@@ -61,7 +61,7 @@ private:
 
     helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
 public:
-    typedef LruMap<Ssl::CertValidationResponse::Pointer, sizeof(Ssl::CertValidationResponse::Pointer) + sizeof(Ssl::CertValidationResponse)> LruCache;
+    typedef LruMap<SBuf, Ssl::CertValidationResponse::Pointer, sizeof(Ssl::CertValidationResponse::Pointer) + sizeof(Ssl::CertValidationResponse)> LruCache;
     static LruCache *HelperCache; ///< cache for cert validation helper
 };
 

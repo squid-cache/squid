@@ -69,11 +69,10 @@ class CertificateDb
 public:
     /// Names of db columns.
     enum Columns {
-        cnlType = 0,
+        cnlKey = 0, //< The key to use for storing/retrieving entries from DB.
         cnlExp_date,
         cnlRev_date,
         cnlSerial,
-        cnlFile,
         cnlName,
         cnlNumber
     };
@@ -97,17 +96,19 @@ public:
     };
 
     CertificateDb(std::string const & db_path, size_t aMax_db_size, size_t aFs_block_size);
-    /// Find certificate and private key for host name
-    bool find(std::string const & host_name, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
+    /// finds matching generated certificate and its private key
+    bool find(std::string const & key,  const Security::CertPointer &expectedOrig, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
     /// Delete a certificate from database
     bool purgeCert(std::string const & key);
     /// Save certificate to disk.
-    bool addCertAndPrivateKey(Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName);
-    /// Create and initialize a database  under the  db_path
-    static void create(std::string const & db_path);
-    /// Check the database stored under the db_path.
-    static void check(std::string const & db_path, size_t max_db_size, size_t fs_block_size);
+    bool addCertAndPrivateKey(std::string const & useKey, const Security::CertPointer & cert, const Ssl::EVP_PKEY_Pointer & pkey, const Security::CertPointer &orig);
+
     bool IsEnabledDiskStore() const; ///< Check enabled of dist store.
+
+    /// Create and initialize a database  under the  db_path
+    static void Create(std::string const & db_path);
+    /// Check the database stored under the db_path.
+    static void Check(std::string const & db_path, size_t max_db_size, size_t fs_block_size);
 private:
     void load(); ///< Load db from disk.
     void save(); ///< Save db to disk.
@@ -121,13 +122,19 @@ private:
     size_t getFileSize(std::string const & filename); ///< get file size on disk.
     size_t rebuildSize(); ///< Rebuild size_file
     /// Only find certificate in current db and return it.
-    bool pure_find(std::string const & host_name, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
+    bool pure_find(std::string const & key, const Security::CertPointer & expectedOrig, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
 
     void deleteRow(const char **row, int rowIndex); ///< Delete a row from TXT_DB
     bool deleteInvalidCertificate(); ///< Delete invalid certificate.
     bool deleteOldestCertificate(); ///< Delete oldest certificate.
-    bool deleteByHostname(std::string const & host); ///< Delete using host name.
+    bool deleteByKey(std::string const & key); ///< Delete using key.
     bool hasRows() const; ///< Whether the TXT_DB has stored items.
+
+    /// stores the db entry into a file
+    static bool WriteEntry(const std::string &filename, const Security::CertPointer & cert, const Ssl::EVP_PKEY_Pointer & pkey, const Security::CertPointer &orig);
+
+    /// loads a db entry from the file
+    static bool ReadEntry(std::string filename, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, Security::CertPointer &orig);
 
     /// Removes the first matching row from TXT_DB. Ignores failures.
     static void sq_TXT_DB_delete(TXT_DB *db, const char **row);

@@ -208,7 +208,7 @@ void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx) {
 
     Row row(rrow, cnlNumber); // row wrapper used to free the rrow
 
-    const Columns db_indexes[]= {cnlSerial, cnlName};
+    const Columns db_indexes[]= {cnlSerial, cnlKey};
     for (unsigned int i = 0; i < countof(db_indexes); ++i) {
         void *data = NULL;
 #if SQUID_SSLTXTDB_PSTRINGDATA
@@ -238,11 +238,11 @@ int Ssl::CertificateDb::index_serial_cmp(const char **a, const char **b) {
 }
 
 unsigned long Ssl::CertificateDb::index_name_hash(const char **a) {
-    return(lh_strhash(a[Ssl::CertificateDb::cnlName]));
+    return(lh_strhash(a[Ssl::CertificateDb::cnlKey]));
 }
 
 int Ssl::CertificateDb::index_name_cmp(const char **a, const char **b) {
-    return(strcmp(a[Ssl::CertificateDb::cnlName], b[CertificateDb::cnlName]));
+    return(strcmp(a[Ssl::CertificateDb::cnlKey], b[CertificateDb::cnlKey]));
 }
 
 const std::string Ssl::CertificateDb::db_file("index.txt");
@@ -264,10 +264,12 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
         throw std::runtime_error("security_file_certgen is missing the required parameter. There should be -s and -M parameters together.");
 }
 
-bool Ssl::CertificateDb::find(std::string const & host_name, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey) {
+bool
+Ssl::CertificateDb::find(std::string const &key,  const Security::CertPointer &expectedOrig, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey)
+{
     const Locker locker(dbLock, Here);
     load();
-    return pure_find(host_name, cert, pkey);
+    return pure_find(key, expectedOrig, cert, pkey);
 }
 
 bool Ssl::CertificateDb::purgeCert(std::string const & key) {
@@ -276,17 +278,21 @@ bool Ssl::CertificateDb::purgeCert(std::string const & key) {
     if (!db)
         return false;
 
-    if (!deleteByHostname(key))
+    if (!deleteByKey(key))
         return false;
 
     save();
     return true;
 }
 
-bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName) {
+bool
+Ssl::CertificateDb::addCertAndPrivateKey(std::string const & useKey, const Security::CertPointer & cert, const Ssl::EVP_PKEY_Pointer & pkey, const Security::CertPointer &orig) {
     const Locker locker(dbLock, Here);
     load();
     if (!db || !cert || !pkey)
+        return false;
+
+    if(useKey.empty())
         return false;
 
     // Functor to wrap xfree() for std::unique_ptr
@@ -309,20 +315,8 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl:
         return true;
     }
 
-    {
-        std::unique_ptr<char, CharDeleter> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
-        Security::CertPointer findCert;
-        Ssl::EVP_PKEY_Pointer findPkey;
-        if (pure_find(useName.empty() ? subject.get() : useName, findCert, findPkey)) {
-            // Replace with database certificate
-            cert = std::move(findCert);
-            pkey = std::move(findPkey);
-            return true;
-        }
-        // pure_find may fail because the entry is expired, or because the
-        // certs file is corrupted. Remove any entry with given hostname
-        deleteByHostname(useName.empty() ? subject.get() : useName);
-    }
+    // Remove any entry with given key
+    deleteByKey(useKey);
 
     // check db size while trying to minimize calls to size()
     size_t dbSize = size();
@@ -346,16 +340,11 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl:
         dbSize = size(); // get the current database size
     }
 
-    row.setValue(cnlType, "V");
     ASN1_UTCTIME * tm = X509_get_notAfter(cert.get());
     row.setValue(cnlExp_date, std::string(reinterpret_cast<char *>(tm->data), tm->length).c_str());
-    row.setValue(cnlFile, "unknown");
-    if (!useName.empty())
-        row.setValue(cnlName, useName.c_str());
-    else {
-        std::unique_ptr<char, CharDeleter> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
-        row.setValue(cnlName, subject.get());
-    }
+    std::unique_ptr<char, CharDeleter> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
+    row.setValue(cnlName, subject.get());
+    row.setValue(cnlKey, useKey.c_str());
 
     if (!TXT_DB_insert(db.get(), row.getRow())) {
         // failed to add index (???) but we may have already modified
@@ -367,7 +356,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl:
     row.reset();
 
     std::string filename(cert_full + "/" + serial_string + ".pem");
-    if (!writeCertAndPrivateKeyToFile(cert, pkey, filename.c_str())) {
+    if (!WriteEntry(filename.c_str(), cert, pkey, orig)) {
         //remove row from txt_db and save
         sq_TXT_DB_delete(db.get(), (const char **)rrow);
         save();
@@ -379,7 +368,8 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Security::CertPointer & cert, Ssl:
     return true;
 }
 
-void Ssl::CertificateDb::create(std::string const & db_path) {
+void
+Ssl::CertificateDb::Create(std::string const & db_path) {
     if (db_path == "")
         throw std::runtime_error("Path to db is empty");
     std::string db_full(db_path + "/" + db_file);
@@ -402,7 +392,8 @@ void Ssl::CertificateDb::create(std::string const & db_path) {
         throw std::runtime_error("Cannot open " + db_full + " to open");
 }
 
-void Ssl::CertificateDb::check(std::string const & db_path, size_t max_db_size, size_t fs_block_size) {
+void
+Ssl::CertificateDb::Check(std::string const & db_path, size_t max_db_size, size_t fs_block_size) {
     CertificateDb db(db_path, max_db_size, fs_block_size);
     db.load();
 
@@ -432,26 +423,32 @@ size_t Ssl::CertificateDb::rebuildSize()
     return dbSize;
 }
 
-bool Ssl::CertificateDb::pure_find(std::string const & host_name, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey) {
+bool
+Ssl::CertificateDb::pure_find(std::string const &key, const Security::CertPointer &expectedOrig, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey)
+{
     if (!db)
         return false;
 
     Row row;
-    row.setValue(cnlName, host_name.c_str());
+    row.setValue(cnlKey, key.c_str());
 
-    char **rrow = TXT_DB_get_by_index(db.get(), cnlName, row.getRow());
+    char **rrow = TXT_DB_get_by_index(db.get(), cnlKey, row.getRow());
     if (rrow == NULL)
         return false;
 
     if (!sslDateIsInTheFuture(rrow[cnlExp_date]))
         return false;
 
+    Security::CertPointer storedOrig;
     // read cert and pkey from file.
     std::string filename(cert_full + "/" + rrow[cnlSerial] + ".pem");
-    readCertAndPrivateKeyFromFiles(cert, pkey, filename.c_str(), NULL);
-    if (!cert || !pkey)
+    if (!ReadEntry(filename.c_str(), cert, pkey, storedOrig))
         return false;
-    return true;
+
+    if (!storedOrig && !expectedOrig)
+        return true;
+    else
+        return Ssl::CertificatesCmp(expectedOrig, storedOrig);
 }
 
 size_t Ssl::CertificateDb::size() {
@@ -514,7 +511,7 @@ void Ssl::CertificateDb::load() {
     if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, NULL, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp)))
         corrupt = true;
 
-    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlName, NULL, LHASH_HASH_FN(index_name_hash), LHASH_COMP_FN(index_name_cmp)))
+    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlKey, NULL, LHASH_HASH_FN(index_name_hash), LHASH_COMP_FN(index_name_cmp)))
         corrupt = true;
 
     if (corrupt)
@@ -596,7 +593,8 @@ bool Ssl::CertificateDb::deleteOldestCertificate()
     return true;
 }
 
-bool Ssl::CertificateDb::deleteByHostname(std::string const & host) {
+bool
+Ssl::CertificateDb::deleteByKey(std::string const & key) {
     if (!db)
         return false;
 
@@ -611,7 +609,7 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host) {
     for (int i = 0; i < sk_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
 #endif
-        if (host == current_row[cnlName]) {
+        if (key == current_row[cnlKey]) {
             deleteRow(current_row, i);
             return true;
         }
@@ -637,3 +635,32 @@ bool Ssl::CertificateDb::IsEnabledDiskStore() const {
     return enabled_disk_store;
 }
 
+bool
+Ssl::CertificateDb::WriteEntry(const std::string &filename, const Security::CertPointer & cert, const Ssl::EVP_PKEY_Pointer & pkey, const Security::CertPointer &orig)
+{
+    Ssl::BIO_Pointer bio;
+    if (!Ssl::OpenCertsFileForWriting(bio, filename.c_str()))
+        return false;
+    if (!Ssl::WriteX509Certificate(bio, cert))
+        return false;
+    if (!Ssl::WritePrivateKey(bio, pkey))
+        return false;
+    if (orig && !Ssl::WriteX509Certificate(bio, orig))
+        return false;
+    return true;
+}
+
+bool
+Ssl::CertificateDb::ReadEntry(std::string filename, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, Security::CertPointer &orig)
+{
+    Ssl::BIO_Pointer bio;
+    if (!Ssl::OpenCertsFileForReading(bio, filename.c_str()))
+        return false;
+    if (!Ssl::ReadX509Certificate(bio, cert))
+        return false;
+    if (!Ssl::ReadPrivateKey(bio, pkey, NULL))
+        return false;
+    // The orig certificate is not mandatory
+    (void)Ssl::ReadX509Certificate(bio, orig);
+    return true;
+}

@@ -15,6 +15,7 @@
 #include "HttpRequest.h"
 #include "ip/Address.h"
 #include "security/forward.h"
+#include "Store.h"
 
 class ConnStateData;
 class store_client;
@@ -34,6 +35,9 @@ public:
     ~ServerBump();
     void attachServerSession(const Security::SessionPointer &); ///< Sets the server TLS session object
     const Security::CertErrors *sslErrors() const; ///< SSL [certificate validation] errors
+
+    /// whether there was a successful connection to (and peeking at) the origin server
+    bool connectedOk() const {return entry && entry->isEmpty();}
 
     /// faked, minimal request; required by Client API
     HttpRequest::Pointer request;
