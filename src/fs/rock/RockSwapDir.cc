@@ -1008,7 +1008,8 @@ Rock::SwapDir::markForUnlink(StoreEntry &e)
 void
 Rock::SwapDir::unlinkByKeyIfFound(const cache_key *key)
 {
-    map->freeEntryByKey(key); // may not be there
+    if (map)
+        map->freeEntryByKey(key); // may not be there
 }
 
 void

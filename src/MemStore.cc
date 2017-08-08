@@ -426,6 +426,9 @@ MemStore::updateCollapsed(StoreEntry &collapsed)
 
     const sfileno index = collapsed.mem_obj->memCache.index;
 
+    if (!collapsed.hasMemStore())
+        return true;
+
     if (!map)
         return false;
 
@@ -916,7 +919,8 @@ MemStore::markForUnlink(StoreEntry &e)
 void
 MemStore::unlinkByKeyIfFound(const cache_key *key)
 {
-    map->freeEntryByKey(key);
+    if (map)
+        map->freeEntryByKey(key);
 }
 
 void

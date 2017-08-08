@@ -163,12 +163,13 @@ public:
 
     /// the disk this entry is [being] cached on; asserts for entries w/o a disk
     Store::Disk &disk() const;
-    /// whether there is a corresponding disk store entry
+    /// whether one of this StoreEntry owners has locked the corresponding
+    /// disk entry (at the specified disk entry coordinates, if any)
     bool hasDisk(const sdirno dirn = -1, const sfileno filen = -1) const;
     /// Makes hasDisk(dirn, filn) true. The caller should have locked
     /// the corresponding disk store entry for reading or writing.
     void attachToDisk(const sdirno dirn, const sfileno filn, const swap_status_t status);
-    /// Makes hasDisk() false. The caller should have deleted
+    /// Makes hasDisk() false. The caller should have unlocked
     /// the corresponding disk store entry.
     void detachFromDisk();
 

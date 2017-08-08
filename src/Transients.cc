@@ -167,7 +167,7 @@ Transients::get(const cache_key *key)
         return newE; // keep read lock to receive updates from others
     }
 
-    // private entry or loading failure
+    // (private or completed) entry or loading failure
     map->closeForReading(index);
     return NULL;
 }
@@ -351,7 +351,8 @@ void
 Transients::unlinkByKeyIfFound(const cache_key *key)
 {
     // Controller ensures that this worker has no StoreEntry to abandon() here.
-    map->freeEntryByKey(key);
+    if (map)
+        map->freeEntryByKey(key);
 }
 
 void
