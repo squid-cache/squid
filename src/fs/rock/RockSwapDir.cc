@@ -98,9 +98,7 @@ Rock::SwapDir::updateCollapsed(StoreEntry &collapsed)
     if (!map || !theFile || !theFile->canRead())
         return false;
 
-    if (collapsed.swap_filen < 0) // no longer using a disk cache
-        return true;
-    assert(collapsed.swap_dirn == index);
+    assert(collapsed.hasDisk(index));
 
     const Ipc::StoreMapAnchor &s = map->readableEntry(collapsed.swap_filen);
     return updateCollapsedWith(collapsed, s);
@@ -126,13 +124,10 @@ Rock::SwapDir::anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreM
     e.refcount = basics.refcount;
     e.flags = basics.flags;
 
-    if (anchor.complete()) {
-        e.store_status = STORE_OK;
-        e.swap_status = SWAPOUT_DONE;
-    } else {
-        e.store_status = STORE_PENDING;
-        e.swap_status = SWAPOUT_WRITING; // even though another worker writes?
-    }
+    const bool complete = anchor.complete();
+    e.store_status = complete ? STORE_OK : STORE_PENDING;
+    // SWAPOUT_WRITING: even though another worker writes?
+    e.attachToDisk(index, filen, complete ? SWAPOUT_DONE : SWAPOUT_WRITING);
 
     e.ping_status = PING_NONE;
 
@@ -146,10 +141,7 @@ Rock::SwapDir::anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreM
 
 void Rock::SwapDir::disconnect(StoreEntry &e)
 {
-    assert(e.swap_dirn == index);
-    assert(e.swap_filen >= 0);
-    // cannot have SWAPOUT_NONE entry with swap_filen >= 0
-    assert(e.swap_status != SWAPOUT_NONE);
+    assert(e.hasDisk(index));
 
     // do not rely on e.swap_status here because there is an async delay
     // before it switches from SWAPOUT_WRITING to SWAPOUT_DONE.
@@ -161,16 +153,12 @@ void Rock::SwapDir::disconnect(StoreEntry &e)
     if (e.mem_obj && e.mem_obj->swapout.sio != NULL &&
             dynamic_cast<IoState&>(*e.mem_obj->swapout.sio).writeableAnchor_) {
         map->abortWriting(e.swap_filen);
-        e.swap_dirn = -1;
-        e.swap_filen = -1;
-        e.swap_status = SWAPOUT_NONE;
+        e.detachFromDisk();
         dynamic_cast<IoState&>(*e.mem_obj->swapout.sio).writeableAnchor_ = NULL;
         Store::Root().transientsAbandon(e); // broadcasts after the change
     } else {
         map->closeForReading(e.swap_filen);
-        e.swap_dirn = -1;
-        e.swap_filen = -1;
-        e.swap_status = SWAPOUT_NONE;
+        e.detachFromDisk();
     }
 }
 
@@ -782,7 +770,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
         return NULL;
     }
 
-    if (e.swap_filen < 0) {
+    if (!e.hasDisk()) {
         debugs(47,4, HERE << e);
         return NULL;
     }
@@ -1002,6 +990,7 @@ void
 Rock::SwapDir::unlink(StoreEntry &e)
 {
     debugs(47, 5, HERE << e);
+    assert(e.hasDisk(index));
     ignoreReferences(e);
     map->freeEntry(e.swap_filen);
     disconnect(e);
@@ -1011,7 +1000,15 @@ void
 Rock::SwapDir::markForUnlink(StoreEntry &e)
 {
     debugs(47, 5, e);
-    map->freeEntry(e.swap_filen);
+    assert(e.key);
+    e.hasDisk() ? map->freeEntry(e.swap_filen) :
+        unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
+}
+
+void
+Rock::SwapDir::unlinkByKeyIfFound(const cache_key *key)
+{
+    map->freeEntryByKey(key); // may not be there
 }
 
 void
@@ -1091,6 +1088,12 @@ Rock::SwapDir::freeSlotsPath() const
     spacesPath = path;
     spacesPath.append("_spaces");
     return spacesPath.termedBuf();
+}
+
+bool
+Rock::SwapDir::hasReadableEntry(const StoreEntry &e) const
+{
+    return map->hasReadableEntry(reinterpret_cast<const cache_key*>(e.key));
 }
 
 namespace Rock

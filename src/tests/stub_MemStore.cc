@@ -36,6 +36,7 @@ uint64_t MemStore::currentCount() const STUB_RETVAL(0)
 int64_t MemStore::maxObjectSize() const STUB_RETVAL(0)
 bool MemStore::dereference(StoreEntry &) STUB_RETVAL(false)
 void MemStore::markForUnlink(StoreEntry&) STUB
+void MemStore::unlinkByKeyIfFound(const cache_key *key) STUB
 bool MemStore::anchorCollapsed(StoreEntry&, bool&) STUB_RETVAL(false)
 bool MemStore::updateCollapsed(StoreEntry&) STUB_RETVAL(false)
 

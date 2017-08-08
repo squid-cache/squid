@@ -53,6 +53,7 @@ public:
     virtual void statfs(StoreEntry &) const override;
     virtual void maintain() override;
     virtual void markForUnlink(StoreEntry &) override {}
+    virtual void unlinkByKeyIfFound(const cache_key *) override {}
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const override;
     virtual void reference(StoreEntry &) override;
     virtual bool dereference(StoreEntry &) override;
@@ -72,6 +73,7 @@ public:
     virtual uint64_t currentCount() const override { return n_disk_objects; }
     virtual ConfigOption *getOptionTree() const override;
     virtual bool smpAware() const override { return false; }
+    virtual bool hasReadableEntry(const StoreEntry &e) const override { return false; };
 
     void unlinkFile(sfileno f);
     // move down when unlink is a virtual method

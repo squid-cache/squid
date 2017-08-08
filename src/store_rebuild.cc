@@ -75,7 +75,7 @@ storeCleanup(void *)
          * Calling StoreEntry->release() has no effect because we're
          * still in 'store_rebuilding' state
          */
-        if (e->swap_filen < 0)
+        if (!e->hasDisk())
             continue;
 
         if (opt_store_doublecheck)

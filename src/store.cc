@@ -282,7 +282,7 @@ StoreEntry::storeClientType() const
         /* the object has completed. */
 
         if (mem_obj->inmem_lo == 0 && !isEmpty()) {
-            if (swap_status == SWAPOUT_DONE) {
+            if (swappedOut()) {
                 debugs(20,7, HERE << mem_obj << " lo: " << mem_obj->inmem_lo << " hi: " << mem_obj->endOffset() << " size: " << mem_obj->object_sz);
                 if (mem_obj->endOffset() == mem_obj->object_sz) {
                     /* hot object fully swapped in (XXX: or swapped out?) */
@@ -395,7 +395,7 @@ destroyStoreEntry(void *data)
         return;
 
     // Store::Root() is FATALly missing during shutdown
-    if (e->swap_filen >= 0 && !shutting_down)
+    if (e->hasDisk() && !shutting_down)
         e->disk().disconnect(*e);
 
     e->destroyMemObject();
@@ -440,7 +440,7 @@ StoreEntry::purgeMem()
 
     Store::Root().memoryUnlink(*this);
 
-    if (swap_status != SWAPOUT_DONE)
+    if (!swappedOut())
         release();
 }
 
@@ -457,6 +457,8 @@ StoreEntry::touch()
     lastref = squid_curtime;
 }
 
+/// Prevents future hits by marking the corresponding entry
+/// for eventual removal from the Store.
 void
 StoreEntry::setReleaseFlag()
 {
@@ -476,7 +478,7 @@ StoreEntry::releaseRequest(const bool shareable)
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
 
-    setReleaseFlag(); // makes validToSend() false, preventing future hits
+    setReleaseFlag();
 
     setPrivateKey(shareable);
 }
@@ -603,7 +605,7 @@ StoreEntry::setPrivateKey(const bool shareable)
         setReleaseFlag(); // will markForUnlink(); all caches/workers will know
 
         // TODO: move into SwapDir::markForUnlink() already called by Root()
-        if (swap_filen > -1)
+        if (hasDisk())
             storeDirSwapLog(this, SWAP_LOG_DEL);
 
         hashDelete();
@@ -686,7 +688,7 @@ StoreEntry::forcePublicKey(const cache_key *newkey)
 
     hashInsert(newkey);
 
-    if (swap_filen > -1)
+    if (hasDisk())
         storeDirSwapLog(this, SWAP_LOG_ADD);
 }
 
@@ -781,11 +783,8 @@ storeCreatePureEntry(const char *url, const char *log_url, const RequestFlags &f
     e = new StoreEntry();
     e->createMemObject(url, log_url, method);
 
-    if (flags.cachable) {
-        EBIT_CLR(e->flags, RELEASE_REQUEST);
-    } else {
-        e->releaseRequest();
-    }
+    if (!flags.cachable)
+        EBIT_SET(e->flags, RELEASE_REQUEST);
 
     e->store_status = STORE_PENDING;
     e->refcount = 0;
@@ -802,7 +801,7 @@ storeCreateEntry(const char *url, const char *logUrl, const RequestFlags &flags,
     StoreEntry *e = storeCreatePureEntry(url, logUrl, flags, method);
     e->lock("storeCreateEntry");
 
-    if (neighbors_do_private_keys || !flags.hierarchical)
+    if (neighbors_do_private_keys || !flags.hierarchical || !flags.cachable)
         e->setPrivateKey(false);
     else
         e->setPublicKey();
@@ -1021,11 +1020,10 @@ StoreEntry::checkCachable()
         } else if (EBIT_TEST(flags, KEY_PRIVATE)) {
             debugs(20, 3, "StoreEntry::checkCachable: NO: private key");
             ++store_check_cachable_hist.no.private_key;
-        } else if (swap_status != SWAPOUT_NONE) {
+        } else if (hasDisk()) {
             /*
-             * here we checked the swap_status because the remaining
-             * cases are only relevant only if we haven't started swapping
-             * out the object yet.
+             * the remaining cases are only relevant if we haven't
+             * started swapping out the object yet.
              */
             return 1;
         } else if (storeTooManyDiskFilesOpen()) {
@@ -1262,7 +1260,7 @@ StoreEntry::release(const bool shareable)
         return;
     }
 
-    if (Store::Controller::store_dirs_rebuilding && swap_filen > -1) {
+    if (Store::Controller::store_dirs_rebuilding && hasDisk()) {
         /* TODO: Teach disk stores to handle releases during rebuild instead. */
 
         Store::Root().memoryUnlink(*this);
@@ -1277,7 +1275,7 @@ StoreEntry::release(const bool shareable)
     }
 
     storeLog(STORE_LOG_RELEASE, this);
-    if (swap_filen > -1 && !EBIT_TEST(flags, KEY_PRIVATE)) {
+    if (hasDisk() && !EBIT_TEST(flags, KEY_PRIVATE)) {
         // log before unlink() below clears swap_filen
         storeDirSwapLog(this, SWAP_LOG_DEL);
     }
@@ -1421,7 +1419,7 @@ StoreEntry::memoryCachable()
     if (mem_obj->inmem_lo != 0)
         return 0;
 
-    if (!Config.onoff.memory_cache_first && swap_status == SWAPOUT_DONE && refcount == 1)
+    if (!Config.onoff.memory_cache_first && swappedOut() && refcount == 1)
         return 0;
 
     return 1;
@@ -1495,7 +1493,7 @@ StoreEntry::validToSend() const
         return 0;
 
     // now check that the entry has a cache backing or is collapsed
-    if (swap_filen > -1) // backed by a disk cache
+    if (hasDisk()) // backed by a disk cache
         return 1;
 
     if (swappingOut()) // will be backed by a disk cache
@@ -1910,8 +1908,8 @@ void
 StoreEntry::transientsAbandonmentCheck()
 {
     if (mem_obj && !mem_obj->smpCollapsed && // this worker is responsible
-            mem_obj->xitTable.index >= 0 && // other workers may be interested
-            mem_obj->memCache.index < 0 && // rejected by the shared memory cache
+            hasTransients() && // other workers may be interested
+            !hasMemStore() && // rejected by the shared memory cache
             mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) {
         debugs(20, 7, "cannot be shared: " << *this);
         if (!shutting_down) // Store::Root() is FATALly missing during shutdown
@@ -2054,11 +2052,58 @@ StoreEntry::hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) con
 Store::Disk &
 StoreEntry::disk() const
 {
-    assert(0 <= swap_dirn && swap_dirn < Config.cacheSwap.n_configured);
+    assert(hasDisk());
     const RefCount<Store::Disk> &sd = INDEXSD(swap_dirn);
     assert(sd);
     return *sd;
 }
+
+bool
+StoreEntry::hasDisk(const sdirno dirn, const sfileno filen) const
+{
+    checkDisk();
+    if (dirn < 0 && filen < 0)
+        return swap_dirn >= 0;
+    Must(dirn >= 0);
+    const bool matchingDisk = (swap_dirn == dirn);
+    return filen < 0 ? matchingDisk : (matchingDisk && swap_filen == filen);
+}
+
+void
+StoreEntry::attachToDisk(const sdirno dirn, const sfileno fno, const swap_status_t status)
+{
+    debugs(88, 3, "attaching entry with key " << getMD5Text() << " : " <<
+           swapStatusStr[status] << " " << dirn << " " <<
+           std::hex << std::setw(8) << std::setfill('0') <<
+           std::uppercase << fno);
+    checkDisk();
+    swap_dirn = dirn;
+    swap_filen = fno;
+    swap_status = status;
+    checkDisk();
+}
+
+void
+StoreEntry::detachFromDisk()
+{
+    swap_dirn = -1;
+    swap_filen = -1;
+    swap_status = SWAPOUT_NONE;
+}
+
+void
+StoreEntry::checkDisk() const
+{
+    const bool ok = (swap_dirn < 0) == (swap_filen < 0) &&
+              (swap_dirn < 0) == (swap_status == SWAPOUT_NONE) &&
+              (swap_dirn < 0 || swap_dirn < Config.cacheSwap.n_configured);
+
+    if (!ok) {
+        debugs(88, DBG_IMPORTANT, "inconsistent disk numbers for entry " << *this);
+        throw std::runtime_error("inconsistent disk numbers ");
+    }
+}
+
 
 /*
  * return true if the entry is in a state where
@@ -2092,13 +2137,11 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 {
     os << "e:";
 
-    if (e.mem_obj) {
-        if (e.mem_obj->xitTable.index > -1)
-            os << 't' << e.mem_obj->xitTable.index;
-        if (e.mem_obj->memCache.index > -1)
-            os << 'm' << e.mem_obj->memCache.index;
-    }
-    if (e.swap_filen > -1 || e.swap_dirn > -1)
+    if (e.hasTransients())
+        os << 't' << e.mem_obj->xitTable.index;
+    if (e.hasMemStore())
+        os << 'm' << e.mem_obj->memCache.index;
+    if (e.hasDisk())
         os << 'd' << e.swap_filen << '@' << e.swap_dirn;
 
     os << '=';

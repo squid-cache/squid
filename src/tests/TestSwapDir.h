@@ -33,7 +33,9 @@ public:
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) override;
     virtual void parse(int, char*) override;
     virtual void markForUnlink(StoreEntry &) override {}
+    virtual void unlinkByKeyIfFound(const cache_key *) override {}
     virtual void unlink(StoreEntry &) override {}
+    virtual bool hasReadableEntry(const StoreEntry &e) const override { return false; }
 };
 
 typedef RefCount<TestSwapDir> TestSwapDirPointer;

@@ -70,9 +70,14 @@ public:
     virtual void reference(StoreEntry &e) override;
     virtual bool dereference(StoreEntry &e) override;
     virtual void markForUnlink(StoreEntry &e) override;
+    virtual void unlinkByKeyIfFound(const cache_key *) override;
     virtual void unlink(StoreEntry &e) override;
     virtual void maintain() override;
     virtual bool smpAware() const override { return true; }
+
+    /// whether the entry with the given key exists and was marked
+    /// for removal some time ago
+    bool markedForDeletion(const cache_key * key) const;
 
     static int64_t EntryLimit();
 

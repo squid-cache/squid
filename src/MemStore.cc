@@ -426,10 +426,6 @@ MemStore::updateCollapsed(StoreEntry &collapsed)
 
     const sfileno index = collapsed.mem_obj->memCache.index;
 
-    // already disconnected from the cache, no need to update
-    if (index < 0)
-        return true;
-
     if (!map)
         return false;
 
@@ -470,7 +466,7 @@ MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
         assert(e.mem_obj->object_sz < 0);
         e.setMemStatus(NOT_IN_MEMORY);
     }
-    assert(e.swap_status == SWAPOUT_NONE); // set in StoreEntry constructor
+    assert(!e.hasDisk()); // set in StoreEntry constructor
     e.ping_status = PING_NONE;
 
     EBIT_CLR(e.flags, RELEASE_REQUEST);
@@ -912,15 +908,21 @@ MemStore::completeWriting(StoreEntry &e)
 void
 MemStore::markForUnlink(StoreEntry &e)
 {
-    assert(e.mem_obj);
-    if (e.mem_obj->memCache.index >= 0)
-        map->freeEntry(e.mem_obj->memCache.index);
+    assert(e.key);
+    e.hasMemStore() ? map->freeEntry(e.mem_obj->memCache.index) :
+        unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
+}
+
+void
+MemStore::unlinkByKeyIfFound(const cache_key *key)
+{
+    map->freeEntryByKey(key);
 }
 
 void
 MemStore::unlink(StoreEntry &e)
 {
-    if (e.mem_obj && e.mem_obj->memCache.index >= 0) {
+    if (e.hasMemStore()) {
         map->freeEntry(e.mem_obj->memCache.index);
         disconnect(e);
     } else if (map) {
@@ -936,7 +938,7 @@ MemStore::disconnect(StoreEntry &e)
 {
     assert(e.mem_obj);
     MemObject &mem_obj = *e.mem_obj;
-    if (mem_obj.memCache.index >= 0) {
+    if (e.hasMemStore()) {
         if (mem_obj.memCache.io == MemObject::ioWriting) {
             map->abortWriting(mem_obj.memCache.index);
             mem_obj.memCache.index = -1;

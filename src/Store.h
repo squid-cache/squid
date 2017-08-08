@@ -95,6 +95,8 @@ public:
     void clearPublicKeyScope();
     void setPrivateKey(const bool shareable);
     void expireNow();
+    /// Makes the StoreEntry private and marks the corresponding entry
+    /// for eventual removal from the Store.
     void releaseRequest(const bool shareable = false);
     void negativeCache();
     void cacheNegatively();     /** \todo argh, why both? */
@@ -104,6 +106,9 @@ public:
     void swapOut();
     /// whether we are in the process of writing this entry to disk
     bool swappingOut() const { return swap_status == SWAPOUT_WRITING; }
+    /// whether this entry was fully written to disk some time in the past;
+    /// it may have been deleted since then though
+    bool swappedOut() const { return swap_status == SWAPOUT_DONE; }
     void swapOutFileClose(int how);
     const char *url() const;
     /// Satisfies cachability requirements shared among disk and RAM caches.
@@ -158,6 +163,19 @@ public:
 
     /// the disk this entry is [being] cached on; asserts for entries w/o a disk
     Store::Disk &disk() const;
+    /// whether there is a corresponding disk store entry
+    bool hasDisk(const sdirno dirn = -1, const sfileno filen = -1) const;
+    /// Makes hasDisk(dirn, filn) true. The caller should have locked
+    /// the corresponding disk store entry for reading or writing.
+    void attachToDisk(const sdirno dirn, const sfileno filn, const swap_status_t status);
+    /// Makes hasDisk() false. The caller should have deleted
+    /// the corresponding disk store entry.
+    void detachFromDisk();
+
+    /// whether there is a corresponding locked transients table entry
+    bool hasTransients() const { return mem_obj && mem_obj->xitTable.index >= 0; }
+    /// whether there is a corresponding locked shared memory table entry
+    bool hasMemStore() const { return mem_obj && mem_obj->memCache.index >= 0; }
 
     MemObject *mem_obj;
     RemovalPolicyNode repl;
@@ -198,7 +216,6 @@ public:
 
     void *operator new(size_t byteCount);
     void operator delete(void *address);
-    void setReleaseFlag();
 #if USE_SQUID_ESI
 
     ESIElement::Pointer cachedESITree;
@@ -220,6 +237,9 @@ public:
     /// update last reference timestamp and related Store metadata
     void touch();
 
+    /// If unlocked, destroys us, removing the corresponding entry
+    /// from the Store. If locked, makes it private and marks the
+    /// entry for eventual removal from the Store.
     virtual void release(const bool shareable = false);
 
     /// May the caller commit to treating this [previously locked]
@@ -243,12 +263,15 @@ public:
 
 protected:
     void transientsAbandonmentCheck();
+    /// does nothing except throwing if disk-associated data members are inconsistent
+    void checkDisk() const;
 
 private:
     bool checkTooBig() const;
     void forcePublicKey(const cache_key *newkey);
     void adjustVary();
     const cache_key *calcPublicKey(const KeyScope keyScope);
+    void setReleaseFlag();
 
     static MemAllocator *pool;
 

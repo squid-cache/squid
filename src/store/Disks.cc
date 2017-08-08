@@ -487,14 +487,30 @@ Store::Disks::sync()
 
 void
 Store::Disks::markForUnlink(StoreEntry &e) {
-    if (e.swap_filen >= 0)
+    if (e.hasDisk())
         store(e.swap_dirn)->markForUnlink(e);
 }
 
 void
-Store::Disks::unlink(StoreEntry &e) {
-    if (e.swap_filen >= 0)
-        store(e.swap_dirn)->unlink(e);
+Store::Disks::unlinkByKeyIfFound(const cache_key *key)
+{
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        if (dir(i).active())
+            dir(i).unlinkByKeyIfFound(key);
+    }
+}
+
+void
+Store::Disks::unlink(StoreEntry &e)
+{
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        if (dir(i).active()) {
+            if (e.hasDisk(i))
+                dir(i).unlink(e);
+            else
+                dir(i).unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
+        }
+    }
 }
 
 bool
@@ -526,7 +542,7 @@ Store::Disks::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
 bool
 Store::Disks::updateCollapsed(StoreEntry &collapsed)
 {
-    return collapsed.swap_filen >= 0 &&
+    return collapsed.hasDisk() &&
            dir(collapsed.swap_dirn).updateCollapsed(collapsed);
 }
 
@@ -543,7 +559,14 @@ Store::Disks::smpAware() const
     return false;
 }
 
-/* Store::Disks globals that should be converted to use RegisteredRunner */
+bool
+Store::Disks::hasReadableEntry(const StoreEntry &e) const
+{
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i)
+        if (dir(i).active() && dir(i).hasReadableEntry(e))
+            return true;
+    return false;
+}
 
 void
 storeDirOpenSwapLogs()
@@ -713,7 +736,7 @@ storeDirSwapLog(const StoreEntry * e, int op)
 {
     assert (e);
     assert(!EBIT_TEST(e->flags, KEY_PRIVATE));
-    assert(e->swap_filen >= 0);
+    assert(e->hasDisk());
     /*
      * icons and such; don't write them to the swap log
      */

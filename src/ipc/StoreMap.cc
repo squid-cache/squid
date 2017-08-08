@@ -13,6 +13,7 @@
 #include "sbuf/SBuf.h"
 #include "Store.h"
 #include "store_key_md5.h"
+#include "store/Controller.h"
 #include "tools.h"
 
 static SBuf
@@ -212,6 +213,7 @@ Ipc::StoreMap::abortWriting(const sfileno fileno)
         debugs(54, 5, "closed clean entry " << fileno << " for writing " << path);
     } else {
         s.waitingToBeFreed = true;
+        EBIT_SET(s.basics.flags, ENTRY_ABORTED);
         s.lock.unlockExclusive();
         debugs(54, 5, "closed dirty entry " << fileno << " for writing " << path);
     }
@@ -289,6 +291,26 @@ Ipc::StoreMap::freeEntryByKey(const cache_key *const key)
             s.waitingToBeFreed = true; // mark to free it later
     }
 }
+
+bool
+Ipc::StoreMap::markedForDeletion(const cache_key *const key)
+{
+    const int idx = fileNoByKey(key);
+    Anchor &s = anchorAt(idx);
+    return s.sameKey(key) ? bool(s.waitingToBeFreed) : false;
+}
+
+bool
+Ipc::StoreMap::hasReadableEntry(const cache_key *const key)
+{
+    sfileno index;
+    if (openForReading(reinterpret_cast<const cache_key*>(key), index)) {
+        closeForReading(index);
+        return true;
+    }
+    return false;
+}
+
 
 /// unconditionally frees an already locked chain of slots, unlocking if needed
 void
@@ -734,6 +756,7 @@ void
 Ipc::StoreMapAnchor::setKey(const cache_key *const aKey)
 {
     memcpy(key, aKey, sizeof(key));
+    waitingToBeFreed = Store::Root().markedForDeletion(aKey);
 }
 
 bool
@@ -747,7 +770,7 @@ void
 Ipc::StoreMapAnchor::set(const StoreEntry &from)
 {
     assert(writing() && !reading());
-    memcpy(key, from.key, sizeof(key));
+    setKey(reinterpret_cast<const cache_key*>(from.key));
     basics.timestamp = from.timestamp;
     basics.lastref = from.lastref;
     basics.expires = from.expires;

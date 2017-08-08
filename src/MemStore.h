@@ -62,6 +62,7 @@ public:
     virtual bool anchorCollapsed(StoreEntry &e, bool &inSync) override;
     virtual bool updateCollapsed(StoreEntry &e) override;
     virtual void markForUnlink(StoreEntry &) override;
+    virtual void unlinkByKeyIfFound(const cache_key *key) override;
     virtual void unlink(StoreEntry &e) override;
     virtual bool smpAware() const override { return true; }
 

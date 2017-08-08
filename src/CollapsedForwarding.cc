@@ -58,7 +58,7 @@ CollapsedForwarding::Broadcast(const StoreEntry &e)
     if (!queue.get())
         return;
 
-    if (!e.mem_obj || e.mem_obj->xitTable.index < 0 ||
+    if (!e.hasTransients() ||
             !Store::Root().transientReaders(e)) {
         debugs(17, 7, "nobody reads " << e);
         return;

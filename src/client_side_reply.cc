@@ -907,20 +907,27 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
 {
 #if USE_HTCP
     bool get_or_head_sent = false;
+    // Optimization: Do not call expensive Root().get() below unless it is needed.
+    const bool needEntry = neighborsHtcpClearNeeded(HTCP_CLR_INVALIDATION);
 #endif
 
     for (HttpRequestMethod m(Http::METHOD_NONE); m != Http::METHOD_ENUM_END; ++m) {
         if (m.respMaybeCacheable()) {
-            if (StoreEntry *entry = storeGetPublic(url, m)) {
-                debugs(88, 5, "purging " << *entry << ' ' << m << ' ' << url);
+            const cache_key *key = storeKeyPublic(url, m);
+            debugs(88, 5, m << ' ' << url << ' ' << storeKeyText(key));
 #if USE_HTCP
-                neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
-                if (m == Http::METHOD_GET || m == Http::METHOD_HEAD) {
-                    get_or_head_sent = true;
+            // TODO: Remove if HTCP_CLR_INVALIDATION does not need Store ID (i.e., entry->uri()).
+            if (needEntry) {
+                if (StoreEntry *entry = Store::Root().get(key)) {
+                    entry->lock("purgeEntriesByUrl");
+                    neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
+                    if (m == Http::METHOD_GET || m == Http::METHOD_HEAD)
+                        get_or_head_sent = true;
+                    entry->unlock("purgeEntriesByUrl");
                 }
-#endif
-                entry->release();
             }
+#endif
+            Store::Root().unlinkByKeyIfFound(key);
         }
     }
 

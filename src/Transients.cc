@@ -161,6 +161,8 @@ Transients::get(const cache_key *key)
     if (StoreEntry *oldE = locals->at(index)) {
         debugs(20, 3, "not joining private " << *oldE);
         assert(EBIT_TEST(oldE->flags, KEY_PRIVATE));
+    } else if (anchor->complete()) {
+        debugs(20, 3, "not joining completed " << storeKeyText(key));
     } else if (StoreEntry *newE = copyFromShm(index)) {
         return newE; // keep read lock to receive updates from others
     }
@@ -185,7 +187,11 @@ Transients::copyFromShm(const sfileno index)
     e->mem_obj->xitTable.index = index;
 
     // TODO: Support collapsed revalidation for SMP-aware caches.
-    e->setPublicKey(ksDefault);
+    if (!extra.reqFlags.cachable)
+        e->setPrivateKey(false);
+    else
+        e->setPublicKey(ksDefault);
+
     assert(e->key);
 
     // How do we know its SMP- and not just locally-collapsed? A worker gets
@@ -222,7 +228,7 @@ Transients::startWriting(StoreEntry *e, const RequestFlags &reqFlags,
 {
     assert(e);
     assert(e->mem_obj);
-    assert(e->mem_obj->xitTable.index < 0);
+    assert(!e->hasTransients());
 
     if (!map) {
         debugs(20, 5, "No map to add " << *e);
@@ -306,17 +312,17 @@ bool
 Transients::abandonedAt(const sfileno index) const
 {
     assert(map);
-    return map->readableEntry(index).waitingToBeFreed;
+    const Ipc::StoreMap::Anchor &anchor = map->readableEntry(index);
+    return anchor.waitingToBeFreed && EBIT_TEST(anchor.basics.flags, ENTRY_ABORTED);
 }
 
 void
 Transients::completeWriting(const StoreEntry &e)
 {
-    if (e.mem_obj && e.mem_obj->xitTable.index >= 0) {
+    if (e.hasTransients()) {
         assert(e.mem_obj->xitTable.io == MemObject::ioWriting);
         // there will be no more updates from us after this, so we must prevent
         // future readers from joining
-        map->freeEntry(e.mem_obj->xitTable.index); // just marks the locked entry
         map->closeForWriting(e.mem_obj->xitTable.index);
         e.mem_obj->xitTable.index = -1;
         e.mem_obj->xitTable.io = MemObject::ioDone;
@@ -326,7 +332,7 @@ Transients::completeWriting(const StoreEntry &e)
 int
 Transients::readers(const StoreEntry &e) const
 {
-    if (e.mem_obj && e.mem_obj->xitTable.index >= 0) {
+    if (e.hasTransients()) {
         assert(map);
         return map->peekAtEntry(e.mem_obj->xitTable.index).lock.readers;
     }
@@ -336,7 +342,16 @@ Transients::readers(const StoreEntry &e) const
 void
 Transients::markForUnlink(StoreEntry &e)
 {
-    unlink(e);
+    assert(e.key);
+    e.hasTransients() ? unlink(e) :
+        unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
+}
+
+void
+Transients::unlinkByKeyIfFound(const cache_key *key)
+{
+    // Controller ensures that this worker has no StoreEntry to abandon() here.
+    map->freeEntryByKey(key);
 }
 
 void
@@ -372,6 +387,13 @@ Transients::EntryLimit()
         return 0; // no SMP collapsed forwarding possible or needed
 
     return Config.collapsed_forwarding_shared_entries_limit;
+}
+
+bool
+Transients::markedForDeletion(const cache_key *key) const
+{
+    assert(map);
+    return map->markedForDeletion(key);
 }
 
 /// initializes shared memory segment used by Transients

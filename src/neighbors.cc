@@ -593,7 +593,7 @@ neighborsUdpPing(HttpRequest * request,
     if (Config.peers == NULL)
         return 0;
 
-    assert(entry->swap_status == SWAPOUT_NONE);
+    assert(!entry->hasDisk());
 
     mem->start_ping = current_time;
 
@@ -1756,6 +1756,18 @@ neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Addres
     mem->ping_reply_callback(p, ntype, AnyP::PROTO_HTCP, htcp, mem->ircb_data);
 }
 
+static bool
+neighborsHtcpClearPeerNeeded(const CachePeer &p, const htcp_clr_reason reason)
+{
+    if (!p.options.htcp)
+        return false;
+    if (p.options.htcp_no_clr)
+        return false;
+    if (p.options.htcp_no_purge_clr && reason == HTCP_CLR_PURGE)
+        return false;
+    return true;
+}
+
 /*
  * Send HTCP CLR messages to all peers configured to receive them.
  */
@@ -1766,18 +1778,21 @@ neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const Htt
     char buf[128];
 
     for (p = Config.peers; p; p = p->next) {
-        if (!p->options.htcp) {
-            continue;
+        if (neighborsHtcpClearPeerNeeded(*p, reason)) {
+            debugs(15, 3, "neighborsHtcpClear: sending CLR to " << p->in_addr.toUrl(buf, 128));
+            htcpClear(e, uri, req, method, p, reason);
         }
-        if (p->options.htcp_no_clr) {
-            continue;
-        }
-        if (p->options.htcp_no_purge_clr && reason == HTCP_CLR_PURGE) {
-            continue;
-        }
-        debugs(15, 3, "neighborsHtcpClear: sending CLR to " << p->in_addr.toUrl(buf, 128));
-        htcpClear(e, uri, req, method, p, reason);
     }
+}
+
+bool
+neighborsHtcpClearNeeded(const htcp_clr_reason reason)
+{
+    for (const CachePeer *p = Config.peers; p; p = p->next) {
+        if (neighborsHtcpClearPeerNeeded(*p, reason))
+            return true;
+    }
+    return false;
 }
 
 #endif

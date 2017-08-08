@@ -253,6 +253,13 @@ public:
     /// does nothing if we cannot check that the key matches the cached entry
     void freeEntryByKey(const cache_key *const key);
 
+    /// whether the entry with the given key exists and was marked as
+    /// "waiting to be freed" some time ago
+    bool markedForDeletion(const cache_key *const key);
+
+    /// whether the index contains a valid readable entry with the given key
+    bool hasReadableEntry(const cache_key *const key);
+
     /// opens entry (identified by key) for reading, increments read level
     const Anchor *openForReading(const cache_key *const key, sfileno &fileno);
     /// opens entry (identified by sfileno) for reading, increments read level

@@ -339,7 +339,7 @@ Fs::Ufs::RebuildState::rebuildFromSwapLog()
         /* log entry is old, ignore it */
         ++counts.clashcount;
         return;
-    } else if (used && currentEntry() && currentEntry()->swap_filen == swapData.swap_filen && currentEntry()->swap_dirn == sd->index) {
+    } else if (used && currentEntry() && currentEntry()->hasDisk(sd->index, swapData.swap_filen)) {
         /* swapfile taken, same URL, newer, update meta */
 
         if (currentEntry()->store_status == STORE_OK) {
@@ -422,7 +422,7 @@ Fs::Ufs::RebuildState::undoAdd()
     added->expireNow();
     added->releaseRequest();
 
-    if (added->swap_filen > -1) {
+    if (added->hasDisk()) {
         SwapDir *someDir = INDEXSD(added->swap_dirn);
         assert(someDir);
         if (UFSSwapDir *ufsDir = dynamic_cast<UFSSwapDir*>(someDir))
