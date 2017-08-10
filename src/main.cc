@@ -1471,7 +1471,6 @@ SquidMain(int argc, char **argv)
     ConfigureCurrentKid(argv[0]);
 
     Debug::parseOptions(NULL);
-    debug_log = stderr;
 
 #if defined(SQUID_MAXFD_LIMIT)
 
@@ -1731,7 +1730,7 @@ SquidMain(int argc, char **argv)
 static void
 sendSignal(void)
 {
-    debug_log = stderr;
+    StopUsingDebugLog();
 
 #if USE_WIN32_SERVICE
     // WIN32_sendSignal() does not need the PID value to signal,
