@@ -177,7 +177,7 @@ IcmpPinger::Recv(void)
 
     if (0 == n) {
         /* EOF indicator */
-        debugs(42, DBG_CRITICAL, HERE << "EOF encountered. Pinger exiting.\n");
+        debugs(42, DBG_CRITICAL, "EOF encountered. Pinger exiting.");
         errno = 0;
         Close();
         exit(1);
