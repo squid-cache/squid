@@ -709,7 +709,7 @@ static void
 gopherTimeout(const CommTimeoutCbParams &io)
 {
     GopherStateData *gopherState = static_cast<GopherStateData *>(io.data);
-    debugs(10, 4, HERE << io.conn << ": '" << gopherState->entry->url() << "'" );
+    debugs(10, 4, io.conn << ": '" << gopherState->entry->url() << "'" );
 
     gopherState->fwd->fail(new ErrorState(ERR_READ_TIMEOUT, Http::scGatewayTimeout, gopherState->fwd->request));
 
@@ -761,7 +761,7 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
         statCounter.server.other.kbytes_in += len;
     }
 
-    debugs(10, 5, HERE << conn << " read len=" << len);
+    debugs(10, 5, conn << " read len=" << len);
 
     if (flag == Comm::OK && len > 0) {
         AsyncCall::Pointer nil;
@@ -830,7 +830,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Com
 {
     GopherStateData *gopherState = (GopherStateData *) data;
     StoreEntry *entry = gopherState->entry;
-    debugs(10, 5, HERE << conn << " size: " << size << " errflag: " << errflag);
+    debugs(10, 5, conn << " size: " << size << " errflag: " << errflag);
 
     if (size > 0) {
         fd_bytes(conn->fd, size, FD_WRITE);

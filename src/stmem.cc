@@ -61,7 +61,7 @@ mem_hdr::freeContent()
 {
     nodes.destroy();
     inmem_hi = 0;
-    debugs(19, 9, HERE << this << " hi: " << inmem_hi);
+    debugs(19, 9, this << " hi: " << inmem_hi);
 }
 
 bool
@@ -122,15 +122,15 @@ mem_hdr::writeAvailable(mem_node *aNode, int64_t location, size_t amount, char c
 
     memcpy(aNode->nodeBuffer.data + aNode->nodeBuffer.length, source, copyLen);
 
-    debugs(19, 9, HERE << this << " hi: " << inmem_hi);
+    debugs(19, 9, this << " hi: " << inmem_hi);
     if (inmem_hi <= location)
         inmem_hi = location + copyLen;
 
     /* Adjust the ptr and len according to what was deposited in the page */
     aNode->nodeBuffer.length += copyLen;
 
-    debugs(19, 9, HERE << this << " hi: " << inmem_hi);
-    debugs(19, 9, HERE << this << " hi: " << endOffset());
+    debugs(19, 9, this << " hi: " << inmem_hi);
+    debugs(19, 9, this << " hi: " << endOffset());
     return copyLen;
 }
 
@@ -373,7 +373,7 @@ mem_hdr::write (StoreIOBuffer const &writeBuffer)
 
 mem_hdr::mem_hdr() : inmem_hi(0)
 {
-    debugs(19, 9, HERE << this << " hi: " << inmem_hi);
+    debugs(19, 9, this << " hi: " << inmem_hi);
 }
 
 mem_hdr::~mem_hdr()

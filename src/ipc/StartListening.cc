@@ -55,7 +55,7 @@ Ipc::StartListening(int sock_type, int proto, const Comm::ConnectionPointer &lis
     cbd->errNo = Comm::IsConnOpen(cbd->conn) ? 0 : errno;
     leave_suid();
 
-    debugs(54, 3, HERE << "opened listen " << cbd->conn);
+    debugs(54, 3, "opened listen " << cbd->conn);
     ScheduleCallHere(callback);
 }
 

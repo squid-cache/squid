@@ -133,7 +133,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     ((sockaddr_in*)S->ai_addr)->sin_port = 0;
     assert(icmp_pktsize <= MAX_PKT4_SZ);
 
-    debugs(42, 5, HERE << "Send ICMP packet to " << to << ".");
+    debugs(42, 5, "Send ICMP packet to " << to << ".");
 
     x = sendto(icmp_sock,
                (const void *) pkt,
@@ -165,7 +165,7 @@ Icmp4::Recv(void)
     static pingerReplyData preply;
 
     if (icmp_sock < 0) {
-        debugs(42, DBG_CRITICAL, HERE << "No socket! Recv() should not be called.");
+        debugs(42, DBG_CRITICAL, "No socket! Recv() should not be called.");
         return;
     }
 
@@ -181,7 +181,7 @@ Icmp4::Recv(void)
                  &from->ai_addrlen);
 
     if (n <= 0) {
-        debugs(42, DBG_CRITICAL, HERE << "Error when calling recvfrom() on ICMP socket.");
+        debugs(42, DBG_CRITICAL, "Error when calling recvfrom() on ICMP socket.");
         Ip::Address::FreeAddr(from);
         return;
     }
@@ -198,7 +198,7 @@ Icmp4::Recv(void)
 
 #endif
 
-    debugs(42, 8, HERE << n << " bytes from " << preply.from);
+    debugs(42, 8, n << " bytes from " << preply.from);
 
     ip = (struct iphdr *) (void *) pkt;
 
@@ -243,7 +243,7 @@ Icmp4::Recv(void)
     preply.psize = n - iphdrlen - (sizeof(icmpEchoData) - MAX_PKT4_SZ);
 
     if (preply.psize < 0) {
-        debugs(42, DBG_CRITICAL, HERE << "Malformed ICMP packet.");
+        debugs(42, DBG_CRITICAL, "Malformed ICMP packet.");
         Ip::Address::FreeAddr(from);
         return;
     }

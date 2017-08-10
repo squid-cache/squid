@@ -439,7 +439,7 @@ BaseMultiQueue::pop(int &remoteProcessId, Value &value)
         OneToOneUniQueue &queue = inQueue(theLastPopProcessId);
         if (queue.pop(value, &localReader())) {
             remoteProcessId = theLastPopProcessId;
-            debugs(54, 7, HERE << "popped from " << remoteProcessId << " to " << theLocalProcessId << " at " << queue.size());
+            debugs(54, 7, "popped from " << remoteProcessId << " to " << theLocalProcessId << " at " << queue.size());
             return true;
         }
     }
@@ -452,7 +452,7 @@ BaseMultiQueue::push(const int remoteProcessId, const Value &value)
 {
     OneToOneUniQueue &remoteQueue = outQueue(remoteProcessId);
     QueueReader &reader = remoteReader(remoteProcessId);
-    debugs(54, 7, HERE << "pushing from " << theLocalProcessId << " to " << remoteProcessId << " at " << remoteQueue.size());
+    debugs(54, 7, "pushing from " << theLocalProcessId << " to " << remoteProcessId << " at " << remoteQueue.size());
     return remoteQueue.push(value, &reader);
 }
 
@@ -486,14 +486,14 @@ FewToFewBiQueue::findOldest(const int remoteProcessId, Value &value) const
 
     // we need the oldest value, so start with the incoming, them-to-us queue:
     const OneToOneUniQueue &in = inQueue(remoteProcessId);
-    debugs(54, 2, HERE << "peeking from " << remoteProcessId << " to " <<
+    debugs(54, 2, "peeking from " << remoteProcessId << " to " <<
            theLocalProcessId << " at " << in.size());
     if (in.peek(value))
         return true;
 
     // if the incoming queue is empty, check the outgoing, us-to-them queue:
     const OneToOneUniQueue &out = outQueue(remoteProcessId);
-    debugs(54, 2, HERE << "peeking from " << theLocalProcessId << " to " <<
+    debugs(54, 2, "peeking from " << theLocalProcessId << " to " <<
            remoteProcessId << " at " << out.size());
     return out.peek(value);
 }

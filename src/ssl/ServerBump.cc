@@ -44,9 +44,9 @@ Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e, Ssl::BumpMo
 
 Ssl::ServerBump::~ServerBump()
 {
-    debugs(33, 4, HERE << "destroying");
+    debugs(33, 4, "destroying");
     if (entry) {
-        debugs(33, 4, HERE << *entry);
+        debugs(33, 4, *entry);
         storeUnregister(sc, entry, this);
         entry->unlock("Ssl::ServerBump");
     }

@@ -214,7 +214,7 @@ StoreEntry::delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int l
         // readers appeared to care around 2009/12/14 as they skipped reading
         // for other reasons. Closing may already be true at the delyaAwareRead
         // call time or may happen while we wait after delayRead() above.
-        debugs(20, 3, HERE << "wont read from closing " << conn << " for " <<
+        debugs(20, 3, "wont read from closing " << conn << " for " <<
                callback);
         return; // the read callback will never be called
     }
@@ -283,7 +283,7 @@ StoreEntry::storeClientType() const
 
         if (mem_obj->inmem_lo == 0 && !isEmpty()) {
             if (swap_status == SWAPOUT_DONE) {
-                debugs(20,7, HERE << mem_obj << " lo: " << mem_obj->inmem_lo << " hi: " << mem_obj->endOffset() << " size: " << mem_obj->object_sz);
+                debugs(20,7, mem_obj << " lo: " << mem_obj->inmem_lo << " hi: " << mem_obj->endOffset() << " size: " << mem_obj->object_sz);
                 if (mem_obj->endOffset() == mem_obj->object_sz) {
                     /* hot object fully swapped in (XXX: or swapped out?) */
                     return STORE_MEM_CLIENT;
@@ -352,7 +352,7 @@ StoreEntry::deferProducer(const AsyncCall::Pointer &producer)
     if (!deferredProducer)
         deferredProducer = producer;
     else
-        debugs(20, 5, HERE << "Deferred producer call is allready set to: " <<
+        debugs(20, 5, "Deferred producer call is allready set to: " <<
                *deferredProducer << ", requested call: " << *producer);
 }
 
@@ -369,7 +369,7 @@ StoreEntry::kickProducer()
 void
 StoreEntry::destroyMemObject()
 {
-    debugs(20, 3, HERE << "destroyMemObject " << mem_obj);
+    debugs(20, 3, "destroyMemObject " << mem_obj);
 
     if (MemObject *mem = mem_obj) {
         // Store::Root() is FATALly missing during shutdown
@@ -387,7 +387,7 @@ StoreEntry::destroyMemObject()
 void
 destroyStoreEntry(void *data)
 {
-    debugs(20, 3, HERE << "destroyStoreEntry: destroying " <<  data);
+    debugs(20, 3, "destroyStoreEntry: destroying " <<  data);
     StoreEntry *e = static_cast<StoreEntry *>(static_cast<hash_link *>(data));
     assert(e != NULL);
 
@@ -1158,7 +1158,7 @@ StoreEntry::abort()
      */
     if (mem_obj->abort.callback) {
         if (!cbdataReferenceValid(mem_obj->abort.data))
-            debugs(20, DBG_IMPORTANT,HERE << "queueing event when abort.data is not valid");
+            debugs(20, DBG_IMPORTANT,"queueing event when abort.data is not valid");
         eventAdd("mem_obj->abort.callback",
                  mem_obj->abort.callback,
                  mem_obj->abort.data,

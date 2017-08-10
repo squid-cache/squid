@@ -35,7 +35,7 @@ Ipc::Inquirer::Inquirer(Request::Pointer aRequest, const StrandCoords& coords,
     AsyncJob("Ipc::Inquirer"),
     request(aRequest), strands(coords), pos(strands.begin()), timeout(aTimeout)
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, "");
 
     // order by ascending kid IDs; useful for non-aggregatable stats
     std::sort(strands.begin(), strands.end(), LesserStrandByKidId);
@@ -43,7 +43,7 @@ Ipc::Inquirer::Inquirer(Request::Pointer aRequest, const StrandCoords& coords,
 
 Ipc::Inquirer::~Inquirer()
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, "");
     cleanup();
 }
 
@@ -73,7 +73,7 @@ Ipc::Inquirer::inquire()
         ++LastRequestId;
     request->requestId = LastRequestId;
     const int kidId = pos->kidId;
-    debugs(54, 4, HERE << "inquire kid: " << kidId << status());
+    debugs(54, 4, "inquire kid: " << kidId << status());
     TheRequestsMap[request->requestId] = callback;
     TypedMsgHdr message;
     request->pack(message);
@@ -86,7 +86,7 @@ Ipc::Inquirer::inquire()
 void
 Ipc::Inquirer::handleRemoteAck(Response::Pointer response)
 {
-    debugs(54, 4, HERE << status());
+    debugs(54, 4, status());
     request->requestId = 0;
     removeTimeoutEvent();
     if (aggregate(response)) {
@@ -101,7 +101,7 @@ Ipc::Inquirer::handleRemoteAck(Response::Pointer response)
 void
 Ipc::Inquirer::swanSong()
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, "");
     removeTimeoutEvent();
     if (request->requestId > 0) {
         DequeueRequest(request->requestId);
@@ -120,18 +120,18 @@ Ipc::Inquirer::doneAll() const
 void
 Ipc::Inquirer::handleException(const std::exception& e)
 {
-    debugs(54, 3, HERE << e.what());
+    debugs(54, 3, e.what());
     mustStop("exception");
 }
 
 void
 Ipc::Inquirer::callException(const std::exception& e)
 {
-    debugs(54, 3, HERE);
+    debugs(54, 3, "");
     try {
         handleException(e);
     } catch (const std::exception& ex) {
-        debugs(54, DBG_CRITICAL, HERE << ex.what());
+        debugs(54, DBG_CRITICAL, ex.what());
     }
     AsyncJob::callException(e);
 }
@@ -140,7 +140,7 @@ Ipc::Inquirer::callException(const std::exception& e)
 AsyncCall::Pointer
 Ipc::Inquirer::DequeueRequest(unsigned int requestId)
 {
-    debugs(54, 3, HERE << " requestId " << requestId);
+    debugs(54, 3, "requestId " << requestId);
     Must(requestId != 0);
     AsyncCall::Pointer call;
     RequestsMap::iterator request = TheRequestsMap.find(requestId);
@@ -177,7 +177,7 @@ Ipc::Inquirer::removeTimeoutEvent()
 void
 Ipc::Inquirer::RequestTimedOut(void* param)
 {
-    debugs(54, 3, HERE);
+    debugs(54, 3, "");
     Must(param != NULL);
     Inquirer* cmi = static_cast<Inquirer*>(param);
     // use async call to enable job call protection that time events lack
@@ -188,7 +188,7 @@ Ipc::Inquirer::RequestTimedOut(void* param)
 void
 Ipc::Inquirer::requestTimedOut()
 {
-    debugs(54, 3, HERE);
+    debugs(54, 3, "");
     if (request->requestId != 0) {
         DequeueRequest(request->requestId);
         request->requestId = 0;

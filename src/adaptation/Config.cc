@@ -118,14 +118,14 @@ Adaptation::Config::removeRule(const String& id)
 void
 Adaptation::Config::clear()
 {
-    debugs(93, 3, HERE << "rules: " << AllRules().size() << ", groups: " <<
+    debugs(93, 3, "rules: " << AllRules().size() << ", groups: " <<
            AllGroups().size() << ", services: " << serviceConfigs.size());
     typedef ServiceConfigs::const_iterator SCI;
     const ServiceConfigs& configs = serviceConfigs;
     for (SCI cfg = configs.begin(); cfg != configs.end(); ++cfg)
         removeService((*cfg)->key);
     serviceConfigs.clear();
-    debugs(93, 3, HERE << "rules: " << AllRules().size() << ", groups: " <<
+    debugs(93, 3, "rules: " << AllRules().size() << ", groups: " <<
            AllGroups().size() << ", services: " << serviceConfigs.size());
 }
 
@@ -205,7 +205,7 @@ Adaptation::Config::finalize()
         }
     }
 
-    debugs(93,3, HERE << "Created " << created << " adaptation services");
+    debugs(93,3, "Created " << created << " adaptation services");
 
     // services remember their configs; we do not have to
     serviceConfigs.clear();
@@ -221,7 +221,7 @@ FinalizeEach(Collection &collection, const char *label)
     for (CI i = collection.begin(); i != collection.end(); ++i)
         (*i)->finalize();
 
-    debugs(93,2, HERE << "Initialized " << collection.size() << ' ' << label);
+    debugs(93,2, "Initialized " << collection.size() << ' ' << label);
 }
 
 void

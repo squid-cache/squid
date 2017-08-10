@@ -35,7 +35,7 @@ void Ipc::Port::start()
 
 void Ipc::Port::doListen()
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, "");
     buf.prepForReading();
     typedef CommCbMemFunT<Port, CommIoCbParams> Dialer;
     AsyncCall::Pointer readHandler = JobCallback(54, 6,
@@ -75,7 +75,7 @@ Ipc::Port::CoordinatorAddr()
 
 void Ipc::Port::noteRead(const CommIoCbParams& params)
 {
-    debugs(54, 6, HERE << params.conn << " flag " << params.flag <<
+    debugs(54, 6, params.conn << " flag " << params.flag <<
            " [" << this << ']');
     if (params.flag == Comm::OK) {
         assert(params.buf == buf.raw());

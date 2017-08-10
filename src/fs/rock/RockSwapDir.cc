@@ -235,11 +235,11 @@ Rock::SwapDir::create()
     assert(filePath);
 
     if (UsingSmp() && !IamDiskProcess()) {
-        debugs (47,3, HERE << "disker will create in " << path);
+        debugs (47,3, "disker will create in " << path);
         return;
     }
 
-    debugs (47,3, HERE << "creating in " << path);
+    debugs (47,3, "creating in " << path);
 
     struct stat dir_sb;
     if (::stat(path, &dir_sb) == 0) {
@@ -300,7 +300,7 @@ Rock::SwapDir::createError(const char *const msg)
 void
 Rock::SwapDir::init()
 {
-    debugs(47,2, HERE);
+    debugs(47, 2, "");
 
     // XXX: SwapDirs aren't refcounted. We make IORequestor calls, which
     // are refcounted. We up our count once to avoid implicit delete's.
@@ -314,7 +314,7 @@ Rock::SwapDir::init()
 
     const char *ioModule = needsDiskStrand() ? "IpcIo" : "Blocking";
     if (DiskIOModule *m = DiskIOModule::Find(ioModule)) {
-        debugs(47,2, HERE << "Using DiskIO module: " << ioModule);
+        debugs(47,2, "Using DiskIO module: " << ioModule);
         io = m->createStrategy();
         io->init();
     } else {
@@ -630,7 +630,7 @@ Rock::SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load)
     // TODO: reserve page instead
     if (needsDiskStrand() &&
             Ipc::Mem::PageLevel(Ipc::Mem::PageId::ioPage) >= 0.9 * Ipc::Mem::PageLimit(Ipc::Mem::PageId::ioPage)) {
-        debugs(47, 5, HERE << "too few shared pages for IPC I/O left");
+        debugs(47, 5, "too few shared pages for IPC I/O left");
         return false;
     }
 
@@ -645,7 +645,7 @@ StoreIOState::Pointer
 Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data)
 {
     if (!theFile || theFile->error()) {
-        debugs(47,4, HERE << theFile);
+        debugs(47,4, theFile);
         return NULL;
     }
 
@@ -653,7 +653,7 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
     Ipc::StoreMapAnchor *const slot =
         map->openForWriting(reinterpret_cast<const cache_key *>(e.key), filen);
     if (!slot) {
-        debugs(47, 5, HERE << "map->add failed");
+        debugs(47, 5, "map->add failed");
         return NULL;
     }
 
@@ -670,7 +670,7 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
     sio->swap_filen = filen;
     sio->writeableAnchor_ = slot;
 
-    debugs(47,5, HERE << "dir " << index << " created new filen " <<
+    debugs(47,5, "dir " << index << " created new filen " <<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
            sio->swap_filen << std::dec << " starting at " <<
            diskOffset(sio->swap_filen));
@@ -778,12 +778,12 @@ StoreIOState::Pointer
 Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data)
 {
     if (!theFile || theFile->error()) {
-        debugs(47,4, HERE << theFile);
+        debugs(47,4, theFile);
         return NULL;
     }
 
     if (e.swap_filen < 0) {
-        debugs(47,4, HERE << e);
+        debugs(47,4, e);
         return NULL;
     }
 
@@ -791,7 +791,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
     // TODO: reserve page instead
     if (needsDiskStrand() &&
             Ipc::Mem::PageLevel(Ipc::Mem::PageId::ioPage) >= 0.9 * Ipc::Mem::PageLimit(Ipc::Mem::PageId::ioPage)) {
-        debugs(47, 5, HERE << "too few shared pages for IPC I/O left");
+        debugs(47, 5, "too few shared pages for IPC I/O left");
         return NULL;
     }
 
@@ -810,7 +810,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
     sio->readableAnchor_ = slot;
     sio->file(theFile);
 
-    debugs(47,5, HERE << "dir " << index << " has old filen: " <<
+    debugs(47,5, "dir " << index << " has old filen: " <<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
            sio->swap_filen);
 
@@ -975,7 +975,7 @@ Rock::SwapDir::maintain()
 void
 Rock::SwapDir::reference(StoreEntry &e)
 {
-    debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
+    debugs(47, 5, &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
     if (repl && repl->Referenced)
         repl->Referenced(repl, &e, &e.repl);
 }
@@ -983,7 +983,7 @@ Rock::SwapDir::reference(StoreEntry &e)
 bool
 Rock::SwapDir::dereference(StoreEntry &e)
 {
-    debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
+    debugs(47, 5, &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
     if (repl && repl->Dereferenced)
         repl->Dereferenced(repl, &e, &e.repl);
 
@@ -1001,7 +1001,7 @@ Rock::SwapDir::unlinkdUseful() const
 void
 Rock::SwapDir::unlink(StoreEntry &e)
 {
-    debugs(47, 5, HERE << e);
+    debugs(47, 5, e);
     ignoreReferences(e);
     map->freeEntry(e.swap_filen);
     disconnect(e);
@@ -1017,7 +1017,7 @@ Rock::SwapDir::markForUnlink(StoreEntry &e)
 void
 Rock::SwapDir::trackReferences(StoreEntry &e)
 {
-    debugs(47, 5, HERE << e);
+    debugs(47, 5, e);
     if (repl)
         repl->Add(repl, &e, &e.repl);
 }
@@ -1025,7 +1025,7 @@ Rock::SwapDir::trackReferences(StoreEntry &e)
 void
 Rock::SwapDir::ignoreReferences(StoreEntry &e)
 {
-    debugs(47, 5, HERE << e);
+    debugs(47, 5, e);
     if (repl)
         repl->Remove(repl, &e, &e.repl);
 }

@@ -197,7 +197,7 @@ peerCheckNeverDirectDone(allow_t answer, void *data)
     case ACCESS_ALLOWED:
         /** if never_direct says YES, do that. */
         psstate->direct = DIRECT_NO;
-        debugs(44, 3, HERE << "direct = " << DirectStr[psstate->direct] << " (never_direct allow)");
+        debugs(44, 3, "direct = " << DirectStr[psstate->direct] << " (never_direct allow)");
         break;
     case ACCESS_DENIED: // not relevant.
     case ACCESS_DUNNO:  // not relevant.
@@ -220,7 +220,7 @@ peerCheckAlwaysDirectDone(allow_t answer, void *data)
     case ACCESS_ALLOWED:
         /** if always_direct says YES, do that. */
         psstate->direct = DIRECT_YES;
-        debugs(44, 3, HERE << "direct = " << DirectStr[psstate->direct] << " (always_direct allow)");
+        debugs(44, 3, "direct = " << DirectStr[psstate->direct] << " (always_direct allow)");
         break;
     case ACCESS_DENIED: // not relevant.
     case ACCESS_DUNNO:  // not relevant.

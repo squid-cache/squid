@@ -186,14 +186,14 @@ IcmpPinger::Recv(void)
     guess_size = n - (sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ);
 
     if (guess_size != pecho.psize) {
-        debugs(42, 2, HERE << "size mismatch, guess=" << guess_size << ", psize=" << pecho.psize);
+        debugs(42, 2, "size mismatch, guess=" << guess_size << ", psize=" << pecho.psize);
         /* don't process this message, but keep running */
         return;
     }
 
     /* pass request for ICMPv6 handing */
     if (pecho.to.isIPv6()) {
-        debugs(42, 2, HERE << " Pass " << pecho.to << " off to ICMPv6 module.");
+        debugs(42, 2, "Pass " << pecho.to << " off to ICMPv6 module.");
         icmp6.SendEcho(pecho.to,
                        pecho.opcode,
                        pecho.payload,
@@ -202,20 +202,20 @@ IcmpPinger::Recv(void)
 
     /* pass the packet for ICMP handling */
     else if (pecho.to.isIPv4()) {
-        debugs(42, 2, HERE << " Pass " << pecho.to << " off to ICMPv4 module.");
+        debugs(42, 2, "Pass " << pecho.to << " off to ICMPv4 module.");
         icmp4.SendEcho(pecho.to,
                        pecho.opcode,
                        pecho.payload,
                        pecho.psize);
     } else {
-        debugs(42, DBG_IMPORTANT, HERE << " IP has unknown Type. " << pecho.to );
+        debugs(42, DBG_IMPORTANT, "IP has unknown Type. " << pecho.to );
     }
 }
 
 void
 IcmpPinger::SendResult(pingerReplyData &preply, int len)
 {
-    debugs(42, 2, HERE << "return result to squid. len=" << len);
+    debugs(42, 2, "return result to squid. len=" << len);
 
     if (send(socket_to_squid, &preply, len, 0) < 0) {
         int xerrno = errno;

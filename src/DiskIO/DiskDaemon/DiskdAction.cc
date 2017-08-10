@@ -65,13 +65,13 @@ DiskdAction::Create(const Mgr::CommandPointer &aCmd)
 DiskdAction::DiskdAction(const Mgr::CommandPointer &aCmd):
     Action(aCmd), data()
 {
-    debugs(79, 5, HERE);
+    debugs(79, 5, "");
 }
 
 void
 DiskdAction::add(const Action& action)
 {
-    debugs(79, 5, HERE);
+    debugs(79, 5, "");
     data += dynamic_cast<const DiskdAction&>(action).data;
 }
 
@@ -114,7 +114,7 @@ DiskdAction::collect()
 void
 DiskdAction::dump(StoreEntry* entry)
 {
-    debugs(79, 5, HERE);
+    debugs(79, 5, "");
     Must(entry != NULL);
     storeAppendPrintf(entry, "sent_count: %.0f\n", data.sent_count);
     storeAppendPrintf(entry, "recv_count: %.0f\n", data.recv_count);

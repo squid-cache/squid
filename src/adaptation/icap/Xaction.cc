@@ -235,7 +235,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
 void
 Adaptation::Icap::Xaction::reusedConnection(void *data)
 {
-    debugs(93, 5, HERE << "reused connection");
+    debugs(93, 5, "reused connection");
     Adaptation::Icap::Xaction *x = (Adaptation::Icap::Xaction*)data;
     x->noteCommConnected(Comm::OK);
 }
@@ -254,7 +254,7 @@ void Adaptation::Icap::Xaction::closeConnection()
 
         if (reuseConnection && !doneWithIo()) {
             //status() adds leading spaces.
-            debugs(93,5, HERE << "not reusing pconn due to pending I/O" << status());
+            debugs(93,5, "not reusing pconn due to pending I/O" << status());
             reuseConnection = false;
         }
 
@@ -321,7 +321,7 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 
 void Adaptation::Icap::Xaction::dieOnConnectionFailure()
 {
-    debugs(93, 2, HERE << typeName <<
+    debugs(93, 2, typeName <<
            " failed to connect to " << service().cfg().uri);
     service().noteConnectionFailed("failure");
     detailError(ERR_DETAIL_ICAP_XACT_START);
@@ -349,7 +349,7 @@ void Adaptation::Icap::Xaction::noteCommWrote(const CommIoCbParams &io)
     if (ignoreLastWrite) {
         // a hack due to comm inability to cancel a pending write
         ignoreLastWrite = false;
-        debugs(93, 7, HERE << "ignoring last write; status: " << io.flag);
+        debugs(93, 7, "ignoring last write; status: " << io.flag);
     } else {
         Must(io.flag == Comm::OK);
         al.icap.bytesSent += io.size;
@@ -366,7 +366,7 @@ void Adaptation::Icap::Xaction::noteCommTimedout(const CommTimeoutCbParams &)
 
 void Adaptation::Icap::Xaction::handleCommTimedout()
 {
-    debugs(93, 2, HERE << typeName << " failed: timeout with " <<
+    debugs(93, 2, typeName << " failed: timeout with " <<
            theService->cfg().methodStr() << " " <<
            theService->cfg().uri << status());
     reuseConnection = false;
@@ -408,7 +408,7 @@ void Adaptation::Icap::Xaction::callException(const std::exception  &e)
 void Adaptation::Icap::Xaction::callEnd()
 {
     if (doneWithIo()) {
-        debugs(93, 5, HERE << typeName << " done with I/O" << status());
+        debugs(93, 5, typeName << " done with I/O" << status());
         closeConnection();
     }
     Adaptation::Initiate::callEnd(); // may destroy us
@@ -573,7 +573,7 @@ void Adaptation::Icap::Xaction::noteInitiatorAborted()
 {
 
     if (theInitiator.set()) {
-        debugs(93,4, HERE << "Initiator gone before ICAP transaction ended");
+        debugs(93,4, "Initiator gone before ICAP transaction ended");
         clearInitiator();
         detailError(ERR_DETAIL_ICAP_INIT_GONE);
         setOutcome(xoGone);
@@ -585,10 +585,10 @@ void Adaptation::Icap::Xaction::noteInitiatorAborted()
 void Adaptation::Icap::Xaction::setOutcome(const Adaptation::Icap::XactOutcome &xo)
 {
     if (al.icap.outcome != xoUnknown) {
-        debugs(93, 3, HERE << "Warning: reseting outcome: from " <<
+        debugs(93, 3, "Warning: reseting outcome: from " <<
                al.icap.outcome << " to " << xo);
     } else {
-        debugs(93, 4, HERE << xo);
+        debugs(93, 4, xo);
     }
     al.icap.outcome = xo;
 }
@@ -600,7 +600,7 @@ void Adaptation::Icap::Xaction::swanSong()
 {
     // kids should sing first and then call the parent method.
     if (cs.valid()) {
-        debugs(93,6, HERE << id << " about to notify ConnOpener!");
+        debugs(93,6, id << " about to notify ConnOpener!");
         CallJobHere(93, 3, cs, Comm::ConnOpener, noteAbort);
         cs = NULL;
         service().noteConnectionFailed("abort");

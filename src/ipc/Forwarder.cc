@@ -27,12 +27,12 @@ Ipc::Forwarder::Forwarder(Request::Pointer aRequest, double aTimeout):
     AsyncJob("Ipc::Forwarder"),
     request(aRequest), timeout(aTimeout)
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, "");
 }
 
 Ipc::Forwarder::~Forwarder()
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, "");
     Must(request->requestId == 0);
     cleanup();
 }
@@ -46,7 +46,7 @@ Ipc::Forwarder::cleanup()
 void
 Ipc::Forwarder::start()
 {
-    debugs(54, 3, HERE);
+    debugs(54, 3, "");
 
     typedef NullaryMemFunT<Forwarder> Dialer;
     AsyncCall::Pointer callback = JobCallback(54, 5, Dialer, this, Forwarder::handleRemoteAck);
@@ -73,7 +73,7 @@ Ipc::Forwarder::start()
 void
 Ipc::Forwarder::swanSong()
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, "");
     removeTimeoutEvent();
     if (request->requestId > 0) {
         DequeueRequest(request->requestId);
@@ -85,7 +85,7 @@ Ipc::Forwarder::swanSong()
 bool
 Ipc::Forwarder::doneAll() const
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, "");
     return request->requestId == 0;
 }
 
@@ -93,7 +93,7 @@ Ipc::Forwarder::doneAll() const
 void
 Ipc::Forwarder::handleRemoteAck()
 {
-    debugs(54, 3, HERE);
+    debugs(54, 3, "");
     request->requestId = 0;
     // Do not clear ENTRY_FWD_HDR_WAIT or do entry->complete() because
     // it will trigger our client side processing. Let job cleanup close.
@@ -103,7 +103,7 @@ Ipc::Forwarder::handleRemoteAck()
 void
 Ipc::Forwarder::RequestTimedOut(void* param)
 {
-    debugs(54, 3, HERE);
+    debugs(54, 3, "");
     Must(param != NULL);
     Forwarder* fwdr = static_cast<Forwarder*>(param);
     // use async call to enable job call protection that time events lack
@@ -114,7 +114,7 @@ Ipc::Forwarder::RequestTimedOut(void* param)
 void
 Ipc::Forwarder::requestTimedOut()
 {
-    debugs(54, 3, HERE);
+    debugs(54, 3, "");
     handleTimeout();
 }
 
@@ -134,7 +134,7 @@ Ipc::Forwarder::handleTimeout()
 void
 Ipc::Forwarder::handleException(const std::exception& e)
 {
-    debugs(54, 3, HERE << e.what());
+    debugs(54, 3, e.what());
     mustStop("exception");
 }
 
@@ -144,7 +144,7 @@ Ipc::Forwarder::callException(const std::exception& e)
     try {
         handleException(e);
     } catch (const std::exception& ex) {
-        debugs(54, DBG_CRITICAL, HERE << ex.what());
+        debugs(54, DBG_CRITICAL, ex.what());
     }
     AsyncJob::callException(e);
 }
@@ -153,7 +153,7 @@ Ipc::Forwarder::callException(const std::exception& e)
 AsyncCall::Pointer
 Ipc::Forwarder::DequeueRequest(unsigned int requestId)
 {
-    debugs(54, 3, HERE);
+    debugs(54, 3, "");
     Must(requestId != 0);
     AsyncCall::Pointer call;
     RequestsMap::iterator request = TheRequestsMap.find(requestId);
@@ -176,7 +176,7 @@ Ipc::Forwarder::removeTimeoutEvent()
 void
 Ipc::Forwarder::HandleRemoteAck(unsigned int requestId)
 {
-    debugs(54, 3, HERE);
+    debugs(54, 3, "");
     Must(requestId != 0);
 
     AsyncCall::Pointer call = DequeueRequest(requestId);

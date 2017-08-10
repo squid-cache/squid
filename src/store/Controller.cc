@@ -308,7 +308,7 @@ Store::Controller::find(const cache_key *key)
     if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, key))) {
         // TODO: ignore and maybe handleIdleEntry() unlocked intransit entries
         // because their backing store slot may be gone already.
-        debugs(20, 3, HERE << "got in-transit entry: " << *e);
+        debugs(20, 3, "got in-transit entry: " << *e);
         return e;
     }
 
@@ -328,7 +328,7 @@ Store::Controller::find(const cache_key *key)
 
     if (memStore) {
         if (StoreEntry *e = memStore->get(key)) {
-            debugs(20, 3, HERE << "got mem-cached entry: " << *e);
+            debugs(20, 3, "got mem-cached entry: " << *e);
             return e;
         }
     }
@@ -398,7 +398,7 @@ Store::Controller::memoryOut(StoreEntry &e, const bool preserveSwappable)
     else
         keepInLocalMemory = keepForLocalMemoryCache(e);
 
-    debugs(20, 7, HERE << "keepInLocalMemory: " << keepInLocalMemory);
+    debugs(20, 7, "keepInLocalMemory: " << keepInLocalMemory);
 
     if (!keepInLocalMemory)
         e.trimMemory(preserveSwappable);
@@ -476,12 +476,12 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
     // An idle, unlocked entry that only belongs to a SwapDir which controls
     // its own index, should not stay in the global store_table.
     if (!dereferenceIdle(e, keepInLocalMemory)) {
-        debugs(20, 5, HERE << "destroying unlocked entry: " << &e << ' ' << e);
+        debugs(20, 5, "destroying unlocked entry: " << &e << ' ' << e);
         destroyStoreEntry(static_cast<hash_link*>(&e));
         return;
     }
 
-    debugs(20, 5, HERE << "keepInLocalMemory: " << keepInLocalMemory);
+    debugs(20, 5, "keepInLocalMemory: " << keepInLocalMemory);
 
     // TODO: move this into [non-shared] memory cache class when we have one
     if (keepInLocalMemory) {

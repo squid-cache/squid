@@ -80,7 +80,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     assert (receivedData.length <= sizeof(esiStream->localbuffer->buf));
     assert (!esiStream->finished);
 
-    debugs (86,5, HERE << "rep " << rep << " body " << receivedData.data << " len " << receivedData.length);
+    debugs (86,5, "rep " << rep << " body " << receivedData.data << " len " << receivedData.length);
     assert (node->readBuffer.offset == receivedData.offset || receivedData.length == 0);
 
     /* trivial case */
@@ -128,7 +128,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     /* EOF / Read error /  aborted entry */
     if (rep == NULL && receivedData.data == NULL && receivedData.length == 0) {
         /* TODO: get stream status to test the entry for aborts */
-        debugs(86, 5, HERE << "Finished reading upstream data in subrequest");
+        debugs(86, 5, "Finished reading upstream data in subrequest");
         esiStream->include->subRequestDone (esiStream, true);
         esiStream->finished = 1;
         httpRequestFree (http);
@@ -183,7 +183,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         tempBuffer.data = esiStream->buffer->buf;
         /* now just read into 'buffer' */
         clientStreamRead (node, http, tempBuffer);
-        debugs(86, 5, HERE << "Requested more data for ESI subrequest");
+        debugs(86, 5, "Requested more data for ESI subrequest");
     }
 
     break;

@@ -189,7 +189,7 @@ DiskThreadsDiskFile::close()
         ioRequestor->closeCompleted();
         return;
     } else {
-        debugs(79, DBG_CRITICAL, HERE << "DiskThreadsDiskFile::close: " <<
+        debugs(79, DBG_CRITICAL, "DiskThreadsDiskFile::close: " <<
                "did NOT close because ioInProgress() is true.  now what?");
     }
 }

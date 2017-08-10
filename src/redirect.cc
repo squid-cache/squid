@@ -80,7 +80,7 @@ static void
 redirectHandleReply(void *data, const Helper::Reply &reply)
 {
     RedirectStateData *r = static_cast<RedirectStateData *>(data);
-    debugs(61, 5, HERE << "reply=" << reply);
+    debugs(61, 5, "reply=" << reply);
 
     // XXX: This function is now kept only to check for and display the garbage use-case
     // and to map the old helper response format(s) into new format result code and key=value pairs
@@ -278,7 +278,7 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
         return;
     }
 
-    debugs(61,6, HERE << "sending '" << buf << "' to the " << name << " helper");
+    debugs(61,6, "sending '" << buf << "' to the " << name << " helper");
     helperSubmit(hlp, buf, replyHandler, r);
 }
 

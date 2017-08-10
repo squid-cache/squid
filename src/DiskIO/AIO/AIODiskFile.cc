@@ -64,12 +64,12 @@ AIODiskFile::open(int flags, mode_t, RefCount<IORequestor> callback)
     ioRequestor = callback;
 
     if (fd < 0) {
-        debugs(79, 3, HERE << ": got failure (" << errno << ")");
+        debugs(79, 3, "got failure (" << errno << ")");
         error(true);
     } else {
         closed = false;
         ++store_open_disk_fd;
-        debugs(79, 3, HERE << ": opened FD " << fd);
+        debugs(79, 3, "opened FD " << fd);
     }
 
     callback->ioCompletedNotification();

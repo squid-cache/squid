@@ -221,7 +221,7 @@ main(int argc, char *argv[])
 
         if (x < 0) {
             int xerrno = errno;
-            debugs(42, DBG_CRITICAL, HERE << " FATAL Shutdown. select()==" << x << ", ERR: " << xstrerr(xerrno));
+            debugs(42, DBG_CRITICAL, "FATAL Shutdown. select()==" << x << ", ERR: " << xstrerr(xerrno));
             control.Close();
             exit(EXIT_FAILURE);
         }

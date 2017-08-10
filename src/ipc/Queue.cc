@@ -47,7 +47,7 @@ InstanceIdDefinitions(Ipc::QueueReader, "ipcQR");
 Ipc::QueueReader::QueueReader(): popBlocked(true), popSignal(false),
     rateLimit(0), balance(0)
 {
-    debugs(54, 7, HERE << "constructed " << id);
+    debugs(54, 7, "constructed " << id);
 }
 
 /* QueueReaders */

@@ -170,7 +170,7 @@ Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn, int)
      * We will simply attempt a bind outgoing on our own IP.
      */
     newConn->remote.port(0); // allow random outgoing port to prevent address clashes
-    debugs(89, 5, HERE << "address TPROXY: " << newConn);
+    debugs(89, 5, "address TPROXY: " << newConn);
     return true;
 #else
     return false;
@@ -185,7 +185,7 @@ Ip::Intercept::IpfwInterception(const Comm::ConnectionPointer &newConn, int)
      * There is no way to identify whether they came from NAT or not.
      * Trust the user configured properly.
      */
-    debugs(89, 5, HERE << "address NAT: " << newConn);
+    debugs(89, 5, "address NAT: " << newConn);
     return true;
 #else
     return false;
@@ -290,7 +290,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
             natfd = -1;
         }
 
-        debugs(89, 9, HERE << "address: " << newConn);
+        debugs(89, 9, "address: " << newConn);
         return false;
     } else {
 #if IPFILTER_VERSION < 5000003
@@ -302,7 +302,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
             newConn->local = natLookup.nl_realipaddr.in4;
 #endif
         newConn->local.port(ntohs(natLookup.nl_realport));
-        debugs(89, 5, HERE << "address NAT: " << newConn);
+        debugs(89, 5, "address NAT: " << newConn);
         return true;
     }
 
@@ -322,7 +322,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent
      *
      * Trust the user configured properly.
      */
-    debugs(89, 5, HERE << "address NAT divert-to: " << newConn);
+    debugs(89, 5, "address NAT divert-to: " << newConn);
     return true;
 
 #else /* USE_NAT_DEVPF / --with-nat-devpf */
@@ -364,13 +364,13 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent
         int xerrno = errno;
         if (xerrno != ENOENT) {
             if (!silent) {
-                debugs(89, DBG_IMPORTANT, HERE << "PF lookup failed: ioctl(DIOCNATLOOK): " << xstrerr(xerrno));
+                debugs(89, DBG_IMPORTANT, "PF lookup failed: ioctl(DIOCNATLOOK): " << xstrerr(xerrno));
                 lastReported_ = squid_curtime;
             }
             close(pffd);
             pffd = -1;
         }
-        debugs(89, 9, HERE << "address: " << newConn);
+        debugs(89, 9, "address: " << newConn);
         return false;
     } else {
         if (newConn->remote.isIPv6())
@@ -378,7 +378,7 @@ Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent
         else
             newConn->local = nl.rdaddr.v4;
         newConn->local.port(ntohs(nl.rdport));
-        debugs(89, 5, HERE << "address NAT: " << newConn);
+        debugs(89, 5, "address NAT: " << newConn);
         return true;
     }
 #endif /* --with-nat-devpf */
@@ -403,7 +403,7 @@ Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::Connec
     int silent = 0;
 #endif
 
-    debugs(89, 5, HERE << "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
+    debugs(89, 5, "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
 
     newConn->flags |= (listenConn->flags & (COMM_TRANSPARENT|COMM_INTERCEPTION));
 

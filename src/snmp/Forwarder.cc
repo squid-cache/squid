@@ -26,7 +26,7 @@ Snmp::Forwarder::Forwarder(const Pdu& aPdu, const Session& aSession, int aFd,
     Ipc::Forwarder(new Request(KidIdentifier, 0, aPdu, aSession, aFd, anAddress), 2),
     fd(aFd)
 {
-    debugs(49, 5, HERE << "FD " << aFd);
+    debugs(49, 5, "FD " << aFd);
     Must(fd >= 0);
     closer = asyncCall(49, 5, "Snmp::Forwarder::noteCommClosed",
                        CommCbMemFunT<Forwarder, CommCloseCbParams>(this, &Forwarder::noteCommClosed));
@@ -50,7 +50,7 @@ Snmp::Forwarder::cleanup()
 void
 Snmp::Forwarder::noteCommClosed(const CommCloseCbParams& params)
 {
-    debugs(49, 5, HERE);
+    debugs(49, 5, "");
     Must(fd == params.fd);
     fd = -1;
     mustStop("commClosed");
@@ -66,7 +66,7 @@ Snmp::Forwarder::handleTimeout()
 void
 Snmp::Forwarder::handleException(const std::exception& e)
 {
-    debugs(49, 3, HERE << e.what());
+    debugs(49, 3, e.what());
     if (fd >= 0)
         sendError(SNMP_ERR_GENERR);
     Ipc::Forwarder::handleException(e);
@@ -76,7 +76,7 @@ Snmp::Forwarder::handleException(const std::exception& e)
 void
 Snmp::Forwarder::sendError(int error)
 {
-    debugs(49, 3, HERE);
+    debugs(49, 3, "");
     Snmp::Request& req = static_cast<Snmp::Request&>(*request);
     req.pdu.command = SNMP_PDU_RESPONSE;
     req.pdu.errstat = error;
@@ -89,7 +89,7 @@ Snmp::Forwarder::sendError(int error)
 void
 Snmp::SendResponse(unsigned int requestId, const Pdu& pdu)
 {
-    debugs(49, 5, HERE);
+    debugs(49, 5, "");
     // snmpAgentResponse() can modify arg
     Pdu tmp = pdu;
     Snmp::Response response(requestId);
@@ -100,7 +100,7 @@ Snmp::SendResponse(unsigned int requestId, const Pdu& pdu)
         response.pdu = static_cast<Pdu&>(*response_pdu);
         snmp_free_pdu(response_pdu);
     } catch (const std::exception& e) {
-        debugs(49, DBG_CRITICAL, HERE << e.what());
+        debugs(49, DBG_CRITICAL, e.what());
         response.pdu.command = SNMP_PDU_RESPONSE;
         response.pdu.errstat = SNMP_ERR_GENERR;
     }

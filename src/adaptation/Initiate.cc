@@ -61,14 +61,14 @@ Adaptation::Initiate::initiator(const CbcPointer<Initiator> &i)
 // internal cleanup
 void Adaptation::Initiate::swanSong()
 {
-    debugs(93, 5, HERE << "swan sings" << status());
+    debugs(93, 5, "swan sings" << status());
 
     if (theInitiator.set()) {
-        debugs(93, 3, HERE << "fatal failure; sending abort notification");
+        debugs(93, 3, "fatal failure; sending abort notification");
         tellQueryAborted(true); // final by default
     }
 
-    debugs(93, 5, HERE << "swan sang" << status());
+    debugs(93, 5, "swan sang" << status());
 }
 
 void Adaptation::Initiate::clearInitiator()

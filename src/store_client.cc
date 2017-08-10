@@ -325,7 +325,7 @@ store_client::doCopy(StoreEntry *anEntry)
 
     if (!moreToSend()) {
         /* There is no more to send! */
-        debugs(33, 3, HERE << "There is no more to send!");
+        debugs(33, 3, "There is no more to send!");
         callback(0);
         flags.store_copying = false;
         return;

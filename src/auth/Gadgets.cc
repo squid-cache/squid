@@ -44,7 +44,7 @@ authenticateActiveSchemeCount(void)
             ++rv;
     }
 
-    debugs(29, 9, HERE << rv << " active.");
+    debugs(29, 9, rv << " active.");
 
     return rv;
 }
@@ -54,7 +54,7 @@ authenticateSchemeCount(void)
 {
     int rv = Auth::Scheme::GetSchemes().size();
 
-    debugs(29, 9, HERE << rv << " active.");
+    debugs(29, 9, rv << " active.");
 
     return rv;
 }

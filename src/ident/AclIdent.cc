@@ -56,7 +56,7 @@ void
 ACLIdent::parse()
 {
     if (!data) {
-        debugs(28, 3, HERE << "current is null. Creating");
+        debugs(28, 3, "current is null. Creating");
         data = new ACLUserData;
     }
 
@@ -78,7 +78,7 @@ ACLIdent::match(ACLChecklist *cl)
         }
         // else fall through to ACCESS_DUNNO failure below
     } else {
-        debugs(28, DBG_IMPORTANT, HERE << "Can't start ident lookup. No client connection" );
+        debugs(28, DBG_IMPORTANT, "Can't start ident lookup. No client connection" );
         // fall through to ACCESS_DUNNO failure below
     }
 
@@ -119,7 +119,7 @@ IdentLookup::checkForAsync(ACLChecklist *cl)const
     const ConnStateData *conn = checklist->conn();
     // check that ACLIdent::match() tested this lookup precondition
     assert(conn && Comm::IsConnOpen(conn->clientConnection));
-    debugs(28, 3, HERE << "Doing ident lookup" );
+    debugs(28, 3, "Doing ident lookup" );
     Ident::Start(checklist->conn()->clientConnection, LookupDone, checklist);
 }
 

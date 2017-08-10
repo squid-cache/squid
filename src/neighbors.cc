@@ -330,7 +330,7 @@ getRoundRobinParent(HttpRequest * request)
     if (q)
         ++ q->rr_count;
 
-    debugs(15, 3, HERE << "returning " << (q ? q->host : "NULL"));
+    debugs(15, 3, "returning " << (q ? q->host : "NULL"));
 
     return q;
 }

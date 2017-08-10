@@ -305,7 +305,7 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
     int swap_hdr_len = 0;
     StoreMetaUnpacker aBuilder(buf.content(), buf.contentSize(), &swap_hdr_len);
     if (aBuilder.isBufferZero()) {
-        debugs(47,5, HERE << "skipping empty record.");
+        debugs(47,5, "skipping empty record.");
         return false;
     }
 

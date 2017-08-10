@@ -112,7 +112,7 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
     int epoll_ctl_type = 0;
 
     assert(fd >= 0);
-    debugs(5, 5, HERE << "FD " << fd << ", type=" << type <<
+    debugs(5, 5, "FD " << fd << ", type=" << type <<
            ", handler=" << handler << ", client_data=" << client_data <<
            ", timeout=" << timeout);
 
@@ -261,7 +261,7 @@ Comm::DoSelect(int msec)
     for (i = 0, cevents = pevents; i < num; ++i, ++cevents) {
         fd = cevents->data.fd;
         F = &fd_table[fd];
-        debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "got FD " << fd << " events=" <<
+        debugs(5, DEBUG_EPOLL ? 0 : 8, "got FD " << fd << " events=" <<
                std::hex << cevents->events << " monitoring=" << F->epoll_state <<
                " F->read_handler=" << F->read_handler << " F->write_handler=" << F->write_handler);
 
@@ -269,7 +269,7 @@ Comm::DoSelect(int msec)
 
         if (cevents->events & (EPOLLIN|EPOLLHUP|EPOLLERR) || F->flags.read_pending) {
             if ((hdl = F->read_handler) != NULL) {
-                debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "Calling read handler on FD " << fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, "Calling read handler on FD " << fd);
                 PROF_start(comm_write_handler);
                 F->flags.read_pending = 0;
                 F->read_handler = NULL;
@@ -277,7 +277,7 @@ Comm::DoSelect(int msec)
                 PROF_stop(comm_write_handler);
                 ++ statCounter.select_fds;
             } else {
-                debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "no read handler for FD " << fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, "no read handler for FD " << fd);
                 // remove interest since no handler exist for this event.
                 SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
             }
@@ -285,14 +285,14 @@ Comm::DoSelect(int msec)
 
         if (cevents->events & (EPOLLOUT|EPOLLHUP|EPOLLERR)) {
             if ((hdl = F->write_handler) != NULL) {
-                debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "Calling write handler on FD " << fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, "Calling write handler on FD " << fd);
                 PROF_start(comm_read_handler);
                 F->write_handler = NULL;
                 hdl(fd, F->write_data);
                 PROF_stop(comm_read_handler);
                 ++ statCounter.select_fds;
             } else {
-                debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "no write handler for FD " << fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, "no write handler for FD " << fd);
                 // remove interest since no handler exist for this event.
                 SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
             }

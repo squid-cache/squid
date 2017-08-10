@@ -763,12 +763,12 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
     char buf[MAX_IPSTRLEN];
 
     if (!sentry) {
-        debugs(14, DBG_CRITICAL, HERE << "CRITICAL: sentry is NULL!");
+        debugs(14, DBG_CRITICAL, "CRITICAL: sentry is NULL!");
         return;
     }
 
     if (!i) {
-        debugs(14, DBG_CRITICAL, HERE << "CRITICAL: ipcache_entry is NULL!");
+        debugs(14, DBG_CRITICAL, "CRITICAL: ipcache_entry is NULL!");
         storeAppendPrintf(sentry, "CRITICAL ERROR\n");
         return;
     }

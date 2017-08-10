@@ -88,7 +88,7 @@ static void
 whoisTimeout(const CommTimeoutCbParams &io)
 {
     WhoisState *p = static_cast<WhoisState *>(io.data);
-    debugs(75, 3, HERE << io.conn << ", URL " << p->entry->url());
+    debugs(75, 3, io.conn << ", URL " << p->entry->url());
     io.conn->close();
 }
 
@@ -117,7 +117,7 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
         return;
 
     aBuffer[aBufferLength] = '\0';
-    debugs(75, 3, HERE << conn << " read " << aBufferLength << " bytes");
+    debugs(75, 3, conn << " read " << aBufferLength << " bytes");
     debugs(75, 5, "{" << aBuffer << "}");
 
     if (flag != Comm::OK) {

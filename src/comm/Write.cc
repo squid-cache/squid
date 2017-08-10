@@ -34,7 +34,7 @@ Comm::Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer 
 void
 Comm::Write(const Comm::ConnectionPointer &conn, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func)
 {
-    debugs(5, 5, HERE << conn << ": sz " << size << ": asynCall " << callback);
+    debugs(5, 5, conn << ": sz " << size << ": asynCall " << callback);
 
     /* Make sure we are open, not closing, and not writing */
     assert(fd_table[conn->fd].flags.open);
@@ -65,7 +65,7 @@ Comm::HandleWrite(int fd, void *data)
     assert(state->conn->fd == fd);
 
     PROF_start(commHandleWrite);
-    debugs(5, 5, HERE << state->conn << ": off " <<
+    debugs(5, 5, state->conn << ": off " <<
            (long int) state->offset << ", sz " << (long int) state->size << ".");
 
     nleft = state->size - state->offset;
@@ -86,7 +86,7 @@ Comm::HandleWrite(int fd, void *data)
     int xerrno = errno = 0;
     len = FD_WRITE_METHOD(fd, state->buf + state->offset, nleft);
     xerrno = errno;
-    debugs(5, 5, HERE << "write() returns " << len);
+    debugs(5, 5, "write() returns " << len);
 
 #if USE_DELAY_POOLS
     if (bucket) {

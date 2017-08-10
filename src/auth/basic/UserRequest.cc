@@ -59,12 +59,12 @@ Auth::Basic::UserRequest::authenticate(HttpRequest *, ConnStateData *, Http::Hdr
 
     /* are we about to recheck the credentials externally? */
     if ((user()->expiretime + static_cast<Auth::Basic::Config*>(Auth::SchemeConfig::Find("basic"))->credentialsTTL) <= squid_curtime) {
-        debugs(29, 4, HERE << "credentials expired - rechecking");
+        debugs(29, 4, "credentials expired - rechecking");
         return;
     }
 
     /* we have been through the external helper, and the credentials haven't expired */
-    debugs(29, 9, HERE << "user '" << user()->username() << "' authenticated");
+    debugs(29, 9, "user '" << user()->username() << "' authenticated");
 
     /* Decode now takes care of finding the AuthUser struct in the cache */
     /* after external auth occurs anyway */
@@ -104,7 +104,7 @@ Auth::Basic::UserRequest::startHelperLookup(HttpRequest *request, AccessLogEntry
     assert(user()->auth_type == Auth::AUTH_BASIC);
     Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(user().getRaw());
     assert(basic_auth != NULL);
-    debugs(29, 9, HERE << "'" << basic_auth->username() << ":" << basic_auth->passwd << "'");
+    debugs(29, 9, "'" << basic_auth->username() << ":" << basic_auth->passwd << "'");
 
     if (static_cast<Auth::Basic::Config*>(Auth::SchemeConfig::Find("basic"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Basic authentication program configured.");
@@ -161,7 +161,7 @@ Auth::Basic::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
     void *cbdata;
-    debugs(29, 5, HERE << "reply=" << reply);
+    debugs(29, 5, "reply=" << reply);
 
     assert(r->auth_user_request != NULL);
     assert(r->auth_user_request->user()->auth_type == Auth::AUTH_BASIC);

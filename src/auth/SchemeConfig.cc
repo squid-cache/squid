@@ -32,7 +32,7 @@ Auth::UserRequest::Pointer
 Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al)
 {
     assert(proxy_auth != NULL);
-    debugs(29, 9, HERE << "header = '" << proxy_auth << "'");
+    debugs(29, 9, "header = '" << proxy_auth << "'");
 
     Auth::SchemeConfig *config = Find(proxy_auth);
 

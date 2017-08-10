@@ -323,7 +323,7 @@ EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, i
     ev_entry *event = new ev_entry(name, func, arg, timestamp, weight, cbdata);
 
     ev_entry **E;
-    debugs(41, 7, HERE << "schedule: Adding '" << name << "', in " << when << " seconds");
+    debugs(41, 7, "schedule: Adding '" << name << "', in " << when << " seconds");
     /* Insert after the last event with the same or earlier time */
 
     for (E = &tasks; *E; E = &(*E)->next) {

@@ -61,7 +61,7 @@ Comm::TcpAcceptor::TcpAcceptor(const AnyP::PortCfgPointer &p, const char *, cons
 void
 Comm::TcpAcceptor::subscribe(const Subscription::Pointer &aSub)
 {
-    debugs(5, 5, HERE << status() << " AsyncCall Subscription: " << aSub);
+    debugs(5, 5, status() << " AsyncCall Subscription: " << aSub);
     unsubscribe("subscription change");
     theCallSub = aSub;
 }
@@ -69,14 +69,14 @@ Comm::TcpAcceptor::subscribe(const Subscription::Pointer &aSub)
 void
 Comm::TcpAcceptor::unsubscribe(const char *reason)
 {
-    debugs(5, 5, HERE << status() << " AsyncCall Subscription " << theCallSub << " removed: " << reason);
+    debugs(5, 5, status() << " AsyncCall Subscription " << theCallSub << " removed: " << reason);
     theCallSub = NULL;
 }
 
 void
 Comm::TcpAcceptor::start()
 {
-    debugs(5, 5, HERE << status() << " AsyncCall Subscription: " << theCallSub);
+    debugs(5, 5, status() << " AsyncCall Subscription: " << theCallSub);
 
     Must(IsConnOpen(conn));
 
@@ -109,7 +109,7 @@ Comm::TcpAcceptor::doneAll() const
 void
 Comm::TcpAcceptor::swanSong()
 {
-    debugs(5,5, HERE);
+    debugs(5, 5, "");
     unsubscribe("swanSong");
     if (IsConnOpen(conn)) {
         if (closer_ != NULL)
@@ -223,7 +223,7 @@ void
 Comm::TcpAcceptor::doAccept(int fd, void *data)
 {
     try {
-        debugs(5, 2, HERE << "New connection on FD " << fd);
+        debugs(5, 2, "New connection on FD " << fd);
 
         Must(isOpen(fd));
         TcpAcceptor *afd = static_cast<TcpAcceptor*>(data);
@@ -288,13 +288,13 @@ Comm::TcpAcceptor::acceptOne()
 
         if (flag == Comm::NOMESSAGE) {
             /* register interest again */
-            debugs(5, 5, HERE << "try later: " << conn << " handler Subscription: " << theCallSub);
+            debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
             SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
             return;
         }
 
         // A non-recoverable error; notify the caller */
-        debugs(5, 5, HERE << "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
+        debugs(5, 5, "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
         if (intendedForUserConnections())
             logAcceptError(newConnDetails);
         notify(flag, newConnDetails);
@@ -302,7 +302,7 @@ Comm::TcpAcceptor::acceptOne()
         return;
     }
 
-    debugs(5, 5, HERE << "Listener: " << conn <<
+    debugs(5, 5, "Listener: " << conn <<
            " accepted new connection " << newConnDetails <<
            " handler Subscription: " << theCallSub);
     notify(flag, newConnDetails);
@@ -312,7 +312,7 @@ void
 Comm::TcpAcceptor::acceptNext()
 {
     Must(IsConnOpen(conn));
-    debugs(5, 2, HERE << "connection on " << conn);
+    debugs(5, 2, "connection on " << conn);
     acceptOne();
 }
 

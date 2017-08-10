@@ -47,7 +47,7 @@ Rock::StoreFileSystem::registerWithCacheManager()
 void
 Rock::StoreFileSystem::setup()
 {
-    debugs(92,2, HERE << "Will use Rock FS");
+    debugs(92,2, "Will use Rock FS");
 }
 
 void

@@ -109,7 +109,7 @@ FwdState::abort(void* d)
     if (Comm::IsConnOpen(fwd->serverConnection())) {
         fwd->closeServerConnection("store entry aborted");
     } else {
-        debugs(17, 7, HERE << "store entry aborted; no connection to close");
+        debugs(17, 7, "store entry aborted; no connection to close");
     }
     fwd->serverDestinations.clear();
     fwd->stopAndDestroy("store entry aborted");
@@ -225,7 +225,7 @@ FwdState::selectPeerForIntercepted()
     p->remote = clientConn->local;
     getOutgoingAddress(request, p);
 
-    debugs(17, 3, HERE << "using client original destination: " << *p);
+    debugs(17, 3, "using client original destination: " << *p);
     serverDestinations.push_back(p);
 }
 #endif
@@ -234,7 +234,7 @@ void
 FwdState::completed()
 {
     if (flags.forward_completed) {
-        debugs(17, DBG_IMPORTANT, HERE << "FwdState::completed called on a completed request! Bad!");
+        debugs(17, DBG_IMPORTANT, "FwdState::completed called on a completed request! Bad!");
         return;
     }
 
@@ -243,7 +243,7 @@ FwdState::completed()
     request->hier.stopPeerClock(false);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        debugs(17, 3, HERE << "entry aborted");
+        debugs(17, 3, "entry aborted");
         return ;
     }
 
@@ -345,7 +345,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
         }
     }
 
-    debugs(17, 3, HERE << "'" << entry->url() << "'");
+    debugs(17, 3, "'" << entry->url() << "'");
     /*
      * This seems like an odd place to bind mem_obj and request.
      * Might want to assert that request is NULL at this point
@@ -422,7 +422,7 @@ FwdState::EnoughTimeToReForward(const time_t fwdStart)
 void
 FwdState::startConnectionOrFail()
 {
-    debugs(17, 3, HERE << entry->url());
+    debugs(17, 3, entry->url());
 
     if (serverDestinations.size() > 0) {
         // Ditch error page if it was created before.
@@ -444,7 +444,7 @@ FwdState::startConnectionOrFail()
             return; // expect a noteDestination*() call
         }
 
-        debugs(17, 3, HERE << "Connection failed: " << entry->url());
+        debugs(17, 3, "Connection failed: " << entry->url());
         if (!err) {
             ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request);
             fail(anErr);
@@ -469,7 +469,7 @@ FwdState::fail(ErrorState * errorState)
         return;
 
     if (pconnRace == racePossible) {
-        debugs(17, 5, HERE << "pconn race happened");
+        debugs(17, 5, "pconn race happened");
         pconnRace = raceHappened;
     }
 
@@ -486,7 +486,7 @@ FwdState::fail(ErrorState * errorState)
 void
 FwdState::unregister(Comm::ConnectionPointer &conn)
 {
-    debugs(17, 3, HERE << entry->url() );
+    debugs(17, 3, entry->url() );
     assert(serverConnection() == conn);
     assert(Comm::IsConnOpen(conn));
     comm_remove_close_handler(conn->fd, closeHandler);
@@ -498,7 +498,7 @@ FwdState::unregister(Comm::ConnectionPointer &conn)
 void
 FwdState::unregister(int fd)
 {
-    debugs(17, 3, HERE << entry->url() );
+    debugs(17, 3, entry->url() );
     assert(fd == serverConnection()->fd);
     unregister(serverConn);
 }
@@ -512,7 +512,7 @@ FwdState::unregister(int fd)
 void
 FwdState::complete()
 {
-    debugs(17, 3, HERE << entry->url() << "\n\tstatus " << entry->getReply()->sline.status());
+    debugs(17, 3, entry->url() << "\n\tstatus " << entry->getReply()->sline.status());
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
@@ -521,7 +521,7 @@ FwdState::complete()
     logReplyStatus(n_tries, entry->getReply()->sline.status());
 
     if (reforward()) {
-        debugs(17, 3, HERE << "re-forwarding " << entry->getReply()->sline.status() << " " << entry->url());
+        debugs(17, 3, "re-forwarding " << entry->getReply()->sline.status() << " " << entry->url());
 
         if (Comm::IsConnOpen(serverConn))
             unregister(serverConn);
@@ -535,9 +535,9 @@ FwdState::complete()
 
     } else {
         if (Comm::IsConnOpen(serverConn))
-            debugs(17, 3, HERE << "server FD " << serverConnection()->fd << " not re-forwarding status " << entry->getReply()->sline.status());
+            debugs(17, 3, "server FD " << serverConnection()->fd << " not re-forwarding status " << entry->getReply()->sline.status());
         else
-            debugs(17, 3, HERE << "server (FD closed) not re-forwarding status " << entry->getReply()->sline.status());
+            debugs(17, 3, "server (FD closed) not re-forwarding status " << entry->getReply()->sline.status());
         EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
         entry->complete();
 
@@ -615,7 +615,7 @@ FwdState::checkRetry()
         return false;
 
     if (!self) { // we have aborted before the server called us back
-        debugs(17, 5, HERE << "not retrying because of earlier abort");
+        debugs(17, 5, "not retrying because of earlier abort");
         // we will be destroyed when the server clears its Pointer to us
         return false;
     }
@@ -677,10 +677,10 @@ void
 FwdState::retryOrBail()
 {
     if (checkRetry()) {
-        debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
+        debugs(17, 3, "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
         // we should retry the same destination if it failed due to pconn race
         if (pconnRace == raceHappened)
-            debugs(17, 4, HERE << "retrying the same destination");
+            debugs(17, 4, "retrying the same destination");
         else
             serverDestinations.erase(serverDestinations.begin()); // last one failed. try another.
         startConnectionOrFail();
@@ -714,7 +714,7 @@ FwdState::doneWithRetries()
 void
 FwdState::handleUnregisteredServerEnd()
 {
-    debugs(17, 2, HERE << "self=" << self << " err=" << err << ' ' << entry->url());
+    debugs(17, 2, "self=" << self << " err=" << err << ' ' << entry->url());
     assert(!Comm::IsConnOpen(serverConn));
     retryOrBail();
 }
@@ -739,7 +739,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
     }
 
     serverConn = conn;
-    debugs(17, 3, HERE << serverConnection() << ": '" << entry->url() << "'" );
+    debugs(17, 3, serverConnection() << ": '" << entry->url() << "'" );
 
     closeHandler = comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
@@ -906,7 +906,7 @@ FwdState::connectStart()
         }
 
         // Pinned connection failure.
-        debugs(17,2,HERE << "Pinned connection failed: " << pinned_connection);
+        debugs(17,2,"Pinned connection failed: " << pinned_connection);
         ErrorState *anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request);
         fail(anErr);
         stopAndDestroy("pinned connection failure");
@@ -932,7 +932,7 @@ FwdState::connectStart()
     if (openedPconn) {
         serverConn = temp;
         flags.connected_okay = true;
-        debugs(17, 3, HERE << "reusing pconn " << serverConnection());
+        debugs(17, 3, "reusing pconn " << serverConnection());
         ++n_tries;
 
         closeHandler = comm_add_close_handler(serverConnection()->fd,  fwdServerClosedWrapper, this);
@@ -1093,7 +1093,7 @@ FwdState::reforward()
     StoreEntry *e = entry;
 
     if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
-        debugs(17, 3, HERE << "entry aborted");
+        debugs(17, 3, "entry aborted");
         return 0;
     }
 
@@ -1104,10 +1104,10 @@ FwdState::reforward()
     e->mem_obj->checkUrlChecksum();
 #endif
 
-    debugs(17, 3, HERE << e->url() << "?" );
+    debugs(17, 3, e->url() << "?" );
 
     if (!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
-        debugs(17, 3, HERE << "No, ENTRY_FWD_HDR_WAIT isn't set");
+        debugs(17, 3, "No, ENTRY_FWD_HDR_WAIT isn't set");
         return 0;
     }
 
@@ -1119,12 +1119,12 @@ FwdState::reforward()
 
     if (serverDestinations.size() <= 1 && !PeerSelectionInitiator::subscribed) {
         // NP: <= 1 since total count includes the recently failed one.
-        debugs(17, 3, HERE << "No alternative forwarding paths left");
+        debugs(17, 3, "No alternative forwarding paths left");
         return 0;
     }
 
     const Http::StatusCode s = e->getReply()->sline.status();
-    debugs(17, 3, HERE << "status " << s);
+    debugs(17, 3, "status " << s);
     return reforwardableStatus(s);
 }
 

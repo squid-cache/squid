@@ -44,7 +44,7 @@ void Adaptation::Icap::OptXact::handleCommConnected()
     MemBuf requestBuf;
     requestBuf.init();
     makeRequest(requestBuf);
-    debugs(93, 9, HERE << "request " << status() << ":\n" <<
+    debugs(93, 9, "request " << status() << ":\n" <<
            (requestBuf.terminate(), requestBuf.content()));
     icap_tio_start = current_time;
     scheduleWrite(requestBuf);
@@ -75,7 +75,7 @@ void Adaptation::Icap::OptXact::makeRequest(MemBuf &buf)
 
 void Adaptation::Icap::OptXact::handleCommWrote(size_t size)
 {
-    debugs(93, 9, HERE << "finished writing " << size <<
+    debugs(93, 9, "finished writing " << size <<
            "-byte request " << status());
 }
 
@@ -89,7 +89,7 @@ void Adaptation::Icap::OptXact::handleCommRead(size_t)
         // we leave readAll false which forces connection closure.
         readAll = !icapReply->header.getByNameListMember("Encapsulated",
                   "opt-body", ',').size();
-        debugs(93, 7, HERE << "readAll=" << readAll);
+        debugs(93, 7, "readAll=" << readAll);
         icap_tio_finish = current_time;
         setOutcome(xoOpt);
         sendAnswer(Answer::Forward(icapReply.getRaw()));

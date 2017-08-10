@@ -50,7 +50,7 @@ void Ipc::Strand::start()
 
 void Ipc::Strand::registerSelf()
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, "");
     Must(!isRegistered);
 
     HereIamMessage ann(StrandCoord(KidIdentifier, getpid()));
@@ -62,7 +62,7 @@ void Ipc::Strand::registerSelf()
 
 void Ipc::Strand::receive(const TypedMsgHdr &message)
 {
-    debugs(54, 6, HERE << message.type());
+    debugs(54, 6, message.type());
     switch (message.type()) {
 
     case mtRegistration:
@@ -114,7 +114,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 #endif
 
     default:
-        debugs(54, DBG_IMPORTANT, HERE << "Unhandled message type: " << message.type());
+        debugs(54, DBG_IMPORTANT, "Unhandled message type: " << message.type());
         break;
     }
 }
@@ -147,20 +147,20 @@ void Ipc::Strand::handleCacheMgrResponse(const Mgr::Response& response)
 #if SQUID_SNMP
 void Ipc::Strand::handleSnmpRequest(const Snmp::Request& request)
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, "");
     Snmp::SendResponse(request.requestId, request.pdu);
 }
 
 void Ipc::Strand::handleSnmpResponse(const Snmp::Response& response)
 {
-    debugs(54, 6, HERE);
+    debugs(54, 6, "");
     Snmp::Forwarder::HandleRemoteAck(response.requestId);
 }
 #endif
 
 void Ipc::Strand::timedout()
 {
-    debugs(54, 6, HERE << isRegistered);
+    debugs(54, 6, isRegistered);
     if (!isRegistered)
         fatalf("kid%d registration timed out", KidIdentifier);
 }

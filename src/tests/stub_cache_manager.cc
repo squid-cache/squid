@@ -17,7 +17,7 @@
 Mgr::Action::Pointer CacheManager::createNamedAction(char const* action) STUB_RETVAL(NULL)
 void CacheManager::Start(const Comm::ConnectionPointer &conn, HttpRequest * request, StoreEntry * entry)
 {
-    std::cerr << HERE << "\n";
+    std::cerr << "\n";
     STUB
 }
 CacheManager* CacheManager::instance=0;

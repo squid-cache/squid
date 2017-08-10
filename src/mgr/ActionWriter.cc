@@ -20,13 +20,13 @@ Mgr::ActionWriter::ActionWriter(const Action::Pointer &anAction, const Comm::Con
     StoreToCommWriter(conn, anAction->createStoreEntry()),
     action(anAction)
 {
-    debugs(16, 5, HERE << conn << " action: " << action);
+    debugs(16, 5, conn << " action: " << action);
 }
 
 void
 Mgr::ActionWriter::start()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     Must(action != NULL);
 
     StoreToCommWriter::start();

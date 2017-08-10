@@ -151,7 +151,7 @@ void Adaptation::Icap::Options::cfgIntHeader(const HttpHeader *h, const char *fn
     else
         value = -1;
 
-    debugs(93,5, HERE << "int header: " << fname << ": " << value);
+    debugs(93,5, "int header: " << fname << ": " << value);
 }
 
 void Adaptation::Icap::Options::cfgTransferList(const HttpHeader *h, TransferList &list)
@@ -162,7 +162,7 @@ void Adaptation::Icap::Options::cfgTransferList(const HttpHeader *h, TransferLis
 
     if (foundStar) {
         theTransfers.byDefault = &list;
-        debugs(93,5, HERE << "set default transfer to " << list.name);
+        debugs(93,5, "set default transfer to " << list.name);
     }
 
     list.report(5, "Adaptation::Icap::Options::cfgTransferList: ");

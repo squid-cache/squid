@@ -386,7 +386,7 @@ Ip::Address::lookupHostIP(const char *s, bool nodns)
     int err = 0;
     struct addrinfo *res = NULL;
     if ( (err = getaddrinfo(s, NULL, &want, &res)) != 0) {
-        debugs(14,3, HERE << "Given Non-IP '" << s << "': " << gai_strerror(err) );
+        debugs(14,3, "Given Non-IP '" << s << "': " << gai_strerror(err) );
         /* free the memory getaddrinfo() dynamically allocated. */
         if (res)
             freeaddrinfo(res);
@@ -945,7 +945,7 @@ Ip::Address::getSockAddr(struct sockaddr_storage &addr, const int family) const
 
     if ( family == AF_INET && !isIPv4()) {
         // FIXME INET6: caller using the wrong socket type!
-        debugs(14, DBG_CRITICAL, HERE << "Ip::Address::getSockAddr : Cannot convert non-IPv4 to IPv4. from " << *this);
+        debugs(14, DBG_CRITICAL, "Ip::Address::getSockAddr : Cannot convert non-IPv4 to IPv4. from " << *this);
         assert(false);
     }
 
@@ -968,7 +968,7 @@ Ip::Address::getSockAddr(struct sockaddr_in &buf) const
         buf.sin_port = mSocketAddr_.sin6_port;
         map6to4( mSocketAddr_.sin6_addr, buf.sin_addr);
     } else {
-        debugs(14, DBG_CRITICAL, HERE << "Ip::Address::getSockAddr : Cannot convert non-IPv4 to IPv4. from " << *this );
+        debugs(14, DBG_CRITICAL, "Ip::Address::getSockAddr : Cannot convert non-IPv4 to IPv4. from " << *this );
 
         memset(&buf,0xFFFFFFFF,sizeof(struct sockaddr_in));
         assert(false);
@@ -1045,7 +1045,7 @@ Ip::Address::getInAddr(struct in_addr &buf) const
     // default:
     // non-compatible IPv6 Pure Address
 
-    debugs(14, DBG_IMPORTANT, HERE << "Ip::Address::getInAddr : Cannot convert non-IPv4 to IPv4. IPA=" << *this);
+    debugs(14, DBG_IMPORTANT, "Ip::Address::getInAddr : Cannot convert non-IPv4 to IPv4. IPA=" << *this);
     memset(&buf,0xFFFFFFFF,sizeof(struct in_addr));
     assert(false);
     return false;

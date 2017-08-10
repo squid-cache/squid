@@ -1383,7 +1383,7 @@ ESIContext::ParserState::popAll()
 void
 ESIContext::freeResources ()
 {
-    debugs(86, 5, HERE << "Freeing for this=" << this);
+    debugs(86, 5, "Freeing for this=" << this);
 
     rep = nullptr; // refcounted
 

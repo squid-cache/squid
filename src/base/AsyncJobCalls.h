@@ -174,7 +174,7 @@ JobDialer<Job>::dial(AsyncCall &call)
         doDial();
     } catch (const std::exception &e) {
         debugs(call.debugSection, 3,
-               HERE << call.name << " threw exception: " << e.what());
+               call.name << " threw exception: " << e.what());
         job->callException(e);
     }
 

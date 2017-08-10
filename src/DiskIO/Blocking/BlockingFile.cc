@@ -110,7 +110,7 @@ BlockingFile::read(ReadRequest *aRequest)
     assert (fd > -1);
     assert (ioRequestor.getRaw());
     readRequest = aRequest;
-    debugs(79, 3, HERE << aRequest->len << " for FD " << fd << " at " << aRequest->offset);
+    debugs(79, 3, aRequest->len << " for FD " << fd << " at " << aRequest->offset);
     file_read(fd, aRequest->buf, aRequest->len, aRequest->offset, ReadDone, this);
 }
 
@@ -125,7 +125,7 @@ BlockingFile::ReadDone(int fd, const char *buf, int len, int errflag, void *my_d
 void
 BlockingFile::write(WriteRequest *aRequest)
 {
-    debugs(79, 3, HERE << aRequest->len << " for FD " << fd << " at " << aRequest->offset);
+    debugs(79, 3, aRequest->len << " for FD " << fd << " at " << aRequest->offset);
     writeRequest = aRequest;
     file_write(fd,
                aRequest->offset,
@@ -181,7 +181,7 @@ void
 BlockingFile::writeDone(int rvfd, int errflag, size_t len)
 {
     assert (rvfd == fd);
-    debugs(79, 3, HERE << "FD " << fd << ", len " << len);
+    debugs(79, 3, "FD " << fd << ", len " << len);
 
     WriteRequest::Pointer result = writeRequest;
     writeRequest = NULL;

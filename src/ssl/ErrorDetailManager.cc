@@ -107,7 +107,7 @@ Ssl::ErrorDetailsList::Pointer Ssl::ErrorDetailsManager::getCachedDetails(const 
     Cache::iterator it;
     it = cache.find(lang);
     if (it != cache.end()) {
-        debugs(83, 8, HERE << "Found template details in cache for language: " << lang);
+        debugs(83, 8, "Found template details in cache for language: " << lang);
         return it->second;
     }
 
@@ -137,12 +137,12 @@ Ssl::ErrorDetailsManager::getErrorDetail(Security::ErrorCode value, const HttpRe
         errDetails = getCachedDetails(lang); // search in cache
 
         if (!errDetails) { // Else try to load from disk
-            debugs(83, 8, HERE << "Creating new ErrDetailList to read from disk");
+            debugs(83, 8, "Creating new ErrDetailList to read from disk");
             errDetails = new ErrorDetailsList();
             ErrorDetailFile detailTmpl(errDetails);
             if (detailTmpl.loadFor(request.getRaw())) {
                 if (detailTmpl.language()) {
-                    debugs(83, 8, HERE << "Found details on disk for language " << detailTmpl.language());
+                    debugs(83, 8, "Found details on disk for language " << detailTmpl.language());
                     errDetails->errLanguage = detailTmpl.language();
                     cacheDetails(errDetails);
                 }
@@ -156,7 +156,7 @@ Ssl::ErrorDetailsManager::getErrorDetail(Security::ErrorCode value, const HttpRe
 
     // else try the default
     if (theDefaultErrorDetails->getRecord(value, entry)) {
-        debugs(83, 8, HERE << "Found default details record for error: " << GetErrorName(value));
+        debugs(83, 8, "Found default details record for error: " << GetErrorName(value));
         return true;
     }
 
@@ -213,14 +213,14 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
         if ( s != e) {
             DetailEntryParser parser;
             if (!parser.parse(s, e - s)) {
-                debugs(83, DBG_IMPORTANT, HERE <<
+                debugs(83, DBG_IMPORTANT,
                        "WARNING! parse error on:" << s);
                 return false;
             }
 
             const String errorName = parser.getByName("name");
             if (!errorName.size()) {
-                debugs(83, DBG_IMPORTANT, HERE <<
+                debugs(83, DBG_IMPORTANT,
                        "WARNING! invalid or no error detail name on:" << s);
                 return false;
             }
@@ -229,7 +229,7 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
             if (ssl_error != SSL_ERROR_NONE) {
 
                 if (theDetails->getErrorDetail(ssl_error)) {
-                    debugs(83, DBG_IMPORTANT, HERE <<
+                    debugs(83, DBG_IMPORTANT,
                            "WARNING! duplicate entry: " << errorName);
                     return false;
                 }
@@ -243,13 +243,13 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
                 const int descrParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.descr);
 
                 if (!detailsParseOk || !descrParseOk) {
-                    debugs(83, DBG_IMPORTANT, HERE <<
+                    debugs(83, DBG_IMPORTANT,
                            "WARNING! missing important field for detail error: " <<  errorName);
                     return false;
                 }
 
             } else if (!Ssl::ErrorIsOptional(errorName.termedBuf())) {
-                debugs(83, DBG_IMPORTANT, HERE <<
+                debugs(83, DBG_IMPORTANT,
                        "WARNING! invalid error detail name: " << errorName);
                 return false;
             }
@@ -258,7 +258,7 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
 
         buf.consume(size);
     }
-    debugs(83, 9, HERE << " Remain size: " << buf.contentSize() << " Content: " << buf.content());
+    debugs(83, 9, "Remain size: " << buf.contentSize() << " Content: " << buf.content());
     return true;
 }
 

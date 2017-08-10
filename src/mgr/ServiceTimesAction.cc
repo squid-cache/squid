@@ -63,27 +63,27 @@ Mgr::ServiceTimesAction::Create(const CommandPointer &cmd)
 Mgr::ServiceTimesAction::ServiceTimesAction(const CommandPointer &aCmd):
     Action(aCmd), data()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
 }
 
 void
 Mgr::ServiceTimesAction::add(const Action& action)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     data += dynamic_cast<const ServiceTimesAction&>(action).data;
 }
 
 void
 Mgr::ServiceTimesAction::collect()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     GetServiceTimesStats(data);
 }
 
 void
 Mgr::ServiceTimesAction::dump(StoreEntry* entry)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     Must(entry != NULL);
     DumpServiceTimesStats(data, entry);
 }

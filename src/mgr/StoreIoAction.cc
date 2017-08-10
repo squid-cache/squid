@@ -41,13 +41,13 @@ Mgr::StoreIoAction::Create(const CommandPointer &cmd)
 Mgr::StoreIoAction::StoreIoAction(const CommandPointer &aCmd):
     Action(aCmd), data()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
 }
 
 void
 Mgr::StoreIoAction::add(const Action& action)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     data += dynamic_cast<const StoreIoAction&>(action).data;
 }
 
@@ -63,7 +63,7 @@ Mgr::StoreIoAction::collect()
 void
 Mgr::StoreIoAction::dump(StoreEntry* entry)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     Must(entry != NULL);
     storeAppendPrintf(entry, "Store IO Interface Stats\n");
     storeAppendPrintf(entry, "create.calls %.0f\n", data.create_calls);

@@ -98,27 +98,27 @@ Mgr::CountersAction::Create(const CommandPointer &cmd)
 Mgr::CountersAction::CountersAction(const CommandPointer &aCmd):
     Action(aCmd), data()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
 }
 
 void
 Mgr::CountersAction::add(const Action& action)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     data += dynamic_cast<const CountersAction&>(action).data;
 }
 
 void
 Mgr::CountersAction::collect()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     GetCountersStats(data);
 }
 
 void
 Mgr::CountersAction::dump(StoreEntry* entry)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     Must(entry != NULL);
     DumpCountersStats(data, entry);
 }

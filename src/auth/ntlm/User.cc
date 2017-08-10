@@ -19,7 +19,7 @@ Auth::Ntlm::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
 
 Auth::Ntlm::User::~User()
 {
-    debugs(29, 5, HERE << "doing nothing to clear NTLM scheme data for '" << this << "'");
+    debugs(29, 5, "doing nothing to clear NTLM scheme data for '" << this << "'");
 }
 
 int32_t

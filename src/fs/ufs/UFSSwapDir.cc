@@ -276,7 +276,7 @@ Fs::Ufs::UFSSwapDir::getOptionTree() const
 void
 Fs::Ufs::UFSSwapDir::init()
 {
-    debugs(47, 3, HERE << "Initialising UFS SwapDir engine.");
+    debugs(47, 3, "Initialising UFS SwapDir engine.");
     /* Parsing must be finished by now - force to NULL, don't delete */
     currentIOOptions = NULL;
     static int started_clean_event = 0;
@@ -345,8 +345,8 @@ Fs::Ufs::UFSSwapDir::~UFSSwapDir()
 void
 Fs::Ufs::UFSSwapDir::dumpEntry(StoreEntry &e) const
 {
-    debugs(47, DBG_CRITICAL, HERE << "FILENO "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
-    debugs(47, DBG_CRITICAL, HERE << "PATH " << fullPath(e.swap_filen, NULL)   );
+    debugs(47, DBG_CRITICAL, "FILENO "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
+    debugs(47, DBG_CRITICAL, "PATH " << fullPath(e.swap_filen, NULL)   );
     e.dump(0);
 }
 
@@ -357,13 +357,13 @@ Fs::Ufs::UFSSwapDir::doubleCheck(StoreEntry & e)
     struct stat sb;
 
     if (::stat(fullPath(e.swap_filen, NULL), &sb) < 0) {
-        debugs(47, DBG_CRITICAL, HERE << "WARNING: Missing swap file");
+        debugs(47, DBG_CRITICAL, "WARNING: Missing swap file");
         dumpEntry(e);
         return true;
     }
 
     if ((off_t)e.swap_file_sz != sb.st_size) {
-        debugs(47, DBG_CRITICAL, HERE << "WARNING: Size Mismatch. Entry size: "
+        debugs(47, DBG_CRITICAL, "WARNING: Size Mismatch. Entry size: "
                << e.swap_file_sz << ", file size: " << sb.st_size);
         dumpEntry(e);
         return true;
@@ -528,7 +528,7 @@ Fs::Ufs::UFSSwapDir::maintain()
 void
 Fs::Ufs::UFSSwapDir::reference(StoreEntry &e)
 {
-    debugs(47, 3, HERE << "referencing " << &e << " " <<
+    debugs(47, 3, "referencing " << &e << " " <<
            e.swap_dirn << "/" << e.swap_filen);
 
     if (repl->Referenced)
@@ -538,7 +538,7 @@ Fs::Ufs::UFSSwapDir::reference(StoreEntry &e)
 bool
 Fs::Ufs::UFSSwapDir::dereference(StoreEntry & e)
 {
-    debugs(47, 3, HERE << "dereferencing " << &e << " " <<
+    debugs(47, 3, "dereferencing " << &e << " " <<
            e.swap_dirn << "/" << e.swap_filen);
 
     if (repl->Dereferenced)
@@ -749,7 +749,7 @@ Fs::Ufs::UFSSwapDir::openLog()
         fatal("UFSSwapDir::openLog: Failed to open swap log.");
     }
 
-    debugs(50, 3, HERE << "Cache Dir #" << index << " log opened on FD " << swaplog_fd);
+    debugs(50, 3, "Cache Dir #" << index << " log opened on FD " << swaplog_fd);
 }
 
 void
@@ -798,7 +798,7 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
                                     int)
 {
     StoreEntry *e = NULL;
-    debugs(47, 5, HERE << storeKeyText(key)  <<
+    debugs(47, 5, storeKeyText(key)  <<
            ", fileno="<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << file_number);
     /* if you call this you'd better be sure file_number is not
      * already in use! */
@@ -830,7 +830,7 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
 void
 Fs::Ufs::UFSSwapDir::undoAddDiskRestore(StoreEntry *e)
 {
-    debugs(47, 5, HERE << *e);
+    debugs(47, 5, *e);
     replacementRemove(e); // checks swap_dirn so do it before we invalidate it
     // Do not unlink the file as it might be used by a subsequent entry.
     mapBitReset(e->swap_filen);
@@ -995,7 +995,7 @@ Fs::Ufs::UFSSwapDir::writeCleanStart()
 
     state->walker = repl->WalkInit(repl);
     ::unlink(state->cln);
-    debugs(47, 3, HERE << "opened " << state->newLog << ", FD " << state->fd);
+    debugs(47, 3, "opened " << state->newLog << ", FD " << state->fd);
 #if HAVE_FCHMOD
 
     if (::stat(state->cur, &sb) == 0)
@@ -1201,7 +1201,7 @@ Fs::Ufs::UFSSwapDir::validFileno(sfileno filn, int flag) const
 void
 Fs::Ufs::UFSSwapDir::unlinkFile(sfileno f)
 {
-    debugs(79, 3, HERE << "unlinking fileno " <<  std::setfill('0') <<
+    debugs(79, 3, "unlinking fileno " <<  std::setfill('0') <<
            std::hex << std::uppercase << std::setw(8) << f << " '" <<
            fullPath(f,NULL) << "'");
     /* commonUfsDirMapBitReset(this, f); */
@@ -1218,7 +1218,7 @@ Fs::Ufs::UFSSwapDir::unlinkdUseful() const
 void
 Fs::Ufs::UFSSwapDir::unlink(StoreEntry & e)
 {
-    debugs(79, 3, HERE << "dirno " << index  << ", fileno "<<
+    debugs(79, 3, "dirno " << index  << ", fileno "<<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
     if (e.swap_status == SWAPOUT_DONE) {
         cur_size -= fs.blksize * sizeInBlocks(e.swap_file_sz);
@@ -1235,7 +1235,7 @@ Fs::Ufs::UFSSwapDir::unlink(StoreEntry & e)
 void
 Fs::Ufs::UFSSwapDir::replacementAdd(StoreEntry * e)
 {
-    debugs(47, 4, HERE << "added node " << e << " to dir " << index);
+    debugs(47, 4, "added node " << e << " to dir " << index);
     repl->Add(repl, e, &e->repl);
 }
 
@@ -1249,7 +1249,7 @@ Fs::Ufs::UFSSwapDir::replacementRemove(StoreEntry * e)
 
     assert (dynamic_cast<UFSSwapDir *>(SD.getRaw()) == this);
 
-    debugs(47, 4, HERE << "remove node " << e << " from dir " << index);
+    debugs(47, 4, "remove node " << e << " from dir " << index);
 
     repl->Remove(repl, e, &e->repl);
 }
@@ -1356,7 +1356,7 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
     D2 = ((swap_index / N0) / N1) % N2;
     snprintf(p1, MAXPATHLEN, "%s/%02X/%02X",
              SD->path, D1, D2);
-    debugs(36, 3, HERE << "Cleaning directory " << p1);
+    debugs(36, 3, "Cleaning directory " << p1);
     dir_pointer = opendir(p1);
 
     if (!dir_pointer) {
@@ -1399,13 +1399,13 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
         k = 10;
 
     for (n = 0; n < k; ++n) {
-        debugs(36, 3, HERE << "Cleaning file "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << files[n]);
+        debugs(36, 3, "Cleaning file "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << files[n]);
         snprintf(p2, MAXPATHLEN + 1, "%s/%08X", p1, files[n]);
         safeunlink(p2, 0);
         ++statCounter.swap.files_cleaned;
     }
 
-    debugs(36, 3, HERE << "Cleaned " << k << " unused files from " << p1);
+    debugs(36, 3, "Cleaned " << k << " unused files from " << p1);
     return k;
 }
 

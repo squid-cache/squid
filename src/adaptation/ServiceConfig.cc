@@ -192,7 +192,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
     // AYJ: most of this is duplicate of URL::parse() in src/url.cc
 
     if (!value || !*value) {
-        debugs(3, DBG_CRITICAL, HERE << cfg_filename << ':' << config_lineno << ": " <<
+        debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " <<
                "empty adaptation service URI");
         return false;
     }
@@ -205,7 +205,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
     if (schemeEnd != String::npos)
         protocol=uri.substr(0,schemeEnd);
 
-    debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
+    debugs(3, 5, cfg_filename << ':' << config_lineno << ": " <<
            "service protocol is " << protocol);
 
     if (protocol.size() == 0)
@@ -281,7 +281,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
     len = e - s;
 
     if (len > 1024) {
-        debugs(3, DBG_CRITICAL, HERE << cfg_filename << ':' << config_lineno << ": " <<
+        debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " <<
                "long resource name (>1024), probably wrong");
     }
 
@@ -297,7 +297,7 @@ Adaptation::ServiceConfig::grokBool(bool &var, const char *name, const char *val
     else if (!strcmp(value, "1") || !strcmp(value, "on"))
         var = true;
     else {
-        debugs(3, DBG_CRITICAL, HERE << cfg_filename << ':' << config_lineno << ": " <<
+        debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " <<
                "wrong value for boolean " << name << "; " <<
                "'0', '1', 'on', or 'off' expected but got: " << value);
         return false;

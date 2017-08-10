@@ -421,7 +421,7 @@ comm_init_opened(const Comm::ConnectionPointer &conn,
     assert(AI);
 
     /* update fdstat */
-    debugs(5, 5, HERE << conn << " is a new socket");
+    debugs(5, 5, conn << " is a new socket");
 
     assert(!isOpen(conn->fd)); // NP: global isOpen checks the fde entry for openness not the Comm::Connection
     fd_open(conn->fd, FD_SOCKET, note);
@@ -500,7 +500,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
                    const char *note,
                    struct addrinfo *AI)
 {
-    debugs(5, 2, HERE << conn);
+    debugs(5, 2, conn);
     assert(Comm::IsConnOpen(conn));
     assert(AI);
 
@@ -538,7 +538,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
 void
 commUnsetFdTimeout(int fd)
 {
-    debugs(5, 3, HERE << "Remove timeout for FD " << fd);
+    debugs(5, 3, "Remove timeout for FD " << fd);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     fde *F = &fd_table[fd];
@@ -551,7 +551,7 @@ commUnsetFdTimeout(int fd)
 int
 commSetConnTimeout(const Comm::ConnectionPointer &conn, int timeout, AsyncCall::Pointer &callback)
 {
-    debugs(5, 3, HERE << conn << " timeout " << timeout);
+    debugs(5, 3, conn << " timeout " << timeout);
     assert(Comm::IsConnOpen(conn));
     assert(conn->fd < Squid_MaxFD);
     fde *F = &fd_table[conn->fd];
@@ -577,7 +577,7 @@ commSetConnTimeout(const Comm::ConnectionPointer &conn, int timeout, AsyncCall::
 int
 commUnsetConnTimeout(const Comm::ConnectionPointer &conn)
 {
-    debugs(5, 3, HERE << "Remove timeout for " << conn);
+    debugs(5, 3, "Remove timeout for " << conn);
     AsyncCall::Pointer nil;
     return commSetConnTimeout(conn, -1, nil);
 }
@@ -600,7 +600,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
 
     assert(address.port() != 0);
 
-    debugs(5, 9, HERE << "connecting socket FD " << sock << " to " << address << " (want family: " << F->sock_family << ")");
+    debugs(5, 9, "connecting socket FD " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
     /* Handle IPv6 over IPv4-only socket case.
      * this case must presently be handled here since the getAddrInfo asserts on bad mappings.
@@ -769,7 +769,7 @@ comm_lingering_close(int fd)
     fd_note(fd, "lingering close");
     AsyncCall::Pointer call = commCbCall(5,4, "commLingerTimeout", FdeCbPtrFun(commLingerTimeout, NULL));
 
-    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
+    debugs(5, 3, "FD " << fd << " timeout " << timeout);
     assert(fd_table[fd].flags.open);
     if (callback != NULL) {
         typedef FdeCbParams Params;
@@ -866,7 +866,7 @@ _comm_close(int fd, char const *file, int line)
 
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
     if (!isOpen(fd)) {
-        debugs(50, DBG_IMPORTANT, HERE << "BUG 3556: FD " << fd << " is not an open socket.");
+        debugs(50, DBG_IMPORTANT, "BUG 3556: FD " << fd << " is not an open socket.");
         // XXX: do we need to run close(fd) or fd_close(fd) here?
         return;
     }
@@ -1277,7 +1277,7 @@ commHandleWriteHelper(void * data)
         // and continue looking for a relevant one
     } while (clientInfo->hasQueue());
 
-    debugs(77,3, HERE << "emptied queue");
+    debugs(77,3, "emptied queue");
 }
 
 bool
@@ -1357,12 +1357,12 @@ ClientInfo::quota()
         // Rounding errors do not accumulate here, but we round down to avoid
         // negative bucket sizes after write with rationedCount=1.
         rationedQuota = static_cast<int>(floor(bucketLevel/rationedCount));
-        debugs(77,5, HERE << "new rationedQuota: " << rationedQuota <<
+        debugs(77,5, "new rationedQuota: " << rationedQuota <<
                '*' << rationedCount);
     }
 
     --rationedCount;
-    debugs(77,7, HERE << "rationedQuota: " << rationedQuota <<
+    debugs(77,7, "rationedQuota: " << rationedQuota <<
            " rations remaining: " << rationedCount);
 
     // update 'last seen' time to prevent clientdb GC from dropping us
@@ -1607,7 +1607,7 @@ checkTimeouts(void)
 void
 commStartHalfClosedMonitor(int fd)
 {
-    debugs(5, 5, HERE << "adding FD " << fd << " to " << *TheHalfClosed);
+    debugs(5, 5, "adding FD " << fd << " to " << *TheHalfClosed);
     assert(isOpen(fd) && !commHasHalfClosedMonitor(fd));
     (void)TheHalfClosed->add(fd); // could also assert the result
     commPlanHalfClosedCheck(); // may schedule check if we added the first FD
@@ -1629,7 +1629,7 @@ static
 void
 commHalfClosedCheck(void *)
 {
-    debugs(5, 5, HERE << "checking " << *TheHalfClosed);
+    debugs(5, 5, "checking " << *TheHalfClosed);
 
     typedef DescriptorSet::const_iterator DSCI;
     const DSCI end = TheHalfClosed->end();
@@ -1661,7 +1661,7 @@ commHasHalfClosedMonitor(int fd)
 void
 commStopHalfClosedMonitor(int const fd)
 {
-    debugs(5, 5, HERE << "removing FD " << fd << " from " << *TheHalfClosed);
+    debugs(5, 5, "removing FD " << fd << " from " << *TheHalfClosed);
 
     // cancel the read if one was scheduled
     AsyncCall::Pointer reader = fd_table[fd].halfClosedReader;
@@ -1689,7 +1689,7 @@ commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, C
 
     // if read failed, close the connection
     if (flag != Comm::OK) {
-        debugs(5, 3, HERE << "closing " << conn);
+        debugs(5, 3, "closing " << conn);
         conn->close();
         return;
     }
@@ -1890,7 +1890,7 @@ comm_open_uds(int sock_type,
     AI.ai_canonname = NULL;
     AI.ai_next = NULL;
 
-    debugs(50, 3, HERE << "Attempt open socket for: " << addr->sun_path);
+    debugs(50, 3, "Attempt open socket for: " << addr->sun_path);
 
     if ((new_socket = socket(AI.ai_family, AI.ai_socktype, AI.ai_protocol)) < 0) {
         int xerrno = errno;
@@ -1912,7 +1912,7 @@ comm_open_uds(int sock_type,
     debugs(50, 3, "Opened UDS FD " << new_socket << " : family=" << AI.ai_family << ", type=" << AI.ai_socktype << ", protocol=" << AI.ai_protocol);
 
     /* update fdstat */
-    debugs(50, 5, HERE << "FD " << new_socket << " is a new socket");
+    debugs(50, 5, "FD " << new_socket << " is a new socket");
 
     assert(!isOpen(new_socket));
     fd_open(new_socket, FD_MSGHDR, addr->sun_path);

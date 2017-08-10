@@ -123,13 +123,13 @@ Mgr::IntervalAction::Create60min(const CommandPointer &cmd)
 Mgr::IntervalAction::IntervalAction(const CommandPointer &aCmd, int aMinutes, int aHours):
     Action(aCmd), minutes(aMinutes), hours(aHours), data()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
 }
 
 void
 Mgr::IntervalAction::add(const Action& action)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     data += dynamic_cast<const IntervalAction&>(action).data;
 }
 
@@ -142,7 +142,7 @@ Mgr::IntervalAction::collect()
 void
 Mgr::IntervalAction::dump(StoreEntry* entry)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     Must(entry != NULL);
     DumpAvgStat(data, entry);
 }

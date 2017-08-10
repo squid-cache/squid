@@ -144,7 +144,7 @@ Ipc::Mem::Segment::open()
 
     theSize = statSize("Ipc::Mem::Segment::open");
 
-    debugs(54, 3, HERE << "opened " << theName << " segment: " << theSize);
+    debugs(54, 3, "opened " << theName << " segment: " << theSize);
 
     attach();
 }
@@ -313,7 +313,7 @@ Ipc::Mem::Segment::~Segment()
         delete [] static_cast<char *>(theMem);
         theMem = NULL;
         Segments.erase(theName);
-        debugs(54, 3, HERE << "unlinked " << theName << " fake segment");
+        debugs(54, 3, "unlinked " << theName << " fake segment");
     }
 }
 
@@ -338,7 +338,7 @@ Ipc::Mem::Segment::create(const off_t aSize)
     theSize = aSize;
     doUnlink = true;
 
-    debugs(54, 3, HERE << "created " << theName << " fake segment: " << theSize);
+    debugs(54, 3, "created " << theName << " fake segment: " << theSize);
 }
 
 void
@@ -355,14 +355,14 @@ Ipc::Mem::Segment::open()
     theMem = segment.theMem;
     theSize = segment.theSize;
 
-    debugs(54, 3, HERE << "opened " << theName << " fake segment: " << theSize);
+    debugs(54, 3, "opened " << theName << " fake segment: " << theSize);
 }
 
 void
 Ipc::Mem::Segment::checkSupport(const char *const context)
 {
     if (!Enabled()) {
-        debugs(54, 5, HERE << context <<
+        debugs(54, 5, context <<
                ": True shared memory segments are not supported. "
                "Cannot fake shared segments in SMP config.");
         fatalf("Ipc::Mem::Segment: Cannot fake shared segments in SMP config (%s)\n",

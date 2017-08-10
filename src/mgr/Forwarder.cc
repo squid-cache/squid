@@ -30,7 +30,7 @@ Mgr::Forwarder::Forwarder(const Comm::ConnectionPointer &aConn, const ActionPara
     Ipc::Forwarder(new Request(KidIdentifier, 0, aConn, aParams), 10),
     httpRequest(aRequest), entry(anEntry), conn(aConn)
 {
-    debugs(16, 5, HERE << conn);
+    debugs(16, 5, conn);
     Must(Comm::IsConnOpen(conn));
     Must(httpRequest != NULL);
     Must(entry != NULL);
@@ -46,7 +46,7 @@ Mgr::Forwarder::Forwarder(const Comm::ConnectionPointer &aConn, const ActionPara
 
 Mgr::Forwarder::~Forwarder()
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     Must(httpRequest != NULL);
     Must(entry != NULL);
 
@@ -97,7 +97,7 @@ Mgr::Forwarder::handleException(const std::exception &e)
 void
 Mgr::Forwarder::noteCommClosed(const CommCloseCbParams &)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     conn = NULL; // needed?
     mustStop("commClosed");
 }
@@ -106,7 +106,7 @@ Mgr::Forwarder::noteCommClosed(const CommCloseCbParams &)
 void
 Mgr::Forwarder::sendError(ErrorState *error)
 {
-    debugs(16, 3, HERE);
+    debugs(16, 3, "");
     Must(error != NULL);
     Must(entry != NULL);
     Must(httpRequest != NULL);

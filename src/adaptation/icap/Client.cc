@@ -12,7 +12,7 @@
 
 void Adaptation::Icap::InitModule()
 {
-    debugs(93,2, HERE << "module enabled.");
+    debugs(93,2, "module enabled.");
 }
 
 void Adaptation::Icap::CleanModule()

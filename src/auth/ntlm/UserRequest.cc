@@ -57,11 +57,11 @@ int
 Auth::Ntlm::UserRequest::authenticated() const
 {
     if (user() != NULL && user()->credentials() == Auth::Ok) {
-        debugs(29, 9, HERE << "user authenticated.");
+        debugs(29, 9, "user authenticated.");
         return 1;
     }
 
-    debugs(29, 9, HERE << "user not fully authenticated.");
+    debugs(29, 9, "user not fully authenticated.");
     return 0;
 }
 
@@ -129,7 +129,7 @@ Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::Pointe
         return;
     }
 
-    debugs(29, 8, HERE << "credentials state is '" << user()->credentials() << "'");
+    debugs(29, 8, "credentials state is '" << user()->credentials() << "'");
 
     const char *keyExtras = helperRequestKeyExtras(request, al);
     int printResult = 0;
@@ -168,11 +168,11 @@ void
 Auth::Ntlm::UserRequest::releaseAuthServer()
 {
     if (authserver) {
-        debugs(29, 6, HERE << "releasing NTLM auth server '" << authserver << "'");
+        debugs(29, 6, "releasing NTLM auth server '" << authserver << "'");
         helperStatefulReleaseServer(authserver);
         authserver = NULL;
     } else
-        debugs(29, 6, HERE << "No NTLM auth server to release.");
+        debugs(29, 6, "No NTLM auth server to release.");
 }
 
 void
@@ -193,7 +193,7 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
     }
 
     if (server_blob) {
-        debugs(29, 2, HERE << "need to challenge client '" << server_blob << "'!");
+        debugs(29, 2, "need to challenge client '" << server_blob << "'!");
         return;
     }
 
@@ -219,7 +219,7 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
 
     case Auth::Unchecked:
         /* we've received a ntlm request. pass to a helper */
-        debugs(29, 9, HERE << "auth state ntlm none. Received blob: '" << proxy_auth << "'");
+        debugs(29, 9, "auth state ntlm none. Received blob: '" << proxy_auth << "'");
         user()->credentials(Auth::Pending);
         safe_free(client_blob);
         client_blob=xstrdup(blob);
@@ -230,7 +230,7 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
         break;
 
     case Auth::Pending:
-        debugs(29, DBG_IMPORTANT, HERE << "need to ask helper");
+        debugs(29, DBG_IMPORTANT, "need to ask helper");
         break;
 
     case Auth::Handshake:
@@ -250,7 +250,7 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
 
     case Auth::Failed:
         /* we've failed somewhere in authentication */
-        debugs(29, 9, HERE << "auth state ntlm failed. " << proxy_auth);
+        debugs(29, 9, "auth state ntlm failed. " << proxy_auth);
         break;
     }
 }
@@ -260,7 +260,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
 
-    debugs(29, 8, HERE << "helper: '" << reply.whichServer << "' sent us reply=" << reply);
+    debugs(29, 8, "helper: '" << reply.whichServer << "' sent us reply=" << reply);
 
     if (!cbdataReferenceValid(r->data)) {
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication invalid callback data. helper '" << reply.whichServer << "'.");
@@ -302,7 +302,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
             lm_request->server_blob = xstrdup(serverBlob);
             auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->setDenyMessage("Authentication in progress");
-            debugs(29, 4, HERE << "Need to challenge the client with a server token: '" << serverBlob << "'");
+            debugs(29, 4, "Need to challenge the client with a server token: '" << serverBlob << "'");
         } else {
             auth_user_request->user()->credentials(Auth::Failed);
             auth_user_request->setDenyMessage("NTLM authentication requires a persistent connection");
@@ -324,9 +324,9 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
         safe_free(lm_request->server_blob);
         lm_request->releaseAuthServer();
 
-        debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << userLabel << "'");
+        debugs(29, 4, "Successfully validated user via NTLM. Username '" << userLabel << "'");
         /* connection is authenticated */
-        debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
+        debugs(29, 4, "authenticated user " << auth_user_request->user()->username());
         /* see if this is an existing user */
         auto local_auth_user = lm_request->user();
         auto cached_user = Auth::Ntlm::User::Cache()->lookup(auth_user_request->user()->userKey());
@@ -346,7 +346,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
         auth_user_request->user()->credentials(Auth::Ok);
-        debugs(29, 4, HERE << "Successfully validated user via NTLM. Username '" << auth_user_request->user()->username() << "'");
+        debugs(29, 4, "Successfully validated user via NTLM. Username '" << auth_user_request->user()->username() << "'");
     }
     break;
 

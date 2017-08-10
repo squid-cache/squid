@@ -46,19 +46,19 @@ aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allow
 
     AclDenyInfoList *A = NULL;
 
-    debugs(28, 8, HERE << "got called for " << name);
+    debugs(28, 8, "got called for " << name);
 
     for (A = *head; A; A = A->next) {
         AclNameList *L = NULL;
 
         if (!redirect_allowed && strchr(A->err_page_name, ':') ) {
-            debugs(28, 8, HERE << "Skip '" << A->err_page_name << "' 30x redirects not allowed as response here.");
+            debugs(28, 8, "Skip '" << A->err_page_name << "' 30x redirects not allowed as response here.");
             continue;
         }
 
         for (L = A->acl_list; L; L = L->next) {
             if (!strcmp(name, L->name)) {
-                debugs(28, 8, HERE << "match on " << name);
+                debugs(28, 8, "match on " << name);
                 return A->err_page_id;
             }
 

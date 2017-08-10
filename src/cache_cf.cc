@@ -539,7 +539,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
                 err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
             } else if (!parse_line(tmp_line)) {
-                debugs(3, DBG_CRITICAL, HERE << cfg_filename << ":" << config_lineno << " unrecognized: '" << tmp_line << "'");
+                debugs(3, DBG_CRITICAL, cfg_filename << ":" << config_lineno << " unrecognized: '" << tmp_line << "'");
                 ++err_count;
             }
         }
@@ -573,7 +573,7 @@ parseConfigFileOrThrow(const char *file_name)
 {
     int err_count = 0;
 
-    debugs(5, 4, HERE);
+    debugs(5, 4, "");
 
     configFreeMemory();
 

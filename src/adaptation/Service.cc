@@ -16,7 +16,7 @@
 Adaptation::Service::Service(const ServiceConfigPointer &aConfig): theConfig(aConfig)
 {
     Must(theConfig != NULL);
-    debugs(93,3, HERE << "creating adaptation service " << cfg().key);
+    debugs(93,3, "creating adaptation service " << cfg().key);
 }
 
 Adaptation::Service::~Service()

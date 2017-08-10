@@ -19,7 +19,7 @@ Auth::Negotiate::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRea
 
 Auth::Negotiate::User::~User()
 {
-    debugs(29, 5, HERE << "doing nothing to clear Negotiate scheme data for '" << this << "'");
+    debugs(29, 5, "doing nothing to clear Negotiate scheme data for '" << this << "'");
 }
 
 int32_t

@@ -67,7 +67,7 @@ Mgr::Action::add(const Action &)
 void
 Mgr::Action::respond(const Request &request)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
 
     // Assume most kid classes are fully aggregatable (i.e., they do not dump
     // local info at all). Do not import the remote HTTP fd into our Comm
@@ -90,7 +90,7 @@ Mgr::Action::sendResponse(unsigned int requestId)
 void
 Mgr::Action::run(StoreEntry* entry, bool writeHttpHeader)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     collect();
     fillEntry(entry, writeHttpHeader);
 }
@@ -98,7 +98,7 @@ Mgr::Action::run(StoreEntry* entry, bool writeHttpHeader)
 void
 Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
 {
-    debugs(16, 5, HERE);
+    debugs(16, 5, "");
     entry->buffer();
 
     if (writeHttpHeader) {

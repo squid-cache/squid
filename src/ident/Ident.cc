@@ -118,7 +118,7 @@ Ident::Close(const CommCloseCbParams &params)
 void
 Ident::Timeout(const CommTimeoutCbParams &io)
 {
-    debugs(30, 3, HERE << io.conn);
+    debugs(30, 3, io.conn);
     IdentStateData *state = (IdentStateData *)io.data;
     state->deleteThis("timeout");
 }
@@ -166,11 +166,11 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int, 
 void
 Ident::WriteFeedback(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::Flag flag, int xerrno, void *data)
 {
-    debugs(30, 5, HERE << conn << ": Wrote IDENT request " << len << " bytes.");
+    debugs(30, 5, conn << ": Wrote IDENT request " << len << " bytes.");
 
     // TODO handle write errors better. retry or abort?
     if (flag != Comm::OK) {
-        debugs(30, 2, HERE << conn << " err-flags=" << flag << " IDENT write error: " << xstrerr(xerrno));
+        debugs(30, 2, conn << " err-flags=" << flag << " IDENT write error: " << xstrerr(xerrno));
         IdentStateData *state = (IdentStateData *)data;
         state->deleteThis("write error");
     }
@@ -204,7 +204,7 @@ Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Com
     if ((t = strchr(buf, '\n')))
         *t = '\0';
 
-    debugs(30, 5, HERE << conn << ": Read '" << buf << "'");
+    debugs(30, 5, conn << ": Read '" << buf << "'");
 
     if (strstr(buf, "USERID")) {
         if ((ident = strrchr(buf, ':'))) {
