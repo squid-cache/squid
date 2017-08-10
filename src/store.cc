@@ -142,7 +142,7 @@ void
 StoreEntry::makePublic(const KeyScope scope)
 {
     /* This object can be cached for a long time */
-    if (!EBIT_TEST(flags, RELEASE_REQUEST))
+    if (!permanentlyPrivate())
         setPublicKey(scope);
 }
 
@@ -460,7 +460,7 @@ StoreEntry::touch()
 void
 StoreEntry::releaseRequest(const bool shareable)
 {
-    if (EBIT_TEST(flags, RELEASE_REQUEST))
+    if (permanentlyPrivate())
         return;
 
     Store::Root().markForUnlink(*this);
@@ -480,7 +480,7 @@ StoreEntry::unlock(const char *context)
 
     assert(storePendingNClients(this) == 0);
 
-    if (store_status == STORE_PENDING || EBIT_TEST(flags, RELEASE_REQUEST)) {
+    if (store_status == STORE_PENDING || permanentlyPrivate()) {
         this->release();
         return 0;
     }
@@ -628,7 +628,7 @@ StoreEntry::setPublicKey(const KeyScope scope)
 
 #endif
 
-    assert(!EBIT_TEST(flags, RELEASE_REQUEST));
+    assert(!permanentlyPrivate());
 
     adjustVary();
     forcePublicKey(calcPublicKey(scope));
@@ -961,7 +961,7 @@ StoreEntry::checkCachable()
     // outcomes, making store_check_cachable_hist counters misleading.
 
     // check this first to optimize handling of repeated calls for uncachables
-    if (EBIT_TEST(flags, RELEASE_REQUEST)) {
+    if (permanentlyPrivate()) {
         debugs(20, 2, "StoreEntry::checkCachable: NO: not cachable");
         ++store_check_cachable_hist.no.not_entry_cachable; // TODO: rename?
         return 0; // avoid rerequesting release below
@@ -1455,7 +1455,7 @@ expiresMoreThan(time_t expires, time_t when)
 int
 StoreEntry::validToSend() const
 {
-    if (EBIT_TEST(flags, RELEASE_REQUEST))
+    if (permanentlyPrivate())
         return 0;
 
     if (EBIT_TEST(flags, ENTRY_NEGCACHED))

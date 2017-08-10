@@ -2645,7 +2645,7 @@ Ftp::Gateway::haveParsedReplyHeaders()
          * Authenticated requests can't be cached.
          */
         e->release();
-    } else if (!EBIT_TEST(e->flags, RELEASE_REQUEST) && !getCurrentOffset()) {
+    } else if (!entry->permanentlyPrivate() && !getCurrentOffset()) {
         e->setPublicKey();
     } else {
         e->release();

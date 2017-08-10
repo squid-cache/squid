@@ -84,6 +84,8 @@ public:
     void abort();
     void makePublic(const KeyScope keyScope = ksDefault);
     void makePrivate(const bool shareable);
+    /// is the entry key private forever?
+    bool permanentlyPrivate() const { return EBIT_TEST(flags, RELEASE_REQUEST); }
     /// A low-level method just resetting "private key" flags.
     /// To avoid key inconsistency please use forcePublicKey()
     /// or similar instead.

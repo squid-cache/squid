@@ -173,7 +173,7 @@ StoreEntry::swapOut()
 
     // this flag may change so we must check even if we are swappingOut
     if (EBIT_TEST(flags, ENTRY_ABORTED)) {
-        assert(EBIT_TEST(flags, RELEASE_REQUEST));
+        assert(permanentlyPrivate());
         // StoreEntry::abort() already closed the swap out file, if any
         // no trimming: data producer must stop production if ENTRY_ABORTED
         return;

@@ -196,7 +196,7 @@ Store::Disk::canLog(StoreEntry const &e)const
     if (e.swap_file_sz <= 0)
         return false;
 
-    if (EBIT_TEST(e.flags, RELEASE_REQUEST))
+    if (e.permanentlyPrivate())
         return false;
 
     if (EBIT_TEST(e.flags, KEY_PRIVATE))
