@@ -49,11 +49,11 @@ typedef enum {
 
 ///Store entry swapping out states.
 typedef enum {
-    SWAPOUT_NONE, ///< the store entry has not been stored on a disk
+    SWAPOUT_NONE, ///< the store entry is in a 'disconnected' from disk state
     SWAPOUT_WRITING, ///< the store entry is being stored on a disk
-    /// The store entry has been stored on a disk some time ago.
-    /// However this does not guarantee that the cached entry has
-    /// not been deleted since then.
+    /// The store entry has been stored on a disk and still is 'connected'
+    /// to that disk. That should guarantee that the cached entry has not
+    /// been deleted yet.
     SWAPOUT_DONE
 } swap_status_t;
 
