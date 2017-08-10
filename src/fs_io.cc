@@ -117,7 +117,7 @@ file_close(int fd)
 
     close(fd);
 
-    debugs(6, F->flags.close_request ? 2 : 5, "file_close: FD " << fd << " really closing\n");
+    debugs(6, F->flags.close_request ? 2 : 5, "file_close: FD " << fd << " really closing");
 
     fd_close(fd);
 
