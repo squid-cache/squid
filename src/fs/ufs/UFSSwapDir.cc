@@ -813,8 +813,6 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
     e->lastModified(lastmod);
     e->refcount = refcount;
     e->flags = newFlags;
-    EBIT_CLR(e->flags, RELEASE_REQUEST);
-    e->clearPrivate();
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
     mapBitSet(e->swap_filen);

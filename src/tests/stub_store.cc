@@ -40,7 +40,7 @@ void StoreEntry::abort() STUB
 void StoreEntry::makePublic(const KeyScope scope) STUB
 void StoreEntry::makePrivate(const bool shareable) STUB
 void StoreEntry::setPublicKey(const KeyScope scope) STUB
-void StoreEntry::setPrivateKey(const bool shareable) STUB
+void StoreEntry::setPrivateKey(const bool shareable, const bool permanent) STUB
 void StoreEntry::expireNow() STUB
 void StoreEntry::releaseRequest(const bool shareable) STUB
 void StoreEntry::negativeCache() STUB
@@ -83,7 +83,6 @@ void *StoreEntry::operator new(size_t byteCount)
     return new StoreEntry();
 }
 void StoreEntry::operator delete(void *address) STUB
-void StoreEntry::setReleaseFlag() STUB
 //#if USE_SQUID_ESI
 //ESIElement::Pointer StoreEntry::cachedESITree STUB_RETVAL(NULL)
 //#endif

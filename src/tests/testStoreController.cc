@@ -111,8 +111,6 @@ addedEntry(Store::Disk *aStore,
     e->expires = squid_curtime;
     e->lastModified(squid_curtime);
     e->refcount = 1;
-    EBIT_CLR(e->flags, RELEASE_REQUEST);
-    e->clearPrivate();
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
     e->hashInsert((const cache_key *)name.termedBuf()); /* do it after we clear KEY_PRIVATE */

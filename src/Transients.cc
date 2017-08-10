@@ -187,8 +187,8 @@ Transients::copyFromShm(const sfileno index)
     e->mem_obj->xitTable.index = index;
 
     // TODO: Support collapsed revalidation for SMP-aware caches.
-    if (!extra.reqFlags.cachable)
-        e->setPrivateKey(false);
+    if (!extra.reqFlags.cachable) // should not happen?
+        e->setPrivateKey(false, true);
     else
         e->setPublicKey(ksDefault);
 

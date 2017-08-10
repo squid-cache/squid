@@ -457,30 +457,14 @@ StoreEntry::touch()
     lastref = squid_curtime;
 }
 
-/// Prevents future hits by marking the corresponding entry
-/// for eventual removal from the Store.
-void
-StoreEntry::setReleaseFlag()
-{
-    if (EBIT_TEST(flags, RELEASE_REQUEST))
-        return;
-
-    debugs(20, 3, "StoreEntry::setReleaseFlag: '" << getMD5Text() << "'");
-
-    EBIT_SET(flags, RELEASE_REQUEST);
-
-    Store::Root().markForUnlink(*this);
-}
-
 void
 StoreEntry::releaseRequest(const bool shareable)
 {
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
 
-    setReleaseFlag();
-
-    setPrivateKey(shareable);
+    Store::Root().markForUnlink(*this);
+    setPrivateKey(shareable, true);
 }
 
 int
@@ -494,12 +478,9 @@ StoreEntry::unlock(const char *context)
     if (lock_count)
         return (int) lock_count;
 
-    if (store_status == STORE_PENDING)
-        setReleaseFlag();
-
     assert(storePendingNClients(this) == 0);
 
-    if (EBIT_TEST(flags, RELEASE_REQUEST)) {
+    if (store_status == STORE_PENDING || EBIT_TEST(flags, RELEASE_REQUEST)) {
         this->release();
         return 0;
     }
@@ -592,7 +573,7 @@ getKeyCounter(void)
  * concept'.
  */
 void
-StoreEntry::setPrivateKey(const bool shareable)
+StoreEntry::setPrivateKey(const bool shareable, const bool permanent)
 {
     if (key && EBIT_TEST(flags, KEY_PRIVATE)) {
         // The entry is already private, but it may be still shareable.
@@ -602,7 +583,7 @@ StoreEntry::setPrivateKey(const bool shareable)
     }
 
     if (key) {
-        setReleaseFlag(); // will markForUnlink(); all caches/workers will know
+        Store::Root().markForUnlink(*this);  // all caches/workers will know
 
         // TODO: move into SwapDir::markForUnlink() already called by Root()
         if (hasDisk())
@@ -617,6 +598,8 @@ StoreEntry::setPrivateKey(const bool shareable)
 
     assert(hash_lookup(store_table, newkey) == NULL);
     EBIT_SET(flags, KEY_PRIVATE);
+    if (permanent)
+        EBIT_SET(flags, RELEASE_REQUEST);
     shareableWhenPrivate = shareable;
     hashInsert(newkey);
 }
@@ -673,11 +656,6 @@ StoreEntry::forcePublicKey(const cache_key *newkey)
 {
     if (StoreEntry *e2 = (StoreEntry *)hash_lookup(store_table, newkey)) {
         assert(e2 != this);
-        debugs(20, 3, "Making old " << *e2 << " private.");
-
-        // TODO: check whether there is any sense in keeping old entry
-        // shareable here. Leaving it non-shareable for now.
-        e2->setPrivateKey(false);
         e2->release(false);
     }
 
@@ -783,9 +761,6 @@ storeCreatePureEntry(const char *url, const char *log_url, const RequestFlags &f
     e = new StoreEntry();
     e->createMemObject(url, log_url, method);
 
-    if (!flags.cachable)
-        EBIT_SET(e->flags, RELEASE_REQUEST);
-
     e->store_status = STORE_PENDING;
     e->refcount = 0;
     e->lastref = squid_curtime;
@@ -802,7 +777,7 @@ storeCreateEntry(const char *url, const char *logUrl, const RequestFlags &flags,
     e->lock("storeCreateEntry");
 
     if (neighbors_do_private_keys || !flags.hierarchical || !flags.cachable)
-        e->setPrivateKey(false);
+        e->setPrivateKey(false, !flags.cachable);
     else
         e->setPublicKey();
 
@@ -1264,12 +1239,10 @@ StoreEntry::release(const bool shareable)
         /* TODO: Teach disk stores to handle releases during rebuild instead. */
 
         Store::Root().memoryUnlink(*this);
-
-        setPrivateKey(shareable);
+        releaseRequest(shareable);
 
         // lock the entry until rebuilding is done
         lock("storeLateRelease");
-        setReleaseFlag();
         LateReleaseStack.push(this);
         return;
     }

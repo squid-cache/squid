@@ -472,8 +472,6 @@ MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
     assert(!e.hasDisk()); // set in StoreEntry constructor
     e.ping_status = PING_NONE;
 
-    EBIT_CLR(e.flags, RELEASE_REQUEST);
-    e.clearPrivate();
     EBIT_SET(e.flags, ENTRY_VALIDATED);
 
     MemObject::MemCache &mc = e.mem_obj->memCache;

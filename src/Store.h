@@ -93,7 +93,11 @@ public:
     /// releasing the old default-scope entry (if any).
     /// Does nothing if the existing public key already has default scope.
     void clearPublicKeyScope();
-    void setPrivateKey(const bool shareable);
+
+    /// Either fills this entry with private key or changes the existing key
+    /// from public to private.
+    /// \param permanent whether this entry should be private forever.
+    void setPrivateKey(const bool shareable, const bool permanent);
     void expireNow();
     /// Makes the StoreEntry private and marks the corresponding entry
     /// for eventual removal from the Store.
@@ -272,7 +276,6 @@ private:
     void forcePublicKey(const cache_key *newkey);
     void adjustVary();
     const cache_key *calcPublicKey(const KeyScope keyScope);
-    void setReleaseFlag();
 
     static MemAllocator *pool;
 
