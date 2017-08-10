@@ -24,8 +24,6 @@
 #include <fcntl.h>
 #endif
 
-#define HERE "(security_file_certgen) " << __FILE__ << ':' << __LINE__ << ": "
-
 Ssl::Lock::Lock(std::string const &aFilename) :
     filename(aFilename),
 #if _SQUID_WINDOWS_

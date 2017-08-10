@@ -124,23 +124,9 @@ const char * SkipBuildPrefix(const char* path);
         } \
    } while (/*CONSTCOND*/ 0)
 
-/** stream manipulator which does nothing.
- * \deprecated Do not add to new code, and remove when editing old code
- *
- * Its purpose is to inactivate calls made following previous debugs()
- * guidelines such as
- * debugs(1,2, "some message");
- *
- * His former objective is now absorbed in the debugs call itself
- */
-inline std::ostream&
-HERE(std::ostream& s)
-{
-    return s;
-}
-
 /*
- * MYNAME is for use at debug levels 0 and 1 where HERE is too messy.
+ * MYNAME can force-feed level-0/1 debugs() with an approximate source code
+ * location. Caution: Most level 0/1 debugs() should not report their location!
  *
  * debugs(1,1, MYNAME << "WARNING: some message");
  */
