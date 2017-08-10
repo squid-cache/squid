@@ -1006,7 +1006,7 @@ Ssl::setClientSNI(SSL *ssl, const char *fqdn)
     }
     return true;
 #else
-    debugs(83, 7,  "no support for TLS servername extension (SNI)\n");
+    debugs(83, 7,  "no support for TLS servername extension (SNI)");
     return false;
 #endif
 }
@@ -1215,7 +1215,7 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
 static int
 untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
 {
-    debugs(83, 4,  "Try to use pre-downloaded intermediate certificates\n");
+    debugs(83, 4,  "Try to use pre-downloaded intermediate certificates");
 
     SSL *ssl = static_cast<SSL *>(X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
     STACK_OF(X509) *sslUntrustedStack = static_cast <STACK_OF(X509) *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_untrusted_chain));
