@@ -580,7 +580,8 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
 
     debugs(20, 7, "syncing " << *collapsed);
 
-    bool abandoned = transients->abandoned(*collapsed);
+    bool aborted = false;
+    bool abandoned = transients->abandoned(*collapsed, aborted);
     bool found = false;
     bool inSync = false;
     if (memStore && collapsed->mem_obj->memCache.io == MemObject::ioDone) {
@@ -598,20 +599,23 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         found = anchorCollapsed(*collapsed, inSync);
     }
 
-    if (abandoned && collapsed->store_status == STORE_PENDING) {
+    const bool pendingAbandoned = abandoned && collapsed->store_status == STORE_PENDING;
+    if (pendingAbandoned && aborted) {
         debugs(20, 3, "aborting abandoned but STORE_PENDING " << *collapsed);
         collapsed->abort();
-        return;
-    }
-
-    if (inSync) {
+    } else if (inSync) {
         debugs(20, 5, "synced " << *collapsed);
         collapsed->invokeHandlers();
     } else if (found) { // unrecoverable problem syncing this entry
         debugs(20, 3, "aborting unsyncable " << *collapsed);
         collapsed->abort();
-    } else { // the entry is still not in one of the caches
-        debugs(20, 7, "waiting " << *collapsed);
+    } else  {
+        // the entry is still not in one of the caches
+        if (pendingAbandoned) {
+            debugs(20, 3, "aborting abandoned detached " << *collapsed);
+            collapsed->abort();
+        } else // is it always collapsed->store_status==STORE_PENDING here?
+            debugs(20, 7, "waiting " << *collapsed);
     }
 }
 

@@ -48,7 +48,7 @@ public:
     void abandon(const StoreEntry &e);
 
     /// whether an in-transit entry is now abandoned by its writer
-    bool abandoned(const StoreEntry &e) const;
+    bool abandoned(const StoreEntry &e, bool &aborted) const;
 
     /// number of entry readers some time ago
     int readers(const StoreEntry &e) const;
@@ -85,7 +85,7 @@ protected:
     StoreEntry *copyFromShm(const sfileno index);
     bool copyToShm(const StoreEntry &e, const sfileno index, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
 
-    bool abandonedAt(const sfileno index) const;
+    bool abandonedAt(const sfileno index, bool &aborted) const;
 
     // Ipc::StoreMapCleaner API
     virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;

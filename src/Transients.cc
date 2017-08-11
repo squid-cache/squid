@@ -301,19 +301,20 @@ Transients::abandon(const StoreEntry &e)
 }
 
 bool
-Transients::abandoned(const StoreEntry &e) const
+Transients::abandoned(const StoreEntry &e, bool &aborted) const
 {
     assert(e.mem_obj);
-    return abandonedAt(e.mem_obj->xitTable.index);
+    return abandonedAt(e.mem_obj->xitTable.index, aborted);
 }
 
 /// whether an in-transit entry at the index is now abandoned by its writer
 bool
-Transients::abandonedAt(const sfileno index) const
+Transients::abandonedAt(const sfileno index, bool &aborted) const
 {
     assert(map);
     const Ipc::StoreMap::Anchor &anchor = map->readableEntry(index);
-    return anchor.waitingToBeFreed && EBIT_TEST(anchor.basics.flags, ENTRY_ABORTED);
+    aborted = EBIT_TEST(anchor.basics.flags, ENTRY_ABORTED);
+    return anchor.waitingToBeFreed;
 }
 
 void
