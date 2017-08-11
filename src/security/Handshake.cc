@@ -535,9 +535,12 @@ Security::HandshakeParser::parseHello(const SBuf &data)
     return false; // unreached
 }
 
-void
-Security::HandshakeParser::ParseCertificate(const SBuf &raw, Security::CertPointer &pCert)
+/// Creates and returns a certificate by parsing a DER-encoded X509 structure.
+/// Throws on failures.
+Security::CertPointer
+Security::HandshakeParser::ParseCertificate(const SBuf &raw)
 {
+    Security::CertPointer pCert;
 #if USE_OPENSSL
     auto x509Start = reinterpret_cast<const unsigned char *>(raw.rawContent());
     auto x509Pos = x509Start;
@@ -546,27 +549,31 @@ Security::HandshakeParser::ParseCertificate(const SBuf &raw, Security::CertPoint
     Must(x509); // successfully parsed
     Must(x509Pos == x509Start + raw.length()); // no leftovers
 #else
-    // workaround GCC -O3 error with unused variables. see bug 4663.
-    (void)pCert;
-    debugs(83, 2, "TLS parsing is not supported without OpenSSL. " << raw);
+    assert(false);  // this code should never be reached
+    pCert = Security::CertPointer(nullptr); // avoid warnings about uninitialized pCert; XXX: Fix CertPoint declaration.
+    (void)raw; // avoid warnings about unused method parameter; TODO: Add a SimulateUse() macro.
 #endif
+    assert(pCert);
+    return pCert;
 }
 
 void
 Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
 {
+#if USE_OPENSSL
     Parser::BinaryTokenizer tkList(raw);
     const SBuf clist = tkList.pstring24("CertificateList");
     Must(tkList.atEnd()); // no leftovers after all certificates
 
     Parser::BinaryTokenizer tkItems(clist);
     while (!tkItems.atEnd()) {
-        Security::CertPointer cert;
-        ParseCertificate(tkItems.pstring24("Certificate"), cert);
-        serverCertificates.push_back(cert);
+        if (Security::CertPointer cert = ParseCertificate(tkItems.pstring24("Certificate")))
+            serverCertificates.push_back(cert);
         debugs(83, 7, "parsed " << serverCertificates.size() << " certificates so far");
     }
-
+#else
+    debugs(83, 7, "no support for CertificateList parsing; ignoring " << raw.length() << " bytes");
+#endif
 }
 
 /// A helper function to create a set of all supported TLS extensions

@@ -101,7 +101,7 @@ private:
     void parseV23Ciphers(const SBuf &raw);
 
     void parseServerCertificates(const SBuf &raw);
-    static void ParseCertificate(const SBuf &raw, CertPointer &cert);
+    static CertPointer ParseCertificate(const SBuf &raw);
 
     unsigned int currentContentType; ///< The current TLS/SSL record content type
 
