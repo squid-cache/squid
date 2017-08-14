@@ -337,7 +337,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
 #define REFRESH_OVERRIDE(flag) 0
 #endif
 
-    if (entry->permanentlyPrivate())
+    if (EBIT_TEST(entry->flags, RELEASE_REQUEST))
         return decision.make(ReuseDecision::reuseNot, "the entry has been released");
 
     // RFC 7234 section 4: a cache MUST use the most recent response
