@@ -12,8 +12,8 @@
 #include "ipc/StoreMap.h"
 #include "sbuf/SBuf.h"
 #include "Store.h"
-#include "store_key_md5.h"
 #include "store/Controller.h"
+#include "store_key_md5.h"
 #include "tools.h"
 
 static SBuf
@@ -310,7 +310,6 @@ Ipc::StoreMap::hasReadableEntry(const cache_key *const key)
     }
     return false;
 }
-
 
 /// unconditionally frees an already locked chain of slots, unlocking if needed
 void

@@ -299,7 +299,7 @@ bool
 Store::Controller::markedForDeletionAndAbandoned(const StoreEntry &e) const
 {
     return markedForDeletion(reinterpret_cast<const cache_key*>(e.key)) &&
-        transients && !transients->readers(e);
+           transients && !transients->readers(e);
 }
 
 bool

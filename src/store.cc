@@ -2069,15 +2069,14 @@ void
 StoreEntry::checkDisk() const
 {
     const bool ok = (swap_dirn < 0) == (swap_filen < 0) &&
-              (swap_dirn < 0) == (swap_status == SWAPOUT_NONE) &&
-              (swap_dirn < 0 || swap_dirn < Config.cacheSwap.n_configured);
+                    (swap_dirn < 0) == (swap_status == SWAPOUT_NONE) &&
+                    (swap_dirn < 0 || swap_dirn < Config.cacheSwap.n_configured);
 
     if (!ok) {
         debugs(88, DBG_IMPORTANT, "inconsistent disk numbers for entry " << *this);
         throw std::runtime_error("inconsistent disk numbers ");
     }
 }
-
 
 /*
  * return true if the entry is in a state where
