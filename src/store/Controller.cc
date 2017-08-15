@@ -577,6 +577,8 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     }
     assert(collapsed->mem_obj);
     assert(collapsed->mem_obj->smpCollapsed);
+    // TODO: confirm whether this is reasonable:
+    // assert(collapsed->store_status == STORE_PENDING);
 
     debugs(20, 7, "syncing " << *collapsed);
 
@@ -606,7 +608,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     }
 
     if (waitingToBeFreed && !found) {
-        debugs(20, 3, "aborting detached" << *collapsed << " due to waitingToBeFreed shared status");
+        debugs(20, 3, "aborting detached " << *collapsed << " due to waitingToBeFreed shared status");
         collapsed->abort();
     } else if (inSync) {
         debugs(20, 5, "synced " << *collapsed);
