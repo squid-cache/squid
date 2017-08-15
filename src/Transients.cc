@@ -300,21 +300,14 @@ Transients::abandon(const StoreEntry &e)
     // prevent other readers from collapsing requests for that resource.
 }
 
-bool
-Transients::abandoned(const StoreEntry &e, bool &aborted) const
-{
-    assert(e.mem_obj);
-    return abandonedAt(e.mem_obj->xitTable.index, aborted);
-}
-
-/// whether an in-transit entry at the index is now abandoned by its writer
-bool
-Transients::abandonedAt(const sfileno index, bool &aborted) const
+void
+Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFreed) const
 {
     assert(map);
-    const Ipc::StoreMap::Anchor &anchor = map->readableEntry(index);
+    assert(entry.mem_obj);
+    const auto &anchor = map->readableEntry(entry.mem_obj->xitTable.index);
     aborted = EBIT_TEST(anchor.basics.flags, ENTRY_ABORTED);
-    return anchor.waitingToBeFreed;
+    waitingToBeFreed = anchor.waitingToBeFreed;
 }
 
 void

@@ -581,7 +581,13 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     debugs(20, 7, "syncing " << *collapsed);
 
     bool aborted = false;
-    bool abandoned = transients->abandoned(*collapsed, aborted);
+    bool waitingToBeFreed = false;
+    transients->status(*collapsed, aborted, waitingToBeFreed);
+    if (aborted) {
+        debugs(20, 3, "aborting " << *collapsed << " due to aborted shared status");
+        collapsed->abort();
+        return;
+    }
     bool found = false;
     bool inSync = false;
     if (memStore && collapsed->mem_obj->memCache.io == MemObject::ioDone) {
@@ -599,9 +605,8 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         found = anchorCollapsed(*collapsed, inSync);
     }
 
-    const bool pendingAbandoned = abandoned && collapsed->store_status == STORE_PENDING;
-    if (pendingAbandoned && aborted) {
-        debugs(20, 3, "aborting abandoned but STORE_PENDING " << *collapsed);
+    if (waitingToBeFreed && !found) {
+        debugs(20, 3, "aborting detached" << *collapsed << " due to waitingToBeFreed shared status");
         collapsed->abort();
     } else if (inSync) {
         debugs(20, 5, "synced " << *collapsed);
@@ -611,11 +616,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         collapsed->abort();
     } else  {
         // the entry is still not in one of the caches
-        if (pendingAbandoned) {
-            debugs(20, 3, "aborting abandoned detached " << *collapsed);
-            collapsed->abort();
-        } else // is it always collapsed->store_status==STORE_PENDING here?
-            debugs(20, 7, "waiting " << *collapsed);
+        debugs(20, 7, "waiting " << *collapsed);
     }
 }
 

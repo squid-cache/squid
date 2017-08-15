@@ -110,8 +110,7 @@ public:
     void swapOut();
     /// whether we are in the process of writing this entry to disk
     bool swappingOut() const { return swap_status == SWAPOUT_WRITING; }
-    /// whether this entry was fully written to disk some time in the past;
-    /// it is guaranteed that the disk entry has not been deleted then yet.
+    /// whether the entire entry is now on disk (possibly marked for deletion)
     bool swappedOut() const { return swap_status == SWAPOUT_DONE; }
     void swapOutFileClose(int how);
     const char *url() const;

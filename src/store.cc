@@ -656,6 +656,7 @@ StoreEntry::forcePublicKey(const cache_key *newkey)
 {
     if (StoreEntry *e2 = (StoreEntry *)hash_lookup(store_table, newkey)) {
         assert(e2 != this);
+        debugs(20, 3, "releasing clashing " << *e2);
         e2->release(false);
     }
 
