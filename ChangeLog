@@ -1,3 +1,15 @@
+Changes to squid-3.5.27 (20 Aug 2017):
+
+	- Regression Bug #4112: ssl_engine does not accept cryptodev
+	- Bug 4687: Wrong names of components in man page, section SEE ALSO
+	- Bug 4671: various GCC 7 compile errors
+	- Bug 4464: Reduce "!Comm::MonitorsRead(serverConnection->fd)" assertions
+	- Bug 2833: Collapse internal revalidation requests (SMP-unaware caches)
+	- Bug 2833: Do not respond with HTTP/304 to unconditional requests
+	- Fix message packing error handling in mgr and snmp SMP Forwarders
+	- Fix mgr query handoff from the original recipient to Coordinator.
+	- ... and some documentation updates
+
 Changes to squid-3.5.26 (01 Jun 2017):
 
 	- Bug 4711: SubjectAlternativeNames is missing in some generated certificates
@@ -9,7 +21,7 @@ Changes to squid-3.5.26 (01 Jun 2017):
 	- Bug 3772: message from FTP server gets mangled
 	- Bug 3102: FTP directory listing drops fist character of file names
 	- Add OpenSSL library details to -v output
-	- ... and some documentatino updates
+	- ... and some documentation updates
 
 Changes to squid-3.5.25 (02 Apr 2017):
 
