@@ -10,40 +10,34 @@
 echo "RUN: $0"
 if [ $# -lt 1 ]; then
 	echo "Usage: $0 [branch]"
-	echo "Where [branch] is the path under /bzr/ to the branch to snapshot."
+	echo "Where [branch] is the name of the branch to snapshot."
 	exit 1
 fi
-# VCS details
-module=squid3
-BZRROOT=${BZRROOT:-/bzr}
 
-# generate a tarball name from the branch ($1) note that trunk is at
-# /bzr/trunk, but we call it 3.HEAD for consistency with CVS (squid 2.x), and
-# branches are in /bzr/branches/ but we don't want 'branches/' in the tarball
-# name so we strip that.
-branchpath=${1:-trunk}
-tag=${2:-`basename $branchpath`}
+# generate a tarball name from the branch ($1)
+branch=${1:-master}
 startdir=${PWD}
 date=`env TZ=GMT date +%Y%m%d`
 
-tmpdir=${TMPDIR:-${PWD}}/${module}-${tag}-mksnapshot
+tmpdir=${TMPDIR:-${PWD}}/squid-${branch}-mksnapshot/
 
 rm -rf ${tmpdir}
 trap "echo FAIL-BUILD_${VERSION} ; rm -rf ${tmpdir}" 0
+mkdir ${tmpdir}
 
-rm -f ${tag}.out
-bzr export ${tmpdir} ${BZRROOT}/${module}/${branchpath} || exit 1
+rm -f ${branch}.out
+(git archive --format=tar ${branch} | tar -xC ${tmpdir}) || exit 1
 if [ ! -f ${tmpdir}/configure ] && [ -f ${tmpdir}/configure.ac ]; then
 	sh -c "cd ${tmpdir} && ./bootstrap.sh"
 fi
 if [ ! -f ${tmpdir}/configure ]; then
-	echo "ERROR! Tag ${tag} not found in ${module}"
+	echo "ERROR! Branch ${branch} not found."
 fi
 
 cd ${tmpdir}
-revision=`bzr revno ${BZRROOT}/${module}/${branchpath}`
+revision=`git rev-parse --short ${branch}`
 suffix="${date}-r${revision}"
-eval `grep "^ *PACKAGE_VERSION=" configure | sed -e 's/-BZR//' | sed -e 's/PACKAGE_//'`
+eval `grep "^ *PACKAGE_VERSION=" configure | sed -e 's/-VCS//' | sed -e 's/PACKAGE_//'`
 eval `grep "^ *PACKAGE_TARNAME=" configure | sed -e 's/_TARNAME//'`
 ed -s configure.ac <<EOS
 g/${VERSION}-[A-Z]*/ s//${VERSION}-${suffix}/
@@ -57,13 +51,13 @@ EOS
 echo "STATE..."
 echo "PACKAGE: ${PACKAGE}"
 echo "VERSION: ${VERSION}"
-echo "TAG: ${tag}"
+echo "BRANCH: ${branch}"
 echo "REVISION: ${revision}"
 echo "STARTDIR: ${startdir}"
 echo "TMPDIR: ${tmpdir}"
 
 ## Ignore extra build layers. General features building is sufficient for snapshot release.
-./test-builds.sh --cleanup layer-00-default layer-01-minimal layer-02-maximus || exit 1
+./test-builds.sh --cleanup layer-00-bootstrap layer-00-default layer-01-minimal layer-02-maximus || exit 1
 ./configure --silent --enable-build-info="DATE: ${date} REVISION: ${revision}" --enable-translation
 make -s dist-all
 
@@ -86,12 +80,12 @@ echo "Preparing to publish: ${tmpdir}/${PACKAGE}-${VERSION}-${suffix}.tar.* ..."
 #echo "BUILT TARS: " ; ls -1 ${tmpdir}/*.tar.* || true
 
 cp -p ${tmpdir}/${PACKAGE}-${VERSION}-${suffix}.tar.gz .
-echo ${PACKAGE}-${VERSION}-${suffix}.tar.gz >>${tag}.out
+echo ${PACKAGE}-${VERSION}-${suffix}.tar.gz >>${branch}.out
 cp -p ${tmpdir}/${PACKAGE}-${VERSION}-${suffix}.tar.bz2 .
-echo ${PACKAGE}-${VERSION}-${suffix}.tar.bz2 >>${tag}.out
+echo ${PACKAGE}-${VERSION}-${suffix}.tar.bz2 >>${branch}.out
 if [ -f ${tmpdir}/${PACKAGE}-${VERSION}-${suffix}.diff ]; then
     cp -p ${tmpdir}/${PACKAGE}-${VERSION}-${suffix}.diff .
-    echo ${PACKAGE}-${VERSION}-${suffix}.diff >>${tag}.out
+    echo ${PACKAGE}-${VERSION}-${suffix}.diff >>${branch}.out
 fi
 
 # latest Squid 'make' builds a RELEASENOTES.html at top directory
@@ -102,14 +96,14 @@ if [ ! -f ${relnotes} ]; then
 fi
 if [ -f ${relnotes} ]; then
 	cp -p ${relnotes} ${PACKAGE}-${VERSION}-${suffix}-RELEASENOTES.html
-	echo ${PACKAGE}-${VERSION}-${suffix}-RELEASENOTES.html >>${tag}.out
+	echo ${PACKAGE}-${VERSION}-${suffix}-RELEASENOTES.html >>${branch}.out
 	ed -s ${PACKAGE}-${VERSION}-${suffix}-RELEASENOTES.html <<EOF
 g/"ChangeLog"/ s//"${PACKAGE}-${VERSION}-${suffix}-ChangeLog.txt"/g
 w
 EOF
 fi
 cp -p ${tmpdir}/ChangeLog ${PACKAGE}-${VERSION}-${suffix}-ChangeLog.txt
-echo ${PACKAGE}-${VERSION}-${suffix}-ChangeLog.txt >>${tag}.out
+echo ${PACKAGE}-${VERSION}-${suffix}-ChangeLog.txt >>${branch}.out
 
 # Generate Configuration Manual HTML
 if [ -x ${tmpdir}/scripts/www/build-cfg-help.pl ]; then
@@ -117,10 +111,10 @@ if [ -x ${tmpdir}/scripts/www/build-cfg-help.pl ]; then
 	mkdir -p ${tmpdir}/doc/cfgman
 	${tmpdir}/scripts/www/build-cfg-help.pl --version ${VERSION} -o ${tmpdir}/doc/cfgman ${tmpdir}/src/cf.data
 	sh -c "cd ${tmpdir}/doc/cfgman && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${suffix}-cfgman.tar.gz *"
-	echo ${PACKAGE}-${VERSION}-${suffix}-cfgman.tar.gz >>${tag}.out
+	echo ${PACKAGE}-${VERSION}-${suffix}-cfgman.tar.gz >>${branch}.out
 	${tmpdir}/scripts/www/build-cfg-help.pl --version ${VERSION} -o ${PACKAGE}-${VERSION}-${suffix}-cfgman.html -f singlehtml ${tmpdir}/src/cf.data
 	gzip -f -9 ${PACKAGE}-${VERSION}-${suffix}-cfgman.html
-	echo ${PACKAGE}-${VERSION}-${suffix}-cfgman.html.gz >>${tag}.out
+	echo ${PACKAGE}-${VERSION}-${suffix}-cfgman.html.gz >>${branch}.out
 fi
 
 # Collate Manual Pages and generate HTML versions
@@ -136,12 +130,10 @@ if (groff --help >/dev/null); then
 		cat ${f} | groff -E -Thtml -mandoc >${f}.html
 	done
 	sh -c "cd ${tmpdir}/doc/manuals && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${suffix}-manuals.tar.gz *.html *.1 *.8"
-	echo ${PACKAGE}-${VERSION}-${suffix}-manuals.tar.gz >>${tag}.out
+	echo ${PACKAGE}-${VERSION}-${suffix}-manuals.tar.gz >>${branch}.out
 fi
 
 # Generate language-pack tarballs
-# NP: Only to be done on trunk.
-if test "${tag}" = "trunk" ; then
-	sh -c "cd ${tmpdir}/errors && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${suffix}-langpack.tar.gz ./*/* ./alias* ./TRANSLATORS ./COPYRIGHT "
-	echo ${PACKAGE}-${VERSION}-${suffix}-langpack.tar.gz >>${tag}.out
-fi
+# NP: Only useful on development branch
+sh -c "cd ${tmpdir}/errors && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${suffix}-langpack.tar.gz ./*/* ./alias* ./TRANSLATORS ./COPYRIGHT "
+echo ${PACKAGE}-${VERSION}-${suffix}-langpack.tar.gz >>${branch}.out
