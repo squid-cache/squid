@@ -364,7 +364,7 @@ get_session_cb(SSL *, unsigned char *sessionID, int len, int *copy)
     }
 
     if (!session)
-        debugs(83, 5, "Failed to retrieve SSL_SESSION from cache\n");
+        debugs(83, 5, "Failed to retrieve SSL_SESSION from cache");
 
     // With the parameter copy the callback can require the SSL engine
     // to increment the reference count of the SSL_SESSION object, Normally
