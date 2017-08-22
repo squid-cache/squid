@@ -26,8 +26,6 @@ bool Debug::log_syslog = false;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 char *Debug::cache_log = NULL;
 int Debug::rotateNumber = -1;
-FILE *debug_log = NULL;
-static char *debug_log_file = NULL;
 static int Ctx_Lock = 0;
 static const char *debugLogTime(void);
 static const char *debugLogKid(void);
@@ -45,6 +43,70 @@ static void _db_print_file(const char *format, va_list args);
 extern LPCRITICAL_SECTION dbg_mutex;
 typedef BOOL (WINAPI * PFInitializeCriticalSectionAndSpinCount) (LPCRITICAL_SECTION, DWORD);
 #endif
+
+/// a (FILE*, file name) pair that uses stderr FILE as the last resort
+class DebugFile
+{
+public:
+    DebugFile() {}
+    ~DebugFile() { clear(); }
+    DebugFile(DebugFile &&) = delete; // no copying or moving of any kind
+
+    /// switches to the new pair, absorbing FILE and duping the name
+    void reset(FILE *newFile, const char *newName);
+
+    /// go back to the initial state
+    void clear() { reset(nullptr, nullptr); }
+
+    /// logging stream; the only method that uses stderr as the last resort
+    FILE *file() { return file_ ? file_ : stderr; }
+
+    char *name = nullptr;
+
+private:
+    friend void ResyncDebugLog(FILE *newFile);
+
+    FILE *file_ = nullptr; ///< opened "real" file or nil; never stderr
+};
+
+/// configured cache.log file or stderr
+/// safe during static initialization, even if it has not been constructed yet
+static DebugFile TheLog;
+
+FILE *
+DebugStream() {
+    return TheLog.file();
+}
+
+void
+StopUsingDebugLog()
+{
+    TheLog.clear();
+}
+
+void
+ResyncDebugLog(FILE *newFile)
+{
+    TheLog.file_ = newFile;
+}
+
+void
+DebugFile::reset(FILE *newFile, const char *newName)
+{
+    // callers must use nullptr instead of the used-as-the-last-resort stderr
+    assert(newFile != stderr || !stderr);
+
+    if (file_)
+        fclose(file_);
+    file_ = newFile; // may be nil
+
+    xfree(name);
+    name = newName ? xstrdup(newName) : nullptr;
+
+    // all open files must have a name
+    // all cleared files must not have a name
+    assert(!file_ == !name);
+}
 
 void
 _db_print(const char *format,...)
@@ -210,17 +272,9 @@ static void
 debugOpenLog(const char *logfile)
 {
     if (logfile == NULL) {
-        debug_log = stderr;
+        TheLog.clear();
         return;
     }
-
-    if (debug_log_file)
-        xfree(debug_log_file);
-
-    debug_log_file = xstrdup(logfile);  /* keep a static copy */
-
-    if (debug_log && debug_log != stderr)
-        fclose(debug_log);
 
     // Bug 4423: ignore the stdio: logging module name if present
     const char *logfilename;
@@ -229,19 +283,18 @@ debugOpenLog(const char *logfile)
     else
         logfilename = logfile;
 
-    debug_log = fopen(logfilename, "a+");
-
-    if (!debug_log) {
+    if (auto log = fopen(logfilename, "a+")) {
+#if _SQUID_WINDOWS_
+        setmode(fileno(log), O_TEXT);
+#endif
+        TheLog.reset(log, logfilename);
+    } else {
         fprintf(stderr, "WARNING: Cannot write log file: %s\n", logfile);
         perror(logfile);
         fprintf(stderr, "         messages will be sent to 'stderr'.\n");
         fflush(stderr);
-        debug_log = stderr;
+        TheLog.clear();
     }
-
-#if _SQUID_WINDOWS_
-    setmode(fileno(debug_log), O_TEXT);
-#endif
 }
 
 #if HAVE_SYSLOG
@@ -445,12 +498,12 @@ _db_init(const char *logfile, const char *options)
 void
 _db_rotate_log(void)
 {
-    if (debug_log_file == NULL)
+    if (!TheLog.name)
         return;
 
 #ifdef S_ISREG
     struct stat sb;
-    if (stat(debug_log_file, &sb) == 0)
+    if (stat(TheLog.name, &sb) == 0)
         if (S_ISREG(sb.st_mode) == 0)
             return;
 #endif
@@ -469,8 +522,8 @@ _db_rotate_log(void)
     /* Rotate numbers 0 through N up one */
     for (int i = Debug::rotateNumber; i > 1;) {
         --i;
-        snprintf(from, MAXPATHLEN, "%s.%d", debug_log_file, i - 1);
-        snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, i);
+        snprintf(from, MAXPATHLEN, "%s.%d", TheLog.name, i - 1);
+        snprintf(to, MAXPATHLEN, "%s.%d", TheLog.name, i);
 #if _SQUID_WINDOWS_
         remove
         (to);
@@ -482,36 +535,31 @@ _db_rotate_log(void)
         }
     }
 
-    /*
-     * You can't rename open files on Microsoft "operating systems"
-     * so we close before renaming.
-     */
-#if _SQUID_WINDOWS_
-    if (debug_log != stderr)
-        fclose(debug_log);
-#endif
     /* Rotate the current log to .0 */
     if (Debug::rotateNumber > 0) {
-        snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, 0);
+        // form file names before we may clear TheLog below
+        snprintf(from, MAXPATHLEN, "%s", TheLog.name);
+        snprintf(to, MAXPATHLEN, "%s.%d", TheLog.name, 0);
+
 #if _SQUID_WINDOWS_
         errno = 0;
         if (remove(to) == -1) {
             const auto saved_errno = errno;
             debugs(0, DBG_IMPORTANT, "removal of log file " << to << " failed: " << xstrerr(saved_errno));
         }
+        TheLog.clear(); // Windows cannot rename() open files
 #endif
         errno = 0;
-        if (rename(debug_log_file, to) == -1) {
+        if (rename(from, to) == -1) {
             const auto saved_errno = errno;
-            debugs(0, DBG_IMPORTANT, "renaming file " << debug_log_file << " to "
+            debugs(0, DBG_IMPORTANT, "renaming file " << from << " to "
                    << to << "failed: " << xstrerr(saved_errno));
         }
     }
 
-    /* Close and reopen the log.  It may have been renamed "manually"
-     * before HUP'ing us. */
-    if (debug_log != stderr)
-        debugOpenLog(Debug::cache_log);
+    // Close (if we have not already) and reopen the log because
+    // it may have been renamed "manually" before HUP'ing us.
+    debugOpenLog(Debug::cache_log);
 }
 
 static const char *

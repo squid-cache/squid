@@ -16,7 +16,8 @@
 #include "squid.h"
 #include "Debug.h"
 
-FILE *debug_log = NULL;
+#define STUB_API "debug.cc"
+#include "tests/STUB.h"
 
 char *Debug::debugOptions;
 char *Debug::cache_log= NULL;
@@ -25,6 +26,15 @@ int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::override_X = 0;
 int Debug::log_stderr = 1;
 bool Debug::log_syslog = false;
+
+void StopUsingDebugLog() STUB
+void ResyncDebugLog(FILE *) STUB
+
+FILE *
+DebugStream()
+{
+    return stderr;
+}
 
 Ctx
 ctx_enter(const char *)

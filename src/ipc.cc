@@ -416,7 +416,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     execvp(prog, (char *const *) args);
     xerrno = errno;
 
-    debug_log = fdopen(2, "a+");
+    ResyncDebugLog(fdopen(2, "a+"));
 
     debugs(54, DBG_CRITICAL, "ipcCreate: " << prog << ": " << xstrerr(xerrno));
 
