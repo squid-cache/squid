@@ -947,7 +947,8 @@ Dns::CachedIps::seekNewGood(const char *name)
 void
 Dns::CachedIps::reset(const Ip::Address &ip)
 {
-    ips.resize(1, Dns::CachedIp(ip));
+    ips.clear();
+    ips.emplace_back(ip);
     goodPosition = 0;
     // Assume that the given IP is good because CachedIps are designed to never
     // run out of good IPs.
@@ -978,10 +979,12 @@ Dns::CachedIps::have(const Ip::Address &ip, size_t *positionOrNil) const
         if (cachedIp.ip == ip) {
             if (auto position = positionOrNil)
                 *position = pos;
+            debugs(14, 7, ip << " at " << pos << " in " << *this);
             return true;
         }
     }
     // no such address; leave *position as is
+    debugs(14, 7, " no " << ip << " in " << *this);
     return false;
 }
 
