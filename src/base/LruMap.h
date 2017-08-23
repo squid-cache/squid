@@ -14,19 +14,19 @@
 #include <list>
 #include <map>
 
-template <class EntryValue, size_t EntryCost = sizeof(EntryValue)> class LruMap
+template <class Key, class EntryValue, size_t EntryCost = sizeof(EntryValue)> class LruMap
 {
 public:
     class Entry
     {
     public:
-        Entry(const char *aKey, EntryValue *t): key(aKey), value(t), date(squid_curtime) {}
+        Entry(const Key &aKey, EntryValue *t): key(aKey), value(t), date(squid_curtime) {}
         ~Entry() {delete value;}
     private:
         Entry(Entry &);
         Entry & operator = (Entry &);
     public:
-        std::string key; ///< the key of entry
+        Key key; ///< the key of entry
         EntryValue *value; ///< A pointer to the stored value
         time_t date; ///< The date the entry created
     };
@@ -34,18 +34,18 @@ public:
     typedef typename std::list<Entry *>::iterator QueueIterator;
 
     /// key:queue_item mapping for fast lookups by key
-    typedef std::map<std::string, QueueIterator> Map;
+    typedef std::map<Key, QueueIterator> Map;
     typedef typename Map::iterator MapIterator;
-    typedef std::pair<std::string, QueueIterator> MapPair;
+    typedef std::pair<Key, QueueIterator> MapPair;
 
     LruMap(int ttl, size_t size);
     ~LruMap();
     /// Search for an entry, and return a pointer
-    EntryValue *get(const char *key);
+    EntryValue *get(const Key &key);
     /// Add an entry to the map
-    bool add(const char *key, EntryValue *t);
+    bool add(const Key &key, EntryValue *t);
     /// Delete an entry from the map
-    bool del(const char *key);
+    bool del(const Key &key);
     /// (Re-)set the maximum size for this map
     void setMemLimit(size_t aSize);
     /// The available size for the map
@@ -64,7 +64,7 @@ private:
     void trim();
     void touch(const MapIterator &i);
     bool del(const MapIterator &i);
-    void findEntry(const char *key, LruMap::MapIterator &i);
+    void findEntry(const Key &key, LruMap::MapIterator &i);
 
     Map storage; ///< The Key/value * pairs
     Queue index; ///< LRU cache index
@@ -73,25 +73,25 @@ private:
     int entries_; ///< The stored entries
 };
 
-template <class EntryValue, size_t EntryCost>
-LruMap<EntryValue, EntryCost>::LruMap(int aTtl, size_t aSize): entries_(0)
+template <class Key, class EntryValue, size_t EntryCost>
+    LruMap<Key, EntryValue, EntryCost>::LruMap(int aTtl, size_t aSize): entries_(0)
 {
     ttl = aTtl;
 
     setMemLimit(aSize);
 }
 
-template <class EntryValue, size_t EntryCost>
-LruMap<EntryValue, EntryCost>::~LruMap()
+template <class Key, class EntryValue, size_t EntryCost>
+LruMap<Key, EntryValue, EntryCost>::~LruMap()
 {
     for (QueueIterator i = index.begin(); i != index.end(); ++i) {
         delete *i;
     }
 }
 
-template <class EntryValue, size_t EntryCost>
+template <class Key, class EntryValue, size_t EntryCost>
 void
-LruMap<EntryValue, EntryCost>::setMemLimit(size_t aSize)
+LruMap<Key, EntryValue, EntryCost>::setMemLimit(size_t aSize)
 {
     if (aSize > 0)
         memLimit_ = aSize;
@@ -99,9 +99,9 @@ LruMap<EntryValue, EntryCost>::setMemLimit(size_t aSize)
         memLimit_ = 0;
 }
 
-template <class EntryValue, size_t EntryCost>
+template <class Key, class EntryValue, size_t EntryCost>
 void
-LruMap<EntryValue, EntryCost>::findEntry(const char *key, LruMap::MapIterator &i)
+LruMap<Key, EntryValue, EntryCost>::findEntry(const Key &key, LruMap::MapIterator &i)
 {
     i = storage.find(key);
     if (i == storage.end()) {
@@ -121,9 +121,9 @@ LruMap<EntryValue, EntryCost>::findEntry(const char *key, LruMap::MapIterator &i
     i = storage.end();
 }
 
-template <class EntryValue, size_t EntryCost>
+template <class Key, class EntryValue, size_t EntryCost>
 EntryValue *
-LruMap<EntryValue, EntryCost>::get(const char *key)
+LruMap<Key, EntryValue, EntryCost>::get(const Key &key)
 {
     MapIterator i;
     findEntry(key, i);
@@ -135,9 +135,9 @@ LruMap<EntryValue, EntryCost>::get(const char *key)
     return NULL;
 }
 
-template <class EntryValue, size_t EntryCost>
+template <class Key, class EntryValue, size_t EntryCost>
 bool
-LruMap<EntryValue, EntryCost>::add(const char *key, EntryValue *t)
+LruMap<Key, EntryValue, EntryCost>::add(const Key &key, EntryValue *t)
 {
     if (ttl == 0)
         return false;
@@ -155,9 +155,9 @@ LruMap<EntryValue, EntryCost>::add(const char *key, EntryValue *t)
     return true;
 }
 
-template <class EntryValue, size_t EntryCost>
+template <class Key, class EntryValue, size_t EntryCost>
 bool
-LruMap<EntryValue, EntryCost>::expired(const LruMap::Entry &entry) const
+LruMap<Key, EntryValue, EntryCost>::expired(const LruMap::Entry &entry) const
 {
     if (ttl < 0)
         return false;
@@ -165,9 +165,9 @@ LruMap<EntryValue, EntryCost>::expired(const LruMap::Entry &entry) const
     return (entry.date + ttl < squid_curtime);
 }
 
-template <class EntryValue, size_t EntryCost>
+template <class Key, class EntryValue, size_t EntryCost>
 bool
-LruMap<EntryValue, EntryCost>::del(LruMap::MapIterator const &i)
+LruMap<Key, EntryValue, EntryCost>::del(LruMap::MapIterator const &i)
 {
     if (i != storage.end()) {
         Entry *e = *i->second;
@@ -180,31 +180,31 @@ LruMap<EntryValue, EntryCost>::del(LruMap::MapIterator const &i)
     return false;
 }
 
-template <class EntryValue, size_t EntryCost>
+template <class Key, class EntryValue, size_t EntryCost>
 bool
-LruMap<EntryValue, EntryCost>::del(const char *key)
+LruMap<Key, EntryValue, EntryCost>::del(const Key &key)
 {
     MapIterator i;
     findEntry(key, i);
     return del(i);
 }
 
-template <class EntryValue, size_t EntryCost>
+template <class Key, class EntryValue, size_t EntryCost>
 void
-LruMap<EntryValue, EntryCost>::trim()
+LruMap<Key, EntryValue, EntryCost>::trim()
 {
     while (size() >= memLimit()) {
         QueueIterator i = index.end();
         --i;
         if (i != index.end()) {
-            del((*i)->key.c_str());
+            del((*i)->key);
         }
     }
 }
 
-template <class EntryValue, size_t EntryCost>
+template <class Key, class EntryValue, size_t EntryCost>
 void
-LruMap<EntryValue, EntryCost>::touch(LruMap::MapIterator const &i)
+LruMap<Key, EntryValue, EntryCost>::touch(LruMap::MapIterator const &i)
 {
     // this must not be done when nothing is being cached.
     if (ttl == 0)

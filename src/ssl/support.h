@@ -211,7 +211,7 @@ void unloadSquidUntrusted();
   \ingroup ServerProtocolSSLAPI
   * Decide on the kind of certificate and generate a CA- or self-signed one
 */
-Security::ContextPointer generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port);
+Security::ContextPointer GenerateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port, bool trusted);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -227,7 +227,7 @@ bool verifySslCertificate(Security::ContextPointer &, CertificateProperties cons
   * Read private key and certificate from memory and generate SSL context
   * using their.
  */
-Security::ContextPointer generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port);
+Security::ContextPointer GenerateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port, bool trusted);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -321,6 +321,18 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
 */
 bool setClientSNI(SSL *ssl, const char *fqdn);
 
+
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Generates a unique key based on CertificateProperties object and store it to key
+ */
+void InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties, SBuf &key);
+
+/**
+  \ingroup ServerProtocolSSLAPI
+  Generates an OpenSSL BIO for writting to an SBuf object
+ */
+BIO *BIO_new_SBuf(SBuf *buf);
 } //namespace Ssl
 
 #if _SQUID_WINDOWS_

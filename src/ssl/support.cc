@@ -876,25 +876,31 @@ Ssl::createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey
 }
 
 Security::ContextPointer
-Ssl::generateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port)
+Ssl::GenerateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port, bool trusted)
 {
     Security::CertPointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
     if (!readCertAndPrivateKeyFromMemory(cert, pkey, data) || !cert || !pkey)
         return Security::ContextPointer();
 
-    return createSSLContext(cert, pkey, port);
+    Security::ContextPointer ctx(createSSLContext(cert, pkey, port));
+    if (ctx && trusted)
+        Ssl::chainCertificatesToSSLContext(ctx, port);
+    return ctx;
 }
 
 Security::ContextPointer
-Ssl::generateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port)
+Ssl::GenerateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port, bool trusted)
 {
     Security::CertPointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
     if (!generateSslCertificate(cert, pkey, properties) || !cert || !pkey)
         return Security::ContextPointer();
 
-    return createSSLContext(cert, pkey, port);
+    Security::ContextPointer ctx(createSSLContext(cert, pkey, port));
+    if (ctx && trusted)
+        Ssl::chainCertificatesToSSLContext(ctx, port);
+    return ctx;
 }
 
 void
@@ -985,11 +991,7 @@ Ssl::verifySslCertificate(Security::ContextPointer &ctx, CertificateProperties c
         return false;
     ASN1_TIME * time_notBefore = X509_get_notBefore(cert);
     ASN1_TIME * time_notAfter = X509_get_notAfter(cert);
-    bool ret = (X509_cmp_current_time(time_notBefore) < 0 && X509_cmp_current_time(time_notAfter) > 0);
-    if (!ret)
-        return false;
-
-    return certificateMatchesProperties(cert, properties);
+    return (X509_cmp_current_time(time_notBefore) < 0 && X509_cmp_current_time(time_notAfter) > 0);
 }
 
 bool
@@ -1323,7 +1325,7 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, EVP_
     // XXX: ssl_ask_password_cb needs SSL_CTX_set_default_passwd_cb_userdata()
     // so this may not fully work iff Config.Program.ssl_password is set.
     pem_password_cb *cb = ::Config.Program.ssl_password ? &ssl_ask_password_cb : NULL;
-    pkey.resetWithoutLocking(readSslPrivateKey(keyFilename, cb));
+    Ssl::ReadPrivateKeyFromFile(keyFilename, pkey, cb);
     cert.resetWithoutLocking(readSslX509CertificatesChain(certFilename, chain.get()));
     if (!cert) {
         debugs(83, DBG_IMPORTANT, "WARNING: missing cert in '" << certFilename << "'");
@@ -1359,6 +1361,128 @@ bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, EVP_PKEY_P
     certProperties.signWithPkey.resetAndLock(pkey.get());
     certProperties.mimicCert.resetAndLock(cert.get());
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
+}
+
+void Ssl::InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties, SBuf &key)
+{
+    bool origSignatureAsKey = false;
+    if (certProperties.mimicCert.get()) {
+        ASN1_BIT_STRING *sig = nullptr;
+#if HAVE_LIBCRYPTO_X509_GET0_SIGNATURE
+        X509_ALGOR *sig_alg;
+        X509_get0_signature(&sig, &sig_alg, certProperties.mimicCert.get());
+#else
+        sig = certProperties.mimicCert->signature;
+#endif
+        if (sig) {
+            origSignatureAsKey = true;
+            key.append((const char *)sig->data, sig->length);
+        }
+    }
+
+    if (!origSignatureAsKey || certProperties.setCommonName) {
+        // Use common name instead
+        key.append(certProperties.commonName.c_str());
+    }
+    key.append(certProperties.setCommonName ? '1' : '0');
+    key.append(certProperties.setValidAfter ? '1' : '0');
+    key.append(certProperties.setValidBefore ? '1' : '0');
+    key.append(certProperties.signAlgorithm != Ssl:: algSignEnd ? certSignAlgorithm(certProperties.signAlgorithm) : "-");
+    key.append(certProperties.signHash ? EVP_MD_name(certProperties.signHash) : "-");
+
+    if (certProperties.mimicCert) {
+        BIO *bio = BIO_new_SBuf(&key);
+        ASN1_item_i2d_bio(ASN1_ITEM_rptr(X509), bio, (ASN1_VALUE *)certProperties.mimicCert.get());
+    }
+}
+
+static int
+bio_sbuf_create(BIO* bio)
+{
+    BIO_set_init(bio, 0);
+    BIO_set_data(bio, NULL);
+    return 1;
+}
+
+static int
+bio_sbuf_destroy(BIO* bio)
+{
+    if (!bio)
+        return 0;
+    return 1;
+}
+
+int
+bio_sbuf_write(BIO* bio, const char* data, int len)
+{
+    SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
+    buf->append(data, len);
+    return len;
+}
+
+int
+bio_sbuf_puts(BIO* bio, const char* data)
+{
+    SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
+    size_t oldLen = buf->length();
+    buf->append(data);
+    return buf->length() - oldLen;
+}
+
+long
+bio_sbuf_ctrl(BIO* bio, int cmd, long num, void* ptr) {
+    SBuf *buf = static_cast<SBuf *>(BIO_get_data(bio));
+    switch (cmd) {
+    case BIO_CTRL_RESET:
+        buf->clear();
+        return 1;
+    case BIO_CTRL_FLUSH:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+
+#if HAVE_LIBCRYPTO_BIO_METH_NEW
+static BIO_METHOD *BioSBufMethods = nullptr;
+#else
+static BIO_METHOD BioSBufMethods = {
+    BIO_TYPE_MEM,
+    "Squid SBuf",
+    bio_sbuf_write,
+    nullptr,
+    bio_sbuf_puts,
+    nullptr,
+    bio_sbuf_ctrl,
+    bio_sbuf_create,
+    bio_sbuf_destroy,
+    NULL,
+
+};
+#endif
+
+BIO *Ssl::BIO_new_SBuf(SBuf *buf)
+{
+#if HAVE_LIBCRYPTO_BIO_METH_NEW
+    if (!BioSBufMethods) {
+        BioSBufMethods = BIO_meth_new(BIO_TYPE_MEM, "Squid-SBuf");
+        BIO_meth_set_write(BioSBufMethods, bio_sbuf_write);
+        BIO_meth_set_read(BioSBufMethods, nullptr);
+        BIO_meth_set_puts(BioSBufMethods, bio_sbuf_puts);
+        BIO_meth_set_gets(BioSBufMethods, nullptr);
+        BIO_meth_set_ctrl(BioSBufMethods, bio_sbuf_ctrl);
+        BIO_meth_set_create(BioSBufMethods, bio_sbuf_create);
+        BIO_meth_set_destroy(BioSBufMethods, bio_sbuf_destroy);
+    }
+#else
+    BIO *bio = BIO_new(&BioSBufMethods);
+#endif
+    if (!bio)
+        return nullptr;
+    BIO_set_data(bio, buf);
+    BIO_set_init(bio, 1);
+    return bio;
 }
 
 #endif /* USE_OPENSSL */

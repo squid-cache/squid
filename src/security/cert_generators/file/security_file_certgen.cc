@@ -190,24 +190,15 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
 
     Security::CertPointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
-    std::string &cert_subject = certProperties.dbKey();
+    Security::CertPointer orig;
+    std::string &certKey = Ssl::OnDiskCertificateDbKey(certProperties);
 
     bool dbFailed = false;
     try {
-        db.find(cert_subject, cert, pkey);
+        db.find(certKey, certProperties.mimicCert, cert, pkey);
     } catch (std::runtime_error &err) {
         dbFailed = true;
         error = err.what();
-    }
-
-    if (cert) {
-        if (!Ssl::certificateMatchesProperties(cert.get(), certProperties)) {
-            // The certificate changed (renewed or other reason).
-            // Generete a new one with the updated fields.
-            cert.reset();
-            pkey.reset();
-            db.purgeCert(cert_subject);
-        }
     }
 
     if (!cert || !pkey) {
@@ -216,7 +207,7 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
 
         if (!dbFailed && db.IsEnabledDiskStore()) {
             try {
-                if (!db.addCertAndPrivateKey(cert, pkey, cert_subject)) {
+                if (!db.addCertAndPrivateKey(certKey, cert, pkey, certProperties.mimicCert)) {
                     dbFailed = true;
                     error = "Cannot add certificate to db.";
                 }
@@ -289,7 +280,7 @@ int main(int argc, char *argv[])
 
         if (create_new_db) {
             std::cout << "Initialization SSL db..." << std::endl;
-            Ssl::CertificateDb::create(db_path);
+            Ssl::CertificateDb::Create(db_path);
             std::cout << "Done" << std::endl;
             exit(EXIT_SUCCESS);
         }
@@ -308,7 +299,7 @@ int main(int argc, char *argv[])
         }
 
         {
-            Ssl::CertificateDb::check(db_path, max_db_size, fs_block_size);
+            Ssl::CertificateDb::Check(db_path, max_db_size, fs_block_size);
         }
         // Initialize SSL subsystem
         SSL_load_error_strings();

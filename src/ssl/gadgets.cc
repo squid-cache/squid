@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "ssl/gadgets.h"
 
+#include <openssl/asn1.h>
 #if HAVE_OPENSSL_X509V3_H
 #include <openssl/x509v3.h>
 #endif
@@ -117,26 +118,6 @@ bool Ssl::appendCertToMemory(Security::CertPointer const & cert, std::string & b
     return true;
 }
 
-bool Ssl::writeCertAndPrivateKeyToFile(Security::CertPointer const & cert, Ssl::EVP_PKEY_Pointer const & pkey, char const * filename)
-{
-    if (!pkey || !cert)
-        return false;
-
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
-    if (!bio)
-        return false;
-    if (!BIO_write_filename(bio.get(), const_cast<char *>(filename)))
-        return false;
-
-    if (!PEM_write_bio_X509(bio.get(), cert.get()))
-        return false;
-
-    if (!PEM_write_bio_PrivateKey(bio.get(), pkey.get(), NULL, NULL, 0, NULL, NULL))
-        return false;
-
-    return true;
-}
-
 bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, char const * bufferToRead)
 {
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
@@ -238,40 +219,60 @@ Ssl::CertificateProperties::CertificateProperties():
     signHash(NULL)
 {}
 
-std::string & Ssl::CertificateProperties::dbKey() const
+static void
+printX509Signature(const Security::CertPointer &cert, std::string &out)
+{
+    ASN1_BIT_STRING *sig = nullptr;
+#if HAVE_LIBCRYPTO_X509_GET0_SIGNATURE
+    X509_ALGOR *sig_alg;
+    X509_get0_signature(&sig, &sig_alg, cert.get());
+#else
+    sig = cert->signature;
+#endif
+
+    if (sig && sig->data) {
+        const unsigned char *s = sig->data;
+        for (int i = 0; i < sig->length; ++i) {
+            char hex[3];
+            snprintf(hex, sizeof(hex), "%02x", s[i]);
+            out.append(hex);
+        }
+    }
+}
+
+std::string &
+Ssl::OnDiskCertificateDbKey(const Ssl::CertificateProperties &properties)
 {
     static std::string certKey;
     certKey.clear();
     certKey.reserve(4096);
-    if (mimicCert.get()) {
-        char buf[1024];
-        certKey.append(X509_NAME_oneline(X509_get_subject_name(mimicCert.get()), buf, sizeof(buf)));
-    }
+    if (properties.mimicCert.get())
+        printX509Signature(properties.mimicCert, certKey);
 
     if (certKey.empty()) {
         certKey.append("/CN=", 4);
-        certKey.append(commonName);
+        certKey.append(properties.commonName);
     }
 
-    if (setValidAfter)
+    if (properties.setValidAfter)
         certKey.append("+SetValidAfter=on", 17);
 
-    if (setValidBefore)
+    if (properties.setValidBefore)
         certKey.append("+SetValidBefore=on", 18);
 
-    if (setCommonName) {
+    if (properties.setCommonName) {
         certKey.append("+SetCommonName=", 15);
-        certKey.append(commonName);
+        certKey.append(properties.commonName);
     }
 
-    if (signAlgorithm != Ssl::algSignEnd) {
+    if (properties.signAlgorithm != Ssl::algSignEnd) {
         certKey.append("+Sign=", 6);
-        certKey.append(certSignAlgorithm(signAlgorithm));
+        certKey.append(certSignAlgorithm(properties.signAlgorithm));
     }
 
-    if (signHash != NULL) {
+    if (properties.signHash != NULL) {
         certKey.append("+SignHash=", 10);
-        certKey.append(EVP_MD_name(signHash));
+        certKey.append(EVP_MD_name(properties.signHash));
     }
 
     return certKey;
@@ -698,46 +699,79 @@ bool Ssl::generateSslCertificate(Security::CertPointer & certToStore, Ssl::EVP_P
     return  generateFakeSslCertificate(certToStore, pkeyToStore, properties, serial);
 }
 
-/**
- \ingroup ServerProtocolSSLInternal
- * Read certificate from file.
- */
-static X509 * readSslX509Certificate(char const * certFilename)
+bool
+Ssl::OpenCertsFileForReading(Ssl::BIO_Pointer &bio, const char *filename)
 {
-    if (!certFilename)
-        return NULL;
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
+    bio.reset(BIO_new(BIO_s_file()));
     if (!bio)
-        return NULL;
-    if (!BIO_read_filename(bio.get(), certFilename))
-        return NULL;
-    X509 *certificate = PEM_read_bio_X509(bio.get(), NULL, NULL, NULL);
-    return certificate;
+        return false;
+    if (!BIO_read_filename(bio.get(), filename))
+        return false;
+    return true;
 }
 
-EVP_PKEY * Ssl::readSslPrivateKey(char const * keyFilename, pem_password_cb *passwd_callback)
+bool
+Ssl::ReadX509Certificate(Ssl::BIO_Pointer &bio, Security::CertPointer & cert)
+{
+    assert(bio);
+    if (X509 *certificate = PEM_read_bio_X509(bio.get(), NULL, NULL, NULL)) {
+        cert.resetWithoutLocking(certificate);
+        return true;
+    }
+    return false;
+}
+
+bool
+Ssl::ReadPrivateKey(Ssl::BIO_Pointer &bio, Ssl::EVP_PKEY_Pointer &pkey, pem_password_cb *passwd_callback)
+{
+    assert(bio);
+    if (EVP_PKEY *akey = PEM_read_bio_PrivateKey(bio.get(), NULL, passwd_callback, NULL)) {
+        pkey.resetWithoutLocking(akey);
+        return true;
+    }
+    return false;
+}
+
+void
+Ssl::ReadPrivateKeyFromFile(char const * keyFilename, Ssl::EVP_PKEY_Pointer &pkey, pem_password_cb *passwd_callback)
 {
     if (!keyFilename)
-        return NULL;
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
-    if (!bio)
-        return NULL;
-    if (!BIO_read_filename(bio.get(), keyFilename))
-        return NULL;
-    EVP_PKEY *pkey = PEM_read_bio_PrivateKey(bio.get(), NULL, passwd_callback, NULL);
-    return pkey;
+        return;
+    Ssl::BIO_Pointer bio;
+    if (!OpenCertsFileForReading(bio, keyFilename))
+        return;
+    ReadPrivateKey(bio, pkey, passwd_callback);
 }
 
-void Ssl::readCertAndPrivateKeyFromFiles(Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, char const * certFilename, char const * keyFilename)
+bool
+Ssl::OpenCertsFileForWriting(Ssl::BIO_Pointer &bio, const char *filename)
 {
-    if (keyFilename == NULL)
-        keyFilename = certFilename;
-    pkey.resetWithoutLocking(readSslPrivateKey(keyFilename));
-    cert.resetWithoutLocking(readSslX509Certificate(certFilename));
-    if (!pkey || !cert || !X509_check_private_key(cert.get(), pkey.get())) {
-        pkey.reset();
-        cert.reset();
-    }
+    bio.reset(BIO_new(BIO_s_file()));
+    if (!bio)
+        return false;
+    if (!BIO_write_filename(bio.get(), const_cast<char *>(filename)))
+        return false;
+    return true;
+}
+
+bool
+Ssl::WriteX509Certificate(Ssl::BIO_Pointer &bio, const Security::CertPointer & cert)
+{
+    if (!cert || !bio)
+        return false;
+    if (!PEM_write_bio_X509(bio.get(), cert.get()))
+        return false;
+    return true;
+}
+
+bool
+Ssl::WritePrivateKey(Ssl::BIO_Pointer &bio, const Ssl::EVP_PKEY_Pointer &pkey)
+{
+    if (!pkey || !bio)
+        return false;
+    if (!PEM_write_bio_PrivateKey(bio.get(), pkey.get(), NULL, NULL, 0, NULL, NULL))
+        return false;
+    return true;
 }
 
 bool Ssl::sslDateIsInTheFuture(char const * date)
@@ -893,3 +927,28 @@ const char *Ssl::getOrganization(X509 *x509)
     return getSubjectEntry(x509, NID_organizationName);
 }
 
+
+bool
+Ssl::CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPointer &cert2)
+{
+    if (!cert1 || ! cert2)
+        return false;
+
+    int cert1Len;
+    unsigned char *cert1Asn = NULL;
+    cert1Len = ASN1_item_i2d((ASN1_VALUE *)cert1.get(), &cert1Asn, ASN1_ITEM_rptr(X509));
+
+    int cert2Len;
+    unsigned char *cert2Asn = NULL;
+    cert2Len = ASN1_item_i2d((ASN1_VALUE *)cert2.get(), &cert2Asn, ASN1_ITEM_rptr(X509));
+
+    if (cert1Len != cert2Len)
+        return false;
+
+    bool ret = (memcmp(cert1Asn, cert2Asn, cert1Len) == 0);
+
+    OPENSSL_free(cert1Asn);
+    OPENSSL_free(cert2Asn);
+
+    return ret;
+}
