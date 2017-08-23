@@ -171,7 +171,7 @@ public:
     bool hasDisk(const sdirno dirn = -1, const sfileno filen = -1) const;
     /// Makes hasDisk(dirn, filn) true. The caller should have locked
     /// the corresponding disk store entry for reading or writing.
-    void attachToDisk(const sdirno dirn, const sfileno filn, const swap_status_t status);
+    void attachToDisk(const sdirno dirn, const sfileno filn, const swap_status_t);
     /// Makes hasDisk() false. The caller should have unlocked
     /// the corresponding disk store entry.
     void detachFromDisk();

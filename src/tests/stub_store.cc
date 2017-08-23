@@ -40,7 +40,7 @@ void StoreEntry::abort() STUB
 void StoreEntry::makePublic(const KeyScope scope) STUB
 void StoreEntry::makePrivate(const bool shareable) STUB
 void StoreEntry::setPublicKey(const KeyScope scope) STUB
-void StoreEntry::setPrivateKey(const bool shareable, const bool permanent) STUB
+void StoreEntry::setPrivateKey(const bool, const bool) STUB
 void StoreEntry::expireNow() STUB
 void StoreEntry::releaseRequest(const bool shareable) STUB
 void StoreEntry::negativeCache() STUB
@@ -111,7 +111,7 @@ void Store::Maintain(void *unused) STUB
 int Store::Controller::store_dirs_rebuilding = 0;
 StoreSearch *Store::Controller::search() STUB_RETVAL(NULL)
 void Store::Controller::maintain() STUB
-bool Store::Controller::markedForDeletion(const cache_key *key) const STUB_RETVAL(false)
+bool Store::Controller::markedForDeletion(const cache_key *) const STUB_RETVAL(false)
 
 std::ostream &operator <<(std::ostream &os, const StoreEntry &)
 {

@@ -40,7 +40,7 @@ public:
     virtual void reconfigure();
     virtual StoreEntry *get(const cache_key *key);
     virtual void markForUnlink(StoreEntry &e);
-    virtual void unlinkByKeyIfFound(const cache_key *key);
+    virtual void unlinkByKeyIfFound(const cache_key *);
     virtual void disconnect(StoreEntry &e);
     virtual uint64_t currentSize() const;
     virtual uint64_t currentCount() const;
@@ -49,7 +49,7 @@ public:
     virtual void create();
     virtual void parse(int index, char *path);
     virtual bool smpAware() const { return true; }
-    virtual bool hasReadableEntry(const StoreEntry &e) const;
+    virtual bool hasReadableEntry(const StoreEntry &) const;
 
     // temporary path to the shared memory map of first slots of cached entries
     SBuf inodeMapPath() const;

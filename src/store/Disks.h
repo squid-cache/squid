@@ -39,7 +39,7 @@ public:
     virtual bool anchorCollapsed(StoreEntry &e, bool &inSync) override;
     virtual bool updateCollapsed(StoreEntry &e) override;
     virtual void markForUnlink(StoreEntry &) override;
-    virtual void unlinkByKeyIfFound(const cache_key *key) override;
+    virtual void unlinkByKeyIfFound(const cache_key *) override;
     virtual void unlink(StoreEntry &) override;
     virtual int callback() override;
 
@@ -51,7 +51,7 @@ public:
     int64_t accumulateMore(const StoreEntry&) const;
     virtual bool smpAware() const override;
     /// whether any of disk caches has entry with e.key
-    bool hasReadableEntry(const StoreEntry &e) const;
+    bool hasReadableEntry(const StoreEntry &) const;
 
 private:
     /* migration logic */

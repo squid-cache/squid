@@ -754,7 +754,7 @@ StoreEntry::adjustVary()
 }
 
 StoreEntry *
-storeCreatePureEntry(const char *url, const char *log_url, const RequestFlags &flags, const HttpRequestMethod& method)
+storeCreatePureEntry(const char *url, const char *log_url, const RequestFlags &, const HttpRequestMethod& method)
 {
     StoreEntry *e = NULL;
     debugs(20, 3, "storeCreateEntry: '" << url << "'");
@@ -2073,7 +2073,7 @@ StoreEntry::checkDisk() const
                     (swap_dirn < 0 || swap_dirn < Config.cacheSwap.n_configured);
 
     if (!ok) {
-        debugs(88, DBG_IMPORTANT, "inconsistent disk numbers for entry " << *this);
+        debugs(88, DBG_IMPORTANT, "ERROR: inconsistent disk numbers for entry " << *this);
         throw std::runtime_error("inconsistent disk numbers ");
     }
 }

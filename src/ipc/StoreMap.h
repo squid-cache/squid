@@ -255,10 +255,10 @@ public:
 
     /// whether the entry with the given key exists and was marked as
     /// "waiting to be freed" some time ago
-    bool markedForDeletion(const cache_key *const key);
+    bool markedForDeletion(const cache_key *const);
 
     /// whether the index contains a valid readable entry with the given key
-    bool hasReadableEntry(const cache_key *const key);
+    bool hasReadableEntry(const cache_key *const);
 
     /// opens entry (identified by key) for reading, increments read level
     const Anchor *openForReading(const cache_key *const key, sfileno &fileno);

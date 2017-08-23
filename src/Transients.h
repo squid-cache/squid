@@ -50,7 +50,7 @@ public:
     /// copies current shared entry metadata into parameters
     /// \param aborted whether the entry was aborted
     /// \param waitingToBeFreed whether the entry was marked for deletion
-    void status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFreed) const;
+    void status(const StoreEntry &, bool &aborted, bool &waitingToBeFreed) const;
 
     /// number of entry readers some time ago
     int readers(const StoreEntry &e) const;
@@ -79,7 +79,7 @@ public:
 
     /// whether the entry with the given key exists and was marked
     /// for removal some time ago
-    bool markedForDeletion(const cache_key * key) const;
+    bool markedForDeletion(const cache_key *) const;
 
     static int64_t EntryLimit();
 

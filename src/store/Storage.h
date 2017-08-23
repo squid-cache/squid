@@ -66,7 +66,7 @@ public:
     /// Remove the entry from the store if possible
     /// or mark it as waiting to be freed otherwise.
     /// Do nothing if there is no matching entry in the store.
-    virtual void unlinkByKeyIfFound(const cache_key *key) = 0;
+    virtual void unlinkByKeyIfFound(const cache_key *) = 0;
 
     /// Remove the entry from the store if possible
     /// or mark it as waiting to be freed otherwise.

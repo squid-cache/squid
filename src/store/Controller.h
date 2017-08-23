@@ -39,21 +39,21 @@ public:
     virtual void sync() override;
     virtual void maintain() override;
     virtual void markForUnlink(StoreEntry &) override;
-    virtual void unlinkByKeyIfFound(const cache_key *key) override;
+    virtual void unlinkByKeyIfFound(const cache_key *) override;
     virtual void unlink(StoreEntry &) override;
     virtual int callback() override;
     virtual bool smpAware() const override;
 
     /// Whether the entry with the key exists and was marked for removal
-    /// some time ago; get(key) will return NULL in such case.
+    /// some time ago; get(key) will return nil in such case.
     bool markedForDeletion(const cache_key *key) const;
 
     /// markedForDeletion() with no readers
     /// this is one method because the two conditions must be checked in the right order
-    bool markedForDeletionAndAbandoned(const StoreEntry &e) const;
+    bool markedForDeletionAndAbandoned(const StoreEntry &) const;
 
     /// whether there is a disk entry with e.key
-    bool hasReadableDiskEntry(const StoreEntry &e) const;
+    bool hasReadableDiskEntry(const StoreEntry &) const;
 
     /// Additional unknown-size entry bytes required by Store in order to
     /// reduce the risk of selecting the wrong disk cache for the growing entry.

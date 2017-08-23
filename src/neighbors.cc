@@ -1774,11 +1774,9 @@ neighborsHtcpClearPeerNeeded(const CachePeer &p, const htcp_clr_reason reason)
 void
 neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, htcp_clr_reason reason)
 {
-    CachePeer *p;
-    char buf[128];
-
-    for (p = Config.peers; p; p = p->next) {
+    for (CachePeer *p = Config.peers; p; p = p->next) {
         if (neighborsHtcpClearPeerNeeded(*p, reason)) {
+            static char buf[128];
             debugs(15, 3, "neighborsHtcpClear: sending CLR to " << p->in_addr.toUrl(buf, 128));
             htcpClear(e, uri, req, method, p, reason);
         }
