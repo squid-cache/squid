@@ -149,8 +149,10 @@ StoreEntry::makePublic(const KeyScope scope)
 void
 StoreEntry::makePrivate(const bool shareable)
 {
-    /* This object should never be cached at all */
-    expireNow();
+    if (!shareable) {
+        // This object should not be reused
+        expireNow();
+    }
     releaseRequest(shareable); /* delete object when not used */
 }
 
@@ -1229,7 +1231,6 @@ StoreEntry::release(const bool shareable)
      * outstanding request, mark it for pending release */
 
     if (locked()) {
-        expireNow();
         debugs(20, 3, "storeRelease: Only setting RELEASE_REQUEST bit");
         releaseRequest(shareable);
         PROF_stop(storeRelease);

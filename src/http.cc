@@ -338,7 +338,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
 #endif
 
     if (EBIT_TEST(entry->flags, RELEASE_REQUEST))
-        return decision.make(ReuseDecision::reuseNot, "the entry has been released");
+        return decision.make(ReuseDecision::doNotCacheButShare, "the entry has been released");
 
     // RFC 7234 section 4: a cache MUST use the most recent response
     // (as determined by the Date header field)

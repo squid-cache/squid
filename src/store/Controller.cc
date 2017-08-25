@@ -391,7 +391,7 @@ Store::Controller::unlinkByKeyIfFound(const cache_key *key)
 {
     if (StoreEntry *entry = static_cast<StoreEntry*>(hash_lookup(store_table, key))) {
         debugs(20, 3, "got in-transit entry: " << *entry);
-        entry->release();
+        entry->release(true);
         // The entry should be locked (but see find()). Return here because the
         // release of a locked entry should take care of all its stores.
         return;
