@@ -7,8 +7,8 @@
 
 include $(top_srcdir)/src/Common.am
 
-DIST_SUBDIRS = ntlmauth profiler rfcnb smblib libTrie snmplib
-SUBDIRS=
+DIST_SUBDIRS = ntlmauth profiler rfcnb smblib libTrie snmplib imageio
+SUBDIRS = imageio
 EXTRA_DIST=
 
 if ENABLE_ESI

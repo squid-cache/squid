@@ -3738,6 +3738,7 @@ AC_CONFIG_FILES([
 	errors/Makefile
 	icons/Makefile
 	lib/Makefile
+	lib/imageio/Makefile
 	lib/libTrie/Makefile
 	lib/libTrie/test/Makefile
 	lib/ntlmauth/Makefile
