@@ -1367,9 +1367,9 @@ void Ssl::InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties
 {
     bool origSignatureAsKey = false;
     if (certProperties.mimicCert.get()) {
-        ASN1_BIT_STRING *sig = nullptr;
+        const_ASN1_BIT_STRING *sig = nullptr;
 #if HAVE_LIBCRYPTO_X509_GET0_SIGNATURE
-        X509_ALGOR *sig_alg;
+        const_X509_ALGOR *sig_alg;
         X509_get0_signature(&sig, &sig_alg, certProperties.mimicCert.get());
 #else
         sig = certProperties.mimicCert->signature;
