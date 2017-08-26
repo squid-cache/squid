@@ -149,10 +149,6 @@ StoreEntry::makePublic(const KeyScope scope)
 void
 StoreEntry::makePrivate(const bool shareable)
 {
-    if (!shareable) {
-        // This object should not be reused
-        expireNow();
-    }
     releaseRequest(shareable); /* delete object when not used */
 }
 
