@@ -301,7 +301,23 @@ parse_externalAclHelper(external_acl ** list)
             (*fmt)->data.header.header = (*fmt)->data.string;
         } else
 #endif
-        {
+        if (strncmp(token,"%<{", 3) == 0) {
+            SBuf tmp("%<h");
+            tmp.append(token+2);
+            debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %<{...} is deprecated. Use " << tmp);
+            const size_t parsedLen = (*fmt)->parse(tmp.c_str(), &quote);
+            assert(parsedLen == tmp.length());
+            assert((*fmt)->type == Format::LFT_REPLY_HEADER);
+
+        } else if (strncmp(token,"%>{", 3) == 0) {
+            SBuf tmp("%>ha");
+            tmp.append(token+2);
+            debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %>{...} is deprecated. Use " << tmp);
+            const size_t parsedLen = (*fmt)->parse(tmp.c_str(), &quote);
+            assert(parsedLen == tmp.length());
+            assert((*fmt)->type == Format::LFT_ADAPTED_REQUEST_HEADER);
+
+        } else {
             // we can use the Format::Token::parse() method since it
             // only pulls off one token. Since we already checked
             // for '%' prefix above this is guaranteed to be a token.
