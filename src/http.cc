@@ -767,6 +767,11 @@ HttpStateData::processReplyHeader()
         flags.chunked = true;
         httpChunkDecoder = new Http1::TeChunkedParser;
     }
+    flags.isImage = false;
+    if ((newrep->sline.protocol == AnyP::PROTO_HTTP || newrep->sline.protocol == AnyP::PROTO_HTTP)
+            && newrep->header.isImage()) {
+        flags.isImage = true;
+    }
 
     if (!peerSupportsConnectionPinning())
         request->flags.connectionAuthDisabled = true;
@@ -1243,7 +1248,7 @@ HttpStateData::processReply()
         if (!continueAfterParsingHeader()) // parsing error or need more data
             return; // TODO: send errors to ICAP
 
-        adaptOrFinalizeReply(); // may write to, abort, or "close" the entry
+        adaptOrFinalizeReply(flags.isImage); // may write to, abort, or "close" the entry
     }
 
     // kick more reads if needed and/or process the response body, if any
@@ -1356,7 +1361,11 @@ HttpStateData::writeReplyBody()
     truncateVirginBody(); // if needed
     const char *data = inBuf.rawContent();
     int len = inBuf.length();
-    addVirginReplyBody(data, len);
+    bool deferralWrite = flags.isImage;
+    addVirginReplyBody(data, len, deferralWrite);
+    if (deferralWrite) {
+        deferredBodyForImage.append(inBuf);
+    }
     inBuf.consume(len);
 }
 
@@ -1376,13 +1385,28 @@ HttpStateData::decodeAndWriteReplyBody()
     inBuf = httpChunkDecoder->remaining(); // sync buffers after parse
     len = decodedData.contentSize();
     data=decodedData.content();
-    addVirginReplyBody(data, len);
+    bool deferralWrite = flags.isImage;
+    addVirginReplyBody(data, len, deferralWrite);
+    if (deferralWrite) {
+        deferredBodyForImage.append(inBuf);
+    }
     if (doneParsing) {
         lastChunk = 1;
         flags.do_next_read = false;
     }
     SQUID_EXIT_THROWING_CODE(wasThereAnException);
     return wasThereAnException;
+}
+
+void 
+HttpStateData::flushPendingReplyBody()
+{
+    if (deferredBodyForImage.isEmpty())
+        return;
+
+    entry->startWriting(); // write the updated entry to store
+    storeReplyBody(deferredBodyForImage.rawContent(), deferredBodyForImage.length());
+    deferredBodyForImage.consume(deferredBodyForImage.length());
 }
 
 /**
@@ -1449,7 +1473,7 @@ HttpStateData::processReplyBody()
 
         case COMPLETE_PERSISTENT_MSG: {
             debugs(11, 5, "processReplyBody: COMPLETE_PERSISTENT_MSG from " << serverConnection);
-
+            flushPendingReplyBody();
             // TODO: Remove serverConnectionSaved but preserve exception safety.
 
             commUnsetConnTimeout(serverConnection);

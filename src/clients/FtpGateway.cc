@@ -2628,7 +2628,7 @@ Ftp::Gateway::appendSuccessHeader()
 
     reply->sources |= Http::Message::srcFtp;
     setVirginReply(reply);
-    adaptOrFinalizeReply();
+    adaptOrFinalizeReply(false);
 }
 
 void
@@ -2706,7 +2706,7 @@ void
 Ftp::Gateway::writeReplyBody(const char *dataToWrite, size_t dataLength)
 {
     debugs(9, 5, HERE << "writing " << dataLength << " bytes to the reply");
-    addVirginReplyBody(dataToWrite, dataLength);
+    addVirginReplyBody(dataToWrite, dataLength, false);
 }
 
 /**

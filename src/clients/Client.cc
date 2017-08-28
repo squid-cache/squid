@@ -133,7 +133,7 @@ Client::finalReply()
 }
 
 HttpReply *
-Client::setFinalReply(HttpReply *rep)
+Client::setFinalReply(HttpReply *rep, bool deferralWrite)
 {
     debugs(11,5, HERE << this << " setting final reply to " << rep);
 
@@ -147,7 +147,9 @@ Client::setFinalReply(HttpReply *rep)
     haveParsedReplyHeaders(); // update the entry/reply (e.g., set timestamps)
     if (!EBIT_TEST(entry->flags, RELEASE_REQUEST) && blockCaching())
         entry->release();
-    entry->startWriting(); // write the updated entry to store
+
+    if (!deferralWrite) // defer for possible transcoding
+        entry->startWriting(); // write the updated entry to store
 
     return theFinalReply;
 }
@@ -635,7 +637,7 @@ void
 Client::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 {
     if (responseBodyBuffer) {
-        addVirginReplyBody(NULL, 0); // kick the buffered fragment alive again
+        addVirginReplyBody(NULL, 0, false); // kick the buffered fragment alive again
         if (completed && !responseBodyBuffer) {
             serverComplete2();
             return;
@@ -695,7 +697,7 @@ Client::handleAdaptedHeader(Http::Message *msg)
     HttpReply *rep = dynamic_cast<HttpReply*>(msg);
     assert(rep);
     debugs(11,5, HERE << this << " setting adapted reply to " << rep);
-    setFinalReply(rep);
+    setFinalReply(rep, false);
 
     assert(!adaptedBodySource);
     if (rep->body_pipe != NULL) {
@@ -918,7 +920,7 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
 
     if (!group) {
         debugs(11,3, HERE << "no adapation needed");
-        setFinalReply(virginReply());
+        setFinalReply(virginReply(), false);
         processReplyBody();
         return;
     }
@@ -940,7 +942,7 @@ Client::sendBodyIsTooLargeError()
 // TODO: when HttpStateData sends all errors to ICAP,
 // we should be able to move this at the end of setVirginReply().
 void
-Client::adaptOrFinalizeReply()
+Client::adaptOrFinalizeReply(bool deferralWrite)
 {
 #if USE_ADAPTATION
     // TODO: merge with client side and return void to hide the on/off logic?
@@ -953,7 +955,7 @@ Client::adaptOrFinalizeReply()
         return;
 #endif
 
-    setFinalReply(virginReply());
+    setFinalReply(virginReply(), deferralWrite);
 }
 
 /// initializes bodyBytesRead stats if needed and applies delta
@@ -973,7 +975,7 @@ Client::adjustBodyBytesRead(const int64_t delta)
 }
 
 void
-Client::addVirginReplyBody(const char *data, ssize_t len)
+Client::addVirginReplyBody(const char *data, ssize_t len, bool deferralWrite)
 {
     adjustBodyBytesRead(len);
 
@@ -984,7 +986,8 @@ Client::addVirginReplyBody(const char *data, ssize_t len)
         return;
     }
 #endif
-    storeReplyBody(data, len);
+    if (!deferralWrite)
+        storeReplyBody(data, len);
 }
 
 // writes virgin or adapted reply body to store
