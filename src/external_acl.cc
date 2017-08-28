@@ -307,7 +307,8 @@ parse_externalAclHelper(external_acl ** list)
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %<{...} is deprecated. Use " << tmp);
             const size_t parsedLen = (*fmt)->parse(tmp.c_str(), &quote);
             assert(parsedLen == tmp.length());
-            assert((*fmt)->type == Format::LFT_REPLY_HEADER);
+            assert((*fmt)->type == Format::LFT_REPLY_HEADER ||
+                   (*fmt)->type == Format::LFT_REPLY_HEADER_ELEM);
 
         } else if (strncmp(token,"%>{", 3) == 0) {
             SBuf tmp("%>ha");
@@ -315,7 +316,8 @@ parse_externalAclHelper(external_acl ** list)
             debugs(82, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: external_acl_type format %>{...} is deprecated. Use " << tmp);
             const size_t parsedLen = (*fmt)->parse(tmp.c_str(), &quote);
             assert(parsedLen == tmp.length());
-            assert((*fmt)->type == Format::LFT_ADAPTED_REQUEST_HEADER);
+            assert((*fmt)->type == Format::LFT_ADAPTED_REQUEST_HEADER ||
+                   (*fmt)->type == Format::LFT_ADAPTED_REQUEST_HEADER_ELEM);
 
         } else {
             // we can use the Format::Token::parse() method since it
