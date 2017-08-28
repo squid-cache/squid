@@ -29,6 +29,7 @@ public:
     bool chunked = false;           ///< reading a chunked response; TODO: rename
     bool chunked_request = false;   ///< writing a chunked request
     bool sentLastChunk = false;     ///< do not try to write last-chunk again
+    bool isImage = false;
 };
 
 } // namespace Http

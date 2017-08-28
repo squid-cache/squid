@@ -151,6 +151,7 @@ public:
     int hasByNameListMember(const char *name, const char *member, const char separator) const;
     void removeHopByHopEntries();
     inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
+    inline bool isImage() const; ///< whether it's a image
 
     /* protected, do not use these, use interface functions instead */
     std::vector<HttpHeaderEntry *> entries;     /**< parsed fields in raw format */
@@ -189,6 +190,15 @@ HttpHeader::chunked() const
 {
     return has(Http::HdrType::TRANSFER_ENCODING) &&
            hasListMember(Http::HdrType::TRANSFER_ENCODING, "chunked", ',');
+}
+
+inline bool
+HttpHeader::isImage() const
+{
+    String result;
+    if (!getByIdIfPresent(Http::HdrType::CONTENT_TYPE, &result))
+        return false;
+    return result.cmp("image", 5) == 0;
 }
 
 void httpHeaderInitModule(void);
