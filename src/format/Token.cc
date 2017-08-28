@@ -152,6 +152,7 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry("DATA", LFT_EXT_ACL_DATA),
     TokenTableEntry("DST", LFT_CLIENT_REQ_URLDOMAIN),
     TokenTableEntry("EXT_LOG", LFT_EXT_LOG),
+    TokenTableEntry("EXT_TAG", LFT_TAG),
     TokenTableEntry("EXT_USER", LFT_USER_EXTERNAL),
     TokenTableEntry("IDENT", LFT_USER_IDENT),
     TokenTableEntry("LOGIN", LFT_USER_LOGIN),
