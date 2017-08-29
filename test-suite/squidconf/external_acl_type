@@ -24,14 +24,6 @@ external_acl_type foo \
 	%MYADDR \
 	%MYPORT \
 	%PATH \
-# TODO: enable when these are no longer requiring OpenSSL
-#	%USER_CERT \
-#	%USER_CERTCHAIN \
-#	%USER_CERT_xx \
-#	%USER_CA_CERT_xx \
-#	%ssl::>sni \
-#	%ssl::<cert_subject \
-#	%ssl::<cert_issuer \
 	%>{Header} \
 	%>{Hdr:member} \
 	%>{Hdr:;member} \
@@ -43,3 +35,12 @@ external_acl_type foo \
 	%ACL \
 	%DATA \
 	%%  /bin/true
+
+# TODO: enable when these are no longer requiring OpenSSL
+#	%USER_CERT
+#	%USER_CERTCHAIN
+#	%USER_CERT_xx
+#	%USER_CA_CERT_xx
+#	%ssl::>sni
+#	%ssl::<cert_subject
+#	%ssl::<cert_issuer
