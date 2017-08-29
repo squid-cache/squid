@@ -330,7 +330,8 @@ void InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties, SBu
 
 /**
   \ingroup ServerProtocolSSLAPI
-  Generates an OpenSSL BIO for writting to an SBuf object
+  Creates and returns an OpenSSL BIO object for writing to `buf` (or throws).
+  TODO: Add support for reading from `buf`.
  */
 BIO *BIO_new_SBuf(SBuf *buf);
 } //namespace Ssl
