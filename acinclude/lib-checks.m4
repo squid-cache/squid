@@ -261,8 +261,7 @@ return 0;
 
 dnl Checks whether the X509_get0_signature() has const arguments
 AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_X509_GET0_SIGNATURE_ARGS],[
-  AH_TEMPLATE(const_ASN1_BIT_STRING, "Define if X509_get0_signature() accepts const parameters")
-  AH_TEMPLATE(const_X509_ALGOR, "Define if X509_get0_signature() accepts const parameters")
+  AH_TEMPLATE(SQUID_USE_CONST_X509_GET0_SIGNATURE_ARGS, "Define if X509_get0_signature() accepts const parameters")
   SQUID_STATE_SAVE(check_const_X509_get0_signature_args)
   AC_MSG_CHECKING("whether X509_get0_signature() accepts const parameters")
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
@@ -277,12 +276,9 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_X509_GET0_SIGNATURE_ARGS],[
 #endif
     ])
   ],[
-   AC_DEFINE_UNQUOTED(const_ASN1_BIT_STRING, [const ASN1_BIT_STRING])
-   AC_DEFINE_UNQUOTED(const_X509_ALGOR, [const X509_ALGOR])
+   AC_DEFINE(SQUID_USE_CONST_X509_GET0_SIGNATURE_ARGS, 1)
    AC_MSG_RESULT([yes])
   ],[
-   AC_DEFINE_UNQUOTED(const_ASN1_BIT_STRING, [ASN1_BIT_STRING])
-   AC_DEFINE_UNQUOTED(const_X509_ALGOR, [X509_ALGOR])
    AC_MSG_RESULT([no])
   ])
   SQUID_STATE_ROLLBACK(check_const_X509_get0_signature_args)

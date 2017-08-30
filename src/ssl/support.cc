@@ -1366,15 +1366,8 @@ bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, EVP_PKEY_P
 void Ssl::InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties, SBuf &key)
 {
     bool origSignatureAsKey = false;
-    if (certProperties.mimicCert.get()) {
-        const_ASN1_BIT_STRING *sig = nullptr;
-#if HAVE_LIBCRYPTO_X509_GET0_SIGNATURE
-        const_X509_ALGOR *sig_alg = nullptr;
-        X509_get0_signature(&sig, &sig_alg, certProperties.mimicCert.get());
-#else
-        sig = certProperties.mimicCert->signature;
-#endif
-        if (sig) {
+    if (certProperties.mimicCert) {
+        if (auto *sig = Ssl::X509_get_signature(certProperties.mimicCert)) {
             origSignatureAsKey = true;
             key.append((const char *)sig->data, sig->length);
         }
