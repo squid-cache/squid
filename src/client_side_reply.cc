@@ -915,22 +915,22 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
             debugs(88, 5, m << ' ' << url << ' ' << storeKeyText(key));
             if (StoreEntry *entry = Store::Root().get(key))
             {
+                entry->lock("purgeEntriesByUrl");
 #if USE_HTCP
                 neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
                 if (m == Http::METHOD_GET || m == Http::METHOD_HEAD) {
                     get_or_head_sent = true;
                 }
 #endif
-                // Are there local collapsed clients we should notify?
-                // If yes, get transients index and use it later.
-                const auto transientsIndex = entry->hasTransients() && entry->locked() ? entry->mem_obj->xitTable.index : -1;
                 // entry->release() notifies other waiting workers but
-                // XXX: it does not abort local collapsed Store clients if needed.
+                // XXX: does not abort local collapsed Store clients if needed.
                 entry->release(true);
-                // Work around the above XXX. TODO: Move into release() after making
-                // invokeHandlers() asynchronous.
-                if (transientsIndex >= 0)
-                    Store::Root().syncCollapsed(transientsIndex);
+                // Work around the above XXX.
+                // TODO: Move into release() after making invokeHandlers() asynchronous.
+                if (entry->hasTransients())
+                    Store::Root().syncCollapsed(entry->mem_obj->xitTable.index);
+
+                entry->unlock("purgeEntriesByUrl");
             } else {
                 Store::Root().unlinkByKeyIfFound(key); // does not broadcast but there are no waiting workers
             }
