@@ -49,11 +49,14 @@ typedef enum {
 
 ///Store entry swapping out states.
 typedef enum {
-    SWAPOUT_NONE, ///< the store entry is in a 'disconnected' from disk state
-    SWAPOUT_WRITING, ///< the store entry is being stored on a disk
-    /// The store entry has been stored on a disk and still is 'connected'
-    /// to that disk. That should guarantee that the cached entry has not
-    /// been deleted yet.
+    /// StoreEntry is currently not associated with any disk store entry.
+    /// Does not guarantee (or preclude!) a matching disk store entry existence.
+    SWAPOUT_NONE,
+    /// StoreEntry is being swapped out to the associated disk store entry.
+    /// Guarantees the disk store entry existence.
+    SWAPOUT_WRITING,
+    /// StoreEntry is associated with a complete (i.e., fully swapped out) disk store entry.
+    /// Guarantees the disk store entry existence.
     SWAPOUT_DONE
 } swap_status_t;
 
@@ -73,7 +76,7 @@ enum {
     ENTRY_SPECIAL,
     ENTRY_REVALIDATE_ALWAYS,
     DELAY_SENDING,
-    RELEASE_REQUEST, ///< makes private key permanent
+    RELEASE_REQUEST, ///< prohibits making the key public
     REFRESH_REQUEST,
     ENTRY_REVALIDATE_STALE,
     ENTRY_DISPATCHED,

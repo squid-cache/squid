@@ -577,27 +577,34 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         debugs(20, 7, "not SMP-syncing not-transient " << xitIndex);
         return;
     }
+
     assert(collapsed->mem_obj);
-    // TODO: confirm whether this is reasonable:
-    // assert(collapsed->store_status == STORE_PENDING);
+
+    if (EBIT_TEST(collapsed->flags, ENTRY_ABORTED)) {
+        debugs(20, 3, "skipping already aborted " << *collapsed);
+        return;
+    }
 
     debugs(20, 7, "syncing " << *collapsed);
 
-    bool aborted = false;
+    bool abortedByWriter = false;
     bool waitingToBeFreed = false;
     const bool isWriter = !collapsed->mem_obj->smpCollapsed; // otherwise reader
-    transients->status(*collapsed, aborted, waitingToBeFreed);
+
+    transients->status(*collapsed, abortedByWriter, waitingToBeFreed);
+
     if (isWriter && waitingToBeFreed) {
         debugs(20, 3, "releasing writing " << *collapsed << " due to waitingToBeFreed shared status");
         collapsed->release(true);
         return;
     }
 
-    if (aborted) {
-        debugs(20, 3, "aborting " << *collapsed << " due to aborted shared status");
+    if (abortedByWriter) {
+        debugs(20, 3, "aborting " << *collapsed << " because its writer has aborted");
         collapsed->abort();
         return;
     }
+
     bool found = false;
     bool inSync = false;
     if (memStore && collapsed->mem_obj->memCache.io == MemObject::ioDone) {
@@ -617,9 +624,12 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
 
     if (waitingToBeFreed && !found) {
         debugs(20, 3, "aborting detached " << *collapsed <<
-                " due to waitingToBeFreed shared status");
+                " because it was marked for deletion before we could attach it");
         collapsed->abort();
-    } else if (inSync) {
+        return;
+    }
+
+    if (inSync) {
         debugs(20, 5, "synced " << *collapsed);
         collapsed->invokeHandlers();
     } else if (found) { // unrecoverable problem syncing this entry
