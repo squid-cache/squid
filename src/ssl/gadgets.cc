@@ -222,9 +222,9 @@ Ssl::CertificateProperties::CertificateProperties():
 static void
 printX509Signature(const Security::CertPointer &cert, std::string &out)
 {
-    ASN1_BIT_STRING *sig = nullptr;
+    const_ASN1_BIT_STRING *sig = nullptr;
 #if HAVE_LIBCRYPTO_X509_GET0_SIGNATURE
-    X509_ALGOR *sig_alg;
+    const_X509_ALGOR *sig_alg = nullptr;
     X509_get0_signature(&sig, &sig_alg, cert.get());
 #else
     sig = cert->signature;
