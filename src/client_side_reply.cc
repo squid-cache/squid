@@ -907,27 +907,33 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
 {
 #if USE_HTCP
     bool get_or_head_sent = false;
-    // Optimization: Do not call expensive Root().get() below unless it is needed.
-    const bool needEntry = neighborsHtcpClearNeeded(HTCP_CLR_INVALIDATION);
 #endif
 
     for (HttpRequestMethod m(Http::METHOD_NONE); m != Http::METHOD_ENUM_END; ++m) {
         if (m.respMaybeCacheable()) {
             const cache_key *key = storeKeyPublic(url, m);
             debugs(88, 5, m << ' ' << url << ' ' << storeKeyText(key));
+            if (StoreEntry *entry = Store::Root().get(key))
+            {
 #if USE_HTCP
-            // TODO: Remove if HTCP_CLR_INVALIDATION does not need Store ID (i.e., entry->uri()).
-            if (needEntry) {
-                if (StoreEntry *entry = Store::Root().get(key)) {
-                    entry->lock("purgeEntriesByUrl");
-                    neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
-                    if (m == Http::METHOD_GET || m == Http::METHOD_HEAD)
-                        get_or_head_sent = true;
-                    entry->unlock("purgeEntriesByUrl");
+                neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
+                if (m == Http::METHOD_GET || m == Http::METHOD_HEAD) {
+                    get_or_head_sent = true;
                 }
-            }
 #endif
-            Store::Root().unlinkByKeyIfFound(key);
+                // Are there local collapsed clients we should notify?
+                // If yes, get transients index and use it later.
+                const auto transientsIndex = entry->hasTransients() && entry->locked() ? entry->mem_obj->xitTable.index : -1;
+                // entry->release() notifies other waiting workers but
+                // XXX: it does not abort local collapsed Store clients if needed.
+                entry->release(true);
+                // Work around the above XXX. TODO: Move into release() after making
+                // invokeHandlers() asynchronous.
+                if (transientsIndex >= 0)
+                    Store::Root().syncCollapsed(transientsIndex);
+            } else {
+                Store::Root().unlinkByKeyIfFound(key); // does not broadcast but there are no waiting workers
+            }
         }
     }
 

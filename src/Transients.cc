@@ -352,7 +352,7 @@ Transients::unlinkByKeyIfFound(const cache_key *key)
 void
 Transients::unlink(StoreEntry &e)
 {
-    if (e.mem_obj && e.mem_obj->xitTable.io == MemObject::ioWriting)
+    if (e.mem_obj)
         abandon(e);
 }
 

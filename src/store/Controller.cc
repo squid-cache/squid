@@ -408,6 +408,8 @@ Store::Controller::unlinkByKeyIfFound(const cache_key *key)
 void
 Store::Controller::unlink(StoreEntry &e)
 {
+    if (transients && e.hasTransients())
+        transients->unlink(e);
     memoryUnlink(e);
     if (swapDir)
         swapDir->unlink(e);
@@ -576,7 +578,6 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         return;
     }
     assert(collapsed->mem_obj);
-    assert(collapsed->mem_obj->smpCollapsed);
     // TODO: confirm whether this is reasonable:
     // assert(collapsed->store_status == STORE_PENDING);
 
@@ -584,7 +585,14 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
 
     bool aborted = false;
     bool waitingToBeFreed = false;
+    const bool isWriter = !collapsed->mem_obj->smpCollapsed; // otherwise reader
     transients->status(*collapsed, aborted, waitingToBeFreed);
+    if (isWriter && waitingToBeFreed) {
+        debugs(20, 3, "releasing writing " << *collapsed << " due to waitingToBeFreed shared status");
+        collapsed->release(true);
+        return;
+    }
+
     if (aborted) {
         debugs(20, 3, "aborting " << *collapsed << " due to aborted shared status");
         collapsed->abort();
@@ -608,7 +616,8 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     }
 
     if (waitingToBeFreed && !found) {
-        debugs(20, 3, "aborting detached " << *collapsed << " due to waitingToBeFreed shared status");
+        debugs(20, 3, "aborting detached " << *collapsed <<
+                " due to waitingToBeFreed shared status");
         collapsed->abort();
     } else if (inSync) {
         debugs(20, 5, "synced " << *collapsed);
