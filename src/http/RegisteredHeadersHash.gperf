@@ -50,7 +50,7 @@ Date, Http::HdrType::DATE, Http::HdrFieldType::ftDate_1123, HdrKind::GeneralHead
 ETag, Http::HdrType::ETAG, Http::HdrFieldType::ftETag, HdrKind::EntityHeader
 Expect, Http::HdrType::EXPECT, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
 Expires, Http::HdrType::EXPIRES, Http::HdrFieldType::ftDate_1123, HdrKind::EntityHeader
-Forwarded, Http::HdrType::FORWARDED, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
+Forwarded, Http::HdrType::FORWARDED, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
 From, Http::HdrType::FROM, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 Host, Http::HdrType::HOST, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 If-Match, Http::HdrType::IF_MATCH, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
