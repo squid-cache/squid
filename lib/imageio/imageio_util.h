@@ -54,6 +54,7 @@ void ImgIoUtilCopyPlane(const uint8_t* src, int src_stride,
 // Returns 0 in case of overflow of nmemb * size.
 int ImgIoUtilCheckSizeArgumentsOverflow(uint64_t nmemb, size_t size);
 
+int TryTranscodingImage(const uint8_t* data, int len, void** encoded_data, size_t* encoded_len);
 #ifdef __cplusplus
 }    // extern "C"
 #endif

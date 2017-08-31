@@ -11,6 +11,8 @@
 //
 
 #include "./imageio_util.h"
+#include "./image_dec.h"
+#include "webp/encode.h"
 
 #if defined(_WIN32)
 #include <fcntl.h>   // for _O_BINARY
@@ -144,4 +146,31 @@ int ImgIoUtilCheckSizeArgumentsOverflow(uint64_t nmemb, size_t size) {
   return ok;
 }
 
+int TryTranscodingImage(const uint8_t* data, int len, void** encoded_data, size_t* encoded_len) {
+    int ok = 0;
+    WebPPicture picture;
+    WebPConfig config;
+    WebPMemoryWriter memory_writer;
+
+    WebPMemoryWriterInit(&memory_writer);
+    if (!WebPPictureInit(&picture) || !WebPConfigInit(&config))
+        return 0;
+
+    WebPImageReader reader = WebPGuessImageReader(data, len);
+    ok = reader(data, len, &picture, /*keep_alpha*/ 1, NULL /* metadata */);
+    if (!ok)
+        return 0;
+
+    picture.writer = WebPMemoryWrite;
+    picture.custom_ptr = (void*)&memory_writer;
+    if (!WebPEncode(&config, &picture))
+        return 0;
+
+    //WebPMemoryWriterClear(&memory_writer);
+    free(picture.extra_info);
+    WebPPictureFree(&picture);
+    *encoded_data = memory_writer.mem;
+    *encoded_len = memory_writer.size;
+    return 1;
+}
 // -----------------------------------------------------------------------------

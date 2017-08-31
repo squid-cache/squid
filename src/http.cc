@@ -41,6 +41,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "imageio/imageio_util.h"
 #include "log/access_log.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -1404,9 +1405,25 @@ HttpStateData::flushPendingReplyBody()
     if (deferredBodyForImage.isEmpty())
         return;
 
-    entry->startWriting(); // write the updated entry to store
-    storeReplyBody(deferredBodyForImage.rawContent(), deferredBodyForImage.length());
-    deferredBodyForImage.consume(deferredBodyForImage.length());
+    assert(flags.isImage);
+
+    void* encoded_data = NULL;
+    size_t encoded_size = 0;
+    if (TryTranscodingImage((const uint8_t*)deferredBodyForImage.rawContent(), deferredBodyForImage.length(), &encoded_data, &encoded_size)) {
+        debugs(11,5, HERE << "transcoded! size from " << deferredBodyForImage.length() << " to " << encoded_size);
+        HttpReply* reply = virginReply();
+        reply->setContentLength(encoded_size);
+        reply->setContentType("image/webp");
+        entry->startWriting(); // write the updated entry to store
+        storeReplyBody(static_cast<const char*>(encoded_data), encoded_size);
+        deferredBodyForImage.consume(deferredBodyForImage.length());
+        free(encoded_data);
+    } else {
+        debugs(11,5, HERE << "forward virgin data");
+        entry->startWriting(); // write the updated entry to store
+        storeReplyBody(deferredBodyForImage.rawContent(), deferredBodyForImage.length());
+        deferredBodyForImage.consume(deferredBodyForImage.length());
+    }
 }
 
 /**

@@ -12,3 +12,5 @@ noinst_LIBRARIES = libimageio.a
 noinst_HEADERS = image_dec.h image_enc.h imageio_util.h jpegdec.h metadata.h pngdec.h pnmdec.h tiffdec.h webpdec.h wicdec.h
 
 libimageio_a_SOURCES = image_dec.h image_enc.h imageio_util.h jpegdec.h metadata.h pngdec.h pnmdec.h tiffdec.h webpdec.h wicdec.h image_dec.c image_enc.c imageio_util.c jpegdec.c metadata.c pngdec.c pnmdec.c tiffdec.c webpdec.c wicdec.c 
+
+libimageio_a_CPPFLAGS = $(PNG_INCLUDES) $(JPEG_INCLUDES)
