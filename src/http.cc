@@ -27,6 +27,7 @@
 #include "comm/Write.h"
 #include "error/Detail.h"
 #include "errorpage.h"
+#include "FadingCounter.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -1899,6 +1900,94 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     return;
 }
 
+/** Handle X-Forwarded-For and Forwarded headers
+ *
+ *  off          - append 'unknown' to X-Forwarded-For (only).
+ *  on           - append client IP or 'unknown' to X-Forwarded-For (only).
+ *  truncate     - replace X-Forwarded-For with client IP or 'unknown'.
+ *  delete       - do not copy Forwarded or X-Forwarded-For through.
+ *  transparent  - pass Forwarded or X-Forwarded-For unchanged.
+ */
+static void
+fixupForwardedHeader(const HttpRequest &request, HttpHeader &hdr_out)
+{
+    switch (Config.http.header_forwarded.mode)
+    {
+    case SquidConfig::Http::ExtForwarded::Mode::fwdDelete:
+        // do not send
+        break;
+
+    case SquidConfig::Http::ExtForwarded::Mode::fwdTransparent: {
+        // send what was received
+        auto strXff = request.header.getList(Http::HdrType::X_FORWARDED_FOR);
+        if (strXff.size() > 0)
+            hdr_out.putStr(Http::HdrType::X_FORWARDED_FOR, strXff.termedBuf());
+        auto strFwd = request.header.getList(Http::HdrType::FORWARDED);
+        if (strFwd.size() > 0)
+            hdr_out.putStr(Http::HdrType::FORWARDED, strFwd.termedBuf());
+    }
+    break;
+
+    case SquidConfig::Http::ExtForwarded::Mode::xffOn: {
+        // send what was received, with client-IP or 'unknown' appended
+        auto strFwd = request.header.getList(Http::HdrType::X_FORWARDED_FOR);
+
+        // if we cannot double strFwd size, then it grew past 50% of the limit
+        if (!strFwd.canGrowBy(strFwd.size())) {
+            // There is probably a forwarding loop with Via detection disabled.
+            // If we do nothing, String will assert on overflow soon.
+            // TODO: Terminate all transactions with huge XFF?
+            strFwd = "error";
+
+            static FadingCounter warnedCount;
+            if (warnedCount.count(1) < 100)
+                debugs(11, DBG_IMPORTANT, "WARNING: likely forwarding loop with " << request.effectiveRequestUri());
+        }
+
+        if (request.client_addr.isNoAddr()) {
+            strListAdd(&strFwd, "unknown", ',');
+        } else {
+            static char ntoabuf[MAX_IPSTRLEN];
+            strListAdd(&strFwd, request.client_addr.toStr(ntoabuf, MAX_IPSTRLEN), ',');
+        }
+
+        hdr_out.putStr(Http::HdrType::X_FORWARDED_FOR, strFwd.termedBuf());
+    }
+    break;
+
+    case SquidConfig::Http::ExtForwarded::Mode::xffOff: {
+        // send what was received, with 'unknown' appended
+        auto strFwd = request.header.getList(Http::HdrType::X_FORWARDED_FOR);
+
+        // if we cannot double strFwd size, then it grew past 50% of the limit
+        if (!strFwd.canGrowBy(strFwd.size())) {
+            // There is probably a forwarding loop with Via detection disabled.
+            // If we do nothing, String will assert on overflow soon.
+            // TODO: Terminate all transactions with huge XFF?
+            strFwd = "error";
+
+            static FadingCounter warnedCount;
+            if (warnedCount.count(1) < 100)
+                debugs(11, DBG_IMPORTANT, "WARNING: likely forwarding loop with " << request.effectiveRequestUri());
+        }
+        strListAdd(&strFwd, "unknown", ',');
+        hdr_out.putStr(Http::HdrType::X_FORWARDED_FOR, strFwd.termedBuf());
+    }
+    break;
+
+    case SquidConfig::Http::ExtForwarded::Mode::xffTruncate:
+        // send only client-IP or 'unknown'
+        if (request.client_addr.isNoAddr()) {
+            hdr_out.putStr(Http::HdrType::X_FORWARDED_FOR, "unknown");
+        } else {
+            static char ntoabuf[MAX_IPSTRLEN];
+            request.client_addr.toStr(ntoabuf, MAX_IPSTRLEN);
+            hdr_out.putStr(Http::HdrType::X_FORWARDED_FOR, ntoabuf);
+        }
+        break;
+    }
+}
+
 /*
  * build request headers and append them to a given MemBuf
  * used by buildRequestPrefix()
@@ -1915,7 +2004,6 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     /* building buffer for complex strings */
 #define BBUF_SZ (MAX_URL+32)
     LOCAL_ARRAY(char, bbuf, BBUF_SZ);
-    LOCAL_ARRAY(char, ntoabuf, MAX_IPSTRLEN);
     const HttpHeader *hdr_in = &request->header;
     const HttpHeaderEntry *e = nullptr;
     HttpHeaderPos pos = HttpHeaderInitPos;
@@ -1961,48 +2049,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         hdr_out->putStr(Http::HdrType::SURROGATE_CAPABILITY, strSurrogate.termedBuf());
     }
 
-    /** \pre Handle X-Forwarded-For */
-    if (strcmp(opt_forwarded_for, "delete") != 0) {
-
-        String strFwd = hdr_in->getList(Http::HdrType::X_FORWARDED_FOR);
-
-        // Detect unreasonably long header values. And paranoidly check String
-        // limits: a String ought to accommodate two reasonable-length values.
-        if (strFwd.size() > 32*1024 || !strFwd.canGrowBy(strFwd.size())) {
-            // There is probably a forwarding loop with Via detection disabled.
-            // If we do nothing, String will assert on overflow soon.
-            // TODO: Terminate all transactions with huge XFF?
-            strFwd = "error";
-
-            static int warnedCount = 0;
-            if (warnedCount++ < 100) {
-                const SBuf url(entry ? SBuf(entry->url()) : request->effectiveRequestUri());
-                debugs(11, DBG_IMPORTANT, "WARNING: likely forwarding loop with " << url);
-            }
-        }
-
-        if (strcmp(opt_forwarded_for, "on") == 0) {
-            /** If set to ON - append client IP or 'unknown'. */
-            if ( request->client_addr.isNoAddr() )
-                strListAdd(&strFwd, "unknown", ',');
-            else
-                strListAdd(&strFwd, request->client_addr.toStr(ntoabuf, MAX_IPSTRLEN), ',');
-        } else if (strcmp(opt_forwarded_for, "off") == 0) {
-            /** If set to OFF - append 'unknown'. */
-            strListAdd(&strFwd, "unknown", ',');
-        } else if (strcmp(opt_forwarded_for, "transparent") == 0) {
-            /** If set to TRANSPARENT - pass through unchanged. */
-        } else if (strcmp(opt_forwarded_for, "truncate") == 0) {
-            /** If set to TRUNCATE - drop existing list and replace with client IP or 'unknown'. */
-            if ( request->client_addr.isNoAddr() )
-                strFwd = "unknown";
-            else
-                strFwd = request->client_addr.toStr(ntoabuf, MAX_IPSTRLEN);
-        }
-        if (strFwd.size() > 0)
-            hdr_out->putStr(Http::HdrType::X_FORWARDED_FOR, strFwd.termedBuf());
-    }
-    /** If set to DELETE - do not copy through. */
+    fixupForwardedHeader(*request, *hdr_out);
 
     /* append Host if not there already */
     if (!hdr_out->has(Http::HdrType::HOST)) {
@@ -2303,10 +2350,8 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
             hdr_out->addEntry(e->clone());
         break;
 
-    case Http::HdrType::X_FORWARDED_FOR:
-
     case Http::HdrType::CACHE_CONTROL:
-        /** \par X-Forwarded-For:, Cache-Control:
+        /** \par Cache-Control:
          * handled specially by Squid, so leave off for now.
          * append these after the loop if needed */
         break;
@@ -2317,6 +2362,13 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         if (!flags.front_end_https)
             hdr_out->addEntry(e->clone());
 
+        break;
+
+    case Http::HdrType::X_FORWARDED_FOR:
+    case Http::HdrType::FORWARDED:
+        /** \par X-Forwarded-For:, Forwarded:
+         * handled specially by fixupForwardedHeader()
+         */
         break;
 
     default:
