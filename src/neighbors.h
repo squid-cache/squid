@@ -41,7 +41,6 @@ void neighbors_init(void);
 #if USE_HTCP
 void neighborsHtcpClear(StoreEntry *, const char *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
 /// Whether calling neighborsHtcpClear(..., reason) is useful
-bool neighborsHtcpClearNeeded(const htcp_clr_reason);
 #endif
 CachePeer *peerFindByName(const char *);
 CachePeer *peerFindByNameAndPort(const char *, unsigned short);

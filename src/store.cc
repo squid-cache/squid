@@ -458,6 +458,8 @@ StoreEntry::touch()
 void
 StoreEntry::releaseRequest(const bool shareable)
 {
+    if (!shareable)
+        shareableWhenPrivate = false; // may already be false
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
 
@@ -573,12 +575,13 @@ getKeyCounter(void)
 void
 StoreEntry::setPrivateKey(const bool shareable, const bool permanent)
 {
-    if (key && EBIT_TEST(flags, KEY_PRIVATE)) {
-        // The entry is already private, but it may be still shareable.
-        if (!shareable)
-            shareableWhenPrivate = false;
+    if (permanent)
+        EBIT_SET(flags, RELEASE_REQUEST); // may already be set
+    if (!shareable)
+        shareableWhenPrivate = false; // may already be false
+
+    if (EBIT_TEST(flags, KEY_PRIVATE))
         return;
-    }
 
     if (key) {
         Store::Root().markForUnlink(*this);  // all caches/workers will know
@@ -596,8 +599,6 @@ StoreEntry::setPrivateKey(const bool shareable, const bool permanent)
 
     assert(hash_lookup(store_table, newkey) == NULL);
     EBIT_SET(flags, KEY_PRIVATE);
-    if (permanent)
-        EBIT_SET(flags, RELEASE_REQUEST);
     shareableWhenPrivate = shareable;
     hashInsert(newkey);
 }
@@ -655,6 +656,8 @@ StoreEntry::forcePublicKey(const cache_key *newkey)
     if (StoreEntry *e2 = (StoreEntry *)hash_lookup(store_table, newkey)) {
         assert(e2 != this);
         debugs(20, 3, "releasing clashing " << *e2);
+        // TODO: check whether there is any sense in keeping old entry
+        // shareable here. Leaving it non-shareable for now.
         e2->release(false);
     }
 

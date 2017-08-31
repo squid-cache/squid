@@ -1783,15 +1783,5 @@ neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const Htt
     }
 }
 
-bool
-neighborsHtcpClearNeeded(const htcp_clr_reason reason)
-{
-    for (const CachePeer *p = Config.peers; p; p = p->next) {
-        if (neighborsHtcpClearPeerNeeded(*p, reason))
-            return true;
-    }
-    return false;
-}
-
 #endif
 

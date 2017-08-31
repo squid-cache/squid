@@ -63,14 +63,13 @@ public:
     /// expect an unlink() call after the entry becomes idle
     virtual void markForUnlink(StoreEntry &e) = 0;
 
-    /// Remove the entry from the store if possible
+    /// Remove the matching entry from the store if possible
     /// or mark it as waiting to be freed otherwise.
     /// Do nothing if there is no matching entry in the store.
     virtual void unlinkByKeyIfFound(const cache_key *) = 0;
 
     /// Remove the entry from the store if possible
     /// or mark it as waiting to be freed otherwise.
-    /// The entry must be present in the store.
     virtual void unlink(StoreEntry &e) = 0;
 
     /// called once every main loop iteration; TODO: Move to UFS code.

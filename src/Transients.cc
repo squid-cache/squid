@@ -316,7 +316,8 @@ Transients::completeWriting(const StoreEntry &e)
     if (e.hasTransients()) {
         assert(e.mem_obj->xitTable.io == MemObject::ioWriting);
         // there will be no more updates from us after this, so we must prevent
-        // future readers from joining
+        // future readers from joining. Making the entry complete() is sufficient
+        // because Transients::get() does not return completed entries.
         map->closeForWriting(e.mem_obj->xitTable.index);
         e.mem_obj->xitTable.index = -1;
         e.mem_obj->xitTable.io = MemObject::ioDone;
@@ -337,7 +338,9 @@ void
 Transients::markForUnlink(StoreEntry &e)
 {
     assert(e.key);
-    e.hasTransients() ? unlink(e) :
+    if (e.hasTransients())
+        abandon(e);
+    else
         unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
 }
 
@@ -347,13 +350,6 @@ Transients::unlinkByKeyIfFound(const cache_key *key)
     // Controller ensures that this worker has no StoreEntry to abandon() here.
     if (map)
         map->freeEntryByKey(key);
-}
-
-void
-Transients::unlink(StoreEntry &e)
-{
-    if (e.mem_obj)
-        abandon(e);
 }
 
 void

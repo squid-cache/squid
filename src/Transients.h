@@ -73,7 +73,7 @@ public:
     virtual bool dereference(StoreEntry &e) override;
     virtual void markForUnlink(StoreEntry &e) override;
     virtual void unlinkByKeyIfFound(const cache_key *) override;
-    virtual void unlink(StoreEntry &e) override;
+
     virtual void maintain() override;
     virtual bool smpAware() const override { return true; }
 
@@ -91,6 +91,9 @@ protected:
     virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
 
 private:
+    /* Store API */
+    virtual void unlink(StoreEntry &e) override { markForUnlink(e); }
+
     /// shared packed info indexed by Store keys, for creating new StoreEntries
     TransientsMap *map;
 

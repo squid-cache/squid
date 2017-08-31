@@ -296,7 +296,7 @@ bool
 Ipc::StoreMap::markedForDeletion(const cache_key *const key)
 {
     const int idx = fileNoByKey(key);
-    Anchor &s = anchorAt(idx);
+    const Anchor &s = anchorAt(idx);
     return s.sameKey(key) ? bool(s.waitingToBeFreed) : false;
 }
 

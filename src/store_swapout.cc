@@ -86,6 +86,7 @@ storeSwapOutStart(StoreEntry * e)
     storeIOWrite(mem->swapout.sio, buf, mem->swap_hdr_sz, 0, xfree_cppwrapper);
 }
 
+/// XXX: unused, see a related StoreIOState::file_callback
 static void
 storeSwapOutFileNotify(void *data, int errflag, StoreIOState::Pointer self)
 {
@@ -303,8 +304,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
             storeConfigure();
         }
 
-        if (e->hasDisk())
-            e->disk().unlink(*e);
+        e->disk().unlink(*e);
 
         assert(!e->hasDisk());
 
@@ -374,6 +374,7 @@ StoreEntry::mayStartSwapOut()
 
     if (Store::Root().markedForDeletionAndAbandoned(*this)) {
         debugs(20, 3, "marked for deletion and abandoned");
+        swapOutDecision(MemObject::SwapOut::swImpossible);
         return false;
     }
 

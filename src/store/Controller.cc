@@ -311,15 +311,13 @@ Store::Controller::hasReadableDiskEntry(const StoreEntry &e) const
 StoreEntry *
 Store::Controller::get(const cache_key *key)
 {
-    if (!markedForDeletion(key)) {
-        if (StoreEntry *e = find(key)) {
-            // this is not very precise: some get()s are not initiated by clients
-            e->touch();
-            referenceBusy(*e);
-            return e;
-        }
+    if (StoreEntry *e = find(key)) {
+        // this is not very precise: some get()s are not initiated by clients
+        e->touch();
+        referenceBusy(*e);
+        return e;
     }
-    return NULL;
+    return nullptr;
 }
 
 /// Internal method to implements the guts of the Store::get() API:
@@ -328,6 +326,9 @@ StoreEntry *
 Store::Controller::find(const cache_key *key)
 {
     debugs(20, 3, storeKeyText(key));
+
+    if (markedForDeletion(key))
+        return nullptr;
 
     if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, key))) {
         // TODO: ignore and maybe handleIdleEntry() unlocked intransit entries
@@ -408,8 +409,8 @@ Store::Controller::unlinkByKeyIfFound(const cache_key *key)
 void
 Store::Controller::unlink(StoreEntry &e)
 {
-    if (transients && e.hasTransients())
-        transients->unlink(e);
+    if (transients)
+        transients->markForUnlink(e);
     memoryUnlink(e);
     if (swapDir)
         swapDir->unlink(e);
@@ -632,13 +633,17 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     if (inSync) {
         debugs(20, 5, "synced " << *collapsed);
         collapsed->invokeHandlers();
-    } else if (found) { // unrecoverable problem syncing this entry
+        return;
+    }
+
+    if (found) { // unrecoverable problem syncing this entry
         debugs(20, 3, "aborting unsyncable " << *collapsed);
         collapsed->abort();
-    } else  {
-        // the entry is still not in one of the caches
-        debugs(20, 7, "waiting " << *collapsed);
+        return;
     }
+
+    // the entry is still not in one of the caches
+    debugs(20, 7, "waiting " << *collapsed);
 }
 
 /// Called for in-transit entries that are not yet anchored to a cache.

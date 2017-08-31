@@ -504,12 +504,8 @@ void
 Store::Disks::unlink(StoreEntry &e)
 {
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        if (dir(i).active()) {
-            if (e.hasDisk(i))
-                dir(i).unlink(e);
-            else
-                dir(i).unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
-        }
+        if (dir(i).active())
+            dir(i).unlink(e);
     }
 }
 

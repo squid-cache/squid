@@ -987,11 +987,15 @@ Rock::SwapDir::unlinkdUseful() const
 void
 Rock::SwapDir::unlink(StoreEntry &e)
 {
-    debugs(47, 5, HERE << e);
-    assert(e.hasDisk(index));
-    ignoreReferences(e);
-    map->freeEntry(e.swap_filen);
-    disconnect(e);
+    debugs(47, 5, e);
+    assert(e.key);
+    if (e.hasDisk(index)) {
+        ignoreReferences(e);
+        map->freeEntry(e.swap_filen);
+        disconnect(e);
+    } else {
+        unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
+    }
 }
 
 void
@@ -999,7 +1003,9 @@ Rock::SwapDir::markForUnlink(StoreEntry &e)
 {
     debugs(47, 5, e);
     assert(e.key);
-    e.hasDisk() ? map->freeEntry(e.swap_filen) :
+    if (e.hasDisk())
+        map->freeEntry(e.swap_filen);
+    else
         unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
 }
 
