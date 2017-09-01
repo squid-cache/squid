@@ -36,6 +36,41 @@ if test "x$LDFLAGS" = "x" ; then
   LDFLAGS="-g"
 fi
 
+dnl === LIBCHECK_PROLOGUE([var_pfx])
+dnl ===   Caches the current values of CPPFLAGS/LIBS in SAVED_* then
+dnl ===   prepends the current values with <var_pfx>_{INCLUDES,LIBS}.
+AC_DEFUN([LIBCHECK_PROLOGUE],
+         [SAVED_CPPFLAGS=$CPPFLAGS
+          SAVED_LIBS=$LIBS
+          CPPFLAGS="$$1_INCLUDES $CPPFLAGS"
+          LIBS="$$1_LIBS $LIBS"])
+
+dnl === CLEAR_LIBVARS([var_pfx])
+dnl ===   Clears <var_pfx>_{INCLUDES,LIBS}.
+AC_DEFUN([CLEAR_LIBVARS], [$1_INCLUDES=""; $1_LIBS=""])
+
+dnl === LIBCHECK_EPILOGUE([var_pfx])
+dnl ===   Restores the values of CPPFLAGS/LIBS from SAVED_* and exports
+dnl ===   <var_pfx>_{INCLUDES,LIBS} with AC_SUBST.
+AC_DEFUN([LIBCHECK_EPILOGUE],
+         [AC_SUBST($1_LIBS)
+          AC_SUBST($1_INCLUDES)
+          CPPFLAGS=$SAVED_CPPFLAGS
+          LIBS=$SAVED_LIBS])
+
+dnl === WITHLIB_OPTION([opt_pfx], [outvar_pfx])
+dnl ===   Defines --with-<opt_pfx>{include,lib}dir options which set
+dnl ===   the variables <outvar_pfx>_{INCLUDES,LIBS}.
+AC_DEFUN([WITHLIB_OPTION],
+  [AC_ARG_WITH([$1includedir],
+               AS_HELP_STRING([--with-$1includedir=DIR],
+                              [use $2 includes from DIR]),
+               $2_INCLUDES="-I$withval")
+   AC_ARG_WITH([$1libdir],
+               AS_HELP_STRING([--with-$1libdir=DIR],
+                              [use $2 libraries from DIR]),
+               [$2_LIBS="-L$withval"])])
+
 # Check for GNU cc
 AC_PROG_CC
 AM_PROG_CC_C_O
@@ -3716,6 +3751,67 @@ if test "x$BUILDCXXFLAGS" = "x"; then
 fi
 AC_SUBST(BUILDCXXFLAGS)
 
+AS_IF([test "x$enable_png" != "xno"], [
+  CLEAR_LIBVARS([PNG])
+  AC_PATH_PROGS([LIBPNG_CONFIG],
+                [libpng-config libpng16-config libpng15-config libpng14-config \
+                 libpng12-config])
+  if test -n "$LIBPNG_CONFIG"; then
+    PNG_INCLUDES=`$LIBPNG_CONFIG --cflags`
+    PNG_LIBS="`$LIBPNG_CONFIG --ldflags`"
+  fi
+
+  WITHLIB_OPTION([png], [PNG])
+
+  LIBCHECK_PROLOGUE([PNG])
+  AC_CHECK_HEADER(png.h,
+    AC_SEARCH_LIBS(png_get_libpng_ver, [png],
+                   [test "$ac_cv_search_png_get_libpng_ver" = "none required" \
+                      || PNG_LIBS="$PNG_LIBS $ac_cv_search_png_get_libpng_ver"
+                    PNG_INCLUDES="$PNG_INCLUDES -DWEBP_HAVE_PNG"
+                    AC_DEFINE(WEBP_HAVE_PNG, [1],
+                              [Set to 1 if PNG library is installed])
+                    png_support=yes
+                   ],
+                   [AC_MSG_WARN(Optional png library not found)
+                    PNG_LIBS=""
+                    PNG_INCLUDES=""
+                   ],
+                   [$MATH_LIBS]),
+    [AC_MSG_WARN(png library not available - no png.h)
+     PNG_LIBS=""
+     PNG_INCLUDES=""
+    ],
+  )
+  LIBCHECK_EPILOGUE([PNG])
+])
+
+dnl === check for JPEG support ===
+
+AC_ARG_ENABLE([jpeg],
+              AS_HELP_STRING([--disable-jpeg],
+                             [Disable detection of JPEG format support
+                              @<:@default=auto@:>@]))
+AS_IF([test "x$enable_jpeg" != "xno"], [
+  CLEAR_LIBVARS([JPEG])
+  WITHLIB_OPTION([jpeg], [JPEG])
+
+  LIBCHECK_PROLOGUE([JPEG])
+  AC_CHECK_HEADER(jpeglib.h,
+    AC_CHECK_LIB(jpeg, jpeg_set_defaults,
+                 [JPEG_LIBS="$JPEG_LIBS -ljpeg"
+                  JPEG_INCLUDES="$JPEG_INCLUDES -DWEBP_HAVE_JPEG"
+                  AC_DEFINE(WEBP_HAVE_JPEG, [1],
+                            [Set to 1 if JPEG library is installed])
+                  jpeg_support=yes
+                 ],
+                 AC_MSG_WARN(Optional jpeg library not found),
+                 [$MATH_LIBS]),
+    AC_MSG_WARN(jpeg library not available - no jpeglib.h)
+  )
+  LIBCHECK_EPILOGUE([JPEG])
+])
+
 AC_MSG_NOTICE([BUILD LIBRARIES: $LIBS])
 AC_MSG_NOTICE([BUILD EXTRA LIBRARIES: $XTRA_LIBS])
 AC_MSG_NOTICE([BUILD OBJECTS: $OBJS])
@@ -3739,6 +3835,7 @@ AC_CONFIG_FILES([
 	errors/Makefile
 	icons/Makefile
 	lib/Makefile
+	lib/imageio/Makefile
 	lib/libTrie/Makefile
 	lib/libTrie/test/Makefile
 	lib/ntlmauth/Makefile

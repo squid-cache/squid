@@ -253,6 +253,13 @@ Http::Message::setContentLength(int64_t clen)
     content_length = clen;
 }
 
+void
+Http::Message::setContentType(const char* type)
+{
+    header.delById(Http::HdrType::CONTENT_TYPE); // if any
+    header. putStr(Http::HdrType::CONTENT_TYPE, type);
+}
+
 bool
 Http::Message::persistent() const
 {

@@ -143,11 +143,11 @@ protected:
     HttpReply *setVirginReply(HttpReply *r);
 
     HttpReply *finalReply();
-    HttpReply *setFinalReply(HttpReply *r);
+    HttpReply *setFinalReply(HttpReply *r, bool deferralWrite);
 
     // Kids use these to stuff data into the response instead of messing with the entry directly
-    void adaptOrFinalizeReply();
-    void addVirginReplyBody(const char *buf, ssize_t len);
+    void adaptOrFinalizeReply(bool deferralWrite);
+    void addVirginReplyBody(const char *buf, ssize_t len, bool deferralWrite);
     void storeReplyBody(const char *buf, ssize_t len);
     /// \deprecated use SBuf I/O API and calcBufferSpaceToReserve() instead
     size_t replyBodySpace(const MemBuf &readBuf, const size_t minSpace) const;

@@ -329,7 +329,7 @@ Ftp::Relay::processReplyBody()
     if (data.readBuf != NULL && data.readBuf->hasContent()) {
         const mb_size_t csize = data.readBuf->contentSize();
         debugs(9, 5, "writing " << csize << " bytes to the reply");
-        addVirginReplyBody(data.readBuf->content(), csize);
+        addVirginReplyBody(data.readBuf->content(), csize, false);
         data.readBuf->consume(csize);
     }
 
@@ -381,7 +381,7 @@ Ftp::Relay::forwardReply()
     reply->sources |= Http::Message::srcFtp;
 
     setVirginReply(reply);
-    adaptOrFinalizeReply();
+    adaptOrFinalizeReply(false);
 
     serverComplete();
 }
@@ -455,7 +455,7 @@ Ftp::Relay::startDataDownload()
 
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     setVirginReply(reply);
-    adaptOrFinalizeReply();
+    adaptOrFinalizeReply(false);
 
     maybeReadVirginBody();
     state = READING_DATA;

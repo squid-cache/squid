@@ -58,6 +58,9 @@ public:
     /// [re]sets Content-Length header and cached value
     void setContentLength(int64_t);
 
+    /// [re]sets Content-type header and cached value
+    void setContentType(const char* type);
+
     /**
      * \retval true  the message sender asks to keep the connection open.
      * \retval false the message sender will close the connection.

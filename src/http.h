@@ -66,6 +66,7 @@ public:
     Http::StateFlags flags;
     size_t read_sz;
     SBuf inBuf;                ///< I/O buffer for receiving server responses
+    SBuf deferredBodyForImage; //< I/O buffer for deferal processing image
     bool ignoreCacheControl;
     bool surrogateNoStore;
 
@@ -124,6 +125,7 @@ private:
 
     void writeReplyBody();
     bool decodeAndWriteReplyBody();
+    void flushPendingReplyBody();
     bool finishingBrokenPost();
     bool finishingChunkedRequest();
     void doneSendingRequestBody();
@@ -150,6 +152,8 @@ private:
     /// Whether we received a Date header older than that of a matching
     /// cached response.
     bool sawDateGoBack;
+
+    bool pendingReplyWriting;
 };
 
 std::ostream &operator <<(std::ostream &os, const HttpStateData::ReuseDecision &d);

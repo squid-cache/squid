@@ -337,6 +337,7 @@ public:
         int hostStrictVerify;
         int client_dst_passthru;
         int dns_mdns;
+        int enable_image_transcode;
 #if USE_OPENSSL
         bool logTlsServerHelloDetails;
 #endif

@@ -75,6 +75,9 @@ SUBDIRS += adaptation
 endif
 DIST_SUBDIRS += adaptation
 
+IMAGEIO_LIBS = \
+	$(top_builddir)/lib/imageio/libimageio.a
+
 if ENABLE_ESI
 SUBDIRS += esi
 ESI_LIBS = \
@@ -578,11 +581,15 @@ squid_LDADD = \
 	$(MINGW_LIBS) \
 	$(KRB5LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
+	$(XTRA_LIBS) \
+    $(IMAGEIO_LIBS) \
+    $(PNG_LIBS) \
+    $(JPEG_LIBS) \
+    -lwebp
 
 if ENABLE_LOADABLE_MODULES
 squid_SOURCES += $(LOADABLE_MODULES_SOURCES)
-squid_LDADD += -L$(top_builddir) $(LIBLTDL)
+squid_LDADD += -L$(top_builddir) -L/usr/local/lib $(LIBLTDL) 
 squid_LDFLAGS = -export-dynamic -dlopen force
 ## when static module linking is supported and enabled:
 ## squid_LDFLAGS = -all-static -dlopen self
@@ -1425,7 +1432,9 @@ tests_testCacheManager_LDADD = \
 	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
+	$(XTRA_LIBS) \
+    $(IMAGEIO_LIBS)
+
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 
 tests_testDiskIO_SOURCES = \
@@ -1852,7 +1861,9 @@ tests_testEvent_LDADD = \
 	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
+	$(XTRA_LIBS) \
+    $(IMAGEIO_LIBS)
+
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of the EventLoop module.
@@ -2086,7 +2097,9 @@ tests_testEventLoop_LDADD = \
 	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
+	$(XTRA_LIBS) \
+    $(IMAGEIO_LIBS)
+
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 
 tests_test_http_range_SOURCES = \
@@ -2316,7 +2329,9 @@ tests_test_http_range_LDADD = \
 	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
+	$(XTRA_LIBS) \
+    $(IMAGEIO_LIBS)
+
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of parser/* objects
@@ -2619,7 +2634,9 @@ tests_testHttpRequest_LDADD = \
 	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
+	$(XTRA_LIBS) \
+    $(IMAGEIO_LIBS)
+
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
 ## Tests for icmp/* objects
@@ -3478,7 +3495,9 @@ tests_testURL_LDADD = \
 	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
+	$(XTRA_LIBS) \
+    $(IMAGEIO_LIBS)
+
 tests_testURL_LDFLAGS = $(LIBADD_DL)
 
 tests_testSBuf_SOURCES= \

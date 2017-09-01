@@ -41,6 +41,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "imageio/imageio_util.h"
 #include "log/access_log.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -90,7 +91,8 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     httpChunkDecoder(NULL),
     payloadSeen(0),
     payloadTruncated(0),
-    sawDateGoBack(false)
+    sawDateGoBack(false),
+    pendingReplyWriting(false)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
@@ -767,6 +769,11 @@ HttpStateData::processReplyHeader()
         flags.chunked = true;
         httpChunkDecoder = new Http1::TeChunkedParser;
     }
+    flags.isImage = false;
+    if ((newrep->sline.protocol == AnyP::PROTO_HTTP || newrep->sline.protocol == AnyP::PROTO_HTTP)
+            && newrep->header.isImage()) {
+        flags.isImage = true;
+    }
 
     if (!peerSupportsConnectionPinning())
         request->flags.connectionAuthDisabled = true;
@@ -1243,7 +1250,8 @@ HttpStateData::processReply()
         if (!continueAfterParsingHeader()) // parsing error or need more data
             return; // TODO: send errors to ICAP
 
-        adaptOrFinalizeReply(); // may write to, abort, or "close" the entry
+        pendingReplyWriting = flags.isImage && Config.onoff.enable_image_transcode;
+        adaptOrFinalizeReply(pendingReplyWriting); // may write to, abort, or "close" the entry
     }
 
     // kick more reads if needed and/or process the response body, if any
@@ -1356,7 +1364,10 @@ HttpStateData::writeReplyBody()
     truncateVirginBody(); // if needed
     const char *data = inBuf.rawContent();
     int len = inBuf.length();
-    addVirginReplyBody(data, len);
+    addVirginReplyBody(data, len, pendingReplyWriting);
+    if (pendingReplyWriting) {
+        deferredBodyForImage.append(inBuf);
+    }
     inBuf.consume(len);
 }
 
@@ -1376,13 +1387,43 @@ HttpStateData::decodeAndWriteReplyBody()
     inBuf = httpChunkDecoder->remaining(); // sync buffers after parse
     len = decodedData.contentSize();
     data=decodedData.content();
-    addVirginReplyBody(data, len);
+    addVirginReplyBody(data, len, pendingReplyWriting);
+    if (pendingReplyWriting) {
+        deferredBodyForImage.append(data, len);
+    }
     if (doneParsing) {
         lastChunk = 1;
         flags.do_next_read = false;
     }
     SQUID_EXIT_THROWING_CODE(wasThereAnException);
     return wasThereAnException;
+}
+
+void 
+HttpStateData::flushPendingReplyBody()
+{
+    if (!pendingReplyWriting)
+        return;
+
+    assert(flags.isImage);
+
+    void* encoded_data = NULL;
+    size_t encoded_size = 0;
+    if (!deferredBodyForImage.isEmpty() && TryTranscodingImage((const uint8_t*)deferredBodyForImage.rawContent(), deferredBodyForImage.length(), &encoded_data, &encoded_size)) {
+        debugs(11,5, HERE << "transcoded! size from " << deferredBodyForImage.length() << " to " << encoded_size);
+        HttpReply* reply = virginReply();
+        reply->setContentLength(encoded_size);
+        reply->setContentType("image/webp");
+        entry->startWriting(); // write the updated entry to store
+        storeReplyBody(static_cast<const char*>(encoded_data), encoded_size);
+        deferredBodyForImage.consume(deferredBodyForImage.length());
+        free(encoded_data);
+    } else {
+        debugs(11,5, HERE << "forward virgin data");
+        entry->startWriting(); // write the updated entry to store
+        storeReplyBody(deferredBodyForImage.rawContent(), deferredBodyForImage.length());
+        deferredBodyForImage.consume(deferredBodyForImage.length());
+    }
 }
 
 /**
@@ -1449,7 +1490,7 @@ HttpStateData::processReplyBody()
 
         case COMPLETE_PERSISTENT_MSG: {
             debugs(11, 5, "processReplyBody: COMPLETE_PERSISTENT_MSG from " << serverConnection);
-
+            flushPendingReplyBody();
             // TODO: Remove serverConnectionSaved but preserve exception safety.
 
             commUnsetConnTimeout(serverConnection);
