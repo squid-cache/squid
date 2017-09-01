@@ -155,6 +155,7 @@ StoreEntry::makePrivate(const bool shareable)
 void
 StoreEntry::clearPrivate()
 {
+    assert(!EBIT_TEST(flags, RELEASE_REQUEST));
     EBIT_CLR(flags, KEY_PRIVATE);
     shareableWhenPrivate = false;
 }
