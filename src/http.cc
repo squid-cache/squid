@@ -91,7 +91,8 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     httpChunkDecoder(NULL),
     payloadSeen(0),
     payloadTruncated(0),
-    sawDateGoBack(false)
+    sawDateGoBack(false),
+    pendingReplyWriting(false)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
@@ -1249,7 +1250,8 @@ HttpStateData::processReply()
         if (!continueAfterParsingHeader()) // parsing error or need more data
             return; // TODO: send errors to ICAP
 
-        adaptOrFinalizeReply(flags.isImage); // may write to, abort, or "close" the entry
+        pendingReplyWriting = flags.isImage && Config.onoff.enable_image_transcode;
+        adaptOrFinalizeReply(pendingReplyWriting); // may write to, abort, or "close" the entry
     }
 
     // kick more reads if needed and/or process the response body, if any
@@ -1362,9 +1364,8 @@ HttpStateData::writeReplyBody()
     truncateVirginBody(); // if needed
     const char *data = inBuf.rawContent();
     int len = inBuf.length();
-    bool deferralWrite = flags.isImage;
-    addVirginReplyBody(data, len, deferralWrite);
-    if (deferralWrite) {
+    addVirginReplyBody(data, len, pendingReplyWriting);
+    if (pendingReplyWriting) {
         deferredBodyForImage.append(inBuf);
     }
     inBuf.consume(len);
@@ -1386,10 +1387,9 @@ HttpStateData::decodeAndWriteReplyBody()
     inBuf = httpChunkDecoder->remaining(); // sync buffers after parse
     len = decodedData.contentSize();
     data=decodedData.content();
-    bool deferralWrite = flags.isImage;
-    addVirginReplyBody(data, len, deferralWrite);
-    if (deferralWrite) {
-        deferredBodyForImage.append(inBuf);
+    addVirginReplyBody(data, len, pendingReplyWriting);
+    if (pendingReplyWriting) {
+        deferredBodyForImage.append(data, len);
     }
     if (doneParsing) {
         lastChunk = 1;
@@ -1402,14 +1402,14 @@ HttpStateData::decodeAndWriteReplyBody()
 void 
 HttpStateData::flushPendingReplyBody()
 {
-    if (deferredBodyForImage.isEmpty())
+    if (!pendingReplyWriting)
         return;
 
     assert(flags.isImage);
 
     void* encoded_data = NULL;
     size_t encoded_size = 0;
-    if (TryTranscodingImage((const uint8_t*)deferredBodyForImage.rawContent(), deferredBodyForImage.length(), &encoded_data, &encoded_size)) {
+    if (!deferredBodyForImage.isEmpty() && TryTranscodingImage((const uint8_t*)deferredBodyForImage.rawContent(), deferredBodyForImage.length(), &encoded_data, &encoded_size)) {
         debugs(11,5, HERE << "transcoded! size from " << deferredBodyForImage.length() << " to " << encoded_size);
         HttpReply* reply = virginReply();
         reply->setContentLength(encoded_size);

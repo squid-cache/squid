@@ -2761,6 +2761,19 @@ COMMENT_START
  -----------------------------------------------------------------------------
 COMMENT_END
 
+NAME: enable_image_transcode
+TYPE: onoff
+DEFAULT: off
+LOC: Config.onoff.enable_image_transcode
+DOC_START
+    Enable image transcoding to webP.
+DOC_END
+
+COMMENT_START
+ NOPE
+ -----------------------------------------------------------------------------
+COMMENT_END
+
 NAME: tls_outgoing_options
 IFDEF: USE_GNUTLS||USE_OPENSSL
 TYPE: securePeerOptions

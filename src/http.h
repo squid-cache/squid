@@ -152,6 +152,8 @@ private:
     /// Whether we received a Date header older than that of a matching
     /// cached response.
     bool sawDateGoBack;
+
+    bool pendingReplyWriting;
 };
 
 std::ostream &operator <<(std::ostream &os, const HttpStateData::ReuseDecision &d);
