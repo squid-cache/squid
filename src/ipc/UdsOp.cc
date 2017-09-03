@@ -193,7 +193,7 @@ void Ipc::SendMessage(const String& toAddress, const TypedMsgHdr &message)
 const Comm::ConnectionPointer &
 Ipc::ImportFdIntoComm(const Comm::ConnectionPointer &conn, int socktype, int protocol, Ipc::FdNoteId noteId)
 {
-    struct sockaddr_in addr;
+    struct sockaddr_storage addr;
     socklen_t len = sizeof(addr);
     if (getsockname(conn->fd, reinterpret_cast<sockaddr*>(&addr), &len) == 0) {
         conn->remote = addr;
