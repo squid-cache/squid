@@ -11,6 +11,7 @@
 
 #include "base/CbcPointer.h"
 #include "helper/forward.h"
+#include "helper/ReservationId.h"
 #include "helper/ResultCode.h"
 #include "MemBuf.h"
 #include "Notes.h"
@@ -33,7 +34,7 @@ private:
     Reply &operator =(const Helper::Reply &r);
 
 public:
-    explicit Reply(Helper::ResultCode res) : result(res), notes(), whichServer(NULL) {}
+    explicit Reply(Helper::ResultCode res) : result(res), notes() {}
 
     /// Creates a NULL reply
     Reply();
@@ -60,9 +61,8 @@ public:
     // list of key=value pairs the helper produced
     NotePairs notes;
 
-    /// for stateful replies the responding helper 'server' needs to be preserved across callbacks
-    CbcPointer<helper_stateful_server> whichServer;
-
+    /// The stateful replies should include the reservation ID
+    Helper::ReservationId reservationId;
 private:
     void parseResponseKeys();
 

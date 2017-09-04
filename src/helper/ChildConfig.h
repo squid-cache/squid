@@ -104,6 +104,9 @@ public:
      * special configurations, for example when redirector_bypass is used.
      */
     bool defaultQueueSize;
+
+    /// older stateful helper server reservations may be forgotten
+    time_t reservationTimeout = 64; // reservation-timeout
 };
 
 } // namespace Helper

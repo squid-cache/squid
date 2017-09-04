@@ -17,8 +17,7 @@
 #include "SquidString.h"
 
 Helper::Reply::Reply() :
-    result(Helper::Unknown),
-    whichServer(NULL)
+    result(Helper::Unknown)
 {
 }
 

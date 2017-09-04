@@ -588,6 +588,7 @@ DOC_START
 
 	"children" numberofchildren [startup=N] [idle=N] [concurrency=N]
 		[queue-size=N] [on-persistent-overload=action]
+		[reservation-timeout=seconds]
 
 		The maximum number of authenticator processes to spawn. If
 		you start too few Squid will have to wait for them to process
@@ -636,6 +637,22 @@ DOC_START
 
 		NOTE: NTLM and Negotiate schemes do not support concurrency
 			in the Squid code module even though some helpers can.
+
+		The reservation-timeout=seconds option allows NTLM and Negotiate
+		helpers to forget about clients that abandon their in-progress
+		connection authentication without closing the connection. The
+		timeout is measured since the last helper response received by
+		Squid for the client. Fractional seconds are not supported.
+
+		After the timeout, the helper will be used for other clients if
+		there are no unreserved helpers available. In the latter case,
+		the old client attempt to resume authentication will not be
+		forwarded to the helper (and the client should open a new HTTP
+		connection and retry authentication from scratch).
+
+		By default, reservations do not expire and clients that keep
+		their connections open without completing authentication may
+		exhaust all NTLM and Negotiate helpers.
 
 	"keep_alive" on|off
 		If you experience problems with PUT/POST requests when using

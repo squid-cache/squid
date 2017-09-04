@@ -26,7 +26,6 @@
 #include "SquidTime.h"
 
 Auth::Ntlm::UserRequest::UserRequest() :
-    authserver(nullptr),
     server_blob(nullptr),
     client_blob(nullptr),
     waiting(0),
@@ -157,7 +156,7 @@ Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::Pointe
 
     safe_free(client_blob);
     helperStatefulSubmit(ntlmauthenticators, buf, Auth::Ntlm::UserRequest::HandleReply,
-                         new Auth::StateData(this, handler, data), authserver);
+                         new Auth::StateData(this, handler, data), reservationId);
 }
 
 /**
@@ -167,10 +166,10 @@ Auth::Ntlm::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::Pointe
 void
 Auth::Ntlm::UserRequest::releaseAuthServer()
 {
-    if (authserver) {
-        debugs(29, 6, HERE << "releasing NTLM auth server '" << authserver << "'");
-        helperStatefulReleaseServer(authserver);
-        authserver = NULL;
+    if (reservationId) {
+        debugs(29, 6, reservationId);
+        ntlmauthenticators->cancelReservation(reservationId);
+        reservationId.clear();
     } else
         debugs(29, 6, HERE << "No NTLM auth server to release.");
 }
@@ -260,10 +259,10 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
 
-    debugs(29, 8, HERE << "helper: '" << reply.whichServer << "' sent us reply=" << reply);
+    debugs(29, 8, reply.reservationId << " got reply=" << reply);
 
     if (!cbdataReferenceValid(r->data)) {
-        debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication invalid callback data. helper '" << reply.whichServer << "'.");
+        debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication invalid callback data(" << reply.reservationId <<")");
         delete r;
         return;
     }
@@ -287,10 +286,10 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
     assert(auth_user_request->user() != NULL);
     assert(auth_user_request->user()->auth_type == Auth::AUTH_NTLM);
 
-    if (lm_request->authserver == NULL)
-        lm_request->authserver = reply.whichServer.get(); // XXX: no locking?
+    if (!lm_request->reservationId)
+        lm_request->reservationId = reply.reservationId;
     else
-        assert(reply.whichServer == lm_request->authserver);
+        assert(lm_request->reservationId == reply.reservationId);
 
     switch (reply.result) {
     case Helper::TT:
@@ -360,7 +359,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
         break;
 
     case Helper::Unknown:
-        debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication Helper '" << reply.whichServer << "' crashed!.");
+        debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication Helper crashed (" << reply.reservationId << ")");
     /* continue to the next case */
 
     case Helper::TimedOut:
