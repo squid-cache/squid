@@ -275,6 +275,8 @@ public:
     Anchor &writeableEntry(const AnchorId anchorId);
     /// readable anchor for the entry created by openForReading()
     const Anchor &readableEntry(const AnchorId anchorId) const;
+    /// anchor for the entry created by openForReading() or openForWriting()
+    const Anchor &entryAt(const AnchorId anchorId) const { return anchorAt(anchorId); }
 
     /// Returns the ID of the entry slice containing n-th byte or
     /// a negative ID if the entry does not store that many bytes (yet).

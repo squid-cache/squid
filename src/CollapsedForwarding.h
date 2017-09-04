@@ -26,7 +26,7 @@ public:
     static void Init();
 
     /// notify other workers about changes in entry state (e.g., new data)
-    static void Broadcast(const StoreEntry &e);
+    static void Broadcast(const StoreEntry &e, const bool includingThisWorker = false);
 
     /// kick worker with empty IPC queue
     static void Notify(const int workerId);

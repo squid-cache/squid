@@ -922,13 +922,8 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
                     get_or_head_sent = true;
                 }
 #endif
-                // entry->release() notifies other waiting workers but
-                // XXX: does not abort local collapsed Store clients if needed.
+                // entry->release() notifies other waiting workers, including this one
                 entry->release(true);
-                // Work around the above XXX.
-                // TODO: Move into release() after making invokeHandlers() asynchronous.
-                if (entry->hasTransients())
-                    Store::Root().syncCollapsed(entry->mem_obj->xitTable.index);
 
                 entry->unlock("purgeEntriesByUrl");
             } else {

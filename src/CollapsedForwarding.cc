@@ -53,7 +53,7 @@ CollapsedForwarding::Init()
 }
 
 void
-CollapsedForwarding::Broadcast(const StoreEntry &e)
+CollapsedForwarding::Broadcast(const StoreEntry &e, const bool includingThisWorker)
 {
     if (!queue.get())
         return;
@@ -73,7 +73,7 @@ CollapsedForwarding::Broadcast(const StoreEntry &e)
     // TODO: send only to workers who are waiting for data
     for (int workerId = 1; workerId <= Config.workers; ++workerId) {
         try {
-            if (workerId != KidIdentifier && queue->push(workerId, msg))
+            if ((workerId != KidIdentifier || includingThisWorker) && queue->push(workerId, msg))
                 Notify(workerId);
         } catch (const Queue::Full &) {
             debugs(17, DBG_IMPORTANT, "ERROR: Collapsed forwarding " <<
