@@ -296,8 +296,11 @@ void
 Transients::abandon(const StoreEntry &e)
 {
     assert(e.mem_obj && map);
-    map->freeEntry(e.mem_obj->xitTable.index); // just marks the locked entry
-    CollapsedForwarding::Broadcast(e, true);
+    // avoid useless broadcasts
+    bool stateChanged = false;
+    map->freeEntry(e.mem_obj->xitTable.index, &stateChanged); // just marks the locked entry
+    if (stateChanged)
+        CollapsedForwarding::Broadcast(e, true);
     // We do not unlock the entry now because the problem is most likely with
     // the server resource rather than a specific cache writer, so we want to
     // prevent other readers from collapsing requests for that resource.
@@ -308,7 +311,9 @@ Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFree
 {
     assert(map);
     assert(entry.mem_obj);
-    const auto &anchor = map->entryAt(entry.mem_obj->xitTable.index);
+    const auto idx = entry.mem_obj->xitTable.index;
+    const auto &anchor = collapsedWriter(entry) ?
+        map->writeableEntry(idx) : map->readableEntry(idx);
     aborted = EBIT_TEST(anchor.basics.flags, ENTRY_ABORTED);
     waitingToBeFreed = anchor.waitingToBeFreed;
 }
@@ -317,7 +322,7 @@ void
 Transients::completeWriting(const StoreEntry &e)
 {
     if (e.hasTransients()) {
-        assert(e.mem_obj->xitTable.io == MemObject::ioWriting);
+        assert(collapsedWriter(e));
         // there will be no more updates from us after this, so we must prevent
         // future readers from joining. Making the entry complete() is sufficient
         // because Transients::get() does not return completed entries.
@@ -360,10 +365,10 @@ Transients::disconnect(MemObject &mem_obj)
 {
     if (mem_obj.xitTable.index >= 0) {
         assert(map);
-        if (mem_obj.xitTable.io == MemObject::ioWriting) {
+        if (collapsedWriter(&mem_obj)) {
             map->abortWriting(mem_obj.xitTable.index);
         } else {
-            assert(mem_obj.xitTable.io == MemObject::ioReading);
+            assert(collapsedReader(&mem_obj));
             map->closeForReading(mem_obj.xitTable.index);
         }
         locals->at(mem_obj.xitTable.index) = NULL;
@@ -388,6 +393,32 @@ Transients::markedForDeletion(const cache_key *key) const
 {
     assert(map);
     return map->markedForDeletion(key);
+}
+
+bool
+Transients::collapsedReader(const StoreEntry &e) const
+{
+    return collapsedReader(e.mem_obj);
+}
+
+bool
+Transients::collapsedReader(const MemObject *mem_obj) const
+{
+    assert(mem_obj);
+    return mem_obj->xitTable.io == MemObject::ioReading;
+}
+
+bool
+Transients::collapsedWriter(const StoreEntry &e) const
+{
+    return collapsedWriter(e.mem_obj);
+}
+
+bool
+Transients::collapsedWriter(const MemObject *mem_obj) const
+{
+    assert(mem_obj);
+    return mem_obj->xitTable.io == MemObject::ioWriting;
 }
 
 /// initializes shared memory segment used by Transients

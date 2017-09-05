@@ -910,7 +910,9 @@ void
 MemStore::markForUnlink(StoreEntry &e)
 {
     assert(e.key);
-    e.hasMemStore() ? map->freeEntry(e.mem_obj->memCache.index) :
+    if (e.hasMemStore())
+        map->freeEntry(e.mem_obj->memCache.index);
+    else
         unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
 }
 

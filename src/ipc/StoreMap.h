@@ -73,7 +73,7 @@ public:
 
 public:
     mutable ReadWriteLock lock; ///< protects slot data below
-    std::atomic<uint8_t> waitingToBeFreed; ///< may be accessed w/o a lock
+    std::atomic<bool> waitingToBeFreed; ///< may be accessed w/o a lock
 
     // fields marked with [app] can be modified when appending-while-reading
     // fields marked with [update] can be modified when updating-while-reading
@@ -248,7 +248,8 @@ public:
     const Anchor &peekAtEntry(const sfileno fileno) const;
 
     /// free the entry if possible or mark it as waiting to be freed if not
-    void freeEntry(const sfileno fileno);
+    /// \param stateChanged when provided, true if the entry state changes, false otherwise
+    void freeEntry(const sfileno fileno, bool *stateChanged = nullptr);
     /// free the entry if possible or mark it as waiting to be freed if not
     /// does nothing if we cannot check that the key matches the cached entry
     void freeEntryByKey(const cache_key *const key);
@@ -275,8 +276,6 @@ public:
     Anchor &writeableEntry(const AnchorId anchorId);
     /// readable anchor for the entry created by openForReading()
     const Anchor &readableEntry(const AnchorId anchorId) const;
-    /// anchor for the entry created by openForReading() or openForWriting()
-    const Anchor &entryAt(const AnchorId anchorId) const { return anchorAt(anchorId); }
 
     /// Returns the ID of the entry slice containing n-th byte or
     /// a negative ID if the entry does not store that many bytes (yet).

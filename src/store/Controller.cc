@@ -569,6 +569,72 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
 }
 
 void
+Store::Controller::syncCollapsedWriter(StoreEntry &collapsed)
+{
+    bool aborted = false;
+    bool waitingToBeFreed = false;
+    transients->status(collapsed, aborted, waitingToBeFreed);
+
+    if (waitingToBeFreed) {
+        debugs(20, 3, "releasing writing " << collapsed << " due to waitingToBeFreed shared status");
+        collapsed.release(true);
+    }
+}
+
+void
+Store::Controller::syncCollapsedReader(StoreEntry &collapsed)
+{
+    bool abortedByWriter = false;
+    bool waitingToBeFreed = false;
+    transients->status(collapsed, abortedByWriter, waitingToBeFreed);
+
+    if (abortedByWriter) {
+        debugs(20, 3, "aborting " << collapsed << " because its writer has aborted");
+        collapsed.abort();
+        return;
+    }
+
+    bool found = false;
+    bool inSync = false;
+    if (memStore && collapsed.mem_obj->memCache.io == MemObject::ioDone) {
+        found = true;
+        inSync = true;
+        debugs(20, 7, "fully mem-loaded " << collapsed);
+    } else if (memStore && collapsed.hasMemStore()) {
+        found = true;
+        inSync = memStore->updateCollapsed(collapsed);
+        // TODO: handle entries attached to both memory and disk
+    } else if (swapDir && collapsed.hasDisk()) {
+        found = true;
+        inSync = swapDir->updateCollapsed(collapsed);
+    } else {
+        found = anchorCollapsed(collapsed, inSync);
+    }
+
+    if (waitingToBeFreed && !found) {
+        debugs(20, 3, "aborting detached " << collapsed <<
+                " because it was marked for deletion before we could attach it");
+        collapsed.abort();
+        return;
+    }
+
+    if (inSync) {
+        debugs(20, 5, "synced " << collapsed);
+        collapsed.invokeHandlers();
+        return;
+    }
+
+    if (found) { // unrecoverable problem syncing this entry
+        debugs(20, 3, "aborting unsyncable " << collapsed);
+        collapsed.abort();
+        return;
+    }
+
+    // the entry is still not in one of the caches
+    debugs(20, 7, "waiting " << collapsed);
+}
+
+void
 Store::Controller::syncCollapsed(const sfileno xitIndex)
 {
     assert(transients);
@@ -588,62 +654,12 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
 
     debugs(20, 7, "syncing " << *collapsed);
 
-    bool abortedByWriter = false;
-    bool waitingToBeFreed = false;
-    const bool isWriter = !collapsed->mem_obj->smpCollapsed; // otherwise reader
-
-    transients->status(*collapsed, abortedByWriter, waitingToBeFreed);
-
-    if (isWriter && waitingToBeFreed) {
-        debugs(20, 3, "releasing writing " << *collapsed << " due to waitingToBeFreed shared status");
-        collapsed->release(true);
-        return;
-    }
-
-    if (abortedByWriter) {
-        debugs(20, 3, "aborting " << *collapsed << " because its writer has aborted");
-        collapsed->abort();
-        return;
-    }
-
-    bool found = false;
-    bool inSync = false;
-    if (memStore && collapsed->mem_obj->memCache.io == MemObject::ioDone) {
-        found = true;
-        inSync = true;
-        debugs(20, 7, "fully mem-loaded " << *collapsed);
-    } else if (memStore && collapsed->hasMemStore()) {
-        found = true;
-        inSync = memStore->updateCollapsed(*collapsed);
-        // TODO: handle entries attached to both memory and disk
-    } else if (swapDir && collapsed->hasDisk()) {
-        found = true;
-        inSync = swapDir->updateCollapsed(*collapsed);
+    if (transients->collapsedWriter(*collapsed)) {
+        syncCollapsedWriter(*collapsed);
     } else {
-        found = anchorCollapsed(*collapsed, inSync);
+        assert(transients->collapsedReader(*collapsed));
+        syncCollapsedReader(*collapsed);
     }
-
-    if (waitingToBeFreed && !found) {
-        debugs(20, 3, "aborting detached " << *collapsed <<
-                " because it was marked for deletion before we could attach it");
-        collapsed->abort();
-        return;
-    }
-
-    if (inSync) {
-        debugs(20, 5, "synced " << *collapsed);
-        collapsed->invokeHandlers();
-        return;
-    }
-
-    if (found) { // unrecoverable problem syncing this entry
-        debugs(20, 3, "aborting unsyncable " << *collapsed);
-        collapsed->abort();
-        return;
-    }
-
-    // the entry is still not in one of the caches
-    debugs(20, 7, "waiting " << *collapsed);
 }
 
 /// Called for in-transit entries that are not yet anchored to a cache.

@@ -28,7 +28,9 @@ typedef Ipc::StoreMap TransientsMap;
 
 /// Keeps track of store entries being delivered to clients that arrived before
 /// those entries were [fully] cached. This shared table is necessary to sync
-/// the entry-writing worker with entry-reading worker(s).
+/// the entry-writing worker with entry-reading worker(s) and entry-modifying
+/// worker (e.g., a worker processing DELETE) with both entry-reading and
+/// entry-writing workers.
 class Transients: public Store::Controlled, public Ipc::StoreMapCleaner
 {
 public:
@@ -81,6 +83,11 @@ public:
     /// for removal some time ago
     bool markedForDeletion(const cache_key *) const;
 
+    /// whether the entry is in "reading from Transients" I/O state
+    bool collapsedReader(const StoreEntry &) const;
+    /// whether the entry is in "writing to Transients" I/O state
+    bool collapsedWriter(const StoreEntry &) const;
+
     static int64_t EntryLimit();
 
 protected:
@@ -94,6 +101,9 @@ private:
     /* Store API */
     virtual void unlink(StoreEntry &e) override { markForUnlink(e); }
 
+    bool collapsedReader(const MemObject *) const;
+    bool collapsedWriter(const MemObject *) const;
+
     /// shared packed info indexed by Store keys, for creating new StoreEntries
     TransientsMap *map;
 
@@ -102,7 +112,8 @@ private:
     Ipc::Mem::Pointer<Extras> extras;
 
     typedef std::vector<StoreEntry*> Locals;
-    /// local collapsed entries indexed by transient ID, for syncing old StoreEntries
+    /// local collapsed reader and writer entries, indexed by transient ID,
+    /// for syncing old StoreEntries
     Locals *locals;
 };
 
