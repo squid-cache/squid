@@ -54,7 +54,7 @@ struct hash<Helper::ReservationId>
     typedef std::size_t result_type;
     result_type operator()(const argument_type &reservation) const noexcept
     {
-        std::hash<uint64_t> aHash; 
+        std::hash<uint64_t> aHash;
         return aHash(reservation.value());
     }
 };
