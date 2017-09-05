@@ -119,7 +119,7 @@ HelperServerBase::closeWritePipeSafely(const char *id_name)
 #endif
 }
 
-void 
+void
 HelperServerBase::dropQueued()
 {
     while (!requests.empty()) {
