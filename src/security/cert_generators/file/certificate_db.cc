@@ -664,3 +664,4 @@ Ssl::CertificateDb::ReadEntry(std::string filename, Security::CertPointer & cert
     (void)Ssl::ReadX509Certificate(bio, orig);
     return true;
 }
+

@@ -920,7 +920,6 @@ const char *Ssl::getOrganization(X509 *x509)
     return getSubjectEntry(x509, NID_organizationName);
 }
 
-
 bool
 Ssl::CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPointer &cert2)
 {
@@ -963,3 +962,4 @@ Ssl::X509_get_signature(const Security::CertPointer &cert)
     return cert->signature;
 #endif
 }
+

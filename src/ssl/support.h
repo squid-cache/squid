@@ -321,7 +321,6 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
 */
 bool setClientSNI(SSL *ssl, const char *fqdn);
 
-
 /**
   \ingroup ServerProtocolSSLAPI
   * Generates a unique key based on CertificateProperties object and store it to key
