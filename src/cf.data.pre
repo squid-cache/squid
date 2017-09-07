@@ -9449,4 +9449,23 @@ DOC_START
 	not all I/O types supports large values (eg on Windows).
 DOC_END
 
+NAME: allow_idempotent_keepalives
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: off
+LOC: Config.onoff.allow_idempotent_keepalives
+DOC_START
+	If set to OFF, squid will not attempt to keep alive connections which
+	have processed an idempotent request (RFC2616 9.1.2 Idempotent Methods).
+	When turned ON, squid will keep the connection open after an idempotent
+	request, if possible. Future requests, idempotent and otherwise, will
+	reuse the connection.
+
+	WARNING: this is potentially unsafe and can lead to unexpected behavior
+	for servers which do not handle multiple requests for a persistent
+	connection that performs an idempotent request.
+	Do not allow unless you are sure that remote endpoints can safely deal
+	with persistent connections and idempotent requests.
+DOC_END
+
 EOF

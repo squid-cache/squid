@@ -596,8 +596,10 @@ FwdState::checkRetriable()
     if (request->body_pipe != NULL)
         return false;
 
-    // RFC2616 9.1 Safe and Idempotent Methods
-    return (request->method.isHttpSafe() || request->method.isIdempotent());
+    // Allow idempotent keepalives (which might be dangerous) if configured,
+    // or fall back to a single request per connection for RFC2616 9.1 Safe and
+    // Idempotent Methods
+    return Config.onoff.allow_idempotent_keepalives || (request->method.isHttpSafe() || request->method.isIdempotent());
 }
 
 void
