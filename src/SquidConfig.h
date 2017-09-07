@@ -326,6 +326,7 @@ public:
         int hostStrictVerify;
         int client_dst_passthru;
         int dns_mdns;
+        int allow_idempotent_keepalives;
     } onoff;
 
     int pipeline_max_prefetch;
