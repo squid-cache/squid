@@ -1221,7 +1221,6 @@ Store::Maintain(void *)
 #define MAINTAIN_MAX_SCAN       1024
 #define MAINTAIN_MAX_REMOVE     64
 
-/* release an object from a cache */
 void
 StoreEntry::release(const bool shareable)
 {

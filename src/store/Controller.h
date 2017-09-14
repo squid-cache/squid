@@ -111,11 +111,6 @@ private:
     bool keepForLocalMemoryCache(StoreEntry &e) const;
     bool anchorCollapsed(StoreEntry &, bool &inSync);
 
-    /// Update local intransit reader entry after changes made by another worker.
-    void syncCollapsedReader(StoreEntry &collapsed);
-    /// Update local intransit writer entry after changes make by other worker.
-    void syncCollapsedWriter(StoreEntry &collapsed);
-
     Disks *swapDir; ///< summary view of all disk caches
     Memory *memStore; ///< memory cache
 

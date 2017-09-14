@@ -913,8 +913,7 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
         if (m.respMaybeCacheable()) {
             const cache_key *key = storeKeyPublic(url, m);
             debugs(88, 5, m << ' ' << url << ' ' << storeKeyText(key));
-            if (StoreEntry *entry = Store::Root().get(key))
-            {
+            if (StoreEntry *entry = Store::Root().get(key)) {
                 entry->lock("purgeEntriesByUrl");
 #if USE_HTCP
                 neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
@@ -922,12 +921,12 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
                     get_or_head_sent = true;
                 }
 #endif
-                // entry->release() notifies other waiting workers, including this one
+                // entry->release() notifies waiting workers, including this one
                 entry->release(true);
 
                 entry->unlock("purgeEntriesByUrl");
             } else {
-                Store::Root().unlinkByKeyIfFound(key); // does not broadcast but there are no waiting workers
+                Store::Root().unlinkByKeyIfFound(key); // does not broadcast but there were no waiting workers
             }
         }
     }

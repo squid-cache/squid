@@ -297,9 +297,7 @@ Transients::abandon(const StoreEntry &e)
 {
     assert(e.mem_obj && map);
     // avoid useless broadcasts
-    bool stateChanged = false;
-    map->freeEntry(e.mem_obj->xitTable.index, &stateChanged); // just marks the locked entry
-    if (stateChanged)
+    if (map->freeEntry(e.mem_obj->xitTable.index)); // just marks the locked entry
         CollapsedForwarding::Broadcast(e, true);
     // We do not unlock the entry now because the problem is most likely with
     // the server resource rather than a specific cache writer, so we want to
@@ -314,7 +312,13 @@ Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFree
     const auto idx = entry.mem_obj->xitTable.index;
     const auto &anchor = collapsedWriter(entry) ?
         map->writeableEntry(idx) : map->readableEntry(idx);
-    aborted = EBIT_TEST(anchor.basics.flags, ENTRY_ABORTED);
+    aborted = false;
+    // Since a shared entry gets ENTRY_ABORTED only within StoreMap::abortWriting(),
+    // (anchor.writing() becomes false), we should not check this value before.
+    // Also note that trying to read ENTRY_ABORTED for being written shared entry
+    // may cause unpredictable result, because anchor.basics.flags is not 'atomic'.
+    if (!anchor.writing() && EBIT_TEST(anchor.basics.flags, ENTRY_ABORTED))
+        aborted = true;
     waitingToBeFreed = anchor.waitingToBeFreed;
 }
 

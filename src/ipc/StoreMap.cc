@@ -255,24 +255,22 @@ Ipc::StoreMap::peekAtEntry(const sfileno fileno) const
     return anchorAt(fileno);
 }
 
-void
-Ipc::StoreMap::freeEntry(const sfileno fileno, bool *stateChanged)
+bool
+Ipc::StoreMap::freeEntry(const sfileno fileno)
 {
     debugs(54, 5, "marking entry " << fileno << " to be freed in " << path);
 
     Anchor &s = anchorAt(fileno);
 
     if (s.lock.lockExclusive()) {
+        const bool result = !s.waitingToBeFreed && !s.empty();
         freeChain(fileno, s, false);
-        if (stateChanged)
-            *stateChanged = true;
-    } else {
-        auto expected = false;
-        // mark to free it later, if not marked yet
-        const bool exchanged = s.waitingToBeFreed.compare_exchange_strong(expected, true);
-        if (stateChanged)
-            *stateChanged = exchanged;
+        return result;
     }
+
+    auto expected = false;
+    // mark to free the locked entry later (if not already marked)
+    return s.waitingToBeFreed.compare_exchange_strong(expected, true);
 }
 
 void

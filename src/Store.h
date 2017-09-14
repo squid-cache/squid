@@ -241,9 +241,9 @@ public:
     /// update last reference timestamp and related Store metadata
     void touch();
 
-    /// If unlocked, destroys us, removing the corresponding entry
-    /// from the Store. If locked, makes it private and marks the
-    /// entry for eventual removal from the Store.
+    /// Removes all unlocked (and marks for eventual removal all locked) Store
+    /// entries, including attached and unattached entries that have our key.
+    /// Also destroys us if we are unlocked or makes us private otherwise.
     virtual void release(const bool shareable = false);
 
     /// May the caller commit to treating this [previously locked]

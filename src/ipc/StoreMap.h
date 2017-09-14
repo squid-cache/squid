@@ -248,8 +248,8 @@ public:
     const Anchor &peekAtEntry(const sfileno fileno) const;
 
     /// free the entry if possible or mark it as waiting to be freed if not
-    /// \param stateChanged when provided, true if the entry state changes, false otherwise
-    void freeEntry(const sfileno fileno, bool *stateChanged = nullptr);
+    /// \returns whether the entry was neither empty nor marked
+    bool freeEntry(const sfileno fileno);
     /// free the entry if possible or mark it as waiting to be freed if not
     /// does nothing if we cannot check that the key matches the cached entry
     void freeEntryByKey(const cache_key *const key);
