@@ -323,7 +323,7 @@ MemStore::get(const cache_key *key)
     // XXX: We do not know the URLs yet, only the key, but we need to parse and
     // store the response for the Root().get() callers to be happy because they
     // expect IN_MEMORY entries to already have the response headers and body.
-    e->makeMemObject();
+    e->createMemObject();
 
     anchorEntry(*e, index, *slot);
 
