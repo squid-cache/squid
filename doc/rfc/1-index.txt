@@ -210,3 +210,8 @@ rfc7540.txt
 	The PRI method, the 421 status code, and the HTTP2-Settings header
 	semantics and syntax for HTTP/1.x messages.
 	Details binary frame syntax and semantics for concurrent messaging.
+
+rfc8246.txt
+	HTTP Immutable Responses
+	Details the Cache-Control:immutable extension which indicates
+	responses that can safely ignore client requested revalidation.
