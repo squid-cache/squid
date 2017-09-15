@@ -779,8 +779,7 @@ storeCreatePureEntry(const char *url, const char *log_url, const RequestFlags &f
     debugs(20, 3, "storeCreateEntry: '" << url << "'");
 
     e = new StoreEntry();
-    e->makeMemObject();
-    e->mem_obj->setUris(url, log_url, method);
+    e->createMemObject(url, log_url, method);
 
     if (flags.cachable) {
         EBIT_CLR(e->flags, RELEASE_REQUEST);
@@ -1678,18 +1677,25 @@ StoreEntry::url() const
         return mem_obj->storeId();
 }
 
-MemObject *
-StoreEntry::makeMemObject()
+void
+StoreEntry::createMemObject()
 {
-    if (!mem_obj)
-        mem_obj = new MemObject();
-    return mem_obj;
+    assert(!mem_obj);
+    mem_obj = new MemObject();
 }
 
 void
 StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl, const HttpRequestMethod &aMethod)
 {
-    makeMemObject();
+    assert(!mem_obj);
+    ensureMemObject(aUrl, aLogUrl, aMethod);
+}
+
+void
+StoreEntry::ensureMemObject(const char *aUrl, const char *aLogUrl, const HttpRequestMethod &aMethod)
+{
+    if (!mem_obj)
+        mem_obj = new MemObject();
     mem_obj->setUris(aUrl, aLogUrl, aMethod);
 }
 

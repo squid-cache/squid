@@ -308,6 +308,7 @@ clientReplyContext::processExpired()
     }
 
     if (entry) {
+        entry->ensureMemObject(url, http->log_uri, http->request->method);
         debugs(88, 5, "collapsed on existing revalidation entry: " << *entry);
         collapsedRevalidation = crSlave;
     } else {
@@ -993,7 +994,7 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
     http->storeEntry(entry);
 
     http->storeEntry()->lock("clientReplyContext::purgeFoundObject");
-    http->storeEntry()->createMemObject(storeId(), http->log_uri,
+    http->storeEntry()->ensureMemObject(storeId(), http->log_uri,
                                         http->request->method);
 
     sc = storeClientListAdd(http->storeEntry(), this);
@@ -1844,22 +1845,7 @@ clientReplyContext::doGetMoreData()
 
         http->storeEntry()->lock("clientReplyContext::doGetMoreData");
 
-        MemObject *mem_obj = http->storeEntry()->makeMemObject();
-        if (!mem_obj->hasUris()) {
-            /*
-             * This if-block exists because we don't want to clobber
-             * a preexiting mem_obj->method value if the mem_obj
-             * already exists.  For example, when a HEAD request
-             * is a cache hit for a GET response, we want to keep
-             * the method as GET.
-             */
-            mem_obj->setUris(storeId(), http->log_uri, http->request->method);
-            /**
-             * Here we can see if the object was
-             * created using URL or alternative StoreID from helper.
-             */
-            debugs(88, 3, "storeId: " << http->storeEntry()->mem_obj->storeId());
-        }
+        http->storeEntry()->ensureMemObject(storeId(), http->log_uri, http->request->method);
 
         sc = storeClientListAdd(http->storeEntry(), this);
 #if USE_DELAY_POOLS

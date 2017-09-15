@@ -42,7 +42,12 @@ public:
     MemObject();
     ~MemObject();
 
-    /// sets store ID, log URI, and request method; TODO: find a better name
+    /// Sets store ID, log URI, and request method (unless already set). Does
+    /// not clobber the method so that, say, a HEAD hit for a GET entry keeps
+    /// the GET method that matches the entry key. Same for the other parts of
+    /// the trio because the entry filling code may expect them to be constant.
+    /// XXX: Avoid this method. We plan to remove it and make the trio constant
+    /// after addressing the XXX in MemStore::get().
     void setUris(char const *aStoreId, char const *aLogUri, const HttpRequestMethod &aMethod);
 
     /// whether setUris() has been called
