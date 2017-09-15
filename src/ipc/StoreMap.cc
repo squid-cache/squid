@@ -213,7 +213,7 @@ Ipc::StoreMap::abortWriting(const sfileno fileno)
         debugs(54, 5, "closed clean entry " << fileno << " for writing " << path);
     } else {
         s.waitingToBeFreed = true;
-        EBIT_SET(s.basics.flags, ENTRY_ABORTED);
+        s.writerHalted = true;
         s.lock.unlockExclusive();
         debugs(54, 5, "closed dirty entry " << fileno << " for writing " << path);
     }
@@ -795,6 +795,7 @@ Ipc::StoreMapAnchor::rewind()
     memset(&key, 0, sizeof(key));
     memset(&basics, 0, sizeof(basics));
     waitingToBeFreed = false;
+    writerHalted = false;
     // but keep the lock
 }
 
