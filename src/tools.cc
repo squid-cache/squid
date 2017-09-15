@@ -56,7 +56,7 @@ The Squid Cache (version %s) died.\n\
 You've encountered a fatal error in the Squid Cache version %s.\n\
 If a core file was created (possibly in the swap directory),\n\
 please execute 'gdb squid core' or 'dbx squid core', then type 'where',\n\
-and report the trace back to squid-bugs@squid-cache.org.\n\
+and report the trace back to squid-bugs@lists.squid-cache.org.\n\
 \n\
 Thanks!\n"
 

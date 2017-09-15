@@ -77,7 +77,7 @@ extern void (*failure_notify) (const char *);
  * NP: FreeBSD 7 defines FD_SETSIZE as unsigned but Squid needs
  *     it to be signed to compare it with signed values.
  *     Linux and others including FreeBSD <7, define it as signed.
- *     If this causes any issues please contact squid-dev@squid-cache.org
+ *     If this causes any issues please contact squid-dev mailing list.
  */
 #if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
 /* Limited by design */
