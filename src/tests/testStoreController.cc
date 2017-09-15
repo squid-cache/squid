@@ -31,8 +31,7 @@ testStoreController::testStats()
 {
     Store::Init();
     StoreEntry *logEntry = new StoreEntry;
-    logEntry->makeMemObject();
-    logEntry->mem_obj->setUris("dummy_storeId", NULL, HttpRequestMethod());
+    logEntry->createMemObject("dummy_storeId", NULL, HttpRequestMethod());
     logEntry->store_status = STORE_PENDING;
     TestSwapDirPointer aStore (new TestSwapDir);
     TestSwapDirPointer aStore2 (new TestSwapDir);
@@ -73,8 +72,7 @@ testStoreController::testMaxSize()
 {
     commonInit();
     StoreEntry *logEntry = new StoreEntry;
-    logEntry->makeMemObject();
-    logEntry->mem_obj->setUris("dummy_storeId", NULL, HttpRequestMethod());
+    logEntry->createMemObject("dummy_storeId", NULL, HttpRequestMethod());
     logEntry->store_status = STORE_PENDING;
     Store::Init();
     TestSwapDirPointer aStore (new TestSwapDir);
