@@ -77,7 +77,11 @@ MemObject::hasUris() const
 void
 MemObject::setUris(char const *aStoreId, char const *aLogUri, const HttpRequestMethod &aMethod)
 {
+    if (hasUris())
+        return;
+
     storeId_ = aStoreId;
+    debugs(88, 3, this << " storeId: " << storeId_);
 
     // fast pointer comparison for a common storeCreateEntry(url,url,...) case
     if (!aLogUri || aLogUri == aStoreId)
