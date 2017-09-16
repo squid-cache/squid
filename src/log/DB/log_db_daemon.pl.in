@@ -440,7 +440,7 @@ if ($EVAL_ERROR) {
         die "Error initializing database table: $EVAL_ERROR";
     };
 }
-# test 
+# test
 
 # for better performance, prepare the statement at startup
 eval {

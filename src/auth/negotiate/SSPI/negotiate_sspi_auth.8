@@ -10,7 +10,7 @@ Windows SSPI Negotiate authentication helper.
 .if !'po4a'hide' .B [\-dhv]
 .
 .SH DESCRIPTION
-.B negptiate_sspi_auth.exe 
+.B negotiate_sspi_auth.exe
 is an installed binary. Uses the Windows SSPI interface to perform Negotiate authentication.
 .
 .SH OPTIONS
@@ -33,7 +33,7 @@ Users that are allowed to access the web proxy must have the Windows NT
 User Rights "logon from the network".
 .
 .PP
-.B squid.conf 
+.B squid.conf
 typical minimal required changes:
 .if !'po4a'hide' .RS
 .if !'po4a'hide' .B auth_param negotiate program c:/squid/libexec/mswin_negotiate_auth.exe
@@ -52,8 +52,8 @@ Refer to Squid documentation for more details.
 .
 .PP
 Currently Internet Explorer has some problems with ftp:// URLs when handling
-internal Squid FTP icons. The following 
-.B squid.conf 
+internal Squid FTP icons. The following
+.B squid.conf
 ACL defined before authentication ACLs works around this:
 .if !'po4a'hide' .RS
 .if !'po4a'hide' .B acl internal_icons urlpath_regex -i /squid-internal-static/icons/
