@@ -55,7 +55,6 @@ for f in `ls -1 ./*.po` ; do
 	mv ${f}.new ${f}
 done
 
-exit 1
 # cleanup.
 rm -rf pot
 rm -f errpages.pot.new
