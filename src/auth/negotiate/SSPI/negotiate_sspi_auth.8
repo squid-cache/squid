@@ -1,0 +1,113 @@
+.if !'po4a'hide' .TH negotiate_sspi_auth.exe 8
+.
+.SH NAME
+.if !'po4a'hide' .B negotiate_sspi_auth.exe
+.if !'po4a'hide' \-
+Windows SSPI Negotiate authentication helper.
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B negotiate_sspi_auth.exe
+.if !'po4a'hide' .B [\-dhv]
+.
+.SH DESCRIPTION
+.B negptiate_sspi_auth.exe 
+is an installed binary. Uses the Windows SSPI interface to perform Negotiate authentication.
+.
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-d
+Write debug info to stderr.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-h
+Display the binary help and command line syntax info using stderr.
+.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-v
+Display verbose Negotiate packet debugging.
+.
+.SH CONFIGURATION
+.PP
+Users that are allowed to access the web proxy must have the Windows NT
+User Rights "logon from the network".
+.
+.PP
+.B squid.conf 
+typical minimal required changes:
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B auth_param negotiate program c:/squid/libexec/mswin_negotiate_auth.exe
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B auth_param negotiate children 5
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl password proxy_auth REQUIRED
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access deny !password
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access allow password
+.if !'po4a'hide' .RE
+.
+.PP
+Refer to Squid documentation for more details.
+.
+.PP
+Currently Internet Explorer has some problems with ftp:// URLs when handling
+internal Squid FTP icons. The following 
+.B squid.conf 
+ACL defined before authentication ACLs works around this:
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B acl internal_icons urlpath_regex -i /squid-internal-static/icons/
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access allow our_networks internal_icons
+.if !'po4a'hide' .RE
+.
+.SH AUTHOR
+This program was written by
+.if !'po4a'hide' .I Guido Serassio <guido.serassio@acmeconsulting.it>
+.if !'po4a'hide' Acme Consulting S.r.l., Italy <http://www.acmeconsulting.it>
+.
+.PP
+Based on prior work of
+.if !'po4a'hide' .I Francesco Chemolli <kinkie@squid-cache.org>
+and
+.if !'po4a'hide' .I Robert Collins <lifeless@squid-cache.org>
+.
+.SH COPYRIGHT
+.PP
+ * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+.PP
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@lists.squid-cache.org>
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@lists.squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@lists.squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/
