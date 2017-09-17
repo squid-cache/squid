@@ -1,8 +1,4 @@
 #!@PERL@
-#
-# A dummy SSL certificate validator helper that
-# echos back all the SSL errors sent by Squid.
-#
 
 use warnings;
 use strict;
@@ -25,6 +21,12 @@ security_fake_certverify - A fake cert validation helper for Squid
 
 security_fake_certverify [-d | --debug] [-h | --help]
 
+=head1 DESCRIPTION
+
+Retrieves the SSL certificate error list from Squid and echo back without any change.
+
+=head1 OPTIONS
+
 =over 8
 
 =item  B<-h | --help>
@@ -37,9 +39,10 @@ enable debug messages to stderr
 
 =back
 
-=head1 DESCRIPTION
+=head1 AUTHOR
 
-Retrieves the SSL certificate error list from squid and echo back without any change.
+This program and documentation was written by
+I<Christos Tsantilas <chtsanti@users.sourceforge.net>>
 
 =head1 COPYRIGHT
 
@@ -54,6 +57,29 @@ Retrieves the SSL certificate error list from squid and echo back without any ch
 This program is free software. You may redistribute copies of it under the
 terms of the GNU General Public License version 2, or (at your opinion) any
 later version.
+
+=head1 QUESTIONS
+
+Questions on the usage of this program can be sent to the I<Squid Users mailing list <squid-users@lists.squid-cache.org>>
+
+=head1 REPORTING BUGS
+
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+
+Report serious security bugs to I<Squid Bugs <squid-bugs@lists.squid-cache.org>>
+
+Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@lists.squid-cache.org>>
+
+=head1 SEE ALSO
+
+squid (8), GPL (7),
+
+The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
+
+The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
 
 =cut
 

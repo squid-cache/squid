@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
-"POT-Creation-Date: 2017-05-29 22:45+1200\n"
+"POT-Creation-Date: 2017-09-16 18:04+1200\n"
 "PO-Revision-Date: 2013-10-31 13:20+0200\n"
 "Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: German <de@li.org>\n"
@@ -38,6 +38,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:3
 #: src/auth/digest/file/digest_file_auth.8:3
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:3
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:3
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:3
 #: src/security/cert_generators/file/security_file_certgen.8.in:3
 #: src/squid.8.in:3 tools/cachemgr.cgi.8.in:3 tools/purge/purge.1:3
@@ -79,6 +80,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:8
 #: src/auth/digest/file/digest_file_auth.8:8
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:8
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:8
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:8
 #: src/security/cert_generators/file/security_file_certgen.8.in:8
 #: src/squid.8.in:6 tools/cachemgr.cgi.8.in:6 tools/purge/purge.1:6
@@ -112,6 +114,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:18
 #: src/auth/digest/file/digest_file_auth.8:13
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:12
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:12
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:16
 #: src/security/cert_generators/file/security_file_certgen.8.in:30
 #: src/squid.8.in:23 tools/cachemgr.cgi.8.in:9 tools/purge/purge.1:10
@@ -194,6 +197,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:32
 #: src/auth/digest/file/digest_file_auth.8:21
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:17
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:16
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:22
 #: src/security/cert_generators/file/security_file_certgen.8.in:41
 #: src/squid.8.in:57 tools/purge/purge.1:24 tools/squidclient/squidclient.1:70
@@ -213,6 +217,7 @@ msgstr ""
 #: src/acl/external/LM_group/ext_lm_group_acl.8:33
 #: src/acl/external/unix_group/ext_unix_group_acl.8:21
 #: src/auth/basic/SSPI/basic_sspi_auth.8:40
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:20
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:30
 #: src/security/cert_generators/file/security_file_certgen.8.in:57
 msgid "Write debug info to stderr."
@@ -235,6 +240,7 @@ msgstr ""
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:67
 #: src/acl/external/LM_group/ext_lm_group_acl.8:45
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:21
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:24
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:38
 #: src/security/cert_generators/file/security_file_certgen.8.in:68
 msgid "Display the binary help and command line syntax info using stderr."
@@ -259,6 +265,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:49
 #: src/auth/digest/file/digest_file_auth.8:26
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:43
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:30
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:43
 #: src/security/cert_generators/file/security_file_certgen.8.in:107
 #: tools/cachemgr.cgi.8.in:17 tools/purge/purge.1:172
@@ -443,6 +450,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:121
 #: src/auth/digest/file/digest_file_auth.8:60
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:94
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:64
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:90
 #: src/security/cert_generators/file/security_file_certgen.8.in:143
 #: src/squid.8.in:235 tools/cachemgr.cgi.8.in:49 tools/purge/purge.1:254
@@ -464,6 +472,7 @@ msgstr "AUTOR"
 #: src/auth/basic/SSPI/basic_sspi_auth.8:123
 #: src/auth/digest/file/digest_file_auth.8:62
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:96
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:66
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:92
 #: src/security/cert_generators/file/security_file_certgen.8.in:145
 msgid "This program was written by"
@@ -513,6 +522,7 @@ msgstr "Dieses Handbuch wurde geschrieben von"
 #: src/auth/basic/SSPI/basic_sspi_auth.8:135
 #: src/auth/digest/file/digest_file_auth.8:72
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:101
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:74
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:102
 #: src/security/cert_generators/file/security_file_certgen.8.in:151
 #: src/squid.8.in:245 tools/cachemgr.cgi.8.in:55 tools/purge/purge.1:261
@@ -538,6 +548,7 @@ msgstr "COPYRIGHT"
 #: src/auth/basic/SASL/basic_sasl_auth.8:88
 #: src/auth/basic/SSPI/basic_sspi_auth.8:142
 #: src/auth/digest/file/digest_file_auth.8:79
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:81
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:109
 #: src/security/cert_generators/file/security_file_certgen.8.in:158
 #: src/squid.8.in:252 tools/cachemgr.cgi.8.in:62 tools/purge/purge.1:268
@@ -568,6 +579,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:144
 #: src/auth/digest/file/digest_file_auth.8:81
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:110
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:83
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:111
 msgid "This program and documentation is copyright to the authors named above."
 msgstr ""
@@ -592,6 +604,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:146
 #: src/auth/digest/file/digest_file_auth.8:83
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:112
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:85
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:113
 msgid ""
 "Distributed under the GNU General Public License (GNU GPL) version 2 or "
@@ -619,6 +632,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:147
 #: src/auth/digest/file/digest_file_auth.8:84
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:113
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:86
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:114
 #: src/security/cert_generators/file/security_file_certgen.8.in:159
 #: src/squid.8.in:253 tools/cachemgr.cgi.8.in:63 tools/purge/purge.1:269
@@ -646,6 +660,7 @@ msgstr "FRAGEN"
 #: src/auth/basic/SSPI/basic_sspi_auth.8:150
 #: src/auth/digest/file/digest_file_auth.8:87
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:116
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:89
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:117
 #: src/security/cert_generators/file/security_file_certgen.8.in:162
 #: src/squid.8.in:256 tools/cachemgr.cgi.8.in:66 tools/purge/purge.1:272
@@ -676,6 +691,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:152
 #: src/auth/digest/file/digest_file_auth.8:89
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:118
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:91
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:119
 #: src/security/cert_generators/file/security_file_certgen.8.in:164
 #: src/squid.8.in:258 tools/cachemgr.cgi.8.in:68 tools/purge/purge.1:274
@@ -703,6 +719,7 @@ msgstr "BUGS MELDEN"
 #: src/auth/basic/SSPI/basic_sspi_auth.8:155
 #: src/auth/digest/file/digest_file_auth.8:92
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:121
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:94
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:122
 #: src/security/cert_generators/file/security_file_certgen.8.in:167
 #: src/squid.8.in:261
@@ -734,6 +751,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:157
 #: src/auth/digest/file/digest_file_auth.8:94
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:123
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:96
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:124
 #: src/security/cert_generators/file/security_file_certgen.8.in:169
 #: src/squid.8.in:263 tools/cachemgr.cgi.8.in:72 tools/purge/purge.1:278
@@ -760,13 +778,18 @@ msgstr "Melden sie Bugs oder Bugfixes unter http://bugs.squid-cache.org/"
 #: src/auth/basic/SSPI/basic_sspi_auth.8:160
 #: src/auth/digest/file/digest_file_auth.8:97
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:126
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:99
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:127
 #: src/security/cert_generators/file/security_file_certgen.8.in:172
 #: src/squid.8.in:266 tools/cachemgr.cgi.8.in:75 tools/purge/purge.1:281
 #: tools/squidclient/squidclient.1:257
+#, fuzzy
+#| msgid ""
+#| "Report serious security bugs to I<Squid Bugs E<lt>squid-bugs@squid-cache."
+#| "orgE<gt>>"
 msgid ""
-"Report serious security bugs to I<Squid Bugs E<lt>squid-bugs@squid-cache."
-"orgE<gt>>"
+"Report serious security bugs to I<Squid Bugs E<lt>squid-bugs@lists.squid-"
+"cache.orgE<gt>>"
 msgstr ""
 "Melden sie schwerwiegende Sicherheitslücken I<Squid Bugs E<lt>squid-"
 "bugs@squid-cache.orgE<gt>>"
@@ -790,6 +813,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:163
 #: src/auth/digest/file/digest_file_auth.8:100
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:129
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:102
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:130
 #: src/security/cert_generators/file/security_file_certgen.8.in:175
 #: src/squid.8.in:269 tools/cachemgr.cgi.8.in:78 tools/purge/purge.1:284
@@ -819,6 +843,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:165
 #: src/auth/digest/file/digest_file_auth.8:102
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:131
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:104
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:132
 #: src/security/cert_generators/file/security_file_certgen.8.in:177
 #: src/squid.8.in:271 tools/cachemgr.cgi.8.in:80 tools/purge/purge.1:286
@@ -846,6 +871,7 @@ msgstr "SIEHE AUCH"
 #: src/auth/basic/SSPI/basic_sspi_auth.8:170
 #: src/auth/digest/file/digest_file_auth.8:107
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:142
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:109
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:137
 #: src/security/cert_generators/file/security_file_certgen.8.in:182
 #: src/squid.8.in:281
@@ -871,6 +897,7 @@ msgstr ""
 #: src/auth/basic/SSPI/basic_sspi_auth.8:173
 #: src/auth/digest/file/digest_file_auth.8:110
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:145
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:112
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:140
 #: src/security/cert_generators/file/security_file_certgen.8.in:185
 #: src/squid.8.in:284
@@ -2775,11 +2802,19 @@ msgstr ""
 
 #. type: Plain text
 #: src/auth/basic/NCSA/basic_ncsa_auth.8:30
+#, no-wrap
 msgid ""
-"This authenticator accepts: * Blowfish - for passwords 72 characters or less "
-"in length * SHA256 - with salting and magic strings * SHA512 - with salting "
-"and magic strings * MD5 - with optional salt and magic strings * DES - for "
-"passwords 8 characters or less in length"
+"This authenticator accepts:\n"
+"\n"
+" * Blowfish - for passwords 72 characters or less in length.\n"
+"\n"
+" * SHA256 - with salting and magic strings.\n"
+"\n"
+" * SHA512 - with salting and magic strings.\n"
+"\n"
+" * MD5 - with optional salt and magic strings.\n"
+"\n"
+" * DES - for passwords 8 characters or less in length.\n"
 msgstr ""
 
 #. type: Plain text
@@ -3516,6 +3551,58 @@ msgid "B<RFC1964> - The Kerberos Version 5 GSS-API Mechanism,"
 msgstr ""
 
 #. type: Plain text
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:7
+msgid "Windows SSPI Negotiate authentication helper."
+msgstr ""
+
+#. type: Plain text
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:15
+msgid ""
+"B<negptiate_sspi_auth.exe> is an installed binary. Uses the Windows SSPI "
+"interface to perform Negotiate authentication."
+msgstr ""
+
+#. type: Plain text
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:29
+msgid "Display verbose Negotiate packet debugging."
+msgstr ""
+
+#. type: Plain text
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:34
+#: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:49
+msgid ""
+"Users that are allowed to access the web proxy must have the Windows NT User "
+"Rights \"logon from the network\"."
+msgstr ""
+
+#. type: Plain text
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:38
+#: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:64
+msgid "B<squid.conf> typical minimal required changes:"
+msgstr ""
+
+#. type: Plain text
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:52
+#: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:76
+msgid "Refer to Squid documentation for more details."
+msgstr ""
+
+#. type: Plain text
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:58
+msgid ""
+"Currently Internet Explorer has some problems with ftp:// URLs when handling "
+"internal Squid FTP icons. The following B<squid.conf> ACL defined before "
+"authentication ACLs works around this:"
+msgstr ""
+
+#. type: Plain text
+#: src/auth/negotiate/SSPI/negotiate_sspi_auth.8:71
+#, fuzzy
+#| msgid "Based on original code by"
+msgid "Based on prior work of"
+msgstr "Basiert auf Originalcode von"
+
+#. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:5
 msgid "ntlm_sspi_auth.exe - Native Windows NTLM/NTLMv2 authenticator for Squid"
 msgstr ""
@@ -3551,13 +3638,6 @@ msgid "B<Allowing Users>"
 msgstr ""
 
 #. type: Plain text
-#: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:49
-msgid ""
-"Users that are allowed to access the web proxy must have the Windows NT User "
-"Rights \"logon from the network\"."
-msgstr ""
-
-#. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:53
 msgid ""
 "Optionally the authenticator can verify the NT LOCAL group membership of the "
@@ -3577,16 +3657,6 @@ msgstr ""
 msgid ""
 "Better group checking is available with external ACL, see B<ext_ad_group_acl."
 "exe> documentation."
-msgstr ""
-
-#. type: Plain text
-#: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:64
-msgid "B<squid.conf> typical minimal required changes:"
-msgstr ""
-
-#. type: Plain text
-#: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:76
-msgid "Refer to Squid documentation for more details."
 msgstr ""
 
 #. type: Plain text
@@ -4827,6 +4897,13 @@ msgid ""
 "Based on original code derived from Harvest and further developed by "
 "numerous individuals from the internet community."
 msgstr ""
+
+#~ msgid ""
+#~ "Report serious security bugs to I<Squid Bugs E<lt>squid-bugs@squid-cache."
+#~ "orgE<gt>>"
+#~ msgstr ""
+#~ "Melden sie schwerwiegende Sicherheitslücken I<Squid Bugs E<lt>squid-"
+#~ "bugs@squid-cache.orgE<gt>>"
 
 #~ msgid "Create swap directories"
 #~ msgstr "Erstelle Swap Verzeichnisse"
