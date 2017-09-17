@@ -30,7 +30,7 @@ enum HttpHdrCcType : unsigned char {
     CC_MIN_FRESH,
     CC_ONLY_IF_CACHED,
     CC_STALE_IF_ERROR,
-    CC_IMMUTABLE, /* draft-mcmanus-immutable-00 */
+    CC_IMMUTABLE, /* RFC 8246 */
     CC_OTHER,
     CC_ENUM_END /* also used to mean "invalid" */
 };

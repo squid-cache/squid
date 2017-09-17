@@ -11,13 +11,13 @@ all:
 
 dyn-docs:
 	rm -f -r tmp
-	cd ../../ && (cat squid3.dox ; echo HTML_FILE_EXTENSION = .dyn ; echo HTML_OUTPUT = tmp ) | doxygen - 2>doxygen.log
+	cd ../../ && (cat squid.dox ; echo HTML_FILE_EXTENSION = .dyn ; echo HTML_OUTPUT = tmp ) | doxygen - 2>doxygen.log
 	rm -f -r dyn
 	mv tmp dyn
 
 html-docs:
 	rm -f -r tmp
-	cd ../../ && (cat squid3.dox | sed s/dyn/html/g | sed s/CALL_GRAPH/#/ | sed s/CALLER_GRAPH/#/ | doxygen -) 2>doxygen.log
+	cd ../../ && (cat squid.dox | sed s/dyn/html/g | sed s/CALL_GRAPH/#/ | sed s/CALLER_GRAPH/#/ | doxygen -) 2>doxygen.log
 	rm -f -r html
 	mv tmp html
 

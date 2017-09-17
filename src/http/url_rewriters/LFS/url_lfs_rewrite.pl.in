@@ -107,9 +107,9 @@ See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you ne
 
 Report bugs or bug fixes using http://bugs.squid-cache.org/
 
-Report serious security bugs to I<Squid Bugs <squid-bugs@squid-cache.org>>
+Report serious security bugs to I<Squid Bugs <squid-bugs@lists.squid-cache.org>>
 
-Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@squid-cache.org>>
+Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@lists.squid-cache.org>>
 
 =head1 SEE ALSO
 

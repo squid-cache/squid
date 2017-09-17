@@ -1,88 +1,62 @@
-.if !'po4a'hide' .TH ntlm_sspi_auth.exe 8
+.if !'po4a'hide' .TH negotiate_sspi_auth.exe 8
 .
 .SH NAME
-ntlm_sspi_auth.exe \- Native Windows NTLM/NTLMv2 authenticator for Squid
-.PP
-Version 1.22
+.if !'po4a'hide' .B negotiate_sspi_auth.exe
+.if !'po4a'hide' \-
+Windows SSPI Negotiate authentication helper.
 .
 .SH SYNOPSIS
-.if !'po4a'hide' .B ntlm_sspi_auth.exe
-.if !'po4a'hide' .B "[\-dhv] [\-A "
-Group Name
-.if !'po4a'hide' .B "] [\-D "
-Group Name
-.if !'po4a'hide' .B "]"
+.if !'po4a'hide' .B negotiate_sspi_auth.exe
+.if !'po4a'hide' .B [\-dhv]
 .
 .SH DESCRIPTION
-.B ntlm_sspi_auth.exe
-is an installed binary built on Windows systems. It provides native access to the
-Security Service Provider Interface of Windows for authenticating with NTLM / NTLMv2.
-It has automatic support for NTLM NEGOTIATE packets.
+.B negotiate_sspi_auth.exe
+is an installed binary. Uses the Windows SSPI interface to perform Negotiate authentication.
 .
 .SH OPTIONS
 .if !'po4a'hide' .TP 12
-.if !'po4a'hide' .B \-A
-Specify a Windows Local Group name allowed to authenticate.
-.
-.if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-d
 Write debug info to stderr.
-.
-.if !'po4a'hide' .TP
-.if !'po4a'hide' .B \-D
-Specify a Windows Local Group name which is to be denied authentication.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-h
 Display the binary help and command line syntax info using stderr.
 .
+.
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-v
-Enables verbose NTLM packet debugging.
+Display verbose Negotiate packet debugging.
 .
 .SH CONFIGURATION
 .PP
-.B Allowing Users
-.PP
 Users that are allowed to access the web proxy must have the Windows NT
 User Rights "logon from the network".
-.PP
-Optionally the authenticator can verify the NT LOCAL group membership of
-the user against the User Group specified in the Authenticator's command
-line.
-.PP
-This can be accomplished creating a local user group on the NT machine,
-grant the privilege, and adding users to it, it works only with MACHINE
-Local Groups, not Domain Local Groups.
-.PP
-Better group checking is available with external ACL, see 
-.B ext_ad_group_acl.exe
-documentation.
+.
 .PP
 .B squid.conf
 typical minimal required changes:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .B auth_param ntlm program c:/squid/libexec/ntlm_sspi_auth.exe
-.if !'po4a'hide' .B auth_param ntlm children 5
+.if !'po4a'hide' .B auth_param negotiate program c:/squid/libexec/mswin_negotiate_auth.exe
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B auth_param negotiate children 5
 .if !'po4a'hide' .br
 .if !'po4a'hide' .B acl password proxy_auth REQUIRED
 .if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access deny !password
+.if !'po4a'hide' .br
 .if !'po4a'hide' .B http_access allow password
-.if !'po4a'hide' .B http_access deny all
 .if !'po4a'hide' .RE
 .
 .PP
 Refer to Squid documentation for more details.
 .
 .PP
-Internet Explorer has some problems with 
-.B ftp:// 
-URLs when handling internal Squid FTP icons.
-The following 
-.B squid.conf 
-ACL works around this when placed before the authentication ACL:
+Currently Internet Explorer has some problems with ftp:// URLs when handling
+internal Squid FTP icons. The following
+.B squid.conf
+ACL defined before authentication ACLs works around this:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .B acl internal_icons urlpath_regex \-i /squid-internal-static/icons/
+.if !'po4a'hide' .B acl internal_icons urlpath_regex -i /squid-internal-static/icons/
 .if !'po4a'hide' .br
 .if !'po4a'hide' .B http_access allow our_networks internal_icons
 .if !'po4a'hide' .RE
@@ -90,14 +64,12 @@ ACL works around this when placed before the authentication ACL:
 .SH AUTHOR
 This program was written by
 .if !'po4a'hide' .I Guido Serassio <guido.serassio@acmeconsulting.it>
+.if !'po4a'hide' Acme Consulting S.r.l., Italy <http://www.acmeconsulting.it>
+.
 .PP
-Based on prior work in by
-.if !'po4a'hide' .I Francesco Chemolli <kinkie@squid-cache.org>
+Based on prior work of
+.if !'po4a'hide' .I Francesco Chemolli <kinkie@squid-cache.org>,
 .if !'po4a'hide' .I Robert Collins <lifeless@squid-cache.org>
-.PP
-This manual was written by
-.if !'po4a'hide' .I Guido Serassio <guido.serassio@acmeconsulting.it>
-.if !'po4a'hide' .I Amos Jeffries <amosjeffries@squid-cache.org>
 .
 .SH COPYRIGHT
 .PP
