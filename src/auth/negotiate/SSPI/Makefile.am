@@ -22,5 +22,4 @@ negotiate_sspi_auth_LDADD = \
 
 EXTRA_DIST= \
 	negotiate_sspi_auth.8 \
-	readme.txt \
 	required.m4
