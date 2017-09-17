@@ -9,6 +9,8 @@ include $(top_srcdir)/src/Common.am
 
 libexec_PROGRAMS = negotiate_sspi_auth
 
+man_MANS = negotiate_sspi_auth.8
+
 negotiate_sspi_auth_SOURCES = \
 	negotiate_sspi_auth.cc
 negotiate_sspi_auth_LDADD = \
@@ -19,5 +21,5 @@ negotiate_sspi_auth_LDADD = \
 	$(XTRA_LIBS)
 
 EXTRA_DIST= \
-	readme.txt \
+	negotiate_sspi_auth.8 \
 	required.m4

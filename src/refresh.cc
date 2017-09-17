@@ -420,7 +420,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
             int maxAge = -1;
             if (cc->hasMaxAge(&maxAge)) {
 
-                // draft-mcmanus-immutable-00: reply contains CC:immutable then ignore client CC:max-age=N
+                // RFC 8246: reply contains CC:immutable then ignore client CC:max-age=N
                 if (reply && reply->cache_control && reply->cache_control->hasImmutable()) {
                     debugs(22, 3, "MAYBE: Ignoring client CC:max-age=" << maxAge << " request - 'Cache-Control: immutable'");
 
