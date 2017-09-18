@@ -23,8 +23,8 @@ namespace One {
  * Works on a raw character I/O buffer and tokenizes the content into
  * the major CRLF delimited segments of an HTTP/1 respone message:
  *
- * \item status-line (version SP status SP reash-phrase)
- * \item mime-header (set of RFC2616 syntax header fields)
+ * \li status-line (version SP status SP reash-phrase)
+ * \li mime-header (set of RFC2616 syntax header fields)
  */
 class ResponseParser : public Http1::Parser
 {

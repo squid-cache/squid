@@ -33,7 +33,7 @@
 /**
  \defgroup IPCacheAPI IP Cache API
  \ingroup Components
- \section Introduction Introduction
+ \section IpcacheIntroduction Introduction
  \par
  *  The IP cache is a built-in component of squid providing
  *  Hostname to IP-Number translation functionality and managing

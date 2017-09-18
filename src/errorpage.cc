@@ -40,7 +40,7 @@
  \defgroup ErrorPageInternal Error Page Internals
  \ingroup ErrorPageAPI
  *
- \section Abstract Abstract:
+ \section ErrorPagesAbstract Abstract:
  *   These routines are used to generate error messages to be
  *   sent to clients.  The error type is used to select between
  *   the various message formats. (formats are stored in the

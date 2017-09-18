@@ -292,7 +292,7 @@ int SMBapi_NetSetUserInfo(SMB_Tree_Handle tree, char *user,
     if (pad_api_name == TRUE)     /* Pad to a word boundary */
         p = p + 1;
 
-    /*  SSVAL(p, 0, 65000);  /* Check the result */
+    /*  SSVAL(p, 0, 65000); */ /* Check the result */
     SSVAL(p, 0, SMB_LMapi_SetUserInfo);  /* The api call */
 
     p = p + 2;

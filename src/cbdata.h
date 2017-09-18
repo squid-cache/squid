@@ -12,7 +12,7 @@
 /**
 \page CBDATA Callback Data Allocator API
 
- \section  Introduction
+ \section CbDataIntro Introduction
 
  \par
    Squid's extensive use of callback functions makes it very

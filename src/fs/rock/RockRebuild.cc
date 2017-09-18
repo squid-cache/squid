@@ -30,7 +30,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Rock, Rebuild);
  \defgroup RockFsRebuild Rock Store Rebuild
  \ingroup Filesystems
  *
- \section Overview Overview
+ \section RockFsRebuildOverview Overview
  *  Several layers of information are manipualted during the rebuild:
  \par
  *  Store Entry: Response message plus all the metainformation associated with

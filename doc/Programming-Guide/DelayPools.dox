@@ -9,7 +9,7 @@
 /**
 \page 10_DelayPools Delay Pools
 
-\section Introduction Introduction
+\section DelayPoolsIntro Introduction
 \par
 	A DelayPool is a Composite used to manage bandwidth for any request
 	assigned to the pool by an access expression. DelayId's are a used

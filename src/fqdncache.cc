@@ -30,7 +30,7 @@
 /**
  \defgroup FQDNCacheAPI FQDN Cache API
  \ingroup Components
- \section Introduction Introduction
+ \section FQDNCacheIntroduction Introduction
  \par
  *  The FQDN cache is a built-in component of squid providing
  *  Hostname to IP-Number translation functionality and managing
@@ -38,8 +38,6 @@
  *  mechanisms that allow non-blocking access to these mappings.
  *  The FQDN cache usually doesn't block on a request except for
  *  special cases where this is desired (see below).
- *
- \todo FQDN Cache should have its own API *.h file.
  */
 
 /**
