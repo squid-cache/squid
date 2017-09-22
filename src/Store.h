@@ -84,6 +84,7 @@ public:
     void abort();
     void makePublic(const KeyScope keyScope = ksDefault);
     void makePrivate(const bool shareable);
+    void insertPublicKey(const Store::CacheKey &);
     /// A low-level method just resetting "private key" flags.
     /// To avoid key inconsistency please use forcePublicKey()
     /// or similar instead.
@@ -364,7 +365,7 @@ StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, c
 
 /// \ingroup StoreAPI
 /// Creates a new StoreEntry with mem_obj and sets initial flags/states.
-StoreEntry *storeCreatePureEntry(const char *storeId, const char *logUrl, const RequestFlags &, const HttpRequestMethod&);
+StoreEntry *storeCreatePureEntry(const char *storeId, const char *logUrl, const HttpRequestMethod&);
 
 /// \ingroup StoreAPI
 void storeInit(void);

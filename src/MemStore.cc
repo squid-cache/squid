@@ -307,13 +307,13 @@ MemStore::dereference(StoreEntry &)
 }
 
 StoreEntry *
-MemStore::get(const cache_key *key)
+MemStore::get(const Store::CacheKey &cacheKey)
 {
     if (!map)
         return NULL;
 
     sfileno index;
-    const Ipc::StoreMapAnchor *const slot = map->openForReading(key, index);
+    const Ipc::StoreMapAnchor *const slot = map->openForReading(cacheKey.key, index);
     if (!slot)
         return NULL;
 
@@ -330,7 +330,7 @@ MemStore::get(const cache_key *key)
     const bool copied = copyFromShm(*e, index, *slot);
 
     if (copied) {
-        e->hashInsert(key);
+        e->insertPublicKey(cacheKey);
         return e;
     }
 

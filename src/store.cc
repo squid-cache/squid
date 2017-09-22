@@ -161,6 +161,16 @@ StoreEntry::clearPrivate()
 }
 
 void
+StoreEntry::insertPublicKey(const Store::CacheKey &cacheKey)
+{
+    debugs(20, 3, "Inserting public key " << *this << " key '" << storeKeyText(cacheKey.key) << "'");
+    hashInsert(cacheKey.key);
+    if (Store::Root().transientsAvailable() && !hasTransients() &&
+            !Store::Root().createTransientsEntry(this, cacheKey))
+        setPrivateKey(true, false);
+}
+
+void
 StoreEntry::cacheNegatively()
 {
     /* This object may be negatively cached */
@@ -532,13 +542,15 @@ StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestM
 StoreEntry *
 storeGetPublic(const char *uri, const HttpRequestMethod& method)
 {
-    return Store::Root().get(storeKeyPublic(uri, method));
+    const Store::CacheKey cacheKey(storeKeyPublic(uri, method), SBuf(uri), method);
+    return Store::Root().get(cacheKey);
 }
 
 StoreEntry *
 storeGetPublicByRequestMethod(HttpRequest * req, const HttpRequestMethod& method, const KeyScope keyScope)
 {
-    return Store::Root().get(storeKeyPublicByRequestMethod(req, method, keyScope));
+    const Store::CacheKey cacheKey(storeKeyPublicByRequestMethod(req, method, keyScope), req->storeId(), method);
+    return Store::Root().get(cacheKey);
 }
 
 StoreEntry *
@@ -576,6 +588,7 @@ getKeyCounter(void)
 void
 StoreEntry::setPrivateKey(const bool shareable, const bool permanent)
 {
+    debugs(20, 3, " private key " << *this);
     if (permanent)
         EBIT_SET(flags, RELEASE_REQUEST); // may already be set
     if (!shareable)
@@ -607,6 +620,7 @@ StoreEntry::setPrivateKey(const bool shareable, const bool permanent)
 void
 StoreEntry::setPublicKey(const KeyScope scope)
 {
+    debugs(20, 3, "public key " << *this);
     if (key && !EBIT_TEST(flags, KEY_PRIVATE))
         return;                 /* is already public */
 
@@ -654,6 +668,9 @@ StoreEntry::clearPublicKeyScope()
 void
 StoreEntry::forcePublicKey(const cache_key *newkey)
 {
+    debugs(20, 3, "key " << *this << " key " << storeKeyText(newkey));
+    assert(mem_obj);
+
     if (StoreEntry *e2 = (StoreEntry *)hash_lookup(store_table, newkey)) {
         assert(e2 != this);
         debugs(20, 3, "releasing clashing " << *e2);
@@ -667,7 +684,7 @@ StoreEntry::forcePublicKey(const cache_key *newkey)
 
     clearPrivate();
 
-    hashInsert(newkey);
+    insertPublicKey(Store::CacheKey(newkey, SBuf(mem_obj->storeId()), mem_obj->method));
 
     if (hasDisk())
         storeDirSwapLog(this, SWAP_LOG_ADD);
@@ -756,7 +773,7 @@ StoreEntry::adjustVary()
 }
 
 StoreEntry *
-storeCreatePureEntry(const char *url, const char *log_url, const RequestFlags &, const HttpRequestMethod& method)
+storeCreatePureEntry(const char *url, const char *log_url, const HttpRequestMethod& method)
 {
     StoreEntry *e = NULL;
     debugs(20, 3, "storeCreateEntry: '" << url << "'");
@@ -776,7 +793,7 @@ storeCreatePureEntry(const char *url, const char *log_url, const RequestFlags &,
 StoreEntry *
 storeCreateEntry(const char *url, const char *logUrl, const RequestFlags &flags, const HttpRequestMethod& method)
 {
-    StoreEntry *e = storeCreatePureEntry(url, logUrl, flags, method);
+    StoreEntry *e = storeCreatePureEntry(url, logUrl, method);
     e->lock("storeCreateEntry");
 
     if (neighbors_do_private_keys || !flags.hierarchical || !flags.cachable)

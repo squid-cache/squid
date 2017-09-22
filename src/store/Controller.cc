@@ -309,9 +309,9 @@ Store::Controller::hasReadableDiskEntry(const StoreEntry &e) const
 }
 
 StoreEntry *
-Store::Controller::get(const cache_key *key)
+Store::Controller::get(const CacheKey &cacheKey)
 {
-    if (StoreEntry *e = find(key)) {
+    if (StoreEntry *e = find(cacheKey)) {
         // this is not very precise: some get()s are not initiated by clients
         e->touch();
         referenceBusy(*e);
@@ -323,16 +323,16 @@ Store::Controller::get(const cache_key *key)
 /// Internal method to implements the guts of the Store::get() API:
 /// returns an in-transit or cached object with a given key, if any.
 StoreEntry *
-Store::Controller::find(const cache_key *key)
+Store::Controller::find(const CacheKey &cacheKey)
 {
-    debugs(20, 3, storeKeyText(key));
+    debugs(20, 3, storeKeyText(cacheKey.key));
 
-    if (markedForDeletion(key)) {
-        debugs(20, 3, "ignoring marked " << storeKeyText(key));
+    if (markedForDeletion(cacheKey.key)) {
+        debugs(20, 3, "ignoring marked " << storeKeyText(cacheKey.key));
         return nullptr;
     }
 
-    if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, key))) {
+    if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, cacheKey.key))) {
         // TODO: ignore and maybe handleIdleEntry() unlocked intransit entries
         // because their backing store slot may be gone already.
         debugs(20, 3, HERE << "got in-transit entry: " << *e);
@@ -341,7 +341,7 @@ Store::Controller::find(const cache_key *key)
 
     // Must search transients before caches because we must sync those we find.
     if (transients) {
-        if (StoreEntry *e = transients->get(key)) {
+        if (StoreEntry *e = transients->get(cacheKey)) {
             debugs(20, 3, "got shared in-transit entry: " << *e);
             bool inSync = false;
             const bool found = anchorCollapsed(*e, inSync);
@@ -354,20 +354,20 @@ Store::Controller::find(const cache_key *key)
     }
 
     if (memStore) {
-        if (StoreEntry *e = memStore->get(key)) {
+        if (StoreEntry *e = memStore->get(cacheKey)) {
             debugs(20, 3, HERE << "got mem-cached entry: " << *e);
             return e;
         }
     }
 
     if (swapDir) {
-        if (StoreEntry *e = swapDir->get(key)) {
+        if (StoreEntry *e = swapDir->get(cacheKey)) {
             debugs(20, 3, "got disk-cached entry: " << *e);
             return e;
         }
     }
 
-    debugs(20, 4, "cannot locate " << storeKeyText(key));
+    debugs(20, 4, "cannot locate " << storeKeyText(cacheKey.key));
     return nullptr;
 }
 
@@ -563,10 +563,21 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
 {
     const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
     e->makePublic(keyScope); // this is needed for both local and SMP collapsing
-    if (transients)
-        transients->startWriting(e, reqFlags, reqMethod);
     debugs(20, 3, "may " << (transients && e->hasTransients() ?
                              "SMP-" : "locally-") << "collapse " << *e);
+}
+
+bool
+Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey)
+{
+    if (!transients)
+        return false;
+    if (e->hasTransients())
+        return true;
+    if (!cacheKey.hasUris())
+        return false;
+
+    return transients->startWriting(e, cacheKey.method);
 }
 
 void

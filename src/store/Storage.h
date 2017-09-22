@@ -11,10 +11,37 @@
 
 #include "base/RefCount.h"
 #include "store/forward.h"
+#include "store_key_md5.h"
+#include "http/RequestMethod.h"
 
 class StoreInfoStats;
 
 namespace Store {
+
+/// Helps passing cache key, corresponding store ID and method to Storage::get().
+class CacheKey
+{
+public:
+    explicit CacheKey(const cache_key *aKey) :
+        CacheKey(aKey, SBuf(), HttpRequestMethod()) {}
+
+    CacheKey(const cache_key *aKey, const SBuf url, const HttpRequestMethod &m):
+        key(storeKeyDup(aKey)),
+        storeId(url),
+        method(m) {}
+
+    ~CacheKey() { if (key) storeKeyFree(key); }
+
+    bool hasUris() const { return storeId.length(); }
+
+    const cache_key *key;
+    const SBuf storeId;
+    const HttpRequestMethod method;
+
+private:
+    CacheKey(const CacheKey &) = delete;
+    CacheKey &operator=(const CacheKey &) = delete;
+};
 
 /// A "response storage" abstraction.
 /// This API is shared among Controller and Controlled classes.
@@ -31,7 +58,7 @@ public:
     virtual void init() = 0;
 
     /// Retrieve a store entry from the store (blocking)
-    virtual StoreEntry *get(const cache_key *) = 0;
+    virtual StoreEntry *get(const CacheKey &) = 0;
 
     /**
      * The maximum size the store will support in normal use. Inaccuracy is

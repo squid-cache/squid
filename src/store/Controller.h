@@ -28,7 +28,7 @@ public:
     /* Storage API */
     virtual void create() override;
     virtual void init() override;
-    virtual StoreEntry *get(const cache_key *) override;
+    virtual StoreEntry *get(const CacheKey &key) override;
     virtual uint64_t maxSize() const override;
     virtual uint64_t minSize() const override;
     virtual uint64_t currentSize() const override;
@@ -74,6 +74,10 @@ public:
     /// makes the entry available for collapsing future requests
     void allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
 
+    /// For each public StoreEntry creates corresponding Transients entry.
+    /// Makes the StoreEntry private on Transients entry creation error.
+    bool createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey);
+
     /// marks the entry completed for collapsed requests
     void transientsCompleteWriting(StoreEntry &);
 
@@ -98,6 +102,9 @@ public:
     /// \returns an iterator for all Store entries
     StoreSearch *search();
 
+    /// whether Transients table exists
+    bool transientsAvailable() const { return bool(transients); }
+
     /// the number of cache_dirs being rebuilt; TODO: move to Disks::Rebuilding
     static int store_dirs_rebuilding;
 
@@ -107,7 +114,7 @@ private:
     /// dereference() an idle entry and return true if the entry should be deleted
     bool dereferenceIdle(StoreEntry &, bool wantsLocalMemory);
 
-    StoreEntry *find(const cache_key *key);
+    StoreEntry *find(const CacheKey &);
     bool keepForLocalMemoryCache(StoreEntry &e) const;
     bool anchorCollapsed(StoreEntry &, bool &inSync);
 

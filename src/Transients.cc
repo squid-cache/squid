@@ -144,13 +144,13 @@ Transients::dereference(StoreEntry &)
 }
 
 StoreEntry *
-Transients::get(const cache_key *key)
+Transients::get(const Store::CacheKey &cacheKey)
 {
     if (!map)
         return NULL;
 
     sfileno index;
-    const Ipc::StoreMapAnchor *anchor = map->openForReading(key, index);
+    const Ipc::StoreMapAnchor *anchor = map->openForReading(cacheKey.key, index);
     if (!anchor)
         return NULL;
 
@@ -162,7 +162,7 @@ Transients::get(const cache_key *key)
         debugs(20, 3, "not joining private " << *oldE);
         assert(EBIT_TEST(oldE->flags, KEY_PRIVATE));
     } else if (anchor->complete()) {
-        debugs(20, 3, "not joining completed " << storeKeyText(key));
+        debugs(20, 3, "not joining completed " << storeKeyText(cacheKey.key));
     } else if (StoreEntry *newE = copyFromShm(index)) {
         return newE; // keep read lock to receive updates from others
     }
@@ -178,8 +178,7 @@ Transients::copyFromShm(const sfileno index)
     const TransientsMapExtras::Item &extra = extras->items[index];
 
     // create a brand new store entry and initialize it with stored info
-    StoreEntry *e = storeCreatePureEntry(extra.url, extra.url,
-                                         extra.reqFlags, extra.reqMethod);
+    StoreEntry *e = storeCreatePureEntry(extra.url, extra.url, extra.reqMethod);
 
     assert(e->mem_obj);
     e->mem_obj->method = extra.reqMethod;
@@ -187,10 +186,7 @@ Transients::copyFromShm(const sfileno index)
     e->mem_obj->xitTable.index = index;
 
     // TODO: Support collapsed revalidation for SMP-aware caches.
-    if (!extra.reqFlags.cachable) // should not happen?
-        e->setPrivateKey(false, true);
-    else
-        e->setPublicKey(ksDefault);
+    e->setPublicKey(ksDefault);
 
     assert(e->key);
 
@@ -222,9 +218,8 @@ Transients::findCollapsed(const sfileno index)
     return NULL;
 }
 
-void
-Transients::startWriting(StoreEntry *e, const RequestFlags &reqFlags,
-                         const HttpRequestMethod &reqMethod)
+bool
+Transients::startWriting(StoreEntry *e, const HttpRequestMethod &reqMethod)
 {
     assert(e);
     assert(e->mem_obj);
@@ -232,18 +227,18 @@ Transients::startWriting(StoreEntry *e, const RequestFlags &reqFlags,
 
     if (!map) {
         debugs(20, 5, "No map to add " << *e);
-        return;
+        return false;
     }
 
     sfileno index = 0;
     Ipc::StoreMapAnchor *slot = map->openForWriting(reinterpret_cast<const cache_key *>(e->key), index);
     if (!slot) {
         debugs(20, 5, "collision registering " << *e);
-        return;
+        return false;
     }
 
     try {
-        if (copyToShm(*e, index, reqFlags, reqMethod)) {
+        if (copyToShm(*e, index, reqMethod)) {
             slot->set(*e);
             e->mem_obj->xitTable.io = MemObject::ioWriting;
             e->mem_obj->xitTable.index = index;
@@ -252,7 +247,7 @@ Transients::startWriting(StoreEntry *e, const RequestFlags &reqFlags,
             locals->at(index) = e;
 
             // keep write lock -- we will be supplying others with updates
-            return;
+            return true;
         }
         // fall through to the error handling code
     } catch (const std::exception &x) { // TODO: should we catch ... as well?
@@ -262,12 +257,12 @@ Transients::startWriting(StoreEntry *e, const RequestFlags &reqFlags,
     }
 
     map->abortWriting(index);
+    return false;
 }
 
 /// copies all relevant local data to shared memory
 bool
 Transients::copyToShm(const StoreEntry &e, const sfileno index,
-                      const RequestFlags &reqFlags,
                       const HttpRequestMethod &reqMethod)
 {
     TransientsMapExtras::Item &extra = extras->items[index];
@@ -277,8 +272,6 @@ Transients::copyToShm(const StoreEntry &e, const sfileno index,
     Must(urlLen < sizeof(extra.url)); // we have space to store it all, plus 0
     strncpy(extra.url, url, sizeof(extra.url));
     extra.url[urlLen] = '\0';
-
-    extra.reqFlags = reqFlags;
 
     Must(reqMethod != Http::METHOD_OTHER);
     extra.reqMethod = reqMethod.id();

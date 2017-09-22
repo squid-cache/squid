@@ -380,7 +380,7 @@ storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key, StoreRebuild
      * index rebuild should just assume its the most recent accurate
      * store entry and whoever indexes the stores handles duplicates.
      */
-    if (StoreEntry *e = Store::Root().get(key)) {
+    if (StoreEntry *e = Store::Root().get(Store::CacheKey(key))) {
 
         if (e->lastref >= tmpe.lastref) {
             /* key already exists, old entry is newer */

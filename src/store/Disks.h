@@ -23,7 +23,7 @@ public:
     /* Storage API */
     virtual void create() override;
     virtual void init() override;
-    virtual StoreEntry *get(const cache_key *) override;
+    virtual StoreEntry *get(const CacheKey &) override;
     virtual uint64_t maxSize() const override;
     virtual uint64_t minSize() const override;
     virtual uint64_t currentSize() const override;

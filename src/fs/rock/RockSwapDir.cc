@@ -54,13 +54,13 @@ Rock::SwapDir::~SwapDir()
 
 // called when Squid core needs a StoreEntry with a given key
 StoreEntry *
-Rock::SwapDir::get(const cache_key *key)
+Rock::SwapDir::get(const Store::CacheKey &cacheKey)
 {
     if (!map || !theFile || !theFile->canRead())
         return NULL;
 
     sfileno filen;
-    const Ipc::StoreMapAnchor *const slot = map->openForReading(key, filen);
+    const Ipc::StoreMapAnchor *const slot = map->openForReading(cacheKey.key, filen);
     if (!slot)
         return NULL;
 
@@ -68,7 +68,7 @@ Rock::SwapDir::get(const cache_key *key)
     StoreEntry *e = new StoreEntry();
     anchorEntry(*e, filen, *slot);
 
-    e->hashInsert(key);
+    e->insertPublicKey(cacheKey);
     trackReferences(*e);
 
     return e;

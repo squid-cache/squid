@@ -20,7 +20,6 @@
 // StoreEntry restoration info not already stored by Ipc::StoreMap
 struct TransientsMapExtraItem {
     char url[MAX_URL+1]; ///< Request-URI; TODO: decrease MAX_URL by one
-    RequestFlags reqFlags; ///< request flags
     Http::MethodType reqMethod; ///< request method; extensions are not supported
 };
 typedef Ipc::StoreMapItems<TransientsMapExtraItem> TransientsMapExtras;
@@ -41,7 +40,7 @@ public:
     StoreEntry *findCollapsed(const sfileno xitIndex);
 
     /// add an in-transit entry suitable for collapsing future requests
-    void startWriting(StoreEntry *e, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
+    bool startWriting(StoreEntry *e, const HttpRequestMethod &reqMethod);
 
     /// called when the in-transit entry has been successfully cached
     void completeWriting(const StoreEntry &e);
@@ -61,7 +60,7 @@ public:
     void disconnect(MemObject &mem_obj);
 
     /* Store API */
-    virtual StoreEntry *get(const cache_key *) override;
+    virtual StoreEntry *get(const Store::CacheKey &cacheKey) override;
     virtual void create() override {}
     virtual void init() override;
     virtual uint64_t maxSize() const override;
@@ -92,7 +91,7 @@ public:
 
 protected:
     StoreEntry *copyFromShm(const sfileno index);
-    bool copyToShm(const StoreEntry &e, const sfileno index, const RequestFlags &reqFlags, const HttpRequestMethod &reqMethod);
+    bool copyToShm(const StoreEntry &e, const sfileno index, const HttpRequestMethod &reqMethod);
 
     // Ipc::StoreMapCleaner API
     virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;

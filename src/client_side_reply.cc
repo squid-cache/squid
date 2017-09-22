@@ -913,7 +913,8 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
         if (m.respMaybeCacheable()) {
             const cache_key *key = storeKeyPublic(url, m);
             debugs(88, 5, m << ' ' << url << ' ' << storeKeyText(key));
-            if (StoreEntry *entry = Store::Root().get(key)) {
+            Store::CacheKey cacheKey(key, SBuf(url), m);
+            if (StoreEntry *entry = Store::Root().get(cacheKey)) {
                 entry->lock("purgeEntriesByUrl");
 #if USE_HTCP
                 neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);

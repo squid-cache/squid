@@ -12,5 +12,5 @@
 #define STUB_API "CollapsedForwarding.cc"
 #include "tests/STUB.h"
 
-void CollapsedForwarding::Broadcast(StoreEntry const&) STUB
+void CollapsedForwarding::Broadcast(StoreEntry const&, const bool) STUB
 
