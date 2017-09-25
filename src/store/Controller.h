@@ -78,6 +78,8 @@ public:
     /// Makes the StoreEntry private on Transients entry creation error.
     bool createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey);
 
+    StoreEntry *intransitEntry(const CacheKey &);
+
     /// marks the entry completed for collapsed requests
     void transientsCompleteWriting(StoreEntry &);
 

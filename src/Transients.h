@@ -40,7 +40,7 @@ public:
     StoreEntry *findCollapsed(const sfileno xitIndex);
 
     /// add an in-transit entry suitable for collapsing future requests
-    bool startWriting(StoreEntry *e, const HttpRequestMethod &reqMethod);
+    bool startWriting(StoreEntry *e, const Store::CacheKey &cacheKey);
 
     /// called when the in-transit entry has been successfully cached
     void completeWriting(const StoreEntry &e);
@@ -91,7 +91,7 @@ public:
 
 protected:
     StoreEntry *copyFromShm(const sfileno index);
-    bool copyToShm(const StoreEntry &e, const sfileno index, const HttpRequestMethod &reqMethod);
+    bool copyToShm(const StoreEntry &e, const sfileno index, const Store::CacheKey &cacheKey);
 
     // Ipc::StoreMapCleaner API
     virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;

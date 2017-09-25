@@ -219,7 +219,7 @@ Transients::findCollapsed(const sfileno index)
 }
 
 bool
-Transients::startWriting(StoreEntry *e, const HttpRequestMethod &reqMethod)
+Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey)
 {
     assert(e);
     assert(e->mem_obj);
@@ -238,7 +238,7 @@ Transients::startWriting(StoreEntry *e, const HttpRequestMethod &reqMethod)
     }
 
     try {
-        if (copyToShm(*e, index, reqMethod)) {
+        if (copyToShm(*e, index, cacheKey)) {
             slot->set(*e);
             e->mem_obj->xitTable.io = MemObject::ioWriting;
             e->mem_obj->xitTable.index = index;
@@ -255,7 +255,7 @@ Transients::startWriting(StoreEntry *e, const HttpRequestMethod &reqMethod)
                ' ' << *e << ": " << x.what());
         // fall through to the error handling code
     }
-
+    debugs(20, 1, "returning false " << *e);
     map->abortWriting(index);
     return false;
 }
@@ -263,18 +263,16 @@ Transients::startWriting(StoreEntry *e, const HttpRequestMethod &reqMethod)
 /// copies all relevant local data to shared memory
 bool
 Transients::copyToShm(const StoreEntry &e, const sfileno index,
-                      const HttpRequestMethod &reqMethod)
+        const Store::CacheKey &cacheKey)
 {
     TransientsMapExtras::Item &extra = extras->items[index];
 
-    const char *url = e.url();
-    const size_t urlLen = strlen(url);
-    Must(urlLen < sizeof(extra.url)); // we have space to store it all, plus 0
-    strncpy(extra.url, url, sizeof(extra.url));
+    Must(cacheKey.storeId.length() < sizeof(extra.url)); // we have space to store it all, plus 0
+    const int urlLen = cacheKey.storeId.copy(&extra.url[0], sizeof(extra.url));
     extra.url[urlLen] = '\0';
 
-    Must(reqMethod != Http::METHOD_OTHER);
-    extra.reqMethod = reqMethod.id();
+    Must(cacheKey.method != Http::METHOD_OTHER);
+    extra.reqMethod = cacheKey.method.id();
 
     return true;
 }
@@ -318,9 +316,8 @@ Transients::completeWriting(const StoreEntry &e)
         // there will be no more updates from us after this, so we must prevent
         // future readers from joining. Making the entry complete() is sufficient
         // because Transients::get() does not return completed entries.
-        map->closeForWriting(e.mem_obj->xitTable.index);
-        e.mem_obj->xitTable.index = -1;
-        e.mem_obj->xitTable.io = MemObject::ioDone;
+        map->closeForWriting(e.mem_obj->xitTable.index, true);
+        e.mem_obj->xitTable.io = MemObject::ioReading;
     }
 }
 

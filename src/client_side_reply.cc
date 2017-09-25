@@ -905,38 +905,16 @@ clientReplyContext::purgeRequestFindObjectToPurge()
 void
 purgeEntriesByUrl(HttpRequest * req, const char *url)
 {
-#if USE_HTCP
-    bool get_or_head_sent = false;
-#endif
-
     for (HttpRequestMethod m(Http::METHOD_NONE); m != Http::METHOD_ENUM_END; ++m) {
         if (m.respMaybeCacheable()) {
             const cache_key *key = storeKeyPublic(url, m);
             debugs(88, 5, m << ' ' << url << ' ' << storeKeyText(key));
-            Store::CacheKey cacheKey(key, SBuf(url), m);
-            if (StoreEntry *entry = Store::Root().get(cacheKey)) {
-                entry->lock("purgeEntriesByUrl");
 #if USE_HTCP
-                neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
-                if (m == Http::METHOD_GET || m == Http::METHOD_HEAD) {
-                    get_or_head_sent = true;
-                }
+            neighborsHtcpClear(nullptr, url, req, m, HTCP_CLR_INVALIDATION);
 #endif
-                // entry->release() notifies waiting workers, including this one
-                entry->release(true);
-
-                entry->unlock("purgeEntriesByUrl");
-            } else {
-                Store::Root().unlinkByKeyIfFound(key); // does not broadcast but there were no waiting workers
-            }
+            Store::Root().unlinkByKeyIfFound(key);
         }
     }
-
-#if USE_HTCP
-    if (!get_or_head_sent) {
-        neighborsHtcpClear(NULL, url, req, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_INVALIDATION);
-    }
-#endif
 }
 
 void

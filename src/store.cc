@@ -165,9 +165,11 @@ StoreEntry::insertPublicKey(const Store::CacheKey &cacheKey)
 {
     debugs(20, 3, "Inserting public key " << *this << " key '" << storeKeyText(cacheKey.key) << "'");
     hashInsert(cacheKey.key);
-    if (Store::Root().transientsAvailable() && !hasTransients() &&
-            !Store::Root().createTransientsEntry(this, cacheKey))
-        setPrivateKey(true, false);
+    if (!EBIT_TEST(flags, ENTRY_SPECIAL)) {
+        if (Store::Root().transientsAvailable() && !hasTransients() &&
+                !Store::Root().createTransientsEntry(this, cacheKey))
+            setPrivateKey(true, true);
+    }
 }
 
 void
@@ -684,6 +686,7 @@ StoreEntry::forcePublicKey(const cache_key *newkey)
 
     clearPrivate();
 
+    assert(mem_obj->hasUris());
     insertPublicKey(Store::CacheKey(newkey, SBuf(mem_obj->storeId()), mem_obj->method));
 
     if (hasDisk())

@@ -320,6 +320,26 @@ Store::Controller::get(const CacheKey &cacheKey)
     return nullptr;
 }
 
+// TODO: partially duplicates Controller::find().
+StoreEntry*
+Store::Controller::intransitEntry(const CacheKey &cacheKey)
+{
+    if (markedForDeletion(cacheKey.key)) {
+        debugs(20, 3, "ignoring marked " << storeKeyText(cacheKey.key));
+        return nullptr;
+    }
+
+    if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, cacheKey.key))) {
+        assert(e->hasTransients());
+        return e;
+    }
+
+    if (transients)
+        return transients->get(cacheKey);
+
+    return nullptr;
+}
+
 /// Internal method to implements the guts of the Store::get() API:
 /// returns an in-transit or cached object with a given key, if any.
 StoreEntry *
@@ -343,6 +363,8 @@ Store::Controller::find(const CacheKey &cacheKey)
     if (transients) {
         if (StoreEntry *e = transients->get(cacheKey)) {
             debugs(20, 3, "got shared in-transit entry: " << *e);
+            if (!e->mem_obj->smpCollapsed)
+                return e;
             bool inSync = false;
             const bool found = anchorCollapsed(*e, inSync);
             if (!found || inSync)
@@ -392,15 +414,11 @@ Store::Controller::markForUnlink(StoreEntry &e)
 void
 Store::Controller::unlinkByKeyIfFound(const cache_key *key)
 {
-    if (StoreEntry *entry = static_cast<StoreEntry*>(hash_lookup(store_table, key))) {
-        debugs(20, 3, "got in-transit entry: " << *entry);
-        // unlink all Store entries with entry->key, even unattached ones
-        entry->release(true);
-        return;
+    if (StoreEntry *entry = intransitEntry(CacheKey(key))) {
+        assert(entry->hasTransients());
+        transients->markForUnlink(*entry);
     }
 
-    if (transients)
-        transients->unlinkByKeyIfFound(key);
     if (memStore)
         memStore->unlinkByKeyIfFound(key);
     if (swapDir)
@@ -574,10 +592,8 @@ Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey
         return false;
     if (e->hasTransients())
         return true;
-    if (!cacheKey.hasUris())
-        return false;
 
-    return transients->startWriting(e, cacheKey.method);
+    return transients->startWriting(e, cacheKey);
 }
 
 void
@@ -604,13 +620,11 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     bool waitingToBeFreed = false;
     transients->status(*collapsed, abortedByWriter, waitingToBeFreed);
 
-    if (waitingToBeFreed) {
+    if (waitingToBeFreed && transients->collapsedWriter(*collapsed)) {
         debugs(20, 3, "will release " << *collapsed << " due to waitingToBeFreed");
         collapsed->release(true); // may already be marked
+        return;
     }
-
-    if (transients->collapsedWriter(*collapsed))
-        return; // readers can only change our waitingToBeFreed flag
 
     assert(transients->collapsedReader(*collapsed));
 
@@ -647,6 +661,8 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     if (inSync) {
         debugs(20, 5, "synced " << *collapsed);
         collapsed->invokeHandlers();
+        if (waitingToBeFreed)
+            collapsed->release(true);
         return;
     }
 
@@ -655,6 +671,9 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         collapsed->abort();
         return;
     }
+
+    if (waitingToBeFreed)
+        collapsed->release(true);
 
     // the entry is still not in one of the caches
     debugs(20, 7, "waiting " << *collapsed);
