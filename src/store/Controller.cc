@@ -575,21 +575,25 @@ Store::Controller::updateOnNotModified(StoreEntry *old, const StoreEntry &newer)
         swapDir->updateHeaders(old);
 }
 
-void
+bool
 Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
                                    const HttpRequestMethod &reqMethod)
 {
     const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
     e->makePublic(keyScope); // this is needed for both local and SMP collapsing
+    if (!e->preparePublicEntry()) {
+        e->makePrivate(true);
+        return false;
+    }
     debugs(20, 3, "may " << (transients && e->hasTransients() ?
-                             "SMP-" : "locally-") << "collapse " << *e);
+                "SMP-" : "locally-") << "collapse " << *e);
+    return true;
 }
 
 bool
 Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey)
 {
-    if (!transients)
-        return false;
+    assert(transients);
     if (e->hasTransients())
         return true;
 

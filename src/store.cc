@@ -160,16 +160,23 @@ StoreEntry::clearPrivate()
     shareableWhenPrivate = false;
 }
 
-void
-StoreEntry::insertPublicKey(const Store::CacheKey &cacheKey)
+bool
+StoreEntry::preparePublicEntry(const Store::CacheKey &cacheKey)
 {
-    debugs(20, 3, "Inserting public key " << *this << " key '" << storeKeyText(cacheKey.key) << "'");
-    hashInsert(cacheKey.key);
-    if (!EBIT_TEST(flags, ENTRY_SPECIAL)) {
-        if (Store::Root().transientsAvailable() && !hasTransients() &&
-                !Store::Root().createTransientsEntry(this, cacheKey))
-            setPrivateKey(true, true);
-    }
+    if (EBIT_TEST(flags, ENTRY_SPECIAL))
+        return true;
+
+    if (!Store::Root().transientsAvailable() || hasTransients())
+        return true;
+
+    return Store::Root().createTransientsEntry(this, cacheKey);
+}
+
+bool
+StoreEntry::preparePublicEntry()
+{
+    return preparePublicEntry(Store::CacheKey(reinterpret_cast<cache_key*>(key),
+			SBuf(mem_obj->storeId()), mem_obj->method));
 }
 
 void
@@ -687,7 +694,7 @@ StoreEntry::forcePublicKey(const cache_key *newkey)
     clearPrivate();
 
     assert(mem_obj->hasUris());
-    insertPublicKey(Store::CacheKey(newkey, SBuf(mem_obj->storeId()), mem_obj->method));
+    hashInsert(newkey);
 
     if (hasDisk())
         storeDirSwapLog(this, SWAP_LOG_ADD);

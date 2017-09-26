@@ -84,7 +84,10 @@ public:
     void abort();
     void makePublic(const KeyScope keyScope = ksDefault);
     void makePrivate(const bool shareable);
-    void insertPublicKey(const Store::CacheKey &);
+    /// Creates Transients entry for this entry if needed.
+    /// Use before placing the entry into a public SMP cache.
+    bool preparePublicEntry(const Store::CacheKey &);
+    bool preparePublicEntry();
     /// A low-level method just resetting "private key" flags.
     /// To avoid key inconsistency please use forcePublicKey()
     /// or similar instead.

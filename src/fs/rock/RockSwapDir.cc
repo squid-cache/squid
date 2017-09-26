@@ -68,10 +68,16 @@ Rock::SwapDir::get(const Store::CacheKey &cacheKey)
     StoreEntry *e = new StoreEntry();
     anchorEntry(*e, filen, *slot);
 
-    e->insertPublicKey(cacheKey);
-    trackReferences(*e);
+    if (e->preparePublicEntry(cacheKey)) {
+        e->hashInsert(cacheKey.key);
+        trackReferences(*e);
+        return e;
+    } else {
+        e->lock("MemStore::get");
+        e->unlock("MemStore::get");
+    }
 
-    return e;
+    return nullptr;
     // the disk entry remains open for reading, protected from modifications
 }
 

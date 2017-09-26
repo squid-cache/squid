@@ -818,7 +818,7 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
     mapBitSet(e->swap_filen);
     cur_size += fs.blksize * sizeInBlocks(e->swap_file_sz);
     ++n_disk_objects;
-    e->insertPublicKey(Store::CacheKey(key)); /* do it after we clear KEY_PRIVATE */
+    e->hashInsert(key); /* do it after we clear KEY_PRIVATE */
     replacementAdd (e);
     return e;
 }
