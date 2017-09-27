@@ -329,15 +329,14 @@ MemStore::get(const Store::CacheKey &cacheKey)
 
     const bool copied = copyFromShm(*e, index, *slot);
 
-    if (copied && e->preparePublicEntry(cacheKey)) {
+    if (copied && e->preparePublicEntry(cacheKey))
         return e;
-    } else {
-        e->lock("MemStore::get");
-        e->unlock("MemStore::get");
-    }
+    else
+        destroyStoreEntry(static_cast<hash_link *>(e));
 
     debugs(20, 3, HERE << "mem-loading failed; freeing " << index);
     map->freeEntry(index); // do not let others into the same trap
+
     return NULL;
 }
 

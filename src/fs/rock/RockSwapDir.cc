@@ -66,15 +66,16 @@ Rock::SwapDir::get(const Store::CacheKey &cacheKey)
 
     // create a brand new store entry and initialize it with stored basics
     StoreEntry *e = new StoreEntry();
+    e->createMemObject();
     anchorEntry(*e, filen, *slot);
 
+    e->hashInsert(cacheKey.key);
     if (e->preparePublicEntry(cacheKey)) {
-        e->hashInsert(cacheKey.key);
         trackReferences(*e);
         return e;
     } else {
-        e->lock("MemStore::get");
-        e->unlock("MemStore::get");
+        e->hashDelete();
+        destroyStoreEntry(static_cast<hash_link *>(e));
     }
 
     return nullptr;

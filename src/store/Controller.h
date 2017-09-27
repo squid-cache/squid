@@ -72,7 +72,7 @@ public:
     void updateOnNotModified(StoreEntry *old, const StoreEntry &newer);
 
     /// makes the entry available for collapsing future requests
-    bool allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
+    void allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
 
     /// For each public StoreEntry creates corresponding Transients entry.
     /// Makes the StoreEntry private on Transients entry creation error.

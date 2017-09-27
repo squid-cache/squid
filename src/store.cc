@@ -595,7 +595,7 @@ getKeyCounter(void)
  * concept'.
  */
 void
-StoreEntry::setPrivateKey(const bool shareable, const bool permanent)
+StoreEntry::setPrivateKey(const bool shareable, const bool permanent, const bool shouldMark)
 {
     debugs(20, 3, " private key " << *this);
     if (permanent)
@@ -607,7 +607,8 @@ StoreEntry::setPrivateKey(const bool shareable, const bool permanent)
         return;
 
     if (key) {
-        Store::Root().markForUnlink(*this);  // all caches/workers will know
+        if (shouldMark)
+            Store::Root().markForUnlink(*this);  // all caches/workers will know
 
         // TODO: move into SwapDir::markForUnlink() already called by Root()
         if (hasDisk())
@@ -2141,6 +2142,10 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
         os << 't' << e.mem_obj->xitTable.index;
     if (e.hasMemStore())
         os << 'm' << e.mem_obj->memCache.index;
+    // It is not possible to use e.hasDisk() here because
+    // it may end up with infinite loop.
+    if (e.swap_filen > -1 || e.swap_dirn > -1)
+        os << 'd' << e.swap_filen << '@' << e.swap_dirn;
     if (e.hasDisk())
         os << 'd' << e.swap_filen << '@' << e.swap_dirn;
 

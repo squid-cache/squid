@@ -333,6 +333,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
         ++statCounter.swap.outs;
     }
 
+    Store::Root().transientsCompleteWriting(*e);
     debugs(20, 3, "storeSwapOutFileClosed: " << __FILE__ << ":" << __LINE__);
     mem->swapout.sio = NULL;
     e->unlock("storeSwapOutFileClosed");

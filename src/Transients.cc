@@ -288,7 +288,7 @@ Transients::abandon(const StoreEntry &e)
 {
     assert(e.mem_obj && map);
     // avoid useless broadcasts
-    if (map->freeEntry(e.mem_obj->xitTable.index)); // just marks the locked entry
+    if (map->freeEntry(e.mem_obj->xitTable.index)) // just marks the locked entry
         CollapsedForwarding::Broadcast(e, true);
     // We do not unlock the entry now because the problem is most likely with
     // the server resource rather than a specific cache writer, so we want to
@@ -311,14 +311,13 @@ Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFree
 void
 Transients::completeWriting(const StoreEntry &e)
 {
-    if (e.hasTransients()) {
-        assert(collapsedWriter(e));
-        // there will be no more updates from us after this, so we must prevent
-        // future readers from joining. Making the entry complete() is sufficient
-        // because Transients::get() does not return completed entries.
-        map->closeForWriting(e.mem_obj->xitTable.index, true);
-        e.mem_obj->xitTable.io = MemObject::ioReading;
-    }
+    assert(e.hasTransients());
+    assert(collapsedWriter(e));
+    // there will be no more updates from us after this, so we must prevent
+    // future readers from joining. Making the entry complete() is sufficient
+    // because Transients::get() does not return completed entries.
+    map->closeForWriting(e.mem_obj->xitTable.index, true);
+    e.mem_obj->xitTable.io = MemObject::ioReading;
 }
 
 int

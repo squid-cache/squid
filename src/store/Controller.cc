@@ -499,7 +499,7 @@ Store::Controller::transientsAbandon(StoreEntry &e)
 void
 Store::Controller::transientsCompleteWriting(StoreEntry &e)
 {
-    if (transients && e.hasTransients())
+    if (transients && e.hasTransients() && transients->collapsedWriter(e))
         transients->completeWriting(e);
 }
 
@@ -575,19 +575,14 @@ Store::Controller::updateOnNotModified(StoreEntry *old, const StoreEntry &newer)
         swapDir->updateHeaders(old);
 }
 
-bool
+void
 Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
                                    const HttpRequestMethod &reqMethod)
 {
     const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
     e->makePublic(keyScope); // this is needed for both local and SMP collapsing
-    if (!e->preparePublicEntry()) {
-        e->makePrivate(true);
-        return false;
-    }
     debugs(20, 3, "may " << (transients && e->hasTransients() ?
                 "SMP-" : "locally-") << "collapse " << *e);
-    return true;
 }
 
 bool
@@ -611,6 +606,13 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         return;
     }
 
+    if (!collapsed->locked()) {
+        debugs(20, 3, "will release unlocked " << *collapsed);
+        // should destroy unlocked entry
+        collapsed->release();
+        return;
+    }
+
     assert(collapsed->mem_obj);
 
     if (EBIT_TEST(collapsed->flags, ENTRY_ABORTED)) {
@@ -624,11 +626,13 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     bool waitingToBeFreed = false;
     transients->status(*collapsed, abortedByWriter, waitingToBeFreed);
 
-    if (waitingToBeFreed && transients->collapsedWriter(*collapsed)) {
+    if (waitingToBeFreed) {
         debugs(20, 3, "will release " << *collapsed << " due to waitingToBeFreed");
         collapsed->release(true); // may already be marked
-        return;
     }
+
+    if (transients->collapsedWriter(*collapsed))
+        return; // readers can only change our waitingToBeFreed flag
 
     assert(transients->collapsedReader(*collapsed));
 
@@ -665,8 +669,6 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     if (inSync) {
         debugs(20, 5, "synced " << *collapsed);
         collapsed->invokeHandlers();
-        if (waitingToBeFreed)
-            collapsed->release(true);
         return;
     }
 
@@ -675,9 +677,6 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         collapsed->abort();
         return;
     }
-
-    if (waitingToBeFreed)
-        collapsed->release(true);
 
     // the entry is still not in one of the caches
     debugs(20, 7, "waiting " << *collapsed);
