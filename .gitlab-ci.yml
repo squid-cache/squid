@@ -1,0 +1,26 @@
+before_script:
+    - sed -i '/^#\sdeb-src /s/^#//' "/etc/apt/sources.list"
+        # avoid `Picking 'squid3' as source package instead of 'squid' E: Unable to find a source package for squid3`
+    - apt-get update
+    - apt-get build-dep --yes squid
+    - export MAKEFLAGS=-j$((`grep -c ^processor /proc/cpuinfo`*2))
+
+ubuntu-17.04:
+    image: ubuntu:zesty
+    script:
+        - ./bootstrap.sh && ./configure && make && make check && make install
+
+ubuntu-16.04:
+    image: ubuntu:xenial
+    script:
+        - ./bootstrap.sh && ./configure && make && make check && make install
+
+ubuntu-14.04:
+    image: ubuntu:trusty
+    script:
+        - ./bootstrap.sh && ./configure && make && make check && make install
+
+ubuntu-17.10:
+    image: ubuntu:artful
+    script:
+        - ./bootstrap.sh && ./configure && make && make check && make install
