@@ -39,4 +39,5 @@ void MemStore::markForUnlink(StoreEntry&) STUB
 void MemStore::unlinkByKeyIfFound(const cache_key *) STUB
 bool MemStore::anchorCollapsed(StoreEntry&, bool&) STUB_RETVAL(false)
 bool MemStore::updateCollapsed(StoreEntry&) STUB_RETVAL(false)
+bool MemStore::markedForDeletion(const StoreEntry &) const STUB_RETVAL(false)
 

@@ -219,11 +219,12 @@ Transients::findCollapsed(const sfileno index)
 }
 
 bool
-Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey)
+Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey, bool &collisionDetected)
 {
     assert(e);
     assert(e->mem_obj);
     assert(!e->hasTransients());
+    collisionDetected = false;
 
     if (!map) {
         debugs(20, 5, "No map to add " << *e);
@@ -234,6 +235,7 @@ Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey)
     Ipc::StoreMapAnchor *slot = map->openForWriting(reinterpret_cast<const cache_key *>(e->key), index);
     if (!slot) {
         debugs(20, 5, "collision registering " << *e);
+        collisionDetected = true;
         return false;
     }
 
@@ -381,6 +383,12 @@ Transients::markedForDeletion(const cache_key *key) const
 {
     assert(map);
     return map->markedForDeletion(key);
+}
+
+bool
+Transients::markedForDeletion(const StoreEntry &e) const
+{
+    return markedForDeletion(reinterpret_cast<const cache_key*>(e.key));
 }
 
 bool

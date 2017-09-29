@@ -112,6 +112,10 @@ public:
     /// a true result does not imply [lack of] non-SMP support because
     /// [only] some SMP-aware storages also support non-SMP configss
     virtual bool smpAware() const = 0;
+
+    /// Whether the entry is attached to a storage and was marked for
+    /// removal some time ago.
+    virtual bool markedForDeletion(const StoreEntry &e) const = 0;
 };
 
 } // namespace Store

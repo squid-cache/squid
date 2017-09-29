@@ -564,6 +564,12 @@ Store::Disks::hasReadableEntry(const StoreEntry &e) const
     return false;
 }
 
+bool
+Store::Disks::markedForDeletion(const StoreEntry &e) const
+{
+    return (e.hasDisk() && dir(e.swap_dirn).markedForDeletion(e));
+}
+
 void
 storeDirOpenSwapLogs()
 {

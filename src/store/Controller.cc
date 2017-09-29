@@ -289,10 +289,24 @@ Store::Controller::dereferenceIdle(StoreEntry &e, bool wantsLocalMemory)
 bool
 Store::Controller::markedForDeletion(const cache_key *key) const
 {
-    // Checking Transients should be enough: assuming that every
-    // public store entry with 'key' has a corresponding Transients entry
-    // (and vice versa).
+    // Checking Transients should cover many, but not all cases.
+    // Since we require that only StoreEntry writer must have the
+    // corresponding Transients entry, there can be StoreEntries,
+    // detached from Transients but still marked for deletion in
+    // another storage.
     return transients && transients->markedForDeletion(key);
+}
+
+bool
+Store::Controller::markedForDeletion(const StoreEntry &e) const
+{
+    if (transients && transients->markedForDeletion(e))
+        return true;
+    if (memStore && memStore->markedForDeletion(e))
+        return true;
+    if (swapDir && swapDir->markedForDeletion(e))
+        return true;
+    return false;
 }
 
 bool
@@ -330,8 +344,8 @@ Store::Controller::intransitEntry(const CacheKey &cacheKey)
     }
 
     if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, cacheKey.key))) {
-        assert(e->hasTransients());
-        return e;
+        if (!markedForDeletion(*e))
+            return e;
     }
 
     if (transients)
@@ -353,10 +367,12 @@ Store::Controller::find(const CacheKey &cacheKey)
     }
 
     if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, cacheKey.key))) {
-        // TODO: ignore and maybe handleIdleEntry() unlocked intransit entries
-        // because their backing store slot may be gone already.
-        debugs(20, 3, HERE << "got in-transit entry: " << *e);
-        return e;
+        if (!markedForDeletion(*e)) {
+            // TODO: ignore and maybe handleIdleEntry() unlocked intransit entries
+            // because their backing store slot may be gone already.
+            debugs(20, 3, HERE << "got in-transit entry: " << *e);
+            return e;
+        }
     }
 
     // Must search transients before caches because we must sync those we find.
@@ -592,7 +608,12 @@ Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey
     if (e->hasTransients())
         return true;
 
-    return transients->startWriting(e, cacheKey);
+    bool collisionDetected = false;
+    if (!transients->startWriting(e, cacheKey, collisionDetected)) {
+        // a collision means that there is already transients writer
+        return collisionDetected;
+    }
+    return true;
 }
 
 void

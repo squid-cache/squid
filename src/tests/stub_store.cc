@@ -112,6 +112,7 @@ int Store::Controller::store_dirs_rebuilding = 0;
 StoreSearch *Store::Controller::search() STUB_RETVAL(NULL)
 void Store::Controller::maintain() STUB
 bool Store::Controller::markedForDeletion(const cache_key *) const STUB_RETVAL(false)
+bool Store::Controller::markedForDeletion(const StoreEntry &) const STUB_RETVAL(false)
 
 std::ostream &operator <<(std::ostream &os, const StoreEntry &)
 {

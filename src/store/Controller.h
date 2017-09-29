@@ -47,6 +47,7 @@ public:
     /// Whether the entry with the key exists and was marked for removal
     /// some time ago; get(key) will return nil in such case.
     bool markedForDeletion(const cache_key *key) const;
+    virtual bool markedForDeletion(const StoreEntry &e) const override;
 
     /// markedForDeletion() with no readers
     /// this is one method because the two conditions must be checked in the right order
@@ -74,8 +75,12 @@ public:
     /// makes the entry available for collapsing future requests
     void allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
 
-    /// For each public StoreEntry creates corresponding Transients entry.
-    /// Makes the StoreEntry private on Transients entry creation error.
+    /// For each public StoreEntry tries to create the corresponding
+    /// Transients entry.
+    /// \returns true on success or if Transients entry already exists
+    /// and is locked.
+    /// \returns false on Transients entry creation error and makes
+    /// the StoreEntry private.
     bool createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey);
 
     StoreEntry *intransitEntry(const CacheKey &);

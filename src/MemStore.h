@@ -65,6 +65,7 @@ public:
     virtual void unlinkByKeyIfFound(const cache_key *key) override;
     virtual void unlink(StoreEntry &e) override;
     virtual bool smpAware() const override { return true; }
+    virtual bool markedForDeletion(const StoreEntry &e) const override;
 
     static int64_t EntryLimit();
 

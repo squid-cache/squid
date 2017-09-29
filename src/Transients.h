@@ -40,7 +40,7 @@ public:
     StoreEntry *findCollapsed(const sfileno xitIndex);
 
     /// add an in-transit entry suitable for collapsing future requests
-    bool startWriting(StoreEntry *e, const Store::CacheKey &cacheKey);
+    bool startWriting(StoreEntry *e, const Store::CacheKey &cacheKey, bool &collisionDetected);
 
     /// called when the in-transit entry has been successfully cached
     void completeWriting(const StoreEntry &e);
@@ -81,6 +81,8 @@ public:
     /// whether the entry with the given key exists and was marked
     /// for removal some time ago
     bool markedForDeletion(const cache_key *) const;
+
+    virtual bool markedForDeletion(const StoreEntry &) const override;
 
     /// whether the entry is in "reading from Transients" I/O state
     bool collapsedReader(const StoreEntry &) const;
