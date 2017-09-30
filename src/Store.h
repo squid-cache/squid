@@ -86,7 +86,7 @@ public:
     void makePrivate(const bool shareable);
     /// Creates Transients entry for this entry if needed.
     /// Use before placing the entry into a public SMP cache.
-    bool preparePublicEntry(const Store::CacheKey &);
+    bool preparePublicEntry(const Store::CacheKey &, const bool switchToReading = false);
     bool preparePublicEntry();
     /// A low-level method just resetting "private key" flags.
     /// To avoid key inconsistency please use forcePublicKey()

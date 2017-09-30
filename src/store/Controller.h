@@ -81,7 +81,7 @@ public:
     /// and is locked.
     /// \returns false on Transients entry creation error and makes
     /// the StoreEntry private.
-    bool createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey);
+    bool createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey, const bool switchToReading = false);
 
     StoreEntry *intransitEntry(const CacheKey &);
 

@@ -70,16 +70,14 @@ Rock::SwapDir::get(const Store::CacheKey &cacheKey)
     anchorEntry(*e, filen, *slot);
 
     e->hashInsert(cacheKey.key);
-    if (e->preparePublicEntry(cacheKey)) {
+    if (e->preparePublicEntry(cacheKey, true)) {
         trackReferences(*e);
         return e;
-    } else {
-        e->hashDelete();
-        destroyStoreEntry(static_cast<hash_link *>(e));
+        // the disk entry remains open for reading, protected from modifications
     }
-
+    e->hashDelete();
+    destroyStoreEntry(static_cast<hash_link *>(e));
     return nullptr;
-    // the disk entry remains open for reading, protected from modifications
 }
 
 bool

@@ -161,7 +161,7 @@ StoreEntry::clearPrivate()
 }
 
 bool
-StoreEntry::preparePublicEntry(const Store::CacheKey &cacheKey)
+StoreEntry::preparePublicEntry(const Store::CacheKey &cacheKey, const bool switchToReading)
 {
     if (EBIT_TEST(flags, ENTRY_SPECIAL))
         return true;
@@ -169,7 +169,7 @@ StoreEntry::preparePublicEntry(const Store::CacheKey &cacheKey)
     if (!Store::Root().transientsAvailable() || hasTransients())
         return true;
 
-    return Store::Root().createTransientsEntry(this, cacheKey);
+    return Store::Root().createTransientsEntry(this, cacheKey, switchToReading);
 }
 
 bool

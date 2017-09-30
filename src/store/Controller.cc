@@ -602,7 +602,7 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
 }
 
 bool
-Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey)
+Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey, const bool switchToReading)
 {
     assert(transients);
     if (e->hasTransients())
@@ -613,6 +613,8 @@ Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey
         // a collision means that there is already transients writer
         return collisionDetected;
     }
+    if (switchToReading)
+        transientsCompleteWriting(*e);
     return true;
 }
 
