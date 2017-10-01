@@ -657,7 +657,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
 }
 
 int
-matchDomainName(const char *h, const char *d, uint8_t flags)
+matchDomainName(const char *h, const char *d, enum MatchDomainNameFlags flags)
 {
     int dl;
     int hl;
