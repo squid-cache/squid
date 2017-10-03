@@ -74,7 +74,7 @@ private:
 };
 
 template <class Key, class EntryValue, size_t EntryCost>
-    LruMap<Key, EntryValue, EntryCost>::LruMap(int aTtl, size_t aSize): entries_(0)
+LruMap<Key, EntryValue, EntryCost>::LruMap(int aTtl, size_t aSize): entries_(0)
 {
     ttl = aTtl;
 
