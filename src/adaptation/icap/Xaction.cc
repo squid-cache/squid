@@ -467,7 +467,7 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
     Must(readBuf.length() < SQUID_TCP_SO_RCVBUF);
     // now we can ensure that there is space to read new data,
     // even if readBuf.spaceSize() currently returns zero.
-    readBuf.rawSpace(1);
+    readBuf.rawAppendStart(1);
 
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
