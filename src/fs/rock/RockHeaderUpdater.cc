@@ -98,24 +98,25 @@ Rock::HeaderUpdater::stopReading(const char *why)
 void
 Rock::HeaderUpdater::NoteRead(void *data, const char *buf, ssize_t result, StoreIOState::Pointer)
 {
+    IoCbParams io(buf, result);
     // TODO: Avoid Rock::StoreIOStateCb for jobs to protect jobs for "free".
     CallJobHere1(47, 7,
                  CbcPointer<HeaderUpdater>(static_cast<HeaderUpdater*>(data)),
                  Rock::HeaderUpdater,
                  noteRead,
-                 result);
+                 io);
 }
 
 void
-Rock::HeaderUpdater::noteRead(ssize_t result)
+Rock::HeaderUpdater::noteRead(const Rock::HeaderUpdater::IoCbParams result)
 {
-    debugs(47, 7, result);
-    if (!result) { // EOF
+    debugs(47, 7, result.size);
+    if (!result.size) { // EOF
         stopReading("eof");
     } else {
-        Must(result > 0);
-        bytesRead += result;
-        readerBuffer.forceSize(readerBuffer.length() + result);
+        Must(result.size > 0);
+        bytesRead += result.size;
+        readerBuffer.rawAppendFinish(result.buf, result.size);
         exchangeBuffer.append(readerBuffer);
         debugs(47, 7, "accumulated " << exchangeBuffer.length());
     }
@@ -130,7 +131,7 @@ Rock::HeaderUpdater::readMore(const char *why)
     Must(reader);
     readerBuffer.clear();
     storeRead(reader,
-              readerBuffer.rawSpace(store->slotSize),
+              readerBuffer.rawAppendStart(store->slotSize),
               store->slotSize,
               bytesRead,
               &NoteRead,
