@@ -84,7 +84,7 @@ Comm::ReadNow(CommIoCbParams &params, SBuf &buf)
     SBuf::size_type sz = buf.spaceSize();
     if (params.size > 0 && params.size < sz)
         sz = params.size;
-    char *inbuf = buf.rawSpace(sz);
+    char *inbuf = buf.rawAppendStart(sz);
     errno = 0;
     const int retval = FD_READ_METHOD(params.conn->fd, inbuf, sz);
     params.xerrno = errno;
@@ -92,7 +92,7 @@ Comm::ReadNow(CommIoCbParams &params, SBuf &buf)
     debugs(5, 3, params.conn << ", size " << sz << ", retval " << retval << ", errno " << params.xerrno);
 
     if (retval > 0) { // data read most common case
-        buf.append(inbuf, retval);
+        buf.rawAppendFinish(inbuf, retval);
         fd_bytes(params.conn->fd, retval, FD_READ);
         params.flag = Comm::OK;
         params.size = retval;
