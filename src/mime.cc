@@ -405,7 +405,7 @@ MimeIcon::created(StoreEntry *newEntry)
     StoreEntry *e = storeCreateEntry(url_,url_,flags,Http::METHOD_GET);
     assert(e != NULL);
     EBIT_SET(e->flags, ENTRY_SPECIAL);
-    e->setPublicKey();
+    (void)e->setPublicKey();
     e->buffer();
 
     e->mem_obj->request = r;

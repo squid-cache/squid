@@ -596,16 +596,19 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
                                    const HttpRequestMethod &reqMethod)
 {
     const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
-    e->makePublic(keyScope); // this is needed for both local and SMP collapsing
-    debugs(20, 3, "may " << (transients && e->hasTransients() ?
-                "SMP-" : "locally-") << "collapse " << *e);
+    if (e->makePublic(keyScope)) { // this is needed for both local and SMP collapsing
+        debugs(20, 3, "may " << (transients && e->hasTransients() ?
+                    "SMP-" : "locally-") << "collapse " << *e);
+    }
 }
 
 bool
 Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey, const bool switchToReading)
 {
-    assert(transients);
-    if (e->hasTransients())
+    if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
+        return true;
+
+    if (!transients || e->hasTransients())
         return true;
 
     bool collisionDetected = false;

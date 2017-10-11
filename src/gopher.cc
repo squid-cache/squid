@@ -922,7 +922,8 @@ gopherSendRequest(int, void *data)
                                          CommIoCbPtrFun(gopherSendComplete, gopherState));
     Comm::Write(gopherState->serverConn, &mb, call);
 
-    gopherState->entry->makePublic();
+    if (!gopherState->entry->makePublic())
+        gopherState->entry->makePrivate(true);
 }
 
 void

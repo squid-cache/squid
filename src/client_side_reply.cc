@@ -316,17 +316,13 @@ clientReplyContext::processExpired()
                                  http->log_uri, http->request->flags, http->request->method);
         /* NOTE, don't call StoreEntry->lock(), storeCreateEntry() does it */
 
-        if (collapsingAllowed)
-            Store::Root().allowCollapsing(entry, http->request->flags, http->request->method);
-
-        collapsedRevalidation = crNone;
-        if (!EBIT_TEST(entry->flags, KEY_PRIVATE)) {
-            if (!entry->preparePublicEntry())
-                entry->setPrivateKey(false, !http->request->flags.cachable, false);
-            else if (collapsingAllowed) {
-                debugs(88, 5, "allow other revalidation requests to collapse on " << *entry);
-                collapsedRevalidation = crInitiator;
-            }
+        if (collapsingAllowed) {
+            debugs(88, 5, "allow other revalidation requests to collapse on " << *entry);
+            Store::Root().allowCollapsing(entry, http->request->flags,
+                                          http->request->method);
+            collapsedRevalidation = crInitiator;
+        } else {
+            collapsedRevalidation = crNone;
         }
     }
 
@@ -2289,9 +2285,6 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
         // make the entry available for future requests now
         Store::Root().allowCollapsing(e, reqFlags, m);
     }
-
-    if (!EBIT_TEST(e->flags, KEY_PRIVATE) && !e->preparePublicEntry())
-        e->setPrivateKey(false, !reqFlags.cachable, false);
 
     sc = storeClientListAdd(e, this);
 

@@ -138,12 +138,11 @@ StoreEntry::operator delete (void *address)
     pool->freeOne(address);
 }
 
-void
+bool
 StoreEntry::makePublic(const KeyScope scope)
 {
     /* This object can be cached for a long time */
-    if (!EBIT_TEST(flags, RELEASE_REQUEST))
-        setPublicKey(scope);
+    return !EBIT_TEST(flags, RELEASE_REQUEST) && setPublicKey(scope);
 }
 
 void
@@ -161,30 +160,14 @@ StoreEntry::clearPrivate()
 }
 
 bool
-StoreEntry::preparePublicEntry(const Store::CacheKey &cacheKey, const bool switchToReading)
-{
-    if (EBIT_TEST(flags, ENTRY_SPECIAL))
-        return true;
-
-    if (!Store::Root().transientsAvailable() || hasTransients())
-        return true;
-
-    return Store::Root().createTransientsEntry(this, cacheKey, switchToReading);
-}
-
-bool
-StoreEntry::preparePublicEntry()
-{
-    return preparePublicEntry(Store::CacheKey(reinterpret_cast<cache_key*>(key),
-			SBuf(mem_obj->storeId()), mem_obj->method));
-}
-
-void
 StoreEntry::cacheNegatively()
 {
     /* This object may be negatively cached */
-    negativeCache();
-    makePublic();
+    if (makePublic()) {
+        negativeCache();
+        return true;
+    }
+    return false;
 }
 
 size_t
@@ -627,12 +610,12 @@ StoreEntry::setPrivateKey(const bool shareable, const bool permanent, const bool
     hashInsert(newkey);
 }
 
-void
+bool
 StoreEntry::setPublicKey(const KeyScope scope)
 {
     debugs(20, 3, "public key " << *this);
     if (key && !EBIT_TEST(flags, KEY_PRIVATE))
-        return;                 /* is already public */
+        return true;                 /* is already public */
 
     assert(mem_obj);
 
@@ -653,9 +636,13 @@ StoreEntry::setPublicKey(const KeyScope scope)
 #endif
 
     assert(!EBIT_TEST(flags, RELEASE_REQUEST));
-
-    adjustVary();
-    forcePublicKey(calcPublicKey(scope));
+    const cache_key *pubKey = calcPublicKey(scope);
+    if (!Store::Root().createTransientsEntry(this, Store::CacheKey(pubKey, SBuf(mem_obj->storeId()), mem_obj->method)))
+        return false;
+    if (!adjustVary())
+        return false;
+    forcePublicKey(pubKey);
+    return true;
 }
 
 void
@@ -714,13 +701,14 @@ StoreEntry::calcPublicKey(const KeyScope keyScope)
 /// Updates mem_obj->request->vary_headers to reflect the current Vary.
 /// The vary_headers field is used to calculate the Vary marker key.
 /// Releases the old Vary marker with an outdated key (if any).
-void
+/// \returns false if fails to create "vary" base object, true otherwise.
+bool
 StoreEntry::adjustVary()
 {
     assert(mem_obj);
 
     if (!mem_obj->request)
-        return;
+        return true;
 
     HttpRequestPointer request(mem_obj->request);
 
@@ -746,12 +734,15 @@ StoreEntry::adjustVary()
     // We should add/use storeHas() API or lock/unlock those entries.
     if (!mem_obj->vary_headers.isEmpty() && !storeGetPublic(mem_obj->storeId(), mem_obj->method)) {
         /* Create "vary" base object */
-        String vary;
         StoreEntry *pe = storeCreateEntry(mem_obj->storeId(), mem_obj->logUri(), request->flags, request->method);
+        if (!pe->makePublic()) {
+            pe->unlock("StoreEntry::adjustVary");
+            return false;
+        }
         /* We are allowed to do this typecast */
         HttpReply *rep = new HttpReply;
         rep->setHeaders(Http::scOkay, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
-        vary = mem_obj->getReply()->header.getList(Http::HdrType::VARY);
+        String vary = mem_obj->getReply()->header.getList(Http::HdrType::VARY);
 
         if (vary.size()) {
             /* Again, we own this structure layout */
@@ -773,14 +764,13 @@ StoreEntry::adjustVary()
 
         pe->timestampsSet();
 
-        pe->makePublic();
-
         pe->startWriting(); // after makePublic()
 
         pe->complete();
 
         pe->unlock("StoreEntry::forcePublicKey+Vary");
     }
+    return true;
 }
 
 StoreEntry *
@@ -807,11 +797,10 @@ storeCreateEntry(const char *url, const char *logUrl, const RequestFlags &flags,
     StoreEntry *e = storeCreatePureEntry(url, logUrl, method);
     e->lock("storeCreateEntry");
 
-    if (neighbors_do_private_keys || !flags.hierarchical || !flags.cachable)
-        e->setPrivateKey(false, !flags.cachable);
-    else
-        e->setPublicKey();
+    if (!neighbors_do_private_keys && flags.hierarchical && flags.cachable && e->setPublicKey())
+        return e;
 
+    e->setPrivateKey(false, !flags.cachable);
     return e;
 }
 

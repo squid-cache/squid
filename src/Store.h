@@ -82,17 +82,13 @@ public:
     void swapOutDecision(const MemObject::SwapOut::Decision &decision);
 
     void abort();
-    void makePublic(const KeyScope keyScope = ksDefault);
+    bool makePublic(const KeyScope keyScope = ksDefault);
     void makePrivate(const bool shareable);
-    /// Creates Transients entry for this entry if needed.
-    /// Use before placing the entry into a public SMP cache.
-    bool preparePublicEntry(const Store::CacheKey &, const bool switchToReading = false);
-    bool preparePublicEntry();
     /// A low-level method just resetting "private key" flags.
     /// To avoid key inconsistency please use forcePublicKey()
     /// or similar instead.
     void clearPrivate();
-    void setPublicKey(const KeyScope keyScope = ksDefault);
+    bool setPublicKey(const KeyScope keyScope = ksDefault);
     /// Resets existing public key to a public key with default scope,
     /// releasing the old default-scope entry (if any).
     /// Does nothing if the existing public key already has default scope.
@@ -108,7 +104,7 @@ public:
     /// for eventual removal from the Store.
     void releaseRequest(const bool shareable = false);
     void negativeCache();
-    void cacheNegatively();     /** \todo argh, why both? */
+    bool cacheNegatively();     /** \todo argh, why both? */
     void invokeHandlers();
     void purgeMem();
     void cacheInMemory(); ///< start or continue storing in memory cache
@@ -278,7 +274,7 @@ protected:
 private:
     bool checkTooBig() const;
     void forcePublicKey(const cache_key *newkey);
-    void adjustVary();
+    bool adjustVary();
     const cache_key *calcPublicKey(const KeyScope keyScope);
 
     static MemAllocator *pool;

@@ -56,7 +56,7 @@ public:
     StoreMapAnchor();
 
     /// store StoreEntry key and basics for an inode slot
-    void set(const StoreEntry &anEntry);
+    void set(const StoreEntry &anEntry, const cache_key *aKey = nullptr);
 
     void setKey(const cache_key *const aKey);
     bool sameKey(const cache_key *const aKey) const;

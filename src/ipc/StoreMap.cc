@@ -773,10 +773,10 @@ Ipc::StoreMapAnchor::sameKey(const cache_key *const aKey) const
 }
 
 void
-Ipc::StoreMapAnchor::set(const StoreEntry &from)
+Ipc::StoreMapAnchor::set(const StoreEntry &from, const cache_key *aKey)
 {
     assert(writing() && !reading());
-    setKey(reinterpret_cast<const cache_key*>(from.key));
+    setKey(reinterpret_cast<const cache_key*>(aKey ? aKey : from.key));
     basics.timestamp = from.timestamp;
     basics.lastref = from.lastref;
     basics.expires = from.expires;

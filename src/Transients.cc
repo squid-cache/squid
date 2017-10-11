@@ -186,7 +186,7 @@ Transients::copyFromShm(const sfileno index)
     e->mem_obj->xitTable.index = index;
 
     // TODO: Support collapsed revalidation for SMP-aware caches.
-    e->setPublicKey(ksDefault);
+    (void)e->setPublicKey(ksDefault);
 
     assert(e->key);
 
@@ -232,7 +232,7 @@ Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey, bool &c
     }
 
     sfileno index = 0;
-    Ipc::StoreMapAnchor *slot = map->openForWriting(reinterpret_cast<const cache_key *>(e->key), index);
+    Ipc::StoreMapAnchor *slot = map->openForWriting(cacheKey.key, index);
     if (!slot) {
         debugs(20, 5, "collision registering " << *e);
         collisionDetected = true;
@@ -241,7 +241,7 @@ Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey, bool &c
 
     try {
         if (copyToShm(*e, index, cacheKey)) {
-            slot->set(*e);
+            slot->set(*e, cacheKey.key);
             e->mem_obj->xitTable.io = MemObject::ioWriting;
             e->mem_obj->xitTable.index = index;
             map->startAppending(index);

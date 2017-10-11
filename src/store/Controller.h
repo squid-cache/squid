@@ -75,12 +75,8 @@ public:
     /// makes the entry available for collapsing future requests
     void allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
 
-    /// For each public StoreEntry tries to create the corresponding
-    /// Transients entry.
-    /// \returns true on success or if Transients entry already exists
-    /// and is locked.
-    /// \returns false on Transients entry creation error and makes
-    /// the StoreEntry private.
+    /// For the given StoreEntry creates the corresponding Transients entry.
+    /// \returns true if Transients entry already exists or successfully created.
     bool createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey, const bool switchToReading = false);
 
     StoreEntry *intransitEntry(const CacheKey &);

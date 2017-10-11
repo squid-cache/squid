@@ -958,13 +958,13 @@ HttpStateData::haveParsedReplyHeaders()
             break;
 
         case ReuseDecision::cachePositively:
-            entry->makePublic();
-            if (!entry->preparePublicEntry())
+            if (!entry->makePublic())
                 entry->makePrivate(true);
             break;
 
         case ReuseDecision::cacheNegatively:
-            entry->cacheNegatively();
+            if (!entry->cacheNegatively())
+                entry->makePrivate(true);
             break;
 
         case ReuseDecision::doNotCacheButShare:

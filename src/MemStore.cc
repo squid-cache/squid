@@ -330,10 +330,12 @@ MemStore::get(const Store::CacheKey &cacheKey)
     const bool copied = copyFromShm(*e, index, *slot);
 
     if (copied) {
-        e->hashInsert(cacheKey.key);
-        if (e->preparePublicEntry(cacheKey, true))
+        if (Store::Root().createTransientsEntry(e, cacheKey)) {
+            e->hashInsert(cacheKey.key);
             return e;
-        e->hashDelete();
+        } else {
+            debugs(20, 3, "Unable to create transients entry for " << *e);
+        }
     }
 
     destroyStoreEntry(static_cast<hash_link *>(e));
@@ -670,6 +672,7 @@ MemStore::startCaching(StoreEntry &e)
     // stop swapping it out if it grows too large.
     if (e.mem_obj->expectedReplySize() >= 0)
         map->startAppending(index);
+
     e.memOutDecision(true);
     return true;
 }
