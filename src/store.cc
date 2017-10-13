@@ -534,6 +534,7 @@ StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestM
 StoreEntry *
 storeGetPublic(const char *uri, const HttpRequestMethod& method)
 {
+    // XXX: Performance regression: SBuf() allocates.
     const Store::CacheKey cacheKey(storeKeyPublic(uri, method), SBuf(uri), method);
     return Store::Root().get(cacheKey);
 }
@@ -637,6 +638,7 @@ StoreEntry::setPublicKey(const KeyScope scope)
 
     assert(!EBIT_TEST(flags, RELEASE_REQUEST));
     const cache_key *pubKey = calcPublicKey(scope);
+    // XXX: Performance regression: SBuf() allocates.
     if (!Store::Root().createTransientsEntry(this, Store::CacheKey(pubKey, SBuf(mem_obj->storeId()), mem_obj->method)))
         return false;
     if (!adjustVary())

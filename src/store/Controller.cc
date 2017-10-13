@@ -591,7 +591,7 @@ Store::Controller::updateOnNotModified(StoreEntry *old, const StoreEntry &newer)
         swapDir->updateHeaders(old);
 }
 
-void
+bool
 Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
                                    const HttpRequestMethod &reqMethod)
 {
@@ -599,7 +599,9 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
     if (e->makePublic(keyScope)) { // this is needed for both local and SMP collapsing
         debugs(20, 3, "may " << (transients && e->hasTransients() ?
                     "SMP-" : "locally-") << "collapse " << *e);
+        return true;
     }
+    return false;
 }
 
 bool
@@ -614,7 +616,7 @@ Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey
     bool collisionDetected = false;
     if (!transients->startWriting(e, cacheKey, collisionDetected)) {
         // a collision means that there is already transients writer
-        return collisionDetected;
+        return false;
     }
     if (switchToReading)
         transientsCompleteWriting(*e);

@@ -73,9 +73,9 @@ public:
 
 public:
     mutable ReadWriteLock lock; ///< protects slot data below
-    std::atomic<bool> waitingToBeFreed; ///< may be accessed w/o a lock
+    std::atomic<uint8_t> waitingToBeFreed; ///< may be accessed w/o a lock
     /// true when StoreMap::abortWriting() was called but there were still readers
-    std::atomic<bool> writerHalted;
+    std::atomic<uint8_t> writerHalted; ///< whether abortWriting() has been called
 
     // fields marked with [app] can be modified when appending-while-reading
     // fields marked with [update] can be modified when updating-while-reading

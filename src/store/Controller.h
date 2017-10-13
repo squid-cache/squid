@@ -72,8 +72,8 @@ public:
     /// update old entry metadata and HTTP headers using a newer entry
     void updateOnNotModified(StoreEntry *old, const StoreEntry &newer);
 
-    /// makes the entry available for collapsing future requests
-    void allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
+    /// tries to make the entry available for collapsing future requests
+    bool allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
 
     /// For the given StoreEntry creates the corresponding Transients entry.
     /// \returns true if Transients entry already exists or successfully created.

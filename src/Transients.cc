@@ -305,7 +305,6 @@ Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFree
     const auto idx = entry.mem_obj->xitTable.index;
     const auto &anchor = collapsedWriter(entry) ?
         map->writeableEntry(idx) : map->readableEntry(idx);
-
     aborted = anchor.writerHalted;
     waitingToBeFreed = anchor.waitingToBeFreed;
 }
