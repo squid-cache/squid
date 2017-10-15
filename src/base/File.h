@@ -115,10 +115,10 @@ private:
     // Windows-specific HANDLE is needed because LockFileEx() does not take POSIX FDs.
 #if _SQUID_WINDOWS_ || _SQUID_MINGW_
     typedef HANDLE Handle;
-    static const Handle InvalidHandle;
+    static constexpr Handle InvalidHandle = INVALID_HANDLE_VALUE;
 #else
     typedef int Handle;
-    static const Handle InvalidHandle = -1;
+    static constexpr Handle InvalidHandle = -1;
 #endif
     Handle fd_ = InvalidHandle; ///< OS-specific file handle
 };
