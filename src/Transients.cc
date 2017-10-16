@@ -186,7 +186,10 @@ Transients::copyFromShm(const sfileno index)
     e->mem_obj->xitTable.index = index;
 
     // TODO: Support collapsed revalidation for SMP-aware caches.
-    (void)e->setPublicKey(ksDefault);
+    if (!e->setPublicKey(ksDefault)) {
+        destroyStoreEntry(static_cast<hash_link *>(e));
+        return nullptr;
+    }
 
     assert(e->key);
 
@@ -219,12 +222,11 @@ Transients::findCollapsed(const sfileno index)
 }
 
 bool
-Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey, bool &collisionDetected)
+Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey)
 {
     assert(e);
     assert(e->mem_obj);
     assert(!e->hasTransients());
-    collisionDetected = false;
 
     if (!map) {
         debugs(20, 5, "No map to add " << *e);
@@ -234,8 +236,6 @@ Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey, bool &c
     sfileno index = 0;
     Ipc::StoreMapAnchor *slot = map->openForWriting(cacheKey.key, index);
     if (!slot) {
-        debugs(20, 5, "collision registering " << *e);
-        collisionDetected = true;
         return false;
     }
 
@@ -314,6 +314,8 @@ Transients::completeWriting(const StoreEntry &e)
 {
     assert(e.hasTransients());
     assert(collapsedWriter(e));
+    // Just marks the locked entry, letting future requests to empty this position.
+    map->freeEntry(e.mem_obj->xitTable.index);
     // there will be no more updates from us after this, so we must prevent
     // future readers from joining. Making the entry complete() is sufficient
     // because Transients::get() does not return completed entries.

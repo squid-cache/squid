@@ -40,7 +40,7 @@ public:
     StoreEntry *findCollapsed(const sfileno xitIndex);
 
     /// add an in-transit entry suitable for collapsing future requests
-    bool startWriting(StoreEntry *e, const Store::CacheKey &cacheKey, bool &collisionDetected);
+    bool startWriting(StoreEntry *e, const Store::CacheKey &cacheKey);
 
     /// called when the in-transit entry has been successfully cached
     void completeWriting(const StoreEntry &e);

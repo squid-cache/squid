@@ -71,7 +71,6 @@ Rock::SwapDir::get(const Store::CacheKey &cacheKey)
     if (!Store::Root().createTransientsEntry(e, cacheKey)) {
         debugs(20, 3, "Unable to create transients entry for " << *e);
         destroyStoreEntry(static_cast<hash_link *>(e));
-        map->freeEntry(filen);
         return nullptr;
     }
     e->hashInsert(cacheKey.key);

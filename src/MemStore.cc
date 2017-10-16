@@ -336,11 +336,12 @@ MemStore::get(const Store::CacheKey &cacheKey)
         } else {
             debugs(20, 3, "Unable to create transients entry for " << *e);
         }
+    } else {
+        debugs(20, 3, "mem-loading failed; freeing " << index);
+        map->freeEntry(index); // do not let others into the same trap
     }
 
     destroyStoreEntry(static_cast<hash_link *>(e));
-    debugs(20, 3, "mem-loading failed; freeing " << index);
-    map->freeEntry(index); // do not let others into the same trap
     return nullptr;
 }
 

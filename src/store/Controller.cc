@@ -338,11 +338,6 @@ Store::Controller::get(const CacheKey &cacheKey)
 StoreEntry*
 Store::Controller::intransitEntry(const CacheKey &cacheKey)
 {
-    if (markedForDeletion(cacheKey.key)) {
-        debugs(20, 3, "ignoring marked " << storeKeyText(cacheKey.key));
-        return nullptr;
-    }
-
     if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, cacheKey.key))) {
         if (!markedForDeletion(*e))
             return e;
@@ -360,11 +355,6 @@ StoreEntry *
 Store::Controller::find(const CacheKey &cacheKey)
 {
     debugs(20, 3, storeKeyText(cacheKey.key));
-
-    if (markedForDeletion(cacheKey.key)) {
-        debugs(20, 3, "ignoring marked " << storeKeyText(cacheKey.key));
-        return nullptr;
-    }
 
     if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, cacheKey.key))) {
         if (!markedForDeletion(*e)) {
@@ -613,8 +603,7 @@ Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey
     if (!transients || e->hasTransients())
         return true;
 
-    bool collisionDetected = false;
-    if (!transients->startWriting(e, cacheKey, collisionDetected)) {
+    if (!transients->startWriting(e, cacheKey)) {
         // a collision means that there is already transients writer
         return false;
     }
@@ -637,7 +626,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     if (!collapsed->locked()) {
         debugs(20, 3, "will release unlocked " << *collapsed);
         // should destroy unlocked entry
-        collapsed->release();
+        handleIdleEntry(*collapsed);
         return;
     }
 
