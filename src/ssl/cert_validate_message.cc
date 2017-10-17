@@ -16,12 +16,28 @@
 #include "ssl/support.h"
 #include "util.h"
 
+/// Retrieves the certificates chain used to verify the peer.
+/// This is the full chain built by OpenSSL while verifying the server
+/// certificate or, if this is not available, the chain sent by server.
+/// \return the certificates chain or nil
+static STACK_OF(X509) *
+PeerValidationCertificatesChain(const Security::SessionPointer &ssl)
+{
+    assert(ssl);
+    // The full chain built by openSSL while verifying the server cert,
+    // retrieved from verify callback:
+    if (const auto certs = static_cast<STACK_OF(X509) *>(SSL_get_ex_data(ssl.get(), ssl_ex_index_ssl_cert_chain)))
+        return certs;
+
+    /// Last resort: certificates chain sent by server
+    return SSL_get_peer_cert_chain(ssl.get()); // may be nil
+}
+
 void
 Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)
 {
     body.clear();
     body += Ssl::CertValidationMsg::param_host + "=" + vcert.domainName;
-    STACK_OF(X509) *peerCerts = static_cast<STACK_OF(X509) *>(SSL_get_ex_data(vcert.ssl.get(), ssl_ex_index_ssl_cert_chain));
 
     if (const char *sslVersion = SSL_get_version(vcert.ssl.get()))
         body += "\n" +  Ssl::CertValidationMsg::param_proto_version + "=" + sslVersion;
@@ -29,9 +45,7 @@ Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)
     if (const char *cipherName = SSL_CIPHER_get_name(SSL_get_current_cipher(vcert.ssl.get())))
         body += "\n" +  Ssl::CertValidationMsg::param_cipher + "=" + cipherName;
 
-    if (!peerCerts)
-        peerCerts = SSL_get_peer_cert_chain(vcert.ssl.get());
-
+    STACK_OF(X509) *peerCerts = PeerValidationCertificatesChain(vcert.ssl);
     if (peerCerts) {
         Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
         for (int i = 0; i < sk_X509_num(peerCerts); ++i) {
@@ -75,9 +89,11 @@ get_error_id(const char *label, size_t len)
 }
 
 bool
-Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, STACK_OF(X509) *peerCerts, std::string &error)
+Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, std::string &error)
 {
     std::vector<CertItem> certs;
+
+    const STACK_OF(X509) *peerCerts = PeerValidationCertificatesChain(resp.ssl);
 
     const char *param = body.c_str();
     while (*param) {
