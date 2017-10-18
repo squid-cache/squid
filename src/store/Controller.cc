@@ -356,6 +356,11 @@ Store::Controller::find(const CacheKey &cacheKey)
 {
     debugs(20, 3, storeKeyText(cacheKey.key));
 
+    if (markedForDeletion(cacheKey.key)) {
+        debugs(20, 3, "ignoring marked " << storeKeyText(cacheKey.key));
+        return nullptr;
+    }
+
     if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, cacheKey.key))) {
         if (!markedForDeletion(*e)) {
             // TODO: ignore and maybe handleIdleEntry() unlocked intransit entries
@@ -420,9 +425,18 @@ Store::Controller::markForUnlink(StoreEntry &e)
 void
 Store::Controller::unlinkByKeyIfFound(const cache_key *key)
 {
-    if (StoreEntry *entry = intransitEntry(CacheKey(key))) {
-        assert(entry->hasTransients());
-        transients->markForUnlink(*entry);
+    if (!transients) {
+        if (StoreEntry *entry = static_cast<StoreEntry*>(hash_lookup(store_table, key))) {
+            entry->release();
+            return;
+        }
+    } else {
+        if (StoreEntry *entry = intransitEntry(CacheKey(key))) {
+            assert(entry->hasTransients());
+            transients->markForUnlink(*entry);
+        } else {
+            transients->unlinkByKeyIfFound(key);
+        }
     }
 
     if (memStore)
@@ -595,7 +609,7 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
 }
 
 bool
-Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey, const bool switchToReading)
+Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey)
 {
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
         return true;
@@ -607,8 +621,7 @@ Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey
         // a collision means that there is already transients writer
         return false;
     }
-    if (switchToReading)
-        transientsCompleteWriting(*e);
+
     return true;
 }
 

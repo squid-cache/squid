@@ -314,8 +314,6 @@ Transients::completeWriting(const StoreEntry &e)
 {
     assert(e.hasTransients());
     assert(collapsedWriter(e));
-    // Just marks the locked entry, letting future requests to empty this position.
-    map->freeEntry(e.mem_obj->xitTable.index);
     // there will be no more updates from us after this, so we must prevent
     // future readers from joining. Making the entry complete() is sufficient
     // because Transients::get() does not return completed entries.

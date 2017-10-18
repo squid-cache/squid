@@ -483,7 +483,8 @@ StoreEntry::unlock(const char *context)
 
     assert(storePendingNClients(this) == 0);
 
-    if (store_status == STORE_PENDING || EBIT_TEST(flags, RELEASE_REQUEST)) {
+    if ((store_status == STORE_PENDING && (!mem_obj || !mem_obj->smpCollapsed))
+            || EBIT_TEST(flags, RELEASE_REQUEST)) {
         this->release();
         return 0;
     }

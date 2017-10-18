@@ -909,8 +909,11 @@ HttpStateData::haveParsedReplyHeaders()
     /* Check if object is cacheable or not based on reply code */
     debugs(11, 3, "HTTP CODE: " << statusCode);
 
-    if (const StoreEntry *oldEntry = findPreviouslyCachedEntry(entry))
+    if (StoreEntry *oldEntry = findPreviouslyCachedEntry(entry)) {
+        oldEntry->lock("HttpStateData::haveParsedReplyHeaders");
         sawDateGoBack = rep->olderThan(oldEntry->getReply());
+        oldEntry->unlock("HttpStateData::haveParsedReplyHeaders");
+    }
 
     if (neighbors_do_private_keys && !sawDateGoBack)
         httpMaybeRemovePublic(entry, rep->sline.status());
@@ -958,13 +961,17 @@ HttpStateData::haveParsedReplyHeaders()
             break;
 
         case ReuseDecision::cachePositively:
-            if (!entry->makePublic())
+            if (!entry->makePublic()) {
+                decision.make(ReuseDecision::doNotCacheButShare, "public key creation error");
                 entry->makePrivate(true);
+            }
             break;
 
         case ReuseDecision::cacheNegatively:
-            if (!entry->cacheNegatively())
+            if (!entry->cacheNegatively()) {
+                decision.make(ReuseDecision::doNotCacheButShare, "public key creation error");
                 entry->makePrivate(true);
+            }
             break;
 
         case ReuseDecision::doNotCacheButShare:

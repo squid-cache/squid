@@ -77,9 +77,10 @@ public:
 
     /// For the given StoreEntry creates the corresponding Transients entry.
     /// \returns true if Transients entry already exists or successfully created.
-    bool createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey, const bool switchToReading = false);
+    bool createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey);
 
-    StoreEntry *intransitEntry(const CacheKey &);
+    /// Whether for the given cacheKey there is an 'in-transit' StoreEntry.
+    StoreEntry *intransitEntry(const CacheKey &cacheKey);
 
     /// marks the entry completed for collapsed requests
     void transientsCompleteWriting(StoreEntry &);
