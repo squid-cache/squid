@@ -312,9 +312,6 @@ Transients::completeWriting(const StoreEntry &e)
 {
     assert(e.hasTransients());
     assert(collapsedWriter(e));
-    // there will be no more updates from us after this, so we must prevent
-    // future readers from joining. Making the entry complete() is sufficient
-    // because Transients::get() does not return completed entries.
     map->closeForWriting(e.mem_obj->xitTable.index, true);
     e.mem_obj->xitTable.io = MemObject::ioReading;
 }
