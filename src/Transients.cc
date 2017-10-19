@@ -161,8 +161,6 @@ Transients::get(const Store::CacheKey &cacheKey)
     if (StoreEntry *oldE = locals->at(index)) {
         debugs(20, 3, "not joining private " << *oldE);
         assert(EBIT_TEST(oldE->flags, KEY_PRIVATE));
-    } else if (anchor->complete()) {
-        debugs(20, 3, "not joining completed " << storeKeyText(cacheKey.key));
     } else if (StoreEntry *newE = copyFromShm(index)) {
         return newE; // keep read lock to receive updates from others
     }
