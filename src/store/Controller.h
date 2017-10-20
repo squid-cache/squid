@@ -77,10 +77,16 @@ public:
 
     /// For the given StoreEntry creates the corresponding Transients entry.
     /// \returns true if Transients entry already exists or successfully created.
-    bool createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey);
+    bool createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey, const bool switchToReading = false);
 
     /// Whether for the given cacheKey there is an 'in-transit' StoreEntry.
     StoreEntry *intransitEntry(const CacheKey &cacheKey);
+
+    /// whether the entry is in "reading from Transients" I/O state
+    bool transientsReader(const StoreEntry &) const;
+
+    /// whether the entry is in "writing to Transients" I/O state
+    bool transientsWriter(const StoreEntry &) const;
 
     /// marks the entry completed for collapsed requests
     void transientsCompleteWriting(StoreEntry &);

@@ -330,7 +330,7 @@ MemStore::get(const Store::CacheKey &cacheKey)
     const bool copied = copyFromShm(*e, index, *slot);
 
     if (copied) {
-        if (Store::Root().createTransientsEntry(e, cacheKey)) {
+        if (Store::Root().createTransientsEntry(e, cacheKey, true)) {
             e->hashInsert(cacheKey.key);
             return e;
         } else {

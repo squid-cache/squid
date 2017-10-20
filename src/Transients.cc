@@ -191,11 +191,6 @@ Transients::copyFromShm(const sfileno index)
 
     assert(e->key);
 
-    // How do we know its SMP- and not just locally-collapsed? A worker gets
-    // locally-collapsed entries from the local store_table, not Transients.
-    // TODO: Can we remove smpCollapsed by not syncing non-transient entries?
-    e->mem_obj->smpCollapsed = true;
-
     assert(!locals->at(index));
     // We do not lock e because we do not want to prevent its destruction;
     // e is tied to us via mem_obj so we will know when it is destructed.
@@ -301,7 +296,7 @@ Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFree
     assert(map);
     assert(entry.mem_obj);
     const auto idx = entry.mem_obj->xitTable.index;
-    const auto &anchor = collapsedWriter(entry) ?
+    const auto &anchor = isWriter(entry) ?
         map->writeableEntry(idx) : map->readableEntry(idx);
     aborted = anchor.writerHalted;
     waitingToBeFreed = anchor.waitingToBeFreed;
@@ -311,7 +306,7 @@ void
 Transients::completeWriting(const StoreEntry &e)
 {
     assert(e.hasTransients());
-    assert(collapsedWriter(e));
+    assert(isWriter(e));
     map->closeForWriting(e.mem_obj->xitTable.index, true);
     e.mem_obj->xitTable.io = MemObject::ioReading;
 }
@@ -349,10 +344,10 @@ Transients::disconnect(MemObject &mem_obj)
 {
     if (mem_obj.xitTable.index >= 0) {
         assert(map);
-        if (collapsedWriter(&mem_obj)) {
+        if (isWriter(&mem_obj)) {
             map->abortWriting(mem_obj.xitTable.index);
         } else {
-            assert(collapsedReader(&mem_obj));
+            assert(isReader(&mem_obj));
             map->closeForReading(mem_obj.xitTable.index);
         }
         locals->at(mem_obj.xitTable.index) = NULL;
@@ -386,26 +381,26 @@ Transients::markedForDeletion(const StoreEntry &e) const
 }
 
 bool
-Transients::collapsedReader(const StoreEntry &e) const
+Transients::isReader(const StoreEntry &e) const
 {
-    return collapsedReader(e.mem_obj);
+    return isReader(e.mem_obj);
 }
 
 bool
-Transients::collapsedReader(const MemObject *mem_obj) const
+Transients::isReader(const MemObject *mem_obj) const
 {
     assert(mem_obj);
     return mem_obj->xitTable.io == MemObject::ioReading;
 }
 
 bool
-Transients::collapsedWriter(const StoreEntry &e) const
+Transients::isWriter(const StoreEntry &e) const
 {
-    return collapsedWriter(e.mem_obj);
+    return isWriter(e.mem_obj);
 }
 
 bool
-Transients::collapsedWriter(const MemObject *mem_obj) const
+Transients::isWriter(const MemObject *mem_obj) const
 {
     assert(mem_obj);
     return mem_obj->xitTable.io == MemObject::ioWriting;

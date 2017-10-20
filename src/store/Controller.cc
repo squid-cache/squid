@@ -374,8 +374,6 @@ Store::Controller::find(const CacheKey &cacheKey)
     if (transients) {
         if (StoreEntry *e = transients->get(cacheKey)) {
             debugs(20, 3, "got shared in-transit entry: " << *e);
-            if (!e->mem_obj->smpCollapsed)
-                return e;
             bool inSync = false;
             const bool found = anchorToCache(*e, inSync);
             if (!found || inSync)
@@ -402,6 +400,18 @@ Store::Controller::find(const CacheKey &cacheKey)
 
     debugs(20, 4, "cannot locate " << storeKeyText(cacheKey.key));
     return nullptr;
+}
+
+bool
+Store::Controller::transientsReader(const StoreEntry &e) const
+{
+    return transients && e.hasTransients() && transients->isReader(e);
+}
+
+bool
+Store::Controller::transientsWriter(const StoreEntry &e) const
+{
+    return transients && e.hasTransients() && transients->isWriter(e);
 }
 
 int64_t
@@ -519,7 +529,7 @@ Store::Controller::transientsAbandon(StoreEntry &e)
 void
 Store::Controller::transientsCompleteWriting(StoreEntry &e)
 {
-    if (transients && e.hasTransients() && transients->collapsedWriter(e))
+    if (transients && e.hasTransients() && transients->isWriter(e))
         transients->completeWriting(e);
 }
 
@@ -609,7 +619,7 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
 }
 
 bool
-Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey)
+Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey, const bool switchToReading)
 {
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
         return true;
@@ -621,6 +631,9 @@ Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey
         // a collision means that there is already transients writer
         return false;
     }
+
+    if (switchToReading)
+        transientsCompleteWriting(*e);
 
     return true;
 }
@@ -661,10 +674,10 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         collapsed->release(true); // may already be marked
     }
 
-    if (transients->collapsedWriter(*collapsed))
+    if (transients->isWriter(*collapsed))
         return; // readers can only change our waitingToBeFreed flag
 
-    assert(transients->collapsedReader(*collapsed));
+    assert(transients->isReader(*collapsed));
 
     if (abortedByWriter) {
         debugs(20, 3, "aborting " << *collapsed << " because its writer has aborted");
@@ -719,7 +732,7 @@ bool
 Store::Controller::anchorToCache(StoreEntry &entry, bool &inSync)
 {
     assert(entry.hasTransients());
-    assert(entry.mem_obj->smpCollapsed);
+    assert(transientsReader(entry));
 
     debugs(20, 7, "anchoring " << entry);
 

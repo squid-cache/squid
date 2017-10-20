@@ -483,7 +483,7 @@ StoreEntry::unlock(const char *context)
 
     assert(storePendingNClients(this) == 0);
 
-    if ((store_status == STORE_PENDING && (!mem_obj || !mem_obj->smpCollapsed))
+    if ((store_status == STORE_PENDING && !Store::Root().transientsReader(*this))
             || EBIT_TEST(flags, RELEASE_REQUEST)) {
         this->release();
         return 0;
@@ -1901,7 +1901,7 @@ StoreEntry::getSerialisedMetaData()
 void
 StoreEntry::transientsAbandonmentCheck()
 {
-    if (mem_obj && !mem_obj->smpCollapsed && // this worker is responsible
+    if (mem_obj && !Store::Root().transientsReader(*this) && // this worker is responsible
             hasTransients() && // other workers may be interested
             !hasMemStore() && // rejected by the shared memory cache
             mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) {
@@ -2175,7 +2175,7 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
         if (EBIT_TEST(e.flags, ENTRY_ABORTED)) os << 'A';
     }
 
-    if (e.mem_obj && e.mem_obj->smpCollapsed)
+    if (Store::Root().transientsReader(e))
         os << 'O';
 
     return os << '/' << &e << '*' << e.locks();

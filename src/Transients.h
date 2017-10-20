@@ -85,9 +85,9 @@ public:
     virtual bool markedForDeletion(const StoreEntry &) const override;
 
     /// whether the entry is in "reading from Transients" I/O state
-    bool collapsedReader(const StoreEntry &) const;
+    bool isReader(const StoreEntry &) const;
     /// whether the entry is in "writing to Transients" I/O state
-    bool collapsedWriter(const StoreEntry &) const;
+    bool isWriter(const StoreEntry &) const;
 
     static int64_t EntryLimit();
 
@@ -102,8 +102,8 @@ private:
     /* Store API */
     virtual void unlink(StoreEntry &e) override { markForUnlink(e); }
 
-    bool collapsedReader(const MemObject *) const;
-    bool collapsedWriter(const MemObject *) const;
+    bool isReader(const MemObject *) const;
+    bool isWriter(const MemObject *) const;
 
     /// shared packed info indexed by Store keys, for creating new StoreEntries
     TransientsMap *map;
