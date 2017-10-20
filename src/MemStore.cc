@@ -351,27 +351,27 @@ MemStore::updateHeaders(StoreEntry *updatedE)
     if (!map)
         return;
 
-    Ipc::StoreMapUpdate update(updatedE);
+    Ipc::StoreMapUpdate mapUpdate(updatedE);
     assert(updatedE);
     assert(updatedE->mem_obj);
-    if (!map->openForUpdating(update, updatedE->mem_obj->memCache.index))
+    if (!map->openForUpdating(mapUpdate, updatedE->mem_obj->memCache.index))
         return;
 
     try {
-        updateHeadersOrThrow(update);
+        updateHeadersOrThrow(mapUpdate);
     } catch (const std::exception &ex) {
         debugs(20, 2, "error starting to update entry " << *updatedE << ": " << ex.what());
-        map->abortUpdating(update);
+        map->abortUpdating(mapUpdate);
     }
 }
 
 void
-MemStore::updateHeadersOrThrow(Ipc::StoreMapUpdate &update)
+MemStore::updateHeadersOrThrow(Ipc::StoreMapUpdate &mapUpdate)
 {
     // our +/- hdr_sz math below does not work if the chains differ [in size]
-    Must(update.stale.anchor->basics.swap_file_sz == update.fresh.anchor->basics.swap_file_sz);
+    Must(mapUpdate.stale.anchor->basics.swap_file_sz == mapUpdate.fresh.anchor->basics.swap_file_sz);
 
-    const HttpReply *rawReply = update.entry->getReply();
+    const HttpReply *rawReply = mapUpdate.entry->getReply();
     Must(rawReply);
     const HttpReply &reply = *rawReply;
     const uint64_t staleHdrSz = reply.hdr_sz;
@@ -379,75 +379,75 @@ MemStore::updateHeadersOrThrow(Ipc::StoreMapUpdate &update)
 
     /* we will need to copy same-slice payload after the stored headers later */
     Must(staleHdrSz > 0);
-    update.stale.splicingPoint = map->sliceContaining(update.stale.fileNo, staleHdrSz);
-    Must(update.stale.splicingPoint >= 0);
-    Must(update.stale.anchor->basics.swap_file_sz >= staleHdrSz);
+    mapUpdate.stale.splicingPoint = map->sliceContaining(mapUpdate.stale.fileNo, staleHdrSz);
+    Must(mapUpdate.stale.splicingPoint >= 0);
+    Must(mapUpdate.stale.anchor->basics.swap_file_sz >= staleHdrSz);
 
-    Must(update.stale.anchor);
-    ShmWriter writer(*this, update.entry, update.fresh.fileNo);
+    Must(mapUpdate.stale.anchor);
+    ShmWriter writer(*this, mapUpdate.entry, mapUpdate.fresh.fileNo);
     reply.packHeadersInto(&writer);
     const uint64_t freshHdrSz = writer.totalWritten;
     debugs(20, 7, "fresh hdr_sz: " << freshHdrSz << " diff: " << (freshHdrSz - staleHdrSz));
 
     /* copy same-slice payload remaining after the stored headers */
-    const Ipc::StoreMapSlice &slice = map->readableSlice(update.stale.fileNo, update.stale.splicingPoint);
+    const Ipc::StoreMapSlice &slice = map->readableSlice(mapUpdate.stale.fileNo, mapUpdate.stale.splicingPoint);
     const Ipc::StoreMapSlice::Size sliceCapacity = Ipc::Mem::PageSize();
     const Ipc::StoreMapSlice::Size headersInLastSlice = staleHdrSz % sliceCapacity;
     Must(headersInLastSlice > 0); // or sliceContaining() would have stopped earlier
     Must(slice.size >= headersInLastSlice);
     const Ipc::StoreMapSlice::Size payloadInLastSlice = slice.size - headersInLastSlice;
-    const MemStoreMapExtras::Item &extra = extras->items[update.stale.splicingPoint];
+    const MemStoreMapExtras::Item &extra = extras->items[mapUpdate.stale.splicingPoint];
     char *page = static_cast<char*>(PagePointer(extra.page));
     debugs(20, 5, "appending same-slice payload: " << payloadInLastSlice);
     writer.append(page + headersInLastSlice, payloadInLastSlice);
-    update.fresh.splicingPoint = writer.lastSlice;
+    mapUpdate.fresh.splicingPoint = writer.lastSlice;
 
-    update.fresh.anchor->basics.swap_file_sz -= staleHdrSz;
-    update.fresh.anchor->basics.swap_file_sz += freshHdrSz;
+    mapUpdate.fresh.anchor->basics.swap_file_sz -= staleHdrSz;
+    mapUpdate.fresh.anchor->basics.swap_file_sz += freshHdrSz;
 
-    map->closeForUpdating(update);
+    map->closeForUpdating(mapUpdate);
 }
 
 bool
-MemStore::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
+MemStore::anchorToCache(StoreEntry &entry, bool &inSync)
 {
     if (!map)
         return false;
 
     sfileno index;
     const Ipc::StoreMapAnchor *const slot = map->openForReading(
-            reinterpret_cast<cache_key*>(collapsed.key), index);
+            reinterpret_cast<cache_key*>(entry.key), index);
     if (!slot)
         return false;
 
-    anchorEntry(collapsed, index, *slot);
-    inSync = updateCollapsedWith(collapsed, index, *slot);
+    anchorEntry(entry, index, *slot);
+    inSync = updateWith(entry, index, *slot);
     return true; // even if inSync is false
 }
 
 bool
-MemStore::updateCollapsed(StoreEntry &collapsed)
+MemStore::update(StoreEntry &entry)
 {
-    assert(collapsed.mem_obj);
+    assert(entry.mem_obj);
 
-    const sfileno index = collapsed.mem_obj->memCache.index;
+    const sfileno index = entry.mem_obj->memCache.index;
 
-    if (!collapsed.hasMemStore())
+    if (!entry.hasMemStore())
         return true;
 
     if (!map)
         return false;
 
     const Ipc::StoreMapAnchor &anchor = map->readableEntry(index);
-    return updateCollapsedWith(collapsed, index, anchor);
+    return updateWith(entry, index, anchor);
 }
 
-/// updates collapsed entry after its anchor has been located
+/// updates Transients entry after its anchor has been located
 bool
-MemStore::updateCollapsedWith(StoreEntry &collapsed, const sfileno index, const Ipc::StoreMapAnchor &anchor)
+MemStore::updateWith(StoreEntry &entry, const sfileno index, const Ipc::StoreMapAnchor &anchor)
 {
-    collapsed.swap_file_sz = anchor.basics.swap_file_sz;
-    const bool copied = copyFromShm(collapsed, index, anchor);
+	entry.swap_file_sz = anchor.basics.swap_file_sz;
+    const bool copied = copyFromShm(entry, index, anchor);
     return copied;
 }
 

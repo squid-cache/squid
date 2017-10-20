@@ -510,7 +510,7 @@ Store::Disks::unlink(StoreEntry &e)
 }
 
 bool
-Store::Disks::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
+Store::Disks::anchorToCache(StoreEntry &entry, bool &inSync)
 {
     if (const int cacheDirs = Config.cacheSwap.n_configured) {
         // ask each cache_dir until the entry is found; use static starting
@@ -523,23 +523,23 @@ Store::Disks::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
             if (!sd.active())
                 continue;
 
-            if (sd.anchorCollapsed(collapsed, inSync)) {
-                debugs(20, 3, "cache_dir " << idx << " anchors " << collapsed);
+            if (sd.anchorToCache(entry, inSync)) {
+                debugs(20, 3, "cache_dir " << idx << " anchors " << entry);
                 return true;
             }
         }
     }
 
     debugs(20, 4, "none of " << Config.cacheSwap.n_configured <<
-           " cache_dirs have " << collapsed);
+           " cache_dirs have " << entry);
     return false;
 }
 
 bool
-Store::Disks::updateCollapsed(StoreEntry &collapsed)
+Store::Disks::update(StoreEntry &entry)
 {
-    return collapsed.hasDisk() &&
-           dir(collapsed.swap_dirn).updateCollapsed(collapsed);
+    return entry.hasDisk() &&
+           dir(entry.swap_dirn).update(entry);
 }
 
 bool

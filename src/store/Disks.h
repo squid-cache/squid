@@ -36,8 +36,8 @@ public:
     virtual bool dereference(StoreEntry &e) override;
     virtual void updateHeaders(StoreEntry *) override;
     virtual void maintain() override;
-    virtual bool anchorCollapsed(StoreEntry &e, bool &inSync) override;
-    virtual bool updateCollapsed(StoreEntry &e) override;
+    virtual bool anchorToCache(StoreEntry &e, bool &inSync) override;
+    virtual bool update(StoreEntry &e) override;
     virtual void markForUnlink(StoreEntry &) override;
     virtual void unlinkByKeyIfFound(const cache_key *) override;
     virtual void unlink(StoreEntry &) override;

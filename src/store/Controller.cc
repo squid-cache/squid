@@ -377,7 +377,7 @@ Store::Controller::find(const CacheKey &cacheKey)
             if (!e->mem_obj->smpCollapsed)
                 return e;
             bool inSync = false;
-            const bool found = anchorCollapsed(*e, inSync);
+            const bool found = anchorToCache(*e, inSync);
             if (!found || inSync)
                 return e;
             assert(!e->locked()); // ensure release will destroyStoreEntry()
@@ -680,13 +680,13 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         debugs(20, 7, "fully mem-loaded " << *collapsed);
     } else if (memStore && collapsed->hasMemStore()) {
         found = true;
-        inSync = memStore->updateCollapsed(*collapsed);
+        inSync = memStore->update(*collapsed);
         // TODO: handle entries attached to both memory and disk
     } else if (swapDir && collapsed->hasDisk()) {
         found = true;
-        inSync = swapDir->updateCollapsed(*collapsed);
+        inSync = swapDir->update(*collapsed);
     } else {
-        found = anchorCollapsed(*collapsed, inSync);
+        found = anchorToCache(*collapsed, inSync);
     }
 
     if (waitingToBeFreed && !found) {
@@ -712,31 +712,30 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     debugs(20, 7, "waiting " << *collapsed);
 }
 
-/// Called for in-transit entries that are not yet anchored to a cache.
+/// Called for Transients entries that are not yet anchored to a cache.
 /// For cached entries, return true after synchronizing them with their cache
 /// (making inSync true on success). For not-yet-cached entries, return false.
 bool
-Store::Controller::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
+Store::Controller::anchorToCache(StoreEntry &entry, bool &inSync)
 {
-    // this method is designed to work with collapsed transients only
-    assert(collapsed.hasTransients());
-    assert(collapsed.mem_obj->smpCollapsed);
+    assert(entry.hasTransients());
+    assert(entry.mem_obj->smpCollapsed);
 
-    debugs(20, 7, "anchoring " << collapsed);
+    debugs(20, 7, "anchoring " << entry);
 
     bool found = false;
     if (memStore)
-        found = memStore->anchorCollapsed(collapsed, inSync);
+        found = memStore->anchorToCache(entry, inSync);
     if (!found && swapDir)
-        found = swapDir->anchorCollapsed(collapsed, inSync);
+        found = swapDir->anchorToCache(entry, inSync);
 
     if (found) {
         if (inSync)
-            debugs(20, 7, "anchored " << collapsed);
+            debugs(20, 7, "anchored " << entry);
         else
-            debugs(20, 5, "failed to anchor " << collapsed);
+            debugs(20, 5, "failed to anchor " << entry);
     } else {
-        debugs(20, 7, "skipping not yet cached " << collapsed);
+        debugs(20, 7, "skipping not yet cached " << entry);
     }
 
     return found;

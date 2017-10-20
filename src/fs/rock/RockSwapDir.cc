@@ -79,38 +79,38 @@ Rock::SwapDir::get(const Store::CacheKey &cacheKey)
 }
 
 bool
-Rock::SwapDir::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
+Rock::SwapDir::anchorToCache(StoreEntry &entry, bool &inSync)
 {
     if (!map || !theFile || !theFile->canRead())
         return false;
 
     sfileno filen;
     const Ipc::StoreMapAnchor *const slot = map->openForReading(
-            reinterpret_cast<cache_key*>(collapsed.key), filen);
+            reinterpret_cast<cache_key*>(entry.key), filen);
     if (!slot)
         return false;
 
-    anchorEntry(collapsed, filen, *slot);
-    inSync = updateCollapsedWith(collapsed, *slot);
+    anchorEntry(entry, filen, *slot);
+    inSync = updateWith(entry, *slot);
     return true; // even if inSync is false
 }
 
 bool
-Rock::SwapDir::updateCollapsed(StoreEntry &collapsed)
+Rock::SwapDir::update(StoreEntry &entry)
 {
     if (!map || !theFile || !theFile->canRead())
         return false;
 
-    assert(collapsed.hasDisk(index));
+    assert(entry.hasDisk(index));
 
-    const Ipc::StoreMapAnchor &s = map->readableEntry(collapsed.swap_filen);
-    return updateCollapsedWith(collapsed, s);
+    const Ipc::StoreMapAnchor &s = map->readableEntry(entry.swap_filen);
+    return updateWith(entry, s);
 }
 
 bool
-Rock::SwapDir::updateCollapsedWith(StoreEntry &collapsed, const Ipc::StoreMapAnchor &anchor)
+Rock::SwapDir::updateWith(StoreEntry &entry, const Ipc::StoreMapAnchor &anchor)
 {
-    collapsed.swap_file_sz = anchor.basics.swap_file_sz;
+	entry.swap_file_sz = anchor.basics.swap_file_sz;
     return true;
 }
 
@@ -671,22 +671,22 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
 }
 
 StoreIOState::Pointer
-Rock::SwapDir::createUpdateIO(const Ipc::StoreMapUpdate &update, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data)
+Rock::SwapDir::createUpdateIO(const Ipc::StoreMapUpdate &mapUpdate, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data)
 {
     if (!theFile || theFile->error()) {
         debugs(47,4, theFile);
         return nullptr;
     }
 
-    Must(update.fresh);
-    Must(update.fresh.fileNo >= 0);
+    Must(mapUpdate.fresh);
+    Must(mapUpdate.fresh.fileNo >= 0);
 
     Rock::SwapDir::Pointer self(this);
-    IoState *sio = new IoState(self, update.entry, cbFile, cbIo, data);
+    IoState *sio = new IoState(self, mapUpdate.entry, cbFile, cbIo, data);
 
     sio->swap_dirn = index;
-    sio->swap_filen = update.fresh.fileNo;
-    sio->writeableAnchor_ = update.fresh.anchor;
+    sio->swap_filen = mapUpdate.fresh.fileNo;
+    sio->writeableAnchor_ = mapUpdate.fresh.anchor;
 
     debugs(47,5, "dir " << index << " updating filen " <<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
@@ -924,15 +924,15 @@ Rock::SwapDir::updateHeaders(StoreEntry *updatedE)
     if (!map)
         return;
 
-    Ipc::StoreMapUpdate update(updatedE);
-    if (!map->openForUpdating(update, updatedE->swap_filen))
+    Ipc::StoreMapUpdate mapUpdate(updatedE);
+    if (!map->openForUpdating(mapUpdate, updatedE->swap_filen))
         return;
 
     try {
-        AsyncJob::Start(new HeaderUpdater(this, update));
+        AsyncJob::Start(new HeaderUpdater(this, mapUpdate));
     } catch (const std::exception &ex) {
         debugs(20, 2, "error starting to update entry " << *updatedE << ": " << ex.what());
-        map->abortUpdating(update);
+        map->abortUpdating(mapUpdate);
     }
 }
 

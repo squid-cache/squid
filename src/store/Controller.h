@@ -120,7 +120,7 @@ private:
 
     StoreEntry *find(const CacheKey &);
     bool keepForLocalMemoryCache(StoreEntry &e) const;
-    bool anchorCollapsed(StoreEntry &, bool &inSync);
+    bool anchorToCache(StoreEntry &, bool &inSync);
 
     Disks *swapDir; ///< summary view of all disk caches
     Memory *memStore; ///< memory cache

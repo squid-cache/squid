@@ -28,15 +28,15 @@ public:
     /// make stored metadata and HTTP headers the same as in the given entry
     virtual void updateHeaders(StoreEntry *) {}
 
-    /// If this storage cannot cache collapsed entries, return false.
+    /// If Transients entry cannot be attached to this storage, return false.
     /// If the entry is not found, return false. Otherwise, return true after
-    /// tying the entry to this cache and setting inSync to updateCollapsed().
-    virtual bool anchorCollapsed(StoreEntry &, bool &/*inSync*/) { return false; }
+    /// tying the entry to this cache and setting inSync to update().
+    virtual bool anchorToCache(StoreEntry &, bool &/*inSync*/) { return false; }
 
-    /// Update a local collapsed entry with fresh info from this cache (if any).
-    /// Return true iff the cache supports collapsed entries and
-    /// the given local collapsed entry is now in sync with this storage.
-    virtual bool updateCollapsed(StoreEntry &) { return false; }
+    /// Update a local Transients entry with fresh info from this cache (if any).
+    /// Return true iff the cache supports Transients entries and
+    /// the given local Transients entry is now in sync with this storage.
+    virtual bool update(StoreEntry &) { return false; }
 };
 
 } // namespace Store
