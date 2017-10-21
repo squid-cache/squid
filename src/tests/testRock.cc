@@ -269,7 +269,7 @@ testRock::testRockSwapOut()
 
         // after marking the old entry as deleted
         StoreEntry *const pe2 = getEntry(4);
-        CPPUNIT_ASSERT(pe2 != NULL);
+        CPPUNIT_ASSERT(pe2 != nullptr);
         pe2->release();
 
         StoreEntry *const pe3 = addEntry(4);

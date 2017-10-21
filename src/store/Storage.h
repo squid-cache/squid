@@ -10,9 +10,9 @@
 #define SQUID_STORE_STORAGE_H
 
 #include "base/RefCount.h"
+#include "http/RequestMethod.h"
 #include "store/forward.h"
 #include "store_key_md5.h"
-#include "http/RequestMethod.h"
 
 class StoreInfoStats;
 

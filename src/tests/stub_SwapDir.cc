@@ -44,5 +44,5 @@ bool SwapDir::optionReadOnlyParse(char const *, const char *, int) STUB_RETVAL(f
 void SwapDir::optionReadOnlyDump(StoreEntry *) const STUB
 bool SwapDir::optionObjectSizeParse(char const *, const char *, int) STUB_RETVAL(false)
 void SwapDir::optionObjectSizeDump(StoreEntry *) const STUB
-StoreEntry * SwapDir::get(const CacheKey &) STUB_RETVAL(NULL)
+StoreEntry * SwapDir::get(const CacheKey &) STUB_RETVAL(nullptr)
 

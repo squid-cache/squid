@@ -250,7 +250,6 @@ Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey)
                ' ' << *e << ": " << x.what());
         // fall through to the error handling code
     }
-    debugs(20, 1, "returning false " << *e);
     map->abortWriting(index);
     return false;
 }

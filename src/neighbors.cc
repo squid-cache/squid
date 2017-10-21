@@ -984,7 +984,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
 
     debugs(15, 6, "neighborsUdpAck: opcode " << opcode << " '" << storeKeyText(key) << "'");
 
-    if (NULL != (entry = Store::Root().get(Store::CacheKey(key))))
+    if ((entry = Store::Root().get(Store::CacheKey(key))))
         mem = entry->mem_obj;
 
     if ((p = whichPeer(from)))
@@ -1777,7 +1777,7 @@ neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const Htt
     for (CachePeer *p = Config.peers; p; p = p->next) {
         if (neighborsHtcpClearPeerNeeded(*p, reason)) {
             static char buf[128];
-            debugs(15, 3, "neighborsHtcpClear: sending CLR to " << p->in_addr.toUrl(buf, 128));
+            debugs(15, 3, "sending CLR to " << p->in_addr.toUrl(buf, 128));
             htcpClear(e, uri, req, method, p, reason);
         }
     }
