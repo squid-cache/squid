@@ -446,7 +446,7 @@ MemStore::update(StoreEntry &entry)
 bool
 MemStore::updateWith(StoreEntry &entry, const sfileno index, const Ipc::StoreMapAnchor &anchor)
 {
-	entry.swap_file_sz = anchor.basics.swap_file_sz;
+    entry.swap_file_sz = anchor.basics.swap_file_sz;
     const bool copied = copyFromShm(entry, index, anchor);
     return copied;
 }

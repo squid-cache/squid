@@ -257,7 +257,7 @@ Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey)
 /// copies all relevant local data to shared memory
 bool
 Transients::copyToShm(const StoreEntry &e, const sfileno index,
-        const Store::CacheKey &cacheKey)
+                      const Store::CacheKey &cacheKey)
 {
     TransientsMapExtras::Item &extra = extras->items[index];
 
@@ -296,7 +296,7 @@ Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFree
     assert(entry.mem_obj);
     const auto idx = entry.mem_obj->xitTable.index;
     const auto &anchor = isWriter(entry) ?
-        map->writeableEntry(idx) : map->readableEntry(idx);
+                         map->writeableEntry(idx) : map->readableEntry(idx);
     aborted = anchor.writerHalted;
     waitingToBeFreed = anchor.waitingToBeFreed;
 }

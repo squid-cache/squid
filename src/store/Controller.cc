@@ -612,7 +612,7 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
     const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
     if (e->makePublic(keyScope)) { // this is needed for both local and SMP collapsing
         debugs(20, 3, "may " << (transients && e->hasTransients() ?
-                    "SMP-" : "locally-") << "collapse " << *e);
+                                 "SMP-" : "locally-") << "collapse " << *e);
         return true;
     }
     return false;
@@ -704,7 +704,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
 
     if (waitingToBeFreed && !found) {
         debugs(20, 3, "aborting detached " << *collapsed <<
-                " because it was marked for deletion before we could attach it");
+               " because it was marked for deletion before we could attach it");
         collapsed->abort();
         return;
     }

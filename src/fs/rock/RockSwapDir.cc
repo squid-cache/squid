@@ -110,7 +110,7 @@ Rock::SwapDir::update(StoreEntry &entry)
 bool
 Rock::SwapDir::updateWith(StoreEntry &entry, const Ipc::StoreMapAnchor &anchor)
 {
-	entry.swap_file_sz = anchor.basics.swap_file_sz;
+    entry.swap_file_sz = anchor.basics.swap_file_sz;
     return true;
 }
 
