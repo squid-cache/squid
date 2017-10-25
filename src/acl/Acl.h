@@ -146,9 +146,8 @@ public:
     /// See also: allowed().
     bool denied() const { return code == ACCESS_DENIED; }
 
-    /// whether there was either a default rule, a rule without any ACLs, or a
-    /// a rule with ACLs that all matched
-    bool someRuleMatched() const { return allowed() || denied(); }
+    /// whether Squid is uncertain about the allowed() or denied() answer
+    bool conflicted() const { return !allowed() && !denied(); }
 
     aclMatchCode code; ///< ACCESS_* code
     int kind; ///< which custom access list verb matched
