@@ -2375,6 +2375,8 @@ DOC_START
 	been redefined for use by ECN (RFC 3168 section 23.1).
 	The squid parser will enforce this by masking away the ECN bits.
 
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: tcp_outgoing_mark
@@ -2420,6 +2422,9 @@ DOC_START
 
 	Note: This feature is incompatible with qos_flows. Any mark values set here
 	will be overwritten by mark values in qos_flows.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: qos_flows
@@ -2542,6 +2547,8 @@ DOC_START
 	When needing to contact peers use the no-tproxy cache_peer option and the
 	client_dst_passthru directive re-enable normal forwarding such as this.
 
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: host_verify_strict
