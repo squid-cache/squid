@@ -418,20 +418,22 @@ void
 Http::Stream::buildRangeHeader(HttpReply *rep)
 {
     HttpHeader *hdr = rep ? &rep->header : nullptr;
-    const char *ignoreRangeReason = nullptr;
+    const char *range_err = nullptr;
     HttpRequest *request = http->request;
     assert(request->range);
     /* check if we still want to do ranges */
     int64_t roffLimit = request->getRangeOffsetLimit();
 
     if (!rep)
-        ignoreRangeReason = "no [parse-able] reply";
+        range_err = "no [parse-able] reply";
     else if ((rep->sline.status() != Http::scOkay) && (rep->sline.status() != Http::scPartialContent))
-        ignoreRangeReason = "wrong status code";
+        range_err = "wrong status code";
+    else if (hdr->has(Http::HdrType::CONTENT_RANGE))
+        range_err = "origin server does ranges";
     else if (rep->content_length < 0)
-        ignoreRangeReason = "unknown length";
+        range_err = "unknown length";
     else if (rep->content_length != http->memObject()->getReply()->content_length)
-        ignoreRangeReason = "INCONSISTENT length";  /* a bug? */
+        range_err = "INCONSISTENT length";  /* a bug? */
 
     /* hits only - upstream CachePeer determines correct behaviour on misses,
      * and client_side_reply determines hits candidates
@@ -439,29 +441,28 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
     else if (http->logType.isTcpHit() &&
              http->request->header.has(Http::HdrType::IF_RANGE) &&
              !clientIfRangeMatch(http, rep))
-        ignoreRangeReason = "If-Range match failed";
+        range_err = "If-Range match failed";
 
     else if (!http->request->range->canonize(rep))
-        ignoreRangeReason = "canonization failed";
+        range_err = "canonization failed";
     else if (http->request->range->isComplex())
-        ignoreRangeReason = "too complex range header";
+        range_err = "too complex range header";
     else if (!http->logType.isTcpHit() && http->request->range->offsetLimitExceeded(roffLimit))
-        ignoreRangeReason = "range outside range_offset_limit";
+        range_err = "range outside range_offset_limit";
 
     /* get rid of our range specs on error */
-    if (ignoreRangeReason) {
+    if (range_err) {
         /* XXX We do this here because we need canonisation etc. However, this current
          * code will lead to incorrect store offset requests - the store will have the
          * offset data, but we won't be requesting it.
          * So, we can either re-request, or generate an error
          */
-        http->request->ignoreRange(ignoreRangeReason);
+        http->request->ignoreRange(range_err);
     } else {
-        if (rep->sline.status() == Http::scOkay) {
-            rep->sline.set(rep->sline.version, Http::scPartialContent);
-            rep->content_range = rep->header.getContRange();
-        }
-        assert(rep->sline.status() == Http::scPartialContent);
+        /* XXX: TODO: Review, this unconditional set may be wrong. */
+        rep->sline.set(rep->sline.version, Http::scPartialContent);
+        // web server responded with a valid, but unexpected range.
+        // will (try-to) forward as-is.
         //TODO: we should cope with multirange request/responses
         bool replyMatchRequest = rep->content_range != nullptr ?
                                  request->range->contains(rep->content_range->spec) :
@@ -474,15 +475,30 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
         assert(spec_count > 0);
         /* append appropriate header(s) */
         if (spec_count == 1) {
-            HttpHdrRange::iterator pos = http->request->range->begin();
-            assert(*pos);
             if (!replyMatchRequest) {
+                hdr->delById(Http::HdrType::CONTENT_RANGE);
+                hdr->putContRange(rep->content_range);
+                actual_clen = rep->content_length;
                 //http->range_iter.pos = rep->content_range->spec.begin();
-                (*pos)->offset = rep->content_range->spec.offset;
-                (*pos)->length = rep->content_range->spec.length;
+                (*http->range_iter.pos)->offset = rep->content_range->spec.offset;
+                (*http->range_iter.pos)->length = rep->content_range->spec.length;
+
+            } else {
+                HttpHdrRange::iterator pos = http->request->range->begin();
+                assert(*pos);
+                /* append Content-Range */
+
+                if (!hdr->has(Http::HdrType::CONTENT_RANGE)) {
+                    /* No content range, so this was a full object we are
+                     * sending parts of.
+                     */
+                    httpHeaderAddContRange(hdr, **pos, rep->content_length);
+                }
+
+                /* set new Content-Length to the actual number of bytes
+                 * transmitted in the message-body */
+                actual_clen = (*pos)->length;
             }
-            httpHeaderAddContRange(hdr, **pos, rep->content_length);
-            actual_clen = (*pos)->length;
         } else {
             /* multipart! */
             /* generate boundary string */
