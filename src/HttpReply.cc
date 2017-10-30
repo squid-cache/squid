@@ -304,7 +304,7 @@ HttpReply::hdrCacheInit()
     date = header.getTime(Http::HdrType::DATE);
     last_modified = header.getTime(Http::HdrType::LAST_MODIFIED);
     surrogate_control = header.getSc();
-    if (sline.status() == Http::scPartialContent || sline.status() == Http::scRequestedRangeNotSatisfied)
+    if (sline.status() == Http::scPartialContent)
         content_range = header.getContRange();
     keep_alive = persistent() ? 1 : 0;
     const char *str = header.getStr(Http::HdrType::CONTENT_TYPE);

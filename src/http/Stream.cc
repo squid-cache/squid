@@ -428,8 +428,14 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
         range_err = "no [parse-able] reply";
     else if ((rep->sline.status() != Http::scOkay) && (rep->sline.status() != Http::scPartialContent))
         range_err = "wrong status code";
-    else if (hdr->has(Http::HdrType::CONTENT_RANGE))
-        range_err = "origin server does ranges";
+    else if (hdr->has(Http::HdrType::CONTENT_RANGE)) {
+        if (rep->sline.status() == Http::scPartialContent)
+            range_err = "existing Content-Range in the 206 response";
+        else {
+            assert(rep->sline.status() == Http::scOkay);
+            range_err = "unexpected Content-Range in the 200 response";
+        }
+    }
     else if (rep->content_length < 0)
         range_err = "unknown length";
     else if (rep->content_length != http->memObject()->getReply()->content_length)
@@ -464,6 +470,7 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
         // web server responded with a valid, but unexpected range.
         // will (try-to) forward as-is.
         //TODO: we should cope with multirange request/responses
+        // TODO: review, since rep->content_range is always nil here.
         bool replyMatchRequest = rep->content_range != nullptr ?
                                  request->range->contains(rep->content_range->spec) :
                                  true;
