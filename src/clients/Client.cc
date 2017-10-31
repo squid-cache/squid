@@ -507,9 +507,7 @@ Client::haveParsedReplyHeaders()
     maybePurgeOthers();
 
     // adaptation may overwrite old offset computed using the virgin response
-    const bool partial = theFinalReply->content_range &&
-                         theFinalReply->sline.status() == Http::scPartialContent;
-    currentOffset = partial ? theFinalReply->content_range->spec.offset : 0;
+    currentOffset = theFinalReply->contentRange() ? theFinalReply->contentRange()->spec.offset : 0;
 }
 
 /// whether to prevent caching of an otherwise cachable response

@@ -372,8 +372,8 @@ HttpHdrRange::canonize(HttpReply *rep)
 {
     assert(rep);
 
-    if (rep->content_range)
-        clen = rep->content_range->elength;
+    if (rep->contentRange())
+        clen = rep->contentRange()->elength;
     else
         clen = rep->content_length;
 

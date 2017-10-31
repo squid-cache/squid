@@ -26,8 +26,8 @@
 #include "StrList.h"
 
 HttpReply::HttpReply() : Http::Message(hoReply), date (0), last_modified (0),
-    expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0),
-    protoPrefix("HTTP/"), bodySizeMax(-2)
+    expires (0), surrogate_control (NULL), keep_alive (0),
+    protoPrefix("HTTP/"), bodySizeMax(-2), content_range(nullptr)
 {
     init();
 }
@@ -297,6 +297,7 @@ HttpReply::hdrExpirationTime()
 void
 HttpReply::hdrCacheInit()
 {
+    hdrCacheClean();
     Http::Message::hdrCacheInit();
 
     http_ver = sline.version;
@@ -311,11 +312,17 @@ HttpReply::hdrCacheInit()
 
     if (str)
         content_type.limitInit(str, strcspn(str, ";\t "));
-    else
-        content_type = String();
 
     /* be sure to set expires after date and cache-control */
     expires = hdrExpirationTime();
+}
+
+HttpHdrContRange *
+HttpReply::contentRange() const
+{
+    if (content_range)
+        assert(sline.status() == Http::scPartialContent);
+    return content_range;
 }
 
 /* sync this routine when you update HttpReply struct */
