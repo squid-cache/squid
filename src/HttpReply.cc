@@ -26,7 +26,7 @@
 #include "StrList.h"
 
 HttpReply::HttpReply() : Http::Message(hoReply), date (0), last_modified (0),
-    expires (0), surrogate_control (NULL), keep_alive (0),
+    expires(0), surrogate_control(nullptr), keep_alive(0),
     protoPrefix("HTTP/"), bodySizeMax(-2), content_range(nullptr)
 {
     init();
@@ -297,7 +297,6 @@ HttpReply::hdrExpirationTime()
 void
 HttpReply::hdrCacheInit()
 {
-    hdrCacheClean();
     Http::Message::hdrCacheInit();
 
     http_ver = sline.version;
@@ -305,23 +304,27 @@ HttpReply::hdrCacheInit()
     date = header.getTime(Http::HdrType::DATE);
     last_modified = header.getTime(Http::HdrType::LAST_MODIFIED);
     surrogate_control = header.getSc();
-    if (sline.status() == Http::scPartialContent)
-        content_range = header.getContRange();
+    content_range = (sline.status() == Http::scPartialContent) ?
+                    header.getContRange() : nullptr;
     keep_alive = persistent() ? 1 : 0;
     const char *str = header.getStr(Http::HdrType::CONTENT_TYPE);
 
     if (str)
         content_type.limitInit(str, strcspn(str, ";\t "));
+    else
+        content_type = String();
 
     /* be sure to set expires after date and cache-control */
     expires = hdrExpirationTime();
 }
 
-HttpHdrContRange *
-HttpReply::contentRange() const
+const HttpHdrContRange *
+HttpReply::contentRange(bool *unparsed) const
 {
     if (content_range)
         assert(sline.status() == Http::scPartialContent);
+    if (unparsed)
+        *unparsed = !content_range && header.has(Http::HdrType::CONTENT_RANGE);
     return content_range;
 }
 

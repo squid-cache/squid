@@ -423,6 +423,8 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
     assert(request->range);
     /* check if we still want to do ranges */
     int64_t roffLimit = request->getRangeOffsetLimit();
+    bool unparsedContentRange = false;
+    const HttpHdrContRange *contentRange = rep ? rep->contentRange(&unparsedContentRange) : nullptr;
 
     if (!rep)
         range_err = "no [parse-able] reply";
@@ -432,8 +434,8 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
         range_err = "too complex response"; // probably contains what the client needs
     else if (rep->sline.status() != Http::scOkay)
         range_err = "wrong status code";
-    else if (hdr->has(Http::HdrType::CONTENT_RANGE))
-        range_err = "meaningless response";
+    else if (unparsedContentRange)
+        range_err = "meaningless response"; // the status code or the header is wrong
     else if (rep->content_length < 0)
         range_err = "unknown length";
     else if (rep->content_length != http->memObject()->getReply()->content_length)
@@ -469,8 +471,8 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
         // will (try-to) forward as-is.
         //TODO: we should cope with multirange request/responses
         // TODO: review, since rep->content_range is always nil here.
-        bool replyMatchRequest = rep->contentRange() != nullptr ?
-                                 request->range->contains(rep->contentRange()->spec) :
+        bool replyMatchRequest = contentRange != nullptr ?
+                                 request->range->contains(contentRange->spec) :
                                  true;
         const int spec_count = http->request->range->specs.size();
         int64_t actual_clen = -1;
@@ -481,18 +483,18 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
         /* append appropriate header(s) */
         if (spec_count == 1) {
             if (!replyMatchRequest) {
-                hdr->putContRange(rep->contentRange());
+                hdr->putContRange(contentRange);
                 actual_clen = rep->content_length;
                 //http->range_iter.pos = rep->content_range->spec.begin();
-                (*http->range_iter.pos)->offset = rep->contentRange()->spec.offset;
-                (*http->range_iter.pos)->length = rep->contentRange()->spec.length;
+                (*http->range_iter.pos)->offset = contentRange->spec.offset;
+                (*http->range_iter.pos)->length = contentRange->spec.length;
 
             } else {
                 HttpHdrRange::iterator pos = http->request->range->begin();
                 assert(*pos);
                 /* append Content-Range */
 
-                if (!hdr->has(Http::HdrType::CONTENT_RANGE)) {
+                if (!contentRange) {
                     /* No content range, so this was a full object we are
                      * sending parts of.
                      */

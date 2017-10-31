@@ -52,7 +52,8 @@ public:
     HttpHdrSc *surrogate_control;
 
     /// \returns parsed Content-Range for a 206 response and nil for others
-    HttpHdrContRange *contentRange() const;
+    /// \param unparsed whether there is an unexpected, not parsed Content-Range
+    const HttpHdrContRange *contentRange(bool *unparsed = nullptr) const;
 
     short int keep_alive;
 

@@ -527,7 +527,7 @@ HttpHdrRange::offsetLimitExceeded(const int64_t limit) const
 }
 
 bool
-HttpHdrRange::contains(HttpHdrRangeSpec& r) const
+HttpHdrRange::contains(const HttpHdrRangeSpec& r) const
 {
     assert(r.length >= 0);
     HttpHdrRangeSpec::HttpRange rrange(r.offset, r.offset + r.length);
