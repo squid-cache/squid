@@ -13,8 +13,10 @@
 #include "clients/forward.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "comm/ConnOpener.h"
 #include "err_type.h"
 #include "fde.h"
+#include "HappyConnOpener.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
 #include "PeerSelectState.h"
@@ -55,8 +57,28 @@ nfmark_t GetNfmarkToServer(HttpRequest * request);
 /// Sets initial TOS value and Netfilter for the future outgoing connection.
 void GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn);
 
-class HelperReply;
+class CandidatePaths: public RefCountable
+{
+public:
+    typedef RefCount<CandidatePaths> Pointer;
+    CandidatePaths();
+    void retryPath(const Comm::ConnectionPointer &);
+    void newPath(const Comm::ConnectionPointer &);
+    bool empty() {return paths_.empty();}
+    Comm::ConnectionPointer popFirst();
+    Comm::ConnectionPointer popFirstNotInFamily(int);
+    int count() {return count_;}
 
+    static int ConnectionFamily(const Comm::ConnectionPointer &conn);
+
+    bool destinationsFinalized;
+private:
+    Comm::ConnectionList paths_;
+    int count_;
+};
+
+
+class HelperReply;
 class FwdState: public RefCountable, public PeerSelectionInitiator
 {
     CBDATA_CHILD(FwdState);
@@ -91,13 +113,10 @@ public:
     void serverClosed(int fd);
     void connectStart();
     void connectDone(const Comm::ConnectionPointer & conn, Comm::Flag status, int xerrno);
-    void connectTimeout(int fd);
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
-    /// Pops a connection from connection pool if available. If not
-    /// checks the peer stand-by connection pool for available connection.
-    Comm::ConnectionPointer pconnPop(const Comm::ConnectionPointer &dest, const char *domain);
+
     void pconnPush(Comm::ConnectionPointer & conn, const char *domain);
 
     bool dontRetry() { return flags.dont_retry; }
@@ -106,6 +125,9 @@ public:
 
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
+
+    void noteConnection(const HappyConnOpener::Answer &cd);
+    HttpRequest *httpRequest() {return request;}
 
 private:
     // hidden for safer management of self; use static fwdStart
@@ -152,6 +174,8 @@ private:
     /// \returns the time left for this connection to become connected or 1 second if it is less than one second left
     time_t connectingTimeout(const Comm::ConnectionPointer &conn) const;
 
+    void handlePinned(CachePeer *);
+    bool hasCandidatePath() {return destinations_ && !destinations_->empty();}
 public:
     StoreEntry *entry;
     HttpRequest *request;
@@ -166,15 +190,20 @@ private:
     time_t start_t;
     int n_tries; ///< the number of forwarding attempts so far
 
+    // AsyncCalls which we set and may need cancelling.
+    struct {
+        AsyncCall::Pointer connector;  ///< a call linking us to the ConnOpener producing serverConn.
+    } calls;
+    
     struct {
         bool connected_okay; ///< TCP link ever opened properly. This affects retry of POST,PUT,CONNECT,etc
         bool dont_retry;
         bool forward_completed;
+        bool destinationsFound;
     } flags;
 
-    /** connections to open, in order, until successful */
-    Comm::ConnectionList serverDestinations;
-
+    HappyConnOpener::Pointer connOpener;
+    CandidatePaths::Pointer destinations_;
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
 
     AsyncCall::Pointer closeHandler; ///< The serverConn close handler

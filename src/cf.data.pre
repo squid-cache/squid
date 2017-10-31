@@ -10460,4 +10460,34 @@ DOC_START
 		server_pconn_for_nonretriable allow SpeedIsWorthTheRisk
 DOC_END
 
+NAME: happy_eyeballs_connect_limit
+TYPE: int
+DEFAULT: -1
+DEFAULT_DOC: No limit.
+LOC: Config.happyEyeballs.connect_limit
+DOC_START
+	The total number of in-progress spare connect() attempts, across all
+	same-worker forwarded requests.
+DOC_END
+
+NAME: happy_eyeballs_connect_gap
+COMMENT: (msec)
+TYPE: int
+DEFAULT: 250
+LOC: Config.happyEyeballs.connect_gap
+DOC_START
+        The last spare connect() attempt, across all same-worker forwarded
+	requests, started at least happy_eyeballs_connect_gap milliseconds ago
+DOC_END
+
+NAME: happy_eyeballs_connect_timeout
+COMMENT: (msec)
+TYPE: int
+DEFAULT: 250
+LOC: Config.happyEyeballs.connect_timeout
+DOC_START
+	The in-progress connect() attempt started at least
+	happy_eyeballs_connect_timeout milliseconds ago.
+DOC_END
+
 EOF

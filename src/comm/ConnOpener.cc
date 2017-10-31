@@ -483,3 +483,11 @@ Comm::ConnOpener::DelayedConnectRetry(void *data)
     delete ptr;
 }
 
+void
+Comm::ConnOpener::cancel(const char *reason)
+{
+    if (Comm::IsConnOpen(conn_))
+        conn_->close();
+    callback_->cancel(reason);
+    mustStop(reason);
+}
