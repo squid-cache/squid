@@ -52,6 +52,8 @@ namespace Ssl
 {
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
 bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, const char *) STUB_RETVAL(false)
+void SetupVerifyCallback(Security::ContextPointer &) STUB
+void MaybeSetupRsaCallback(Security::ContextPointer &) STUB
 } // namespace Ssl
 const char *sslGetUserEmail(SSL *ssl) STUB_RETVAL(NULL)
 const char *sslGetUserAttribute(SSL *ssl, const char *attribute_name) STUB_RETVAL(NULL)
@@ -64,12 +66,12 @@ namespace Ssl
 //GETX509ATTRIBUTE GetX509CAAttribute;
 //GETX509ATTRIBUTE GetX509Fingerprint;
 std::vector<const char *> BumpModeStr = {""};
-bool generateUntrustedCert(Security::CertPointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, Security::CertPointer const & cert, EVP_PKEY_Pointer const & pkey) STUB_RETVAL(false)
-Security::ContextPointer GenerateSslContext(CertificateProperties const &, AnyP::PortCfg &, bool) STUB_RETVAL(Security::ContextPointer())
+bool generateUntrustedCert(Security::CertPointer &, Security::PrivateKeyPointer &, Security::CertPointer const &, Security::PrivateKeyPointer const &) STUB_RETVAL(false)
+Security::ContextPointer GenerateSslContext(CertificateProperties const &, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
 bool verifySslCertificate(Security::ContextPointer &, CertificateProperties const &) STUB_RETVAL(false)
-Security::ContextPointer GenerateSslContextUsingPkeyAndCertFromMemory(const char *, AnyP::PortCfg &, bool) STUB_RETVAL(Security::ContextPointer())
+Security::ContextPointer GenerateSslContextUsingPkeyAndCertFromMemory(const char *, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
 void addChainToSslContext(Security::ContextPointer &, STACK_OF(X509) *) STUB
-void readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, EVP_PKEY_Pointer & pkey, X509_STACK_Pointer & chain, char const * certFilename, char const * keyFilename) STUB
+void readCertChainAndPrivateKeyFromFiles(Security::CertPointer &, Security::PrivateKeyPointer &, Security::CertList &, char const *, char const *) STUB
 int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data)) STUB_RETVAL(0)
 bool checkX509ServerValidity(X509 *cert, const char *server) STUB_RETVAL(false)
 int asn1timeToString(ASN1_TIME *tm, char *buf, int len) STUB_RETVAL(0)
