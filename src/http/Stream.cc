@@ -423,8 +423,7 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
     assert(request->range);
     /* check if we still want to do ranges */
     int64_t roffLimit = request->getRangeOffsetLimit();
-    bool unparsedContentRange = false;
-    const HttpHdrContRange *contentRange = rep ? rep->contentRange(&unparsedContentRange) : nullptr;
+    auto contentRange = rep ? rep->contentRange() : nullptr;
 
     if (!rep)
         range_err = "no [parse-able] reply";
@@ -434,8 +433,10 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
         range_err = "too complex response"; // probably contains what the client needs
     else if (rep->sline.status() != Http::scOkay)
         range_err = "wrong status code";
-    else if (unparsedContentRange)
+    else if (hdr->has(Http::HdrType::CONTENT_RANGE)) {
+        Must(!contentRange); // this is a 200, not 206 response
         range_err = "meaningless response"; // the status code or the header is wrong
+    }
     else if (rep->content_length < 0)
         range_err = "unknown length";
     else if (rep->content_length != http->memObject()->getReply()->content_length)

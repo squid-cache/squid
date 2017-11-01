@@ -319,12 +319,10 @@ HttpReply::hdrCacheInit()
 }
 
 const HttpHdrContRange *
-HttpReply::contentRange(bool *unparsed) const
+HttpReply::contentRange() const
 {
     if (content_range)
         assert(sline.status() == Http::scPartialContent);
-    if (unparsed)
-        *unparsed = !content_range && header.has(Http::HdrType::CONTENT_RANGE);
     return content_range;
 }
 
