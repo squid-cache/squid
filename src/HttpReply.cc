@@ -25,9 +25,16 @@
 #include "Store.h"
 #include "StrList.h"
 
-HttpReply::HttpReply() : Http::Message(hoReply), date (0), last_modified (0),
-    expires(0), surrogate_control(nullptr), keep_alive(0),
-    protoPrefix("HTTP/"), bodySizeMax(-2), content_range(nullptr)
+HttpReply::HttpReply():
+    Http::Message(hoReply),
+    date(0),
+    last_modified(0),
+    expires(0),
+    surrogate_control(nullptr),
+    keep_alive(0),
+    protoPrefix("HTTP/"),
+    bodySizeMax(-2),
+    content_range(nullptr)
 {
     init();
 }
