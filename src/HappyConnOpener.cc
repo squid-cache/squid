@@ -217,6 +217,9 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
         master = spare;
     } else {
         assert(spare.path == params.conn);
+    }
+
+    if (spare.path != nullptr) {
         HappyConnOpener::SpareConnects--;
         spare.path = nullptr;
         spare.connector = nullptr;
