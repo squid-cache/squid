@@ -328,8 +328,7 @@ HttpReply::hdrCacheInit()
 const HttpHdrContRange *
 HttpReply::contentRange() const
 {
-    if (content_range)
-        assert(sline.status() == Http::scPartialContent);
+    assert(!content_range || sline.status() == Http::scPartialContent);
     return content_range;
 }
 
