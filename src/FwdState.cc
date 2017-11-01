@@ -510,7 +510,14 @@ FwdState::fail(ErrorState * errorState)
 
     if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
+        // we should retry the same destination if it failed due to pconn race
+        // if (serverConn != nullptr) {
+        assert(serverConn != nullptr);
+        assert(destinations_ != nullptr);
+        debugs(17, 4, "retrying the same destination");
+        destinations_->retryPath(serverConn);
         pconnRace = raceHappened;
+        //}
     }
 
     if (ConnStateData *pinned_connection = request->pinnedConnection()) {
@@ -758,14 +765,6 @@ FwdState::retryOrBail()
 {
     if (checkRetry()) {
         debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
-        // we should retry the same destination if it failed due to pconn race
-        if (pconnRace == raceHappened) {
-            assert(serverConn != nullptr);
-            assert(destinations_ != nullptr);
-            debugs(17, 4, "retrying the same destination");
-            destinations_->retryPath(serverConn);
-        }
-
         useDestinations();
         return;
     }
