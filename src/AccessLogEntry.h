@@ -49,6 +49,12 @@ public:
     /// including indirect forwarded-for IP if configured to log that
     void getLogClientIp(char *buf, size_t bufsz) const;
 
+    /// Fetch the client IDENT string, or nil if none is available.
+    const char *getClientIdent() const;
+
+    /// Fetch the external ACL provided 'user=' string, or nil if none is available.
+    const char *getExtUser() const;
+
     /// Fetch the transaction method string (ICP opcode, HTCP opcode or HTTP method)
     SBuf getLogMethod() const;
 

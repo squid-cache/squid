@@ -70,6 +70,30 @@ AccessLogEntry::syncNotes(HttpRequest *req)
         assert(notes == req->notes());
 }
 
+const char *
+AccessLogEntry::getClientIdent() const
+{
+    if (tcpClient)
+        return tcpClient->rfc931;
+
+    if (cache.rfc931 && *cache.rfc931)
+        return cache.rfc931;
+
+    return nullptr;
+}
+
+const char *
+AccessLogEntry::getExtUser() const
+{
+    if (request->extacl_user.size())
+        return request->extacl_user.termedBuf();
+
+    if (cache.extuser && *cache.extuser)
+        return cache.extuser;
+
+    return nullptr;
+}
+
 AccessLogEntry::~AccessLogEntry()
 {
     safe_free(headers.request);
