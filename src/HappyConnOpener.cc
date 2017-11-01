@@ -64,14 +64,14 @@ HappyConnOpener::swanSong()
     }
 
     if (master.path != nullptr) {
-        if (master.connector.valid())
+        if (master.connector != nullptr)
             master.connector->cancel("HappyConnOpener object destructed");
         master.connector = nullptr;
         master.path = nullptr;
     }
 
     if (spare.path == nullptr) {
-        if (spare.connector.valid())
+        if (spare.connector != nullptr)
             spare.connector->cancel("HappyConnOpener object destructed");
         spare.connector = nullptr;
         spare.path = nullptr;
@@ -197,10 +197,10 @@ HappyConnOpener::startConnecting(Comm::ConnectionPointer &dest)
 
     if (master.path == nullptr) {
         master.path = dest;
-        master.connector = cs;
+        master.connector = callConnect;
     } else {
         spare.path = dest;
-        spare.connector = cs;
+        spare.connector = callConnect;
         HappyConnOpener::SpareConnects++;
     }
 
@@ -236,8 +236,8 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     }
 
     if (master.path) {
-        if (master.connector.valid())
-            master.connector->cancel("Already connected");
+        Must(master.connector != nullptr);
+        master.connector->cancel("Already connected");
         master.connector = nullptr;
         master.path = nullptr;
     }

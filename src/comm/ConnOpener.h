@@ -38,8 +38,6 @@ public:
 
     void setHost(const char *);    ///< set the hostname note for this connection
     const char * getHost() const;  ///< get the hostname noted for this connection
-    const Comm::ConnectionPointer &connection() {return conn_;}
-    void cancel(const char *reason);
 
 protected:
     virtual void start();

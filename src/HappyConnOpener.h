@@ -89,7 +89,7 @@ public:
     CandidatePathsPointer dests_;
     struct {
         Comm::ConnectionPointer path;
-        Comm::ConnOpener::Pointer connector;
+        AsyncCall::Pointer connector;
     } master, spare;
 
     bool allowPconn;
