@@ -13,8 +13,8 @@
 #include "security/Context.h"
 #include "security/Session.h"
 
-#if USE_GNUTLS && HAVE_GNUTLS_X509_H
-#include <gnutls/x509.h>
+#if USE_GNUTLS && HAVE_GNUTLS_ABSTRACT_H
+#include <gnutls/abstract.h>
 #endif
 #include <list>
 #if USE_OPENSSL && HAVE_OPENSSL_ERR_H
@@ -167,6 +167,9 @@ class PeerOptions;
 #if USE_OPENSSL
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
 typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, HardFun<int, EVP_PKEY *, EVP_PKEY_up_ref> > PrivateKeyPointer;
+#elif USE_GNUTLS
+CtoCpp1(gnutls_privkey_deinit, gnutls_privkey_t);
+typedef Security::LockingPointer<struct gnutls_privkey_st, gnutls_privkey_deinit> PrivateKeyPointer;
 #else
 // XXX: incompatible with the other PrivateKeyPointer declaration (lacks self-initialization)
 typedef void *PrivateKeyPointer;
