@@ -90,7 +90,7 @@ void Ssl::Helper::Init()
     // TODO: generate host certificates for SNI enabled accel ports
     bool found = false;
     for (AnyP::PortCfgPointer s = HttpPortList; !found && s != NULL; s = s->next)
-        found = s->flags.tunnelSslBumping && s->generateHostCertificates;
+        found = s->flags.tunnelSslBumping && s->secure.generateHostCertificates;
     if (!found)
         return;
 

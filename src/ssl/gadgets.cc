@@ -16,7 +16,7 @@
 
 EVP_PKEY * Ssl::createSslPrivateKey()
 {
-    Ssl::EVP_PKEY_Pointer pkey(EVP_PKEY_new());
+    Security::PrivateKeyPointer pkey(EVP_PKEY_new());
 
     if (!pkey)
         return NULL;
@@ -70,7 +70,7 @@ static bool setSerialNumber(ASN1_INTEGER *ai, BIGNUM const* serial)
     return true;
 }
 
-bool Ssl::writeCertAndPrivateKeyToMemory(Security::CertPointer const & cert, Ssl::EVP_PKEY_Pointer const & pkey, std::string & bufferToWrite)
+bool Ssl::writeCertAndPrivateKeyToMemory(Security::CertPointer const & cert, Security::PrivateKeyPointer const & pkey, std::string & bufferToWrite)
 {
     bufferToWrite.clear();
     if (!pkey || !cert)
@@ -118,7 +118,7 @@ bool Ssl::appendCertToMemory(Security::CertPointer const & cert, std::string & b
     return true;
 }
 
-bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, char const * bufferToRead)
+bool Ssl::readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, char const * bufferToRead)
 {
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
     BIO_puts(bio.get(), bufferToRead);
@@ -554,9 +554,9 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     return true;
 }
 
-static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Ssl::EVP_PKEY_Pointer & pkeyToStore, Ssl::CertificateProperties const &properties,  Ssl::BIGNUM_Pointer const &serial)
+static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Security::PrivateKeyPointer & pkeyToStore, Ssl::CertificateProperties const &properties,  Ssl::BIGNUM_Pointer const &serial)
 {
-    Ssl::EVP_PKEY_Pointer pkey;
+    Security::PrivateKeyPointer pkey;
     // Use signing certificates private key as generated certificate private key
     if (properties.signWithPkey.get())
         pkey.resetAndLock(properties.signWithPkey.get());
@@ -660,7 +660,7 @@ static BIGNUM *x509Pubkeydigest(Security::CertPointer const & cert)
 /// for a new generated certificate
 static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties const &properties)
 {
-    Ssl::EVP_PKEY_Pointer fakePkey;
+    Security::PrivateKeyPointer fakePkey;
     Security::CertPointer fakeCert;
 
     serial.reset(x509Pubkeydigest(properties.signWithX509));
@@ -682,7 +682,7 @@ static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties
     return true;
 }
 
-bool Ssl::generateSslCertificate(Security::CertPointer & certToStore, Ssl::EVP_PKEY_Pointer & pkeyToStore, Ssl::CertificateProperties const &properties)
+bool Ssl::generateSslCertificate(Security::CertPointer & certToStore, Security::PrivateKeyPointer & pkeyToStore, Ssl::CertificateProperties const &properties)
 {
     Ssl::BIGNUM_Pointer serial;
 
@@ -715,7 +715,7 @@ Ssl::ReadX509Certificate(Ssl::BIO_Pointer &bio, Security::CertPointer & cert)
 }
 
 bool
-Ssl::ReadPrivateKey(Ssl::BIO_Pointer &bio, Ssl::EVP_PKEY_Pointer &pkey, pem_password_cb *passwd_callback)
+Ssl::ReadPrivateKey(Ssl::BIO_Pointer &bio, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback)
 {
     assert(bio);
     if (EVP_PKEY *akey = PEM_read_bio_PrivateKey(bio.get(), NULL, passwd_callback, NULL)) {
@@ -726,7 +726,7 @@ Ssl::ReadPrivateKey(Ssl::BIO_Pointer &bio, Ssl::EVP_PKEY_Pointer &pkey, pem_pass
 }
 
 void
-Ssl::ReadPrivateKeyFromFile(char const * keyFilename, Ssl::EVP_PKEY_Pointer &pkey, pem_password_cb *passwd_callback)
+Ssl::ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback)
 {
     if (!keyFilename)
         return;
@@ -758,7 +758,7 @@ Ssl::WriteX509Certificate(Ssl::BIO_Pointer &bio, const Security::CertPointer & c
 }
 
 bool
-Ssl::WritePrivateKey(Ssl::BIO_Pointer &bio, const Ssl::EVP_PKEY_Pointer &pkey)
+Ssl::WritePrivateKey(Ssl::BIO_Pointer &bio, const Security::PrivateKeyPointer &pkey)
 {
     if (!pkey || !bio)
         return false;

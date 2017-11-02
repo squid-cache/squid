@@ -44,6 +44,9 @@ public:
     /// sync the context options with tls-min-version=N configuration
     void updateTlsVersionLimits();
 
+    /// Setup the library specific 'options=' parameters for the given context.
+    void updateContextOptions(Security::ContextPointer &) const;
+
     /// setup the NPN extension details for the given context
     void updateContextNpn(Security::ContextPointer &);
 
