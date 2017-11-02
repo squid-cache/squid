@@ -46,11 +46,21 @@ public:
     /// \returns true if a context could be created
     bool createStaticServerContext(AnyP::PortCfg &);
 
+    /// initialize contexts for signing dynamic TLS certificates (if needed)
+    /// the resulting context is stored in signingCert, signPKey, untrustedSigningCert, untrustedSignPKey
+    void createSigningContexts(AnyP::PortCfg &);
+
+    /// update the given TLS security context using squid.conf settings
+    bool updateContextConfig(Security::ContextPointer &);
+
     /// update the context with DH, EDH, EECDH settings
     void updateContextEecdh(Security::ContextPointer &);
 
     /// update the context with CA details used to verify client certificates
     void updateContextClientCa(Security::ContextPointer &);
+
+    /// update the context with a configured session ID (if any)
+    void updateContextSessionId(Security::ContextPointer &);
 
     /// sync the various sources of CA files to be loaded
     void syncCaFiles();
@@ -58,6 +68,18 @@ public:
 public:
     /// TLS context to use for HTTPS accelerator or static SSL-Bump
     Security::ContextPointer staticContext;
+    SBuf staticContextSessionId; ///< "session id context" for staticContext
+
+    bool generateHostCertificates = true; ///< dynamically make host cert
+
+    Security::CertPointer signingCert; ///< x509 certificate for signing generated certificates
+    Security::PrivateKeyPointer signPkey; ///< private key for signing generated certificates
+    Security::CertList certsToChain; ///<  x509 certificates to send with the generated cert
+    Security::CertPointer untrustedSigningCert; ///< x509 certificate for signing untrusted generated certificates
+    Security::PrivateKeyPointer untrustedSignPkey; ///< private key for signing untrusted generated certificates
+
+    /// max size of generated certificates memory cache (4 MB default)
+    size_t dynamicCertMemCacheSize = 4*1024*1024;
 
 private:
     bool loadClientCaFile();

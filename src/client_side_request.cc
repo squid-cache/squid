@@ -506,7 +506,7 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
     request->x_forwarded_for_iterator.clean();
     request->flags.done_follow_x_forwarded_for = true;
 
-    if (!answer.someRuleMatched()) {
+    if (answer.conflicted()) {
         debugs(28, DBG_CRITICAL, "ERROR: Processing X-Forwarded-For. Stopping at IP address: " << request->indirect_client_addr );
     }
 

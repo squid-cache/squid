@@ -7,9 +7,14 @@
  */
 
 #include "squid.h"
+#include "anyp/PortCfg.h"
 #include "base/Packable.h"
+#include "cache_cf.h"
+#include "fatal.h"
 #include "globals.h"
 #include "security/ServerOptions.h"
+#include "security/Session.h"
+#include "SquidConfig.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
 #endif
@@ -33,9 +38,18 @@ Security::ServerOptions::operator =(const Security::ServerOptions &old) {
 #if USE_OPENSSL
         if (auto *stk = SSL_dup_CA_list(old.clientCaStack.get()))
             clientCaStack = Security::ServerOptions::X509_NAME_STACK_Pointer(stk);
-#else
-        clientCaStack = nullptr;
+        else
 #endif
+            clientCaStack = nullptr;
+
+        staticContextSessionId = old.staticContextSessionId;
+        generateHostCertificates = old.generateHostCertificates;
+        signingCert = old.signingCert;
+        signPkey = old.signPkey;
+        certsToChain = old.certsToChain;
+        untrustedSigningCert = old.untrustedSigningCert;
+        untrustedSignPkey = old.untrustedSignPkey;
+        dynamicCertMemCacheSize = old.dynamicCertMemCacheSize;
     }
     return *this;
 }
@@ -84,6 +98,34 @@ Security::ServerOptions::parse(const char *token)
 
         loadDhParams();
 
+    } else if (strncmp(token, "dynamic_cert_mem_cache_size=", 28) == 0) {
+        parseBytesOptionValue(&dynamicCertMemCacheSize, "bytes", token + 28);
+        // XXX: parseBytesOptionValue() self_destruct()s on invalid values,
+        // probably making this comparison and misleading ERROR unnecessary.
+        if (dynamicCertMemCacheSize == std::numeric_limits<size_t>::max()) {
+            debugs(3, DBG_CRITICAL, "ERROR: Cannot allocate memory for '" << token << "'. Using default of 4MB instead.");
+            dynamicCertMemCacheSize = 4*1024*1024; // 4 MB
+        }
+
+    } else if (strcmp(token, "generate-host-certificates") == 0) {
+        generateHostCertificates = true;
+    } else if (strcmp(token, "generate-host-certificates=on") == 0) {
+        generateHostCertificates = true;
+    } else if (strcmp(token, "generate-host-certificates=off") == 0) {
+        generateHostCertificates = false;
+
+    } else if (strncmp(token, "context=", 8) == 0) {
+#if USE_OPENSSL
+        staticContextSessionId = SBuf(token+8);
+        // to hide its arguably sensitive value, do not print token in these debugs
+        if (staticContextSessionId.length() > SSL_MAX_SSL_SESSION_ID_LENGTH) {
+            debugs(83, DBG_CRITICAL, "FATAL: Option 'context=' value is too long. Maximum " << SSL_MAX_SSL_SESSION_ID_LENGTH << " characters.");
+            self_destruct();
+        }
+#else
+        debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Option 'context=' requires --with-openssl. Ignoring.");
+#endif
+
     } else {
         // parse generic TLS options
         Security::PeerOptions::parse(token);
@@ -102,6 +144,15 @@ Security::ServerOptions::dumpCfg(Packable *p, const char *pfx) const
     // dump the server-only options
     if (!dh.isEmpty())
         p->appendf(" %sdh=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(dh));
+
+    if (!generateHostCertificates)
+        p->appendf(" %sgenerate-host-certificates=off", pfx);
+
+    if (dynamicCertMemCacheSize != 4*1024*1024) // 4MB default, no 'tls-' prefix
+        p->appendf(" dynamic_cert_mem_cache_size=%" PRIuSIZE "bytes", dynamicCertMemCacheSize);
+
+    if (!staticContextSessionId.isEmpty())
+        p->appendf(" %scontext=" SQUIDSBUFPH, pfx, SQUIDSBUFPRINT(staticContextSessionId));
 }
 
 Security::ContextPointer
@@ -155,6 +206,43 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
 
     staticContext = std::move(t);
     return bool(staticContext);
+}
+
+void
+Security::ServerOptions::createSigningContexts(AnyP::PortCfg &port)
+{
+    const char *portType = AnyP::ProtocolType_str[port.transport.protocol];
+    if (!certs.empty()) {
+#if USE_OPENSSL
+        Security::KeyData &keys = certs.front();
+        Ssl::readCertChainAndPrivateKeyFromFiles(signingCert, signPkey, certsToChain, keys.certFile.c_str(), keys.privateKeyFile.c_str());
+#else
+        char buf[128];
+        fatalf("Directive '%s_port %s' requires --with-openssl.", portType, port.s.toUrl(buf, sizeof(buf)));
+#endif
+    }
+
+    if (!signingCert) {
+        char buf[128];
+        fatalf("No valid signing SSL certificate configured for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
+    }
+
+    if (!signPkey)
+        debugs(3, DBG_IMPORTANT, "No SSL private key configured for  " << portType << "_port " << port.s);
+
+#if USE_OPENSSL
+    Ssl::generateUntrustedCert(untrustedSigningCert, untrustedSignPkey, signingCert, signPkey);
+#endif
+
+    if (!untrustedSigningCert) {
+        char buf[128];
+        fatalf("Unable to generate signing SSL certificate for untrusted sites for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
+    }
+
+    if (!createStaticServerContext(port)) {
+        char buf[128];
+        fatalf("%s_port %s initialization error", portType, port.s.toUrl(buf, sizeof(buf)));
+    }
 }
 
 void
@@ -218,6 +306,47 @@ Security::ServerOptions::loadDhParams()
 
     parsedDhParams.resetWithoutLocking(dhp);
 #endif
+}
+
+bool
+Security::ServerOptions::updateContextConfig(Security::ContextPointer &ctx)
+{
+    updateContextOptions(ctx);
+    updateContextSessionId(ctx);
+
+#if USE_OPENSSL
+    if (parsedFlags & SSL_FLAG_NO_SESSION_REUSE) {
+        SSL_CTX_set_session_cache_mode(ctx.get(), SSL_SESS_CACHE_OFF);
+    }
+
+    if (Config.SSL.unclean_shutdown) {
+        debugs(83, 5, "Enabling quiet SSL shutdowns (RFC violation).");
+        SSL_CTX_set_quiet_shutdown(ctx.get(), 1);
+    }
+
+    if (!sslCipher.isEmpty()) {
+        debugs(83, 5, "Using cipher suite " << sslCipher << ".");
+        if (!SSL_CTX_set_cipher_list(ctx.get(), sslCipher.c_str())) {
+            auto ssl_error = ERR_get_error();
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to set SSL cipher suite '" << sslCipher << "': " <<  Security::ErrorString(ssl_error));
+            return false;
+        }
+    }
+
+    Ssl::MaybeSetupRsaCallback(ctx);
+#endif
+
+    updateContextEecdh(ctx);
+    updateContextCa(ctx);
+    updateContextClientCa(ctx);
+
+#if USE_OPENSSL
+    if (parsedFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
+        SSL_CTX_set_ex_data(ctx.get(), ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
+
+    Security::SetSessionCacheCallbacks(ctx);
+#endif
+    return true;
 }
 
 void
@@ -289,6 +418,15 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
     if (parsedDhParams) {
         SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get());
     }
+#endif
+}
+
+void
+Security::ServerOptions::updateContextSessionId(Security::ContextPointer &ctx)
+{
+#if USE_OPENSSL
+    if (!staticContextSessionId.isEmpty())
+        SSL_CTX_set_session_id_context(ctx.get(), reinterpret_cast<const unsigned char*>(staticContextSessionId.rawContent()), staticContextSessionId.length());
 #endif
 }
 

@@ -82,6 +82,9 @@ bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long
 /// set the certificate verify callback for a context
 void SetupVerifyCallback(Security::ContextPointer &);
 
+/// if required, setup callback for generating ephemeral RSA keys
+void MaybeSetupRsaCallback(Security::ContextPointer &);
+
 } //namespace Ssl
 
 /// \ingroup ServerProtocolSSLAPI
@@ -182,7 +185,7 @@ void missingChainCertificatesUrls(std::queue<SBuf> &URIs, Security::CertList con
   \ingroup ServerProtocolSSLAPI
   * Generate a certificate to be used as untrusted signing certificate, based on a trusted CA
 */
-bool generateUntrustedCert(Security::CertPointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, Security::CertPointer const & cert, EVP_PKEY_Pointer const & pkey);
+bool generateUntrustedCert(Security::CertPointer & untrustedCert, Security::PrivateKeyPointer & untrustedPkey, Security::CertPointer const & cert, Security::PrivateKeyPointer const & pkey);
 
 /// certificates indexed by issuer name
 typedef std::multimap<SBuf, X509 *> CertsIndexedList;
@@ -211,7 +214,7 @@ void unloadSquidUntrusted();
   \ingroup ServerProtocolSSLAPI
   * Decide on the kind of certificate and generate a CA- or self-signed one
 */
-Security::ContextPointer GenerateSslContext(CertificateProperties const &properties, AnyP::PortCfg &port, bool trusted);
+Security::ContextPointer GenerateSslContext(CertificateProperties const &, Security::ServerOptions &, bool trusted);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -227,19 +230,19 @@ bool verifySslCertificate(Security::ContextPointer &, CertificateProperties cons
   * Read private key and certificate from memory and generate SSL context
   * using their.
  */
-Security::ContextPointer GenerateSslContextUsingPkeyAndCertFromMemory(const char * data, AnyP::PortCfg &port, bool trusted);
+Security::ContextPointer GenerateSslContextUsingPkeyAndCertFromMemory(const char * data, Security::ServerOptions &, bool trusted);
 
 /**
   \ingroup ServerProtocolSSLAPI
   * Create an SSL context using the provided certificate and key
  */
-Security::ContextPointer createSSLContext(Security::CertPointer & x509, Ssl::EVP_PKEY_Pointer & pkey, AnyP::PortCfg &port);
+Security::ContextPointer createSSLContext(Security::CertPointer & x509, Security::PrivateKeyPointer & pkey, Security::ServerOptions &);
 
 /**
  \ingroup ServerProtocolSSLAPI
  * Chain signing certificate and chained certificates to an SSL Context
  */
-void chainCertificatesToSSLContext(Security::ContextPointer &, AnyP::PortCfg &);
+void chainCertificatesToSSLContext(Security::ContextPointer &, Security::ServerOptions &);
 
 /**
  \ingroup ServerProtocolSSLAPI
@@ -265,7 +268,7 @@ bool configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
   \ingroup ServerProtocolSSLAPI
   * Adds the certificates in certList to the certificate chain of the SSL context
  */
-void addChainToSslContext(Security::ContextPointer &, STACK_OF(X509) *certList);
+void addChainToSslContext(Security::ContextPointer &, Security::CertList &);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -281,7 +284,7 @@ void useSquidUntrusted(SSL_CTX *sslContext);
  * \param certFilename name of file with certificate and certificates which must be chainned.
  * \param keyFilename name of file with private key.
  */
-void readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, EVP_PKEY_Pointer & pkey, X509_STACK_Pointer & chain, char const * certFilename, char const * keyFilename);
+void readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, Security::CertList &chain, char const * certFilename, char const * keyFilename);
 
 /**
    \ingroup ServerProtocolSSLAPI
@@ -320,7 +323,6 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
    \return true if SNI set false otherwise
 */
 bool setClientSNI(SSL *ssl, const char *fqdn);
-
 
 /**
   \ingroup ServerProtocolSSLAPI

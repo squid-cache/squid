@@ -59,12 +59,13 @@ public:
     };
 
     typedef std::vector<RecvdError> RecvdErrors;
-
+    explicit CertValidationResponse(const Security::SessionPointer &aSession) : ssl(aSession) {}
     /// Search in errors list for the error item with id=errorId.
     /// If none found a new RecvdError item added with the given id;
     RecvdError &getError(int errorId);
     RecvdErrors errors; ///< The list of parsed errors
     Helper::ResultCode resultCode; ///< The helper result code
+    Security::SessionPointer ssl;
 };
 
 /**
@@ -99,7 +100,7 @@ public:
     void composeRequest(CertValidationRequest const &vcert);
 
     /// Parse a response message and fill the resp object with parsed informations
-    bool parseResponse(CertValidationResponse &resp, STACK_OF(X509) *peerCerts, std::string &error);
+    bool parseResponse(CertValidationResponse &resp, std::string &error);
 
     /// Search a CertItems list for the certificate with ID "name"
     X509 *getCertByName(std::vector<CertItem> const &, std::string const & name);

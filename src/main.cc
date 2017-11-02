@@ -1225,36 +1225,34 @@ mainInitialize(void)
 
 #endif
 
-    if (!configured_once) {
-        if (unlinkdNeeded())
-            unlinkdInit();
+    if (unlinkdNeeded())
+        unlinkdInit();
 
-        urlInitialize();
-        statInit();
-        storeInit();
-        mainSetCwd();
-        mimeInit(Config.mimeTablePathname);
-        refreshInit();
+    urlInitialize();
+    statInit();
+    storeInit();
+    mainSetCwd();
+    mimeInit(Config.mimeTablePathname);
+    refreshInit();
 #if USE_DELAY_POOLS
-        DelayPools::Init();
+    DelayPools::Init();
 #endif
 
-        FwdState::initModule();
-        /* register the modules in the cache manager menus */
+    FwdState::initModule();
+    /* register the modules in the cache manager menus */
 
-        cbdataRegisterWithCacheManager();
-        SBufStatsAction::RegisterWithCacheManager();
+    cbdataRegisterWithCacheManager();
+    SBufStatsAction::RegisterWithCacheManager();
 
-        /* These use separate calls so that the comm loops can eventually
-         * coexist.
-         */
+    /* These use separate calls so that the comm loops can eventually
+     * coexist.
+     */
 
-        eventInit();
+    eventInit();
 
-        // TODO: pconn is a good candidate for new-style registration
-        // PconnModule::GetInstance()->registerWithCacheManager();
-        //   moved to PconnModule::PconnModule()
-    }
+    // TODO: pconn is a good candidate for new-style registration
+    // PconnModule::GetInstance()->registerWithCacheManager();
+    // moved to PconnModule::PconnModule()
 
     if (IamPrimaryProcess()) {
 #if USE_WCCP
@@ -1332,24 +1330,22 @@ mainInitialize(void)
     Config.ClientDelay.finalize();
 #endif
 
-    if (!configured_once) {
-        eventAdd("storeMaintain", Store::Maintain, NULL, 1.0, 1);
+    eventAdd("storeMaintain", Store::Maintain, nullptr, 1.0, 1);
 
-        if (Config.onoff.announce)
-            eventAdd("start_announce", start_announce, NULL, 3600.0, 1);
+    if (Config.onoff.announce)
+        eventAdd("start_announce", start_announce, nullptr, 3600.0, 1);
 
-        eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10.0, 1);
+    eventAdd("ipcache_purgelru", ipcache_purgelru, nullptr, 10.0, 1);
 
-        eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 15.0, 1);
+    eventAdd("fqdncache_purgelru", fqdncache_purgelru, nullptr, 15.0, 1);
 
 #if USE_XPROF_STATS
 
-        eventAdd("cpuProfiling", xprof_event, NULL, 1.0, 1);
+    eventAdd("cpuProfiling", xprof_event, nullptr, 1.0, 1);
 
 #endif
 
-        eventAdd("memPoolCleanIdlePools", Mem::CleanIdlePools, NULL, 15.0, 1);
-    }
+    eventAdd("memPoolCleanIdlePools", Mem::CleanIdlePools, nullptr, 15.0, 1);
 
     configured_once = 1;
 }
