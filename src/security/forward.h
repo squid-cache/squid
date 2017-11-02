@@ -55,6 +55,14 @@ inline int DH_up_ref(DH *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_DH
 #endif /* OpenSSL 1.0 CRYPTO_LOCK_X509_CRL */
 #endif /* OpenSSL 1.1 DH_up_ref */
 
+#if !HAVE_LIBCRYPTO_EVP_PKEY_UP_REF
+#if defined(CRYPTO_LOCK_EVP_PKEY) // OpenSSL 1.0
+inline int EVP_PKEY_up_ref(EVP_PKEY *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_EVP_PKEY); return 0;}
+#endif
+#else
+#error missing both OpenSSL API features EVP_PKEY_up_ref (v1.1) and CRYPTO_LOCK_EVP_PKEY (v1.0)
+#endif
+
 #endif /* USE_OPENSSL */
 
 /* flags a SSL connection can be configured with */
@@ -155,6 +163,15 @@ class ParsedOptions {}; // we never parse/use TLS options in this case
 
 class PeerConnector;
 class PeerOptions;
+
+#if USE_OPENSSL
+CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
+typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, HardFun<int, EVP_PKEY *, EVP_PKEY_up_ref> > PrivateKeyPointer;
+#else
+// XXX: incompatible with the other PrivateKeyPointer declaration (lacks self-initialization)
+typedef void *PrivateKeyPointer;
+#endif
+
 class ServerOptions;
 
 } // namespace Security

@@ -45,12 +45,6 @@ typedef SSL_METHOD * ContextMethod;
 sk_dtor_wrapper(sk_X509, STACK_OF(X509) *, X509_free);
 typedef std::unique_ptr<STACK_OF(X509), sk_X509_free_wrapper> X509_STACK_Pointer;
 
-CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
-#if defined(CRYPTO_LOCK_EVP_PKEY) // OpenSSL 1.0
-inline int EVP_PKEY_up_ref(EVP_PKEY *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_EVP_PKEY); return 0;}
-#endif
-typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, HardFun<int, EVP_PKEY *, EVP_PKEY_up_ref> > EVP_PKEY_Pointer;
-
 typedef std::unique_ptr<BIGNUM, HardFun<void, BIGNUM*, &BN_free>> BIGNUM_Pointer;
 
 typedef std::unique_ptr<BIO, HardFun<void, BIO*, &BIO_vfree>> BIO_Pointer;
@@ -86,7 +80,7 @@ EVP_PKEY * createSslPrivateKey();
  \ingroup SslCrtdSslAPI
  * Write private key and SSL certificate to memory.
  */
-bool writeCertAndPrivateKeyToMemory(Security::CertPointer const & cert, EVP_PKEY_Pointer const & pkey, std::string & bufferToWrite);
+bool writeCertAndPrivateKeyToMemory(Security::CertPointer const & cert, Security::PrivateKeyPointer const & pkey, std::string & bufferToWrite);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -98,7 +92,7 @@ bool appendCertToMemory(Security::CertPointer const & cert, std::string & buffer
  \ingroup SslCrtdSslAPI
  * Write private key and SSL certificate to memory.
  */
-bool readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, EVP_PKEY_Pointer & pkey, char const * bufferToRead);
+bool readCertAndPrivateKeyFromMemory(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, char const * bufferToRead);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -110,7 +104,7 @@ bool readCertFromMemory(Security::CertPointer & cert, char const * bufferToRead)
  \ingroup SslCrtdSslAPI
  * Read private key from file.
  */
-void ReadPrivateKeyFromFile(char const * keyFilename, EVP_PKEY_Pointer &pkey, pem_password_cb *passwd_callback);
+void ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -128,7 +122,7 @@ bool ReadX509Certificate(BIO_Pointer &bio, Security::CertPointer & cert);
  \ingroup SslCrtdSslAPI
  * Read a private key from bio
  */
-bool ReadPrivateKey(BIO_Pointer &bio, EVP_PKEY_Pointer &pkey, pem_password_cb *passwd_callback);
+bool ReadPrivateKey(BIO_Pointer &bio, Security::PrivateKeyPointer &pkey, pem_password_cb *passwd_callback);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -147,7 +141,7 @@ bool WriteX509Certificate(BIO_Pointer &bio, const Security::CertPointer & cert);
  \ingroup SslCrtdSslAPI
  * Write private key to BIO.
  */
-bool WritePrivateKey(BIO_Pointer &bio, const EVP_PKEY_Pointer &pkey);
+bool WritePrivateKey(BIO_Pointer &bio, const Security::PrivateKeyPointer &pkey);
 
 /**
   \ingroup SslCrtdSslAPI
@@ -221,7 +215,7 @@ public:
     CertificateProperties();
     Security::CertPointer mimicCert; ///< Certificate to mimic
     Security::CertPointer signWithX509; ///< Certificate to sign the generated request
-    EVP_PKEY_Pointer signWithPkey; ///< The key of the signing certificate
+    Security::PrivateKeyPointer signWithPkey; ///< The key of the signing certificate
     bool setValidAfter; ///< Do not mimic "Not Valid After" field
     bool setValidBefore; ///< Do not mimic "Not Valid Before" field
     bool setCommonName; ///< Replace the CN field of the mimicing subject with the given
@@ -244,7 +238,7 @@ std::string & OnDiskCertificateDbKey(const CertificateProperties &);
  * Return generated certificate and private key in resultX509 and resultPkey
  * variables.
  */
-bool generateSslCertificate(Security::CertPointer & cert, EVP_PKEY_Pointer & pkey, CertificateProperties const &properties);
+bool generateSslCertificate(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, CertificateProperties const &properties);
 
 /**
  \ingroup SslCrtdSslAPI

@@ -282,10 +282,9 @@ Security::PeerOptions::createClientContext(bool setOptions)
 
     Security::ContextPointer t(createBlankContext());
     if (t) {
+        if (setOptions)
+            updateContextOptions(t);
 #if USE_OPENSSL
-        // NP: GnuTLS uses 'priorities' which are set per-session instead.
-        SSL_CTX_set_options(t.get(), (setOptions ? parsedOptions : 0));
-
         // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
         Ssl::InitClientContext(t, *this, parsedFlags);
 #endif
@@ -591,6 +590,16 @@ Security::PeerOptions::loadCrlFile()
         parsedCrl.emplace_back(Security::CrlPointer(crl));
     }
     BIO_free(in);
+#endif
+}
+
+void
+Security::PeerOptions::updateContextOptions(Security::ContextPointer &ctx) const
+{
+#if USE_OPENSSL
+    SSL_CTX_set_options(ctx.get(), parsedOptions);
+#elif USE_GNUTLS
+    // NP: GnuTLS uses 'priorities' which are set per-session instead.
 #endif
 }
 

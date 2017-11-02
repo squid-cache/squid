@@ -189,7 +189,7 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
     Ssl::CertificateDb db(db_path, max_db_size, fs_block_size);
 
     Security::CertPointer cert;
-    Ssl::EVP_PKEY_Pointer pkey;
+    Security::PrivateKeyPointer pkey;
     Security::CertPointer orig;
     std::string &certKey = Ssl::OnDiskCertificateDbKey(certProperties);
 

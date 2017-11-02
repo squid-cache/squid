@@ -92,9 +92,12 @@ void Security::ServerOptions::parse(const char *) STUB
 void Security::ServerOptions::dumpCfg(Packable *, const char *) const STUB
 Security::ContextPointer Security::ServerOptions::createBlankContext() const STUB_RETVAL(Security::ContextPointer())
 bool Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &) STUB_RETVAL(false)
+void Security::ServerOptions::createSigningContexts(AnyP::PortCfg &) STUB
+bool Security::ServerOptions::updateContextConfig(Security::ContextPointer &) STUB_RETVAL(false)
 void Security::ServerOptions::updateContextEecdh(Security::ContextPointer &) STUB
 void Security::ServerOptions::updateContextClientCa(Security::ContextPointer &) STUB
 void Security::ServerOptions::syncCaFiles() STUB
+void Security::ServerOptions::updateContextSessionId(Security::ContextPointer &) STUB
 
 #include "security/Session.h"
 namespace Security {

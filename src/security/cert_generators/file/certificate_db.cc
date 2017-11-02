@@ -265,7 +265,7 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
 }
 
 bool
-Ssl::CertificateDb::find(std::string const &key,  const Security::CertPointer &expectedOrig, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey)
+Ssl::CertificateDb::find(std::string const &key, const Security::CertPointer &expectedOrig, Security::CertPointer &cert, Security::PrivateKeyPointer &pkey)
 {
     const Locker locker(dbLock, Here);
     load();
@@ -286,7 +286,8 @@ bool Ssl::CertificateDb::purgeCert(std::string const & key) {
 }
 
 bool
-Ssl::CertificateDb::addCertAndPrivateKey(std::string const & useKey, const Security::CertPointer & cert, const Ssl::EVP_PKEY_Pointer & pkey, const Security::CertPointer &orig) {
+Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Security::CertPointer &cert, const Security::PrivateKeyPointer &pkey, const Security::CertPointer &orig)
+{
     const Locker locker(dbLock, Here);
     load();
     if (!db || !cert || !pkey)
@@ -424,7 +425,7 @@ size_t Ssl::CertificateDb::rebuildSize()
 }
 
 bool
-Ssl::CertificateDb::pure_find(std::string const &key, const Security::CertPointer &expectedOrig, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey)
+Ssl::CertificateDb::pure_find(std::string const &key, const Security::CertPointer &expectedOrig, Security::CertPointer &cert, Security::PrivateKeyPointer &pkey)
 {
     if (!db)
         return false;
@@ -636,7 +637,7 @@ bool Ssl::CertificateDb::IsEnabledDiskStore() const {
 }
 
 bool
-Ssl::CertificateDb::WriteEntry(const std::string &filename, const Security::CertPointer & cert, const Ssl::EVP_PKEY_Pointer & pkey, const Security::CertPointer &orig)
+Ssl::CertificateDb::WriteEntry(const std::string &filename, const Security::CertPointer &cert, const Security::PrivateKeyPointer &pkey, const Security::CertPointer &orig)
 {
     Ssl::BIO_Pointer bio;
     if (!Ssl::OpenCertsFileForWriting(bio, filename.c_str()))
@@ -651,7 +652,7 @@ Ssl::CertificateDb::WriteEntry(const std::string &filename, const Security::Cert
 }
 
 bool
-Ssl::CertificateDb::ReadEntry(std::string filename, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, Security::CertPointer &orig)
+Ssl::CertificateDb::ReadEntry(std::string filename, Security::CertPointer &cert, Security::PrivateKeyPointer &pkey, Security::CertPointer &orig)
 {
     Ssl::BIO_Pointer bio;
     if (!Ssl::OpenCertsFileForReading(bio, filename.c_str()))
