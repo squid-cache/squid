@@ -85,7 +85,7 @@ AccessLogEntry::getClientIdent() const
 const char *
 AccessLogEntry::getExtUser() const
 {
-    if (request->extacl_user.size())
+    if (request && request->extacl_user.size())
         return request->extacl_user.termedBuf();
 
     if (cache.extuser && *cache.extuser)
