@@ -2838,7 +2838,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
                     Security::ContextPointer ctx(Security::GetFrom(fd_table[clientConnection->fd].ssl));
                     Ssl::configureUnconfiguredSslContext(ctx, signAlgorithm, *port);
                 } else {
-                    Security::ContextPointer ctx(Ssl::GenerateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), *port, (signAlgorithm == Ssl::algSignTrusted)));
+                    Security::ContextPointer ctx(Ssl::GenerateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), port->secure, (signAlgorithm == Ssl::algSignTrusted)));
                     if (ctx && !sslBumpCertKey.isEmpty())
                         storeTlsContextToCache(sslBumpCertKey, ctx);
                     getSslContextDone(ctx);
@@ -2912,15 +2912,15 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
     assert(certProperties.signAlgorithm != Ssl::algSignEnd);
 
     if (certProperties.signAlgorithm == Ssl::algSignUntrusted) {
-        assert(port->untrustedSigningCert.get());
-        certProperties.signWithX509.resetAndLock(port->untrustedSigningCert.get());
-        certProperties.signWithPkey.resetAndLock(port->untrustedSignPkey.get());
+        assert(port->secure.untrustedSigningCert);
+        certProperties.signWithX509.resetAndLock(port->secure.untrustedSigningCert.get());
+        certProperties.signWithPkey.resetAndLock(port->secure.untrustedSignPkey.get());
     } else {
-        assert(port->signingCert.get());
-        certProperties.signWithX509.resetAndLock(port->signingCert.get());
+        assert(port->secure.signingCert.get());
+        certProperties.signWithX509.resetAndLock(port->secure.signingCert.get());
 
-        if (port->signPkey.get())
-            certProperties.signWithPkey.resetAndLock(port->signPkey.get());
+        if (port->secure.signPkey)
+            certProperties.signWithPkey.resetAndLock(port->secure.signPkey.get());
     }
     signAlgorithm = certProperties.signAlgorithm;
 
@@ -2967,7 +2967,7 @@ ConnStateData::getSslContextStart()
     }
     /* careful: finished() above frees request, host, etc. */
 
-    if (port->generateHostCertificates) {
+    if (port->secure.generateHostCertificates) {
         Ssl::CertificateProperties certProperties;
         buildSslCertGenerationParams(certProperties);
 
@@ -3012,7 +3012,7 @@ ConnStateData::getSslContextStart()
             Security::ContextPointer ctx(Security::GetFrom(fd_table[clientConnection->fd].ssl));
             Ssl::configureUnconfiguredSslContext(ctx, certProperties.signAlgorithm, *port);
         } else {
-            Security::ContextPointer dynCtx(Ssl::GenerateSslContext(certProperties, *port, (signAlgorithm == Ssl::algSignTrusted)));
+            Security::ContextPointer dynCtx(Ssl::GenerateSslContext(certProperties, port->secure, (signAlgorithm == Ssl::algSignTrusted)));
             if (dynCtx && !sslBumpCertKey.isEmpty())
                 storeTlsContextToCache(sslBumpCertKey, dynCtx);
             getSslContextDone(dynCtx);
@@ -3027,7 +3027,7 @@ ConnStateData::getSslContextStart()
 void
 ConnStateData::getSslContextDone(Security::ContextPointer &ctx)
 {
-    if (port->generateHostCertificates && !ctx) {
+    if (port->secure.generateHostCertificates && !ctx) {
         debugs(33, 2, "Failed to generate TLS cotnext for " << sslConnectHostOrIp);
     }
 
@@ -3259,7 +3259,7 @@ ConnStateData::startPeekAndSplice()
     }
 
     // will call httpsPeeked() with certificate and connection, eventually
-    Security::ContextPointer unConfiguredCTX(Ssl::createSSLContext(port->signingCert, port->signPkey, *port));
+    Security::ContextPointer unConfiguredCTX(Ssl::createSSLContext(port->secure.signingCert, port->secure.signPkey, port->secure));
     fd_table[clientConnection->fd].dynamicTlsContext = unConfiguredCTX;
 
     if (!httpsCreate(clientConnection, unConfiguredCTX))
@@ -3491,7 +3491,7 @@ clientHttpConnectionsOpen(void)
                 debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << scheme << "_port " << s->s);
                 s->flags.tunnelSslBumping = false;
             }
-            if (!s->secure.staticContext && !s->generateHostCertificates) {
+            if (!s->secure.staticContext && !s->secure.generateHostCertificates) {
                 debugs(1, DBG_IMPORTANT, "Will not bump SSL at " << scheme << "_port " << s->s << " due to TLS initialization failure.");
                 s->flags.tunnelSslBumping = false;
                 if (s->transport.protocol == AnyP::PROTO_HTTP)
@@ -3499,8 +3499,7 @@ clientHttpConnectionsOpen(void)
             }
             if (s->flags.tunnelSslBumping) {
                 // Create ssl_ctx cache for this port.
-                auto sz = s->dynamicCertMemCacheSize == std::numeric_limits<size_t>::max() ? 4194304 : s->dynamicCertMemCacheSize;
-                Ssl::TheGlobalContextStorage.addLocalStorage(s->s, sz);
+                Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->secure.dynamicCertMemCacheSize);
             }
         }
 

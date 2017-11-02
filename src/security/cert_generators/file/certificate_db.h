@@ -97,11 +97,11 @@ public:
 
     CertificateDb(std::string const & db_path, size_t aMax_db_size, size_t aFs_block_size);
     /// finds matching generated certificate and its private key
-    bool find(std::string const & key,  const Security::CertPointer &expectedOrig, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
+    bool find(std::string const & key,  const Security::CertPointer &expectedOrig, Security::CertPointer & cert, Security::PrivateKeyPointer & pkey);
     /// Delete a certificate from database
     bool purgeCert(std::string const & key);
     /// Save certificate to disk.
-    bool addCertAndPrivateKey(std::string const & useKey, const Security::CertPointer & cert, const Ssl::EVP_PKEY_Pointer & pkey, const Security::CertPointer &orig);
+    bool addCertAndPrivateKey(std::string const & useKey, const Security::CertPointer & cert, const Security::PrivateKeyPointer & pkey, const Security::CertPointer &orig);
 
     bool IsEnabledDiskStore() const; ///< Check enabled of dist store.
 
@@ -122,7 +122,7 @@ private:
     size_t getFileSize(std::string const & filename); ///< get file size on disk.
     size_t rebuildSize(); ///< Rebuild size_file
     /// Only find certificate in current db and return it.
-    bool pure_find(std::string const & key, const Security::CertPointer & expectedOrig, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
+    bool pure_find(std::string const & key, const Security::CertPointer & expectedOrig, Security::CertPointer & cert, Security::PrivateKeyPointer & pkey);
 
     void deleteRow(const char **row, int rowIndex); ///< Delete a row from TXT_DB
     bool deleteInvalidCertificate(); ///< Delete invalid certificate.
@@ -131,10 +131,10 @@ private:
     bool hasRows() const; ///< Whether the TXT_DB has stored items.
 
     /// stores the db entry into a file
-    static bool WriteEntry(const std::string &filename, const Security::CertPointer & cert, const Ssl::EVP_PKEY_Pointer & pkey, const Security::CertPointer &orig);
+    static bool WriteEntry(const std::string &filename, const Security::CertPointer & cert, const Security::PrivateKeyPointer & pkey, const Security::CertPointer &orig);
 
     /// loads a db entry from the file
-    static bool ReadEntry(std::string filename, Security::CertPointer & cert, Ssl::EVP_PKEY_Pointer & pkey, Security::CertPointer &orig);
+    static bool ReadEntry(std::string filename, Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, Security::CertPointer &orig);
 
     /// Removes the first matching row from TXT_DB. Ignores failures.
     static void sq_TXT_DB_delete(TXT_DB *db, const char **row);
