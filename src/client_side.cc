@@ -415,9 +415,6 @@ ClientHttpRequest::logRequest()
     if (request)
         prepareLogWithRequestDetails(request, al);
 
-    if (getConn() != NULL && getConn()->clientConnection != NULL && getConn()->clientConnection->rfc931[0])
-        al->cache.rfc931 = getConn()->clientConnection->rfc931;
-
 #if USE_OPENSSL && 0
 
     /* This is broken. Fails if the connection has been closed. Needs

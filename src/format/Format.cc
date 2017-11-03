@@ -873,13 +873,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                     out = t;
             }
             if (!out)
-                out = strOrNull(al->cache.extuser);
+                out = strOrNull(al->getExtUser());
 #if USE_OPENSSL
             if (!out)
                 out = strOrNull(al->cache.ssluser);
 #endif
             if (!out)
-                out = strOrNull(al->cache.rfc931);
+                out = strOrNull(al->getClientIdent());
             break;
 
         case LFT_USER_LOGIN:
@@ -890,17 +890,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_USER_IDENT:
-            out = strOrNull(al->cache.rfc931);
+            out = strOrNull(al->getClientIdent());
             break;
 
         case LFT_USER_EXTERNAL:
-            if (al->request && al->request->extacl_user.size()) {
-                if (const char *t = al->request->extacl_user.termedBuf())
-                    out = t;
-            }
-
-            if (!out)
-                out = strOrNull(al->cache.extuser);
+            out = strOrNull(al->getExtUser());
             break;
 
         /* case LFT_USER_REALM: */
