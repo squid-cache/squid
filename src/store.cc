@@ -739,7 +739,7 @@ StoreEntry::adjustVary()
         /* Create "vary" base object */
         StoreEntry *pe = storeCreateEntry(mem_obj->storeId(), mem_obj->logUri(), request->flags, request->method);
         if (!pe->makePublic()) {
-            pe->unlock("StoreEntry::adjustVary");
+            pe->unlock("StoreEntry::adjustVary+failed_makePublic");
             return false;
         }
         /* We are allowed to do this typecast */
@@ -771,7 +771,7 @@ StoreEntry::adjustVary()
 
         pe->complete();
 
-        pe->unlock("StoreEntry::forcePublicKey+Vary");
+        pe->unlock("StoreEntry::adjustVary+ok_makePublic");
     }
     return true;
 }
