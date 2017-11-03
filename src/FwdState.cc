@@ -102,7 +102,7 @@ private:
     Security::EncryptorAnswer answer_;
 };
 
-CandidatePaths::CandidatePaths(): destinationsFinalized(false), count_(0)
+CandidatePaths::CandidatePaths(): destinationsFinalized(false), readStatus(0.0), count_(0)
 {
     paths_.reserve(Config.forward_max_tries);
 }
@@ -190,6 +190,7 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     clientConn(client),
     start_t(squid_curtime),
     n_tries(0),
+    connOpenerInformTime(0.0),
     pconnRace(raceImpossible)
 {
     debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
@@ -637,10 +638,13 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     destinations_->newPath(path);
 
     if (connOpener.valid()/*&& calls.connector*/) {
-        // Call to inform conn opener that new destination found
-        typedef NullaryMemFunT<HappyConnOpener> CbDialer;
-        AsyncCall::Pointer informCall = JobCallback(50, 5, CbDialer, connOpener, HappyConnOpener::noteCandidatePath);
-        ScheduleCallHere(informCall);
+        if (destinations_->readStatus >= connOpenerInformTime) {
+            // Call to inform conn opener that new destination found
+            typedef NullaryMemFunT<HappyConnOpener> CbDialer;
+            AsyncCall::Pointer informCall = JobCallback(50, 5, CbDialer, connOpener, HappyConnOpener::noteCandidatePath);
+            ScheduleCallHere(informCall);
+            connOpenerInformTime = current_dtime;
+        }
     } else {
         useDestinations();
     }
@@ -673,10 +677,13 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     destinations_->destinationsFinalized = true;
 
     if (connOpener.valid()) {
-        // Call to inform conn opener that new destination found
-        typedef NullaryMemFunT<HappyConnOpener> CbDialer;
-        AsyncCall::Pointer informCall = JobCallback(17, 5, CbDialer, connOpener, HappyConnOpener::noteCandidatePath);
-        ScheduleCallHere(informCall);
+        if (destinations_->readStatus >= connOpenerInformTime) {
+            // Call to inform conn opener that new destination found
+            typedef NullaryMemFunT<HappyConnOpener> CbDialer;
+            AsyncCall::Pointer informCall = JobCallback(17, 5, CbDialer, connOpener, HappyConnOpener::noteCandidatePath);
+            ScheduleCallHere(informCall);
+            connOpenerInformTime = current_dtime;
+        }
     }
 }
 
@@ -1079,6 +1086,7 @@ FwdState::connectStart()
         cs->allowPersistent(pconnRace != raceHappened/* && !bumpThroughPeer*/);
         GetMarkings(request, cs->useTos, cs->useNfmark);
         connOpener = cs;
+        connOpenerInformTime = current_dtime;
         AsyncJob::Start(cs);
     }
 }

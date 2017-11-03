@@ -44,6 +44,10 @@ HappyConnOpener::setHost(const char *h)
 void
 HappyConnOpener::start()
 {
+    dests_->readStatus = current_dtime;
+    debugs(17, 8, "Start connecting " << dests_->count());
+    if (dests_->count())
+        checkForNewConnection();
 }
 
 bool
@@ -100,6 +104,7 @@ void
 HappyConnOpener::noteCandidatePath()
 {
     assert(dests_ != nullptr);
+    dests_->readStatus = current_dtime;
     debugs(17, 8, "New candidate path from caller, number of destinations " << dests_->count());
     checkForNewConnection();
 }
@@ -291,9 +296,9 @@ HappyConnOpener::checkForNewConnection()
         Comm::ConnectionPointer dest = getCandidatePath();
         if (dest != nullptr)
             startConnecting(dest);
-        return;
     }
 
+    // Check if we need to start a spare connection
     if (Config.happyEyeballs.connect_limit == 0)
         return; // feature disabled
 

@@ -73,6 +73,7 @@ public:
     static int ConnectionFamily(const Comm::ConnectionPointer &conn);
 
     bool destinationsFinalized;
+    double readStatus;
 private:
     Comm::ConnectionList paths_;
     int count_;
@@ -204,6 +205,7 @@ private:
     } flags;
 
     HappyConnOpener::Pointer connOpener;
+    double connOpenerInformTime; ///< Last time the connOpener object contacted
     CandidatePaths::Pointer destinations_;
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
 
