@@ -67,6 +67,7 @@ public:
     bool empty() {return paths_.empty();}
     Comm::ConnectionPointer popFirst();
     Comm::ConnectionPointer popFirstNotInFamily(int);
+    bool existPathNotInFamily(int);
     int count() {return count_;}
 
     static int ConnectionFamily(const Comm::ConnectionPointer &conn);

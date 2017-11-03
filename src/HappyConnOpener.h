@@ -64,6 +64,7 @@ public:
     void startConnecting(Comm::ConnectionPointer &);
     void connectDone(const CommConnectCbParams &);
     Comm::ConnectionPointer getCandidatePath();
+    bool existCandidatePath();
     void checkForNewConnection();
     bool preconditions();
     bool timeCondition();
@@ -71,6 +72,7 @@ public:
     void notRetriable() { retriable_ = false; }
     void setHost(const char *host);
     void callCallback(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno, bool reused, const char *msg);
+    double nextAttemptAt() {return nextAttemptTime;}
 
     // AsyncJob API
     virtual void start() override;
@@ -83,6 +85,7 @@ public:
     static void PconnPush(Comm::ConnectionPointer &conn, const char *domain);
     static void ConnectionClosed(const Comm::ConnectionPointer &conn);
     static void ManageConnections(void *);
+    static void ScheduleConnectionAttempt(HappyConnOpener::Pointer happy);
     static bool SystemPreconditions();
 public:
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
@@ -94,16 +97,18 @@ public:
 
     bool allowPconn;
     bool retriable_;
+    bool queueSubscribed_;
     const char *host_;
     time_t fwdStart_;
     int maxTries;
     int n_tries;
     tos_t useTos;
     nfmark_t useNfmark;
-    double lastStart;
+    double nextAttemptTime;
 
     static int SpareConnects;
     static double LastAttempt;
+    static std::list<HappyConnOpener::Pointer> WaitingConnectors;
 };
 
 std::ostream &operator <<(std::ostream &os, const HappyConnOpener::Answer &answer);

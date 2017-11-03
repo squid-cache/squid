@@ -10473,7 +10473,7 @@ DOC_END
 NAME: happy_eyeballs_connect_gap
 COMMENT: (msec)
 TYPE: int
-DEFAULT: 250
+DEFAULT: 5
 LOC: Config.happyEyeballs.connect_gap
 DOC_START
         The last spare connect() attempt, across all same-worker forwarded

@@ -143,6 +143,13 @@ CandidatePaths::popFirstNotInFamily(int family)
     return path;
 }
 
+bool
+CandidatePaths::existPathNotInFamily(int family)
+{
+    auto it = std::find_if(paths_.begin(), paths_.end(), [family](const Comm::ConnectionPointer &c) {return family != ConnectionFamily(c);});
+    return (it != paths_.end());
+}
+
 int
 CandidatePaths::ConnectionFamily(const Comm::ConnectionPointer &conn)
 {
