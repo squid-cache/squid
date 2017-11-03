@@ -638,12 +638,18 @@ StoreEntry::setPublicKey(const KeyScope scope)
 #endif
 
     assert(!EBIT_TEST(flags, RELEASE_REQUEST));
+
+    // XXX: Violates the documented calcPublicKey() assumption!
     const cache_key *pubKey = calcPublicKey(scope);
+
     // XXX: Performance regression: SBuf() allocates.
     if (!Store::Root().addWriting(this, Store::CacheKey(pubKey, SBuf(mem_obj->storeId()), mem_obj->method)))
         return false;
+
+    // XXX: Does not undo addWriting() on failures
     if (!adjustVary())
         return false;
+
     forcePublicKey(pubKey);
     return true;
 }
@@ -763,6 +769,9 @@ StoreEntry::adjustVary()
         }
 
 #endif
+        // XXX: "no write until key is public" but the key is already public!
+        // TODO: If calling makePublic() earlier works, then perhaps we should
+        // call replaceHttpReply(rep) to start writing, like most callers do?
         pe->replaceHttpReply(rep, false); // no write until key is public
 
         pe->timestampsSet();

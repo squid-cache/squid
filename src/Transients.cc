@@ -184,6 +184,7 @@ Transients::copyFromShm(const sfileno index)
     e->mem_obj->xitTable.index = index;
 
     // TODO: Support collapsed revalidation for SMP-aware caches.
+    // XXX: setPublicKey() calls addWRiting() but we are reading here. Call addReading() here instead?!
     if (!e->setPublicKey(ksDefault)) {
         destroyStoreEntry(static_cast<hash_link *>(e));
         return nullptr;
