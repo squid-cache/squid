@@ -330,17 +330,14 @@ MemStore::get(const Store::CacheKey &cacheKey)
     const bool copied = copyFromShm(*e, index, *slot);
 
     if (copied) {
-        if (Store::Root().createTransientsEntry(e, cacheKey, true)) {
-            e->hashInsert(cacheKey.key);
+        if (Store::Root().addReading(e, cacheKey))
             return e;
-        } else {
-            debugs(20, 3, "Unable to create transients entry for " << *e);
-        }
+        // fall through to cleanup, keeping the innocent memory store entry
     } else {
-        debugs(20, 3, "mem-loading failed; freeing " << index);
         map->freeEntry(index); // do not let others into the same trap
     }
 
+    debugs(20, 3, "failed for " << *e);
     destroyStoreEntry(static_cast<hash_link *>(e));
     return nullptr;
 }

@@ -619,8 +619,20 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
 }
 
 bool
-Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey, const bool switchToReading)
+Store::Controller::addReading(StoreEntry *e, const CacheKey &cacheKey)
 {
+    if (transients && !e->hasTransients() && !transients->monitorWhileReading(e, cacheKey))
+        return false;
+
+    e->hashInsert(cacheKey.key);
+    return true;
+}
+
+bool
+Store::Controller::addWriting(StoreEntry *e, const CacheKey &cacheKey)
+{
+    assert(e);
+
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
         return true;
 
@@ -631,9 +643,6 @@ Store::Controller::createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey
         // a collision means that there is already transients writer
         return false;
     }
-
-    if (switchToReading)
-        transientsCompleteWriting(*e);
 
     return true;
 }

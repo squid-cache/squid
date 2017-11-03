@@ -75,9 +75,15 @@ public:
     /// tries to make the entry available for collapsing future requests
     bool allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
 
-    /// For the given StoreEntry creates the corresponding Transients entry.
-    /// \returns true if Transients entry already exists or successfully created.
-    bool createTransientsEntry(StoreEntry *e, const CacheKey &cacheKey, const bool switchToReading = false);
+    /// register a being-read StoreEntry (to optimize concurrent cache reads
+    /// and to receive remote DELETE events)
+    /// \returns false on failures
+    bool addReading(StoreEntry *e, const CacheKey &cacheKey);
+
+    /// register a being-written StoreEntry (to support concurrent cache reads
+    /// and to receive remote DELETE events)
+    /// \returns false on failures
+    bool addWriting(StoreEntry *e, const CacheKey &cacheKey);
 
     /// Whether for the given cacheKey there is an 'in-transit' StoreEntry.
     StoreEntry *intransitEntry(const CacheKey &cacheKey);

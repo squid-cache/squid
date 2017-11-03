@@ -68,14 +68,15 @@ Rock::SwapDir::get(const Store::CacheKey &cacheKey)
     StoreEntry *e = new StoreEntry();
     e->createMemObject();
     anchorEntry(*e, filen, *slot);
-    if (!Store::Root().createTransientsEntry(e, cacheKey, true)) {
-        debugs(20, 3, "Unable to create transients entry for " << *e);
-        destroyStoreEntry(static_cast<hash_link *>(e));
-        return nullptr;
+
+    if (Store::Root().addReading(e, cacheKey)) {
+        trackReferences(*e);
+        return e;
     }
-    e->hashInsert(cacheKey.key);
-    trackReferences(*e);
-    return e;
+
+    debugs(20, 3, "failed for " << *e);
+    destroyStoreEntry(static_cast<hash_link *>(e));
+    return nullptr;
 }
 
 bool

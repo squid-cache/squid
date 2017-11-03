@@ -640,7 +640,7 @@ StoreEntry::setPublicKey(const KeyScope scope)
     assert(!EBIT_TEST(flags, RELEASE_REQUEST));
     const cache_key *pubKey = calcPublicKey(scope);
     // XXX: Performance regression: SBuf() allocates.
-    if (!Store::Root().createTransientsEntry(this, Store::CacheKey(pubKey, SBuf(mem_obj->storeId()), mem_obj->method)))
+    if (!Store::Root().addWriting(this, Store::CacheKey(pubKey, SBuf(mem_obj->storeId()), mem_obj->method)))
         return false;
     if (!adjustVary())
         return false;

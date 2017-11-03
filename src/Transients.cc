@@ -215,7 +215,32 @@ Transients::findCollapsed(const sfileno index)
 }
 
 bool
+Transients::monitorWhileReading(StoreEntry *e, const Store::CacheKey &cacheKey)
+{
+    if (!addEntry(e, cacheKey))
+        return false;
+
+    // keep the entry locked (for reading) to receive remote DELETE events
+    map->closeForWriting(e->mem_obj->xitTable.index, true);
+    e->mem_obj->xitTable.io = MemObject::ioReading;
+    return true;
+}
+
+bool
 Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey)
+{
+    if (!addEntry(e, cacheKey))
+        return false;
+
+    // keep the entry locked for writing but allow reading our updates
+    // we also need this entry locked to receive remote DELETE events
+    map->startAppending(e->mem_obj->xitTable.index);
+    return true;
+}
+
+/// either creates a new Transients entry for `e` or returns false
+bool
+Transients::addEntry(StoreEntry *e, const Store::CacheKey &cacheKey)
 {
     assert(e);
     assert(e->mem_obj);
@@ -237,11 +262,9 @@ Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey)
             slot->set(*e, cacheKey.key);
             e->mem_obj->xitTable.io = MemObject::ioWriting;
             e->mem_obj->xitTable.index = index;
-            map->startAppending(index);
             assert(!locals->at(index));
             locals->at(index) = e;
-
-            // keep write lock -- we will be supplying others with updates
+            // keep write lock; the caller will decide what to do with it
             return true;
         }
         // fall through to the error handling code

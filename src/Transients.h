@@ -39,8 +39,12 @@ public:
     /// return a local, previously collapsed entry
     StoreEntry *findCollapsed(const sfileno xitIndex);
 
-    /// add an in-transit entry suitable for collapsing future requests
-    bool startWriting(StoreEntry *e, const Store::CacheKey &cacheKey);
+    /// start listening for remote DELETE requests targeting the given complete StoreEntry
+    bool monitorWhileReading(StoreEntry*, const Store::CacheKey&);
+
+    /// start listening for remote DELETE requests targeting the given miss StoreEntry
+    /// and allow broadcasting of local StoreEntry updates to remote readers
+    bool startWriting(StoreEntry*, const Store::CacheKey&);
 
     /// called when the in-transit entry has been successfully cached
     void completeWriting(const StoreEntry &e);
@@ -92,6 +96,8 @@ public:
     static int64_t EntryLimit();
 
 protected:
+    bool addEntry(StoreEntry*, const Store::CacheKey&);
+
     StoreEntry *copyFromShm(const sfileno index);
     bool copyToShm(const StoreEntry &e, const sfileno index, const Store::CacheKey &cacheKey);
 
