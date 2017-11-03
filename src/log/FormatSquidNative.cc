@@ -32,7 +32,7 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
 #endif
 
     if (!user)
-        user = ::Format::QuoteUrlEncodeUsername(al->cache.extuser);
+        user = ::Format::QuoteUrlEncodeUsername(al->getExtUser());
 
 #if USE_OPENSSL
     if (!user)
@@ -40,7 +40,7 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
 #endif
 
     if (!user)
-        user = ::Format::QuoteUrlEncodeUsername(al->cache.rfc931);
+        user = ::Format::QuoteUrlEncodeUsername(al->getClientIdent());
 
     if (user && !*user)
         safe_free(user);
