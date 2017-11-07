@@ -165,7 +165,7 @@ Transients::get(const Store::CacheKey &cacheKey)
         return newE; // keep read lock to receive updates from others
     }
 
-    // (private or completed) entry or loading failure
+    // private entry or loading failure
     map->closeForReading(index);
     return NULL;
 }
