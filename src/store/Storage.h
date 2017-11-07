@@ -32,15 +32,14 @@ public:
 
     ~CacheKey() { if (key) storeKeyFree(key); }
 
+    // TODO: Support moving.
+    CacheKey(CacheKey &&) = delete; // no copying or moving of any kind
+
     bool hasUris() const { return storeId.length(); }
 
     const cache_key *key;
     const SBuf storeId;
     const HttpRequestMethod method;
-
-private:
-    CacheKey(const CacheKey &) = delete;
-    CacheKey &operator=(const CacheKey &) = delete;
 };
 
 /// A "response storage" abstraction.
