@@ -536,10 +536,10 @@ Store::Disks::anchorToCache(StoreEntry &entry, bool &inSync)
 }
 
 bool
-Store::Disks::update(StoreEntry &entry)
+Store::Disks::updateAnchored(StoreEntry &entry)
 {
     return entry.hasDisk() &&
-           dir(entry.swap_dirn).update(entry);
+           dir(entry.swap_dirn).updateAnchored(entry);
 }
 
 bool

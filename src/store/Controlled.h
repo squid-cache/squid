@@ -30,13 +30,13 @@ public:
 
     /// If Transients entry cannot be attached to this storage, return false.
     /// If the entry is not found, return false. Otherwise, return true after
-    /// tying the entry to this cache and setting inSync to update().
+    /// tying the entry to this cache and setting inSync to updateAnchored().
     virtual bool anchorToCache(StoreEntry &, bool &/*inSync*/) { return false; }
 
     /// Update a local Transients entry with fresh info from this cache (if any).
     /// Return true iff the cache supports Transients entries and
     /// the given local Transients entry is now in sync with this storage.
-    virtual bool update(StoreEntry &) { return false; }
+    virtual bool updateAnchored(StoreEntry &) { return false; }
 };
 
 } // namespace Store

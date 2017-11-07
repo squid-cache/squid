@@ -37,7 +37,7 @@ public:
     virtual void updateHeaders(StoreEntry *) override;
     virtual void maintain() override;
     virtual bool anchorToCache(StoreEntry &e, bool &inSync) override;
-    virtual bool update(StoreEntry &e) override;
+    virtual bool updateAnchored(StoreEntry &) override;
     virtual void markForUnlink(StoreEntry &) override;
     virtual void unlinkByKeyIfFound(const cache_key *) override;
     virtual void unlink(StoreEntry &) override;

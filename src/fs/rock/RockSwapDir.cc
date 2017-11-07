@@ -92,12 +92,12 @@ Rock::SwapDir::anchorToCache(StoreEntry &entry, bool &inSync)
         return false;
 
     anchorEntry(entry, filen, *slot);
-    inSync = updateWith(entry, *slot);
+    inSync = updateAnchoredWith(entry, *slot);
     return true; // even if inSync is false
 }
 
 bool
-Rock::SwapDir::update(StoreEntry &entry)
+Rock::SwapDir::updateAnchored(StoreEntry &entry)
 {
     if (!map || !theFile || !theFile->canRead())
         return false;
@@ -105,11 +105,11 @@ Rock::SwapDir::update(StoreEntry &entry)
     assert(entry.hasDisk(index));
 
     const Ipc::StoreMapAnchor &s = map->readableEntry(entry.swap_filen);
-    return updateWith(entry, s);
+    return updateAnchoredWith(entry, s);
 }
 
 bool
-Rock::SwapDir::updateWith(StoreEntry &entry, const Ipc::StoreMapAnchor &anchor)
+Rock::SwapDir::updateAnchoredWith(StoreEntry &entry, const Ipc::StoreMapAnchor &anchor)
 {
     entry.swap_file_sz = anchor.basics.swap_file_sz;
     return true;
@@ -672,22 +672,22 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
 }
 
 StoreIOState::Pointer
-Rock::SwapDir::createUpdateIO(const Ipc::StoreMapUpdate &mapUpdate, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data)
+Rock::SwapDir::createUpdateIO(const Ipc::StoreMapUpdate &update, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data)
 {
     if (!theFile || theFile->error()) {
         debugs(47,4, theFile);
         return nullptr;
     }
 
-    Must(mapUpdate.fresh);
-    Must(mapUpdate.fresh.fileNo >= 0);
+    Must(update.fresh);
+    Must(update.fresh.fileNo >= 0);
 
     Rock::SwapDir::Pointer self(this);
-    IoState *sio = new IoState(self, mapUpdate.entry, cbFile, cbIo, data);
+    IoState *sio = new IoState(self, update.entry, cbFile, cbIo, data);
 
     sio->swap_dirn = index;
-    sio->swap_filen = mapUpdate.fresh.fileNo;
-    sio->writeableAnchor_ = mapUpdate.fresh.anchor;
+    sio->swap_filen = update.fresh.fileNo;
+    sio->writeableAnchor_ = update.fresh.anchor;
 
     debugs(47,5, "dir " << index << " updating filen " <<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
@@ -925,15 +925,15 @@ Rock::SwapDir::updateHeaders(StoreEntry *updatedE)
     if (!map)
         return;
 
-    Ipc::StoreMapUpdate mapUpdate(updatedE);
-    if (!map->openForUpdating(mapUpdate, updatedE->swap_filen))
+    Ipc::StoreMapUpdate update(updatedE);
+    if (!map->openForUpdating(update, updatedE->swap_filen))
         return;
 
     try {
-        AsyncJob::Start(new HeaderUpdater(this, mapUpdate));
+        AsyncJob::Start(new HeaderUpdater(this, update));
     } catch (const std::exception &ex) {
         debugs(20, 2, "error starting to update entry " << *updatedE << ": " << ex.what());
-        map->abortUpdating(mapUpdate);
+        map->abortUpdating(update);
     }
 }
 

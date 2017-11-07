@@ -38,6 +38,6 @@ bool MemStore::dereference(StoreEntry &) STUB_RETVAL(false)
 void MemStore::markForUnlink(StoreEntry&) STUB
 void MemStore::unlinkByKeyIfFound(const cache_key *) STUB
 bool MemStore::anchorToCache(StoreEntry&, bool&) STUB_RETVAL(false)
-bool MemStore::update(StoreEntry&) STUB_RETVAL(false)
+bool MemStore::updateAnchored(StoreEntry&) STUB_RETVAL(false)
 bool MemStore::markedForDeletion(const StoreEntry &) const STUB_RETVAL(false)
 

@@ -702,11 +702,11 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         debugs(20, 7, "fully mem-loaded " << *collapsed);
     } else if (memStore && collapsed->hasMemStore()) {
         found = true;
-        inSync = memStore->update(*collapsed);
+        inSync = memStore->updateAnchored(*collapsed);
         // TODO: handle entries attached to both memory and disk
     } else if (swapDir && collapsed->hasDisk()) {
         found = true;
-        inSync = swapDir->update(*collapsed);
+        inSync = swapDir->updateAnchored(*collapsed);
     } else {
         found = anchorToCache(*collapsed, inSync);
     }

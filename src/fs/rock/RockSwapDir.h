@@ -81,7 +81,7 @@ public:
 protected:
     /* Store API */
     virtual bool anchorToCache(StoreEntry &entry, bool &inSync);
-    virtual bool update(StoreEntry &collapsed);
+    virtual bool updateAnchored(StoreEntry &);
 
     /* protected ::SwapDir API */
     virtual bool needsDiskStrand() const;
@@ -127,7 +127,7 @@ protected:
     StoreIOState::Pointer createUpdateIO(const Ipc::StoreMapUpdate &update, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
 
     void anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreMapAnchor &anchor);
-    bool updateWith(StoreEntry &collapsed, const Ipc::StoreMapAnchor &anchor);
+    bool updateAnchoredWith(StoreEntry &, const Ipc::StoreMapAnchor &);
 
     friend class Rebuild;
     friend class IoState;

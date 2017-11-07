@@ -60,7 +60,7 @@ public:
     virtual void updateHeaders(StoreEntry *e) override;
     virtual void maintain() override;
     virtual bool anchorToCache(StoreEntry &e, bool &inSync) override;
-    virtual bool update(StoreEntry &e) override;
+    virtual bool updateAnchored(StoreEntry &) override;
     virtual void markForUnlink(StoreEntry &) override;
     virtual void unlinkByKeyIfFound(const cache_key *key) override;
     virtual void unlink(StoreEntry &e) override;
@@ -83,7 +83,7 @@ protected:
     void updateHeadersOrThrow(Ipc::StoreMapUpdate &update);
 
     void anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor);
-    bool updateWith(StoreEntry &entry, const sfileno index, const Ipc::StoreMapAnchor &anchor);
+    bool updateAnchoredWith(StoreEntry &, const sfileno, const Ipc::StoreMapAnchor &);
 
     Ipc::Mem::PageId pageForSlice(Ipc::StoreMapSliceId sliceId);
     Ipc::StoreMap::Slice &nextAppendableSlice(const sfileno entryIndex, sfileno &sliceOffset);
