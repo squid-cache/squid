@@ -425,16 +425,12 @@ MemStore::anchorToCache(StoreEntry &entry, bool &inSync)
 bool
 MemStore::updateAnchored(StoreEntry &entry)
 {
-    assert(entry.mem_obj);
-
-    const sfileno index = entry.mem_obj->memCache.index;
-
-    if (!entry.hasMemStore())
-        return true;
-
     if (!map)
         return false;
 
+    assert(entry.mem_obj);
+    assert(entry.hasMemStore());
+    const sfileno index = entry.mem_obj->memCache.index;
     const Ipc::StoreMapAnchor &anchor = map->readableEntry(index);
     return updateAnchoredWith(entry, index, anchor);
 }
