@@ -637,6 +637,15 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
         destinations_ = new CandidatePaths();
     destinations_->newPath(path);
 
+    if (Comm::IsConnOpen(serverConn)) {
+        // If the connection is established abort here.
+        // We may still receiving destinations while we are connecting.
+        // We need them in the case the first established connection fails
+        // with null server response.
+        assert(connOpener == nullptr);
+        return;
+    }
+
     if (connOpener.valid()/*&& calls.connector*/) {
         if (destinations_->readStatus >= connOpenerInformTime) {
             // Call to inform conn opener that new destination found
