@@ -989,35 +989,32 @@ Rock::SwapDir::unlinkdUseful() const
 }
 
 void
+Rock::SwapDir::unlinkByKeyIfFound(const cache_key *key)
+{
+    if (map)
+        map->freeEntryByKey(key); // may not be there
+}
+
+void
 Rock::SwapDir::unlink(StoreEntry &e)
 {
-    debugs(47, 5, e);
-    assert(e.key);
-    if (e.hasDisk(index)) {
-        ignoreReferences(e);
-        map->freeEntry(e.swap_filen);
-        disconnect(e);
-    } else {
-        unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
-    }
+    debugs(47, 5, HERE << e);
+    if (!e.hasDisk(index))
+        return unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
+
+    ignoreReferences(e);
+    map->freeEntry(e.swap_filen);
+    disconnect(e);
 }
 
 void
 Rock::SwapDir::markForUnlink(StoreEntry &e)
 {
     debugs(47, 5, e);
-    assert(e.key);
-    if (e.hasDisk())
-        map->freeEntry(e.swap_filen);
-    else
-        unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
-}
+    if (!e.hasDisk())
+        return unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
 
-void
-Rock::SwapDir::unlinkByKeyIfFound(const cache_key *key)
-{
-    if (map)
-        map->freeEntryByKey(key); // may not be there
+    map->freeEntry(e.swap_filen);
 }
 
 void

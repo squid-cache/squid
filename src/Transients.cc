@@ -347,11 +347,9 @@ Transients::readers(const StoreEntry &e) const
 void
 Transients::markForUnlink(StoreEntry &e)
 {
-    assert(e.key);
-    if (e.hasTransients())
-        abandon(e);
-    else
-        unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
+    if (!e.hasTransients())
+        return unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
+    abandon(e);
 }
 
 void
