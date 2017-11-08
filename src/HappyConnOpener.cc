@@ -22,7 +22,7 @@ std::ostream &operator <<(std::ostream &os, const HappyConnOpener::Answer &answe
     return os << answer.conn << ", " << answer.ioStatus << ", " << answer.xerrno << ", " << (answer.reused ? "reused" : "new");
 }
 
-HappyConnOpener::HappyConnOpener(const CandidatePaths::Pointer &destinations, const AsyncCall::Pointer &aCall, const time_t fwdStart, int tries) : AsyncJob("HappyConnOpener"),callback_(aCall), dests_(destinations), allowPconn(true), retriable_(true), queueSubscribed_(false), host_(nullptr), fwdStart_(fwdStart), maxTries(tries), n_tries(0), useTos(0), useNfmark(0)
+HappyConnOpener::HappyConnOpener(const CandidatePaths::Pointer &destinations, const AsyncCall::Pointer &aCall, const time_t fwdStart, int tries) : AsyncJob("HappyConnOpener"), useTos(0), useNfmark(0), callback_(aCall), dests_(destinations), allowPconn_(true), retriable_(true), queueSubscribed_(false), host_(nullptr), fwdStart_(fwdStart), maxTries(tries), n_tries(0)
 {
     assert(dynamic_cast<HappyConnOpener::CbDialer *>(callback_->getDialer()));
 }
@@ -150,11 +150,6 @@ HappyConnOpener::preconditions()
     return (spare.path == nullptr);
 }
 
-/**
- * Called after forwarding path selection (via peer select) has taken place
- * and whenever forwarding needs to attempt a new connection (routing failover).
- * We have a vector of possible localIP->remoteIP paths now ready to start being connected.
- */
 void
 HappyConnOpener::startConnecting(Comm::ConnectionPointer &dest)
 {
@@ -162,7 +157,7 @@ HappyConnOpener::startConnecting(Comm::ConnectionPointer &dest)
     assert(spare.connector == nullptr);
     // Use pconn to avoid opening a new connection.
     Comm::ConnectionPointer temp;
-    if (allowPconn)
+    if (allowPconn_)
         temp = PconnPop(dest, (dest->getPeer() ? nullptr : host_), retriable_);
 
     const bool openedPconn = Comm::IsConnOpen(temp);
@@ -282,7 +277,7 @@ HappyConnOpener::checkForNewConnection()
     debugs(17, 8, "Check for starting new connection");
     assert(dests_ != nullptr);
 
-    // If it is already in WaitingConnectors queue wait the ManageConnections()
+    // If it is already in WaitingConnectors queue wait the CheckForConnectionAttempts()
     // be executed and start new connection if required.
     // Starting new connection here will alter the this->nextAttemptTime member which
     // affects the WaitingConnectors ordering.
@@ -353,22 +348,22 @@ HappyConnOpener::ScheduleConnectionAttempt(HappyConnOpener::Pointer happy)
 {
     happy->queueSubscribed_ = true;
     if (WaitingConnectors.empty()) { // Restart queue run
-        double startAfter = happy->nextAttemptAt() > current_dtime ? happy->nextAttemptAt() - current_dtime : 0.001;
+        double startAfter = happy->nextAttemptTime > current_dtime ? happy->nextAttemptTime - current_dtime : 0.001;
         
-        eventAdd("ManageHappyConnections", ManageConnections, NULL, startAfter, false);
+        eventAdd("HappyConnOpener::CheckForConnectionAttempts", CheckForConnectionAttempts, NULL, startAfter, false);
         WaitingConnectors.push_back(happy);
         return;
     }
     // Exist at least one item in list
     auto it = --WaitingConnectors.end();
     for (; it != WaitingConnectors.begin(); --it) {
-        if ((*it).valid() && (*it)->nextAttemptAt() < happy->nextAttemptAt()) {
+        if ((*it).valid() && (*it)->nextAttemptTime < happy->nextAttemptTime) {
             ++it;
             WaitingConnectors.insert(it, happy);
             return; // stop here.
         }
     }
-    if ((*it).valid() && (*it)->nextAttemptAt() < happy->nextAttemptAt()) {
+    if ((*it).valid() && (*it)->nextAttemptTime < happy->nextAttemptTime) {
         ++it;
         WaitingConnectors.insert(it, happy);
    } else
@@ -376,7 +371,7 @@ HappyConnOpener::ScheduleConnectionAttempt(HappyConnOpener::Pointer happy)
 }
 
 void
-HappyConnOpener::ManageConnections(void *)
+HappyConnOpener::CheckForConnectionAttempts(void *)
 {
     debugs(17, 8, "Queue size: " << WaitingConnectors.size());
 
@@ -399,8 +394,8 @@ HappyConnOpener::ManageConnections(void *)
             WaitingConnectors.pop_front();
             continue;
         }
-        double startAfter = he->nextAttemptAt() > current_dtime ? he->nextAttemptAt() - current_dtime : 0.001;
-        eventAdd("ManageHappyConnections", ManageConnections, NULL, startAfter, false);
+        double startAfter = he->nextAttemptTime > current_dtime ? he->nextAttemptTime - current_dtime : 0.001;
+        eventAdd("HappyConnOpener::CheckForConnectionAttempts", CheckForConnectionAttempts, NULL, startAfter, false);
         return; // abort here
     }
 }

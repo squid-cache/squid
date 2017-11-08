@@ -248,7 +248,6 @@ FwdState::stopAndDestroy(const char *reason)
     if (calls.connector != NULL) {
         calls.connector->cancel("FwdState destructed");
         calls.connector = NULL;
-        //connOpener->cancel("abort");
         connOpener = nullptr;
     }
 
@@ -358,8 +357,6 @@ FwdState::~FwdState()
     if (calls.connector != NULL) {
         calls.connector->cancel("FwdState destructed");
         calls.connector = NULL;
-        //assert(connOpener);
-        //connOpener->cancel("FwdState destruction");
     }
 
     if (Comm::IsConnOpen(serverConn))
@@ -519,13 +516,11 @@ FwdState::fail(ErrorState * errorState)
     if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
         // we should retry the same destination if it failed due to pconn race
-        // if (serverConn != nullptr) {
         assert(serverConn != nullptr);
         assert(destinations_ != nullptr);
         debugs(17, 4, "retrying the same destination");
         destinations_->retryPath(serverConn);
         pconnRace = raceHappened;
-        //}
     }
 
     if (ConnStateData *pinned_connection = request->pinnedConnection()) {
