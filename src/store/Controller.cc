@@ -451,14 +451,14 @@ Store::Controller::markForUnlink(StoreEntry &e)
 void
 Store::Controller::unlinkByKeyIfFound(const cache_key *key)
 {
-    if (!transients) {
+    if (transients) {
+        transientsUnlinkByKeyIfFound(key);
+        // fall through to mark cache stores
+    } else {
         if (StoreEntry *entry = static_cast<StoreEntry*>(hash_lookup(store_table, key))) {
             entry->release();
             return;
         }
-    } else {
-        transientsUnlinkByKeyIfFound(key);
-        // fall through to mark cache stores
     }
 
     if (memStore)
