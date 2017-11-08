@@ -85,9 +85,6 @@ public:
     /// \returns false on failures
     bool addWriting(StoreEntry *e, const CacheKey &cacheKey);
 
-    /// Whether for the given cacheKey there is an 'in-transit' StoreEntry.
-    StoreEntry *intransitEntry(const CacheKey &cacheKey);
-
     /// whether the entry is in "reading from Transients" I/O state
     bool transientsReader(const StoreEntry &) const;
 
@@ -131,6 +128,8 @@ private:
     bool dereferenceIdle(StoreEntry &, bool wantsLocalMemory);
 
     StoreEntry *find(const CacheKey &);
+    StoreEntry *findLocal(const CacheKey &);
+    void transientsUnlinkByKeyIfFound(const cache_key *);
     bool keepForLocalMemoryCache(StoreEntry &e) const;
     bool anchorToCache(StoreEntry &, bool &inSync);
 

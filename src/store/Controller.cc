@@ -334,18 +334,16 @@ Store::Controller::get(const CacheKey &cacheKey)
     return nullptr;
 }
 
-// TODO: partially duplicates Controller::find().
-StoreEntry*
-Store::Controller::intransitEntry(const CacheKey &cacheKey)
+/// \returns either an existing local reusable StoreEntry object or nil
+StoreEntry *
+Store::Controller::findLocal(const CacheKey &cacheKey)
 {
     if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, cacheKey.key))) {
+        // TODO: ignore and maybe handleIdleEntry() unlocked intransit entries
+        // because their backing store slot may be gone already.
         if (!markedForDeletion(*e))
             return e;
     }
-
-    if (transients)
-        return transients->get(cacheKey);
-
     return nullptr;
 }
 
@@ -361,13 +359,9 @@ Store::Controller::find(const CacheKey &cacheKey)
         return nullptr;
     }
 
-    if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, cacheKey.key))) {
-        if (!markedForDeletion(*e)) {
-            // TODO: ignore and maybe handleIdleEntry() unlocked intransit entries
-            // because their backing store slot may be gone already.
-            debugs(20, 3, HERE << "got in-transit entry: " << *e);
-            return e;
-        }
+    if (StoreEntry *e = findLocal(cacheKey)) {
+        debugs(20, 3, "got local in-transit entry: " << *e);
+        return e;
     }
 
     // Must search transients before caches because we must sync those we find.
@@ -414,6 +408,28 @@ Store::Controller::transientsWriter(const StoreEntry &e) const
     return transients && e.hasTransients() && transients->isWriter(e);
 }
 
+void
+Store::Controller::transientsUnlinkByKeyIfFound(const cache_key *key)
+{
+    assert(transients);
+
+    if (StoreEntry *entry = findLocal(CacheKey(key))) {
+        debugs(20, 5, "marking local in-transit entry: " << *entry);
+        assert(entry->hasTransients());
+        transients->markForUnlink(*entry);
+        return;
+    }
+
+    if (StoreEntry *entry = transients->get(CacheKey(key))) {
+        debugs(20, 5, "marking shared in-transit entry: " << *entry);
+        transients->markForUnlink(*entry);
+        return;
+    }
+
+    debugs(20, 5, "maybe marking busy in-transit entry");
+    transients->unlinkByKeyIfFound(key);
+}
+
 int64_t
 Store::Controller::accumulateMore(StoreEntry &entry) const
 {
@@ -441,12 +457,8 @@ Store::Controller::unlinkByKeyIfFound(const cache_key *key)
             return;
         }
     } else {
-        if (StoreEntry *entry = intransitEntry(CacheKey(key))) {
-            assert(entry->hasTransients());
-            transients->markForUnlink(*entry);
-        } else {
-            transients->unlinkByKeyIfFound(key);
-        }
+        transientsUnlinkByKeyIfFound(key);
+        // fall through to mark cache stores
     }
 
     if (memStore)
