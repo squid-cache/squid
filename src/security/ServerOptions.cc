@@ -189,6 +189,23 @@ Security::ServerOptions::createBlankContext() const
     return ctx;
 }
 
+void
+Security::ServerOptions::initServerContexts(AnyP::PortCfg &port)
+{
+    const char *portType = AnyP::ProtocolType_str[port.transport.protocol];
+    for (auto &keyData : certs) {
+        keyData.loadFromFiles(port, portType);
+    }
+
+    if (generateHostCertificates) {
+        createSigningContexts(port);
+
+    } else if (!createStaticServerContext(port)) {
+        char buf[128];
+        fatalf("%s_port %s initialization error", portType, port.s.toUrl(buf, sizeof(buf)));
+    }
+}
+
 bool
 Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
 {
@@ -209,39 +226,39 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
 }
 
 void
-Security::ServerOptions::createSigningContexts(AnyP::PortCfg &port)
+Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
 {
-    const char *portType = AnyP::ProtocolType_str[port.transport.protocol];
-    if (!certs.empty()) {
-#if USE_OPENSSL
-        Security::KeyData &keys = certs.front();
-        Ssl::readCertChainAndPrivateKeyFromFiles(signingCert, signPkey, certsToChain, keys.certFile.c_str(), keys.privateKeyFile.c_str());
-#else
-        char buf[128];
-        fatalf("Directive '%s_port %s' requires --with-openssl.", portType, port.s.toUrl(buf, sizeof(buf)));
-#endif
-    }
+    Security::KeyData &keys = certs.front();
+    signingCert = keys.cert;
+    signPkey = keys.pkey;
+    certsToChain = keys.chain;
 
+    const char *portType = AnyP::ProtocolType_str[port.transport.protocol];
     if (!signingCert) {
         char buf[128];
-        fatalf("No valid signing SSL certificate configured for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
+        // XXX: we never actually checked that the cert is capable of signing!
+        fatalf("No valid signing certificate configured for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
     }
 
     if (!signPkey)
-        debugs(3, DBG_IMPORTANT, "No SSL private key configured for  " << portType << "_port " << port.s);
+        debugs(3, DBG_IMPORTANT, "No TLS private key configured for  " << portType << "_port " << port.s);
 
 #if USE_OPENSSL
     Ssl::generateUntrustedCert(untrustedSigningCert, untrustedSignPkey, signingCert, signPkey);
+#elif USE_GNUTLS
+    // TODO: implement for GnuTLS. Just a warning for now since generate is implicitly on for all crypto builds.
+    signingCert.reset();
+    signPkey.reset();
+    debugs(83, DBG_CRITICAL, "WARNING: Dynamic TLS certificate generation requires --with-openssl.");
+    return;
+#else
+    debugs(83, DBG_CRITICAL, "ERROR: Dynamic TLS certificate generation requires --with-openssl.");
+    return;
 #endif
 
     if (!untrustedSigningCert) {
         char buf[128];
-        fatalf("Unable to generate signing SSL certificate for untrusted sites for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
-    }
-
-    if (!createStaticServerContext(port)) {
-        char buf[128];
-        fatalf("%s_port %s initialization error", portType, port.s.toUrl(buf, sizeof(buf)));
+        fatalf("Unable to generate signing certificate for untrusted sites for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
     }
 }
 

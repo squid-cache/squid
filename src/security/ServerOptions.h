@@ -41,14 +41,8 @@ public:
     virtual Security::ContextPointer createBlankContext() const;
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
-    /// generate a security server-context from these configured options
-    /// the resulting context is stored in staticContext
-    /// \returns true if a context could be created
-    bool createStaticServerContext(AnyP::PortCfg &);
-
-    /// initialize contexts for signing dynamic TLS certificates (if needed)
-    /// the resulting context is stored in signingCert, signPKey, untrustedSigningCert, untrustedSignPKey
-    void createSigningContexts(AnyP::PortCfg &);
+    /// initialize all server contexts as-needed
+    void initServerContexts(AnyP::PortCfg &);
 
     /// update the given TLS security context using squid.conf settings
     bool updateContextConfig(Security::ContextPointer &);
@@ -84,6 +78,15 @@ public:
 private:
     bool loadClientCaFile();
     void loadDhParams();
+
+    /// generate a security server-context from these configured options
+    /// the resulting context is stored in staticContext
+    /// \returns true if a context could be created
+    bool createStaticServerContext(AnyP::PortCfg &);
+
+    /// initialize contexts for signing dynamic TLS certificates (if needed)
+    /// the resulting context is stored in signingCert, signPKey, untrustedSigningCert, untrustedSignPKey
+    void createSigningContexts(const AnyP::PortCfg &);
 
 private:
     SBuf clientCaFile;  ///< name of file to load client CAs from

@@ -59,15 +59,14 @@ std::vector<const char *> Ssl::BumpModeStr = {
  \ingroup ServerProtocolSSLAPI
  */
 
-/// \ingroup ServerProtocolSSLInternal
-static int
-ssl_ask_password_cb(char *buf, int size, int rwflag, void *userdata)
+int
+Ssl::AskPasswordCb(char *buf, int size, int rwflag, void *userdata)
 {
     FILE *in;
     int len = 0;
     char cmdline[1024];
 
-    snprintf(cmdline, sizeof(cmdline), "\"%s\" \"%s\"", Config.Program.ssl_password, (const char *)userdata);
+    snprintf(cmdline, sizeof(cmdline), "\"%s\" \"%s\"", ::Config.Program.ssl_password, (const char *)userdata);
     in = popen(cmdline, "r");
 
     if (fgets(buf, size, in))
@@ -89,7 +88,7 @@ static void
 ssl_ask_password(SSL_CTX * context, const char * prompt)
 {
     if (Config.Program.ssl_password) {
-        SSL_CTX_set_default_passwd_cb(context, ssl_ask_password_cb);
+        SSL_CTX_set_default_passwd_cb(context, Ssl::AskPasswordCb);
         SSL_CTX_set_default_passwd_cb_userdata(context, (void *)prompt);
     }
 }
@@ -1234,65 +1233,6 @@ Ssl::unloadSquidUntrusted()
         }
         SquidUntrustedCerts.clear();
     }
-}
-
-/**
- \ingroup ServerProtocolSSLInternal
- * Read certificate from file.
- * See also: static readSslX509Certificate function, gadgets.cc file
- */
-static X509 * readSslX509CertificatesChain(char const * certFilename, Security::CertList &chain)
-{
-    if (!certFilename)
-        return NULL;
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
-    if (!bio)
-        return NULL;
-    if (!BIO_read_filename(bio.get(), certFilename))
-        return NULL;
-    X509 *certificate = PEM_read_bio_X509(bio.get(), NULL, NULL, NULL);
-
-    if (certificate) {
-
-        if (X509_check_issued(certificate, certificate) == X509_V_OK)
-            debugs(83, 5, "Certificate is self-signed, will not be chained");
-        else {
-            // and add to the chain any other certificate exist in the file
-            while (X509 *ca = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr))
-                chain.emplace_front(Security::CertPointer(ca));
-        }
-    }
-
-    return certificate;
-}
-
-void
-Ssl::readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, Security::CertList &chain, char const * certFilename, char const * keyFilename)
-{
-    if (keyFilename == NULL)
-        keyFilename = certFilename;
-
-    if (certFilename == NULL)
-        certFilename = keyFilename;
-
-    debugs(83, DBG_IMPORTANT, "Using certificate in " << certFilename);
-
-    // XXX: ssl_ask_password_cb needs SSL_CTX_set_default_passwd_cb_userdata()
-    // so this may not fully work iff Config.Program.ssl_password is set.
-    pem_password_cb *cb = ::Config.Program.ssl_password ? &ssl_ask_password_cb : NULL;
-    Ssl::ReadPrivateKeyFromFile(keyFilename, pkey, cb);
-    cert.resetWithoutLocking(readSslX509CertificatesChain(certFilename, chain));
-    if (!cert) {
-        debugs(83, DBG_IMPORTANT, "WARNING: missing cert in '" << certFilename << "'");
-    } else if (!pkey) {
-        debugs(83, DBG_IMPORTANT, "WARNING: missing private key in '" << keyFilename << "'");
-    } else if (!X509_check_private_key(cert.get(), pkey.get())) {
-        debugs(83, DBG_IMPORTANT, "WARNING: X509_check_private_key() failed to verify signing cert");
-    } else
-        return; // everything is okay
-
-    pkey.reset();
-    cert.reset();
 }
 
 bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, Security::PrivateKeyPointer &untrustedPkey, Security::CertPointer const  &cert, Security::PrivateKeyPointer const & pkey)
