@@ -47,7 +47,7 @@ typedef enum {
     STORE_PENDING
 } store_status_t;
 
-///Store entry swapping out states.
+/// StoreEntry relationship with a disk cache
 typedef enum {
     /// StoreEntry is currently not associated with any disk store entry.
     /// Does not guarantee (or preclude!) a matching disk store entry existence.

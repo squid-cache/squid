@@ -331,7 +331,7 @@ Store::Controller::get(const CacheKey &cacheKey)
         referenceBusy(*e);
         return e;
     }
-    return nullptr;
+    return NULL;
 }
 
 /// \returns either an existing local reusable StoreEntry object or nil
@@ -724,7 +724,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     }
 
     if (waitingToBeFreed && !found) {
-        debugs(20, 3, "aborting detached " << *collapsed <<
+        debugs(20, 3, "aborting unattached " << *collapsed <<
                " because it was marked for deletion before we could attach it");
         collapsed->abort();
         return;

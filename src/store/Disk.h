@@ -72,8 +72,8 @@ public:
     /// called when entry swap out is complete
     virtual void swappedOut(const StoreEntry &e) = 0;
 
-    /// whether this cache dir has entry with e.key
-    virtual bool hasReadableEntry(const StoreEntry &) const = 0;
+    /// whether this cache dir has an entry with `e.key`
+    virtual bool hasReadableEntry(const StoreEntry &e) const = 0;
 
 protected:
     void parseOptions(int reconfiguring);

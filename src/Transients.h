@@ -26,10 +26,9 @@ typedef Ipc::StoreMapItems<TransientsMapExtraItem> TransientsMapExtras;
 typedef Ipc::StoreMap TransientsMap;
 
 /// Keeps track of store entries being delivered to clients that arrived before
-/// those entries were [fully] cached. This shared table is necessary to sync
-/// the entry-writing worker with entry-reading worker(s) and entry-modifying
-/// worker (e.g., a worker processing DELETE) with both entry-reading and
-/// entry-writing workers.
+/// those entries were [fully] cached. This SMP-shared table is necessary to
+/// * sync an entry-writing worker with entry-reading worker(s); and
+/// * sync an entry-deleting worker with both entry-reading/writing workers.
 class Transients: public Store::Controlled, public Ipc::StoreMapCleaner
 {
 public:

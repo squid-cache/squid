@@ -39,7 +39,6 @@ storeSwapInStart(store_client * sc)
     }
 
     assert(e->mem_obj != NULL);
-    debugs(20, 3, "storeSwapInStart: Opening fileno " << std::hex << std::setw(8) << std::setfill('0') << std::uppercase << e->swap_filen);
     sc->swapin_sio = storeOpen(e, storeSwapInFileNotify, storeSwapInFileClosed, sc);
 }
 

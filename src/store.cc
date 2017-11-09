@@ -615,9 +615,9 @@ StoreEntry::setPrivateKey(const bool shareable, const bool permanent, const bool
 bool
 StoreEntry::setPublicKey(const KeyScope scope)
 {
-    debugs(20, 3, "public key " << *this);
+    debugs(20, 3, *this);
     if (key && !EBIT_TEST(flags, KEY_PRIVATE))
-        return true;                 /* is already public */
+        return true; // already public
 
     assert(mem_obj);
 
@@ -674,7 +674,7 @@ StoreEntry::clearPublicKeyScope()
 void
 StoreEntry::forcePublicKey(const cache_key *newkey)
 {
-    debugs(20, 3, "key " << *this << " key " << storeKeyText(newkey));
+    debugs(20, 3, storeKeyText(newkey) << " for " << *this);
     assert(mem_obj);
 
     if (StoreEntry *e2 = (StoreEntry *)hash_lookup(store_table, newkey)) {
@@ -2102,8 +2102,8 @@ StoreEntry::checkDisk() const
                     (swap_dirn < 0 || swap_dirn < Config.cacheSwap.n_configured);
 
     if (!ok) {
-        debugs(88, DBG_IMPORTANT, "ERROR: inconsistent disk numbers for entry " << *this);
-        throw std::runtime_error("inconsistent disk numbers ");
+        debugs(88, DBG_IMPORTANT, "ERROR: inconsistent disk entry state " << *this);
+        throw std::runtime_error("inconsistent disk entry state ");
     }
 }
 
