@@ -2139,8 +2139,17 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 {
     os << "e:";
 
-    if (e.hasTransients())
-        os << 't' << e.mem_obj->xitTable.index;
+    if (e.hasTransients()) {
+        const auto &xitTable = e.mem_obj->xitTable;
+        switch (xitTable.io) {
+            case MemObject::ioUndecided: os << 'u'; break;
+            case MemObject::ioReading: os << 'r'; break;
+            case MemObject::ioWriting: os << 'w'; break;
+            case MemObject::ioDone: os << 'd'; break;
+        }
+        os << 't' << xitTable.index;
+    }
+
     if (e.hasMemStore())
         os << 'm' << e.mem_obj->memCache.index;
     // It is not possible to use e.hasDisk() here because
@@ -2183,9 +2192,6 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
         if (EBIT_TEST(e.flags, ENTRY_BAD_LENGTH)) os << 'L';
         if (EBIT_TEST(e.flags, ENTRY_ABORTED)) os << 'A';
     }
-
-    if (Store::Root().transientsReader(e))
-        os << 'O';
 
     return os << '/' << &e << '*' << e.locks();
 }
