@@ -1537,9 +1537,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
                 clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
                 assert (repContext);
 
-                // Fill the server IP and hostname for error page generation.
-                HttpRequest::Pointer const & peekerRequest = sslServerBump->request;
-                request->hier.note(peekerRequest->hier.tcpServer, request->url.host());
+                request->hier = sslServerBump->request->hier;
 
                 // Create an error object and fill it
                 ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request);
