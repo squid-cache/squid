@@ -40,7 +40,6 @@ void neighborAdd(const char *, const char *, int, int, int, int, int);
 void neighbors_init(void);
 #if USE_HTCP
 void neighborsHtcpClear(StoreEntry *, const char *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
-/// Whether calling neighborsHtcpClear(..., reason) is useful
 #endif
 CachePeer *peerFindByName(const char *);
 CachePeer *peerFindByNameAndPort(const char *, unsigned short);
