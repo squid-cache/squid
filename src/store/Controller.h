@@ -115,9 +115,6 @@ public:
     /// \returns an iterator for all Store entries
     StoreSearch *search();
 
-    /// whether Transients table exists
-    bool transientsAvailable() const { return bool(transients); }
-
     /// the number of cache_dirs being rebuilt; TODO: move to Disks::Rebuilding
     static int store_dirs_rebuilding;
 
