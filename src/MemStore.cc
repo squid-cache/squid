@@ -916,15 +916,6 @@ MemStore::markForUnlink(StoreEntry &e)
     map->freeEntry(e.mem_obj->memCache.index);
 }
 
-bool
-MemStore::markedForDeletion(const StoreEntry &e) const
-{
-    if (!e.hasMemStore())
-        return false;
-    assert(map);
-    return map->markedForDeletion(reinterpret_cast<const cache_key *>(e.key));
-}
-
 void
 MemStore::unlinkByKeyIfFound(const cache_key *key)
 {

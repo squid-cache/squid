@@ -44,10 +44,9 @@ public:
     virtual int callback() override;
     virtual bool smpAware() const override;
 
-    /// Whether the entry with the key exists and was marked for removal
-    /// some time ago; get(key) will return nil in such case.
+    /// Whether a transient entry with the given public key exists and (but) was
+    /// marked for removal some time ago; get(key) returns nil in such cases.
     bool markedForDeletion(const cache_key *key) const;
-    virtual bool markedForDeletion(const StoreEntry &e) const override;
 
     /// markedForDeletion() with no readers
     /// this is one method because the two conditions must be checked in the right order

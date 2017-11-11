@@ -81,11 +81,9 @@ public:
     virtual void maintain() override;
     virtual bool smpAware() const override { return true; }
 
-    /// whether the entry with the given key exists and was marked
-    /// for removal some time ago
+    /// Whether an entry with the given public key exists and (but) was
+    /// marked for removal some time ago; get(key) returns nil in such cases.
     bool markedForDeletion(const cache_key *) const;
-
-    virtual bool markedForDeletion(const StoreEntry &) const override;
 
     /// whether the entry is in "reading from Transients" I/O state
     bool isReader(const StoreEntry &) const;

@@ -289,24 +289,8 @@ Store::Controller::dereferenceIdle(StoreEntry &e, bool wantsLocalMemory)
 bool
 Store::Controller::markedForDeletion(const cache_key *key) const
 {
-    // Checking Transients should cover many, but not all cases.
-    // Since we require that only StoreEntry writer must have the
-    // corresponding Transients entry, there can be StoreEntries,
-    // detached from Transients but still marked for deletion in
-    // another storage.
+    // assuming a public key, checking Transients should cover all cases.
     return transients && transients->markedForDeletion(key);
-}
-
-bool
-Store::Controller::markedForDeletion(const StoreEntry &e) const
-{
-    if (transients && transients->markedForDeletion(e))
-        return true;
-    if (memStore && memStore->markedForDeletion(e))
-        return true;
-    if (swapDir && swapDir->markedForDeletion(e))
-        return true;
-    return false;
 }
 
 bool
@@ -335,14 +319,18 @@ Store::Controller::get(const CacheKey &cacheKey)
 }
 
 /// \returns either an existing local reusable StoreEntry object or nil
+/// To treat remotely marked entries specially,
+/// callers ought to check markedForDeletion() first!
 StoreEntry *
 Store::Controller::findLocal(const CacheKey &cacheKey)
 {
     if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, cacheKey.key))) {
+        // callers must only search for public entries
+        assert(!EBIT_TEST(e->flags, KEY_PRIVATE));
+
         // TODO: ignore and maybe handleIdleEntry() unlocked intransit entries
         // because their backing store slot may be gone already.
-        if (!markedForDeletion(*e))
-            return e;
+        return e;
     }
     return nullptr;
 }
@@ -355,7 +343,7 @@ Store::Controller::find(const CacheKey &cacheKey)
     debugs(20, 3, storeKeyText(cacheKey.key));
 
     if (markedForDeletion(cacheKey.key)) {
-        debugs(20, 3, "ignoring marked " << storeKeyText(cacheKey.key));
+        debugs(20, 3, "ignoring marked in-transit " << storeKeyText(cacheKey.key));
         return nullptr;
     }
 
@@ -412,6 +400,11 @@ void
 Store::Controller::transientsUnlinkByKeyIfFound(const cache_key *key)
 {
     assert(transients);
+
+    if (markedForDeletion(key)) {
+        debugs(20, 3, "ignoring already marked in-transit " << storeKeyText(key));
+        return;
+    }
 
     if (StoreEntry *entry = findLocal(CacheKey(key))) {
         debugs(20, 5, "marking local in-transit entry: " << *entry);

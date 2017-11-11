@@ -42,7 +42,6 @@ public:
     virtual void unlinkByKeyIfFound(const cache_key *) override;
     virtual void unlink(StoreEntry &) override;
     virtual int callback() override;
-    virtual bool markedForDeletion(const StoreEntry &e) const override;
 
     /// slowly calculate (and cache) hi/lo watermarks and similar limits
     void updateLimits();

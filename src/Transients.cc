@@ -396,12 +396,6 @@ Transients::markedForDeletion(const cache_key *key) const
 }
 
 bool
-Transients::markedForDeletion(const StoreEntry &e) const
-{
-    return markedForDeletion(reinterpret_cast<const cache_key*>(e.key));
-}
-
-bool
 Transients::isReader(const StoreEntry &e) const
 {
     return isReader(e.mem_obj);

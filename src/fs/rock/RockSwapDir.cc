@@ -1102,15 +1102,6 @@ Rock::SwapDir::hasReadableEntry(const StoreEntry &e) const
     return map->hasReadableEntry(reinterpret_cast<const cache_key*>(e.key));
 }
 
-bool
-Rock::SwapDir::markedForDeletion(const StoreEntry &e) const
-{
-    assert(e.hasDisk());
-    assert(e.swap_dirn == index);
-    assert(map);
-    return map->markedForDeletion(reinterpret_cast<const cache_key *>(e.key));
-}
-
 namespace Rock
 {
 RunnerRegistrationEntry(SwapDirRr);

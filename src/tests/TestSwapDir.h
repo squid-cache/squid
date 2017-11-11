@@ -36,7 +36,6 @@ public:
     virtual void unlinkByKeyIfFound(const cache_key *) override {}
     virtual void unlink(StoreEntry &) override {}
     virtual bool hasReadableEntry(const StoreEntry &) const override { return false; }
-    virtual bool markedForDeletion(const StoreEntry &) const override { return false; }
 };
 
 typedef RefCount<TestSwapDir> TestSwapDirPointer;
