@@ -296,6 +296,8 @@ Store::Controller::markedForDeletion(const cache_key *key) const
 bool
 Store::Controller::markedForDeletionAndAbandoned(const StoreEntry &e) const
 {
+    // The opposite check order could miss a reader that has arrived after the
+    // !readers() and before the markedForDeletion() check.
     return markedForDeletion(reinterpret_cast<const cache_key*>(e.key)) &&
            transients && !transients->readers(e);
 }
