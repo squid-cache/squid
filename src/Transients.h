@@ -105,9 +105,6 @@ private:
     /* Store API */
     virtual void unlink(StoreEntry &e) override { markForUnlink(e); }
 
-    bool isReader(const MemObject *) const;
-    bool isWriter(const MemObject *) const;
-
     /// shared packed info indexed by Store keys, for creating new StoreEntries
     TransientsMap *map;
 

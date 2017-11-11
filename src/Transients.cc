@@ -399,27 +399,13 @@ Transients::markedForDeletion(const cache_key *key) const
 bool
 Transients::isReader(const StoreEntry &e) const
 {
-    return isReader(e.mem_obj);
-}
-
-bool
-Transients::isReader(const MemObject *mem_obj) const
-{
-    assert(mem_obj);
-    return mem_obj->xitTable.io == MemObject::ioReading;
+    return e.mem_obj && e.mem_obj->xitTable.io == MemObject::ioReading;
 }
 
 bool
 Transients::isWriter(const StoreEntry &e) const
 {
-    return isWriter(e.mem_obj);
-}
-
-bool
-Transients::isWriter(const MemObject *mem_obj) const
-{
-    assert(mem_obj);
-    return mem_obj->xitTable.io == MemObject::ioWriting;
+    return e.mem_obj && e.mem_obj->xitTable.io == MemObject::ioWriting;
 }
 
 /// initializes shared memory segment used by Transients
