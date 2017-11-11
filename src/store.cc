@@ -2152,11 +2152,9 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 
     if (e.hasMemStore())
         os << 'm' << e.mem_obj->memCache.index;
-    // It is not possible to use e.hasDisk() here because
-    // it may end up with infinite loop.
+
+    // Do not use e.hasDisk() here because its checkDisk() call may calls us.
     if (e.swap_filen > -1 || e.swap_dirn > -1)
-        os << 'd' << e.swap_filen << '@' << e.swap_dirn;
-    if (e.hasDisk())
         os << 'd' << e.swap_filen << '@' << e.swap_dirn;
 
     os << '=';
