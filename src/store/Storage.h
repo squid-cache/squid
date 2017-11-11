@@ -25,10 +25,10 @@ public:
     explicit CacheKey(const cache_key *aKey) :
         CacheKey(aKey, SBuf(), HttpRequestMethod()) {}
 
-    CacheKey(const cache_key *aKey, const SBuf url, const HttpRequestMethod &m):
+    CacheKey(const cache_key *aKey, const SBuf &aStoreId, const HttpRequestMethod &aMethod):
         key(storeKeyDup(aKey)),
-        storeId(url),
-        method(m) {}
+        storeId(aStoreId),
+        method(aMethod) {}
 
     ~CacheKey() { if (key) storeKeyFree(key); }
 
