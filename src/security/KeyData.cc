@@ -98,7 +98,7 @@ Security::KeyData::loadX509CertFromFile()
 }
 
 void
-Security::KeyData::loadFromFiles(AnyP::PortCfg &port, const char *portType)
+Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType)
 {
     char buf[128];
     debugs(83, DBG_IMPORTANT, "Using certificate in " << certFile);

@@ -21,7 +21,7 @@ class KeyData
 {
 public:
     /// load the contents of certFile and privateKeyFile into memory cert, pkey and chain
-    void loadFromFiles(AnyP::PortCfg &, const char *portType);
+    void loadFromFiles(const AnyP::PortCfg &, const char *portType);
 
 public:
     SBuf certFile;       ///< path of file containing PEM format X.509 certificate
