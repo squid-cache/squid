@@ -744,6 +744,10 @@ StoreEntry::adjustVary()
     if (!mem_obj->vary_headers.isEmpty() && !storeGetPublic(mem_obj->storeId(), mem_obj->method)) {
         /* Create "vary" base object */
         StoreEntry *pe = storeCreateEntry(mem_obj->storeId(), mem_obj->logUri(), request->flags, request->method);
+        // XXX: storeCreateEntry() already tries to make `pe` public under
+        // certain conditions. If those conditions do not apply to Vary markers,
+        // then refactor to call storeCreatePureEntry() above.  Otherwise,
+        // refactor to simply check whether `pe` is already public below.
         if (!pe->makePublic()) {
             pe->unlock("StoreEntry::adjustVary+failed_makePublic");
             return false;
