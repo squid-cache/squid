@@ -103,7 +103,7 @@ public:
     int transientReaders(const StoreEntry &) const;
 
     /// disassociates the entry from the intransit table
-    void transientsDisconnect(MemObject &);
+    void transientsDisconnect(StoreEntry &);
 
     /// removes the entry from the memory cache
     void memoryUnlink(StoreEntry &);

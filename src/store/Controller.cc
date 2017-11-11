@@ -548,10 +548,10 @@ Store::Controller::transientReaders(const StoreEntry &e) const
 }
 
 void
-Store::Controller::transientsDisconnect(MemObject &mem_obj)
+Store::Controller::transientsDisconnect(StoreEntry &e)
 {
     if (transients)
-        transients->disconnect(mem_obj);
+        transients->disconnect(e);
 }
 
 void

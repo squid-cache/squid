@@ -361,19 +361,20 @@ Transients::unlinkByKeyIfFound(const cache_key *key)
 }
 
 void
-Transients::disconnect(MemObject &mem_obj)
+Transients::disconnect(StoreEntry &entry)
 {
-    if (mem_obj.xitTable.index >= 0) {
+    if (entry.hasTransients()) {
+        auto &xitTable = entry.mem_obj->xitTable;
         assert(map);
-        if (isWriter(&mem_obj)) {
-            map->abortWriting(mem_obj.xitTable.index);
+        if (isWriter(entry)) {
+            map->abortWriting(xitTable.index);
         } else {
-            assert(isReader(&mem_obj));
-            map->closeForReading(mem_obj.xitTable.index);
+            assert(isReader(entry));
+            map->closeForReading(xitTable.index);
         }
-        locals->at(mem_obj.xitTable.index) = NULL;
-        mem_obj.xitTable.index = -1;
-        mem_obj.xitTable.io = MemObject::ioDone;
+        locals->at(xitTable.index) = NULL;
+        xitTable.index = -1;
+        xitTable.io = MemObject::ioDone;
     }
 }
 

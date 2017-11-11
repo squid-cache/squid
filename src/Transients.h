@@ -59,8 +59,8 @@ public:
     /// number of entry readers some time ago
     int readers(const StoreEntry &e) const;
 
-    /// the caller is done writing or reading this entry
-    void disconnect(MemObject &mem_obj);
+    /// the caller is done writing or reading the given entry
+    void disconnect(StoreEntry &);
 
     /* Store API */
     virtual StoreEntry *get(const Store::CacheKey &cacheKey) override;
