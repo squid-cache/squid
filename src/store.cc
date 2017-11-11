@@ -2144,8 +2144,8 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
         switch (xitTable.io) {
             case MemObject::ioUndecided: os << 'u'; break;
             case MemObject::ioReading: os << 'r'; break;
-            case MemObject::ioWriting: os << 'w'; break;
-            case MemObject::ioDone: os << 'd'; break;
+            case MemObject::ioWriting: os << 'v'; break;
+            case MemObject::ioDone: os << 'o'; break;
         }
         os << 't' << xitTable.index;
     }
