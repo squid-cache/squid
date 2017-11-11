@@ -56,6 +56,9 @@ public:
     /// update the context with a configured session ID (if any)
     void updateContextSessionId(Security::ContextPointer &);
 
+    /// Adds the certificates in certsToChain to the certificate chain of the given TLS context
+    void updateContextCertChain(Security::ContextPointer &);
+
     /// sync the various sources of CA files to be loaded
     void syncCaFiles();
 

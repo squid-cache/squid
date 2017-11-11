@@ -525,7 +525,7 @@ Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
         return false;
     }
 
-    Ssl::addChainToSslContext(ctx, port.secure.certsToChain);
+    port.secure.updateContextCertChain(ctx);
 
     if (!port.secure.updateContextConfig(ctx)) {
         debugs(83, DBG_CRITICAL, "ERROR: Configuring static SSL context");
@@ -844,7 +844,7 @@ Ssl::chainCertificatesToSSLContext(Security::ContextPointer &ctx, Security::Serv
         const int ssl_error = ERR_get_error();
         debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain: " << Security::ErrorString(ssl_error));
     }
-    Ssl::addChainToSslContext(ctx, options.certsToChain);
+    options.updateContextCertChain(ctx);
 }
 
 void
@@ -940,23 +940,6 @@ Ssl::setClientSNI(SSL *ssl, const char *fqdn)
 #else
     debugs(83, 7,  "no support for TLS servername extension (SNI)");
 #endif
-}
-
-void
-Ssl::addChainToSslContext(Security::ContextPointer &ctx, Security::CertList &chain)
-{
-    if (chain.empty())
-        return;
-
-    for (auto cert : chain) {
-        if (SSL_CTX_add_extra_chain_cert(ctx.get(), cert.get())) {
-            // increase the certificate lock
-            X509_up_ref(cert.get());
-        } else {
-            const int ssl_error = ERR_get_error();
-            debugs(83, DBG_IMPORTANT, "WARNING: can not add certificate to SSL context chain: " << Security::ErrorString(ssl_error));
-        }
-    }
 }
 
 static const char *

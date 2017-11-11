@@ -97,6 +97,7 @@ void Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &) STUB
 bool Security::ServerOptions::updateContextConfig(Security::ContextPointer &) STUB_RETVAL(false)
 void Security::ServerOptions::updateContextEecdh(Security::ContextPointer &) STUB
 void Security::ServerOptions::updateContextClientCa(Security::ContextPointer &) STUB
+void Security::ServerOptions::updateContextCertChain(Security::ContextPointer &) STUB
 void Security::ServerOptions::syncCaFiles() STUB
 void Security::ServerOptions::updateContextSessionId(Security::ContextPointer &) STUB
 

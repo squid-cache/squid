@@ -263,6 +263,29 @@ Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
 }
 
 void
+Security::ServerOptions::updateContextCertChain(Security::ContextPointer &ctx)
+{
+    if (certsToChain.empty())
+        return;
+
+#if USE_OPENSSL
+    for (auto cert : certsToChain) {
+        if (SSL_CTX_add_extra_chain_cert(ctx.get(), cert.get())) {
+            // increase the certificate lock
+            X509_up_ref(cert.get());
+        } else {
+            const auto error = ERR_get_error();
+            debugs(83, DBG_IMPORTANT, "WARNING: can not add certificate to SSL context chain: " << Security::ErrorString(error));
+        }
+    }
+
+#elif USE_GNUTLS
+    debugs(83, DBG_IMPORTANT, "WARNING: Delivering TLS certificate chain requires --with-openssl. Skipping.");
+
+#endif
+}
+
+void
 Security::ServerOptions::syncCaFiles()
 {
     // if caFiles is set, just use that

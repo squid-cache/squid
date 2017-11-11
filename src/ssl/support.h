@@ -270,12 +270,6 @@ bool configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
 
 /**
   \ingroup ServerProtocolSSLAPI
-  * Adds the certificates in certList to the certificate chain of the SSL context
- */
-void addChainToSslContext(Security::ContextPointer &, Security::CertList &);
-
-/**
-  \ingroup ServerProtocolSSLAPI
   * Configures sslContext to use squid untrusted certificates internal list
   * to complete certificate chains when verifies SSL servers certificates.
  */
