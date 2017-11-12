@@ -18,10 +18,11 @@ class StoreInfoStats;
 
 namespace Store {
 
-/// Helps passing cache key, corresponding store ID and method to Storage::get().
+/// helps passing cache key, corresponding store ID and method to Storage::get()
 class CacheKey
 {
 public:
+    // XXX: If this constructor is sufficient, why do we need the second one?!
     explicit CacheKey(const cache_key *aKey) :
         CacheKey(aKey, SBuf(), HttpRequestMethod()) {}
 
