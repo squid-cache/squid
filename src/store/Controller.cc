@@ -415,13 +415,7 @@ Store::Controller::transientsUnlinkByKeyIfFound(const cache_key *key)
         return;
     }
 
-    if (StoreEntry *entry = transients->get(CacheKey(key))) {
-        debugs(20, 5, "marking shared in-transit entry: " << *entry);
-        transients->markForUnlink(*entry);
-        return;
-    }
-
-    debugs(20, 5, "maybe marking busy in-transit entry");
+    debugs(20, 5, "maybe marking remote in-transit entry: " << *entry);
     transients->unlinkByKeyIfFound(key);
 }
 
