@@ -97,10 +97,6 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     surrogateNoStore = false;
     serverConnection = fwd->serverConnection();
 
-    // reset peer response time stats for %<pt
-    request->hier.peer_http_request_sent.tv_sec = 0;
-    request->hier.peer_http_request_sent.tv_usec = 0;
-
     if (fwd->serverConnection() != NULL)
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
@@ -1188,12 +1184,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
         ++ IOStats.Http.read_hist[bin];
 
-        // update peer response time stats (%<pt)
-        const timeval &sent = request->hier.peer_http_request_sent;
-        if (sent.tv_sec)
-            tvSub(request->hier.peer_response_time, sent, current_time);
-        else
-            request->hier.peer_response_time.tv_sec = -1;
+        request->hier.notePeerRead();
     }
 
         /* Continue to process previously read data */
@@ -1580,6 +1571,9 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
     entry->mem_obj->checkUrlChecksum();
 #endif
 
+    // XXX: Keep in sync with Client::sentRequestBody().
+    // TODO: Extract common parts.
+
     if (io.size > 0) {
         fd_bytes(io.fd, io.size, FD_WRITE);
         statCounter.server.all.kbytes_out += io.size;
@@ -1588,6 +1582,9 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
 
     if (io.flag == Comm::ERR_CLOSING)
         return;
+
+    // both successful and failed writes affect response times
+    request->hier.notePeerWrite();
 
     if (io.flag) {
         ErrorState *err = new ErrorState(ERR_WRITE_ERROR, Http::scBadGateway, fwd->request);
@@ -1619,7 +1616,6 @@ HttpStateData::sendComplete()
 
     commSetConnTimeout(serverConnection, Config.Timeout.read, timeoutCall);
     flags.request_sent = true;
-    request->hier.peer_http_request_sent = current_time;
 }
 
 void

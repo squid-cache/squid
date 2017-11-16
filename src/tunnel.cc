@@ -404,6 +404,7 @@ TunnelStateData::readServer(char *, size_t len, Comm::Flag errcode, int xerrno)
         server.bytesIn(len);
         statCounter.server.all.kbytes_in += len;
         statCounter.server.other.kbytes_in += len;
+        request->hier.notePeerRead();
     }
 
     if (keepGoingAfterRead(len, errcode, xerrno, server, client))
@@ -425,6 +426,7 @@ TunnelStateData::readConnectResponseDone(char *, size_t len, Comm::Flag errcode,
         server.bytesIn(len);
         statCounter.server.all.kbytes_in += len;
         statCounter.server.other.kbytes_in += len;
+        request->hier.notePeerRead();
     }
 
     if (keepGoingAfterRead(len, errcode, xerrno, server, client))
@@ -515,7 +517,7 @@ TunnelStateData::handleConnectResponse(const size_t chunkSize)
     }
 
     // CONNECT response was successfully parsed
-    *status_ptr = rep.sline.status();
+    request->hier.peer_reply_status = rep.sline.status();
 
     // bail if we did not get an HTTP 200 (Connection Established) response
     if (rep.sline.status() != Http::scOkay) {
@@ -651,12 +653,15 @@ TunnelStateData::writeServerDone(char *, size_t len, Comm::Flag flag, int xerrno
 {
     debugs(26, 3, HERE  << server.conn << ", " << len << " bytes written, flag=" << flag);
 
+    if (flag == Comm::ERR_CLOSING)
+        return;
+
+    request->hier.notePeerWrite();
+
     /* Error? */
     if (flag != Comm::OK) {
-        if (flag != Comm::ERR_CLOSING) {
-            debugs(26, 4, HERE << "calling TunnelStateData::server.error(" << xerrno <<")");
-            server.error(xerrno); // may call comm_close
-        }
+        debugs(26, 4, "to-server write failed: " << xerrno);
+        server.error(xerrno); // may call comm_close
         return;
     }
 
@@ -706,6 +711,7 @@ TunnelStateData::Connection::dataSent(size_t amount)
 
     if (size_ptr)
         *size_ptr += amount;
+
 }
 
 void
@@ -720,12 +726,13 @@ TunnelStateData::writeClientDone(char *, size_t len, Comm::Flag flag, int xerrno
 {
     debugs(26, 3, HERE << client.conn << ", " << len << " bytes written, flag=" << flag);
 
+    if (flag == Comm::ERR_CLOSING)
+        return;
+
     /* Error? */
     if (flag != Comm::OK) {
-        if (flag != Comm::ERR_CLOSING) {
-            debugs(26, 4, HERE << "Closing client connection due to comm flags.");
-            client.error(xerrno); // may call comm_close
-        }
+        debugs(26, 4, "from-client read failed: " << xerrno);
+        client.error(xerrno); // may call comm_close
         return;
     }
 
@@ -915,18 +922,23 @@ tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *, size_t len
 
 /// Called when we are done writing CONNECT request to a peer.
 static void
-tunnelConnectReqWriteDone(const Comm::ConnectionPointer &conn, char *, size_t, Comm::Flag flag, int, void *data)
+tunnelConnectReqWriteDone(const Comm::ConnectionPointer &conn, char *, size_t ioSize, Comm::Flag flag, int, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, conn << ", flag=" << flag);
     tunnelState->server.writer = NULL;
     assert(tunnelState->waitingForConnectRequest());
 
+    tunnelState->request->hier.notePeerWrite();
+
     if (flag != Comm::OK) {
         *tunnelState->status_ptr = Http::scInternalServerError;
         tunnelErrorComplete(conn->fd, data, 0);
         return;
     }
+
+    statCounter.server.all.kbytes_out += ioSize;
+    statCounter.server.other.kbytes_out += ioSize;
 
     tunnelState->connectReqWriting = false;
     tunnelState->connectExchangeCheckpoint();
@@ -958,6 +970,7 @@ tunnelConnected(const Comm::ConnectionPointer &server, void *data)
     if (!tunnelState->clientExpectsConnectResponse())
         tunnelStartShoveling(tunnelState); // ssl-bumped connection, be quiet
     else {
+        *tunnelState->status_ptr = Http::scOkay;
         AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
                                              CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
         tunnelState->client.write(conn_established, strlen(conn_established), call, NULL);
@@ -1024,7 +1037,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
         tunnelState->server.setDelayId(DelayId());
 #endif
 
-    tunnelState->request->hier.note(conn, tunnelState->getHost());
+    tunnelState->request->hier.resetPeerNotes(conn, tunnelState->getHost());
 
     tunnelState->server.conn = conn;
     tunnelState->request->peer_host = conn->getPeer() ? conn->getPeer()->host : NULL;
@@ -1287,7 +1300,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     fd_table[clientConn->fd].read_method = &default_read_method;
     fd_table[clientConn->fd].write_method = &default_write_method;
 
-    request->hier.note(srvConn, tunnelState->getHost());
+    request->hier.resetPeerNotes(srvConn, tunnelState->getHost());
 
     tunnelState->server.conn = srvConn;
 
