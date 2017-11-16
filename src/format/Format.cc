@@ -592,17 +592,17 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_PEER_RESPONSE_TIME:
-            if (al->hier.peer_response_time.tv_sec != -1) {
-                outtv = al->hier.peer_response_time;
+            struct timeval peerResponseTime;
+            if (al->hier.peerResponseTime(peerResponseTime)) {
+                outtv = peerResponseTime;
                 doMsec = 1;
             }
             break;
 
         case LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME: {
-            timeval total_response_time;
-            al->hier.totalResponseTime(total_response_time);
-            if (total_response_time.tv_sec != -1) {
-                outtv = total_response_time;
+            struct timeval totalResponseTime;
+            if (al->hier.totalResponseTime(totalResponseTime)) {
+                outtv = totalResponseTime;
                 doMsec = 1;
             }
         }

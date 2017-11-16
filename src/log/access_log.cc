@@ -237,11 +237,7 @@ HierarchyLogEntry::HierarchyLogEntry() :
     store_complete_stop.tv_sec =0;
     store_complete_stop.tv_usec =0;
 
-    peer_http_request_sent.tv_sec = 0;
-    peer_http_request_sent.tv_usec = 0;
-
-    peer_response_time.tv_sec = -1;
-    peer_response_time.tv_usec = 0;
+    clearPeerNotes();
 
     totalResponseTime_.tv_sec = -1;
     totalResponseTime_.tv_usec = 0;
@@ -251,8 +247,10 @@ HierarchyLogEntry::HierarchyLogEntry() :
 }
 
 void
-HierarchyLogEntry::note(const Comm::ConnectionPointer &server, const char *requestedHost)
+HierarchyLogEntry::resetPeerNotes(const Comm::ConnectionPointer &server, const char *requestedHost)
 {
+    clearPeerNotes();
+
     tcpServer = server;
     if (tcpServer == NULL) {
         code = HIER_NONE;
@@ -267,6 +265,31 @@ HierarchyLogEntry::note(const Comm::ConnectionPointer &server, const char *reque
             xstrncpy(host, requestedHost, sizeof(host));
         }
     }
+}
+
+/// forget previous notePeerRead() and notePeerWrite() calls (if any)
+void
+HierarchyLogEntry::clearPeerNotes()
+{
+    peer_last_read_.tv_sec = 0;
+    peer_last_read_.tv_usec = 0;
+
+    peer_last_write_.tv_sec = 0;
+    peer_last_write_.tv_usec = 0;
+
+    bodyBytesRead = -1;
+}
+
+void
+HierarchyLogEntry::notePeerRead()
+{
+    peer_last_read_ = current_time;
+}
+
+void
+HierarchyLogEntry::notePeerWrite()
+{
+    peer_last_write_ = current_time;
 }
 
 void
@@ -290,7 +313,34 @@ HierarchyLogEntry::stopPeerClock(const bool force)
         tvSub(totalResponseTime_, firstConnStart_, current_time);
 }
 
-void
+bool
+HierarchyLogEntry::peerResponseTime(struct timeval &responseTime)
+{
+    // no I/O whatsoever
+    if (peer_last_write_.tv_sec <= 0 && peer_last_read_.tv_sec <= 0)
+        return false;
+
+    // accommodate read without (completed) write
+    const auto last_write = peer_last_write_.tv_sec > 0 ?
+        peer_last_write_ : peer_last_read_;
+
+    // accommodate write without (completed) read
+    const auto last_read = peer_last_read_.tv_sec > 0 ?
+        peer_last_read_ : peer_last_write_;
+
+    tvSub(responseTime, last_write, last_read);
+    // The peer response time (%<pt) stopwatch is currently defined to start
+    // when we wrote the entire request. Thus, if we wrote something after the
+    // last read, report zero peer response time.
+    if (responseTime.tv_sec < 0) {
+        responseTime.tv_sec = 0;
+        responseTime.tv_usec = 0;
+    }
+
+    return true;
+}
+
+bool
 HierarchyLogEntry::totalResponseTime(struct timeval &responseTime)
 {
     // This should not really happen, but there may be rare code
@@ -300,6 +350,7 @@ HierarchyLogEntry::totalResponseTime(struct timeval &responseTime)
         stopPeerClock(false);
 
     responseTime = totalResponseTime_;
+    return responseTime.tv_sec >= 0 && responseTime.tv_usec >= 0;
 }
 
 static void
