@@ -94,6 +94,13 @@ public:
     /// Does nothing if the existing public key already has default scope.
     void clearPublicKeyScope();
 
+    /// \returns public key (if the entry has it) or nil (otherwise)
+    const cache_key *publicKey() const {
+        return (!EBIT_TEST(flags, KEY_PRIVATE)) ?
+            reinterpret_cast<const cache_key*>(key): // may be nil
+            nullptr;
+    }
+
     /// Either fills this entry with private key or changes the existing key
     /// from public to private.
     /// \param permanent whether this entry should be private forever.

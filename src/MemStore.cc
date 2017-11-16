@@ -917,9 +917,9 @@ MemStore::evictCached(StoreEntry &e)
             disconnect(e);
             e.destroyMemObject();
         }
-    } else if (!EBIT_TEST(e.flags, KEY_PRIVATE)) {
+    } else if (const auto key = e.publicKey()) {
         // the entry may have been loaded and then disconnected from the cache
-        evictIfFound(reinterpret_cast<cache_key*>(e.key));
+        evictIfFound(key);
         if (!e.locked())
             e.destroyMemObject();
     }

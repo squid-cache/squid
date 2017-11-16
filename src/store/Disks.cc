@@ -489,8 +489,8 @@ void
 Store::Disks::evictCached(StoreEntry &e) {
     if (e.hasDisk())
         e.disk().evictCached(e);
-    else if (!EBIT_TEST(e.flags, KEY_PRIVATE))
-        evictIfFound(reinterpret_cast<const cache_key*>(e.key));
+    else if (const auto key = e.publicKey())
+        evictIfFound(key);
 }
 
 void

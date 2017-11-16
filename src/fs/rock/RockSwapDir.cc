@@ -1006,8 +1006,8 @@ Rock::SwapDir::evictCached(StoreEntry &e)
             ignoreReferences(e);
             disconnect(e);
         }
-    } else if (!EBIT_TEST(e.flags, KEY_PRIVATE)) {
-        evictIfFound(reinterpret_cast<const cache_key*>(e.key));
+    } else if (const auto key = e.publicKey()) {
+        evictIfFound(key);
     }
 }
 
