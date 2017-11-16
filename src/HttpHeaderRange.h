@@ -78,7 +78,7 @@ public:
     int64_t firstOffset() const;
     int64_t lowestOffset(int64_t) const;
     bool offsetLimitExceeded(const int64_t limit) const;
-    bool contains(HttpHdrRangeSpec& r) const;
+    bool contains(const HttpHdrRangeSpec& r) const;
     std::vector<HttpHdrRangeSpec *> specs;
 
 private:
