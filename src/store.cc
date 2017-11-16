@@ -1553,10 +1553,10 @@ StoreEntry::timestampsSet()
 
     // compensate for Squid-to-server and server-to-Squid delays
     if (mem_obj && mem_obj->request) {
-        const time_t request_sent =
-            mem_obj->request->hier.peer_http_request_sent.tv_sec;
-        if (0 < request_sent && request_sent < squid_curtime)
-            served_date -= (squid_curtime - request_sent);
+        struct timeval responseTime;
+        if (mem_obj->request->hier.peerResponseTime(responseTime) &&
+            responseTime.tv_sec < squid_curtime)
+            served_date -= (squid_curtime - responseTime.tv_sec);
     }
 
     time_t exp = 0;
