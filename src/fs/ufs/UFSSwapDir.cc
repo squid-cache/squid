@@ -1211,21 +1211,32 @@ Fs::Ufs::UFSSwapDir::unlinkdUseful() const
 }
 
 void
-Fs::Ufs::UFSSwapDir::unlink(StoreEntry & e)
+Fs::Ufs::UFSSwapDir::evictCached(StoreEntry & e)
 {
-    debugs(79, 3, HERE << "dirno " << index  << ", fileno "<<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
-    if (!e.hasDisk())
-        return;
-    mapBitReset(e.swap_filen);
-    if (e.swappedOut()) {
-        cur_size -= fs.blksize * sizeInBlocks(e.swap_file_sz);
-        --n_disk_objects;
+    debugs(79, 3, e);
+    if (e.locked()) // somebody else may still be using this file
+        return; // nothing to do: our get() always returns nil
+
+    if (e.hasDisk()) {
+        mapBitReset(e.swap_filen);
+        if (e.swappedOut()) {
+            cur_size -= fs.blksize * sizeInBlocks(e.swap_file_sz);
+            --n_disk_objects;
+        }
+        replacementRemove(&e);
+        UFSSwapDir::unlinkFile(e.swap_filen);
+        e.detachFromDisk();
     }
-    replacementRemove(&e);
-    UFSSwapDir::unlinkFile(e.swap_filen);
-    e.detachFromDisk();
+    // else see evictIfFound()
 }
+
+void
+Fs::Ufs::UFSSwapDir::evictIfFound(const cache_key *)
+{
+    // UFS disk entries always have (attached) StoreEntries so if we got here,
+    // the entry is not cached on disk and there is nothing for us to do.
+}
+
 
 void
 Fs::Ufs::UFSSwapDir::replacementAdd(StoreEntry * e)

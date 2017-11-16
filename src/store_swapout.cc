@@ -304,11 +304,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
             storeConfigure();
         }
 
-        e->disk().unlink(*e);
-
-        assert(!e->hasDisk());
-
-        e->releaseRequest();
+        e->releaseRequest(); // TODO: Keep the memory entry (if any)
     } else {
         /* swapping complete */
         debugs(20, 3, "storeSwapOutFileClosed: SwapOut complete: '" << e->url() << "' to " <<

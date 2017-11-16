@@ -87,17 +87,14 @@ public:
      */
     virtual void stat(StoreEntry &e) const = 0;
 
-    /// expect an unlink() call after the entry becomes idle
-    virtual void markForUnlink(StoreEntry &e) = 0;
+    /// Prevent new get() calls from returning the matching entry.
+    /// If the matching entry is unused, it may be removed from the store now.
+    /// The store entry is matched using either `e` attachment info or `e.key`.
+    virtual void evictCached(StoreEntry &e) = 0;
 
-    /// Remove the matching entry from the store if possible
-    /// or mark it as waiting to be freed otherwise.
-    /// Do nothing if there is no matching entry in the store.
-    virtual void unlinkByKeyIfFound(const cache_key *) = 0;
-
-    /// Remove the entry from the store if possible
-    /// or mark it as waiting to be freed otherwise.
-    virtual void unlink(StoreEntry &e) = 0;
+    /// An evictCached() equivalent for callers that did not get() a StoreEntry.
+    /// Callers with StoreEntry objects must use evictCached() instead.
+    virtual void evictIfFound(const cache_key *) = 0;
 
     /// called once every main loop iteration; TODO: Move to UFS code.
     virtual int callback() { return 0; }

@@ -439,7 +439,7 @@ StoreEntry::purgeMem()
 
     debugs(20, 3, "StoreEntry::purgeMem: Freeing memory-copy of " << getMD5Text());
 
-    Store::Root().memoryUnlink(*this);
+    Store::Root().memoryEvictCached(*this);
 
     if (!swappedOut())
         release();
@@ -466,7 +466,7 @@ StoreEntry::releaseRequest(const bool shareable)
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
 
-    Store::Root().markForUnlink(*this);
+    Store::Root().evictCached(*this);
     setPrivateKey(shareable, true);
 }
 
@@ -593,7 +593,7 @@ StoreEntry::setPrivateKey(const bool shareable, const bool permanent, const bool
 
     if (key) {
         if (shouldMark)
-            Store::Root().markForUnlink(*this);  // all caches/workers will know
+            Store::Root().evictCached(*this);  // all caches/workers will know
 
         // TODO: move into SwapDir::markForUnlink() already called by Root()
         if (hasDisk())
@@ -1272,7 +1272,7 @@ StoreEntry::release(const bool shareable)
     if (Store::Controller::store_dirs_rebuilding && hasDisk()) {
         /* TODO: Teach disk stores to handle releases during rebuild instead. */
 
-        Store::Root().memoryUnlink(*this);
+        Store::Root().memoryEvictCached(*this);
         releaseRequest(shareable);
 
         // lock the entry until rebuilding is done
@@ -1283,11 +1283,11 @@ StoreEntry::release(const bool shareable)
 
     storeLog(STORE_LOG_RELEASE, this);
     if (hasDisk() && !EBIT_TEST(flags, KEY_PRIVATE)) {
-        // log before unlink() below clears swap_filen
+        // log before evictCached() below clears swap_filen
         storeDirSwapLog(this, SWAP_LOG_DEL);
     }
 
-    Store::Root().unlink(*this);
+    Store::Root().evictCached(*this);
     destroyStoreEntry(static_cast<hash_link *>(this));
     PROF_stop(storeRelease);
 }
@@ -1920,7 +1920,7 @@ StoreEntry::transientsAbandonmentCheck()
             mem_obj->swapout.decision == MemObject::SwapOut::swImpossible) {
         debugs(20, 7, "cannot be shared: " << *this);
         if (!shutting_down) // Store::Root() is FATALly missing during shutdown
-            Store::Root().transientsAbandon(*this);
+            Store::Root().stopSharing(*this);
     }
 }
 

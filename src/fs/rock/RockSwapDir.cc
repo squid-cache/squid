@@ -157,7 +157,7 @@ void Rock::SwapDir::disconnect(StoreEntry &e)
         map->abortWriting(e.swap_filen);
         e.detachFromDisk();
         dynamic_cast<IoState&>(*e.mem_obj->swapout.sio).writeableAnchor_ = NULL;
-        Store::Root().transientsAbandon(e); // broadcasts after the change
+        Store::Root().stopSharing(e); // broadcasts after the change
     } else {
         map->closeForReading(e.swap_filen);
         e.detachFromDisk();
@@ -913,7 +913,7 @@ Rock::SwapDir::writeError(StoreIOState &sio)
     map->freeEntry(sio.swap_filen); // will mark as unusable, just in case
 
     if (sio.touchingStoreEntry())
-        Store::Root().transientsAbandon(*sio.e);
+        Store::Root().stopSharing(*sio.e);
     // else noop: a fresh entry update error does not affect stale entry readers
 
     // All callers must also call IoState callback, to propagate the error.
@@ -989,32 +989,26 @@ Rock::SwapDir::unlinkdUseful() const
 }
 
 void
-Rock::SwapDir::unlinkByKeyIfFound(const cache_key *key)
+Rock::SwapDir::evictIfFound(const cache_key *key)
 {
     if (map)
         map->freeEntryByKey(key); // may not be there
 }
 
 void
-Rock::SwapDir::unlink(StoreEntry &e)
-{
-    debugs(47, 5, HERE << e);
-    if (!e.hasDisk(index))
-        return unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
-
-    ignoreReferences(e);
-    map->freeEntry(e.swap_filen);
-    disconnect(e);
-}
-
-void
-Rock::SwapDir::markForUnlink(StoreEntry &e)
+Rock::SwapDir::evictCached(StoreEntry &e)
 {
     debugs(47, 5, e);
-    if (!e.hasDisk())
-        return unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
-
-    map->freeEntry(e.swap_filen);
+    if (e.hasDisk(index)) {
+        if (map->freeEntry(e.swap_filen))
+            CollapsedForwarding::Broadcast(e);
+        if (!e.locked()) {
+            ignoreReferences(e);
+            disconnect(e);
+        }
+    } else if (!EBIT_TEST(e.flags, KEY_PRIVATE)) {
+        evictIfFound(reinterpret_cast<const cache_key*>(e.key));
+    }
 }
 
 void

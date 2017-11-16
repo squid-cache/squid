@@ -910,7 +910,7 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
 #if USE_HTCP
             neighborsHtcpClear(nullptr, url, req, m, HTCP_CLR_INVALIDATION);
 #endif
-            Store::Root().unlinkByKeyIfFound(key);
+            Store::Root().evictIfFound(key);
         }
     }
 }

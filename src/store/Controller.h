@@ -38,9 +38,8 @@ public:
     virtual void stat(StoreEntry &) const override;
     virtual void sync() override;
     virtual void maintain() override;
-    virtual void markForUnlink(StoreEntry &) override;
-    virtual void unlinkByKeyIfFound(const cache_key *) override;
-    virtual void unlink(StoreEntry &) override;
+    virtual void evictCached(StoreEntry &) override;
+    virtual void evictIfFound(const cache_key *) override;
     virtual int callback() override;
     virtual bool smpAware() const override;
 
@@ -96,8 +95,8 @@ public:
     /// Update local intransit entry after changes made by appending worker.
     void syncCollapsed(const sfileno);
 
-    /// calls Root().transients->abandon() if transients are tracked
-    void transientsAbandon(StoreEntry &);
+    /// stop any current (and prevent any future) SMP sharing of the given entry
+    void stopSharing(StoreEntry &);
 
     /// number of the transient entry readers some time ago
     int transientReaders(const StoreEntry &) const;
@@ -106,7 +105,7 @@ public:
     void transientsDisconnect(StoreEntry &);
 
     /// removes the entry from the memory cache
-    void memoryUnlink(StoreEntry &);
+    void memoryEvictCached(StoreEntry &);
 
     /// disassociates the entry from the memory cache, preserving cached data
     void memoryDisconnect(StoreEntry &);
@@ -124,7 +123,7 @@ private:
     bool dereferenceIdle(StoreEntry &, bool wantsLocalMemory);
 
     StoreEntry *find(const CacheKey &);
-    StoreEntry *findLocal(const CacheKey &);
+    StoreEntry *findLocal(const cache_key *);
     void transientsUnlinkByKeyIfFound(const cache_key *);
     bool keepForLocalMemoryCache(StoreEntry &e) const;
     bool anchorToCache(StoreEntry &, bool &inSync);

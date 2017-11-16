@@ -48,9 +48,6 @@ public:
     /// called when the in-transit entry has been successfully cached
     void completeWriting(const StoreEntry &e);
 
-    /// the calling entry writer no longer expects to cache this entry
-    void abandon(const StoreEntry &e);
-
     /// copies current shared entry metadata into parameters
     /// \param aborted whether the entry was aborted
     /// \param waitingToBeFreed whether the entry was marked for deletion
@@ -75,9 +72,8 @@ public:
     virtual void stat(StoreEntry &e) const override;
     virtual void reference(StoreEntry &e) override;
     virtual bool dereference(StoreEntry &e) override;
-    virtual void markForUnlink(StoreEntry &e) override;
-    virtual void unlinkByKeyIfFound(const cache_key *) override;
-
+    virtual void evictCached(StoreEntry &) override;
+    virtual void evictIfFound(const cache_key *) override;
     virtual void maintain() override;
     virtual bool smpAware() const override { return true; }
 
@@ -102,9 +98,6 @@ protected:
     virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
 
 private:
-    /* Store API */
-    virtual void unlink(StoreEntry &e) override { markForUnlink(e); }
-
     /// shared packed info indexed by Store keys, for creating new StoreEntries
     TransientsMap *map;
 

@@ -32,9 +32,8 @@ public:
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) override;
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) override;
     virtual void parse(int, char*) override;
-    virtual void markForUnlink(StoreEntry &) override {}
-    virtual void unlinkByKeyIfFound(const cache_key *) override {}
-    virtual void unlink(StoreEntry &) override {}
+    virtual void evictCached(StoreEntry &) override {}
+    virtual void evictIfFound(const cache_key *) override {}
     virtual bool hasReadableEntry(const StoreEntry &) const override { return false; }
 };
 

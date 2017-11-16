@@ -324,9 +324,9 @@ Store::Controller::get(const CacheKey &cacheKey)
 /// To treat remotely marked entries specially,
 /// callers ought to check markedForDeletion() first!
 StoreEntry *
-Store::Controller::findLocal(const CacheKey &cacheKey)
+Store::Controller::findLocal(const cache_key *key)
 {
-    if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, cacheKey.key))) {
+    if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, key))) {
         // callers must only search for public entries
         assert(!EBIT_TEST(e->flags, KEY_PRIVATE));
 
@@ -349,7 +349,7 @@ Store::Controller::find(const CacheKey &cacheKey)
         return nullptr;
     }
 
-    if (StoreEntry *e = findLocal(cacheKey)) {
+    if (StoreEntry *e = findLocal(cacheKey.key)) {
         debugs(20, 3, "got local in-transit entry: " << *e);
         return e;
     }
@@ -398,27 +398,6 @@ Store::Controller::transientsWriter(const StoreEntry &e) const
     return transients && e.hasTransients() && transients->isWriter(e);
 }
 
-void
-Store::Controller::transientsUnlinkByKeyIfFound(const cache_key *key)
-{
-    assert(transients);
-
-    if (markedForDeletion(key)) {
-        debugs(20, 3, "ignoring already marked in-transit " << storeKeyText(key));
-        return;
-    }
-
-    if (StoreEntry *entry = findLocal(CacheKey(key))) {
-        debugs(20, 5, "marking local in-transit entry: " << *entry);
-        assert(entry->hasTransients());
-        transients->markForUnlink(*entry);
-        return;
-    }
-
-    debugs(20, 5, "maybe marking remote in-transit entry: " << *entry);
-    transients->unlinkByKeyIfFound(key);
-}
-
 int64_t
 Store::Controller::accumulateMore(StoreEntry &entry) const
 {
@@ -426,44 +405,37 @@ Store::Controller::accumulateMore(StoreEntry &entry) const
     // The memory cache should not influence for-swapout accumulation decision.
 }
 
+// Must be called from StoreEntry::release() or releaseRequest() because
+// those methods currently manage local indexing of StoreEntry objects.
+// TODO: Replace StoreEntry::release*() with Root().evictCached().
 void
-Store::Controller::markForUnlink(StoreEntry &e)
+Store::Controller::evictCached(StoreEntry &e)
 {
-    if (transients)
-        transients->markForUnlink(e);
-    if (memStore)
-        memStore->markForUnlink(e);
+    debugs(20, 7, e);
+    memoryEvictCached(e);
     if (swapDir)
-        swapDir->markForUnlink(e);
+        swapDir->evictCached(e);
+    if (transients)
+        transients->evictCached(e);
 }
 
 void
-Store::Controller::unlinkByKeyIfFound(const cache_key *key)
+Store::Controller::evictIfFound(const cache_key *key)
 {
-    if (transients) {
-        transientsUnlinkByKeyIfFound(key);
-        // fall through to mark cache stores
-    } else {
-        if (StoreEntry *entry = static_cast<StoreEntry*>(hash_lookup(store_table, key))) {
-            entry->release();
-            return;
-        }
+    debugs(20, 7, storeKeyText(key));
+
+    if (StoreEntry *entry = findLocal(key)) {
+        debugs(20, 5, "marking local in-transit " << *entry);
+        entry->release();
+        return;
     }
 
     if (memStore)
-        memStore->unlinkByKeyIfFound(key);
+        memStore->evictIfFound(key);
     if (swapDir)
-        swapDir->unlinkByKeyIfFound(key);
-}
-
-void
-Store::Controller::unlink(StoreEntry &e)
-{
+        swapDir->evictIfFound(key);
     if (transients)
-        transients->markForUnlink(e);
-    memoryUnlink(e);
-    if (swapDir)
-        swapDir->unlink(e);
+        transients->evictIfFound(key);
 }
 
 // move this into [non-shared] memory cache class when we have one
@@ -501,11 +473,12 @@ Store::Controller::memoryOut(StoreEntry &e, const bool preserveSwappable)
 }
 
 void
-Store::Controller::memoryUnlink(StoreEntry &e)
+Store::Controller::memoryEvictCached(StoreEntry &e)
 {
     if (memStore)
-        memStore->unlink(e);
+        memStore->evictCached(e);
     else // TODO: move into [non-shared] memory cache class when we have one
+    if (!e.locked())
         e.destroyMemObject();
 }
 
@@ -518,13 +491,13 @@ Store::Controller::memoryDisconnect(StoreEntry &e)
 }
 
 void
-Store::Controller::transientsAbandon(StoreEntry &e)
+Store::Controller::stopSharing(StoreEntry &e)
 {
-    if (transients) {
-        assert(e.mem_obj);
-        if (e.hasTransients())
-            transients->abandon(e);
-    }
+    // Marking the transients entry is sufficient to prevent new readers from
+    // starting to wait for `e` updates and to inform the current readers (and,
+    // hence, Broadcast() recipients) about the underlying Store problems.
+    if (transients && e.hasTransients())
+        transients->evictCached(e);
 }
 
 void

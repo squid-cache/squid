@@ -486,26 +486,19 @@ Store::Disks::sync()
 }
 
 void
-Store::Disks::markForUnlink(StoreEntry &e) {
+Store::Disks::evictCached(StoreEntry &e) {
     if (e.hasDisk())
-        store(e.swap_dirn)->markForUnlink(e);
+        e.disk().evictCached(e);
+    else if (!EBIT_TEST(e.flags, KEY_PRIVATE))
+        evictIfFound(reinterpret_cast<const cache_key*>(e.key));
 }
 
 void
-Store::Disks::unlinkByKeyIfFound(const cache_key *key)
+Store::Disks::evictIfFound(const cache_key *key)
 {
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         if (dir(i).active())
-            dir(i).unlinkByKeyIfFound(key);
-    }
-}
-
-void
-Store::Disks::unlink(StoreEntry &e)
-{
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        if (dir(i).active())
-            dir(i).unlink(e);
+            dir(i).evictIfFound(key);
     }
 }
 

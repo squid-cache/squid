@@ -907,34 +907,29 @@ MemStore::completeWriting(StoreEntry &e)
 }
 
 void
-MemStore::markForUnlink(StoreEntry &e)
+MemStore::evictCached(StoreEntry &e)
 {
     debugs(47, 5, e);
-    if (!e.hasMemStore())
-        return unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
-
-    map->freeEntry(e.mem_obj->memCache.index);
+    if (e.hasMemStore()) {
+        if (map->freeEntry(e.mem_obj->memCache.index))
+            CollapsedForwarding::Broadcast(e);
+        if (!e.locked()) {
+            disconnect(e);
+            e.destroyMemObject();
+        }
+    } else if (!EBIT_TEST(e.flags, KEY_PRIVATE)) {
+        // the entry may have been loaded and then disconnected from the cache
+        evictIfFound(reinterpret_cast<cache_key*>(e.key));
+        if (!e.locked())
+            e.destroyMemObject();
+    }
 }
 
 void
-MemStore::unlinkByKeyIfFound(const cache_key *key)
+MemStore::evictIfFound(const cache_key *key)
 {
     if (map)
         map->freeEntryByKey(key);
-}
-
-void
-MemStore::unlink(StoreEntry &e)
-{
-    if (e.hasMemStore()) {
-        map->freeEntry(e.mem_obj->memCache.index);
-        disconnect(e);
-    } else {
-        // the entry may have been loaded and then disconnected from the cache
-        unlinkByKeyIfFound(reinterpret_cast<cache_key*>(e.key));
-    }
-
-    e.destroyMemObject(); // XXX: but it may contain useful info such as a client list. The old code used to do that though, right?
 }
 
 void
@@ -947,7 +942,7 @@ MemStore::disconnect(StoreEntry &e)
             map->abortWriting(mem_obj.memCache.index);
             mem_obj.memCache.index = -1;
             mem_obj.memCache.io = MemObject::ioDone;
-            Store::Root().transientsAbandon(e); // broadcasts after the change
+            Store::Root().stopSharing(e); // broadcasts after the change
         } else {
             assert(mem_obj.memCache.io == MemObject::ioReading);
             map->closeForReading(mem_obj.memCache.index);

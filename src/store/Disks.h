@@ -38,9 +38,8 @@ public:
     virtual void maintain() override;
     virtual bool anchorToCache(StoreEntry &e, bool &inSync) override;
     virtual bool updateAnchored(StoreEntry &) override;
-    virtual void markForUnlink(StoreEntry &) override;
-    virtual void unlinkByKeyIfFound(const cache_key *) override;
-    virtual void unlink(StoreEntry &) override;
+    virtual void evictCached(StoreEntry &) override;
+    virtual void evictIfFound(const cache_key *) override;
     virtual int callback() override;
 
     /// slowly calculate (and cache) hi/lo watermarks and similar limits

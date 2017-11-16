@@ -49,11 +49,10 @@ public:
     virtual void dump(StoreEntry &) const override;
     virtual bool doubleCheck(StoreEntry &) override;
     virtual bool unlinkdUseful() const override;
-    virtual void unlink(StoreEntry &) override;
     virtual void statfs(StoreEntry &) const override;
     virtual void maintain() override;
-    virtual void markForUnlink(StoreEntry &) override {}
-    virtual void unlinkByKeyIfFound(const cache_key *) override {}
+    virtual void evictCached(StoreEntry &) override;
+    virtual void evictIfFound(const cache_key *) override;
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const override;
     virtual void reference(StoreEntry &) override;
     virtual bool dereference(StoreEntry &) override;

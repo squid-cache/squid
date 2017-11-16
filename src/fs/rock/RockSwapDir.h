@@ -39,8 +39,8 @@ public:
     /* public ::SwapDir API */
     virtual void reconfigure();
     virtual StoreEntry *get(const Store::CacheKey &);
-    virtual void markForUnlink(StoreEntry &e);
-    virtual void unlinkByKeyIfFound(const cache_key *);
+    virtual void evictCached(StoreEntry &);
+    virtual void evictIfFound(const cache_key *);
     virtual void disconnect(StoreEntry &e);
     virtual uint64_t currentSize() const;
     virtual uint64_t currentCount() const;
@@ -96,7 +96,6 @@ protected:
     virtual bool dereference(StoreEntry &e);
     virtual void updateHeaders(StoreEntry *e);
     virtual bool unlinkdUseful() const;
-    virtual void unlink(StoreEntry &e);
     virtual void statfs(StoreEntry &e) const;
 
     /* IORequestor API */

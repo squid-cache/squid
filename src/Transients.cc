@@ -302,18 +302,6 @@ Transients::noteFreeMapSlice(const Ipc::StoreMapSliceId)
 }
 
 void
-Transients::abandon(const StoreEntry &e)
-{
-    assert(e.mem_obj && map);
-    // avoid useless broadcasts
-    if (map->freeEntry(e.mem_obj->xitTable.index)) // just marks the locked entry
-        CollapsedForwarding::Broadcast(e, true);
-    // We do not unlock the entry now because the problem is most likely with
-    // the server resource rather than a specific cache writer, so we want to
-    // prevent other readers from collapsing requests for that resource.
-}
-
-void
 Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFreed) const
 {
     assert(map);
@@ -345,19 +333,24 @@ Transients::readers(const StoreEntry &e) const
 }
 
 void
-Transients::markForUnlink(StoreEntry &e)
+Transients::evictCached(StoreEntry &e)
 {
-    if (!e.hasTransients())
-        return unlinkByKeyIfFound(reinterpret_cast<const cache_key*>(e.key));
-    abandon(e);
+    debugs(20, 5, e);
+    if (e.hasTransients()) {
+        if (map->freeEntry(e.mem_obj->xitTable.index))
+            CollapsedForwarding::Broadcast(e);
+    }
 }
 
 void
-Transients::unlinkByKeyIfFound(const cache_key *key)
+Transients::evictIfFound(const cache_key *key)
 {
-    // Controller ensures that this worker has no StoreEntry to abandon() here.
-    if (map)
-        map->freeEntryByKey(key);
+    if (!map)
+        return;
+
+    const sfileno index = map->fileNoByKey(key);
+    if (map->freeEntry(index))
+        CollapsedForwarding::Broadcast(index, true);
 }
 
 void
