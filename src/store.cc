@@ -483,6 +483,8 @@ StoreEntry::unlock(const char *context)
 
     assert(storePendingNClients(this) == 0);
 
+    // Both aborted local writers and aborted local readers (of remote writers)
+    // are STORE_PENDING, but aborted readers should never release().
     if ((store_status == STORE_PENDING && !Store::Root().transientsReader(*this))
             || EBIT_TEST(flags, RELEASE_REQUEST)) {
         this->release();
