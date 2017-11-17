@@ -217,6 +217,14 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
         if (!Ssl::InitServerContext(t, port))
             return false;
 #endif
+
+        updateContextCertChain(t);
+
+        if (!updateContextConfig(t)) {
+            debugs(83, DBG_CRITICAL, "ERROR: Configuring static TLS context");
+            return false;
+        }
+
         if (!loadClientCaFile())
             return false;
     }

@@ -525,13 +525,6 @@ Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
         return false;
     }
 
-    port.secure.updateContextCertChain(ctx);
-
-    if (!port.secure.updateContextConfig(ctx)) {
-        debugs(83, DBG_CRITICAL, "ERROR: Configuring static SSL context");
-        return false;
-    }
-
     return true;
 }
 
