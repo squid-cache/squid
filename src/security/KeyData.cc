@@ -127,9 +127,12 @@ Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType
         (void)gnutls_privkey_init(&key);
         Security::ErrorCode x = gnutls_privkey_import_x509_raw(key, &data, GNUTLS_X509_FMT_PEM, nullptr, 0);
         if (x == GNUTLS_E_SUCCESS) {
-            pkey = Security::PrivateKeyPointer(key, [](gnutls_privkey_t p) {
-                       debugs(83, 5, "gnutls_privkey_deinit pkey=" << (void*)p);
-                       gnutls_privkey_deinit(p);
+            gnutls_x509_privkey_t xkey;
+            gnutls_privkey_export_x509(key, &xkey);
+            gnutls_privkey_deinit(key);
+            pkey = Security::PrivateKeyPointer(xkey, [](gnutls_x509_privkey_t p) {
+                       debugs(83, 5, "gnutls_x509_privkey_deinit pkey=" << (void*)p);
+                       gnutls_x509_privkey_deinit(p);
                    });
         }
     }

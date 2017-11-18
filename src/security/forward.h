@@ -167,7 +167,7 @@ class PeerOptions;
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
 typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, HardFun<int, EVP_PKEY *, EVP_PKEY_up_ref> > PrivateKeyPointer;
 #elif USE_GNUTLS
-typedef std::shared_ptr<struct gnutls_privkey_st> PrivateKeyPointer;
+typedef std::shared_ptr<struct gnutls_x509_privkey_int> PrivateKeyPointer;
 #else
 typedef std::shared_ptr<void> PrivateKeyPointer;
 #endif
