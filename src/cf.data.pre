@@ -2223,12 +2223,20 @@ DOC_START
 
 	TLS / SSL Options:
 
-	   cert=	Path to SSL certificate (PEM format).
+	   tls-cert=	Path to TLS server certificate (PEM format).
 
-	   key=		Path to SSL private key file (PEM format)
-			if not specified, the certificate file is
-			assumed to be a combined certificate and
-			key file.
+			When OpenSSL or LibreSSL is used this file may also
+			contain a chain of intermediate certificates to send
+			in the TLS handshake.
+
+			When GnuTLS is used this option (and any paired
+			tls-key= option) may be repeated to load multiple
+			certificates for different domains.
+
+	   tls-key=	Path to TLS private key file (PEM format) for the
+			previous tls-cert= parameter.
+			If not specified, the previous certificate file is
+			assumed to be a combined certificate and key file.
 
 	   cipher=	Colon separated list of supported ciphers.
 			NOTE: some ciphers such as EDH ciphers depend on
@@ -2378,12 +2386,13 @@ DOC_START
 	over TLS or SSL connections. Commonly referred to as HTTPS.
 
 	This is most useful for situations where you are running squid in
-	accelerator mode and you want to do the TLS work at the accelerator level.
+	accelerator mode and you want to do the TLS work at the accelerator
+	level.
 
 	You may specify multiple socket addresses on multiple lines,
 	each with their own certificate and/or options.
 
-	The TLS cert= option is mandatory on HTTPS ports.
+	The tls-cert= option is mandatory on HTTPS ports.
 
 	See http_port for a list of modes and options.
 DOC_END
