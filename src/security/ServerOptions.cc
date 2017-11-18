@@ -213,9 +213,43 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
 
     Security::ContextPointer t(createBlankContext());
     if (t) {
+
 #if USE_OPENSSL
-        if (!Ssl::InitServerContext(t, port))
+        if (certs.size() > 1) {
+            // NOTE: calling SSL_CTX_use_certificate() repeatedly _replaces_ the previous cert details.
+            //       so we cannot use it and support multiple server certificates with OpenSSL.
+            debugs(83, DBG_CRITICAL, "ERROR: OpenSSL does not support multiple server certificates. Ignoring addional cert= parameters.");
+        }
+
+        const auto &keys = certs.front();
+
+        if (!SSL_CTX_use_certificate(t.get(), keys.cert.get())) {
+            const auto x = ERR_get_error();
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS certificate '" << keys.certFile << "': " << Security::ErrorString(x));
             return false;
+        }
+
+        if (!SSL_CTX_use_PrivateKey(t.get(), keys.pkey.get())) {
+            const auto x = ERR_get_error();
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS private key '" << keys.privateKeyFile << "': " << Security::ErrorString(x));
+            return false;
+        }
+
+#elif USE_GNUTLS
+        for (auto &keys : certs) {
+            gnutls_x509_crt_t crt = keys.cert.get();
+            gnutls_x509_privkey_t xkey = keys.pkey.get();
+            const auto x = gnutls_certificate_set_x509_key(t.get(), &crt, 1, xkey);
+            if (x != GNUTLS_E_SUCCESS) {
+                SBuf whichFile = keys.certFile;
+                if (keys.certFile != keys.privateKeyFile) {
+                    whichFile.appendf(" and ");
+                    whichFile.append(keys.privateKeyFile);
+                }
+                debugs(83, DBG_CRITICAL, "ERROR: Failed to initialize server context with keys from " << whichFile << ": " << Security::ErrorString(x));
+                return false;
+            }
+        }
 #endif
 
         updateContextCertChain(t);
@@ -236,6 +270,10 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
 void
 Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
 {
+    // For signing we do not have a pre-initialized context object. Instead
+    // contexts are generated as needed. This method initializes the cert
+    // and key pointers used to sign those contexts later.
+
     Security::KeyData &keys = certs.front();
     signingCert = keys.cert;
     signPkey = keys.pkey;

@@ -511,20 +511,6 @@ Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
     if (!ctx)
         return false;
 
-    if (!SSL_CTX_use_certificate(ctx.get(), port.secure.signingCert.get())) {
-        const int ssl_error = ERR_get_error();
-        const auto &keys = port.secure.certs.front();
-        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS certificate '" << keys.certFile << "': " << Security::ErrorString(ssl_error));
-        return false;
-    }
-
-    if (!SSL_CTX_use_PrivateKey(ctx.get(), port.secure.signPkey.get())) {
-        const int ssl_error = ERR_get_error();
-        const auto &keys = port.secure.certs.front();
-        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS private key '" << keys.privateKeyFile << "': " << Security::ErrorString(ssl_error));
-        return false;
-    }
-
     return true;
 }
 
