@@ -2559,46 +2559,40 @@ tryTlsHandshake(ConnStateData *conn, PF *callback)
 
 #if USE_OPENSSL
     auto ret = SSL_accept(session);
-    if (ret <= 0) {
-        const int xerrno = errno;
-        const auto ssl_error = SSL_get_error(session, ret);
+    if (ret > 0)
+        return true;
 
-        switch (ssl_error) {
+    const int xerrno = errno;
+    const auto ssl_error = SSL_get_error(session, ret);
 
-        case SSL_ERROR_WANT_READ:
-            Comm::SetSelect(fd, COMM_SELECT_READ, callback, (callback != NULL ? conn : NULL), 0);
-            return false;
+    switch (ssl_error) {
 
-        case SSL_ERROR_WANT_WRITE:
-            Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, (callback != NULL ? conn : NULL), 0);
-            return false;
+    case SSL_ERROR_WANT_READ:
+        Comm::SetSelect(fd, COMM_SELECT_READ, callback, (callback ? conn : nullptr), 0);
+        return false;
 
-        case SSL_ERROR_SYSCALL:
-            if (ret == 0) {
-                debugs(83, 2, "Error negotiating SSL connection on FD " << fd << ": Aborted by client: " << ssl_error);
-            } else {
-                debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
-                       (xerrno == 0 ? Security::ErrorString(ssl_error) : xstrerr(xerrno)));
-            }
-            conn->clientConnection->close();
-            return false;
+    case SSL_ERROR_WANT_WRITE:
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, (callback ? conn : nullptr), 0);
+        return false;
 
-        case SSL_ERROR_ZERO_RETURN:
-            debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
-            conn->clientConnection->close();
-            return false;
-
-        default:
-            debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
-                   fd << ": " << Security::ErrorString(ERR_get_error()) <<
-                   " (" << ssl_error << "/" << ret << ")");
-            conn->clientConnection->close();
-            return false;
+    case SSL_ERROR_SYSCALL:
+        if (ret == 0) {
+            debugs(83, 2, "Error negotiating SSL connection on FD " << fd << ": Aborted by client: " << ssl_error);
+        } else {
+            debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
+                   (xerrno == 0 ? Security::ErrorString(ssl_error) : xstrerr(xerrno)));
         }
+        break;
 
-        /* NOTREACHED */
+    case SSL_ERROR_ZERO_RETURN:
+        debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
+        break;
+
+    default:
+        debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
+               fd << ": " << Security::ErrorString(ERR_get_error()) <<
+               " (" << ssl_error << "/" << ret << ")");
     }
-    return true;
 
 #elif USE_GNUTLS
 
@@ -2608,33 +2602,20 @@ tryTlsHandshake(ConnStateData *conn, PF *callback)
 
     if (gnutls_error_is_fatal(x)) {
         debugs(83, 2, "Error negotiating TLS on " << conn->clientConnection << ": Aborted by client: " << Security::ErrorString(x));
-        conn->clientConnection->close();
-        return false;
-    }
 
-    if (x == GNUTLS_E_INTERRUPTED || x == GNUTLS_E_AGAIN) {
-// x < 0 && gnutls_error_is_fatal(x) == 0) {
-
-// XXX: check if comm is still set for reading or writing?
-
-const bool writePending = comm_has_incomplete_write(fd);
-const auto direction = gnutls_record_get_direction(session);
-debugs(1, 0, "DEBUG: gnutls handshake I/O:  write=" << (writePending?'T':'F') << ", record_direction=" << direction);
-
+    } else if (x == GNUTLS_E_INTERRUPTED || x == GNUTLS_E_AGAIN) {
         const auto ioAction = (gnutls_record_get_direction(session)==0 ? COMM_SELECT_READ : COMM_SELECT_WRITE);
         Comm::SetSelect(fd, ioAction, callback, (callback ? conn : nullptr), 0);
         return false;
     }
 
-    /* Should never get here */
-    assert(x == GNUTLS_E_SUCCESS);
-    return false;
-
 #else
+    (void)session;
     debugs(83, DBG_CRITICAL, "ERROR: HTTPS not supported by this Squid.");
+#endif
+
     conn->clientConnection->close();
     return false;
-#endif
 }
 
 /** negotiate an SSL connection */
