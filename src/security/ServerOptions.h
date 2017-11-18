@@ -67,7 +67,11 @@ public:
     Security::ContextPointer staticContext;
     SBuf staticContextSessionId; ///< "session id context" for staticContext
 
+#if USE_OPENSSL
     bool generateHostCertificates = true; ///< dynamically make host cert
+#elif USE_GNUTLS || 1 /* requires --with-openssl for now */
+    bool generateHostCertificates = false; ///< dynamically make host cert
+#endif
 
     Security::CertPointer signingCert; ///< x509 certificate for signing generated certificates
     Security::PrivateKeyPointer signPkey; ///< private key for signing generated certificates

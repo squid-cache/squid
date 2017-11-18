@@ -171,9 +171,6 @@ private:
 static void clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
 
 static IOACB httpAccept;
-#if USE_OPENSSL
-static IOACB httpsAccept;
-#endif
 static CTCB clientLifetimeTimeout;
 #if USE_IDENT
 static IDCB clientIdentDone;
@@ -2531,7 +2528,6 @@ httpAccept(const CommAcceptCbParams &params)
     AsyncJob::Start(srv); // usually async-calls readSomeData()
 }
 
-#if USE_OPENSSL
 /// Create TLS connection structure and update fd_table
 static bool
 httpsCreate(const Comm::ConnectionPointer &conn, const Security::ContextPointer &ctx)
@@ -2539,12 +2535,15 @@ httpsCreate(const Comm::ConnectionPointer &conn, const Security::ContextPointer 
     if (Security::CreateServerSession(ctx, conn, "client https start")) {
         debugs(33, 5, "will negotiate TLS on " << conn);
         return true;
+    } else {
+        debugs(33, 1, "ERROR: could not create TLS server context for " << conn);
     }
 
     conn->close();
     return false;
 }
 
+#if USE_OPENSSL
 /**
  *
  * \retval 1 on success
@@ -2597,11 +2596,13 @@ Squid_SSL_accept(ConnStateData *conn, PF *callback)
     }
     return 1;
 }
+#endif
 
 /** negotiate an SSL connection */
 static void
 clientNegotiateSSL(int fd, void *data)
 {
+#if USE_OPENSSL
     ConnStateData *conn = (ConnStateData *)data;
     int ret;
     if ((ret = Squid_SSL_accept(conn, clientNegotiateSSL)) <= 0) {
@@ -2674,6 +2675,9 @@ clientNegotiateSSL(int fd, void *data)
     }
 
     conn->readSomeData();
+#else
+debugs(1, 0, "ERROR: clientNegotiateSSL not implemented.");
+#endif
 }
 
 /**
@@ -2697,6 +2701,7 @@ httpsEstablish(ConnStateData *connState, const Security::ContextPointer &ctx)
     Comm::SetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
 }
 
+#if USE_OPENSSL
 /**
  * A callback function to use with the ACLFilledChecklist callback.
  */
@@ -2725,6 +2730,7 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
     if (!connState->fakeAConnectRequest("ssl-bump", connState->inBuf))
         connState->clientConnection->close();
 }
+#endif
 
 /** handle a new HTTPS connection */
 static void
@@ -2758,6 +2764,7 @@ void
 ConnStateData::postHttpsAccept()
 {
     if (port->flags.tunnelSslBumping) {
+#if USE_OPENSSL
         debugs(33, 5, "accept transparent connection: " << clientConnection);
 
         if (!Config.accessList.ssl_bump) {
@@ -2789,12 +2796,16 @@ ConnStateData::postHttpsAccept()
         acl_checklist->al->request = request;
         HTTPMSGLOCK(acl_checklist->al->request);
         acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
+#else
+        debugs(33, DBG_CRITICAL, "ERROR: SSL-Bump requires --with-openssl");
+#endif
         return;
     } else {
         httpsEstablish(this, port->secure.staticContext);
     }
 }
 
+#if USE_OPENSSL
 void
 ConnStateData::sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply)
 {
@@ -3497,12 +3508,12 @@ clientHttpConnectionsOpen(void)
                 Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->secure.dynamicCertMemCacheSize);
             }
         }
+#endif
 
         if (s->secure.encryptTransport && !s->secure.staticContext) {
             debugs(1, DBG_CRITICAL, "ERROR: Ignoring " << scheme << "_port " << s->s << " due to TLS context initialization failure.");
             continue;
         }
-#endif
 
         // Fill out a Comm::Connection which IPC will open as a listener for us
         //  then pass back when active so we can start a TcpAcceptor subscription.
@@ -3522,7 +3533,6 @@ clientHttpConnectionsOpen(void)
                                             ListeningStartedDialer(&clientListenerConnectionOpened, s, Ipc::fdnHttpSocket, sub));
             Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpSocket, listenCall);
 
-#if USE_OPENSSL
         } else if (s->transport.protocol == AnyP::PROTO_HTTPS) {
             // setup the subscriptions such that new connections accepted by listenConn are handled by HTTPS
             RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpsAccept", CommAcceptCbPtrFun(httpsAccept, CommAcceptCbParams(NULL)));
@@ -3532,7 +3542,6 @@ clientHttpConnectionsOpen(void)
                                             ListeningStartedDialer(&clientListenerConnectionOpened,
                                                     s, Ipc::fdnHttpsSocket, sub));
             Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpsSocket, listenCall);
-#endif
         }
 
         HttpSockets[NHttpSockets] = -1; // set in clientListenerConnectionOpened
