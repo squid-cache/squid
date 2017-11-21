@@ -44,8 +44,7 @@ Security::ServerOptions::operator =(const Security::ServerOptions &old) {
 
         staticContextSessionId = old.staticContextSessionId;
         generateHostCertificates = old.generateHostCertificates;
-        signingCert = old.signingCert;
-        signPkey = old.signPkey;
+        signingCa = old.signingCa;
         certsToChain = old.certsToChain;
         untrustedSigningCert = old.untrustedSigningCert;
         untrustedSignPkey = old.untrustedSignPkey;
@@ -275,26 +274,26 @@ Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
     // and key pointers used to sign those contexts later.
 
     Security::KeyData &keys = certs.front();
-    signingCert = keys.cert;
-    signPkey = keys.pkey;
+    signingCa.cert = keys.cert;
+    signingCa.pkey = keys.pkey;
     certsToChain = keys.chain;
 
     const char *portType = AnyP::ProtocolType_str[port.transport.protocol];
-    if (!signingCert) {
+    if (!signingCa.cert) {
         char buf[128];
         // XXX: we never actually checked that the cert is capable of signing!
         fatalf("No valid signing certificate configured for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
     }
 
-    if (!signPkey)
+    if (!signingCa.pkey)
         debugs(3, DBG_IMPORTANT, "No TLS private key configured for  " << portType << "_port " << port.s);
 
 #if USE_OPENSSL
-    Ssl::generateUntrustedCert(untrustedSigningCert, untrustedSignPkey, signingCert, signPkey);
+    Ssl::generateUntrustedCert(untrustedSigningCert, untrustedSignPkey, signingCa.cert, signingCa.pkey);
 #elif USE_GNUTLS
     // TODO: implement for GnuTLS. Just a warning for now since generate is implicitly on for all crypto builds.
-    signingCert.reset();
-    signPkey.reset();
+    signingCa.cert.reset();
+    signingCa.pkey.reset();
     debugs(83, DBG_CRITICAL, "WARNING: Dynamic TLS certificate generation requires --with-openssl.");
     return;
 #else

@@ -815,7 +815,7 @@ Ssl::chainCertificatesToSSLContext(Security::ContextPointer &ctx, Security::Serv
 {
     assert(ctx);
     // Add signing certificate to the certificates chain
-    X509 *signingCert = options.signingCert.get();
+    X509 *signingCert = options.signingCa.cert.get();
     if (SSL_CTX_add_extra_chain_cert(ctx.get(), signingCert)) {
         // increase the certificate lock
         X509_up_ref(signingCert);

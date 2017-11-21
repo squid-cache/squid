@@ -2939,11 +2939,11 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         certProperties.signWithX509.resetAndLock(port->secure.untrustedSigningCert.get());
         certProperties.signWithPkey.resetAndLock(port->secure.untrustedSignPkey.get());
     } else {
-        assert(port->secure.signingCert.get());
-        certProperties.signWithX509.resetAndLock(port->secure.signingCert.get());
+        assert(port->secure.signingCa.cert.get());
+        certProperties.signWithX509.resetAndLock(port->secure.signingCa.cert.get());
 
-        if (port->secure.signPkey)
-            certProperties.signWithPkey.resetAndLock(port->secure.signPkey.get());
+        if (port->secure.signingCa.pkey)
+            certProperties.signWithPkey.resetAndLock(port->secure.signingCa.pkey.get());
     }
     signAlgorithm = certProperties.signAlgorithm;
 
@@ -3282,7 +3282,7 @@ ConnStateData::startPeekAndSplice()
     }
 
     // will call httpsPeeked() with certificate and connection, eventually
-    Security::ContextPointer unConfiguredCTX(Ssl::createSSLContext(port->secure.signingCert, port->secure.signPkey, port->secure));
+    Security::ContextPointer unConfiguredCTX(Ssl::createSSLContext(port->secure.signingCa.cert, port->secure.signingCa.pkey, port->secure));
     fd_table[clientConnection->fd].dynamicTlsContext = unConfiguredCTX;
 
     if (!httpsCreate(clientConnection, unConfiguredCTX))

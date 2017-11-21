@@ -73,8 +73,8 @@ public:
     bool generateHostCertificates = false; ///< dynamically make host cert
 #endif
 
-    Security::CertPointer signingCert; ///< x509 certificate for signing generated certificates
-    Security::PrivateKeyPointer signPkey; ///< private key for signing generated certificates
+    Security::KeyData signingCa; ///< x509 certificate and key for signing generated certificates
+
     Security::CertList certsToChain; ///<  x509 certificates to send with the generated cert
     Security::CertPointer untrustedSigningCert; ///< x509 certificate for signing untrusted generated certificates
     Security::PrivateKeyPointer untrustedSignPkey; ///< private key for signing untrusted generated certificates
