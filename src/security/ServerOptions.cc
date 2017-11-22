@@ -45,9 +45,8 @@ Security::ServerOptions::operator =(const Security::ServerOptions &old) {
         staticContextSessionId = old.staticContextSessionId;
         generateHostCertificates = old.generateHostCertificates;
         signingCa = old.signingCa;
+        untrustedSigningCa = old.untrustedSigningCa;
         certsToChain = old.certsToChain;
-        untrustedSigningCert = old.untrustedSigningCert;
-        untrustedSignPkey = old.untrustedSignPkey;
         dynamicCertMemCacheSize = old.dynamicCertMemCacheSize;
     }
     return *this;
@@ -289,7 +288,7 @@ Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
         debugs(3, DBG_IMPORTANT, "No TLS private key configured for  " << portType << "_port " << port.s);
 
 #if USE_OPENSSL
-    Ssl::generateUntrustedCert(untrustedSigningCert, untrustedSignPkey, signingCa.cert, signingCa.pkey);
+    Ssl::generateUntrustedCert(untrustedSigningCa.cert, untrustedSigningCa.pkey, signingCa.cert, signingCa.pkey);
 #elif USE_GNUTLS
     // TODO: implement for GnuTLS. Just a warning for now since generate is implicitly on for all crypto builds.
     signingCa.cert.reset();
@@ -301,7 +300,7 @@ Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
     return;
 #endif
 
-    if (!untrustedSigningCert) {
+    if (!untrustedSigningCa.cert) {
         char buf[128];
         fatalf("Unable to generate signing certificate for untrusted sites for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
     }

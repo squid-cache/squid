@@ -74,10 +74,9 @@ public:
 #endif
 
     Security::KeyData signingCa; ///< x509 certificate and key for signing generated certificates
+    Security::KeyData untrustedSigningCa; ///< x509 certificate and key for signing untrusted generated certificates
 
     Security::CertList certsToChain; ///<  x509 certificates to send with the generated cert
-    Security::CertPointer untrustedSigningCert; ///< x509 certificate for signing untrusted generated certificates
-    Security::PrivateKeyPointer untrustedSignPkey; ///< private key for signing untrusted generated certificates
 
     /// max size of generated certificates memory cache (4 MB default)
     size_t dynamicCertMemCacheSize = 4*1024*1024;
@@ -92,7 +91,7 @@ private:
     bool createStaticServerContext(AnyP::PortCfg &);
 
     /// initialize contexts for signing dynamic TLS certificates (if needed)
-    /// the resulting context is stored in signingCert, signPKey, untrustedSigningCert, untrustedSignPKey
+    /// the resulting keys are stored in signingCa and untrustedSigningCa
     void createSigningContexts(const AnyP::PortCfg &);
 
 private:
