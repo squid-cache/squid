@@ -149,4 +149,3 @@ Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType
     pkey.reset();
     cert.reset();
 }
-
