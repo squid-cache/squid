@@ -418,10 +418,9 @@ testSBuf::testRawSpace()
 {
     SBuf s1(literal);
     SBuf s2(fox1);
-    SBuf::size_type sz=s2.length();
-    char *rb=s2.rawSpace(strlen(fox2)+1);
+    char *rb=s2.rawAppendStart(strlen(fox2)+1);
     strcpy(rb,fox2);
-    s2.forceSize(sz+strlen(fox2));
+    s2.rawAppendFinish(rb, strlen(fox2));
     CPPUNIT_ASSERT_EQUAL(s1,s2);
 }
 

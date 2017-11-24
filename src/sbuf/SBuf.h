@@ -364,24 +364,18 @@ public:
      */
     const char* rawContent() const;
 
-    /** Exports a writable pointer to the SBuf internal storage.
-     * \warning Use with EXTREME caution, this is a dangerous operation.
-     *
-     * Returns a pointer to the first unused byte in the SBuf's storage,
-     * which can be be used for appending. At least minSize bytes will
-     * be available for writing.
-     * The returned pointer must not be stored by the caller, as it will
-     * be invalidated by the first call to a non-const method call
-     * on the SBuf.
-     * This call guarantees to never return NULL.
-     * \see reserveSpace
-     * \note Unlike reserveSpace(), this method does not guarantee exclusive
-     *       buffer ownership. It is instead optimized for a one writer
-     *       (appender), many readers scenario by avoiding unnecessary
-     *       copying and allocations.
-     * \throw SBufTooBigException if the user tries to allocate too big a SBuf
-     */
-    char *rawSpace(size_type minSize);
+    /// \returns a buffer suitable for appending at most `anticipatedSize` bytes
+    /// The buffer must be used "immediately" because it is invalidated by most
+    /// non-constant SBuf method calls, including such calls against other SBuf
+    /// objects that just happen to share the same underlying MemBlob storage!
+    char *rawAppendStart(size_type anticipatedSize);
+
+    /// Updates SBuf metadata to reflect appending `actualSize` bytes to the
+    /// buffer returned by the corresponding rawAppendStart() call. Throws if
+    /// rawAppendStart(actualSize) would have returned a different value now.
+    /// \param start raw buffer previously returned by rawAppendStart()
+    /// \param actualSize the number of appended bytes
+    void rawAppendFinish(const char *start, size_type actualSize);
 
     /** Obtain how much free space is available in the backing store.
      *
@@ -389,16 +383,6 @@ public:
      *        the free space can be used.
      */
     size_type spaceSize() const { return store_->spaceSize(); }
-
-    /** Force a SBuf's size
-     * \warning use with EXTREME caution, this is a dangerous operation
-     *
-     * Adapt the SBuf internal state after external interference
-     * such as writing into it via rawSpace.
-     * \throw TextException if SBuf doesn't have exclusive ownership of store
-     * \throw SBufTooBigException if new size is bigger than available store space
-     */
-    void forceSize(size_type newSize);
 
     /** exports a null-terminated reference to the SBuf internal storage.
      * \warning ACCESSING RAW STORAGE IS DANGEROUS! DO NOT EVER USE
@@ -671,6 +655,25 @@ private:
     void cow(size_type minsize = npos);
 
     void checkAccessBounds(size_type pos) const;
+
+    /** Exports a writable pointer to the SBuf internal storage.
+     * \warning Use with EXTREME caution, this is a dangerous operation.
+     *
+     * Returns a pointer to the first unused byte in the SBuf's storage,
+     * which can be be used for appending. At least minSize bytes will
+     * be available for writing.
+     * The returned pointer must not be stored by the caller, as it will
+     * be invalidated by the first call to a non-const method call
+     * on the SBuf.
+     * This call guarantees to never return nullptr.
+     * \see reserveSpace
+     * \note Unlike reserveSpace(), this method does not guarantee exclusive
+     *       buffer ownership. It is instead optimized for a one writer
+     *       (appender), many readers scenario by avoiding unnecessary
+     *       copying and allocations.
+     * \throw SBufTooBigException if the user tries to allocate too big a SBuf
+     */
+    char *rawSpace(size_type minSize);
 
     /** Low-level append operation
      *
