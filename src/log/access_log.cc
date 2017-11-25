@@ -322,11 +322,11 @@ HierarchyLogEntry::peerResponseTime(struct timeval &responseTime)
 
     // accommodate read without (completed) write
     const auto last_write = peer_last_write_.tv_sec > 0 ?
-        peer_last_write_ : peer_last_read_;
+                            peer_last_write_ : peer_last_read_;
 
     // accommodate write without (completed) read
     const auto last_read = peer_last_read_.tv_sec > 0 ?
-        peer_last_read_ : peer_last_write_;
+                           peer_last_read_ : peer_last_write_;
 
     tvSub(responseTime, last_write, last_read);
     // The peer response time (%<pt) stopwatch is currently defined to start
