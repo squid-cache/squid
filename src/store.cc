@@ -1555,7 +1555,7 @@ StoreEntry::timestampsSet()
     if (mem_obj && mem_obj->request) {
         struct timeval responseTime;
         if (mem_obj->request->hier.peerResponseTime(responseTime) &&
-            responseTime.tv_sec < squid_curtime)
+                responseTime.tv_sec < squid_curtime)
             served_date -= (squid_curtime - responseTime.tv_sec);
     }
 
