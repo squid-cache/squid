@@ -641,11 +641,16 @@ Security::PeerOptions::updateContextCa(Security::ContextPointer &ctx)
 {
     debugs(83, 8, "Setting CA certificate locations.");
 #if USE_OPENSSL
-    const char *path = caDir.isEmpty() ? nullptr : caDir.c_str();
+    if (const char *path = caDir.isEmpty() ? nullptr : caDir.c_str()) {
+        if (!SSL_CTX_load_verify_locations(ctx.get(), nullptr, path)) {
+            const auto x = ERR_get_error();
+            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate location " << path << ": " << Security::ErrorString(x));
+        }
+    }
 #endif
     for (auto i : caFiles) {
 #if USE_OPENSSL
-        if (!SSL_CTX_load_verify_locations(ctx.get(), i.c_str(), path)) {
+        if (!SSL_CTX_load_verify_locations(ctx.get(), i.c_str(), nullptr)) {
             const auto x = ERR_get_error();
             debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate location " <<
                    i << ": " << Security::ErrorString(x));
