@@ -235,12 +235,10 @@ public:
 
     /// Start to create dynamic Security::ContextPointer for host or uses static port SSL context.
     void getSslContextStart();
-    /**
-     * Done create dynamic ssl certificate.
-     *
-     * \param[in] isNew if generated certificate is new, so we need to add this certificate to storage.
-     */
-    void getSslContextDone(Security::ContextPointer &, bool isNew = false);
+
+    /// finish configuring the newly created SSL context"
+    void getSslContextDone(Security::ContextPointer &);
+
     /// Callback function. It is called when squid receive message from ssl_crtd.
     static void sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply);
     /// Proccess response from ssl_crtd.
@@ -369,6 +367,15 @@ private:
     bool parseProxy2p0();
     bool proxyProtocolError(const char *reason);
 
+#if USE_OPENSSL
+    /// \returns a pointer to the matching cached TLS context or nil
+    Security::ContextPointer getTlsContextFromCache(const SBuf &cacheKey, const Ssl::CertificateProperties &certProperties);
+
+    /// Attempts to add a given TLS context to the cache, replacing the old
+    /// same-key context, if any
+    void storeTlsContextToCache(const SBuf &cacheKey, Security::ContextPointer &ctx);
+#endif
+
     /// whether PROXY protocol header is still expected
     bool needProxyProtocolHeader_;
 
@@ -390,7 +397,7 @@ private:
 
     /// TLS client delivered SNI value. Empty string if none has been received.
     SBuf tlsClientSni_;
-    String sslBumpCertKey; ///< Key to use to store/retrieve generated certificate
+    SBuf sslBumpCertKey; ///< Key to use to store/retrieve generated certificate
 
     /// HTTPS server cert. fetching state for bump-ssl-server-first
     Ssl::ServerBump *sslServerBump;
