@@ -17,11 +17,11 @@
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
-#if HAVE_SYS_FILE_H
-#include <sys/file.h>
-#endif
 #if HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+#if HAVE_SYS_FILE_H
+#include <sys/file.h>
 #endif
 
 #define HERE "(security_file_certgen) " << __FILE__ << ':' << __LINE__ << ": "
