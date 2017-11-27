@@ -28,6 +28,12 @@ class HeaderUpdater: public AsyncJob
     CBDATA_CHILD(HeaderUpdater);
 
 public:
+    class IoCbParams {
+    public:
+        IoCbParams(const char *aBuf, ssize_t aSize) : buf(aBuf), size(aSize) {}
+        const char *buf;
+        ssize_t size;
+    };
     HeaderUpdater(const Rock::SwapDir::Pointer &aStore, const Ipc::StoreMapUpdate &update);
     virtual ~HeaderUpdater() override = default;
 
@@ -45,7 +51,7 @@ private:
     void startReading();
     void stopReading(const char *why);
     void readMore(const char *why);
-    void noteRead(ssize_t result);
+    void noteRead(const IoCbParams result);
     void noteDoneReading(int errflag);
     void parseReadBytes();
 
@@ -66,6 +72,13 @@ private:
 
     SlotId staleSplicingPointNext; ///< non-updatable old HTTP body suffix start
 };
+
+inline
+std::ostream &operator <<(std::ostream &os, const HeaderUpdater::IoCbParams &params)
+{
+    os << static_cast<const void *>(params.buf) << "," << params.size;
+    return os;
+}
 
 } // namespace Rock
 

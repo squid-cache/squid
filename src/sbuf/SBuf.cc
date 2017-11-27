@@ -144,6 +144,28 @@ SBuf::reserve(const SBufReservationRequirements &req)
 }
 
 char *
+SBuf::rawAppendStart(size_type anticipatedSize)
+{
+    char *space = rawSpace(anticipatedSize);
+    debugs(24, 8, id << " start appending up to " << anticipatedSize << " bytes");
+    return space;
+}
+
+void
+SBuf::rawAppendFinish(const char *start, size_type actualSize)
+{
+    Must(bufEnd() == start);
+    Must(store_->canAppend(off_ + len_, actualSize));
+    debugs(24, 8, id << " finish appending " << actualSize << " bytes");
+
+    size_type newSize = length() + actualSize;
+    if (newSize > min(maxSize,store_->capacity-off_))
+        throw SBufTooBigException(__FILE__,__LINE__);
+    len_ = newSize;
+    store_->size = off_ + newSize;
+}
+
+char *
 SBuf::rawSpace(size_type minSpace)
 {
     Must(length() <= maxSize - minSpace);
@@ -518,18 +540,6 @@ SBuf::rawContent() const
 {
     ++stats.rawAccess;
     return buf();
-}
-
-void
-SBuf::forceSize(size_type newSize)
-{
-    debugs(24, 8, id << " force " << (newSize > length() ? "grow" : "shrink") << " to length=" << newSize);
-
-    Must(store_->LockCount() == 1);
-    if (newSize > min(maxSize,store_->capacity-off_))
-        throw SBufTooBigException(__FILE__,__LINE__);
-    len_ = newSize;
-    store_->size = newSize;
 }
 
 const char*
