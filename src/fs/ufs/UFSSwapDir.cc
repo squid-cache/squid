@@ -1217,17 +1217,17 @@ Fs::Ufs::UFSSwapDir::evictCached(StoreEntry & e)
     if (e.locked()) // somebody else may still be using this file
         return; // nothing to do: our get() always returns nil
 
-    if (e.hasDisk()) {
-        mapBitReset(e.swap_filen);
-        if (e.swappedOut()) {
-            cur_size -= fs.blksize * sizeInBlocks(e.swap_file_sz);
-            --n_disk_objects;
-        }
-        replacementRemove(&e);
-        UFSSwapDir::unlinkFile(e.swap_filen);
-        e.detachFromDisk();
+    if (!e.hasDisk())
+        return; // see evictIfFound()
+
+    if (e.swappedOut()) {
+        cur_size -= fs.blksize * sizeInBlocks(e.swap_file_sz);
+        --n_disk_objects;
     }
-    // else see evictIfFound()
+    replacementRemove(&e);
+    mapBitReset(e.swap_filen);
+    UFSSwapDir::unlinkFile(e.swap_filen);
+    e.detachFromDisk();
 }
 
 void
