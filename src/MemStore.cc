@@ -448,8 +448,8 @@ MemStore::updateAnchoredWith(StoreEntry &entry, const sfileno index, const Ipc::
 void
 MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor)
 {
+    assert(!e.hasDisk()); // no conflict with disk entry basics
     const Ipc::StoreMapAnchor::Basics &basics = anchor.basics;
-
     e.swap_file_sz = basics.swap_file_sz;
     e.lastref = basics.lastref;
     e.timestamp = basics.timestamp;
@@ -468,8 +468,6 @@ MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
         assert(e.mem_obj->object_sz < 0);
         e.setMemStatus(NOT_IN_MEMORY);
     }
-    assert(!e.hasDisk()); // set in StoreEntry constructor
-    e.ping_status = PING_NONE;
 
     EBIT_SET(e.flags, ENTRY_VALIDATED);
 
