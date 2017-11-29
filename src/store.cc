@@ -641,19 +641,18 @@ StoreEntry::setPublicKey(const KeyScope scope)
 
     assert(!EBIT_TEST(flags, RELEASE_REQUEST));
 
-    // XXX: Violates the documented calcPublicKey() assumption!
-    const cache_key *pubKey = calcPublicKey(scope);
-
-    // XXX: Performance regression: SBuf() allocates.
-    if (!Store::Root().addWriting(this, Store::CacheKey(pubKey, SBuf(mem_obj->storeId()), mem_obj->method)))
-        return false;
-
-    // XXX: Does not undo addWriting() on failures
-    if (!adjustVary())
-        return false;
-
-    forcePublicKey(pubKey);
-    return true;
+    try {
+        EntryGuard newVaryMarker(adjustVary(), "setPublicKey+failure");
+        const cache_key *pubKey = calcPublicKey(scope);
+        // XXX: Performance regression: SBuf() allocates.
+        Store::Root().addWriting(this, Store::CacheKey(pubKey, SBuf(mem_obj->storeId()), mem_obj->method));
+        forcePublicKey(pubKey);
+        newVaryMarker.unlockAndReset("setPublicKey+success");
+        return true;
+    } catch (const std::exception &ex) {
+        debugs(20, 2, "failed: " << ex.what());
+    }
+    return false;
 }
 
 void
@@ -712,14 +711,15 @@ StoreEntry::calcPublicKey(const KeyScope keyScope)
 /// Updates mem_obj->request->vary_headers to reflect the current Vary.
 /// The vary_headers field is used to calculate the Vary marker key.
 /// Releases the old Vary marker with an outdated key (if any).
-/// \returns false if fails to create "vary" base object, true otherwise.
-bool
+/// \returns new (locked) Vary marker StoreEntry or, if none was needed, nil
+/// \throws std::exception on failures
+StoreEntry *
 StoreEntry::adjustVary()
 {
     assert(mem_obj);
 
     if (!mem_obj->request)
-        return true;
+        return nullptr;
 
     HttpRequestPointer request(mem_obj->request);
 
@@ -752,7 +752,7 @@ StoreEntry::adjustVary()
         // refactor to simply check whether `pe` is already public below.
         if (!pe->makePublic()) {
             pe->unlock("StoreEntry::adjustVary+failed_makePublic");
-            return false;
+            throw TexcHere("failed to make Vary marker public");
         }
         /* We are allowed to do this typecast */
         HttpReply *rep = new HttpReply;
@@ -786,9 +786,9 @@ StoreEntry::adjustVary()
 
         pe->complete();
 
-        pe->unlock("StoreEntry::adjustVary+ok_makePublic");
+        return pe;
     }
-    return true;
+    return nullptr;
 }
 
 StoreEntry *

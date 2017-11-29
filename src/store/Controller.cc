@@ -602,23 +602,22 @@ Store::Controller::addReading(StoreEntry *e, const CacheKey &cacheKey)
     return true;
 }
 
-bool
+void
 Store::Controller::addWriting(StoreEntry *e, const CacheKey &cacheKey)
 {
     assert(e);
 
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
-        return true;
+        return; // constant memory-resident entries do not need transients
 
-    if (!transients || e->hasTransients())
-        return true;
+    if (!transients)
+        return; // non-SMP configurations do not need transients
 
-    if (!transients->startWriting(e, cacheKey)) {
-        // a collision means that there is already transients writer
-        return false;
-    }
+    if (e->hasTransients())
+        return; // already got transients somehow
 
-    return true;
+    if (!transients->startWriting(e, cacheKey))
+        throw TexcHere("transients writer collision");
 }
 
 void

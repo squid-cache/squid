@@ -274,6 +274,8 @@ public:
     virtual void flush();
 
 protected:
+    typedef Store::EntryGuard EntryGuard;
+
     void transientsAbandonmentCheck();
     /// does nothing except throwing if disk-associated data members are inconsistent
     void checkDisk() const;
@@ -281,7 +283,7 @@ protected:
 private:
     bool checkTooBig() const;
     void forcePublicKey(const cache_key *newkey);
-    bool adjustVary();
+    StoreEntry *adjustVary();
     const cache_key *calcPublicKey(const KeyScope keyScope);
 
     static MemAllocator *pool;
@@ -344,9 +346,62 @@ private:
 typedef void (*STOREGETCLIENT) (StoreEntry *, void *cbdata);
 
 namespace Store {
+
+/// a smart pointer similar to std::unique_ptr<> that automatically
+/// release()s and unlock()s the guarded Entry on stack-unwinding failures
+class EntryGuard {
+public:
+    /// \param entry either nil or a locked Entry to manage
+    /// \param context default unlock() message
+    EntryGuard(Entry *entry, const char *context):
+        entry_(entry), context_(context) {
+        assert(!entry_ || entry_->locked());
+    }
+
+    ~EntryGuard() {
+        if (entry_) {
+            // something went wrong -- the caller did not unlockAndReset() us
+            entry_->releaseRequest(false);
+            entry_->unlock(context_);
+        }
+    }
+
+    EntryGuard(EntryGuard &&) = delete; // no copying or moving (for now)
+
+    /// like std::unique_ptr::get()
+    /// \returns nil or the guarded (locked) entry
+    Entry *get() {
+        return entry_;
+    }
+
+    /// like std::unique_ptr::release(); not like Entry::release()
+    /// stops guarding the entry
+    /// does not unlock the entry
+    /// \returns nil or the previously guarded entry
+    Entry *releaseLocked() {
+        const auto entry = entry_;
+        entry_ = nullptr;
+        return entry;
+    }
+
+    /// like std::unique_ptr::reset()
+    /// stops guarding the entry
+    /// unlocks the entry (which may destroy it)
+    void unlockAndReset(const char *resetContext = nullptr) {
+        if (entry_) {
+            entry_->unlock(resetContext ? resetContext : context_);
+            entry_ = nullptr;
+        }
+    }
+
+private:
+    Entry *entry_; ///< the guarded Entry or nil
+    const char *context_; ///< default unlock() message
+};
+
 void Stats(StoreEntry *output);
 void Maintain(void *unused);
-};
+}; // namespace Store
 
 /// \ingroup StoreAPI
 size_t storeEntryInUse();

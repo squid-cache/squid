@@ -80,8 +80,8 @@ public:
 
     /// register a being-written StoreEntry (to support concurrent cache reads
     /// and to receive remote DELETE events)
-    /// \returns false on failures
-    bool addWriting(StoreEntry *e, const CacheKey &cacheKey);
+    /// \throws std::exception on failures
+    void addWriting(StoreEntry *, const CacheKey &);
 
     /// whether the entry is in "reading from Transients" I/O state
     bool transientsReader(const StoreEntry &) const;

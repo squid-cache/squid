@@ -42,6 +42,7 @@ class Controlled;
 class Disks;
 class Disk;
 class DiskConfig;
+class EntryGuard;
 
 typedef ::StoreEntry Entry;
 typedef ::MemStore Memory;
