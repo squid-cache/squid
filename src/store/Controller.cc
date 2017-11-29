@@ -632,8 +632,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     }
 
     if (!collapsed->locked()) {
-        debugs(20, 3, "will release unlocked " << *collapsed);
-        // should destroy unlocked entry
+        debugs(20, 3, "skipping (and may destroy) unlocked " << *collapsed);
         handleIdleEntry(*collapsed);
         return;
     }
