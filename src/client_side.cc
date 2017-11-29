@@ -2535,10 +2535,9 @@ httpsCreate(const Comm::ConnectionPointer &conn, const Security::ContextPointer 
     if (Security::CreateServerSession(ctx, conn, "client https start")) {
         debugs(33, 5, "will negotiate TLS on " << conn);
         return true;
-    } else {
-        debugs(33, 1, "ERROR: could not create TLS server context for " << conn);
     }
 
+    debugs(33, DBG_IMPORTANT, "ERROR: could not create TLS server context for " << conn);
     conn->close();
     return false;
 }
@@ -2547,18 +2546,20 @@ httpsCreate(const Comm::ConnectionPointer &conn, const Security::ContextPointer 
  *
  * \retval true on success
  * \retval false when needs more data
- * \retval false when an error occured and closes the TCP connection
+ * \retval false when an error occurred (and closes the TCP connection)
  */
 static bool
-tryTlsHandshake(ConnStateData *conn, PF *callback)
+tlsAttemptHandshake(ConnStateData *conn, PF *callback)
 {
+    // TODO: maybe throw instead of just closing the TCP connection.
+    // see https://github.com/squid-cache/squid/pull/81#discussion_r153053278
     int fd = conn->clientConnection->fd;
     auto session = fd_table[fd].ssl.get();
 
     errno = 0;
 
 #if USE_OPENSSL
-    auto ret = SSL_accept(session);
+    const auto ret = SSL_accept(session);
     if (ret > 0)
         return true;
 
@@ -2590,13 +2591,13 @@ tryTlsHandshake(ConnStateData *conn, PF *callback)
 
     default:
         debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
-               fd << ": " << Security::ErrorString(ERR_get_error()) <<
+               fd << ": " << Security::ErrorString(ssl_error) <<
                " (" << ssl_error << "/" << ret << ")");
     }
 
 #elif USE_GNUTLS
 
-    auto x = gnutls_handshake(session);
+    const auto x = gnutls_handshake(session);
     if (x == GNUTLS_E_SUCCESS)
         return true;
 
@@ -2624,7 +2625,7 @@ clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
 
-    if (!tryTlsHandshake(conn, clientNegotiateSSL))
+    if (!tlsAttemptHandshake(conn, clientNegotiateSSL))
         return;
 
 #if USE_OPENSSL
@@ -3297,10 +3298,10 @@ ConnStateData::startPeekAndSplice()
     bio->hold(true);
 
     // Here squid should have all of the client hello message so the
-    // tryTlsHandshake() should return false;
+    // tlsAttemptHandshake() should return false;
     // This block exist only to force openSSL parse client hello and detect
     // ERR_SECURE_ACCEPT_FAIL error, which should be checked and splice if required.
-    if (!tryTlsHandshake(this, nullptr)) {
+    if (!tlsAttemptHandshake(this, nullptr)) {
         debugs(83, 2, "TLS handshake failed.");
         HttpRequest::Pointer request(http ? http->request : nullptr);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_SECURE_ACCEPT_FAIL))
