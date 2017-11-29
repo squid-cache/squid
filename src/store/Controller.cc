@@ -503,6 +503,11 @@ Store::Controller::stopSharing(StoreEntry &e)
 void
 Store::Controller::transientsCompleteWriting(StoreEntry &e)
 {
+    // e.hasTransients() is false if a previously public `e` became private.
+    // transients->isWriter(e) is false if `e` is writing to its second store
+    // after finishing writing to its first store: At the end of the first swap
+    // out, the transients writer becomes a reader and (XXX) we never switch
+    // back to writing, even if we start swapping out again (to another store).
     if (transients && e.hasTransients() && transients->isWriter(e))
         transients->completeWriting(e);
 }
