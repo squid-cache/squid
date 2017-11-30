@@ -104,7 +104,7 @@ public:
     /// Either fills this entry with private key or changes the existing key
     /// from public to private.
     /// \param permanent whether this entry should be private forever.
-    void setPrivateKey(const bool shareable, const bool permanent, const bool shouldMark = true);
+    void setPrivateKey(const bool shareable, const bool permanent);
 
     void expireNow();
     /// Makes the StoreEntry private and marks the corresponding entry

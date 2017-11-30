@@ -40,7 +40,7 @@ void StoreEntry::abort() STUB
 bool StoreEntry::makePublic(const KeyScope scope) STUB
 void StoreEntry::makePrivate(const bool shareable) STUB
 bool StoreEntry::setPublicKey(const KeyScope scope) STUB
-void StoreEntry::setPrivateKey(const bool, const bool, const bool) STUB
+void StoreEntry::setPrivateKey(const bool, const bool) STUB
 void StoreEntry::expireNow() STUB
 void StoreEntry::releaseRequest(const bool shareable) STUB
 void StoreEntry::negativeCache() STUB

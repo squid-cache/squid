@@ -582,7 +582,7 @@ getKeyCounter(void)
  * concept'.
  */
 void
-StoreEntry::setPrivateKey(const bool shareable, const bool permanent, const bool shouldMark)
+StoreEntry::setPrivateKey(const bool shareable, const bool permanent)
 {
     debugs(20, 3, " private key " << *this);
     if (permanent)
@@ -594,8 +594,7 @@ StoreEntry::setPrivateKey(const bool shareable, const bool permanent, const bool
         return;
 
     if (key) {
-        if (shouldMark)
-            Store::Root().evictCached(*this);  // all caches/workers will know
+        Store::Root().evictCached(*this); // all caches/workers will know
 
         // TODO: move into SwapDir::markForUnlink() already called by Root()
         if (hasDisk())
