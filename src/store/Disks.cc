@@ -487,9 +487,18 @@ Store::Disks::sync()
 
 void
 Store::Disks::evictCached(StoreEntry &e) {
-    if (e.hasDisk())
+    if (e.hasDisk()) {
+        // TODO: move into Fs::Ufs::UFSSwapDir::evictCached()
+        if (!EBIT_TEST(e.flags, KEY_PRIVATE)) {
+            // log before evictCached() below may clear hasDisk()
+            storeDirSwapLog(&e, SWAP_LOG_DEL);
+        }
+
         e.disk().evictCached(e);
-    else if (const auto key = e.publicKey())
+        return;
+    }
+
+    if (const auto key = e.publicKey())
         evictIfFound(key);
 }
 

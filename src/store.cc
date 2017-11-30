@@ -594,11 +594,6 @@ StoreEntry::setPrivateKey(const bool shareable, const bool permanent)
         return;
 
     if (key) {
-        // log before evictCached() below may clear hasDisk()
-        // TODO: move into Fs::Ufs::UFSSwapDir::evictCached()
-        if (hasDisk())
-            storeDirSwapLog(this, SWAP_LOG_DEL);
-
         Store::Root().evictCached(*this); // all caches/workers will know
         hashDelete();
     }
@@ -1283,11 +1278,6 @@ StoreEntry::release(const bool shareable)
     }
 
     storeLog(STORE_LOG_RELEASE, this);
-    if (hasDisk() && !EBIT_TEST(flags, KEY_PRIVATE)) {
-        // log before evictCached() below may clear hasDisk()
-        storeDirSwapLog(this, SWAP_LOG_DEL);
-    }
-
     Store::Root().evictCached(*this);
     destroyStoreEntry(static_cast<hash_link *>(this));
     PROF_stop(storeRelease);
