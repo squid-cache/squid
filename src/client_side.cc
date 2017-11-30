@@ -2674,10 +2674,14 @@ clientNegotiateSSL(int fd, void *data)
                " on FD " << fd << " (" << fd_table[fd].ipaddr << ":" <<
                fd_table[fd].remote_port << ")");
     }
+#else
+    debugs(83, 2, "TLS session reuse not yet implemented.");
+#endif
 
     // Connection established. Retrieve TLS connection parameters for logging.
     conn->clientConnection->tlsNegotiations()->retrieveNegotiatedInfo(session);
 
+#if USE_OPENSSL
     X509 *client_cert = SSL_get_peer_certificate(session.get());
 
     if (client_cert) {
@@ -2689,10 +2693,10 @@ clientNegotiateSSL(int fd, void *data)
 
         X509_free(client_cert);
     } else {
-        debugs(83, 5, "FD " << fd << " has no certificate.");
+        debugs(83, 5, "FD " << fd << " has no client certificate.");
     }
 #else
-    debugs(1, DBG_CRITICAL, "ERROR: clientNegotiateSSL session logics not implemented.");
+    debugs(83, 2, "Client certificate requesting not yet implemented.");
 #endif
 
     conn->readSomeData();
