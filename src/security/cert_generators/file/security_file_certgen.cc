@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        if (!(db_path.empty() && (max_db_size == 0))) {
+        if (!db_path.empty() || max_db_size != 0) {
             Ssl::CertificateDb::Check(db_path, max_db_size, fs_block_size);
         }
         // Initialize SSL subsystem
