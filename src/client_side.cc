@@ -2628,8 +2628,9 @@ clientNegotiateSSL(int fd, void *data)
     if (!tlsAttemptHandshake(conn, clientNegotiateSSL))
         return;
 
-#if USE_OPENSSL
     Security::SessionPointer session(fd_table[fd].ssl);
+
+#if USE_OPENSSL
     if (Security::SessionIsResumed(session)) {
         debugs(83, 2, "Session " << SSL_get_session(session.get()) <<
                " reused on FD " << fd << " (" << fd_table[fd].ipaddr <<
