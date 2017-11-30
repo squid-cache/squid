@@ -194,6 +194,11 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
     bool dbFailed = false;
     try {
         db.find(certKey, certProperties.mimicCert, cert, pkey);
+        if(db.IsEnabledDiskStore())
+            db.find(certKey, certProperties.mimicCert, cert, pkey);
+        else
+	    dbFailed = true;
+
     } catch (std::runtime_error &err) {
         dbFailed = true;
         error = err.what();
@@ -216,7 +221,7 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
         }
     }
 
-    if (dbFailed)
+    if (dbFailed && db.IsEnabledDiskStore())
         std::cerr << "security_file_certgen helper database '" << db_path  << "' failed: " << error << std::endl;
 
     std::string bufferToWrite;
@@ -296,7 +301,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        {
+        if (!(db_path.empty() && (max_db_size == 0))) {
             Ssl::CertificateDb::Check(db_path, max_db_size, fs_block_size);
         }
         // Initialize SSL subsystem
