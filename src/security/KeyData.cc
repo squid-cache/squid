@@ -14,8 +14,8 @@
 #include "ssl/bio.h"
 
 /// verify that a private key and cert match
-static bool
-checkPrivateKey(Security::CertPointer &cert, Security::PrivateKeyPointer &pkey)
+bool
+Security::KeyData::checkPrivateKey()
 {
 #if USE_OPENSSL
     return X509_check_private_key(cert.get(), pkey.get());
@@ -141,7 +141,7 @@ Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType
 
     if (!pkey) {
         debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing private key in '" << keyFilename << "'");
-    } else if (!checkPrivateKey(cert, pkey)) {
+    } else if (!checkPrivateKey()) {
         debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' checkPrivateKey() failed");
     } else
         return; // everything is okay

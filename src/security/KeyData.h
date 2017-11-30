@@ -35,6 +35,7 @@ public:
     Security::CertList chain;
 
 private:
+    bool checkPrivateKey();
     bool loadX509CertFromFile();
 };
 
