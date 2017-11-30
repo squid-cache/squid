@@ -87,6 +87,9 @@ Security::KeyData::loadX509CertFromFile()
                    gnutls_x509_crt_deinit(p);
                });
         // XXX: do chain load and cert self-signed check like OpenSSL
+    debugs(83, 2, "Loading certificate chain from PEM files not implemented in this Squid.");
+#else
+        // unreachable.
 #endif
 
     } else {
@@ -104,11 +107,7 @@ Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType
     debugs(83, DBG_IMPORTANT, "Using certificate in " << certFile);
 
     if (!loadX509CertFromFile()) {
-#if USE_OPENSSL
         debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing certificate in '" << certFile << "'");
-#else
-        fatalf("Directive '%s_port %s' requires --with-openssl to load %s.", portType, port.s.toUrl(buf, sizeof(buf)), certFile.c_str());
-#endif
         return;
     }
 
@@ -137,6 +136,9 @@ Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType
         }
     }
     gnutls_free(data.data);
+
+#else
+    debugs(83, 2, "Loading private key PEM files not implemented in this Squid.");
 #endif
 
     if (!pkey) {
