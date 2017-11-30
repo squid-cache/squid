@@ -268,8 +268,6 @@ Ipc::StoreMap::freeEntry(const sfileno fileno)
         return result;
     }
 
-    // TODO: check whether 'empty' anchors can be still locked.
-    // Should we mark with waitingToBeFreed such empty anchors?
     uint8_t expected = false;
     // mark to free the locked entry later (if not already marked)
     return s.waitingToBeFreed.compare_exchange_strong(expected, true);
