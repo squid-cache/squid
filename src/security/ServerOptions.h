@@ -69,8 +69,15 @@ public:
 
 #if USE_OPENSSL
     bool generateHostCertificates = true; ///< dynamically make host cert
-#elif USE_GNUTLS || 1 /* requires --with-openssl for now */
+#elif USE_GNUTLS
+    // TODO: GnuTLS does implement TLS server connections so the cert
+    // generate vs static choice can be reached in the code now.
+    // But this feature is not fully working implemented so must not
+    // be enabled by default for production installations.
     bool generateHostCertificates = false; ///< dynamically make host cert
+#else
+    // same as OpenSSL so config errors show up easily
+    bool generateHostCertificates = true; ///< dynamically make host cert
 #endif
 
     Security::KeyData signingCa; ///< x509 certificate and key for signing generated certificates
