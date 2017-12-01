@@ -10477,7 +10477,9 @@ DEFAULT: 5
 LOC: Config.happyEyeballs.connect_gap
 DOC_START
         The last spare connect() attempt, across all same-worker forwarded
-	requests, started at least happy_eyeballs_connect_gap milliseconds ago
+	requests, must started at least happy_eyeballs_connect_gap milliseconds
+	ago, else none new spare connection opened unless this condition become
+	true.
 DOC_END
 
 NAME: happy_eyeballs_connect_timeout
@@ -10486,8 +10488,12 @@ TYPE: int
 DEFAULT: 250
 LOC: Config.happyEyeballs.connect_timeout
 DOC_START
-	The in-progress connect() attempt started at least
-	happy_eyeballs_connect_timeout milliseconds ago.
+	if an in-progress connect() attempt is not succeed after
+	happy_eyeballs_connect_timeout milliseconds, and
+	happy_eyeballs_connect_gap and happy_eyeballs_connect_limit conditions
+	are satisfied squid will start a spare connection attempt to the next
+	available destination IP with different address family than the family
+	of destination IP of the master connection attempt.
 DOC_END
 
 EOF

@@ -85,8 +85,8 @@ public:
     /// family
     bool existPathNotInFamily(int);
 
-    /// The number of candidate paths, including the tried/removed paths.
-    int count() {return count_;}
+    /// the current number of candidate paths
+    int size() {return paths_.size();}
 
     /// The protocol family of the given path, AF_INET or AF_INET6
     static int ConnectionFamily(const Comm::ConnectionPointer &conn);
@@ -94,12 +94,8 @@ public:
     ///< whether all of the available candidate paths received from DNS
     bool destinationsFinalized;
 
-    double readStatus; ///< When the reader access this list
 private:
     Comm::ConnectionList paths_;
-
-    /// The number of candidate paths, including the tried/removed paths.
-    int count_;
 };
 
 
@@ -235,7 +231,6 @@ private:
 
      /// The active HappyConnOpener object or nil
     HappyConnOpener::Pointer connOpener;
-    double connOpenerInformTime; ///< Last time the connOpener object contacted
     CandidatePaths::Pointer destinations_; ///< The available candidate paths
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
 

@@ -100,9 +100,15 @@ private:
     virtual bool doneAll() const override;
     virtual void swanSong() override;
 
+    /// Schedule the next check for starting spare connections
+    static void ScheduleConnectorsListCheck();
+
     /// Run the list of active HappyConnector AsyncJobs and starts spare
     /// connections if required
     static void CheckForConnectionAttempts(void *);
+
+    /// \return pointer to the first valid HappyConnOpener AsyncJob or nil
+    static const HappyConnOpener::Pointer &FrontOpener();
 
     /// Schedule an attempt for a new soare connection
     static void ScheduleConnectionAttempt(HappyConnOpener::Pointer happy);
@@ -110,7 +116,7 @@ private:
     /// True if the system preconditions for starting a new spare connection
     /// are satisfied. It checks the happy_eyeballs_connect_limit and
     /// happy_eyeballs_connect_gap configuration parameters.
-    static bool SystemPreconditions();
+    static bool SpareConnectionAllowedNow();
 
     /// Called after HappyConnector asyncJob started to start a master
     /// connection, or after the preconditions for starting a new spare
@@ -137,11 +143,11 @@ private:
     void checkForNewConnection();
 
     /// True if preconditions to start a spare connection are satisfied.
-    bool preconditions();
+    bool spareConnectionNeeded() const;
 
     ///< \return true if the happy_eyeballs_connect_timeout precondition
     /// satisfied
-    bool timeCondition();
+    bool primaryConnectTooSlow() const;
 
     /// Calls the FwdState object back
     void callCallback(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno, bool reused, const char *msg);

@@ -102,7 +102,7 @@ private:
     Security::EncryptorAnswer answer_;
 };
 
-CandidatePaths::CandidatePaths(): destinationsFinalized(false), readStatus(0.0), count_(0)
+CandidatePaths::CandidatePaths(): destinationsFinalized(false)
 {
     paths_.reserve(Config.forward_max_tries);
 }
@@ -117,7 +117,6 @@ void
 CandidatePaths::newPath(const Comm::ConnectionPointer &path)
 {
     paths_.push_back(path);
-    count_++;
 }
 
 Comm::ConnectionPointer
@@ -190,7 +189,6 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     clientConn(client),
     start_t(squid_curtime),
     n_tries(0),
-    connOpenerInformTime(0.0),
     pconnRace(raceImpossible)
 {
     debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
@@ -480,7 +478,7 @@ FwdState::EnoughTimeToReForward(const time_t fwdStart)
 void
 FwdState::useDestinations()
 {
-    debugs(17, 3, destinations_->count() << " paths to " << entry->url());
+    debugs(17, 3, destinations_->size() << " paths to " << entry->url());
     if (hasCandidatePath()) {
         connectStart();
     } else {
@@ -598,6 +596,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 {
     flags.destinationsFound = true;
     if (path == nullptr) {
+        assert(!destinations_); // no other destinations allowed
         usePinned();
         // We do not expect and not need more results
         PeerSelectionInitiator::subscribed = false;
@@ -634,21 +633,18 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 
     if (Comm::IsConnOpen(serverConn)) {
         // If the connection is established abort here.
-        // We may still receiving destinations while we are connecting.
-        // We need them in the case the first established connection fails
-        // with null server response.
+        // We may still receiving destinations while we are using the current
+        // connection. We need them in the case the first established
+        // connection fails with null server response.
         assert(connOpener == nullptr);
         return;
     }
 
     if (connOpener.valid()/*&& calls.connector*/) {
-        if (destinations_->readStatus >= connOpenerInformTime) {
-            // Call to inform conn opener that new destination found
-            typedef NullaryMemFunT<HappyConnOpener> CbDialer;
-            AsyncCall::Pointer informCall = JobCallback(50, 5, CbDialer, connOpener, HappyConnOpener::noteCandidatePath);
-            ScheduleCallHere(informCall);
-            connOpenerInformTime = current_dtime;
-        }
+        // Call to inform conn opener that new destination found
+        typedef NullaryMemFunT<HappyConnOpener> CbDialer;
+        AsyncCall::Pointer informCall = JobCallback(50, 5, CbDialer, connOpener, HappyConnOpener::noteCandidatePath);
+        ScheduleCallHere(informCall);
     } else {
         useDestinations();
     }
@@ -681,13 +677,10 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     destinations_->destinationsFinalized = true;
 
     if (connOpener.valid()) {
-        if (destinations_->readStatus >= connOpenerInformTime) {
-            // Call to inform conn opener that new destination found
-            typedef NullaryMemFunT<HappyConnOpener> CbDialer;
-            AsyncCall::Pointer informCall = JobCallback(17, 5, CbDialer, connOpener, HappyConnOpener::noteCandidatePath);
-            ScheduleCallHere(informCall);
-            connOpenerInformTime = current_dtime;
-        }
+        // Call to inform conn opener that new destination found
+        typedef NullaryMemFunT<HappyConnOpener> CbDialer;
+        AsyncCall::Pointer informCall = JobCallback(17, 5, CbDialer, connOpener, HappyConnOpener::noteCandidatePath);
+        ScheduleCallHere(informCall);
     }
 }
 
@@ -831,7 +824,7 @@ FwdState::noteConnection(const HappyConnOpener::Answer &cd)
             // There are not available destinations
             flags.dont_retry = true;
         }
-    
+
         // Update the logging information about this new server connection.
         // Done here before anything else so the errors get logged for
         // this server link regardless of what happens when connecting to it.
@@ -1090,7 +1083,6 @@ FwdState::connectStart()
         cs->allowPersistent(pconnRace != raceHappened/* && !bumpThroughPeer*/);
         GetMarkings(request, cs->useTos, cs->useNfmark);
         connOpener = cs;
-        connOpenerInformTime = current_dtime;
         AsyncJob::Start(cs);
     }
 }
@@ -1522,6 +1514,8 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
 tos_t
 GetTosToServer(HttpRequest * request)
 {
+    // XXX: Supply the destination address to ACLs and (after that) move to
+    // HappyConnOpener::startConnecting()
     ACLFilledChecklist ch(NULL, request, NULL);
     return aclMapTOS(Ip::Qos::TheConfig.tosToServer, &ch);
 }
@@ -1529,6 +1523,8 @@ GetTosToServer(HttpRequest * request)
 nfmark_t
 GetNfmarkToServer(HttpRequest * request)
 {
+    // XXX: Supply the destination address to ACLs and (after that) move to
+    // HappyConnOpener::startConnecting()
     ACLFilledChecklist ch(NULL, request, NULL);
     const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToServer, &ch);
     return mc.mark;
@@ -1546,7 +1542,7 @@ void GetMarkings(HttpRequest * request, tos_t &tos, nfmark_t &nfmark)
     nfmark = GetNfmarkToServer(request);
 #else
     nfmark = 0;
-#endif    
+#endif
 }
 
 void
