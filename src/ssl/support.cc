@@ -1046,18 +1046,49 @@ findCertIssuer(Security::CertList const &list, X509 *cert)
     return false;
 }
 
+/// \return true if the cert issuer exist in the certificates stored in connContext
+static bool
+issuerExistInCaDb(X509 *cert, const Security::ContextPointer &connContext)
+{
+    if (!connContext)
+        return false;
+
+    X509_STORE_CTX *storeCtx = X509_STORE_CTX_new();
+    if (!storeCtx) {
+        debugs(83, DBG_IMPORTANT, "Failed to allocate STORE_CTX object");
+        return false;
+    }
+
+    bool gotIssuer = false;
+    X509_STORE *store = SSL_CTX_get_cert_store(connContext.get());
+    if (X509_STORE_CTX_init(storeCtx, store, nullptr, nullptr)) {
+        X509 *issuer = nullptr;
+        gotIssuer = (X509_STORE_CTX_get1_issuer(&issuer, storeCtx, cert) > 0);
+        if (issuer)
+            X509_free(issuer);
+    } else {
+        const int ssl_error = ERR_get_error();
+        debugs(83, DBG_IMPORTANT, "Failed to initialize STORE_CTX object: " << Security::ErrorString(ssl_error));
+    }
+    X509_STORE_CTX_free(storeCtx);
+
+    return gotIssuer;
+}
+
 const char *
-Ssl::uriOfIssuerIfMissing(X509 *cert, Security::CertList const &serverCertificates)
+Ssl::uriOfIssuerIfMissing(X509 *cert, Security::CertList const &serverCertificates, const Security::ContextPointer &context)
 {
     if (!cert || !serverCertificates.size())
         return nullptr;
 
     if (!findCertIssuer(serverCertificates, cert)) {
         //if issuer is missing
-        if (!findCertIssuerFast(SquidUntrustedCerts, cert)) {
-            // and issuer not found in local untrusted certificates database
-            if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(cert)) {
-                // There is a URI where we can download a certificate.
+        if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(cert)) {
+            // There is a URI where we can download a certificate.
+            if (!findCertIssuerFast(SquidUntrustedCerts, cert) &&
+                !issuerExistInCaDb(cert, context)) {
+                // and issuer not found in local databases containing
+                // untrusted certificates and trusted CA certificates
                 return issuerUri;
             }
         }
@@ -1066,13 +1097,13 @@ Ssl::uriOfIssuerIfMissing(X509 *cert, Security::CertList const &serverCertificat
 }
 
 void
-Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, Security::CertList const &serverCertificates)
+Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, Security::CertList const &serverCertificates, const Security::ContextPointer &context)
 {
     if (!serverCertificates.size())
         return;
 
     for (const auto &i : serverCertificates) {
-        if (const char *issuerUri = uriOfIssuerIfMissing(i.get(), serverCertificates))
+        if (const char *issuerUri = uriOfIssuerIfMissing(i.get(), serverCertificates, context))
             URIs.push(SBuf(issuerUri));
     }
 }
