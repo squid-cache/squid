@@ -285,7 +285,7 @@ Fs::Ufs::RebuildState::rebuildFromSwapLog()
          * for a matching object in the store
          * TODO FIXME change to new async api
          */
-        currentEntry(Store::Root().get(Store::CacheKey(swapData.key)));
+        currentEntry(Store::Root().get(Store::CacheKeyXXX(swapData.key)));
 
         if (currentEntry() != NULL && swapData.lastref >= e->lastref) {
             undoAdd();
@@ -323,7 +323,7 @@ Fs::Ufs::RebuildState::rebuildFromSwapLog()
      * for a matching object in the store
      * TODO FIXME change to new async api
      */
-    currentEntry(Store::Root().get(Store::CacheKey(swapData.key)));
+    currentEntry(Store::Root().get(Store::CacheKeyXXX(swapData.key)));
 
     int used;           /* is swapfile already in use? */
 

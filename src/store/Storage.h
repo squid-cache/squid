@@ -22,10 +22,6 @@ namespace Store {
 class CacheKey
 {
 public:
-    // XXX: If this constructor is sufficient, why do we need the second one?!
-    explicit CacheKey(const cache_key *aKey) :
-        CacheKey(aKey, SBuf(), HttpRequestMethod()) {}
-
     CacheKey(const cache_key *aKey, const SBuf &aStoreId, const HttpRequestMethod &aMethod):
         key(storeKeyDup(aKey)),
         storeId(aStoreId),
@@ -41,6 +37,14 @@ public:
     const cache_key *key;
     const SBuf storeId;
     const HttpRequestMethod method;
+};
+
+/// CacheKey for legacy Storage::get() callers that do not supply the required info
+class CacheKeyXXX: public CacheKey
+{
+public:
+    explicit CacheKeyXXX(const cache_key *aKey):
+        CacheKey(aKey, SBuf(), HttpRequestMethod()) {}
 };
 
 /// A "response storage" abstraction.

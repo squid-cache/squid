@@ -354,7 +354,7 @@ peerDigestRequest(PeerDigest * pd)
     /* the rest is based on clientProcessExpired() */
     req->flags.refresh = true;
 
-    old_e = fetch->old_entry = Store::Root().get(Store::CacheKey(key));
+    old_e = fetch->old_entry = Store::Root().get(Store::CacheKeyXXX(key));
 
     if (old_e) {
         debugs(72, 5, "peerDigestRequest: found old entry");
