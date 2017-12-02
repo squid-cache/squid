@@ -33,7 +33,7 @@ public:
 
     virtual bool error() const;
     virtual bool isDone() const;
-    virtual StoreEntry *currentItem();
+    virtual StoreEntry *currentItem(); // TODO: Delete as unused.
 
     RefCount<UFSSwapDir> sd;
     int n_read;
