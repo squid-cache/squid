@@ -249,10 +249,18 @@ public:
     /// update last reference timestamp and related Store metadata
     void touch();
 
+    /// One of the three methods to get rid of an unlocked StoreEntry object.
     /// Removes all unlocked (and marks for eventual removal all locked) Store
     /// entries, including attached and unattached entries that have our key.
     /// Also destroys us if we are unlocked or makes us private otherwise.
+    /// TODO: remove virtual.
     virtual void release(const bool shareable = false);
+
+    /// One of the three methods to get rid of an unlocked StoreEntry object.
+    /// May destroy this object if it is unlocked; does nothing otherwise.
+    /// Unlike release(), does not trigger eviction of underlying store entries,
+    /// but, unlike destroyStoreEntry(), does honor an earlier release request.
+    void abandon(const char *context) { if (!locked()) doAbandon(context); }
 
     /// May the caller commit to treating this [previously locked]
     /// entry as a cache hit?
@@ -281,6 +289,7 @@ protected:
     void checkDisk() const;
 
 private:
+    void doAbandon(const char *context);
     bool checkTooBig() const;
     void forcePublicKey(const cache_key *newkey);
     StoreEntry *adjustVary();
@@ -465,7 +474,10 @@ void storeFsDone(void);
 /// \ingroup StoreAPI
 void storeReplAdd(const char *, REMOVALPOLICYCREATE *);
 
-/// \ingroup StoreAPI
+/// One of the three methods to get rid of an unlocked StoreEntry object.
+/// This low-level method ignores lock()ing and release() promises. It never
+/// leaves the entry in the local store_table.
+/// TODO: Hide by moving its functionality into the StoreEntry destructor.
 extern FREE destroyStoreEntry;
 
 /// \ingroup StoreAPI

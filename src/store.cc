@@ -481,6 +481,17 @@ StoreEntry::unlock(const char *context)
     if (lock_count)
         return (int) lock_count;
 
+    abandon(context);
+    return 0;
+}
+
+/// keep the unlocked StoreEntry object in the local store_table (if needed) or
+/// delete it (otherwise)
+void
+StoreEntry::doAbandon(const char *context)
+{
+    debugs(20, 5, *this << " via " << (context ? context : "somebody"));
+    assert(!locked());
     assert(storePendingNClients(this) == 0);
 
     // Both aborted local writers and aborted local readers (of remote writers)
@@ -488,14 +499,13 @@ StoreEntry::unlock(const char *context)
     if (EBIT_TEST(flags, RELEASE_REQUEST) ||
         (store_status == STORE_PENDING && !Store::Root().transientsReader(*this))) {
         this->release();
-        return 0;
+        return;
     }
 
     if (EBIT_TEST(flags, KEY_PRIVATE))
         debugs(20, DBG_IMPORTANT, "WARNING: " << __FILE__ << ":" << __LINE__ << ": found KEY_PRIVATE");
 
     Store::Root().handleIdleEntry(*this); // may delete us
-    return 0;
 }
 
 void
