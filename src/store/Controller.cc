@@ -320,6 +320,17 @@ Store::Controller::get(const CacheKey &cacheKey)
     return NULL;
 }
 
+StoreEntry *
+Store::Controller::findCallback(const cache_key *key)
+{
+    // We could check for mem_obj presence (and more), moving and merging some
+    // of the duplicated neighborsUdpAck() and neighborsHtcpReply() code here,
+    // but that would mean polluting Store with HTCP/ICP code. Instead, we
+    // should encapsulate callback-related data in a protocol-neutral MemObject
+    // member or use an HTCP/ICP-specific index rather than store_table.
+    return findLocal(key);
+}
+
 /// \returns either an existing local reusable StoreEntry object or nil
 /// To treat remotely marked entries specially,
 /// callers ought to check markedForDeletion() first!

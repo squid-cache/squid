@@ -984,7 +984,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
 
     debugs(15, 6, "neighborsUdpAck: opcode " << opcode << " '" << storeKeyText(key) << "'");
 
-    if ((entry = Store::Root().get(Store::CacheKeyXXX(key))))
+    if ((entry = Store::Root().findCallback(key)))
         mem = entry->mem_obj;
 
     if ((p = whichPeer(from)))
@@ -1695,7 +1695,7 @@ dump_peers(StoreEntry * sentry, CachePeer * peers)
 void
 neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Address &from)
 {
-    StoreEntry *e = Store::Root().get(Store::CacheKeyXXX(key));
+    StoreEntry *e = Store::Root().findCallback(key);
     MemObject *mem = NULL;
     CachePeer *p;
     peer_t ntype = PEER_NONE;
