@@ -42,8 +42,6 @@ void storeRebuildProgress(int sd_index, int total, int sofar);
 bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &counts);
 /// parses entry buffer and validates entry metadata; fills e on success
 bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, StoreRebuildData &counts, uint64_t expectedSize);
-/// checks whether the loaded entry should be kept; updates counters
-bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, StoreRebuildData &counts);
 
 #endif /* SQUID_STORE_REBUILD_H_ */
 

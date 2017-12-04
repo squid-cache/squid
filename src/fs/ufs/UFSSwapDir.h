@@ -102,8 +102,6 @@ public:
                                uint32_t refcount,
                                uint16_t flags,
                                int clean);
-    /// Undo the effects of UFSSwapDir::addDiskRestore().
-    void undoAddDiskRestore(StoreEntry *e);
     int validFileno(sfileno filn, int flag) const;
     int mapBitAllocate();
 
