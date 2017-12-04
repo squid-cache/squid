@@ -660,8 +660,9 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     if (X509 *cert = d2i_X509(NULL, &raw, obj.length())) {
         char buffer[1024];
         debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
+        ContextPointer ctx(getTlsContext());
         const Security::CertList &certsList = srvBio->serverCertificatesIfAny();
-        if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert,  certsList)) {
+        if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert, certsList, ctx)) {
             urlsOfMissingCerts.push(SBuf(issuerUri));
         }
         Ssl::SSL_add_untrusted_cert(session.get(), cert);
@@ -698,7 +699,8 @@ Security::PeerConnector::checkForMissingCertificates()
 
     if (certs.size()) {
         debugs(83, 5, "SSL server sent " << certs.size() << " certificates");
-        Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs);
+        ContextPointer ctx(getTlsContext());
+        Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx);
         if (urlsOfMissingCerts.size()) {
             startCertDownloading(urlsOfMissingCerts.front());
             urlsOfMissingCerts.pop();
