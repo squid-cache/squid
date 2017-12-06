@@ -39,14 +39,6 @@ public:
     const HttpRequestMethod method;
 };
 
-/// CacheKey for legacy Storage::get() callers that do not supply the required info
-class CacheKeyXXX: public CacheKey
-{
-public:
-    explicit CacheKeyXXX(const cache_key *aKey):
-        CacheKey(aKey, SBuf(), HttpRequestMethod()) {}
-};
-
 /// A "response storage" abstraction.
 /// This API is shared among Controller and Controlled classes.
 class Storage: public RefCountable
@@ -60,9 +52,6 @@ public:
     /// Start preparing the store for use. To check readiness, callers should
     /// use readable() and writable() methods.
     virtual void init() = 0;
-
-    /// Retrieve a store entry from the store (blocking)
-    virtual StoreEntry *get(const CacheKey &) = 0;
 
     /**
      * The maximum size the store will support in normal use. Inaccuracy is

@@ -44,7 +44,7 @@ public:
 
     /* Controlled API */
     virtual void create() override;
-    virtual StoreEntry *get(const CacheKey &) override;
+    virtual StoreEntry *get(const cache_key *) override;
     virtual uint64_t maxSize() const override { return max_size; }
     virtual uint64_t minSize() const override;
     virtual int64_t maxObjectSize() const override;

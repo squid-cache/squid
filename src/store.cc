@@ -370,7 +370,7 @@ StoreEntry::kickProducer()
 void
 StoreEntry::destroyMemObject()
 {
-    debugs(20, 3, HERE << "destroyMemObject " << mem_obj);
+    debugs(20, 3, mem_obj << " in " << *this);
 
     // Store::Root() is FATALly missing during shutdown
     if (hasTransients() && !shutting_down)
@@ -414,6 +414,7 @@ void
 StoreEntry::hashInsert(const cache_key * someKey)
 {
     debugs(20, 3, "StoreEntry::hashInsert: Inserting Entry " << *this << " key '" << storeKeyText(someKey) << "'");
+    assert(!key);
     key = storeKeyDup(someKey);
     hash_join(store_table, this);
 }
@@ -549,14 +550,14 @@ storeGetPublic(const char *uri, const HttpRequestMethod& method)
 {
     // XXX: Performance regression: SBuf() allocates.
     const Store::CacheKey cacheKey(storeKeyPublic(uri, method), SBuf(uri), method);
-    return Store::Root().get(cacheKey);
+    return Store::Root().find(cacheKey);
 }
 
 StoreEntry *
 storeGetPublicByRequestMethod(HttpRequest * req, const HttpRequestMethod& method, const KeyScope keyScope)
 {
     const Store::CacheKey cacheKey(storeKeyPublicByRequestMethod(req, method, keyScope), req->storeId(), method);
-    return Store::Root().get(cacheKey);
+    return Store::Root().find(cacheKey);
 }
 
 StoreEntry *

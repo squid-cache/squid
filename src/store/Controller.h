@@ -28,7 +28,6 @@ public:
     /* Storage API */
     virtual void create() override;
     virtual void init() override;
-    virtual StoreEntry *get(const CacheKey &key) override;
     virtual uint64_t maxSize() const override;
     virtual uint64_t minSize() const override;
     virtual uint64_t currentSize() const override;
@@ -42,6 +41,18 @@ public:
     virtual void evictIfFound(const cache_key *) override;
     virtual int callback() override;
     virtual bool smpAware() const override;
+
+    /// \returns a locally indexed and SMP-tracked matching StoreEntry (or nil)
+    /// Slower than peek() but does not restrict StoreEntry use and storage.
+    /// Counts as an entry reference from the removal policy p.o.v.
+    StoreEntry *find(const CacheKey &key);
+
+    /// \returns a matching StoreEntry not suitable for long-term use (or nil)
+    /// Faster than find() but the returned entry may not receive updates, may
+    /// lack information from some of the Stores, and should not be updated
+    /// except that purging peek()ed entries is supported.
+    /// Does not count as an entry reference from the removal policy p.o.v.
+    StoreEntry *peek(const cache_key *);
 
     /// \returns matching StoreEntry associated with local ICP/HTCP transaction
     /// Warning: The returned StoreEntry is not synced and may be marked for
@@ -128,8 +139,9 @@ private:
     /// dereference() an idle entry and return true if the entry should be deleted
     bool dereferenceIdle(StoreEntry &, bool wantsLocalMemory);
 
-    StoreEntry *find(const CacheKey &);
-    StoreEntry *findLocal(const cache_key *);
+    void allowSharing(StoreEntry &entry, const CacheKey &cacheKey);
+    StoreEntry *peekAtLocal(const cache_key *);
+
     void transientsUnlinkByKeyIfFound(const cache_key *);
     bool keepForLocalMemoryCache(StoreEntry &e) const;
     bool anchorToCache(StoreEntry &, bool &inSync);

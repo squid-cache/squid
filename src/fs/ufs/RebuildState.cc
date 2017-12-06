@@ -251,7 +251,7 @@ Fs::Ufs::RebuildState::addIfFresh(const cache_key *key,
 bool
 Fs::Ufs::RebuildState::evictStaleAndContinue(const cache_key *candidateKey, const time_t maxRef, int &staleCount)
 {
-    if (auto *indexedEntry = Store::Root().get(Store::CacheKeyXXX(candidateKey))) {
+    if (auto *indexedEntry = Store::Root().peek(candidateKey)) {
 
         if (indexedEntry->lastref >= maxRef) {
             indexedEntry->abandon("Fs::Ufs::RebuildState::evictStaleAndContinue");

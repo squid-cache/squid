@@ -390,7 +390,7 @@ Store::Disk::optionObjectSizeDump(StoreEntry * e) const
 
 // some SwapDirs may maintain their indexes and be able to lookup an entry key
 StoreEntry *
-Store::Disk::get(const CacheKey &)
+Store::Disk::get(const cache_key *key)
 {
     return NULL;
 }

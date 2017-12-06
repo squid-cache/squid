@@ -309,15 +309,40 @@ Store::Controller::hasReadableDiskEntry(const StoreEntry &e) const
 }
 
 StoreEntry *
-Store::Controller::get(const CacheKey &cacheKey)
+Store::Controller::find(const CacheKey &cacheKey)
 {
-    if (StoreEntry *e = find(cacheKey)) {
-        // this is not very precise: some get()s are not initiated by clients
-        e->touch();
-        referenceBusy(*e);
-        return e;
+    if (const auto entry = peek(cacheKey.key)) {
+       try {
+            if (!entry->key)
+                allowSharing(*entry, cacheKey);
+            entry->touch();
+            referenceBusy(*entry);
+            return entry;
+        } catch (const std::exception &ex) {
+            debugs(20, 2, "failed: " << ex.what());
+            entry->release("Store::Controller::find");
+            // fall through
+        }
     }
-    return NULL;
+    return nullptr;
+}
+
+/// indexes and adds SMP-tracking for an ephemeral peek() result
+void
+Store::Controller::allowSharing(StoreEntry &entry, const CacheKey &cacheKey)
+{
+    // TODO: refactor to throw on anchorToCache() and addReading() errors!
+
+    // anchorToCache() below and many find() callers expect a registered entry
+    if (!addReading(&entry, cacheKey))
+        throw TexcHere("cannot index");
+
+    if (entry.hasTransients()) {
+        bool inSync = false;
+        const bool found = anchorToCache(entry, inSync);
+        if (found && !inSync)
+            throw TexcHere("cannot sync");
+    }
 }
 
 StoreEntry *
@@ -328,14 +353,14 @@ Store::Controller::findCallback(const cache_key *key)
     // but that would mean polluting Store with HTCP/ICP code. Instead, we
     // should encapsulate callback-related data in a protocol-neutral MemObject
     // member or use an HTCP/ICP-specific index rather than store_table.
-    return findLocal(key);
+    return peekAtLocal(key);
 }
 
 /// \returns either an existing local reusable StoreEntry object or nil
 /// To treat remotely marked entries specially,
 /// callers ought to check markedForDeletion() first!
 StoreEntry *
-Store::Controller::findLocal(const cache_key *key)
+Store::Controller::peekAtLocal(const cache_key *key)
 {
     if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, key))) {
         // callers must only search for public entries
@@ -348,52 +373,44 @@ Store::Controller::findLocal(const cache_key *key)
     return nullptr;
 }
 
-/// Internal method to implements the guts of the Store::get() API:
-/// returns an in-transit or cached object with a given key, if any.
 StoreEntry *
-Store::Controller::find(const CacheKey &cacheKey)
+Store::Controller::peek(const cache_key *key)
 {
-    debugs(20, 3, storeKeyText(cacheKey.key));
+    debugs(20, 3, storeKeyText(key));
 
-    if (markedForDeletion(cacheKey.key)) {
-        debugs(20, 3, "ignoring marked in-transit " << storeKeyText(cacheKey.key));
+    if (markedForDeletion(key)) {
+        debugs(20, 3, "ignoring marked in-transit " << storeKeyText(key));
         return nullptr;
     }
 
-    if (StoreEntry *e = findLocal(cacheKey.key)) {
+    if (StoreEntry *e = peekAtLocal(key)) {
         debugs(20, 3, "got local in-transit entry: " << *e);
         return e;
     }
 
     // Must search transients before caches because we must sync those we find.
     if (transients) {
-        if (StoreEntry *e = transients->get(cacheKey)) {
+        if (StoreEntry *e = transients->get(key)) {
             debugs(20, 3, "got shared in-transit entry: " << *e);
-            bool inSync = false;
-            const bool found = anchorToCache(*e, inSync);
-            if (!found || inSync)
-                return e;
-            assert(!e->locked()); // ensure release will destroyStoreEntry()
-            e->release(); // do not let others into the same trap
-            return NULL;
+            return e;
         }
     }
 
     if (memStore) {
-        if (StoreEntry *e = memStore->get(cacheKey)) {
+        if (StoreEntry *e = memStore->get(key)) {
             debugs(20, 3, HERE << "got mem-cached entry: " << *e);
             return e;
         }
     }
 
     if (swapDir) {
-        if (StoreEntry *e = swapDir->get(cacheKey)) {
+        if (StoreEntry *e = swapDir->get(key)) {
             debugs(20, 3, "got disk-cached entry: " << *e);
             return e;
         }
     }
 
-    debugs(20, 4, "cannot locate " << storeKeyText(cacheKey.key));
+    debugs(20, 4, "cannot locate " << storeKeyText(key));
     return nullptr;
 }
 
@@ -435,7 +452,7 @@ Store::Controller::evictIfFound(const cache_key *key)
 {
     debugs(20, 7, storeKeyText(key));
 
-    if (StoreEntry *entry = findLocal(key)) {
+    if (StoreEntry *entry = peekAtLocal(key)) {
         debugs(20, 5, "marking local in-transit " << *entry);
         entry->release();
         return;
@@ -611,7 +628,7 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
 bool
 Store::Controller::addReading(StoreEntry *e, const CacheKey &cacheKey)
 {
-    if (transients && !e->hasTransients() && !transients->monitorWhileReading(e, cacheKey))
+    if (transients && !transients->monitorWhileReading(e, cacheKey))
         return false;
 
     e->hashInsert(cacheKey.key);
@@ -628,9 +645,6 @@ Store::Controller::addWriting(StoreEntry *e, const CacheKey &cacheKey)
 
     if (!transients)
         return; // non-SMP configurations do not need transients
-
-    if (e->hasTransients())
-        return; // already got transients somehow
 
     if (!transients->startWriting(e, cacheKey))
         throw TexcHere("transients writer collision");

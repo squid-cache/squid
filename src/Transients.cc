@@ -144,13 +144,13 @@ Transients::dereference(StoreEntry &)
 }
 
 StoreEntry *
-Transients::get(const Store::CacheKey &cacheKey)
+Transients::get(const cache_key *key)
 {
     if (!map)
         return NULL;
 
     sfileno index;
-    const Ipc::StoreMapAnchor *anchor = map->openForReading(cacheKey.key, index);
+    const Ipc::StoreMapAnchor *anchor = map->openForReading(key, index);
     if (!anchor)
         return NULL;
 
@@ -183,19 +183,7 @@ Transients::copyFromShm(const sfileno index)
     e->mem_obj->xitTable.io = MemObject::ioReading;
     e->mem_obj->xitTable.index = index;
 
-    // TODO: Support collapsed revalidation for SMP-aware caches.
-    // XXX: setPublicKey() calls addWRiting() but we are reading here. Call addReading() here instead?!
-    if (!e->setPublicKey(ksDefault)) {
-        destroyStoreEntry(static_cast<hash_link *>(e));
-        return nullptr;
-    }
-
-    assert(e->key);
-
-    assert(!locals->at(index));
-    // We do not lock e because we do not want to prevent its destruction;
-    // e is tied to us via mem_obj so we will know when it is destructed.
-    locals->at(index) = e;
+    // XXX: Set basic metadata.
     return e;
 }
 
@@ -218,24 +206,50 @@ Transients::findCollapsed(const sfileno index)
 bool
 Transients::monitorWhileReading(StoreEntry *e, const Store::CacheKey &cacheKey)
 {
-    if (!addEntry(e, cacheKey))
-        return false;
+    if (!e->hasTransients()) {
+        if (!addEntry(e, cacheKey))
+            return false;
+        // keep the entry locked (for reading) to receive remote DELETE events
+        map->closeForWriting(e->mem_obj->xitTable.index, true);
+        e->mem_obj->xitTable.io = MemObject::ioReading;
+    }
 
-    // keep the entry locked (for reading) to receive remote DELETE events
-    map->closeForWriting(e->mem_obj->xitTable.index, true);
-    e->mem_obj->xitTable.io = MemObject::ioReading;
+    assert(e->hasTransients());
+    const auto index = e->mem_obj->xitTable.index;
+    if (const auto old = locals->at(index)) {
+        assert(old == e);
+    } else {
+        // We do not lock e because we do not want to prevent its destruction;
+        // e is tied to us via mem_obj so we will know when it is destructed.
+        locals->at(index) = e;
+    }
+
     return true;
 }
 
 bool
 Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey)
 {
-    if (!addEntry(e, cacheKey))
-        return false;
+    if (!e->hasTransients()) {
+        if (!addEntry(e, cacheKey))
+            return false;
 
-    // keep the entry locked for writing but allow reading our updates
-    // we also need this entry locked to receive remote DELETE events
-    map->startAppending(e->mem_obj->xitTable.index);
+        // keep the entry locked for writing but allow reading our updates
+        // we also need this entry locked to receive remote DELETE events
+        map->startAppending(e->mem_obj->xitTable.index);
+    }
+
+    // XXX: Duplicates Transients::monitorWhileReading().
+    assert(e->hasTransients());
+    const auto index = e->mem_obj->xitTable.index;
+    if (const auto old = locals->at(index)) {
+        assert(old == e);
+    } else {
+        // We do not lock e because we do not want to prevent its destruction;
+        // e is tied to us via mem_obj so we will know when it is destructed.
+        locals->at(index) = e;
+    }
+
     return true;
 }
 
@@ -263,8 +277,6 @@ Transients::addEntry(StoreEntry *e, const Store::CacheKey &cacheKey)
             slot->set(*e, cacheKey.key);
             e->mem_obj->xitTable.io = MemObject::ioWriting;
             e->mem_obj->xitTable.index = index;
-            assert(!locals->at(index));
-            locals->at(index) = e;
             // keep write lock; the caller will decide what to do with it
             return true;
         }
@@ -339,7 +351,9 @@ Transients::evictCached(StoreEntry &e)
     if (e.hasTransients()) {
         if (map->freeEntry(e.mem_obj->xitTable.index))
             CollapsedForwarding::Broadcast(e);
-    }
+    } else
+    if (const auto key = e.publicKey())
+        evictIfFound(key);
 }
 
 void
@@ -356,6 +370,7 @@ Transients::evictIfFound(const cache_key *key)
 void
 Transients::disconnect(StoreEntry &entry)
 {
+    debugs(20, 5, entry);
     if (entry.hasTransients()) {
         auto &xitTable = entry.mem_obj->xitTable;
         assert(map);

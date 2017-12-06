@@ -307,13 +307,13 @@ MemStore::dereference(StoreEntry &)
 }
 
 StoreEntry *
-MemStore::get(const Store::CacheKey &cacheKey)
+MemStore::get(const cache_key *key)
 {
     if (!map)
         return NULL;
 
     sfileno index;
-    const Ipc::StoreMapAnchor *const slot = map->openForReading(cacheKey.key, index);
+    const Ipc::StoreMapAnchor *const slot = map->openForReading(key, index);
     if (!slot)
         return NULL;
 
@@ -321,7 +321,7 @@ MemStore::get(const Store::CacheKey &cacheKey)
     StoreEntry *e = new StoreEntry();
 
     // XXX: We do not know the URLs yet, only the key, but we need to parse and
-    // store the response for the Root().get() callers to be happy because they
+    // store the response for the Root().find() callers to be happy because they
     // expect IN_MEMORY entries to already have the response headers and body.
     e->createMemObject();
 
@@ -329,14 +329,10 @@ MemStore::get(const Store::CacheKey &cacheKey)
 
     const bool copied = copyFromShm(*e, index, *slot);
 
-    if (copied) {
-        if (Store::Root().addReading(e, cacheKey))
-            return e;
-        // fall through to cleanup, keeping the innocent memory store entry
-    } else {
-        map->freeEntry(index); // do not let others into the same trap
-    }
+    if (copied)
+        return e;
 
+    map->freeEntry(index); // do not let others into the same trap
     debugs(20, 3, "failed for " << *e);
     destroyStoreEntry(static_cast<hash_link *>(e));
     return nullptr;

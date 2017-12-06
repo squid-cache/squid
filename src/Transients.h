@@ -60,7 +60,7 @@ public:
     void disconnect(StoreEntry &);
 
     /* Store API */
-    virtual StoreEntry *get(const Store::CacheKey &cacheKey) override;
+    virtual StoreEntry *get(const cache_key *) override;
     virtual void create() override {}
     virtual void init() override;
     virtual uint64_t maxSize() const override;

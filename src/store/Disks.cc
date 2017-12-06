@@ -215,7 +215,7 @@ Store::Disks::create()
 }
 
 StoreEntry *
-Store::Disks::get(const CacheKey &cacheKey)
+Store::Disks::get(const cache_key *key)
 {
     if (const int cacheDirs = Config.cacheSwap.n_configured) {
         // ask each cache_dir until the entry is found; use static starting
@@ -228,7 +228,7 @@ Store::Disks::get(const CacheKey &cacheKey)
             if (!sd->active())
                 continue;
 
-            if (StoreEntry *e = sd->get(cacheKey)) {
+            if (StoreEntry *e = sd->get(key)) {
                 debugs(20, 7, "cache_dir " << idx << " has: " << *e);
                 return e;
             }
@@ -236,7 +236,7 @@ Store::Disks::get(const CacheKey &cacheKey)
     }
 
     debugs(20, 6, "none of " << Config.cacheSwap.n_configured <<
-           " cache_dirs have " << storeKeyText(cacheKey.key));
+           " cache_dirs have " << storeKeyText(key));
     return nullptr;
 }
 

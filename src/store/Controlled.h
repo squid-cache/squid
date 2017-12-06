@@ -18,6 +18,12 @@ namespace Store {
 class Controlled: public Storage
 {
 public:
+    /// \returns a possibly unlocked/unregistered stored entry with key (or nil)
+    /// The returned entry might not match the caller's Store ID or method. The
+    /// caller must abandon()/release() the entry or register it with Root().
+    /// This method must not trigger slow I/O operations (e.g., disk swap in).
+    virtual StoreEntry *get(const cache_key *) = 0;
+
     /// somebody needs this entry (many cache replacement policies need to know)
     virtual void reference(StoreEntry &e) = 0;
 

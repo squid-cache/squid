@@ -38,7 +38,7 @@ public:
 
     /* public ::SwapDir API */
     virtual void reconfigure();
-    virtual StoreEntry *get(const Store::CacheKey &);
+    virtual StoreEntry *get(const cache_key *key);
     virtual void evictCached(StoreEntry &);
     virtual void evictIfFound(const cache_key *);
     virtual void disconnect(StoreEntry &e);

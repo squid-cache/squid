@@ -20,7 +20,7 @@ TestStore::callback()
 }
 
 StoreEntry*
-TestStore::get(const Store::CacheKey &)
+TestStore::get(const cache_key *)
 {
     return NULL;
 }
