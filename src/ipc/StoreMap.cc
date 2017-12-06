@@ -782,7 +782,26 @@ Ipc::StoreMapAnchor::set(const StoreEntry &from, const cache_key *aKey)
     basics.lastmod = from.lastModified();
     basics.swap_file_sz = from.swap_file_sz;
     basics.refcount = from.refcount;
-    basics.flags = from.flags;
+
+    // do not copy key bit if we are not using from.key
+    // TODO: Replace KEY_PRIVATE with a nil StoreEntry::key!
+    uint16_t cleanFlags = from.flags;
+    if (aKey)
+        EBIT_CLR(cleanFlags, KEY_PRIVATE);
+    basics.flags = cleanFlags;
+}
+
+void
+Ipc::StoreMapAnchor::exportInto(StoreEntry &into) const
+{
+    assert(reading());
+    into.timestamp = basics.timestamp;
+    into.lastref = basics.lastref;
+    into.expires = basics.expires;
+    into.lastModified(basics.lastmod);
+    into.swap_file_sz = basics.swap_file_sz;
+    into.refcount = basics.refcount;
+    into.flags = basics.flags;
 }
 
 void

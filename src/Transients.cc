@@ -161,7 +161,7 @@ Transients::get(const cache_key *key)
     if (StoreEntry *oldE = locals->at(index)) {
         debugs(20, 3, "not joining private " << *oldE);
         assert(EBIT_TEST(oldE->flags, KEY_PRIVATE));
-    } else if (StoreEntry *newE = copyFromShm(index)) {
+    } else if (StoreEntry *newE = copyFromShm(*anchor, index)) {
         return newE; // keep read lock to receive updates from others
     }
 
@@ -171,7 +171,7 @@ Transients::get(const cache_key *key)
 }
 
 StoreEntry *
-Transients::copyFromShm(const sfileno index)
+Transients::copyFromShm(const Ipc::StoreMapAnchor &anchor, const sfileno index)
 {
     const TransientsMapExtras::Item &extra = extras->items[index];
 
@@ -183,7 +183,7 @@ Transients::copyFromShm(const sfileno index)
     e->mem_obj->xitTable.io = MemObject::ioReading;
     e->mem_obj->xitTable.index = index;
 
-    // XXX: Set basic metadata.
+    anchor.exportInto(*e);
     return e;
 }
 

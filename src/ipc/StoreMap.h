@@ -57,6 +57,8 @@ public:
 
     /// store StoreEntry key and basics for an inode slot
     void set(const StoreEntry &anEntry, const cache_key *aKey = nullptr);
+    /// load StoreEntry basics that were previously stored with set()
+    void exportInto(StoreEntry &) const;
 
     void setKey(const cache_key *const aKey);
     bool sameKey(const cache_key *const aKey) const;

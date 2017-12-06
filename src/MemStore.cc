@@ -445,14 +445,7 @@ void
 MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor)
 {
     assert(!e.hasDisk()); // no conflict with disk entry basics
-    const Ipc::StoreMapAnchor::Basics &basics = anchor.basics;
-    e.swap_file_sz = basics.swap_file_sz;
-    e.lastref = basics.lastref;
-    e.timestamp = basics.timestamp;
-    e.expires = basics.expires;
-    e.lastModified(basics.lastmod);
-    e.refcount = basics.refcount;
-    e.flags = basics.flags;
+    anchor.exportInto(e);
 
     assert(e.mem_obj);
     if (anchor.complete()) {

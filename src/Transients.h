@@ -91,7 +91,7 @@ public:
 protected:
     bool addEntry(StoreEntry*, const Store::CacheKey&);
 
-    StoreEntry *copyFromShm(const sfileno index);
+    StoreEntry *copyFromShm(const Ipc::StoreMapAnchor &anchor, const sfileno index);
     bool copyToShm(const StoreEntry &e, const sfileno index, const Store::CacheKey &cacheKey);
 
     // Ipc::StoreMapCleaner API

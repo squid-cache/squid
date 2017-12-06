@@ -111,15 +111,7 @@ Rock::SwapDir::updateAnchoredWith(StoreEntry &entry, const Ipc::StoreMapAnchor &
 void
 Rock::SwapDir::anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreMapAnchor &anchor)
 {
-    const Ipc::StoreMapAnchor::Basics &basics = anchor.basics;
-
-    e.swap_file_sz = basics.swap_file_sz;
-    e.lastref = basics.lastref;
-    e.timestamp = basics.timestamp;
-    e.expires = basics.expires;
-    e.lastModified(basics.lastmod);
-    e.refcount = basics.refcount;
-    e.flags = basics.flags;
+    anchor.exportInto(e);
 
     const bool complete = anchor.complete();
     e.store_status = complete ? STORE_OK : STORE_PENDING;
