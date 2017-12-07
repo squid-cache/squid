@@ -1086,7 +1086,7 @@ Ssl::uriOfIssuerIfMissing(X509 *cert, Security::CertList const &serverCertificat
         if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(cert)) {
             // There is a URI where we can download a certificate.
             if (!findCertIssuerFast(SquidUntrustedCerts, cert) &&
-                !issuerExistInCaDb(cert, context)) {
+                    !issuerExistInCaDb(cert, context)) {
                 // and issuer not found in local databases containing
                 // untrusted certificates and trusted CA certificates
                 return issuerUri;
