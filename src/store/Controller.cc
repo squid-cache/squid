@@ -454,7 +454,7 @@ Store::Controller::evictIfFound(const cache_key *key)
 
     if (StoreEntry *entry = peekAtLocal(key)) {
         debugs(20, 5, "marking local in-transit " << *entry);
-        entry->release();
+        entry->release(true);
         return;
     }
 
