@@ -349,8 +349,12 @@ Transients::evictCached(StoreEntry &e)
 {
     debugs(20, 5, e);
     if (e.hasTransients()) {
-        if (map->freeEntry(e.mem_obj->xitTable.index))
-            CollapsedForwarding::Broadcast(e);
+        const auto index = e.mem_obj->xitTable.index;
+        if (map->freeEntry(index)) {
+            // Delay syncCollapsed(index) which may stop `e` wait for updates.
+            // Calling it directly/here creates complex reentrant call chains.
+            CollapsedForwarding::Broadcast(e, true);
+        }
     } else
     if (const auto key = e.publicKey())
         evictIfFound(key);
