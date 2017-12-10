@@ -686,9 +686,7 @@ StoreEntry::forcePublicKey(const cache_key *newkey)
     if (StoreEntry *e2 = (StoreEntry *)hash_lookup(store_table, newkey)) {
         assert(e2 != this);
         debugs(20, 3, "releasing clashing " << *e2);
-        // TODO: check whether there is any sense in keeping old entry
-        // shareable here. Leaving it non-shareable for now.
-        e2->release(false);
+        e2->release(true);
     }
 
     if (key)
