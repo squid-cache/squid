@@ -656,7 +656,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     assert(transients);
 
     StoreEntry *collapsed = transients->findCollapsed(xitIndex);
-    if (!collapsed) { // the entry is no longer locally active, ignore update
+    if (!collapsed) { // the entry is no longer active, ignore update
         debugs(20, 7, "not SMP-syncing not-transient " << xitIndex);
         return;
     }

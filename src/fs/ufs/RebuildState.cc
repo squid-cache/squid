@@ -247,7 +247,7 @@ Fs::Ufs::RebuildState::addIfFresh(const cache_key *key,
 
 /// Evicts a matching entry if it was last touched before caller's maxRef.
 /// \returns false only if the matching entry was touched at or after maxRef,
-/// indicating that the caller itself has supplied outdated maxRef.
+/// indicating that the caller has supplied outdated maxRef.
 bool
 Fs::Ufs::RebuildState::evictStaleAndContinue(const cache_key *candidateKey, const time_t maxRef, int &staleCount)
 {
