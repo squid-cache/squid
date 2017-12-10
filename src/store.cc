@@ -736,7 +736,7 @@ StoreEntry::adjustVary()
              */
             request->vary_headers.clear();       /* free old "bad" variance key */
             if (StoreEntry *pe = storeGetPublic(mem_obj->storeId(), mem_obj->method))
-                pe->release();
+                pe->release(true);
         }
 
         /* Make sure the request knows the variance status */
@@ -1847,7 +1847,7 @@ StoreEntry::storeErrorResponse(HttpReply *reply)
     flush();
     complete();
     negativeCache();
-    releaseRequest();
+    releaseRequest(false); // if it is safe to negatively cache, sharing is OK
     unlock("StoreEntry::storeErrorResponse");
 }
 

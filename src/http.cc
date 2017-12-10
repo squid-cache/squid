@@ -112,7 +112,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
          * for example, the request to this neighbor fails.
          */
         if (_peer->options.proxy_only)
-            entry->releaseRequest();
+            entry->releaseRequest(true);
 
 #if USE_DELAY_POOLS
         entry->setNoDelay(_peer->options.no_delay);
@@ -256,7 +256,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 #if USE_HTCP
         neighborsHtcpClear(e, nullptr, e->mem_obj->request.getRaw(), e->mem_obj->method, HTCP_CLR_INVALIDATION);
 #endif
-        pe->release();
+        pe->release(true);
     }
 
     /** \par
@@ -273,7 +273,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 #if USE_HTCP
         neighborsHtcpClear(e, nullptr, e->mem_obj->request.getRaw(), HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_INVALIDATION);
 #endif
-        pe->release();
+        pe->release(true);
     }
 }
 

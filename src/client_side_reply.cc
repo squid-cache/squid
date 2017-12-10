@@ -1043,7 +1043,7 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 #if USE_HTCP
         neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
-        newEntry->release();
+        newEntry->release(true);
         purgeStatus = Http::scOkay;
     }
 
@@ -1059,7 +1059,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 #if USE_HTCP
         neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
-        newEntry->release();
+        newEntry->release(true);
         purgeStatus = Http::scOkay;
     }
 
@@ -1075,7 +1075,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 #if USE_HTCP
             neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
-            entry->release();
+            entry->release(true);
             purgeStatus = Http::scOkay;
         }
 
@@ -1086,7 +1086,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 #if USE_HTCP
             neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
-            entry->release();
+            entry->release(true);
             purgeStatus = Http::scOkay;
         }
     }
