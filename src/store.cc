@@ -462,12 +462,12 @@ StoreEntry::touch()
 void
 StoreEntry::releaseRequest(const bool shareable)
 {
+    debugs(20, 3, shareable << ' ' << *this);
     if (!shareable)
         shareableWhenPrivate = false; // may already be false
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
 
-    Store::Root().evictCached(*this);
     setPrivateKey(shareable, true);
 }
 
@@ -595,7 +595,7 @@ getKeyCounter(void)
 void
 StoreEntry::setPrivateKey(const bool shareable, const bool permanent)
 {
-    debugs(20, 3, " private key " << *this);
+    debugs(20, 3, shareable << permanent << ' ' << *this);
     if (permanent)
         EBIT_SET(flags, RELEASE_REQUEST); // may already be set
     if (!shareable)
@@ -1263,12 +1263,11 @@ void
 StoreEntry::release(const bool shareable)
 {
     PROF_start(storeRelease);
-    debugs(20, 3, "releasing " << *this << ' ' << getMD5Text());
+    debugs(20, 3, shareable << ' ' << *this << ' ' << getMD5Text());
     /* If, for any reason we can't discard this object because of an
      * outstanding request, mark it for pending release */
 
     if (locked()) {
-        debugs(20, 3, "storeRelease: Only setting RELEASE_REQUEST bit");
         releaseRequest(shareable);
         PROF_stop(storeRelease);
         return;
