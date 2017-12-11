@@ -4552,7 +4552,7 @@ DOC_START
 				not available. Consider encoding the logged
 				value because Subject often has spaces.
 
-		ssl::>cert_issuer
+		ssl::<cert_issuer
 				The Issuer field of the received server
 				TLS certificate or a dash ('-') if this is
 				not available. Consider encoding the logged
