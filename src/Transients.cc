@@ -163,8 +163,8 @@ Transients::get(const cache_key *key)
 
     StoreEntry *e = new StoreEntry();
     e->createMemObject();
-    e->mem_obj->xitTable.io = MemObject::ioReading;
     e->mem_obj->xitTable.index = index;
+    e->mem_obj->xitTable.io = MemObject::ioReading;
     anchor->exportInto(*e);
     // keep read lock to receive updates from others
     return e;
@@ -192,8 +192,6 @@ Transients::monitorWhileReading(StoreEntry *e, const cache_key *key)
     if (!e->hasTransients()) {
         if (!addEntry(e, key))
             return false;
-        // keep the entry locked (for reading) to receive remote DELETE events
-        map->closeForWriting(e->mem_obj->xitTable.index, true);
         e->mem_obj->xitTable.io = MemObject::ioReading;
     }
 
@@ -216,10 +214,7 @@ Transients::startWriting(StoreEntry *e, const cache_key *key)
     if (!e->hasTransients()) {
         if (!addEntry(e, key))
             return false;
-
-        // keep the entry locked for writing but allow reading our updates
-        // we also need this entry locked to receive remote DELETE events
-        map->startAppending(e->mem_obj->xitTable.index);
+        e->mem_obj->xitTable.io = MemObject::ioWriting;
     }
 
     // XXX: Duplicates Transients::monitorWhileReading().
@@ -256,9 +251,10 @@ Transients::addEntry(StoreEntry *e, const cache_key *key)
     }
 
     slot->set(*e, key);
-    e->mem_obj->xitTable.io = MemObject::ioWriting;
+
+    // keep the entry locked (for reading) to receive remote DELETE events
     e->mem_obj->xitTable.index = index;
-    // keep write lock; the caller will decide what to do with it
+    map->closeForWriting(e->mem_obj->xitTable.index, true);
     return true;
 }
 
@@ -272,10 +268,9 @@ void
 Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFreed) const
 {
     assert(map);
-    assert(entry.mem_obj);
+    assert(entry.hasTransients());
     const auto idx = entry.mem_obj->xitTable.index;
-    const auto &anchor = isWriter(entry) ?
-                         map->writeableEntry(idx) : map->readableEntry(idx);
+    const auto &anchor = map->readableEntry(idx);
     aborted = anchor.writerHalted;
     waitingToBeFreed = anchor.waitingToBeFreed;
 }
@@ -285,7 +280,6 @@ Transients::completeWriting(const StoreEntry &e)
 {
     assert(e.hasTransients());
     assert(isWriter(e));
-    map->closeForWriting(e.mem_obj->xitTable.index, true);
     e.mem_obj->xitTable.io = MemObject::ioReading;
 }
 
@@ -333,12 +327,7 @@ Transients::disconnect(StoreEntry &entry)
     if (entry.hasTransients()) {
         auto &xitTable = entry.mem_obj->xitTable;
         assert(map);
-        if (isWriter(entry)) {
-            map->abortWriting(xitTable.index);
-        } else {
-            assert(isReader(entry));
-            map->closeForReading(xitTable.index);
-        }
+        map->closeForReading(xitTable.index);
         locals->at(xitTable.index) = NULL;
         xitTable.index = -1;
         xitTable.io = MemObject::ioDone;
