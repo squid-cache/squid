@@ -27,11 +27,11 @@ public:
     SBuf certFile;       ///< path of file containing PEM format X.509 certificate
     SBuf privateKeyFile; ///< path of file containing private key in PEM format
 
-    /// memory copy of the X.509 certificate from certFile
+    /// public X.509 certificate from certFile
     Security::CertPointer cert;
-    /// memory copy of the private key from privateKeyFile (which may be the same as certFile)
+    /// private key from privateKeyFile
     Security::PrivateKeyPointer pkey;
-    /// memory copy of any certificates which must be chained from cert
+    /// any certificates which must be chained from cert
     Security::CertList chain;
 
 private:
