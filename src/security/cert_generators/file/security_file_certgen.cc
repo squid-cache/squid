@@ -193,7 +193,6 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
 
     bool dbFailed = false;
     try {
-        db.find(certKey, certProperties.mimicCert, cert, pkey);
         if(db.IsEnabledDiskStore())
             db.find(certKey, certProperties.mimicCert, cert, pkey);
         else
