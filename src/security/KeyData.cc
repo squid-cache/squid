@@ -33,23 +33,30 @@ Security::KeyData::checkPrivateKey()
 bool
 Security::KeyData::loadX509CertFromFile()
 {
+    debugs(83, DBG_IMPORTANT, "Using certificate in " << certFile);
+
 #if USE_OPENSSL
     const char *certFilename = certFile.c_str();
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
     if (!bio || !BIO_read_filename(bio.get(), certFilename)) {
         const auto x = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "ERROR: unable to load file '" << certFile << "': " << ErrorString(x));
+        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << ErrorString(x));
         return false;
     }
 
-    X509 *certificate = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr);
+    if (X509 *certificate = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr)) {
+        if (X509_check_issued(certificate, certificate) == X509_V_OK)
+            debugs(83, 5, "Certificate is self-signed, will not be chained");
+        else
+            cert.resetWithoutLocking(certificate);
+    }
 
 #elif USE_GNUTLS
     const char *certFilename = certFile.c_str();
     gnutls_datum_t data;
     Security::ErrorCode x = gnutls_load_file(certFilename, &data);
     if (x != GNUTLS_E_SUCCESS) {
-        debugs(83, DBG_IMPORTANT, "ERROR: unable to load file '" << certFile << "': " << ErrorString(x));
+        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << ErrorString(x));
         return false;
     }
 
@@ -66,60 +73,87 @@ Security::KeyData::loadX509CertFromFile()
     if (x != GNUTLS_E_SUCCESS) {
         certificate = nullptr; // paranoid: just in case the *_t ptr is undefined after deinit.
     }
-#else
-    // to simplify and prevent 'undefined variable errors' in the next code block
-    void *certificate = nullptr;
-#endif
 
     if (certificate) {
-#if USE_OPENSSL
-        if (X509_check_issued(certificate, certificate) == X509_V_OK)
-            debugs(83, 5, "Certificate is self-signed, will not be chained");
-        else {
-            cert.resetWithoutLocking(certificate);
-            // and add to the chain any other certificate exist in the file
-            while (X509 *ca = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr))
-                chain.emplace_front(Security::CertPointer(ca));
-        }
-#elif USE_GNUTLS
         cert = Security::CertPointer(certificate, [](gnutls_x509_crt_t p) {
                    debugs(83, 5, "gnutls_x509_crt_deinit cert=" << (void*)p);
                    gnutls_x509_crt_deinit(p);
                });
-        // XXX: do chain load and cert self-signed check like OpenSSL
-    debugs(83, 2, "Loading certificate chain from PEM files not implemented in this Squid.");
+    } else {
+        cert.reset(); // paranoid: ensure cert is unset
+    }
+
 #else
-        // unreachable.
+    // do nothing.
 #endif
 
-    } else {
+    if (!cert) {
         debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate from '" << certFile << "'");
-        cert.reset(); // paranoid: ensure cert is unset
     }
 
     return bool(cert);
 }
 
+/**
+ * Read certificate from file.
+ * See also: Ssl::ReadX509Certificate function, gadgets.cc file
+ */
 void
-Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType)
+Security::KeyData::loadX509ChainFromFile()
 {
-    char buf[128];
-    debugs(83, DBG_IMPORTANT, "Using certificate in " << certFile);
-
-    if (!loadX509CertFromFile()) {
-        debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing certificate in '" << certFile << "'");
+#if USE_OPENSSL
+    // XXX: This BIO loads the public cert as first chain cert,
+    //      so the code appending chains sends it twice in handshakes.
+    const char *certFilename = certFile.c_str();
+    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
+    if (!bio || !BIO_read_filename(bio.get(), certFilename)) {
+        const auto x = ERR_get_error();
+        debugs(83, DBG_IMPORTANT, "ERROR: unable to load chain file '" << certFile << "': " << ErrorString(x));
         return;
     }
 
-    const char *keyFilename = privateKeyFile.c_str();
+    if (X509_check_issued(cert.get(), cert.get()) == X509_V_OK)
+        debugs(83, 5, "Certificate is self-signed, will not be chained");
+    else {
+        // and add to the chain any other certificate exist in the file
+        while (X509 *ca = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr)) {
+            // XXX: self-signed check should be applied to all certs loaded.
+            // XXX: missing checks that the chained certs are actually part of a chain for validating cert.
+            chain.emplace_front(Security::CertPointer(ca));
+        }
+    }
+
+#elif USE_GNUTLS
+    // XXX: implement chain loading
+    debugs(83, 2, "Loading certificate chain from PEM files not implemented in this Squid.");
+
+#else
+    // nothing to do.
+#endif
+}
+
+/**
+ * Read X.509 private key from file.
+ */
+void
+Security::KeyData::loadX509PrivateKeyFromFile()
+{
+    debugs(83, DBG_IMPORTANT, "Using key in " << privateKeyFile);
 
 #if USE_OPENSSL
+    const char *keyFilename = privateKeyFile.c_str();
     // XXX: Ssl::AskPasswordCb needs SSL_CTX_set_default_passwd_cb_userdata()
     // so this may not fully work iff Config.Program.ssl_password is set.
     pem_password_cb *cb = ::Config.Program.ssl_password ? &Ssl::AskPasswordCb : nullptr;
     Ssl::ReadPrivateKeyFromFile(keyFilename, pkey, cb);
 
+    if (pkey && !checkPrivateKey()) {
+        debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' checkPrivateKey() failed");
+        pkey.reset();
+    }
+
 #elif USE_GNUTLS
+    const char *keyFilename = privateKeyFile.c_str();
     gnutls_datum_t data;
     if (gnutls_load_file(keyFilename, &data) == GNUTLS_E_SUCCESS) {
         gnutls_privkey_t key;
@@ -138,16 +172,28 @@ Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType
     gnutls_free(data.data);
 
 #else
-    debugs(83, 2, "Loading private key PEM files not implemented in this Squid.");
+    // nothing to do.
 #endif
 
-    if (!pkey) {
-        debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing private key in '" << keyFilename << "'");
-    } else if (!checkPrivateKey()) {
-        debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' checkPrivateKey() failed");
-    } else
-        return; // everything is okay
+    return bool(pkey);
+}
 
-    pkey.reset();
-    cert.reset();
+void
+Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType)
+{
+    char buf[128];
+    if (!loadX509CertFromFile()) {
+        debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing certificate in '" << certFile << "'");
+        return;
+    }
+
+    // certificate chain in the PEM file is optional
+    loadX509ChainFromFile();
+
+    // pkey is mandatory, not having it makes cert and chain pointless.
+    if (!loadX509PrivateKeyFromFile()) {
+        debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing private key in '" << keyFilename << "'");
+        cert.reset();
+        chain.reset();
+    }
 }
