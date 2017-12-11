@@ -46,7 +46,6 @@ Security::ServerOptions::operator =(const Security::ServerOptions &old) {
         generateHostCertificates = old.generateHostCertificates;
         signingCa = old.signingCa;
         untrustedSigningCa = old.untrustedSigningCa;
-        certsToChain = old.certsToChain;
         dynamicCertMemCacheSize = old.dynamicCertMemCacheSize;
     }
     return *this;
@@ -233,6 +232,16 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
             return false;
         }
 
+        for (auto cert : keys.chain) {
+            if (SSL_CTX_add_extra_chain_cert(t.get(), cert.get())) {
+                // increase the certificate lock
+                X509_up_ref(cert.get());
+            } else {
+                const auto error = ERR_get_error();
+                debugs(83, DBG_IMPORTANT, "WARNING: can not add certificate to SSL context chain: " << Security::ErrorString(error));
+            }
+        }
+
 #elif USE_GNUTLS
         for (auto &keys : certs) {
             gnutls_x509_crt_t crt = keys.cert.get();
@@ -247,10 +256,9 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
                 debugs(83, DBG_CRITICAL, "ERROR: Failed to initialize server context with keys from " << whichFile << ": " << Security::ErrorString(x));
                 return false;
             }
+                // XXX: add cert chain to the context
         }
 #endif
-
-        updateContextCertChain(t);
 
         if (!updateContextConfig(t)) {
             debugs(83, DBG_CRITICAL, "ERROR: Configuring static TLS context");
@@ -272,10 +280,7 @@ Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
     // contexts are generated as needed. This method initializes the cert
     // and key pointers used to sign those contexts later.
 
-    Security::KeyData &keys = certs.front();
-    signingCa.cert = keys.cert;
-    signingCa.pkey = keys.pkey;
-    certsToChain = keys.chain;
+    signingCa = certs.front();
 
     const char *portType = AnyP::ProtocolType_str[port.transport.protocol];
     if (!signingCa.cert) {
@@ -304,29 +309,6 @@ Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
         char buf[128];
         fatalf("Unable to generate signing certificate for untrusted sites for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
     }
-}
-
-void
-Security::ServerOptions::updateContextCertChain(Security::ContextPointer &ctx)
-{
-    if (certsToChain.empty())
-        return;
-
-#if USE_OPENSSL
-    for (auto cert : certsToChain) {
-        if (SSL_CTX_add_extra_chain_cert(ctx.get(), cert.get())) {
-            // increase the certificate lock
-            X509_up_ref(cert.get());
-        } else {
-            const auto error = ERR_get_error();
-            debugs(83, DBG_IMPORTANT, "WARNING: can not add certificate to SSL context chain: " << Security::ErrorString(error));
-        }
-    }
-
-#elif USE_GNUTLS
-    debugs(83, DBG_IMPORTANT, "WARNING: Delivering TLS certificate chain requires --with-openssl. Skipping.");
-
-#endif
 }
 
 void

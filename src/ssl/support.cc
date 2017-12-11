@@ -823,7 +823,16 @@ Ssl::chainCertificatesToSSLContext(Security::ContextPointer &ctx, Security::Serv
         const int ssl_error = ERR_get_error();
         debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain: " << Security::ErrorString(ssl_error));
     }
-    options.updateContextCertChain(ctx);
+
+    for (auto cert : options.signingCa.chain) {
+        if (SSL_CTX_add_extra_chain_cert(ctx.get(), cert.get())) {
+            // increase the certificate lock
+            X509_up_ref(cert.get());
+        } else {
+            const auto error = ERR_get_error();
+            debugs(83, DBG_IMPORTANT, "WARNING: can not add certificate to SSL dynamic context chain: " << Security::ErrorString(error));
+        }
+    }
 }
 
 void
