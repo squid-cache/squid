@@ -67,6 +67,7 @@ namespace Ssl
 {
 
 /// callback for receiving password to access password secured PEM files
+/// XXX: Requires SSL_CTX_set_default_passwd_cb_userdata()!
 int AskPasswordCb(char *buf, int size, int rwflag, void *userdata);
 
 /// initialize the SSL library global state.
