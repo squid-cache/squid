@@ -186,12 +186,11 @@ Transients::findCollapsed(const sfileno index)
     return NULL;
 }
 
-bool
+void
 Transients::monitorWhileReading(StoreEntry *e, const cache_key *key)
 {
     if (!e->hasTransients()) {
-        if (!addEntry(e, key))
-            return false;
+        addEntry(e, key);
         e->mem_obj->xitTable.io = MemObject::ioReading;
     }
 
@@ -204,16 +203,13 @@ Transients::monitorWhileReading(StoreEntry *e, const cache_key *key)
         // e is tied to us via mem_obj so we will know when it is destructed.
         locals->at(index) = e;
     }
-
-    return true;
 }
 
-bool
+void
 Transients::startWriting(StoreEntry *e, const cache_key *key)
 {
     if (!e->hasTransients()) {
-        if (!addEntry(e, key))
-            return false;
+        addEntry(e, key);
         e->mem_obj->xitTable.io = MemObject::ioWriting;
     }
 
@@ -227,35 +223,27 @@ Transients::startWriting(StoreEntry *e, const cache_key *key)
         // e is tied to us via mem_obj so we will know when it is destructed.
         locals->at(index) = e;
     }
-
-    return true;
 }
 
 /// either creates a new Transients entry for `e` or returns false
-bool
+void
 Transients::addEntry(StoreEntry *e, const cache_key *key)
 {
     assert(e);
     assert(e->mem_obj);
     assert(!e->hasTransients());
 
-    if (!map) {
-        debugs(20, 5, "No map to add " << *e);
-        return false;
-    }
+    Must(map); // configured to track transients
 
     sfileno index = 0;
     Ipc::StoreMapAnchor *slot = map->openForWriting(key, index);
-    if (!slot) {
-        return false;
-    }
+    Must(slot); // no writer collisions
 
     slot->set(*e, key);
 
     // keep the entry locked (for reading) to receive remote DELETE events
     e->mem_obj->xitTable.index = index;
     map->closeForWriting(e->mem_obj->xitTable.index, true);
-    return true;
 }
 
 void

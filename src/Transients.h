@@ -32,11 +32,11 @@ public:
     StoreEntry *findCollapsed(const sfileno xitIndex);
 
     /// start listening for remote DELETE requests targeting the given complete StoreEntry
-    bool monitorWhileReading(StoreEntry*, const cache_key *key);
+    void monitorWhileReading(StoreEntry*, const cache_key *key);
 
     /// start listening for remote DELETE requests targeting the given miss StoreEntry
     /// and allow broadcasting of local StoreEntry updates to remote readers
-    bool startWriting(StoreEntry*, const cache_key *key);
+    void startWriting(StoreEntry*, const cache_key *key);
 
     /// called when the in-transit entry has been successfully cached
     void completeWriting(const StoreEntry &e);
@@ -82,7 +82,7 @@ public:
     static int64_t EntryLimit();
 
 protected:
-    bool addEntry(StoreEntry*, const cache_key *key);
+    void addEntry(StoreEntry*, const cache_key *key);
 
     // Ipc::StoreMapCleaner API
     virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;

@@ -319,7 +319,7 @@ Store::Controller::find(const cache_key *key)
             referenceBusy(*entry);
             return entry;
         } catch (const std::exception &ex) {
-            debugs(20, 2, "failed: " << ex.what());
+            debugs(20, 2, "failed with " << *entry << ": " << ex.what());
             entry->release("Store::Controller::find");
             // fall through
         }
@@ -331,11 +331,10 @@ Store::Controller::find(const cache_key *key)
 void
 Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
 {
-    // TODO: refactor to throw on anchorToCache() and addReading() errors!
+    // TODO: refactor to throw on anchorToCache() inSync errors!
 
     // anchorToCache() below and many find() callers expect a registered entry
-    if (!addReading(&entry, key))
-        throw TexcHere("cannot index");
+    addReading(&entry, key);
 
     if (entry.hasTransients()) {
         bool inSync = false;
@@ -625,29 +624,24 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
     return false;
 }
 
-bool
+void
 Store::Controller::addReading(StoreEntry *e, const cache_key *key)
 {
-    if (transients && !transients->monitorWhileReading(e, key))
-        return false;
-
+    if (transients)
+        transients->monitorWhileReading(e, key);
     e->hashInsert(key);
-    return true;
 }
 
 void
 Store::Controller::addWriting(StoreEntry *e, const cache_key *key)
 {
     assert(e);
-
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL))
         return; // constant memory-resident entries do not need transients
 
-    if (!transients)
-        return; // non-SMP configurations do not need transients
-
-    if (!transients->startWriting(e, key))
-        throw TexcHere("transients writer collision");
+    if (transients)
+        transients->startWriting(e, key);
+    // else: non-SMP configurations do not need transients
 }
 
 void

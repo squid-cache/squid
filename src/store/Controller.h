@@ -92,12 +92,10 @@ public:
 
     /// register a being-read StoreEntry (to optimize concurrent cache reads
     /// and to receive remote DELETE events)
-    /// \returns false on failures
-    bool addReading(StoreEntry *e, const cache_key *cacheKey);
+    void addReading(StoreEntry *e, const cache_key *cacheKey);
 
     /// register a being-written StoreEntry (to support concurrent cache reads
     /// and to receive remote DELETE events)
-    /// \throws std::exception on failures
     void addWriting(StoreEntry *, const cache_key *);
 
     /// whether the entry is in "reading from Transients" I/O state

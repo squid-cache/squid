@@ -651,7 +651,7 @@ StoreEntry::setPublicKey(const KeyScope scope)
         newVaryMarker.unlockAndReset("setPublicKey+success");
         return true;
     } catch (const std::exception &ex) {
-        debugs(20, 2, "failed: " << ex.what());
+        debugs(20, 2, "for " << *this << " failed: " << ex.what());
     }
     return false;
 }
