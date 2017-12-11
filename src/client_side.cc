@@ -2611,8 +2611,9 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
     }
 
 #else
-    (void)session;
-    debugs(83, DBG_CRITICAL, "ERROR: HTTPS not supported by this Squid.");
+    // Performing TLS handshake should never be reachable without a TLS/SSL library.
+    (void)session; // avoid compiler and static analysis complaints
+    fatal("FATAL: HTTPS not supported by this Squid.");
 #endif
 
     conn->clientConnection->close();
@@ -2820,7 +2821,7 @@ ConnStateData::postHttpsAccept()
         HTTPMSGLOCK(acl_checklist->al->request);
         acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
 #else
-        debugs(33, DBG_CRITICAL, "ERROR: SSL-Bump requires --with-openssl");
+        fatal("FATAL: SSL-Bump requires --with-openssl");
 #endif
         return;
     } else {
