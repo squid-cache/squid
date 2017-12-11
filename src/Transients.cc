@@ -26,8 +26,6 @@
 
 /// shared memory segment path to use for Transients map
 static const SBuf MapLabel("transients_map");
-/// shared memory segment path to use for Transients map extras
-static const char *ExtrasLabel = "transients_ex";
 
 Transients::Transients(): map(NULL), locals(NULL)
 {
@@ -49,8 +47,6 @@ Transients::init()
     Must(!map);
     map = new TransientsMap(MapLabel);
     map->cleaner = this;
-
-    extras = shm_old(TransientsMapExtras)(ExtrasLabel);
 
     locals = new Locals(entryLimit, 0);
 }
@@ -161,29 +157,16 @@ Transients::get(const cache_key *key)
     if (StoreEntry *oldE = locals->at(index)) {
         debugs(20, 3, "not joining private " << *oldE);
         assert(EBIT_TEST(oldE->flags, KEY_PRIVATE));
-    } else if (StoreEntry *newE = copyFromShm(*anchor, index)) {
-        return newE; // keep read lock to receive updates from others
+        map->closeForReading(index);
+        return nullptr;
     }
 
-    // private entry or loading failure
-    map->closeForReading(index);
-    return NULL;
-}
-
-StoreEntry *
-Transients::copyFromShm(const Ipc::StoreMapAnchor &anchor, const sfileno index)
-{
-    const TransientsMapExtras::Item &extra = extras->items[index];
-
-    // create a brand new store entry and initialize it with stored info
-    StoreEntry *e = storeCreatePureEntry(extra.url, extra.url, extra.reqMethod);
-
-    assert(e->mem_obj);
-    e->mem_obj->method = extra.reqMethod;
+    StoreEntry *e = new StoreEntry();
+    e->createMemObject();
     e->mem_obj->xitTable.io = MemObject::ioReading;
     e->mem_obj->xitTable.index = index;
-
-    anchor.exportInto(*e);
+    anchor->exportInto(*e);
+    // keep read lock to receive updates from others
     return e;
 }
 
@@ -204,10 +187,10 @@ Transients::findCollapsed(const sfileno index)
 }
 
 bool
-Transients::monitorWhileReading(StoreEntry *e, const Store::CacheKey &cacheKey)
+Transients::monitorWhileReading(StoreEntry *e, const cache_key *key)
 {
     if (!e->hasTransients()) {
-        if (!addEntry(e, cacheKey))
+        if (!addEntry(e, key))
             return false;
         // keep the entry locked (for reading) to receive remote DELETE events
         map->closeForWriting(e->mem_obj->xitTable.index, true);
@@ -228,10 +211,10 @@ Transients::monitorWhileReading(StoreEntry *e, const Store::CacheKey &cacheKey)
 }
 
 bool
-Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey)
+Transients::startWriting(StoreEntry *e, const cache_key *key)
 {
     if (!e->hasTransients()) {
-        if (!addEntry(e, cacheKey))
+        if (!addEntry(e, key))
             return false;
 
         // keep the entry locked for writing but allow reading our updates
@@ -255,7 +238,7 @@ Transients::startWriting(StoreEntry *e, const Store::CacheKey &cacheKey)
 
 /// either creates a new Transients entry for `e` or returns false
 bool
-Transients::addEntry(StoreEntry *e, const Store::CacheKey &cacheKey)
+Transients::addEntry(StoreEntry *e, const cache_key *key)
 {
     assert(e);
     assert(e->mem_obj);
@@ -267,43 +250,15 @@ Transients::addEntry(StoreEntry *e, const Store::CacheKey &cacheKey)
     }
 
     sfileno index = 0;
-    Ipc::StoreMapAnchor *slot = map->openForWriting(cacheKey.key, index);
+    Ipc::StoreMapAnchor *slot = map->openForWriting(key, index);
     if (!slot) {
         return false;
     }
 
-    try {
-        if (copyToShm(*e, index, cacheKey)) {
-            slot->set(*e, cacheKey.key);
-            e->mem_obj->xitTable.io = MemObject::ioWriting;
-            e->mem_obj->xitTable.index = index;
-            // keep write lock; the caller will decide what to do with it
-            return true;
-        }
-        // fall through to the error handling code
-    } catch (const std::exception &x) { // TODO: should we catch ... as well?
-        debugs(20, 2, "error keeping entry " << index <<
-               ' ' << *e << ": " << x.what());
-        // fall through to the error handling code
-    }
-    map->abortWriting(index);
-    return false;
-}
-
-/// copies all relevant local data to shared memory
-bool
-Transients::copyToShm(const StoreEntry &e, const sfileno index,
-                      const Store::CacheKey &cacheKey)
-{
-    TransientsMapExtras::Item &extra = extras->items[index];
-
-    Must(cacheKey.storeId.length() < sizeof(extra.url)); // we have space to store it all, plus 0
-    const int urlLen = cacheKey.storeId.copy(&extra.url[0], sizeof(extra.url));
-    extra.url[urlLen] = '\0';
-
-    Must(cacheKey.method != Http::METHOD_OTHER);
-    extra.reqMethod = cacheKey.method.id();
-
+    slot->set(*e, key);
+    e->mem_obj->xitTable.io = MemObject::ioWriting;
+    e->mem_obj->xitTable.index = index;
+    // keep write lock; the caller will decide what to do with it
     return true;
 }
 
@@ -425,7 +380,7 @@ class TransientsRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    TransientsRr(): mapOwner(NULL), extrasOwner(NULL) {}
+    TransientsRr(): mapOwner(NULL) {}
     virtual void useConfig();
     virtual ~TransientsRr();
 
@@ -434,7 +389,6 @@ protected:
 
 private:
     TransientsMap::Owner *mapOwner;
-    Ipc::Mem::Owner<TransientsMapExtras> *extrasOwner;
 };
 
 RunnerRegistrationEntry(TransientsRr);
@@ -458,13 +412,10 @@ TransientsRr::create()
 
     Must(!mapOwner);
     mapOwner = TransientsMap::Init(MapLabel, entryLimit);
-    Must(!extrasOwner);
-    extrasOwner = shm_new(TransientsMapExtras)(ExtrasLabel, entryLimit);
 }
 
 TransientsRr::~TransientsRr()
 {
-    delete extrasOwner;
     delete mapOwner;
 }
 

@@ -18,27 +18,6 @@ class StoreInfoStats;
 
 namespace Store {
 
-/// helps passing cache key, corresponding store ID and method to Storage::get()
-class CacheKey
-{
-public:
-    CacheKey(const cache_key *aKey, const SBuf &aStoreId, const HttpRequestMethod &aMethod):
-        key(storeKeyDup(aKey)),
-        storeId(aStoreId),
-        method(aMethod) {}
-
-    ~CacheKey() { if (key) storeKeyFree(key); }
-
-    // TODO: Support moving.
-    CacheKey(CacheKey &&) = delete; // no copying or moving of any kind
-
-    bool hasUris() const { return storeId.length(); }
-
-    const cache_key *key;
-    const SBuf storeId;
-    const HttpRequestMethod method;
-};
-
 /// A "response storage" abstraction.
 /// This API is shared among Controller and Controlled classes.
 class Storage: public RefCountable

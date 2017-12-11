@@ -45,7 +45,7 @@ public:
     /// \returns a locally indexed and SMP-tracked matching StoreEntry (or nil)
     /// Slower than peek() but does not restrict StoreEntry use and storage.
     /// Counts as an entry reference from the removal policy p.o.v.
-    StoreEntry *find(const CacheKey &key);
+    StoreEntry *find(const cache_key *key);
 
     /// \returns a matching StoreEntry not suitable for long-term use (or nil)
     /// Faster than find() but the returned entry may not receive updates, may
@@ -93,12 +93,12 @@ public:
     /// register a being-read StoreEntry (to optimize concurrent cache reads
     /// and to receive remote DELETE events)
     /// \returns false on failures
-    bool addReading(StoreEntry *e, const CacheKey &cacheKey);
+    bool addReading(StoreEntry *e, const cache_key *cacheKey);
 
     /// register a being-written StoreEntry (to support concurrent cache reads
     /// and to receive remote DELETE events)
     /// \throws std::exception on failures
-    void addWriting(StoreEntry *, const CacheKey &);
+    void addWriting(StoreEntry *, const cache_key *);
 
     /// whether the entry is in "reading from Transients" I/O state
     bool transientsReader(const StoreEntry &) const;
@@ -139,7 +139,7 @@ private:
     /// dereference() an idle entry and return true if the entry should be deleted
     bool dereferenceIdle(StoreEntry &, bool wantsLocalMemory);
 
-    void allowSharing(StoreEntry &entry, const CacheKey &cacheKey);
+    void allowSharing(StoreEntry &entry, const cache_key *cacheKey);
     StoreEntry *peekAtLocal(const cache_key *);
 
     void transientsUnlinkByKeyIfFound(const cache_key *);

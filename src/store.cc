@@ -548,16 +548,13 @@ StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestM
 StoreEntry *
 storeGetPublic(const char *uri, const HttpRequestMethod& method)
 {
-    // XXX: Performance regression: SBuf() allocates.
-    const Store::CacheKey cacheKey(storeKeyPublic(uri, method), SBuf(uri), method);
-    return Store::Root().find(cacheKey);
+    return Store::Root().find(storeKeyPublic(uri, method));
 }
 
 StoreEntry *
 storeGetPublicByRequestMethod(HttpRequest * req, const HttpRequestMethod& method, const KeyScope keyScope)
 {
-    const Store::CacheKey cacheKey(storeKeyPublicByRequestMethod(req, method, keyScope), req->storeId(), method);
-    return Store::Root().find(cacheKey);
+    return Store::Root().find(storeKeyPublicByRequestMethod(req, method, keyScope));
 }
 
 StoreEntry *
@@ -649,8 +646,7 @@ StoreEntry::setPublicKey(const KeyScope scope)
     try {
         EntryGuard newVaryMarker(adjustVary(), "setPublicKey+failure");
         const cache_key *pubKey = calcPublicKey(scope);
-        // XXX: Performance regression: SBuf() allocates.
-        Store::Root().addWriting(this, Store::CacheKey(pubKey, SBuf(mem_obj->storeId()), mem_obj->method));
+        Store::Root().addWriting(this, pubKey);
         forcePublicKey(pubKey);
         newVaryMarker.unlockAndReset("setPublicKey+success");
         return true;

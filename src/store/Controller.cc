@@ -309,12 +309,12 @@ Store::Controller::hasReadableDiskEntry(const StoreEntry &e) const
 }
 
 StoreEntry *
-Store::Controller::find(const CacheKey &cacheKey)
+Store::Controller::find(const cache_key *key)
 {
-    if (const auto entry = peek(cacheKey.key)) {
+    if (const auto entry = peek(key)) {
        try {
             if (!entry->key)
-                allowSharing(*entry, cacheKey);
+                allowSharing(*entry, key);
             entry->touch();
             referenceBusy(*entry);
             return entry;
@@ -329,12 +329,12 @@ Store::Controller::find(const CacheKey &cacheKey)
 
 /// indexes and adds SMP-tracking for an ephemeral peek() result
 void
-Store::Controller::allowSharing(StoreEntry &entry, const CacheKey &cacheKey)
+Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
 {
     // TODO: refactor to throw on anchorToCache() and addReading() errors!
 
     // anchorToCache() below and many find() callers expect a registered entry
-    if (!addReading(&entry, cacheKey))
+    if (!addReading(&entry, key))
         throw TexcHere("cannot index");
 
     if (entry.hasTransients()) {
@@ -626,17 +626,17 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
 }
 
 bool
-Store::Controller::addReading(StoreEntry *e, const CacheKey &cacheKey)
+Store::Controller::addReading(StoreEntry *e, const cache_key *key)
 {
-    if (transients && !transients->monitorWhileReading(e, cacheKey))
+    if (transients && !transients->monitorWhileReading(e, key))
         return false;
 
-    e->hashInsert(cacheKey.key);
+    e->hashInsert(key);
     return true;
 }
 
 void
-Store::Controller::addWriting(StoreEntry *e, const CacheKey &cacheKey)
+Store::Controller::addWriting(StoreEntry *e, const cache_key *key)
 {
     assert(e);
 
@@ -646,7 +646,7 @@ Store::Controller::addWriting(StoreEntry *e, const CacheKey &cacheKey)
     if (!transients)
         return; // non-SMP configurations do not need transients
 
-    if (!transients->startWriting(e, cacheKey))
+    if (!transients->startWriting(e, key))
         throw TexcHere("transients writer collision");
 }
 

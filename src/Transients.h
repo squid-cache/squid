@@ -9,7 +9,6 @@
 #ifndef SQUID_TRANSIENTS_H
 #define SQUID_TRANSIENTS_H
 
-#include "http/MethodType.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
 #include "ipc/StoreMap.h"
@@ -17,12 +16,6 @@
 #include "store/Controlled.h"
 #include <vector>
 
-// StoreEntry restoration info not already stored by Ipc::StoreMap
-struct TransientsMapExtraItem {
-    char url[MAX_URL+1]; ///< Request-URI; TODO: decrease MAX_URL by one
-    Http::MethodType reqMethod; ///< request method; extensions are not supported
-};
-typedef Ipc::StoreMapItems<TransientsMapExtraItem> TransientsMapExtras;
 typedef Ipc::StoreMap TransientsMap;
 
 /// Keeps track of store entries being delivered to clients that arrived before
@@ -39,11 +32,11 @@ public:
     StoreEntry *findCollapsed(const sfileno xitIndex);
 
     /// start listening for remote DELETE requests targeting the given complete StoreEntry
-    bool monitorWhileReading(StoreEntry*, const Store::CacheKey&);
+    bool monitorWhileReading(StoreEntry*, const cache_key *key);
 
     /// start listening for remote DELETE requests targeting the given miss StoreEntry
     /// and allow broadcasting of local StoreEntry updates to remote readers
-    bool startWriting(StoreEntry*, const Store::CacheKey&);
+    bool startWriting(StoreEntry*, const cache_key *key);
 
     /// called when the in-transit entry has been successfully cached
     void completeWriting(const StoreEntry &e);
@@ -89,10 +82,7 @@ public:
     static int64_t EntryLimit();
 
 protected:
-    bool addEntry(StoreEntry*, const Store::CacheKey&);
-
-    StoreEntry *copyFromShm(const Ipc::StoreMapAnchor &anchor, const sfileno index);
-    bool copyToShm(const StoreEntry &e, const sfileno index, const Store::CacheKey &cacheKey);
+    bool addEntry(StoreEntry*, const cache_key *key);
 
     // Ipc::StoreMapCleaner API
     virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
@@ -100,10 +90,6 @@ protected:
 private:
     /// shared packed info indexed by Store keys, for creating new StoreEntries
     TransientsMap *map;
-
-    /// shared packed info that standard StoreMap does not store for us
-    typedef TransientsMapExtras Extras;
-    Ipc::Mem::Pointer<Extras> extras;
 
     typedef std::vector<StoreEntry*> Locals;
     /// local collapsed reader and writer entries, indexed by transient ID,
