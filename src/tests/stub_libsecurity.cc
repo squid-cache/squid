@@ -31,6 +31,12 @@ std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorA
 Security::HandshakeParser::HandshakeParser() STUB
 bool Security::HandshakeParser::parseHello(const SBuf &) STUB_RETVAL(false)
 
+#include "security/KeyData.h"
+namespace Security
+{
+void KeyData::loadFromFiles(const AnyP::PortCfg &, const char *) STUB
+}
+
 #include "security/NegotiationHistory.h"
 Security::NegotiationHistory::NegotiationHistory() STUB
 void Security::NegotiationHistory::retrieveNegotiatedInfo(const Security::SessionPointer &) STUB
@@ -97,7 +103,6 @@ void Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &) STUB
 bool Security::ServerOptions::updateContextConfig(Security::ContextPointer &) STUB_RETVAL(false)
 void Security::ServerOptions::updateContextEecdh(Security::ContextPointer &) STUB
 void Security::ServerOptions::updateContextClientCa(Security::ContextPointer &) STUB
-void Security::ServerOptions::updateContextCertChain(Security::ContextPointer &) STUB
 void Security::ServerOptions::syncCaFiles() STUB
 void Security::ServerOptions::updateContextSessionId(Security::ContextPointer &) STUB
 

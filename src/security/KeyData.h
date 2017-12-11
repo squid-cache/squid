@@ -37,7 +37,7 @@ public:
 private:
     bool checkPrivateKey();
     bool loadX509CertFromFile();
-    bool loadX509ChainFromFile();
+    void loadX509ChainFromFile();
     bool loadX509PrivateKeyFromFile();
 };
 

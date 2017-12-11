@@ -135,7 +135,7 @@ Security::KeyData::loadX509ChainFromFile()
 /**
  * Read X.509 private key from file.
  */
-void
+bool
 Security::KeyData::loadX509PrivateKeyFromFile()
 {
     debugs(83, DBG_IMPORTANT, "Using key in " << privateKeyFile);
@@ -148,7 +148,7 @@ Security::KeyData::loadX509PrivateKeyFromFile()
     Ssl::ReadPrivateKeyFromFile(keyFilename, pkey, cb);
 
     if (pkey && !checkPrivateKey()) {
-        debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' checkPrivateKey() failed");
+        debugs(83, DBG_IMPORTANT, "WARNING: '" << privateKeyFile << "' checkPrivateKey() failed");
         pkey.reset();
     }
 
@@ -192,8 +192,8 @@ Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType
 
     // pkey is mandatory, not having it makes cert and chain pointless.
     if (!loadX509PrivateKeyFromFile()) {
-        debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing private key in '" << keyFilename << "'");
+        debugs(83, DBG_IMPORTANT, "WARNING: '" << portType << "_port " << port.s.toUrl(buf, sizeof(buf)) << "' missing private key in '" << privateKeyFile << "'");
         cert.reset();
-        chain.reset();
+        chain.clear();
     }
 }
