@@ -58,7 +58,8 @@ Security::KeyData::loadX509CertFromFile()
     gnutls_x509_crt_t certificate;
     x = gnutls_pcert_export_x509(&pcrt, &certificate);
     if (x != GNUTLS_E_SUCCESS) {
-        certificate = nullptr; // paranoid: just in case the *_t ptr is undefined after deinit.
+        debugs(83, DBG_IMPORTANT, "ERROR: unable to X.509 convert certificate from '" << certFile << "': " << ErrorString(x));
+        return false;
     }
 
     if (certificate) {
