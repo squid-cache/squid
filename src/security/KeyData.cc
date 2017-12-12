@@ -13,19 +13,6 @@
 #include "SquidConfig.h"
 #include "ssl/bio.h"
 
-/// verify that a private key and cert match
-bool
-Security::KeyData::checkPrivateKey()
-{
-#if USE_OPENSSL
-    return X509_check_private_key(cert.get(), pkey.get());
-#elif USE_GNUTLS
-    return true; // TODO find GnuTLS equivalent check
-#else
-    return false;
-#endif
-}
-
 /**
  * Read certificate from file.
  * See also: Ssl::ReadX509Certificate function, gadgets.cc file
@@ -147,8 +134,8 @@ Security::KeyData::loadX509PrivateKeyFromFile()
     pem_password_cb *cb = ::Config.Program.ssl_password ? &Ssl::AskPasswordCb : nullptr;
     Ssl::ReadPrivateKeyFromFile(keyFilename, pkey, cb);
 
-    if (pkey && !checkPrivateKey()) {
-        debugs(83, DBG_IMPORTANT, "WARNING: '" << privateKeyFile << "' checkPrivateKey() failed");
+    if (pkey && !X509_check_private_key(cert.get(), pkey.get())) {
+        debugs(83, DBG_IMPORTANT, "WARNING: '" << privateKeyFile << "' X509_check_private_key() failed");
         pkey.reset();
     }
 
