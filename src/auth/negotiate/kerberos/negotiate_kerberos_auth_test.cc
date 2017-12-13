@@ -203,8 +203,8 @@ squid_kerb_proxy_auth(char *proxy)
             token = (char *) xcalloc(base64_encode_len(output_token.length), 1);
             struct base64_encode_ctx ctx;
             base64_encode_init(&ctx);
-            size_t blen = base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(token), output_token.length, reinterpret_cast<const uint8_t*>(output_token.value));
-            blen += base64_encode_final(&ctx, reinterpret_cast<uint8_t*>(token)+blen);
+            size_t blen = base64_encode_update(&ctx, token, output_token.length, reinterpret_cast<const uint8_t*>(output_token.value));
+            blen += base64_encode_final(&ctx, token+blen);
         }
     }
 

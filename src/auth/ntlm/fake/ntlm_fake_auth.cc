@@ -155,7 +155,7 @@ main(int argc, char *argv[])
         base64_decode_init(&ctx);
         size_t dstLen = 0;
         if (buflen > 3 &&
-                base64_decode_update(&ctx, &dstLen, decodedBuf, buflen-3, reinterpret_cast<const uint8_t*>(buf+3)) &&
+                base64_decode_update(&ctx, &dstLen, decodedBuf, buflen-3, buf+3) &&
                 base64_decode_final(&ctx)) {
             decodedLen = dstLen;
             packet = (ntlmhdr*)decodedBuf;
@@ -189,8 +189,8 @@ main(int argc, char *argv[])
 
             struct base64_encode_ctx eCtx;
             base64_encode_init(&eCtx);
-            uint8_t *data = (uint8_t*)xcalloc(base64_encode_len(len), 1);
-            size_t blen = base64_encode_update(&eCtx, data, len, reinterpret_cast<uint8_t*>(&chal));
+            char *data = static_cast<char *>(xcalloc(base64_encode_len(len), 1));
+            size_t blen = base64_encode_update(&eCtx, data, len, reinterpret_cast<const uint8_t *>(&chal));
             blen += base64_encode_final(&eCtx, data+blen);
             if (NTLM_packet_debug_enabled) {
                 printf("TT %.*s\n", (int)blen, data);
