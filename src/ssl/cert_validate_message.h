@@ -64,7 +64,7 @@ public:
     /// If none found a new RecvdError item added with the given id;
     RecvdError &getError(int errorId);
     RecvdErrors errors; ///< The list of parsed errors
-    Helper::ResultCode resultCode; ///< The helper result code
+    Helper::ResultCode resultCode = Helper::Unknown; ///< The helper result code
     Security::SessionPointer ssl;
 };
 
