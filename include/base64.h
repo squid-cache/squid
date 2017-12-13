@@ -15,7 +15,7 @@
 #else /* Base64 functions copied from Nettle 3.4 under GPLv2, with adjustments */
 
 /* base64.h
-   
+
    Base-64 encoding and decoding.
 
    Copyright (C) 2002 Niels Möller, Dan Egnor
@@ -70,9 +70,9 @@ extern "C" {
 
 struct base64_encode_ctx
 {
-  const char *alphabet;    /* Alphabet to use for encoding */
-  unsigned short word;     /* Leftover bits */
-  unsigned char bits;      /* Number of bits, always 0, 2, or 4. */
+    const char *alphabet;    /* Alphabet to use for encoding */
+    unsigned short word;     /* Leftover bits */
+    unsigned char bits;      /* Number of bits, always 0, 2, or 4. */
 };
 
 /* Initialize encoding context for base-64 */
@@ -86,22 +86,22 @@ base64url_encode_init(struct base64_encode_ctx *ctx);
 /* Encodes a single byte. Returns amount of output (always 1 or 2). */
 size_t
 base64_encode_single(struct base64_encode_ctx *ctx,
-		     char *dst,
-		     uint8_t src);
+                     char *dst,
+                     uint8_t src);
 
 /* Returns the number of output characters. DST should point to an
  * area of size at least BASE64_ENCODE_LENGTH(length). */
 size_t
 base64_encode_update(struct base64_encode_ctx *ctx,
-		     char *dst,
-		     size_t length,
-		     const uint8_t *src);
+                     char *dst,
+                     size_t length,
+                     const uint8_t *src);
 
 /* DST should point to an area of size at least
  * BASE64_ENCODE_FINAL_LENGTH */
 size_t
 base64_encode_final(struct base64_encode_ctx *ctx,
-		    char *dst);
+                    char *dst);
 
 /* Lower level functions */
 
@@ -116,7 +116,6 @@ base64_encode_raw(char *dst, size_t length, const uint8_t *src);
 void
 base64_encode_group(char *dst, uint32_t group);
 
-
 /* Base64 decoding */
 
 /* Maximum length of output for base64_decode_update. */
@@ -125,12 +124,12 @@ base64_encode_group(char *dst, uint32_t group);
 
 struct base64_decode_ctx
 {
-  const signed char *table; /* Decoding table */
-  unsigned short word;      /* Leftover bits */
-  unsigned char bits;       /* Number buffered bits */
+    const signed char *table; /* Decoding table */
+    unsigned short word;      /* Leftover bits */
+    unsigned char bits;       /* Number buffered bits */
 
-  /* Number of padding characters encountered */
-  unsigned char padding;
+    /* Number of padding characters encountered */
+    unsigned char padding;
 };
 
 /* Initialize decoding context for base-64 */
@@ -145,18 +144,18 @@ base64url_decode_init(struct base64_decode_ctx *ctx);
  * errors. */
 int
 base64_decode_single(struct base64_decode_ctx *ctx,
-		     uint8_t *dst,
-		     char src);
+                     uint8_t *dst,
+                     char src);
 
 /* Returns 1 on success, 0 on error. DST should point to an area of
  * size at least BASE64_DECODE_LENGTH(length). The amount of data
  * generated is returned in *DST_LENGTH. */
 int
 base64_decode_update(struct base64_decode_ctx *ctx,
-		     size_t *dst_length,
-		     uint8_t *dst,
-		     size_t src_length,
-		     const char *src);
+                     size_t *dst_length,
+                     uint8_t *dst,
+                     size_t src_length,
+                     const char *src);
 
 /* Returns 1 on success. */
 int
