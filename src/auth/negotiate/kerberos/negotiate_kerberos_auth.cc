@@ -658,7 +658,7 @@ main(int argc, char *const argv[])
             fprintf(stdout, "BH Invalid negotiate request\n");
             continue;
         }
-        const uint8_t *b64Token = reinterpret_cast<const uint8_t*>(buf+3);
+        const char *b64Token = buf+3;
         const size_t srcLen = strlen(buf+3);
         input_token.length = BASE64_DECODE_LENGTH(srcLen);
         debug((char *) "%s| %s: DEBUG: Decode '%s' (decoded length estimate: %d).\n",
@@ -729,8 +729,8 @@ main(int argc, char *const argv[])
             }
             struct base64_encode_ctx tokCtx;
             base64_encode_init(&tokCtx);
-            size_t blen = base64_encode_update(&tokCtx, reinterpret_cast<uint8_t*>(token), spnegoTokenLength, reinterpret_cast<const uint8_t*>(spnegoToken));
-            blen += base64_encode_final(&tokCtx, reinterpret_cast<uint8_t*>(token)+blen);
+            size_t blen = base64_encode_update(&tokCtx, token, spnegoTokenLength, reinterpret_cast<const uint8_t*>(spnegoToken));
+            blen += base64_encode_final(&tokCtx, token+blen);
             token[blen] = '\0';
 
             if (check_gss_err(major_status, minor_status, "gss_accept_sec_context()", log, 1))

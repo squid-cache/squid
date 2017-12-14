@@ -193,7 +193,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
         struct base64_decode_ctx ctx;
         base64_decode_init(&ctx);
         size_t dstLen = 0;
-        if (!base64_decode_update(&ctx, &dstLen, token, strlen(buf+3), reinterpret_cast<const uint8_t*>(buf+3)) ||
+        if (!base64_decode_update(&ctx, &dstLen, token, strlen(buf+3), buf+3) ||
                 !base64_decode_final(&ctx)) {
             if (debug_enabled)
                 fprintf(stderr, "%s| %s: Invalid base64 token [%s]\n", LogTime(), PROGRAM, buf+3);
