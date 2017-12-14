@@ -21,7 +21,7 @@
 void
 Acl::InnerNode::prepareForUse()
 {
-    for (auto &node : nodes)
+    for (auto node : nodes)
         node->prepareForUse();
 }
 
