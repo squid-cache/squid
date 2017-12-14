@@ -131,14 +131,12 @@ GSSAPI_token(const char *server)
                                             NULL);
 
         if (!check_gss_err(major_status, minor_status, "gss_init_sec_context()") && output_token.length) {
-            uint8_t *b64buf = new uint8_t[base64_encode_len(output_token.length)];
+            token = new char[base64_encode_len(output_token.length)];
             struct base64_encode_ctx ctx;
             base64_encode_init(&ctx);
-            size_t blen = base64_encode_update(&ctx, b64buf, output_token.length, reinterpret_cast<const uint8_t*>(output_token.value));
-            blen += base64_encode_final(&ctx, b64buf+blen);
-            b64buf[blen] = '\0';
-
-            token = reinterpret_cast<char*>(b64buf);
+            size_t blen = base64_encode_update(&ctx, token, output_token.length, reinterpret_cast<const uint8_t*>(output_token.value));
+            blen += base64_encode_final(&ctx, token+blen);
+            token[blen] = '\0';
         }
     }
 
