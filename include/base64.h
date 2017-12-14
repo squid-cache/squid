@@ -51,9 +51,6 @@
 extern "C" {
 #endif
 
-//#define BASE64_BINARY_BLOCK_SIZE 3
-//#define BASE64_TEXT_BLOCK_SIZE 4
-
 /* Base64 encoding */
 
 /* Maximum length of output for base64_encode_update. NOTE: Doesn't
