@@ -162,6 +162,8 @@ public:
     virtual void noteBodyConsumerAborted(BodyPipe::Pointer) = 0;
 
     bool handleRequestBodyData();
+    // called to get client connmark
+    const Comm::ConnectionPointer getClientConnection();
 
     /// parameters for the async notePinnedConnectionBecameIdle() call
     class PinnedIdleContext
