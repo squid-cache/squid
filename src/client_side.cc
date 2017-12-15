@@ -2242,6 +2242,13 @@ ConnStateData::handleRequestBodyData()
     return true;
 }
 
+/// returns client connection
+const Comm::ConnectionPointer
+ConnStateData::getClientConnection()
+{
+	return clientConnection;
+}
+
 /// parses available chunked encoded body bytes, checks size, returns errors
 err_type
 ConnStateData::handleChunkedRequestBody()

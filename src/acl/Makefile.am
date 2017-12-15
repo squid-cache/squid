@@ -150,7 +150,9 @@ libacls_la_SOURCES = \
 	Gadgets.cc \
 	Gadgets.h \
 	AclSizeLimit.cc \
-	AclSizeLimit.h
+	AclSizeLimit.h \
+	ConnMark.h \
+	ConnMark.cc
 
 ## Add conditional sources
 ## TODO: move these to their respective dirs when those dirs are created

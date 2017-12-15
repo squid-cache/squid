@@ -1110,6 +1110,7 @@ restoreCapabilities(bool keep)
         cap_list[ncaps] = CAP_NET_BIND_SERVICE;
         ++ncaps;
         if (Ip::Interceptor.TransparentActive() ||
+                Ip::Interceptor.InterceptActive() ||
                 Ip::Qos::TheConfig.isHitNfmarkActive() ||
                 Ip::Qos::TheConfig.isAclNfmarkActive() ||
                 Ip::Qos::TheConfig.isAclTosActive()) {
