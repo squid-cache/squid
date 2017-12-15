@@ -192,22 +192,20 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
     std::string &certKey = Ssl::OnDiskCertificateDbKey(certProperties);
 
     bool dbFailed = false;
-    try {
-        if(db.IsEnabledDiskStore())
-            db.find(certKey, certProperties.mimicCert, cert, pkey);
-        else
-	    dbFailed = true;
-
-    } catch (std::runtime_error &err) {
-        dbFailed = true;
-        error = err.what();
+    if (db.IsEnabledDiskStore()) {
+        try {
+            db.find(cert_subject, cert, pkey);
+        } catch (std::runtime_error &err) {
+            dbFailed = true;
+            error = err.what();
+        }
     }
 
     if (!cert || !pkey) {
         if (!Ssl::generateSslCertificate(cert, pkey, certProperties))
             throw std::runtime_error("Cannot create ssl certificate or private key.");
 
-        if (!dbFailed && db.IsEnabledDiskStore()) {
+        if (db.IsEnabledDiskStore()) {
             try {
                 if (!db.addCertAndPrivateKey(certKey, cert, pkey, certProperties.mimicCert)) {
                     dbFailed = true;
@@ -220,7 +218,7 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
         }
     }
 
-    if (dbFailed && db.IsEnabledDiskStore())
+    if (dbFailed)
         std::cerr << "security_file_certgen helper database '" << db_path  << "' failed: " << error << std::endl;
 
     std::string bufferToWrite;
@@ -287,22 +285,22 @@ int main(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         }
 
-        if (fs_block_size == 0) {
-            struct statvfs sfs;
-
-            if (xstatvfs(db_path.c_str(), &sfs)) {
-                fs_block_size = 2048;
-            } else {
-                fs_block_size = sfs.f_frsize;
-                // Sanity check; make sure we have a meaningful value.
-                if (fs_block_size < 512)
-                    fs_block_size = 2048;
-            }
-        }
-
         if (!db_path.empty() || max_db_size != 0) {
-            Ssl::CertificateDb::Check(db_path, max_db_size, fs_block_size);
+            if (fs_block_size == 0) {
+                struct statvfs sfs;
+
+                if (xstatvfs(db_path.c_str(), &sfs)) {
+                   fs_block_size = 2048;
+                } else {
+                   fs_block_size = sfs.f_frsize;
+                   // Sanity check; make sure we have a meaningful value.
+                   if (fs_block_size < 512)
+                        fs_block_size = 2048;
+                }
+            }
+            Ssl::CertificateDb::check(db_path, max_db_size, fs_block_size);
         }
+
         // Initialize SSL subsystem
         SSL_load_error_strings();
         SSLeay_add_ssl_algorithms();
