@@ -31,6 +31,7 @@ Comm::Connection::Connection() :
     fd(-1),
     tos(0),
     nfmark(0),
+    client_nfmark(0),
     flags(COMM_NONBLOCKING),
     peer_(nullptr),
     startTime_(squid_curtime),
@@ -62,6 +63,7 @@ Comm::Connection::copyDetails() const
     c->peerType = peerType;
     c->tos = tos;
     c->nfmark = nfmark;
+    c->client_nfmark = client_nfmark;
     c->flags = flags;
     c->startTime_ = startTime_;
 

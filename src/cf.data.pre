@@ -1043,6 +1043,11 @@ DOC_START
 	  # NOTE 2: IPv6 protocol does not contain ARP. MAC/EUI is either
 	  # encoded directly in the IPv6 address or not available.
 
+	acl aclname client_connmark mark[/mask] ...
+	  # [fast]
+	  # check client's connection mark
+	  # mark and mask - hex or decimal connection marks and masks
+
 	acl aclname srcdomain   .foo.com ...
 	  # reverse lookup, from client IP [slow]
 	acl aclname dstdomain [-n] .foo.com ...

@@ -79,6 +79,10 @@ void getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde);
 */
 void getNfmarkFromServer(const Comm::ConnectionPointer &server, const fde *clientFde);
 
+/**
+ * Function to retrieve the netfilter connmark value of client connection
+ */
+nfmark_t getNfmarkFromClient(const Comm::ConnectionPointer &client);
 #if USE_LIBNETFILTERCONNTRACK
 /**
 * Callback function to mark connection once it's been found.
@@ -90,6 +94,11 @@ void getNfmarkFromServer(const Comm::ConnectionPointer &server, const fde *clien
 * @param clientFde Pointer to client side fde instance to set nfmarkFromServer in
 */
 int getNfMarkCallback(enum nf_conntrack_msg_type type, struct nf_conntrack *ct, void *clientFde);
+
+/**
+ * Callback function to get client connection mark
+ * */
+int getNfClientConnmarkCallback(enum nf_conntrack_msg_type type, struct nf_conntrack *ct, void *client_connmark);
 #endif
 
 /**
