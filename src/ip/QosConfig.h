@@ -61,6 +61,12 @@ namespace Ip
 namespace Qos
 {
 
+/// Possible Squid roles in connection handling
+enum ConnectionDirection {
+    dirAccepted, ///< accepted (from a client by Squid)
+    dirOpened ///< opened (by Squid to an origin server or peer)
+};
+
 /**
 * Function to retrieve the TOS value of the inbound packet.
 * Called by FwdState::dispatch if QOS options are enabled.
@@ -71,13 +77,14 @@ namespace Qos
 void getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde);
 
 /**
-* Function to retrieve the netfilter mark value of the connection
-* to the upstream server. Called by FwdState::dispatch if QOS
-* options are enabled.
-* @param server    Server side descriptor of connection to get mark for
-* @param clientFde Pointer to client side fde instance to set nfmarkFromServer in
+* Function to retrieve the netfilter mark value of the connection.
+* Called by FwdState::dispatch if QOS options are enabled or by
+* Comm::TcpAcceptor::acceptOne
+*
+* @param conn      Pointer to connection to get mark for
+* @param conn_type Specifies connection type (incoming or outgoing)
 */
-void getNfmarkFromServer(const Comm::ConnectionPointer &server, const fde *clientFde);
+nfmark_t getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const ConnectionDirection connDir);
 
 #if USE_LIBNETFILTERCONNTRACK
 /**
@@ -87,9 +94,9 @@ void getNfmarkFromServer(const Comm::ConnectionPointer &server, const fde *clien
 * nfct_callback_register is used to register this function.
 * @param nf_conntrack_msg_type Type of conntrack message
 * @param nf_conntrack Pointer to the conntrack structure
-* @param clientFde Pointer to client side fde instance to set nfmarkFromServer in
+* @param mark Pointer to nfmark_t mark
 */
-int getNfMarkCallback(enum nf_conntrack_msg_type type, struct nf_conntrack *ct, void *clientFde);
+int getNfmarkCallback(enum nf_conntrack_msg_type type, struct nf_conntrack *ct, void *mark);
 #endif
 
 /**
