@@ -194,7 +194,7 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
     bool dbFailed = false;
     if (db.IsEnabledDiskStore()) {
         try {
-            db.find(cert_subject, cert, pkey);
+            db.find(certKey, certProperties.mimicCert, cert, pkey);
         } catch (std::runtime_error &err) {
             dbFailed = true;
             error = err.what();
@@ -298,7 +298,7 @@ int main(int argc, char *argv[])
                         fs_block_size = 2048;
                 }
             }
-            Ssl::CertificateDb::check(db_path, max_db_size, fs_block_size);
+            Ssl::CertificateDb::Check(db_path, max_db_size, fs_block_size);
         }
 
         // Initialize SSL subsystem
