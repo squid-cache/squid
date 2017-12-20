@@ -1110,6 +1110,10 @@ restoreCapabilities(bool keep)
         cap_list[ncaps] = CAP_NET_BIND_SERVICE;
         ++ncaps;
         if (Ip::Interceptor.TransparentActive() ||
+#if USE_LIBNETFILTERCONNTRACK
+                // netfilter_conntrack requires CAP_NET_ADMIN to get client's CONNMARK
+                Ip::Interceptor.InterceptActive() ||
+#endif
                 Ip::Qos::TheConfig.isHitNfmarkActive() ||
                 Ip::Qos::TheConfig.isAclNfmarkActive() ||
                 Ip::Qos::TheConfig.isAclTosActive()) {

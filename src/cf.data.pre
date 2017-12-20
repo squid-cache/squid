@@ -1043,6 +1043,16 @@ DOC_START
 	  # NOTE 2: IPv6 protocol does not contain ARP. MAC/EUI is either
 	  # encoded directly in the IPv6 address or not available.
 
+	acl aclname connmark mark[/mask] ...
+	  # [fast]
+	  # check CONNMARK
+	  # mark and mask - hex or decimal values
+	  #
+	  # NOTE: this ACL uses netfilter-conntrack library
+	  # and requires Squid to be built with --enable-linux-netfilter
+	  #
+	  # NOTE 2: original CONNMARK can be overwritten by clientside_mark option
+
 	acl aclname srcdomain   .foo.com ...
 	  # reverse lookup, from client IP [slow]
 	acl aclname dstdomain [-n] .foo.com ...

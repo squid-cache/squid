@@ -302,6 +302,8 @@ Comm::TcpAcceptor::acceptOne()
         return;
     }
 
+    newConnDetails->nfmark = Ip::Qos::getNfmarkFromConnection(newConnDetails, Ip::Qos::FromClient);
+
     debugs(5, 5, HERE << "Listener: " << conn <<
            " accepted new connection " << newConnDetails <<
            " handler Subscription: " << theCallSub);
