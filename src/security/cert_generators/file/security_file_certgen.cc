@@ -39,15 +39,14 @@
 
  \section ssl_crtdInterface Command Line Interface
  \verbatim
-usage: security_file_certgen -hv -s ssl_storage_path -M storage_max_size
+usage: security_file_certgen -hv -s directory -M size -b fs_block_size
     -h                   Help
     -v                   Version
-    -s ssl_storage_path  Path to specific disk storage of ssl server
-                         certificates.
-    -M storage_max_size  max size of ssl certificates storage.
+    -s directory         Directory path of SSL storage database.
+    -M size              Maximum size of SSL certificate disk storage.
     -b fs_block_size     File system block size in bytes. Need for processing
                          natural size of certificate on disk. Default value is
-                         2048 bytes."
+                         2048 bytes.
 
     After running write requests in the next format:
     <request code><whitespace><body_len><whitespace><body>
@@ -149,12 +148,11 @@ static void usage()
     std::stringstream request_string_size_stream;
     request_string_size_stream << request_string.length();
     std::string help_string =
-        "usage: security_file_certgen -hv -s ssl_storage_path -M storage_max_size\n"
+        "usage: security_file_certgen -hv -s directory -M size -b fs_block_size\n"
         "\t-h                   Help\n"
         "\t-v                   Version\n"
-        "\t-s ssl_storage_path  Path to specific disk storage of ssl server\n"
-        "\t                     certificates.\n"
-        "\t-M storage_max_size  max size of ssl certificates storage.\n"
+        "\t-s directory         Directory path of SSL storage database.\n"
+        "\t-M size              Maximum size of SSL certificate disk storage.\n"
         "\t-b fs_block_size     File system block size in bytes. Need for processing\n"
         "\t                     natural size of certificate on disk. Default value is\n"
         "\t                     2048 bytes.\n"
@@ -245,7 +243,7 @@ int main(int argc, char *argv[])
         bool create_new_db = false;
         std::string db_path;
         // process options.
-        while ((c = getopt(argc, argv, "dcghvs:M:b:n:")) != -1) {
+        while ((c = getopt(argc, argv, "dchvs:M:b:")) != -1) {
             switch (c) {
             case 'd':
                 debug_enabled = 1;
