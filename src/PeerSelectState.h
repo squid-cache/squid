@@ -19,11 +19,11 @@
 #include "mem/forward.h"
 #include "PingData.h"
 
-class HttpRequest;
-class StoreEntry;
 class ErrorState;
-class icp_common_t;
 class HtcpReplyData;
+class HttpRequest;
+class icp_common_t;
+class StoreEntry;
 
 void peerSelectInit(void);
 
