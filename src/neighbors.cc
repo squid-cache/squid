@@ -1375,7 +1375,6 @@ peerCountMcastPeersStart(void *data)
     // XXX: Do not create lots of complex fake objects (while abusing their
     // APIs) to pass around a few basic data points like start_ping and ping!
     CachePeer *p = (CachePeer *)data;
-    ps_state *psstate;
     MemObject *mem;
     icp_common_t *query;
     int reqnum;
@@ -1390,7 +1389,7 @@ peerCountMcastPeersStart(void *data)
     HttpRequest *req = HttpRequest::FromUrl(url, mx);
     assert(req != nullptr);
     StoreEntry *fake = storeCreateEntry(url, url, RequestFlags(), Http::METHOD_GET);
-    psstate = new ps_state(nullptr);
+    auto psstate = new PeerSelector(nullptr);
     psstate->request = req;
     HTTPMSGLOCK(psstate->request);
     psstate->entry = fake;
@@ -1418,7 +1417,7 @@ peerCountMcastPeersStart(void *data)
 static void
 peerCountMcastPeersDone(void *data)
 {
-    ps_state *psstate = (ps_state *)data;
+    auto psstate = static_cast<PeerSelector*>(data);
     StoreEntry *fake = psstate->entry;
 
     if (cbdataReferenceValid(psstate->peerCountMcastPeerXXX)) {
@@ -1442,7 +1441,7 @@ peerCountMcastPeersDone(void *data)
 static void
 peerCountHandleIcpReply(CachePeer * p, peer_t, AnyP::ProtocolType proto, void *, void *data)
 {
-    ps_state *psstate = (ps_state *)data;
+    auto psstate = static_cast<PeerSelector*>(data);
     StoreEntry *fake = psstate->entry;
     assert(fake);
     MemObject *mem = fake->mem_obj;

@@ -76,32 +76,15 @@ static const char *DirectStr[] = {
 class PeerSelectionDumper
 {
 public:
-    PeerSelectionDumper(const ps_state * const aPs, const CachePeer * const aPeer, const hier_code aCode):
+    PeerSelectionDumper(const PeerSelector * const aPs, const CachePeer * const aPeer, const hier_code aCode):
         ps(aPs), peer(aPeer), code(aCode) {}
 
-    const ps_state * const ps; ///< selection parameters
+    const PeerSelector * const ps; ///< selection parameters
     const CachePeer * const peer; ///< successful selection info
     const hier_code code; ///< selection algorithm
 };
 
-static void peerSelectFoo(ps_state *);
-static void peerPingTimeout(void *data);
-static IRCB peerHandlePingReply;
-static void peerIcpParentMiss(CachePeer *, icp_common_t *, ps_state *);
-#if USE_HTCP
-static void peerHtcpParentMiss(CachePeer *, HtcpReplyData *, ps_state *);
-static void peerHandleHtcpReply(CachePeer *, peer_t, HtcpReplyData *, void *);
-#endif
-static int peerCheckNetdbDirect(ps_state * psstate);
-static void peerGetSomeNeighbor(ps_state *);
-static void peerGetSomeNeighborReplies(ps_state *);
-static void peerGetSomeDirect(ps_state *);
-static void peerGetSomeParent(ps_state *);
-static void peerGetAllParents(ps_state *);
-static void peerAddFwdServer(ps_state*, CachePeer*, const hier_code);
-static void peerSelectPinned(ps_state * ps);
-
-CBDATA_CLASS_INIT(ps_state);
+CBDATA_CLASS_INIT(PeerSelector);
 
 /// prints PeerSelectionDumper (for debugging)
 static std::ostream &
@@ -117,7 +100,7 @@ operator <<(std::ostream &os, const PeerSelectionDumper &fsd)
     return os;
 }
 
-ps_state::~ps_state()
+PeerSelector::~PeerSelector()
 {
     while (servers) {
         FwdServer *next = servers->next;
@@ -129,13 +112,13 @@ ps_state::~ps_state()
         debugs(44, 3, entry->url());
 
         if (entry->ping_status == PING_WAITING)
-            eventDelete(peerPingTimeout, this);
+            eventDelete(HandlePingTimeout, this);
 
         entry->ping_status = PING_DONE;
     }
 
     if (acl_checklist) {
-        debugs(44, DBG_IMPORTANT, "calling aclChecklistFree() from ps_state destructor");
+        debugs(44, DBG_IMPORTANT, "BUG: peer selector gone while waiting for a slow ACL");
         delete acl_checklist;
     }
 
@@ -184,7 +167,7 @@ peerSelect(PeerSelectionInitiator *initiator,
     else
         debugs(44, 3, request->method);
 
-    const auto psstate = new ps_state(initiator);
+    const auto psstate = new PeerSelector(initiator);
 
     psstate->request = request;
     HTTPMSGLOCK(psstate->request);
@@ -201,7 +184,7 @@ peerSelect(PeerSelectionInitiator *initiator,
     if (psstate->entry)
         psstate->entry->lock("peerSelect");
 
-    peerSelectFoo(psstate);
+    psstate->selectMore();
 }
 
 void
@@ -212,10 +195,10 @@ PeerSelectionInitiator::startSelectingDestinations(HttpRequest *request, const A
     // and wait for noteDestination() and/or noteDestinationsEnd() calls
 }
 
-static void
-peerCheckNeverDirectDone(allow_t answer, void *data)
+void
+PeerSelector::checkNeverDirectDone(const allow_t answer)
 {
-    ps_state *psstate = (ps_state *) data;
+    auto psstate = this;
     psstate->acl_checklist = NULL;
     debugs(44, 3, "peerCheckNeverDirectDone: " << answer);
     psstate->never_direct = answer;
@@ -232,13 +215,19 @@ peerCheckNeverDirectDone(allow_t answer, void *data)
         debugs(44, DBG_IMPORTANT, "WARNING: never_direct resulted in " << answer << ". Username ACLs are not reliable here.");
         break;
     }
-    peerSelectFoo(psstate);
+    selectMore();
 }
 
-static void
-peerCheckAlwaysDirectDone(allow_t answer, void *data)
+void
+PeerSelector::CheckNeverDirectDone(allow_t answer, void *data)
 {
-    ps_state *psstate = (ps_state *)data;
+    static_cast<PeerSelector*>(data)->checkNeverDirectDone(answer);
+}
+
+void
+PeerSelector::checkAlwaysDirectDone(const allow_t answer)
+{
+    auto psstate = this;
     psstate->acl_checklist = NULL;
     debugs(44, 3, "peerCheckAlwaysDirectDone: " << answer);
     psstate->always_direct = answer;
@@ -255,26 +244,35 @@ peerCheckAlwaysDirectDone(allow_t answer, void *data)
         debugs(44, DBG_IMPORTANT, "WARNING: always_direct resulted in " << answer << ". Username ACLs are not reliable here.");
         break;
     }
-    peerSelectFoo(psstate);
-}
-
-/// \returns true (after destroying psstate) if the peer initiator is gone
-/// \returns false (without side effects) otherwise
-static bool
-peerSelectionAborted(ps_state *psstate)
-{
-    if (psstate->interestedInitiator())
-        return false;
-
-    debugs(44, 3, "Aborting peer selection: Initiator gone or lost interest.");
-    delete psstate;
-    return true;
+    selectMore();
 }
 
 void
-peerSelectDnsPaths(ps_state *psstate)
+PeerSelector::CheckAlwaysDirectDone(allow_t answer, void *data)
 {
-    if (peerSelectionAborted(psstate))
+    static_cast<PeerSelector*>(data)->checkAlwaysDirectDone(answer);
+}
+
+
+/// \returns true (after destroying "this") if the peer initiator is gone
+/// \returns false (without side effects) otherwise
+bool
+PeerSelector::selectionAborted()
+{
+    if (interestedInitiator())
+        return false;
+
+    debugs(44, 3, "Aborting peer selection: Initiator gone or lost interest.");
+    delete this;
+    return true;
+}
+
+/// A single DNS resolution loop iteration: Converts selected FwdServer to IPs.
+void
+PeerSelector::resolveSelected()
+{
+    auto psstate = this;
+    if (selectionAborted())
         return;
 
     FwdServer *fs = psstate->servers;
@@ -301,7 +299,7 @@ peerSelectDnsPaths(ps_state *psstate)
         // clear the used fs and continue
         psstate->servers = fs->next;
         delete fs;
-        peerSelectDnsPaths(psstate);
+        resolveSelected();
         return;
     }
 
@@ -350,11 +348,11 @@ peerSelectDnsPaths(ps_state *psstate)
 }
 
 void
-ps_state::noteLookup(const Dns::LookupDetails &details)
+PeerSelector::noteLookup(const Dns::LookupDetails &details)
 {
     /* ignore lookup delays that occurred after the initiator moved on */
 
-    if (peerSelectionAborted(this))
+    if (selectionAborted())
         return;
 
     if (!wantsMoreDestinations())
@@ -364,9 +362,9 @@ ps_state::noteLookup(const Dns::LookupDetails &details)
 }
 
 void
-ps_state::noteIp(const Ip::Address &ip)
+PeerSelector::noteIp(const Ip::Address &ip)
 {
-    if (peerSelectionAborted(this))
+    if (selectionAborted())
         return;
 
     if (!wantsMoreDestinations())
@@ -387,9 +385,9 @@ ps_state::noteIp(const Ip::Address &ip)
 }
 
 void
-ps_state::noteIps(const Dns::CachedIps *ia, const Dns::LookupDetails &details)
+PeerSelector::noteIps(const Dns::CachedIps *ia, const Dns::LookupDetails &details)
 {
-    if (peerSelectionAborted(this))
+    if (selectionAborted())
         return;
 
     FwdServer *fs = servers;
@@ -408,14 +406,15 @@ ps_state::noteIps(const Dns::CachedIps *ia, const Dns::LookupDetails &details)
     servers = fs->next;
     delete fs;
 
-    // see if more paths can be found
-    peerSelectDnsPaths(this);
+    // continue resolving selected peers
+    resolveSelected();
 }
 
-static int
-peerCheckNetdbDirect(ps_state * psstate)
+int
+PeerSelector::checkNetdbDirect()
 {
 #if USE_ICMP
+    auto psstate = this;
     CachePeer *p;
     int myrtt;
     int myhops;
@@ -455,14 +454,13 @@ peerCheckNetdbDirect(ps_state * psstate)
     return 0;
 }
 
-static void
-peerSelectFoo(ps_state * ps)
+void
+PeerSelector::selectMore()
 {
-    if (peerSelectionAborted(ps))
+    auto ps = this;
+    if (selectionAborted())
         return;
 
-    StoreEntry *entry = ps->entry;
-    HttpRequest *request = ps->request;
     debugs(44, 3, request->method << ' ' << request->url.host());
 
     /** If we don't know whether DIRECT is permitted ... */
@@ -473,7 +471,7 @@ peerSelectFoo(ps_state * ps)
             ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, NULL);
             ch->al = ps->al;
             ps->acl_checklist = ch;
-            ps->acl_checklist->nonBlockingCheck(peerCheckAlwaysDirectDone, ps);
+            ps->acl_checklist->nonBlockingCheck(CheckAlwaysDirectDone, ps);
             return;
         } else if (ps->never_direct == ACCESS_DUNNO) {
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (never_direct to be checked)");
@@ -481,7 +479,7 @@ peerSelectFoo(ps_state * ps)
             ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
             ch->al = ps->al;
             ps->acl_checklist = ch;
-            ps->acl_checklist->nonBlockingCheck(peerCheckNeverDirectDone, ps);
+            ps->acl_checklist->nonBlockingCheck(CheckNeverDirectDone, ps);
             return;
         } else if (request->flags.noDirect) {
             /** if we are accelerating, direct is not an option. */
@@ -491,7 +489,7 @@ peerSelectFoo(ps_state * ps)
             /** if we are in a forwarding-loop, direct is not an option. */
             ps->direct = DIRECT_YES;
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (forwarding loop detected)");
-        } else if (peerCheckNetdbDirect(ps)) {
+        } else if (checkNetdbDirect()) {
             ps->direct = DIRECT_YES;
             debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (checkNetdbDirect)");
         } else {
@@ -503,71 +501,67 @@ peerSelectFoo(ps_state * ps)
     }
 
     if (!entry || entry->ping_status == PING_NONE)
-        peerSelectPinned(ps);
+        selectPinned();
     if (entry == NULL) {
         (void) 0;
     } else if (entry->ping_status == PING_NONE) {
-        peerGetSomeNeighbor(ps);
+        selectSomeNeighbor();
 
         if (entry->ping_status == PING_WAITING)
             return;
     } else if (entry->ping_status == PING_WAITING) {
-        peerGetSomeNeighborReplies(ps);
+        selectSomeNeighborReplies();
         entry->ping_status = PING_DONE;
     }
 
     switch (ps->direct) {
 
     case DIRECT_YES:
-        peerGetSomeDirect(ps);
+        selectSomeDirect();
         break;
 
     case DIRECT_NO:
-        peerGetSomeParent(ps);
-        peerGetAllParents(ps);
+        selectSomeParent();
+        selectAllParents();
         break;
 
     default:
 
         if (Config.onoff.prefer_direct)
-            peerGetSomeDirect(ps);
+            selectSomeDirect();
 
         if (request->flags.hierarchical || !Config.onoff.nonhierarchical_direct) {
-            peerGetSomeParent(ps);
-            peerGetAllParents(ps);
+            selectSomeParent();
+            selectAllParents();
         }
 
         if (!Config.onoff.prefer_direct)
-            peerGetSomeDirect(ps);
+            selectSomeDirect();
 
         break;
     }
 
-    // resolve the possible peers
-    peerSelectDnsPaths(ps);
+    // end peer selection; start resolving selected peers
+    resolveSelected();
 }
 
 bool peerAllowedToUse(const CachePeer * p, HttpRequest * request);
 
-/**
- * peerSelectPinned
- *
- * Selects a pinned connection.
- */
-static void
-peerSelectPinned(ps_state * ps)
+/// Selects a (possibly gone) pinned connection.
+void
+PeerSelector::selectPinned()
 {
-    HttpRequest *request = ps->request;
+    auto ps = this;
     if (!request->pinnedConnection())
         return;
     CachePeer *pear = request->pinnedConnection()->pinnedPeer();
     if (Comm::IsConnOpen(request->pinnedConnection()->validatePinnedConnection(request, pear))) {
         if (pear && peerAllowedToUse(pear, request)) {
-            peerAddFwdServer(ps, pear, PINNED);
+            addSelection(pear, PINNED);
             if (ps->entry)
                 ps->entry->ping_status = PING_DONE;     /* Skip ICP */
         } else if (!pear && ps->direct != DIRECT_NO) {
-            peerAddFwdServer(ps, nullptr, PINNED);
+            addSelection(nullptr, PINNED);
             if (ps->entry)
                 ps->entry->ping_status = PING_DONE;     /* Skip ICP */
         }
@@ -575,8 +569,6 @@ peerSelectPinned(ps_state * ps)
 }
 
 /**
- * peerGetSomeNeighbor
- *
  * Selects a neighbor (parent or sibling) based on one of the
  * following methods:
  *      Cache Digests
@@ -584,11 +576,10 @@ peerSelectPinned(ps_state * ps)
  *      ICMP Netdb RTT estimates
  *      ICP/HTCP queries
  */
-static void
-peerGetSomeNeighbor(ps_state * ps)
+void
+PeerSelector::selectSomeNeighbor()
 {
-    StoreEntry *entry = ps->entry;
-    HttpRequest *request = ps->request;
+    auto ps = this;
     CachePeer *p;
     hier_code code = HIER_NONE;
     assert(entry->ping_status == PING_NONE);
@@ -613,7 +604,7 @@ peerGetSomeNeighbor(ps_state * ps)
             ps->ping.start = current_time;
             ps->ping.n_sent = neighborsUdpPing(request,
                                                entry,
-                                               peerHandlePingReply,
+                                               HandlePingReply,
                                                ps,
                                                &ps->ping.n_replies_expected,
                                                &ps->ping.timeout);
@@ -626,8 +617,8 @@ peerGetSomeNeighbor(ps_state * ps)
 
             if (ps->ping.n_replies_expected > 0) {
                 entry->ping_status = PING_WAITING;
-                eventAdd("peerPingTimeout",
-                         peerPingTimeout,
+                eventAdd("PeerSelector::HandlePingTimeout",
+                         HandlePingTimeout,
                          ps,
                          0.001 * ps->ping.timeout,
                          0);
@@ -637,28 +628,25 @@ peerGetSomeNeighbor(ps_state * ps)
 
     if (code != HIER_NONE) {
         assert(p);
-        peerAddFwdServer(ps, p, code);
+        addSelection(p, code);
     }
 
     entry->ping_status = PING_DONE;
 }
 
-/*
- * peerGetSomeNeighborReplies
- *
- * Selects a neighbor (parent or sibling) based on ICP/HTCP replies.
- */
-static void
-peerGetSomeNeighborReplies(ps_state * ps)
+/// Selects a neighbor (parent or sibling) based on ICP/HTCP replies.
+void
+PeerSelector::selectSomeNeighborReplies()
 {
+    auto ps = this;
     CachePeer *p = NULL;
     hier_code code = HIER_NONE;
     assert(ps->entry->ping_status == PING_WAITING);
     assert(ps->direct != DIRECT_YES);
 
-    if (peerCheckNetdbDirect(ps)) {
+    if (checkNetdbDirect()) {
         code = CLOSEST_DIRECT;
-        peerAddFwdServer(ps, nullptr, code);
+        addSelection(nullptr, code);
         return;
     }
 
@@ -674,19 +662,15 @@ peerGetSomeNeighborReplies(ps_state * ps)
         }
     }
     if (p && code != HIER_NONE) {
-        peerAddFwdServer(ps, p, code);
+        addSelection(p, code);
     }
 }
 
-/*
- * peerGetSomeDirect
- *
- * Simply adds a 'direct' entry to the FwdServers list if this
- * request can be forwarded directly to the origin server
- */
-static void
-peerGetSomeDirect(ps_state * ps)
+/// Adds a "direct" entry if the request can be forwarded to the origin server.
+void
+PeerSelector::selectSomeDirect()
 {
+    auto ps = this;
     if (ps->direct == DIRECT_NO)
         return;
 
@@ -694,14 +678,14 @@ peerGetSomeDirect(ps_state * ps)
     if (ps->request->url.getScheme() == AnyP::PROTO_WAIS)
         return;
 
-    peerAddFwdServer(ps, nullptr, HIER_DIRECT);
+    addSelection(nullptr, HIER_DIRECT);
 }
 
-static void
-peerGetSomeParent(ps_state * ps)
+void
+PeerSelector::selectSomeParent()
 {
+    auto ps = this;
     CachePeer *p;
-    HttpRequest *request = ps->request;
     hier_code code = HIER_NONE;
     debugs(44, 3, request->method << ' ' << request->url.host());
 
@@ -727,17 +711,15 @@ peerGetSomeParent(ps_state * ps)
     }
 
     if (code != HIER_NONE) {
-        peerAddFwdServer(ps, p, code);
+        addSelection(p, code);
     }
 }
 
-/* Adds alive parents. Used as a last resort for never_direct.
- */
-static void
-peerGetAllParents(ps_state * ps)
+/// Adds alive parents. Used as a last resort for never_direct.
+void
+PeerSelector::selectAllParents()
 {
     CachePeer *p;
-    HttpRequest *request = ps->request;
     /* Add all alive parents */
 
     for (p = Config.peers; p; p = p->next) {
@@ -751,7 +733,7 @@ peerGetAllParents(ps_state * ps)
         if (!peerHTTPOkay(p, request))
             continue;
 
-        peerAddFwdServer(ps, p, ANY_OLD_PARENT);
+        addSelection(p, ANY_OLD_PARENT);
     }
 
     /* XXX: should add dead parents here, but it is currently
@@ -760,25 +742,31 @@ peerGetAllParents(ps_state * ps)
      */
     /* Add default parent as a last resort */
     if ((p = getDefaultParent(request))) {
-        peerAddFwdServer(ps, p, DEFAULT_PARENT);
+        addSelection(p, DEFAULT_PARENT);
     }
 }
 
-static void
-peerPingTimeout(void *data)
+void
+PeerSelector::handlePingTimeout()
 {
-    ps_state *psstate = (ps_state *)data;
+    auto psstate = this;
     debugs(44, 3, psstate->url());
 
-    if (StoreEntry *entry = psstate->entry)
+    if (entry)
         entry->ping_status = PING_DONE;
 
-    if (peerSelectionAborted(psstate))
+    if (selectionAborted())
         return;
 
     ++PeerStats.timeouts;
     psstate->ping.timedout = 1;
-    peerSelectFoo(psstate);
+    selectMore();
+}
+
+void
+PeerSelector::HandlePingTimeout(void *data)
+{
+    static_cast<PeerSelector*>(data)->handlePingTimeout();
 }
 
 void
@@ -787,9 +775,10 @@ peerSelectInit(void)
     memset(&PeerStats, '\0', sizeof(PeerStats));
 }
 
-static void
-peerIcpParentMiss(CachePeer * p, icp_common_t * header, ps_state * ps)
+void
+PeerSelector::handleIcpParentMiss(CachePeer *p, icp_common_t *header)
 {
+    auto ps = this;
     int rtt;
 
 #if USE_ICMP
@@ -828,10 +817,10 @@ peerIcpParentMiss(CachePeer * p, icp_common_t * header, ps_state * ps)
     }
 }
 
-static void
-peerHandleIcpReply(CachePeer * p, peer_t type, icp_common_t * header, void *data)
+void
+PeerSelector::handleIcpReply(CachePeer *p, const peer_t type, icp_common_t *header)
 {
-    ps_state *psstate = (ps_state *)data;
+    auto psstate = this;
     icp_opcode op = header->getOpCode();
     debugs(44, 3, "peerHandleIcpReply: " << icp_opcode_str[op] << " " << psstate->url()  );
 #if USE_CACHE_DIGESTS && 0
@@ -847,47 +836,48 @@ peerHandleIcpReply(CachePeer * p, peer_t type, icp_common_t * header, void *data
 
     if (op == ICP_MISS || op == ICP_DECHO) {
         if (type == PEER_PARENT)
-            peerIcpParentMiss(p, header, psstate);
+            handleIcpParentMiss(p, header);
     } else if (op == ICP_HIT) {
         psstate->hit = p;
         psstate->hit_type = type;
-        peerSelectFoo(psstate);
+        selectMore();
         return;
     }
 
     if (psstate->ping.n_recv < psstate->ping.n_replies_expected)
         return;
 
-    peerSelectFoo(psstate);
+    selectMore();
 }
 
 #if USE_HTCP
-static void
-peerHandleHtcpReply(CachePeer * p, peer_t type, HtcpReplyData * htcp, void *data)
+void
+PeerSelector::handleHtcpReply(CachePeer *p, const peer_t type, HtcpReplyData *htcp)
 {
-    ps_state *psstate = (ps_state *)data;
+    auto psstate = this;
     debugs(44, 3, "" << (htcp->hit ? "HIT" : "MISS") << " " << psstate->url());
     ++ psstate->ping.n_recv;
 
     if (htcp->hit) {
         psstate->hit = p;
         psstate->hit_type = type;
-        peerSelectFoo(psstate);
+        selectMore();
         return;
     }
 
     if (type == PEER_PARENT)
-        peerHtcpParentMiss(p, htcp, psstate);
+        handleHtcpParentMiss(p, htcp);
 
     if (psstate->ping.n_recv < psstate->ping.n_replies_expected)
         return;
 
-    peerSelectFoo(psstate);
+    selectMore();
 }
 
-static void
-peerHtcpParentMiss(CachePeer * p, HtcpReplyData * htcp, ps_state * ps)
+void
+PeerSelector::handleHtcpParentMiss(CachePeer *p, HtcpReplyData *htcp)
 {
+    auto ps = this;
     int rtt;
 
 #if USE_ICMP
@@ -926,30 +916,30 @@ peerHtcpParentMiss(CachePeer * p, HtcpReplyData * htcp, ps_state * ps)
 
 #endif
 
-static void
-peerHandlePingReply(CachePeer * p, peer_t type, AnyP::ProtocolType proto, void *pingdata, void *data)
+void
+PeerSelector::HandlePingReply(CachePeer * p, peer_t type, AnyP::ProtocolType proto, void *pingdata, void *data)
 {
     if (proto == AnyP::PROTO_ICP)
-        peerHandleIcpReply(p, type, (icp_common_t *)pingdata, data);
+        static_cast<PeerSelector*>(data)->handleIcpReply(p, type, static_cast<icp_common_t*>(pingdata));
 
 #if USE_HTCP
 
     else if (proto == AnyP::PROTO_HTCP)
-        peerHandleHtcpReply(p, type, (HtcpReplyData *)pingdata, data);
+        static_cast<PeerSelector*>(data)->handleHtcpReply(p, type, static_cast<HtcpReplyData*>(pingdata));
 
 #endif
 
     else
-        debugs(44, DBG_IMPORTANT, "peerHandlePingReply: unknown protocol " << proto);
+        debugs(44, DBG_IMPORTANT, "ERROR: ignoring an ICP reply with unknown protocol " << proto);
 }
 
-static void
-peerAddFwdServer(ps_state *ps, CachePeer *peer, const hier_code code)
+void
+PeerSelector::addSelection(CachePeer *peer, const hier_code code)
 {
+    auto ps = this;
     // Find the end of the servers list. Bail on a duplicate destination.
-    assert(ps);
-    FwdServer **FSVR = &ps->servers;
-    while (const auto server = *FSVR) {
+    auto **serversTail = &servers;
+    while (const auto server = *serversTail) {
         // There can be at most one PINNED destination.
         // Non-PINNED destinations are uniquely identified by their CachePeer
         // (even though a DIRECT destination might match a cache_peer address).
@@ -960,15 +950,14 @@ peerAddFwdServer(ps_state *ps, CachePeer *peer, const hier_code code)
                    "; have " << PeerSelectionDumper(ps, server->_peer.get(), server->code));
             return;
         }
-        FSVR = &server->next;
+        serversTail = &server->next;
     }
 
     debugs(44, 3, "adding " << PeerSelectionDumper(ps, peer, code));
-    FwdServer *fs = new FwdServer(peer, code);
-    *FSVR = fs;
+    *serversTail = new FwdServer(peer, code);
 }
 
-ps_state::ps_state(PeerSelectionInitiator *initiator):
+PeerSelector::PeerSelector(PeerSelectionInitiator *initiator):
     request(nullptr),
     entry (NULL),
     always_direct(Config.accessList.AlwaysDirect?ACCESS_DUNNO:ACCESS_DENIED),
@@ -987,7 +976,7 @@ ps_state::ps_state(PeerSelectionInitiator *initiator):
 }
 
 const SBuf
-ps_state::url() const
+PeerSelector::url() const
 {
     if (entry)
         return SBuf(entry->url());
@@ -1001,7 +990,7 @@ ps_state::url() const
 
 /// \returns valid/interested peer initiator or nil
 PeerSelectionInitiator *
-ps_state::interestedInitiator()
+PeerSelector::interestedInitiator()
 {
     const auto initiator = initiator_.valid();
 
@@ -1020,14 +1009,14 @@ ps_state::interestedInitiator()
 }
 
 bool
-ps_state::wantsMoreDestinations() const {
+PeerSelector::wantsMoreDestinations() const {
     const auto maxCount = Config.forward_max_tries;
     return maxCount >= 0 && foundPaths <
            static_cast<std::make_unsigned<decltype(maxCount)>::type>(maxCount);
 }
 
 void
-ps_state::handlePath(Comm::ConnectionPointer &path, FwdServer &fs)
+PeerSelector::handlePath(Comm::ConnectionPointer &path, FwdServer &fs)
 {
     ++foundPaths;
 
@@ -1048,7 +1037,7 @@ ps_state::handlePath(Comm::ConnectionPointer &path, FwdServer &fs)
         initiator->noteDestination(path);
 }
 
-InstanceIdDefinitions(ps_state, "PeerSelector");
+InstanceIdDefinitions(PeerSelector, "PeerSelector");
 
 ping_data::ping_data() :
     n_sent(0),

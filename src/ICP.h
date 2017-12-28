@@ -24,13 +24,12 @@
 class HttpRequest;
 
 /**
- \ingroup ServerProtocolICPAPI
- *
- * This struct is the wire-level header.
- * DO NOT add more move fields on pain of breakage.
+ * Wire-level ICP header.
+ * DO NOT add or move fields.
  * DO NOT add virtual methods.
  */
-struct _icp_common_t {
+class icp_common_t {
+public:
     /** opcode */
     unsigned char opcode;
     /** version number */
@@ -44,21 +43,15 @@ struct _icp_common_t {
     /** sender host id */
     uint32_t shostid;
 
-/// \todo I don't believe this header is included in non-c++ code anywhere
-///     the struct should become a public POD class and kill these ifdef.
-#ifdef __cplusplus
-
-    _icp_common_t();
-    _icp_common_t(char *buf, unsigned int len);
+    icp_common_t();
+    icp_common_t(char *buf, unsigned int len);
 
     void handleReply(char *buf, Ip::Address &from);
-    static _icp_common_t *createMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad);
+    static icp_common_t *createMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad);
     icp_opcode getOpCode() const;
-#endif
 };
-typedef struct _icp_common_t icp_common_t;
-
-#ifdef __cplusplus
+// TODO: Remove after fixing remaining users.
+#define _icp_common_t icp_common_t
 
 /**
  \ingroup ServerProtocolICPAPI
@@ -77,8 +70,6 @@ public:
     Ip::Address from;
     char *url;
 };
-
-#endif
 
 /// \ingroup ServerProtocolICPAPI
 struct icpUdpData {
