@@ -60,7 +60,7 @@ class PeerSelector: public Dns::IpReceiver
     CBDATA_CHILD(PeerSelector);
 
 public:
-    explicit PeerSelector(PeerSelectionInitiator *initiator);
+    explicit PeerSelector(PeerSelectionInitiator*);
     virtual ~PeerSelector() override;
 
     /* Dns::IpReceiver API */
