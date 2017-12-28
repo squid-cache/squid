@@ -72,6 +72,18 @@ static const char *DirectStr[] = {
     "DIRECT_YES"
 };
 
+/// a helper class to report a selected destination (for debugging)
+class PeerSelectionDumper
+{
+public:
+    PeerSelectionDumper(const ps_state * const aPs, const CachePeer * const aPeer, const hier_code aCode):
+        ps(aPs), peer(aPeer), code(aCode) {}
+
+    const ps_state * const ps; ///< selection parameters
+    const CachePeer * const peer; ///< successful selection info
+    const hier_code code; ///< selection algorithm
+};
+
 static void peerSelectFoo(ps_state *);
 static void peerPingTimeout(void *data);
 static IRCB peerHandlePingReply;
@@ -86,10 +98,24 @@ static void peerGetSomeNeighborReplies(ps_state *);
 static void peerGetSomeDirect(ps_state *);
 static void peerGetSomeParent(ps_state *);
 static void peerGetAllParents(ps_state *);
-static void peerAddFwdServer(FwdServer **, CachePeer *, hier_code);
+static void peerAddFwdServer(ps_state*, CachePeer*, const hier_code);
 static void peerSelectPinned(ps_state * ps);
 
 CBDATA_CLASS_INIT(ps_state);
+
+/// prints PeerSelectionDumper (for debugging)
+static std::ostream &
+operator <<(std::ostream &os, const PeerSelectionDumper &fsd)
+{
+    os << hier_code_str[fsd.code];
+
+    if (fsd.peer)
+        os << '/' << fsd.peer->host;
+    else if (fsd.ps) // useful for DIRECT and gone PINNED destinations
+        os << '#' << fsd.ps->request->url.host();
+
+    return os;
+}
 
 ps_state::~ps_state()
 {
@@ -537,11 +563,11 @@ peerSelectPinned(ps_state * ps)
     CachePeer *pear = request->pinnedConnection()->pinnedPeer();
     if (Comm::IsConnOpen(request->pinnedConnection()->validatePinnedConnection(request, pear))) {
         if (pear && peerAllowedToUse(pear, request)) {
-            peerAddFwdServer(&ps->servers, pear, PINNED);
+            peerAddFwdServer(ps, pear, PINNED);
             if (ps->entry)
                 ps->entry->ping_status = PING_DONE;     /* Skip ICP */
         } else if (!pear && ps->direct != DIRECT_NO) {
-            peerAddFwdServer(&ps->servers, NULL, PINNED);
+            peerAddFwdServer(ps, nullptr, PINNED);
             if (ps->entry)
                 ps->entry->ping_status = PING_DONE;     /* Skip ICP */
         }
@@ -611,8 +637,7 @@ peerGetSomeNeighbor(ps_state * ps)
 
     if (code != HIER_NONE) {
         assert(p);
-        debugs(44, 3, "peerSelect: " << hier_code_str[code] << "/" << p->host);
-        peerAddFwdServer(&ps->servers, p, code);
+        peerAddFwdServer(ps, p, code);
     }
 
     entry->ping_status = PING_DONE;
@@ -626,7 +651,6 @@ peerGetSomeNeighbor(ps_state * ps)
 static void
 peerGetSomeNeighborReplies(ps_state * ps)
 {
-    HttpRequest *request = ps->request;
     CachePeer *p = NULL;
     hier_code code = HIER_NONE;
     assert(ps->entry->ping_status == PING_WAITING);
@@ -634,8 +658,7 @@ peerGetSomeNeighborReplies(ps_state * ps)
 
     if (peerCheckNetdbDirect(ps)) {
         code = CLOSEST_DIRECT;
-        debugs(44, 3, hier_code_str[code] << "/" << request->url.host());
-        peerAddFwdServer(&ps->servers, NULL, code);
+        peerAddFwdServer(ps, nullptr, code);
         return;
     }
 
@@ -651,8 +674,7 @@ peerGetSomeNeighborReplies(ps_state * ps)
         }
     }
     if (p && code != HIER_NONE) {
-        debugs(44, 3, hier_code_str[code] << "/" << p->host);
-        peerAddFwdServer(&ps->servers, p, code);
+        peerAddFwdServer(ps, p, code);
     }
 }
 
@@ -672,7 +694,7 @@ peerGetSomeDirect(ps_state * ps)
     if (ps->request->url.getScheme() == AnyP::PROTO_WAIS)
         return;
 
-    peerAddFwdServer(&ps->servers, NULL, HIER_DIRECT);
+    peerAddFwdServer(ps, nullptr, HIER_DIRECT);
 }
 
 static void
@@ -705,8 +727,7 @@ peerGetSomeParent(ps_state * ps)
     }
 
     if (code != HIER_NONE) {
-        debugs(44, 3, "peerSelect: " << hier_code_str[code] << "/" << p->host);
-        peerAddFwdServer(&ps->servers, p, code);
+        peerAddFwdServer(ps, p, code);
     }
 }
 
@@ -730,9 +751,7 @@ peerGetAllParents(ps_state * ps)
         if (!peerHTTPOkay(p, request))
             continue;
 
-        debugs(15, 3, "peerGetAllParents: adding alive parent " << p->host);
-
-        peerAddFwdServer(&ps->servers, p, ANY_OLD_PARENT);
+        peerAddFwdServer(ps, p, ANY_OLD_PARENT);
     }
 
     /* XXX: should add dead parents here, but it is currently
@@ -741,7 +760,7 @@ peerGetAllParents(ps_state * ps)
      */
     /* Add default parent as a last resort */
     if ((p = getDefaultParent(request))) {
-        peerAddFwdServer(&ps->servers, p, DEFAULT_PARENT);
+        peerAddFwdServer(ps, p, DEFAULT_PARENT);
     }
 }
 
@@ -925,16 +944,27 @@ peerHandlePingReply(CachePeer * p, peer_t type, AnyP::ProtocolType proto, void *
 }
 
 static void
-peerAddFwdServer(FwdServer ** FSVR, CachePeer * p, hier_code code)
+peerAddFwdServer(ps_state *ps, CachePeer *peer, const hier_code code)
 {
-    debugs(44, 5, "peerAddFwdServer: adding " <<
-           (p ? p->host : "DIRECT")  << " " <<
-           hier_code_str[code]  );
-    FwdServer *fs = new FwdServer(p, code);
+    // Find the end of the servers list. Bail on a duplicate destination.
+    assert(ps);
+    FwdServer **FSVR = &ps->servers;
+    while (const auto server = *FSVR) {
+        // There can be at most one PINNED destination.
+        // Non-PINNED destinations are uniquely identified by their CachePeer
+        // (even though a DIRECT destination might match a cache_peer address).
+        const bool duplicate = (server->code == PINNED) ?
+            (code == PINNED) : (server->_peer == peer);
+        if (duplicate) {
+            debugs(44, 3, "skipping " << PeerSelectionDumper(ps, peer, code) <<
+                   "; have " << PeerSelectionDumper(ps, server->_peer.get(), server->code));
+            return;
+        }
+        FSVR = &server->next;
+    }
 
-    while (*FSVR)
-        FSVR = &(*FSVR)->next;
-
+    debugs(44, 3, "adding " << PeerSelectionDumper(ps, peer, code));
+    FwdServer *fs = new FwdServer(peer, code);
     *FSVR = fs;
 }
 
