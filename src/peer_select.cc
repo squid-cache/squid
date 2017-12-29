@@ -542,24 +542,24 @@ PeerSelector::selectMore()
 
 bool peerAllowedToUse(const CachePeer * p, HttpRequest * request);
 
-/// Selects a (possibly gone) pinned connection.
+/// Selects a pinned connection if it exists, is valid, and is allowed.
 void
 PeerSelector::selectPinned()
 {
+    // TODO: Avoid all repeated calls. Relying on PING_DONE is not enough.
     if (!request->pinnedConnection())
         return;
     CachePeer *pear = request->pinnedConnection()->pinnedPeer();
     if (Comm::IsConnOpen(request->pinnedConnection()->validatePinnedConnection(request, pear))) {
-        if (pear && peerAllowedToUse(pear, request)) {
+        const bool usePinned = pear ? peerAllowedToUse(pear, request) : (direct != DIRECT_NO);
+        if (usePinned) {
             addSelection(pear, PINNED);
             if (entry)
-                entry->ping_status = PING_DONE;     /* Skip ICP */
-        } else if (!pear && direct != DIRECT_NO) {
-            addSelection(nullptr, PINNED);
-            if (entry)
-                entry->ping_status = PING_DONE;     /* Skip ICP */
+                entry->ping_status = PING_DONE; // skip ICP
         }
     }
+    // If the pinned connection is prohibited (for this request) or gone, then
+    // the initiator must decide whether it is OK to open a new one instead.
 }
 
 /**
