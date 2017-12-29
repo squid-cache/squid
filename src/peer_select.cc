@@ -251,7 +251,6 @@ PeerSelector::CheckAlwaysDirectDone(allow_t answer, void *data)
     static_cast<PeerSelector*>(data)->checkAlwaysDirectDone(answer);
 }
 
-
 /// \returns true (after destroying "this") if the peer initiator is gone
 /// \returns false (without side effects) otherwise
 bool
@@ -596,11 +595,11 @@ PeerSelector::selectSomeNeighbor()
             debugs(44, 3, "Doing ICP pings");
             ping.start = current_time;
             ping.n_sent = neighborsUdpPing(request,
-                                               entry,
-                                               HandlePingReply,
-                                               this,
-                                               &ping.n_replies_expected,
-                                               &ping.timeout);
+                                           entry,
+                                           HandlePingReply,
+                                           this,
+                                           &ping.n_replies_expected,
+                                           &ping.timeout);
 
             if (ping.n_sent == 0)
                 debugs(44, DBG_CRITICAL, "WARNING: neighborsUdpPing returned 0");
@@ -928,7 +927,7 @@ PeerSelector::addSelection(CachePeer *peer, const hier_code code)
         // Non-PINNED destinations are uniquely identified by their CachePeer
         // (even though a DIRECT destination might match a cache_peer address).
         const bool duplicate = (server->code == PINNED) ?
-            (code == PINNED) : (server->_peer == peer);
+                               (code == PINNED) : (server->_peer == peer);
         if (duplicate) {
             debugs(44, 3, "skipping " << PeerSelectionDumper(this, peer, code) <<
                    "; have " << PeerSelectionDumper(this, server->_peer.get(), server->code));
