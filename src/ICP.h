@@ -47,11 +47,11 @@ public:
     icp_common_t(char *buf, unsigned int len);
 
     void handleReply(char *buf, Ip::Address &from);
-    static icp_common_t *createMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad);
     icp_opcode getOpCode() const;
+
+    /// \returns newly allocated buffer with an ICP message, including header
+    static icp_common_t *CreateMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad);
 };
-// TODO: Remove after fixing remaining users.
-#define _icp_common_t icp_common_t
 
 /**
  \ingroup ServerProtocolICPAPI
