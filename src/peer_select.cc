@@ -140,7 +140,7 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
     assert(entry);
     assert(entry->ping_status == PING_NONE);
     assert(direct != DIRECT_YES);
-    debugs(44, 3, "peerSelectIcpPing: " << entry->url());
+    debugs(44, 3, entry->url());
 
     if (!request->flags.hierarchical && direct != DIRECT_NO)
         return 0;
@@ -151,7 +151,7 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
 
     n = neighborsCount(request);
 
-    debugs(44, 3, "peerSelectIcpPing: counted " << n << " neighbors");
+    debugs(44, 3, "counted " << n << " neighbors");
 
     return n;
 }
@@ -199,13 +199,13 @@ void
 PeerSelector::checkNeverDirectDone(const allow_t answer)
 {
     acl_checklist = nullptr;
-    debugs(44, 3, "peerCheckNeverDirectDone: " << answer);
+    debugs(44, 3, answer);
     never_direct = answer;
     switch (answer) {
     case ACCESS_ALLOWED:
         /** if never_direct says YES, do that. */
         direct = DIRECT_NO;
-        debugs(44, 3, HERE << "direct = " << DirectStr[direct] << " (never_direct allow)");
+        debugs(44, 3, "direct = " << DirectStr[direct] << " (never_direct allow)");
         break;
     case ACCESS_DENIED: // not relevant.
     case ACCESS_DUNNO:  // not relevant.
@@ -227,13 +227,13 @@ void
 PeerSelector::checkAlwaysDirectDone(const allow_t answer)
 {
     acl_checklist = nullptr;
-    debugs(44, 3, "peerCheckAlwaysDirectDone: " << answer);
+    debugs(44, 3, answer);
     always_direct = answer;
     switch (answer) {
     case ACCESS_ALLOWED:
         /** if always_direct says YES, do that. */
         direct = DIRECT_YES;
-        debugs(44, 3, HERE << "direct = " << DirectStr[direct] << " (always_direct allow)");
+        debugs(44, 3, "direct = " << DirectStr[direct] << " (always_direct allow)");
         break;
     case ACCESS_DENIED: // not relevant.
     case ACCESS_DUNNO:  // not relevant.
@@ -429,8 +429,8 @@ PeerSelector::checkNetdbDirect()
 
     myhops = netdbHostHops(request->url.host());
 
-    debugs(44, 3, "peerCheckNetdbDirect: MY hops = " << myhops);
-    debugs(44, 3, "peerCheckNetdbDirect: minimum_direct_hops = " << Config.minDirectHops);
+    debugs(44, 3, "MY hops = " << myhops);
+    debugs(44, 3, "minimum_direct_hops = " << Config.minDirectHops);
 
     if (myhops && myhops <= Config.minDirectHops)
         return 1;
@@ -440,7 +440,7 @@ PeerSelector::checkNetdbDirect()
     if (p == NULL)
         return 0;
 
-    debugs(44, 3, "peerCheckNetdbDirect: closest_parent_miss RTT = " << ping.p_rtt << " msec");
+    debugs(44, 3, "closest_parent_miss RTT = " << ping.p_rtt << " msec");
 
     if (myrtt && myrtt <= ping.p_rtt)
         return 1;
@@ -461,7 +461,7 @@ PeerSelector::selectMore()
     /** If we don't know whether DIRECT is permitted ... */
     if (direct == DIRECT_UNKNOWN) {
         if (always_direct == ACCESS_DUNNO) {
-            debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[direct] << " (always_direct to be checked)");
+            debugs(44, 3, "direct = " << DirectStr[direct] << " (always_direct to be checked)");
             /** check always_direct; */
             ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, NULL);
             ch->al = al;
@@ -469,7 +469,7 @@ PeerSelector::selectMore()
             acl_checklist->nonBlockingCheck(CheckAlwaysDirectDone, this);
             return;
         } else if (never_direct == ACCESS_DUNNO) {
-            debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[direct] << " (never_direct to be checked)");
+            debugs(44, 3, "direct = " << DirectStr[direct] << " (never_direct to be checked)");
             /** check never_direct; */
             ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
             ch->al = al;
@@ -479,20 +479,20 @@ PeerSelector::selectMore()
         } else if (request->flags.noDirect) {
             /** if we are accelerating, direct is not an option. */
             direct = DIRECT_NO;
-            debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[direct] << " (forced non-direct)");
+            debugs(44, 3, "direct = " << DirectStr[direct] << " (forced non-direct)");
         } else if (request->flags.loopDetected) {
             /** if we are in a forwarding-loop, direct is not an option. */
             direct = DIRECT_YES;
-            debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[direct] << " (forwarding loop detected)");
+            debugs(44, 3, "direct = " << DirectStr[direct] << " (forwarding loop detected)");
         } else if (checkNetdbDirect()) {
             direct = DIRECT_YES;
-            debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[direct] << " (checkNetdbDirect)");
+            debugs(44, 3, "direct = " << DirectStr[direct] << " (checkNetdbDirect)");
         } else {
             direct = DIRECT_MAYBE;
-            debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[direct] << " (default)");
+            debugs(44, 3, "direct = " << DirectStr[direct] << " (default)");
         }
 
-        debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[direct]);
+        debugs(44, 3, "direct = " << DirectStr[direct]);
     }
 
     if (!entry || entry->ping_status == PING_NONE)
@@ -593,7 +593,7 @@ PeerSelector::selectSomeNeighbor()
         if ((p = netdbClosestParent(request))) {
             code = CLOSEST_PARENT;
         } else if (peerSelectIcpPing(request, direct, entry)) {
-            debugs(44, 3, "peerSelect: Doing ICP pings");
+            debugs(44, 3, "Doing ICP pings");
             ping.start = current_time;
             ping.n_sent = neighborsUdpPing(request,
                                                entry,
@@ -604,7 +604,7 @@ PeerSelector::selectSomeNeighbor()
 
             if (ping.n_sent == 0)
                 debugs(44, DBG_CRITICAL, "WARNING: neighborsUdpPing returned 0");
-            debugs(44, 3, "peerSelect: " << ping.n_replies_expected <<
+            debugs(44, 3, ping.n_replies_expected <<
                    " ICP replies expected, RTT " << ping.timeout <<
                    " msec");
 
@@ -809,7 +809,7 @@ void
 PeerSelector::handleIcpReply(CachePeer *p, const peer_t type, icp_common_t *header)
 {
     icp_opcode op = header->getOpCode();
-    debugs(44, 3, "peerHandleIcpReply: " << icp_opcode_str[op] << " " << url()  );
+    debugs(44, 3, icp_opcode_str[op] << ' ' << url());
 #if USE_CACHE_DIGESTS && 0
     /* do cd lookup to count false misses */
 
@@ -841,7 +841,7 @@ PeerSelector::handleIcpReply(CachePeer *p, const peer_t type, icp_common_t *head
 void
 PeerSelector::handleHtcpReply(CachePeer *p, const peer_t type, HtcpReplyData *htcp)
 {
-    debugs(44, 3, "" << (htcp->hit ? "HIT" : "MISS") << " " << url());
+    debugs(44, 3, (htcp->hit ? "HIT" : "MISS") << ' ' << url());
     ++ping.n_recv;
 
     if (htcp->hit) {
