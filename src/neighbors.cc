@@ -1389,7 +1389,7 @@ peerCountMcastPeersStart(void *data)
     HttpRequest *req = HttpRequest::FromUrl(url, mx);
     assert(req != nullptr);
     StoreEntry *fake = storeCreateEntry(url, url, RequestFlags(), Http::METHOD_GET);
-    auto psstate = new PeerSelector(nullptr);
+    const auto psstate = new PeerSelector(nullptr);
     psstate->request = req;
     HTTPMSGLOCK(psstate->request);
     psstate->entry = fake;
@@ -1417,7 +1417,7 @@ peerCountMcastPeersStart(void *data)
 static void
 peerCountMcastPeersDone(void *data)
 {
-    auto psstate = static_cast<PeerSelector*>(data);
+    const auto psstate = static_cast<PeerSelector*>(data);
     StoreEntry *fake = psstate->entry;
 
     if (cbdataReferenceValid(psstate->peerCountMcastPeerXXX)) {
@@ -1441,7 +1441,7 @@ peerCountMcastPeersDone(void *data)
 static void
 peerCountHandleIcpReply(CachePeer * p, peer_t, AnyP::ProtocolType proto, void *, void *data)
 {
-    auto psstate = static_cast<PeerSelector*>(data);
+    const auto psstate = static_cast<PeerSelector*>(data);
     StoreEntry *fake = psstate->entry;
     assert(fake);
     MemObject *mem = fake->mem_obj;
