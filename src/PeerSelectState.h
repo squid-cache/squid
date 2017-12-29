@@ -127,9 +127,7 @@ private:
     allow_t always_direct;
     allow_t never_direct;
     int direct;   // TODO: fold always_direct/never_direct/prefer_direct into this now that ACL can do a multi-state result.
-
     size_t foundPaths = 0; ///< number of unique destinations identified so far
-
     ErrorState *lastError;
 
     FwdServer *servers; ///< a linked list of (unresolved) selected peers
@@ -151,7 +149,6 @@ private:
      */
     CachePeer *hit;
     peer_t hit_type;
-
     ACLChecklist *acl_checklist;
 
     typedef CbcPointer<PeerSelectionInitiator> Initiator;
