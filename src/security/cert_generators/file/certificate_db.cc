@@ -267,6 +267,9 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
 bool
 Ssl::CertificateDb::find(std::string const &key, const Security::CertPointer &expectedOrig, Security::CertPointer &cert, Security::PrivateKeyPointer &pkey)
 {
+    if (!IsEnabledDiskStore())
+        return false;
+
     const Locker locker(dbLock, Here);
     load();
     return pure_find(key, expectedOrig, cert, pkey);

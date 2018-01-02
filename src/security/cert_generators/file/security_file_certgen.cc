@@ -192,13 +192,11 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
     std::string &certKey = Ssl::OnDiskCertificateDbKey(certProperties);
 
     bool dbFailed = false;
-    if (db.IsEnabledDiskStore()) {
-        try {
-            db.find(certKey, certProperties.mimicCert, cert, pkey);
-        } catch (std::runtime_error &err) {
-            dbFailed = true;
-            error = err.what();
-        }
+    try {
+        db.find(certKey, certProperties.mimicCert, cert, pkey);
+    } catch (std::runtime_error &err) {
+        dbFailed = true;
+        error = err.what();
     }
 
     if (!cert || !pkey) {
