@@ -498,7 +498,7 @@ StoreEntry::doAbandon(const char *context)
     // Both aborted local writers and aborted local readers (of remote writers)
     // are STORE_PENDING, but aborted readers should never release().
     if (EBIT_TEST(flags, RELEASE_REQUEST) ||
-        (store_status == STORE_PENDING && !Store::Root().transientsReader(*this))) {
+            (store_status == STORE_PENDING && !Store::Root().transientsReader(*this))) {
         this->release();
         return;
     }
@@ -2140,10 +2140,18 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
     if (e.hasTransients()) {
         const auto &xitTable = e.mem_obj->xitTable;
         switch (xitTable.io) {
-            case MemObject::ioUndecided: os << 'u'; break;
-            case MemObject::ioReading: os << 'r'; break;
-            case MemObject::ioWriting: os << 'v'; break;
-            case MemObject::ioDone: os << 'o'; break;
+        case MemObject::ioUndecided:
+            os << 'u';
+            break;
+        case MemObject::ioReading:
+            os << 'r';
+            break;
+        case MemObject::ioWriting:
+            os << 'v';
+            break;
+        case MemObject::ioDone:
+            os << 'o';
+            break;
         }
         os << 't' << xitTable.index;
     }

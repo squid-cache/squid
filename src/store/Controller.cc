@@ -312,7 +312,7 @@ StoreEntry *
 Store::Controller::find(const cache_key *key)
 {
     if (const auto entry = peek(key)) {
-       try {
+        try {
             if (!entry->key)
                 allowSharing(*entry, key);
             entry->touch();
@@ -505,8 +505,8 @@ Store::Controller::memoryEvictCached(StoreEntry &e)
     if (memStore)
         memStore->evictCached(e);
     else // TODO: move into [non-shared] memory cache class when we have one
-    if (!e.locked())
-        e.destroyMemObject();
+        if (!e.locked())
+            e.destroyMemObject();
 }
 
 void

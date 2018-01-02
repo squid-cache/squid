@@ -233,15 +233,15 @@ Fs::Ufs::RebuildState::addIfFresh(const cache_key *key,
 
     ++counts.objcount;
     const auto addedEntry = sd->addDiskRestore(key,
-                                               file_number,
-                                               swap_file_sz,
-                                               expires,
-                                               timestamp,
-                                               lastref,
-                                               lastmod,
-                                               refcount,
-                                               newFlags,
-                                               0 /* XXX: unused */);
+                            file_number,
+                            swap_file_sz,
+                            expires,
+                            timestamp,
+                            lastref,
+                            lastmod,
+                            refcount,
+                            newFlags,
+                            0 /* XXX: unused */);
     storeDirSwapLog(addedEntry, SWAP_LOG_ADD);
 }
 
@@ -474,3 +474,4 @@ Fs::Ufs::RebuildState::isDone() const
 {
     return _done;
 }
+

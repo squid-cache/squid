@@ -97,8 +97,8 @@ public:
     /// \returns public key (if the entry has it) or nil (otherwise)
     const cache_key *publicKey() const {
         return (!EBIT_TEST(flags, KEY_PRIVATE)) ?
-            reinterpret_cast<const cache_key*>(key): // may be nil
-            nullptr;
+               reinterpret_cast<const cache_key*>(key): // may be nil
+               nullptr;
     }
 
     /// Either fills this entry with private key or changes the existing key

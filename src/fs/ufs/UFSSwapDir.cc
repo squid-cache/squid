@@ -1225,7 +1225,6 @@ Fs::Ufs::UFSSwapDir::evictIfFound(const cache_key *)
     // the entry is not cached on disk and there is nothing for us to do.
 }
 
-
 void
 Fs::Ufs::UFSSwapDir::replacementAdd(StoreEntry * e)
 {
