@@ -45,7 +45,7 @@ public:
     /// \returns a locally indexed and SMP-tracked matching StoreEntry (or nil)
     /// Slower than peek() but does not restrict StoreEntry use and storage.
     /// Counts as an entry reference from the removal policy p.o.v.
-    StoreEntry *find(const cache_key *key);
+    StoreEntry *find(const cache_key *);
 
     /// \returns a matching StoreEntry not suitable for long-term use (or nil)
     /// Faster than find() but the returned entry may not receive updates, may
@@ -92,7 +92,7 @@ public:
 
     /// register a being-read StoreEntry (to optimize concurrent cache reads
     /// and to receive remote DELETE events)
-    void addReading(StoreEntry *e, const cache_key *cacheKey);
+    void addReading(StoreEntry *, const cache_key *);
 
     /// register a being-written StoreEntry (to support concurrent cache reads
     /// and to receive remote DELETE events)
@@ -137,12 +137,12 @@ private:
     /// dereference() an idle entry and return true if the entry should be deleted
     bool dereferenceIdle(StoreEntry &, bool wantsLocalMemory);
 
-    void allowSharing(StoreEntry &entry, const cache_key *cacheKey);
+    void allowSharing(StoreEntry &, const cache_key *);
     StoreEntry *peekAtLocal(const cache_key *);
 
     void transientsUnlinkByKeyIfFound(const cache_key *);
     bool keepForLocalMemoryCache(StoreEntry &e) const;
-    bool anchorToCache(StoreEntry &, bool &inSync);
+    bool anchorToCache(StoreEntry &e, bool &inSync);
 
     Disks *swapDir; ///< summary view of all disk caches
     Memory *memStore; ///< memory cache

@@ -32,11 +32,11 @@ public:
     StoreEntry *findCollapsed(const sfileno xitIndex);
 
     /// start listening for remote DELETE requests targeting the given complete StoreEntry
-    void monitorWhileReading(StoreEntry*, const cache_key *key);
+    void monitorWhileReading(StoreEntry*, const cache_key *);
 
     /// start listening for remote DELETE requests targeting the given miss StoreEntry
     /// and allow broadcasting of local StoreEntry updates to remote readers
-    void startWriting(StoreEntry*, const cache_key *key);
+    void startWriting(StoreEntry*, const cache_key *);
 
     /// called when the in-transit entry has been successfully cached
     void completeWriting(const StoreEntry &e);
@@ -44,7 +44,7 @@ public:
     /// copies current shared entry metadata into parameters
     /// \param aborted whether the entry was aborted
     /// \param waitingToBeFreed whether the entry was marked for deletion
-    void status(const StoreEntry &, bool &aborted, bool &waitingToBeFreed) const;
+    void status(const StoreEntry &e, bool &aborted, bool &waitingToBeFreed) const;
 
     /// number of entry readers some time ago
     int readers(const StoreEntry &e) const;
@@ -82,7 +82,7 @@ public:
     static int64_t EntryLimit();
 
 protected:
-    void addEntry(StoreEntry*, const cache_key *key);
+    void addEntry(StoreEntry*, const cache_key *);
 
     // Ipc::StoreMapCleaner API
     virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;

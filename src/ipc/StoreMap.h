@@ -253,7 +253,7 @@ public:
 
     /// free the entry if possible or mark it as waiting to be freed if not
     /// \returns whether the entry was neither empty nor marked
-    bool freeEntry(const sfileno fileno);
+    bool freeEntry(const sfileno);
     /// free the entry if possible or mark it as waiting to be freed if not
     /// does nothing if we cannot check that the key matches the cached entry
     void freeEntryByKey(const cache_key *const key);
