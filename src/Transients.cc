@@ -288,7 +288,7 @@ Transients::evictCached(StoreEntry &e)
     if (e.hasTransients()) {
         const auto index = e.mem_obj->xitTable.index;
         if (map->freeEntry(index)) {
-            // Delay syncCollapsed(index) which may stop `e` wait for updates.
+            // Delay syncCollapsed(index) which may end `e` wait for updates.
             // Calling it directly/here creates complex reentrant call chains.
             CollapsedForwarding::Broadcast(e, true);
         }
