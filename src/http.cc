@@ -97,10 +97,6 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     surrogateNoStore = false;
     serverConnection = fwd->serverConnection();
 
-    // reset peer response time stats for %<pt
-    request->hier.peer_http_request_sent.tv_sec = 0;
-    request->hier.peer_http_request_sent.tv_usec = 0;
-
     if (fwd->serverConnection() != NULL)
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
@@ -1198,12 +1194,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
         ++ IOStats.Http.read_hist[bin];
 
-        // update peer response time stats (%<pt)
-        const timeval &sent = request->hier.peer_http_request_sent;
-        if (sent.tv_sec)
-            tvSub(request->hier.peer_response_time, sent, current_time);
-        else
-            request->hier.peer_response_time.tv_sec = -1;
+        request->hier.notePeerRead();
     }
 
         /* Continue to process previously read data */
@@ -1590,6 +1581,9 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
     entry->mem_obj->checkUrlChecksum();
 #endif
 
+    // XXX: Keep in sync with Client::sentRequestBody().
+    // TODO: Extract common parts.
+
     if (io.size > 0) {
         fd_bytes(io.fd, io.size, FD_WRITE);
         statCounter.server.all.kbytes_out += io.size;
@@ -1598,6 +1592,9 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
 
     if (io.flag == Comm::ERR_CLOSING)
         return;
+
+    // both successful and failed writes affect response times
+    request->hier.notePeerWrite();
 
     if (io.flag) {
         ErrorState *err = new ErrorState(ERR_WRITE_ERROR, Http::scBadGateway, fwd->request);
@@ -1629,7 +1626,6 @@ HttpStateData::sendComplete()
 
     commSetConnTimeout(serverConnection, Config.Timeout.read, timeoutCall);
     flags.request_sent = true;
-    request->hier.peer_http_request_sent = current_time;
 }
 
 void
@@ -1685,7 +1681,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
         }
     }
 
-    uint8_t loginbuf[base64_encode_len(MAX_LOGIN_SZ)];
+    char loginbuf[base64_encode_len(MAX_LOGIN_SZ)];
     size_t blen;
     struct base64_encode_ctx ctx;
     base64_encode_init(&ctx);
@@ -1870,7 +1866,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     /* append Authorization if known in URL, not in header and going direct */
     if (!hdr_out->has(Http::HdrType::AUTHORIZATION)) {
         if (!request->flags.proxying && !request->url.userInfo().isEmpty()) {
-            static uint8_t result[base64_encode_len(MAX_URL*2)]; // should be big enough for a single URI segment
+            static char result[base64_encode_len(MAX_URL*2)]; // should be big enough for a single URI segment
             struct base64_encode_ctx ctx;
             base64_encode_init(&ctx);
             size_t blen = base64_encode_update(&ctx, result, request->url.userInfo().length(), reinterpret_cast<const uint8_t*>(request->url.userInfo().rawContent()));

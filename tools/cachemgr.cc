@@ -1081,8 +1081,8 @@ make_pub_auth(cachemgr_request * req)
     req->pub_auth = (char *) xmalloc(encodedLen);
     struct base64_encode_ctx ctx;
     base64_encode_init(&ctx);
-    size_t blen = base64_encode_update(&ctx, reinterpret_cast<uint8_t*>(req->pub_auth), bufLen, reinterpret_cast<uint8_t*>(buf));
-    blen += base64_encode_final(&ctx, reinterpret_cast<uint8_t*>(req->pub_auth)+blen);
+    size_t blen = base64_encode_update(&ctx, req->pub_auth, bufLen, reinterpret_cast<uint8_t*>(buf));
+    blen += base64_encode_final(&ctx, req->pub_auth + blen);
     req->pub_auth[blen] = '\0';
     debug("cmgr: encoded: '%s'\n", req->pub_auth);
 }
@@ -1106,7 +1106,7 @@ decode_pub_auth(cachemgr_request * req)
     buf = (char*)xmalloc(decodedLen);
     struct base64_decode_ctx ctx;
     base64_decode_init(&ctx);
-    if (!base64_decode_update(&ctx, &decodedLen, reinterpret_cast<uint8_t*>(buf), strlen(req->pub_auth), reinterpret_cast<const uint8_t*>(req->pub_auth)) ||
+    if (!base64_decode_update(&ctx, &decodedLen, reinterpret_cast<uint8_t*>(buf), strlen(req->pub_auth), req->pub_auth) ||
             !base64_decode_final(&ctx)) {
         debug("cmgr: base64 decode failure. Incomplete auth token string.\n");
         xfree(buf);
@@ -1191,7 +1191,7 @@ make_auth_header(const cachemgr_request * req)
     if (encodedLen <= 0)
         return "";
 
-    uint8_t *str64 = static_cast<uint8_t*>(xmalloc(encodedLen));
+    char *str64 = static_cast<char *>(xmalloc(encodedLen));
     struct base64_encode_ctx ctx;
     base64_encode_init(&ctx);
     size_t blen = base64_encode_update(&ctx, str64, bufLen, reinterpret_cast<uint8_t*>(buf));

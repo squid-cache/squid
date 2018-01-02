@@ -19,9 +19,11 @@
 #include "mem/forward.h"
 #include "PingData.h"
 
-class HttpRequest;
-class StoreEntry;
 class ErrorState;
+class HtcpReplyData;
+class HttpRequest;
+class icp_common_t;
+class StoreEntry;
 
 void peerSelectInit(void);
 
@@ -51,13 +53,15 @@ public:
 
 class FwdServer;
 
-class ps_state: public Dns::IpReceiver
+/// Finds peer (including origin server) IPs for forwarding a single request.
+/// Gives PeerSelectionInitiator each found destination, in the right order.
+class PeerSelector: public Dns::IpReceiver
 {
-    CBDATA_CHILD(ps_state);
+    CBDATA_CHILD(PeerSelector);
 
 public:
-    explicit ps_state(PeerSelectionInitiator *initiator);
-    virtual ~ps_state() override;
+    explicit PeerSelector(PeerSelectionInitiator*);
+    virtual ~PeerSelector() override;
 
     /* Dns::IpReceiver API */
     virtual void noteIp(const Ip::Address &ip) override;
@@ -77,17 +81,56 @@ public:
     /// processes a newly discovered/finalized path
     void handlePath(Comm::ConnectionPointer &path, FwdServer &fs);
 
+    /// a single selection loop iteration: attempts to add more destinations
+    void selectMore();
+
     HttpRequest *request;
     AccessLogEntry::Pointer al; ///< info for the future access.log entry
     StoreEntry *entry;
+
+    void *peerCountMcastPeerXXX = nullptr; ///< a hack to help peerCountMcastPeersStart()
+
+    ping_data ping;
+
+protected:
+    bool selectionAborted();
+
+    void handlePingTimeout();
+    void handleIcpReply(CachePeer*, const peer_t, icp_common_t *header);
+    void handleIcpParentMiss(CachePeer*, icp_common_t*);
+#if USE_HTCP
+    void handleHtcpParentMiss(CachePeer*, HtcpReplyData*);
+    void handleHtcpReply(CachePeer*, const peer_t, HtcpReplyData*);
+#endif
+
+    int checkNetdbDirect();
+    void checkAlwaysDirectDone(const allow_t answer);
+    void checkNeverDirectDone(const allow_t answer);
+
+    void selectSomeNeighbor();
+    void selectSomeNeighborReplies();
+    void selectSomeDirect();
+    void selectSomeParent();
+    void selectAllParents();
+    void selectPinned();
+
+    void addSelection(CachePeer*, const hier_code);
+
+    void resolveSelected();
+
+    static IRCB HandlePingReply;
+    static ACLCB CheckAlwaysDirectDone;
+    static ACLCB CheckNeverDirectDone;
+    static EVH HandlePingTimeout;
+
+private:
     allow_t always_direct;
     allow_t never_direct;
     int direct;   // TODO: fold always_direct/never_direct/prefer_direct into this now that ACL can do a multi-state result.
     size_t foundPaths = 0; ///< number of unique destinations identified so far
-    void *peerCountMcastPeerXXX = nullptr; ///< a hack to help peerCountMcastPeersStart()
     ErrorState *lastError;
 
-    FwdServer *servers;    ///< temporary linked list of peers we will pass back.
+    FwdServer *servers; ///< a linked list of (unresolved) selected peers
 
     /*
      * Why are these Ip::Address instead of CachePeer *?  Because a
@@ -106,15 +149,12 @@ public:
      */
     CachePeer *hit;
     peer_t hit_type;
-    ping_data ping;
     ACLChecklist *acl_checklist;
-
-    const InstanceId<ps_state> id; ///< unique identification in worker log
-
-private:
 
     typedef CbcPointer<PeerSelectionInitiator> Initiator;
     Initiator initiator_; ///< recipient of the destinations we select; use interestedInitiator() to access
+
+    const InstanceId<PeerSelector> id; ///< unique identification in worker log
 };
 
 #endif /* SQUID_PEERSELECTSTATE_H */

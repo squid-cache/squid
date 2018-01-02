@@ -4546,6 +4546,18 @@ DOC_START
 				no certificate at all. Consider encoding the
 				logged value because Issuer often has spaces.
 
+		ssl::<cert_subject
+				The Subject field of the received server
+				TLS certificate or a dash ('-') if this is
+				not available. Consider encoding the logged
+				value because Subject often has spaces.
+
+		ssl::<cert_issuer
+				The Issuer field of the received server
+				TLS certificate or a dash ('-') if this is
+				not available. Consider encoding the logged
+				value because Issuer often has spaces.
+
 		ssl::<cert_errors
 				The list of certificate validation errors
 				detected by Squid (including OpenSSL and

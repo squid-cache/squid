@@ -359,6 +359,9 @@ Client::sentRequestBody(const CommIoCbParams &io)
         return; // do nothing;
     }
 
+    // both successful and failed writes affect response times
+    request->hier.notePeerWrite();
+
     if (io.flag) {
         debugs(11, DBG_IMPORTANT, "sentRequestBody error: FD " << io.fd << ": " << xstrerr(io.xerrno));
         ErrorState *err;
@@ -507,9 +510,8 @@ Client::haveParsedReplyHeaders()
     maybePurgeOthers();
 
     // adaptation may overwrite old offset computed using the virgin response
-    const bool partial = theFinalReply->content_range &&
-                         theFinalReply->sline.status() == Http::scPartialContent;
-    currentOffset = partial ? theFinalReply->content_range->spec.offset : 0;
+    const bool partial = theFinalReply->contentRange();
+    currentOffset = partial ? theFinalReply->contentRange()->spec.offset : 0;
 }
 
 /// whether to prevent caching of an otherwise cachable response

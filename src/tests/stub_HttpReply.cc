@@ -13,8 +13,8 @@
 #include "tests/STUB.h"
 
 HttpReply::HttpReply() : Http::Message(hoReply), date (0), last_modified (0),
-    expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0),
-    protoPrefix("HTTP/"), do_clean(false), bodySizeMax(-2)
+    expires(0), surrogate_control(nullptr), keep_alive(0),
+    protoPrefix("HTTP/"), do_clean(false), bodySizeMax(-2), content_range(nullptr)
 {STUB_NOP}
 HttpReply::~HttpReply() STUB
 void HttpReply::setHeaders(Http::StatusCode status, const char *reason, const char *ctype, int64_t clen, time_t lmt, time_t expires_) STUB
@@ -30,4 +30,5 @@ HttpReply * HttpReply::clone() const STUB_RETVAL(NULL)
 bool HttpReply::inheritProperties(const Http::Message *aMsg) STUB_RETVAL(false)
 bool HttpReply::updateOnNotModified(HttpReply const*) STUB_RETVAL(false)
 int64_t HttpReply::bodySize(const HttpRequestMethod&) const STUB_RETVAL(0)
+const HttpHdrContRange *HttpReply::contentRange() const STUB_RETVAL(nullptr)
 

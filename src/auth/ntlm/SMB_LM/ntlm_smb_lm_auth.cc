@@ -195,7 +195,7 @@ make_challenge(char *domain, char *domain_controller)
     size_t len = sizeof(chal) - sizeof(chal.payload) + le16toh(chal.target.maxlen);
     // for lack of a good NTLM token size limit, allow up to what the helper input can be
     // validations later will expect to be limited to that size.
-    static uint8_t b64buf[HELPER_INPUT_BUFFER-10]; /* 10 for other line fields, delimiters and terminator */
+    static char b64buf[HELPER_INPUT_BUFFER-10]; /* 10 for other line fields, delimiters and terminator */
     if (base64_encode_len(len) < sizeof(b64buf)-1) {
         debug("base64 encoding of the token challenge will exceed %" PRIuSIZE " bytes", sizeof(b64buf));
         return NULL;
@@ -206,7 +206,7 @@ make_challenge(char *domain, char *domain_controller)
     size_t blen = base64_encode_update(&ctx, b64buf, len, reinterpret_cast<const uint8_t *>(&chal));
     blen += base64_encode_final(&ctx, b64buf+blen);
     b64buf[blen] = '\0';
-    return reinterpret_cast<const char*>(b64buf);
+    return b64buf;
 }
 
 /* returns NULL on failure, or a pointer to
@@ -518,7 +518,7 @@ manage_request()
         base64_decode_init(&ctx);
         size_t dstLen = 0;
         int decodedLen = 0;
-        if (!base64_decode_update(&ctx, &dstLen, reinterpret_cast<uint8_t*>(decoded), strlen(buf)-3, reinterpret_cast<const uint8_t*>(buf+3)) ||
+        if (!base64_decode_update(&ctx, &dstLen, reinterpret_cast<uint8_t*>(decoded), strlen(buf)-3, buf+3) ||
                 !base64_decode_final(&ctx)) {
             SEND("NA Packet format error, couldn't base64-decode");
             return;

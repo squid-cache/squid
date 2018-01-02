@@ -14,17 +14,12 @@ Version 1.0
 directory
 .if !'po4a'hide' .B "[\-M "
 size
+.if !'po4a'hide' .B "] [\-b "
+fs_block_size
 .if !'po4a'hide' .B ]
 .br
 .if !'po4a'hide' .B security_file_certgen
 .if !'po4a'hide' .B "[\-d] \-c \-s "
-directory
-.if !'po4a'hide' .B "[\-n "
-serial number
-.if !'po4a'hide' .B ]
-.br
-.if !'po4a'hide' .B security_file_certgen
-.if !'po4a'hide' .B "[\-d] \-g \-s "
 directory
 .
 .SH DESCRIPTION
@@ -42,13 +37,13 @@ Communication occurs via TCP sockets bound to the loopback interface.
 .if !'po4a'hide' .TP 12
 .if !'po4a'hide' .B \-b fs_block_size
 File system block size in bytes. Needed for processing natural size of certificate on disk.
-Default value is 2048 bytes.
+Default value is 2048 bytes. The following suffixes are accepted: B, KB, MB, GB.
+When no suffix is set, B is assumed.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-c
-Initialize the SSL storage database and exit.
-Requires the 
-.B -s 
+Initialize the SSL storage database and exit. Requires the
+.B \-s
 option to determine the storage location being created.
 .
 .if !'po4a'hide' .TP
@@ -56,30 +51,18 @@ option to determine the storage location being created.
 Write debug info to stderr.
 .
 .if !'po4a'hide' .TP
-.if !'po4a'hide' .B \-g
-Display the current serial number using stderr and exit.
-Requires 
-.B \-s 
-option to determine which storage directory the serial is located in.
-.
-.if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-h
 Display the binary help and command line syntax info using stderr.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-s directory
-Directory path of disk storage for new SSL certificates.
+Directory path of SSL storage database.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-M size
-Maximum size of SSL certificate disk storage.
-.
-.if !'po4a'hide' .TP
-.if !'po4a'hide' .B \-n serial number
-HEX 
-.B "serial number "
-to use when initializing an SSL storage database.
-The default value of serial number is the number of seconds since Epoch minus 1200000000.
+Maximum size of SSL certificate disk storage. Same suffixes supported by the
+.B \-b
+option can be used.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-v
@@ -109,12 +92,12 @@ root and the intermediate public CA on the clients.
 Before this helper can be used the storage area for new certificates must be initialized manually.
 This is done from the command line using the 
 .B \-c 
-parameters.
+parameter.
 .
 .PP
 For example:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .B @DEFAULT_SSL_CRTD@ -c -s @DEFAULT_SSL_DB_DIR@
+.if !'po4a'hide' .B @DEFAULT_SSL_CRTD@ \-c \-s @DEFAULT_SSL_DB_DIR@
 .if !'po4a'hide' .RE
 .
 .PP
@@ -135,7 +118,7 @@ For more customized configuration the helper certificate storage directory locat
 configuration directive.
 For example:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .B sslcrtd_program @DEFAULT_SSL_CRTD@ -s @DEFAULT_SSL_DB_DIR@ -M 4MB
+.if !'po4a'hide' .B sslcrtd_program @DEFAULT_SSL_CRTD@ \-s @DEFAULT_SSL_DB_DIR@ \-M 4MB
 .if !'po4a'hide' .br
 .if !'po4a'hide' .B sslcrtd_children 5
 .if !'po4a'hide' .RE
@@ -146,6 +129,7 @@ This program was written by
 .PP
 This manual was written by
 .if !'po4a'hide' .I Christos Tsantilas <christos@chtsanti.net>
+and
 .if !'po4a'hide' .I Amos Jeffries <amosjeffries@squid-cache.org>
 .
 .SH COPYRIGHT
