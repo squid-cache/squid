@@ -324,7 +324,7 @@ Store::Controller::find(const cache_key *key)
             // fall through
         }
     }
-    return nullptr;
+    return NULL;
 }
 
 /// indexes and adds SMP-tracking for an ephemeral peek() result

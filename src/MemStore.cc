@@ -335,7 +335,7 @@ MemStore::get(const cache_key *key)
     map->freeEntry(index); // do not let others into the same trap
     debugs(20, 3, "failed for " << *e);
     destroyStoreEntry(static_cast<hash_link *>(e));
-    return nullptr;
+    return NULL;
 }
 
 void
@@ -653,7 +653,6 @@ MemStore::startCaching(StoreEntry &e)
     // stop swapping it out if it grows too large.
     if (e.mem_obj->expectedReplySize() >= 0)
         map->startAppending(index);
-
     e.memOutDecision(true);
     return true;
 }
