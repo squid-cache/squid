@@ -14,6 +14,7 @@
 #include "ipc/StoreMap.h"
 #include "Store.h"
 #include "store/Controlled.h"
+#include "store/forward.h"
 #include <vector>
 
 typedef Ipc::StoreMap TransientsMap;
@@ -31,12 +32,9 @@ public:
     /// return a local, previously collapsed entry
     StoreEntry *findCollapsed(const sfileno xitIndex);
 
-    /// start listening for remote DELETE requests targeting the given complete StoreEntry
-    void monitorWhileReading(StoreEntry*, const cache_key *);
-
-    /// start listening for remote DELETE requests targeting the given miss StoreEntry
-    /// and allow broadcasting of local StoreEntry updates to remote readers
-    void startWriting(StoreEntry*, const cache_key *);
+    /// start listening for remote DELETE requests targeting either a complete
+    /// StoreEntry (ioReading) or a being-formed miss StoreEntry (ioWriting)
+    void monitorIo(StoreEntry*, const cache_key*, const Store::IoStatus);
 
     /// called when the in-transit entry has been successfully cached
     void completeWriting(const StoreEntry &e);

@@ -628,7 +628,7 @@ void
 Store::Controller::addReading(StoreEntry *e, const cache_key *key)
 {
     if (transients)
-        transients->monitorWhileReading(e, key);
+        transients->monitorIo(e, key, Store::ioReading);
     e->hashInsert(key);
 }
 
@@ -640,7 +640,7 @@ Store::Controller::addWriting(StoreEntry *e, const cache_key *key)
         return; // constant memory-resident entries do not need transients
 
     if (transients)
-        transients->startWriting(e, key);
+        transients->monitorIo(e, key, Store::ioWriting);
     // else: non-SMP configurations do not need transients
 }
 

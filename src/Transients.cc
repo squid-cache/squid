@@ -187,33 +187,15 @@ Transients::findCollapsed(const sfileno index)
 }
 
 void
-Transients::monitorWhileReading(StoreEntry *e, const cache_key *key)
+Transients::monitorIo(StoreEntry *e, const cache_key *key, const Store::IoStatus direction)
 {
+    assert(direction == Store::ioReading || direction == Store::ioWriting);
+
     if (!e->hasTransients()) {
         addEntry(e, key);
-        e->mem_obj->xitTable.io = MemObject::ioReading;
+        e->mem_obj->xitTable.io = direction;
     }
 
-    assert(e->hasTransients());
-    const auto index = e->mem_obj->xitTable.index;
-    if (const auto old = locals->at(index)) {
-        assert(old == e);
-    } else {
-        // We do not lock e because we do not want to prevent its destruction;
-        // e is tied to us via mem_obj so we will know when it is destructed.
-        locals->at(index) = e;
-    }
-}
-
-void
-Transients::startWriting(StoreEntry *e, const cache_key *key)
-{
-    if (!e->hasTransients()) {
-        addEntry(e, key);
-        e->mem_obj->xitTable.io = MemObject::ioWriting;
-    }
-
-    // XXX: Duplicates Transients::monitorWhileReading().
     assert(e->hasTransients());
     const auto index = e->mem_obj->xitTable.index;
     if (const auto old = locals->at(index)) {
