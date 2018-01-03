@@ -2130,31 +2130,39 @@ StoreEntry::describeTimestamps() const
     return buf;
 }
 
+static std::ostream &
+operator <<(std::ostream &os, const Store::IoStatus &io)
+{
+    switch (io) {
+    case Store::ioUndecided:
+        os << 'u';
+        break;
+    case Store::ioReading:
+        os << 'r';
+        break;
+    case Store::ioWriting:
+        os << 'v';
+        break;
+    case Store::ioDone:
+        os << 'o';
+        break;
+    }
+    return os;
+}
+
 std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 {
     os << "e:";
 
     if (e.hasTransients()) {
         const auto &xitTable = e.mem_obj->xitTable;
-        switch (xitTable.io) {
-        case Store::ioUndecided:
-            os << 'u';
-            break;
-        case Store::ioReading:
-            os << 'r';
-            break;
-        case Store::ioWriting:
-            os << 'v';
-            break;
-        case Store::ioDone:
-            os << 'o';
-            break;
-        }
-        os << 't' << xitTable.index;
+        os << 't' << xitTable.io << xitTable.index;
     }
 
-    if (e.hasMemStore())
-        os << 'm' << e.mem_obj->memCache.index;
+    if (e.hasMemStore()) {
+        const auto &memCache = e.mem_obj->memCache;
+        os << 'm' << memCache.io << memCache.index << '@' << memCache.offset;
+    }
 
     // Do not use e.hasDisk() here because its checkDisk() call may calls us.
     if (e.swap_filen > -1 || e.swap_dirn > -1)
