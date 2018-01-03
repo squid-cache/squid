@@ -127,6 +127,8 @@ void Rock::SwapDir::disconnect(StoreEntry &e)
 {
     assert(e.hasDisk(index));
 
+    ignoreReferences(e);
+
     // do not rely on e.swap_status here because there is an async delay
     // before it switches from SWAPOUT_WRITING to SWAPOUT_DONE.
 
@@ -170,9 +172,16 @@ Rock::SwapDir::doReportStat() const
 }
 
 void
-Rock::SwapDir::swappedOut(const StoreEntry &)
+Rock::SwapDir::finalizeSwapoutSuccess(const StoreEntry &)
 {
-    // stats are not stored but computed when needed
+    // nothing to do
+}
+
+void
+Rock::SwapDir::finalizeSwapoutFailure(StoreEntry &entry)
+{
+    debugs(47, 5, entry);
+    disconnect(entry); // calls abortWriting() to free the disk entry
 }
 
 int64_t
@@ -880,7 +889,7 @@ Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
 
         writeError(sio);
         sio.finishedWriting(errflag);
-        // and hope that Core will call disconnect() to close the map entry
+        // and wait for the finalizeSwapoutFailure() call to close the map entry
     }
 
     if (sio.touchingStoreEntry())
@@ -984,10 +993,8 @@ Rock::SwapDir::evictCached(StoreEntry &e)
     if (e.hasDisk(index)) {
         if (map->freeEntry(e.swap_filen))
             CollapsedForwarding::Broadcast(e);
-        if (!e.locked()) {
-            ignoreReferences(e);
+        if (!e.locked())
             disconnect(e);
-        }
     } else if (const auto key = e.publicKey()) {
         evictIfFound(key);
     }

@@ -67,7 +67,8 @@ public:
     virtual void reconfigure() override;
     virtual int callback() override;
     virtual void sync() override;
-    virtual void swappedOut(const StoreEntry &e) override;
+    virtual void finalizeSwapoutSuccess(const StoreEntry &) override;
+    virtual void finalizeSwapoutFailure(StoreEntry &) override;
     virtual uint64_t currentSize() const override { return cur_size; }
     virtual uint64_t currentCount() const override { return n_disk_objects; }
     virtual ConfigOption *getOptionTree() const override;

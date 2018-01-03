@@ -304,6 +304,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
             storeConfigure();
         }
 
+        e->disk().finalizeSwapoutFailure(*e);
         e->releaseRequest(); // TODO: Keep the memory entry (if any)
     } else {
         /* swapping complete */
@@ -315,7 +316,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
 
         e->swap_file_sz = e->objectLen() + mem->swap_hdr_sz;
         e->swap_status = SWAPOUT_DONE;
-        e->disk().swappedOut(*e);
+        e->disk().finalizeSwapoutSuccess(*e);
 
         // XXX: For some Stores, it is pointless to re-check cachability here
         // and it leads to double counts in store_check_cachable_hist. We need

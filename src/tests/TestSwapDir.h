@@ -24,7 +24,8 @@ public:
     virtual uint64_t currentSize() const override;
     virtual uint64_t currentCount() const override;
     virtual void stat(StoreEntry &) const override;
-    virtual void swappedOut(const StoreEntry &e) override {}
+    virtual void finalizeSwapoutSuccess(const StoreEntry &) override {}
+    virtual void finalizeSwapoutFailure(StoreEntry &) override {}
     virtual void reconfigure() override;
     virtual void init() override;
     virtual bool unlinkdUseful() const override;
