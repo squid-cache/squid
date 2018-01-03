@@ -2137,16 +2137,16 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
     if (e.hasTransients()) {
         const auto &xitTable = e.mem_obj->xitTable;
         switch (xitTable.io) {
-        case MemObject::ioUndecided:
+        case Store::ioUndecided:
             os << 'u';
             break;
-        case MemObject::ioReading:
+        case Store::ioReading:
             os << 'r';
             break;
-        case MemObject::ioWriting:
+        case Store::ioWriting:
             os << 'v';
             break;
-        case MemObject::ioDone:
+        case Store::ioDone:
             os << 'o';
             break;
         }

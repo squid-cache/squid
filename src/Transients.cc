@@ -164,7 +164,7 @@ Transients::get(const cache_key *key)
     StoreEntry *e = new StoreEntry();
     e->createMemObject();
     e->mem_obj->xitTable.index = index;
-    e->mem_obj->xitTable.io = MemObject::ioReading;
+    e->mem_obj->xitTable.io = Store::ioReading;
     anchor->exportInto(*e);
     // keep read lock to receive updates from others
     return e;
@@ -250,7 +250,7 @@ Transients::completeWriting(const StoreEntry &e)
 {
     assert(e.hasTransients());
     assert(isWriter(e));
-    e.mem_obj->xitTable.io = MemObject::ioReading;
+    e.mem_obj->xitTable.io = Store::ioReading;
 }
 
 int
@@ -299,7 +299,7 @@ Transients::disconnect(StoreEntry &entry)
         map->closeForReading(xitTable.index);
         locals->at(xitTable.index) = nullptr;
         xitTable.index = -1;
-        xitTable.io = MemObject::ioDone;
+        xitTable.io = Store::ioDone;
     }
 }
 
@@ -324,13 +324,13 @@ Transients::markedForDeletion(const cache_key *key) const
 bool
 Transients::isReader(const StoreEntry &e) const
 {
-    return e.mem_obj && e.mem_obj->xitTable.io == MemObject::ioReading;
+    return e.mem_obj && e.mem_obj->xitTable.io == Store::ioReading;
 }
 
 bool
 Transients::isWriter(const StoreEntry &e) const
 {
-    return e.mem_obj && e.mem_obj->xitTable.io == MemObject::ioWriting;
+    return e.mem_obj && e.mem_obj->xitTable.io == Store::ioWriting;
 }
 
 /// initializes shared memory segment used by Transients
