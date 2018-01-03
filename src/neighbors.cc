@@ -643,7 +643,7 @@ neighborsUdpPing(HttpRequest * request,
 
                 if (p->icp.port == echo_port) {
                     debugs(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping");
-                    query = _icp_common_t::createMessage(ICP_DECHO, 0, url, reqnum, 0);
+                    query = icp_common_t::CreateMessage(ICP_DECHO, 0, url, reqnum, 0);
                     icpUdpSend(icpOutgoingConn->fd, p->in_addr, query, LOG_ICP_QUERY, 0);
                 } else {
                     flags = 0;
@@ -652,7 +652,7 @@ neighborsUdpPing(HttpRequest * request,
                         if (p->icp.version == ICP_VERSION_2)
                             flags |= ICP_FLAG_SRC_RTT;
 
-                    query = _icp_common_t::createMessage(ICP_QUERY, flags, url, reqnum, 0);
+                    query = icp_common_t::CreateMessage(ICP_QUERY, flags, url, reqnum, 0);
 
                     icpUdpSend(icpOutgoingConn->fd, p->in_addr, query, LOG_ICP_QUERY, 0.0);
                 }
@@ -1375,7 +1375,6 @@ peerCountMcastPeersStart(void *data)
     // XXX: Do not create lots of complex fake objects (while abusing their
     // APIs) to pass around a few basic data points like start_ping and ping!
     CachePeer *p = (CachePeer *)data;
-    ps_state *psstate;
     MemObject *mem;
     icp_common_t *query;
     int reqnum;
@@ -1390,7 +1389,7 @@ peerCountMcastPeersStart(void *data)
     HttpRequest *req = HttpRequest::FromUrl(url, mx);
     assert(req != nullptr);
     StoreEntry *fake = storeCreateEntry(url, url, RequestFlags(), Http::METHOD_GET);
-    psstate = new ps_state(nullptr);
+    const auto psstate = new PeerSelector(nullptr);
     psstate->request = req;
     HTTPMSGLOCK(psstate->request);
     psstate->entry = fake;
@@ -1404,7 +1403,7 @@ peerCountMcastPeersStart(void *data)
     mcastSetTtl(icpOutgoingConn->fd, p->mcast.ttl);
     p->mcast.id = mem->id;
     reqnum = icpSetCacheKey((const cache_key *)fake->key);
-    query = _icp_common_t::createMessage(ICP_QUERY, 0, url, reqnum, 0);
+    query = icp_common_t::CreateMessage(ICP_QUERY, 0, url, reqnum, 0);
     icpUdpSend(icpOutgoingConn->fd, p->in_addr, query, LOG_ICP_QUERY, 0);
     fake->ping_status = PING_WAITING;
     eventAdd("peerCountMcastPeersDone",
@@ -1418,7 +1417,7 @@ peerCountMcastPeersStart(void *data)
 static void
 peerCountMcastPeersDone(void *data)
 {
-    ps_state *psstate = (ps_state *)data;
+    const auto psstate = static_cast<PeerSelector*>(data);
     StoreEntry *fake = psstate->entry;
 
     if (cbdataReferenceValid(psstate->peerCountMcastPeerXXX)) {
@@ -1442,7 +1441,7 @@ peerCountMcastPeersDone(void *data)
 static void
 peerCountHandleIcpReply(CachePeer * p, peer_t, AnyP::ProtocolType proto, void *, void *data)
 {
-    ps_state *psstate = (ps_state *)data;
+    const auto psstate = static_cast<PeerSelector*>(data);
     StoreEntry *fake = psstate->entry;
     assert(fake);
     MemObject *mem = fake->mem_obj;

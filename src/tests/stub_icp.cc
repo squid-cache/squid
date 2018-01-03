@@ -13,15 +13,13 @@
 #define STUB_API "icp_*.cc"
 #include "tests/STUB.h"
 
-#ifdef __cplusplus
-_icp_common_t::_icp_common_t() STUB
-_icp_common_t::_icp_common_t(char *buf, unsigned int len) STUB
-void _icp_common_t::handleReply(char *buf, Ip::Address &from) STUB
-_icp_common_t *_icp_common_t::createMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad) STUB_RETVAL(NULL)
-icp_opcode _icp_common_t::getOpCode() const STUB_RETVAL(ICP_INVALID)
+icp_common_t::icp_common_t() STUB
+icp_common_t::icp_common_t(char *buf, unsigned int len) STUB
+void icp_common_t::handleReply(char *buf, Ip::Address &from) STUB
+icp_common_t *icp_common_t::CreateMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad) STUB_RETVAL(nullptr)
+icp_opcode icp_common_t::getOpCode() const STUB_RETVAL(ICP_INVALID)
 ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest) STUB
 ICPState::~ICPState() STUB
-#endif
 
 Comm::ConnectionPointer icpIncomingConn;
 Comm::ConnectionPointer icpOutgoingConn;

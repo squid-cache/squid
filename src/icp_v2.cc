@@ -73,15 +73,15 @@ Comm::ConnectionPointer icpIncomingConn = NULL;
 Comm::ConnectionPointer icpOutgoingConn = NULL;
 
 /* icp_common_t */
-_icp_common_t::_icp_common_t() :
+icp_common_t::icp_common_t() :
     opcode(ICP_INVALID), version(0), length(0), reqnum(0),
     flags(0), pad(0), shostid(0)
 {}
 
-_icp_common_t::_icp_common_t(char *buf, unsigned int len) :
+icp_common_t::icp_common_t(char *buf, unsigned int len) :
     opcode(ICP_INVALID), version(0), reqnum(0), flags(0), pad(0), shostid(0)
 {
-    if (len < sizeof(_icp_common_t)) {
+    if (len < sizeof(icp_common_t)) {
         /* mark as invalid */
         length = len + 1;
         return;
@@ -98,7 +98,7 @@ _icp_common_t::_icp_common_t(char *buf, unsigned int len) :
 }
 
 icp_opcode
-_icp_common_t::getOpCode() const
+icp_common_t::getOpCode() const
 {
     if (opcode > static_cast<char>(icp_opcode::ICP_END))
         return ICP_INVALID;
@@ -228,8 +228,8 @@ icpUdpSendQueue(int fd, void *)
     }
 }
 
-_icp_common_t *
-_icp_common_t::createMessage(
+icp_common_t *
+icp_common_t::CreateMessage(
     icp_opcode opcode,
     int flags,
     const char *url,
@@ -387,7 +387,7 @@ icpLogFromICPCode(icp_opcode opcode)
 void
 icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from)
 {
-    icp_common_t *reply = _icp_common_t::createMessage(opcode, flags, url, reqnum, pad);
+    icp_common_t *reply = icp_common_t::CreateMessage(opcode, flags, url, reqnum, pad);
     icpUdpSend(fd, from, reply, icpLogFromICPCode(opcode), 0);
 }
 
@@ -493,7 +493,7 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
 }
 
 void
-_icp_common_t::handleReply(char *buf, Ip::Address &from)
+icp_common_t::handleReply(char *buf, Ip::Address &from)
 {
     if (neighbors_do_private_keys && reqnum == 0) {
         debugs(12, DBG_CRITICAL, "icpHandleIcpV2: Neighbor " << from << " returned reqnum = 0");
