@@ -774,14 +774,11 @@ StoreEntry::adjustVary()
         }
 
 #endif
-        // XXX: "no write until key is public" but the key is already public!
-        // TODO: If calling makePublic() earlier works, then perhaps we should
-        // call replaceHttpReply(rep) to start writing, like most callers do?
-        pe->replaceHttpReply(rep, false); // no write until key is public
+        pe->replaceHttpReply(rep, false); // no write until timestampsSet()
 
         pe->timestampsSet();
 
-        pe->startWriting(); // after makePublic()
+        pe->startWriting(); // after timestampsSet()
 
         pe->complete();
 
