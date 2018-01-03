@@ -332,8 +332,8 @@ MemStore::get(const cache_key *key)
     if (copied)
         return e;
 
-    map->freeEntry(index); // do not let others into the same trap
     debugs(20, 3, "failed for " << *e);
+    map->freeEntry(index); // do not let others into the same trap
     destroyStoreEntry(static_cast<hash_link *>(e));
     return NULL;
 }
