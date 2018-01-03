@@ -315,7 +315,7 @@ Transients::disconnect(StoreEntry &entry)
         auto &xitTable = entry.mem_obj->xitTable;
         assert(map);
         map->closeForReading(xitTable.index);
-        locals->at(xitTable.index) = NULL;
+        locals->at(xitTable.index) = nullptr;
         xitTable.index = -1;
         xitTable.io = MemObject::ioDone;
     }
@@ -356,7 +356,6 @@ class TransientsRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    TransientsRr(): mapOwner(NULL) {}
     virtual void useConfig();
     virtual ~TransientsRr();
 
@@ -364,7 +363,7 @@ protected:
     virtual void create();
 
 private:
-    TransientsMap::Owner *mapOwner;
+    TransientsMap::Owner *mapOwner = nullptr;
 };
 
 RunnerRegistrationEntry(TransientsRr);
