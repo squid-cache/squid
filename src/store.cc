@@ -2141,7 +2141,7 @@ operator <<(std::ostream &os, const Store::IoStatus &io)
         os << 'r';
         break;
     case Store::ioWriting:
-        os << 'v';
+        os << 'w';
         break;
     case Store::ioDone:
         os << 'o';
