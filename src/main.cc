@@ -154,12 +154,14 @@ static int malloc_debug_level = 0;
 static volatile int do_reconfigure = 0;
 static volatile int do_rotate = 0;
 static volatile int do_shutdown = 0;
+static volatile int do_revive_kids = 0;
 static volatile int shutdown_status = 0;
 static volatile int do_handle_stopped_child = 0;
 
 static int RotateSignal = -1;
 static int ReconfigureSignal = -1;
 static int ShutdownSignal = -1;
+static int ReviveKidsSignal = -1;
 
 static void mainRotate(void);
 static void mainReconfigureStart(void);
@@ -732,6 +734,19 @@ reconfigure(int sig)
 #if !HAVE_SIGACTION
 
     signal(sig, reconfigure);
+#endif
+#endif
+}
+
+void
+master_revive_kids(int sig)
+{
+    ReviveKidsSignal = sig;
+    do_revive_kids = true;
+
+#if !_SQUID_WINDOWS_
+#if !HAVE_SIGACTION
+    signal(sig, master_revive_kids);
 #endif
 #endif
 }
@@ -1774,32 +1789,87 @@ mainStartScript(const char *prog)
     }
 }
 
-#endif /* _SQUID_WINDOWS_ */
+/// Initiates shutdown sequence. Shutdown ends when the last running kids stops.
+static void
+masterShutdownStart()
+{
+    if (AvoidSignalAction("shutdown", do_shutdown))
+        return;
+    debugs(1, 2, "received shutdown command");
+    shutting_down = 1;
+}
 
-#if !_SQUID_WINDOWS_
+/// Initiates reconfiguration sequence. See also: masterReconfigureFinish().
+static void
+masterReconfigureStart()
+{
+    if (AvoidSignalAction("reconfiguration", do_reconfigure))
+        return;
+    debugs(1, 2, "received reconfiguration command");
+    reconfiguring = 1;
+    TheKids.forgetAllFailures();
+    // TODO: hot-reconfiguration of the number of kids, kids revival delay,
+    // PID file location, etc.
+}
+
+/// Ends reconfiguration sequence started by masterReconfigureStart().
+static void
+masterReconfigureFinish()
+{
+    reconfiguring = 0;
+}
+
+/// Reacts to the kid revival alarm.
+static void
+masterReviveKids()
+{
+    if (AvoidSignalAction("kids revival", do_revive_kids))
+        return;
+    debugs(1, 2, "woke up after ~" << Config.hopelessKidRevivalDelay << "s");
+    // nothing to do here -- actual revival happens elsewhere in the main loop
+    // the alarm was needed just to wake us up so that we do a loop iteration
+}
+
 static void
 masterCheckAndBroadcastSignals()
 {
-    // if (do_reconfigure)
-    //     TODO: hot-reconfiguration of the number of kids and PID file location
-
     if (do_shutdown)
-        shutting_down = 1;
+        masterShutdownStart();
+    if (do_reconfigure)
+        masterReconfigureStart();
+    if (do_revive_kids)
+        masterReviveKids();
+
+    // emulate multi-step reconfiguration assumed by AvoidSignalAction()
+    if (reconfiguring)
+        masterReconfigureFinish();
 
     BroadcastSignalIfAny(DebugSignal);
     BroadcastSignalIfAny(RotateSignal);
     BroadcastSignalIfAny(ReconfigureSignal);
     BroadcastSignalIfAny(ShutdownSignal);
+    ReviveKidsSignal = -1; // alarms are not broadcasted
 }
-#endif
+
+/// Maintains the following invariant: An alarm should be scheduled when and
+/// only when there are hopeless kid(s) that cannot be immediately revived.
+static void
+masterMaintainKidRevivalSchedule()
+{
+    const auto nextCheckDelay = TheKids.forgetOldFailures();
+    assert(nextCheckDelay >= 0);
+    (void)alarm(static_cast<unsigned int>(nextCheckDelay)); // resets or cancels
+    if (nextCheckDelay)
+        debugs(1, 2, "will recheck hopeless kids in " << nextCheckDelay << " seconds");
+}
 
 static inline bool
 masterSignaled()
 {
-    return (DebugSignal > 0 || RotateSignal > 0 || ReconfigureSignal > 0 || ShutdownSignal > 0);
+    return (DebugSignal > 0 || RotateSignal > 0 || ReconfigureSignal > 0 ||
+            ShutdownSignal > 0 || ReviveKidsSignal > 0);
 }
 
-#if !_SQUID_WINDOWS_
 /// makes the caller a daemon process running in the background
 static void
 GoIntoBackground()
@@ -1815,6 +1885,23 @@ GoIntoBackground()
     }
     // child, running as a background daemon (or a failed-to-fork parent)
 }
+
+static void
+masterExit()
+{
+    if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
+        syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
+        exit(EXIT_FAILURE);
+    }
+
+    if (TheKids.allHopeless()) {
+        syslog(LOG_ALERT, "Exiting due to repeated, frequent failures");
+        exit(EXIT_FAILURE);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+
 #endif /* !_SQUID_WINDOWS_ */
 
 static void
@@ -1829,6 +1916,12 @@ watch_child(char *argv[])
 #endif
 
     int nullfd;
+
+    // TODO: zero values are not supported because they result in
+    // misconfigured SMP Squid instances running forever, endlessly
+    // restarting each dying kid.
+    if (Config.hopelessKidRevivalDelay <= 0)
+        throw TexcHere("hopeless_kid_revival_delay must be positive");
 
     enter_suid();
 
@@ -1892,6 +1985,7 @@ watch_child(char *argv[])
     squid_signal(SIGHUP, reconfigure, 0);
 
     squid_signal(SIGTERM, master_shutdown, 0);
+    squid_signal(SIGALRM, master_revive_kids, 0);
     squid_signal(SIGINT, master_shutdown, 0);
 #ifdef SIGTTIN
     squid_signal(SIGTTIN, master_shutdown, 0);
@@ -1903,6 +1997,8 @@ watch_child(char *argv[])
         // but we keep going in hope that user knows best
     }
     TheKids.init();
+
+    configured_once = 1;
 
     syslog(LOG_NOTICE, "Squid Parent: will start %d kids", (int)TheKids.count());
 
@@ -1951,33 +2047,16 @@ watch_child(char *argv[])
             waitFlag = WNOHANG;
         PidStatus status;
         pid = WaitForAnyPid(status, waitFlag);
+        getCurrentTime();
 
         // check for a stopped kid
-        Kid* kid = pid > 0 ? TheKids.find(pid) : NULL;
-        if (kid) {
+        if (Kid *kid = pid > 0 ? TheKids.find(pid) : nullptr)
             kid->stop(status);
-            if (kid->calledExit()) {
-                syslog(LOG_NOTICE,
-                       "Squid Parent: %s process %d exited with status %d",
-                       kid->name().termedBuf(),
-                       kid->getPid(), kid->exitStatus());
-            } else if (kid->signaled()) {
-                syslog(LOG_NOTICE,
-                       "Squid Parent: %s process %d exited due to signal %d with status %d",
-                       kid->name().termedBuf(),
-                       kid->getPid(), kid->termSignal(), kid->exitStatus());
-            } else {
-                syslog(LOG_NOTICE, "Squid Parent: %s process %d exited",
-                       kid->name().termedBuf(), kid->getPid());
-            }
-            if (kid->hopeless()) {
-                syslog(LOG_NOTICE, "Squid Parent: %s process %d will not"
-                       " be restarted due to repeated, frequent failures",
-                       kid->name().termedBuf(), kid->getPid());
-            }
-        } else if (pid > 0) {
+        else if (pid > 0)
             syslog(LOG_NOTICE, "Squid Parent: unknown child process %d exited", pid);
-        }
+
+        masterCheckAndBroadcastSignals();
+        masterMaintainKidRevivalSchedule();
 
         if (!TheKids.someRunning() && !TheKids.shouldRestartSome()) {
             leave_suid();
@@ -1985,21 +2064,8 @@ watch_child(char *argv[])
             // RegisteredRunner::startShutdown which promises a loop iteration.
             RunRegisteredHere(RegisteredRunner::finishShutdown);
             enter_suid();
-
-            if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
-                syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
-                exit(1);
-            }
-
-            if (TheKids.allHopeless()) {
-                syslog(LOG_ALERT, "Exiting due to repeated, frequent failures");
-                exit(1);
-            }
-
-            exit(0);
+            masterExit();
         }
-
-        masterCheckAndBroadcastSignals();
     }
 
     /* NOTREACHED */

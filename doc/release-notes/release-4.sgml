@@ -209,6 +209,10 @@ This section gives a thorough account of those changes in three categories:
 	<p>New directive to limit the size of a table used for sharing information
 	   about collapsible entries among SMP workers.
 
+	<tag>hopeless_kid_revival_delay</tag>
+	<p>New directive to set a cool-down delay reviving a child process if
+	   the process is encountering frequent deaths.
+
 	<tag>on_unsupported_protocol</tag>
 	<p>New directive to set the action performed when encountering strange
 	   protocol requests at the beginning of an accepted TCP connection.
