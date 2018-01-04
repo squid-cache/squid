@@ -169,3 +169,4 @@ base64_decode_final(struct base64_decode_ctx *ctx);
 #   define base64_encode_len(length) (BASE64_ENCODE_LENGTH(length)+BASE64_ENCODE_FINAL_LENGTH+1)
 
 #endif /* _SQUID_BASE64_H */
+

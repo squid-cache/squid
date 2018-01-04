@@ -325,3 +325,4 @@ base64_encode_final(struct base64_encode_ctx *ctx,
 }
 
 #endif /* !HAVE_NETTLE_BASE64_H || !HAVE_NETTLE34_BASE64 */
+
