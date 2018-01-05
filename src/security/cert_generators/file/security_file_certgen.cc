@@ -184,7 +184,10 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
     if (!request_message.parseRequest(certProperties, error))
         throw std::runtime_error("Error while parsing the crtd request: " + error);
 
-    Ssl::CertificateDb db(db_path, max_db_size, fs_block_size);
+    // TODO: create a DB object only once, instead re-allocating here on every call.
+    std::unique_ptr<Ssl::CertificateDb> db;
+    if (!db_path.empty() && max_db_size > 0)
+        db.reset(new Ssl::CertificateDb(db_path, max_db_size, fs_block_size));
 
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
@@ -193,7 +196,9 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
 
     bool dbFailed = false;
     try {
-        db.find(certKey, certProperties.mimicCert, cert, pkey);
+        if (db)
+            db->find(certKey, certProperties.mimicCert, cert, pkey);
+
     } catch (std::runtime_error &err) {
         dbFailed = true;
         error = err.what();
@@ -203,16 +208,13 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
         if (!Ssl::generateSslCertificate(cert, pkey, certProperties))
             throw std::runtime_error("Cannot create ssl certificate or private key.");
 
-        if (db.IsEnabledDiskStore()) {
-            try {
-                if (!db.addCertAndPrivateKey(certKey, cert, pkey, certProperties.mimicCert)) {
-                    dbFailed = true;
-                    error = "Cannot add certificate to db.";
-                }
-            } catch (const std::runtime_error &err) {
-                dbFailed = true;
-                error = err.what();
-            }
+        try {
+            if (db && !db->addCertAndPrivateKey(certKey, cert, pkey, certProperties.mimicCert))
+                throw std::runtime_error("Cannot add certificate to db.");
+
+        } catch (const std::runtime_error &err) {
+            dbFailed = true;
+            error = err.what();
         }
     }
 
