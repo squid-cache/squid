@@ -10,6 +10,7 @@
 #define SQUID_YESNONONE_H_
 
 #include "base/TextException.h"
+#include "Debug.h"
 
 // TODO: generalize / template to non-boolean option types
 // and make YesNoNone the boolean instance of the template

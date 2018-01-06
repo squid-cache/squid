@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "base/RunnersRegistry.h"
 #include "base/TextException.h"
+#include "Debug.h"
 #include <set>
 
 /// a collection of unique runners, in no particular order
