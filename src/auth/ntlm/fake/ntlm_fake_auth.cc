@@ -40,7 +40,6 @@
 #include "ntlmauth/support_bits.cci"
 
 #include <cctype>
-#include <chrono>
 #include <cstring>
 #if HAVE_CRYPT_H
 #include <crypt.h>
@@ -51,7 +50,6 @@
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#include <thread>
 
 /* A couple of harmless helper macros */
 #define SEND(X) {debug("sending '%s' to squid\n",X); printf(X "\n");}
@@ -69,7 +67,6 @@
 const char *authenticate_ntlm_domain = "WORKGROUP";
 int strip_domain_enabled = 0;
 int NTLM_packet_debug_enabled = 0;
-unsigned int response_delay = 0;
 
 /*
  * options:
@@ -83,10 +80,9 @@ static void
 usage(void)
 {
     fprintf(stderr,
-            "Usage: %s [-d] [-t N] [-v] [-h]\n"
+            "Usage: %s [-d] [-v] [-h]\n"
             " -d  enable debugging.\n"
             " -S  strip domain from username.\n"
-            " -t  timeout to delay responses.\n"
             " -v  enable verbose NTLM packet debugging.\n"
             " -h  this message\n\n",
             my_program_name);
@@ -98,7 +94,7 @@ process_options(int argc, char *argv[])
     int opt, had_error = 0;
 
     opterr = 0;
-    while (-1 != (opt = getopt(argc, argv, "hdvSt:"))) {
+    while (-1 != (opt = getopt(argc, argv, "hdvS"))) {
         switch (opt) {
         case 'd':
             debug_enabled = 1;
@@ -109,12 +105,6 @@ process_options(int argc, char *argv[])
             break;
         case 'S':
             strip_domain_enabled = 1;
-            break;
-        case 't':
-            if (!xstrtoui(optarg, nullptr, &response_delay, 0, 86400)) {
-                fprintf(stderr, "ERROR: invalid parameter value for -t '%s'", optarg);
-                usage();
-            }
             break;
         case 'h':
             usage();
@@ -181,10 +171,6 @@ main(int argc, char *argv[])
             hex_dump((unsigned char *)decodedBuf, decodedLen);
         } else
             debug("Got '%s' from Squid\n", buf);
-
-        if (response_delay > 0) {
-            std::this_thread::sleep_for(std::chrono::seconds(response_delay));
-        }
 
         if (strncmp(buf, "YR", 2) == 0) {
             char nonce[NTLM_NONCE_LEN];
