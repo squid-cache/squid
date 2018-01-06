@@ -186,7 +186,7 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
 
     // TODO: create a DB object only once, instead re-allocating here on every call.
     std::unique_ptr<Ssl::CertificateDb> db;
-    if (!db_path.empty() && max_db_size > 0)
+    if (!db_path.empty())
         db.reset(new Ssl::CertificateDb(db_path, max_db_size, fs_block_size));
 
     Security::CertPointer cert;
@@ -259,6 +259,10 @@ int main(int argc, char *argv[])
                 db_path = optarg;
                 break;
             case 'M':
+                // use of -M without -s is probably an admin mistake, so make it an error
+                if (db_path.empty()) {
+                    throw std::runtime_error("Error -M option requires an -s parameter be set first.");
+                }
                 if (!parseBytesOptionValue(&max_db_size, optarg)) {
                     throw std::runtime_error("Error when parsing -M options value");
                 }
@@ -278,14 +282,23 @@ int main(int argc, char *argv[])
             }
         }
 
+        // when -s is used, -M is required
+        if (!db_path.empty() && max_db_size == 0)
+            throw std::runtime_error("security_file_certgen is missing the required parameter. There should be -s and -M parameters together, or neither used.");
+
         if (create_new_db) {
+            // when -c is used, -s is required (implying also -M, which is checked above)
+            if (db_path.empty())
+                throw std::runtime_error("security_file_certgen is missing the required parameter. There should be -s and -M parameters when -c is used.");
+
             std::cout << "Initialization SSL db..." << std::endl;
             Ssl::CertificateDb::Create(db_path);
             std::cout << "Done" << std::endl;
             exit(EXIT_SUCCESS);
         }
 
-        if (!db_path.empty() || max_db_size != 0) {
+        // only do filesystem checks when a path (-s) is given
+        if (!db_path.empty()) {
             if (fs_block_size == 0) {
                 struct statvfs sfs;
 

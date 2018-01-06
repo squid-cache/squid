@@ -257,10 +257,7 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
        max_db_size(aMax_db_size),
        fs_block_size((aFs_block_size ? aFs_block_size : 2048)),
        dbLock(db_full)
-{
-    if (db_path.empty() || !max_db_size)
-        throw std::runtime_error("security_file_certgen is missing the required parameter. There should be -s and -M parameters together.");
-}
+{}
 
 bool
 Ssl::CertificateDb::find(std::string const &key, const Security::CertPointer &expectedOrig, Security::CertPointer &cert, Security::PrivateKeyPointer &pkey)
