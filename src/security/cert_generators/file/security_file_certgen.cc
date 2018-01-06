@@ -209,7 +209,17 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
             throw std::runtime_error("Cannot create ssl certificate or private key.");
 
         try {
-            if (db && !db->addCertAndPrivateKey(certKey, cert, pkey, certProperties.mimicCert))
+            /* XXX: this !dbFailed condition prevents the helper fixing DB issues
+               by adding cleanly generated certs. Which is not consistent with other
+               data caches used by Squid - they purge broken entries and allow clean
+               entries to later try and fix the issue.
+               We leave it in place now only to avoid breaking existing installations
+               behaviour with version 1.x of the helper.
+
+               TODO: remove the !dbFailed condition when fixing the CertificateDb
+                    object lifecycle and formally altering the helper behaviour.
+            */
+            if (!dbFailed && db && !db->addCertAndPrivateKey(certKey, cert, pkey, certProperties.mimicCert))
                 throw std::runtime_error("Cannot add certificate to db.");
 
         } catch (const std::runtime_error &err) {
