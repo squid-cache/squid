@@ -294,7 +294,7 @@ int main(int argc, char *argv[])
 
         // when -s is used, -M is required
         if (!db_path.empty() && max_db_size == 0)
-            throw std::runtime_error("security_file_certgen is missing the required parameter. There should be -s and -M parameters together, or neither used.");
+            throw std::runtime_error("security_file_certgen -s requires an -M parameter");
 
         if (create_new_db) {
             // when -c is used, -s is required (implying also -M, which is checked above)
