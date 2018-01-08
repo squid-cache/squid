@@ -21,7 +21,7 @@ typedef uint32_t SourceLocationId;
 typedef SourceLocationId FileNameHasher(const char *fileName);
 
 /// a caching proxy for `hasher` results
-typedef SourceLocationId FileNameHashCacher(const char *fileName, const FileNameHasher hasher);
+typedef SourceLocationId FileNameHashCacher(const char *fileName, FileNameHasher hasher);
 
 static FileNameHashCacher UnitFileNameHashCacher;
 
@@ -60,7 +60,7 @@ operator <<(std::ostream &os, const SourceLocation &location)
 /// SourceLocation::id() speed optimization hack: Caches `hasher` results. The
 /// cache capacity is one filename hash. Each translation unit gets one cache.
 static SourceLocationId
-UnitFileNameHashCacher(const char *fileName, const FileNameHasher hasher)
+UnitFileNameHashCacher(const char *fileName, FileNameHasher hasher)
 {
     static SourceLocationId cachedHash = 0;
     static const char *hashedFilename = 0;
