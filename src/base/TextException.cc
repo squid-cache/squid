@@ -37,7 +37,7 @@ std::ostream &
 TextException::print(std::ostream &os) const
 {
     os << std::runtime_error::what() << "\n" <<
-        "    exception location: " << where << "\n";
+       "    exception location: " << where << "\n";
     // TODO: error_detail: " << (ERR_DETAIL_EXCEPTION_START+id()) << "\n";
     return os;
 }
@@ -77,3 +77,4 @@ CurrentException(std::ostream &os)
     }
     return os;
 }
+

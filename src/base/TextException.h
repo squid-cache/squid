@@ -23,7 +23,7 @@ public:
     TextException(const char *message, const SourceLocation &location):
         std::runtime_error(message),
         where(location)
-        {}
+    {}
 
     TextException(SBuf message, const SourceLocation &location);
 
