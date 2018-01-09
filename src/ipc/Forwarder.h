@@ -45,7 +45,6 @@ protected:
     virtual void swanSong();
     virtual bool doneAll() const;
 
-    virtual void cleanup(); ///< perform cleanup actions
     virtual void handleError();
     virtual void handleTimeout();
     virtual void handleException(const std::exception& e);

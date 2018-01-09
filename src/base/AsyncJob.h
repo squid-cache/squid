@@ -35,7 +35,6 @@ public:
 
 public:
     AsyncJob(const char *aTypeName);
-    virtual ~AsyncJob();
 
     /// starts a freshly created job (i.e., makes the job asynchronous)
     static Pointer Start(AsyncJob *job);
@@ -64,6 +63,9 @@ public:
     virtual void callException(const std::exception &e);
 
 protected:
+    // external destruction prohibited to ensure swanSong() is called
+    virtual ~AsyncJob();
+
     const char *stopReason; ///< reason for forcing done() to be true
     const char *typeName; ///< kid (leaf) class name, for debugging
     AsyncCall::Pointer inCall; ///< the asynchronous call being handled, if any

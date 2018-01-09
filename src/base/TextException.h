@@ -68,5 +68,16 @@ std::ostream &CurrentException(std::ostream &);
 /// Like assert() but throws an exception instead of aborting the process.
 #define Must(condition) Must2((condition), "check failed: " #condition)
 
+/// Reports and swallows all exceptions to prevent compiler warnings and runtime
+/// errors related to throwing class destructors. Should be used for most dtors.
+#define SWALLOW_EXCEPTIONS(code) \
+    try { \
+        code \
+    } catch (...) { \
+        debugs(0, DBG_IMPORTANT, "BUG: ignoring exception;\n" << \
+               "    bug location: " << Here() << "\n" << \
+               "    ignored exception: " << CurrentException); \
+    }
+
 #endif /* SQUID__TEXTEXCEPTION_H */
 

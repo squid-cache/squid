@@ -38,7 +38,7 @@ public:
 
 protected:
     /* Ipc::Forwarder API */
-    virtual void cleanup(); ///< perform cleanup actions
+    virtual void swanSong();
     virtual void handleError();
     virtual void handleTimeout();
     virtual void handleException(const std::exception& e);
