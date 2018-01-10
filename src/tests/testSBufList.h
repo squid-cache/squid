@@ -11,8 +11,6 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "sbuf/OutOfBoundsException.h"
-
 class testSBufList : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testSBufList );

@@ -97,12 +97,6 @@ void
 Debug::parseOptions(char const *)
 {}
 
-const char*
-SkipBuildPrefix(const char* path)
-{
-    return path;
-}
-
 Debug::Context *Debug::Current = nullptr;
 
 Debug::Context::Context(const int aSection, const int aLevel):
