@@ -27,7 +27,7 @@ TextException::TextException(SBuf message, const SourceLocation &location):
     TextException(message.c_str(), location)
 {}
 
-TextException::~TextException()
+TextException::~TextException() throw()
 {
     if (WhatStrings_)
         WhatStrings_->erase(this); // there only if what() has been called
