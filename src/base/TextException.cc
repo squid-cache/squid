@@ -18,7 +18,7 @@
 typedef std::runtime_error WhatString;
 
 /// a collection of strings indexed by pointers to their creator objects
-typedef std::unordered_map<const void*, WhatString> WhatStrings;
+typedef std::unordered_multimap<const void*, WhatString> WhatStrings;
 
 /// requested what() strings of alive TextException objects
 static WhatStrings *WhatStrings_ = nullptr;
@@ -52,8 +52,7 @@ TextException::what() const throw()
     // extend result.c_str() lifetime to this object lifetime
     if (!WhatStrings_)
         WhatStrings_ = new WhatStrings;
-    else
-        WhatStrings_->erase(this); // keep the cache fresh; *this could change
+    // *this could change, but we must preserve old results for they may be used
     WhatStrings_->emplace(std::make_pair(this, result));
 
     return result.what();
