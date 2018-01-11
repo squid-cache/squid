@@ -1369,7 +1369,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     } else if (request->extacl_user.size() > 0 && request->extacl_passwd.size() > 0) {
         struct base64_encode_ctx ctx;
         base64_encode_init(&ctx);
-        uint8_t base64buf[base64_encode_len(MAX_LOGIN_SZ)];
+        char base64buf[base64_encode_len(MAX_LOGIN_SZ)];
         size_t resultLen = base64_encode_update(&ctx, base64buf, request->extacl_user.size(), reinterpret_cast<const uint8_t*>(request->extacl_user.rawBuf()));
         resultLen += base64_encode_update(&ctx, base64buf+resultLen, 1, reinterpret_cast<const uint8_t*>(":"));
         resultLen += base64_encode_update(&ctx, base64buf+resultLen, request->extacl_passwd.size(), reinterpret_cast<const uint8_t*>(request->extacl_passwd.rawBuf()));
@@ -1529,7 +1529,7 @@ void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, M
 
     if (value) {
         if (TheConfig.client_username_encode) {
-            uint8_t base64buf[base64_encode_len(MAX_LOGIN_SZ)];
+            char base64buf[base64_encode_len(MAX_LOGIN_SZ)];
             size_t resultLen = base64_encode_update(&ctx, base64buf, strlen(value), reinterpret_cast<const uint8_t*>(value));
             resultLen += base64_encode_final(&ctx, base64buf+resultLen);
             buf.appendf("%s: %.*s\r\n", TheConfig.client_username_header, (int)resultLen, base64buf);

@@ -100,6 +100,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-aio \
 	--without-dl \
 	--without-large-files \
+	--without-nettle \
 	--without-valgrind-debug \
 	--without-ipv6-split-stack \
 	--without-dns-cname \
