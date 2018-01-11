@@ -926,6 +926,10 @@ Ssl::verifySslCertificate(Security::ContextPointer &ctx, CertificateProperties c
 void
 Ssl::setClientSNI(SSL *ssl, const char *fqdn)
 {
+    const Ip::Address test(fqdn);
+    if (!test.isAnyAddr())
+        return; // raw IP is inappropriate for SNI
+
     //The SSL_CTRL_SET_TLSEXT_HOSTNAME is a openssl macro which indicates
     // if the TLS servername extension (SNI) is enabled in openssl library.
 #if defined(SSL_CTRL_SET_TLSEXT_HOSTNAME)
