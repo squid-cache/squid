@@ -75,7 +75,7 @@ void readCertChainAndPrivateKeyFromFiles(Security::CertPointer &, Security::Priv
 int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data)) STUB_RETVAL(0)
 bool checkX509ServerValidity(X509 *cert, const char *server) STUB_RETVAL(false)
 int asn1timeToString(ASN1_TIME *tm, char *buf, int len) STUB_RETVAL(0)
-bool setClientSNI(SSL *ssl, const char *fqdn) STUB_RETVAL(false)
+void setClientSNI(SSL *ssl, const char *fqdn) STUB
 } //namespace Ssl
 
 #endif
