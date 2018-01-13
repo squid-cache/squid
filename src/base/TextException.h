@@ -11,7 +11,7 @@
 
 #include "base/Here.h"
 
-#include <exception>
+#include <stdexcept>
 
 class SBuf;
 
