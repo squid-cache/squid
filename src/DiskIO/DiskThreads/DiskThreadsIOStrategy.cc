@@ -225,7 +225,7 @@ DiskThreadsIOStrategy::newFile (char const *path)
         return NULL;
     }
 
-    return new DiskThreadsDiskFile (path, this);
+    return new DiskThreadsDiskFile(path);
 }
 
 bool
