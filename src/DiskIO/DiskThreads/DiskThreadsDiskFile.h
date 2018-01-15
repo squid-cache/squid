@@ -21,7 +21,7 @@ class DiskThreadsDiskFile : public DiskFile
     CBDATA_CLASS(DiskThreadsDiskFile);
 
 public:
-    DiskThreadsDiskFile(char const *path, DiskThreadsIOStrategy *);
+    DiskThreadsDiskFile(char const *path);
     ~DiskThreadsDiskFile();
     virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
     virtual void create(int flags, mode_t mode, RefCount<IORequestor> callback);
@@ -51,11 +51,10 @@ private:
     static DWCB WriteDone;
 #endif
 
-    int fd;
-    bool errorOccured;
-    char const *path_;
-    DiskThreadsIOStrategy *IO;
-    size_t inProgressIOs;
+    int fd = -1;
+    bool errorOccured = false;
+    char const *path_ = nullptr;
+    size_t inProgressIOs = 0;
     static AIOCB OpenDone;
     void openDone(int fd, const char *buf, int aio_return, int aio_errno);
     RefCount<IORequestor> ioRequestor;
