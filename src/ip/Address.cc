@@ -349,13 +349,6 @@ Ip::Address::getReverseString(char buf[MAX_IPSTRLEN], int show_type) const
     return false;
 }
 
-Ip::Address&
-Ip::Address::operator =(const Ip::Address &s)
-{
-    memmove(&mSocketAddr_, &s.mSocketAddr_, sizeof(struct sockaddr_in6));
-    return *this;
-};
-
 Ip::Address::Address(const char*s)
 {
     setEmpty();
@@ -490,12 +483,6 @@ Ip::Address::operator =(struct in6_addr const &s)
 
     return *this;
 };
-
-Ip::Address::Address(const Ip::Address &s)
-{
-    setEmpty();
-    operator=(s);
-}
 
 Ip::Address::Address(const struct hostent &s)
 {
