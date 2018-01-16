@@ -244,5 +244,28 @@ operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
         return os << "[nil]";
 }
 
+/// std::ostream manipulator to print integers as hex numbers prefixed by 0x
+template <class Integer>
+class AsHex
+{
+public:
+    explicit AsHex(const Integer n): raw(n) {}
+    Integer raw; ///< the integer to print
+};
+
+template <class Integer>
+inline std::ostream &
+operator <<(std::ostream &os, const AsHex<Integer> number)
+{
+    const auto oldFlags = os.flags();
+    os << std::hex << std::showbase << number.raw;
+    os.setf(oldFlags);
+    return os;
+}
+
+/// a helper to ease AsHex object creation
+template <class Integer>
+inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
+
 #endif /* SQUID_DEBUG_H */
 

@@ -30,6 +30,9 @@
 #include "acl/DestinationDomain.h"
 #include "acl/DestinationIp.h"
 #include "acl/DomainData.h"
+#if USE_LIBNETFILTERCONNTRACK
+#include "acl/ConnMark.h"
+#endif
 #if USE_AUTH
 #include "acl/ExtUser.h"
 #endif
@@ -152,6 +155,10 @@ Acl::Init()
     RegisterMaker("note", [](TypeName name)->ACL* { return new ACLStrategised<NotePairs::Entry*>(new ACLNoteData, new ACLNoteStrategy, name); });
     RegisterMaker("has", [](TypeName name)->ACL* {return new ACLStrategised<ACLChecklist *>(new ACLHasComponentData, new ACLHasComponentStrategy, name); });
     RegisterMaker("transaction_initiator", [](TypeName name)->ACL* {return new Acl::TransactionInitiator(name);});
+
+#if USE_LIBNETFILTERCONNTRACK
+    RegisterMaker("clientside_mark", [](TypeName name)->ACL* { return new Acl::ConnMark; });
+#endif
 
 #if USE_OPENSSL
     RegisterMaker("ssl_error", [](TypeName name)->ACL* { return new ACLStrategised<const Security::CertErrors *>(new ACLSslErrorData, new ACLSslErrorStrategy, name); });
