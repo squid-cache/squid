@@ -81,8 +81,8 @@ void getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde);
 * Called by FwdState::dispatch if QOS options are enabled or by
 * Comm::TcpAcceptor::acceptOne
 *
-* @param conn      Pointer to connection to get mark for
-* @param conn_type Specifies connection type (incoming or outgoing)
+* @param conn    Pointer to connection to get mark for
+* @param connDir Specifies connection type (incoming or outgoing)
 */
 nfmark_t getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const ConnectionDirection connDir);
 
