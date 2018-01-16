@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -78,13 +78,14 @@ IpcIoFile::IpcIoFile(char const *aDb):
 
 IpcIoFile::~IpcIoFile()
 {
-    if (diskId >= 0) {
-        const IpcIoFilesMap::iterator i = IpcIoFiles.find(diskId);
-        // XXX: warn and continue?
-        Must(i != IpcIoFiles.end());
-        Must(i->second == this);
-        IpcIoFiles.erase(i);
-    }
+    SWALLOW_EXCEPTIONS({
+        if (diskId >= 0) {
+            const auto i = IpcIoFiles.find(diskId);
+            Must(i != IpcIoFiles.end());
+            Must(i->second == this);
+            IpcIoFiles.erase(i);
+        }
+    });
 }
 
 void

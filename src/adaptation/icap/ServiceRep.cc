@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -49,9 +49,11 @@ Adaptation::Icap::ServiceRep::ServiceRep(const ServiceConfigPointer &svcCfg):
 
 Adaptation::Icap::ServiceRep::~ServiceRep()
 {
-    delete theIdleConns;
-    Must(!theOptionsFetcher);
-    delete theOptions;
+    SWALLOW_EXCEPTIONS({
+        delete theIdleConns;
+        Must(!theOptionsFetcher);
+        delete theOptions;
+    });
 }
 
 void

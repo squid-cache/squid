@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,8 +26,7 @@
 
 CBDATA_CLASS_INIT(DiskThreadsDiskFile);
 
-DiskThreadsDiskFile::DiskThreadsDiskFile(char const *aPath, DiskThreadsIOStrategy *anIO):fd(-1), errorOccured (false), IO(anIO),
-    inProgressIOs (0)
+DiskThreadsDiskFile::DiskThreadsDiskFile(char const *aPath)
 {
     assert(aPath);
     debugs(79, 3, "UFSFile::UFSFile: " << aPath);

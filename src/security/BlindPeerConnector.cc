@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,11 +47,13 @@ Security::BlindPeerConnector::initialize(Security::SessionPointer &serverSession
         // const loss is okay here, ssl_ex_index_server is only read and not assigned a destructor
         SBuf *host = new SBuf(peer->secure.sslDomain);
         SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, host);
+        Ssl::setClientSNI(serverSession.get(), host->c_str());
 
         Security::SetSessionResumeData(serverSession, peer->sslSession);
     } else {
         SBuf *hostName = new SBuf(request->url.host());
         SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, (void*)hostName);
+        Ssl::setClientSNI(serverSession.get(), hostName->c_str());
 #endif
     }
 

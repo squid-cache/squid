@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -714,6 +714,7 @@ Ssl::IcapPeerConnector::initialize(Security::SessionPointer &serverSession)
 #if USE_OPENSSL
     SBuf *host = new SBuf(icapService->cfg().secure.sslDomain);
     SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, host);
+    setClientSNI(serverSession.get(), host->c_str());
 
     ACLFilledChecklist *check = static_cast<ACLFilledChecklist *>(SSL_get_ex_data(serverSession.get(), ssl_ex_index_cert_error_check));
     if (check)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #ifndef SQUID_DEBUG_H
 #define SQUID_DEBUG_H
 
+#include "base/Here.h"
 // XXX should be mem/forward.h once it removes dependencies on typedefs.h
 #include "mem/AllocatorProxy.h"
 
@@ -111,9 +112,6 @@ void StopUsingDebugLog();
 /// a hack for low-level file descriptor manipulations in ipcCreate()
 void ResyncDebugLog(FILE *newDestination);
 
-size_t BuildPrefixInit();
-const char * SkipBuildPrefix(const char* path);
-
 /* Debug stream
  *
  * Unit tests can enable full debugging to stderr for one
@@ -127,7 +125,7 @@ const char * SkipBuildPrefix(const char* path);
             std::ostream &_dbo = Debug::Start((SECTION), _dbg_level); \
             if (_dbg_level > DBG_IMPORTANT) { \
                 _dbo << (SECTION) << ',' << _dbg_level << "| " \
-                     << SkipBuildPrefix(__FILE__)<<"("<<__LINE__<<") "<<__FUNCTION__<<": "; \
+                     << Here() << ": "; \
             } \
             _dbo << CONTENT; \
             Debug::Finish(); \

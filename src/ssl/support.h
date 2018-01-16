@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -320,9 +320,8 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
    \ingroup ServerProtocolSSLAPI
    * Sets the hostname for the Server Name Indication (SNI) TLS extension
    * if supported by the used openssl toolkit.
-   \return true if SNI set false otherwise
 */
-bool setClientSNI(SSL *ssl, const char *fqdn);
+void setClientSNI(SSL *ssl, const char *fqdn);
 
 /**
   \ingroup ServerProtocolSSLAPI

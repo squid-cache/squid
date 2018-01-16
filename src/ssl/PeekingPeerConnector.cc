@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -186,17 +186,12 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             // Set client SSL options
             SSL_set_options(serverSession.get(), ::Security::ProxyOutgoingConfig.parsedOptions);
 
-            // Use SNI TLS extension only when we connect directly
-            // to the origin server and we know the server host name.
-            const char *sniServer = NULL;
             const bool redirected = request->flags.redirected && ::Config.onoff.redir_rewrites_host;
-            if (!hostName || redirected)
-                sniServer = !request->url.hostIsNumeric() ? request->url.host() : NULL;
-            else
-                sniServer = hostName->c_str();
-
+            const char *sniServer = (!hostName || redirected) ?
+                                    request->url.host() :
+                                    hostName->c_str();
             if (sniServer)
-                Ssl::setClientSNI(serverSession.get(), sniServer);
+                setClientSNI(serverSession.get(), sniServer);
         }
 
         if (Ssl::ServerBump *serverBump = csd->serverBump()) {

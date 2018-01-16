@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,7 +38,7 @@ public:
 
 protected:
     /* Ipc::Forwarder API */
-    virtual void cleanup(); ///< perform cleanup actions
+    virtual void swanSong();
     virtual void handleError();
     virtual void handleTimeout();
     virtual void handleException(const std::exception& e);

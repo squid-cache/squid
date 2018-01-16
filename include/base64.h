@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -169,3 +169,4 @@ base64_decode_final(struct base64_decode_ctx *ctx);
 #   define base64_encode_len(length) (BASE64_ENCODE_LENGTH(length)+BASE64_ENCODE_FINAL_LENGTH+1)
 
 #endif /* _SQUID_BASE64_H */
+

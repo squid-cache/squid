@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,9 +12,9 @@
 #define SQUID_SBUF_H
 
 #include "base/InstanceId.h"
+#include "base/TextException.h"
 #include "Debug.h"
 #include "globals.h"
-#include "sbuf/Exceptions.h"
 #include "sbuf/forward.h"
 #include "sbuf/MemBlob.h"
 #include "sbuf/Stats.h"
@@ -233,7 +233,7 @@ public:
 
     /** random-access read to any char within the SBuf.
      *
-     * \throw OutOfBoundsException when access is out of bounds
+     * \throw std::exception when access is out of bounds
      * \note bounds is 0 <= pos < length(); caller must pay attention to signedness
      */
     char at(size_type pos) const {checkAccessBounds(pos); return operator[](pos);}
@@ -242,7 +242,7 @@ public:
      *
      * \param pos the position to be overwritten
      * \param toset the value to be written
-     * \throw OutOfBoundsException when pos is of bounds
+     * \throw std::exception when pos is of bounds
      * \note bounds is 0 <= pos < length(); caller must pay attention to signedness
      * \note performs a copy-on-write if needed.
      */
@@ -407,11 +407,10 @@ public:
     /** Get the length of the SBuf, as a signed integer
      *
      * Compatibility function for printf(3) which requires a signed int
-     * \throw SBufTooBigException if the SBuf is too big for a signed integer
+     * \throw std::exception if buffer length does not fit a signed integer
      */
     int plength() const {
-        if (length()>INT_MAX)
-            throw SBufTooBigException(__FILE__, __LINE__);
+        Must(length() <= INT_MAX);
         return static_cast<int>(length());
     }
 
@@ -426,7 +425,7 @@ public:
      * After the reserveSpace request, the SBuf is guaranteed to have at
      * least minSpace bytes of unused backing store following the currently
      * used portion and single ownership of the backing store.
-     * \throw SBufTooBigException if the user tries to allocate too big a SBuf
+     * \throw std::exception if the user tries to allocate a too big SBuf
      */
     void reserveSpace(size_type minSpace) {
         Must(minSpace <= maxSize);
@@ -440,7 +439,7 @@ public:
      * minCapacity bytes of total buffer size, including the currently-used
      * portion; it is also guaranteed that after this call this SBuf
      * has unique ownership of the underlying memory store.
-     * \throw SBufTooBigException if the user tries to allocate too big a SBuf
+     * \throw std::exception if the user tries to allocate a too big SBuf
      */
     void reserveCapacity(size_type minCapacity);
 
@@ -652,7 +651,7 @@ private:
 
     void cow(size_type minsize = npos);
 
-    void checkAccessBounds(size_type pos) const;
+    void checkAccessBounds(const size_type pos) const { Must(pos < length()); }
 
     /** Exports a writable pointer to the SBuf internal storage.
      * \warning Use with EXTREME caution, this is a dangerous operation.
@@ -669,7 +668,7 @@ private:
      *       buffer ownership. It is instead optimized for a one writer
      *       (appender), many readers scenario by avoiding unnecessary
      *       copying and allocations.
-     * \throw SBufTooBigException if the user tries to allocate too big a SBuf
+     * \throw std::exception if the user tries to allocate a too big SBuf
      */
     char *rawSpace(size_type minSize);
 

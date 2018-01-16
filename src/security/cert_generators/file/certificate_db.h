@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -103,8 +103,6 @@ public:
     /// Save certificate to disk.
     bool addCertAndPrivateKey(std::string const & useKey, const Security::CertPointer & cert, const Security::PrivateKeyPointer & pkey, const Security::CertPointer &orig);
 
-    bool IsEnabledDiskStore() const; ///< Check enabled of dist store.
-
     /// Create and initialize a database  under the  db_path
     static void Create(std::string const & db_path);
     /// Check the database stored under the db_path.
@@ -187,8 +185,6 @@ private:
     const size_t max_db_size; ///< Max size of db.
     const size_t fs_block_size; ///< File system block size.
     mutable Lock dbLock;  ///< protects the database file
-
-    bool enabled_disk_store; ///< The storage on the disk is enabled.
 };
 
 } // namespace Ssl

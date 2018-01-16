@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -96,12 +96,6 @@ _db_print_stderr(const char *format, va_list args)
 void
 Debug::parseOptions(char const *)
 {}
-
-const char*
-SkipBuildPrefix(const char* path)
-{
-    return path;
-}
 
 Debug::Context *Debug::Current = nullptr;
 

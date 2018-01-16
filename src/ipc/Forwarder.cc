@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,20 +27,13 @@ Ipc::Forwarder::Forwarder(Request::Pointer aRequest, double aTimeout):
     AsyncJob("Ipc::Forwarder"),
     request(aRequest), timeout(aTimeout)
 {
-    debugs(54, 5, HERE);
 }
 
 Ipc::Forwarder::~Forwarder()
 {
-    debugs(54, 5, HERE);
-    Must(request->requestId == 0);
-    cleanup();
-}
-
-/// perform cleanup actions
-void
-Ipc::Forwarder::cleanup()
-{
+    SWALLOW_EXCEPTIONS({
+        Must(request->requestId == 0);
+    });
 }
 
 void
@@ -79,7 +72,6 @@ Ipc::Forwarder::swanSong()
         DequeueRequest(request->requestId);
         request->requestId = 0;
     }
-    cleanup();
 }
 
 bool

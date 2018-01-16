@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,8 +22,6 @@ class LocalSearch : public StoreSearch
     CBDATA_CLASS(LocalSearch);
 
 public:
-    LocalSearch();
-
     /* StoreSearch API */
     virtual void next(void (callback)(void *cbdata), void *cbdata) override;
     virtual bool next() override;
@@ -33,10 +31,8 @@ public:
 
 private:
     void copyBucket();
-    void (*callback)(void *cbdata);
-    void *cbdata;
-    bool _done;
-    int bucket;
+    bool _done = false;
+    int bucket = 0;
     std::vector<StoreEntry *> entries;
 };
 
@@ -49,13 +45,6 @@ Store::NewLocalSearch()
 {
     return new LocalSearch;
 }
-
-Store::LocalSearch::LocalSearch() :
-    callback(NULL),
-    cbdata(NULL),
-    _done(false),
-    bucket(0)
-{}
 
 void
 Store::LocalSearch::next(void (aCallback)(void *), void *aCallbackData)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,7 +45,6 @@ protected:
     virtual void swanSong();
     virtual bool doneAll() const;
 
-    virtual void cleanup(); ///< perform cleanup actions
     virtual void handleError();
     virtual void handleTimeout();
     virtual void handleException(const std::exception& e);

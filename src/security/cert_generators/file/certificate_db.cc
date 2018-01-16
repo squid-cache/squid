@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -256,13 +256,8 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
        size_full(aDb_path + "/" + size_file),
        max_db_size(aMax_db_size),
        fs_block_size((aFs_block_size ? aFs_block_size : 2048)),
-       dbLock(db_full),
-       enabled_disk_store(true) {
-    if (db_path.empty() && !max_db_size)
-        enabled_disk_store = false;
-    else if ((db_path.empty() && max_db_size) || (!db_path.empty() && !max_db_size))
-        throw std::runtime_error("security_file_certgen is missing the required parameter. There should be -s and -M parameters together.");
-}
+       dbLock(db_full)
+{}
 
 bool
 Ssl::CertificateDb::find(std::string const &key, const Security::CertPointer &expectedOrig, Security::CertPointer &cert, Security::PrivateKeyPointer &pkey)
@@ -630,10 +625,6 @@ bool Ssl::CertificateDb::hasRows() const
 #endif
         return false;
     return true;
-}
-
-bool Ssl::CertificateDb::IsEnabledDiskStore() const {
-    return enabled_disk_store;
 }
 
 bool

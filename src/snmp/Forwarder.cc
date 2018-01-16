@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,7 +35,7 @@ Snmp::Forwarder::Forwarder(const Pdu& aPdu, const Session& aSession, int aFd,
 
 /// removes our cleanup handler of the client connection socket
 void
-Snmp::Forwarder::cleanup()
+Snmp::Forwarder::swanSong()
 {
     if (fd >= 0) {
         if (closer != NULL) {
@@ -44,6 +44,7 @@ Snmp::Forwarder::cleanup()
         }
         fd = -1;
     }
+    Ipc::Forwarder::swanSong();
 }
 
 /// called when the client socket gets closed by some external force

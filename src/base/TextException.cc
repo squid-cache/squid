@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,93 +8,72 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "Debug.h"
 #include "sbuf/SBuf.h"
-#include "util.h"
 
-TextException::TextException()
-{
-    message=NULL;
-    theFileName=NULL;
-    theLineNo=0;
-    theId=0;
-}
+#include <iostream>
+#include <sstream>
+#include <unordered_map>
 
-TextException::TextException(const TextException& right) :
-    message((right.message?xstrdup(right.message):NULL)), theFileName(right.theFileName), theLineNo(right.theLineNo), theId(right.theId)
-{
-}
+/// a standard CoW string; avoids noise and circular dependencies of SBuf
+typedef std::runtime_error WhatString;
 
-TextException::TextException(const char *aMsg, const char *aFileName, int aLineNo, unsigned int anId):
-    message(aMsg?xstrdup(aMsg):NULL), theFileName(aFileName), theLineNo(aLineNo), theId(anId)
-{}
+/// a collection of strings indexed by pointers to their creator objects
+typedef std::unordered_multimap<const void*, WhatString> WhatStrings;
 
-TextException::TextException(SBuf msg, const char *aFileName, int aLineNo, unsigned int anId):
-    TextException(msg.c_str(), aFileName, aLineNo, anId)
+/// requested what() strings of alive TextException objects
+static WhatStrings *WhatStrings_ = nullptr;
+
+TextException::TextException(SBuf message, const SourceLocation &location):
+    TextException(message.c_str(), location)
 {}
 
 TextException::~TextException() throw()
 {
-    if (message) xfree(message);
+    if (WhatStrings_)
+        WhatStrings_->erase(this); // there only if what() has been called
 }
 
-TextException& TextException::operator=(const TextException &right)
+std::ostream &
+TextException::print(std::ostream &os) const
 {
-    if (this==&right) return *this;
-    if (message) xfree(message);
-    message=(right.message?xstrdup(right.message):NULL);
-    theFileName=right.theFileName;
-    theLineNo=right.theLineNo;
-    theId=right.theId;
-    return *this;
+    os << std::runtime_error::what() << "\n" <<
+       "    exception location: " << where << "\n";
+    // TODO: error_detail: " << (ERR_DETAIL_EXCEPTION_START+id()) << "\n";
+    return os;
 }
 
-const char *TextException::what() const throw()
+const char *
+TextException::what() const throw()
 {
-    /// \todo add file:lineno
-    return message ? message : "TextException without a message";
+    std::ostringstream os;
+    print(os);
+    const WhatString result(os.str());
+
+    // extend result.c_str() lifetime to this object lifetime
+    if (!WhatStrings_)
+        WhatStrings_ = new WhatStrings;
+    // *this could change, but we must preserve old results for they may be used
+    WhatStrings_->emplace(std::make_pair(this, result));
+
+    return result.what();
 }
 
-unsigned int TextException::FileNameHash(const char *fname)
+std::ostream &
+CurrentException(std::ostream &os)
 {
-    const char *s = NULL;
-    unsigned int n = 0;
-    unsigned int j = 0;
-    unsigned int i = 0;
-    s = strrchr(fname, '/');
-
-    if (s)
-        ++s;
-    else
-        s = fname;
-
-    while (*s) {
-        ++j;
-        n ^= 271 * (unsigned) *s;
-        ++s;
-    }
-    i = n ^ (j * 271);
-    /*18bits of a 32 bit integer used  for filename hash (max hash=262143),
-      and 14 bits for storing line number (16k max).
-      If you change this policy remember to update the FileNameHash function
-      in the scripts/calc-must-ids.pl script
-    */
-    return i % 262143;
-}
-
-void Throw(const char *message, const char *fileName, int lineNo, unsigned int id)
-{
-
-    // or should we let the exception recepient print the exception instead?
-
-    if (fileName) {
-        debugs(0, 3, fileName << ':' << lineNo << ": exception" <<
-               (message ? ": " : ".") << (message ? message : ""));
+    if (std::current_exception()) {
+        try {
+            throw; // re-throw to recognize the exception type
+        }
+        catch (const std::exception &ex) {
+            os << ex.what();
+        }
+        catch (...) {
+            os << "[unknown exception type]";
+        }
     } else {
-        debugs(0, 3, "exception" <<
-               (message ? ": " : ".") << (message ? message : ""));
+        os << "[no active exception]";
     }
-
-    throw TextException(message, fileName, lineNo, id);
+    return os;
 }
 

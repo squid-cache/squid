@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,10 +18,6 @@ class SBuf;
 class SBufIterator;
 class SBufReverseIterator;
 class SBufReservationRequirements;
-
-class OutOfBoundsException;
-class InvalidParamException;
-class SBufTooBigException;
 
 class SBufStats;
 typedef std::list<SBuf> SBufList;

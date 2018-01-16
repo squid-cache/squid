@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -276,7 +276,8 @@ struct wccp2_router_id_element_t {
     uint32_t received_id;
 };
 
-static struct wccp2_router_id_element_t wccp2_router_id_element;
+// unused (for now)
+// static struct wccp2_router_id_element_t wccp2_router_id_element;
 
 /** \interface WCCPv2_Protocol
  * Sect 5.6.9 Capabilities Info Component
@@ -807,7 +808,7 @@ wccp2Init(void)
         wccp2_cache_view_header.cache_view_type = htons(WCCP2_WC_VIEW_INFO);
 
         wccp2_cache_view_header.cache_view_length = htons(sizeof(wccp2_cache_view_header) - 4 +
-                sizeof(wccp2_cache_view_info) + (wccp2_numrouters * sizeof(wccp2_router_id_element)));
+                sizeof(wccp2_cache_view_info) + (wccp2_numrouters * sizeof(wccp2_router_id_element_t)));
 
         wccp2_cache_view_header.cache_view_version = htonl(1);
 

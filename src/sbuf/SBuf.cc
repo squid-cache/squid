@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,8 +11,6 @@
 #include "base/RefCount.h"
 #include "Debug.h"
 #include "sbuf/DetailedStats.h"
-#include "sbuf/Exceptions.h"
-#include "sbuf/OutOfBoundsException.h"
 #include "sbuf/SBuf.h"
 #include "util.h"
 
@@ -159,8 +157,7 @@ SBuf::rawAppendFinish(const char *start, size_type actualSize)
     debugs(24, 8, id << " finish appending " << actualSize << " bytes");
 
     size_type newSize = length() + actualSize;
-    if (newSize > min(maxSize,store_->capacity-off_))
-        throw SBufTooBigException(__FILE__,__LINE__);
+    Must2(newSize <= min(maxSize,store_->capacity-off_), "raw append overflow");
     len_ = newSize;
     store_->size = off_ + newSize;
 }
@@ -277,6 +274,7 @@ SBuf::vappendf(const char *fmt, va_list vargs)
 #else
     sz = vsnprintf(space, spaceSize(), fmt, vargs);
 #endif
+    Must2(sz >= 0, "vsnprintf() output error");
 
     /* check for possible overflow */
     /* snprintf on Linux returns -1 on output errors, or the size
@@ -288,13 +286,8 @@ SBuf::vappendf(const char *fmt, va_list vargs)
         requiredSpaceEstimate = sz*2; // TODO: tune heuristics
         space = rawSpace(requiredSpaceEstimate);
         sz = vsnprintf(space, spaceSize(), fmt, vargs);
-        if (sz < 0) // output error in vsnprintf
-            throw TextException("output error in second-go vsnprintf",__FILE__,
-                                __LINE__);
+        Must2(sz >= 0, "vsnprintf() output error despite increased buffer space");
     }
-
-    if (sz < 0) // output error in either vsnprintf
-        throw TextException("output error in vsnprintf",__FILE__, __LINE__);
 
     // data was appended, update internal state
     len_ += sz;
@@ -863,17 +856,6 @@ SBuf::toUpper()
     ++stats.caseChange;
 }
 
-/**
- * checks whether the requested 'pos' is within the bounds of the SBuf
- * \throw OutOfBoundsException if access is out of bounds
- */
-void
-SBuf::checkAccessBounds(size_type pos) const
-{
-    if (pos >= length())
-        throw OutOfBoundsException(*this, pos, __FILE__, __LINE__);
-}
-
 /** re-allocate the backing store of the SBuf.
  *
  * If there are contents in the SBuf, they will be copied over.
@@ -886,8 +868,7 @@ void
 SBuf::reAlloc(size_type newsize)
 {
     debugs(24, 8, id << " new size: " << newsize);
-    if (newsize > maxSize)
-        throw SBufTooBigException(__FILE__, __LINE__);
+    Must(newsize <= maxSize);
     MemBlob::Pointer newbuf = new MemBlob(newsize);
     if (length() > 0)
         newbuf->append(buf(), length());
