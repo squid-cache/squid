@@ -40,3 +40,4 @@ private:
 } // namespace Acl
 
 #endif /* SQUID_ACLCONNMARK_H */
+
