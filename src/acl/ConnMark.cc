@@ -25,9 +25,9 @@ Acl::ConnMark::empty() const
 static std::ostream &
 operator <<(std::ostream &os, const Acl::ConnMark::ConnMarkQuery connmark)
 {
-    os << AsHex<nfmark_t>(connmark.first);
+    os << asHex(connmark.first);
     if (connmark.second != 0xffffffff) {
-        os << '/' << AsHex<nfmark_t>(connmark.second);
+        os << '/' << asHex(connmark.second);
     }
     return os;
 }
@@ -78,10 +78,10 @@ Acl::ConnMark::match(ACLChecklist *cl)
 
     for (const auto &m : marks) {
         if ((connmark & m.second) == m.first) {
-            debugs(28, 7, "CONNMARK '" << AsHex<nfmark_t>(connmark) << "' matches with '" << m << "'");
+            debugs(28, 7, "CONNMARK '" << asHex(connmark) << "' matches with '" << m << "'");
             return 1;
         }
-        debugs(28, 7, "checking CONNMARK '" << AsHex<nfmark_t>(connmark) << "' against '" << m << "'");
+        debugs(28, 7, "checking CONNMARK '" << asHex(connmark) << "' against '" << m << "'");
     }
     return 0;
 }

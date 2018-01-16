@@ -144,7 +144,7 @@ Ip::Qos::getNfmarkCallback(enum nf_conntrack_msg_type,
 {
     auto *mark = static_cast<nfmark_t *>(connmark);
     *mark = nfct_get_attr_u32(ct, ATTR_MARK);
-    debugs(17, 3, "QOS: Retrieved connmark value: " << AsHex<nfmark_t>(*mark));
+    debugs(17, 3, "QOS: Retrieved connmark value: " << asHex(*mark));
 
     return NFCT_CB_CONTINUE;
 }
