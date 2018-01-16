@@ -13,6 +13,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "CommCalls.h"
+#include "http/two/StreamContext.h"
 #include "ipc/UdsOp.h"
 #include "snmp/Inquirer.h"
 #include "snmp/Request.h"

@@ -16,6 +16,7 @@
 #include "fde.h"
 #include "fs_io.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 #include "ICP.h"
 #include "ipcache.h"
 #include "send-announce.h"

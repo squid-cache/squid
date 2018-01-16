@@ -14,6 +14,7 @@
 #include "comm/Connection.h"
 #include "CommRead.h"
 #include "DelayVector.h"
+#include "http/two/StreamContext.h"
 
 DelayVector::DelayVector()
 {

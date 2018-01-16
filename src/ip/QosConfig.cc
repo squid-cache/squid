@@ -15,6 +15,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "hier_code.h"
+#include "http/two/StreamContext.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "Parsing.h"

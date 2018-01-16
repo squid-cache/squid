@@ -14,6 +14,7 @@
 #include "fatal.h"
 #include "fde.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 #include "log/Config.h"
 #include "log/File.h"
 #include "log/ModDaemon.h"

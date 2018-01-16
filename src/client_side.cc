@@ -90,6 +90,7 @@
 #include "http/one/RequestParser.h"
 #include "http/one/TeChunkedParser.h"
 #include "http/Stream.h"
+#include "http/two/StreamContext.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -1296,6 +1297,65 @@ prepareTransparentURL(ConnStateData * conn, const Http1::RequestParserPointer &h
 Http::Stream *
 ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
 {
+    /*
+     * Right now Squid only supports HTTP/1.x traffic fully.
+     * So we start from the assumption that all new requests are in HTTP/1 syntax.
+     *
+     * HTTP/2 magic octets (connection header) is detected and one of the following performed:
+     * - interception traffic is tunnelled.
+     * - forward and reverse proxy traffic is rejected with an HTTP/1.1 syntax error
+     */
+
+    // attempt to locate HTTP/2 traffic
+    const bool isHttp2MagicPrefix = hp->parseHttp2magicPrefix(inBuf);
+    if (!isHttp2MagicPrefix && hp->incompleteHttp2magicPrefix()) {
+        debugs(33, 5, "Incomplete HTTP/2 magic octets, waiting for more");
+        debugs(33, 9, "buffer: " << inBuf);
+        return NULL;
+    }
+
+    if (isHttp2MagicPrefix) {
+        debugs(33, 5, "Complete HTTP/2 magic octets received");
+
+        // we only support tunneling intercepted HTTP/2 traffic for now
+        if (port && !port->flags.isIntercepted()) {
+            hp->parseStatusCode = Http::scMethodNotAllowed;
+            return abortRequestParsing("error:http-2.0-not-supported");
+        }
+
+        // the parseHttp2magicPrefix() parser fills out the necessary offset values
+        // used by ClientHttpRequest initialization
+
+        // sync the buffers after parsing.
+        inBuf = hp->remaining();
+
+        ClientHttpRequest *http = new ClientHttpRequest(this);
+        http->req_sz = hp->Http2magic.length();
+        http->uri = xstrdup("*");
+        http->setLogUriToRawUri(http->uri, hp->method());
+
+        auto *result = new Http::Stream(clientConnection, http);
+
+        StoreIOBuffer tempBuffer;
+        tempBuffer.data = result->reqbuf;
+        tempBuffer.length = HTTP_REQBUF_SZ;
+
+        ClientStreamData newServer = new clientReplyContext(http);
+        ClientStreamData newClient = result;
+        clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
+                         clientReplyStatus, newServer, clientSocketRecipient,
+                         clientSocketDetach, newClient, tempBuffer);
+
+        debugs(11, 2, "HTTP Client " << clientConnection);
+        debugs(11, 2, "HTTP Client REQUEST:\n---------\n" << hp->Http2magic << "\n----------");
+
+        result->flags.parsed_ok = 1;
+        return result;
+    }
+
+    // fallback to parsing as HTTP/1 traffic
+    debugs(33, 5, "not HTTP/2 magic octets received. Try HTTP/1 parse.");
+
     /* Attempt to parse the first line; this will define where the method, url, version and header begin */
     {
         Must(hp);
@@ -1696,7 +1756,9 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
 
     clientSetKeepaliveFlag(http);
     // Let tunneling code be fully responsible for CONNECT requests
-    if (http->request->method == Http::METHOD_CONNECT) {
+    // and (for now) HTTP/2 tunnelling
+    if (http->request->method == Http::METHOD_CONNECT ||
+            (request->method == Http::METHOD_PRI && request->http_ver == Http::ProtocolVersion(2,0))) {
         context->mayUseConnection(true);
         conn->flags.readMore = false;
     }
@@ -1991,12 +2053,6 @@ ConnStateData::afterClientRead()
     clientAfterReadingRequests();
 }
 
-/**
- * called when new request data has been read from the socket
- *
- * \retval false called comm_close or setReplyToError (the caller should bail)
- * \retval true  we did not call comm_close or setReplyToError
- */
 bool
 ConnStateData::handleReadData()
 {
@@ -2193,6 +2249,10 @@ ConnStateData::start()
 {
     BodyProducer::start();
     HttpControlMsgSink::start();
+    Server::start();
+
+    // ensure a buffer is present for this connection
+    maybeMakeSpaceAvailable();
 
     if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
             (transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {

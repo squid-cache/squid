@@ -54,6 +54,8 @@ CLEANFILES += test_tools.cc tests/stub_debug.cc time.cc tests/stub_libmem.cc tes
 bin_PROGRAMS = squidclient
 
 squidclient_SOURCES = \
+	Http2.cc \
+	Http2.h \
 	Parameters.h \
 	Ping.cc \
 	Ping.h \

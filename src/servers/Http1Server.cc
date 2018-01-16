@@ -6,7 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 33    Client-side Routines */
+/* DEBUG: section 11    Hypertext Transfer Protocol (HTTP/1.x) */
+/* DEBUG: section 33    Transfer protocol server for HTTP/1.x */
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
@@ -16,9 +17,11 @@
 #include "comm/Write.h"
 #include "http/one/RequestParser.h"
 #include "http/Stream.h"
+#include "http/two/FrameParser.h"
 #include "HttpHeaderTools.h"
 #include "profiler/Profiler.h"
 #include "servers/Http1Server.h"
+#include "servers/Http2Server.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "tunnel.h"
@@ -156,9 +159,10 @@ Http::One::Server::buildHttpRequest(Http::StreamPointer &context)
 
     /* RFC 2616 section 10.5.6 : handle unsupported HTTP major versions cleanly. */
     /* We currently only support 0.9, 1.0, 1.1 properly */
+    /* We support 2.0 experimentally */
     /* TODO: move HTTP-specific processing into servers/HttpServer and such */
     if ( (parser_->messageProtocol().major == 0 && parser_->messageProtocol().minor != 9) ||
-            (parser_->messageProtocol().major > 1) ) {
+            (parser_->messageProtocol().major > 2) ) {
 
         debugs(33, 5, "Unsupported HTTP version discovered. :\n" << parser_->messageProtocol());
         // setReplyToError() requires log_uri
@@ -395,13 +399,24 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext serve
                    server.connection(), server.preReadServerBytes);
 }
 
-ConnStateData *
+/* the following should all be in a servers/HttpGadgets.cc file
+ * but left for now since the Http::Server needs to be renamed Http1::Server
+ * and moved to Http1Server.h first
+ */
+#include "servers/Http2Server.h"
+
+Server *
 Http::NewServer(MasterXactionPointer &xact)
 {
+    // HTTP/2
+    if (xact->squidPort && xact->squidPort->transport == Http::ProtocolVersion(2,0))
+        return new Http2::Server(xact);
+
+    // else HTTP/1
     return new Http1::Server(xact, false);
 }
 
-ConnStateData *
+Server *
 Https::NewServer(MasterXactionPointer &xact)
 {
     return new Http1::Server(xact, true);

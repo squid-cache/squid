@@ -11,6 +11,7 @@
 #if USE_OPENSSL
 
 #include "fatal.h"
+#include "http/two/StreamContext.h"
 #include "sbuf/Algorithms.h"
 #include "sbuf/SBuf.h"
 

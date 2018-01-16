@@ -9,7 +9,7 @@
 #ifndef _SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H
 #define _SQUID_SRC_HTTP_ONE_RESPONSEPARSER_H
 
-#include "http/one/Parser.h"
+#include "http/Parser.h"
 #include "http/StatusCode.h"
 
 namespace Http {
@@ -26,7 +26,7 @@ namespace One {
  * \li status-line (version SP status SP reash-phrase)
  * \li mime-header (set of RFC2616 syntax header fields)
  */
-class ResponseParser : public Http1::Parser
+class ResponseParser : public Http::Parser
 {
 public:
     ResponseParser() = default;
@@ -38,7 +38,7 @@ public:
 
     /* Http::One::Parser API */
     virtual void clear() {*this=ResponseParser();}
-    virtual Http1::Parser::size_type firstLineSize() const;
+    virtual Http::Parser::size_type firstLineSize() const;
     virtual bool parse(const SBuf &aBuf);
 
     /* respone specific fields, read-only */

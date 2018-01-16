@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "esi/VarState.h"
 #include "fatal.h"
+#include "http/two/StreamContext.h"
 #include "HttpReply.h"
 
 char const *ESIVariableUserAgent::esiUserOs[]= {

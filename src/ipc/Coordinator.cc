@@ -14,6 +14,7 @@
 #include "CacheManager.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "http/two/StreamContext.h"
 #include "ipc/Coordinator.h"
 #include "ipc/SharedListen.h"
 #include "mgr/Inquirer.h"

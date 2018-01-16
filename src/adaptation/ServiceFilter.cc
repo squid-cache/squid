@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "adaptation/ServiceFilter.h"
+#include "http/two/StreamContext.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 

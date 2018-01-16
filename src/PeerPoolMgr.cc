@@ -17,6 +17,7 @@
 #include "fd.h"
 #include "FwdState.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 #include "HttpRequest.h"
 #include "MasterXaction.h"
 #include "neighbors.h"

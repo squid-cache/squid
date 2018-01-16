@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "Generic.h"
+#include "http/two/StreamContext.h"
 #include "HttpReply.h"
 #include "mem_node.h"
 #include "MemObject.h"

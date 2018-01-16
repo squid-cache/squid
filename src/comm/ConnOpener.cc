@@ -17,6 +17,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 #include "icmp/net_db.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"

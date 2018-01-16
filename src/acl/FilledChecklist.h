@@ -14,6 +14,7 @@
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
 #include "error/forward.h"
+#include "http/two/StreamContext.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"

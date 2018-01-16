@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "http/two/StreamContext.h"
 #include "HttpRequest.h"
 
 #define STUB_API "HttpRequest.cc"

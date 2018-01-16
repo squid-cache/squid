@@ -12,6 +12,7 @@
 #include "comm/Connection.h"
 #include "errorpage.h"
 #include "fde.h"
+#include "http/two/StreamContext.h"
 #include "HttpRequest.h"
 #include "neighbors.h"
 #include "security/BlindPeerConnector.h"

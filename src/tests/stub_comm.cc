@@ -12,6 +12,7 @@
 #include "comm/Loops.h"
 // #include "comm/Read.h"
 #include "fde.h"
+#include "http/two/StreamContext.h"
 
 #define STUB_API "comm.cc"
 #include "tests/STUB.h"

@@ -10,6 +10,15 @@
 #define SQUID_SRC_HTTP_FORWARD_H
 
 #include "http/one/forward.h"
+#include "http/two/forward.h"
+
+namespace Http
+{
+
+class Parser;
+typedef RefCount<Http::Parser> ParserPointer;
+
+} // namespace Http
 
 #define HTTP_REQBUF_SZ  4096
 

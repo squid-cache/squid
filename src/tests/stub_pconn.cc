@@ -11,6 +11,7 @@
  */
 #include "squid.h"
 #include "comm/Connection.h"
+#include "http/two/StreamContext.h"
 #include "pconn.h"
 
 #define STUB_API "pconn.cc"

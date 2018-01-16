@@ -3553,6 +3553,10 @@ parsePortProtocol(const SBuf &value)
     if (value.cmp("FTP") == 0)
         return Ftp::ProtocolVersion();
 
+    // TODO: when HTTP/2 is operational move this up top.
+    if (value.cmp("HTTP") == 0 || value.cmp("HTTP/2.0") == 0)
+        return Http::ProtocolVersion(2,0);
+
     fatalf("%s directive does not support protocol=" SQUIDSBUFPH "\n", cfg_directive, SQUIDSBUFPRINT(value));
     return AnyP::ProtocolVersion(); // not reached
 }

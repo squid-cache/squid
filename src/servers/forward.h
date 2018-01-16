@@ -14,6 +14,7 @@ template <class C> class RefCount;
 typedef RefCount<MasterXaction> MasterXactionPointer;
 
 class ConnStateData;
+class Server;
 
 namespace Http
 {
@@ -23,8 +24,13 @@ namespace One
 class Server;
 } // namespace One
 
+namespace Two
+{
+class Server;
+} // namespace Two
+
 /// create a new HTTP connection handler; never returns NULL
-ConnStateData *NewServer(MasterXactionPointer &xact);
+::Server *NewServer(MasterXactionPointer &xact);
 
 } // namespace Http
 
@@ -32,7 +38,7 @@ namespace Https
 {
 
 /// create a new HTTPS connection handler; never returns NULL
-ConnStateData *NewServer(MasterXactionPointer &xact);
+::Server *NewServer(MasterXactionPointer &xact);
 
 } // namespace Https
 

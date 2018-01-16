@@ -240,6 +240,8 @@ Transport::Write(const void *buf, size_t len)
     if (conn < 0)
         return -1;
 
+    debugVerbose(2, "Sending " << len << " bytes: " << buf);
+
     if (Config.tlsEnabled) {
 #if USE_GNUTLS
         gnutls_record_send(Config.session, buf, len);

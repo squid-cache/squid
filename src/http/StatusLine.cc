@@ -126,7 +126,7 @@ Http::StatusLine::parse(const String &protoPrefix, const char *start, const char
     Parser::Tokenizer tok(statusBuf);
     try {
         One::ResponseParser::ParseResponseStatus(tok, status_);
-    } catch (const Parser::InsufficientInput &) {
+    } catch (const ::Parser::InsufficientInput &) {
         debugs(57, 7, "need more; have " << unparsedLength);
         return false;
     } catch (...) {

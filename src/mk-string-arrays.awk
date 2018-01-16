@@ -23,12 +23,13 @@ BEGIN {
         codeSkip = 1
         e = 0
         nspath = ""
+	ns = 0
 }
 
 # when namespace is encountered store it
 /^namespace *[a-zA-Z]+/	{
-	nspath = tolower($2) "/"		# nested folder
-	namespace = $2				# code namespace reconstruct
+	nspath = nspath tolower($2) "/"		# nested folder
+	namespace[++ns] = $2			# code namespace reconstruct
 	next
 }
 
@@ -78,8 +79,8 @@ END {
         else print "#include \"" nspath type ".h\""
 
 	# if namespace is not empty ??
-	if (namespace) print "namespace " namespace
-	if (namespace) print "{"
+	for ( i = 1; i <= ns; ++i)
+		print "namespace " namespace[i] "\n{"
 
 	if (sbuf) print "\nconst SBuf " type "_sb[] = {"
 	else print "\nconst char * " type "_str[] = {"
@@ -88,6 +89,7 @@ END {
 		else print "\t" Element[i] ","
 
 	print "\t" Element[i]
-	print "};"
-	if (namespace) print "}; // namespace " namespace
+	print "};\n"
+	for ( i = ns; i > 0; --i)
+		print "} // namespace " namespace[i]
 }

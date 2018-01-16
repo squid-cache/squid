@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "anyp/Uri.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 #include "HttpRequest.h"
 #include "parser/Tokenizer.h"
 #include "rfc1738.h"
@@ -271,7 +272,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             return false;
         }
 
-        if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
+        if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE || method == Http::METHOD_PRI) &&
                 Asterisk().cmp(rawUrl) == 0) {
             // XXX: these methods might also occur in HTTPS traffic. Handle this better.
             setScheme(AnyP::PROTO_HTTP, nullptr);
@@ -844,6 +845,10 @@ urlCheckRequest(const HttpRequest * r)
 
     if (r->method == Http::METHOD_CONNECT)
         return true;
+
+    // we support HTTP/2 magic PRI requests
+    if (r->method == Http::METHOD_PRI && r->http_ver == Http::ProtocolVersion(2,0))
+        return (r->url.path() == AnyP::Uri::Asterisk());
 
     // we support OPTIONS and TRACE directed at us (with a 501 reply, for now)
     // we also support forwarding OPTIONS and TRACE, except for the *-URI ones

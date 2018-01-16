@@ -29,6 +29,7 @@
 #include "globals.h"
 #include "HappyConnOpener.h"
 #include "http.h"
+#include "http/Parser.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
@@ -1208,6 +1209,48 @@ TunnelStateData::noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answ
         error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw(), al);
         closePendingConnection(answer.conn, "conn was closed while waiting for noteSecurityPeerConnectorAnswer");
     }
+
+#if MISPLACED_CODE
+    assert(!tunnelState->waitingForConnectExchange());
+    HttpHeader hdr_out(hoRequest);
+    Http::StateFlags flags;
+    debugs(26, 3, HERE << srv << ", tunnelState=" << tunnelState);
+    flags.proxying = tunnelState->request->flags.proxying;
+    MemBuf mb;
+    mb.init();
+
+    // method PRI only gets here as part of HTTP/2 magic prefix
+    if (tunnelState->request->method == Http::METHOD_PRI) {
+        // send full HTTP/2.0 magic connection header to server
+        mb.append(Http::Parser::Http2magic.rawContent(), Http::Parser::Http2magic.length());
+    } else {
+        // assume CONNECT
+        mb.appendf("CONNECT %s HTTP/1.1\r\n", tunnelState->url);
+        HttpStateData::httpBuildRequestHeader(tunnelState->request.getRaw(), NULL, tunnelState->al, &hdr_out, flags);
+        hdr_out.packInto(&mb);
+        hdr_out.clean();
+        mb.append("\r\n", 2);
+    }
+
+    debugs(11, 2, "Tunnel Server REQUEST: " << tunnelState->server.conn <<
+           ":\n----------\n" << mb.buf << "\n----------");
+
+    AsyncCall::Pointer writeCall = commCbCall(5,5, "tunnelConnectReqWriteDone",
+                                   CommIoCbPtrFun(tunnelConnectReqWriteDone,
+                                           tunnelState));
+
+    tunnelState->server.write(mb.buf, mb.size, writeCall, mb.freeFunc());
+    tunnelState->connectReqWriting = true;
+
+    tunnelState->connectRespBuf = new MemBuf;
+    // SQUID_TCP_SO_RCVBUF: we should not accumulate more than regular I/O buffer
+    // can hold since any CONNECT response leftovers have to fit into server.buf.
+    // 2*SQUID_TCP_SO_RCVBUF: Http::Message::parse() zero-terminates, which uses space.
+    tunnelState->connectRespBuf->init(SQUID_TCP_SO_RCVBUF, 2*SQUID_TCP_SO_RCVBUF);
+    tunnelState->readConnectResponse();
+
+    assert(tunnelState->waitingForConnectExchange());
+#endif
 
     if (error) {
         saveError(error);

@@ -716,7 +716,7 @@ HttpRequest::checkEntityFraming() const
 }
 
 bool
-HttpRequest::parseHeader(Http1::Parser &hp)
+HttpRequest::parseHeader(Http::Parser &hp)
 {
     Http::ContentLengthInterpreter clen;
     return Message::parseHeader(hp, clen);

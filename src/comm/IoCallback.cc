@@ -15,6 +15,7 @@
 #include "CommCalls.h"
 #include "fde.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 
 Comm::CbEntry *Comm::iocb_table;
 

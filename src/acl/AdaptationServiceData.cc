@@ -17,6 +17,7 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
+#include "http/two/StreamContext.h"
 
 void
 ACLAdaptationServiceData::parse()

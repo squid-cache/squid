@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "comm/Connection.h"
+#include "http/two/StreamContext.h"
 #include "HttpReply.h"
 #include "MemObject.h"
 #if USE_DELAY_POOLS

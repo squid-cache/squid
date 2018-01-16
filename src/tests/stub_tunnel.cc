@@ -10,6 +10,7 @@
 #include "client_side_request.h"
 #include "FwdState.h"
 #include "http/Stream.h"
+#include "http/two/StreamContext.h"
 #include "tunnel.h"
 
 #define STUB_API "tunnel.cc"

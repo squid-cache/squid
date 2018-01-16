@@ -13,6 +13,7 @@
 #include "format/Quoting.h"
 #include "format/Token.h"
 #include "globals.h"
+#include "http/two/StreamContext.h"
 #include "HttpRequest.h"
 #include "log/File.h"
 #include "log/Formats.h"

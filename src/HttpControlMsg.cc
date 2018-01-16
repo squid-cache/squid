@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "comm/Flag.h"
 #include "CommCalls.h"
+#include "http/two/StreamContext.h"
 #include "HttpControlMsg.h"
 
 void

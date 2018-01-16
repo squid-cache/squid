@@ -15,6 +15,7 @@
 #include "comm/Connection.h"
 #include "Debug.h"
 #include "fde.h"
+#include "http/two/StreamContext.h"
 
 BandwidthBucket::BandwidthBucket(const int speed, const int initialLevelPercent, const double sizeLimit) :
     bucketLevel( sizeLimit * (initialLevelPercent / 100.0)),

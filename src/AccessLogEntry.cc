@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "http/two/StreamContext.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"

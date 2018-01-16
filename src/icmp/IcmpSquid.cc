@@ -13,6 +13,7 @@
 #include "comm/Loops.h"
 #include "defines.h"
 #include "fd.h"
+#include "http/two/StreamContext.h"
 #include "icmp/IcmpConfig.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"

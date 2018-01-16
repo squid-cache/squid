@@ -12,7 +12,7 @@
 #include "Debug.h"
 #include "http/ContentLengthInterpreter.h"
 #include "http/Message.h"
-#include "http/one/Parser.h"
+#include "http/Parser.h"
 #include "HttpHdrCc.h"
 #include "HttpHeaderTools.h"
 #include "MemBuf.h"
@@ -216,7 +216,7 @@ Http::Message::httpMsgParseStep(const char *buf, int len, int atEnd)
 }
 
 bool
-Http::Message::parseHeader(Http1::Parser &hp, Http::ContentLengthInterpreter &clen)
+Http::Message::parseHeader(Http::Parser &hp, Http::ContentLengthInterpreter &clen)
 {
     // HTTP/1 message contains "zero or more header fields"
     // zero does not need parsing

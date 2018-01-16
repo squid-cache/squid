@@ -12,6 +12,7 @@
 #include "comm/Connection.h"
 #include "DelayPools.h"
 #include "fde.h"
+#include "http/two/StreamContext.h"
 #include "MessageBucket.h"
 
 MessageBucket::MessageBucket(const int speed, const int initialLevelPercent,

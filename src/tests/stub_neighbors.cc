@@ -7,11 +7,12 @@
  */
 
 #include "squid.h"
+#include "FwdState.h"
+#include "http/two/StreamContext.h"
 
 #define STUB_API "neighbors.cc"
 #include "tests/STUB.h"
 
-#include "FwdState.h"
 #include "neighbors.h"
 
 void

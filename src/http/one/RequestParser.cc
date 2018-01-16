@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "anyp/Uri.h"
 #include "Debug.h"
 #include "http/one/RequestParser.h"
 #include "http/ProtocolVersion.h"
@@ -14,7 +15,7 @@
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
-Http1::Parser::size_type
+Http::Parser::size_type
 Http::One::RequestParser::firstLineSize() const
 {
     // RFC 7230 section 2.6
@@ -332,6 +333,24 @@ Http::One::RequestParser::parseRequestFirstLine()
     parseStatusCode = Http::scOkay;
     buf_ = lineTok.remaining(); // incremental parse checkpoint
     return 1;
+}
+
+bool
+Http::One::RequestParser::parseHttp2magicPrefix(const SBuf &buf)
+{
+    if (!Http::Parser::parseHttp2magicPrefix(buf)) // does all the buf_ changes
+        return false;
+
+    parsingStage_ = HTTP_PARSE_DONE;
+
+    // found HTTP/2 magic octets
+    // set parser fields to fake request values
+    method_ = METHOD_PRI;
+    uri_ = AnyP::Uri::Asterisk();
+    msgProtocol_ = Http::ProtocolVersion(2,0);
+    mimeHeaderBlock_.clear(); // magic has no mime headers
+
+    return true;
 }
 
 bool

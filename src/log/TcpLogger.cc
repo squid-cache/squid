@@ -15,6 +15,7 @@
 #include "fatal.h"
 #include "fde.h"
 #include "globals.h" // for shutting_down
+#include "http/two/StreamContext.h"
 #include "log/CustomLog.h"
 #include "log/File.h"
 #include "log/TcpLogger.h"

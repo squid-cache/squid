@@ -18,6 +18,7 @@
 #include "fs_io.h"
 #include "htcp.h"
 #include "http/Stream.h"
+#include "http/two/StreamContext.h"
 #include "ICP.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"

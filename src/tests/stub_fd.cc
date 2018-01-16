@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "fd.h"
 #include "fde.h"
+#include "http/two/StreamContext.h"
 
 #define STUB_API "fd.cc"
 #include "tests/STUB.h"

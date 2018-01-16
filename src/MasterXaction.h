@@ -15,6 +15,7 @@
 #include "base/Lock.h"
 #include "base/RefCount.h"
 #include "comm/forward.h"
+#include "http/two/StreamContext.h"
 #include "XactionInitiator.h"
 
 /** Master transaction details.
@@ -57,6 +58,9 @@ public:
 
     /// whether we are currently creating a CONNECT header (to be sent to peer)
     bool generatingConnect = false;
+
+    /// the HTTP/2 stream details
+    Http2::StreamContextPointer http2Stream;
 
     // TODO: add state from other Jobs in the transaction
 };
