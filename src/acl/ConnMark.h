@@ -31,9 +31,10 @@ public:
 
     /// a mark/mask pair for matching CONNMARKs
     typedef std::pair<nfmark_t, nfmark_t> ConnMarkQuery;
+
 private:
     nfmark_t getNumber(Parser::Tokenizer &tokenizer, const SBuf &token) const;
-    std::vector<ConnMarkQuery> marks;
+    std::vector<ConnMarkQuery> marks; ///< mark/mask pairs in configured order
 };
 
 } // namespace Acl
