@@ -62,7 +62,7 @@ Acl::ConnMark::parse()
 
         const ConnMarkQuery connmark(mark, mask);
         marks.push_back(connmark);
-        debugs(28, 7, "mark '" << connmark << "'");
+        debugs(28, 7, "added " << connmark);
     }
 
     if (marks.empty()) {
@@ -78,10 +78,10 @@ Acl::ConnMark::match(ACLChecklist *cl)
 
     for (const auto &m : marks) {
         if ((connmark & m.second) == m.first) {
-            debugs(28, 7, "CONNMARK '" << asHex(connmark) << "' matches with '" << m << "'");
+            debugs(28, 5, "found " << m << " matching " << asHex(connmark));
             return 1;
         }
-        debugs(28, 7, "checking CONNMARK '" << asHex(connmark) << "' against '" << m << "'");
+        debugs(28, 7, "skipped " << m << " mismatching " << asHex(connmark));
     }
     return 0;
 }
