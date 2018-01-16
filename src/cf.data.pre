@@ -1059,6 +1059,23 @@ DOC_START
 	  # NOTE 2: IPv6 protocol does not contain ARP. MAC/EUI is either
 	  # encoded directly in the IPv6 address or not available.
 
+	acl aclname clientside_mark mark[/mask] ...
+	  # matches CONNMARK of an accepted connection [fast]
+	  #
+	  # mark and mask are unsigned integers (hex, octal, or decimal).
+	  # If multiple marks are given, then the ACL matches if at least
+	  # one mark matches.
+	  #
+	  # Uses netfilter-conntrack library.
+	  # Requires building Squid with --enable-linux-netfilter.
+	  #
+	  # The client, various intermediaries, and Squid itself may set
+	  # CONNMARK at various times. The last CONNMARK set wins. This ACL
+	  # checks the mark present on an accepted connection or set by
+	  # Squid afterwards, depending on the ACL check timing. This ACL
+	  # effectively ignores any mark set by other agents after Squid has
+	  # accepted the connection.
+
 	acl aclname srcdomain   .foo.com ...
 	  # reverse lookup, from client IP [slow]
 	acl aclname dstdomain [-n] .foo.com ...

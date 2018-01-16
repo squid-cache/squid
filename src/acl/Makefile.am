@@ -61,6 +61,8 @@ libacls_la_SOURCES = \
 	Asn.h \
 	ConnectionsEncrypted.cc \
 	ConnectionsEncrypted.h \
+	ConnMark.cc \
+	ConnMark.h \
 	DestinationAsn.h \
 	DestinationDomain.cc \
 	DestinationDomain.h \
