@@ -890,9 +890,9 @@ if test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno" ; then
     squid_opt_use_esi=yes
   ],[
     AS_IF(test "x$with_expat" = "xyes",[
-      AC_MSG_ERROR([Required library expat is not able to be found.])
+      AC_MSG_ERROR([Required library expat not found.])
     ],[
-      AC_MSG_NOTICE([Required library expat is not able to be found.])
+      AC_MSG_NOTICE([Required library expat not found.])
     ])
   ])
 fi
@@ -929,9 +929,9 @@ if test "x$squid_opt_use_esi" != "xno" -a "x$with_libxml2" != "xno" ; then
     squid_opt_use_esi=yes
   ],[
     AS_IF(test "x$with_libxml2" = "xyes",[
-      AC_MSG_ERROR([Required library libxml2 is not able to be found.])
+      AC_MSG_ERROR([Required library libxml2 not found.])
     ],[
-      AC_MSG_NOTICE([Required library libxml2 is not able to be found.])
+      AC_MSG_NOTICE([Required library libxml2 not found.])
     ])
   ])
 fi

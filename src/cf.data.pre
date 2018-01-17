@@ -7007,14 +7007,12 @@ DOC_END
 
 NAME: esi_parser
 IFDEF: USE_SQUID_ESI
-COMMENT: libxml2|expat|custom
+COMMENT: libxml2|expat
 TYPE: string
 LOC: ESIParser::Type
-DEFAULT: custom
+DEFAULT: libxml2
 DOC_START
-	ESI markup is not strictly XML compatible. The custom ESI parser
-	will give higher performance, but cannot handle non ASCII character
-	encodings.
+	ESI markup is not strictly XML compatible.
 DOC_END
 
 COMMENT_START
