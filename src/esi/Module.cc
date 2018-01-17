@@ -36,13 +36,11 @@ void Esi::Init()
 void Esi::Clean()
 {
 #if HAVE_LIBEXPAT
-    assert(prExpat); // we should be called once, and only after Init()
     delete prExpat;
     prExpat = NULL;
 #endif
 
 #if HAVE_LIBXML2
-    assert(prLibxml); // we should be called once, and only after Init()
     delete prLibxml;
     prLibxml = NULL;
 #endif
