@@ -7010,7 +7010,7 @@ IFDEF: USE_SQUID_ESI
 COMMENT: libxml2|expat
 TYPE: string
 LOC: ESIParser::Type
-DEFAULT: libxml2
+DEFAULT: auto
 DOC_START
 	ESI markup is not strictly XML compatible.
 DOC_END
