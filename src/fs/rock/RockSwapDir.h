@@ -45,8 +45,8 @@ public:
     virtual uint64_t currentSize() const;
     virtual uint64_t currentCount() const;
     virtual bool doReportStat() const;
-    virtual void finalizeSwapoutSuccess(const StoreEntry &) override;
-    virtual void finalizeSwapoutFailure(StoreEntry &) override;
+    virtual void finalizeSwapoutSuccess(const StoreEntry &);
+    virtual void finalizeSwapoutFailure(StoreEntry &);
     virtual void create();
     virtual void parse(int index, char *path);
     virtual bool smpAware() const { return true; }
