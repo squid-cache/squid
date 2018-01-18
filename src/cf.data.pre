@@ -6906,14 +6906,16 @@ DOC_END
 
 NAME: esi_parser
 IFDEF: USE_SQUID_ESI
-COMMENT: libxml2|expat|custom
+COMMENT: libxml2|expat
 TYPE: string
 LOC: ESIParser::Type
-DEFAULT: custom
+DEFAULT: auto
+DEFAULT_DOC: Selects libxml2 if available at ./configure time or libexpat otherwise.
 DOC_START
-	ESI markup is not strictly XML compatible. The custom ESI parser
-	will give higher performance, but cannot handle non ASCII character
-	encodings.
+	Selects the XML parsing library to use when interpreting responses with
+	Edge Side Includes.
+
+	To disable ESI handling completely, ./configure Squid with --disable-esi.
 DOC_END
 
 COMMENT_START
