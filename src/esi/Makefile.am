@@ -10,9 +10,7 @@ include $(top_srcdir)/src/TestHeaders.am
 
 noinst_LTLIBRARIES = libesi.la
 
-ESI_PARSER_SOURCES = \
-	CustomParser.cc \
-	CustomParser.h
+ESI_PARSER_SOURCES =
 
 if ENABLE_LIBEXPAT
 ESI_PARSER_SOURCES += \
