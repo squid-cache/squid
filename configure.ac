@@ -892,7 +892,7 @@ if test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno" ; then
     AS_IF(test "x$with_expat" = "xyes",[
       AC_MSG_ERROR([Required library expat not found.])
     ],[
-      AC_MSG_NOTICE([Required library expat not found.])
+      AC_MSG_NOTICE([Library expat not found.])
     ])
   ])
 fi
@@ -931,28 +931,28 @@ if test "x$squid_opt_use_esi" != "xno" -a "x$with_libxml2" != "xno" ; then
     AS_IF(test "x$with_libxml2" = "xyes",[
       AC_MSG_ERROR([Required library libxml2 not found.])
     ],[
-      AC_MSG_NOTICE([Required library libxml2 not found.])
+      AC_MSG_NOTICE([Library libxml2 not found.])
     ])
   ])
 fi
 
 AS_IF([test "x$squid_opt_use_esi" = "xyes"],[
-  AS_IF(test $HAVE_LIBXML2 = 1 -a $HAVE_EXPAT = 1,[
-    AC_MSG_ERROR([ESI processor requires libxml2 or libexpat  A- $squid_opt_use_esi . $HAVE_LIBXML2 . $HAVE_EXPAT])
+  AS_IF(test "x$HAVE_LIBXML2" = "x0" -a "x$HAVE_LIBEXPAT" = "x0",[
+    AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])
   ])
-  AC_MSG_NOTICE([Enabling ESI processor.])
+  AC_MSG_NOTICE([Enabling ESI processor: $EXPATLIB $XMLLIB])
   AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor])
 ],[
   AS_IF(test "x$squid_opt_use_esi" = "xno",[
     AC_MSG_NOTICE([Disabling ESI processor.])
   ],[
-    AC_MSG_ERROR([ESI processor requires libxml2 or libexpat B- $squid_opt_use_esi . $HAVE_LIBXML2 . $HAVE_EXPAT])
+    AC_MSG_NOTICE([Disabling ESI processor. libxml2 and libexpat not found.])
   ])
 ])
 AM_CONDITIONAL(ENABLE_ESI, test "x$squid_opt_use_esi" = "xyes")
-AM_CONDITIONAL(ENABLE_LIBEXPAT, test "$HAVE_LIBEXPAT" = 1)
+AM_CONDITIONAL(ENABLE_LIBEXPAT, test "x$HAVE_LIBEXPAT" = "x1")
 AC_SUBST(EXPATLIB)
-AM_CONDITIONAL(ENABLE_LIBXML2, test "$HAVE_LIBXML2" = 1)
+AM_CONDITIONAL(ENABLE_LIBXML2, test "x$HAVE_LIBXML2" = "x1")
 AC_SUBST(XMLLIB)
 
 # icap argument handling
