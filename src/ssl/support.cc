@@ -1116,7 +1116,7 @@ Ssl::SSL_add_untrusted_cert(SSL *ssl, X509 *cert)
         untrustedStack = sk_X509_new_null();
         if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_untrusted_chain, untrustedStack)) {
             sk_X509_pop_free(untrustedStack, X509_free);
-            throw TextException("Failed to attach untrusted certificates chain");
+            throw TextException("Failed to attach untrusted certificates chain", Here());
         }
     }
     sk_X509_push(untrustedStack, cert);

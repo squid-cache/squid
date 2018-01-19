@@ -46,19 +46,17 @@ Mgr::Forwarder::Forwarder(const Comm::ConnectionPointer &aConn, const ActionPara
 
 Mgr::Forwarder::~Forwarder()
 {
-    debugs(16, 5, HERE);
-    Must(httpRequest != NULL);
-    Must(entry != NULL);
-
-    HTTPMSGUNLOCK(httpRequest);
-    entry->unregisterAbort();
-    entry->unlock("Mgr::Forwarder");
-    cleanup();
+    SWALLOW_EXCEPTIONS({
+        Must(entry);
+        entry->unlock("Mgr::Forwarder");
+        Must(httpRequest);
+        HTTPMSGUNLOCK(httpRequest);
+    });
 }
 
 /// closes our copy of the client HTTP connection socket
 void
-Mgr::Forwarder::cleanup()
+Mgr::Forwarder::swanSong()
 {
     if (Comm::IsConnOpen(conn)) {
         if (closer != NULL) {
@@ -68,6 +66,7 @@ Mgr::Forwarder::cleanup()
         conn->close();
     }
     conn = NULL;
+    Ipc::Forwarder::swanSong();
 }
 
 void
