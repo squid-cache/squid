@@ -184,7 +184,10 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
     if (!request_message.parseRequest(certProperties, error))
         throw std::runtime_error("Error while parsing the crtd request: " + error);
 
-    Ssl::CertificateDb db(db_path, max_db_size, fs_block_size);
+    // TODO: create a DB object only once, instead re-allocating here on every call.
+    std::unique_ptr<Ssl::CertificateDb> db;
+    if (!db_path.empty())
+        db.reset(new Ssl::CertificateDb(db_path, max_db_size, fs_block_size));
 
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
@@ -193,7 +196,9 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
 
     bool dbFailed = false;
     try {
-        db.find(certKey, certProperties.mimicCert, cert, pkey);
+        if (db)
+            db->find(certKey, certProperties.mimicCert, cert, pkey);
+
     } catch (std::runtime_error &err) {
         dbFailed = true;
         error = err.what();
@@ -203,16 +208,23 @@ static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string co
         if (!Ssl::generateSslCertificate(cert, pkey, certProperties))
             throw std::runtime_error("Cannot create ssl certificate or private key.");
 
-        if (!dbFailed && db.IsEnabledDiskStore()) {
-            try {
-                if (!db.addCertAndPrivateKey(certKey, cert, pkey, certProperties.mimicCert)) {
-                    dbFailed = true;
-                    error = "Cannot add certificate to db.";
-                }
-            } catch (const std::runtime_error &err) {
-                dbFailed = true;
-                error = err.what();
-            }
+        try {
+            /* XXX: this !dbFailed condition prevents the helper fixing DB issues
+               by adding cleanly generated certs. Which is not consistent with other
+               data caches used by Squid - they purge broken entries and allow clean
+               entries to later try and fix the issue.
+               We leave it in place now only to avoid breaking existing installations
+               behaviour with version 1.x of the helper.
+
+               TODO: remove the !dbFailed condition when fixing the CertificateDb
+                    object lifecycle and formally altering the helper behaviour.
+            */
+            if (!dbFailed && db && !db->addCertAndPrivateKey(certKey, cert, pkey, certProperties.mimicCert))
+                throw std::runtime_error("Cannot add certificate to db.");
+
+        } catch (const std::runtime_error &err) {
+            dbFailed = true;
+            error = err.what();
         }
     }
 
@@ -257,6 +269,10 @@ int main(int argc, char *argv[])
                 db_path = optarg;
                 break;
             case 'M':
+                // use of -M without -s is probably an admin mistake, so make it an error
+                if (db_path.empty()) {
+                    throw std::runtime_error("Error -M option requires an -s parameter be set first.");
+                }
                 if (!parseBytesOptionValue(&max_db_size, optarg)) {
                     throw std::runtime_error("Error when parsing -M options value");
                 }
@@ -276,29 +292,38 @@ int main(int argc, char *argv[])
             }
         }
 
+        // when -s is used, -M is required
+        if (!db_path.empty() && max_db_size == 0)
+            throw std::runtime_error("security_file_certgen -s requires an -M parameter");
+
         if (create_new_db) {
+            // when -c is used, -s is required (implying also -M, which is checked above)
+            if (db_path.empty())
+                throw std::runtime_error("security_file_certgen is missing the required parameter. There should be -s and -M parameters when -c is used.");
+
             std::cout << "Initialization SSL db..." << std::endl;
             Ssl::CertificateDb::Create(db_path);
             std::cout << "Done" << std::endl;
             exit(0);
         }
 
-        if (fs_block_size == 0) {
-            struct statvfs sfs;
+        // only do filesystem checks when a path (-s) is given
+        if (!db_path.empty()) {
+            if (fs_block_size == 0) {
+                struct statvfs sfs;
 
-            if (xstatvfs(db_path.c_str(), &sfs)) {
-                fs_block_size = 2048;
-            } else {
-                fs_block_size = sfs.f_frsize;
-                // Sanity check; make sure we have a meaningful value.
-                if (fs_block_size < 512)
-                    fs_block_size = 2048;
+                if (xstatvfs(db_path.c_str(), &sfs)) {
+                   fs_block_size = 2048;
+                } else {
+                   fs_block_size = sfs.f_frsize;
+                   // Sanity check; make sure we have a meaningful value.
+                   if (fs_block_size < 512)
+                        fs_block_size = 2048;
+                }
             }
-        }
-
-        {
             Ssl::CertificateDb::Check(db_path, max_db_size, fs_block_size);
         }
+
         // Initialize SSL subsystem
         SSL_load_error_strings();
         SSLeay_add_ssl_algorithms();
