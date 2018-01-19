@@ -49,9 +49,11 @@ Adaptation::Icap::ServiceRep::ServiceRep(const ServiceConfigPointer &svcCfg):
 
 Adaptation::Icap::ServiceRep::~ServiceRep()
 {
-    delete theIdleConns;
-    Must(!theOptionsFetcher);
-    delete theOptions;
+    SWALLOW_EXCEPTIONS({
+        delete theIdleConns;
+        Must(!theOptionsFetcher);
+        delete theOptions;
+    });
 }
 
 void

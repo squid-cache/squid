@@ -9,19 +9,12 @@
 /* DEBUG: section 19    Store Memory Primitives */
 
 #include "squid.h"
-#include "base/TextException.h"
 #include "Generic.h"
 #include "mem_node.h"
 #include "stmem.h"
 
 #include <iostream>
 #include <sstream>
-
-/*For  a reason required on some platforms */
-unsigned int TextException::FileNameHash(const char *fname)
-{
-    return 0;
-}
 
 void
 testLowAndHigh()

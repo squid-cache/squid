@@ -845,29 +845,6 @@ Debug::Finish()
     // else it was a static topContext from Debug::Start()
 }
 
-size_t
-BuildPrefixInit()
-{
-    // XXX: This must be kept in sync with the actual debug.cc location
-    const char *ThisFileNameTail = "src/debug.cc";
-
-    const char *file=__FILE__;
-
-    // Disable heuristic if it does not work.
-    if (!strstr(file, ThisFileNameTail))
-        return 0;
-
-    return strlen(file)-strlen(ThisFileNameTail);
-}
-
-const char*
-SkipBuildPrefix(const char* path)
-{
-    static const size_t BuildPrefixLength = BuildPrefixInit();
-
-    return path+BuildPrefixLength;
-}
-
 /// print data bytes using hex notation
 void
 Raw::printHex(std::ostream &os) const
