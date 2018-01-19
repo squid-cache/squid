@@ -191,9 +191,9 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>ESI Custom Parser removal
-<p>The Squid custom ESI parser has been removed in favour of better supported
-and maintained third-party libraries. At least one of libxml2 or libexpat are
-now mandatory to build support for the ESI (Edge Side Includes) response processor.
+<p>The Squid custom ESI (Edge Side Includes) parser has been removed in favour
+of better supported and maintained third-party libraries. At least one of libxml2
+or libexpat is now mandatory to build support for the ESI response processor.
 
 
 <sect>Changes to squid.conf since Squid-3.5
@@ -301,7 +301,7 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>esi_parser</tag>
 	<p>Removed <em>custom</em> parser option.
-	<p>Changed default to auto-detect available parsers instead of a fixed default.
+	<p>Changed default to auto-detect available parsers instead of <em>custom</em>.
 
 	<tag>external_acl_type</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
@@ -512,7 +512,7 @@ This section gives an account of those changes in three categories:
 
 	<tag>--enable-esi</tag>
 	<p>Custom ESI parser has been removed.
-	   Libxml2 or libexpat are now required to enable ESI processor.
+	   Libxml2 or libexpat is now required to enable ESI processing.
 
 </descrip>
 </p>
