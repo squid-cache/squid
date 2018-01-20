@@ -349,13 +349,6 @@ Ip::Address::getReverseString(char buf[MAX_IPSTRLEN], int show_type) const
     return false;
 }
 
-Ip::Address&
-Ip::Address::operator =(const Ip::Address &s)
-{
-    memcpy(this, &s, sizeof(Ip::Address));
-    return *this;
-};
-
 Ip::Address::Address(const char*s)
 {
     setEmpty();
@@ -440,7 +433,7 @@ Ip::Address::operator =(const struct sockaddr_storage &s)
 {
     /* some AF_* magic to tell socket types apart and what we need to do */
     if (s.ss_family == AF_INET6) {
-        memcpy(&mSocketAddr_, &s, sizeof(struct sockaddr_in6));
+        memmove(&mSocketAddr_, &s, sizeof(struct sockaddr_in6));
     } else { // convert it to our storage mapping.
         struct sockaddr_in *sin = (struct sockaddr_in*)&s;
         mSocketAddr_.sin6_port = sin->sin_port;
@@ -458,8 +451,7 @@ Ip::Address::Address(struct sockaddr_in6 const &s)
 Ip::Address &
 Ip::Address::operator =(struct sockaddr_in6 const &s)
 {
-    memcpy(&mSocketAddr_, &s, sizeof(struct sockaddr_in6));
-
+    memmove(&mSocketAddr_, &s, sizeof(struct sockaddr_in6));
     return *this;
 };
 
@@ -486,18 +478,11 @@ Ip::Address::Address(struct in6_addr const &s)
 Ip::Address &
 Ip::Address::operator =(struct in6_addr const &s)
 {
-
-    memcpy(&mSocketAddr_.sin6_addr, &s, sizeof(struct in6_addr));
+    memmove(&mSocketAddr_.sin6_addr, &s, sizeof(struct in6_addr));
     mSocketAddr_.sin6_family = AF_INET6;
 
     return *this;
 };
-
-Ip::Address::Address(const Ip::Address &s)
-{
-    setEmpty();
-    operator=(s);
-}
 
 Ip::Address::Address(const struct hostent &s)
 {
@@ -957,7 +942,7 @@ Ip::Address::getSockAddr(struct sockaddr_in &buf) const
 void
 Ip::Address::getSockAddr(struct sockaddr_in6 &buf) const
 {
-    memcpy(&buf, &mSocketAddr_, sizeof(struct sockaddr_in6));
+    memmove(&buf, &mSocketAddr_, sizeof(struct sockaddr_in6));
     /* maintain address family. It may have changed inside us. */
     buf.sin6_family = AF_INET6;
 
@@ -1005,7 +990,7 @@ Ip::Address::map6to4(const struct in6_addr &in, struct in_addr &out) const
 void
 Ip::Address::getInAddr(struct in6_addr &buf) const
 {
-    memcpy(&buf, &mSocketAddr_.sin6_addr, sizeof(struct in6_addr));
+    memmove(&buf, &mSocketAddr_.sin6_addr, sizeof(struct in6_addr));
 }
 
 bool

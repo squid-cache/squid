@@ -46,7 +46,6 @@ public:
     /** @name Constructors and Destructor */
     /*@{*/
     Address() { setEmpty(); }
-    Address(const Ip::Address &);
     Address(const struct in_addr &);
     Address(const struct sockaddr_in &);
     Address(const struct in6_addr &);
@@ -59,7 +58,6 @@ public:
 
     /** @name Assignment Operators */
     /*@{*/
-    Address& operator =(const Address &s);
     Address& operator =(struct sockaddr_in const &s);
     Address& operator =(struct sockaddr_storage const &s);
     Address& operator =(struct in_addr const &s);
