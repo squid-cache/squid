@@ -216,6 +216,10 @@ This section gives a thorough account of those changes in three categories:
 	<p>New directive to limit the size of a table used for sharing information
 	   about collapsible entries among SMP workers.
 
+	<tag>force_request_body_continuation</tag>
+	<p>New directive to control Squid behaviour on the client connection when
+	   receiving an HTTP request with an Expect:100-continue header.
+
 	<tag>hopeless_kid_revival_delay</tag>
 	<p>New directive to set a cool-down delay reviving a child process if
 	   the process is encountering frequent deaths.
@@ -223,6 +227,9 @@ This section gives a thorough account of those changes in three categories:
 	<tag>on_unsupported_protocol</tag>
 	<p>New directive to set the action performed when encountering strange
 	   protocol requests at the beginning of an accepted TCP connection.
+
+	<tag>pconn_lifetime</tag>
+	<p>New directive to limit the lifetime of persistent connections.
 
 	<tag>reply_header_add</tag>
 	<p>New directive to add header fields to outgoing HTTP responses to
@@ -262,6 +269,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>Unused connections received in <em>http_port</em> or <em>https_port</em>
 	   or transactions terminated before reading[parsing] request headers
 	   logged with URI <em>error:transaction-end-before-headers</em>.
+	<p>New option <em>rotate=</em> to control the number of log file rotations
+	   to make when <em>-k rotate</em> command is received. Default is to
+	   obey the <em>logfile_rotate</em> directive.
 
 	<tag>acl</tag>
 	<p>New <em>-m</em> flag for <em>note</em> ACL to match substrings.
@@ -298,6 +308,14 @@ This section gives a thorough account of those changes in three categories:
 	<p>Manual squid.conf update may be required on upgrade.
 	<p>Replaced option <em>sslcafile=</em> with <em>tls-cafile=</em>
 	   which takes multiple entries.
+
+	<tag>deny_info</tag>
+	<p>New format macro <em>%O</em> to expand the <em>message=</em> value supplied
+	   by external ACL helpers.
+
+	<tag>ecap_service</tag>
+	<p>New <em>connection-encryption=</em> option to determine ICAP service
+	   effect on <em>connections_encrypted</em> ACL.
 
 	<tag>esi_parser</tag>
 	<p>Removed <em>custom</em> parser option.
@@ -337,6 +355,8 @@ This section gives a thorough account of those changes in three categories:
 	<tag>icap_service</tag>
 	<p>New scheme <em>icaps://</em> to enable TLS/SSL connections to Secure ICAP
 	   servers on port 11344.
+	<p>New <em>connection-encryption=</em> option to determine ICAP service
+	   effect on <em>connections_encrypted</em> ACL.
 	<p>New <em>tls-cert=</em> option to set TLS client certificate to use.
 	<p>New <em>tls-key=</em> option to set TLS private key matching the client
 	   certificate used.
@@ -347,6 +367,8 @@ This section gives a thorough account of those changes in three categories:
 	<p>New <em>tls-cipher=</em> option to set a list of ciphers permitted.
 	<p>New <em>tls-cafile=</em> option to set a file with additional CA
 	   certificate(s) to verify the server certificate.
+	<p>New <em>tls-capath=</em> option to set a directory with additional CA
+	   certificate(s) to verify the server certificate.
 	<p>New <em>tls-crlfile=</em> option to set a file with a CRL to verify the
 	   server certificate.
 	<p>New <em>tls-default-ca</em> option to use the system Trusted CAs to
@@ -354,8 +376,13 @@ This section gives a thorough account of those changes in three categories:
 	<p>New <em>tls-domain=</em> option to verify the server certificate domain.
 
 	<tag>logformat</tag>
-	<p>New code <em>%ssl::&lt;cert_errors</em> to display server
+	<p>New quoting modifier to produce <em>\-escaped</em> output.
+	<p>New code <em>%ssl::&lt;cert_errors</em> to display server X.509
 	   certificate errors.
+	<p>New code <em>%ssl::&lt;cert_issuer</em> to display Issuer field of
+	   the received server X.509 certificate.
+	<p>New code <em>%ssl::&lt;cert_subject</em> to display Subject field of
+	   the received server X.509 certificate.
 	<p>New code <em>%ssl::&gt;negotiated_version</em> to display
 	   negotiated TLS version of the client connection.
 	<p>New code <em>%ssl::&lt;negotiated_version</em> to display
@@ -380,13 +407,15 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>pid_filename</tag>
 	<p>Default value now based on squid -n command line parameter.
+	<p>This directive is no longer mandatory to edit for
+	   multi-instance/tenant Squid installations.
 
 	<tag>refresh_pattern</tag>
 	<p>Removed option <em>ignore-auth</em>. Its commonly desired behaviour
 	   is performed by default with correct HTTP/1.1 revalidation.
-	<p>Removed <em>ignore-must-revalidate</em>. Other more HTTP compliant
-	   directives (cache, store_miss) can be used to prevent objects from
-	   caching.
+	<p>Removed option <em>ignore-must-revalidate</em>. Other more HTTP compliant
+	   directives (<em>cache</em>, <em>store_miss</em>) can be used to prevent
+	   objects from caching.
 
 	<tag>sslcrtd_children</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
