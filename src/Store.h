@@ -370,8 +370,7 @@ public:
     ~EntryGuard() {
         if (entry_) {
             // something went wrong -- the caller did not unlockAndReset() us
-            entry_->releaseRequest(false);
-            entry_->unlock(context_);
+            onException();
         }
     }
 
@@ -381,16 +380,6 @@ public:
     /// \returns nil or the guarded (locked) entry
     Entry *get() {
         return entry_;
-    }
-
-    /// like std::unique_ptr::release(); not like Entry::release()
-    /// stops guarding the entry
-    /// does not unlock the entry
-    /// \returns nil or the previously guarded entry
-    Entry *releaseLocked() {
-        const auto entry = entry_;
-        entry_ = nullptr;
-        return entry;
     }
 
     /// like std::unique_ptr::reset()
@@ -404,6 +393,8 @@ public:
     }
 
 private:
+    void onException() noexcept;
+
     Entry *entry_; ///< the guarded Entry or nil
     const char *context_; ///< default unlock() message
 };

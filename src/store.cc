@@ -9,6 +9,7 @@
 /* DEBUG: section 20    Storage Manager */
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "CacheDigest.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
@@ -2231,5 +2232,14 @@ char const *
 NullStoreEntry::getSerialisedMetaData()
 {
     return NULL;
+}
+
+void
+Store::EntryGuard::onException() noexcept
+{
+    SWALLOW_EXCEPTIONS({
+        entry_->releaseRequest(false);
+        entry_->unlock(context_);
+    });
 }
 
