@@ -13,21 +13,23 @@ noinst_LTLIBRARIES = libbase.la
 libbase_la_SOURCES = \
 	AsyncCall.cc \
 	AsyncCall.h \
-	AsyncCbdataCalls.h \
-	AsyncJob.h \
-	AsyncJob.cc \
-	AsyncJobCalls.h \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
+	AsyncCbdataCalls.h \
+	AsyncJob.cc \
+	AsyncJob.h \
+	AsyncJobCalls.h \
 	ByteCounter.h \
 	CbcPointer.h \
 	CbDataList.h \
-	CharacterSet.h \
 	CharacterSet.cc \
+	CharacterSet.h \
 	EnumIterator.h \
-	File.h \
 	File.cc \
+	File.h \
 	HardFun.h \
+	Here.cc \
+	Here.h \
 	InstanceId.h \
 	Lock.h \
 	LookupTable.h \

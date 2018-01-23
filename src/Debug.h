@@ -11,6 +11,7 @@
 #ifndef SQUID_DEBUG_H
 #define SQUID_DEBUG_H
 
+#include "base/Here.h"
 // XXX should be mem/forward.h once it removes dependencies on typedefs.h
 #include "mem/AllocatorProxy.h"
 
@@ -111,9 +112,6 @@ void StopUsingDebugLog();
 /// a hack for low-level file descriptor manipulations in ipcCreate()
 void ResyncDebugLog(FILE *newDestination);
 
-size_t BuildPrefixInit();
-const char * SkipBuildPrefix(const char* path);
-
 /* Debug stream
  *
  * Unit tests can enable full debugging to stderr for one
@@ -127,7 +125,7 @@ const char * SkipBuildPrefix(const char* path);
             std::ostream &_dbo = Debug::Start((SECTION), _dbg_level); \
             if (_dbg_level > DBG_IMPORTANT) { \
                 _dbo << (SECTION) << ',' << _dbg_level << "| " \
-                     << SkipBuildPrefix(__FILE__)<<"("<<__LINE__<<") "<<__FUNCTION__<<": "; \
+                     << Here() << ": "; \
             } \
             _dbo << CONTENT; \
             Debug::Finish(); \
@@ -245,6 +243,29 @@ operator <<(std::ostream &os, const RawPointerT<Pointer> &pd)
     else
         return os << "[nil]";
 }
+
+/// std::ostream manipulator to print integers as hex numbers prefixed by 0x
+template <class Integer>
+class AsHex
+{
+public:
+    explicit AsHex(const Integer n): raw(n) {}
+    Integer raw; ///< the integer to print
+};
+
+template <class Integer>
+inline std::ostream &
+operator <<(std::ostream &os, const AsHex<Integer> number)
+{
+    const auto oldFlags = os.flags();
+    os << std::hex << std::showbase << number.raw;
+    os.setf(oldFlags);
+    return os;
+}
+
+/// a helper to ease AsHex object creation
+template <class Integer>
+inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
 
 #endif /* SQUID_DEBUG_H */
 

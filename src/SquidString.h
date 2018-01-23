@@ -12,6 +12,7 @@
 #define SQUID_STRING_H
 
 #include "base/TextException.h"
+#include "Debug.h"
 
 #include <ostream>
 

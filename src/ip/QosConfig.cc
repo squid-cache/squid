@@ -77,71 +77,74 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
 #endif
 }
 
-void Ip::Qos::getNfmarkFromServer(const Comm::ConnectionPointer &server, const fde *clientFde)
+nfmark_t
+Ip::Qos::getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionDirection connDir)
 {
+    nfmark_t mark = 0;
 #if USE_LIBNETFILTERCONNTRACK
     /* Allocate a new conntrack */
     if (struct nf_conntrack *ct = nfct_new()) {
-
         /* Prepare data needed to find the connection in the conntrack table.
          * We need the local and remote IP address, and the local and remote
          * port numbers.
          */
+        const auto src = (connDir == Ip::Qos::dirAccepted) ? conn->remote : conn->local;
+        const auto dst = (connDir == Ip::Qos::dirAccepted) ? conn->local : conn->remote;
 
-        if (Ip::EnableIpv6 && server->local.isIPv6()) {
+        if (Ip::EnableIpv6 && src.isIPv6()) {
             nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET6);
-            struct in6_addr serv_fde_remote_ip6;
-            server->remote.getInAddr(serv_fde_remote_ip6);
-            nfct_set_attr(ct, ATTR_IPV6_DST, serv_fde_remote_ip6.s6_addr);
-            struct in6_addr serv_fde_local_ip6;
-            server->local.getInAddr(serv_fde_local_ip6);
-            nfct_set_attr(ct, ATTR_IPV6_SRC, serv_fde_local_ip6.s6_addr);
+            struct in6_addr conn_fde_dst_ip6;
+            dst.getInAddr(conn_fde_dst_ip6);
+            nfct_set_attr(ct, ATTR_ORIG_IPV6_DST, conn_fde_dst_ip6.s6_addr);
+            struct in6_addr conn_fde_src_ip6;
+            src.getInAddr(conn_fde_src_ip6);
+            nfct_set_attr(ct, ATTR_ORIG_IPV6_SRC, conn_fde_src_ip6.s6_addr);
         } else {
             nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET);
-            struct in_addr serv_fde_remote_ip;
-            server->remote.getInAddr(serv_fde_remote_ip);
-            nfct_set_attr_u32(ct, ATTR_IPV4_DST, serv_fde_remote_ip.s_addr);
-            struct in_addr serv_fde_local_ip;
-            server->local.getInAddr(serv_fde_local_ip);
-            nfct_set_attr_u32(ct, ATTR_IPV4_SRC, serv_fde_local_ip.s_addr);
+            struct in_addr conn_fde_dst_ip;
+            dst.getInAddr(conn_fde_dst_ip);
+            nfct_set_attr_u32(ct, ATTR_ORIG_IPV4_DST, conn_fde_dst_ip.s_addr);
+            struct in_addr conn_fde_src_ip;
+            src.getInAddr(conn_fde_src_ip);
+            nfct_set_attr_u32(ct, ATTR_ORIG_IPV4_SRC, conn_fde_src_ip.s_addr);
         }
 
         nfct_set_attr_u8(ct, ATTR_L4PROTO, IPPROTO_TCP);
-        nfct_set_attr_u16(ct, ATTR_PORT_DST, htons(server->remote.port()));
-        nfct_set_attr_u16(ct, ATTR_PORT_SRC, htons(server->local.port()));
+        nfct_set_attr_u16(ct, ATTR_ORIG_PORT_DST, htons(dst.port()));
+        nfct_set_attr_u16(ct, ATTR_ORIG_PORT_SRC, htons(src.port()));
 
         /* Open a handle to the conntrack */
         if (struct nfct_handle *h = nfct_open(CONNTRACK, 0)) {
             /* Register the callback. The callback function will record the mark value. */
-            nfct_callback_register(h, NFCT_T_ALL, getNfMarkCallback, (void *)clientFde);
+            nfct_callback_register(h, NFCT_T_ALL, getNfmarkCallback, static_cast<void *>(&mark));
             /* Query the conntrack table using the data previously set */
             int x = nfct_query(h, NFCT_Q_GET, ct);
             if (x == -1) {
-                debugs(17, 2, "QOS: Failed to retrieve connection mark: (" << x << ") " << strerror(errno)
-                       << " (Destination " << server->remote << ", source " << server->local << ")" );
+                const int xerrno = errno;
+                debugs(17, 2, "QOS: Failed to retrieve connection mark: (" << x << ") " << xstrerr(xerrno)
+                       << " (Destination " << dst << ", source " << src << ")" );
             }
             nfct_close(h);
         } else {
-            debugs(17, 2, "QOS: Failed to open conntrack handle for upstream netfilter mark retrieval.");
+            debugs(17, 2, "QOS: Failed to open conntrack handle for netfilter mark retrieval.");
         }
         nfct_destroy(ct);
-
     } else {
-        debugs(17, 2, "QOS: Failed to allocate new conntrack for upstream netfilter mark retrieval.");
+        debugs(17, 2, "QOS: Failed to allocate new conntrack for netfilter mark retrieval.");
     }
 #endif
+    return mark;
 }
 
 #if USE_LIBNETFILTERCONNTRACK
 int
-Ip::Qos::getNfMarkCallback(enum nf_conntrack_msg_type,
+Ip::Qos::getNfmarkCallback(enum nf_conntrack_msg_type,
                            struct nf_conntrack *ct,
-                           void *data)
+                           void *connmark)
 {
-    fde *clientFde = (fde *)data;
-    clientFde->nfmarkFromServer = nfct_get_attr_u32(ct, ATTR_MARK);
-    debugs(17, 3, "QOS: Retrieved connection mark value: " << clientFde->nfmarkFromServer);
-
+    auto *mark = static_cast<nfmark_t *>(connmark);
+    *mark = nfct_get_attr_u32(ct, ATTR_MARK);
+    debugs(17, 3, asHex(*mark));
     return NFCT_CB_CONTINUE;
 }
 #endif

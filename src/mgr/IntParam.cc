@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
+#include "Debug.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/IntParam.h"
 

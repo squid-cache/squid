@@ -14,6 +14,7 @@ DISTCLEANFILES =
 
 LDADD = \
 	$(top_builddir)/src/ip/libip.la \
+	$(top_builddir)/src/base/libbase.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \

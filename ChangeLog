@@ -1,3 +1,17 @@
+Changes to squid-4.0.23 (19 Jan 2018):
+
+	- Bug 4715: security_file_certgen: Remove -g and -n options docs
+	- Bug 4679: User names not sent to url_rewrite_program
+	- Bug 4631: security_file_certgen helper without disk cache
+	- Bug 3911: clang -fsanitize warnings
+	- Bug 2378: Duplicates in selected peer destinations
+	- Nettle v3.4 support
+	- Fix Squid FTP server dying because of an unhandled exception
+	- Automatically revive hopeless kids on reconfigure and after a timeout
+	- Fix %<Hs, %<pt, %<tt, %<bs calculation bugs for error responses
+	- ... and many documentation updates
+	- ... and some stability fixes
+
 Changes to squid-4.0.22 (07 Dec 2017):
 
 	- Regression fix: Relay peer CONNECT error status line and headers to clients

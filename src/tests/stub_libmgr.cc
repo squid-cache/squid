@@ -96,7 +96,7 @@ void Mgr::CountersAction::dump(StoreEntry* entry) STUB
 //Mgr::Forwarder::Forwarder(int aFd, const ActionParams &aParams, HttpRequest* aRequest, StoreEntry* anEntry) STUB
 //Mgr::Forwarder::~Forwarder() STUB
 //protected:
-void Mgr::Forwarder::cleanup() STUB
+//void Mgr::Forwarder::swanSong() STUB
 void Mgr::Forwarder::handleError() STUB
 void Mgr::Forwarder::handleTimeout() STUB
 void Mgr::Forwarder::handleException(const std::exception& e) STUB

@@ -320,9 +320,8 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
    \ingroup ServerProtocolSSLAPI
    * Sets the hostname for the Server Name Indication (SNI) TLS extension
    * if supported by the used openssl toolkit.
-   \return true if SNI set false otherwise
 */
-bool setClientSNI(SSL *ssl, const char *fqdn);
+void setClientSNI(SSL *ssl, const char *fqdn);
 
 /**
   \ingroup ServerProtocolSSLAPI

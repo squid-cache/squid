@@ -19,10 +19,6 @@ class SBufIterator;
 class SBufReverseIterator;
 class SBufReservationRequirements;
 
-class OutOfBoundsException;
-class InvalidParamException;
-class SBufTooBigException;
-
 class SBufStats;
 typedef std::list<SBuf> SBufList;
 
