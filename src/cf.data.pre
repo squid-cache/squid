@@ -4865,7 +4865,7 @@ DOC_START
 	Note, from Squid-3.1 this option is only a default for cache.log,
 	that log can be rotated separately by using debug_options.
 
-	Note, from Squid-3.6 this option is only a default for access.log
+	Note, from Squid-4 this option is only a default for access.log
 	recorded by stdio: module. Those logs can be rotated separately by
 	using the rotate=N option on their access_log directive.
 
