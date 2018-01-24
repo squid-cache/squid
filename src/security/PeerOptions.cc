@@ -63,6 +63,13 @@ Security::PeerOptions::parse(const char *token)
         optsReparse = true;
     } else if (strncmp(token, "cipher=", 7) == 0) {
         sslCipher = SBuf(token + 7);
+#if USE_OPENSSL
+        // everything okay
+#elif USE_GNUTLS
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: SSL cipher= not supported. Uses GnuTLS tls-options= parameters instead.");
+#else
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: SSL cipher= option requires --with-openssl.");
+#endif
     } else if (strncmp(token, "cafile=", 7) == 0) {
         caFiles.emplace_back(SBuf(token + 7));
     } else if (strncmp(token, "capath=", 7) == 0) {
@@ -274,6 +281,9 @@ Security::PeerOptions::createClientContext(bool setOptions)
     if (t) {
         if (setOptions)
             updateContextOptions(t);
+
+        Must(updateContextCiphers(t)); // ciphers not working is fatal for connections to server/peer
+
 #if USE_OPENSSL
         // XXX: temporary performance regression. c_str() data copies and prevents this being a const method
         Ssl::InitClientContext(t, *this, parsedFlags);
@@ -619,6 +629,28 @@ Security::PeerOptions::updateContextOptions(Security::ContextPointer &ctx)
 #elif USE_GNUTLS
     // NP: GnuTLS uses 'priorities' which are set only per-session instead.
 #endif
+}
+
+bool
+Security::PeerOptions::updateContextCiphers(Security::ContextPointer &ctx) const
+{
+    if (sslCipher.isEmpty())
+        return true;
+
+#if USE_OPENSSL
+    const char *cipher = const_cast<SBuf*>(&sslCipher)->c_str();
+    if (!SSL_CTX_set_cipher_list(ctx.get(), cipher)) {
+        const int ssl_error = ERR_get_error();
+        debugs(83, DBG_CRITICAL, "ERROR: Failed to set SSL cipher suite '" << sslCipher << "': " <<  Security::ErrorString(ssl_error));
+        return false;
+    }
+
+    debugs(83, 5, "Using cipher suite " << sslCipher);
+
+#elif USE_GNUTLS
+    // NP: GnuTLS uses 'priorities' which are set via options= instead.
+#endif
+    return true;
 }
 
 #if USE_OPENSSL && defined(TLSEXT_TYPE_next_proto_neg)
