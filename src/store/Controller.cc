@@ -315,6 +315,7 @@ Store::Controller::find(const cache_key *key)
         try {
             if (!entry->key)
                 allowSharing(*entry, key);
+            assert(!transients || entry->hasTransients());
             entry->touch();
             referenceBusy(*entry);
             return entry;
@@ -384,6 +385,7 @@ Store::Controller::peek(const cache_key *key)
 
     if (StoreEntry *e = peekAtLocal(key)) {
         debugs(20, 3, "got local in-transit entry: " << *e);
+        assert(!transients || e->hasTransients());
         return e;
     }
 

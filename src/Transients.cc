@@ -274,8 +274,7 @@ Transients::evictCached(StoreEntry &e)
             // Calling it directly/here creates complex reentrant call chains.
             CollapsedForwarding::Broadcast(e, true);
         }
-    } else if (const auto key = e.publicKey())
-        evictIfFound(key);
+    } // else nothing to do because e must be private
 }
 
 void
