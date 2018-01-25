@@ -4548,14 +4548,8 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
     } else
         param = NULL;
 
-    if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidAfter]) == 0) {
-        ca->alg = Ssl::algSetValidAfter;
-        ca->param = xstrdup("on");
-    } else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidBefore]) == 0) {
-        ca->alg = Ssl::algSetValidBefore;
-        ca->param = xstrdup("on");
-    } else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetCommonName]) == 0) {
-        ca->alg = Ssl::algSetCommonName;
+    ca->alg = Security::certAdaptAlgorithmId(al);
+    if (ca->alg == Security::algSetCommonName) {
         if (param) {
             if (strlen(param) > 64) {
                 debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: setCommonName{" <<param << "} : using common name longer than 64 bytes is not supported");
@@ -4565,6 +4559,10 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
             }
             ca->param = xstrdup(param);
         }
+
+    } else if (ca->alg != Security::algSetEnd) {
+        ca->param = xstrdup("on");
+
     } else {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: unknown cert adaptation algorithm: " << al);
         xfree(ca);
@@ -4584,7 +4582,7 @@ static void dump_sslproxy_cert_adapt(StoreEntry *entry, const char *name, sslpro
 {
     for (sslproxy_cert_adapt *ca = cert_adapt; ca != NULL; ca = ca->next) {
         storeAppendPrintf(entry, "%s ", name);
-        storeAppendPrintf(entry, "%s{%s} ", Ssl::sslCertAdaptAlgoritm(ca->alg), ca->param);
+        storeAppendPrintf(entry, "%s{%s} ", Security::certAdaptAlgorithm(ca->alg), ca->param);
         if (ca->aclList)
             dump_acl_list(entry, ca->aclList);
         storeAppendPrintf(entry, "\n");

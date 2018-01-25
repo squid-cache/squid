@@ -14,6 +14,8 @@ noinst_LTLIBRARIES = libsecurity.la libsecurityutil.la
 
 # Pieces linked to security helpers
 libsecurityutil_la_SOURCES= \
+	CertAdaptAlgorithm.cc \
+	CertAdaptAlgorithm.h \
 	CertSignAlgorithm.cc \
 	CertSignAlgorithm.h
 
@@ -44,7 +46,10 @@ libsecurity_la_SOURCES= \
 
 libsecurity_la_LIBADD= libsecurityutil.la
 
+CertAdaptAlgorithm.cc: CertAdaptAlgorithm.h $(top_srcdir)/src/mk-string-arrays.awk
+	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk <$(srcdir)/CertAdaptAlgorithm.h | sed -e 's%algSet%set%' >$@) || ($(RM) -f $@ && exit 1)
+
 CertSignAlgorithm.cc: CertSignAlgorithm.h $(top_srcdir)/src/mk-string-arrays.awk
 	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk <$(srcdir)/CertSignAlgorithm.h | sed -e 's%algSign%sign%' >$@) || ($(RM) -f $@ && exit 1)
 
-CLEANFILES += CertSignAlgorithm.cc
+CLEANFILES += CertAdaptAlgorithm.cc CertSignAlgorithm.cc

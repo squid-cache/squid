@@ -2734,25 +2734,25 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 
         for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != NULL; ca = ca->next) {
             // If the algorithm already set, then ignore it.
-            if ((ca->alg == Ssl::algSetCommonName && certProperties.setCommonName) ||
-                    (ca->alg == Ssl::algSetValidAfter && certProperties.setValidAfter) ||
-                    (ca->alg == Ssl::algSetValidBefore && certProperties.setValidBefore) )
+            if ((ca->alg == Security::algSetCommonName && certProperties.setCommonName) ||
+                    (ca->alg == Security::algSetValidAfter && certProperties.setValidAfter) ||
+                    (ca->alg == Security::algSetValidBefore && certProperties.setValidBefore) )
                 continue;
 
             if (ca->aclList && checklist.fastCheck(ca->aclList).allowed()) {
-                const char *alg = Ssl::CertAdaptAlgorithmStr[ca->alg];
+                const char *alg = Security::certAdaptAlgorithm(ca->alg);
                 const char *param = ca->param;
 
                 // For parameterless CN adaptation, use hostname from the
                 // CONNECT request.
-                if (ca->alg == Ssl::algSetCommonName) {
+                if (ca->alg == Security::algSetCommonName) {
                     if (!param)
                         param = tlsConnectHostOrIp.c_str();
                     certProperties.commonName = param;
                     certProperties.setCommonName = true;
-                } else if (ca->alg == Ssl::algSetValidAfter)
+                } else if (ca->alg == Security::algSetValidAfter)
                     certProperties.setValidAfter = true;
-                else if (ca->alg == Ssl::algSetValidBefore)
+                else if (ca->alg == Security::algSetValidBefore)
                     certProperties.setValidBefore = true;
 
                 debugs(33, 5, HERE << "Matches certificate adaptation aglorithm: " <<

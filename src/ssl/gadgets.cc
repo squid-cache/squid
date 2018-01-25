@@ -192,13 +192,6 @@ static bool replaceCommonName(Security::CertPointer & cert, std::string const &r
                                       (unsigned char *)(cn.c_str()), -1, -1, 0);
 }
 
-const char *Ssl::CertAdaptAlgorithmStr[] = {
-    "setValidAfter",
-    "setValidBefore",
-    "setCommonName",
-    NULL
-};
-
 Ssl::CertificateProperties::CertificateProperties():
     setValidAfter(false),
     setValidBefore(false),

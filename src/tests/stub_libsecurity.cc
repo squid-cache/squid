@@ -15,6 +15,7 @@
 #include "tests/STUB.h"
 
 // auto-generated constants
+#include "security/CertAdaptAlgorithm.cc"
 #include "security/CertSignAlgorithm.cc"
 
 #include "security/BlindPeerConnector.h"

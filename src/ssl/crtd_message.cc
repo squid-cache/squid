@@ -263,9 +263,9 @@ void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProp
 
 const std::string Ssl::CrtdMessage::code_new_certificate("new_certificate");
 const std::string Ssl::CrtdMessage::param_host("host");
-const std::string Ssl::CrtdMessage::param_SetValidAfter(Ssl::CertAdaptAlgorithmStr[algSetValidAfter]);
-const std::string Ssl::CrtdMessage::param_SetValidBefore(Ssl::CertAdaptAlgorithmStr[algSetValidBefore]);
-const std::string Ssl::CrtdMessage::param_SetCommonName(Ssl::CertAdaptAlgorithmStr[algSetCommonName]);
+const std::string Ssl::CrtdMessage::param_SetValidAfter(Security::certAdaptAlgorithm(Security::algSetValidAfter));
+const std::string Ssl::CrtdMessage::param_SetValidBefore(Security::certAdaptAlgorithm(Security::algSetValidBefore));
+const std::string Ssl::CrtdMessage::param_SetCommonName(Security::certAdaptAlgorithm(Security::algSetCommonName));
 const std::string Ssl::CrtdMessage::param_Sign("Sign");
 const std::string Ssl::CrtdMessage::param_SignHash("SignHash");
 

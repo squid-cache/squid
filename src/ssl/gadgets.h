@@ -145,30 +145,6 @@ bool WritePrivateKey(BIO_Pointer &bio, const Security::PrivateKeyPointer &pkey);
 
 /**
  \ingroup SslCrtdSslAPI
- * Supported certificate adaptation algorithms
- */
-enum CertAdaptAlgorithm {algSetValidAfter = 0, algSetValidBefore, algSetCommonName, algSetEnd};
-
-/**
- \ingroup SslCrtdSslAPI
- * Short names for certificate adaptation algorithms
- */
-extern const char *CertAdaptAlgorithmStr[];
-
-/**
- \ingroup SslCrtdSslAPI
- * Return the short name of the adaptation algorithm "alg"
- */
-inline const char *sslCertAdaptAlgoritm(int alg)
-{
-    if (alg >=0 && alg < Ssl::algSetEnd)
-        return Ssl::CertAdaptAlgorithmStr[alg];
-
-    return NULL;
-}
-
-/**
- \ingroup SslCrtdSslAPI
  * Simple struct to pass certificate generation parameters to generateSslCertificate function.
  */
 class CertificateProperties
