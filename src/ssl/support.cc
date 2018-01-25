@@ -808,9 +808,9 @@ Ssl::chainCertificatesToSSLContext(Security::ContextPointer &ctx, Security::Serv
 }
 
 void
-Ssl::configureUnconfiguredSslContext(Security::ContextPointer &ctx, Ssl::CertSignAlgorithm signAlgorithm,AnyP::PortCfg &port)
+Ssl::configureUnconfiguredSslContext(Security::ContextPointer &ctx, Security::CertSignAlgorithm signAlgorithm, AnyP::PortCfg &port)
 {
-    if (ctx && signAlgorithm == Ssl::algSignTrusted)
+    if (ctx && signAlgorithm == Security::algSignTrusted)
         Ssl::chainCertificatesToSSLContext(ctx, port.secure);
 }
 
@@ -1179,7 +1179,7 @@ bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, Security::
     certProperties.setCommonName = true;
     // O, OU, and other CA subject fields will be mimicked
     // Expiration date and other common properties will be mimicked
-    certProperties.signAlgorithm = Ssl::algSignSelf;
+    certProperties.signAlgorithm = Security::algSignSelf;
     certProperties.signWithPkey.resetAndLock(pkey.get());
     certProperties.mimicCert.resetAndLock(cert.get());
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
@@ -1202,7 +1202,7 @@ void Ssl::InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties
     key.append(certProperties.setCommonName ? '1' : '0');
     key.append(certProperties.setValidAfter ? '1' : '0');
     key.append(certProperties.setValidBefore ? '1' : '0');
-    key.append(certProperties.signAlgorithm != Ssl:: algSignEnd ? certSignAlgorithm(certProperties.signAlgorithm) : "-");
+    key.append(certProperties.signAlgorithm != Security::algSignEnd ? certSignAlgorithm(certProperties.signAlgorithm) : "-");
     key.append(certProperties.signHash ? EVP_MD_name(certProperties.signHash) : "-");
 
     if (certProperties.mimicCert) {

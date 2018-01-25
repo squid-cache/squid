@@ -2195,7 +2195,6 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     parsedBumpedRequestCount(0),
     tlsConnectPort(0),
     sslServerBump(NULL),
-    signAlgorithm(Ssl::algSignTrusted),
 #endif
     stoppedSending_(NULL),
     stoppedReceiving_(NULL)
@@ -2707,7 +2706,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
                     Security::ContextPointer ctx(Security::GetFrom(fd_table[clientConnection->fd].ssl));
                     Ssl::configureUnconfiguredSslContext(ctx, signAlgorithm, *port);
                 } else {
-                    Security::ContextPointer ctx(Ssl::GenerateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), port->secure, (signAlgorithm == Ssl::algSignTrusted)));
+                    Security::ContextPointer ctx(Ssl::GenerateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str(), port->secure, (signAlgorithm == Security::algSignTrusted)));
                     if (ctx && !sslBumpCertKey.isEmpty())
                         storeTlsContextToCache(sslBumpCertKey, ctx);
                     getSslContextDone(ctx);
@@ -2761,10 +2760,10 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
             }
         }
 
-        certProperties.signAlgorithm = Ssl::algSignEnd;
+        certProperties.signAlgorithm = Security::algSignEnd;
         for (sslproxy_cert_sign *sg = Config.ssl_client.cert_sign; sg != NULL; sg = sg->next) {
             if (sg->aclList && checklist.fastCheck(sg->aclList).allowed()) {
-                certProperties.signAlgorithm = (Ssl::CertSignAlgorithm)sg->alg;
+                certProperties.signAlgorithm = static_cast<Security::CertSignAlgorithm>(sg->alg);
                 break;
             }
         }
@@ -2775,12 +2774,12 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         // number of warnings the user will have to see to get to the error page.
         // We will close the connection, so that the trust is not extended to
         // non-Squid content.
-        certProperties.signAlgorithm = Ssl::algSignTrusted;
+        certProperties.signAlgorithm = Security::algSignTrusted;
     }
 
-    assert(certProperties.signAlgorithm != Ssl::algSignEnd);
+    assert(certProperties.signAlgorithm != Security::algSignEnd);
 
-    if (certProperties.signAlgorithm == Ssl::algSignUntrusted) {
+    if (certProperties.signAlgorithm == Security::algSignUntrusted) {
         assert(port->secure.untrustedSigningCa.cert);
         certProperties.signWithX509.resetAndLock(port->secure.untrustedSigningCa.cert.get());
         certProperties.signWithPkey.resetAndLock(port->secure.untrustedSigningCa.pkey.get());
@@ -2881,7 +2880,7 @@ ConnStateData::getSslContextStart()
             Security::ContextPointer ctx(Security::GetFrom(fd_table[clientConnection->fd].ssl));
             Ssl::configureUnconfiguredSslContext(ctx, certProperties.signAlgorithm, *port);
         } else {
-            Security::ContextPointer dynCtx(Ssl::GenerateSslContext(certProperties, port->secure, (signAlgorithm == Ssl::algSignTrusted)));
+            Security::ContextPointer dynCtx(Ssl::GenerateSslContext(certProperties, port->secure, (signAlgorithm == Security::algSignTrusted)));
             if (dynCtx && !sslBumpCertKey.isEmpty())
                 storeTlsContextToCache(sslBumpCertKey, dynCtx);
             getSslContextDone(dynCtx);

@@ -426,8 +426,8 @@ private:
 
     /// HTTPS server cert. fetching state for bump-ssl-server-first
     Ssl::ServerBump *sslServerBump;
-    Ssl::CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
 #endif
+    Security::CertSignAlgorithm signAlgorithm = Security::algSignTrusted; ///< The signing algorithm to use
 
     /// the reason why we no longer write the response or nil
     const char *stoppedSending_;

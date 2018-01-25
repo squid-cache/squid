@@ -4615,13 +4615,8 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
         return;
     }
 
-    if (strcmp(al, Ssl::CertSignAlgorithmStr[Ssl::algSignTrusted]) == 0)
-        cs->alg = Ssl::algSignTrusted;
-    else if (strcmp(al, Ssl::CertSignAlgorithmStr[Ssl::algSignUntrusted]) == 0)
-        cs->alg = Ssl::algSignUntrusted;
-    else if (strcmp(al, Ssl::CertSignAlgorithmStr[Ssl::algSignSelf]) == 0)
-        cs->alg = Ssl::algSignSelf;
-    else {
+    cs->alg = Security::certSignAlgorithmId(al);
+    if (cs->alg == Security::algSignEnd) {
         debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_sign: unknown cert signing algorithm: " << al);
         xfree(cs);
         self_destruct();
@@ -4641,7 +4636,7 @@ static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslprox
     sslproxy_cert_sign *cs;
     for (cs = cert_sign; cs != NULL; cs = cs->next) {
         storeAppendPrintf(entry, "%s ", name);
-        storeAppendPrintf(entry, "%s ", Ssl::certSignAlgorithm(cs->alg));
+        storeAppendPrintf(entry, "%s ", Security::certSignAlgorithm(cs->alg));
         if (cs->aclList)
             dump_acl_list(entry, cs->aclList);
         storeAppendPrintf(entry, "\n");

@@ -8,10 +8,16 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-SUBDIRS= cert_generators cert_validators
+SUBDIRS= . cert_generators cert_validators
 
-noinst_LTLIBRARIES = libsecurity.la
+noinst_LTLIBRARIES = libsecurity.la libsecurityutil.la
 
+# Pieces linked to security helpers
+libsecurityutil_la_SOURCES= \
+	CertSignAlgorithm.cc \
+	CertSignAlgorithm.h
+
+# Pieces only linked to squid binary
 libsecurity_la_SOURCES= \
 	BlindPeerConnector.cc \
 	BlindPeerConnector.h \
@@ -35,3 +41,10 @@ libsecurity_la_SOURCES= \
 	ServerOptions.h \
 	Session.cc \
 	Session.h
+
+libsecurity_la_LIBADD= libsecurityutil.la
+
+CertSignAlgorithm.cc: CertSignAlgorithm.h $(top_srcdir)/src/mk-string-arrays.awk
+	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk <$(srcdir)/CertSignAlgorithm.h | sed -e 's%algSign%sign%' >$@) || ($(RM) -f $@ && exit 1)
+
+CLEANFILES += CertSignAlgorithm.cc

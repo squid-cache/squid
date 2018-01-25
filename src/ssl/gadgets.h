@@ -144,44 +144,6 @@ bool WriteX509Certificate(BIO_Pointer &bio, const Security::CertPointer & cert);
 bool WritePrivateKey(BIO_Pointer &bio, const Security::PrivateKeyPointer &pkey);
 
 /**
-  \ingroup SslCrtdSslAPI
- * Supported certificate signing algorithms
- */
-enum CertSignAlgorithm {algSignTrusted = 0, algSignUntrusted, algSignSelf, algSignEnd};
-
-/**
- \ingroup SslCrtdSslAPI
- * Short names for certificate signing algorithms
- */
-
-extern const char *CertSignAlgorithmStr[];
-
-/**
- \ingroup SslCrtdSslAPI
- * Return the short name of the signing algorithm "sg"
- */
-inline const char *certSignAlgorithm(int sg)
-{
-    if (sg >=0 && sg < Ssl::algSignEnd)
-        return Ssl::CertSignAlgorithmStr[sg];
-
-    return NULL;
-}
-
-/**
- \ingroup SslCrtdSslAPI
- * Return the id of the signing algorithm "sg"
- */
-inline CertSignAlgorithm certSignAlgorithmId(const char *sg)
-{
-    for (int i = 0; i < algSignEnd && Ssl::CertSignAlgorithmStr[i] != NULL; i++)
-        if (strcmp(Ssl::CertSignAlgorithmStr[i], sg) == 0)
-            return (CertSignAlgorithm)i;
-
-    return algSignEnd;
-}
-
-/**
  \ingroup SslCrtdSslAPI
  * Supported certificate adaptation algorithms
  */
@@ -220,7 +182,7 @@ public:
     bool setValidBefore; ///< Do not mimic "Not Valid Before" field
     bool setCommonName; ///< Replace the CN field of the mimicing subject with the given
     std::string commonName; ///< A CN to use for the generated certificate
-    CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
+    Security::CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
     const EVP_MD *signHash; ///< The signing hash to use
 private:
     CertificateProperties(CertificateProperties &);

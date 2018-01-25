@@ -14,6 +14,9 @@
 #define STUB_API "security/libsecurity.la"
 #include "tests/STUB.h"
 
+// auto-generated constants
+#include "security/CertSignAlgorithm.cc"
+
 #include "security/BlindPeerConnector.h"
 CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 namespace Security

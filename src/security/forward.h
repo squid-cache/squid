@@ -10,6 +10,7 @@
 #define SQUID_SRC_SECURITY_FORWARD_H
 
 #include "base/CbDataList.h"
+#include "security/CertSignAlgorithm.h"
 #include "security/Context.h"
 #include "security/Session.h"
 

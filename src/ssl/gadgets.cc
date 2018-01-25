@@ -192,13 +192,6 @@ static bool replaceCommonName(Security::CertPointer & cert, std::string const &r
                                       (unsigned char *)(cn.c_str()), -1, -1, 0);
 }
 
-const char *Ssl::CertSignAlgorithmStr[] = {
-    "signTrusted",
-    "signUntrusted",
-    "signSelf",
-    NULL
-};
-
 const char *Ssl::CertAdaptAlgorithmStr[] = {
     "setValidAfter",
     "setValidBefore",
@@ -210,7 +203,7 @@ Ssl::CertificateProperties::CertificateProperties():
     setValidAfter(false),
     setValidBefore(false),
     setCommonName(false),
-    signAlgorithm(Ssl::algSignEnd),
+    signAlgorithm(Security::algSignEnd),
     signHash(NULL)
 {}
 
@@ -253,7 +246,7 @@ Ssl::OnDiskCertificateDbKey(const Ssl::CertificateProperties &properties)
         certKey.append(properties.commonName);
     }
 
-    if (properties.signAlgorithm != Ssl::algSignEnd) {
+    if (properties.signAlgorithm != Security::algSignEnd) {
         certKey.append("+Sign=", 6);
         certKey.append(certSignAlgorithm(properties.signAlgorithm));
     }
@@ -572,7 +565,7 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Secu
 
     int ret = 0;
     // Set issuer name, from CA or our subject name for self signed cert
-    if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithX509.get())
+    if (properties.signAlgorithm != Security::algSignSelf && properties.signWithX509)
         ret = X509_set_issuer_name(cert.get(), X509_get_subject_name(properties.signWithX509.get()));
     else // Self signed certificate, set issuer to self
         ret = X509_set_issuer_name(cert.get(), X509_get_subject_name(cert.get()));
@@ -582,7 +575,7 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Secu
     const  EVP_MD *hash = properties.signHash ? properties.signHash : EVP_get_digestbyname(SQUID_SSL_SIGN_HASH_IF_NONE);
     assert(hash);
     /*Now sign the request */
-    if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithPkey.get())
+    if (properties.signAlgorithm != Security::algSignSelf && properties.signWithPkey)
         ret = X509_sign(cert.get(), properties.signWithPkey.get(), hash);
     else //else sign with self key (self signed request)
         ret = X509_sign(cert.get(), pkey.get(), hash);
@@ -814,7 +807,7 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
     assert(cert);
 
     // For non self-signed certificates we have to check if the signing certificate changed
-    if (properties.signAlgorithm != Ssl::algSignSelf) {
+    if (properties.signAlgorithm != Security::algSignSelf) {
         assert(properties.signWithX509.get());
         if (X509_check_issued(properties.signWithX509.get(), cert) != X509_V_OK)
             return false;

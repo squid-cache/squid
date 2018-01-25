@@ -256,7 +256,7 @@ void chainCertificatesToSSLContext(Security::ContextPointer &, Security::ServerO
  \ingroup ServerProtocolSSLAPI
  * Configure a previously unconfigured SSL context object.
  */
-void configureUnconfiguredSslContext(Security::ContextPointer &, Ssl::CertSignAlgorithm signAlgorithm, AnyP::PortCfg &);
+void configureUnconfiguredSslContext(Security::ContextPointer &, Security::CertSignAlgorithm signAlgorithm, AnyP::PortCfg &);
 
 /**
   \ingroup ServerProtocolSSLAPI
