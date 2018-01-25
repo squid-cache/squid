@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "security/CertificateProperties.h"
 #include "ssl/crtd_message.h"
 #include "ssl/gadgets.h"
 
@@ -175,7 +176,7 @@ void Ssl::CrtdMessage::composeBody(CrtdMessage::BodyParams const & map, std::str
         body += '\n' + other_part;
 }
 
-bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, std::string &error)
+bool Ssl::CrtdMessage::parseRequest(Security::CertificateProperties &certProperties, std::string &error)
 {
     Ssl::CrtdMessage::BodyParams map;
     std::string certs_part;
@@ -236,7 +237,7 @@ bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, 
     return true;
 }
 
-void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProperties)
+void Ssl::CrtdMessage::composeRequest(Security::CertificateProperties const &certProperties)
 {
     body.clear();
     body = Ssl::CrtdMessage::param_host + "=" + certProperties.commonName;

@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "helper/protocol_defines.h"
 #include "security/cert_generators/file/certificate_db.h"
+#include "security/CertificateProperties.h"
 #include "ssl/crtd_message.h"
 
 #include <cstring>
@@ -179,7 +180,7 @@ static void usage()
 /// Process new request message.
 static bool processNewRequest(Ssl::CrtdMessage & request_message, std::string const & db_path, size_t max_db_size, size_t fs_block_size)
 {
-    Ssl::CertificateProperties certProperties;
+    Security::CertificateProperties certProperties;
     std::string error;
     if (!request_message.parseRequest(certProperties, error))
         throw std::runtime_error("Error while parsing the crtd request: " + error);

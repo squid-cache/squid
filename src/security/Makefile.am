@@ -16,6 +16,7 @@ noinst_LTLIBRARIES = libsecurity.la libsecurityutil.la
 libsecurityutil_la_SOURCES= \
 	CertAdaptAlgorithm.cc \
 	CertAdaptAlgorithm.h \
+	CertificateProperties.h \
 	CertSignAlgorithm.cc \
 	CertSignAlgorithm.h \
 	DigestAlgorithm.h

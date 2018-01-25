@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "security/CertificateProperties.h"
 #include "ssl/gadgets.h"
 
 EVP_PKEY * Ssl::createSslPrivateKey()
@@ -192,14 +193,6 @@ static bool replaceCommonName(Security::CertPointer & cert, std::string const &r
                                       (unsigned char *)(cn.c_str()), -1, -1, 0);
 }
 
-Ssl::CertificateProperties::CertificateProperties():
-    setValidAfter(false),
-    setValidBefore(false),
-    setCommonName(false),
-    signAlgorithm(Security::algSignEnd),
-    signHash(NULL)
-{}
-
 static void
 printX509Signature(const Security::CertPointer &cert, std::string &out)
 {
@@ -215,7 +208,7 @@ printX509Signature(const Security::CertPointer &cert, std::string &out)
 }
 
 std::string &
-Ssl::OnDiskCertificateDbKey(const Ssl::CertificateProperties &properties)
+Ssl::OnDiskCertificateDbKey(const Security::CertificateProperties &properties)
 {
     static std::string certKey;
     certKey.clear();
@@ -445,7 +438,7 @@ addAltNameWithSubjectCn(Security::CertPointer &cert)
     return result;
 }
 
-static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificateProperties const &properties)
+static bool buildCertificate(Security::CertPointer & cert, Security::CertificateProperties const &properties)
 {
     // not an Ssl::X509_NAME_Pointer because X509_REQ_get_subject_name()
     // returns a pointer to the existing subject name. Nothing to clean here.
@@ -530,7 +523,8 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     return true;
 }
 
-static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Security::PrivateKeyPointer & pkeyToStore, Ssl::CertificateProperties const &properties,  Ssl::BIGNUM_Pointer const &serial)
+static bool
+generateFakeSslCertificate(Security::CertPointer &certToStore, Security::PrivateKeyPointer &pkeyToStore, Security::CertificateProperties const &properties, Ssl::BIGNUM_Pointer const &serial)
 {
     Security::PrivateKeyPointer pkey;
     // Use signing certificates private key as generated certificate private key
@@ -632,9 +626,10 @@ static BIGNUM *x509Pubkeydigest(Security::CertPointer const & cert)
     return createCertSerial(md, n);
 }
 
-/// Generate a unique serial number based on a Ssl::CertificateProperties object
+/// Generate a unique serial number based on a Security::CertificateProperties object
 /// for a new generated certificate
-static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties const &properties)
+static bool
+createSerial(Ssl::BIGNUM_Pointer &serial, Security::CertificateProperties const &properties)
 {
     Security::PrivateKeyPointer fakePkey;
     Security::CertPointer fakeCert;
@@ -658,7 +653,8 @@ static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties
     return true;
 }
 
-bool Ssl::generateSslCertificate(Security::CertPointer & certToStore, Security::PrivateKeyPointer & pkeyToStore, Ssl::CertificateProperties const &properties)
+bool
+Ssl::generateSslCertificate(Security::CertPointer & certToStore, Security::PrivateKeyPointer & pkeyToStore, Security::CertificateProperties const &properties)
 {
     Ssl::BIGNUM_Pointer serial;
 
@@ -795,7 +791,7 @@ static int asn1time_cmp(ASN1_TIME *asnTime1, ASN1_TIME *asnTime2)
     return strcmp(strTime1, strTime2);
 }
 
-bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &properties)
+bool Ssl::certificateMatchesProperties(X509 *cert, Security::CertificateProperties const &properties)
 {
     assert(cert);
 

@@ -222,7 +222,7 @@ void unloadSquidUntrusted();
   \ingroup ServerProtocolSSLAPI
   * Decide on the kind of certificate and generate a CA- or self-signed one
 */
-Security::ContextPointer GenerateSslContext(CertificateProperties const &, Security::ServerOptions &, bool trusted);
+Security::ContextPointer GenerateSslContext(Security::CertificateProperties const &, Security::ServerOptions &, bool trusted);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -231,7 +231,7 @@ Security::ContextPointer GenerateSslContext(CertificateProperties const &, Secur
   \param properties Check if the context certificate matches the given properties
   \return true if the contexts certificate is valid, false otherwise
  */
-bool verifySslCertificate(Security::ContextPointer &, CertificateProperties const &);
+bool verifySslCertificate(Security::ContextPointer &, Security::CertificateProperties const &);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -263,7 +263,7 @@ void configureUnconfiguredSslContext(Security::ContextPointer &, Security::CertS
   * Generates a certificate and a private key using provided properies and set it
   * to SSL object.
  */
-bool configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &port);
+bool configureSSL(SSL *ssl, Security::CertificateProperties const &properties, AnyP::PortCfg &port);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -318,9 +318,9 @@ void setClientSNI(SSL *ssl, const char *fqdn);
 
 /**
   \ingroup ServerProtocolSSLAPI
-  * Generates a unique key based on CertificateProperties object and store it to key
+  * Generates a unique key based on Security::CertificateProperties object and store it to key
  */
-void InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties, SBuf &key);
+void InRamCertificateDbKey(const Security::CertificateProperties &certProperties, SBuf &key);
 
 /**
   \ingroup ServerProtocolSSLAPI

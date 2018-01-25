@@ -24,6 +24,7 @@
 #include "globals.h"
 #include "ipc/MemMap.h"
 #include "security/CertError.h"
+#include "security/CertificateProperties.h"
 #include "security/Session.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -769,7 +770,7 @@ Ssl::GenerateSslContextUsingPkeyAndCertFromMemory(const char * data, Security::S
 }
 
 Security::ContextPointer
-Ssl::GenerateSslContext(CertificateProperties const &properties, Security::ServerOptions &options, bool trusted)
+Ssl::GenerateSslContext(Security::CertificateProperties const &properties, Security::ServerOptions &options, bool trusted)
 {
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
@@ -815,7 +816,7 @@ Ssl::configureUnconfiguredSslContext(Security::ContextPointer &ctx, Security::Ce
 }
 
 bool
-Ssl::configureSSL(SSL *ssl, CertificateProperties const &properties, AnyP::PortCfg &port)
+Ssl::configureSSL(SSL *ssl, Security::CertificateProperties const &properties, AnyP::PortCfg &port)
 {
     Security::CertPointer cert;
     Security::PrivateKeyPointer pkey;
@@ -858,7 +859,7 @@ Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
 }
 
 bool
-Ssl::verifySslCertificate(Security::ContextPointer &ctx, CertificateProperties const &properties)
+Ssl::verifySslCertificate(Security::ContextPointer &ctx, Security::CertificateProperties const &properties)
 {
 #if HAVE_SSL_CTX_GET0_CERTIFICATE
     X509 * cert = SSL_CTX_get0_certificate(ctx.get());
@@ -1165,7 +1166,7 @@ Ssl::unloadSquidUntrusted()
 bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, Security::PrivateKeyPointer &untrustedPkey, Security::CertPointer const  &cert, Security::PrivateKeyPointer const & pkey)
 {
     // Generate the self-signed certificate, using a hard-coded subject prefix
-    Ssl::CertificateProperties certProperties;
+    Security::CertificateProperties certProperties;
     if (const char *cn = CommonHostName(cert.get())) {
         certProperties.commonName = "Not trusted by \"";
         certProperties.commonName += cn;
@@ -1185,7 +1186,8 @@ bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, Security::
     return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
 }
 
-void Ssl::InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties, SBuf &key)
+void
+Ssl::InRamCertificateDbKey(const Security::CertificateProperties &certProperties, SBuf &key)
 {
     bool origSignatureAsKey = false;
     if (certProperties.mimicCert) {

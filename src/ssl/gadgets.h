@@ -143,31 +143,9 @@ bool WriteX509Certificate(BIO_Pointer &bio, const Security::CertPointer & cert);
  */
 bool WritePrivateKey(BIO_Pointer &bio, const Security::PrivateKeyPointer &pkey);
 
-/**
- \ingroup SslCrtdSslAPI
- * Simple struct to pass certificate generation parameters to generateSslCertificate function.
- */
-class CertificateProperties
-{
-public:
-    CertificateProperties();
-    Security::CertPointer mimicCert; ///< Certificate to mimic
-    Security::CertPointer signWithX509; ///< Certificate to sign the generated request
-    Security::PrivateKeyPointer signWithPkey; ///< The key of the signing certificate
-    bool setValidAfter; ///< Do not mimic "Not Valid After" field
-    bool setValidBefore; ///< Do not mimic "Not Valid Before" field
-    bool setCommonName; ///< Replace the CN field of the mimicing subject with the given
-    std::string commonName; ///< A CN to use for the generated certificate
-    Security::CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
-    Security::DigestAlgorithm signHash; ///< The signing hash to use
-private:
-    CertificateProperties(CertificateProperties &);
-    CertificateProperties &operator =(CertificateProperties const &);
-};
-
 /// \ingroup SslCrtdSslAPI
 /// \returns certificate database key
-std::string & OnDiskCertificateDbKey(const CertificateProperties &);
+std::string & OnDiskCertificateDbKey(const Security::CertificateProperties &);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -176,7 +154,7 @@ std::string & OnDiskCertificateDbKey(const CertificateProperties &);
  * Return generated certificate and private key in resultX509 and resultPkey
  * variables.
  */
-bool generateSslCertificate(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, CertificateProperties const &properties);
+bool generateSslCertificate(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, Security::CertificateProperties const &properties);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -191,7 +169,7 @@ bool sslDateIsInTheFuture(char const * date);
  * a CertficateProperties object
  \return true if the certificates matches false otherwise.
 */
-bool certificateMatchesProperties(X509 *peer_cert, CertificateProperties const &properties);
+bool certificateMatchesProperties(X509 *peer_cert, Security::CertificateProperties const &properties);
 
 /**
    \ingroup ServerProtocolSSLAPI

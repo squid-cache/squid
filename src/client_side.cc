@@ -2719,7 +2719,8 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
     getSslContextDone(nil);
 }
 
-void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties)
+void
+ConnStateData::buildSslCertGenerationParams(Security::CertificateProperties &certProperties)
 {
     certProperties.commonName = sslCommonName_.isEmpty() ? tlsConnectHostOrIp.c_str() : sslCommonName_.c_str();
 
@@ -2796,7 +2797,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 }
 
 Security::ContextPointer
-ConnStateData::getTlsContextFromCache(const SBuf &cacheKey, const Ssl::CertificateProperties &certProperties)
+ConnStateData::getTlsContextFromCache(const SBuf &cacheKey, const Security::CertificateProperties &certProperties)
 {
     debugs(33, 5, "Finding SSL certificate for " << cacheKey << " in cache");
     Ssl::LocalContextStorage * ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
@@ -2836,7 +2837,7 @@ ConnStateData::getSslContextStart()
     /* careful: finished() above frees request, host, etc. */
 
     if (port->secure.generateHostCertificates) {
-        Ssl::CertificateProperties certProperties;
+        Security::CertificateProperties certProperties;
         buildSslCertGenerationParams(certProperties);
 
         // Disable caching for bumpPeekAndSplice mode

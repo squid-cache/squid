@@ -61,6 +61,8 @@ class CertError;
 /// Holds a list of X.509 certificate errors
 typedef CbDataList<Security::CertError> CertErrors;
 
+class CertificateProperties;
+
 #if USE_OPENSSL
 CtoCpp1(X509_free, X509 *);
 typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref> > CertPointer;

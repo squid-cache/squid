@@ -9,12 +9,13 @@
 #ifndef SQUID_SSL_CRTD_MESSAGE_H
 #define SQUID_SSL_CRTD_MESSAGE_H
 
+#include "security/CertificateProperties.h"
+
 #include <map>
 #include <string>
 
 namespace Ssl
 {
-class CertificateProperties;
 
 /**
  * This class is responsible for composing and parsing messages destined to, or comming
@@ -69,8 +70,8 @@ public:
     void composeBody(BodyParams const & map, std::string const & other_part);
 
     /// orchestrates entire request parsing
-    bool parseRequest(Ssl::CertificateProperties &, std::string &error);
-    void composeRequest(Ssl::CertificateProperties const &); // throws
+    bool parseRequest(Security::CertificateProperties &, std::string &error);
+    void composeRequest(Security::CertificateProperties const &); // throws
 
     /// String code for "new_certificate" messages
     static const std::string code_new_certificate;
