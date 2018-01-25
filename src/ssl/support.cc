@@ -40,7 +40,7 @@ int ssl_ex_index_ssl_untrusted_chain = -1;
 
 static Ssl::CertsIndexedList SquidUntrustedCerts;
 
-const EVP_MD *Ssl::DefaultSignHash = NULL;
+Security::DigestAlgorithm Ssl::DefaultSignHash = nullptr;
 
 std::vector<const char *> Ssl::BumpModeStr = {
     "none",
@@ -503,7 +503,7 @@ Ssl::Initialize(void)
 #endif
 
     const char *defName = ::Config.SSL.certSignHash ? ::Config.SSL.certSignHash : SQUID_SSL_SIGN_HASH_IF_NONE;
-    Ssl::DefaultSignHash = EVP_get_digestbyname(defName);
+    Ssl::DefaultSignHash = Security::digestByName(defName);
     if (!Ssl::DefaultSignHash)
         fatalf("Sign hash '%s' is not supported\n", defName);
 
@@ -1203,7 +1203,7 @@ void Ssl::InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties
     key.append(certProperties.setValidAfter ? '1' : '0');
     key.append(certProperties.setValidBefore ? '1' : '0');
     key.append(certProperties.signAlgorithm != Security::algSignEnd ? certSignAlgorithm(certProperties.signAlgorithm) : "-");
-    key.append(certProperties.signHash ? EVP_MD_name(certProperties.signHash) : "-");
+    key.append(certProperties.signHash ? Security::digestName(certProperties.signHash) : "-");
 
     if (certProperties.mimicCert) {
         Ssl::BIO_Pointer bio(BIO_new_SBuf(&key));

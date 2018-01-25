@@ -126,7 +126,7 @@ GETX509PEM GetX509PEM;
 /// \ingroup ServerProtocolSSLAPI
 GETX509ATTRIBUTE GetX509Fingerprint;
 
-extern const EVP_MD *DefaultSignHash;
+extern Security::DigestAlgorithm DefaultSignHash;
 
 /**
   \ingroup ServerProtocolSSLAPI

@@ -159,7 +159,7 @@ public:
     bool setCommonName; ///< Replace the CN field of the mimicing subject with the given
     std::string commonName; ///< A CN to use for the generated certificate
     Security::CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
-    const EVP_MD *signHash; ///< The signing hash to use
+    Security::DigestAlgorithm signHash; ///< The signing hash to use
 private:
     CertificateProperties(CertificateProperties &);
     CertificateProperties &operator =(CertificateProperties const &);

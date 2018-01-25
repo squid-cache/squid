@@ -13,6 +13,7 @@
 #include "security/CertAdaptAlgorithm.h"
 #include "security/CertSignAlgorithm.h"
 #include "security/Context.h"
+#include "security/DigestAlgorithm.h"
 #include "security/Session.h"
 
 #if USE_GNUTLS && HAVE_GNUTLS_ABSTRACT_H

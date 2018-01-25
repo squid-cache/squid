@@ -246,7 +246,7 @@ Ssl::OnDiskCertificateDbKey(const Ssl::CertificateProperties &properties)
 
     if (properties.signHash != NULL) {
         certKey.append("+SignHash=", 10);
-        certKey.append(EVP_MD_name(properties.signHash));
+        certKey.append(Security::digestName(properties.signHash));
     }
 
     return certKey;
@@ -565,7 +565,7 @@ static bool generateFakeSslCertificate(Security::CertPointer & certToStore, Secu
     if (!ret)
         return false;
 
-    const  EVP_MD *hash = properties.signHash ? properties.signHash : EVP_get_digestbyname(SQUID_SSL_SIGN_HASH_IF_NONE);
+    const Security::DigestAlgorithm hash = properties.signHash ? properties.signHash : Security::digestByName(SQUID_SSL_SIGN_HASH_IF_NONE);
     assert(hash);
     /*Now sign the request */
     if (properties.signAlgorithm != Security::algSignSelf && properties.signWithPkey)

@@ -215,7 +215,7 @@ bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, 
 
     i = map.find(Ssl::CrtdMessage::param_SignHash);
     const char *signHashName = i != map.end() ? i->second.c_str() : SQUID_SSL_SIGN_HASH_IF_NONE;
-    if (!(certProperties.signHash = EVP_get_digestbyname(signHashName))) {
+    if (!(certProperties.signHash = Security::digestByName(signHashName))) {
         error = "Wrong signing hash: ";
         error += signHashName;
         return false;
@@ -249,7 +249,7 @@ void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProp
     if (certProperties.signAlgorithm != Security::algSignEnd)
         body +=  "\n" +  Ssl::CrtdMessage::param_Sign + "=" +  certSignAlgorithm(certProperties.signAlgorithm);
     if (certProperties.signHash)
-        body +=  "\n" + Ssl::CrtdMessage::param_SignHash + "=" + EVP_MD_name(certProperties.signHash);
+        body +=  "\n" + Ssl::CrtdMessage::param_SignHash + "=" + Security::digestName(certProperties.signHash);
 
     std::string certsPart;
     if (!Ssl::writeCertAndPrivateKeyToMemory(certProperties.signWithX509, certProperties.signWithPkey, certsPart))

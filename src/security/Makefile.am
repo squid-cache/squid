@@ -17,7 +17,8 @@ libsecurityutil_la_SOURCES= \
 	CertAdaptAlgorithm.cc \
 	CertAdaptAlgorithm.h \
 	CertSignAlgorithm.cc \
-	CertSignAlgorithm.h
+	CertSignAlgorithm.h \
+	DigestAlgorithm.h
 
 # Pieces only linked to squid binary
 libsecurity_la_SOURCES= \
