@@ -192,7 +192,7 @@ Transients::monitorIo(StoreEntry *e, const cache_key *key, const Store::IoStatus
     assert(direction == Store::ioReading || direction == Store::ioWriting);
 
     if (!e->hasTransients()) {
-        addEntry(e, key);
+        addEntry(e, key, direction);
         e->mem_obj->xitTable.io = direction;
     }
 
@@ -209,7 +209,7 @@ Transients::monitorIo(StoreEntry *e, const cache_key *key, const Store::IoStatus
 
 /// either creates a new Transients entry for `e` or returns false
 void
-Transients::addEntry(StoreEntry *e, const cache_key *key)
+Transients::addEntry(StoreEntry *e, const cache_key *key, const Store::IoStatus direction)
 {
     assert(e);
     assert(e->mem_obj);
@@ -222,10 +222,14 @@ Transients::addEntry(StoreEntry *e, const cache_key *key)
     Must(slot); // no writer collisions
 
     slot->set(*e, key);
-
-    // keep the entry locked (for reading) to receive remote DELETE events
     e->mem_obj->xitTable.index = index;
-    map->closeForWriting(e->mem_obj->xitTable.index, true);
+    if (direction == Store::ioWriting) {
+        // keep write lock; the caller will decide what to do with it
+        map->startAppending(e->mem_obj->xitTable.index);
+    } else {
+        // keep the entry locked (for reading) to receive remote DELETE events
+        map->closeForWriting(e->mem_obj->xitTable.index);
+    }
 }
 
 void
@@ -240,7 +244,8 @@ Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFree
     assert(map);
     assert(entry.hasTransients());
     const auto idx = entry.mem_obj->xitTable.index;
-    const auto &anchor = map->readableEntry(idx);
+    const auto &anchor = isWriter(entry) ?
+                         map->writeableEntry(idx) : map->readableEntry(idx);
     aborted = anchor.writerHalted;
     waitingToBeFreed = anchor.waitingToBeFreed;
 }
@@ -250,6 +255,7 @@ Transients::completeWriting(const StoreEntry &e)
 {
     assert(e.hasTransients());
     assert(isWriter(e));
+    map->closeForWriting(e.mem_obj->xitTable.index, true);
     e.mem_obj->xitTable.io = Store::ioReading;
 }
 
@@ -295,7 +301,12 @@ Transients::disconnect(StoreEntry &entry)
     if (entry.hasTransients()) {
         auto &xitTable = entry.mem_obj->xitTable;
         assert(map);
-        map->closeForReading(xitTable.index);
+        if (isWriter(entry)) {
+            map->abortWriting(xitTable.index);
+        } else {
+            assert(isReader(entry));
+            map->closeForReading(xitTable.index);
+        }
         locals->at(xitTable.index) = nullptr;
         xitTable.index = -1;
         xitTable.io = Store::ioDone;

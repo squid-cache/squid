@@ -80,7 +80,7 @@ public:
     static int64_t EntryLimit();
 
 protected:
-    void addEntry(StoreEntry*, const cache_key *);
+    void addEntry(StoreEntry*, const cache_key *, const Store::IoStatus);
 
     // Ipc::StoreMapCleaner API
     virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId) override;
