@@ -207,7 +207,7 @@ Transients::monitorIo(StoreEntry *e, const cache_key *key, const Store::IoStatus
     }
 }
 
-/// either creates a new Transients entry for `e` or returns false
+/// creates a new Transients entry or throws
 void
 Transients::addEntry(StoreEntry *e, const cache_key *key, const Store::IoStatus direction)
 {
