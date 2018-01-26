@@ -442,11 +442,11 @@ void
 Store::Controller::evictCached(StoreEntry &e)
 {
     debugs(20, 7, e);
+    if (transients)
+        transients->evictCached(e);
     memoryEvictCached(e);
     if (swapDir)
         swapDir->evictCached(e);
-    if (transients)
-        transients->evictCached(e);
 }
 
 void
