@@ -315,7 +315,7 @@ Store::Controller::find(const cache_key *key)
         try {
             if (!entry->key)
                 allowSharing(*entry, key);
-            assert(!transients || entry->hasTransients());
+            checkTransients(*entry);
             entry->touch();
             referenceBusy(*entry);
             return entry;
@@ -365,6 +365,8 @@ Store::Controller::peekAtLocal(const cache_key *key)
     if (StoreEntry *e = static_cast<StoreEntry*>(hash_lookup(store_table, key))) {
         // callers must only search for public entries
         assert(!EBIT_TEST(e->flags, KEY_PRIVATE));
+        assert(e->publicKey());
+        checkTransients(*e);
 
         // TODO: ignore and maybe handleIdleEntry() unlocked intransit entries
         // because their backing store slot may be gone already.
@@ -385,7 +387,6 @@ Store::Controller::peek(const cache_key *key)
 
     if (StoreEntry *e = peekAtLocal(key)) {
         debugs(20, 3, "got local in-transit entry: " << *e);
-        assert(!transients || e->hasTransients());
         return e;
     }
 
@@ -765,6 +766,14 @@ bool
 Store::Controller::smpAware() const
 {
     return memStore || (swapDir && swapDir->smpAware());
+}
+
+void
+Store::Controller::checkTransients(const StoreEntry &e) const
+{
+    if (EBIT_TEST(e.flags, ENTRY_SPECIAL))
+        return;
+    assert(!transients || e.hasTransients());
 }
 
 namespace Store {

@@ -143,6 +143,7 @@ private:
     void transientsUnlinkByKeyIfFound(const cache_key *);
     bool keepForLocalMemoryCache(StoreEntry &e) const;
     bool anchorToCache(StoreEntry &e, bool &inSync);
+    void checkTransients(const StoreEntry &) const;
 
     Disks *swapDir; ///< summary view of all disk caches
     Memory *memStore; ///< memory cache
