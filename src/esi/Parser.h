@@ -47,7 +47,7 @@ protected:
 
 private:
     static Register *Parser;
-    static std::list<Register *>Parsers;
+    static std::list<Register *> Parsers;
 
 public:
 };
