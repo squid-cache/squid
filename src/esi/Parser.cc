@@ -13,19 +13,27 @@
 #include "fatal.h"
 
 char *ESIParser::Type = NULL;
-ESIParser::Register *ESIParser::Parsers = NULL;
 ESIParser::Register *ESIParser::Parser = NULL;
+
+std::list<ESIParser::Register *> &
+ESIParser::GetRegistry()
+{
+    static std::list<ESIParser::Register *> parsers;
+    return parsers;
+}
 
 ESIParser::Pointer
 ESIParser::NewParser(ESIParserClient *aClient)
 {
     if (Parser == NULL) {
-        Parser = Parsers;
+        Parser = GetRegistry().front();
 
         // if type name matters, use it
         if (strcasecmp(Type, "auto") != 0) {
-            while (Parser && strcasecmp(Parser->name, Type) != 0)
-                Parser = Parser->next;
+            for (auto *p : GetRegistry()) {
+                if (p && strcasecmp(p->name, Type) != 0)
+                    Parser = p;
+            }
         }
 
         if (Parser == NULL)
@@ -37,14 +45,11 @@ ESIParser::NewParser(ESIParserClient *aClient)
 
 ESIParser::Register::Register(const char *_name, ESIParser::Pointer (*_newParser)(ESIParserClient *aClient)) : name(_name), newParser(_newParser)
 {
-    this->next = ESIParser::Parsers;
-    ESIParser::Parsers = this;
+    ESIParser::GetRegistry().emplace_back(this);
 }
 
 ESIParser::Register::~Register()
 {
-    // TODO: support random-order deregistration
-    assert(ESIParser::Parsers == this);
-    ESIParser::Parsers = next;
+    ESIParser::GetRegistry().remove(this);
 }
 
