@@ -47,9 +47,7 @@ protected:
 
 private:
     static Register *Parser;
-    static std::list<Register *> Parsers;
-
-public:
+    static std::list<Register *> & GetRegistry();
 };
 
 class ESIParser::Register
