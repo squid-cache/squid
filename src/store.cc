@@ -886,13 +886,6 @@ storeAppendPrintf(StoreEntry * e, const char *fmt,...)
     va_end(args);
 }
 
-// deprecated. use StoreEntry::appendf() instead.
-void
-storeAppendVPrintf(StoreEntry * e, const char *fmt, va_list vargs)
-{
-    e->vappendf(fmt, vargs);
-}
-
 struct _store_check_cachable_hist {
 
     struct {

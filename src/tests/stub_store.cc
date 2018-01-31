@@ -111,7 +111,6 @@ StoreEntry *storeCreatePureEntry(const char *storeId, const char *logUrl, const 
 void storeConfigure(void) STUB
 int expiresMoreThan(time_t, time_t) STUB_RETVAL(0)
 void storeAppendPrintf(StoreEntry *, const char *,...) STUB
-void storeAppendVPrintf(StoreEntry *, const char *, va_list ap) STUB
 int storeTooManyDiskFilesOpen(void) STUB_RETVAL(0)
 void storeHeapPositionUpdate(StoreEntry *, SwapDir *) STUB
 void storeSwapFileNumberSet(StoreEntry * e, sfileno filn) STUB

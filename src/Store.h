@@ -425,9 +425,6 @@ int expiresMoreThan(time_t, time_t);
 void storeAppendPrintf(StoreEntry *, const char *,...) PRINTF_FORMAT_ARG2;
 
 /// \ingroup StoreAPI
-void storeAppendVPrintf(StoreEntry *, const char *, va_list ap);
-
-/// \ingroup StoreAPI
 int storeTooManyDiskFilesOpen(void);
 
 /// \ingroup StoreAPI
