@@ -168,7 +168,7 @@ Adaptation::Config::dumpService(StoreEntry *entry, const char *name) const
         else if (isIcap && !cfg.secure.encryptTransport && cfg.connectionEncryption)
             optConnectionEncryption = " connection-encryption=on";
 
-        storeAppendPrintf(entry, "%s " SQUIDSTRINGPH " %s_%s %d " SQUIDSTRINGPH "%s\n",
+        entry->appendf("%s " SQUIDSTRINGPH " %s_%s %d " SQUIDSTRINGPH "%s\n",
                           name,
                           SQUIDSTRINGPRINT(cfg.key),
                           cfg.methodStr(), cfg.vectPointStr(), cfg.bypass,
@@ -269,7 +269,7 @@ Adaptation::Config::DumpServiceGroups(StoreEntry *entry, const char *name)
 {
     typedef Groups::iterator GI;
     for (GI i = AllGroups().begin(); i != AllGroups().end(); ++i)
-        storeAppendPrintf(entry, "%s " SQUIDSTRINGPH "\n", name, SQUIDSTRINGPRINT((*i)->id));
+        entry->appendf("%s " SQUIDSTRINGPH "\n", name, SQUIDSTRINGPRINT((*i)->id));
 }
 
 void

@@ -122,11 +122,11 @@ Format::Format::dump(StoreEntry * entry, const char *directiveName, bool eol) co
     for (const Format *fmt = this; fmt; fmt = fmt->next) {
         debugs(46, 3, HERE << "Dumping format definition for " << fmt->name);
         if (directiveName)
-            storeAppendPrintf(entry, "%s %s ", directiveName, fmt->name);
+            entry->appendf("%s %s ", directiveName, fmt->name);
 
         for (Token *t = fmt->format; t; t = t->next) {
             if (t->type == LFT_STRING)
-                storeAppendPrintf(entry, "%s", t->data.string);
+                entry->appendf("%s", t->data.string);
             else {
                 char argbuf[256];
                 char *arg = NULL;
@@ -267,15 +267,15 @@ Format::Format::dump(StoreEntry * entry, const char *directiveName, bool eol) co
                     entry->append("0", 1);
 
                 if (t->widthMin >= 0)
-                    storeAppendPrintf(entry, "%d", t->widthMin);
+                    entry->appendf("%d", t->widthMin);
 
                 if (t->widthMax >= 0)
-                    storeAppendPrintf(entry, ".%d", t->widthMax);
+                    entry->appendf(".%d", t->widthMax);
 
                 if (arg)
-                    storeAppendPrintf(entry, "{%s}", arg);
+                    entry->appendf("{%s}", arg);
 
-                storeAppendPrintf(entry, "%s", t->label);
+                entry->appendf("%s", t->label);
 
                 if (t->space)
                     entry->append(" ", 1);

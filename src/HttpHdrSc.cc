@@ -293,7 +293,7 @@ httpHdrScTargetStatDumper(StoreEntry * sentry, int, double val, double, int coun
     const char *name = valid_id ? ScAttrs[id].name : "INVALID";
 
     if (count || valid_id)
-        storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
+        sentry->appendf("%2d\t %-20s\t %5d\t %6.2f\n",
                           id, name, count, xdiv(count, dump_stat->scParsedCount));
 }
 
@@ -306,7 +306,7 @@ httpHdrScStatDumper(StoreEntry * sentry, int, double val, double, int count)
     const char *name = valid_id ? ScAttrs[id].name : "INVALID";
 
     if (count || valid_id)
-        storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
+        sentry->appendf("%2d\t %-20s\t %5d\t %6.2f\n",
                           id, name, count, xdiv(count, dump_stat->scParsedCount));
 }
 

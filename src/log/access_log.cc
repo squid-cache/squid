@@ -503,7 +503,7 @@ fvdbDumpTable(StoreEntry * e, hash_table * hash)
 
     while ((h = hash_next(hash))) {
         fv = (fvdb_entry *) h;
-        storeAppendPrintf(e, "%9d %s\n", fv->n, hashKeyStr(&fv->hash));
+        e->appendf("%9d %s\n", fv->n, hashKeyStr(&fv->hash));
     }
 }
 

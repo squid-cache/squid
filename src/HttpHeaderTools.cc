@@ -371,7 +371,7 @@ void header_mangler_dump_access(StoreEntry * entry, const char *option,
                                 const headerMangler &m, const char *name)
 {
     if (m.access_list != NULL) {
-        storeAppendPrintf(entry, "%s ", option);
+        entry->appendf("%s ", option);
         dump_acl_access(entry, name, m.access_list);
     }
 }
@@ -381,7 +381,7 @@ void header_mangler_dump_replacement(StoreEntry * entry, const char *option,
                                      const headerMangler &m, const char *name)
 {
     if (m.replacement)
-        storeAppendPrintf(entry, "%s %s %s\n", option, name, m.replacement);
+        entry->appendf("%s %s %s\n", option, name, m.replacement);
 }
 
 HeaderManglers::HeaderManglers()

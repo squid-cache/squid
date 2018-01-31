@@ -464,7 +464,7 @@ DiskdIOStrategy::optionQ1Parse(const char *name, const char *value, int isaRecon
 void
 DiskdIOStrategy::optionQ1Dump(StoreEntry * e) const
 {
-    storeAppendPrintf(e, " Q1=%d", magic1);
+    e->appendf(" Q1=%d", magic1);
 }
 
 bool
@@ -496,7 +496,7 @@ DiskdIOStrategy::optionQ2Parse(const char *name, const char *value, int isaRecon
 void
 DiskdIOStrategy::optionQ2Dump(StoreEntry * e) const
 {
-    storeAppendPrintf(e, " Q2=%d", magic2);
+    e->appendf(" Q2=%d", magic2);
 }
 
 /*
@@ -572,6 +572,6 @@ DiskdIOStrategy::callback()
 void
 DiskdIOStrategy::statfs(StoreEntry & sentry)const
 {
-    storeAppendPrintf(&sentry, "Pending operations: %d\n", away);
+    sentry.appendf("Pending operations: %d\n", away);
 }
 

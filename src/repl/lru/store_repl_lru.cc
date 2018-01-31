@@ -281,7 +281,7 @@ again:
             goto again;
         }
 
-        storeAppendPrintf(sentry, "LRU reference age: %.2f days\n", (double) (squid_curtime - entry->lastref) / (double) (24 * 60 * 60));
+        sentry->appendf("LRU reference age: %.2f days\n", (double) (squid_curtime - entry->lastref) / (double) (24 * 60 * 60));
     }
 }
 

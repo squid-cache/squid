@@ -467,7 +467,7 @@ cbdata::dump(StoreEntry *sentry) const
 #else
     void *p = (void *)&data;
 #endif
-    storeAppendPrintf(sentry, "%c%p\t%d\t%d\t%20s:%-5d\n", valid ? ' ' :
+    sentry->appendf("%c%p\t%d\t%d\t%20s:%-5d\n", valid ? ' ' :
                       '!', p, type, locks, file, line);
 }
 
@@ -486,14 +486,14 @@ struct CBDataDumper : public unary_function<cbdata, void> {
 static void
 cbdataDump(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "%d cbdata entries\n", cbdataCount);
+    sentry->appendf("%d cbdata entries\n", cbdataCount);
 #if USE_CBDATA_DEBUG
 
-    storeAppendPrintf(sentry, "Pointer\tType\tLocks\tAllocated by\n");
+    sentry->appendf("Pointer\tType\tLocks\tAllocated by\n");
     CBDataDumper dumper(sentry);
     for_each (cbdataEntries, dumper);
-    storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "types\tsize\tallocated\ttotal\n");
+    sentry->appendf("\n");
+    sentry->appendf("types\tsize\tallocated\ttotal\n");
 
     for (int i = 1; i < cbdata_types; ++i) {
         MemAllocator *pool = cbdata_index[i].pool;
@@ -504,16 +504,16 @@ cbdataDump(StoreEntry * sentry)
 #else
             int obj_size = pool->objectSize() - cbdata::Offset;
 #endif
-            storeAppendPrintf(sentry, "%s\t%d\t%ld\t%ld\n", pool->objectType() + 7, obj_size, (long int)pool->getMeter().inuse.currentLevel(), (long int)obj_size * pool->getMeter().inuse.currentLevel());
+            sentry->appendf("%s\t%d\t%ld\t%ld\n", pool->objectType() + 7, obj_size, (long int)pool->getMeter().inuse.currentLevel(), (long int)obj_size * pool->getMeter().inuse.currentLevel());
         }
     }
 
 #else
-    storeAppendPrintf(sentry, "detailed allocation information only available when compiled with --enable-debug-cbdata\n");
+    sentry->appendf("detailed allocation information only available when compiled with --enable-debug-cbdata\n");
 
 #endif
 
-    storeAppendPrintf(sentry, "\nsee also \"Memory utilization\" for detailed per type statistics\n");
+    sentry->appendf("\nsee also \"Memory utilization\" for detailed per type statistics\n");
 }
 
 CallbackData &
@@ -535,7 +535,7 @@ struct CBDataCallDumper : public unary_function<CBDataCall, void> {
     CBDataCallDumper (StoreEntry *anEntry):where(anEntry) {}
 
     void operator()(CBDataCall * const &x) {
-        storeAppendPrintf(where, "%s\t%s\t%d\n", x->label, x->file, x->line);
+        where->appendf("%s\t%s\t%d\n", x->label, x->file, x->line);
     }
 
     StoreEntry *where;
@@ -546,10 +546,10 @@ struct CBDataHistoryDumper : public CBDataDumper {
 
     void operator()(cbdata const &x) {
         CBDataDumper::operator()(x);
-        storeAppendPrintf(where, "\n");
-        storeAppendPrintf(where, "Action\tFile\tLine\n");
+        where->appendf("\n");
+        where->appendf("Action\tFile\tLine\n");
         std::for_each (x.calls.begin(), x.calls.end(), callDumper);
-        storeAppendPrintf(where, "\n");
+        where->appendf("\n");
     }
 
     StoreEntry *where;
@@ -559,8 +559,8 @@ struct CBDataHistoryDumper : public CBDataDumper {
 void
 cbdataDumpHistory(StoreEntry *sentry)
 {
-    storeAppendPrintf(sentry, "%d cbdata entries\n", cbdataCount);
-    storeAppendPrintf(sentry, "Pointer\tType\tLocks\tAllocated by\n");
+    sentry->appendf("%d cbdata entries\n", cbdataCount);
+    sentry->appendf("Pointer\tType\tLocks\tAllocated by\n");
     CBDataHistoryDumper dumper(sentry);
     for_each (cbdataEntries, dumper);
 }

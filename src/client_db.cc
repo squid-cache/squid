@@ -272,18 +272,18 @@ clientdbDump(StoreEntry * sentry)
     int icp_hits = 0;
     int http_total = 0;
     int http_hits = 0;
-    storeAppendPrintf(sentry, "Cache Clients:\n");
+    sentry->appendf("Cache Clients:\n");
     hash_first(client_table);
 
     while (hash_link *hash = hash_next(client_table)) {
         const ClientInfo *c = static_cast<const ClientInfo *>(hash);
-        storeAppendPrintf(sentry, "Address: %s\n", hashKeyStr(hash));
+        sentry->appendf("Address: %s\n", hashKeyStr(hash));
         if ( (name = fqdncache_gethostbyaddr(c->addr, 0)) ) {
-            storeAppendPrintf(sentry, "Name:    %s\n", name);
+            sentry->appendf("Name:    %s\n", name);
         }
-        storeAppendPrintf(sentry, "Currently established connections: %d\n",
+        sentry->appendf("Currently established connections: %d\n",
                           c->n_established);
-        storeAppendPrintf(sentry, "    ICP  Requests %d\n",
+        sentry->appendf("    ICP  Requests %d\n",
                           c->Icp.n_requests);
 
         for (LogTags_ot l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
@@ -295,10 +295,10 @@ clientdbDump(StoreEntry * sentry)
             if (LOG_UDP_HIT == l)
                 icp_hits += c->Icp.result_hist[l];
 
-            storeAppendPrintf(sentry, "        %-20.20s %7d %3d%%\n", LogTags(l).c_str(), c->Icp.result_hist[l], Math::intPercent(c->Icp.result_hist[l], c->Icp.n_requests));
+            sentry->appendf("        %-20.20s %7d %3d%%\n", LogTags(l).c_str(), c->Icp.result_hist[l], Math::intPercent(c->Icp.result_hist[l], c->Icp.n_requests));
         }
 
-        storeAppendPrintf(sentry, "    HTTP Requests %d\n", c->Http.n_requests);
+        sentry->appendf("    HTTP Requests %d\n", c->Http.n_requests);
 
         for (LogTags_ot l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
             if (c->Http.result_hist[l] == 0)
@@ -316,13 +316,13 @@ clientdbDump(StoreEntry * sentry)
                               Math::intPercent(c->Http.result_hist[l], c->Http.n_requests));
         }
 
-        storeAppendPrintf(sentry, "\n");
+        sentry->appendf("\n");
     }
 
-    storeAppendPrintf(sentry, "TOTALS\n");
-    storeAppendPrintf(sentry, "ICP : %d Queries, %d Hits (%3d%%)\n",
+    sentry->appendf("TOTALS\n");
+    sentry->appendf("ICP : %d Queries, %d Hits (%3d%%)\n",
                       icp_total, icp_hits, Math::intPercent(icp_hits, icp_total));
-    storeAppendPrintf(sentry, "HTTP: %d Requests, %d Hits (%3d%%)\n",
+    sentry->appendf("HTTP: %d Requests, %d Hits (%3d%%)\n",
                       http_total, http_hits, Math::intPercent(http_hits, http_total));
 }
 

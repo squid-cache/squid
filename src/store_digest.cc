@@ -200,16 +200,16 @@ storeDigestReport(StoreEntry * e)
     if (store_digest) {
         static const SBuf label("store");
         cacheDigestReport(store_digest, label, e);
-        storeAppendPrintf(e, "\t added: %d rejected: %d ( %.2f %%) del-ed: %d\n",
+        e->appendf("\t added: %d rejected: %d ( %.2f %%) del-ed: %d\n",
                           sd_stats.add_count,
                           sd_stats.rej_count,
                           xpercent(sd_stats.rej_count, sd_stats.rej_count + sd_stats.add_count),
                           sd_stats.del_count);
-        storeAppendPrintf(e, "\t collisions: on add: %.2f %% on rej: %.2f %%\n",
+        e->appendf("\t collisions: on add: %.2f %% on rej: %.2f %%\n",
                           xpercent(sd_stats.add_coll_count, sd_stats.add_count),
                           xpercent(sd_stats.rej_coll_count, sd_stats.rej_count));
     } else {
-        storeAppendPrintf(e, "store digest: disabled.\n");
+        e->appendf("store digest: disabled.\n");
     }
 
 #endif //USE_CACHE_DIGESTS

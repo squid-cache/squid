@@ -769,11 +769,11 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
 
     if (!i) {
         debugs(14, DBG_CRITICAL, HERE << "CRITICAL: ipcache_entry is NULL!");
-        storeAppendPrintf(sentry, "CRITICAL ERROR\n");
+        sentry->appendf("CRITICAL ERROR\n");
         return;
     }
 
-    storeAppendPrintf(sentry, " %-32.32s %c%c %6d %6d %2d(%2d)",
+    sentry->appendf(" %-32.32s %c%c %6d %6d %2d(%2d)",
                       hashKeyStr(&i->hash),
                       i->flags.fromhosts ? 'H' : ' ',
                       i->flags.negcached ? 'N' : ' ',
@@ -785,7 +785,7 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
     /** \par
      * Negative-cached entries have no IPs listed. */
     if (i->flags.negcached) {
-        storeAppendPrintf(sentry, "\n");
+        sentry->appendf("\n");
         return;
     }
 
@@ -795,7 +795,7 @@ ipcacheStatPrint(ipcache_entry * i, StoreEntry * sentry)
     for (const auto &addr: i->addrs.raw()) {
         /* Display tidy-up: IPv6 are so big make the list vertical */
         const char *indent = firstLine ? "" : "                                                         ";
-        storeAppendPrintf(sentry, "%s %45.45s-%3s\n",
+        sentry->appendf("%s %45.45s-%3s\n",
                           indent,
                           addr.ip.toStr(buf, MAX_IPSTRLEN),
                           addr.bad() ? "BAD" : "OK ");
@@ -813,32 +813,32 @@ stat_ipcache_get(StoreEntry * sentry)
 {
     dlink_node *m;
     assert(ip_table != NULL);
-    storeAppendPrintf(sentry, "IP Cache Statistics:\n");
-    storeAppendPrintf(sentry, "IPcache Entries Cached:  %d\n",
+    sentry->appendf("IP Cache Statistics:\n");
+    sentry->appendf("IPcache Entries Cached:  %d\n",
                       ipcacheCount());
-    storeAppendPrintf(sentry, "IPcache Requests: %d\n",
+    sentry->appendf("IPcache Requests: %d\n",
                       IpcacheStats.requests);
-    storeAppendPrintf(sentry, "IPcache Hits:            %d\n",
+    sentry->appendf("IPcache Hits:            %d\n",
                       IpcacheStats.hits);
-    storeAppendPrintf(sentry, "IPcache Negative Hits:       %d\n",
+    sentry->appendf("IPcache Negative Hits:       %d\n",
                       IpcacheStats.negative_hits);
-    storeAppendPrintf(sentry, "IPcache Numeric Hits:        %d\n",
+    sentry->appendf("IPcache Numeric Hits:        %d\n",
                       IpcacheStats.numeric_hits);
-    storeAppendPrintf(sentry, "IPcache Misses:          %d\n",
+    sentry->appendf("IPcache Misses:          %d\n",
                       IpcacheStats.misses);
-    storeAppendPrintf(sentry, "IPcache Retrieved A:     %d\n",
+    sentry->appendf("IPcache Retrieved A:     %d\n",
                       IpcacheStats.rr_a);
-    storeAppendPrintf(sentry, "IPcache Retrieved AAAA:  %d\n",
+    sentry->appendf("IPcache Retrieved AAAA:  %d\n",
                       IpcacheStats.rr_aaaa);
-    storeAppendPrintf(sentry, "IPcache Retrieved CNAME: %d\n",
+    sentry->appendf("IPcache Retrieved CNAME: %d\n",
                       IpcacheStats.rr_cname);
-    storeAppendPrintf(sentry, "IPcache CNAME-Only Response: %d\n",
+    sentry->appendf("IPcache CNAME-Only Response: %d\n",
                       IpcacheStats.cname_only);
-    storeAppendPrintf(sentry, "IPcache Invalid Request: %d\n",
+    sentry->appendf("IPcache Invalid Request: %d\n",
                       IpcacheStats.invalid);
-    storeAppendPrintf(sentry, "\n\n");
-    storeAppendPrintf(sentry, "IP Cache Contents:\n\n");
-    storeAppendPrintf(sentry, " %-31.31s %3s %6s %6s  %4s\n",
+    sentry->appendf("\n\n");
+    sentry->appendf("IP Cache Contents:\n\n");
+    sentry->appendf(" %-31.31s %3s %6s %6s  %4s\n",
                       "Hostname",
                       "Flg",
                       "lstref",

@@ -319,7 +319,7 @@ String::caseCmp(char const *aString, String::size_type count) const
 void
 String::stat(StoreEntry *entry) const
 {
-    storeAppendPrintf(entry, "%p : %d/%d \"%.*s\"\n",this,len_, size_, size(), rawBuf());
+    entry->appendf("%p : %d/%d \"%.*s\"\n",this,len_, size_, size(), rawBuf());
 }
 
 StringRegistry &
@@ -362,7 +362,7 @@ String::size_type memStringCount();
 void
 StringRegistry::Stat(StoreEntry *entry)
 {
-    storeAppendPrintf(entry, "%lu entries, %lu reported from MemPool\n", (unsigned long) Instance().entries.elements, (unsigned long) memStringCount());
+    entry->appendf("%lu entries, %lu reported from MemPool\n", (unsigned long) Instance().entries.elements, (unsigned long) memStringCount());
     Instance().entries.head->walk(Stater, entry);
 }
 

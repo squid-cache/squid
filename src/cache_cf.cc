@@ -1422,7 +1422,7 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
 {
     while (ae != NULL) {
         debugs(3, 3, "dump_acl: " << name << " " << ae->name);
-        storeAppendPrintf(entry, "%s %s %s ",
+        entry->appendf("%s %s %s ",
                           name,
                           ae->name,
                           ae->typeString());
@@ -1475,7 +1475,7 @@ static void
 dump_address(StoreEntry * entry, const char *name, Ip::Address &addr)
 {
     char buf[MAX_IPSTRLEN];
-    storeAppendPrintf(entry, "%s %s\n", name, addr.toStr(buf,MAX_IPSTRLEN) );
+    entry->appendf("%s %s\n", name, addr.toStr(buf,MAX_IPSTRLEN) );
 }
 
 static void
@@ -1515,13 +1515,13 @@ dump_acl_address(StoreEntry * entry, const char *name, Acl::Address * head)
 
     for (Acl::Address *l = head; l; l = l->next) {
         if (!l->addr.isAnyAddr())
-            storeAppendPrintf(entry, "%s %s", name, l->addr.toStr(buf,MAX_IPSTRLEN));
+            entry->appendf("%s %s", name, l->addr.toStr(buf,MAX_IPSTRLEN));
         else
-            storeAppendPrintf(entry, "%s autoselect", name);
+            entry->appendf("%s autoselect", name);
 
         dump_acl_list(entry, l->aclList);
 
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
     }
 }
 
@@ -1553,13 +1553,13 @@ dump_acl_tos(StoreEntry * entry, const char *name, acl_tos * head)
 
     for (l = head; l; l = l->next) {
         if (l->tos > 0)
-            storeAppendPrintf(entry, "%s 0x%02X", name, l->tos);
+            entry->appendf("%s 0x%02X", name, l->tos);
         else
-            storeAppendPrintf(entry, "%s none", name);
+            entry->appendf("%s none", name);
 
         dump_acl_list(entry, l->aclList);
 
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
     }
 }
 
@@ -1611,11 +1611,11 @@ static void
 dump_acl_nfmark(StoreEntry * entry, const char *name, acl_nfmark * head)
 {
     for (acl_nfmark *l = head; l; l = l->next) {
-        storeAppendPrintf(entry, "%s %s", name, ToSBuf(l->markConfig).c_str());
+        entry->appendf("%s %s", name, ToSBuf(l->markConfig).c_str());
 
         dump_acl_list(entry, l->aclList);
 
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
     }
 }
 
@@ -1655,13 +1655,13 @@ dump_acl_b_size_t(StoreEntry * entry, const char *name, AclSizeLimit * head)
 {
     for (AclSizeLimit *l = head; l; l = l->next) {
         if (l->size != -1)
-            storeAppendPrintf(entry, "%s %d %s\n", name, (int) l->size, B_BYTES_STR);
+            entry->appendf("%s %d %s\n", name, (int) l->size, B_BYTES_STR);
         else
-            storeAppendPrintf(entry, "%s none", name);
+            entry->appendf("%s none", name);
 
         dump_acl_list(entry, l->aclList);
 
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
     }
 }
 
@@ -1860,9 +1860,9 @@ dump_cachedir(StoreEntry * entry, const char *name, const Store::DiskConfig &swa
     for (i = 0; i < swap.n_configured; ++i) {
         s = dynamic_cast<SwapDir *>(swap.swapDirs[i].getRaw());
         if (!s) continue;
-        storeAppendPrintf(entry, "%s %s %s", name, s->type(), s->path);
+        entry->appendf("%s %s %s", name, s->type(), s->path);
         s->dump(*entry);
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
     }
 }
 
@@ -2095,7 +2095,7 @@ dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
     LOCAL_ARRAY(char, xname, 128);
 
     while (p != NULL) {
-        storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
+        entry->appendf("%s %s %s %d %d name=%s",
                           name,
                           p->host,
                           neighborTypeStr(p),
@@ -2110,7 +2110,7 @@ dump_peer(StoreEntry * entry, const char *name, CachePeer * p)
         }
 
         for (t = p->typelist; t; t = t->next) {
-            storeAppendPrintf(entry, "neighbor_type_domain %s %s %s\n",
+            entry->appendf("neighbor_type_domain %s %s %s\n",
                               p->host,
                               peer_type_str(t->type),
                               t->domain);
@@ -2445,14 +2445,14 @@ dump_cachemgrpasswd(StoreEntry * entry, const char *name, Mgr::ActionPasswordLis
 {
     while (list) {
         if (strcmp(list->passwd, "none") && strcmp(list->passwd, "disable"))
-            storeAppendPrintf(entry, "%s XXXXXXXXXX", name);
+            entry->appendf("%s XXXXXXXXXX", name);
         else
-            storeAppendPrintf(entry, "%s %s", name, list->passwd);
+            entry->appendf("%s %s", name, list->passwd);
 
         for (auto w : list->actions)
             entry->appendf(" " SQUIDSBUFPH, SQUIDSBUFPRINT(w));
 
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
         list = list->next;
     }
 }
@@ -2503,12 +2503,12 @@ static void
 dump_denyinfo(StoreEntry * entry, const char *name, AclDenyInfoList * var)
 {
     while (var != NULL) {
-        storeAppendPrintf(entry, "%s %s", name, var->err_page_name);
+        entry->appendf("%s %s", name, var->err_page_name);
 
         for (const auto &aclName: var->acl_list)
-            storeAppendPrintf(entry, " " SQUIDSBUFPH, SQUIDSBUFPRINT(aclName));
+            entry->appendf(" " SQUIDSBUFPH, SQUIDSBUFPRINT(aclName));
 
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
 
         var = var->next;
     }
@@ -2583,7 +2583,7 @@ parse_hostdomaintype(void)
 static void
 dump_int(StoreEntry * entry, const char *name, int var)
 {
-    storeAppendPrintf(entry, "%s %d\n", name, var);
+    entry->appendf("%s %d\n", name, var);
 }
 
 void
@@ -2603,7 +2603,7 @@ free_int(int *var)
 static void
 dump_int64_t(StoreEntry * entry, const char *name, int64_t var)
 {
-    storeAppendPrintf(entry, "%s %" PRId64 "\n", name, var);
+    entry->appendf("%s %" PRId64 "\n", name, var);
 }
 
 void
@@ -2623,7 +2623,7 @@ free_int64_t(int64_t *var)
 static void
 dump_onoff(StoreEntry * entry, const char *name, int var)
 {
-    storeAppendPrintf(entry, "%s %s\n", name, var ? "on" : "off");
+    entry->appendf("%s %s\n", name, var ? "on" : "off");
 }
 
 void
@@ -2665,7 +2665,7 @@ dump_tristate(StoreEntry * entry, const char *name, int var)
     else
         state = "off";
 
-    storeAppendPrintf(entry, "%s %s\n", name, state);
+    entry->appendf("%s %s\n", name, state);
 }
 
 static void
@@ -2727,7 +2727,7 @@ static void
 dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
 {
     while (head != NULL) {
-        storeAppendPrintf(entry, "%s%s %s %d %d%% %d",
+        entry->appendf("%s%s %s %d %d%% %d",
                           name,
                           head->pattern.flags&REG_ICASE ? " -i" : null_string,
                           head->pattern.c_str(),
@@ -2736,36 +2736,36 @@ dump_refreshpattern(StoreEntry * entry, const char *name, RefreshPattern * head)
                           (int) head->max / 60);
 
         if (head->max_stale >= 0)
-            storeAppendPrintf(entry, " max-stale=%d", head->max_stale);
+            entry->appendf(" max-stale=%d", head->max_stale);
 
         if (head->flags.refresh_ims)
-            storeAppendPrintf(entry, " refresh-ims");
+            entry->appendf(" refresh-ims");
 
         if (head->flags.store_stale)
-            storeAppendPrintf(entry, " store-stale");
+            entry->appendf(" store-stale");
 
 #if USE_HTTP_VIOLATIONS
 
         if (head->flags.override_expire)
-            storeAppendPrintf(entry, " override-expire");
+            entry->appendf(" override-expire");
 
         if (head->flags.override_lastmod)
-            storeAppendPrintf(entry, " override-lastmod");
+            entry->appendf(" override-lastmod");
 
         if (head->flags.reload_into_ims)
-            storeAppendPrintf(entry, " reload-into-ims");
+            entry->appendf(" reload-into-ims");
 
         if (head->flags.ignore_reload)
-            storeAppendPrintf(entry, " ignore-reload");
+            entry->appendf(" ignore-reload");
 
         if (head->flags.ignore_no_store)
-            storeAppendPrintf(entry, " ignore-no-store");
+            entry->appendf(" ignore-no-store");
 
         if (head->flags.ignore_private)
-            storeAppendPrintf(entry, " ignore-private");
+            entry->appendf(" ignore-private");
 #endif
 
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
 
         head = head->next;
     }
@@ -2959,7 +2959,7 @@ static void
 dump_string(StoreEntry * entry, const char *name, char *var)
 {
     if (var != NULL)
-        storeAppendPrintf(entry, "%s %s\n", name, var);
+        entry->appendf("%s %s\n", name, var);
 }
 
 static void
@@ -3032,7 +3032,7 @@ parse_TokenOrQuotedString(char **var)
 static void
 dump_time_t(StoreEntry * entry, const char *name, time_t var)
 {
-    storeAppendPrintf(entry, "%s %d seconds\n", name, (int) var);
+    entry->appendf("%s %d seconds\n", name, (int) var);
 }
 
 void
@@ -3055,9 +3055,9 @@ static void
 dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 {
     if (var % 1000)
-        storeAppendPrintf(entry, "%s %" PRId64 " milliseconds\n", name, var);
+        entry->appendf("%s %" PRId64 " milliseconds\n", name, var);
     else
-        storeAppendPrintf(entry, "%s %d seconds\n", name, (int)(var/1000) );
+        entry->appendf("%s %d seconds\n", name, (int)(var/1000) );
 }
 
 void
@@ -3076,7 +3076,7 @@ static void
 dump_time_nanoseconds(StoreEntry *entry, const char *name, const std::chrono::nanoseconds &var)
 {
     // std::chrono::nanoseconds::rep is unknown a priori so we cast to (and print) the largest supported integer
-    storeAppendPrintf(entry, "%s %jd nanoseconds\n", name, static_cast<intmax_t>(var.count()));
+    entry->appendf("%s %jd nanoseconds\n", name, static_cast<intmax_t>(var.count()));
 }
 
 static void
@@ -3095,40 +3095,40 @@ free_time_nanoseconds(std::chrono::nanoseconds *var)
 static void
 dump_size_t(StoreEntry * entry, const char *name, size_t var)
 {
-    storeAppendPrintf(entry, "%s %d\n", name, (int) var);
+    entry->appendf("%s %d\n", name, (int) var);
 }
 #endif
 
 static void
 dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
 {
-    storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
+    entry->appendf("%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
 
 static void
 dump_b_ssize_t(StoreEntry * entry, const char *name, ssize_t var)
 {
-    storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
+    entry->appendf("%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
 
 #if UNUSED_CODE
 static void
 dump_kb_size_t(StoreEntry * entry, const char *name, size_t var)
 {
-    storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_KBYTES_STR);
+    entry->appendf("%s %d %s\n", name, (int) var, B_KBYTES_STR);
 }
 #endif
 
 static void
 dump_b_int64_t(StoreEntry * entry, const char *name, int64_t var)
 {
-    storeAppendPrintf(entry, "%s %" PRId64 " %s\n", name, var, B_BYTES_STR);
+    entry->appendf("%s %" PRId64 " %s\n", name, var, B_BYTES_STR);
 }
 
 static void
 dump_kb_int64_t(StoreEntry * entry, const char *name, int64_t var)
 {
-    storeAppendPrintf(entry, "%s %" PRId64 " %s\n", name, var, B_KBYTES_STR);
+    entry->appendf("%s %" PRId64 " %s\n", name, var, B_KBYTES_STR);
 }
 
 #if UNUSED_CODE
@@ -3201,7 +3201,7 @@ free_b_int64_t(int64_t * var)
 static void
 dump_u_short(StoreEntry * entry, const char *name, unsigned short var)
 {
-    storeAppendPrintf(entry, "%s %d\n", name, var);
+    entry->appendf("%s %d\n", name, var);
 }
 
 static void
@@ -3239,7 +3239,7 @@ static void
 dump_wordlist(StoreEntry * entry, const char *name, wordlist * list)
 {
     while (list != NULL) {
-        storeAppendPrintf(entry, "%s %s\n", name, list->key);
+        entry->appendf("%s %s\n", name, list->key);
         list = list->next;
     }
 }
@@ -3317,7 +3317,7 @@ dump_uri_whitespace(StoreEntry * entry, const char *name, int var)
     else
         s = "strip";
 
-    storeAppendPrintf(entry, "%s %s\n", name, s);
+    entry->appendf("%s %s\n", name, s);
 }
 
 static void
@@ -3352,15 +3352,15 @@ static void
 dump_removalpolicy(StoreEntry * entry, const char *name, RemovalPolicySettings * settings)
 {
     wordlist *args;
-    storeAppendPrintf(entry, "%s %s", name, settings->type);
+    entry->appendf("%s %s", name, settings->type);
     args = settings->args;
 
     while (args) {
-        storeAppendPrintf(entry, " %s", args->key);
+        entry->appendf(" %s", args->key);
         args = args->next;
     }
 
-    storeAppendPrintf(entry, "\n");
+    entry->appendf("\n");
 }
 
 inline void
@@ -3416,16 +3416,16 @@ parse_memcachemode(SquidConfig *)
 static void
 dump_memcachemode(StoreEntry * entry, const char *name, SquidConfig &)
 {
-    storeAppendPrintf(entry, "%s ", name);
+    entry->appendf("%s ", name);
     if (Config.onoff.memory_cache_first && Config.onoff.memory_cache_disk)
-        storeAppendPrintf(entry, "always");
+        entry->appendf("always");
     else if (!Config.onoff.memory_cache_first && Config.onoff.memory_cache_disk)
-        storeAppendPrintf(entry, "disk");
+        entry->appendf("disk");
     else if (Config.onoff.memory_cache_first && !Config.onoff.memory_cache_disk)
-        storeAppendPrintf(entry, "network");
+        entry->appendf("network");
     else if (!Config.onoff.memory_cache_first && !Config.onoff.memory_cache_disk)
-        storeAppendPrintf(entry, "none");
-    storeAppendPrintf(entry, "\n");
+        entry->appendf("none");
+    entry->appendf("\n");
 }
 
 #include "cf_parser.cci"
@@ -3484,7 +3484,7 @@ dump_IpAddress_list(StoreEntry * e, const char *n, const Ip::Address_list * s)
     char ntoabuf[MAX_IPSTRLEN];
 
     while (s) {
-        storeAppendPrintf(e, "%s %s\n",
+        e->appendf("%s %s\n",
                           n,
                           s->s.toStr(ntoabuf,MAX_IPSTRLEN));
         s = s->next;
@@ -3944,60 +3944,60 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 {
     char buf[MAX_IPSTRLEN];
 
-    storeAppendPrintf(e, "%s %s",
+    e->appendf("%s %s",
                       n,
                       s->s.toUrl(buf,MAX_IPSTRLEN));
 
     // MODES and specific sub-options.
     if (s->flags.natIntercept)
-        storeAppendPrintf(e, " intercept");
+        e->appendf(" intercept");
 
     else if (s->flags.tproxyIntercept)
-        storeAppendPrintf(e, " tproxy");
+        e->appendf(" tproxy");
 
     else if (s->flags.proxySurrogate)
-        storeAppendPrintf(e, " require-proxy-header");
+        e->appendf(" require-proxy-header");
 
     else if (s->flags.accelSurrogate) {
-        storeAppendPrintf(e, " accel");
+        e->appendf(" accel");
 
         if (s->vhost)
-            storeAppendPrintf(e, " vhost");
+            e->appendf(" vhost");
 
         if (s->vport < 0)
-            storeAppendPrintf(e, " vport");
+            e->appendf(" vport");
         else if (s->vport > 0)
-            storeAppendPrintf(e, " vport=%d", s->vport);
+            e->appendf(" vport=%d", s->vport);
 
         if (s->defaultsite)
-            storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
+            e->appendf(" defaultsite=%s", s->defaultsite);
 
         // TODO: compare against prefix of 'n' instead of assuming http_port
         if (s->transport.protocol != AnyP::PROTO_HTTP)
-            storeAppendPrintf(e, " protocol=%s", AnyP::ProtocolType_str[s->transport.protocol]);
+            e->appendf(" protocol=%s", AnyP::ProtocolType_str[s->transport.protocol]);
 
         if (s->allow_direct)
-            storeAppendPrintf(e, " allow-direct");
+            e->appendf(" allow-direct");
 
         if (s->ignore_cc)
-            storeAppendPrintf(e, " ignore-cc");
+            e->appendf(" ignore-cc");
 
     }
 
     // Generic independent options
 
     if (s->name)
-        storeAppendPrintf(e, " name=%s", s->name);
+        e->appendf(" name=%s", s->name);
 
 #if USE_HTTP_VIOLATIONS
     if (!s->flags.accelSurrogate && s->ignore_cc)
-        storeAppendPrintf(e, " ignore-cc");
+        e->appendf(" ignore-cc");
 #endif
 
     if (s->connection_auth_disabled)
-        storeAppendPrintf(e, " connection-auth=off");
+        e->appendf(" connection-auth=off");
     else
-        storeAppendPrintf(e, " connection-auth=on");
+        e->appendf(" connection-auth=on");
 
     if (s->disable_pmtu_discovery != DISABLE_PMTU_OFF) {
         const char *pmtu;
@@ -4007,23 +4007,23 @@ dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
         else
             pmtu = "transparent";
 
-        storeAppendPrintf(e, " disable-pmtu-discovery=%s", pmtu);
+        e->appendf(" disable-pmtu-discovery=%s", pmtu);
     }
 
     if (s->s.isAnyAddr() && !s->s.isIPv6())
-        storeAppendPrintf(e, " ipv4");
+        e->appendf(" ipv4");
 
     if (s->tcp_keepalive.enabled) {
         if (s->tcp_keepalive.idle || s->tcp_keepalive.interval || s->tcp_keepalive.timeout) {
-            storeAppendPrintf(e, " tcpkeepalive=%d,%d,%d", s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
+            e->appendf(" tcpkeepalive=%d,%d,%d", s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
         } else {
-            storeAppendPrintf(e, " tcpkeepalive");
+            e->appendf(" tcpkeepalive");
         }
     }
 
 #if USE_OPENSSL
     if (s->flags.tunnelSslBumping)
-        storeAppendPrintf(e, " ssl-bump");
+        e->appendf(" ssl-bump");
 #endif
 
     s->secure.dumpCfg(e, "tls-");
@@ -4034,7 +4034,7 @@ dump_PortCfg(StoreEntry * e, const char *n, const AnyP::PortCfgPointer &s)
 {
     for (AnyP::PortCfgPointer p = s; p != NULL; p = p->next) {
         dump_generic_port(e, n, p);
-        storeAppendPrintf(e, "\n");
+        e->appendf("\n");
     }
 }
 
@@ -4252,42 +4252,42 @@ dump_access_log(StoreEntry * entry, const char *name, CustomLog * logs)
     CustomLog *log;
 
     for (log = logs; log; log = log->next) {
-        storeAppendPrintf(entry, "%s ", name);
+        entry->appendf("%s ", name);
 
         switch (log->type) {
 
         case Log::Format::CLF_CUSTOM:
-            storeAppendPrintf(entry, "%s logformat=%s", log->filename, log->logFormat->name);
+            entry->appendf("%s logformat=%s", log->filename, log->logFormat->name);
             break;
 
         case Log::Format::CLF_NONE:
-            storeAppendPrintf(entry, "logformat=none");
+            entry->appendf("logformat=none");
             break;
 
         case Log::Format::CLF_SQUID:
             // this is the default, no need to add to the dump
-            //storeAppendPrintf(entry, "%s logformat=squid", log->filename);
+            //entry->appendf("%s logformat=squid", log->filename);
             break;
 
         case Log::Format::CLF_COMBINED:
-            storeAppendPrintf(entry, "%s logformat=combined", log->filename);
+            entry->appendf("%s logformat=combined", log->filename);
             break;
 
         case Log::Format::CLF_COMMON:
-            storeAppendPrintf(entry, "%s logformat=common", log->filename);
+            entry->appendf("%s logformat=common", log->filename);
             break;
 
 #if ICAP_CLIENT
         case Log::Format::CLF_ICAP_SQUID:
-            storeAppendPrintf(entry, "%s logformat=icap_squid", log->filename);
+            entry->appendf("%s logformat=icap_squid", log->filename);
             break;
 #endif
         case Log::Format::CLF_USERAGENT:
-            storeAppendPrintf(entry, "%s logformat=useragent", log->filename);
+            entry->appendf("%s logformat=useragent", log->filename);
             break;
 
         case Log::Format::CLF_REFERER:
-            storeAppendPrintf(entry, "%s logformat=referrer", log->filename);
+            entry->appendf("%s logformat=referrer", log->filename);
             break;
 
         case Log::Format::CLF_UNKNOWN:
@@ -4296,19 +4296,19 @@ dump_access_log(StoreEntry * entry, const char *name, CustomLog * logs)
 
         // default is on-error=die
         if (!log->fatal)
-            storeAppendPrintf(entry, " on-error=drop");
+            entry->appendf(" on-error=drop");
 
         // default: 64KB
         if (log->bufferSize != 64*1024)
-            storeAppendPrintf(entry, " buffer-size=%" PRIuSIZE, log->bufferSize);
+            entry->appendf(" buffer-size=%" PRIuSIZE, log->bufferSize);
 
         if (log->rotateCount >= 0)
-            storeAppendPrintf(entry, " rotate=%d", log->rotateCount);
+            entry->appendf(" rotate=%d", log->rotateCount);
 
         if (log->aclList)
             dump_acl_list(entry, log->aclList);
 
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
     }
 }
 
@@ -4390,17 +4390,17 @@ static void
 dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAffinityMap *const cpuAffinityMap)
 {
     if (cpuAffinityMap) {
-        storeAppendPrintf(entry, "%s process_numbers=", name);
+        entry->appendf("%s process_numbers=", name);
         for (size_t i = 0; i < cpuAffinityMap->processes().size(); ++i) {
-            storeAppendPrintf(entry, "%s%i", (i ? "," : ""),
+            entry->appendf("%s%i", (i ? "," : ""),
                               cpuAffinityMap->processes()[i]);
         }
-        storeAppendPrintf(entry, " cores=");
+        entry->appendf(" cores=");
         for (size_t i = 0; i < cpuAffinityMap->cores().size(); ++i) {
-            storeAppendPrintf(entry, "%s%i", (i ? "," : ""),
+            entry->appendf("%s%i", (i ? "," : ""),
                               cpuAffinityMap->cores()[i]);
         }
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
     }
 }
 
@@ -4512,11 +4512,11 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 
 static void dump_icap_service_failure_limit(StoreEntry *entry, const char *name, const Adaptation::Icap::Config &cfg)
 {
-    storeAppendPrintf(entry, "%s %d", name, cfg.service_failure_limit);
+    entry->appendf("%s %d", name, cfg.service_failure_limit);
     if (cfg.oldest_service_failure > 0) {
-        storeAppendPrintf(entry, " in %d seconds", (int)cfg.oldest_service_failure);
+        entry->appendf(" in %d seconds", (int)cfg.oldest_service_failure);
     }
-    storeAppendPrintf(entry, "\n");
+    entry->appendf("\n");
 }
 
 static void free_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
@@ -4587,11 +4587,11 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 static void dump_sslproxy_cert_adapt(StoreEntry *entry, const char *name, sslproxy_cert_adapt *cert_adapt)
 {
     for (sslproxy_cert_adapt *ca = cert_adapt; ca != NULL; ca = ca->next) {
-        storeAppendPrintf(entry, "%s ", name);
-        storeAppendPrintf(entry, "%s{%s} ", Ssl::sslCertAdaptAlgoritm(ca->alg), ca->param);
+        entry->appendf("%s ", name);
+        entry->appendf("%s{%s} ", Ssl::sslCertAdaptAlgoritm(ca->alg), ca->param);
         if (ca->aclList)
             dump_acl_list(entry, ca->aclList);
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
     }
 }
 
@@ -4644,11 +4644,11 @@ static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslprox
 {
     sslproxy_cert_sign *cs;
     for (cs = cert_sign; cs != NULL; cs = cs->next) {
-        storeAppendPrintf(entry, "%s ", name);
-        storeAppendPrintf(entry, "%s ", Ssl::certSignAlgorithm(cs->alg));
+        entry->appendf("%s ", name);
+        entry->appendf("%s ", Ssl::certSignAlgorithm(cs->alg));
         if (cs->aclList)
             dump_acl_list(entry, cs->aclList);
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
     }
 }
 
@@ -4800,10 +4800,10 @@ static void dump_HeaderWithAclList(StoreEntry * entry, const char *name, HeaderW
         return;
 
     for (HeaderWithAclList::iterator hwa = headers->begin(); hwa != headers->end(); ++hwa) {
-        storeAppendPrintf(entry, "%s %s %s", name, hwa->fieldName.c_str(), hwa->fieldValue.c_str());
+        entry->appendf("%s %s %s", name, hwa->fieldName.c_str(), hwa->fieldValue.c_str());
         if (hwa->aclList)
             dump_acl_list(entry, hwa->aclList);
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
     }
 }
 
@@ -5022,12 +5022,12 @@ dump_UrlHelperTimeout(StoreEntry *entry, const char *name, SquidConfig::UrlHelpe
     assert(config.action >= 0 && config.action <= toutActUseConfiguredResponse);
 
     dump_time_t(entry, name, Config.Timeout.urlRewrite);
-    storeAppendPrintf(entry, " on_timeout=%s", onTimedOutActions[config.action]);
+    entry->appendf(" on_timeout=%s", onTimedOutActions[config.action]);
 
     if (config.response)
-        storeAppendPrintf(entry, " response=\"%s\"", config.response);
+        entry->appendf(" response=\"%s\"", config.response);
 
-    storeAppendPrintf(entry, "\n");
+    entry->appendf("\n");
 }
 
 static void

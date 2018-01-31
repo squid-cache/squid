@@ -25,8 +25,8 @@ void ClientDelayPool::dump(StoreEntry * entry, unsigned int poolNumberMinusOne) 
     LOCAL_ARRAY(char, nom, 32);
     snprintf(nom, 32, "client_delay_access %d", poolNumberMinusOne + 1);
     dump_acl_access(entry, nom, access);
-    storeAppendPrintf(entry, "client_delay_parameters %d %d %" PRId64 "\n", poolNumberMinusOne + 1, rate,highwatermark);
-    storeAppendPrintf(entry, "\n");
+    entry->appendf("client_delay_parameters %d %d %" PRId64 "\n", poolNumberMinusOne + 1, rate,highwatermark);
+    entry->appendf("\n");
 }
 
 ClientDelayPools *
@@ -58,7 +58,7 @@ void ClientDelayConfig::dumpPoolCount(StoreEntry * entry, const char *name) cons
 {
     const auto &pools_ = ClientDelayPools::Instance()->pools;
     if (pools_.size()) {
-        storeAppendPrintf(entry, "%s %d\n", name, static_cast<int>(pools_.size()));
+        entry->appendf("%s %d\n", name, static_cast<int>(pools_.size()));
         for (unsigned int i = 0; i < pools_.size(); ++i)
             pools_[i]->dump(entry, i);
     }

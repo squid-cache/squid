@@ -129,63 +129,63 @@ extern unsigned int mem_pool_free_calls;
 static void
 statUtilization(StoreEntry * e)
 {
-    storeAppendPrintf(e, "Cache Utilisation:\n");
-    storeAppendPrintf(e, "\n");
-    storeAppendPrintf(e, "Last 5 minutes:\n");
+    e->appendf("Cache Utilisation:\n");
+    e->appendf("\n");
+    e->appendf("Last 5 minutes:\n");
 
     if (NCountHist >= 5)
         statAvgDump(e, 5, 0);
     else
-        storeAppendPrintf(e, "(no values recorded yet)\n");
+        e->appendf("(no values recorded yet)\n");
 
-    storeAppendPrintf(e, "\n");
+    e->appendf("\n");
 
-    storeAppendPrintf(e, "Last 15 minutes:\n");
+    e->appendf("Last 15 minutes:\n");
 
     if (NCountHist >= 15)
         statAvgDump(e, 15, 0);
     else
-        storeAppendPrintf(e, "(no values recorded yet)\n");
+        e->appendf("(no values recorded yet)\n");
 
-    storeAppendPrintf(e, "\n");
+    e->appendf("\n");
 
-    storeAppendPrintf(e, "Last hour:\n");
+    e->appendf("Last hour:\n");
 
     if (NCountHist >= 60)
         statAvgDump(e, 60, 0);
     else
-        storeAppendPrintf(e, "(no values recorded yet)\n");
+        e->appendf("(no values recorded yet)\n");
 
-    storeAppendPrintf(e, "\n");
+    e->appendf("\n");
 
-    storeAppendPrintf(e, "Last 8 hours:\n");
+    e->appendf("Last 8 hours:\n");
 
     if (NCountHourHist >= 8)
         statAvgDump(e, 0, 8);
     else
-        storeAppendPrintf(e, "(no values recorded yet)\n");
+        e->appendf("(no values recorded yet)\n");
 
-    storeAppendPrintf(e, "\n");
+    e->appendf("\n");
 
-    storeAppendPrintf(e, "Last day:\n");
+    e->appendf("Last day:\n");
 
     if (NCountHourHist >= 24)
         statAvgDump(e, 0, 24);
     else
-        storeAppendPrintf(e, "(no values recorded yet)\n");
+        e->appendf("(no values recorded yet)\n");
 
-    storeAppendPrintf(e, "\n");
+    e->appendf("\n");
 
-    storeAppendPrintf(e, "Last 3 days:\n");
+    e->appendf("Last 3 days:\n");
 
     if (NCountHourHist >= 72)
         statAvgDump(e, 0, 72);
     else
-        storeAppendPrintf(e, "(no values recorded yet)\n");
+        e->appendf("(no values recorded yet)\n");
 
-    storeAppendPrintf(e, "\n");
+    e->appendf("\n");
 
-    storeAppendPrintf(e, "Totals since cache startup:\n");
+    e->appendf("Totals since cache startup:\n");
 
     statCountersDump(e);
 }
@@ -219,45 +219,45 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
 {
     int i;
 
-    storeAppendPrintf(sentry, "HTTP I/O\n");
-    storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.http_reads);
-    storeAppendPrintf(sentry, "Read Histogram:\n");
+    sentry->appendf("HTTP I/O\n");
+    sentry->appendf("number of reads: %.0f\n", stats.http_reads);
+    sentry->appendf("Read Histogram:\n");
 
     for (i = 0; i < IoStats::histSize; ++i) {
-        storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
+        sentry->appendf("%5d-%5d: %9.0f %2.0f%%\n",
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
                           stats.http_read_hist[i],
                           Math::doublePercent(stats.http_read_hist[i], stats.http_reads));
     }
 
-    storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "FTP I/O\n");
-    storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.ftp_reads);
-    storeAppendPrintf(sentry, "Read Histogram:\n");
+    sentry->appendf("\n");
+    sentry->appendf("FTP I/O\n");
+    sentry->appendf("number of reads: %.0f\n", stats.ftp_reads);
+    sentry->appendf("Read Histogram:\n");
 
     for (i = 0; i < IoStats::histSize; ++i) {
-        storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
+        sentry->appendf("%5d-%5d: %9.0f %2.0f%%\n",
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
                           stats.ftp_read_hist[i],
                           Math::doublePercent(stats.ftp_read_hist[i], stats.ftp_reads));
     }
 
-    storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "Gopher I/O\n");
-    storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.gopher_reads);
-    storeAppendPrintf(sentry, "Read Histogram:\n");
+    sentry->appendf("\n");
+    sentry->appendf("Gopher I/O\n");
+    sentry->appendf("number of reads: %.0f\n", stats.gopher_reads);
+    sentry->appendf("Read Histogram:\n");
 
     for (i = 0; i < IoStats::histSize; ++i) {
-        storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
+        sentry->appendf("%5d-%5d: %9.0f %2.0f%%\n",
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
                           stats.gopher_read_hist[i],
                           Math::doublePercent(stats.gopher_read_hist[i], stats.gopher_reads));
     }
 
-    storeAppendPrintf(sentry, "\n");
+    sentry->appendf("\n");
 }
 
 static const char *
@@ -448,7 +448,7 @@ info_get_mallstat(int size, int number, int oldnum, void *data)
 
 // format: "%12s %15s %6s %12s\n","Alloc Size","Count","Delta","Alloc/sec"
     if (number > 0)
-        storeAppendPrintf(sentry, "%12d %15d %6d %.1f\n", size, number, number - oldnum, xdiv((number - oldnum), xm_deltat));
+        sentry->appendf("%12d %15d %6d %.1f\n", size, number, number - oldnum, xdiv((number - oldnum), xm_deltat));
 }
 
 #endif
@@ -580,210 +580,210 @@ GetInfo(Mgr::InfoActionData& stats)
 void
 DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
 {
-    storeAppendPrintf(sentry, "Squid Object Cache: Version %s\n",
+    sentry->appendf("Squid Object Cache: Version %s\n",
                       version_string);
 
-    storeAppendPrintf(sentry, "Build Info: " SQUID_BUILD_INFO "\n");
+    sentry->appendf("Build Info: " SQUID_BUILD_INFO "\n");
 
 #if _SQUID_WINDOWS_
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
-        storeAppendPrintf(sentry,"\nRunning as " SQUIDSBUFPH " Windows System Service on %s\n",
+        sentry->appendf("\nRunning as " SQUIDSBUFPH " Windows System Service on %s\n",
                           SQUIDSBUFPRINT(service_name), WIN32_OS_string);
-        storeAppendPrintf(sentry,"Service command line is: %s\n", WIN32_Service_Command_Line);
+        sentry->appendf("Service command line is: %s\n", WIN32_Service_Command_Line);
     } else
-        storeAppendPrintf(sentry,"Running on %s\n",WIN32_OS_string);
+        sentry->appendf("Running on %s\n",WIN32_OS_string);
 #else
-    storeAppendPrintf(sentry,"Service Name: " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(service_name));
+    sentry->appendf("Service Name: " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(service_name));
 #endif
 
-    storeAppendPrintf(sentry, "Start Time:\t%s\n",
+    sentry->appendf("Start Time:\t%s\n",
                       mkrfc1123(stats.squid_start.tv_sec));
 
-    storeAppendPrintf(sentry, "Current Time:\t%s\n",
+    sentry->appendf("Current Time:\t%s\n",
                       mkrfc1123(stats.current_time.tv_sec));
 
-    storeAppendPrintf(sentry, "Connection information for %s:\n",APP_SHORTNAME);
+    sentry->appendf("Connection information for %s:\n",APP_SHORTNAME);
 
     if (Config.onoff.client_db)
-        storeAppendPrintf(sentry, "\tNumber of clients accessing cache:\t%.0f\n", stats.client_http_clients);
+        sentry->appendf("\tNumber of clients accessing cache:\t%.0f\n", stats.client_http_clients);
     else
         sentry->append("\tNumber of clients accessing cache:\t(client_db off)\n", 52);
 
-    storeAppendPrintf(sentry, "\tNumber of HTTP requests received:\t%.0f\n",
+    sentry->appendf("\tNumber of HTTP requests received:\t%.0f\n",
                       stats.client_http_requests);
 
-    storeAppendPrintf(sentry, "\tNumber of ICP messages received:\t%.0f\n",
+    sentry->appendf("\tNumber of ICP messages received:\t%.0f\n",
                       stats.icp_pkts_recv);
 
-    storeAppendPrintf(sentry, "\tNumber of ICP messages sent:\t%.0f\n",
+    sentry->appendf("\tNumber of ICP messages sent:\t%.0f\n",
                       stats.icp_pkts_sent);
 
-    storeAppendPrintf(sentry, "\tNumber of queued ICP replies:\t%.0f\n",
+    sentry->appendf("\tNumber of queued ICP replies:\t%.0f\n",
                       stats.icp_replies_queued);
 
 #if USE_HTCP
 
-    storeAppendPrintf(sentry, "\tNumber of HTCP messages received:\t%.0f\n",
+    sentry->appendf("\tNumber of HTCP messages received:\t%.0f\n",
                       stats.htcp_pkts_recv);
 
-    storeAppendPrintf(sentry, "\tNumber of HTCP messages sent:\t%.0f\n",
+    sentry->appendf("\tNumber of HTCP messages sent:\t%.0f\n",
                       stats.htcp_pkts_sent);
 
 #endif
 
     double fct = stats.count > 1 ? stats.count : 1.0;
-    storeAppendPrintf(sentry, "\tRequest failure ratio:\t%5.2f\n",
+    sentry->appendf("\tRequest failure ratio:\t%5.2f\n",
                       stats.request_failure_ratio / fct);
 
-    storeAppendPrintf(sentry, "\tAverage HTTP requests per minute since start:\t%.1f\n",
+    sentry->appendf("\tAverage HTTP requests per minute since start:\t%.1f\n",
                       stats.avg_client_http_requests);
 
-    storeAppendPrintf(sentry, "\tAverage ICP messages per minute since start:\t%.1f\n",
+    sentry->appendf("\tAverage ICP messages per minute since start:\t%.1f\n",
                       stats.avg_icp_messages);
 
-    storeAppendPrintf(sentry, "\tSelect loop called: %.0f times, %0.3f ms avg\n",
+    sentry->appendf("\tSelect loop called: %.0f times, %0.3f ms avg\n",
                       stats.select_loops, stats.avg_loop_time / fct);
 
-    storeAppendPrintf(sentry, "Cache information for %s:\n",APP_SHORTNAME);
+    sentry->appendf("Cache information for %s:\n",APP_SHORTNAME);
 
-    storeAppendPrintf(sentry, "\tHits as %% of all requests:\t5min: %3.1f%%, 60min: %3.1f%%\n",
+    sentry->appendf("\tHits as %% of all requests:\t5min: %3.1f%%, 60min: %3.1f%%\n",
                       stats.request_hit_ratio5 / fct,
                       stats.request_hit_ratio60 / fct);
 
-    storeAppendPrintf(sentry, "\tHits as %% of bytes sent:\t5min: %3.1f%%, 60min: %3.1f%%\n",
+    sentry->appendf("\tHits as %% of bytes sent:\t5min: %3.1f%%, 60min: %3.1f%%\n",
                       stats.byte_hit_ratio5 / fct,
                       stats.byte_hit_ratio60 / fct);
 
-    storeAppendPrintf(sentry, "\tMemory hits as %% of hit requests:\t5min: %3.1f%%, 60min: %3.1f%%\n",
+    sentry->appendf("\tMemory hits as %% of hit requests:\t5min: %3.1f%%, 60min: %3.1f%%\n",
                       stats.request_hit_mem_ratio5 / fct,
                       stats.request_hit_mem_ratio60 / fct);
 
-    storeAppendPrintf(sentry, "\tDisk hits as %% of hit requests:\t5min: %3.1f%%, 60min: %3.1f%%\n",
+    sentry->appendf("\tDisk hits as %% of hit requests:\t5min: %3.1f%%, 60min: %3.1f%%\n",
                       stats.request_hit_disk_ratio5 / fct,
                       stats.request_hit_disk_ratio60 / fct);
 
-    storeAppendPrintf(sentry, "\tStorage Swap size:\t%.0f KB\n",
+    sentry->appendf("\tStorage Swap size:\t%.0f KB\n",
                       stats.store.swap.size / 1024);
 
-    storeAppendPrintf(sentry, "\tStorage Swap capacity:\t%4.1f%% used, %4.1f%% free\n",
+    sentry->appendf("\tStorage Swap capacity:\t%4.1f%% used, %4.1f%% free\n",
                       Math::doublePercent(stats.store.swap.size, stats.store.swap.capacity),
                       Math::doublePercent(stats.store.swap.available(), stats.store.swap.capacity));
 
-    storeAppendPrintf(sentry, "\tStorage Mem size:\t%.0f KB\n",
+    sentry->appendf("\tStorage Mem size:\t%.0f KB\n",
                       stats.store.mem.size / 1024);
 
-    storeAppendPrintf(sentry, "\tStorage Mem capacity:\t%4.1f%% used, %4.1f%% free\n",
+    sentry->appendf("\tStorage Mem capacity:\t%4.1f%% used, %4.1f%% free\n",
                       Math::doublePercent(stats.store.mem.size, stats.store.mem.capacity),
                       Math::doublePercent(stats.store.mem.available(), stats.store.mem.capacity));
 
-    storeAppendPrintf(sentry, "\tMean Object Size:\t%0.2f KB\n",
+    sentry->appendf("\tMean Object Size:\t%0.2f KB\n",
                       stats.store.swap.meanObjectSize() / 1024);
 
-    storeAppendPrintf(sentry, "\tRequests given to unlinkd:\t%.0f\n",
+    sentry->appendf("\tRequests given to unlinkd:\t%.0f\n",
                       stats.unlink_requests);
 
-    storeAppendPrintf(sentry, "Median Service Times (seconds)  5 min    60 min:\n");
+    sentry->appendf("Median Service Times (seconds)  5 min    60 min:\n");
 
     fct = stats.count > 1 ? stats.count * 1000.0 : 1000.0;
-    storeAppendPrintf(sentry, "\tHTTP Requests (All):  %8.5f %8.5f\n",
+    sentry->appendf("\tHTTP Requests (All):  %8.5f %8.5f\n",
                       stats.http_requests5 / fct,
                       stats.http_requests60 / fct);
 
-    storeAppendPrintf(sentry, "\tCache Misses:         %8.5f %8.5f\n",
+    sentry->appendf("\tCache Misses:         %8.5f %8.5f\n",
                       stats.cache_misses5 / fct,
                       stats.cache_misses60 / fct);
 
-    storeAppendPrintf(sentry, "\tCache Hits:           %8.5f %8.5f\n",
+    sentry->appendf("\tCache Hits:           %8.5f %8.5f\n",
                       stats.cache_hits5 / fct,
                       stats.cache_hits60 / fct);
 
-    storeAppendPrintf(sentry, "\tNear Hits:            %8.5f %8.5f\n",
+    sentry->appendf("\tNear Hits:            %8.5f %8.5f\n",
                       stats.near_hits5 / fct,
                       stats.near_hits60 / fct);
 
-    storeAppendPrintf(sentry, "\tNot-Modified Replies: %8.5f %8.5f\n",
+    sentry->appendf("\tNot-Modified Replies: %8.5f %8.5f\n",
                       stats.not_modified_replies5 / fct,
                       stats.not_modified_replies60 / fct);
 
-    storeAppendPrintf(sentry, "\tDNS Lookups:          %8.5f %8.5f\n",
+    sentry->appendf("\tDNS Lookups:          %8.5f %8.5f\n",
                       stats.dns_lookups5 / fct,
                       stats.dns_lookups60 / fct);
 
     fct = stats.count > 1 ? stats.count * 1000000.0 : 1000000.0;
-    storeAppendPrintf(sentry, "\tICP Queries:          %8.5f %8.5f\n",
+    sentry->appendf("\tICP Queries:          %8.5f %8.5f\n",
                       stats.icp_queries5 / fct,
                       stats.icp_queries60 / fct);
 
-    storeAppendPrintf(sentry, "Resource usage for %s:\n", APP_SHORTNAME);
+    sentry->appendf("Resource usage for %s:\n", APP_SHORTNAME);
 
-    storeAppendPrintf(sentry, "\tUP Time:\t%.3f seconds\n", stats.up_time);
+    sentry->appendf("\tUP Time:\t%.3f seconds\n", stats.up_time);
 
-    storeAppendPrintf(sentry, "\tCPU Time:\t%.3f seconds\n", stats.cpu_time);
+    sentry->appendf("\tCPU Time:\t%.3f seconds\n", stats.cpu_time);
 
-    storeAppendPrintf(sentry, "\tCPU Usage:\t%.2f%%\n",
+    sentry->appendf("\tCPU Usage:\t%.2f%%\n",
                       stats.cpu_usage);
 
-    storeAppendPrintf(sentry, "\tCPU Usage, 5 minute avg:\t%.2f%%\n",
+    sentry->appendf("\tCPU Usage, 5 minute avg:\t%.2f%%\n",
                       stats.cpu_usage5);
 
-    storeAppendPrintf(sentry, "\tCPU Usage, 60 minute avg:\t%.2f%%\n",
+    sentry->appendf("\tCPU Usage, 60 minute avg:\t%.2f%%\n",
                       stats.cpu_usage60);
 
-    storeAppendPrintf(sentry, "\tMaximum Resident Size: %.0f KB\n",
+    sentry->appendf("\tMaximum Resident Size: %.0f KB\n",
                       stats.maxrss);
 
-    storeAppendPrintf(sentry, "\tPage faults with physical i/o: %.0f\n",
+    sentry->appendf("\tPage faults with physical i/o: %.0f\n",
                       stats.page_faults);
 
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
 
-    storeAppendPrintf(sentry, "Memory usage for %s via mstats():\n",APP_SHORTNAME);
+    sentry->appendf("Memory usage for %s via mstats():\n",APP_SHORTNAME);
 
-    storeAppendPrintf(sentry, "\tTotal space in arena:  %6.0f KB\n",
+    sentry->appendf("\tTotal space in arena:  %6.0f KB\n",
                       stats.ms_bytes_total / 1024);
 
-    storeAppendPrintf(sentry, "\tTotal free:            %6.0f KB %.0f%%\n",
+    sentry->appendf("\tTotal free:            %6.0f KB %.0f%%\n",
                       stats.ms_bytes_free / 1024,
                       Math::doublePercent(stats.ms_bytes_free, stats.ms_bytes_total));
 
 #endif
 
-    storeAppendPrintf(sentry, "Memory accounted for:\n");
-    storeAppendPrintf(sentry, "\tTotal accounted:       %6.0f KB\n",
+    sentry->appendf("Memory accounted for:\n");
+    sentry->appendf("\tTotal accounted:       %6.0f KB\n",
                       stats.total_accounted / 1024);
     {
         MemPoolGlobalStats mp_stats;
         memPoolGetGlobalStats(&mp_stats);
-        storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
+        sentry->appendf("\tmemPoolAlloc calls: %9.0f\n",
                           stats.gb_saved_count);
-        storeAppendPrintf(sentry, "\tmemPoolFree calls:  %9.0f\n",
+        sentry->appendf("\tmemPoolFree calls:  %9.0f\n",
                           stats.gb_freed_count);
     }
 
-    storeAppendPrintf(sentry, "File descriptor usage for %s:\n", APP_SHORTNAME);
-    storeAppendPrintf(sentry, "\tMaximum number of file descriptors:   %4.0f\n",
+    sentry->appendf("File descriptor usage for %s:\n", APP_SHORTNAME);
+    sentry->appendf("\tMaximum number of file descriptors:   %4.0f\n",
                       stats.max_fd);
-    storeAppendPrintf(sentry, "\tLargest file desc currently in use:   %4.0f\n",
+    sentry->appendf("\tLargest file desc currently in use:   %4.0f\n",
                       stats.biggest_fd);
-    storeAppendPrintf(sentry, "\tNumber of file desc currently in use: %4.0f\n",
+    sentry->appendf("\tNumber of file desc currently in use: %4.0f\n",
                       stats.number_fd);
-    storeAppendPrintf(sentry, "\tFiles queued for open:                %4.0f\n",
+    sentry->appendf("\tFiles queued for open:                %4.0f\n",
                       stats.opening_fd);
-    storeAppendPrintf(sentry, "\tAvailable number of file descriptors: %4.0f\n",
+    sentry->appendf("\tAvailable number of file descriptors: %4.0f\n",
                       stats.num_fd_free);
-    storeAppendPrintf(sentry, "\tReserved number of file descriptors:  %4.0f\n",
+    sentry->appendf("\tReserved number of file descriptors:  %4.0f\n",
                       stats.reserved_fd);
-    storeAppendPrintf(sentry, "\tStore Disk files open:                %4.0f\n",
+    sentry->appendf("\tStore Disk files open:                %4.0f\n",
                       stats.store.swap.open_disk_fd);
 
-    storeAppendPrintf(sentry, "Internal Data Structures:\n");
-    storeAppendPrintf(sentry, "\t%6.0f StoreEntries\n",
+    sentry->appendf("Internal Data Structures:\n");
+    sentry->appendf("\t%6.0f StoreEntries\n",
                       stats.store.store_entry_count);
-    storeAppendPrintf(sentry, "\t%6.0f StoreEntries with MemObjects\n",
+    sentry->appendf("\t%6.0f StoreEntries with MemObjects\n",
                       stats.store.mem_object_count);
-    storeAppendPrintf(sentry, "\t%6.0f Hot Object Cache Items\n",
+    sentry->appendf("\t%6.0f Hot Object Cache Items\n",
                       stats.store.mem.count);
-    storeAppendPrintf(sentry, "\t%6.0f on-disk objects\n",
+    sentry->appendf("\t%6.0f on-disk objects\n",
                       stats.store.swap.count);
 }
 
@@ -793,8 +793,8 @@ DumpMallocStatistics(StoreEntry* sentry)
 #if XMALLOC_STATISTICS
     xm_deltat = current_dtime - xm_time;
     xm_time = current_dtime;
-    storeAppendPrintf(sentry, "\nMemory allocation statistics\n");
-    storeAppendPrintf(sentry, "%12s %15s %6s %12s\n","Alloc Size","Count","Delta","Alloc/sec");
+    sentry->appendf("\nMemory allocation statistics\n");
+    sentry->appendf("%12s %15s %6s %12s\n","Alloc Size","Count","Delta","Alloc/sec");
     malloc_statistics(info_get_mallstat, sentry);
 #endif
 }
@@ -830,47 +830,47 @@ GetServiceTimesStats(Mgr::ServiceTimesActionData& stats)
 void
 DumpServiceTimesStats(Mgr::ServiceTimesActionData& stats, StoreEntry* sentry)
 {
-    storeAppendPrintf(sentry, "Service Time Percentiles            5 min    60 min:\n");
+    sentry->appendf("Service Time Percentiles            5 min    60 min:\n");
     double fct = stats.count > 1 ? stats.count * 1000.0 : 1000.0;
     for (int i = 0; i < Mgr::ServiceTimesActionData::seriesSize; ++i) {
-        storeAppendPrintf(sentry, "\tHTTP Requests (All):  %2d%%  %8.5f %8.5f\n",
+        sentry->appendf("\tHTTP Requests (All):  %2d%%  %8.5f %8.5f\n",
                           (i + 1) * 5,
                           stats.http_requests5[i] / fct,
                           stats.http_requests60[i] / fct);
     }
     for (int i = 0; i < Mgr::ServiceTimesActionData::seriesSize; ++i) {
-        storeAppendPrintf(sentry, "\tCache Misses:         %2d%%  %8.5f %8.5f\n",
+        sentry->appendf("\tCache Misses:         %2d%%  %8.5f %8.5f\n",
                           (i + 1) * 5,
                           stats.cache_misses5[i] / fct,
                           stats.cache_misses60[i] / fct);
     }
     for (int i = 0; i < Mgr::ServiceTimesActionData::seriesSize; ++i) {
-        storeAppendPrintf(sentry, "\tCache Hits:           %2d%%  %8.5f %8.5f\n",
+        sentry->appendf("\tCache Hits:           %2d%%  %8.5f %8.5f\n",
                           (i + 1) * 5,
                           stats.cache_hits5[i] / fct,
                           stats.cache_hits60[i] / fct);
     }
     for (int i = 0; i < Mgr::ServiceTimesActionData::seriesSize; ++i) {
-        storeAppendPrintf(sentry, "\tNear Hits:            %2d%%  %8.5f %8.5f\n",
+        sentry->appendf("\tNear Hits:            %2d%%  %8.5f %8.5f\n",
                           (i + 1) * 5,
                           stats.near_hits5[i] / fct,
                           stats.near_hits60[i] / fct);
     }
     for (int i = 0; i < Mgr::ServiceTimesActionData::seriesSize; ++i) {
-        storeAppendPrintf(sentry, "\tNot-Modified Replies: %2d%%  %8.5f %8.5f\n",
+        sentry->appendf("\tNot-Modified Replies: %2d%%  %8.5f %8.5f\n",
                           (i + 1) * 5,
                           stats.not_modified_replies5[i] / fct,
                           stats.not_modified_replies60[i] / fct);
     }
     for (int i = 0; i < Mgr::ServiceTimesActionData::seriesSize; ++i) {
-        storeAppendPrintf(sentry, "\tDNS Lookups:          %2d%%  %8.5f %8.5f\n",
+        sentry->appendf("\tDNS Lookups:          %2d%%  %8.5f %8.5f\n",
                           (i + 1) * 5,
                           stats.dns_lookups5[i] / fct,
                           stats.dns_lookups60[i] / fct);
     }
     fct = stats.count > 1 ? stats.count * 1000000.0 : 1000000.0;
     for (int i = 0; i < Mgr::ServiceTimesActionData::seriesSize; ++i) {
-        storeAppendPrintf(sentry, "\tICP Queries:          %2d%%  %8.5f %8.5f\n",
+        sentry->appendf("\tICP Queries:          %2d%%  %8.5f %8.5f\n",
                           (i + 1) * 5,
                           stats.icp_queries5[i] / fct,
                           stats.icp_queries60[i] / fct);
@@ -1025,165 +1025,165 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
 void
 DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry)
 {
-    storeAppendPrintf(sentry, "sample_start_time = %d.%d (%s)\n",
+    sentry->appendf("sample_start_time = %d.%d (%s)\n",
                       (int)stats.sample_start_time.tv_sec,
                       (int)stats.sample_start_time.tv_usec,
                       mkrfc1123(stats.sample_start_time.tv_sec));
-    storeAppendPrintf(sentry, "sample_end_time = %d.%d (%s)\n",
+    sentry->appendf("sample_end_time = %d.%d (%s)\n",
                       (int)stats.sample_end_time.tv_sec,
                       (int)stats.sample_end_time.tv_usec,
                       mkrfc1123(stats.sample_end_time.tv_sec));
 
-    storeAppendPrintf(sentry, "client_http.requests = %f/sec\n",
+    sentry->appendf("client_http.requests = %f/sec\n",
                       stats.client_http_requests);
-    storeAppendPrintf(sentry, "client_http.hits = %f/sec\n",
+    sentry->appendf("client_http.hits = %f/sec\n",
                       stats.client_http_hits);
-    storeAppendPrintf(sentry, "client_http.errors = %f/sec\n",
+    sentry->appendf("client_http.errors = %f/sec\n",
                       stats.client_http_errors);
-    storeAppendPrintf(sentry, "client_http.kbytes_in = %f/sec\n",
+    sentry->appendf("client_http.kbytes_in = %f/sec\n",
                       stats.client_http_kbytes_in);
-    storeAppendPrintf(sentry, "client_http.kbytes_out = %f/sec\n",
+    sentry->appendf("client_http.kbytes_out = %f/sec\n",
                       stats.client_http_kbytes_out);
 
     double fct = stats.count > 1 ? stats.count : 1.0;
-    storeAppendPrintf(sentry, "client_http.all_median_svc_time = %f seconds\n",
+    sentry->appendf("client_http.all_median_svc_time = %f seconds\n",
                       stats.client_http_all_median_svc_time / fct);
-    storeAppendPrintf(sentry, "client_http.miss_median_svc_time = %f seconds\n",
+    sentry->appendf("client_http.miss_median_svc_time = %f seconds\n",
                       stats.client_http_miss_median_svc_time / fct);
-    storeAppendPrintf(sentry, "client_http.nm_median_svc_time = %f seconds\n",
+    sentry->appendf("client_http.nm_median_svc_time = %f seconds\n",
                       stats.client_http_nm_median_svc_time / fct);
-    storeAppendPrintf(sentry, "client_http.nh_median_svc_time = %f seconds\n",
+    sentry->appendf("client_http.nh_median_svc_time = %f seconds\n",
                       stats.client_http_nh_median_svc_time / fct);
-    storeAppendPrintf(sentry, "client_http.hit_median_svc_time = %f seconds\n",
+    sentry->appendf("client_http.hit_median_svc_time = %f seconds\n",
                       stats.client_http_hit_median_svc_time / fct);
 
-    storeAppendPrintf(sentry, "server.all.requests = %f/sec\n",
+    sentry->appendf("server.all.requests = %f/sec\n",
                       stats.server_all_requests);
-    storeAppendPrintf(sentry, "server.all.errors = %f/sec\n",
+    sentry->appendf("server.all.errors = %f/sec\n",
                       stats.server_all_errors);
-    storeAppendPrintf(sentry, "server.all.kbytes_in = %f/sec\n",
+    sentry->appendf("server.all.kbytes_in = %f/sec\n",
                       stats.server_all_kbytes_in);
-    storeAppendPrintf(sentry, "server.all.kbytes_out = %f/sec\n",
+    sentry->appendf("server.all.kbytes_out = %f/sec\n",
                       stats.server_all_kbytes_out);
 
-    storeAppendPrintf(sentry, "server.http.requests = %f/sec\n",
+    sentry->appendf("server.http.requests = %f/sec\n",
                       stats.server_http_requests);
-    storeAppendPrintf(sentry, "server.http.errors = %f/sec\n",
+    sentry->appendf("server.http.errors = %f/sec\n",
                       stats.server_http_errors);
-    storeAppendPrintf(sentry, "server.http.kbytes_in = %f/sec\n",
+    sentry->appendf("server.http.kbytes_in = %f/sec\n",
                       stats.server_http_kbytes_in);
-    storeAppendPrintf(sentry, "server.http.kbytes_out = %f/sec\n",
+    sentry->appendf("server.http.kbytes_out = %f/sec\n",
                       stats.server_http_kbytes_out);
 
-    storeAppendPrintf(sentry, "server.ftp.requests = %f/sec\n",
+    sentry->appendf("server.ftp.requests = %f/sec\n",
                       stats.server_ftp_requests);
-    storeAppendPrintf(sentry, "server.ftp.errors = %f/sec\n",
+    sentry->appendf("server.ftp.errors = %f/sec\n",
                       stats.server_ftp_errors);
-    storeAppendPrintf(sentry, "server.ftp.kbytes_in = %f/sec\n",
+    sentry->appendf("server.ftp.kbytes_in = %f/sec\n",
                       stats.server_ftp_kbytes_in);
-    storeAppendPrintf(sentry, "server.ftp.kbytes_out = %f/sec\n",
+    sentry->appendf("server.ftp.kbytes_out = %f/sec\n",
                       stats.server_ftp_kbytes_out);
 
-    storeAppendPrintf(sentry, "server.other.requests = %f/sec\n",
+    sentry->appendf("server.other.requests = %f/sec\n",
                       stats.server_other_requests);
-    storeAppendPrintf(sentry, "server.other.errors = %f/sec\n",
+    sentry->appendf("server.other.errors = %f/sec\n",
                       stats.server_other_errors);
-    storeAppendPrintf(sentry, "server.other.kbytes_in = %f/sec\n",
+    sentry->appendf("server.other.kbytes_in = %f/sec\n",
                       stats.server_other_kbytes_in);
-    storeAppendPrintf(sentry, "server.other.kbytes_out = %f/sec\n",
+    sentry->appendf("server.other.kbytes_out = %f/sec\n",
                       stats.server_other_kbytes_out);
 
-    storeAppendPrintf(sentry, "icp.pkts_sent = %f/sec\n",
+    sentry->appendf("icp.pkts_sent = %f/sec\n",
                       stats.icp_pkts_sent);
-    storeAppendPrintf(sentry, "icp.pkts_recv = %f/sec\n",
+    sentry->appendf("icp.pkts_recv = %f/sec\n",
                       stats.icp_pkts_recv);
-    storeAppendPrintf(sentry, "icp.queries_sent = %f/sec\n",
+    sentry->appendf("icp.queries_sent = %f/sec\n",
                       stats.icp_queries_sent);
-    storeAppendPrintf(sentry, "icp.replies_sent = %f/sec\n",
+    sentry->appendf("icp.replies_sent = %f/sec\n",
                       stats.icp_replies_sent);
-    storeAppendPrintf(sentry, "icp.queries_recv = %f/sec\n",
+    sentry->appendf("icp.queries_recv = %f/sec\n",
                       stats.icp_queries_recv);
-    storeAppendPrintf(sentry, "icp.replies_recv = %f/sec\n",
+    sentry->appendf("icp.replies_recv = %f/sec\n",
                       stats.icp_replies_recv);
-    storeAppendPrintf(sentry, "icp.replies_queued = %f/sec\n",
+    sentry->appendf("icp.replies_queued = %f/sec\n",
                       stats.icp_replies_queued);
-    storeAppendPrintf(sentry, "icp.query_timeouts = %f/sec\n",
+    sentry->appendf("icp.query_timeouts = %f/sec\n",
                       stats.icp_query_timeouts);
-    storeAppendPrintf(sentry, "icp.kbytes_sent = %f/sec\n",
+    sentry->appendf("icp.kbytes_sent = %f/sec\n",
                       stats.icp_kbytes_sent);
-    storeAppendPrintf(sentry, "icp.kbytes_recv = %f/sec\n",
+    sentry->appendf("icp.kbytes_recv = %f/sec\n",
                       stats.icp_kbytes_recv);
-    storeAppendPrintf(sentry, "icp.q_kbytes_sent = %f/sec\n",
+    sentry->appendf("icp.q_kbytes_sent = %f/sec\n",
                       stats.icp_q_kbytes_sent);
-    storeAppendPrintf(sentry, "icp.r_kbytes_sent = %f/sec\n",
+    sentry->appendf("icp.r_kbytes_sent = %f/sec\n",
                       stats.icp_r_kbytes_sent);
-    storeAppendPrintf(sentry, "icp.q_kbytes_recv = %f/sec\n",
+    sentry->appendf("icp.q_kbytes_recv = %f/sec\n",
                       stats.icp_q_kbytes_recv);
-    storeAppendPrintf(sentry, "icp.r_kbytes_recv = %f/sec\n",
+    sentry->appendf("icp.r_kbytes_recv = %f/sec\n",
                       stats.icp_r_kbytes_recv);
-    storeAppendPrintf(sentry, "icp.query_median_svc_time = %f seconds\n",
+    sentry->appendf("icp.query_median_svc_time = %f seconds\n",
                       stats.icp_query_median_svc_time / fct);
-    storeAppendPrintf(sentry, "icp.reply_median_svc_time = %f seconds\n",
+    sentry->appendf("icp.reply_median_svc_time = %f seconds\n",
                       stats.icp_reply_median_svc_time / fct);
-    storeAppendPrintf(sentry, "dns.median_svc_time = %f seconds\n",
+    sentry->appendf("dns.median_svc_time = %f seconds\n",
                       stats.dns_median_svc_time / fct);
-    storeAppendPrintf(sentry, "unlink.requests = %f/sec\n",
+    sentry->appendf("unlink.requests = %f/sec\n",
                       stats.unlink_requests);
-    storeAppendPrintf(sentry, "page_faults = %f/sec\n",
+    sentry->appendf("page_faults = %f/sec\n",
                       stats.page_faults);
-    storeAppendPrintf(sentry, "select_loops = %f/sec\n",
+    sentry->appendf("select_loops = %f/sec\n",
                       stats.select_loops);
-    storeAppendPrintf(sentry, "select_fds = %f/sec\n",
+    sentry->appendf("select_fds = %f/sec\n",
                       stats.select_fds);
-    storeAppendPrintf(sentry, "average_select_fd_period = %f/fd\n",
+    sentry->appendf("average_select_fd_period = %f/fd\n",
                       stats.average_select_fd_period / fct);
-    storeAppendPrintf(sentry, "median_select_fds = %f\n",
+    sentry->appendf("median_select_fds = %f\n",
                       stats.median_select_fds / fct);
-    storeAppendPrintf(sentry, "swap.outs = %f/sec\n",
+    sentry->appendf("swap.outs = %f/sec\n",
                       stats.swap_outs);
-    storeAppendPrintf(sentry, "swap.ins = %f/sec\n",
+    sentry->appendf("swap.ins = %f/sec\n",
                       stats.swap_ins);
-    storeAppendPrintf(sentry, "swap.files_cleaned = %f/sec\n",
+    sentry->appendf("swap.files_cleaned = %f/sec\n",
                       stats.swap_files_cleaned);
-    storeAppendPrintf(sentry, "aborted_requests = %f/sec\n",
+    sentry->appendf("aborted_requests = %f/sec\n",
                       stats.aborted_requests);
 
-    storeAppendPrintf(sentry, "hit_validation.attempts = %f/sec\n",
+    sentry->appendf("hit_validation.attempts = %f/sec\n",
                       stats.hitValidationAttempts);
-    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_locking = %f/sec\n",
+    sentry->appendf("hit_validation.refusals.due_to_locking = %f/sec\n",
                       stats.hitValidationRefusalsDueToLocking);
-    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_zeroSize = %f/sec\n",
+    sentry->appendf("hit_validation.refusals.due_to_zeroSize = %f/sec\n",
                       stats.hitValidationRefusalsDueToZeroSize);
-    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_timeLimit = %f/sec\n",
+    sentry->appendf("hit_validation.refusals.due_to_timeLimit = %f/sec\n",
                       stats.hitValidationRefusalsDueToTimeLimit);
-    storeAppendPrintf(sentry, "hit_validation.failures = %f/sec\n",
+    sentry->appendf("hit_validation.failures = %f/sec\n",
                       stats.hitValidationFailures);
 
 #if USE_POLL
-    storeAppendPrintf(sentry, "syscalls.polls = %f/sec\n", stats.syscalls_selects);
+    sentry->appendf("syscalls.polls = %f/sec\n", stats.syscalls_selects);
 #elif defined(USE_SELECT) || defined(USE_SELECT_WIN32)
-    storeAppendPrintf(sentry, "syscalls.selects = %f/sec\n", stats.syscalls_selects);
+    sentry->appendf("syscalls.selects = %f/sec\n", stats.syscalls_selects);
 #endif
 
-    storeAppendPrintf(sentry, "syscalls.disk.opens = %f/sec\n", stats.syscalls_disk_opens);
-    storeAppendPrintf(sentry, "syscalls.disk.closes = %f/sec\n", stats.syscalls_disk_closes);
-    storeAppendPrintf(sentry, "syscalls.disk.reads = %f/sec\n", stats.syscalls_disk_reads);
-    storeAppendPrintf(sentry, "syscalls.disk.writes = %f/sec\n", stats.syscalls_disk_writes);
-    storeAppendPrintf(sentry, "syscalls.disk.seeks = %f/sec\n", stats.syscalls_disk_seeks);
-    storeAppendPrintf(sentry, "syscalls.disk.unlinks = %f/sec\n", stats.syscalls_disk_unlinks);
-    storeAppendPrintf(sentry, "syscalls.sock.accepts = %f/sec\n", stats.syscalls_sock_accepts);
-    storeAppendPrintf(sentry, "syscalls.sock.sockets = %f/sec\n", stats.syscalls_sock_sockets);
-    storeAppendPrintf(sentry, "syscalls.sock.connects = %f/sec\n", stats.syscalls_sock_connects);
-    storeAppendPrintf(sentry, "syscalls.sock.binds = %f/sec\n", stats.syscalls_sock_binds);
-    storeAppendPrintf(sentry, "syscalls.sock.closes = %f/sec\n", stats.syscalls_sock_closes);
-    storeAppendPrintf(sentry, "syscalls.sock.reads = %f/sec\n", stats.syscalls_sock_reads);
-    storeAppendPrintf(sentry, "syscalls.sock.writes = %f/sec\n", stats.syscalls_sock_writes);
-    storeAppendPrintf(sentry, "syscalls.sock.recvfroms = %f/sec\n", stats.syscalls_sock_recvfroms);
-    storeAppendPrintf(sentry, "syscalls.sock.sendtos = %f/sec\n", stats.syscalls_sock_sendtos);
+    sentry->appendf("syscalls.disk.opens = %f/sec\n", stats.syscalls_disk_opens);
+    sentry->appendf("syscalls.disk.closes = %f/sec\n", stats.syscalls_disk_closes);
+    sentry->appendf("syscalls.disk.reads = %f/sec\n", stats.syscalls_disk_reads);
+    sentry->appendf("syscalls.disk.writes = %f/sec\n", stats.syscalls_disk_writes);
+    sentry->appendf("syscalls.disk.seeks = %f/sec\n", stats.syscalls_disk_seeks);
+    sentry->appendf("syscalls.disk.unlinks = %f/sec\n", stats.syscalls_disk_unlinks);
+    sentry->appendf("syscalls.sock.accepts = %f/sec\n", stats.syscalls_sock_accepts);
+    sentry->appendf("syscalls.sock.sockets = %f/sec\n", stats.syscalls_sock_sockets);
+    sentry->appendf("syscalls.sock.connects = %f/sec\n", stats.syscalls_sock_connects);
+    sentry->appendf("syscalls.sock.binds = %f/sec\n", stats.syscalls_sock_binds);
+    sentry->appendf("syscalls.sock.closes = %f/sec\n", stats.syscalls_sock_closes);
+    sentry->appendf("syscalls.sock.reads = %f/sec\n", stats.syscalls_sock_reads);
+    sentry->appendf("syscalls.sock.writes = %f/sec\n", stats.syscalls_sock_writes);
+    sentry->appendf("syscalls.sock.recvfroms = %f/sec\n", stats.syscalls_sock_recvfroms);
+    sentry->appendf("syscalls.sock.sendtos = %f/sec\n", stats.syscalls_sock_sendtos);
 
-    storeAppendPrintf(sentry, "cpu_time = %f seconds\n", stats.cpu_time);
-    storeAppendPrintf(sentry, "wall_time = %f seconds\n", stats.wall_time);
-    storeAppendPrintf(sentry, "cpu_usage = %f%%\n", Math::doublePercent(stats.cpu_time, stats.wall_time));
+    sentry->appendf("cpu_time = %f seconds\n", stats.cpu_time);
+    sentry->appendf("wall_time = %f seconds\n", stats.wall_time);
+    sentry->appendf("cpu_usage = %f%%\n", Math::doublePercent(stats.cpu_time, stats.wall_time));
 }
 
 static void
@@ -1351,23 +1351,23 @@ statAvgTick(void *)
 static void
 statCountersHistograms(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "client_http.allSvcTime histogram:\n");
+    sentry->appendf("client_http.allSvcTime histogram:\n");
     statCounter.client_http.allSvcTime.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.missSvcTime histogram:\n");
+    sentry->appendf("client_http.missSvcTime histogram:\n");
     statCounter.client_http.missSvcTime.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.nearMissSvcTime histogram:\n");
+    sentry->appendf("client_http.nearMissSvcTime histogram:\n");
     statCounter.client_http.nearMissSvcTime.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.nearHitSvcTime histogram:\n");
+    sentry->appendf("client_http.nearHitSvcTime histogram:\n");
     statCounter.client_http.nearHitSvcTime.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.hitSvcTime histogram:\n");
+    sentry->appendf("client_http.hitSvcTime histogram:\n");
     statCounter.client_http.hitSvcTime.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "icp.querySvcTime histogram:\n");
+    sentry->appendf("icp.querySvcTime histogram:\n");
     statCounter.icp.querySvcTime.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "icp.replySvcTime histogram:\n");
+    sentry->appendf("icp.replySvcTime histogram:\n");
     statCounter.icp.replySvcTime.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
+    sentry->appendf("dns.svc_time histogram:\n");
     statCounter.dns.svcTime.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "select_fds_hist histogram:\n");
+    sentry->appendf("select_fds_hist histogram:\n");
     statCounter.select_fds_hist.dump(sentry, NULL);
 }
 
@@ -1464,136 +1464,136 @@ GetCountersStats(Mgr::CountersActionData& stats)
 void
 DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry)
 {
-    storeAppendPrintf(sentry, "sample_time = %d.%d (%s)\n",
+    sentry->appendf("sample_time = %d.%d (%s)\n",
                       (int) stats.sample_time.tv_sec,
                       (int) stats.sample_time.tv_usec,
                       mkrfc1123(stats.sample_time.tv_sec));
-    storeAppendPrintf(sentry, "client_http.requests = %.0f\n",
+    sentry->appendf("client_http.requests = %.0f\n",
                       stats.client_http_requests);
-    storeAppendPrintf(sentry, "client_http.hits = %.0f\n",
+    sentry->appendf("client_http.hits = %.0f\n",
                       stats.client_http_hits);
-    storeAppendPrintf(sentry, "client_http.errors = %.0f\n",
+    sentry->appendf("client_http.errors = %.0f\n",
                       stats.client_http_errors);
-    storeAppendPrintf(sentry, "client_http.kbytes_in = %.0f\n",
+    sentry->appendf("client_http.kbytes_in = %.0f\n",
                       stats.client_http_kbytes_in);
-    storeAppendPrintf(sentry, "client_http.kbytes_out = %.0f\n",
+    sentry->appendf("client_http.kbytes_out = %.0f\n",
                       stats.client_http_kbytes_out);
-    storeAppendPrintf(sentry, "client_http.hit_kbytes_out = %.0f\n",
+    sentry->appendf("client_http.hit_kbytes_out = %.0f\n",
                       stats.client_http_hit_kbytes_out);
 
-    storeAppendPrintf(sentry, "server.all.requests = %.0f\n",
+    sentry->appendf("server.all.requests = %.0f\n",
                       stats.server_all_requests);
-    storeAppendPrintf(sentry, "server.all.errors = %.0f\n",
+    sentry->appendf("server.all.errors = %.0f\n",
                       stats.server_all_errors);
-    storeAppendPrintf(sentry, "server.all.kbytes_in = %.0f\n",
+    sentry->appendf("server.all.kbytes_in = %.0f\n",
                       stats.server_all_kbytes_in);
-    storeAppendPrintf(sentry, "server.all.kbytes_out = %.0f\n",
+    sentry->appendf("server.all.kbytes_out = %.0f\n",
                       stats.server_all_kbytes_out);
 
-    storeAppendPrintf(sentry, "server.http.requests = %.0f\n",
+    sentry->appendf("server.http.requests = %.0f\n",
                       stats.server_http_requests);
-    storeAppendPrintf(sentry, "server.http.errors = %.0f\n",
+    sentry->appendf("server.http.errors = %.0f\n",
                       stats.server_http_errors);
-    storeAppendPrintf(sentry, "server.http.kbytes_in = %.0f\n",
+    sentry->appendf("server.http.kbytes_in = %.0f\n",
                       stats.server_http_kbytes_in);
-    storeAppendPrintf(sentry, "server.http.kbytes_out = %.0f\n",
+    sentry->appendf("server.http.kbytes_out = %.0f\n",
                       stats.server_http_kbytes_out);
 
-    storeAppendPrintf(sentry, "server.ftp.requests = %.0f\n",
+    sentry->appendf("server.ftp.requests = %.0f\n",
                       stats.server_ftp_requests);
-    storeAppendPrintf(sentry, "server.ftp.errors = %.0f\n",
+    sentry->appendf("server.ftp.errors = %.0f\n",
                       stats.server_ftp_errors);
-    storeAppendPrintf(sentry, "server.ftp.kbytes_in = %.0f\n",
+    sentry->appendf("server.ftp.kbytes_in = %.0f\n",
                       stats.server_ftp_kbytes_in);
-    storeAppendPrintf(sentry, "server.ftp.kbytes_out = %.0f\n",
+    sentry->appendf("server.ftp.kbytes_out = %.0f\n",
                       stats.server_ftp_kbytes_out);
 
-    storeAppendPrintf(sentry, "server.other.requests = %.0f\n",
+    sentry->appendf("server.other.requests = %.0f\n",
                       stats.server_other_requests);
-    storeAppendPrintf(sentry, "server.other.errors = %.0f\n",
+    sentry->appendf("server.other.errors = %.0f\n",
                       stats.server_other_errors);
-    storeAppendPrintf(sentry, "server.other.kbytes_in = %.0f\n",
+    sentry->appendf("server.other.kbytes_in = %.0f\n",
                       stats.server_other_kbytes_in);
-    storeAppendPrintf(sentry, "server.other.kbytes_out = %.0f\n",
+    sentry->appendf("server.other.kbytes_out = %.0f\n",
                       stats.server_other_kbytes_out);
 
-    storeAppendPrintf(sentry, "icp.pkts_sent = %.0f\n",
+    sentry->appendf("icp.pkts_sent = %.0f\n",
                       stats.icp_pkts_sent);
-    storeAppendPrintf(sentry, "icp.pkts_recv = %.0f\n",
+    sentry->appendf("icp.pkts_recv = %.0f\n",
                       stats.icp_pkts_recv);
-    storeAppendPrintf(sentry, "icp.queries_sent = %.0f\n",
+    sentry->appendf("icp.queries_sent = %.0f\n",
                       stats.icp_queries_sent);
-    storeAppendPrintf(sentry, "icp.replies_sent = %.0f\n",
+    sentry->appendf("icp.replies_sent = %.0f\n",
                       stats.icp_replies_sent);
-    storeAppendPrintf(sentry, "icp.queries_recv = %.0f\n",
+    sentry->appendf("icp.queries_recv = %.0f\n",
                       stats.icp_queries_recv);
-    storeAppendPrintf(sentry, "icp.replies_recv = %.0f\n",
+    sentry->appendf("icp.replies_recv = %.0f\n",
                       stats.icp_replies_recv);
-    storeAppendPrintf(sentry, "icp.query_timeouts = %.0f\n",
+    sentry->appendf("icp.query_timeouts = %.0f\n",
                       stats.icp_query_timeouts);
-    storeAppendPrintf(sentry, "icp.replies_queued = %.0f\n",
+    sentry->appendf("icp.replies_queued = %.0f\n",
                       stats.icp_replies_queued);
-    storeAppendPrintf(sentry, "icp.kbytes_sent = %.0f\n",
+    sentry->appendf("icp.kbytes_sent = %.0f\n",
                       stats.icp_kbytes_sent);
-    storeAppendPrintf(sentry, "icp.kbytes_recv = %.0f\n",
+    sentry->appendf("icp.kbytes_recv = %.0f\n",
                       stats.icp_kbytes_recv);
-    storeAppendPrintf(sentry, "icp.q_kbytes_sent = %.0f\n",
+    sentry->appendf("icp.q_kbytes_sent = %.0f\n",
                       stats.icp_q_kbytes_sent);
-    storeAppendPrintf(sentry, "icp.r_kbytes_sent = %.0f\n",
+    sentry->appendf("icp.r_kbytes_sent = %.0f\n",
                       stats.icp_r_kbytes_sent);
-    storeAppendPrintf(sentry, "icp.q_kbytes_recv = %.0f\n",
+    sentry->appendf("icp.q_kbytes_recv = %.0f\n",
                       stats.icp_q_kbytes_recv);
-    storeAppendPrintf(sentry, "icp.r_kbytes_recv = %.0f\n",
+    sentry->appendf("icp.r_kbytes_recv = %.0f\n",
                       stats.icp_r_kbytes_recv);
 
 #if USE_CACHE_DIGESTS
 
-    storeAppendPrintf(sentry, "icp.times_used = %.0f\n",
+    sentry->appendf("icp.times_used = %.0f\n",
                       stats.icp_times_used);
-    storeAppendPrintf(sentry, "cd.times_used = %.0f\n",
+    sentry->appendf("cd.times_used = %.0f\n",
                       stats.cd_times_used);
-    storeAppendPrintf(sentry, "cd.msgs_sent = %.0f\n",
+    sentry->appendf("cd.msgs_sent = %.0f\n",
                       stats.cd_msgs_sent);
-    storeAppendPrintf(sentry, "cd.msgs_recv = %.0f\n",
+    sentry->appendf("cd.msgs_recv = %.0f\n",
                       stats.cd_msgs_recv);
-    storeAppendPrintf(sentry, "cd.memory = %.0f\n",
+    sentry->appendf("cd.memory = %.0f\n",
                       stats.cd_memory);
-    storeAppendPrintf(sentry, "cd.local_memory = %.0f\n",
+    sentry->appendf("cd.local_memory = %.0f\n",
                       stats.cd_local_memory);
-    storeAppendPrintf(sentry, "cd.kbytes_sent = %.0f\n",
+    sentry->appendf("cd.kbytes_sent = %.0f\n",
                       stats.cd_kbytes_sent);
-    storeAppendPrintf(sentry, "cd.kbytes_recv = %.0f\n",
+    sentry->appendf("cd.kbytes_recv = %.0f\n",
                       stats.cd_kbytes_recv);
 #endif
 
-    storeAppendPrintf(sentry, "unlink.requests = %.0f\n",
+    sentry->appendf("unlink.requests = %.0f\n",
                       stats.unlink_requests);
-    storeAppendPrintf(sentry, "page_faults = %.0f\n",
+    sentry->appendf("page_faults = %.0f\n",
                       stats.page_faults);
-    storeAppendPrintf(sentry, "select_loops = %.0f\n",
+    sentry->appendf("select_loops = %.0f\n",
                       stats.select_loops);
-    storeAppendPrintf(sentry, "cpu_time = %f\n",
+    sentry->appendf("cpu_time = %f\n",
                       stats.cpu_time);
-    storeAppendPrintf(sentry, "wall_time = %f\n",
+    sentry->appendf("wall_time = %f\n",
                       stats.wall_time);
-    storeAppendPrintf(sentry, "swap.outs = %.0f\n",
+    sentry->appendf("swap.outs = %.0f\n",
                       stats.swap_outs);
-    storeAppendPrintf(sentry, "swap.ins = %.0f\n",
+    sentry->appendf("swap.ins = %.0f\n",
                       stats.swap_ins);
-    storeAppendPrintf(sentry, "swap.files_cleaned = %.0f\n",
+    sentry->appendf("swap.files_cleaned = %.0f\n",
                       stats.swap_files_cleaned);
-    storeAppendPrintf(sentry, "aborted_requests = %.0f\n",
+    sentry->appendf("aborted_requests = %.0f\n",
                       stats.aborted_requests);
 
-    storeAppendPrintf(sentry, "hit_validation.attempts = %.0f\n",
+    sentry->appendf("hit_validation.attempts = %.0f\n",
                       stats.hitValidationAttempts);
-    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_locking = %.0f\n",
+    sentry->appendf("hit_validation.refusals.due_to_locking = %.0f\n",
                       stats.hitValidationRefusalsDueToLocking);
-    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_zeroSize = %.0f\n",
+    sentry->appendf("hit_validation.refusals.due_to_zeroSize = %.0f\n",
                       stats.hitValidationRefusalsDueToZeroSize);
-    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_timeLimit = %.0f\n",
+    sentry->appendf("hit_validation.refusals.due_to_timeLimit = %.0f\n",
                       stats.hitValidationRefusalsDueToTimeLimit);
-    storeAppendPrintf(sentry, "hit_validation.failures = %.0f\n",
+    sentry->appendf("hit_validation.failures = %.0f\n",
                       stats.hitValidationFailures);
 }
 
@@ -1620,42 +1620,42 @@ statPeerSelect(StoreEntry * sentry)
     static const SBuf label("all peers");
     cacheDigestGuessStatsReport(&f->cd.guess, sentry, label);
     /* per-peer */
-    storeAppendPrintf(sentry, "\nPer-peer statistics:\n");
+    sentry->appendf("\nPer-peer statistics:\n");
 
     for (peer = getFirstPeer(); peer; peer = getNextPeer(peer)) {
         if (peer->digest)
             peerDigestStatsReport(peer->digest, sentry);
         else
-            storeAppendPrintf(sentry, "\nNo peer digest from %s\n", peer->host);
+            sentry->appendf("\nNo peer digest from %s\n", peer->host);
 
-        storeAppendPrintf(sentry, "\n");
+        sentry->appendf("\n");
     }
 
-    storeAppendPrintf(sentry, "\nAlgorithm usage:\n");
-    storeAppendPrintf(sentry, "Cache Digest: %7d (%3d%%)\n",
+    sentry->appendf("\nAlgorithm usage:\n");
+    sentry->appendf("Cache Digest: %7d (%3d%%)\n",
                       f->cd.times_used, xpercentInt(f->cd.times_used, tot_used));
-    storeAppendPrintf(sentry, "Icp:          %7d (%3d%%)\n",
+    sentry->appendf("Icp:          %7d (%3d%%)\n",
                       f->icp.times_used, xpercentInt(f->icp.times_used, tot_used));
-    storeAppendPrintf(sentry, "Total:        %7d (%3d%%)\n",
+    sentry->appendf("Total:        %7d (%3d%%)\n",
                       tot_used, xpercentInt(tot_used, tot_used));
 #else
 
-    storeAppendPrintf(sentry, "peer digests are disabled; no stats is available.\n");
+    sentry->appendf("peer digests are disabled; no stats is available.\n");
 #endif
 }
 
 static void
 statDigestBlob(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "\nCounters:\n");
+    sentry->appendf("\nCounters:\n");
     statCountersDump(sentry);
-    storeAppendPrintf(sentry, "\n5 Min Averages:\n");
+    sentry->appendf("\n5 Min Averages:\n");
     statAvgDump(sentry, 5, 0);
-    storeAppendPrintf(sentry, "\nHistograms:\n");
+    sentry->appendf("\nHistograms:\n");
     statCountersHistograms(sentry);
-    storeAppendPrintf(sentry, "\nPeer Digests:\n");
+    sentry->appendf("\nPeer Digests:\n");
     statPeerSelect(sentry);
-    storeAppendPrintf(sentry, "\nLocal Digest:\n");
+    sentry->appendf("\nLocal Digest:\n");
     storeDigestReport(sentry);
 }
 
@@ -1816,30 +1816,30 @@ statClientRequests(StoreEntry * s)
         http = static_cast<ClientHttpRequest *>(i->data);
         assert(http);
         ConnStateData * conn = http->getConn();
-        storeAppendPrintf(s, "Connection: %p\n", conn);
+        s->appendf("Connection: %p\n", conn);
 
         if (conn != NULL) {
             const int fd = conn->clientConnection->fd;
-            storeAppendPrintf(s, "\tFD %d, read %" PRId64 ", wrote %" PRId64 "\n", fd,
+            s->appendf("\tFD %d, read %" PRId64 ", wrote %" PRId64 "\n", fd,
                               fd_table[fd].bytes_read, fd_table[fd].bytes_written);
-            storeAppendPrintf(s, "\tFD desc: %s\n", fd_table[fd].desc);
-            storeAppendPrintf(s, "\tin: buf %p, used %ld, free %ld\n",
+            s->appendf("\tFD desc: %s\n", fd_table[fd].desc);
+            s->appendf("\tin: buf %p, used %ld, free %ld\n",
                               conn->inBuf.rawContent(), (long int) conn->inBuf.length(), (long int) conn->inBuf.spaceSize());
-            storeAppendPrintf(s, "\tremote: %s\n",
+            s->appendf("\tremote: %s\n",
                               conn->clientConnection->remote.toUrl(buf,MAX_IPSTRLEN));
-            storeAppendPrintf(s, "\tlocal: %s\n",
+            s->appendf("\tlocal: %s\n",
                               conn->clientConnection->local.toUrl(buf,MAX_IPSTRLEN));
-            storeAppendPrintf(s, "\tnrequests: %u\n", conn->pipeline.nrequests);
+            s->appendf("\tnrequests: %u\n", conn->pipeline.nrequests);
         }
 
-        storeAppendPrintf(s, "uri %s\n", http->uri);
-        storeAppendPrintf(s, "logType %s\n", http->logType.c_str());
-        storeAppendPrintf(s, "out.offset %ld, out.size %lu\n",
+        s->appendf("uri %s\n", http->uri);
+        s->appendf("logType %s\n", http->logType.c_str());
+        s->appendf("out.offset %ld, out.size %lu\n",
                           (long int) http->out.offset, (unsigned long int) http->out.size);
-        storeAppendPrintf(s, "req_sz %ld\n", (long int) http->req_sz);
+        s->appendf("req_sz %ld\n", (long int) http->req_sz);
         e = http->storeEntry();
-        storeAppendPrintf(s, "entry %p/%s\n", e, e ? e->getMD5Text() : "N/A");
-        storeAppendPrintf(s, "start %ld.%06d (%f seconds ago)\n",
+        s->appendf("entry %p/%s\n", e, e ? e->getMD5Text() : "N/A");
+        s->appendf("start %ld.%06d (%f seconds ago)\n",
                           (long int) http->al->cache.start_time.tv_sec,
                           (int) http->al->cache.start_time.tv_usec,
                           tvSubDsec(http->al->cache.start_time, current_time));
@@ -1863,13 +1863,13 @@ statClientRequests(StoreEntry * s)
         if (!p)
             p = dash_str;
 
-        storeAppendPrintf(s, "username %s\n", p);
+        s->appendf("username %s\n", p);
 
 #if USE_DELAY_POOLS
-        storeAppendPrintf(s, "delay_pool %d\n", DelayId::DelayClient(http).pool());
+        s->appendf("delay_pool %d\n", DelayId::DelayClient(http).pool());
 #endif
 
-        storeAppendPrintf(s, "\n");
+        s->appendf("\n");
     }
 }
 
@@ -1883,7 +1883,7 @@ statClientRequests(StoreEntry * s)
     dt = tvSubDsec(CountHist[i+1].timestamp, CountHist[i].timestamp); \
     if (dt <= 0.0) \
         break; \
-    storeAppendPrintf(e, "%lu,%0.2f:", \
+    e->appendf("%lu,%0.2f:", \
         CountHist[i].timestamp.tv_sec, \
         ((CountHist[i].Y - CountHist[i+1].Y) / dt)); \
     }
@@ -1893,13 +1893,13 @@ statClientRequests(StoreEntry * s)
     dt = tvSubDsec(CountHourHist[i+1].timestamp, CountHourHist[i].timestamp); \
     if (dt <= 0.0) \
         break; \
-    storeAppendPrintf(e, "%lu,%0.2f:", \
+    e->appendf("%lu,%0.2f:", \
         CountHourHist[i].timestamp.tv_sec, \
         ((CountHourHist[i].Y - CountHourHist[i+1].Y) / dt)); \
     }
 
-#define GRAPH_TITLE(X,Y) storeAppendPrintf(e,"%s\t%s\t",X,Y);
-#define GRAPH_END storeAppendPrintf(e,"\n");
+#define GRAPH_TITLE(X,Y) e->appendf("%s\t%s\t",X,Y);
+#define GRAPH_END e->appendf("\n");
 
 #define GENGRAPH(X,Y,Z) \
     GRAPH_TITLE(Y,Z) \

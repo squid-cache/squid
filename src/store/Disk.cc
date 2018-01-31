@@ -65,14 +65,14 @@ Store::Disk::stat(StoreEntry &output) const
     if (!doReportStat())
         return;
 
-    storeAppendPrintf(&output, "Store Directory #%d (%s): %s\n", index, type(),
+    output.appendf("Store Directory #%d (%s): %s\n", index, type(),
                       path);
-    storeAppendPrintf(&output, "FS Block Size %d Bytes\n",
+    output.appendf("FS Block Size %d Bytes\n",
                       fs.blksize);
     statfs(output);
 
     if (repl) {
-        storeAppendPrintf(&output, "Removal policy: %s\n", repl->_type);
+        output.appendf("Removal policy: %s\n", repl->_type);
 
         if (repl->Stats)
             repl->Stats(repl, &output);
@@ -340,7 +340,7 @@ void
 Store::Disk::optionReadOnlyDump(StoreEntry * e) const
 {
     if (flags.read_only)
-        storeAppendPrintf(e, " no-store");
+        e->appendf(" no-store");
 }
 
 bool
@@ -382,10 +382,10 @@ void
 Store::Disk::optionObjectSizeDump(StoreEntry * e) const
 {
     if (min_objsize != -1)
-        storeAppendPrintf(e, " min-size=%" PRId64, min_objsize);
+        e->appendf(" min-size=%" PRId64, min_objsize);
 
     if (max_objsize != -1)
-        storeAppendPrintf(e, " max-size=%" PRId64, max_objsize);
+        e->appendf(" max-size=%" PRId64, max_objsize);
 }
 
 // some SwapDirs may maintain their indexes and be able to lookup an entry key

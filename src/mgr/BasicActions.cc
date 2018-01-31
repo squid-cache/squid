@@ -57,7 +57,7 @@ Mgr::MenuAction::dump(StoreEntry* entry)
     const CacheManager::Menu& menu = CacheManager::GetInstance()->menu();
 
     for (Iterator a = menu.begin(); a != menu.end(); ++a) {
-        storeAppendPrintf(entry, " %-22s\t%-32s\t%s\n",
+        entry->appendf(" %-22s\t%-32s\t%s\n",
                           (*a)->name, (*a)->desc,
                           CacheManager::GetInstance()->ActionProtection(*a));
     }
@@ -97,7 +97,7 @@ void
 Mgr::ReconfigureAction::dump(StoreEntry* entry)
 {
     debugs(16, DBG_IMPORTANT, "Reconfigure by Cache Manager command.");
-    storeAppendPrintf(entry, "Reconfiguring Squid Process ....");
+    entry->appendf("Reconfiguring Squid Process ....");
     reconfigure(SIGHUP);
 }
 
@@ -116,7 +116,7 @@ void
 Mgr::RotateAction::dump(StoreEntry* entry)
 {
     debugs(16, DBG_IMPORTANT, "Rotate Logs by Cache Manager command.");
-    storeAppendPrintf(entry, "Rotating Squid Process Logs ....");
+    entry->appendf("Rotating Squid Process Logs ....");
 #if defined(_SQUID_LINUX_THREADS_)
     rotate_logs(SIGQUIT);
 #else
@@ -142,7 +142,7 @@ Mgr::OfflineToggleAction::dump(StoreEntry* entry)
     Config.onoff.offline = !Config.onoff.offline;
     debugs(16, DBG_IMPORTANT, "offline_mode now " << (Config.onoff.offline ? "ON" : "OFF") << " by Cache Manager request.");
 
-    storeAppendPrintf(entry, "offline_mode is now %s\n",
+    entry->appendf("offline_mode is now %s\n",
                       Config.onoff.offline ? "ON" : "OFF");
 }
 

@@ -244,7 +244,7 @@ extern Config TheConfig;
 #define dump_QosConfig(e,n,X) do { \
         char temp[256]; /* random number. change as needed. max config line length. */ \
         (X).dumpConfigLine(temp,n); \
-            storeAppendPrintf(e, "%s", temp); \
+            e->appendf("%s", temp); \
     } while(0);
 
 } // namespace Qos

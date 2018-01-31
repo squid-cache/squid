@@ -1518,70 +1518,70 @@ void
 dump_peer_options(StoreEntry * sentry, CachePeer * p)
 {
     if (p->options.proxy_only)
-        storeAppendPrintf(sentry, " proxy-only");
+        sentry->appendf(" proxy-only");
 
     if (p->options.no_query)
-        storeAppendPrintf(sentry, " no-query");
+        sentry->appendf(" no-query");
 
     if (p->options.background_ping)
-        storeAppendPrintf(sentry, " background-ping");
+        sentry->appendf(" background-ping");
 
     if (p->options.no_digest)
-        storeAppendPrintf(sentry, " no-digest");
+        sentry->appendf(" no-digest");
 
     if (p->options.default_parent)
-        storeAppendPrintf(sentry, " default");
+        sentry->appendf(" default");
 
     if (p->options.roundrobin)
-        storeAppendPrintf(sentry, " round-robin");
+        sentry->appendf(" round-robin");
 
     if (p->options.carp)
-        storeAppendPrintf(sentry, " carp");
+        sentry->appendf(" carp");
 
 #if USE_AUTH
     if (p->options.userhash)
-        storeAppendPrintf(sentry, " userhash");
+        sentry->appendf(" userhash");
 #endif
 
     if (p->options.sourcehash)
-        storeAppendPrintf(sentry, " sourcehash");
+        sentry->appendf(" sourcehash");
 
     if (p->options.weighted_roundrobin)
-        storeAppendPrintf(sentry, " weighted-round-robin");
+        sentry->appendf(" weighted-round-robin");
 
     if (p->options.mcast_responder)
-        storeAppendPrintf(sentry, " multicast-responder");
+        sentry->appendf(" multicast-responder");
 
 #if PEER_MULTICAST_SIBLINGS
     if (p->options.mcast_siblings)
-        storeAppendPrintf(sentry, " multicast-siblings");
+        sentry->appendf(" multicast-siblings");
 #endif
 
     if (p->weight != 1)
-        storeAppendPrintf(sentry, " weight=%d", p->weight);
+        sentry->appendf(" weight=%d", p->weight);
 
     if (p->options.closest_only)
-        storeAppendPrintf(sentry, " closest-only");
+        sentry->appendf(" closest-only");
 
 #if USE_HTCP
     if (p->options.htcp) {
-        storeAppendPrintf(sentry, " htcp");
+        sentry->appendf(" htcp");
         if (p->options.htcp_oldsquid || p->options.htcp_no_clr || p->options.htcp_no_purge_clr || p->options.htcp_only_clr) {
             bool doneopts = false;
             if (p->options.htcp_oldsquid) {
-                storeAppendPrintf(sentry, "oldsquid");
+                sentry->appendf("oldsquid");
                 doneopts = true;
             }
             if (p->options.htcp_no_clr) {
-                storeAppendPrintf(sentry, "%sno-clr",(doneopts?",":"="));
+                sentry->appendf("%sno-clr",(doneopts?",":"="));
                 doneopts = true;
             }
             if (p->options.htcp_no_purge_clr) {
-                storeAppendPrintf(sentry, "%sno-purge-clr",(doneopts?",":"="));
+                sentry->appendf("%sno-purge-clr",(doneopts?",":"="));
                 doneopts = true;
             }
             if (p->options.htcp_only_clr) {
-                storeAppendPrintf(sentry, "%sonly-clr",(doneopts?",":"="));
+                sentry->appendf("%sonly-clr",(doneopts?",":"="));
                 //doneopts = true; // uncomment if more opts are added
             }
         }
@@ -1589,58 +1589,58 @@ dump_peer_options(StoreEntry * sentry, CachePeer * p)
 #endif
 
     if (p->options.no_netdb_exchange)
-        storeAppendPrintf(sentry, " no-netdb-exchange");
+        sentry->appendf(" no-netdb-exchange");
 
 #if USE_DELAY_POOLS
     if (p->options.no_delay)
-        storeAppendPrintf(sentry, " no-delay");
+        sentry->appendf(" no-delay");
 #endif
 
     if (p->login)
-        storeAppendPrintf(sentry, " login=%s", p->login);
+        sentry->appendf(" login=%s", p->login);
 
     if (p->mcast.ttl > 0)
-        storeAppendPrintf(sentry, " ttl=%d", p->mcast.ttl);
+        sentry->appendf(" ttl=%d", p->mcast.ttl);
 
     if (p->connect_timeout_raw > 0)
-        storeAppendPrintf(sentry, " connect-timeout=%d", (int)p->connect_timeout_raw);
+        sentry->appendf(" connect-timeout=%d", (int)p->connect_timeout_raw);
 
     if (p->connect_fail_limit != PEER_TCP_MAGIC_COUNT)
-        storeAppendPrintf(sentry, " connect-fail-limit=%d", p->connect_fail_limit);
+        sentry->appendf(" connect-fail-limit=%d", p->connect_fail_limit);
 
 #if USE_CACHE_DIGESTS
 
     if (p->digest_url)
-        storeAppendPrintf(sentry, " digest-url=%s", p->digest_url);
+        sentry->appendf(" digest-url=%s", p->digest_url);
 
 #endif
 
     if (p->options.allow_miss)
-        storeAppendPrintf(sentry, " allow-miss");
+        sentry->appendf(" allow-miss");
 
     if (p->options.no_tproxy)
-        storeAppendPrintf(sentry, " no-tproxy");
+        sentry->appendf(" no-tproxy");
 
     if (p->max_conn > 0)
-        storeAppendPrintf(sentry, " max-conn=%d", p->max_conn);
+        sentry->appendf(" max-conn=%d", p->max_conn);
     if (p->standby.limit > 0)
-        storeAppendPrintf(sentry, " standby=%d", p->standby.limit);
+        sentry->appendf(" standby=%d", p->standby.limit);
 
     if (p->options.originserver)
-        storeAppendPrintf(sentry, " originserver");
+        sentry->appendf(" originserver");
 
     if (p->domain)
-        storeAppendPrintf(sentry, " forceddomain=%s", p->domain);
+        sentry->appendf(" forceddomain=%s", p->domain);
 
     if (p->connection_auth == 0)
-        storeAppendPrintf(sentry, " connection-auth=off");
+        sentry->appendf(" connection-auth=off");
     else if (p->connection_auth == 1)
-        storeAppendPrintf(sentry, " connection-auth=on");
+        sentry->appendf(" connection-auth=on");
     else if (p->connection_auth == 2)
-        storeAppendPrintf(sentry, " connection-auth=auto");
+        sentry->appendf(" connection-auth=auto");
 
     p->secure.dumpCfg(sentry,"tls-");
-    storeAppendPrintf(sentry, "\n");
+    sentry->appendf("\n");
 }
 
 static void
@@ -1650,59 +1650,59 @@ dump_peers(StoreEntry * sentry, CachePeer * peers)
     int i;
 
     if (peers == NULL)
-        storeAppendPrintf(sentry, "There are no neighbors installed.\n");
+        sentry->appendf("There are no neighbors installed.\n");
 
     for (CachePeer *e = peers; e; e = e->next) {
         assert(e->host != NULL);
-        storeAppendPrintf(sentry, "\n%-11.11s: %s\n",
+        sentry->appendf("\n%-11.11s: %s\n",
                           neighborTypeStr(e),
                           e->name);
-        storeAppendPrintf(sentry, "Host       : %s/%d/%d\n",
+        sentry->appendf("Host       : %s/%d/%d\n",
                           e->host,
                           e->http_port,
                           e->icp.port);
-        storeAppendPrintf(sentry, "Flags      :");
+        sentry->appendf("Flags      :");
         dump_peer_options(sentry, e);
 
         for (i = 0; i < e->n_addresses; ++i) {
-            storeAppendPrintf(sentry, "Address[%d] : %s\n", i,
+            sentry->appendf("Address[%d] : %s\n", i,
                               e->addresses[i].toStr(ntoabuf,MAX_IPSTRLEN) );
         }
 
-        storeAppendPrintf(sentry, "Status     : %s\n",
+        sentry->appendf("Status     : %s\n",
                           neighborUp(e) ? "Up" : "Down");
-        storeAppendPrintf(sentry, "FETCHES    : %d\n", e->stats.fetches);
-        storeAppendPrintf(sentry, "OPEN CONNS : %d\n", e->stats.conn_open);
-        storeAppendPrintf(sentry, "AVG RTT    : %d msec\n", e->stats.rtt);
+        sentry->appendf("FETCHES    : %d\n", e->stats.fetches);
+        sentry->appendf("OPEN CONNS : %d\n", e->stats.conn_open);
+        sentry->appendf("AVG RTT    : %d msec\n", e->stats.rtt);
 
         if (!e->options.no_query) {
-            storeAppendPrintf(sentry, "LAST QUERY : %8d seconds ago\n",
+            sentry->appendf("LAST QUERY : %8d seconds ago\n",
                               (int) (squid_curtime - e->stats.last_query));
 
             if (e->stats.last_reply > 0)
-                storeAppendPrintf(sentry, "LAST REPLY : %8d seconds ago\n",
+                sentry->appendf("LAST REPLY : %8d seconds ago\n",
                                   (int) (squid_curtime - e->stats.last_reply));
             else
-                storeAppendPrintf(sentry, "LAST REPLY : none received\n");
+                sentry->appendf("LAST REPLY : none received\n");
 
-            storeAppendPrintf(sentry, "PINGS SENT : %8d\n", e->stats.pings_sent);
+            sentry->appendf("PINGS SENT : %8d\n", e->stats.pings_sent);
 
-            storeAppendPrintf(sentry, "PINGS ACKED: %8d %3d%%\n",
+            sentry->appendf("PINGS ACKED: %8d %3d%%\n",
                               e->stats.pings_acked,
                               Math::intPercent(e->stats.pings_acked, e->stats.pings_sent));
         }
 
-        storeAppendPrintf(sentry, "IGNORED    : %8d %3d%%\n", e->stats.ignored_replies, Math::intPercent(e->stats.ignored_replies, e->stats.pings_acked));
+        sentry->appendf("IGNORED    : %8d %3d%%\n", e->stats.ignored_replies, Math::intPercent(e->stats.ignored_replies, e->stats.pings_acked));
 
         if (!e->options.no_query) {
-            storeAppendPrintf(sentry, "Histogram of PINGS ACKED:\n");
+            sentry->appendf("Histogram of PINGS ACKED:\n");
 #if USE_HTCP
 
             if (e->options.htcp) {
-                storeAppendPrintf(sentry, "\tMisses\t%8d %3d%%\n",
+                sentry->appendf("\tMisses\t%8d %3d%%\n",
                                   e->htcp.counts[0],
                                   Math::intPercent(e->htcp.counts[0], e->stats.pings_acked));
-                storeAppendPrintf(sentry, "\tHits\t%8d %3d%%\n",
+                sentry->appendf("\tHits\t%8d %3d%%\n",
                                   e->htcp.counts[1],
                                   Math::intPercent(e->htcp.counts[1], e->stats.pings_acked));
             } else {
@@ -1712,7 +1712,7 @@ dump_peers(StoreEntry * sentry, CachePeer * peers)
                     if (e->icp.counts[op] == 0)
                         continue;
 
-                    storeAppendPrintf(sentry, "    %12.12s : %8d %3d%%\n",
+                    sentry->appendf("    %12.12s : %8d %3d%%\n",
                                       icp_opcode_str[op],
                                       e->icp.counts[op],
                                       Math::intPercent(e->icp.counts[op], e->stats.pings_acked));
@@ -1727,11 +1727,11 @@ dump_peers(StoreEntry * sentry, CachePeer * peers)
         }
 
         if (e->stats.last_connect_failure) {
-            storeAppendPrintf(sentry, "Last failed connect() at: %s\n",
+            sentry->appendf("Last failed connect() at: %s\n",
                               Time::FormatHttpd(e->stats.last_connect_failure));
         }
 
-        storeAppendPrintf(sentry, "keep-alive ratio: %d%%\n", Math::intPercent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
+        sentry->appendf("keep-alive ratio: %d%%\n", Math::intPercent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
     }
 }
 

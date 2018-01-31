@@ -140,14 +140,14 @@ Store::Controller::getStats(StoreInfoStats &stats) const
 void
 Store::Controller::stat(StoreEntry &output) const
 {
-    storeAppendPrintf(&output, "Store Directory Statistics:\n");
-    storeAppendPrintf(&output, "Store Entries          : %lu\n",
+    output.appendf("Store Directory Statistics:\n");
+    output.appendf("Store Entries          : %lu\n",
                       (unsigned long int)StoreEntry::inUseCount());
-    storeAppendPrintf(&output, "Maximum Swap Size      : %" PRIu64 " KB\n",
+    output.appendf("Maximum Swap Size      : %" PRIu64 " KB\n",
                       maxSize() >> 10);
-    storeAppendPrintf(&output, "Current Store Swap Size: %.2f KB\n",
+    output.appendf("Current Store Swap Size: %.2f KB\n",
                       currentSize() / 1024.0);
-    storeAppendPrintf(&output, "Current Capacity       : %.2f%% used, %.2f%% free\n",
+    output.appendf("Current Capacity       : %.2f%% used, %.2f%% free\n",
                       Math::doublePercent(currentSize(), maxSize()),
                       Math::doublePercent((maxSize() - currentSize()), maxSize()));
 

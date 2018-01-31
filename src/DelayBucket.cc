@@ -19,7 +19,7 @@
 void
 DelayBucket::stats(StoreEntry *entry)const
 {
-    storeAppendPrintf(entry, "%d", level());
+    entry->appendf("%d", level());
 }
 
 void

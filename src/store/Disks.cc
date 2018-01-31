@@ -439,7 +439,7 @@ Store::Disks::stat(StoreEntry & output) const
     /* Now go through each store, calling its stat routine */
 
     for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        storeAppendPrintf(&output, "\n");
+        output.appendf("\n");
         store(i)->stat(output);
     }
 }

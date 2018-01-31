@@ -361,7 +361,7 @@ PconnPool::dumpHist(StoreEntry * e) const
         if (hist[i] == 0)
             continue;
 
-        storeAppendPrintf(e, "\t%d\t%d\n", i, hist[i]);
+        e->appendf("\t%d\t%d\n", i, hist[i]);
     }
 }
 
@@ -373,7 +373,7 @@ PconnPool::dumpHash(StoreEntry *e) const
 
     int i = 0;
     for (hash_link *walker = hash_next(hid); walker; walker = hash_next(hid)) {
-        storeAppendPrintf(e, "\t item %d:\t%s\n", i, (char *)(walker->key));
+        e->appendf("\t item %d:\t%s\n", i, (char *)(walker->key));
         ++i;
     }
 }
@@ -588,9 +588,9 @@ PconnModule::dump(StoreEntry *e)
     int i = 0; // TODO: Why number pools if they all have names?
     for (PCI p = pools.begin(); p != pools.end(); ++p, ++i) {
         // TODO: Let each pool dump itself the way it wants to.
-        storeAppendPrintf(e, "\n Pool %d Stats\n", i);
+        e->appendf("\n Pool %d Stats\n", i);
         (*p)->dumpHist(e);
-        storeAppendPrintf(e, "\n Pool %d Hash Table\n",i);
+        e->appendf("\n Pool %d Hash Table\n",i);
         (*p)->dumpHash(e);
     }
 }

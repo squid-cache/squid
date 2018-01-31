@@ -168,17 +168,17 @@ DiskThreadsIOStrategy::DiskThreadsIOStrategy() :
 void
 DiskThreadsIOStrategy::aioStats(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "ASYNC IO Counters:\n");
-    storeAppendPrintf(sentry, "  Operation\t# Requests\tNumber serviced\n");
-    storeAppendPrintf(sentry, "  open\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.open_start, squidaio_counts.open_finish);
-    storeAppendPrintf(sentry, "  close\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.close_start, squidaio_counts.close_finish);
-    storeAppendPrintf(sentry, "  cancel\t%" PRIu64 "\t-\n", squidaio_counts.cancel);
-    storeAppendPrintf(sentry, "  write\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.write_start, squidaio_counts.write_finish);
-    storeAppendPrintf(sentry, "  read\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.read_start, squidaio_counts.read_finish);
-    storeAppendPrintf(sentry, "  stat\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.stat_start, squidaio_counts.stat_finish);
-    storeAppendPrintf(sentry, "  unlink\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.unlink_start, squidaio_counts.unlink_finish);
-    storeAppendPrintf(sentry, "  check_callback\t%" PRIu64 "\t-\n", squidaio_counts.check_callback);
-    storeAppendPrintf(sentry, "  queue\t%d\t-\n", squidaio_get_queue_len());
+    sentry->appendf("ASYNC IO Counters:\n");
+    sentry->appendf("  Operation\t# Requests\tNumber serviced\n");
+    sentry->appendf("  open\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.open_start, squidaio_counts.open_finish);
+    sentry->appendf("  close\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.close_start, squidaio_counts.close_finish);
+    sentry->appendf("  cancel\t%" PRIu64 "\t-\n", squidaio_counts.cancel);
+    sentry->appendf("  write\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.write_start, squidaio_counts.write_finish);
+    sentry->appendf("  read\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.read_start, squidaio_counts.read_finish);
+    sentry->appendf("  stat\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.stat_start, squidaio_counts.stat_finish);
+    sentry->appendf("  unlink\t%" PRIu64 "\t%" PRIu64 "\n", squidaio_counts.unlink_start, squidaio_counts.unlink_finish);
+    sentry->appendf("  check_callback\t%" PRIu64 "\t-\n", squidaio_counts.check_callback);
+    sentry->appendf("  queue\t%d\t-\n", squidaio_get_queue_len());
     squidaio_stats(sentry);
 }
 

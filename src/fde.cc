@@ -76,11 +76,11 @@ fde::dumpStats(StoreEntry &dumpEntry, int fdNumber) const
         return;
 
 #if _SQUID_WINDOWS_
-    storeAppendPrintf(&dumpEntry, "%4d 0x%-8lX %-6.6s %4d %7" PRId64 "%c %7" PRId64 "%c %-21s %s\n",
+    dumpEntry.appendf("%4d 0x%-8lX %-6.6s %4d %7" PRId64 "%c %7" PRId64 "%c %-21s %s\n",
                       fdNumber,
                       win32.handle,
 #else
-    storeAppendPrintf(&dumpEntry, "%4d %-6.6s %4d %7" PRId64 "%c %7" PRId64 "%c %-21s %s\n",
+    dumpEntry.appendf("%4d %-6.6s %4d %7" PRId64 "%c %7" PRId64 "%c %-21s %s\n",
                       fdNumber,
 #endif
                       fdTypeStr[type],
@@ -96,13 +96,13 @@ fde::dumpStats(StoreEntry &dumpEntry, int fdNumber) const
 void
 fde::DumpStats(StoreEntry *dumpEntry)
 {
-    storeAppendPrintf(dumpEntry, "Active file descriptors:\n");
+    dumpEntry->appendf("Active file descriptors:\n");
 #if _SQUID_WINDOWS_
-    storeAppendPrintf(dumpEntry, "%-4s %-10s %-6s %-4s %-7s* %-7s* %-21s %s\n",
+    dumpEntry->appendf("%-4s %-10s %-6s %-4s %-7s* %-7s* %-21s %s\n",
                       "File",
                       "Handle",
 #else
-    storeAppendPrintf(dumpEntry, "%-4s %-6s %-4s %-7s* %-7s* %-21s %s\n",
+    dumpEntry->appendf("%-4s %-6s %-4s %-7s* %-7s* %-21s %s\n",
                       "File",
 #endif
                       "Type",
@@ -112,9 +112,9 @@ fde::DumpStats(StoreEntry *dumpEntry)
                       "Remote Address",
                       "Description");
 #if _SQUID_WINDOWS_
-    storeAppendPrintf(dumpEntry, "---- ---------- ------ ---- -------- -------- --------------------- ------------------------------\n");
+    dumpEntry->appendf("---- ---------- ------ ---- -------- -------- --------------------- ------------------------------\n");
 #else
-    storeAppendPrintf(dumpEntry, "---- ------ ---- -------- -------- --------------------- ------------------------------\n");
+    dumpEntry->appendf("---- ------ ---- -------- -------- --------------------- ------------------------------\n");
 #endif
 
     for (int i = 0; i < Squid_MaxFD; ++i) {

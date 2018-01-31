@@ -322,26 +322,26 @@ gopherCachable(const HttpRequest * req)
 static void
 gopherHTMLHeader(StoreEntry * e, const char *title, const char *substring)
 {
-    storeAppendPrintf(e, "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n");
-    storeAppendPrintf(e, "<HTML><HEAD><TITLE>");
-    storeAppendPrintf(e, title, substring);
-    storeAppendPrintf(e, "</TITLE>");
-    storeAppendPrintf(e, "<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}--></STYLE>\n");
-    storeAppendPrintf(e, "</HEAD>\n<BODY><H1>");
-    storeAppendPrintf(e, title, substring);
-    storeAppendPrintf(e, "</H1>\n");
+    e->appendf("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n");
+    e->appendf("<HTML><HEAD><TITLE>");
+    e->appendf(title, substring);
+    e->appendf("</TITLE>");
+    e->appendf("<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}--></STYLE>\n");
+    e->appendf("</HEAD>\n<BODY><H1>");
+    e->appendf(title, substring);
+    e->appendf("</H1>\n");
 }
 
 static void
 gopherHTMLFooter(StoreEntry * e)
 {
-    storeAppendPrintf(e, "<HR noshade size=\"1px\">\n");
-    storeAppendPrintf(e, "<ADDRESS>\n");
-    storeAppendPrintf(e, "Generated %s by %s (%s)\n",
+    e->appendf("<HR noshade size=\"1px\">\n");
+    e->appendf("<ADDRESS>\n");
+    e->appendf("Generated %s by %s (%s)\n",
                       mkrfc1123(squid_curtime),
                       getMyHostname(),
                       visible_appname_string);
-    storeAppendPrintf(e, "</ADDRESS></BODY></HTML>\n");
+    e->appendf("</ADDRESS></BODY></HTML>\n");
 }
 
 static void
@@ -351,9 +351,9 @@ gopherEndHTML(GopherStateData * gopherState)
 
     if (!gopherState->HTML_header_added) {
         gopherHTMLHeader(e, "Server Return Nothing", NULL);
-        storeAppendPrintf(e, "<P>The Gopher query resulted in a blank response</P>");
+        e->appendf("<P>The Gopher query resulted in a blank response</P>");
     } else if (gopherState->HTML_pre) {
-        storeAppendPrintf(e, "</PRE>\n");
+        e->appendf("</PRE>\n");
     }
 
     gopherHTMLFooter(e);

@@ -653,7 +653,7 @@ getMaxAge(const char *url)
 static int
 refreshCountsStatsEntry(StoreEntry * sentry, struct RefreshCounts &rc, int code, const char *desc)
 {
-    storeAppendPrintf(sentry, "%6d\t%6.2f\t%s\n", rc.status[code], xpercent(rc.status[code], rc.total), desc);
+    sentry->appendf("%6d\t%6.2f\t%s\n", rc.status[code], xpercent(rc.status[code], rc.total), desc);
     return rc.status[code];
 }
 
@@ -663,8 +663,8 @@ refreshCountsStats(StoreEntry * sentry, struct RefreshCounts &rc)
     if (!rc.total)
         return;
 
-    storeAppendPrintf(sentry, "\n\n%s histogram:\n", rc.proto);
-    storeAppendPrintf(sentry, "Count\t%%Total\tCategory\n");
+    sentry->appendf("\n\n%s histogram:\n", rc.proto);
+    sentry->appendf("Count\t%%Total\tCategory\n");
 
     int sum = 0;
     sum += refreshCountsStatsEntry(sentry, rc, FRESH_REQUEST_MAX_STALE_ALL, "Fresh: request max-stale wildcard");
@@ -682,17 +682,17 @@ refreshCountsStats(StoreEntry * sentry, struct RefreshCounts &rc)
     sum += refreshCountsStatsEntry(sentry, rc, STALE_MAX_RULE, "Stale: refresh_pattern max age rule");
     sum += refreshCountsStatsEntry(sentry, rc, STALE_LMFACTOR_RULE, "Stale: refresh_pattern last-mod factor percentage");
     sum += refreshCountsStatsEntry(sentry, rc, STALE_DEFAULT, "Stale: by default");
-    storeAppendPrintf(sentry, "\n");
+    sentry->appendf("\n");
 }
 
 static void
 refreshStats(StoreEntry * sentry)
 {
     // display per-rule counts of usage and tests
-    storeAppendPrintf(sentry, "\nRefresh pattern usage:\n\n");
-    storeAppendPrintf(sentry, "  Used      \tChecks    \t%% Matches\tPattern\n");
+    sentry->appendf("\nRefresh pattern usage:\n\n");
+    sentry->appendf("  Used      \tChecks    \t%% Matches\tPattern\n");
     for (const RefreshPattern *R = Config.Refresh; R; R = R->next) {
-        storeAppendPrintf(sentry, "  %10" PRIu64 "\t%10" PRIu64 "\t%6.2f\t%s%s\n",
+        sentry->appendf("  %10" PRIu64 "\t%10" PRIu64 "\t%6.2f\t%s%s\n",
                           R->stats.matchCount,
                           R->stats.matchTests,
                           xpercent(R->stats.matchCount, R->stats.matchTests),
@@ -709,18 +709,18 @@ refreshStats(StoreEntry * sentry)
         total += refreshCounts[i].total;
 
     /* protocol usage histogram */
-    storeAppendPrintf(sentry, "\nRefreshCheck calls per protocol\n\n");
+    sentry->appendf("\nRefreshCheck calls per protocol\n\n");
 
-    storeAppendPrintf(sentry, "Protocol\t#Calls\t%%Calls\n");
+    sentry->appendf("Protocol\t#Calls\t%%Calls\n");
 
     for (i = 0; i < rcCount; ++i)
-        storeAppendPrintf(sentry, "%10s\t%6d\t%6.2f\n",
+        sentry->appendf("%10s\t%6d\t%6.2f\n",
                           refreshCounts[i].proto,
                           refreshCounts[i].total,
                           xpercent(refreshCounts[i].total, total));
 
     /* per protocol histograms */
-    storeAppendPrintf(sentry, "\n\nRefreshCheck histograms for various protocols\n");
+    sentry->appendf("\n\nRefreshCheck histograms for various protocols\n");
 
     for (i = 0; i < rcCount; ++i)
         refreshCountsStats(sentry, refreshCounts[i]);

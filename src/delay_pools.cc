@@ -326,7 +326,7 @@ ClassCBucket::stats(StoreEntry *sentry)const
 {
     for (unsigned int j = 0; j < individuals.size(); ++j) {
         assert (individualUsed (j));
-        storeAppendPrintf(sentry, " %d:",individuals.key_map[j]);
+        sentry->appendf(" %d:",individuals.key_map[j]);
         individuals.values[j].stats (sentry);
     }
 }
@@ -394,11 +394,11 @@ Aggregate::stats(StoreEntry * sentry)
     if (rate()->restore_bps == -1)
         return;
 
-    storeAppendPrintf(sentry, "\t\tCurrent: ");
+    sentry->appendf("\t\tCurrent: ");
 
     theBucket.stats(sentry);
 
-    storeAppendPrintf(sentry, "\n\n");
+    sentry->appendf("\n\n");
 }
 
 void
@@ -540,14 +540,14 @@ std::vector<Updateable *> DelayPools::toUpdate;
 void
 DelayPools::Stats(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "Delay pools configured: %d\n\n", DelayPools::pools());
+    sentry->appendf("Delay pools configured: %d\n\n", DelayPools::pools());
 
     for (unsigned short i = 0; i < DelayPools::pools(); ++i) {
         if (DelayPools::delay_data[i].theComposite().getRaw()) {
-            storeAppendPrintf(sentry, "Pool: %d\n\tClass: %s\n\n", i + 1, DelayPools::delay_data[i].pool->theClassTypeLabel());
+            sentry->appendf("Pool: %d\n\tClass: %s\n\n", i + 1, DelayPools::delay_data[i].pool->theClassTypeLabel());
             DelayPools::delay_data[i].theComposite()->stats (sentry);
         } else
-            storeAppendPrintf(sentry, "\tMisconfigured pool.\n\n");
+            sentry->appendf("\tMisconfigured pool.\n\n");
     }
 }
 
@@ -621,21 +621,21 @@ VectorPool::stats(StoreEntry * sentry)
     rate()->stats (sentry, label());
 
     if (rate()->restore_bps == -1) {
-        storeAppendPrintf(sentry, "\n\n");
+        sentry->appendf("\n\n");
         return;
     }
 
-    storeAppendPrintf(sentry, "\t\tCurrent:");
+    sentry->appendf("\t\tCurrent:");
 
     for (unsigned int i = 0; i < buckets.size(); ++i) {
-        storeAppendPrintf(sentry, " %d:", buckets.key_map[i]);
+        sentry->appendf(" %d:", buckets.key_map[i]);
         buckets.values[i].stats(sentry);
     }
 
     if (!buckets.size())
-        storeAppendPrintf(sentry, " Not used yet.");
+        sentry->appendf(" Not used yet.");
 
-    storeAppendPrintf(sentry, "\n\n");
+    sentry->appendf("\n\n");
 }
 
 void
@@ -766,20 +766,20 @@ ClassCHostPool::stats(StoreEntry * sentry)
     rate()->stats (sentry, label());
 
     if (rate()->restore_bps == -1) {
-        storeAppendPrintf(sentry, "\n\n");
+        sentry->appendf("\n\n");
         return;
     }
 
     for (unsigned int index = 0; index < buckets.size(); ++index) {
-        storeAppendPrintf(sentry, "\t\tCurrent [Network %d]:", buckets.key_map[index]);
+        sentry->appendf("\t\tCurrent [Network %d]:", buckets.key_map[index]);
         buckets.values[index].stats (sentry);
-        storeAppendPrintf(sentry, "\n");
+        sentry->appendf("\n");
     }
 
     if (!buckets.size())
-        storeAppendPrintf(sentry, "\t\tCurrent [All networks]: Not used yet.\n");
+        sentry->appendf("\t\tCurrent [All networks]: Not used yet.\n");
 
-    storeAppendPrintf(sentry, "\n\n");
+    sentry->appendf("\n\n");
 }
 
 void

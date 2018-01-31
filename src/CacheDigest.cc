@@ -229,26 +229,26 @@ cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * se
     assert(tot_count == hit_count + miss_count);    /* paranoid */
 
     if (!tot_count) {
-        storeAppendPrintf(sentry, "no guess stats for " SQUIDSBUFPH " available\n", SQUIDSBUFPRINT(label));
+        sentry->appendf("no guess stats for " SQUIDSBUFPH " available\n", SQUIDSBUFPRINT(label));
         return;
     }
 
-    storeAppendPrintf(sentry, "Digest guesses stats for " SQUIDSBUFPH ":\n", SQUIDSBUFPRINT(label));
-    storeAppendPrintf(sentry, "guess\t hit\t\t miss\t\t total\t\t\n");
-    storeAppendPrintf(sentry, " \t #\t %%\t #\t %%\t #\t %%\t\n");
-    storeAppendPrintf(sentry, "true\t %d\t %.2f\t %d\t %.2f\t %d\t %.2f\n",
+    sentry->appendf("Digest guesses stats for " SQUIDSBUFPH ":\n", SQUIDSBUFPRINT(label));
+    sentry->appendf("guess\t hit\t\t miss\t\t total\t\t\n");
+    sentry->appendf(" \t #\t %%\t #\t %%\t #\t %%\t\n");
+    sentry->appendf("true\t %d\t %.2f\t %d\t %.2f\t %d\t %.2f\n",
                       stats->trueHits, xpercent(stats->trueHits, tot_count),
                       stats->trueMisses, xpercent(stats->trueMisses, tot_count),
                       true_count, xpercent(true_count, tot_count));
-    storeAppendPrintf(sentry, "false\t %d\t %.2f\t %d\t %.2f\t %d\t %.2f\n",
+    sentry->appendf("false\t %d\t %.2f\t %d\t %.2f\t %d\t %.2f\n",
                       stats->falseHits, xpercent(stats->falseHits, tot_count),
                       stats->falseMisses, xpercent(stats->falseMisses, tot_count),
                       false_count, xpercent(false_count, tot_count));
-    storeAppendPrintf(sentry, "all\t %d\t %.2f\t %d\t %.2f\t %d\t %.2f\n",
+    sentry->appendf("all\t %d\t %.2f\t %d\t %.2f\t %d\t %.2f\n",
                       hit_count, xpercent(hit_count, tot_count),
                       miss_count, xpercent(miss_count, tot_count),
                       tot_count, xpercent(tot_count, tot_count));
-    storeAppendPrintf(sentry, "\tclose_hits: %d ( %d%%) /* cd said hit, doc was in the peer cache, but we got a miss */\n",
+    sentry->appendf("\tclose_hits: %d ( %d%%) /* cd said hit, doc was in the peer cache, but we got a miss */\n",
                       stats->closeHits, xpercentInt(stats->closeHits, stats->falseHits));
 }
 
@@ -258,23 +258,23 @@ cacheDigestReport(CacheDigest * cd, const SBuf &label, StoreEntry * e)
     CacheDigestStats stats;
     assert(cd && e);
     cacheDigestStats(cd, &stats);
-    storeAppendPrintf(e, SQUIDSBUFPH " digest: size: %d bytes\n",
+    e->appendf(SQUIDSBUFPH " digest: size: %d bytes\n",
                       SQUIDSBUFPRINT(label), stats.bit_count / 8
                      );
-    storeAppendPrintf(e, "\t entries: count: %" PRIu64 " capacity: %" PRIu64 " util: %d%%\n",
+    e->appendf("\t entries: count: %" PRIu64 " capacity: %" PRIu64 " util: %d%%\n",
                       cd->count,
                       cd->capacity,
                       xpercentInt(cd->count, cd->capacity)
                      );
-    storeAppendPrintf(e, "\t deletion attempts: %" PRIu64 "\n",
+    e->appendf("\t deletion attempts: %" PRIu64 "\n",
                       cd->del_count
                      );
-    storeAppendPrintf(e, "\t bits: per entry: %d on: %d capacity: %d util: %d%%\n",
+    e->appendf("\t bits: per entry: %d on: %d capacity: %d util: %d%%\n",
                       cd->bits_per_entry,
                       stats.bit_on_count, stats.bit_count,
                       xpercentInt(stats.bit_on_count, stats.bit_count)
                      );
-    storeAppendPrintf(e, "\t bit-seq: count: %d avg.len: %.2f\n",
+    e->appendf("\t bit-seq: count: %d avg.len: %.2f\n",
                       stats.bseq_count,
                       xdiv(stats.bseq_len_sum, stats.bseq_count)
                      );

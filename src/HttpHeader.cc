@@ -1580,7 +1580,7 @@ httpHeaderFieldStatDumper(StoreEntry * sentry, int, double val, double, int coun
         visible = CBIT_TEST(*dump_stat->owner_mask, id);
 
     if (visible)
-        storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
+        sentry->appendf("%2d\t %-20s\t %5d\t %6.2f\n",
                           id, name, count, xdiv(count, dump_stat->busyDestroyedCount));
 }
 
@@ -1588,7 +1588,7 @@ static void
 httpHeaderFldsPerHdrDumper(StoreEntry * sentry, int idx, double val, double, int count)
 {
     if (count)
-        storeAppendPrintf(sentry, "%2d\t %5d\t %5d\t %6.2f\n",
+        sentry->appendf("%2d\t %5d\t %5d\t %6.2f\n",
                           idx, (int) val, count,
                           xpercent(count, dump_stat->destroyedCount));
 }
@@ -1600,24 +1600,24 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
     assert(e);
 
     dump_stat = hs;
-    storeAppendPrintf(e, "\nHeader Stats: %s\n", hs->label);
-    storeAppendPrintf(e, "\nField type distribution\n");
-    storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
+    e->appendf("\nHeader Stats: %s\n", hs->label);
+    e->appendf("\nField type distribution\n");
+    e->appendf("%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/header");
     hs->fieldTypeDistr.dump(e, httpHeaderFieldStatDumper);
-    storeAppendPrintf(e, "\nCache-control directives distribution\n");
-    storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
+    e->appendf("\nCache-control directives distribution\n");
+    e->appendf("%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/cc_field");
     hs->ccTypeDistr.dump(e, httpHdrCcStatDumper);
-    storeAppendPrintf(e, "\nSurrogate-control directives distribution\n");
-    storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
+    e->appendf("\nSurrogate-control directives distribution\n");
+    e->appendf("%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/sc_field");
     hs->scTypeDistr.dump(e, httpHdrScStatDumper);
-    storeAppendPrintf(e, "\nNumber of fields per header distribution\n");
-    storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
+    e->appendf("\nNumber of fields per header distribution\n");
+    e->appendf("%2s\t %-5s\t %5s\t %6s\n",
                       "id", "#flds", "count", "%total");
     hs->hdrUCountDistr.dump(e, httpHeaderFldsPerHdrDumper);
-    storeAppendPrintf(e, "\n");
+    e->appendf("\n");
     dump_stat = NULL;
 }
 
@@ -1641,15 +1641,15 @@ httpHeaderStoreReport(StoreEntry * e)
     }
 
     /* field stats for all messages */
-    storeAppendPrintf(e, "\nHttp Fields Stats (replies and requests)\n");
+    e->appendf("\nHttp Fields Stats (replies and requests)\n");
 
-    storeAppendPrintf(e, "%2s\t %-25s\t %5s\t %6s\t %6s\n",
+    e->appendf("%2s\t %-25s\t %5s\t %6s\t %6s\n",
                       "id", "name", "#alive", "%err", "%repeat");
 
     // scan heaaderTable and output
     for (auto h : WholeEnum<Http::HdrType>()) {
         auto stats = headerStatsTable[h];
-        storeAppendPrintf(e, "%2d\t %-25s\t %5d\t %6.3f\t %6.3f\n",
+        e->appendf("%2d\t %-25s\t %5d\t %6.3f\t %6.3f\n",
                           Http::HeaderLookupTable.lookup(h).id,
                           Http::HeaderLookupTable.lookup(h).name,
                           stats.aliveCount,
@@ -1657,11 +1657,11 @@ httpHeaderStoreReport(StoreEntry * e)
                           xpercent(stats.repCount, stats.seenCount));
     }
 
-    storeAppendPrintf(e, "Headers Parsed: %d + %d = %d\n",
+    e->appendf("Headers Parsed: %d + %d = %d\n",
                       HttpHeaderStats[hoRequest].parsedCount,
                       HttpHeaderStats[hoReply].parsedCount,
                       HttpHeaderStats[0].parsedCount);
-    storeAppendPrintf(e, "Hdr Fields Parsed: %d\n", HeaderEntryParsedCount);
+    e->appendf("Hdr Fields Parsed: %d\n", HeaderEntryParsedCount);
 }
 
 int

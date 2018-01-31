@@ -244,7 +244,7 @@ Fs::Ufs::UFSSwapDir::optionIOParse(char const *option, const char *value, int is
 void
 Fs::Ufs::UFSSwapDir::optionIODump(StoreEntry * e) const
 {
-    storeAppendPrintf(e, " IOEngine=%s", ioType);
+    e->appendf(" IOEngine=%s", ioType);
 }
 
 ConfigOption *
@@ -376,37 +376,37 @@ Fs::Ufs::UFSSwapDir::statfs(StoreEntry & sentry) const
     int totl_in = 0;
     int free_in = 0;
     int x;
-    storeAppendPrintf(&sentry, "First level subdirectories: %d\n", l1);
-    storeAppendPrintf(&sentry, "Second level subdirectories: %d\n", l2);
-    storeAppendPrintf(&sentry, "Maximum Size: %" PRIu64 " KB\n", maxSize() >> 10);
-    storeAppendPrintf(&sentry, "Current Size: %.2f KB\n", currentSize() / 1024.0);
-    storeAppendPrintf(&sentry, "Percent Used: %0.2f%%\n",
+    sentry.appendf("First level subdirectories: %d\n", l1);
+    sentry.appendf("Second level subdirectories: %d\n", l2);
+    sentry.appendf("Maximum Size: %" PRIu64 " KB\n", maxSize() >> 10);
+    sentry.appendf("Current Size: %.2f KB\n", currentSize() / 1024.0);
+    sentry.appendf("Percent Used: %0.2f%%\n",
                       Math::doublePercent(currentSize(), maxSize()));
-    storeAppendPrintf(&sentry, "Filemap bits in use: %d of %d (%d%%)\n",
+    sentry.appendf("Filemap bits in use: %d of %d (%d%%)\n",
                       map->numFilesInMap(), map->capacity(),
                       Math::intPercent(map->numFilesInMap(), map->capacity()));
     x = fsStats(path, &totl_kb, &free_kb, &totl_in, &free_in);
 
     if (0 == x) {
-        storeAppendPrintf(&sentry, "Filesystem Space in use: %d/%d KB (%d%%)\n",
+        sentry.appendf("Filesystem Space in use: %d/%d KB (%d%%)\n",
                           totl_kb - free_kb,
                           totl_kb,
                           Math::intPercent(totl_kb - free_kb, totl_kb));
-        storeAppendPrintf(&sentry, "Filesystem Inodes in use: %d/%d (%d%%)\n",
+        sentry.appendf("Filesystem Inodes in use: %d/%d (%d%%)\n",
                           totl_in - free_in,
                           totl_in,
                           Math::intPercent(totl_in - free_in, totl_in));
     }
 
-    storeAppendPrintf(&sentry, "Flags:");
+    sentry.appendf("Flags:");
 
     if (flags.selected)
-        storeAppendPrintf(&sentry, " SELECTED");
+        sentry.appendf(" SELECTED");
 
     if (flags.read_only)
-        storeAppendPrintf(&sentry, " READ-ONLY");
+        sentry.appendf(" READ-ONLY");
 
-    storeAppendPrintf(&sentry, "\n");
+    sentry.appendf("\n");
 
     IO->statfs(sentry);
 }
@@ -1231,7 +1231,7 @@ Fs::Ufs::UFSSwapDir::replacementRemove(StoreEntry * e)
 void
 Fs::Ufs::UFSSwapDir::dump(StoreEntry & entry) const
 {
-    storeAppendPrintf(&entry, " %" PRIu64 " %d %d", maxSize() >> 20, l1, l2);
+    entry.appendf(" %" PRIu64 " %d %d", maxSize() >> 20, l1, l2);
     dumpOptions(&entry);
 }
 

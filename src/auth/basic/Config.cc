@@ -123,8 +123,8 @@ Auth::Basic::Config::dump(StoreEntry * entry, const char *name, Auth::SchemeConf
     if (!Auth::SchemeConfig::dump(entry, name, scheme))
         return false; // not configured
 
-    storeAppendPrintf(entry, "%s basic credentialsttl %d seconds\n", name, (int) credentialsTTL);
-    storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
+    entry->appendf("%s basic credentialsttl %d seconds\n", name, (int) credentialsTTL);
+    entry->appendf("%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
     return true;
 }
 

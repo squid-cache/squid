@@ -378,46 +378,46 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
     const wordlist *word;
 
     for (node = list; node; node = node->next) {
-        storeAppendPrintf(sentry, "%s %s", name, node->name);
+        sentry->appendf("%s %s", name, node->name);
 
         if (!node->local_addr.isIPv6())
-            storeAppendPrintf(sentry, " ipv4");
+            sentry->appendf(" ipv4");
         else
-            storeAppendPrintf(sentry, " ipv6");
+            sentry->appendf(" ipv6");
 
         if (node->ttl != DEFAULT_EXTERNAL_ACL_TTL)
-            storeAppendPrintf(sentry, " ttl=%d", node->ttl);
+            sentry->appendf(" ttl=%d", node->ttl);
 
         if (node->negative_ttl != node->ttl)
-            storeAppendPrintf(sentry, " negative_ttl=%d", node->negative_ttl);
+            sentry->appendf(" negative_ttl=%d", node->negative_ttl);
 
         if (node->grace)
-            storeAppendPrintf(sentry, " grace=%d", node->grace);
+            sentry->appendf(" grace=%d", node->grace);
 
         if (node->children.n_max != DEFAULT_EXTERNAL_ACL_CHILDREN)
-            storeAppendPrintf(sentry, " children-max=%d", node->children.n_max);
+            sentry->appendf(" children-max=%d", node->children.n_max);
 
         if (node->children.n_startup != 0) // sync with helper/ChildConfig.cc default
-            storeAppendPrintf(sentry, " children-startup=%d", node->children.n_startup);
+            sentry->appendf(" children-startup=%d", node->children.n_startup);
 
         if (node->children.n_idle != 1) // sync with helper/ChildConfig.cc default
-            storeAppendPrintf(sentry, " children-idle=%d", node->children.n_idle);
+            sentry->appendf(" children-idle=%d", node->children.n_idle);
 
         if (node->children.concurrency != 0)
-            storeAppendPrintf(sentry, " concurrency=%d", node->children.concurrency);
+            sentry->appendf(" concurrency=%d", node->children.concurrency);
 
         if (node->cache)
-            storeAppendPrintf(sentry, " cache=%d", node->cache_size);
+            sentry->appendf(" cache=%d", node->cache_size);
 
         if (node->quote == Format::LOG_QUOTE_SHELL)
-            storeAppendPrintf(sentry, " protocol=2.5");
+            sentry->appendf(" protocol=2.5");
 
         node->format.dump(sentry, NULL, false);
 
         for (word = node->cmdline; word; word = word->next)
-            storeAppendPrintf(sentry, " %s", word->key);
+            sentry->appendf(" %s", word->key);
 
-        storeAppendPrintf(sentry, "\n");
+        sentry->appendf("\n");
     }
 }
 
@@ -1090,11 +1090,11 @@ static void
 externalAclStats(StoreEntry * sentry)
 {
     for (external_acl *p = Config.externalAclHelperList; p; p = p->next) {
-        storeAppendPrintf(sentry, "External ACL Statistics: %s\n", p->name);
-        storeAppendPrintf(sentry, "Cache size: %d\n", p->cache->count);
+        sentry->appendf("External ACL Statistics: %s\n", p->name);
+        sentry->appendf("Cache size: %d\n", p->cache->count);
         assert(p->theHelper);
         p->theHelper->packStatsInto(sentry);
-        storeAppendPrintf(sentry, "\n");
+        sentry->appendf("\n");
     }
 }
 

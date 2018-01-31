@@ -44,7 +44,7 @@ DelayPool::dump(StoreEntry *entry, unsigned int i) const
     if (theComposite() == NULL)
         return;
 
-    storeAppendPrintf(entry, "delay_class %d %s\n", i + 1, pool->theClassTypeLabel());
+    entry->appendf("delay_class %d %s\n", i + 1, pool->theClassTypeLabel());
 
     LOCAL_ARRAY(char, nom, 32);
 
@@ -52,11 +52,11 @@ DelayPool::dump(StoreEntry *entry, unsigned int i) const
 
     dump_acl_access(entry, nom, access);
 
-    storeAppendPrintf(entry, "delay_parameters %d", i + 1);
+    entry->appendf("delay_parameters %d", i + 1);
 
     theComposite()->dump (entry);
 
-    storeAppendPrintf(entry, "\n");
+    entry->appendf("\n");
 }
 
 void

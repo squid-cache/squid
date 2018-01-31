@@ -102,9 +102,9 @@ MessageDelayPool::dump(StoreEntry *entry) const
     SBuf name("response_delay_pool_access ");
     name.append(poolName);
     dump_acl_access(entry, name.c_str(), access);
-    storeAppendPrintf(entry, "response_delay_pool parameters %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64 " %d\n",
+    entry->appendf("response_delay_pool parameters %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64 " %d\n",
                       individualRestore, individualMaximum, aggregateRestore, aggregateMaximum, initialBucketLevel);
-    storeAppendPrintf(entry, "\n");
+    entry->appendf("\n");
 }
 
 MessageBucket::Pointer

@@ -108,10 +108,10 @@ void
 Note::dump(StoreEntry *entry, const char *k)
 {
     for (auto v: values) {
-        storeAppendPrintf(entry, "%s %.*s %s",
+        entry->appendf("%s %.*s %s",
                           k, key().length(), key().rawContent(), ConfigParser::QuoteString(SBufToString(v->value())));
         dump_acl_list(entry, v->aclList);
-        storeAppendPrintf(entry, "\n");
+        entry->appendf("\n");
     }
 }
 

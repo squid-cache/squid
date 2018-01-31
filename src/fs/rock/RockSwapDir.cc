@@ -442,7 +442,7 @@ void
 Rock::SwapDir::dumpTimeOption(StoreEntry * e) const
 {
     if (fileConfig.ioTimeout)
-        storeAppendPrintf(e, " swap-timeout=%" PRId64,
+        e->appendf(" swap-timeout=%" PRId64,
                           static_cast<int64_t>(fileConfig.ioTimeout));
 }
 
@@ -493,7 +493,7 @@ void
 Rock::SwapDir::dumpRateOption(StoreEntry * e) const
 {
     if (fileConfig.ioRate >= 0)
-        storeAppendPrintf(e, " max-swap-rate=%d", fileConfig.ioRate);
+        e->appendf(" max-swap-rate=%d", fileConfig.ioRate);
 }
 
 /// parses size-specific options; mimics ::SwapDir::optionObjectSizeParse()
@@ -540,7 +540,7 @@ Rock::SwapDir::parseSizeOption(char const *option, const char *value, int reconf
 void
 Rock::SwapDir::dumpSizeOption(StoreEntry * e) const
 {
-    storeAppendPrintf(e, " slot-size=%" PRId64, slotSize);
+    e->appendf(" slot-size=%" PRId64, slotSize);
 }
 
 /// check the results of the configuration; only level-0 debugging works here
@@ -1053,27 +1053,27 @@ Rock::SwapDir::ignoreReferences(StoreEntry &e)
 void
 Rock::SwapDir::statfs(StoreEntry &e) const
 {
-    storeAppendPrintf(&e, "\n");
-    storeAppendPrintf(&e, "Maximum Size: %" PRIu64 " KB\n", maxSize() >> 10);
-    storeAppendPrintf(&e, "Current Size: %.2f KB %.2f%%\n",
+    e.appendf("\n");
+    e.appendf("Maximum Size: %" PRIu64 " KB\n", maxSize() >> 10);
+    e.appendf("Current Size: %.2f KB %.2f%%\n",
                       currentSize() / 1024.0,
                       Math::doublePercent(currentSize(), maxSize()));
 
     const int entryLimit = entryLimitActual();
     const int slotLimit = slotLimitActual();
-    storeAppendPrintf(&e, "Maximum entries: %9d\n", entryLimit);
+    e.appendf("Maximum entries: %9d\n", entryLimit);
     if (map && entryLimit > 0) {
         const int entryCount = map->entryCount();
-        storeAppendPrintf(&e, "Current entries: %9d %.2f%%\n",
+        e.appendf("Current entries: %9d %.2f%%\n",
                           entryCount, (100.0 * entryCount / entryLimit));
     }
 
-    storeAppendPrintf(&e, "Maximum slots:   %9d\n", slotLimit);
+    e.appendf("Maximum slots:   %9d\n", slotLimit);
     if (map && slotLimit > 0) {
         const unsigned int slotsFree = !freeSlots ? 0 : freeSlots->size();
         if (slotsFree <= static_cast<const unsigned int>(slotLimit)) {
             const int usedSlots = slotLimit - static_cast<const int>(slotsFree);
-            storeAppendPrintf(&e, "Used slots:      %9d %.2f%%\n",
+            e.appendf("Used slots:      %9d %.2f%%\n",
                               usedSlots, (100.0 * usedSlots / slotLimit));
         }
         if (slotLimit < 100) { // XXX: otherwise too expensive to count
@@ -1083,18 +1083,18 @@ Rock::SwapDir::statfs(StoreEntry &e) const
         }
     }
 
-    storeAppendPrintf(&e, "Pending operations: %d out of %d\n",
+    e.appendf("Pending operations: %d out of %d\n",
                       store_open_disk_fd, Config.max_open_disk_fds);
 
-    storeAppendPrintf(&e, "Flags:");
+    e.appendf("Flags:");
 
     if (flags.selected)
-        storeAppendPrintf(&e, " SELECTED");
+        e.appendf(" SELECTED");
 
     if (flags.read_only)
-        storeAppendPrintf(&e, " READ-ONLY");
+        e.appendf(" READ-ONLY");
 
-    storeAppendPrintf(&e, "\n");
+    e.appendf("\n");
 
 }
 

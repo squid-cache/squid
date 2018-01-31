@@ -70,16 +70,16 @@ DelayUser::stats(StoreEntry * sentry)
     if (spec.restore_bps == -1)
         return;
 
-    storeAppendPrintf(sentry, "\t\tCurrent: ");
+    sentry->appendf("\t\tCurrent: ");
 
     if (buckets.empty()) {
-        storeAppendPrintf (sentry, "Not used yet.\n\n");
+        sentry->appendf("Not used yet.\n\n");
         return;
     }
 
     DelayUserStatsVisitor visitor(sentry);
     buckets.visit(visitor);
-    storeAppendPrintf(sentry, "\n\n");
+    sentry->appendf("\n\n");
 }
 
 void
@@ -149,7 +149,7 @@ DelayUserBucket::~DelayUserBucket()
 void
 DelayUserBucket::stats (StoreEntry *entry) const
 {
-    storeAppendPrintf(entry, " %s:", authUser->username());
+    entry->appendf(" %s:", authUser->username());
     theBucket.stats(entry);
 }
 

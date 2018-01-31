@@ -976,8 +976,8 @@ netdbDump(StoreEntry * sentry)
     int i;
     int j;
     net_db_peer *p;
-    storeAppendPrintf(sentry, "Network DB Statistics:\n");
-    storeAppendPrintf(sentry, "%-46.46s %9s %7s %5s %s\n",  /* Max between 16 (IPv4) or 46 (IPv6)   */
+    sentry->appendf("Network DB Statistics:\n");
+    sentry->appendf("%-46.46s %9s %7s %5s %s\n",  /* Max between 16 (IPv4) or 46 (IPv6)   */
                       "Network",
                       "recv/sent",
                       "RTT",
@@ -1003,7 +1003,7 @@ netdbDump(StoreEntry * sentry)
 
     for (k = 0; k < i; ++k) {
         n = *(list + k);
-        storeAppendPrintf(sentry, "%-46.46s %4d/%4d %7.1f %5.1f", /* Max between 16 (IPv4) or 46 (IPv6)   */
+        sentry->appendf("%-46.46s %4d/%4d %7.1f %5.1f", /* Max between 16 (IPv4) or 46 (IPv6)   */
                           n->network,
                           n->pings_recv,
                           n->pings_sent,
@@ -1011,14 +1011,14 @@ netdbDump(StoreEntry * sentry)
                           n->hops);
 
         for (x = n->hosts; x; x = x->next)
-            storeAppendPrintf(sentry, " %s", hashKeyStr(x));
+            sentry->appendf(" %s", hashKeyStr(x));
 
-        storeAppendPrintf(sentry, "\n");
+        sentry->appendf("\n");
 
         p = n->peers;
 
         for (j = 0; j < n->n_peers; ++j, ++p) {
-            storeAppendPrintf(sentry, "    %-22.22s %7.1f %5.1f\n",
+            sentry->appendf("    %-22.22s %7.1f %5.1f\n",
                               p->peername,
                               p->rtt,
                               p->hops);
@@ -1028,7 +1028,7 @@ netdbDump(StoreEntry * sentry)
     xfree(list);
 #else
 
-    storeAppendPrintf(sentry,"NETDB support not compiled into this Squid cache.\n");
+    sentry->appendf("NETDB support not compiled into this Squid cache.\n");
 #endif
 }
 
@@ -1259,7 +1259,7 @@ netdbBinaryExchange(StoreEntry * s)
 
     reply->setHeaders(Http::scBadRequest, "Bad Request", NULL, -1, squid_curtime, -2);
     s->replaceHttpReply(reply);
-    storeAppendPrintf(s, "NETDB support not compiled into this Squid cache.\n");
+    s->appendf("NETDB support not compiled into this Squid cache.\n");
 #endif
 
     s->complete();

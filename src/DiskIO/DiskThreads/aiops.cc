@@ -1008,14 +1008,14 @@ squidaio_stats(StoreEntry * sentry)
     if (!squidaio_initialised)
         return;
 
-    storeAppendPrintf(sentry, "\n\nThreads Status:\n");
+    sentry->appendf("\n\nThreads Status:\n");
 
-    storeAppendPrintf(sentry, "#\tID\t# Requests\n");
+    sentry->appendf("#\tID\t# Requests\n");
 
     threadp = threads;
 
     for (i = 0; i < NUMTHREADS; ++i) {
-        storeAppendPrintf(sentry, "%i\t0x%lx\t%ld\n", i + 1, (unsigned long)threadp->thread, threadp->requests);
+        sentry->appendf("%i\t0x%lx\t%ld\n", i + 1, (unsigned long)threadp->thread, threadp->requests);
         threadp = threadp->next;
     }
 }
