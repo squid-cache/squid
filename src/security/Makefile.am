@@ -22,6 +22,7 @@ libsecurity_la_SOURCES= \
 	Handshake.cc \
 	Handshake.h \
 	forward.h \
+	KeyData.cc \
 	KeyData.h \
 	LockingPointer.h \
 	NegotiationHistory.cc \
