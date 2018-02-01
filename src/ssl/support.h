@@ -65,6 +65,11 @@ class MemMap;
 
 namespace Ssl
 {
+
+/// callback for receiving password to access password secured PEM files
+/// XXX: Requires SSL_CTX_set_default_passwd_cb_userdata()!
+int AskPasswordCb(char *buf, int size, int rwflag, void *userdata);
+
 /// initialize the SSL library global state.
 /// call before generating any SSL context
 void Initialize();
@@ -266,25 +271,10 @@ bool configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
 
 /**
   \ingroup ServerProtocolSSLAPI
-  * Adds the certificates in certList to the certificate chain of the SSL context
- */
-void addChainToSslContext(Security::ContextPointer &, Security::CertList &);
-
-/**
-  \ingroup ServerProtocolSSLAPI
   * Configures sslContext to use squid untrusted certificates internal list
   * to complete certificate chains when verifies SSL servers certificates.
  */
 void useSquidUntrusted(SSL_CTX *sslContext);
-
-/**
- \ingroup ServerProtocolSSLAPI
- *  Read certificate, private key and any certificates which must be chained from files.
- * See also: Ssl::readCertAndPrivateKeyFromFiles function,  defined in gadgets.h
- * \param certFilename name of file with certificate and certificates which must be chainned.
- * \param keyFilename name of file with private key.
- */
-void readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, Security::CertList &chain, char const * certFilename, char const * keyFilename);
 
 /**
    \ingroup ServerProtocolSSLAPI

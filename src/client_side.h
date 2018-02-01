@@ -216,10 +216,10 @@ public:
     /// The caller assumes responsibility for connection closure detection.
     void stopPinnedConnectionMonitoring();
 
-#if USE_OPENSSL
     /// the second part of old httpsAccept, waiting for future HttpsServer home
     void postHttpsAccept();
 
+#if USE_OPENSSL
     /// Initializes and starts a peek-and-splice negotiation with the SSL client
     void startPeekAndSplice();
 

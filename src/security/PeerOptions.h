@@ -66,6 +66,7 @@ private:
     void parseOptions(); ///< parsed value of sslOptions
     long parseFlags();
     void loadCrlFile();
+    void loadKeysFile();
 
 public:
     SBuf sslOptions;     ///< library-specific options string

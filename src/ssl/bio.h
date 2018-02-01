@@ -13,7 +13,9 @@
 
 #include "FadingCounter.h"
 #include "fd.h"
+#include "MemBuf.h"
 #include "security/Handshake.h"
+#include "ssl/support.h"
 
 #include <iosfwd>
 #include <list>
