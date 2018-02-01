@@ -422,9 +422,6 @@ void storeFreeMemory(void);
 int expiresMoreThan(time_t, time_t);
 
 /// \ingroup StoreAPI
-void storeAppendPrintf(StoreEntry *, const char *,...) PRINTF_FORMAT_ARG2;
-
-/// \ingroup StoreAPI
 int storeTooManyDiskFilesOpen(void);
 
 /// \ingroup StoreAPI

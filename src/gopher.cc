@@ -389,8 +389,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     if (gopherState->conversion == GopherStateData::HTML_INDEX_PAGE) {
         char *html_url = html_quote(entry->url());
         gopherHTMLHeader(entry, "Gopher Index %s", html_url);
-        storeAppendPrintf(entry,
-                          "<p>This is a searchable Gopher index. Use the search\n"
+        entry->appendf("<p>This is a searchable Gopher index. Use the search\n"
                           "function of your browser to enter search terms.\n"
                           "<ISINDEX>\n");
         gopherHTMLFooter(entry);
@@ -404,8 +403,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     if (gopherState->conversion == GopherStateData::HTML_CSO_PAGE) {
         char *html_url = html_quote(entry->url());
         gopherHTMLHeader(entry, "CSO Search of %s", html_url);
-        storeAppendPrintf(entry,
-                          "<P>A CSO database usually contains a phonebook or\n"
+        entry->appendf("<P>A CSO database usually contains a phonebook or\n"
                           "directory.  Use the search function of your browser to enter\n"
                           "search terms.</P><ISINDEX>\n");
         gopherHTMLFooter(entry);

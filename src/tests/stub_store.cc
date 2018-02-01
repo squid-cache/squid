@@ -110,7 +110,6 @@ StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, c
 StoreEntry *storeCreatePureEntry(const char *storeId, const char *logUrl, const HttpRequestMethod&) STUB_RETVAL(nullptr)
 void storeConfigure(void) STUB
 int expiresMoreThan(time_t, time_t) STUB_RETVAL(0)
-void storeAppendPrintf(StoreEntry *, const char *,...) STUB
 int storeTooManyDiskFilesOpen(void) STUB_RETVAL(0)
 void storeHeapPositionUpdate(StoreEntry *, SwapDir *) STUB
 void storeSwapFileNumberSet(StoreEntry * e, sfileno filn) STUB

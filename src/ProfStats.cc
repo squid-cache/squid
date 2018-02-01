@@ -91,8 +91,7 @@ static double time_frame;
 static void
 xprof_show_item(StoreEntry * sentry, const char *name, xprof_stats_data * hist)
 {
-    storeAppendPrintf(sentry,
-                      "%s\t %" PRIu64 "\t %" PRIu64 "\t %" PRIu64 "\t %" PRIu64 "\t %" PRIu64 "\t %.2f\t %6.3f\t\n",
+    sentry->appendf("%s\t %" PRIu64 "\t %" PRIu64 "\t %" PRIu64 "\t %" PRIu64 "\t %" PRIu64 "\t %.2f\t %6.3f\t\n",
                       name,
                       hist->count,
                       hist->summ,
@@ -127,8 +126,7 @@ xprof_summary_item(StoreEntry * sentry, char const *descr, TimersArray * list)
                       time_frame
                      );
 
-    storeAppendPrintf(sentry,
-                      "Probe Name\t  Events\t cumulated time \t best case \t average \t worst case\t Rate / sec \t %% in int\n");
+    sentry->appendf("Probe Name\t  Events\t cumulated time \t best case \t average \t worst case\t Rate / sec \t %% in int\n");
 
     for (i = 0; i < XPROF_LAST; ++i) {
         if (!hist[i]->name)
@@ -213,10 +211,8 @@ xprof_summary(StoreEntry * sentry)
     hrtime_t now = get_tick();
 
     sentry->appendf("CPU Profiling Statistics:\n");
-    storeAppendPrintf(sentry,
-                      "  (CPU times are in arbitrary units, most probably in CPU clock ticks)\n");
-    storeAppendPrintf(sentry,
-                      "Probe Name\t Event Count\t last Interval \t Avg Interval \t since squid start \t (since system boot) \n");
+    sentry->appendf("  (CPU times are in arbitrary units, most probably in CPU clock ticks)\n");
+    sentry->appendf("Probe Name\t Event Count\t last Interval \t Avg Interval \t since squid start \t (since system boot) \n");
     sentry->appendf("Total\t %lu\t %" PRIu64 " \t %" PRIu64 " \t %" PRIu64 " \t %" PRIu64 "\n",
                       (long unsigned) xprof_events,
                       xprof_delta,

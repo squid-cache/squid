@@ -350,8 +350,7 @@ PconnPool::key(const Comm::ConnectionPointer &destLink, const char *domain)
 void
 PconnPool::dumpHist(StoreEntry * e) const
 {
-    storeAppendPrintf(e,
-                      "%s persistent connection counts:\n"
+    e->appendf("%s persistent connection counts:\n"
                       "\n"
                       "\t Requests\t Connection Count\n"
                       "\t --------\t ----------------\n",

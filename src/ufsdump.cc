@@ -34,17 +34,6 @@ eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
 const char *urlCanonical(HttpRequest *) { assert(false); return NULL; }
 
 void
-storeAppendPrintf(StoreEntry * e, const char *fmt,...)
-{
-    va_list args;
-    va_start(args, fmt);
-
-    assert(false);
-
-    va_end(args);
-}
-
-void
 Mgr::RegisterAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic) {}
 
 /* MinGW needs also a stub of death() */

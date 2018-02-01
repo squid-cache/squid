@@ -876,16 +876,6 @@ StoreEntry::vappendf(const char *fmt, va_list vargs)
     delete[] buf2;
 }
 
-// deprecated. use StoreEntry::appendf() instead.
-void
-storeAppendPrintf(StoreEntry * e, const char *fmt,...)
-{
-    va_list args;
-    va_start(args, fmt);
-    e->vappendf(fmt, args);
-    va_end(args);
-}
-
 struct _store_check_cachable_hist {
 
     struct {
