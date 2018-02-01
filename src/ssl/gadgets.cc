@@ -438,7 +438,8 @@ addAltNameWithSubjectCn(Security::CertPointer &cert)
     return result;
 }
 
-static bool buildCertificate(Security::CertPointer & cert, Security::CertificateProperties const &properties)
+static bool
+buildCertificate(Security::CertPointer & cert, Security::CertificateProperties const &properties)
 {
     // not an Ssl::X509_NAME_Pointer because X509_REQ_get_subject_name()
     // returns a pointer to the existing subject name. Nothing to clean here.
@@ -791,7 +792,8 @@ static int asn1time_cmp(ASN1_TIME *asnTime1, ASN1_TIME *asnTime2)
     return strcmp(strTime1, strTime2);
 }
 
-bool Ssl::certificateMatchesProperties(X509 *cert, Security::CertificateProperties const &properties)
+bool
+Ssl::certificateMatchesProperties(X509 *cert, Security::CertificateProperties const &properties)
 {
     assert(cert);
 
