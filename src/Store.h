@@ -113,7 +113,6 @@ public:
     void negativeCache();
     bool cacheNegatively();     /** \todo argh, why both? */
     void invokeHandlers();
-    void purgeMem();
     void cacheInMemory(); ///< start or continue storing in memory cache
     void swapOut();
     /// whether we are in the process of writing this entry to disk

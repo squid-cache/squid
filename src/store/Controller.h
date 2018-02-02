@@ -81,6 +81,11 @@ public:
     /// called when the entry is no longer needed by any transaction
     void handleIdleEntry(StoreEntry &);
 
+    /// Evict memory cache entries to free at least `spaceRequired` bytes.
+    /// Should be called via storeGetMemSpace().
+    /// Unreliable: Fails if enough victims cannot be found fast enough.
+    void freeMemorySpace(const int spaceRequired);
+
     /// called to get rid of no longer needed entry data in RAM, if any
     void memoryOut(StoreEntry &, const bool preserveSwappable);
 
@@ -119,9 +124,6 @@ public:
     /// disassociates the entry from the intransit table
     void transientsDisconnect(StoreEntry &);
 
-    /// removes the entry from the memory cache
-    void memoryEvictCached(StoreEntry &);
-
     /// disassociates the entry from the memory cache, preserving cached data
     void memoryDisconnect(StoreEntry &);
 
@@ -132,6 +134,8 @@ public:
     static int store_dirs_rebuilding;
 
 private:
+    bool memoryCacheHasSpaceFor(const int pagesRequired) const;
+
     /// update reference counters of the recently touched entry
     void referenceBusy(StoreEntry &e);
     /// dereference() an idle entry and return true if the entry should be deleted
@@ -140,6 +144,7 @@ private:
     void allowSharing(StoreEntry &, const cache_key *);
     StoreEntry *peekAtLocal(const cache_key *);
 
+    void memoryEvictCached(StoreEntry &);
     void transientsUnlinkByKeyIfFound(const cache_key *);
     bool keepForLocalMemoryCache(StoreEntry &e) const;
     bool anchorToCache(StoreEntry &e, bool &inSync);
@@ -152,6 +157,9 @@ private:
     /// will belong to a memory cache, a disk cache, or will be uncachable
     /// when the response header comes. Used for SMP collapsed forwarding.
     Transients *transients;
+
+    /// Hack: Relays page shortage from freeMemorySpace() to handleIdleEntry().
+    int memoryPagesDebt_ = 0;
 };
 
 /// safely access controller singleton

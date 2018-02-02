@@ -45,7 +45,6 @@ void StoreEntry::expireNow() STUB
 void StoreEntry::releaseRequest(const bool shareable) STUB
 void StoreEntry::negativeCache() STUB
 bool StoreEntry::cacheNegatively() STUB
-void StoreEntry::purgeMem() STUB
 void StoreEntry::swapOut() STUB
 void StoreEntry::swapOutFileClose(int how) STUB
 const char *StoreEntry::url() const STUB_RETVAL(NULL)
@@ -112,6 +111,7 @@ int Store::Controller::store_dirs_rebuilding = 0;
 StoreSearch *Store::Controller::search() STUB_RETVAL(NULL)
 void Store::Controller::maintain() STUB
 bool Store::Controller::markedForDeletion(const cache_key *) const STUB_RETVAL(false)
+void Store::Controller::freeMemorySpace(const int) STUB
 
 std::ostream &operator <<(std::ostream &os, const StoreEntry &)
 {

@@ -468,6 +468,56 @@ Store::Controller::evictIfFound(const cache_key *key)
         transients->evictIfFound(key);
 }
 
+/// whether the memory cache is allowed to store that many additional pages
+bool
+Store::Controller::memoryCacheHasSpaceFor(const int pagesRequired) const
+{
+    // XXX: We count mem_nodes but may free shared memory pages instead.
+    const auto fits = mem_node::InUseCount() + pagesRequired <= store_pages_max;
+    debugs(20, 7, fits << ": " << mem_node::InUseCount() << '+' << pagesRequired << '?' << store_pages_max);
+    return fits;
+}
+
+void
+Store::Controller::freeMemorySpace(const int bytesRequired)
+{
+    const auto pagesRequired = (bytesRequired + SM_PAGE_SIZE-1) / SM_PAGE_SIZE;
+
+    if (memoryCacheHasSpaceFor(pagesRequired))
+        return;
+
+    // XXX: When store_pages_max is smaller than pagesRequired, we should not
+    // look for more space (but we do because we want to abandon idle entries?).
+
+    // limit our performance impact to one walk per second
+    static time_t lastWalk = 0;
+    if (lastWalk == squid_curtime)
+        return;
+    lastWalk = squid_curtime;
+
+    debugs(20, 2, "need " << pagesRequired << " pages");
+
+    // let abandon()/handleIdleEntry() know about the impeding memory shortage
+    memoryPagesDebt_ = pagesRequired;
+
+    // XXX: SMP-unaware: Walkers should iterate memory cache, not store_table.
+    // XXX: Limit iterations by time, not arbitrary count.
+    const auto walker = mem_policy->PurgeInit(mem_policy, 100000);
+    int removed = 0;
+    while (const auto entry = walker->Next(walker)) {
+        // Abandoned memory cache entries are purged during memory shortage.
+        entry->abandon(__FUNCTION__); // may delete entry
+        ++removed;
+
+        if (memoryCacheHasSpaceFor(pagesRequired))
+            break;
+    }
+    // TODO: Move to RemovalPolicyWalker::Done() that has more/better details.
+    debugs(20, 3, "removed " << removed << " out of " << hot_obj_count  << " memory-cached entries");
+    walker->Done(walker);
+    memoryPagesDebt_ = 0;
+}
+
 // move this into [non-shared] memory cache class when we have one
 /// whether e should be kept in local RAM for possible future caching
 bool
@@ -502,9 +552,12 @@ Store::Controller::memoryOut(StoreEntry &e, const bool preserveSwappable)
         e.trimMemory(preserveSwappable);
 }
 
+/// removes the entry from the memory cache
+/// XXX: Dangerous side effect: Unlocked entries lose their mem_obj.
 void
 Store::Controller::memoryEvictCached(StoreEntry &e)
 {
+    // TODO: Untangle memory caching from mem_obj.
     if (memStore)
         memStore->evictCached(e);
     else // TODO: move into [non-shared] memory cache class when we have one
@@ -570,7 +623,7 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
     } else {
         keepInLocalMemory = keepForLocalMemoryCache(e) && // in good shape and
                             // the local memory cache is not overflowing
-                            (mem_node::InUseCount() <= store_pages_max);
+                            memoryCacheHasSpaceFor(memoryPagesDebt_);
     }
 
     // An idle, unlocked entry that only belongs to a SwapDir which controls
@@ -587,9 +640,18 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
     if (keepInLocalMemory) {
         e.setMemStatus(IN_MEMORY);
         e.mem_obj->unlinkRequest();
-    } else {
-        e.purgeMem(); // may free e
+        return;
     }
+
+    // We know the in-memory data will be gone. Get rid of the entire entry if
+    // it has nothing worth preserving on disk either.
+    if (!e.swappedOut()) {
+        e.release(); // deletes e
+        return;
+    }
+
+    memoryEvictCached(e); // may already be gone
+    // and keep the entry in store_table for its on-disk data
 }
 
 void
