@@ -10,7 +10,9 @@
 #define SQUID_STORE_STORAGE_H
 
 #include "base/RefCount.h"
+#include "http/RequestMethod.h"
 #include "store/forward.h"
+#include "store_key_md5.h"
 
 class StoreInfoStats;
 
@@ -29,9 +31,6 @@ public:
     /// Start preparing the store for use. To check readiness, callers should
     /// use readable() and writable() methods.
     virtual void init() = 0;
-
-    /// Retrieve a store entry from the store (blocking)
-    virtual StoreEntry *get(const cache_key *) = 0;
 
     /**
      * The maximum size the store will support in normal use. Inaccuracy is
@@ -60,11 +59,14 @@ public:
      */
     virtual void stat(StoreEntry &e) const = 0;
 
-    /// expect an unlink() call after the entry becomes idle
-    virtual void markForUnlink(StoreEntry &e) = 0;
+    /// Prevent new get() calls from returning the matching entry.
+    /// If the matching entry is unused, it may be removed from the store now.
+    /// The store entry is matched using either `e` attachment info or `e.key`.
+    virtual void evictCached(StoreEntry &e) = 0;
 
-    /// remove the entry from the store
-    virtual void unlink(StoreEntry &e) = 0;
+    /// An evictCached() equivalent for callers that did not get() a StoreEntry.
+    /// Callers with StoreEntry objects must use evictCached() instead.
+    virtual void evictIfFound(const cache_key *) = 0;
 
     /// called once every main loop iteration; TODO: Move to UFS code.
     virtual int callback() { return 0; }

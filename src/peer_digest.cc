@@ -305,7 +305,6 @@ peerDigestRequest(PeerDigest * pd)
     CachePeer *p = pd->peer;
     StoreEntry *e, *old_e;
     char *url = NULL;
-    const cache_key *key;
     HttpRequest *req;
     StoreIOBuffer tempBuffer;
 
@@ -318,15 +317,12 @@ peerDigestRequest(PeerDigest * pd)
         url = xstrdup(p->digest_url);
     else
         url = xstrdup(internalRemoteUri(p->host, p->http_port, "/squid-internal-periodic/", SBuf(StoreDigestFileName)));
+    debugs(72, 2, url);
 
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initCacheDigest);
     req = HttpRequest::FromUrl(url, mx);
 
     assert(req);
-
-    key = storeKeyPublicByRequest(req);
-
-    debugs(72, 2, "peerDigestRequest: " << url << " key: " << storeKeyText(key));
 
     /* add custom headers */
     assert(!req->header.len);
@@ -351,13 +347,13 @@ peerDigestRequest(PeerDigest * pd)
     pd_last_req_time = squid_curtime;
     req->flags.cachable = true;
 
-    /* the rest is based on clientProcessExpired() */
+    /* the rest is based on clientReplyContext::processExpired() */
     req->flags.refresh = true;
 
-    old_e = fetch->old_entry = Store::Root().get(key);
+    old_e = fetch->old_entry = storeGetPublicByRequest(req);
 
     if (old_e) {
-        debugs(72, 5, "peerDigestRequest: found old entry");
+        debugs(72, 5, "found old " << *old_e);
 
         old_e->lock("peerDigestRequest");
         old_e->ensureMemObject(url, url, req->method);
@@ -366,6 +362,7 @@ peerDigestRequest(PeerDigest * pd)
     }
 
     e = fetch->entry = storeCreateEntry(url, url, req->flags, req->method);
+    debugs(72, 5, "created " << *e);
     assert(EBIT_TEST(e->flags, KEY_PRIVATE));
     fetch->sc = storeClientListAdd(e, fetch);
     /* set lastmod to trigger IMS request if possible */
@@ -374,8 +371,6 @@ peerDigestRequest(PeerDigest * pd)
         e->lastModified(old_e->lastModified());
 
     /* push towards peer cache */
-    debugs(72, 3, "peerDigestRequest: forwarding to fwdStart...");
-
     FwdState::fwdStart(Comm::ConnectionPointer(), e, req);
 
     tempBuffer.offset = 0;

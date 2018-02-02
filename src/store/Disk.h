@@ -69,8 +69,13 @@ public:
     /// called when the entry is about to forget its association with cache_dir
     virtual void disconnect(StoreEntry &) {}
 
-    /// called when entry swap out is complete
-    virtual void swappedOut(const StoreEntry &e) = 0;
+    /// finalize the successful swapout that has been already noticed by Store
+    virtual void finalizeSwapoutSuccess(const StoreEntry &) = 0;
+    /// abort the failed swapout that has been already noticed by Store
+    virtual void finalizeSwapoutFailure(StoreEntry &) = 0;
+
+    /// whether this cache dir has an entry with `e.key`
+    virtual bool hasReadableEntry(const StoreEntry &e) const = 0;
 
 protected:
     void parseOptions(int reconfiguring);

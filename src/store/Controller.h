@@ -28,7 +28,6 @@ public:
     /* Storage API */
     virtual void create() override;
     virtual void init() override;
-    virtual StoreEntry *get(const cache_key *) override;
     virtual uint64_t maxSize() const override;
     virtual uint64_t minSize() const override;
     virtual uint64_t currentSize() const override;
@@ -38,10 +37,39 @@ public:
     virtual void stat(StoreEntry &) const override;
     virtual void sync() override;
     virtual void maintain() override;
-    virtual void markForUnlink(StoreEntry &) override;
-    virtual void unlink(StoreEntry &) override;
+    virtual void evictCached(StoreEntry &) override;
+    virtual void evictIfFound(const cache_key *) override;
     virtual int callback() override;
     virtual bool smpAware() const override;
+
+    /// \returns a locally indexed and SMP-tracked matching StoreEntry (or nil)
+    /// Slower than peek() but does not restrict StoreEntry use and storage.
+    /// Counts as an entry reference from the removal policy p.o.v.
+    StoreEntry *find(const cache_key *);
+
+    /// \returns a matching StoreEntry not suitable for long-term use (or nil)
+    /// Faster than find() but the returned entry may not receive updates, may
+    /// lack information from some of the Stores, and should not be updated
+    /// except that purging peek()ed entries is supported.
+    /// Does not count as an entry reference from the removal policy p.o.v.
+    StoreEntry *peek(const cache_key *);
+
+    /// \returns matching StoreEntry associated with local ICP/HTCP transaction
+    /// Warning: The returned StoreEntry is not synced and may be marked for
+    /// deletion. Use it only for extracting transaction callback details.
+    /// TODO: Group and return just that callback-related data instead?
+    StoreEntry *findCallback(const cache_key *);
+
+    /// Whether a transient entry with the given public key exists and (but) was
+    /// marked for removal some time ago; get(key) returns nil in such cases.
+    bool markedForDeletion(const cache_key *key) const;
+
+    /// markedForDeletion() with no readers
+    /// this is one method because the two conditions must be checked in the right order
+    bool markedForDeletionAndAbandoned(const StoreEntry &) const;
+
+    /// whether there is a disk entry with e.key
+    bool hasReadableDiskEntry(const StoreEntry &) const;
 
     /// Additional unknown-size entry bytes required by Store in order to
     /// reduce the risk of selecting the wrong disk cache for the growing entry.
@@ -53,14 +81,33 @@ public:
     /// called when the entry is no longer needed by any transaction
     void handleIdleEntry(StoreEntry &);
 
+    /// Evict memory cache entries to free at least `spaceRequired` bytes.
+    /// Should be called via storeGetMemSpace().
+    /// Unreliable: Fails if enough victims cannot be found fast enough.
+    void freeMemorySpace(const int spaceRequired);
+
     /// called to get rid of no longer needed entry data in RAM, if any
     void memoryOut(StoreEntry &, const bool preserveSwappable);
 
     /// update old entry metadata and HTTP headers using a newer entry
     void updateOnNotModified(StoreEntry *old, const StoreEntry &newer);
 
-    /// makes the entry available for collapsing future requests
-    void allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
+    /// tries to make the entry available for collapsing future requests
+    bool allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
+
+    /// register a being-read StoreEntry (to optimize concurrent cache reads
+    /// and to receive remote DELETE events)
+    void addReading(StoreEntry *, const cache_key *);
+
+    /// register a being-written StoreEntry (to support concurrent cache reads
+    /// and to receive remote DELETE events)
+    void addWriting(StoreEntry *, const cache_key *);
+
+    /// whether the entry is in "reading from Transients" I/O state
+    bool transientsReader(const StoreEntry &) const;
+
+    /// whether the entry is in "writing to Transients" I/O state
+    bool transientsWriter(const StoreEntry &) const;
 
     /// marks the entry completed for collapsed requests
     void transientsCompleteWriting(StoreEntry &);
@@ -68,17 +115,14 @@ public:
     /// Update local intransit entry after changes made by appending worker.
     void syncCollapsed(const sfileno);
 
-    /// calls Root().transients->abandon() if transients are tracked
-    void transientsAbandon(StoreEntry &);
+    /// stop any current (and prevent any future) SMP sharing of the given entry
+    void stopSharing(StoreEntry &);
 
     /// number of the transient entry readers some time ago
     int transientReaders(const StoreEntry &) const;
 
     /// disassociates the entry from the intransit table
-    void transientsDisconnect(MemObject &);
-
-    /// removes the entry from the memory cache
-    void memoryUnlink(StoreEntry &);
+    void transientsDisconnect(StoreEntry &);
 
     /// disassociates the entry from the memory cache, preserving cached data
     void memoryDisconnect(StoreEntry &);
@@ -90,14 +134,21 @@ public:
     static int store_dirs_rebuilding;
 
 private:
+    bool memoryCacheHasSpaceFor(const int pagesRequired) const;
+
     /// update reference counters of the recently touched entry
     void referenceBusy(StoreEntry &e);
     /// dereference() an idle entry and return true if the entry should be deleted
     bool dereferenceIdle(StoreEntry &, bool wantsLocalMemory);
 
-    StoreEntry *find(const cache_key *key);
+    void allowSharing(StoreEntry &, const cache_key *);
+    StoreEntry *peekAtLocal(const cache_key *);
+
+    void memoryEvictCached(StoreEntry &);
+    void transientsUnlinkByKeyIfFound(const cache_key *);
     bool keepForLocalMemoryCache(StoreEntry &e) const;
-    bool anchorCollapsed(StoreEntry &, bool &inSync);
+    bool anchorToCache(StoreEntry &e, bool &inSync);
+    void checkTransients(const StoreEntry &) const;
 
     Disks *swapDir; ///< summary view of all disk caches
     Memory *memStore; ///< memory cache
@@ -106,6 +157,9 @@ private:
     /// will belong to a memory cache, a disk cache, or will be uncachable
     /// when the response header comes. Used for SMP collapsed forwarding.
     Transients *transients;
+
+    /// Hack: Relays page shortage from freeMemorySpace() to handleIdleEntry().
+    int memoryPagesDebt_ = 0;
 };
 
 /// safely access controller singleton

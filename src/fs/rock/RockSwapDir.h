@@ -39,15 +39,18 @@ public:
     /* public ::SwapDir API */
     virtual void reconfigure();
     virtual StoreEntry *get(const cache_key *key);
-    virtual void markForUnlink(StoreEntry &e);
+    virtual void evictCached(StoreEntry &);
+    virtual void evictIfFound(const cache_key *);
     virtual void disconnect(StoreEntry &e);
     virtual uint64_t currentSize() const;
     virtual uint64_t currentCount() const;
     virtual bool doReportStat() const;
-    virtual void swappedOut(const StoreEntry &e);
+    virtual void finalizeSwapoutSuccess(const StoreEntry &);
+    virtual void finalizeSwapoutFailure(StoreEntry &);
     virtual void create();
     virtual void parse(int index, char *path);
     virtual bool smpAware() const { return true; }
+    virtual bool hasReadableEntry(const StoreEntry &) const;
 
     // temporary path to the shared memory map of first slots of cached entries
     SBuf inodeMapPath() const;
@@ -77,8 +80,8 @@ public:
 
 protected:
     /* Store API */
-    virtual bool anchorCollapsed(StoreEntry &collapsed, bool &inSync);
-    virtual bool updateCollapsed(StoreEntry &collapsed);
+    virtual bool anchorToCache(StoreEntry &entry, bool &inSync);
+    virtual bool updateAnchored(StoreEntry &);
 
     /* protected ::SwapDir API */
     virtual bool needsDiskStrand() const;
@@ -94,7 +97,6 @@ protected:
     virtual bool dereference(StoreEntry &e);
     virtual void updateHeaders(StoreEntry *e);
     virtual bool unlinkdUseful() const;
-    virtual void unlink(StoreEntry &e);
     virtual void statfs(StoreEntry &e) const;
 
     /* IORequestor API */
@@ -124,7 +126,7 @@ protected:
     StoreIOState::Pointer createUpdateIO(const Ipc::StoreMapUpdate &update, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
 
     void anchorEntry(StoreEntry &e, const sfileno filen, const Ipc::StoreMapAnchor &anchor);
-    bool updateCollapsedWith(StoreEntry &collapsed, const Ipc::StoreMapAnchor &anchor);
+    bool updateAnchoredWith(StoreEntry &, const Ipc::StoreMapAnchor &);
 
     friend class Rebuild;
     friend class IoState;

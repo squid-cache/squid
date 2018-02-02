@@ -47,9 +47,16 @@ typedef enum {
     STORE_PENDING
 } store_status_t;
 
+/// StoreEntry relationship with a disk cache
 typedef enum {
+    /// StoreEntry is currently not associated with any disk store entry.
+    /// Does not guarantee (or preclude!) a matching disk store entry existence.
     SWAPOUT_NONE,
+    /// StoreEntry is being swapped out to the associated disk store entry.
+    /// Guarantees the disk store entry existence.
     SWAPOUT_WRITING,
+    /// StoreEntry is associated with a complete (i.e., fully swapped out) disk store entry.
+    /// Guarantees the disk store entry existence.
     SWAPOUT_DONE
 } swap_status_t;
 
@@ -69,7 +76,7 @@ enum {
     ENTRY_SPECIAL,
     ENTRY_REVALIDATE_ALWAYS,
     DELAY_SENDING,
-    RELEASE_REQUEST,
+    RELEASE_REQUEST, ///< prohibits making the key public
     REFRESH_REQUEST,
     ENTRY_REVALIDATE_STALE,
     ENTRY_DISPATCHED,
