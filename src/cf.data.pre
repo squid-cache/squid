@@ -1043,6 +1043,23 @@ DOC_START
 	  # NOTE 2: IPv6 protocol does not contain ARP. MAC/EUI is either
 	  # encoded directly in the IPv6 address or not available.
 
+	acl aclname clientside_mark mark[/mask] ...
+	  # matches CONNMARK of an accepted connection [fast]
+	  #
+	  # mark and mask are unsigned integers (hex, octal, or decimal).
+	  # If multiple marks are given, then the ACL matches if at least
+	  # one mark matches.
+	  #
+	  # Uses netfilter-conntrack library.
+	  # Requires building Squid with --enable-linux-netfilter.
+	  #
+	  # The client, various intermediaries, and Squid itself may set
+	  # CONNMARK at various times. The last CONNMARK set wins. This ACL
+	  # checks the mark present on an accepted connection or set by
+	  # Squid afterwards, depending on the ACL check timing. This ACL
+	  # effectively ignores any mark set by other agents after Squid has
+	  # accepted the connection.
+
 	acl aclname srcdomain   .foo.com ...
 	  # reverse lookup, from client IP [slow]
 	acl aclname dstdomain [-n] .foo.com ...
@@ -2206,12 +2223,33 @@ DOC_START
 
 	TLS / SSL Options:
 
-	   cert=	Path to SSL certificate (PEM format).
+	   tls-cert=	Path to file containing an X.509 certificate (PEM format)
+			to be used in the TLS handshake ServerHello.
 
-	   key=		Path to SSL private key file (PEM format)
-			if not specified, the certificate file is
-			assumed to be a combined certificate and
-			key file.
+			If this certificate is constrained by KeyUsage TLS
+			feature it must allow HTTP server usage, along with
+			any additional restrictions imposed by your choice
+			of options= settings.
+
+			When OpenSSL is used this file may also contain a
+			chain of intermediate CA certificates to send in the
+			TLS handshake.
+
+			When GnuTLS is used this option (and any paired
+			tls-key= option) may be repeated to load multiple
+			certificates for different domains.
+
+			Also, when generate-host-certificates=on is configured
+			the first tls-cert= option must be a CA certificate
+			capable of signing the automatically generated
+			certificates.
+
+	   tls-key=	Path to a file containing private key file (PEM format)
+			for the previous tls-cert= option.
+
+			If tls-key= is not specified tls-cert= is assumed to
+			reference a PEM file containing both the certificate
+			and private key.
 
 	   cipher=	Colon separated list of supported ciphers.
 			NOTE: some ciphers such as EDH ciphers depend on
@@ -2355,18 +2393,19 @@ TYPE: PortCfg
 DEFAULT: none
 LOC: HttpPortList
 DOC_START
-	Usage:  [ip:]port [mode] cert=certificate.pem [options]
+	Usage:  [ip:]port [mode] tls-cert=certificate.pem [options]
 
 	The socket address where Squid will listen for client requests made
 	over TLS or SSL connections. Commonly referred to as HTTPS.
 
 	This is most useful for situations where you are running squid in
-	accelerator mode and you want to do the TLS work at the accelerator level.
+	accelerator mode and you want to do the TLS work at the accelerator
+	level.
 
 	You may specify multiple socket addresses on multiple lines,
 	each with their own certificate and/or options.
 
-	The TLS cert= option is mandatory on HTTPS ports.
+	The tls-cert= option is mandatory on HTTPS ports.
 
 	See http_port for a list of modes and options.
 DOC_END
@@ -2777,12 +2816,14 @@ DOC_START
 	disable		Do not support https:// URLs.
 	
 	cert=/path/to/client/certificate
-			A client TLS certificate to use when connecting.
+			A client X.509 certificate to use when connecting.
 	
 	key=/path/to/client/private_key
-			The private TLS key corresponding to the cert= above.
-			If key= is not specified cert= is assumed to reference
-			a PEM file containing both the certificate and the key.
+			The private key corresponding to the cert= above.
+
+			If key= is not specified cert= is assumed to
+			reference a PEM file containing both the certificate
+			and private key.
 	
 	cipher=...	The list of valid TLS ciphers to use.
 
@@ -3551,14 +3592,15 @@ DOC_START
 	tls		Encrypt connections to this peer with TLS.
 	
 	sslcert=/path/to/ssl/certificate
-			A client SSL certificate to use when connecting to
+			A client X.509 certificate to use when connecting to
 			this peer.
 	
 	sslkey=/path/to/ssl/key
-			The private SSL key corresponding to sslcert above.
-			If 'sslkey' is not specified 'sslcert' is assumed to
-			reference a combined file containing both the
-			certificate and the key.
+			The private key corresponding to sslcert above.
+
+			If sslkey= is not specified sslcert= is assumed to
+			reference a PEM file containing both the certificate
+			and private key.
 	
 	sslcipher=...	The list of valid SSL ciphers to use when connecting
 			to this peer.
@@ -4949,7 +4991,7 @@ DOC_START
 	Note, from Squid-3.1 this option is only a default for cache.log,
 	that log can be rotated separately by using debug_options.
 
-	Note, from Squid-3.6 this option is only a default for access.log
+	Note, from Squid-4 this option is only a default for access.log
 	recorded by stdio: module. Those logs can be rotated separately by
 	using the rotate=N option on their access_log directive.
 
@@ -6990,14 +7032,16 @@ DOC_END
 
 NAME: esi_parser
 IFDEF: USE_SQUID_ESI
-COMMENT: libxml2|expat|custom
+COMMENT: libxml2|expat
 TYPE: string
 LOC: ESIParser::Type
-DEFAULT: custom
+DEFAULT: auto
+DEFAULT_DOC: Selects libxml2 if available at ./configure time or libexpat otherwise.
 DOC_START
-	ESI markup is not strictly XML compatible. The custom ESI parser
-	will give higher performance, but cannot handle non ASCII character
-	encodings.
+	Selects the XML parsing library to use when interpreting responses with
+	Edge Side Includes.
+
+	To disable ESI handling completely, ./configure Squid with --disable-esi.
 DOC_END
 
 COMMENT_START
@@ -8955,14 +8999,16 @@ DOC_START
 	These options are used for Secure ICAP (icaps://....) services only.
 
 	tls-cert=/path/to/ssl/certificate
-			A client SSL certificate to use when connecting to
-			this icap server.
+			A client X.509 certificate to use when connecting to
+			this ICAP server.
 
 	tls-key=/path/to/ssl/key
-			The private TLS/SSL key corresponding to sslcert above.
-			If 'tls-key' is not specified 'tls-cert' is assumed to
-			reference a combined PEM format file containing both the
-			certificate and the key.
+			The private key corresponding to the previous
+			tls-cert= option.
+
+			If tls-key= is not specified tls-cert= is assumed to
+			reference a PEM file containing both the certificate
+			and private key.
 
 	tls-cipher=...	The list of valid TLS/SSL ciphers to use when connecting
 			to this icap server.

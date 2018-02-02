@@ -867,40 +867,38 @@ AC_ARG_ENABLE(delay-pools,
 dnl disable generic/common adaptation support by default
 squid_opt_use_adaptation=no
 
-squid_opt_use_esi=yes
-AH_TEMPLATE([USE_SQUID_ESI],
-            [Define to enable the ESI processor and Surrogate header support])
+squid_opt_use_esi=auto
+AH_TEMPLATE([USE_SQUID_ESI],[Define to enable the ESI processor])
 AC_ARG_ENABLE(esi,
-  AS_HELP_STRING([--enable-esi],
-                 [Enable ESI for accelerators. Benefits from expat or libxml2.
+  AS_HELP_STRING([--disable-esi],
+                 [Disable ESI for accelerators. ESI requires expat or libxml2.
                   Enabling ESI will cause squid reverse proxies to be capable
                   of the Edge Acceleration Specification (www.esi.org).]),
-                 [squid_opt_use_esi=$enableval], [squid_opt_use_esi=no])
+                 [squid_opt_use_esi=$enableval],[])
 HAVE_LIBEXPAT=0
 EXPATLIB=
 HAVE_LIBXML2=0
 XMLLIB=
-if test "x$squid_opt_use_esi" = "xyes" ; then
-  AC_MSG_NOTICE([Enabling ESI processor and Surrogate header support.])
-  AC_DEFINE(USE_SQUID_ESI,1,
-    [Compile the ESI processor and Surrogate header support])
-else
-  AC_MSG_NOTICE([Disabling ESI processor])
-fi
 
 # ESI support libraries: expat
 AC_ARG_WITH(expat, AS_HELP_STRING([--without-expat],[Do not use expat for ESI. Default: auto-detect]))
-if test "x$squid_opt_use_esi" = "xyes" -a "x$with_expat" != "xno" ; then
+if test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno" ; then
   AC_CHECK_LIB([expat], [main], [EXPATLIB="-lexpat"; HAVE_LIBEXPAT=1])
   AC_CHECK_HEADERS([expat.h])
   AC_DEFINE_UNQUOTED(HAVE_LIBEXPAT, $HAVE_LIBEXPAT, [Define to 1 if you have the expat library])
-  if test "x$with_expat" = "xyes" -a "x$HAVE_LIBEXPAT" != "x1" ; then
-    AC_MSG_ERROR([Required library expat is not able to be found.])
-  fi
+  AS_IF(test "x$HAVE_LIBEXPAT" = "x1",[
+    squid_opt_use_esi=yes
+  ],[
+    AS_IF(test "x$with_expat" = "xyes",[
+      AC_MSG_ERROR([Required library expat not found.])
+    ],[
+      AC_MSG_NOTICE([Library expat not found.])
+    ])
+  ])
 fi
 
 AC_ARG_WITH(libxml2, AS_HELP_STRING([--without-libxml2],[Do not use libxml2 for ESI. Default: auto-detect]))
-if test "x$squid_opt_use_esi" = "xyes" -a "x$with_libxml2" != "xno" ; then
+if test "x$squid_opt_use_esi" != "xno" -a "x$with_libxml2" != "xno" ; then
   AC_CHECK_LIB([xml2], [main], [XMLLIB="-lxml2"; HAVE_LIBXML2=1])
   dnl Find the main header and include path...
   AC_CACHE_CHECK([location of libxml2 include files], [ac_cv_libxml2_include], [
@@ -927,15 +925,34 @@ if test "x$squid_opt_use_esi" = "xyes" -a "x$with_libxml2" != "xno" ; then
   dnl Now that we know where to look find the headers...
   AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
   AC_DEFINE_UNQUOTED(HAVE_LIBXML2, $HAVE_LIBXML2, [Define to 1 if you have the libxml2 library])
-  if test "x$with_libxml2" = "xyes" -a "$HAVE_LIBXML2" != "1" ; then
-    AC_MSG_ERROR([Required library libxml2 is not able to be found.])
-  fi
+  AS_IF(test "x$HAVE_LIBXML2" = "x1",[
+    squid_opt_use_esi=yes
+  ],[
+    AS_IF(test "x$with_libxml2" = "xyes",[
+      AC_MSG_ERROR([Required library libxml2 not found.])
+    ],[
+      AC_MSG_NOTICE([Library libxml2 not found.])
+    ])
+  ])
 fi
 
+AS_IF([test "x$squid_opt_use_esi" = "xyes"],[
+  AS_IF(test "x$HAVE_LIBXML2" = "x0" -a "x$HAVE_LIBEXPAT" = "x0",[
+    AC_MSG_ERROR([ESI processor requires libxml2 or libexpat])
+  ])
+  AC_MSG_NOTICE([Enabling ESI processor: $EXPATLIB $XMLLIB])
+  AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor])
+],[
+  AS_IF(test "x$squid_opt_use_esi" = "xno",[
+    AC_MSG_NOTICE([Disabling ESI processor.])
+  ],[
+    AC_MSG_NOTICE([Disabling ESI processor. libxml2 and libexpat not found.])
+  ])
+])
 AM_CONDITIONAL(ENABLE_ESI, test "x$squid_opt_use_esi" = "xyes")
-AM_CONDITIONAL(ENABLE_LIBEXPAT, test "$HAVE_LIBEXPAT" = 1)
+AM_CONDITIONAL(ENABLE_LIBEXPAT, test "x$HAVE_LIBEXPAT" = "x1")
 AC_SUBST(EXPATLIB)
-AM_CONDITIONAL(ENABLE_LIBXML2, test "$HAVE_LIBXML2" = 1)
+AM_CONDITIONAL(ENABLE_LIBXML2, test "x$HAVE_LIBXML2" = "x1")
 AC_SUBST(XMLLIB)
 
 # icap argument handling
@@ -1236,7 +1253,7 @@ if test "x$with_gnutls" != "xno"; then
     ## by testing for a 3.1.5+ function which we use
     AC_CHECK_LIB(gnutls,gnutls_certificate_verify_peers3,[LIBGNUTLS_LIBS="-lgnutls"])
   ])
-  AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h)
+  AC_CHECK_HEADERS(gnutls/gnutls.h gnutls/x509.h gnutls/abstract.h)
 
   SQUID_STATE_ROLLBACK(squid_gnutls_state) #de-pollute LIBS
 

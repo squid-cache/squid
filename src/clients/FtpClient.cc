@@ -763,6 +763,8 @@ Ftp::Client::connectDataChannel()
     conn->remote.port(data.port);
     conn->tos = ctrl.conn->tos;
     conn->nfmark = ctrl.conn->nfmark;
+    // Using non-local addresses in TPROXY mode requires appropriate socket option.
+    conn->flags |= ctrl.conn->flags & COMM_TRANSPARENT;
 
     debugs(9, 3, "connecting to " << conn->remote);
 

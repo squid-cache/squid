@@ -171,9 +171,6 @@ private:
 static void clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
 
 static IOACB httpAccept;
-#if USE_OPENSSL
-static IOACB httpsAccept;
-#endif
 static CTCB clientLifetimeTimeout;
 #if USE_IDENT
 static IDCB clientIdentDone;
@@ -2531,7 +2528,6 @@ httpAccept(const CommAcceptCbParams &params)
     AsyncJob::Start(srv); // usually async-calls readSomeData()
 }
 
-#if USE_OPENSSL
 /// Create TLS connection structure and update fd_table
 static bool
 httpsCreate(const Comm::ConnectionPointer &conn, const Security::ContextPointer &ctx)
@@ -2541,61 +2537,87 @@ httpsCreate(const Comm::ConnectionPointer &conn, const Security::ContextPointer 
         return true;
     }
 
+    debugs(33, DBG_IMPORTANT, "ERROR: could not create TLS server context for " << conn);
     conn->close();
     return false;
 }
 
 /**
  *
- * \retval 1 on success
- * \retval 0 when needs more data
- * \retval -1 on error
+ * \retval true on success
+ * \retval false when needs more data
+ * \retval false when an error occurred (and closes the TCP connection)
  */
-static int
-Squid_SSL_accept(ConnStateData *conn, PF *callback)
+static bool
+tlsAttemptHandshake(ConnStateData *conn, PF *callback)
 {
+    // TODO: maybe throw instead of just closing the TCP connection.
+    // see https://github.com/squid-cache/squid/pull/81#discussion_r153053278
     int fd = conn->clientConnection->fd;
-    auto ssl = fd_table[fd].ssl.get();
-    int ret;
+    auto session = fd_table[fd].ssl.get();
 
     errno = 0;
-    if ((ret = SSL_accept(ssl)) <= 0) {
-        const int xerrno = errno;
-        const int ssl_error = SSL_get_error(ssl, ret);
 
-        switch (ssl_error) {
+#if USE_OPENSSL
+    const auto ret = SSL_accept(session);
+    if (ret > 0)
+        return true;
 
-        case SSL_ERROR_WANT_READ:
-            Comm::SetSelect(fd, COMM_SELECT_READ, callback, (callback != NULL ? conn : NULL), 0);
-            return 0;
+    const int xerrno = errno;
+    const auto ssl_error = SSL_get_error(session, ret);
 
-        case SSL_ERROR_WANT_WRITE:
-            Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, (callback != NULL ? conn : NULL), 0);
-            return 0;
+    switch (ssl_error) {
 
-        case SSL_ERROR_SYSCALL:
-            if (ret == 0) {
-                debugs(83, 2, "Error negotiating SSL connection on FD " << fd << ": Aborted by client: " << ssl_error);
-            } else {
-                debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
-                       (xerrno == 0 ? Security::ErrorString(ssl_error) : xstrerr(xerrno)));
-            }
-            return -1;
+    case SSL_ERROR_WANT_READ:
+        Comm::SetSelect(fd, COMM_SELECT_READ, callback, (callback ? conn : nullptr), 0);
+        return false;
 
-        case SSL_ERROR_ZERO_RETURN:
-            debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
-            return -1;
+    case SSL_ERROR_WANT_WRITE:
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, (callback ? conn : nullptr), 0);
+        return false;
 
-        default:
-            debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
-                   fd << ": " << Security::ErrorString(ERR_get_error()) <<
-                   " (" << ssl_error << "/" << ret << ")");
-            return -1;
+    case SSL_ERROR_SYSCALL:
+        if (ret == 0) {
+            debugs(83, 2, "Error negotiating SSL connection on FD " << fd << ": Aborted by client: " << ssl_error);
+        } else {
+            debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
+                   (xerrno == 0 ? Security::ErrorString(ssl_error) : xstrerr(xerrno)));
         }
+        break;
 
-        /* NOTREACHED */
+    case SSL_ERROR_ZERO_RETURN:
+        debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
+        break;
+
+    default:
+        debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
+               fd << ": " << Security::ErrorString(ssl_error) <<
+               " (" << ssl_error << "/" << ret << ")");
     }
-    return 1;
+
+#elif USE_GNUTLS
+
+    const auto x = gnutls_handshake(session);
+    if (x == GNUTLS_E_SUCCESS)
+        return true;
+
+    if (gnutls_error_is_fatal(x)) {
+        debugs(83, 2, "Error negotiating TLS on " << conn->clientConnection << ": Aborted by client: " << Security::ErrorString(x));
+
+    } else if (x == GNUTLS_E_INTERRUPTED || x == GNUTLS_E_AGAIN) {
+        const auto ioAction = (gnutls_record_get_direction(session)==0 ? COMM_SELECT_READ : COMM_SELECT_WRITE);
+        Comm::SetSelect(fd, ioAction, callback, (callback ? conn : nullptr), 0);
+        return false;
+    }
+
+#else
+    // Performing TLS handshake should never be reachable without a TLS/SSL library.
+    (void)session; // avoid compiler and static analysis complaints
+    fatal("FATAL: HTTPS not supported by this Squid.");
+#endif
+
+    conn->clientConnection->close();
+    return false;
 }
 
 /** negotiate an SSL connection */
@@ -2603,14 +2625,13 @@ static void
 clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
-    int ret;
-    if ((ret = Squid_SSL_accept(conn, clientNegotiateSSL)) <= 0) {
-        if (ret < 0) // An error
-            conn->clientConnection->close();
+
+    if (!tlsAttemptHandshake(conn, clientNegotiateSSL))
         return;
-    }
 
     Security::SessionPointer session(fd_table[fd].ssl);
+
+#if USE_OPENSSL
     if (Security::SessionIsResumed(session)) {
         debugs(83, 2, "Session " << SSL_get_session(session.get()) <<
                " reused on FD " << fd << " (" << fd_table[fd].ipaddr <<
@@ -2655,10 +2676,14 @@ clientNegotiateSSL(int fd, void *data)
                " on FD " << fd << " (" << fd_table[fd].ipaddr << ":" <<
                fd_table[fd].remote_port << ")");
     }
+#else
+    debugs(83, 2, "TLS session reuse not yet implemented.");
+#endif
 
     // Connection established. Retrieve TLS connection parameters for logging.
     conn->clientConnection->tlsNegotiations()->retrieveNegotiatedInfo(session);
 
+#if USE_OPENSSL
     X509 *client_cert = SSL_get_peer_certificate(session.get());
 
     if (client_cert) {
@@ -2670,8 +2695,11 @@ clientNegotiateSSL(int fd, void *data)
 
         X509_free(client_cert);
     } else {
-        debugs(83, 5, "FD " << fd << " has no certificate.");
+        debugs(83, 5, "FD " << fd << " has no client certificate.");
     }
+#else
+    debugs(83, 2, "Client certificate requesting not yet implemented.");
+#endif
 
     conn->readSomeData();
 }
@@ -2697,6 +2725,7 @@ httpsEstablish(ConnStateData *connState, const Security::ContextPointer &ctx)
     Comm::SetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
 }
 
+#if USE_OPENSSL
 /**
  * A callback function to use with the ACLFilledChecklist callback.
  */
@@ -2725,6 +2754,7 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
     if (!connState->fakeAConnectRequest("ssl-bump", connState->inBuf))
         connState->clientConnection->close();
 }
+#endif
 
 /** handle a new HTTPS connection */
 static void
@@ -2758,6 +2788,7 @@ void
 ConnStateData::postHttpsAccept()
 {
     if (port->flags.tunnelSslBumping) {
+#if USE_OPENSSL
         debugs(33, 5, "accept transparent connection: " << clientConnection);
 
         if (!Config.accessList.ssl_bump) {
@@ -2789,12 +2820,16 @@ ConnStateData::postHttpsAccept()
         acl_checklist->al->request = request;
         HTTPMSGLOCK(acl_checklist->al->request);
         acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
+#else
+        fatal("FATAL: SSL-Bump requires --with-openssl");
+#endif
         return;
     } else {
         httpsEstablish(this, port->secure.staticContext);
     }
 }
 
+#if USE_OPENSSL
 void
 ConnStateData::sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply)
 {
@@ -2907,15 +2942,15 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
     assert(certProperties.signAlgorithm != Ssl::algSignEnd);
 
     if (certProperties.signAlgorithm == Ssl::algSignUntrusted) {
-        assert(port->secure.untrustedSigningCert);
-        certProperties.signWithX509.resetAndLock(port->secure.untrustedSigningCert.get());
-        certProperties.signWithPkey.resetAndLock(port->secure.untrustedSignPkey.get());
+        assert(port->secure.untrustedSigningCa.cert);
+        certProperties.signWithX509.resetAndLock(port->secure.untrustedSigningCa.cert.get());
+        certProperties.signWithPkey.resetAndLock(port->secure.untrustedSigningCa.pkey.get());
     } else {
-        assert(port->secure.signingCert.get());
-        certProperties.signWithX509.resetAndLock(port->secure.signingCert.get());
+        assert(port->secure.signingCa.cert.get());
+        certProperties.signWithX509.resetAndLock(port->secure.signingCa.cert.get());
 
-        if (port->secure.signPkey)
-            certProperties.signWithPkey.resetAndLock(port->secure.signPkey.get());
+        if (port->secure.signingCa.pkey)
+            certProperties.signWithPkey.resetAndLock(port->secure.signingCa.pkey.get());
     }
     signAlgorithm = certProperties.signAlgorithm;
 
@@ -3254,7 +3289,7 @@ ConnStateData::startPeekAndSplice()
     }
 
     // will call httpsPeeked() with certificate and connection, eventually
-    Security::ContextPointer unConfiguredCTX(Ssl::createSSLContext(port->secure.signingCert, port->secure.signPkey, port->secure));
+    Security::ContextPointer unConfiguredCTX(Ssl::createSSLContext(port->secure.signingCa.cert, port->secure.signingCa.pkey, port->secure));
     fd_table[clientConnection->fd].dynamicTlsContext = unConfiguredCTX;
 
     if (!httpsCreate(clientConnection, unConfiguredCTX))
@@ -3269,12 +3304,11 @@ ConnStateData::startPeekAndSplice()
     bio->hold(true);
 
     // Here squid should have all of the client hello message so the
-    // Squid_SSL_accept should return 0;
+    // tlsAttemptHandshake() should return false;
     // This block exist only to force openSSL parse client hello and detect
     // ERR_SECURE_ACCEPT_FAIL error, which should be checked and splice if required.
-    int ret = 0;
-    if ((ret = Squid_SSL_accept(this, NULL)) < 0) {
-        debugs(83, 2, "SSL_accept failed.");
+    if (!tlsAttemptHandshake(this, nullptr)) {
+        debugs(83, 2, "TLS handshake failed.");
         HttpRequest::Pointer request(http ? http->request : nullptr);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_SECURE_ACCEPT_FAIL))
             clientConnection->close();
@@ -3497,12 +3531,12 @@ clientHttpConnectionsOpen(void)
                 Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->secure.dynamicCertMemCacheSize);
             }
         }
+#endif
 
         if (s->secure.encryptTransport && !s->secure.staticContext) {
             debugs(1, DBG_CRITICAL, "ERROR: Ignoring " << scheme << "_port " << s->s << " due to TLS context initialization failure.");
             continue;
         }
-#endif
 
         // Fill out a Comm::Connection which IPC will open as a listener for us
         //  then pass back when active so we can start a TcpAcceptor subscription.
@@ -3522,7 +3556,6 @@ clientHttpConnectionsOpen(void)
                                             ListeningStartedDialer(&clientListenerConnectionOpened, s, Ipc::fdnHttpSocket, sub));
             Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpSocket, listenCall);
 
-#if USE_OPENSSL
         } else if (s->transport.protocol == AnyP::PROTO_HTTPS) {
             // setup the subscriptions such that new connections accepted by listenConn are handled by HTTPS
             RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpsAccept", CommAcceptCbPtrFun(httpsAccept, CommAcceptCbParams(NULL)));
@@ -3532,7 +3565,6 @@ clientHttpConnectionsOpen(void)
                                             ListeningStartedDialer(&clientListenerConnectionOpened,
                                                     s, Ipc::fdnHttpsSocket, sub));
             Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpsSocket, listenCall);
-#endif
         }
 
         HttpSockets[NHttpSockets] = -1; // set in clientListenerConnectionOpened
