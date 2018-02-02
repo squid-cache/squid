@@ -316,10 +316,8 @@ clientReplyContext::processExpired()
                                  http->log_uri, http->request->flags, http->request->method);
         /* NOTE, don't call StoreEntry->lock(), storeCreateEntry() does it */
 
-        if (collapsingAllowed) {
+        if (collapsingAllowed && Store::Root().allowCollapsing(entry, http->request->flags, http->request->method)) {
             debugs(88, 5, "allow other revalidation requests to collapse on " << *entry);
-            Store::Root().allowCollapsing(entry, http->request->flags,
-                                          http->request->method);
             collapsedRevalidation = crInitiator;
         } else {
             collapsedRevalidation = crNone;
@@ -905,30 +903,16 @@ clientReplyContext::purgeRequestFindObjectToPurge()
 void
 purgeEntriesByUrl(HttpRequest * req, const char *url)
 {
-#if USE_HTCP
-    bool get_or_head_sent = false;
-#endif
-
     for (HttpRequestMethod m(Http::METHOD_NONE); m != Http::METHOD_ENUM_END; ++m) {
         if (m.respMaybeCacheable()) {
-            if (StoreEntry *entry = storeGetPublic(url, m)) {
-                debugs(88, 5, "purging " << *entry << ' ' << m << ' ' << url);
+            const cache_key *key = storeKeyPublic(url, m);
+            debugs(88, 5, m << ' ' << url << ' ' << storeKeyText(key));
 #if USE_HTCP
-                neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
-                if (m == Http::METHOD_GET || m == Http::METHOD_HEAD) {
-                    get_or_head_sent = true;
-                }
+            neighborsHtcpClear(nullptr, url, req, m, HTCP_CLR_INVALIDATION);
 #endif
-                entry->release();
-            }
+            Store::Root().evictIfFound(key);
         }
     }
-
-#if USE_HTCP
-    if (!get_or_head_sent) {
-        neighborsHtcpClear(NULL, url, req, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_INVALIDATION);
-    }
-#endif
 }
 
 void
@@ -1059,7 +1043,7 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 #if USE_HTCP
         neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
-        newEntry->release();
+        newEntry->release(true);
         purgeStatus = Http::scOkay;
     }
 
@@ -1075,7 +1059,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 #if USE_HTCP
         neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
-        newEntry->release();
+        newEntry->release(true);
         purgeStatus = Http::scOkay;
     }
 
@@ -1091,7 +1075,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 #if USE_HTCP
             neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
-            entry->release();
+            entry->release(true);
             purgeStatus = Http::scOkay;
         }
 
@@ -1102,7 +1086,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 #if USE_HTCP
             neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
-            entry->release();
+            entry->release(true);
             purgeStatus = Http::scOkay;
         }
     }
@@ -2296,7 +2280,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
             !reqFlags.needValidation &&
             (m == Http::METHOD_GET || m == Http::METHOD_HEAD)) {
         // make the entry available for future requests now
-        Store::Root().allowCollapsing(e, reqFlags, m);
+        (void)Store::Root().allowCollapsing(e, reqFlags, m);
     }
 
     sc = storeClientListAdd(e, this);

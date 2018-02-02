@@ -16,6 +16,7 @@
 #include "sbuf/SBuf.h"
 #include "SquidString.h"
 #include "stmem.h"
+#include "store/forward.h"
 #include "StoreIOBuffer.h"
 #include "StoreIOState.h"
 #include "typedefs.h" //for IRCB
@@ -126,8 +127,12 @@ public:
 
     SwapOut swapout;
 
-    /// cache "I/O" direction and status
-    typedef enum { ioUndecided, ioWriting, ioReading, ioDone } Io;
+    /* TODO: Remove this change-minimizing hack */
+    using Io = Store::IoStatus;
+    static constexpr Io ioUndecided = Store::ioUndecided;
+    static constexpr Io ioReading = Store::ioReading;
+    static constexpr Io ioWriting = Store::ioWriting;
+    static constexpr Io ioDone = Store::ioDone;
 
     /// State of an entry with regards to the [shared] in-transit table.
     class XitTable
@@ -152,8 +157,6 @@ public:
         Io io; ///< current I/O state
     };
     MemCache memCache; ///< current [shared] memory caching state for the entry
-
-    bool smpCollapsed; ///< whether this entry gets data from another worker
 
     /* Read only - this reply must be preserved by store clients */
     /* The original reply. possibly with updated metadata. */

@@ -509,7 +509,7 @@ Fs::Ufs::UFSSwapDir::maintain()
 
         ++removed;
 
-        e->release();
+        e->release(true);
     }
 
     walker->Done(walker);
@@ -801,9 +801,7 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
     e = new StoreEntry();
     e->store_status = STORE_OK;
     e->setMemStatus(NOT_IN_MEMORY);
-    e->swap_status = SWAPOUT_DONE;
-    e->swap_filen = file_number;
-    e->swap_dirn = index;
+    e->attachToDisk(index, file_number, SWAPOUT_DONE);
     e->swap_file_sz = swap_file_sz;
     e->lastref = lastref;
     e->timestamp = timestamp;
@@ -811,29 +809,14 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
     e->lastModified(lastmod);
     e->refcount = refcount;
     e->flags = newFlags;
-    EBIT_CLR(e->flags, RELEASE_REQUEST);
-    e->clearPrivate();
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
     mapBitSet(e->swap_filen);
     cur_size += fs.blksize * sizeInBlocks(e->swap_file_sz);
     ++n_disk_objects;
-    e->hashInsert(key); /* do it after we clear KEY_PRIVATE */
+    e->hashInsert(key);
     replacementAdd (e);
     return e;
-}
-
-void
-Fs::Ufs::UFSSwapDir::undoAddDiskRestore(StoreEntry *e)
-{
-    debugs(47, 5, HERE << *e);
-    replacementRemove(e); // checks swap_dirn so do it before we invalidate it
-    // Do not unlink the file as it might be used by a subsequent entry.
-    mapBitReset(e->swap_filen);
-    e->swap_filen = -1;
-    e->swap_dirn = -1;
-    cur_size -= fs.blksize * sizeInBlocks(e->swap_file_sz);
-    --n_disk_objects;
 }
 
 void
@@ -1212,20 +1195,30 @@ Fs::Ufs::UFSSwapDir::unlinkdUseful() const
 }
 
 void
-Fs::Ufs::UFSSwapDir::unlink(StoreEntry & e)
+Fs::Ufs::UFSSwapDir::evictCached(StoreEntry & e)
 {
-    debugs(79, 3, HERE << "dirno " << index  << ", fileno "<<
-           std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
-    if (e.swap_status == SWAPOUT_DONE) {
+    debugs(79, 3, e);
+    if (e.locked()) // somebody else may still be using this file
+        return; // nothing to do: our get() always returns nil
+
+    if (!e.hasDisk())
+        return; // see evictIfFound()
+
+    if (e.swappedOut()) {
         cur_size -= fs.blksize * sizeInBlocks(e.swap_file_sz);
         --n_disk_objects;
     }
     replacementRemove(&e);
     mapBitReset(e.swap_filen);
     UFSSwapDir::unlinkFile(e.swap_filen);
-    e.swap_filen = -1;
-    e.swap_dirn = -1;
-    e.swap_status = SWAPOUT_NONE;
+    e.detachFromDisk();
+}
+
+void
+Fs::Ufs::UFSSwapDir::evictIfFound(const cache_key *)
+{
+    // UFS disk entries always have (attached) StoreEntries so if we got here,
+    // the entry is not cached on disk and there is nothing for us to do.
 }
 
 void
@@ -1238,8 +1231,7 @@ Fs::Ufs::UFSSwapDir::replacementAdd(StoreEntry * e)
 void
 Fs::Ufs::UFSSwapDir::replacementRemove(StoreEntry * e)
 {
-    if (e->swap_dirn < 0)
-        return;
+    assert(e->hasDisk());
 
     SwapDirPointer SD = INDEXSD(e->swap_dirn);
 
@@ -1291,10 +1283,18 @@ Fs::Ufs::UFSSwapDir::sync()
 }
 
 void
-Fs::Ufs::UFSSwapDir::swappedOut(const StoreEntry &e)
+Fs::Ufs::UFSSwapDir::finalizeSwapoutSuccess(const StoreEntry &e)
 {
     cur_size += fs.blksize * sizeInBlocks(e.swap_file_sz);
     ++n_disk_objects;
+}
+
+void
+Fs::Ufs::UFSSwapDir::finalizeSwapoutFailure(StoreEntry &entry)
+{
+    debugs(47, 5, entry);
+    // rely on the expected subsequent StoreEntry::release(), evictCached(), or
+    // a similar call to call unlink(), detachFromDisk(), etc. for the entry.
 }
 
 void

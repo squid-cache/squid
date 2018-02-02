@@ -56,7 +56,9 @@ public:
     StoreMapAnchor();
 
     /// store StoreEntry key and basics for an inode slot
-    void set(const StoreEntry &anEntry);
+    void set(const StoreEntry &anEntry, const cache_key *aKey = nullptr);
+    /// load StoreEntry basics that were previously stored with set()
+    void exportInto(StoreEntry &) const;
 
     void setKey(const cache_key *const aKey);
     bool sameKey(const cache_key *const aKey) const;
@@ -74,6 +76,8 @@ public:
 public:
     mutable ReadWriteLock lock; ///< protects slot data below
     std::atomic<uint8_t> waitingToBeFreed; ///< may be accessed w/o a lock
+    /// whether StoreMap::abortWriting() was called for a read-locked entry
+    std::atomic<uint8_t> writerHalted;
 
     // fields marked with [app] can be modified when appending-while-reading
     // fields marked with [update] can be modified when updating-while-reading
@@ -248,10 +252,18 @@ public:
     const Anchor &peekAtEntry(const sfileno fileno) const;
 
     /// free the entry if possible or mark it as waiting to be freed if not
-    void freeEntry(const sfileno fileno);
+    /// \returns whether the entry was neither empty nor marked
+    bool freeEntry(const sfileno);
     /// free the entry if possible or mark it as waiting to be freed if not
     /// does nothing if we cannot check that the key matches the cached entry
     void freeEntryByKey(const cache_key *const key);
+
+    /// whether the entry with the given key exists and was marked as
+    /// "waiting to be freed" some time ago
+    bool markedForDeletion(const cache_key *const);
+
+    /// whether the index contains a valid readable entry with the given key
+    bool hasReadableEntry(const cache_key *const);
 
     /// opens entry (identified by key) for reading, increments read level
     const Anchor *openForReading(const cache_key *const key, sfileno &fileno);

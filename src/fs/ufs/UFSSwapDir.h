@@ -49,10 +49,10 @@ public:
     virtual void dump(StoreEntry &) const override;
     virtual bool doubleCheck(StoreEntry &) override;
     virtual bool unlinkdUseful() const override;
-    virtual void unlink(StoreEntry &) override;
     virtual void statfs(StoreEntry &) const override;
     virtual void maintain() override;
-    virtual void markForUnlink(StoreEntry &) override {}
+    virtual void evictCached(StoreEntry &) override;
+    virtual void evictIfFound(const cache_key *) override;
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const override;
     virtual void reference(StoreEntry &) override;
     virtual bool dereference(StoreEntry &) override;
@@ -67,11 +67,15 @@ public:
     virtual void reconfigure() override;
     virtual int callback() override;
     virtual void sync() override;
-    virtual void swappedOut(const StoreEntry &e) override;
+    virtual void finalizeSwapoutSuccess(const StoreEntry &) override;
+    virtual void finalizeSwapoutFailure(StoreEntry &) override;
     virtual uint64_t currentSize() const override { return cur_size; }
     virtual uint64_t currentCount() const override { return n_disk_objects; }
     virtual ConfigOption *getOptionTree() const override;
     virtual bool smpAware() const override { return false; }
+    /// as long as ufs relies on the global store_table to index entries,
+    /// it is wrong to ask individual ufs cache_dirs whether they have an entry
+    virtual bool hasReadableEntry(const StoreEntry &) const override { return false; }
 
     void unlinkFile(sfileno f);
     // move down when unlink is a virtual method
@@ -99,8 +103,6 @@ public:
                                uint32_t refcount,
                                uint16_t flags,
                                int clean);
-    /// Undo the effects of UFSSwapDir::addDiskRestore().
-    void undoAddDiskRestore(StoreEntry *e);
     int validFileno(sfileno filn, int flag) const;
     int mapBitAllocate();
 

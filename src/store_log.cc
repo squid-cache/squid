@@ -57,6 +57,9 @@ storeLog(int tag, const StoreEntry * e)
 
         String ctype=(reply->content_type.size() ? reply->content_type.termedBuf() : str_unknown);
 
+        // mem_obj may still lack logging details; especially in RELEASE cases
+        const char *logUri = mem->hasUris() ? mem->logUri() : "?";
+
         logfileLineStart(storelog);
         logfilePrintf(storelog, "%9d.%03d %-7s %02d %08X %s %4d %9d %9d %9d " SQUIDSTRINGPH " %" PRId64 "/%" PRId64 " " SQUIDSBUFPH " %s\n",
                       (int) current_time.tv_sec,
@@ -73,7 +76,7 @@ storeLog(int tag, const StoreEntry * e)
                       reply->content_length,
                       e->contentLen(),
                       SQUIDSBUFPRINT(mem->method.image()),
-                      mem->logUri());
+                      logUri);
         logfileLineEnd(storelog);
     } else {
         /* no mem object. Most RELEASE cases */

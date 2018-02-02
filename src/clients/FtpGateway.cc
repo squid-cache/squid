@@ -2641,14 +2641,10 @@ Ftp::Gateway::haveParsedReplyHeaders()
 
     e->timestampsSet();
 
-    if (flags.authenticated) {
-        /*
-         * Authenticated requests can't be cached.
-         */
-        e->release();
-    } else if (!EBIT_TEST(e->flags, RELEASE_REQUEST) && !getCurrentOffset()) {
-        e->setPublicKey();
-    } else {
+    // makePublic() if allowed/possible or release() otherwise
+    if (flags.authenticated || // authenticated requests can't be cached
+            getCurrentOffset() ||
+            !e->makePublic()) {
         e->release();
     }
 }

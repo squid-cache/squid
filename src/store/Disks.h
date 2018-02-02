@@ -36,10 +36,10 @@ public:
     virtual bool dereference(StoreEntry &e) override;
     virtual void updateHeaders(StoreEntry *) override;
     virtual void maintain() override;
-    virtual bool anchorCollapsed(StoreEntry &e, bool &inSync) override;
-    virtual bool updateCollapsed(StoreEntry &e) override;
-    virtual void markForUnlink(StoreEntry &) override;
-    virtual void unlink(StoreEntry &) override;
+    virtual bool anchorToCache(StoreEntry &e, bool &inSync) override;
+    virtual bool updateAnchored(StoreEntry &) override;
+    virtual void evictCached(StoreEntry &) override;
+    virtual void evictIfFound(const cache_key *) override;
     virtual int callback() override;
 
     /// slowly calculate (and cache) hi/lo watermarks and similar limits
@@ -49,6 +49,8 @@ public:
     /// reduce the risk of selecting the wrong disk cache for the growing entry.
     int64_t accumulateMore(const StoreEntry&) const;
     virtual bool smpAware() const override;
+    /// whether any of disk caches has entry with e.key
+    bool hasReadableEntry(const StoreEntry &) const;
 
 private:
     /* migration logic */

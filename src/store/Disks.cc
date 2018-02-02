@@ -486,19 +486,33 @@ Store::Disks::sync()
 }
 
 void
-Store::Disks::markForUnlink(StoreEntry &e) {
-    if (e.swap_filen >= 0)
-        store(e.swap_dirn)->markForUnlink(e);
+Store::Disks::evictCached(StoreEntry &e) {
+    if (e.hasDisk()) {
+        // TODO: move into Fs::Ufs::UFSSwapDir::evictCached()
+        if (!EBIT_TEST(e.flags, KEY_PRIVATE)) {
+            // log before evictCached() below may clear hasDisk()
+            storeDirSwapLog(&e, SWAP_LOG_DEL);
+        }
+
+        e.disk().evictCached(e);
+        return;
+    }
+
+    if (const auto key = e.publicKey())
+        evictIfFound(key);
 }
 
 void
-Store::Disks::unlink(StoreEntry &e) {
-    if (e.swap_filen >= 0)
-        store(e.swap_dirn)->unlink(e);
+Store::Disks::evictIfFound(const cache_key *key)
+{
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        if (dir(i).active())
+            dir(i).evictIfFound(key);
+    }
 }
 
 bool
-Store::Disks::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
+Store::Disks::anchorToCache(StoreEntry &entry, bool &inSync)
 {
     if (const int cacheDirs = Config.cacheSwap.n_configured) {
         // ask each cache_dir until the entry is found; use static starting
@@ -511,23 +525,23 @@ Store::Disks::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
             if (!sd.active())
                 continue;
 
-            if (sd.anchorCollapsed(collapsed, inSync)) {
-                debugs(20, 3, "cache_dir " << idx << " anchors " << collapsed);
+            if (sd.anchorToCache(entry, inSync)) {
+                debugs(20, 3, "cache_dir " << idx << " anchors " << entry);
                 return true;
             }
         }
     }
 
     debugs(20, 4, "none of " << Config.cacheSwap.n_configured <<
-           " cache_dirs have " << collapsed);
+           " cache_dirs have " << entry);
     return false;
 }
 
 bool
-Store::Disks::updateCollapsed(StoreEntry &collapsed)
+Store::Disks::updateAnchored(StoreEntry &entry)
 {
-    return collapsed.swap_filen >= 0 &&
-           dir(collapsed.swap_dirn).updateCollapsed(collapsed);
+    return entry.hasDisk() &&
+           dir(entry.swap_dirn).updateAnchored(entry);
 }
 
 bool
@@ -543,7 +557,14 @@ Store::Disks::smpAware() const
     return false;
 }
 
-/* Store::Disks globals that should be converted to use RegisteredRunner */
+bool
+Store::Disks::hasReadableEntry(const StoreEntry &e) const
+{
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i)
+        if (dir(i).active() && dir(i).hasReadableEntry(e))
+            return true;
+    return false;
+}
 
 void
 storeDirOpenSwapLogs()
@@ -713,7 +734,7 @@ storeDirSwapLog(const StoreEntry * e, int op)
 {
     assert (e);
     assert(!EBIT_TEST(e->flags, KEY_PRIVATE));
-    assert(e->swap_filen >= 0);
+    assert(e->hasDisk());
     /*
      * icons and such; don't write them to the swap log
      */

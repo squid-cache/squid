@@ -953,7 +953,7 @@ peerAddFwdServer(ps_state *ps, CachePeer *peer, const hier_code code)
         // Non-PINNED destinations are uniquely identified by their CachePeer
         // (even though a DIRECT destination might match a cache_peer address).
         const bool duplicate = (server->code == PINNED) ?
-            (code == PINNED) : (server->_peer == peer);
+                               (code == PINNED) : (server->_peer == peer);
         if (duplicate) {
             debugs(44, 3, "skipping " << PeerSelectionDumper(ps, peer, code) <<
                    "; have " << PeerSelectionDumper(ps, server->_peer.get(), server->code));

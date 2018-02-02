@@ -321,7 +321,7 @@ MemStore::get(const cache_key *key)
     StoreEntry *e = new StoreEntry();
 
     // XXX: We do not know the URLs yet, only the key, but we need to parse and
-    // store the response for the Root().get() callers to be happy because they
+    // store the response for the Root().find() callers to be happy because they
     // expect IN_MEMORY entries to already have the response headers and body.
     e->createMemObject();
 
@@ -329,13 +329,12 @@ MemStore::get(const cache_key *key)
 
     const bool copied = copyFromShm(*e, index, *slot);
 
-    if (copied) {
-        e->hashInsert(key);
+    if (copied)
         return e;
-    }
 
-    debugs(20, 3, HERE << "mem-loading failed; freeing " << index);
+    debugs(20, 3, "failed for " << *e);
     map->freeEntry(index); // do not let others into the same trap
+    destroyStoreEntry(static_cast<hash_link *>(e));
     return NULL;
 }
 
@@ -403,46 +402,41 @@ MemStore::updateHeadersOrThrow(Ipc::StoreMapUpdate &update)
 }
 
 bool
-MemStore::anchorCollapsed(StoreEntry &collapsed, bool &inSync)
+MemStore::anchorToCache(StoreEntry &entry, bool &inSync)
 {
     if (!map)
         return false;
 
     sfileno index;
     const Ipc::StoreMapAnchor *const slot = map->openForReading(
-            reinterpret_cast<cache_key*>(collapsed.key), index);
+            reinterpret_cast<cache_key*>(entry.key), index);
     if (!slot)
         return false;
 
-    anchorEntry(collapsed, index, *slot);
-    inSync = updateCollapsedWith(collapsed, index, *slot);
+    anchorEntry(entry, index, *slot);
+    inSync = updateAnchoredWith(entry, index, *slot);
     return true; // even if inSync is false
 }
 
 bool
-MemStore::updateCollapsed(StoreEntry &collapsed)
+MemStore::updateAnchored(StoreEntry &entry)
 {
-    assert(collapsed.mem_obj);
-
-    const sfileno index = collapsed.mem_obj->memCache.index;
-
-    // already disconnected from the cache, no need to update
-    if (index < 0)
-        return true;
-
     if (!map)
         return false;
 
+    assert(entry.mem_obj);
+    assert(entry.hasMemStore());
+    const sfileno index = entry.mem_obj->memCache.index;
     const Ipc::StoreMapAnchor &anchor = map->readableEntry(index);
-    return updateCollapsedWith(collapsed, index, anchor);
+    return updateAnchoredWith(entry, index, anchor);
 }
 
-/// updates collapsed entry after its anchor has been located
+/// updates Transients entry after its anchor has been located
 bool
-MemStore::updateCollapsedWith(StoreEntry &collapsed, const sfileno index, const Ipc::StoreMapAnchor &anchor)
+MemStore::updateAnchoredWith(StoreEntry &entry, const sfileno index, const Ipc::StoreMapAnchor &anchor)
 {
-    collapsed.swap_file_sz = anchor.basics.swap_file_sz;
-    const bool copied = copyFromShm(collapsed, index, anchor);
+    entry.swap_file_sz = anchor.basics.swap_file_sz;
+    const bool copied = copyFromShm(entry, index, anchor);
     return copied;
 }
 
@@ -450,15 +444,8 @@ MemStore::updateCollapsedWith(StoreEntry &collapsed, const sfileno index, const 
 void
 MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor)
 {
-    const Ipc::StoreMapAnchor::Basics &basics = anchor.basics;
-
-    e.swap_file_sz = basics.swap_file_sz;
-    e.lastref = basics.lastref;
-    e.timestamp = basics.timestamp;
-    e.expires = basics.expires;
-    e.lastModified(basics.lastmod);
-    e.refcount = basics.refcount;
-    e.flags = basics.flags;
+    assert(!e.hasDisk()); // no conflict with disk entry basics
+    anchor.exportInto(e);
 
     assert(e.mem_obj);
     if (anchor.complete()) {
@@ -470,11 +457,7 @@ MemStore::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
         assert(e.mem_obj->object_sz < 0);
         e.setMemStatus(NOT_IN_MEMORY);
     }
-    assert(e.swap_status == SWAPOUT_NONE); // set in StoreEntry constructor
-    e.ping_status = PING_NONE;
 
-    EBIT_CLR(e.flags, RELEASE_REQUEST);
-    e.clearPrivate();
     EBIT_SET(e.flags, ENTRY_VALIDATED);
 
     MemObject::MemCache &mc = e.mem_obj->memCache;
@@ -910,25 +893,29 @@ MemStore::completeWriting(StoreEntry &e)
 }
 
 void
-MemStore::markForUnlink(StoreEntry &e)
+MemStore::evictCached(StoreEntry &e)
 {
-    assert(e.mem_obj);
-    if (e.mem_obj->memCache.index >= 0)
-        map->freeEntry(e.mem_obj->memCache.index);
+    debugs(47, 5, e);
+    if (e.hasMemStore()) {
+        if (map->freeEntry(e.mem_obj->memCache.index))
+            CollapsedForwarding::Broadcast(e);
+        if (!e.locked()) {
+            disconnect(e);
+            e.destroyMemObject();
+        }
+    } else if (const auto key = e.publicKey()) {
+        // the entry may have been loaded and then disconnected from the cache
+        evictIfFound(key);
+        if (!e.locked())
+            e.destroyMemObject();
+    }
 }
 
 void
-MemStore::unlink(StoreEntry &e)
+MemStore::evictIfFound(const cache_key *key)
 {
-    if (e.mem_obj && e.mem_obj->memCache.index >= 0) {
-        map->freeEntry(e.mem_obj->memCache.index);
-        disconnect(e);
-    } else if (map) {
-        // the entry may have been loaded and then disconnected from the cache
-        map->freeEntryByKey(reinterpret_cast<cache_key*>(e.key));
-    }
-
-    e.destroyMemObject(); // XXX: but it may contain useful info such as a client list. The old code used to do that though, right?
+    if (map)
+        map->freeEntryByKey(key);
 }
 
 void
@@ -936,12 +923,12 @@ MemStore::disconnect(StoreEntry &e)
 {
     assert(e.mem_obj);
     MemObject &mem_obj = *e.mem_obj;
-    if (mem_obj.memCache.index >= 0) {
+    if (e.hasMemStore()) {
         if (mem_obj.memCache.io == MemObject::ioWriting) {
             map->abortWriting(mem_obj.memCache.index);
             mem_obj.memCache.index = -1;
             mem_obj.memCache.io = MemObject::ioDone;
-            Store::Root().transientsAbandon(e); // broadcasts after the change
+            Store::Root().stopSharing(e); // broadcasts after the change
         } else {
             assert(mem_obj.memCache.io == MemObject::ioReading);
             map->closeForReading(mem_obj.memCache.index);

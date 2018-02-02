@@ -19,7 +19,6 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "mime.h"
-#include "RequestFlags.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -394,18 +393,19 @@ MimeIcon::created(StoreEntry *newEntry)
         status = Http::scNoContent;
     }
 
+    StoreEntry *e = storeCreatePureEntry(url_, url_, Http::METHOD_GET);
+    e->lock("MimeIcon::created");
+    EBIT_SET(e->flags, ENTRY_SPECIAL);
+    const auto madePublic = e->setPublicKey();
+    assert(madePublic); // nothing can block ENTRY_SPECIAL from becoming public
+
+    /* fill `e` with a canned 2xx response object */
+
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcon);
     HttpRequest *r = HttpRequest::FromUrl(url_, mx);
     if (!r)
         fatalf("mimeLoadIcon: cannot parse internal URL: %s", url_);
 
-    // fill newEntry with a canned 2xx response object
-    RequestFlags flags;
-    flags.cachable = true;
-    StoreEntry *e = storeCreateEntry(url_,url_,flags,Http::METHOD_GET);
-    assert(e != NULL);
-    EBIT_SET(e->flags, ENTRY_SPECIAL);
-    e->setPublicKey();
     e->buffer();
 
     e->mem_obj->request = r;
