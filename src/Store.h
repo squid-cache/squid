@@ -257,7 +257,7 @@ public:
 
     /// One of the three methods to get rid of an unlocked StoreEntry object.
     /// May destroy this object if it is unlocked; does nothing otherwise.
-    /// Unlike release(), does not trigger eviction of underlying store entries,
+    /// Unlike release(), may not trigger eviction of underlying store entries,
     /// but, unlike destroyStoreEntry(), does honor an earlier release request.
     void abandon(const char *context) { if (!locked()) doAbandon(context); }
 
