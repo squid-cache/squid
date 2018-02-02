@@ -99,7 +99,6 @@ MemObject::setUris(char const *aStoreId, char const *aLogUri, const HttpRequestM
 MemObject::MemObject() :
     inmem_lo(0),
     nclients(0),
-    smpCollapsed(false),
     request(nullptr),
     ping_reply_callback(nullptr),
     ircb_data(nullptr),
@@ -247,8 +246,6 @@ MemObject::stat(MemBuf * mb) const
         mb->appendf("\tmem-cache index: %d state: %d offset: %" PRId64 "\n", memCache.index, memCache.io, memCache.offset);
     if (object_sz >= 0)
         mb->appendf("\tobject_sz: %" PRId64 "\n", object_sz);
-    if (smpCollapsed)
-        mb->appendf("\tsmp-collapsed\n");
 
     StoreClientStats statsVisitor(mb);
 

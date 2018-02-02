@@ -162,7 +162,7 @@ store_client::store_client(StoreEntry *e) :
     if (getType() == STORE_DISK_CLIENT) {
         /* assert we'll be able to get the data we want */
         /* maybe we should open swapin_sio here */
-        assert(entry->swap_filen > -1 || entry->swappingOut());
+        assert(entry->hasDisk() || entry->swappingOut());
     }
 }
 
@@ -251,7 +251,7 @@ store_client::moreToSend() const
     const int64_t len = entry->objectLen();
 
     // If we do not know the entry length, then we have to open the swap file.
-    const bool canSwapIn = entry->swap_filen >= 0;
+    const bool canSwapIn = entry->hasDisk();
     if (len < 0)
         return canSwapIn;
 
@@ -441,7 +441,7 @@ store_client::fileRead()
     flags.disk_io_pending = true;
 
     if (mem->swap_hdr_sz != 0)
-        if (entry->swap_status == SWAPOUT_WRITING)
+        if (entry->swappingOut())
             assert(mem->swapout.sio->offset() > copyInto.offset + (int64_t)mem->swap_hdr_sz);
 
     storeRead(swapin_sio,
@@ -667,7 +667,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     dlinkDelete(&sc->node, &mem->clients);
     -- mem->nclients;
 
-    if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
+    if (e->store_status == STORE_OK && !e->swappedOut())
         e->swapOut();
 
     if (sc->swapin_sio != NULL) {

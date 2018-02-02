@@ -26,8 +26,6 @@
 
 /// shared memory segment path to use for Transients map
 static const SBuf MapLabel("transients_map");
-/// shared memory segment path to use for Transients map extras
-static const char *ExtrasLabel = "transients_ex";
 
 Transients::Transients(): map(NULL), locals(NULL)
 {
@@ -49,8 +47,6 @@ Transients::init()
     Must(!map);
     map = new TransientsMap(MapLabel);
     map->cleaner = this;
-
-    extras = shm_old(TransientsMapExtras)(ExtrasLabel);
 
     locals = new Locals(entryLimit, 0);
 }
@@ -161,42 +157,16 @@ Transients::get(const cache_key *key)
     if (StoreEntry *oldE = locals->at(index)) {
         debugs(20, 3, "not joining private " << *oldE);
         assert(EBIT_TEST(oldE->flags, KEY_PRIVATE));
-    } else if (StoreEntry *newE = copyFromShm(index)) {
-        return newE; // keep read lock to receive updates from others
+        map->closeForReading(index);
+        return nullptr;
     }
 
-    // private entry or loading failure
-    map->closeForReading(index);
-    return NULL;
-}
-
-StoreEntry *
-Transients::copyFromShm(const sfileno index)
-{
-    const TransientsMapExtras::Item &extra = extras->items[index];
-
-    // create a brand new store entry and initialize it with stored info
-    StoreEntry *e = storeCreatePureEntry(extra.url, extra.url,
-                                         extra.reqFlags, extra.reqMethod);
-
-    assert(e->mem_obj);
-    e->mem_obj->method = extra.reqMethod;
-    e->mem_obj->xitTable.io = MemObject::ioReading;
+    StoreEntry *e = new StoreEntry();
+    e->createMemObject();
     e->mem_obj->xitTable.index = index;
-
-    // TODO: Support collapsed revalidation for SMP-aware caches.
-    e->setPublicKey(ksDefault);
-    assert(e->key);
-
-    // How do we know its SMP- and not just locally-collapsed? A worker gets
-    // locally-collapsed entries from the local store_table, not Transients.
-    // TODO: Can we remove smpCollapsed by not syncing non-transient entries?
-    e->mem_obj->smpCollapsed = true;
-
-    assert(!locals->at(index));
-    // We do not lock e because we do not want to prevent its destruction;
-    // e is tied to us via mem_obj so we will know when it is destructed.
-    locals->at(index) = e;
+    e->mem_obj->xitTable.io = Store::ioReading;
+    anchor->exportInto(*e);
+    // keep read lock to receive updates from others
     return e;
 }
 
@@ -217,64 +187,49 @@ Transients::findCollapsed(const sfileno index)
 }
 
 void
-Transients::startWriting(StoreEntry *e, const RequestFlags &reqFlags,
-                         const HttpRequestMethod &reqMethod)
+Transients::monitorIo(StoreEntry *e, const cache_key *key, const Store::IoStatus direction)
+{
+    assert(direction == Store::ioReading || direction == Store::ioWriting);
+
+    if (!e->hasTransients()) {
+        addEntry(e, key, direction);
+        e->mem_obj->xitTable.io = direction;
+    }
+
+    assert(e->hasTransients());
+    const auto index = e->mem_obj->xitTable.index;
+    if (const auto old = locals->at(index)) {
+        assert(old == e);
+    } else {
+        // We do not lock e because we do not want to prevent its destruction;
+        // e is tied to us via mem_obj so we will know when it is destructed.
+        locals->at(index) = e;
+    }
+}
+
+/// creates a new Transients entry or throws
+void
+Transients::addEntry(StoreEntry *e, const cache_key *key, const Store::IoStatus direction)
 {
     assert(e);
     assert(e->mem_obj);
-    assert(e->mem_obj->xitTable.index < 0);
+    assert(!e->hasTransients());
 
-    if (!map) {
-        debugs(20, 5, "No map to add " << *e);
-        return;
-    }
+    Must(map); // configured to track transients
 
     sfileno index = 0;
-    Ipc::StoreMapAnchor *slot = map->openForWriting(reinterpret_cast<const cache_key *>(e->key), index);
-    if (!slot) {
-        debugs(20, 5, "collision registering " << *e);
-        return;
+    Ipc::StoreMapAnchor *slot = map->openForWriting(key, index);
+    Must(slot); // no writer collisions
+
+    slot->set(*e, key);
+    e->mem_obj->xitTable.index = index;
+    if (direction == Store::ioWriting) {
+        // keep write lock; the caller will decide what to do with it
+        map->startAppending(e->mem_obj->xitTable.index);
+    } else {
+        // keep the entry locked (for reading) to receive remote DELETE events
+        map->closeForWriting(e->mem_obj->xitTable.index);
     }
-
-    try {
-        if (copyToShm(*e, index, reqFlags, reqMethod)) {
-            slot->set(*e);
-            e->mem_obj->xitTable.io = MemObject::ioWriting;
-            e->mem_obj->xitTable.index = index;
-            map->startAppending(index);
-            // keep write lock -- we will be supplying others with updates
-            return;
-        }
-        // fall through to the error handling code
-    } catch (const std::exception &x) { // TODO: should we catch ... as well?
-        debugs(20, 2, "error keeping entry " << index <<
-               ' ' << *e << ": " << x.what());
-        // fall through to the error handling code
-    }
-
-    map->abortWriting(index);
-}
-
-/// copies all relevant local data to shared memory
-bool
-Transients::copyToShm(const StoreEntry &e, const sfileno index,
-                      const RequestFlags &reqFlags,
-                      const HttpRequestMethod &reqMethod)
-{
-    TransientsMapExtras::Item &extra = extras->items[index];
-
-    const char *url = e.url();
-    const size_t urlLen = strlen(url);
-    Must(urlLen < sizeof(extra.url)); // we have space to store it all, plus 0
-    strncpy(extra.url, url, sizeof(extra.url));
-    extra.url[urlLen] = '\0';
-
-    extra.reqFlags = reqFlags;
-
-    Must(reqMethod != Http::METHOD_OTHER);
-    extra.reqMethod = reqMethod.id();
-
-    return true;
 }
 
 void
@@ -284,49 +239,30 @@ Transients::noteFreeMapSlice(const Ipc::StoreMapSliceId)
 }
 
 void
-Transients::abandon(const StoreEntry &e)
-{
-    assert(e.mem_obj && map);
-    map->freeEntry(e.mem_obj->xitTable.index); // just marks the locked entry
-    CollapsedForwarding::Broadcast(e);
-    // We do not unlock the entry now because the problem is most likely with
-    // the server resource rather than a specific cache writer, so we want to
-    // prevent other readers from collapsing requests for that resource.
-}
-
-bool
-Transients::abandoned(const StoreEntry &e) const
-{
-    assert(e.mem_obj);
-    return abandonedAt(e.mem_obj->xitTable.index);
-}
-
-/// whether an in-transit entry at the index is now abandoned by its writer
-bool
-Transients::abandonedAt(const sfileno index) const
+Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFreed) const
 {
     assert(map);
-    return map->readableEntry(index).waitingToBeFreed;
+    assert(entry.hasTransients());
+    const auto idx = entry.mem_obj->xitTable.index;
+    const auto &anchor = isWriter(entry) ?
+                         map->writeableEntry(idx) : map->readableEntry(idx);
+    aborted = anchor.writerHalted;
+    waitingToBeFreed = anchor.waitingToBeFreed;
 }
 
 void
 Transients::completeWriting(const StoreEntry &e)
 {
-    if (e.mem_obj && e.mem_obj->xitTable.index >= 0) {
-        assert(e.mem_obj->xitTable.io == MemObject::ioWriting);
-        // there will be no more updates from us after this, so we must prevent
-        // future readers from joining
-        map->freeEntry(e.mem_obj->xitTable.index); // just marks the locked entry
-        map->closeForWriting(e.mem_obj->xitTable.index);
-        e.mem_obj->xitTable.index = -1;
-        e.mem_obj->xitTable.io = MemObject::ioDone;
-    }
+    assert(e.hasTransients());
+    assert(isWriter(e));
+    map->closeForWriting(e.mem_obj->xitTable.index, true);
+    e.mem_obj->xitTable.io = Store::ioReading;
 }
 
 int
 Transients::readers(const StoreEntry &e) const
 {
-    if (e.mem_obj && e.mem_obj->xitTable.index >= 0) {
+    if (e.hasTransients()) {
         assert(map);
         return map->peekAtEntry(e.mem_obj->xitTable.index).lock.readers;
     }
@@ -334,32 +270,46 @@ Transients::readers(const StoreEntry &e) const
 }
 
 void
-Transients::markForUnlink(StoreEntry &e)
+Transients::evictCached(StoreEntry &e)
 {
-    unlink(e);
-}
-
-void
-Transients::unlink(StoreEntry &e)
-{
-    if (e.mem_obj && e.mem_obj->xitTable.io == MemObject::ioWriting)
-        abandon(e);
-}
-
-void
-Transients::disconnect(MemObject &mem_obj)
-{
-    if (mem_obj.xitTable.index >= 0) {
-        assert(map);
-        if (mem_obj.xitTable.io == MemObject::ioWriting) {
-            map->abortWriting(mem_obj.xitTable.index);
-        } else {
-            assert(mem_obj.xitTable.io == MemObject::ioReading);
-            map->closeForReading(mem_obj.xitTable.index);
+    debugs(20, 5, e);
+    if (e.hasTransients()) {
+        const auto index = e.mem_obj->xitTable.index;
+        if (map->freeEntry(index)) {
+            // Delay syncCollapsed(index) which may end `e` wait for updates.
+            // Calling it directly/here creates complex reentrant call chains.
+            CollapsedForwarding::Broadcast(e, true);
         }
-        locals->at(mem_obj.xitTable.index) = NULL;
-        mem_obj.xitTable.index = -1;
-        mem_obj.xitTable.io = MemObject::ioDone;
+    } // else nothing to do because e must be private
+}
+
+void
+Transients::evictIfFound(const cache_key *key)
+{
+    if (!map)
+        return;
+
+    const sfileno index = map->fileNoByKey(key);
+    if (map->freeEntry(index))
+        CollapsedForwarding::Broadcast(index, true);
+}
+
+void
+Transients::disconnect(StoreEntry &entry)
+{
+    debugs(20, 5, entry);
+    if (entry.hasTransients()) {
+        auto &xitTable = entry.mem_obj->xitTable;
+        assert(map);
+        if (isWriter(entry)) {
+            map->abortWriting(xitTable.index);
+        } else {
+            assert(isReader(entry));
+            map->closeForReading(xitTable.index);
+        }
+        locals->at(xitTable.index) = nullptr;
+        xitTable.index = -1;
+        xitTable.io = Store::ioDone;
     }
 }
 
@@ -374,12 +324,30 @@ Transients::EntryLimit()
     return Config.collapsed_forwarding_shared_entries_limit;
 }
 
+bool
+Transients::markedForDeletion(const cache_key *key) const
+{
+    assert(map);
+    return map->markedForDeletion(key);
+}
+
+bool
+Transients::isReader(const StoreEntry &e) const
+{
+    return e.mem_obj && e.mem_obj->xitTable.io == Store::ioReading;
+}
+
+bool
+Transients::isWriter(const StoreEntry &e) const
+{
+    return e.mem_obj && e.mem_obj->xitTable.io == Store::ioWriting;
+}
+
 /// initializes shared memory segment used by Transients
 class TransientsRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    TransientsRr(): mapOwner(NULL), extrasOwner(NULL) {}
     virtual void useConfig();
     virtual ~TransientsRr();
 
@@ -387,8 +355,7 @@ protected:
     virtual void create();
 
 private:
-    TransientsMap::Owner *mapOwner;
-    Ipc::Mem::Owner<TransientsMapExtras> *extrasOwner;
+    TransientsMap::Owner *mapOwner = nullptr;
 };
 
 RunnerRegistrationEntry(TransientsRr);
@@ -412,13 +379,10 @@ TransientsRr::create()
 
     Must(!mapOwner);
     mapOwner = TransientsMap::Init(MapLabel, entryLimit);
-    Must(!extrasOwner);
-    extrasOwner = shm_new(TransientsMapExtras)(ExtrasLabel, entryLimit);
 }
 
 TransientsRr::~TransientsRr()
 {
-    delete extrasOwner;
     delete mapOwner;
 }
 

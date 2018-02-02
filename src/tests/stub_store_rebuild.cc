@@ -19,7 +19,6 @@
 #include "tests/STUB.h"
 
 void storeRebuildProgress(int sd_index, int total, int sofar) STUB
-bool storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key, StoreRebuildData &counts) STUB_RETVAL(false)
 bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, StoreRebuildData &, uint64_t) STUB_RETVAL(false)
 
 void storeRebuildComplete(StoreRebuildData *)

@@ -19,7 +19,6 @@ MemStore::~MemStore() STUB
 bool MemStore::keepInLocalMemory(const StoreEntry &) const STUB_RETVAL(false)
 void MemStore::write(StoreEntry &e) STUB
 void MemStore::completeWriting(StoreEntry &e) STUB
-void MemStore::unlink(StoreEntry &e) STUB
 void MemStore::disconnect(StoreEntry &e) STUB
 void MemStore::reference(StoreEntry &) STUB
 void MemStore::updateHeaders(StoreEntry *) STUB
@@ -35,7 +34,8 @@ uint64_t MemStore::currentSize() const STUB_RETVAL(0)
 uint64_t MemStore::currentCount() const STUB_RETVAL(0)
 int64_t MemStore::maxObjectSize() const STUB_RETVAL(0)
 bool MemStore::dereference(StoreEntry &) STUB_RETVAL(false)
-void MemStore::markForUnlink(StoreEntry&) STUB
-bool MemStore::anchorCollapsed(StoreEntry&, bool&) STUB_RETVAL(false)
-bool MemStore::updateCollapsed(StoreEntry&) STUB_RETVAL(false)
+void MemStore::evictCached(StoreEntry&) STUB
+void MemStore::evictIfFound(const cache_key *) STUB
+bool MemStore::anchorToCache(StoreEntry&, bool&) STUB_RETVAL(false)
+bool MemStore::updateAnchored(StoreEntry&) STUB_RETVAL(false)
 

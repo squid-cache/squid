@@ -108,7 +108,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
          * for example, the request to this neighbor fails.
          */
         if (_peer->options.proxy_only)
-            entry->releaseRequest();
+            entry->releaseRequest(true);
 
 #if USE_DELAY_POOLS
         entry->setNoDelay(_peer->options.no_delay);
@@ -252,7 +252,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 #if USE_HTCP
         neighborsHtcpClear(e, NULL, e->mem_obj->request, e->mem_obj->method, HTCP_CLR_INVALIDATION);
 #endif
-        pe->release();
+        pe->release(true);
     }
 
     /** \par
@@ -269,7 +269,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
 #if USE_HTCP
         neighborsHtcpClear(e, NULL, e->mem_obj->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_INVALIDATION);
 #endif
-        pe->release();
+        pe->release(true);
     }
 }
 
@@ -334,7 +334,7 @@ HttpStateData::reusableReply(HttpStateData::ReuseDecision &decision)
 #endif
 
     if (EBIT_TEST(entry->flags, RELEASE_REQUEST))
-        return decision.make(ReuseDecision::reuseNot, "the entry has been released");
+        return decision.make(ReuseDecision::doNotCacheButShare, "the entry has been released");
 
     // RFC 7234 section 4: a cache MUST use the most recent response
     // (as determined by the Date header field)
@@ -905,8 +905,11 @@ HttpStateData::haveParsedReplyHeaders()
     /* Check if object is cacheable or not based on reply code */
     debugs(11, 3, "HTTP CODE: " << statusCode);
 
-    if (const StoreEntry *oldEntry = findPreviouslyCachedEntry(entry))
+    if (StoreEntry *oldEntry = findPreviouslyCachedEntry(entry)) {
+        oldEntry->lock("HttpStateData::haveParsedReplyHeaders");
         sawDateGoBack = rep->olderThan(oldEntry->getReply());
+        oldEntry->unlock("HttpStateData::haveParsedReplyHeaders");
+    }
 
     if (neighbors_do_private_keys && !sawDateGoBack)
         httpMaybeRemovePublic(entry, rep->sline.status());
@@ -954,11 +957,17 @@ HttpStateData::haveParsedReplyHeaders()
             break;
 
         case ReuseDecision::cachePositively:
-            entry->makePublic();
+            if (!entry->makePublic()) {
+                decision.make(ReuseDecision::doNotCacheButShare, "public key creation error");
+                entry->makePrivate(true);
+            }
             break;
 
         case ReuseDecision::cacheNegatively:
-            entry->cacheNegatively();
+            if (!entry->cacheNegatively()) {
+                decision.make(ReuseDecision::doNotCacheButShare, "public key creation error");
+                entry->makePrivate(true);
+            }
             break;
 
         case ReuseDecision::doNotCacheButShare:

@@ -158,7 +158,8 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
     entry->timestampsSet();
     entry->flush();
 
-    entry->makePublic();
+    if (!entry->makePublic())
+        entry->makePrivate(true);
 
     fwd->complete();
     debugs(75, 3, "whoisReadReply: Done: " << entry->url());

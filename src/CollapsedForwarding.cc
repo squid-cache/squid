@@ -53,27 +53,34 @@ CollapsedForwarding::Init()
 }
 
 void
-CollapsedForwarding::Broadcast(const StoreEntry &e)
+CollapsedForwarding::Broadcast(const StoreEntry &e, const bool includingThisWorker)
 {
-    if (!queue.get())
-        return;
-
-    if (!e.mem_obj || e.mem_obj->xitTable.index < 0 ||
+    if (!e.hasTransients() ||
             !Store::Root().transientReaders(e)) {
         debugs(17, 7, "nobody reads " << e);
         return;
     }
 
+    debugs(17, 5, e);
+    Broadcast(e.mem_obj->xitTable.index, includingThisWorker);
+}
+
+void
+CollapsedForwarding::Broadcast(const sfileno index, const bool includingThisWorker)
+{
+    if (!queue.get())
+        return;
+
     CollapsedForwardingMsg msg;
     msg.sender = KidIdentifier;
-    msg.xitIndex = e.mem_obj->xitTable.index;
+    msg.xitIndex = index;
 
-    debugs(17, 5, e << " to " << Config.workers << "-1 workers");
+    debugs(17, 7, "entry " << index << " to " << Config.workers << (includingThisWorker ? "" : "-1") << " workers");
 
     // TODO: send only to workers who are waiting for data
     for (int workerId = 1; workerId <= Config.workers; ++workerId) {
         try {
-            if (workerId != KidIdentifier && queue->push(workerId, msg))
+            if ((workerId != KidIdentifier || includingThisWorker) && queue->push(workerId, msg))
                 Notify(workerId);
         } catch (const Queue::Full &) {
             debugs(17, DBG_IMPORTANT, "ERROR: Collapsed forwarding " <<

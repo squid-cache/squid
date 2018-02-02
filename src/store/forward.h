@@ -36,12 +36,16 @@ class Transients;
 
 namespace Store
 {
+/// cache "I/O" direction and status
+enum IoStatus { ioUndecided, ioWriting, ioReading, ioDone };
+
 class Storage;
 class Controller;
 class Controlled;
 class Disks;
 class Disk;
 class DiskConfig;
+class EntryGuard;
 
 typedef ::StoreEntry Entry;
 typedef ::MemStore Memory;
