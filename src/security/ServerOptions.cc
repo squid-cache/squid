@@ -196,8 +196,9 @@ Security::ServerOptions::initServerContexts(AnyP::PortCfg &port)
 
     if (generateHostCertificates) {
         createSigningContexts(port);
+    }
 
-    } else if (!createStaticServerContext(port)) {
+    if (!certs.empty() && !createStaticServerContext(port)) {
         char buf[128];
         fatalf("%s_port %s initialization error", portType, port.s.toUrl(buf, sizeof(buf)));
     }
