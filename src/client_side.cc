@@ -3058,7 +3058,7 @@ void
 ConnStateData::getSslContextDone(Security::ContextPointer &ctx)
 {
     if (port->secure.generateHostCertificates && !ctx) {
-        debugs(33, 2, "Failed to generate TLS cotnext for " << sslConnectHostOrIp);
+        debugs(33, 2, "Failed to generate TLS context for " << sslConnectHostOrIp);
     }
 
     // If generated ssl context = NULL, try to use static ssl context.
