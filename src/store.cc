@@ -2142,7 +2142,6 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
             if (e.shareableWhenPrivate)
                 os << 'H';
         }
-        if (EBIT_TEST(e.flags, KEY_PRIVATE)) os << 'I';
         if (EBIT_TEST(e.flags, ENTRY_FWD_HDR_WAIT)) os << 'W';
         if (EBIT_TEST(e.flags, ENTRY_NEGCACHED)) os << 'N';
         if (EBIT_TEST(e.flags, ENTRY_VALIDATED)) os << 'V';
