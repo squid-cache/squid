@@ -23,6 +23,9 @@ public:
     /// load the contents of certFile and privateKeyFile into memory cert, pkey and chain
     void loadFromFiles(const AnyP::PortCfg &, const char *portType);
 
+    /// detect whether the cert stored is self-signed
+    bool certSelfSigned() const;
+
 public:
     SBuf certFile;       ///< path of file containing PEM format X.509 certificate
     SBuf privateKeyFile; ///< path of file containing private key in PEM format
