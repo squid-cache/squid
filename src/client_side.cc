@@ -2625,7 +2625,7 @@ clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
 
-    int ret = tlsAttemptHandshake(conn, clientNegotiateSSL);
+    const int ret = tlsAttemptHandshake(conn, clientNegotiateSSL);
     if (ret <= 0) {
         if (ret < 0) // An error
             conn->clientConnection->close();
