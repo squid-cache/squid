@@ -202,6 +202,9 @@ Security::ServerOptions::initServerContexts(AnyP::PortCfg &port)
         char buf[128];
         fatalf("%s_port %s initialization error", portType, port.s.toUrl(buf, sizeof(buf)));
     }
+
+    // if generate-host-certificates=off and certs is empty, no contexts may be created.
+    // features depending on contexts do their own checks and error messages later.
 }
 
 bool
