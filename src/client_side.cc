@@ -2741,7 +2741,7 @@ ConnStateData::buildSslCertGenerationParams(Security::CertificateProperties &cer
                 continue;
 
             if (ca->aclList && checklist.fastCheck(ca->aclList).allowed()) {
-                const char *alg = Security::certAdaptAlgorithm(ca->alg);
+                const char *alg = Security::certAdaptAlgorithmName(ca->alg);
                 const char *param = ca->param;
 
                 // For parameterless CN adaptation, use hostname from the

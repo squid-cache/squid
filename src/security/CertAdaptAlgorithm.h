@@ -23,13 +23,11 @@ typedef enum {
 /// Short names for certificate adaptation algorithms
 extern const char *CertAdaptAlgorithm_str[];
 
-/// Return the short name of the adaptation algorithm "alg"
-inline const char *certAdaptAlgorithm(int alg)
+/// \returns the short name of the adaptation algorithm "alg"
+inline const char *certAdaptAlgorithmName(const int alg)
 {
-    if (alg >=0 && alg < Security::algSetEnd)
-        return Security::CertAdaptAlgorithm_str[alg];
-
-    return nullptr;
+    assert(0 <= alg && alg < Security::algSetEnd);
+    return Security::CertAdaptAlgorithm_str[alg];
 }
 
 /// Return the id of the adaptation algorithm "alg"

@@ -4582,7 +4582,7 @@ static void dump_sslproxy_cert_adapt(StoreEntry *entry, const char *name, sslpro
 {
     for (sslproxy_cert_adapt *ca = cert_adapt; ca != NULL; ca = ca->next) {
         storeAppendPrintf(entry, "%s ", name);
-        storeAppendPrintf(entry, "%s{%s} ", Security::certAdaptAlgorithm(ca->alg), ca->param);
+        storeAppendPrintf(entry, "%s{%s} ", Security::certAdaptAlgorithmName(ca->alg), ca->param);
         if (ca->aclList)
             dump_acl_list(entry, ca->aclList);
         storeAppendPrintf(entry, "\n");
