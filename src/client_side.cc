@@ -2544,14 +2544,14 @@ httpsCreate(const Comm::ConnectionPointer &conn, const Security::ContextPointer 
 
 /**
  *
- * \retval true on success
- * \retval false when needs more data
- * \retval false when an error occurred (and closes the TCP connection)
+ * \retval 1 on success
+ * \retval 0 when needs more data
+ * \retval -1 on error
  */
-static bool
+static int
 tlsAttemptHandshake(ConnStateData *conn, PF *callback)
 {
-    // TODO: maybe throw instead of just closing the TCP connection.
+    // TODO: maybe throw instead of returning -1
     // see https://github.com/squid-cache/squid/pull/81#discussion_r153053278
     int fd = conn->clientConnection->fd;
     auto session = fd_table[fd].ssl.get();
@@ -2561,7 +2561,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
 #if USE_OPENSSL
     const auto ret = SSL_accept(session);
     if (ret > 0)
-        return true;
+        return 1;
 
     const int xerrno = errno;
     const auto ssl_error = SSL_get_error(session, ret);
@@ -2570,11 +2570,11 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
 
     case SSL_ERROR_WANT_READ:
         Comm::SetSelect(fd, COMM_SELECT_READ, callback, (callback ? conn : nullptr), 0);
-        return false;
+        return 0;
 
     case SSL_ERROR_WANT_WRITE:
         Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, (callback ? conn : nullptr), 0);
-        return false;
+        return 0;
 
     case SSL_ERROR_SYSCALL:
         if (ret == 0) {
@@ -2599,7 +2599,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
 
     const auto x = gnutls_handshake(session);
     if (x == GNUTLS_E_SUCCESS)
-        return true;
+        return 1;
 
     if (gnutls_error_is_fatal(x)) {
         debugs(83, 2, "Error negotiating TLS on " << conn->clientConnection << ": Aborted by client: " << Security::ErrorString(x));
@@ -2607,7 +2607,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
     } else if (x == GNUTLS_E_INTERRUPTED || x == GNUTLS_E_AGAIN) {
         const auto ioAction = (gnutls_record_get_direction(session)==0 ? COMM_SELECT_READ : COMM_SELECT_WRITE);
         Comm::SetSelect(fd, ioAction, callback, (callback ? conn : nullptr), 0);
-        return false;
+        return 0;
     }
 
 #else
@@ -2616,8 +2616,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
     fatal("FATAL: HTTPS not supported by this Squid.");
 #endif
 
-    conn->clientConnection->close();
-    return false;
+    return -1;
 }
 
 /** negotiate an SSL connection */
@@ -2626,8 +2625,12 @@ clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
 
-    if (!tlsAttemptHandshake(conn, clientNegotiateSSL))
+    const int ret = tlsAttemptHandshake(conn, clientNegotiateSSL);
+    if (ret <= 0) {
+        if (ret < 0) // An error
+            conn->clientConnection->close();
         return;
+    }
 
     Security::SessionPointer session(fd_table[fd].ssl);
 
@@ -3058,7 +3061,7 @@ void
 ConnStateData::getSslContextDone(Security::ContextPointer &ctx)
 {
     if (port->secure.generateHostCertificates && !ctx) {
-        debugs(33, 2, "Failed to generate TLS cotnext for " << sslConnectHostOrIp);
+        debugs(33, 2, "Failed to generate TLS context for " << sslConnectHostOrIp);
     }
 
     // If generated ssl context = NULL, try to use static ssl context.
@@ -3304,10 +3307,10 @@ ConnStateData::startPeekAndSplice()
     bio->hold(true);
 
     // Here squid should have all of the client hello message so the
-    // tlsAttemptHandshake() should return false;
+    // tlsAttemptHandshake() should return 0.
     // This block exist only to force openSSL parse client hello and detect
     // ERR_SECURE_ACCEPT_FAIL error, which should be checked and splice if required.
-    if (!tlsAttemptHandshake(this, nullptr)) {
+    if (tlsAttemptHandshake(this, nullptr) < 0) {
         debugs(83, 2, "TLS handshake failed.");
         HttpRequest::Pointer request(http ? http->request : nullptr);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_SECURE_ACCEPT_FAIL))

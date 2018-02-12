@@ -21,6 +21,7 @@ bool
 Security::KeyData::loadX509CertFromFile()
 {
     debugs(83, DBG_IMPORTANT, "Using certificate in " << certFile);
+    cert.reset(); // paranoid: ensure cert is unset
 
 #if USE_OPENSSL
     const char *certFilename = certFile.c_str();
@@ -32,10 +33,7 @@ Security::KeyData::loadX509CertFromFile()
     }
 
     if (X509 *certificate = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr)) {
-        if (X509_check_issued(certificate, certificate) == X509_V_OK)
-            debugs(83, 5, "Certificate is self-signed, will not be chained");
-        else
-            cert.resetWithoutLocking(certificate);
+        cert.resetWithoutLocking(certificate);
     }
 
 #elif USE_GNUTLS
@@ -67,8 +65,6 @@ Security::KeyData::loadX509CertFromFile()
                    debugs(83, 5, "gnutls_x509_crt_deinit cert=" << (void*)p);
                    gnutls_x509_crt_deinit(p);
                });
-    } else {
-        cert.reset(); // paranoid: ensure cert is unset
     }
 
 #else
