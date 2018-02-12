@@ -2270,8 +2270,17 @@ DOC_START
 			generated certificate is self-signed lifetime is three
 			years.
 
-			This option is enabled by default when Squid is built
-			with OpenSSL. Set it to 'off' to disable.
+			Set it to 'off' to disable certificate generation and
+			use only a static certificate from tls-cert=.
+
+			For backward compatibility with older configurations
+			when Squid is built with OpenSSL this option defaults
+			to enabled and the first tls-cert= is expected to
+			contain a CA certificate capable of signing the
+			automatically generated certificates.
+
+			NOTE: certificate generation is currently only
+			      performed when ssl-bump is configured.
 
 	   cipher=	Colon separated list of supported ciphers.
 			NOTE: some ciphers such as EDH ciphers depend on
