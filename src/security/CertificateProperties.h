@@ -37,7 +37,7 @@ public:
     DigestAlgorithm signHash = nullptr;                     ///< The signing hash to use
 
 private:
-    CertificateProperties(CertificateProperties &) = delete;
+    CertificateProperties(CertificateProperties const &) = delete;
     CertificateProperties &operator =(CertificateProperties const &) = delete;
 };
 
