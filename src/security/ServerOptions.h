@@ -41,7 +41,8 @@ public:
     virtual Security::ContextPointer createBlankContext() const;
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
-    /// initialize all server contexts as-needed
+    /// initialize all server contexts as-needed and load PEM files.
+    /// if none can be created this may do nothing.
     void initServerContexts(AnyP::PortCfg &);
 
     /// update the given TLS security context using squid.conf settings
