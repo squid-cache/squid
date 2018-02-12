@@ -248,7 +248,7 @@ void Ssl::CrtdMessage::composeRequest(Security::CertificateProperties const &cer
     if (certProperties.setValidBefore)
         body +=  "\n" + Ssl::CrtdMessage::param_SetValidBefore + "=on";
     if (certProperties.signAlgorithm != Security::algSignEnd)
-        body +=  "\n" +  Ssl::CrtdMessage::param_Sign + "=" +  certSignAlgorithm(certProperties.signAlgorithm);
+        body +=  "\n" +  Ssl::CrtdMessage::param_Sign + "=" +  certSignAlgorithmName(certProperties.signAlgorithm);
     if (certProperties.signHash)
         body +=  "\n" + Ssl::CrtdMessage::param_SignHash + "=" + Security::digestName(certProperties.signHash);
 

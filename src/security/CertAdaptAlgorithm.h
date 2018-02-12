@@ -26,7 +26,8 @@ extern const char *CertAdaptAlgorithm_str[];
 /// \returns the short name of the adaptation algorithm "alg"
 inline const char *certAdaptAlgorithmName(const int alg)
 {
-    assert(0 <= alg && alg < Security::algSetEnd);
+    assert(alg >= 0);
+    assert(alg < Security::algSetEnd);
     return Security::CertAdaptAlgorithm_str[alg];
 }
 
@@ -34,9 +35,10 @@ inline const char *certAdaptAlgorithmName(const int alg)
 inline CertAdaptAlgorithm
 certAdaptAlgorithmId(const char *alg)
 {
-    for (int i = 0; i < algSetEnd && CertAdaptAlgorithm_str[i]; i++)
+    for (int i = 0; i < algSetEnd; i++) {
         if (strcmp(CertAdaptAlgorithm_str[i], alg) == 0)
             return static_cast<CertAdaptAlgorithm>(i);
+    }
 
     return algSetEnd;
 }

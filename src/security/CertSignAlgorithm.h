@@ -24,21 +24,21 @@ extern const char *CertSignAlgorithm_str[];
 
 /// \returns the short name of the signing algorithm sg
 inline const char *
-certSignAlgorithm(int sg)
+certSignAlgorithmName(const int sg)
 {
-    if (sg >= 0 && sg < algSignEnd)
-        return CertSignAlgorithm_str[sg];
-
-    return nullptr;
+    assert(sg >= 0);
+    assert(sg < algSignEnd);
+    return CertSignAlgorithm_str[sg];
 }
 
 /// Return the id of the signing algorithm "sg"
 inline CertSignAlgorithm
 certSignAlgorithmId(const char *sg)
 {
-    for (int i = 0; i < algSignEnd && CertSignAlgorithm_str[i]; i++)
+    for (int i = 0; i < algSignEnd; i++) {
         if (strcmp(CertSignAlgorithm_str[i], sg) == 0)
             return static_cast<CertSignAlgorithm>(i);
+    }
 
     return algSignEnd;
 }

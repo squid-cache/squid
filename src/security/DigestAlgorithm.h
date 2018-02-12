@@ -17,7 +17,7 @@ typedef EVP_MD const * DigestAlgorithm;
 #elif USE_GNUTLS
 typedef gnutls_digest_algorithm_t DigestAlgorithm;
 #else
-typedef void * DigestAlgorithm;
+typedef std::shared_ptr<void> DigestAlgorithm;
 #endif
 
 /// retrieve the name of a Digest algorithm

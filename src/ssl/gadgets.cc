@@ -234,7 +234,7 @@ Ssl::OnDiskCertificateDbKey(const Security::CertificateProperties &properties)
 
     if (properties.signAlgorithm != Security::algSignEnd) {
         certKey.append("+Sign=", 6);
-        certKey.append(certSignAlgorithm(properties.signAlgorithm));
+        certKey.append(certSignAlgorithmName(properties.signAlgorithm));
     }
 
     if (properties.signHash != NULL) {

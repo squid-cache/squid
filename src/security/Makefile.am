@@ -10,10 +10,10 @@ include $(top_srcdir)/src/TestHeaders.am
 
 SUBDIRS= . cert_generators cert_validators
 
-noinst_LTLIBRARIES = libsecurity.la libsecurityutil.la
+noinst_LTLIBRARIES = libsecurity.la libsecuritybase.la
 
-# Pieces linked to security helpers
-libsecurityutil_la_SOURCES= \
+# Pieces linked to both Squid and security helpers
+libsecuritybase_la_SOURCES= \
 	CertAdaptAlgorithm.cc \
 	CertAdaptAlgorithm.h \
 	CertificateProperties.h \
@@ -46,7 +46,7 @@ libsecurity_la_SOURCES= \
 	Session.cc \
 	Session.h
 
-libsecurity_la_LIBADD= libsecurityutil.la
+libsecurity_la_LIBADD= libsecuritybase.la
 
 CertAdaptAlgorithm.cc: CertAdaptAlgorithm.h $(top_srcdir)/src/mk-string-arrays.awk
 	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk <$(srcdir)/CertAdaptAlgorithm.h | sed -e 's%algSet%set%' >$@) || ($(RM) -f $@ && exit 1)

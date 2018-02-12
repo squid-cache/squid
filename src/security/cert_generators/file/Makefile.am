@@ -25,7 +25,7 @@ security_file_certgen_SOURCES = \
 
 security_file_certgen_LDADD = \
 	$(top_builddir)/src/ssl/libsslutil.la \
-	$(top_builddir)/src/security/libsecurityutil.la \
+	$(top_builddir)/src/security/libsecuritybase.la \
 	$(SSLLIB) \
 	$(COMPAT_LIB)
 

@@ -1204,7 +1204,7 @@ Ssl::InRamCertificateDbKey(const Security::CertificateProperties &certProperties
     key.append(certProperties.setCommonName ? '1' : '0');
     key.append(certProperties.setValidAfter ? '1' : '0');
     key.append(certProperties.setValidBefore ? '1' : '0');
-    key.append(certProperties.signAlgorithm != Security::algSignEnd ? certSignAlgorithm(certProperties.signAlgorithm) : "-");
+    key.append(certProperties.signAlgorithm != Security::algSignEnd ? certSignAlgorithmName(certProperties.signAlgorithm) : "-");
     key.append(certProperties.signHash ? Security::digestName(certProperties.signHash) : "-");
 
     if (certProperties.mimicCert) {
