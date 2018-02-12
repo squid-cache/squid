@@ -107,15 +107,21 @@ Security::ServerOptions::parse(const char *token)
         }
 
     } else if (strcmp(token, "generate-host-certificates") == 0) {
+        debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Option '" << token << "' missing a value.");
         generateHostCertificates = true;
     } else if (strcmp(token, "generate-host-certificates=on") == 0) {
         generateHostCertificates = true;
+        debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Option '" << token << "' deprecated. A file with CA certificate is now expected.");
     } else if (strcmp(token, "generate-host-certificates=off") == 0) {
         generateHostCertificates = false;
     } else if (strncmp(token, "generate-host-certificates=", 27) == 0) {
         generateHostCertificates = true;
         // file given must contain both cert and private key in PEM format
         signingCa.certFile = signingCa.privateKeyFile = SBuf(token+27);
+
+        if (signingCa.certFile.isEmpty()) {
+            debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Option '" << token << "' missing a value");
+        }
 
     } else if (strncmp(token, "context=", 8) == 0) {
 #if USE_OPENSSL
