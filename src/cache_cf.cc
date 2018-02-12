@@ -4526,13 +4526,14 @@ static void free_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
     char *al;
-    sslproxy_cert_adapt *ca = (sslproxy_cert_adapt *) xcalloc(1, sizeof(sslproxy_cert_adapt));
     if ((al = ConfigParser::NextToken()) == NULL) {
-        xfree(ca);
         self_destruct();
         return;
     }
 
+    const auto algId = Security::certAdaptAlgorithmId(al); // throws on error
+
+    sslproxy_cert_adapt *ca = static_cast<sslproxy_cert_adapt *>(xcalloc(1, sizeof(sslproxy_cert_adapt)));
     const char *param;
     if ( char *s = strchr(al, '{')) {
         *s = '\0'; // terminate the al string
@@ -4548,7 +4549,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
     } else
         param = NULL;
 
-    ca->alg = Security::certAdaptAlgorithmId(al);
+    ca->alg = algId;
     if (ca->alg == Security::algSetCommonName) {
         if (param) {
             if (strlen(param) > 64) {
@@ -4560,14 +4561,8 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
             ca->param = xstrdup(param);
         }
 
-    } else if (ca->alg != Security::algSetEnd) {
-        ca->param = xstrdup("on");
-
     } else {
-        debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: unknown cert adaptation algorithm: " << al);
-        xfree(ca);
-        self_destruct();
-        return;
+        ca->param = xstrdup("on");
     }
 
     aclParseAclList(LegacyParser, &ca->aclList, al);
@@ -4606,20 +4601,15 @@ static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 {
     char *al;
-    sslproxy_cert_sign *cs = (sslproxy_cert_sign *) xcalloc(1, sizeof(sslproxy_cert_sign));
     if ((al = ConfigParser::NextToken()) == NULL) {
-        xfree(cs);
         self_destruct();
         return;
     }
 
-    cs->alg = Security::certSignAlgorithmId(al);
-    if (cs->alg == Security::algSignEnd) {
-        debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_sign: unknown cert signing algorithm: " << al);
-        xfree(cs);
-        self_destruct();
-        return;
-    }
+    const auto algName = Security::certSignAlgorithmId(al); // throws on errors
+
+    sslproxy_cert_sign *cs = static_cast<sslproxy_cert_sign *>(xcalloc(1, sizeof(sslproxy_cert_sign)));
+    cs->alg = algName;
 
     aclParseAclList(LegacyParser, &cs->aclList, al);
 

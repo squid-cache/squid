@@ -9,6 +9,9 @@
 #ifndef SQUID_SRC_SECURITY_CERTSIGNALGORITHM_H
 #define SQUID_SRC_SECURITY_CERTSIGNALGORITHM_H
 
+#include <stdexcept>
+#include <string>
+
 namespace Security
 {
 
@@ -40,7 +43,9 @@ certSignAlgorithmId(const char *sg)
             return static_cast<CertSignAlgorithm>(i);
     }
 
-    return algSignEnd;
+    std::string msg("unknown cert signing algorithm: ");
+    msg.append(sg);
+    throw std::runtime_error(msg);
 }
 
 } // namespace Security

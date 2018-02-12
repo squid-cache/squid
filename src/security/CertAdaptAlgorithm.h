@@ -9,6 +9,9 @@
 #ifndef SQUID_SRC_SECURITY_CERTADAPTALGORITHM_H
 #define SQUID_SRC_SECURITY_CERTADAPTALGORITHM_H
 
+#include <stdexcept>
+#include <string>
+
 namespace Security
 {
 
@@ -40,7 +43,9 @@ certAdaptAlgorithmId(const char *alg)
             return static_cast<CertAdaptAlgorithm>(i);
     }
 
-    return algSetEnd;
+    std::string msg("unknown cert adaptation algorithm: ");
+    msg.append(alg);
+    throw std::runtime_error(msg);
 }
 
 } // namespace Security
