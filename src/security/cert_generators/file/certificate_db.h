@@ -49,9 +49,6 @@ private:
     const int lineNo; ///<  where the lock was needed
 };
 
-/// convenience macro to pass source code location to Locker and others
-#define Here __FILE__, __LINE__
-
 /**
  * Database class for storing SSL certificates and their private keys.
  * A database consist by:
