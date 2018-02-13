@@ -94,3 +94,4 @@ sslproxy_ssl_bump_peeked acl
 sslproxy_cert_sign	acl
 sslproxy_cert_adapt	acl
 ftp_epsv                acl
+collapsed_forwarding_access acl

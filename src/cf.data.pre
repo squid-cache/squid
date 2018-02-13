@@ -6581,6 +6581,29 @@ DOC_START
        disk or memory caches and for Vary-controlled cached objects.
 DOC_END
 
+NAME: collapsed_forwarding_access
+TYPE: collapsed_forwarding_access
+DEFAULT: none
+DEFAULT_DOC: By default, this directive is unused and has no effect.
+LOC: Config.accessList.collapsedForwardingAccess
+DOC_START
+	This directive allows or denies collapsed forwarding of matching
+	requests(including collapsed revalidation).
+	The syntax for this directive is:
+
+	collapsed_forwarding_access allow|deny [!]aclname ...
+
+	This directive cannot force collapsing: it is checked only
+	 after all other collapsing prerequisites (including the
+	'collapsed_forwarding' option) are satisfied.
+
+	All collapsed_forwarding_access options are checked in the
+	order they appear in this configuration file. The first rule
+	with a matching ACL wins.
+
+	Only fast ACLs are supported.
+DOC_END
+
 NAME: collapsed_forwarding_shared_entries_limit
 COMMENT: (number of entries)
 TYPE: int64_t

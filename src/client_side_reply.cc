@@ -297,9 +297,9 @@ clientReplyContext::processExpired()
     saveState();
 
     // TODO: support collapsed revalidation for Vary-controlled entries
-    const bool collapsingAllowed = Config.onoff.collapsed_forwarding &&
-                                   !Store::Root().smpAware() &&
-                                   http->request->vary_headers.isEmpty();
+    const bool collapsingAllowed = !Store::Root().smpAware() &&
+                                   http->request->vary_headers.isEmpty() &&
+                                   collapsingApplicable();
 
     StoreEntry *entry = nullptr;
     if (collapsingAllowed) {
@@ -2255,6 +2255,21 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     return;
 }
 
+// whether collapsed forwarding is on and allowed
+// for current transaction
+bool
+clientReplyContext::collapsingApplicable() const
+{
+    if (!Config.onoff.collapsed_forwarding)
+        return false;
+
+    if(!Config.accessList.collapsedForwardingAccess)
+        return true;
+
+    ACLFilledChecklist checklist(Config.accessList.collapsedForwardingAccess, http->request, NULL);
+    return checklist.fastCheck().allowed();
+}
+
 /* Using this breaks the client layering just a little!
  */
 void
@@ -2277,9 +2292,8 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
     // Make entry collapsable ASAP, to increase collapsing chances for others,
     // TODO: every must-revalidate and similar request MUST reach the origin,
     // but do we have to prohibit others from collapsing on that request?
-    if (Config.onoff.collapsed_forwarding && reqFlags.cachable &&
-            !reqFlags.needValidation &&
-            (m == Http::METHOD_GET || m == Http::METHOD_HEAD)) {
+    if (reqFlags.cachable && !reqFlags.needValidation &&
+            (m == Http::METHOD_GET || m == Http::METHOD_HEAD) && collapsingApplicable()) {
         // make the entry available for future requests now
         (void)Store::Root().allowCollapsing(e, reqFlags, m);
     }
