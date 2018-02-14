@@ -100,7 +100,6 @@ public:
 
 private:
     clientStreamNode *getNextNode() const;
-    bool collapsingApplicable() const;
     void makeThisHead();
     bool errorInStream(StoreIOBuffer const &result, size_t const &sizeToProcess)const ;
     void sendStreamError(StoreIOBuffer const &result);

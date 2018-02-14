@@ -6582,26 +6582,31 @@ DOC_START
 DOC_END
 
 NAME: collapsed_forwarding_access
-TYPE: collapsed_forwarding_access
+TYPE: acl_access
 DEFAULT: none
-DEFAULT_DOC: By default, this directive is unused and has no effect.
+DEFAULT_DOC: Requests may be collapsed if collapsed_forwarding is on.
 LOC: Config.accessList.collapsedForwardingAccess
 DOC_START
-	This directive allows or denies collapsed forwarding of matching
-	requests(including collapsed revalidation).
-	The syntax for this directive is:
+	Use this directive to fine-tune collapsed forwarding decisions for
+	individual requests, including internal revalidation transactions.
 
-	collapsed_forwarding_access allow|deny [!]aclname ...
+		collapsed_forwarding_access allow|deny [!]aclname ...
 
-	This directive cannot force collapsing: it is checked only
-	 after all other collapsing prerequisites (including the
-	'collapsed_forwarding' option) are satisfied.
+	Denied requests do not collapse on an in-progress transaction, and
+	no future transactions will collapse on the denied request.
 
-	All collapsed_forwarding_access options are checked in the
-	order they appear in this configuration file. The first rule
-	with a matching ACL wins.
+	An allowed request may collapse on an in-progress (previously
+	allowed) transaction, and future (allowed) transactions may collapse
+	on an allowed request. However, this directive cannot force
+	collapsing.
+
+	This directive is not checked if collapsed_forwarding is "off"
+	(which is the default). It has no effect unless other collapsing
+	preconditions are satisfied.
 
 	Only fast ACLs are supported.
+
+	See also: collapsed_forwarding.
 DOC_END
 
 NAME: collapsed_forwarding_shared_entries_limit

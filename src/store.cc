@@ -540,7 +540,17 @@ storeGetPublic(const char *uri, const HttpRequestMethod& method)
 StoreEntry *
 storeGetPublicByRequestMethod(HttpRequest * req, const HttpRequestMethod& method, const KeyScope keyScope)
 {
-    return Store::Root().find(storeKeyPublicByRequestMethod(req, method, keyScope));
+    StoreEntry *e = Store::Root().find(storeKeyPublicByRequestMethod(req, method, keyScope));
+    if (e) {
+        const mayCollapse = EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT) ||
+            Store::Root().smpAware() && (e->hasTransients() && (!e->hasMemStore() && !e->hasDisk()));
+        if (mayCollapse && !req->collapsingApplicable()) {
+            debugs(20, 3, "Collapsing prohibited for " << *e);
+            e->abandon("storeKeyPublicByRequestMethod");
+            return nullptr;
+        }
+    }
+    return e;
 }
 
 StoreEntry *

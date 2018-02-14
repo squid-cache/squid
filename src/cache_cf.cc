@@ -222,10 +222,6 @@ static void parse_ftp_epsv(acl_access **ftp_epsv);
 static void dump_ftp_epsv(StoreEntry *entry, const char *name, acl_access *ftp_epsv);
 static void free_ftp_epsv(acl_access **ftp_epsv);
 
-static void parse_collapsed_forwarding_access(acl_access **collapsed_forwarding_access);
-static void dump_collapsed_forwarding_access(StoreEntry *entry, const char *name, acl_access *collapsed_forwarding_access);
-static void free_collapsed_forwarding_access(acl_access **collapsed_forwarding_access);
-
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
 
@@ -4867,22 +4863,6 @@ static void free_ftp_epsv(acl_access **ftp_epsv)
 {
     free_acl_access(ftp_epsv);
     FtpEspvDeprecated = false;
-}
-
-static void parse_collapsed_forwarding_access(acl_access **collapsed_forwarding_access)
-{
-    aclParseAccessLine("collapsed_forwarding_access", LegacyParser, collapsed_forwarding_access);
-}
-
-static void free_collapsed_forwarding_access(acl_access **collapsed_forwarding_access)
-{
-    free_acl_access(collapsed_forwarding_access);
-}
-
-static void dump_collapsed_forwarding_access(StoreEntry *entry, const char *name, acl_access *collapsed_forwarding_access)
-{
-    if (collapsed_forwarding_access)
-        dump_SBufList(entry, collapsed_forwarding_access->treeDump(name, Acl::AllowOrDeny));
 }
 
 static void

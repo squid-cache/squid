@@ -93,6 +93,9 @@ public:
     /// associates the request with a from-client connection manager
     void manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntryPointer &al);
 
+    /// whether becoming a CF master or slave is not prohibited
+    bool collapsingApplicable();
+
 protected:
     void clean();
 
