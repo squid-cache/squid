@@ -6595,14 +6595,12 @@ DOC_START
 	Denied requests do not collapse on an in-progress transaction, and
 	no future transactions will collapse on the denied request.
 
-	An allowed request may collapse on an in-progress (previously
-	allowed) transaction, and future (allowed) transactions may collapse
-	on an allowed request. However, this directive cannot force
-	collapsing.
+	Allowed requests may collapse only on an in-progress, previously
+	allowed transaction.
 
 	This directive is not checked if collapsed_forwarding is "off"
 	(which is the default). It has no effect unless other collapsing
-	preconditions are satisfied.
+	preconditions are satisfied. So it cannot force collapsing.
 
 	Only fast ACLs are supported.
 

@@ -750,3 +750,4 @@ HttpRequest::collapsingApplicable()
     ACLFilledChecklist checklist(Config.accessList.collapsedForwardingAccess, this, nullptr);
     return checklist.fastCheck().allowed();
 }
+
