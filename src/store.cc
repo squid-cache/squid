@@ -496,10 +496,10 @@ StoreEntry::doAbandon(const char *context)
 }
 
 void
-StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * request, const HttpRequestMethod& method)
+StoreEntry::getPublicByRequestMethod(StoreClient *aClient, HttpRequest * request, const HttpRequestMethod& method, const bool consultCollapsing)
 {
     assert (aClient);
-    StoreEntry *result = storeGetPublicByRequestMethod( request, method);
+    StoreEntry *result = storeGetPublicByRequestMethod(request, method, consultCollapsing);
 
     if (!result)
         aClient->created (NullStoreEntry::getInstance());
@@ -508,10 +508,10 @@ StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * reque
 }
 
 void
-StoreEntry::getPublicByRequest (StoreClient *aClient, HttpRequest * request)
+StoreEntry::getPublicByRequest(StoreClient *aClient, HttpRequest * request, const bool consultCollapsing)
 {
     assert (aClient);
-    StoreEntry *result = storeGetPublicByRequest (request);
+    StoreEntry *result = storeGetPublicByRequest(request, consultCollapsing);
 
     if (!result)
         result = NullStoreEntry::getInstance();
@@ -538,15 +538,15 @@ storeGetPublic(const char *uri, const HttpRequestMethod& method)
 }
 
 StoreEntry *
-storeGetPublicByRequestMethod(HttpRequest * req, const HttpRequestMethod& method, const KeyScope keyScope)
+storeGetPublicByRequestMethod(HttpRequest * req, const HttpRequestMethod& method, const bool consultCollapsing, const KeyScope keyScope)
 {
     StoreEntry *e = Store::Root().find(storeKeyPublicByRequestMethod(req, method, keyScope));
-    if (e) {
-        const mayCollapse = EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT) ||
-                            Store::Root().smpAware() && (e->hasTransients() && (!e->hasMemStore() && !e->hasDisk()));
-        if (mayCollapse && !req->collapsingApplicable()) {
+    if (consultCollapsing && e) {
+        const auto foundCfInitiator = EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT) ||
+                            (e->hasTransients() && (!e->hasMemStore() && !e->hasDisk()));
+        if (foundCfInitiator && !req->collapsingApplicable()) {
             debugs(20, 3, "Collapsing prohibited for " << *e);
-            e->abandon("storeKeyPublicByRequestMethod");
+            e->abandon(__FUNCTION__);
             return nullptr;
         }
     }
@@ -554,13 +554,13 @@ storeGetPublicByRequestMethod(HttpRequest * req, const HttpRequestMethod& method
 }
 
 StoreEntry *
-storeGetPublicByRequest(HttpRequest * req, const KeyScope keyScope)
+storeGetPublicByRequest(HttpRequest * req, const bool consultCollapsing, const KeyScope keyScope)
 {
-    StoreEntry *e = storeGetPublicByRequestMethod(req, req->method, keyScope);
+    StoreEntry *e = storeGetPublicByRequestMethod(req, req->method, consultCollapsing, keyScope);
 
     if (e == NULL && req->method == Http::METHOD_HEAD)
         /* We can generate a HEAD reply from a cached GET object */
-        e = storeGetPublicByRequestMethod(req, Http::METHOD_GET, keyScope);
+        e = storeGetPublicByRequestMethod(req, Http::METHOD_GET, consultCollapsing, keyScope);
 
     return e;
 }

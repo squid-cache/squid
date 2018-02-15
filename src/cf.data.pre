@@ -6590,17 +6590,17 @@ DOC_START
 	Use this directive to fine-tune collapsed forwarding decisions for
 	individual requests, including internal revalidation transactions.
 
+	This directive cannot force collapsing: it has an effect only if
+	collapsed_forwarding is 'on' and all other collapsing preconditions
+	are satisfied.
+
 		collapsed_forwarding_access allow|deny [!]aclname ...
 
-	Denied requests do not collapse on an in-progress transaction, and
-	no future transactions will collapse on the denied request.
+	A denied request will not collapse, and future transactions will
+	not collapse on it (even if they are allowed to collapse).
 
-	Allowed requests may collapse only on an in-progress, previously
-	allowed transaction.
-
-	This directive is not checked if collapsed_forwarding is "off"
-	(which is the default). It has no effect unless other collapsing
-	preconditions are satisfied. So it cannot force collapsing.
+	An allowed request may collapse, or future transactions may collapse
+	on it (provided they are allowed to collapse).
 
 	Only fast ACLs are supported.
 

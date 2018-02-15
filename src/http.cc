@@ -168,7 +168,7 @@ static StoreEntry *
 findPreviouslyCachedEntry(StoreEntry *newEntry) {
     assert(newEntry->mem_obj);
     return newEntry->mem_obj->request ?
-           storeGetPublicByRequest(newEntry->mem_obj->request.getRaw()) :
+           storeGetPublicByRequest(newEntry->mem_obj->request.getRaw(), false) :
            storeGetPublic(newEntry->mem_obj->storeId(), newEntry->mem_obj->method);
 }
 
@@ -260,7 +260,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
      * changed.
      */
     if (e->mem_obj->request)
-        pe = storeGetPublicByRequestMethod(e->mem_obj->request.getRaw(), Http::METHOD_HEAD);
+        pe = storeGetPublicByRequestMethod(e->mem_obj->request.getRaw(), Http::METHOD_HEAD, false);
     else
         pe = storeGetPublic(e->mem_obj->storeId(), Http::METHOD_HEAD);
 

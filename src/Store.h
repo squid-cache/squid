@@ -217,8 +217,9 @@ public:
 
 public:
     static size_t inUseCount();
-    static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method);
-    static void getPublicByRequest(StoreClient * aClient, HttpRequest * request);
+    static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method,
+                                         const bool consultCollapsing = false);
+    static void getPublicByRequest(StoreClient * aClient, HttpRequest * request, const bool consultCollapsing = true);
     static void getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method);
 
     virtual bool isNull() {
@@ -415,10 +416,11 @@ void storeEntryReplaceObject(StoreEntry *, HttpReply *);
 StoreEntry *storeGetPublic(const char *uri, const HttpRequestMethod& method);
 
 /// \ingroup StoreAPI
-StoreEntry *storeGetPublicByRequest(HttpRequest * request, const KeyScope keyScope = ksDefault);
+StoreEntry *storeGetPublicByRequest(HttpRequest * request, const bool consultCollapsing, const KeyScope keyScope = ksDefault);
 
 /// \ingroup StoreAPI
-StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method, const KeyScope keyScope = ksDefault);
+StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method, const bool consultCollapsing,
+		const KeyScope keyScope = ksDefault);
 
 /// \ingroup StoreAPI
 /// Like storeCreatePureEntry(), but also locks the entry and sets entry key.

@@ -56,5 +56,6 @@ void HttpRequest::packFirstLineInto(Packable *, bool) const STUB
 bool HttpRequest::sanityCheckStartLine(const char *, const size_t, Http::StatusCode *) STUB_RETVAL(false)
 void HttpRequest::hdrCacheInit() STUB
 bool HttpRequest::inheritProperties(const Http::Message *) STUB_RETVAL(false)
+bool HttpRequest::collapsingApplicable() STUB
 NotePairs::Pointer HttpRequest::notes() STUB_RETVAL(NotePairs::Pointer())
 
