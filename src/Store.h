@@ -218,7 +218,7 @@ public:
 public:
     static size_t inUseCount();
     static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method,
-          ACLFilledChecklist *);
+                                         ACLFilledChecklist *);
     static void getPublicByRequest(StoreClient * aClient, HttpRequest * request, ACLFilledChecklist *);
     static void getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method, ACLFilledChecklist *);
 
