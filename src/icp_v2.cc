@@ -487,7 +487,8 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     state->rtt = rtt;
     state->src_rtt = src_rtt;
 
-    StoreEntry::getPublic(state, url, Http::METHOD_GET);
+    ACLFilledChecklist checkList(nullptr, icp_request, nullptr);
+    StoreEntry::getPublic(state, url, Http::METHOD_GET, &checkList);
 
     HTTPMSGUNLOCK(icp_request);
 }

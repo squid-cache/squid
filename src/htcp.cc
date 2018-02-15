@@ -916,7 +916,8 @@ htcpSpecifier::checkHit()
         return;
     }
 
-    StoreEntry::getPublicByRequest(this, checkHitRequest.getRaw());
+    ACLFilledChecklist checklist(nullptr, request.getRaw(), nullptr);
+    StoreEntry::getPublicByRequest(this, checkHitRequest.getRaw(), &checklist);
 }
 
 void

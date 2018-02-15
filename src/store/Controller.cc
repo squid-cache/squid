@@ -9,6 +9,7 @@
 /* DEBUG: section 20    Store Controller */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "mem_node.h"
 #include "MemStore.h"
 #include "profiler/Profiler.h"
@@ -686,6 +687,18 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
         return true;
     }
     return false;
+}
+
+bool
+Store::Controller::collapsingApplicable(ACLFilledChecklist *checkList)
+{
+    if (!Config.onoff.collapsed_forwarding)
+        return false;
+
+    if (!Config.accessList.collapsedForwardingAccess)
+        return true;
+
+    return checkList->fastCheck(Config.accessList.collapsedForwardingAccess).allowed();
 }
 
 void

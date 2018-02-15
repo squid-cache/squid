@@ -354,7 +354,7 @@ MimeIcon::load()
     if (type == NULL)
         fatal("Unknown icon format while reading mime.conf\n");
 
-    StoreEntry::getPublic(this, url_, Http::METHOD_GET);
+    StoreEntry::getPublic(this, url_, Http::METHOD_GET, nullptr);
 }
 
 void

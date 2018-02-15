@@ -9,6 +9,7 @@
 /* DEBUG: section 52    URN Parsing */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "cbdata.h"
 #include "errorpage.h"
 #include "FwdState.h"
@@ -178,7 +179,8 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     if (urlres_r == NULL)
         return;
 
-    StoreEntry::getPublic (this, urlres, Http::METHOD_GET);
+    ACLFilledChecklist checkList(nullptr, request.getRaw(), nullptr);
+    StoreEntry::getPublic(this, urlres, Http::METHOD_GET, &checkList);
 }
 
 void

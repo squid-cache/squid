@@ -737,17 +737,3 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
             flags.spoofClientIp = false;
     }
 }
-
-bool
-HttpRequest::collapsingApplicable()
-{
-    if (!Config.onoff.collapsed_forwarding)
-        return false;
-
-    if (!Config.accessList.collapsedForwardingAccess)
-        return true;
-
-    ACLFilledChecklist checklist(Config.accessList.collapsedForwardingAccess, this, nullptr);
-    return checklist.fastCheck().allowed();
-}
-

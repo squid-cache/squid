@@ -495,11 +495,24 @@ StoreEntry::doAbandon(const char *context)
     Store::Root().handleIdleEntry(*this); // may delete us
 }
 
+bool
+StoreEntry::abandonNotApplicable(ACLFilledChecklist *checkList)
+{
+    if (checkList && !Store::Controller::collapsingApplicable(checkList)) {
+        debugs(20, 3, "Collapsing prohibited for " << *this);
+        abandon(__FUNCTION__);
+        return true;
+    }
+    return false;
+}
+
 void
-StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * request, const HttpRequestMethod& method)
+StoreEntry::getPublicByRequestMethod(StoreClient *aClient, HttpRequest * request, const HttpRequestMethod& method, ACLFilledChecklist *checkList)
 {
     assert (aClient);
     StoreEntry *result = storeGetPublicByRequestMethod( request, method);
+    if (result && result->abandonNotApplicable(checkList))
+        result = nullptr;
 
     if (!result)
         aClient->created (NullStoreEntry::getInstance());
@@ -508,10 +521,12 @@ StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * reque
 }
 
 void
-StoreEntry::getPublicByRequest (StoreClient *aClient, HttpRequest * request)
+StoreEntry::getPublicByRequest(StoreClient *aClient, HttpRequest * request, ACLFilledChecklist *checkList)
 {
     assert (aClient);
     StoreEntry *result = storeGetPublicByRequest (request);
+    if (result && result->abandonNotApplicable(checkList))
+        result = nullptr;
 
     if (!result)
         result = NullStoreEntry::getInstance();
@@ -520,10 +535,12 @@ StoreEntry::getPublicByRequest (StoreClient *aClient, HttpRequest * request)
 }
 
 void
-StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestMethod& method)
+StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestMethod& method, ACLFilledChecklist *checkList)
 {
     assert (aClient);
     StoreEntry *result = storeGetPublic (uri, method);
+    if (result && result->abandonNotApplicable(checkList))
+        result = nullptr;
 
     if (!result)
         result = NullStoreEntry::getInstance();
@@ -540,17 +557,7 @@ storeGetPublic(const char *uri, const HttpRequestMethod& method)
 StoreEntry *
 storeGetPublicByRequestMethod(HttpRequest * req, const HttpRequestMethod& method, const KeyScope keyScope)
 {
-    StoreEntry *e = Store::Root().find(storeKeyPublicByRequestMethod(req, method, keyScope));
-    if (e) {
-        const mayCollapse = EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT) ||
-                            Store::Root().smpAware() && (e->hasTransients() && (!e->hasMemStore() && !e->hasDisk()));
-        if (mayCollapse && !req->collapsingApplicable()) {
-            debugs(20, 3, "Collapsing prohibited for " << *e);
-            e->abandon("storeKeyPublicByRequestMethod");
-            return nullptr;
-        }
-    }
-    return e;
+    return Store::Root().find(storeKeyPublicByRequestMethod(req, method, keyScope));
 }
 
 StoreEntry *

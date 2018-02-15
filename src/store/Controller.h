@@ -14,6 +14,7 @@
 class MemObject;
 class RequestFlags;
 class HttpRequestMethod;
+class ACLFilledChecklist;
 
 namespace Store {
 
@@ -94,6 +95,9 @@ public:
 
     /// tries to make the entry available for collapsing future requests
     bool allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);
+
+    /// whether becoming a CF master or slave is not prohibited
+    static bool collapsingApplicable(ACLFilledChecklist *);
 
     /// register a being-read StoreEntry (to optimize concurrent cache reads
     /// and to receive remote DELETE events)

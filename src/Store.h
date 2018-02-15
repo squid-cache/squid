@@ -217,9 +217,10 @@ public:
 
 public:
     static size_t inUseCount();
-    static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method);
-    static void getPublicByRequest(StoreClient * aClient, HttpRequest * request);
-    static void getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method);
+    static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method,
+          ACLFilledChecklist *);
+    static void getPublicByRequest(StoreClient * aClient, HttpRequest * request, ACLFilledChecklist *);
+    static void getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method, ACLFilledChecklist *);
 
     virtual bool isNull() {
         return false;
@@ -284,6 +285,9 @@ protected:
     typedef Store::EntryGuard EntryGuard;
 
     void transientsAbandonmentCheck();
+    /// Gets rid of the StoreEntry(and returns true) if collapsing
+    /// is not applicable for the given checkList.
+    bool abandonNotApplicable(ACLFilledChecklist *checkList);
     /// does nothing except throwing if disk-associated data members are inconsistent
     void checkDisk() const;
 

@@ -297,9 +297,11 @@ clientReplyContext::processExpired()
     saveState();
 
     // TODO: support collapsed revalidation for Vary-controlled entries
-    const bool collapsingAllowed = !Store::Root().smpAware() &&
-                                   http->request->vary_headers.isEmpty() &&
-                                   http->request->collapsingApplicable();
+    bool collapsingAllowed = false;
+    if (!Store::Root().smpAware() && http->request->vary_headers.isEmpty()) {
+        std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(nullptr, http));
+        collapsingAllowed = Store::Controller::collapsingApplicable(chl.get());
+    }
 
     StoreEntry *entry = nullptr;
     if (collapsingAllowed) {
@@ -891,7 +893,7 @@ clientReplyContext::purgeRequestFindObjectToPurge()
 
     // TODO: can we use purgeAllCached() here instead of doing the
     // getPublicByRequestMethod() dance?
-    StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_GET);
+    StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_GET, nullptr);
 }
 
 // Purges all entries with a given url
@@ -943,7 +945,7 @@ clientReplyContext::purgeFoundGet(StoreEntry *newEntry)
 {
     if (newEntry->isNull()) {
         lookingforstore = 2;
-        StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
+        StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD, nullptr);
     } else
         purgeFoundObject (newEntry);
 }
@@ -1027,7 +1029,7 @@ clientReplyContext::purgeDoMissPurge()
 {
     http->logType = LOG_TCP_MISS;
     lookingforstore = 3;
-    StoreEntry::getPublicByRequestMethod(this,http->request, Http::METHOD_GET);
+    StoreEntry::getPublicByRequestMethod(this,http->request, Http::METHOD_GET, nullptr);
 }
 
 void
@@ -1048,7 +1050,7 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
     }
 
     lookingforstore = 4;
-    StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
+    StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD, nullptr);
 }
 
 void
@@ -1671,7 +1673,8 @@ clientReplyContext::identifyStoreObject()
     // encountered which prevents delivering a public/cached object.
     if (!r->flags.noCache || r->flags.internal) {
         lookingforstore = 5;
-        StoreEntry::getPublicByRequest (this, r);
+        std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(nullptr, http));
+        StoreEntry::getPublicByRequest (this, r, chl.get());
     } else {
         identifyFoundObject (NullStoreEntry::getInstance());
     }
@@ -2278,9 +2281,12 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
     // TODO: every must-revalidate and similar request MUST reach the origin,
     // but do we have to prohibit others from collapsing on that request?
     if (reqFlags.cachable && !reqFlags.needValidation &&
-            (m == Http::METHOD_GET || m == Http::METHOD_HEAD) && http->request->collapsingApplicable()) {
-        // make the entry available for future requests now
-        (void)Store::Root().allowCollapsing(e, reqFlags, m);
+            (m == Http::METHOD_GET || m == Http::METHOD_HEAD)) {
+        std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(nullptr, http));
+        if (Store::Controller::collapsingApplicable(chl.get())) {
+            // make the entry available for future requests now
+            (void)Store::Root().allowCollapsing(e, reqFlags, m);
+        }
     }
 
     sc = storeClientListAdd(e, this);

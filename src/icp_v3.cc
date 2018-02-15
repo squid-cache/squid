@@ -14,6 +14,7 @@
  */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "HttpRequest.h"
 #include "ICP.h"
 #include "Store.h"
@@ -53,7 +54,8 @@ doV3Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     state->from = from;
     state->url = xstrdup(url);
 
-    StoreEntry::getPublic (state, url, Http::METHOD_GET);
+    ACLFilledChecklist checkList(nullptr, icp_request, nullptr);
+    StoreEntry::getPublic(state, url, Http::METHOD_GET, &checkList);
 }
 
 ICP3State::~ICP3State()
