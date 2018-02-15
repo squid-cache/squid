@@ -934,6 +934,7 @@ htcpSpecifier::created(StoreEntry *e)
         debugs(31, 3, "htcpCheckHit: YES!?");
         hit = e;
     }
+
     checkedHit(hit);
 }
 
@@ -962,7 +963,7 @@ htcpClrStore(const htcpSpecifier::Pointer &s)
     StoreEntry *e = nullptr;
     int released = 0;
     /* Lookup matching entries. This matches both GET and HEAD */
-    while ((e = storeGetPublicByRequest(request.getRaw(), false))) {
+    while ((e = storeGetPublicByRequest(request.getRaw()))) {
         htcpClrStoreEntry(e);
         ++released;
     }

@@ -350,7 +350,7 @@ peerDigestRequest(PeerDigest * pd)
     /* the rest is based on clientReplyContext::processExpired() */
     req->flags.refresh = true;
 
-    old_e = fetch->old_entry = storeGetPublicByRequest(req, false);
+    old_e = fetch->old_entry = storeGetPublicByRequest(req);
 
     if (old_e) {
         debugs(72, 5, "found old " << *old_e);

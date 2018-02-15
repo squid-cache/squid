@@ -73,8 +73,8 @@ bool StoreEntry::hasIfMatchEtag(const HttpRequest &request) const STUB_RETVAL(fa
 bool StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const STUB_RETVAL(false)
 Store::Disk &StoreEntry::disk() const STUB_RETREF(Store::Disk)
 size_t StoreEntry::inUseCount() STUB_RETVAL(0)
-void StoreEntry::getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method, const bool consultCollapsing) STUB
-void StoreEntry::getPublicByRequest(StoreClient * aClient, HttpRequest * request, const bool consultCollapsing) STUB
+void StoreEntry::getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method) STUB
+void StoreEntry::getPublicByRequest(StoreClient * aClient, HttpRequest * request) STUB
 void StoreEntry::getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method) STUB
 void *StoreEntry::operator new(size_t byteCount)
 {
@@ -122,8 +122,8 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &)
 size_t storeEntryInUse() STUB_RETVAL(0)
 void storeEntryReplaceObject(StoreEntry *, HttpReply *) STUB
 StoreEntry *storeGetPublic(const char *uri, const HttpRequestMethod& method) STUB_RETVAL(NULL)
-StoreEntry *storeGetPublicByRequest(HttpRequest * request, const bool consultCollapsing, const KeyScope scope) STUB_RETVAL(NULL)
-StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method, const bool consultCollapsing, const KeyScope scope) STUB_RETVAL(NULL)
+StoreEntry *storeGetPublicByRequest(HttpRequest * request, const KeyScope scope) STUB_RETVAL(NULL)
+StoreEntry *storeGetPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method, const KeyScope scope) STUB_RETVAL(NULL)
 StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(NULL)
 StoreEntry *storeCreatePureEntry(const char *storeId, const char *logUrl, const HttpRequestMethod&) STUB_RETVAL(nullptr)
 void storeConfigure(void) STUB

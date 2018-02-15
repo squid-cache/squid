@@ -303,7 +303,7 @@ clientReplyContext::processExpired()
 
     StoreEntry *entry = nullptr;
     if (collapsingAllowed) {
-        if ((entry = storeGetPublicByRequest(http->request, false, ksRevalidation)))
+        if ((entry = storeGetPublicByRequest(http->request, ksRevalidation)))
             entry->lock("clientReplyContext::processExpired#alreadyRevalidating");
     }
 
