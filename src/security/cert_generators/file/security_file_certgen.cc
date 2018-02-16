@@ -313,11 +313,11 @@ int main(int argc, char *argv[])
                 struct statvfs sfs;
 
                 if (xstatvfs(db_path.c_str(), &sfs)) {
-                   fs_block_size = 2048;
+                    fs_block_size = 2048;
                 } else {
-                   fs_block_size = sfs.f_frsize;
-                   // Sanity check; make sure we have a meaningful value.
-                   if (fs_block_size < 512)
+                    fs_block_size = sfs.f_frsize;
+                    // Sanity check; make sure we have a meaningful value.
+                    if (fs_block_size < 512)
                         fs_block_size = 2048;
                 }
             }
