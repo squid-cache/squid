@@ -57,18 +57,26 @@ public:
  \ingroup ServerProtocolICPAPI
  \todo mempool this
  */
-class ICPState
+class ICPState: public StoreClient
 {
 
 public:
     ICPState(icp_common_t &aHeader, HttpRequest *aRequest);
     virtual ~ICPState();
+
+    /// whether the found entry warrants an ICP_HIT response
+    bool foundHit(const StoreEntry &) const;
+
     icp_common_t header;
     HttpRequest *request;
     int fd;
 
     Ip::Address from;
     char *url;
+
+protected:
+    /* StoreClient API */
+    virtual void fillChecklist(ACLFilledChecklist &) const override;
 };
 
 /// \ingroup ServerProtocolICPAPI
@@ -123,9 +131,6 @@ PF icpUdpSendQueue;
 
 /// \ingroup ServerProtocolICPAPI
 void icpHandleIcpV3(int, Ip::Address &, char *, int);
-
-/// \ingroup ServerProtocolICPAPI
-int icpCheckUdpHit(StoreEntry *, HttpRequest * request);
 
 /// \ingroup ServerProtocolICPAPI
 void icpOpenPorts(void);

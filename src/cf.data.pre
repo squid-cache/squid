@@ -6588,7 +6588,8 @@ DEFAULT_DOC: Requests may be collapsed if collapsed_forwarding is on.
 LOC: Config.accessList.collapsedForwardingAccess
 DOC_START
 	Use this directive to fine-tune collapsed forwarding decisions for
-	individual requests, including internal revalidation transactions.
+	individual requests, including internal revalidation transactions
+	and ICP/HTCP queries.
 
 	This directive cannot force collapsing. It has an effect on
 	collapsing only if collapsed_forwarding is 'on' and all other
@@ -6601,6 +6602,9 @@ DOC_START
 
 	An allowed request may collapse, or future transactions may collapse
 	on it (provided they are allowed to collapse).
+
+	This directive is evaluated before receiving HTTP response headers
+	and without access to Squid-to-peer connection (if any).
 
 	Only fast ACLs are supported.
 

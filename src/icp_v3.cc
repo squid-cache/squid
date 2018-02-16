@@ -20,7 +20,7 @@
 #include "Store.h"
 
 /// \ingroup ServerProtocolICPInternal3
-class ICP3State : public ICPState, public StoreClient
+class ICP3State: public ICPState
 {
 
 public:
@@ -54,21 +54,19 @@ doV3Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     state->from = from;
     state->url = xstrdup(url);
 
-    ACLFilledChecklist checkList(nullptr, icp_request, nullptr);
-    StoreEntry::getPublic(state, url, Http::METHOD_GET, &checkList);
+    StoreEntry::getPublic (state, url, Http::METHOD_GET);
 }
 
 ICP3State::~ICP3State()
 {}
 
 void
-ICP3State::created(StoreEntry *newEntry)
+ICP3State::created(StoreEntry *e)
 {
-    StoreEntry *entry = newEntry->isNull () ? NULL : newEntry;
     debugs(12, 5, "icpHandleIcpV3: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 
-    if (icpCheckUdpHit(entry, request)) {
+    if (foundHit(*e)) {
         codeToSend = ICP_HIT;
     } else if (icpGetCommonOpcode() == ICP_ERR)
         codeToSend = ICP_MISS;
@@ -76,6 +74,10 @@ ICP3State::created(StoreEntry *newEntry)
         codeToSend = icpGetCommonOpcode();
 
     icpCreateAndSend (codeToSend, 0, url, header.reqnum, 0, fd, from);
+
+    // TODO: StoreClients must either store/lock or abandon found entries.
+    //if (!e->isNull())
+    //    e->abandon();
 
     delete this;
 }

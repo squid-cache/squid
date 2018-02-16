@@ -54,6 +54,9 @@ public:
     int reqofs;
 
 private:
+    /* StoreClient API */
+    virtual void fillChecklist(ACLFilledChecklist &) const;
+
     char *urlres;
 };
 
@@ -179,20 +182,28 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     if (urlres_r == NULL)
         return;
 
-    ACLFilledChecklist checkList(nullptr, request.getRaw(), nullptr);
-    StoreEntry::getPublic(this, urlres, Http::METHOD_GET, &checkList);
+    StoreEntry::getPublic (this, urlres, Http::METHOD_GET);
 }
 
 void
-UrnState::created(StoreEntry *newEntry)
+UrnState::fillChecklist(ACLFilledChecklist &checklist) const
 {
-    urlres_e = newEntry;
+    assert(!"XXX: implement");
+    // ACLFilledChecklist checkList(nullptr, request.getRaw(), nullptr);
+}
 
-    if (urlres_e->isNull()) {
+void
+UrnState::created(StoreEntry *e)
+{
+    if (e->isNull() || !mayCollapseOn(*e)) {
         urlres_e = storeCreateEntry(urlres, urlres, RequestFlags(), Http::METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);
         FwdState::fwdStart(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw());
+        // TODO: StoreClients must either store/lock or abandon found entries.
+        //if (!e->isNull())
+        //    e->abandon();
     } else {
+        urlres_e = e;
         urlres_e->lock("UrnState::created");
         sc = storeClientListAdd(urlres_e, this);
     }

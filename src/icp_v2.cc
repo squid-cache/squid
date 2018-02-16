@@ -123,12 +123,37 @@ ICPState::~ICPState()
     HTTPMSGUNLOCK(request);
 }
 
+bool
+ICPState::foundHit(const StoreEntry &e) const
+{
+    if (e.isNull())
+        return false;
+
+    if (!e.validToSend())
+        return false;
+
+    if (!Config.onoff.icp_hit_stale && refreshCheckICP(&e, request))
+        return false;
+
+    if (!mayCollapseOn(e))
+        return false;
+
+    return true;
+}
+
+void
+ICPState::fillChecklist(ACLFilledChecklist &checklist) const
+{
+    assert(!"XXX: implement");
+    // ACLFilledChecklist checkList(nullptr, request, nullptr);
+}
+
 /* End ICPState */
 
 /* ICP2State */
 
 /// \ingroup ServerProtocolICPInternal2
-class ICP2State : public ICPState, public StoreClient
+class ICP2State: public ICPState
 {
 
 public:
@@ -147,13 +172,12 @@ ICP2State::~ICP2State()
 {}
 
 void
-ICP2State::created(StoreEntry *newEntry)
+ICP2State::created(StoreEntry *e)
 {
-    StoreEntry *entry = newEntry->isNull () ? NULL : newEntry;
     debugs(12, 5, "icpHandleIcpV2: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 
-    if (icpCheckUdpHit(entry, request)) {
+    if (foundHit(*e)) {
         codeToSend = ICP_HIT;
     } else {
 #if USE_ICMP
@@ -172,6 +196,11 @@ ICP2State::created(StoreEntry *newEntry)
     }
 
     icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from);
+
+    // TODO: StoreClients must either store/lock or abandon found entries.
+    //if (!e->isNull())
+    //    e->abandon();
+
     delete this;
 }
 
@@ -324,24 +353,6 @@ icpUdpSend(int fd,
     return x;
 }
 
-int
-icpCheckUdpHit(StoreEntry * e, HttpRequest * request)
-{
-    if (e == NULL)
-        return 0;
-
-    if (!e->validToSend())
-        return 0;
-
-    if (Config.onoff.icp_hit_stale)
-        return 1;
-
-    if (refreshCheckICP(e, request))
-        return 0;
-
-    return 1;
-}
-
 /**
  * This routine selects an ICP opcode for ICP misses.
  *
@@ -487,8 +498,7 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     state->rtt = rtt;
     state->src_rtt = src_rtt;
 
-    ACLFilledChecklist checkList(nullptr, icp_request, nullptr);
-    StoreEntry::getPublic(state, url, Http::METHOD_GET, &checkList);
+    StoreEntry::getPublic(state, url, Http::METHOD_GET);
 
     HTTPMSGUNLOCK(icp_request);
 }

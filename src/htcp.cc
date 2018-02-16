@@ -136,6 +136,7 @@ public:
 
     /* StoreClient API */
     void created(StoreEntry *);
+    virtual void fillChecklist(ACLFilledChecklist &) const;
 
 public:
     const char *method = nullptr;
@@ -916,8 +917,7 @@ htcpSpecifier::checkHit()
         return;
     }
 
-    ACLFilledChecklist checklist(nullptr, request.getRaw(), nullptr);
-    StoreEntry::getPublicByRequest(this, checkHitRequest.getRaw(), &checklist);
+    StoreEntry::getPublicByRequest(this, checkHitRequest.getRaw());
 }
 
 void
@@ -931,12 +931,25 @@ htcpSpecifier::created(StoreEntry *e)
         debugs(31, 3, "htcpCheckHit: NO; entry not valid to send" );
     } else if (refreshCheckHTCP(e, checkHitRequest.getRaw())) {
         debugs(31, 3, "htcpCheckHit: NO; cached response is stale");
+    } else if (!mayCollapseOn(*e)) {
+        debugs(31, 3, "htcpCheckHit: NO; prohibited CF hit: " << *e);
     } else {
         debugs(31, 3, "htcpCheckHit: YES!?");
         hit = e;
     }
 
     checkedHit(hit);
+
+    // TODO: StoreClients must either store/lock or abandon found entries.
+    //if (!e->isNull())
+    //    e->abandon();
+}
+
+void
+htcpSpecifier::fillChecklist(ACLFilledChecklist &checklist) const
+{
+    assert(!"XXX: implement");
+    // ACLFilledChecklist checklist(nullptr, request.getRaw(), nullptr);
 }
 
 static void

@@ -217,14 +217,11 @@ public:
 
 public:
     static size_t inUseCount();
-    static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method,
-                                         ACLFilledChecklist *);
-    static void getPublicByRequest(StoreClient * aClient, HttpRequest * request, ACLFilledChecklist *);
-    static void getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method, ACLFilledChecklist *);
+    static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method);
+    static void getPublicByRequest(StoreClient * aClient, HttpRequest * request);
+    static void getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method);
 
-    virtual bool isNull() {
-        return false;
-    };
+    virtual bool isNull() const { return false; } // TODO: Replace with nullptr.
 
     void *operator new(size_t byteCount);
     void operator delete(void *address);
@@ -285,9 +282,6 @@ protected:
     typedef Store::EntryGuard EntryGuard;
 
     void transientsAbandonmentCheck();
-    /// Gets rid of the StoreEntry(and returns true) if collapsing
-    /// is not applicable for the given checkList.
-    bool abandonNotApplicable(ACLFilledChecklist *checkList);
     /// does nothing except throwing if disk-associated data members are inconsistent
     void checkDisk() const;
 
@@ -328,9 +322,6 @@ class NullStoreEntry:public StoreEntry
 
 public:
     static NullStoreEntry *getInstance();
-    bool isNull() {
-        return true;
-    }
 
     const char *getMD5Text() const;
     HttpReply const *getReply() const { return NULL; }
@@ -338,6 +329,8 @@ public:
 
     bool isEmpty () const {return true;}
 
+    /* StoreEntry API */
+    virtual bool isNull() const { return true; }
     virtual size_t bytesWanted(Range<size_t> const aRange, bool) const { return aRange.end; }
 
     void operator delete(void *address);

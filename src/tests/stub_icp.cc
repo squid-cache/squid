@@ -20,6 +20,7 @@ icp_common_t *icp_common_t::CreateMessage(icp_opcode opcode, int flags, const ch
 icp_opcode icp_common_t::getOpCode() const STUB_RETVAL(ICP_INVALID)
 ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest) STUB
 ICPState::~ICPState() STUB
+bool ICPState::foundHit(const StoreEntry &) const STUB_RETVAL(false)
 
 Comm::ConnectionPointer icpIncomingConn;
 Comm::ConnectionPointer icpOutgoingConn;
@@ -33,7 +34,6 @@ int icpUdpSend(int, const Ip::Address &, icp_common_t *, LogTags, int) STUB_RETV
 LogTags icpLogFromICPCode(icp_opcode opcode) STUB_RETVAL(LOG_TAG_NONE)
 void icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd) STUB
 void icpHandleIcpV3(int, Ip::Address &, char *, int) STUB
-int icpCheckUdpHit(StoreEntry *, HttpRequest * request) STUB_RETVAL(0)
 void icpConnectionsOpen(void) STUB
 void icpConnectionShutdown(void) STUB
 void icpConnectionClose(void) STUB

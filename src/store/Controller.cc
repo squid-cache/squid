@@ -689,18 +689,6 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
     return false;
 }
 
-bool
-Store::Controller::collapsingApplicable(ACLFilledChecklist *checkList)
-{
-    if (!Config.onoff.collapsed_forwarding)
-        return false;
-
-    if (!Config.accessList.collapsedForwardingAccess)
-        return true;
-
-    return checkList->fastCheck(Config.accessList.collapsedForwardingAccess).allowed();
-}
-
 void
 Store::Controller::addReading(StoreEntry *e, const cache_key *key)
 {

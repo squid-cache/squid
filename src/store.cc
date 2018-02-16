@@ -495,24 +495,11 @@ StoreEntry::doAbandon(const char *context)
     Store::Root().handleIdleEntry(*this); // may delete us
 }
 
-bool
-StoreEntry::abandonNotApplicable(ACLFilledChecklist *checkList)
-{
-    if (checkList && !Store::Controller::collapsingApplicable(checkList)) {
-        debugs(20, 3, "Collapsing prohibited for " << *this);
-        abandon(__FUNCTION__);
-        return true;
-    }
-    return false;
-}
-
 void
-StoreEntry::getPublicByRequestMethod(StoreClient *aClient, HttpRequest * request, const HttpRequestMethod& method, ACLFilledChecklist *checkList)
+StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * request, const HttpRequestMethod& method)
 {
     assert (aClient);
     StoreEntry *result = storeGetPublicByRequestMethod( request, method);
-    if (result && result->abandonNotApplicable(checkList))
-        result = nullptr;
 
     if (!result)
         aClient->created (NullStoreEntry::getInstance());
@@ -521,12 +508,10 @@ StoreEntry::getPublicByRequestMethod(StoreClient *aClient, HttpRequest * request
 }
 
 void
-StoreEntry::getPublicByRequest(StoreClient *aClient, HttpRequest * request, ACLFilledChecklist *checkList)
+StoreEntry::getPublicByRequest (StoreClient *aClient, HttpRequest * request)
 {
     assert (aClient);
     StoreEntry *result = storeGetPublicByRequest (request);
-    if (result && result->abandonNotApplicable(checkList))
-        result = nullptr;
 
     if (!result)
         result = NullStoreEntry::getInstance();
@@ -535,12 +520,10 @@ StoreEntry::getPublicByRequest(StoreClient *aClient, HttpRequest * request, ACLF
 }
 
 void
-StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestMethod& method, ACLFilledChecklist *checkList)
+StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestMethod& method)
 {
     assert (aClient);
     StoreEntry *result = storeGetPublic (uri, method);
-    if (result && result->abandonNotApplicable(checkList))
-        result = nullptr;
 
     if (!result)
         result = NullStoreEntry::getInstance();
