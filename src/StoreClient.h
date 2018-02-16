@@ -33,9 +33,11 @@ public:
 
 protected:
     /// whether becoming a CF initiator is not prohibited
-    bool mayInitiateCollapsing() const;
+    bool mayInitiateCollapsing() const { return onCollapsingPath(); }
     /// whether becoming a CF slave is not prohibited
     bool mayCollapseOn(const StoreEntry&) const;
+    /// common collapsing checks for mayInitiateCollapsing() and mayCollapseOn()
+    bool onCollapsingPath() const;
 
     /// configure the ACL checklist with the current transaction state
     virtual void fillChecklist(ACLFilledChecklist &) const = 0;

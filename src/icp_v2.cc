@@ -135,7 +135,7 @@ ICPState::foundHit(const StoreEntry &e) const
     if (!Config.onoff.icp_hit_stale && refreshCheckICP(&e, request))
         return false;
 
-    if (!mayCollapseOn(e))
+    if (e.collapsingInitiator() && !mayCollapseOn(e))
         return false;
 
     return true;
@@ -144,8 +144,7 @@ ICPState::foundHit(const StoreEntry &e) const
 void
 ICPState::fillChecklist(ACLFilledChecklist &checklist) const
 {
-    assert(!"XXX: implement");
-    // ACLFilledChecklist checkList(nullptr, request, nullptr);
+    checklist.setRequest(request);
 }
 
 /* End ICPState */

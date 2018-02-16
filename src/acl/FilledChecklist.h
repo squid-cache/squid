@@ -56,6 +56,8 @@ public:
     void markDestinationDomainChecked();
     bool sourceDomainChecked() const;
     void markSourceDomainChecked();
+    void setRequest(HttpRequest *);
+    void setIdent(const char *);
 
     // ACLChecklist API
     virtual bool hasRequest() const { return request != NULL; }

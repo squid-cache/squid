@@ -49,7 +49,7 @@ CBDATA_CLASS_INIT(store_client);
 /* StoreClient */
 
 bool
-StoreClient::mayInitiateCollapsing() const
+StoreClient::onCollapsingPath() const
 {
     if (!Config.onoff.collapsed_forwarding)
         return false;
@@ -63,12 +63,10 @@ StoreClient::mayInitiateCollapsing() const
 }
 
 bool
-StoreClient::mayCollapseOn(const StoreEntry&) const
+StoreClient::mayCollapseOn(const StoreEntry &e) const
 {
-    // XXX: Implement. Very similar to mayInitiateCollapsing() but also checks
-    // whether we are about to become a collapsed slave (and not just a regular
-    // hit): For regular hits, returns true. For others, checks the new ACL.
-    return false;
+    assert(e.collapsingInitiator()); // our result is not meaningful for regular hits
+    return onCollapsingPath();
 }
 
 void

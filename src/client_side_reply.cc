@@ -304,7 +304,7 @@ clientReplyContext::processExpired()
     StoreEntry *entry = nullptr;
     if (collapsingAllowed) {
         if (const auto e = storeGetPublicByRequest(http->request, ksRevalidation)) {
-            if (mayCollapseOn(*e)) {
+            if (e->collapsingInitiator() && mayCollapseOn(*e)) {
                 entry = e;
                 entry->lock("clientReplyContext::processExpired#alreadyRevalidating");
             } else {
@@ -1765,7 +1765,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
         return;
     }
 
-    if (!mayCollapseOn(*e)) {
+    if (e->collapsingInitiator() && !mayCollapseOn(*e)) {
         debugs(85, 3, "prohibited CF MISS " << *e);
         forgetHit();
         http->logType = LOG_TCP_MISS;
@@ -2275,8 +2275,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 void
 clientReplyContext::fillChecklist(ACLFilledChecklist &checklist) const
 {
-    assert(!"XXX: implement");
-    // XXX: Refactor clientAclChecklistCreate() to reuse its primary logic here
+    clientAclChecklistFill(checklist, http);
 }
 
 /* Using this breaks the client layering just a little!

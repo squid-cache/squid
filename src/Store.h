@@ -188,6 +188,9 @@ public:
     /// whether there is a corresponding locked shared memory table entry
     bool hasMemStore() const { return mem_obj && mem_obj->memCache.index >= 0; }
 
+    // whether it is a public collapsed entry
+    bool collapsingInitiator() const;
+
     MemObject *mem_obj;
     RemovalPolicyNode repl;
     /* START OF ON-DISK STORE_META_STD TLV field */

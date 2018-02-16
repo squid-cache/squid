@@ -188,14 +188,13 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
 void
 UrnState::fillChecklist(ACLFilledChecklist &checklist) const
 {
-    assert(!"XXX: implement");
-    // ACLFilledChecklist checkList(nullptr, request.getRaw(), nullptr);
+    checklist.setRequest(request.getRaw());
 }
 
 void
 UrnState::created(StoreEntry *e)
 {
-    if (e->isNull() || !mayCollapseOn(*e)) {
+    if (e->isNull() || (e->collapsingInitiator() && !mayCollapseOn(*e))) {
         urlres_e = storeCreateEntry(urlres, urlres, RequestFlags(), Http::METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);
         FwdState::fwdStart(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw());

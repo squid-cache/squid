@@ -3722,16 +3722,25 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 ACLFilledChecklist *
 clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 {
+    ACLFilledChecklist *ch = new ACLFilledChecklist(acl, nullptr, nullptr);
+    clientAclChecklistFill(*ch, http);
+    return ch;
+}
+
+void
+clientAclChecklistFill(ACLFilledChecklist &checklist, ClientHttpRequest *http)
+{
     ConnStateData * conn = http->getConn();
-    ACLFilledChecklist *ch = new ACLFilledChecklist(acl, http->request,
-            cbdataReferenceValid(conn) && conn != NULL && conn->clientConnection != NULL ? conn->clientConnection->rfc931 : dash_str);
-    ch->al = http->al;
+    checklist.setRequest(http->request);
     /*
      * hack for ident ACL. It needs to get full addresses, and a place to store
      * the ident result on persistent connections...
      */
     /* connection oriented auth also needs these two lines for it's operation. */
-    return ch;
+    const char *ident = cbdataReferenceValid(conn) && conn != nullptr && conn->clientConnection != nullptr ?
+        conn->clientConnection->rfc931 : dash_str;
+    checklist.setIdent(ident);
+    checklist.al = http->al;
 }
 
 bool

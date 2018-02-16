@@ -931,7 +931,7 @@ htcpSpecifier::created(StoreEntry *e)
         debugs(31, 3, "htcpCheckHit: NO; entry not valid to send" );
     } else if (refreshCheckHTCP(e, checkHitRequest.getRaw())) {
         debugs(31, 3, "htcpCheckHit: NO; cached response is stale");
-    } else if (!mayCollapseOn(*e)) {
+    } else if (e->collapsingInitiator() && !mayCollapseOn(*e)) {
         debugs(31, 3, "htcpCheckHit: NO; prohibited CF hit: " << *e);
     } else {
         debugs(31, 3, "htcpCheckHit: YES!?");
@@ -948,8 +948,7 @@ htcpSpecifier::created(StoreEntry *e)
 void
 htcpSpecifier::fillChecklist(ACLFilledChecklist &checklist) const
 {
-    assert(!"XXX: implement");
-    // ACLFilledChecklist checklist(nullptr, request.getRaw(), nullptr);
+    checklist.setRequest(request.getRaw());
 }
 
 static void
