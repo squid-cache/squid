@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -62,9 +62,9 @@ Security::KeyData::loadX509CertFromFile()
 
     if (certificate) {
         cert = Security::CertPointer(certificate, [](gnutls_x509_crt_t p) {
-                   debugs(83, 5, "gnutls_x509_crt_deinit cert=" << (void*)p);
-                   gnutls_x509_crt_deinit(p);
-               });
+            debugs(83, 5, "gnutls_x509_crt_deinit cert=" << (void*)p);
+            gnutls_x509_crt_deinit(p);
+        });
     }
 
 #else
@@ -148,9 +148,9 @@ Security::KeyData::loadX509PrivateKeyFromFile()
             gnutls_privkey_export_x509(key, &xkey);
             gnutls_privkey_deinit(key);
             pkey = Security::PrivateKeyPointer(xkey, [](gnutls_x509_privkey_t p) {
-                       debugs(83, 5, "gnutls_x509_privkey_deinit pkey=" << (void*)p);
-                       gnutls_x509_privkey_deinit(p);
-                   });
+                debugs(83, 5, "gnutls_x509_privkey_deinit pkey=" << (void*)p);
+                gnutls_x509_privkey_deinit(p);
+            });
         }
     }
     gnutls_free(data.data);
@@ -181,3 +181,4 @@ Security::KeyData::loadFromFiles(const AnyP::PortCfg &port, const char *portType
         chain.clear();
     }
 }
+

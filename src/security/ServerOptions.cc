@@ -260,7 +260,7 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
                 debugs(83, DBG_CRITICAL, "ERROR: Failed to initialize server context with keys from " << whichFile << ": " << Security::ErrorString(x));
                 return false;
             }
-                // XXX: add cert chain to the context
+            // XXX: add cert chain to the context
         }
 #endif
 
