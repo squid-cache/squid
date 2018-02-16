@@ -13,8 +13,8 @@
 #include "security/Context.h"
 #include "security/Session.h"
 
-#if USE_GNUTLS && HAVE_GNUTLS_X509_H
-#include <gnutls/x509.h>
+#if USE_GNUTLS && HAVE_GNUTLS_ABSTRACT_H
+#include <gnutls/abstract.h>
 #endif
 #include <list>
 #if USE_OPENSSL && HAVE_OPENSSL_ERR_H
@@ -86,10 +86,9 @@ typedef CbDataList<Security::CertError> CertErrors;
 CtoCpp1(X509_free, X509 *)
 typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref> > CertPointer;
 #elif USE_GNUTLS
-CtoCpp1(gnutls_x509_crt_deinit, gnutls_x509_crt_t)
-typedef Security::LockingPointer<struct gnutls_x509_crt_int, gnutls_x509_crt_deinit> CertPointer;
+typedef std::shared_ptr<struct gnutls_x509_crt_int> CertPointer;
 #else
-typedef void * CertPointer;
+typedef std::shared_ptr<void> CertPointer;
 #endif
 
 #if USE_OPENSSL
@@ -167,9 +166,10 @@ class PeerOptions;
 #if USE_OPENSSL
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
 typedef Security::LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, HardFun<int, EVP_PKEY *, EVP_PKEY_up_ref> > PrivateKeyPointer;
+#elif USE_GNUTLS
+typedef std::shared_ptr<struct gnutls_x509_privkey_int> PrivateKeyPointer;
 #else
-// XXX: incompatible with the other PrivateKeyPointer declaration (lacks self-initialization)
-typedef void *PrivateKeyPointer;
+typedef std::shared_ptr<void> PrivateKeyPointer;
 #endif
 
 class ServerOptions;

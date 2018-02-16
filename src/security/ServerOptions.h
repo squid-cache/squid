@@ -41,14 +41,9 @@ public:
     virtual Security::ContextPointer createBlankContext() const;
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
-    /// generate a security server-context from these configured options
-    /// the resulting context is stored in staticContext
-    /// \returns true if a context could be created
-    bool createStaticServerContext(AnyP::PortCfg &);
-
-    /// initialize contexts for signing dynamic TLS certificates (if needed)
-    /// the resulting context is stored in signingCert, signPKey, untrustedSigningCert, untrustedSignPKey
-    void createSigningContexts(AnyP::PortCfg &);
+    /// initialize all server contexts as-needed and load PEM files.
+    /// if none can be created this may do nothing.
+    void initServerContexts(AnyP::PortCfg &);
 
     /// update the given TLS security context using squid.conf settings
     bool updateContextConfig(Security::ContextPointer &);
@@ -70,13 +65,21 @@ public:
     Security::ContextPointer staticContext;
     SBuf staticContextSessionId; ///< "session id context" for staticContext
 
+#if USE_OPENSSL
     bool generateHostCertificates = true; ///< dynamically make host cert
+#elif USE_GNUTLS
+    // TODO: GnuTLS does implement TLS server connections so the cert
+    // generate vs static choice can be reached in the code now.
+    // But this feature is not fully working implemented so must not
+    // be enabled by default for production installations.
+    bool generateHostCertificates = false; ///< dynamically make host cert
+#else
+    // same as OpenSSL so config errors show up easily
+    bool generateHostCertificates = true; ///< dynamically make host cert
+#endif
 
-    Security::CertPointer signingCert; ///< x509 certificate for signing generated certificates
-    Security::PrivateKeyPointer signPkey; ///< private key for signing generated certificates
-    Security::CertList certsToChain; ///<  x509 certificates to send with the generated cert
-    Security::CertPointer untrustedSigningCert; ///< x509 certificate for signing untrusted generated certificates
-    Security::PrivateKeyPointer untrustedSignPkey; ///< private key for signing untrusted generated certificates
+    Security::KeyData signingCa; ///< x509 certificate and key for signing generated certificates
+    Security::KeyData untrustedSigningCa; ///< x509 certificate and key for signing untrusted generated certificates
 
     /// max size of generated certificates memory cache (4 MB default)
     size_t dynamicCertMemCacheSize = 4*1024*1024;
@@ -84,6 +87,15 @@ public:
 private:
     bool loadClientCaFile();
     void loadDhParams();
+
+    /// generate a security server-context from these configured options
+    /// the resulting context is stored in staticContext
+    /// \returns true if a context could be created
+    bool createStaticServerContext(AnyP::PortCfg &);
+
+    /// initialize contexts for signing dynamic TLS certificates (if needed)
+    /// the resulting keys are stored in signingCa and untrustedSigningCa
+    void createSigningContexts(const AnyP::PortCfg &);
 
 private:
     SBuf clientCaFile;  ///< name of file to load client CAs from

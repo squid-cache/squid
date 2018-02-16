@@ -50,6 +50,7 @@ const String & Ssl::ErrorDetail::toString() const STUB_RETSTATREF(String)
 #include "ssl/support.h"
 namespace Ssl
 {
+int AskPasswordCb(char *, int, int, void *) STUB_RETVAL(0)
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
 bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, const char *) STUB_RETVAL(false)
 void SetupVerifyCallback(Security::ContextPointer &) STUB
@@ -70,8 +71,6 @@ bool generateUntrustedCert(Security::CertPointer &, Security::PrivateKeyPointer 
 Security::ContextPointer GenerateSslContext(CertificateProperties const &, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
 bool verifySslCertificate(Security::ContextPointer &, CertificateProperties const &) STUB_RETVAL(false)
 Security::ContextPointer GenerateSslContextUsingPkeyAndCertFromMemory(const char *, Security::ServerOptions &, bool) STUB_RETVAL(Security::ContextPointer())
-void addChainToSslContext(Security::ContextPointer &, STACK_OF(X509) *) STUB
-void readCertChainAndPrivateKeyFromFiles(Security::CertPointer &, Security::PrivateKeyPointer &, Security::CertList &, char const *, char const *) STUB
 int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data)) STUB_RETVAL(0)
 bool checkX509ServerValidity(X509 *cert, const char *server) STUB_RETVAL(false)
 int asn1timeToString(ASN1_TIME *tm, char *buf, int len) STUB_RETVAL(0)

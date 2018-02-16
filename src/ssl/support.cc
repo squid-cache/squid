@@ -59,15 +59,14 @@ std::vector<const char *> Ssl::BumpModeStr = {
  \ingroup ServerProtocolSSLAPI
  */
 
-/// \ingroup ServerProtocolSSLInternal
-static int
-ssl_ask_password_cb(char *buf, int size, int rwflag, void *userdata)
+int
+Ssl::AskPasswordCb(char *buf, int size, int rwflag, void *userdata)
 {
     FILE *in;
     int len = 0;
     char cmdline[1024];
 
-    snprintf(cmdline, sizeof(cmdline), "\"%s\" \"%s\"", Config.Program.ssl_password, (const char *)userdata);
+    snprintf(cmdline, sizeof(cmdline), "\"%s\" \"%s\"", ::Config.Program.ssl_password, (const char *)userdata);
     in = popen(cmdline, "r");
 
     if (fgets(buf, size, in))
@@ -89,7 +88,7 @@ static void
 ssl_ask_password(SSL_CTX * context, const char * prompt)
 {
     if (Config.Program.ssl_password) {
-        SSL_CTX_set_default_passwd_cb(context, ssl_ask_password_cb);
+        SSL_CTX_set_default_passwd_cb(context, Ssl::AskPasswordCb);
         SSL_CTX_set_default_passwd_cb_userdata(context, (void *)prompt);
     }
 }
@@ -512,27 +511,6 @@ Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
     if (!ctx)
         return false;
 
-    if (!SSL_CTX_use_certificate(ctx.get(), port.secure.signingCert.get())) {
-        const int ssl_error = ERR_get_error();
-        const auto &keys = port.secure.certs.front();
-        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS certificate '" << keys.certFile << "': " << Security::ErrorString(ssl_error));
-        return false;
-    }
-
-    if (!SSL_CTX_use_PrivateKey(ctx.get(), port.secure.signPkey.get())) {
-        const int ssl_error = ERR_get_error();
-        const auto &keys = port.secure.certs.front();
-        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS private key '" << keys.privateKeyFile << "': " << Security::ErrorString(ssl_error));
-        return false;
-    }
-
-    Ssl::addChainToSslContext(ctx, port.secure.certsToChain);
-
-    if (!port.secure.updateContextConfig(ctx)) {
-        debugs(83, DBG_CRITICAL, "ERROR: Configuring static SSL context");
-        return false;
-    }
-
     return true;
 }
 
@@ -837,7 +815,7 @@ Ssl::chainCertificatesToSSLContext(Security::ContextPointer &ctx, Security::Serv
 {
     assert(ctx);
     // Add signing certificate to the certificates chain
-    X509 *signingCert = options.signingCert.get();
+    X509 *signingCert = options.signingCa.cert.get();
     if (SSL_CTX_add_extra_chain_cert(ctx.get(), signingCert)) {
         // increase the certificate lock
         X509_up_ref(signingCert);
@@ -845,7 +823,16 @@ Ssl::chainCertificatesToSSLContext(Security::ContextPointer &ctx, Security::Serv
         const int ssl_error = ERR_get_error();
         debugs(33, DBG_IMPORTANT, "WARNING: can not add signing certificate to SSL context chain: " << Security::ErrorString(ssl_error));
     }
-    Ssl::addChainToSslContext(ctx, options.certsToChain);
+
+    for (auto cert : options.signingCa.chain) {
+        if (SSL_CTX_add_extra_chain_cert(ctx.get(), cert.get())) {
+            // increase the certificate lock
+            X509_up_ref(cert.get());
+        } else {
+            const auto error = ERR_get_error();
+            debugs(83, DBG_IMPORTANT, "WARNING: can not add certificate to SSL dynamic context chain: " << Security::ErrorString(error));
+        }
+    }
 }
 
 void
@@ -941,23 +928,6 @@ Ssl::setClientSNI(SSL *ssl, const char *fqdn)
 #else
     debugs(83, 7,  "no support for TLS servername extension (SNI)");
 #endif
-}
-
-void
-Ssl::addChainToSslContext(Security::ContextPointer &ctx, Security::CertList &chain)
-{
-    if (chain.empty())
-        return;
-
-    for (auto cert : chain) {
-        if (SSL_CTX_add_extra_chain_cert(ctx.get(), cert.get())) {
-            // increase the certificate lock
-            X509_up_ref(cert.get());
-        } else {
-            const int ssl_error = ERR_get_error();
-            debugs(83, DBG_IMPORTANT, "WARNING: can not add certificate to SSL context chain: " << Security::ErrorString(ssl_error));
-        }
-    }
 }
 
 static const char *
@@ -1234,65 +1204,6 @@ Ssl::unloadSquidUntrusted()
         }
         SquidUntrustedCerts.clear();
     }
-}
-
-/**
- \ingroup ServerProtocolSSLInternal
- * Read certificate from file.
- * See also: static readSslX509Certificate function, gadgets.cc file
- */
-static X509 * readSslX509CertificatesChain(char const * certFilename, Security::CertList &chain)
-{
-    if (!certFilename)
-        return NULL;
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
-    if (!bio)
-        return NULL;
-    if (!BIO_read_filename(bio.get(), certFilename))
-        return NULL;
-    X509 *certificate = PEM_read_bio_X509(bio.get(), NULL, NULL, NULL);
-
-    if (certificate) {
-
-        if (X509_check_issued(certificate, certificate) == X509_V_OK)
-            debugs(83, 5, "Certificate is self-signed, will not be chained");
-        else {
-            // and add to the chain any other certificate exist in the file
-            while (X509 *ca = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr))
-                chain.emplace_front(Security::CertPointer(ca));
-        }
-    }
-
-    return certificate;
-}
-
-void
-Ssl::readCertChainAndPrivateKeyFromFiles(Security::CertPointer & cert, Security::PrivateKeyPointer & pkey, Security::CertList &chain, char const * certFilename, char const * keyFilename)
-{
-    if (keyFilename == NULL)
-        keyFilename = certFilename;
-
-    if (certFilename == NULL)
-        certFilename = keyFilename;
-
-    debugs(83, DBG_IMPORTANT, "Using certificate in " << certFilename);
-
-    // XXX: ssl_ask_password_cb needs SSL_CTX_set_default_passwd_cb_userdata()
-    // so this may not fully work iff Config.Program.ssl_password is set.
-    pem_password_cb *cb = ::Config.Program.ssl_password ? &ssl_ask_password_cb : NULL;
-    Ssl::ReadPrivateKeyFromFile(keyFilename, pkey, cb);
-    cert.resetWithoutLocking(readSslX509CertificatesChain(certFilename, chain));
-    if (!cert) {
-        debugs(83, DBG_IMPORTANT, "WARNING: missing cert in '" << certFilename << "'");
-    } else if (!pkey) {
-        debugs(83, DBG_IMPORTANT, "WARNING: missing private key in '" << keyFilename << "'");
-    } else if (!X509_check_private_key(cert.get(), pkey.get())) {
-        debugs(83, DBG_IMPORTANT, "WARNING: X509_check_private_key() failed to verify signing cert");
-    } else
-        return; // everything is okay
-
-    pkey.reset();
-    cert.reset();
 }
 
 bool Ssl::generateUntrustedCert(Security::CertPointer &untrustedCert, Security::PrivateKeyPointer &untrustedPkey, Security::CertPointer const  &cert, Security::PrivateKeyPointer const & pkey)

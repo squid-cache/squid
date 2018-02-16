@@ -44,11 +44,8 @@ Security::ServerOptions::operator =(const Security::ServerOptions &old) {
 
         staticContextSessionId = old.staticContextSessionId;
         generateHostCertificates = old.generateHostCertificates;
-        signingCert = old.signingCert;
-        signPkey = old.signPkey;
-        certsToChain = old.certsToChain;
-        untrustedSigningCert = old.untrustedSigningCert;
-        untrustedSignPkey = old.untrustedSignPkey;
+        signingCa = old.signingCa;
+        untrustedSigningCa = old.untrustedSigningCa;
         dynamicCertMemCacheSize = old.dynamicCertMemCacheSize;
     }
     return *this;
@@ -189,6 +186,27 @@ Security::ServerOptions::createBlankContext() const
     return ctx;
 }
 
+void
+Security::ServerOptions::initServerContexts(AnyP::PortCfg &port)
+{
+    const char *portType = AnyP::ProtocolType_str[port.transport.protocol];
+    for (auto &keyData : certs) {
+        keyData.loadFromFiles(port, portType);
+    }
+
+    if (generateHostCertificates) {
+        createSigningContexts(port);
+    }
+
+    if (!certs.empty() && !createStaticServerContext(port)) {
+        char buf[128];
+        fatalf("%s_port %s initialization error", portType, port.s.toUrl(buf, sizeof(buf)));
+    }
+
+    // if generate-host-certificates=off and certs is empty, no contexts may be created.
+    // features depending on contexts do their own checks and error messages later.
+}
+
 bool
 Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
 {
@@ -196,10 +214,61 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
 
     Security::ContextPointer t(createBlankContext());
     if (t) {
+
 #if USE_OPENSSL
-        if (!Ssl::InitServerContext(t, port))
+        if (certs.size() > 1) {
+            // NOTE: calling SSL_CTX_use_certificate() repeatedly _replaces_ the previous cert details.
+            //       so we cannot use it and support multiple server certificates with OpenSSL.
+            debugs(83, DBG_CRITICAL, "ERROR: OpenSSL does not support multiple server certificates. Ignoring addional cert= parameters.");
+        }
+
+        const auto &keys = certs.front();
+
+        if (!SSL_CTX_use_certificate(t.get(), keys.cert.get())) {
+            const auto x = ERR_get_error();
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS certificate '" << keys.certFile << "': " << Security::ErrorString(x));
             return false;
+        }
+
+        if (!SSL_CTX_use_PrivateKey(t.get(), keys.pkey.get())) {
+            const auto x = ERR_get_error();
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire TLS private key '" << keys.privateKeyFile << "': " << Security::ErrorString(x));
+            return false;
+        }
+
+        for (auto cert : keys.chain) {
+            if (SSL_CTX_add_extra_chain_cert(t.get(), cert.get())) {
+                // increase the certificate lock
+                X509_up_ref(cert.get());
+            } else {
+                const auto error = ERR_get_error();
+                debugs(83, DBG_IMPORTANT, "WARNING: can not add certificate to SSL context chain: " << Security::ErrorString(error));
+            }
+        }
+
+#elif USE_GNUTLS
+        for (auto &keys : certs) {
+            gnutls_x509_crt_t crt = keys.cert.get();
+            gnutls_x509_privkey_t xkey = keys.pkey.get();
+            const auto x = gnutls_certificate_set_x509_key(t.get(), &crt, 1, xkey);
+            if (x != GNUTLS_E_SUCCESS) {
+                SBuf whichFile = keys.certFile;
+                if (keys.certFile != keys.privateKeyFile) {
+                    whichFile.appendf(" and ");
+                    whichFile.append(keys.privateKeyFile);
+                }
+                debugs(83, DBG_CRITICAL, "ERROR: Failed to initialize server context with keys from " << whichFile << ": " << Security::ErrorString(x));
+                return false;
+            }
+            // XXX: add cert chain to the context
+        }
 #endif
+
+        if (!updateContextConfig(t)) {
+            debugs(83, DBG_CRITICAL, "ERROR: Configuring static TLS context");
+            return false;
+        }
+
         if (!loadClientCaFile())
             return false;
     }
@@ -209,39 +278,40 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
 }
 
 void
-Security::ServerOptions::createSigningContexts(AnyP::PortCfg &port)
+Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
 {
+    // For signing we do not have a pre-initialized context object. Instead
+    // contexts are generated as needed. This method initializes the cert
+    // and key pointers used to sign those contexts later.
+
+    signingCa = certs.front();
+
     const char *portType = AnyP::ProtocolType_str[port.transport.protocol];
-    if (!certs.empty()) {
+    if (!signingCa.cert) {
+        char buf[128];
+        // XXX: we never actually checked that the cert is capable of signing!
+        fatalf("No valid signing certificate configured for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
+    }
+
+    if (!signingCa.pkey)
+        debugs(3, DBG_IMPORTANT, "No TLS private key configured for  " << portType << "_port " << port.s);
+
 #if USE_OPENSSL
-        Security::KeyData &keys = certs.front();
-        Ssl::readCertChainAndPrivateKeyFromFiles(signingCert, signPkey, certsToChain, keys.certFile.c_str(), keys.privateKeyFile.c_str());
+    Ssl::generateUntrustedCert(untrustedSigningCa.cert, untrustedSigningCa.pkey, signingCa.cert, signingCa.pkey);
+#elif USE_GNUTLS
+    // TODO: implement for GnuTLS. Just a warning for now since generate is implicitly on for all crypto builds.
+    signingCa.cert.reset();
+    signingCa.pkey.reset();
+    debugs(83, DBG_CRITICAL, "WARNING: Dynamic TLS certificate generation requires --with-openssl.");
+    return;
 #else
-        char buf[128];
-        fatalf("Directive '%s_port %s' requires --with-openssl.", portType, port.s.toUrl(buf, sizeof(buf)));
-#endif
-    }
-
-    if (!signingCert) {
-        char buf[128];
-        fatalf("No valid signing SSL certificate configured for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
-    }
-
-    if (!signPkey)
-        debugs(3, DBG_IMPORTANT, "No SSL private key configured for  " << portType << "_port " << port.s);
-
-#if USE_OPENSSL
-    Ssl::generateUntrustedCert(untrustedSigningCert, untrustedSignPkey, signingCert, signPkey);
+    debugs(83, DBG_CRITICAL, "ERROR: Dynamic TLS certificate generation requires --with-openssl.");
+    return;
 #endif
 
-    if (!untrustedSigningCert) {
+    if (!untrustedSigningCa.cert) {
         char buf[128];
-        fatalf("Unable to generate signing SSL certificate for untrusted sites for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
-    }
-
-    if (!createStaticServerContext(port)) {
-        char buf[128];
-        fatalf("%s_port %s initialization error", portType, port.s.toUrl(buf, sizeof(buf)));
+        fatalf("Unable to generate signing certificate for untrusted sites for %s_port %s", portType, port.s.toUrl(buf, sizeof(buf)));
     }
 }
 
