@@ -1246,6 +1246,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
             else
 #endif
                 conn->local = request->client_addr;
+            conn->local.port(0); // let OS pick the source port to prevent address clashes
             // some flags need setting on the socket to use this address
             conn->flags |= COMM_DOBIND;
             conn->flags |= COMM_TRANSPARENT;

@@ -168,7 +168,6 @@ Ip::Intercept::TproxyTransparent(const Comm::ConnectionPointer &newConn, int sil
     /* Trust the user configured properly. If not no harm done.
      * We will simply attempt a bind outgoing on our own IP.
      */
-    newConn->remote.port(0); // allow random outgoing port to prevent address clashes
     debugs(89, 5, HERE << "address TPROXY: " << newConn);
     return true;
 #else
