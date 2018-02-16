@@ -45,7 +45,6 @@ static bool CheckQuickAbortIsReasonable(StoreEntry * entry);
 
 CBDATA_CLASS_INIT(store_client);
 
-
 /* StoreClient */
 
 bool
@@ -74,7 +73,6 @@ StoreClient::fillChecklist(ACLFilledChecklist &checklist) const
 {
     Must(!"mayCollapse() caller must override fillChecklist()");
 }
-
 
 /* store_client */
 

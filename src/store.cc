@@ -2084,7 +2084,7 @@ StoreEntry::collapsingInitiator() const
     if (!publicKey())
         return false;
     return EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT) ||
-        (hasTransients() && (!hasMemStore() && !hasDisk()));
+           (hasTransients() && (!hasMemStore() && !hasDisk()));
 }
 
 static std::ostream &

@@ -3738,7 +3738,7 @@ clientAclChecklistFill(ACLFilledChecklist &checklist, ClientHttpRequest *http)
      */
     /* connection oriented auth also needs these two lines for it's operation. */
     const char *ident = cbdataReferenceValid(conn) && conn != nullptr && conn->clientConnection != nullptr ?
-        conn->clientConnection->rfc931 : dash_str;
+                        conn->clientConnection->rfc931 : dash_str;
     checklist.setIdent(ident);
     checklist.al = http->al;
 }
