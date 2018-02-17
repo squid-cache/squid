@@ -219,12 +219,12 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
 
     changeAcl(A);
     setRequest(request);
-
     setIdent(ident);
 }
 
 void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
 {
+    assert(!request);
     if (httpRequest != NULL) {
         request = httpRequest;
         HTTPMSGLOCK(request);
@@ -245,6 +245,7 @@ void
 ACLFilledChecklist::setIdent(const char *ident)
 {
 #if USE_IDENT
+    assert(!rfc931[0]);
     if (ident)
         xstrncpy(rfc931, ident, USER_IDENT_SZ);
 #endif
