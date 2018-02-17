@@ -32,15 +32,18 @@ public:
     virtual void created(StoreEntry *) = 0;
 
 protected:
-    /// whether becoming a CF initiator is not prohibited
-    bool mayInitiateCollapsing() const { return onCollapsingPath(); }
-    /// whether becoming a CF slave is not prohibited
-    bool mayCollapseOn(const StoreEntry&) const;
-    /// common collapsing checks for mayInitiateCollapsing() and mayCollapseOn()
-    bool onCollapsingPath() const;
-
     /// configure the ACL checklist with the current transaction state
     virtual void fillChecklist(ACLFilledChecklist &) const = 0;
+
+    // These methods only interpret Squid configuration. Their allowances are
+    // provisional -- other factors may prevent collapsed forwarding. The first
+    // two exist primarily to distinguish two major CF cases in callers code.
+    /// whether Squid configuration allows us to become a CF initiator
+    bool mayInitiateCollapsing() const { return onCollapsingPath(); }
+    /// whether Squid configuration allows collapsing on the initiatorEntry
+    bool mayCollapseOn(const StoreEntry &initiatorEntry) const;
+    /// whether Squid configuration allows collapsing for this transaction
+    bool onCollapsingPath() const;
 };
 
 #if USE_DELAY_POOLS

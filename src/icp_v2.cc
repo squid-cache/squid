@@ -145,6 +145,9 @@ void
 ICPState::fillChecklist(ACLFilledChecklist &checklist) const
 {
     checklist.setRequest(request);
+    // TODO: Refactor to make sure both fillChecklist() and icpLogIcp() have
+    // the same created-once ALE and then add:
+    // checklist.al = al;
 }
 
 /* End ICPState */

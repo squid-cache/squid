@@ -71,6 +71,7 @@ StoreClient::mayCollapseOn(const StoreEntry &e) const
 void
 StoreClient::fillChecklist(ACLFilledChecklist &checklist) const
 {
+    // TODO: Consider moving all CF-related methods into a new dedicated class.
     Must(!"mayCollapse() caller must override fillChecklist()");
 }
 

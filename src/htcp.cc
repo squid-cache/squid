@@ -949,6 +949,9 @@ void
 htcpSpecifier::fillChecklist(ACLFilledChecklist &checklist) const
 {
     checklist.setRequest(request.getRaw());
+    // TODO: Refactor to make sure both fillChecklist() and htcpLogHtcp() have
+    // the same created-once ALE and then add:
+    // checklist.al = al;
 }
 
 static void
