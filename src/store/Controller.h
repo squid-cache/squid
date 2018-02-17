@@ -14,7 +14,6 @@
 class MemObject;
 class RequestFlags;
 class HttpRequestMethod;
-class ACLFilledChecklist;
 
 namespace Store {
 
