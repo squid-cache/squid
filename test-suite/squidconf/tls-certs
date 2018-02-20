@@ -1,0 +1,77 @@
+## Copyright (C) 1996-2017 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
+#
+# static domain certificate
+#
+https_port 127.0.1.1:8443 tls-cert=./leaf-rsa.crt tls-key=./leaf-rsa.pkey
+
+https_port 127.0.1.2:8443 tls-cert=./leaf-chain-rsa.pem
+
+https_port 127.0.1.3:8443 tls-cert=./leaf-rsa.crt tls-key=./leaf-rsa.pkey \
+	tls-generate-host-certificates=off
+
+https_port 127.0.1.4:8443 tls-cert=./leaf-chain-rsa.pem \
+	tls-generate-host-certificates=off
+
+#
+# dynamically generated certificates (Squid-3)
+#
+https_port 127.0.2.1:8443 tls-cert=./ca-root-rsa.crt tls-key=./ca-root-rsa.pkey \
+	tls-generate-host-certificates=on
+
+https_port 127.0.2.2:8443 tls-cert=./ca-root-rsa.pem \
+	tls-generate-host-certificates=on
+
+https_port 127.0.2.3:8443 tls-cert=./ca-root-rsa.crt tls-key=./ca-root-rsa.pkey \
+	tls-generate-host-certificates
+
+https_port 127.0.2.4:8443 tls-cert=./ca-mid-rsa.crt tls-key=./ca-mid-rsa.pkey \
+	tls-generate-host-certificates=on
+
+https_port 127.0.2.5:8443 tls-cert=./ca-mid-rsa.pem \
+	tls-generate-host-certificates=on
+
+https_port 127.0.2.6:8443 tls-cert=./ca-mid-rsa.crt tls-key=./ca-mid-rsa.pkey \
+	tls-generate-host-certificates
+
+https_port 127.0.2.7:8443 tls-cert=./ca-chain-rsa.pem \
+	tls-generate-host-certificates
+
+#
+# dynamically generated certs (Squid-4+) [REQUIRES PR#140]
+#
+#https_port 127.0.3.1:8443 tls-generate-host-certificates=./ca-root-rsa.pem
+#
+#https_port 127.0.3.2:8443 tls-generate-host-certificates=./ca-chain-rsa.pem
+#
+# dynamically generated certs with custom static cert
+#https_port 127.0.3.2:8443 tls-cert=./leaf-rsa.pem tls-generate-host-certificates=./ca-chain-rsa.pem
+
+#
+# Common Misconfigurations:
+#
+
+# - missing key:
+#	WARNING: 'HTTPS_port 127.0.4.1:8443' missing private key in './leaf-rsa.crt'
+#	ERROR: Failed to initialize server context with keys from ./leaf-rsa.crt: The request is invalid.
+#	FATAL: HTTPS_port 127.0.4.1:8443 initialization error
+#https_port 127.0.4.1:8443 tls-cert=./leaf-rsa.crt
+
+# - missing CA cert
+#	XXX: ignores the error silently.
+https_port 127.0.4.2:8443 tls-generate-host-certificates=off
+
+# - non-CA cert and key
+#	WARNING: 'HTTPS_port 127.0.4.3:8443' missing private key in './leaf-rsa.crt'
+#	FATAL: No valid signing certificate configured for HTTPS_port 127.0.4.3:8443
+#https_port 127.0.4.3:8443 tls-cert=./leaf-rsa.crt tls-generate-host-certificates
+
+#
+# TODO: test the ssl-bump permutations once we can for all build layers
+#
+

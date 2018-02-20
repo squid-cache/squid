@@ -21,6 +21,7 @@ LDADD = \
 EXTRA_PROGRAMS = mem_node_test splay tcp-banger2
 
 EXTRA_DIST = \
+	mk-tls-test-certs.sh \
 	$(srcdir)/squidconf/* \
 	testheaders.sh
 
@@ -139,9 +140,25 @@ VirtualDeleteOperator_SOURCES = \
 	VirtualDeleteOperator.cc \
 	stub_libmem.cc
 
-squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
+tls-test-certs: $(srcdir)/mk-tls-test-certs.sh
+	$(srcdir)/mk-tls-test-certs.sh
+
+CLEANFILES += \
+	ca-chain-rsa.pem \
+	ca-mid-rsa.crt \
+	ca-mid-rsa.pem \
+	ca-mid-rsa.pkey \
+	ca-root-rsa.crt \
+	ca-root-rsa.pem \
+	ca-root-rsa.pkey \
+	leaf-chain-rsa.pem \
+	leaf-rsa.crt \
+	leaf-rsa.pkey
+
+squid-conf-tests: tls-test-certs $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
 	@failed=0; cfglist="$?"; rm -f $@ || $(TRUE); \
 	for cfg in $$cfglist ; do \
+		test -f "$$cfg" || continue; \
 		$(top_builddir)/src/squid -k parse -f $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
 				sed s%$(top_builddir)/src/%% | \
@@ -157,3 +174,5 @@ squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
 	if test "$$failed" -eq 0; then cp $(TRUE) $@ ; fi
 
 CLEANFILES += squid-conf-tests
+
+.PHONY: tls-test-certs
