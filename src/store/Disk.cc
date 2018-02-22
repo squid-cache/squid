@@ -187,7 +187,7 @@ Store::Disk::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) c
 bool
 Store::Disk::canLog(StoreEntry const &e)const
 {
-    if (e.hasDisk())
+    if (!e.hasDisk())
         return false;
 
     if (!e.swappedOut())
