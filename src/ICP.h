@@ -14,6 +14,7 @@
  \ingroup ServerProtocol
  */
 
+#include "AccessLogEntry.h"
 #include "comm/forward.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
@@ -77,6 +78,9 @@ public:
 protected:
     /* StoreClient API */
     virtual void fillChecklist(ACLFilledChecklist &) const override;
+    // 'mutable' allows us to create ALE where required, including constant members.
+    // TODO: find a better solution.
+    mutable AccessLogEntry::Pointer al;
 };
 
 /// \ingroup ServerProtocolICPAPI
@@ -109,13 +113,13 @@ HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
 bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
 
 /// \ingroup ServerProtocolICPAPI
-void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from);
+void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntry::Pointer al = nullptr);
 
 /// \ingroup ServerProtocolICPAPI
 icp_opcode icpGetCommonOpcode();
 
 /// \ingroup ServerProtocolICPAPI
-int icpUdpSend(int, const Ip::Address &, icp_common_t *, const LogTags &, int);
+int icpUdpSend(int, const Ip::Address &, icp_common_t *, const LogTags &, int, AccessLogEntry::Pointer al = nullptr);
 
 /// \ingroup ServerProtocolICPAPI
 LogTags icpLogFromICPCode(icp_opcode opcode);

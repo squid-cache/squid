@@ -151,6 +151,9 @@ private:
 
     Ip::Address from;
     htcpDataHeader *dhdr = nullptr;
+    // 'mutable' allows us to create ALE where required, including constant members.
+    // TODO: find a better solution.
+    mutable AccessLogEntryPointer al;
 };
 
 class htcpDetail {
@@ -254,7 +257,7 @@ static ssize_t htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff);
 
 static void htcpHandleMsg(char *buf, int sz, Ip::Address &from);
 
-static void htcpLogHtcp(Ip::Address &, int, LogTags, const char *);
+static void htcpLogHtcp(Ip::Address &, int, LogTags, const char *, AccessLogEntryPointer al = nullptr);
 static void htcpHandleTst(htcpDataHeader *, char *buf, int sz, Ip::Address &from);
 
 static void htcpRecv(int fd, void *data);
@@ -949,9 +952,12 @@ void
 htcpSpecifier::fillChecklist(ACLFilledChecklist &checklist) const
 {
     checklist.setRequest(request.getRaw());
-    // TODO: Refactor to make sure both fillChecklist() and htcpLogHtcp() have
-    // the same created-once ALE and then add:
-    // checklist.al = al;
+    assert(!al);
+    al = new AccessLogEntry();
+    al->htcp.opcode = htcpOpcodeStr[dhdr->opcode];
+    al->url = uri;
+    al->cache.caddr = from;
+    checklist.al = al;
 }
 
 static void
@@ -1127,10 +1133,10 @@ htcpSpecifier::checkedHit(StoreEntry *e)
 {
     if (e) {
         htcpTstReply(dhdr, e, this, from);      /* hit */
-        htcpLogHtcp(from, dhdr->opcode, LOG_UDP_HIT, uri);
+        htcpLogHtcp(from, dhdr->opcode, LOG_UDP_HIT, uri, al);
     } else {
         htcpTstReply(dhdr, NULL, NULL, from);   /* cache miss */
-        htcpLogHtcp(from, dhdr->opcode, LOG_UDP_MISS, uri);
+        htcpLogHtcp(from, dhdr->opcode, LOG_UDP_MISS, uri, al);
     }
 }
 
@@ -1593,13 +1599,14 @@ htcpClosePorts(void)
 }
 
 static void
-htcpLogHtcp(Ip::Address &caddr, int opcode, LogTags logcode, const char *url)
+htcpLogHtcp(Ip::Address &caddr, int opcode, LogTags logcode, const char *url, AccessLogEntryPointer ale)
 {
-    AccessLogEntry::Pointer al = new AccessLogEntry;
     if (LOG_TAG_NONE == logcode.oldType)
         return;
     if (!Config.onoff.log_udp)
         return;
+
+    AccessLogEntry::Pointer al = !ale ? new AccessLogEntry() : ale;
     al->htcp.opcode = htcpOpcodeStr[opcode];
     al->url = url;
     al->cache.caddr = caddr;

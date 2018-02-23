@@ -29,9 +29,9 @@ Ip::Address theIcpPublicHostID;
 
 HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from) STUB_RETVAL(NULL)
 bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request) STUB_RETVAL(false)
-void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from) STUB
+void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntryPointer) STUB
 icp_opcode icpGetCommonOpcode() STUB_RETVAL(ICP_INVALID)
-int icpUdpSend(int, const Ip::Address &, icp_common_t *, LogTags, int) STUB_RETVAL(0)
+int icpUdpSend(int, const Ip::Address &, icp_common_t *, LogTags, int, AccessLogEntryPointer) STUB_RETVAL(0)
 LogTags icpLogFromICPCode(icp_opcode opcode) STUB_RETVAL(LOG_TAG_NONE)
 void icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd) STUB
 void icpHandleIcpV3(int, Ip::Address &, char *, int) STUB

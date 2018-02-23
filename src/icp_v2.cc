@@ -50,7 +50,7 @@
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
 
 /// \ingroup ServerProtocolICPInternal2
-static void icpLogIcp(const Ip::Address &, const LogTags &, int, const char *, int);
+static void icpLogIcp(const Ip::Address &, const LogTags &, int, const char *, int, AccessLogEntryPointer al = nullptr);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpHandleIcpV2(int, Ip::Address &, char *, int);
@@ -145,9 +145,13 @@ void
 ICPState::fillChecklist(ACLFilledChecklist &checklist) const
 {
     checklist.setRequest(request);
-    // TODO: Refactor to make sure both fillChecklist() and icpLogIcp() have
-    // the same created-once ALE and then add:
-    // checklist.al = al;
+
+    assert(!al);
+    al = new AccessLogEntry();
+    al->icp.opcode = ICP_QUERY;
+    al->url = url;
+    al->cache.caddr = from;
+    checklist.al = al;
 }
 
 /* End ICPState */
@@ -180,6 +184,7 @@ ICP2State::created(StoreEntry *e)
     icp_opcode codeToSend;
 
     if (foundHit(*e)) {
+
         codeToSend = ICP_HIT;
     } else {
 #if USE_ICMP
@@ -197,7 +202,7 @@ ICP2State::created(StoreEntry *e)
             codeToSend = ICP_MISS;
     }
 
-    icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from);
+    icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, al);
 
     // TODO: StoreClients must either store/lock or abandon found entries.
     //if (!e->isNull())
@@ -210,10 +215,8 @@ ICP2State::created(StoreEntry *e)
 
 /// \ingroup ServerProtocolICPInternal2
 static void
-icpLogIcp(const Ip::Address &caddr, const LogTags &logcode, int len, const char *url, int delay)
+icpLogIcp(const Ip::Address &caddr, const LogTags &logcode, int len, const char *url, int delay, AccessLogEntry::Pointer ale)
 {
-    AccessLogEntry::Pointer al = new AccessLogEntry();
-
     if (LOG_TAG_NONE == logcode.oldType)
         return;
 
@@ -224,6 +227,8 @@ icpLogIcp(const Ip::Address &caddr, const LogTags &logcode, int len, const char 
 
     if (!Config.onoff.log_udp)
         return;
+
+    AccessLogEntry::Pointer al = !ale ? new AccessLogEntry() : ale;
 
     al->icp.opcode = ICP_QUERY;
 
@@ -309,7 +314,8 @@ icpUdpSend(int fd,
            const Ip::Address &to,
            icp_common_t * msg,
            const LogTags &logcode,
-           int delay)
+           int delay,
+           AccessLogEntryPointer al)
 {
     icpUdpData *queue;
     int x;
@@ -322,7 +328,7 @@ icpUdpSend(int fd,
 
     if (x >= 0) {
         /* successfully written */
-        icpLogIcp(to, logcode, len, (char *) (msg + 1), delay);
+        icpLogIcp(to, logcode, len, (char *) (msg + 1), delay, al);
         icpCount(msg, SENT, (size_t) len, delay);
         safe_free(msg);
     } else if (0 == delay) {
@@ -398,10 +404,10 @@ icpLogFromICPCode(icp_opcode opcode)
 }
 
 void
-icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from)
+icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntry::Pointer al)
 {
     icp_common_t *reply = icp_common_t::CreateMessage(opcode, flags, url, reqnum, pad);
-    icpUdpSend(fd, from, reply, icpLogFromICPCode(opcode), 0);
+    icpUdpSend(fd, from, reply, icpLogFromICPCode(opcode), 0, al);
 }
 
 void
