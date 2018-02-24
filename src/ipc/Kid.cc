@@ -90,7 +90,9 @@ Kid::reportStopped() const
     if (hopeless() && Config.hopelessKidRevivalDelay) {
         syslog(LOG_NOTICE, "Squid Parent: %s process %d will not be restarted for %ld "
                "seconds due to repeated, frequent failures",
-               theName.termedBuf(), pid, Config.hopelessKidRevivalDelay);
+               theName.termedBuf(),
+               pid,
+               static_cast<long int>(Config.hopelessKidRevivalDelay));
     }
 }
 
