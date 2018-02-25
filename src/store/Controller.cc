@@ -9,7 +9,6 @@
 /* DEBUG: section 20    Store Controller */
 
 #include "squid.h"
-#include "acl/FilledChecklist.h"
 #include "mem_node.h"
 #include "MemStore.h"
 #include "profiler/Profiler.h"

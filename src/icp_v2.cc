@@ -58,6 +58,23 @@ static void icpHandleIcpV2(int, Ip::Address &, char *, int);
 /// \ingroup ServerProtocolICPInternal2
 static void icpCount(void *, int, size_t, int);
 
+static void
+icpSyncAle(AccessLogEntryPointer al, const Ip::Address &caddr, LogTags logcode, const char *url, int len, int delay)
+{
+    if (!al)
+        al = new AccessLogEntry();
+    al->icp.opcode = ICP_QUERY;
+    al->cache.caddr = caddr;
+    al->cache.code = logcode;
+    al->url = url;
+    // XXX: move to use icp.clientReply instead
+    al->http.clientReplySz.payloadData = len;
+    al->cache.start_time = current_time;
+    al->cache.start_time.tv_sec -= delay;
+    al->cache.trTime.tv_sec = delay;
+    al->cache.trTime.tv_usec = 0;
+}
+
 /**
  \ingroup ServerProtocolICPInternal2
  * IcpQueueHead is global so comm_incoming() knows whether or not
@@ -145,13 +162,7 @@ void
 ICPState::fillChecklist(ACLFilledChecklist &checklist) const
 {
     checklist.setRequest(request);
-
-    assert(!al);
-    al = new AccessLogEntry();
-    al->icp.opcode = ICP_QUERY;
-    al->url = url;
-    al->cache.caddr = from;
-    checklist.al = al;
+    icpSyncAle(al, from, LOG_TAG_NONE, url, 0, 0);
 }
 
 /* End ICPState */
@@ -215,7 +226,7 @@ ICP2State::created(StoreEntry *e)
 
 /// \ingroup ServerProtocolICPInternal2
 static void
-icpLogIcp(const Ip::Address &caddr, const LogTags &logcode, int len, const char *url, int delay, AccessLogEntry::Pointer ale)
+icpLogIcp(const Ip::Address &caddr, const LogTags &logcode, int len, const char *url, int delay, AccessLogEntry::Pointer al)
 {
     if (LOG_TAG_NONE == logcode.oldType)
         return;
@@ -228,21 +239,7 @@ icpLogIcp(const Ip::Address &caddr, const LogTags &logcode, int len, const char 
     if (!Config.onoff.log_udp)
         return;
 
-    AccessLogEntry::Pointer al = !ale ? new AccessLogEntry() : ale;
-
-    al->icp.opcode = ICP_QUERY;
-
-    al->url = url;
-
-    al->cache.caddr = caddr;
-
-    // XXX: move to use icp.clientReply instead
-    al->http.clientReplySz.payloadData = len;
-
-    al->cache.code = logcode;
-
-    al->cache.trTime.tv_sec = delay;
-
+    icpSyncAle(al, caddr, logcode, url, len, delay);
     accessLogLog(al, NULL);
 }
 

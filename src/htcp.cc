@@ -151,8 +151,6 @@ private:
 
     Ip::Address from;
     htcpDataHeader *dhdr = nullptr;
-    // 'mutable' allows us to create ALE where required, including constant members.
-    // TODO: find a better solution.
     mutable AccessLogEntryPointer al;
 };
 
@@ -269,6 +267,23 @@ static void htcpTstReply(htcpDataHeader *, StoreEntry *, htcpSpecifier *, Ip::Ad
 static void htcpHandleTstRequest(htcpDataHeader *, char *buf, int sz, Ip::Address &from);
 
 static void htcpHandleTstResponse(htcpDataHeader *, char *, int, Ip::Address &);
+
+static void
+htcpSyncAle(AccessLogEntryPointer al, const Ip::Address &caddr, int opcode, LogTags logcode, const char *url)
+{
+    if (!al)
+        al = new AccessLogEntry();
+    al->cache.caddr = caddr;
+    al->htcp.opcode = htcpOpcodeStr[opcode];
+    al->cache.code = logcode;
+    al->url = url;
+    // HTCP transactions do not wait
+    al->cache.start_time = current_time;
+    // al->cache.trTime remains zero
+    al->cache.trTime.tv_sec = 0;
+    al->cache.trTime.tv_usec = 0;
+    accessLogLog(al, NULL);
+}
 
 static void
 htcpHexdump(const char *tag, const char *s, int sz)
@@ -952,12 +967,7 @@ void
 htcpSpecifier::fillChecklist(ACLFilledChecklist &checklist) const
 {
     checklist.setRequest(request.getRaw());
-    assert(!al);
-    al = new AccessLogEntry();
-    al->htcp.opcode = htcpOpcodeStr[dhdr->opcode];
-    al->url = uri;
-    al->cache.caddr = from;
-    checklist.al = al;
+    htcpSyncAle(al, from, dhdr->opcode, LOG_TAG_NONE, uri);
 }
 
 static void
@@ -1599,20 +1609,14 @@ htcpClosePorts(void)
 }
 
 static void
-htcpLogHtcp(Ip::Address &caddr, int opcode, LogTags logcode, const char *url, AccessLogEntryPointer ale)
+htcpLogHtcp(Ip::Address &caddr, int opcode, LogTags logcode, const char *url, AccessLogEntryPointer al)
 {
     if (LOG_TAG_NONE == logcode.oldType)
         return;
     if (!Config.onoff.log_udp)
         return;
 
-    AccessLogEntry::Pointer al = !ale ? new AccessLogEntry() : ale;
-    al->htcp.opcode = htcpOpcodeStr[opcode];
-    al->url = url;
-    al->cache.caddr = caddr;
-    al->cache.code = logcode;
-    al->cache.trTime.tv_sec = 0;
-    al->cache.trTime.tv_usec = 0;
+    htcpSyncAle(al, caddr, opcode, logcode, url);
     accessLogLog(al, NULL);
 }
 
