@@ -1273,6 +1273,7 @@ if test "x$with_gnutls" != "xno"; then
     CXXFLAGS="$LIBGNUTLS_CFLAGS $CXXFLAGS"
     SSLLIB="$LIBGNUTLS_PATH $LIBGNUTLS_LIBS $SSLLIB"
     AC_DEFINE(USE_GNUTLS,1,[GnuTLS support is available])
+    AC_PATH_PROG(CERTTOOL_BIN, certtool, $FALSE)
   else
     with_gnutls=no
   fi
@@ -1363,6 +1364,7 @@ if test "x$with_openssl" = "xyes"; then
     SQUID_CHECK_OPENSSL_CONST_X509_GET0_SIGNATURE_ARGS
     SQUID_CHECK_OPENSSL_TXTDB
     SQUID_CHECK_OPENSSL_HELLO_OVERWRITE_HACK
+    AC_PATH_PROG(OPENSSL_BIN, openssl, $FALSE)
   fi
   if test "x$SSLLIB" = "x"; then
     AC_MSG_ERROR([Required OpenSSL library not found])

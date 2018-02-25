@@ -141,7 +141,7 @@ VirtualDeleteOperator_SOURCES = \
 	stub_libmem.cc
 
 generate-test-certificates:
-	$(srcdir)/mk-tls-test-certs.sh
+	$(srcdir)/mk-tls-test-certs.sh "$(CERTTOOL_BIN)" "$(OPENSSL_BIN)"
 
 CLEANFILES += \
 	ca-chain-rsa.pem \
