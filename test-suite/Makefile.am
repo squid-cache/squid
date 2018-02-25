@@ -140,7 +140,7 @@ VirtualDeleteOperator_SOURCES = \
 	VirtualDeleteOperator.cc \
 	stub_libmem.cc
 
-tls-test-certs: $(srcdir)/mk-tls-test-certs.sh
+generate-test-certificates:
 	$(srcdir)/mk-tls-test-certs.sh
 
 CLEANFILES += \
@@ -155,7 +155,7 @@ CLEANFILES += \
 	leaf-rsa.crt \
 	leaf-rsa.pkey
 
-squid-conf-tests: tls-test-certs $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
+squid-conf-tests: generate-test-certificates $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
 	@failed=0; cfglist="$?"; rm -f $@ || $(TRUE); \
 	for cfg in $$cfglist ; do \
 		test -f "$$cfg" || continue; \
@@ -175,4 +175,4 @@ squid-conf-tests: tls-test-certs $(top_builddir)/src/squid.conf.default $(srcdir
 
 CLEANFILES += squid-conf-tests
 
-.PHONY: tls-test-certs
+.PHONY: generate-test-certificates
