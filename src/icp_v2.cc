@@ -196,7 +196,6 @@ ICP2State::created(StoreEntry *e)
     icp_opcode codeToSend;
 
     if (foundHit(*e)) {
-
         codeToSend = ICP_HIT;
     } else {
 #if USE_ICMP

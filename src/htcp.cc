@@ -279,7 +279,6 @@ htcpSyncAle(AccessLogEntryPointer &al, const Ip::Address &caddr, int opcode, Log
     al->url = url;
     // HTCP transactions do not wait
     al->cache.start_time = current_time;
-    // al->cache.trTime remains zero
     al->cache.trTime.tv_sec = 0;
     al->cache.trTime.tv_usec = 0;
 }
