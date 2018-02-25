@@ -50,7 +50,7 @@
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
 
 /// \ingroup ServerProtocolICPInternal2
-static void icpLogIcp(const Ip::Address &, const LogTags &, int, const char *, int, AccessLogEntryPointer al = nullptr);
+static void icpLogIcp(const Ip::Address &, const LogTags &, int, const char *, int, AccessLogEntryPointer);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpHandleIcpV2(int, Ip::Address &, char *, int);
@@ -252,7 +252,7 @@ icpUdpSendQueue(int fd, void *)
     while ((q = IcpQueueHead) != NULL) {
         int delay = tvSubUsec(q->queue_time, current_time);
         /* increment delay to prevent looping */
-        const int x = icpUdpSend(fd, q->address, (icp_common_t *) q->msg, q->logcode, ++delay);
+        const int x = icpUdpSend(fd, q->address, (icp_common_t *) q->msg, q->logcode, ++delay, nullptr);
         IcpQueueHead = q->next;
         xfree(q);
 
@@ -419,7 +419,7 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
          */
         clientdbUpdate(from, LOG_UDP_DENIED, AnyP::PROTO_ICP, 0);
     } else {
-        icpCreateAndSend(ICP_DENIED, 0, url, reqnum, 0, fd, from);
+        icpCreateAndSend(ICP_DENIED, 0, url, reqnum, 0, fd, from, nullptr);
     }
 }
 
@@ -450,14 +450,14 @@ icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
 {
     if (strpbrk(url, w_space)) {
         url = rfc1738_escape(url);
-        icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from);
+        icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from, nullptr);
         return NULL;
     }
 
     HttpRequest *result;
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcp);
     if ((result = HttpRequest::FromUrl(url, mx)) == NULL)
-        icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from);
+        icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr);
 
     return result;
 

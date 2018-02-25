@@ -114,13 +114,13 @@ HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
 bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
 
 /// \ingroup ServerProtocolICPAPI
-void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntryPointer al = nullptr);
+void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntryPointer);
 
 /// \ingroup ServerProtocolICPAPI
 icp_opcode icpGetCommonOpcode();
 
 /// \ingroup ServerProtocolICPAPI
-int icpUdpSend(int, const Ip::Address &, icp_common_t *, const LogTags &, int, AccessLogEntryPointer al = nullptr);
+int icpUdpSend(int, const Ip::Address &, icp_common_t *, const LogTags &, int, AccessLogEntryPointer);
 
 /// \ingroup ServerProtocolICPAPI
 LogTags icpLogFromICPCode(icp_opcode opcode);
