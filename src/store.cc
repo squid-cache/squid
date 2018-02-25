@@ -859,7 +859,7 @@ StoreEntry::vappendf(const char *fmt, va_list vargs)
     *buf = 0;
     int x;
 
-    va_args ap;
+    va_list ap;
     /* Fix of bug 753r. The value of vargs is undefined
      * after vsnprintf() returns. Make a copy of vargs
      * incase we loop around and call vsnprintf() again.
