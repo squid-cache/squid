@@ -269,7 +269,7 @@ static void htcpHandleTstRequest(htcpDataHeader *, char *buf, int sz, Ip::Addres
 static void htcpHandleTstResponse(htcpDataHeader *, char *, int, Ip::Address &);
 
 static void
-htcpSyncAle(AccessLogEntryPointer al, const Ip::Address &caddr, int opcode, LogTags logcode, const char *url)
+htcpSyncAle(AccessLogEntryPointer &al, const Ip::Address &caddr, int opcode, LogTags logcode, const char *url)
 {
     if (!al)
         al = new AccessLogEntry();
@@ -282,7 +282,6 @@ htcpSyncAle(AccessLogEntryPointer al, const Ip::Address &caddr, int opcode, LogT
     // al->cache.trTime remains zero
     al->cache.trTime.tv_sec = 0;
     al->cache.trTime.tv_usec = 0;
-    accessLogLog(al, NULL);
 }
 
 static void
@@ -968,6 +967,7 @@ htcpSpecifier::fillChecklist(ACLFilledChecklist &checklist) const
 {
     checklist.setRequest(request.getRaw());
     htcpSyncAle(al, from, dhdr->opcode, LOG_TAG_NONE, uri);
+    checklist.al = al;
 }
 
 static void

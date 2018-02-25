@@ -59,7 +59,7 @@ static void icpHandleIcpV2(int, Ip::Address &, char *, int);
 static void icpCount(void *, int, size_t, int);
 
 static void
-icpSyncAle(AccessLogEntryPointer al, const Ip::Address &caddr, LogTags logcode, const char *url, int len, int delay)
+icpSyncAle(AccessLogEntryPointer &al, const Ip::Address &caddr, LogTags logcode, const char *url, int len, int delay)
 {
     if (!al)
         al = new AccessLogEntry();
@@ -163,6 +163,7 @@ ICPState::fillChecklist(ACLFilledChecklist &checklist) const
 {
     checklist.setRequest(request);
     icpSyncAle(al, from, LOG_TAG_NONE, url, 0, 0);
+    checklist.al = al;
 }
 
 /* End ICPState */
