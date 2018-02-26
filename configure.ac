@@ -1372,6 +1372,7 @@ if test "x$with_openssl" = "xyes"; then
 fi
 AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_PATH} ${LIBOPENSSL_LIBS}])
 AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
+AM_CONDITIONAL(ENABLE_CERT_TESTS,[ test "x$with_openssl" = "xyes" -o "x$with_gnutls" != "xno"])
 AC_SUBST(SSLLIB)
 
 dnl User may specify MIT Kerberos is needed from a non-standard location

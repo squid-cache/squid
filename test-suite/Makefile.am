@@ -155,10 +155,24 @@ CLEANFILES += \
 	leaf-rsa.crt \
 	leaf-rsa.pkey
 
-squid-conf-tests: generate-test-certificates $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
-	@failed=0; cfglist="$?"; rm -f $@ || $(TRUE); \
-	for cfg in $$cfglist ; do \
-		test -f "$$cfg" || continue; \
+CFG_TEST_FILES= \
+	$(top_builddir)/src/squid.conf.default \
+	$(srcdir)/squidconf/empty \
+	$(srcdir)/squidconf/external_acl_type \
+	$(srcdir)/squidconf/mgr_passwd \
+	$(srcdir)/squidconf/regex \
+	$(srcdir)/squidconf/regressions-3.3 \
+	$(srcdir)/squidconf/regressions-3.4.0.1 \
+	$(srcdir)/squidconf/regressions-3.5.0.2 \
+	$(srcdir)/squidconf/regressions-4.0.18
+
+if ENABLE_CERT_TESTS
+CFG_TEST_FILES += $(srcdir)/squidconf/tls-certs
+endif
+
+squid-conf-tests: generate-test-certificates $(top_builddir)/src/squid.conf.default
+	@failed=0; rm -f $@ || $(TRUE); \
+	for cfg in $(CFG_TEST_FILES) ; do \
 		$(top_builddir)/src/squid -k parse -f $$cfg || \
 			{ echo "FAIL: squid.conf test: $$cfg" | \
 				sed s%$(top_builddir)/src/%% | \
