@@ -233,6 +233,7 @@ Store::Controller::callback()
     return result;
 }
 
+/// update reference counters of the recently touched entry
 void
 Store::Controller::referenceBusy(StoreEntry &e)
 {
@@ -256,6 +257,8 @@ Store::Controller::referenceBusy(StoreEntry &e)
     }
 }
 
+/// dereference()s an idle entry
+/// \returns false if and only if the entry should be deleted
 bool
 Store::Controller::dereferenceIdle(StoreEntry &e, bool wantsLocalMemory)
 {
