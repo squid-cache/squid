@@ -207,7 +207,7 @@ Transients::monitorIo(StoreEntry *e, const cache_key *key, const Store::IoStatus
     }
 }
 
-/// creates a new Transients entry or throws
+/// creates a new Transients entry
 void
 Transients::addEntry(StoreEntry *e, const cache_key *key, const Store::IoStatus direction)
 {
@@ -224,11 +224,12 @@ Transients::addEntry(StoreEntry *e, const cache_key *key, const Store::IoStatus 
     slot->set(*e, key);
     e->mem_obj->xitTable.index = index;
     if (direction == Store::ioWriting) {
-        // keep write lock; the caller will decide what to do with it
+        // allow reading and receive remote DELETE events, but do not switch to
+        // the reading lock because transientReaders() callers want true readers
         map->startAppending(e->mem_obj->xitTable.index);
     } else {
         // keep the entry locked (for reading) to receive remote DELETE events
-        map->closeForWriting(e->mem_obj->xitTable.index);
+        map->closeForWriting(e->mem_obj->xitTable.index, true);
     }
 }
 
