@@ -229,7 +229,7 @@ Transients::addEntry(StoreEntry *e, const cache_key *key, const Store::IoStatus 
         map->startAppending(e->mem_obj->xitTable.index);
     } else {
         // keep the entry locked (for reading) to receive remote DELETE events
-        map->closeForWriting(e->mem_obj->xitTable.index, true);
+        map->switchWritingToReading(e->mem_obj->xitTable.index);
     }
 }
 
@@ -256,7 +256,7 @@ Transients::completeWriting(const StoreEntry &e)
 {
     assert(e.hasTransients());
     assert(isWriter(e));
-    map->closeForWriting(e.mem_obj->xitTable.index, true);
+    map->switchWritingToReading(e.mem_obj->xitTable.index);
     e.mem_obj->xitTable.io = Store::ioReading;
 }
 
