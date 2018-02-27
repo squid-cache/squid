@@ -136,9 +136,7 @@ public:
 private:
     bool memoryCacheHasSpaceFor(const int pagesRequired) const;
 
-    /// update reference counters of the recently touched entry
     void referenceBusy(StoreEntry &e);
-    /// dereference() an idle entry and return true if the entry should be deleted
     bool dereferenceIdle(StoreEntry &, bool wantsLocalMemory);
 
     void allowSharing(StoreEntry &, const cache_key *);
