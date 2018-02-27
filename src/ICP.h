@@ -14,6 +14,7 @@
  \ingroup ServerProtocol
  */
 
+#include "base/RefCount.h"
 #include "comm/forward.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
@@ -22,6 +23,9 @@
 #include "StoreClient.h"
 
 class HttpRequest;
+
+class AccessLogEntry;
+typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
 /**
  * Wire-level ICP header.
@@ -57,18 +61,27 @@ public:
  \ingroup ServerProtocolICPAPI
  \todo mempool this
  */
-class ICPState
+class ICPState: public StoreClient
 {
 
 public:
     ICPState(icp_common_t &aHeader, HttpRequest *aRequest);
     virtual ~ICPState();
+
+    /// whether the found entry warrants an ICP_HIT response
+    bool foundHit(const StoreEntry &) const;
+
     icp_common_t header;
     HttpRequest *request;
     int fd;
 
     Ip::Address from;
     char *url;
+
+protected:
+    /* StoreClient API */
+    virtual void fillChecklist(ACLFilledChecklist &) const override;
+    mutable AccessLogEntryPointer al;
 };
 
 /// \ingroup ServerProtocolICPAPI
@@ -101,13 +114,13 @@ HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
 bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
 
 /// \ingroup ServerProtocolICPAPI
-void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from);
+void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntryPointer);
 
 /// \ingroup ServerProtocolICPAPI
 icp_opcode icpGetCommonOpcode();
 
 /// \ingroup ServerProtocolICPAPI
-int icpUdpSend(int, const Ip::Address &, icp_common_t *, const LogTags &, int);
+int icpUdpSend(int, const Ip::Address &, icp_common_t *, const LogTags &, int, AccessLogEntryPointer);
 
 /// \ingroup ServerProtocolICPAPI
 LogTags icpLogFromICPCode(icp_opcode opcode);
@@ -123,9 +136,6 @@ PF icpUdpSendQueue;
 
 /// \ingroup ServerProtocolICPAPI
 void icpHandleIcpV3(int, Ip::Address &, char *, int);
-
-/// \ingroup ServerProtocolICPAPI
-int icpCheckUdpHit(StoreEntry *, HttpRequest * request);
 
 /// \ingroup ServerProtocolICPAPI
 void icpOpenPorts(void);
