@@ -218,7 +218,7 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
     rfc931[0] = '\0';
 
     changeAcl(A);
-    setRequest(request);
+    setRequest(http_request);
     setIdent(ident);
 }
 
