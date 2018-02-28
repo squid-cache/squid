@@ -259,8 +259,6 @@ void MemBuf::terminate()
 void
 MemBuf::vappendf(const char *fmt, va_list vargs)
 {
-    va_list ap;
-
     int sz = 0;
     assert(fmt);
     assert(buf);
@@ -275,6 +273,7 @@ MemBuf::vappendf(const char *fmt, va_list vargs)
          * after vsnprintf() returns. Make a copy of vargs
          * incase we loop around and call vsnprintf() again.
          */
+        va_list ap;
         va_copy(ap,vargs);
         sz = vsnprintf(buf + size, free_space, fmt, ap);
         va_end(ap);
