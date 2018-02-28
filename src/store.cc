@@ -1223,6 +1223,7 @@ StoreEntry::release(const bool shareable)
         lock("storeLateRelease");
         releaseRequest(shareable);
         LateReleaseStack.push(this);
+        PROF_stop(storeRelease);
         return;
     }
 
