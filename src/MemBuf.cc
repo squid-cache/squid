@@ -76,15 +76,6 @@
 #include "MemBuf.h"
 #include "profiler/Profiler.h"
 
-#ifdef VA_COPY
-#undef VA_COPY
-#endif
-#if defined HAVE_VA_COPY
-#define VA_COPY va_copy
-#elif defined HAVE___VA_COPY
-#define VA_COPY __va_copy
-#endif
-
 /* local constants */
 
 /* default values for buffer sizes, used by memBufDefInit */
@@ -268,10 +259,6 @@ void MemBuf::terminate()
 void
 MemBuf::vappendf(const char *fmt, va_list vargs)
 {
-#ifdef VA_COPY
-    va_list ap;
-#endif
-
     int sz = 0;
     assert(fmt);
     assert(buf);
@@ -282,18 +269,15 @@ MemBuf::vappendf(const char *fmt, va_list vargs)
         mb_size_t free_space = capacity - size;
         /* put as much as we can */
 
-#ifdef VA_COPY
         /* Fix of bug 753r. The value of vargs is undefined
          * after vsnprintf() returns. Make a copy of vargs
          * incase we loop around and call vsnprintf() again.
          */
-        VA_COPY(ap,vargs);
+        va_list ap;
+        va_copy(ap,vargs);
         sz = vsnprintf(buf + size, free_space, fmt, ap);
         va_end(ap);
-#else /* VA_COPY */
 
-        sz = vsnprintf(buf + size, free_space, fmt, vargs);
-#endif /*VA_COPY*/
         /* check for possible overflow */
         /* snprintf on Linuz returns -1 on overflows */
         /* snprintf on FreeBSD returns at least free_space on overflows */

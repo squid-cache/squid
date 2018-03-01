@@ -29,7 +29,6 @@
 #include "squid.h"
 #include "helper/protocol_defines.h"
 
-#include <cstdarg>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>

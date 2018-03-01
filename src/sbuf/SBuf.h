@@ -20,7 +20,6 @@
 #include "sbuf/Stats.h"
 
 #include <climits>
-#include <cstdarg>
 #include <iosfwd>
 #include <iterator>
 #if HAVE_UNISTD_H
