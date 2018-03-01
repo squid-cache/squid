@@ -19,15 +19,6 @@
 #include <iostream>
 #include <sstream>
 
-#ifdef VA_COPY
-#undef VA_COPY
-#endif
-#if defined HAVE_VA_COPY
-#define VA_COPY va_copy
-#elif defined HAVE___VA_COPY
-#define VA_COPY __va_copy
-#endif
-
 InstanceIdDefinitions(SBuf, "SBuf");
 
 SBufStats SBuf::stats;
@@ -266,14 +257,10 @@ SBuf::vappendf(const char *fmt, va_list vargs)
     size_type requiredSpaceEstimate = strlen(fmt)*2;
 
     char *space = rawSpace(requiredSpaceEstimate);
-#ifdef VA_COPY
     va_list ap;
-    VA_COPY(ap, vargs);
+    va_copy(ap, vargs);
     sz = vsnprintf(space, spaceSize(), fmt, ap);
     va_end(ap);
-#else
-    sz = vsnprintf(space, spaceSize(), fmt, vargs);
-#endif
     Must2(sz >= 0, "vsnprintf() output error");
 
     /* check for possible overflow */
