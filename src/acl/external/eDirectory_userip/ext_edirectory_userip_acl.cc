@@ -53,7 +53,6 @@
 #include <cctype>
 #include <cerrno>
 #include <csignal>
-#include <cstdarg>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
