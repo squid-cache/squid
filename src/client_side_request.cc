@@ -1683,7 +1683,7 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
  */
 
 tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
-nfmark_t aclMapNfmark (acl_nfmark * head, ACLChecklist * ch);
+acl_nfmark *aclMapNfmark (acl_nfmark * head, ACLChecklist * ch);
 
 void
 ClientHttpRequest::doCallouts()
@@ -1794,9 +1794,13 @@ ClientHttpRequest::doCallouts()
             ACLFilledChecklist ch(NULL, request, NULL);
             ch.src_addr = request->client_addr;
             ch.my_addr = request->my_addr;
-            nfmark_t mark = aclMapNfmark(Ip::Qos::TheConfig.nfmarkToClient, &ch);
-            if (mark)
+            if (const auto mc = aclMapNfmark(Ip::Qos::TheConfig.nfmarkToClient, &ch)) {
+                // Clear the bits given by the mask in existing MARK
+                // and OR it with a new mark.
+                nfmark_t mark = getConn()->clientConnection->nfmark & ~(mc->connMark.nfmask);
+                mark |= mc->connMark.nfmark;
                 Ip::Qos::setSockNfmark(getConn()->clientConnection, mark);
+            }
         }
     }
 

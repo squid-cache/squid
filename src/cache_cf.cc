@@ -25,6 +25,7 @@
 #include "cache_cf.h"
 #include "CachePeer.h"
 #include "ConfigParser.h"
+#include "ConnMarkConfig.h"
 #include "CpuAffinityMap.h"
 #include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
@@ -47,6 +48,7 @@
 #include "mgr/Registration.h"
 #include "neighbors.h"
 #include "NeighborTypeDomainList.h"
+#include "parser/Tokenizer.h"
 #include "Parsing.h"
 #include "pconn.h"
 #include "PeerDigest.h"
@@ -55,6 +57,8 @@
 #include "RefreshPattern.h"
 #include "rfc1738.h"
 #include "sbuf/List.h"
+#include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"
@@ -1542,10 +1546,7 @@ static void
 dump_acl_nfmark(StoreEntry * entry, const char *name, acl_nfmark * head)
 {
     for (acl_nfmark *l = head; l; l = l->next) {
-        if (l->nfmark > 0)
-            storeAppendPrintf(entry, "%s 0x%02X", name, l->nfmark);
-        else
-            storeAppendPrintf(entry, "%s none", name);
+        storeAppendPrintf(entry, "%s %s", name, ToSBuf(l->connMark).c_str());
 
         dump_acl_list(entry, l->aclList);
 
@@ -1556,24 +1557,19 @@ dump_acl_nfmark(StoreEntry * entry, const char *name, acl_nfmark * head)
 static void
 parse_acl_nfmark(acl_nfmark ** head)
 {
-    nfmark_t mark;
-    char *token = ConfigParser::NextToken();
+    SBuf token(ConfigParser::NextToken());
 
-    if (!token) {
+    if (token.isEmpty()) {
         self_destruct();
         return;
     }
 
-    if (!xstrtoui(token, NULL, &mark, 0, std::numeric_limits<nfmark_t>::max())) {
-        self_destruct();
-        return;
-    }
+    const auto cm = ConnMarkConfig::Parse(token);
 
     acl_nfmark *l = new acl_nfmark;
+    l->connMark = cm;
 
-    l->nfmark = mark;
-
-    aclParseAclList(LegacyParser, &l->aclList, token);
+    aclParseAclList(LegacyParser, &l->aclList, token.c_str());
 
     acl_nfmark **tail = head;   /* sane name below */
     while (*tail)
