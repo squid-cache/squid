@@ -262,6 +262,8 @@ squid_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ConfigParser.h \
+	ConnMarkConfig.cc \
+	ConnMarkConfig.h \
 	CpuAffinity.cc \
 	CpuAffinity.h \
 	CpuAffinityMap.cc \
@@ -1234,6 +1236,8 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	ConnMarkConfig.cc \
+	ConnMarkConfig.h \
 	CpuAffinityMap.cc \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \
@@ -1647,6 +1651,8 @@ tests_testEvent_SOURCES = \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	ConnMarkConfig.cc \
+	ConnMarkConfig.h \
 	CpuAffinityMap.cc \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \
@@ -1882,6 +1888,8 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	ConnMarkConfig.cc \
+	ConnMarkConfig.h \
 	CpuAffinityMap.cc \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \
@@ -2115,6 +2123,8 @@ tests_test_http_range_SOURCES = \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	ConnMarkConfig.cc \
+	ConnMarkConfig.h \
 	CpuAffinityMap.cc \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \
@@ -2392,6 +2402,8 @@ tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
 	AccessLogEntry.cc \
+	ConnMarkConfig.cc \
+	ConnMarkConfig.h \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -3273,6 +3285,8 @@ tests_testURL_SOURCES = \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	ConnMarkConfig.cc \
+	ConnMarkConfig.h \
 	CpuAffinityMap.cc \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \

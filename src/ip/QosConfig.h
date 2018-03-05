@@ -10,6 +10,7 @@
 #define SQUID_QOSCONFIG_H
 
 #include "acl/forward.h"
+#include "ConnMarkConfig.h"
 #include "hier_code.h"
 #include "ip/forward.h"
 
@@ -43,12 +44,12 @@ class acl_nfmark
     CBDATA_CLASS(acl_nfmark);
 
 public:
-    acl_nfmark() : next(NULL), aclList(NULL), nfmark(0) {}
+    acl_nfmark() : next(NULL), aclList(NULL) {}
     ~acl_nfmark();
 
     acl_nfmark *next;
     ACLList *aclList;
-    nfmark_t nfmark;
+    ConnMarkConfig connMark;
 };
 
 namespace Ip

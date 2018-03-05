@@ -2570,7 +2570,23 @@ DOC_START
 	Allows you to apply a Netfilter mark value to packets being transmitted
 	on the client-side, based on an ACL.
 
-	clientside_mark mark-value [!]aclname ...
+	clientside_mark mark[/mask] [!]aclname ...
+
+	Mark and mask are unsigned integers (hex, octal, or decimal).
+	The mask may be used to preserve marking previously set by other agents
+	(e.g., iptables).
+
+	A matching rule replaces the original packet mark value with the configured mark.
+	If a mask is also specified, then the masked bits of the original value are
+	zeroed, and the configured mark is ORed with that adjusted value. For example,
+	setting a 0xAB/0xF mark for a packet with a 0x5F mark, results in a
+	0xFB mark (rather than a 0xAB or 0x5B mark).
+
+	This directive semantics is similar to iptables --set-mark rather than
+	--set-xmark functionality.
+
+	The directive rules are evaluated in the configuration order. The first
+	matching rule wins.
 
 	Example where normal_service_net uses the mark value 0x00
 	and good_service_net uses 0x20

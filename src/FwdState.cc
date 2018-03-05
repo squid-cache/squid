@@ -1278,15 +1278,15 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 }
 
 /// Checks for a netfilter mark value to apply depending on the ACL
-nfmark_t
+acl_nfmark *
 aclMapNfmark(acl_nfmark * head, ACLChecklist * ch)
 {
     for (acl_nfmark *l = head; l; l = l->next) {
         if (!l->aclList || ch->fastCheck(l->aclList).allowed())
-            return l->nfmark;
+            return l;
     }
 
-    return 0;
+    return nullptr;
 }
 
 void
@@ -1352,7 +1352,10 @@ nfmark_t
 GetNfmarkToServer(HttpRequest * request)
 {
     ACLFilledChecklist ch(NULL, request, NULL);
-    return aclMapNfmark(Ip::Qos::TheConfig.nfmarkToServer, &ch);
+    if (const auto mc = aclMapNfmark(Ip::Qos::TheConfig.nfmarkToServer, &ch))
+        return mc->connMark.nfmark;
+
+    return 0;
 }
 
 void
