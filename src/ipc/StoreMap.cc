@@ -756,8 +756,6 @@ Ipc::StoreMap::sliceAt(const SliceId sliceId) const
 
 Ipc::StoreMapAnchor::StoreMapAnchor(): start(0), splicingPoint(-1)
 {
-    memset(&key, 0, sizeof(key));
-    memset(&basics, 0, sizeof(basics));
     // keep in sync with rewind()
 }
 

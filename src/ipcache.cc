@@ -689,7 +689,7 @@ ipcache_init(void)
     int n;
     debugs(14, DBG_IMPORTANT, "Initializing IP Cache...");
     memset(&IpcacheStats, '\0', sizeof(IpcacheStats));
-    memset(&lru_list, '\0', sizeof(lru_list));
+    lru_list = dlink_list();
 
     ipcache_high = (long) (((float) Config.ipcache.size *
                             (float) Config.ipcache.high) / (float) 100);

@@ -82,7 +82,7 @@ public:
     // fields marked with [app] can be modified when appending-while-reading
     // fields marked with [update] can be modified when updating-while-reading
 
-    uint64_t key[2]; ///< StoreEntry key
+    uint64_t key[2] = {0, 0}; ///< StoreEntry key
 
     // STORE_META_STD TLV field from StoreEntry
     struct Basics {

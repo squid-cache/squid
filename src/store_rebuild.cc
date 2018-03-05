@@ -172,7 +172,7 @@ storeRebuildComplete(StoreRebuildData *dc)
 void
 storeRebuildStart(void)
 {
-    memset(&counts, '\0', sizeof(counts));
+    counts = StoreRebuildData(); // reset counters
     rebuild_start = current_time;
     /*
      * Note: store_dirs_rebuilding is initialized to 1.
