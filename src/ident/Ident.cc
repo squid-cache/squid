@@ -239,11 +239,12 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     IdentStateData *state;
     char key1[IDENT_KEY_SZ];
     char key2[IDENT_KEY_SZ];
-    char key[IDENT_KEY_SZ];
+    char key[IDENT_KEY_SZ*2+2]; // key1 + ',' + key2 + terminator
 
     conn->local.toUrl(key1, IDENT_KEY_SZ);
     conn->remote.toUrl(key2, IDENT_KEY_SZ);
-    snprintf(key, IDENT_KEY_SZ, "%s,%s", key1, key2);
+    int res = snprintf(key, sizeof(key), "%s,%s", key1, key2);
+    assert(0 <= res && res < IDENT_KEY_SZ);
 
     if (!ident_hash) {
         Init();
