@@ -204,7 +204,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
     memset(&natLookup, 0, sizeof(natLookup));
     // for NAT lookup set local and remote IP:port's
     if (newConn->remote.isIPv6()) {
-#if IPFILTER_VERSION < 5000003
+#if HAVE_NATLOOKUP_NL_INIPADDR_IN6
         // warn once every 10 at critical level, then push down a level each repeated event
         static int warningLevel = DBG_CRITICAL;
         debugs(89, warningLevel, "IPF (IPFilter v4) NAT does not support IPv6. Please upgrade to IPFilter v5.1");
@@ -292,13 +292,13 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
         debugs(89, 9, HERE << "address: " << newConn);
         return false;
     } else {
-#if IPFILTER_VERSION < 5000003
-        newConn->local = natLookup.nl_realip;
-#else
+#if HAVE_NATLOOKUP_NL_REALIPADDR_IN6
         if (newConn->remote.isIPv6())
             newConn->local = natLookup.nl_realipaddr.in6;
         else
             newConn->local = natLookup.nl_realipaddr.in4;
+#else
+        newConn->local = natLookup.nl_realip;
 #endif
         newConn->local.port(ntohs(natLookup.nl_realport));
         debugs(89, 5, HERE << "address NAT: " << newConn);
