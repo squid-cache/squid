@@ -1,3 +1,14 @@
+Changes to squid-4.0.24 (07 Mar 2018):
+
+	- Bug 4822: Build failure (-Wformat) where time_t is not long int
+	- Bug 4505: SMP caches sometimes do not purge entries
+	- TLS: GnuTLS implementation for listening ports and client connections
+	- TPROXY: Fix clientside_mark and client port logging
+	- Native FTP: Fix "Cannot assign requested address" with TPROXY
+	- SSL-Bump: Fix authentication with types other than Basic
+	- ... and many small compile and stability fixes
+	- ... and some documentation fixes
+
 Changes to squid-4.0.23 (19 Jan 2018):
 
 	- Bug 4715: security_file_certgen: Remove -g and -n options docs
