@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.0.23 release notes</title>
+<title>Squid 4.0.24 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.0.23 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.0.24 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -176,10 +176,13 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Initial GnuTLS support
-<p>If all you need is a proxy that connects over TLS/SSL to a <em>cache_peer</em>
-   or accepts <em>https://</em> URLs over clear-text and performs the necessary
-   upstream TLS connections. Then you now have the choice to build Squid with
-   GnuTLS instead of OpenSSL.
+<p>Squid can now be built to use GnuTLS in place of OpenSSL for the core
+   features of receiving TLS connections from clients and making TLS
+   connections to servers. The GnuTLS support is still very much experimental
+   and should be tested before use.
+
+<p>SSL-Bump and certificate generation features are not yet supported by
+   GnuTLS builds. Nor are many other less commonly used Squid TLS/SSL features.
 
 <p><em>squid.conf</em> directives and configuration options which have undergone
    name changes from 'ssl' to 'tls' prefix in Squid-4 have GnuTLS support, unless
