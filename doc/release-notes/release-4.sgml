@@ -177,13 +177,12 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>Initial GnuTLS support
 <p>Squid can now be built to use GnuTLS in place of OpenSSL for the core
-   features of receiving TLS connections from clients, and making TLS
-   connection to servers. The GnuTLS support is still very much experimental
+   features of receiving TLS connections from clients and making TLS
+   connections to servers. The GnuTLS support is still very much experimental
    and should be tested before use.
 
-<p>Also, be aware that the feature implementation is far from complete. The
-   popular SSL-Bump and certificate generation features are not yet supported
-   GnuTLS builds. Nor are many other less commonly used features.
+<p>SSL-Bump and certificate generation features are not yet supported by
+   GnuTLS builds. Nor are many other less commonly used Squid TLS/SSL features.
 
 <p><em>squid.conf</em> directives and configuration options which have undergone
    name changes from 'ssl' to 'tls' prefix in Squid-4 have GnuTLS support, unless

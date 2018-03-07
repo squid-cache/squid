@@ -1,4 +1,4 @@
-Changes to squid-4.0.24 (06 Mar 2018):
+Changes to squid-4.0.24 (07 Mar 2018):
 
 	- Bug 4822: Build failure (-Wformat) where time_t is not long int
 	- Bug 4505: SMP caches sometimes do not purge entries
