@@ -372,8 +372,8 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
                dbName << " overflow: " <<
                SipcIo(KidIdentifier, ipcIo, diskId)); // TODO: report queue len
         // TODO: grow queue size
-        if (!pending->readRequest && ipcIo.page)
-            Ipc::Mem::PutPage(ipcIo.page); // Free the page if allocated
+        if (ipcIo.page)
+            Ipc::Mem::PutPage(ipcIo.page);
 
         pending->completeIo(NULL);
         delete pending;
