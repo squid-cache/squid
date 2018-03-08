@@ -2565,24 +2565,24 @@ DOC_START
 	Only fast ACLs are supported.
 DOC_END
 
-NAME: clientside_mark
+NAME: mark_client_packet clientside_mark
 TYPE: acl_nfmark
 IFDEF: SO_MARK&&USE_LIBCAP
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfmarkToClient
 DOC_START
-	Allows you to apply a Netfilter mark value to packets being transmitted
+	Allows you to apply a Netfilter MARK value to packets being transmitted
 	on the client-side, based on an ACL.
 
-	clientside_mark mark-value [!]aclname ...
+	mark_client_packet mark-value [!]aclname ...
 
 	Example where normal_service_net uses the mark value 0x00
 	and good_service_net uses 0x20
 
 	acl normal_service_net src 10.0.0.0/24
 	acl good_service_net src 10.0.1.0/24
-	clientside_mark 0x00 normal_service_net
-	clientside_mark 0x20 good_service_net
+	mark_client_packet 0x00 normal_service_net
+	mark_client_packet 0x20 good_service_net
 
 	Note: This feature is incompatible with qos_flows. Any mark values set here
 	will be overwritten by mark values in qos_flows.
