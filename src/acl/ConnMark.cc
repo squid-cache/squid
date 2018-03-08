@@ -99,6 +99,6 @@ Acl::ConnMark::dump() const
 char const *
 Acl::ConnMark::typeString() const
 {
-    return "clientside_mark";
+    return "client_connection_mark";
 }
 

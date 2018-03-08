@@ -1045,6 +1045,10 @@ DOC_START
 
 	acl aclname clientside_mark mark[/mask] ...
 	  # matches CONNMARK of an accepted connection [fast]
+	  # DEPRECATED. Use the 'client_connection_mark' instead.
+
+	acl aclname client_connection_mark mark[/mask] ...
+	  # matches CONNMARK of an accepted connection [fast]
 	  #
 	  # mark and mask are unsigned integers (hex, octal, or decimal).
 	  # If multiple marks are given, then the ACL matches if at least
