@@ -149,6 +149,9 @@ public:
     /** Netfilter MARK values currently sent on this connection */
     nfmark_t nfmark;
 
+    /** Netfilter CONNMARK value of this connection */
+    nfmark_t nfConnmark;
+
     /** COMM flags set on this connection */
     int flags;
 

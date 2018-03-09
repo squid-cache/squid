@@ -74,7 +74,7 @@ int
 Acl::ConnMark::match(ACLChecklist *cl)
 {
     const auto *checklist = Filled(cl);
-    const auto connmark = checklist->conn()->clientConnection->nfmark;
+    const auto connmark = checklist->conn()->clientConnection->nfConnmark;
 
     for (const auto &m : marks) {
         if ((connmark & m.second) == m.first) {
