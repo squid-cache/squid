@@ -42,6 +42,7 @@
 #include "MemObject.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
+#include "NfMarkConfig.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
 #include "security/BlindPeerConnector.h"
@@ -1278,15 +1279,15 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 }
 
 /// Checks for a netfilter mark value to apply depending on the ACL
-nfmark_t
-aclMapNfmark(acl_nfmark * head, ACLChecklist * ch)
+NfMarkConfig
+aclMapNfmarkConfig(acl_nfmark * head, ACLChecklist * ch)
 {
     for (acl_nfmark *l = head; l; l = l->next) {
         if (!l->aclList || ch->fastCheck(l->aclList).allowed())
-            return l->nfmark;
+            return l->markConfig;
     }
 
-    return 0;
+    return NfMarkConfig::Empty();
 }
 
 void
@@ -1352,7 +1353,8 @@ nfmark_t
 GetNfmarkToServer(HttpRequest * request)
 {
     ACLFilledChecklist ch(NULL, request, NULL);
-    return aclMapNfmark(Ip::Qos::TheConfig.nfmarkToServer, &ch);
+    const auto mc = aclMapNfmarkConfig(Ip::Qos::TheConfig.nfmarkToServer, &ch);
+    return mc.mark;
 }
 
 void

@@ -537,7 +537,7 @@ Ip::Qos::Config::isAclNfmarkActive() const
     for (int i=0; i<2; ++i) {
         while (nfmarkAcls[i]) {
             acl_nfmark *l = nfmarkAcls[i];
-            if (l->nfmark > 0)
+            if (!l->markConfig.isEmpty())
                 return true;
             nfmarkAcls[i] = l->next;
         }

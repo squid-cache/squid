@@ -45,6 +45,7 @@
 #include "ipcache.h"
 #include "log/access_log.h"
 #include "MemObject.h"
+#include "NfMarkConfig.h"
 #include "Parsing.h"
 #include "profiler/Profiler.h"
 #include "redirect.h"
@@ -1683,7 +1684,7 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
  */
 
 tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
-nfmark_t aclMapNfmark (acl_nfmark * head, ACLChecklist * ch);
+NfMarkConfig aclMapNfmarkConfig (acl_nfmark * head, ACLChecklist * ch);
 
 void
 ClientHttpRequest::doCallouts()
@@ -1794,9 +1795,9 @@ ClientHttpRequest::doCallouts()
             ACLFilledChecklist ch(NULL, request, NULL);
             ch.src_addr = request->client_addr;
             ch.my_addr = request->my_addr;
-            nfmark_t mark = aclMapNfmark(Ip::Qos::TheConfig.nfmarkToClient, &ch);
-            if (mark)
-                Ip::Qos::setSockNfmark(getConn()->clientConnection, mark);
+            const auto mc = aclMapNfmarkConfig(Ip::Qos::TheConfig.nfmarkToClient, &ch);
+            if (!mc.isEmpty())
+                Ip::Qos::setSockNfmark(getConn()->clientConnection, mc.mark);
         }
     }
 

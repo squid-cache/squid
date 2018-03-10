@@ -381,6 +381,8 @@ squid_SOURCES = \
 	multicast.cc \
 	neighbors.h \
 	neighbors.cc \
+	NfMarkConfig.cc \
+	NfMarkConfig.h \
 	Notes.h \
 	Notes.cc \
 	Parsing.cc \
@@ -1304,6 +1306,8 @@ tests_testCacheManager_SOURCES = \
 	mime_header.cc \
 	neighbors.h \
 	neighbors.cc \
+	NfMarkConfig.cc \
+	NfMarkConfig.h \
 	Notes.cc \
 	Notes.h \
 	Parsing.cc \
@@ -1728,6 +1732,8 @@ tests_testEvent_SOURCES = \
 	multicast.cc \
 	neighbors.h \
 	neighbors.cc \
+	NfMarkConfig.cc \
+	NfMarkConfig.h \
 	Notes.cc \
 	Notes.h \
 	Parsing.cc \
@@ -1934,6 +1940,8 @@ tests_testEventLoop_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpReply.cc \
+	NfMarkConfig.cc \
+	NfMarkConfig.h \
 	PeerPoolMgr.h \
 	PeerPoolMgr.cc \
 	RequestFlags.h \
@@ -2192,6 +2200,8 @@ tests_test_http_range_SOURCES = \
 	multicast.cc \
 	neighbors.h \
 	neighbors.cc \
+	NfMarkConfig.cc \
+	NfMarkConfig.h \
 	Notes.cc \
 	Notes.h \
 	Parsing.cc \
@@ -2392,6 +2402,8 @@ tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
 	AccessLogEntry.cc \
+	NfMarkConfig.cc \
+	NfMarkConfig.h \
 	RequestFlags.h \
 	RequestFlags.cc \
 	HttpRequest.cc \
@@ -3321,6 +3333,8 @@ tests_testURL_SOURCES = \
 	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpReply.cc \
+	NfMarkConfig.cc \
+	NfMarkConfig.h \
 	PeerPoolMgr.h \
 	PeerPoolMgr.cc \
 	RequestFlags.h \

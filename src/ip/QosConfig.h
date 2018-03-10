@@ -12,6 +12,7 @@
 #include "acl/forward.h"
 #include "hier_code.h"
 #include "ip/forward.h"
+#include "NfMarkConfig.h"
 
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
@@ -43,12 +44,12 @@ class acl_nfmark
     CBDATA_CLASS(acl_nfmark);
 
 public:
-    acl_nfmark() : next(NULL), aclList(NULL), nfmark(0) {}
+    acl_nfmark() : next(NULL), aclList(NULL), markConfig(NfMarkConfig::Empty()) {}
     ~acl_nfmark();
 
     acl_nfmark *next;
     ACLList *aclList;
-    nfmark_t nfmark;
+    NfMarkConfig markConfig;
 };
 
 namespace Ip
