@@ -691,7 +691,7 @@ allocate_new_swapdir(Store::DiskConfig *swap)
         for (int i = 0; i < swap->n_configured; ++i) {
             tmp[i] = swap->swapDirs[i];
         }
-        delete swap->swapDirs;
+        delete[] swap->swapDirs;
         swap->swapDirs = tmp;
     }
 }
@@ -712,7 +712,7 @@ free_cachedir(Store::DiskConfig *swap)
 
     // only free's the array memory itself
     // the Pointers may remain (ref-counted)
-    delete swap->swapDirs;
+    delete[] swap->swapDirs;
     swap->swapDirs = nullptr;
     swap->n_allocated = 0;
     swap->n_configured = 0;
