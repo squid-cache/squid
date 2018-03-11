@@ -1558,6 +1558,11 @@ parse_acl_nfmark(acl_nfmark ** head)
     SBuf token(ConfigParser::NextToken());
     const auto mc = NfMarkConfig::Parse(token);
 
+    // Packet marking directives should not allow to use masks.
+    const auto pkt_dirs = {"mark_client_packet", "clientside_mark", "tcp_outgoing_mark"};
+    if (mc.hasMask() && std::find(pkt_dirs.begin(), pkt_dirs.end(), cfg_directive) != pkt_dirs.end())
+        throw TexcHere(ToSBuf("'", cfg_directive, "' does not support masked marks"));
+
     acl_nfmark *l = new acl_nfmark;
     l->markConfig = mc;
 
