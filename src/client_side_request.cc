@@ -134,6 +134,7 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) :
     interpreted_req_hdrs(false),
     tosToClientDone(false),
     nfmarkToClientDone(false),
+    nfConnmarkToClientDone(false),
 #if USE_OPENSSL
     sslBumpCheckDone(false),
 #endif
@@ -1799,6 +1800,18 @@ ClientHttpRequest::doCallouts()
             if (!mc.isEmpty())
                 Ip::Qos::setSockNfmark(getConn()->clientConnection, mc.mark);
         }
+    }
+
+    if (!calloutContext->nfConnmarkToClientDone) {
+        calloutContext->nfConnmarkToClientDone = true;
+        if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConnection)) {
+            ACLFilledChecklist ch(NULL, request, NULL);
+            ch.src_addr = request->client_addr;
+            ch.my_addr = request->my_addr;
+            const auto mc = aclMapNfmarkConfig(Ip::Qos::TheConfig.nfConnmarkToClient, &ch);
+            if (!mc.isEmpty())
+                Ip::Qos::setNfmarkOnConnection(getConn()->clientConnection, Ip::Qos::dirAccepted, mc);
+       }
     }
 
 #if USE_OPENSSL

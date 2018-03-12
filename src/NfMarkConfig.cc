@@ -42,6 +42,12 @@ NfMarkConfig::Parse(const SBuf &token)
     return {mark, mask};
 }
 
+nfmark_t
+NfMarkConfig::applyToMark(nfmark_t m) const
+{
+    return (m & ~mask) | mark;
+}
+
 std::ostream &
 operator <<(std::ostream &os, const NfMarkConfig c)
 {

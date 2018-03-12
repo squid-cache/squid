@@ -2576,6 +2576,9 @@ DOC_START
 
 	mark_client_packet mark-value [!]aclname ...
 
+	The directive rules are evaluated in the configuration order. The first
+	matching rule wins.
+
 	Example where normal_service_net uses the mark value 0x00
 	and good_service_net uses 0x20
 
@@ -2586,6 +2589,42 @@ DOC_START
 
 	Note: This feature is incompatible with qos_flows. Any mark values set here
 	will be overwritten by mark values in qos_flows.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+DOC_END
+
+NAME: mark_client_connection
+TYPE: acl_nfmark
+IFDEF: SO_MARK&&USE_LIBCAP
+DEFAULT: none
+LOC: Ip::Qos::TheConfig.nfConnmarkToClient
+DOC_START
+	Allows you to apply a Netfilter CONNMARK value to a connection
+	on the client-side, based on an ACL.
+
+	mark_client_connection mark[/mask] [!]aclname ...
+
+	Mark and mask are unsigned integers (hex, octal, or decimal).
+	The mask may be used to preserve marking previously set by other agents
+	(e.g., iptables).
+
+	A matching rule replaces the connection mark value. If a mask is also
+	specified, then the masked bits of the original value are zeroed, and
+	the configured mark is ORed with that adjusted value.
+	For example, applying a 0xAB/0xF mark to 0x5F mark, results in a 0xFB
+	mark (rather than a 0xAB or 0x5B mark).
+
+	This directive semantics is similar to iptables --set-mark rather than
+	--set-xmark functionality.
+
+	The directive rules are evaluated in the configuration order. The first
+	matching rule wins.
+
+	Example where squid marks intercepted FTP connections:
+
+	acl proto_ftp proto FTP
+	mark_client_connection 0x200/0xff00 proto_ftp
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.

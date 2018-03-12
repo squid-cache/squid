@@ -76,6 +76,7 @@ public:
     bool interpreted_req_hdrs;
     bool tosToClientDone;
     bool nfmarkToClientDone;
+    bool nfConnmarkToClientDone;
 #if USE_OPENSSL
     bool sslBumpCheckDone;
 #endif

@@ -78,7 +78,7 @@ enum ConnectionDirection {
 void getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde);
 
 /**
-* Function to retrieve the netfilter mark value of the connection.
+* Function to retrieve the netfilter CONNMARK value of the connection.
 * Called by FwdState::dispatch if QOS options are enabled or by
 * Comm::TcpAcceptor::acceptOne
 *
@@ -87,18 +87,15 @@ void getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde);
 */
 nfmark_t getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const ConnectionDirection connDir);
 
-#if USE_LIBNETFILTERCONNTRACK
 /**
-* Callback function to mark connection once it's been found.
-* This function is called by the libnetfilter_conntrack
-* libraries, during nfct_query in Ip::Qos::getNfmarkFromServer.
-* nfct_callback_register is used to register this function.
-* @param nf_conntrack_msg_type Type of conntrack message
-* @param nf_conntrack Pointer to the conntrack structure
-* @param mark Pointer to nfmark_t mark
+* Function to set the netfilter CONNMARK value on the connection.
+* Called by ClientHttpRequest::doCallouts.
+*
+* @param conn    Pointer to connection to set mark on
+* @param connDir Specifies connection type (incoming or outgoing)
+* @cm            Netfilter mark configuration (mark and mask)
 */
-int getNfmarkCallback(enum nf_conntrack_msg_type type, struct nf_conntrack *ct, void *mark);
-#endif
+bool setNfmarkOnConnection(Comm::ConnectionPointer &conn, const ConnectionDirection connDir, const NfMarkConfig &cm);
 
 /**
 * Function to work out and then apply to the socket the appropriate
@@ -234,6 +231,7 @@ public:
     acl_tos *tosToClient;               ///< The TOS that packets to the client should be marked with, based on ACL
     acl_nfmark *nfmarkToServer;         ///< The MARK that packets to the web server should be marked with, based on ACL
     acl_nfmark *nfmarkToClient;         ///< The MARK that packets to the client should be marked with, based on ACL
+    acl_nfmark *nfConnmarkToClient;     ///< The CONNMARK that the client connection should be marked with, based on ACL
 
 };
 

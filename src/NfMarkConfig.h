@@ -27,6 +27,10 @@ public:
     bool isEmpty() const { return mark == 0; }
     /// whether the mask is set
     bool hasMask() const { return mask != 0xffffffff; }
+    /// Applies configured mark/mask to previously set mark (m).
+    /// m is ANDed with the negated mask and then ORed with the configured mark.
+    /// Returns new mark. This is similar to what iptables --set-mark does.
+    nfmark_t applyToMark(nfmark_t m) const;
 
     nfmark_t mark;
     nfmark_t mask;
