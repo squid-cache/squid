@@ -12,10 +12,9 @@
 #define SQUID_ESISEQUENCE_H
 
 #include "esi/Element.h"
-#include "esi/ElementList.h"
 #include "mem/forward.h"
 
-/* esiSequence */
+#include <vector>
 
 class esiSequence : public ESIElement
 {
@@ -37,7 +36,7 @@ public:
     void makeUsableElements(esiSequence const &old, ESIVarState &);
     Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
 
-    ElementList elements; /* unprocessed or rendered nodes */
+    std::vector<ESIElement::Pointer> elements; /* unprocessed or rendered nodes */
     size_t processedcount;
 
     struct {
