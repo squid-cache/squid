@@ -18,23 +18,38 @@
 
 Ipc::TypedMsgHdr::TypedMsgHdr()
 {
-    memset(this, 0, sizeof(*this));
+    clear();
     sync();
 }
 
 Ipc::TypedMsgHdr::TypedMsgHdr(const TypedMsgHdr &tmh)
 {
-    memcpy(this, &tmh, sizeof(*this));
-    sync();
+    operator =(tmh);
 }
 
 Ipc::TypedMsgHdr &Ipc::TypedMsgHdr::operator =(const TypedMsgHdr &tmh)
 {
     if (this != &tmh) { // skip assignment to self
-        memcpy(this, &tmh, sizeof(*this));
+        memcpy(reinterpret_cast<msghdr*>(this), reinterpret_cast<const msghdr*>(&tmh), sizeof(msghdr));
+        memcpy(&name, &tmh.name, sizeof(name));
+        memcpy(&ios, &tmh.ios, sizeof(ios));
+        data = tmh.data;
+        ctrl = tmh.ctrl;
+        offset = tmh.offset;
         sync();
     }
     return *this;
+}
+
+void
+Ipc::TypedMsgHdr::clear()
+{
+    memset(reinterpret_cast<msghdr*>(this), 0, sizeof(msghdr));
+    memset(&name, 0, sizeof(name));
+    memset(&ios, 0, sizeof(ios));
+    data = DataBuffer();
+    ctrl = CtrlBuffer();
+    offset = 0;
 }
 
 // update msghdr and ios pointers based on msghdr counters
@@ -223,7 +238,7 @@ Ipc::TypedMsgHdr::getFd() const
 void
 Ipc::TypedMsgHdr::prepForReading()
 {
-    memset(this, 0, sizeof(*this));
+    clear(); // XXX: why no sync() after these changes?
     allocName();
     allocData();
     allocControl();
