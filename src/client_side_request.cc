@@ -1778,40 +1778,32 @@ ClientHttpRequest::doCallouts()
         }
     } //  if !calloutContext->error
 
-    if (!calloutContext->tosToClientDone) {
-        calloutContext->tosToClientDone = true;
-        if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConnection)) {
-            ACLFilledChecklist ch(NULL, request, NULL);
-            ch.src_addr = request->client_addr;
-            ch.my_addr = request->my_addr;
+    // Set appropriate MARKs and CONNMARKs if needed.
+    if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConnection)) {
+        ACLFilledChecklist ch(NULL, request, NULL);
+        ch.src_addr = request->client_addr;
+        ch.my_addr = request->my_addr;
+
+        if (!calloutContext->tosToClientDone) {
+            calloutContext->tosToClientDone = true;
             tos_t tos = aclMapTOS(Ip::Qos::TheConfig.tosToClient, &ch);
             if (tos)
                 Ip::Qos::setSockTos(getConn()->clientConnection, tos);
         }
-    }
 
-    if (!calloutContext->nfmarkToClientDone) {
-        calloutContext->nfmarkToClientDone = true;
-        if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConnection)) {
-            ACLFilledChecklist ch(NULL, request, NULL);
-            ch.src_addr = request->client_addr;
-            ch.my_addr = request->my_addr;
+        if (!calloutContext->nfmarkToClientDone) {
+            calloutContext->nfmarkToClientDone = true;
             const auto mc = aclMapNfmarkConfig(Ip::Qos::TheConfig.nfmarkToClient, &ch);
             if (!mc.isEmpty())
                 Ip::Qos::setSockNfmark(getConn()->clientConnection, mc.mark);
         }
-    }
 
-    if (!calloutContext->nfConnmarkToClientDone) {
-        calloutContext->nfConnmarkToClientDone = true;
-        if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConnection)) {
-            ACLFilledChecklist ch(NULL, request, NULL);
-            ch.src_addr = request->client_addr;
-            ch.my_addr = request->my_addr;
+        if (!calloutContext->nfConnmarkToClientDone) {
+            calloutContext->nfConnmarkToClientDone = true;
             const auto mc = aclMapNfmarkConfig(Ip::Qos::TheConfig.nfConnmarkToClient, &ch);
             if (!mc.isEmpty())
                 Ip::Qos::setNfmarkOnConnection(getConn()->clientConnection, Ip::Qos::dirAccepted, mc);
-       }
+        }
     }
 
 #if USE_OPENSSL
