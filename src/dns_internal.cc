@@ -96,8 +96,6 @@ static const char *Rcodes[] = {
     "Bad OPT Version or TSIG Signature Failure"
 };
 
-typedef struct _ns ns;
-
 typedef struct _sp sp;
 
 class idns_query
@@ -180,15 +178,17 @@ public:
 
 CBDATA_CLASS_INIT(nsvc);
 
-struct _ns {
+class ns
+{
+public:
     Ip::Address S;
-    int nqueries;
-    int nreplies;
+    int nqueries = 0;
+    int nreplies = 0;
 #if WHEN_EDNS_RESPONSES_ARE_PARSED
-    int last_seen_edns;
+    int last_seen_edns = 0;
 #endif
-    bool mDNSResolver;
-    nsvc *vc;
+    bool mDNSResolver = false;
+    nsvc *vc = nullptr;
 };
 
 namespace Dns
@@ -350,13 +350,12 @@ idnsAddNameserver(const char *buf)
         else
             nns_alloc <<= 1;
 
-        nameservers = (ns *)xcalloc(nns_alloc, sizeof(*nameservers));
+        nameservers = new ns[nns_alloc];
 
-        if (oldptr && oldalloc)
-            memcpy(nameservers, oldptr, oldalloc * sizeof(*nameservers));
+        for (int i = 0; i < oldalloc; ++i)
+            nameservers[i] = oldptr[i];
 
-        if (oldptr)
-            safe_free(oldptr);
+        delete[] oldptr;
     }
 
     assert(nns < nns_alloc);
@@ -402,7 +401,7 @@ idnsAddPathComponent(const char *buf)
 static void
 idnsFreeNameservers(void)
 {
-    safe_free(nameservers);
+    delete[] nameservers;
     nns = nns_alloc = 0;
 }
 
