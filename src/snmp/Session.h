@@ -23,17 +23,15 @@ class Session: public snmp_session
 {
 public:
     Session();
-    Session(const Session& session);
+    Session(const Session &s) { operator =(s); }
     Session& operator = (const Session& session);
-    ~Session();
+    ~Session() { reset(); }
 
-    void pack(Ipc::TypedMsgHdr& msg) const; ///< prepare for sendmsg()
-    void unpack(const Ipc::TypedMsgHdr& msg); ///< restore struct from the message
-    void clear(); ///< clear internal members
+    void pack(Ipc::TypedMsgHdr &) const; ///< prepare for sendmsg()
+    void unpack(const Ipc::TypedMsgHdr &); ///< restore struct from the message
 
 private:
-    void free();  ///< free internal members
-    void assign(const Session& session); ///< perform full assignment
+    void reset(); ///< free internal members and clear()
 };
 
 } // namespace Snmp

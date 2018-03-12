@@ -14,59 +14,39 @@
 #include "snmp/Session.h"
 #include "tools.h"
 
+
 Snmp::Session::Session()
 {
-    clear();
-}
-
-Snmp::Session::Session(const Session& session)
-{
-    assign(session);
-}
-
-Snmp::Session::~Session()
-{
-    free();
+    memset(reinterpret_cast<snmp_session *>(this), 0, sizeof(snmp_session));
 }
 
 Snmp::Session&
 Snmp::Session::operator = (const Session& session)
 {
-    free();
-    assign(session);
+    reset();
+    memcpy(reinterpret_cast<snmp_session *>(this), &session, sizeof(snmp_session));
+    // NP: memcpy did a shallow copy of the pointer members,
+    //     make sure we have our own allocations
+    if (session.community) {
+        community = (u_char*)xstrdup((char*)session.community);
+        Must(community != nullptr);
+    }
+    if (session.peername) {
+        peername = xstrdup(session.peername);
+        Must(peername != nullptr);
+    }
     return *this;
 }
 
 void
-Snmp::Session::clear()
-{
-    memset(this, 0, sizeof(*this));
-}
-
-void
-Snmp::Session::free()
+Snmp::Session::reset()
 {
     if (community_len > 0) {
         Must(community != NULL);
         xfree(community);
     }
-    if (peername != NULL)
-        xfree(peername);
-    clear();
-}
-
-void
-Snmp::Session::assign(const Session& session)
-{
-    memcpy(this, &session, sizeof(*this));
-    if (session.community != NULL) {
-        community = (u_char*)xstrdup((char*)session.community);
-        Must(community != NULL);
-    }
-    if (session.peername != NULL) {
-        peername = xstrdup(session.peername);
-        Must(peername != NULL);
-    }
+    xfree(peername);
+    memset(reinterpret_cast<snmp_session *>(this), 0, sizeof(snmp_session));
 }
 
 void
@@ -91,7 +71,7 @@ Snmp::Session::pack(Ipc::TypedMsgHdr& msg) const
 void
 Snmp::Session::unpack(const Ipc::TypedMsgHdr& msg)
 {
-    free();
+    reset();
     msg.getPod(Version);
     community_len = msg.getInt();
     if (community_len > 0) {
