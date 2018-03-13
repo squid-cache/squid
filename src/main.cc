@@ -1053,7 +1053,7 @@ ConfigureCurrentKid(const CommandLine &cmdLine)
 {
     if (!cmdLine.kidName().isEmpty()) {
         // TODO: parse directly SBuf instead
-        char *processName = strdup(cmdLine.kidName().c_str());
+        char *processName = xstrdup(cmdLine.kidName().c_str());
         if (const char *idStart = strrchr(processName, '-')) {
             KidIdentifier = atoi(idStart + 1);
             const size_t nameLen = idStart - processName;
@@ -1068,7 +1068,7 @@ ConfigureCurrentKid(const CommandLine &cmdLine)
             else
                 TheProcessKind = pkOther; // including coordinator
         }
-        free(processName);
+        xfree(processName);
     } else {
         xstrncpy(TheKidName, APP_SHORTNAME, sizeof(TheKidName));
         KidIdentifier = 0;

@@ -8,8 +8,8 @@
 
 #include "squid.h"
 
-#include "CommandLine.h"
 #include "cache_cf.h"
+#include "CommandLine.h"
 #include "fatal.h"
 #include "globals.h"
 #include "parser/Tokenizer.h"
@@ -135,10 +135,10 @@ CommandLine::argv(const char *argv0, const char *kid)
     // not expected to happen because kids do not create kids
     if (kidPos != argv_.end()) {
         assert(++kidPos != argv_.end());
-        *kidPos = strdup(kid);
+        *kidPos = xstrdup(kid);
     } else {
         argv_.push_back("--kid");
-        argv_.push_back(strdup(kid));
+        argv_.push_back(xstrdup(kid));
     }
     argv_.push_back(nullptr);
     return &argv_[0];

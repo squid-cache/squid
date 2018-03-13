@@ -16,38 +16,38 @@
 /// The same info is passed to main() as argc and argv[] parameters.
 class CommandLine
 {
-    public:
-        // codes for options without short option characters
-        enum LongCodes {
-            ForegroundCode = 1,
-            KidCode = 2
-        };
+public:
+    // codes for options without short option characters
+    enum LongCodes {
+        ForegroundCode = 1,
+        KidCode = 2
+    };
 
-        typedef std::pair<char, SBuf> OptionsPair;
-        typedef std::list<OptionsPair> Options;
+    typedef std::pair<char, SBuf> OptionsPair;
+    typedef std::list<OptionsPair> Options;
 
-        CommandLine(int argc, char *argv[]);
+    CommandLine(int argc, char *argv[]);
 
-        /// \returns parsed kid option argument or an empty string
-        SBuf kidName() const;
+    /// \returns parsed kid option argument or an empty string
+    SBuf kidName() const;
 
-        /// apply all available command line options
-        void processOptions();
+    /// apply all available command line options
+    void processOptions();
 
-        /// generate a new argument list from the parsed one,
-        /// supstituting argv[0] and adding/substituting kid option
-        const char **argv(const char *argv0, const char *kidName);
+    /// generate a new argument list from the parsed one,
+    /// supstituting argv[0] and adding/substituting kid option
+    const char **argv(const char *argv0, const char *kidName);
 
-        /// \returns Squid executable file name
-        SBuf execFile() const { return execFile_; }
+    /// \returns Squid executable file name
+    SBuf execFile() const { return execFile_; }
 
-    private:
-        void processOption(const char, const char *);
-        void parse(int argc, char *argv[]);
+private:
+    void processOption(const char, const char *);
+    void parse(int argc, char *argv[]);
 
-        SBuf execFile_;
-        std::vector<const char *> argv_;
-        Options options;
+    SBuf execFile_;
+    std::vector<const char *> argv_;
+    Options options;
 };
 
 #endif
