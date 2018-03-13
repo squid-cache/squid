@@ -26,6 +26,7 @@
 #include "client_db.h"
 #include "client_side.h"
 #include "comm.h"
+#include "CommandLine.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
 #include "DiskIO/DiskIOModule.h"
@@ -57,7 +58,6 @@
 #include "ipcache.h"
 #include "mime.h"
 #include "neighbors.h"
-#include "parser/Tokenizer.h"
 #include "pconn.h"
 #include "peer_sourcehash.h"
 #include "peer_userhash.h"
@@ -66,6 +66,7 @@
 #include "redirect.h"
 #include "refresh.h"
 #include "sbuf/Stream.h"
+#include "sbuf/StringConvert.h"
 #include "SBufStatsAction.h"
 #include "send-announce.h"
 #include "SquidConfig.h"
@@ -143,9 +144,6 @@ void WIN32_svcstatusupdate(DWORD, DWORD);
 void WINAPI WIN32_svcHandler(DWORD);
 #endif
 
-static int opt_signal_service = FALSE;
-static char *opt_syslog_facility = NULL;
-static int icpPortNumOverride = 1;  /* Want to detect "-u 0" */
 static int configured_once = 0;
 #if MALLOC_DBG
 static int malloc_debug_level = 0;
@@ -166,11 +164,10 @@ static void mainRotate(void);
 static void mainReconfigureStart(void);
 static void mainReconfigureFinish(void*);
 static void mainInitialize(void);
-static void usage(void);
 static void sendSignal(void);
 static void serverConnectionsOpen(void);
 static void serverConnectionsClose(void);
-static void watch_child(int, char **);
+static void watch_child(CommandLine &);
 static void setEffectiveUser(void);
 static void SquidShutdown(void);
 static void mainSetCwd(void);
@@ -249,379 +246,6 @@ SignalEngine::checkEvents(int)
         handleStoppedChild();
     PROF_stop(SignalEngine_checkEvents);
     return EVENT_IDLE;
-}
-
-class OptParser
-{
-    public:
-        typedef std::map<char, std::string> Options;
-        typedef Options::iterator OptionsIterator;
-
-        OptParser(int argc, char *argv[]);
-
-        void processOptions();
-        void processOption(const char shortOpt);
-        std::string getOption(const char shortOpt);
-
-    private:
-
-        OptionsIterator processOption(OptionsIterator);
-        void parse(int argc, char *argv[]);
-
-        Options options;
-};
-
-OptParser::OptParser(int argc, char *argv[])
-{
-    parse(argc, argv);
-}
-
-void
-OptParser::parse(int argc, char *argv[])
-{
-    int optIndex = 0;
-
-    static std::string shortOptions = std::string(
-    #if USE_WIN32_SERVICE
-            "O:Vir"
-    #endif
-            "CDFK:NRSYXa:d:f:hk:m::n:sl:u:vz?"
-            );
-
-    // long options
-    static struct option squidOptions[] = {
-        {"foreground", no_argument, 0,  1 },
-        {"help",       no_argument, 0, 'h'},
-        {"version",    no_argument, 0, 'v'},
-        {"kid",        required_argument, 0, 'K'},
-        {0, 0, 0, 0}
-    };
-
-    int c;
-
-
-    while ((c = getopt_long(argc, argv, shortOptions.c_str(), squidOptions, &optIndex)) != -1) {
-        const auto optPos = shortOptions.find(c);
-        if (optPos == std::string::npos) {
-            usage();
-            break;
-        }
-        options.insert(std::make_pair(c, std::string(optarg ? optarg : "")));
-    }
-}
-
-std::string
-OptParser::getOption(const char shortOpt)
-{
-    auto opt = options.find(shortOpt);
-    if (opt == options.end())
-        return std::string();
-    const std::string value = opt->second;
-    options.erase(opt);
-    return value;
-}
-
-void
-OptParser::processOptions()
-{
-    for (OptionsIterator it = options.begin(); it != options.end();)
-        it = processOption(it);
-}
-
-/**
- * Parse the parameters received via command line interface.
- *
- * \param argc   Number of options received on command line
- * \param argv   List of parameters received on command line
- */
-void
-OptParser::processOption(const char shortOpt)
-{
-    auto opt = options.find(shortOpt);
-    printf("shortopt=%c\n", shortOpt);
-    assert(opt != options.end());
-    processOption(opt);
-}
-
-OptParser::OptionsIterator
-OptParser::processOption(OptionsIterator opt)
-{
-        const char *optValue = opt->second.empty() ? nullptr : opt->second.c_str();
-
-        switch (opt->first) {
-
-        case 'C':
-            /** \par C
-             * Unset/disabel global option for catchign signals. opt_catch_signals */
-            opt_catch_signals = 0;
-            break;
-
-        case 'D':
-            /** \par D
-             * OBSOLETE: WAS: override to prevent optional startup DNS tests. */
-            debugs(1,DBG_CRITICAL, "WARNING: -D command-line option is obsolete.");
-            break;
-
-        case 'F':
-            /** \par F
-             * Set global option for foreground rebuild. opt_foreground_rebuild */
-            opt_foreground_rebuild = 1;
-            break;
-
-        case 'N':
-            /** \par N
-             * Set global option for 'no_daemon' mode. opt_no_daemon */
-            opt_no_daemon = 1;
-            break;
-
-#if USE_WIN32_SERVICE
-
-        case 'O':
-            /** \par O
-             * Set global option. opt_command_lin and WIN32_Command_Line */
-            opt_command_line = 1;
-            WIN32_Command_Line = xstrdup(optValue);
-            break;
-#endif
-
-        case 'R':
-            /** \par R
-             * Unset/disable global option opt_reuseaddr */
-            opt_reuseaddr = 0;
-            break;
-
-        case 'S':
-            /** \par S
-             * Set global option opt_store_doublecheck */
-            opt_store_doublecheck = 1;
-            break;
-
-        case 'X':
-            /** \par X
-             * Force full debugging */
-            Debug::parseOptions("rotate=0 ALL,9");
-            Debug::override_X = 1;
-            sigusr2_handle(SIGUSR2);
-            break;
-
-        case 'Y':
-            /** \par Y
-             * Set global option opt_reload_hit_only */
-            opt_reload_hit_only = 1;
-            break;
-
-#if USE_WIN32_SERVICE
-
-        case 'i':
-            /** \par i
-             * Set global option opt_install_service (to TRUE) */
-            opt_install_service = TRUE;
-            break;
-#endif
-
-        case 'a':
-            /** \par a
-             * Add optional HTTP port as given following the option */
-            add_http_port(const_cast<char*>(optValue));
-            break;
-
-        case 'd':
-            /** \par d
-             * Set global option Debug::log_stderr to the number given following the option */
-            Debug::log_stderr = atoi(optValue);
-            break;
-
-        case 'f':
-            /** \par f
-             * Load the file given instead of the default squid.conf. */
-            xfree(ConfigFile);
-            ConfigFile = xstrdup(optValue);
-            break;
-
-        case 'K': {
-            fatal("Must parse --kid option before other options");
-            break;
-          }
-
-        case 'k':
-            /** \par k
-             * Run the administrative action given following the option */
-
-            /** \li When it is missing or an unknown option display the usage help. */
-            if (!optValue || strlen(optValue) < 1)
-                usage();
-
-            else if (!strncmp(optValue, "reconfigure", strlen(optValue)))
-                /** \li On reconfigure send SIGHUP. */
-                opt_send_signal = SIGHUP;
-            else if (!strncmp(optValue, "rotate", strlen(optValue)))
-                /** \li On rotate send SIGQUIT or SIGUSR1. */
-#if defined(_SQUID_LINUX_THREADS_)
-                opt_send_signal = SIGQUIT;
-#else
-                opt_send_signal = SIGUSR1;
-#endif
-
-            else if (!strncmp(optValue, "debug", strlen(optValue)))
-                /** \li On debug send SIGTRAP or SIGUSR2. */
-#if defined(_SQUID_LINUX_THREADS_)
-                opt_send_signal = SIGTRAP;
-#else
-                opt_send_signal = SIGUSR2;
-#endif
-
-            else if (!strncmp(optValue, "shutdown", strlen(optValue)))
-                /** \li On shutdown send SIGTERM. */
-                opt_send_signal = SIGTERM;
-            else if (!strncmp(optValue, "interrupt", strlen(optValue)))
-                /** \li On interrupt send SIGINT. */
-                opt_send_signal = SIGINT;
-            else if (!strncmp(optValue, "kill", strlen(optValue)))
-                /** \li On kill send SIGKILL. */
-                opt_send_signal = SIGKILL;
-
-#ifdef SIGTTIN
-
-            else if (!strncmp(optValue, "restart", strlen(optValue)))
-                /** \li On restart send SIGTTIN. (exit and restart by parent) */
-                opt_send_signal = SIGTTIN;
-
-#endif
-
-            else if (!strncmp(optValue, "check", strlen(optValue)))
-                /** \li On check send 0 / SIGNULL. */
-                opt_send_signal = 0;    /* SIGNULL */
-            else if (!strncmp(optValue, "parse", strlen(optValue)))
-                /** \li On parse set global flag to re-parse the config file only. */
-                opt_parse_cfg_only = 1;
-            else
-                usage();
-
-            break;
-
-        case 'm':
-            /** \par m
-             * Set global malloc_debug_level to the value given following the option.
-             * if none is given it toggles the xmalloc_trace option on/off */
-            if (optValue) {
-#if MALLOC_DBG
-                malloc_debug_level = atoi(optValue);
-#else
-                fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
-#endif
-
-            }
-            break;
-
-        case 'n':
-            /** \par n
-             * Set global option opt_signal_service (to true).
-             * Stores the additional parameter given in global service_name */
-            if (optValue && *optValue != '\0') {
-                const SBuf t(optValue);
-                ::Parser::Tokenizer tok(t);
-                const CharacterSet chr = CharacterSet::ALPHA+CharacterSet::DIGIT;
-                if (!tok.prefix(service_name, chr))
-                    fatalf("Expected alphanumeric service name for the -n option but got: %s", optValue);
-                if (!tok.atEnd())
-                    fatalf("Garbage after alphanumeric service name in the -n option value: %s", optValue);
-                if (service_name.length() > 32)
-                    fatalf("Service name (-n option) must be limited to 32 characters but got %u", service_name.length());
-                opt_signal_service = true;
-            } else {
-                fatal("A service name is required for the -n option");
-            }
-            break;
-
-#if USE_WIN32_SERVICE
-
-        case 'r':
-            /** \par r
-             * Set global option opt_remove_service (to TRUE) */
-            opt_remove_service = TRUE;
-
-            break;
-
-#endif
-
-        case 'l':
-            /** \par l
-             * Stores the syslog facility name in global opt_syslog_facility
-             * then performs actions for -s option. */
-            xfree(opt_syslog_facility); // ignore any previous options sent
-            opt_syslog_facility = xstrdup(optValue);
-
-        case 's':
-            /** \par s
-             * Initialize the syslog for output */
-#if HAVE_SYSLOG
-
-            _db_set_syslog(opt_syslog_facility);
-
-            break;
-
-#else
-
-            fatal("Logging to syslog not available on this platform");
-
-            /* NOTREACHED */
-#endif
-
-        case 'u':
-            /** \par u
-             * Store the ICP port number given in global option icpPortNumOverride
-             * ensuring its a positive number. */
-            icpPortNumOverride = atoi(optValue);
-
-            if (icpPortNumOverride < 0)
-                icpPortNumOverride = 0;
-
-            break;
-
-        case 'v':
-            /** \par v
-             * Display squid version and build information. Then exit. */
-            printf("Squid Cache: Version %s\n",version_string);
-            printf("Service Name: " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(service_name));
-            if (strlen(SQUID_BUILD_INFO))
-                printf("%s\n",SQUID_BUILD_INFO);
-#if USE_OPENSSL
-            printf("\nThis binary uses %s. ", SSLeay_version(SSLEAY_VERSION));
-            printf("For legal restrictions on distribution see https://www.openssl.org/source/license.html\n\n");
-#endif
-            printf( "configure options: %s\n", SQUID_CONFIGURE_OPTIONS);
-
-#if USE_WIN32_SERVICE
-
-            printf("Compiled as Windows System Service.\n");
-
-#endif
-
-            exit(EXIT_SUCCESS);
-
-        /* NOTREACHED */
-
-        case 'z':
-            /** \par z
-             * Set global option Debug::log_stderr and opt_create_swap_dirs */
-            Debug::log_stderr = 1;
-            opt_create_swap_dirs = 1;
-            break;
-
-        case 1:
-            /** \par --foreground
-             * Set global option opt_foreground */
-            opt_foreground = 1;
-            break;
-
-        case 'h':
-        case '?':
-        default:
-            usage();
-            break;
-        }
-
-        return options.erase(opt);
 }
 
 /// Decides whether the signal-controlled action X should be delayed, canceled,
@@ -721,59 +345,6 @@ SignalEngine::handleStoppedChild()
     while (pid > 0 || (pid < 0 && errno == EINTR));
 #endif
 #endif
-}
-
-static void
-usage(void)
-{
-    fprintf(stderr,
-            "Usage: %s [-cdzCFNRVYX] [-n name] [-s | -l facility] [-f config-file] [-[au] port] [-k signal]"
-#if USE_WIN32_SERVICE
-            "[-ir] [-O CommandLine]"
-#endif
-            "\n"
-            "    -h | --help       Print help message.\n"
-            "    -v | --version    Print version details.\n"
-            "\n"
-            "       -a port   Specify HTTP port number (default: %d).\n"
-            "       -d level  Write debugging to stderr also.\n"
-            "       -f file   Use given config-file instead of\n"
-            "                 %s\n"
-#if USE_WIN32_SERVICE
-            "       -i        Installs as a Windows Service (see -n option).\n"
-#endif
-            "       -k reconfigure|rotate|shutdown|"
-#ifdef SIGTTIN
-            "restart|"
-#endif
-            "interrupt|kill|debug|check|parse\n"
-            "                 Parse configuration file, then send signal to \n"
-            "                 running copy (except -k parse) and exit.\n"
-            "       -n name   Specify service name to use for service operations\n"
-            "                 default is: " APP_SHORTNAME ".\n"
-#if USE_WIN32_SERVICE
-            "       -r        Removes a Windows Service (see -n option).\n"
-#endif
-            "       -s | -l facility\n"
-            "                 Enable logging to syslog.\n"
-            "       -u port   Specify ICP port number (default: %d), disable with 0.\n"
-            "       -z        Create missing swap directories and then exit.\n"
-            "       -C        Do not catch fatal signals.\n"
-            "       -D        OBSOLETE. Scheduled for removal.\n"
-            "       -F        Don't serve any requests until store is rebuilt.\n"
-            "       -N        Master process runs in foreground and is a worker. No kids.\n"
-            "       --foreground\n"
-            "                 Master process runs in foreground and creates worker kids.\n"
-#if USE_WIN32_SERVICE
-            "       -O options\n"
-            "                 Set Windows Service Command line options in Registry.\n"
-#endif
-            "       -R        Do not set REUSEADDR on port.\n"
-            "       -S        Double-check swap during rebuild.\n"
-            "       -X        Force full debugging.\n"
-            "       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
-            APP_SHORTNAME, CACHE_HTTP_PORT, DefaultConfigFile, CACHE_ICP_PORT);
-    exit(EXIT_FAILURE);
 }
 
 /* ARGSUSED */
@@ -1478,18 +1049,16 @@ SquidMainSafe(int argc, char **argv)
 
 /// computes name and ID for the current kid process
 static void
-ConfigureCurrentKid(OptParser &optParser)
+ConfigureCurrentKid(const CommandLine &cmdLine)
 {
-    const auto optValue = optParser.getOption('K');
-    // kids are marked with parenthesis around their process names
-    if (!optValue.empty() && optValue[0] == '(') {
-        const char *processName = optValue.c_str();
-        printf("process name = %s\n", processName);
+    if (!cmdLine.kidName().isEmpty()) {
+        // TODO: parse directly SBuf instead
+        char *processName = strdup(cmdLine.kidName().c_str());
         if (const char *idStart = strrchr(processName, '-')) {
             KidIdentifier = atoi(idStart + 1);
-            const size_t nameLen = idStart - (processName + 1);
+            const size_t nameLen = idStart - processName;
             assert(nameLen < sizeof(TheKidName));
-            xstrncpy(TheKidName, processName + 1, nameLen + 1);
+            xstrncpy(TheKidName, processName, nameLen);
             if (!strcmp(TheKidName, "squid-coord"))
                 TheProcessKind = pkCoordinator;
             else if (!strcmp(TheKidName, "squid"))
@@ -1499,6 +1068,7 @@ ConfigureCurrentKid(OptParser &optParser)
             else
                 TheProcessKind = pkOther; // including coordinator
         }
+        free(processName);
     } else {
         xstrncpy(TheKidName, APP_SHORTNAME, sizeof(TheKidName));
         KidIdentifier = 0;
@@ -1514,9 +1084,9 @@ static void StartUsingConfig()
 int
 SquidMain(int argc, char **argv)
 {
-    OptParser optParser(argc, argv);
-    // configure current kid
-    ConfigureCurrentKid(optParser);
+    CommandLine cmdLine(argc, argv);
+
+    ConfigureCurrentKid(cmdLine);
 
     Debug::parseOptions(NULL);
 
@@ -1563,7 +1133,7 @@ SquidMain(int argc, char **argv)
 
 #endif
 
-    optParser.processOptions();
+    cmdLine.processOptions();
 
     if (opt_foreground && opt_no_daemon) {
         debugs(1, DBG_CRITICAL, "WARNING: --foreground command-line option has no effect with -N.");
@@ -1679,7 +1249,7 @@ SquidMain(int argc, char **argv)
 
     if (IamMasterProcess()) {
         if (InDaemonMode()) {
-            watch_child(argc, argv);
+            watch_child(cmdLine);
             // NOTREACHED
         } else {
             Instance::WriteOurPid();
@@ -1952,10 +1522,9 @@ masterExit()
 #endif /* !_SQUID_WINDOWS_ */
 
 static void
-watch_child(int argc, char *argv[])
+watch_child(CommandLine &cmdLine)
 {
 #if !_SQUID_WINDOWS_
-    char *prog;
     pid_t pid;
 #ifdef TIOCNOTTY
 
@@ -2059,23 +1628,15 @@ watch_child(int argc, char *argv[])
                 continue;
 
             if (!mainStartScriptCalled) {
-                mainStartScript(argv[0]);
+                mainStartScript(cmdLine.execFile().c_str());
                 mainStartScriptCalled = true;
             }
 
             if ((pid = fork()) == 0) {
                 /* child */
                 openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
-                prog = argv[0];
-
-                char **newArgv = (char **)malloc(sizeof(char *) * (argc + 3));
-                for (int j = 1; j < argc; j++)
-                    newArgv[j] = strdup(argv[j]);
-                newArgv[0] = const_cast<char*>(kid.name().termedBuf());
-                newArgv[argc] = strdup("--kid");
-                newArgv[argc + 1] = newArgv[0];
-                newArgv[argc + 2] = nullptr;
-                execvp(prog, newArgv);
+                const auto argv = cmdLine.argv(kid.name().termedBuf(), kid.pureName().termedBuf());
+                execvp(cmdLine.execFile().c_str(), const_cast<char * const *>(argv));
                 int xerrno = errno;
                 syslog(LOG_ALERT, "execvp failed: %s", xstrerr(xerrno));
             }

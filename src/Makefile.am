@@ -258,6 +258,8 @@ squid_SOURCES = \
 	CollapsedForwarding.h \
 	CompletionDispatcher.cc \
 	CompletionDispatcher.h \
+	CommandLine.cc \
+	CommandLine.h \
 	CommRead.h \
 	ConfigOption.cc \
 	ConfigParser.cc \

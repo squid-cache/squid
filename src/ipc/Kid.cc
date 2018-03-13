@@ -175,6 +175,15 @@ const String& Kid::name() const
     return theName;
 }
 
+String Kid::pureName() const
+{
+    if (theName.size() > 2 && theName[0] == '(') {
+        assert(theName[theName.size() - 1] == ')');
+        return theName.substr(1, theName.size() - 1);
+    }
+    return theName;
+}
+
 time_t
 Kid::deathDuration() const
 {

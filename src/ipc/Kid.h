@@ -77,6 +77,9 @@ public:
     /// returns kid name
     const String& name() const;
 
+    /// \returns kid name without parenthesis
+    String pureName() const;
+
 private:
     void reportStopped() const;
 
