@@ -217,7 +217,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
 #else
         // warn once every 10 at critical level, then push down a level each repeated event
         static int warningLevel = DBG_CRITICAL;
-        debugs(89, warningLevel, "IPF (IPFilter v4) NAT does not support IPv6. Please upgrade to IPFilter v5.1");
+        debugs(89, warningLevel, "Your IPF (IPFilter) NAT does not support IPv6. Please upgrade it.");
         warningLevel = (warningLevel + 1) % 10;
         return false;
     }
