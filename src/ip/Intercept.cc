@@ -205,15 +205,6 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
     // for NAT lookup set local and remote IP:port's
     if (newConn->remote.isIPv6()) {
 #if HAVE_NATLOOKUP_NL_INIPADDR_IN6
-        // warn once every 10 at critical level, then push down a level each repeated event
-        static int warningLevel = DBG_CRITICAL;
-        debugs(89, warningLevel, "IPF (IPFilter v4) NAT does not support IPv6. Please upgrade to IPFilter v5.1");
-        warningLevel = (warningLevel + 1) % 10;
-        return false;
-    }
-    newConn->local.getInAddr(natLookup.nl_inip);
-    newConn->remote.getInAddr(natLookup.nl_outip);
-#else
         natLookup.nl_v = 6;
         newConn->local.getInAddr(natLookup.nl_inipaddr.in6);
         newConn->remote.getInAddr(natLookup.nl_outipaddr.in6);
@@ -223,6 +214,15 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
         newConn->local.getInAddr(natLookup.nl_inipaddr.in4);
         newConn->remote.getInAddr(natLookup.nl_outipaddr.in4);
     }
+#else
+        // warn once every 10 at critical level, then push down a level each repeated event
+        static int warningLevel = DBG_CRITICAL;
+        debugs(89, warningLevel, "IPF (IPFilter v4) NAT does not support IPv6. Please upgrade to IPFilter v5.1");
+        warningLevel = (warningLevel + 1) % 10;
+        return false;
+    }
+    newConn->local.getInAddr(natLookup.nl_inip);
+    newConn->remote.getInAddr(natLookup.nl_outip);
 #endif
     natLookup.nl_inport = htons(newConn->local.port());
     natLookup.nl_outport = htons(newConn->remote.port());
