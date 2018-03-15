@@ -73,6 +73,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Age", HDR_AGE, ftInt},
     {"Allow", HDR_ALLOW, ftStr},
     {"Alternate-Protocol", HDR_ALTERNATE_PROTOCOL, ftStr},
+    {"Authentication-Info", HDR_AUTHENTICATION_INFO, ftStr},
     {"Authorization", HDR_AUTHORIZATION, ftStr},    /* for now */
     {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
     {"Connection", HDR_CONNECTION, ftStr},
@@ -135,7 +136,6 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Via", HDR_VIA, ftStr},    /* for now */
     {"Warning", HDR_WARNING, ftStr},    /* for now */
     {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftStr},
-    {"Authentication-Info", HDR_AUTHENTICATION_INFO, ftStr},
     {"X-Cache", HDR_X_CACHE, ftStr},
     {"X-Cache-Lookup", HDR_X_CACHE_LOOKUP, ftStr},
     {"X-Forwarded-For", HDR_X_FORWARDED_FOR, ftStr},
