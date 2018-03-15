@@ -116,9 +116,5 @@ extern int opt_parse_cfg_only; /* 0 */
 /// Zero for SMP-unaware code and in no-SMP mode.
 extern int KidIdentifier; /* 0 */
 
-extern int opt_signal_service; /* 0 */
-/// Want to detect "-u 0"
-extern int icpPortNumOverride; /* 1 */
-
 #endif /* SQUID_GLOBALS_H */
 

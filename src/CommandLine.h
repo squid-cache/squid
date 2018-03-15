@@ -6,49 +6,62 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef COMMANDLINE_H
-#define COMMANDLINE_H
+#ifndef SQUID_BASE_COMMANDLINE_H /* TODO: Move to src/base/ or remove BASE_. */
+#define SQUID_BASE_COMMANDLINE_H
 
-#include "sbuf/SBuf.h"
+#include <getopt.h>
 #include <vector>
 
-/// Manages arguments passed to the program, including the program name.
-/// The same info is passed to main() as argc and argv[] parameters.
+/// Manages arguments passed to a program (i.e., main(argc, argv) parameters).
 class CommandLine
 {
 public:
-    // codes for options without short option characters
-    enum LongCodes {
-        ForegroundCode = 1,
-        KidCode = 2
-    };
+    /// expects main() input plus getopt_long(3) grammar rules for parsing argv
+    CommandLine(int argc, char *argv[], const char *shortRules, const struct option *longRules);
+    CommandLine(const CommandLine &them);
+    ~CommandLine();
 
-    typedef std::pair<char, SBuf> OptionsPair;
-    typedef std::list<OptionsPair> Options;
+    // inefficient profile to simplify implementation
+    CommandLine &operator =(CommandLine);
 
-    CommandLine(int argc, char *argv[]);
+    /// \returns whether the option with optId identifier is present
+    /// When returning true, sets non-nil optValue to the found option's value.
+    /// For letter options (-x) and their --long synonyms, the letter is the ID.
+    /// For long-only --options, the ID is the configured options::val value.
+    bool hasOption(const int optId, const char **optValue = nullptr) const;
 
-    /// \returns parsed kid option argument or an empty string
-    SBuf kidName() const;
+    /// A callback function for forEachOption(); receives parsed options.
+    /// Must not call hasOption() or forEachOption() -- getopt(3) uses globals!
+    typedef void Visitor(const int optId, const char *optValue);
 
-    /// apply all available command line options
-    void processOptions();
+    /// calls Visitor for each of the configured command line option
+    void forEachOption(Visitor) const;
 
-    /// generate a new argument list from the parsed one,
-    /// supstituting argv[0] and adding/substituting kid option
-    const char **argv(const char *argv0, const char *kidName);
+    /// \returns argv[0], which is usually a program "name"
+    const char *arg0() const { return argv_[0]; }
 
-    /// \returns Squid executable file name
-    SBuf execFile() const { return execFile_; }
+    /// \returns main()'s argc, which is traditionally missing the last/nil item
+    int argc() const { return static_cast<int>(argv_.size()) - 1; }
+
+    /// \returns main()'s argv[] which is traditionally const-wrong
+    char **argv() const { return const_cast<char**>(argv_.data()); }
+
+    /// replaces argv[0] with the new value
+    void resetArg0(const char *programName);
+
+    /// appends a (possibly duplicated) option
+    void addOption(const char *name, const char *value = nullptr);
 
 private:
-    void processOption(const char, const char *);
-    void parse(int argc, char *argv[]);
+    const struct option *longOptions() const { return longOptions_.size() ? longOptions_.data() : nullptr; }
+    bool nextOption(int &optId) const;
 
-    SBuf execFile_;
-    std::vector<const char *> argv_;
-    Options options;
+    /// raw main() parameters, including argv[0] and a nil argv[argc]
+    std::vector<char *> argv_;
+
+    /* getopt_long() grammar rules */
+    const char *shortOptions_; ///< single-dash, single-letter (-x) option rules
+    std::vector<struct option> longOptions_; ///< long --option rules
 };
 
-#endif
-
+#endif /* SQUID_BASE_COMMANDLINE_H */

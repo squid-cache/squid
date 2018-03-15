@@ -74,11 +74,11 @@ public:
     /// whether the process was terminated by a given signal
     bool signaled(int sgnl) const;
 
-    /// returns kid name
-    const String& name() const;
+    /// \returns kid's role and ID formatted for use as a process name
+    const String& processName() const;
 
-    /// \returns kid name without parenthesis
-    String pureName() const;
+    /// \returns kid's role and ID summary; usable as a --kid parameter value
+    String gist() const;
 
 private:
     void reportStopped() const;

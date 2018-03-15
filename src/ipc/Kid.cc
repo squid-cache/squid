@@ -170,13 +170,14 @@ bool Kid::signaled(int sgnl) const
 }
 
 /// returns kid name
-const String& Kid::name() const
+const String& Kid::processName() const
 {
     return theName;
 }
 
-String Kid::pureName() const
+String Kid::gist() const
 {
+    // TODO: Assemble both processName() and gist() from role and ID instead.
     if (theName.size() > 2 && theName[0] == '(') {
         assert(theName[theName.size() - 1] == ')');
         return theName.substr(1, theName.size() - 1);
