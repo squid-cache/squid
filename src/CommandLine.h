@@ -17,15 +17,15 @@ typedef struct option LongOption;
 /// A struct option C++ wrapper, helps with option::name copying/freeing.
 class Option : public LongOption
 {
-    public:
-        Option();
-        explicit Option(const LongOption &);
-        Option(const Option&);
-        Option &operator =(const Option &);
-        ~Option();
+public:
+    Option();
+    explicit Option(const LongOption &);
+    Option(const Option&);
+    Option &operator =(const Option &);
+    ~Option();
 
-    private:
-        void copy(const LongOption &);
+private:
+    void copy(const LongOption &);
 };
 
 /// Manages arguments passed to a program (i.e., main(argc, argv) parameters).

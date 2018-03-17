@@ -417,23 +417,23 @@ enum {
     optKid
 };
 
-    // short options
-    // TODO: consider prefixing with ':' for better logging
-    // (distinguish missing required argument cases)
-    const char *shortOpStr =
+// short options
+// TODO: consider prefixing with ':' for better logging
+// (distinguish missing required argument cases)
+const char *shortOpStr =
 #if USE_WIN32_SERVICE
-        "O:Vir"
+    "O:Vir"
 #endif
-        "CDFNRSYXa:d:f:hk:m::n:sl:u:vz?";
+    "CDFNRSYXa:d:f:hk:m::n:sl:u:vz?";
 
-    // long options
-    static struct option squidOptions[] = {
-        {"foreground", no_argument, 0,  optForeground},
-        {"kid",        required_argument, 0, optKid},
-        {"help",       no_argument, 0, 'h'},
-        {"version",    no_argument, 0, 'v'},
-        {0, 0, 0, 0}
-    };
+// long options
+static struct option squidOptions[] = {
+    {"foreground", no_argument, 0,  optForeground},
+    {"kid",        required_argument, 0, optKid},
+    {"help",       no_argument, 0, 'h'},
+    {"version",    no_argument, 0, 'v'},
+    {0, 0, 0, 0}
+};
 
 // handle a command line parameter
 static void
@@ -441,283 +441,283 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
 {
     switch (optId) {
 
-        case 'C':
-            /** \par C
-             * Unset/disabel global option for catchign signals. opt_catch_signals */
-            opt_catch_signals = 0;
-            break;
+    case 'C':
+        /** \par C
+         * Unset/disabel global option for catchign signals. opt_catch_signals */
+        opt_catch_signals = 0;
+        break;
 
-        case 'D':
-            /** \par D
-             * OBSOLETE: WAS: override to prevent optional startup DNS tests. */
-            debugs(1,DBG_CRITICAL, "WARNING: -D command-line option is obsolete.");
-            break;
+    case 'D':
+        /** \par D
+         * OBSOLETE: WAS: override to prevent optional startup DNS tests. */
+        debugs(1,DBG_CRITICAL, "WARNING: -D command-line option is obsolete.");
+        break;
 
-        case 'F':
-            /** \par F
-             * Set global option for foreground rebuild. opt_foreground_rebuild */
-            opt_foreground_rebuild = 1;
-            break;
+    case 'F':
+        /** \par F
+         * Set global option for foreground rebuild. opt_foreground_rebuild */
+        opt_foreground_rebuild = 1;
+        break;
 
-        case 'N':
-            /** \par N
-             * Set global option for 'no_daemon' mode. opt_no_daemon */
-            opt_no_daemon = 1;
-            break;
-
-#if USE_WIN32_SERVICE
-
-        case 'O':
-            /** \par O
-             * Set global option. opt_command_lin and WIN32_Command_Line */
-            opt_command_line = 1;
-            WIN32_Command_Line = xstrdup(optValue);
-            break;
-#endif
-
-        case 'R':
-            /** \par R
-             * Unset/disable global option opt_reuseaddr */
-            opt_reuseaddr = 0;
-            break;
-
-        case 'S':
-            /** \par S
-             * Set global option opt_store_doublecheck */
-            opt_store_doublecheck = 1;
-            break;
-
-        case 'X':
-            /** \par X
-             * Force full debugging */
-            Debug::parseOptions("rotate=0 ALL,9");
-            Debug::override_X = 1;
-            sigusr2_handle(SIGUSR2);
-            break;
-
-        case 'Y':
-            /** \par Y
-             * Set global option opt_reload_hit_only */
-            opt_reload_hit_only = 1;
-            break;
+    case 'N':
+        /** \par N
+         * Set global option for 'no_daemon' mode. opt_no_daemon */
+        opt_no_daemon = 1;
+        break;
 
 #if USE_WIN32_SERVICE
 
-        case 'i':
-            /** \par i
-             * Set global option opt_install_service (to TRUE) */
-            opt_install_service = TRUE;
-            break;
+    case 'O':
+        /** \par O
+         * Set global option. opt_command_lin and WIN32_Command_Line */
+        opt_command_line = 1;
+        WIN32_Command_Line = xstrdup(optValue);
+        break;
 #endif
 
-        case 'a':
-            {
-                /** \par a
-                 * Add optional HTTP port as given following the option */
-                char *port = xstrdup(optValue);
-                add_http_port(port);
-                xfree(port);
-                break;
-            }
+    case 'R':
+        /** \par R
+         * Unset/disable global option opt_reuseaddr */
+        opt_reuseaddr = 0;
+        break;
 
-        case 'd':
-            /** \par d
-             * Set global option Debug::log_stderr to the number given following the option */
-            Debug::log_stderr = atoi(optValue);
-            break;
+    case 'S':
+        /** \par S
+         * Set global option opt_store_doublecheck */
+        opt_store_doublecheck = 1;
+        break;
 
-        case 'f':
-            /** \par f
-             * Load the file given instead of the default squid.conf. */
-            xfree(ConfigFile);
-            ConfigFile = xstrdup(optValue);
-            break;
+    case 'X':
+        /** \par X
+         * Force full debugging */
+        Debug::parseOptions("rotate=0 ALL,9");
+        Debug::override_X = 1;
+        sigusr2_handle(SIGUSR2);
+        break;
 
-        case 'k':
-            /** \par k
-             * Run the administrative action given following the option */
+    case 'Y':
+        /** \par Y
+         * Set global option opt_reload_hit_only */
+        opt_reload_hit_only = 1;
+        break;
 
-            /** \li When it is missing or an unknown option display the usage help. */
-            if (!optValue || strlen(optValue) < 1)
-                usage();
+#if USE_WIN32_SERVICE
 
-            else if (!strncmp(optValue, "reconfigure", strlen(optValue)))
-                /** \li On reconfigure send SIGHUP. */
-                opt_send_signal = SIGHUP;
-            else if (!strncmp(optValue, "rotate", strlen(optValue)))
-                /** \li On rotate send SIGQUIT or SIGUSR1. */
+    case 'i':
+        /** \par i
+         * Set global option opt_install_service (to TRUE) */
+        opt_install_service = TRUE;
+        break;
+#endif
+
+    case 'a':
+    {
+        /** \par a
+         * Add optional HTTP port as given following the option */
+        char *port = xstrdup(optValue);
+        add_http_port(port);
+        xfree(port);
+        break;
+    }
+
+    case 'd':
+        /** \par d
+         * Set global option Debug::log_stderr to the number given following the option */
+        Debug::log_stderr = atoi(optValue);
+        break;
+
+    case 'f':
+        /** \par f
+         * Load the file given instead of the default squid.conf. */
+        xfree(ConfigFile);
+        ConfigFile = xstrdup(optValue);
+        break;
+
+    case 'k':
+        /** \par k
+         * Run the administrative action given following the option */
+
+        /** \li When it is missing or an unknown option display the usage help. */
+        if (!optValue || strlen(optValue) < 1)
+            usage();
+
+        else if (!strncmp(optValue, "reconfigure", strlen(optValue)))
+            /** \li On reconfigure send SIGHUP. */
+            opt_send_signal = SIGHUP;
+        else if (!strncmp(optValue, "rotate", strlen(optValue)))
+            /** \li On rotate send SIGQUIT or SIGUSR1. */
 #if defined(_SQUID_LINUX_THREADS_)
-                opt_send_signal = SIGQUIT;
+            opt_send_signal = SIGQUIT;
 #else
-                opt_send_signal = SIGUSR1;
+            opt_send_signal = SIGUSR1;
 #endif
 
-            else if (!strncmp(optValue, "debug", strlen(optValue)))
-                /** \li On debug send SIGTRAP or SIGUSR2. */
+        else if (!strncmp(optValue, "debug", strlen(optValue)))
+            /** \li On debug send SIGTRAP or SIGUSR2. */
 #if defined(_SQUID_LINUX_THREADS_)
-                opt_send_signal = SIGTRAP;
+            opt_send_signal = SIGTRAP;
 #else
-                opt_send_signal = SIGUSR2;
+            opt_send_signal = SIGUSR2;
 #endif
 
-            else if (!strncmp(optValue, "shutdown", strlen(optValue)))
-                /** \li On shutdown send SIGTERM. */
-                opt_send_signal = SIGTERM;
-            else if (!strncmp(optValue, "interrupt", strlen(optValue)))
-                /** \li On interrupt send SIGINT. */
-                opt_send_signal = SIGINT;
-            else if (!strncmp(optValue, "kill", strlen(optValue)))
-                /** \li On kill send SIGKILL. */
-                opt_send_signal = SIGKILL;
+        else if (!strncmp(optValue, "shutdown", strlen(optValue)))
+            /** \li On shutdown send SIGTERM. */
+            opt_send_signal = SIGTERM;
+        else if (!strncmp(optValue, "interrupt", strlen(optValue)))
+            /** \li On interrupt send SIGINT. */
+            opt_send_signal = SIGINT;
+        else if (!strncmp(optValue, "kill", strlen(optValue)))
+            /** \li On kill send SIGKILL. */
+            opt_send_signal = SIGKILL;
 
 #ifdef SIGTTIN
 
-            else if (!strncmp(optValue, "restart", strlen(optValue)))
-                /** \li On restart send SIGTTIN. (exit and restart by parent) */
-                opt_send_signal = SIGTTIN;
+        else if (!strncmp(optValue, "restart", strlen(optValue)))
+            /** \li On restart send SIGTTIN. (exit and restart by parent) */
+            opt_send_signal = SIGTTIN;
 
 #endif
 
-            else if (!strncmp(optValue, "check", strlen(optValue)))
-                /** \li On check send 0 / SIGNULL. */
-                opt_send_signal = 0;    /* SIGNULL */
-            else if (!strncmp(optValue, "parse", strlen(optValue)))
-                /** \li On parse set global flag to re-parse the config file only. */
-                opt_parse_cfg_only = 1;
-            else
-                usage();
-
-            break;
-
-        case 'm':
-            /** \par m
-             * Set global malloc_debug_level to the value given following the option.
-             * if none is given it toggles the xmalloc_trace option on/off */
-            if (optValue) {
-#if MALLOC_DBG
-                malloc_debug_level = atoi(optValue);
-#else
-                fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
-#endif
-
-            }
-            break;
-
-        case 'n':
-            /** \par n
-             * Set global option opt_signal_service (to true).
-             * Stores the additional parameter given in global service_name */
-            if (optValue && *optValue != '\0') {
-                const SBuf t(optValue);
-                ::Parser::Tokenizer tok(t);
-                const CharacterSet chr = CharacterSet::ALPHA+CharacterSet::DIGIT;
-                if (!tok.prefix(service_name, chr))
-                    fatalf("Expected alphanumeric service name for the -n option but got: %s", optValue);
-                if (!tok.atEnd())
-                    fatalf("Garbage after alphanumeric service name in the -n option value: %s", optValue);
-                if (service_name.length() > 32)
-                    fatalf("Service name (-n option) must be limited to 32 characters but got %u", service_name.length());
-                opt_signal_service = true;
-            } else {
-                fatal("A service name is required for the -n option");
-            }
-            break;
-
-#if USE_WIN32_SERVICE
-
-        case 'r':
-            /** \par r
-             * Set global option opt_remove_service (to TRUE) */
-            opt_remove_service = TRUE;
-
-            break;
-
-#endif
-
-        case 'l':
-            /** \par l
-             * Stores the syslog facility name in global opt_syslog_facility
-             * then performs actions for -s option. */
-            xfree(opt_syslog_facility); // ignore any previous options sent
-            opt_syslog_facility = xstrdup(optValue);
-
-        case 's':
-            /** \par s
-             * Initialize the syslog for output */
-#if HAVE_SYSLOG
-
-            _db_set_syslog(opt_syslog_facility);
-
-            break;
-
-#else
-
-            fatal("Logging to syslog not available on this platform");
-
-            /* NOTREACHED */
-#endif
-
-        case 'u':
-            /** \par u
-             * Store the ICP port number given in global option icpPortNumOverride
-             * ensuring its a positive number. */
-            icpPortNumOverride = atoi(optValue);
-
-            if (icpPortNumOverride < 0)
-                icpPortNumOverride = 0;
-
-            break;
-
-        case 'v':
-            /** \par v
-             * Display squid version and build information. Then exit. */
-            printf("Squid Cache: Version %s\n",version_string);
-            printf("Service Name: " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(service_name));
-            if (strlen(SQUID_BUILD_INFO))
-                printf("%s\n",SQUID_BUILD_INFO);
-#if USE_OPENSSL
-            printf("\nThis binary uses %s. ", SSLeay_version(SSLEAY_VERSION));
-            printf("For legal restrictions on distribution see https://www.openssl.org/source/license.html\n\n");
-#endif
-            printf( "configure options: %s\n", SQUID_CONFIGURE_OPTIONS);
-
-#if USE_WIN32_SERVICE
-
-            printf("Compiled as Windows System Service.\n");
-
-#endif
-
-            exit(EXIT_SUCCESS);
-
-        /* NOTREACHED */
-
-        case 'z':
-            /** \par z
-             * Set global option Debug::log_stderr and opt_create_swap_dirs */
-            Debug::log_stderr = 1;
-            opt_create_swap_dirs = 1;
-            break;
-
-        case optForeground:
-            /** \par --foreground
-             * Set global option opt_foreground */
-            opt_foreground = 1;
-            break;
-
-        case optKid:
-            // already processed in ConfigureCurrentKid()
-            break;
-
-        case 'h':
-
-        case '?':
-
-        default:
-            /** \par h,?, or unknown
-             * \copydoc usage() */
+        else if (!strncmp(optValue, "check", strlen(optValue)))
+            /** \li On check send 0 / SIGNULL. */
+            opt_send_signal = 0;    /* SIGNULL */
+        else if (!strncmp(optValue, "parse", strlen(optValue)))
+            /** \li On parse set global flag to re-parse the config file only. */
+            opt_parse_cfg_only = 1;
+        else
             usage();
 
-            break;
+        break;
+
+    case 'm':
+        /** \par m
+         * Set global malloc_debug_level to the value given following the option.
+         * if none is given it toggles the xmalloc_trace option on/off */
+        if (optValue) {
+#if MALLOC_DBG
+            malloc_debug_level = atoi(optValue);
+#else
+            fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
+#endif
+
+        }
+        break;
+
+    case 'n':
+        /** \par n
+         * Set global option opt_signal_service (to true).
+         * Stores the additional parameter given in global service_name */
+        if (optValue && *optValue != '\0') {
+            const SBuf t(optValue);
+            ::Parser::Tokenizer tok(t);
+            const CharacterSet chr = CharacterSet::ALPHA+CharacterSet::DIGIT;
+            if (!tok.prefix(service_name, chr))
+                fatalf("Expected alphanumeric service name for the -n option but got: %s", optValue);
+            if (!tok.atEnd())
+                fatalf("Garbage after alphanumeric service name in the -n option value: %s", optValue);
+            if (service_name.length() > 32)
+                fatalf("Service name (-n option) must be limited to 32 characters but got %u", service_name.length());
+            opt_signal_service = true;
+        } else {
+            fatal("A service name is required for the -n option");
+        }
+        break;
+
+#if USE_WIN32_SERVICE
+
+    case 'r':
+        /** \par r
+         * Set global option opt_remove_service (to TRUE) */
+        opt_remove_service = TRUE;
+
+        break;
+
+#endif
+
+    case 'l':
+        /** \par l
+         * Stores the syslog facility name in global opt_syslog_facility
+         * then performs actions for -s option. */
+        xfree(opt_syslog_facility); // ignore any previous options sent
+        opt_syslog_facility = xstrdup(optValue);
+
+    case 's':
+        /** \par s
+         * Initialize the syslog for output */
+#if HAVE_SYSLOG
+
+        _db_set_syslog(opt_syslog_facility);
+
+        break;
+
+#else
+
+        fatal("Logging to syslog not available on this platform");
+
+        /* NOTREACHED */
+#endif
+
+    case 'u':
+        /** \par u
+         * Store the ICP port number given in global option icpPortNumOverride
+         * ensuring its a positive number. */
+        icpPortNumOverride = atoi(optValue);
+
+        if (icpPortNumOverride < 0)
+            icpPortNumOverride = 0;
+
+        break;
+
+    case 'v':
+        /** \par v
+         * Display squid version and build information. Then exit. */
+        printf("Squid Cache: Version %s\n",version_string);
+        printf("Service Name: " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(service_name));
+        if (strlen(SQUID_BUILD_INFO))
+            printf("%s\n",SQUID_BUILD_INFO);
+#if USE_OPENSSL
+        printf("\nThis binary uses %s. ", SSLeay_version(SSLEAY_VERSION));
+        printf("For legal restrictions on distribution see https://www.openssl.org/source/license.html\n\n");
+#endif
+        printf( "configure options: %s\n", SQUID_CONFIGURE_OPTIONS);
+
+#if USE_WIN32_SERVICE
+
+        printf("Compiled as Windows System Service.\n");
+
+#endif
+
+        exit(EXIT_SUCCESS);
+
+    /* NOTREACHED */
+
+    case 'z':
+        /** \par z
+         * Set global option Debug::log_stderr and opt_create_swap_dirs */
+        Debug::log_stderr = 1;
+        opt_create_swap_dirs = 1;
+        break;
+
+    case optForeground:
+        /** \par --foreground
+         * Set global option opt_foreground */
+        opt_foreground = 1;
+        break;
+
+    case optKid:
+        // already processed in ConfigureCurrentKid()
+        break;
+
+    case 'h':
+
+    case '?':
+
+    default:
+        /** \par h,?, or unknown
+         * \copydoc usage() */
+        usage();
+
+        break;
     }
 }
 

@@ -101,7 +101,7 @@ CommandLine::nextOption(int &optId) const
         assert(optind > 0 && static_cast<unsigned int>(optind) < argv_.size());
         SBuf errMsg;
         errMsg.Printf("'%s': %s", argv_[optind - 1],  optId == '?' ?
-                "unrecognized option or missing required argument" : "missing required argument");
+                      "unrecognized option or missing required argument" : "missing required argument");
         throw TexcHere(errMsg);
     }
     return optId != -1;
