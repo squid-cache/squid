@@ -27,7 +27,7 @@ public:
 public:
     Kid();
 
-    Kid(const String& kid_name);
+    Kid(const char *role, const int id);
 
     /// called when this kid got started, records PID
     void start(pid_t cpid);
@@ -75,16 +75,17 @@ public:
     bool signaled(int sgnl) const;
 
     /// \returns kid's role and ID formatted for use as a process name
-    const String& processName() const;
+    SBuf processName() const;
 
     /// \returns kid's role and ID summary; usable as a --kid parameter value
-    String gist() const;
+    SBuf gist() const;
 
 private:
     void reportStopped() const;
 
     // Information preserved across restarts
-    String theName; ///< process name
+    SBuf processRole;
+    int processId;
     int badFailures; ///< number of "repeated frequent" failures
 
     // Information specific to a running or stopped kid

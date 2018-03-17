@@ -418,6 +418,8 @@ enum {
 };
 
     // short options
+    // TODO: consider prefixing with ':' for better logging
+    // (distinguish missing required argument cases)
     const char *shortOpStr =
 #if USE_WIN32_SERVICE
         "O:Vir"
@@ -437,11 +439,7 @@ enum {
 static void
 mainHandleCommandLineOption(const int optId, const char *optValue)
 {
-    // XXX: Remove these diff-minimizing hacks and reformat.
-    const auto c = optId;
-    #define optarg optValue
-
-        switch (c) {
+    switch (optId) {
 
         case 'C':
             /** \par C
@@ -473,7 +471,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             /** \par O
              * Set global option. opt_command_lin and WIN32_Command_Line */
             opt_command_line = 1;
-            WIN32_Command_Line = xstrdup(optarg);
+            WIN32_Command_Line = xstrdup(optValue);
             break;
 #endif
 
@@ -513,22 +511,26 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
 #endif
 
         case 'a':
-            /** \par a
-             * Add optional HTTP port as given following the option */
-            add_http_port(const_cast<char*>(optarg)); // XXX: Remove cast.
-            break;
+            {
+                /** \par a
+                 * Add optional HTTP port as given following the option */
+                char *port = xstrdup(optValue);
+                add_http_port(port);
+                xfree(port);
+                break;
+            }
 
         case 'd':
             /** \par d
              * Set global option Debug::log_stderr to the number given following the option */
-            Debug::log_stderr = atoi(optarg);
+            Debug::log_stderr = atoi(optValue);
             break;
 
         case 'f':
             /** \par f
              * Load the file given instead of the default squid.conf. */
             xfree(ConfigFile);
-            ConfigFile = xstrdup(optarg);
+            ConfigFile = xstrdup(optValue);
             break;
 
         case 'k':
@@ -536,13 +538,13 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
              * Run the administrative action given following the option */
 
             /** \li When it is missing or an unknown option display the usage help. */
-            if (!optarg || strlen(optarg) < 1)
+            if (!optValue || strlen(optValue) < 1)
                 usage();
 
-            else if (!strncmp(optarg, "reconfigure", strlen(optarg)))
+            else if (!strncmp(optValue, "reconfigure", strlen(optValue)))
                 /** \li On reconfigure send SIGHUP. */
                 opt_send_signal = SIGHUP;
-            else if (!strncmp(optarg, "rotate", strlen(optarg)))
+            else if (!strncmp(optValue, "rotate", strlen(optValue)))
                 /** \li On rotate send SIGQUIT or SIGUSR1. */
 #if defined(_SQUID_LINUX_THREADS_)
                 opt_send_signal = SIGQUIT;
@@ -550,7 +552,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
                 opt_send_signal = SIGUSR1;
 #endif
 
-            else if (!strncmp(optarg, "debug", strlen(optarg)))
+            else if (!strncmp(optValue, "debug", strlen(optValue)))
                 /** \li On debug send SIGTRAP or SIGUSR2. */
 #if defined(_SQUID_LINUX_THREADS_)
                 opt_send_signal = SIGTRAP;
@@ -558,28 +560,28 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
                 opt_send_signal = SIGUSR2;
 #endif
 
-            else if (!strncmp(optarg, "shutdown", strlen(optarg)))
+            else if (!strncmp(optValue, "shutdown", strlen(optValue)))
                 /** \li On shutdown send SIGTERM. */
                 opt_send_signal = SIGTERM;
-            else if (!strncmp(optarg, "interrupt", strlen(optarg)))
+            else if (!strncmp(optValue, "interrupt", strlen(optValue)))
                 /** \li On interrupt send SIGINT. */
                 opt_send_signal = SIGINT;
-            else if (!strncmp(optarg, "kill", strlen(optarg)))
+            else if (!strncmp(optValue, "kill", strlen(optValue)))
                 /** \li On kill send SIGKILL. */
                 opt_send_signal = SIGKILL;
 
 #ifdef SIGTTIN
 
-            else if (!strncmp(optarg, "restart", strlen(optarg)))
+            else if (!strncmp(optValue, "restart", strlen(optValue)))
                 /** \li On restart send SIGTTIN. (exit and restart by parent) */
                 opt_send_signal = SIGTTIN;
 
 #endif
 
-            else if (!strncmp(optarg, "check", strlen(optarg)))
+            else if (!strncmp(optValue, "check", strlen(optValue)))
                 /** \li On check send 0 / SIGNULL. */
                 opt_send_signal = 0;    /* SIGNULL */
-            else if (!strncmp(optarg, "parse", strlen(optarg)))
+            else if (!strncmp(optValue, "parse", strlen(optValue)))
                 /** \li On parse set global flag to re-parse the config file only. */
                 opt_parse_cfg_only = 1;
             else
@@ -591,9 +593,9 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             /** \par m
              * Set global malloc_debug_level to the value given following the option.
              * if none is given it toggles the xmalloc_trace option on/off */
-            if (optarg) {
+            if (optValue) {
 #if MALLOC_DBG
-                malloc_debug_level = atoi(optarg);
+                malloc_debug_level = atoi(optValue);
 #else
                 fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
 #endif
@@ -605,14 +607,14 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             /** \par n
              * Set global option opt_signal_service (to true).
              * Stores the additional parameter given in global service_name */
-            if (optarg && *optarg != '\0') {
-                const SBuf t(optarg);
+            if (optValue && *optValue != '\0') {
+                const SBuf t(optValue);
                 ::Parser::Tokenizer tok(t);
                 const CharacterSet chr = CharacterSet::ALPHA+CharacterSet::DIGIT;
                 if (!tok.prefix(service_name, chr))
-                    fatalf("Expected alphanumeric service name for the -n option but got: %s", optarg);
+                    fatalf("Expected alphanumeric service name for the -n option but got: %s", optValue);
                 if (!tok.atEnd())
-                    fatalf("Garbage after alphanumeric service name in the -n option value: %s", optarg);
+                    fatalf("Garbage after alphanumeric service name in the -n option value: %s", optValue);
                 if (service_name.length() > 32)
                     fatalf("Service name (-n option) must be limited to 32 characters but got %u", service_name.length());
                 opt_signal_service = true;
@@ -637,7 +639,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
              * Stores the syslog facility name in global opt_syslog_facility
              * then performs actions for -s option. */
             xfree(opt_syslog_facility); // ignore any previous options sent
-            opt_syslog_facility = xstrdup(optarg);
+            opt_syslog_facility = xstrdup(optValue);
 
         case 's':
             /** \par s
@@ -659,7 +661,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             /** \par u
              * Store the ICP port number given in global option icpPortNumOverride
              * ensuring its a positive number. */
-            icpPortNumOverride = atoi(optarg);
+            icpPortNumOverride = atoi(optValue);
 
             if (icpPortNumOverride < 0)
                 icpPortNumOverride = 0;
@@ -696,10 +698,14 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             opt_create_swap_dirs = 1;
             break;
 
-        case 1:
+        case optForeground:
             /** \par --foreground
              * Set global option opt_foreground */
             opt_foreground = 1;
+            break;
+
+        case optKid:
+            // already processed in ConfigureCurrentKid()
             break;
 
         case 'h':
@@ -712,7 +718,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
             usage();
 
             break;
-        }
+    }
 }
 
 /* ARGSUSED */
@@ -1421,25 +1427,23 @@ ConfigureCurrentKid(const CommandLine &cmdLine)
 {
     const char *kidParams = nullptr;
     if (cmdLine.hasOption(optKid, &kidParams)) {
-        // TODO: Use Tokenizer to parse kidParams.
-        char *processName = xstrdup(kidParams);
-        if (const char *idStart = strrchr(processName, '-')) {
-            KidIdentifier = atoi(idStart + 1);
-            const size_t nameLen = idStart - processName;
-            assert(nameLen < sizeof(TheKidName));
-            xstrncpy(TheKidName, processName, nameLen);
-            if (!strcmp(TheKidName, "squid-coord"))
-                TheProcessKind = pkCoordinator;
-            else if (!strcmp(TheKidName, "squid"))
-                TheProcessKind = pkWorker;
-            else if (!strcmp(TheKidName, "squid-disk"))
-                TheProcessKind = pkDisker;
-            else
-                TheProcessKind = pkOther; // including coordinator
-        }
-        xfree(processName);
+        SBuf processName(kidParams);
+        SBuf kidId;
+        Parser::Tokenizer tok(processName);
+        tok.suffix(kidId, CharacterSet::DIGIT);
+        KidIdentifier = atoi(kidId.c_str());
+        tok.skipSuffix(SBuf("-"));
+        TheKidName = tok.remaining();
+        if (TheKidName.cmp("squid-coord") == 0)
+            TheProcessKind = pkCoordinator;
+        else if (TheKidName.cmp("squid") == 0)
+            TheProcessKind = pkWorker;
+        else if (TheKidName.cmp("squid-disk") == 0)
+            TheProcessKind = pkDisker;
+        else
+            TheProcessKind = pkOther; // including coordinator
     } else {
-        xstrncpy(TheKidName, APP_SHORTNAME, sizeof(TheKidName));
+        TheKidName.assign(APP_SHORTNAME);
         KidIdentifier = 0;
     }
 }
@@ -1453,7 +1457,7 @@ static void StartUsingConfig()
 int
 SquidMain(int argc, char **argv)
 {
-    const CommandLine cmdLine(argc, argv, shortOpStr, squidOptions);
+    const CommandLine cmdLine(argc, argv, *shortOpStr, squidOptions);
 
     ConfigureCurrentKid(cmdLine);
 
@@ -2004,8 +2008,9 @@ watch_child(const CommandLine &masterCommand)
             // These are only needed by the forked child below, but let's keep
             // them out of that "no man's land" between fork() and execvp().
             auto kidCommand = masterCommand;
-            kidCommand.resetArg0(kid.processName().termedBuf());
-            kidCommand.addOption("--kid", kid.gist().termedBuf());
+            kidCommand.resetArg0(kid.processName().c_str());
+            assert(!kidCommand.hasOption(optKid));
+            kidCommand.addOption("--kid", kid.gist().c_str());
 
             if ((pid = fork()) == 0) {
                 /* child */
@@ -2017,7 +2022,7 @@ watch_child(const CommandLine &masterCommand)
 
             kid.start(pid);
             syslog(LOG_NOTICE, "Squid Parent: %s process %d started",
-                   kid.processName().termedBuf(), pid);
+                   kid.processName().c_str(), pid);
         }
 
         /* parent */

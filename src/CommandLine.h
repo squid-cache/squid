@@ -6,23 +6,38 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_BASE_COMMANDLINE_H /* TODO: Move to src/base/ or remove BASE_. */
-#define SQUID_BASE_COMMANDLINE_H
+#ifndef SQUID_COMMANDLINE_H
+#define SQUID_COMMANDLINE_H
 
 #include <getopt.h>
 #include <vector>
+
+typedef struct option LongOption;
+
+/// A struct option C++ wrapper, helps with option::name copying/freeing.
+class Option : public LongOption
+{
+    public:
+        Option();
+        explicit Option(const LongOption &);
+        Option(const Option&);
+        Option &operator =(const Option &);
+        ~Option();
+
+    private:
+        void copy(const LongOption &);
+};
 
 /// Manages arguments passed to a program (i.e., main(argc, argv) parameters).
 class CommandLine
 {
 public:
     /// expects main() input plus getopt_long(3) grammar rules for parsing argv
-    CommandLine(int argc, char *argv[], const char *shortRules, const struct option *longRules);
+    CommandLine(int argc, char *argv[], const char &shortRules, const LongOption *longRules);
     CommandLine(const CommandLine &them);
     ~CommandLine();
 
-    // inefficient profile to simplify implementation
-    CommandLine &operator =(CommandLine);
+    CommandLine &operator =(const CommandLine &);
 
     /// \returns whether the option with optId identifier is present
     /// When returning true, sets non-nil optValue to the found option's value.
@@ -31,7 +46,7 @@ public:
     bool hasOption(const int optId, const char **optValue = nullptr) const;
 
     /// A callback function for forEachOption(); receives parsed options.
-    /// Must not call hasOption() or forEachOption() -- getopt(3) uses globals!
+    /// Must not call addOption(), hasOption() or forEachOption() -- getopt(3) uses globals!
     typedef void Visitor(const int optId, const char *optValue);
 
     /// calls Visitor for each of the configured command line option
@@ -49,11 +64,11 @@ public:
     /// replaces argv[0] with the new value
     void resetArg0(const char *programName);
 
-    /// appends a (possibly duplicated) option
+    /// inserts a (possibly duplicated) option at the position 1 (just after argv[0])
     void addOption(const char *name, const char *value = nullptr);
 
 private:
-    const struct option *longOptions() const { return longOptions_.size() ? longOptions_.data() : nullptr; }
+    const LongOption *longOptions() const { return longOptions_.size() ? longOptions_.data() : nullptr; }
     bool nextOption(int &optId) const;
 
     /// raw main() parameters, including argv[0] and a nil argv[argc]
@@ -61,7 +76,8 @@ private:
 
     /* getopt_long() grammar rules */
     const char *shortOptions_; ///< single-dash, single-letter (-x) option rules
-    std::vector<struct option> longOptions_; ///< long --option rules
+    std::vector<Option> longOptions_; ///< long --option rules
 };
 
-#endif /* SQUID_BASE_COMMANDLINE_H */
+#endif /* SQUID_COMMANDLINE_H */
+

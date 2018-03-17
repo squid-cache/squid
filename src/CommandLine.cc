@@ -9,19 +9,21 @@
 #include "squid.h"
 
 #include "CommandLine.h"
+#include "sbuf/SBuf.h"
 
 static void
 ResetGetopt(const bool allowStderrWarnings)
 {
-    opterr = allowStderrWarnings ? 1 : 0;
-    // getopt(3) uses global state but resets it if optind is zero
+    opterr = allowStderrWarnings;
+    // Resetting optind to zero instead of conventional '1' has an
+    // advantage, since it also resets getopt(3) global state.
     // getopt(3) always skips argv[0], even if optind is zero
     optind = 0;
 }
 
-CommandLine::CommandLine(int argC, char *argV[], const char *shortRules, const struct option *longRules):
+CommandLine::CommandLine(int argC, char *argV[], const char &shortRules, const LongOption *longRules):
     argv_(),
-    shortOptions_(xstrdup(shortRules)),
+    shortOptions_(xstrdup(&shortRules)),
     longOptions_()
 {
     assert(argC > 0); // C++ main() requirement that makes our arg0() safe
@@ -33,25 +35,26 @@ CommandLine::CommandLine(int argC, char *argV[], const char *shortRules, const s
     argv_.push_back(nullptr); // POSIX argv "must be terminated by a null pointer"
 
     /* copy grammar rules for the long options */
-    for (auto longOption = longRules; longOption; ++longOption) {
-        longOptions_.push_back(*longOption);
-        if (!longOption->name)
-            break;
+    if (longRules) {
+        for (auto longOption = longRules; longOption->name; ++longOption)
+            longOptions_.push_back(Option(*longOption));
+        longOptions_.push_back(Option());
     }
 }
 
 CommandLine::CommandLine(const CommandLine &them):
-    CommandLine(them.argc(), them.argv(), them.shortOptions_, them.longOptions())
+    CommandLine(them.argc(), them.argv(), *them.shortOptions_, them.longOptions())
 {
 }
 
 CommandLine &
-CommandLine::operator =(CommandLine them) // not a reference so that we can swap
+CommandLine::operator =(const CommandLine &them) // not a reference so that we can swap
 {
     // cannot just swap(*this, them): std::swap(T,T) may call this assignment op
-    std::swap(argv_, them.argv_);
-    std::swap(shortOptions_, them.shortOptions_);
-    std::swap(longOptions_, them.longOptions_);
+    CommandLine tmp(them);
+    std::swap(argv_, tmp.argv_);
+    std::swap(shortOptions_, tmp.shortOptions_);
+    std::swap(longOptions_, tmp.longOptions_);
     return *this;
 }
 
@@ -89,11 +92,18 @@ CommandLine::forEachOption(Visitor visitor) const
 
 /// extracts the next option (if any)
 /// \returns whether the option was extracted
+/// throws on unknown option or missing required argument
 bool
 CommandLine::nextOption(int &optId) const
 {
     optId = getopt_long(argc(), argv(), shortOptions_, longOptions(), nullptr);
-    // TODO: if (optId == '?'), then throw an error instead of relying on opterr
+    if ((optId == ':' && shortOptions_[0] == ':') || optId == '?') {
+        assert(optind > 0 && static_cast<unsigned int>(optind) < argv_.size());
+        SBuf errMsg;
+        errMsg.Printf("'%s': %s", argv_[optind - 1],  optId == '?' ?
+                "unrecognized option or missing required argument" : "missing required argument");
+        throw TexcHere(errMsg);
+    }
     return optId != -1;
 }
 
@@ -109,7 +119,45 @@ void
 CommandLine::addOption(const char *name, const char *value)
 {
     assert(name);
-    argv_.push_back(xstrdup(name));
+    argv_.insert(argv_.begin() + 1, xstrdup(name));
     if (value)
-        argv_.push_back(xstrdup(value));
+        argv_.insert(argv_.begin() + 2, xstrdup(value));
 }
+
+Option::Option() :
+    option({nullptr, 0, nullptr, 0})
+{
+}
+
+Option::Option(const LongOption &opt)
+{
+    copy(opt);
+}
+
+Option::Option(const Option &opt):
+    Option(static_cast<const LongOption &>(opt))
+{
+}
+
+Option::~Option()
+{
+    xfree(name);
+}
+
+Option &
+Option::operator =(const Option &opt)
+{
+    xfree(name);
+    copy(static_cast<const LongOption &>(opt));
+    return *this;
+}
+
+void
+Option::copy(const LongOption &opt)
+{
+    name = opt.name ? xstrdup(opt.name) : nullptr;
+    has_arg = opt.has_arg;
+    flag = opt.flag;
+    val = opt.val;
+}
+

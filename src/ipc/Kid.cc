@@ -21,6 +21,8 @@
 int TheProcessKind = pkOther;
 
 Kid::Kid():
+    processRole(),
+    processId(0),
     badFailures(0),
     pid(-1),
     startTime(0),
@@ -29,8 +31,9 @@ Kid::Kid():
 {
 }
 
-Kid::Kid(const String& kid_name):
-    theName(kid_name),
+Kid::Kid(const char *aRole, const int anId):
+    processRole(aRole),
+    processId(anId),
     badFailures(0),
     pid(-1),
     startTime(0),
@@ -77,20 +80,20 @@ Kid::reportStopped() const
     if (calledExit()) {
         syslog(LOG_NOTICE,
                "Squid Parent: %s process %d exited with status %d",
-               theName.termedBuf(), pid, exitStatus());
+               gist().c_str(), pid, exitStatus());
     } else if (signaled()) {
         syslog(LOG_NOTICE,
                "Squid Parent: %s process %d exited due to signal %d with status %d",
-               theName.termedBuf(), pid, termSignal(), exitStatus());
+               gist().c_str(), pid, termSignal(), exitStatus());
     } else {
         syslog(LOG_NOTICE, "Squid Parent: %s process %d exited",
-               theName.termedBuf(), pid);
+               gist().c_str(), pid);
     }
 
     if (hopeless() && Config.hopelessKidRevivalDelay) {
         syslog(LOG_NOTICE, "Squid Parent: %s process %d will not be restarted for %ld "
                "seconds due to repeated, frequent failures",
-               theName.termedBuf(),
+               gist().c_str(),
                pid,
                static_cast<long int>(Config.hopelessKidRevivalDelay));
     }
@@ -170,19 +173,19 @@ bool Kid::signaled(int sgnl) const
 }
 
 /// returns kid name
-const String& Kid::processName() const
+SBuf Kid::processName() const
 {
-    return theName;
+    SBuf name("(");
+    name.append(gist());
+    name.append(")");
+    return name;
 }
 
-String Kid::gist() const
+SBuf Kid::gist() const
 {
-    // TODO: Assemble both processName() and gist() from role and ID instead.
-    if (theName.size() > 2 && theName[0] == '(') {
-        assert(theName[theName.size() - 1] == ')');
-        return theName.substr(1, theName.size() - 1);
-    }
-    return theName;
+    SBuf name(processRole);
+    name.appendf("-%d", processId);
+    return name;
 }
 
 time_t
