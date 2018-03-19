@@ -46,7 +46,7 @@ public:
     bool hasOption(const int optId, const char **optValue = nullptr) const;
 
     /// A callback function for forEachOption(); receives parsed options.
-    /// Must not call addOption(), hasOption() or forEachOption() -- getopt(3) uses globals!
+    /// Must not call pushFrontOption(), hasOption() or forEachOption() -- getopt(3) uses globals!
     typedef void Visitor(const int optId, const char *optValue);
 
     /// calls Visitor for each of the configured command line option
@@ -64,8 +64,8 @@ public:
     /// replaces argv[0] with the new value
     void resetArg0(const char *programName);
 
-    /// inserts a (possibly duplicated) option at the position 1 (just after argv[0])
-    void addOption(const char *name, const char *value = nullptr);
+    /// inserts a (possibly duplicated) option at the beginning of options (just after argv[0])
+    void pushFrontOption(const char *name, const char *value = nullptr);
 
 private:
     const LongOption *longOptions() const { return longOptions_.size() ? longOptions_.data() : nullptr; }

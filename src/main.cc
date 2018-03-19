@@ -2010,7 +2010,7 @@ watch_child(const CommandLine &masterCommand)
             auto kidCommand = masterCommand;
             kidCommand.resetArg0(kid.processName().c_str());
             assert(!kidCommand.hasOption(optKid));
-            kidCommand.addOption("--kid", kid.gist().c_str());
+            kidCommand.pushFrontOption("--kid", kid.gist().c_str());
 
             if ((pid = fork()) == 0) {
                 /* child */

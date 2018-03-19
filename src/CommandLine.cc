@@ -116,7 +116,7 @@ CommandLine::resetArg0(const char *programName)
 }
 
 void
-CommandLine::addOption(const char *name, const char *value)
+CommandLine::pushFrontOption(const char *name, const char *value)
 {
     assert(name);
     argv_.insert(argv_.begin() + 1, xstrdup(name));
