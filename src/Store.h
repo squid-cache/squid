@@ -188,6 +188,10 @@ public:
     /// whether there is a corresponding locked shared memory table entry
     bool hasMemStore() const { return mem_obj && mem_obj->memCache.index >= 0; }
 
+    /// whether this is a collapsed forwarding-created public entry that still
+    /// has not received its response headers; new requests may collapse on it
+    bool collapsingInitiator() const;
+
     MemObject *mem_obj;
     RemovalPolicyNode repl;
     /* START OF ON-DISK STORE_META_STD TLV field */
@@ -221,9 +225,7 @@ public:
     static void getPublicByRequest(StoreClient * aClient, HttpRequest * request);
     static void getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method);
 
-    virtual bool isNull() {
-        return false;
-    };
+    virtual bool isNull() const { return false; } // TODO: Replace with nullptr.
 
     void *operator new(size_t byteCount);
     void operator delete(void *address);
@@ -324,9 +326,6 @@ class NullStoreEntry:public StoreEntry
 
 public:
     static NullStoreEntry *getInstance();
-    bool isNull() {
-        return true;
-    }
 
     const char *getMD5Text() const;
     HttpReply const *getReply() const { return NULL; }
@@ -334,6 +333,8 @@ public:
 
     bool isEmpty () const {return true;}
 
+    /* StoreEntry API */
+    virtual bool isNull() const { return true; }
     virtual size_t bytesWanted(Range<size_t> const aRange, bool) const { return aRange.end; }
 
     void operator delete(void *address);

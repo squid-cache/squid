@@ -6581,6 +6581,36 @@ DOC_START
        disk or memory caches and for Vary-controlled cached objects.
 DOC_END
 
+NAME: collapsed_forwarding_access
+TYPE: acl_access
+DEFAULT: none
+DEFAULT_DOC: Requests may be collapsed if collapsed_forwarding is on.
+LOC: Config.accessList.collapsedForwardingAccess
+DOC_START
+	Use this directive to restrict collapsed forwarding to a subset of
+	eligible requests. The directive is checked for regular HTTP
+	requests, internal revalidation requests, and HTCP/ICP requests.
+
+		collapsed_forwarding_access allow|deny [!]aclname ...
+
+	This directive cannot force collapsing. It has no effect on
+	collapsing unless collapsed_forwarding is 'on', and all other
+	collapsing preconditions are satisfied.
+
+	* A denied request will not collapse, and future transactions will
+	  not collapse on it (even if they are allowed to collapse).
+
+	* An allowed request may collapse, or future transactions may
+	  collapse on it (provided they are allowed to collapse).
+
+	This directive is evaluated before receiving HTTP response headers
+	and without access to Squid-to-peer connection (if any).
+
+	Only fast ACLs are supported.
+
+	See also: collapsed_forwarding.
+DOC_END
+
 NAME: collapsed_forwarding_shared_entries_limit
 COMMENT: (number of entries)
 TYPE: int64_t
