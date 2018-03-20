@@ -22,9 +22,9 @@
 #include "store_key_md5.h"
 #include "StoreClient.h"
 
+class AccessLogEntry;
 class HttpRequest;
 
-class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
 /**

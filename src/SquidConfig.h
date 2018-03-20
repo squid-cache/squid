@@ -399,7 +399,6 @@ public:
 
         acl_access *forceRequestBodyContinuation;
         acl_access *serverPconnForNonretriable;
-
         acl_access *collapsedForwardingAccess;
     } accessList;
     AclDenyInfoList *denyInfoList;

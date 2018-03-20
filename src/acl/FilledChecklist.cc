@@ -225,7 +225,7 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
 void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
 {
     assert(!request);
-    if (httpRequest != NULL) {
+    if (httpRequest) {
         request = httpRequest;
         HTTPMSGLOCK(request);
 #if FOLLOW_X_FORWARDED_FOR
