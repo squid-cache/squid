@@ -2071,6 +2071,15 @@ StoreEntry::describeTimestamps() const
     return buf;
 }
 
+bool
+StoreEntry::collapsingInitiator() const
+{
+    if (!publicKey())
+        return false;
+    return EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT) ||
+           (hasTransients() && !hasMemStore() && !hasDisk());
+}
+
 static std::ostream &
 operator <<(std::ostream &os, const Store::IoStatus &io)
 {

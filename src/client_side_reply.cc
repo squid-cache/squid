@@ -297,14 +297,22 @@ clientReplyContext::processExpired()
     saveState();
 
     // TODO: support collapsed revalidation for Vary-controlled entries
-    const bool collapsingAllowed = Config.onoff.collapsed_forwarding &&
-                                   !Store::Root().smpAware() &&
-                                   http->request->vary_headers.isEmpty();
+    bool collapsingAllowed = Config.onoff.collapsed_forwarding &&
+                             !Store::Root().smpAware() &&
+                             http->request->vary_headers.isEmpty();
 
     StoreEntry *entry = nullptr;
     if (collapsingAllowed) {
-        if ((entry = storeGetPublicByRequest(http->request, ksRevalidation)))
-            entry->lock("clientReplyContext::processExpired#alreadyRevalidating");
+        if (const auto e = storeGetPublicByRequest(http->request, ksRevalidation)) {
+            if (e->collapsingInitiator() && mayCollapseOn(*e)) {
+                entry = e;
+                entry->lock("clientReplyContext::processExpired#alreadyRevalidating");
+            } else {
+                e->abandon(__FUNCTION__);
+                // assume mayInitiateCollapsing() would fail too
+                collapsingAllowed = false;
+            }
+        }
     }
 
     if (entry) {
@@ -316,7 +324,8 @@ clientReplyContext::processExpired()
                                  http->log_uri, http->request->flags, http->request->method);
         /* NOTE, don't call StoreEntry->lock(), storeCreateEntry() does it */
 
-        if (collapsingAllowed && Store::Root().allowCollapsing(entry, http->request->flags, http->request->method)) {
+        if (collapsingAllowed && mayInitiateCollapsing() &&
+                Store::Root().allowCollapsing(entry, http->request->flags, http->request->method)) {
             debugs(88, 5, "allow other revalidation requests to collapse on " << *entry);
             collapsedRevalidation = crInitiator;
         } else {
@@ -1756,6 +1765,14 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
         return;
     }
 
+    if (e->collapsingInitiator() && !mayCollapseOn(*e)) {
+        debugs(85, 3, "prohibited CF MISS " << *e);
+        forgetHit();
+        http->logType = LOG_TCP_MISS;
+        doGetMoreData();
+        return;
+    }
+
     debugs(85, 3, "default HIT " << *e);
     http->logType = LOG_TCP_HIT;
     doGetMoreData();
@@ -2255,6 +2272,12 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     return;
 }
 
+void
+clientReplyContext::fillChecklist(ACLFilledChecklist &checklist) const
+{
+    clientAclChecklistFill(checklist, http);
+}
+
 /* Using this breaks the client layering just a little!
  */
 void
@@ -2277,9 +2300,10 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
     // Make entry collapsable ASAP, to increase collapsing chances for others,
     // TODO: every must-revalidate and similar request MUST reach the origin,
     // but do we have to prohibit others from collapsing on that request?
-    if (Config.onoff.collapsed_forwarding && reqFlags.cachable &&
+    if (reqFlags.cachable &&
             !reqFlags.needValidation &&
-            (m == Http::METHOD_GET || m == Http::METHOD_HEAD)) {
+            (m == Http::METHOD_GET || m == Http::METHOD_HEAD) &&
+            mayInitiateCollapsing()) {
         // make the entry available for future requests now
         (void)Store::Root().allowCollapsing(e, reqFlags, m);
     }
