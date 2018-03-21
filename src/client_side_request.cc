@@ -41,11 +41,11 @@
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
 #include "ipcache.h"
 #include "log/access_log.h"
 #include "MemObject.h"
-#include "NfMarkConfig.h"
 #include "Parsing.h"
 #include "profiler/Profiler.h"
 #include "redirect.h"
@@ -1685,7 +1685,7 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
  */
 
 tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
-NfMarkConfig aclMapNfmarkConfig (acl_nfmark * head, ACLChecklist * ch);
+Ip::NfMarkConfig aclMapNfmarkConfig (acl_nfmark * head, ACLChecklist * ch);
 
 void
 ClientHttpRequest::doCallouts()

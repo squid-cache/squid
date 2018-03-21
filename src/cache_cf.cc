@@ -36,6 +36,7 @@
 #include "icmp/IcmpConfig.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
+#include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "ipc/Kids.h"
@@ -47,7 +48,6 @@
 #include "mgr/Registration.h"
 #include "neighbors.h"
 #include "NeighborTypeDomainList.h"
-#include "NfMarkConfig.h"
 #include "Parsing.h"
 #include "pconn.h"
 #include "PeerDigest.h"
@@ -1556,7 +1556,7 @@ static void
 parse_acl_nfmark(acl_nfmark ** head)
 {
     SBuf token(ConfigParser::NextToken());
-    const auto mc = NfMarkConfig::Parse(token);
+    const auto mc = Ip::NfMarkConfig::Parse(token);
 
     // Packet marking directives should not allow to use masks.
     const auto pkt_dirs = {"mark_client_packet", "clientside_mark", "tcp_outgoing_mark"};

@@ -37,12 +37,12 @@
 #include "icmp/net_db.h"
 #include "internal.h"
 #include "ip/Intercept.h"
+#include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
-#include "NfMarkConfig.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
 #include "security/BlindPeerConnector.h"
@@ -1279,7 +1279,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 }
 
 /// Checks for a netfilter mark value to apply depending on the ACL
-NfMarkConfig
+Ip::NfMarkConfig
 aclMapNfmarkConfig(acl_nfmark * head, ACLChecklist * ch)
 {
     for (acl_nfmark *l = head; l; l = l->next) {
@@ -1287,7 +1287,7 @@ aclMapNfmarkConfig(acl_nfmark * head, ACLChecklist * ch)
             return l->markConfig;
     }
 
-    return NfMarkConfig::Empty();
+    return Ip::NfMarkConfig::Empty();
 }
 
 void

@@ -11,8 +11,8 @@
 
 #include "acl/Acl.h"
 #include "ip/forward.h"
+#include "ip/NfMarkConfig.h"
 #include "parser/Tokenizer.h"
-#include "NfMarkConfig.h"
 
 #include <vector>
 
@@ -31,7 +31,7 @@ public:
     virtual bool empty() const override;
 
 private:
-    std::vector<NfMarkConfig> marks; ///< marks/masks in configured order
+    std::vector<Ip::NfMarkConfig> marks; ///< marks/masks in configured order
 };
 
 } // namespace Acl

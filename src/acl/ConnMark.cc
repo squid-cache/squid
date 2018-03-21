@@ -28,7 +28,7 @@ Acl::ConnMark::parse()
     while (const char *t = ConfigParser::strtokFile()) {
         SBuf token(t);
         Parser::Tokenizer tokenizer(token);
-        const auto mc = NfMarkConfig::Parse(token);
+        const auto mc = Ip::NfMarkConfig::Parse(token);
         marks.push_back(mc);
         debugs(28, 7, "added " << mc);
     }

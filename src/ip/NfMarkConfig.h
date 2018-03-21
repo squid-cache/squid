@@ -13,6 +13,9 @@
 
 class SBuf;
 
+namespace Ip
+{
+
 /// a netfilter mark/mask pair
 class NfMarkConfig
 {
@@ -36,6 +39,8 @@ public:
     nfmark_t mask;
 };
 
-std::ostream &operator <<(std::ostream &os, const NfMarkConfig connmark);
+} // namespace Ip
+
+std::ostream &operator <<(std::ostream &os, const Ip::NfMarkConfig connmark);
 
 #endif // SQUID_NFMARKCONFIG_H

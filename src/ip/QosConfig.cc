@@ -171,7 +171,7 @@ nfmark_t mark = 0;
 }
 
 bool
-Ip::Qos::setNfmarkOnConnection(Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionDirection connDir, const NfMarkConfig &cm)
+Ip::Qos::setNfmarkOnConnection(Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionDirection connDir, const Ip::NfMarkConfig &cm)
 {
     bool ret = false;
 

@@ -9,7 +9,7 @@
 #include "squid.h"
 
 #include "ConfigParser.h"
-#include "NfMarkConfig.h"
+#include "ip/NfMarkConfig.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
@@ -28,8 +28,8 @@ getNfmark(Parser::Tokenizer &tokenizer, const SBuf &token)
     return static_cast<nfmark_t>(number);
 }
 
-NfMarkConfig
-NfMarkConfig::Parse(const SBuf &token)
+Ip::NfMarkConfig
+Ip::NfMarkConfig::Parse(const SBuf &token)
 {
     Parser::Tokenizer tokenizer(token);
 
@@ -43,13 +43,13 @@ NfMarkConfig::Parse(const SBuf &token)
 }
 
 nfmark_t
-NfMarkConfig::applyToMark(nfmark_t m) const
+Ip::NfMarkConfig::applyToMark(nfmark_t m) const
 {
     return (m & ~mask) | mark;
 }
 
 std::ostream &
-operator <<(std::ostream &os, const NfMarkConfig c)
+operator <<(std::ostream &os, const Ip::NfMarkConfig c)
 {
     os << asHex(c.mark);
 
