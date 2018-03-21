@@ -2576,10 +2576,7 @@ DOC_START
 
 	mark_client_packet mark-value [!]aclname ...
 
-	The directive rules are evaluated in the configuration order. The first
-	matching rule wins.
-
-	Example where normal_service_net uses the mark value 0x00
+	Example where normal_service_net uses the MARK value 0x00
 	and good_service_net uses 0x20
 
 	acl normal_service_net src 10.0.0.0/24
@@ -2603,23 +2600,23 @@ DOC_START
 	Allows you to apply a Netfilter CONNMARK value to a connection
 	on the client-side, based on an ACL.
 
-	mark_client_connection mark[/mask] [!]aclname ...
+	mark_client_connection mark-value[/mask] [!]aclname ...
 
-	Mark and mask are unsigned integers (hex, octal, or decimal).
+	The mark-value and mask are unsigned integers (hex, octal, or decimal).
 	The mask may be used to preserve marking previously set by other agents
 	(e.g., iptables).
 
-	A matching rule replaces the connection mark value. If a mask is also
+	A matching rule replaces the CONNMARK value. If a mask is also
 	specified, then the masked bits of the original value are zeroed, and
-	the configured mark is ORed with that adjusted value.
-	For example, applying a 0xAB/0xF mark to 0x5F mark, results in a 0xFB
-	mark (rather than a 0xAB or 0x5B mark).
+	the configured mark-value is ORed with that adjusted value.
+	For example, applying a mark-value 0xAB/0xF to 0x5F CONNMARK, results
+	in a 0xFB marking (rather than a 0xAB or 0x5B).
 
 	This directive semantics is similar to iptables --set-mark rather than
 	--set-xmark functionality.
 
-	The directive rules are evaluated in the configuration order. The first
-	matching rule wins.
+	The directive does not interfere with qos_flows (which uses packet MARKs,
+	not CONNMARKs).
 
 	Example where squid marks intercepted FTP connections:
 
