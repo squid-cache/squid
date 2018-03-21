@@ -103,7 +103,6 @@ getNfmarkCallback(enum nf_conntrack_msg_type, struct nf_conntrack *ct, void *con
 static nf_conntrack *
 prepareConntrackQuery(const Ip::Address &src, const Ip::Address &dst)
 {
-
     /* Allocate a new conntrack */
     if (auto ct = nfct_new()) {
         // Prepare data needed to find the connection in the conntrack table.
@@ -277,7 +276,7 @@ Ip::Qos::Config::Config() : tosLocalHit(0), tosSiblingHit(0), tosParentHit(0),
     markParentHit(0), markMiss(0), markMissMask(0),
     preserveMissMark(false), preserveMissMarkMask(0xFFFFFFFF),
     tosToServer(NULL), tosToClient(NULL), nfmarkToServer(NULL),
-    nfmarkToClient(NULL), nfConnmarkToClient(NULL)
+    nfmarkToClient(NULL)
 {
 }
 

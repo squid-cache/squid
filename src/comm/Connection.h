@@ -150,7 +150,7 @@ public:
     nfmark_t nfmark;
 
     /** Netfilter CONNMARK value of this connection */
-    nfmark_t nfConnmark;
+    nfmark_t nfConnmark = 0;
 
     /** COMM flags set on this connection */
     int flags;

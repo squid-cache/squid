@@ -44,7 +44,7 @@ class acl_nfmark
     CBDATA_CLASS(acl_nfmark);
 
 public:
-    acl_nfmark() : next(NULL), aclList(NULL), markConfig(Ip::NfMarkConfig::Empty()) {}
+    acl_nfmark() : next(NULL), aclList(NULL) {}
     ~acl_nfmark();
 
     acl_nfmark *next;
@@ -231,7 +231,7 @@ public:
     acl_tos *tosToClient;               ///< The TOS that packets to the client should be marked with, based on ACL
     acl_nfmark *nfmarkToServer;         ///< The MARK that packets to the web server should be marked with, based on ACL
     acl_nfmark *nfmarkToClient;         ///< The MARK that packets to the client should be marked with, based on ACL
-    acl_nfmark *nfConnmarkToClient;     ///< The CONNMARK that the client connection should be marked with, based on ACL
+    acl_nfmark *nfConnmarkToClient = nullptr;    ///< The CONNMARK that the client connection should be marked with, based on ACL
 
 };
 

@@ -39,7 +39,7 @@ Ip::NfMarkConfig::Parse(const SBuf &token)
     if (!tokenizer.atEnd())
         throw TexcHere(ToSBuf("NfMarkConfig: trailing garbage in '", token, "'"));
 
-    return {mark, mask};
+    return Ip::NfMarkConfig(mark, mask);
 }
 
 nfmark_t

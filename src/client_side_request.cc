@@ -1779,8 +1779,8 @@ ClientHttpRequest::doCallouts()
     } //  if !calloutContext->error
 
     // Set appropriate MARKs and CONNMARKs if needed.
-    if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConnection)) {
-        ACLFilledChecklist ch(NULL, request, NULL);
+    if (getConn() && Comm::IsConnOpen(getConn()->clientConnection)) {
+        ACLFilledChecklist ch(nullptr, request, nullptr);
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
 

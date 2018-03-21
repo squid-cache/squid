@@ -1287,7 +1287,7 @@ aclMapNfmarkConfig(acl_nfmark * head, ACLChecklist * ch)
             return l->markConfig;
     }
 
-    return Ip::NfMarkConfig::Empty();
+    return {};
 }
 
 void
