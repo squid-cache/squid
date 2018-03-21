@@ -133,7 +133,7 @@ StatHist::operator =(const StatHist & src)
     scale_=src.scale_;
     val_in=src.val_in;
     val_out=src.val_out;
-    if (bins != NULL)
+    if (bins)
         memcpy(bins,src.bins,capacity_*sizeof(*bins));
     return *this;
 }

@@ -1280,34 +1280,24 @@ statInit(void)
 static void
 statAvgTick(void *)
 {
-    StatCounters *t = &CountHist[0];
-    StatCounters *p = &CountHist[1];
-    StatCounters *c = &statCounter;
-
     struct rusage rusage;
     eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
     squid_getrusage(&rusage);
-    c->page_faults = rusage_pagefaults(&rusage);
-    c->cputime = rusage_cputime(&rusage);
-    c->timestamp = current_time;
-    /* even if NCountHist is small, we already Init()ed the tail */
-    CountHist[N_COUNT_HIST - 1] = StatCounters();
-    // shuffle the whole array by +1 and prepend c
-    for(int i = 0; i < N_COUNT_HIST; ++i)
-        p[i] = t[i];
-    *t = *c;
+    statCounter.page_faults = rusage_pagefaults(&rusage);
+    statCounter.cputime = rusage_cputime(&rusage);
+    statCounter.timestamp = current_time;
+    // shuffle the whole array by +1 and prepend
+    for(int i = N_COUNT_HIST-1; i > 0; --i)
+        CountHist[i] = CountHist[i-1];
+    CountHist[0] = statCounter;
     ++NCountHist;
 
     if ((NCountHist % COUNT_INTERVAL) == 0) {
         /* we have an hours worth of readings.  store previous hour */
-        StatCounters *t2 = &CountHourHist[0];
-        StatCounters *p2 = &CountHourHist[1];
-        StatCounters *c2 = &CountHist[N_COUNT_HIST - 1];
-        CountHourHist[N_COUNT_HOUR_HIST - 1] = StatCounters();
-        // shuffle the whole array by +1 and prepend c2
-        for(int i = 0; i < N_COUNT_HOUR_HIST; ++i)
-            p2[i] = t2[i];
-        *t2 = *c2;
+        // shuffle the whole array by +1 and prepend
+        for(int i = N_COUNT_HOUR_HIST-1; i > 0; --i)
+            CountHourHist[i] = CountHourHist[i-1];
+        CountHourHist[0] = CountHist[N_COUNT_HIST - 1];
         ++NCountHourHist;
     }
 
