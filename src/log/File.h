@@ -46,7 +46,8 @@ public:
     char path[MAXPATHLEN];
 
     struct {
-        unsigned int fatal;
+        unsigned int fatal = 0;
+        bool usesDaemon = false;
     } flags;
 
     int64_t sequence_number;  ///< Unique sequence number per log line.

@@ -8,4 +8,9 @@
 
 #include "squid.h"
 #include "CustomLog.h"
+#include "log/File.h"
 
+bool CustomLog::usesDaemon() const
+{
+    return (logfile && logfile->flags.usesDaemon);
+}

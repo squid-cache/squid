@@ -31,7 +31,7 @@ Logfile::Logfile(const char *aPath) :
     f_close(NULL)
 {
     xstrncpy(path, aPath, sizeof(path));
-    flags.fatal = 0;
+    flags.usesDaemon = (strncmp(path, "daemon:", 7) == 0);
 }
 
 Logfile *
@@ -48,7 +48,7 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
     if (strncmp(path, "stdio:", 6) == 0) {
         patharg = path + 6;
         ret = logfile_mod_stdio_open(lf, patharg, bufsz, fatal_flag);
-    } else if (strncmp(path, "daemon:", 7) == 0) {
+    } else if (lf->flags.usesDaemon) {
         patharg = path + 7;
         ret = logfile_mod_daemon_open(lf, patharg, bufsz, fatal_flag);
     } else if (strncmp(path, "tcp:", 4) == 0) {

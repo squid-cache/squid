@@ -734,7 +734,16 @@ configDoConfigure(void)
 
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
 #endif
-    requirePathnameExists("logfile_daemon", Log::TheConfig.logfile_daemon);
+    bool logDaemonUsed = false;
+    for (const auto *log = Config.Log.accesslogs; !logDaemonUsed && log; log = log->next)
+        logDaemonUsed |= log->usesDaemon();
+#if ICAP_CLIENT
+    for (const auto *log = Config.Log.icaplogs; !logDaemonUsed && log; log = log->next)
+        logDaemonUsed |= log->usesDaemon();
+#endif
+    if (logDaemonUsed)
+        requirePathnameExists("logfile_daemon", Log::TheConfig.logfile_daemon);
+
     if (Config.Program.redirect)
         requirePathnameExists("redirect_program", Config.Program.redirect->key);
 
