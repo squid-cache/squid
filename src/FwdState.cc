@@ -807,8 +807,21 @@ void
 FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
     if (answer.positive()) {
-        // XXX: Copy any post-200 OK bytes from answer to our buffer!
-        secureConnectionToPeerIfNeeded();
+        if (answer.leftovers.isEmpty()) {
+            secureConnectionToPeerIfNeeded();
+            return;
+        }
+        // This should not happen because TLS servers do not speak first. If we
+        // have to handle this, then pass answer.leftovers via a PeerConnector
+        // to ServerBio. See ClientBio::setReadBufData().
+        static int occurrences = 0;
+        const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
+        debugs(17, level, "ERROR: Early data after CONNECT response. " <<
+               "Found " << answer.leftovers.length() << " bytes. " <<
+               "Closing " << serverConnection());
+        fail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request));
+        closeServerConnection("found early data after CONNECT response");
+        retryOrBail();
         return;
     }
 
