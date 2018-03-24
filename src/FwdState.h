@@ -10,6 +10,7 @@
 #define SQUID_FORWARD_H
 
 #include "base/RefCount.h"
+#include "clients/forward.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "err_type.h"
@@ -133,6 +134,11 @@ private:
     ErrorState *makeConnectingError(const err_type type) const;
     void connectedToPeer(Security::EncryptorAnswer &answer);
     static void RegisterWithCacheManager(void);
+
+    void establishTunnelThruProxy();
+    void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
+    void secureConnectionToPeerIfNeeded();
+    void successfullyConnectedToPeer();
 
     /// stops monitoring server connection for closure and updates pconn stats
     void closeServerConnection(const char *reason);

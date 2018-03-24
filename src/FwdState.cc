@@ -18,6 +18,8 @@
 #include "CachePeer.h"
 #include "client_side.h"
 #include "clients/forward.h"
+#include "clients/HttpTunneler.h"
+#include "clients/HttpTunnelerAnswer.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
@@ -99,6 +101,33 @@ private:
     Method method_;
     CbcPointer<FwdState> fwd_;
     Security::EncryptorAnswer answer_;
+};
+
+// XXX: Find a better way to pass answers than to create a dedicated class
+// for each peer connector/tunneler!
+/// Gives Http::Tunneler access to Answer in the FwdState callback dialer.
+class FwdStatePeerAnswerDialer2: public CallDialer, public Http::Tunneler::CbDialer
+{
+public:
+    typedef void (FwdState::*Method)(Http::TunnelerAnswer &);
+
+    FwdStatePeerAnswerDialer2(Method method, FwdState *fwd):
+        method_(method), fwd_(fwd), answer_() {}
+
+    /* CallDialer API */
+    virtual bool canDial(AsyncCall &call) { return fwd_.valid(); }
+    void dial(AsyncCall &call) { ((&(*fwd_))->*method_)(answer_); }
+    virtual void print(std::ostream &os) const {
+        os << '(' << fwd_.get() << ", " << answer_ << ')';
+    }
+
+    /* Http::Tunneler::CbDialer API */
+    virtual Http::TunnelerAnswer &answer() { return answer_; }
+
+private:
+    Method method_;
+    CbcPointer<FwdState> fwd_;
+    Http::TunnelerAnswer answer_;
 };
 
 void
@@ -709,9 +738,12 @@ FwdState::handleUnregisteredServerEnd()
     retryOrBail();
 }
 
+/// handles an established TCP connection to peer (including origin servers)
 void
 FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno)
 {
+    calls.connector = nullptr; // TODO: Remove calls.connector?
+
     if (status != Comm::OK) {
         ErrorState *const anErr = makeConnectingError(ERR_CONNECT_FAIL);
         anErr->xerrno = xerrno;
@@ -735,6 +767,80 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
 
     // request->flags.pinned cannot be true in connectDone(). The flag is
     // only set when we dispatch the request to an existing (pinned) connection.
+    assert(!request->flags.pinned);
+
+    if (const CachePeer *peer = serverConnection()->getPeer()) {
+        // We need a CONNECT tunnel to send encrypted traffic through a proxy,
+        // but we do not support TLS inside TLS, so we exclude HTTPS proxies.
+        const bool originWantsEncryptedTraffic =
+            request->method == Http::METHOD_CONNECT ||
+            request->flags.sslPeek;
+        if (originWantsEncryptedTraffic && // the "encrypted traffic" part
+                !peer->options.originserver && // the "through a proxy" part
+                !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
+            return establishTunnelThruProxy();
+    }
+
+    secureConnectionToPeerIfNeeded();
+}
+
+void
+FwdState::establishTunnelThruProxy()
+{
+    AsyncCall::Pointer callback = asyncCall(17,4,
+                                            "FwdState::tunnelEstablishmentDone",
+                                            FwdStatePeerAnswerDialer2(&FwdState::tunnelEstablishmentDone, this));
+    const auto tunneler = new Http::Tunneler(callback);
+    tunneler->connection = serverConnection();
+    tunneler->al = al;
+    tunneler->request = request;
+    tunneler->url = request->url.authority();
+    // TODO: Refactor to avoid code duplication.
+    const auto connTimeout = serverDestinations[0]->connectTimeout(start_t);
+    tunneler->lifetimeLimit = positiveTimeout(connTimeout);
+    AsyncJob::Start(tunneler);
+    // and wait for the tunnelEstablishmentDone() call
+}
+
+/// resumes operations after the (possibly failed) HTTP CONNECT exchange
+void
+FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
+{
+    if (answer.positive()) {
+        // XXX: Copy any post-200 OK bytes from answer to our buffer!
+        secureConnectionToPeerIfNeeded();
+        return;
+    }
+
+    // TODO: Reuse to-peer connections after a CONNECT error response.
+
+    if (const auto peer = serverConnection()->getPeer())
+        peerConnectFailed(peer);
+
+    if (const auto error = answer.squidError.get()) {
+        answer.squidError.clear(); // preserve error for fail()
+        fail(error);
+        closeServerConnection("Squid-generated CONNECT error");
+        retryOrBail();
+        return;
+    }
+
+    assert(!answer.peerError.isEmpty());
+
+    // XXX: Stuffing raw answer.peerError SBuf into Store feels wrong so we
+    // replace that raw peer error with our generic error page, recreating bugs
+    // fixed in master commits 971003b and 4d27d0a!
+    // TODO: Revise how Tunneler reports peer error responses,
+    // possibly using an HttpReply *ErrorState::response_ field or similar.
+    fail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request, al));
+    closeServerConnection("peer-generated CONNECT error");
+    retryOrBail();
+}
+
+/// handles an established TCP connection to peer (including origin servers)
+void
+FwdState::secureConnectionToPeerIfNeeded()
+{
     assert(!request->flags.pinned);
 
     const CachePeer *p = serverConnection()->getPeer();
@@ -764,10 +870,10 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
     }
 
     // if not encrypting just run the post-connect actions
-    Security::EncryptorAnswer nil;
-    connectedToPeer(nil);
+    successfullyConnectedToPeer();
 }
 
+/// called when all negotiations with the TLS-speaking peer have been completed
 void
 FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
 {
@@ -790,6 +896,13 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
         return;
     }
 
+    successfullyConnectedToPeer();
+}
+
+/// called when all negotiations with the peer have been completed
+void
+FwdState::successfullyConnectedToPeer()
+{
     // should reach ConnStateData before the dispatched Client job starts
     CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                  ConnStateData::notePeerConnection, serverConnection());
@@ -877,13 +990,15 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    // Do not fowrward bumped connections to parent proxy unless it is an
-    // origin server
-    if (serverDestinations[0]->getPeer() && !serverDestinations[0]->getPeer()->options.originserver && request->flags.sslBumped) {
-        debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
-        const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
-        fail(anErr);
-        stopAndDestroy("SslBump misconfiguration");
+    // Bumped requests require their pinned connection. Since we failed to reuse
+    // the pinned connection, we now must terminate the bumped request.
+    if (request->flags.sslBumped) {
+        // TODO: Factor out/reuse as Occasionally(DBG_IMPORTANT, 2[, occurrences]).
+        static int occurrences = 0;
+        const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
+        debugs(17, level, "BUG: Lost previously bumped from-Squid connection. Rejecting bumped request.");
+        fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));
+        self = NULL; // refcounted
         return;
     }
 
