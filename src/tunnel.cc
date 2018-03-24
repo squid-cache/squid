@@ -826,7 +826,8 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
         *status_ptr = answer.peerResponseStatus;
 
     if (answer.positive()) {
-        // XXX: Copy any post-200 OK bytes from answer to our buffer!
+        // copy any post-200 OK bytes to our buffer
+        preReadServerData = answer.leftovers;
         notePeerReadyToShovel();
         return;
     }
