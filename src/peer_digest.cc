@@ -141,7 +141,7 @@ peerDigestCreate(CachePeer * p)
     // cbdataReferenceValidDone is called.
     // TODO test if it can be moved into peerDigestDestroy() or
     //      if things can break earlier (eg CachePeer death).
-    cbdataReference(pd);
+    (void)cbdataReference(pd);
 }
 
 /* call Clean and free/unlock everything */
