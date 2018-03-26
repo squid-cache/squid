@@ -20,25 +20,13 @@
 
 int TheProcessKind = pkOther;
 
-Kid::Kid():
-    processRole(),
-    processId(0),
-    badFailures(0),
-    pid(-1),
-    startTime(0),
-    isRunning(false),
-    status(0)
+Kid::Kid()
 {
 }
 
 Kid::Kid(const char *aRole, const int anId):
     processRole(aRole),
-    processId(anId),
-    badFailures(0),
-    pid(-1),
-    startTime(0),
-    isRunning(false),
-    status(0)
+    processId(anId)
 {
 }
 

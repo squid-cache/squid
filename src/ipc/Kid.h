@@ -85,15 +85,15 @@ private:
 
     // Information preserved across restarts
     SBuf processRole;
-    int processId;
-    int badFailures; ///< number of "repeated frequent" failures
+    int processId = 0;
+    int badFailures = 0; ///< number of "repeated frequent" failures
 
     // Information specific to a running or stopped kid
-    pid_t  pid; ///< current (for a running kid) or last (for stopped kid) PID
-    time_t startTime; ///< last start time
+    pid_t  pid = -1; ///< current (for a running kid) or last (for stopped kid) PID
+    time_t startTime = 0; ///< last start time
     time_t stopTime = 0; ///< last termination time
-    bool   isRunning; ///< whether the kid is assumed to be alive
-    PidStatus status; ///< exit status of a stopped kid
+    bool   isRunning = false; ///< whether the kid is assumed to be alive
+    PidStatus status = 0; ///< exit status of a stopped kid
 };
 
 // TODO: processes may not be kids; is there a better place to put this?

@@ -30,15 +30,15 @@ void Kids::init()
     storage.reserve(NumberOfKids());
 
     for (int i = 0; i < Config.workers; ++i)
-        storage.push_back(Kid("squid", storage.size() + 1));
+        storage.emplace_back("squid", storage.size() + 1);
 
     // add Kid records for all disk processes
     for (int i = 0; i < Config.cacheSwap.n_strands; ++i)
-        storage.push_back(Kid("squid-disk", storage.size() + 1));
+        storage.emplace_back("squid-disk", storage.size() + 1);
 
     // if coordination is needed, add a Kid record for Coordinator
     if (storage.size() > 1)
-        storage.push_back(Kid("squid-coord", storage.size() + 1));
+        storage.emplace_back("squid-coord", storage.size() + 1);
 
     Must(storage.size() == static_cast<size_t>(NumberOfKids()));
 }

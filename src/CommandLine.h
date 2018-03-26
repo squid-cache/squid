@@ -9,7 +9,9 @@
 #ifndef SQUID_COMMANDLINE_H
 #define SQUID_COMMANDLINE_H
 
+#if HAVE_GETOPT_H
 #include <getopt.h>
+#endif
 #include <vector>
 
 typedef struct option LongOption;

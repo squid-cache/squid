@@ -37,8 +37,8 @@ CommandLine::CommandLine(int argC, char *argV[], const char &shortRules, const L
     /* copy grammar rules for the long options */
     if (longRules) {
         for (auto longOption = longRules; longOption->name; ++longOption)
-            longOptions_.push_back(Option(*longOption));
-        longOptions_.push_back(Option());
+            longOptions_.emplace_back(*longOption);
+        longOptions_.emplace_back();
     }
 }
 
@@ -48,7 +48,7 @@ CommandLine::CommandLine(const CommandLine &them):
 }
 
 CommandLine &
-CommandLine::operator =(const CommandLine &them) // not a reference so that we can swap
+CommandLine::operator =(const CommandLine &them)
 {
     // cannot just swap(*this, them): std::swap(T,T) may call this assignment op
     CommandLine tmp(them);
