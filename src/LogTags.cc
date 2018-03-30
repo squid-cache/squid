@@ -39,6 +39,19 @@ const char * LogTags::Str_[] = {
     "TYPE_MAX"
 };
 
+LogTags::LogTags(const LogTags_ot t, const CollapsedStats &stats)
+{
+    assign(t, stats);
+}
+
+void
+LogTags::assign(const LogTags_ot &t, const CollapsedStats &stats)
+{
+    assert(t < LOG_TYPE_MAX);
+    oldType = t;
+    collapsedStats = stats;
+}
+
 /*
  * This method is documented in http://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid_result_codes
  * Please keep the wiki up to date
@@ -51,10 +64,20 @@ LogTags::c_str() const
     int pos = 0;
 
     // source tags
-    if (oldType && oldType < LOG_TYPE_MAX)
-        pos += snprintf(buf, sizeof(buf), "%s",Str_[oldType]);
+    const int protoLen = 3;
+    if (oldType && oldType < LOG_TYPE_MAX) {
+        assert(Str_[oldType][protoLen] == '_');
+        snprintf(buf, protoLen + 1, "%s", Str_[oldType]);
+        pos += protoLen;
+    }
     else
         pos += snprintf(buf, sizeof(buf), "NONE");
+
+    if (collapsedStats.isCollapsed())
+        pos += snprintf(buf + pos, sizeof(buf) - pos, "_COLLAPSED");
+
+    const char *tag = Str_[oldType] + protoLen;
+    pos += snprintf(buf + pos, sizeof(buf) - pos, "%s", tag);
 
     if (err.ignored)
         pos += snprintf(buf+pos,sizeof(buf)-pos, "_IGNORED");

@@ -778,7 +778,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
          */
         page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_AUTH_REQUIRED);
 
-        http->logType = LOG_TCP_DENIED;
+        http->logType.assign(LOG_TCP_DENIED, CollapsedStats());
 
         if (auth_challenge) {
 #if USE_AUTH
@@ -1534,7 +1534,7 @@ void
 ClientHttpRequest::httpStart()
 {
     PROF_start(httpStart);
-    logType = LOG_TAG_NONE;
+    logType.assign(LOG_TAG_NONE, CollapsedStats());
     debugs(85, 4, logType.c_str() << " for '" << uri << "'");
 
     /* no one should have touched this */

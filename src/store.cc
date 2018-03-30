@@ -2080,6 +2080,20 @@ StoreEntry::collapsingInitiator() const
            (hasTransients() && !hasMemStore() && !hasDisk());
 }
 
+bool
+StoreEntry::collapsed() const
+{
+    if (!Config.onoff.collapsed_forwarding)
+        return false;
+    if (isNull())
+        return false;
+    if (!publicKey())
+        return false;
+    const bool empty = isEmpty();
+    assert(!empty || (empty && collapsingInitiator()));
+    return empty;
+}
+
 static std::ostream &
 operator <<(std::ostream &os, const Store::IoStatus &io)
 {

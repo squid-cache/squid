@@ -28,7 +28,7 @@ public:
         ICPState(aHeader, aRequest) {}
 
     ~ICP3State();
-    void created (StoreEntry *newEntry);
+    virtual void created (StoreEntry *newEntry) override;
 };
 
 /// \ingroup ServerProtocolICPInternal3
@@ -63,6 +63,7 @@ ICP3State::~ICP3State()
 void
 ICP3State::created(StoreEntry *e)
 {
+    StoreClient::created(e);
     debugs(12, 5, "icpHandleIcpV3: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 
@@ -73,7 +74,7 @@ ICP3State::created(StoreEntry *e)
     else
         codeToSend = icpGetCommonOpcode();
 
-    icpCreateAndSend(codeToSend, 0, url, header.reqnum, 0, fd, from, al);
+    icpCreateAndSend(codeToSend, 0, url, header.reqnum, 0, fd, from, al, collapsedStats);
 
     // TODO: StoreClients must either store/lock or abandon found entries.
     //if (!e->isNull())

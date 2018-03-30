@@ -46,6 +46,13 @@ static bool CheckQuickAbortIsReasonable(StoreEntry * entry);
 CBDATA_CLASS_INIT(store_client);
 
 /* StoreClient */
+void
+StoreClient::created(StoreEntry *e)
+{
+    assert(e);
+    if (e->collapsed())
+        collapsedStats.collapsed++;
+}
 
 bool
 StoreClient::onCollapsingPath() const

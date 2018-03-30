@@ -194,6 +194,7 @@ UrnState::fillChecklist(ACLFilledChecklist &checklist) const
 void
 UrnState::created(StoreEntry *e)
 {
+    StoreClient::created(e);
     if (e->isNull() || (e->collapsingInitiator() && !mayCollapseOn(*e))) {
         urlres_e = storeCreateEntry(urlres, urlres, RequestFlags(), Http::METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);

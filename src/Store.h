@@ -191,6 +191,11 @@ public:
     /// whether this is a collapsed forwarding-created public entry that still
     /// has not received its response headers; new requests may collapse on it
     bool collapsingInitiator() const;
+    /// Whether this is a collapsed entry. A collapsed entry is a StoreEntry, attached
+    /// via a getPublic*() method to a public store entry, being requested from the server
+    /// and still lacking response headers. The result is valid only if called just
+    /// after getPublic*(), i.e., before this entry could lose its collapsed status.
+    bool collapsed() const;
 
     MemObject *mem_obj;
     RemovalPolicyNode repl;

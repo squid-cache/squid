@@ -128,7 +128,7 @@ public:
     class CacheDetails
     {
     public:
-        CacheDetails() {
+        CacheDetails() : code(LOG_TAG_NONE) {
             caddr.setNoAddr();
             memset(&start_time, 0, sizeof(start_time));
             memset(&trTime, 0, sizeof(start_time));
@@ -137,7 +137,7 @@ public:
         Ip::Address caddr;
         int64_t highOffset = 0;
         int64_t objectSize = 0;
-        LogTags code = LOG_TAG_NONE;
+        LogTags code;
         struct timeval start_time; ///< The time the master transaction started
         struct timeval trTime; ///< The response time
         const char *rfc931 = nullptr;

@@ -162,7 +162,7 @@ void
 ICPState::fillChecklist(ACLFilledChecklist &checklist) const
 {
     checklist.setRequest(request);
-    icpSyncAle(al, from, LOG_TAG_NONE, url, 0, 0);
+    icpSyncAle(al, from, LogTags(LOG_TAG_NONE), url, 0, 0);
     checklist.al = al;
 }
 
@@ -179,7 +179,7 @@ public:
         ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0) {}
 
     ~ICP2State();
-    void created(StoreEntry * newEntry);
+    virtual void created(StoreEntry * newEntry) override;
 
     int rtt;
     int src_rtt;
@@ -192,6 +192,7 @@ ICP2State::~ICP2State()
 void
 ICP2State::created(StoreEntry *e)
 {
+    StoreClient::created(e);
     debugs(12, 5, "icpHandleIcpV2: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 
@@ -213,7 +214,7 @@ ICP2State::created(StoreEntry *e)
             codeToSend = ICP_MISS;
     }
 
-    icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, al);
+    icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, al, collapsedStats);
 
     // TODO: StoreClients must either store/lock or abandon found entries.
     //if (!e->isNull())
@@ -377,7 +378,7 @@ icpGetCommonOpcode()
     return ICP_ERR;
 }
 
-LogTags
+static LogTags_ot
 icpLogFromICPCode(icp_opcode opcode)
 {
     if (opcode == ICP_ERR)
@@ -401,10 +402,10 @@ icpLogFromICPCode(icp_opcode opcode)
 }
 
 void
-icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntry::Pointer al)
+icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntry::Pointer al, const CollapsedStats &collapsedStats)
 {
     icp_common_t *reply = icp_common_t::CreateMessage(opcode, flags, url, reqnum, pad);
-    icpUdpSend(fd, from, reply, icpLogFromICPCode(opcode), 0, al);
+    icpUdpSend(fd, from, reply, LogTags(icpLogFromICPCode(opcode), collapsedStats) , 0, al);
 }
 
 void
@@ -417,9 +418,9 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
          * count this DENIED query in the clientdb, even though
          * we're not sending an ICP reply...
          */
-        clientdbUpdate(from, LOG_UDP_DENIED, AnyP::PROTO_ICP, 0);
+        clientdbUpdate(from, LogTags(LOG_UDP_DENIED), AnyP::PROTO_ICP, 0);
     } else {
-        icpCreateAndSend(ICP_DENIED, 0, url, reqnum, 0, fd, from, nullptr);
+        icpCreateAndSend(ICP_DENIED, 0, url, reqnum, 0, fd, from, nullptr, CollapsedStats());
     }
 }
 
@@ -450,14 +451,14 @@ icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
 {
     if (strpbrk(url, w_space)) {
         url = rfc1738_escape(url);
-        icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from, nullptr);
+        icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from, nullptr, CollapsedStats());
         return NULL;
     }
 
     HttpRequest *result;
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcp);
     if ((result = HttpRequest::FromUrl(url, mx)) == NULL)
-        icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr);
+        icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr, CollapsedStats());
 
     return result;
 
