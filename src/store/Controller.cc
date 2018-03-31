@@ -64,8 +64,7 @@ Store::Controller::init()
 
     swapDir->init();
 
-    if (UsingSmp() && IamWorkerProcess() && Config.onoff.collapsed_forwarding &&
-            smpAware()) {
+    if (UsingSmp() && IamWorkerProcess() && smpAware()) {
         transients = new Transients;
         transients->init();
     }

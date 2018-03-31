@@ -318,8 +318,8 @@ int64_t
 Transients::EntryLimit()
 {
     // TODO: we should also check whether any SMP-aware caching is configured
-    if (!UsingSmp() || !Config.onoff.collapsed_forwarding)
-        return 0; // no SMP collapsed forwarding possible or needed
+    if (!UsingSmp())
+        return 0;
 
     return Config.collapsed_forwarding_shared_entries_limit;
 }
@@ -370,9 +370,6 @@ TransientsRr::useConfig()
 void
 TransientsRr::create()
 {
-    if (!Config.onoff.collapsed_forwarding)
-        return;
-
     const int64_t entryLimit = Transients::EntryLimit();
     if (entryLimit <= 0)
         return; // no SMP configured or a misconfiguration
