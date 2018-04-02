@@ -95,7 +95,7 @@ k5_error(const char* msg, krb5_error_code code)
  * create Kerberos memory cache
  */
 int
-krb5_create_cache(char *domain,char *princ)
+krb5_create_cache(char *domain,char *service_principal_name)
 {
 
     krb5_keytab keytab = NULL;
@@ -305,8 +305,8 @@ krb5_create_cache(char *domain,char *princ)
                 } else {
                     debug((char *) "%s| %s: DEBUG: Found principal name: %s\n", LogTime(), PROGRAM, principal_name);
                     found = 1;
-                    if (princ != NULL && strcasecmp(principal_name,princ)) {
-                        debug((char *) "%s| %s: DEBUG: principal name does not match parameter: %s\n", LogTime(), PROGRAM, princ);
+                    if (service_principal_name != NULL && strcasecmp(principal_name,service_principal_name)) {
+                        debug((char *) "%s| %s: DEBUG: principal name does not match parameter: %s\n", LogTime(), PROGRAM, service_principal_name);
                         safe_free(principal_name);
                         found = 0;
                     }
@@ -407,7 +407,7 @@ krb5_create_cache(char *domain,char *princ)
         /*
          * if no principal name found in keytab for domain use the prinipal name which can get a TGT
          */
-        if (!principal_name && !princ) {
+        if (!principal_name && !service_principal_name) {
             size_t i;
             debug((char *) "%s| %s: DEBUG: Did not find a principal in keytab for domain %s.\n", LogTime(), PROGRAM, domain);
             debug((char *) "%s| %s: DEBUG: Try to get principal of trusted domain.\n", LogTime(), PROGRAM);
