@@ -11,6 +11,11 @@
 # external_acl_type test_acl ipv4 %LOGIN %note{group} /opt/squid/sbin/negotiate_external_acl
 # acl squid_allow external test_acl
 #
+# Squid config lines:
+# auth_param negotiate program /opt/squid/sbin/negotiate_wrapper_auth -d --ntlm /usr/bin/ntlm_auth --helper-protocol=squid-2.5-ntlmssp --domain SAMBA.HOME --kerberos /opt/squid/sbin/negotiate_kerberos_auth -d -s GSS_C_NO_NAME -k /etc/squid/squid.keytab -t none
+# external_acl_type test_acl ipv4 %LOGIN %note{group} /opt/squid/sbin/negotiate_external_acl
+# acl squid_allow external test_acl
+#
 # GET SID for Group
 #
 # Please change sample values with real valuse

@@ -95,7 +95,11 @@ k5_error(const char* msg, krb5_error_code code)
  * create Kerberos memory cache
  */
 int
+<<<<<<< HEAD
 krb5_create_cache(char *domain,char *service_principal_name)
+=======
+krb5_create_cache(char *domain,char *princ)
+>>>>>>> 9b0f23a60... Add sample config lines for ACL helper
 {
 
     krb5_keytab keytab = NULL;
@@ -305,8 +309,13 @@ krb5_create_cache(char *domain,char *service_principal_name)
                 } else {
                     debug((char *) "%s| %s: DEBUG: Found principal name: %s\n", LogTime(), PROGRAM, principal_name);
                     found = 1;
+<<<<<<< HEAD
                     if (service_principal_name != NULL && strcasecmp(principal_name,service_principal_name)) {
                         debug((char *) "%s| %s: DEBUG: principal name does not match parameter: %s\n", LogTime(), PROGRAM, service_principal_name);
+=======
+                    if (princ != NULL && strcasecmp(principal_name,princ)) {
+                        debug((char *) "%s| %s: DEBUG: principal name does not match parameter: %s\n", LogTime(), PROGRAM, princ);
+>>>>>>> 9b0f23a60... Add sample config lines for ACL helper
                         safe_free(principal_name);
                         found = 0;
                     }
@@ -407,7 +416,11 @@ krb5_create_cache(char *domain,char *service_principal_name)
         /*
          * if no principal name found in keytab for domain use the prinipal name which can get a TGT
          */
+<<<<<<< HEAD
         if (!principal_name && !service_principal_name) {
+=======
+        if (!principal_name && !princ) {
+>>>>>>> 9b0f23a60... Add sample config lines for ACL helper
             size_t i;
             debug((char *) "%s| %s: DEBUG: Did not find a principal in keytab for domain %s.\n", LogTime(), PROGRAM, domain);
             debug((char *) "%s| %s: DEBUG: Try to get principal of trusted domain.\n", LogTime(), PROGRAM);
