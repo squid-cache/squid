@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+# This external  acl helper checks the Kerberos group information without 
+# continues ldap queries by leveraging the kerbors ticket group information 
+# i.e. PAC field 
+#
+# It requires only during startup aldap  query to get the SID for the group name. 
+#
+# GET SID for Group
+#
+# Please change sample values with real valuse
+#
+if [ -z "$KRB5_KTNAME" ]; then
+   export KTNAME="/etc/krb5.keytab"
+else
+   export KTNAME=$KRB5_KTNAME
+fi
+export PRINCIPAL="HTTP/opensus42.suse.home"
+export DC="dc1.samba.home"
+export KRB5CCNAME="/tmp/squid_krb5cc"
+export GROUPNAME="SQUID_ALLOW"
+export BASEDN="DC=samba,DC=home"
+#
+#
+#
+
+kinit -kt $KTNAME $PRINCIPAL
+SID=`ldapsearch -LLL -Ygssapi -H ldap://$DC:389 -s sub -b "BASEDN" "(CN=$GROUPNAME)" objectsid 2>&1 | awk '{ if ( $0 ~/^object/ ) print $2}'`
+
+(>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: SID=$SID")
+
+#
+# Loop over input 
+#
+while [ 1 == 1 ] ; do
+  read input
+  found=0
+  user=`echo $input | awk '{ print $1 }'`
+  groups=`echo $input | awk '{ print $2 }'`
+  (>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: user=$user")
+  (>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: groups=$groups")
+  if [ -n "$groups" ]; then
+    while read group; do
+      if [ "$group" == "$SID" ]; then
+        (>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: matched group: $group")
+        found=1
+        echo "OK"
+      fi
+    done <<< "$(echo $groups | tr , "\n" )"
+    if [ $found -eq 0 ]; then
+      echo "ERR"
+    fi
+  else
+    if [ $found -eq 0 ]; then
+      echo "ERR"
+    fi
+  fi
+done
