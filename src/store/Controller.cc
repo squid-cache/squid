@@ -64,10 +64,8 @@ Store::Controller::init()
 
     swapDir->init();
 
-    if (UsingSmp() && IamWorkerProcess() && smpAware()) {
+    if (Transients::EntryLimit() && IamWorkerProcess() && smpAware())
         transients = new Transients;
-        transients->init();
-    }
 }
 
 void

@@ -29,6 +29,7 @@ static const SBuf MapLabel("transients_map");
 
 Transients::Transients(): map(NULL), locals(NULL)
 {
+    init();
 }
 
 Transients::~Transients()
@@ -41,8 +42,7 @@ void
 Transients::init()
 {
     const int64_t entryLimit = EntryLimit();
-    if (entryLimit <= 0)
-        return; // no SMP support or a misconfiguration
+    Must(entryLimit);
 
     Must(!map);
     map = new TransientsMap(MapLabel);
@@ -321,7 +321,7 @@ Transients::EntryLimit()
     if (!UsingSmp())
         return 0;
 
-    return Config.collapsed_forwarding_shared_entries_limit;
+    return Config.transients_shared_entries_limit;
 }
 
 bool

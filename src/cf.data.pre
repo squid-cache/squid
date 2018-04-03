@@ -224,6 +224,12 @@ DOC_START
 	Remove this line. Use tls_outgoing_options options= instead.
 DOC_END
 
+NAME: collapsed_forwarding_shared_entries_limit
+TYPE: obsolete
+DOC_START
+	Replace with transients_shared_entries_limit.
+DOC_END
+
 # Options removed in 3.5
 NAME: hierarchy_stoplist
 TYPE: obsolete
@@ -6581,25 +6587,26 @@ DOC_START
        disk or memory caches and for Vary-controlled cached objects.
 DOC_END
 
-NAME: collapsed_forwarding_shared_entries_limit
+NAME: transients_shared_entries_limit
 COMMENT: (number of entries)
 TYPE: int64_t
-LOC: Config.collapsed_forwarding_shared_entries_limit
+LOC: Config.transients_shared_entries_limit
 DEFAULT: 16384
 DOC_START
 	This limits the size of a table used for sharing information
-	about collapsible entries among SMP workers. Limiting sharing
-	too much results in cache content duplication and missed
-	collapsing opportunities. Using excessively large values
-	wastes shared memory.
+	about being delivered entries among SMP workers. Limiting
+	sharing too much results in cache content duplication and
+	missed collapsing opportunities. Using excessively large
+	values wastes shared memory.
 
 	The limit should be significantly larger then the number of
-	concurrent collapsible entries one wants to share. For a cache
-	that handles less than 5000 concurrent requests, the default
-	setting of 16384 should be plenty.
+	concurrent (possibly collapsed) entries one wants to share.
+	For a cache that handles less than 5000 concurrent requests,
+	the default setting of 16384 should be plenty.
 
-	If the limit is set to zero, it disables sharing of collapsed
-	forwarding between SMP workers.
+	If the limit is set to zero, it disables synchronization of
+	entry-writing workers with entry-reader workers and
+	entry-deleting worker with both entry-reading/writing workers.
 DOC_END
 
 COMMENT_START
