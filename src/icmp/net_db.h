@@ -16,6 +16,7 @@
 class CachePeer;
 class HttpRequest;
 class netdbEntry;
+class PeerSelector;
 class StoreEntry;
 class URL;
 
@@ -80,7 +81,7 @@ void netdbBinaryExchange(StoreEntry *);
 void netdbExchangeStart(void *);
 
 void netdbExchangeUpdatePeer(Ip::Address &, CachePeer *, double, double);
-CachePeer *netdbClosestParent(HttpRequest *);
+CachePeer *netdbClosestParent(PeerSelector *);
 void netdbHostData(const char *host, int *samp, int *rtt, int *hops);
 
 #endif /* ICMP_NET_DB_H */

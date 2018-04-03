@@ -12,10 +12,10 @@
 #define SQUID_PEER_SOURCEHASH_H_
 
 class CachePeer;
-class HttpRequest;
+class PeerSelector;
 
 void peerSourceHashInit(void);
-CachePeer * peerSourceHashSelectParent(HttpRequest * request);
+CachePeer * peerSourceHashSelectParent(PeerSelector*);
 
 #endif /* SQUID_PEER_SOURCEHASH_H_ */
 

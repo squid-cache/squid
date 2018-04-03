@@ -35,6 +35,6 @@ void netdbDeleteAddrNetwork(Ip::Address &addr) STUB
 void netdbBinaryExchange(StoreEntry *) STUB
 void netdbExchangeStart(void *) STUB
 void netdbExchangeUpdatePeer(Ip::Address &, CachePeer *, double, double) STUB
-CachePeer *netdbClosestParent(HttpRequest *) STUB_RETVAL(NULL)
+CachePeer *netdbClosestParent(PeerSelector *) STUB_RETVAL(NULL)
 void netdbHostData(const char *host, int *samp, int *rtt, int *hops) STUB
 
