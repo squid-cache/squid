@@ -69,6 +69,7 @@ bool
 Note::match(HttpRequest *request, HttpReply *reply, const AccessLogEntry::Pointer &al, SBuf &matched)
 {
     ACLFilledChecklist ch(nullptr, request, nullptr);
+    ch.al = al;
     ch.reply = reply;
     if (reply)
         HTTPMSGLOCK(ch.reply);

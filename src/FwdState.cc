@@ -331,6 +331,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
          * we do NOT want the indirect client address to be tested here.
          */
         ACLFilledChecklist ch(Config.accessList.miss, request, NULL);
+        ch.al = al;
         ch.src_addr = request->client_addr;
         if (ch.fastCheck().denied()) {
             err_type page_id;
@@ -1218,6 +1219,7 @@ FwdState::pconnPop(const Comm::ConnectionPointer &dest, const char *domain)
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {
         ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, NULL);
+        ch.al = al;
         retriable = ch.fastCheck().allowed();
     }
     // always call shared pool first because we need to close an idle
