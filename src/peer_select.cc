@@ -585,7 +585,7 @@ PeerSelector::selectSomeNeighbor()
     }
 
 #if USE_CACHE_DIGESTS
-    if ((p = neighborsDigestSelect(ps))) {
+    if ((p = neighborsDigestSelect(this))) {
         if (neighborType(p, request->url) == PEER_PARENT)
             code = CD_PARENT_HIT;
         else
