@@ -61,7 +61,7 @@ public:
     virtual bool hasRequest() const { return request != NULL; }
     virtual bool hasReply() const { return reply != NULL; }
     virtual bool hasAle() const { return al != NULL; }
-    virtual void syncAle() const;
+    virtual void syncAle(const bool warnUnsync = false) const;
 
 public:
     Ip::Address src_addr;
