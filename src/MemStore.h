@@ -65,6 +65,8 @@ public:
     virtual void evictIfFound(const cache_key *) override;
     virtual bool smpAware() const override { return true; }
 
+    /// Can we create and initialize MemStore?
+    static bool Enabled() { return EntryLimit(); }
     static int64_t EntryLimit();
 
 protected:

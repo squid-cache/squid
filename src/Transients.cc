@@ -40,8 +40,8 @@ Transients::~Transients()
 void
 Transients::init()
 {
+    Must(Enabled());
     const int64_t entryLimit = EntryLimit();
-    Must(entryLimit);
 
     Must(!map);
     map = new TransientsMap(MapLabel);
@@ -316,11 +316,8 @@ Transients::disconnect(StoreEntry &entry)
 int64_t
 Transients::EntryLimit()
 {
-    // TODO: we should also check whether any SMP-aware caching is configured
-    if (!UsingSmp())
-        return 0;
-
-    return Config.transients_shared_entries_limit;
+    return (UsingSmp() && Store::Controller::SmpAware()) ?
+        Config.transients_shared_entries_limit : 0;
 }
 
 bool

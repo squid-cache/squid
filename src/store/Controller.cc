@@ -57,6 +57,7 @@ Store::Controller::~Controller()
 void
 Store::Controller::init()
 {
+    // TODO: use MemStore::Enabled() instead.
     if (Config.memShared && IamWorkerProcess()) {
         memStore = new MemStore;
         memStore->init();
@@ -64,7 +65,7 @@ Store::Controller::init()
 
     swapDir->init();
 
-    if (Transients::EntryLimit() && IamWorkerProcess() && smpAware()) {
+    if (Transients::Enabled() && IamWorkerProcess()) {
         transients = new Transients;
         transients->init();
     }
@@ -828,7 +829,13 @@ Store::Controller::anchorToCache(StoreEntry &entry, bool &inSync)
 bool
 Store::Controller::smpAware() const
 {
-    return memStore || (swapDir && swapDir->smpAware());
+    return SmpAware();
+}
+
+bool
+Store::Controller::SmpAware()
+{
+    return MemStore::Enabled() || Disks::SmpAware();
 }
 
 void

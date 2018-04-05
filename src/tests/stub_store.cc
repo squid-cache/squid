@@ -112,6 +112,7 @@ StoreSearch *Store::Controller::search() STUB_RETVAL(NULL)
 void Store::Controller::maintain() STUB
 bool Store::Controller::markedForDeletion(const cache_key *) const STUB_RETVAL(false)
 void Store::Controller::freeMemorySpace(const int) STUB
+bool Store::Controller::SmpAware() STUB_RETVAL(false)
 
 std::ostream &operator <<(std::ostream &os, const StoreEntry &)
 {

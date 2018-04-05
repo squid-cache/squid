@@ -79,6 +79,9 @@ public:
 
     static int64_t EntryLimit();
 
+    /// Can we create and initialize Transients?
+    static bool Enabled() { return EntryLimit(); }
+
 protected:
     void addEntry(StoreEntry*, const cache_key *, const Store::IoStatus);
 
