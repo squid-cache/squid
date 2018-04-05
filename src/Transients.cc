@@ -29,7 +29,6 @@ static const SBuf MapLabel("transients_map");
 
 Transients::Transients(): map(NULL), locals(NULL)
 {
-    init();
 }
 
 Transients::~Transients()

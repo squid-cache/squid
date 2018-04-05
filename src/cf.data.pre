@@ -224,12 +224,6 @@ DOC_START
 	Remove this line. Use tls_outgoing_options options= instead.
 DOC_END
 
-NAME: collapsed_forwarding_shared_entries_limit
-TYPE: obsolete
-DOC_START
-	Replace with transients_shared_entries_limit.
-DOC_END
-
 # Options removed in 3.5
 NAME: hierarchy_stoplist
 TYPE: obsolete
@@ -6587,7 +6581,7 @@ DOC_START
        disk or memory caches and for Vary-controlled cached objects.
 DOC_END
 
-NAME: transients_shared_entries_limit
+NAME: transients_shared_entries_limit collapsed_forwarding_shared_entries_limit
 COMMENT: (number of entries)
 TYPE: int64_t
 LOC: Config.transients_shared_entries_limit
