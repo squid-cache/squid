@@ -76,9 +76,6 @@ ACLChecklist::preCheck(const char *what)
 
     AclMatchedName = NULL;
     finished_ = false;
-
-    if (hasAle())
-        syncAle();
 }
 
 bool

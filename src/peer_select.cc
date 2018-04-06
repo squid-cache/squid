@@ -468,6 +468,7 @@ PeerSelector::selectMore()
             ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, NULL);
             ch->al = al;
             acl_checklist = ch;
+            acl_checklist->syncAle(request, nullptr);
             acl_checklist->nonBlockingCheck(CheckAlwaysDirectDone, this);
             return;
         } else if (never_direct == ACCESS_DUNNO) {
@@ -476,6 +477,7 @@ PeerSelector::selectMore()
             ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
             ch->al = al;
             acl_checklist = ch;
+            acl_checklist->syncAle(request, nullptr);
             acl_checklist->nonBlockingCheck(CheckNeverDirectDone, this);
             return;
         } else if (request->flags.noDirect) {
