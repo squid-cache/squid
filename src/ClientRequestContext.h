@@ -74,9 +74,7 @@ public:
     bool store_id_done;
     bool no_cache_done;
     bool interpreted_req_hdrs;
-    bool tosToClientDone;
-    bool nfmarkToClientDone;
-    bool nfConnmarkToClientDone;
+    bool toClientMarkingDone;
 #if USE_OPENSSL
     bool sslBumpCheckDone;
 #endif

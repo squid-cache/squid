@@ -132,9 +132,7 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) :
     store_id_done(false),
     no_cache_done(false),
     interpreted_req_hdrs(false),
-    tosToClientDone(false),
-    nfmarkToClientDone(false),
-    nfConnmarkToClientDone(false),
+    toClientMarkingDone(false),
 #if USE_OPENSSL
     sslBumpCheckDone(false),
 #endif
@@ -1784,25 +1782,19 @@ ClientHttpRequest::doCallouts()
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
 
-        if (!calloutContext->tosToClientDone) {
-            calloutContext->tosToClientDone = true;
+        if (!calloutContext->toClientMarkingDone) {
+            calloutContext->toClientMarkingDone = true;
             tos_t tos = aclMapTOS(Ip::Qos::TheConfig.tosToClient, &ch);
             if (tos)
                 Ip::Qos::setSockTos(getConn()->clientConnection, tos);
-        }
 
-        if (!calloutContext->nfmarkToClientDone) {
-            calloutContext->nfmarkToClientDone = true;
-            const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToClient, &ch);
-            if (!mc.isEmpty())
-                Ip::Qos::setSockNfmark(getConn()->clientConnection, mc.mark);
-        }
+            const auto packetMark = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToClient, &ch);
+            if (!packetMark.isEmpty())
+                Ip::Qos::setSockNfmark(getConn()->clientConnection, packetMark.mark);
 
-        if (!calloutContext->nfConnmarkToClientDone) {
-            calloutContext->nfConnmarkToClientDone = true;
-            const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfConnmarkToClient, &ch);
-            if (!mc.isEmpty())
-                Ip::Qos::setNfConnmark(getConn()->clientConnection, Ip::Qos::dirAccepted, mc);
+            const auto connmark = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfConnmarkToClient, &ch);
+            if (!connmark.isEmpty())
+                Ip::Qos::setNfConnmark(getConn()->clientConnection, Ip::Qos::dirAccepted, connmark);
         }
     }
 
