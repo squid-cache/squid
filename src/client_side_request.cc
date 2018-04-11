@@ -1685,7 +1685,7 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
  */
 
 tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
-Ip::NfMarkConfig aclMapNfmarkConfig (acl_nfmark * head, ACLChecklist * ch);
+Ip::NfMarkConfig aclFindNfMarkConfig (acl_nfmark * head, ACLChecklist * ch);
 
 void
 ClientHttpRequest::doCallouts()
@@ -1793,14 +1793,14 @@ ClientHttpRequest::doCallouts()
 
         if (!calloutContext->nfmarkToClientDone) {
             calloutContext->nfmarkToClientDone = true;
-            const auto mc = aclMapNfmarkConfig(Ip::Qos::TheConfig.nfmarkToClient, &ch);
+            const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToClient, &ch);
             if (!mc.isEmpty())
                 Ip::Qos::setSockNfmark(getConn()->clientConnection, mc.mark);
         }
 
         if (!calloutContext->nfConnmarkToClientDone) {
             calloutContext->nfConnmarkToClientDone = true;
-            const auto mc = aclMapNfmarkConfig(Ip::Qos::TheConfig.nfConnmarkToClient, &ch);
+            const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfConnmarkToClient, &ch);
             if (!mc.isEmpty())
                 Ip::Qos::setNfmarkOnConnection(getConn()->clientConnection, Ip::Qos::dirAccepted, mc);
         }

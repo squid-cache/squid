@@ -149,7 +149,7 @@ public:
     /** Netfilter MARK values currently sent on this connection */
     nfmark_t nfmark;
 
-    /** Netfilter CONNMARK value of this connection */
+    /** Netfilter CONNMARK value previously retrieved from this connection */
     nfmark_t nfConnmark = 0;
 
     /** COMM flags set on this connection */

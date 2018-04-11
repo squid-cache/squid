@@ -140,7 +140,7 @@ prepareConntrackQuery(const Ip::Address &src, const Ip::Address &dst)
 nfmark_t
 Ip::Qos::getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionDirection connDir)
 {
-nfmark_t mark = 0;
+    nfmark_t mark = 0;
 #if USE_LIBNETFILTERCONNTRACK
     const auto src = (connDir == Ip::Qos::dirAccepted) ? conn->remote : conn->local;
     const auto dst = (connDir == Ip::Qos::dirAccepted) ? conn->local : conn->remote;
@@ -178,7 +178,7 @@ Ip::Qos::setNfmarkOnConnection(Comm::ConnectionPointer &conn, const Ip::Qos::Con
     const auto src = (connDir == Ip::Qos::dirAccepted) ? conn->remote : conn->local;
     const auto dst = (connDir == Ip::Qos::dirAccepted) ? conn->local : conn->remote;
 
-    nfmark_t newMark = cm.applyToMark(conn->nfConnmark);
+    const nfmark_t newMark = cm.applyToMark(conn->nfConnmark);
 
     // No need to do anything if a CONNMARK has not changed.
     if (newMark == conn->nfConnmark)
@@ -189,13 +189,13 @@ Ip::Qos::setNfmarkOnConnection(Comm::ConnectionPointer &conn, const Ip::Qos::Con
         if (struct nfct_handle *h = nfct_open(CONNTRACK, 0)) {
             nfct_set_attr_u32(ct, ATTR_MARK, newMark);
             // Update the conntrack table using the new mark. We do not need a callback here.
-            int x = nfct_query(h, NFCT_Q_UPDATE, ct);
-            if (x == 0) {
+            const int queryResult = nfct_query(h, NFCT_Q_UPDATE, ct);
+            if (queryResult == 0) {
                 conn->nfConnmark = newMark;
                 ret = true;
             } else {
                 const int xerrno = errno;
-                debugs(17, 2, "QOS: Failed to modify connection mark: (" << x << ") " << xstrerr(xerrno)
+                debugs(17, 2, "QOS: Failed to modify connection mark: (" << queryResult << ") " << xstrerr(xerrno)
                        << " (Destination " << dst << ", source " << src << ")" );
             }
             nfct_close(h);
