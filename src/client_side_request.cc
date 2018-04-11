@@ -1802,7 +1802,7 @@ ClientHttpRequest::doCallouts()
             calloutContext->nfConnmarkToClientDone = true;
             const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfConnmarkToClient, &ch);
             if (!mc.isEmpty())
-                Ip::Qos::setNfmarkOnConnection(getConn()->clientConnection, Ip::Qos::dirAccepted, mc);
+                Ip::Qos::setNfConnmark(getConn()->clientConnection, Ip::Qos::dirAccepted, mc);
         }
     }
 

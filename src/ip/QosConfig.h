@@ -85,7 +85,7 @@ void getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde);
 * @param conn    Pointer to connection to get mark for
 * @param connDir Specifies connection type (incoming or outgoing)
 */
-nfmark_t getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const ConnectionDirection connDir);
+nfmark_t getNfConnmark(const Comm::ConnectionPointer &conn, const ConnectionDirection connDir);
 
 /**
 * Function to set the netfilter CONNMARK value on the connection.
@@ -95,7 +95,7 @@ nfmark_t getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const Conn
 * @param connDir Specifies connection type (incoming or outgoing)
 * @cm            Netfilter mark configuration (mark and mask)
 */
-bool setNfmarkOnConnection(Comm::ConnectionPointer &conn, const ConnectionDirection connDir, const NfMarkConfig &cm);
+bool setNfConnmark(Comm::ConnectionPointer &conn, const ConnectionDirection connDir, const NfMarkConfig &cm);
 
 /**
 * Function to work out and then apply to the socket the appropriate

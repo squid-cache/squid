@@ -996,7 +996,7 @@ FwdState::dispatch()
         if (Comm::IsConnOpen(clientConn) && Comm::IsConnOpen(serverConnection())) {
             fde * clientFde = &fd_table[clientConn->fd]; // XXX: move the fd_table access into Ip::Qos
             /* Get the netfilter CONNMARK */
-            clientFde->nfmarkFromServer = Ip::Qos::getNfmarkFromConnection(serverConnection(), Ip::Qos::dirOpened);
+            clientFde->nfConnmarkFromServer = Ip::Qos::getNfConnmark(serverConnection(), Ip::Qos::dirOpened);
         }
     }
 

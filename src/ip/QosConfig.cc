@@ -81,7 +81,7 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
 /**
 * Callback function to mark connection once it's been found.
 * This function is called by the libnetfilter_conntrack
-* libraries, during nfct_query in Ip::Qos::getNfmarkFromServer.
+* libraries, during nfct_query in Ip::Qos::getNfConnmark.
 * nfct_callback_register is used to register this function.
 * @param nf_conntrack_msg_type Type of conntrack message
 * @param nf_conntrack Pointer to the conntrack structure
@@ -138,7 +138,7 @@ prepareConntrackQuery(const Ip::Address &src, const Ip::Address &dst)
 #endif
 
 nfmark_t
-Ip::Qos::getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionDirection connDir)
+Ip::Qos::getNfConnmark(const Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionDirection connDir)
 {
     nfmark_t mark = 0;
 #if USE_LIBNETFILTERCONNTRACK
@@ -170,7 +170,7 @@ Ip::Qos::getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const Ip::
 }
 
 bool
-Ip::Qos::setNfmarkOnConnection(Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionDirection connDir, const Ip::NfMarkConfig &cm)
+Ip::Qos::setNfConnmark(Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionDirection connDir, const Ip::NfMarkConfig &cm)
 {
     bool ret = false;
 
@@ -242,7 +242,7 @@ Ip::Qos::doNfmarkLocalMiss(const Comm::ConnectionPointer &conn, const hier_code 
         mark = Ip::Qos::TheConfig.markParentHit;
         debugs(33, 2, "QOS: Parent Peer hit with hier code=" << hierCode << ", Mark=" << mark);
     } else if (Ip::Qos::TheConfig.preserveMissMark) {
-        mark = fd_table[conn->fd].nfmarkFromServer & Ip::Qos::TheConfig.preserveMissMarkMask;
+        mark = fd_table[conn->fd].nfConnmarkFromServer & Ip::Qos::TheConfig.preserveMissMarkMask;
         mark = (mark & ~Ip::Qos::TheConfig.markMissMask) | (Ip::Qos::TheConfig.markMiss & Ip::Qos::TheConfig.markMissMask);
         debugs(33, 2, "QOS: Preserving mark on miss, Mark=" << mark);
     } else if (Ip::Qos::TheConfig.markMiss) {
