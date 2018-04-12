@@ -882,7 +882,7 @@ MemStore::completeWriting(StoreEntry &e)
 
     e.mem_obj->memCache.index = -1;
     e.mem_obj->memCache.io = MemObject::ioDone;
-    map->closeForWriting(index, false);
+    map->closeForWriting(index);
 
     CollapsedForwarding::Broadcast(e); // before we close our transient entry!
     Store::Root().transientsCompleteWriting(e);
