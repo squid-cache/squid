@@ -991,6 +991,9 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
         entryData.password = label;
 #endif
 
+    // XXX: Accessing the state->def->queue without cbdataReferenceValid check.
+    // It will work because the state->def may not cbdata valid but still its
+    // memory is accessible.
     dlinkDelete(&state->list, &state->def->queue);
 
     ExternalACLEntryPointer entry;
