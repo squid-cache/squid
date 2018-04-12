@@ -865,9 +865,8 @@ Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
             if (sio.touchingStoreEntry()) {
                 sio.e->swap_file_sz = sio.writeableAnchor_->basics.swap_file_sz =
                                           sio.offset_;
-
-                // close, the entry gets the read lock
-                map->closeForWriting(sio.swap_filen, true);
+                map->switchWritingToReading(sio.swap_filen);
+                // sio.e keeps the (now read) lock on the anchor
             }
             sio.writeableAnchor_ = NULL;
             sio.splicingPoint = request->sidCurrent;

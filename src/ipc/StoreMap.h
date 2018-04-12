@@ -233,7 +233,9 @@ public:
     /// restrict opened for writing entry to appending operations; allow reads
     void startAppending(const sfileno fileno);
     /// successfully finish creating or updating the entry at fileno pos
-    void closeForWriting(const sfileno fileno, bool lockForReading = false);
+    void closeForWriting(const sfileno fileno);
+    /// stop writing (or updating) the locked entry and start reading it
+    void switchWritingToReading(const sfileno fileno);
     /// unlock and "forget" openForWriting entry, making it Empty again
     /// this call does not free entry slices so the caller has to do that
     void forgetWritingEntry(const sfileno fileno);
