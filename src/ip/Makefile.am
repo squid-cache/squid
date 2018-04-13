@@ -16,6 +16,8 @@ libip_la_SOURCES = \
 	Address.cc \
 	Intercept.h \
 	Intercept.cc \
+	NfMarkConfig.h \
+	NfMarkConfig.cc \
 	QosConfig.h \
 	QosConfig.cc \
 	tools.cc \

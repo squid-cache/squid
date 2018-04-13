@@ -87,7 +87,7 @@ public:
     tos_t tosToServer = '\0';      /**< The TOS value for packets going towards the server.
                                         See also tosFromServer. */
     nfmark_t nfmarkToServer = 0;   /**< The netfilter mark for packets going towards the server.
-                                        See also nfmarkFromServer. */
+                                        See also nfConnmarkFromServer. */
     int sock_family = 0;
     char ipaddr[MAX_IPSTRLEN];            /* dotted decimal address of peer */
     char desc[FD_DESC_SZ];
@@ -147,11 +147,11 @@ public:
                                             tosToServer in that this is the value we *receive* from the,
                                             connection, whereas tosToServer is the value to set on packets
                                             *leaving* Squid.  */
-    unsigned int nfmarkFromServer = 0; /**< Stores the Netfilter mark value of the connection from the remote
-                                            server. See FwdState::dispatch(). Note that this differs to
-                                            nfmarkToServer in that this is the value we *receive* from the,
-                                            connection, whereas nfmarkToServer is the value to set on packets
-                                            *leaving* Squid.   */
+    unsigned int nfConnmarkFromServer = 0; /**< Stores the Netfilter mark value of the connection from the remote
+                                                server. See FwdState::dispatch(). Note that this differs to
+                                                nfmarkToServer in that this is the value we *receive* from the,
+                                                connection, whereas nfmarkToServer is the value to set on packets
+                                                *leaving* Squid.   */
 };
 
 #define fd_table fde::Table
