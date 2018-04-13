@@ -12,6 +12,7 @@
 #include "acl/forward.h"
 #include "hier_code.h"
 #include "ip/forward.h"
+#include "ip/NfMarkConfig.h"
 
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
@@ -43,12 +44,12 @@ class acl_nfmark
     CBDATA_CLASS(acl_nfmark);
 
 public:
-    acl_nfmark() : next(NULL), aclList(NULL), nfmark(0) {}
+    acl_nfmark() : next(NULL), aclList(NULL) {}
     ~acl_nfmark();
 
     acl_nfmark *next;
     ACLList *aclList;
-    nfmark_t nfmark;
+    Ip::NfMarkConfig markConfig;
 };
 
 namespace Ip
@@ -77,27 +78,24 @@ enum ConnectionDirection {
 void getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde);
 
 /**
-* Function to retrieve the netfilter mark value of the connection.
+* Function to retrieve the netfilter CONNMARK value of the connection.
 * Called by FwdState::dispatch if QOS options are enabled or by
 * Comm::TcpAcceptor::acceptOne
 *
 * @param conn    Pointer to connection to get mark for
 * @param connDir Specifies connection type (incoming or outgoing)
 */
-nfmark_t getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const ConnectionDirection connDir);
+nfmark_t getNfConnmark(const Comm::ConnectionPointer &conn, const ConnectionDirection connDir);
 
-#if USE_LIBNETFILTERCONNTRACK
 /**
-* Callback function to mark connection once it's been found.
-* This function is called by the libnetfilter_conntrack
-* libraries, during nfct_query in Ip::Qos::getNfmarkFromServer.
-* nfct_callback_register is used to register this function.
-* @param nf_conntrack_msg_type Type of conntrack message
-* @param nf_conntrack Pointer to the conntrack structure
-* @param mark Pointer to nfmark_t mark
+* Function to set the netfilter CONNMARK value on the connection.
+* Called by ClientHttpRequest::doCallouts.
+*
+* @param conn    Pointer to connection to set mark on
+* @param connDir Specifies connection type (incoming or outgoing)
+* @cm            Netfilter mark configuration (mark and mask)
 */
-int getNfmarkCallback(enum nf_conntrack_msg_type type, struct nf_conntrack *ct, void *mark);
-#endif
+bool setNfConnmark(Comm::ConnectionPointer &conn, const ConnectionDirection connDir, const NfMarkConfig &cm);
 
 /**
 * Function to work out and then apply to the socket the appropriate
@@ -233,6 +231,7 @@ public:
     acl_tos *tosToClient;               ///< The TOS that packets to the client should be marked with, based on ACL
     acl_nfmark *nfmarkToServer;         ///< The MARK that packets to the web server should be marked with, based on ACL
     acl_nfmark *nfmarkToClient;         ///< The MARK that packets to the client should be marked with, based on ACL
+    acl_nfmark *nfConnmarkToClient = nullptr;    ///< The CONNMARK that the client connection should be marked with, based on ACL
 
 };
 

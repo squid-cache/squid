@@ -62,6 +62,7 @@ Comm::Connection::copyDetails() const
     c->peerType = peerType;
     c->tos = tos;
     c->nfmark = nfmark;
+    c->nfConnmark = nfConnmark;
     c->flags = flags;
     c->startTime_ = startTime_;
 

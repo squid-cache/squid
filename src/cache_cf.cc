@@ -36,6 +36,7 @@
 #include "icmp/IcmpConfig.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
+#include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "ipc/Kids.h"
@@ -55,6 +56,7 @@
 #include "RefreshPattern.h"
 #include "rfc1738.h"
 #include "sbuf/List.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"
@@ -1542,10 +1544,7 @@ static void
 dump_acl_nfmark(StoreEntry * entry, const char *name, acl_nfmark * head)
 {
     for (acl_nfmark *l = head; l; l = l->next) {
-        if (l->nfmark > 0)
-            storeAppendPrintf(entry, "%s 0x%02X", name, l->nfmark);
-        else
-            storeAppendPrintf(entry, "%s none", name);
+        storeAppendPrintf(entry, "%s %s", name, ToSBuf(l->markConfig).c_str());
 
         dump_acl_list(entry, l->aclList);
 
@@ -1556,24 +1555,18 @@ dump_acl_nfmark(StoreEntry * entry, const char *name, acl_nfmark * head)
 static void
 parse_acl_nfmark(acl_nfmark ** head)
 {
-    nfmark_t mark;
-    char *token = ConfigParser::NextToken();
+    SBuf token(ConfigParser::NextToken());
+    const auto mc = Ip::NfMarkConfig::Parse(token);
 
-    if (!token) {
-        self_destruct();
-        return;
-    }
-
-    if (!xstrtoui(token, NULL, &mark, 0, std::numeric_limits<nfmark_t>::max())) {
-        self_destruct();
-        return;
-    }
+    // Packet marking directives should not allow to use masks.
+    const auto pkt_dirs = {"mark_client_packet", "clientside_mark", "tcp_outgoing_mark"};
+    if (mc.hasMask() && std::find(pkt_dirs.begin(), pkt_dirs.end(), cfg_directive) != pkt_dirs.end())
+        throw TexcHere(ToSBuf("'", cfg_directive, "' does not support masked marks"));
 
     acl_nfmark *l = new acl_nfmark;
+    l->markConfig = mc;
 
-    l->nfmark = mark;
-
-    aclParseAclList(LegacyParser, &l->aclList, token);
+    aclParseAclList(LegacyParser, &l->aclList, token.c_str());
 
     acl_nfmark **tail = head;   /* sane name below */
     while (*tail)
