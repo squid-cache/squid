@@ -92,7 +92,7 @@ private:
     pid_t  pid = -1; ///< current (for a running kid) or last (for stopped kid) PID
     time_t startTime = 0; ///< last start time
     time_t stopTime = 0; ///< last termination time
-    bool   isRunning = false; ///< whether the kid is assumed to be alive
+    bool isRunning = false; ///< whether the kid is assumed to be alive
     PidStatus status = 0; ///< exit status of a stopped kid
 };
 

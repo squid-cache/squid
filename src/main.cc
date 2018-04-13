@@ -59,6 +59,7 @@
 #include "mime.h"
 #include "neighbors.h"
 #include "parser/Tokenizer.h"
+#include "Parsing.h"
 #include "pconn.h"
 #include "peer_sourcehash.h"
 #include "peer_userhash.h"
@@ -420,7 +421,7 @@ enum {
 // short options
 // TODO: consider prefixing with ':' for better logging
 // (distinguish missing required argument cases)
-const char *shortOpStr =
+static const char *shortOpStr =
 #if USE_WIN32_SERVICE
     "O:Vir"
 #endif
@@ -515,6 +516,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
         /** \par a
          * Add optional HTTP port as given following the option */
         char *port = xstrdup(optValue);
+        // use a copy to avoid optValue modification
         add_http_port(port);
         xfree(port);
         break;
@@ -523,7 +525,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
     case 'd':
         /** \par d
          * Set global option Debug::log_stderr to the number given following the option */
-        Debug::log_stderr = atoi(optValue);
+        Debug::log_stderr = xatoi(optValue);
         break;
 
     case 'f':
@@ -595,7 +597,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
          * if none is given it toggles the xmalloc_trace option on/off */
         if (optValue) {
 #if MALLOC_DBG
-            malloc_debug_level = atoi(optValue);
+            malloc_debug_level = xatoi(optValue);
 #else
             fatal("Need to add -DMALLOC_DBG when compiling to use -mX option");
 #endif
@@ -1431,7 +1433,7 @@ ConfigureCurrentKid(const CommandLine &cmdLine)
         SBuf kidId;
         Parser::Tokenizer tok(processName);
         tok.suffix(kidId, CharacterSet::DIGIT);
-        KidIdentifier = atoi(kidId.c_str());
+        KidIdentifier = xatoi(kidId.c_str());
         tok.skipSuffix(SBuf("-"));
         TheKidName = tok.remaining();
         if (TheKidName.cmp("squid-coord") == 0)
@@ -1457,7 +1459,7 @@ static void StartUsingConfig()
 int
 SquidMain(int argc, char **argv)
 {
-    const CommandLine cmdLine(argc, argv, *shortOpStr, squidOptions);
+    const CommandLine cmdLine(argc, argv, shortOpStr, squidOptions);
 
     ConfigureCurrentKid(cmdLine);
 

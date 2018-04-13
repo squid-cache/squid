@@ -14,20 +14,20 @@
 #endif
 #include <vector>
 
-typedef struct option LongOption;
+typedef struct option RawLongOption;
 
 /// A struct option C++ wrapper, helps with option::name copying/freeing.
-class Option : public LongOption
+class LongOption : public RawLongOption
 {
 public:
-    Option();
-    explicit Option(const LongOption &);
-    Option(const Option&);
-    Option &operator =(const Option &);
-    ~Option();
+    LongOption();
+    explicit LongOption(const RawLongOption &);
+    LongOption(const LongOption&);
+    LongOption &operator =(const LongOption &);
+    ~LongOption();
 
 private:
-    void copy(const LongOption &);
+    void copy(const RawLongOption &);
 };
 
 /// Manages arguments passed to a program (i.e., main(argc, argv) parameters).
@@ -35,7 +35,7 @@ class CommandLine
 {
 public:
     /// expects main() input plus getopt_long(3) grammar rules for parsing argv
-    CommandLine(int argc, char *argv[], const char &shortRules, const LongOption *longRules);
+    CommandLine(int argc, char *argv[], const char *shortRules, const RawLongOption *longRules);
     CommandLine(const CommandLine &them);
     ~CommandLine();
 
@@ -70,7 +70,7 @@ public:
     void pushFrontOption(const char *name, const char *value = nullptr);
 
 private:
-    const LongOption *longOptions() const { return longOptions_.size() ? longOptions_.data() : nullptr; }
+    const RawLongOption *longOptions() const { return longOptions_.size() ? longOptions_.data() : nullptr; }
     bool nextOption(int &optId) const;
 
     /// raw main() parameters, including argv[0] and a nil argv[argc]
@@ -78,7 +78,7 @@ private:
 
     /* getopt_long() grammar rules */
     const char *shortOptions_; ///< single-dash, single-letter (-x) option rules
-    std::vector<Option> longOptions_; ///< long --option rules
+    std::vector<LongOption> longOptions_; ///< long --option rules
 };
 
 #endif /* SQUID_COMMANDLINE_H */

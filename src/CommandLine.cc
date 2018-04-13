@@ -21,12 +21,13 @@ ResetGetopt(const bool allowStderrWarnings)
     optind = 0;
 }
 
-CommandLine::CommandLine(int argC, char *argV[], const char &shortRules, const LongOption *longRules):
+CommandLine::CommandLine(int argC, char *argV[], const char *shortRules, const RawLongOption *longRules):
     argv_(),
-    shortOptions_(xstrdup(&shortRules)),
+    shortOptions_(shortRules ? xstrdup(shortRules) : ""),
     longOptions_()
 {
     assert(argC > 0); // C++ main() requirement that makes our arg0() safe
+    assert(shortRules);
 
     /* copy argV items */
     argv_.reserve(argC+1);
@@ -43,7 +44,7 @@ CommandLine::CommandLine(int argC, char *argV[], const char &shortRules, const L
 }
 
 CommandLine::CommandLine(const CommandLine &them):
-    CommandLine(them.argc(), them.argv(), *them.shortOptions_, them.longOptions())
+    CommandLine(them.argc(), them.argv(), them.shortOptions_, them.longOptions())
 {
 }
 
@@ -124,36 +125,38 @@ CommandLine::pushFrontOption(const char *name, const char *value)
         argv_.insert(argv_.begin() + 2, xstrdup(value));
 }
 
-Option::Option() :
+LongOption::LongOption() :
     option({nullptr, 0, nullptr, 0})
 {
 }
 
-Option::Option(const LongOption &opt)
+LongOption::LongOption(const RawLongOption &opt)
 {
     copy(opt);
 }
 
-Option::Option(const Option &opt):
-    Option(static_cast<const LongOption &>(opt))
+LongOption::LongOption(const LongOption &opt):
+    LongOption(static_cast<const RawLongOption &>(opt))
 {
 }
 
-Option::~Option()
+LongOption::~LongOption()
 {
     xfree(name);
 }
 
-Option &
-Option::operator =(const Option &opt)
+LongOption &
+LongOption::operator =(const LongOption &opt)
 {
-    xfree(name);
-    copy(static_cast<const LongOption &>(opt));
+    if (this != &opt) {
+        xfree(name);
+        copy(static_cast<const RawLongOption &>(opt));
+    }
     return *this;
 }
 
 void
-Option::copy(const LongOption &opt)
+LongOption::copy(const RawLongOption &opt)
 {
     name = opt.name ? xstrdup(opt.name) : nullptr;
     has_arg = opt.has_arg;
