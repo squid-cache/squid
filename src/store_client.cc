@@ -9,6 +9,7 @@
 /* DEBUG: section 90    Storage Manager Client-Side Interface */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "event.h"
 #include "globals.h"
 #include "HttpReply.h"
@@ -43,6 +44,38 @@ static EVH storeClientCopyEvent;
 static bool CheckQuickAbortIsReasonable(StoreEntry * entry);
 
 CBDATA_CLASS_INIT(store_client);
+
+/* StoreClient */
+
+bool
+StoreClient::onCollapsingPath() const
+{
+    if (!Config.onoff.collapsed_forwarding)
+        return false;
+
+    if (!Config.accessList.collapsedForwardingAccess)
+        return true;
+
+    ACLFilledChecklist checklist(Config.accessList.collapsedForwardingAccess, nullptr, nullptr);
+    fillChecklist(checklist);
+    return checklist.fastCheck().allowed();
+}
+
+bool
+StoreClient::mayCollapseOn(const StoreEntry &e) const
+{
+    assert(e.collapsingInitiator()); // our result is not meaningful for regular hits
+    return onCollapsingPath();
+}
+
+void
+StoreClient::fillChecklist(ACLFilledChecklist &checklist) const
+{
+    // TODO: Consider moving all CF-related methods into a new dedicated class.
+    Must(!"mayCollapse() caller must override fillChecklist()");
+}
+
+/* store_client */
 
 bool
 store_client::memReaderHasLowerOffset(int64_t anOffset) const

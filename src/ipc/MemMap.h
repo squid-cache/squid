@@ -90,7 +90,10 @@ public:
     Slot *openForWritingAt(sfileno fileno, bool overwriteExisting = true);
 
     /// successfully finish writing the entry
-    void closeForWriting(const sfileno fileno, bool lockForReading = false);
+    void closeForWriting(const sfileno fileno);
+
+    /// stop writing the locked entry and start reading it
+    void switchWritingToReading(const sfileno fileno);
 
     /// only works on locked entries; returns nil unless the slot is readable
     const Slot *peekAtReader(const sfileno fileno) const;

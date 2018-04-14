@@ -11,6 +11,7 @@
 
 #include "acl/Acl.h"
 #include "ip/forward.h"
+#include "ip/NfMarkConfig.h"
 #include "parser/Tokenizer.h"
 
 #include <vector>
@@ -29,12 +30,8 @@ public:
     virtual SBufList dump() const override;
     virtual bool empty() const override;
 
-    /// a mark/mask pair for matching CONNMARKs
-    typedef std::pair<nfmark_t, nfmark_t> ConnMarkQuery;
-
 private:
-    nfmark_t getNumber(Parser::Tokenizer &tokenizer, const SBuf &token) const;
-    std::vector<ConnMarkQuery> marks; ///< mark/mask pairs in configured order
+    std::vector<Ip::NfMarkConfig> marks; ///< marks/masks in configured order
 };
 
 } // namespace Acl

@@ -77,20 +77,37 @@ Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
 #endif
 }
 
-nfmark_t
-Ip::Qos::getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionDirection connDir)
-{
-    nfmark_t mark = 0;
 #if USE_LIBNETFILTERCONNTRACK
-    /* Allocate a new conntrack */
-    if (struct nf_conntrack *ct = nfct_new()) {
-        /* Prepare data needed to find the connection in the conntrack table.
-         * We need the local and remote IP address, and the local and remote
-         * port numbers.
-         */
-        const auto src = (connDir == Ip::Qos::dirAccepted) ? conn->remote : conn->local;
-        const auto dst = (connDir == Ip::Qos::dirAccepted) ? conn->local : conn->remote;
+/**
+* Callback function to mark connection once it's been found.
+* This function is called by the libnetfilter_conntrack
+* libraries, during nfct_query in Ip::Qos::getNfConnmark.
+* nfct_callback_register is used to register this function.
+* @param nf_conntrack_msg_type Type of conntrack message
+* @param nf_conntrack Pointer to the conntrack structure
+* @param mark Pointer to nfmark_t mark
+*/
+static int
+getNfmarkCallback(enum nf_conntrack_msg_type, struct nf_conntrack *ct, void *connmark)
+{
+    auto *mark = static_cast<nfmark_t *>(connmark);
+    *mark = nfct_get_attr_u32(ct, ATTR_MARK);
+    debugs(17, 3, asHex(*mark));
+    return NFCT_CB_CONTINUE;
+}
 
+/**
+* Prepares a conntrack query for specified source and destination.
+* This can be used for querying or modifying attributes.
+*/
+static nf_conntrack *
+prepareConntrackQuery(const Ip::Address &src, const Ip::Address &dst)
+{
+    /* Allocate a new conntrack */
+    if (auto ct = nfct_new()) {
+        // Prepare data needed to find the connection in the conntrack table.
+        // We need the local and remote IP address, and the local and remote
+        // port numbers.
         if (Ip::EnableIpv6 && src.isIPv6()) {
             nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET6);
             struct in6_addr conn_fde_dst_ip6;
@@ -113,11 +130,27 @@ Ip::Qos::getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const Ip::
         nfct_set_attr_u16(ct, ATTR_ORIG_PORT_DST, htons(dst.port()));
         nfct_set_attr_u16(ct, ATTR_ORIG_PORT_SRC, htons(src.port()));
 
-        /* Open a handle to the conntrack */
+        return ct;
+    }
+
+    return nullptr;
+}
+#endif
+
+nfmark_t
+Ip::Qos::getNfConnmark(const Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionDirection connDir)
+{
+    nfmark_t mark = 0;
+#if USE_LIBNETFILTERCONNTRACK
+    const auto src = (connDir == Ip::Qos::dirAccepted) ? conn->remote : conn->local;
+    const auto dst = (connDir == Ip::Qos::dirAccepted) ? conn->local : conn->remote;
+
+    if (const auto ct = prepareConntrackQuery(src, dst)) {
+        // Open a handle to the conntrack
         if (struct nfct_handle *h = nfct_open(CONNTRACK, 0)) {
-            /* Register the callback. The callback function will record the mark value. */
+            // Register the callback. The callback function will record the mark value.
             nfct_callback_register(h, NFCT_T_ALL, getNfmarkCallback, static_cast<void *>(&mark));
-            /* Query the conntrack table using the data previously set */
+            // Query the conntrack table using the data previously set
             int x = nfct_query(h, NFCT_Q_GET, ct);
             if (x == -1) {
                 const int xerrno = errno;
@@ -126,28 +159,56 @@ Ip::Qos::getNfmarkFromConnection(const Comm::ConnectionPointer &conn, const Ip::
             }
             nfct_close(h);
         } else {
-            debugs(17, 2, "QOS: Failed to open conntrack handle for netfilter mark retrieval.");
+            debugs(17, 2, "QOS: Failed to open conntrack handle for netfilter CONNMARK retrieval.");
         }
         nfct_destroy(ct);
     } else {
-        debugs(17, 2, "QOS: Failed to allocate new conntrack for netfilter mark retrieval.");
+        debugs(17, 2, "QOS: Failed to allocate new conntrack for netfilter CONNMARK retrieval.");
     }
 #endif
     return mark;
 }
 
-#if USE_LIBNETFILTERCONNTRACK
-int
-Ip::Qos::getNfmarkCallback(enum nf_conntrack_msg_type,
-                           struct nf_conntrack *ct,
-                           void *connmark)
+bool
+Ip::Qos::setNfConnmark(Comm::ConnectionPointer &conn, const Ip::Qos::ConnectionDirection connDir, const Ip::NfMarkConfig &cm)
 {
-    auto *mark = static_cast<nfmark_t *>(connmark);
-    *mark = nfct_get_attr_u32(ct, ATTR_MARK);
-    debugs(17, 3, asHex(*mark));
-    return NFCT_CB_CONTINUE;
-}
+    bool ret = false;
+
+#if USE_LIBNETFILTERCONNTRACK
+    const auto src = (connDir == Ip::Qos::dirAccepted) ? conn->remote : conn->local;
+    const auto dst = (connDir == Ip::Qos::dirAccepted) ? conn->local : conn->remote;
+
+    const nfmark_t newMark = cm.applyToMark(conn->nfConnmark);
+
+    // No need to do anything if a CONNMARK has not changed.
+    if (newMark == conn->nfConnmark)
+        return true;
+
+    if (const auto ct = prepareConntrackQuery(src, dst)) {
+        // Open a handle to the conntrack
+        if (struct nfct_handle *h = nfct_open(CONNTRACK, 0)) {
+            nfct_set_attr_u32(ct, ATTR_MARK, newMark);
+            // Update the conntrack table using the new mark. We do not need a callback here.
+            const int queryResult = nfct_query(h, NFCT_Q_UPDATE, ct);
+            if (queryResult == 0) {
+                conn->nfConnmark = newMark;
+                ret = true;
+            } else {
+                const int xerrno = errno;
+                debugs(17, 2, "QOS: Failed to modify connection mark: (" << queryResult << ") " << xstrerr(xerrno)
+                       << " (Destination " << dst << ", source " << src << ")" );
+            }
+            nfct_close(h);
+        } else {
+            debugs(17, 2, "QOS: Failed to open conntrack handle for netfilter CONNMARK modification.");
+        }
+        nfct_destroy(ct);
+    } else {
+        debugs(17, 2, "QOS: Failed to allocate new conntrack for netfilter CONNMARK modification.");
+    }
 #endif
+    return ret;
+}
 
 int
 Ip::Qos::doTosLocalMiss(const Comm::ConnectionPointer &conn, const hier_code hierCode)
@@ -181,7 +242,7 @@ Ip::Qos::doNfmarkLocalMiss(const Comm::ConnectionPointer &conn, const hier_code 
         mark = Ip::Qos::TheConfig.markParentHit;
         debugs(33, 2, "QOS: Parent Peer hit with hier code=" << hierCode << ", Mark=" << mark);
     } else if (Ip::Qos::TheConfig.preserveMissMark) {
-        mark = fd_table[conn->fd].nfmarkFromServer & Ip::Qos::TheConfig.preserveMissMarkMask;
+        mark = fd_table[conn->fd].nfConnmarkFromServer & Ip::Qos::TheConfig.preserveMissMarkMask;
         mark = (mark & ~Ip::Qos::TheConfig.markMissMask) | (Ip::Qos::TheConfig.markMiss & Ip::Qos::TheConfig.markMissMask);
         debugs(33, 2, "QOS: Preserving mark on miss, Mark=" << mark);
     } else if (Ip::Qos::TheConfig.markMiss) {
@@ -537,7 +598,7 @@ Ip::Qos::Config::isAclNfmarkActive() const
     for (int i=0; i<2; ++i) {
         while (nfmarkAcls[i]) {
             acl_nfmark *l = nfmarkAcls[i];
-            if (l->nfmark > 0)
+            if (!l->markConfig.isEmpty())
                 return true;
             nfmarkAcls[i] = l->next;
         }
