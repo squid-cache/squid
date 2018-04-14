@@ -291,11 +291,11 @@ void
 death(int sig)
 {
     if (sig == SIGSEGV)
-        fprintf(debug_log, "FATAL: Received Segment Violation...dying.\n");
+        debugs(1, DBG_CRITICAL, ForceAlert << "FATAL: Received Segment Violation...dying.");
     else if (sig == SIGBUS)
-        fprintf(debug_log, "FATAL: Received Bus Error...dying.\n");
+        debugs(1, DBG_CRITICAL, ForceAlert << "FATAL: Received Bus Error...dying.");
     else
-        fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
+        debugs(1, DBG_CRITICAL, ForceAlert << "FATAL: Received signal " << sig << "...dying.");
 
 #if PRINT_STACK_TRACE
 #if _SQUID_HPUX_
@@ -405,7 +405,7 @@ debug_trap(const char *message)
     if (!opt_catch_signals)
         fatal_dump(message);
 
-    _db_print("WARNING: %s\n", message);
+    debugs(50, DBG_CRITICAL, "WARNING: " << message);
 }
 
 const char *

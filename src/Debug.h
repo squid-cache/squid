@@ -68,6 +68,7 @@ public:
         void formatStream();
         Context *upper; ///< previous or parent record in nested debugging calls
         std::ostringstream buf; ///< debugs() output sink
+        bool forceAlert; ///< the current debugs() will be a syslog ALERT
     };
 
     /// whether debugging the given section and the given level produces output
@@ -96,6 +97,8 @@ public:
     /// logs output buffer created in Start() and closes debugging context
     static void Finish();
 
+    /// configures the active debugging context to write syslog ALERT
+    static void ForceAlert();
 private:
     static Context *Current; ///< deepest active context; nil outside debugs()
 };
@@ -132,6 +135,11 @@ void ResyncDebugLog(FILE *newDestination);
         } \
    } while (/*CONSTCOND*/ 0)
 
+/// Does not change the stream being manipulated. Exists for its side effect:
+/// In a debugs() context, forces the message to become a syslog ALERT.
+/// Outside of debugs() context, has no effect and should not be used.
+std::ostream& ForceAlert(std::ostream& s);
+
 /** stream manipulator which does nothing.
  * \deprecated Do not add to new code, and remove when editing old code
  *
@@ -166,7 +174,6 @@ inline std::ostream& operator <<(std::ostream &os, const uint8_t d)
 
 /* Legacy debug function definitions */
 void _db_init(const char *logfile, const char *options);
-void _db_print(const char *,...) PRINTF_FORMAT_ARG1;
 void _db_set_syslog(const char *facility);
 void _db_rotate_log(void);
 
