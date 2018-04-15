@@ -96,14 +96,34 @@ Security::KeyData::loadX509ChainFromFile()
         return;
     }
 
-    if (X509_check_issued(cert.get(), cert.get()) == X509_V_OK)
-        debugs(83, 5, "Certificate is self-signed, will not be chained");
-    else {
+    if (X509_check_issued(cert.get(), cert.get()) == X509_V_OK) {
+        char *nameStr = X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0);
+        debugs(83, DBG_IMPORTANT, "Certificate is self-signed, will not be chained: " << nameStr);
+        OPENSSL_free(nameStr);
+    } else {
+        debugs(83, DBG_IMPORTANT, "Using certificate chain in " << certFile);
         // and add to the chain any other certificate exist in the file
+        X509 *lastCert = cert.get();
         while (X509 *ca = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr)) {
-            // XXX: self-signed check should be applied to all certs loaded.
-            // XXX: missing checks that the chained certs are actually part of a chain for validating cert.
-            chain.emplace_front(Security::CertPointer(ca));
+            // get Issuer name of the cert for debug display.
+            char *nameStr = X509_NAME_oneline(X509_get_subject_name(ca), nullptr, 0);
+
+            // self-signed certificates are not valid in a sent chain.
+            if (X509_check_issued(ca, ca) == X509_V_OK) {
+                debugs(83, 5, "CA " << nameStr << " is self-signed, will not be chained: " << nameStr);
+                OPENSSL_free(nameStr);
+                continue;
+            }
+
+            // checks that the chained certs are actually part of a chain for validating cert.
+            if (X509_check_issued(lastCert, ca) == X509_V_OK) {
+                debugs(83, DBG_IMPORTANT, "Adding issuer CA: " << nameStr);
+                chain.emplace_front(Security::CertPointer(ca));
+                lastCert = ca;
+            } else {
+                debugs(83, DBG_IMPORTANT, "Ignoring non-issuer CA: " << nameStr);
+            }
+            OPENSSL_free(nameStr);
         }
     }
 
