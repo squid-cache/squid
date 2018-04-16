@@ -991,6 +991,8 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
         entryData.password = label;
 #endif
 
+    // XXX: This state->def access conflicts with the cbdata validity check
+    // below.
     dlinkDelete(&state->list, &state->def->queue);
 
     ExternalACLEntryPointer entry;

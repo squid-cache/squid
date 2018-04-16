@@ -880,15 +880,9 @@ mainReconfigureStart(void)
 #if USE_HTCP
     htcpClosePorts();
 #endif
-#if USE_SSL_CRTD
-    Ssl::Helper::GetInstance()->Shutdown();
-#endif
 #if USE_OPENSSL
-    if (Ssl::CertValidationHelper::GetInstance())
-        Ssl::CertValidationHelper::GetInstance()->Shutdown();
     Ssl::TheGlobalContextStorage.reconfigureStart();
 #endif
-    redirectShutdown();
 #if USE_AUTH
     authenticateReset();
 #endif
@@ -976,14 +970,13 @@ mainReconfigureFinish(void *)
     storeLogOpen();
     Dns::Init();
 #if USE_SSL_CRTD
-    Ssl::Helper::GetInstance()->Init();
+    Ssl::Helper::Reconfigure();
 #endif
 #if USE_OPENSSL
-    if (Ssl::CertValidationHelper::GetInstance())
-        Ssl::CertValidationHelper::GetInstance()->Init();
+    Ssl::CertValidationHelper::Reconfigure();
 #endif
 
-    redirectInit();
+    redirectReconfigure();
 #if USE_AUTH
     authenticateInit(&Auth::TheConfig.schemes);
 #endif
@@ -1186,12 +1179,11 @@ mainInitialize(void)
     Dns::Init();
 
 #if USE_SSL_CRTD
-    Ssl::Helper::GetInstance()->Init();
+    Ssl::Helper::Init();
 #endif
 
 #if USE_OPENSSL
-    if (Ssl::CertValidationHelper::GetInstance())
-        Ssl::CertValidationHelper::GetInstance()->Init();
+    Ssl::CertValidationHelper::Init();
 #endif
 
     redirectInit();
@@ -2063,11 +2055,10 @@ SquidShutdown()
 
     debugs(1, DBG_IMPORTANT, "Shutting down...");
 #if USE_SSL_CRTD
-    Ssl::Helper::GetInstance()->Shutdown();
+    Ssl::Helper::Shutdown();
 #endif
 #if USE_OPENSSL
-    if (Ssl::CertValidationHelper::GetInstance())
-        Ssl::CertValidationHelper::GetInstance()->Shutdown();
+    Ssl::CertValidationHelper::Shutdown();
 #endif
     redirectShutdown();
     externalAclShutdown();
