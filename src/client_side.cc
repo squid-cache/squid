@@ -3023,7 +3023,7 @@ ConnStateData::getSslContextStart()
             request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
             request_message.composeRequest(certProperties);
             debugs(33, 5, HERE << "SSL crtd request: " << request_message.compose().c_str());
-            Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
+            Ssl::Helper::Submit(request_message, sslCrtdHandleReplyWrapper, this);
             return;
         } catch (const std::exception &e) {
             debugs(33, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtd " <<

@@ -19,6 +19,7 @@ class ClientHttpRequest;
 
 void redirectInit(void);
 void redirectShutdown(void);
+void redirectReconfigure();
 void redirectStart(ClientHttpRequest *, HLPCB *, void *);
 void storeIdStart(ClientHttpRequest *, HLPCB *, void *);
 
