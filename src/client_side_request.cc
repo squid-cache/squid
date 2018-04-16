@@ -1419,6 +1419,11 @@ ClientRequestContext::checkNoCacheDone(const allow_t &answer)
 bool
 ClientRequestContext::sslBumpAccessCheck()
 {
+    if (!http->getConn()) {
+        http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
+        return false;
+    }
+
     // If SSL connection tunneling or bumping decision has been made, obey it.
     const Ssl::BumpMode bumpMode = http->getConn()->sslBumpMode;
     if (bumpMode != Ssl::bumpEnd) {
