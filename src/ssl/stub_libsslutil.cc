@@ -37,8 +37,7 @@ void Ssl::readCertAndPrivateKeyFromFiles(Security::CertPointer &, Security::Priv
 bool Ssl::sslDateIsInTheFuture(char const *) STUB_RETVAL(false)
 
 #include "ssl/helper.h"
-Ssl::Helper * Ssl::Helper::GetInstance() STUB_RETVAL(NULL)
 void Ssl::Helper::Init() STUB
 void Ssl::Helper::Shutdown() STUB
-void Ssl::Helper::sslSubmit(Ssl::CrtdMessage const & message, HLPCB * callback, void *data) STUB
+void Ssl::Helper::Submit(Ssl::CrtdMessage const & message, HLPCB * callback, void *data) STUB
 
