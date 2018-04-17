@@ -3007,7 +3007,11 @@ ConnStateData::proxyProtocolError(const char *msg)
 static const SBuf Proxy1p0magic("PROXY ", 6);
 
 /// magic octet prefix for PROXY protocol version 2
-static const SBuf Proxy2p0magic("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A", 12);
+//  The first four bytes (\x0D\x0A\x0D\x0A) are intentionally
+//  ommited from the prefix since leading whitespace is stripped
+//  before checking for PROXY protocol headers.
+//  See: https://bugs.squid-cache.org/show_bug.cgi?id=4814
+static const SBuf Proxy2p0magic("\x00\x0D\x0A\x51\x55\x49\x54\x0A", 8);
 
 /**
  * Test the connection read buffer for PROXY protocol header.
