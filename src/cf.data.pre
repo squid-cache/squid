@@ -1030,6 +1030,7 @@ DOC_START
 	acl aclname dst [-n] ip-address/mask ...	# URL host's IP address [slow]
 	acl aclname localip ip-address/mask ... # IP address the client connected to [fast]
 
+if USE_SQUID_EUI
 	acl aclname arp      mac-address ...
 	acl aclname eui64    eui64-address ...
 	  # [fast]
@@ -1039,13 +1040,17 @@ DOC_START
 	  # It works on Linux, Solaris, Windows, FreeBSD, and some other
 	  # BSD variants.
 	  #
+	  # The eui_lookup directive is required to be 'on' (the default)
+	  # and Squid built with --enable-eui for MAC/EUI addresses to be
+	  # available for this ACL.
+	  #
 	  # Squid can only determine the MAC/EUI address for IPv4
 	  # clients that are on the same subnet. If the client is on a
 	  # different subnet, then Squid cannot find out its address.
 	  #
 	  # IPv6 protocol does not contain ARP. MAC/EUI is either
 	  # encoded directly in the IPv6 address or not available.
-
+endif
 	acl aclname clientside_mark mark[/mask] ...
 	  # matches CONNMARK of an accepted connection [fast]
 	  # DEPRECATED. Use the 'client_connection_mark' instead.
