@@ -1,0 +1,176 @@
+## Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
+#
+# see Bug 4847
+#
+# NP: lines which are build-dependent cannot (yet) be tested by
+#     the build farm, and commented out. They should by tested
+#     manually periodically.
+
+# some options require -n flag
+acl dstCheck dst -n 192.168.2.1
+acl dstdomainCheck dstdomain -n example.com
+acl dstdom_regexCheck dstdom_regex -n 192.168.2.1
+
+# all regex ACLs require -i and +i flags
+acl dstdom_regexCheck dstdom_regex -i Example.com
+acl dstdom_regexCheck dstdom_regex +i example.com
+acl srcdom_regexCheck srcdom_regex -i Example.com
+acl srcdom_regexCheck srcdom_regex +i example.com
+acl peername_regexCheck peername_regex -i Example.com
+acl peername_regexCheck peername_regex +i example.com
+acl url_regexCheck url_regex -i ^HTTP
+acl url_regexCheck url_regex +i ^http
+acl urlloginCheck urllogin -i alice
+acl urlloginCheck urllogin +i bob
+acl urlpath_regexCheck urlpath_regex -i /foo
+acl urlpath_regexCheck urlpath_regex +i /Foo
+acl browserCheck browser -i ^mozilla
+acl browserCheck browser +i ^Mozilla
+acl referer_regexCheck referer_regex -i .
+acl referer_regexCheck referer_regex +i .
+##if USE_IDENT
+# acl identCheck ident_regex -i alice
+# acl identCheck ident_regex +i bob
+##endif
+##if USE_AUTH
+#auth_param basic program /bin/true
+##BUG: acl users proxy_auth -i alice bob
+#acl users proxy_auth_regex -i alic bob
+#acl users proxy_auth_regex +i aLICe bOb
+##endif
+acl req_mime_typeCheck req_mime_type -i Foo/BAR
+acl req_mime_typeCheck req_mime_type +i foo/bar
+acl req_headerCheck req_header Foo -i foo
+acl req_headerCheck req_header Foo +i Food
+acl rep_mime_typeCheck rep_mime_type -i Foo/BAR
+acl rep_mime_typeCheck rep_mime_type +i foo/bar
+acl rep_headerCheck rep_header Foo -i Foo
+acl rep_headerCheck rep_header Foo +i foo
+##if USE_AUTH
+#acl ext_user_regexCheck ext_user_regex -i AliCe
+#acl ext_user_regexCheck ext_user_regex +i bob
+##endif
+##if USE_OPENSSL
+#acl ssl::server_name_regexCheck ssl::server_name_regex -i example
+#acl ssl::server_name_regexCheck ssl::server_name_regex +i example
+##endif
+
+# max_user_ip requires -s flag
+##if USE_AUTH
+#acl max_user_ipCheck max_user_ip -s 1
+##endif
+
+# note requires the -m[=delimiters] flag
+acl noteCheck note -m foo1
+acl noteCheck note -m=: foo2 bar
+acl noteCheck note -m== foo2 bar
+acl noteCheck note -m=,+-._!@" foo3 bar
+acl noteCheck note -m=",+-._!@" foo4 bar
+acl noteCheck note -m=,+-'"._!@" foo5 bar
+
+# server_cert_fingerprint requires -sha1 flag
+##if USE_OPENSSL
+##BUG: acl server_cert_fingerprintCheck server_cert_fingerprint -sha1 blah
+##endif
+
+# ssl::server_name requires several flags
+#if USE_OPENSSL
+#acl ssl::server_nameCheck ssl::server_name --client-requested example.com
+#acl ssl::server_nameCheck ssl::server_name --server-provided example.com
+#acl ssl::server_nameCheck ssl::server_name --consensus example.com
+#acl ssl::server_nameCheck ssl::server_name --client-requested --server-provided example.com
+#acl ssl::server_nameCheck ssl::server_name --client-requested --consensus example.com
+#acl ssl::server_nameCheck ssl::server_name --client-requested --server-provided --consensus example.com
+#acl ssl::server_nameCheck ssl::server_name --server-provided --client-requested example.com
+#acl ssl::server_nameCheck ssl::server_name --server-provided --consensus example.com
+#acl ssl::server_nameCheck ssl::server_name --consensus --client-requested example.com
+#acl ssl::server_nameCheck ssl::server_name --consensus --server-provided example.com
+##endif
+
+# ALL ACL types require support for "--" flag to stop unwanted flag processing
+acl -dummy src all
+acl all-ofNfCheck all-of -- -dummy
+acl any-ofNfCheck any-of -- -dummy
+acl randomNfCheck random -- 1/1
+acl timeNfCheck time -- -HFS 00:00-23:59
+acl src_asNfCheck src_as -- -1
+acl dstc_asNfCheck dst_as -- -1
+acl browserNfCheck browser -- -name
+acl dstdomainNfCheck dstdomain -- -example.com
+acl dstdom_regexNfCheck dstdom_regex -- -example.com
+acl dstNfCheck dst -- 0.0.0.0
+acl hier_codeNfCheck hier_code -- HIER_DIRECT
+# BUG: hier_code "DIRECT" is documented but not accepted.
+acl rep_headerNfCheck rep_header Foo -- -bar
+acl req_headerNfCheck req_header Foo -- -bar
+acl http_statusNfCheck http_status -- -000
+acl maxconnNfCheck maxconn -- 1
+acl methodNfCheck method -- -FOO
+acl localipNfCheck localip -- 0.0.0.0
+acl localportNfCheck localport -- 0
+acl myportnameNfCheck myportname -- -name
+acl peernameNfCheck peername -- -name
+acl peername_regexNfCheck peername_regex -- -name
+acl protoNfCheck proto -- -HTTP
+acl referer_regexNfCheck referer_regex -- -example.com
+acl rep_mime_typeNfCheck rep_mime_type -- -foo/bar
+acl req_mime_typeNfCheck req_mime_type -- -foo/bar
+acl srcdomainNfCheck srcdomain -- -example.com
+acl srcdom_regexNfCheck srcdom_regex -- -example.com
+acl srcNfCheck src -- 0.0.0.0
+acl url_regexNfCheck url_regex -- -example
+acl urlloginNfCheck urllogin -- -bob
+acl urlpath_regexNfCheck urlpath_regex -- -foo
+acl portNfCheck port -- 0
+external_acl_type -foo %% /bin/true
+acl externalNfCheck external -- -foo
+acl squid_errorNfCheck squid_error -- -blah
+acl connections_encryptedNfCheck connections_encrypted -- -ignored
+acl tagNfCheck tag -- -foo bar
+acl noteNfCheck note -- -foo bar
+acl annotate_clientNfCheck annotate_client -- -foo=bar
+acl annotate_transactionNfCheck annotate_transaction -- -foo=bar
+acl hasNfCheck has -- request
+acl transaction_initiatorNfCheck transaction_initiator -- all
+##if USE_LIBNETFILTERCONNTRACK
+#acl clientside_markNfCheck clientside_mark -- 0x0
+#acl client_connection_markNfCheck client_connection_mark -- 0x0
+##endif
+##if USE_OPENSSL
+#acl ssl_errorNfCheck ssl_error -- certHasExpired
+#acl user_certNfCheck user_cert -- CN -foo
+#acl ca_certNfCheck ca_cert -- CN -foo
+##BUG: acl server_cert_fingerprintNfCheck server_cert_fingerprint -- -sha1 foo
+#acl at_stepNfCheck at_step -- SslBump1
+#acl ssl::server_nameNfCheck ssl::server_name -- -example.com
+#acl ssl::server_name_regexNfCheck ssl::server_name_regex -- -example.com
+##endif
+##if USE_SQUID_EUI
+#acl arpNfCheck arp -- -1
+#acl eui64NfCheck eui64 -- -1
+##endif
+##if USE_IDENT
+#acl identNfCheck ident -- -alice
+#acl ident_regexNfCheck ident_regex -- -bob
+##endif
+#if USE_AUTH
+#acl ext_userNfCheck ext_user -- -alice
+#acl ext_user_regexNfCheck ext_user_regex -- -alice
+#acl proxy_authNfCheck proxy_auth -- -bob
+#acl proxy_auth_regexNfCheck proxy_auth_regex -- -cindy
+#acl max_user_ipNfCheck max_user_ip -- 1
+#endif
+##if USE_ADAPTATION
+#icap_service -dummy reqmod_precache icap://example.com:80/
+#acl adaptation_serviceNfCheck adaptation_service -- -dummy
+##endif
+##if SQUID_SNMP
+#acl snmp_communityNfCheck snmp_community -- -foo
+##endif
+
