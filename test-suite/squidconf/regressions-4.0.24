@@ -35,23 +35,24 @@ acl browserCheck browser +i ^Mozilla
 acl referer_regexCheck referer_regex -i .
 acl referer_regexCheck referer_regex +i .
 ##if USE_IDENT
-# acl identCheck ident_regex -i alice
-# acl identCheck ident_regex +i bob
+#acl identCheck ident_regex -i alice
+#acl identCheck ident_regex +i bob
 ##endif
 ##if USE_AUTH
 #auth_param basic program /bin/true
-##BUG: acl users proxy_auth -i alice bob
-#acl users proxy_auth_regex -i alic bob
-#acl users proxy_auth_regex +i aLICe bOb
+#acl proxy_authCheck proxy_auth -i alice bob
+#acl proxy_authCheck proxy_auth +i alice bob
+#acl proxy_auth_regexCheck proxy_auth_regex -i alic bob
+#acl  proxy_auth_regexCheck proxy_auth_regex +i aLICe bOb
 ##endif
-acl req_mime_typeCheck req_mime_type -i Foo/BAR
-acl req_mime_typeCheck req_mime_type +i foo/bar
-acl req_headerCheck req_header Foo -i foo
-acl req_headerCheck req_header Foo +i Food
-acl rep_mime_typeCheck rep_mime_type -i Foo/BAR
-acl rep_mime_typeCheck rep_mime_type +i foo/bar
-acl rep_headerCheck rep_header Foo -i Foo
-acl rep_headerCheck rep_header Foo +i foo
+#acl req_mime_typeCheck req_mime_type -i Foo/BAR
+#acl req_mime_typeCheck req_mime_type +i foo/bar
+#acl req_headerCheck req_header Foo -i foo
+#acl req_headerCheck req_header Foo +i Food
+#acl rep_mime_typeCheck rep_mime_type -i Foo/BAR
+#acl rep_mime_typeCheck rep_mime_type +i foo/bar
+#acl rep_headerCheck rep_header Foo -i Foo
+#acl rep_headerCheck rep_header Foo +i foo
 ##if USE_AUTH
 #acl ext_user_regexCheck ext_user_regex -i AliCe
 #acl ext_user_regexCheck ext_user_regex +i bob
