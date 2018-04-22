@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# This external  acl helper checks the Kerberos group information without 
-# continues ldap queries by leveraging the kerbors ticket group information 
-# i.e. PAC field 
+# This external  acl helper checks the Kerberos group information without
+# continues ldap queries by leveraging the kerbors ticket group information
+# i.e. PAC field
 #
-# It requires only during startup aldap  query to get the SID for the group name. 
+# It requires only during startup aldap  query to get the SID for the group name.
 #
 # Squid config lines:
 # auth_param negotiate program /opt/squid/sbin/negotiate_wrapper_auth -d --ntlm /usr/bin/ntlm_auth --helper-protocol=squid-2.5-ntlmssp --domain SAMBA.HOME --kerberos /opt/squid/sbin/negotiate_kerberos_auth -d -s GSS_C_NO_NAME -k /etc/squid/squid.keytab -t none
@@ -35,7 +35,7 @@ SID=`ldapsearch -LLL -Ygssapi -H ldap://$DC:389 -s sub -b "BASEDN" "(CN=$GROUPNA
 (>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: SID=$SID")
 
 #
-# Loop over input 
+# Loop over input
 #
 while [ 1 == 1 ] ; do
   read input
