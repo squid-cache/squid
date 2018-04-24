@@ -1077,8 +1077,7 @@ FwdState::connectStart()
             ch.syncAle(request, nullptr);
             retriable = ch.fastCheck().allowed();
         }
-        if (!retriable)
-            cs->notRetriable();
+        cs->setRetriable(retriable);
         //bool bumpThroughPeer = request->flags.sslBumped && serverDestinations[0]->getPeer();
         cs->allowPersistent(pconnRace != raceHappened/* && !bumpThroughPeer*/);
         GetMarkings(request, cs->useTos, cs->useNfmark);

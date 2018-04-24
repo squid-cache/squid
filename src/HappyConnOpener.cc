@@ -12,17 +12,40 @@
 CBDATA_CLASS_INIT(HappyConnOpener);
 
 static PconnPool *fwdPconnPool = new PconnPool("server-peers", NULL);
-std::list<HappyConnOpener::Pointer> HappyConnOpener::WaitingConnectors;
 
 int HappyConnOpener::SpareConnects = 0;
 double HappyConnOpener::LastAttempt = 0;
+
+/// Manages a queue of HappyConnOpeners objects waiting the preconditions
+/// to be satisfied in order to start an attempt for a new spare connection
+class HappyConnQueue {
+public:
+    /// Schedule the next check for starting new connection attempts
+    void scheduleConnectorsListCheck();
+
+    /// Check if the next HappyConnOpener in queue satisfies the preconditions
+    /// to start a new connection attempt
+    void checkForConnectionAttempts();
+
+    /// \return pointer to the first valid connector in queue or nil
+    const HappyConnOpener::Pointer &frontOpener();
+
+    /// Add the HappyConnOpener object to the queue
+    void waitingForConnectionAttempt(HappyConnOpener::Pointer happy);
+
+    /// The list of connectors waiting to start a new spare connection attempt
+    /// when system and current request preconditions satisfied.
+    std::list<HappyConnOpener::Pointer> waitingConnectors;
+};
+
+HappyConnQueue HappyQueue;
 
 std::ostream &operator <<(std::ostream &os, const HappyConnOpener::Answer &answer)
 {
     return os << answer.conn << ", " << answer.ioStatus << ", " << answer.xerrno << ", " << (answer.reused ? "reused" : "new");
 }
 
-HappyConnOpener::HappyConnOpener(const CandidatePaths::Pointer &destinations, const AsyncCall::Pointer &aCall, const time_t fwdStart, int tries) : AsyncJob("HappyConnOpener"), useTos(0), useNfmark(0), callback_(aCall), dests_(destinations), allowPconn_(true), retriable_(true), queueSubscribed_(false), host_(nullptr), fwdStart_(fwdStart), maxTries(tries), n_tries(0)
+HappyConnOpener::HappyConnOpener(const CandidatePaths::Pointer &destinations, const AsyncCall::Pointer &aCall, const time_t fwdStart, int tries) : AsyncJob("HappyConnOpener"), useTos(0), useNfmark(0), callback_(aCall), dests_(destinations), allowPconn_(true), retriable_(true), waitingSpareConnection_(false), host_(nullptr), fwdStart_(fwdStart), maxTries(tries), n_tries(0)
 {
     assert(dynamic_cast<HappyConnOpener::CbDialer *>(callback_->getDialer()));
 }
@@ -107,18 +130,6 @@ HappyConnOpener::noteCandidatePath()
 }
 
 bool
-HappyConnOpener::SpareConnectionAllowedNow()
-{
-    if (Config.happyEyeballs.connect_limit > 0 && HappyConnOpener::SpareConnects >= Config.happyEyeballs.connect_limit)
-        return false;
-
-    if (HappyConnOpener::LastAttempt > current_dtime - (double)Config.happyEyeballs.connect_gap/1000.0)
-        return false;
-
-    return true;
-}
-
-bool
 HappyConnOpener::primaryConnectTooSlow() const
 {
     return (nextAttemptTime <= current_dtime);
@@ -127,7 +138,7 @@ HappyConnOpener::primaryConnectTooSlow() const
 bool
 HappyConnOpener::spareConnectionNeeded() const
 {
-    if (Config.happyEyeballs.connect_limit == 0)
+    if (ConnectLimit() == 0)
         return false; // feature disabled
 
     if (dests_->empty())
@@ -139,7 +150,7 @@ HappyConnOpener::spareConnectionNeeded() const
     if (!primaryConnectTooSlow())
         return false;
 
-    if (!HappyConnOpener::SpareConnectionAllowedNow())
+    if (!SpareConnectionAllowedNow())
         return false;
 
     return (spare.path == nullptr);
@@ -193,11 +204,11 @@ HappyConnOpener::startConnecting(Comm::ConnectionPointer &dest)
     } else {
         spare.path = dest;
         spare.connector = callConnect;
-        HappyConnOpener::SpareConnects++;
+        ++SpareConnects;
     }
 
     nextAttemptTime = current_dtime + (double)Config.happyEyeballs.connect_timeout/1000.0;
-    HappyConnOpener::LastAttempt = current_dtime;
+    LastAttempt = current_dtime;
     AsyncJob::Start(cs);
 }
 
@@ -212,7 +223,7 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     }
 
     if (spare.path != nullptr) {
-        HappyConnOpener::SpareConnects--;
+        --SpareConnects;
         spare.path = nullptr;
         spare.connector = nullptr;
     }
@@ -275,11 +286,12 @@ HappyConnOpener::checkForNewConnection()
     debugs(17, 8, "Check for starting new connection");
     assert(dests_ != nullptr);
 
-    // If it is already in WaitingConnectors queue wait the CheckForConnectionAttempts()
-    // be executed and start new connection if required.
-    // Starting new connection here will alter the this->nextAttemptTime member
-    // which affects the WaitingConnectors ordering.
-    if (queueSubscribed_) {
+    // If it is already waiting stop here even if we need the connection immediately.
+    // Starting new connection will alter the this->nextAttemptTime member
+    // which affects the waiting connectors ordering in HappyQueue.
+    // XXX: check if in the case there is not any connection attempt in the go,
+    // it is better to unregister from HappyQueue and start a connection immediately.
+    if (waitingSpareConnection_) {
         debugs(17, 8, "already subscribed for starting new connection when ready");
         return;
     }
@@ -290,14 +302,15 @@ HappyConnOpener::checkForNewConnection()
             startConnecting(dest);
     }
 
-    if (Config.happyEyeballs.connect_limit == 0)
+    if (ConnectLimit() == 0)
         return; // feature disabled
 
     // Else check to start a monitoring process to start secondary connections
     // if required.
     if (spare.path == nullptr && existCandidatePath()) {
         debugs(17, 8, "Schedule a new attempt for later");
-        ScheduleConnectionAttempt(HappyConnOpener::Pointer(this));
+        HappyQueue.waitingForConnectionAttempt(HappyConnOpener::Pointer(this));
+        waitingSpareConnection_ = true;
     }
 }
 
@@ -339,67 +352,110 @@ HappyConnOpener::ConnectionClosed(const Comm::ConnectionPointer &conn)
     fwdPconnPool->noteUses(fd_table[conn->fd].pconn.uses);
 }
 
-void
-HappyConnOpener::ScheduleConnectorsListCheck()
+bool
+HappyConnOpener::newSpareConnectionAttempt()
 {
-    HappyConnOpener::Pointer he = FrontOpener();
+    if (!SpareConnectionAllowedNow())
+        return false;
+
+    if (!primaryConnectTooSlow())
+        return false;
+
+    waitingSpareConnection_ = false;
+
+    typedef NullaryMemFunT<HappyConnOpener> CbDialer;
+    AsyncCall::Pointer informCall = JobCallback(17, 5, CbDialer, this, HappyConnOpener::checkForNewConnection);
+    ScheduleCallHere(informCall);
+    return true;
+}
+
+bool
+HappyConnOpener::SpareConnectionAllowedNow()
+{
+    int limit = ConnectLimit();
+    if (limit > 0 && SpareConnects >= limit)
+        return false;
+
+    if (LastAttempt > current_dtime - (double)ConnectGap()/1000.0)
+        return false;
+
+    return true;
+}
+
+int
+HappyConnOpener::ConnectGap()
+{
+    if (Config.happyEyeballs.connect_gap < 0) // no explicit configuration
+        return 5; // ms per worker
+
+    // keep opening rate in check despite the lack of SMP sharing
+    return Config.happyEyeballs.connect_gap * Config.workers;
+}
+
+int
+HappyConnOpener::ConnectLimit()
+{
+    if (Config.happyEyeballs.connect_limit <= 0)
+        return Config.happyEyeballs.connect_limit;
+
+    int limit = Config.happyEyeballs.connect_limit / Config.workers;
+    return (limit == 0 ? 1 : limit);
+}
+
+void CheckForConnectionAttempts(void *data)
+{
+    HappyConnQueue *queue = static_cast<HappyConnQueue *>(data);
+    queue->checkForConnectionAttempts();
+}
+
+void
+HappyConnQueue::scheduleConnectorsListCheck()
+{
+    HappyConnOpener::Pointer he = frontOpener();
     if (he.valid()) {
-        double startAfter = he->nextAttemptTime > current_dtime ? he->nextAttemptTime - current_dtime : 0.001;
-        eventAdd("HappyConnOpener::CheckForConnectionAttempts", CheckForConnectionAttempts, NULL, startAfter, false);
+        double startAfter = he->nextAttempt() > current_dtime ? he->nextAttempt() - current_dtime : 0.001;
+        eventAdd("HappyConnQueue::checkForConnectionAttempts", CheckForConnectionAttempts, this, startAfter, false);
     }
 }
 
 void
-HappyConnOpener::ScheduleConnectionAttempt(HappyConnOpener::Pointer happy)
+HappyConnQueue::waitingForConnectionAttempt(HappyConnOpener::Pointer happy)
 {
-    happy->queueSubscribed_ = true;
-    if (WaitingConnectors.empty()) {
-        WaitingConnectors.push_back(happy);
-        ScheduleConnectorsListCheck(); // Restart queue run
+    if (waitingConnectors.empty()) {
+        waitingConnectors.push_back(happy);
+        scheduleConnectorsListCheck(); // Restart queue run
         return;
     }
     // Exist at least one item in list
-    auto it = --WaitingConnectors.end();
-    for (; it != WaitingConnectors.begin(); --it) {
-        if ((*it).valid() && (*it)->nextAttemptTime < happy->nextAttemptTime) {
-            ++it;
-            WaitingConnectors.insert(it, happy);
+    auto it = waitingConnectors.rbegin();
+    for (; it != waitingConnectors.rend(); ++it) {
+        if ((*it).valid() && (*it)->nextAttempt() < happy->nextAttempt()) {
+            waitingConnectors.insert(it.base(), happy);
             return;
         }
     }
-    if ((*it).valid() && (*it)->nextAttemptTime < happy->nextAttemptTime) {
-        ++it;
-        WaitingConnectors.insert(it, happy);
-   } else
-        WaitingConnectors.push_front(happy);
+    waitingConnectors.push_front(happy);
 }
 
 void
-HappyConnOpener::CheckForConnectionAttempts(void *)
+HappyConnQueue::checkForConnectionAttempts()
 {
-    debugs(17, 8, "Queue size: " << WaitingConnectors.size());
+    debugs(17, 8, "Queue size: " << waitingConnectors.size());
 
-    if (SpareConnectionAllowedNow()) {
-        HappyConnOpener::Pointer he = FrontOpener();
-        if (he.valid() && he->primaryConnectTooSlow()) {
-            WaitingConnectors.pop_front();
-            he->queueSubscribed_ = false;
-            typedef NullaryMemFunT<HappyConnOpener> CbDialer;
-            AsyncCall::Pointer informCall = JobCallback(17, 5, CbDialer, he, HappyConnOpener::checkForNewConnection);
-            ScheduleCallHere(informCall);
-        }
-    }
+    HappyConnOpener::Pointer he = frontOpener();
+    if (he.valid() && he->newSpareConnectionAttempt())
+        waitingConnectors.pop_front();
 
-    ScheduleConnectorsListCheck();
+    scheduleConnectorsListCheck();
 }
 
 const HappyConnOpener::Pointer &
-HappyConnOpener::FrontOpener()
+HappyConnQueue::frontOpener()
 {
-    while (!WaitingConnectors.empty()) {
-        if (WaitingConnectors.front().valid())
-            return WaitingConnectors.front();
-        WaitingConnectors.pop_front();
+    while (!waitingConnectors.empty()) {
+        if (waitingConnectors.front().valid())
+            return waitingConnectors.front();
+        waitingConnectors.pop_front();
     }
     static HappyConnOpener::Pointer nil;
     return nil;

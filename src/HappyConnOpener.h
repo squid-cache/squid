@@ -86,10 +86,19 @@ public:
     void allowPersistent(bool p) { allowPconn_ = p; }
 
     /// Whether the opened connection can be used for a retriable request
-    void notRetriable() { retriable_ = false; }
+    void setRetriable(bool retriable) { retriable_ = retriable; }
 
     /// Sets the destination hostname
     void setHost(const char *host);
+
+    double nextAttempt() const { return nextAttemptTime; }
+
+    bool newSpareConnectionAttempt();
+
+    /// True if the system preconditions for starting a new spare connection
+    /// are satisfied. It checks the happy_eyeballs_connect_limit and
+    /// happy_eyeballs_connect_gap configuration parameters.
+    static bool SpareConnectionAllowedNow();
 
     tos_t useTos; ///< The tos to use for opened connection
     nfmark_t useNfmark;///< the nfmark to use for opened connection
@@ -99,24 +108,6 @@ private:
     virtual void start() override;
     virtual bool doneAll() const override;
     virtual void swanSong() override;
-
-    /// Schedule the next check for starting spare connections
-    static void ScheduleConnectorsListCheck();
-
-    /// Run the list of active HappyConnector AsyncJobs and starts spare
-    /// connections if required
-    static void CheckForConnectionAttempts(void *);
-
-    /// \return pointer to the first valid HappyConnOpener AsyncJob or nil
-    static const HappyConnOpener::Pointer &FrontOpener();
-
-    /// Schedule an attempt for a new soare connection
-    static void ScheduleConnectionAttempt(HappyConnOpener::Pointer happy);
-
-    /// True if the system preconditions for starting a new spare connection
-    /// are satisfied. It checks the happy_eyeballs_connect_limit and
-    /// happy_eyeballs_connect_gap configuration parameters.
-    static bool SpareConnectionAllowedNow();
 
     /// Called after HappyConnector asyncJob started to start a master
     /// connection, or after the preconditions for starting a new spare
@@ -152,6 +143,12 @@ private:
     /// Calls the FwdState object back
     void callCallback(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno, bool reused, const char *msg);
 
+    /// The configured connect_gap per worker basis
+    static int ConnectGap();
+
+    /// The configured connect_limit per worker basis
+    static int ConnectLimit();
+
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
 
     /// The list with candidate destinations. Shared with the caller FwdState object.
@@ -167,8 +164,8 @@ private:
     bool allowPconn_; ///< Whether to allow persistent connections
     bool retriable_; ///< Whether to open connection for retriable request
 
-    /// Whether this object is attached to WaitingConnectord list
-    bool queueSubscribed_;
+    /// Whether this object is waiting for a new spare connection attempt
+    bool waitingSpareConnection_;
     const char *host_; ///< The destination hostname
     time_t fwdStart_; ///< When the forwarding of the related request started
     int maxTries; ///< The connector should not exceed the maxTries tries.
@@ -177,13 +174,9 @@ private:
     /// When the next spare connection attempt can be started
     double nextAttemptTime;
 
-    /// The number of spare connections accross all connectors
+     /// The number of spare connections accross all connectors
     static int SpareConnects;
     static double LastAttempt; ///< The time of last spare connection attempt
-
-    /// The list of connectors waiting to start a new spare connection attempt
-    /// when system and current request preconditions satisfied.
-    static std::list<HappyConnOpener::Pointer> WaitingConnectors;
 };
 
 std::ostream &operator <<(std::ostream &os, const HappyConnOpener::Answer &answer);
