@@ -74,12 +74,12 @@ public:
     /// Whether the list is empty
     bool empty() {return paths_.empty();}
 
-    /// Retrieves and remove from list the first path
+    /// Retrieves and remove from list the first path. Throws on empty list
     Comm::ConnectionPointer popFirst();
 
     /// Retrieves and remove from list the first path which is
     /// not in the passed protocol family
-    Comm::ConnectionPointer popFirstNotInFamily(int);
+    Comm::ConnectionPointer popFirstFromDifferentFamily(int);
 
     /// Whether exist a path which is not in given protocol
     /// family

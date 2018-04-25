@@ -67,6 +67,11 @@ public:
 
     typedef CbcPointer<HappyConnOpener> Pointer;
 
+    struct PendingConnection {
+        Comm::ConnectionPointer path;
+        AsyncCall::Pointer connector;
+    };
+
 public:
     /// Pops a connection from connection pool if available. If not
     /// checks the peer stand-by connection pool for available connection.
@@ -109,21 +114,18 @@ private:
     virtual bool doneAll() const override;
     virtual void swanSong() override;
 
-    /// Called after HappyConnector asyncJob started to start a master
-    /// connection, or after the preconditions for starting a new spare
-    /// connection are satisfied.
-    void startConnecting(Comm::ConnectionPointer &);
+    /// Called after HappyConnector asyncJob started to start a connection
+    void startConnecting(PendingConnection &pconn, Comm::ConnectionPointer &);
 
     /// Callback called by Comm::ConnOpener objects after a master or spare
     /// connection attempt completes.
     void connectDone(const CommConnectCbParams &);
 
-    /// If there is not any pending connection return the first available
-    /// candidate path from CandidatePaths  object.
-    /// If there is a pending connection returns the first candidate path
-    /// with different protocol family than the pending connection or nil
+    /// Return the first available candidate path from CandidatePaths  object.
+    /// If the given excludeFamily is not 0 ignore CandidatePaths with
+    /// this protocol family.
     /// The returned candidate path removed from CandidatePaths object.
-    Comm::ConnectionPointer getCandidatePath();
+    Comm::ConnectionPointer getCandidatePath(int excludeFamily);
 
     /// \return true if there any candidate path, to try a master or spare
     /// connection.
@@ -134,7 +136,9 @@ private:
     void checkForNewConnection();
 
     /// True if preconditions to start a spare connection are satisfied.
-    bool spareConnectionNeeded() const;
+    bool spareConnectionPreconditions() const;
+
+    bool spareConnectionsAllowed() const {return (ConnectLimit() != 0);}
 
     ///< \return true if the happy_eyeballs_connect_timeout precondition
     /// satisfied
@@ -154,10 +158,6 @@ private:
     /// The list with candidate destinations. Shared with the caller FwdState object.
     CandidatePathsPointer dests_;
 
-    struct PendingConnection {
-        Comm::ConnectionPointer path;
-        AsyncCall::Pointer connector;
-    };
     PendingConnection master; ///< Master pending connection
     PendingConnection spare;  ///< Spare pending connection
 

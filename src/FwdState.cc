@@ -122,16 +122,15 @@ CandidatePaths::newPath(const Comm::ConnectionPointer &path)
 Comm::ConnectionPointer
 CandidatePaths::popFirst()
 {
+    Must(!empty());
     Comm::ConnectionPointer path;
-    if (!paths_.empty()) {
-        path = paths_[0];
-        paths_.erase(paths_.begin());
-    }
+    path = paths_[0];
+    paths_.erase(paths_.begin());
     return path;
 }
 
 Comm::ConnectionPointer
-CandidatePaths::popFirstNotInFamily(int family)
+CandidatePaths::popFirstFromDifferentFamily(int family)
 {
     Comm::ConnectionPointer path;
     auto it = std::find_if(paths_.begin(), paths_.end(), [family](const Comm::ConnectionPointer &c) {return family != ConnectionFamily(c);});
@@ -243,9 +242,9 @@ FwdState::stopAndDestroy(const char *reason)
 {
     // The following should removed after
     // The dependency FwdState/HappyConnOpener solved
-    if (calls.connector != NULL) {
+    if (calls.connector) {
         calls.connector->cancel("FwdState destructed");
-        calls.connector = NULL;
+        calls.connector = nullptr;
         connOpener = nullptr;
     }
 
@@ -514,8 +513,8 @@ FwdState::fail(ErrorState * errorState)
     if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
         // we should retry the same destination if it failed due to pconn race
-        assert(serverConn != nullptr);
-        assert(destinations_ != nullptr);
+        assert(serverConn);
+        assert(destinations_);
         debugs(17, 4, "retrying the same destination");
         destinations_->retryPath(serverConn);
         pconnRace = raceHappened;
@@ -673,7 +672,7 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     // if all of them fail, forwarding as whole will fail
     Must(!selectionError); // finding at least one path means selection succeeded
 
-    Must(destinations_ != nullptr);
+    Must(destinations_);
     destinations_->destinationsFinalized = true;
 
     if (connOpener.valid()) {
@@ -1053,7 +1052,7 @@ FwdState::connectStart()
     debugs(17, 3, HERE << entry->url());
 
     assert(!calls.connector); // Must not called if we are waiting for connection
-    assert(connOpener == nullptr);
+    assert(!connOpener);
 
     if (hasCandidatePath()) {
         // Ditch error page if it was created before.

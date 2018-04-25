@@ -83,19 +83,19 @@ void
 HappyConnOpener::swanSong()
 {
     debugs(17,5, "HappyConnOpener::swanSong: Job finished, cleanup");
-    if (callback_ != nullptr) {
+    if (callback_) {
         callCallback(nullptr, Comm::ERR_CONNECT, 0, false, "unexpected end");
     }
 
-    if (master.path != nullptr) {
-        if (master.connector != nullptr)
+    if (master.path) {
+        if (master.connector)
             master.connector->cancel("HappyConnOpener object destructed");
         master.connector = nullptr;
         master.path = nullptr;
     }
 
-    if (spare.path == nullptr) {
-        if (spare.connector != nullptr)
+    if (!spare.path) {
+        if (spare.connector)
             spare.connector->cancel("HappyConnOpener object destructed");
         spare.connector = nullptr;
         spare.path = nullptr;
@@ -124,7 +124,7 @@ HappyConnOpener::callCallback(const Comm::ConnectionPointer &conn, Comm::Flag er
 void
 HappyConnOpener::noteCandidatePath()
 {
-    assert(dests_ != nullptr);
+    assert(dests_);
     debugs(17, 8, "New candidate path from caller, number of destinations " << dests_->size());
     checkForNewConnection();
 }
@@ -136,13 +136,9 @@ HappyConnOpener::primaryConnectTooSlow() const
 }
 
 bool
-HappyConnOpener::spareConnectionNeeded() const
+HappyConnOpener::spareConnectionPreconditions() const
 {
-    if (ConnectLimit() == 0)
-        return false; // feature disabled
-
-    if (dests_->empty())
-        return false;
+    assert(spare.path == nullptr);
 
     if (n_tries >= maxTries)
         return false;
@@ -153,14 +149,14 @@ HappyConnOpener::spareConnectionNeeded() const
     if (!SpareConnectionAllowedNow())
         return false;
 
-    return (spare.path == nullptr);
+    return true;
 }
 
 void
-HappyConnOpener::startConnecting(Comm::ConnectionPointer &dest)
+HappyConnOpener::startConnecting(PendingConnection &pconn, Comm::ConnectionPointer &dest)
 {
-    assert(spare.path == nullptr);
-    assert(spare.connector == nullptr);
+    assert(!spare.path);
+    assert(!spare.connector);
     // Use pconn to avoid opening a new connection.
     Comm::ConnectionPointer temp;
     if (allowPconn_)
@@ -170,11 +166,7 @@ HappyConnOpener::startConnecting(Comm::ConnectionPointer &dest)
 
     // if we found an open persistent connection to use. use it.
     if (openedPconn) {
-        if (master.path == nullptr)
-            master.path = temp;
-        else
-            spare.path = temp;
-
+        pconn.path = temp;
         ++n_tries;
         callCallback(temp, Comm::OK, 0, true, "reusing pconn");
         return;
@@ -198,14 +190,10 @@ HappyConnOpener::startConnecting(Comm::ConnectionPointer &dest)
     if (!dest->getPeer())
         cs->setHost(host_);
 
-    if (master.path == nullptr) {
-        master.path = dest;
-        master.connector = callConnect;
-    } else {
-        spare.path = dest;
-        spare.connector = callConnect;
-        ++SpareConnects;
-    }
+        pconn.path = dest;
+        pconn.connector = callConnect;
+        if (&pconn == &spare) // this is a spare connection
+            ++SpareConnects;
 
     nextAttemptTime = current_dtime + (double)Config.happyEyeballs.connect_timeout/1000.0;
     LastAttempt = current_dtime;
@@ -222,7 +210,7 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
         assert(spare.path == params.conn);
     }
 
-    if (spare.path != nullptr) {
+    if (spare.path) {
         --SpareConnects;
         spare.path = nullptr;
         spare.connector = nullptr;
@@ -244,7 +232,7 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
 
     debugs(17, 8, "Connections to " << params.conn << " succeed");
     if (master.path) {
-        Must(master.connector != nullptr);
+        Must(master.connector);
         master.connector->cancel("Already connected");
         master.connector = nullptr;
         master.path = nullptr;
@@ -255,28 +243,25 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
 }
 
 Comm::ConnectionPointer
-HappyConnOpener::getCandidatePath()
+HappyConnOpener::getCandidatePath(int excludeFamily)
 {
     if (dests_->empty())
         return Comm::ConnectionPointer();
 
-    // if there is not any pending connection just get the first available destination
-    if (master.path == nullptr)
+    // if no excludeFamily given, just get the first available destination
+    if (!excludeFamily)
         return dests_->popFirst();
 
-    // Check if there is available destination with different protocol
-    // than the last connector
-    int lastConnectionFamily = CandidatePaths::ConnectionFamily(master.path);
-    return dests_->popFirstNotInFamily(lastConnectionFamily);
+    return dests_->popFirstFromDifferentFamily(excludeFamily);
 }
 
 bool
 HappyConnOpener::existCandidatePath()
 {
-    if (master.path == nullptr)
+    if (!master.path)
         return !dests_->empty();
 
-    int lastConnectionFamily = CandidatePaths::ConnectionFamily(master.path);
+    const auto lastConnectionFamily = CandidatePaths::ConnectionFamily(master.path);
     return dests_->existPathNotInFamily(lastConnectionFamily);
 }
 
@@ -284,7 +269,7 @@ void
 HappyConnOpener::checkForNewConnection()
 {
     debugs(17, 8, "Check for starting new connection");
-    assert(dests_ != nullptr);
+    assert(dests_);
 
     // If it is already waiting stop here even if we need the connection immediately.
     // Starting new connection will alter the this->nextAttemptTime member
@@ -296,18 +281,34 @@ HappyConnOpener::checkForNewConnection()
         return;
     }
 
-    if (master.path == nullptr || spareConnectionNeeded()) {
-        Comm::ConnectionPointer dest = getCandidatePath();
-        if (dest != nullptr)
-            startConnecting(dest);
+    if (spare.path) {
+        Must(master.path);
+        debugs(17, 8, "master and spare connections are pending");
+        return;
     }
 
-    if (ConnectLimit() == 0)
-        return; // feature disabled
+    if (!master.path) {
+        Comm::ConnectionPointer dest = getCandidatePath(0);
+        if (!dest)
+            return; // wait for more destinations
+        startConnecting(master, dest);
+    }
+
+    if (!spareConnectionsAllowed()) {
+        debugs(17, 8, "Spare connections are disabled");
+        return;
+    }
+
+    if (spareConnectionPreconditions()) {
+        Comm::ConnectionPointer dest = getCandidatePath(CandidatePaths::ConnectionFamily(master.path));
+        if (!dest)
+            return;// wait for more destinations
+        startConnecting(spare, dest);
+    }
 
     // Else check to start a monitoring process to start secondary connections
     // if required.
-    if (spare.path == nullptr && existCandidatePath()) {
+    if (existCandidatePath()) {
         debugs(17, 8, "Schedule a new attempt for later");
         HappyQueue.waitingForConnectionAttempt(HappyConnOpener::Pointer(this));
         waitingSpareConnection_ = true;
@@ -373,7 +374,7 @@ bool
 HappyConnOpener::SpareConnectionAllowedNow()
 {
     int limit = ConnectLimit();
-    if (limit > 0 && SpareConnects >= limit)
+    if (limit >= 0 && SpareConnects >= limit)
         return false;
 
     if (LastAttempt > current_dtime - (double)ConnectGap()/1000.0)
@@ -413,7 +414,7 @@ HappyConnQueue::scheduleConnectorsListCheck()
 {
     HappyConnOpener::Pointer he = frontOpener();
     if (he.valid()) {
-        double startAfter = he->nextAttempt() > current_dtime ? he->nextAttempt() - current_dtime : 0.001;
+        double startAfter = he->nextAttempt() > current_dtime ? he->nextAttempt() - current_dtime : 0.000;
         eventAdd("HappyConnQueue::checkForConnectionAttempts", CheckForConnectionAttempts, this, startAfter, false);
     }
 }
