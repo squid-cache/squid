@@ -301,9 +301,9 @@ HappyConnOpener::checkForNewConnection()
 
     if (spareConnectionPreconditions()) {
         Comm::ConnectionPointer dest = getCandidatePath(CandidatePaths::ConnectionFamily(master.path));
-        if (!dest)
-            return;// wait for more destinations
-        startConnecting(spare, dest);
+        if (dest)
+            startConnecting(spare, dest);
+        return;
     }
 
     // Else check to start a monitoring process to start secondary connections
