@@ -74,8 +74,11 @@ CommandLine::hasOption(const int optIdToFind, const char **optValue) const
     int optId = 0;
     while (nextOption(optId)) {
         if (optId == optIdToFind) {
-            if (optValue)
+            if (optValue) {
+                // do not need to copy the optarg string because it is a pointer into the original
+                // argv array (https://www.gnu.org/software/libc/manual/html_node/Using-Getopt.html)
                 *optValue = optarg;
+            }
             return true;
         }
     }
@@ -130,7 +133,8 @@ LongOption::LongOption() :
 {
 }
 
-LongOption::LongOption(const RawLongOption &opt)
+LongOption::LongOption(const RawLongOption &opt) :
+    option({nullptr, 0, nullptr, 0})
 {
     copy(opt);
 }
@@ -148,16 +152,15 @@ LongOption::~LongOption()
 LongOption &
 LongOption::operator =(const LongOption &opt)
 {
-    if (this != &opt) {
-        xfree(name);
+    if (this != &opt)
         copy(static_cast<const RawLongOption &>(opt));
-    }
     return *this;
 }
 
 void
 LongOption::copy(const RawLongOption &opt)
 {
+    xfree(name);
     name = opt.name ? xstrdup(opt.name) : nullptr;
     has_arg = opt.has_arg;
     flag = opt.flag;

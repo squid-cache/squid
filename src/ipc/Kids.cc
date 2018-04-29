@@ -16,7 +16,7 @@
 #include "tools.h"
 
 Kids TheKids;
-KidName TheKidName;
+SBuf TheKidName;
 
 Kids::Kids()
 {
