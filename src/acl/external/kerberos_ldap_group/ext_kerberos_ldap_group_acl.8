@@ -7,7 +7,7 @@ Version 1.3.0sq
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B ext_kerberos_ldap_group_acl
-.if !'po4a'hide' .B [\-h] [\-d] [\-i] [\-s] [\-a] [\-D Realm ] [\-N Netbios\-Realm\-List] [\-m Max\-Depth] [\-u Ldap\-User] [\-p Ldap\-Password] [\-b Ldap\-Bind\-Path] [\-l Ldap\-URL] [\-S ldap server list] \-g Group\-Realm\-List \-t  Hex\-Group\-Realm\-List \-T Hex\-Group\-Hex\-Realm\-List 
+.if !'po4a'hide' .B [\-h] [\-d] [\-i] [\-s] [\-a] [\-D Realm ] [\-N Netbios\-Realm\-List] [\-P service principal name] [\-m Max\-Depth] [\-u Ldap\-User] [\-p Ldap\-Password] [\-b Ldap\-Bind\-Path] [\-l Ldap\-URL] [\-S ldap server list] \-g Group\-Realm\-List \-t  Hex\-Group\-Realm\-List \-T Hex\-Group\-Hex\-Realm\-List
 .
 .SH DESCRIPTION
 .B ext_kerberos_ldap_group_acl
@@ -89,6 +89,8 @@ information (e.g. for users using basic authentication).
 A list of Netbios name mappings to Kerberos domain names of the form 
 Netbios\-Name@Kerberos\-Realm[:Netbios\-Name@Kerberos\-Realm] (e.g. for users 
 using NTLM authentication).
+.if !'po4a'hide' .B \-P service principal name
+The principal name in the keytab to use. Avoids automated selection of name.
 .if !'po4a'hide' .TP 12
 .if !'po4a'hide' .B \-m Max\-Depth
 Maximal depth of recursive group search.
