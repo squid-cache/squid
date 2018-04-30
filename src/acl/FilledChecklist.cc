@@ -121,7 +121,7 @@ ACLFilledChecklist::verifyAle() const
 
 #if USE_IDENT
     if (*rfc931 && !al->cache.rfc931) {
-            showDebugWarning("IDENT");
+        showDebugWarning("IDENT");
         al->cache.rfc931 = xstrdup(rfc931);
     }
 #endif

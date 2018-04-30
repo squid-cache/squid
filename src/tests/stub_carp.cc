@@ -15,5 +15,5 @@ class CachePeer;
 class PeerSelector;
 
 void carpInit(void) STUB
-CachePeer *carpSelectParent(PeerSelector *ps) STUB_RETVAL(NULL)
+CachePeer *carpSelectParent(PeerSelector *ps) STUB_RETVAL(nullptr)
 
