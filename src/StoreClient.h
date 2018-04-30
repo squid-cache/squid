@@ -30,9 +30,12 @@ public:
     // still blocking. A lot more is needed to support async callbacks.
     /// Handle a StoreEntry::getPublic*() result.
     /// An isNull() entry indicates a cache miss.
-    virtual void created(StoreEntry *);
+    virtual void created(StoreEntry *) = 0;
     /// whether the StoreEntry, passed to created(), was collapsed
     const CollapsedStats &collapsed() const { return collapsedStats; }
+
+    /// how many times this client was collapsed
+    CollapsedStats collapsedStats;
 
 protected:
     /// configure the ACL checklist with the current transaction state
@@ -47,8 +50,6 @@ protected:
     bool mayCollapseOn(const StoreEntry &initiatorEntry) const;
     /// whether Squid configuration allows collapsing for this transaction
     bool onCollapsingPath() const;
-    /// how many times this client was collapsed
-    CollapsedStats collapsedStats;
 };
 
 #if USE_DELAY_POOLS

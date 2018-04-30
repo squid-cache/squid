@@ -939,7 +939,6 @@ htcpSpecifier::checkHit()
 void
 htcpSpecifier::created(StoreEntry *e)
 {
-    StoreClient::created(e);
     StoreEntry *hit = nullptr;
 
     if (!e || e->isNull()) {

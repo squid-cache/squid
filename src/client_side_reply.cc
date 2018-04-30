@@ -936,7 +936,6 @@ clientReplyContext::purgeAllCached()
 void
 clientReplyContext::created(StoreEntry *newEntry)
 {
-    StoreClient::created(newEntry);
     if (lookingforstore == 1)
         purgeFoundGet(newEntry);
     else if (lookingforstore == 2)

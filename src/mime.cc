@@ -361,7 +361,6 @@ MimeIcon::load()
 void
 MimeIcon::created(StoreEntry *newEntry)
 {
-    StoreClient::created(newEntry);
     /* if the icon is already in the store, do nothing */
     if (!newEntry->isNull())
         return;

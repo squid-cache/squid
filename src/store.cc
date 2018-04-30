@@ -502,9 +502,9 @@ StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * reque
     StoreEntry *result = storeGetPublicByRequestMethod( request, method);
 
     if (!result)
-        aClient->created (NullStoreEntry::getInstance());
-    else
-        aClient->created (result);
+        result = NullStoreEntry::getInstance();
+
+    result->callCreated(aClient);
 }
 
 void
@@ -516,7 +516,7 @@ StoreEntry::getPublicByRequest (StoreClient *aClient, HttpRequest * request)
     if (!result)
         result = NullStoreEntry::getInstance();
 
-    aClient->created (result);
+    result->callCreated(aClient);
 }
 
 void
@@ -528,7 +528,7 @@ StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestM
     if (!result)
         result = NullStoreEntry::getInstance();
 
-    aClient->created (result);
+    result->callCreated(aClient);
 }
 
 StoreEntry *
@@ -2080,18 +2080,16 @@ StoreEntry::collapsingInitiator() const
            (hasTransients() && !hasMemStore() && !hasDisk());
 }
 
-bool
-StoreEntry::collapsed() const
+void
+StoreEntry::callCreated(StoreClient *sc)
 {
-    if (!Config.onoff.collapsed_forwarding)
-        return false;
-    if (isNull())
-        return false;
-    if (!publicKey())
-        return false;
-    const bool empty = isEmpty();
-    assert(!empty || (empty && collapsingInitiator()));
-    return empty;
+    if (Config.onoff.collapsed_forwarding && !isNull() && publicKey()) {
+        const bool collapsed = isEmpty();
+        assert(!collapsed || (collapsed && collapsingInitiator()));
+        if (collapsed)
+            sc->collapsedStats.collapsed++;
+    }
+    sc->created(this);
 }
 
 static std::ostream &

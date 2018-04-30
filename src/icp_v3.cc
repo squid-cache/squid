@@ -63,7 +63,6 @@ ICP3State::~ICP3State()
 void
 ICP3State::created(StoreEntry *e)
 {
-    StoreClient::created(e);
     debugs(12, 5, "icpHandleIcpV3: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 

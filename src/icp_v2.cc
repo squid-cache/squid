@@ -192,7 +192,6 @@ ICP2State::~ICP2State()
 void
 ICP2State::created(StoreEntry *e)
 {
-    StoreClient::created(e);
     debugs(12, 5, "icpHandleIcpV2: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 
