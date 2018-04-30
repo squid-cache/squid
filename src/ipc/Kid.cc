@@ -20,22 +20,13 @@
 
 int TheProcessKind = pkOther;
 
-Kid::Kid():
-    badFailures(0),
-    pid(-1),
-    startTime(0),
-    isRunning(false),
-    status(0)
+Kid::Kid()
 {
 }
 
-Kid::Kid(const String& kid_name):
-    theName(kid_name),
-    badFailures(0),
-    pid(-1),
-    startTime(0),
-    isRunning(false),
-    status(0)
+Kid::Kid(const char *aRole, const int anId):
+    processRole(aRole),
+    processId(anId)
 {
 }
 
@@ -77,20 +68,20 @@ Kid::reportStopped() const
     if (calledExit()) {
         syslog(LOG_NOTICE,
                "Squid Parent: %s process %d exited with status %d",
-               theName.termedBuf(), pid, exitStatus());
+               gist().c_str(), pid, exitStatus());
     } else if (signaled()) {
         syslog(LOG_NOTICE,
                "Squid Parent: %s process %d exited due to signal %d with status %d",
-               theName.termedBuf(), pid, termSignal(), exitStatus());
+               gist().c_str(), pid, termSignal(), exitStatus());
     } else {
         syslog(LOG_NOTICE, "Squid Parent: %s process %d exited",
-               theName.termedBuf(), pid);
+               gist().c_str(), pid);
     }
 
     if (hopeless() && Config.hopelessKidRevivalDelay) {
         syslog(LOG_NOTICE, "Squid Parent: %s process %d will not be restarted for %ld "
                "seconds due to repeated, frequent failures",
-               theName.termedBuf(),
+               gist().c_str(),
                pid,
                static_cast<long int>(Config.hopelessKidRevivalDelay));
     }
@@ -170,9 +161,19 @@ bool Kid::signaled(int sgnl) const
 }
 
 /// returns kid name
-const String& Kid::name() const
+SBuf Kid::processName() const
 {
-    return theName;
+    SBuf name("(");
+    name.append(gist());
+    name.append(")");
+    return name;
+}
+
+SBuf Kid::gist() const
+{
+    SBuf name(processRole);
+    name.appendf("-%d", processId);
+    return name;
 }
 
 time_t
