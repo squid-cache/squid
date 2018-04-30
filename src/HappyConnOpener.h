@@ -96,18 +96,32 @@ public:
     /// Sets the destination hostname
     void setHost(const char *host);
 
-    double nextAttempt() const { return nextAttemptTime; }
+    /// The time period after which the next spare connection can be started
+    /// It takes in account the happy_eyeballs_connect_gap and the
+    /// happy_eyeballs_connect_timeout.
+    double spareMayStartAfter() const;
 
-    bool newSpareConnectionAttempt();
+    /// Start openning a master connection.
+    /// Returns true on success false if candidate paths are not available.
+    bool startMasterConnection();
 
-    /// True if the system preconditions for starting a new spare connection
-    /// are satisfied. It checks the happy_eyeballs_connect_limit and
-    /// happy_eyeballs_connect_gap configuration parameters.
-    static bool SpareConnectionAllowedNow();
+    /// Start openning a spare connection.
+    /// Returns true on success false if candidate paths are not available.
+    bool startSpareConnection();
+
+    void stopWaiting() {waitingSpareConnection_ = false;}
 
     tos_t useTos; ///< The tos to use for opened connection
     nfmark_t useNfmark;///< the nfmark to use for opened connection
 
+    /// Flag which is set to true if the last try to start a spare
+    /// connection failed because candidate paths are not available.
+    /// This flag is cleared (set to false), before a new spare
+    /// connection try is scheduled.
+    bool rang;
+
+    /// The number of spare connections accross all connectors
+    static int SpareConnects;
 private:
     // AsyncJob API
     virtual void start() override;
@@ -135,9 +149,6 @@ private:
     /// or schedules a connection attempt for later.
     void checkForNewConnection();
 
-    /// True if preconditions to start a spare connection are satisfied.
-    bool spareConnectionPreconditions() const;
-
     bool spareConnectionsAllowed() const {return (ConnectLimit() != 0);}
 
     ///< \return true if the happy_eyeballs_connect_timeout precondition
@@ -152,6 +163,11 @@ private:
 
     /// The configured connect_limit per worker basis
     static int ConnectLimit();
+
+    /// True if the system preconditions for starting a new spare connection
+    /// are satisfied. It checks the happy_eyeballs_connect_limit and
+    /// happy_eyeballs_connect_gap configuration parameters.
+    static bool SpareConnectionAllowedNow();
 
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
 
@@ -174,8 +190,6 @@ private:
     /// When the next spare connection attempt can be started
     double nextAttemptTime;
 
-     /// The number of spare connections accross all connectors
-    static int SpareConnects;
     static double LastAttempt; ///< The time of last spare connection attempt
 };
 
