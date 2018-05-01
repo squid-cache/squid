@@ -43,7 +43,9 @@ void LogConfig::parseFormats() STUB
 LogConfig TheConfig;
 }
 
-//#include "log/CustomLog.h"
+#include "log/CustomLog.h"
+bool CustomLog::usesDaemon() const STUB_RETVAL(false)
+
 #include "log/File.h"
 CBDATA_CLASS_INIT(Logfile);
 Logfile::Logfile(const char *) {STUB}
