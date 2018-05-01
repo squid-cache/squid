@@ -7,5 +7,12 @@
  */
 
 #include "squid.h"
-#include "CustomLog.h"
+#include "log/CustomLog.h"
+#include "log/File.h"
+
+bool
+CustomLog::usesDaemon() const
+{
+    return (filename && strncmp(filename, "daemon:", 7) == 0);
+}
 
