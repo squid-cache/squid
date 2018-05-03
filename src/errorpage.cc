@@ -955,8 +955,8 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     case 'R':
         if (building_deny_info_url) {
             if (request != NULL) {
-                SBuf tmp = request->url.path();
-                p = tmp.c_str();
+                const SBuf &tmp = request->url.path();
+                mb.append(tmp.rawContent(), tmp.length());
                 no_urlescape = 1;
             } else
                 p = "[no request]";
