@@ -47,3 +47,4 @@ public:
 std::ostream &operator <<(std::ostream &os, const Ip::NfMarkConfig connmark);
 
 #endif // SQUID_NFMARKCONFIG_H
+
