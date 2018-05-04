@@ -39,8 +39,8 @@ SID=`ldapsearch -LLL -Ygssapi -H ldap://$DC:389 -s sub -b "BASEDN" "(CN=$GROUPNA
 while read input 
 do
   found=0
-  user=`echo $input | awk '{ print $1 }'`
-  groups=`echo $input | awk '{ print $2 }'`
+  user=`echo $input | awk '{ sub(/user=/,""); print $1 }'`
+  groups=`echo $input | awk '{ sub(/group=/,""); print $2 }'`
   (>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: user=$user")
   (>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: groups=$groups")
   if [ -n "$groups" ]; then
