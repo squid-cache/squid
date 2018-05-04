@@ -31,8 +31,6 @@ public:
     /// Handle a StoreEntry::getPublic*() result.
     /// An isNull() entry indicates a cache miss.
     virtual void created(StoreEntry *) = 0;
-    /// whether the StoreEntry, passed to created(), was collapsed
-    const CollapsedStats &collapsed() const { return collapsedStats; }
 
     /// how many times this client was collapsed
     CollapsedStats collapsedStats;

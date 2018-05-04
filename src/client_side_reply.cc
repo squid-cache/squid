@@ -1831,7 +1831,7 @@ clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
         }
 
         /* continue forwarding, not finished yet. */
-        http->logType.update(LOG_TCP_MISS, context->collapsed());
+        http->logType.update(LOG_TCP_MISS, context->collapsedStats);
 
         context->doGetMoreData();
     } else
