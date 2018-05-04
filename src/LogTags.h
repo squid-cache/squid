@@ -54,7 +54,7 @@ public:
     explicit LogTags(const LogTags_ot t, const CollapsedStats &stats = CollapsedStats());
 
     // XXX: does not reset flags
-    void assign(const LogTags_ot &t, const CollapsedStats &stats);
+    void update(const LogTags_ot &t, const CollapsedStats &stats);
 
     /// compute the status access.log field
     const char *c_str() const;

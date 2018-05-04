@@ -451,7 +451,7 @@ TunnelStateData::informUserOfPeerError(const char *errMsg, const size_t sz)
     server.len = 0;
 
     if (logTag_ptr)
-        logTag_ptr->assign(LOG_TCP_TUNNEL, CollapsedStats());
+        logTag_ptr->update(LOG_TCP_TUNNEL, CollapsedStats());
 
     if (!clientExpectsConnectResponse()) {
         // closing the connection is the best we can do here
@@ -880,7 +880,7 @@ tunnelStartShoveling(TunnelStateData *tunnelState)
     assert(!tunnelState->waitingForConnectExchange());
     *tunnelState->status_ptr = Http::scOkay;
     if (tunnelState->logTag_ptr)
-        tunnelState->logTag_ptr->assign(LOG_TCP_TUNNEL, CollapsedStats());
+        tunnelState->logTag_ptr->update(LOG_TCP_TUNNEL, CollapsedStats());
     if (cbdataReferenceValid(tunnelState)) {
 
         // Shovel any payload already pushed into reply buffer by the server response

@@ -41,11 +41,11 @@ const char * LogTags::Str_[] = {
 
 LogTags::LogTags(const LogTags_ot t, const CollapsedStats &stats)
 {
-    assign(t, stats);
+    update(t, stats);
 }
 
 void
-LogTags::assign(const LogTags_ot &t, const CollapsedStats &stats)
+LogTags::update(const LogTags_ot &t, const CollapsedStats &stats)
 {
     assert(t < LOG_TYPE_MAX);
     oldType = t;
