@@ -128,7 +128,7 @@ public:
     class CacheDetails
     {
     public:
-        CacheDetails() : code(LOG_TAG_NONE) {
+        CacheDetails() {
             caddr.setNoAddr();
             memset(&start_time, 0, sizeof(start_time));
             memset(&trTime, 0, sizeof(start_time));

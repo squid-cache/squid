@@ -152,7 +152,6 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     uri(NULL),
     log_uri(NULL),
     req_sz(0),
-    logType(LOG_TAG_NONE),
     calloutContext(NULL),
     maxReplyBodySize_(0),
     entry_(NULL),

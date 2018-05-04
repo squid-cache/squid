@@ -13,7 +13,6 @@
 #include "SquidTime.h"
 
 Adaptation::Icap::History::History():
-    logType(LOG_TAG_NONE),
     req_sz(0),
     concurrencyLevel(0)
 {

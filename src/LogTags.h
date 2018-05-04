@@ -51,6 +51,7 @@ typedef enum {
 class LogTags
 {
 public:
+    LogTags() = default;
     explicit LogTags(const LogTags_ot t, const CollapsedStats &stats = CollapsedStats());
 
     void update(const LogTags_ot &t, const CollapsedStats &stats);
@@ -79,8 +80,8 @@ private:
 
 public: // XXX: only until client_db.cc stats are redesigned.
 
-    // deprecated LogTag enum value
-    LogTags_ot oldType;
+    /// a set of client protocol, cache use, and other transaction outcome tags
+    LogTags_ot oldType = LOG_TAG_NONE;
     /// controls COLLAPSED tag presence
     CollapsedStats collapsedStats;
 };

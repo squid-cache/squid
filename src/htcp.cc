@@ -965,7 +965,7 @@ void
 htcpSpecifier::fillChecklist(ACLFilledChecklist &checklist) const
 {
     checklist.setRequest(request.getRaw());
-    htcpSyncAle(al, from, dhdr->opcode, LogTags(LOG_TAG_NONE), uri);
+    htcpSyncAle(al, from, dhdr->opcode, LogTags(), uri);
     checklist.al = al;
 }
 

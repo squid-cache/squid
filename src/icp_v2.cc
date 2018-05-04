@@ -162,7 +162,7 @@ void
 ICPState::fillChecklist(ACLFilledChecklist &checklist) const
 {
     checklist.setRequest(request);
-    icpSyncAle(al, from, LogTags(LOG_TAG_NONE), url, 0, 0);
+    icpSyncAle(al, from, LogTags(), url, 0, 0);
     checklist.al = al;
 }
 
