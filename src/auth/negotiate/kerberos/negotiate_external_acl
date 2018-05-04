@@ -36,7 +36,7 @@ SID=`ldapsearch -LLL -Ygssapi -H ldap://$DC:389 -s sub -b "BASEDN" "(CN=$GROUPNA
 #
 # Read from STDIN as a series of lines into 'input'."
 #
-while read input 
+while read input
 do
   found=0
   user=`echo $input | awk '{ sub(/user=/,""); print $1 }'`
