@@ -2863,7 +2863,7 @@ SQUID_DEFAULT_INCLUDES
 #endif
 )
 
-dnl *BSD dont include the dependencies for all their net/ and netinet/ files
+dnl *BSD do not include the dependencies for all their net/ and netinet/ files
 dnl We must include a few basic type headers for them to work.
 AC_CHECK_HEADERS( \
   net/if.h \

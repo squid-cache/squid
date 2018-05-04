@@ -20,7 +20,7 @@
 #include <cerrno>
 
 /* START Legacy includes pattern */
-/* TODO: clean this up so we dont have per-OS requirements.
+/* TODO: clean this up so we do not have per-OS requirements.
          The files are checked for existence individually
          and can be wrapped
  */

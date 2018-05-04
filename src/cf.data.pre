@@ -5636,7 +5636,7 @@ DOC_START
 		The default is to use HTTP request URL as the store ID.
 
 	  BH
-		An internal error occured in the helper, preventing
+		An internal error occurred in the helper, preventing
 		a result being identified.
 
 	In addition to the above kv-pairs Squid also understands the following

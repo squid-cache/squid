@@ -35,7 +35,7 @@
 #include "ssl/support.h"
 #endif
 
-/// url maximum lengh + extra informations passed to redirector
+/// url maximum length + extra informations passed to redirector
 #define MAX_REDIRECTOR_REQUEST_STRLEN (MAX_URL + 1024)
 
 class RedirectStateData

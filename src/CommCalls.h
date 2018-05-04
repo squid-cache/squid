@@ -17,7 +17,7 @@
 
 /* CommCalls implement AsyncCall interface for comm_* callbacks.
  * The classes cover two call dialer kinds:
- *     - A C-style call using a function pointer (depricated);
+ *     - A C-style call using a function pointer (deprecated);
  *     - A C++-style call to an AsyncJob child.
  * and several comm_* callback kinds:
  *     - accept (IOACB)
