@@ -288,8 +288,6 @@ protected:
     void transientsAbandonmentCheck();
     /// does nothing except throwing if disk-associated data members are inconsistent
     void checkDisk() const;
-    /// adjusts the client after getPublic*()
-    void callCreated(StoreClient *);
 
 private:
     void doAbandon(const char *context);

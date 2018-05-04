@@ -495,16 +495,38 @@ StoreEntry::doAbandon(const char *context)
     Store::Root().handleIdleEntry(*this); // may delete us
 }
 
+/// Updates StoreClient's history of (successful) cache inquiries.
+/// Assumes that the caller has just gotten the entry from getPublic*() method.
+static void
+UpdateHitHistory(StoreClient *sc, StoreEntry *e)
+{
+    if (!Config.onoff.collapsed_forwarding)
+        return; // we only update collapsing history for now
+
+    assert(e);
+    assert(!e->isNull()); // no miss history yet
+    if (!e->publicKey())
+        return; // XXX: remove or explain how we might get here
+
+    assert(sc);
+    const bool collapsed = e->isEmpty();
+    assert(!collapsed || (collapsed && e->collapsingInitiator()));
+    if (collapsed)
+        sc->collapsedStats.collapsed++;
+}
+
 void
 StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * request, const HttpRequestMethod& method)
 {
     assert (aClient);
     StoreEntry *result = storeGetPublicByRequestMethod( request, method);
 
-    if (!result)
+    if (result)
+        UpdateHitHistory(aClient, result);
+    else
         result = NullStoreEntry::getInstance();
 
-    result->callCreated(aClient);
+    aClient->created(result);
 }
 
 void
@@ -513,10 +535,12 @@ StoreEntry::getPublicByRequest (StoreClient *aClient, HttpRequest * request)
     assert (aClient);
     StoreEntry *result = storeGetPublicByRequest (request);
 
-    if (!result)
+    if (result)
+        UpdateHitHistory(aClient, result);
+    else
         result = NullStoreEntry::getInstance();
 
-    result->callCreated(aClient);
+    aClient->created (result);
 }
 
 void
@@ -525,10 +549,12 @@ StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestM
     assert (aClient);
     StoreEntry *result = storeGetPublic (uri, method);
 
-    if (!result)
+    if (result)
+        UpdateHitHistory(aClient, result);
+    else
         result = NullStoreEntry::getInstance();
 
-    result->callCreated(aClient);
+    aClient->created (result);
 }
 
 StoreEntry *
@@ -2078,18 +2104,6 @@ StoreEntry::collapsingInitiator() const
         return false;
     return EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT) ||
            (hasTransients() && !hasMemStore() && !hasDisk());
-}
-
-void
-StoreEntry::callCreated(StoreClient *sc)
-{
-    if (Config.onoff.collapsed_forwarding && !isNull() && publicKey()) {
-        const bool collapsed = isEmpty();
-        assert(!collapsed || (collapsed && collapsingInitiator()));
-        if (collapsed)
-            sc->collapsedStats.collapsed++;
-    }
-    sc->created(this);
 }
 
 static std::ostream &
