@@ -22,6 +22,9 @@ class Format;
 class CustomLog
 {
 public:
+    /// \returns whether the daemon module is used for this log
+    bool usesDaemon() const;
+
     char *filename;
     ACLList *aclList;
     Format::Format *logFormat;
