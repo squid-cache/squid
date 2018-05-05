@@ -447,6 +447,8 @@ ClientHttpRequest::logRequest()
         al->adapted_request = request;
         HTTPMSGLOCK(al->adapted_request);
     }
+    // no need checklist.syncAle(): already synced
+    checklist.al = al;
     accessLogLog(al, &checklist);
 
     bool updatePerformanceCounters = true;
