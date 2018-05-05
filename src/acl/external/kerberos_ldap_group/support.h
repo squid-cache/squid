@@ -110,7 +110,7 @@ struct main_args {
     struct gdstruct *groups;
     struct ndstruct *ndoms;
     struct lsstruct *lservs;
-    char *princ;
+    char *principal;
 };
 
 SQUIDCEXTERN int log_enabled;
