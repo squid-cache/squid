@@ -83,7 +83,7 @@ init_args(struct main_args *margs)
     margs->groups = NULL;
     margs->ndoms = NULL;
     margs->lservs = NULL;
-    margs->princ = NULL;
+    margs->principal = NULL;
 }
 
 void clean_gd(struct gdstruct *gdsp);
@@ -179,7 +179,7 @@ clean_args(struct main_args *margs)
         clean_ls(margs->lservs);
         margs->lservs = NULL;
     }
-    safe_free(margs->princ);
+    safe_free(margs->principal);
 }
 
 void strup(char *s);
@@ -231,7 +231,7 @@ main(int argc, char *const argv[])
             margs.nlist = xstrdup(optarg);
             break;
         case 'P':
-            margs.princ = xstrdup(optarg);
+            margs.principal = xstrdup(optarg);
             break;
         case 'u':
             margs.luser = xstrdup(optarg);
