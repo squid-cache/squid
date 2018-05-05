@@ -17,13 +17,6 @@
 #include "sbuf/Algorithms.h"
 #include "util.h"
 
-const Acl::ParameterFlags &
-ACLUserData::supportedFlags() const
-{
-    static const Acl::ParameterFlags theFlagNames = { "-i", "+i" };
-    return theFlagNames;
-}
-
 bool
 ACLUserData::match(char const *user)
 {
