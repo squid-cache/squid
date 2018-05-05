@@ -50,13 +50,30 @@
 static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
 
 /// \ingroup ServerProtocolICPInternal2
-static void icpLogIcp(const Ip::Address &, const LogTags &, int, const char *, int);
+static void icpLogIcp(const Ip::Address &, const LogTags &, int, const char *, int, AccessLogEntryPointer);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpHandleIcpV2(int, Ip::Address &, char *, int);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpCount(void *, int, size_t, int);
+
+static void
+icpSyncAle(AccessLogEntryPointer &al, const Ip::Address &caddr, LogTags logcode, const char *url, int len, int delay)
+{
+    if (!al)
+        al = new AccessLogEntry();
+    al->icp.opcode = ICP_QUERY;
+    al->cache.caddr = caddr;
+    al->cache.code = logcode;
+    al->url = url;
+    // XXX: move to use icp.clientReply instead
+    al->http.clientReplySz.payloadData = len;
+    al->cache.start_time = current_time;
+    al->cache.start_time.tv_sec -= delay;
+    al->cache.trTime.tv_sec = delay;
+    al->cache.trTime.tv_usec = 0;
+}
 
 /**
  \ingroup ServerProtocolICPInternal2
@@ -123,12 +140,38 @@ ICPState::~ICPState()
     HTTPMSGUNLOCK(request);
 }
 
+bool
+ICPState::foundHit(const StoreEntry &e) const
+{
+    if (e.isNull())
+        return false;
+
+    if (!e.validToSend())
+        return false;
+
+    if (!Config.onoff.icp_hit_stale && refreshCheckICP(&e, request))
+        return false;
+
+    if (e.collapsingInitiator() && !mayCollapseOn(e))
+        return false;
+
+    return true;
+}
+
+void
+ICPState::fillChecklist(ACLFilledChecklist &checklist) const
+{
+    checklist.setRequest(request);
+    icpSyncAle(al, from, LOG_TAG_NONE, url, 0, 0);
+    checklist.al = al;
+}
+
 /* End ICPState */
 
 /* ICP2State */
 
 /// \ingroup ServerProtocolICPInternal2
-class ICP2State : public ICPState, public StoreClient
+class ICP2State: public ICPState
 {
 
 public:
@@ -147,13 +190,12 @@ ICP2State::~ICP2State()
 {}
 
 void
-ICP2State::created(StoreEntry *newEntry)
+ICP2State::created(StoreEntry *e)
 {
-    StoreEntry *entry = newEntry->isNull () ? NULL : newEntry;
     debugs(12, 5, "icpHandleIcpV2: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 
-    if (icpCheckUdpHit(entry, request)) {
+    if (foundHit(*e)) {
         codeToSend = ICP_HIT;
     } else {
 #if USE_ICMP
@@ -171,7 +213,12 @@ ICP2State::created(StoreEntry *newEntry)
             codeToSend = ICP_MISS;
     }
 
-    icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from);
+    icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, al);
+
+    // TODO: StoreClients must either store/lock or abandon found entries.
+    //if (!e->isNull())
+    //    e->abandon();
+
     delete this;
 }
 
@@ -179,10 +226,8 @@ ICP2State::created(StoreEntry *newEntry)
 
 /// \ingroup ServerProtocolICPInternal2
 static void
-icpLogIcp(const Ip::Address &caddr, const LogTags &logcode, int len, const char *url, int delay)
+icpLogIcp(const Ip::Address &caddr, const LogTags &logcode, int len, const char *url, int delay, AccessLogEntry::Pointer al)
 {
-    AccessLogEntry::Pointer al = new AccessLogEntry();
-
     if (LOG_TAG_NONE == logcode.oldType)
         return;
 
@@ -194,19 +239,7 @@ icpLogIcp(const Ip::Address &caddr, const LogTags &logcode, int len, const char 
     if (!Config.onoff.log_udp)
         return;
 
-    al->icp.opcode = ICP_QUERY;
-
-    al->url = url;
-
-    al->cache.caddr = caddr;
-
-    // XXX: move to use icp.clientReply instead
-    al->http.clientReplySz.payloadData = len;
-
-    al->cache.code = logcode;
-
-    al->cache.trTime.tv_sec = delay;
-
+    icpSyncAle(al, caddr, logcode, url, len, delay);
     accessLogLog(al, NULL);
 }
 
@@ -219,7 +252,7 @@ icpUdpSendQueue(int fd, void *)
     while ((q = IcpQueueHead) != NULL) {
         int delay = tvSubUsec(q->queue_time, current_time);
         /* increment delay to prevent looping */
-        const int x = icpUdpSend(fd, q->address, (icp_common_t *) q->msg, q->logcode, ++delay);
+        const int x = icpUdpSend(fd, q->address, (icp_common_t *) q->msg, q->logcode, ++delay, nullptr);
         IcpQueueHead = q->next;
         xfree(q);
 
@@ -278,7 +311,8 @@ icpUdpSend(int fd,
            const Ip::Address &to,
            icp_common_t * msg,
            const LogTags &logcode,
-           int delay)
+           int delay,
+           AccessLogEntryPointer al)
 {
     icpUdpData *queue;
     int x;
@@ -291,7 +325,7 @@ icpUdpSend(int fd,
 
     if (x >= 0) {
         /* successfully written */
-        icpLogIcp(to, logcode, len, (char *) (msg + 1), delay);
+        icpLogIcp(to, logcode, len, (char *) (msg + 1), delay, al);
         icpCount(msg, SENT, (size_t) len, delay);
         safe_free(msg);
     } else if (0 == delay) {
@@ -322,24 +356,6 @@ icpUdpSend(int fd,
     }
 
     return x;
-}
-
-int
-icpCheckUdpHit(StoreEntry * e, HttpRequest * request)
-{
-    if (e == NULL)
-        return 0;
-
-    if (!e->validToSend())
-        return 0;
-
-    if (Config.onoff.icp_hit_stale)
-        return 1;
-
-    if (refreshCheckICP(e, request))
-        return 0;
-
-    return 1;
 }
 
 /**
@@ -385,10 +401,10 @@ icpLogFromICPCode(icp_opcode opcode)
 }
 
 void
-icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from)
+icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntry::Pointer al)
 {
     icp_common_t *reply = icp_common_t::CreateMessage(opcode, flags, url, reqnum, pad);
-    icpUdpSend(fd, from, reply, icpLogFromICPCode(opcode), 0);
+    icpUdpSend(fd, from, reply, icpLogFromICPCode(opcode), 0, al);
 }
 
 void
@@ -403,7 +419,7 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
          */
         clientdbUpdate(from, LOG_UDP_DENIED, AnyP::PROTO_ICP, 0);
     } else {
-        icpCreateAndSend(ICP_DENIED, 0, url, reqnum, 0, fd, from);
+        icpCreateAndSend(ICP_DENIED, 0, url, reqnum, 0, fd, from, nullptr);
     }
 }
 
@@ -434,14 +450,14 @@ icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
 {
     if (strpbrk(url, w_space)) {
         url = rfc1738_escape(url);
-        icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from);
+        icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from, nullptr);
         return NULL;
     }
 
     HttpRequest *result;
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcp);
     if ((result = HttpRequest::FromUrl(url, mx)) == NULL)
-        icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from);
+        icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr);
 
     return result;
 

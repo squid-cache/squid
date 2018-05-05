@@ -124,6 +124,11 @@ Parent process does not exit until its children have finished. It has no effect 
 which does not fork/exit at startup.
 .
 .if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\--kid roleID"
+Play a given SMP kid process role, with a given ID. Do not use
+this option. It is meant for the master process use only.
+.
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-O options"
 Set Windows Service Command line options in Registry.
 .

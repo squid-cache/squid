@@ -434,3 +434,10 @@ redirectShutdown(void)
     storeIdExtrasFmt = NULL;
 }
 
+void
+redirectReconfigure()
+{
+    redirectShutdown();
+    redirectInit();
+}
+

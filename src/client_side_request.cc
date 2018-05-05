@@ -41,6 +41,7 @@
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
 #include "ipcache.h"
 #include "log/access_log.h"
@@ -131,8 +132,7 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) :
     store_id_done(false),
     no_cache_done(false),
     interpreted_req_hdrs(false),
-    tosToClientDone(false),
-    nfmarkToClientDone(false),
+    toClientMarkingDone(false),
 #if USE_OPENSSL
     sslBumpCheckDone(false),
 #endif
@@ -1683,7 +1683,7 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
  */
 
 tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
-nfmark_t aclMapNfmark (acl_nfmark * head, ACLChecklist * ch);
+Ip::NfMarkConfig aclFindNfMarkConfig (acl_nfmark * head, ACLChecklist * ch);
 
 void
 ClientHttpRequest::doCallouts()
@@ -1776,31 +1776,27 @@ ClientHttpRequest::doCallouts()
         }
     } //  if !calloutContext->error
 
-    if (!calloutContext->tosToClientDone) {
-        calloutContext->tosToClientDone = true;
-        if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConnection)) {
-            ACLFilledChecklist ch(NULL, request, NULL);
-            ch.al = calloutContext->http->al;
-            ch.src_addr = request->client_addr;
-            ch.my_addr = request->my_addr;
-            ch.syncAle(request, log_uri);
+    // Set appropriate MARKs and CONNMARKs if needed.
+    if (getConn() && Comm::IsConnOpen(getConn()->clientConnection)) {
+        ACLFilledChecklist ch(nullptr, request, nullptr);
+        ch.al = calloutContext->http->al;
+        ch.src_addr = request->client_addr;
+        ch.my_addr = request->my_addr;
+        ch.syncAle(request, log_uri);
+
+        if (!calloutContext->toClientMarkingDone) {
+            calloutContext->toClientMarkingDone = true;
             tos_t tos = aclMapTOS(Ip::Qos::TheConfig.tosToClient, &ch);
             if (tos)
                 Ip::Qos::setSockTos(getConn()->clientConnection, tos);
-        }
-    }
 
-    if (!calloutContext->nfmarkToClientDone) {
-        calloutContext->nfmarkToClientDone = true;
-        if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConnection)) {
-            ACLFilledChecklist ch(NULL, request, NULL);
-            ch.al = calloutContext->http->al;
-            ch.src_addr = request->client_addr;
-            ch.my_addr = request->my_addr;
-            ch.syncAle(request, log_uri);
-            nfmark_t mark = aclMapNfmark(Ip::Qos::TheConfig.nfmarkToClient, &ch);
-            if (mark)
-                Ip::Qos::setSockNfmark(getConn()->clientConnection, mark);
+            const auto packetMark = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToClient, &ch);
+            if (!packetMark.isEmpty())
+                Ip::Qos::setSockNfmark(getConn()->clientConnection, packetMark.mark);
+
+            const auto connmark = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfConnmarkToClient, &ch);
+            if (!connmark.isEmpty())
+                Ip::Qos::setNfConnmark(getConn()->clientConnection, Ip::Qos::dirAccepted, connmark);
         }
     }
 

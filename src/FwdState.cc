@@ -37,6 +37,7 @@
 #include "icmp/net_db.h"
 #include "internal.h"
 #include "ip/Intercept.h"
+#include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "MemObject.h"
@@ -997,7 +998,7 @@ FwdState::dispatch()
         if (Comm::IsConnOpen(clientConn) && Comm::IsConnOpen(serverConnection())) {
             fde * clientFde = &fd_table[clientConn->fd]; // XXX: move the fd_table access into Ip::Qos
             /* Get the netfilter CONNMARK */
-            clientFde->nfmarkFromServer = Ip::Qos::getNfmarkFromConnection(serverConnection(), Ip::Qos::dirOpened);
+            clientFde->nfConnmarkFromServer = Ip::Qos::getNfConnmark(serverConnection(), Ip::Qos::dirOpened);
         }
     }
 
@@ -1282,15 +1283,15 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 }
 
 /// Checks for a netfilter mark value to apply depending on the ACL
-nfmark_t
-aclMapNfmark(acl_nfmark * head, ACLChecklist * ch)
+Ip::NfMarkConfig
+aclFindNfMarkConfig(acl_nfmark * head, ACLChecklist * ch)
 {
     for (acl_nfmark *l = head; l; l = l->next) {
         if (!l->aclList || ch->fastCheck(l->aclList).allowed())
-            return l->nfmark;
+            return l->markConfig;
     }
 
-    return 0;
+    return {};
 }
 
 void
@@ -1356,7 +1357,8 @@ nfmark_t
 GetNfmarkToServer(HttpRequest * request)
 {
     ACLFilledChecklist ch(NULL, request, NULL);
-    return aclMapNfmark(Ip::Qos::TheConfig.nfmarkToServer, &ch);
+    const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToServer, &ch);
+    return mc.mark;
 }
 
 void
