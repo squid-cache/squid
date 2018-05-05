@@ -50,7 +50,6 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_libip.cc \
-	tests/stub_libipc.cc \
 	tests/stub_liblog.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libmgr.cc \
