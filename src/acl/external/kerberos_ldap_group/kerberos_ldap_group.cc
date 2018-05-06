@@ -83,6 +83,7 @@ init_args(struct main_args *margs)
     margs->groups = NULL;
     margs->ndoms = NULL;
     margs->lservs = NULL;
+    margs->principal = NULL;
 }
 
 void clean_gd(struct gdstruct *gdsp);
@@ -178,6 +179,7 @@ clean_args(struct main_args *margs)
         clean_ls(margs->lservs);
         margs->lservs = NULL;
     }
+    safe_free(margs->principal);
 }
 
 void strup(char *s);
@@ -202,7 +204,7 @@ main(int argc, char *const argv[])
 
     init_args(&margs);
 
-    while (-1 != (opt = getopt(argc, argv, "diasng:D:N:S:u:U:t:T:p:l:b:m:h"))) {
+    while (-1 != (opt = getopt(argc, argv, "diasng:D:N:P:S:u:U:t:T:p:l:b:m:h"))) {
         switch (opt) {
         case 'd':
             debug_enabled = 1;
@@ -227,6 +229,9 @@ main(int argc, char *const argv[])
             break;
         case 'N':
             margs.nlist = xstrdup(optarg);
+            break;
+        case 'P':
+            margs.principal = xstrdup(optarg);
             break;
         case 'u':
             margs.luser = xstrdup(optarg);
@@ -259,7 +264,7 @@ main(int argc, char *const argv[])
             break;
         case 'h':
             fprintf(stderr, "Usage: \n");
-            fprintf(stderr, "squid_kerb_ldap [-d] [-i] -g group list [-D domain] [-N netbios domain map] [-s] [-u ldap user] [-p ldap user password] [-l ldap url] [-b ldap bind path] [-a] [-m max depth] [-h]\n");
+            fprintf(stderr, "squid_kerb_ldap [-d] [-i] -g group list [-D domain] [-N netbios domain map] [-P service principal name] [-s] [-u ldap user] [-p ldap user password] [-l ldap url] [-b ldap bind path] [-a] [-m max depth] [-h]\n");
             fprintf(stderr, "-d full debug\n");
             fprintf(stderr, "-i informational messages\n");
             fprintf(stderr, "-n do not use Kerberos to authenticate to AD. Requires -u , -p and -l option\n");
@@ -268,6 +273,7 @@ main(int argc, char *const argv[])
             fprintf(stderr, "-T group list (all in hex UTF-8 format - except separator @)\n");
             fprintf(stderr, "-D default domain\n");
             fprintf(stderr, "-N netbios to dns domain map\n");
+            fprintf(stderr, "-P service principal name to be used from keytab\n");
             fprintf(stderr, "-S ldap server to dns domain map\n");
             fprintf(stderr, "-u ldap user\n");
             fprintf(stderr, "-p ldap user password\n");
