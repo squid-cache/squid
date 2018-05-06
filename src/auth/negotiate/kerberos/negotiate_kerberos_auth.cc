@@ -737,7 +737,7 @@ main(int argc, char *const argv[])
                 goto cleanup;
             if (major_status & GSS_S_CONTINUE_NEEDED) {
                 debug((char *) "%s| %s: INFO: continuation needed\n", LogTime(), PROGRAM);
-                fprintf(stdout, "TT %s\n", token);
+                fprintf(stdout, "TT token=%s\n", token);
                 goto cleanup;
             }
             gss_release_buffer(&minor_status, &output_token);
@@ -794,11 +794,11 @@ main(int argc, char *const argv[])
 #endif
             rfc_user = rfc1738_escape(user);
 #if HAVE_PAC_SUPPORT
-            fprintf(stdout, "AF %s %s %s\n", token, rfc_user, ag?ag:"group=");
+            fprintf(stdout, "OK token=%s user=%s %s\n", token, rfc_user, ag?ag:"group=");
 #else
-            fprintf(stdout, "AF %s %s\n", token, rfc_user);
+            fprintf(stdout, "OK token=%s user=%s\n", token, rfc_user);
 #endif
-            debug((char *) "%s| %s: DEBUG: AF %s %s\n", LogTime(), PROGRAM, token, rfc_user);
+            debug((char *) "%s| %s: DEBUG: OK token=%s user=%s\n", LogTime(), PROGRAM, token, rfc_user);
             if (log)
                 fprintf(stderr, "%s| %s: INFO: User %s authenticated\n", LogTime(),
                         PROGRAM, rfc_user);
@@ -808,7 +808,7 @@ main(int argc, char *const argv[])
                 goto cleanup;
             if (major_status & GSS_S_CONTINUE_NEEDED) {
                 debug((char *) "%s| %s: INFO: continuation needed\n", LogTime(), PROGRAM);
-                fprintf(stdout, "NA %s\n", token);
+                fprintf(stdout, "ERR token=%s\n", token);
                 goto cleanup;
             }
             gss_release_buffer(&minor_status, &output_token);
@@ -834,11 +834,11 @@ main(int argc, char *const argv[])
             }
             rfc_user = rfc1738_escape(user);
 #if HAVE_PAC_SUPPORT
-            fprintf(stdout, "AF %s %s %s\n", "AA==", rfc_user, ag?ag:"group=");
+            fprintf(stdout, "OK token=%s user=%s %s\n", "AA==", rfc_user, ag?ag:"group=");
 #else
-            fprintf(stdout, "AF %s %s\n", "AA==", rfc_user);
+            fprintf(stdout, "OK token=%s user=%s\n", "AA==", rfc_user);
 #endif
-            debug((char *) "%s| %s: DEBUG: AF %s %s\n", LogTime(), PROGRAM, "AA==", rfc_user);
+            debug((char *) "%s| %s: DEBUG: OK token=%s user=%s\n", LogTime(), PROGRAM, "AA==", rfc_user);
             if (log)
                 fprintf(stderr, "%s| %s: INFO: User %s authenticated\n", LogTime(),
                         PROGRAM, rfc_user);
