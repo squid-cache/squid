@@ -71,6 +71,21 @@ k5_error2(const char* msg, char* msg2, krb5_error_code code)
 }
 
 static void
+k5_debug(const char* msg, krb5_error_code code)
+{
+    const char *errmsg;
+    errmsg = krb5_get_error_message(kparam.context, code);
+    debug((char *) "%s| %s: DEBUG: %s : %s\n", LogTime(), PROGRAM, msg, errmsg);
+#if HAVE_KRB5_FREE_ERROR_MESSAGE
+    krb5_free_error_message(kparam.context, errmsg);
+#elif HAVE_KRB5_FREE_ERROR_STRING
+    krb5_free_error_string(kparam.context, (char *)errmsg);
+#else
+    xfree(errmsg);
+#endif
+}
+
+static void
 k5_error(const char* msg, krb5_error_code code)
 {
     k5_error2(msg, (char *)"", code);
@@ -80,7 +95,7 @@ k5_error(const char* msg, krb5_error_code code)
  * create Kerberos memory cache
  */
 int
-krb5_create_cache(char *domain)
+krb5_create_cache(char *domain, char *service_principal_name)
 {
 
     krb5_keytab keytab = NULL;
@@ -131,7 +146,7 @@ krb5_create_cache(char *domain)
         }
         code = krb5_cc_resolve(kparam.context, mem_cache, &kparam.cc[ccindex]);
         if (code) {
-            k5_error("Error while resolving memory ccache",code);
+            k5_error("Error while resolving memory ccache", code);
             retval = 1;
             goto cleanup;
         }
@@ -145,22 +160,22 @@ krb5_create_cache(char *domain)
         if (principal)
             krb5_free_principal(kparam.context, principal);
         principal = NULL;
-        k5_error("No default principal found in ccache",code);
+        k5_debug("No default principal found in ccache", code);
     } else {
         /*
          * Look for krbtgt and check if it is expired (or soon to be expired)
          */
         code = krb5_cc_start_seq_get(kparam.context, kparam.cc[ccindex], &ccursor);
         if (code) {
-            k5_error("Error while starting ccache scan",code);
+            k5_error("Error while starting ccache scan", code);
             code = krb5_cc_close (kparam.context, kparam.cc[ccindex]);
             if (code) {
-                k5_error("Error while closing ccache",code);
+                k5_error("Error while closing ccache", code);
             }
             if (kparam.cc[ccindex]) {
                 code = krb5_cc_destroy(kparam.context, kparam.cc[ccindex]);
                 if (code) {
-                    k5_error("Error while destroying ccache",code);
+                    k5_error("Error while destroying ccache", code);
                 }
             }
         } else {
@@ -169,10 +184,10 @@ krb5_create_cache(char *domain)
             while ((krb5_cc_next_cred(kparam.context, kparam.cc[ccindex], &ccursor, creds)) == 0) {
                 code2 = krb5_unparse_name(kparam.context, creds->server, &principal_name);
                 if (code2) {
-                    k5_error("Error while unparsing principal",code2);
+                    k5_error("Error while unparsing principal", code2);
                     code = krb5_cc_destroy(kparam.context, kparam.cc[ccindex]);
                     if (code) {
-                        k5_error("Error while destroying ccache",code);
+                        k5_error("Error while destroying ccache", code);
                     }
                     assert(creds != NULL);
                     krb5_free_creds(kparam.context, creds);
@@ -181,7 +196,7 @@ krb5_create_cache(char *domain)
                     debug((char *) "%s| %s: DEBUG: Reset credential cache to %s\n", LogTime(), PROGRAM, mem_cache);
                     code = krb5_cc_resolve(kparam.context, mem_cache, &kparam.cc[ccindex]);
                     if (code) {
-                        k5_error("Error  while resolving memory ccache",code);
+                        k5_error("Error while resolving memory ccache", code);
                         retval = 1;
                         goto cleanup;
                     }
@@ -205,7 +220,7 @@ krb5_create_cache(char *domain)
                         principal = NULL;
                         code = krb5_cc_destroy(kparam.context, kparam.cc[ccindex]);
                         if (code) {
-                            k5_error("Error  while destroying ccache",code);
+                            k5_error("Error  while destroying ccache", code);
                         }
                         assert(creds != NULL);
                         krb5_free_creds(kparam.context, creds);
@@ -214,7 +229,7 @@ krb5_create_cache(char *domain)
                         debug((char *) "%s| %s: DEBUG: Reset credential cache to %s\n", LogTime(), PROGRAM, mem_cache);
                         code = krb5_cc_resolve(kparam.context, mem_cache, &kparam.cc[ccindex]);
                         if (code) {
-                            k5_error("Error  while resolving ccache",code);
+                            k5_error("Error  while resolving ccache", code);
                             retval = 1;
                             goto cleanup;
                         }
@@ -234,7 +249,7 @@ krb5_create_cache(char *domain)
             creds = NULL;
             code2 = krb5_cc_end_seq_get(kparam.context, kparam.cc[ccindex], &ccursor);
             if (code2) {
-                k5_error("Error  while ending ccache scan",code2);
+                k5_error("Error while ending ccache scan", code2);
                 retval = 1;
                 goto cleanup;
             }
@@ -255,13 +270,13 @@ krb5_create_cache(char *domain)
 
         code = krb5_kt_resolve(kparam.context, keytab_name, &keytab);
         if (code) {
-            k5_error2("Error while resolving keytab ",keytab_name,code);
+            k5_error2("Error while resolving keytab ", keytab_name,code);
             retval = 1;
             goto cleanup;
         }
         code = krb5_kt_start_seq_get(kparam.context, keytab, &cursor);
         if (code) {
-            k5_error("Error while starting keytab scan",code);
+            k5_error("Error while starting keytab scan", code);
             retval = 1;
             goto cleanup;
         }
@@ -286,10 +301,15 @@ krb5_create_cache(char *domain)
             {
                 code = krb5_unparse_name(kparam.context, entry.principal, &principal_name);
                 if (code) {
-                    k5_error("Error while unparsing principal name",code);
+                    k5_error("Error while unparsing principal name", code);
                 } else {
                     debug((char *) "%s| %s: DEBUG: Found principal name: %s\n", LogTime(), PROGRAM, principal_name);
                     found = 1;
+                    if (service_principal_name && strcasecmp(principal_name,service_principal_name) != 0 ) {
+                        debug((char *) "%s| %s: DEBUG: principal name does not match parameter: %s\n", LogTime(), PROGRAM, service_principal_name);
+                        safe_free(principal_name);
+                        found = 0;
+                    }
                 }
             }
 #if USE_HEIMDAL_KRB5 || ( HAVE_KRB5_KT_FREE_ENTRY && HAVE_DECL_KRB5_KT_FREE_ENTRY )
@@ -298,7 +318,7 @@ krb5_create_cache(char *domain)
             code = krb5_free_keytab_entry_contents(kparam.context, &entry);
 #endif
             if (code) {
-                k5_error("Error while freeing keytab entry",code);
+                k5_error("Error while freeing keytab entry", code);
                 retval = 1;
                 break;
             }
@@ -333,7 +353,7 @@ krb5_create_cache(char *domain)
 #endif
 
                 if (code) {
-                    k5_error("Error while initialising credentials from keytab" ,code);
+                    k5_error("Error while initialising credentials from keytab", code);
                     safe_free(principal_name);
                     if (principal)
                         krb5_free_principal(kparam.context, principal);
@@ -345,7 +365,7 @@ krb5_create_cache(char *domain)
                 }
                 code = krb5_cc_initialize(kparam.context, kparam.cc[ccindex], principal);
                 if (code) {
-                    k5_error("Error while initialising  memory caches" ,code);
+                    k5_error("Error while initialising cache", code);
                     safe_free(principal_name);
                     if (principal)
                         krb5_free_principal(kparam.context, principal);
@@ -357,7 +377,7 @@ krb5_create_cache(char *domain)
                 }
                 code = krb5_cc_store_cred(kparam.context, kparam.cc[ccindex], creds);
                 if (code) {
-                    k5_error("Error while storing credentials" ,code);
+                    k5_error("Error while storing credentials", code);
                     if (principal)
                         krb5_free_principal(kparam.context, principal);
                     safe_free(principal_name);
@@ -373,13 +393,13 @@ krb5_create_cache(char *domain)
         }
 
         if (code && code != KRB5_KT_END) {
-            k5_error("Error while scanning keytab" ,code);
+            k5_error("Error while scanning keytab", code);
             retval = 1;
             goto cleanup;
         }
         code = krb5_kt_end_seq_get(kparam.context, keytab, &cursor);
         if (code) {
-            k5_error("Error while ending keytab scan" ,code);
+            k5_error("Error while ending keytab scan", code);
             retval = 1;
             goto cleanup;
         }
@@ -387,7 +407,7 @@ krb5_create_cache(char *domain)
         /*
          * if no principal name found in keytab for domain use the prinipal name which can get a TGT
          */
-        if (!principal_name) {
+        if (!principal_name && !service_principal_name) {
             size_t i;
             debug((char *) "%s| %s: DEBUG: Did not find a principal in keytab for domain %s.\n", LogTime(), PROGRAM, domain);
             debug((char *) "%s| %s: DEBUG: Try to get principal of trusted domain.\n", LogTime(), PROGRAM);
@@ -401,7 +421,7 @@ krb5_create_cache(char *domain)
                  */
                 code = krb5_unparse_name(kparam.context, principal_list[i], &principal_name);
                 if (code) {
-                    k5_error("Error while unparsing principal name" ,code);
+                    k5_error("Error while unparsing principal name", code);
                     goto loop_end;
                 }
                 debug((char *) "%s| %s: DEBUG: Keytab entry has principal: %s\n", LogTime(), PROGRAM, principal_name);
@@ -417,17 +437,17 @@ krb5_create_cache(char *domain)
                 code = krb5_get_in_tkt_with_keytab(kparam.context, 0, NULL, NULL, NULL, keytab, NULL, creds, 0);
 #endif
                 if (code) {
-                    k5_error("Error while initialising credentials from keytab" ,code);
+                    k5_error("Error while initialising credentials from keytab", code);
                     goto loop_end;
                 }
                 code = krb5_cc_initialize(kparam.context, kparam.cc[ccindex], principal_list[i]);
                 if (code) {
-                    k5_error("Error while initialising memory caches" ,code);
+                    k5_error("Error while initialising memory caches", code);
                     goto loop_end;
                 }
                 code = krb5_cc_store_cred(kparam.context, kparam.cc[ccindex], creds);
                 if (code) {
-                    k5_error("Error while storing credentials" ,code);
+                    k5_error("Error while storing credentials", code);
                     goto loop_end;
                 }
                 if (creds->server)
@@ -442,12 +462,12 @@ krb5_create_cache(char *domain)
                 code = krb5_parse_name(kparam.context, service, &creds->server);
                 xfree(service);
                 if (code) {
-                    k5_error("Error while initialising TGT credentials" ,code);
+                    k5_error("Error while initialising TGT credentials", code);
                     goto loop_end;
                 }
                 code = krb5_get_credentials(kparam.context, 0, kparam.cc[ccindex], creds, &tgt_creds);
                 if (code) {
-                    k5_error("Error while getting tgt" ,code);
+                    k5_error("Error while getting tgt", code);
                     goto loop_end;
                 } else {
                     debug((char *) "%s| %s: DEBUG: Found trusted principal name: %s\n", LogTime(), PROGRAM, principal_name);
@@ -479,7 +499,7 @@ loop_end:
          */
         code = krb5_unparse_name(kparam.context, principal, &principal_name);
         if (code) {
-            k5_error("Error while unparsing principal name" ,code);
+            k5_error("Error while unparsing principal name", code);
             retval = 1;
             goto cleanup;
         }

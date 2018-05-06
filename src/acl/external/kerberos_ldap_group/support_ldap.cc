@@ -1013,7 +1013,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
                   "%s| %s: DEBUG: Kerberos is disabled. Use username/password with ldap url instead\n",
                   LogTime(), PROGRAM);
         } else {
-            kc = krb5_create_cache(domain);
+            kc = krb5_create_cache(domain, margs->principal);
             if (kc) {
                 error((char *)
                       "%s| %s: ERROR: Error during setup of Kerberos credential cache\n",
