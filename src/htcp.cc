@@ -1174,6 +1174,9 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
         debugs(31, 3, "htcpHandleClr: htcpUnpackSpecifier failed");
         htcpLogHtcp(from, hdr->opcode, LogTags(LOG_UDP_INVALID), dash_str, nullptr);
         return;
+    } else {
+        s->setFrom(from);
+        s->setDataHeader(hdr);
     }
 
     if (!s->request) {
