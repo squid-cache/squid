@@ -65,6 +65,8 @@ class PeerConnector: virtual public AsyncJob
     CBDATA_CLASS(PeerConnector);
 
 public:
+    typedef CbcPointer<PeerConnector> Pointer;
+
     /// Callback dialer API to allow PeerConnector to set the answer.
     class CbDialer
     {
@@ -191,8 +193,8 @@ private:
     Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
 #endif
 
-    /// A wrapper function for negotiateSsl for use with Comm::SetSelect
     static void NegotiateSsl(int fd, void *data);
+    void negotiateSsl();
 
     /// The maximum allowed missing certificates downloads.
     static const unsigned int MaxCertsDownloads = 10;
