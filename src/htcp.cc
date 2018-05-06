@@ -146,12 +146,14 @@ public:
     size_t reqHdrsSz = 0; ///< size of the req_hdrs content
     HttpRequest::Pointer request;
 
+    /// optimization: nil until needed
+    mutable AccessLogEntryPointer al;
+
 private:
     HttpRequest::Pointer checkHitRequest;
 
     Ip::Address from;
     htcpDataHeader *dhdr = nullptr;
-    mutable AccessLogEntryPointer al;
 };
 
 class htcpDetail {
@@ -1122,13 +1124,13 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, Ip::Address &from
 
     if (!s->request) {
         debugs(31, 3, "htcpHandleTstRequest: failed to parse request");
-        htcpLogHtcp(from, dhdr->opcode, LogTags(LOG_UDP_INVALID), dash_str, nullptr);
+        htcpLogHtcp(from, dhdr->opcode, LogTags(LOG_UDP_INVALID), dash_str, s->al);
         return;
     }
 
     if (!htcpAccessAllowed(Config.accessList.htcp, s, from)) {
         debugs(31, 3, "htcpHandleTstRequest: Access denied");
-        htcpLogHtcp(from, dhdr->opcode, LogTags(LOG_UDP_DENIED), s->uri, nullptr);
+        htcpLogHtcp(from, dhdr->opcode, LogTags(LOG_UDP_DENIED), s->uri, s->al);
         return;
     }
 
@@ -1176,13 +1178,13 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 
     if (!s->request) {
         debugs(31, 3, "htcpHandleTstRequest: failed to parse request");
-        htcpLogHtcp(from, hdr->opcode, LogTags(LOG_UDP_INVALID), dash_str, nullptr);
+        htcpLogHtcp(from, hdr->opcode, LogTags(LOG_UDP_INVALID), dash_str, s->al);
         return;
     }
 
     if (!htcpAccessAllowed(Config.accessList.htcp_clr, s, from)) {
         debugs(31, 3, "htcpHandleClr: Access denied");
-        htcpLogHtcp(from, hdr->opcode, LogTags(LOG_UDP_DENIED), s->uri, nullptr);
+        htcpLogHtcp(from, hdr->opcode, LogTags(LOG_UDP_DENIED), s->uri, s->al);
         return;
     }
 
@@ -1197,12 +1199,12 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
 
     case 1:
         htcpClrReply(hdr, 1, from); /* hit */
-        htcpLogHtcp(from, hdr->opcode, LogTags(LOG_UDP_HIT), s->uri, nullptr);
+        htcpLogHtcp(from, hdr->opcode, LogTags(LOG_UDP_HIT), s->uri, s->al);
         break;
 
     case 0:
         htcpClrReply(hdr, 0, from); /* miss */
-        htcpLogHtcp(from, hdr->opcode, LogTags(LOG_UDP_MISS), s->uri, nullptr);
+        htcpLogHtcp(from, hdr->opcode, LogTags(LOG_UDP_MISS), s->uri, s->al);
         break;
 
     default:
