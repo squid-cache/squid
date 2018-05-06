@@ -713,11 +713,14 @@ BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
 
     /* Copy details - dn and pw CAN be NULL for anonymous and/or TLS */
     if (dn != NULL) {
+        if (strlen(dn) > sizeof(l->dn))
+            return LDAP_ERR_OOB; /* DN too large */
+
         if ((l->basedn[0] != '\0') && (strstr(dn, l->basedn) == NULL)) {
             /* We got a basedn, but it's not part of dn */
-            xstrncpy(l->dn, dn, sizeof(l->dn));
-            strncat(l->dn, ",", 1);
-            strncat(l->dn, l->basedn, strlen(l->basedn));
+            int x = snprintf(l->dn, sizeof(l->dn)-1, "%s,%s", dn, l->basedn);
+            if (0 < x || static_cast<size_t>(x) > sizeof(l->dn))
+                return LDAP_ERR_OOB; /* DN too large */
         } else
             xstrncpy(l->dn, dn, sizeof(l->dn));
     }
