@@ -1203,6 +1203,30 @@ SearchLDAP(edui_ldap_t *l, int scope, char *filter, char **attrs)
     }
 }
 
+/// convert len characters from bufa into HEX
+/// \retval N   length of bufb written
+/// \retval -1  buffer overflow detected
+static int
+makeHexString(char *bufb, const char *bufa, const int len)
+{
+    static char hexc[4];
+    *hexc = 0;
+    size_t bsize = 0;
+    for (int k = 0; k < len; ++k) {
+        int c = static_cast<int>(bufa[k]);
+        if (c < 0)
+            c = c + 256;
+        int hlen = snprintf(hexc, sizeof(hexc), "%02X", c);
+        if (hlen < 0) // should be impossible
+            return -1;
+        if (sizeof(bufb) < (bsize + hlen))
+            return -1;
+        strncat(bufb, hexc, sizeof(bufb)-bsize);
+        bsize += hlen;
+    }
+    return strlen(bufb);
+}
+
 /*
  * SearchIPLDAP() - <edui_ldap_t>
  *
@@ -1214,10 +1238,9 @@ static int
 SearchIPLDAP(edui_ldap_t *l)
 {
     ber_len_t i, x;
-    ber_len_t j, k;
+    ber_len_t j;
     ber_len_t y, z;
-    int c;
-    char bufa[EDUI_MAXLEN], bufb[EDUI_MAXLEN], hexc[4];
+    char bufa[EDUI_MAXLEN], bufb[EDUI_MAXLEN];
     LDAPMessage *ent;
     if (l == NULL) return LDAP_ERR_NULL;
     if (l->lp == NULL) return LDAP_ERR_POINTER;
@@ -1275,17 +1298,9 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa is the address, just compare it */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;                          /* Not looking for IPv4 */
-                        for (k = 0; k < z; ++k) {
-                            c = (int) bufa[k];
-                            if (c < 0)
-                                c = c + 256;
-                            int hlen = snprintf(hexc, sizeof(hexc), "%02X", c);
-                            if (k == 0)
-                                xstrncpy(bufb, hexc, sizeof(bufb));
-                            else
-                                strncat(bufb, hexc, hlen);
-                        }
-                        y = strlen(bufb);
+                        y = makeHexString(bufb, bufa, z);
+                        if (y < 0)
+                            return LDAP_ERR_OOB;
                         /* Compare value with IP */
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
@@ -1310,17 +1325,9 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;                          /* Not looking for IPv4 */
-                        for (k = 2; k < z; ++k) {
-                            c = (int) bufa[k];
-                            if (c < 0)
-                                c = c + 256;
-                            int hlen = snprintf(hexc, sizeof(hexc), "%02X", c);
-                            if (k == 2)
-                                xstrncpy(bufb, hexc, sizeof(bufb));
-                            else
-                                strncat(bufb, hexc, hlen);
-                        }
-                        y = strlen(bufb);
+                        y = makeHexString(bufb, &bufa[2], z);
+                        if (y < 0)
+                            return LDAP_ERR_OOB;
                         /* Compare value with IP */
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
@@ -1345,17 +1352,9 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV6_S))
                             break;                          /* Not looking for IPv6 */
-                        for (k = 2; k < z; ++k) {
-                            c = (int) bufa[k];
-                            if (c < 0)
-                                c = c + 256;
-                            int hlen = snprintf(hexc, sizeof(hexc), "%02X", c);
-                            if (k == 2)
-                                xstrncpy(bufb, hexc, sizeof(bufb));
-                            else
-                                strncat(bufb, hexc, hlen);
-                        }
-                        y = strlen(bufb);
+                        y = makeHexString(bufb, &bufa[2], z);
+                        if (y < 0)
+                            return LDAP_ERR_OOB;
                         /* Compare value with IP */
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
