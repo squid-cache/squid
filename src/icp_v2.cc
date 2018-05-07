@@ -158,6 +158,15 @@ ICPState::foundHit(const StoreEntry &e) const
     return true;
 }
 
+LogTags *
+ICPState::loggingTags()
+{
+    // calling icpSyncAle(LOG_TAG_NONE) here would not change cache.code
+    if (!al)
+        al = new AccessLogEntry();
+    return &al->cache.code;
+}
+
 void
 ICPState::fillChecklist(ACLFilledChecklist &checklist) const
 {

@@ -508,11 +508,14 @@ UpdateHitHistory(StoreClient *sc, StoreEntry *e)
     if (!e->publicKey())
         return; // XXX: remove or explain how we might get here
 
-    assert(sc);
     const bool collapsed = e->isEmpty();
     assert(!collapsed || (collapsed && e->collapsingInitiator()));
-    if (collapsed)
-        sc->collapsedStats.collapsed++;
+    if (!collapsed)
+        return; // we only record collapsing events for now
+
+    assert(sc);
+    if (const auto loggingTags = sc->loggingTags())
+        loggingTags->collapsedStats.collapsed++;
 }
 
 void

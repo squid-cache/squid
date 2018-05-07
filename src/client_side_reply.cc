@@ -305,7 +305,7 @@ clientReplyContext::processExpired()
     if (collapsingAllowed) {
         if (const auto e = storeGetPublicByRequest(http->request, ksRevalidation)) {
             if (e->collapsingInitiator() && mayCollapseOn(*e)) {
-                collapsedStats.revalidationCollapsed++;
+                http->logType.collapsedStats.revalidationCollapsed++;
                 entry = e;
                 entry->lock("clientReplyContext::processExpired#alreadyRevalidating");
             } else {
@@ -946,6 +946,15 @@ clientReplyContext::created(StoreEntry *newEntry)
         purgeDoPurgeHead(newEntry);
     else if (lookingforstore == 5)
         identifyFoundObject(newEntry);
+}
+
+LogTags *
+clientReplyContext::loggingTags()
+{
+    // XXX: clientReplyContext code assumes that http cbdata is always valid.
+    // TODO: Either add cbdataReferenceValid(http) checks in all the relevant
+    // places, like this one, or remove cbdata protection of the http member.
+    return &http->logType;
 }
 
 void

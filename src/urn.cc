@@ -9,6 +9,7 @@
 /* DEBUG: section 52    URN Parsing */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "cbdata.h"
 #include "errorpage.h"
@@ -34,6 +35,8 @@ class UrnState : public StoreClient
     CBDATA_CLASS(UrnState);
 
 public:
+    explicit UrnState(const AccessLogEntry::Pointer &anAle): ale(anAle) {}
+
     void created (StoreEntry *newEntry);
     void start (HttpRequest *, StoreEntry *);
     char *getHost(const SBuf &urlpath);
@@ -41,23 +44,25 @@ public:
 
     virtual ~UrnState();
 
-    StoreEntry *entry;
-    store_client *sc;
-    StoreEntry *urlres_e;
+    StoreEntry *entry = nullptr;
+    store_client *sc = nullptr;
+    StoreEntry *urlres_e = nullptr;
     HttpRequest::Pointer request;
     HttpRequest::Pointer urlres_r;
 
     struct {
-        bool force_menu;
+        bool force_menu = false;
     } flags;
-    char reqbuf[URN_REQBUF_SZ];
-    int reqofs;
+    char reqbuf[URN_REQBUF_SZ] = { '\0' };
+    int reqofs = 0;
 
 private:
     /* StoreClient API */
+    virtual LogTags *loggingTags() { return ale ? &ale->cache.code : nullptr; }
     virtual void fillChecklist(ACLFilledChecklist &) const;
 
-    char *urlres;
+    char *urlres = nullptr;
+    AccessLogEntry::Pointer ale; ///< master transaction ALE
 };
 
 typedef struct {
@@ -189,6 +194,7 @@ void
 UrnState::fillChecklist(ACLFilledChecklist &checklist) const
 {
     checklist.setRequest(request.getRaw());
+    checklist.al = ale;
 }
 
 void
@@ -197,7 +203,7 @@ UrnState::created(StoreEntry *e)
     if (e->isNull() || (e->collapsingInitiator() && !mayCollapseOn(*e))) {
         urlres_e = storeCreateEntry(urlres, urlres, RequestFlags(), Http::METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);
-        FwdState::fwdStart(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw());
+        FwdState::Start(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw(), ale);
         // TODO: StoreClients must either store/lock or abandon found entries.
         //if (!e->isNull())
         //    e->abandon();
@@ -219,9 +225,9 @@ UrnState::created(StoreEntry *e)
 }
 
 void
-urnStart(HttpRequest * r, StoreEntry * e)
+urnStart(HttpRequest *r, StoreEntry *e, const AccessLogEntryPointer &ale)
 {
-    UrnState *anUrn = new UrnState();
+    const auto anUrn = new UrnState(ale);
     anUrn->start (r, e);
 }
 

@@ -136,6 +136,7 @@ public:
 
     /* StoreClient API */
     void created(StoreEntry *);
+    virtual LogTags *loggingTags();
     virtual void fillChecklist(ACLFilledChecklist &) const;
 
 public:
@@ -277,7 +278,7 @@ htcpSyncAle(AccessLogEntryPointer &al, const Ip::Address &caddr, int opcode, Log
         al = new AccessLogEntry();
     al->cache.caddr = caddr;
     al->htcp.opcode = htcpOpcodeStr[opcode];
-    al->cache.code = logcode;
+    al->cache.code.update(logcode.oldType, CollapsedStats());
     al->url = url;
     // HTCP transactions do not wait
     al->cache.start_time = current_time;
@@ -961,6 +962,15 @@ htcpSpecifier::created(StoreEntry *e)
     // TODO: StoreClients must either store/lock or abandon found entries.
     //if (!e->isNull())
     //    e->abandon();
+}
+
+LogTags *
+htcpSpecifier::loggingTags()
+{
+    // calling htcpSyncAle(LOG_TAG_NONE) here would not change cache.code
+    if (!al)
+        al = new AccessLogEntry();
+    return &al->cache.code;
 }
 
 void

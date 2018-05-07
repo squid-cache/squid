@@ -80,6 +80,7 @@ public:
 
 protected:
     /* StoreClient API */
+    virtual LogTags *loggingTags() override;
     virtual void fillChecklist(ACLFilledChecklist &) const override;
     mutable AccessLogEntryPointer al;
 };

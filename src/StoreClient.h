@@ -35,6 +35,9 @@ public:
     /// how many times this client was collapsed
     CollapsedStats collapsedStats;
 
+    /// \return LogTags (if the child logs transactions) or nil (otherwise)
+    virtual LogTags *loggingTags() = 0;
+
 protected:
     /// configure the ACL checklist with the current transaction state
     virtual void fillChecklist(ACLFilledChecklist &) const = 0;

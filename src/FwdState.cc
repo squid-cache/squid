@@ -378,7 +378,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
         return;
 
     case AnyP::PROTO_URN:
-        urnStart(request, entry);
+        urnStart(request, entry, al);
         return;
 
     default:

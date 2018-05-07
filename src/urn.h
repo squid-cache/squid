@@ -11,10 +11,14 @@
 #ifndef SQUID_URN_H_
 #define SQUID_URN_H_
 
+class AccessLogEntry;
 class HttpRequest;
 class StoreEntry;
 
-void urnStart(HttpRequest *, StoreEntry *);
+template <class C> class RefCount;
+typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
+
+void urnStart(HttpRequest *, StoreEntry *, const AccessLogEntryPointer &ale);
 
 #endif /* SQUID_URN_H_ */
 
