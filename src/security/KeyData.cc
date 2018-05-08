@@ -86,8 +86,6 @@ void
 Security::KeyData::loadX509ChainFromFile()
 {
 #if USE_OPENSSL
-    // XXX: This BIO loads the public cert as first chain cert,
-    //      so the code appending chains sends it twice in handshakes.
     const char *certFilename = certFile.c_str();
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
     if (!bio || !BIO_read_filename(bio.get(), certFilename)) {
@@ -98,30 +96,33 @@ Security::KeyData::loadX509ChainFromFile()
 
     if (X509_check_issued(cert.get(), cert.get()) == X509_V_OK) {
         char *nameStr = X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0);
-        debugs(83, DBG_IMPORTANT, "Certificate is self-signed, will not be chained: " << nameStr);
+        debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << nameStr);
         OPENSSL_free(nameStr);
     } else {
-        debugs(83, DBG_IMPORTANT, "Using certificate chain in " << certFile);
+        debugs(83, DBG_PARSE_NOTE(3), "Using certificate chain in " << certFile);
         // and add to the chain any other certificate exist in the file
-        X509 *lastCert = cert.get();
-        while (X509 *ca = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr)) {
-            // get Issuer name of the cert for debug display.
+        CertPointer latestCert = cert;
+
+        while (auto ca = PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr)) {
+            // get Issuer name of the cert for debug display
             char *nameStr = X509_NAME_oneline(X509_get_subject_name(ca), nullptr, 0);
 
-            // self-signed certificates are not valid in a sent chain.
+            // self-signed certificates are not valid in a sent chain
             if (X509_check_issued(ca, ca) == X509_V_OK) {
-                debugs(83, 5, "CA " << nameStr << " is self-signed, will not be chained: " << nameStr);
+                debugs(83, DBG_PARSE_NOTE(2), "CA " << nameStr << " is self-signed, will not be chained: " << nameStr);
                 OPENSSL_free(nameStr);
                 continue;
             }
 
-            // checks that the chained certs are actually part of a chain for validating cert.
-            if (X509_check_issued(lastCert, ca) == X509_V_OK) {
-                debugs(83, DBG_IMPORTANT, "Adding issuer CA: " << nameStr);
-                chain.emplace_front(Security::CertPointer(ca));
-                lastCert = ca;
+            // checks that the chained certs are actually part of a chain for validating cert
+            if (X509_check_issued(ca, latestCert.get()) == X509_V_OK) {
+                debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << nameStr);
+                // OpenSSL API requires that we order certificates such that the
+                // chain can be appended directly into the on-wire traffic.
+                latestCert = CertPointer(ca);
+                chain.emplace_front(latestCert);
             } else {
-                debugs(83, DBG_IMPORTANT, "Ignoring non-issuer CA: " << nameStr);
+                debugs(83, DBG_PARSE_NOTE(2), "Ignoring non-issuer CA from " << certFile << ": " << nameStr);
             }
             OPENSSL_free(nameStr);
         }
