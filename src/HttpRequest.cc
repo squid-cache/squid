@@ -739,16 +739,16 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
 }
 
 const Ip::Address *
-FindListeningPortAddress(const HttpRequest *request, const Ip::Address *cacheip, const Ip::Address *localip)
+FindListeningPortAddress(const HttpRequest *request, const bool derive_ips, const Ip::Address *cacheip, const Ip::Address *localip)
 {
     if (request) {
         if (request->flags.interceptTproxy || request->flags.intercepted) {
-            if (!cacheip && request->masterXaction->squidPort)
+            if (!cacheip && derive_ips && request->masterXaction->squidPort)
                 cacheip = &(request->masterXaction->squidPort->s);
             if (cacheip)
                 return (cacheip->isAnyAddr() ? nullptr : cacheip);
         }
-        if (!localip && request->masterXaction->tcpClient)
+        if (!localip && derive_ips && request->masterXaction->tcpClient)
             return &(request->masterXaction->tcpClient->local);
     }
     return localip;

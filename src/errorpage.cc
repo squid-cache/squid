@@ -698,7 +698,7 @@ ErrorState::Dump(MemBuf * mb)
     str.appendf("TimeStamp: %s\r\n\r\n", mkrfc1123(squid_curtime));
 
     /* - IP stuff */
-    str.appendf("ClientIP: %s\r\n", src_addr.toStr(ntoabuf, MAX_IPSTRLEN));
+    str.appendf("ClientIP: %s\r\n", src_addr.toStr(ntoabuf,MAX_IPSTRLEN));
 
     if (request && request->hier.host[0] != '\0') {
         str.appendf("ServerIP: %s\r\n", request->hier.host);
@@ -760,7 +760,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'A':
         // TODO: When/if we get ALE here, use al->cache.port->s and al->tcpClient->local as well
-        if (const auto addr = FindListeningPortAddress(request.getRaw()))
+        if (const auto addr = FindListeningPortAddress(request.getRaw(), true))
             mb.appendf("%s", addr->toStr(ntoabuf, MAX_IPSTRLEN));
         else
             p = "-";
@@ -859,12 +859,12 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     case 'i':
-        mb.appendf("%s", src_addr.toStr(ntoabuf, MAX_IPSTRLEN));
+        mb.appendf("%s", src_addr.toStr(ntoabuf,MAX_IPSTRLEN));
         break;
 
     case 'I':
         if (request && request->hier.tcpServer)
-            p = request->hier.tcpServer->remote.toStr(ntoabuf, MAX_IPSTRLEN);
+            p = request->hier.tcpServer->remote.toStr(ntoabuf,MAX_IPSTRLEN);
         else if (!building_deny_info_url)
             p = "[unknown]";
         break;
