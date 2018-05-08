@@ -1402,7 +1402,7 @@ ESIContext::freeResources ()
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
-ErrorState *clientBuildError (err_type, Http::StatusCode, char const *, Ip::Address &, HttpRequest *);
+ErrorState *clientBuildError (err_type, Http::StatusCode, char const *, Ip::Address &, HttpRequest *, const AccessLogEntry::Pointer &);
 
 /* This can ONLY be used before we have sent *any* data to the client */
 void
@@ -1420,7 +1420,7 @@ ESIContext::fail ()
     flags.error = 1;
     /* create an error object */
     // XXX: with the in-direction on remote IP. does the http->getConn()->clientConnection exist?
-    ErrorState * err = clientBuildError(errorpage, errorstatus, NULL, http->getConn()->clientConnection->remote, http->request);
+    ErrorState * err = clientBuildError(errorpage, errorstatus, NULL, http->getConn()->clientConnection->remote, http->request, http->al);
     err->err_msg = errormessage;
     errormessage = NULL;
     rep = err->BuildHttpReply();

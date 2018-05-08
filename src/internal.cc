@@ -9,6 +9,7 @@
 /* DEBUG: section 76    Internal Squid Object handling */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
@@ -28,7 +29,7 @@
  * return Http::scNotFound for others
  */
 void
-internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, StoreEntry * entry)
+internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, StoreEntry * entry, const AccessLogEntry::Pointer &al)
 {
     ErrorState *err;
     const SBuf upath = request->url.path();
@@ -55,11 +56,11 @@ internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, 
         entry->complete();
     } else if (upath.startsWith(mgrPfx)) {
         debugs(17, 2, "calling CacheManager due to URL-path " << mgrPfx);
-        CacheManager::GetInstance()->Start(clientConn, request, entry);
+        CacheManager::GetInstance()->Start(clientConn, request, entry, al);
     } else {
         debugObj(76, 1, "internalStart: unknown request:\n",
                  request, (ObjPackMethod) & httpRequestPack);
-        err = new ErrorState(ERR_INVALID_REQ, Http::scNotFound, request);
+        err = new ErrorState(ERR_INVALID_REQ, Http::scNotFound, request, al);
         errorAppendEntry(entry, err);
     }
 }

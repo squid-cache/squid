@@ -1531,7 +1531,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
                 request->hier = sslServerBump->request->hier;
 
                 // Create an error object and fill it
-                ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request);
+                ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request, http->al);
                 err->src_addr = clientConnection->remote;
                 Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail(
                     SQUID_X509_V_ERR_DOMAIN_MISMATCH,

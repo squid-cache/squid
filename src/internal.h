@@ -15,12 +15,13 @@
 #define SQUID_INTERNAL_H_
 
 #include "comm/forward.h"
+#include "log/forward.h"
 #include "sbuf/forward.h"
 
 class HttpRequest;
 class StoreEntry;
 
-void internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest *, StoreEntry *);
+void internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest *, StoreEntry *, const AccessLogEntryPointer &);
 bool internalCheck(const SBuf &urlPath);
 bool internalStaticCheck(const SBuf &urlPath);
 char *internalLocalUri(const char *dir, const SBuf &name);

@@ -9,6 +9,7 @@
 /* DEBUG: section 04    Error Generation */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "cache_cf.h"
 #include "clients/forward.h"
 #include "comm/Connection.h"
@@ -16,6 +17,7 @@
 #include "err_detail_type.h"
 #include "errorpage.h"
 #include "fde.h"
+#include "format/Format.h"
 #include "fs_io.h"
 #include "html_quote.h"
 #include "HttpHeaderTools.h"
@@ -93,6 +95,18 @@ error_hard_text[] = {
     {
         TCP_RESET,
         "reset"
+    },
+    {
+        ERR_SECURE_ACCEPT_FAIL,
+        "secure accept fail"
+    },
+    {
+        ERR_REQUEST_START_TIMEOUT,
+        "request start timedout"
+    },
+    {
+        MGR_INDEX,
+        "mgr_index"
     }
 };
 
@@ -128,11 +142,29 @@ public:
     /// The template text data read from disk
     const char *text() { return textBuf.content(); }
 
+    bool parseErrorCheck = true; ///< whether to check loaded pages for errors
 private:
     /// stores the data read from disk to a local buffer
-    virtual bool parse(const char *buf, int len, bool) {
+    virtual bool parse(const char *buf, int len, bool eof) {
         if (len)
             textBuf.append(buf, len);
+
+        if (eof)
+            return testPage(textBuf.content());
+
+        return true;
+    }
+
+    /// checks for syntax errors
+    bool testPage(const char *text) {
+        if (!parseErrorCheck)
+            return true;
+
+        const char *err = nullptr;
+        if (!ErrorState::ParseCheck(text, false, err)) {
+            return false;
+        }
+
         return true;
     }
 
@@ -177,7 +209,12 @@ errorInitialize(void)
              *  (b) admin specified custom directory (error_directory)
              */
             ErrorPageFile errTmpl(err_type_str[i], i);
-            error_text[i] = errTmpl.loadDefault() ? xstrdup(errTmpl.text()) : NULL;
+            if (!errTmpl.loadDefault() && !reconfiguring)
+                fatalf("cannot load template '%s'\n", err_type_str[i]);
+            // TODO: on reconfigure reject all of the new configuration
+
+            // ErrorPageFile::loadDefault always builds a template
+            error_text[i] = xstrdup(errTmpl.text());
         } else {
             /** \par
              * Index any unknown file names used by deny_info.
@@ -192,7 +229,11 @@ errorInitialize(void)
             if (strchr(pg, ':') == NULL) {
                 /** But only if they are not redirection URL. */
                 ErrorPageFile errTmpl(pg, ERR_MAX);
-                error_text[i] = errTmpl.loadDefault() ? xstrdup(errTmpl.text()) : NULL;
+                if (errTmpl.loadDefault() && !reconfiguring)
+                    fatalf("cannot load template '%s'\n", pg);
+                // TODO: on reconfigure reject all of the new configuration
+
+                error_text[i] = xstrdup(errTmpl.text());
             }
         }
     }
@@ -202,8 +243,10 @@ errorInitialize(void)
     // look for and load stylesheet into global MemBuf for it.
     if (Config.errorStylesheet) {
         ErrorPageFile tmpl("StylesSheet", ERR_MAX);
-        tmpl.loadFromFile(Config.errorStylesheet);
-        error_stylesheet.appendf("%s",tmpl.text());
+        if (!tmpl.loadFromFile(Config.errorStylesheet) && !reconfiguring)
+            fatalf("cannot load template from file '%s'\n", Config.errorStylesheet);
+        if (tmpl.loaded())
+            error_stylesheet.appendf("%s",tmpl.text());
     }
 
 #if USE_OPENSSL
@@ -283,8 +326,9 @@ TemplateFile::loadDefault()
     /* giving up if failed */
     if (!loaded()) {
         debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
-        parse("Internal Error: Missing Template ", 33, '\0');
-        parse(templateName.termedBuf(), templateName.size(), '\0');
+        parse("Internal Error: Missing Template ", 33, false);
+        parse(templateName.termedBuf(), templateName.size(), true);
+        return false;
     }
 
     return true;
@@ -337,23 +381,28 @@ TemplateFile::loadFromFile(const char *path)
         return wasLoaded;
     }
 
-    while ((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
-        if (!parse(buf, len, false)) {
-            debugs(4, DBG_CRITICAL, "ERROR: parsing error in template file: " << path);
-            wasLoaded = false;
-            return wasLoaded;
-        }
+    bool parseError = false;
+    while (!parseError && (len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
+        if (!parse(buf, len, false))
+            parseError = true;
     }
-    parse(buf, 0, true);
+    file_close(fd);
 
     if (len < 0) {
         int xerrno = errno;
         debugs(4, DBG_CRITICAL, MYNAME << "ERROR: failed to fully read: '" << path << "': " << xstrerr(xerrno));
+        return false;
     }
 
-    file_close(fd);
+    if (!parseError && !parse(buf, 0, true))
+        parseError = true;
 
-    wasLoaded = true;
+    if (parseError){
+        debugs(4, DBG_CRITICAL, "ERROR: parsing error in template file: " << path);
+        wasLoaded = false;
+    } else
+        wasLoaded = true;
+
     return wasLoaded;
 }
 
@@ -549,14 +598,14 @@ errorPageName(int pageId)
 }
 
 ErrorState *
-ErrorState::NewForwarding(err_type type, HttpRequestPointer &request)
+ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const AccessLogEntry::Pointer &al)
 {
     const Http::StatusCode status = (request && request->flags.needValidation) ?
                                     Http::scGatewayTimeout : Http::scServiceUnavailable;
-    return new ErrorState(type, status, request.getRaw());
+    return new ErrorState(type, status, request.getRaw(), al);
 }
 
-ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req) :
+ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, const AccessLogEntry::Pointer &alp) :
     type(t),
     page_id(t),
     httpStatus(status),
@@ -569,6 +618,8 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req) :
         request = req;
         src_addr = req->client_addr;
     }
+
+    al = alp;
 }
 
 void
@@ -736,7 +787,7 @@ ErrorState::Dump(MemBuf * mb)
 #define CVT_BUF_SZ 512
 
 const char *
-ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion)
+ErrorState::convert(const char *start, bool building_deny_info_url, bool allowRecursion)
 {
     static MemBuf mb;
     const char *p = NULL;   /* takes priority over mb if set */
@@ -746,7 +797,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     mb.reset();
 
-    switch (token) {
+    switch (*start) {
 
     case 'a':
 #if USE_AUTH
@@ -1063,7 +1114,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     default:
-        mb.appendf("%%%c", token);
+        mb.appendf("%%%c", *start);
         do_quote = 0;
         break;
     }
@@ -1073,7 +1124,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     assert(p);
 
-    debugs(4, 3, "errorConvert: %%" << token << " --> '" << p << "'" );
+    debugs(4, 3, "errorConvert: %%" << *start << " --> '" << p << "'" );
 
     if (do_quote)
         p = html_quote(p);
@@ -1088,23 +1139,19 @@ void
 ErrorState::DenyInfoLocation(const char *name, HttpRequest *, MemBuf &result)
 {
     char const *m = name;
-    char const *p = m;
-    char const *t;
 
     if (m[0] == '3')
         m += 4; // skip "3xx:"
 
-    while ((p = strchr(m, '%'))) {
-        result.append(m, p - m);       /* copy */
-        t = Convert(*++p, true, true);       /* convert */
-        result.appendf("%s", t);        /* copy */
-        m = p + 1;                     /* advance */
-    }
-
-    if (*m)
-        result.appendf("%s", m);        /* copy tail */
+    convertAndWriteTo(m, result, true, true);
 
     assert((size_t)result.contentSize() == strlen(result.content()));
+}
+
+bool
+ErrorState::IsDenyInfoUrl(const char *text)
+{
+    return text[0] == '3' || (text[0] != '2' && text[0] != '4' && text[0] != '5' && strchr(text, ':'));
 }
 
 HttpReply *
@@ -1114,7 +1161,7 @@ ErrorState::BuildHttpReply()
     const char *name = errorPageName(page_id);
     /* no LMT for error pages; error pages expire immediately */
 
-    if (name[0] == '3' || (name[0] != '2' && name[0] != '4' && name[0] != '5' && strchr(name, ':'))) {
+    if (IsDenyInfoUrl(name)) {
         /* Redirection */
         Http::StatusCode status = Http::scFound;
         // Use configured 3xx reply status if set.
@@ -1216,6 +1263,7 @@ ErrorState::BuildContent()
             safe_free(err_language);
 
         localeTmpl = new ErrorPageFile(err_type_str[page_id], static_cast<err_type>(page_id));
+        localeTmpl->parseErrorCheck = false; // We are going to check later
         if (localeTmpl->loadFor(request.getRaw())) {
             m = localeTmpl->text();
             assert(localeTmpl->language());
@@ -1224,20 +1272,34 @@ ErrorState::BuildContent()
     }
 #endif /* USE_ERR_LOCALES */
 
-    /** \par
-     * If client-specific error templates are not enabled or available.
-     * fall back to the old style squid.conf settings.
-     */
-    if (!m) {
-        m = error_text[page_id];
+    MemBuf *result = nullptr;
+    do {
+        bool useDefaultTemplate = false;
+        /** \par
+         * If client-specific error templates are not enabled or available.
+         * fall back to the old style squid.conf settings.
+         */
+        if (!m) {
+            m = error_text[page_id];
 #if USE_ERR_LOCALES
-        if (!Config.errorDirectory)
-            err_language = Config.errorDefaultLanguage;
+            if (!Config.errorDirectory)
+                err_language = Config.errorDefaultLanguage;
 #endif
-        debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
-    }
+            debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
+            useDefaultTemplate = true;
+        }
 
-    MemBuf *result = ConvertText(m, true);
+        try {
+            result = ConvertText(m, true);
+        } catch (const std::exception &ex) {
+            m = nullptr;
+            // The default template must always parses
+            assert(!useDefaultTemplate);
+            debugs(1, DBG_IMPORTANT, "Error while parsing template " << err_type_str[page_id] << ": " << ex.what());
+        }
+    } while(!result /*&& !(useDefaultTemplate)*/);
+
+
 #if USE_ERR_LOCALES
     if (localeTmpl)
         delete localeTmpl;
@@ -1248,25 +1310,97 @@ ErrorState::BuildContent()
 MemBuf *ErrorState::ConvertText(const char *text, bool allowRecursion)
 {
     MemBuf *content = new MemBuf;
-    const char *p;
-    const char *m = text;
-    assert(m);
     content->init();
-
-    while ((p = strchr(m, '%'))) {
-        content->append(m, p - m);  /* copy */
-        const char *t = Convert(*++p, false, allowRecursion);   /* convert */
-        content->appendf("%s", t);   /* copy */
-        m = p + 1;          /* advance */
-    }
-
-    if (*m)
-        content->appendf("%s", m);   /* copy tail */
-
+    convertAndWriteTo(text, *content, false, allowRecursion);
     content->terminate();
-
     assert((size_t)content->contentSize() == strlen(content->content()));
-
     return content;
 }
 
+const char *
+ErrorState::NextCode(const char *p)
+{
+    assert(p);
+    do {
+        while (*p && *p != '%' && *p != '@') ++p;
+        if (*p == '@' && strncmp(p + 1, "Squid{", 6) != 0) {
+            ++p;
+            continue;
+        }
+        return p;
+    } while (1);
+}
+
+void
+ErrorState::convertAndWriteTo(const char *text, MemBuf &result, bool building_deny_info_url, bool allowRecursion)
+{
+    const char *p;
+    const char *m = text;
+    assert(m);
+
+    while (*(p = NextCode(m))) {
+        result.append(m, p - m);
+        if (*p == '%') {
+            const char *t = convert(++p, building_deny_info_url, allowRecursion);
+            result.appendf("%s", t);
+            m = p + 1;
+        } else {
+            assert(*p == '@');
+            const char *t = handleLogFormat(p);
+            result.appendf("%s", t);
+            m = p;
+        }
+    }
+
+    if (*m)
+        result.appendf("%s", m);   /* copy tail */
+}
+
+const char *
+ErrorState::handleLogFormat(const char *&start)
+{
+    static MemBuf mb;
+    mb.reset();
+
+    static const SBuf logFormatStart("@Squid{");
+    assert(logFormatStart.cmp(start, logFormatStart.length()) == 0);
+
+    const char *error = nullptr;
+    const char *p = start + logFormatStart.length();
+    if (int tokenBytes = Format::Format::AssembleToken(p, mb, al)) {
+        p += tokenBytes;
+        if (*p != '}') {
+            error = "unterminated @Squid{";
+            mb.reset();
+        }
+        start = p + 1;
+    } else {
+        static char buf[1024];
+        snprintf(buf, sizeof(buf), "Parse error at: %.10s", start);
+        error = buf;
+    }
+
+    if (error)
+        throw TexcHere(error);
+
+    return mb.buf;
+}
+
+bool
+ErrorState::ParseCheck(const char *text, bool is_deny_info_url, const char *&err)
+{
+    MemBuf content;
+    content.init();
+    AccessLogEntry::Pointer alp= new AccessLogEntry;
+    ErrorState anErr(ERR_NONE, Http::scNone, NULL, alp);
+    try {
+        anErr.convertAndWriteTo(text, content, is_deny_info_url, true);
+    } catch (const std::exception &ex) {
+        static SBuf errDescription;
+        errDescription.clear();
+        errDescription.append(ex.what());
+        err = errDescription.c_str();
+        return false;
+    }
+    return true;
+}

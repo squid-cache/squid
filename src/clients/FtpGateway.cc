@@ -153,7 +153,7 @@ public:
     virtual void timeout(const CommTimeoutCbParams &io);
     void ftpAcceptDataConnection(const CommAcceptCbParams &io);
 
-    static HttpReply *ftpAuthRequired(HttpRequest * request, SBuf &realm);
+    static HttpReply *ftpAuthRequired(HttpRequest * request, SBuf &realm, AccessLogEntry::Pointer &);
     SBuf ftpRealm();
     void loginFailed(void);
 
@@ -1150,7 +1150,7 @@ Ftp::Gateway::start()
     if (!checkAuth(&request->header)) {
         /* create appropriate reply */
         SBuf realm(ftpRealm()); // local copy so SBuf will not disappear too early
-        HttpReply *reply = ftpAuthRequired(request.getRaw(), realm);
+        HttpReply *reply = ftpAuthRequired(request.getRaw(), realm, fwd->al);
         entry->replaceHttpReply(reply);
         serverComplete();
         return;
@@ -1225,16 +1225,16 @@ Ftp::Gateway::loginFailed()
     if ((state == SENT_USER || state == SENT_PASS) && ctrl.replycode >= 400) {
         if (ctrl.replycode == 421 || ctrl.replycode == 426) {
             // 421/426 - Service Overload - retry permitted.
-            err = new ErrorState(ERR_FTP_UNAVAILABLE, Http::scServiceUnavailable, fwd->request);
+            err = new ErrorState(ERR_FTP_UNAVAILABLE, Http::scServiceUnavailable, fwd->request, fwd->al);
         } else if (ctrl.replycode >= 430 && ctrl.replycode <= 439) {
             // 43x - Invalid or Credential Error - retry challenge required.
-            err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scUnauthorized, fwd->request);
+            err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scUnauthorized, fwd->request, fwd->al);
         } else if (ctrl.replycode >= 530 && ctrl.replycode <= 539) {
             // 53x - Credentials Missing - retry challenge required
             if (password_url) // but they were in the URI! major fail.
-                err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scForbidden, fwd->request);
+                err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scForbidden, fwd->request, fwd->al);
             else
-                err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scUnauthorized, fwd->request);
+                err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scUnauthorized, fwd->request, fwd->al);
         }
     }
 
@@ -2263,7 +2263,7 @@ Ftp::Gateway::completedListing()
 {
     assert(entry);
     entry->lock("Ftp::Gateway");
-    ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request.getRaw());
+    ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request.getRaw(), fwd->al);
     ferr.ftp.listing = &listing;
     ferr.ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
     ferr.ftp.server_msg = ctrl.message;
@@ -2437,7 +2437,7 @@ ftpFail(Ftp::Gateway *ftpState)
     }
 
     Http::StatusCode sc = ftpState->failedHttpStatus(error_code);
-    ErrorState *ftperr = new ErrorState(error_code, sc, ftpState->fwd->request);
+    ErrorState *ftperr = new ErrorState(error_code, sc, ftpState->fwd->request, ftpState->fwd->al);
     ftpState->failed(error_code, code, ftperr);
     ftperr->detailError(code);
     HttpReply *newrep = ftperr->BuildHttpReply();
@@ -2505,7 +2505,7 @@ ftpSendReply(Ftp::Gateway * ftpState)
         http_code = Http::scInternalServerError;
     }
 
-    ErrorState err(err_code, http_code, ftpState->request.getRaw());
+    ErrorState err(err_code, http_code, ftpState->request.getRaw(), ftpState->fwd->al);
 
     if (ftpState->old_request)
         err.ftp.request = xstrdup(ftpState->old_request);
@@ -2626,9 +2626,9 @@ Ftp::Gateway::haveParsedReplyHeaders()
 }
 
 HttpReply *
-Ftp::Gateway::ftpAuthRequired(HttpRequest * request, SBuf &realm)
+Ftp::Gateway::ftpAuthRequired(HttpRequest * request, SBuf &realm, AccessLogEntry::Pointer &al)
 {
-    ErrorState err(ERR_CACHE_ACCESS_DENIED, Http::scUnauthorized, request);
+    ErrorState err(ERR_CACHE_ACCESS_DENIED, Http::scUnauthorized, request, al);
     HttpReply *newrep = err.BuildHttpReply();
 #if HAVE_AUTH_MODULE_BASIC
     /* add Authenticate header */

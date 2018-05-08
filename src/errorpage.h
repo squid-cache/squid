@@ -15,6 +15,7 @@
 #include "comm/forward.h"
 #include "err_detail_type.h"
 #include "err_type.h"
+#include "log/forward.h"
 #include "http/forward.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
@@ -69,6 +70,9 @@ typedef void ERCB(int fd, void *, size_t);
    z - dns server error message                 x
    Z - Preformatted error message               x
  \endverbatim
+ *
+ * Also the squid logformat codes supported using the @Squid{%logformat_code}
+ * syntax.
  */
 
 class MemBuf;
@@ -81,12 +85,12 @@ class ErrorState
     CBDATA_CLASS(ErrorState);
 
 public:
-    ErrorState(err_type type, Http::StatusCode, HttpRequest * request);
+    ErrorState(err_type type, Http::StatusCode, HttpRequest * request, const AccessLogEntryPointer &al);
     ErrorState() = delete; // not implemented.
     ~ErrorState();
 
     /// Creates a general request forwarding error with the right http_status.
-    static ErrorState *NewForwarding(err_type, HttpRequestPointer &);
+    static ErrorState *NewForwarding(err_type, HttpRequestPointer &, const AccessLogEntryPointer &);
 
     /**
      * Allocates and initializes an error response
@@ -96,7 +100,20 @@ public:
     /// set error type-specific detail code
     void detailError(int dCode) {detailCode = dCode;}
 
+    /// Checks if the text can be parsed correctly.
+    static bool ParseCheck(const char *text, bool is_deny_info_url, const char *&err);
+
+    /// True if the text is a URL deny info
+    static bool IsDenyInfoUrl(const char *text);
+
 private:
+    /**
+     * Searches in  a string for the next formating code and return a pointer
+     * to it, or a pointer to the end of input string.
+     * Return always a non-nil value.
+     */
+    static const char *NextCode(const char *p);
+
     /**
      * Locates error page template to be used for this error
      * and constructs the HTML page content from it.
@@ -104,7 +121,19 @@ private:
     MemBuf *BuildContent(void);
 
     /**
+     * Lowlevel method to convert the given template string and write it
+     * to a given MemBuf object.
+     * Throws on parse error
+     * \param text            The string to be converted
+     * \param result          where to write output.
+     * \param building_deny_info_url  Whether the text input is a deny info url
+     * \param allowRecursion  Whether to convert codes which output may contain codes
+     */
+    void convertAndWriteTo(const char *text, MemBuf &result, bool building_deny_info_url, bool allowRecursion);
+
+    /**
      * Convert the given template string into textual output
+     * Throws on parse error
      *
      * \param text            The string to be converted
      * \param allowRecursion  Whether to convert codes which output may contain codes
@@ -127,8 +156,10 @@ private:
      * \param building_deny_info_url   Perform special deny_info actions, such as URL-encoding and token skipping.
      * \ allowRecursion   True if the codes which do recursions should converted
      */
-    const char *Convert(char token, bool building_deny_info_url, bool allowRecursion);
+    const char *convert(const char *start, bool building_deny_info_url, bool allowRecursion);
 
+    /// Handle the @Squid{%logformat_code} formatting code.
+    const char *handleLogFormat(const char *&start);
     /**
      * CacheManager / Debug dump of the ErrorState object.
      * Writes output into the given MemBuf.
@@ -173,6 +204,7 @@ public:
     /// type-specific detail about the transaction error;
     /// overwrites xerrno; overwritten by detail, if any.
     int detailCode = ERR_DETAIL_NONE;
+    AccessLogEntryPointer al;
 };
 
 /**
@@ -254,6 +286,7 @@ public:
      *  (a) admin specified custom directory (error_directory)
      *  (b) default language translation directory (error_default_language)
      *  (c) English sub-directory where errors should ALWAYS exist
+     \return false if no template found and uses as template text an error message
      */
     bool loadDefault();
 

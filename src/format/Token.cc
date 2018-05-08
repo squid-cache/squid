@@ -443,7 +443,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
         }
 
         if (type == LFT_NONE) {
-            fatalf("Can't parse configuration token: '%s'\n", def);
+            throw TexcHere(SBuf().appendf("Can't parse configuration token: '%s'\n", def));
         }
 
         // when {arg} field is after the token (old external_acl_type token syntax)

@@ -111,6 +111,15 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
         debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: missing 'error page' parameter.");
         return;
     }
+    const char *err = nullptr;
+    if (ErrorState::IsDenyInfoUrl(t) && !ErrorState::ParseCheck(t, true, err)) {
+        debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
+        //if (!reconfiguring)
+        //    fatalf("Fatal: error parsing deny info URL: %s\n", err);
+        //else
+        debugs(28, DBG_CRITICAL, "error parsing deny info URL: " << err);
+        return;
+    }
 
     AclDenyInfoList *A = new AclDenyInfoList(t);
 

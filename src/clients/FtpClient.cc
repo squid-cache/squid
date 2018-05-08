@@ -257,7 +257,7 @@ Ftp::Client::failed(err_type error, int xerrno, ErrorState *err)
         ftperr = err;
     } else {
         Http::StatusCode httpStatus = failedHttpStatus(error);
-        ftperr = new ErrorState(error, httpStatus, fwd->request);
+        ftperr = new ErrorState(error, httpStatus, fwd->request, fwd->al);
     }
 
     ftperr->xerrno = xerrno;

@@ -84,7 +84,7 @@ static const char *const crlf = "\r\n";
 static void clientFollowXForwardedForCheck(allow_t answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, Ip::Address &, HttpRequest *);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, Ip::Address &, HttpRequest *, const AccessLogEntry::Pointer &);
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
@@ -808,7 +808,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
         error = clientBuildError(page_id, status,
                                  NULL,
                                  http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
-                                 http->request
+                                 http->request, http->al
                                 );
 
 #if USE_AUTH
@@ -2171,8 +2171,9 @@ ClientHttpRequest::calloutsError(const err_type error, const int errDetail)
         calloutContext->error = clientBuildError(error, Http::scInternalServerError,
                                 NULL,
                                 c != NULL ? c->clientConnection->remote : noAddr,
-                                request
-                                                );
+                                request,
+                                al
+                                );
 #if USE_AUTH
         calloutContext->error->auth_user_request =
             c != NULL && c->getAuth() != NULL ? c->getAuth() : request->auth_user_request;

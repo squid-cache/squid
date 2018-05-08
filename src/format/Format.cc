@@ -82,17 +82,46 @@ Format::Format::parse(const char *def)
      * token but it can be an escaped sequence), or a string. */
     cur = def;
     eos = def + strlen(def);
-    format = new_lt = last_lt = new Token;
-    cur += new_lt->parse(cur, &quote);
-
-    while (cur < eos) {
-        new_lt = new Token;
-        last_lt->next = new_lt;
-        last_lt = new_lt;
+    try {
+        format = new_lt = last_lt = new Token;
         cur += new_lt->parse(cur, &quote);
+
+        while (cur < eos) {
+            new_lt = new Token;
+            last_lt->next = new_lt;
+            last_lt = new_lt;
+            cur += new_lt->parse(cur, &quote);
+        }
+    } catch (const std::exception &ex) {
+        debugs(46, DBG_CRITICAL, ex.what());
+        return false;
     }
 
     return true;
+}
+
+int
+Format::Format::AssembleToken(const char *token, MemBuf &mb, const AccessLogEntryPointer &al)
+{
+    Token tkn;
+    enum Quoting quote = LOG_QUOTE_NONE;
+    int tokenSize;
+    try {
+        if ((tokenSize = tkn.parse(token, &quote))) {
+            if (al != nullptr) {
+                Format fmt("SimpleToken");
+                fmt.format = &tkn;
+                fmt.assemble(mb, al, 0);
+                fmt.format = nullptr;
+            } else
+                mb.append("-", 1);
+        }
+    } catch (...) {
+        debugs(46, 5, "Unknown token: " << token);
+        tokenSize = 0;
+    }
+
+    return tokenSize;
 }
 
 void

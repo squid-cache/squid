@@ -48,6 +48,7 @@ public:
     StoreEntry *urlres_e = nullptr;
     HttpRequest::Pointer request;
     HttpRequest::Pointer urlres_r;
+    AccessLogEntry::Pointer ale; ///< master transaction summary
 
     struct {
         bool force_menu = false;
@@ -61,7 +62,6 @@ private:
     virtual void fillChecklist(ACLFilledChecklist &) const;
 
     char *urlres = nullptr;
-    AccessLogEntry::Pointer ale; ///< master transaction summary
 };
 
 typedef struct {
@@ -163,7 +163,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
 
     if (!urlres_r) {
         debugs(52, 3, "Bad uri-res URL " << local_urlres);
-        ErrorState *err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, r);
+        ErrorState *err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, r, ale);
         err->url = xstrdup(local_urlres);
         errorAppendEntry(entry, err);
         return;
@@ -320,7 +320,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     if (rep->sline.status() != Http::scOkay) {
         debugs(52, 3, "urnHandleReply: failed.");
-        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw());
+        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw(), urnState->ale);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
         delete rep;
@@ -337,7 +337,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     if (!urls) {     /* unknown URN error */
         debugs(52, 3, "urnTranslateDone: unknown URN " << e->url());
-        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw());
+        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw(), urnState->ale);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
         urnHandleReplyError(urnState, urlres_e);
