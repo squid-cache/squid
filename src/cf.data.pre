@@ -8451,6 +8451,7 @@ DOC_START
 
 	URL FORMAT TAGS:
 		%a	- username (if available. Password NOT included)
+		%A	- Local listening IP address the client connection was connected to
 		%B	- FTP path URL
 		%e	- Error number
 		%E	- Error description

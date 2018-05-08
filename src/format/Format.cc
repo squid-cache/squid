@@ -470,20 +470,14 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 
-        case LFT_LOCAL_LISTENING_IP: {
+        case LFT_LOCAL_LISTENING_IP:
             // avoid logging a dash if we have reliable info
-            const bool interceptedAtKnownPort = al->request ?
-                                                (al->request->flags.interceptTproxy ||
-                                                 al->request->flags.intercepted) && al->cache.port :
-                                                false;
-            if (interceptedAtKnownPort) {
-                const bool portAddressConfigured = !al->cache.port->s.isAnyAddr();
-                if (portAddressConfigured)
-                    out = al->cache.port->s.toStr(tmp, sizeof(tmp));
-            } else if (al->tcpClient)
-                out = al->tcpClient->local.toStr(tmp, sizeof(tmp));
-        }
-        break;
+            if (const auto addr = FindListeningPortAddress(
+                                    al->request,
+                                    al->cache.port ? &(al->cache.port->s) : nullptr,
+                                    al->tcpClient ? &(al->tcpClient->local) : nullptr))
+                out = addr->toStr(tmp, sizeof(tmp));
+            break;
 
         case LFT_CLIENT_LOCAL_IP:
             if (al->tcpClient)
