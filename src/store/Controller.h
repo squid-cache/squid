@@ -152,7 +152,8 @@ private:
     void checkTransients(const StoreEntry &) const;
 
     Disks *swapDir; ///< summary view of all disk caches
-    Memory *memStore; ///< memory cache
+    Memory *sharedMemStore; ///< memory cache
+    bool localMemStore; ///< whether local (non-shared) memory cache is enabled
 
     /// A shared table of public store entries that do not know whether they
     /// will belong to a memory cache, a disk cache, or will be uncachable
