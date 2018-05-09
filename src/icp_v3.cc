@@ -28,7 +28,7 @@ public:
         ICPState(aHeader, aRequest) {}
 
     ~ICP3State();
-    virtual void created (StoreEntry *newEntry) override;
+    void created (StoreEntry *newEntry);
 };
 
 /// \ingroup ServerProtocolICPInternal3
