@@ -759,8 +759,8 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     case 'A':
-        // TODO: When/if we get ALE here, use al->cache.port->s and al->tcpClient->local as well
-        if (const auto addr = FindListeningPortAddress(request.getRaw(), true))
+        // TODO: When/if we get ALE here, use FindListeningPortAddress(al) as well
+        if (const auto addr = FindListeningPortAddress(request))
             mb.appendf("%s", addr->toStr(ntoabuf, MAX_IPSTRLEN));
         else
             p = "-";

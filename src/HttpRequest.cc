@@ -754,3 +754,15 @@ FindListeningPortAddress(const HttpRequest *request, const bool derive_ips, cons
     return localip;
 }
 
+const Ip::Address *FindListeningPortAddress(const HttpRequestPointer &request)
+{
+    return FindListeningPortAddress(request.getRaw(), true, nullptr, nullptr);
+}
+
+const Ip::Address *FindListeningPortAddress(const AccessLogEntryPointer &al)
+{
+    return FindListeningPortAddress(al->request, false,
+                    al->cache.port ? &(al->cache.port->s) : nullptr,
+                    al->tcpClient ? &(al->tcpClient->local) : nullptr);
+}
+
