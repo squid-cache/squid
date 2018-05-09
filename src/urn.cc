@@ -62,7 +62,7 @@ private:
     virtual void fillChecklist(ACLFilledChecklist &) const;
 
     char *urlres = nullptr;
-    AccessLogEntry::Pointer ale; ///< master transaction ALE
+    AccessLogEntry::Pointer ale; ///< master transaction summary
 };
 
 typedef struct {

@@ -85,25 +85,6 @@ protected:
     mutable AccessLogEntryPointer al;
 };
 
-/// \ingroup ServerProtocolICPAPI
-struct icpUdpData {
-
-    /// IP address for the remote end. Because we reply to packets from unknown non-peers.
-    Ip::Address address;
-
-    void *msg;
-    size_t len;
-    icpUdpData *next;
-#ifndef LESS_TIMING
-
-    struct timeval start;
-#endif
-
-    LogTags logcode;
-
-    struct timeval queue_time;
-};
-
 extern Comm::ConnectionPointer icpIncomingConn;
 extern Comm::ConnectionPointer icpOutgoingConn;
 extern Ip::Address theIcpPublicHostID;
@@ -115,22 +96,16 @@ HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
 bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
 
 /// \ingroup ServerProtocolICPAPI
-void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntryPointer, const CollapsedStats &);
+void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntryPointer);
 
 /// \ingroup ServerProtocolICPAPI
 icp_opcode icpGetCommonOpcode();
-
-/// \ingroup ServerProtocolICPAPI
-int icpUdpSend(int, const Ip::Address &, icp_common_t *, const LogTags &, int, AccessLogEntryPointer);
 
 /// \ingroup ServerProtocolICPAPI
 void icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd);
 
 /// \ingroup ServerProtocolICPAPI
 PF icpHandleUdp;
-
-/// \ingroup ServerProtocolICPAPI
-PF icpUdpSendQueue;
 
 /// \ingroup ServerProtocolICPAPI
 void icpHandleIcpV3(int, Ip::Address &, char *, int);

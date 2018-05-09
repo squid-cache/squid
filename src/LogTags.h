@@ -52,9 +52,9 @@ class LogTags
 {
 public:
     LogTags() = default;
-    explicit LogTags(const LogTags_ot t, const CollapsedStats &stats = CollapsedStats());
+    explicit LogTags(const LogTags_ot t) { update(t); }
 
-    void update(const LogTags_ot t, const CollapsedStats &stats);
+    void update(const LogTags_ot t);
 
     /// compute the status access.log field
     const char *c_str() const;

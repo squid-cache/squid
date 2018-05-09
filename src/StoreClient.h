@@ -32,10 +32,7 @@ public:
     /// An isNull() entry indicates a cache miss.
     virtual void created(StoreEntry *) = 0;
 
-    /// how many times this client was collapsed
-    CollapsedStats collapsedStats;
-
-    /// \return LogTags (if the child logs transactions) or nil (otherwise)
+    /// \return LogTags (if the class logs transactions) or nil (otherwise)
     virtual LogTags *loggingTags() = 0;
 
 protected:

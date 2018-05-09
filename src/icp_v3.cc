@@ -73,7 +73,7 @@ ICP3State::created(StoreEntry *e)
     else
         codeToSend = icpGetCommonOpcode();
 
-    icpCreateAndSend(codeToSend, 0, url, header.reqnum, 0, fd, from, al, collapsedStats);
+    icpCreateAndSend(codeToSend, 0, url, header.reqnum, 0, fd, from, al);
 
     // TODO: StoreClients must either store/lock or abandon found entries.
     //if (!e->isNull())

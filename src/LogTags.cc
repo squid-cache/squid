@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "Debug.h"
 #include "LogTags.h"
 
 // old deprecated tag strings
@@ -39,17 +40,12 @@ const char * LogTags::Str_[] = {
     "TYPE_MAX"
 };
 
-LogTags::LogTags(const LogTags_ot t, const CollapsedStats &stats)
-{
-    update(t, stats);
-}
-
 void
-LogTags::update(const LogTags_ot t, const CollapsedStats &stats)
+LogTags::update(const LogTags_ot t)
 {
     assert(t < LOG_TYPE_MAX);
+    debugs(83, 7, Str_[oldType] << " to " << Str_[t]);
     oldType = t;
-    collapsedStats = stats;
 }
 
 /*
