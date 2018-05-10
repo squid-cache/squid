@@ -472,7 +472,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_LOCAL_LISTENING_IP:
             // avoid logging a dash if we have reliable info
-            if (const auto addr = FindListeningPortAddress(al))
+            if (const auto addr = FindListeningPortAddress(nullptr, al))
                 out = addr->toStr(tmp, sizeof(tmp));
             break;
 

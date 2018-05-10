@@ -256,11 +256,7 @@ void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs cons
 
 /// \returns a pointer to known *_port address where the request was accepted
 /// \returns nil for nil requests and when the port address info was not available
-/// cacheip and localip are useful when ALE has necessary info (cache.port->s / tcpClient->local)
-/// if cacheip or localip is nil and derive_ips is set, then it tries to derive them from request
-const Ip::Address *FindListeningPortAddress(const HttpRequest *request, const bool derive_ips, const Ip::Address *cacheip, const Ip::Address *localip);
-const Ip::Address *FindListeningPortAddress(const HttpRequestPointer &request);
-const Ip::Address *FindListeningPortAddress(const AccessLogEntryPointer &al);
+const Ip::Address *FindListeningPortAddress(const HttpRequestPointer &request, const AccessLogEntryPointer &al);
 
 #endif /* SQUID_HTTPREQUEST_H */
 
