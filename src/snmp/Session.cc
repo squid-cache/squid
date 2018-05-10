@@ -17,14 +17,14 @@
 
 Snmp::Session::Session()
 {
-    memset(reinterpret_cast<snmp_session *>(this), 0, sizeof(snmp_session));
+    memset(static_cast<snmp_session *>(this), 0, sizeof(snmp_session));
 }
 
 Snmp::Session&
 Snmp::Session::operator = (const Session& session)
 {
     reset();
-    memcpy(reinterpret_cast<snmp_session *>(this), &session, sizeof(snmp_session));
+    memcpy(static_cast<snmp_session *>(this), &session, sizeof(snmp_session));
     // NP: memcpy did a shallow copy of the pointer members,
     //     make sure we have our own allocations
     if (session.community) {
@@ -46,7 +46,7 @@ Snmp::Session::reset()
         xfree(community);
     }
     xfree(peername);
-    memset(reinterpret_cast<snmp_session *>(this), 0, sizeof(snmp_session));
+    memset(static_cast<snmp_session *>(this), 0, sizeof(snmp_session));
 }
 
 void

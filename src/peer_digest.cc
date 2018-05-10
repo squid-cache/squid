@@ -159,7 +159,7 @@ peerDigestDestroy(PeerDigest * pd)
      * tell it that the digest is gone.
      */
     if (cbdataReferenceValidDone(peerTmp, &p)) {
-        cbdataReferenceDone(((CachePeer *)p)->digest);
+        cbdataReferenceDone(static_cast<CachePeer *>(p)->digest);
     }
 
     delete pd;

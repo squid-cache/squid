@@ -24,15 +24,16 @@ Ipc::TypedMsgHdr::TypedMsgHdr()
 
 Ipc::TypedMsgHdr::TypedMsgHdr(const TypedMsgHdr &tmh)
 {
+    clear();
     operator =(tmh);
 }
 
 Ipc::TypedMsgHdr &Ipc::TypedMsgHdr::operator =(const TypedMsgHdr &tmh)
 {
     if (this != &tmh) { // skip assignment to self
-        memcpy(reinterpret_cast<msghdr*>(this), reinterpret_cast<const msghdr*>(&tmh), sizeof(msghdr));
-        memcpy(&name, &tmh.name, sizeof(name));
-        memcpy(&ios, &tmh.ios, sizeof(ios));
+        memcpy(static_cast<msghdr*>(this), static_cast<const msghdr*>(&tmh), sizeof(msghdr));
+        // struct name is handled in sync()
+        // struct ios[] is handled in sync()
         data = tmh.data;
         ctrl = tmh.ctrl;
         offset = tmh.offset;
@@ -44,7 +45,7 @@ Ipc::TypedMsgHdr &Ipc::TypedMsgHdr::operator =(const TypedMsgHdr &tmh)
 void
 Ipc::TypedMsgHdr::clear()
 {
-    memset(reinterpret_cast<msghdr*>(this), 0, sizeof(msghdr));
+    memset(static_cast<msghdr*>(this), 0, sizeof(msghdr));
     memset(&name, 0, sizeof(name));
     memset(&ios, 0, sizeof(ios));
     data = DataBuffer();
@@ -238,7 +239,9 @@ Ipc::TypedMsgHdr::getFd() const
 void
 Ipc::TypedMsgHdr::prepForReading()
 {
-    clear(); // XXX: why no sync() after these changes?
+    clear();
+    // no sync() like other clear() calls because the
+    // alloc*() below "sync()" the parts they allocate.
     allocName();
     allocData();
     allocControl();

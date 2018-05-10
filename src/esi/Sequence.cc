@@ -97,7 +97,7 @@ esiSequence::render(ESISegment::Pointer output)
     }
 
     // prune completed (or otherwise unset) elements
-    std::remove_if(elements.begin(), elements.end(), [](ESIElement::Pointer e) { return !e; });
+    std::remove_if(elements.begin(), elements.end(), [](const ESIElement::Pointer &e) { return !e; });
     processedcount = 0;
     assert (output->next == NULL);
 }

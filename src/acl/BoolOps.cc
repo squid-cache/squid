@@ -20,7 +20,7 @@ Acl::NotNode::NotNode(ACL *acl)
     Must(strlen(acl->name) <= sizeof(name)-2);
     name[0] = '!';
     name[1] = '\0';
-    xstrncpy(&name[1], acl->name, sizeof(name)-2); // 2 for '!' and terminator
+    xstrncpy(&name[1], acl->name, sizeof(name)-1); // -1 for '!'
     add(acl);
 }
 

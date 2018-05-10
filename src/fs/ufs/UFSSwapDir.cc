@@ -1319,7 +1319,7 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
     LOCAL_ARRAY(char, p1, MAXPATHLEN + 1);
     // Use +10 for the files[n] integer extensions to make GCC happy.
     // This should never actually exceed MAXPATHLEN but if it does
-    // the OS syscall's shodul produce an appropriate error
+    // the OS syscall's should produce an appropriate error
     LOCAL_ARRAY(char, p2, MAXPATHLEN + 1 + 10);
 
     int files[20];

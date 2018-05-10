@@ -580,12 +580,12 @@ debugLogTime(void)
         tm = localtime(&t);
         strftime(buf2, sizeof(buf2), "%Y/%m/%d %H:%M:%S", tm);
         buf2[sizeof(buf2)-1] = '\0';
-        int sz = snprintf(buf, sizeof(buf), "%s.%03d", buf2, static_cast<int>(current_time.tv_usec / 1000));
+        const int sz = snprintf(buf, sizeof(buf), "%s.%03d", buf2, static_cast<int>(current_time.tv_usec / 1000));
         assert(0 < sz && sz < static_cast<int>(sizeof(buf)));
         last_t = t;
     } else if (t != last_t) {
         tm = localtime(&t);
-        int sz = strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M:%S", tm);
+        const int sz = strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M:%S", tm);
         assert(0 < sz && sz <= static_cast<int>(sizeof(buf)));
         last_t = t;
     }

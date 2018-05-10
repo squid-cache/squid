@@ -131,7 +131,7 @@ public:
     void unhack();
     void readStor();
     void parseListing();
-    MemBuf *htmlifyListEntry(const char *line);
+    bool htmlifyListEntry(const char *line, PackableStream &);
     void completedListing(void);
 
     /// create a data channel acceptor and start listening.
@@ -763,19 +763,14 @@ found:
     return p;
 }
 
-MemBuf *
-Ftp::Gateway::htmlifyListEntry(const char *line)
+bool
+Ftp::Gateway::htmlifyListEntry(const char *line, PackableStream &html)
 {
     debugs(9, 7, "line={" << line << "}");
 
-    MemBuf *htmlPage = new MemBuf();
-    htmlPage->init();
-    PackableStream html(*htmlPage);
-
     if (strlen(line) > 1024) {
         html << "<tr><td colspan=\"5\">" << line << "</td></tr>\n";
-        html.flush();
-        return htmlPage;
+        return true;
     }
 
     SBuf prefix;
@@ -793,14 +788,12 @@ Ftp::Gateway::htmlifyListEntry(const char *line)
         if (*p && !xisspace(*p))
             flags.listformat_unknown = 1;
 
-        html.flush();
-        return htmlPage;
+        return true;
     }
 
     if (!strcmp(parts->name, ".") || !strcmp(parts->name, "..")) {
         ftpListPartsFree(&parts);
-        delete htmlPage;
-        return nullptr;
+        return false;
     }
 
     parts->size += 1023;
@@ -883,7 +876,7 @@ Ftp::Gateway::htmlifyListEntry(const char *line)
             "</tr>\n";
 
     ftpListPartsFree(&parts);
-    return htmlPage;
+    return true;
 }
 
 void
@@ -894,7 +887,6 @@ Ftp::Gateway::parseListing()
     char *end;
     char *line;
     char *s;
-    MemBuf *t;
     size_t linelen;
     size_t usable;
     size_t len = data.readBuf->contentSize();
@@ -954,12 +946,14 @@ Ftp::Gateway::parseListing()
         if (!strncmp(line, "total", 5))
             continue;
 
-        t = htmlifyListEntry(line);
+        MemBuf htmlPage;
+        htmlPage.init();
+        PackableStream html(htmlPage);
 
-        if ( t != NULL) {
-            debugs(9, 7, HERE << "listing append: t = {" << t->contentSize() << ", '" << t->content() << "'}");
-            listing.append(t->content(), t->contentSize());
-            delete t;
+        if (htmlifyListEntry(line, html)) {
+            html.flush();
+            debugs(9, 7, "listing append: t = {" << htmlPage.contentSize() << ", '" << htmlPage.content() << "'}");
+            listing.append(htmlPage.content(), htmlPage.contentSize());
         }
     }
 

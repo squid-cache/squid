@@ -44,7 +44,7 @@ Snmp::Var::operator = (const Var& var)
 void
 Snmp::Var::init()
 {
-    memset(reinterpret_cast<variable_list *>(this), 0, sizeof(variable_list));
+    memset(static_cast<variable_list *>(this), 0, sizeof(variable_list));
 }
 
 Snmp::Var&
