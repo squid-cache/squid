@@ -759,12 +759,12 @@ FindListeningPortAddress(const HttpRequest *request, const bool deriveIps, const
 }
 
 const Ip::Address *
-FindListeningPortAddress(const HttpRequestPointer &request, const AccessLogEntryPointer &al)
+FindListeningPortAddress(const HttpRequest *request, const AccessLogEntry *al)
 {
     if (al)
         return FindListeningPortAddress(al->request, false,
                     al->cache.port ? &(al->cache.port->s) : nullptr,
                     al->tcpClient ? &(al->tcpClient->local) : nullptr);
-    return (request ? FindListeningPortAddress(request.getRaw(), true, nullptr, nullptr) : nullptr);
+    return (request ? FindListeningPortAddress(request, true, nullptr, nullptr) : nullptr);
 }
 

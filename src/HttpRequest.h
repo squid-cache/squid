@@ -256,7 +256,7 @@ void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs cons
 
 /// \returns a pointer to known *_port address where the request was accepted
 /// \returns nil for nil requests and when the port address info was not available
-const Ip::Address *FindListeningPortAddress(const HttpRequestPointer &request, const AccessLogEntryPointer &al);
+const Ip::Address *FindListeningPortAddress(const HttpRequest *request, const AccessLogEntry *al);
 
 #endif /* SQUID_HTTPREQUEST_H */
 
