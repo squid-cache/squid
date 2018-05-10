@@ -247,27 +247,31 @@ ICP2State::created(StoreEntry *e)
 
 /* End ICP2State */
 
-/// \ingroup ServerProtocolICPInternal2
+/// updates ALE (if any) and logs the transaction (if needed)
 static void
 icpLogIcp(const Ip::Address &caddr, const LogTags_ot logcode, const int len, const char *url, int delay, AccessLogEntry::Pointer &al)
 {
     assert(logcode != LOG_TAG_NONE);
+
+    // Optimization: No premature (ALE creation in) icpSyncAle().
+    if (al) {
+        icpSyncAle(al, caddr, url, len, delay);
+        al->cache.code.update(logcode);
+    }
+
     if (logcode == LOG_ICP_QUERY)
         return; // we never log queries
 
     if (!Config.onoff.log_udp) {
-        // Optimization: No icpSyncAle() since clientdbUpdate() does not use ALE
-        if (al) {
-            al->cache.code.update(logcode);
-            clientdbUpdate(caddr, al->cache.code, AnyP::PROTO_ICP, len);
-        } else {
-            clientdbUpdate(caddr, LogTags(logcode), AnyP::PROTO_ICP, len);
-        }
+        clientdbUpdate(caddr, al ? al->cache.code : LogTags(logcode), AnyP::PROTO_ICP, len);
         return;
     }
 
-    icpSyncAle(al, caddr, url, len, delay);
-    al->cache.code.update(logcode);
+    if (!al) {
+        // The above attempt to optimize ALE creation has failed. We do need it.
+        icpSyncAle(al, caddr, url, len, delay);
+        al->cache.code.update(logcode);
+    }
     clientdbUpdate(caddr, al->cache.code, AnyP::PROTO_ICP, len);
     accessLogLog(al, NULL);
 }
