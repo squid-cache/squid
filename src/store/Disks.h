@@ -48,8 +48,7 @@ public:
     /// Additional unknown-size entry bytes required by disks in order to
     /// reduce the risk of selecting the wrong disk cache for the growing entry.
     int64_t accumulateMore(const StoreEntry&) const;
-    virtual bool smpAware() const override;
-    /// whether any of disk caches is SMP-aware
+    /// whether any disk cache is SMP-aware
     static bool SmpAware();
     /// whether any of disk caches has entry with e.key
     bool hasReadableEntry(const StoreEntry &) const;

@@ -324,6 +324,7 @@ Store::Controller::hasReadableDiskEntry(const StoreEntry &e) const
 StoreEntry *
 Store::Controller::find(const cache_key *key)
 {
+	debugs(20, 1, "sizeof = " << sizeof(Ipc::StoreMapAnchor));
     if (const auto entry = peek(key)) {
         try {
             if (!entry->key)
@@ -834,12 +835,6 @@ Store::Controller::anchorToCache(StoreEntry &entry, bool &inSync)
     }
 
     return found;
-}
-
-bool
-Store::Controller::smpAware() const
-{
-    return SmpAware();
 }
 
 bool

@@ -40,8 +40,9 @@ Transients::~Transients()
 void
 Transients::init()
 {
-    Must(Enabled());
+    assert(Enabled());
     const int64_t entryLimit = EntryLimit();
+    assert(entryLimit > 0);
 
     Must(!map);
     map = new TransientsMap(MapLabel);
@@ -317,7 +318,7 @@ int64_t
 Transients::EntryLimit()
 {
     return (UsingSmp() && Store::Controller::SmpAware()) ?
-        Config.transients_shared_entries_limit : 0;
+        Config.shared_transient_entries_limit : 0;
 }
 
 bool

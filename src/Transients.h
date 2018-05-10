@@ -66,7 +66,6 @@ public:
     virtual void evictCached(StoreEntry &) override;
     virtual void evictIfFound(const cache_key *) override;
     virtual void maintain() override;
-    virtual bool smpAware() const override { return true; }
 
     /// Whether an entry with the given public key exists and (but) was
     /// marked for removal some time ago; get(key) returns nil in such cases.

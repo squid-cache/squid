@@ -298,7 +298,7 @@ clientReplyContext::processExpired()
 
     // TODO: support collapsed revalidation for Vary-controlled entries
     const bool collapsingAllowed = Config.onoff.collapsed_forwarding &&
-                                   !Store::Root().smpAware() &&
+                                   !Store::Controller::SmpAware() &&
                                    http->request->vary_headers.isEmpty();
 
     StoreEntry *entry = nullptr;

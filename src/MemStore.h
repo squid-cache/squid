@@ -63,10 +63,9 @@ public:
     virtual bool updateAnchored(StoreEntry &) override;
     virtual void evictCached(StoreEntry &) override;
     virtual void evictIfFound(const cache_key *) override;
-    virtual bool smpAware() const override { return true; }
 
-    /// Can we create and initialize MemStore?
-    static bool Enabled() { return EntryLimit(); }
+    /// whether Squid is correctly configured to use a shared memory cache
+    static bool Enabled() { return EntryLimit() > 0; }
     static int64_t EntryLimit();
 
 protected:

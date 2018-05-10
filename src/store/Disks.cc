@@ -545,12 +545,6 @@ Store::Disks::updateAnchored(StoreEntry &entry)
 }
 
 bool
-Store::Disks::smpAware() const
-{
-    return SmpAware();
-}
-
-bool
 Store::Disks::SmpAware()
 {
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {

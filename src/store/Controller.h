@@ -40,7 +40,6 @@ public:
     virtual void evictCached(StoreEntry &) override;
     virtual void evictIfFound(const cache_key *) override;
     virtual int callback() override;
-    virtual bool smpAware() const override;
 
     /// \returns a locally indexed and SMP-tracked matching StoreEntry (or nil)
     /// Slower than peek() but does not restrict StoreEntry use and storage.

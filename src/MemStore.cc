@@ -982,8 +982,14 @@ MemStoreRr::finalizeConfig()
 {
     // decide whether to use a shared memory cache if the user did not specify
     if (!Config.memShared.configured()) {
-        Config.memShared.configure(Ipc::Mem::Segment::Enabled() && UsingSmp() &&
-                                   Config.memMaxSize > 0);
+        const bool enable = Ipc::Mem::Segment::Enabled() && UsingSmp() && Config.memMaxSize > 0;
+        const bool sufficient = Config.memMaxSize < Ipc::Mem::PageSize();
+        if (enable && !sufficient) {
+            debugs(20, DBG_IMPORTANT, "WARNING: mem-cache size is too small ("
+                    << (Config.memMaxSize / 1024.0) << " KB), should be >= " <<
+                    (Ipc::Mem::PageSize() / 1024.0) << " KB");
+        }
+        Config.memShared.configure(enable && sufficient);
     } else if (Config.memShared && !Ipc::Mem::Segment::Enabled()) {
         fatal("memory_cache_shared is on, but no support for shared memory detected");
     } else if (Config.memShared && !UsingSmp()) {
@@ -999,22 +1005,15 @@ MemStoreRr::useConfig()
     Ipc::Mem::RegisteredRunner::useConfig();
 }
 
+
 void
 MemStoreRr::create()
 {
-    if (!Config.memShared)
-        return;
+    if (!MemStore::Enabled())
+        return; // no memory cache configured or a misconfiguration
 
     const int64_t entryLimit = MemStore::EntryLimit();
-    if (entryLimit <= 0) {
-        if (Config.memMaxSize > 0) {
-            debugs(20, DBG_IMPORTANT, "WARNING: mem-cache size is too small ("
-                   << (Config.memMaxSize / 1024.0) << " KB), should be >= " <<
-                   (Ipc::Mem::PageSize() / 1024.0) << " KB");
-        }
-        return; // no memory cache configured or a misconfiguration
-    }
-
+    assert(entryLimit > 0);
     Must(!spaceOwner);
     spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, SpacePoolId,
                  entryLimit, 0);
