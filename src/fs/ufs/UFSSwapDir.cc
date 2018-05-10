@@ -834,19 +834,27 @@ Fs::Ufs::UFSSwapDir::closeTmpSwapLog()
     rebuilding_ = false;
 
     SBuf swaplog_path(logFile()); // where the swaplog should be
-    SBuf tmp_path(logFile(".new")); // the temporary file we have generated
+    int tplen = swaplog_path.plength() +5; // 5 bytes for ".new" and terminator
+    char *tmp_path = new char[tplen];
+    int x = snprintf(tmp_path, tplen, SQUIDSBUFPH ".new", SQUIDSBUFPRINT(swaplog_path));
+    if (x < 0 || tplen < x) {
+        fatalf("Buffer overflow finding swap log log " SQUIDSBUFPH, SQUIDSBUFPRINT(swaplog_path));
+    }
+
     file_close(swaplog_fd);
 
-    if (xrename(tmp_path.c_str(), swaplog_path.c_str()) < 0) {
-        fatalf("Failed to rename log file %s to %s", tmp_path.c_str(), swaplog_path.c_str());
+    if (xrename(tmp_path, swaplog_path.c_str()) < 0) {
+        fatalf("Failed to rename log file %s to " SQUIDSBUFPH, tmp_path, SQUIDSBUFPRINT(swaplog_path));
     }
+    delete []tmp_path;
+    tmp_path = nullptr;
 
     int fd = file_open(swaplog_path.c_str(), O_WRONLY | O_CREAT | O_BINARY);
 
     if (fd < 0) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, "ERROR: " << swaplog_path << ": " << xstrerr(xerrno));
-        fatalf("Failed to open swap log %s", swaplog_path.c_str());
+        fatalf("Failed to open swap log " SQUIDSBUFPH, SQUIDSBUFPRINT(swaplog_path));
     }
 
     swaplog_fd = fd;
