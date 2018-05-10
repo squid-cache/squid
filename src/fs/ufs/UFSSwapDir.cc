@@ -1023,7 +1023,11 @@ Fs::Ufs::UFSSwapDir::writeCleanDone()
         state->fd = -1;
 #endif
 
-        xrename(state->newLog.c_str(), state->cur.c_str());
+        // alloc to avoid c_str() called twice for xrename() parameters and these
+        // SBuf may share memory, so cur.c_str() may invalidate newLog.c_str() pointer.
+        char *newPath = xstrcpy(state->newLog.c_str());
+        xrename(newPath, state->cur.c_str());
+        xfree(newPath);
     }
 
     /* touch a timestamp file if we're not still validating */
