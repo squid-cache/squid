@@ -572,10 +572,12 @@ debugLogTime(void)
     time_t t = getCurrentTime();
 
     struct tm *tm;
-    static char buf[128];
+    static char buf[128]; // arbitrary size, big enough for the below timestamp strings.
     static time_t last_t = 0;
 
     if (Debug::Level() > 1) {
+        // 4 bytes smaller than buf to ensure .NNN catenation by snprintf()
+        // is safe and works even if strftime() fills its buffer.
         char buf2[sizeof(buf)-4];
         tm = localtime(&t);
         strftime(buf2, sizeof(buf2), "%Y/%m/%d %H:%M:%S", tm);
