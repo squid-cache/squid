@@ -136,7 +136,6 @@ neighborType(const CachePeer * p, const URL &url)
 bool
 peerAllowedToUse(const CachePeer * p, HttpRequest * request)
 {
-
     assert(request != NULL);
 
     if (neighborType(p, request->url) == PEER_SIBLING) {
@@ -167,7 +166,8 @@ peerAllowedToUse(const CachePeer * p, HttpRequest * request)
         return true;
 
     ACLFilledChecklist checklist(p->access, request, NULL);
-
+//    checklist.al = ps->al;
+    checklist.syncAle(request, nullptr);
     return checklist.fastCheck().allowed();
 }
 

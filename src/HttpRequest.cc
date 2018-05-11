@@ -704,6 +704,7 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
             if (Config.accessList.spoof_client_ip) {
                 ACLFilledChecklist *checklist = new ACLFilledChecklist(Config.accessList.spoof_client_ip, this, clientConnection->rfc931);
                 checklist->al = al;
+                checklist->syncAle(this, nullptr);
                 flags.spoofClientIp = checklist->fastCheck().allowed();
                 delete checklist;
             } else
