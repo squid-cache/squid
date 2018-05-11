@@ -2722,6 +2722,7 @@ tests_testStore_SOURCES= \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
+	MemStore.cc \
 	Notes.h \
 	Notes.cc \
 	Parsing.cc \
@@ -2775,7 +2776,6 @@ tests_testStore_SOURCES= \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_libcomm.cc \
-	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_Port.cc \
@@ -2910,7 +2910,6 @@ tests_testUfs_SOURCES = \
 	tests/stub_libeui.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_liblog.cc \
-	tests/stub_MemStore.cc \
 	tests/stub_neighbors.cc \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
@@ -2946,6 +2945,7 @@ tests_testUfs_SOURCES = \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemObject.cc \
+	MemStore.cc \
 	Notes.h \
 	Notes.cc \
 	StoreSwapLogData.cc \
@@ -3128,6 +3128,7 @@ tests_testRock_SOURCES = \
 	MasterXaction.h \
 	MemBuf.cc \
 	MemObject.cc \
+	MemStore.cc \
 	mem_node.cc \
 	Notes.h \
 	Notes.cc \
@@ -3186,7 +3187,6 @@ tests_testRock_SOURCES = \
 	tests/stub_liblog.cc \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
-	tests/stub_MemStore.cc \
 	mime.h \
 	tests/stub_mime.cc \
 	tests/stub_neighbors.cc \

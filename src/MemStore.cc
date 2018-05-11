@@ -934,11 +934,17 @@ MemStore::disconnect(StoreEntry &e)
     }
 }
 
+bool
+MemStore::Requested()
+{
+    return Config.memShared && Config.memMaxSize > 0;
+}
+
 /// calculates maximum number of entries we need to store and map
 int64_t
 MemStore::EntryLimit()
 {
-    if (!Config.memShared || !Config.memMaxSize)
+    if (!Requested())
         return 0; // no memory cache configured
 
     const int64_t minEntrySize = Ipc::Mem::PageSize();
@@ -982,19 +988,19 @@ MemStoreRr::finalizeConfig()
 {
     // decide whether to use a shared memory cache if the user did not specify
     if (!Config.memShared.configured()) {
-        const bool enable = Ipc::Mem::Segment::Enabled() && UsingSmp() && Config.memMaxSize > 0;
-        const bool sufficient = Config.memMaxSize < Ipc::Mem::PageSize();
-        if (enable && !sufficient) {
-            debugs(20, DBG_IMPORTANT, "WARNING: mem-cache size is too small ("
-                    << (Config.memMaxSize / 1024.0) << " KB), should be >= " <<
-                    (Ipc::Mem::PageSize() / 1024.0) << " KB");
-        }
-        Config.memShared.configure(enable && sufficient);
+        Config.memShared.configure(Ipc::Mem::Segment::Enabled() && UsingSmp() &&
+                                   Config.memMaxSize > 0);
     } else if (Config.memShared && !Ipc::Mem::Segment::Enabled()) {
         fatal("memory_cache_shared is on, but no support for shared memory detected");
     } else if (Config.memShared && !UsingSmp()) {
         debugs(20, DBG_IMPORTANT, "WARNING: memory_cache_shared is on, but only"
                " a single worker is running");
+    }
+
+    if (MemStore::Requested() && Config.memMaxSize < Ipc::Mem::PageSize()) {
+        debugs(20, DBG_IMPORTANT, "WARNING: mem-cache size is too small ("
+                << (Config.memMaxSize / 1024.0) << " KB), should be >= " <<
+                (Ipc::Mem::PageSize() / 1024.0) << " KB");
     }
 }
 

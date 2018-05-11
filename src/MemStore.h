@@ -67,6 +67,9 @@ public:
     /// whether Squid is correctly configured to use a shared memory cache
     static bool Enabled() { return EntryLimit() > 0; }
     static int64_t EntryLimit();
+    /// whether Squid is configured to use a shared memory cache
+    /// (it may still be disabled due to the implicit minimum entry size limit)
+    static bool Requested();
 
 protected:
     friend ShmWriter;
