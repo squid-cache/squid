@@ -2075,10 +2075,12 @@ StoreEntry::describeTimestamps() const
 bool
 StoreEntry::collapsingInitiator() const
 {
-    if (!publicKey())
-        return false;
-    return EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT) ||
-           (hasTransients() && !hasMemStore() && !hasDisk());
+    // TODO: the method description says that this must be
+    // a collapsed forwarding-created public entry, however
+    // this implementation has no explicit confirmation of that.
+    // We should verify here that collapsing has been allowed
+    // for this entry by Store::Controller::allowCollapsing().
+    return publicKey() && isEmpty();
 }
 
 static std::ostream &
