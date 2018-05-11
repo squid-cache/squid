@@ -740,21 +740,27 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
 
 /// \returns a pointer to known *_port address where the request was accepted
 /// \returns nil for nil requests and when the port address info was not available
-/// cacheIp and localIp are useful when such information should not be derived from request
-/// if cacheIp or localIp is nil and deriveIps is set, then it tries to derive them from request
+/// cacheIp and localIp are useful when such information may not be available in request
 const Ip::Address *
-FindListeningPortAddress(const HttpRequest *request, const bool deriveIps, const Ip::Address *cacheIp, const Ip::Address *localIp)
+FindListeningPortAddress(const HttpRequest *request, const Ip::Address *cacheIp, const Ip::Address *localIp)
 {
     if (request) {
         if (request->flags.interceptTproxy || request->flags.intercepted) {
-            if (!cacheIp && deriveIps && request->masterXaction->squidPort)
-                cacheIp = &(request->masterXaction->squidPort->s);
+            if (request->masterXaction->squidPort) {
+                if (!request->masterXaction->squidPort->s.isAnyAddr())
+                    return &(request->masterXaction->squidPort->s);
+                else if (!cacheIp)
+                    return nullptr;
+            }
             if (cacheIp)
                 return (cacheIp->isAnyAddr() ? nullptr : cacheIp);
+	    // XXX: is it correct to return localIp if cacheIp didn't have info?
         }
-        if (!localIp && deriveIps && request->masterXaction->tcpClient)
-            return &(request->masterXaction->tcpClient->local);
+        // XXX: do we need to check isAnyAddr() here?
+        if (request->masterXaction->tcpClient)
+            localIp = &(request->masterXaction->tcpClient->local);
     }
+    // XXX: do we need to check isAnyAddr() here?
     return localIp;
 }
 
@@ -762,9 +768,10 @@ const Ip::Address *
 FindListeningPortAddress(const HttpRequest *request, const AccessLogEntry *al)
 {
     if (al)
-        return FindListeningPortAddress(al->request, false,
+        return FindListeningPortAddress(
+                    request ? request : al->request, // use request if specifically given
                     al->cache.port ? &(al->cache.port->s) : nullptr,
                     al->tcpClient ? &(al->tcpClient->local) : nullptr);
-    return (request ? FindListeningPortAddress(request, true, nullptr, nullptr) : nullptr);
+    return FindListeningPortAddress(request, nullptr, nullptr);
 }
 
