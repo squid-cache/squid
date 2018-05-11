@@ -1025,7 +1025,7 @@ Fs::Ufs::UFSSwapDir::writeCleanDone()
 
         // alloc to avoid c_str() called twice for xrename() parameters and these
         // SBuf may share memory, so cur.c_str() may invalidate newLog.c_str() pointer.
-        char *newPath = xstrcpy(state->newLog.c_str());
+        char *newPath = xstrdup(state->newLog.c_str());
         xrename(newPath, state->cur.c_str());
         xfree(newPath);
     }
