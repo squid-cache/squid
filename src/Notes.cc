@@ -42,7 +42,9 @@ Note::match(HttpRequest *request, HttpReply *reply, const AccessLogEntry::Pointe
 
     typedef Values::iterator VLI;
     ACLFilledChecklist ch(NULL, request, NULL);
+    ch.al = al;
     ch.reply = reply;
+    ch.syncAle(request, nullptr);
     if (reply)
         HTTPMSGLOCK(ch.reply);
 

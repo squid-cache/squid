@@ -79,7 +79,7 @@ showDebugWarning(const char *msg)
 }
 
 void
-ACLFilledChecklist::syncAle() const
+ACLFilledChecklist::verifyAle() const
 {
     // make sure the ALE fields used by Format::assemble to
     // fill the old external_acl_type codes are set if any
@@ -93,6 +93,8 @@ ACLFilledChecklist::syncAle() const
     if (request) {
         if (!al->request) {
             showDebugWarning("HttpRequest object");
+            // XXX: al->request should be original,
+            // but the request may be already adapted
             al->request = request;
             HTTPMSGLOCK(al->request);
         }
@@ -105,6 +107,8 @@ ACLFilledChecklist::syncAle() const
 
         if (al->url.isEmpty()) {
             showDebugWarning("URL");
+            // XXX: al->url should be the request URL from client,
+            // but request->url may be different (e.g.,redirected)
             al->url = request->url.absolute();
         }
     }
@@ -121,6 +125,19 @@ ACLFilledChecklist::syncAle() const
         al->cache.rfc931 = xstrdup(rfc931);
     }
 #endif
+}
+
+void
+ACLFilledChecklist::syncAle(HttpRequest *adaptedRequest, const char *logUri) const
+{
+    if (!al)
+        return;
+    if (!al->adapted_request) {
+        al->adapted_request = adaptedRequest;
+        HTTPMSGLOCK(al->adapted_request);
+    }
+    if (al->url.isEmpty())
+        al->url = logUri;
 }
 
 ConnStateData *

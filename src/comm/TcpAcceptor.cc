@@ -267,6 +267,7 @@ logAcceptError(const Comm::ConnectionPointer &conn)
     ACLFilledChecklist ch(nullptr, nullptr, nullptr);
     ch.src_addr = conn->remote;
     ch.my_addr = conn->local;
+    ch.al = al;
     accessLogLog(al, &ch);
 }
 
