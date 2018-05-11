@@ -296,6 +296,7 @@ clientReplyContext::processExpired()
     /* Prepare to make a new temporary request */
     saveState();
 
+    // TODO: Consider also allowing regular (non-collapsed) revalidation hits.
     // TODO: support collapsed revalidation for Vary-controlled entries
     bool collapsingAllowed = Config.onoff.collapsed_forwarding &&
                              !Store::Root().smpAware() &&
@@ -304,8 +305,7 @@ clientReplyContext::processExpired()
     StoreEntry *entry = nullptr;
     if (collapsingAllowed) {
         if (const auto e = storeGetPublicByRequest(http->request, ksRevalidation)) {
-            if (e->collapsingInitiator() && mayCollapseOn(*e)) {
-                http->logType.collapsedStats.revalidationCollapsed++;
+            if (e->hittingRequiresCollapsing() && startCollapsingOn(*e, true)) {
                 entry = e;
                 entry->lock("clientReplyContext::processExpired#alreadyRevalidating");
             } else {
@@ -1775,7 +1775,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
         return;
     }
 
-    if (e->collapsingInitiator() && !mayCollapseOn(*e)) {
+    if (e->hittingRequiresCollapsing() && !startCollapsingOn(*e, false)) {
         debugs(85, 3, "prohibited CF MISS " << *e);
         forgetHit();
         http->logType.update(LOG_TCP_MISS);

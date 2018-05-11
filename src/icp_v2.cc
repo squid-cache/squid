@@ -155,7 +155,7 @@ ICPState::~ICPState()
 }
 
 bool
-ICPState::foundHit(const StoreEntry &e) const
+ICPState::confirmAndPrepHit(const StoreEntry &e)
 {
     if (e.isNull())
         return false;
@@ -166,7 +166,7 @@ ICPState::foundHit(const StoreEntry &e) const
     if (!Config.onoff.icp_hit_stale && refreshCheckICP(&e, request))
         return false;
 
-    if (e.collapsingInitiator() && !mayCollapseOn(e))
+    if (e.hittingRequiresCollapsing() && !startCollapsingOn(e, false))
         return false;
 
     return true;
@@ -218,7 +218,7 @@ ICP2State::created(StoreEntry *e)
     debugs(12, 5, "icpHandleIcpV2: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 
-    if (foundHit(*e)) {
+    if (confirmAndPrepHit(*e)) {
         codeToSend = ICP_HIT;
     } else {
 #if USE_ICMP

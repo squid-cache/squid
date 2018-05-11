@@ -949,7 +949,7 @@ htcpSpecifier::created(StoreEntry *e)
         debugs(31, 3, "htcpCheckHit: NO; entry not valid to send" );
     } else if (refreshCheckHTCP(e, checkHitRequest.getRaw())) {
         debugs(31, 3, "htcpCheckHit: NO; cached response is stale");
-    } else if (e->collapsingInitiator() && !mayCollapseOn(*e)) {
+    } else if (e->hittingRequiresCollapsing() && !startCollapsingOn(*e, false)) {
         debugs(31, 3, "htcpCheckHit: NO; prohibited CF hit: " << *e);
     } else {
         debugs(31, 3, "htcpCheckHit: YES!?");

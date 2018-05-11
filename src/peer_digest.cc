@@ -352,6 +352,7 @@ peerDigestRequest(PeerDigest * pd)
 
     old_e = fetch->old_entry = storeGetPublicByRequest(req);
 
+    // XXX: Missing a hittingRequiresCollapsing() && startCollapsingOn() check.
     if (old_e) {
         debugs(72, 5, "found old " << *old_e);
 

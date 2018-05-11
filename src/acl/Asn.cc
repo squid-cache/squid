@@ -246,6 +246,7 @@ asnCacheStart(int as)
     asState->request = HttpRequest::FromUrl(asres, mx);
     assert(asState->request != NULL);
 
+    // XXX: Missing a hittingRequiresCollapsing() && startCollapsingOn() check.
     if ((e = storeGetPublic(asres, Http::METHOD_GET)) == NULL) {
         e = storeCreateEntry(asres, asres, RequestFlags(), Http::METHOD_GET);
         asState->sc = storeClientListAdd(e, asState);

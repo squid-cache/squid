@@ -68,9 +68,6 @@ public:
     ICPState(icp_common_t &aHeader, HttpRequest *aRequest);
     virtual ~ICPState();
 
-    /// whether the found entry warrants an ICP_HIT response
-    bool foundHit(const StoreEntry &) const;
-
     icp_common_t header;
     HttpRequest *request;
     int fd;
@@ -82,6 +79,10 @@ protected:
     /* StoreClient API */
     virtual LogTags *loggingTags() override;
     virtual void fillChecklist(ACLFilledChecklist &) const override;
+
+    /// either confirms and starts processing a cache hit or returns false
+    bool confirmAndPrepHit(const StoreEntry &);
+
     mutable AccessLogEntryPointer al;
 };
 

@@ -443,7 +443,7 @@ MimeIcon::created(StoreEntry *newEntry)
 void
 MimeIcon::fillChecklist(ACLFilledChecklist &) const
 {
-    // Unreachable: We never call mayInitiateCollapsing() or mayCollapseOn().
+    // Unreachable: We never mayInitiateCollapsing() or startCollapsingOn().
     assert(false);
 }
 

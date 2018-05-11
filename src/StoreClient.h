@@ -39,13 +39,16 @@ protected:
     /// configure the ACL checklist with the current transaction state
     virtual void fillChecklist(ACLFilledChecklist &) const = 0;
 
+    /// \returns whether the caller must collapse on the given entry
+    /// Before returning true, updates common collapsing-related stats.
+    /// See also: StoreEntry::hittingRequiresCollapsing().
+    bool startCollapsingOn(const StoreEntry &, const bool doingRevalidation);
+
     // These methods only interpret Squid configuration. Their allowances are
     // provisional -- other factors may prevent collapsed forwarding. The first
     // two exist primarily to distinguish two major CF cases in callers code.
     /// whether Squid configuration allows us to become a CF initiator
     bool mayInitiateCollapsing() const { return onCollapsingPath(); }
-    /// whether Squid configuration allows collapsing on the initiatorEntry
-    bool mayCollapseOn(const StoreEntry &initiatorEntry) const;
     /// whether Squid configuration allows collapsing for this transaction
     bool onCollapsingPath() const;
 };
