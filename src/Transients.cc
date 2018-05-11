@@ -189,14 +189,11 @@ Transients::findCollapsed(const sfileno index)
 void
 Transients::monitorIo(StoreEntry *e, const cache_key *key, const Store::IoStatus direction)
 {
-    assert(direction == Store::ioReading || direction == Store::ioWriting);
-
     if (!e->hasTransients()) {
         addEntry(e, key, direction);
-        e->mem_obj->xitTable.io = direction;
+        assert(e->hasTransients());
     }
 
-    assert(e->hasTransients());
     const auto index = e->mem_obj->xitTable.index;
     if (const auto old = locals->at(index)) {
         assert(old == e);
@@ -207,7 +204,7 @@ Transients::monitorIo(StoreEntry *e, const cache_key *key, const Store::IoStatus
     }
 }
 
-/// creates a new Transients entry or throws
+/// creates a new Transients entry
 void
 Transients::addEntry(StoreEntry *e, const cache_key *key, const Store::IoStatus direction)
 {
@@ -221,14 +218,20 @@ Transients::addEntry(StoreEntry *e, const cache_key *key, const Store::IoStatus 
     Ipc::StoreMapAnchor *slot = map->openForWriting(key, index);
     Must(slot); // no writer collisions
 
-    slot->set(*e, key);
+    // set ASAP in hope to unlock the slot if something throws
     e->mem_obj->xitTable.index = index;
+    e->mem_obj->xitTable.io = Store::ioWriting;
+
+    slot->set(*e, key);
     if (direction == Store::ioWriting) {
-        // keep write lock; the caller will decide what to do with it
-        map->startAppending(e->mem_obj->xitTable.index);
+        // allow reading and receive remote DELETE events, but do not switch to
+        // the reading lock because transientReaders() callers want true readers
+        map->startAppending(index);
     } else {
+        assert(direction == Store::ioReading);
         // keep the entry locked (for reading) to receive remote DELETE events
-        map->closeForWriting(e->mem_obj->xitTable.index);
+        map->switchWritingToReading(index);
+        e->mem_obj->xitTable.io = Store::ioReading;
     }
 }
 
@@ -255,7 +258,7 @@ Transients::completeWriting(const StoreEntry &e)
 {
     assert(e.hasTransients());
     assert(isWriter(e));
-    map->closeForWriting(e.mem_obj->xitTable.index, true);
+    map->switchWritingToReading(e.mem_obj->xitTable.index);
     e.mem_obj->xitTable.io = Store::ioReading;
 }
 

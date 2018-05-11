@@ -7,7 +7,7 @@ Version 1.3.0sq
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B ext_kerberos_ldap_group_acl
-.if !'po4a'hide' .B [\-h] [\-d] [\-i] [\-s] [\-a] [\-D Realm ] [\-N Netbios\-Realm\-List] [\-m Max\-Depth] [\-u Ldap\-User] [\-p Ldap\-Password] [\-b Ldap\-Bind\-Path] [\-l Ldap\-URL] [\-S ldap server list] \-g Group\-Realm\-List \-t  Hex\-Group\-Realm\-List \-T Hex\-Group\-Hex\-Realm\-List 
+.if !'po4a'hide' .B [\-h] [\-d] [\-i] [\-s] [\-a] [\-D Realm ] [\-N Netbios\-Realm\-List] [\-P service principal name] [\-m Max\-Depth] [\-u Ldap\-User] [\-p Ldap\-Password] [\-b Ldap\-Bind\-Path] [\-l Ldap\-URL] [\-S ldap server list] \-g Group\-Realm\-List \-t Hex\-Group\-Realm\-List \-T Hex\-Group\-Hex\-Realm\-List
 .
 .SH DESCRIPTION
 .B ext_kerberos_ldap_group_acl
@@ -89,6 +89,8 @@ information (e.g. for users using basic authentication).
 A list of Netbios name mappings to Kerberos domain names of the form 
 Netbios\-Name@Kerberos\-Realm[:Netbios\-Name@Kerberos\-Realm] (e.g. for users 
 using NTLM authentication).
+.if !'po4a'hide' .B \-P service principal name
+The principal name in the keytab to use. Avoids automated selection of name.
 .if !'po4a'hide' .TP 12
 .if !'po4a'hide' .B \-m Max\-Depth
 Maximal depth of recursive group search.
@@ -100,7 +102,8 @@ Username for LDAP server.
 Password for LDAP server.
 .IP
 As the password needs to be printed in plain text in your Squid configuration
-it is strongly recommended to use an account with minimal associated privileges.  
+it is strongly recommended to use an account with minimal associated privileges.
+
 This to limit the damage in case someone could get hold of a copy of your Squid 
 configuration file or extracts the password used from a process listing.
 .
@@ -119,7 +122,7 @@ lserver|lserver@|lserver@Realm[:lserver@|lserver@Realm]
 A list of group name per Kerberos domain of the form 
 Group|Group@|Group@Realm[:Group@|Group@Realm]
 .if !'po4a'hide' .TP 12
-.if !'po4a'hide' .B \-t  Hex\-Group\-Realm\-List
+.if !'po4a'hide' .B \-t Hex\-Group\-Realm\-List
 A list of group name per Kerberos domain of the 
 form Group|Group@|Group@Realm[:Group@|Group@Realm] where group is in 
 UTF\-8 hex format
@@ -138,9 +141,9 @@ helper in
 .if !'po4a'hide' .P
 .if !'po4a'hide' .ft CR
 .if !'po4a'hide' .nf
-.if !'po4a'hide' external_acl_type kerberos_ldap_group1  ttl=3600  negative_ttl=3600 %LOGIN /path/to/ext_kerberos_ldap_group_acl \-g GROUP1
+.if !'po4a'hide' external_acl_type kerberos_ldap_group1 ttl=3600 negative_ttl=3600 %LOGIN /path/to/ext_kerberos_ldap_group_acl \-g GROUP1
 .if !'po4a'hide' .br
-.if !'po4a'hide' external_acl_type kerberos_ldap_group2  ttl=3600  negative_ttl=3600 %LOGIN /path/to/ext_kerberos_ldap_group_acl \-g GROUP2
+.if !'po4a'hide' external_acl_type kerberos_ldap_group2 ttl=3600 negative_ttl=3600 %LOGIN /path/to/ext_kerberos_ldap_group_acl \-g GROUP2
 .if !'po4a'hide' .br
 .if !'po4a'hide' acl group1 external kerberos_ldap_group1
 .if !'po4a'hide' .br
@@ -198,7 +201,7 @@ The Groups to check against are determined as follows:
 3) For NDOMAIN\\user
    a) Use realm given by \-N NDOMAIN@REALM and then use values given by \-g option which contain a @REALM e.g. \-g GROUP1@REALM:GROUP2@REALM
 
-To support Non\-ASCII character use \-t GROUP  or \-t GROUP@REALM instead of \-g where GROUP is the hex UTF\-8 representation e.g.
+To support Non\-ASCII character use \-t GROUP or \-t GROUP@REALM instead of \-g where GROUP is the hex UTF\-8 representation e.g.
 
    \-t 6d61726b7573 instead of \-g markus
 
@@ -210,8 +213,8 @@ For a translation of hex UTF\-8 see for example http://www.utf8\-chartable.de/un
 
 The ldap server list can be:
 server \- In this case server can be used for all Kerberos domains
-server@  \- In this case server can be used for all Kerberos domains
-server@domain  \- In this case server can be used for Kerberos domain domain
+server@ \- In this case server can be used for all Kerberos domains
+server@domain \- In this case server can be used for Kerberos domain domain
 server1a@domain1:server1b@domain1:server2@domain2:server3@:server4 \- A list is build with a colon as separator
 
 .

@@ -218,9 +218,15 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
     rfc931[0] = '\0';
 
     changeAcl(A);
+    setRequest(http_request);
+    setIdent(ident);
+}
 
-    if (http_request != NULL) {
-        request = http_request;
+void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
+{
+    assert(!request);
+    if (httpRequest) {
+        request = httpRequest;
         HTTPMSGLOCK(request);
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.acl_uses_indirect_client)
@@ -233,8 +239,13 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
         if (request->clientConnectionManager.valid())
             conn(request->clientConnectionManager.get());
     }
+}
 
+void
+ACLFilledChecklist::setIdent(const char *ident)
+{
 #if USE_IDENT
+    assert(!rfc931[0]);
     if (ident)
         xstrncpy(rfc931, ident, USER_IDENT_SZ);
 #endif

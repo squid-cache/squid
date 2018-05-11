@@ -163,6 +163,7 @@ Acl::Init()
 
 #if USE_LIBNETFILTERCONNTRACK
     RegisterMaker("clientside_mark", [](TypeName name)->ACL* { return new Acl::ConnMark; });
+    RegisterMaker("client_connection_mark", [](TypeName name)->ACL* { return new Acl::ConnMark; });
 #endif
 
 #if USE_OPENSSL

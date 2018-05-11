@@ -36,6 +36,7 @@
 #include "icmp/IcmpConfig.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
+#include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "ipc/Kids.h"
@@ -55,6 +56,7 @@
 #include "RefreshPattern.h"
 #include "rfc1738.h"
 #include "sbuf/List.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"
@@ -338,7 +340,7 @@ static void
 ProcessMacros(char*& line, int& len)
 {
     SubstituteMacro(line, len, "${service_name}", service_name.c_str());
-    SubstituteMacro(line, len, "${process_name}", TheKidName);
+    SubstituteMacro(line, len, "${process_name}", TheKidName.c_str());
     SubstituteMacro(line, len, "${process_number}", xitoa(KidIdentifier));
 }
 
@@ -734,7 +736,16 @@ configDoConfigure(void)
 
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
 #endif
-    requirePathnameExists("logfile_daemon", Log::TheConfig.logfile_daemon);
+    bool logDaemonUsed = false;
+    for (const auto *log = Config.Log.accesslogs; !logDaemonUsed && log; log = log->next)
+        logDaemonUsed = log->usesDaemon();
+#if ICAP_CLIENT
+    for (const auto *log = Config.Log.icaplogs; !logDaemonUsed && log; log = log->next)
+        logDaemonUsed = log->usesDaemon();
+#endif
+    if (logDaemonUsed)
+        requirePathnameExists("logfile_daemon", Log::TheConfig.logfile_daemon);
+
     if (Config.Program.redirect)
         requirePathnameExists("redirect_program", Config.Program.redirect->key);
 
@@ -1542,10 +1553,7 @@ static void
 dump_acl_nfmark(StoreEntry * entry, const char *name, acl_nfmark * head)
 {
     for (acl_nfmark *l = head; l; l = l->next) {
-        if (l->nfmark > 0)
-            storeAppendPrintf(entry, "%s 0x%02X", name, l->nfmark);
-        else
-            storeAppendPrintf(entry, "%s none", name);
+        storeAppendPrintf(entry, "%s %s", name, ToSBuf(l->markConfig).c_str());
 
         dump_acl_list(entry, l->aclList);
 
@@ -1556,24 +1564,18 @@ dump_acl_nfmark(StoreEntry * entry, const char *name, acl_nfmark * head)
 static void
 parse_acl_nfmark(acl_nfmark ** head)
 {
-    nfmark_t mark;
-    char *token = ConfigParser::NextToken();
+    SBuf token(ConfigParser::NextToken());
+    const auto mc = Ip::NfMarkConfig::Parse(token);
 
-    if (!token) {
-        self_destruct();
-        return;
-    }
-
-    if (!xstrtoui(token, NULL, &mark, 0, std::numeric_limits<nfmark_t>::max())) {
-        self_destruct();
-        return;
-    }
+    // Packet marking directives should not allow to use masks.
+    const auto pkt_dirs = {"mark_client_packet", "clientside_mark", "tcp_outgoing_mark"};
+    if (mc.hasMask() && std::find(pkt_dirs.begin(), pkt_dirs.end(), cfg_directive) != pkt_dirs.end())
+        throw TexcHere(ToSBuf("'", cfg_directive, "' does not support masked marks"));
 
     acl_nfmark *l = new acl_nfmark;
+    l->markConfig = mc;
 
-    l->nfmark = mark;
-
-    aclParseAclList(LegacyParser, &l->aclList, token);
+    aclParseAclList(LegacyParser, &l->aclList, token.c_str());
 
     acl_nfmark **tail = head;   /* sane name below */
     while (*tail)
