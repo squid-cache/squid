@@ -256,7 +256,7 @@ squid_SOURCES = \
 	clientStreamForward.h \
 	CollapsedForwarding.cc \
 	CollapsedForwarding.h \
-	CollapsedStats.h \
+	CollapsingHistory.h \
 	CommandLine.cc \
 	CommandLine.h \
 	CompletionDispatcher.cc \

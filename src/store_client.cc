@@ -74,9 +74,9 @@ StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation
 
     if (const auto tags = loggingTags()) {
         if (doingRevalidation)
-            tags->collapsedStats.revalidationCollapsed++;
+            tags->collapsingHistory.revalidationCollapses++;
         else
-            tags->collapsedStats.collapsed++;
+            tags->collapsingHistory.otherCollapses++;
     }
 
     debugs(85, 5, e << " doingRevalidation=" << doingRevalidation);

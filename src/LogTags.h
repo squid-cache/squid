@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_LOGTAGS_H
 #define SQUID_SRC_LOGTAGS_H
 
-#include "CollapsedStats.h"
+#include "CollapsingHistory.h"
 
 /** Squid transaction result code/tag set.
  *
@@ -83,7 +83,7 @@ public: // XXX: only until client_db.cc stats are redesigned.
     /// a set of client protocol, cache use, and other transaction outcome tags
     LogTags_ot oldType = LOG_TAG_NONE;
     /// controls COLLAPSED tag presence
-    CollapsedStats collapsedStats;
+    CollapsingHistory collapsingHistory;
 };
 
 /// iterator for LogTags_ot enumeration

@@ -9,7 +9,6 @@
 #ifndef SQUID_STORECLIENT_H
 #define SQUID_STORECLIENT_H
 
-#include "CollapsedStats.h"
 #include "dlink.h"
 #include "StoreIOBuffer.h"
 #include "StoreIOState.h"
