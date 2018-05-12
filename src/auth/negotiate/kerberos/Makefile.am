@@ -10,7 +10,8 @@ include $(top_srcdir)/src/Common.am
 EXTRA_DIST= \
 	README \
 	required.m4 \
-	negotiate_kerberos_auth.8
+	negotiate_kerberos_auth.8 \
+	negotiate_external_acl
 
 libexec_PROGRAMS = \
 	negotiate_kerberos_auth \
