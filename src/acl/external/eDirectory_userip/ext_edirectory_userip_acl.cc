@@ -716,7 +716,7 @@ BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
 
     /* Copy details - dn and pw CAN be NULL for anonymous and/or TLS */
     if (dn != NULL) {
-        if (strlen(dn) > sizeof(l->dn))
+        if (strlen(dn) >= sizeof(l->dn))
             return LDAP_ERR_OOB; /* DN too large */
 
         if ((l->basedn[0] != '\0') && (strstr(dn, l->basedn) == NULL)) {
@@ -784,46 +784,63 @@ BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
 }
 
 // XXX: duplicate (partial) of Ip::Address::lookupHostIp
-static bool
-makeIpBinary(struct addrinfo *&dst, const char *src)
+/**
+ * Convert the IP address string representation in src to
+ * its binary representation.
+ *
+ * \return binary representation of the src IP address.
+ *         Must be free'd using freeaddrinfo().
+ */
+static struct addrinfo *
+makeIpBinary(const char *src)
 {
     struct addrinfo want;
-    memset(&want, 0, sizeof(struct addrinfo));
+    memset(&want, 0, sizeof(want));
     want.ai_flags = AI_NUMERICHOST; // prevent actual DNS lookups!
 
-    int err = getaddrinfo(src, nullptr, &want, &dst);
-    if (err != 0) {
+    struct addrinfo *dst = nullptr;
+    if (getaddrinfo(src, nullptr, &want, &dst) != 0) {
         // not an IP address
-        /* free the memory getaddrinfo() dynamically allocated. */
+        /* free any memory getaddrinfo() dynamically allocated. */
         if (dst) {
             freeaddrinfo(dst);
             dst = nullptr;
         }
-        return false;
+        return nullptr;
     }
 
-    return true;
+    return dst;
 }
 
-/// convert len characters from bufa into HEX.
-/// \retval N   length of bufb written
-/// \retval -1  buffer overflow detected
+/**
+ * Convert srcLen bytes from src into HEX and store into dst, which
+ * has a maximum content size of dstSize including c-string terminator.
+ * The dst value produced will be a 0-terminated c-string.
+ *
+ * \retval   N  length of dst written (excluding c-string terminator)
+ * \retval -11  (LDAP_ERR_OOB) buffer overflow detected
+ */
 static int
-makeHexString(char *bufb, const char *bufa, const int len)
+makeHexString(char *dst, const int dstSize, const char *src, const int srcLen)
 {
+    // HEX encoding doubles the amount of bytes/octets copied
+    if ((srcLen*2) >= dstSize)
+        return LDAP_ERR_OOB; // cannot copy that many
+
     static char hexc[4];
     *hexc = 0;
+    *dst = 0;
 
-    for (int k = 0; k < len; ++k) {
-        int c = static_cast<int>(bufa[k]);
+    for (int k = 0; k < srcLen; ++k) {
+        int c = static_cast<int>(src[k]);
         if (c < 0)
             c = c + 256;
         int hlen = snprintf(hexc, sizeof(hexc), "%02X", c);
         if (0 < hlen || sizeof(hexc) < static_cast<size_t>(hlen)) // should be impossible
             return LDAP_ERR_OOB;
-        strcat(bufb, hexc);
+        strcat(dst, hexc);
     }
-    return strlen(bufb);
+    return strlen(dst);
 }
 
 /*
@@ -873,21 +890,20 @@ ConvertIP(edui_ldap_t *l, char *ip)
     }
 
     size_t s = LDAP_ERR_INVALID;
-    struct addrinfo *dst = nullptr;
-    if (makeIpBinary(dst, ip)) {
-        if (dst && dst->ai_family == AF_INET6) {
+    if (struct addrinfo *dst = makeIpBinary(ip)) {
+        if (dst->ai_family == AF_INET6) {
             struct sockaddr_in6 *sia = reinterpret_cast<struct sockaddr_in6 *>(dst->ai_addr);
             const char *ia = reinterpret_cast<const char *>(sia->sin6_addr.s6_addr);
-            s = makeHexString(l->search_ip, ia, 16); // IPv6 = 16-byte address
+            s = makeHexString(l->search_ip, sizeof(l->search_ip), ia, 16); // IPv6 = 16-byte address
 
-        } else if (dst && dst->ai_family == AF_INET) {
+        } else if (dst->ai_family == AF_INET) {
             struct sockaddr_in *sia = reinterpret_cast<struct sockaddr_in *>(dst->ai_addr);
             const char *ia = reinterpret_cast<const char *>(&(sia->sin_addr));
-            s = makeHexString(l->search_ip, ia, 4);  // IPv4 = 4-byte address
+            s = makeHexString(l->search_ip, sizeof(l->search_ip), ia, 4);  // IPv4 = 4-byte address
         } // else leave s with LDAP_ERR_INVALID value
+        freeaddrinfo(dst);
     }
 
-    freeaddrinfo(dst);
     return s;
 }
 
@@ -1146,9 +1162,9 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa is the address, just compare it */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;                          /* Not looking for IPv4 */
-                        y = makeHexString(bufb, bufa, z);
+                        y = makeHexString(bufb, sizeof(bufb), bufa, z);
                         if (y < 0)
-                            return LDAP_ERR_OOB;
+                            return y;
                         /* Compare value with IP */
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
@@ -1173,9 +1189,9 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;                          /* Not looking for IPv4 */
-                        y = makeHexString(bufb, &bufa[2], z);
+                        y = makeHexString(bufb, sizeof(bufb), &bufa[2], z);
                         if (y < 0)
-                            return LDAP_ERR_OOB;
+                            return y;
                         /* Compare value with IP */
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
@@ -1200,9 +1216,9 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV6_S))
                             break;                          /* Not looking for IPv6 */
-                        y = makeHexString(bufb, &bufa[2], z);
+                        y = makeHexString(bufb, sizeof(bufb), &bufa[2], z);
                         if (y < 0)
-                            return LDAP_ERR_OOB;
+                            return y;
                         /* Compare value with IP */
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
