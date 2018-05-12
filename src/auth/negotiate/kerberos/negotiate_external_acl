@@ -11,53 +11,53 @@
 # external_acl_type test_acl ipv4 %LOGIN %note{group} /opt/squid/sbin/negotiate_external_acl
 # acl squid_allow external test_acl
 #
+# Use KRB5_KTNAME and KRB5_CONFIG to change system krb5 settings
+#
 # GET SID for Group
 #
 # Please change sample values with real valuse
 #
-if test -z "$KRB5_KTNAME" ; then
-   export KTNAME="/etc/krb5.keytab"
-else
-   export KTNAME=$KRB5_KTNAME
-fi
-export PRINCIPAL="HTTP/opensus42.suse.home"
-export DC="dc1.samba.home"
+export PRINCIPAL="HTTP/squid.example.com"
+export DC="dc1.example.com"
 export KRB5CCNAME="/tmp/squid_krb5cc"
 export GROUPNAME="SQUID_ALLOW"
-export BASEDN="DC=samba,DC=home"
+export BASEDN="DC=example,DC=com"
+export EXTERNAL_ACL_DEBUG=1
 #
-#  Do not change values below
+#  
 #
-kinit -kt $KTNAME $PRINCIPAL
-SID=`ldapsearch -LLL -Ygssapi -H ldap://$DC:389 -s sub -b "BASEDN" "(CN=$GROUPNAME)" objectsid 2>&1 | awk '{ if ( $0 ~/^object/ ) print $2}'`
+MSG=$(kinit -k $PRINCIPAL 2>&1)
+if test -n "$MSG" ; then
+  (>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: ERROR: $MSG")
+fi
+SID=$(ldapsearch -LLL -Ygssapi -H ldap://$DC:389 -s sub -b "$BASEDN" "(CN=$GROUPNAME)" objectsid 2>&1 | awk '{ if ( $0 ~/^object/ ) print $2}')
 
-(>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: SID=$SID")
+(>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: INFO: Group=$GROUPNAME, SID=$SID")
 
 #
 # Read from STDIN as a series of lines into 'input'."
 #
 while read input
 do
-  found=0
-  user=`echo $input | awk '{ sub(/user=/,""); print $1 }'`
-  groups=`echo $input | awk '{ sub(/group=/,""); print $2 }'`
-  (>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: user=$user")
-  (>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: groups=$groups")
-  if [ -n "$groups" ]; then
+  user=$(echo $input | awk '{ sub(/user=/,""); print $1 }')
+  groups=r$(echo $input | awk '{ sub(/group=/,""); print $2 }')
+  if test $EXTERNAL_ACL_DEBUG -eq 1 ; then
+    (>&2 echo "$(date +"%Y/%m/%d %H:%M:%S")| negotiate_external_acl: DEBUG: user=$user")
+    (>&2 echo "$(date +"%Y/%m/%d %H:%M:%S")| negotiate_external_acl: DEBUG: groups=$groups")
+  fi
+  result="ERR"
+  if test -n "$groups" ; then
     IFS=,
     for group in $groups; do
-      if [ "$group" == "$SID" ]; then
-        (>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: matched group: $group")
-        found=1
-        echo "OK"
+      if test "$group" = "$SID" ; then
+        if test $EXTERNAL_ACL_DEBUG -eq 1 ; then
+          (>&2 echo "$(date +"%Y/%m/%d %H:%M:%S")| negotiate_external_acl: DEBUG: matched group: $group")
+        fi
+        result="OK"
+        break
       fi
     done
-    if [ $found -eq 0 ]; then
-      echo "ERR"
-    fi
-  else
-    if [ $found -eq 0 ]; then
-      echo "ERR"
-    fi
+    IFS=
   fi
+  echo $result
 done
