@@ -1103,7 +1103,7 @@ SearchIPLDAP(edui_ldap_t *l)
 {
     ber_len_t i, x;
     ber_len_t j;
-    ber_len_t y, z;
+    ber_len_t z;
     char bufa[EDUI_MAXLEN], bufb[EDUI_MAXLEN];
     LDAPMessage *ent;
     if (l == NULL) return LDAP_ERR_NULL;
@@ -1162,11 +1162,11 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa is the address, just compare it */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;                          /* Not looking for IPv4 */
-                        y = makeHexString(bufb, sizeof(bufb), bufa, z);
-                        if (y < 0)
-                            return y;
+                        const int blen = makeHexString(bufb, sizeof(bufb), bufa, z);
+                        if (blen < 0)
+                            return blen;
                         /* Compare value with IP */
-                        if (memcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, blen) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; ++j) {
@@ -1189,11 +1189,11 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;                          /* Not looking for IPv4 */
-                        y = makeHexString(bufb, sizeof(bufb), &bufa[2], z);
-                        if (y < 0)
-                            return y;
+                        const int blen = makeHexString(bufb, sizeof(bufb), &bufa[2], z);
+                        if (blen < 0)
+                            return blen;
                         /* Compare value with IP */
-                        if (memcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, blen) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; ++j) {
@@ -1216,11 +1216,11 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV6_S))
                             break;                          /* Not looking for IPv6 */
-                        y = makeHexString(bufb, sizeof(bufb), &bufa[2], z);
-                        if (y < 0)
-                            return y;
+                        const int blen = makeHexString(bufb, sizeof(bufb), &bufa[2], z);
+                        if (blen < 0)
+                            return blen;
                         /* Compare value with IP */
-                        if (memcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, blen) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; ++j) {
