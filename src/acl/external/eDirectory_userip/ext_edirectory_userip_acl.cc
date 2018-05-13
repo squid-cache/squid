@@ -1101,7 +1101,8 @@ SearchIPLDAP(edui_ldap_t *l)
     ber_len_t i, x;
     ber_len_t j;
     ber_len_t z;
-    char bufa[EDUI_MAXLEN], bufb[EDUI_MAXLEN];
+    char bufa[EDUI_MAXLEN];
+    char bufb[EDUI_MAXLEN];
     LDAPMessage *ent;
     if (l == NULL) return LDAP_ERR_NULL;
     if (l->lp == NULL) return LDAP_ERR_POINTER;
