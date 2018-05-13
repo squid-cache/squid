@@ -721,8 +721,8 @@ BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
 
         if ((l->basedn[0] != '\0') && (strstr(dn, l->basedn) == NULL)) {
             /* We got a basedn, but it's not part of dn */
-            int x = snprintf(l->dn, sizeof(l->dn)-1, "%s,%s", dn, l->basedn);
-            if (x < 0 || sizeof(l->dn) <= static_cast<size_t>(x))
+            const int x = snprintf(l->dn, sizeof(l->dn)-1, "%s,%s", dn, l->basedn);
+            if (x < 0 || static_cast<size_t>(x) >= sizeof(l->dn))
                 return LDAP_ERR_OOB; /* DN too large */
         } else
             xstrncpy(l->dn, dn, sizeof(l->dn));
@@ -802,10 +802,8 @@ makeIpBinary(const char *src)
     if (getaddrinfo(src, nullptr, &want, &dst) != 0) {
         // not an IP address
         /* free any memory getaddrinfo() dynamically allocated. */
-        if (dst) {
+        if (dst)
             freeaddrinfo(dst);
-            dst = nullptr;
-        }
         return nullptr;
     }
 
@@ -827,16 +825,15 @@ makeHexString(char *dst, const int dstSize, const char *src, const int srcLen)
     if ((srcLen*2) >= dstSize)
         return LDAP_ERR_OOB; // cannot copy that many
 
-    static char hexc[4];
-    *hexc = 0;
     *dst = 0;
 
     for (int k = 0; k < srcLen; ++k) {
         int c = static_cast<int>(src[k]);
         if (c < 0)
             c = c + 256;
-        int hlen = snprintf(hexc, sizeof(hexc), "%02X", c);
-        if (0 < hlen || sizeof(hexc) < static_cast<size_t>(hlen)) // should be impossible
+        char hexc[4];
+        const int hlen = snprintf(hexc, sizeof(hexc), "%02X", c);
+        if (hlen < 0 || static_cast<size_t>(hlen) > sizeof(hexc)) // should be impossible
             return LDAP_ERR_OOB;
         strcat(dst, hexc);
     }
@@ -997,39 +994,39 @@ SearchFilterLDAP(edui_ldap_t *l, char *group)
         /* No groupMembership= to add, yay! */
         /* networkAddress */
         if (l->status & LDAP_IPV4_S) {
-            int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s)", bufc, bufc);
-            if (ln < 0 || sizeof(bufd) <= static_cast<size_t>(ln))
+            const int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s)", bufc, bufc);
+            if (ln < 0 || static_cast<size_t>(ln) >= sizeof(bufd))
                 return LDAP_ERR_OOB;
 
         } else if (l->status & LDAP_IPV6_S) {
-            int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s)", bufc, bufc);
-            if (ln < 0 || sizeof(bufd) <= static_cast<size_t>(ln))
+            const int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s)", bufc, bufc);
+            if (ln < 0 || static_cast<size_t>(ln) >= sizeof(bufd))
                 return LDAP_ERR_OOB;
         }
-        int x = snprintf(bufa, sizeof(bufa), "(&%s(|(networkAddress=1\\23%s)%s))", edui_conf.search_filter, bufc, bufd);
-        if (x < 0 || sizeof(bufa) <= static_cast<size_t>(x))
+        const int x = snprintf(bufa, sizeof(bufa), "(&%s(|(networkAddress=1\\23%s)%s))", edui_conf.search_filter, bufc, bufd);
+        if (x < 0 || static_cast<size_t>(x) >= sizeof(bufa))
             return LDAP_ERR_OOB;
 
     } else {
         /* Needs groupMembership= to add... */
         /* groupMembership -- NOTE: Squid *MUST* provide "cn=" from squid.conf */
         if ((l->basedn[0] != '\0') && (strstr(group, l->basedn) == NULL)) {
-            int ln = snprintf(bufg, sizeof(bufg), ",%s", l->basedn);
-            if (ln < 0 || sizeof(bufd) <= static_cast<size_t>(ln))
+            const int ln = snprintf(bufg, sizeof(bufg), ",%s", l->basedn);
+            if (ln < 0 || static_cast<size_t>(ln) >= sizeof(bufd))
                 return LDAP_ERR_OOB;
         }
         /* networkAddress */
         if (l->status & LDAP_IPV4_S) {
-            int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s)", bufc, bufc);
-            if (ln < 0 || sizeof(bufd) <= static_cast<size_t>(ln))
+            const int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s)", bufc, bufc);
+            if (ln < 0 || static_cast<size_t>(ln) >= sizeof(bufd))
                 return LDAP_ERR_OOB;
         } else if (l->status & LDAP_IPV6_S) {
-            int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s)", bufc, bufc);
-            if (ln < 0 || sizeof(bufd) <= static_cast<size_t>(ln))
+            const int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s)", bufc, bufc);
+            if (ln < 0 || static_cast<size_t>(ln) >= sizeof(bufd))
                 return LDAP_ERR_OOB;
         }
-        int x = snprintf(bufa, sizeof(bufa), "(&(&%s(groupMembership=%s%s)(|(networkAddress=1\\23%s)%s)))", edui_conf.search_filter, group, bufg, bufc, bufd);
-        if (x < 0 || sizeof(bufa) <= static_cast<size_t>(x))
+        const int x = snprintf(bufa, sizeof(bufa), "(&(&%s(groupMembership=%s%s)(|(networkAddress=1\\23%s)%s)))", edui_conf.search_filter, group, bufg, bufc, bufd);
+        if (x < 0 || static_cast<size_t>(x) >= sizeof(bufa))
             return LDAP_ERR_OOB;
     }
     s = strlen(bufa);
