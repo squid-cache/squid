@@ -834,20 +834,14 @@ Fs::Ufs::UFSSwapDir::closeTmpSwapLog()
     rebuilding_ = false;
 
     SBuf swaplog_path(logFile()); // where the swaplog should be
-    int tplen = swaplog_path.plength() +5; // 5 bytes for ".new" and terminator
-    char *tmp_path = new char[tplen];
-    int x = snprintf(tmp_path, tplen, SQUIDSBUFPH ".new", SQUIDSBUFPRINT(swaplog_path));
-    if (x < 0 || tplen < x) {
-        fatalf("Buffer overflow finding swap log log " SQUIDSBUFPH, SQUIDSBUFPRINT(swaplog_path));
-    }
+    SBuf tmp_path(swaplog_path);
+    tmp_path.append(".new", 4);
 
     file_close(swaplog_fd);
 
-    if (xrename(tmp_path, swaplog_path.c_str()) < 0) {
-        fatalf("Failed to rename log file %s to " SQUIDSBUFPH, tmp_path, SQUIDSBUFPRINT(swaplog_path));
+    if (FileRename(tmp_path, swaplog_path) < 0) {
+        fatalf("Failed to rename log file " SQUIDSBUFPH " to " SQUIDSBUFPH, SQUIDSBUFPRINT(tmp_path), SQUIDSBUFPRINT(swaplog_path));
     }
-    delete []tmp_path;
-    tmp_path = nullptr;
 
     int fd = file_open(swaplog_path.c_str(), O_WRONLY | O_CREAT | O_BINARY);
 
@@ -1023,11 +1017,7 @@ Fs::Ufs::UFSSwapDir::writeCleanDone()
         state->fd = -1;
 #endif
 
-        // alloc to avoid c_str() called twice for xrename() parameters and these
-        // SBuf may share memory, so cur.c_str() may invalidate newLog.c_str() pointer.
-        char *newPath = xstrdup(state->newLog.c_str());
-        xrename(newPath, state->cur.c_str());
-        xfree(newPath);
+        FileRename(state->newLog, state->cur);
     }
 
     /* touch a timestamp file if we're not still validating */
