@@ -834,8 +834,7 @@ Fs::Ufs::UFSSwapDir::closeTmpSwapLog()
     rebuilding_ = false;
 
     SBuf swaplog_path(logFile()); // where the swaplog should be
-    SBuf tmp_path(swaplog_path);
-    tmp_path.append(".new", 4);
+    SBuf tmp_path(logFile(".new"));
 
     file_close(swaplog_fd);
 
@@ -861,12 +860,8 @@ Fs::Ufs::UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
     assert(!rebuilding_);
 
     SBuf swaplog_path(logFile());
-
-    SBuf clean_path = swaplog_path;
-    clean_path.append(".last-clean");
-
-    SBuf new_path(swaplog_path);
-    new_path.append(".new");
+    SBuf clean_path(logFile(".last-clean"));
+    SBuf new_path(logFile(".new"));
 
     struct stat log_sb;
 
@@ -945,8 +940,7 @@ Fs::Ufs::UFSSwapDir::writeCleanStart()
 
     cleanLog = NULL;
     state->cur = logFile();
-    state->newLog = state->cur;
-    state->newLog.append(".clean");
+    state->newLog = logFile(".clean");
     state->fd = file_open(state->newLog.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_BINARY);
 
     if (state->fd < 0) {
