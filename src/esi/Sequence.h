@@ -36,7 +36,7 @@ public:
     void makeUsableElements(esiSequence const &old, ESIVarState &);
     Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
 
-    std::vector<ESIElement::Pointer> elements; /* unprocessed or rendered nodes */
+    Esi::Elements elements; /* unprocessed or rendered nodes */
     size_t processedcount;
 
     struct {

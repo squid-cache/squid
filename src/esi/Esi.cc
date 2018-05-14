@@ -176,7 +176,7 @@ public:
     Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
     void NULLUnChosen();
 
-    std::vector<ESIElement::Pointer> elements;
+    Esi::Elements elements;
     int chosenelement;
     ESIElement::Pointer otherwise;
     void finish();
@@ -1978,7 +1978,7 @@ FinishAnElement(ESIElement::Pointer &element, int pos)
 }
 
 void
-FinishAllElements(std::vector<ESIElement::Pointer> &elements)
+FinishAllElements(Esi::Elements &elements)
 {
     int pos = 0;
     for (auto &element : elements)
@@ -1994,9 +1994,8 @@ esiChoose::finish()
     if (otherwise.getRaw())
         otherwise->finish();
 
-    otherwise = NULL;
-
-    parent = NULL;
+    otherwise = nullptr;
+    parent = nullptr;
 }
 
 void
