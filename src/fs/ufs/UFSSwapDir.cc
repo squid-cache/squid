@@ -1310,14 +1310,6 @@ int
 Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
 {
     DIR *dir_pointer = NULL;
-
-    // +1 on both the below for string terminators
-    LOCAL_ARRAY(char, p1, MAXPATHLEN + 1);
-    // Use +10 for the files[n] integer extensions to make GCC happy.
-    // This should never actually exceed MAXPATHLEN but if it does
-    // the OS syscall's should produce an appropriate error
-    LOCAL_ARRAY(char, p2, MAXPATHLEN + 1 + 10);
-
     int files[20];
     int swapfileno;
     int fn;         /* same as swapfileno, but with dirn bits set */
@@ -1334,20 +1326,22 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
     D1 = (swap_index / N0) % N1;
     N2 = SD->l2;
     D2 = ((swap_index / N0) / N1) % N2;
-    snprintf(p1, sizeof(p1), "%s/%02X/%02X", SD->path, D1, D2);
+
+    SBuf p1;
+    p1.appendf("%s/%02X/%02X", SD->path, D1, D2);
     debugs(36, 3, HERE << "Cleaning directory " << p1);
-    dir_pointer = opendir(p1);
+    dir_pointer = opendir(p1.c_str());
 
     if (!dir_pointer) {
         int xerrno = errno;
         if (xerrno == ENOENT) {
             debugs(36, DBG_CRITICAL, MYNAME << "WARNING: Creating " << p1);
-            if (mkdir(p1, 0777) == 0)
+            if (mkdir(p1.c_str(), 0777) == 0)
                 return 0;
         }
 
         debugs(50, DBG_CRITICAL, MYNAME << p1 << ": " << xstrerr(xerrno));
-        safeunlink(p1, 1);
+        safeunlink(p1.c_str(), 1);
         return 0;
     }
 
@@ -1379,8 +1373,9 @@ Fs::Ufs::UFSSwapDir::DirClean(int swap_index)
 
     for (n = 0; n < k; ++n) {
         debugs(36, 3, HERE << "Cleaning file "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << files[n]);
-        snprintf(p2, sizeof(p2), "%s/%08X", p1, files[n]);
-        safeunlink(p2, 0);
+        SBuf p2(p1);
+        p2.appendf("/%08X", files[n]);
+        safeunlink(p2.c_str(), 0);
         ++statCounter.swap.files_cleaned;
     }
 
