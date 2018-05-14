@@ -20,20 +20,25 @@ Snmp::Session::Session()
     memset(static_cast<snmp_session *>(this), 0, sizeof(snmp_session));
 }
 
+Snmp::Session::Session(const Snmp::Session& session) : Session()
+{
+    operator =(session);
+}
+
 Snmp::Session&
 Snmp::Session::operator = (const Session& session)
 {
+    if (&session == this)
+        return *this;
+
     reset();
     memcpy(static_cast<snmp_session *>(this), &session, sizeof(snmp_session));
-    // NP: memcpy did a shallow copy of the pointer members,
-    //     make sure we have our own allocations
+    // memcpy did a shallow copy, make sure we have our own allocations
     if (session.community) {
         community = (u_char*)xstrdup((char*)session.community);
-        Must(community != nullptr);
     }
     if (session.peername) {
         peername = xstrdup(session.peername);
-        Must(peername != nullptr);
     }
     return *this;
 }

@@ -45,6 +45,7 @@ Ipc::TypedMsgHdr &Ipc::TypedMsgHdr::operator =(const TypedMsgHdr &tmh)
 void
 Ipc::TypedMsgHdr::clear()
 {
+    // may be called from the constructor, with object fields uninitialized
     memset(static_cast<msghdr*>(this), 0, sizeof(msghdr));
     memset(&name, 0, sizeof(name));
     memset(&ios, 0, sizeof(ios));

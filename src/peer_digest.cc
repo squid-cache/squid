@@ -136,7 +136,7 @@ peerDigestCreate(CachePeer * p)
     // TODO: make CachePeer member a CbcPointer
     p->digest = cbdataReference(pd);
 
-    // lock a reference to self, this prevents the PeerDigest
+    // lock a reference to pd again to prevent the PeerDigest
     // disappearing during peerDigestDestroy() when
     // cbdataReferenceValidDone is called.
     // TODO test if it can be moved into peerDigestDestroy() or
@@ -155,10 +155,11 @@ peerDigestDestroy(PeerDigest * pd)
     /*
      * DPW 2007-04-12
      * We locked the peer in PeerDigest constructor, this is
-     * where we unlock it.  If the peer is still valid,
-     * tell it that the digest is gone.
+     * where we unlock it.
      */
     if (cbdataReferenceValidDone(peerTmp, &p)) {
+        // we locked the p->digest in peerDigestCreate()
+        // this is where we unlock that
         cbdataReferenceDone(static_cast<CachePeer *>(p)->digest);
     }
 
