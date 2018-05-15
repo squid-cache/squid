@@ -21,16 +21,17 @@ class HttpRequestMethod;
 class CachePeer;
 class StoreEntry;
 class URL;
+class PeerSelector;
 
 CachePeer *getFirstPeer(void);
-CachePeer *getFirstUpParent(HttpRequest *);
+CachePeer *getFirstUpParent(PeerSelector *);
 CachePeer *getNextPeer(CachePeer *);
-CachePeer *getSingleParent(HttpRequest *);
-int neighborsCount(HttpRequest *);
+CachePeer *getSingleParent(PeerSelector *);
+int neighborsCount(PeerSelector *);
 int neighborsUdpPing(HttpRequest *,
                      StoreEntry *,
                      IRCB * callback,
-                     void *data,
+                     PeerSelector *ps,
                      int *exprep,
                      int *timeout);
 void neighborAddAcl(const char *, const char *);
@@ -43,13 +44,13 @@ void neighborsHtcpClear(StoreEntry *, const char *, HttpRequest *, const HttpReq
 #endif
 CachePeer *peerFindByName(const char *);
 CachePeer *peerFindByNameAndPort(const char *, unsigned short);
-CachePeer *getDefaultParent(HttpRequest * request);
-CachePeer *getRoundRobinParent(HttpRequest * request);
-CachePeer *getWeightedRoundRobinParent(HttpRequest * request);
+CachePeer *getDefaultParent(PeerSelector*);
+CachePeer *getRoundRobinParent(PeerSelector*);
+CachePeer *getWeightedRoundRobinParent(PeerSelector*);
 void peerClearRRStart(void);
 void peerClearRR(void);
-lookup_t peerDigestLookup(CachePeer * p, HttpRequest * request);
-CachePeer *neighborsDigestSelect(HttpRequest * request);
+lookup_t peerDigestLookup(CachePeer * p, PeerSelector *);
+CachePeer *neighborsDigestSelect(PeerSelector *);
 void peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup);
 void peerNoteDigestGone(CachePeer * p);
 int neighborUp(const CachePeer * e);
@@ -58,7 +59,7 @@ peer_t neighborType(const CachePeer *, const URL &);
 void peerConnectFailed(CachePeer *);
 void peerConnectSucceded(CachePeer *);
 void dump_peer_options(StoreEntry *, CachePeer *);
-int peerHTTPOkay(const CachePeer *, HttpRequest *);
+int peerHTTPOkay(const CachePeer *, PeerSelector *);
 
 // TODO: Consider moving this method to CachePeer class.
 /// \returns the effective connect timeout for the given peer

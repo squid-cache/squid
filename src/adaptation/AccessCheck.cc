@@ -135,6 +135,7 @@ Adaptation::AccessCheck::checkCandidates()
             if ((acl_checklist->reply = filter.reply))
                 HTTPMSGLOCK(acl_checklist->reply);
             acl_checklist->al = filter.al;
+            acl_checklist->syncAle(filter.request, nullptr);
             acl_checklist->nonBlockingCheck(AccessCheckCallbackWrapper, this);
             return;
         }

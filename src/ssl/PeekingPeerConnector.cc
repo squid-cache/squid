@@ -70,6 +70,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
         acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpSplice));
     if (!srvBio->canBump())
         acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpBump));
+    acl_checklist->syncAle(request.getRaw(), nullptr);
     acl_checklist->nonBlockingCheck(Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone, this);
 }
 

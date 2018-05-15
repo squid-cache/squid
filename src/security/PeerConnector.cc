@@ -131,6 +131,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
         if (acl_access *acl = ::Config.ssl_client.cert_error) {
             ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
             check->al = al;
+            check->syncAle(request.getRaw(), nullptr);
             // check->fd(fd); XXX: need client FD here
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check);
         }
@@ -324,6 +325,7 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
     if (acl_access *acl = ::Config.ssl_client.cert_error) {
         check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
         check->al = al;
+        check->syncAle(request.getRaw(), nullptr);
     }
 
     Security::CertErrors *errs = nullptr;
