@@ -254,12 +254,8 @@ class ConnStateData;
  */
 void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &notes);
 
-/**
- * The listening IP address from squid.conf *_port which the transaction client was connected to.
- * May be [::] or 0.0.0.0.
- * \retval * object with IP address details.
- * \retval nullptr no IP was found.
- **/
+/// \returns listening/*_port address used by the client connection (or nil)
+/// nil parameter(s) indicate missing caller information and are handled safely
 const Ip::Address *FindListeningPortAddress(const HttpRequest *, const AccessLogEntry *);
 
 #endif /* SQUID_HTTPREQUEST_H */

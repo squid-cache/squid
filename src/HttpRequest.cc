@@ -738,39 +738,59 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
     }
 }
 
-/// cacheIp and localIp are useful when required information may not be available in request
-/// \see const Ip::Address *FindListeningPortAddress(const HttpRequest *request, const AccessLogEntry *al)
+/// a helper for validating FindListeningPortAddress()-found address candidates
 static const Ip::Address *
-FindListeningPortAddress(const HttpRequest *request, const Ip::Address *cacheIp, const Ip::Address *localIp)
+FindListeningPortAddressInAddress(const Ip::Address *ip)
 {
-    if (request) {
-        if (request->flags.interceptTproxy || request->flags.intercepted) {
-            if (request->masterXaction->squidPort) {
-                if (!request->masterXaction->squidPort->s.isAnyAddr())
-                    return &(request->masterXaction->squidPort->s);
-                else if (!cacheIp)
-                    return nullptr;
-            }
-            if (cacheIp)
-                return (cacheIp->isAnyAddr() ? nullptr : cacheIp);
-	    // XXX: is it correct to return localIp if cacheIp didn't have info?
-        }
-        // XXX: do we need to check isAnyAddr() here?
-        if (request->masterXaction->tcpClient)
-            localIp = &(request->masterXaction->tcpClient->local);
-    }
-    // XXX: do we need to check isAnyAddr() here?
-    return localIp;
+    // FindListeningPortAddress() callers do not want "any" addresses
+    return (ip && !ip->isAnyAddr()) ? ip : nullptr;
+}
+
+/// a helper for handling PortCfg cases of FindListeningPortAddress()
+static const Ip::Address *
+FindListeningPortAddressInPort(const AnyP::PortCfgPointer &port)
+{
+    return port ? FindListeningPortAddressInAddress(&port->s) : nullptr;
+}
+
+/// a helper for handling Connection cases of FindListeningPortAddress()
+static const Ip::Address *
+FindListeningPortAddressInConn(const Comm::ConnectionPointer &conn)
+{
+    return conn ? FindListeningPortAddressInAddress(&conn->local) : nullptr;
 }
 
 const Ip::Address *
-FindListeningPortAddress(const HttpRequest *request, const AccessLogEntry *al)
+FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry *ale)
 {
-    if (al)
-        return FindListeningPortAddress(
-                    request ? request : al->request, // use request if specifically given
-                    al->cache.port ? &(al->cache.port->s) : nullptr,
-                    al->tcpClient ? &(al->tcpClient->local) : nullptr);
-    return FindListeningPortAddress(request, nullptr, nullptr);
+    // Check all sources of usable listening port information, giving
+    // HttpRequest and masterXaction a preference over ALE.
+
+    const HttpRequest *request = callerRequest;
+    if (!request && ale)
+        request = ale->request;
+    if (!request)
+        return nullptr; // not enough information
+
+    const Ip::Address *ip = nullptr;
+
+    if (request->flags.interceptTproxy || request->flags.intercepted) {
+        if (!ip)
+            ip = FindListeningPortAddressInPort(request->masterXaction->squidPort);
+        if (!ip && ale)
+            ip = FindListeningPortAddressInPort(ale->cache.port);
+        // XXX: tcpClient contains client destination rather than Squid
+        // listening address for intercepted and PROXY clients, but here we fall
+        // through as if it does not.
+    }
+
+    /* handle intercepted-without-port-info and all non-intercepted cases */
+
+    if (!ip)
+        ip = FindListeningPortAddressInConn(request->masterXaction->tcpClient);
+    if (!ip && ale)
+        ip = FindListeningPortAddressInConn(ale->tcpClient);
+
+    return ip; // may still be nil
 }
 
