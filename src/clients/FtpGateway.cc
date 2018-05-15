@@ -1170,7 +1170,7 @@ Ftp::Gateway::start()
 {
     if (!checkAuth(&request->header)) {
         /* create appropriate reply */
-        SBuf realm(ftpRealm()); // local copy so SBuf wont disappear too early
+        SBuf realm(ftpRealm()); // local copy so SBuf will not disappear too early
         HttpReply *reply = ftpAuthRequired(request, realm);
         entry->replaceHttpReply(reply);
         serverComplete();
@@ -1273,7 +1273,7 @@ Ftp::Gateway::loginFailed()
 #if HAVE_AUTH_MODULE_BASIC
     /* add Authenticate header */
     // XXX: performance regression. c_str() may reallocate
-    SBuf realm(ftpRealm()); // local copy so SBuf wont disappear too early
+    SBuf realm(ftpRealm()); // local copy so SBuf will not disappear too early
     newrep->header.putAuth("Basic", realm.c_str());
 #endif
 
@@ -2094,7 +2094,7 @@ void Ftp::Gateway::readStor()
         debugs(9, 3, HERE << "starting data transfer");
         switchTimeoutToDataChannel();
         sendMoreRequestBody();
-        fwd->dontRetry(true); // dont permit re-trying if the body was sent.
+        fwd->dontRetry(true); // do not permit re-trying if the body was sent.
         state = WRITING_DATA;
         debugs(9, 3, HERE << "writing data channel");
     } else if (code == 150) {

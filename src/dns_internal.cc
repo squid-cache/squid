@@ -1577,7 +1577,7 @@ Dns::Init(void)
     static int init = 0;
 
     if (DnsSocketA < 0 && DnsSocketB < 0) {
-        Ip::Address addrV6; // since we don't want to alter Config.Addrs.udp_* and dont have one of our own.
+        Ip::Address addrV6; // since we do not want to alter Config.Addrs.udp_* and do not have one of our own.
 
         if (!Config.Addrs.udp_outgoing.isNoAddr())
             addrV6 = Config.Addrs.udp_outgoing;

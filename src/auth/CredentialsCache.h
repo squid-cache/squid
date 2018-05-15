@@ -51,7 +51,7 @@ public:
     void cleanup();
 
     /**
-     * Cleanup cache data after a reconfiguration has occured.
+     * Cleanup cache data after a reconfiguration has occurred.
      * Similar to cleanup() but also flushes stale config dependent
      * state from retained entries.
      */

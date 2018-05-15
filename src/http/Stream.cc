@@ -262,7 +262,7 @@ Http::Stream::sendStartOfMessage(HttpReply *rep, StoreIOBuffer bodyData)
     assert(rep);
     MemBuf *mb = rep->pack();
 
-    // dump now, so we dont output any body.
+    // dump now, so we do not output any body.
     debugs(11, 2, "HTTP Client " << clientConnection);
     debugs(11, 2, "HTTP Client REPLY:\n---------\n" << mb->buf << "\n----------");
 

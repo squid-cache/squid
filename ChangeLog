@@ -1638,7 +1638,7 @@ Changes to squid-3.2.0.7 (19 Apr 2011):
 Changes to squid-3.2.0.6 (04 Apr 2011):
 
 	- Regression fix: upgrade existing icons
-	- Regression fix: dont crash when accessing an SSL certificate with errors
+	- Regression fix: do not crash when accessing an SSL certificate with errors
 	- Regression fix: prevent stdio log module segfaults on rotate
 	- Regression fix: shutdown properly even if a worker process crashes on exit
 	- Regression Bug 3159: (partial fix) ICAP and --disable-auth compile problems

@@ -1310,13 +1310,13 @@ const char
     case LDAP_ERR_NOTFOUND:
         return "Item or object has not been found";
     case LDAP_ERR_OTHER:
-        return "An unknown error has occured";
+        return "An unknown error has occurred";
     case LDAP_ERR_FAILED:
         return "Operation has failed";
     case LDAP_ERR_SUCCESS:
         return "Operation is successful";
     default:
-        return "An unknown error has occured";
+        return "An unknown error has occurred";
     }
 }
 

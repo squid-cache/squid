@@ -50,7 +50,7 @@ main(int argc, char **argv)
 {
     Debug::Levels[1] = 8;
     debugs (1,1,"test" << "string");
-    debugs (1,9,"dont show this" << "string");
+    debugs (1,9,"do not show this" << "string");
     debugs (1,1,"test" << "string");
     debugs (1,1,"test" << "string");
     if (true)

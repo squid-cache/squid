@@ -812,7 +812,7 @@ void
 testSBuf::testReserve()
 {
     SBufReservationRequirements requirements;
-    // use unusual numbers to ensure we dont hit a lucky boundary situation
+    // use unusual numbers to ensure we do not hit a lucky boundary situation
     requirements.minSpace = 10;
     requirements.idealSpace = 82;
     requirements.maxCapacity = 259;
