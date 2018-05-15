@@ -4886,7 +4886,7 @@ parse_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *config)
             else if (strcasecmp(value, "use_configured_response") == 0) {
                 config->action = toutActUseConfiguredResponse;
             } else {
-                debugs(3, DBG_CRITICAL, "FATAL: unsupported action: on_timeout=" << value);
+                debugs(3, DBG_CRITICAL, "FATAL: unsupported \"on_timeout\" action: " << value);
                 self_destruct();
                 return;
             }
@@ -4905,7 +4905,7 @@ parse_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *config)
     }
 
     if (config->action != toutActUseConfiguredResponse && config->response) {
-        debugs(3, DBG_CRITICAL, "FATAL: 'response=' option is valid only when used with the  'on_timeout=use_configured_response' option");
+        debugs(3, DBG_CRITICAL, "FATAL: 'response=' option is valid only when used with the 'on_timeout=use_configured_response' option");
         self_destruct();
     }
 }
