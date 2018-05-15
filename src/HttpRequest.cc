@@ -791,6 +791,9 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     if (!ip && ale)
         ip = FindListeningPortAddressInConn(ale->tcpClient);
 
+    // XXX: should we check request->my_addr as well?
+    // if yes then when? before checking tcpClient or before intercepion checks?
+
     return ip; // may still be nil
 }
 
