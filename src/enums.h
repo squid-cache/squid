@@ -95,12 +95,12 @@ enum {
 typedef enum {
     STREAM_NONE,        /* No particular status */
     STREAM_COMPLETE,        /* All data has been flushed, no more reads allowed */
-    /* an unpredicted end has occured, no more
-     * reads occured, but no need to tell
-     * downstream that an error occured
+    /* an unpredicted end has occurred, no more
+     * reads occurred, but no need to tell
+     * downstream that an error occurred
      */
     STREAM_UNPLANNED_COMPLETE,
-    /* An error has occured in this node or an above one,
+    /* An error has occurred in this node or an above one,
      * and the node is not generating an error body / it's
      * midstream
      */

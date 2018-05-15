@@ -230,7 +230,7 @@ Security::PeerOptions::updateTlsVersionLimits()
             break;
         }
         if (add) {
-#if USE_GNUTLS // dont bother otherwise
+#if USE_GNUTLS // do not bother otherwise
             if (sslOptions.isEmpty())
                 sslOptions.append(add+1, strlen(add+1));
             else
