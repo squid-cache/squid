@@ -64,7 +64,7 @@ Helper::ChildConfig::needNew() const
     /* keep a minimum of n_idle helpers free... */
     if ( (n_active + n_idle) < n_max) return n_idle;
 
-    /* dont ever start more than n_max processes. */
+    /* do not ever start more than n_max processes. */
     return (n_max - n_active);
 }
 
@@ -91,7 +91,7 @@ Helper::ChildConfig::parseConfig()
         } else if (strncmp(token, "idle=", 5) == 0) {
             n_idle = xatoui(token + 5);
             if (n_idle < 1) {
-                debugs(0, DBG_CRITICAL, "WARNING OVERIDE: Using idle=0 for helpers causes request failures. Overiding to use idle=1 instead.");
+                debugs(0, DBG_CRITICAL, "WARNING OVERRIDE: Using idle=0 for helpers causes request failures. Overriding to use idle=1 instead.");
                 n_idle = 1;
             }
         } else if (strncmp(token, "concurrency=", 12) == 0) {
@@ -118,12 +118,12 @@ Helper::ChildConfig::parseConfig()
     /* simple sanity. */
 
     if (n_startup > n_max) {
-        debugs(0, DBG_CRITICAL, "WARNING OVERIDE: Capping startup=" << n_startup << " to the defined maximum (" << n_max <<")");
+        debugs(0, DBG_CRITICAL, "WARNING OVERRIDE: Capping startup=" << n_startup << " to the defined maximum (" << n_max <<")");
         n_startup = n_max;
     }
 
     if (n_idle > n_max) {
-        debugs(0, DBG_CRITICAL, "WARNING OVERIDE: Capping idle=" << n_idle << " to the defined maximum (" << n_max <<")");
+        debugs(0, DBG_CRITICAL, "WARNING OVERRIDE: Capping idle=" << n_idle << " to the defined maximum (" << n_max <<")");
         n_idle = n_max;
     }
 

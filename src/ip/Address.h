@@ -137,7 +137,7 @@ public:
     /*@}*/
 
     /** Retrieve the Port if stored.
-     \retval 0 Port is unset or an error occured.
+     \retval 0 Port is unset or an error occurred.
      \retval n Port associated with this address in host native -endian.
      */
     unsigned short port() const;
@@ -145,7 +145,7 @@ public:
     /** Set the Port value for an address.
      *  Replaces any previously existing Port value.
      \param port Port being assigned in host native -endian.
-     \retval 0 Port is unset or an error occured.
+     \retval 0 Port is unset or an error occurred.
      \retval n Port associated with this address in host native -endian.
      */
     unsigned short port(unsigned short port);

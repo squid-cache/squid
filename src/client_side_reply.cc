@@ -1906,7 +1906,7 @@ clientReplyContext::sendStreamError(StoreIOBuffer const &result)
      * We call into the stream, because we don't know that there is a
      * client socket!
      */
-    debugs(88, 5, "clientReplyContext::sendStreamError: A stream error has occured, marking as complete and sending no data.");
+    debugs(88, 5, "A stream error has occurred, marking as complete and sending no data.");
     StoreIOBuffer localTempBuffer;
     flags.complete = 1;
     http->request->flags.streamError = true;

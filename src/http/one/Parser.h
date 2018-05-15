@@ -131,7 +131,7 @@ protected:
      *                identified accurately within limit characters.
      *                mimeHeaderBlock_ has been updated and buf_ consumed.
      *
-     * \retval false  An error occured, or no mime terminator found within limit.
+     * \retval false  An error occurred, or no mime terminator found within limit.
      */
     bool grabMimeBlock(const char *which, const size_t limit);
 

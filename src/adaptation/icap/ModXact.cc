@@ -397,7 +397,7 @@ bool Adaptation::Icap::ModXact::virginBodyEndReached(const Adaptation::Icap::Vir
 {
     return
         !act.active() || // did all (assuming it was originally planned)
-        !virgin.body_pipe->expectMoreAfter(act.offset()); // wont have more
+        !virgin.body_pipe->expectMoreAfter(act.offset()); // will not have more
 }
 
 // the size of buffered virgin body data available for the specified activity

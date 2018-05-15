@@ -602,7 +602,7 @@ ipcache_init(void)
  \param flags       Default is NULL, set to IP_LOOKUP_IF_MISS
  *          to explicitly perform DNS lookups.
  *
- \retval NULL   An error occured during lookup
+ \retval NULL   An error occurred during lookup
  \retval NULL   No results available in cache and no lookup specified
  \retval *  Pointer to the ipcahce_addrs structure containing the lookup results
  */
