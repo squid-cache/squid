@@ -78,7 +78,7 @@ public:
         int oktosend:1;
         int finished:1;
 
-        /* an error has occured, send full body replies
+        /* an error has occurred, send full body replies
          * regardless. Note that we don't fail midstream
          * because we buffer until we can not fail
          */

@@ -90,7 +90,7 @@ public:
     bool noDirect = false;
     /** Reply with chunked transfer encoding */
     bool chunkedReply = false;
-    /** set if stream error has occured */
+    /** set if stream error has occurred */
     bool streamError = false;
     /** internal ssl-bump request to get server cert */
     bool sslPeek = false;

@@ -55,7 +55,7 @@ Fs::Ufs::UFSStoreState::ioCompletedNotification()
            std::setfill('0') << std::hex << std::setw(8) << swap_filen  <<
            " status "<< std::setfill(' ') << std::dec << theFile->error());
 
-    /* Ok, notification past open means an error has occured */
+    /* Ok, notification past open means an error has occurred */
     assert (theFile->error());
     tryClosing();
 }
