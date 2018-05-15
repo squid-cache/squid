@@ -743,7 +743,7 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
 static const Ip::Address *
 FindListeningPortAddressInAddress(const Ip::Address *ip)
 {
-    // FindListeningPortAddress() callers do not want "any" addresses
+    // FindListeningPortAddress() callers do not want INADDR_ANY addresses
     return (ip && !ip->isAnyAddr()) ? ip : nullptr;
 }
 
@@ -776,10 +776,12 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     const Ip::Address *ip = nullptr;
 
     if (request->flags.interceptTproxy || request->flags.intercepted) {
-        if (!ip)
-            ip = FindListeningPortAddressInPort(request->masterXaction->squidPort);
+        ip = FindListeningPortAddressInPort(request->masterXaction->squidPort);
         if (!ip && ale)
             ip = FindListeningPortAddressInPort(ale->cache.port);
+        if (ip)
+            return ip;
+
         // XXX: tcpClient contains client destination rather than Squid
         // listening address for intercepted and PROXY clients, but here we fall
         // through as if it does not.
@@ -787,8 +789,7 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
 
     /* handle intercepted-without-port-info and all non-intercepted cases */
 
-    if (!ip)
-        ip = FindListeningPortAddressInConn(request->masterXaction->tcpClient);
+    ip = FindListeningPortAddressInConn(request->masterXaction->tcpClient);
     if (!ip && ale)
         ip = FindListeningPortAddressInConn(ale->tcpClient);
 
