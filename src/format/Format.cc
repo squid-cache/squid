@@ -495,12 +495,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_LOCAL_LISTENING_PORT:
-            // XXX: Out of sync with LFT_LOCAL_LISTENING_IP
             if (const auto addr = FindListeningPortAddress(nullptr, al.getRaw())) {
                 outint = addr->port();
-                doint = 1;
-            } else if (al->request) {
-                outint = al->request->my_addr.port();
                 doint = 1;
             }
             break;
