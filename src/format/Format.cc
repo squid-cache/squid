@@ -495,6 +495,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_LOCAL_LISTENING_PORT:
+            // XXX: Out of sync with LFT_LOCAL_LISTENING_IP
             if (al->cache.port) {
                 outint = al->cache.port->s.port();
                 doint = 1;
