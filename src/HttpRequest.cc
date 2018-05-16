@@ -773,26 +773,16 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     if (!request)
         return nullptr; // not enough information
 
-    const Ip::Address *ip = nullptr;
+    const Ip::Address *ip = FindListeningPortAddressInPort(request->masterXaction->squidPort);
+    if (!ip && ale)
+        ip = FindListeningPortAddressInPort(ale->cache.port);
+    if (ip || request->flags.interceptTproxy || request->flags.intercepted)
+        return ip;
 
-    if (request->flags.interceptTproxy || request->flags.intercepted) {
-        ip = FindListeningPortAddressInPort(request->masterXaction->squidPort);
-        if (!ip && ale)
-            ip = FindListeningPortAddressInPort(ale->cache.port);
-        if (ip)
-            return ip;
-
-        // XXX: tcpClient contains client destination rather than Squid
-        // listening address for intercepted and PROXY clients, but here we fall
-        // through as if it does not.
-    }
-
-    /* handle intercepted-without-port-info and all non-intercepted cases */
-
+    /* handle non-intercepted cases */
     ip = FindListeningPortAddressInConn(request->masterXaction->tcpClient);
     if (!ip && ale)
         ip = FindListeningPortAddressInConn(ale->tcpClient);
-
     return ip; // may still be nil
 }
 
