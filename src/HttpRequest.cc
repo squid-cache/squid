@@ -776,6 +776,8 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     const Ip::Address *ip = FindListeningPortAddressInPort(request->masterXaction->squidPort);
     if (!ip && ale)
         ip = FindListeningPortAddressInPort(ale->cache.port);
+
+    // XXX: also handle PROXY protocol here when we have a flag to identify such request
     if (ip || request->flags.interceptTproxy || request->flags.intercepted)
         return ip;
 
