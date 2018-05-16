@@ -255,7 +255,7 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &aKey)
         if (!isAvailable(i))
             continue;
 
-        // local end port is required, but dont match.
+        // local end port is required, but do not match.
         if (keyCheckPort && aKey->local.port() != theList_[i]->local.port())
             continue;
 

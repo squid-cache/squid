@@ -1287,7 +1287,7 @@ statAvgTick(void *)
             i /= (int) dt;
 
             if (Config.warnings.high_pf < i)
-                debugs(18, DBG_CRITICAL, "WARNING: Page faults occuring at " << i << "/sec");
+                debugs(18, DBG_CRITICAL, "WARNING: Page faults occurring at " << i << "/sec");
         }
     }
 

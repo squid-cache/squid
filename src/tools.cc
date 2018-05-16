@@ -603,7 +603,7 @@ no_suid(void)
     uid_t uid;
     leave_suid();
     uid = geteuid();
-    debugs(21, 3, "no_suid: PID " << getpid() << " giving up root priveleges forever");
+    debugs(21, 3, "no_suid: PID " << getpid() << " giving up root privileges forever");
 
     if (setuid(0) < 0) {
         int xerrno = errno;

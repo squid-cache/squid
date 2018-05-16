@@ -170,7 +170,7 @@ typedef unsigned char UCHAR;
 /* We define these as offsets into a char SMB[] array for the   */
 /* sake of portability                                          */
 
-/* NOTE!. Some of the lenght defines, SMB_<protreq>_len do not include */
+/* NOTE!. Some of the length defines, SMB_<protreq>_len do not include */
 /* the data that follows in the SMB packet, so the code will have to   */
 /* take that into account.                                             */
 

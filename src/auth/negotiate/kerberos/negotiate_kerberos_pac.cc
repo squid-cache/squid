@@ -402,7 +402,7 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
 
     p = (unsigned char *)ad_data->data;
 
-    debug((char *) "%s| %s: INFO: Got PAC data of lengh %d\n",
+    debug((char *) "%s| %s: INFO: Got PAC data of length %d\n",
           LogTime(), PROGRAM, (int)ad_data->length);
 
     /* Skip 16 bytes icommon RPC header
