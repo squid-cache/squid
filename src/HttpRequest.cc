@@ -781,7 +781,7 @@ FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry 
     if (ip || request->flags.interceptTproxy || request->flags.intercepted)
         return ip;
 
-    /* handle non-intercepted cases */
+    /* handle non-intercepted cases that were not handled above */
     ip = FindListeningPortAddressInConn(request->masterXaction->tcpClient);
     if (!ip && ale)
         ip = FindListeningPortAddressInConn(ale->tcpClient);
