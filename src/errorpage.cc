@@ -758,6 +758,14 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
             p = "-";
         break;
 
+    case 'A':
+        // TODO: When/if we get ALE here, pass it as well
+        if (const auto addr = FindListeningPortAddress(request.getRaw(), nullptr))
+            mb.appendf("%s", addr->toStr(ntoabuf, MAX_IPSTRLEN));
+        else
+            p = "-";
+        break;
+
     case 'b':
         mb.appendf("%u", getMyPort());
         break;
