@@ -57,9 +57,6 @@ using namespace Squid;
 #ifndef MESSAGELEN
 #define MESSAGELEN  65536
 #endif
-#ifndef HEADERLEN
-#define HEADERLEN   65536
-#endif
 
 /* Local functions */
 static void usage(const char *progname);
@@ -193,7 +190,7 @@ main(int argc, char *argv[])
     int www_neg = 0, proxy_neg = 0;
 #endif
     char url[BUFSIZ], msg[MESSAGELEN], buf[BUFSIZ];
-    char extra_hdrs[HEADERLEN];
+    char *extra_hdrs = nullptr;
     const char *method = "GET";
     extern char *optarg;
     time_t ims = 0;
@@ -208,7 +205,6 @@ main(int argc, char *argv[])
     const char *useragent = NULL;
 
     /* set the defaults */
-    extra_hdrs[0] = '\0';
     to_stdout = true;
     reload = false;
 
@@ -312,7 +308,8 @@ main(int argc, char *argv[])
 
             case 'H':
                 if (strlen(optarg)) {
-                    strncpy(extra_hdrs, optarg, sizeof(extra_hdrs));
+                    xfree(extra_hdrs);
+                    extra_hdrs = xstrdup(optarg);
                     shellUnescape(extra_hdrs);
                 }
                 break;
@@ -427,44 +424,44 @@ main(int argc, char *argv[])
 
     if (version[0] == '-' || !version[0]) {
         /* HTTP/0.9, no headers, no version */
-        snprintf(msg, BUFSIZ, "%s %s\r\n", method, url);
+        snprintf(msg, sizeof(msg), "%s %s\r\n", method, url);
     } else {
         if (!xisdigit(version[0])) // not HTTP/n.n
-            snprintf(msg, BUFSIZ, "%s %s %s\r\n", method, url, version);
+            snprintf(msg, sizeof(msg), "%s %s %s\r\n", method, url, version);
         else
-            snprintf(msg, BUFSIZ, "%s %s HTTP/%s\r\n", method, url, version);
+            snprintf(msg, sizeof(msg), "%s %s HTTP/%s\r\n", method, url, version);
 
         if (host) {
-            snprintf(buf, BUFSIZ, "Host: %s\r\n", host);
+            snprintf(buf, sizeof(buf), "Host: %s\r\n", host);
             strcat(msg,buf);
         }
 
         if (useragent == NULL) {
-            snprintf(buf, BUFSIZ, "User-Agent: squidclient/%s\r\n", VERSION);
+            snprintf(buf, sizeof(buf), "User-Agent: squidclient/%s\r\n", VERSION);
             strcat(msg,buf);
         } else if (useragent[0] != '\0') {
-            snprintf(buf, BUFSIZ, "User-Agent: %s\r\n", useragent);
+            snprintf(buf, sizeof(buf), "User-Agent: %s\r\n", useragent);
             strcat(msg,buf);
         }
 
         if (reload) {
-            snprintf(buf, BUFSIZ, "Cache-Control: no-cache\r\n");
+            snprintf(buf, sizeof(buf), "Cache-Control: no-cache\r\n");
             strcat(msg, buf);
         }
         if (put_fd > 0) {
-            snprintf(buf, BUFSIZ, "Content-length: %" PRId64 "\r\n", (int64_t) sb.st_size);
+            snprintf(buf, sizeof(buf), "Content-length: %" PRId64 "\r\n", (int64_t) sb.st_size);
             strcat(msg, buf);
         }
         if (opt_noaccept == 0) {
-            snprintf(buf, BUFSIZ, "Accept: */*\r\n");
+            snprintf(buf, sizeof(buf), "Accept: */*\r\n");
             strcat(msg, buf);
         }
         if (ims) {
-            snprintf(buf, BUFSIZ, "If-Modified-Since: %s\r\n", mkrfc1123(ims));
+            snprintf(buf, sizeof(buf), "If-Modified-Since: %s\r\n", mkrfc1123(ims));
             strcat(msg, buf);
         }
         if (max_forwards > -1) {
-            snprintf(buf, BUFSIZ, "Max-Forwards: %d\r\n", max_forwards);
+            snprintf(buf, sizeof(buf), "Max-Forwards: %d\r\n", max_forwards);
             strcat(msg, buf);
         }
         struct base64_encode_ctx ctx;
@@ -486,7 +483,7 @@ main(int argc, char *argv[])
             blen += base64_encode_update(&ctx, pwdBuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
             blen += base64_encode_update(&ctx, pwdBuf+blen, strlen(password), reinterpret_cast<const uint8_t*>(password));
             blen += base64_encode_final(&ctx, pwdBuf+blen);
-            snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %.*s\r\n", static_cast<int>(blen), pwdBuf);
+            snprintf(buf, sizeof(buf), "Proxy-Authorization: Basic %.*s\r\n", static_cast<int>(blen), pwdBuf);
             strcat(msg, buf);
             delete[] pwdBuf;
         }
@@ -506,7 +503,7 @@ main(int argc, char *argv[])
             blen += base64_encode_update(&ctx, pwdBuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
             blen += base64_encode_update(&ctx, pwdBuf+blen, strlen(password), reinterpret_cast<const uint8_t*>(password));
             blen += base64_encode_final(&ctx, pwdBuf+blen);
-            snprintf(buf, BUFSIZ, "Authorization: Basic %.*s\r\n", static_cast<int>(blen), pwdBuf);
+            snprintf(buf, sizeof(buf), "Authorization: Basic %.*s\r\n", static_cast<int>(blen), pwdBuf);
             strcat(msg, buf);
             delete[] pwdBuf;
         }
@@ -514,7 +511,7 @@ main(int argc, char *argv[])
         if (www_neg) {
             if (host) {
                 const char *token = GSSAPI_token(host);
-                snprintf(buf, BUFSIZ, "Authorization: Negotiate %s\r\n", token);
+                snprintf(buf, sizeof(buf), "Authorization: Negotiate %s\r\n", token);
                 strcat(msg, buf);
                 delete[] token;
             } else
@@ -523,7 +520,7 @@ main(int argc, char *argv[])
         if (proxy_neg) {
             if (Transport::Config.hostname) {
                 const char *token = GSSAPI_token(Transport::Config.hostname);
-                snprintf(buf, BUFSIZ, "Proxy-Authorization: Negotiate %s\r\n", token);
+                snprintf(buf, sizeof(buf), "Proxy-Authorization: Negotiate %s\r\n", token);
                 strcat(msg, buf);
                 delete[] token;
             } else
@@ -539,7 +536,11 @@ main(int argc, char *argv[])
         if (!keep_alive)
             strcat(msg, "Connection: close\r\n");
 
-        strcat(msg, extra_hdrs);
+        if (extra_hdrs) {
+            assert(strlen(extra_hdrs) < (sizeof(msg) - strlen(msg)));
+            strcat(msg, extra_hdrs);
+            safe_free(extra_hdrs);
+        }
         strcat(msg, "\r\n");
     }
 
