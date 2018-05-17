@@ -235,7 +235,7 @@ Transport::Connect()
 }
 
 ssize_t
-Transport::Write(void *buf, size_t len)
+Transport::Write(const void *buf, size_t len)
 {
     if (conn < 0)
         return -1;
