@@ -130,22 +130,15 @@ CandidatePaths::popFirst()
 }
 
 Comm::ConnectionPointer
-CandidatePaths::popFirstFromDifferentFamily(int family)
+CandidatePaths::popFirstFromDifferentFamily(const CachePeer *p, int family)
 {
     Comm::ConnectionPointer path;
-    auto it = std::find_if(paths_.begin(), paths_.end(), [family](const Comm::ConnectionPointer &c) {return family != ConnectionFamily(c);});
+    auto it = std::find_if(paths_.begin(), paths_.end(), [p, family](const Comm::ConnectionPointer &c) {return c->getPeer() == p && family != ConnectionFamily(c);});
     if (it != paths_.end()) {
         path = *it;
         paths_.erase(it);
     }
     return path;
-}
-
-bool
-CandidatePaths::existPathNotInFamily(int family)
-{
-    auto it = std::find_if(paths_.begin(), paths_.end(), [family](const Comm::ConnectionPointer &c) {return family != ConnectionFamily(c);});
-    return (it != paths_.end());
 }
 
 int

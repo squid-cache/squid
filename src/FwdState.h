@@ -77,13 +77,10 @@ public:
     /// Retrieves and remove from list the first path. Throws on empty list
     Comm::ConnectionPointer popFirst();
 
-    /// Retrieves and remove from list the first path which is
+    /// Retrieves and remove from list the first path for the given CachePeer which is
     /// not in the passed protocol family
-    Comm::ConnectionPointer popFirstFromDifferentFamily(int);
-
-    /// Whether exist a path which is not in given protocol
-    /// family
-    bool existPathNotInFamily(int);
+    /// The CachePeer is null for origin server paths
+    Comm::ConnectionPointer popFirstFromDifferentFamily(const CachePeer *, int);
 
     /// the current number of candidate paths
     int size() {return paths_.size();}
