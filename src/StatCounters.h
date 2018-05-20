@@ -27,8 +27,8 @@ public:
 
 /** General collection of process-wide statistics.
  *
- * \note if you add a field to StatCounters,
- * you MUST sync statCountersInitSpecial, statCountersClean, and statCountersCopy
+ * \note if you add a field to StatCounters which requires any non-trivial
+ *  initialization or copy you MUST sync statCountersInitSpecial()
  */
 class StatCounters
 {

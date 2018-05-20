@@ -1286,7 +1286,7 @@ statAvgTick(void *)
     statCounter.page_faults = rusage_pagefaults(&rusage);
     statCounter.cputime = rusage_cputime(&rusage);
     statCounter.timestamp = current_time;
-    // shuffle the whole array by +1 and prepend
+    // shift all elements right and prepend statCounter
     for(int i = N_COUNT_HIST-1; i > 0; --i)
         CountHist[i] = CountHist[i-1];
     CountHist[0] = statCounter;
@@ -1294,7 +1294,7 @@ statAvgTick(void *)
 
     if ((NCountHist % COUNT_INTERVAL) == 0) {
         /* we have an hours worth of readings.  store previous hour */
-        // shuffle the whole array by +1 and prepend
+        // shift all elements right and prepend final CountHist element
         for(int i = N_COUNT_HOUR_HIST-1; i > 0; --i)
             CountHourHist[i] = CountHourHist[i-1];
         CountHourHist[0] = CountHist[N_COUNT_HIST - 1];
