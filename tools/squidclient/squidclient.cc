@@ -187,7 +187,8 @@ main(int argc, char *argv[])
 #if HAVE_GSSAPI
     int www_neg = 0, proxy_neg = 0;
 #endif
-    char url[BUFSIZ], buf[BUFSIZ];
+    char url[BUFSIZ];
+    char buf[BUFSIZ];
     char *extra_hdrs = nullptr;
     const char *method = "GET";
     extern char *optarg;
@@ -306,7 +307,10 @@ main(int argc, char *argv[])
 
             case 'H':
                 if (strlen(optarg)) {
-                    xfree(extra_hdrs);
+                    if (extra_hdrs) {
+                        std::cerr << "ERROR: multiple -H options not supported. Discarding previous value." << std::endl;
+                        xfree(extra_hdrs);
+                    }
                     extra_hdrs = xstrdup(optarg);
                     shellUnescape(extra_hdrs);
                 }
@@ -426,16 +430,18 @@ main(int argc, char *argv[])
         /* HTTP/0.9, no headers, no version */
         msg << method << " " << url << "\r\n";
     } else {
-        msg << method << " " << url << " "
-            << (xisdigit(version[0]) ? "HTTP/" : "") // is HTTP/n.n
-            << version << "\r\n";
+        const auto versionImpliesHttp = xisdigit(version[0]); // is HTTP/n.n
+        msg << method << " "
+            << url << " "
+            << (versionImpliesHttp ? "HTTP/" : "") << version
+            << "\r\n";
 
         if (host) {
             msg << "Host: " << host << "\r\n";
         }
 
         if (!useragent) {
-            msg  << "User-Agent: squidclient/" VERSION "\r\n";
+            msg  << "User-Agent: squidclient/" << VERSION << "\r\n";
         } else if (useragent[0] != '\0') {
             msg << "User-Agent: " << useragent << "\r\n";
         } // else custom: no value U-A header
@@ -531,7 +537,7 @@ main(int argc, char *argv[])
     }
 
     msg.flush();
-    const auto &messageHeader = msg.str();
+    const auto messageHeader = msg.str();
     debugVerbose(1, "Request:" << std::endl << messageHeader << std::endl << ".");
 
     uint32_t loops = Ping::Init();
@@ -544,13 +550,14 @@ main(int argc, char *argv[])
 
         /* Send the HTTP request */
         debugVerbose(2, "Sending HTTP request ... ");
-        bytesWritten = Transport::Write(messageHeader.c_str(), messageHeader.length());
+        bytesWritten = Transport::Write(messageHeader.data(), messageHeader.length());
 
         if (bytesWritten < 0) {
             std::cerr << "ERROR: write" << std::endl;
             exit(EXIT_FAILURE);
-        } else if ((unsigned) bytesWritten != messageHeader.length()) {
-            std::cerr << "ERROR: Cannot send request?: " << std::endl << messageHeader << std::endl;
+        } else if (static_cast<size_t>(bytesWritten) != messageHeader.length()) {
+            std::cerr << "ERROR: Failed to send the following request: " << std::endl
+                      << messageHeader << std::endl;
             exit(EXIT_FAILURE);
         }
         debugVerbose(2, "done.");
