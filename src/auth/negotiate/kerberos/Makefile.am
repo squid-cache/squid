@@ -11,7 +11,7 @@ EXTRA_DIST= \
 	README \
 	required.m4 \
 	negotiate_kerberos_auth.8 \
-	negotiate_external_acl
+	ext_negotiate_kerberos_acl
 
 libexec_PROGRAMS = \
 	negotiate_kerberos_auth \
