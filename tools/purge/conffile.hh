@@ -55,11 +55,6 @@ typedef int bool;
 #endif
 #endif /* __cplusplus */
 
-
-#if !defined(DEFAULT_CONFIG_FILE)
-#error Missing -DDEFAULT_CONFIG_FILE= compile option for squid.conf location
-#endif
-
 #include <vector>
 
 struct CacheDir {
