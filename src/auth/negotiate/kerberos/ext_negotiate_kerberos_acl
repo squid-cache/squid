@@ -1,36 +1,36 @@
 #!/bin/sh
 #
 #  Author: Markus Moeller (markus_moeller at compuserve.com)
-# 
+#
 #  Copyright (C) 2008 Markus Moeller. All rights reserved.
-# 
+#
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-# 
+#
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-# 
+#
 #    You should have received a copy of the GNU General Public License
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
-# 
+#
 #    As a special exemption, M Moeller gives permission to link this program
 #    with MIT, Heimdal or other GSS/Kerberos libraries, and distribute
 #    the resulting executable, without including the source code for
 #    the Libraries in the source distribution.
 #
 #############################################################################
-# 
+#
 # This external acl helper checks the Kerberos group information without
 # continues ldap queries by leveraging the kerbors ticket group information
 # i.e. PAC field. During startup the helper determines the objectsid for the
 # group and compares it to the kerberos token group information. This must
 # be a Security group as these are only stored in the Kerberos ticket.
-# 
+#
 #
 # Squid config lines:
 # auth_param negotiate program /opt/squid/sbin/negotiate_wrapper_auth -d --ntlm /usr/bin/ntlm_auth --helper-protocol=squid-2.5-ntlmssp --domain SAMBA.HOME --kerberos /opt/squid/sbin/negotiate_kerberos_auth -d -s GSS_C_NO_NAME -k /etc/squid/squid.keytab -t none
@@ -50,7 +50,7 @@ export GROUPNAME="SQUID_ALLOW"
 export BASEDN="DC=example,DC=com"
 export EXTERNAL_ACL_DEBUG=1
 #
-#  
+#
 #
 MSG=$(kinit -k $PRINCIPAL 2>&1)
 if test -n "$MSG" ; then
@@ -61,7 +61,7 @@ SID=$(ldapsearch -LLL -Ygssapi -H ldap://$DC:389 -s sub -b "$BASEDN" "(CN=$GROUP
 (>&2 echo "`date +"%Y/%m/%d %H:%M:%S"`| negotiate_external_acl: INFO: Group=$GROUPNAME, SID=$SID")
 
 #
-# Read from STDIN as a series of lines into 'input'."
+# Read from STDIN as a series of lines into 'input'
 #
 while read input
 do
