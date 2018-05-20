@@ -26,6 +26,7 @@ using namespace Squid;
 #include <csignal>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #if _SQUID_WINDOWS_
 #include <io.h>
 #endif
@@ -53,12 +54,6 @@ using namespace Squid;
 
 #ifndef BUFSIZ
 #define BUFSIZ      8192
-#endif
-#ifndef MESSAGELEN
-#define MESSAGELEN  65536
-#endif
-#ifndef HEADERLEN
-#define HEADERLEN   65536
 #endif
 
 /* Local functions */
@@ -192,8 +187,9 @@ main(int argc, char *argv[])
 #if HAVE_GSSAPI
     int www_neg = 0, proxy_neg = 0;
 #endif
-    char url[BUFSIZ], msg[MESSAGELEN], buf[BUFSIZ];
-    char extra_hdrs[HEADERLEN];
+    char url[BUFSIZ];
+    char buf[BUFSIZ];
+    char *extra_hdrs = nullptr;
     const char *method = "GET";
     extern char *optarg;
     time_t ims = 0;
@@ -208,7 +204,6 @@ main(int argc, char *argv[])
     const char *useragent = NULL;
 
     /* set the defaults */
-    extra_hdrs[0] = '\0';
     to_stdout = true;
     reload = false;
 
@@ -216,8 +211,8 @@ main(int argc, char *argv[])
     if (argc < 2 || argv[argc-1][0] == '-') {
         usage(argv[0]);     /* need URL */
     } else if (argc >= 2) {
-        strncpy(url, argv[argc - 1], BUFSIZ);
-        url[BUFSIZ - 1] = '\0';
+        strncpy(url, argv[argc - 1], sizeof(url));
+        url[sizeof(url) - 1] = '\0';
 
         int optIndex = 0;
         const char *shortOpStr = "aA:h:j:V:l:P:i:km:nNp:rsvt:H:T:u:U:w:W:?";
@@ -312,7 +307,11 @@ main(int argc, char *argv[])
 
             case 'H':
                 if (strlen(optarg)) {
-                    strncpy(extra_hdrs, optarg, sizeof(extra_hdrs));
+                    if (extra_hdrs) {
+                        std::cerr << "ERROR: multiple -H options not supported. Discarding previous value." << std::endl;
+                        xfree(extra_hdrs);
+                    }
+                    extra_hdrs = xstrdup(optarg);
                     shellUnescape(extra_hdrs);
                 }
                 break;
@@ -385,9 +384,9 @@ main(int argc, char *argv[])
         }
         // embed the -w proxy password into old-style cachemgr URLs
         if (at)
-            snprintf(url, BUFSIZ, "cache_object://%s/%s@%s", Transport::Config.hostname, t, at);
+            snprintf(url, sizeof(url), "cache_object://%s/%s@%s", Transport::Config.hostname, t, at);
         else
-            snprintf(url, BUFSIZ, "cache_object://%s/%s", Transport::Config.hostname, t);
+            snprintf(url, sizeof(url), "cache_object://%s/%s", Transport::Config.hostname, t);
         xfree(t);
     }
     if (put_file) {
@@ -425,47 +424,42 @@ main(int argc, char *argv[])
         }
     }
 
+    std::stringstream msg;
+
     if (version[0] == '-' || !version[0]) {
         /* HTTP/0.9, no headers, no version */
-        snprintf(msg, BUFSIZ, "%s %s\r\n", method, url);
+        msg << method << " " << url << "\r\n";
     } else {
-        if (!xisdigit(version[0])) // not HTTP/n.n
-            snprintf(msg, BUFSIZ, "%s %s %s\r\n", method, url, version);
-        else
-            snprintf(msg, BUFSIZ, "%s %s HTTP/%s\r\n", method, url, version);
+        const auto versionImpliesHttp = xisdigit(version[0]); // is HTTP/n.n
+        msg << method << " "
+            << url << " "
+            << (versionImpliesHttp ? "HTTP/" : "") << version
+            << "\r\n";
 
         if (host) {
-            snprintf(buf, BUFSIZ, "Host: %s\r\n", host);
-            strcat(msg,buf);
+            msg << "Host: " << host << "\r\n";
         }
 
-        if (useragent == NULL) {
-            snprintf(buf, BUFSIZ, "User-Agent: squidclient/%s\r\n", VERSION);
-            strcat(msg,buf);
+        if (!useragent) {
+            msg  << "User-Agent: squidclient/" << VERSION << "\r\n";
         } else if (useragent[0] != '\0') {
-            snprintf(buf, BUFSIZ, "User-Agent: %s\r\n", useragent);
-            strcat(msg,buf);
-        }
+            msg << "User-Agent: " << useragent << "\r\n";
+        } // else custom: no value U-A header
 
         if (reload) {
-            snprintf(buf, BUFSIZ, "Cache-Control: no-cache\r\n");
-            strcat(msg, buf);
+            msg << "Cache-Control: no-cache\r\n";
         }
         if (put_fd > 0) {
-            snprintf(buf, BUFSIZ, "Content-length: %" PRId64 "\r\n", (int64_t) sb.st_size);
-            strcat(msg, buf);
+            msg << "Content-length: " << sb.st_size << "\r\n";
         }
         if (opt_noaccept == 0) {
-            snprintf(buf, BUFSIZ, "Accept: */*\r\n");
-            strcat(msg, buf);
+            msg << "Accept: */*\r\n";
         }
         if (ims) {
-            snprintf(buf, BUFSIZ, "If-Modified-Since: %s\r\n", mkrfc1123(ims));
-            strcat(msg, buf);
+            msg << "If-Modified-Since: " << mkrfc1123(ims) << "\r\n";
         }
         if (max_forwards > -1) {
-            snprintf(buf, BUFSIZ, "Max-Forwards: %d\r\n", max_forwards);
-            strcat(msg, buf);
+            msg << "Max-Forwards: " << max_forwards << "\r\n";
         }
         struct base64_encode_ctx ctx;
         base64_encode_init(&ctx);
@@ -486,8 +480,7 @@ main(int argc, char *argv[])
             blen += base64_encode_update(&ctx, pwdBuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
             blen += base64_encode_update(&ctx, pwdBuf+blen, strlen(password), reinterpret_cast<const uint8_t*>(password));
             blen += base64_encode_final(&ctx, pwdBuf+blen);
-            snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %.*s\r\n", static_cast<int>(blen), pwdBuf);
-            strcat(msg, buf);
+            msg << "Proxy-Authorization: Basic " << pwdBuf << "\r\n";
             delete[] pwdBuf;
         }
         if (www_user) {
@@ -506,16 +499,14 @@ main(int argc, char *argv[])
             blen += base64_encode_update(&ctx, pwdBuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
             blen += base64_encode_update(&ctx, pwdBuf+blen, strlen(password), reinterpret_cast<const uint8_t*>(password));
             blen += base64_encode_final(&ctx, pwdBuf+blen);
-            snprintf(buf, BUFSIZ, "Authorization: Basic %.*s\r\n", static_cast<int>(blen), pwdBuf);
-            strcat(msg, buf);
+            msg << "Proxy-Authorization: Basic " << pwdBuf << "\r\n";
             delete[] pwdBuf;
         }
 #if HAVE_GSSAPI
         if (www_neg) {
             if (host) {
                 const char *token = GSSAPI_token(host);
-                snprintf(buf, BUFSIZ, "Authorization: Negotiate %s\r\n", token);
-                strcat(msg, buf);
+                msg << "Proxy-Authorization: Negotiate " << token << "\r\n";
                 delete[] token;
             } else
                 std::cerr << "ERROR: server host missing" << std::endl;
@@ -523,8 +514,7 @@ main(int argc, char *argv[])
         if (proxy_neg) {
             if (Transport::Config.hostname) {
                 const char *token = GSSAPI_token(Transport::Config.hostname);
-                snprintf(buf, BUFSIZ, "Proxy-Authorization: Negotiate %s\r\n", token);
-                strcat(msg, buf);
+                msg << "Proxy-Authorization: Negotiate " << token << "\r\n";
                 delete[] token;
             } else
                 std::cerr << "ERROR: proxy server host missing" << std::endl;
@@ -533,17 +523,22 @@ main(int argc, char *argv[])
 
         /* HTTP/1.0 may need keep-alive explicitly */
         if (strcmp(version, "1.0") == 0 && keep_alive)
-            strcat(msg, "Connection: keep-alive\r\n");
+            msg << "Connection: keep-alive\r\n";
 
         /* HTTP/1.1 may need close explicitly */
         if (!keep_alive)
-            strcat(msg, "Connection: close\r\n");
+            msg << "Connection: close\r\n";
 
-        strcat(msg, extra_hdrs);
-        strcat(msg, "\r\n");
+        if (extra_hdrs) {
+            msg << extra_hdrs;
+            safe_free(extra_hdrs);
+        }
+        msg << "\r\n"; // empty line ends MIME header block
     }
 
-    debugVerbose(1, "Request:" << std::endl << msg << std::endl << ".");
+    msg.flush();
+    const auto messageHeader = msg.str();
+    debugVerbose(1, "Request:" << std::endl << messageHeader << std::endl << ".");
 
     uint32_t loops = Ping::Init();
 
@@ -555,14 +550,15 @@ main(int argc, char *argv[])
 
         /* Send the HTTP request */
         debugVerbose(2, "Sending HTTP request ... ");
-        bytesWritten = Transport::Write(msg, strlen(msg));
+        bytesWritten = Transport::Write(messageHeader.data(), messageHeader.length());
 
         if (bytesWritten < 0) {
             std::cerr << "ERROR: write" << std::endl;
-            exit(1);
-        } else if ((unsigned) bytesWritten != strlen(msg)) {
-            std::cerr << "ERROR: Cannot send request?: " << std::endl << msg << std::endl;
-            exit(1);
+            exit(EXIT_FAILURE);
+        } else if (static_cast<size_t>(bytesWritten) != messageHeader.length()) {
+            std::cerr << "ERROR: Failed to send the following request: " << std::endl
+                      << messageHeader << std::endl;
+            exit(EXIT_FAILURE);
         }
         debugVerbose(2, "done.");
 
