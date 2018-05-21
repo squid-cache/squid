@@ -1003,9 +1003,11 @@ idnsSendQuery(idns_query * q)
 static int
 idnsFromKnownNameserver(Ip::Address const &from)
 {
-    int i;
+    int i = -1;
 
     for (const auto &server : nameservers) {
+        ++i;
+
         if (server.S != from)
             continue;
 
