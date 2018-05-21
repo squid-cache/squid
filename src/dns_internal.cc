@@ -345,7 +345,7 @@ idnsAddNameserver(const char *buf)
     nameservers.back().last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
     // TODO generate a test packet to probe this NS from EDNS size and ability.
 #endif
-    debugs(78, 3, "idnsAddNameserver: Added nameserver #" << nameservers.size()-1 << " (" << A << ")");
+    debugs(78, 3, "Added nameserver #" << nameservers.size()-1 << " (" << A << ")");
 }
 
 static void
