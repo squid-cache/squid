@@ -838,7 +838,7 @@ Fs::Ufs::UFSSwapDir::closeTmpSwapLog()
 
     file_close(swaplog_fd);
 
-    if (FileRename(tmp_path, swaplog_path) < 0) {
+    if (!FileRename(tmp_path, swaplog_path)) {
         fatalf("Failed to rename log file " SQUIDSBUFPH " to " SQUIDSBUFPH, SQUIDSBUFPRINT(tmp_path), SQUIDSBUFPRINT(swaplog_path));
     }
 
@@ -1012,6 +1012,7 @@ Fs::Ufs::UFSSwapDir::writeCleanDone()
 #endif
 
         FileRename(state->newLog, state->cur);
+        // TODO handle rename errors
     }
 
     /* touch a timestamp file if we're not still validating */

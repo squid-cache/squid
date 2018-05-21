@@ -164,10 +164,10 @@ class nsvc
     CBDATA_CLASS(nsvc);
 
 public:
-    explicit nsvc(int nsv) : ns(nsv), msg(new MemBuf()), queue(new MemBuf()) {}
+    explicit nsvc(size_t nsv) : ns(nsv), msg(new MemBuf()), queue(new MemBuf()) {}
     ~nsvc();
 
-    unsigned int ns = 0;
+    size_t ns = 0;
     Comm::ConnectionPointer conn;
     unsigned short msglen = 0;
     int read_msglen = 0;
@@ -345,7 +345,7 @@ idnsAddNameserver(const char *buf)
     nameservers.back().last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
     // TODO generate a test packet to probe this NS from EDNS size and ability.
 #endif
-    debugs(78, 3, "idnsAddNameserver: Added nameserver #" << nameservers.size() << " (" << A << ")");
+    debugs(78, 3, "idnsAddNameserver: Added nameserver #" << nameservers.size()-1 << " (" << A << ")");
 }
 
 static void
@@ -878,7 +878,7 @@ nsvc::~nsvc()
 }
 
 static void
-idnsInitVC(unsigned int nsv)
+idnsInitVC(size_t nsv)
 {
     assert(nsv < nameservers.size());
     nsvc *vc = new nsvc(nsv);
@@ -903,7 +903,7 @@ idnsInitVC(unsigned int nsv)
 }
 
 static void
-idnsSendQueryVC(idns_query * q, unsigned int nsn)
+idnsSendQueryVC(idns_query * q, size_t nsn)
 {
     assert(nsn < nameservers.size());
     if (nameservers[nsn].vc == NULL)
@@ -954,7 +954,7 @@ idnsSendQuery(idns_query * q)
     assert(q->lru.prev == NULL);
 
     int x = -1, y = -1;
-    unsigned int nsn;
+    size_t nsn;
     const auto nsCount = nameservers.size();
 
     do {
@@ -1003,15 +1003,11 @@ idnsSendQuery(idns_query * q)
 static int
 idnsFromKnownNameserver(Ip::Address const &from)
 {
-    int i = -1;
-
-    for (const auto &server : nameservers) {
-        ++i;
-
-        if (server.S != from)
+    for (int i = 0; static_cast<size_t>(i) < nameservers.size(); ++i) {
+        if (nameservers[i].S != from)
             continue;
 
-        if (server.S.port() != from.port())
+        if (nameservers[i].S.port() != from.port())
             continue;
 
         return i;
@@ -1640,7 +1636,7 @@ idnsShutdownAndFreeState(const char *reason)
     }
 
     for (const auto &server : nameservers) {
-        if (nsvc *vc = server.vc) {
+        if (const auto vc = server.vc) {
             if (Comm::IsConnOpen(vc->conn))
                 vc->conn->close();
         }
@@ -1747,7 +1743,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     q->query_id = idnsQueryID();
 
     int nd = 0;
-    for (unsigned int i = 0; i < nameLength; ++i)
+    for (size_t i = 0; i < nameLength; ++i)
         if (name[i] == '.')
             ++nd;
 

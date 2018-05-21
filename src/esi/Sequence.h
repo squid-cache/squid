@@ -14,7 +14,7 @@
 #include "esi/Element.h"
 #include "mem/forward.h"
 
-#include <vector>
+/* esiSequence */
 
 class esiSequence : public ESIElement
 {

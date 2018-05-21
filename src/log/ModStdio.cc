@@ -130,6 +130,7 @@ logfile_mod_stdio_rotate(Logfile * lf, const int16_t nRotate)
         SBuf to(basePath);
         to.appendf(".%d", i);
         FileRename(from, to);
+        // TODO handle rename errors
     }
 
     /* Rotate the current log to .0 */
@@ -141,6 +142,7 @@ logfile_mod_stdio_rotate(Logfile * lf, const int16_t nRotate)
         SBuf to(basePath);
         to.appendf(".0");
         FileRename(basePath, to);
+        // TODO handle rename errors
     }
     /* Reopen the log.  It may have been renamed "manually" */
     ll->fd = file_open(realpath, O_WRONLY | O_CREAT | O_TEXT);

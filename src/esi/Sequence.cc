@@ -22,8 +22,6 @@
 #include "esi/Literal.h"
 #include "esi/Sequence.h"
 
-#include <algorithm>
-
 class esiExcept;
 
 esiSequence::~esiSequence ()

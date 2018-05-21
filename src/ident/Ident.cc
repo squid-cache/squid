@@ -244,7 +244,7 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     conn->local.toUrl(key1, IDENT_KEY_SZ);
     conn->remote.toUrl(key2, IDENT_KEY_SZ);
     const auto res = snprintf(key, sizeof(key), "%s,%s", key1, key2);
-    assert(0 <= res);
+    assert(res > 0);
     assert(static_cast<std::make_unsigned<decltype(res)>::type>(res) < sizeof(key));
 
     if (!ident_hash) {

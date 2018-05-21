@@ -53,8 +53,11 @@ void safeunlink(const char *path, int quiet);
  * Wrapper for rename(2) which complains if something goes wrong;
  * the caller is responsible for handing and explaining the
  * consequences of errors.
+ *
+ * \retval true successful rename
+ * \retval false an error occured
  */
-int FileRename(const SBuf &from, const SBuf &to);
+bool FileRename(const SBuf &from, const SBuf &to);
 
 int fsBlockSize(const char *path, int *blksize);
 int fsStats(const char *, int *, int *, int *, int *);

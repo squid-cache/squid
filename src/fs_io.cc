@@ -504,7 +504,7 @@ safeunlink(const char *s, int quiet)
     }
 }
 
-int
+bool
 FileRename(const SBuf &from, const SBuf &to)
 {
     debugs(21, 2, "renaming " << from << " to " << to);
@@ -518,13 +518,13 @@ FileRename(const SBuf &from, const SBuf &to)
     remove(to2.c_str());
 #endif
 
-    if (0 == rename(from2.c_str(), to2.c_str()))
-        return 0;
+    if (rename(from2.c_str(), to2.c_str()) == 0)
+        return true;
 
     int xerrno = errno;
     debugs(21, (errno == ENOENT ? 2 : DBG_IMPORTANT), "Cannot rename " << from << " to " << to << ": " << xstrerr(xerrno));
 
-    return -1;
+    return false;
 }
 
 int

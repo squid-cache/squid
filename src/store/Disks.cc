@@ -711,7 +711,7 @@ free_cachedir(Store::DiskConfig *swap)
      */
 
     // only free's the array memory itself
-    // the Pointers may remain (ref-counted)
+    // the SwapDir objects may remain (ref-counted)
     delete[] swap->swapDirs;
     swap->swapDirs = nullptr;
     swap->n_allocated = 0;
