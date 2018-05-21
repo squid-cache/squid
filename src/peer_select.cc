@@ -134,8 +134,11 @@ PeerSelector::~PeerSelector()
 }
 
 static int
-peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
+peerSelectIcpPing(PeerSelector *ps, int direct, StoreEntry * entry)
 {
+    assert(ps);
+    HttpRequest *request = ps->request;
+
     int n;
     assert(entry);
     assert(entry->ping_status == PING_NONE);
@@ -149,7 +152,7 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
         if (direct != DIRECT_NO)
             return 0;
 
-    n = neighborsCount(request);
+    n = neighborsCount(ps);
 
     debugs(44, 3, "counted " << n << " neighbors");
 
@@ -465,6 +468,7 @@ PeerSelector::selectMore()
             ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, NULL);
             ch->al = al;
             acl_checklist = ch;
+            acl_checklist->syncAle(request, nullptr);
             acl_checklist->nonBlockingCheck(CheckAlwaysDirectDone, this);
             return;
         } else if (never_direct == ACCESS_DUNNO) {
@@ -473,6 +477,7 @@ PeerSelector::selectMore()
             ACLFilledChecklist *ch = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
             ch->al = al;
             acl_checklist = ch;
+            acl_checklist->syncAle(request, nullptr);
             acl_checklist->nonBlockingCheck(CheckNeverDirectDone, this);
             return;
         } else if (request->flags.noDirect) {
@@ -539,7 +544,7 @@ PeerSelector::selectMore()
     resolveSelected();
 }
 
-bool peerAllowedToUse(const CachePeer * p, HttpRequest * request);
+bool peerAllowedToUse(const CachePeer *, PeerSelector*);
 
 /// Selects a pinned connection if it exists, is valid, and is allowed.
 void
@@ -550,7 +555,7 @@ PeerSelector::selectPinned()
         return;
     CachePeer *pear = request->pinnedConnection()->pinnedPeer();
     if (Comm::IsConnOpen(request->pinnedConnection()->validatePinnedConnection(request, pear))) {
-        const bool usePinned = pear ? peerAllowedToUse(pear, request) : (direct != DIRECT_NO);
+        const bool usePinned = pear ? peerAllowedToUse(pear, this) : (direct != DIRECT_NO);
         if (usePinned) {
             addSelection(pear, PINNED);
             if (entry)
@@ -582,16 +587,16 @@ PeerSelector::selectSomeNeighbor()
     }
 
 #if USE_CACHE_DIGESTS
-    if ((p = neighborsDigestSelect(request))) {
+    if ((p = neighborsDigestSelect(this))) {
         if (neighborType(p, request->url) == PEER_PARENT)
             code = CD_PARENT_HIT;
         else
             code = CD_SIBLING_HIT;
     } else
 #endif
-        if ((p = netdbClosestParent(request))) {
+        if ((p = netdbClosestParent(this))) {
             code = CLOSEST_PARENT;
-        } else if (peerSelectIcpPing(request, direct, entry)) {
+        } else if (peerSelectIcpPing(this, direct, entry)) {
             debugs(44, 3, "Doing ICP pings");
             ping.start = current_time;
             ping.n_sent = neighborsUdpPing(request,
@@ -681,21 +686,21 @@ PeerSelector::selectSomeParent()
     if (direct == DIRECT_YES)
         return;
 
-    if ((p = peerSourceHashSelectParent(request))) {
+    if ((p = peerSourceHashSelectParent(this))) {
         code = SOURCEHASH_PARENT;
 #if USE_AUTH
-    } else if ((p = peerUserHashSelectParent(request))) {
+    } else if ((p = peerUserHashSelectParent(this))) {
         code = USERHASH_PARENT;
 #endif
-    } else if ((p = carpSelectParent(request))) {
+    } else if ((p = carpSelectParent(this))) {
         code = CARP;
-    } else if ((p = getRoundRobinParent(request))) {
+    } else if ((p = getRoundRobinParent(this))) {
         code = ROUNDROBIN_PARENT;
-    } else if ((p = getWeightedRoundRobinParent(request))) {
+    } else if ((p = getWeightedRoundRobinParent(this))) {
         code = ROUNDROBIN_PARENT;
-    } else if ((p = getFirstUpParent(request))) {
+    } else if ((p = getFirstUpParent(this))) {
         code = FIRSTUP_PARENT;
-    } else if ((p = getDefaultParent(request))) {
+    } else if ((p = getDefaultParent(this))) {
         code = DEFAULT_PARENT;
     }
 
@@ -719,7 +724,7 @@ PeerSelector::selectAllParents()
         if (neighborType(p, request->url) != PEER_PARENT)
             continue;
 
-        if (!peerHTTPOkay(p, request))
+        if (!peerHTTPOkay(p, this))
             continue;
 
         addSelection(p, ANY_OLD_PARENT);
@@ -730,7 +735,7 @@ PeerSelector::selectAllParents()
      * simply are not configured to handle the request.
      */
     /* Add default parent as a last resort */
-    if ((p = getDefaultParent(request))) {
+    if ((p = getDefaultParent(this))) {
         addSelection(p, DEFAULT_PARENT);
     }
 }
@@ -814,7 +819,7 @@ PeerSelector::handleIcpReply(CachePeer *p, const peer_t type, icp_common_t *head
 
     if (p && request)
         peerNoteDigestLookup(request, p,
-                             peerDigestLookup(p, request, entry));
+                             peerDigestLookup(p, this));
 
 #endif
 

@@ -1030,19 +1030,27 @@ DOC_START
 	acl aclname dst [-n] ip-address/mask ...	# URL host's IP address [slow]
 	acl aclname localip ip-address/mask ... # IP address the client connected to [fast]
 
-	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
+if USE_SQUID_EUI
+	acl aclname arp      mac-address ...
+	acl aclname eui64    eui64-address ...
 	  # [fast]
+	  # MAC (EUI-48) and EUI-64 addresses use xx:xx:xx:xx:xx:xx notation.
+	  #
 	  # The 'arp' ACL code is not portable to all operating systems.
 	  # It works on Linux, Solaris, Windows, FreeBSD, and some other
 	  # BSD variants.
 	  #
-	  # NOTE: Squid can only determine the MAC/EUI address for IPv4
+	  # The eui_lookup directive is required to be 'on' (the default)
+	  # and Squid built with --enable-eui for MAC/EUI addresses to be
+	  # available for this ACL.
+	  #
+	  # Squid can only determine the MAC/EUI address for IPv4
 	  # clients that are on the same subnet. If the client is on a
 	  # different subnet, then Squid cannot find out its address.
 	  #
-	  # NOTE 2: IPv6 protocol does not contain ARP. MAC/EUI is either
+	  # IPv6 protocol does not contain ARP. MAC/EUI is either
 	  # encoded directly in the IPv6 address or not available.
-
+endif
 	acl aclname clientside_mark mark[/mask] ...
 	  # matches CONNMARK of an accepted connection [fast]
 	  # DEPRECATED. Use the 'client_connection_mark' instead.
@@ -1089,6 +1097,7 @@ DOC_START
 	  # cache_peer_access mycache_mydomain.net deny all
 
 	acl aclname peername myPeer ...
+	acl aclname peername_regex [-i] regex-pattern ...
 	  # [fast]
 	  # match against a named cache_peer entry
 	  # set unique name= on cache_peer lines for reliable use.
@@ -1133,7 +1142,7 @@ DOC_START
 	  # pattern match on Referer header [fast]
 	  # Referer is highly unreliable, so use with care
 
-	acl aclname ident username ...
+	acl aclname ident [-i] username ...
 	acl aclname ident_regex [-i] pattern ...
 	  # string match on ident output [slow]
 	  # use REQUIRED to accept any non-null ident.
@@ -1228,7 +1237,7 @@ DOC_START
 	  # match against attributes a users issuing CA SSL certificate
 	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID  [fast]
 
-	acl aclname ext_user username ...
+	acl aclname ext_user [-i] username ...
 	acl aclname ext_user_regex [-i] pattern ...
 	  # string match on username returned by external acl helper [slow]
 	  # use REQUIRED to accept any non-null user name.
@@ -5627,7 +5636,7 @@ DOC_START
 		The default is to use HTTP request URL as the store ID.
 
 	  BH
-		An internal error occured in the helper, preventing
+		An internal error occurred in the helper, preventing
 		a result being identified.
 
 	In addition to the above kv-pairs Squid also understands the following
@@ -8442,6 +8451,7 @@ DOC_START
 
 	URL FORMAT TAGS:
 		%a	- username (if available. Password NOT included)
+		%A	- Local listening IP address the client connection was connected to
 		%B	- FTP path URL
 		%e	- Error number
 		%E	- Error description

@@ -447,11 +447,14 @@ ClientHttpRequest::logRequest()
         al->adapted_request = request;
         HTTPMSGLOCK(al->adapted_request);
     }
+    // no need checklist.syncAle(): already synced
+    checklist.al = al;
     accessLogLog(al, &checklist);
 
     bool updatePerformanceCounters = true;
     if (Config.accessList.stats_collection) {
         ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request, NULL);
+        statsCheck.al = al;
         if (al->reply) {
             statsCheck.reply = al->reply;
             HTTPMSGLOCK(statsCheck.reply);
@@ -789,7 +792,7 @@ void
 clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
                       HttpReply * rep, StoreIOBuffer receivedData)
 {
-    // dont tryt to deliver if client already ABORTED
+    // do not try to deliver if client already ABORTED
     if (!http->getConn() || !cbdataReferenceValid(http->getConn()) || !Comm::IsConnOpen(http->getConn()->clientConnection))
         return;
 
@@ -1521,7 +1524,9 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {
                 ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
+                check.al = http->al;
                 check.sslErrors = new Security::CertErrors(Security::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
+                check.syncAle(request, http->log_uri);
                 allowDomainMismatch = check.fastCheck().allowed();
                 delete check.sslErrors;
                 check.sslErrors = NULL;
@@ -1569,10 +1574,14 @@ clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpReque
 {
     if (conn->mayTunnelUnsupportedProto()) {
         ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, request.getRaw(), nullptr);
+        checklist.al = (context && context->http) ? context->http->al : nullptr;
         checklist.requestErrorType = requestError;
         checklist.src_addr = conn->clientConnection->remote;
         checklist.my_addr = conn->clientConnection->local;
         checklist.conn(conn);
+        ClientHttpRequest *http = context ? context->http : nullptr;
+        const char *log_uri = http ? http->log_uri : nullptr;
+        checklist.syncAle(request.getRaw(), log_uri);
         allow_t answer = checklist.fastCheck();
         if (answer.allowed() && answer.kind == 1) {
             debugs(33, 3, "Request will be tunneled to server");
@@ -2822,6 +2831,10 @@ ConnStateData::postHttpsAccept()
         HTTPMSGUNLOCK(acl_checklist->al->request);
         acl_checklist->al->request = request;
         HTTPMSGLOCK(acl_checklist->al->request);
+        Http::StreamPointer context = pipeline.front();
+        ClientHttpRequest *http = context ? context->http : nullptr;
+        const char *log_uri = http ? http->log_uri : nullptr;
+        acl_checklist->syncAle(request, log_uri);
         acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
 #else
         fatal("FATAL: SSL-Bump requires --with-openssl");
@@ -3024,7 +3037,7 @@ ConnStateData::getSslContextStart()
             request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
             request_message.composeRequest(certProperties);
             debugs(33, 5, HERE << "SSL crtd request: " << request_message.compose().c_str());
-            Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
+            Ssl::Helper::Submit(request_message, sslCrtdHandleReplyWrapper, this);
             return;
         } catch (const std::exception &e) {
             debugs(33, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtd " <<
@@ -3287,6 +3300,8 @@ ConnStateData::startPeekAndSplice()
         acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpNone));
         acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpClientFirst));
         acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpServerFirst));
+        const char *log_uri = http ? http->log_uri : nullptr;
+        acl_checklist->syncAle(sslServerBump->request.getRaw(), log_uri);
         acl_checklist->nonBlockingCheck(httpsSslBumpStep2AccessCheckDone, this);
         return;
     }
@@ -3732,6 +3747,7 @@ clientAclChecklistFill(ACLFilledChecklist &checklist, ClientHttpRequest *http)
 {
     checklist.setRequest(http->request);
     checklist.al = http->al;
+    checklist.syncAle(http->request, http->log_uri);
 
     // TODO: If http->getConn is always http->request->clientConnectionManager,
     // then call setIdent() inside checklist.setRequest(). Otherwise, restore

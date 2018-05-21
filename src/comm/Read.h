@@ -37,9 +37,9 @@ bool MonitorsRead(int fd);
  * The returned flag is also placed in params.flag.
  *
  * \retval Comm::OK          data has been read and placed in buf, amount in params.size
- * \retval Comm::COMM_ERROR  an error occured, the code is placed in params.xerrno
- * \retval Comm::INPROGRESS  unable to read at this time, or a minor error occured
- * \retval Comm::ENDFILE     0-byte read has occured.
+ * \retval Comm::COMM_ERROR  an error occurred, the code is placed in params.xerrno
+ * \retval Comm::INPROGRESS  unable to read at this time, or a minor error occurred
+ * \retval Comm::ENDFILE     0-byte read has occurred.
  *                           Usually indicates the remote end has disconnected.
  */
 Comm::Flag ReadNow(CommIoCbParams &params, SBuf &buf);

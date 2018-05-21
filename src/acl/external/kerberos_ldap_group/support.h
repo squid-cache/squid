@@ -110,6 +110,7 @@ struct main_args {
     struct gdstruct *groups;
     struct ndstruct *ndoms;
     struct lsstruct *lservs;
+    char *principal;
 };
 
 SQUIDCEXTERN int log_enabled;
@@ -181,7 +182,7 @@ struct kstruct {
     char* mem_ccache[MAX_DOMAINS];
     int ncache;
 };
-int krb5_create_cache(char *domain);
+int krb5_create_cache(char *domain, char* princ);
 void krb5_cleanup(void);
 #endif
 

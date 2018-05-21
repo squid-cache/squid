@@ -216,8 +216,7 @@ StoreEntry::delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int l
         // readers appeared to care around 2009/12/14 as they skipped reading
         // for other reasons. Closing may already be true at the delyaAwareRead
         // call time or may happen while we wait after delayRead() above.
-        debugs(20, 3, HERE << "wont read from closing " << conn << " for " <<
-               callback);
+        debugs(20, 3, "will not read from closing " << conn << " for " << callback);
         return; // the read callback will never be called
     }
 
@@ -354,7 +353,7 @@ StoreEntry::deferProducer(const AsyncCall::Pointer &producer)
     if (!deferredProducer)
         deferredProducer = producer;
     else
-        debugs(20, 5, HERE << "Deferred producer call is allready set to: " <<
+        debugs(20, 5, "Deferred producer call is already set to: " <<
                *deferredProducer << ", requested call: " << *producer);
 }
 

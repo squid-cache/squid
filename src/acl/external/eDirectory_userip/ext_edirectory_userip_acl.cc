@@ -66,6 +66,9 @@
 #ifdef HAVE_LDAP_H
 #include <ldap.h>
 #endif
+#ifdef HAVE_NETDB_H
+#include <netdb.h>
+#endif
 
 #ifdef HELPER_INPUT_BUFFER
 #define EDUI_MAXLEN     HELPER_INPUT_BUFFER
@@ -713,11 +716,14 @@ BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
 
     /* Copy details - dn and pw CAN be NULL for anonymous and/or TLS */
     if (dn != NULL) {
+        if (strlen(dn) >= sizeof(l->dn))
+            return LDAP_ERR_OOB; /* DN too large */
+
         if ((l->basedn[0] != '\0') && (strstr(dn, l->basedn) == NULL)) {
             /* We got a basedn, but it's not part of dn */
-            xstrncpy(l->dn, dn, sizeof(l->dn));
-            strncat(l->dn, ",", 1);
-            strncat(l->dn, l->basedn, strlen(l->basedn));
+            const int x = snprintf(l->dn, sizeof(l->dn)-1, "%s,%s", dn, l->basedn);
+            if (x < 0 || static_cast<size_t>(x) >= sizeof(l->dn))
+                return LDAP_ERR_OOB; /* DN too large */
         } else
             xstrncpy(l->dn, dn, sizeof(l->dn));
     }
@@ -777,24 +783,73 @@ BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
     }
 }
 
+// XXX: duplicate (partial) of Ip::Address::lookupHostIp
+/**
+ * Convert the IP address string representation in src to
+ * its binary representation.
+ *
+ * \return binary representation of the src IP address.
+ *         Must be free'd using freeaddrinfo().
+ */
+static struct addrinfo *
+makeIpBinary(const char *src)
+{
+    struct addrinfo want;
+    memset(&want, 0, sizeof(want));
+    want.ai_flags = AI_NUMERICHOST; // prevent actual DNS lookups!
+
+    struct addrinfo *dst = nullptr;
+    if (getaddrinfo(src, nullptr, &want, &dst) != 0) {
+        // not an IP address
+        /* free any memory getaddrinfo() dynamically allocated. */
+        if (dst)
+            freeaddrinfo(dst);
+        return nullptr;
+    }
+
+    return dst;
+}
+
+/**
+ * Convert srcLen bytes from src into HEX and store into dst, which
+ * has a maximum content size of dstSize including c-string terminator.
+ * The dst value produced will be a 0-terminated c-string.
+ *
+ * \retval   N  length of dst written (excluding c-string terminator)
+ * \retval -11  (LDAP_ERR_OOB) buffer overflow detected
+ */
+static int
+makeHexString(char *dst, const int dstSize, const char *src, const int srcLen)
+{
+    // HEX encoding doubles the amount of bytes/octets copied
+    if ((srcLen*2) >= dstSize)
+        return LDAP_ERR_OOB; // cannot copy that many
+
+    *dst = 0;
+
+    for (int k = 0; k < srcLen; ++k) {
+        int c = static_cast<int>(src[k]);
+        if (c < 0)
+            c = c + 256;
+        char hexc[4];
+        const int hlen = snprintf(hexc, sizeof(hexc), "%02X", c);
+        if (hlen < 0 || static_cast<size_t>(hlen) > sizeof(hexc)) // should be impossible
+            return LDAP_ERR_OOB;
+        strcat(dst, hexc);
+    }
+    return strlen(dst);
+}
+
 /*
  * ConvertIP() - <edui_ldap_t> <ip>
  *
  * Take an IPv4 address in dot-decimal or IPv6 notation, and convert to 2-digit HEX stored in l->search_ip
  * This is the networkAddress that we search LDAP for.
- *
- * PENDING -- CHANGE OVER TO inet*_pton, but inet6_pton does not provide the correct syntax
- *
  */
 static int
 ConvertIP(edui_ldap_t *l, char *ip)
 {
-    char bufa[EDUI_MAXLEN], bufb[EDUI_MAXLEN], obj[EDUI_MAXLEN];
-    char hexc[4], *p;
     void *y, *z;
-    size_t s;
-    long x;
-    int i, j, t, swi;                           /* IPv6 "::" cut over toggle */
     if (l == NULL) return LDAP_ERR_NULL;
     if (ip == NULL) return LDAP_ERR_PARAM;
     if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initalized */
@@ -830,183 +885,22 @@ ConvertIP(edui_ldap_t *l, char *ip)
             l->status |= (LDAP_IPV4_S);
         z = NULL;
     }
-    s = strlen(ip);
-    *(bufa) = '\0';
-    *(bufb) = '\0';
-    *(obj) = '\0';
-    /* StringSplit() will zero out bufa & obj at each call */
-    memset(l->search_ip, '\0', sizeof(l->search_ip));
-    xstrncpy(bufa, ip, sizeof(bufa));                       /* To avoid segfaults, use bufa instead of ip */
-    swi = 0;
-    if (l->status & LDAP_IPV6_S) {
-        /* Search for :: in string */
-        if ((bufa[0] == ':') && (bufa[1] == ':')) {
-            /* bufa starts with a ::, so just copy and clear */
-            xstrncpy(bufb, bufa, sizeof(bufb));
-            *(bufa) = '\0';
-            ++swi;                              /* Indicates that there is a bufb */
-        } else if ((bufa[0] == ':') && (bufa[1] != ':')) {
-            /* bufa starts with a :, a typo so just fill in a ':', cat and clear */
-            bufb[0] = ':';
-            strncat(bufb, bufa, strlen(bufa));
-            *(bufa) = '\0';
-            ++swi;                              /* Indicates that there is a bufb */
-        } else {
-            p = strstr(bufa, "::");
-            if (p != NULL) {
-                /* Found it, break bufa down and split into bufb here */
-                *(bufb) = '\0';
-                i = strlen(p);
-                memcpy(bufb, p, i);
-                *p = '\0';
-                bufb[i] = '\0';
-                ++swi;                              /* Indicates that there is a bufb */
-            }
-        }
-    }
-    s = strlen(bufa);
-    if (s < 1)
-        s = strlen(bufb);
-    while (s > 0) {
-        if ((l->status & LDAP_IPV4_S) && (swi == 0)) {
-            /* Break down IPv4 address  */
-            t = StringSplit(bufa, '.', obj, sizeof(obj));
-            if (t > 0) {
-                errno = 0;
-                x = strtol(obj, (char **)NULL, 10);
-                if (((x < 0) || (x > 255)) || ((errno != 0) && (x == 0)) || ((obj[0] != '0') && (x == 0)))
-                    return LDAP_ERR_OOB;                        /* Out of bounds -- Invalid address */
-                memset(hexc, '\0', sizeof(hexc));
-                int hlen = snprintf(hexc, sizeof(hexc), "%02X", (int)x);
-                strncat(l->search_ip, hexc, hlen);
-            } else
-                break;                              /* reached end of octet */
-        } else if (l->status & LDAP_IPV6_S) {
-            /* Break down IPv6 address */
-            if (swi > 1)
-                t = StringSplit(bufb, ':', obj, sizeof(obj));           /* After "::" */
-            else
-                t = StringSplit(bufa, ':', obj, sizeof(obj));           /* Before "::" */
-            /* Convert octet by size (t) - and fill 0's */
-            switch (t) {                            /* IPv6 is already in HEX, copy contents */
-            case 4:
-                hexc[0] = (char) toupper((int)obj[0]);
-                i = (int)hexc[0];
-                if (!isxdigit(i))
-                    return LDAP_ERR_OOB;                    /* Out of bounds */
-                hexc[1] = (char) toupper((int)obj[1]);
-                i = (int)hexc[1];
-                if (!isxdigit(i))
-                    return LDAP_ERR_OOB;                    /* Out of bounds */
-                hexc[2] = '\0';
-                strncat(l->search_ip, hexc, 2);
-                hexc[0] = (char) toupper((int)obj[2]);
-                i = (int)hexc[0];
-                if (!isxdigit(i))
-                    return LDAP_ERR_OOB;                    /* Out of bounds */
-                hexc[1] = (char) toupper((int)obj[3]);
-                i = (int)hexc[1];
-                if (!isxdigit(i))
-                    return LDAP_ERR_OOB;                    /* Out of bounds */
-                hexc[2] = '\0';
-                strncat(l->search_ip, hexc, 2);
-                break;
-            case 3:
-                hexc[0] = '0';
-                hexc[1] = (char) toupper((int)obj[0]);
-                i = (int)hexc[1];
-                if (!isxdigit(i))
-                    return LDAP_ERR_OOB;                    /* Out of bounds */
-                hexc[2] = '\0';
-                strncat(l->search_ip, hexc, 2);
-                hexc[0] = (char) toupper((int)obj[1]);
-                i = (int)hexc[0];
-                if (!isxdigit(i))
-                    return LDAP_ERR_OOB;                    /* Out of bounds */
-                hexc[1] = (char) toupper((int)obj[2]);
-                i = (int)hexc[1];
-                if (!isxdigit(i))
-                    return LDAP_ERR_OOB;                    /* Out of bounds */
-                hexc[2] = '\0';
-                strncat(l->search_ip, hexc, 2);
-                break;
-            case 2:
-                strncat(l->search_ip, "00", 2);
-                hexc[0] = (char) toupper((int)obj[0]);
-                i = (int)hexc[0];
-                if (!isxdigit(i))
-                    return LDAP_ERR_OOB;                    /* Out of bounds */
-                hexc[1] = (char) toupper((int)obj[1]);
-                i = (int)hexc[1];
-                if (!isxdigit(i))
-                    return LDAP_ERR_OOB;                    /* Out of bounds */
-                hexc[2] = '\0';
-                strncat(l->search_ip, hexc, 2);
-                break;
-            case 1:
-                strncat(l->search_ip, "00", 2);
-                hexc[0] = '0';
-                hexc[1] = (char) toupper((int)obj[0]);
-                i = (int)hexc[1];
-                if (!isxdigit(i))
-                    return LDAP_ERR_OOB;                    /* Out of bounds */
-                hexc[2] = '\0';
-                strncat(l->search_ip, hexc, 2);
-                break;
-            default:
-                if (t > 4)
-                    return LDAP_ERR_OOB;
-                break;
-            }
-            /* Code to pad the address with 0's between a '::' */
-            if ((strlen(bufa) == 0) && (swi == 1)) {
-                /* We are *AT* the split, pad in some 0000 */
-                t = strlen(bufb);
-                /* How many ':' exist in bufb ? */
-                j = 0;
-                for (i = 0; i < t; ++i) {
-                    if (bufb[i] == ':')
-                        ++j;
-                }
-                --j;                                /* Preceding "::" doesn't count */
-                t = 8 - (strlen(l->search_ip) / 4) - j;         /* Remainder */
-                if (t > 0) {
-                    for (i = 0; i < t; ++i)
-                        strncat(l->search_ip, "0000", 4);
-                }
-            }
-        }
-        if ((bufa[0] == '\0') && (swi > 0)) {
-            s = strlen(bufb);
-            ++swi;
-        } else
-            s = strlen(bufa);
-    }
-    s = strlen(l->search_ip);
 
-    /* CHECK sizes of address, truncate or pad */
-    /* if "::" is at end of ip, then pad another block or two */
-    while ((l->status & LDAP_IPV6_S) && (s < 32)) {
-        strncat(l->search_ip, "0000", 4);
-        s = strlen(l->search_ip);
-    }
-    if ((l->status & LDAP_IPV6_S) && (s > 32)) {
-        /* Too long, truncate */
-        l->search_ip[32] = '\0';
-        s = strlen(l->search_ip);
-    }
-    /* If at end of ip, and its not long enough, then pad another block or two */
-    while ((l->status & LDAP_IPV4_S) && (s < 8)) {
-        strncat(l->search_ip, "00", 2);
-        s = strlen(l->search_ip);
-    }
-    if ((l->status & LDAP_IPV4_S) && (s > 8)) {
-        /* Too long, truncate */
-        l->search_ip[8] = '\0';
-        s = strlen(l->search_ip);
+    size_t s = LDAP_ERR_INVALID;
+    if (struct addrinfo *dst = makeIpBinary(ip)) {
+        if (dst->ai_family == AF_INET6) {
+            struct sockaddr_in6 *sia = reinterpret_cast<struct sockaddr_in6 *>(dst->ai_addr);
+            const char *ia = reinterpret_cast<const char *>(sia->sin6_addr.s6_addr);
+            s = makeHexString(l->search_ip, sizeof(l->search_ip), ia, 16); // IPv6 = 16-byte address
+
+        } else if (dst->ai_family == AF_INET) {
+            struct sockaddr_in *sia = reinterpret_cast<struct sockaddr_in *>(dst->ai_addr);
+            const char *ia = reinterpret_cast<const char *>(&(sia->sin_addr));
+            s = makeHexString(l->search_ip, sizeof(l->search_ip), ia, 4);  // IPv4 = 4-byte address
+        } // else leave s with LDAP_ERR_INVALID value
+        freeaddrinfo(dst);
     }
 
-    /* Completed, s is length of address in HEX */
     return s;
 }
 
@@ -1098,48 +992,42 @@ SearchFilterLDAP(edui_ldap_t *l, char *group)
     }
     if (group == NULL) {
         /* No groupMembership= to add, yay! */
-        xstrncpy(bufa, "(&", sizeof(bufa));
-        strncat(bufa, edui_conf.search_filter, strlen(edui_conf.search_filter));
         /* networkAddress */
-        snprintf(bufb, sizeof(bufb), "(|(networkAddress=1\\23%s)", bufc);
         if (l->status & LDAP_IPV4_S) {
-            int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s))", \
-                              bufc, bufc);
-            strncat(bufb, bufd, ln);
+            const int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s)", bufc, bufc);
+            if (ln < 0 || static_cast<size_t>(ln) >= sizeof(bufd))
+                return LDAP_ERR_OOB;
+
         } else if (l->status & LDAP_IPV6_S) {
-            int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s))", \
-                              bufc, bufc);
-            strncat(bufb, bufd, ln);
-        } else
-            strncat(bufb, ")", 1);
-        strncat(bufa, bufb, strlen(bufb));
-        strncat(bufa, ")", 1);
+            const int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s)", bufc, bufc);
+            if (ln < 0 || static_cast<size_t>(ln) >= sizeof(bufd))
+                return LDAP_ERR_OOB;
+        }
+        const int x = snprintf(bufa, sizeof(bufa), "(&%s(|(networkAddress=1\\23%s)%s))", edui_conf.search_filter, bufc, bufd);
+        if (x < 0 || static_cast<size_t>(x) >= sizeof(bufa))
+            return LDAP_ERR_OOB;
+
     } else {
         /* Needs groupMembership= to add... */
-        xstrncpy(bufa, "(&(&", sizeof(bufa));
-        strncat(bufa, edui_conf.search_filter, strlen(edui_conf.search_filter));
         /* groupMembership -- NOTE: Squid *MUST* provide "cn=" from squid.conf */
-        snprintf(bufg, sizeof(bufg), "(groupMembership=%s", group);
         if ((l->basedn[0] != '\0') && (strstr(group, l->basedn) == NULL)) {
-            strncat(bufg, ",", 1);
-            strncat(bufg, l->basedn, strlen(l->basedn));
+            const int ln = snprintf(bufg, sizeof(bufg), ",%s", l->basedn);
+            if (ln < 0 || static_cast<size_t>(ln) >= sizeof(bufd))
+                return LDAP_ERR_OOB;
         }
-        strncat(bufg, ")", 1);
-        strncat(bufa, bufg, strlen(bufg));
         /* networkAddress */
-        snprintf(bufb, sizeof(bufb), "(|(networkAddress=1\\23%s)", bufc);
         if (l->status & LDAP_IPV4_S) {
-            int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s))", \
-                              bufc, bufc);
-            strncat(bufb, bufd, ln);
+            const int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s)", bufc, bufc);
+            if (ln < 0 || static_cast<size_t>(ln) >= sizeof(bufd))
+                return LDAP_ERR_OOB;
         } else if (l->status & LDAP_IPV6_S) {
-            int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s))", \
-                              bufc, bufc);
-            strncat(bufb, bufd, ln);
-        } else
-            strncat(bufb, ")", 1);
-        strncat(bufa, bufb, strlen(bufb));
-        strncat(bufa, "))", 2);
+            const int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s)", bufc, bufc);
+            if (ln < 0 || static_cast<size_t>(ln) >= sizeof(bufd))
+                return LDAP_ERR_OOB;
+        }
+        const int x = snprintf(bufa, sizeof(bufa), "(&(&%s(groupMembership=%s%s)(|(networkAddress=1\\23%s)%s)))", edui_conf.search_filter, group, bufg, bufc, bufd);
+        if (x < 0 || static_cast<size_t>(x) >= sizeof(bufa))
+            return LDAP_ERR_OOB;
     }
     s = strlen(bufa);
     xstrncpy(l->search_filter, bufa, sizeof(l->search_filter));
@@ -1211,10 +1099,10 @@ static int
 SearchIPLDAP(edui_ldap_t *l)
 {
     ber_len_t i, x;
-    ber_len_t j, k;
-    ber_len_t y, z;
-    int c;
-    char bufa[EDUI_MAXLEN], bufb[EDUI_MAXLEN], hexc[4];
+    ber_len_t j;
+    ber_len_t z;
+    char bufa[EDUI_MAXLEN];
+    char bufb[EDUI_MAXLEN];
     LDAPMessage *ent;
     if (l == NULL) return LDAP_ERR_NULL;
     if (l->lp == NULL) return LDAP_ERR_POINTER;
@@ -1272,19 +1160,11 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa is the address, just compare it */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;                          /* Not looking for IPv4 */
-                        for (k = 0; k < z; ++k) {
-                            c = (int) bufa[k];
-                            if (c < 0)
-                                c = c + 256;
-                            int hlen = snprintf(hexc, sizeof(hexc), "%02X", c);
-                            if (k == 0)
-                                xstrncpy(bufb, hexc, sizeof(bufb));
-                            else
-                                strncat(bufb, hexc, hlen);
-                        }
-                        y = strlen(bufb);
+                        const int blen = makeHexString(bufb, sizeof(bufb), bufa, z);
+                        if (blen < 0)
+                            return blen;
                         /* Compare value with IP */
-                        if (memcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, blen) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; ++j) {
@@ -1307,19 +1187,11 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;                          /* Not looking for IPv4 */
-                        for (k = 2; k < z; ++k) {
-                            c = (int) bufa[k];
-                            if (c < 0)
-                                c = c + 256;
-                            int hlen = snprintf(hexc, sizeof(hexc), "%02X", c);
-                            if (k == 2)
-                                xstrncpy(bufb, hexc, sizeof(bufb));
-                            else
-                                strncat(bufb, hexc, hlen);
-                        }
-                        y = strlen(bufb);
+                        const int blen = makeHexString(bufb, sizeof(bufb), &bufa[2], z);
+                        if (blen < 0)
+                            return blen;
                         /* Compare value with IP */
-                        if (memcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, blen) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; ++j) {
@@ -1342,19 +1214,11 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV6_S))
                             break;                          /* Not looking for IPv6 */
-                        for (k = 2; k < z; ++k) {
-                            c = (int) bufa[k];
-                            if (c < 0)
-                                c = c + 256;
-                            int hlen = snprintf(hexc, sizeof(hexc), "%02X", c);
-                            if (k == 2)
-                                xstrncpy(bufb, hexc, sizeof(bufb));
-                            else
-                                strncat(bufb, hexc, hlen);
-                        }
-                        y = strlen(bufb);
+                        const int blen = makeHexString(bufb, sizeof(bufb), &bufa[2], z);
+                        if (blen < 0)
+                            return blen;
                         /* Compare value with IP */
-                        if (memcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, blen) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; ++j) {
@@ -1446,13 +1310,13 @@ const char
     case LDAP_ERR_NOTFOUND:
         return "Item or object has not been found";
     case LDAP_ERR_OTHER:
-        return "An unknown error has occured";
+        return "An unknown error has occurred";
     case LDAP_ERR_FAILED:
         return "Operation has failed";
     case LDAP_ERR_SUCCESS:
         return "Operation is successful";
     default:
-        return "An unknown error has occured";
+        return "An unknown error has occurred";
     }
 }
 

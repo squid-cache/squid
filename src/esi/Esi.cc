@@ -308,7 +308,7 @@ ESIContext::kick ()
         /* we've been detached from - we can't do anything more */
         return ESI_KICK_FAILED;
 
-    /* Something has occured. Process any remaining nodes */
+    /* Something has occurred. Process any remaining nodes */
     if (!flags.finished)
         /* Process some of our data */
         switch (process ()) {
@@ -1666,7 +1666,7 @@ esiTry::addElement(ESIElement::Pointer element)
 
     if (dynamic_cast<esiAttempt*>(element.getRaw())) {
         if (attempt.getRaw()) {
-            debugs(86, DBG_IMPORTANT, "esiTryAdd: Failed for " << this << " - try allready has an attempt node (section 3.4)");
+            debugs(86, DBG_IMPORTANT, "esiTryAdd: Failed for " << this << " - try already has an attempt node (section 3.4)");
             return false;
         }
 

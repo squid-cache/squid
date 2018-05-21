@@ -131,6 +131,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
         if (acl_access *acl = ::Config.ssl_client.cert_error) {
             ACLFilledChecklist *check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
             check->al = al;
+            check->syncAle(request.getRaw(), nullptr);
             // check->fd(fd); XXX: need client FD here
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check);
         }
@@ -241,7 +242,7 @@ Security::PeerConnector::sslFinalized()
         try {
             debugs(83, 5, "Sending SSL certificate for validation to ssl_crtvd.");
             AsyncCall::Pointer call = asyncCall(83,5, "Security::PeerConnector::sslCrtvdHandleReply", Ssl::CertValidationHelper::CbDialer(this, &Security::PeerConnector::sslCrtvdHandleReply, nullptr));
-            Ssl::CertValidationHelper::GetInstance()->sslSubmit(validationRequest, call);
+            Ssl::CertValidationHelper::Submit(validationRequest, call);
             return false;
         } catch (const std::exception &e) {
             debugs(83, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtvd " <<
@@ -324,6 +325,7 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
     if (acl_access *acl = ::Config.ssl_client.cert_error) {
         check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
         check->al = al;
+        check->syncAle(request.getRaw(), nullptr);
     }
 
     Security::CertErrors *errs = nullptr;
@@ -375,9 +377,18 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
 void
 Security::PeerConnector::NegotiateSsl(int, void *data)
 {
-    PeerConnector *pc = static_cast<Security::PeerConnector *>(data);
+    const auto pc = static_cast<PeerConnector::Pointer*>(data);
+    if (pc->valid())
+        (*pc)->negotiateSsl();
+    delete pc;
+}
+
+/// Comm::SetSelect() callback. Direct calls tickle/resume negotiations.
+void
+Security::PeerConnector::negotiateSsl()
+{
     // Use job calls to add done() checks and other job logic/protections.
-    CallJobHere(83, 7, pc, Security::PeerConnector, negotiate);
+    CallJobHere(83, 7, this, Security::PeerConnector, negotiate);
 }
 
 void
@@ -460,19 +471,19 @@ Security::PeerConnector::noteWantRead()
 
             srvBio->holdRead(false);
             // schedule a negotiateSSl to allow openSSL parse received data
-            Security::PeerConnector::NegotiateSsl(fd, this);
+            negotiateSsl();
             return;
         } else if (srvBio->gotHelloFailed()) {
             srvBio->holdRead(false);
             debugs(83, DBG_IMPORTANT, "Error parsing SSL Server Hello Message on FD " << fd);
             // schedule a negotiateSSl to allow openSSL parse received data
-            Security::PeerConnector::NegotiateSsl(fd, this);
+            negotiateSsl();
             return;
         }
     }
 #endif
     setReadTimeout();
-    Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, this, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, new Pointer(this), 0);
 }
 
 void
@@ -480,7 +491,7 @@ Security::PeerConnector::noteWantWrite()
 {
     const int fd = serverConnection()->fd;
     debugs(83, 5, serverConnection());
-    Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, this, 0);
+    Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, new Pointer(this), 0);
     return;
 }
 
@@ -673,7 +684,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     }
 
     srvBio->holdRead(false);
-    Security::PeerConnector::NegotiateSsl(serverConnection()->fd, this);
+    negotiateSsl();
 }
 
 bool

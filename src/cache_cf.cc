@@ -340,7 +340,7 @@ static void
 ProcessMacros(char*& line, int& len)
 {
     SubstituteMacro(line, len, "${service_name}", service_name.c_str());
-    SubstituteMacro(line, len, "${process_name}", TheKidName);
+    SubstituteMacro(line, len, "${process_name}", TheKidName.c_str());
     SubstituteMacro(line, len, "${process_number}", xitoa(KidIdentifier));
 }
 
@@ -736,7 +736,16 @@ configDoConfigure(void)
 
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
 #endif
-    requirePathnameExists("logfile_daemon", Log::TheConfig.logfile_daemon);
+    bool logDaemonUsed = false;
+    for (const auto *log = Config.Log.accesslogs; !logDaemonUsed && log; log = log->next)
+        logDaemonUsed = log->usesDaemon();
+#if ICAP_CLIENT
+    for (const auto *log = Config.Log.icaplogs; !logDaemonUsed && log; log = log->next)
+        logDaemonUsed = log->usesDaemon();
+#endif
+    if (logDaemonUsed)
+        requirePathnameExists("logfile_daemon", Log::TheConfig.logfile_daemon);
+
     if (Config.Program.redirect)
         requirePathnameExists("redirect_program", Config.Program.redirect->key);
 
@@ -1427,7 +1436,7 @@ parse_address(Ip::Address *addr)
         addr->setNoAddr();
     else if ( (*addr = token) ) // try parse numeric/IPA
         (void) 0;
-    else if (addr->GetHostByName(token)) // dont use ipcache
+    else if (addr->GetHostByName(token)) // do not use ipcache
         (void) 0;
     else { // not an IP and not a hostname
         debugs(3, DBG_CRITICAL, "FATAL: invalid IP address or domain name '" << token << "'");
@@ -3496,7 +3505,7 @@ parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
             s->s.setIPv4();
         debugs(3, 3, portType << "_port: Listen on Host/IP: " << host << " --> " << s->s);
     } else if ( s->s.GetHostByName(host) ) { /* check/parse for FQDN */
-        /* dont use ipcache */
+        /* do not use ipcache */
         s->defaultsite = xstrdup(host);
         s->s.port(port);
         if (!Ip::EnableIpv6)
@@ -4352,7 +4361,7 @@ dump_icap_service_type(StoreEntry * entry, const char *name, const Adaptation::I
 static void
 parse_icap_class_type()
 {
-    debugs(93, DBG_CRITICAL, "WARNING: 'icap_class' is depricated. " <<
+    debugs(93, DBG_CRITICAL, "WARNING: 'icap_class' is deprecated. " <<
            "Use 'adaptation_service_set' instead");
     Adaptation::Config::ParseServiceSet();
 }
@@ -4360,7 +4369,7 @@ parse_icap_class_type()
 static void
 parse_icap_access_type()
 {
-    debugs(93, DBG_CRITICAL, "WARNING: 'icap_access' is depricated. " <<
+    debugs(93, DBG_CRITICAL, "WARNING: 'icap_access' is deprecated. " <<
            "Use 'adaptation_access' instead");
     Adaptation::Config::ParseAccess(LegacyParser);
 }
@@ -4877,14 +4886,14 @@ parse_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *config)
             else if (strcasecmp(value, "use_configured_response") == 0) {
                 config->action = toutActUseConfiguredResponse;
             } else {
-                debugs(3, DBG_CRITICAL, "FATAL: unsuported \"on_timeout\"  action:" << value);
+                debugs(3, DBG_CRITICAL, "FATAL: unsupported \"on_timeout\" action: " << value);
                 self_destruct();
                 return;
             }
         } else if (strcasecmp(key, "response") == 0) {
             config->response = xstrdup(value);
         } else {
-            debugs(3, DBG_CRITICAL, "FATAL: unsuported option " << key);
+            debugs(3, DBG_CRITICAL, "FATAL: unsupported option " << key);
             self_destruct();
             return;
         }
@@ -4896,7 +4905,7 @@ parse_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *config)
     }
 
     if (config->action != toutActUseConfiguredResponse && config->response) {
-        debugs(3, DBG_CRITICAL, "FATAL: 'response=' option is valid only when used with the  'on_timeout=use_configured_response' option");
+        debugs(3, DBG_CRITICAL, "FATAL: 'response=' option is valid only when used with the 'on_timeout=use_configured_response' option");
         self_destruct();
     }
 }

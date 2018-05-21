@@ -254,5 +254,9 @@ class ConnStateData;
  */
 void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &notes);
 
+/// \returns listening/*_port address used by the client connection (or nil)
+/// nil parameter(s) indicate missing caller information and are handled safely
+const Ip::Address *FindListeningPortAddress(const HttpRequest *, const AccessLogEntry *);
+
 #endif /* SQUID_HTTPREQUEST_H */
 

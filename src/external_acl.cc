@@ -285,7 +285,7 @@ parse_externalAclHelper(external_acl ** list)
         (*fmt)->quote = a->quote;
 
         // compatibility for old tokens incompatible with Format::Token syntax
-#if USE_OPENSSL // dont bother if we dont have to.
+#if USE_OPENSSL // do not bother unless we have to.
         if (strncmp(token, "%USER_CERT_", 11) == 0) {
             (*fmt)->type = Format::LFT_EXT_ACL_USER_CERT;
             (*fmt)->data.string = xstrdup(token + 11);
@@ -610,7 +610,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             if (!key)
                 return ACCESS_DUNNO; // insufficent data to continue
             if (strcmp(key, (char*)entry->key) != 0) {
-                debugs(82, 9, "entry key='" << (char *)entry->key << "', our key='" << key << "' dont match. Discarded.");
+                debugs(82, 9, "entry key='" << (char *)entry->key << "', our key='" << key << "' do not match. Discarded.");
                 // too bad. need a new lookup.
                 entry = ch->extacl_entry = NULL;
             }
@@ -991,6 +991,8 @@ externalAclHandleReply(void *data, const Helper::Reply &reply)
         entryData.password = label;
 #endif
 
+    // XXX: This state->def access conflicts with the cbdata validity check
+    // below.
     dlinkDelete(&state->list, &state->def->queue);
 
     ExternalACLEntryPointer entry;

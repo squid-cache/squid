@@ -18,6 +18,7 @@
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
+#include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "Store.h"
 
@@ -146,7 +147,7 @@ peerUserHashRegisterWithCacheManager(void)
 }
 
 CachePeer *
-peerUserHashSelectParent(HttpRequest * request)
+peerUserHashSelectParent(PeerSelector *ps)
 {
     int k;
     const char *c;
@@ -160,6 +161,9 @@ peerUserHashSelectParent(HttpRequest * request)
 
     if (n_userhash_peers == 0)
         return NULL;
+
+    assert(ps);
+    HttpRequest *request = ps->request;
 
     if (request->auth_user_request != NULL)
         key = request->auth_user_request->username();
@@ -183,7 +187,7 @@ peerUserHashSelectParent(HttpRequest * request)
         debugs(39, 3, "peerUserHashSelectParent: " << tp->name << " combined_hash " << combined_hash  <<
                " score " << std::setprecision(0) << score);
 
-        if ((score > high_score) && peerHTTPOkay(tp, request)) {
+        if ((score > high_score) && peerHTTPOkay(tp, ps)) {
             p = tp;
             high_score = score;
         }

@@ -22,23 +22,19 @@ namespace Ssl
 {
 #if USE_SSL_CRTD
 /**
- * Set of thread for ssl_crtd. This class is singleton. Use this class only
- * over GetIntance() static method. This class use helper structure
- * for threads management.
+ * Set of thread for ssl_crtd. This class is singleton.
+ * This class use helper structure for threads management.
  */
 class Helper
 {
 public:
-    static Helper * GetInstance(); ///< Instance class.
-    void Init(); ///< Init helper structure.
-    void Shutdown(); ///< Shutdown helper structure.
+    static void Init(); ///< Init helper structure.
+    static void Shutdown(); ///< Shutdown helper structure.
+    static void Reconfigure(); ///< Reconfigure helper structure.
     /// Submit crtd message to external crtd server.
-    void sslSubmit(CrtdMessage const & message, HLPCB * callback, void *data);
+    static void Submit(CrtdMessage const & message, HLPCB * callback, void *data);
 private:
-    Helper();
-    ~Helper();
-
-    helper * ssl_crtd; ///< helper for management of ssl_crtd.
+    static helper * ssl_crtd; ///< helper for management of ssl_crtd.
 };
 #endif
 
@@ -50,16 +46,13 @@ public:
     typedef UnaryMemFunT<Security::PeerConnector, CertValidationResponse::Pointer> CbDialer;
 
     typedef void CVHCB(void *, Ssl::CertValidationResponse const &);
-    static CertValidationHelper * GetInstance(); ///< Instance class.
-    void Init(); ///< Init helper structure.
-    void Shutdown(); ///< Shutdown helper structure.
+    static void Init(); ///< Init helper structure.
+    static void Shutdown(); ///< Shutdown helper structure.
+    static void Reconfigure(); ///< Reconfigure helper structure
     /// Submit crtd request message to external crtd server.
-    void sslSubmit(Ssl::CertValidationRequest const & request, AsyncCall::Pointer &);
+    static void Submit(Ssl::CertValidationRequest const & request, AsyncCall::Pointer &);
 private:
-    CertValidationHelper();
-    ~CertValidationHelper();
-
-    helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
+    static helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
 public:
     typedef LruMap<SBuf, Ssl::CertValidationResponse::Pointer, sizeof(Ssl::CertValidationResponse::Pointer) + sizeof(Ssl::CertValidationResponse)> LruCache;
     static LruCache *HelperCache; ///< cache for cert validation helper

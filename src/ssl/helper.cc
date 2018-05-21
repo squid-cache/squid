@@ -67,20 +67,7 @@ operator <<(std::ostream &os, const Ssl::GeneratorRequest &gr)
 /// pending Ssl::Helper requests (to all certificate generator helpers combined)
 static Ssl::GeneratorRequests TheGeneratorRequests;
 
-Ssl::Helper * Ssl::Helper::GetInstance()
-{
-    static Ssl::Helper sslHelper;
-    return &sslHelper;
-}
-
-Ssl::Helper::Helper() : ssl_crtd(NULL)
-{
-}
-
-Ssl::Helper::~Helper()
-{
-    Shutdown();
-}
+helper *Ssl::Helper::ssl_crtd = nullptr;
 
 void Ssl::Helper::Init()
 {
@@ -123,10 +110,15 @@ void Ssl::Helper::Shutdown()
     ssl_crtd = NULL;
 }
 
-void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void * data)
+void
+Ssl::Helper::Reconfigure()
 {
-    assert(ssl_crtd);
+    Shutdown();
+    Init();
+}
 
+void Ssl::Helper::Submit(CrtdMessage const & message, HLPCB * callback, void * data)
+{
     SBuf rawMessage(message.compose().c_str()); // XXX: helpers cannot use SBuf
     rawMessage.append("\n", 1);
 
@@ -142,7 +134,9 @@ void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void 
     request->emplace(callback, data);
     TheGeneratorRequests.emplace(request->query, request);
     debugs(83, 5, "request from " << data << " as " << *request);
-    if (ssl_crtd->trySubmit(request->query.c_str(), HandleGeneratorReply, request))
+    // ssl_crtd becomes nil if Squid is reconfigured without SslBump or
+    // certificate generation disabled in the new configuration
+    if (ssl_crtd && ssl_crtd->trySubmit(request->query.c_str(), HandleGeneratorReply, request))
         return;
 
     ::Helper::Reply failReply(::Helper::BrokenHelper);
@@ -168,25 +162,13 @@ Ssl::HandleGeneratorReply(void *data, const ::Helper::Reply &reply)
 }
 #endif //USE_SSL_CRTD
 
-Ssl::CertValidationHelper * Ssl::CertValidationHelper::GetInstance()
-{
-    static Ssl::CertValidationHelper sslHelper;
-    if (!Ssl::TheConfig.ssl_crt_validator)
-        return NULL;
-    return &sslHelper;
-}
-
-Ssl::CertValidationHelper::CertValidationHelper() : ssl_crt_validator(NULL)
-{
-}
-
-Ssl::CertValidationHelper::~CertValidationHelper()
-{
-    Shutdown();
-}
+helper *Ssl::CertValidationHelper::ssl_crt_validator = nullptr;
 
 void Ssl::CertValidationHelper::Init()
 {
+    if (!Ssl::TheConfig.ssl_crt_validator)
+        return;
+
     assert(ssl_crt_validator == NULL);
 
     // we need to start ssl_crtd only if some port(s) need to bump SSL
@@ -249,6 +231,13 @@ void Ssl::CertValidationHelper::Shutdown()
     HelperCache = NULL;
 }
 
+void
+Ssl::CertValidationHelper::Reconfigure()
+{
+    Shutdown();
+    Init();
+}
+
 class submitData
 {
     CBDATA_CLASS(submitData);
@@ -298,10 +287,8 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
     delete crtdvdData;
 }
 
-void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &request, AsyncCall::Pointer &callback)
+void Ssl::CertValidationHelper::Submit(Ssl::CertValidationRequest const &request, AsyncCall::Pointer &callback)
 {
-    assert(ssl_crt_validator);
-
     Ssl::CertValidationMsg message(Ssl::CrtdMessage::REQUEST);
     message.setCode(Ssl::CertValidationMsg::code_cert_validate);
     message.composeRequest(request);
@@ -325,15 +312,18 @@ void Ssl::CertValidationHelper::sslSubmit(Ssl::CertValidationRequest const &requ
         return;
     }
 
-    if (!ssl_crt_validator->trySubmit(crtdvdData->query.c_str(), sslCrtvdHandleReplyWrapper, crtdvdData)) {
-        Ssl::CertValidationResponse::Pointer resp = new Ssl::CertValidationResponse(crtdvdData->ssl);
-        resp->resultCode = ::Helper::BrokenHelper;
-        Ssl::CertValidationHelper::CbDialer *dialer = dynamic_cast<Ssl::CertValidationHelper::CbDialer*>(callback->getDialer());
-        Must(dialer);
-        dialer->arg1 = resp;
-        ScheduleCallHere(callback);
-        delete crtdvdData;
+    // ssl_crt_validator becomes nil if Squid is reconfigured with cert
+    // validator disabled in the new configuration
+    if (ssl_crt_validator && ssl_crt_validator->trySubmit(crtdvdData->query.c_str(), sslCrtvdHandleReplyWrapper, crtdvdData))
         return;
-    }
+
+    Ssl::CertValidationResponse::Pointer resp = new Ssl::CertValidationResponse(crtdvdData->ssl);
+    resp->resultCode = ::Helper::BrokenHelper;
+    Ssl::CertValidationHelper::CbDialer *dialer = dynamic_cast<Ssl::CertValidationHelper::CbDialer*>(callback->getDialer());
+    Must(dialer);
+    dialer->arg1 = resp;
+    ScheduleCallHere(callback);
+    delete crtdvdData;
+    return;
 }
 
