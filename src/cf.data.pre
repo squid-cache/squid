@@ -3127,7 +3127,12 @@ LOC: Ssl::TheConfig.ssl_crtd
 DOC_START
 	Specify the location and options of the executable for certificate
 	generator.
-	@DEFAULT_SSL_CRTD@ program requires -s and -M parameters
+
+	@DEFAULT_SSL_CRTD@ program can use a disk cache to improve response
+	times on repeated requests. To enable caching, specify -s and -M
+	parameters. If those parameters are not given, the program generates
+	a new certificate on every request.
+
 	For more information use:
 		@DEFAULT_SSL_CRTD@ -h
 DOC_END
