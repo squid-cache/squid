@@ -55,11 +55,6 @@ typedef int bool;
 #endif
 #endif /* __cplusplus */
 
-
-#if !defined(DEFAULT_SQUID_CONF)
-#define DEFAULT_SQUID_CONF "/usr/local/squid/etc/squid.conf"
-#endif
-
 #include <vector>
 
 struct CacheDir {
@@ -75,7 +70,7 @@ typedef std::vector<CacheDir> CacheDirVector;
 
 int
 readConfigFile( CacheDirVector& cachedir, 
-		const char* fn = DEFAULT_SQUID_CONF, 
+		const char* fn,
 		FILE* debug = 0 );
   // purpose: read squid.conf file and extract cache_dir entries
   // paramtr: cachedir (OUT): vector with an entry for each cache_dir found
