@@ -406,7 +406,7 @@ usage(void)
             "       -S        Double-check swap during rebuild.\n"
             "       -X        Force full debugging.\n"
             "       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
-            APP_SHORTNAME, CACHE_HTTP_PORT, DefaultConfigFile, CACHE_ICP_PORT);
+            APP_SHORTNAME, CACHE_HTTP_PORT, DEFAULT_CONFIG_FILE, CACHE_ICP_PORT);
     exit(EXIT_FAILURE);
 }
 
@@ -1540,7 +1540,7 @@ SquidMain(int argc, char **argv)
         int parse_err;
 
         if (!ConfigFile)
-            ConfigFile = xstrdup(DefaultConfigFile);
+            ConfigFile = xstrdup(DEFAULT_CONFIG_FILE);
 
         assert(!configured_once);
 

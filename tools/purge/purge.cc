@@ -615,7 +615,7 @@ helpMe( void )
         "\t0 and 1 are recommended - slow rebuild your cache with other modes.\n"
         " -s\tshow all options after option parsing, but before really starting.\n"
         " -v\tshow more information about the file, e.g. MD5, timestamps and flags.\n"
-        "\n", DEFAULT_SQUID_CONF, DEFAULTHOST, DEFAULTPORT );
+        "\n", DEFAULT_CONFIG_FILE, DEFAULTHOST, DEFAULTPORT );
 
 }
 
@@ -890,7 +890,7 @@ main( int argc, char* argv[] )
 {
     // setup variables
     REList* list = 0;
-    char* conffile = xstrdup( DEFAULT_SQUID_CONF );
+    char* conffile = xstrdup(DEFAULT_CONFIG_FILE);
     serverPort = htons(DEFAULTPORT);
     if ( convertHostname(DEFAULTHOST,serverHost) == -1 ) {
         fprintf( stderr, "unable to resolve host %s!\n", DEFAULTHOST );
