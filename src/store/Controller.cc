@@ -683,11 +683,13 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
                                    const HttpRequestMethod &reqMethod)
 {
     const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
+    e->startCollapsing();
     if (e->makePublic(keyScope)) { // this is needed for both local and SMP collapsing
         debugs(20, 3, "may " << (transients && e->hasTransients() ?
                                  "SMP-" : "locally-") << "collapse " << *e);
         return true;
     }
+    e->stopCollapsing();
     return false;
 }
 

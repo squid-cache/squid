@@ -433,6 +433,8 @@ MemStore::updateAnchoredWith(StoreEntry &entry, const sfileno index, const Ipc::
 {
     entry.swap_file_sz = anchor.basics.swap_file_sz;
     const bool copied = copyFromShm(entry, index, anchor);
+    if (!EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING))
+        entry.stopCollapsing();
     return copied;
 }
 

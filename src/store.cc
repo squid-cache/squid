@@ -454,6 +454,8 @@ StoreEntry::releaseRequest(const bool shareable)
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
 
+    stopCollapsing();
+
     setPrivateKey(shareable, true);
 }
 
@@ -1809,12 +1811,13 @@ StoreEntry::startWriting()
     /* TODO: when we store headers separately remove the header portion */
     /* TODO: mark the length of the headers ? */
     /* We ONLY want the headers */
-
     assert (isEmpty());
     assert(mem_obj);
 
     const HttpReply *rep = getReply();
     assert(rep);
+
+    stopCollapsing();
 
     buffer();
     rep->packHeadersInto(this);
@@ -2074,12 +2077,19 @@ StoreEntry::describeTimestamps() const
 bool
 StoreEntry::hittingRequiresCollapsing() const
 {
-    if (!publicKey())
-        return false;
-    // TODO: If ENTRY_FWD_HDR_WAIT should be set for all collapsable-on cases
-    // (including SMP), then always return false when that bit is not set.
-    return EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT) ||
-           (hasTransients() && !hasMemStore() && !hasDisk());
+    return publicKey() && EBIT_TEST(flags, ENTRY_REQUIRES_COLLAPSING);
+}
+
+void
+StoreEntry::startCollapsing()
+{
+    EBIT_SET(flags, ENTRY_REQUIRES_COLLAPSING);
+}
+
+void
+StoreEntry::stopCollapsing()
+{
+    EBIT_CLR(flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 static std::ostream &

@@ -191,6 +191,11 @@ public:
     /// whether this entry can feed collapsed requests and only them
     bool hittingRequiresCollapsing() const;
 
+    /// begin collapsed requests feeding
+    void startCollapsing();
+    /// finish collapsed requests feeding
+    void stopCollapsing();
+
     MemObject *mem_obj;
     RemovalPolicyNode repl;
     /* START OF ON-DISK STORE_META_STD TLV field */
