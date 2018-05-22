@@ -47,13 +47,11 @@
 
 #include <cerrno>
 
-// TODO: Rename.
-/// a delayed icpUdpSend() call
-class icpUdpData {
+class DelayedUdpSend {
 public:
     Ip::Address address; ///< remote peer (which may not be a cache_peer)
     icp_common_t *msg = nullptr; ///< ICP message with network byte order fields
-    icpUdpData *next = nullptr; ///< invasive FIFO queue of delayed ICP messages
+    DelayedUdpSend *next = nullptr; ///< invasive FIFO queue of delayed ICP messages
     AccessLogEntryPointer ale; ///< sender's master transaction summary
     struct timeval queue_time = {0, 0}; ///< queuing timestamp
 };
@@ -94,9 +92,9 @@ icpSyncAle(AccessLogEntryPointer &al, const Ip::Address &caddr, const char *url,
  * IcpQueueHead is global so comm_incoming() knows whether or not
  * to call icpUdpSendQueue.
  */
-static icpUdpData *IcpQueueHead = NULL;
+static DelayedUdpSend *IcpQueueHead = NULL;
 /// \ingroup ServerProtocolICPInternal2
-static icpUdpData *IcpQueueTail = NULL;
+static DelayedUdpSend *IcpQueueTail = NULL;
 
 /// \ingroup ServerProtocolICPInternal2
 Comm::ConnectionPointer icpIncomingConn = NULL;
@@ -280,7 +278,7 @@ icpLogIcp(const Ip::Address &caddr, const LogTags_ot logcode, const int len, con
 void
 icpUdpSendQueue(int fd, void *)
 {
-    icpUdpData *q;
+    DelayedUdpSend *q;
 
     while ((q = IcpQueueHead) != NULL) {
         int delay = tvSubUsec(q->queue_time, current_time);
@@ -365,7 +363,7 @@ icpUdpSend(int fd,
         safe_free(msg);
     } else if (0 == delay) {
         /* send failed, but queue it */
-        const auto queue = new icpUdpData();
+        const auto queue = new DelayedUdpSend();
         queue->address = to;
         queue->msg = msg;
         queue->queue_time = current_time;
