@@ -517,7 +517,7 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
                 ConfigFile = static_cast<char *>(xmalloc(Size));
                 RegQueryValueEx(hndKey, CONFIGFILE, NULL, &Type, (unsigned char *)ConfigFile, &Size);
             } else
-                ConfigFile = xstrdup(DefaultConfigFile);
+                ConfigFile = xstrdup(DEFAULT_CONFIG_FILE);
 
             Size = 0;
 
@@ -533,7 +533,7 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
 
             RegCloseKey(hndKey);
         } else {
-            ConfigFile = xstrdup(DefaultConfigFile);
+            ConfigFile = xstrdup(DEFAULT_CONFIG_FILE);
             WIN32_Service_Command_Line = xstrdup("");
         }
 
@@ -778,7 +778,7 @@ WIN32_InstallService()
             /* Now store the config file location in the registry */
 
             if (!ConfigFile)
-                ConfigFile = xstrdup(DefaultConfigFile);
+                ConfigFile = xstrdup(DEFAULT_CONFIG_FILE);
 
             WIN32_StoreKey(CONFIGFILE, REG_SZ, (unsigned char *) ConfigFile, strlen(ConfigFile) + 1);
 
