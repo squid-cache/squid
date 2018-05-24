@@ -59,8 +59,8 @@ public:
 
     /// The list of connectors waiting to start a new spare connection attempt
     /// when system and current request preconditions satisfied.
-    std::list<AsyncCall::Pointer> gapQueue; //waitingForSparePool;
-    std::list<AsyncCall::Pointer> sparesLimitQueue; //waitingForLimitPool;
+    std::list<AsyncCall::Pointer> waitingForSpareQueue;
+    std::list<AsyncCall::Pointer> sparesLimitQueue;
 
     bool waitEvent = false;
 };
@@ -394,14 +394,15 @@ HappyConnQueue::queueASpareConnection(HappyConnOpener::Pointer happy)
         return call;
     }
 
-    debugs(17, 8, "Schedule a new attempt for later");
-    if (needsSpareNow && gapRuleOK && !connectionsLimitRuleOK) {
-        // start it when a spare connection is closed
-        gapQueue.push_back(call);
+    if (needsSpareNow && gapRuleOK /*&& !connectionsLimitRuleOK*/) {
+        debugs(17, 8, "A new attempt should start as soon as possible");
+        sparesLimitQueue.push_back(call);
+    } else {
+        debugs(17, 8, "Schedule a new attempt for later");
+        waitingForSpareQueue.push_back(call);
         if (!waitEvent) // if we add the first element
             scheduleConnectorsListCheck(); // Restart queue run
-    } else
-        sparesLimitQueue.push_back(call);
+    }
 
     return call;
 }
@@ -447,7 +448,7 @@ HappyConnQueue::spareMayStartAfter(const HappyConnOpener::Pointer &happy) const
     double fromLastTry = (current_dtime - HappyConnOpener::LastSpareAttempt);
     double remainGap = mgap > fromLastTry ? mgap - fromLastTry : 0.0 ;
     double startAfter = nextAttemptTime > current_dtime ?
-                        min(nextAttemptTime - current_dtime, remainGap) : remainGap;
+                        max(nextAttemptTime - current_dtime, remainGap) : remainGap;
     return startAfter;
 }
 
@@ -471,15 +472,17 @@ HappyConnQueue::scheduleConnectorsListCheck()
 {
     HappyConnOpener::Pointer he;
 
-    while(!gapQueue.empty()) {
-        AsyncCall::Pointer call = gapQueue.front();
+    while(!waitingForSpareQueue.empty()) {
+        AsyncCall::Pointer call = waitingForSpareQueue.front();
         if (call->canceled()) {
-            gapQueue.pop_front();
+            waitingForSpareQueue.pop_front();
             continue;
         }
         NullaryMemFunT<HappyConnOpener> *dialer = dynamic_cast<NullaryMemFunT<HappyConnOpener> *>(call->getDialer());
         he = dialer->job;
         double startAfter = spareMayStartAfter(he);
+
+        debugs(17, 8, "A new spare connection should start after: " << startAfter << " ms");
         if (startAfter > 0.0) {
             eventAdd("HappyConnQueue::SpareConnectionAttempt", HappyConnQueue::SpareConnectionAttempt, this, startAfter, 1, false);
             waitEvent = true;
@@ -487,10 +490,10 @@ HappyConnQueue::scheduleConnectorsListCheck()
         }
 
         if (ConnectionsLimitRule())
-            call->make();  // ScheduleCallHere(call);
+            ScheduleCallHere(call);
         else // Move to sparesLimit queue to start spare connection when a spare connection is closed
             sparesLimitQueue.push_back(call);
-        gapQueue.pop_front();
+        waitingForSpareQueue.pop_front();
     }
 }
 
@@ -500,7 +503,7 @@ HappyConnQueue::kickSparesLimitQueue()
     while (!sparesLimitQueue.empty() && ConnectionsLimitRule()) {
         AsyncCall::Pointer call = sparesLimitQueue.front();
         if (!call->canceled()) {
-            call->make(); // ScheduleCallHere(call);
+            ScheduleCallHere(call);
         }
         sparesLimitQueue.pop_front();
     }
