@@ -1817,11 +1817,6 @@ StoreEntry::startWriting()
     const HttpReply *rep = getReply();
     assert(rep);
 
-    if (collapsingAllowed()) {
-        collapsingStopped();
-        Store::Root().transientsStopCollapsing(*this);
-    }
-
     buffer();
     rep->packHeadersInto(this);
     mem_obj->markEndOfReplyHeaders();
@@ -1829,6 +1824,13 @@ StoreEntry::startWriting()
 
     rep->body.packInto(this);
     flush();
+
+    // The entry headers are written, new clients
+    // should not collapse anymore.
+    if (collapsingAllowed()) {
+        collapsingStopped();
+        Store::Root().transientsStopCollapsing(*this);
+    }
 }
 
 char const *

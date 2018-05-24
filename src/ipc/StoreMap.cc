@@ -805,7 +805,12 @@ Ipc::StoreMapAnchor::exportInto(StoreEntry &into) const
     into.lastModified(basics.lastmod);
     into.swap_file_sz = basics.swap_file_sz;
     into.refcount = basics.refcount;
+    const bool collapsingAllowed = into.collapsingAllowed();
     into.flags = basics.flags;
+    // There are possibly several flags we do not need to overwrite,
+    // and ENTRY_REQUIRES_COLLAPSING is one of them.
+    // TODO: check for other flags.
+    collapsingAllowed ? into.collapsingStarted() : into.collapsingStopped();
 }
 
 void

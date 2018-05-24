@@ -166,6 +166,8 @@ Transients::get(const cache_key *key)
     e->mem_obj->xitTable.index = index;
     e->mem_obj->xitTable.io = Store::ioReading;
     anchor->exportInto(*e);
+    EBIT_TEST(anchor->basics.flags, ENTRY_REQUIRES_COLLAPSING) ?
+        e->collapsingStarted() : e->collapsingStopped();
     // keep read lock to receive updates from others
     return e;
 }
