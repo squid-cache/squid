@@ -47,6 +47,7 @@
 
 #include <cerrno>
 
+/// a delayed icpUdpSend() call
 class DelayedUdpSend {
 public:
     Ip::Address address; ///< remote peer (which may not be a cache_peer)
