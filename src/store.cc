@@ -2079,7 +2079,7 @@ StoreEntry::describeTimestamps() const
 bool
 StoreEntry::hittingRequiresCollapsing() const
 {
-    return publicKey() && EBIT_TEST(flags, ENTRY_REQUIRES_COLLAPSING);
+    return publicKey() && collapsingEnabled();
 }
 
 void

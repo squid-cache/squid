@@ -82,7 +82,9 @@ enum {
     ENTRY_DISPATCHED,
     KEY_PRIVATE,
     ENTRY_FWD_HDR_WAIT,
-    ENTRY_REQUIRES_COLLAPSING, ///< whether the entry serves collapsed hits now
+    /// Whether the entry serves collapsed hits now.
+    /// Meaningful only for public entries.
+    ENTRY_REQUIRES_COLLAPSING,
     ENTRY_NEGCACHED,
     ENTRY_VALIDATED,
     ENTRY_BAD_LENGTH,
