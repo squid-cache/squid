@@ -124,6 +124,9 @@ public:
     /// disassociates the entry from the intransit table
     void transientsDisconnect(StoreEntry &);
 
+    /// prevents future collapsing hits for e
+    void transientsStopCollapsing(StoreEntry &e);
+
     /// disassociates the entry from the memory cache, preserving cached data
     void memoryDisconnect(StoreEntry &);
 

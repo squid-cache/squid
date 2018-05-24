@@ -454,7 +454,7 @@ StoreEntry::releaseRequest(const bool shareable)
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
 
-    stopCollapsing();
+    collapsingStopped();
 
     setPrivateKey(shareable, true);
 }
@@ -1817,7 +1817,10 @@ StoreEntry::startWriting()
     const HttpReply *rep = getReply();
     assert(rep);
 
-    stopCollapsing();
+    if (collapsingAllowed()) {
+        collapsingStopped();
+        Store::Root().transientsStopCollapsing(*this);
+    }
 
     buffer();
     rep->packHeadersInto(this);
@@ -2081,13 +2084,19 @@ StoreEntry::hittingRequiresCollapsing() const
 }
 
 void
-StoreEntry::startCollapsing()
+StoreEntry::collapsingStarted()
 {
     EBIT_SET(flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
+bool
+StoreEntry::collapsingAllowed()
+{
+    return EBIT_TEST(flags, ENTRY_REQUIRES_COLLAPSING);
+}
+
 void
-StoreEntry::stopCollapsing()
+StoreEntry::collapsingStopped()
 {
     EBIT_CLR(flags, ENTRY_REQUIRES_COLLAPSING);
 }

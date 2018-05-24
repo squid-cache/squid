@@ -187,6 +187,20 @@ Transients::findCollapsed(const sfileno index)
 }
 
 void
+Transients::stopCollapsing(const StoreEntry &e)
+{
+    assert(map);
+    assert(e.hasTransients());
+    assert(isWriter(e));
+    const auto idx = e.mem_obj->xitTable.index;
+    auto &anchor = map->writeableEntry(idx);
+    if (EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING)) {
+        EBIT_CLR(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
+        CollapsedForwarding::Broadcast(e);
+    }
+}
+
+void
 Transients::monitorIo(StoreEntry *e, const cache_key *key, const Store::IoStatus direction)
 {
     if (!e->hasTransients()) {
@@ -242,15 +256,16 @@ Transients::noteFreeMapSlice(const Ipc::StoreMapSliceId)
 }
 
 void
-Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFreed) const
+Transients::status(const StoreEntry &entry, Transients::Status &aStatus) const
 {
     assert(map);
     assert(entry.hasTransients());
     const auto idx = entry.mem_obj->xitTable.index;
     const auto &anchor = isWriter(entry) ?
                          map->writeableEntry(idx) : map->readableEntry(idx);
-    aborted = anchor.writerHalted;
-    waitingToBeFreed = anchor.waitingToBeFreed;
+    aStatus.abortedByWriter = anchor.writerHalted;
+    aStatus.waitingToBeFreed = anchor.waitingToBeFreed;
+    aStatus.collapsed = EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 void

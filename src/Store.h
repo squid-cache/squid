@@ -191,10 +191,12 @@ public:
     /// whether this entry can feed collapsed requests and only them
     bool hittingRequiresCollapsing() const;
 
-    /// begin collapsed requests feeding
-    void startCollapsing();
-    /// finish collapsed requests feeding
-    void stopCollapsing();
+    /// allow collapsed requests feeding
+    void collapsingStarted();
+    /// forbid collapsed requests feeding
+    void collapsingStopped();
+    /// this entry may feed collapsed requests
+    bool collapsingAllowed();
 
     MemObject *mem_obj;
     RemovalPolicyNode repl;

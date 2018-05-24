@@ -105,8 +105,6 @@ bool
 Rock::SwapDir::updateAnchoredWith(StoreEntry &entry, const Ipc::StoreMapAnchor &anchor)
 {
     entry.swap_file_sz = anchor.basics.swap_file_sz;
-    if (!EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING))
-        entry.stopCollapsing();
     return true;
 }
 
