@@ -691,13 +691,13 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
 {
     const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
     // adjust entry flags in order to use them while creating Transients entry
-    e->collapsingStarted();
+    e->enableCollapsing();
     if (e->makePublic(keyScope)) { // this is needed for both local and SMP collapsing
         debugs(20, 3, "may " << (transients && e->hasTransients() ?
                                  "SMP-" : "locally-") << "collapse " << *e);
         return true;
     }
-    e->collapsingStopped();
+    e->disableCollapsing();
     return false;
 }
 
@@ -747,13 +747,13 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
 
     debugs(20, 7, "syncing " << *collapsed);
 
-    Transients::Status status;
-    transients->status(*collapsed, status);
+    Transients::EntryStatus entryStatus;
+    transients->status(*collapsed, entryStatus);
 
-    if (!status.collapsed)
-        collapsed->collapsingStopped();
+    if (!entryStatus.collapsed)
+        collapsed->disableCollapsing();
 
-    if (status.waitingToBeFreed) {
+    if (entryStatus.waitingToBeFreed) {
         debugs(20, 3, "will release " << *collapsed << " due to waitingToBeFreed");
         collapsed->release(true); // may already be marked
     }
@@ -763,13 +763,13 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
 
     assert(transients->isReader(*collapsed));
 
-    if (status.abortedByWriter) {
+    if (entryStatus.abortedByWriter) {
         debugs(20, 3, "aborting " << *collapsed << " because its writer has aborted");
         collapsed->abort();
         return;
     }
 
-    if (status.collapsed && !collapsed->collapsingAllowed()) {
+    if (entryStatus.collapsed && !collapsed->collapsingEnabled()) {
         debugs(20, 3, "aborting " << *collapsed << " due to writer/reader collapsing state mismatch");
         collapsed->abort();
         return;
@@ -792,7 +792,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         found = anchorToCache(*collapsed, inSync);
     }
 
-    if (status.waitingToBeFreed && !found) {
+    if (entryStatus.waitingToBeFreed && !found) {
         debugs(20, 3, "aborting unattached " << *collapsed <<
                " because it was marked for deletion before we could attach it");
         collapsed->abort();

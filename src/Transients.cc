@@ -167,7 +167,7 @@ Transients::get(const cache_key *key)
     e->mem_obj->xitTable.io = Store::ioReading;
     anchor->exportInto(*e);
     EBIT_TEST(anchor->basics.flags, ENTRY_REQUIRES_COLLAPSING) ?
-        e->collapsingStarted() : e->collapsingStopped();
+        e->enableCollapsing() : e->disableCollapsing();
     // keep read lock to receive updates from others
     return e;
 }
@@ -258,16 +258,16 @@ Transients::noteFreeMapSlice(const Ipc::StoreMapSliceId)
 }
 
 void
-Transients::status(const StoreEntry &entry, Transients::Status &aStatus) const
+Transients::status(const StoreEntry &entry, Transients::EntryStatus &entryStatus) const
 {
     assert(map);
     assert(entry.hasTransients());
     const auto idx = entry.mem_obj->xitTable.index;
     const auto &anchor = isWriter(entry) ?
                          map->writeableEntry(idx) : map->readableEntry(idx);
-    aStatus.abortedByWriter = anchor.writerHalted;
-    aStatus.waitingToBeFreed = anchor.waitingToBeFreed;
-    aStatus.collapsed = EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
+    entryStatus.abortedByWriter = anchor.writerHalted;
+    entryStatus.waitingToBeFreed = anchor.waitingToBeFreed;
+    entryStatus.collapsed = EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 void

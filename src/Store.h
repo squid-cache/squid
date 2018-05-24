@@ -192,11 +192,11 @@ public:
     bool hittingRequiresCollapsing() const;
 
     /// allow collapsed requests feeding
-    void collapsingStarted();
+    void enableCollapsing();
     /// forbid collapsed requests feeding
-    void collapsingStopped();
+    void disableCollapsing();
     /// this entry may feed collapsed requests
-    bool collapsingAllowed();
+    bool collapsingEnabled();
 
     MemObject *mem_obj;
     RemovalPolicyNode repl;

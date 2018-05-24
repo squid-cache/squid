@@ -453,9 +453,6 @@ StoreEntry::releaseRequest(const bool shareable)
         shareableWhenPrivate = false; // may already be false
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
-
-    collapsingStopped();
-
     setPrivateKey(shareable, true);
 }
 
@@ -1827,8 +1824,8 @@ StoreEntry::startWriting()
 
     // The entry headers are written, new clients
     // should not collapse anymore.
-    if (collapsingAllowed()) {
-        collapsingStopped();
+    if (collapsingEnabled()) {
+        disableCollapsing();
         Store::Root().transientsStopCollapsing(*this);
     }
 }
@@ -2086,19 +2083,19 @@ StoreEntry::hittingRequiresCollapsing() const
 }
 
 void
-StoreEntry::collapsingStarted()
+StoreEntry::enableCollapsing()
 {
     EBIT_SET(flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 bool
-StoreEntry::collapsingAllowed()
+StoreEntry::collapsingEnabled()
 {
     return EBIT_TEST(flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 void
-StoreEntry::collapsingStopped()
+StoreEntry::disableCollapsing()
 {
     EBIT_CLR(flags, ENTRY_REQUIRES_COLLAPSING);
 }

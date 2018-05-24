@@ -26,12 +26,13 @@ typedef Ipc::StoreMap TransientsMap;
 class Transients: public Store::Controlled, public Ipc::StoreMapCleaner
 {
 public:
-    class Status
+    /// shared entry metadata, used for synchronization
+    class EntryStatus
     {
         public:
-            bool abortedByWriter = false;
-            bool waitingToBeFreed = false;
-            bool collapsed = false;
+            bool abortedByWriter = false; ///< whether the entry was aborted
+            bool waitingToBeFreed = false; ///< whether the entry was marked for deletion
+            bool collapsed = false; ///< whether the entry allows collapsing
     };
 
     Transients();
@@ -50,10 +51,8 @@ public:
     /// called when the in-transit entry has been successfully cached
     void completeWriting(const StoreEntry &e);
 
-    /// copies current shared entry metadata into parameters
-    /// \param aborted whether the entry was aborted
-    /// \param waitingToBeFreed whether the entry was marked for deletion
-    void status(const StoreEntry &e, Status &status) const;
+    /// copies current shared entry metadata into entryStatus
+    void status(const StoreEntry &e, EntryStatus &entryStatus) const;
 
     /// number of entry readers some time ago
     int readers(const StoreEntry &e) const;
