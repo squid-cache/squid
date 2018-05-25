@@ -29,10 +29,10 @@ public:
     /// shared entry metadata, used for synchronization
     class EntryStatus
     {
-        public:
-            bool abortedByWriter = false; ///< whether the entry was aborted
-            bool waitingToBeFreed = false; ///< whether the entry was marked for deletion
-            bool collapsed = false; ///< whether the entry allows collapsing
+    public:
+        bool abortedByWriter = false; ///< whether the entry was aborted
+        bool waitingToBeFreed = false; ///< whether the entry was marked for deletion
+        bool collapsed = false; ///< whether the entry allows collapsing
     };
 
     Transients();

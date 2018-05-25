@@ -810,7 +810,10 @@ Ipc::StoreMapAnchor::exportInto(StoreEntry &into) const
     // There are possibly several flags we do not need to overwrite,
     // and ENTRY_REQUIRES_COLLAPSING is one of them.
     // TODO: check for other flags.
-    collapsingAllowed ? into.enableCollapsing() : into.disableCollapsing();
+    if (collapsingAllowed)
+        into.enableCollapsing();
+    else
+        into.disableCollapsing();
 }
 
 void
