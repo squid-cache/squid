@@ -256,7 +256,7 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     state = new IdentStateData;
     state->hash.key = xstrdup(key);
 
-    // copy the conn details. We dont want the original FD to be re-used by IDENT.
+    // copy the conn details. We do not want the original FD to be re-used by IDENT.
     state->conn = conn->copyDetails();
     // NP: use random port for secure outbound to IDENT_PORT
     state->conn->local.port(0);

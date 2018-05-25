@@ -25,21 +25,21 @@
 #include "util.h"
 
 /**
- \retval NULL  An error occured.
- \retval *    The fully qualified name (FQDN) of the current host.
- *            Pointer is only valid until the next call to the gethost*() functions.
- *
- \todo Make this a squid String result so the duration limit is flexible.
+ * \retval nullptr  An error occurred.
+ * \retval *        The fully qualified name (FQDN) of the current host.
+ *                  Pointer is only valid until the next call to the
+ *                  gethost*() functions.
  */
 const char *
 getfullhostname(void)
 {
     const struct hostent *hp = NULL;
+    // TODO: make this dynamic so the duration limit is flexible
     static char buf[RFC2181_MAXHOSTNAMELEN + 1];
 
     if (gethostname(buf, RFC2181_MAXHOSTNAMELEN) < 0)
         return NULL;
-    /** \todo convert this to a getaddrinfo() call */
+    // TODO: convert this to a getaddrinfo() call
     if ((hp = gethostbyname(buf)) != NULL)
         xstrncpy(buf, hp->h_name, RFC2181_MAXHOSTNAMELEN);
     return buf;

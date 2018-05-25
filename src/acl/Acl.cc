@@ -141,7 +141,7 @@ ACL::matches(ACLChecklist *checklist) const
     } else {
         // make sure the ALE has as much data as possible
         if (requiresAle())
-            checklist->syncAle();
+            checklist->verifyAle();
 
         // have to cast because old match() API is missing const
         result = const_cast<ACL*>(this)->match(checklist);

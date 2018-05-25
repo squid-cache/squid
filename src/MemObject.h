@@ -28,6 +28,7 @@ typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
 typedef void STABH(void *);
 
 class store_client;
+class PeerSelector;
 
 class MemObject
 {
@@ -161,7 +162,7 @@ public:
 
     struct timeval start_ping;
     IRCB *ping_reply_callback;
-    void *ircb_data;
+    PeerSelector *ircb_data;
 
     struct {
         STABH *callback;

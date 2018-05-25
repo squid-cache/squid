@@ -12,8 +12,8 @@
 #include "tests/STUB.h"
 
 class CachePeer;
-class HttpRequest;
+class PeerSelector;
 
 void carpInit(void) STUB
-CachePeer * carpSelectParent(HttpRequest *) STUB_RETVAL(NULL)
+CachePeer *carpSelectParent(PeerSelector *ps) STUB_RETVAL(nullptr)
 

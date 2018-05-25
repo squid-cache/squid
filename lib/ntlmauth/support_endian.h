@@ -40,7 +40,7 @@
  * uint32_t le32toh(uint32_t);
  *
  * XXX: What about unusual byte orders like 3412 or 2143 ?
- *      Never had any problems reported, so we dont worry about them.
+ *      Never had any problems reported, so we do not worry about them.
  */
 
 #if !HAVE_HTOLE16 && !defined(htole16)

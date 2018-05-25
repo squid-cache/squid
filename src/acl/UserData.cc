@@ -20,8 +20,8 @@
 const Acl::ParameterFlags &
 ACLUserData::supportedFlags() const
 {
-    static const Acl::ParameterFlags theFlagNames = { "-i", "+i" };
-    return theFlagNames;
+    static const Acl::ParameterFlags flagNames = { "-i", "+i" };
+    return flagNames;
 }
 
 bool

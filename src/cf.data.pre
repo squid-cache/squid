@@ -1142,7 +1142,7 @@ endif
 	  # pattern match on Referer header [fast]
 	  # Referer is highly unreliable, so use with care
 
-	acl aclname ident username ...
+	acl aclname ident [-i] username ...
 	acl aclname ident_regex [-i] pattern ...
 	  # string match on ident output [slow]
 	  # use REQUIRED to accept any non-null ident.
@@ -1237,7 +1237,7 @@ endif
 	  # match against attributes a users issuing CA SSL certificate
 	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID  [fast]
 
-	acl aclname ext_user username ...
+	acl aclname ext_user [-i] username ...
 	acl aclname ext_user_regex [-i] pattern ...
 	  # string match on username returned by external acl helper [slow]
 	  # use REQUIRED to accept any non-null user name.
@@ -3268,7 +3268,12 @@ LOC: Ssl::TheConfig.ssl_crtd
 DOC_START
 	Specify the location and options of the executable for certificate
 	generator.
-	@DEFAULT_SSL_CRTD@ program requires -s and -M parameters
+
+	@DEFAULT_SSL_CRTD@ program can use a disk cache to improve response
+	times on repeated requests. To enable caching, specify -s and -M
+	parameters. If those parameters are not given, the program generates
+	a new certificate on every request.
+
 	For more information use:
 		@DEFAULT_SSL_CRTD@ -h
 DOC_END
@@ -5636,7 +5641,7 @@ DOC_START
 		The default is to use HTTP request URL as the store ID.
 
 	  BH
-		An internal error occured in the helper, preventing
+		An internal error occurred in the helper, preventing
 		a result being identified.
 
 	In addition to the above kv-pairs Squid also understands the following
@@ -8451,6 +8456,7 @@ DOC_START
 
 	URL FORMAT TAGS:
 		%a	- username (if available. Password NOT included)
+		%A	- Local listening IP address the client connection was connected to
 		%B	- FTP path URL
 		%e	- Error number
 		%E	- Error description
