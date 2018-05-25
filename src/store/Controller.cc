@@ -356,7 +356,9 @@ Store::Controller::findCallback(const cache_key *key)
     // but that would mean polluting Store with HTCP/ICP code. Instead, we
     // should encapsulate callback-related data in a protocol-neutral MemObject
     // member or use an HTCP/ICP-specific index rather than store_table.
-    return peekAtLocal(key);
+
+    // cannot reuse peekAtLocal() because HTCP/ICP callbacks may use private keys
+    return static_cast<StoreEntry*>(hash_lookup(store_table, key));
 }
 
 /// \returns either an existing local reusable StoreEntry object or nil
