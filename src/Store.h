@@ -196,7 +196,7 @@ public:
     /// forbid collapsed requests feeding
     void disableCollapsing();
     /// this entry may feed collapsed requests
-    bool collapsingEnabled();
+    bool collapsingEnabled() const;
 
     MemObject *mem_obj;
     RemovalPolicyNode repl;

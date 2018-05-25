@@ -2088,7 +2088,7 @@ StoreEntry::enableCollapsing()
 }
 
 bool
-StoreEntry::collapsingEnabled()
+StoreEntry::collapsingEnabled() const
 {
     return EBIT_TEST(flags, ENTRY_REQUIRES_COLLAPSING);
 }

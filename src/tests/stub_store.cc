@@ -97,7 +97,7 @@ void StoreEntry::append(char const *, int) STUB
 void StoreEntry::vappendf(const char *, va_list) STUB
 void StoreEntry::enableCollapsing() STUB
 void StoreEntry::disableCollapsing() STUB
-bool StoreEntry::collapsingEnabled() STUB_RETVAL(false)
+bool StoreEntry::collapsingEnabled() const STUB_RETVAL(false)
 
 NullStoreEntry *NullStoreEntry::getInstance() STUB_RETVAL(NULL)
 const char *NullStoreEntry::getMD5Text() const STUB_RETVAL(NULL)
