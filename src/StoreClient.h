@@ -17,6 +17,7 @@ typedef void STCB(void *, StoreIOBuffer);   /* store callback */
 
 class StoreEntry;
 class ACLFilledChecklist;
+class LogTags;
 
 /// A StoreEntry::getPublic*() caller.
 class StoreClient
