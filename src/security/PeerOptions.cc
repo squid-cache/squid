@@ -66,9 +66,9 @@ Security::PeerOptions::parse(const char *token)
 #if USE_OPENSSL
         // everything okay
 #elif USE_GNUTLS
-        debugs(3, DBG_PARSE_NOTE(1), "WARNING: SSL cipher= not supported. Uses GnuTLS tls-options= parameters instead.");
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: cipher= not supported. Uses GnuTLS tls-options= parameters instead.");
 #else
-        debugs(3, DBG_PARSE_NOTE(1), "WARNING: SSL cipher= option requires --with-openssl.");
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: cipher= option requires --with-openssl.");
 #endif
     } else if (strncmp(token, "cafile=", 7) == 0) {
         caFiles.emplace_back(SBuf(token + 7));
@@ -641,7 +641,7 @@ Security::PeerOptions::updateContextCiphers(Security::ContextPointer &ctx) const
     const char *cipher = const_cast<SBuf*>(&sslCipher)->c_str();
     if (!SSL_CTX_set_cipher_list(ctx.get(), cipher)) {
         const int ssl_error = ERR_get_error();
-        debugs(83, DBG_CRITICAL, "ERROR: Failed to set SSL cipher suite '" << sslCipher << "': " <<  Security::ErrorString(ssl_error));
+        debugs(83, DBG_CRITICAL, "ERROR: Failed to set cipher suite '" << sslCipher << "': " <<  Security::ErrorString(ssl_error));
         return false;
     }
 
