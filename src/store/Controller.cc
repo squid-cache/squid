@@ -349,7 +349,7 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
 }
 
 StoreEntry *
-Store::Controller::findCallback(const cache_key *key)
+Store::Controller::findCallbackXXX(const cache_key *key)
 {
     // We could check for mem_obj presence (and more), moving and merging some
     // of the duplicated neighborsUdpAck() and neighborsHtcpReply() code here,

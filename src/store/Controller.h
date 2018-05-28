@@ -58,7 +58,8 @@ public:
     /// Warning: The returned StoreEntry is not synced and may be marked for
     /// deletion. Use it only for extracting transaction callback details.
     /// TODO: Group and return just that callback-related data instead?
-    StoreEntry *findCallback(const cache_key *);
+    /// XXX: do not use: may return private entries from store_table
+    StoreEntry *findCallbackXXX(const cache_key *);
 
     /// Whether a transient entry with the given public key exists and (but) was
     /// marked for removal some time ago; get(key) returns nil in such cases.
