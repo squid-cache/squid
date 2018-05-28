@@ -193,58 +193,6 @@ static bool replaceCommonName(Security::CertPointer & cert, std::string const &r
                                       (unsigned char *)(cn.c_str()), -1, -1, 0);
 }
 
-static void
-printX509Signature(const Security::CertPointer &cert, std::string &out)
-{
-    const ASN1_BIT_STRING *sig = Ssl::X509_get_signature(cert);
-    if (sig && sig->data) {
-        const unsigned char *s = sig->data;
-        for (int i = 0; i < sig->length; ++i) {
-            char hex[3];
-            snprintf(hex, sizeof(hex), "%02x", s[i]);
-            out.append(hex);
-        }
-    }
-}
-
-std::string &
-Ssl::OnDiskCertificateDbKey(const Security::CertificateProperties &properties)
-{
-    static std::string certKey;
-    certKey.clear();
-    certKey.reserve(4096);
-    if (properties.mimicCert.get())
-        printX509Signature(properties.mimicCert, certKey);
-
-    if (certKey.empty()) {
-        certKey.append("/CN=", 4);
-        certKey.append(properties.commonName);
-    }
-
-    if (properties.setValidAfter)
-        certKey.append("+SetValidAfter=on", 17);
-
-    if (properties.setValidBefore)
-        certKey.append("+SetValidBefore=on", 18);
-
-    if (properties.setCommonName) {
-        certKey.append("+SetCommonName=", 15);
-        certKey.append(properties.commonName);
-    }
-
-    if (properties.signAlgorithm != Security::algSignEnd) {
-        certKey.append("+Sign=", 6);
-        certKey.append(certSignAlgorithmName(properties.signAlgorithm));
-    }
-
-    if (properties.signHash != NULL) {
-        certKey.append("+SignHash=", 10);
-        certKey.append(Security::digestName(properties.signHash));
-    }
-
-    return certKey;
-}
-
 /// Check if mimicCert certificate has the Authority Key Identifier extension
 /// and if yes add the extension to cert certificate with the same fields if
 /// possible. If the issuerCert certificate  does not have the Subject Key

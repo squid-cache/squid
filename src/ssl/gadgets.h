@@ -143,10 +143,6 @@ bool WriteX509Certificate(BIO_Pointer &bio, const Security::CertPointer & cert);
  */
 bool WritePrivateKey(BIO_Pointer &bio, const Security::PrivateKeyPointer &pkey);
 
-/// \ingroup SslCrtdSslAPI
-/// \returns certificate database key
-std::string & OnDiskCertificateDbKey(const Security::CertificateProperties &);
-
 /**
  \ingroup SslCrtdSslAPI
  * Decide on the kind of certificate and generate a CA- or self-signed one.
