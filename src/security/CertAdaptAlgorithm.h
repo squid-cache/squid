@@ -27,11 +27,12 @@ typedef enum {
 extern const char *CertAdaptAlgorithm_str[];
 
 /// \returns the short name of the adaptation algorithm "alg"
-inline const char *certAdaptAlgorithmName(const int alg)
+inline const char *
+certAdaptAlgorithmName(const int alg)
 {
     assert(alg >= 0);
     assert(alg < Security::algSetEnd);
-    return Security::CertAdaptAlgorithm_str[alg];
+    return CertAdaptAlgorithm_str[alg];
 }
 
 /// Return the id of the adaptation algorithm "alg"
