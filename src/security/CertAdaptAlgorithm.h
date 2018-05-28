@@ -35,11 +35,11 @@ certAdaptAlgorithmName(const int alg)
     return CertAdaptAlgorithm_str[alg];
 }
 
-/// Return the id of the adaptation algorithm "alg"
+/// \returns the id of the named adaptation algorithm
 inline CertAdaptAlgorithm
 certAdaptAlgorithmId(const char *alg)
 {
-    for (int i = 0; i < algSetEnd; i++) {
+    for (int i = 0; i < algSetEnd; ++i) {
         if (strcmp(CertAdaptAlgorithm_str[i], alg) == 0)
             return static_cast<CertAdaptAlgorithm>(i);
     }

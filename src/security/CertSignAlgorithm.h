@@ -34,11 +34,11 @@ certSignAlgorithmName(const int sg)
     return CertSignAlgorithm_str[sg];
 }
 
-/// Return the id of the signing algorithm "sg"
+/// \returns the id of the named signing algorithm
 inline CertSignAlgorithm
 certSignAlgorithmId(const char *sg)
 {
-    for (int i = 0; i < algSignEnd; i++) {
+    for (int i = 0; i < algSignEnd; ++i) {
         if (strcmp(CertSignAlgorithm_str[i], sg) == 0)
             return static_cast<CertSignAlgorithm>(i);
     }

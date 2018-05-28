@@ -15,17 +15,17 @@ namespace Security
 {
 
 /**
- * Certificate generation parameters to mimic
+ * Certificate generation parameters
  */
 class CertificateProperties
 {
 public:
     CertificateProperties() = default;
 
-    Security::CertPointer mimicCert;          ///< Certificate to mimic
+    CertPointer mimicCert;          ///< Certificate to mimic
 
-    Security::CertPointer signWithX509;       ///< Certificate to sign the generated request
-    Security::PrivateKeyPointer signWithPkey; ///< The key of the signing certificate
+    CertPointer signWithX509;       ///< Certificate to sign the generated request
+    PrivateKeyPointer signWithPkey; ///< The key of the signing certificate
 
     bool setValidAfter = false;  ///< Do not mimic "Not Valid After" field
     bool setValidBefore = false; ///< Do not mimic "Not Valid Before" field
@@ -33,7 +33,7 @@ public:
     bool setCommonName = false; ///< Replace the CN field of the mimicing subject with the given
     std::string commonName;     ///< A CN to use for the generated certificate
 
-    CertSignAlgorithm signAlgorithm = Security::algSignEnd; ///< The signing algorithm to use
+    CertSignAlgorithm signAlgorithm = algSignEnd; ///< The signing algorithm to use
     DigestAlgorithm signHash = nullptr;                     ///< The signing hash to use
 
 private:
