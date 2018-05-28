@@ -4607,7 +4607,6 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
     }
 
     const auto algName = Security::certSignAlgorithmId(al); // throws on errors
-
     sslproxy_cert_sign *cs = static_cast<sslproxy_cert_sign *>(xcalloc(1, sizeof(sslproxy_cert_sign)));
     cs->alg = algName;
 
