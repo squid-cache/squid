@@ -66,7 +66,7 @@ Security::PeerOptions::parse(const char *token)
 #if USE_OPENSSL
         // everything okay
 #elif USE_GNUTLS
-        debugs(3, DBG_PARSE_NOTE(1), "WARNING: cipher= not supported. Uses GnuTLS tls-options= parameters instead.");
+        debugs(3, DBG_PARSE_NOTE(1), "WARNING: cipher= requires --with-openssl. In GnuTLS builds, use tls-options= parameter instead.");
 #else
         debugs(3, DBG_PARSE_NOTE(1), "WARNING: cipher= option requires --with-openssl.");
 #endif
@@ -648,7 +648,7 @@ Security::PeerOptions::updateContextCiphers(Security::ContextPointer &ctx) const
     debugs(83, 5, "Using cipher suite " << sslCipher);
 
 #elif USE_GNUTLS
-    // NP: GnuTLS uses 'priorities' which are set via options= instead.
+    // NP: GnuTLS uses 'priorities' which are set per-session and via options= instead.
 #endif
     return true;
 }
