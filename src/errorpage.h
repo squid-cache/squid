@@ -100,6 +100,17 @@ public:
     /// set error type-specific detail code
     void detailError(int dCode) {detailCode = dCode;}
 
+    /**
+     * Lowlevel method to convert the given template string and write it
+     * to a given MemBuf object.
+     * Throws on parse error
+     * \param text            The string to be converted
+     * \param result          where to write output.
+     * \param building_deny_info_url  Whether the text input is a deny info url
+     * \param allowRecursion  Whether to convert codes which output may contain codes
+     */
+    void convertAndWriteTo(const char *text, MemBuf &result, bool building_deny_info_url, bool allowRecursion);
+
     /// Checks if the text can be parsed correctly.
     static bool ParseCheck(const char *text, bool is_deny_info_url, const char *&err);
 
@@ -119,17 +130,6 @@ private:
      * and constructs the HTML page content from it.
      */
     MemBuf *BuildContent(void);
-
-    /**
-     * Lowlevel method to convert the given template string and write it
-     * to a given MemBuf object.
-     * Throws on parse error
-     * \param text            The string to be converted
-     * \param result          where to write output.
-     * \param building_deny_info_url  Whether the text input is a deny info url
-     * \param allowRecursion  Whether to convert codes which output may contain codes
-     */
-    void convertAndWriteTo(const char *text, MemBuf &result, bool building_deny_info_url, bool allowRecursion);
 
     /**
      * Convert the given template string into textual output
@@ -159,7 +159,10 @@ private:
     const char *convert(const char *start, bool building_deny_info_url, bool allowRecursion);
 
     /// Handle the @Squid{%logformat_code} formatting code.
-    const char *handleLogFormat(const char *&start);
+    /// On success updates 'start' to point after the @Squid{}
+    /// formatting code and appends the generated string to 'result'.
+    /// Throws on parse error.
+    void handleLogFormat(const char *&start, MemBuf &result);
     /**
      * CacheManager / Debug dump of the ErrorState object.
      * Writes output into the given MemBuf.
@@ -286,9 +289,8 @@ public:
      *  (a) admin specified custom directory (error_directory)
      *  (b) default language translation directory (error_default_language)
      *  (c) English sub-directory where errors should ALWAYS exist
-     \return false if no template found and uses as template text an error message
      */
-    bool loadDefault();
+    void loadDefault();
 
     /**
      * Load an error template for a given HTTP request. This function examines the
@@ -311,7 +313,7 @@ public:
 
 protected:
     /// Used to parse (if parsing required) the template data .
-    virtual bool parse(const char *buf, int len, bool eof) = 0;
+    virtual bool parse() = 0;
 
     /**
      * Try to load the "page_name" template for a given language "lang"
@@ -320,10 +322,42 @@ protected:
      */
     bool tryLoadTemplate(const char *lang);
 
+    SBuf textBuf; ///< A Buffer to store the template
     bool wasLoaded; ///< True if the template data read from disk without any problem
     String errLanguage; ///< The error language of the template.
     String templateName; ///< The name of the template
     err_type templateCode; ///< The internal code for this template.
+    SBuf lastTemplateFile; ///< The last used path
+};
+
+class ErrTextValidator {
+public:
+    ErrTextValidator() {}
+    ErrTextValidator(const char *aName) : name_(aName) {}
+
+    ErrTextValidator &useCfgContext(const char *filename, int lineNo, const char *line);
+
+    ErrTextValidator &useFileContext(const char *templateFilename);
+
+    ErrTextValidator &warn(int level) { warn_ = level; return *this; }
+
+    ErrTextValidator &fatal(bool abort = true) { fatal_ = abort; return *this; }
+
+    ErrTextValidator &throws(bool doThrow = true) { throw_ = doThrow; return *this; }
+
+    bool validate(const char *text);
+
+    bool initialised() { return name_.length() != 0;}
+private:
+    enum Context {CtxUnknown, CtxFile, CtxConfig};
+    Context ctx = CtxUnknown;
+    SBuf name_;
+    bool fatal_ = false;
+    bool throw_ = false;
+    int warn_ = -1;
+    SBuf ctxFilename;
+    int ctxLineNo_ = 0;
+    SBuf ctxLine_;
 };
 
 /**

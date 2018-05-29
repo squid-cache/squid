@@ -33,6 +33,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
+#include "sbuf/Stream.h"
 #include "SquidTime.h"
 #if USE_OPENSSL
 #include "ssl/ErrorDetailManager.h"
@@ -137,38 +138,25 @@ static IOCB errorSendComplete;
 class ErrorPageFile: public TemplateFile
 {
 public:
-    ErrorPageFile(const char *name, const err_type code) : TemplateFile(name,code) {textBuf.init();}
+    ErrorPageFile(const char *name, const err_type code) : TemplateFile(name, code) {}
+
+    ErrorPageFile(const char *name, const err_type code, const ErrTextValidator &useValidator) : TemplateFile(name, code), validator(useValidator) {}
+
+    ~ErrorPageFile() {}
 
     /// The template text data read from disk
-    const char *text() { return textBuf.content(); }
+    const char *text() { return textBuf.c_str(); }
 
-    bool parseErrorCheck = true; ///< whether to check loaded pages for errors
+    ErrTextValidator validator;
 private:
     /// stores the data read from disk to a local buffer
-    virtual bool parse(const char *buf, int len, bool eof) {
-        if (len)
-            textBuf.append(buf, len);
-
-        if (eof)
-            return testPage(textBuf.content());
-
-        return true;
-    }
-
-    /// checks for syntax errors
-    bool testPage(const char *text) {
-        if (!parseErrorCheck)
-            return true;
-
-        const char *err = nullptr;
-        if (!ErrorState::ParseCheck(text, false, err)) {
-            return false;
+    virtual bool parse() {
+        if (validator.initialised()) {
+            validator.useFileContext(lastTemplateFile.c_str());
+            return validator.validate(text());
         }
-
         return true;
     }
-
-    MemBuf textBuf; ///< A buffer to store the error page
 };
 
 /// \ingroup ErrorPageInternal
@@ -192,6 +180,9 @@ errorInitialize(void)
     const char *text;
     error_page_count = ERR_MAX + ErrorDynamicPages.size();
     error_text = static_cast<char **>(xcalloc(error_page_count, sizeof(char *)));
+    // error pages validator to use as base
+    ErrTextValidator validator("ErrorPageFile");
+    validator.warn(DBG_CRITICAL).throws();
 
     for (i = ERR_NONE, ++i; i < error_page_count; ++i) {
         safe_free(error_text[i]);
@@ -208,10 +199,8 @@ errorInitialize(void)
              *  (a) default language translation directory (error_default_language)
              *  (b) admin specified custom directory (error_directory)
              */
-            ErrorPageFile errTmpl(err_type_str[i], i);
-            if (!errTmpl.loadDefault() && !reconfiguring)
-                fatalf("cannot load template '%s'\n", err_type_str[i]);
-            // TODO: on reconfigure reject all of the new configuration
+            ErrorPageFile errTmpl(err_type_str[i], i, validator);
+            errTmpl.loadDefault();
 
             // ErrorPageFile::loadDefault always builds a template
             error_text[i] = xstrdup(errTmpl.text());
@@ -228,10 +217,8 @@ errorInitialize(void)
 
             if (strchr(pg, ':') == NULL) {
                 /** But only if they are not redirection URL. */
-                ErrorPageFile errTmpl(pg, ERR_MAX);
-                if (errTmpl.loadDefault() && !reconfiguring)
-                    fatalf("cannot load template '%s'\n", pg);
-                // TODO: on reconfigure reject all of the new configuration
+                ErrorPageFile errTmpl(pg, ERR_MAX, validator);
+                errTmpl.loadDefault();
 
                 error_text[i] = xstrdup(errTmpl.text());
             }
@@ -242,9 +229,7 @@ errorInitialize(void)
 
     // look for and load stylesheet into global MemBuf for it.
     if (Config.errorStylesheet) {
-        ErrorPageFile tmpl("StylesSheet", ERR_MAX);
-        if (!tmpl.loadFromFile(Config.errorStylesheet) && !reconfiguring)
-            fatalf("cannot load template from file '%s'\n", Config.errorStylesheet);
+        ErrorPageFile tmpl("StylesSheet", ERR_MAX, validator);
         if (tmpl.loaded())
             error_stylesheet.appendf("%s",tmpl.text());
     }
@@ -296,11 +281,11 @@ TemplateFile::TemplateFile(const char *name, const err_type code): silent(false)
     assert(name);
 }
 
-bool
+void
 TemplateFile::loadDefault()
 {
     if (loaded()) // already loaded?
-        return true;
+        return;
 
     /** test error_directory configured location */
     if (Config.errorDirectory) {
@@ -325,13 +310,15 @@ TemplateFile::loadDefault()
 
     /* giving up if failed */
     if (!loaded()) {
+        // TODO: on reconfigure reject all of the new configuration
         debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
-        parse("Internal Error: Missing Template ", 33, false);
-        parse(templateName.termedBuf(), templateName.size(), true);
-        return false;
+        textBuf.clear();
+        textBuf.append("Internal Error: Missing Template ");
+        textBuf.append(templateName.termedBuf());
+        wasLoaded = parse();
     }
 
-    return true;
+    return;
 }
 
 bool
@@ -369,6 +356,8 @@ TemplateFile::loadFromFile(const char *path)
     if (loaded()) // already loaded?
         return true;
 
+    lastTemplateFile.assign(path);
+
     fd = file_open(path, O_RDONLY | O_TEXT);
 
     if (fd < 0) {
@@ -381,10 +370,9 @@ TemplateFile::loadFromFile(const char *path)
         return wasLoaded;
     }
 
-    bool parseError = false;
-    while (!parseError && (len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
-        if (!parse(buf, len, false))
-            parseError = true;
+    textBuf.clear();
+    while ((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
+        textBuf.append(buf, len);
     }
     file_close(fd);
 
@@ -394,14 +382,8 @@ TemplateFile::loadFromFile(const char *path)
         return false;
     }
 
-    if (!parseError && !parse(buf, 0, true))
-        parseError = true;
-
-    if (parseError){
+    if (!(wasLoaded = parse()))
         debugs(4, DBG_CRITICAL, "ERROR: parsing error in template file: " << path);
-        wasLoaded = false;
-    } else
-        wasLoaded = true;
 
     return wasLoaded;
 }
@@ -1262,8 +1244,9 @@ ErrorState::BuildContent()
         if (err_language && err_language != Config.errorDefaultLanguage)
             safe_free(err_language);
 
-        localeTmpl = new ErrorPageFile(err_type_str[page_id], static_cast<err_type>(page_id));
-        localeTmpl->parseErrorCheck = false; // We are going to check later
+        // XXX. We may do not want to use validator in the following
+        // ErrorPageFile to avoid double error template parsing.
+        localeTmpl = new ErrorPageFile(err_type_str[page_id], static_cast<err_type>(page_id), ErrTextValidator("ErrorPageFile").warn(DBG_CRITICAL));
         if (localeTmpl->loadFor(request.getRaw())) {
             m = localeTmpl->text();
             assert(localeTmpl->language());
@@ -1346,8 +1329,7 @@ ErrorState::convertAndWriteTo(const char *text, MemBuf &result, bool building_de
             m = p + 1;
         } else {
             assert(*p == '@');
-            const char *t = handleLogFormat(p);
-            result.appendf("%s", t);
+            handleLogFormat(p, result);
             m = p;
         }
     }
@@ -1356,50 +1338,66 @@ ErrorState::convertAndWriteTo(const char *text, MemBuf &result, bool building_de
         result.appendf("%s", m);   /* copy tail */
 }
 
-const char *
-ErrorState::handleLogFormat(const char *&start)
+void
+ErrorState::handleLogFormat(const char *&start, MemBuf &result)
 {
-    static MemBuf mb;
-    mb.reset();
-
     static const SBuf logFormatStart("@Squid{");
     assert(logFormatStart.cmp(start, logFormatStart.length()) == 0);
 
-    const char *error = nullptr;
     const char *p = start + logFormatStart.length();
-    if (int tokenBytes = Format::Format::AssembleToken(p, mb, al)) {
+    if (int tokenBytes = Format::Format::AssembleToken(p, result, al)) {
         p += tokenBytes;
-        if (*p != '}') {
-            error = "unterminated @Squid{";
-            mb.reset();
-        }
+        if (*p != '}')
+            throw TexcHere("unterminated @Squid{");
         start = p + 1;
-    } else {
-        static char buf[1024];
-        snprintf(buf, sizeof(buf), "Parse error at: %.10s", start);
-        error = buf;
+        return;
     }
 
-    if (error)
-        throw TexcHere(error);
+    throw TexcHere(ToSBuf("Cannot parse @Squid{logformat} in error page template near '", SBuf(start).substr(0, 100), "'"));
+}
 
-    return mb.buf;
+ErrTextValidator &
+ErrTextValidator::useCfgContext(const char *filename, int lineNo, const char *line)
+{
+    ctx = CtxConfig;
+    ctxFilename = filename;
+    ctxLineNo_ = lineNo;
+    ctxLine_ = line;
+    return *this;
+}
+
+ErrTextValidator &
+ErrTextValidator::useFileContext(const char *templateFilename)
+{
+    ctx = CtxFile;
+    ctxFilename = templateFilename;
+    return *this;
 }
 
 bool
-ErrorState::ParseCheck(const char *text, bool is_deny_info_url, const char *&err)
+ErrTextValidator::validate(const char *text)
 {
+    Must (initialised());
+
     MemBuf content;
     content.init();
     AccessLogEntry::Pointer alp= new AccessLogEntry;
     ErrorState anErr(ERR_NONE, Http::scNone, NULL, alp);
     try {
-        anErr.convertAndWriteTo(text, content, is_deny_info_url, true);
+        anErr.convertAndWriteTo(text, content, (ctx == CtxConfig), true);
     } catch (const std::exception &ex) {
-        static SBuf errDescription;
-        errDescription.clear();
-        errDescription.append(ex.what());
-        err = errDescription.c_str();
+        if (warn_ >= 0) {
+            if (ctx == CtxConfig)
+                debugs(4, warn_, name_ << ": " <<  ctxFilename << " line " << ctxLineNo_ << ": " << ctxLine_);
+            else if (ctx == CtxFile)
+                debugs(4, warn_, name_ << "Error while parsing file " <<  ctxFilename);
+        }
+        if (fatal_)
+            fatalf("Fatal: %s:'%s'", name_.c_str(), ex.what());
+        else if (throw_)
+            throw TexcHere(ToSBuf(name_, ": ", ex.what()));
+        else if (warn_ >= 0)
+            debugs(4, warn_, name_ << ": " <<  ex.what());
         return false;
     }
     return true;
