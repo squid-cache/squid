@@ -1,0 +1,165 @@
+--- ModDevPoll.cc	Tue May 22 20:46:41 2018
++++ ModDevPoll.cc	Wed May 30 18:48:27 2018
+@@ -72,7 +72,7 @@
+  * is written out the API.
+  */
+ static struct {
+-    struct pollfd *pfds; /**< ptr to array of struct pollfd config elements */
++    std::unique_ptr<pollfd[]> pfds; /**< Unique ptr to array of struct pollfd config elements */
+     int cur; /**< index of last written element of array, or -1 if none */
+     int size; /**< maximum number of elements in array */
+ } devpoll_update;
+@@ -81,8 +81,12 @@
+ static int devpoll_fd; /**< handle to /dev/poll device */
+ static int max_poll_time = 1000; /**< maximum milliseconds to spend in poll */
+ 
+-static struct _devpoll_state *devpoll_state; /**< array of socket states */
+-static struct dvpoll do_poll; /**< data struct for storing poll results */
++static struct std::unique_ptr<_devpoll_state[]> devpoll_state;	/**< array of socket states */
++static struct { /* Similar like dvpoll_t from sys/devpoll.h */
++    std::unique_ptr<pollfd[]> dp_fds;
++    int dp_timeout;
++    nfds_t dp_nfds;
++} do_poll; /**< data struct for storing poll results */
+ static int dpoll_nfds; /**< maximum number of poll results */
+ 
+ /* PROTOTYPES */
+@@ -100,23 +104,23 @@
+ static void
+ comm_flush_updates(void)
+ {
+-    int i;
++    std::size_t i = 0, j;
+     if (devpoll_update.cur == -1)
+         return; /* array of changes to make is empty */
+ 
++    j = ++devpoll_update.cur;
+     debugs(
+         5,
+         DEBUG_DEVPOLL ? 0 : 8,
+-        HERE << (devpoll_update.cur + 1) << " fds queued"
++        HERE << (j) << " fds queued"
+     );
+ 
+     i = write(
+             devpoll_fd, /* open handle to /dev/poll */
+-            devpoll_update.pfds, /* pointer to array of struct pollfd */
+-            (devpoll_update.cur + 1) * sizeof(struct pollfd) /* bytes to process */
++            static_cast<void *>(devpoll_update.pfds.get()), /* pointer to array of struct pollfd */
++            (j) * sizeof(struct pollfd) /* bytes to process */
+         );
+-    assert(i > 0);
+-    assert(static_cast<size_t>(i) == (sizeof(struct pollfd) * (devpoll_update.cur + 1)));
++    assert(i > 0 || i == (sizeof(struct pollfd) * (j)));
+     devpoll_update.cur = -1; /* reset size of array, no elements remain */
+ }
+ 
+@@ -179,19 +183,13 @@
+ {
+     /* allocate memory first before attempting to open poll device */
+     /* This tracks the FD devpoll offset+state */
+-    devpoll_state = (struct _devpoll_state *)xcalloc(
+-                        SQUID_MAXFD, sizeof(struct _devpoll_state)
+-                    );
++    devpoll_state = std::unique_ptr<_devpoll_state[]>{ new _devpoll_state[SQUID_MAXFD] };
+ 
+     /* And this is the stuff we use to read events */
+-    do_poll.dp_fds = (struct pollfd *)xcalloc(
+-                         DEVPOLL_QUERYSIZE, sizeof(struct pollfd)
+-                     );
++    do_poll.dp_fds = std::unique_ptr<pollfd[]>{ new pollfd[DEVPOLL_QUERYSIZE] };
+     dpoll_nfds = DEVPOLL_QUERYSIZE;
+ 
+-    devpoll_update.pfds = (struct pollfd *)xcalloc(
+-                              DEVPOLL_UPDATESIZE, sizeof(struct pollfd)
+-                          );
++    devpoll_update.pfds = std::unique_ptr<pollfd[]>{ new pollfd[DEVPOLL_UPDATESIZE] };
+     devpoll_update.cur = -1;
+     devpoll_update.size = DEVPOLL_UPDATESIZE;
+ 
+@@ -242,7 +240,7 @@
+     pollfd_events_t state_new = 0; /* new state (derive from old state) */
+ 
+     if ( type & COMM_SELECT_READ ) {
+-        if ( handler != NULL ) {
++        if ( handler ) {
+             // Hack to keep the events flowing if there is data immediately ready
+             if (F->flags.read_pending)
+                 state_new |= POLLOUT;
+@@ -260,7 +258,7 @@
+     }
+ 
+     if ( type & COMM_SELECT_WRITE ) {
+-        if ( handler != NULL ) {
++        if ( handler ) {
+             /* we want to POLLOUT */
+             state_new |= POLLOUT;
+         } else {
+@@ -303,8 +301,8 @@
+ void
+ Comm::ResetSelect(int fd)
+ {
+-    SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+-    SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
++    SetSelect(fd, COMM_SELECT_WRITE, nullptr, nullptr, 0);
++    SetSelect(fd, COMM_SELECT_READ, nullptr, nullptr, 0);
+ }
+ 
+ /** \brief Do poll and trigger callback functions as appropriate
+@@ -388,7 +386,7 @@
+ 
+         /* check if file descriptor has data to read */
+         if (do_poll.dp_fds[i].revents & POLLIN || F->flags.read_pending) {
+-            if ( (hdl = F->read_handler) != NULL ) {
++            if ((hdl = F->read_handler)) {
+                 debugs(
+                     5,
+                     DEBUG_DEVPOLL ? 0 : 8,
+@@ -396,7 +394,7 @@
+                 );
+                 PROF_start(comm_read_handler);
+                 F->flags.read_pending = 0;
+-                F->read_handler = NULL;
++                F->read_handler = nullptr;
+                 hdl(fd, F->read_data);
+                 PROF_stop(comm_read_handler);
+                 ++ statCounter.select_fds;
+@@ -407,13 +405,13 @@
+                     HERE << "no read handler for FD " << fd
+                 );
+                 // remove interest since no handler exist for this event.
+-                SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
++                SetSelect(fd, COMM_SELECT_READ, nullptr, nullptr, 0);
+             }
+         }
+ 
+         /* check if file descriptor is ready to write */
+         if (do_poll.dp_fds[i].revents & POLLOUT) {
+-            if ((hdl = F->write_handler) != NULL) {
++            if ((hdl = F->write_handler)) {
+                 debugs(
+                     5,
+                     DEBUG_DEVPOLL ? 0 : 8,
+@@ -420,7 +418,7 @@
+                     HERE << "Calling write handler on FD " << fd
+                 );
+                 PROF_start(comm_write_handler);
+-                F->write_handler = NULL;
++                F->write_handler = nullptr;
+                 hdl(fd, F->write_data);
+                 PROF_stop(comm_write_handler);
+                 ++ statCounter.select_fds;
+@@ -431,7 +429,7 @@
+                     HERE << "no write handler for FD " << fd
+                 );
+                 // remove interest since no handler exist for this event.
+-                SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
++                SetSelect(fd, COMM_SELECT_WRITE, nullptr, nullptr, 0);
+             }
+         }
+     }
+@@ -447,4 +445,3 @@
+ }
+ 
+ #endif /* USE_DEVPOLL */
+-
