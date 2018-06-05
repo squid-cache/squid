@@ -241,7 +241,6 @@ gopherMimeCreate(GopherStateData * gopherState)
     }
 
     assert(entry->isEmpty());
-    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     HttpReply *reply = new HttpReply;
     entry->buffer();

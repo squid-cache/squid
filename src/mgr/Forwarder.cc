@@ -37,7 +37,6 @@ Mgr::Forwarder::Forwarder(const Comm::ConnectionPointer &aConn, const ActionPara
 
     HTTPMSGLOCK(httpRequest);
     entry->lock("Mgr::Forwarder");
-    EBIT_SET(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     closer = asyncCall(16, 5, "Mgr::Forwarder::noteCommClosed",
                        CommCbMemFunT<Forwarder, CommCloseCbParams>(this, &Forwarder::noteCommClosed));
@@ -110,7 +109,6 @@ Mgr::Forwarder::sendError(ErrorState *error)
     Must(entry != NULL);
     Must(httpRequest != NULL);
 
-    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     entry->buffer();
     entry->replaceHttpReply(error->BuildHttpReply());
     entry->expires = squid_curtime;
