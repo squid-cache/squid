@@ -1256,6 +1256,8 @@ tests_testRock_LDADD = \
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
+	$(ADAPTATION_LIBS) \
+	$(ESI_LIBS) \
 	anyp/libanyp.la \
 	eui/libeui.la \
 	$(SSL_LIBS) \
@@ -1263,7 +1265,6 @@ tests_testRock_LDADD = \
 	base/libbase.la \
 	mem/libmem.la \
 	store/libstore.la \
-	$(ADAPTATION_LIBS) \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -2045,7 +2046,9 @@ tests_test_http_range_SOURCES = \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_test_http_range_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	tests/stub_libsslsquid.cc \
+	tests/stub_libsslutil.cc
 tests_test_http_range_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -2070,7 +2073,6 @@ tests_test_http_range_LDADD = \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
-	$(SSL_LIBS) \
 	ipc/libipc.la \
 	dns/libdns.la \
 	base/libbase.la \
