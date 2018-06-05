@@ -9,42 +9,35 @@
 #ifndef SQUID__SRC_SECURITY_DIGESTALGORITHM_H
 #define SQUID__SRC_SECURITY_DIGESTALGORITHM_H
 
+#if USE_OPENSSL
+#if HAVE_OPENSSL_EVP_H
+#include <openssl/evp.h>
+#endif
+#elif USE_GNUTLS
+#if HAVE_GNUTLS_GNUTLS_H
+#include <gnutls/gnutls.h>
+#endif
+#endif
+
 namespace Security
 {
 
 #if USE_OPENSSL
 typedef EVP_MD const * DigestAlgorithm;
+#define UnknownDigestAlgorithm nullptr
 #elif USE_GNUTLS
 typedef gnutls_digest_algorithm_t DigestAlgorithm;
+#define UnknownDigestAlgorithm GNUTLS_DIG_UNKNOWN
 #else
 typedef void * DigestAlgorithm;
+#define UnknownDigestAlgorithm nullptr
 #endif
 
 /// retrieve the name of a Digest algorithm
-inline const char *
-digestName(const DigestAlgorithm alg)
-{
-#if USE_OPENSSL
-    return EVP_MD_name(alg);
-#elif USE_GNUTLS
-    return gnutls_digest_get_name(alg);
-#else
-    return nullptr;
-#endif
-}
+const char *digestName(const DigestAlgorithm);
 
 /// retrieve a Digest algorithm handle from its name
-inline const DigestAlgorithm
-digestByName(const char *name)
-{
-#if USE_OPENSSL
-    return EVP_get_digestbyname(name);
-#elif USE_GNUTLS
-    return gnutls_digest_get_id(name);
-#else
-    return nullptr; // not supported
-#endif
-}
+const DigestAlgorithm digestByName(const char *name);
 
 } // namespace Security
 

@@ -14,6 +14,7 @@ noinst_LTLIBRARIES = libsecurity.la libsecuritybase.la
 
 # Pieces linked to both Squid and security helpers
 libsecuritybase_la_SOURCES= \
+	Algorithms.cc \
 	CertAdaptAlgorithm.cc \
 	CertAdaptAlgorithm.h \
 	CertificateProperties.h \

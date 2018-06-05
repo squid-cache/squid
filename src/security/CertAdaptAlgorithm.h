@@ -9,9 +9,6 @@
 #ifndef SQUID_SRC_SECURITY_CERTADAPTALGORITHM_H
 #define SQUID_SRC_SECURITY_CERTADAPTALGORITHM_H
 
-#include <stdexcept>
-#include <string>
-
 namespace Security
 {
 
@@ -27,27 +24,10 @@ typedef enum {
 extern const char *CertAdaptAlgorithm_str[];
 
 /// \returns the short name of the adaptation algorithm "alg"
-inline const char *
-certAdaptAlgorithmName(const int alg)
-{
-    assert(alg >= 0);
-    assert(alg < Security::algSetEnd);
-    return CertAdaptAlgorithm_str[alg];
-}
+const char *certAdaptAlgorithmName(const int alg);
 
 /// \returns the id of the named adaptation algorithm
-inline CertAdaptAlgorithm
-certAdaptAlgorithmId(const char *alg)
-{
-    for (int i = 0; i < algSetEnd; ++i) {
-        if (strcmp(CertAdaptAlgorithm_str[i], alg) == 0)
-            return static_cast<CertAdaptAlgorithm>(i);
-    }
-
-    std::string msg("unknown cert adaptation algorithm: ");
-    msg.append(alg);
-    throw std::runtime_error(msg);
-}
+CertAdaptAlgorithm certAdaptAlgorithmId(const char *name);
 
 } // namespace Security
 

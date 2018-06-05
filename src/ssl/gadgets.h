@@ -9,6 +9,8 @@
 #ifndef SQUID_SSL_GADGETS_H
 #define SQUID_SSL_GADGETS_H
 
+#if USE_OPENSSL
+
 #include "base/HardFun.h"
 #include "security/forward.h"
 #include "ssl/crtd_message.h"
@@ -190,5 +192,6 @@ bool CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPoi
 const ASN1_BIT_STRING *X509_get_signature(const Security::CertPointer &);
 
 } // namespace Ssl
-#endif // SQUID_SSL_GADGETS_H
 
+#endif /* USE_OPENSSL */
+#endif // SQUID_SSL_GADGETS_H

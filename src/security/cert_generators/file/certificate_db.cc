@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "base/HardFun.h"
 #include "security/cert_generators/file/certificate_db.h"
+#include "security/CertificateProperties.h"
 
 #include <cerrno>
 #include <fstream>

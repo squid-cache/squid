@@ -2434,7 +2434,9 @@ tests_testHttpRequest_SOURCES = \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testHttpRequest_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	tests/stub_libsslsquid.cc \
+	tests/stub_libsslutil.cc
 tests_testHttpRequest_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -2449,7 +2451,6 @@ tests_testHttpRequest_LDADD = \
 	parser/libparser.la \
 	ip/libip.la \
 	fs/libfs.la \
-	$(SSL_LIBS) \
 	ipc/libipc.la \
 	proxyp/libproxyp.la \
 	parser/libparser.la \
@@ -2735,7 +2736,9 @@ tests_testCacheManager_SOURCES = \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	tests/stub_libsslsquid.cc \
+	tests/stub_libsslutil.cc
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	libsquid.la \
@@ -2762,7 +2765,6 @@ tests_testCacheManager_LDADD = \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
-	$(SSL_LIBS) \
 	anyp/libanyp.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
@@ -3057,7 +3059,9 @@ tests_testEvent_SOURCES = \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testEvent_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	tests/stub_libsslsquid.cc \
+	tests/stub_libsslutil.cc
 tests_testEvent_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -3083,7 +3087,6 @@ tests_testEvent_LDADD = \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3294,7 +3297,9 @@ tests_testEventLoop_SOURCES = \
 	wordlist.h \
 	wordlist.cc
 nodist_tests_testEventLoop_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	tests/stub_libsslsquid.cc \
+	tests/stub_libsslutil.cc
 tests_testEventLoop_LDADD = \
 	libsquid.la \
 	clients/libclients.la \
@@ -3320,7 +3325,6 @@ tests_testEventLoop_LDADD = \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \

@@ -135,8 +135,7 @@ namespace Ssl
 const char *GetX509UserAttribute(X509 *, const char *) STUB_RETVAL(nullptr)
 const char *GetX509CAAttribute(X509 *, const char *) STUB_RETVAL(nullptr)
 const char *GetX509Fingerprint(X509 *, const char *) STUB_RETVAL(nullptr)
-//Security::DigestAlgorithm DefaultSignHash = UnknownDigestAlgorithm;
-Security::DigestAlgorithm DefaultSignHash = nullptr;
+Security::DigestAlgorithm DefaultSignHash = UnknownDigestAlgorithm;
 std::vector<const char *> BumpModeStr = {""};
 bool loadCerts(const char *, Ssl::CertsIndexedList &) STUB_RETVAL(false)
 bool loadSquidUntrusted(const char *) STUB_RETVAL(false)

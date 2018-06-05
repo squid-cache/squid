@@ -9,7 +9,7 @@
 #ifndef SQUID_SSL_CRTD_MESSAGE_H
 #define SQUID_SSL_CRTD_MESSAGE_H
 
-#include "security/CertificateProperties.h"
+#include "security/forward.h"
 
 #include <map>
 #include <string>

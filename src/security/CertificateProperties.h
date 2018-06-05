@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_SECURITY_CERTIFICATEPROPERTIES_H
 #define SQUID_SRC_SECURITY_CERTIFICATEPROPERTIES_H
 
+#include "security/CertSignAlgorithm.h"
+#include "security/DigestAlgorithm.h"
 #include "security/forward.h"
 
 namespace Security
@@ -34,7 +36,7 @@ public:
     std::string commonName;     ///< A CN to use for the generated certificate
 
     CertSignAlgorithm signAlgorithm = algSignEnd; ///< The signing algorithm to use
-    DigestAlgorithm signHash = nullptr;                     ///< The signing hash to use
+    DigestAlgorithm signHash = UnknownDigestAlgorithm; ///< The signing hash to use
 
 private:
     CertificateProperties(CertificateProperties const &) = delete;

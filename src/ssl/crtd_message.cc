@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "security/CertAdaptAlgorithm.h"
 #include "security/CertificateProperties.h"
 #include "ssl/crtd_message.h"
 #include "ssl/gadgets.h"
