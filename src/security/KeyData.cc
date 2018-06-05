@@ -94,11 +94,14 @@ Security::KeyData::loadX509ChainFromFile()
         return;
     }
 
+#if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
     if (X509_check_issued(cert.get(), cert.get()) == X509_V_OK) {
         char *nameStr = X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0);
         debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << nameStr);
         OPENSSL_free(nameStr);
-    } else {
+    } else
+#endif
+    {
         debugs(83, DBG_PARSE_NOTE(3), "Using certificate chain in " << certFile);
         // and add to the chain any other certificate exist in the file
         CertPointer latestCert = cert;
@@ -107,13 +110,14 @@ Security::KeyData::loadX509ChainFromFile()
             // get Issuer name of the cert for debug display
             char *nameStr = X509_NAME_oneline(X509_get_subject_name(ca), nullptr, 0);
 
+#if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
             // self-signed certificates are not valid in a sent chain
             if (X509_check_issued(ca, ca) == X509_V_OK) {
                 debugs(83, DBG_PARSE_NOTE(2), "CA " << nameStr << " is self-signed, will not be chained: " << nameStr);
                 OPENSSL_free(nameStr);
                 continue;
             }
-
+#endif
             // checks that the chained certs are actually part of a chain for validating cert
             if (X509_check_issued(ca, latestCert.get()) == X509_V_OK) {
                 debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << nameStr);
