@@ -140,7 +140,7 @@ https_port 127.0.2.6:8443 tls-cert=./ca-mid-rsa.crt tls-key=./ca-mid-rsa.pkey \
 	tls-generate-host-certificates
 # case: 1d, 2a, 3d invalid
 # case: 1a, 2b, 3d invalid
-# case: 1b, 2b, 3d 
+# case: 1b, 2b, 3d
 https_port 127.0.2.7:8443 tls-cert=./ca-chain-rsa.pem \
 	tls-generate-host-certificates
 # case: 1c, 2b, 3d
