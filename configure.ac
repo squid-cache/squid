@@ -2350,6 +2350,35 @@ AC_ARG_WITH(large-files,
   fi
 ])
 
+dnl systemd service
+squid_systemd_service_path=""
+AC_ARG_WITH(systemdsystemunitdir,
+  AS_HELP_STRING([--with-systemdsystemunitdir=PATH],
+                 [Directory to install systemd service file. To
+                  auto-detect specify "yes" (or do not pass an
+                  argument). Default: do not install]), [
+case "$withval" in
+  no)
+    : # Nothing special to do here
+    ;;
+  yes)
+    if test -n "$PKG_CONFIG"; then
+      squid_systemd_service_path=`$PKG_CONFIG --variable=systemdsystemunitdir systemd`
+    else
+      AC_MSG_ERROR([Could not find pkg-config to query systemdsystemunitdir path])
+    fi
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-systemdsystemunitdir path does not point to a directory])
+    fi
+    squid_systemd_service_path="$withval"
+esac
+])
+AS_IF([test "x$squid_systemd_service_path" != "x"],
+      [AC_SUBST([systemdsystemunitdir], [$squid_systemd_service_path])])
+AM_CONDITIONAL([ENABLE_SYSTEMD_SERVICE], [test "x$squid_systemd_service_path" != "x"])
+
 dnl UNIX Build environment
 dnl AS_HELP_STRING is not suited here because it cannot to specify newlines
 AC_ARG_WITH(build-environment,
