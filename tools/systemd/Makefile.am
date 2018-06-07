@@ -6,3 +6,7 @@
 ##
 
 EXTRA_DIST = squid.service
+
+if ENABLE_SYSTEMD_SERVICE
+systemdsystemunit_DATA = squid.service
+endif
