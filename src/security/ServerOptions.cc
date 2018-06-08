@@ -284,6 +284,11 @@ Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
     // contexts are generated as needed. This method initializes the cert
     // and key pointers used to sign those contexts later.
 
+    if (certs.empty()) {
+        char buf[128];
+        fatalf("%s_port %s - missing cert= parameter", portType, port.s.toUrl(buf, sizeof(buf)));
+    }
+
     signingCa = certs.front();
 
     const char *portType = AnyP::ProtocolType_str[port.transport.protocol];
