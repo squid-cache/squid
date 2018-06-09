@@ -100,7 +100,7 @@ protected:
 
 public:
     HttpRequestMethod method;
-    URL url; ///< the request URI
+    AnyP::Uri url; ///< the request URI
 
 private:
 #if USE_ADAPTATION

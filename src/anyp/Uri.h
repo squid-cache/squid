@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_SRC_URL_H
-#define SQUID_SRC_URL_H
+#ifndef SQUID_SRC_ANYP_URI_H
+#define SQUID_SRC_ANYP_URI_H
 
 #include "anyp/UriScheme.h"
 #include "ip/Address.h"
@@ -16,22 +16,28 @@
 
 #include <iosfwd>
 
+class HttpRequestMethod;
+
+namespace AnyP
+{
+
 /**
- * The URL class represents a Uniform Resource Location
+ * Represents a Uniform Resource Identifier.
+ * Can store both URL or URN representations.
  *
  * Governed by RFC 3986
  */
-class URL
+class Uri
 {
-    MEMPROXY_CLASS(URL);
+    MEMPROXY_CLASS(Uri);
 
 public:
-    URL() : hostIsNumeric_(false), port_(0) {*host_=0;}
-    URL(AnyP::UriScheme const &aScheme);
-    URL(const URL &other) {
+    Uri() : hostIsNumeric_(false), port_(0) {*host_=0;}
+    Uri(AnyP::UriScheme const &aScheme);
+    Uri(const Uri &other) {
         this->operator =(other);
     }
-    URL &operator =(const URL &o) {
+    Uri &operator =(const Uri &o) {
         scheme_ = o.scheme_;
         userInfo_ = o.userInfo_;
         memcpy(host_, o.host_, sizeof(host_));
@@ -81,7 +87,7 @@ public:
     /// the static '/' default URL-path
     static const SBuf &SlashPath();
 
-    /// the static '*' pseudo-URL
+    /// the static '*' pseudo-Uri
     static const SBuf &Asterisk();
 
     /**
@@ -141,16 +147,18 @@ private:
     unsigned short port_;   ///< URL port
 
     // XXX: for now includes query-string.
-    SBuf path_;     ///< URL path segment
+    SBuf path_;     ///< Uri path segment
 
-    // pre-assembled URL forms
+    // pre-assembled URI forms
     mutable SBuf authorityHttp_;     ///< RFC 7230 section 5.3.3 authority, maybe without default-port
     mutable SBuf authorityWithPort_; ///< RFC 7230 section 5.3.3 authority with explicit port
     mutable SBuf absolute_;          ///< RFC 7230 section 5.3.2 absolute-URI
 };
 
+} // namespace AnyP
+
 inline std::ostream &
-operator <<(std::ostream &os, const URL &url)
+operator <<(std::ostream &os, const AnyP::Uri &url)
 {
     // none means explicit empty string for scheme.
     if (url.getScheme() != AnyP::PROTO_NONE)
@@ -166,8 +174,9 @@ operator <<(std::ostream &os, const URL &url)
     return os;
 }
 
+/* Deprecated functions for Legacy code handling URLs */
+
 class HttpRequest;
-class HttpRequestMethod;
 
 void urlInitialize(void);
 char *urlCanonicalClean(const HttpRequest *);
@@ -221,5 +230,5 @@ int urlCheckRequest(const HttpRequest *);
 char *urlHostname(const char *url);
 void urlExtMethodConfigure(void);
 
-#endif /* SQUID_SRC_URL_H_H */
+#endif /* SQUID_SRC_ANYP_URI_H */
 

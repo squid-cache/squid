@@ -339,7 +339,7 @@ Ftp::Server::resetLogin(const char *reason)
 void
 Ftp::Server::calcUri(const SBuf *file)
 {
-    // TODO: fill a class URL instead of string
+    // TODO: fill a class AnyP::Uri instead of string
     uri = "ftp://";
     uri.append(host);
     if (port->ftp_track_dirs && master->workingDir.length()) {

@@ -110,7 +110,7 @@ whichPeer(const Ip::Address &from)
 }
 
 peer_t
-neighborType(const CachePeer * p, const URL &url)
+neighborType(const CachePeer * p, const AnyP::Uri &url)
 {
 
     const NeighborTypeDomainList *d = NULL;
@@ -1404,7 +1404,7 @@ peerCountMcastPeersStart(void *data)
     MemObject *mem;
     icp_common_t *query;
     int reqnum;
-    // TODO: use class URL instead of constructing and re-parsing a string
+    // TODO: use class AnyP::Uri instead of constructing and re-parsing a string
     LOCAL_ARRAY(char, url, MAX_URL);
     assert(p->type == PEER_MULTICAST);
     p->mcast.flags.count_event_pending = false;

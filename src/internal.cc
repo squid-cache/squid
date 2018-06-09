@@ -107,7 +107,7 @@ internalRemoteUri(const char *host, unsigned short port, const char *dir, const 
                 strlen(lc_host) - 1);
 
     /* build URI */
-    URL tmp(AnyP::PROTO_HTTP);
+    AnyP::Uri tmp(AnyP::PROTO_HTTP);
     tmp.host(lc_host);
     if (port)
         tmp.port(port);
