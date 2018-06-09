@@ -24,7 +24,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"
-#include "URL.h"
 #include "urn.h"
 
 #define URN_REQBUF_SZ   4096

@@ -20,7 +20,6 @@
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/XactionRep.h"
 #include "base/TextException.h"
-#include "URL.h"
 
 /* HeaderRep */
 

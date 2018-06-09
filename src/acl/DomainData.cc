@@ -11,10 +11,10 @@
 #include "squid.h"
 #include "acl/Checklist.h"
 #include "acl/DomainData.h"
+#include "anyp/Uri.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "src/URL.h"
 #include "util.h"
 
 template<class T>

@@ -8,10 +8,10 @@
 
 #include "squid.h"
 
-#define STUB_API "url.cc"
+#define STUB_API "anyp/libayp.la"
 #include "tests/STUB.h"
 
-#include "URL.h"
+#include "anyp/Uri.h"
 URL::URL(AnyP::UriScheme const &) {STUB}
 void URL::touch() STUB
 bool URL::parse(const HttpRequestMethod&, const char *) STUB_RETVAL(true)

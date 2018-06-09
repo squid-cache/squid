@@ -10,10 +10,10 @@
 
 #include <cppunit/TestAssert.h>
 
+#include "anyp/Uri.h"
 #include "Debug.h"
-#include "testURL.h"
+#include "tests/testURL.h"
 #include "unitTestMain.h"
-#include "URL.h"
 
 #include <sstream>
 

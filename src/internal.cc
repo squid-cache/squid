@@ -20,7 +20,6 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
-#include "URL.h"
 #include "util.h"
 #include "wordlist.h"
 
