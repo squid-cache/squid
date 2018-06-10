@@ -863,7 +863,6 @@ TESTSOURCES= \
 	globals.cc
 
 check_PROGRAMS+=\
-	tests/testBoilerplate \
 	tests/testCacheManager \
 	tests/testCharacterSet \
 	tests/testDiskIO \
@@ -897,31 +896,43 @@ if ENABLE_FS_UFS
 check_PROGRAMS += tests/testUfs
 endif
 
-## NP: required to run the above list. check_PROGRAMS only builds the binaries...
-TESTS += $(check_PROGRAMS)
-
 ### Template for new Unit Test Program
-## - add tests/testX to check_PROGRAMS above.
-## - copy template below and substitue X for class name
+## - copy template below and substitute X for class name
+## - place code being tested in _SOURCES
+## - place stubs etc. requiredd to link in nodist_*_SOURCES
 ## - add other component .(h|cc) files needed to link and run tests
 ##
-##NP: (TESTSOURCES) defines stub debugs() and new/delete for testing
+## NP: (TESTSOURCES) defines stub debugs() and new/delete for testing
 ##
-#tests_testX_SOURCES=\
-#	tests/testX.h \
+#check_PROGRAMS += tests/testX
+#tests_testX_SOURCES= \
 #	tests/testX.cc \
-#	X.h \
-#	X.cc
-#nodist_tests_testX_SOURCES=\
-#   tests/stubs_as_needed.cc\
+#	tests/testX.h \
+#	X.cc \
+#	X.h
+#nodist_tests_testX_SOURCES= \
+#	tests/stubs_as_needed.cc \
 #	$(TESTSOURCES)
-#tests_testX_LDFLAGS = $(LIBADD_DL)
 #tests_testX_LDADD=\
 #	$(LIBCPPUNIT_LIBS) \
 #	$(COMPAT_LIB) \
 #	$(XTRA_LIBS)
+#tests_testX_LDFLAGS = $(LIBADD_DL)
 
-# - add other component .(h|cc) files needed to link and run tests
+## A demonstration test that does nothing but shows the salient points
+## involved in writing tests.
+check_PROGRAMS += tests/testBoilerplate
+tests_testBoilerplate_SOURCES = \
+	tests/testBoilerplate.cc \
+	tests/testBoilerplate.h
+nodist_tests_testBoilerplate_SOURCES = \
+	$(TESTSOURCES)
+tests_testBoilerplate_LDADD= \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
+
 tests_testHttpReply_SOURCES=\
 	cbdata.cc \
 	cbdata.h \
@@ -1150,27 +1161,6 @@ tests_testACLMaxUserIP_LDADD= \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
-
-## a demonstration test that does nothing but shows the salient points
-## involved in writing tests.
-tests_testBoilerplate_SOURCES = \
-	tests/testBoilerplate.cc \
-	tests/testBoilerplate.h \
-	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
-	tests/stub_SBuf.cc \
-	tests/stub_time.cc
-nodist_tests_testBoilerplate_SOURCES = \
-	tests/stub_cbdata.cc \
-	tests/stub_MemBuf.cc \
-	$(TESTSOURCES)
-tests_testBoilerplate_LDADD= \
-	$(SSLLIB) \
-	base/libbase.la \
-	$(LIBCPPUNIT_LIBS) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of base/libbase.la objects
 tests_testCharacterSet_SOURCES = \
@@ -3650,6 +3640,9 @@ tests_testMem_LDADD= \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testMem_LDFLAGS = $(LIBADD_DL)
+
+## Run the above tests. check_PROGRAMS only builds the binaries.
+TESTS += $(check_PROGRAMS)
 
 TESTS += testHeaders
 
