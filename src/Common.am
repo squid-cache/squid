@@ -36,6 +36,11 @@ AM_CFLAGS = $(SQUID_CFLAGS)
 AM_CXXFLAGS = $(SQUID_CXXFLAGS)
 DEFS = @DEFS@
 
+# Make ./configure location settings above available to the code
+DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" \
+	-DDEFAULT_SQUID_DATA_DIR=\"$(datadir)\" \
+	-DDEFAULT_SQUID_CONFIG_DIR=\"$(sysconfdir)\"
+
 ## so that others can always use += for these variables
 CLEANFILES =
 check_PROGRAMS = 
