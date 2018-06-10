@@ -235,19 +235,27 @@ asnStats(StoreEntry * sentry)
 static void
 asnCacheStart(int as)
 {
-    // TODO: use class AnyP::Uri instead of generating a string and re-parsing
-    LOCAL_ARRAY(char, asres, 4096);
-    StoreEntry *e;
-    ASState *asState = new ASState;
+    AnyP::Uri whoisUrl(AnyP::PROTO_WHOIS);
+    whoisUrl.host(Config.as_whois_server);
+
+    SBuf asPath("/!gAS");
+    asPath.appendf("%d", as);
+    whoisUrl.path(asPath);
+
     debugs(53, 3, "AS " << as);
-    snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
+    ASState *asState = new ASState;
     asState->as_number = as;
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAsn);
-    asState->request = HttpRequest::FromUrl(asres, mx);
-    assert(asState->request != NULL);
+    asState->request = new HttpRequest(mx);
+    asState->request->url = whoisUrl;
+    asState->request->method = Http::METHOD_GET;
+
+    // XXX: performance regression, c_str() reallocates
+    const auto asres = xstrdup(whoisUrl.absolute().c_str());
 
     // XXX: Missing a hittingRequiresCollapsing() && startCollapsingOn() check.
-    if ((e = storeGetPublic(asres, Http::METHOD_GET)) == NULL) {
+    StoreEntry *e= storeGetPublic(asres, Http::METHOD_GET);
+    if (!e) {
         e = storeCreateEntry(asres, asres, RequestFlags(), Http::METHOD_GET);
         asState->sc = storeClientListAdd(e, asState);
         FwdState::fwdStart(Comm::ConnectionPointer(), e, asState->request.getRaw());
@@ -255,6 +263,7 @@ asnCacheStart(int as)
         e->lock("Asn");
         asState->sc = storeClientListAdd(e, asState);
     }
+    xfree(asres);
 
     asState->entry = e;
     StoreIOBuffer readBuffer (AS_REQBUF_SZ, asState->offset, asState->reqbuf);
