@@ -70,39 +70,29 @@ class ASState
     CBDATA_CLASS(ASState);
 
 public:
-    ASState();
-    ~ASState();
+    ASState() {
+        memset(reqbuf, 0, sizeof(reqbuf));
+    }
+    ~ASState() {
+        if (entry) {
+            debugs(53, 3, entry->url());
+            storeUnregister(sc, entry, this);
+            entry->unlock("~ASState");
+        }
+    }
 
-    StoreEntry *entry;
-    store_client *sc;
+public:
+    StoreEntry *entry = nullptr;
+    store_client *sc = nullptr;
     HttpRequest::Pointer request;
-    int as_number;
-    int64_t offset;
-    int reqofs;
+    int as_number = 0;
+    int64_t offset = 0;
+    int reqofs = 0;
     char reqbuf[AS_REQBUF_SZ];
-    bool dataRead;
+    bool dataRead = false;
 };
 
 CBDATA_CLASS_INIT(ASState);
-
-ASState::ASState() :
-    entry(NULL),
-    sc(NULL),
-    request(NULL),
-    as_number(0),
-    offset(0),
-    reqofs(0),
-    dataRead(false)
-{
-    memset(reqbuf, 0, AS_REQBUF_SZ);
-}
-
-ASState::~ASState()
-{
-    debugs(53, 3, entry->url());
-    storeUnregister(sc, entry, this);
-    entry->unlock("~ASState");
-}
 
 /** entry into the radix tree */
 struct rtentry_t {
