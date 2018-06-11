@@ -1,4 +1,4 @@
-Changes to squid-4.0.25 (?? Jun 2018):
+Changes to squid-4.0.25 (11 Jun 2018):
 
 	- Regression Bug 4855: querying private entries for HTCP/ICP
 	- Regression Bug 4852: deny_info %R macro not being expanded
