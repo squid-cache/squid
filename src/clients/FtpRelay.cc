@@ -292,7 +292,6 @@ Ftp::Relay::failedErrorMessage(err_type error, int xerrno)
     const Http::StatusCode httpStatus = failedHttpStatus(error);
     HttpReply *const reply = createHttpReply(httpStatus);
     entry->replaceHttpReply(reply);
-    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     fwd->request->detailError(error, xerrno);
 }
 
@@ -375,7 +374,6 @@ void
 Ftp::Relay::forwardReply()
 {
     assert(entry->isEmpty());
-    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     HttpReply *const reply = createHttpReply(Http::scNoContent);
     reply->sources |= HttpMsg::srcFtp;
@@ -453,7 +451,6 @@ Ftp::Relay::startDataDownload()
     HttpReply *const reply = createHttpReply(Http::scOkay, -1);
     reply->sources |= HttpMsg::srcFtp;
 
-    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     setVirginReply(reply);
     adaptOrFinalizeReply();
 

@@ -556,7 +556,6 @@ MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
         const int result = rep->httpMsgParseStep(mb.buf, buf.length, eof);
         if (result > 0) {
             assert(rep->pstate == psParsed);
-            EBIT_CLR(e.flags, ENTRY_FWD_HDR_WAIT);
         } else if (result < 0) {
             debugs(20, DBG_IMPORTANT, "Corrupted mem-cached headers: " << e);
             return false;
@@ -657,15 +656,9 @@ MemStore::startCaching(StoreEntry &e)
 void
 MemStore::copyToShm(StoreEntry &e)
 {
-    // prevents remote readers from getting ENTRY_FWD_HDR_WAIT entries and
-    // not knowing when the wait is over
-    if (EBIT_TEST(e.flags, ENTRY_FWD_HDR_WAIT)) {
-        debugs(20, 5, "postponing copying " << e << " for ENTRY_FWD_HDR_WAIT");
-        return;
-    }
-
     assert(map);
     assert(e.mem_obj);
+    Must(!EBIT_TEST(e.flags, ENTRY_FWD_HDR_WAIT));
 
     const int64_t eSize = e.mem_obj->endOffset();
     if (e.mem_obj->memCache.offset >= eSize) {
