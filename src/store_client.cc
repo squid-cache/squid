@@ -279,11 +279,6 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
         return;
     }
 
-    if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
-        debugs(90, 5, "storeClientCopy2: returning because ENTRY_FWD_HDR_WAIT set");
-        return;
-    }
-
     if (sc->flags.store_copying) {
         sc->flags.copy_event_pending = true;
         debugs(90, 3, "storeClientCopy2: Queueing storeClientCopyEvent()");
@@ -711,6 +706,15 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 void
 StoreEntry::invokeHandlers()
 {
+    if (EBIT_TEST(flags, DELAY_SENDING)) {
+        debugs(90, 3, "DELAY_SENDING is on, exiting " << *this);
+        return;
+    }
+    if (EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT)) {
+        debugs(90, 3, "ENTRY_FWD_HDR_WAIT is on, exiting " << *this);
+        return;
+    }
+
     /* Commit what we can to disk, if appropriate */
     swapOut();
     int i = 0;

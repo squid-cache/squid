@@ -828,8 +828,12 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
     storeGetMemSpace(writeBuffer.length);
     mem_obj->write(writeBuffer);
 
-    if (!EBIT_TEST(flags, DELAY_SENDING))
-        invokeHandlers();
+    if (EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT) && !mem_obj->readAheadPolicyCanRead()) {
+        debugs(20, 3, "allow Store clients to get entry content after buffering too much for " << *this);
+        EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
+    }
+
+    invokeHandlers();
 }
 
 /* Append incoming data from a primary server to an entry. */
@@ -1073,6 +1077,9 @@ StoreEntry::complete()
 {
     debugs(20, 3, "storeComplete: '" << getMD5Text() << "'");
 
+    // To preserve forwarding retries, call FwdState::complete() instead.
+    EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
+
     if (store_status != STORE_PENDING) {
         /*
          * if we're not STORE_PENDING, then probably we got aborted
@@ -1128,6 +1135,9 @@ StoreEntry::abort()
     releaseRequest();
 
     EBIT_SET(flags, ENTRY_ABORTED);
+
+    // allow the Store clients to be told about the problem
+    EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
 
     setMemStatus(NOT_IN_MEMORY);
 
@@ -1823,7 +1833,6 @@ StoreEntry::startWriting()
     buffer();
     rep->packHeadersInto(this);
     mem_obj->markEndOfReplyHeaders();
-    EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
 
     rep->body.packInto(this);
     flush();

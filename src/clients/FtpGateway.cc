@@ -2289,8 +2289,7 @@ Ftp::Gateway::completedListing()
     ferr.ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
     ferr.ftp.server_msg = ctrl.message;
     ctrl.message = NULL;
-    entry->replaceHttpReply( ferr.BuildHttpReply() );
-    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
+    entry->replaceHttpReply(ferr.BuildHttpReply());
     entry->flush();
     entry->unlock("Ftp::Gateway");
 }
@@ -2562,8 +2561,6 @@ Ftp::Gateway::appendSuccessHeader()
     flags.http_header_sent = 1;
 
     assert(entry->isEmpty());
-
-    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     entry->buffer();    /* released when done processing current data payload */
 
