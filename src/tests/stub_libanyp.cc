@@ -8,28 +8,28 @@
 
 #include "squid.h"
 
-#define STUB_API "url.cc"
+#define STUB_API "anyp/libanyp.la"
 #include "tests/STUB.h"
 
-#include "URL.h"
-URL::URL(AnyP::UriScheme const &) {STUB}
-void URL::touch() STUB
-bool URL::parse(const HttpRequestMethod&, const char *) STUB_RETVAL(true)
-void URL::host(const char *) STUB
+#include "anyp/Uri.h"
+AnyP::Uri::Uri(AnyP::UriScheme const &) {STUB}
+void AnyP::Uri::touch() STUB
+bool AnyP::Uri::parse(const HttpRequestMethod&, const char *) STUB_RETVAL(true)
+void AnyP::Uri::host(const char *) STUB
 static SBuf nil;
-const SBuf &URL::path() const STUB_RETVAL(nil)
-const SBuf &URL::SlashPath()
+const SBuf &AnyP::Uri::path() const STUB_RETVAL(nil)
+const SBuf &AnyP::Uri::SlashPath()
 {
     static SBuf slash("/");
     return slash;
 }
-const SBuf &URL::Asterisk()
+const SBuf &AnyP::Uri::Asterisk()
 {
     static SBuf asterisk("*");
     return asterisk;
 }
-SBuf &URL::authority(bool) const STUB_RETVAL(nil)
-SBuf &URL::absolute() const STUB_RETVAL(nil)
+SBuf &AnyP::Uri::authority(bool) const STUB_RETVAL(nil)
+SBuf &AnyP::Uri::absolute() const STUB_RETVAL(nil)
 void urlInitialize() STUB
 char *urlCanonicalClean(const HttpRequest *) STUB_RETVAL(nullptr)
 const char *urlCanonicalFakeHttps(const HttpRequest *) STUB_RETVAL(nullptr)

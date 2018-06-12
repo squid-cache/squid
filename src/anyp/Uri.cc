@@ -9,12 +9,12 @@
 /* DEBUG: section 23    URL Parsing */
 
 #include "squid.h"
+#include "anyp/Uri.h"
 #include "globals.h"
 #include "HttpRequest.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
-#include "URL.h"
 
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -30,21 +30,21 @@ static const char valid_hostname_chars[] =
     ;
 
 const SBuf &
-URL::Asterisk()
+AnyP::Uri::Asterisk()
 {
     static SBuf star("*");
     return star;
 }
 
 const SBuf &
-URL::SlashPath()
+AnyP::Uri::SlashPath()
 {
     static SBuf slash("/");
     return slash;
 }
 
 void
-URL::host(const char *src)
+AnyP::Uri::host(const char *src)
 {
     hostAddr_.setEmpty();
     hostAddr_ = src;
@@ -60,7 +60,7 @@ URL::host(const char *src)
 }
 
 const SBuf &
-URL::path() const
+AnyP::Uri::path() const
 {
     // RFC 3986 section 3.3 says path can be empty (path-abempty).
     // RFC 7230 sections 2.7.3, 5.3.1, 5.7.2 - says path cannot be empty, default to "/"
@@ -188,7 +188,7 @@ urlParseProtocol(const char *b)
  * being "end of host with implied path of /".
  */
 bool
-URL::parse(const HttpRequestMethod& method, const char *url)
+AnyP::Uri::parse(const HttpRequestMethod& method, const char *url)
 {
     LOCAL_ARRAY(char, proto, MAX_URL);
     LOCAL_ARRAY(char, login, MAX_URL);
@@ -224,7 +224,7 @@ URL::parse(const HttpRequestMethod& method, const char *url)
                 return false;
 
     } else if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
-               URL::Asterisk().cmp(url) == 0) {
+               AnyP::Uri::Asterisk().cmp(url) == 0) {
         parseFinish(AnyP::PROTO_HTTP, nullptr, url, foundHost, SBuf(), 80 /* HTTP default port */);
         return true;
     } else if (strncmp(url, "urn:", 4) == 0) {
@@ -444,7 +444,7 @@ URL::parse(const HttpRequestMethod& method, const char *url)
 
 /// Update the URL object with parsed URI data.
 void
-URL::parseFinish(const AnyP::ProtocolType protocol,
+AnyP::Uri::parseFinish(const AnyP::ProtocolType protocol,
                  const char *const protoStr, // for unknown protocols
                  const char *const aUrlPath,
                  const char *const aHost,
@@ -459,7 +459,7 @@ URL::parseFinish(const AnyP::ProtocolType protocol,
 }
 
 void
-URL::touch()
+AnyP::Uri::touch()
 {
     absolute_.clear();
     authorityHttp_.clear();
@@ -467,7 +467,7 @@ URL::touch()
 }
 
 SBuf &
-URL::authority(bool requirePort) const
+AnyP::Uri::authority(bool requirePort) const
 {
     if (authorityHttp_.isEmpty()) {
 
@@ -485,7 +485,7 @@ URL::authority(bool requirePort) const
 }
 
 SBuf &
-URL::absolute() const
+AnyP::Uri::absolute() const
 {
     if (absolute_.isEmpty()) {
         // TODO: most URL will be much shorter, avoid allocating this much
@@ -774,7 +774,7 @@ urlCheckRequest(const HttpRequest * r)
     // we support OPTIONS and TRACE directed at us (with a 501 reply, for now)
     // we also support forwarding OPTIONS and TRACE, except for the *-URI ones
     if (r->method == Http::METHOD_OPTIONS || r->method == Http::METHOD_TRACE)
-        return (r->header.getInt64(Http::HdrType::MAX_FORWARDS) == 0 || r->url.path() != URL::Asterisk());
+        return (r->header.getInt64(Http::HdrType::MAX_FORWARDS) == 0 || r->url.path() != AnyP::Uri::Asterisk());
 
     if (r->method == Http::METHOD_PURGE)
         return 1;
@@ -928,7 +928,7 @@ URLHostName::extract(char const *aUrl)
     return Host;
 }
 
-URL::URL(AnyP::UriScheme const &aScheme) :
+AnyP::Uri::Uri(AnyP::UriScheme const &aScheme) :
     scheme_(aScheme),
     hostIsNumeric_(false),
     port_(0)

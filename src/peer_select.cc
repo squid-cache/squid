@@ -34,7 +34,6 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "URL.h"
 
 /**
  * A CachePeer which has been selected as a possible destination.
