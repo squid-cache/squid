@@ -30,7 +30,6 @@
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"
-#include "URL.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"

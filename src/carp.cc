@@ -15,7 +15,6 @@
 #include "neighbors.h"
 #include "SquidConfig.h"
 #include "Store.h"
-#include "URL.h"
 
 #include <cmath>
 

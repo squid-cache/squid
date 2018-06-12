@@ -78,7 +78,6 @@
 #include "StoreFileSystem.h"
 #include "tools.h"
 #include "unlinkd.h"
-#include "URL.h"
 #include "wccp.h"
 #include "wccp2.h"
 #include "WinSvc.h"

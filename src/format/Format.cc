@@ -27,7 +27,6 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
-#include "URL.h"
 #if USE_OPENSSL
 #include "ssl/ErrorDetail.h"
 #include "ssl/ServerBump.h"

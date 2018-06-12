@@ -38,7 +38,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"
-#include "URL.h"
 #include "wordlist.h"
 
 #if HAVE_SYS_STAT_H
@@ -1095,7 +1094,7 @@ netdbHostData(const char *host, int *samp, int *rtt, int *hops)
 }
 
 void
-netdbUpdatePeer(const URL &url, CachePeer * e, int irtt, int ihops)
+netdbUpdatePeer(const AnyP::Uri &url, CachePeer *e, int irtt, int ihops)
 {
 #if USE_ICMP
     netdbEntry *n;

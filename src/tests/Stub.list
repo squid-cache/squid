@@ -41,6 +41,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_ipc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_ipc_TypedMsgHdr.cc \
+	tests/stub_libanyp.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \

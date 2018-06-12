@@ -11,6 +11,7 @@
 #ifndef SQUID_NEIGHBORS_H_
 #define SQUID_NEIGHBORS_H_
 
+#include "anyp/forward.h"
 #include "enums.h"
 #include "ICP.h"
 #include "lookup_t.h"
@@ -20,7 +21,6 @@ class HttpRequest;
 class HttpRequestMethod;
 class CachePeer;
 class StoreEntry;
-class URL;
 
 CachePeer *getFirstPeer(void);
 CachePeer *getFirstUpParent(HttpRequest *);
@@ -54,7 +54,7 @@ void peerNoteDigestLookup(HttpRequest * request, CachePeer * p, lookup_t lookup)
 void peerNoteDigestGone(CachePeer * p);
 int neighborUp(const CachePeer * e);
 const char *neighborTypeStr(const CachePeer * e);
-peer_t neighborType(const CachePeer *, const URL &);
+peer_t neighborType(const CachePeer *, const AnyP::Uri &);
 void peerConnectFailed(CachePeer *);
 void peerConnectSucceded(CachePeer *);
 void dump_peer_options(StoreEntry *, CachePeer *);
