@@ -53,7 +53,6 @@
 #include "Store.h"
 #include "StrList.h"
 #include "tools.h"
-#include "URL.h"
 #include "wordlist.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -1264,7 +1263,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
 
             // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
             if (urlNote != NULL && strcmp(urlNote, http->uri)) {
-                URL tmpUrl;
+                AnyP::Uri tmpUrl;
                 if (tmpUrl.parse(old_request->method, urlNote)) {
                     HttpRequest *new_request = old_request->clone();
                     new_request->url = tmpUrl;

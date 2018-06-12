@@ -23,7 +23,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"
-#include "URL.h"
 #include "urn.h"
 
 #define URN_REQBUF_SZ   4096
@@ -145,7 +144,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
     }
 
     SBuf uri = r->url.path();
-    // TODO: use class URL instead of generating a string and re-parsing
+    // TODO: use class AnyP::Uri instead of generating a string and re-parsing
     LOCAL_ARRAY(char, local_urlres, 4096);
     char *host = getHost(uri);
     snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:" SQUIDSBUFPH, host, SQUIDSBUFPRINT(uri));

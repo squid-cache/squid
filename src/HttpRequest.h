@@ -9,6 +9,7 @@
 #ifndef SQUID_HTTPREQUEST_H
 #define SQUID_HTTPREQUEST_H
 
+#include "anyp/Uri.h"
 #include "base/CbcPointer.h"
 #include "dns/forward.h"
 #include "err_type.h"
@@ -18,7 +19,6 @@
 #include "MasterXaction.h"
 #include "Notes.h"
 #include "RequestFlags.h"
-#include "URL.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -100,7 +100,7 @@ protected:
 
 public:
     HttpRequestMethod method;
-    URL url; ///< the request URI
+    AnyP::Uri url; ///< the request URI
 
 private:
 #if USE_ADAPTATION

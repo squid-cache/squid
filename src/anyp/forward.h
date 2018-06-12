@@ -17,6 +17,7 @@ namespace AnyP
 class PortCfg;
 typedef RefCount<PortCfg> PortCfgPointer;
 
+class Uri;
 class UriScheme;
 
 } // namespace AnyP

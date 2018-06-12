@@ -17,6 +17,7 @@
 
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
+#include "anyp/Uri.h"
 #include "fatal.h"
 #include "fd.h"
 #include "fde.h"
@@ -31,7 +32,6 @@
 #include "ssl/ErrorDetail.h"
 #include "ssl/gadgets.h"
 #include "ssl/support.h"
-#include "URL.h"
 
 #include <cerrno>
 
