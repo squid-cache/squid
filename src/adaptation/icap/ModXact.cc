@@ -30,7 +30,6 @@
 #include "HttpReply.h"
 #include "MasterXaction.h"
 #include "SquidTime.h"
-#include "URL.h"
 
 // flow and terminology:
 //     HTTP| --> receive --> encode --> write --> |network

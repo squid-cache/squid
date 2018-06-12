@@ -35,7 +35,6 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
-#include "URL.h"
 #include "wordlist.h"
 #if USE_OPENSSL
 #include "ssl/ServerBump.h"
