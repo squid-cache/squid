@@ -87,7 +87,7 @@ public:
     /// the static '/' default URL-path
     static const SBuf &SlashPath();
 
-    /// the static '*' pseudo-Uri
+    /// the static '*' pseudo-URI
     static const SBuf &Asterisk();
 
     /**
@@ -125,14 +125,14 @@ private:
      * is to have one prototype URL with no host etc for each scheme,
      * another is to have an explicit scheme class, and then each URL class
      * could be a subclass of the scheme. Another way is one instance of
-     * a AnyP::UriScheme class instance for each URL scheme we support, and one URL
+     * a AnyP::UriScheme class instance for each URL scheme we support, and one
      * class for each manner of treating the scheme : a Hierarchical URL, a
      * non-hierarchical URL etc.
      \par
      * Deferring the decision, its a type code for now. RBC 20060507.
      \par
-     * In order to make taking any of these routes easy, scheme is private
-     * and immutable, only settable at construction time,
+     * In order to make taking any of these routes easy, scheme is private,
+     * only settable at construction time, or with explicit setter
      */
     AnyP::UriScheme scheme_;
 
@@ -147,7 +147,7 @@ private:
     unsigned short port_;   ///< URL port
 
     // XXX: for now includes query-string.
-    SBuf path_;     ///< Uri path segment
+    SBuf path_;     ///< URI path segment
 
     // pre-assembled URI forms
     mutable SBuf authorityHttp_;     ///< RFC 7230 section 5.3.3 authority, maybe without default-port
