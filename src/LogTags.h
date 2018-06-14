@@ -82,7 +82,7 @@ public: // XXX: only until client_db.cc stats are redesigned.
 
     /// a set of client protocol, cache use, and other transaction outcome tags
     LogTags_ot oldType = LOG_TAG_NONE;
-    /// controls COLLAPSED tag presence
+    /// controls CF tag presence
     CollapsingHistory collapsingHistory;
 };
 

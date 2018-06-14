@@ -70,7 +70,7 @@ LogTags::c_str() const
         pos += snprintf(buf, sizeof(buf), "NONE");
 
     if (collapsingHistory.collapsed())
-        pos += snprintf(buf + pos, sizeof(buf) - pos, "_COLLAPSED");
+        pos += snprintf(buf + pos, sizeof(buf) - pos, "_CF");
 
     const char *tag = Str_[oldType] + protoLen;
     pos += snprintf(buf + pos, sizeof(buf) - pos, "%s", tag);
