@@ -1282,7 +1282,6 @@ ErrorState::BuildContent()
         }
     } while(!result /*&& !(useDefaultTemplate)*/);
 
-
 #if USE_ERR_LOCALES
     if (localeTmpl)
         delete localeTmpl;
@@ -1399,10 +1398,11 @@ ErrTextValidator::validate(const char *text)
         case doThrow:
             throw TexcHere(ToSBuf(name_, ": ", ex.what()));
             break;
-        case default:
+        default:
             break;
         }
         return false;
     }
     return true;
 }
+

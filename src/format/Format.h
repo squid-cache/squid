@@ -60,7 +60,6 @@ public:
     /// \return true on success, false otherwise
     static int AssembleToken(const char *token, MemBuf &mb, const AccessLogEntryPointer &al);
 
-
     char *name;
     Token *format;
     Format *next;

@@ -2173,7 +2173,7 @@ ClientHttpRequest::calloutsError(const err_type error, const int errDetail)
                                 c != NULL ? c->clientConnection->remote : noAddr,
                                 request,
                                 al
-                                );
+                                                );
 #if USE_AUTH
         calloutContext->error->auth_user_request =
             c != NULL && c->getAuth() != NULL ? c->getAuth() : request->auth_user_request;
