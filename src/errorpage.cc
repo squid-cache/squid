@@ -1386,18 +1386,22 @@ ErrTextValidator::validate(const char *text)
     try {
         anErr.convertAndWriteTo(text, content, (ctx == CtxConfig), true);
     } catch (const std::exception &ex) {
-        if (warn_ >= 0) {
-            if (ctx == CtxConfig)
-                debugs(4, warn_, name_ << ": " <<  ctxFilename << " line " << ctxLineNo_ << ": " << ctxLine_);
-            else if (ctx == CtxFile)
-                debugs(4, warn_, name_ << "Error while parsing file " <<  ctxFilename);
-        }
-        if (fatal_)
+        if (ctx == CtxConfig)
+            debugs(4, warn_, name_ << ": " <<  ctxFilename << " line " << ctxLineNo_ << ": " << ctxLine_);
+        else if (ctx == CtxFile)
+            debugs(4, warn_, name_ << ": Error while parsing file " <<  ctxFilename);
+        debugs(4, warn_, name_ << ": " <<  ex.what());
+
+        switch(onError_) {
+        case doQuit:
             fatalf("Fatal: %s:'%s'", name_.c_str(), ex.what());
-        else if (throw_)
+            break;
+        case doThrow:
             throw TexcHere(ToSBuf(name_, ": ", ex.what()));
-        else if (warn_ >= 0)
-            debugs(4, warn_, name_ << ": " <<  ex.what());
+            break;
+        case default:
+            break;
+        }
         return false;
     }
     return true;

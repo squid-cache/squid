@@ -114,7 +114,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
 
     if (ErrorState::IsDenyInfoUrl(t)) {
         // throws on error
-        (void)ErrTextValidator("aclParseDenyInfoLine").useCfgContext(cfg_filename, config_lineno, config_input_line).warn(DBG_CRITICAL).throws(/*!reconfiguring*/).validate(t);
+        (void)ErrTextValidator("aclParseDenyInfoLine").useCfgContext(cfg_filename, config_lineno, config_input_line).warn(DBG_CRITICAL).throws().validate(t);
         // if (!validated) return;//eg when reconfiguring
     }
 

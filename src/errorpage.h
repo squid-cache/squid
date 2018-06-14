@@ -330,33 +330,57 @@ protected:
     SBuf lastTemplateFile; ///< The last used path
 };
 
+/// Checks error pages text for syntax errors
 class ErrTextValidator {
 public:
     ErrTextValidator() {}
     ErrTextValidator(const char *aName) : name_(aName) {}
 
+    /// Setup the current object to handle the checked text as a configuration
+    /// file error page formatted string like those can be found in deny_info
+    /// configuration parameter.
+    /// \par filename the configuration file path
+    /// \par lineNo the number of parsed line
+    /// \par line the configuration file line
+    /// The parameters used to describe the error to the caller
     ErrTextValidator &useCfgContext(const char *filename, int lineNo, const char *line);
 
+    /// Setup the current object to handle checked text as a template error
+    /// page.
     ErrTextValidator &useFileContext(const char *templateFilename);
 
+    /// The debug level to use for debug messages
     ErrTextValidator &warn(int level) { warn_ = level; return *this; }
 
-    ErrTextValidator &fatal(bool abort = true) { fatal_ = abort; return *this; }
+    /// Treat the parse errors as fatal
+    ErrTextValidator &fatal() { onError_ = doQuit; return *this; }
 
-    ErrTextValidator &throws(bool doThrow = true) { throw_ = doThrow; return *this; }
+    /// Throw on parse errors
+    ErrTextValidator &throws() { onError_ = doThrow; return *this; }
 
+    /// Validate the passed text
     bool validate(const char *text);
 
+    /// \return true if the object initialized and can be used to validate text
     bool initialised() { return name_.length() != 0;}
 private:
     enum Context {CtxUnknown, CtxFile, CtxConfig};
-    Context ctx = CtxUnknown;
+    enum OnError {doReturn, doQuit, doThrow};
+
+    Context ctx = CtxUnknown; ///< The current context type
+
+    /// A name for validator to be used for debugging. It can be the caller
+    /// function name or caller class name.
     SBuf name_;
-    bool fatal_ = false;
-    bool throw_ = false;
-    int warn_ = -1;
-    SBuf ctxFilename;
+
+    OnError onError_ = doReturn; ///< Action when error detected
+    int warn_ = 3; ///< The debug level to use for error messages
+    SBuf ctxFilename; ///< The configuration file or the error page template
+
+    /// The current configuration file line number on CtxConfig context.
     int ctxLineNo_ = 0;
+
+    /// The current configuration file line on CtxConfig context.
     SBuf ctxLine_;
 };
 
