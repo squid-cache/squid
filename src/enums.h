@@ -101,6 +101,9 @@ enum {
     /// ENTRY_DELAY_WHILE_WOBBLING to emphasize the difference from and
     /// similarity with DELAY_SENDING.
     ENTRY_FWD_HDR_WAIT,
+    /// Whether the entry serves collapsed hits now.
+    /// Meaningful only for public entries.
+    ENTRY_REQUIRES_COLLAPSING,
     ENTRY_NEGCACHED,
     ENTRY_VALIDATED,
     ENTRY_BAD_LENGTH,
