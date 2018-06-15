@@ -3832,6 +3832,16 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
         }
     }
 
+    if (s->secure.encryptTransport) {
+        // protocol requires TLS, that means cert= is a required parameter
+        if (s->secure.certs.empty()) {
+            debugs(3, DBG_CRITICAL, "FATAL: " << AnyP::UriScheme(s->transport.protocol) << "_port requires a cert= parameter");
+            self_destruct();
+            return;
+        }
+    }
+
+    // *_port line should now be fully valid so we can clone it if necessary
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.isAnyAddr()) {
         // clone the port options from *s to *(s->next)
         s->next = s->clone();
