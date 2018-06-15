@@ -3,13 +3,14 @@
 use strict;
 use Pod::Usage;
 use Getopt::Long;
+use File::Basename;
+use Date::Format;
 
 =pod
 
 =head1 NAME
 
  ext_kerberos_sid_group_acl - external ACL helper for Squid to verify AD Domain group membership using sid.
-
 
 =head1 SYNOPSIS
 
@@ -52,21 +53,21 @@ Base DN for ldap search
 
 =item B<-G AD group name>
 
-AD group name to be used for SID lookup. List seperated by :
+AD group name to be used for SID lookup. List separated by a colon (:)
 
 =back
 
 =head1 CONFIGURATION
 
   auth_param negotiate program /path/to/negotiate_wrapper_auth -d --ntlm /path/to/ntlm_auth --helper-protocol=squid-2.5-ntlmssp --domain example.com --kerberos /path/to/negotiate_kerberos_auth -d -s GSS_C_NO_NAME -k /path/to/squid.keytab -t none
-  external_acl_type sid_check ipv4 %LOGIN %note{group} /path/to/kerberos_sid_group_acl -p principal -D dc1.example.com -b "DC=example,DC=com" -G Group1:Group2
+  external_acl_type sid_check %LOGIN %note{group} /path/to/kerberos_sid_group_acl -p principal -D dc1.example.com -b "DC=example,DC=com" -G Group1:Group2
   acl squid_allow external sid_check
   acl allowed_group external sid_check 
   http_access allow allowed_group
 
 If the local perl interpreter is in a unusual location it may need to be added:
 
-  external_acl_type sid_check ipv4 %LOGIN %note{group} /path/to/perl /path/to/kerberos_sid_group_acl -p principal -D dc1.example.com -b "DC=example,DC=com" -G Group1:Group2
+  external_acl_type sid_check %LOGIN %note{group} /path/to/perl /path/to/kerberos_sid_group_acl -p principal -D dc1.example.com -b "DC=example,DC=com" -G Group1:Group2
 
 =head1 AUTHOR
 
@@ -104,6 +105,8 @@ Report ideas for new improvements to the I<Squid Developers mailing list <squid-
 
 =head1 SEE ALSO
 
+negotiate_kerberos_auth(8)
+
 The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
 
 The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
@@ -117,8 +120,6 @@ The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
 #
 # Globals
 #
-use File::Basename;
-use Date::Format;
 use vars qw/ %opt /;
 
 my $name = basename($0);
@@ -167,11 +168,11 @@ sub init()
 	my $errmsg;
 	my $opt_string = 'hdD:p:b:G:';
 	getopts( "$opt_string", \%opt ) or usage();
-	usage() if $opt{h};
-	usage() if not defined $opt{D};
-	usage() if not defined $opt{b};
-	usage() if not defined $opt{p};
-	usage() if not defined $opt{G};
+	Pod::Usage::pod2usage(1) if $opt{h};
+	Pod::Usage::pod2usage(1) if not defined $opt{D};
+	Pod::Usage::pod2usage(1) if not defined $opt{b};
+	Pod::Usage::pod2usage(1) if not defined $opt{p};
+	Pod::Usage::pod2usage(1) if not defined $opt{G};
 
 	$ENV{'KRB5CCNAME'} = $ccname;
 
@@ -209,24 +210,8 @@ sub init()
 	exit 99 if ! @ADgroupSIDs;
 }
 
-#
-# Message about this program and how to use it
-#
-sub usage()
-{
-        print "Usage: kerberos_sid_group_acl -dh\n";
-        print "\t-d enable debugging\n";
-        print "\t-h print the help\n";
-        print "\t-p principal name (required)\n";
-        print "\t-D domain controller (required)\n";
-        print "\t-b base dn (required)\n";
-        print "\t-G list of AD group names (seperated by : ) (required)\n";
-        exit;
-}
-
 init();
 &debug("INFO: Debugging mode ON.");
-
 
 #
 # Main loop
@@ -250,3 +235,4 @@ while (<STDIN>) {
         	print "ERR\n";
 	}
 }
+
