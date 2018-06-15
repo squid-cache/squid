@@ -41,8 +41,8 @@ public:
     /// return a local, previously collapsed entry
     StoreEntry *findCollapsed(const sfileno xitIndex);
 
-    /// prevents future collapsing hits for e
-    void stopCollapsing(const StoreEntry &e);
+    /// removes collapsing requirement (for future hits)
+    void clearCollapsingRequirement(const StoreEntry &e);
 
     /// start listening for remote DELETE requests targeting either a complete
     /// StoreEntry (ioReading) or a being-formed miss StoreEntry (ioWriting)

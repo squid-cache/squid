@@ -612,10 +612,10 @@ Store::Controller::transientsDisconnect(StoreEntry &e)
 }
 
 void
-Store::Controller::transientsStopCollapsing(StoreEntry &e)
+Store::Controller::transientsClearCollapsingRequirement(StoreEntry &e)
 {
     if (transients)
-        transients->stopCollapsing(e);
+        transients->clearCollapsingRequirement(e);
 }
 
 void
@@ -690,14 +690,15 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
                                    const HttpRequestMethod &reqMethod)
 {
     const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
-    // adjust entry flags in order to use them while creating Transients entry
-    e->enableCollapsing();
+    // set the flag now so that it gets copied into the Transients entry
+    e->setCollapsingRequirement(true);
     if (e->makePublic(keyScope)) { // this is needed for both local and SMP collapsing
         debugs(20, 3, "may " << (transients && e->hasTransients() ?
                                  "SMP-" : "locally-") << "collapse " << *e);
         return true;
     }
-    e->disableCollapsing();
+    // paranoid cleanup; the flag is meaningless for private entries
+    e->setCollapsingRequirement(false);
     return false;
 }
 
@@ -750,8 +751,10 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
     Transients::EntryStatus entryStatus;
     transients->status(*collapsed, entryStatus);
 
-    if (!entryStatus.collapsed)
-        collapsed->disableCollapsing();
+    if (!entryStatus.collapsed) {
+        debugs(20, 5, "removing collapsing requirement for " << *collapsed << " since remote writer probably got headers");
+        collapsed->setCollapsingRequirement(false);
+    }
 
     if (entryStatus.waitingToBeFreed) {
         debugs(20, 3, "will release " << *collapsed << " due to waitingToBeFreed");
@@ -769,7 +772,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         return;
     }
 
-    if (entryStatus.collapsed && !collapsed->collapsingEnabled()) {
+    if (entryStatus.collapsed && !collapsed->hittingRequiresCollapsing()) {
         debugs(20, 3, "aborting " << *collapsed << " due to writer/reader collapsing state mismatch");
         collapsed->abort();
         return;

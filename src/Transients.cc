@@ -166,10 +166,8 @@ Transients::get(const cache_key *key)
     e->mem_obj->xitTable.index = index;
     e->mem_obj->xitTable.io = Store::ioReading;
     anchor->exportInto(*e);
-    if (EBIT_TEST(anchor->basics.flags, ENTRY_REQUIRES_COLLAPSING))
-        e->enableCollapsing();
-    else
-        e->disableCollapsing();
+    const bool collapsingRequired = EBIT_TEST(anchor->basics.flags, ENTRY_REQUIRES_COLLAPSING);
+    e->setCollapsingRequirement(collapsingRequired);
     // keep read lock to receive updates from others
     return e;
 }
@@ -191,7 +189,7 @@ Transients::findCollapsed(const sfileno index)
 }
 
 void
-Transients::stopCollapsing(const StoreEntry &e)
+Transients::clearCollapsingRequirement(const StoreEntry &e)
 {
     assert(map);
     assert(e.hasTransients());

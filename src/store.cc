@@ -1823,9 +1823,9 @@ StoreEntry::startWriting()
 
     // The entry headers are written, new clients
     // should not collapse anymore.
-    if (collapsingEnabled()) {
-        disableCollapsing();
-        Store::Root().transientsStopCollapsing(*this);
+    if (hittingRequiresCollapsing()) {
+        setCollapsingRequirement(false);
+        Store::Root().transientsClearCollapsingRequirement(*this);
     }
 }
 
@@ -2078,25 +2078,16 @@ StoreEntry::describeTimestamps() const
 bool
 StoreEntry::hittingRequiresCollapsing() const
 {
-    return publicKey() && collapsingEnabled();
-}
-
-void
-StoreEntry::enableCollapsing()
-{
-    EBIT_SET(flags, ENTRY_REQUIRES_COLLAPSING);
-}
-
-bool
-StoreEntry::collapsingEnabled() const
-{
     return EBIT_TEST(flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 void
-StoreEntry::disableCollapsing()
+StoreEntry::setCollapsingRequirement(const bool required)
 {
-    EBIT_CLR(flags, ENTRY_REQUIRES_COLLAPSING);
+    if (required)
+        EBIT_SET(flags, ENTRY_REQUIRES_COLLAPSING);
+    else
+        EBIT_CLR(flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 static std::ostream &
