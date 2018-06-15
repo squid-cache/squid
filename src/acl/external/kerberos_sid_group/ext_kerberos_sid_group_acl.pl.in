@@ -223,16 +223,16 @@ while (<STDIN>) {
         if ( defined $user && defined $groupSIDs ) {
 		&debug("DEBUG: user=$user");
 		&debug("DEBUG: groups=$groupSIDs");
-        	# test for each group squid send in it's request
-        	foreach my $group (split(/,/,$groupSIDs)) {
-                	$ans = &check($group);
-                	last if $ans eq "OK";
-        	}
-        	&debug("DEBUG: Sending $ans to squid");
-        	print "$ans\n";
+		# test for each group squid send in it's request
+		foreach my $group (split(/,/,$groupSIDs)) {
+			$ans = &check($group);
+			last if $ans eq "OK";
+		}
+		&debug("DEBUG: Sending $ans to squid");
+		print "$ans\n";
         } else {
-        	&debug("DEBUG: Sending ERR to squid");
-        	print "ERR\n";
+		&debug("DEBUG: Sending ERR to squid");
+		print "ERR\n";
 	}
 }
 
