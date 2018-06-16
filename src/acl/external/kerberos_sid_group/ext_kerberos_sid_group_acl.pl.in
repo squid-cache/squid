@@ -59,7 +59,9 @@ AD group name to be used for SID lookup. List separated by a colon (:)
 
 =head1 CONFIGURATION
 
-  auth_param negotiate program /path/to/negotiate_wrapper_auth -d --ntlm /path/to/ntlm_auth --helper-protocol=squid-2.5-ntlmssp --domain example.com --kerberos /path/to/negotiate_kerberos_auth -d -s GSS_C_NO_NAME -k /path/to/squid.keytab -t none
+  auth_param negotiate program /path/to/negotiate_wrapper_auth -d 
+       --ntlm /path/to/ntlm_auth --helper-protocol=squid-2.5-ntlmssp --domain example.com
+       --kerberos /path/to/negotiate_kerberos_auth -d -s GSS_C_NO_NAME -k /path/to/squid.keytab -t none
   external_acl_type sid_check %LOGIN %note{group} /path/to/kerberos_sid_group_acl -p principal -D dc1.example.com -b "DC=example,DC=com" -G Group1:Group2
   acl squid_allow external sid_check
   acl allowed_group external sid_check
@@ -90,18 +92,18 @@ This manual was written by Markus Moeller <markus_moeller@compuserve.com>
 
 =head1 QUESTIONS
 
-Questions on the usage of this program can be sent to the I<Squid Users mailing list <    squid-users@lists.squid-cache.org>>
+Questions on the usage of this program can be sent to the I<Squid Users mailing list <squid-users@lists.squid-cache.org>>
 
 =head1 REPORTING BUGS
 
 Bug reports need to be made in English.
-See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to     include with your bug report.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
 
 Report bugs or bug fixes using http://bugs.squid-cache.org/
 
 Report serious security bugs to I<Squid Bugs <squid-bugs@lists.squid-cache.org>>
 
-Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@li    sts.squid-cache.org>>
+Report ideas for new improvements to the I<Squid Developers mailing list <squid-dev@lists.squid-cache.org>>
 
 =head1 SEE ALSO
 
