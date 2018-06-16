@@ -2075,12 +2075,6 @@ StoreEntry::describeTimestamps() const
     return buf;
 }
 
-bool
-StoreEntry::hittingRequiresCollapsing() const
-{
-    return EBIT_TEST(flags, ENTRY_REQUIRES_COLLAPSING);
-}
-
 void
 StoreEntry::setCollapsingRequirement(const bool required)
 {
