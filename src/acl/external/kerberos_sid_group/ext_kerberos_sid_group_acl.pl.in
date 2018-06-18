@@ -59,8 +59,8 @@ AD group name to be used for SID lookup. List separated by a colon (:)
 
 =head1 CONFIGURATION
 
-  auth_param negotiate program /path/to/negotiate_wrapper_auth -d
-       --ntlm /path/to/ntlm_auth --helper-protocol=squid-2.5-ntlmssp --domain example.com
+  auth_param negotiate program /path/to/negotiate_wrapper_auth -d \
+       --ntlm /path/to/ntlm_auth --helper-protocol=squid-2.5-ntlmssp --domain example.com \
        --kerberos /path/to/negotiate_kerberos_auth -d -s GSS_C_NO_NAME -k /path/to/squid.keytab -t none
   external_acl_type sid_check %LOGIN %note{group} /path/to/kerberos_sid_group_acl -p principal -D dc1.example.com -b "DC=example,DC=com" -G Group1:Group2
   acl squid_allow external sid_check
