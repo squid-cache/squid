@@ -151,7 +151,6 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     uri(NULL),
     log_uri(NULL),
     req_sz(0),
-    logType(LOG_TAG_NONE),
     calloutContext(NULL),
     maxReplyBodySize_(0),
     entry_(NULL),
@@ -777,7 +776,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
          */
         page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_AUTH_REQUIRED);
 
-        http->logType = LOG_TCP_DENIED;
+        http->logType.update(LOG_TCP_DENIED);
 
         if (auth_challenge) {
 #if USE_AUTH
@@ -1533,7 +1532,8 @@ void
 ClientHttpRequest::httpStart()
 {
     PROF_start(httpStart);
-    logType = LOG_TAG_NONE;
+    // XXX: Re-initializes rather than updates. Should not be needed at all.
+    logType.update(LOG_TAG_NONE);
     debugs(85, 4, logType.c_str() << " for '" << uri << "'");
 
     /* no one should have touched this */

@@ -62,17 +62,32 @@ StoreClient::onCollapsingPath() const
 }
 
 bool
-StoreClient::mayCollapseOn(const StoreEntry &e) const
+StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation)
 {
-    assert(e.collapsingInitiator()); // our result is not meaningful for regular hits
-    return onCollapsingPath();
+    if (!e.hittingRequiresCollapsing())
+        return false; // collapsing is impossible due to the entry state
+
+    if (!onCollapsingPath())
+        return false; // collapsing is impossible due to Squid configuration
+
+    /* collapsing is possible; the caller must collapse */
+
+    if (const auto tags = loggingTags()) {
+        if (doingRevalidation)
+            tags->collapsingHistory.revalidationCollapses++;
+        else
+            tags->collapsingHistory.otherCollapses++;
+    }
+
+    debugs(85, 5, e << " doingRevalidation=" << doingRevalidation);
+    return true;
 }
 
 void
 StoreClient::fillChecklist(ACLFilledChecklist &checklist) const
 {
     // TODO: Consider moving all CF-related methods into a new dedicated class.
-    Must(!"mayCollapse() caller must override fillChecklist()");
+    Must(!"startCollapsingOn() caller must override fillChecklist()");
 }
 
 /* store_client */

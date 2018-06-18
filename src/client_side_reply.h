@@ -74,7 +74,10 @@ public:
 
     /* state variable - replace with class to handle storeentries at some point */
     int lookingforstore;
+
+    /* StoreClient API */
     virtual void created (StoreEntry *newEntry);
+    virtual LogTags *loggingTags();
 
     ClientHttpRequest *http;
     int headers_sz;
