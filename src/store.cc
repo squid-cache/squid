@@ -452,7 +452,6 @@ StoreEntry::releaseRequest(const bool shareable)
         shareableWhenPrivate = false; // may already be false
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
-
     setPrivateKey(shareable, true);
 }
 
@@ -1818,7 +1817,6 @@ StoreEntry::startWriting()
     /* TODO: when we store headers separately remove the header portion */
     /* TODO: mark the length of the headers ? */
     /* We ONLY want the headers */
-
     assert (isEmpty());
     assert(mem_obj);
 
@@ -1831,6 +1829,13 @@ StoreEntry::startWriting()
 
     rep->body.packInto(this);
     flush();
+
+    // The entry headers are written, new clients
+    // should not collapse anymore.
+    if (hittingRequiresCollapsing()) {
+        setCollapsingRequirement(false);
+        Store::Root().transientsClearCollapsingRequirement(*this);
+    }
 }
 
 char const *
@@ -2079,13 +2084,13 @@ StoreEntry::describeTimestamps() const
     return buf;
 }
 
-bool
-StoreEntry::collapsingInitiator() const
+void
+StoreEntry::setCollapsingRequirement(const bool required)
 {
-    if (!publicKey())
-        return false;
-    return EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT) ||
-           (hasTransients() && !hasMemStore() && !hasDisk());
+    if (required)
+        EBIT_SET(flags, ENTRY_REQUIRES_COLLAPSING);
+    else
+        EBIT_CLR(flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 static std::ostream &

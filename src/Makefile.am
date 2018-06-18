@@ -256,6 +256,7 @@ squid_SOURCES = \
 	clientStreamForward.h \
 	CollapsedForwarding.cc \
 	CollapsedForwarding.h \
+	CollapsingHistory.h \
 	CommandLine.cc \
 	CommandLine.h \
 	CompletionDispatcher.cc \
@@ -1467,6 +1468,7 @@ tests_testDiskIO_SOURCES = \
 	HttpReply.cc \
 	int.h \
 	int.cc \
+	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
@@ -2935,6 +2937,7 @@ tests_testUfs_SOURCES = \
 	HttpReply.cc \
 	int.h \
 	int.cc \
+	LogTags.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
 	Transients.cc \
@@ -3119,6 +3122,7 @@ tests_testRock_SOURCES = \
 	HttpReply.cc \
 	int.h \
 	int.cc \
+	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
 	MemBuf.cc \
