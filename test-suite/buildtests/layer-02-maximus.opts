@@ -112,6 +112,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-build-info=squid\ test\ build \
 	--enable-ssl-crtd \
 	--with-openssl \
+	--with-tdb \
 	"
 
 # Fix the distclean testing.
