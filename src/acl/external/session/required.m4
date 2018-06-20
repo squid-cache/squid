@@ -24,7 +24,7 @@ AH_TEMPLATE(USE_TRIVIALDB,[Samba TrivialDB support is available])
 if test "x$with_tdb" != "xno"; then
   SQUID_STATE_SAVE(squid_libtdb_state)
   LIBS="$LIBS $LIBTDB_PATH"
-  PKG_CHECK_MODULES([LIBTDB],[tdb],[CPPFLAGS="$CPPFLAGS $LIBTDB_CFLAGS"],[])
+  PKG_CHECK_MODULES([LIBTDB],[tdb],[CPPFLAGS="$CPPFLAGS $LIBTDB_CFLAGS"],[:])
   AC_CHECK_HEADERS([sys/stat.h tdb.h],,,[
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -35,7 +35,7 @@ if test "x$with_tdb" != "xno"; then
   if test "x$with_tdb" = "xyes" -a "x$LIBTDB_LIBS" = "x"; then
     AC_MSG_ERROR([Required TrivialDB library not found])
   fi
-  if test "x$LIBGNUTLS_LIBS" != "x" ; then
+  if test "x$LIBTDB_LIBS" != "x" ; then
     CXXFLAGS="$LIBTDB_CFLAGS $CXXFLAGS"
     LIBTDB_LIBS="$LIBTDB_PATH $LIBTDB_LIBS"
     AC_DEFINE_UNQUOTED(USE_TRIVIALDB, HAVE_TDB_H, [Samba TrivialDB support is available])
