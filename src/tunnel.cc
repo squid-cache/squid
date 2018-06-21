@@ -93,13 +93,6 @@ public:
         return (server.conn != NULL && server.conn->getPeer() ? server.conn->getPeer()->host : request->url.host());
     };
 
-    /// Whether we are writing a CONNECT request to a peer.
-    bool waitingForConnectRequest() const { return connectReqWriting; }
-    /// Whether we are reading a CONNECT response from a peer.
-    bool waitingForConnectResponse() const { return connectRespBuf; }
-    /// Whether we are waiting for the CONNECT request/response exchange with the peer.
-    bool waitingForConnectExchange() const { return waitingForConnectRequest() || waitingForConnectResponse(); }
-
     /// Whether the client sent a CONNECT request to us.
     bool clientExpectsConnectResponse() const {
         // If we are forcing a tunnel after receiving a client CONNECT, then we
@@ -168,11 +161,13 @@ public:
     Connection client, server;
     int *status_ptr;        ///< pointer for logging HTTP status
     LogTags *logTag_ptr;    ///< pointer for logging Squid processing code
-    MemBuf *connectRespBuf; ///< accumulates peer CONNECT response when we need it
-    bool connectReqWriting; ///< whether we are writing a CONNECT request to a peer
+
     SBuf preReadClientData;
     SBuf preReadServerData;
     time_t startTime; ///< object creation time, before any peer selection/connection attempts
+    /// Whether we are waiting for the CONNECT request/response exchange with the peer.
+    bool waitingForConnectExchange;
+
 
     void copyRead(Connection &from, IOCB *completion);
 
@@ -328,8 +323,6 @@ tunnelClientClosed(const CommCloseCbParams &params)
 }
 
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
-    connectRespBuf(NULL),
-    connectReqWriting(false),
     startTime(squid_curtime)
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
@@ -360,7 +353,6 @@ TunnelStateData::~TunnelStateData()
     assert(noConnections());
     xfree(url);
     serverDestinations.clear();
-    delete connectRespBuf;
     delete savedError;
 }
 
@@ -764,7 +756,7 @@ TunnelStateData::copyServerBytes()
 static void
 tunnelStartShoveling(TunnelStateData *tunnelState)
 {
-    assert(!tunnelState->waitingForConnectExchange());
+    assert(!tunnelState->waitingForConnectExchange);
     *tunnelState->status_ptr = Http::scOkay;
     if (tunnelState->logTag_ptr)
         tunnelState->logTag_ptr->update(LOG_TCP_TUNNEL);
@@ -824,6 +816,8 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 
     if (answer.peerResponseStatus != Http::scNone)
         *status_ptr = answer.peerResponseStatus;
+
+    waitingForConnectExchange = false;
 
     if (answer.positive()) {
         // copy any post-200 OK bytes to our buffer
@@ -1054,7 +1048,7 @@ TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
         return;
     }
 
-    assert(!waitingForConnectExchange());
+    assert(!waitingForConnectExchange);
     // XXX: make waitingForConnectExchange a boolean; set it after Start() below
 
     AsyncCall::Pointer callback = asyncCall(5,4,
@@ -1067,6 +1061,7 @@ TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
     tunneler->url = url;
     tunneler->lifetimeLimit = Config.Timeout.lifetime;
     AsyncJob::Start(tunneler);
+    waitingForConnectExchange = true;
     // and wait for the tunnelEstablishmentDone() call
 }
 
