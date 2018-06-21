@@ -150,7 +150,7 @@ dataSize(DB_ENTRY *data)
 }
 
 static bool
-fetchKey(const DB_ENTRY &key, DB_ENTRY *data)
+fetchKey(/*const*/ DB_ENTRY &key, DB_ENTRY *data)
 {
 #if USE_BERKLEYDB
     return (db->get(db, nullptr, &key, data, 0) == 0);
@@ -162,7 +162,7 @@ fetchKey(const DB_ENTRY &key, DB_ENTRY *data)
 }
 
 static void
-deleteEntry(const DB_ENTRY &key)
+deleteEntry(/*const*/ DB_ENTRY &key)
 {
 #if USE_BERKLEYDB
     db->del(db, nullptr, &key, 0);
