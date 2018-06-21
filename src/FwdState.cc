@@ -742,7 +742,7 @@ FwdState::handleUnregisteredServerEnd()
 void
 FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno)
 {
-    calls.connector = nullptr; // TODO: Remove calls.connector?
+    calls.connector = nullptr;
 
     if (status != Comm::OK) {
         ErrorState *const anErr = makeConnectingError(ERR_CONNECT_FAIL);
