@@ -149,6 +149,9 @@ private:
     /// whether we have used up all permitted forwarding attempts
     bool exhaustedTries() const;
 
+    /// \returns the time left for this connection to become connected or 1 second if it is less than one second left
+    time_t connectingTimeout(const Comm::ConnectionPointer &conn) const;
+
 public:
     StoreEntry *entry;
     HttpRequest *request;

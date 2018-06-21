@@ -795,9 +795,7 @@ FwdState::establishTunnelThruProxy()
     tunneler->al = al;
     tunneler->request = request;
     tunneler->url = request->url.authority();
-    // TODO: Refactor to avoid code duplication.
-    const auto connTimeout = serverDestinations[0]->connectTimeout(start_t);
-    tunneler->lifetimeLimit = positiveTimeout(connTimeout);
+    tunneler->lifetimeLimit = connectingTimeout(serverDestinations[0]);
     AsyncJob::Start(tunneler);
     // and wait for the tunnelEstablishmentDone() call
 }
@@ -868,9 +866,7 @@ FwdState::secureConnectionToPeerIfNeeded()
         AsyncCall::Pointer callback = asyncCall(17,4,
                                                 "FwdState::ConnectedToPeer",
                                                 FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
-        // Use positive timeout when less than one second is left.
-        const time_t connTimeout = serverDestinations[0]->connectTimeout(start_t);
-        const time_t sslNegotiationTimeout = positiveTimeout(connTimeout);
+        const time_t sslNegotiationTimeout = connectingTimeout(serverDestinations[0]);
         Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
         if (request->flags.sslPeek)
@@ -1058,7 +1054,7 @@ FwdState::connectStart()
     GetMarkingsToServer(request, *serverDestinations[0]);
 
     calls.connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-    const time_t connTimeout = serverDestinations[0]->connectTimeout(start_t);
+    const time_t connTimeout = connectingTimeout(serverDestinations[0]);
     Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], calls.connector, connTimeout);
     if (host)
         cs->setHost(host);
@@ -1441,6 +1437,13 @@ FwdState::pinnedCanRetry() const
     // The other pinned cases are FTP proxying and connection-based HTTP
     // authentication. TODO: Do these cases have restrictions?
     return true;
+}
+
+time_t
+FwdState::connectingTimeout(const Comm::ConnectionPointer &conn) const
+{
+    const auto connTimeout = conn->connectTimeout(start_t);
+    return positiveTimeout(connTimeout);
 }
 
 /**** PRIVATE NON-MEMBER FUNCTIONS ********************************************/
