@@ -22,17 +22,15 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 namespace Http
 {
 
-// TODO: Reformat description using Doxygen.
-
-// Establishes an HTTP CONNECT tunnel through another proxy.
-//
-// The caller receives a call back with Http::TunnelerAnswer.
-//
-// The caller must monitor the connection for closure because this job will not
-// inform the caller about such events.
-//
-// This job never closes the connection, even on errors. If a 3rd-party closes
-// the connection, this job simply quits without informing the caller.
+/// Establishes an HTTP CONNECT tunnel through another proxy.
+///
+/// The caller receives a call back with Http::TunnelerAnswer.
+///
+/// The caller must monitor the connection for closure because this job will not
+/// inform the caller about such events.
+///
+/// This job never closes the connection, even on errors. If a 3rd-party closes
+/// the connection, this job simply quits without informing the caller.
 class Tunneler: virtual public AsyncJob
 {
     CBDATA_CLASS(Tunneler);
