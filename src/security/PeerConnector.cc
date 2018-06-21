@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "comm/Loops.h"
+#include "comm/Read.h"
 #include "Downloader.h"
 #include "errorpage.h"
 #include "fde.h"
@@ -139,20 +140,6 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 #endif
 
     return true;
-}
-
-void
-Security::PeerConnector::setReadTimeout()
-{
-    int timeToRead;
-    if (negotiationTimeout) {
-        const int timeUsed = squid_curtime - startTime;
-        const int timeLeft = max(0, static_cast<int>(negotiationTimeout - timeUsed));
-        timeToRead = min(static_cast<int>(::Config.Timeout.read), timeLeft);
-    } else
-        timeToRead = ::Config.Timeout.read;
-    AsyncCall::Pointer nil;
-    commSetConnTimeout(serverConnection(), timeToRead, nil);
 }
 
 void
@@ -482,7 +469,11 @@ Security::PeerConnector::noteWantRead()
         }
     }
 #endif
-    setReadTimeout();
+
+    // read timeout to avoid getting stuck while reading from a silent server
+    AsyncCall::Pointer nil;
+    Comm::SetClientObjectReadTimeout(serverConnection(), startTime, negotiationTimeout, nil);
+
     Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, new Pointer(this), 0);
 }
 

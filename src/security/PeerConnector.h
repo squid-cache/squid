@@ -101,10 +101,6 @@ protected:
     /// handler to monitor the socket.
     bool prepareSocket();
 
-    /// Sets the read timeout to avoid getting stuck while reading from a
-    /// silent server
-    void setReadTimeout();
-
     /// \returns true on successful TLS session initialization
     virtual bool initialize(Security::SessionPointer &);
 

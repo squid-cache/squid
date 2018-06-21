@@ -19,6 +19,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "sbuf/SBuf.h"
+#include "SquidConfig.h"
 #include "StatCounters.h"
 
 // Does comm check this fd for read readiness?
@@ -241,3 +242,16 @@ Comm::ReadCancel(int fd, AsyncCall::Pointer &callback)
     Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
+void
+Comm::SetClientObjectReadTimeout(const Comm::ConnectionPointer &conn, time_t startTime, time_t lifetimeLimit, AsyncCall::Pointer &callback)
+{
+    time_t timeToRead;
+    if (lifetimeLimit > 0) {
+        Must(squid_curtime >= startTime);
+        const time_t timeUsed = squid_curtime - startTime;        
+        const time_t timeLeft = (lifetimeLimit > timeUsed) ? (lifetimeLimit - timeUsed) : 0;
+        timeToRead = min(::Config.Timeout.read, timeLeft);
+    } else
+        timeToRead = ::Config.Timeout.read;
+    commSetConnTimeout(conn, timeToRead, callback);
+}

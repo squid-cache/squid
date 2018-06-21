@@ -96,23 +96,6 @@ Http::Tunneler::watchForClosures()
 }
 
 void
-Http::Tunneler::setReadTimeout()
-{
-    // TODO: polish to use time_t and extract to reduce duplication with similar code in PeerConnector
-    int timeToRead;
-    if (lifetimeLimit > 0) {
-        const int timeUsed = squid_curtime - startTime;
-        const int timeLeft = max(0, static_cast<int>(lifetimeLimit - timeUsed));
-        timeToRead = min(static_cast<int>(::Config.Timeout.read), timeLeft);
-    } else
-        timeToRead = ::Config.Timeout.read;
-    // TODO: Same as PeerConnector, but who removes this timeout after we send a
-    // positive answer? Should not we clean after ourselves in swanSong()?
-    AsyncCall::Pointer nil;
-    commSetConnTimeout(connection, timeToRead, nil);
-}
-
-void
 Http::Tunneler::handleException(const std::exception& e)
 {
     debugs(83, 2, e.what() << status());
@@ -243,7 +226,11 @@ Http::Tunneler::readMore()
     typedef CommCbMemFunT<Http::Tunneler, CommIoCbParams> Dialer;
     reader = JobCallback(93, 3, Dialer, this, Http::Tunneler::handleReadyRead);
     Comm::Read(connection, reader);
-    setReadTimeout();
+
+    // TODO: Same as PeerConnector, but who removes this timeout after we send a
+    // positive answer? Should not we clean after ourselves in swanSong()?
+    AsyncCall::Pointer nil;
+    Comm::SetClientObjectReadTimeout(connection, startTime, lifetimeLimit, nil);
 }
 
 /// Parses [possibly incomplete] CONNECT response and reacts to it.

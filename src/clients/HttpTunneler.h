@@ -70,7 +70,6 @@ protected:
 
     void handleConnectionClosure(const CommCloseCbParams&);
     void watchForClosures();
-    void setReadTimeout();
     void handleException(const std::exception&);
     void startReadingResponse();
     void writeRequest();
