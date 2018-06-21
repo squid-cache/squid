@@ -91,16 +91,17 @@ shutdown_db()
         }
 #endif
     }
+    xfree(db_path);
 }
 
 static void init_db(void)
 {
-#if USE_BERKLEYDB
     struct stat st_buf;
 
     if (db_path) {
         if (!stat(db_path, &st_buf)) {
             if (S_ISDIR (st_buf.st_mode)) {
+#if USE_BERKLEYDB
                 /* If directory then open database environment. This prevents sync problems
                     between different processes. Otherwise fallback to single file */
                 db_env_create(&db_env, 0);
@@ -110,10 +111,16 @@ static void init_db(void)
                     exit(EXIT_FAILURE);
                 }
                 db_create(&db, db_env, 0);
+#elif USE_TRIVIALDB
+                std::string newPath(db_path);
+                newPath.append("session", 7);
+                db_path = xstrdup(newPath.c_str());
+#endif
             }
         }
     }
 
+#if USE_BERKLEYDB
     if (db_env) {
         if (db->open(db, NULL, "session", NULL, DB_BTREE, DB_CREATE, 0666)) {
             fprintf(stderr, "FATAL: %s: Failed to open db file '%s' in dir '%s'\n",
@@ -265,7 +272,7 @@ int main(int argc, char **argv)
             session_ttl = strtol(optarg, NULL, 0);
             break;
         case 'b':
-            db_path = optarg;
+            db_path = xstrdup(optarg);
             break;
         case 'a':
             default_action = 0;
