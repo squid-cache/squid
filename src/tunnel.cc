@@ -841,7 +841,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
     if (!clientExpectsConnectResponse()) {
         // closing the non-HTTP client connection is the best we can do
         debugs(50, 3, server.conn << " closing on CONNECT-to-peer error");
-        server.closeIfOpen(); // TODO: Add client.closeIfOpen().
+        server.closeIfOpen();
         return;
     }
 
