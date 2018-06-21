@@ -356,10 +356,13 @@ Http::Tunneler::status() const
 
     // TODO: redesign AsyncJob::status() API to avoid
     // id and stop reason reporting duplication.
-    buf.append(" [", 2);
-    // TODO: report true requestWritten, true tunnelEstablished, and nil callback
+    buf.append(" [state:", 8);
+    if (requestWritten) buf.append('w'); // request sent
+    if (tunnelEstablished) buf.append('t'); // tunnel established
+    if (!callback) buf.append('x'); // caller informed
+    
     if (stopReason != NULL) {
-        buf.append("Stopped, reason:", 16);
+        buf.append(" stopped, reason:", 16);
         buf.appendf("%s",stopReason);
     }
     if (connection != NULL)
