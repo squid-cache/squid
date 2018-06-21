@@ -34,8 +34,6 @@ public:
 
     bool positive() const { return !squidError && peerError.isEmpty(); }
 
-    Comm::ConnectionPointer conn; ///< to-peer connection (XXX: remove?)
-
     // answer recipients must clear the error member in order to keep its info
     // XXX: We should refcount ErrorState instead of cbdata-protecting it.
     CbcPointer<ErrorState> squidError; ///< problem details (or nil)
