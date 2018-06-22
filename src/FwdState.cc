@@ -817,7 +817,7 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
         debugs(17, level, "ERROR: Early data after CONNECT response. " <<
                "Found " << answer.leftovers.length() << " bytes. " <<
                "Closing " << serverConnection());
-        fail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request));
+        fail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request, al));
         closeServerConnection("found early data after CONNECT response");
         retryOrBail();
         return;
@@ -828,23 +828,11 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
     if (const auto peer = serverConnection()->getPeer())
         peerConnectFailed(peer);
 
-    if (const auto error = answer.squidError.get()) {
-        answer.squidError.clear(); // preserve error for fail()
-        fail(error);
-        closeServerConnection("Squid-generated CONNECT error");
-        retryOrBail();
-        return;
-    }
-
-    assert(!answer.peerError.isEmpty());
-
-    // XXX: Stuffing raw answer.peerError SBuf into Store feels wrong so we
-    // replace that raw peer error with our generic error page, recreating bugs
-    // fixed in master commits 971003b and 4d27d0a!
-    // TODO: Revise how Tunneler reports peer error responses,
-    // possibly using an HttpReply *ErrorState::response_ field or similar.
-    fail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request, al));
-    closeServerConnection("peer-generated CONNECT error");
+    const auto error = answer.squidError.get();
+    Must(error);
+    answer.squidError.clear(); // preserve error for fail()
+    fail(error);
+    closeServerConnection("Squid-generated CONNECT error");
     retryOrBail();
 }
 

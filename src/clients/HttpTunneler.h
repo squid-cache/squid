@@ -15,6 +15,7 @@
 #include "http/forward.h"
 #include "clients/forward.h"
 
+class HttpReply;
 class ErrorState;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
@@ -75,7 +76,7 @@ protected:
     void handleReadyRead(const CommIoCbParams&);
     void readMore();
     void handleResponse(const bool eof);
-    void bailOnResponseError(const char *error, const size_t peerResponseSize);
+    void bailOnResponseError(const char *error, HttpReply *);
     void bailWith(ErrorState*);
     void callBack();
 

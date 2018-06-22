@@ -839,28 +839,10 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
         return;
     }
 
-    if (ErrorState *error = answer.squidError.get()) {
-        answer.squidError.clear(); // preserve error for errorSendComplete()
-        sendError(error, "Error while connecting to peer");
-        return;
-    }
-
-    assert(!answer.peerError.isEmpty());
-
-    // if we cannot relay the peer response, generate 502 (Bad Gateway)
-    if (answer.peerError.length() > SQUID_TCP_SO_RCVBUF) {
-        *status_ptr = Http::scBadGateway;
-        sendError(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al), "long peer response");
-        return;
-    }
-
-    // send back the actual peer response to the client
-    server.len = answer.peerError.length();
-    assert(server.len <= SQUID_TCP_SO_RCVBUF);
-    memcpy(server.buf, answer.peerError.rawContent(), server.len);
-    copy(server.len, server, client, TunnelStateData::WriteClientDone);
-    // then close the server FD to prevent any relayed keep-alive causing CVE-2015-5400
-    server.closeIfOpen();
+    ErrorState *error = answer.squidError.get();
+    Must(error);
+    answer.squidError.clear(); // preserve error for errorSendComplete()
+    sendError(error, "peer error");
 }
 
 void

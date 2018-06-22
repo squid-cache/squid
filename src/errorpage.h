@@ -78,6 +78,7 @@ typedef void ERCB(int fd, void *, size_t);
 class MemBuf;
 class StoreEntry;
 class wordlist;
+typedef RefCount<HttpReply> HttpReplyPointer;
 
 namespace ErrorPage {
 
@@ -93,6 +94,10 @@ class ErrorState
 public:
     ErrorState(err_type type, Http::StatusCode, HttpRequest * request, const AccessLogEntryPointer &al);
     ErrorState() = delete; // not implemented.
+
+    /// Build an ERR_RELAY_REMOTE ErrorState object
+    ErrorState(HttpReply *);
+
     ~ErrorState();
 
     /// Creates a general request forwarding error with the right http_status.
@@ -198,6 +203,8 @@ public:
     /// type-specific detail about the transaction error;
     /// overwrites xerrno; overwritten by detail, if any.
     int detailCode = ERR_DETAIL_NONE;
+
+    HttpReplyPointer response_;
 
 private:
     void noteBuildError_(const char *msg, const char *near, const bool forceBypass);

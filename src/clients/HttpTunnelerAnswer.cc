@@ -23,8 +23,6 @@ Http::operator <<(std::ostream &os, const TunnelerAnswer &answer)
 
     if (const auto squidError = answer.squidError.get()) {
         os << "SquidErr:" << squidError->page_id;
-    } else if (const auto errBytes = answer.peerError.length()) {
-        os << "PeerErr:" << answer.peerError.length();
     } else {
         os << "OK";
         if (const auto extraBytes = answer.leftovers.length())

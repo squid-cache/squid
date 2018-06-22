@@ -240,12 +240,12 @@ Http::Tunneler::handleResponse(const bool eof)
     // mimic the basic parts of HttpStateData::processReplyHeader()
     // TODO: HttpStateData::processReplyHeader() tries harder on eof!
     // TODO: Do not parse headers. Use Http1::ResponseParser. See HttpStateData::processReplyHeader().
-    HttpReply rep;
+    HttpReply::Pointer rep = new HttpReply;
     Http::StatusCode parseErr = Http::scNone;
-    const bool parsed = rep.parse(readBuf.c_str(), readBuf.length(), eof, &parseErr);
+    const bool parsed = rep->parse(readBuf.c_str(), readBuf.length(), eof, &parseErr);
     if (!parsed) {
         if (parseErr > 0) { // unrecoverable parsing error
-            bailOnResponseError("malformed CONNECT response from peer", 0);
+            bailOnResponseError("malformed CONNECT response from peer", nullptr);
             return;
         }
 
@@ -254,7 +254,7 @@ Http::Tunneler::handleResponse(const bool eof)
         assert(!parseErr);
 
         if (readBuf.length() >= SQUID_TCP_SO_RCVBUF) {
-            bailOnResponseError("huge CONNECT response from peer", 0);
+            bailOnResponseError("huge CONNECT response from peer", nullptr);
             return;
         }
 
@@ -264,24 +264,24 @@ Http::Tunneler::handleResponse(const bool eof)
 
     // CONNECT response was successfully parsed
     auto &futureAnswer = answer();
-    futureAnswer.peerResponseStatus = rep.sline.status();
-    request->hier.peer_reply_status = rep.sline.status();
+    futureAnswer.peerResponseStatus = rep->sline.status();
+    request->hier.peer_reply_status = rep->sline.status();
 
     // XXX: Raw() prints an extra leading space. TODO: Add/use Raw::gap(false).
     debugs(11, 2, "HTTP Server " << connection);
     debugs(11, 2, "HTTP Server RESPONSE:\n---------\n" <<
-           Raw(nullptr, readBuf.rawContent(), rep.hdr_sz).minLevel(2) <<
+           Raw(nullptr, readBuf.rawContent(), rep->hdr_sz).minLevel(2) <<
            "----------");
 
     // bail if we did not get an HTTP 200 (Connection Established) response
-    if (rep.sline.status() != Http::scOkay) {
+    if (rep->sline.status() != Http::scOkay) {
         // TODO: To reuse the connection, extract the whole error response.
-        bailOnResponseError("unsupported CONNECT response status code", rep.hdr_sz);
+        bailOnResponseError("unsupported CONNECT response status code", rep.getRaw());
         return;
     }
 
     // preserve any bytes sent by the server after the CONNECT response
-    futureAnswer.leftovers = readBuf.substr(rep.hdr_sz);
+    futureAnswer.leftovers = readBuf.substr(rep->hdr_sz);
     // delay pools were using this field to throttle CONNECT response
     len = futureAnswer.leftovers.length();
 
@@ -290,17 +290,18 @@ Http::Tunneler::handleResponse(const bool eof)
 }
 
 void
-Http::Tunneler::bailOnResponseError(const char *error, const size_t peerResponseSize)
+Http::Tunneler::bailOnResponseError(const char *error, HttpReply *errorReply)
 {
     debugs(83, 3, error << status());
 
-    if (!peerResponseSize) {
-        // with no reply suitable for relaying, answer with 502 (Bad Gateway)
-        bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
+    ErrorState *err;
+    if (errorReply) {
+        err = new ErrorState(errorReply);
     } else {
-        answer().peerError = readBuf.substr(0, peerResponseSize);
-        callBack();
+        // with no reply suitable for relaying, answer with 502 (Bad Gateway)
+        err = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al);
     }
+    bailWith(err);
 }
 
 void
