@@ -267,10 +267,9 @@ Http::Tunneler::handleResponse(const bool eof)
     futureAnswer.peerResponseStatus = rep->sline.status();
     request->hier.peer_reply_status = rep->sline.status();
 
-    // XXX: Raw() prints an extra leading space. TODO: Add/use Raw::gap(false).
     debugs(11, 2, "HTTP Server " << connection);
     debugs(11, 2, "HTTP Server RESPONSE:\n---------\n" <<
-           Raw(nullptr, readBuf.rawContent(), rep->hdr_sz).minLevel(2) <<
+           Raw(nullptr, readBuf.rawContent(), rep->hdr_sz).minLevel(2).gap(false) <<
            "----------");
 
     // bail if we did not get an HTTP 200 (Connection Established) response

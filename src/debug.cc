@@ -895,7 +895,10 @@ Raw::print(std::ostream &os) const
     const int finalLevel = (level >= 0) ? level :
                            (size_ > 40 ? DBG_DATA : Debug::SectionLevel());
     if (finalLevel <= Debug::SectionLevel()) {
-        os << (label_ ? '=' : ' ');
+        if (label_)
+            os << '=';
+        else if (useGap_)
+            os << ' ';
         if (data_) {
             if (useHex_)
                 printHex(os);
