@@ -216,7 +216,7 @@ private:
     ErrorState *savedError = nullptr;
 
     // XXX: Find a better way to pass answers than to create a dedicated class
-    // for each peer connector/tunneler!
+    // for each service with a callback!
     /// Gives Http::Tunneler access to Answer in the TunnelStateData callback dialer.
     class MyAnswerDialer2: public CallDialer, public Http::Tunneler::CbDialer
     {
