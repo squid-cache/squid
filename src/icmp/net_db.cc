@@ -1084,7 +1084,7 @@ netdbHostData(const char *host, int *samp, int *rtt, int *hops)
 }
 
 void
-netdbUpdatePeer(const URL &url, CachePeer * e, int irtt, int ihops)
+netdbUpdatePeer(const AnyP::Uri &url, CachePeer *e, int irtt, int ihops)
 {
 #if USE_ICMP
     netdbEntry *n;

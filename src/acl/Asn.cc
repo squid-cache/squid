@@ -235,7 +235,7 @@ asnStats(StoreEntry * sentry)
 static void
 asnCacheStart(int as)
 {
-    // TODO: use class URL instead of generating a string and re-parsing
+    // TODO: use class AnyP::Uri instead of generating a string and re-parsing
     LOCAL_ARRAY(char, asres, 4096);
     StoreEntry *e;
     ASState *asState = new ASState;
@@ -246,6 +246,7 @@ asnCacheStart(int as)
     asState->request = HttpRequest::FromUrl(asres, mx);
     assert(asState->request != NULL);
 
+    // XXX: Missing a hittingRequiresCollapsing() && startCollapsingOn() check.
     if ((e = storeGetPublic(asres, Http::METHOD_GET)) == NULL) {
         e = storeCreateEntry(asres, asres, RequestFlags(), Http::METHOD_GET);
         asState->sc = storeClientListAdd(e, asState);

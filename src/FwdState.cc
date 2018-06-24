@@ -142,7 +142,6 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     HTTPMSGLOCK(request);
     serverDestinations.reserve(Config.forward_max_tries);
     e->lock("FwdState");
-    EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
     flags.connected_okay = false;
     flags.dont_retry = false;
     flags.forward_completed = false;
@@ -267,7 +266,6 @@ FwdState::completed()
             }
 #endif
         } else {
-            EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             entry->complete();
             entry->releaseRequest();
         }
@@ -380,7 +378,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
         return;
 
     case AnyP::PROTO_URN:
-        urnStart(request, entry);
+        urnStart(request, entry, al);
         return;
 
     default:
@@ -541,7 +539,6 @@ FwdState::complete()
             debugs(17, 3, HERE << "server FD " << serverConnection()->fd << " not re-forwarding status " << entry->getReply()->sline.status());
         else
             debugs(17, 3, HERE << "server (FD closed) not re-forwarding status " << entry->getReply()->sline.status());
-        EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
         entry->complete();
 
         if (!Comm::IsConnOpen(serverConn))

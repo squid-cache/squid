@@ -16,7 +16,6 @@
 #include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "Store.h"
-#include "URL.h"
 
 #include <cmath>
 

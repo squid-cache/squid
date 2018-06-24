@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.0.24 release notes</title>
+<title>Squid 4.0.25 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.0.24 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.0.25 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -173,6 +173,10 @@ Most user-facing changes are reflected in squid.conf (see below).
    <em>--foreground</em> is particularly useful for use with <em>-z</em> (disk
    cache structures creation), as it allows the caller to wait until Squid has
    finished.
+
+<p>The squid binary now accepts a <em>--kid</em> command line option which
+   informs the process which role it is to take on. This aids with debugging
+   SMP issues with specific process types and resolves some SMP forking issues.
 
 
 <sect1>Initial GnuTLS support
@@ -377,6 +381,10 @@ This section gives a thorough account of those changes in three categories:
 	<p>New <em>tls-default-ca</em> option to use the system Trusted CAs to
 	   verify the server certificate.
 	<p>New <em>tls-domain=</em> option to verify the server certificate domain.
+
+	<tag>logfile_daemon</tag>
+	<p>Now only requires that helper binary exists when daemon: log module
+	   is actually being used.
 
 	<tag>logformat</tag>
 	<p>New quoting modifier to produce <em>\-escaped</em> output.

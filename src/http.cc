@@ -56,7 +56,6 @@
 #include "Store.h"
 #include "StrList.h"
 #include "tools.h"
-#include "URL.h"
 #include "util.h"
 
 #if USE_AUTH
@@ -928,8 +927,8 @@ HttpStateData::haveParsedReplyHeaders()
             // TODO: check whether such responses are shareable.
             // Do not share for now.
             entry->makePrivate(false);
-            if (!fwd->reforwardableStatus(rep->sline.status()))
-                EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
+            if (fwd->reforwardableStatus(rep->sline.status()))
+                EBIT_SET(entry->flags, ENTRY_FWD_HDR_WAIT);
             varyFailure = true;
         } else {
             entry->mem_obj->vary_headers = vary;
@@ -947,8 +946,8 @@ HttpStateData::haveParsedReplyHeaders()
          * If its not a reply that we will re-forward, then
          * allow the client to get it.
          */
-        if (!fwd->reforwardableStatus(rep->sline.status()))
-            EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
+        if (fwd->reforwardableStatus(rep->sline.status()))
+            EBIT_SET(entry->flags, ENTRY_FWD_HDR_WAIT);
 
         ReuseDecision decision(entry, statusCode);
 

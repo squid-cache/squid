@@ -68,9 +68,6 @@ public:
     ICPState(icp_common_t &aHeader, HttpRequest *aRequest);
     virtual ~ICPState();
 
-    /// whether the found entry warrants an ICP_HIT response
-    bool foundHit(const StoreEntry &) const;
-
     icp_common_t header;
     HttpRequest *request;
     int fd;
@@ -80,27 +77,13 @@ public:
 
 protected:
     /* StoreClient API */
+    virtual LogTags *loggingTags() override;
     virtual void fillChecklist(ACLFilledChecklist &) const override;
+
+    /// either confirms and starts processing a cache hit or returns false
+    bool confirmAndPrepHit(const StoreEntry &);
+
     mutable AccessLogEntryPointer al;
-};
-
-/// \ingroup ServerProtocolICPAPI
-struct icpUdpData {
-
-    /// IP address for the remote end. Because we reply to packets from unknown non-peers.
-    Ip::Address address;
-
-    void *msg;
-    size_t len;
-    icpUdpData *next;
-#ifndef LESS_TIMING
-
-    struct timeval start;
-#endif
-
-    LogTags logcode;
-
-    struct timeval queue_time;
 };
 
 extern Comm::ConnectionPointer icpIncomingConn;
@@ -120,19 +103,10 @@ void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pa
 icp_opcode icpGetCommonOpcode();
 
 /// \ingroup ServerProtocolICPAPI
-int icpUdpSend(int, const Ip::Address &, icp_common_t *, const LogTags &, int, AccessLogEntryPointer);
-
-/// \ingroup ServerProtocolICPAPI
-LogTags icpLogFromICPCode(icp_opcode opcode);
-
-/// \ingroup ServerProtocolICPAPI
 void icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd);
 
 /// \ingroup ServerProtocolICPAPI
 PF icpHandleUdp;
-
-/// \ingroup ServerProtocolICPAPI
-PF icpUdpSendQueue;
 
 /// \ingroup ServerProtocolICPAPI
 void icpHandleIcpV3(int, Ip::Address &, char *, int);

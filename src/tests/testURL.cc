@@ -10,10 +10,10 @@
 
 #include <cppunit/TestAssert.h>
 
+#include "anyp/Uri.h"
 #include "Debug.h"
-#include "testURL.h"
+#include "tests/testURL.h"
 #include "unitTestMain.h"
-#include "URL.h"
 
 #include <sstream>
 
@@ -36,11 +36,11 @@ void
 testURL::testConstructScheme()
 {
     AnyP::UriScheme empty_scheme;
-    URL protoless_url(AnyP::PROTO_NONE);
+    AnyP::Uri protoless_url(AnyP::PROTO_NONE);
     CPPUNIT_ASSERT_EQUAL(empty_scheme, protoless_url.getScheme());
 
     AnyP::UriScheme ftp_scheme(AnyP::PROTO_FTP);
-    URL ftp_url(AnyP::PROTO_FTP);
+    AnyP::Uri ftp_url(AnyP::PROTO_FTP);
     CPPUNIT_ASSERT_EQUAL(ftp_scheme, ftp_url.getScheme());
 }
 
@@ -53,10 +53,10 @@ void
 testURL::testDefaultConstructor()
 {
     AnyP::UriScheme aScheme;
-    URL aUrl;
+    AnyP::Uri aUrl;
     CPPUNIT_ASSERT_EQUAL(aScheme, aUrl.getScheme());
 
-    URL *urlPointer = new URL;
+    auto *urlPointer = new AnyP::Uri;
     CPPUNIT_ASSERT(urlPointer != NULL);
     delete urlPointer;
 }
