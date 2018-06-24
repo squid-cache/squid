@@ -11,6 +11,7 @@ DIST_SUBDIRS= \
 	eDirectory_userip \
 	file_userip \
 	kerberos_ldap_group \
+	kerberos_sid_group \
 	LDAP_group \
 	LM_group \
 	session \

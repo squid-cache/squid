@@ -3777,6 +3777,7 @@ AC_CONFIG_FILES([
 	src/acl/external/eDirectory_userip/Makefile
 	src/acl/external/file_userip/Makefile
 	src/acl/external/kerberos_ldap_group/Makefile
+	src/acl/external/kerberos_sid_group/Makefile
 	src/acl/external/LDAP_group/Makefile
 	src/acl/external/LM_group/Makefile
 	src/acl/external/session/Makefile
