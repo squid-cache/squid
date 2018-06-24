@@ -51,6 +51,9 @@ if test "x$enable_external_acl_helpers" != "xno" ; then
       elif test "x$helper" = "xkerberos_ldap_group" ; then
         m4_include([src/acl/external/kerberos_ldap_group/required.m4])
 
+      elif test "x$helper" = "xkerberos_sid_group" ; then
+        m4_include([src/acl/external/kerberos_sid_group/required.m4])
+
       elif test "x$helper" = "xsession" ; then
         m4_include([src/acl/external/session/required.m4])
 
