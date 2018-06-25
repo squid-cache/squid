@@ -12,6 +12,9 @@
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
 #include "CommCalls.h"
+#if USE_DELAY_POOLS
+#include "DelayId.h"
+#endif
 #include "http/forward.h"
 #include "clients/forward.h"
 
@@ -58,6 +61,9 @@ public:
     AsyncCall::Pointer callback; ///< we call this with the results
     SBuf url; ///< request-target for the CONNECT request
     time_t lifetimeLimit; ///< do not run longer than this
+#if USE_DELAY_POOLS
+    DelayId delayId;
+#endif
 
 protected:
     /* AsyncJob API */

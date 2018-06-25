@@ -178,7 +178,11 @@ Http::Tunneler::handleReadyRead(const CommIoCbParams &io)
 
     CommIoCbParams rd(this);
     rd.conn = io.conn;
-    rd.size = readBuf.spaceSize(); // XXX: from.bytesWanted(...)
+#if USE_DELAY_POOLS
+    rd.size = delayId.bytesWanted(1, readBuf.spaceSize());
+#else
+    rd.size = readBuf.spaceSize();
+#endif
 
     switch (Comm::ReadNow(rd, readBuf)) {
     case Comm::INPROGRESS:
@@ -186,7 +190,7 @@ Http::Tunneler::handleReadyRead(const CommIoCbParams &io)
         return;
 
     case Comm::OK: {
-#if USE_DELAY_POOLS && XXX_IMPLEMENT
+#if USE_DELAY_POOLS
         delayId.bytesIn(rd.size);
 #endif
         statCounter.server.all.kbytes_in += rd.size;
