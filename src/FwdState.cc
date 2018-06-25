@@ -142,7 +142,6 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     HTTPMSGLOCK(request);
     serverDestinations.reserve(Config.forward_max_tries);
     e->lock("FwdState");
-    EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
     flags.connected_okay = false;
     flags.dont_retry = false;
     flags.forward_completed = false;
@@ -267,7 +266,6 @@ FwdState::completed()
             }
 #endif
         } else {
-            EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             entry->complete();
             entry->releaseRequest();
         }
@@ -332,7 +330,9 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
          * we do NOT want the indirect client address to be tested here.
          */
         ACLFilledChecklist ch(Config.accessList.miss, request, NULL);
+        ch.al = al;
         ch.src_addr = request->client_addr;
+        ch.syncAle(request, nullptr);
         if (ch.fastCheck().denied()) {
             err_type page_id;
             page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);
@@ -378,7 +378,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
         return;
 
     case AnyP::PROTO_URN:
-        urnStart(request, entry);
+        urnStart(request, entry, al);
         return;
 
     default:
@@ -539,7 +539,6 @@ FwdState::complete()
             debugs(17, 3, HERE << "server FD " << serverConnection()->fd << " not re-forwarding status " << entry->getReply()->sline.status());
         else
             debugs(17, 3, HERE << "server (FD closed) not re-forwarding status " << entry->getReply()->sline.status());
-        EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
         entry->complete();
 
         if (!Comm::IsConnOpen(serverConn))
@@ -1219,6 +1218,8 @@ FwdState::pconnPop(const Comm::ConnectionPointer &dest, const char *domain)
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {
         ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, NULL);
+        ch.al = al;
+        ch.syncAle(request, nullptr);
         retriable = ch.fastCheck().allowed();
     }
     // always call shared pool first because we need to close an idle

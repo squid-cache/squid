@@ -46,6 +46,7 @@ public:
 
     /* StoreClient API */
     virtual void created(StoreEntry *);
+    virtual LogTags *loggingTags() { return nullptr; } // no access logging/ACLs
     virtual void fillChecklist(ACLFilledChecklist &) const;
 
 private:
@@ -442,7 +443,7 @@ MimeIcon::created(StoreEntry *newEntry)
 void
 MimeIcon::fillChecklist(ACLFilledChecklist &) const
 {
-    // Unreachable: We never call mayInitiateCollapsing() or mayCollapseOn().
+    // Unreachable: We never mayInitiateCollapsing() or startCollapsingOn().
     assert(false);
 }
 

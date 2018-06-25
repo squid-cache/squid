@@ -63,7 +63,7 @@ public:
     VirginBodyAct();
 
     void plan(); // the activity may happen; do not consume at or above offset
-    void disable(); // the activity wont continue; no consumption restrictions
+    void disable(); // the activity will not continue; no consumption restrictions
 
     bool active() const { return theState == stActive; }
     bool disabled() const { return theState == stDisabled; }

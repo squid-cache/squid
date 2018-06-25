@@ -166,6 +166,8 @@ Transients::get(const cache_key *key)
     e->mem_obj->xitTable.index = index;
     e->mem_obj->xitTable.io = Store::ioReading;
     anchor->exportInto(*e);
+    const bool collapsingRequired = EBIT_TEST(anchor->basics.flags, ENTRY_REQUIRES_COLLAPSING);
+    e->setCollapsingRequirement(collapsingRequired);
     // keep read lock to receive updates from others
     return e;
 }
@@ -184,6 +186,20 @@ Transients::findCollapsed(const sfileno index)
 
     debugs(20, 3, "no entry at " << index << " in " << MapLabel);
     return NULL;
+}
+
+void
+Transients::clearCollapsingRequirement(const StoreEntry &e)
+{
+    assert(map);
+    assert(e.hasTransients());
+    assert(isWriter(e));
+    const auto idx = e.mem_obj->xitTable.index;
+    auto &anchor = map->writeableEntry(idx);
+    if (EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING)) {
+        EBIT_CLR(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
+        CollapsedForwarding::Broadcast(e);
+    }
 }
 
 void
@@ -242,15 +258,16 @@ Transients::noteFreeMapSlice(const Ipc::StoreMapSliceId)
 }
 
 void
-Transients::status(const StoreEntry &entry, bool &aborted, bool &waitingToBeFreed) const
+Transients::status(const StoreEntry &entry, Transients::EntryStatus &entryStatus) const
 {
     assert(map);
     assert(entry.hasTransients());
     const auto idx = entry.mem_obj->xitTable.index;
     const auto &anchor = isWriter(entry) ?
                          map->writeableEntry(idx) : map->readableEntry(idx);
-    aborted = anchor.writerHalted;
-    waitingToBeFreed = anchor.waitingToBeFreed;
+    entryStatus.abortedByWriter = anchor.writerHalted;
+    entryStatus.waitingToBeFreed = anchor.waitingToBeFreed;
+    entryStatus.collapsed = EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 void

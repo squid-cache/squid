@@ -217,8 +217,7 @@ StoreEntry::delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int l
         // readers appeared to care around 2009/12/14 as they skipped reading
         // for other reasons. Closing may already be true at the delyaAwareRead
         // call time or may happen while we wait after delayRead() above.
-        debugs(20, 3, HERE << "wont read from closing " << conn << " for " <<
-               callback);
+        debugs(20, 3, "will not read from closing " << conn << " for " << callback);
         return; // the read callback will never be called
     }
 
@@ -355,7 +354,7 @@ StoreEntry::deferProducer(const AsyncCall::Pointer &producer)
     if (!deferredProducer)
         deferredProducer = producer;
     else
-        debugs(20, 5, HERE << "Deferred producer call is allready set to: " <<
+        debugs(20, 5, "Deferred producer call is already set to: " <<
                *deferredProducer << ", requested call: " << *producer);
 }
 
@@ -454,7 +453,6 @@ StoreEntry::releaseRequest(const bool shareable)
         shareableWhenPrivate = false; // may already be false
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
-
     setPrivateKey(shareable, true);
 }
 
@@ -830,8 +828,12 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
     storeGetMemSpace(writeBuffer.length);
     mem_obj->write(writeBuffer);
 
-    if (!EBIT_TEST(flags, DELAY_SENDING))
-        invokeHandlers();
+    if (EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT) && !mem_obj->readAheadPolicyCanRead()) {
+        debugs(20, 3, "allow Store clients to get entry content after buffering too much for " << *this);
+        EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
+    }
+
+    invokeHandlers();
 }
 
 /* Append incoming data from a primary server to an entry. */
@@ -1075,6 +1077,9 @@ StoreEntry::complete()
 {
     debugs(20, 3, "storeComplete: '" << getMD5Text() << "'");
 
+    // To preserve forwarding retries, call FwdState::complete() instead.
+    EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
+
     if (store_status != STORE_PENDING) {
         /*
          * if we're not STORE_PENDING, then probably we got aborted
@@ -1130,6 +1135,9 @@ StoreEntry::abort()
     releaseRequest();
 
     EBIT_SET(flags, ENTRY_ABORTED);
+
+    // allow the Store clients to be told about the problem
+    EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
 
     setMemStatus(NOT_IN_MEMORY);
 
@@ -1810,7 +1818,6 @@ StoreEntry::startWriting()
     /* TODO: when we store headers separately remove the header portion */
     /* TODO: mark the length of the headers ? */
     /* We ONLY want the headers */
-
     assert (isEmpty());
     assert(mem_obj);
 
@@ -1820,10 +1827,16 @@ StoreEntry::startWriting()
     buffer();
     rep->packHeadersInto(this);
     mem_obj->markEndOfReplyHeaders();
-    EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
 
     rep->body.packInto(this);
     flush();
+
+    // The entry headers are written, new clients
+    // should not collapse anymore.
+    if (hittingRequiresCollapsing()) {
+        setCollapsingRequirement(false);
+        Store::Root().transientsClearCollapsingRequirement(*this);
+    }
 }
 
 char const *
@@ -2072,15 +2085,13 @@ StoreEntry::describeTimestamps() const
     return buf;
 }
 
-bool
-StoreEntry::collapsingInitiator() const
+void
+StoreEntry::setCollapsingRequirement(const bool required)
 {
-    // TODO: the method description says that this must be
-    // a collapsed forwarding-created public entry, however
-    // this implementation has no explicit confirmation of that.
-    // We should verify here that collapsing has been allowed
-    // for this entry by Store::Controller::allowCollapsing().
-    return publicKey() && isEmpty();
+    if (required)
+        EBIT_SET(flags, ENTRY_REQUIRES_COLLAPSING);
+    else
+        EBIT_CLR(flags, ENTRY_REQUIRES_COLLAPSING);
 }
 
 static std::ostream &

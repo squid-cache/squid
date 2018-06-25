@@ -28,7 +28,7 @@ public:
          * registered with it that can create events
          */
         EVENT_IDLE = -1,
-        /* some error has occured in this engine */
+        /* some error has occurred in this engine */
         EVENT_ERROR = -2
     };
 

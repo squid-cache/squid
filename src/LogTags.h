@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_LOGTAGS_H
 #define SQUID_SRC_LOGTAGS_H
 
+#include "CollapsingHistory.h"
+
 /** Squid transaction result code/tag set.
  *
  * These codes indicate how the request was received
@@ -49,10 +51,10 @@ typedef enum {
 class LogTags
 {
 public:
-    LogTags(LogTags_ot t) : oldType(t) {assert(oldType < LOG_TYPE_MAX);}
-    // XXX: this operator does not reset flags
-    // TODO: either replace with a category-only setter or remove
-    LogTags &operator =(const LogTags_ot &t) {assert(t < LOG_TYPE_MAX); oldType = t; return *this;}
+    LogTags() = default;
+    explicit LogTags(const LogTags_ot t) { update(t); }
+
+    void update(const LogTags_ot t);
 
     /// compute the status access.log field
     const char *c_str() const;
@@ -78,8 +80,10 @@ private:
 
 public: // XXX: only until client_db.cc stats are redesigned.
 
-    // deprecated LogTag enum value
-    LogTags_ot oldType;
+    /// a set of client protocol, cache use, and other transaction outcome tags
+    LogTags_ot oldType = LOG_TAG_NONE;
+    /// controls CF tag presence
+    CollapsingHistory collapsingHistory;
 };
 
 /// iterator for LogTags_ot enumeration

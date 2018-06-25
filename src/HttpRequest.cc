@@ -30,7 +30,6 @@
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"
-#include "URL.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -729,6 +728,7 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
             if (Config.accessList.spoof_client_ip) {
                 ACLFilledChecklist *checklist = new ACLFilledChecklist(Config.accessList.spoof_client_ip, this, clientConnection->rfc931);
                 checklist->al = al;
+                checklist->syncAle(this, nullptr);
                 flags.spoofClientIp = checklist->fastCheck().allowed();
                 delete checklist;
             } else
@@ -736,5 +736,54 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
         } else
             flags.spoofClientIp = false;
     }
+}
+
+/// a helper for validating FindListeningPortAddress()-found address candidates
+static const Ip::Address *
+FindListeningPortAddressInAddress(const Ip::Address *ip)
+{
+    // FindListeningPortAddress() callers do not want INADDR_ANY addresses
+    return (ip && !ip->isAnyAddr()) ? ip : nullptr;
+}
+
+/// a helper for handling PortCfg cases of FindListeningPortAddress()
+static const Ip::Address *
+FindListeningPortAddressInPort(const AnyP::PortCfgPointer &port)
+{
+    return port ? FindListeningPortAddressInAddress(&port->s) : nullptr;
+}
+
+/// a helper for handling Connection cases of FindListeningPortAddress()
+static const Ip::Address *
+FindListeningPortAddressInConn(const Comm::ConnectionPointer &conn)
+{
+    return conn ? FindListeningPortAddressInAddress(&conn->local) : nullptr;
+}
+
+const Ip::Address *
+FindListeningPortAddress(const HttpRequest *callerRequest, const AccessLogEntry *ale)
+{
+    // Check all sources of usable listening port information, giving
+    // HttpRequest and masterXaction a preference over ALE.
+
+    const HttpRequest *request = callerRequest;
+    if (!request && ale)
+        request = ale->request;
+    if (!request)
+        return nullptr; // not enough information
+
+    const Ip::Address *ip = FindListeningPortAddressInPort(request->masterXaction->squidPort);
+    if (!ip && ale)
+        ip = FindListeningPortAddressInPort(ale->cache.port);
+
+    // XXX: also handle PROXY protocol here when we have a flag to identify such request
+    if (ip || request->flags.interceptTproxy || request->flags.intercepted)
+        return ip;
+
+    /* handle non-intercepted cases that were not handled above */
+    ip = FindListeningPortAddressInConn(request->masterXaction->tcpClient);
+    if (!ip && ale)
+        ip = FindListeningPortAddressInConn(ale->tcpClient);
+    return ip; // may still be nil
 }
 

@@ -13,6 +13,7 @@
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
+#include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "Store.h"
 
@@ -141,7 +142,7 @@ peerSourceHashRegisterWithCacheManager(void)
 }
 
 CachePeer *
-peerSourceHashSelectParent(HttpRequest * request)
+peerSourceHashSelectParent(PeerSelector *ps)
 {
     int k;
     const char *c;
@@ -156,6 +157,9 @@ peerSourceHashSelectParent(HttpRequest * request)
 
     if (n_sourcehash_peers == 0)
         return NULL;
+
+    assert(ps);
+    HttpRequest *request = ps->request;
 
     key = request->client_addr.toStr(ntoabuf, sizeof(ntoabuf));
 
@@ -175,7 +179,7 @@ peerSourceHashSelectParent(HttpRequest * request)
         debugs(39, 3, "peerSourceHashSelectParent: " << tp->name << " combined_hash " << combined_hash  <<
                " score " << std::setprecision(0) << score);
 
-        if ((score > high_score) && peerHTTPOkay(tp, request)) {
+        if ((score > high_score) && peerHTTPOkay(tp, ps)) {
             p = tp;
             high_score = score;
         }

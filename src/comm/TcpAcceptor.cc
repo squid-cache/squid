@@ -267,6 +267,7 @@ logAcceptError(const Comm::ConnectionPointer &conn)
     ACLFilledChecklist ch(nullptr, nullptr, nullptr);
     ch.src_addr = conn->remote;
     ch.my_addr = conn->local;
+    ch.al = al;
     accessLogLog(al, &ch);
 }
 
@@ -344,10 +345,10 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
  * accept() and process
  * Wait for an incoming connection on our listener socket.
  *
- * \retval Comm::OK         success. details parameter filled.
- * \retval Comm::NOMESSAGE  attempted accept() but nothing useful came in.
- * \retval Comm::COMM_ERROR      an outright failure occured.
- *                         Or if this client has too many connections already.
+ * \retval Comm::OK          success. details parameter filled.
+ * \retval Comm::NOMESSAGE   attempted accept() but nothing useful came in.
+ * \retval Comm::COMM_ERROR  an outright failure occurred.
+ *                           Or this client has too many connections already.
  */
 Comm::Flag
 Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)

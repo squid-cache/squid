@@ -27,7 +27,6 @@
 #include "SquidConfig.h"
 #include "Store.h"
 #include "tools.h"
-#include "URL.h"
 #include "wordlist.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -755,6 +754,14 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
             p = request->auth_user_request->username();
         if (!p)
 #endif
+            p = "-";
+        break;
+
+    case 'A':
+        // TODO: When/if we get ALE here, pass it as well
+        if (const auto addr = FindListeningPortAddress(request.getRaw(), nullptr))
+            mb.appendf("%s", addr->toStr(ntoabuf, MAX_IPSTRLEN));
+        else
             p = "-";
         break;
 

@@ -26,11 +26,23 @@ typedef Ipc::StoreMap TransientsMap;
 class Transients: public Store::Controlled, public Ipc::StoreMapCleaner
 {
 public:
+    /// shared entry metadata, used for synchronization
+    class EntryStatus
+    {
+    public:
+        bool abortedByWriter = false; ///< whether the entry was aborted
+        bool waitingToBeFreed = false; ///< whether the entry was marked for deletion
+        bool collapsed = false; ///< whether the entry allows collapsing
+    };
+
     Transients();
     virtual ~Transients();
 
     /// return a local, previously collapsed entry
     StoreEntry *findCollapsed(const sfileno xitIndex);
+
+    /// removes collapsing requirement (for future hits)
+    void clearCollapsingRequirement(const StoreEntry &e);
 
     /// start listening for remote DELETE requests targeting either a complete
     /// StoreEntry (ioReading) or a being-formed miss StoreEntry (ioWriting)
@@ -39,10 +51,8 @@ public:
     /// called when the in-transit entry has been successfully cached
     void completeWriting(const StoreEntry &e);
 
-    /// copies current shared entry metadata into parameters
-    /// \param aborted whether the entry was aborted
-    /// \param waitingToBeFreed whether the entry was marked for deletion
-    void status(const StoreEntry &e, bool &aborted, bool &waitingToBeFreed) const;
+    /// copies current shared entry metadata into entryStatus
+    void status(const StoreEntry &e, EntryStatus &entryStatus) const;
 
     /// number of entry readers some time ago
     int readers(const StoreEntry &e) const;

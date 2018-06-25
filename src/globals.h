@@ -24,7 +24,6 @@ extern char ThisCache2[RFC2181_MAXHOSTNAMELEN << 1];
 extern char config_input_line[BUFSIZ];
 /// During parsing, the name of the current squid.conf directive being parsed.
 extern const char *cfg_directive; /* NULL */
-extern const char *DefaultConfigFile;   /* DEFAULT_CONFIG_FILE */
 extern const char *cfg_filename;    /* NULL */
 extern const char *dash_str;    /* "-" */
 extern const char *null_string; /* "" */

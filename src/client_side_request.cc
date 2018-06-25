@@ -54,7 +54,6 @@
 #include "Store.h"
 #include "StrList.h"
 #include "tools.h"
-#include "URL.h"
 #include "wordlist.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -152,7 +151,6 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     uri(NULL),
     log_uri(NULL),
     req_sz(0),
-    logType(LOG_TAG_NONE),
     calloutContext(NULL),
     maxReplyBodySize_(0),
     entry_(NULL),
@@ -778,7 +776,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
          */
         page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_AUTH_REQUIRED);
 
-        http->logType = LOG_TCP_DENIED;
+        http->logType.update(LOG_TCP_DENIED);
 
         if (auth_challenge) {
 #if USE_AUTH
@@ -1259,7 +1257,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
 
             // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
             if (urlNote != NULL && strcmp(urlNote, http->uri)) {
-                URL tmpUrl;
+                AnyP::Uri tmpUrl;
                 if (tmpUrl.parse(old_request->method, urlNote)) {
                     HttpRequest *new_request = old_request->clone();
                     new_request->url = tmpUrl;
@@ -1385,8 +1383,8 @@ ClientRequestContext::checkNoCacheDone(const allow_t &answer)
 {
     acl_checklist = NULL;
     if (answer.denied()) {
-        http->request->flags.noCache = true; // dont read reply from cache
-        http->request->flags.cachable = false; // dont store reply into cache
+        http->request->flags.noCache = true; // do not read reply from cache
+        http->request->flags.cachable = false; // do not store reply into cache
     }
     http->doCallouts();
 }
@@ -1534,7 +1532,8 @@ void
 ClientHttpRequest::httpStart()
 {
     PROF_start(httpStart);
-    logType = LOG_TAG_NONE;
+    // XXX: Re-initializes rather than updates. Should not be needed at all.
+    logType.update(LOG_TAG_NONE);
     debugs(85, 4, logType.c_str() << " for '" << uri << "'");
 
     /* no one should have touched this */
@@ -1779,8 +1778,10 @@ ClientHttpRequest::doCallouts()
     // Set appropriate MARKs and CONNMARKs if needed.
     if (getConn() && Comm::IsConnOpen(getConn()->clientConnection)) {
         ACLFilledChecklist ch(nullptr, request, nullptr);
+        ch.al = calloutContext->http->al;
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
+        ch.syncAle(request, log_uri);
 
         if (!calloutContext->toClientMarkingDone) {
             calloutContext->toClientMarkingDone = true;
@@ -1939,7 +1940,6 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
         assert(repContext);
         repContext->createStoreEntry(request->method, request->flags);
 
-        EBIT_CLR(storeEntry()->flags, ENTRY_FWD_HDR_WAIT);
         request_satisfaction_mode = true;
         request_satisfaction_offset = 0;
         storeEntry()->replaceHttpReply(new_rep);

@@ -1,3 +1,25 @@
+Changes to squid-4.0.25 (11 Jun 2018):
+
+	- Regression Bug 4855: querying private entries for HTCP/ICP
+	- Regression Bug 4852: deny_info %R macro not being expanded
+	- Regression Bug 4847: proxy_auth ACL -i/+i flags not working
+	- Regression Bug 4831: filter chain certificates for validity when loading
+	- Regression fix: Transient reader locking broken in 4.0.24
+	- Bug 4845: NegotiateSsl crash on aborting transaction
+	- Bug 4843 pt1: ext_edirectory_userip_acl refactoring for GCC-8
+	- Bug 4843 pt2: squidclient refactoring for GCC-8
+	- Bug 4829: IPC shared memory leaks when disker queue overflows
+	- Bug 4828: Use feature detection for IPFilter API/ABI checks
+	- Bug 4816: update negotiate_kerberos_auth helper protocol to v3.4
+	- Bug 4811: supply AccessLogEntry (ALE) for more fast ACL checks
+	- Bug 4707: purge tool does not obey --sysconfdir= build option
+	- Bug 4171: checking for log_file_daemon despite disabling logging
+	- Bug 4042: ext_kerberos_ldap_group: add -P principal option
+	- TLS: avoid "ssl_crtd" assertions on reconfiguration
+	- Add timestamps to (most) FATAL messages
+	- Add "--kid role-ID" command line option
+	- ... and many documentation updates
+
 Changes to squid-4.0.24 (07 Mar 2018):
 
 	- Bug 4822: Build failure (-Wformat) where time_t is not long int
@@ -1638,7 +1660,7 @@ Changes to squid-3.2.0.7 (19 Apr 2011):
 Changes to squid-3.2.0.6 (04 Apr 2011):
 
 	- Regression fix: upgrade existing icons
-	- Regression fix: dont crash when accessing an SSL certificate with errors
+	- Regression fix: do not crash when accessing an SSL certificate with errors
 	- Regression fix: prevent stdio log module segfaults on rotate
 	- Regression fix: shutdown properly even if a worker process crashes on exit
 	- Regression Bug 3159: (partial fix) ICAP and --disable-auth compile problems

@@ -27,7 +27,6 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
-#include "URL.h"
 #if USE_OPENSSL
 #include "ssl/ErrorDetail.h"
 #include "ssl/ServerBump.h"
@@ -470,20 +469,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 
-        case LFT_LOCAL_LISTENING_IP: {
-            // avoid logging a dash if we have reliable info
-            const bool interceptedAtKnownPort = al->request ?
-                                                (al->request->flags.interceptTproxy ||
-                                                 al->request->flags.intercepted) && al->cache.port :
-                                                false;
-            if (interceptedAtKnownPort) {
-                const bool portAddressConfigured = !al->cache.port->s.isAnyAddr();
-                if (portAddressConfigured)
-                    out = al->cache.port->s.toStr(tmp, sizeof(tmp));
-            } else if (al->tcpClient)
-                out = al->tcpClient->local.toStr(tmp, sizeof(tmp));
-        }
-        break;
+        case LFT_LOCAL_LISTENING_IP:
+            if (const auto addr = FindListeningPortAddress(nullptr, al.getRaw()))
+                out = addr->toStr(tmp, sizeof(tmp));
+            break;
 
         case LFT_CLIENT_LOCAL_IP:
             if (al->tcpClient)
@@ -505,11 +494,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_LOCAL_LISTENING_PORT:
-            if (al->cache.port) {
-                outint = al->cache.port->s.port();
-                doint = 1;
-            } else if (al->request) {
-                outint = al->request->my_addr.port();
+            if (const auto addr = FindListeningPortAddress(nullptr, al.getRaw())) {
+                outint = addr->port();
                 doint = 1;
             }
             break;

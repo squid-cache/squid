@@ -359,14 +359,16 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
 }
 
 StoreEntry *
-Store::Controller::findCallback(const cache_key *key)
+Store::Controller::findCallbackXXX(const cache_key *key)
 {
     // We could check for mem_obj presence (and more), moving and merging some
     // of the duplicated neighborsUdpAck() and neighborsHtcpReply() code here,
     // but that would mean polluting Store with HTCP/ICP code. Instead, we
     // should encapsulate callback-related data in a protocol-neutral MemObject
     // member or use an HTCP/ICP-specific index rather than store_table.
-    return peekAtLocal(key);
+
+    // cannot reuse peekAtLocal() because HTCP/ICP callbacks may use private keys
+    return static_cast<StoreEntry*>(hash_lookup(store_table, key));
 }
 
 /// \returns either an existing local reusable StoreEntry object or nil
@@ -622,6 +624,13 @@ Store::Controller::transientsDisconnect(StoreEntry &e)
 }
 
 void
+Store::Controller::transientsClearCollapsingRequirement(StoreEntry &e)
+{
+    if (transients)
+        transients->clearCollapsingRequirement(e);
+}
+
+void
 Store::Controller::handleIdleEntry(StoreEntry &e)
 {
     bool keepInLocalMemory = false;
@@ -693,11 +702,15 @@ Store::Controller::allowCollapsing(StoreEntry *e, const RequestFlags &reqFlags,
                                    const HttpRequestMethod &reqMethod)
 {
     const KeyScope keyScope = reqFlags.refresh ? ksRevalidation : ksDefault;
+    // set the flag now so that it gets copied into the Transients entry
+    e->setCollapsingRequirement(true);
     if (e->makePublic(keyScope)) { // this is needed for both local and SMP collapsing
         debugs(20, 3, "may " << (transients && e->hasTransients() ?
                                  "SMP-" : "locally-") << "collapse " << *e);
         return true;
     }
+    // paranoid cleanup; the flag is meaningless for private entries
+    e->setCollapsingRequirement(false);
     return false;
 }
 
@@ -747,11 +760,15 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
 
     debugs(20, 7, "syncing " << *collapsed);
 
-    bool abortedByWriter = false;
-    bool waitingToBeFreed = false;
-    transients->status(*collapsed, abortedByWriter, waitingToBeFreed);
+    Transients::EntryStatus entryStatus;
+    transients->status(*collapsed, entryStatus);
 
-    if (waitingToBeFreed) {
+    if (!entryStatus.collapsed) {
+        debugs(20, 5, "removing collapsing requirement for " << *collapsed << " since remote writer probably got headers");
+        collapsed->setCollapsingRequirement(false);
+    }
+
+    if (entryStatus.waitingToBeFreed) {
         debugs(20, 3, "will release " << *collapsed << " due to waitingToBeFreed");
         collapsed->release(true); // may already be marked
     }
@@ -761,8 +778,14 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
 
     assert(transients->isReader(*collapsed));
 
-    if (abortedByWriter) {
+    if (entryStatus.abortedByWriter) {
         debugs(20, 3, "aborting " << *collapsed << " because its writer has aborted");
+        collapsed->abort();
+        return;
+    }
+
+    if (entryStatus.collapsed && !collapsed->hittingRequiresCollapsing()) {
+        debugs(20, 3, "aborting " << *collapsed << " due to writer/reader collapsing state mismatch");
         collapsed->abort();
         return;
     }
@@ -784,7 +807,7 @@ Store::Controller::syncCollapsed(const sfileno xitIndex)
         found = anchorToCache(*collapsed, inSync);
     }
 
-    if (waitingToBeFreed && !found) {
+    if (entryStatus.waitingToBeFreed && !found) {
         debugs(20, 3, "aborting unattached " << *collapsed <<
                " because it was marked for deletion before we could attach it");
         collapsed->abort();

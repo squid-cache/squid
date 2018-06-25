@@ -13,9 +13,9 @@
 #include "HttpRequest.h"
 #include "mgr/Registration.h"
 #include "neighbors.h"
+#include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "Store.h"
-#include "URL.h"
 
 #include <cmath>
 
@@ -143,8 +143,11 @@ carpInit(void)
 }
 
 CachePeer *
-carpSelectParent(HttpRequest * request)
+carpSelectParent(PeerSelector *ps)
 {
+    assert(ps);
+    HttpRequest *request = ps->request;
+
     int k;
     CachePeer *p = NULL;
     CachePeer *tp;
@@ -204,7 +207,7 @@ carpSelectParent(HttpRequest * request)
         debugs(39, 3, "carpSelectParent: key=" << key << " name=" << tp->name << " combined_hash=" << combined_hash  <<
                " score=" << std::setprecision(0) << score);
 
-        if ((score > high_score) && peerHTTPOkay(tp, request)) {
+        if ((score > high_score) && peerHTTPOkay(tp, ps)) {
             p = tp;
             high_score = score;
         }
