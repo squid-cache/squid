@@ -3833,7 +3833,6 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
     }
 
     if (s->secure.encryptTransport) {
-        // protocol requires TLS, that means cert= is a required parameter
         if (s->secure.certs.empty()) {
             debugs(3, DBG_CRITICAL, "FATAL: " << AnyP::UriScheme(s->transport.protocol) << "_port requires a cert= parameter");
             self_destruct();
