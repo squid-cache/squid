@@ -364,7 +364,6 @@ Http::Tunneler::status() const
     if (requestWritten) buf.append("w", 1); // request sent
     if (tunnelEstablished) buf.append("t", 1); // tunnel established
     if (!callback) buf.append("x", 1); // caller informed
-    
     if (stopReason != NULL) {
         buf.append(" stopped, reason:", 16);
         buf.appendf("%s",stopReason);

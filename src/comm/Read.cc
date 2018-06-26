@@ -248,7 +248,7 @@ Comm::SetClientObjectReadTimeout(const Comm::ConnectionPointer &conn, time_t sta
     time_t timeToRead;
     if (lifetimeLimit > 0) {
         Must(squid_curtime >= startTime);
-        const time_t timeUsed = squid_curtime - startTime;        
+        const time_t timeUsed = squid_curtime - startTime;
         const time_t timeLeft = (lifetimeLimit > timeUsed) ? (lifetimeLimit - timeUsed) : 0;
         timeToRead = min(::Config.Timeout.read, timeLeft);
     } else
