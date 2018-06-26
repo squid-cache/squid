@@ -14,6 +14,7 @@
 #include "errorpage.h"
 #include "fde.h"
 #include "http.h"
+#include "http/one/ResponseParser.h"
 #include "http/StateFlags.h"
 #include "HttpRequest.h"
 #include "StatCounters.h"
@@ -196,7 +197,6 @@ Http::Tunneler::handleReadyRead(const CommIoCbParams &io)
         statCounter.server.all.kbytes_in += rd.size;
         statCounter.server.other.kbytes_in += rd.size; // TODO: other or http?
         request->hier.notePeerRead();
-        len += rd.size;
         handleResponse(false);
         return;
     }
@@ -242,29 +242,42 @@ void
 Http::Tunneler::handleResponse(const bool eof)
 {
     // mimic the basic parts of HttpStateData::processReplyHeader()
-    // TODO: HttpStateData::processReplyHeader() tries harder on eof!
-    // TODO: Do not parse headers. Use Http1::ResponseParser. See HttpStateData::processReplyHeader().
-    HttpReply::Pointer rep = new HttpReply;
-    Http::StatusCode parseErr = Http::scNone;
-    const bool parsed = rep->parse(readBuf.c_str(), readBuf.length(), eof, &parseErr);
-    if (!parsed) {
-        if (parseErr > 0) { // unrecoverable parsing error
-            bailOnResponseError("malformed CONNECT response from peer", nullptr);
+    if (hp == NULL)
+        hp = new Http1::ResponseParser;
+
+    bool parsedOk = hp->parse(readBuf);
+    readBuf = hp->remaining();
+    if (hp->needsMoreData()) {
+        if (!eof) {
+            if (readBuf.length() >= SQUID_TCP_SO_RCVBUF) {
+                bailOnResponseError("huge CONNECT response from peer", nullptr);
+                return;
+            }
+            readMore();
             return;
         }
 
-        // need more data
-        assert(!eof);
-        assert(!parseErr);
+        //eof, handle truncated response
+        readBuf.append("\r\n\r\n", 4);
+        parsedOk = hp->parse(readBuf);
+        readBuf = hp->remaining();
+    }
 
-        if (readBuf.length() >= SQUID_TCP_SO_RCVBUF) {
-            bailOnResponseError("huge CONNECT response from peer", nullptr);
-            return;
-        }
-
-        readMore();
+    if (!parsedOk) {
+        bailOnResponseError("malformed CONNECT response from peer", nullptr);
         return;
     }
+
+    // Assume the Http reply parsed correctly
+    HttpReply::Pointer rep = new HttpReply;
+    rep->sline.set(hp->messageProtocol(), hp->messageStatus());
+    // parse headers
+    if (!rep->parseHeader(*hp)) {
+        bailOnResponseError("malformed CONNECT response from peer", nullptr);
+        return;
+    }
+
+    rep->sources |= HttpMsg::srcHttp;
 
     // CONNECT response was successfully parsed
     auto &futureAnswer = answer();
@@ -284,9 +297,7 @@ Http::Tunneler::handleResponse(const bool eof)
     }
 
     // preserve any bytes sent by the server after the CONNECT response
-    futureAnswer.leftovers = readBuf.substr(rep->hdr_sz);
-    // delay pools were using this field to throttle CONNECT response
-    len = futureAnswer.leftovers.length();
+    futureAnswer.leftovers = readBuf;
 
     tunnelEstablished = true;
     debugs(83, 5, status());

@@ -94,10 +94,10 @@ private:
     AsyncCall::Pointer closer; ///< called when the connection is being closed
 
     SBuf readBuf; ///< either unparsed response or post-response bytes
+    /// Parser being used at present to parse the HTTP peer response.
+    Http1::ResponseParserPointer hp;
 
     const time_t startTime; ///< when the tunnel establishment started
-
-    size_t len; // XXX: Delay ID needs something like this?
 
     bool requestWritten; ///< whether we successfully wrote the request
     bool tunnelEstablished; ///< whether we got a 200 OK response
