@@ -927,11 +927,17 @@ MemStore::disconnect(StoreEntry &e)
     }
 }
 
+bool
+MemStore::Requested()
+{
+    return Config.memShared && Config.memMaxSize > 0;
+}
+
 /// calculates maximum number of entries we need to store and map
 int64_t
 MemStore::EntryLimit()
 {
-    if (!Config.memShared || !Config.memMaxSize)
+    if (!Requested())
         return 0; // no memory cache configured
 
     const int64_t minEntrySize = Ipc::Mem::PageSize();
@@ -983,6 +989,12 @@ MemStoreRr::finalizeConfig()
         debugs(20, DBG_IMPORTANT, "WARNING: memory_cache_shared is on, but only"
                " a single worker is running");
     }
+
+    if (MemStore::Requested() && Config.memMaxSize < Ipc::Mem::PageSize()) {
+        debugs(20, DBG_IMPORTANT, "WARNING: mem-cache size is too small (" <<
+               (Config.memMaxSize / 1024.0) << " KB), should be >= " <<
+               (Ipc::Mem::PageSize() / 1024.0) << " KB");
+    }
 }
 
 void
@@ -995,19 +1007,11 @@ MemStoreRr::useConfig()
 void
 MemStoreRr::create()
 {
-    if (!Config.memShared)
-        return;
+    if (!MemStore::Enabled())
+        return; // no memory cache configured or a misconfiguration
 
     const int64_t entryLimit = MemStore::EntryLimit();
-    if (entryLimit <= 0) {
-        if (Config.memMaxSize > 0) {
-            debugs(20, DBG_IMPORTANT, "WARNING: mem-cache size is too small ("
-                   << (Config.memMaxSize / 1024.0) << " KB), should be >= " <<
-                   (Ipc::Mem::PageSize() / 1024.0) << " KB");
-        }
-        return; // no memory cache configured or a misconfiguration
-    }
-
+    assert(entryLimit > 0);
     Must(!spaceOwner);
     spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, SpacePoolId,
                  entryLimit, 0);

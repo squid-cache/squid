@@ -36,6 +36,7 @@ public:
     virtual void evictCached(StoreEntry &) override {}
     virtual void evictIfFound(const cache_key *) override {}
     virtual bool hasReadableEntry(const StoreEntry &) const override { return false; }
+    virtual bool smpAware() const override { return false; }
 };
 
 typedef RefCount<TestSwapDir> TestSwapDirPointer;
