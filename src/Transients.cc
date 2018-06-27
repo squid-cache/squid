@@ -338,7 +338,7 @@ int64_t
 Transients::EntryLimit()
 {
     return (UsingSmp() && Store::Controller::SmpAware()) ?
-        Config.shared_transient_entries_limit : 0;
+           Config.shared_transient_entries_limit : 0;
 }
 
 bool

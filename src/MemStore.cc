@@ -991,9 +991,9 @@ MemStoreRr::finalizeConfig()
     }
 
     if (MemStore::Requested() && Config.memMaxSize < Ipc::Mem::PageSize()) {
-        debugs(20, DBG_IMPORTANT, "WARNING: mem-cache size is too small ("
-                << (Config.memMaxSize / 1024.0) << " KB), should be >= " <<
-                (Ipc::Mem::PageSize() / 1024.0) << " KB");
+        debugs(20, DBG_IMPORTANT, "WARNING: mem-cache size is too small (" <<
+               (Config.memMaxSize / 1024.0) << " KB), should be >= " <<
+               (Ipc::Mem::PageSize() / 1024.0) << " KB");
     }
 }
 
@@ -1003,7 +1003,6 @@ MemStoreRr::useConfig()
     assert(Config.memShared.configured());
     Ipc::Mem::RegisteredRunner::useConfig();
 }
-
 
 void
 MemStoreRr::create()
