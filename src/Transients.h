@@ -76,7 +76,6 @@ public:
     virtual void evictCached(StoreEntry &) override;
     virtual void evictIfFound(const cache_key *) override;
     virtual void maintain() override;
-    virtual bool smpAware() const override { return true; }
 
     /// Whether an entry with the given public key exists and (but) was
     /// marked for removal some time ago; get(key) returns nil in such cases.
@@ -88,6 +87,9 @@ public:
     bool isWriter(const StoreEntry &) const;
 
     static int64_t EntryLimit();
+
+    /// Can we create and initialize Transients?
+    static bool Enabled() { return EntryLimit(); }
 
 protected:
     void addEntry(StoreEntry*, const cache_key *, const Store::IoStatus);

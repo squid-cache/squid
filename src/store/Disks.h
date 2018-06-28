@@ -48,14 +48,15 @@ public:
     /// Additional unknown-size entry bytes required by disks in order to
     /// reduce the risk of selecting the wrong disk cache for the growing entry.
     int64_t accumulateMore(const StoreEntry&) const;
-    virtual bool smpAware() const override;
+    /// whether any disk cache is SMP-aware
+    static bool SmpAware();
     /// whether any of disk caches has entry with e.key
     bool hasReadableEntry(const StoreEntry &) const;
 
 private:
     /* migration logic */
     SwapDir *store(int const x) const;
-    SwapDir &dir(int const idx) const;
+    static SwapDir &Dir(int const idx);
 
     int64_t largestMinimumObjectSize; ///< maximum of all Disk::minObjectSize()s
     int64_t largestMaximumObjectSize; ///< maximum of all Disk::maxObjectSize()s

@@ -38,4 +38,5 @@ void MemStore::evictCached(StoreEntry&) STUB
 void MemStore::evictIfFound(const cache_key *) STUB
 bool MemStore::anchorToCache(StoreEntry&, bool&) STUB_RETVAL(false)
 bool MemStore::updateAnchored(StoreEntry&) STUB_RETVAL(false)
+int64_t MemStore::EntryLimit() STUB_RETVAL(0)
 
