@@ -177,7 +177,7 @@ MemStore::init()
 {
     const int64_t entryLimit = EntryLimit();
     if (entryLimit <= 0)
-        return; // no memory cache configured or a misconfiguration
+        return; // no shared memory cache configured or a misconfiguration
 
     // check compatibility with the disk cache, if any
     if (Config.cacheSwap.n_configured > 0) {
@@ -938,7 +938,7 @@ int64_t
 MemStore::EntryLimit()
 {
     if (!Requested())
-        return 0; // no memory cache configured
+        return 0;
 
     const int64_t minEntrySize = Ipc::Mem::PageSize();
     const int64_t entryLimit = Config.memMaxSize / minEntrySize;
@@ -1008,7 +1008,7 @@ void
 MemStoreRr::create()
 {
     if (!MemStore::Enabled())
-        return; // no memory cache configured or a misconfiguration
+        return;
 
     const int64_t entryLimit = MemStore::EntryLimit();
     assert(entryLimit > 0);
