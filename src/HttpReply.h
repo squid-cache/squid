@@ -100,7 +100,12 @@ public:
 
     int validatorsMatch (HttpReply const *other) const;
 
+    /// adds status line and header to the given Packable
     void packHeadersInto(Packable * p) const;
+    /// same as packHeadersInto() but assumes that `p` can quickly process small additions
+    void packHeadersIntoFast(Packable &p) const;
+    /// same as packHeadersInto() but assumes that `p` cannot quickly process small additions
+    void packHeadersIntoSlow(Packable &p) const;
 
     /** Clone this reply.
      *  Could be done as a copy-contructor but we do not want to accidently copy a HttpReply..

@@ -82,11 +82,30 @@ HttpReply::clean()
 }
 
 void
+HttpReply::packHeadersIntoFast(Packable &p) const
+{
+    sline.packInto(&p);
+    header.packInto(&p);
+    p.append("\r\n", 2);
+}
+
+void
+HttpReply::packHeadersIntoSlow(Packable &p) const
+{
+    MemBuf buf;
+    buf.init();
+    packHeadersIntoFast(buf);
+    p.append(buf.content(), buf.contentSize());
+}
+
+void
 HttpReply::packHeadersInto(Packable * p) const
 {
-    sline.packInto(p);
-    header.packInto(p);
-    p->append("\r\n", 2);
+    assert(p);
+    if (dynamic_cast<MemBuf*>(p))
+        packHeadersIntoFast(*p);
+    else
+        packHeadersIntoSlow(*p);
 }
 
 void

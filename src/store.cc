@@ -1824,7 +1824,7 @@ StoreEntry::startWriting()
     assert(rep);
 
     buffer();
-    rep->packHeadersInto(this);
+    rep->packHeadersIntoSlow(*this);
     mem_obj->markEndOfReplyHeaders();
 
     rep->body.packInto(this);
