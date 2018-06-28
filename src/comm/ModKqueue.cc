@@ -197,13 +197,7 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
 void
 Comm::ResetSelect(int fd)
 {
-    fde *F = &fd_table[fd];
-    if (F->read_handler) {
-        kq_update_events(fd, EVFILT_READ, (PF *)1);
-    }
-    if (F->write_handler) {
-        kq_update_events(fd, EVFILT_WRITE, (PF *)1);
-    }
+    SetSelect(fd, COMM_SELECT_READ|COMM_SELECT_WRITE, nullptr, nullptr, 0);
 }
 
 /*

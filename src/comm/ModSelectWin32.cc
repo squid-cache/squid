@@ -142,6 +142,7 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
 void
 Comm::ResetSelect(int fd)
 {
+    SetSelect(fd, COMM_SELECT_READ|COMM_SELECT_WRITE, nullptr, nullptr, 0);
 }
 
 static int

@@ -3188,8 +3188,7 @@ ConnStateData::parseTlsHandshake()
     }
 
     // We should disable read/write handlers
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+    Comm::ResetSelect(clientConnection->fd);
 
     if (unsupportedProtocol) {
         Http::StreamPointer context = pipeline.front();
