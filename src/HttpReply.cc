@@ -99,20 +99,10 @@ HttpReply::packHeadersIntoSlow(Packable &p) const
 }
 
 void
-HttpReply::packHeadersInto(Packable * p) const
+HttpReply::packInto(MemBuf &buf) const
 {
-    assert(p);
-    if (dynamic_cast<MemBuf*>(p))
-        packHeadersIntoFast(*p);
-    else
-        packHeadersIntoSlow(*p);
-}
-
-void
-HttpReply::packInto(Packable * p) const
-{
-    packHeadersInto(p);
-    body.packInto(p);
+    packHeadersIntoFast(buf);
+    body.packInto(&buf);
 }
 
 /* create memBuf, create mem-based packer, pack, destroy packer, return MemBuf */
@@ -121,7 +111,7 @@ HttpReply::pack() const
 {
     MemBuf *mb = new MemBuf;
     mb->init();
-    packInto(mb);
+    packInto(*mb);
     return mb;
 }
 

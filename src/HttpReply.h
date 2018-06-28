@@ -101,10 +101,9 @@ public:
     int validatorsMatch (HttpReply const *other) const;
 
     /// adds status line and header to the given Packable
-    void packHeadersInto(Packable * p) const;
-    /// same as packHeadersInto() but assumes that `p` can quickly process small additions
+    /// assumes that `p` can quickly process small additions
     void packHeadersIntoFast(Packable &p) const;
-    /// same as packHeadersInto() but assumes that `p` cannot quickly process small additions
+    /// same as packHeadersIntoFast() but assumes that `p` cannot quickly process small additions
     void packHeadersIntoSlow(Packable &p) const;
 
     /** Clone this reply.
@@ -129,7 +128,7 @@ private:
 
     void hdrCacheClean();
 
-    void packInto(Packable * p) const;
+    void packInto(MemBuf &) const;
 
     /* ez-routines */
     /** \return construct 304 reply and pack it into a MemBuf */
