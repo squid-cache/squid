@@ -113,23 +113,18 @@ GetStrPool(size_t type)
     return *strPools[type];
 }
 
-/* Find the best fit string pool type */
-static mem_type
-memFindStringSizeType(size_t net_size, bool fuzzy)
+/// \returns the best-fit string pool or nil
+static MemAllocator *
+memFindStringPool(size_t net_size, bool fuzzy)
 {
-    mem_type type = MEM_NONE;
     for (unsigned int i = 0; i < mem_str_pool_count; ++i) {
         auto &pool = GetStrPool(i);
-        if (fuzzy && net_size < pool.objectSize()) {
-            type = static_cast<mem_type>(i);
-            break;
-        } else if (net_size == pool.objectSize()) {
-            type = static_cast<mem_type>(i);
-            break;
-        }
+        if (fuzzy && net_size < pool.objectSize())
+            return &pool;
+        if (net_size == pool.objectSize())
+            return &pool;
     }
-
-    return type;
+    return nullptr;
 }
 
 static void
@@ -236,14 +231,12 @@ memAllocString(size_t net_size, size_t * gross_size)
 {
     assert(gross_size);
 
-    auto type = memFindStringSizeType(net_size, true);
-    if (type != MEM_NONE) {
-        auto &pool = GetStrPool(type);
-        *gross_size = pool.objectSize();
+    if (const auto pool = memFindStringPool(net_size, true)) {
+        *gross_size = pool->objectSize();
         assert(*gross_size >= net_size);
         ++StrCountMeter;
         StrVolumeMeter += *gross_size;
-        return pool.alloc();
+        return pool->alloc();
     }
 
     *gross_size = net_size;
@@ -269,9 +262,8 @@ memFreeString(size_t size, void *buf)
 {
     assert(buf);
 
-    auto type = memFindStringSizeType(size, false);
-    if (type != MEM_NONE)
-        GetStrPool(type).freeOne(buf);
+    if (const auto pool = memFindStringPool(size, false))
+        pool->freeOne(buf);
     else
         xfree(buf);
 
