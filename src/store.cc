@@ -23,6 +23,7 @@
 #include "HttpRequest.h"
 #include "mem_node.h"
 #include "MemObject.h"
+#include "MemStore.h"
 #include "mgr/Registration.h"
 #include "mgr/StoreIoAction.h"
 #include "profiler/Profiler.h"
@@ -1578,7 +1579,7 @@ StoreEntry::setMemStatus(mem_status_t new_status)
         return;
 
     // are we using a shared memory cache?
-    if (Config.memShared && IamWorkerProcess()) {
+    if (MemStore::Enabled()) {
         // This method was designed to update replacement policy, not to
         // actually purge something from the memory cache (TODO: rename?).
         // Shared memory cache does not have a policy that needs updates.

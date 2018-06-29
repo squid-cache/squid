@@ -40,7 +40,6 @@ public:
     virtual void evictCached(StoreEntry &) override;
     virtual void evictIfFound(const cache_key *) override;
     virtual int callback() override;
-    virtual bool smpAware() const override;
 
     /// \returns a locally indexed and SMP-tracked matching StoreEntry (or nil)
     /// Slower than peek() but does not restrict StoreEntry use and storage.
@@ -133,6 +132,9 @@ public:
     /// \returns an iterator for all Store entries
     StoreSearch *search();
 
+    /// whether there are any SMP-aware storages
+    static bool SmpAware();
+
     /// the number of cache_dirs being rebuilt; TODO: move to Disks::Rebuilding
     static int store_dirs_rebuilding;
 
@@ -152,7 +154,8 @@ private:
     void checkTransients(const StoreEntry &) const;
 
     Disks *swapDir; ///< summary view of all disk caches
-    Memory *memStore; ///< memory cache
+    Memory *sharedMemStore; ///< memory cache that multiple workers can use
+    bool localMemStore; ///< whether local (non-shared) memory cache is enabled
 
     /// A shared table of public store entries that do not know whether they
     /// will belong to a memory cache, a disk cache, or will be uncachable
