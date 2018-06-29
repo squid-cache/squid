@@ -88,18 +88,22 @@ public:
     Comm::ConnectionPointer clientConnection;
 
     /// Request currently being handled by ClientHttpRequest.
-    /// Starts as a virgin request (see initRequest()), where
-    /// request->url keeps the virgin URI whith uri_whitespace applied.
+    /// Usually remains nil until the virgin request header is parsed or faked.
+    /// Starts as a virgin request; see initRequest().
     /// Adaptation and redirections replace it; see resetRequest().
     HttpRequest * const request;
-    /// Starts as a parsed request URI (a.k.a virgin URI).
-    /// Adaptation and redirections replace it; see resetRequest().
+
+    /// Usually starts as a URI received from the client, with scheme and host
+    /// added if needed. Is used to create the virgin request for initRequest().
+    /// URIs of adapted/redirected requests replace it via resetRequest().
     char *uri;
+
     // TODO: remove this field and store the URI directly in al->url
     /// Cleaned up URI of the current (virgin or adapted/redirected) request,
     /// computed URI of an internally-generated requests, or
     /// one of the hard-coded "error:..." URIs.
     char * const log_uri;
+
     String store_id; /* StoreID for transactions where the request member is nil */
 
     struct Out {
