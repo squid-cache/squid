@@ -1,3 +1,7 @@
+Changes to squid-4.1 (01 Jul 2018):
+
+	- Documentation updates
+
 Changes to squid-4.0.25 (11 Jun 2018):
 
 	- Regression Bug 4855: querying private entries for HTCP/ICP
