@@ -168,7 +168,6 @@ public:
     /// Whether we are waiting for the CONNECT request/response exchange with the peer.
     bool waitingForConnectExchange;
 
-
     void copyRead(Connection &from, IOCB *completion);
 
     /// continue to set up connection to a peer, going async for SSL peers
@@ -855,7 +854,7 @@ TunnelStateData::notePeerReadyToShovel()
         *status_ptr = Http::scOkay;
         AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
                                              CommIoCbPtrFun(tunnelConnectedWriteDone, this));
-        client.write(conn_established, strlen(conn_established), call, NULL);
+        client.write(conn_established, strlen(conn_established), call, nullptr);
     }
 }
 

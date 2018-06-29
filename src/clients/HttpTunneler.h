@@ -106,3 +106,4 @@ private:
 } // namespace Http
 
 #endif /* SQUID_SRC_CLIENTS_HTTP_TUNNELER_H */
+

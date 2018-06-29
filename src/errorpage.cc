@@ -699,9 +699,8 @@ ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply) :
 {
     Must(errorReply);
     httpStatus = errorReply->sline.status();
-    if (req != NULL) {
+    if (req != nullptr) {
         request = req;
-        HTTPMSGLOCK(request);
         src_addr = req->client_addr;
     }
 }

@@ -252,3 +252,4 @@ Comm::MortalReadTimeout(const time_t startTime, const time_t lifetimeLimit)
     } else
         return ::Config.Timeout.read;
 }
+

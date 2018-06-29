@@ -243,7 +243,7 @@ void
 Http::Tunneler::handleResponse(const bool eof)
 {
     // mimic the basic parts of HttpStateData::processReplyHeader()
-    if (hp == NULL)
+    if (hp == nullptr)
         hp = new Http1::ResponseParser;
 
     bool parsedOk = hp->parse(readBuf);
@@ -373,14 +373,15 @@ Http::Tunneler::status() const
     if (requestWritten) buf.append("w", 1); // request sent
     if (tunnelEstablished) buf.append("t", 1); // tunnel established
     if (!callback) buf.append("x", 1); // caller informed
-    if (stopReason != NULL) {
+    if (stopReason != nullptr) {
         buf.append(" stopped, reason:", 16);
         buf.appendf("%s",stopReason);
     }
-    if (connection != NULL)
+    if (connection != nullptr)
         buf.appendf(" FD %d", connection->fd);
     buf.appendf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
 
     return buf.content();
 }
+
