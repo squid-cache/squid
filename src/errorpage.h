@@ -96,7 +96,7 @@ public:
     ErrorState() = delete; // not implemented.
 
     /// Build an ERR_RELAY_REMOTE ErrorState object
-    ErrorState(HttpReply *);
+    explicit ErrorState(HttpRequest * request, HttpReply *);
 
     ~ErrorState();
 
@@ -119,6 +119,9 @@ public:
 
 private:
     typedef ErrorPage::Build Build;
+
+    /// used by public constructors
+    ErrorState(err_type type);
 
     /// locates the right error page template for this error and compiles it
     SBuf buildBody();

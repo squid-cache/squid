@@ -317,11 +317,6 @@ FwdState::~FwdState()
 
     entry = NULL;
 
-    if (calls.connector != NULL) {
-        calls.connector->cancel("FwdState destructed");
-        calls.connector = NULL;
-    }
-
     if (Comm::IsConnOpen(serverConn))
         closeServerConnection("~FwdState");
 
@@ -742,8 +737,6 @@ FwdState::handleUnregisteredServerEnd()
 void
 FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno)
 {
-    calls.connector = nullptr;
-
     if (status != Comm::OK) {
         ErrorState *const anErr = makeConnectingError(ERR_CONNECT_FAIL);
         anErr->xerrno = xerrno;
@@ -1061,9 +1054,9 @@ FwdState::connectStart()
 
     GetMarkingsToServer(request, *serverDestinations[0]);
 
-    calls.connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
+    AsyncCall::Pointer connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
     const time_t connTimeout = connectingTimeout(serverDestinations[0]);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], calls.connector, connTimeout);
+    Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], connector, connTimeout);
     if (host)
         cs->setHost(host);
     ++n_tries;

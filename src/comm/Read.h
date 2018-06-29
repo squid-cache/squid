@@ -50,11 +50,8 @@ void ReadCancel(int fd, AsyncCall::Pointer &callback);
 /// callback handler to process an FD which is available for reading
 extern PF HandleRead;
 
-/**
- * Sets a read timeout based on configured read timeout and  caller lifetime
- * limit and start time
- */
-void SetClientObjectReadTimeout(const Comm::ConnectionPointer &conn, time_t startTime, time_t lifeTimeLimit, AsyncCall::Pointer &callback);
+/// maximum read delay for readers with limited lifetime
+time_t MortalReadTimeout(const time_t startTime, const time_t lifetimeLimit);
 } // namespace Comm
 
 // Legacy API to be removed

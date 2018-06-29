@@ -671,51 +671,39 @@ ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const Acce
     return new ErrorState(type, status, request.getRaw(), ale);
 }
 
-ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, const AccessLogEntry::Pointer &anAle) :
+ErrorState::ErrorState(err_type t) :
     type(t),
     page_id(t),
-    httpStatus(status),
-    callback(nullptr),
-    ale(anAle)
+    callback(nullptr)
+{
+}
+
+ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, const AccessLogEntry::Pointer &anAle) :
+    ErrorState(t)
 {
     if (page_id >= ERR_MAX && ErrorDynamicPages[page_id - ERR_MAX]->page_redirect != Http::scNone)
         httpStatus = ErrorDynamicPages[page_id - ERR_MAX]->page_redirect;
+    else
+        httpStatus = status;
 
     if (req) {
         request = req;
         src_addr = req->client_addr;
     }
+
+    ale = anAle;
 }
 
-ErrorState::ErrorState(HttpReply *errorReply) :
-    type(ERR_RELAY_REMOTE),
-    page_id(ERR_RELAY_REMOTE),
-    err_language(NULL),
-    httpStatus(Http::scNone),
-#if USE_AUTH
-    auth_user_request (NULL),
-#endif
-    request(NULL),
-    url(NULL),
-    xerrno(0),
-    port(0),
-    dnsError(),
-    ttl(0),
-    src_addr(),
-    redirect_url(NULL),
-    callback(NULL),
-    callback_data(NULL),
-    request_hdrs(NULL),
-    err_msg(NULL),
-#if USE_OPENSSL
-    detail(NULL),
-#endif
-    detailCode(ERR_DETAIL_NONE),
-    response_(errorReply)
+ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply) :
+    ErrorState(ERR_RELAY_REMOTE)
 {
-    memset(&ftp, 0, sizeof(ftp));
     Must(errorReply);
     httpStatus = errorReply->sline.status();
+    if (req != NULL) {
+        request = req;
+        HTTPMSGLOCK(request);
+        src_addr = req->client_addr;
+    }
 }
 
 void

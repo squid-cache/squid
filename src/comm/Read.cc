@@ -242,16 +242,13 @@ Comm::ReadCancel(int fd, AsyncCall::Pointer &callback)
     Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
-void
-Comm::SetClientObjectReadTimeout(const Comm::ConnectionPointer &conn, time_t startTime, time_t lifetimeLimit, AsyncCall::Pointer &callback)
+time_t
+Comm::MortalReadTimeout(const time_t startTime, const time_t lifetimeLimit)
 {
-    time_t timeToRead;
     if (lifetimeLimit > 0) {
-        Must(squid_curtime >= startTime);
-        const time_t timeUsed = squid_curtime - startTime;
+        const time_t timeUsed = (squid_curtime > startTime) ? (squid_curtime - startTime) : 0;
         const time_t timeLeft = (lifetimeLimit > timeUsed) ? (lifetimeLimit - timeUsed) : 0;
-        timeToRead = min(::Config.Timeout.read, timeLeft);
+        return min(::Config.Timeout.read, timeLeft);
     } else
-        timeToRead = ::Config.Timeout.read;
-    commSetConnTimeout(conn, timeToRead, callback);
+        return ::Config.Timeout.read;
 }

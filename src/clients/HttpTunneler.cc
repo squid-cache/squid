@@ -234,7 +234,8 @@ Http::Tunneler::readMore()
     // TODO: Same as PeerConnector, but who removes this timeout after we send a
     // positive answer? Should not we clean after ourselves in swanSong()?
     AsyncCall::Pointer nil;
-    Comm::SetClientObjectReadTimeout(connection, startTime, lifetimeLimit, nil);
+    time_t timeout = Comm::MortalReadTimeout(startTime, lifetimeLimit);
+    commSetConnTimeout(connection, timeout, nil);
 }
 
 /// Parses [possibly incomplete] CONNECT response and reacts to it.
@@ -268,16 +269,13 @@ Http::Tunneler::handleResponse(const bool eof)
         return;
     }
 
-    // Assume the Http reply parsed correctly
     HttpReply::Pointer rep = new HttpReply;
+    rep->sources |= HttpMsg::srcHttp;
     rep->sline.set(hp->messageProtocol(), hp->messageStatus());
-    // parse headers
     if (!rep->parseHeader(*hp)) {
         bailOnResponseError("malformed CONNECT response from peer", nullptr);
         return;
     }
-
-    rep->sources |= HttpMsg::srcHttp;
 
     // CONNECT response was successfully parsed
     auto &futureAnswer = answer();
@@ -310,7 +308,7 @@ Http::Tunneler::bailOnResponseError(const char *error, HttpReply *errorReply)
 
     ErrorState *err;
     if (errorReply) {
-        err = new ErrorState(errorReply);
+        err = new ErrorState(request.getRaw(), errorReply);
     } else {
         // with no reply suitable for relaying, answer with 502 (Bad Gateway)
         err = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al);

@@ -323,7 +323,8 @@ tunnelClientClosed(const CommCloseCbParams &params)
 }
 
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
-    startTime(squid_curtime)
+    startTime(squid_curtime),
+    waitingForConnectExchange(false)
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
     client.readPendingFunc = &tunnelDelayedClientRead;
@@ -1031,7 +1032,6 @@ TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
     }
 
     assert(!waitingForConnectExchange);
-    // XXX: make waitingForConnectExchange a boolean; set it after Start() below
 
     AsyncCall::Pointer callback = asyncCall(5,4,
                                             "TunnelStateData::tunnelEstablishmentDone",
