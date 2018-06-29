@@ -261,7 +261,7 @@ Http::Tunneler::handleResponse(const bool eof)
         //eof, handle truncated response
         readBuf.append("\r\n\r\n", 4);
         parsedOk = hp->parse(readBuf);
-        readBuf = hp->remaining();
+        readBuf.clear();
     }
 
     if (!parsedOk) {
