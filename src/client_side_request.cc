@@ -1981,7 +1981,7 @@ ClientHttpRequest::setErrorUri(const char *aUri)
     // Should(!request);
 
     uri = xstrdup(aUri);
-    // TODO: SBuf() performance regression, fix by converting errorUri to SBuf
+    // TODO: SBuf() performance regression, fix by converting setErrorUri() parameter to SBuf
     const SBuf errorUri(aUri);
     const auto canonicalUri = urlCanonicalCleanWithoutRequest(errorUri, HttpRequestMethod(), AnyP::UriScheme());
     absorbLogUri(xstrndup(canonicalUri, MAX_URL));

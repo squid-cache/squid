@@ -88,9 +88,12 @@ public:
     Comm::ConnectionPointer clientConnection;
 
     /// Request currently being handled by ClientHttpRequest.
-    /// Starts as a virgin request; see initRequest().
+    /// Starts as a virgin request (see initRequest()), where
+    /// request->url keeps the virgin URI whith uri_whitespace applied.
     /// Adaptation and redirections replace it; see resetRequest().
     HttpRequest * const request;
+    /// Starts as a parsed request URI (a.k.a virgin URI).
+    /// Adaptation and redirections replace it; see resetRequest().
     char *uri;
     // TODO: remove this field and store the URI directly in al->url
     /// Cleaned up URI of the current (virgin or adapted/redirected) request,
@@ -164,6 +167,14 @@ public:
 #endif
 
 private:
+    /// assigns log_uri with aUri without copying the entire C-string
+    void absorbLogUri(char *aUri);
+    /// resets the current request and log_uri to nil
+    void clearRequest();
+    /// initializes the current unassigned request to the virgin request
+    /// sets the current request, asserting that it was unset
+    void assignRequest(HttpRequest *aRequest);
+
     int64_t maxReplyBodySize_;
     StoreEntry *entry_;
     StoreEntry *loggingEntry_;
@@ -209,14 +220,6 @@ private:
     void endRequestSatisfaction();
     /// called by StoreEntry when it has more buffer space available
     void resumeBodyStorage();
-
-    /// assigns log_uri with aUri without copying the entire C-string
-    void absorbLogUri(char *aUri);
-    /// resets the current request and log_uri to nil
-    void clearRequest();
-    /// initializes the current unassigned request to the virgin request
-    /// sets the current request, asserting that it was unset
-    void assignRequest(HttpRequest *aRequest);
 
 private:
     CbcPointer<Adaptation::Initiate> virginHeadSource;
