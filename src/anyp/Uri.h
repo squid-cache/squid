@@ -179,7 +179,13 @@ operator <<(std::ostream &os, const AnyP::Uri &url)
 class HttpRequest;
 
 void urlInitialize(void);
-char *urlCanonicalClean(const HttpRequest *);
+/// \returns a pointer to a local static buffer containing request URI
+/// that honors strip_query_terms and %-encodes unsafe URI characters
+char *urlCanonicalClean(const HttpRequest &);
+/// call urlCanonicalClean() instead if you have HttpRequest
+/// \returns a pointer to a local static buffer containing request URI
+/// that honors strip_query_terms and %-encodes unsafe URI characters
+char *urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &, const AnyP::UriScheme &);
 const char *urlCanonicalFakeHttps(const HttpRequest * request);
 bool urlIsRelative(const char *);
 char *urlMakeAbsolute(const HttpRequest *, const char *);

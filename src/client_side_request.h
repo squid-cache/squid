@@ -72,14 +72,31 @@ public:
         }
     }
 
+    /// Initializes the current request with the virgin request.
+    /// Call this method when the virgin request becomes known.
+    /// To update the current request later, use resetRequest().
+    void initRequest(HttpRequest *);
+
+    /// Resets the current request to the latest adapted or redirected
+    /// request. Call this every time adaptation or redirection changes
+    /// the request. To set the virgin request, use initRequest().
+    void resetRequest(HttpRequest *);
+
     /** Details of the client socket which produced us.
      * Treat as read-only for the lifetime of this HTTP request.
      */
     Comm::ConnectionPointer clientConnection;
 
-    HttpRequest *request;       /* Parsed URL ... */
+    /// Request currently being handled by ClientHttpRequest.
+    /// Starts as a virgin request; see initRequest().
+    /// Adaptation and redirections replace it; see resetRequest().
+    HttpRequest * const request;
     char *uri;
-    char *log_uri;
+    // TODO: remove this field and store the URI directly in al->url
+    /// Cleaned up URI of the current (virgin or adapted/redirected) request,
+    /// computed URI of an internally-generated requests, or
+    /// one of the hard-coded "error:..." URIs.
+    char * const log_uri;
     String store_id; /* StoreID for transactions where the request member is nil */
 
     struct Out {
@@ -121,6 +138,18 @@ public:
 
     ClientRequestContext *calloutContext;
     void doCallouts();
+
+    // The three methods below prepare log_uri and friends for future logging.
+    // Call the best-fit method whenever the current request or its URI changes.
+
+    /// sets log_uri when we know the current request
+    void setLogUriToRequestUri();
+    /// sets log_uri to a parsed request URI when Squid fails to parse or
+    /// validate other request components, yielding no current request
+    void setLogUriToRawUri(const char *rawUri, const HttpRequestMethod &);
+    /// sets log_uri and uri to an internally-generated "error:..." URI when
+    /// neither the current request nor the parsed request URI are known
+    void setErrorUri(const char *errorUri);
 
     /// Build an error reply. For use with the callouts.
     void calloutsError(const err_type error, const int errDetail);
@@ -180,6 +209,14 @@ private:
     void endRequestSatisfaction();
     /// called by StoreEntry when it has more buffer space available
     void resumeBodyStorage();
+
+    /// assigns log_uri with aUri without copying the entire C-string
+    void absorbLogUri(char *aUri);
+    /// resets the current request and log_uri to nil
+    void clearRequest();
+    /// initializes the current unassigned request to the virgin request
+    /// sets the current request, asserting that it was unset
+    void assignRequest(HttpRequest *aRequest);
 
 private:
     CbcPointer<Adaptation::Initiate> virginHeadSource;

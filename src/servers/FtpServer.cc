@@ -749,10 +749,9 @@ Ftp::Server::parseOneRequest()
     }
 
     ClientHttpRequest *const http = new ClientHttpRequest(this);
-    http->request = request;
-    HTTPMSGLOCK(http->request);
     http->req_sz = tok.parsedSize();
     http->uri = newUri;
+    http->initRequest(request);
 
     Http::Stream *const result =
         new Http::Stream(clientConnection, http);
@@ -1735,8 +1734,6 @@ Ftp::Server::setReply(const int code, const char *msg)
     assert(http->storeEntry() == NULL);
 
     HttpReply *const reply = Ftp::HttpReplyWrapper(code, msg, Http::scNoContent, 0);
-
-    setLogUri(http, urlCanonicalClean(http->request));
 
     clientStreamNode *const node = context->getClientReplyContext();
     clientReplyContext *const repContext =
