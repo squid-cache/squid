@@ -1,6 +1,9 @@
 Changes to squid-4.1 (01 Jul 2018):
 
-	- Documentation updates
+	- Bug 4223: fixed retries of failed re-forwardable transactions
+	- Bug 4791: Build failure on MacOS
+	- Fix --with-netfilter-conntrack error message
+	- ... and many documentation updates
 
 Changes to squid-4.0.25 (11 Jun 2018):
 
