@@ -2463,10 +2463,11 @@ ConnStateData::whenClientIpKnown()
 #if USE_DELAY_POOLS
     fd_table[clientConnection->fd].clientInfo = NULL;
 
-    if (Config.onoff.client_db) {
-        /* it was said several times that client write limiter does not work if client_db is disabled */
+    if (!Config.onoff.client_db)
+        return; // client delay pools require client_db
 
-        ClientDelayPools& pools(Config.ClientDelay.pools);
+    ClientDelayPools& pools(Config.ClientDelay.pools);
+    if (pools.size()) {
         ACLFilledChecklist ch(NULL, NULL, NULL);
 
         // TODO: we check early to limit error response bandwith but we
