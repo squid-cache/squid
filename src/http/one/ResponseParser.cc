@@ -121,16 +121,7 @@ Http::One::ResponseParser::parseResponseFirstLine()
 {
     Http1::Tokenizer tok(buf_);
 
-    CharacterSet WspDelim = CharacterSet::SP; // strict parse only accepts SP
-
-    if (Config.onoff.relaxed_header_parser) {
-        // RFC 7230 section 3.5
-        // tolerant parser MAY accept any of SP, HTAB, VT (%x0B), FF (%x0C), or bare CR
-        // as whitespace between status-line fields
-        WspDelim += CharacterSet::HTAB
-                    + CharacterSet("VT,FF","\x0B\x0C")
-                    + CharacterSet::CR;
-    }
+    const CharacterSet &WspDelim = DelimiterCharacters();
 
     if (msgProtocol_.protocol != AnyP::PROTO_NONE) {
         debugs(74, 6, "continue incremental parse for " << msgProtocol_);
