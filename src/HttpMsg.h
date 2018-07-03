@@ -128,7 +128,7 @@ protected:
 };
 
 #define HTTPMSGUNLOCK(a) if (a) { if ((a)->unlock() == 0) delete (a); (a)=NULL; }
-#define HTTPMSGLOCK(a) (a)->lock()
+#define HTTPMSGLOCK(a) if (a) { (a)->lock(); }
 
 #endif /* SQUID_HTTPMSG_H */
 
