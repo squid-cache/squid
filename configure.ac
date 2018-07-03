@@ -5,7 +5,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[4.0.25-VCS],[http://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[4.1-VCS],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -2333,7 +2333,7 @@ case "$with_netfilter_conntrack" in
     ;;
   *)
     if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--without-netfilter-conntrack path does not point to a directory])
+      AC_MSG_ERROR([--with-netfilter-conntrack path does not point to a directory])
     fi
     squid_opt_netfilterconntrackpath=$withval
     LDFLAGS="-L$squid_opt_netfilterconntrackpath/lib $LDFLAGS"
