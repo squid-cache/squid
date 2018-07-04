@@ -250,12 +250,10 @@ memAllocRigid(size_t net_size)
 {
     // TODO: Use memAllocString() instead (after it stops zeroing memory).
 
-    auto type = memFindStringSizeType(net_size, true);
-    if (type != MEM_NONE) {
-        auto &pool = GetStrPool(type);
+    if (const auto pool = memFindStringPool(net_size, true)) {
         ++StrCountMeter;
-        StrVolumeMeter += pool.objectSize();
-        return pool.alloc();
+        StrVolumeMeter += pool->objectSize();
+        return pool->alloc();
     }
 
     ++StrCountMeter;
@@ -294,11 +292,9 @@ memFreeRigid(void *buf, size_t net_size)
 {
     // TODO: Use memFreeString() instead (after removing fuzzy=false pool search).
 
-    auto type = memFindStringSizeType(net_size, true);
-    if (type != MEM_NONE) {
-        auto &pool = GetStrPool(type);
-        pool.freeOne(buf);
-        StrVolumeMeter -= pool.objectSize();
+    if (const auto pool = memFindStringPool(net_size, true)) {
+        pool->freeOne(buf);
+        StrVolumeMeter -= pool->objectSize();
         --StrCountMeter;
         return;
     }
