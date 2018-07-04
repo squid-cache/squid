@@ -43,25 +43,26 @@
 
 class StoreDigestState
 {
-
 public:
     StoreDigestCBlock cblock;
-    int rebuild_lock;       /* bucket number */
-    StoreEntry * rewrite_lock;  /* points to store entry with the digest */
+    int rebuild_lock = 0;                 ///< bucket number
+    StoreEntry * rewrite_lock = nullptr;  ///< points to store entry with the digest
     StoreSearchPointer theSearch;
-    int rewrite_offset;
-    int rebuild_count;
-    int rewrite_count;
+    int rewrite_offset = 0;
+    int rebuild_count = 0;
+    int rewrite_count = 0;
 };
 
-typedef struct {
-    int del_count;      /* #store entries deleted from store_digest */
-    int del_lost_count;     /* #store entries not found in store_digest on delete */
-    int add_count;      /* #store entries accepted to store_digest */
-    int add_coll_count;     /* #accepted entries that collided with existing ones */
-    int rej_count;      /* #store entries not accepted to store_digest */
-    int rej_coll_count;     /* #not accepted entries that collided with existing ones */
-} StoreDigestStats;
+class StoreDigestStats
+{
+public:
+    int del_count = 0;          /* #store entries deleted from store_digest */
+    int del_lost_count = 0;     /* #store entries not found in store_digest on delete */
+    int add_count = 0;          /* #store entries accepted to store_digest */
+    int add_coll_count = 0;     /* #accepted entries that collided with existing ones */
+    int rej_count = 0;          /* #store entries not accepted to store_digest */
+    int rej_coll_count = 0;     /* #not accepted entries that collided with existing ones */
+};
 
 /* local vars */
 static StoreDigestState sd_state;
@@ -139,7 +140,7 @@ storeDigestInit(void)
            (int) Config.digest.rebuild_period << "/" <<
            (int) Config.digest.rewrite_period << " sec");
 
-    memset(&sd_state, 0, sizeof(sd_state));
+    sd_state = StoreDigestState();
 #else
     store_digest = NULL;
     debugs(71, 3, "Local cache digest is 'off'");
@@ -355,7 +356,7 @@ storeDigestRebuildResume(void)
     if (!storeDigestResize())
         store_digest->clear();     /* not clean()! */
 
-    memset(&sd_stats, 0, sizeof(sd_stats));
+    sd_stats = StoreDigestStats();
 
     eventAdd("storeDigestRebuildStep", storeDigestRebuildStep, NULL, 0.0, 1);
 }

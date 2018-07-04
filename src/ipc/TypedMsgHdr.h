@@ -74,6 +74,7 @@ public:
     size_t size() const { return sizeof(*this); } ///< not true message size
 
 private:
+    void clear();
     void sync();
     void allocData();
     void allocName();
@@ -89,18 +90,22 @@ private:
     struct iovec ios[1]; ///< same as .msg_iov[]
 
     struct DataBuffer {
-        int type_; ///< Message kind, uses MessageType values
-        size_t size; ///< actual raw data size (for sanity checks)
+        DataBuffer() { memset(raw, 0, sizeof(raw)); }
+
+        int type_ = 0; ///< Message kind, uses MessageType values
+        size_t size = 0; ///< actual raw data size (for sanity checks)
         char raw[maxSize]; ///< buffer with type-specific data
     } data; ///< same as .msg_iov[0].iov_base
 
     struct CtrlBuffer {
+        CtrlBuffer() { memset(raw, 0, sizeof(raw)); }
+
         /// control buffer space for one fd
         char raw[SQUID_CMSG_SPACE(sizeof(int))];
     } ctrl; ///< same as .msg_control
 
     /// data offset for the next get/put*() to start with
-    mutable unsigned int offset;
+    mutable unsigned int offset = 0;
 };
 
 } // namespace Ipc

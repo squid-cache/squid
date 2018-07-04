@@ -1158,7 +1158,6 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     HttpHeader hdr_out(hoRequest);
     Http::StateFlags flags;
     debugs(26, 3, HERE << srv << ", tunnelState=" << tunnelState);
-    memset(&flags, '\0', sizeof(flags));
     flags.proxying = tunnelState->request->flags.proxying;
     MemBuf mb;
     mb.init();

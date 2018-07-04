@@ -96,30 +96,18 @@ MemObject::setUris(char const *aStoreId, char const *aLogUri, const HttpRequestM
 #endif
 }
 
-MemObject::MemObject() :
-    inmem_lo(0),
-    nclients(0),
-    request(nullptr),
-    ping_reply_callback(nullptr),
-    ircb_data(nullptr),
-    id(0),
-    object_sz(-1),
-    swap_hdr_sz(0),
-#if URL_CHECKSUM_DEBUG
-    chksum(0),
-#endif
-    vary_headers(nullptr)
+MemObject::MemObject()
 {
-    debugs(20, 3, "new MemObject " << this);
+    debugs(20, 3, "MemObject constructed, this=" << this);
+    ping_reply_callback = nullptr;
     memset(&start_ping, 0, sizeof(start_ping));
-    memset(&abort, 0, sizeof(abort));
     _reply = new HttpReply;
     HTTPMSGLOCK(_reply);
 }
 
 MemObject::~MemObject()
 {
-    debugs(20, 3, "del MemObject " << this);
+    debugs(20, 3, "MemObject destructed, this=" << this);
     const Ctx ctx = ctx_enter(hasUris() ? urlXXX() : "[unknown_ctx]");
 
 #if URL_CHECKSUM_DEBUG

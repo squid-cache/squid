@@ -708,8 +708,7 @@ fqdncache_init(void)
     debugs(35, 3, "Initializing FQDN Cache...");
 
     memset(&FqdncacheStats, '\0', sizeof(FqdncacheStats));
-
-    memset(&lru_list, '\0', sizeof(lru_list));
+    lru_list = dlink_list();
 
     fqdncache_high = (long) (((float) Config.fqdncache.size *
                               (float) FQDN_HIGH_WATER) / (float) 100);

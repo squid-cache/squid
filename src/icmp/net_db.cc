@@ -590,7 +590,7 @@ netdbReloadState(void)
         char *q;
         assert(s - buf < l);
         *s = '\0';
-        memset(&N, '\0', sizeof(netdbEntry));
+        N = netdbEntry();
         q = strtok(t, w_space);
         t = s + 1;
 

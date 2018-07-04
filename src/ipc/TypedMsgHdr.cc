@@ -18,23 +18,40 @@
 
 Ipc::TypedMsgHdr::TypedMsgHdr()
 {
-    memset(this, 0, sizeof(*this));
+    clear();
     sync();
 }
 
 Ipc::TypedMsgHdr::TypedMsgHdr(const TypedMsgHdr &tmh)
 {
-    memcpy(this, &tmh, sizeof(*this));
-    sync();
+    clear();
+    operator =(tmh);
 }
 
 Ipc::TypedMsgHdr &Ipc::TypedMsgHdr::operator =(const TypedMsgHdr &tmh)
 {
     if (this != &tmh) { // skip assignment to self
-        memcpy(this, &tmh, sizeof(*this));
+        memcpy(static_cast<msghdr*>(this), static_cast<const msghdr*>(&tmh), sizeof(msghdr));
+        name = tmh.name;
+        memcpy(&ios, &tmh.ios, sizeof(ios));
+        data = tmh.data;
+        ctrl = tmh.ctrl;
+        offset = tmh.offset;
         sync();
     }
     return *this;
+}
+
+void
+Ipc::TypedMsgHdr::clear()
+{
+    // may be called from the constructor, with object fields uninitialized
+    memset(static_cast<msghdr*>(this), 0, sizeof(msghdr));
+    memset(&name, 0, sizeof(name));
+    memset(&ios, 0, sizeof(ios));
+    data = DataBuffer();
+    ctrl = CtrlBuffer();
+    offset = 0;
 }
 
 // update msghdr and ios pointers based on msghdr counters
@@ -223,7 +240,9 @@ Ipc::TypedMsgHdr::getFd() const
 void
 Ipc::TypedMsgHdr::prepForReading()
 {
-    memset(this, 0, sizeof(*this));
+    clear();
+    // no sync() like other clear() calls because the
+    // alloc*() below "sync()" the parts they allocate.
     allocName();
     allocData();
     allocControl();

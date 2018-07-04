@@ -96,8 +96,6 @@ static const char *Rcodes[] = {
     "Bad OPT Version or TSIG Signature Failure"
 };
 
-typedef struct _ns ns;
-
 typedef struct _sp sp;
 
 class idns_query
@@ -125,7 +123,6 @@ public:
         ancount(0),
         error(NULL)
     {
-        memset(&hash, 0, sizeof(hash));
         memset(&query, 0, sizeof(query));
         *buf = 0;
         *name = 0;
@@ -185,29 +182,31 @@ class nsvc
     CBDATA_CLASS(nsvc);
 
 public:
-    explicit nsvc(int nsv) : ns(nsv), msglen(0), read_msglen(0), msg(new MemBuf()), queue(new MemBuf()), busy(true) {}
+    explicit nsvc(size_t nsv) : ns(nsv), msg(new MemBuf()), queue(new MemBuf()) {}
     ~nsvc();
 
-    int ns;
+    size_t ns = 0;
     Comm::ConnectionPointer conn;
-    unsigned short msglen;
-    int read_msglen;
+    unsigned short msglen = 0;
+    int read_msglen = 0;
     MemBuf *msg;
     MemBuf *queue;
-    bool busy;
+    bool busy = true;
 };
 
 CBDATA_CLASS_INIT(nsvc);
 
-struct _ns {
+class ns
+{
+public:
     Ip::Address S;
-    int nqueries;
-    int nreplies;
+    int nqueries = 0;
+    int nreplies = 0;
 #if WHEN_EDNS_RESPONSES_ARE_PARSED
-    int last_seen_edns;
+    int last_seen_edns = 0;
 #endif
-    bool mDNSResolver;
-    nsvc *vc;
+    bool mDNSResolver = false;
+    nsvc *vc = nullptr;
 };
 
 namespace Dns
@@ -231,10 +230,8 @@ struct _sp {
     int queries;
 };
 
-static ns *nameservers = NULL;
+static std::vector<ns> nameservers;
 static sp *searchpath = NULL;
-static int nns = 0;
-static int nns_alloc = 0;
 static int nns_mdns_count = 0;
 static int npc = 0;
 static int npc_alloc = 0;
@@ -275,7 +272,6 @@ static OBJH idnsStats;
 static void idnsAddNameserver(const char *buf);
 static void idnsAddMDNSNameservers();
 static void idnsAddPathComponent(const char *buf);
-static void idnsFreeNameservers(void);
 static void idnsFreeSearchpath(void);
 static bool idnsParseNameservers(void);
 static bool idnsParseResolvConf(void);
@@ -326,14 +322,14 @@ idnsAddMDNSNameservers()
     // mDNS resolver addresses are explicit multicast group IPs
     if (Ip::EnableIpv6) {
         idnsAddNameserver("FF02::FB");
-        nameservers[nns-1].S.port(5353);
-        nameservers[nns-1].mDNSResolver = true;
+        nameservers.back().S.port(5353);
+        nameservers.back().mDNSResolver = true;
         ++nns_mdns_count;
     }
 
     idnsAddNameserver("224.0.0.251");
-    nameservers[nns-1].S.port(5353);
-    nameservers[nns-1].mDNSResolver = true;
+    nameservers.back().S.port(5353);
+    nameservers.back().mDNSResolver = true;
 
     ++nns_mdns_count;
 }
@@ -359,33 +355,14 @@ idnsAddNameserver(const char *buf)
         return;
     }
 
-    if (nns == nns_alloc) {
-        int oldalloc = nns_alloc;
-        ns *oldptr = nameservers;
-
-        if (nns_alloc == 0)
-            nns_alloc = 2;
-        else
-            nns_alloc <<= 1;
-
-        nameservers = (ns *)xcalloc(nns_alloc, sizeof(*nameservers));
-
-        if (oldptr && oldalloc)
-            memcpy(nameservers, oldptr, oldalloc * sizeof(*nameservers));
-
-        if (oldptr)
-            safe_free(oldptr);
-    }
-
-    assert(nns < nns_alloc);
+    nameservers.emplace_back(ns());
     A.port(NS_DEFAULTPORT);
-    nameservers[nns].S = A;
+    nameservers.back().S = A;
 #if WHEN_EDNS_RESPONSES_ARE_PARSED
-    nameservers[nns].last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
+    nameservers.back().last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
     // TODO generate a test packet to probe this NS from EDNS size and ability.
 #endif
-    debugs(78, 3, "idnsAddNameserver: Added nameserver #" << nns << " (" << A << ")");
-    ++nns;
+    debugs(78, 3, "Added nameserver #" << nameservers.size()-1 << " (" << A << ")");
 }
 
 static void
@@ -415,13 +392,6 @@ idnsAddPathComponent(const char *buf)
     Tolower(searchpath[npc].domain);
     debugs(78, 3, "idnsAddPathComponent: Added domain #" << npc << ": " << searchpath[npc].domain);
     ++npc;
-}
-
-static void
-idnsFreeNameservers(void)
-{
-    safe_free(nameservers);
-    nns = nns_alloc = 0;
 }
 
 static void
@@ -778,12 +748,12 @@ idnsStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "IP ADDRESS                                     # QUERIES # REPLIES Type\n");
     storeAppendPrintf(sentry, "---------------------------------------------- --------- --------- --------\n");
 
-    for (i = 0; i < nns; ++i) {
+    for (const auto &server : nameservers) {
         storeAppendPrintf(sentry, "%-45s %9d %9d %s\n",  /* Let's take the maximum: (15 IPv4/45 IPv6) */
-                          nameservers[i].S.toStr(buf,MAX_IPSTRLEN),
-                          nameservers[i].nqueries,
-                          nameservers[i].nreplies,
-                          nameservers[i].mDNSResolver?"multicast":"recurse");
+                          server.S.toStr(buf,MAX_IPSTRLEN),
+                          server.nqueries,
+                          server.nreplies,
+                          server.mDNSResolver?"multicast":"recurse");
     }
 
     storeAppendPrintf(sentry, "\nRcode Matrix:\n");
@@ -893,7 +863,7 @@ idnsInitVCConnected(const Comm::ConnectionPointer &conn, Comm::Flag status, int,
 
     if (status != Comm::OK || !conn) {
         char buf[MAX_IPSTRLEN] = "";
-        if (vc->ns < nns)
+        if (vc->ns < nameservers.size())
             nameservers[vc->ns].S.toStr(buf,MAX_IPSTRLEN);
         debugs(78, DBG_IMPORTANT, HERE << "Failed to connect to nameserver " << buf << " using TCP.");
         return;
@@ -920,15 +890,15 @@ nsvc::~nsvc()
 {
     delete queue;
     delete msg;
-    if (ns < nns) // XXX: idnsShutdownAndFreeState may have freed nameservers[]
+    if (ns < nameservers.size()) // XXX: idnsShutdownAndFreeState may have freed nameservers[]
         nameservers[ns].vc = NULL;
 }
 
 static void
-idnsInitVC(int nsv)
+idnsInitVC(size_t nsv)
 {
+    assert(nsv < nameservers.size());
     nsvc *vc = new nsvc(nsv);
-    assert(nsv < nns);
     assert(vc->conn == NULL); // MUST be NULL from the construction process!
     nameservers[nsv].vc = vc;
 
@@ -950,9 +920,9 @@ idnsInitVC(int nsv)
 }
 
 static void
-idnsSendQueryVC(idns_query * q, int nsn)
+idnsSendQueryVC(idns_query * q, size_t nsn)
 {
-    assert(nsn < nns);
+    assert(nsn < nameservers.size());
     if (nameservers[nsn].vc == NULL)
         idnsInitVC(nsn);
 
@@ -991,7 +961,7 @@ idnsSendQuery(idns_query * q)
         return;
     }
 
-    if (nns <= 0) {
+    if (nameservers.empty()) {
         debugs(78, DBG_IMPORTANT, "WARNING: idnsSendQuery: Can't send query, no DNS nameservers known!");
         return;
     }
@@ -1001,14 +971,15 @@ idnsSendQuery(idns_query * q)
     assert(q->lru.prev == NULL);
 
     int x = -1, y = -1;
-    int nsn;
+    size_t nsn;
+    const auto nsCount = nameservers.size();
 
     do {
         // only use mDNS resolvers for mDNS compatible queries
         if (!q->permit_mdns)
-            nsn = nns_mdns_count + q->nsends % (nns-nns_mdns_count);
+            nsn = nns_mdns_count + q->nsends % (nsCount - nns_mdns_count);
         else
-            nsn = q->nsends % nns;
+            nsn = q->nsends % nsCount;
 
         if (q->need_vc) {
             idnsSendQueryVC(q, nsn);
@@ -1030,7 +1001,7 @@ idnsSendQuery(idns_query * q)
         if (x < 0 && nameservers[nsn].S.isIPv4())
             debugs(50, DBG_IMPORTANT, MYNAME << "FD " << DnsSocketA << ": sendto: " << xstrerr(xerrno));
 
-    } while ( (x<0 && y<0) && q->nsends % nns != 0);
+    } while ( (x<0 && y<0) && q->nsends % nsCount != 0);
 
     if (y > 0) {
         fd_bytes(DnsSocketB, y, FD_WRITE);
@@ -1049,9 +1020,7 @@ idnsSendQuery(idns_query * q)
 static int
 idnsFromKnownNameserver(Ip::Address const &from)
 {
-    int i;
-
-    for (i = 0; i < nns; ++i) {
+    for (int i = 0; static_cast<size_t>(i) < nameservers.size(); ++i) {
         if (nameservers[i].S != from)
             continue;
 
@@ -1232,8 +1201,8 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
             // the altered NS was limiting the whole group.
             max_shared_edns = q->edns_seen;
             // may be limited by one of the others still
-            for (int i = 0; i < nns; ++i)
-                max_shared_edns = min(max_shared_edns, nameservers[i].last_seen_edns);
+            for (const auto &server : nameservers)
+                max_shared_edns = min(max_shared_edns, server.last_seen_edns);
         } else {
             nameservers[from_ns].last_seen_edns = q->edns_seen;
             // maybe reduce the global limit downwards to accomodate this NS
@@ -1435,10 +1404,11 @@ idnsCheckQueue(void *)
     idns_query *q;
     event_queued = 0;
 
-    if (0 == nns)
+    if (nameservers.empty())
         /* name servers went away; reconfiguring or shutting down */
         return;
 
+    const auto nsCount = nameservers.size();
     for (n = lru_list.tail; n; n = p) {
 
         p = n->prev;
@@ -1449,7 +1419,7 @@ idnsCheckQueue(void *)
             break;
 
         /* Query timer still running? */
-        if ((time_msec_t)tvSubMsec(q->sent_t, current_time) < (Config.Timeout.idns_retransmit * 1 << ((q->nsends - 1) / nns))) {
+        if ((time_msec_t)tvSubMsec(q->sent_t, current_time) < (Config.Timeout.idns_retransmit * 1 << ((q->nsends - 1) / nsCount))) {
             dlinkDelete(&q->lru, &lru_list);
             q->queue_t = current_time;
             dlinkAdd(q, &q->lru, &lru_list);
@@ -1504,7 +1474,7 @@ idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm::Fla
         return;
     }
 
-    assert(vc->ns < nns);
+    assert(vc->ns < nameservers.size());
     debugs(78, 3, HERE << conn << ": received " << vc->msg->contentSize() << " bytes via TCP from " << nameservers[vc->ns].S << ".");
 
     idnsGrokReply(vc->msg->buf, vc->msg->contentSize(), vc->ns);
@@ -1623,7 +1593,7 @@ Dns::Init(void)
         }
     }
 
-    assert(0 == nns);
+    assert(nameservers.empty());
     idnsAddMDNSNameservers();
     bool nsFound = idnsParseNameservers();
 
@@ -1683,15 +1653,15 @@ idnsShutdownAndFreeState(const char *reason)
         DnsSocketB = -1;
     }
 
-    for (int i = 0; i < nns; ++i) {
-        if (nsvc *vc = nameservers[i].vc) {
+    for (const auto &server : nameservers) {
+        if (const auto vc = server.vc) {
             if (Comm::IsConnOpen(vc->conn))
                 vc->conn->close();
         }
     }
 
     // XXX: vcs are not closed/freed yet and may try to access nameservers[]
-    idnsFreeNameservers();
+    nameservers.clear();
     idnsFreeSearchpath();
 }
 
@@ -1784,7 +1754,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     q->query_id = idnsQueryID();
 
     int nd = 0;
-    for (unsigned int i = 0; i < nameLength; ++i)
+    for (size_t i = 0; i < nameLength; ++i)
         if (name[i] == '.')
             ++nd;
 
@@ -1871,7 +1841,7 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
 variable_list *
 snmp_netDnsFn(variable_list * Var, snint * ErrP)
 {
-    int i, n = 0;
+    int n = 0;
     variable_list *Answer = NULL;
     MemBuf tmp;
     debugs(49, 5, "snmp_netDnsFn: Processing request: " << snmpDebugOid(Var->name, Var->name_length, tmp));
@@ -1881,8 +1851,8 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
 
     case DNS_REQ:
 
-        for (i = 0; i < nns; ++i)
-            n += nameservers[i].nqueries;
+        for (const auto &server : nameservers)
+            n += server.nqueries;
 
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       n,
@@ -1891,8 +1861,8 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
         break;
 
     case DNS_REP:
-        for (i = 0; i < nns; ++i)
-            n += nameservers[i].nreplies;
+        for (const auto &server : nameservers)
+            n += server.nreplies;
 
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       n,
@@ -1902,7 +1872,7 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
 
     case DNS_SERVERS:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      nns,
+                                      nameservers.size(),
                                       SMI_COUNTER32);
 
         break;

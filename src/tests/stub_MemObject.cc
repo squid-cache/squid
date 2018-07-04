@@ -29,20 +29,9 @@ MemObject::endOffset() const
 void MemObject::trimSwappable() STUB
 void MemObject::trimUnSwappable() STUB
 int64_t MemObject::policyLowestOffsetToKeep(bool swap) const STUB_RETVAL(-1)
-MemObject::MemObject() :
-    inmem_lo(0),
-    nclients(0),
-    request(NULL),
-    ping_reply_callback(NULL),
-    ircb_data(NULL),
-    id(0),
-    object_sz(-1),
-    swap_hdr_sz(0),
-    _reply(NULL)
-{
-    memset(&clients, 0, sizeof(clients));
+MemObject::MemObject() {
+    ping_reply_callback = nullptr;
     memset(&start_ping, 0, sizeof(start_ping));
-    memset(&abort, 0, sizeof(abort));
 } // NOP instead of elided due to Store
 
 HttpReply const * MemObject::getReply() const
