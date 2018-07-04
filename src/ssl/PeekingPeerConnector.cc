@@ -283,11 +283,11 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
     //
     if (srvBio->bumpMode() == Ssl::bumpPeek && (resumingSession = srvBio->resumingSession())) {
         // we currently splice all resumed sessions unconditionally
-        if (const bool spliceResumed = true) {
-            bypassCertValidator();
-            checkForPeekAndSpliceMatched(Ssl::bumpSplice);
-            return;
-        } // else fall through to find a matching ssl_bump action (with limited info)
+        // if (const bool spliceResumed = true) {
+        bypassCertValidator();
+        checkForPeekAndSpliceMatched(Ssl::bumpSplice);
+        return;
+        // } // else fall through to find a matching ssl_bump action (with limited info)
     }
 
     // If we are in peek-and-splice mode and still we did not write to
