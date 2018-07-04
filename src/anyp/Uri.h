@@ -61,6 +61,9 @@ public:
 
     bool parse(const HttpRequestMethod &, const char *url);
 
+    /// \return a new URI that honors uri_whitespace
+    static char *cleanup(const char *uri);
+
     AnyP::UriScheme const & getScheme() const {return scheme_;}
 
     /// convert the URL scheme to that given
@@ -179,10 +182,7 @@ operator <<(std::ostream &os, const AnyP::Uri &url)
 class HttpRequest;
 
 void urlInitialize(void);
-/// \returns a pointer to a local static buffer containing request URI
-/// that honors strip_query_terms and %-encodes unsafe URI characters
-char *urlCanonicalClean(const HttpRequest &);
-/// call urlCanonicalClean() instead if you have HttpRequest
+/// call HttpRequest::canonicalCleanUrl() instead if you have HttpRequest
 /// \returns a pointer to a local static buffer containing request URI
 /// that honors strip_query_terms and %-encodes unsafe URI characters
 char *urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &, const AnyP::UriScheme &);
