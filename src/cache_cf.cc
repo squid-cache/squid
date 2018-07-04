@@ -2356,15 +2356,8 @@ parse_peer(CachePeer ** head)
         p->connect_fail_limit = 10;
 
 #if USE_CACHE_DIGESTS
-
-    if (!p->options.no_digest) {
-        /* XXX This looks odd.. who has the original pointer
-         * then?
-         */
-        PeerDigest *pd = peerDigestCreate(p);
-        p->digest = cbdataReference(pd);
-    }
-
+    if (!p->options.no_digest)
+        peerDigestCreate(p);
 #endif
 
     p->index =  ++Config.npeers;

@@ -166,7 +166,7 @@ IcmpPinger::Recv(void)
     int n;
     int guess_size;
 
-    memset(&pecho, '\0', sizeof(pecho));
+    pecho = pingerEchoData();
     n = recv(socket_from_squid, &pecho, sizeof(pecho), 0);
 
     if (n < 0) {

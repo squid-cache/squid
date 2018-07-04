@@ -572,23 +572,27 @@ debugLogTime(void)
     time_t t = getCurrentTime();
 
     struct tm *tm;
-    static char buf[128];
+    static char buf[128]; // arbitrary size, big enough for the below timestamp strings.
     static time_t last_t = 0;
 
     if (Debug::Level() > 1) {
-        char buf2[128];
+        // 4 bytes smaller than buf to ensure .NNN catenation by snprintf()
+        // is safe and works even if strftime() fills its buffer.
+        char buf2[sizeof(buf)-4];
         tm = localtime(&t);
-        strftime(buf2, 127, "%Y/%m/%d %H:%M:%S", tm);
-        buf2[127] = '\0';
-        snprintf(buf, 127, "%s.%03d", buf2, (int) current_time.tv_usec / 1000);
+        strftime(buf2, sizeof(buf2), "%Y/%m/%d %H:%M:%S", tm);
+        buf2[sizeof(buf2)-1] = '\0';
+        const int sz = snprintf(buf, sizeof(buf), "%s.%03d", buf2, static_cast<int>(current_time.tv_usec / 1000));
+        assert(0 < sz && sz < static_cast<int>(sizeof(buf)));
         last_t = t;
     } else if (t != last_t) {
         tm = localtime(&t);
-        strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
+        const int sz = strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M:%S", tm);
+        assert(0 < sz && sz <= static_cast<int>(sizeof(buf)));
         last_t = t;
     }
 
-    buf[127] = '\0';
+    buf[sizeof(buf)-1] = '\0';
     return buf;
 }
 
