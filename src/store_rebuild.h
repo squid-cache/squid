@@ -16,22 +16,16 @@
 class StoreRebuildData
 {
 public:
-    StoreRebuildData() :
-        objcount(0), expcount(0), scancount(0), clashcount(0),
-        dupcount(0), cancelcount(0), invalid(0), badflags(0),
-        bad_log_op(0), zero_object_sz(0)
-    {}
-
-    int objcount;       /* # objects successfully reloaded */
-    int expcount;       /* # objects expired */
-    int scancount;      /* # entries scanned or read from state file */
-    int clashcount;     /* # swapfile clashes avoided */
-    int dupcount;       /* # duplicates purged */
-    int cancelcount;        /* # SWAP_LOG_DEL objects purged */
-    int invalid;        /* # bad lines */
-    int badflags;       /* # bad e->flags */
-    int bad_log_op;
-    int zero_object_sz;
+    int objcount = 0;       /* # objects successfully reloaded */
+    int expcount = 0;       /* # objects expired */
+    int scancount = 0;      /* # entries scanned or read from state file */
+    int clashcount = 0;     /* # swapfile clashes avoided */
+    int dupcount = 0;       /* # duplicates purged */
+    int cancelcount = 0;    /* # SWAP_LOG_DEL objects purged */
+    int invalid = 0;        /* # bad lines */
+    int badflags = 0;       /* # bad e->flags */
+    int bad_log_op = 0;
+    int zero_object_sz = 0;
 };
 
 void storeRebuildStart(void);

@@ -213,7 +213,6 @@ Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
     validationPos(0)
 {
     assert(sd);
-    memset(&counts, 0, sizeof(counts));
     dbSize = sd->diskOffsetLimit(); // we do not care about the trailer waste
     dbSlotSize = sd->slotSize;
     dbEntryLimit = sd->entryLimitActual();
