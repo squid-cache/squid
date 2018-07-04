@@ -3291,8 +3291,8 @@ LOC: Ssl::TheConfig.ssl_crtdChildren
 DOC_START
 	Specifies the maximum number of certificate generation processes that
 	Squid may spawn (numberofchildren) and several related options. Using
-	too few of these helper processes (a.k.a. "helpers") queues requests.
-	Using too many helpers wastes RAM and other system resources. Squid
+	too few of these helper processes (a.k.a. "helpers") creates request
+	queues. Using too many helpers wastes your system resources. Squid
 	does not support spawning more than 32 helpers.
 
 	Usage: numberofchildren [option]...
@@ -3351,8 +3351,8 @@ LOC: Ssl::TheConfig.ssl_crt_validator_Children
 DOC_START
 	Specifies the maximum number of certificate validation processes that
 	Squid may spawn (numberofchildren) and several related options. Using
-	too few of these helper processes (a.k.a. "helpers") queues requests.
-	Using too many helpers wastes RAM and other system resources. Squid
+	too few of these helper processes (a.k.a. "helpers") creates request
+	queues. Using too many helpers wastes your system resources. Squid
 	does not support spawning more than 32 helpers.
 
 	Usage: numberofchildren [option]...
@@ -5481,8 +5481,8 @@ LOC: Config.redirectChildren
 DOC_START
 	Specifies the maximum number of redirector processes that Squid may
 	spawn (numberofchildren) and several related options. Using too few of
-	these helper processes (a.k.a. "helpers") queues requests. Using too
-	many helpers wastes RAM and other system resources.
+	these helper processes (a.k.a. "helpers") creates request queues.
+	Using too many helpers wastes your system resources.
 
 	Usage: numberofchildren [option]...
 
@@ -5711,8 +5711,8 @@ LOC: Config.storeIdChildren
 DOC_START
 	Specifies the maximum number of StoreID helper processes that Squid
 	may spawn (numberofchildren) and several related options. Using
-	too few of these helper processes (a.k.a. "helpers") queues requests.
-	Using too many helpers wastes RAM and other system resources.
+	too few of these helper processes (a.k.a. "helpers") creates request
+	queues. Using too many helpers wastes your system resources.
 
 	Usage: numberofchildren [option]...
 	
