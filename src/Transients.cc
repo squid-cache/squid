@@ -40,9 +40,9 @@ Transients::~Transients()
 void
 Transients::init()
 {
+    assert(Enabled());
     const int64_t entryLimit = EntryLimit();
-    if (entryLimit <= 0)
-        return; // no SMP support or a misconfiguration
+    assert(entryLimit > 0);
 
     Must(!map);
     map = new TransientsMap(MapLabel);
@@ -337,11 +337,8 @@ Transients::disconnect(StoreEntry &entry)
 int64_t
 Transients::EntryLimit()
 {
-    // TODO: we should also check whether any SMP-aware caching is configured
-    if (!UsingSmp() || !Config.onoff.collapsed_forwarding)
-        return 0; // no SMP collapsed forwarding possible or needed
-
-    return Config.collapsed_forwarding_shared_entries_limit;
+    return (UsingSmp() && Store::Controller::SmpAware()) ?
+           Config.shared_transient_entries_limit : 0;
 }
 
 bool
@@ -390,9 +387,6 @@ TransientsRr::useConfig()
 void
 TransientsRr::create()
 {
-    if (!Config.onoff.collapsed_forwarding)
-        return;
-
     const int64_t entryLimit = Transients::EntryLimit();
     if (entryLimit <= 0)
         return; // no SMP configured or a misconfiguration

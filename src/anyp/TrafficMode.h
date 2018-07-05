@@ -21,17 +21,13 @@ namespace AnyP
 class TrafficMode
 {
 public:
-    TrafficMode() : accelSurrogate(false), proxySurrogate(false), natIntercept(false), tproxyIntercept(false), tunnelSslBumping(false) {}
-    TrafficMode(const TrafficMode &rhs) { operator =(rhs); }
-    TrafficMode &operator =(const TrafficMode &rhs) { memcpy(this, &rhs, sizeof(TrafficMode)); return *this; }
-
     /** marks HTTP accelerator (reverse/surrogate proxy) traffic
      *
      * Indicating the following are required:
      *  - URL translation from relative to absolute form
      *  - restriction to origin peer relay recommended
      */
-    bool accelSurrogate;
+    bool accelSurrogate = false;
 
     /** marks ports receiving PROXY protocol traffic
      *
@@ -41,7 +37,7 @@ public:
      *  - indirect client IP trust verification is mandatory
      *  - TLS is not supported
      */
-    bool proxySurrogate;
+    bool proxySurrogate = false;
 
     /** marks NAT intercepted traffic
      *
@@ -52,7 +48,7 @@ public:
      *  - destination pinning is recommended
      *  - authentication prohibited
      */
-    bool natIntercept;
+    bool natIntercept = false;
 
     /** marks TPROXY intercepted traffic
      *
@@ -64,7 +60,7 @@ public:
      *  - destination pinning is recommended
      *  - authentication prohibited
      */
-    bool tproxyIntercept;
+    bool tproxyIntercept = false;
 
     /** marks intercept and decryption of CONNECT (tunnel) SSL traffic
      *
@@ -75,7 +71,7 @@ public:
      *  - encrypted outbound server connections
      *  - peer relay prohibited. TODO: re-encrypt and re-wrap with CONNECT
      */
-    bool tunnelSslBumping;
+    bool tunnelSslBumping = false;
 
     /** true if the traffic is in any way intercepted
      *

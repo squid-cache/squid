@@ -319,7 +319,7 @@ death(int sig)
 #endif /* _SQUID_SOLARIS_and HAVE_LIBOPCOM_STACK */
 #if HAVE_BACKTRACE_SYMBOLS_FD
     {
-        static void *(callarray[8192]);
+        static void *callarray[8192];
         int n;
         n = backtrace(callarray, 8192);
         backtrace_symbols_fd(callarray, n, fileno(debug_log));

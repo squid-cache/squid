@@ -298,7 +298,7 @@ clientReplyContext::processExpired()
     // TODO: Consider also allowing regular (non-collapsed) revalidation hits.
     // TODO: support collapsed revalidation for Vary-controlled entries
     bool collapsingAllowed = Config.onoff.collapsed_forwarding &&
-                             !Store::Root().smpAware() &&
+                             !Store::Controller::SmpAware() &&
                              http->request->vary_headers.isEmpty();
 
     StoreEntry *entry = nullptr;
@@ -1463,13 +1463,8 @@ clientReplyContext::buildReplyHeader()
              */
             /* TODO: if maxage or s-maxage is present, don't do this */
 
-            if (squid_curtime - http->storeEntry()->timestamp >= 86400) {
-                char tbuf[512];
-                snprintf (tbuf, sizeof(tbuf), "%s %s %s",
-                          "113", ThisCache,
-                          "This cache hit is still fresh and more than 1 day old");
-                hdr->putStr(Http::HdrType::WARNING, tbuf);
-            }
+            if (squid_curtime - http->storeEntry()->timestamp >= 86400)
+                hdr->putWarning(113, "This cache hit is still fresh and more than 1 day old");
         }
     }
 

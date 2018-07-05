@@ -34,20 +34,16 @@ public:
      * \todo specialize the class in a small hierarchy so that all
      *       relevant initializations are done at build-time
      */
-    StatHist();
-    StatHist(const StatHist&); //not needed
-    ~StatHist() { clear(); };
+    StatHist() = default;
+    StatHist(const StatHist &);
+    ~StatHist() {
+        xfree(bins); // can handle case of bins being nullptr
+        capacity_ = 0;  // mark as destructed, may be needed for troubleshooting
+    }
 
     typedef uint64_t bins_type;
 
     StatHist &operator=(const StatHist &);
-
-    /** clear the contents of the histograms
-     *
-     * \todo remove: this function has been replaced in its purpose
-     *       by the destructor
-     */
-    void clear();
 
     /** Calculate the percentile for value pctile for the difference between
      *  this and the supplied histogram.
@@ -102,19 +98,19 @@ protected:
     unsigned int findBin(double v);
 
     /// the histogram counters
-    bins_type *bins;
-    unsigned int capacity_;
+    bins_type *bins = nullptr;
+    unsigned int capacity_ = 0;
 
     /// minimum value to be stored, corresponding to the first bin
-    double min_;
+    double min_ = 0.0;
 
     /// value of the maximum counter in the histogram
-    double max_;
+    double max_ = 0.0;
 
     /// scaling factor when looking for a bin
-    double scale_;
-    hbase_f *val_in;        /* e.g., log() for log-based histogram */
-    hbase_f *val_out;       /* e.g., exp() for log based histogram */
+    double scale_ = 1.0;
+    hbase_f *val_in = nullptr;        /* e.g., log() for log-based histogram */
+    hbase_f *val_out = nullptr;       /* e.g., exp() for log based histogram */
 };
 
 double statHistDeltaMedian(const StatHist & A, const StatHist & B);
@@ -137,23 +133,9 @@ StatHist::operator =(const StatHist & src)
     scale_=src.scale_;
     val_in=src.val_in;
     val_out=src.val_out;
-    if (bins != NULL)
+    if (bins)
         memcpy(bins,src.bins,capacity_*sizeof(*bins));
     return *this;
-}
-
-inline
-StatHist::StatHist() :
-    bins(NULL), capacity_(0), min_(0), max_(0),
-    scale_(1.0), val_in(NULL), val_out(NULL)
-{}
-
-inline void
-StatHist::clear()
-{
-    xfree(bins); // can handle case of bins being NULL
-    bins=NULL;
-    capacity_=0; // mark as destructed, may be needed for troubleshooting
 }
 
 #endif /* STATHIST_H_ */
