@@ -11,6 +11,7 @@
 
 #include "comm/Flag.h"
 #include "comm/forward.h"
+#include "defines.h"
 
 /* Comm layer select loops API.
  *
@@ -25,7 +26,10 @@ namespace Comm
 void SelectLoopInit(void);
 
 /// reset/undo/unregister the watch for an FD which was set by Comm::SetSelect()
-void ResetSelect(int);
+inline void ResetSelect(int fd)
+{
+    SetSelect(fd, COMM_SELECT_READ|COMM_SELECT_WRITE, nullptr, nullptr, 0);
+}
 
 /** Perform a select() or equivalent call.
  * This is used by the main select loop engine to check for FD with IO available.
