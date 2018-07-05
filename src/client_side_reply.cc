@@ -959,7 +959,7 @@ clientReplyContext::loggingTags()
 void
 clientReplyContext::purgeFoundGet(StoreEntry *newEntry)
 {
-    if (newEntry->isNull()) {
+    if (!newEntry) {
         lookingforstore = 2;
         StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
     } else
@@ -969,7 +969,7 @@ clientReplyContext::purgeFoundGet(StoreEntry *newEntry)
 void
 clientReplyContext::purgeFoundHead(StoreEntry *newEntry)
 {
-    if (newEntry->isNull())
+    if (!newEntry)
         purgeDoMissPurge();
     else
         purgeFoundObject (newEntry);
@@ -978,7 +978,7 @@ clientReplyContext::purgeFoundHead(StoreEntry *newEntry)
 void
 clientReplyContext::purgeFoundObject(StoreEntry *entry)
 {
-    assert (entry && !entry->isNull());
+    assert (entry);
 
     if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
         http->logType.update(LOG_TCP_DENIED);
@@ -1054,16 +1054,13 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
     assert (newEntry);
     /* Move to new() when that is created */
     purgeStatus = Http::scNotFound;
-
-    if (!newEntry->isNull()) {
-        /* Release the cached URI */
-        debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
+    /* Release the cached URI */
+    debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
 #if USE_HTCP
-        neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
+    neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
-        newEntry->release(true);
-        purgeStatus = Http::scOkay;
-    }
+    newEntry->release(true);
+    purgeStatus = Http::scOkay;
 
     lookingforstore = 4;
     StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
@@ -1072,7 +1069,7 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 void
 clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 {
-    if (newEntry && !newEntry->isNull()) {
+    if (newEntry) {
         debugs(88, 4, "HEAD " << newEntry->url());
 #if USE_HTCP
         neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
@@ -1686,7 +1683,7 @@ clientReplyContext::identifyStoreObject()
         lookingforstore = 5;
         StoreEntry::getPublicByRequest (this, r);
     } else {
-        identifyFoundObject (NullStoreEntry::getInstance());
+        identifyFoundObject(nullptr);
     }
 }
 
@@ -1697,17 +1694,9 @@ clientReplyContext::identifyStoreObject()
 void
 clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 {
-    StoreEntry *e = newEntry;
     HttpRequest *r = http->request;
-
-    /** \li If the entry received isNull() then we ignore it. */
-    if (e->isNull()) {
-        http->storeEntry(NULL);
-    } else {
-        http->storeEntry(e);
-    }
-
-    e = http->storeEntry();
+    http->storeEntry(newEntry);
+    StoreEntry *e = http->storeEntry();
 
     /* Release IP-cache entries on reload */
     /** \li If the request has no-cache flag set or some no_cache HACK in operation we
