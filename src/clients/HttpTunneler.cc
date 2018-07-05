@@ -231,8 +231,6 @@ Http::Tunneler::readMore()
     reader = JobCallback(93, 3, Dialer, this, Http::Tunneler::handleReadyRead);
     Comm::Read(connection, reader);
 
-    // TODO: Same as PeerConnector, but who removes this timeout after we send a
-    // positive answer? Should not we clean after ourselves in swanSong()?
     AsyncCall::Pointer nil;
     time_t timeout = Comm::MortalReadTimeout(startTime, lifetimeLimit);
     commSetConnTimeout(connection, timeout, nil);
