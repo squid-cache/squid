@@ -204,7 +204,7 @@ UrnState::created(StoreEntry *e)
         sc = storeClientListAdd(urlres_e, this);
         FwdState::Start(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw(), ale);
         // TODO: StoreClients must either store/lock or abandon found entries.
-        //if (!e->isNull())
+        //if (e)
         //    e->abandon();
     } else {
         urlres_e = e;

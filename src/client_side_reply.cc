@@ -1696,7 +1696,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 {
     HttpRequest *r = http->request;
     http->storeEntry(newEntry);
-    StoreEntry *e = http->storeEntry();
+    const auto e = http->storeEntry();
 
     /* Release IP-cache entries on reload */
     /** \li If the request has no-cache flag set or some no_cache HACK in operation we

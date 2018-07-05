@@ -954,7 +954,7 @@ htcpSpecifier::created(StoreEntry *e)
     checkedHit(hit);
 
     // TODO: StoreClients must either store/lock or abandon found entries.
-    //if (!e->isNull())
+    //if (e)
     //    e->abandon();
 }
 

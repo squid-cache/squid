@@ -235,7 +235,7 @@ ICP2State::created(StoreEntry *e)
     icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, al);
 
     // TODO: StoreClients must either store/lock or abandon found entries.
-    //if (!e->isNull())
+    //if (e)
     //    e->abandon();
 
     delete this;
