@@ -20,7 +20,7 @@ void CacheManager::Start(const Comm::ConnectionPointer &conn, HttpRequest * requ
     std::cerr << HERE << "\n";
     STUB
 }
-CacheManager* CacheManager::instance=0;
+static CacheManager* instance = nullptr;
 CacheManager* CacheManager::GetInstance() STUB_RETVAL(instance)
 void Mgr::RegisterAction(char const*, char const*, OBJH, int, int) {}
 void Mgr::RegisterAction(char const *, char const *, Mgr::ClassActionCreationHandler *, int, int) {}

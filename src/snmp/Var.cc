@@ -44,7 +44,7 @@ Snmp::Var::operator = (const Var& var)
 void
 Snmp::Var::init()
 {
-    memset(this, 0, sizeof(*this));
+    memset(static_cast<variable_list *>(this), 0, sizeof(variable_list));
 }
 
 Snmp::Var&
@@ -156,10 +156,8 @@ Snmp::Var::assign(const Var& var)
 void
 Snmp::Var::clearName()
 {
-    if (name != NULL) {
-        xfree(name);
-        name = NULL;
-    }
+    xfree(name);
+    name = nullptr;
     name_length = 0;
 }
 
@@ -183,10 +181,8 @@ Snmp::Var::setName(const Range<const oid*>& aName)
 void
 Snmp::Var::clearValue()
 {
-    if (val.string != NULL) {
-        xfree(val.string);
-        val.string = NULL;
-    }
+    xfree(val.string);
+    val.string = nullptr;
     val_len = 0;
     type = 0;
 }
