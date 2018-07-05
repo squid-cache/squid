@@ -61,7 +61,7 @@ public:
         assert (mem_obj);
         return mem_obj->endOffset() == 0;
     }
-    virtual bool isAccepting() const;
+    bool isAccepting() const;
     size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const;
     /// flags [truncated or too big] entry with ENTRY_BAD_LENGTH and releases it
     void lengthWentBad(const char *reason);
@@ -233,8 +233,8 @@ public:
 
     ESIElement::Pointer cachedESITree;
 #endif
-    virtual int64_t objectLen() const;
-    virtual int64_t contentLen() const;
+    int64_t objectLen() const;
+    int64_t contentLen() const;
 
     /// claim shared ownership of this entry (for use in a given context)
     /// matching lock() and unlock() contexts eases leak triage but is optional
@@ -254,8 +254,7 @@ public:
     /// Removes all unlocked (and marks for eventual removal all locked) Store
     /// entries, including attached and unattached entries that have our key.
     /// Also destroys us if we are unlocked or makes us private otherwise.
-    /// TODO: remove virtual.
-    virtual void release(const bool shareable = false);
+    void release(const bool shareable = false);
 
     /// One of the three methods to get rid of an unlocked StoreEntry object.
     /// May destroy this object if it is unlocked; does nothing otherwise.
