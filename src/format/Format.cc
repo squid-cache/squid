@@ -103,6 +103,9 @@ Format::Format::parse(const char *def)
 int
 Format::Format::AssembleToken(const char *token, MemBuf &mb, const AccessLogEntryPointer &al)
 {
+    if (*token != '%')
+        return 0;
+
     Token tkn;
     enum Quoting quote = LOG_QUOTE_NONE;
     int tokenSize;

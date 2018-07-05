@@ -26,6 +26,8 @@
 #include "ssl/ErrorDetail.h"
 #endif
 
+#include <memory>
+
 /// error page callback
 typedef void ERCB(int fd, void *, size_t);
 
@@ -83,6 +85,16 @@ class wordlist;
 class ErrorState
 {
     CBDATA_CLASS(ErrorState);
+
+public:
+    class ErrorHandler {
+    public:
+        virtual void handleError(const SBuf &mesg) { ++errors_; };
+        int errors() { return errors_; }
+
+    protected:
+        int errors_ = 0;
+    };
 
 public:
     ErrorState(err_type type, Http::StatusCode, HttpRequest * request, const AccessLogEntryPointer &al);
@@ -208,6 +220,12 @@ public:
     /// overwrites xerrno; overwritten by detail, if any.
     int detailCode = ERR_DETAIL_NONE;
     AccessLogEntryPointer al;
+
+    // Error handler to use to report errors while parses error pages
+    std::unique_ptr<ErrorHandler> errorHandler_;
+
+private:
+    static const SBuf LogFormatStart;
 };
 
 /**
@@ -358,6 +376,9 @@ public:
     /// Throw on parse errors
     ErrTextValidator &throws() { onError_ = doThrow; return *this; }
 
+    /// Just report parse errors
+    ErrTextValidator &report() { onError_ = doReport; return *this; }
+
     /// Validate the passed text
     bool validate(const char *text);
 
@@ -365,7 +386,7 @@ public:
     bool initialised() { return name_.length() != 0;}
 private:
     enum Context {CtxUnknown, CtxFile, CtxConfig};
-    enum OnError {doReturn, doQuit, doThrow};
+    enum OnError {doReport, doQuit, doThrow};
 
     Context ctx = CtxUnknown; ///< The current context type
 
@@ -373,7 +394,7 @@ private:
     /// function name or caller class name.
     SBuf name_;
 
-    OnError onError_ = doReturn; ///< Action when error detected
+    OnError onError_ = doReport; ///< Action when error detected
     int warn_ = 3; ///< The debug level to use for error messages
     SBuf ctxFilename; ///< The configuration file or the error page template
 

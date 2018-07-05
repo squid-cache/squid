@@ -57,8 +57,11 @@
 #define DEFAULT_SQUID_ERROR_DIR   DEFAULT_SQUID_DATA_DIR"/errors"
 #endif
 
+
 /// \ingroup ErrorPageInternal
 CBDATA_CLASS_INIT(ErrorState);
+
+const SBuf ErrorState::LogFormatStart("@Squid{");
 
 /* local types */
 
@@ -159,6 +162,44 @@ private:
     }
 };
 
+class ReportErrorHandler: public ErrorState::ErrorHandler
+{
+public:
+    ReportErrorHandler(int aLevel, SBuf &aLabel, SBuf &aPrefix): level(aLevel), label(aLabel), prefix(aPrefix) {}
+    void handleError(const SBuf &msg) {
+        ErrorState::ErrorHandler::handleError(msg);
+        if (!errors_)
+            debugs(4, level, label << ": " << prefix);
+        debugs(4, level, label << ": " << msg);
+    }
+
+protected:
+    int level;
+    SBuf label;
+    SBuf prefix;
+};
+
+class ThrownErrorHandler: public ReportErrorHandler
+{
+public:
+    ThrownErrorHandler(int aLevel, SBuf &aLabel, SBuf &aPrefix) : ReportErrorHandler(aLevel, aLabel, aPrefix) {}
+    void handleError(const SBuf &msg) {
+        ReportErrorHandler::handleError(msg);
+        throw TexcHere(msg);
+    }
+};
+
+class FatalErrorHandler: public ReportErrorHandler
+{
+public:
+    FatalErrorHandler(int aLevel, SBuf &aLabel, SBuf &aPrefix) : ReportErrorHandler(aLevel, aLabel, aPrefix) {}
+    void handleError(const SBuf &msg) {
+        ReportErrorHandler::handleError(msg);
+        SBuf toStr(msg);
+        fatalf("Fatal: %s:'%s'", label.c_str(), toStr.c_str());
+    }
+};
+
 /// \ingroup ErrorPageInternal
 err_type &operator++ (err_type &anErr)
 {
@@ -182,7 +223,9 @@ errorInitialize(void)
     error_text = static_cast<char **>(xcalloc(error_page_count, sizeof(char *)));
     // error pages validator to use as base
     ErrTextValidator validator("ErrorPageFile");
-    validator.warn(DBG_CRITICAL).throws();
+    validator.warn(DBG_CRITICAL);
+    if (!reconfiguring)
+        validator.throws();
 
     for (i = ERR_NONE, ++i; i < error_page_count; ++i) {
         safe_free(error_text[i]);
@@ -1096,6 +1139,14 @@ ErrorState::convert(const char *start, bool building_deny_info_url, bool allowRe
         break;
 
     default:
+        if (building_deny_info_url && errorHandler_) {
+            try {
+                // catch the exceptions we need only to report the error.
+                errorHandler_->handleError(ToSBuf("Wrong error code at  '%", SBuf(start).substr(0, 100), "'"));
+            } catch(...) {
+                // do nothing, errors printed inside errorHandler
+            }
+        }
         mb.appendf("%%%c", *start);
         do_quote = 0;
         break;
@@ -1244,9 +1295,7 @@ ErrorState::BuildContent()
         if (err_language && err_language != Config.errorDefaultLanguage)
             safe_free(err_language);
 
-        // XXX. We may do not want to use validator in the following
-        // ErrorPageFile to avoid double error template parsing.
-        localeTmpl = new ErrorPageFile(err_type_str[page_id], static_cast<err_type>(page_id), ErrTextValidator("ErrorPageFile").warn(DBG_CRITICAL));
+        localeTmpl = new ErrorPageFile(err_type_str[page_id], static_cast<err_type>(page_id), ErrTextValidator("ErrorPageFile").warn(5));
         if (localeTmpl->loadFor(request.getRaw())) {
             m = localeTmpl->text();
             assert(localeTmpl->language());
@@ -1255,33 +1304,20 @@ ErrorState::BuildContent()
     }
 #endif /* USE_ERR_LOCALES */
 
-    MemBuf *result = nullptr;
-    do {
-        bool useDefaultTemplate = false;
-        /** \par
-         * If client-specific error templates are not enabled or available.
-         * fall back to the old style squid.conf settings.
-         */
-        if (!m) {
-            m = error_text[page_id];
+    /** \par
+     * If client-specific error templates are not enabled or available.
+     * fall back to the old style squid.conf settings.
+     */
+    if (!m) {
+        m = error_text[page_id];
 #if USE_ERR_LOCALES
-            if (!Config.errorDirectory)
-                err_language = Config.errorDefaultLanguage;
+        if (!Config.errorDirectory)
+            err_language = Config.errorDefaultLanguage;
 #endif
-            debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
-            useDefaultTemplate = true;
-        }
+        debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
+    }
 
-        try {
-            result = ConvertText(m, true);
-        } catch (const std::exception &ex) {
-            m = nullptr;
-            // The default template must always parses
-            assert(!useDefaultTemplate);
-            debugs(1, DBG_IMPORTANT, "Error while parsing template " << err_type_str[page_id] << ": " << ex.what());
-        }
-    } while(!result /*&& !(useDefaultTemplate)*/);
-
+    MemBuf *result = ConvertText(m, true);
 #if USE_ERR_LOCALES
     if (localeTmpl)
         delete localeTmpl;
@@ -1305,7 +1341,7 @@ ErrorState::NextCode(const char *p)
     assert(p);
     do {
         while (*p && *p != '%' && *p != '@') ++p;
-        if (*p == '@' && strncmp(p + 1, "Squid{", 6) != 0) {
+        if (*p == '@' && LogFormatStart.cmp(p, LogFormatStart.length()) != 0) {
             ++p;
             continue;
         }
@@ -1340,19 +1376,31 @@ ErrorState::convertAndWriteTo(const char *text, MemBuf &result, bool building_de
 void
 ErrorState::handleLogFormat(const char *&start, MemBuf &result)
 {
-    static const SBuf logFormatStart("@Squid{");
-    assert(logFormatStart.cmp(start, logFormatStart.length()) == 0);
+    assert(LogFormatStart.cmp(start, LogFormatStart.length()) == 0);
 
-    const char *p = start + logFormatStart.length();
+    const char *p = start + LogFormatStart.length();
     if (int tokenBytes = Format::Format::AssembleToken(p, result, al)) {
         p += tokenBytes;
-        if (*p != '}')
-            throw TexcHere("unterminated @Squid{");
-        start = p + 1;
+        if (*p != '}') {
+            if (errorHandler_)
+                errorHandler_->handleError(SBuf("unterminated @Squid{"));
+            start = p;
+        } else
+            start = p + 1;
         return;
     }
 
-    throw TexcHere(ToSBuf("Cannot parse @Squid{logformat} in error page template near '", SBuf(start).substr(0, 100), "'"));
+    if (errorHandler_)
+        errorHandler_->handleError(ToSBuf("Cannot parse @Squid{logformat} in error page template near '", SBuf(start).substr(0, 100), "'"));
+
+    // Try recover to continue parsing
+    // The p points after '@Squid{'. Try to find the '}'.
+    if (const char *endOfComment = strchr(p, '}'))
+        p = endOfComment + 1;
+    else
+        while (*p == '%') ++p; // just skip the first '%' after '@Squid{'
+    result.append(start, p - start);
+    start = p;
 }
 
 ErrTextValidator &
@@ -1382,27 +1430,25 @@ ErrTextValidator::validate(const char *text)
     content.init();
     AccessLogEntry::Pointer alp= new AccessLogEntry;
     ErrorState anErr(ERR_NONE, Http::scNone, NULL, alp);
-    try {
-        anErr.convertAndWriteTo(text, content, (ctx == CtxConfig), true);
-    } catch (const std::exception &ex) {
-        if (ctx == CtxConfig)
-            debugs(4, warn_, name_ << ": " <<  ctxFilename << " line " << ctxLineNo_ << ": " << ctxLine_);
-        else if (ctx == CtxFile)
-            debugs(4, warn_, name_ << ": Error while parsing file " <<  ctxFilename);
-        debugs(4, warn_, name_ << ": " <<  ex.what());
+    SBuf prefix;
+    if (ctx == CtxConfig)
+        prefix = ToSBuf(name_ , ": " ,  ctxFilename , " line " , ctxLineNo_ , ": " , ctxLine_);
+    else if (ctx == CtxFile)
+        prefix = ToSBuf(name_, ": Error while parsing file ",  ctxFilename);
 
-        switch(onError_) {
-        case doQuit:
-            fatalf("Fatal: %s:'%s'", name_.c_str(), ex.what());
-            break;
-        case doThrow:
-            throw TexcHere(ToSBuf(name_, ": ", ex.what()));
-            break;
-        default:
-            break;
-        }
-        return false;
-    }
-    return true;
+    ErrorState::ErrorHandler *handler;
+    if (onError_ == doReport)
+        handler = new ReportErrorHandler(warn_, name_, prefix);
+    else if (onError_ == doQuit)
+        handler = new FatalErrorHandler(warn_, name_, prefix);
+    else
+        handler = new ThrownErrorHandler(warn_, name_, prefix);
+
+    anErr.errorHandler_.reset(handler);
+
+    // Any possible thrown exceptions should handled from the caller.
+    anErr.convertAndWriteTo(text, content, (ctx == CtxConfig), true);
+
+    return onError_ == doReport ? true : (handler->errors() != 0);
 }
 
