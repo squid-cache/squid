@@ -26,7 +26,8 @@ namespace Comm
 void SelectLoopInit(void);
 
 /// reset/undo/unregister the watch for an FD which was set by Comm::SetSelect()
-inline void ResetSelect(int fd)
+inline void
+ResetSelect(int fd)
 {
     SetSelect(fd, COMM_SELECT_READ|COMM_SELECT_WRITE, nullptr, nullptr, 0);
 }
