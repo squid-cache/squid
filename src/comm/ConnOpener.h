@@ -33,7 +33,7 @@ public:
 
     virtual bool doneAll() const;
 
-    ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &handler, time_t connect_timeout);
+    ConnOpener(Comm::ConnectionPointer &, const AsyncCall::Pointer &handler, time_t connect_timeout);
     ~ConnOpener();
 
     void setHost(const char *);    ///< set the hostname note for this connection

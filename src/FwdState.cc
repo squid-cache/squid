@@ -793,7 +793,7 @@ FwdState::establishTunnelThruProxy()
     Must(serverConnection()->getPeer());
     if (!serverConnection()->getPeer()->options.no_delay) {
 #if 1
-        if (auto conn = request->clientConnectionManager.get()) {
+        if (const auto conn = request->clientConnectionManager.get()) {
             Http::StreamPointer context = conn->pipeline.front();
             if (context && context->http)
                 tunneler->delayId = DelayId(DelayId::DelayClient(context->http));
@@ -867,7 +867,7 @@ FwdState::secureConnectionToPeerIfNeeded()
         AsyncCall::Pointer callback = asyncCall(17,4,
                                                 "FwdState::ConnectedToPeer",
                                                 FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
-        const time_t sslNegotiationTimeout = connectingTimeout(serverDestinations[0]);
+        const auto sslNegotiationTimeout = connectingTimeout(serverDestinations[0]);
         Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
         if (request->flags.sslPeek)
@@ -1054,9 +1054,9 @@ FwdState::connectStart()
 
     GetMarkingsToServer(request, *serverDestinations[0]);
 
-    AsyncCall::Pointer connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-    const time_t connTimeout = connectingTimeout(serverDestinations[0]);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], connector, connTimeout);
+    const AsyncCall::Pointer connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
+    const auto connTimeout = connectingTimeout(serverDestinations[0]);
+    const auto cs = new Comm::ConnOpener(serverDestinations[0], connector, connTimeout);
     if (host)
         cs->setHost(host);
     ++n_tries;

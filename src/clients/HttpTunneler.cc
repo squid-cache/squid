@@ -232,7 +232,7 @@ Http::Tunneler::readMore()
     Comm::Read(connection, reader);
 
     AsyncCall::Pointer nil;
-    time_t timeout = Comm::MortalReadTimeout(startTime, lifetimeLimit);
+    const auto timeout = Comm::MortalReadTimeout(startTime, lifetimeLimit);
     commSetConnTimeout(connection, timeout, nil);
 }
 
@@ -244,7 +244,7 @@ Http::Tunneler::handleResponse(const bool eof)
     if (hp == nullptr)
         hp = new Http1::ResponseParser;
 
-    bool parsedOk = hp->parse(readBuf);
+    auto parsedOk = hp->parse(readBuf); // may be refined below
     readBuf = hp->remaining();
     if (hp->needsMoreData()) {
         if (!eof) {
