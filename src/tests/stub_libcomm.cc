@@ -52,7 +52,6 @@ void Comm::CallbackTableDestruct() STUB
 #include "comm/Loops.h"
 void Comm::SelectLoopInit(void) STUB
 void Comm::SetSelect(int, unsigned int, PF *, void *, time_t) STUB
-void Comm::ResetSelect(int) STUB
 Comm::Flag Comm::DoSelect(int) STUB_RETVAL(Comm::COMM_ERROR)
 void Comm::QuickPollRequired(void) STUB
 
