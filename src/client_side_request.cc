@@ -1584,7 +1584,7 @@ ClientHttpRequest::sslBumpEstablish(Comm::Flag errflag)
 #endif
 
     assert(sslBumpNeeded());
-    getConn()->switchToHttps(request, sslBumpNeed_);
+    getConn()->switchToHttps(this, sslBumpNeed_);
 }
 
 void
@@ -1849,7 +1849,7 @@ ClientHttpRequest::doCallouts()
             // We have to serve an error, so bump the client first.
             sslBumpNeed(Ssl::bumpClientFirst);
             // set final error but delay sending until we bump
-            Ssl::ServerBump *srvBump = new Ssl::ServerBump(request, e, Ssl::bumpClientFirst);
+            Ssl::ServerBump *srvBump = new Ssl::ServerBump(this, e, Ssl::bumpClientFirst);
             errorAppendEntry(e, calloutContext->error);
             calloutContext->error = NULL;
             getConn()->setServerBump(srvBump);

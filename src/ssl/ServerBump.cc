@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "anyp/Uri.h"
 #include "client_side.h"
+#include "client_side_request.h"
 #include "FwdState.h"
 #include "http/Stream.h"
 #include "ssl/ServerBump.h"
@@ -19,10 +20,11 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, ServerBump);
 
-Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e, Ssl::BumpMode md):
-    request(fakeRequest),
+Ssl::ServerBump::ServerBump(ClientHttpRequest *http, StoreEntry *e, Ssl::BumpMode md):
     step(bumpStep1)
 {
+    assert(http->request);
+    request = http->request;
     debugs(33, 4, "will peek at " << request->url.authority(true));
     act.step1 = md;
     act.step2 = act.step3 = Ssl::bumpNone;
@@ -39,6 +41,9 @@ Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e, Ssl::BumpMo
     // We do not need to be a client because the error contents will be used
     // later, but an entry without any client will trim all its contents away.
     sc = storeClientListAdd(entry, this);
+#if USE_DELAY_POOLS
+    sc->setDelayId(DelayId::DelayClient(http));
+#endif
 }
 
 Ssl::ServerBump::~ServerBump()

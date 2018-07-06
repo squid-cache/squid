@@ -791,23 +791,8 @@ FwdState::establishTunnelThruProxy()
     tunneler->lifetimeLimit = connectingTimeout(serverDestinations[0]);
 #if USE_DELAY_POOLS
     Must(serverConnection()->getPeer());
-    if (!serverConnection()->getPeer()->options.no_delay) {
-#if 1
-        if (const auto conn = request->clientConnectionManager.get()) {
-            Http::StreamPointer context = conn->pipeline.front();
-            if (context && context->http)
-                tunneler->delayId = DelayId(DelayId::DelayClient(context->http));
-        }
-#else
-        // The following looks a better option however will not work because
-        // the entry is the one created internally to Ssl::ServerBump to keep
-        // bumping error replies.
-        // We need to call  sc->setDelayId(DelayId::DelayClient(http)) somewhere
-        // inside Ssl::ServerBump constructor where the storeEntry created
-        // and attached a StoreClient.
+    if (!serverConnection()->getPeer()->options.no_delay)
         tunneler->delayId = entry->mem_obj->mostBytesAllowed();
-#endif
-    }
 #endif
     AsyncJob::Start(tunneler);
     // and wait for the tunnelEstablishmentDone() call
