@@ -32,8 +32,8 @@ Ipc::TypedMsgHdr &Ipc::TypedMsgHdr::operator =(const TypedMsgHdr &tmh)
 {
     if (this != &tmh) { // skip assignment to self
         memcpy(static_cast<msghdr*>(this), static_cast<const msghdr*>(&tmh), sizeof(msghdr));
-        // struct name is handled in sync()
-        // struct ios[] is handled in sync()
+        name = tmh.name;
+        memcpy(&ios, &tmh.ios, sizeof(ios));
         data = tmh.data;
         ctrl = tmh.ctrl;
         offset = tmh.offset;
