@@ -132,11 +132,11 @@ ACLFilledChecklist::syncAle(HttpRequest *adaptedRequest, const char *logUri) con
 {
     if (!al)
         return;
-    if (!al->adapted_request) {
+    if (adaptedRequest && !al->adapted_request) {
         al->adapted_request = adaptedRequest;
         HTTPMSGLOCK(al->adapted_request);
     }
-    if (al->url.isEmpty())
+    if (logUri && al->url.isEmpty())
         al->url = logUri;
 }
 
