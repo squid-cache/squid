@@ -66,7 +66,7 @@ ICP3State::created(StoreEntry *e)
     debugs(12, 5, "icpHandleIcpV3: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 
-    if (confirmAndPrepHit(*e)) {
+    if (e && confirmAndPrepHit(*e)) {
         codeToSend = ICP_HIT;
     } else if (icpGetCommonOpcode() == ICP_ERR)
         codeToSend = ICP_MISS;

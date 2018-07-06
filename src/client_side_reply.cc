@@ -1051,16 +1051,17 @@ clientReplyContext::purgeDoMissPurge()
 void
 clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 {
-    assert (newEntry);
-    /* Move to new() when that is created */
-    purgeStatus = Http::scNotFound;
-    /* Release the cached URI */
-    debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
+    if (newEntry) {
+        /* Move to new() when that is created */
+        purgeStatus = Http::scNotFound;
+        /* Release the cached URI */
+        debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
 #if USE_HTCP
-    neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
+        neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
-    newEntry->release(true);
-    purgeStatus = Http::scOkay;
+        newEntry->release(true);
+        purgeStatus = Http::scOkay;
+    }
 
     lookingforstore = 4;
     StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
@@ -1706,10 +1707,10 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
         ipcacheInvalidateNegative(r->url.host());
 
 #if USE_CACHE_DIGESTS
-    lookup_type = http->storeEntry() ? "HIT" : "MISS";
+    lookup_type = e ? "HIT" : "MISS";
 #endif
 
-    if (NULL == http->storeEntry()) {
+    if (!e) {
         /** \li If no StoreEntry object is current assume this object isn't in the cache set MISS*/
         debugs(85, 3, "StoreEntry is NULL -  MISS");
         http->logType.update(LOG_TCP_MISS);
