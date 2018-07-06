@@ -296,17 +296,6 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
         F->timeout = squid_curtime + timeout;
 }
 
-/** \brief Clear polling of file handle (both read and write)
- *
- * @param fd file descriptor to clear polling on
- */
-void
-Comm::ResetSelect(int fd)
-{
-    SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-    SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-}
-
 /** \brief Do poll and trigger callback functions as appropriate
  *
  * Check all connections for new connections and input data that is to be
