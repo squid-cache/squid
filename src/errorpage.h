@@ -92,11 +92,12 @@ class ErrorState
     CBDATA_CLASS(ErrorState);
 
 public:
+    /// creates an error of type other than ERR_RELAY_REMOTE
     ErrorState(err_type type, Http::StatusCode, HttpRequest * request, const AccessLogEntryPointer &al);
     ErrorState() = delete; // not implemented.
 
-    /// Build an ERR_RELAY_REMOTE ErrorState object
-    explicit ErrorState(HttpRequest * request, HttpReply *);
+    /// creates an ERR_RELAY_REMOTE error
+    ErrorState(HttpRequest * request, HttpReply *);
 
     ~ErrorState();
 
@@ -120,8 +121,8 @@ public:
 private:
     typedef ErrorPage::Build Build;
 
-    /// used by public constructors
-    ErrorState(err_type type);
+    /// initializations shared by public constructors
+    explicit ErrorState(err_type type);
 
     /// locates the right error page template for this error and compiles it
     SBuf buildBody();
