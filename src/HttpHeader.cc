@@ -1727,6 +1727,20 @@ HttpHeader::removeHopByHopEntries()
 }
 
 void
+HttpHeader::removeIrrelevantContentLength(const Http::StatusCode code)
+{
+    // RFC 7230 section 3.3.2: A server MUST NOT send a Content-Length
+    // header field in any response with a status code of 1xx (Informational)
+    // or 204 (No Content).
+    if ((code == Http::scNoContent) || (code >= Http::scContinue && code < Http::scOkay)) {
+        if (has(Http::HdrType::CONTENT_LENGTH)) {
+            debugs(55, 3, "removing Content-Length before replying with " << code << " status code.");
+            delById(Http::HdrType::CONTENT_LENGTH);
+        }
+    }
+}
+
+void
 HttpHeader::removeConnectionHeaderEntries()
 {
     if (has(Http::HdrType::CONNECTION)) {

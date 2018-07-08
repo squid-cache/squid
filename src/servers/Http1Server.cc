@@ -334,6 +334,7 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
     // apply selected clientReplyContext::buildReplyHeader() mods
     // it is not clear what headers are required for control messages
     rep->header.removeHopByHopEntries();
+    rep->header.removeIrrelevantContentLength(rep->sline.status());
     rep->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
     httpHdrMangleList(&rep->header, http->request, http->al, ROR_REPLY);
 
