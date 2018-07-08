@@ -445,11 +445,11 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const char *url)
 /// Update the URL object with parsed URI data.
 void
 AnyP::Uri::parseFinish(const AnyP::ProtocolType protocol,
-                 const char *const protoStr, // for unknown protocols
-                 const char *const aUrlPath,
-                 const char *const aHost,
-                 const SBuf &aLogin,
-                 const int aPort)
+                       const char *const protoStr, // for unknown protocols
+                       const char *const aUrlPath,
+                       const char *const aHost,
+                       const SBuf &aLogin,
+                       const int aPort)
 {
     setScheme(protocol, protoStr);
     path(aUrlPath);
