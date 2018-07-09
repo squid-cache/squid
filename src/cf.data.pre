@@ -4525,7 +4525,7 @@ DOC_START
 
 			Current support is limited to these contexts:
 			- http_port connections, but only when the
-                          on_unsupported_protocol directive is in use.
+			  on_unsupported_protocol directive is in use.
 			- https_port connections (and CONNECT tunnels) that
 			  are subject to the ssl_bump peek or stare action.
 
