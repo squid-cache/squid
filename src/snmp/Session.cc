@@ -14,7 +14,6 @@
 #include "snmp/Session.h"
 #include "tools.h"
 
-
 Snmp::Session::Session()
 {
     memset(static_cast<snmp_session *>(this), 0, sizeof(snmp_session));
