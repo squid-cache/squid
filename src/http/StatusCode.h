@@ -88,6 +88,10 @@ typedef enum {
 } StatusCode;
 
 const char *StatusCodeString(const Http::StatusCode status);
+/// whether this is an informational 1xx response status code
+inline bool Is1xx(const int sc) { return scContinue <= sc && sc < scOkay; }
+/// whether this response status code prohibits sending Content-Length
+inline bool ProhibitsContentLength(const StatusCode sc) { return sc == scNoContent || Is1xx(sc); }
 
 } // namespace Http
 

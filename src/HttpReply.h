@@ -116,6 +116,11 @@ public:
     /// \returns false if any information is missing
     bool olderThan(const HttpReply *them) const;
 
+    /// Some response status codes prohibit sending Content-Length (RFC 7230 section 3.3.2).
+    void removeIrrelevantContentLength() {
+        Http::ProhibitsContentLength(sline.status()) && header.delById(Http::HdrType::CONTENT_LENGTH);
+    }
+
 private:
     /** initialize */
     void init();

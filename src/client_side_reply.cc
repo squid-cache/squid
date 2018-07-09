@@ -1410,7 +1410,7 @@ clientReplyContext::buildReplyHeader()
     }
 
     reply->header.removeHopByHopEntries();
-    reply->header.removeIrrelevantContentLength(reply->sline.status());
+    reply->removeIrrelevantContentLength();
 
     //    if (request->range)
     //      clientBuildRangeHeader(http, reply);

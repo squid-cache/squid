@@ -567,7 +567,7 @@ Ftp::Relay::readReply()
     assert(serverState() == fssConnected ||
            serverState() == fssHandleUploadRequest);
 
-    if (100 <= ctrl.replycode && ctrl.replycode < 200)
+    if (Http::Is1xx(ctrl.replycode))
         forwardPreliminaryReply(&Ftp::Relay::scheduleReadControlReply);
     else
         forwardReply();
@@ -578,7 +578,7 @@ Ftp::Relay::readFeatReply()
 {
     assert(serverState() == fssHandleFeat);
 
-    if (100 <= ctrl.replycode && ctrl.replycode < 200)
+    if (Http::Is1xx(ctrl.replycode))
         return; // ignore preliminary replies
 
     forwardReply();
@@ -589,7 +589,7 @@ Ftp::Relay::readPasvReply()
 {
     assert(serverState() == fssHandlePasv || serverState() == fssHandleEpsv || serverState() == fssHandlePort || serverState() == fssHandleEprt);
 
-    if (100 <= ctrl.replycode && ctrl.replycode < 200)
+    if (Http::Is1xx(ctrl.replycode))
         return; // ignore preliminary replies
 
     if (handlePasvReply(updateMaster().clientDataAddr))
@@ -601,7 +601,7 @@ Ftp::Relay::readPasvReply()
 void
 Ftp::Relay::readEpsvReply()
 {
-    if (100 <= ctrl.replycode && ctrl.replycode < 200)
+    if (Http::Is1xx(ctrl.replycode))
         return; // ignore preliminary replies
 
     if (handleEpsvReply(updateMaster().clientDataAddr)) {
@@ -680,7 +680,7 @@ Ftp::Relay::readCwdOrCdupReply()
 
     debugs(9, 5, "got code " << ctrl.replycode << ", msg: " << ctrl.last_reply);
 
-    if (100 <= ctrl.replycode && ctrl.replycode < 200)
+    if (Http::Is1xx(ctrl.replycode))
         return;
 
     if (weAreTrackingDir()) { // we are tracking
@@ -694,7 +694,7 @@ Ftp::Relay::readCwdOrCdupReply()
 void
 Ftp::Relay::readUserOrPassReply()
 {
-    if (100 <= ctrl.replycode && ctrl.replycode < 200)
+    if (Http::Is1xx(ctrl.replycode))
         return; //Just ignore
 
     if (weAreTrackingDir()) { // we are tracking

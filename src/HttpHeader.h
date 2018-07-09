@@ -151,8 +151,6 @@ public:
     int hasListMember(Http::HdrType id, const char *member, const char separator) const;
     int hasByNameListMember(const char *name, const char *member, const char separator) const;
     void removeHopByHopEntries();
-    /// Some response status codes prohibit sending Content-Length.
-    void removeIrrelevantContentLength(const Http::StatusCode code);
     inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
 
     /* protected, do not use these, use interface functions instead */
