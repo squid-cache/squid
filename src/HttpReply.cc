@@ -24,9 +24,16 @@
 #include "Store.h"
 #include "StrList.h"
 
-HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
-    expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0),
-    protoPrefix("HTTP/"), bodySizeMax(-2)
+HttpReply::HttpReply():
+    HttpMsg(hoReply),
+    date(0),
+    last_modified(0),
+    expires(0),
+    surrogate_control(nullptr),
+    keep_alive(0),
+    protoPrefix("HTTP/"),
+    bodySizeMax(-2),
+    content_range(nullptr)
 {
     init();
 }
@@ -317,7 +324,8 @@ HttpReply::hdrCacheInit()
     date = header.getTime(HDR_DATE);
     last_modified = header.getTime(HDR_LAST_MODIFIED);
     surrogate_control = header.getSc();
-    content_range = header.getContRange();
+    content_range = (sline.status() == Http::scPartialContent) ?
+                    header.getContRange() : nullptr;
     keep_alive = persistent() ? 1 : 0;
     const char *str = header.getStr(HDR_CONTENT_TYPE);
 
@@ -328,6 +336,13 @@ HttpReply::hdrCacheInit()
 
     /* be sure to set expires after date and cache-control */
     expires = hdrExpirationTime();
+}
+
+const HttpHdrContRange *
+HttpReply::contentRange() const
+{
+    assert(!content_range || sline.status() == Http::scPartialContent);
+    return content_range;
 }
 
 /* sync this routine when you update HttpReply struct */

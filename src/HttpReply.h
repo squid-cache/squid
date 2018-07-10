@@ -52,7 +52,8 @@ public:
 
     HttpHdrSc *surrogate_control;
 
-    HttpHdrContRange *content_range;
+    /// \returns parsed Content-Range for a 206 response and nil for others
+    const HttpHdrContRange *contentRange() const;
 
     short int keep_alive;
 
@@ -141,6 +142,8 @@ private:
     String removeStaleWarningValues(const String &value);
 
     mutable int64_t bodySizeMax; /**< cached result of calcMaxBodySize */
+
+    HttpHdrContRange *content_range; ///< parsed Content-Range; nil for non-206 responses!
 
 protected:
     virtual void packFirstLineInto(Packer * p, bool) const { sline.packInto(p); }

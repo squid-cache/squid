@@ -372,8 +372,8 @@ HttpHdrRange::canonize(HttpReply *rep)
 {
     assert(rep);
 
-    if (rep->content_range)
-        clen = rep->content_range->elength;
+    if (rep->contentRange())
+        clen = rep->contentRange()->elength;
     else
         clen = rep->content_length;
 
@@ -527,7 +527,7 @@ HttpHdrRange::offsetLimitExceeded(const int64_t limit) const
 }
 
 bool
-HttpHdrRange::contains(HttpHdrRangeSpec& r) const
+HttpHdrRange::contains(const HttpHdrRangeSpec& r) const
 {
     assert(r.length >= 0);
     HttpHdrRangeSpec::HttpRange rrange(r.offset, r.offset + r.length);
