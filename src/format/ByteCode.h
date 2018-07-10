@@ -46,6 +46,8 @@ typedef enum {
     LFT_CLIENT_LOCAL_TOS,
     LFT_CLIENT_LOCAL_NFMARK,
 
+    LFT_CLIENT_HANDSHAKE,
+
     /* client connection local squid.conf details */
     LFT_LOCAL_LISTENING_IP,
     LFT_LOCAL_LISTENING_PORT,
