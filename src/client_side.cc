@@ -1285,7 +1285,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
     /* check if we still want to do ranges */
 
     int64_t roffLimit = request->getRangeOffsetLimit();
-    auto contentRange = rep ? rep->contentRange() : nullptr;
+    const HttpHdrContRange *contentRange = rep ? rep->contentRange() : nullptr;
 
     if (!rep)
         range_err = "no [parse-able] reply";
