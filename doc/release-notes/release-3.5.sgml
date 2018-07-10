@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.5.27 release notes</title>
+<title>Squid 3.5.28 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.5.27.
+The Squid Team are pleased to announce the release of Squid-3.5.28.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.5/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
