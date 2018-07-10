@@ -1,3 +1,20 @@
+Changes to squid-3.5.28 (15 Jul 2018):
+
+	- SQUID-2018:1: crash processing SSL-Bumped traffic containing ESI
+	- SQUID-2018:2: crash handling responses to internally generated requests
+	- SQUID-2018:3 / CVE-2018-1172: crash in ESI Response processing
+	- Bug 4861: HTTPMSGLOCK missing pointer safety
+	- Bug 4829: IPC shared memory leaks when disker queue overflows
+	- Bug 4767: SMP breaks IPv6 SNMP and cache manager queries
+	- Bug 2821: Ignore Content-Range in non-206 responses
+	- HTCP: Ignore HTCP packets with invalid URI
+	- SSL-Bump: fix authentication with schemes other than Basic
+	- TPROXY: Fix clientside_mark and client port logging
+	- Fix "Cannot assign requested address" for to-origin TPROXY FTP data
+	- Fix --with-netfilter-conntrack error message
+	- Validate mime icon URL before allocating store entries
+	- ... and many documentation changes
+
 Changes to squid-3.5.27 (20 Aug 2017):
 
 	- Regression Bug #4112: ssl_engine does not accept cryptodev
