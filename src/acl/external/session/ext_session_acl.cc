@@ -43,6 +43,9 @@
 #endif
 #include <sys/types.h>
 #include <sys/stat.h>
+#if HAVE_TDB_H
+#include <tdb.h>
+#endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -60,8 +63,36 @@ static int fixed_timeout = 0;
 char *db_path = NULL;
 const char *program_name;
 
+#if USE_BERKLEYDB
 DB *db = NULL;
 DB_ENV *db_env = NULL;
+typedef DBT DB_ENTRY;
+
+#elif USE_TRIVIALDB
+TDB_CONTEXT *db = nullptr;
+typedef TDB_DATA DB_ENTRY;
+
+#endif
+
+static void
+shutdown_db()
+{
+    if (db) {
+#if USE_BERKLEYDB
+        db->close(db, 0);
+    }
+    if (db_env) {
+        db_env->close(db_env, 0);
+
+#elif USE_TRIVIALDB
+        if (tdb_close(db) != 0) {
+            fprintf(stderr, "%s| WARNING: error closing session db '%s'\n", program_name, db_path);
+            exit(EXIT_FAILURE);
+        }
+#endif
+    }
+    xfree(db_path);
+}
 
 static void init_db(void)
 {
@@ -70,6 +101,7 @@ static void init_db(void)
     if (db_path) {
         if (!stat(db_path, &st_buf)) {
             if (S_ISDIR (st_buf.st_mode)) {
+#if USE_BERKLEYDB
                 /* If directory then open database environment. This prevents sync problems
                     between different processes. Otherwise fallback to single file */
                 db_env_create(&db_env, 0);
@@ -79,10 +111,16 @@ static void init_db(void)
                     exit(EXIT_FAILURE);
                 }
                 db_create(&db, db_env, 0);
+#elif USE_TRIVIALDB
+                std::string newPath(db_path);
+                newPath.append("session", 7);
+                db_path = xstrdup(newPath.c_str());
+#endif
             }
         }
     }
 
+#if USE_BERKLEYDB
     if (db_env) {
         if (db->open(db, NULL, "session", NULL, DB_BTREE, DB_CREATE, 0666)) {
             fprintf(stderr, "FATAL: %s: Failed to open db file '%s' in dir '%s'\n",
@@ -93,60 +131,121 @@ static void init_db(void)
     } else {
         db_create(&db, NULL, 0);
         if (db->open(db, NULL, db_path, NULL, DB_BTREE, DB_CREATE, 0666)) {
-            fprintf(stderr, "FATAL: %s: Failed to open session db '%s'\n", program_name, db_path);
-            exit(EXIT_FAILURE);
+            db = nullptr;
         }
     }
-}
-
-static void shutdown_db(void)
-{
-    db->close(db, 0);
-    if (db_env) {
-        db_env->close(db_env, 0);
+#elif USE_TRIVIALDB
+    db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, O_CREAT|O_DSYNC, 0666);
+#endif
+    if (!db) {
+        fprintf(stderr, "FATAL: %s: Failed to open session db '%s'\n", program_name, db_path);
+        shutdown_db();
+        exit(EXIT_FAILURE);
     }
 }
 
 int session_is_active = 0;
 
+static size_t
+dataSize(DB_ENTRY *data)
+{
+#if USE_BERKLEYDB
+    return data->size;
+#elif USE_TRIVIALDB
+    return data->dsize;
+#endif
+}
+
+static bool
+fetchKey(/*const*/ DB_ENTRY &key, DB_ENTRY *data)
+{
+#if USE_BERKLEYDB
+    return (db->get(db, nullptr, &key, data, 0) == 0);
+#elif USE_TRIVIALDB
+    // NP: API says returns NULL on errors, but return is a struct type WTF??
+    *data = tdb_fetch(db, key);
+    return (data->dptr != nullptr);
+#endif
+}
+
+static void
+deleteEntry(/*const*/ DB_ENTRY &key)
+{
+#if USE_BERKLEYDB
+    db->del(db, nullptr, &key, 0);
+#elif USE_TRIVIALDB
+    tdb_delete(db, key);
+#endif
+}
+
+static void
+copyValue(void *dst, const DB_ENTRY *src, size_t sz)
+{
+#if USE_BERKLEYDB
+    memcpy(dst, src->data, sz);
+#elif USE_TRIVIALDB
+    memcpy(dst, src->dptr, sz);
+#endif
+}
+
 static int session_active(const char *details, size_t len)
 {
+#if USE_BERKLEYDB
     DBT key = {0};
     DBT data = {0};
     key.data = (void *)details;
     key.size = len;
-    if (db->get(db, NULL, &key, &data, 0) == 0) {
+#elif USE_TRIVIALDB
+    TDB_DATA key;
+    TDB_DATA data;
+#endif
+    if (fetchKey(key, &data)) {
         time_t timestamp;
-        if (data.size != sizeof(timestamp)) {
+        if (dataSize(&data) != sizeof(timestamp)) {
             fprintf(stderr, "ERROR: %s: CORRUPTED DATABASE (%s)\n", program_name, details);
-            db->del(db, NULL, &key, 0);
+            deleteEntry(key);
             return 0;
         }
-        memcpy(&timestamp, data.data, sizeof(timestamp));
+        copyValue(&timestamp, &data, sizeof(timestamp));
         if (timestamp + session_ttl >= time(NULL))
             return 1;
     }
     return 0;
 }
 
-static void session_login(const char *details, size_t len)
+static void
+session_login(/*const*/ char *details, size_t len)
 {
-    DBT key = {0};
-    DBT data = {0};
-    key.data = (void *)details;
+    DB_ENTRY key = {0};
+    DB_ENTRY data = {0};
+    time_t now = time(0);
+#if USE_BERKLEYDB
+    key.data = static_cast<decltype(key.data)>(details);
     key.size = len;
-    time_t now = time(NULL);
     data.data = &now;
     data.size = sizeof(now);
     db->put(db, NULL, &key, &data, 0);
+#elif USE_TRIVIALDB
+    key.dptr = reinterpret_cast<decltype(key.dptr)>(details);
+    key.dsize = len;
+    data.dptr = reinterpret_cast<decltype(data.dptr)>(&now);
+    data.dsize = sizeof(now);
+    tdb_store(db, key, data, 0);
+#endif
 }
 
-static void session_logout(const char *details, size_t len)
+static void
+session_logout(/*const*/ char *details, size_t len)
 {
-    DBT key = {0};
-    key.data = (void *)details;
+    DB_ENTRY key = {0};
+#if USE_BERKLEYDB
+    key.data = static_cast<decltype(key.data)>(details);
     key.size = len;
-    db->del(db, NULL, &key, 0);
+#elif USE_TRIVIALDB
+    key.dptr = reinterpret_cast<decltype(key.dptr)>(details);
+    key.dsize = len;
+#endif
+    deleteEntry(key);
 }
 
 static void usage(void)
@@ -173,7 +272,7 @@ int main(int argc, char **argv)
             session_ttl = strtol(optarg, NULL, 0);
             break;
         case 'b':
-            db_path = optarg;
+            db_path = xstrdup(optarg);
             break;
         case 'a':
             default_action = 0;
