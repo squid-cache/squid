@@ -41,19 +41,8 @@
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-
-/* At this point all Bit Types are already defined, so we must
-   protect from multiple type definition on platform where
-   __BIT_TYPES_DEFINED__ is not defined.
- */
-#ifndef        __BIT_TYPES_DEFINED__
-#define        __BIT_TYPES_DEFINED__
-#endif
-
-#if HAVE_DB_185_H
-#include <db_185.h>
-#elif HAVE_DB_H
-#include <db.h>
+#if HAVE_TDB_H
+#include <tdb.h>
 #endif
 
 #ifndef DEFAULT_QUOTA_DB
@@ -63,7 +52,7 @@
 const char *db_path = DEFAULT_QUOTA_DB;
 const char *program_name;
 
-DB *db = NULL;
+TDB_CONTEXT *db = nullptr;
 
 #define KEY_LAST_ACTIVITY            "last-activity"
 #define KEY_PERIOD_START             "period-start"
@@ -147,7 +136,7 @@ static void log_fatal(const char *format, ...)
 static void init_db(void)
 {
     log_info("opening time quota database \"%s\".\n", db_path);
-    db = dbopen(db_path, O_CREAT | O_RDWR, 0666, DB_BTREE, NULL);
+    db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, O_CREAT | O_RDWR, 0666);
     if (!db) {
         log_fatal("Failed to open time_quota db '%s'\n", db_path);
         exit(EXIT_FAILURE);
@@ -156,52 +145,68 @@ static void init_db(void)
 
 static void shutdown_db(void)
 {
-    db->close(db);
+    tdb_close(db);
+}
+
+static char *KeyString(int &len, const char *user_key, const char *sub_key)
+{
+    static char keybuffer[TQ_BUFFERSIZE];
+    *keybuffer = 0;
+
+    len = snprintf(keybuffer, sizeof(keybuffer), "%s-%s", user_key, sub_key);
+    if (len < 0) {
+        log_error("Cannot add entry: %s-%s", user_key, sub_key);
+        len = 0;
+
+    } else if (static_cast<size_t>(len) >= sizeof(keybuffer)) {
+        log_error("key too long (%s,%s)\n", user_key, sub_key);
+        len = 0;
+    }
+
+    return keybuffer;
 }
 
 static void writeTime(const char *user_key, const char *sub_key, time_t t)
 {
-    char keybuffer[TQ_BUFFERSIZE];
-    DBT key, data;
+    int len = 0;
+    if (/* const */ char *keybuffer = KeyString(len, user_key, sub_key)) {
 
-    if ( strlen(user_key) + strlen(sub_key) + 1 + 1 > sizeof(keybuffer) ) {
-        log_error("key too long (%s,%s)\n", user_key, sub_key);
-    } else {
-        snprintf(keybuffer, sizeof(keybuffer), "%s-%s", user_key, sub_key);
+        TDB_DATA key, data;
 
-        key.data = (void *)keybuffer;
-        key.size = strlen(keybuffer);
-        data.data = &t;
-        data.size = sizeof(t);
-        db->put(db, &key, &data, 0);
+        key.dptr = reinterpret_cast<unsigned char *>(keybuffer);
+        key.dsize = len;
+
+        data.dptr = reinterpret_cast<unsigned char *>(&t);
+        data.dsize = sizeof(t);
+
+        tdb_store(db, key, data, TDB_REPLACE);
         log_debug("writeTime(\"%s\", %d)\n", keybuffer, t);
     }
 }
 
 static time_t readTime(const char *user_key, const char *sub_key)
 {
-    char keybuffer[TQ_BUFFERSIZE];
-    DBT key, data;
-    time_t t = 0;
+    int len = 0;
+    if (/* const */ char *keybuffer = KeyString(len, user_key, sub_key)) {
 
-    if ( strlen(user_key) + 1 + strlen(sub_key) + 1 > sizeof(keybuffer) ) {
-        log_error("key too long (%s,%s)\n", user_key, sub_key);
-    } else {
-        snprintf(keybuffer, sizeof(keybuffer), "%s-%s", user_key, sub_key);
+        TDB_DATA key;
+        key.dptr = reinterpret_cast<unsigned char *>(keybuffer);
+        key.dsize = len;
 
-        key.data = (void *)keybuffer;
-        key.size = strlen(keybuffer);
-        if (db->get(db, &key, &data, 0) == 0) {
-            if (data.size != sizeof(t)) {
-                log_error("CORRUPTED DATABASE (%s)\n", keybuffer);
-            } else {
-                memcpy(&t, data.data, sizeof(t));
-            }
+        auto data = tdb_fetch(db, key);
+
+        time_t t = 0;
+        if (data.dsize != sizeof(t)) {
+            log_error("CORRUPTED DATABASE (%s)\n", keybuffer);
+        } else {
+            memcpy(&t, data.dptr, sizeof(t));
         }
+
         log_debug("readTime(\"%s\")=%d\n", keybuffer, t);
+        return t;
     }
 
-    return t;
+    return 0;
 }
 
 static void parseTime(const char *s, time_t *secs, time_t *start)
@@ -388,8 +393,6 @@ static void processActivity(const char *user_key)
         log_debug("ERR %s\n", message);
         SEND_ERR("Time budget exceeded.");
     }
-
-    db->sync(db, 0);
 }
 
 static void usage(void)
