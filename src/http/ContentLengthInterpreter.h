@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_HTTP_CONTENTLENGTH_INTERPRETER_H
 #define SQUID_SRC_HTTP_CONTENTLENGTH_INTERPRETER_H
 
+#include "StatusCode.h"
+
 class String;
 
 namespace Http
@@ -24,6 +26,9 @@ public:
     /// updates history based on the given message-header field
     /// \return true iff the field should be added/remembered for future use
     bool checkField(const String &field);
+
+    /// whether the response status code forbids Content-Length
+    bool prohibited(const Http::StatusCode code) const { return Http::ProhibitsContentLength(code); }
 
     /// intended Content-Length value if sawGood is set and sawBad is not set
     /// meaningless otherwise

@@ -117,9 +117,9 @@ public:
     bool olderThan(const HttpReply *them) const;
 
     /// Some response status codes prohibit sending Content-Length (RFC 7230 section 3.3.2).
-    void removeIrrelevantContentLength() {
-        Http::ProhibitsContentLength(sline.status()) && header.delById(Http::HdrType::CONTENT_LENGTH);
-    }
+    void removeIrrelevantContentLength();
+
+    virtual bool parseHeaderKnownLength(const char *headerStart, const size_t hdrLen);
 
 private:
     /** initialize */
@@ -153,6 +153,8 @@ protected:
     virtual void packFirstLineInto(Packable * p, bool) const { sline.packInto(p); }
 
     virtual bool parseFirstLine(const char *start, const char *end);
+
+    virtual int parseHeaderUnknownLength(const char *buf, const size_t bufLen, const bool atEnd, size_t &hdrLen);
 };
 
 #endif /* SQUID_HTTPREPLY_H */

@@ -2063,7 +2063,8 @@ void Adaptation::Icap::ModXactLauncher::updateHistory(bool doStart)
 }
 
 bool Adaptation::Icap::TrailerParser::parse(const char *buf, int len, int atEnd, Http::StatusCode *error) {
-    const int parsed = trailer.parse(buf, len, atEnd, hdr_sz);
+    // TODO: provide meaningful Http::StatusCode
+    const int parsed = trailer.parse(buf, len, atEnd, hdr_sz, Http::scNone);
     if (parsed < 0)
         *error = Http::scInvalidHeader; // TODO: should we add a new Http::scInvalidTrailer?
     return parsed > 0;

@@ -923,7 +923,7 @@ htcpSpecifier::checkHit()
         return;
     }
 
-    if (!checkHitRequest->header.parse(req_hdrs, reqHdrsSz)) {
+    if (!checkHitRequest->parseHeaderKnownLength(req_hdrs, reqHdrsSz)) {
         debugs(31, 3, "htcpCheckHit: NO; failed to parse request headers");
         checkHitRequest = nullptr;
         checkedHit(NullStoreEntry::getInstance());
@@ -992,7 +992,7 @@ htcpClrStore(const htcpSpecifier::Pointer &s)
     }
 
     /* Parse request headers */
-    if (!request->header.parse(s->req_hdrs, s->reqHdrsSz)) {
+    if (!request->parseHeaderKnownLength(s->req_hdrs, s->reqHdrsSz)) {
         debugs(31, 2, "htcpClrStore: failed to parse request headers");
         return -1;
     }
@@ -1087,13 +1087,13 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from
         }
 
         if ((t = d->resp_hdrs))
-            htcpReply.hdr.parse(t, d->respHdrsSz);
+            htcpReply.hdr.parse(t, d->respHdrsSz, Http::scNone);
 
         if ((t = d->entity_hdrs))
-            htcpReply.hdr.parse(t, d->entityHdrsSz);
+            htcpReply.hdr.parse(t, d->entityHdrsSz, Http::scNone);
 
         if ((t = d->cache_hdrs))
-            htcpReply.hdr.parse(t, d->cacheHdrsSz);
+            htcpReply.hdr.parse(t, d->cacheHdrsSz, Http::scNone);
     }
 
     debugs(31, 3, "htcpHandleTstResponse: key (" << key << ") " << storeKeyText(key));

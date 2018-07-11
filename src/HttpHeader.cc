@@ -341,7 +341,7 @@ HttpHeader::Isolate(const char **parse_start, size_t l, const char **blk_start, 
 }
 
 int
-HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz)
+HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, const Http::StatusCode code)
 {
     const char *parse_start = buf;
     const char *blk_start, *blk_end;
@@ -356,7 +356,7 @@ HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz)
         blk_end = blk_start + strlen(blk_start);
     }
 
-    if (parse(blk_start, blk_end - blk_start)) {
+    if (parse(blk_start, blk_end - blk_start, code)) {
         hdr_sz = parse_start - buf;
         return 1;
     }
@@ -364,7 +364,7 @@ HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz)
 }
 
 int
-HttpHeader::parse(const char *header_start, size_t hdrLen)
+HttpHeader::parse(const char *header_start, size_t hdrLen, const Http::StatusCode code)
 {
     const char *field_ptr = header_start;
     const char *header_end = header_start + hdrLen; // XXX: remove
@@ -517,7 +517,13 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
                Raw("header", header_start, hdrLen));
     }
 
-    if (chunked()) {
+    if (clen.prohibited(code)) {
+        // RFC 7230 section 3.3.2: A server MUST NOT send a Content-Length
+        // header field in any response with a status code of 1xx (Informational)
+        // or 204 (No Content).
+        if (delById(Http::HdrType::CONTENT_LENGTH))
+            debugs(55, 3, "Content-Length is prohibited by " << code << " status code");
+    } else if (chunked()) {
         // RFC 2616 section 4.4: ignore Content-Length with Transfer-Encoding
         // RFC 7230 section 3.3.3 #3: Transfer-Encoding overwrites Content-Length
         delById(Http::HdrType::CONTENT_LENGTH);

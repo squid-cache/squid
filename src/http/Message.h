@@ -115,6 +115,10 @@ public:
     // Parser-NG transitional parsing of mime headers
     bool parseHeader(Http1::Parser &); // TODO move this function to the parser
 
+    /// Parses headers stored in a buffer when the header size is known.
+    /// \returns true on success
+    virtual bool parseHeaderKnownLength(const char *header_start, const size_t hdrLen) = 0;
+
     virtual bool expectingBody(const HttpRequestMethod&, int64_t&) const = 0;
 
     void firstLineBuf(MemBuf&);
@@ -136,6 +140,11 @@ protected:
     virtual bool parseFirstLine(const char *blk_start, const char *blk_end) = 0;
 
     virtual void hdrCacheInit();
+    /// Parses headers stored in a buffer, when the header size is unknown.
+    /// \returns 1 and sets hdr_sz on success
+    /// \returns 0 when needs more data
+    /// \returns -1 on error
+    virtual int parseHeaderUnknownLength(const char *buf, const size_t bufLen, const bool atEnd, size_t &hdrLen) = 0;
 };
 
 } // namespace Http
