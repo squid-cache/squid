@@ -92,8 +92,7 @@ fd_close(int fd)
     }
 
     debugs(51, 3, "fd_close FD " << fd << " " << F->desc);
-    Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-    Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+    Comm::ResetSelect(fd);
     F->flags.open = false;
     fdUpdateBiggest(fd, 0);
     --Number_FD;

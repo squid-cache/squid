@@ -612,12 +612,15 @@ DOC_START
 		Concurrency must not be set unless it's known the helper
 		supports the input format with channel-ID fields.
 
-		The queue-size=N option sets the maximum number of queued
-		requests to N. The default maximum is 2*numberofchildren. Squid
-		is allowed to temporarily exceed the configured maximum, marking
-		the affected helper as "overloaded". If the helper overload
-		lasts more than 3 minutes, the action prescribed by the
-		on-persistent-overload option applies.
+		The queue-size option sets the maximum number of queued
+		requests. A request is queued when no existing child can
+		accept it due to concurrency limit and no new child can be
+		started due to numberofchildren limit. The default maximum is
+		2*numberofchildren. Squid is allowed to temporarily exceed the
+		configured maximum, marking the affected helper as
+		"overloaded". If the helper overload lasts more than 3
+		minutes, the action prescribed by the on-persistent-overload
+		option applies.
 
 		The on-persistent-overload=action option specifies Squid
 		reaction to a new helper request arriving when the helper
@@ -829,10 +832,12 @@ DOC_START
 	  concurrency=n	concurrency level per process. Only used with helpers
 			capable of processing more than one query at a time.
 
-	  queue-size=N  The queue-size= option sets the maximum number of queued
-			requests. If the queued requests exceed queue size 
-			the acl is ignored.
-			The default value is set to 2*children-max.
+	  queue-size=N  The queue-size option sets the maximum number of
+			queued requests. A request is queued when no existing
+			helper can accept it due to concurrency limit and no
+			new helper can be started due to children-max limit.
+			If the queued requests exceed queue size, the acl is
+			ignored. The default value is set to 2*children-max.
 
 	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers.
 
@@ -3284,9 +3289,14 @@ IFDEF: USE_SSL_CRTD
 DEFAULT: 32 startup=5 idle=1
 LOC: Ssl::TheConfig.ssl_crtdChildren
 DOC_START
-	The maximum number of processes spawn to service ssl server.
-	The maximum this may be safely set to is 32.
-	
+	Specifies the maximum number of certificate generation processes that
+	Squid may spawn (numberofchildren) and several related options. Using
+	too few of these helper processes (a.k.a. "helpers") creates request
+	queues. Using too many helpers wastes your system resources. Squid
+	does not support spawning more than 32 helpers.
+
+	Usage: numberofchildren [option]...
+
 	The startup= and idle= options allow some measure of skew in your
 	tuning.
 	
@@ -3308,10 +3318,11 @@ DOC_START
 
 		queue-size=N
 
-	Sets the maximum number of queued requests.
-	If the queued requests exceed queue size for more than 3 minutes
-	squid aborts its operation.
-	The default value is set to 2*numberofchildren.
+	Sets the maximum number of queued requests. A request is queued when
+	no existing child is idle and no new child can be started due to
+	numberofchildren limit. If the queued requests exceed queue size for
+	more than 3 minutes squid aborts its operation. The default value is
+	set to 2*numberofchildren.
 	
 	You must have at least one ssl_crtd process.
 DOC_END
@@ -3338,8 +3349,13 @@ IFDEF: USE_OPENSSL
 DEFAULT: 32 startup=5 idle=1 concurrency=1
 LOC: Ssl::TheConfig.ssl_crt_validator_Children
 DOC_START
-	The maximum number of processes spawn to service SSL server.
-	The maximum this may be safely set to is 32.
+	Specifies the maximum number of certificate validation processes that
+	Squid may spawn (numberofchildren) and several related options. Using
+	too few of these helper processes (a.k.a. "helpers") creates request
+	queues. Using too many helpers wastes your system resources. Squid
+	does not support spawning more than 32 helpers.
+
+	Usage: numberofchildren [option]...
 	
 	The startup= and idle= options allow some measure of skew in your
 	tuning.
@@ -3374,10 +3390,11 @@ DOC_START
 
 		queue-size=N
 
-	Sets the maximum number of queued requests.
-	If the queued requests exceed queue size for more than 3 minutes
-	squid aborts its operation.
-	The default value is set to 2*numberofchildren.
+	Sets the maximum number of queued requests. A request is queued when
+	no existing child can accept it due to concurrency limit and no new
+	child can be started due to numberofchildren limit. If the queued
+	requests exceed queue size for more than 3 minutes squid aborts its
+	operation. The default value is set to 2*numberofchildren.
 	
 	You must have at least one ssl_crt_validator process.
 DOC_END
@@ -4487,6 +4504,37 @@ DOC_START
 		<qos	Server connection TOS/DSCP value set by Squid
 		<nfmark Server connection netfilter packet MARK set by Squid
 
+		>handshake Raw client handshake
+			Initial client bytes received by Squid on a newly
+			accepted TCP connection or inside a just established
+			CONNECT tunnel. Squid stops accumulating handshake
+			bytes as soon as the handshake parser succeeds or
+			fails (determining whether the client is using the
+			expected protocol).
+
+			For HTTP clients, the handshake is the request line.
+			For TLS clients, the handshake consists of all TLS
+			records up to and including the TLS record that
+			contains the last byte of the first ClientHello
+			message. For clients using an unsupported protocol,
+			this field contains the bytes received by Squid at the
+			time of the handshake parsing failure.
+
+			See the on_unsupported_protocol directive for more
+			information on Squid handshake traffic expectations.
+
+			Current support is limited to these contexts:
+			- http_port connections, but only when the
+			  on_unsupported_protocol directive is in use.
+			- https_port connections (and CONNECT tunnels) that
+			  are subject to the ssl_bump peek or stare action.
+
+			To protect binary handshake data, this field is always
+			base64-encoded (RFC 4648 Section 4). If logformat
+			field encoding is configured, that encoding is applied
+			on top of base64. Otherwise, the computed base64 value
+			is recorded as is.
+
 	Time related format codes:
 
 		ts	Seconds since epoch
@@ -5462,11 +5510,13 @@ TYPE: HelperChildConfig
 DEFAULT: 20 startup=0 idle=1 concurrency=0
 LOC: Config.redirectChildren
 DOC_START
-	The maximum number of redirector processes to spawn. If you limit
-	it too few Squid will have to wait for them to process a backlog of
-	URLs, slowing it down. If you allow too many they will use RAM
-	and other system resources noticably.
-	
+	Specifies the maximum number of redirector processes that Squid may
+	spawn (numberofchildren) and several related options. Using too few of
+	these helper processes (a.k.a. "helpers") creates request queues.
+	Using too many helpers wastes your system resources.
+
+	Usage: numberofchildren [option]...
+
 	The startup= and idle= options allow some measure of skew in your
 	tuning.
 	
@@ -5499,13 +5549,16 @@ DOC_START
 
 		queue-size=N
 
-	Sets the maximum number of queued requests to N. The default maximum
-	is 2*numberofchildren. If the queued requests exceed queue size and
-	redirector_bypass configuration option is set, then redirector is bypassed.
-	Otherwise, Squid is allowed to temporarily exceed the configured maximum,
-	marking the affected helper as "overloaded". If the helper overload lasts
-	more than 3 minutes, the action prescribed by the on-persistent-overload
-	option applies.
+	Sets the maximum number of queued requests. A request is queued when
+	no existing child can accept it due to concurrency limit and no new
+	child can be started due to numberofchildren limit. The default
+	maximum is zero if url_rewrite_bypass is enabled and
+	2*numberofchildren otherwise. If the queued requests exceed queue size
+	and redirector_bypass configuration option is set, then redirector is
+	bypassed. Otherwise, Squid is allowed to temporarily exceed the
+	configured maximum, marking the affected helper as "overloaded". If
+	the helper overload lasts more than 3 minutes, the action prescribed
+	by the on-persistent-overload option applies.
 
 		on-persistent-overload=action
 
@@ -5571,8 +5624,9 @@ DOC_START
 	redirectors for access control, and you enable this option,
 	users may have access to pages they should not
 	be allowed to request.
-	This options sets default queue-size option of the url_rewrite_children
-	to 0.
+
+	Enabling this option sets the default url_rewrite_children queue-size
+	option value to 0.
 DOC_END
 
 NAME: url_rewrite_extras
@@ -5686,10 +5740,12 @@ TYPE: HelperChildConfig
 DEFAULT: 20 startup=0 idle=1 concurrency=0
 LOC: Config.storeIdChildren
 DOC_START
-	The maximum number of StoreID helper processes to spawn. If you limit
-	it too few Squid will have to wait for them to process a backlog of
-	requests, slowing it down. If you allow too many they will use RAM
-	and other system resources noticably.
+	Specifies the maximum number of StoreID helper processes that Squid
+	may spawn (numberofchildren) and several related options. Using
+	too few of these helper processes (a.k.a. "helpers") creates request
+	queues. Using too many helpers wastes your system resources.
+
+	Usage: numberofchildren [option]...
 	
 	The startup= and idle= options allow some measure of skew in your
 	tuning.
@@ -5723,13 +5779,15 @@ DOC_START
 
 		queue-size=N
 
-	Sets the maximum number of queued requests to N. The default maximum
-	is 2*numberofchildren. If the queued requests exceed queue size and
-	redirector_bypass configuration option is set, then redirector is bypassed.
-	Otherwise, Squid is allowed to temporarily exceed the configured maximum,
-	marking the affected helper as "overloaded". If the helper overload lasts
-	more than 3 minutes, the action prescribed by the on-persistent-overload
-	option applies.
+	Sets the maximum number of queued requests to N. A request is queued
+	when no existing child can accept it due to concurrency limit and no
+	new child can be started due to numberofchildren limit. The default
+	maximum is 2*numberofchildren. If the queued requests exceed queue
+	size and redirector_bypass configuration option is set, then
+	redirector is bypassed. Otherwise, Squid is allowed to temporarily
+	exceed the configured maximum, marking the affected helper as
+	"overloaded". If the helper overload lasts more than 3 minutes, the
+	action prescribed by the on-persistent-overload option applies.
 
 		on-persistent-overload=action
 
