@@ -145,6 +145,7 @@ httpHeaderInitModule(void)
 
 HttpHeader::HttpHeader() : owner (hoNone), len (0), conflictingContentLength_(false)
 {
+    entries.reserve(32);
     httpHeaderMaskInit(&mask, 0);
 }
 
@@ -152,11 +153,13 @@ HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0
 {
     assert(anOwner > hoNone && anOwner < hoEnd);
     debugs(55, 7, "init-ing hdr: " << this << " owner: " << owner);
+    entries.reserve(32);
     httpHeaderMaskInit(&mask, 0);
 }
 
 HttpHeader::HttpHeader(const HttpHeader &other): owner(other.owner), len(other.len), conflictingContentLength_(false)
 {
+    entries.reserve(other.entries.capacity());
     httpHeaderMaskInit(&mask, 0);
     update(&other); // will update the mask as well
 }

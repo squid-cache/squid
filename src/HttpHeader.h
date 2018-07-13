@@ -14,7 +14,7 @@
 #include "http/RegisteredHeaders.h"
 /* because we pass a spec by value */
 #include "HttpHeaderMask.h"
-#include "mem/forward.h"
+#include "mem/PoolingAllocator.h"
 #include "sbuf/forward.h"
 #include "SquidString.h"
 
@@ -153,7 +153,7 @@ public:
     inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
 
     /* protected, do not use these, use interface functions instead */
-    std::vector<HttpHeaderEntry *> entries;     /**< parsed fields in raw format */
+    std::vector<HttpHeaderEntry*, PoolingAllocator<HttpHeaderEntry*> > entries; /**< parsed fields in raw format */
     HttpHeaderMask mask;    /**< bit set <=> entry present */
     http_hdr_owner_type owner;  /**< request or reply */
     int len;            /**< length when packed, not counting terminating null-byte */
