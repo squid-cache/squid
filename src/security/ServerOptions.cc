@@ -61,7 +61,9 @@ Security::ServerOptions::parse(const char *token)
     }
 
     // parse the server-only options
-    if (strncmp(token, "dh=", 3) == 0) {
+    if (strncmp(token, "clientca=", 9) == 0) {
+        clientCaFile = SBuf(token + 9);
+    } else if (strncmp(token, "dh=", 3) == 0) {
         // clear any previous Diffi-Helman configuration
         dh.clear();
         dhParamsFile.clear();
