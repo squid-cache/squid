@@ -393,9 +393,6 @@ destroyStoreEntry(void *data)
     StoreEntry *e = static_cast<StoreEntry *>(static_cast<hash_link *>(data));
     assert(e != NULL);
 
-    if (e == NullStoreEntry::getInstance())
-        return;
-
     // Store::Root() is FATALly missing during shutdown
     if (e->hasDisk() && !shutting_down)
         e->disk().disconnect(*e);
@@ -498,36 +495,21 @@ void
 StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * request, const HttpRequestMethod& method)
 {
     assert (aClient);
-    StoreEntry *result = storeGetPublicByRequestMethod( request, method);
-
-    if (!result)
-        aClient->created (NullStoreEntry::getInstance());
-    else
-        aClient->created (result);
+    aClient->created(storeGetPublicByRequestMethod(request, method));
 }
 
 void
 StoreEntry::getPublicByRequest (StoreClient *aClient, HttpRequest * request)
 {
     assert (aClient);
-    StoreEntry *result = storeGetPublicByRequest (request);
-
-    if (!result)
-        result = NullStoreEntry::getInstance();
-
-    aClient->created (result);
+    aClient->created(storeGetPublicByRequest(request));
 }
 
 void
 StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestMethod& method)
 {
     assert (aClient);
-    StoreEntry *result = storeGetPublic (uri, method);
-
-    if (!result)
-        result = NullStoreEntry::getInstance();
-
-    aClient->created (result);
+    aClient->created(storeGetPublic(uri, method));
 }
 
 StoreEntry *
@@ -2166,34 +2148,6 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
     }
 
     return os << '/' << &e << '*' << e.locks();
-}
-
-/* NullStoreEntry */
-
-NullStoreEntry NullStoreEntry::_instance;
-
-NullStoreEntry *
-NullStoreEntry::getInstance()
-{
-    return &_instance;
-}
-
-char const *
-NullStoreEntry::getMD5Text() const
-{
-    return "N/A";
-}
-
-void
-NullStoreEntry::operator delete(void*)
-{
-    fatal ("Attempt to delete NullStoreEntry\n");
-}
-
-char const *
-NullStoreEntry::getSerialisedMetaData()
-{
-    return NULL;
 }
 
 void

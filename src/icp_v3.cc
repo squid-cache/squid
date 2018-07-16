@@ -66,7 +66,7 @@ ICP3State::created(StoreEntry *e)
     debugs(12, 5, "icpHandleIcpV3: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 
-    if (confirmAndPrepHit(*e)) {
+    if (e && confirmAndPrepHit(*e)) {
         codeToSend = ICP_HIT;
     } else if (icpGetCommonOpcode() == ICP_ERR)
         codeToSend = ICP_MISS;
@@ -76,7 +76,7 @@ ICP3State::created(StoreEntry *e)
     icpCreateAndSend(codeToSend, 0, url, header.reqnum, 0, fd, from, al);
 
     // TODO: StoreClients must either store/lock or abandon found entries.
-    //if (!e->isNull())
+    //if (e)
     //    e->abandon();
 
     delete this;
