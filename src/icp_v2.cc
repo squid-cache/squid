@@ -156,9 +156,6 @@ ICPState::~ICPState()
 bool
 ICPState::confirmAndPrepHit(const StoreEntry &e)
 {
-    if (e.isNull())
-        return false;
-
     if (!e.validToSend())
         return false;
 
@@ -217,7 +214,7 @@ ICP2State::created(StoreEntry *e)
     debugs(12, 5, "icpHandleIcpV2: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 
-    if (confirmAndPrepHit(*e)) {
+    if (e && confirmAndPrepHit(*e)) {
         codeToSend = ICP_HIT;
     } else {
 #if USE_ICMP
@@ -238,7 +235,7 @@ ICP2State::created(StoreEntry *e)
     icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, al);
 
     // TODO: StoreClients must either store/lock or abandon found entries.
-    //if (!e->isNull())
+    //if (e)
     //    e->abandon();
 
     delete this;

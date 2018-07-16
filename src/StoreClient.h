@@ -29,7 +29,7 @@ public:
     // TODO: Remove? Probably added to make lookups asynchronous, but they are
     // still blocking. A lot more is needed to support async callbacks.
     /// Handle a StoreEntry::getPublic*() result.
-    /// An isNull() entry indicates a cache miss.
+    /// A nil entry indicates a cache miss.
     virtual void created(StoreEntry *) = 0;
 
     /// \return LogTags (if the class logs transactions) or nil (otherwise)
