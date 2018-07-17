@@ -14,6 +14,7 @@ ext_session_acl_SOURCES= \
 	ext_session_acl.cc
 ext_session_acl_LDADD = \
 	$(COMPAT_LIB) \
-	-ldb
+	$(LIBBDB_LIBS) \
+	$(LIBTDB_LIBS)
 
 EXTRA_DIST= ext_session_acl.8 required.m4

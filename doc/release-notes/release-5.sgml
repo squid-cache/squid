@@ -114,7 +114,12 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<p>No new options in this version.
+	<tag>--without-tdb</tag>
+	<p>New option to determine whether TrivialDB support is used, and
+	   build against local custom installs.
+	<p>Samba TrivialDB is now the preferred database used by the
+	   <em>ext_session_acl</em> and <em>ext_time_quota_acl</em> helpers,
+	   deprecating use of BerkleyDB.
 
 </descrip>
 
