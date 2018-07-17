@@ -110,7 +110,7 @@ public:
     /// connection failed because candidate paths are not available.
     /// This flag is cleared (set to false), before a new spare
     /// connection try is scheduled.
-    bool rang;
+    bool sparesBlockedOnCandidatePaths;
 
     /// When the last connection attempt started
     double lastAttemptTime;

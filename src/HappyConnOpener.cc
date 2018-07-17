@@ -355,11 +355,10 @@ void
 HappyConnOpener::startSpareConnection()
 {
     activeSpareCall = nullptr;
-    Comm::ConnectionPointer dest = getPeerCandidatePath(master.path->getPeer(), CandidatePaths::ConnectionFamily(master.path));
-    if (!dest) {
-        rang = true;
+    auto dest = getPeerCandidatePath(master.path->getPeer(), CandidatePaths::ConnectionFamily(master.path));
+    sparesBlockedOnCandidatePaths = !dest;
+    if (sparesBlockedOnCandidatePaths)
         return;
-    }
 
     debugs(17, 8, "Starting a spare connection to: " << *dest);
     startConnecting(spare, dest);
@@ -367,9 +366,6 @@ HappyConnOpener::startSpareConnection()
         ++SpareConnects;
         LastSpareAttempt = current_dtime;
     }
-
-    rang = false; // clear flag
-    return;
 }
 
 AsyncCall::Pointer
@@ -384,7 +380,7 @@ HappyConnQueue::queueASpareConnection(HappyConnOpener::Pointer happy)
     bool needsSpareNow = primaryConnectTooSlow(happy);
     bool gapRuleOK = GapRule();
     bool connectionsLimitRuleOK = ConnectionsLimitRule();
-    bool startSpareNow = happy->rang ||
+    bool startSpareNow = happy->sparesBlockedOnCandidatePaths ||
                          (needsSpareNow && gapRuleOK && connectionsLimitRuleOK);
 
     typedef NullaryMemFunT<HappyConnOpener> Dialer;
