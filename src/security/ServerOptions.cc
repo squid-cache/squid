@@ -269,6 +269,7 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
         if (!loadClientCaFile())
             return false;
 
+        // by this point all config related files must be loaded
         if (!updateContextConfig(t)) {
             debugs(83, DBG_CRITICAL, "ERROR: Configuring static TLS context");
             return false;
