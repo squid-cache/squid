@@ -738,6 +738,12 @@ HttpRequest::manager(const CbcPointer<ConnStateData> &aMgr, const AccessLogEntry
     }
 }
 
+char *
+HttpRequest::canonicalCleanUrl() const
+{
+    return urlCanonicalCleanWithoutRequest(effectiveRequestUri(), method, url.getScheme());
+}
+
 /// a helper for validating FindListeningPortAddress()-found address candidates
 static const Ip::Address *
 FindListeningPortAddressInAddress(const Ip::Address *ip)
