@@ -43,6 +43,7 @@ MAKETEST="distcheck"
 #   --enable-win32-service \
 #   --with-valgrind-debug \
 #   --with-gnutls \
+#   --with-tdb \
 #
 #   --enable-cpu-profiling \  Requires CPU support.
 #
