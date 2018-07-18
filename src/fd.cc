@@ -186,6 +186,7 @@ void
 fd_open(int fd, unsigned int type, const char *desc)
 {
     fde *F;
+    if(!fd_table) return; // parse config
     assert(fd >= 0);
     F = &fd_table[fd];
 

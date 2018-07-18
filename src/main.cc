@@ -1149,9 +1149,9 @@ mainInitialize(void)
     if (icpPortNumOverride != 1)
         Config.Port.icp = (unsigned short) icpPortNumOverride;
 
-    _db_init(Debug::cache_log, Debug::debugOptions);
-
     fd_open(fileno(debug_log), FD_LOG, Debug::cache_log);
+
+    _db_init(Debug::cache_log, Debug::debugOptions);
 
     debugs(1, DBG_CRITICAL, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
     debugs(1, DBG_CRITICAL, "Service Name: " << service_name);

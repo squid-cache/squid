@@ -18,6 +18,7 @@
 
 /* for shutting_down flag in xassert() */
 #include "globals.h"
+#include "fd.h"
 
 char *Debug::debugOptions = NULL;
 int Debug::override_X = 0;
@@ -96,8 +97,10 @@ DebugFile::reset(FILE *newFile, const char *newName)
     // callers must use nullptr instead of the used-as-the-last-resort stderr
     assert(newFile != stderr || !stderr);
 
-    if (file_)
+    if (file_) {
+	fd_close(fileno(file_));
         fclose(file_);
+    }
     file_ = newFile; // may be nil
 
     xfree(name);
@@ -106,6 +109,8 @@ DebugFile::reset(FILE *newFile, const char *newName)
     // all open files must have a name
     // all cleared files must not have a name
     assert(!file_ == !name);
+    if (name)
+	fd_open(fileno(file_),FD_LOG,name);
 }
 
 static
