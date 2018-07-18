@@ -1150,14 +1150,6 @@ neighborUp(const CachePeer * p)
     return 1;
 }
 
-void
-peerNoteDigestGone(CachePeer * p)
-{
-#if USE_CACHE_DIGESTS
-    cbdataReferenceDone(p->digest);
-#endif
-}
-
 /// \returns the effective connect timeout for this peer
 time_t
 peerConnectTimeout(const CachePeer *peer)

@@ -575,8 +575,7 @@ ipcache_init(void)
     int n;
     debugs(14, DBG_IMPORTANT, "Initializing IP Cache...");
     memset(&IpcacheStats, '\0', sizeof(IpcacheStats));
-    memset(&lru_list, '\0', sizeof(lru_list));
-    memset(&static_addrs, '\0', sizeof(ipcache_addrs));
+    lru_list = dlink_list();
 
     static_addrs.in_addrs = static_cast<Ip::Address *>(xcalloc(1, sizeof(Ip::Address)));
     static_addrs.in_addrs->setEmpty(); // properly setup the Ip::Address!

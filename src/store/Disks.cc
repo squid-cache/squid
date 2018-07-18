@@ -680,16 +680,18 @@ storeDirWriteCleanLogs(int reopen)
 void
 allocate_new_swapdir(Store::DiskConfig *swap)
 {
-    if (swap->swapDirs == NULL) {
+    if (!swap->swapDirs) {
         swap->n_allocated = 4;
-        swap->swapDirs = static_cast<SwapDir::Pointer *>(xcalloc(swap->n_allocated, sizeof(SwapDir::Pointer)));
+        swap->swapDirs = new SwapDir::Pointer[swap->n_allocated];
     }
 
     if (swap->n_allocated == swap->n_configured) {
         swap->n_allocated <<= 1;
-        SwapDir::Pointer *const tmp = static_cast<SwapDir::Pointer *>(xcalloc(swap->n_allocated, sizeof(SwapDir::Pointer)));
-        memcpy(tmp, swap->swapDirs, swap->n_configured * sizeof(SwapDir *));
-        xfree(swap->swapDirs);
+        const auto tmp = new SwapDir::Pointer[swap->n_allocated];
+        for (int i = 0; i < swap->n_configured; ++i) {
+            tmp[i] = swap->swapDirs[i];
+        }
+        delete[] swap->swapDirs;
         swap->swapDirs = tmp;
     }
 }
@@ -697,23 +699,21 @@ allocate_new_swapdir(Store::DiskConfig *swap)
 void
 free_cachedir(Store::DiskConfig *swap)
 {
-    int i;
     /* DON'T FREE THESE FOR RECONFIGURE */
 
     if (reconfiguring)
         return;
 
-    for (i = 0; i < swap->n_configured; ++i) {
-        /* TODO XXX this lets the swapdir free resources asynchronously
-        * swap->swapDirs[i]->deactivate();
-        * but there may be such a means already.
-        * RBC 20041225
-        */
-        swap->swapDirs[i] = NULL;
-    }
+    /* TODO XXX this lets the swapdir free resources asynchronously
+     * swap->swapDirs[i]->deactivate();
+     * but there may be such a means already.
+     * RBC 20041225
+     */
 
-    safe_free(swap->swapDirs);
-    swap->swapDirs = NULL;
+    // only free's the array memory itself
+    // the SwapDir objects may remain (ref-counted)
+    delete[] swap->swapDirs;
+    swap->swapDirs = nullptr;
     swap->n_allocated = 0;
     swap->n_configured = 0;
 }

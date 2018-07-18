@@ -27,6 +27,7 @@ class esiExcept;
 esiSequence::~esiSequence ()
 {
     debugs(86, 5, "esiSequence::~esiSequence " << this);
+    FinishAllElements(elements); // finish if not already done
 }
 
 esiSequence::esiSequence(esiTreeParentPtr aParent, bool incrementalFlag) :
@@ -88,12 +89,13 @@ esiSequence::render(ESISegment::Pointer output)
 
     for (size_t i = 0; i < processedcount; ++i) {
         elements[i]->render(output);
-        elements.setNULL(i,i+1);
+        FinishAnElement(elements[i], i);
         /* FIXME: pass a ESISegment ** ? */
         output = output->tail();
     }
 
-    elements.pop_front (processedcount);
+    // prune completed elements
+    elements.erase(elements.begin(), elements.begin() + processedcount);
     processedcount = 0;
     assert (output->next == NULL);
 }
@@ -102,7 +104,7 @@ void
 esiSequence::finish()
 {
     debugs(86, 5, "esiSequence::finish: " << this << " is finished");
-    elements.setNULL(0, elements.size());
+    FinishAllElements(elements);
     parent = NULL;
 }
 
@@ -126,7 +128,7 @@ esiSequence::provideData (ESISegment::Pointer data, ESIElement *source)
     assert (index >= 0);
 
     /* remove the current node */
-    elements.setNULL(index, index+1);
+    FinishAnElement(elements[index], index);
 
     /* create a literal */
     esiLiteral *temp = new esiLiteral (data);
@@ -267,7 +269,7 @@ esiSequence::process (int inheritedVarsFlag)
             return processingResult;
 
         if (processingResult == ESI_PROCESS_FAILED) {
-            elements.setNULL (0, elements.size());
+            FinishAllElements(elements);
             failed = true;
             parent = NULL;
             processing = false;
@@ -313,7 +315,7 @@ esiSequence::fail (ESIElement *source, char const *anError)
 
     debugs(86, 5, "esiSequence::fail: " << this << " has failed.");
     parent->fail (this, anError);
-    elements.setNULL(0, elements.size());
+    FinishAllElements(elements);
     parent = NULL;
 }
 

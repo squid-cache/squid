@@ -66,23 +66,20 @@ static const time_t GlobDigestReqMinGap = 1 * 60;   /* seconds */
 
 static time_t pd_last_req_time = 0; /* last call to Check */
 
-/* initialize peer digest */
-static void
-peerDigestInit(PeerDigest * pd, CachePeer * p)
+PeerDigest::PeerDigest(CachePeer * p)
 {
-    assert(pd && p);
+    assert(p);
 
-    memset(pd, 0, sizeof(*pd));
     /*
      * DPW 2007-04-12
      * Lock on to the peer here.  The corresponding cbdataReferenceDone()
      * is in peerDigestDestroy().
      */
-    pd->peer = cbdataReference(p);
+    peer = cbdataReference(p);
     /* if peer disappears, we will know it's name */
-    pd->host = p->host;
+    host = p->host;
 
-    pd->times.initialized = squid_curtime;
+    times.initialized = squid_curtime;
 }
 
 CBDATA_CLASS_INIT(PeerDigest);
@@ -129,17 +126,22 @@ DigestFetchState::~DigestFetchState()
 }
 
 /* allocate new peer digest, call Init, and lock everything */
-PeerDigest *
+void
 peerDigestCreate(CachePeer * p)
 {
-    PeerDigest *pd;
     assert(p);
 
-    pd = new PeerDigest;
-    peerDigestInit(pd, p);
+    PeerDigest *pd = new PeerDigest(p);
 
-    /* XXX This does not look right, and the same thing again in the caller */
-    return cbdataReference(pd);
+    // TODO: make CachePeer member a CbcPointer
+    p->digest = cbdataReference(pd);
+
+    // lock a reference to pd again to prevent the PeerDigest
+    // disappearing during peerDigestDestroy() when
+    // cbdataReferenceValidDone is called.
+    // TODO test if it can be moved into peerDigestDestroy() or
+    //      if things can break earlier (eg CachePeer death).
+    (void)cbdataReference(pd);
 }
 
 /* call Clean and free/unlock everything */
@@ -152,17 +154,22 @@ peerDigestDestroy(PeerDigest * pd)
 
     /*
      * DPW 2007-04-12
-     * We locked the peer in peerDigestInit(), this is
-     * where we unlock it.  If the peer is still valid,
-     * tell it that the digest is gone.
+     * We locked the peer in PeerDigest constructor, this is
+     * where we unlock it.
      */
-    if (cbdataReferenceValidDone(peerTmp, &p))
-        peerNoteDigestGone((CachePeer *)p);
-
-    delete pd->cd;
-    pd->host.clean();
+    if (cbdataReferenceValidDone(peerTmp, &p)) {
+        // we locked the p->digest in peerDigestCreate()
+        // this is where we unlock that
+        cbdataReferenceDone(static_cast<CachePeer *>(p)->digest);
+    }
 
     delete pd;
+}
+
+PeerDigest::~PeerDigest()
+{
+    delete cd;
+    // req_result pointer is not owned by us
 }
 
 /* called by peer to indicate that somebody actually needs this digest */
