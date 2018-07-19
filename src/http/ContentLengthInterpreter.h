@@ -21,14 +21,17 @@ namespace Http
 class ContentLengthInterpreter
 {
 public:
-    explicit ContentLengthInterpreter(const int aDebugLevel);
+    explicit ContentLengthInterpreter();
 
     /// updates history based on the given message-header field
     /// \return true iff the field should be added/remembered for future use
     bool checkField(const String &field);
 
-    /// whether the response status code forbids Content-Length
-    bool prohibited(const Http::StatusCode code) const { return Http::ProhibitsContentLength(code); }
+    /// prohibits Content-Length in 1xx and 204 responses
+    void applyStatusCodeRules(const Http::StatusCode code) { prohibited = Http::ProhibitsContentLength(code); }
+    // TODO: implement
+    /// prohibits Content-Length in GET/HEAD requests
+    // void applyRequestMethodRules(const Http::MethodType method);
 
     /// intended Content-Length value if sawGood is set and sawBad is not set
     /// meaningless otherwise
@@ -49,6 +52,9 @@ public:
     /// whether a valid field value was present, possibly among problematic ones
     /// irrelevant if sawBad is set
     bool sawGood;
+
+    /// whether the response status code forbids Content-Length
+    bool prohibited;
 
 protected:
     bool goodSuffix(const char *suffix, const char * const end) const;

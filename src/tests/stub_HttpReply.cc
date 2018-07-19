@@ -31,6 +31,5 @@ bool HttpReply::inheritProperties(const Http::Message *aMsg) STUB_RETVAL(false)
 bool HttpReply::updateOnNotModified(HttpReply const*) STUB_RETVAL(false)
 int64_t HttpReply::bodySize(const HttpRequestMethod&) const STUB_RETVAL(0)
 const HttpHdrContRange *HttpReply::contentRange() const STUB_RETVAL(nullptr)
-bool HttpReply::parseHeaderKnownLength(const char *header_start, const size_t hdrLen) STUB_RETVAL(false)
-int HttpReply::parseHeaderUnknownLength(const char *buf, const size_t bufLen, const bool atEnd, size_t &hdrLen) STUB_RETVAL(0)
+void HttpReply::configureContentLengthInterpreter(Http::ContentLengthInterpreter &) STUB
 

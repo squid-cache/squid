@@ -212,7 +212,8 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
 
         if ( s != e) {
             DetailEntryParser parser;
-            if (!parser.parse(s, e - s, Http::StatusCode::scNone)) {
+            Http::ContentLengthInterpreter interpreter;
+            if (!parser.parse(s, e - s, interpreter)) {
                 debugs(83, DBG_IMPORTANT, HERE <<
                        "WARNING! parse error on:" << s);
                 return false;

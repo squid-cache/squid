@@ -232,7 +232,7 @@ public:
     NotePairs::Pointer notes();
     bool hasNotes() const { return bool(theNotes) && !theNotes->empty(); }
 
-    virtual bool parseHeaderKnownLength(const char *header_start, const size_t hdrLen);
+    void configureContentLengthInterpreter(Http::ContentLengthInterpreter &) {}
 
 private:
     mutable int64_t rangeOffsetLimit;  /* caches the result of getRangeOffsetLimit */
@@ -248,8 +248,6 @@ protected:
     virtual void hdrCacheInit();
 
     virtual bool inheritProperties(const Http::Message *);
-
-    virtual int parseHeaderUnknownLength(const char *buf, const size_t bufLen, const bool atEnd, size_t &hdrLen);;
 };
 
 class ConnStateData;

@@ -338,18 +338,6 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
     return ret;
 }
 
-int
-HttpRequest::parseHeaderUnknownLength(const char *buf, const size_t bufLen, const bool atEnd, size_t &hdrLen)
-{
-    return header.parse(buf, bufLen, atEnd, hdrLen, Http::StatusCode::scNone);
-}
-
-bool
-HttpRequest::parseHeaderKnownLength(const char *headerStart, const size_t hdrLen)
-{
-    return header.parse(headerStart, hdrLen, Http::StatusCode::scNone);
-}
-
 /* swaps out request using httpRequestPack */
 void
 HttpRequest::swapOut(StoreEntry * e)

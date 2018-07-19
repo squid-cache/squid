@@ -205,7 +205,9 @@ Http::Message::httpMsgParseStep(const char *buf, int len, int atEnd)
      */
     if (pstate == Http::Message::psReadyToParseHeaders) {
         size_t hsize = 0;
-        const int parsed = parseHeaderUnknownLength(parse_start, parse_len, atEnd, hsize);
+        Http::ContentLengthInterpreter interpreter;
+        configureContentLengthInterpreter(interpreter);
+        const int parsed = header.parse(parse_start, parse_len, atEnd, hsize, interpreter);
         if (parsed <= 0) {
             PROF_stop(HttpMsg_httpMsgParseStep);
             return !parsed ? 0 : httpMsgParseError();
@@ -225,7 +227,9 @@ Http::Message::parseHeader(Http1::Parser &hp)
     // HTTP/1 message contains "zero or more header fields"
     // zero does not need parsing
     // XXX: c_str() reallocates. performance regression.
-    if (hp.headerBlockSize() && !parseHeaderKnownLength(hp.mimeHeader().c_str(), hp.headerBlockSize())) {
+    Http::ContentLengthInterpreter interpreter;
+    configureContentLengthInterpreter(interpreter);
+    if (hp.headerBlockSize() && !header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize(), interpreter)) {
         pstate = Http::Message::psError;
         return false;
     }

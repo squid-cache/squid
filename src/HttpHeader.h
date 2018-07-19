@@ -11,8 +11,8 @@
 
 #include "anyp/ProtocolVersion.h"
 #include "base/LookupTable.h"
+#include "http/ContentLengthInterpreter.h"
 #include "http/RegisteredHeaders.h"
-#include "http/StatusCode.h"
 /* because we pass a spec by value */
 #include "HttpHeaderMask.h"
 #include "mem/forward.h"
@@ -85,12 +85,12 @@ public:
     void append(const HttpHeader * src);
     bool update(HttpHeader const *fresh);
     void compact();
-    int parse(const char *header_start, size_t len, const Http::StatusCode code);
+    int parse(const char *header_start, size_t len, Http::ContentLengthInterpreter &interpreter);
     /// Parses headers stored in a buffer.
     /// \returns 1 and sets hdr_sz on success
     /// \returns 0 when needs more data
     /// \returns -1 on error
-    int parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, const Http::StatusCode code);
+    int parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, Http::ContentLengthInterpreter &interpreter);
     void packInto(Packable * p, bool mask_sensitive_info=false) const;
     HttpHeaderEntry *getEntry(HttpHeaderPos * pos) const;
     HttpHeaderEntry *findEntry(Http::HdrType id) const;

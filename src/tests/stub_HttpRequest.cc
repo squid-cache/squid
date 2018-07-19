@@ -57,6 +57,4 @@ bool HttpRequest::sanityCheckStartLine(const char *, const size_t, Http::StatusC
 void HttpRequest::hdrCacheInit() STUB
 bool HttpRequest::inheritProperties(const Http::Message *) STUB_RETVAL(false)
 NotePairs::Pointer HttpRequest::notes() STUB_RETVAL(NotePairs::Pointer())
-bool HttpRequest::parseHeaderKnownLength(const char *header_start, const size_t hdrLen) STUB_RETVAL(false)
-int HttpRequest::parseHeaderUnknownLength(const char *buf, const size_t bufLen, const bool atEnd, size_t &hdrLen) STUB_RETVAL(0)
 

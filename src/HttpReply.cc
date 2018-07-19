@@ -443,16 +443,10 @@ HttpReply::parseFirstLine(const char *blk_start, const char *blk_end)
     return sline.parse(protoPrefix, blk_start, blk_end);
 }
 
-int
-HttpReply::parseHeaderUnknownLength(const char *buf, const size_t bufLen, const bool atEnd, size_t &hdrLen)
+void
+HttpReply::configureContentLengthInterpreter(Http::ContentLengthInterpreter &interpreter)
 {
-    return header.parse(buf, bufLen, atEnd, hdrLen, sline.status());
-}
-
-bool
-HttpReply::parseHeaderKnownLength(const char *headerStart, const size_t hdrLen)
-{
-    return header.parse(headerStart, hdrLen, sline.status());
+    interpreter.applyStatusCodeRules(sline.status());
 }
 
 /* handy: resets and returns -1 */
