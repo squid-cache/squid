@@ -244,7 +244,7 @@ asnCacheStart(int as)
     const auto asres = xstrdup(whoisUrl.absolute().c_str());
 
     // XXX: Missing a hittingRequiresCollapsing() && startCollapsingOn() check.
-    StoreEntry *e= storeGetPublic(asres, Http::METHOD_GET);
+    auto e = storeGetPublic(asres, Http::METHOD_GET);
     if (!e) {
         e = storeCreateEntry(asres, asres, RequestFlags(), Http::METHOD_GET);
         asState->sc = storeClientListAdd(e, asState);
