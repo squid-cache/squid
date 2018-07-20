@@ -869,12 +869,12 @@ Ftp::Gateway::htmlifyListEntry(const char *line, PackableStream &html)
 
     /* construct the table row from parts. */
     html << "<tr class=\"entry\">"
-            "<td class=\"icon\"><a href=\"" << href << "\">" << icon << "</a></td>"
-            "<td class=\"filename\"><a href=\"" << href << "\">" << html_quote(text.c_str()) << "</a></td>"
-            "<td class=\"date\">" << parts->date << "</td>"
-            "<td class=\"size\">" << size << "</td>"
-            "<td class=\"actions\">" << chdir << view << download << link << "</td>"
-            "</tr>\n";
+         "<td class=\"icon\"><a href=\"" << href << "\">" << icon << "</a></td>"
+         "<td class=\"filename\"><a href=\"" << href << "\">" << html_quote(text.c_str()) << "</a></td>"
+         "<td class=\"date\">" << parts->date << "</td>"
+         "<td class=\"size\">" << size << "</td>"
+         "<td class=\"actions\">" << chdir << view << download << link << "</td>"
+         "</tr>\n";
 
     ftpListPartsFree(&parts);
     return true;
