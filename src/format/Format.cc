@@ -979,9 +979,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_CLIENT_REQ_URI:
-            // original client URI
-            if (al->request) {
-                sb = al->request->effectiveRequestUri();
+            if (const auto uri = al->effectiveVirginUrl()) {
+                sb = *uri;
                 out = sb.c_str();
                 quote = 1;
             }

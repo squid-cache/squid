@@ -4276,19 +4276,42 @@ DOC_START
 
 	The <format specification> is a string with embedded % format codes
 
-	% format codes all follow the same basic structure where all but
-	the formatcode is optional. Output strings are automatically escaped
-	as required according to their context and the output format
-	modifiers are usually not needed, but can be specified if an explicit
-	output format is desired.
+	% format codes all follow the same basic structure where all
+	components but the formatcode are optional and usually unnecessary,
+	especially when dealing with common codes.
 
-		% ["|[|'|#|/] [-] [[0]width] [{arg}] formatcode [{arg}]
+		% [encoding] [-] [[0]width] [{arg}] formatcode [{arg}]
 
-		"	output in quoted string format
-		[	output in squid text log format as used by log_mime_hdrs
-		#	output in URL quoted format
-		/	output in shell \-escaped format
-		'	output as-is
+		encoding escapes or otherwise protects "special" characters:
+
+			"	Quoted string encoding where quote(") and
+				backslash(\) characters are \-escaped while
+				CR, LF, and TAB characters are encoded as \r,
+				\n, and \t two-character sequences.
+
+			[	Custom Squid encoding where percent(%), square
+				brackets([]), backslash(\) and characters with
+				codes outside of [32,126] range are %-encoded.
+				SP is not encoded. Used by log_mime_hdrs.
+
+			#	URL encoding (a.k.a. percent-encoding) where
+				all URL unsafe and control characters (per RFC
+				1738) are %-encoded.
+
+			/	Shell-like encoding where quote(") and
+				backslash(\) characters are \-escaped while CR
+				and LF characters are encoded as \r and \n
+				two-character sequences. Values containing SP
+				character(s) are surrounded by quotes(").
+
+			'	Raw/as-is encoding with no escaping/quoting.
+
+			Default encoding: When no explicit encoding is
+			specified, each %code determines its own encoding.
+			Most %codes use raw/as-is encoding, but some codes use
+			a so called "pass-through URL encoding" where all URL
+			unsafe and control characters (per RFC 1738) are
+			%-encoded, but the percent character(%) is left as is.
 
 		-	left aligned
 
@@ -4394,8 +4417,40 @@ DOC_START
 		[http::]rm	Request method (GET/POST etc)
 		[http::]>rm	Request method from client
 		[http::]<rm	Request method sent to server or peer
-		[http::]ru	Request URL from client (historic, filtered for logging)
-		[http::]>ru	Request URL from client
+
+		[http::]ru	Request URL received (or computed) and sanitized
+
+				Logs request URI received from the client, a
+				request adaptation service, or a request
+				redirector (whichever was applied last).
+
+				Computed URLs are URIs of internally generated
+				requests and various "error:..." URIs.
+
+				Honors strip_query_terms and uri_whitespace.
+
+				This field is not encoded by default. Encoding
+				this field using variants of %-encoding will
+				clash with uri_whitespace modifications that
+				also use %-encoding.
+
+		[http::]>ru	Request URL received from the client (or computed)
+
+				Computed URLs are URIs of internally generated
+				requests and various "error:..." URIs.
+
+				Unlike %ru, this request URI is not affected
+				by request adaptation, URL rewriting services,
+				and strip_query_terms.
+
+				Honors uri_whitespace.
+
+				This field is using pass-through URL encoding
+				by default. Encoding this field using other
+				variants of %-encoding will clash with
+				uri_whitespace modifications that also use
+				%-encoding.
+
 		[http::]<ru	Request URL sent to server or peer
 		[http::]>rs	Request URL scheme from client
 		[http::]<rs	Request URL scheme sent to server or peer

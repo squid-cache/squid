@@ -103,7 +103,6 @@
 #include "mime_header.h"
 #include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
-#include "rfc1738.h"
 #include "security/NegotiationHistory.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"
@@ -473,10 +472,9 @@ void
 ClientHttpRequest::freeResources()
 {
     safe_free(uri);
-    safe_free(log_uri);
     safe_free(redirect.location);
     range_iter.boundary.clean();
-    HTTPMSGUNLOCK(request);
+    clearRequest();
 
     if (client_stream.tail)
         clientStreamAbort((clientStreamNode *)client_stream.tail->data, this);
@@ -1011,8 +1009,7 @@ ConnStateData::abortRequestParsing(const char *const uri)
 {
     ClientHttpRequest *http = new ClientHttpRequest(this);
     http->req_sz = inBuf.length();
-    http->uri = xstrdup(uri);
-    setLogUri (http, uri);
+    http->setErrorUri(uri);
     auto *context = new Http::Stream(clientConnection, http);
     StoreIOBuffer tempBuffer;
     tempBuffer.data = context->reqbuf;
@@ -1082,57 +1079,6 @@ findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end)
     }
 
     return NULL;
-}
-
-void
-setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl)
-{
-    safe_free(http->log_uri);
-
-    if (!cleanUrl)
-        // The uri is already clean just dump it.
-        http->log_uri = xstrndup(uri, MAX_URL);
-    else {
-        int flags = 0;
-        switch (Config.uri_whitespace) {
-        case URI_WHITESPACE_ALLOW:
-            flags |= RFC1738_ESCAPE_NOSPACE;
-
-        case URI_WHITESPACE_ENCODE:
-            flags |= RFC1738_ESCAPE_UNESCAPED;
-            http->log_uri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
-            break;
-
-        case URI_WHITESPACE_CHOP: {
-            flags |= RFC1738_ESCAPE_NOSPACE;
-            flags |= RFC1738_ESCAPE_UNESCAPED;
-            http->log_uri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
-            int pos = strcspn(http->log_uri, w_space);
-            http->log_uri[pos] = '\0';
-        }
-        break;
-
-        case URI_WHITESPACE_DENY:
-        case URI_WHITESPACE_STRIP:
-        default: {
-            const char *t;
-            char *tmp_uri = static_cast<char*>(xmalloc(strlen(uri) + 1));
-            char *q = tmp_uri;
-            t = uri;
-            while (*t) {
-                if (!xisspace(*t)) {
-                    *q = *t;
-                    ++q;
-                }
-                ++t;
-            }
-            *q = '\0';
-            http->log_uri = xstrndup(rfc1738_escape_unescaped(tmp_uri), MAX_URL);
-            xfree(tmp_uri);
-        }
-        break;
-        }
-    }
 }
 
 static void
@@ -1498,12 +1444,6 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
         debugs(33, 5, "Responding with delated error for " << http->uri);
         repContext->setReplyToStoreEntry(sslServerBump->entry, "delayed SslBump error");
 
-        // save the original request for logging purposes
-        if (!context->http->al->request) {
-            context->http->al->request = http->request;
-            HTTPMSGLOCK(context->http->al->request);
-        }
-
         // Get error details from the fake certificate-peeking request.
         http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
         context->pullData();
@@ -1546,11 +1486,6 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
                     SQUID_X509_V_ERR_DOMAIN_MISMATCH,
                     srvCert.get(), nullptr);
                 err->detail = errDetail;
-                // Save the original request for logging purposes.
-                if (!context->http->al->request) {
-                    context->http->al->request = request;
-                    HTTPMSGLOCK(context->http->al->request);
-                }
                 repContext->setReplyToError(request->method, err);
                 assert(context->http->out.offset == 0);
                 context->pullData();
@@ -1660,12 +1595,12 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             request->url.host(internalHostname());
             request->url.port(getMyPort());
             http->flags.internal = true;
+            http->setLogUriToRequestUri();
         } else
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
     }
 
     request->flags.internal = http->flags.internal;
-    setLogUri (http, urlCanonicalClean(request.getRaw()));
 
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different HttpMsg child type
@@ -3468,8 +3403,7 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
     request->method = method;
     request->url.host(useHost.c_str());
     request->url.port(usePort);
-    http->request = request.getRaw();
-    HTTPMSGLOCK(http->request);
+    http->initRequest(request.getRaw());
 
     request->manager(this, http->al);
 
@@ -3485,7 +3419,6 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
     inBuf = payload;
     flags.readMore = false;
 
-    setLogUri(http, urlCanonicalClean(request.getRaw()));
     return http;
 }
 
@@ -4154,9 +4087,7 @@ ConnStateData::checkLogging()
     ClientHttpRequest http(this);
     http.req_sz = inBuf.length();
     // XXX: Or we died while waiting for the pinned connection to become idle.
-    char const *uri = "error:transaction-end-before-headers";
-    http.uri = xstrdup(uri);
-    setLogUri(&http, uri);
+    http.setErrorUri("error:transaction-end-before-headers");
 }
 
 bool

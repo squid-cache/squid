@@ -2266,7 +2266,10 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
 
     if (http->request == NULL) {
         const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
-        http->request = new HttpRequest(m, AnyP::PROTO_NONE, "http", null_string, mx);
+        // XXX: These fake URI parameters shadow the real (or error:...) URI.
+        // TODO: Either always set the request earlier and assert here OR use
+        // http->uri (converted to Anyp::Uri) to create this catch-all request.
+        const_cast<HttpRequest *&>(http->request) =  new HttpRequest(m, AnyP::PROTO_NONE, "http", null_string, mx);
         HTTPMSGLOCK(http->request);
     }
 

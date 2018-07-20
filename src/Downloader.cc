@@ -151,12 +151,10 @@ Downloader::buildRequest()
            "\n----------");
 
     ClientHttpRequest *const http = new ClientHttpRequest(nullptr);
-    http->request = request;
-    HTTPMSGLOCK(http->request);
+    http->initRequest(request);
     http->req_sz = 0;
     // XXX: performance regression. c_str() reallocates
     http->uri = xstrdup(url_.c_str());
-    setLogUri (http, urlCanonicalClean(request));
 
     context_ = new DownloaderContext(this, http);
     StoreIOBuffer tempBuffer;

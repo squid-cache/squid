@@ -198,6 +198,8 @@ icpLogIcp(const Ip::Address &caddr, const LogTags &logcode, int len, const char 
 
     al->url = url;
 
+    al->setVirginUrlForMissingRequest(al->url);
+
     al->cache.caddr = caddr;
 
     // XXX: move to use icp.clientReply instead

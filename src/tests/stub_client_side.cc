@@ -51,7 +51,6 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &) S
 bool ConnStateData::serveDelayedError(Http::Stream *) STUB_RETVAL(false)
 #endif
 
-void setLogUri(ClientHttpRequest *, char const *, bool) STUB
 const char *findTrailingHTTPVersion(const char *, const char *) STUB_RETVAL(NULL)
 int varyEvaluateMatch(StoreEntry *, HttpRequest *) STUB_RETVAL(0)
 void clientOpenListenSockets(void) STUB
