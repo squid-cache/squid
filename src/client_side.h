@@ -412,8 +412,6 @@ private:
     SBuf connectionTag_; ///< clt_conn_tag=Tag annotation for client connection
 };
 
-void setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl = false);
-
 const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end = NULL);
 
 int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);

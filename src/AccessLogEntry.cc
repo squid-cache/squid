@@ -112,3 +112,15 @@ AccessLogEntry::~AccessLogEntry()
 #endif
 }
 
+const SBuf *
+AccessLogEntry::effectiveVirginUrl() const
+{
+    const SBuf *effectiveUrl = request ? &request->url.absolute() : &virginUrlForMissingRequest_;
+    if (effectiveUrl && !effectiveUrl->isEmpty())
+        return effectiveUrl;
+    // We can not use ALE::url here because it may contain a request URI after
+    // adaptation/redirection. When the request is missing, a non-empty ALE::url
+    // means that we missed a setVirginUrlForMissingRequest() call somewhere.
+    return nullptr;
+}
+

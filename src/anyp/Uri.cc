@@ -515,15 +515,15 @@ AnyP::Uri::absolute() const
  *        and never copy the query-string part in the first place
  */
 char *
-urlCanonicalClean(const HttpRequest * request)
+urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method, const AnyP::UriScheme &scheme)
 {
     LOCAL_ARRAY(char, buf, MAX_URL);
 
-    snprintf(buf, sizeof(buf), SQUIDSBUFPH, SQUIDSBUFPRINT(request->effectiveRequestUri()));
+    snprintf(buf, sizeof(buf), SQUIDSBUFPH, SQUIDSBUFPRINT(url));
     buf[sizeof(buf)-1] = '\0';
 
     // URN, CONNECT method, and non-stripped URIs can go straight out
-    if (Config.onoff.strip_query_terms && !(request->method == Http::METHOD_CONNECT || request->url.getScheme() == AnyP::PROTO_URN)) {
+    if (Config.onoff.strip_query_terms && !(method == Http::METHOD_CONNECT || scheme == AnyP::PROTO_URN)) {
         // strip anything AFTER a question-mark
         // leaving the '?' in place
         if (auto t = strchr(buf, '?')) {
@@ -555,7 +555,7 @@ urlCanonicalFakeHttps(const HttpRequest * request)
     }
 
     // else do the normal complete canonical thing.
-    return urlCanonicalClean(request);
+    return request->canonicalCleanUrl();
 }
 
 /*
@@ -934,5 +934,58 @@ AnyP::Uri::Uri(AnyP::UriScheme const &aScheme) :
     port_(0)
 {
     *host_=0;
+}
+
+// TODO: fix code duplication with AnyP::Uri::parse()
+char *
+AnyP::Uri::cleanup(const char *uri)
+{
+    int flags = 0;
+    char *cleanedUri = nullptr;
+    switch (Config.uri_whitespace) {
+    case URI_WHITESPACE_ALLOW:
+        flags |= RFC1738_ESCAPE_NOSPACE;
+        // fall through to next case
+    case URI_WHITESPACE_ENCODE:
+        flags |= RFC1738_ESCAPE_UNESCAPED;
+        cleanedUri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
+        break;
+
+    case URI_WHITESPACE_CHOP: {
+        flags |= RFC1738_ESCAPE_UNESCAPED;
+        const auto pos = strcspn(uri, w_space);
+        char *choppedUri = nullptr;
+        if (pos < strlen(uri))
+            choppedUri = xstrndup(uri, pos + 1);
+        cleanedUri = xstrndup(rfc1738_do_escape(choppedUri ? choppedUri : uri, flags), MAX_URL);
+        cleanedUri[pos] = '\0';
+        xfree(choppedUri);
+    }
+    break;
+
+    case URI_WHITESPACE_DENY:
+    case URI_WHITESPACE_STRIP:
+    default: {
+        // TODO: avoid duplication with urlParse()
+        const char *t;
+        char *tmp_uri = static_cast<char*>(xmalloc(strlen(uri) + 1));
+        char *q = tmp_uri;
+        t = uri;
+        while (*t) {
+            if (!xisspace(*t)) {
+                *q = *t;
+                ++q;
+            }
+            ++t;
+        }
+        *q = '\0';
+        cleanedUri = xstrndup(rfc1738_escape_unescaped(tmp_uri), MAX_URL);
+        xfree(tmp_uri);
+    }
+    break;
+    }
+
+    assert(cleanedUri);
+    return cleanedUri;
 }
 
