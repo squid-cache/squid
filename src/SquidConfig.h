@@ -23,8 +23,8 @@
 #if USE_OPENSSL
 #include "ssl/support.h"
 #endif
-#include "store/forward.h"
 #include "store/Disk.h"
+#include "store/forward.h"
 
 #if USE_OPENSSL
 class sslproxy_cert_sign;
