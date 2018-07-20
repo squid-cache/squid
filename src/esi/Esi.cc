@@ -1985,7 +1985,6 @@ FinishAllElements(Esi::Elements &elements)
         FinishAnElement(element, pos++);
 }
 
-
 void
 esiChoose::finish()
 {
