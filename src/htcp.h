@@ -22,6 +22,9 @@ class HtcpReplyData
 
 public:
     HtcpReplyData();
+
+    int parseHeader(const char *buffer, const size_t size);
+
     int hit;
     HttpHeader hdr;
     uint32_t msg_id;

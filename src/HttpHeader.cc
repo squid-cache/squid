@@ -340,7 +340,7 @@ HttpHeader::Isolate(const char **parse_start, size_t l, const char **blk_start, 
 }
 
 int
-HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, Http::ContentLengthInterpreter &interpreter)
+HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, Http::ContentLengthInterpreter &clen)
 {
     const char *parse_start = buf;
     const char *blk_start, *blk_end;
@@ -355,7 +355,7 @@ HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, H
         blk_end = blk_start + strlen(blk_start);
     }
 
-    if (parse(blk_start, blk_end - blk_start, interpreter)) {
+    if (parse(blk_start, blk_end - blk_start, clen)) {
         hdr_sz = parse_start - buf;
         return 1;
     }
@@ -363,7 +363,7 @@ HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, H
 }
 
 int
-HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthInterpreter &interpreter)
+HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthInterpreter &clen)
 {
     const char *field_ptr = header_start;
     const char *header_end = header_start + hdrLen; // XXX: remove
@@ -479,11 +479,11 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             return 0;
         }
 
-        if (e->id == Http::HdrType::CONTENT_LENGTH && !interpreter.checkField(e->value)) {
+        if (e->id == Http::HdrType::CONTENT_LENGTH && !clen.checkField(e->value)) {
             delete e;
 
             if (Config.onoff.relaxed_header_parser)
-                continue; // interpreter has printed any necessary warnings
+                continue; // clen has printed any necessary warnings
 
             PROF_stop(HttpHeaderParse);
             clean();
@@ -509,34 +509,34 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
         addEntry(e);
     }
 
-    if (interpreter.headerWideProblem) {
-        debugs(55, warnOnError, "WARNING: " << interpreter.headerWideProblem <<
+    if (clen.headerWideProblem) {
+        debugs(55, warnOnError, "WARNING: " << clen.headerWideProblem <<
                " Content-Length field values in" <<
                Raw("header", header_start, hdrLen));
     }
 
-    if (interpreter.prohibited) {
+    if (clen.prohibitedAndIgnored) {
         // RFC 7230 section 3.3.2: A server MUST NOT send a Content-Length
         // header field in any response with a status code of 1xx (Informational)
         // or 204 (No Content).
         if (delById(Http::HdrType::CONTENT_LENGTH))
-            debugs(55, 3, "Content-Length is prohibited");
+            debugs(55, 3, "Content-Length is prohibited and ignored");
     } else if (chunked()) {
         // RFC 2616 section 4.4: ignore Content-Length with Transfer-Encoding
         // RFC 7230 section 3.3.3 #3: Transfer-Encoding overwrites Content-Length
         delById(Http::HdrType::CONTENT_LENGTH);
-        // and interpreter state becomes irrelevant
-    } else if (interpreter.sawBad) {
+        // and clen state becomes irrelevant
+    } else if (clen.sawBad) {
         // ensure our callers do not accidentally see bad Content-Length values
         delById(Http::HdrType::CONTENT_LENGTH);
         conflictingContentLength_ = true; // TODO: Rename to badContentLength_.
-    } else if (interpreter.needsSanitizing) {
+    } else if (clen.needsSanitizing) {
         // RFC 7230 section 3.3.2: MUST either reject or ... [sanitize];
         // ensure our callers see a clean Content-Length value or none at all
         delById(Http::HdrType::CONTENT_LENGTH);
-        if (interpreter.sawGood) {
-            putInt64(Http::HdrType::CONTENT_LENGTH, interpreter.value);
-            debugs(55, 5, "sanitized Content-Length to be " << interpreter.value);
+        if (clen.sawGood) {
+            putInt64(Http::HdrType::CONTENT_LENGTH, clen.value);
+            debugs(55, 5, "sanitized Content-Length to be " << clen.value);
         }
     }
 

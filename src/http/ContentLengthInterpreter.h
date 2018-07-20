@@ -21,14 +21,14 @@ namespace Http
 class ContentLengthInterpreter
 {
 public:
-    explicit ContentLengthInterpreter();
+    ContentLengthInterpreter();
 
     /// updates history based on the given message-header field
     /// \return true iff the field should be added/remembered for future use
     bool checkField(const String &field);
 
     /// prohibits Content-Length in 1xx and 204 responses
-    void applyStatusCodeRules(const Http::StatusCode code) { prohibited = Http::ProhibitsContentLength(code); }
+    void applyStatusCodeRules(const StatusCode code) { prohibitedAndIgnored = ProhibitsContentLength(code); }
     // TODO: implement
     /// prohibits Content-Length in GET/HEAD requests
     // void applyRequestMethodRules(const Http::MethodType method);
@@ -54,7 +54,7 @@ public:
     bool sawGood;
 
     /// whether the response status code forbids Content-Length
-    bool prohibited;
+    bool prohibitedAndIgnored;
 
 protected:
     bool goodSuffix(const char *suffix, const char * const end) const;

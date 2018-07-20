@@ -25,7 +25,7 @@ Http::ContentLengthInterpreter::ContentLengthInterpreter():
     sawBad(false),
     needsSanitizing(false),
     sawGood(false),
-    prohibited(false)
+    prohibitedAndIgnored(false)
 {
 }
 

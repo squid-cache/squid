@@ -1034,6 +1034,13 @@ HtcpReplyData::HtcpReplyData() :
     memset(&cto, 0, sizeof(cto));
 }
 
+int
+HtcpReplyData::parseHeader(const char *buffer, const size_t size)
+{
+    Http::ContentLengthInterpreter interpreter;
+    return hdr.parse(buffer, size, interpreter);
+}
+
 static void
 
 htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
@@ -1088,20 +1095,14 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from
             return;
         }
 
-        if ((t = d->resp_hdrs)) {
-            Http::ContentLengthInterpreter interpreter;
-            htcpReply.hdr.parse(t, d->respHdrsSz, interpreter);
-        }
+        if ((t = d->resp_hdrs))
+            htcpReply.parseHeader(t, d->respHdrsSz);
 
-        if ((t = d->entity_hdrs)) {
-            Http::ContentLengthInterpreter interpreter;
-            htcpReply.hdr.parse(t, d->entityHdrsSz, interpreter);
-        }
+        if ((t = d->entity_hdrs))
+            htcpReply.parseHeader(t, d->entityHdrsSz);
 
-        if ((t = d->cache_hdrs)) {
-            Http::ContentLengthInterpreter interpreter;
-            htcpReply.hdr.parse(t, d->cacheHdrsSz, interpreter);
-        }
+        if ((t = d->cache_hdrs))
+            htcpReply.parseHeader(t, d->cacheHdrsSz);
     }
 
     debugs(31, 3, "htcpHandleTstResponse: key (" << key << ") " << storeKeyText(key));
