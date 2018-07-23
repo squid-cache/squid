@@ -691,7 +691,9 @@ xassert(const char *msg, const char *file, int line)
  * have a bug if your nesting goes that deep.
  */
 
+#if !defined(CTX_MAX_LEVEL)
 #define CTX_MAX_LEVEL 255
+#endif
 
 /* all descriptions has been printed up to this level */
 static int Ctx_Reported_Level = -1;
