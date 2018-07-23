@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <deque>
 
 /* for shutting_down flag in xassert() */
 #include "globals.h"
@@ -702,7 +703,7 @@ static int Ctx_Valid_Level = -1;
 /* current level, the number of nested ctx_enter() calls */
 static int Ctx_Current_Level = -1;
 /* saved descriptions (stack) */
-static const char *Ctx_Descrs[CTX_MAX_LEVEL + 1];
+static std::deque<const char *> Ctx_Descrs;
 /* "safe" get secription */
 static const char *ctx_get_descr(Ctx ctx);
 
@@ -712,7 +713,7 @@ ctx_enter(const char *descr)
     ++Ctx_Current_Level;
 
     if (Ctx_Current_Level <= CTX_MAX_LEVEL)
-        Ctx_Descrs[Ctx_Current_Level] = descr;
+        Ctx_Descrs.emplace_back(descr);
 
     static int Ctx_Warn_Level = 32;
     if (Ctx_Current_Level == Ctx_Warn_Level) {
@@ -728,6 +729,10 @@ ctx_exit(Ctx ctx)
 {
     assert(ctx >= 0);
     Ctx_Current_Level = (ctx >= 0) ? ctx - 1 : -1;
+
+    // Ctx_Current_Level is 0-based index, size() is 1-based count
+    while (static_cast<size_t>(Ctx_Current_Level+1) < Ctx_Descrs.size())
+        Ctx_Descrs.pop_back();
 
     if (Ctx_Valid_Level > Ctx_Current_Level)
         Ctx_Valid_Level = Ctx_Current_Level;
