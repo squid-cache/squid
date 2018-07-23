@@ -112,9 +112,6 @@ public:
 
     virtual int httpMsgParseError();
 
-    // Parser-NG transitional parsing of mime headers
-    bool parseHeader(Http1::Parser &); // TODO move this function to the parser
-
     virtual bool expectingBody(const HttpRequestMethod&, int64_t&) const = 0;
 
     void firstLineBuf(MemBuf&);
@@ -139,6 +136,9 @@ protected:
 
     /// configures the interpreter as needed
     virtual void configureContentLengthInterpreter(Http::ContentLengthInterpreter &) = 0;
+
+    // Parser-NG transitional parsing of mime headers
+    bool parseHeader(Http1::Parser &, Http::ContentLengthInterpreter &); // TODO move this function to the parser
 };
 
 } // namespace Http

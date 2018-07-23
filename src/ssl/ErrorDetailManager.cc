@@ -10,6 +10,7 @@
 #include "ErrorDetail.h"
 #include "ErrorDetailManager.h"
 #include "errorpage.h"
+#include "http/ContentLengthInterpreter.h"
 #include "mime_header.h"
 
 void Ssl::errorDetailInitialize()
@@ -213,6 +214,7 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
         if ( s != e) {
             DetailEntryParser parser;
             Http::ContentLengthInterpreter interpreter;
+            // no applyStatusCodeRules() -- error templates lack HTTP status code
             if (!parser.parse(s, e - s, interpreter)) {
                 debugs(83, DBG_IMPORTANT, HERE <<
                        "WARNING! parse error on:" << s);

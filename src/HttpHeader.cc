@@ -13,6 +13,7 @@
 #include "base/EnumIterator.h"
 #include "base64.h"
 #include "globals.h"
+#include "http/ContentLengthInterpreter.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrScTarget.h" // also includes HttpHdrSc.h
@@ -518,7 +519,8 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
     if (clen.prohibitedAndIgnored) {
         // RFC 7230 section 3.3.2: A server MUST NOT send a Content-Length
         // header field in any response with a status code of 1xx (Informational)
-        // or 204 (No Content).
+        // or 204 (No Content). And RFC 7230 3.3.3#1 tells recipients to ignore
+        // such Content-Lengths.
         if (delById(Http::HdrType::CONTENT_LENGTH))
             debugs(55, 3, "Content-Length is prohibited and ignored");
     } else if (chunked()) {

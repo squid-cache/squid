@@ -120,6 +120,8 @@ public:
     void removeIrrelevantContentLength();
 
     virtual void configureContentLengthInterpreter(Http::ContentLengthInterpreter &);
+    /// parses reply header using Parser
+    bool parseHeader(Http1::Parser &hp);
 
 private:
     /** initialize */

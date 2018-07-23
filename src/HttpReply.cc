@@ -13,6 +13,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/EnumIterator.h"
 #include "globals.h"
+#include "http/ContentLengthInterpreter.h"
 #include "HttpBody.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
@@ -447,6 +448,13 @@ void
 HttpReply::configureContentLengthInterpreter(Http::ContentLengthInterpreter &interpreter)
 {
     interpreter.applyStatusCodeRules(sline.status());
+}
+
+bool
+HttpReply::parseHeader(Http1::Parser &hp)
+{
+    Http::ContentLengthInterpreter clen;
+    return Message::parseHeader(hp, clen);
 }
 
 /* handy: resets and returns -1 */

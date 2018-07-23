@@ -20,6 +20,8 @@ typedef RefCount<Http::Message> MessagePointer;
 class Stream;
 typedef RefCount<Http::Stream> StreamPointer;
 
+class ContentLengthInterpreter;
+
 } // namespace Http
 
 // TODO move these classes into Http namespace

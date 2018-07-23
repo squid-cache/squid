@@ -33,6 +33,9 @@ public:
     /// prohibits Content-Length in GET/HEAD requests
     // void applyRequestMethodRules(const Http::MethodType method);
 
+    /// prohibits Content-Length in trailer
+    void applyTrailerRules() { prohibitedAndIgnored = true; }
+
     /// intended Content-Length value if sawGood is set and sawBad is not set
     /// meaningless otherwise
     int64_t value;

@@ -11,7 +11,6 @@
 
 #include "anyp/ProtocolVersion.h"
 #include "base/LookupTable.h"
-#include "http/ContentLengthInterpreter.h"
 #include "http/RegisteredHeaders.h"
 /* because we pass a spec by value */
 #include "HttpHeaderMask.h"

@@ -23,7 +23,7 @@ class HtcpReplyData
 public:
     HtcpReplyData();
 
-    int parseHeader(const char *buffer, const size_t size);
+    bool parseHeader(const char *buffer, const size_t size);
 
     int hit;
     HttpHeader hdr;
