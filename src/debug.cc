@@ -696,8 +696,6 @@ xassert(const char *msg, const char *file, int line)
 #define CTX_MAX_LEVEL 255
 #endif
 
-/* all descriptions has been printed up to this level */
-static int Ctx_Reported_Level = -1;
 /* descriptions are still valid or active up to this level */
 static int Ctx_Valid_Level = -1;
 /* current level, the number of nested ctx_enter() calls */
@@ -760,6 +758,9 @@ ctx_print(void)
     static std::atomic_bool Ctx_Lock;
     if (Ctx_Lock.exchange(true))
         return;
+
+    /* all descriptions has been printed up to this level */
+    static int Ctx_Reported_Level = -1;
 
     /* ok, user saw [0,Ctx_Reported_Level] descriptions */
     /* first inform about entries popped since user saw them */
