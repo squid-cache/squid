@@ -693,11 +693,6 @@ xassert(const char *msg, const char *file, int line)
 
 #define CTX_MAX_LEVEL 255
 
-/*
- * produce a warning when nesting reaches this level and then double
- * the level
- */
-static int Ctx_Warn_Level = 32;
 /* all descriptions has been printed up to this level */
 static int Ctx_Reported_Level = -1;
 /* descriptions are still valid or active up to this level */
@@ -717,6 +712,7 @@ ctx_enter(const char *descr)
     if (Ctx_Current_Level <= CTX_MAX_LEVEL)
         Ctx_Descrs[Ctx_Current_Level] = descr;
 
+    static int Ctx_Warn_Level = 32;
     if (Ctx_Current_Level == Ctx_Warn_Level) {
         debugs(0, DBG_CRITICAL, "# ctx: suspiciously deep (" << Ctx_Warn_Level << ") nesting:");
         Ctx_Warn_Level *= 2;
