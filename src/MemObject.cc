@@ -106,7 +106,8 @@ MemObject::MemObject()
 MemObject::~MemObject()
 {
     debugs(20, 3, "MemObject destructed, this=" << this);
-    const Ctx ctx = ctx_enter(hasUris() ? urlXXX() : "[unknown_ctx]");
+    static const std::string unknownCtx("[unknown_ctx]");
+    const Ctx ctx = ctx_enter(hasUris() ? std::string(urlXXX()) : unknownCtx);
 
 #if URL_CHECKSUM_DEBUG
     checkUrlChecksum();

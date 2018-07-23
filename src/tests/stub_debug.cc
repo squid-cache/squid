@@ -38,7 +38,7 @@ DebugStream()
 }
 
 Ctx
-ctx_enter(const char *)
+ctx_enter(const std::string &)
 {
     return -1;
 }

@@ -703,10 +703,10 @@ static int Ctx_Valid_Level = -1;
 /* current level, the number of nested ctx_enter() calls */
 static int Ctx_Current_Level = -1;
 /* saved descriptions (stack) */
-static std::deque<const char *> Ctx_Descrs;
+static std::deque<std::string> Ctx_Descrs;
 
 Ctx
-ctx_enter(const char *descr)
+ctx_enter(const std::string &descr)
 {
     ++Ctx_Current_Level;
 
@@ -737,13 +737,16 @@ ctx_exit(Ctx ctx)
 }
 
 /* checks for nulls and overflows */
-static const char *
+static const std::string &
 ctx_get_descr(Ctx ctx)
 {
-    if (ctx < 0 || ctx > CTX_MAX_LEVEL)
-        return "<lost>";
+    if (ctx < 0 || ctx > CTX_MAX_LEVEL) {
+        static const std::string lost("<lost>");
+        return lost;
+    }
 
-    return Ctx_Descrs[ctx] ? Ctx_Descrs[ctx] : "<null>";
+    static const std::string nil("<nil>");
+    return static_cast<size_t>(ctx) < Ctx_Descrs.size() ? Ctx_Descrs[ctx] : nil;
 }
 
 /*
@@ -775,8 +778,9 @@ ctx_print(void)
     while (Ctx_Reported_Level < Ctx_Current_Level) {
         ++Ctx_Reported_Level;
         ++Ctx_Valid_Level;
-        _db_print(false, "ctx: enter level %2d: '%s'\n", Ctx_Reported_Level,
-                  ctx_get_descr(Ctx_Reported_Level));
+        const auto dsc = ctx_get_descr(Ctx_Reported_Level);
+        _db_print(false, "ctx: enter level %2d: '%.*s'\n", Ctx_Reported_Level,
+                  dsc.length(), dsc.data());
     }
 
     /* unlock */
