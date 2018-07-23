@@ -18,8 +18,8 @@ HttpReply::HttpReply() : Http::Message(hoReply), date (0), last_modified (0),
 {STUB_NOP}
 HttpReply::~HttpReply() STUB
 void HttpReply::setHeaders(Http::StatusCode status, const char *reason, const char *ctype, int64_t clen, time_t lmt, time_t expires_) STUB
-void HttpReply::packHeadersIntoFast(Packable&) const STUB
-void HttpReply::packHeadersIntoSlow(Packable&) const STUB
+void HttpReply::packHeadersUsingFastPacker(Packable&) const STUB
+void HttpReply::packHeadersUsingSlowPacker(Packable&) const STUB
 void HttpReply::reset() STUB
 void httpBodyPackInto(const HttpBody *, Packable *) STUB
 bool HttpReply::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error) STUB_RETVAL(false)

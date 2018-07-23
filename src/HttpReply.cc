@@ -82,7 +82,7 @@ HttpReply::clean()
 }
 
 void
-HttpReply::packHeadersIntoFast(Packable &p) const
+HttpReply::packHeadersUsingFastPacker(Packable &p) const
 {
     sline.packInto(&p);
     header.packInto(&p);
@@ -90,18 +90,18 @@ HttpReply::packHeadersIntoFast(Packable &p) const
 }
 
 void
-HttpReply::packHeadersIntoSlow(Packable &p) const
+HttpReply::packHeadersUsingSlowPacker(Packable &p) const
 {
     MemBuf buf;
     buf.init();
-    packHeadersIntoFast(buf);
+    packHeadersUsingFastPacker(buf);
     p.append(buf.content(), buf.contentSize());
 }
 
 void
 HttpReply::packInto(MemBuf &buf) const
 {
-    packHeadersIntoFast(buf);
+    packHeadersUsingFastPacker(buf);
     body.packInto(&buf);
 }
 

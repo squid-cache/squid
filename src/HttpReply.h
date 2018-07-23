@@ -102,9 +102,9 @@ public:
 
     /// adds status line and header to the given Packable
     /// assumes that `p` can quickly process small additions
-    void packHeadersIntoFast(Packable &p) const;
-    /// same as packHeadersIntoFast() but assumes that `p` cannot quickly process small additions
-    void packHeadersIntoSlow(Packable &p) const;
+    void packHeadersUsingFastPacker(Packable &p) const;
+    /// same as packHeadersUsingFastPacker() but assumes that `p` cannot quickly process small additions
+    void packHeadersUsingSlowPacker(Packable &p) const;
 
     /** Clone this reply.
      *  Could be done as a copy-contructor but we do not want to accidently copy a HttpReply..
