@@ -704,8 +704,6 @@ static int Ctx_Valid_Level = -1;
 static int Ctx_Current_Level = -1;
 /* saved descriptions (stack) */
 static std::deque<const char *> Ctx_Descrs;
-/* "safe" get secription */
-static const char *ctx_get_descr(Ctx ctx);
 
 Ctx
 ctx_enter(const char *descr)
@@ -736,6 +734,16 @@ ctx_exit(Ctx ctx)
 
     if (Ctx_Valid_Level > Ctx_Current_Level)
         Ctx_Valid_Level = Ctx_Current_Level;
+}
+
+/* checks for nulls and overflows */
+static const char *
+ctx_get_descr(Ctx ctx)
+{
+    if (ctx < 0 || ctx > CTX_MAX_LEVEL)
+        return "<lost>";
+
+    return Ctx_Descrs[ctx] ? Ctx_Descrs[ctx] : "<null>";
 }
 
 /*
@@ -773,16 +781,6 @@ ctx_print(void)
 
     /* unlock */
     Ctx_Lock.store(false);
-}
-
-/* checks for nulls and overflows */
-static const char *
-ctx_get_descr(Ctx ctx)
-{
-    if (ctx < 0 || ctx > CTX_MAX_LEVEL)
-        return "<lost>";
-
-    return Ctx_Descrs[ctx] ? Ctx_Descrs[ctx] : "<null>";
 }
 
 Debug::Context *Debug::Current = nullptr;
