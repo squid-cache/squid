@@ -15,6 +15,7 @@
 #include "util.h"
 
 #include <algorithm>
+#include <atomic>
 
 /* for shutting_down flag in xassert() */
 #include "globals.h"
@@ -26,7 +27,6 @@ bool Debug::log_syslog = false;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 char *Debug::cache_log = NULL;
 int Debug::rotateNumber = -1;
-static int Ctx_Lock = 0;
 static const char *debugLogTime(void);
 static const char *debugLogKid(void);
 static void ctx_print(void);
@@ -152,8 +152,7 @@ _db_print(const bool forceAlert, const char *format,...)
 #endif
 
     /* give a chance to context-based debugging to print current context */
-    if (!Ctx_Lock)
-        ctx_print();
+    ctx_print();
 
     va_start(args1, format);
     va_start(args2, format);
@@ -187,8 +186,7 @@ _db_print_file(const char *format, va_list args)
         return;
 
     /* give a chance to context-based debugging to print current context */
-    if (!Ctx_Lock)
-        ctx_print();
+    ctx_print();
 
     vfprintf(debug_log, format, args);
     fflush(debug_log);
@@ -744,8 +742,11 @@ ctx_exit(Ctx ctx)
 static void
 ctx_print(void)
 {
-    /* lock so _db_print will not call us recursively */
-    ++Ctx_Lock;
+    /* lock to prevent recursive calls, eg from _db_print */
+    static std::atomic_bool Ctx_Lock;
+    if (Ctx_Lock.exchange(true))
+        return;
+
     /* ok, user saw [0,Ctx_Reported_Level] descriptions */
     /* first inform about entries popped since user saw them */
 
@@ -768,7 +769,7 @@ ctx_print(void)
     }
 
     /* unlock */
-    --Ctx_Lock;
+    Ctx_Lock.store(false);
 }
 
 /* checks for nulls and overflows */
