@@ -1389,7 +1389,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = sb.c_str();
         } else if (doMsec) {
             if (fmt->widthMax < 0) {
-                sb.appendf("%0*ld", fmt->widthMin, tvToMsec(outtv));
+                sb.appendf("%0*ld", fmt->zero && fmt->widthMin >= 0 ? fmt->widthMin : 0, tvToMsec(outtv));
             } else {
                 int precision = fmt->widthMax;
                 sb.appendf("%0*" PRId64 ".%0*" PRId64 "", fmt->zero && (fmt->widthMin - precision - 1 >= 0) ? fmt->widthMin - precision - 1 : 0, static_cast<int64_t>(outtv.tv_sec * 1000 + outtv.tv_usec / 1000), precision, static_cast<int64_t>((outtv.tv_usec % 1000 )* (1000 / fmt->divisor)));
