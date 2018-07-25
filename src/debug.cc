@@ -755,9 +755,13 @@ static void
 ctx_print(void)
 {
     /* lock to prevent recursive calls, eg from _db_print */
-    static std::atomic_bool Ctx_Lock;
-    if (Ctx_Lock.exchange(true))
+    // TODO: make this ctx_*() code thread safe
+    static int Ctx_Lock = 0;
+    ++Ctx_Lock;
+    if (Ctx_Lock > 1) {
+        --Ctx_Lock;
         return;
+    }
 
     /* all descriptions has been printed up to this level */
     static int Ctx_Reported_Level = -1;
@@ -785,7 +789,7 @@ ctx_print(void)
     }
 
     /* unlock */
-    Ctx_Lock.store(false);
+    --Ctx_Lock;
 }
 
 Debug::Context *Debug::Current = nullptr;
