@@ -82,18 +82,27 @@ HttpReply::clean()
 }
 
 void
-HttpReply::packHeadersInto(Packable * p) const
+HttpReply::packHeadersUsingFastPacker(Packable &p) const
 {
-    sline.packInto(p);
-    header.packInto(p);
-    p->append("\r\n", 2);
+    sline.packInto(&p);
+    header.packInto(&p);
+    p.append("\r\n", 2);
 }
 
 void
-HttpReply::packInto(Packable * p) const
+HttpReply::packHeadersUsingSlowPacker(Packable &p) const
 {
-    packHeadersInto(p);
-    body.packInto(p);
+    MemBuf buf;
+    buf.init();
+    packHeadersUsingFastPacker(buf);
+    p.append(buf.content(), buf.contentSize());
+}
+
+void
+HttpReply::packInto(MemBuf &buf) const
+{
+    packHeadersUsingFastPacker(buf);
+    body.packInto(&buf);
 }
 
 /* create memBuf, create mem-based packer, pack, destroy packer, return MemBuf */
@@ -102,7 +111,7 @@ HttpReply::pack() const
 {
     MemBuf *mb = new MemBuf;
     mb->init();
-    packInto(mb);
+    packInto(*mb);
     return mb;
 }
 

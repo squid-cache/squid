@@ -374,7 +374,7 @@ MemStore::updateHeadersOrThrow(Ipc::StoreMapUpdate &update)
 
     Must(update.stale.anchor);
     ShmWriter writer(*this, update.entry, update.fresh.fileNo);
-    reply.packHeadersInto(&writer);
+    reply.packHeadersUsingSlowPacker(writer);
     const uint64_t freshHdrSz = writer.totalWritten;
     debugs(20, 7, "fresh hdr_sz: " << freshHdrSz << " diff: " << (freshHdrSz - staleHdrSz));
 
