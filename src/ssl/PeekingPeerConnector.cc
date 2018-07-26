@@ -23,7 +23,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 
-void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn);
+void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn, const SBuf *);
 
 void
 Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(allow_t answer, void *data)
@@ -244,11 +244,24 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
 
     if (!error) {
         serverCertificateVerified();
-        if (splice) {
-            switchToTunnel(request.getRaw(), clientConn, serverConn);
-            tunnelInsteadOfNegotiating();
-        }
+        if (splice)
+            startTunneling();
     }
+}
+
+void
+Ssl::PeekingPeerConnector::startTunneling()
+{
+    // Replace with the raw socket io methods
+    fd_table[serverConn->fd].read_method = &default_read_method;
+    fd_table[serverConn->fd].write_method = &default_write_method;
+
+    Security::SessionPointer session(fd_table[serverConn->fd].ssl);
+    BIO *b = SSL_get_rbio(session.get());
+    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
+    
+    switchToTunnel(request.getRaw(), clientConn, serverConn, &srvBio->rBufData());
+    tunnelInsteadOfNegotiating();
 }
 
 void

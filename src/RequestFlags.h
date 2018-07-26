@@ -112,6 +112,9 @@ public:
     /// whether to forward via TunnelStateData (instead of FwdState)
     bool forceTunnel = false;
 
+    /// whether the client asked to upgrade
+    bool mayUpgrade = false;
+
     /** clone the flags, resetting to default those which are not safe in
      *  a related (e.g. ICAP-adapted) request.
      */

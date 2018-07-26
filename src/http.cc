@@ -50,6 +50,7 @@
 #include "refresh.h"
 #include "RefreshPattern.h"
 #include "rfc1738.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -812,6 +813,15 @@ HttpStateData::handle1xx(HttpReply *reply)
     }
 #endif // USE_HTTP_VIOLATIONS
 
+    if (reply->sline.status() == Http::scSwitchingProtocols) {
+        if (!processSwitchingProtocols(reply)) {
+            ErrorState *err = new ErrorState(ERR_INVALID_REQ, Http::scBadGateway, request.getRaw());
+            fwd->fail(err);
+            closeServer();
+            return;
+        }
+    }
+
     debugs(11, 2, HERE << "forwarding 1xx to client");
 
     // the Sink will use this to call us back after writing 1xx to the client
@@ -826,11 +836,109 @@ HttpStateData::handle1xx(HttpReply *reply)
     // for similar reasons without a 1xx response.
 }
 
+bool
+upgradeProtocolSupported(SBuf &proto)
+{
+    enum Protocols {pUnknown, pWebSockets, pTls};
+    static std::map<Protocols, SBuf> SupportedProtocols = {
+        {pWebSockets, SBuf("websocket")},
+        // {pTls, "TLS"} // RFC2817, handle it just like WebSocket?
+        {pUnknown, SBuf("unknown")}
+    };
+
+    for (auto it = SupportedProtocols.cbegin(); it != SupportedProtocols.cend(); ++it) {
+        // we are expecting Upgrade header in form proto/version
+        if (proto.startsWith(it->second, caseInsensitive) &&
+            (proto.length() == it->second.length() || proto[it->second.length()] == '/'))
+            return true;
+    }
+    return false;
+}
+
+bool
+HttpStateData::processSwitchingProtocols(HttpReply *reply)
+{
+    // Must have an upgrade header
+    if (!reply->header.has(Http::HdrType::UPGRADE))
+        return false;
+
+    // Must include a "Connection: upgrade" header (RFC 7230 section 6.7)
+    if (!reply->header.hasListMember(Http::HdrType::CONNECTION, "upgrade", ','))
+        return false;
+
+    // XXX: The Upgrade response header may include more than one protocols to
+    // upgrade, so a correct check of Upgrade header must check that all
+    // of the listed protocols are supported.
+    // Currently Squid support upgrading to only one protocol per request.
+    SBuf upgrade = StringToSBuf(reply->header.getList(Http::HdrType::UPGRADE));
+    if (upgrade.find(',') != SBuf::npos)
+        return false; // Multiple protocols upgrade is not supported.
+
+    if (!upgradeProtocolSupported(upgrade))
+        return false;
+
+    // We need to check if the HttpRequest Upgrade header lists the
+    // protocols appeared in HttpReply.
+    // Currently only WebSockets supported so the following check is enough
+
+    // Does acl check
+    ACLFilledChecklist ch(Config.accessList.on_http_upgrade, originalRequest().getRaw());
+    ch.reply = reply;
+    HTTPMSGLOCK(ch.reply);
+    allow_t answer = ch.fastCheck();
+    bool allowUpgrade = answer.allowed() && answer.kind == 1;
+
+    if (!allowUpgrade)
+        return false; //upgrade denied;
+
+    flags.handling101 = true;
+    return true;
+}
+
+/// Dialer to pass the control of the server Comm::Connection object to the
+/// related ConnStateData object. The HttpStateData has remove any reference
+/// to the server connection before pass the control to ConnStateData so this
+/// dialer has to close the connection if the recipient does not exist any more.
+class ServerConnectionControlDialer: public UnaryMemFunT<ConnStateData, ConnStateData::ServerConnectionContext>
+{
+public:
+    typedef UnaryMemFunT<ConnStateData, ConnStateData::ServerConnectionContext> Parent;
+
+    ServerConnectionControlDialer(const CbcPointer<ConnStateData> &mgr, const ConnStateData::ServerConnectionContext &scc): Parent(mgr, &ConnStateData::noteTakeServerConnectionControl, scc) {}
+
+    virtual bool canDial(AsyncCall &call) {
+        if (!Parent::canDial(call)) {
+            debugs(11, 2, "ConnStateData gone, close server connection to avoid orphan connection!");
+            arg1.connection->close();
+            return false;
+        }
+        return true;
+    }
+
+    const char *callName = "ConnStateData::noteTakeServerConnectionControl";
+};
+
 /// restores state and resumes processing after 1xx is ignored or forwarded
 void
 HttpStateData::proceedAfter1xx()
 {
     Must(flags.handling1xx);
+    if (flags.handling101) {
+        // Our job is finished here. The control passed to other
+        // squid subsystems.
+        ConnStateData::ServerConnectionContext scc(serverConnection,
+                                                   request,
+                                                   ConnStateData::ServerConnectionContext::UpgradeToWebSockets);
+        ServerConnectionControlDialer dialer(request->clientConnectionManager, scc);
+        AsyncCall::Pointer call = asyncCall(11, 3, dialer.callName, dialer);
+        ScheduleCallHere(call);
+        fwd->unregister(serverConnection);
+        comm_remove_close_handler(serverConnection->fd, closeHandler);
+        serverConnection = nullptr;
+        doneWithFwd = "UpgradeToWebSockets";
+        mustStop("UpgradeToWebSockets");
+    }
+
     debugs(11, 2, "continuing with " << payloadSeen << " bytes in buffer after 1xx");
     CallJobHere(11, 3, this, HttpStateData, HttpStateData::processReply);
 }
@@ -1910,10 +2018,10 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         delete cc;
     }
 
-    /* maybe append Connection: keep-alive */
-    if (flags.keepalive) {
+    if (hdr_out->has(Http::HdrType::UPGRADE))
+        hdr_out->putStr(Http::HdrType::CONNECTION, "Upgrade");
+    else if (flags.keepalive) /* maybe append Connection: keep-alive */
         hdr_out->putStr(Http::HdrType::CONNECTION, "keep-alive");
-    }
 
     /* append Front-End-Https */
     if (flags.front_end_https) {
@@ -1966,8 +2074,13 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case Http::HdrType::KEEP_ALIVE:          /** \par Keep-Alive: */
     case Http::HdrType::PROXY_AUTHENTICATE:  /** \par Proxy-Authenticate: */
     case Http::HdrType::TRAILER:             /** \par Trailer: */
-    case Http::HdrType::UPGRADE:             /** \par Upgrade: */
     case Http::HdrType::TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
+        break;
+    case Http::HdrType::UPGRADE:             /** \par Upgrade: */
+        if (request->flags.mayUpgrade) {
+            // copy the supported protocols only:
+            hdr_out->addEntry(e->clone());
+        }
         break;
 
     /** \par OTHER headers I haven't bothered to track down yet. */

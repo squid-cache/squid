@@ -1329,9 +1329,8 @@ TunnelStateData::Connection::setDelayId(DelayId const &newDelay)
 
 #endif
 
-#if USE_OPENSSL
 void
-switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn)
+switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn, const SBuf *serverPayload)
 {
     debugs(26,5, "Revert to tunnel FD " << clientConn->fd << " with FD " << srvConn->fd);
 
@@ -1347,9 +1346,6 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     debugs(26, 3, request->method << " " << context->http->uri << " " << request->http_ver);
 
     TunnelStateData *tunnelState = new TunnelStateData(context->http);
-
-    fd_table[clientConn->fd].read_method = &default_read_method;
-    fd_table[clientConn->fd].write_method = &default_write_method;
 
     request->hier.resetPeerNotes(srvConn, tunnelState->getHost());
 
@@ -1380,15 +1376,10 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(srvConn, Config.Timeout.read, timeoutCall);
-    fd_table[srvConn->fd].read_method = &default_read_method;
-    fd_table[srvConn->fd].write_method = &default_write_method;
 
-    auto ssl = fd_table[srvConn->fd].ssl.get();
-    assert(ssl);
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
-    tunnelState->preReadServerData = srvBio->rBufData();
+    if (serverPayload)
+        tunnelState->preReadServerData = *serverPayload;
+
     tunnelStartShoveling(tunnelState);
 }
-#endif //USE_OPENSSL
 

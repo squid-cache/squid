@@ -138,6 +138,11 @@ private:
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
     bool peerSupportsConnectionPinning() const;
 
+    /// Process an "101 Switching Protocols" reply.
+    /// \return false if this 101 reply is not supported, true otherwise
+    bool processSwitchingProtocols(HttpReply *msg);
+
+
     /// Parser being used at present to parse the HTTP/ICY server response.
     Http1::ResponseParserPointer hp;
     Http1::TeChunkedParser *httpChunkDecoder;
