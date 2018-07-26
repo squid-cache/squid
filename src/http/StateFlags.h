@@ -19,6 +19,8 @@ public:
     bool keepalive = false; ///< whether to keep the connection persistent
     bool only_if_cached = false;
     bool handling1xx = false;       ///< we are ignoring or forwarding 1xx response
+    /// we are waiting client side feedback for an 101 switching protocol response.
+    bool handling101 = false;
     bool headers_parsed = false;
 
     /// Whether the next TCP hop is a cache_peer, including originserver

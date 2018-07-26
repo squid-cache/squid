@@ -407,6 +407,7 @@ public:
         acl_access *forceRequestBodyContinuation;
         acl_access *serverPconnForNonretriable;
         acl_access *collapsedForwardingAccess;
+	acl_access *on_http_upgrade;
     } accessList;
     AclDenyInfoList *denyInfoList;
 

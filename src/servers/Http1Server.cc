@@ -242,6 +242,12 @@ Http::One::Server::processParsedRequest(Http::StreamPointer &context)
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request = http->request;
 
+    if (request->header.has(Http::HdrType::UPGRADE)) {
+        const String upgrade = request->header.getList(Http::HdrType::UPGRADE);
+        // Check if any of the listed protocols supported:
+        request->flags.mayUpgrade = (upgrade.caseCmp("websocket") == 0);
+    }
+
     if (request->header.has(Http::HdrType::EXPECT)) {
         const String expect = request->header.getList(Http::HdrType::EXPECT);
         const bool supportedExpect = (expect.caseCmp("100-continue") == 0);
@@ -335,12 +341,23 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
 
     const ClientHttpRequest *http = context->http;
 
+    String upgradeHeader;
+    bool switching = (rep->sline.status() == Http::scSwitchingProtocols);
+    if (switching) // save Upgrade header
+        upgradeHeader = rep->header.getList(Http::HdrType::UPGRADE);
+
     // apply selected clientReplyContext::buildReplyHeader() mods
     // it is not clear what headers are required for control messages
     rep->header.removeHopByHopEntries();
     // paranoid: ContentLengthInterpreter has cleaned non-generated replies
     rep->removeIrrelevantContentLength();
-    rep->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
+
+    if (switching) {
+        rep->header.putStr(Http::HdrType::UPGRADE, upgradeHeader.termedBuf());
+        rep->header.putStr(Http::HdrType::CONNECTION, "Upgrade");
+    } else
+        rep->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
+
     httpHdrMangleList(&rep->header, http->request, http->al, ROR_REPLY);
 
     MemBuf *mb = rep->pack();
@@ -352,6 +369,21 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
 
     delete mb;
     return true;
+}
+
+void
+switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn, const SBuf *serverPayload);
+
+void
+Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext scc)
+{
+    Comm::ConnectionPointer serverConnection = scc.connection;
+    Http::StreamPointer context = pipeline.front();
+    assert(context != nullptr);
+    const ClientHttpRequest *http = context->http;
+    assert(http->request == scc.request.getRaw());
+    stopReading(); // Stop reading for more requests, tunnel code starts now
+    switchToTunnel(scc.request.getRaw(), clientConnection, serverConnection, NULL);
 }
 
 ConnStateData *

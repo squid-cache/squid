@@ -10524,6 +10524,37 @@ DOC_START
 	that the request body is needed. Delaying is the default behavior.
 DOC_END
 
+NAME:  on_http_upgrade
+TYPE:  on_http_upgrade
+LOC: Config.accessList.on_http_upgrade
+DEFAULT: none
+DEFAULT_DOC: Respond with an error message when client and server agree to upgrade
+DOC_START
+        Determines Squid behavior when client and server agree to upgrade to
+        new protocol inside an TCP connection or on a bumped CONNECT tunnel
+
+                 on_http_upgrade <action> [!]acl ...
+
+        The first matching action wins. Only fast ACLs are supported.
+
+        Supported actions are:
+
+        tunnel: Establish a TCP connection with the intended server and
+                blindly shovel TCP packets between the client and server.
+
+        respond: Respond with an error message, using the transfer protocol
+                for the Squid port that the server and client wants to
+                upgrade to a new protocol. This is the default.
+
+	For example:
+	# Define supported protocols
+	acl WEBSOCKET rep_header Upgrade -i websocket
+	# Allow web socket protocol:
+	on_http_upgrade tunnel WEBSOCKET
+	# in all other cases just send an HTTP "error page" response:
+	on_http_upgrade respond all
+DOC_END
+
 NAME: server_pconn_for_nonretriable
 TYPE: acl_access
 DEFAULT: none

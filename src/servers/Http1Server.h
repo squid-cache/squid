@@ -34,6 +34,7 @@ protected:
     virtual void handleReply(HttpReply *rep, StoreIOBuffer receivedData);
     virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
     virtual time_t idleTimeout() const;
+    virtual void noteTakeServerConnectionControl(ServerConnectionContext scc);
 
     /* BodyPipe API */
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);

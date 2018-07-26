@@ -247,10 +247,17 @@ static int parseOneConfigFile(const char *file_name, unsigned int depth);
 static void parse_configuration_includes_quoted_values(bool *recognizeQuotedValues);
 static void dump_configuration_includes_quoted_values(StoreEntry *const entry, const char *const name, bool recognizeQuotedValues);
 static void free_configuration_includes_quoted_values(bool *recognizeQuotedValues);
+
+static void parseOnActionTunnel(acl_access **access, const char *name);
+static void dumpOnActionTunnel(StoreEntry *entry, const char *name, acl_access *access);
+
 static void parse_on_unsupported_protocol(acl_access **access);
 static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
 static void free_on_unsupported_protocol(acl_access **access);
 static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, ACL *acl = nullptr);
+static void parse_on_http_upgrade(acl_access **access);
+static void dump_on_http_upgrade(StoreEntry *entry, const char *name, acl_access *access);
+static void free_on_http_upgrade(acl_access **access);
 
 /*
  * LegacyParser is a parser for legacy code that uses the global
@@ -5065,7 +5072,7 @@ free_configuration_includes_quoted_values(bool *)
 }
 
 static void
-parse_on_unsupported_protocol(acl_access **access)
+parseOnActionTunnel(acl_access **access, const char *name)
 {
     char *tm;
     if ((tm = ConfigParser::NextToken()) == NULL) {
@@ -5079,29 +5086,41 @@ parse_on_unsupported_protocol(acl_access **access)
     else if (strcmp(tm, "respond") == 0)
         action.kind = 2;
     else {
-        debugs(3, DBG_CRITICAL, "FATAL: unknown on_unsupported_protocol mode: " << tm);
+        debugs(3, DBG_CRITICAL, "FATAL: unknown " << name <<" mode: " << tm);
         self_destruct();
         return;
     }
 
     // empty rule OK
-    ParseAclWithAction(access, action, "on_unsupported_protocol");
+    ParseAclWithAction(access, action, name);
 }
 
 static void
-dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access)
+dumpOnActionTunnel(StoreEntry *entry, const char *name, acl_access *access)
 {
-    static const std::vector<const char *> onErrorTunnelMode = {
+    static const std::vector<const char *> onActionTunnelMode = {
         "none",
         "tunnel",
         "respond"
     };
     if (access) {
         SBufList lines = access->treeDump(name, [](const Acl::Answer &action) {
-            return onErrorTunnelMode.at(action.kind);
+            return onActionTunnelMode.at(action.kind);
         });
         dump_SBufList(entry, lines);
     }
+}
+
+static void
+parse_on_unsupported_protocol(acl_access **access)
+{
+    parseOnActionTunnel(access, "on_unsupported_protocol");
+}
+
+static void
+dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access)
+{
+    dumpOnActionTunnel(entry, name, access);
 }
 
 static void
@@ -5110,3 +5129,20 @@ free_on_unsupported_protocol(acl_access **access)
     free_acl_access(access);
 }
 
+static void
+parse_on_http_upgrade(acl_access **access)
+{
+    parseOnActionTunnel(access, "on_http_upgrade");
+}
+
+static void
+dump_on_http_upgrade(StoreEntry *entry, const char *name, acl_access *access)
+{
+    dumpOnActionTunnel(entry, name, access);
+}
+
+static void
+free_on_http_upgrade(acl_access **access)
+{
+    free_acl_access(access);
+}

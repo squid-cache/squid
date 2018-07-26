@@ -1710,6 +1710,13 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         conn->flags.readMore = false;
     }
 
+    // Client asks to upgrade disable pipelining for now
+    if (http->request->flags.mayUpgrade) {
+        // Do we really need it?
+        // context->mayUseConnection(true);
+        // conn->flags.readMore = false;
+    }
+
 #if USE_OPENSSL
     if (conn->switchedToHttps() && conn->serveDelayedError(context)) {
         clientProcessRequestFinished(conn, request);
@@ -4087,5 +4094,11 @@ std::ostream &
 operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic)
 {
     return os << pic.connection << ", request=" << pic.request;
+}
+
+std::ostream &
+operator <<(std::ostream &os, const ConnStateData::ServerConnectionContext &scc)
+{
+    return os << scc.connection << ", request=" << scc.request << ", reason=" << scc.reason;
 }
 
