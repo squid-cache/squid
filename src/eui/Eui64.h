@@ -36,11 +36,9 @@ class Eui64
 
 public:
     Eui64() { clear(); }
-    Eui64(const Eui64 &t) { memcpy(this, &t, sizeof(Eui64)); }
-    Eui64& operator= (const Eui64 &t) {memcpy(this, &t, sizeof(Eui64)); return *this;}
+
     bool operator== (const Eui64 &t) const { return (memcmp(eui,t.eui,SZ_EUI64_BUF) == 0); }
     bool operator< (const Eui64 &t) const { return (memcmp(eui,t.eui,SZ_EUI64_BUF) < 0); }
-    ~Eui64() {}
 
     const unsigned char *get(void);
 

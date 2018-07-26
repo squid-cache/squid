@@ -2356,15 +2356,8 @@ parse_peer(CachePeer ** head)
         p->connect_fail_limit = 10;
 
 #if USE_CACHE_DIGESTS
-
-    if (!p->options.no_digest) {
-        /* XXX This looks odd.. who has the original pointer
-         * then?
-         */
-        PeerDigest *pd = peerDigestCreate(p);
-        p->digest = cbdataReference(pd);
-    }
-
+    if (!p->options.no_digest)
+        peerDigestCreate(p);
 #endif
 
     p->index =  ++Config.npeers;
@@ -3832,6 +3825,15 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
         }
     }
 
+    if (s->secure.encryptTransport) {
+        if (s->secure.certs.empty()) {
+            debugs(3, DBG_CRITICAL, "FATAL: " << AnyP::UriScheme(s->transport.protocol) << "_port requires a cert= parameter");
+            self_destruct();
+            return;
+        }
+    }
+
+    // *_port line should now be fully valid so we can clone it if necessary
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.isAnyAddr()) {
         // clone the port options from *s to *(s->next)
         s->next = s->clone();

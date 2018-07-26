@@ -1367,7 +1367,6 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_SwapDir.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
-	tests/stub_libanyp.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -1799,7 +1798,6 @@ tests_testEvent_SOURCES = \
 	tests/stub_tunnel.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
-	tests/stub_libanyp.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2033,7 +2031,6 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_tunnel.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
-	tests/stub_libanyp.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \
@@ -2262,7 +2259,6 @@ tests_test_http_range_SOURCES = \
 	tools.cc \
 	tests/stub_tunnel.cc \
 	$(UNLINKDSOURCE) \
-	tests/stub_libanyp.cc \
 	urn.h \
 	urn.cc \
 	wccp2.h \

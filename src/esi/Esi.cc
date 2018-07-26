@@ -176,7 +176,7 @@ public:
     Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
     void NULLUnChosen();
 
-    ElementList elements;
+    Esi::Elements elements;
     int chosenelement;
     ESIElement::Pointer otherwise;
     void finish();
@@ -1884,6 +1884,7 @@ esiTry::finish()
 esiChoose::~esiChoose()
 {
     debugs(86, 5, "esiChoose::~esiChoose " << this);
+    FinishAllElements(elements); // finish if not already done
 }
 
 esiChoose::esiChoose(esiTreeParentPtr aParent) :
@@ -1963,35 +1964,37 @@ esiChoose::selectElement()
     }
 }
 
+// TODO: make ESIElement destructor call finish() instead so it is
+//       a) only called when an element ref-count is 0, and
+//       b) caller can elements.clear() instead of doing this
+void
+FinishAnElement(ESIElement::Pointer &element, int pos)
+{
+    if (element)
+        element->finish();
+
+    debugs(86, 5, "setting index " << pos << ", pointer " << (void*)element.getRaw() << " to nil");
+    element = nullptr;
+}
+
+void
+FinishAllElements(Esi::Elements &elements)
+{
+    int pos = 0;
+    for (auto &element : elements)
+        FinishAnElement(element, pos++);
+}
+
 void
 esiChoose::finish()
 {
-    elements.setNULL(0, elements.size());
+    FinishAllElements(elements);
 
     if (otherwise.getRaw())
         otherwise->finish();
 
-    otherwise = NULL;
-
-    parent = NULL;
-}
-
-void
-ElementList::setNULL (int start, int end)
-{
-    assert (start >= 0 && start <= elementcount);
-    assert (end >= 0 && end <= elementcount);
-
-    for (int loopPosition = start; loopPosition < end; ++loopPosition) {
-        if (elements[loopPosition].getRaw())
-            elements[loopPosition]->finish();
-
-        debugs(86, 5, "esiSequence::NULLElements: Setting index " <<
-               loopPosition << ", pointer " <<
-               elements[loopPosition].getRaw() << " to NULL");
-
-        elements[loopPosition] = NULL;
-    }
+    otherwise = nullptr;
+    parent = nullptr;
 }
 
 void
@@ -2003,11 +2006,14 @@ esiChoose::NULLUnChosen()
 
         otherwise = NULL;
 
-        elements.setNULL (0, chosenelement);
+        int pos = 0;
+        for (auto &element : elements) {
+            if (pos != chosenelement)
+                FinishAnElement(element, pos++);
+        }
 
-        elements.setNULL (chosenelement + 1, elements.size());
     } else if (otherwise.getRaw()) {
-        elements.setNULL (0, elements.size());
+        FinishAllElements(elements);
     }
 }
 
@@ -2059,7 +2065,7 @@ void
 esiChoose::fail(ESIElement * source, char const *anError)
 {
     checkValidSource (source);
-    elements.setNULL (0, elements.size());
+    FinishAllElements(elements);
 
     if (otherwise.getRaw())
         otherwise->finish();
@@ -2136,59 +2142,6 @@ esiChoose::makeUsable(esiTreeParentPtr newParent, ESIVarState &newVarState) cons
         resultC->otherwise = otherwise->makeUsable(resultC, newVarState);
 
     return result;
-}
-
-/* ElementList */
-ElementList::ElementList () : elements(NULL), allocedcount(0), allocedsize(0), elementcount (0)
-{}
-
-ElementList::~ElementList()
-{
-    debugs(86, 5, "ElementList::~ElementList " << this);
-    setNULL(0, elementcount);
-
-    if (elements)
-        memFreeBuf (allocedsize, elements);
-}
-
-ESIElement::Pointer &
-ElementList::operator [] (int index)
-{
-    return elements[index];
-}
-
-ESIElement::Pointer const &
-ElementList::operator [] (int index) const
-{
-    return elements[index];
-}
-
-void
-ElementList::pop_front (size_t const count)
-{
-    if (!count)
-        return;
-
-    memmove(elements, &elements[count], (elementcount - count)  * sizeof (ESIElement::Pointer));
-
-    elementcount -= count;
-}
-
-void
-ElementList::push_back(ESIElement::Pointer &newElement)
-{
-    elements = (ESIElement::Pointer *)memReallocBuf (elements, ++elementcount * sizeof (ESIElement::Pointer),
-               &allocedsize);
-    assert (elements);
-    allocedcount = elementcount;
-    memset(&elements[elementcount - 1], '\0', sizeof (ESIElement::Pointer));
-    elements[elementcount - 1] = newElement;
-}
-
-size_t
-ElementList::size() const
-{
-    return elementcount;
 }
 
 /* esiWhen */

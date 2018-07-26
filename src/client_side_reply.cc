@@ -959,7 +959,7 @@ clientReplyContext::loggingTags()
 void
 clientReplyContext::purgeFoundGet(StoreEntry *newEntry)
 {
-    if (newEntry->isNull()) {
+    if (!newEntry) {
         lookingforstore = 2;
         StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
     } else
@@ -969,7 +969,7 @@ clientReplyContext::purgeFoundGet(StoreEntry *newEntry)
 void
 clientReplyContext::purgeFoundHead(StoreEntry *newEntry)
 {
-    if (newEntry->isNull())
+    if (!newEntry)
         purgeDoMissPurge();
     else
         purgeFoundObject (newEntry);
@@ -978,7 +978,7 @@ clientReplyContext::purgeFoundHead(StoreEntry *newEntry)
 void
 clientReplyContext::purgeFoundObject(StoreEntry *entry)
 {
-    assert (entry && !entry->isNull());
+    assert (entry);
 
     if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
         http->logType.update(LOG_TCP_DENIED);
@@ -1051,11 +1051,9 @@ clientReplyContext::purgeDoMissPurge()
 void
 clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 {
-    assert (newEntry);
-    /* Move to new() when that is created */
-    purgeStatus = Http::scNotFound;
-
-    if (!newEntry->isNull()) {
+    if (newEntry) {
+        /* Move to new() when that is created */
+        purgeStatus = Http::scNotFound;
         /* Release the cached URI */
         debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
 #if USE_HTCP
@@ -1072,7 +1070,7 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 void
 clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 {
-    if (newEntry && !newEntry->isNull()) {
+    if (newEntry) {
         debugs(88, 4, "HEAD " << newEntry->url());
 #if USE_HTCP
         neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
@@ -1463,13 +1461,8 @@ clientReplyContext::buildReplyHeader()
              */
             /* TODO: if maxage or s-maxage is present, don't do this */
 
-            if (squid_curtime - http->storeEntry()->timestamp >= 86400) {
-                char tbuf[512];
-                snprintf (tbuf, sizeof(tbuf), "%s %s %s",
-                          "113", ThisCache,
-                          "This cache hit is still fresh and more than 1 day old");
-                hdr->putStr(Http::HdrType::WARNING, tbuf);
-            }
+            if (squid_curtime - http->storeEntry()->timestamp >= 86400)
+                hdr->putWarning(113, "This cache hit is still fresh and more than 1 day old");
         }
     }
 
@@ -1691,7 +1684,7 @@ clientReplyContext::identifyStoreObject()
         lookingforstore = 5;
         StoreEntry::getPublicByRequest (this, r);
     } else {
-        identifyFoundObject (NullStoreEntry::getInstance());
+        identifyFoundObject(nullptr);
     }
 }
 
@@ -1702,17 +1695,9 @@ clientReplyContext::identifyStoreObject()
 void
 clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 {
-    StoreEntry *e = newEntry;
     HttpRequest *r = http->request;
-
-    /** \li If the entry received isNull() then we ignore it. */
-    if (e->isNull()) {
-        http->storeEntry(NULL);
-    } else {
-        http->storeEntry(e);
-    }
-
-    e = http->storeEntry();
+    http->storeEntry(newEntry);
+    const auto e = http->storeEntry();
 
     /* Release IP-cache entries on reload */
     /** \li If the request has no-cache flag set or some no_cache HACK in operation we
@@ -1722,10 +1707,10 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
         ipcacheInvalidateNegative(r->url.host());
 
 #if USE_CACHE_DIGESTS
-    lookup_type = http->storeEntry() ? "HIT" : "MISS";
+    lookup_type = e ? "HIT" : "MISS";
 #endif
 
-    if (NULL == http->storeEntry()) {
+    if (!e) {
         /** \li If no StoreEntry object is current assume this object isn't in the cache set MISS*/
         debugs(85, 3, "StoreEntry is NULL -  MISS");
         http->logType.update(LOG_TCP_MISS);
@@ -2300,7 +2285,10 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
 
     if (http->request == NULL) {
         const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
-        http->request = new HttpRequest(m, AnyP::PROTO_NONE, "http", null_string, mx);
+        // XXX: These fake URI parameters shadow the real (or error:...) URI.
+        // TODO: Either always set the request earlier and assert here OR use
+        // http->uri (converted to Anyp::Uri) to create this catch-all request.
+        const_cast<HttpRequest *&>(http->request) =  new HttpRequest(m, AnyP::PROTO_NONE, "http", null_string, mx);
         HTTPMSGLOCK(http->request);
     }
 

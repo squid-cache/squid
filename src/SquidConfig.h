@@ -28,6 +28,7 @@
 #if USE_OPENSSL
 #include "ssl/support.h"
 #endif
+#include "store/Disk.h"
 #include "store/forward.h"
 
 #if USE_OPENSSL
@@ -55,11 +56,14 @@ class PortCfg;
 namespace Store {
 class DiskConfig {
 public:
-    RefCount<SwapDir> *swapDirs;
-    int n_allocated;
-    int n_configured;
+    DiskConfig() { assert(swapDirs == nullptr); }
+    ~DiskConfig() { delete[] swapDirs; }
+
+    RefCount<SwapDir> *swapDirs = nullptr;
+    int n_allocated = 0;
+    int n_configured = 0;
     /// number of disk processes required to support all cache_dirs
-    int n_strands;
+    int n_strands = 0;
 };
 #define INDEXSD(i) (Config.cacheSwap.swapDirs[i].getRaw())
 }

@@ -363,7 +363,7 @@ void
 MimeIcon::created(StoreEntry *newEntry)
 {
     /* if the icon is already in the store, do nothing */
-    if (!newEntry->isNull())
+    if (newEntry)
         return;
     // XXX: if a 204 is cached due to earlier load 'failure' we should try to reload.
 

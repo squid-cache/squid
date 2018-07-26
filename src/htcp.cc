@@ -156,18 +156,18 @@ private:
     htcpDataHeader *dhdr = nullptr;
 };
 
-class htcpDetail {
+class htcpDetail
+{
     MEMPROXY_CLASS(htcpDetail);
 public:
-    htcpDetail() : resp_hdrs(nullptr), respHdrsSz(0), entity_hdrs(nullptr), entityHdrsSz(0), cache_hdrs(nullptr), cacheHdrsSz(0) {}
-    char *resp_hdrs;
-    size_t respHdrsSz;
+    char *resp_hdrs = nullptr;
+    size_t respHdrsSz = 0;
 
-    char *entity_hdrs;
-    size_t entityHdrsSz;
+    char *entity_hdrs = nullptr;
+    size_t entityHdrsSz = 0;
 
-    char *cache_hdrs;
-    size_t cacheHdrsSz;
+    char *cache_hdrs = nullptr;
+    size_t cacheHdrsSz = 0;
 };
 
 class htcpStuff
@@ -177,18 +177,14 @@ public:
         op(o),
         rr(r),
         f1(f),
-        response(0),
-        reason(0),
         msg_id(id)
-    {
-        memset(&D, 0, sizeof(D));
-    }
+    {}
 
-    int op;
-    int rr;
-    int f1;
-    int response;
-    int reason;
+    int op = 0;
+    int rr = 0;
+    int f1 = 0;
+    int response = 0;
+    int reason = 0;
     uint32_t msg_id;
     htcpSpecifier S;
     htcpDetail D;
@@ -278,6 +274,7 @@ htcpSyncAle(AccessLogEntryPointer &al, const Ip::Address &caddr, const int opcod
     al->cache.caddr = caddr;
     al->htcp.opcode = htcpOpcodeStr[opcode];
     al->url = url;
+    al->setVirginUrlForMissingRequest(al->url);
     // HTCP transactions do not wait
     al->cache.start_time = current_time;
     al->cache.trTime.tv_sec = 0;
@@ -923,14 +920,14 @@ htcpSpecifier::checkHit()
 
     if (!checkHitRequest) {
         debugs(31, 3, "htcpCheckHit: NO; failed to parse URL");
-        checkedHit(NullStoreEntry::getInstance());
+        checkedHit(nullptr);
         return;
     }
 
     if (!checkHitRequest->header.parse(req_hdrs, reqHdrsSz)) {
         debugs(31, 3, "htcpCheckHit: NO; failed to parse request headers");
         checkHitRequest = nullptr;
-        checkedHit(NullStoreEntry::getInstance());
+        checkedHit(nullptr);
         return;
     }
 
@@ -942,7 +939,7 @@ htcpSpecifier::created(StoreEntry *e)
 {
     StoreEntry *hit = nullptr;
 
-    if (!e || e->isNull()) {
+    if (!e) {
         debugs(31, 3, "htcpCheckHit: NO; public object not found");
     } else if (!e->validToSend()) {
         debugs(31, 3, "htcpCheckHit: NO; entry not valid to send" );
@@ -958,7 +955,7 @@ htcpSpecifier::created(StoreEntry *e)
     checkedHit(hit);
 
     // TODO: StoreClients must either store/lock or abandon found entries.
-    //if (!e->isNull())
+    //if (e)
     //    e->abandon();
 }
 
@@ -1483,7 +1480,6 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
         return 0;
 
     old_squid_format = p->options.htcp_oldsquid;
-    memset(&flags, '\0', sizeof(flags));
     snprintf(vbuf, sizeof(vbuf), "%d/%d",
              req->http_ver.major, req->http_ver.minor);
 
@@ -1533,7 +1529,6 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
         return;
 
     old_squid_format = p->options.htcp_oldsquid;
-    memset(&flags, '\0', sizeof(flags));
     snprintf(vbuf, sizeof(vbuf), "%d/%d",
              req->http_ver.major, req->http_ver.minor);
 

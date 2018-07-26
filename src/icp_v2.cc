@@ -80,6 +80,7 @@ icpSyncAle(AccessLogEntryPointer &al, const Ip::Address &caddr, const char *url,
     al->icp.opcode = ICP_QUERY;
     al->cache.caddr = caddr;
     al->url = url;
+    al->setVirginUrlForMissingRequest(al->url);
     // XXX: move to use icp.clientReply instead
     al->http.clientReplySz.payloadData = len;
     al->cache.start_time = current_time;
@@ -156,9 +157,6 @@ ICPState::~ICPState()
 bool
 ICPState::confirmAndPrepHit(const StoreEntry &e)
 {
-    if (e.isNull())
-        return false;
-
     if (!e.validToSend())
         return false;
 
@@ -217,7 +215,7 @@ ICP2State::created(StoreEntry *e)
     debugs(12, 5, "icpHandleIcpV2: OPCODE " << icp_opcode_str[header.opcode]);
     icp_opcode codeToSend;
 
-    if (confirmAndPrepHit(*e)) {
+    if (e && confirmAndPrepHit(*e)) {
         codeToSend = ICP_HIT;
     } else {
 #if USE_ICMP
@@ -238,7 +236,7 @@ ICP2State::created(StoreEntry *e)
     icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, al);
 
     // TODO: StoreClients must either store/lock or abandon found entries.
-    //if (!e->isNull())
+    //if (e)
     //    e->abandon();
 
     delete this;

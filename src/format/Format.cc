@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "base64.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "err_detail_type.h"
@@ -534,6 +535,24 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 
+        case LFT_CLIENT_HANDSHAKE:
+            if (al->request && al->request->clientConnectionManager.valid()) {
+                const auto &handshake = al->request->clientConnectionManager->preservedClientData;
+                if (const auto rawLength = handshake.length()) {
+                    // add 1 byte to optimize the c_str() conversion below
+                    char *buf = sb.rawAppendStart(base64_encode_len(rawLength) + 1);
+
+                    struct base64_encode_ctx ctx;
+                    base64_encode_init(&ctx);
+                    auto encLength = base64_encode_update(&ctx, buf, rawLength, reinterpret_cast<const uint8_t*>(handshake.rawContent()));
+                    encLength += base64_encode_final(&ctx, buf + encLength);
+
+                    sb.rawAppendFinish(buf, encLength);
+                    out = sb.c_str();
+                }
+            }
+            break;
+
         case LFT_TIME_SECONDS_SINCE_EPOCH:
             // some platforms store time in 32-bit, some 64-bit...
             outoff = static_cast<int64_t>(current_time.tv_sec);
@@ -966,9 +985,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_CLIENT_REQ_URI:
-            // original client URI
-            if (al->request) {
-                sb = al->request->effectiveRequestUri();
+            if (const auto uri = al->effectiveVirginUrl()) {
+                sb = *uri;
                 out = sb.c_str();
                 quote = 1;
             }

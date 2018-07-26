@@ -49,6 +49,7 @@
 #include "Parsing.h"
 #include "profiler/Profiler.h"
 #include "redirect.h"
+#include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -357,8 +358,6 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     if (header)
         request->header.update(header);
 
-    http->log_uri = xstrdup(urlCanonicalClean(request));
-
     /* http struct now ready */
 
     /*
@@ -389,8 +388,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
 
     request->http_ver = Http::ProtocolVersion();
 
-    http->request = request;
-    HTTPMSGLOCK(http->request);
+    http->initRequest(request);
 
     /* optional - skip the access check ? */
     http->calloutContext = new ClientRequestContext(http);
@@ -1273,12 +1271,8 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                                " from request " << old_request << " to " << new_request);
                     }
 
-                    // update the current working ClientHttpRequest fields
-                    xfree(http->uri);
-                    http->uri = SBufToCstring(new_request->effectiveRequestUri());
-                    HTTPMSGUNLOCK(old_request);
-                    http->request = new_request;
-                    HTTPMSGLOCK(http->request);
+                    http->resetRequest(new_request);
+                    old_request = nullptr;
                 } else {
                     debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
                            old_request->method << " " << urlNote << " " << old_request->http_ver);
@@ -1649,6 +1643,52 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
         loggingEntry_->lock("ClientHttpRequest::loggingEntry");
 }
 
+void
+ClientHttpRequest::initRequest(HttpRequest *aRequest)
+{
+    assignRequest(aRequest);
+    if (const auto csd = getConn()) {
+        if (!csd->notes()->empty())
+            request->notes()->appendNewOnly(csd->notes().getRaw());
+    }
+    // al is created in the constructor
+    assert(al);
+    if (!al->request) {
+        al->request = request;
+        HTTPMSGLOCK(al->request);
+        al->syncNotes(request);
+    }
+}
+
+void
+ClientHttpRequest::resetRequest(HttpRequest *newRequest)
+{
+    assert(request != newRequest);
+    clearRequest();
+    assignRequest(newRequest);
+    xfree(uri);
+    uri = SBufToCstring(request->effectiveRequestUri());
+}
+
+void
+ClientHttpRequest::assignRequest(HttpRequest *newRequest)
+{
+    assert(newRequest);
+    assert(!request);
+    const_cast<HttpRequest *&>(request) = newRequest;
+    HTTPMSGLOCK(request);
+    setLogUriToRequestUri();
+}
+
+void
+ClientHttpRequest::clearRequest()
+{
+    HttpRequest *oldRequest = request;
+    HTTPMSGUNLOCK(oldRequest);
+    const_cast<HttpRequest *&>(request) = nullptr;
+    absorbLogUri(nullptr);
+}
+
 /*
  * doCallouts() - This function controls the order of "callout"
  * executions, including non-blocking access control checks, the
@@ -1688,20 +1728,6 @@ void
 ClientHttpRequest::doCallouts()
 {
     assert(calloutContext);
-
-    auto &ale = calloutContext->http->al;
-    /*Save the original request for logging purposes*/
-    if (!ale->request) {
-        ale->request = request;
-        HTTPMSGLOCK(ale->request);
-
-        // Make the previously set client connection ID available as annotation.
-        if (ConnStateData *csd = calloutContext->http->getConn()) {
-            if (!csd->notes()->empty())
-                calloutContext->http->request->notes()->appendNewOnly(csd->notes().getRaw());
-        }
-        ale->syncNotes(calloutContext->http->request);
-    }
 
     if (!calloutContext->error) {
         // CVE-2009-0801: verify the Host: header is consistent with other known details.
@@ -1863,6 +1889,53 @@ ClientHttpRequest::doCallouts()
 #endif
 }
 
+void
+ClientHttpRequest::setLogUriToRequestUri()
+{
+    assert(request);
+    const auto canonicalUri = request->canonicalCleanUrl();
+    absorbLogUri(xstrndup(canonicalUri, MAX_URL));
+}
+
+void
+ClientHttpRequest::setLogUriToRawUri(const char *rawUri, const HttpRequestMethod &method)
+{
+    assert(rawUri);
+    // Should(!request);
+
+    // TODO: SBuf() performance regression, fix by converting rawUri to SBuf
+    char *canonicalUri = urlCanonicalCleanWithoutRequest(SBuf(rawUri), method, AnyP::UriScheme());
+
+    absorbLogUri(AnyP::Uri::cleanup(canonicalUri));
+
+    char *cleanedRawUri = AnyP::Uri::cleanup(rawUri);
+    al->setVirginUrlForMissingRequest(SBuf(cleanedRawUri));
+    xfree(cleanedRawUri);
+}
+
+void
+ClientHttpRequest::absorbLogUri(char *aUri)
+{
+    xfree(log_uri);
+    const_cast<char *&>(log_uri) = aUri;
+}
+
+void
+ClientHttpRequest::setErrorUri(const char *aUri)
+{
+    assert(!uri);
+    assert(aUri);
+    // Should(!request);
+
+    uri = xstrdup(aUri);
+    // TODO: SBuf() performance regression, fix by converting setErrorUri() parameter to SBuf
+    const SBuf errorUri(aUri);
+    const auto canonicalUri = urlCanonicalCleanWithoutRequest(errorUri, HttpRequestMethod(), AnyP::UriScheme());
+    absorbLogUri(xstrndup(canonicalUri, MAX_URL));
+
+    al->setVirginUrlForMissingRequest(errorUri);
+}
+
 #if USE_ADAPTATION
 /// Initiate an asynchronous adaptation transaction which will call us back.
 void
@@ -1907,23 +1980,10 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
     assert(msg);
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
-        /*
-         * Replace the old request with the new request.
-         */
-        HTTPMSGUNLOCK(request);
-        request = new_req;
-        HTTPMSGLOCK(request);
-
         // update the new message to flag whether URL re-writing was done on it
-        if (request->effectiveRequestUri().cmp(uri) != 0)
-            request->flags.redirected = 1;
-
-        /*
-         * Store the new URI for logging
-         */
-        xfree(uri);
-        uri = SBufToCstring(request->effectiveRequestUri());
-        setLogUri(this, urlCanonicalClean(request));
+        if (request->effectiveRequestUri() != new_req->effectiveRequestUri())
+            new_req->flags.redirected = true;
+        resetRequest(new_req);
         assert(request->method.id());
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {
         debugs(85,3,HERE << "REQMOD reply is HTTP reply");

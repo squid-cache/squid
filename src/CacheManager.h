@@ -58,9 +58,6 @@ protected:
     void registerProfile(const Mgr::ActionProfilePointer &profile);
 
     Menu menu_;
-
-private:
-    static CacheManager* instance;
 };
 
 #endif /* SQUID_CACHEMANAGER_H */

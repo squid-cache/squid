@@ -12,6 +12,7 @@
 #define SQUID_FS_IO_H_
 
 #include "mem/forward.h"
+#include "sbuf/forward.h"
 #include "typedefs.h" //DRCB, DWCB
 
 class MemBuf;
@@ -47,7 +48,16 @@ void file_write(int, off_t, void const *, int len, DWCB *, void *, FREE *);
 void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void *handler_data);
 void file_read(int, char *, int, off_t, DRCB *, void *);
 void safeunlink(const char *path, int quiet);
-int xrename(const char *from, const char *to);
+
+/*
+ * Wrapper for rename(2) which complains if something goes wrong;
+ * the caller is responsible for handing and explaining the
+ * consequences of errors.
+ *
+ * \retval true successful rename
+ * \retval false an error occured
+ */
+bool FileRename(const SBuf &from, const SBuf &to);
 
 int fsBlockSize(const char *path, int *blksize);
 int fsStats(const char *, int *, int *, int *, int *);

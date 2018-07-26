@@ -199,12 +199,12 @@ UrnState::fillChecklist(ACLFilledChecklist &checklist) const
 void
 UrnState::created(StoreEntry *e)
 {
-    if (e->isNull() || (e->hittingRequiresCollapsing() && !startCollapsingOn(*e, false))) {
+    if (!e || (e->hittingRequiresCollapsing() && !startCollapsingOn(*e, false))) {
         urlres_e = storeCreateEntry(urlres, urlres, RequestFlags(), Http::METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);
         FwdState::Start(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw(), ale);
         // TODO: StoreClients must either store/lock or abandon found entries.
-        //if (!e->isNull())
+        //if (e)
         //    e->abandon();
     } else {
         urlres_e = e;
