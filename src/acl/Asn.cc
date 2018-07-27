@@ -29,7 +29,9 @@
 #include "StoreClient.h"
 
 #define WHOIS_PORT 43
+#ifndef AS_REQBUF_SZ
 #define AS_REQBUF_SZ    4096
+#endif
 
 /* BEGIN of definitions for radix tree entries */
 
@@ -70,39 +72,29 @@ class ASState
     CBDATA_CLASS(ASState);
 
 public:
-    ASState();
-    ~ASState();
+    ASState() {
+        memset(reqbuf, 0, sizeof(reqbuf));
+    }
+    ~ASState() {
+        if (entry) {
+            debugs(53, 3, entry->url());
+            storeUnregister(sc, entry, this);
+            entry->unlock("~ASState");
+        }
+    }
 
-    StoreEntry *entry;
-    store_client *sc;
+public:
+    StoreEntry *entry = nullptr;
+    store_client *sc = nullptr;
     HttpRequest::Pointer request;
-    int as_number;
-    int64_t offset;
-    int reqofs;
+    int as_number = 0;
+    int64_t offset = 0;
+    int reqofs = 0;
     char reqbuf[AS_REQBUF_SZ];
-    bool dataRead;
+    bool dataRead = false;
 };
 
 CBDATA_CLASS_INIT(ASState);
-
-ASState::ASState() :
-    entry(NULL),
-    sc(NULL),
-    request(NULL),
-    as_number(0),
-    offset(0),
-    reqofs(0),
-    dataRead(false)
-{
-    memset(reqbuf, 0, AS_REQBUF_SZ);
-}
-
-ASState::~ASState()
-{
-    debugs(53, 3, entry->url());
-    storeUnregister(sc, entry, this);
-    entry->unlock("~ASState");
-}
 
 /** entry into the radix tree */
 struct rtentry_t {
@@ -235,19 +227,27 @@ asnStats(StoreEntry * sentry)
 static void
 asnCacheStart(int as)
 {
-    // TODO: use class AnyP::Uri instead of generating a string and re-parsing
-    LOCAL_ARRAY(char, asres, 4096);
-    StoreEntry *e;
-    ASState *asState = new ASState;
+    AnyP::Uri whoisUrl(AnyP::PROTO_WHOIS);
+    whoisUrl.host(Config.as_whois_server);
+
+    SBuf asPath("/!gAS");
+    asPath.appendf("%d", as);
+    whoisUrl.path(asPath);
+
     debugs(53, 3, "AS " << as);
-    snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
+    ASState *asState = new ASState;
     asState->as_number = as;
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAsn);
-    asState->request = HttpRequest::FromUrl(asres, mx);
-    assert(asState->request != NULL);
+    asState->request = new HttpRequest(mx);
+    asState->request->url = whoisUrl;
+    asState->request->method = Http::METHOD_GET;
+
+    // XXX: performance regression, c_str() reallocates
+    const auto asres = xstrdup(whoisUrl.absolute().c_str());
 
     // XXX: Missing a hittingRequiresCollapsing() && startCollapsingOn() check.
-    if ((e = storeGetPublic(asres, Http::METHOD_GET)) == NULL) {
+    auto e = storeGetPublic(asres, Http::METHOD_GET);
+    if (!e) {
         e = storeCreateEntry(asres, asres, RequestFlags(), Http::METHOD_GET);
         asState->sc = storeClientListAdd(e, asState);
         FwdState::fwdStart(Comm::ConnectionPointer(), e, asState->request.getRaw());
@@ -255,6 +255,7 @@ asnCacheStart(int as)
         e->lock("Asn");
         asState->sc = storeClientListAdd(e, asState);
     }
+    xfree(asres);
 
     asState->entry = e;
     StoreIOBuffer readBuffer (AS_REQBUF_SZ, asState->offset, asState->reqbuf);
