@@ -15,6 +15,8 @@
 #include "util.h"
 
 #include <algorithm>
+#include <atomic>
+#include <deque>
 
 /* for shutting_down flag in xassert() */
 #include "globals.h"
@@ -26,7 +28,6 @@ bool Debug::log_syslog = false;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 char *Debug::cache_log = NULL;
 int Debug::rotateNumber = -1;
-static int Ctx_Lock = 0;
 static const char *debugLogTime(void);
 static const char *debugLogKid(void);
 static void ctx_print(void);
@@ -152,8 +153,7 @@ _db_print(const bool forceAlert, const char *format,...)
 #endif
 
     /* give a chance to context-based debugging to print current context */
-    if (!Ctx_Lock)
-        ctx_print();
+    ctx_print();
 
     va_start(args1, format);
     va_start(args2, format);
@@ -187,8 +187,7 @@ _db_print_file(const char *format, va_list args)
         return;
 
     /* give a chance to context-based debugging to print current context */
-    if (!Ctx_Lock)
-        ctx_print();
+    ctx_print();
 
     vfprintf(debug_log, format, args);
     fflush(debug_log);
@@ -693,32 +692,26 @@ xassert(const char *msg, const char *file, int line)
  * have a bug if your nesting goes that deep.
  */
 
+#if !defined(CTX_MAX_LEVEL)
 #define CTX_MAX_LEVEL 255
+#endif
 
-/*
- * produce a warning when nesting reaches this level and then double
- * the level
- */
-static int Ctx_Warn_Level = 32;
-/* all descriptions has been printed up to this level */
-static int Ctx_Reported_Level = -1;
 /* descriptions are still valid or active up to this level */
 static int Ctx_Valid_Level = -1;
 /* current level, the number of nested ctx_enter() calls */
 static int Ctx_Current_Level = -1;
 /* saved descriptions (stack) */
-static const char *Ctx_Descrs[CTX_MAX_LEVEL + 1];
-/* "safe" get secription */
-static const char *ctx_get_descr(Ctx ctx);
+static std::deque<std::string> Ctx_Descrs;
 
 Ctx
-ctx_enter(const char *descr)
+ctx_enter(const std::string &descr)
 {
     ++Ctx_Current_Level;
 
     if (Ctx_Current_Level <= CTX_MAX_LEVEL)
-        Ctx_Descrs[Ctx_Current_Level] = descr;
+        Ctx_Descrs.emplace_back(descr);
 
+    static int Ctx_Warn_Level = 32;
     if (Ctx_Current_Level == Ctx_Warn_Level) {
         debugs(0, DBG_CRITICAL, "# ctx: suspiciously deep (" << Ctx_Warn_Level << ") nesting:");
         Ctx_Warn_Level *= 2;
@@ -733,8 +726,25 @@ ctx_exit(Ctx ctx)
     assert(ctx >= 0);
     Ctx_Current_Level = (ctx >= 0) ? ctx - 1 : -1;
 
+    // Ctx_Current_Level is 0-based index, size() is 1-based count
+    while (static_cast<size_t>(Ctx_Current_Level+1) < Ctx_Descrs.size())
+        Ctx_Descrs.pop_back();
+
     if (Ctx_Valid_Level > Ctx_Current_Level)
         Ctx_Valid_Level = Ctx_Current_Level;
+}
+
+/* checks for nulls and overflows */
+static const std::string &
+ctx_get_descr(Ctx ctx)
+{
+    if (ctx < 0 || ctx > CTX_MAX_LEVEL) {
+        static const std::string lost("<lost>");
+        return lost;
+    }
+
+    static const std::string nil("<nil>");
+    return static_cast<size_t>(ctx) < Ctx_Descrs.size() ? Ctx_Descrs[ctx] : nil;
 }
 
 /*
@@ -744,8 +754,18 @@ ctx_exit(Ctx ctx)
 static void
 ctx_print(void)
 {
-    /* lock so _db_print will not call us recursively */
+    /* lock to prevent recursive calls, eg from _db_print */
+    // TODO: make this ctx_*() code thread safe
+    static int Ctx_Lock = 0;
     ++Ctx_Lock;
+    if (Ctx_Lock > 1) {
+        --Ctx_Lock;
+        return;
+    }
+
+    /* all descriptions has been printed up to this level */
+    static int Ctx_Reported_Level = -1;
+
     /* ok, user saw [0,Ctx_Reported_Level] descriptions */
     /* first inform about entries popped since user saw them */
 
@@ -763,22 +783,13 @@ ctx_print(void)
     while (Ctx_Reported_Level < Ctx_Current_Level) {
         ++Ctx_Reported_Level;
         ++Ctx_Valid_Level;
-        _db_print(false, "ctx: enter level %2d: '%s'\n", Ctx_Reported_Level,
-                  ctx_get_descr(Ctx_Reported_Level));
+        const auto dsc = ctx_get_descr(Ctx_Reported_Level);
+        _db_print(false, "ctx: enter level %2d: '%.*s'\n", Ctx_Reported_Level,
+                  dsc.length(), dsc.data());
     }
 
     /* unlock */
     --Ctx_Lock;
-}
-
-/* checks for nulls and overflows */
-static const char *
-ctx_get_descr(Ctx ctx)
-{
-    if (ctx < 0 || ctx > CTX_MAX_LEVEL)
-        return "<lost>";
-
-    return Ctx_Descrs[ctx] ? Ctx_Descrs[ctx] : "<null>";
 }
 
 Debug::Context *Debug::Current = nullptr;

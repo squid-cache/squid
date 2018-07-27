@@ -663,7 +663,7 @@ HttpStateData::processReplyHeader()
     /** Creates a blank header. If this routine is made incremental, this will not do */
 
     /* NP: all exit points to this function MUST call ctx_exit(ctx) */
-    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
+    Ctx ctx = ctx_enter(std::string(entry->mem_obj->urlXXX()));
 
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
@@ -897,7 +897,7 @@ HttpStateData::haveParsedReplyHeaders()
 {
     Client::haveParsedReplyHeaders();
 
-    Ctx ctx = ctx_enter(entry->mem_obj->urlXXX());
+    Ctx ctx = ctx_enter(std::string(entry->mem_obj->urlXXX()));
     HttpReply *rep = finalReply();
     const Http::StatusCode statusCode = rep->sline.status();
 

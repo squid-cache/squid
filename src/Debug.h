@@ -23,6 +23,8 @@
 #undef assert
 #endif
 
+#include <string>
+
 #if PURIFY
 #define assert(EX) ((void)0)
 #elif defined(NODEBUG)
@@ -35,7 +37,7 @@
 
 /* context-based debugging, the actual type is subject to change */
 typedef int Ctx;
-Ctx ctx_enter(const char *descr);
+Ctx ctx_enter(const std::string &descr);
 void ctx_exit(Ctx ctx);
 
 /* defined debug section limits */
