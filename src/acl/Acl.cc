@@ -141,7 +141,7 @@ ACL::matches(ACLChecklist *checklist) const
     } else {
         // make sure the ALE has as much data as possible
         if (requiresAle())
-            checklist->syncAle();
+            checklist->verifyAle();
 
         // have to cast because old match() API is missing const
         result = const_cast<ACL*>(this)->match(checklist);
@@ -224,6 +224,9 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         // ACL manager is now a built-in and has a different type.
         debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "UPGRADE: ACL 'manager' is now a built-in ACL. Remove it from your config file.");
         return; // ignore the line
+    } else if (strcmp(theType, "clientside_mark") == 0) {
+        debugs(28, DBG_IMPORTANT, "UPGRADE: ACL 'clientside_mark' type has been renamed to 'client_connection_mark'.");
+        theType = "client_connection_mark";
     }
 
     if ((A = FindByName(aclname)) == NULL) {

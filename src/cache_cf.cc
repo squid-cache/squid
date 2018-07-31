@@ -36,6 +36,7 @@
 #include "icmp/IcmpConfig.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
+#include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "ipc/Kids.h"
@@ -55,6 +56,7 @@
 #include "RefreshPattern.h"
 #include "rfc1738.h"
 #include "sbuf/List.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"
@@ -338,7 +340,7 @@ static void
 ProcessMacros(char*& line, int& len)
 {
     SubstituteMacro(line, len, "${service_name}", service_name.c_str());
-    SubstituteMacro(line, len, "${process_name}", TheKidName);
+    SubstituteMacro(line, len, "${process_name}", TheKidName.c_str());
     SubstituteMacro(line, len, "${process_number}", xitoa(KidIdentifier));
 }
 
@@ -734,7 +736,16 @@ configDoConfigure(void)
 
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
 #endif
-    requirePathnameExists("logfile_daemon", Log::TheConfig.logfile_daemon);
+    bool logDaemonUsed = false;
+    for (const auto *log = Config.Log.accesslogs; !logDaemonUsed && log; log = log->next)
+        logDaemonUsed = log->usesDaemon();
+#if ICAP_CLIENT
+    for (const auto *log = Config.Log.icaplogs; !logDaemonUsed && log; log = log->next)
+        logDaemonUsed = log->usesDaemon();
+#endif
+    if (logDaemonUsed)
+        requirePathnameExists("logfile_daemon", Log::TheConfig.logfile_daemon);
+
     if (Config.Program.redirect)
         requirePathnameExists("redirect_program", Config.Program.redirect->key);
 
@@ -1425,7 +1436,7 @@ parse_address(Ip::Address *addr)
         addr->setNoAddr();
     else if ( (*addr = token) ) // try parse numeric/IPA
         (void) 0;
-    else if (addr->GetHostByName(token)) // dont use ipcache
+    else if (addr->GetHostByName(token)) // do not use ipcache
         (void) 0;
     else { // not an IP and not a hostname
         debugs(3, DBG_CRITICAL, "FATAL: invalid IP address or domain name '" << token << "'");
@@ -1542,10 +1553,7 @@ static void
 dump_acl_nfmark(StoreEntry * entry, const char *name, acl_nfmark * head)
 {
     for (acl_nfmark *l = head; l; l = l->next) {
-        if (l->nfmark > 0)
-            storeAppendPrintf(entry, "%s 0x%02X", name, l->nfmark);
-        else
-            storeAppendPrintf(entry, "%s none", name);
+        storeAppendPrintf(entry, "%s %s", name, ToSBuf(l->markConfig).c_str());
 
         dump_acl_list(entry, l->aclList);
 
@@ -1556,24 +1564,18 @@ dump_acl_nfmark(StoreEntry * entry, const char *name, acl_nfmark * head)
 static void
 parse_acl_nfmark(acl_nfmark ** head)
 {
-    nfmark_t mark;
-    char *token = ConfigParser::NextToken();
+    SBuf token(ConfigParser::NextToken());
+    const auto mc = Ip::NfMarkConfig::Parse(token);
 
-    if (!token) {
-        self_destruct();
-        return;
-    }
-
-    if (!xstrtoui(token, NULL, &mark, 0, std::numeric_limits<nfmark_t>::max())) {
-        self_destruct();
-        return;
-    }
+    // Packet marking directives should not allow to use masks.
+    const auto pkt_dirs = {"mark_client_packet", "clientside_mark", "tcp_outgoing_mark"};
+    if (mc.hasMask() && std::find(pkt_dirs.begin(), pkt_dirs.end(), cfg_directive) != pkt_dirs.end())
+        throw TexcHere(ToSBuf("'", cfg_directive, "' does not support masked marks"));
 
     acl_nfmark *l = new acl_nfmark;
+    l->markConfig = mc;
 
-    l->nfmark = mark;
-
-    aclParseAclList(LegacyParser, &l->aclList, token);
+    aclParseAclList(LegacyParser, &l->aclList, token.c_str());
 
     acl_nfmark **tail = head;   /* sane name below */
     while (*tail)
@@ -2354,15 +2356,8 @@ parse_peer(CachePeer ** head)
         p->connect_fail_limit = 10;
 
 #if USE_CACHE_DIGESTS
-
-    if (!p->options.no_digest) {
-        /* XXX This looks odd.. who has the original pointer
-         * then?
-         */
-        PeerDigest *pd = peerDigestCreate(p);
-        p->digest = cbdataReference(pd);
-    }
-
+    if (!p->options.no_digest)
+        peerDigestCreate(p);
 #endif
 
     p->index =  ++Config.npeers;
@@ -3503,7 +3498,7 @@ parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
             s->s.setIPv4();
         debugs(3, 3, portType << "_port: Listen on Host/IP: " << host << " --> " << s->s);
     } else if ( s->s.GetHostByName(host) ) { /* check/parse for FQDN */
-        /* dont use ipcache */
+        /* do not use ipcache */
         s->defaultsite = xstrdup(host);
         s->s.port(port);
         if (!Ip::EnableIpv6)
@@ -3830,6 +3825,15 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
         }
     }
 
+    if (s->secure.encryptTransport) {
+        if (s->secure.certs.empty()) {
+            debugs(3, DBG_CRITICAL, "FATAL: " << AnyP::UriScheme(s->transport.protocol) << "_port requires a cert= parameter");
+            self_destruct();
+            return;
+        }
+    }
+
+    // *_port line should now be fully valid so we can clone it if necessary
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.isAnyAddr()) {
         // clone the port options from *s to *(s->next)
         s->next = s->clone();
@@ -4359,7 +4363,7 @@ dump_icap_service_type(StoreEntry * entry, const char *name, const Adaptation::I
 static void
 parse_icap_class_type()
 {
-    debugs(93, DBG_CRITICAL, "WARNING: 'icap_class' is depricated. " <<
+    debugs(93, DBG_CRITICAL, "WARNING: 'icap_class' is deprecated. " <<
            "Use 'adaptation_service_set' instead");
     Adaptation::Config::ParseServiceSet();
 }
@@ -4367,7 +4371,7 @@ parse_icap_class_type()
 static void
 parse_icap_access_type()
 {
-    debugs(93, DBG_CRITICAL, "WARNING: 'icap_access' is depricated. " <<
+    debugs(93, DBG_CRITICAL, "WARNING: 'icap_access' is deprecated. " <<
            "Use 'adaptation_access' instead");
     Adaptation::Config::ParseAccess(LegacyParser);
 }
@@ -4884,14 +4888,14 @@ parse_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *config)
             else if (strcasecmp(value, "use_configured_response") == 0) {
                 config->action = toutActUseConfiguredResponse;
             } else {
-                debugs(3, DBG_CRITICAL, "FATAL: unsuported \"on_timeout\"  action:" << value);
+                debugs(3, DBG_CRITICAL, "FATAL: unsupported \"on_timeout\" action: " << value);
                 self_destruct();
                 return;
             }
         } else if (strcasecmp(key, "response") == 0) {
             config->response = xstrdup(value);
         } else {
-            debugs(3, DBG_CRITICAL, "FATAL: unsuported option " << key);
+            debugs(3, DBG_CRITICAL, "FATAL: unsupported option " << key);
             self_destruct();
             return;
         }
@@ -4903,7 +4907,7 @@ parse_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *config)
     }
 
     if (config->action != toutActUseConfiguredResponse && config->response) {
-        debugs(3, DBG_CRITICAL, "FATAL: 'response=' option is valid only when used with the  'on_timeout=use_configured_response' option");
+        debugs(3, DBG_CRITICAL, "FATAL: 'response=' option is valid only when used with the 'on_timeout=use_configured_response' option");
         self_destruct();
     }
 }

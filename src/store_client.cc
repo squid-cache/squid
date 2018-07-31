@@ -9,6 +9,7 @@
 /* DEBUG: section 90    Storage Manager Client-Side Interface */
 
 #include "squid.h"
+#include "acl/FilledChecklist.h"
 #include "event.h"
 #include "globals.h"
 #include "HttpReply.h"
@@ -43,6 +44,53 @@ static EVH storeClientCopyEvent;
 static bool CheckQuickAbortIsReasonable(StoreEntry * entry);
 
 CBDATA_CLASS_INIT(store_client);
+
+/* StoreClient */
+
+bool
+StoreClient::onCollapsingPath() const
+{
+    if (!Config.onoff.collapsed_forwarding)
+        return false;
+
+    if (!Config.accessList.collapsedForwardingAccess)
+        return true;
+
+    ACLFilledChecklist checklist(Config.accessList.collapsedForwardingAccess, nullptr, nullptr);
+    fillChecklist(checklist);
+    return checklist.fastCheck().allowed();
+}
+
+bool
+StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation)
+{
+    if (!e.hittingRequiresCollapsing())
+        return false; // collapsing is impossible due to the entry state
+
+    if (!onCollapsingPath())
+        return false; // collapsing is impossible due to Squid configuration
+
+    /* collapsing is possible; the caller must collapse */
+
+    if (const auto tags = loggingTags()) {
+        if (doingRevalidation)
+            tags->collapsingHistory.revalidationCollapses++;
+        else
+            tags->collapsingHistory.otherCollapses++;
+    }
+
+    debugs(85, 5, e << " doingRevalidation=" << doingRevalidation);
+    return true;
+}
+
+void
+StoreClient::fillChecklist(ACLFilledChecklist &checklist) const
+{
+    // TODO: Consider moving all CF-related methods into a new dedicated class.
+    Must(!"startCollapsingOn() caller must override fillChecklist()");
+}
+
+/* store_client */
 
 bool
 store_client::memReaderHasLowerOffset(int64_t anOffset) const
@@ -276,11 +324,6 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
      */
 
     if (sc->flags.copy_event_pending) {
-        return;
-    }
-
-    if (EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
-        debugs(90, 5, "storeClientCopy2: returning because ENTRY_FWD_HDR_WAIT set");
         return;
     }
 
@@ -711,6 +754,15 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
 void
 StoreEntry::invokeHandlers()
 {
+    if (EBIT_TEST(flags, DELAY_SENDING)) {
+        debugs(90, 3, "DELAY_SENDING is on, exiting " << *this);
+        return;
+    }
+    if (EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT)) {
+        debugs(90, 3, "ENTRY_FWD_HDR_WAIT is on, exiting " << *this);
+        return;
+    }
+
     /* Commit what we can to disk, if appropriate */
     swapOut();
     int i = 0;

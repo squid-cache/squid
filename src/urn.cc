@@ -9,6 +9,8 @@
 /* DEBUG: section 52    URN Parsing */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
+#include "acl/FilledChecklist.h"
 #include "cbdata.h"
 #include "errorpage.h"
 #include "FwdState.h"
@@ -23,7 +25,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"
-#include "URL.h"
 #include "urn.h"
 
 #define URN_REQBUF_SZ   4096
@@ -33,6 +34,8 @@ class UrnState : public StoreClient
     CBDATA_CLASS(UrnState);
 
 public:
+    explicit UrnState(const AccessLogEntry::Pointer &anAle): ale(anAle) {}
+
     void created (StoreEntry *newEntry);
     void start (HttpRequest *, StoreEntry *);
     char *getHost(const SBuf &urlpath);
@@ -40,20 +43,25 @@ public:
 
     virtual ~UrnState();
 
-    StoreEntry *entry;
-    store_client *sc;
-    StoreEntry *urlres_e;
+    StoreEntry *entry = nullptr;
+    store_client *sc = nullptr;
+    StoreEntry *urlres_e = nullptr;
     HttpRequest::Pointer request;
     HttpRequest::Pointer urlres_r;
 
     struct {
-        bool force_menu;
+        bool force_menu = false;
     } flags;
-    char reqbuf[URN_REQBUF_SZ];
-    int reqofs;
+    char reqbuf[URN_REQBUF_SZ] = { '\0' };
+    int reqofs = 0;
 
 private:
-    char *urlres;
+    /* StoreClient API */
+    virtual LogTags *loggingTags() { return ale ? &ale->cache.code : nullptr; }
+    virtual void fillChecklist(ACLFilledChecklist &) const;
+
+    char *urlres = nullptr;
+    AccessLogEntry::Pointer ale; ///< master transaction summary
 };
 
 typedef struct {
@@ -145,7 +153,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
     }
 
     SBuf uri = r->url.path();
-    // TODO: use class URL instead of generating a string and re-parsing
+    // TODO: use class AnyP::Uri instead of generating a string and re-parsing
     LOCAL_ARRAY(char, local_urlres, 4096);
     char *host = getHost(uri);
     snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:" SQUIDSBUFPH, host, SQUIDSBUFPRINT(uri));
@@ -182,15 +190,24 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
 }
 
 void
-UrnState::created(StoreEntry *newEntry)
+UrnState::fillChecklist(ACLFilledChecklist &checklist) const
 {
-    urlres_e = newEntry;
+    checklist.setRequest(request.getRaw());
+    checklist.al = ale;
+}
 
-    if (urlres_e->isNull()) {
+void
+UrnState::created(StoreEntry *e)
+{
+    if (!e || (e->hittingRequiresCollapsing() && !startCollapsingOn(*e, false))) {
         urlres_e = storeCreateEntry(urlres, urlres, RequestFlags(), Http::METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);
-        FwdState::fwdStart(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw());
+        FwdState::Start(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw(), ale);
+        // TODO: StoreClients must either store/lock or abandon found entries.
+        //if (e)
+        //    e->abandon();
     } else {
+        urlres_e = e;
         urlres_e->lock("UrnState::created");
         sc = storeClientListAdd(urlres_e, this);
     }
@@ -207,9 +224,9 @@ UrnState::created(StoreEntry *newEntry)
 }
 
 void
-urnStart(HttpRequest * r, StoreEntry * e)
+urnStart(HttpRequest *r, StoreEntry *e, const AccessLogEntryPointer &ale)
 {
-    UrnState *anUrn = new UrnState();
+    const auto anUrn = new UrnState(ale);
     anUrn->start (r, e);
 }
 

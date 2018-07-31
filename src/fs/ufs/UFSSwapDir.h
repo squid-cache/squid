@@ -140,7 +140,7 @@ private:
     int createDirectory(const char *path, int);
     void createSwapSubDirs();
     void dumpEntry(StoreEntry &) const;
-    char *logFile(char const *ext = NULL)const;
+    SBuf logFile(char const *ext = nullptr) const;
     void changeIO(DiskIOModule *);
     bool optionIOParse(char const *option, const char *value, int reconfiguring);
     void optionIODump(StoreEntry * e) const;

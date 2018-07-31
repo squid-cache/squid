@@ -95,12 +95,7 @@ void StoreEntry::touch() STUB
 void StoreEntry::release(const bool shareable) STUB
 void StoreEntry::append(char const *, int) STUB
 void StoreEntry::vappendf(const char *, va_list) STUB
-
-NullStoreEntry *NullStoreEntry::getInstance() STUB_RETVAL(NULL)
-const char *NullStoreEntry::getMD5Text() const STUB_RETVAL(NULL)
-void NullStoreEntry::operator delete(void *address) STUB
-// private virtual. Why is this linked from outside?
-const char *NullStoreEntry::getSerialisedMetaData() STUB_RETVAL(NULL)
+void StoreEntry::setCollapsingRequirement(const bool required) STUB
 
 Store::Controller &Store::Root() STUB_RETREF(Store::Controller)
 void Store::Init(Store::Controller *root) STUB
@@ -112,6 +107,7 @@ StoreSearch *Store::Controller::search() STUB_RETVAL(NULL)
 void Store::Controller::maintain() STUB
 bool Store::Controller::markedForDeletion(const cache_key *) const STUB_RETVAL(false)
 void Store::Controller::freeMemorySpace(const int) STUB
+bool Store::Controller::SmpAware() STUB_RETVAL(false)
 
 std::ostream &operator <<(std::ostream &os, const StoreEntry &)
 {

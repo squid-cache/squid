@@ -689,7 +689,7 @@ ipcache_init(void)
     int n;
     debugs(14, DBG_IMPORTANT, "Initializing IP Cache...");
     memset(&IpcacheStats, '\0', sizeof(IpcacheStats));
-    memset(&lru_list, '\0', sizeof(lru_list));
+    lru_list = dlink_list();
 
     ipcache_high = (long) (((float) Config.ipcache.size *
                             (float) Config.ipcache.high) / (float) 100);
@@ -712,7 +712,7 @@ ipcache_init(void)
  \param flags       Default is NULL, set to IP_LOOKUP_IF_MISS
  *          to explicitly perform DNS lookups.
  *
- \retval NULL   An error occured during lookup
+ \retval NULL   An error occurred during lookup
  \retval NULL   No results available in cache and no lookup specified
  \retval *  Pointer to the ipcahce_addrs structure containing the lookup results
  */

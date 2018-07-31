@@ -82,17 +82,26 @@ public:
     // fields marked with [app] can be modified when appending-while-reading
     // fields marked with [update] can be modified when updating-while-reading
 
-    uint64_t key[2]; ///< StoreEntry key
+    uint64_t key[2] = {0, 0}; ///< StoreEntry key
 
     // STORE_META_STD TLV field from StoreEntry
     struct Basics {
-        time_t timestamp;
-        time_t lastref;
-        time_t expires;
-        time_t lastmod;
+        void clear() {
+            timestamp = 0;
+            lastref = 0;
+            expires = 0;
+            lastmod = 0;
+            swap_file_sz.store(0);
+            refcount = 0;
+            flags = 0;
+        }
+        time_t timestamp = 0;
+        time_t lastref = 0;
+        time_t expires = 0;
+        time_t lastmod = 0;
         std::atomic<uint64_t> swap_file_sz; // [app]
-        uint16_t refcount;
-        uint16_t flags;
+        uint16_t refcount = 0;
+        uint16_t flags = 0;
     } basics;
 
     /// where the chain of StoreEntry slices begins [app]
@@ -233,7 +242,9 @@ public:
     /// restrict opened for writing entry to appending operations; allow reads
     void startAppending(const sfileno fileno);
     /// successfully finish creating or updating the entry at fileno pos
-    void closeForWriting(const sfileno fileno, bool lockForReading = false);
+    void closeForWriting(const sfileno fileno);
+    /// stop writing (or updating) the locked entry and start reading it
+    void switchWritingToReading(const sfileno fileno);
     /// unlock and "forget" openForWriting entry, making it Empty again
     /// this call does not free entry slices so the caller has to do that
     void forgetWritingEntry(const sfileno fileno);

@@ -87,7 +87,7 @@ private:
     TimeEngine * timeService;
     AsyncEngine * primaryEngine;
     int loop_delay; /**< the delay to be given to the primary engine */
-    bool error; /**< has an error occured in this loop */
+    bool error; /**< has an error occurred in this loop */
     bool runOnceResult; /**< the result from runOnce */
 };
 

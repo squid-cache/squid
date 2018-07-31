@@ -103,7 +103,6 @@
 #include "mime_header.h"
 #include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
-#include "rfc1738.h"
 #include "security/NegotiationHistory.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"
@@ -113,7 +112,6 @@
 #include "Store.h"
 #include "TimeOrTag.h"
 #include "tools.h"
-#include "URL.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -447,11 +445,14 @@ ClientHttpRequest::logRequest()
         al->adapted_request = request;
         HTTPMSGLOCK(al->adapted_request);
     }
+    // no need checklist.syncAle(): already synced
+    checklist.al = al;
     accessLogLog(al, &checklist);
 
     bool updatePerformanceCounters = true;
     if (Config.accessList.stats_collection) {
         ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request, NULL);
+        statsCheck.al = al;
         if (al->reply) {
             statsCheck.reply = al->reply;
             HTTPMSGLOCK(statsCheck.reply);
@@ -472,10 +473,9 @@ void
 ClientHttpRequest::freeResources()
 {
     safe_free(uri);
-    safe_free(log_uri);
     safe_free(redirect.location);
     range_iter.boundary.clean();
-    HTTPMSGUNLOCK(request);
+    clearRequest();
 
     if (client_stream.tail)
         clientStreamAbort((clientStreamNode *)client_stream.tail->data, this);
@@ -789,7 +789,7 @@ void
 clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
                       HttpReply * rep, StoreIOBuffer receivedData)
 {
-    // dont tryt to deliver if client already ABORTED
+    // do not try to deliver if client already ABORTED
     if (!http->getConn() || !cbdataReferenceValid(http->getConn()) || !Comm::IsConnOpen(http->getConn()->clientConnection))
         return;
 
@@ -1010,8 +1010,7 @@ ConnStateData::abortRequestParsing(const char *const uri)
 {
     ClientHttpRequest *http = new ClientHttpRequest(this);
     http->req_sz = inBuf.length();
-    http->uri = xstrdup(uri);
-    setLogUri (http, uri);
+    http->setErrorUri(uri);
     auto *context = new Http::Stream(clientConnection, http);
     StoreIOBuffer tempBuffer;
     tempBuffer.data = context->reqbuf;
@@ -1081,57 +1080,6 @@ findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end)
     }
 
     return NULL;
-}
-
-void
-setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl)
-{
-    safe_free(http->log_uri);
-
-    if (!cleanUrl)
-        // The uri is already clean just dump it.
-        http->log_uri = xstrndup(uri, MAX_URL);
-    else {
-        int flags = 0;
-        switch (Config.uri_whitespace) {
-        case URI_WHITESPACE_ALLOW:
-            flags |= RFC1738_ESCAPE_NOSPACE;
-
-        case URI_WHITESPACE_ENCODE:
-            flags |= RFC1738_ESCAPE_UNESCAPED;
-            http->log_uri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
-            break;
-
-        case URI_WHITESPACE_CHOP: {
-            flags |= RFC1738_ESCAPE_NOSPACE;
-            flags |= RFC1738_ESCAPE_UNESCAPED;
-            http->log_uri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
-            int pos = strcspn(http->log_uri, w_space);
-            http->log_uri[pos] = '\0';
-        }
-        break;
-
-        case URI_WHITESPACE_DENY:
-        case URI_WHITESPACE_STRIP:
-        default: {
-            const char *t;
-            char *tmp_uri = static_cast<char*>(xmalloc(strlen(uri) + 1));
-            char *q = tmp_uri;
-            t = uri;
-            while (*t) {
-                if (!xisspace(*t)) {
-                    *q = *t;
-                    ++q;
-                }
-                ++t;
-            }
-            *q = '\0';
-            http->log_uri = xstrndup(rfc1738_escape_unescaped(tmp_uri), MAX_URL);
-            xfree(tmp_uri);
-        }
-        break;
-        }
-    }
 }
 
 static void
@@ -1497,12 +1445,6 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
         debugs(33, 5, "Responding with delated error for " << http->uri);
         repContext->setReplyToStoreEntry(sslServerBump->entry, "delayed SslBump error");
 
-        // save the original request for logging purposes
-        if (!context->http->al->request) {
-            context->http->al->request = http->request;
-            HTTPMSGLOCK(context->http->al->request);
-        }
-
         // Get error details from the fake certificate-peeking request.
         http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
         context->pullData();
@@ -1521,7 +1463,9 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
             bool allowDomainMismatch = false;
             if (Config.ssl_client.cert_error) {
                 ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
+                check.al = http->al;
                 check.sslErrors = new Security::CertErrors(Security::CertError(SQUID_X509_V_ERR_DOMAIN_MISMATCH, srvCert));
+                check.syncAle(request, http->log_uri);
                 allowDomainMismatch = check.fastCheck().allowed();
                 delete check.sslErrors;
                 check.sslErrors = NULL;
@@ -1543,11 +1487,6 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
                     SQUID_X509_V_ERR_DOMAIN_MISMATCH,
                     srvCert.get(), nullptr);
                 err->detail = errDetail;
-                // Save the original request for logging purposes.
-                if (!context->http->al->request) {
-                    context->http->al->request = request;
-                    HTTPMSGLOCK(context->http->al->request);
-                }
                 repContext->setReplyToError(request->method, err);
                 assert(context->http->out.offset == 0);
                 context->pullData();
@@ -1569,10 +1508,14 @@ clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpReque
 {
     if (conn->mayTunnelUnsupportedProto()) {
         ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, request.getRaw(), nullptr);
+        checklist.al = (context && context->http) ? context->http->al : nullptr;
         checklist.requestErrorType = requestError;
         checklist.src_addr = conn->clientConnection->remote;
         checklist.my_addr = conn->clientConnection->local;
         checklist.conn(conn);
+        ClientHttpRequest *http = context ? context->http : nullptr;
+        const char *log_uri = http ? http->log_uri : nullptr;
+        checklist.syncAle(request.getRaw(), log_uri);
         allow_t answer = checklist.fastCheck();
         if (answer.allowed() && answer.kind == 1) {
             debugs(33, 3, "Request will be tunneled to server");
@@ -1653,12 +1596,12 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             request->url.host(internalHostname());
             request->url.port(getMyPort());
             http->flags.internal = true;
+            http->setLogUriToRequestUri();
         } else
             debugs(33, 2, "internal URL found: " << request->url.getScheme() << "://" << request->url.authority(true) << " (not this proxy)");
     }
 
     request->flags.internal = http->flags.internal;
-    setLogUri (http, urlCanonicalClean(request.getRaw()));
 
     if (!isFtp) {
         // XXX: for non-HTTP messages instantiate a different Http::Message child type
@@ -2456,10 +2399,11 @@ ConnStateData::whenClientIpKnown()
 #if USE_DELAY_POOLS
     fd_table[clientConnection->fd].clientInfo = NULL;
 
-    if (Config.onoff.client_db) {
-        /* it was said several times that client write limiter does not work if client_db is disabled */
+    if (!Config.onoff.client_db)
+        return; // client delay pools require client_db
 
-        auto &pools = ClientDelayPools::Instance()->pools;
+    const auto &pools = ClientDelayPools::Instance()->pools;
+    if (pools.size()) {
         ACLFilledChecklist ch(NULL, NULL, NULL);
 
         // TODO: we check early to limit error response bandwith but we
@@ -2822,6 +2766,10 @@ ConnStateData::postHttpsAccept()
         HTTPMSGUNLOCK(acl_checklist->al->request);
         acl_checklist->al->request = request;
         HTTPMSGLOCK(acl_checklist->al->request);
+        Http::StreamPointer context = pipeline.front();
+        ClientHttpRequest *http = context ? context->http : nullptr;
+        const char *log_uri = http ? http->log_uri : nullptr;
+        acl_checklist->syncAle(request, log_uri);
         acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, this);
 #else
         fatal("FATAL: SSL-Bump requires --with-openssl");
@@ -3024,7 +2972,7 @@ ConnStateData::getSslContextStart()
             request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
             request_message.composeRequest(certProperties);
             debugs(33, 5, HERE << "SSL crtd request: " << request_message.compose().c_str());
-            Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
+            Ssl::Helper::Submit(request_message, sslCrtdHandleReplyWrapper, this);
             return;
         } catch (const std::exception &e) {
             debugs(33, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtd " <<
@@ -3176,8 +3124,7 @@ ConnStateData::parseTlsHandshake()
     }
 
     // We should disable read/write handlers
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-    Comm::SetSelect(clientConnection->fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+    Comm::ResetSelect(clientConnection->fd);
 
     if (unsupportedProtocol) {
         Http::StreamPointer context = pipeline.front();
@@ -3287,6 +3234,8 @@ ConnStateData::startPeekAndSplice()
         acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpNone));
         acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpClientFirst));
         acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpServerFirst));
+        const char *log_uri = http ? http->log_uri : nullptr;
+        acl_checklist->syncAle(sslServerBump->request.getRaw(), log_uri);
         acl_checklist->nonBlockingCheck(httpsSslBumpStep2AccessCheckDone, this);
         return;
     }
@@ -3455,8 +3404,7 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
     request->method = method;
     request->url.host(useHost.c_str());
     request->url.port(usePort);
-    http->request = request.getRaw();
-    HTTPMSGLOCK(http->request);
+    http->initRequest(request.getRaw());
 
     request->manager(this, http->al);
 
@@ -3472,7 +3420,6 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
     inBuf = payload;
     flags.readMore = false;
 
-    setLogUri(http, urlCanonicalClean(request.getRaw()));
     return http;
 }
 
@@ -3722,16 +3669,26 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 ACLFilledChecklist *
 clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 {
+    const auto checklist = new ACLFilledChecklist(acl, nullptr, nullptr);
+    clientAclChecklistFill(*checklist, http);
+    return checklist;
+}
+
+void
+clientAclChecklistFill(ACLFilledChecklist &checklist, ClientHttpRequest *http)
+{
+    checklist.setRequest(http->request);
+    checklist.al = http->al;
+    checklist.syncAle(http->request, http->log_uri);
+
+    // TODO: If http->getConn is always http->request->clientConnectionManager,
+    // then call setIdent() inside checklist.setRequest(). Otherwise, restore
+    // USE_IDENT lost in commit 94439e4.
     ConnStateData * conn = http->getConn();
-    ACLFilledChecklist *ch = new ACLFilledChecklist(acl, http->request,
-            cbdataReferenceValid(conn) && conn != NULL && conn->clientConnection != NULL ? conn->clientConnection->rfc931 : dash_str);
-    ch->al = http->al;
-    /*
-     * hack for ident ACL. It needs to get full addresses, and a place to store
-     * the ident result on persistent connections...
-     */
-    /* connection oriented auth also needs these two lines for it's operation. */
-    return ch;
+    const char *ident = (cbdataReferenceValid(conn) &&
+                         conn && conn->clientConnection) ?
+                        conn->clientConnection->rfc931 : dash_str;
+    checklist.setIdent(ident);
 }
 
 bool
@@ -4140,9 +4097,7 @@ ConnStateData::checkLogging()
     ClientHttpRequest http(this);
     http.req_sz = inBuf.length();
     // XXX: Or we died while waiting for the pinned connection to become idle.
-    char const *uri = "error:transaction-end-before-headers";
-    http.uri = xstrdup(uri);
-    setLogUri(&http, uri);
+    http.setErrorUri("error:transaction-end-before-headers");
 }
 
 bool

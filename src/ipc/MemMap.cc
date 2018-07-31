@@ -88,17 +88,25 @@ Ipc::MemMap::openForWritingAt(const sfileno fileno, bool overwriteExisting)
 }
 
 void
-Ipc::MemMap::closeForWriting(const sfileno fileno, bool lockForReading)
+Ipc::MemMap::closeForWriting(const sfileno fileno)
 {
-    debugs(54, 5, "closing slot at " << fileno << " for writing and "
-           "openning for reading in map [" << path << ']');
+    debugs(54, 5, "stop writing slot at " << fileno <<
+           " in map [" << path << ']');
     assert(valid(fileno));
     Slot &s = shared->slots[fileno];
     assert(s.writing());
-    if (lockForReading)
-        s.lock.switchExclusiveToShared();
-    else
-        s.lock.unlockExclusive();
+    s.lock.unlockExclusive();
+}
+
+void
+Ipc::MemMap::switchWritingToReading(const sfileno fileno)
+{
+    debugs(54, 5, "switching writing slot at " << fileno <<
+           " to reading in map [" << path << ']');
+    assert(valid(fileno));
+    Slot &s = shared->slots[fileno];
+    assert(s.writing());
+    s.lock.switchExclusiveToShared();
 }
 
 /// terminate writing the entry, freeing its slot for others to use

@@ -46,6 +46,8 @@ public:
 
     /* StoreClient API */
     virtual void created(StoreEntry *);
+    virtual LogTags *loggingTags() { return nullptr; } // no access logging/ACLs
+    virtual void fillChecklist(ACLFilledChecklist &) const;
 
 private:
     SBuf icon_;
@@ -361,7 +363,7 @@ void
 MimeIcon::created(StoreEntry *newEntry)
 {
     /* if the icon is already in the store, do nothing */
-    if (!newEntry->isNull())
+    if (newEntry)
         return;
     // XXX: if a 204 is cached due to earlier load 'failure' we should try to reload.
 
@@ -436,6 +438,13 @@ MimeIcon::created(StoreEntry *newEntry)
     e->timestampsSet();
     e->unlock("MimeIcon::created");
     debugs(25, 3, "Loaded icon " << url_);
+}
+
+void
+MimeIcon::fillChecklist(ACLFilledChecklist &) const
+{
+    // Unreachable: We never mayInitiateCollapsing() or startCollapsingOn().
+    assert(false);
 }
 
 MimeEntry::~MimeEntry()

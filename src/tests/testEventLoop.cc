@@ -103,7 +103,7 @@ testEventLoop::testRunOnce()
  * This test works by having a customer dispatcher which shuts the loop down
  * once its been invoked twice.
  *
- * It also tests that loop.run() and loop.stop() work, because if they dont
+ * It also tests that loop.run() and loop.stop() work, because if they do not
  * work, this test will either hang, or fail.
  */
 
@@ -154,7 +154,7 @@ testEventLoop::testRegisterEngine()
 /* each AsyncEngine needs to be given a timeout. We want one engine in each
  * loop to be given the timeout value - and the rest to have a timeout of 0.
  * The last registered engine should be given this timeout, which will mean
- * that we dont block in the loop until the last engine. This will allow for
+ * that we do not block in the loop until the last engine. This will allow for
  * dynamic introduction and removal of engines, as long as the last engine
  * is one which can do a os call rather than busy waiting.
  *

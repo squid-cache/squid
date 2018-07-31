@@ -162,7 +162,7 @@ Store::Disks::store(int const x) const
 }
 
 SwapDir &
-Store::Disks::dir(const int i) const
+Store::Disks::Dir(const int i)
 {
     SwapDir *sd = INDEXSD(i);
     assert(sd);
@@ -209,7 +209,7 @@ Store::Disks::create()
     }
 
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        if (dir(i).active())
+        if (Dir(i).active())
             store(i)->create();
     }
 }
@@ -283,7 +283,7 @@ Store::Disks::init()
         *         above
         * Step 3: have the hash index walk the searches itself.
          */
-        if (dir(i).active())
+        if (Dir(i).active())
             store(i)->init();
     }
 
@@ -302,7 +302,7 @@ Store::Disks::maxSize() const
     uint64_t result = 0;
 
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        if (dir(i).doReportStat())
+        if (Dir(i).doReportStat())
             result += store(i)->maxSize();
     }
 
@@ -315,7 +315,7 @@ Store::Disks::minSize() const
     uint64_t result = 0;
 
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        if (dir(i).doReportStat())
+        if (Dir(i).doReportStat())
             result += store(i)->minSize();
     }
 
@@ -328,7 +328,7 @@ Store::Disks::currentSize() const
     uint64_t result = 0;
 
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        if (dir(i).doReportStat())
+        if (Dir(i).doReportStat())
             result += store(i)->currentSize();
     }
 
@@ -341,7 +341,7 @@ Store::Disks::currentCount() const
     uint64_t result = 0;
 
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        if (dir(i).doReportStat())
+        if (Dir(i).doReportStat())
             result += store(i)->currentCount();
     }
 
@@ -362,7 +362,7 @@ Store::Disks::updateLimits()
     secondLargestMaximumObjectSize = -1;
 
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        const auto &disk = dir(i);
+        const auto &disk = Dir(i);
         if (!disk.active())
             continue;
 
@@ -506,8 +506,8 @@ void
 Store::Disks::evictIfFound(const cache_key *key)
 {
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        if (dir(i).active())
-            dir(i).evictIfFound(key);
+        if (Dir(i).active())
+            Dir(i).evictIfFound(key);
     }
 }
 
@@ -521,7 +521,7 @@ Store::Disks::anchorToCache(StoreEntry &entry, bool &inSync)
         static int idx = 0;
         for (int n = 0; n < cacheDirs; ++n) {
             idx = (idx + 1) % cacheDirs;
-            SwapDir &sd = dir(idx);
+            SwapDir &sd = Dir(idx);
             if (!sd.active())
                 continue;
 
@@ -541,17 +541,17 @@ bool
 Store::Disks::updateAnchored(StoreEntry &entry)
 {
     return entry.hasDisk() &&
-           dir(entry.swap_dirn).updateAnchored(entry);
+           Dir(entry.swap_dirn).updateAnchored(entry);
 }
 
 bool
-Store::Disks::smpAware() const
+Store::Disks::SmpAware()
 {
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         // A mix is not supported, but we conservatively check every
         // dir because features like collapsed revalidation should
         // currently be disabled if any dir is SMP-aware
-        if (dir(i).smpAware())
+        if (Dir(i).smpAware())
             return true;
     }
     return false;
@@ -561,7 +561,7 @@ bool
 Store::Disks::hasReadableEntry(const StoreEntry &e) const
 {
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i)
-        if (dir(i).active() && dir(i).hasReadableEntry(e))
+        if (Dir(i).active() && Dir(i).hasReadableEntry(e))
             return true;
     return false;
 }
@@ -680,16 +680,18 @@ storeDirWriteCleanLogs(int reopen)
 void
 allocate_new_swapdir(Store::DiskConfig *swap)
 {
-    if (swap->swapDirs == NULL) {
+    if (!swap->swapDirs) {
         swap->n_allocated = 4;
-        swap->swapDirs = static_cast<SwapDir::Pointer *>(xcalloc(swap->n_allocated, sizeof(SwapDir::Pointer)));
+        swap->swapDirs = new SwapDir::Pointer[swap->n_allocated];
     }
 
     if (swap->n_allocated == swap->n_configured) {
         swap->n_allocated <<= 1;
-        SwapDir::Pointer *const tmp = static_cast<SwapDir::Pointer *>(xcalloc(swap->n_allocated, sizeof(SwapDir::Pointer)));
-        memcpy(tmp, swap->swapDirs, swap->n_configured * sizeof(SwapDir *));
-        xfree(swap->swapDirs);
+        const auto tmp = new SwapDir::Pointer[swap->n_allocated];
+        for (int i = 0; i < swap->n_configured; ++i) {
+            tmp[i] = swap->swapDirs[i];
+        }
+        delete[] swap->swapDirs;
         swap->swapDirs = tmp;
     }
 }
@@ -697,23 +699,21 @@ allocate_new_swapdir(Store::DiskConfig *swap)
 void
 free_cachedir(Store::DiskConfig *swap)
 {
-    int i;
     /* DON'T FREE THESE FOR RECONFIGURE */
 
     if (reconfiguring)
         return;
 
-    for (i = 0; i < swap->n_configured; ++i) {
-        /* TODO XXX this lets the swapdir free resources asynchronously
-        * swap->swapDirs[i]->deactivate();
-        * but there may be such a means already.
-        * RBC 20041225
-        */
-        swap->swapDirs[i] = NULL;
-    }
+    /* TODO XXX this lets the swapdir free resources asynchronously
+     * swap->swapDirs[i]->deactivate();
+     * but there may be such a means already.
+     * RBC 20041225
+     */
 
-    safe_free(swap->swapDirs);
-    swap->swapDirs = NULL;
+    // only free's the array memory itself
+    // the SwapDir objects may remain (ref-counted)
+    delete[] swap->swapDirs;
+    swap->swapDirs = nullptr;
     swap->n_allocated = 0;
     swap->n_configured = 0;
 }

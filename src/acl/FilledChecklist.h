@@ -38,6 +38,11 @@ public:
     ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident = nullptr);
     ~ACLFilledChecklist();
 
+    /// configure client request-related fields for the first time
+    void setRequest(HttpRequest *);
+    /// configure rfc931 user identity for the first time
+    void setIdent(const char *userIdentity);
+
 public:
     /// The client connection manager
     ConnStateData * conn() const;
@@ -61,7 +66,8 @@ public:
     virtual bool hasRequest() const { return request != NULL; }
     virtual bool hasReply() const { return reply != NULL; }
     virtual bool hasAle() const { return al != NULL; }
-    virtual void syncAle() const;
+    virtual void syncAle(HttpRequest *adaptedRequest, const char *logUri) const;
+    virtual void verifyAle() const;
 
 public:
     Ip::Address src_addr;

@@ -23,6 +23,7 @@
 #include "HttpRequest.h"
 #include "mem_node.h"
 #include "MemObject.h"
+#include "MemStore.h"
 #include "mgr/Registration.h"
 #include "mgr/StoreIoAction.h"
 #include "profiler/Profiler.h"
@@ -216,8 +217,7 @@ StoreEntry::delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int l
         // readers appeared to care around 2009/12/14 as they skipped reading
         // for other reasons. Closing may already be true at the delyaAwareRead
         // call time or may happen while we wait after delayRead() above.
-        debugs(20, 3, HERE << "wont read from closing " << conn << " for " <<
-               callback);
+        debugs(20, 3, "will not read from closing " << conn << " for " << callback);
         return; // the read callback will never be called
     }
 
@@ -354,7 +354,7 @@ StoreEntry::deferProducer(const AsyncCall::Pointer &producer)
     if (!deferredProducer)
         deferredProducer = producer;
     else
-        debugs(20, 5, HERE << "Deferred producer call is allready set to: " <<
+        debugs(20, 5, "Deferred producer call is already set to: " <<
                *deferredProducer << ", requested call: " << *producer);
 }
 
@@ -392,9 +392,6 @@ destroyStoreEntry(void *data)
     debugs(20, 3, HERE << "destroyStoreEntry: destroying " <<  data);
     StoreEntry *e = static_cast<StoreEntry *>(static_cast<hash_link *>(data));
     assert(e != NULL);
-
-    if (e == NullStoreEntry::getInstance())
-        return;
 
     // Store::Root() is FATALly missing during shutdown
     if (e->hasDisk() && !shutting_down)
@@ -453,7 +450,6 @@ StoreEntry::releaseRequest(const bool shareable)
         shareableWhenPrivate = false; // may already be false
     if (EBIT_TEST(flags, RELEASE_REQUEST))
         return;
-
     setPrivateKey(shareable, true);
 }
 
@@ -499,36 +495,21 @@ void
 StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * request, const HttpRequestMethod& method)
 {
     assert (aClient);
-    StoreEntry *result = storeGetPublicByRequestMethod( request, method);
-
-    if (!result)
-        aClient->created (NullStoreEntry::getInstance());
-    else
-        aClient->created (result);
+    aClient->created(storeGetPublicByRequestMethod(request, method));
 }
 
 void
 StoreEntry::getPublicByRequest (StoreClient *aClient, HttpRequest * request)
 {
     assert (aClient);
-    StoreEntry *result = storeGetPublicByRequest (request);
-
-    if (!result)
-        result = NullStoreEntry::getInstance();
-
-    aClient->created (result);
+    aClient->created(storeGetPublicByRequest(request));
 }
 
 void
 StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestMethod& method)
 {
     assert (aClient);
-    StoreEntry *result = storeGetPublic (uri, method);
-
-    if (!result)
-        result = NullStoreEntry::getInstance();
-
-    aClient->created (result);
+    aClient->created(storeGetPublic(uri, method));
 }
 
 StoreEntry *
@@ -829,8 +810,12 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
     storeGetMemSpace(writeBuffer.length);
     mem_obj->write(writeBuffer);
 
-    if (!EBIT_TEST(flags, DELAY_SENDING))
-        invokeHandlers();
+    if (EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT) && !mem_obj->readAheadPolicyCanRead()) {
+        debugs(20, 3, "allow Store clients to get entry content after buffering too much for " << *this);
+        EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
+    }
+
+    invokeHandlers();
 }
 
 /* Append incoming data from a primary server to an entry. */
@@ -859,26 +844,18 @@ StoreEntry::vappendf(const char *fmt, va_list vargs)
     *buf = 0;
     int x;
 
-#ifdef VA_COPY
-    va_args ap;
+    va_list ap;
     /* Fix of bug 753r. The value of vargs is undefined
      * after vsnprintf() returns. Make a copy of vargs
      * incase we loop around and call vsnprintf() again.
      */
-    VA_COPY(ap,vargs);
+    va_copy(ap,vargs);
     errno = 0;
     if ((x = vsnprintf(buf, sizeof(buf), fmt, ap)) < 0) {
         fatal(xstrerr(errno));
         return;
     }
     va_end(ap);
-#else /* VA_COPY */
-    errno = 0;
-    if ((x = vsnprintf(buf, sizeof(buf), fmt, vargs)) < 0) {
-        fatal(xstrerr(errno));
-        return;
-    }
-#endif /*VA_COPY*/
 
     if (x < static_cast<int>(sizeof(buf))) {
         append(buf, x);
@@ -1082,6 +1059,9 @@ StoreEntry::complete()
 {
     debugs(20, 3, "storeComplete: '" << getMD5Text() << "'");
 
+    // To preserve forwarding retries, call FwdState::complete() instead.
+    EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
+
     if (store_status != STORE_PENDING) {
         /*
          * if we're not STORE_PENDING, then probably we got aborted
@@ -1137,6 +1117,9 @@ StoreEntry::abort()
     releaseRequest();
 
     EBIT_SET(flags, ENTRY_ABORTED);
+
+    // allow the Store clients to be told about the problem
+    EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
 
     setMemStatus(NOT_IN_MEMORY);
 
@@ -1223,6 +1206,7 @@ StoreEntry::release(const bool shareable)
         lock("storeLateRelease");
         releaseRequest(shareable);
         LateReleaseStack.push(this);
+        PROF_stop(storeRelease);
         return;
     }
 
@@ -1577,7 +1561,7 @@ StoreEntry::setMemStatus(mem_status_t new_status)
         return;
 
     // are we using a shared memory cache?
-    if (Config.memShared && IamWorkerProcess()) {
+    if (MemStore::Enabled()) {
         // This method was designed to update replacement policy, not to
         // actually purge something from the memory cache (TODO: rename?).
         // Shared memory cache does not have a policy that needs updates.
@@ -1816,7 +1800,6 @@ StoreEntry::startWriting()
     /* TODO: when we store headers separately remove the header portion */
     /* TODO: mark the length of the headers ? */
     /* We ONLY want the headers */
-
     assert (isEmpty());
     assert(mem_obj);
 
@@ -1824,12 +1807,18 @@ StoreEntry::startWriting()
     assert(rep);
 
     buffer();
-    rep->packHeadersInto(this);
+    rep->packHeadersUsingSlowPacker(*this);
     mem_obj->markEndOfReplyHeaders();
-    EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
 
     rep->body.packInto(this);
     flush();
+
+    // The entry headers are written, new clients
+    // should not collapse anymore.
+    if (hittingRequiresCollapsing()) {
+        setCollapsingRequirement(false);
+        Store::Root().transientsClearCollapsingRequirement(*this);
+    }
 }
 
 char const *
@@ -2078,6 +2067,15 @@ StoreEntry::describeTimestamps() const
     return buf;
 }
 
+void
+StoreEntry::setCollapsingRequirement(const bool required)
+{
+    if (required)
+        EBIT_SET(flags, ENTRY_REQUIRES_COLLAPSING);
+    else
+        EBIT_CLR(flags, ENTRY_REQUIRES_COLLAPSING);
+}
+
 static std::ostream &
 operator <<(std::ostream &os, const Store::IoStatus &io)
 {
@@ -2150,34 +2148,6 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
     }
 
     return os << '/' << &e << '*' << e.locks();
-}
-
-/* NullStoreEntry */
-
-NullStoreEntry NullStoreEntry::_instance;
-
-NullStoreEntry *
-NullStoreEntry::getInstance()
-{
-    return &_instance;
-}
-
-char const *
-NullStoreEntry::getMD5Text() const
-{
-    return "N/A";
-}
-
-void
-NullStoreEntry::operator delete(void*)
-{
-    fatal ("Attempt to delete NullStoreEntry\n");
-}
-
-char const *
-NullStoreEntry::getSerialisedMetaData()
-{
-    return NULL;
 }
 
 void

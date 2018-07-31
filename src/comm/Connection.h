@@ -146,8 +146,18 @@ public:
     /** Quality of Service TOS values currently sent on this connection */
     tos_t tos;
 
-    /** Netfilter MARK values currently sent on this connection */
+    /** Netfilter MARK values currently sent on this connection
+     * In case of FTP, the MARK will be sent on data connections as well.
+     */
     nfmark_t nfmark;
+
+    /** Netfilter CONNMARK value previously retrieved from this connection
+     * In case of FTP, the CONNMARK will NOT be applied to data connections, for one main reason:
+     * the CONNMARK could be set by a third party like iptables and overwriting it in squid may
+     * cause side effects and break CONNMARK-based policy. In other words, data connection is
+     * related to control connection, but it's not the same.
+     */
+    nfmark_t nfConnmark = 0;
 
     /** COMM flags set on this connection */
     int flags;

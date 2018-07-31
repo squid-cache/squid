@@ -23,6 +23,7 @@ m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
 m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
+m4_include([acinclude/tdb.m4])
 m4_include([acinclude/lib-checks.m4])
 m4_include([acinclude/ax_cxx_compile_stdcxx_11.m4])
 m4_include([acinclude/ax_cxx_0x_types.m4])
@@ -2310,7 +2311,7 @@ case "$with_netfilter_conntrack" in
     ;;
   *)
     if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--without-netfilter-conntrack path does not point to a directory])
+      AC_MSG_ERROR([--with-netfilter-conntrack path does not point to a directory])
     fi
     squid_opt_netfilterconntrackpath=$withval
     LDFLAGS="-L$squid_opt_netfilterconntrackpath/lib $LDFLAGS"
@@ -2863,7 +2864,7 @@ SQUID_DEFAULT_INCLUDES
 #endif
 )
 
-dnl *BSD dont include the dependencies for all their net/ and netinet/ files
+dnl *BSD do not include the dependencies for all their net/ and netinet/ files
 dnl We must include a few basic type headers for them to work.
 AC_CHECK_HEADERS( \
   net/if.h \
@@ -2988,6 +2989,13 @@ AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,
    [mtyp_t is defined by the system headers]),,[#include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>])
+
+AC_CHECK_TYPE(cpu_set_t,
+   AC_DEFINE(HAVE_CPU_SET_T,1,[cpu_set_t is defined by the system headers]),,[
+#if HAVE_SCHED_H
+#include <sched.h>
+#endif
+])
 
 # check for compiler support of %zu printf macro
 AH_TEMPLATE(PRIuSIZE,[Compiler supports %zu printf macro])
@@ -3489,8 +3497,6 @@ AC_CHECK_TYPE(struct sockaddr_un,AC_DEFINE(HAVE_SOCKADDR_UN,1,[The system provid
 ])
 
 SQUID_CHECK_FUNC_STRNSTR
-SQUID_CHECK_FUNC_VACOPY
-SQUID_CHECK_FUNC___VACOPY
 
 dnl IP-Filter support requires ipf header files. These aren't
 dnl installed by default, so we need to check for them
@@ -3772,6 +3778,7 @@ AC_CONFIG_FILES([
 	src/acl/external/eDirectory_userip/Makefile
 	src/acl/external/file_userip/Makefile
 	src/acl/external/kerberos_ldap_group/Makefile
+	src/acl/external/kerberos_sid_group/Makefile
 	src/acl/external/LDAP_group/Makefile
 	src/acl/external/LM_group/Makefile
 	src/acl/external/session/Makefile

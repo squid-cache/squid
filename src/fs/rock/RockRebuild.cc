@@ -213,7 +213,6 @@ Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
     validationPos(0)
 {
     assert(sd);
-    memset(&counts, 0, sizeof(counts));
     dbSize = sd->diskOffsetLimit(); // we do not care about the trailer waste
     dbSlotSize = sd->slotSize;
     dbEntryLimit = sd->entryLimitActual();
@@ -491,7 +490,7 @@ Rock::Rebuild::finalizeOrThrow(const sfileno fileNo, LoadingEntry &le)
         anchor.basics.swap_file_sz = le.size;
     EBIT_SET(anchor.basics.flags, ENTRY_VALIDATED);
     le.state(LoadingEntry::leLoaded);
-    sd->map->closeForWriting(fileNo, false);
+    sd->map->closeForWriting(fileNo);
     ++counts.objcount;
 }
 

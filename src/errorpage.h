@@ -35,6 +35,7 @@ typedef void ERCB(int fd, void *, size_t);
  *
  \verbatim
    a - User identity                            x
+   A - Local listening IP address               x
    B - URL with FTP %2f hack                    x
    c - Squid error code                         x
    d - seconds elapsed since request received   x

@@ -32,6 +32,7 @@
 #include "mgr/Registration.h"
 #include "mime_header.h"
 #include "neighbors.h"
+#include "PeerSelectState.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -579,7 +580,7 @@ netdbReloadState(void)
         char *q;
         assert(s - buf < l);
         *s = '\0';
-        memset(&N, '\0', sizeof(netdbEntry));
+        N = netdbEntry();
         q = strtok(t, w_space);
         t = s + 1;
 
@@ -1083,7 +1084,7 @@ netdbHostData(const char *host, int *samp, int *rtt, int *hops)
 }
 
 void
-netdbUpdatePeer(const URL &url, CachePeer * e, int irtt, int ihops)
+netdbUpdatePeer(const AnyP::Uri &url, CachePeer *e, int irtt, int ihops)
 {
 #if USE_ICMP
     netdbEntry *n;
@@ -1304,9 +1305,12 @@ netdbExchangeStart(void *data)
 }
 
 CachePeer *
-netdbClosestParent(HttpRequest * request)
+netdbClosestParent(PeerSelector *ps)
 {
 #if USE_ICMP
+    assert(ps);
+    HttpRequest *request = ps->request;
+
     CachePeer *p = NULL;
     netdbEntry *n;
     const ipcache_addrs *ia;
@@ -1350,7 +1354,7 @@ netdbClosestParent(HttpRequest * request)
         if (neighborType(p, request->url) != PEER_PARENT)
             continue;
 
-        if (!peerHTTPOkay(p, request))  /* not allowed */
+        if (!peerHTTPOkay(p, ps))  /* not allowed */
             continue;
 
         return p;

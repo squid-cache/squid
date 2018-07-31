@@ -612,12 +612,15 @@ DOC_START
 		Concurrency must not be set unless it's known the helper
 		supports the input format with channel-ID fields.
 
-		The queue-size=N option sets the maximum number of queued
-		requests to N. The default maximum is 2*numberofchildren. Squid
-		is allowed to temporarily exceed the configured maximum, marking
-		the affected helper as "overloaded". If the helper overload
-		lasts more than 3 minutes, the action prescribed by the
-		on-persistent-overload option applies.
+		The queue-size option sets the maximum number of queued
+		requests. A request is queued when no existing child can
+		accept it due to concurrency limit and no new child can be
+		started due to numberofchildren limit. The default maximum is
+		2*numberofchildren. Squid is allowed to temporarily exceed the
+		configured maximum, marking the affected helper as
+		"overloaded". If the helper overload lasts more than 3
+		minutes, the action prescribed by the on-persistent-overload
+		option applies.
 
 		The on-persistent-overload=action option specifies Squid
 		reaction to a new helper request arriving when the helper
@@ -829,10 +832,12 @@ DOC_START
 	  concurrency=n	concurrency level per process. Only used with helpers
 			capable of processing more than one query at a time.
 
-	  queue-size=N  The queue-size= option sets the maximum number of queued
-			requests. If the queued requests exceed queue size 
-			the acl is ignored.
-			The default value is set to 2*children-max.
+	  queue-size=N  The queue-size option sets the maximum number of
+			queued requests. A request is queued when no existing
+			helper can accept it due to concurrency limit and no
+			new helper can be started due to children-max limit.
+			If the queued requests exceed queue size, the acl is
+			ignored. The default value is set to 2*children-max.
 
 	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers.
 
@@ -1030,20 +1035,32 @@ DOC_START
 	acl aclname dst [-n] ip-address/mask ...	# URL host's IP address [slow]
 	acl aclname localip ip-address/mask ... # IP address the client connected to [fast]
 
-	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
+if USE_SQUID_EUI
+	acl aclname arp      mac-address ...
+	acl aclname eui64    eui64-address ...
 	  # [fast]
+	  # MAC (EUI-48) and EUI-64 addresses use xx:xx:xx:xx:xx:xx notation.
+	  #
 	  # The 'arp' ACL code is not portable to all operating systems.
 	  # It works on Linux, Solaris, Windows, FreeBSD, and some other
 	  # BSD variants.
 	  #
-	  # NOTE: Squid can only determine the MAC/EUI address for IPv4
+	  # The eui_lookup directive is required to be 'on' (the default)
+	  # and Squid built with --enable-eui for MAC/EUI addresses to be
+	  # available for this ACL.
+	  #
+	  # Squid can only determine the MAC/EUI address for IPv4
 	  # clients that are on the same subnet. If the client is on a
 	  # different subnet, then Squid cannot find out its address.
 	  #
-	  # NOTE 2: IPv6 protocol does not contain ARP. MAC/EUI is either
+	  # IPv6 protocol does not contain ARP. MAC/EUI is either
 	  # encoded directly in the IPv6 address or not available.
-
+endif
 	acl aclname clientside_mark mark[/mask] ...
+	  # matches CONNMARK of an accepted connection [fast]
+	  # DEPRECATED. Use the 'client_connection_mark' instead.
+
+	acl aclname client_connection_mark mark[/mask] ...
 	  # matches CONNMARK of an accepted connection [fast]
 	  #
 	  # mark and mask are unsigned integers (hex, octal, or decimal).
@@ -1085,6 +1102,7 @@ DOC_START
 	  # cache_peer_access mycache_mydomain.net deny all
 
 	acl aclname peername myPeer ...
+	acl aclname peername_regex [-i] regex-pattern ...
 	  # [fast]
 	  # match against a named cache_peer entry
 	  # set unique name= on cache_peer lines for reliable use.
@@ -1129,7 +1147,7 @@ DOC_START
 	  # pattern match on Referer header [fast]
 	  # Referer is highly unreliable, so use with care
 
-	acl aclname ident username ...
+	acl aclname ident [-i] username ...
 	acl aclname ident_regex [-i] pattern ...
 	  # string match on ident output [slow]
 	  # use REQUIRED to accept any non-null ident.
@@ -1224,7 +1242,7 @@ DOC_START
 	  # match against attributes a users issuing CA SSL certificate
 	  # attribute is one of DN/C/O/CN/L/ST or a numerical OID  [fast]
 
-	acl aclname ext_user username ...
+	acl aclname ext_user [-i] username ...
 	acl aclname ext_user_regex [-i] pattern ...
 	  # string match on username returned by external acl helper [slow]
 	  # use REQUIRED to accept any non-null user name.
@@ -2561,27 +2579,63 @@ DOC_START
 	Only fast ACLs are supported.
 DOC_END
 
-NAME: clientside_mark
+NAME: mark_client_packet clientside_mark
 TYPE: acl_nfmark
 IFDEF: SO_MARK&&USE_LIBCAP
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfmarkToClient
 DOC_START
-	Allows you to apply a Netfilter mark value to packets being transmitted
+	Allows you to apply a Netfilter MARK value to packets being transmitted
 	on the client-side, based on an ACL.
 
-	clientside_mark mark-value [!]aclname ...
+	mark_client_packet mark-value [!]aclname ...
 
-	Example where normal_service_net uses the mark value 0x00
+	Example where normal_service_net uses the MARK value 0x00
 	and good_service_net uses 0x20
 
 	acl normal_service_net src 10.0.0.0/24
 	acl good_service_net src 10.0.1.0/24
-	clientside_mark 0x00 normal_service_net
-	clientside_mark 0x20 good_service_net
+	mark_client_packet 0x00 normal_service_net
+	mark_client_packet 0x20 good_service_net
 
 	Note: This feature is incompatible with qos_flows. Any mark values set here
 	will be overwritten by mark values in qos_flows.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+DOC_END
+
+NAME: mark_client_connection
+TYPE: acl_nfmark
+IFDEF: SO_MARK&&USE_LIBCAP
+DEFAULT: none
+LOC: Ip::Qos::TheConfig.nfConnmarkToClient
+DOC_START
+	Allows you to apply a Netfilter CONNMARK value to a connection
+	on the client-side, based on an ACL.
+
+	mark_client_connection mark-value[/mask] [!]aclname ...
+
+	The mark-value and mask are unsigned integers (hex, octal, or decimal).
+	The mask may be used to preserve marking previously set by other agents
+	(e.g., iptables).
+
+	A matching rule replaces the CONNMARK value. If a mask is also
+	specified, then the masked bits of the original value are zeroed, and
+	the configured mark-value is ORed with that adjusted value.
+	For example, applying a mark-value 0xAB/0xF to 0x5F CONNMARK, results
+	in a 0xFB marking (rather than a 0xAB or 0x5B).
+
+	This directive semantics is similar to iptables --set-mark rather than
+	--set-xmark functionality.
+
+	The directive does not interfere with qos_flows (which uses packet MARKs,
+	not CONNMARKs).
+
+	Example where squid marks intercepted FTP connections:
+
+	acl proto_ftp proto FTP
+	mark_client_connection 0x200/0xff00 proto_ftp
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
@@ -3219,7 +3273,12 @@ LOC: Ssl::TheConfig.ssl_crtd
 DOC_START
 	Specify the location and options of the executable for certificate
 	generator.
-	@DEFAULT_SSL_CRTD@ program requires -s and -M parameters
+
+	@DEFAULT_SSL_CRTD@ program can use a disk cache to improve response
+	times on repeated requests. To enable caching, specify -s and -M
+	parameters. If those parameters are not given, the program generates
+	a new certificate on every request.
+
 	For more information use:
 		@DEFAULT_SSL_CRTD@ -h
 DOC_END
@@ -3230,9 +3289,14 @@ IFDEF: USE_SSL_CRTD
 DEFAULT: 32 startup=5 idle=1
 LOC: Ssl::TheConfig.ssl_crtdChildren
 DOC_START
-	The maximum number of processes spawn to service ssl server.
-	The maximum this may be safely set to is 32.
-	
+	Specifies the maximum number of certificate generation processes that
+	Squid may spawn (numberofchildren) and several related options. Using
+	too few of these helper processes (a.k.a. "helpers") creates request
+	queues. Using too many helpers wastes your system resources. Squid
+	does not support spawning more than 32 helpers.
+
+	Usage: numberofchildren [option]...
+
 	The startup= and idle= options allow some measure of skew in your
 	tuning.
 	
@@ -3254,10 +3318,11 @@ DOC_START
 
 		queue-size=N
 
-	Sets the maximum number of queued requests.
-	If the queued requests exceed queue size for more than 3 minutes
-	squid aborts its operation.
-	The default value is set to 2*numberofchildren.
+	Sets the maximum number of queued requests. A request is queued when
+	no existing child is idle and no new child can be started due to
+	numberofchildren limit. If the queued requests exceed queue size for
+	more than 3 minutes squid aborts its operation. The default value is
+	set to 2*numberofchildren.
 	
 	You must have at least one ssl_crtd process.
 DOC_END
@@ -3284,8 +3349,13 @@ IFDEF: USE_OPENSSL
 DEFAULT: 32 startup=5 idle=1 concurrency=1
 LOC: Ssl::TheConfig.ssl_crt_validator_Children
 DOC_START
-	The maximum number of processes spawn to service SSL server.
-	The maximum this may be safely set to is 32.
+	Specifies the maximum number of certificate validation processes that
+	Squid may spawn (numberofchildren) and several related options. Using
+	too few of these helper processes (a.k.a. "helpers") creates request
+	queues. Using too many helpers wastes your system resources. Squid
+	does not support spawning more than 32 helpers.
+
+	Usage: numberofchildren [option]...
 	
 	The startup= and idle= options allow some measure of skew in your
 	tuning.
@@ -3320,10 +3390,11 @@ DOC_START
 
 		queue-size=N
 
-	Sets the maximum number of queued requests.
-	If the queued requests exceed queue size for more than 3 minutes
-	squid aborts its operation.
-	The default value is set to 2*numberofchildren.
+	Sets the maximum number of queued requests. A request is queued when
+	no existing child can accept it due to concurrency limit and no new
+	child can be started due to numberofchildren limit. If the queued
+	requests exceed queue size for more than 3 minutes squid aborts its
+	operation. The default value is set to 2*numberofchildren.
 	
 	You must have at least one ssl_crt_validator process.
 DOC_END
@@ -4363,19 +4434,42 @@ DOC_START
 
 	The <format specification> is a string with embedded % format codes
 
-	% format codes all follow the same basic structure where all but
-	the formatcode is optional. Output strings are automatically escaped
-	as required according to their context and the output format
-	modifiers are usually not needed, but can be specified if an explicit
-	output format is desired.
+	% format codes all follow the same basic structure where all
+	components but the formatcode are optional and usually unnecessary,
+	especially when dealing with common codes.
 
-		% ["|[|'|#|/] [-] [[0]width] [{arg}] formatcode [{arg}]
+		% [encoding] [-] [[0]width] [{arg}] formatcode [{arg}]
 
-		"	output in quoted string format
-		[	output in squid text log format as used by log_mime_hdrs
-		#	output in URL quoted format
-		/	output in shell \-escaped format
-		'	output as-is
+		encoding escapes or otherwise protects "special" characters:
+
+			"	Quoted string encoding where quote(") and
+				backslash(\) characters are \-escaped while
+				CR, LF, and TAB characters are encoded as \r,
+				\n, and \t two-character sequences.
+
+			[	Custom Squid encoding where percent(%), square
+				brackets([]), backslash(\) and characters with
+				codes outside of [32,126] range are %-encoded.
+				SP is not encoded. Used by log_mime_hdrs.
+
+			#	URL encoding (a.k.a. percent-encoding) where
+				all URL unsafe and control characters (per RFC
+				1738) are %-encoded.
+
+			/	Shell-like encoding where quote(") and
+				backslash(\) characters are \-escaped while CR
+				and LF characters are encoded as \r and \n
+				two-character sequences. Values containing SP
+				character(s) are surrounded by quotes(").
+
+			'	Raw/as-is encoding with no escaping/quoting.
+
+			Default encoding: When no explicit encoding is
+			specified, each %code determines its own encoding.
+			Most %codes use raw/as-is encoding, but some codes use
+			a so called "pass-through URL encoding" where all URL
+			unsafe and control characters (per RFC 1738) are
+			%-encoded, but the percent character(%) is left as is.
 
 		-	left aligned
 
@@ -4420,7 +4514,7 @@ DOC_START
 		>la	Local IP address the client connected to
 		>lp	Local port number the client connected to
 		>qos    Client connection TOS/DSCP value set by Squid
-		>nfmark Client connection netfilter mark set by Squid
+		>nfmark Client connection netfilter packet MARK set by Squid
 
 		la	Local listening IP address the client connection was connected to.
 		lp	Local listening port number the client connection was connected to.
@@ -4431,7 +4525,38 @@ DOC_START
 		<la	Local IP address of the last server or peer connection
 		<lp     Local port number of the last server or peer connection
 		<qos	Server connection TOS/DSCP value set by Squid
-		<nfmark Server connection netfilter mark set by Squid
+		<nfmark Server connection netfilter packet MARK set by Squid
+
+		>handshake Raw client handshake
+			Initial client bytes received by Squid on a newly
+			accepted TCP connection or inside a just established
+			CONNECT tunnel. Squid stops accumulating handshake
+			bytes as soon as the handshake parser succeeds or
+			fails (determining whether the client is using the
+			expected protocol).
+
+			For HTTP clients, the handshake is the request line.
+			For TLS clients, the handshake consists of all TLS
+			records up to and including the TLS record that
+			contains the last byte of the first ClientHello
+			message. For clients using an unsupported protocol,
+			this field contains the bytes received by Squid at the
+			time of the handshake parsing failure.
+
+			See the on_unsupported_protocol directive for more
+			information on Squid handshake traffic expectations.
+
+			Current support is limited to these contexts:
+			- http_port connections, but only when the
+			  on_unsupported_protocol directive is in use.
+			- https_port connections (and CONNECT tunnels) that
+			  are subject to the ssl_bump peek or stare action.
+
+			To protect binary handshake data, this field is always
+			base64-encoded (RFC 4648 Section 4). If logformat
+			field encoding is configured, that encoding is applied
+			on top of base64. Otherwise, the computed base64 value
+			is recorded as is.
 
 	Time related format codes:
 
@@ -4481,8 +4606,40 @@ DOC_START
 		[http::]rm	Request method (GET/POST etc)
 		[http::]>rm	Request method from client
 		[http::]<rm	Request method sent to server or peer
-		[http::]ru	Request URL from client (historic, filtered for logging)
-		[http::]>ru	Request URL from client
+
+		[http::]ru	Request URL received (or computed) and sanitized
+
+				Logs request URI received from the client, a
+				request adaptation service, or a request
+				redirector (whichever was applied last).
+
+				Computed URLs are URIs of internally generated
+				requests and various "error:..." URIs.
+
+				Honors strip_query_terms and uri_whitespace.
+
+				This field is not encoded by default. Encoding
+				this field using variants of %-encoding will
+				clash with uri_whitespace modifications that
+				also use %-encoding.
+
+		[http::]>ru	Request URL received from the client (or computed)
+
+				Computed URLs are URIs of internally generated
+				requests and various "error:..." URIs.
+
+				Unlike %ru, this request URI is not affected
+				by request adaptation, URL rewriting services,
+				and strip_query_terms.
+
+				Honors uri_whitespace.
+
+				This field is using pass-through URL encoding
+				by default. Encoding this field using other
+				variants of %-encoding will clash with
+				uri_whitespace modifications that also use
+				%-encoding.
+
 		[http::]<ru	Request URL sent to server or peer
 		[http::]>rs	Request URL scheme from client
 		[http::]<rs	Request URL scheme sent to server or peer
@@ -5408,11 +5565,13 @@ TYPE: HelperChildConfig
 DEFAULT: 20 startup=0 idle=1 concurrency=0
 LOC: Config.redirectChildren
 DOC_START
-	The maximum number of redirector processes to spawn. If you limit
-	it too few Squid will have to wait for them to process a backlog of
-	URLs, slowing it down. If you allow too many they will use RAM
-	and other system resources noticably.
-	
+	Specifies the maximum number of redirector processes that Squid may
+	spawn (numberofchildren) and several related options. Using too few of
+	these helper processes (a.k.a. "helpers") creates request queues.
+	Using too many helpers wastes your system resources.
+
+	Usage: numberofchildren [option]...
+
 	The startup= and idle= options allow some measure of skew in your
 	tuning.
 	
@@ -5445,13 +5604,16 @@ DOC_START
 
 		queue-size=N
 
-	Sets the maximum number of queued requests to N. The default maximum
-	is 2*numberofchildren. If the queued requests exceed queue size and
-	redirector_bypass configuration option is set, then redirector is bypassed.
-	Otherwise, Squid is allowed to temporarily exceed the configured maximum,
-	marking the affected helper as "overloaded". If the helper overload lasts
-	more than 3 minutes, the action prescribed by the on-persistent-overload
-	option applies.
+	Sets the maximum number of queued requests. A request is queued when
+	no existing child can accept it due to concurrency limit and no new
+	child can be started due to numberofchildren limit. The default
+	maximum is zero if url_rewrite_bypass is enabled and
+	2*numberofchildren otherwise. If the queued requests exceed queue size
+	and redirector_bypass configuration option is set, then redirector is
+	bypassed. Otherwise, Squid is allowed to temporarily exceed the
+	configured maximum, marking the affected helper as "overloaded". If
+	the helper overload lasts more than 3 minutes, the action prescribed
+	by the on-persistent-overload option applies.
 
 		on-persistent-overload=action
 
@@ -5517,8 +5679,9 @@ DOC_START
 	redirectors for access control, and you enable this option,
 	users may have access to pages they should not
 	be allowed to request.
-	This options sets default queue-size option of the url_rewrite_children
-	to 0.
+
+	Enabling this option sets the default url_rewrite_children queue-size
+	option value to 0.
 DOC_END
 
 NAME: url_rewrite_extras
@@ -5587,7 +5750,7 @@ DOC_START
 		The default is to use HTTP request URL as the store ID.
 
 	  BH
-		An internal error occured in the helper, preventing
+		An internal error occurred in the helper, preventing
 		a result being identified.
 
 	In addition to the above kv-pairs Squid also understands the following
@@ -5632,10 +5795,12 @@ TYPE: HelperChildConfig
 DEFAULT: 20 startup=0 idle=1 concurrency=0
 LOC: Config.storeIdChildren
 DOC_START
-	The maximum number of StoreID helper processes to spawn. If you limit
-	it too few Squid will have to wait for them to process a backlog of
-	requests, slowing it down. If you allow too many they will use RAM
-	and other system resources noticably.
+	Specifies the maximum number of StoreID helper processes that Squid
+	may spawn (numberofchildren) and several related options. Using
+	too few of these helper processes (a.k.a. "helpers") creates request
+	queues. Using too many helpers wastes your system resources.
+
+	Usage: numberofchildren [option]...
 	
 	The startup= and idle= options allow some measure of skew in your
 	tuning.
@@ -5669,13 +5834,15 @@ DOC_START
 
 		queue-size=N
 
-	Sets the maximum number of queued requests to N. The default maximum
-	is 2*numberofchildren. If the queued requests exceed queue size and
-	redirector_bypass configuration option is set, then redirector is bypassed.
-	Otherwise, Squid is allowed to temporarily exceed the configured maximum,
-	marking the affected helper as "overloaded". If the helper overload lasts
-	more than 3 minutes, the action prescribed by the on-persistent-overload
-	option applies.
+	Sets the maximum number of queued requests to N. A request is queued
+	when no existing child can accept it due to concurrency limit and no
+	new child can be started due to numberofchildren limit. The default
+	maximum is 2*numberofchildren. If the queued requests exceed queue
+	size and redirector_bypass configuration option is set, then
+	redirector is bypassed. Otherwise, Squid is allowed to temporarily
+	exceed the configured maximum, marking the affected helper as
+	"overloaded". If the helper overload lasts more than 3 minutes, the
+	action prescribed by the on-persistent-overload option applies.
 
 		on-persistent-overload=action
 
@@ -6581,25 +6748,66 @@ DOC_START
        disk or memory caches and for Vary-controlled cached objects.
 DOC_END
 
-NAME: collapsed_forwarding_shared_entries_limit
+NAME: collapsed_forwarding_access
+TYPE: acl_access
+DEFAULT: none
+DEFAULT_DOC: Requests may be collapsed if collapsed_forwarding is on.
+LOC: Config.accessList.collapsedForwardingAccess
+DOC_START
+	Use this directive to restrict collapsed forwarding to a subset of
+	eligible requests. The directive is checked for regular HTTP
+	requests, internal revalidation requests, and HTCP/ICP requests.
+
+		collapsed_forwarding_access allow|deny [!]aclname ...
+
+	This directive cannot force collapsing. It has no effect on
+	collapsing unless collapsed_forwarding is 'on', and all other
+	collapsing preconditions are satisfied.
+
+	* A denied request will not collapse, and future transactions will
+	  not collapse on it (even if they are allowed to collapse).
+
+	* An allowed request may collapse, or future transactions may
+	  collapse on it (provided they are allowed to collapse).
+
+	This directive is evaluated before receiving HTTP response headers
+	and without access to Squid-to-peer connection (if any).
+
+	Only fast ACLs are supported.
+
+	See also: collapsed_forwarding.
+DOC_END
+
+NAME: shared_transient_entries_limit collapsed_forwarding_shared_entries_limit
 COMMENT: (number of entries)
 TYPE: int64_t
-LOC: Config.collapsed_forwarding_shared_entries_limit
+LOC: Config.shared_transient_entries_limit
 DEFAULT: 16384
 DOC_START
-	This limits the size of a table used for sharing information
-	about collapsible entries among SMP workers. Limiting sharing
-	too much results in cache content duplication and missed
-	collapsing opportunities. Using excessively large values
-	wastes shared memory.
+	This directive limits the size of a table used for sharing current
+	transaction information among SMP workers. A table entry stores meta
+	information about a single cache entry being delivered to Squid
+	client(s) by one or more SMP workers. A single table entry consumes
+	less than 128 shared memory bytes.
 
-	The limit should be significantly larger then the number of
-	concurrent collapsible entries one wants to share. For a cache
-	that handles less than 5000 concurrent requests, the default
+	The limit should be significantly larger than the number of
+	concurrent non-collapsed cachable responses leaving Squid. For a
+	cache that handles less than 5000 concurrent requests, the default
 	setting of 16384 should be plenty.
 
-	If the limit is set to zero, it disables sharing of collapsed
-	forwarding between SMP workers.
+	Using excessively large values wastes shared memory. Limiting the
+	table size too much results in hash collisions, leading to lower hit
+	ratio and missed SMP request collapsing opportunities: Transactions
+	left without a table entry cannot cache their responses and are
+	invisible to other concurrent requests for the same resource.
+
+	A zero limit is allowed but unsupported. A positive small limit
+	lowers hit ratio, but zero limit disables a lot of essential
+	synchronization among SMP workers, leading to HTTP violations (e.g.,
+	stale hit responses). It also disables shared collapsed forwarding:
+	A worker becomes unable to collapse its requests on transactions in
+	other workers, resulting in more trips to the origin server and more
+	cache thrashing.
 DOC_END
 
 COMMENT_START
@@ -8372,6 +8580,7 @@ DOC_START
 
 	URL FORMAT TAGS:
 		%a	- username (if available. Password NOT included)
+		%A	- Local listening IP address the client connection was connected to
 		%B	- FTP path URL
 		%e	- Error number
 		%E	- Error description

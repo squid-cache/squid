@@ -41,6 +41,7 @@
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "ip/NfMarkConfig.h"
 #include "ip/QosConfig.h"
 #include "ipcache.h"
 #include "log/access_log.h"
@@ -48,12 +49,12 @@
 #include "Parsing.h"
 #include "profiler/Profiler.h"
 #include "redirect.h"
+#include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
 #include "tools.h"
-#include "URL.h"
 #include "wordlist.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -131,8 +132,7 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) :
     store_id_done(false),
     no_cache_done(false),
     interpreted_req_hdrs(false),
-    tosToClientDone(false),
-    nfmarkToClientDone(false),
+    toClientMarkingDone(false),
 #if USE_OPENSSL
     sslBumpCheckDone(false),
 #endif
@@ -152,7 +152,6 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     uri(NULL),
     log_uri(NULL),
     req_sz(0),
-    logType(LOG_TAG_NONE),
     calloutContext(NULL),
     maxReplyBodySize_(0),
     entry_(NULL),
@@ -359,8 +358,6 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     if (header)
         request->header.update(header);
 
-    http->log_uri = xstrdup(urlCanonicalClean(request));
-
     /* http struct now ready */
 
     /*
@@ -391,8 +388,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
 
     request->http_ver = Http::ProtocolVersion();
 
-    http->request = request;
-    HTTPMSGLOCK(http->request);
+    http->initRequest(request);
 
     /* optional - skip the access check ? */
     http->calloutContext = new ClientRequestContext(http);
@@ -778,7 +774,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
          */
         page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_AUTH_REQUIRED);
 
-        http->logType = LOG_TCP_DENIED;
+        http->logType.update(LOG_TCP_DENIED);
 
         if (auth_challenge) {
 #if USE_AUTH
@@ -1259,7 +1255,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
 
             // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
             if (urlNote != NULL && strcmp(urlNote, http->uri)) {
-                URL tmpUrl;
+                AnyP::Uri tmpUrl;
                 if (tmpUrl.parse(old_request->method, urlNote)) {
                     HttpRequest *new_request = old_request->clone();
                     new_request->url = tmpUrl;
@@ -1275,12 +1271,8 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                                " from request " << old_request << " to " << new_request);
                     }
 
-                    // update the current working ClientHttpRequest fields
-                    xfree(http->uri);
-                    http->uri = SBufToCstring(new_request->effectiveRequestUri());
-                    HTTPMSGUNLOCK(old_request);
-                    http->request = new_request;
-                    HTTPMSGLOCK(http->request);
+                    http->resetRequest(new_request);
+                    old_request = nullptr;
                 } else {
                     debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
                            old_request->method << " " << urlNote << " " << old_request->http_ver);
@@ -1385,8 +1377,8 @@ ClientRequestContext::checkNoCacheDone(const allow_t &answer)
 {
     acl_checklist = NULL;
     if (answer.denied()) {
-        http->request->flags.noCache = true; // dont read reply from cache
-        http->request->flags.cachable = false; // dont store reply into cache
+        http->request->flags.noCache = true; // do not read reply from cache
+        http->request->flags.cachable = false; // do not store reply into cache
     }
     http->doCallouts();
 }
@@ -1534,7 +1526,8 @@ void
 ClientHttpRequest::httpStart()
 {
     PROF_start(httpStart);
-    logType = LOG_TAG_NONE;
+    // XXX: Re-initializes rather than updates. Should not be needed at all.
+    logType.update(LOG_TAG_NONE);
     debugs(85, 4, logType.c_str() << " for '" << uri << "'");
 
     /* no one should have touched this */
@@ -1650,6 +1643,52 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
         loggingEntry_->lock("ClientHttpRequest::loggingEntry");
 }
 
+void
+ClientHttpRequest::initRequest(HttpRequest *aRequest)
+{
+    assignRequest(aRequest);
+    if (const auto csd = getConn()) {
+        if (!csd->notes()->empty())
+            request->notes()->appendNewOnly(csd->notes().getRaw());
+    }
+    // al is created in the constructor
+    assert(al);
+    if (!al->request) {
+        al->request = request;
+        HTTPMSGLOCK(al->request);
+        al->syncNotes(request);
+    }
+}
+
+void
+ClientHttpRequest::resetRequest(HttpRequest *newRequest)
+{
+    assert(request != newRequest);
+    clearRequest();
+    assignRequest(newRequest);
+    xfree(uri);
+    uri = SBufToCstring(request->effectiveRequestUri());
+}
+
+void
+ClientHttpRequest::assignRequest(HttpRequest *newRequest)
+{
+    assert(newRequest);
+    assert(!request);
+    const_cast<HttpRequest *&>(request) = newRequest;
+    HTTPMSGLOCK(request);
+    setLogUriToRequestUri();
+}
+
+void
+ClientHttpRequest::clearRequest()
+{
+    HttpRequest *oldRequest = request;
+    HTTPMSGUNLOCK(oldRequest);
+    const_cast<HttpRequest *&>(request) = nullptr;
+    absorbLogUri(nullptr);
+}
+
 /*
  * doCallouts() - This function controls the order of "callout"
  * executions, including non-blocking access control checks, the
@@ -1683,26 +1722,12 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
  */
 
 tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
-nfmark_t aclMapNfmark (acl_nfmark * head, ACLChecklist * ch);
+Ip::NfMarkConfig aclFindNfMarkConfig (acl_nfmark * head, ACLChecklist * ch);
 
 void
 ClientHttpRequest::doCallouts()
 {
     assert(calloutContext);
-
-    auto &ale = calloutContext->http->al;
-    /*Save the original request for logging purposes*/
-    if (!ale->request) {
-        ale->request = request;
-        HTTPMSGLOCK(ale->request);
-
-        // Make the previously set client connection ID available as annotation.
-        if (ConnStateData *csd = calloutContext->http->getConn()) {
-            if (!csd->notes()->empty())
-                calloutContext->http->request->notes()->appendNewOnly(csd->notes().getRaw());
-        }
-        ale->syncNotes(calloutContext->http->request);
-    }
 
     if (!calloutContext->error) {
         // CVE-2009-0801: verify the Host: header is consistent with other known details.
@@ -1776,27 +1801,27 @@ ClientHttpRequest::doCallouts()
         }
     } //  if !calloutContext->error
 
-    if (!calloutContext->tosToClientDone) {
-        calloutContext->tosToClientDone = true;
-        if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConnection)) {
-            ACLFilledChecklist ch(NULL, request, NULL);
-            ch.src_addr = request->client_addr;
-            ch.my_addr = request->my_addr;
+    // Set appropriate MARKs and CONNMARKs if needed.
+    if (getConn() && Comm::IsConnOpen(getConn()->clientConnection)) {
+        ACLFilledChecklist ch(nullptr, request, nullptr);
+        ch.al = calloutContext->http->al;
+        ch.src_addr = request->client_addr;
+        ch.my_addr = request->my_addr;
+        ch.syncAle(request, log_uri);
+
+        if (!calloutContext->toClientMarkingDone) {
+            calloutContext->toClientMarkingDone = true;
             tos_t tos = aclMapTOS(Ip::Qos::TheConfig.tosToClient, &ch);
             if (tos)
                 Ip::Qos::setSockTos(getConn()->clientConnection, tos);
-        }
-    }
 
-    if (!calloutContext->nfmarkToClientDone) {
-        calloutContext->nfmarkToClientDone = true;
-        if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConnection)) {
-            ACLFilledChecklist ch(NULL, request, NULL);
-            ch.src_addr = request->client_addr;
-            ch.my_addr = request->my_addr;
-            nfmark_t mark = aclMapNfmark(Ip::Qos::TheConfig.nfmarkToClient, &ch);
-            if (mark)
-                Ip::Qos::setSockNfmark(getConn()->clientConnection, mark);
+            const auto packetMark = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToClient, &ch);
+            if (!packetMark.isEmpty())
+                Ip::Qos::setSockNfmark(getConn()->clientConnection, packetMark.mark);
+
+            const auto connmark = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfConnmarkToClient, &ch);
+            if (!connmark.isEmpty())
+                Ip::Qos::setNfConnmark(getConn()->clientConnection, Ip::Qos::dirAccepted, connmark);
         }
     }
 
@@ -1864,6 +1889,53 @@ ClientHttpRequest::doCallouts()
 #endif
 }
 
+void
+ClientHttpRequest::setLogUriToRequestUri()
+{
+    assert(request);
+    const auto canonicalUri = request->canonicalCleanUrl();
+    absorbLogUri(xstrndup(canonicalUri, MAX_URL));
+}
+
+void
+ClientHttpRequest::setLogUriToRawUri(const char *rawUri, const HttpRequestMethod &method)
+{
+    assert(rawUri);
+    // Should(!request);
+
+    // TODO: SBuf() performance regression, fix by converting rawUri to SBuf
+    char *canonicalUri = urlCanonicalCleanWithoutRequest(SBuf(rawUri), method, AnyP::UriScheme());
+
+    absorbLogUri(AnyP::Uri::cleanup(canonicalUri));
+
+    char *cleanedRawUri = AnyP::Uri::cleanup(rawUri);
+    al->setVirginUrlForMissingRequest(SBuf(cleanedRawUri));
+    xfree(cleanedRawUri);
+}
+
+void
+ClientHttpRequest::absorbLogUri(char *aUri)
+{
+    xfree(log_uri);
+    const_cast<char *&>(log_uri) = aUri;
+}
+
+void
+ClientHttpRequest::setErrorUri(const char *aUri)
+{
+    assert(!uri);
+    assert(aUri);
+    // Should(!request);
+
+    uri = xstrdup(aUri);
+    // TODO: SBuf() performance regression, fix by converting setErrorUri() parameter to SBuf
+    const SBuf errorUri(aUri);
+    const auto canonicalUri = urlCanonicalCleanWithoutRequest(errorUri, HttpRequestMethod(), AnyP::UriScheme());
+    absorbLogUri(xstrndup(canonicalUri, MAX_URL));
+
+    al->setVirginUrlForMissingRequest(errorUri);
+}
+
 #if USE_ADAPTATION
 /// Initiate an asynchronous adaptation transaction which will call us back.
 void
@@ -1908,23 +1980,10 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
     assert(msg);
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
-        /*
-         * Replace the old request with the new request.
-         */
-        HTTPMSGUNLOCK(request);
-        request = new_req;
-        HTTPMSGLOCK(request);
-
         // update the new message to flag whether URL re-writing was done on it
-        if (request->effectiveRequestUri().cmp(uri) != 0)
-            request->flags.redirected = 1;
-
-        /*
-         * Store the new URI for logging
-         */
-        xfree(uri);
-        uri = SBufToCstring(request->effectiveRequestUri());
-        setLogUri(this, urlCanonicalClean(request));
+        if (request->effectiveRequestUri() != new_req->effectiveRequestUri())
+            new_req->flags.redirected = true;
+        resetRequest(new_req);
         assert(request->method.id());
     } else if (HttpReply *new_rep = dynamic_cast<HttpReply*>(msg)) {
         debugs(85,3,HERE << "REQMOD reply is HTTP reply");
@@ -1941,7 +2000,6 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
         assert(repContext);
         repContext->createStoreEntry(request->method, request->flags);
 
-        EBIT_CLR(storeEntry()->flags, ENTRY_FWD_HDR_WAIT);
         request_satisfaction_mode = true;
         request_satisfaction_offset = 0;
         storeEntry()->replaceHttpReply(new_rep);

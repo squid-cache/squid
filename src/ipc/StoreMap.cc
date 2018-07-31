@@ -155,20 +155,24 @@ Ipc::StoreMap::startAppending(const sfileno fileno)
 }
 
 void
-Ipc::StoreMap::closeForWriting(const sfileno fileno, bool lockForReading)
+Ipc::StoreMap::closeForWriting(const sfileno fileno)
 {
     Anchor &s = anchorAt(fileno);
     assert(s.writing());
-    if (lockForReading) {
-        s.lock.switchExclusiveToShared();
-        debugs(54, 5, "switched entry " << fileno <<
-               " from writing to reading " << path);
-        assert(s.complete());
-    } else {
-        s.lock.unlockExclusive();
-        debugs(54, 5, "closed entry " << fileno << " for writing " << path);
-        // cannot assert completeness here because we have no lock
-    }
+    // TODO: assert(!s.empty()); // i.e., unlocked s becomes s.complete()
+    s.lock.unlockExclusive();
+    debugs(54, 5, "closed entry " << fileno << " for writing " << path);
+    // cannot assert completeness here because we have no lock
+}
+
+void
+Ipc::StoreMap::switchWritingToReading(const sfileno fileno)
+{
+    debugs(54, 5, "switching entry " << fileno << " from writing to reading " << path);
+    Anchor &s = anchorAt(fileno);
+    assert(s.writing());
+    s.lock.switchExclusiveToShared();
+    assert(s.complete());
 }
 
 Ipc::StoreMap::Slice &
@@ -752,8 +756,6 @@ Ipc::StoreMap::sliceAt(const SliceId sliceId) const
 
 Ipc::StoreMapAnchor::StoreMapAnchor(): start(0), splicingPoint(-1)
 {
-    memset(&key, 0, sizeof(key));
-    memset(&basics, 0, sizeof(basics));
     // keep in sync with rewind()
 }
 
@@ -801,7 +803,12 @@ Ipc::StoreMapAnchor::exportInto(StoreEntry &into) const
     into.lastModified(basics.lastmod);
     into.swap_file_sz = basics.swap_file_sz;
     into.refcount = basics.refcount;
+    const bool collapsingRequired = into.hittingRequiresCollapsing();
     into.flags = basics.flags;
+    // There are possibly several flags we do not need to overwrite,
+    // and ENTRY_REQUIRES_COLLAPSING is one of them.
+    // TODO: check for other flags.
+    into.setCollapsingRequirement(collapsingRequired);
 }
 
 void
@@ -811,7 +818,7 @@ Ipc::StoreMapAnchor::rewind()
     start = 0;
     splicingPoint = -1;
     memset(&key, 0, sizeof(key));
-    memset(&basics, 0, sizeof(basics));
+    basics.clear();
     waitingToBeFreed = false;
     writerHalted = false;
     // but keep the lock

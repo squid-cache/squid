@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "base64.h"
 #include "client_side.h"
 #include "comm/Connection.h"
 #include "err_detail_type.h"
@@ -27,7 +28,6 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
-#include "URL.h"
 #if USE_OPENSSL
 #include "ssl/ErrorDetail.h"
 #include "ssl/ServerBump.h"
@@ -470,20 +470,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 
-        case LFT_LOCAL_LISTENING_IP: {
-            // avoid logging a dash if we have reliable info
-            const bool interceptedAtKnownPort = al->request ?
-                                                (al->request->flags.interceptTproxy ||
-                                                 al->request->flags.intercepted) && al->cache.port :
-                                                false;
-            if (interceptedAtKnownPort) {
-                const bool portAddressConfigured = !al->cache.port->s.isAnyAddr();
-                if (portAddressConfigured)
-                    out = al->cache.port->s.toStr(tmp, sizeof(tmp));
-            } else if (al->tcpClient)
-                out = al->tcpClient->local.toStr(tmp, sizeof(tmp));
-        }
-        break;
+        case LFT_LOCAL_LISTENING_IP:
+            if (const auto addr = FindListeningPortAddress(nullptr, al.getRaw()))
+                out = addr->toStr(tmp, sizeof(tmp));
+            break;
 
         case LFT_CLIENT_LOCAL_IP:
             if (al->tcpClient)
@@ -505,11 +495,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_LOCAL_LISTENING_PORT:
-            if (al->cache.port) {
-                outint = al->cache.port->s.port();
-                doint = 1;
-            } else if (al->request) {
-                outint = al->request->my_addr.port();
+            if (const auto addr = FindListeningPortAddress(nullptr, al.getRaw())) {
+                outint = addr->port();
                 doint = 1;
             }
             break;
@@ -545,6 +532,24 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->hier.tcpServer) {
                 sb.appendf("0x%x", al->hier.tcpServer->nfmark);
                 out = sb.c_str();
+            }
+            break;
+
+        case LFT_CLIENT_HANDSHAKE:
+            if (al->request && al->request->clientConnectionManager.valid()) {
+                const auto &handshake = al->request->clientConnectionManager->preservedClientData;
+                if (const auto rawLength = handshake.length()) {
+                    // add 1 byte to optimize the c_str() conversion below
+                    char *buf = sb.rawAppendStart(base64_encode_len(rawLength) + 1);
+
+                    struct base64_encode_ctx ctx;
+                    base64_encode_init(&ctx);
+                    auto encLength = base64_encode_update(&ctx, buf, rawLength, reinterpret_cast<const uint8_t*>(handshake.rawContent()));
+                    encLength += base64_encode_final(&ctx, buf + encLength);
+
+                    sb.rawAppendFinish(buf, encLength);
+                    out = sb.c_str();
+                }
             }
             break;
 
@@ -980,9 +985,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_CLIENT_REQ_URI:
-            // original client URI
-            if (al->request) {
-                sb = al->request->effectiveRequestUri();
+            if (const auto uri = al->effectiveVirginUrl()) {
+                sb = *uri;
                 out = sb.c_str();
                 quote = 1;
             }
@@ -1385,7 +1389,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = sb.c_str();
         } else if (doMsec) {
             if (fmt->widthMax < 0) {
-                sb.appendf("%0*ld", fmt->widthMin, tvToMsec(outtv));
+                sb.appendf("%0*ld", fmt->zero && fmt->widthMin >= 0 ? fmt->widthMin : 0, tvToMsec(outtv));
             } else {
                 int precision = fmt->widthMax;
                 sb.appendf("%0*" PRId64 ".%0*" PRId64 "", fmt->zero && (fmt->widthMin - precision - 1 >= 0) ? fmt->widthMin - precision - 1 : 0, static_cast<int64_t>(outtv.tv_sec * 1000 + outtv.tv_usec / 1000), precision, static_cast<int64_t>((outtv.tv_usec % 1000 )* (1000 / fmt->divisor)));

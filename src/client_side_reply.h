@@ -74,7 +74,10 @@ public:
 
     /* state variable - replace with class to handle storeentries at some point */
     int lookingforstore;
+
+    /* StoreClient API */
     virtual void created (StoreEntry *newEntry);
+    virtual LogTags *loggingTags();
 
     ClientHttpRequest *http;
     int headers_sz;
@@ -99,6 +102,9 @@ public:
     clientStreamNode *ourNode;  /* This will go away if/when this file gets refactored some more */
 
 private:
+    /* StoreClient API */
+    virtual void fillChecklist(ACLFilledChecklist &) const;
+
     clientStreamNode *getNextNode() const;
     void makeThisHead();
     bool errorInStream(StoreIOBuffer const &result, size_t const &sizeToProcess)const ;

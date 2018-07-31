@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/PackableStream.h"
 #include "clients/forward.h"
 #include "clients/FtpClient.h"
 #include "comm.h"
@@ -37,7 +38,6 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
-#include "URL.h"
 #include "util.h"
 #include "wordlist.h"
 
@@ -131,7 +131,7 @@ public:
     void unhack();
     void readStor();
     void parseListing();
-    MemBuf *htmlifyListEntry(const char *line);
+    bool htmlifyListEntry(const char *line, PackableStream &);
     void completedListing(void);
 
     /// create a data channel acceptor and start listening.
@@ -763,53 +763,37 @@ found:
     return p;
 }
 
-MemBuf *
-Ftp::Gateway::htmlifyListEntry(const char *line)
+bool
+Ftp::Gateway::htmlifyListEntry(const char *line, PackableStream &html)
 {
-    char icon[2048];
-    char href[2048 + 40];
-    char text[ 2048];
-    char size[ 2048];
-    char chdir[ 2048 + 40];
-    char view[ 2048 + 40];
-    char download[ 2048 + 40];
-    char link[ 2048 + 40];
-    MemBuf *html;
-    char prefix[2048];
-    ftpListParts *parts;
-    *icon = *href = *text = *size = *chdir = *view = *download = *link = '\0';
-
-    debugs(9, 7, HERE << " line ={" << line << "}");
+    debugs(9, 7, "line={" << line << "}");
 
     if (strlen(line) > 1024) {
-        html = new MemBuf();
-        html->init();
-        html->appendf("<tr><td colspan=\"5\">%s</td></tr>\n", line);
-        return html;
+        html << "<tr><td colspan=\"5\">" << line << "</td></tr>\n";
+        return true;
     }
 
-    if (flags.dir_slash && dirpath && typecode != 'D')
-        snprintf(prefix, 2048, "%s/", rfc1738_escape_part(dirpath));
-    else
-        prefix[0] = '\0';
+    SBuf prefix;
+    if (flags.dir_slash && dirpath && typecode != 'D') {
+        prefix.append(rfc1738_escape_part(dirpath));
+        prefix.append("/", 1);
+    }
 
-    if ((parts = ftpListParseParts(line, flags)) == NULL) {
+    ftpListParts *parts = ftpListParseParts(line, flags);
+    if (!parts) {
+        html << "<tr class=\"entry\"><td colspan=\"5\">" << line << "</td></tr>\n";
+
         const char *p;
-
-        html = new MemBuf();
-        html->init();
-        html->appendf("<tr class=\"entry\"><td colspan=\"5\">%s</td></tr>\n", line);
-
         for (p = line; *p && xisspace(*p); ++p);
         if (*p && !xisspace(*p))
             flags.listformat_unknown = 1;
 
-        return html;
+        return true;
     }
 
     if (!strcmp(parts->name, ".") || !strcmp(parts->name, "..")) {
         ftpListPartsFree(&parts);
-        return NULL;
+        return false;
     }
 
     parts->size += 1023;
@@ -817,87 +801,82 @@ Ftp::Gateway::htmlifyListEntry(const char *line)
     parts->showname = xstrdup(parts->name);
 
     /* {icon} {text} . . . {date}{size}{chdir}{view}{download}{link}\n  */
-    xstrncpy(href, rfc1738_escape_part(parts->name), 2048);
+    SBuf href(prefix);
+    href.append(rfc1738_escape_part(parts->name));
 
-    xstrncpy(text, parts->showname, 2048);
+    SBuf text(parts->showname);
 
+    SBuf icon, size, chdir, link;
     switch (parts->type) {
 
     case 'd':
-        snprintf(icon, 2048, "<img border=\"0\" src=\"%s\" alt=\"%-6s\">",
-                 mimeGetIconURL("internal-dir"),
-                 "[DIR]");
-        strcat(href, "/");  /* margin is allocated above */
+        icon.appendf("<img border=\"0\" src=\"%s\" alt=\"%-6s\">",
+                     mimeGetIconURL("internal-dir"),
+                     "[DIR]");
+        href.append("/", 1);  /* margin is allocated above */
         break;
 
     case 'l':
-        snprintf(icon, 2048, "<img border=\"0\" src=\"%s\" alt=\"%-6s\">",
-                 mimeGetIconURL("internal-link"),
-                 "[LINK]");
+        icon.appendf("<img border=\"0\" src=\"%s\" alt=\"%-6s\">",
+                     mimeGetIconURL("internal-link"),
+                     "[LINK]");
         /* sometimes there is an 'l' flag, but no "->" link */
 
         if (parts->link) {
-            char *link2 = xstrdup(html_quote(rfc1738_escape(parts->link)));
-            snprintf(link, 2048, " -&gt; <a href=\"%s%s\">%s</a>",
-                     *link2 != '/' ? prefix : "", link2,
-                     html_quote(parts->link));
-            safe_free(link2);
+            SBuf link2(html_quote(rfc1738_escape(parts->link)));
+            link.appendf(" -&gt; <a href=\"%s" SQUIDSBUFPH "\">%s</a>",
+                         link2[0] != '/' ? prefix.c_str() : "", SQUIDSBUFPRINT(link2),
+                         html_quote(parts->link));
         }
 
         break;
 
     case '\0':
-        snprintf(icon, 2048, "<img border=\"0\" src=\"%s\" alt=\"%-6s\">",
-                 mimeGetIconURL(parts->name),
-                 "[UNKNOWN]");
-        snprintf(chdir, 2048, "<a href=\"%s/;type=d\"><img border=\"0\" src=\"%s\" "
-                 "alt=\"[DIR]\"></a>",
-                 rfc1738_escape_part(parts->name),
-                 mimeGetIconURL("internal-dir"));
+        icon.appendf("<img border=\"0\" src=\"%s\" alt=\"%-6s\">",
+                     mimeGetIconURL(parts->name),
+                     "[UNKNOWN]");
+        chdir.appendf("<a href=\"%s/;type=d\"><img border=\"0\" src=\"%s\" "
+                      "alt=\"[DIR]\"></a>",
+                      rfc1738_escape_part(parts->name),
+                      mimeGetIconURL("internal-dir"));
         break;
 
     case '-':
 
     default:
-        snprintf(icon, 2048, "<img border=\"0\" src=\"%s\" alt=\"%-6s\">",
-                 mimeGetIconURL(parts->name),
-                 "[FILE]");
-        snprintf(size, 2048, " %6" PRId64 "k", parts->size);
+        icon.appendf("<img border=\"0\" src=\"%s\" alt=\"%-6s\">",
+                     mimeGetIconURL(parts->name),
+                     "[FILE]");
+        size.appendf(" %6" PRId64 "k", parts->size);
         break;
     }
 
+    SBuf view, download;
     if (parts->type != 'd') {
         if (mimeGetViewOption(parts->name)) {
-            snprintf(view, 2048, "<a href=\"%s%s;type=a\"><img border=\"0\" src=\"%s\" "
-                     "alt=\"[VIEW]\"></a>",
-                     prefix, href, mimeGetIconURL("internal-view"));
+            view.appendf("<a href=\"" SQUIDSBUFPH ";type=a\"><img border=\"0\" src=\"%s\" "
+                         "alt=\"[VIEW]\"></a>",
+                         SQUIDSBUFPRINT(href), mimeGetIconURL("internal-view"));
         }
 
         if (mimeGetDownloadOption(parts->name)) {
-            snprintf(download, 2048, "<a href=\"%s%s;type=i\"><img border=\"0\" src=\"%s\" "
-                     "alt=\"[DOWNLOAD]\"></a>",
-                     prefix, href, mimeGetIconURL("internal-download"));
+            download.appendf("<a href=\"" SQUIDSBUFPH ";type=i\"><img border=\"0\" src=\"%s\" "
+                             "alt=\"[DOWNLOAD]\"></a>",
+                             SQUIDSBUFPRINT(href), mimeGetIconURL("internal-download"));
         }
     }
 
     /* construct the table row from parts. */
-    html = new MemBuf();
-    html->init();
-    html->appendf("<tr class=\"entry\">"
-                  "<td class=\"icon\"><a href=\"%s%s\">%s</a></td>"
-                  "<td class=\"filename\"><a href=\"%s%s\">%s</a></td>"
-                  "<td class=\"date\">%s</td>"
-                  "<td class=\"size\">%s</td>"
-                  "<td class=\"actions\">%s%s%s%s</td>"
-                  "</tr>\n",
-                  prefix, href, icon,
-                  prefix, href, html_quote(text),
-                  parts->date,
-                  size,
-                  chdir, view, download, link);
+    html << "<tr class=\"entry\">"
+         "<td class=\"icon\"><a href=\"" << href << "\">" << icon << "</a></td>"
+         "<td class=\"filename\"><a href=\"" << href << "\">" << html_quote(text.c_str()) << "</a></td>"
+         "<td class=\"date\">" << parts->date << "</td>"
+         "<td class=\"size\">" << size << "</td>"
+         "<td class=\"actions\">" << chdir << view << download << link << "</td>"
+         "</tr>\n";
 
     ftpListPartsFree(&parts);
-    return html;
+    return true;
 }
 
 void
@@ -908,7 +887,6 @@ Ftp::Gateway::parseListing()
     char *end;
     char *line;
     char *s;
-    MemBuf *t;
     size_t linelen;
     size_t usable;
     size_t len = data.readBuf->contentSize();
@@ -968,12 +946,14 @@ Ftp::Gateway::parseListing()
         if (!strncmp(line, "total", 5))
             continue;
 
-        t = htmlifyListEntry(line);
+        MemBuf htmlPage;
+        htmlPage.init();
+        PackableStream html(htmlPage);
 
-        if ( t != NULL) {
-            debugs(9, 7, HERE << "listing append: t = {" << t->contentSize() << ", '" << t->content() << "'}");
-            listing.append(t->content(), t->contentSize());
-            delete t;
+        if (htmlifyListEntry(line, html)) {
+            html.flush();
+            debugs(9, 7, "listing append: t = {" << htmlPage.contentSize() << ", '" << htmlPage.content() << "'}");
+            listing.append(htmlPage.content(), htmlPage.contentSize());
         }
     }
 
@@ -1169,7 +1149,7 @@ Ftp::Gateway::start()
 {
     if (!checkAuth(&request->header)) {
         /* create appropriate reply */
-        SBuf realm(ftpRealm()); // local copy so SBuf wont disappear too early
+        SBuf realm(ftpRealm()); // local copy so SBuf will not disappear too early
         HttpReply *reply = ftpAuthRequired(request.getRaw(), realm);
         entry->replaceHttpReply(reply);
         serverComplete();
@@ -1272,7 +1252,7 @@ Ftp::Gateway::loginFailed()
 #if HAVE_AUTH_MODULE_BASIC
     /* add Authenticate header */
     // XXX: performance regression. c_str() may reallocate
-    SBuf realm(ftpRealm()); // local copy so SBuf wont disappear too early
+    SBuf realm(ftpRealm()); // local copy so SBuf will not disappear too early
     newrep->header.putAuth("Basic", realm.c_str());
 #endif
 
@@ -2093,7 +2073,7 @@ void Ftp::Gateway::readStor()
         debugs(9, 3, HERE << "starting data transfer");
         switchTimeoutToDataChannel();
         sendMoreRequestBody();
-        fwd->dontRetry(true); // dont permit re-trying if the body was sent.
+        fwd->dontRetry(true); // do not permit re-trying if the body was sent.
         state = WRITING_DATA;
         debugs(9, 3, HERE << "writing data channel");
     } else if (code == 150) {
@@ -2289,7 +2269,6 @@ Ftp::Gateway::completedListing()
     ferr.ftp.server_msg = ctrl.message;
     ctrl.message = NULL;
     entry->replaceHttpReply(ferr.BuildHttpReply());
-    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     entry->flush();
     entry->unlock("Ftp::Gateway");
 }
@@ -2561,8 +2540,6 @@ Ftp::Gateway::appendSuccessHeader()
     flags.http_header_sent = 1;
 
     assert(entry->isEmpty());
-
-    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     entry->buffer();    /* released when done processing current data payload */
 

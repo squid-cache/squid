@@ -239,11 +239,13 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     IdentStateData *state;
     char key1[IDENT_KEY_SZ];
     char key2[IDENT_KEY_SZ];
-    char key[IDENT_KEY_SZ];
+    char key[IDENT_KEY_SZ*2+2]; // key1 + ',' + key2 + terminator
 
     conn->local.toUrl(key1, IDENT_KEY_SZ);
     conn->remote.toUrl(key2, IDENT_KEY_SZ);
-    snprintf(key, IDENT_KEY_SZ, "%s,%s", key1, key2);
+    const auto res = snprintf(key, sizeof(key), "%s,%s", key1, key2);
+    assert(res > 0);
+    assert(static_cast<std::make_unsigned<decltype(res)>::type>(res) < sizeof(key));
 
     if (!ident_hash) {
         Init();
@@ -256,7 +258,7 @@ Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     state = new IdentStateData;
     state->hash.key = xstrdup(key);
 
-    // copy the conn details. We dont want the original FD to be re-used by IDENT.
+    // copy the conn details. We do not want the original FD to be re-used by IDENT.
     state->conn = conn->copyDetails();
     // NP: use random port for secure outbound to IDENT_PORT
     state->conn->local.port(0);

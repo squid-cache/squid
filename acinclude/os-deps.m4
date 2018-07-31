@@ -36,62 +36,6 @@ fi
 
 ]) dnl SQUID_CHECK_FUNC_STRNSTR
 
-dnl check that va_copy is implemented and works
-dnl sets squid_cv_func_va_copy and defines HAVE_VA_COPY
-AC_DEFUN([SQUID_CHECK_FUNC_VACOPY],[
-
-# check that the system provides a functional va_copy call
-
-AH_TEMPLATE(HAVE_VA_COPY, [The system implements a functional va_copy() ])
-AC_CACHE_CHECK(if va_copy is implemented, squid_cv_func_va_copy,
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
-      #include <stdarg.h>
-      #include <stdlib.h>
-      int f (int i, ...) {
-         va_list args1, args2;
-         va_start (args1, i);
-         va_copy (args2, args1);
-         if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
-            return 1;
-         va_end (args1); va_end (args2);
-         return 0;
-      }
-      int main(int argc, char **argv) { return f (0, 42); }
-      ]])],[squid_cv_func_va_copy="yes"],[squid_cv_func_va_copy="no"],[:])
-)
-if test "$squid_cv_func_va_copy" = "yes" ; then
-  AC_DEFINE(HAVE_VA_COPY, 1)
-fi
-
-]) dnl SQUID_CHECK_FUNC_VACOPY
-
-dnl same sa SQUID_CHECK_FUNC_VACOPY, but checks __va_copy
-dnl sets squid_cv_func___va_copy, and defines HAVE___VA_COPY
-AC_DEFUN([SQUID_CHECK_FUNC___VACOPY],[
-
-AH_TEMPLATE(HAVE___VA_COPY,[Some systems have __va_copy instead of va_copy])
-AC_CACHE_CHECK(if __va_copy is implemented, squid_cv_func___va_copy,
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
-      #include <stdarg.h>
-      #include <stdlib.h>
-      int f (int i, ...) {
-         va_list args1, args2;
-         va_start (args1, i);
-         __va_copy (args2, args1);
-         if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
-            return 1;
-         va_end (args1); va_end (args2);
-         return 0;
-      }
-      int main(int argc, char **argv) { return f (0, 42); }
-      ]])],[squid_cv_func___va_copy="yes"],[squid_cv_func___va_copy="no"],[:])
-)
-if test "$squid_cv_func___va_copy" = "yes" ; then
-  AC_DEFINE(HAVE___VA_COPY, 1)
-fi
-]) dnl SQUID_CHECK_FUNC___VACOPY
-
-
 dnl check that epoll actually works
 dnl sets squid_cv_epoll_works to "yes" or "no"
 AC_DEFUN([SQUID_CHECK_EPOLL],[
@@ -968,4 +912,41 @@ AC_DEFUN([SQUID_CHECK_BROKEN_SOLARIS_IPFILTER],[
 #define IPFILTER_VERSION        5000004
 #endif
   ])
+
+## Solaris 10+ backported IPv6 NAT to their IPFilter v4.1 instead of using v5
+  AC_CHECK_MEMBERS([
+    struct natlookup.nl_inipaddr.in6,
+    struct natlookup.nl_realipaddr.in6
+  ],,,[
+#if USE_SOLARIS_IPFILTER_MINOR_T_HACK
+#define minor_t fubar
+#endif
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_SYS_IOCCOM_H
+#include <sys/ioccom.h>
+#endif
+#if USE_SOLARIS_IPFILTER_MINOR_T_HACK
+#undef minor_t
+#endif
+#if HAVE_IP_COMPAT_H
+#include <ip_compat.h>
+#elif HAVE_NETINET_IP_COMPAT_H
+#include <netinet/ip_compat.h>
+#endif
+#if HAVE_IP_FIL_H
+#include <ip_fil.h>
+#elif HAVE_NETINET_IP_FIL_H
+#include <netinet/ip_fil.h>
+#endif
+#include <ip_nat.h>
+  ])
+
 ])

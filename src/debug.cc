@@ -34,7 +34,7 @@ static void ctx_print(void);
 #ifdef LOG_LOCAL4
 static int syslog_facility = 0;
 #endif
-static void _db_print_syslog(const char *format, va_list args);
+static void _db_print_syslog(const bool forceAlert, const char *format, va_list args);
 #endif
 static void _db_print_stderr(const char *format, va_list args);
 static void _db_print_file(const char *format, va_list args);
@@ -108,8 +108,9 @@ DebugFile::reset(FILE *newFile, const char *newName)
     assert(!file_ == !name);
 }
 
+static
 void
-_db_print(const char *format,...)
+_db_print(const bool forceAlert, const char *format,...)
 {
     char f[BUFSIZ];
     f[0]='\0';
@@ -167,7 +168,7 @@ _db_print(const char *format,...)
     _db_print_stderr(f, args2);
 
 #if HAVE_SYSLOG
-    _db_print_syslog(format, args3);
+    _db_print_syslog(forceAlert, format, args3);
 #endif
 
 #if _SQUID_WINDOWS_
@@ -207,15 +208,17 @@ _db_print_stderr(const char *format, va_list args)
 
 #if HAVE_SYSLOG
 static void
-_db_print_syslog(const char *format, va_list args)
+_db_print_syslog(const bool forceAlert, const char *format, va_list args)
 {
     /* level 0,1 go to syslog */
 
-    if (Debug::Level() > 1)
-        return;
+    if (!forceAlert) {
+        if (Debug::Level() > 1)
+            return;
 
-    if (!Debug::log_syslog)
-        return;
+        if (!Debug::log_syslog)
+            return;
+    }
 
     char tmpbuf[BUFSIZ];
     tmpbuf[0] = '\0';
@@ -224,7 +227,7 @@ _db_print_syslog(const char *format, va_list args)
 
     tmpbuf[BUFSIZ - 1] = '\0';
 
-    syslog(Debug::Level() == 0 ? LOG_WARNING : LOG_NOTICE, "%s", tmpbuf);
+    syslog(forceAlert ? LOG_ALERT : (Debug::Level() == 0 ? LOG_WARNING : LOG_NOTICE), "%s", tmpbuf);
 }
 #endif /* HAVE_SYSLOG */
 
@@ -569,23 +572,27 @@ debugLogTime(void)
     time_t t = getCurrentTime();
 
     struct tm *tm;
-    static char buf[128];
+    static char buf[128]; // arbitrary size, big enough for the below timestamp strings.
     static time_t last_t = 0;
 
     if (Debug::Level() > 1) {
-        char buf2[128];
+        // 4 bytes smaller than buf to ensure .NNN catenation by snprintf()
+        // is safe and works even if strftime() fills its buffer.
+        char buf2[sizeof(buf)-4];
         tm = localtime(&t);
-        strftime(buf2, 127, "%Y/%m/%d %H:%M:%S", tm);
-        buf2[127] = '\0';
-        snprintf(buf, 127, "%s.%03d", buf2, (int) current_time.tv_usec / 1000);
+        strftime(buf2, sizeof(buf2), "%Y/%m/%d %H:%M:%S", tm);
+        buf2[sizeof(buf2)-1] = '\0';
+        const int sz = snprintf(buf, sizeof(buf), "%s.%03d", buf2, static_cast<int>(current_time.tv_usec / 1000));
+        assert(0 < sz && sz < static_cast<int>(sizeof(buf)));
         last_t = t;
     } else if (t != last_t) {
         tm = localtime(&t);
-        strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
+        const int sz = strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M:%S", tm);
+        assert(0 < sz && sz <= static_cast<int>(sizeof(buf)));
         last_t = t;
     }
 
-    buf[127] = '\0';
+    buf[sizeof(buf)-1] = '\0';
     return buf;
 }
 
@@ -744,10 +751,10 @@ ctx_print(void)
 
     if (Ctx_Valid_Level < Ctx_Reported_Level) {
         if (Ctx_Reported_Level != Ctx_Valid_Level + 1)
-            _db_print("ctx: exit levels from %2d down to %2d\n",
+            _db_print(false, "ctx: exit levels from %2d down to %2d\n",
                       Ctx_Reported_Level, Ctx_Valid_Level + 1);
         else
-            _db_print("ctx: exit level %2d\n", Ctx_Reported_Level);
+            _db_print(false, "ctx: exit level %2d\n", Ctx_Reported_Level);
 
         Ctx_Reported_Level = Ctx_Valid_Level;
     }
@@ -756,7 +763,7 @@ ctx_print(void)
     while (Ctx_Reported_Level < Ctx_Current_Level) {
         ++Ctx_Reported_Level;
         ++Ctx_Valid_Level;
-        _db_print("ctx: enter level %2d: '%s'\n", Ctx_Reported_Level,
+        _db_print(false, "ctx: enter level %2d: '%s'\n", Ctx_Reported_Level,
                   ctx_get_descr(Ctx_Reported_Level));
     }
 
@@ -779,7 +786,8 @@ Debug::Context *Debug::Current = nullptr;
 Debug::Context::Context(const int aSection, const int aLevel):
     level(aLevel),
     sectionLevel(Levels[aSection]),
-    upper(Current)
+    upper(Current),
+    forceAlert(false)
 {
     formatStream();
 }
@@ -836,13 +844,29 @@ void
 Debug::Finish()
 {
     // TODO: Optimize to remove at least one extra copy.
-    _db_print("%s\n", Current->buf.str().c_str());
+    _db_print(Current->forceAlert, "%s\n", Current->buf.str().c_str());
+    Current->forceAlert = false;
 
     Context *past = Current;
     Current = past->upper;
     if (Current)
         delete past;
     // else it was a static topContext from Debug::Start()
+}
+
+void
+Debug::ForceAlert()
+{
+    //  the ForceAlert(ostream) manipulator should only be used inside debugs()
+    if (Current)
+        Current->forceAlert = true;
+}
+
+std::ostream&
+ForceAlert(std::ostream& s)
+{
+    Debug::ForceAlert();
+    return s;
 }
 
 /// print data bytes using hex notation

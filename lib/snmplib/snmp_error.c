@@ -44,7 +44,7 @@ static const char *error_string[25] = {
     "There is no such variable name in this MIB.",
     "The value given has the wrong type, length, or value",
     "This variable is read only",
-    "A general failure occured",
+    "A general failure occurred",
 
     /* 0x06 - 0x09 */
     /* SNMPv2 Errors */

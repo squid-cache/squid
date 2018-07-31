@@ -32,7 +32,6 @@ libesi_la_SOURCES = \
 	Context.h \
 	$(ESI_PARSER_SOURCES) \
 	Element.h \
-	ElementList.h \
 	Esi.cc \
 	Esi.h \
 	Except.h \

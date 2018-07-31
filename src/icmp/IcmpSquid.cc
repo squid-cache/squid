@@ -125,7 +125,6 @@ IcmpSquid::Recv()
     static Ip::Address F;
 
     Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, NULL, 0);
-    memset(&preply, '\0', sizeof(pingerReplyData));
     n = comm_udp_recv(icmp_sock,
                       (char *) &preply,
                       sizeof(pingerReplyData),

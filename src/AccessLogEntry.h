@@ -137,7 +137,7 @@ public:
         Ip::Address caddr;
         int64_t highOffset = 0;
         int64_t objectSize = 0;
-        LogTags code = LOG_TAG_NONE;
+        LogTags code;
         struct timeval start_time; ///< The time the master transaction started
         struct timeval trTime; ///< The response time
         const char *rfc931 = nullptr;
@@ -228,6 +228,24 @@ public:
     }
     icap;
 #endif
+
+    /// Effective URI of the received client (or equivalent) HTTP request or,
+    /// in rare cases where that information was not collected, a nil pointer.
+    /// Receiving errors are represented by "error:..." URIs.
+    /// Adaptations and redirections do not affect this URI.
+    const SBuf *effectiveVirginUrl() const;
+
+    /// Remember Client URI (or equivalent) when there is no HttpRequest.
+    void setVirginUrlForMissingRequest(const SBuf &vu)
+    {
+        if (!request)
+            virginUrlForMissingRequest_ = vu;
+    }
+
+private:
+    /// Client URI (or equivalent) for effectiveVirginUrl() when HttpRequest is
+    /// missing. This member is ignored unless the request member is nil.
+    SBuf virginUrlForMissingRequest_;
 };
 
 class ACLChecklist;

@@ -40,7 +40,6 @@ public:
     virtual void evictCached(StoreEntry &) override;
     virtual void evictIfFound(const cache_key *) override;
     virtual int callback() override;
-    virtual bool smpAware() const override;
 
     /// \returns a locally indexed and SMP-tracked matching StoreEntry (or nil)
     /// Slower than peek() but does not restrict StoreEntry use and storage.
@@ -56,9 +55,9 @@ public:
 
     /// \returns matching StoreEntry associated with local ICP/HTCP transaction
     /// Warning: The returned StoreEntry is not synced and may be marked for
-    /// deletion. Use it only for extracting transaction callback details.
-    /// TODO: Group and return just that callback-related data instead?
-    StoreEntry *findCallback(const cache_key *);
+    /// deletion. It can only be used for extracting transaction callback details.
+    /// New code should be designed to avoid this deprecated API.
+    StoreEntry *findCallbackXXX(const cache_key *);
 
     /// Whether a transient entry with the given public key exists and (but) was
     /// marked for removal some time ago; get(key) returns nil in such cases.
@@ -124,11 +123,17 @@ public:
     /// disassociates the entry from the intransit table
     void transientsDisconnect(StoreEntry &);
 
+    /// removes collapsing requirement (for future hits)
+    void transientsClearCollapsingRequirement(StoreEntry &e);
+
     /// disassociates the entry from the memory cache, preserving cached data
     void memoryDisconnect(StoreEntry &);
 
     /// \returns an iterator for all Store entries
     StoreSearch *search();
+
+    /// whether there are any SMP-aware storages
+    static bool SmpAware();
 
     /// the number of cache_dirs being rebuilt; TODO: move to Disks::Rebuilding
     static int store_dirs_rebuilding;
@@ -136,9 +141,7 @@ public:
 private:
     bool memoryCacheHasSpaceFor(const int pagesRequired) const;
 
-    /// update reference counters of the recently touched entry
     void referenceBusy(StoreEntry &e);
-    /// dereference() an idle entry and return true if the entry should be deleted
     bool dereferenceIdle(StoreEntry &, bool wantsLocalMemory);
 
     void allowSharing(StoreEntry &, const cache_key *);
@@ -151,7 +154,8 @@ private:
     void checkTransients(const StoreEntry &) const;
 
     Disks *swapDir; ///< summary view of all disk caches
-    Memory *memStore; ///< memory cache
+    Memory *sharedMemStore; ///< memory cache that multiple workers can use
+    bool localMemStore; ///< whether local (non-shared) memory cache is enabled
 
     /// A shared table of public store entries that do not know whether they
     /// will belong to a memory cache, a disk cache, or will be uncachable

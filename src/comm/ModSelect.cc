@@ -124,7 +124,7 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
 {
     fde *F = &fd_table[fd];
     assert(fd >= 0);
-    assert(F->flags.open);
+    assert(F->flags.open || (!handler && !client_data && !timeout));
     debugs(5, 5, HERE << "FD " << fd << ", type=" << type <<
            ", handler=" << handler << ", client_data=" << client_data <<
            ", timeout=" << timeout);
@@ -143,11 +143,6 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
 
     if (timeout)
         F->timeout = squid_curtime + timeout;
-}
-
-void
-Comm::ResetSelect(int fd)
-{
 }
 
 static int

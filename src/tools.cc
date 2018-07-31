@@ -291,11 +291,11 @@ void
 death(int sig)
 {
     if (sig == SIGSEGV)
-        fprintf(debug_log, "FATAL: Received Segment Violation...dying.\n");
+        debugs(1, DBG_CRITICAL, ForceAlert << "FATAL: Received Segment Violation...dying.");
     else if (sig == SIGBUS)
-        fprintf(debug_log, "FATAL: Received Bus Error...dying.\n");
+        debugs(1, DBG_CRITICAL, ForceAlert << "FATAL: Received Bus Error...dying.");
     else
-        fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
+        debugs(1, DBG_CRITICAL, ForceAlert << "FATAL: Received signal " << sig << "...dying.");
 
 #if PRINT_STACK_TRACE
 #if _SQUID_HPUX_
@@ -319,7 +319,7 @@ death(int sig)
 #endif /* _SQUID_SOLARIS_and HAVE_LIBOPCOM_STACK */
 #if HAVE_BACKTRACE_SYMBOLS_FD
     {
-        static void *(callarray[8192]);
+        static void *callarray[8192];
         int n;
         n = backtrace(callarray, 8192);
         backtrace_symbols_fd(callarray, n, fileno(debug_log));
@@ -405,7 +405,7 @@ debug_trap(const char *message)
     if (!opt_catch_signals)
         fatal_dump(message);
 
-    _db_print("WARNING: %s\n", message);
+    debugs(50, DBG_CRITICAL, "WARNING: " << message);
 }
 
 const char *
@@ -603,7 +603,7 @@ no_suid(void)
     uid_t uid;
     leave_suid();
     uid = geteuid();
-    debugs(21, 3, "no_suid: PID " << getpid() << " giving up root priveleges forever");
+    debugs(21, 3, "no_suid: PID " << getpid() << " giving up root privileges forever");
 
     if (setuid(0) < 0) {
         int xerrno = errno;

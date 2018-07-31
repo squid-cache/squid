@@ -9,6 +9,7 @@
 #ifndef SQUID_HTTPREQUEST_H
 #define SQUID_HTTPREQUEST_H
 
+#include "anyp/Uri.h"
 #include "base/CbcPointer.h"
 #include "dns/forward.h"
 #include "err_type.h"
@@ -18,7 +19,6 @@
 #include "MasterXaction.h"
 #include "Notes.h"
 #include "RequestFlags.h"
-#include "URL.h"
 
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -70,6 +70,10 @@ public:
     /// whether the client is likely to be able to handle a 1xx reply
     bool canHandle1xx() const;
 
+    /// \returns a pointer to a local static buffer containing request URI
+    /// that honors strip_query_terms and %-encodes unsafe URI characters
+    char *canonicalCleanUrl() const;
+
 #if USE_ADAPTATION
     /// Returns possibly nil history, creating it if adapt. logging is enabled
     Adaptation::History::Pointer adaptLogHistory() const;
@@ -100,7 +104,7 @@ protected:
 
 public:
     HttpRequestMethod method;
-    URL url; ///< the request URI
+    AnyP::Uri url; ///< the request URI
 
 private:
 #if USE_ADAPTATION
@@ -253,6 +257,10 @@ class ConnStateData;
  * Updates ConnStateData ids and HttpRequest notes from helpers received notes.
  */
 void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &notes);
+
+/// \returns listening/*_port address used by the client connection (or nil)
+/// nil parameter(s) indicate missing caller information and are handled safely
+const Ip::Address *FindListeningPortAddress(const HttpRequest *, const AccessLogEntry *);
 
 #endif /* SQUID_HTTPREQUEST_H */
 

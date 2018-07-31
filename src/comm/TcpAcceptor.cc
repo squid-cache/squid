@@ -264,9 +264,11 @@ logAcceptError(const Comm::ConnectionPointer &conn)
     AccessLogEntry::Pointer al = new AccessLogEntry;
     al->tcpClient = conn;
     al->url = "error:accept-client-connection";
+    al->setVirginUrlForMissingRequest(al->url);
     ACLFilledChecklist ch(nullptr, nullptr, nullptr);
     ch.src_addr = conn->remote;
     ch.my_addr = conn->local;
+    ch.al = al;
     accessLogLog(al, &ch);
 }
 
@@ -302,7 +304,7 @@ Comm::TcpAcceptor::acceptOne()
         return;
     }
 
-    newConnDetails->nfmark = Ip::Qos::getNfmarkFromConnection(newConnDetails, Ip::Qos::dirAccepted);
+    newConnDetails->nfConnmark = Ip::Qos::getNfConnmark(newConnDetails, Ip::Qos::dirAccepted);
 
     debugs(5, 5, HERE << "Listener: " << conn <<
            " accepted new connection " << newConnDetails <<
@@ -344,10 +346,10 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
  * accept() and process
  * Wait for an incoming connection on our listener socket.
  *
- * \retval Comm::OK         success. details parameter filled.
- * \retval Comm::NOMESSAGE  attempted accept() but nothing useful came in.
- * \retval Comm::COMM_ERROR      an outright failure occured.
- *                         Or if this client has too many connections already.
+ * \retval Comm::OK          success. details parameter filled.
+ * \retval Comm::NOMESSAGE   attempted accept() but nothing useful came in.
+ * \retval Comm::COMM_ERROR  an outright failure occurred.
+ *                           Or this client has too many connections already.
  */
 Comm::Flag
 Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)

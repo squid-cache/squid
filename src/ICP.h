@@ -14,6 +14,7 @@
  \ingroup ServerProtocol
  */
 
+#include "base/RefCount.h"
 #include "comm/forward.h"
 #include "icp_opcode.h"
 #include "ip/Address.h"
@@ -21,7 +22,10 @@
 #include "store_key_md5.h"
 #include "StoreClient.h"
 
+class AccessLogEntry;
 class HttpRequest;
+
+typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
 /**
  * Wire-level ICP header.
@@ -57,37 +61,29 @@ public:
  \ingroup ServerProtocolICPAPI
  \todo mempool this
  */
-class ICPState
+class ICPState: public StoreClient
 {
 
 public:
     ICPState(icp_common_t &aHeader, HttpRequest *aRequest);
     virtual ~ICPState();
+
     icp_common_t header;
     HttpRequest *request;
     int fd;
 
     Ip::Address from;
     char *url;
-};
 
-/// \ingroup ServerProtocolICPAPI
-struct icpUdpData {
+protected:
+    /* StoreClient API */
+    virtual LogTags *loggingTags() override;
+    virtual void fillChecklist(ACLFilledChecklist &) const override;
 
-    /// IP address for the remote end. Because we reply to packets from unknown non-peers.
-    Ip::Address address;
+    /// either confirms and starts processing a cache hit or returns false
+    bool confirmAndPrepHit(const StoreEntry &);
 
-    void *msg;
-    size_t len;
-    icpUdpData *next;
-#ifndef LESS_TIMING
-
-    struct timeval start;
-#endif
-
-    LogTags logcode;
-
-    struct timeval queue_time;
+    mutable AccessLogEntryPointer al;
 };
 
 extern Comm::ConnectionPointer icpIncomingConn;
@@ -101,16 +97,10 @@ HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
 bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
 
 /// \ingroup ServerProtocolICPAPI
-void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from);
+void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from, AccessLogEntryPointer);
 
 /// \ingroup ServerProtocolICPAPI
 icp_opcode icpGetCommonOpcode();
-
-/// \ingroup ServerProtocolICPAPI
-int icpUdpSend(int, const Ip::Address &, icp_common_t *, const LogTags &, int);
-
-/// \ingroup ServerProtocolICPAPI
-LogTags icpLogFromICPCode(icp_opcode opcode);
 
 /// \ingroup ServerProtocolICPAPI
 void icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd);
@@ -119,13 +109,7 @@ void icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd);
 PF icpHandleUdp;
 
 /// \ingroup ServerProtocolICPAPI
-PF icpUdpSendQueue;
-
-/// \ingroup ServerProtocolICPAPI
 void icpHandleIcpV3(int, Ip::Address &, char *, int);
-
-/// \ingroup ServerProtocolICPAPI
-int icpCheckUdpHit(StoreEntry *, HttpRequest * request);
 
 /// \ingroup ServerProtocolICPAPI
 void icpOpenPorts(void);

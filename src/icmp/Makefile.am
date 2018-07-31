@@ -8,11 +8,6 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-# TODO: get rid of this when config filename is no longer a global constant.
-#      its only here so the pinger globals.cc will link.
-DEFS += -DDEFAULT_CONFIG_FILE=NULL
-
-
 # ICMP Specific Configurations
 
 if ENABLE_PINGER

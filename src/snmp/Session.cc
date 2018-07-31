@@ -16,57 +16,41 @@
 
 Snmp::Session::Session()
 {
-    clear();
+    memset(static_cast<snmp_session *>(this), 0, sizeof(snmp_session));
 }
 
-Snmp::Session::Session(const Session& session)
+Snmp::Session::Session(const Snmp::Session& session) : Session()
 {
-    assign(session);
-}
-
-Snmp::Session::~Session()
-{
-    free();
+    operator =(session);
 }
 
 Snmp::Session&
 Snmp::Session::operator = (const Session& session)
 {
-    free();
-    assign(session);
+    if (&session == this)
+        return *this;
+
+    reset();
+    memcpy(static_cast<snmp_session *>(this), &session, sizeof(snmp_session));
+    // memcpy did a shallow copy, make sure we have our own allocations
+    if (session.community) {
+        community = (u_char*)xstrdup((char*)session.community);
+    }
+    if (session.peername) {
+        peername = xstrdup(session.peername);
+    }
     return *this;
 }
 
 void
-Snmp::Session::clear()
-{
-    memset(this, 0, sizeof(*this));
-}
-
-void
-Snmp::Session::free()
+Snmp::Session::reset()
 {
     if (community_len > 0) {
         Must(community != NULL);
         xfree(community);
     }
-    if (peername != NULL)
-        xfree(peername);
-    clear();
-}
-
-void
-Snmp::Session::assign(const Session& session)
-{
-    memcpy(this, &session, sizeof(*this));
-    if (session.community != NULL) {
-        community = (u_char*)xstrdup((char*)session.community);
-        Must(community != NULL);
-    }
-    if (session.peername != NULL) {
-        peername = xstrdup(session.peername);
-        Must(peername != NULL);
-    }
+    xfree(peername);
+    memset(static_cast<snmp_session *>(this), 0, sizeof(snmp_session));
 }
 
 void
@@ -91,7 +75,7 @@ Snmp::Session::pack(Ipc::TypedMsgHdr& msg) const
 void
 Snmp::Session::unpack(const Ipc::TypedMsgHdr& msg)
 {
-    free();
+    reset();
     msg.getPod(Version);
     community_len = msg.getInt();
     if (community_len > 0) {
