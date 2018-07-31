@@ -10338,35 +10338,26 @@ DOC_START
 	that the request body is needed. Delaying is the default behavior.
 DOC_END
 
-NAME:  on_http_upgrade
-TYPE:  on_http_upgrade
-LOC: Config.accessList.on_http_upgrade
+NAME:  http_upgrade_request_protocols
+TYPE:  http_upgrade_request_protocols
+LOC: Config.accessList.http_upgrade_protocols
 DEFAULT: none
 DEFAULT_DOC: Respond with an error message when client and server agree to upgrade
 DOC_START
-        Determines Squid behavior when client and server agree to upgrade to
-        new protocol inside an TCP connection or on a bumped CONNECT tunnel
+	Mpla mpla
 
-                 on_http_upgrade <action> [!]acl ...
+                 http_upgrade_request_protocols protocol|All <allow|deny> [!]acl ...
 
-        The first matching action wins. Only fast ACLs are supported.
-
-        Supported actions are:
-
-        tunnel: Establish a TCP connection with the intended server and
-                blindly shovel TCP packets between the client and server.
-
-        respond: Respond with an error message, using the transfer protocol
-                for the Squid port that the server and client wants to
-                upgrade to a new protocol. This is the default.
+        Only fast ACLs are supported.
 
 	For example:
-	# Define supported protocols
-	acl WEBSOCKET rep_header Upgrade -i websocket
-	# Allow web socket protocol:
-	on_http_upgrade tunnel WEBSOCKET
-	# in all other cases just send an HTTP "error page" response:
-	on_http_upgrade respond all
+
+	# never offer Foo
+	http_upgrade_request_protocols Foo deny all
+	# do not tunnel if WebSocket is not alone
+	http_upgrade_request_protocols ANY deny UpgradeHeaderHasWebSocket !UpgradeHeaderIsWebSocket
+	# tunnel nothing else but bare WebSocket and anything with a TLS layer
+	http_upgrade_request_protocols ANY deny !UpgradeHeaderIsWebSocket !UpgradeHeaderHasTls
 DOC_END
 
 NAME: server_pconn_for_nonretriable

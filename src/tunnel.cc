@@ -1168,7 +1168,8 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     MemBuf mb;
     mb.init();
     mb.appendf("CONNECT %s HTTP/1.1\r\n", tunnelState->url);
-    HttpStateData::httpBuildRequestHeader(tunnelState->request.getRaw(),
+    HttpStateData::httpBuildRequestHeader(nullptr,
+                                          tunnelState->request.getRaw(),
                                           NULL,         /* StoreEntry */
                                           tunnelState->al,          /* AccessLogEntry */
                                           &hdr_out,

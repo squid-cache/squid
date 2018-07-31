@@ -31,6 +31,8 @@
 #include "store/Disk.h"
 #include "store/forward.h"
 
+#include <map>
+
 #if USE_OPENSSL
 class sslproxy_cert_sign;
 class sslproxy_cert_adapt;
@@ -47,6 +49,7 @@ class external_acl;
 class HeaderManglers;
 class RefreshPattern;
 class RemovalPolicySettings;
+class HttpUpgradeProtocols;
 
 namespace AnyP
 {
@@ -403,7 +406,7 @@ public:
         acl_access *forceRequestBodyContinuation;
         acl_access *serverPconnForNonretriable;
         acl_access *collapsedForwardingAccess;
-	acl_access *on_http_upgrade;
+        HttpUpgradeProtocols *http_upgrade_protocols;
     } accessList;
     AclDenyInfoList *denyInfoList;
 
