@@ -83,6 +83,7 @@ static const char *const crlf = "\r\n";
 static void httpMaybeRemovePublic(StoreEntry *, Http::StatusCode);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
         HttpHeader * hdr_out, const int we_do_ranges, const Http::StateFlags &);
+static const char *mkUpgradeHeader(HttpStateData *, HttpRequest *, const String &);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) :
     AsyncJob("HttpStateData"),
@@ -137,6 +138,8 @@ HttpStateData::~HttpStateData()
         delete httpChunkDecoder;
 
     cbdataReferenceDone(_peer);
+
+    delete upgradeProtocols;
 
     debugs(11,5, HERE << "HttpStateData " << this << " destroyed; " << serverConnection);
 }
@@ -844,19 +847,14 @@ HttpStateData::handle1xx(HttpReply *reply)
 }
 
 bool
-upgradeProtocolSupported(SBuf &proto)
+HttpStateData::upgradeProtocolSupported(SBuf &proto)
 {
-    enum Protocols {pUnknown, pWebSockets, pTls};
-    static std::map<Protocols, SBuf> SupportedProtocols = {
-        {pWebSockets, SBuf("websocket")},
-        // {pTls, "TLS"} // RFC2817, handle it just like WebSocket?
-        {pUnknown, SBuf("unknown")}
-    };
-
-    for (auto it = SupportedProtocols.cbegin(); it != SupportedProtocols.cend(); ++it) {
+    if (!upgradeProtocols)
+        return false;
+    for (auto it = upgradeProtocols->cbegin(); it != upgradeProtocols->cend(); ++it) {
         // we are expecting Upgrade header in form proto/version
-        if (proto.startsWith(it->second, caseInsensitive) &&
-            (proto.length() == it->second.length() || proto[it->second.length()] == '/'))
+        if (proto.startsWith(*it, caseInsensitive) &&
+            (proto.length() == it->length() || proto[it->length()] == '/'))
             return true;
     }
     return false;
@@ -881,22 +879,10 @@ HttpStateData::processSwitchingProtocols(HttpReply *reply)
     if (upgrade.find(',') != SBuf::npos)
         return false; // Multiple protocols upgrade is not supported.
 
-    if (!upgradeProtocolSupported(upgrade))
-        return false;
-
     // We need to check if the HttpRequest Upgrade header lists the
     // protocols appeared in HttpReply.
-    // Currently only WebSockets supported so the following check is enough
-
-    // Does acl check
-    ACLFilledChecklist ch(Config.accessList.on_http_upgrade, originalRequest().getRaw());
-    ch.reply = reply;
-    HTTPMSGLOCK(ch.reply);
-    allow_t answer = ch.fastCheck();
-    bool allowUpgrade = answer.allowed() && answer.kind == 1;
-
-    if (!allowUpgrade)
-        return false; //upgrade denied;
+    if (!upgradeProtocolSupported(upgrade))
+        return false;
 
     flags.handling101 = true;
     return true;
@@ -1885,7 +1871,8 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
  * note: initialised the HttpHeader, the caller is responsible for Clean()-ing
  */
 void
-HttpStateData::httpBuildRequestHeader(HttpRequest * request,
+HttpStateData::httpBuildRequestHeader(HttpStateData *state,
+                                      HttpRequest * request,
                                       StoreEntry * entry,
                                       const AccessLogEntryPointer &al,
                                       HttpHeader * hdr_out,
@@ -2041,6 +2028,13 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         delete cc;
     }
 
+    if ((e = hdr_in->findEntry(Http::HdrType::UPGRADE))) {
+        const char *upGrdValue = mkUpgradeHeader(state, request, e->value);
+        if (upGrdValue && *upGrdValue) {
+            hdr_out->addEntry(new HttpHeaderEntry(Http::HdrType::UPGRADE, SBuf(), upGrdValue));
+        }
+    }
+
     if (hdr_out->has(Http::HdrType::UPGRADE))
         hdr_out->putStr(Http::HdrType::CONNECTION, "Upgrade");
     else {
@@ -2066,6 +2060,34 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     httpHdrMangleList(hdr_out, request, al, ROR_REQUEST);
 
     strConnection.clean();
+}
+
+static const char *
+mkUpgradeHeader(HttpStateData *state, HttpRequest *req, const String &value)
+{
+    static String out;
+    const char *pos = NULL;
+    const char *item;
+    int ilen = 0;
+
+    out.clean();
+    while (strListGetItem(&value, ',', &item, &ilen, &pos)) {
+        //Config.accessList.http_upgrade_protocols
+        SBuf proto(item, ilen);
+        auto it = Config.accessList.http_upgrade_protocols->find(proto);
+        if (it != Config.accessList.http_upgrade_protocols->end() && it->second != nullptr) {
+            acl_access *acl = it->second;
+            ACLFilledChecklist ch(acl, req);
+            allow_t answer = ch.fastCheck();
+            if (answer.allowed()) {
+                strListAdd(&out, proto.c_str(), ',');
+                if (!state->upgradeProtocols)
+                    state->upgradeProtocols = new std::vector<SBuf>;
+                state->upgradeProtocols->push_back(proto);
+            }
+        }
+    }
+    return out.termedBuf();
 }
 
 /**
@@ -2101,13 +2123,8 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case Http::HdrType::KEEP_ALIVE:          /** \par Keep-Alive: */
     case Http::HdrType::PROXY_AUTHENTICATE:  /** \par Proxy-Authenticate: */
     case Http::HdrType::TRAILER:             /** \par Trailer: */
-    case Http::HdrType::TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
-        break;
     case Http::HdrType::UPGRADE:             /** \par Upgrade: */
-        if (request->flags.mayUpgrade) {
-            // copy the supported protocols only:
-            hdr_out->addEntry(e->clone());
-        }
+    case Http::HdrType::TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
         break;
 
     /** \par OTHER headers I haven't bothered to track down yet. */
@@ -2302,7 +2319,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     /* build and pack headers */
     {
         HttpHeader hdr(hoRequest);
-        httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, flags);
+        httpBuildRequestHeader(this, request.getRaw(), entry, fwd->al, &hdr, flags);
 
         if (request->flags.pinned && request->flags.connectionAuth)
             request->flags.authSent = true;

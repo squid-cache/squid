@@ -15,6 +15,8 @@
 #include "http/StateFlags.h"
 #include "sbuf/SBuf.h"
 
+#include <vector>
+
 class FwdState;
 class HttpHeader;
 
@@ -43,7 +45,8 @@ public:
     HttpStateData(FwdState *);
     ~HttpStateData();
 
-    static void httpBuildRequestHeader(HttpRequest * request,
+    static void httpBuildRequestHeader(HttpStateData *state,
+                                       HttpRequest * request,
                                        StoreEntry * entry,
                                        const AccessLogEntryPointer &al,
                                        HttpHeader * hdr_out,
@@ -68,6 +71,7 @@ public:
     SBuf inBuf;                ///< I/O buffer for receiving server responses
     bool ignoreCacheControl;
     bool surrogateNoStore;
+    std::vector<SBuf> *upgradeProtocols = nullptr;
 
     void processSurrogateControl(HttpReply *);
 
@@ -142,6 +146,7 @@ private:
     /// \return false if this 101 reply is not supported, true otherwise
     bool processSwitchingProtocols(HttpReply *msg);
 
+    bool upgradeProtocolSupported(SBuf &proto);
 
     /// Parser being used at present to parse the HTTP/ICY server response.
     Http1::ResponseParserPointer hp;

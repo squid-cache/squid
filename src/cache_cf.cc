@@ -247,17 +247,13 @@ static int parseOneConfigFile(const char *file_name, unsigned int depth);
 static void parse_configuration_includes_quoted_values(bool *recognizeQuotedValues);
 static void dump_configuration_includes_quoted_values(StoreEntry *const entry, const char *const name, bool recognizeQuotedValues);
 static void free_configuration_includes_quoted_values(bool *recognizeQuotedValues);
-
-static void parseOnActionTunnel(acl_access **access, const char *name);
-static void dumpOnActionTunnel(StoreEntry *entry, const char *name, acl_access *access);
-
 static void parse_on_unsupported_protocol(acl_access **access);
 static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
 static void free_on_unsupported_protocol(acl_access **access);
 static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, ACL *acl = nullptr);
-static void parse_on_http_upgrade(acl_access **access);
-static void dump_on_http_upgrade(StoreEntry *entry, const char *name, acl_access *access);
-static void free_on_http_upgrade(acl_access **access);
+static void parse_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protocols);
+static void dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocols *http_upgrade_protocols);
+static void free_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protocols);
 
 /*
  * LegacyParser is a parser for legacy code that uses the global
@@ -5072,7 +5068,7 @@ free_configuration_includes_quoted_values(bool *)
 }
 
 static void
-parseOnActionTunnel(acl_access **access, const char *name)
+parse_on_unsupported_protocol(acl_access **access)
 {
     char *tm;
     if ((tm = ConfigParser::NextToken()) == NULL) {
@@ -5086,41 +5082,29 @@ parseOnActionTunnel(acl_access **access, const char *name)
     else if (strcmp(tm, "respond") == 0)
         action.kind = 2;
     else {
-        debugs(3, DBG_CRITICAL, "FATAL: unknown " << name <<" mode: " << tm);
+        debugs(3, DBG_CRITICAL, "FATAL: unknown on_unsupported_protocol mode: " << tm);
         self_destruct();
         return;
     }
 
     // empty rule OK
-    ParseAclWithAction(access, action, name);
+    ParseAclWithAction(access, action, "on_unsupported_protocol");
 }
 
 static void
-dumpOnActionTunnel(StoreEntry *entry, const char *name, acl_access *access)
+dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access)
 {
-    static const std::vector<const char *> onActionTunnelMode = {
+    static const std::vector<const char *> onErrorTunnelMode = {
         "none",
         "tunnel",
         "respond"
     };
     if (access) {
         SBufList lines = access->treeDump(name, [](const Acl::Answer &action) {
-            return onActionTunnelMode.at(action.kind);
+            return onErrorTunnelMode.at(action.kind);
         });
         dump_SBufList(entry, lines);
     }
-}
-
-static void
-parse_on_unsupported_protocol(acl_access **access)
-{
-    parseOnActionTunnel(access, "on_unsupported_protocol");
-}
-
-static void
-dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access)
-{
-    dumpOnActionTunnel(entry, name, access);
 }
 
 static void
@@ -5130,19 +5114,53 @@ free_on_unsupported_protocol(acl_access **access)
 }
 
 static void
-parse_on_http_upgrade(acl_access **access)
+parse_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protocols)
 {
-    parseOnActionTunnel(access, "on_http_upgrade");
+    char *proto;
+    if ((proto = ConfigParser::NextToken()) == NULL) {
+        self_destruct();
+        return;
+    }
+
+    if (!*http_upgrade_protocols)
+        *http_upgrade_protocols = new HttpUpgradeProtocols;
+
+    auto it = (*http_upgrade_protocols)->find(SBuf(proto));
+    acl_access *access = nullptr;
+    if (it != (*http_upgrade_protocols)->end())
+        access = it->second;
+    else {
+        access = new Acl::Tree;
+        access->context(cfg_directive, config_input_line);
+        (*http_upgrade_protocols)->insert(std::pair<SBuf, acl_access *>(SBuf(proto), access));
+    }
+
+    aclParseAccessLine(cfg_directive, LegacyParser, &access);
 }
 
 static void
-dump_on_http_upgrade(StoreEntry *entry, const char *name, acl_access *access)
+dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocols *http_upgrade_protocols)
 {
-    dumpOnActionTunnel(entry, name, access);
+    for (auto it = http_upgrade_protocols->begin(); it != http_upgrade_protocols->end(); ++it) {
+//        storeAppendPrintf(entry, "%s %s", name, it->first.c_str());
+        SBufList line;
+        line.push_back(SBuf(name));
+        line.push_back(it->first);
+        SBufList acld = it->second->treeDump("", &Acl::AllowOrDeny);
+        line.insert(line.end(), acld.begin(), acld.end());
+        dump_SBufList(entry, line);
+    }
 }
 
 static void
-free_on_http_upgrade(acl_access **access)
+free_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protocols)
 {
-    free_acl_access(access);
+    if (!*http_upgrade_protocols)
+        return;
+
+    for (auto it = (*http_upgrade_protocols)->begin(); it != (*http_upgrade_protocols)->end(); ++it)
+        free_acl_access(&it->second);
+
+    delete *http_upgrade_protocols;
+    *http_upgrade_protocols = nullptr;
 }
