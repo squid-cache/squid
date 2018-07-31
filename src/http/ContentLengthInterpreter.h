@@ -31,7 +31,7 @@ public:
     void applyStatusCodeRules(const StatusCode code) {
         if (!prohibitedAndIgnored_ && ProhibitsContentLength(code))
             prohibitedAndIgnored_ = (code == scNoContent) ? "prohibited and ignored in the 204 response" :
-                "prohibited and ignored the 1xx response";
+                                    "prohibited and ignored the 1xx response";
     }
 
     // TODO: implement
@@ -65,7 +65,6 @@ public:
     /// whether a valid field value was present, possibly among problematic ones
     /// irrelevant if sawBad is set
     bool sawGood;
-
 
 protected:
     bool goodSuffix(const char *suffix, const char * const end) const;
