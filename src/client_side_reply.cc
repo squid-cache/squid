@@ -1408,6 +1408,8 @@ clientReplyContext::buildReplyHeader()
     }
 
     reply->header.removeHopByHopEntries();
+    // paranoid: ContentLengthInterpreter has cleaned non-generated replies
+    reply->removeIrrelevantContentLength();
 
     //    if (request->range)
     //      clientBuildRangeHeader(http, reply);

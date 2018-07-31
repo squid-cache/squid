@@ -21,6 +21,7 @@
 #include "globals.h"
 #include "htcp.h"
 #include "http.h"
+#include "http/ContentLengthInterpreter.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
 #include "ip/tools.h"
@@ -924,7 +925,7 @@ htcpSpecifier::checkHit()
         return;
     }
 
-    if (!checkHitRequest->header.parse(req_hdrs, reqHdrsSz)) {
+    if (!checkHitRequest->parseHeader(req_hdrs, reqHdrsSz)) {
         debugs(31, 3, "htcpCheckHit: NO; failed to parse request headers");
         checkHitRequest = nullptr;
         checkedHit(nullptr);
@@ -993,7 +994,7 @@ htcpClrStore(const htcpSpecifier::Pointer &s)
     }
 
     /* Parse request headers */
-    if (!request->header.parse(s->req_hdrs, s->reqHdrsSz)) {
+    if (!request->parseHeader(s->req_hdrs, s->reqHdrsSz)) {
         debugs(31, 2, "htcpClrStore: failed to parse request headers");
         return -1;
     }
@@ -1031,6 +1032,14 @@ HtcpReplyData::HtcpReplyData() :
     hit(0), hdr(hoHtcpReply), msg_id(0), version(0.0)
 {
     memset(&cto, 0, sizeof(cto));
+}
+
+bool
+HtcpReplyData::parseHeader(const char *buffer, const size_t size)
+{
+    Http::ContentLengthInterpreter interpreter;
+    // no applyStatusCodeRules() -- HTCP replies lack cached HTTP status code
+    return hdr.parse(buffer, size, interpreter);
 }
 
 static void
@@ -1088,13 +1097,13 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from
         }
 
         if ((t = d->resp_hdrs))
-            htcpReply.hdr.parse(t, d->respHdrsSz);
+            htcpReply.parseHeader(t, d->respHdrsSz);
 
         if ((t = d->entity_hdrs))
-            htcpReply.hdr.parse(t, d->entityHdrsSz);
+            htcpReply.parseHeader(t, d->entityHdrsSz);
 
         if ((t = d->cache_hdrs))
-            htcpReply.hdr.parse(t, d->cacheHdrsSz);
+            htcpReply.parseHeader(t, d->cacheHdrsSz);
     }
 
     debugs(31, 3, "htcpHandleTstResponse: key (" << key << ") " << storeKeyText(key));

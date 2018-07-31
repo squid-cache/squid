@@ -751,7 +751,7 @@ HttpStateData::processReplyHeader()
 
     newrep->removeStaleWarnings();
 
-    if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->sline.status() >= 100 && newrep->sline.status() < 200) {
+    if (newrep->sline.protocol == AnyP::PROTO_HTTP && Http::Is1xx(newrep->sline.status())) {
         handle1xx(newrep);
         ctx_exit(ctx);
         return;

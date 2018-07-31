@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "http/ContentLengthInterpreter.h"
 #include "http/Message.h"
 #include "http/one/Parser.h"
 #include "HttpHdrCc.h"
@@ -205,7 +206,9 @@ Http::Message::httpMsgParseStep(const char *buf, int len, int atEnd)
      */
     if (pstate == Http::Message::psReadyToParseHeaders) {
         size_t hsize = 0;
-        const int parsed = header.parse(parse_start, parse_len, atEnd, hsize);
+        Http::ContentLengthInterpreter interpreter;
+        configureContentLengthInterpreter(interpreter);
+        const int parsed = header.parse(parse_start, parse_len, atEnd, hsize, interpreter);
         if (parsed <= 0) {
             PROF_stop(HttpMsg_httpMsgParseStep);
             return !parsed ? 0 : httpMsgParseError();
@@ -220,12 +223,13 @@ Http::Message::httpMsgParseStep(const char *buf, int len, int atEnd)
 }
 
 bool
-Http::Message::parseHeader(Http1::Parser &hp)
+Http::Message::parseHeader(Http1::Parser &hp, Http::ContentLengthInterpreter &clen)
 {
     // HTTP/1 message contains "zero or more header fields"
     // zero does not need parsing
     // XXX: c_str() reallocates. performance regression.
-    if (hp.headerBlockSize() && !header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize())) {
+    configureContentLengthInterpreter(clen);
+    if (hp.headerBlockSize() && !header.parse(hp.mimeHeader().c_str(), hp.headerBlockSize(), clen)) {
         pstate = Http::Message::psError;
         return false;
     }

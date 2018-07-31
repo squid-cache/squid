@@ -236,6 +236,15 @@ public:
     NotePairs::Pointer notes();
     bool hasNotes() const { return bool(theNotes) && !theNotes->empty(); }
 
+    virtual void configureContentLengthInterpreter(Http::ContentLengthInterpreter &) {}
+
+    /// Parses request header using Parser.
+    /// Use it in contexts where the Parser object is available.
+    bool parseHeader(Http1::Parser &hp);
+    /// Parses request header from the buffer.
+    /// Use it in contexts where the Parser object not available.
+    bool parseHeader(const char *buffer, const size_t size);
+
 private:
     mutable int64_t rangeOffsetLimit;  /* caches the result of getRangeOffsetLimit */
 

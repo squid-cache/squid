@@ -20,6 +20,7 @@
 #include "globals.h"
 #include "gopher.h"
 #include "http.h"
+#include "http/ContentLengthInterpreter.h"
 #include "http/one/RequestParser.h"
 #include "http/Stream.h"
 #include "HttpHdrCc.h"
@@ -647,6 +648,20 @@ HttpRequest::canHandle1xx() const
 
     // others must support 1xx control messages
     return true;
+}
+
+bool
+HttpRequest::parseHeader(Http1::Parser &hp)
+{
+    Http::ContentLengthInterpreter clen;
+    return Message::parseHeader(hp, clen);
+}
+
+bool
+HttpRequest::parseHeader(const char *buffer, const size_t size)
+{
+    Http::ContentLengthInterpreter clen;
+    return header.parse(buffer, size, clen);
 }
 
 ConnStateData *
