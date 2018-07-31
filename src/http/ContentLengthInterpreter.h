@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_HTTP_CONTENTLENGTH_INTERPRETER_H
 #define SQUID_SRC_HTTP_CONTENTLENGTH_INTERPRETER_H
 
-#include "StatusCode.h"
+#include "http/StatusCode.h"
 
 class String;
 
