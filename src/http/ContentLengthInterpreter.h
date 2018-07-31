@@ -28,13 +28,23 @@ public:
     bool checkField(const String &field);
 
     /// prohibits Content-Length in 1xx and 204 responses
-    void applyStatusCodeRules(const StatusCode code) { prohibitedAndIgnored = ProhibitsContentLength(code); }
+    void applyStatusCodeRules(const StatusCode code) {
+        if (!prohibitedAndIgnored_ && ProhibitsContentLength(code))
+            prohibitedAndIgnored_ = (code == scNoContent) ? "prohibited and ignored in the 204 response" :
+                "prohibited and ignored the 1xx response";
+    }
+
     // TODO: implement
     /// prohibits Content-Length in GET/HEAD requests
     // void applyRequestMethodRules(const Http::MethodType method);
 
     /// prohibits Content-Length in trailer
-    void applyTrailerRules() { prohibitedAndIgnored = true; }
+    void applyTrailerRules() {
+        if (!prohibitedAndIgnored_)
+            prohibitedAndIgnored_ = "prohibited in trailers";
+    }
+
+    const char *prohibitedAndIgnored() const { return prohibitedAndIgnored_; }
 
     /// intended Content-Length value if sawGood is set and sawBad is not set
     /// meaningless otherwise
@@ -56,13 +66,15 @@ public:
     /// irrelevant if sawBad is set
     bool sawGood;
 
-    /// whether the response status code forbids Content-Length
-    bool prohibitedAndIgnored;
 
 protected:
     bool goodSuffix(const char *suffix, const char * const end) const;
     bool checkValue(const char *start, const int size);
     bool checkList(const String &list);
+
+private:
+    /// why the response status code forbids Content-Length, nil otherwise
+    const char *prohibitedAndIgnored_;
 };
 
 } // namespace Http
