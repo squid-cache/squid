@@ -72,7 +72,7 @@ protected:
     bool checkList(const String &list);
 
 private:
-    /// why the response status code forbids Content-Length, nil otherwise
+    /// whether and why Content-Length is prohibited
     const char *prohibitedAndIgnored_;
 };
 
