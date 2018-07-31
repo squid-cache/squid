@@ -49,6 +49,9 @@ const SBuf &cmdStor();
 const SBuf &cmdStou();
 const SBuf &cmdUser();
 
+/// whether this is an informational 1xx response status code
+inline bool Is1xx(const int sc) { return Http::scContinue <= sc && sc < Http::scOkay; }
+
 } // namespace Ftp
 
 #endif /* SQUID_FTP_ELEMENTS_H */

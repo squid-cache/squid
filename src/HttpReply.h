@@ -120,6 +120,13 @@ public:
     /// \returns false if any information is missing
     bool olderThan(const HttpReply *them) const;
 
+    /// Some response status codes prohibit sending Content-Length (RFC 7230 section 3.3.2).
+    void removeIrrelevantContentLength();
+
+    virtual void configureContentLengthInterpreter(Http::ContentLengthInterpreter &);
+    /// parses reply header using Parser
+    bool parseHeader(Http1::Parser &hp);
+
 private:
     /** initialize */
     void init();
