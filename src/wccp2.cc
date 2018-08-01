@@ -1743,7 +1743,7 @@ wccp2AssignBuckets(void *)
 
         assignment_key = (struct assignment_key_t *) &wccp_packet[offset];
 
-        service_list_ptr->change_num++;
+        ++service_list_ptr->change_num;
         assignment_key->master_number = htonl(service_list_ptr->change_num);
 
         offset += sizeof(struct assignment_key_t);
