@@ -671,13 +671,9 @@ Store::Controller::updateOnNotModified(StoreEntry *old, const StoreEntry &newer)
     if (!old->timestampsSet() && !modified)
         return;
 
-    /* update stored image of the old entry */
-
-    if (memStore && old->mem_status == IN_MEMORY && !EBIT_TEST(old->flags, ENTRY_SPECIAL))
-        memStore->updateHeaders(old);
-
-    if (old->hasDisk())
-        swapDir->updateHeaders(old);
+    // XXX: Call memStore->updateHeaders(old) and swapDir->updateHeaders(old) to
+    // update stored headers, stored metadata, and in-transit metadata.
+    debugs(20, 3, *old << " headers were modified: " << modified);
 }
 
 bool
