@@ -1,3 +1,16 @@
+Changes to squid-4.2 (04 Aug 2018):
+
+	- Regression fix: support for https_port clientca= option
+	- Regression Bug 4870: milliseconds logformats prepend 0s instead of spaces
+	- Bug 4861: HTTPMSGLOCK missing pointer safety
+	- Bug 4843 pt3: GCC-8 fixes and refactoring
+	- HTTP: Do not update stored headers on 304 responses
+	- Fix segmentation fault on -k parse
+	- Fix %>ru logging of huge URLs
+	- ... and several performance optimizations
+	- ... and some documentation updates
+	- ... and all fixes from 3.5.28
+
 Changes to squid-4.1 (02 Jul 2018):
 
 	- Bug 4223: fixed retries of failed re-forwardable transactions
