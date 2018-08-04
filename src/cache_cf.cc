@@ -2976,7 +2976,7 @@ dump_time_t(StoreEntry * entry, const char *name, time_t var)
 void
 parse_time_t(time_t * var)
 {
-    time_msec_t tval;
+    time_msec_t tval = 0;
     parseTimeLine(&tval, T_SECOND_STR, false);
     *var = static_cast<time_t>(tval/1000);
 }
