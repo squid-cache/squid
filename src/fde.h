@@ -54,15 +54,22 @@ class fde
 public:
     fde() {
         *ipaddr = 0;
-        *desc = 0;
         read_handler = nullptr;
         write_handler = nullptr;
         readMethod_ = nullptr;
         writeMethod_ = nullptr;
     }
+    // no copying, just move-construct for clear()
+    fde(const fde &) = delete;
+    fde &operator =(const fde &) = delete;
+    fde(fde &&) = default;
+    fde &operator =(fde &&) = default;
+    ~fde() {
+        xfree(desc);
+    }
 
     /// Clear the fde class back to NULL equivalent.
-    void clear() { *this = fde(); }
+    void clear() { safe_free(desc); *this = fde(); }
 
     /// True if comm_close for this fd has been called
     bool closing() const { return flags.close_request; }
@@ -105,7 +112,7 @@ public:
                                         See also nfConnmarkFromServer. */
     int sock_family = 0;
     char ipaddr[MAX_IPSTRLEN];            /* dotted decimal address of peer */
-    char desc[FD_DESC_SZ];
+    char *desc = nullptr;
 
     struct _fde_flags {
         bool open = false;

@@ -246,10 +246,11 @@ void
 fd_note(int fd, const char *s)
 {
     fde *F = &fd_table[fd];
-    if (s)
-        xstrncpy(F->desc, s, FD_DESC_SZ);
+    safe_free(F->desc);
+    if (!s)
+        F->desc = xstrdup(s);
     else
-        *(F->desc) = 0; // ""-string
+        F->desc = xstrdup("");
 }
 
 void
