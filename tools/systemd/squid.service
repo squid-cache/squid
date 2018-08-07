@@ -8,7 +8,7 @@
 [Unit]
 Description=Squid Web Proxy Server
 Documentation=man:squid(8)
-After=network.target nss-lookup.target
+After=network.target network-online.target nss-lookup.target
 
 [Service]
 Type=forking
