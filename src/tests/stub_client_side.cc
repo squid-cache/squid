@@ -47,7 +47,7 @@ void ConnStateData::getSslContextStart() STUB
 void ConnStateData::getSslContextDone(Security::ContextPointer &) STUB
 void ConnStateData::sslCrtdHandleReplyWrapper(void *, const Helper::Reply &) STUB
 void ConnStateData::sslCrtdHandleReply(const Helper::Reply &) STUB
-void ConnStateData::switchToHttps(HttpRequest *, Ssl::BumpMode) STUB
+void ConnStateData::switchToHttps(ClientHttpRequest *, Ssl::BumpMode) STUB
 void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &) STUB
 bool ConnStateData::serveDelayedError(Http::Stream *) STUB_RETVAL(false)
 #endif
