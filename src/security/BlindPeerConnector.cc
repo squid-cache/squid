@@ -22,10 +22,10 @@ CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 Security::ContextPointer
 Security::BlindPeerConnector::getTlsContext()
 {
-    const CachePeer *peer = serverConnection()->getPeer();
-    if (peer && peer->secure.encryptTransport)
+    if (const CachePeer *peer = serverConnection()->getPeer()) {
+        assert(peer->secure.encryptTransport);
         return peer->sslContext;
-
+    }
     return ::Config.ssl_client.sslContext;
 }
 
@@ -37,8 +37,7 @@ Security::BlindPeerConnector::initialize(Security::SessionPointer &serverSession
         return false;
     }
 
-    const CachePeer *peer = serverConnection()->getPeer();
-    if (peer && peer->secure.encryptTransport) {
+    if (const CachePeer *peer = serverConnection()->getPeer()) {
         assert(peer);
 
         // NP: domain may be a raw-IP but it is now always set
@@ -65,8 +64,6 @@ Security::BlindPeerConnector::initialize(Security::SessionPointer &serverSession
 void
 Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
 {
-    auto *peer = serverConnection()->getPeer();
-
     if (error) {
         debugs(83, 5, "error=" << (void*)error);
         // XXX: forward.cc calls peerConnectSucceeded() after an OK TCP connect but
@@ -74,12 +71,12 @@ Security::BlindPeerConnector::noteNegotiationDone(ErrorState *error)
         // It is not clear whether we should call peerConnectSucceeded/Failed()
         // based on TCP results, SSL results, or both. And the code is probably not
         // consistent in this aspect across tunnelling and forwarding modules.
-        if (peer && peer->secure.encryptTransport)
-            peerConnectFailed(peer);
+        if (CachePeer *p = serverConnection()->getPeer())
+            peerConnectFailed(p);
         return;
     }
 
-    if (peer && peer->secure.encryptTransport) {
+    if (auto *peer = serverConnection()->getPeer()) {
         const int fd = serverConnection()->fd;
         Security::MaybeGetSessionResumeData(fd_table[fd].ssl, peer->sslSession);
     }
