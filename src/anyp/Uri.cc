@@ -205,22 +205,14 @@ urlAppendDomain(char *host)
 /*
  * Parse a URI/URL.
  *
- * Stores parsed values in the `request` argument.
- *
- * This abuses HttpRequest as a way of representing the parsed url
- * and its components.
- * method is used to switch parsers and to init the HttpRequest.
- * If method is Http::METHOD_CONNECT, then rather than a URL a hostname:port is
- * looked for.
- * The url is non const so that if its too long we can NULL-terminate it in place.
- */
-
-/*
- * This routine parses a URL. Its assumed that the URL is complete -
+ * It is assumed that the URL is complete -
  * ie, the end of the string is the end of the URL. Don't pass a partial
  * URL here as this routine doesn't have any way of knowing whether
- * its partial or not (ie, it handles the case of no trailing slash as
+ * it is partial or not (ie, it handles the case of no trailing slash as
  * being "end of host with implied path of /".
+ *
+ * method is used to switch parsers. If method is Http::METHOD_CONNECT,
+ * then rather than a URL a hostname:port is looked for.
  */
 bool
 AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf str)
