@@ -265,7 +265,9 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf str)
 
     } else if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
                AnyP::Uri::Asterisk().cmp(url) == 0) {
-        parseFinish(AnyP::PROTO_HTTP, nullptr, url, foundHost, SBuf(), 80 /* HTTP default port */);
+        setScheme(AnyP::PROTO_HTTP, nullptr);
+        path(Asterisk());
+        port(getScheme().defaultPort());
         return true;
     } else if (strncmp(url, "urn:", 4) == 0) {
         debugs(23, 3, "Split URI '" << url << "' into proto='urn', path='" << (url+4) << "'");
@@ -477,24 +479,12 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf str)
         }
     }
 
-    parseFinish(protocol, proto, urlpath, foundHost, SBuf(login), foundPort);
+    setScheme(protocol, proto);
+    path(urlpath);
+    host(foundHost);
+    userInfo(SBuf(login));
+    port(foundPort);
     return true;
-}
-
-/// Update the URL object with parsed URI data.
-void
-AnyP::Uri::parseFinish(const AnyP::ProtocolType protocol,
-                       const char *const protoStr, // for unknown protocols
-                       const char *const aUrlPath,
-                       const char *const aHost,
-                       const SBuf &aLogin,
-                       const int aPort)
-{
-    setScheme(protocol, protoStr);
-    path(aUrlPath);
-    host(aHost);
-    userInfo(aLogin);
-    port(aPort);
 }
 
 void
