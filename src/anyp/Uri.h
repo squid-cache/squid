@@ -71,6 +71,10 @@ public:
         scheme_ = AnyP::UriScheme(p, str);
         touch();
     }
+    void setScheme(const AnyP::UriScheme &s) {
+        scheme_ = s;
+        touch();
+    }
 
     void userInfo(const SBuf &s) {userInfo_=s; touch();}
     const SBuf &userInfo() const {return userInfo_;}
