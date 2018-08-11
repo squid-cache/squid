@@ -49,6 +49,7 @@ testHttpRequest::testCreateFromUrl()
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
     HttpRequest *aRequest = HttpRequest::FromUrl(url, mx);
     expected_port = 90;
+    CPPUNIT_ASSERT(aRequest != nullptr);
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
@@ -60,6 +61,7 @@ testHttpRequest::testCreateFromUrl()
     url = "http://foo:90/bar";
     aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 90;
+    CPPUNIT_ASSERT(aRequest != nullptr);
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
@@ -71,6 +73,7 @@ testHttpRequest::testCreateFromUrl()
     url = "http://foo/bar";
     aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_PUT);
     expected_port = 80;
+    CPPUNIT_ASSERT(aRequest != nullptr);
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_PUT);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
@@ -88,6 +91,7 @@ testHttpRequest::testCreateFromUrl()
     url = "foo:45";
     aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_CONNECT);
     expected_port = 45;
+    CPPUNIT_ASSERT(aRequest != nullptr);
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_CONNECT);
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
