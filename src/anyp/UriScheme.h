@@ -54,6 +54,9 @@ public:
     /// initializes down-cased protocol scheme names array
     static void Init();
 
+    /// produce the ProtocolType code for names scheme, or PROTO_UNKNOWN
+    static const AnyP::ProtocolType FindProtocolType(const SBuf &);
+
 private:
     /// optimization: stores down-cased protocol scheme names, copied from
     /// AnyP::ProtocolType_str
