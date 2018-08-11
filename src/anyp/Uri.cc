@@ -12,6 +12,7 @@
 #include "anyp/Uri.h"
 #include "globals.h"
 #include "HttpRequest.h"
+#include "parser/Tokenizer.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
@@ -222,7 +223,7 @@ urlAppendDomain(char *host)
  * being "end of host with implied path of /".
  */
 bool
-AnyP::Uri::parse(const HttpRequestMethod& method, const char *url)
+AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf str)
 {
     LOCAL_ARRAY(char, proto, MAX_URL);
     LOCAL_ARRAY(char, login, MAX_URL);
@@ -238,10 +239,15 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const char *url)
     char *dst;
     proto[0] = foundHost[0] = urlpath[0] = login[0] = '\0';
 
-    if ((l = strlen(url)) + Config.appendDomainLen > (MAX_URL - 1)) {
+    if ((l = str.length()) + Config.appendDomainLen > (MAX_URL - 1)) {
         debugs(23, DBG_IMPORTANT, MYNAME << "URL too large (" << l << " bytes)");
         return false;
     }
+
+    Parser::Tokenizer tok(str);
+    auto B = tok.buf();
+    const char *url = B.c_str();
+
     if (method == Http::METHOD_CONNECT) {
         /*
          * RFC 7230 section 5.3.3:  authority-form = authority

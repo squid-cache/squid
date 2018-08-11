@@ -59,7 +59,7 @@ public:
     }
     void touch(); ///< clear the cached URI display forms
 
-    bool parse(const HttpRequestMethod &, const char *url);
+    bool parse(const HttpRequestMethod &, const SBuf url);
 
     /// \return a new URI that honors uri_whitespace
     static char *cleanup(const char *uri);

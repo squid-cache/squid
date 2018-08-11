@@ -1269,7 +1269,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
             // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
             if (urlNote != NULL && strcmp(urlNote, http->uri)) {
                 AnyP::Uri tmpUrl;
-                if (tmpUrl.parse(old_request->method, urlNote)) {
+                if (tmpUrl.parse(old_request->method, SBuf(urlNote))) {
                     HttpRequest *new_request = old_request->clone();
                     new_request->url = tmpUrl;
                     debugs(61, 2, "URL-rewriter diverts URL from " << old_request->effectiveRequestUri() << " to " << new_request->effectiveRequestUri());
