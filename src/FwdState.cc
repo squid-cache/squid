@@ -985,6 +985,7 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
+#if USE_OPENSSL
     // Bumped requests require their pinned connection. Since we failed to reuse
     // the pinned connection, we now must terminate the bumped request.
     if (request->clientConnectionManager.valid() && request->clientConnectionManager->serverBump()) {
@@ -996,6 +997,7 @@ FwdState::connectStart()
         self = NULL; // refcounted
         return;
     }
+#endif // USE_OPENSSL
 
     // Use pconn to avoid opening a new connection.
     const char *host = NULL;
