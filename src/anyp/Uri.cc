@@ -138,6 +138,8 @@ static AnyP::UriScheme
 uriParseScheme(Parser::Tokenizer &tok)
 {
     /*
+     * RFC 3986 section 3.1 paragraph 2:
+     *
      * Scheme names consist of a sequence of characters beginning with a
      * letter and followed by any combination of letters, digits, plus
      * ("+"), period ("."), or hyphen ("-").
@@ -214,7 +216,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
 
     if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
                Asterisk().cmp(urlStr) == 0) {
-        // XXX: these methods might also occur in HTTPS traffic. Handle this batter.
+        // XXX: these methods might also occur in HTTPS traffic. Handle this better.
         setScheme(AnyP::PROTO_HTTP, nullptr);
         port(getScheme().defaultPort());
         path(Asterisk());
@@ -247,6 +249,9 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
 
         // first the "scheme:" part
         scheme = uriParseScheme(tok);
+
+        if (scheme == AnyP::PROTO_NONE)
+            return false; // invalid scheme
 
         // URN have a different schema from URL
         if (scheme == AnyP::PROTO_URN) {
