@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "CachePeer.h"
 #include "clients/HttpTunneler.h"
 #include "clients/HttpTunnelerAnswer.h"
 #include "comm/Read.h"
@@ -68,6 +69,11 @@ Http::Tunneler::start()
     Must(callback);
     Must(url.length());
     Must(lifetimeLimit >= 0);
+
+    if (const auto peer = connection->getPeer())
+        request->prepForPeering(*peer);
+    else
+        request->prepForDirect();
 
     watchForClosures();
     writeRequest();

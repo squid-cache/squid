@@ -1151,17 +1151,13 @@ FwdState::dispatch()
     }
 #endif
 
-    if (serverConnection()->getPeer() != NULL) {
-        ++ serverConnection()->getPeer()->stats.fetches;
-        request->peer_login = serverConnection()->getPeer()->login;
-        request->peer_domain = serverConnection()->getPeer()->domain;
-        request->flags.auth_no_keytab = serverConnection()->getPeer()->options.auth_no_keytab;
+    if (const auto peer = serverConnection()->getPeer()) {
+        ++peer->stats.fetches;
+        request->prepForPeering(*peer);
         httpStart(this);
     } else {
         assert(!request->flags.sslPeek);
-        request->peer_login = NULL;
-        request->peer_domain = NULL;
-        request->flags.auth_no_keytab = 0;
+        request->prepForDirect();
 
         switch (request->url.getScheme()) {
 

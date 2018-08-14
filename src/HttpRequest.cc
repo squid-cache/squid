@@ -12,6 +12,7 @@
 #include "AccessLogEntry.h"
 #include "acl/AclSizeLimit.h"
 #include "acl/FilledChecklist.h"
+#include "CachePeer.h"
 #include "client_side.h"
 #include "client_side_request.h"
 #include "dns/LookupDetails.h"
@@ -450,6 +451,27 @@ bool
 HttpRequest::bodyNibbled() const
 {
     return body_pipe != NULL && body_pipe->consumedSize() > 0;
+}
+
+void
+HttpRequest::prepForPeering(const CachePeer &peer)
+{
+    // XXX: Saving two pointers to memory controlled by an independent object.
+    peer_login = peer.login;
+    peer_domain = peer.domain;
+    flags.auth_no_keytab = peer.options.auth_no_keytab;
+    flags.proxying = !peer.options.originserver;
+    debugs(11, 4, this << " to " << peer.host << (flags.proxying ? " proxy" : " origin"));
+}
+
+void
+HttpRequest::prepForDirect()
+{
+    peer_login = nullptr;
+    peer_domain = nullptr;
+    flags.auth_no_keytab = false;
+    flags.proxying = false;
+    debugs(11, 4, this);
 }
 
 void

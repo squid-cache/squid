@@ -932,19 +932,10 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
     tunnelState->request->peer_host = conn->getPeer() ? conn->getPeer()->host : NULL;
     comm_add_close_handler(conn->fd, tunnelServerClosed, tunnelState);
 
-    if (conn->getPeer()) {
-        tunnelState->request->peer_login = conn->getPeer()->login;
-        tunnelState->request->peer_domain = conn->getPeer()->domain;
-        tunnelState->request->flags.auth_no_keytab = conn->getPeer()->options.auth_no_keytab;
-        tunnelState->request->flags.proxying = !(conn->getPeer()->options.originserver);
-        debugs(26, 4, "post-connect(2) proxying: " << tunnelState->request->flags.proxying);
-    } else {
-        tunnelState->request->peer_login = NULL;
-        tunnelState->request->peer_domain = NULL;
-        tunnelState->request->flags.auth_no_keytab = false;
-        tunnelState->request->flags.proxying = false;
-        debugs(26, 4, "post-connect(2) proxying: direct");
-    }
+    if (const auto * const peer = conn->getPeer())
+        tunnelState->request->prepForPeering(*peer);
+    else
+        tunnelState->request->prepForDirect();
 
     if (tunnelState->request->flags.proxying)
         tunnelState->connectToPeer();
@@ -1229,17 +1220,10 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     comm_add_close_handler(srvConn->fd, tunnelServerClosed, tunnelState);
 
     debugs(26, 4, "determine post-connect handling pathway.");
-    if (srvConn->getPeer()) {
-        request->peer_login = srvConn->getPeer()->login;
-        request->peer_domain = srvConn->getPeer()->domain;
-        request->flags.auth_no_keytab = srvConn->getPeer()->options.auth_no_keytab;
-        request->flags.proxying = !(srvConn->getPeer()->options.originserver);
-    } else {
-        request->peer_login = nullptr;
-        request->peer_domain = nullptr;
-        request->flags.auth_no_keytab = false;
-        request->flags.proxying = false;
-    }
+    if (const auto peer = srvConn->getPeer())
+        request->prepForPeering(*peer);
+    else
+        request->prepForDirect();
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));

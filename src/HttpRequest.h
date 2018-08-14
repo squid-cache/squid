@@ -34,10 +34,11 @@
 #include "eui/Eui64.h"
 #endif
 
-class ConnStateData;
-class Downloader;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
+class CachePeer;
+class ConnStateData;
+class Downloader;
 
 /*  Http Request */
 void httpRequestPack(void *obj, Packable *p);
@@ -86,6 +87,13 @@ public:
     /// Returns possibly nil history, creating it if icap logging is enabled
     Adaptation::Icap::History::Pointer icapHistory() const;
 #endif
+
+    /* If a request goes through several destinations, then the following two
+     * methods will be called several times, in destinations-dependent order. */
+    /// get ready to be sent to the given cache_peer, including originserver
+    void prepForPeering(const CachePeer &peer);
+    /// get ready to be sent directly to an origin server, excluding originserver
+    void prepForDirect();
 
     void recordLookup(const Dns::LookupDetails &detail);
 

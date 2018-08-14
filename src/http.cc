@@ -100,7 +100,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
     if (_peer) {
-        // XXX: tunnel.cc and sendRequest() exclude originserver from proxying!
+        // XXX: HttpRequest::prepForPeering excludes originserver from proxying!
         // TODO: split {proxying,originserver} into {peering,toProxy,toOrigin}
         request->flags.proxying = true;
         /*
