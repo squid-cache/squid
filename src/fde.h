@@ -59,11 +59,6 @@ public:
         readMethod_ = nullptr;
         writeMethod_ = nullptr;
     }
-    // no copying, just move-construct for clear()
-    fde(const fde &) = delete;
-    fde &operator =(const fde &) = delete;
-    fde(fde &&) = default;
-    fde &operator =(fde &&) = default;
     ~fde() {
         xfree(desc);
     }
