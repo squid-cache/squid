@@ -626,7 +626,7 @@ FwdState::checkRetry()
     if (!entry->isEmpty())
         return false;
 
-    if (n_tries >= Config.forward_max_tries)
+    if (!forwardTriesAllowed())
         return false;
 
     if (!EnoughTimeToReForward(start_t))
@@ -1110,7 +1110,7 @@ FwdState::reforward()
         return 0;
     }
 
-    if (n_tries >= Config.forward_max_tries)
+    if (!forwardTriesAllowed())
         return 0;
 
     if (request->bodyNibbled())
@@ -1258,6 +1258,12 @@ FwdState::logReplyStatus(int tries, const Http::StatusCode status)
         tries = MAX_FWD_STATS_IDX;
 
     ++ FwdReplyCodes[tries][status];
+}
+
+bool
+FwdState::forwardTriesAllowed() const
+{
+    return n_tries < Config.forward_max_tries;
 }
 
 /**** PRIVATE NON-MEMBER FUNCTIONS ********************************************/
