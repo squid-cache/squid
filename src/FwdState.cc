@@ -767,7 +767,8 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
         // but we do not support TLS inside TLS, so we exclude HTTPS proxies.
         const bool originWantsEncryptedTraffic =
             request->method == Http::METHOD_CONNECT ||
-            request->flags.sslPeek;
+            request->flags.sslPeek ||
+            request->url.getScheme() == AnyP::PROTO_HTTPS; // 'get https://xxx' or bump client-first
         if (originWantsEncryptedTraffic && // the "encrypted traffic" part
                 !peer->options.originserver && // the "through a proxy" part
                 !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
@@ -846,7 +847,11 @@ FwdState::secureConnectionToPeerIfNeeded()
     const bool userWillTlsToPeerForUs = p && p->options.originserver &&
                                         request->method == Http::METHOD_CONNECT;
     const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
-    const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS;
+
+    // 'get https://xxx' requests or bump client-first, excluding
+    // https proxies (TLS inside TLS is not supported yet)
+    const bool needTlsToOrigin = !peerWantsTls && request->url.getScheme() == AnyP::PROTO_HTTPS;
+
     if (needTlsToPeer || needTlsToOrigin || request->flags.sslPeek) {
         HttpRequest::Pointer requestPointer = request;
         AsyncCall::Pointer callback = asyncCall(17,4,
@@ -987,7 +992,10 @@ FwdState::connectStart()
 
     // Bumped requests require their pinned connection. Since we failed to reuse
     // the pinned connection, we now must terminate the bumped request.
-    if (request->flags.sslBumped) {
+    // For client-first bumping mode the request is already bumped but the
+    // connection to the server is not established yet.
+    bool clientFirstBump = request->clientConnectionManager.valid() && request->clientConnectionManager->sslBumpMode == Ssl::bumpClientFirst;
+    if (request->flags.sslBumped && !clientFirstBump) {
         // TODO: Factor out/reuse as Occasionally(DBG_IMPORTANT, 2[, occurrences]).
         static int occurrences = 0;
         const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
