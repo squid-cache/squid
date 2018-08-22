@@ -96,7 +96,9 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     surrogateNoStore = false;
     serverConnection = fwd->serverConnection();
 
-    if (fwd->serverConnection() != NULL)
+    bool alwaysToOrigin = request->flags.sslBumped || // http request through bumped connection
+        request->url.getScheme() == AnyP::PROTO_HTTPS; // 'get https://xxx' request (this check superset request->flags.sslBump check)
+    if (!alwaysToOrigin && fwd->serverConnection() != NULL)
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
     if (_peer) {
