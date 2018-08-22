@@ -994,7 +994,13 @@ FwdState::connectStart()
     // the pinned connection, we now must terminate the bumped request.
     // For client-first bumping mode the request is already bumped but the
     // connection to the server is not established yet.
-    bool clientFirstBump = request->clientConnectionManager.valid() && request->clientConnectionManager->sslBumpMode == Ssl::bumpClientFirst;
+    // When a connection bumped on step1 the result is equivalent to
+    // client-first bumping mode. We can recognise such cases because there is
+    // not ConnStateData::sslServerBump object.
+    bool clientFirstBump = request->clientConnectionManager.valid() &&
+        (request->clientConnectionManager->sslBumpMode == Ssl::bumpClientFirst ||
+         (request->clientConnectionManager->sslBumpMode == Ssl::bumpBump && !request->clientConnectionManager->serverBump())
+            );
     if (request->flags.sslBumped && !clientFirstBump) {
         // TODO: Factor out/reuse as Occasionally(DBG_IMPORTANT, 2[, occurrences]).
         static int occurrences = 0;
