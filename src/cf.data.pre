@@ -3924,8 +3924,10 @@ DEFAULT: 25
 TYPE: int
 LOC: Config.forward_max_tries
 DOC_START
-	Controls how many different forward paths Squid will try
-	before giving up. See also forward_timeout.
+	Limits the number of forwarding attempts to fetch the response.
+	This comprises all forwarding attempts, including different
+	forward paths as well as the same path retries in case of
+	persistent connection. See also forward_timeout.
 	
 	NOTE: connect_retries (default: none) can make each of these
 	possible forwarding paths be tried multiple times.
@@ -10098,7 +10100,7 @@ DOC_START
 	value and the configured value will be over-ridden.
 
 	Note: These re-tries are in addition to forward_max_tries
-	which limit how many different addresses may be tried to find
+	which limit how many forwarding attempts may be performed to find
 	a useful server.
 DOC_END
 

@@ -722,7 +722,6 @@ FwdState::handleUnregisteredServerEnd()
 void
 FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno)
 {
-    n_tries++;
     if (status != Comm::OK) {
         ErrorState *const anErr = makeConnectingError(ERR_CONNECT_FAIL);
         anErr->xerrno = xerrno;
@@ -890,6 +889,7 @@ FwdState::connectStart()
         serverConn = pinned_connection ? pinned_connection->borrowPinnedConnection(request, serverDestinations[0]->getPeer()) : nullptr;
         if (Comm::IsConnOpen(serverConn)) {
             flags.connected_okay = true;
+            ++n_tries;
             request->flags.pinned = true;
 
             if (pinned_connection->pinnedAuth())
@@ -933,6 +933,7 @@ FwdState::connectStart()
         serverConn = temp;
         flags.connected_okay = true;
         debugs(17, 3, HERE << "reusing pconn " << serverConnection());
+        ++n_tries;
 
         closeHandler = comm_add_close_handler(serverConnection()->fd,  fwdServerClosedWrapper, this);
 
@@ -959,6 +960,7 @@ FwdState::connectStart()
     Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], calls.connector, connTimeout);
     if (host)
         cs->setHost(host);
+    ++n_tries;
     AsyncJob::Start(cs);
 }
 
