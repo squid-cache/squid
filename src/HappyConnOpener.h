@@ -84,8 +84,8 @@ public:
     HappyConnOpener(const CandidatePathsPointer &, const AsyncCall::Pointer &, const time_t fwdStart, int tries);
     ~HappyConnOpener();
 
-     /// Inform us that new candidate destinations are available
-    void noteCandidatePath();
+    /// reacts to changes in the destinations list
+    void noteCandidatesChange();
 
     /// Whether to use persistent connections
     void allowPersistent(bool p) { allowPconn_ = p; }

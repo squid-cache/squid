@@ -152,10 +152,10 @@ HappyConnOpener::callCallback(const Comm::ConnectionPointer &conn, Comm::Flag er
 }
 
 void
-HappyConnOpener::noteCandidatePath()
+HappyConnOpener::noteCandidatesChange()
 {
     assert(dests_);
-    debugs(17, 8, "New candidate path from caller, number of destinations " << dests_->size());
+    debugs(17, 7, "destinations: " << dests_->size() << " finalized: " << dests_->destinationsFinalized);
     checkForNewConnection();
 }
 
@@ -274,8 +274,8 @@ HappyConnOpener::getPeerCandidatePath(const CachePeer *p, int excludeFamily)
 void
 HappyConnOpener::checkForNewConnection()
 {
-    debugs(17, 8, "Check for starting new connection");
-    assert(dests_);
+    assert(dests_); // TODO: remove this and others
+    debugs(17, 7, "destinations: " << dests_->size() << " finalized: " << dests_->destinationsFinalized);
 
     if (n_tries >= maxTries) {
         // No more connections, abort now
