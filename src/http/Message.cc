@@ -267,11 +267,9 @@ Http::Message::persistent() const
          */
         static SBuf close("close", 5);
         return !httpHeaderHasConnDir(&header, close);
-    } else {
-        /* for old versions of HTTP: persistent if has "keep-alive" */
-        static SBuf keepAlive("keep-alive", 10);
-        return httpHeaderHasConnDir(&header, keepAlive);
     }
+    // RFC 7230 section 6.3: MUST NOT maintain a persistent connection with an HTTP/1.0 client
+    return false;
 }
 
 void
