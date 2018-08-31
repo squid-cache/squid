@@ -840,17 +840,26 @@ HttpStateData::handle1xx(HttpReply *reply)
 }
 
 bool
-HttpStateData::upgradeProtocolSupported(SBuf &proto)
+HttpStateData::upgradeProtocolsSupported(String &upgradeProtos)
 {
     if (!upgradeProtocols)
         return false;
-    for (auto it = upgradeProtocols->cbegin(); it != upgradeProtocols->cend(); ++it) {
-        // we are expecting Upgrade header in form proto/version
-        if (proto.startsWith(*it, caseInsensitive) &&
-            (proto.length() == it->length() || proto[it->length()] == '/'))
-            return true;
+
+    const char *pos = NULL;
+    const char *item;
+    int ilen = 0;
+    while (strListGetItem(&upgradeProtos, ',', &item, &ilen, &pos)) {
+        // we are expecting Upgrade header items in the form 'proto[/version]'
+        const char *pend = std::find (item, item + ilen, '/');
+        int len = (pend != item + ilen) ? (pend - item)  : ilen;
+        auto it = std::find_if(upgradeProtocols->cbegin(), upgradeProtocols->cend(), SBufEqual(SBuf(item, len), caseInsensitive));
+        if (it == upgradeProtocols->cend()) { //protocol not listed by client!
+            debugs(11, 2, "Upgrade to " << SBuf(item, len) << "is not allowed by client or squid configuration");
+            return false;
+        }
     }
-    return false;
+
+    return true;
 }
 
 bool
@@ -864,17 +873,11 @@ HttpStateData::processSwitchingProtocols(HttpReply *reply)
     if (!reply->header.hasListMember(Http::HdrType::CONNECTION, "upgrade", ','))
         return false;
 
-    // XXX: The Upgrade response header may include more than one protocols to
-    // upgrade, so a correct check of Upgrade header must check that all
-    // of the listed protocols are supported.
-    // Currently Squid support upgrading to only one protocol per request.
-    SBuf upgrade = StringToSBuf(reply->header.getList(Http::HdrType::UPGRADE));
-    if (upgrade.find(',') != SBuf::npos)
-        return false; // Multiple protocols upgrade is not supported.
+    String upgrade = reply->header.getList(Http::HdrType::UPGRADE);
 
     // We need to check if the HttpRequest Upgrade header lists the
-    // protocols appeared in HttpReply.
-    if (!upgradeProtocolSupported(upgrade))
+    // protocols appeared in HttpReply Upgrade header.
+    if (!upgradeProtocolsSupported(upgrade))
         return false;
 
     flags.handling101 = true;
@@ -2005,8 +2008,9 @@ HttpStateData::httpBuildRequestHeader(HttpStateData *state,
         delete cc;
     }
 
-    if ((e = hdr_in->findEntry(Http::HdrType::UPGRADE))) {
-        const char *upGrdValue = mkUpgradeHeader(state, request, e->value);
+    if (hdr_in->has(Http::HdrType::UPGRADE)) {
+        String upgradeValue = hdr_in->getList(Http::HdrType::UPGRADE);
+        const char *upGrdValue = mkUpgradeHeader(state, request, upgradeValue);
         if (upGrdValue && *upGrdValue) {
             hdr_out->addEntry(new HttpHeaderEntry(Http::HdrType::UPGRADE, SBuf(), upGrdValue));
         }

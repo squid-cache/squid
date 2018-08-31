@@ -146,7 +146,7 @@ private:
     /// \return false if this 101 reply is not supported, true otherwise
     bool processSwitchingProtocols(HttpReply *msg);
 
-    bool upgradeProtocolSupported(SBuf &proto);
+    bool upgradeProtocolsSupported(String &upgradeProtos);
 
     /// Parser being used at present to parse the HTTP/ICY server response.
     Http1::ResponseParserPointer hp;
