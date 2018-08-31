@@ -54,15 +54,18 @@ public:
      *
      * \param escaped HTTP/1.0 does not permit \-escaped characters
      */
+    // TODO: unused
     bool quotedString(SBuf &value, const bool http1p0 = false);
 
-    /**
-     * Attempt to parse a (token / quoted-string ) lexical construct.
-     */
+    /// Attempts to parse a (token / quoted-string ) lexical construct.
+    /// throws if case of invalid input characters
+    /// \returns true on success
+    /// \returns false on incomplete quoted string (more data is needed)
     bool quotedStringOrToken(SBuf &value, const bool http1p0 = false);
 
 private:
     /// parse the internal component of a quote-string, and terminal DQUOTE
+    /// throws if invalid characters were detected
     bool qdText(SBuf &value, const bool http1p0);
 
     void checkpoint() { savedCheckpoint_ = buf(); savedStats_ = parsedSize(); }

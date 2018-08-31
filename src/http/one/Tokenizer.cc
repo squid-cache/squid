@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "Debug.h"
 #include "http/one/Tokenizer.h"
+#include "sbuf/Stream.h"
 
 bool
 Http::One::Tokenizer::quotedString(SBuf &returnedToken, const bool http1p0)
@@ -24,11 +25,11 @@ Http::One::Tokenizer::quotedString(SBuf &returnedToken, const bool http1p0)
 bool
 Http::One::Tokenizer::quotedStringOrToken(SBuf &returnedToken, const bool http1p0)
 {
-    checkpoint();
-
-    if (!skip('"'))
-        return prefix(returnedToken, CharacterSet::TCHAR);
-
+    if (!skip('"')) {
+        if (prefix(returnedToken, CharacterSet::TCHAR))
+            return true;
+        throw TexcHere("invalid token");
+    }
     return qdText(returnedToken, http1p0);
 }
 
@@ -80,8 +81,7 @@ Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
             SBuf escaped;
             if (!prefix(escaped, qPairChars, 1)) {
                 returnedToken.clear();
-                restoreLastCheckpoint();
-                return false;
+                throw TexcHere("invalid escaped characters");
             }
             returnedToken.append(escaped);
             continue;
@@ -92,15 +92,12 @@ Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
         } else if (atEnd()) {
             // need more data
             returnedToken.clear();
-            restoreLastCheckpoint();
             return false;
         }
 
         // else, we have an error
-        debugs(24, 8, "invalid bytes for set " << tokenChars.name);
         returnedToken.clear();
-        restoreLastCheckpoint();
-        return false;
+        throw TexcHere(ToSBuf("invalid bytes for set ", tokenChars.name));
     }
 
     // found the whole string
