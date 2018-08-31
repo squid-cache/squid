@@ -141,6 +141,9 @@ do
 	    bootstrap_libtoolize ${LIBTOOL_BIN}ize${ltver}
 	    bootstrap automake$amver --foreign --add-missing --copy -f
 	    bootstrap autoconf$acver --force
+        # sometimes the autofiles in libltdl have a version mismatch.
+        # force-refresh them
+        (cd libltdl; bootstrap autoreconf -fi)
 	fi ); then
 	    : # OK
 	else
