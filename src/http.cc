@@ -849,10 +849,7 @@ HttpStateData::upgradeProtocolsSupported(String &upgradeProtos)
     const char *item;
     int ilen = 0;
     while (strListGetItem(&upgradeProtos, ',', &item, &ilen, &pos)) {
-        // we are expecting Upgrade header items in the form 'proto[/version]'
-        const char *pend = std::find (item, item + ilen, '/');
-        int len = (pend != item + ilen) ? (pend - item)  : ilen;
-        auto it = std::find_if(upgradeProtocols->cbegin(), upgradeProtocols->cend(), SBufEqual(SBuf(item, len), caseInsensitive));
+        auto it = std::find_if(upgradeProtocols->cbegin(), upgradeProtocols->cend(), SBufEqual(SBuf(item, ilen), caseInsensitive));
         if (it == upgradeProtocols->cend()) { //protocol not listed by client!
             debugs(11, 2, "Upgrade to " << SBuf(item, len) << "is not allowed by client or squid configuration");
             return false;
@@ -2052,6 +2049,11 @@ mkUpgradeHeader(HttpStateData *state, HttpRequest *req, const String &value)
         //Config.accessList.http_upgrade_protocols
         SBuf proto(item, ilen);
         auto it = Config.accessList.http_upgrade_protocols->find(proto);
+
+        // If protocol not found try the "ANY" protocol
+        if (it == Config.accessList.http_upgrade_protocols->end())
+            it = Config.accessList.http_upgrade_protocols->find(SBuf("ANY"));
+
         if (it != Config.accessList.http_upgrade_protocols->end() && it->second != nullptr) {
             acl_access *acl = it->second;
             ACLFilledChecklist ch(acl, req);

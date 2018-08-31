@@ -10342,11 +10342,18 @@ NAME:  http_upgrade_request_protocols
 TYPE:  http_upgrade_request_protocols
 LOC: Config.accessList.http_upgrade_protocols
 DEFAULT: none
-DEFAULT_DOC: Respond with an error message when client and server agree to upgrade
+DEFAULT_DOC: Allow or deny upgrading from HTTP/1.1 to other protocols
 DOC_START
-	Mpla mpla
+	Usage: http_upgrade_request_protocols protocol|ANY <allow|deny> [!]acl ...
 
-                 http_upgrade_request_protocols protocol|All <allow|deny> [!]acl ...
+	This option used to allow or deny upgrading from HTTP/1.1 to other
+	protocol on the same connection, allowing or denying protocols from
+	being in Upgrade HTTP request header. If upstream server responds
+	with 101 Switching reply to a protocol not listed in Upgrade request
+	header will result to error.
+
+	The 'ANY' keyword corresponds to any protocol not explicitly configured
+	using this configuration option.
 
         Only fast ACLs are supported.
 
