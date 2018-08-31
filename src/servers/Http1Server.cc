@@ -233,6 +233,15 @@ Http::One::Server::proceedAfterBodyContinuation(Http::StreamPointer context)
     clientProcessRequest(this, parser_, context.getRaw());
 }
 
+int
+Http::One::Server::pipelinePrefetchMax() const
+{
+    if (mayUpgrade)
+        return 0;
+
+    return ConnStateData::pipelinePrefetchMax();
+}
+
 void
 Http::One::Server::processParsedRequest(Http::StreamPointer &context)
 {
@@ -244,8 +253,7 @@ Http::One::Server::processParsedRequest(Http::StreamPointer &context)
 
     if (request->header.has(Http::HdrType::UPGRADE)) {
         const String upgrade = request->header.getList(Http::HdrType::UPGRADE);
-        // Check if any of the listed protocols supported:
-        request->flags.mayUpgrade = (upgrade.caseCmp("websocket") == 0);
+        mayUpgrade = true;
     }
 
     if (request->header.has(Http::HdrType::EXPECT)) {
