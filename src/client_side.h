@@ -82,7 +82,7 @@ public:
         HttpRequest::Pointer request; ///< to-server request that initiated serverConnection
         Reason reason;
     };
-    
+
     explicit ConnStateData(const MasterXactionPointer &xact);
     virtual ~ConnStateData();
 
