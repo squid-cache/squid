@@ -258,7 +258,7 @@ Ssl::PeekingPeerConnector::startTunneling()
     Security::SessionPointer session(fd_table[serverConn->fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
-    
+
     switchToTunnel(request.getRaw(), clientConn, serverConn, &srvBio->rBufData());
     tunnelInsteadOfNegotiating();
 }
