@@ -99,16 +99,32 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 {
     static RSA *rsa_512 = NULL;
     static RSA *rsa_1024 = NULL;
+    static BIGNUM *e = NULL;
     RSA *rsa = NULL;
     int newkey = 0;
+
+    if (!e) {
+        e = BN_new();
+        if (!e || !BN_set_word(e, RSA_F4)) {
+            debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Failed to set exponent for key " << keylen);
+            BN_free(e);
+            e = NULL;
+            return NULL;
+        }
+    }
 
     switch (keylen) {
 
     case 512:
 
         if (!rsa_512) {
-            rsa_512 = RSA_generate_key(512, RSA_F4, NULL, NULL);
-            newkey = 1;
+            rsa_512 = RSA_new();
+            if (rsa_512 && RSA_generate_key_ex(rsa_512, 512, e, NULL)) {
+                newkey = 1;
+            } else {
+                RSA_free(rsa_512);
+                rsa_512 = NULL;
+            }
         }
 
         rsa = rsa_512;
@@ -117,8 +133,13 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
     case 1024:
 
         if (!rsa_1024) {
-            rsa_1024 = RSA_generate_key(1024, RSA_F4, NULL, NULL);
-            newkey = 1;
+            rsa_1024 = RSA_new();
+            if (rsa_1024 && RSA_generate_key_ex(rsa_1024, 1024, e, NULL)) {
+                newkey = 1;
+            } else {
+                RSA_free(rsa_1024);
+                rsa_1024 = NULL;
+            }
         }
 
         rsa = rsa_1024;
@@ -469,8 +490,10 @@ Ssl::Initialize(void)
         return;
     initialized = true;
 
+#if HAVE_LIBSSL_SSL_LOAD_ERROR_STRINGS
     SSL_load_error_strings();
     SSLeay_add_ssl_algorithms();
+#endif
 
 #if HAVE_OPENSSL_ENGINE_H
     if (::Config.SSL.ssl_engine) {
@@ -905,8 +928,8 @@ Ssl::verifySslCertificate(Security::ContextPointer &ctx, CertificateProperties c
 #endif
     if (!cert)
         return false;
-    ASN1_TIME * time_notBefore = X509_get_notBefore(cert);
-    ASN1_TIME * time_notAfter = X509_get_notAfter(cert);
+    ASN1_TIME * time_notBefore = X509_getm_notBefore(cert);
+    ASN1_TIME * time_notAfter = X509_getm_notAfter(cert);
     return (X509_cmp_current_time(time_notBefore) < 0 && X509_cmp_current_time(time_notAfter) > 0);
 }
 
@@ -1172,7 +1195,11 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
     if (SquidUntrustedCerts.size() > 0)
         completeIssuers(ctx, sk);
 
+#if HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED
+    X509_STORE_CTX_set0_untrusted(ctx, sk); // No locking/unlocking, just sets ctx->untrusted
+#else
     X509_STORE_CTX_set_chain(ctx, sk); // No locking/unlocking, just sets ctx->untrusted
+#endif
     int ret = X509_verify_cert(ctx);
 #if HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED
     X509_STORE_CTX_set0_untrusted(ctx, oldUntrusted);

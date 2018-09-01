@@ -496,25 +496,25 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     // objects.
     ASN1_TIME *aTime = NULL;
     if (!properties.setValidBefore && properties.mimicCert.get())
-        aTime = X509_get_notBefore(properties.mimicCert.get());
+        aTime = X509_getm_notBefore(properties.mimicCert.get());
     if (!aTime && properties.signWithX509.get())
-        aTime = X509_get_notBefore(properties.signWithX509.get());
+        aTime = X509_getm_notBefore(properties.signWithX509.get());
 
     if (aTime) {
-        if (!X509_set_notBefore(cert.get(), aTime))
+        if (!X509_set1_notBefore(cert.get(), aTime))
             return false;
-    } else if (!X509_gmtime_adj(X509_get_notBefore(cert.get()), (-2)*24*60*60))
+    } else if (!X509_gmtime_adj(X509_getm_notBefore(cert.get()), (-2)*24*60*60))
         return false;
 
     aTime = NULL;
     if (!properties.setValidAfter && properties.mimicCert.get())
-        aTime = X509_get_notAfter(properties.mimicCert.get());
+        aTime = X509_getm_notAfter(properties.mimicCert.get());
     if (!aTime && properties.signWithX509.get())
-        aTime = X509_get_notAfter(properties.signWithX509.get());
+        aTime = X509_getm_notAfter(properties.signWithX509.get());
     if (aTime) {
-        if (!X509_set_notAfter(cert.get(), aTime))
+        if (!X509_set1_notAfter(cert.get(), aTime))
             return false;
-    } else if (!X509_gmtime_adj(X509_get_notAfter(cert.get()), 60*60*24*356*3))
+    } else if (!X509_gmtime_adj(X509_getm_notAfter(cert.get()), 60*60*24*356*3))
         return false;
 
     int addedExtensions = 0;
@@ -844,21 +844,21 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
         return false;
 
     if (!properties.setValidBefore) {
-        ASN1_TIME *aTime = X509_get_notBefore(cert);
-        ASN1_TIME *bTime = X509_get_notBefore(cert2);
+        ASN1_TIME *aTime = X509_getm_notBefore(cert);
+        ASN1_TIME *bTime = X509_getm_notBefore(cert2);
         if (asn1time_cmp(aTime, bTime) != 0)
             return false;
-    } else if (X509_cmp_current_time(X509_get_notBefore(cert)) >= 0) {
+    } else if (X509_cmp_current_time(X509_getm_notBefore(cert)) >= 0) {
         // notBefore does not exist (=0) or it is in the future (>0)
         return false;
     }
 
     if (!properties.setValidAfter) {
-        ASN1_TIME *aTime = X509_get_notAfter(cert);
-        ASN1_TIME *bTime = X509_get_notAfter(cert2);
+        ASN1_TIME *aTime = X509_getm_notAfter(cert);
+        ASN1_TIME *bTime = X509_getm_notAfter(cert2);
         if (asn1time_cmp(aTime, bTime) != 0)
             return false;
-    } else if (X509_cmp_current_time(X509_get_notAfter(cert)) <= 0) {
+    } else if (X509_cmp_current_time(X509_getm_notAfter(cert)) <= 0) {
         // notAfter does not exist (0) or  it is in the past (<0)
         return false;
     }

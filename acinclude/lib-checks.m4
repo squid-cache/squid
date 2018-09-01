@@ -61,6 +61,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TLS_METHODS],[
 
 dnl Checks whether the -lcrypto library provides various OpenSSL API functions
 AC_DEFUN([SQUID_CHECK_LIBCRYPTO_API],[
+  AH_TEMPLATE(HAVE_LIBCRYPTO_OPENSSL_LH_STRHASH, "Define to 1 if the OPENSSL_LH_strhash() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_EVP_PKEY_GET0_RSA, "Define to 1 if the EVP_PKEY_get0_RSA() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_BIO_METH_NEW, "Define to 1 if the BIO_meth_new() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_BIO_GET_INIT, "Define to 1 if the BIO_get_init() OpenSSL API function exists")
@@ -75,6 +76,7 @@ AC_DEFUN([SQUID_CHECK_LIBCRYPTO_API],[
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_GET0_SIGNATURE, "Define to 1 if the X509_get0_signature() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_libcrypto_api)
   LIBS="$LIBS $SSLLIB"
+  AC_CHECK_LIB(crypto, OPENSSL_LH_strhash, AC_DEFINE(HAVE_LIBCRYPTO_OPENSSL_LH_STRHASH, 1))
   AC_CHECK_LIB(crypto, EVP_PKEY_get0_RSA, AC_DEFINE(HAVE_LIBCRYPTO_EVP_PKEY_GET0_RSA, 1))
   AC_CHECK_LIB(crypto, BIO_meth_new, AC_DEFINE(HAVE_LIBCRYPTO_BIO_METH_NEW, 1))
   AC_CHECK_LIB(crypto, BIO_get_init, AC_DEFINE(HAVE_LIBCRYPTO_BIO_GET_INIT, 1))
@@ -94,11 +96,13 @@ dnl Checks whether the -lssl library provides various OpenSSL API functions
 AC_DEFUN([SQUID_CHECK_LIBSSL_API],[
   AH_TEMPLATE(HAVE_LIBSSL_SSL_CIPHER_FIND, "Define to 1 if the SSL_CIPHER_find() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, "Define to 1 if the SSL_CTX_set_tmp_rsa_callback() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBSSL_SSL_LOAD_ERROR_STRINGS, "Define to 1 if the SSL_load_error_strings() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_SESSION_GET_ID, "Define to 1 if the SSL_SESSION_get_id() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_libssl_api)
   LIBS="$LIBS $SSLLIB"
   AC_CHECK_LIB(ssl, SSL_CIPHER_find, AC_DEFINE(HAVE_LIBSSL_SSL_CIPHER_FIND, 1))
   AC_CHECK_LIB(ssl, SSL_CTX_set_tmp_rsa_callback, AC_DEFINE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, 1))
+  AC_CHECK_LIB(ssl, SSL_load_error_strings, AC_DEFINE(HAVE_LIBSSL_SSL_LOAD_ERROR_STRINGS, 1))
   AC_CHECK_LIB(ssl, SSL_SESSION_get_id, AC_DEFINE(HAVE_LIBSSL_SSL_SESSION_GET_ID, 1))
   SQUID_STATE_ROLLBACK(check_openssl_libssl_api)
 ])
