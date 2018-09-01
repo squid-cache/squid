@@ -1195,17 +1195,9 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
     if (SquidUntrustedCerts.size() > 0)
         completeIssuers(ctx, sk);
 
-#if HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED
     X509_STORE_CTX_set0_untrusted(ctx, sk); // No locking/unlocking, just sets ctx->untrusted
-#else
-    X509_STORE_CTX_set_chain(ctx, sk); // No locking/unlocking, just sets ctx->untrusted
-#endif
     int ret = X509_verify_cert(ctx);
-#if HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED
-    X509_STORE_CTX_set0_untrusted(ctx, oldUntrusted);
-#else
-    X509_STORE_CTX_set_chain(ctx, oldUntrusted); // Set back the old untrusted list
-#endif
+    X509_STORE_CTX_set0_untrusted(ctx, oldUntrusted); // Set back the old untrusted list
     sk_X509_free(sk); // Release sk list
     return ret;
 }

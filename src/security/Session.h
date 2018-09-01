@@ -18,31 +18,6 @@
 #if USE_OPENSSL
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
-
-/// These are not included by openssl/ssl.h when deprecated API is disabled
-#include <openssl/opensslv.h>
-#include <openssl/bn.h>
-#include <openssl/rsa.h>
-#include <openssl/dh.h>
-#include <openssl/x509.h>
-
-/// Use new calls for API deprecated in OpenSSL 1.1.0
-/// Note that all of the calls in this next group were implemented at the same time
-/// as X509_STORE_CTX_set0_untrusted, in both OpenSSL 1.1.0, and LibreSSL 2.7.0.
-#if !HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED
-#define OPENSSL_VERSION SSLEAY_VERSION
-#define OpenSSL_version SSLeay_version
-#define X509_getm_notBefore X509_get_notBefore
-#define X509_getm_notAfter X509_get_notAfter
-#define X509_set1_notBefore X509_set_notBefore
-#define X509_set1_notAfter X509_set_notAfter
-#endif
-/// lhash.h functions, on the other hand, need a check of their own.
-#if !HAVE_LIBCRYPTO_OPENSSL_LH_STRHASH
-#define OPENSSL_LH_delete lh_delete
-#define OPENSSL_LH_strhash lh_strhash
-#endif
-
 #endif
 #endif
 
