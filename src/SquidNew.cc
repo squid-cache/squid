@@ -31,7 +31,7 @@ void operator delete[](void *address)
     xfree(address);
 }
 
-void *operator new(size_t size, const std::nothrow_t &tag)
+void *operator new(size_t size, const std::nothrow_t &tag) noexcept
 {
     return xmalloc(size);
 }
@@ -39,7 +39,7 @@ void operator delete(void *address, const std::nothrow_t &tag)
 {
     xfree(address);
 }
-void *operator new[](size_t size, const std::nothrow_t &tag)
+void *operator new[](size_t size, const std::nothrow_t &tag) noexcept
 {
     return xmalloc(size);
 }
