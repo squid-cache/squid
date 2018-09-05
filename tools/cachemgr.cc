@@ -294,7 +294,8 @@ auth_html(const char *host, int port, const char *user_name)
 
         while (fgets(config_line, BUFSIZ, fp)) {
             char *server, *comment;
-            strtok(config_line, "\r\n");
+            if (strtok(config_line, "\r\n") == nullptr)
+                continue;
 
             if (config_line[0] == '#')
                 continue;
