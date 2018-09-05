@@ -335,6 +335,8 @@ This section gives a thorough account of those changes in three categories:
 	<p>New parameter <em>on-persistent-overload=</em> to set the action taken
 	   when the helper queue is overloaded.
 	<p>Format field updated to accept any logformat %macro code.
+	<p>The optional <em>acl-value</em> fields in this helper input now expand
+	   to a dash ('-') if the %DATA macro is not specified explicitly.
 
 	<tag>http_port</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.

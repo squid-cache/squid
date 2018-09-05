@@ -862,6 +862,8 @@ DOC_START
 
 			If you do not specify a DATA macro inside FORMAT,
 			Squid automatically appends %DATA to your FORMAT.
+			Note that Squid-3.x may expand %DATA to whitespace
+			or nothing in this case.
 
 			By default, Squid applies URL-encoding to each ACL
 			argument inside the argument string. If an explicit
