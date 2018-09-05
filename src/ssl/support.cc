@@ -253,13 +253,6 @@ bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
     return matchX509CommonNames(cert, (void *)server, check_domain);
 }
 
-#if !HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT
-static inline X509 *X509_STORE_CTX_get0_cert(X509_STORE_CTX *ctx)
-{
-    return ctx->cert;
-}
-#endif
-
 /// \ingroup ServerProtocolSSLInternal
 static int
 ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
@@ -972,11 +965,7 @@ hasAuthorityInfoAccessCaIssuers(X509 *cert)
             if (ad->location->type == GEN_URI) {
                 xstrncpy(uri,
                          reinterpret_cast<const char *>(
-#if HAVE_LIBCRYPTO_ASN1_STRING_GET0_DATA
                              ASN1_STRING_get0_data(ad->location->d.uniformResourceIdentifier)
-#else
-                             ASN1_STRING_data(ad->location->d.uniformResourceIdentifier)
-#endif
                          ),
                          sizeof(uri));
             }
@@ -1138,12 +1127,8 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
 {
     debugs(83, 2,  "completing " << sk_X509_num(untrustedCerts) << " OpenSSL untrusted certs using " << SquidUntrustedCerts.size() << " configured untrusted certificates");
 
-#if HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH
     const X509_VERIFY_PARAM *param = X509_STORE_CTX_get0_param(ctx);
     int depth = X509_VERIFY_PARAM_get_depth(param);
-#else
-    int depth = ctx->param->depth;
-#endif
     X509 *current = X509_STORE_CTX_get0_cert(ctx);
     int i = 0;
     for (i = 0; current && (i < depth); ++i) {
@@ -1178,11 +1163,7 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
     // OpenSSL already maintains ctx->untrusted but we cannot modify
     // internal OpenSSL list directly. We have to give OpenSSL our own
     // list, but it must include certificates on the OpenSSL ctx->untrusted
-#if HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED
     STACK_OF(X509) *oldUntrusted = X509_STORE_CTX_get0_untrusted(ctx);
-#else
-    STACK_OF(X509) *oldUntrusted = ctx->untrusted;
-#endif
     STACK_OF(X509) *sk = sk_X509_dup(oldUntrusted); // oldUntrusted is always not NULL
 
     for (int i = 0; i < sk_X509_num(sslUntrustedStack); ++i) {

@@ -381,13 +381,8 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
         DecipherOnly
     };
 
-#if HAVE_LIBCRYPTO_EVP_PKEY_GET0_RSA
     EVP_PKEY *certKey = X509_get_pubkey(mimicCert.get());
     const bool rsaPkey = (EVP_PKEY_get0_RSA(certKey) != nullptr);
-#else
-    const int mimicAlgo = OBJ_obj2nid(mimicCert.get()->cert_info->key->algor->algorithm);
-    const bool rsaPkey = (mimicAlgo == NID_rsaEncryption);
-#endif
 
     int added = 0;
     int nid;
@@ -948,7 +943,6 @@ Ssl::CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPoi
 const ASN1_BIT_STRING *
 Ssl::X509_get_signature(const Security::CertPointer &cert)
 {
-#if HAVE_LIBCRYPTO_X509_GET0_SIGNATURE
 #if SQUID_USE_CONST_X509_GET0_SIGNATURE_ARGS
     const ASN1_BIT_STRING *sig = nullptr;
     const X509_ALGOR *sig_alg = nullptr;
@@ -958,8 +952,5 @@ Ssl::X509_get_signature(const Security::CertPointer &cert)
 #endif
     X509_get0_signature(&sig, &sig_alg, cert.get());
     return sig;
-#else
-    return cert->signature;
-#endif
 }
 

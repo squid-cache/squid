@@ -706,12 +706,7 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
             cbytes[0] = (cipherId >> 8) & 0xFF;
             cbytes[1] = cipherId & 0xFF;
             cbytes[2] = 0;
-#if HAVE_LIBSSL_SSL_CIPHER_FIND
             const SSL_CIPHER *c = SSL_CIPHER_find(ssl, cbytes);
-#else
-            const SSL_METHOD *method = SSLv23_method();
-            const SSL_CIPHER *c = method->get_cipher_by_char(cbytes);
-#endif
             if (c != NULL) {
                 if (!strCiphers.isEmpty())
                     strCiphers.append(":");

@@ -15,10 +15,6 @@
 #include <openssl/opensslv.h>
 #endif
 #include <openssl/lhash.h>
-#if !HAVE_LIBCRYPTO_OPENSSL_LH_STRHASH
-#define OPENSSL_LH_delete lh_delete
-#define OPENSSL_LH_strhash lh_strhash
-#endif
 #include <string>
 
 namespace Ssl
