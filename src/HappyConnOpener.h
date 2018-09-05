@@ -70,6 +70,8 @@ public:
     struct PendingConnection {
         Comm::ConnectionPointer path;
         AsyncCall::Pointer connector;
+
+        explicit operator bool() const { return static_cast<bool>(path); }
     };
 
 public:
@@ -96,13 +98,6 @@ public:
     /// Sets the destination hostname
     void setHost(const char *host);
 
-    /// Start openning a master connection.
-    /// Returns true on success false if candidate paths are not available.
-    bool startMasterConnection();
-
-    /// Start openning a spare connection, if candidate paths are available
-    void startSpareConnection();
-
     tos_t useTos; ///< The tos to use for opened connection
     nfmark_t useNfmark;///< the nfmark to use for opened connection
 
@@ -119,12 +114,20 @@ public:
 
     /// The number of spare connections accross all connectors
     static int SpareConnects;
+
+    // XXX: Make private?
+    void resumeSpareAttempt();
+
 private:
-    // AsyncJob API
+    /* AsyncJob API */
     virtual void start() override;
     virtual bool doneAll() const override;
     virtual void swanSong() override;
 
+    void ensureMasterConnection();
+    void ensureSpareConnection();
+
+    // TODO: Describe non-public methods when you define them.
     /// Called after HappyConnector asyncJob started to start a connection
     void startConnecting(PendingConnection &pconn, Comm::ConnectionPointer &);
 
@@ -134,13 +137,13 @@ private:
 
     /// The first available candidate path.
     /// The returned candidate path removed from CandidatePaths object.
-    Comm::ConnectionPointer nextCandidatePath();
+    Comm::ConnectionPointer extractMasterCandidatePath();
 
     /// Return the first available candidate path for given CachePeer.
     /// Ignore CandidatePaths with protocol family 'excludeFamily'.
     /// The CachePeer is null for an origin server path.
     /// The returned candidate path removed from CandidatePaths object.
-    Comm::ConnectionPointer getPeerCandidatePath(const CachePeer *p, int excludeFamily);
+    Comm::ConnectionPointer extractSpareCandidatePath();
 
     /// Check and start a spare connection if preconditions are satisfied,
     /// or schedules a connection attempt for later.

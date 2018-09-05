@@ -114,6 +114,7 @@ HappyConnOpener::swanSong()
         callCallback(nullptr, Comm::ERR_CONNECT, 0, false, "unexpected end");
     }
 
+    // TODO: These call cancellations should not be needed.
     if (activeSpareCall)
         activeSpareCall->cancel("HappyConnOpener object destructed");
 
@@ -208,9 +209,16 @@ HappyConnOpener::startConnecting(PendingConnection &pconn, Comm::ConnectionPoint
 void
 HappyConnOpener::connectDone(const CommConnectCbParams &params)
 {
+    // XXX: Some of this logic is wrong: If a master connection failed, and we
+    // do not have any spare paths to try, but we do have another master-family,
+    // same-peer path to try, then we should do another master attempt while
+    // preserving the activeSpareCall wait.
+    // Test case: a4.down4.up4.a6.happy.test
+
     if (activeSpareCall) {
-        // If we are waiting to start a new spare cancel, we are going
-        // to schedule a new spare connection attempt if required
+        // If we are waiting to start a new spare, then cancel because we are
+        // going to schedule a new spare connection attempt if required.
+        // TODO: Cancel unconditionally.
         if (!activeSpareCall->canceled())
             activeSpareCall->cancel("outdated");
         activeSpareCall = nullptr;
@@ -257,18 +265,32 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     return;
 }
 
+/// \returns usable master path (if possible) or nil (on failures)
+/// reports permanent failures to the job initiator
 Comm::ConnectionPointer
-HappyConnOpener::nextCandidatePath()
+HappyConnOpener::extractMasterCandidatePath()
 {
-    if (dests_->empty())
-        return Comm::ConnectionPointer();
-    return dests_->popFirst();
+    if (!dests_->empty())
+        return dests_->popFirst(); // found one
+
+    if (!dests_->destinationsFinalized)
+        return Comm::ConnectionPointer(); // may get one later
+
+    /* permanent failure */
+    callCallback(nullptr, Comm::ERR_CONNECT, 0, false, "Found no usable destinations");
+    return Comm::ConnectionPointer();
 }
 
+/// returns usable spare path (if possible) or nil (on temporary failures)
+/// no failures can be permanent -- there is an ongoing master attempt
 Comm::ConnectionPointer
-HappyConnOpener::getPeerCandidatePath(const CachePeer *p, int excludeFamily)
+HappyConnOpener::extractSpareCandidatePath()
 {
-    return dests_->popFirstFromDifferentFamily(p, excludeFamily);
+    Must(master);
+    // TODO: Rename/rafactor to popSamePeerDifferentFamily(master.path)
+    return dests_->popFirstFromDifferentFamily(
+        master.path->getPeer(),
+        CandidatePaths::ConnectionFamily(master.path));
 }
 
 void
@@ -277,28 +299,19 @@ HappyConnOpener::checkForNewConnection()
     assert(dests_); // TODO: remove this and others
     debugs(17, 7, "destinations: " << dests_->size() << " finalized: " << dests_->destinationsFinalized);
 
-    if (n_tries >= maxTries) {
-        // No more connections, abort now
-        callCallback(nullptr, Comm::ERR_CONNECT, 0, false, "Maximum allowed tries reached");
-        return;
-    }
+    if (!master)
+        return ensureMasterConnection();
 
-    if (spare.path) {
-        Must(master.path);
-        debugs(17, 8, "master and spare connections are pending");
-        return;
-    }
+    if (!spare)
+        return ensureSpareConnection();
+}
 
-    if (!master.path && !startMasterConnection()) {
-        return; // no paths to start master connection
-    }
-
-    if (activeSpareCall && !activeSpareCall->canceled()) {
-        debugs(17, 8, "already subscribed for starting new spare connection when ready");
-        return;
-    }
-
-    activeSpareCall = HappyQueue.queueASpareConnection(HappyConnOpener::Pointer(this));
+// XXX: Describe.
+void
+HappyConnOpener::resumeSpareAttempt()
+{
+    activeSpareCall = nullptr;
+    checkForNewConnection();
 }
 
 /**
@@ -339,29 +352,58 @@ HappyConnOpener::ConnectionClosed(const Comm::ConnectionPointer &conn)
     fwdPconnPool->noteUses(fd_table[conn->fd].pconn.uses);
 }
 
-bool
-HappyConnOpener::startMasterConnection()
+/// if possible, starts a master connection attempt
+/// otherwise, either waits for more candidates or ends the job, as appropriate
+void
+HappyConnOpener::ensureMasterConnection()
 {
-    Comm::ConnectionPointer dest = nextCandidatePath();
-    if (!dest)
-        return false; // wait for more destinations
+    Must(!spare); // or that spare should have become master
 
-    debugs(17, 8, "Starting a master connection to: " << *dest);
+    auto dest = extractMasterCandidatePath();
+    if (!dest)
+        return; // extractMasterCandidatePath() handles extraction failures
+
+    debugs(17, 8, "to " << *dest);
     startConnecting(master, dest);
-    return true;
+
+    if (activeSpareCall) {
+        // This happens if a master connection fails while there is another
+        // same-family, same-peer path available and no spare paths available.
+        // Test case: a4.down4.up4.a6.happy.test
+        debugs(17, 7, "already waiting for spare: " << activeSpareCall);
+        return;
+    }
+
+    // TODO: Find a way to move this check into HappyQueue?
+    if (dests_->empty() && dests_->destinationsFinalized) {
+        debugs(17, 7, "no spare paths expected");
+        return; // this is not a failure -- we are master-connecting
+    }
+    // TODO: Rename to waitForSpareOpportunity
+    activeSpareCall = HappyQueue.queueASpareConnection(HappyConnOpener::Pointer(this));
 }
 
+/// if possible, starts a spare connection attempt
+/// otherwise, waits for more candidates and/or spare connection allowance
 void
-HappyConnOpener::startSpareConnection()
+HappyConnOpener::ensureSpareConnection()
 {
-    activeSpareCall = nullptr;
-    auto dest = getPeerCandidatePath(master.path->getPeer(), CandidatePaths::ConnectionFamily(master.path));
-    sparesBlockedOnCandidatePaths = !dest;
-    if (sparesBlockedOnCandidatePaths)
+    Must(master); // or we should be starting a master connection instead
+
+    // TODO: Cancel wait if no spare candidates are going to be available?
+
+    // TODO: Rename to waitingForSpareGap or something like that
+    if (activeSpareCall)
+        return; // honor spare connection gap
+
+    auto dest = extractSpareCandidatePath();
+    if (!dest)
         return;
 
-    debugs(17, 8, "Starting a spare connection to: " << *dest);
+    debugs(17, 8, "to " << *dest);
     startConnecting(spare, dest);
+
+    // TODO: Check (and explain) why only the new attempts should count.
     if (spare.connector != nullptr) { // this is a new connection attempt
         ++SpareConnects;
         LastSpareAttempt = current_dtime;
@@ -384,7 +426,7 @@ HappyConnQueue::queueASpareConnection(HappyConnOpener::Pointer happy)
                          (needsSpareNow && gapRuleOK && connectionsLimitRuleOK);
 
     typedef NullaryMemFunT<HappyConnOpener> Dialer;
-    AsyncCall::Pointer call = JobCallback(17, 5, Dialer, happy, HappyConnOpener::startSpareConnection);
+    AsyncCall::Pointer call = JobCallback(17, 5, Dialer, happy, HappyConnOpener::resumeSpareAttempt);
     if (startSpareNow) {
         ScheduleCallHere(call);
         return call;
@@ -466,16 +508,21 @@ HappyConnQueue::SpareConnectionAttempt(void *data)
 void
 HappyConnQueue::scheduleConnectorsListCheck()
 {
-    HappyConnOpener::Pointer he;
-
     while(!waitingForSpareQueue.empty()) {
         AsyncCall::Pointer call = waitingForSpareQueue.front();
         if (call->canceled()) {
             waitingForSpareQueue.pop_front();
             continue;
         }
+
         NullaryMemFunT<HappyConnOpener> *dialer = dynamic_cast<NullaryMemFunT<HappyConnOpener> *>(call->getDialer());
-        he = dialer->job;
+        assert(dialer);
+        const auto he = dialer->job;
+        if (!he.valid()){
+            waitingForSpareQueue.pop_front();
+            continue;
+        }
+
         double startAfter = spareMayStartAfter(he);
 
         debugs(17, 8, "A new spare connection should start after: " << startAfter << " ms");
