@@ -116,7 +116,7 @@ public:
     static int SpareConnects;
 
     // XXX: Make private?
-    void resumeSpareAttempt();
+    void noteSpareAllowed();
 
 private:
     /* AsyncJob API */
@@ -153,9 +153,12 @@ private:
     void callCallback(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno, bool reused, const char *msg);
 
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
-    /// Points to the startSpareConnection handler to be called when
-    /// squid is ready to start the spare connection
-    AsyncCall::Pointer activeSpareCall;
+
+    /// A noteSpareAllowed() callback. Designed to give the master connection
+    /// a chance to succeed before we spend resources on the spare connection
+    /// (and also to obey various spare connection limits). A spare connection
+    /// must not be opened while this callback is set.
+    AsyncCall::Pointer waitingForSparePermission;
 
     /// The list with candidate destinations. Shared with the caller FwdState object.
     CandidatePathsPointer dests_;

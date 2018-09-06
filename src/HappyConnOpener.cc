@@ -115,8 +115,8 @@ HappyConnOpener::swanSong()
     }
 
     // TODO: These call cancellations should not be needed.
-    if (activeSpareCall)
-        activeSpareCall->cancel("HappyConnOpener object destructed");
+    if (waitingForSparePermission)
+        waitingForSparePermission->cancel("HappyConnOpener object destructed");
 
     if (master.path) {
         if (master.connector)
@@ -212,16 +212,16 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     // XXX: Some of this logic is wrong: If a master connection failed, and we
     // do not have any spare paths to try, but we do have another master-family,
     // same-peer path to try, then we should do another master attempt while
-    // preserving the activeSpareCall wait.
+    // still waitingForSparePermission.
     // Test case: a4.down4.up4.a6.happy.test
 
-    if (activeSpareCall) {
+    if (waitingForSparePermission) {
         // If we are waiting to start a new spare, then cancel because we are
         // going to schedule a new spare connection attempt if required.
         // TODO: Cancel unconditionally.
-        if (!activeSpareCall->canceled())
-            activeSpareCall->cancel("outdated");
-        activeSpareCall = nullptr;
+        if (!waitingForSparePermission->canceled())
+            waitingForSparePermission->cancel("outdated");
+        waitingForSparePermission = nullptr;
     }
 
     if (master.path == params.conn) {
@@ -306,11 +306,11 @@ HappyConnOpener::checkForNewConnection()
         return ensureSpareConnection();
 }
 
-// XXX: Describe.
+/// called when we were allowed to open one spare connection
 void
-HappyConnOpener::resumeSpareAttempt()
+HappyConnOpener::noteSpareAllowed()
 {
-    activeSpareCall = nullptr;
+    waitingForSparePermission = nullptr;
     checkForNewConnection();
 }
 
@@ -366,11 +366,11 @@ HappyConnOpener::ensureMasterConnection()
     debugs(17, 8, "to " << *dest);
     startConnecting(master, dest);
 
-    if (activeSpareCall) {
+    if (waitingForSparePermission) {
         // This happens if a master connection fails while there is another
         // same-family, same-peer path available and no spare paths available.
         // Test case: a4.down4.up4.a6.happy.test
-        debugs(17, 7, "already waiting for spare: " << activeSpareCall);
+        debugs(17, 7, "already waiting for spare permission: " << waitingForSparePermission);
         return;
     }
 
@@ -379,8 +379,8 @@ HappyConnOpener::ensureMasterConnection()
         debugs(17, 7, "no spare paths expected");
         return; // this is not a failure -- we are master-connecting
     }
-    // TODO: Rename to waitForSpareOpportunity
-    activeSpareCall = HappyQueue.queueASpareConnection(HappyConnOpener::Pointer(this));
+
+    waitingForSparePermission = HappyQueue.queueASpareConnection(HappyConnOpener::Pointer(this));
 }
 
 /// if possible, starts a spare connection attempt
@@ -392,8 +392,7 @@ HappyConnOpener::ensureSpareConnection()
 
     // TODO: Cancel wait if no spare candidates are going to be available?
 
-    // TODO: Rename to waitingForSpareGap or something like that
-    if (activeSpareCall)
+    if (waitingForSparePermission)
         return; // honor spare connection gap
 
     auto dest = extractSpareCandidatePath();
@@ -426,7 +425,7 @@ HappyConnQueue::queueASpareConnection(HappyConnOpener::Pointer happy)
                          (needsSpareNow && gapRuleOK && connectionsLimitRuleOK);
 
     typedef NullaryMemFunT<HappyConnOpener> Dialer;
-    AsyncCall::Pointer call = JobCallback(17, 5, Dialer, happy, HappyConnOpener::resumeSpareAttempt);
+    AsyncCall::Pointer call = JobCallback(17, 5, Dialer, happy, HappyConnOpener::noteSpareAllowed);
     if (startSpareNow) {
         ScheduleCallHere(call);
         return call;
