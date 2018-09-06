@@ -76,7 +76,7 @@ Ssl::Bio::Create(const int fd, Security::Io::Type type)
         BIO_meth_set_create(SquidMethods, squid_bio_create);
         BIO_meth_set_destroy(SquidMethods, squid_bio_destroy);
     }
-    const BIO_METHOD *useMethod = SquidMethods;
+    BIO_METHOD *useMethod = SquidMethods;
 #else
     BIO_METHOD *useMethod = &SquidMethods;
 #endif
