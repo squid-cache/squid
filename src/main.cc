@@ -677,7 +677,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
         if (strlen(SQUID_BUILD_INFO))
             printf("%s\n",SQUID_BUILD_INFO);
 #if USE_OPENSSL
-#ifdef SSLEAY_VERSION
+#if defined(SSLEAY_VERSION)
         printf("\nThis binary uses %s. ", SSLeay_version(SSLEAY_VERSION));
 #else
         printf("\nThis binary uses %s. ", OpenSSL_version(OPENSSL_VERSION));

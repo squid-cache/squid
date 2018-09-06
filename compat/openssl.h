@@ -1,15 +1,41 @@
+/*
+ * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+ */
 #ifndef OPENSSL_COMPAT_H
 #define OPENSSL_COMPAT_H
+
+#if defined(__cplusplus)
+
+#if HAVE_OPENSSL_ASN1_H
 #include <openssl/asn1.h>
-#include <openssl/dh.h>
+#endif
+#if HAVE_OPENSSL_BIO_H
 #include <openssl/bio.h>
+#endif
+#if HAVE_OPENSSL_DH_H
+#include <openssl/dh.h>
+#endif
+#if HAVE_OPENSSL_EVP_H
 #include <openssl/evp.h>
+#endif
+#if HAVE_OPENSSL_LHASH_H
 #include <openssl/lhash.h>
+#endif
+#if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
+#endif
+#if HAVE_OPENSSL_X509_H
 #include <openssl/x509.h>
+#endif
+
 
 #if !HAVE_LIBCRYPTO_ASN1_STRING_GET0_DATA
-inline const unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *x)
+inline const unsigned char *
+ASN1_STRING_get0_data(const ASN1_STRING *x)
 {
     return x->data;
 }
@@ -63,7 +89,7 @@ inline RSA *
 EVP_PKEY_get0_RSA(EVP_PKEY *pkey)
 {
     if (pkey->type != EVP_PKEY_RSA)
-        return NULL;
+        return nullptr;
     return pkey->pkey.rsa;
 }
 #endif
@@ -122,8 +148,7 @@ X509_CRL_up_ref(X509_CRL *t)
 
 #if !HAVE_LIBCRYPTO_X509_GET0_SIGNATURE
 inline void
-X509_get0_signature(ASN1_BIT_STRING **psig, X509_ALGOR **palg,
-                    const X509 *x)
+X509_get0_signature(ASN1_BIT_STRING **psig, X509_ALGOR **palg, const X509 *x)
 {
     if (psig)
         *psig = (ASN1_BIT_STRING *)&x->signature;
@@ -180,4 +205,5 @@ X509_VERIFY_PARAM_get_depth(const X509_VERIFY_PARAM *param)
 }
 #endif
 
+#endif /* __cplusplus */
 #endif /* OPENSSL_COMPAT_H */

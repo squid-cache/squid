@@ -96,15 +96,15 @@ AC_DEFUN([SQUID_CHECK_LIBCRYPTO_API],[
 
 dnl Checks whether the -lssl library provides various OpenSSL API functions
 AC_DEFUN([SQUID_CHECK_LIBSSL_API],[
+  AH_TEMPLATE(HAVE_LIBSSL_OPENSSL_INIT_SSL, "Define to 1 if the OPENSSL_init_ssl() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_CIPHER_FIND, "Define to 1 if the SSL_CIPHER_find() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, "Define to 1 if the SSL_CTX_set_tmp_rsa_callback() OpenSSL API function exists")
-  AH_TEMPLATE(HAVE_LIBSSL_SSL_LOAD_ERROR_STRINGS, "Define to 1 if the SSL_load_error_strings() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_SESSION_GET_ID, "Define to 1 if the SSL_SESSION_get_id() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_libssl_api)
   LIBS="$LIBS $SSLLIB"
+  AC_CHECK_LIB(ssl, OPENSSL_init_ssl, AC_DEFINE(HAVE_LIBSSL_OPENSSL_INIT_SSL, 1))
   AC_CHECK_LIB(ssl, SSL_CIPHER_find, AC_DEFINE(HAVE_LIBSSL_SSL_CIPHER_FIND, 1))
   AC_CHECK_LIB(ssl, SSL_CTX_set_tmp_rsa_callback, AC_DEFINE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, 1))
-  AC_CHECK_LIB(ssl, SSL_load_error_strings, AC_DEFINE(HAVE_LIBSSL_SSL_LOAD_ERROR_STRINGS, 1))
   AC_CHECK_LIB(ssl, SSL_SESSION_get_id, AC_DEFINE(HAVE_LIBSSL_SSL_SESSION_GET_ID, 1))
   SQUID_STATE_ROLLBACK(check_openssl_libssl_api)
 ])
@@ -128,7 +128,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
      #include <openssl/err.h>
     ],
     [
-#if HAVE_LIBSSL_SSL_LOAD_ERROR_STRINGS
+#if defined(SSLeay_add_ssl_algorithms)
     SSLeay_add_ssl_algorithms();
 #endif
 #if HAVE_OPENSSL_TLS_METHOD
@@ -161,7 +161,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
      #include <openssl/err.h>
     ],
     [
-#if HAVE_LIBSSL_SSL_LOAD_ERROR_STRINGS
+#if defined(SSLeay_add_ssl_algorithms)
     SSLeay_add_ssl_algorithms();
 #endif
 #if HAVE_OPENSSL_TLS_METHOD

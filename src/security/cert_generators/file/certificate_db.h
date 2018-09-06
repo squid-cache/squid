@@ -14,7 +14,9 @@
 #if HAVE_OPENSSL_OPENSSLV_H
 #include <openssl/opensslv.h>
 #endif
+#if HAVE_OPENSSL_LHASH_H
 #include <openssl/lhash.h>
+#endif
 #include <string>
 
 namespace Ssl

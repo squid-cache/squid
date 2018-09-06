@@ -18,13 +18,15 @@
 #endif
 #include <list>
 #if USE_OPENSSL
+#if HAVE_OPENSSL_BN_H
 #include <openssl/bn.h>
-#include <openssl/dh.h>
+#endif
 #if HAVE_OPENSSL_ERR_H
 #include <openssl/err.h>
 #endif
+#if HAVE_OPENSSL_RSA_H
 #include <openssl/rsa.h>
-#include <openssl/x509.h>
+#endif
 #endif /* USE_OPENSSL */
 #include <unordered_set>
 

@@ -706,8 +706,7 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
             cbytes[0] = (cipherId >> 8) & 0xFF;
             cbytes[1] = cipherId & 0xFF;
             cbytes[2] = 0;
-            const SSL_CIPHER *c = SSL_CIPHER_find(ssl, cbytes);
-            if (c != NULL) {
+            if (auto c = SSL_CIPHER_find(ssl, cbytes)) {
                 if (!strCiphers.isEmpty())
                     strCiphers.append(":");
                 strCiphers.append(SSL_CIPHER_get_name(c));

@@ -97,10 +97,10 @@ ssl_ask_password(SSL_CTX * context, const char * prompt)
 static RSA *
 ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 {
-    static RSA *rsa_512 = NULL;
-    static RSA *rsa_1024 = NULL;
-    static BIGNUM *e = NULL;
-    RSA *rsa = NULL;
+    static RSA *rsa_512 = nullptr;
+    static RSA *rsa_1024 = nullptr;
+    static BIGNUM *e = nullptr;
+    RSA *rsa = nullptr;
     int newkey = 0;
 
     if (!e) {
@@ -108,8 +108,8 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
         if (!e || !BN_set_word(e, RSA_F4)) {
             debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Failed to set exponent for key " << keylen);
             BN_free(e);
-            e = NULL;
-            return NULL;
+            e = nullptr;
+            return nullptr;
         }
     }
 
@@ -119,11 +119,11 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 
         if (!rsa_512) {
             rsa_512 = RSA_new();
-            if (rsa_512 && RSA_generate_key_ex(rsa_512, 512, e, NULL)) {
+            if (rsa_512 && RSA_generate_key_ex(rsa_512, 512, e, nullptr)) {
                 newkey = 1;
             } else {
                 RSA_free(rsa_512);
-                rsa_512 = NULL;
+                rsa_512 = nullptr;
             }
         }
 
@@ -134,11 +134,11 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 
         if (!rsa_1024) {
             rsa_1024 = RSA_new();
-            if (rsa_1024 && RSA_generate_key_ex(rsa_1024, 1024, e, NULL)) {
+            if (rsa_1024 && RSA_generate_key_ex(rsa_1024, 1024, e, nullptr)) {
                 newkey = 1;
             } else {
                 RSA_free(rsa_1024);
-                rsa_1024 = NULL;
+                rsa_1024 = nullptr;
             }
         }
 
@@ -147,17 +147,17 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 
     default:
         debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Unexpected key length " << keylen);
-        return NULL;
+        return nullptr;
     }
 
-    if (rsa == NULL) {
+    if (rsa == nullptr) {
         debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Failed to generate key " << keylen);
-        return NULL;
+        return nullptr;
     }
 
     if (newkey) {
         if (Debug::Enabled(83, 5))
-            PEM_write_RSAPrivateKey(debug_log, rsa, NULL, NULL, 0, NULL, NULL);
+            PEM_write_RSAPrivateKey(debug_log, rsa, nullptr, nullptr, 0, nullptr, nullptr);
 
         debugs(83, DBG_IMPORTANT, "Generated ephemeral RSA key of length " << keylen);
     }
@@ -483,7 +483,10 @@ Ssl::Initialize(void)
         return;
     initialized = true;
 
-#if HAVE_LIBSSL_SSL_LOAD_ERROR_STRINGS
+#if HAVE_LIBSSL_OPENSSL_INIT_SSL
+    // No explicit initialisation is required.
+    //OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS, nullptr);
+#else
     SSL_load_error_strings();
     SSLeay_add_ssl_algorithms();
 #endif
