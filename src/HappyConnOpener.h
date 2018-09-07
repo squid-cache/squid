@@ -169,6 +169,12 @@ private:
     bool allowPconn_; ///< Whether to allow persistent connections
     bool retriable_; ///< Whether to open connection for retriable request
 
+    /// Whether we are allowed to open a spare connection.
+    /// See also: waitingForSparePermission
+    bool sparePermitted;
+
+    // TODO: Inline initializations?
+
     const char *host_; ///< The destination hostname
     time_t fwdStart_; ///< When the forwarding of the related request started
     int maxTries; ///< The connector should not exceed the maxTries tries.

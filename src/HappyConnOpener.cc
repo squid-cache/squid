@@ -72,7 +72,19 @@ std::ostream &operator <<(std::ostream &os, const HappyConnOpener::Answer &answe
     return os << answer.conn << ", " << answer.ioStatus << ", " << answer.xerrno << ", " << (answer.reused ? "reused" : "new");
 }
 
-HappyConnOpener::HappyConnOpener(const CandidatePaths::Pointer &destinations, const AsyncCall::Pointer &aCall, const time_t fwdStart, int tries) : AsyncJob("HappyConnOpener"), useTos(0), useNfmark(0), callback_(aCall), dests_(destinations), allowPconn_(true), retriable_(true), host_(nullptr), fwdStart_(fwdStart), maxTries(tries), n_tries(0)
+HappyConnOpener::HappyConnOpener(const CandidatePaths::Pointer &destinations, const AsyncCall::Pointer &aCall, const time_t fwdStart, int tries):
+    AsyncJob("HappyConnOpener"),
+    useTos(0),
+    useNfmark(0),
+    callback_(aCall),
+    dests_(destinations),
+    allowPconn_(true),
+    retriable_(true),
+    sparePermitted(false),
+    host_(nullptr),
+    fwdStart_(fwdStart),
+    maxTries(tries),
+    n_tries(0)
 {
     assert(dynamic_cast<HappyConnOpener::CbDialer *>(callback_->getDialer()));
 }
@@ -209,60 +221,70 @@ HappyConnOpener::startConnecting(PendingConnection &pconn, Comm::ConnectionPoint
 void
 HappyConnOpener::connectDone(const CommConnectCbParams &params)
 {
-    // XXX: Some of this logic is wrong: If a master connection failed, and we
-    // do not have any spare paths to try, but we do have another master-family,
-    // same-peer path to try, then we should do another master attempt while
-    // still waitingForSparePermission.
-    // Test case: a4.down4.up4.a6.happy.test
+    Must(params.conn);
+    const bool itWasMaster = (params.conn == master.path);
+    const bool itWasSpare = (params.conn == spare.path);
+    Must(itWasMaster != itWasSpare);
+    const char *what = itWasMaster ? "master connection" : "spare connection";
 
-    if (waitingForSparePermission) {
-        // If we are waiting to start a new spare, then cancel because we are
-        // going to schedule a new spare connection attempt if required.
-        // TODO: Cancel unconditionally.
-        if (!waitingForSparePermission->canceled())
-            waitingForSparePermission->cancel("outdated");
-        waitingForSparePermission = nullptr;
-    }
-
-    if (master.path == params.conn) {
-        // master connection is now the remaining spare if exist, or null
-        master = spare;
+    if (itWasMaster) {
+        master.path = nullptr;
+        master.connector = nullptr;
     } else {
-        assert(spare.path == params.conn);
-    }
-
-    if (spare.path) {
-        --SpareConnects;
         spare.path = nullptr;
         spare.connector = nullptr;
-        // trigger the HappyQueue
+        --SpareConnects;
         HappyQueue.kickSparesLimitQueue();
     }
 
-    if (params.flag != Comm::OK) {
-        debugs(17, 8, "Connections to " << params.conn << " failed");
-        /* it might have been a timeout with a partially open link */
-        if (params.conn != NULL) {
-            if (params.conn->getPeer())
-                peerConnectFailed(params.conn->getPeer());
-
-            params.conn->close();
-        }
-
-        checkForNewConnection();
+    if (params.flag == Comm::OK) {
+        callCallback(params.conn, Comm::OK, 0, false, what);
         return;
     }
 
-    debugs(17, 8, "Connections to " << params.conn << " succeed");
-    if (master.path) {
-        Must(master.connector);
-        master.connector->cancel("Already connected");
-        master.connector = nullptr;
-        master.path = nullptr;
+    debugs(17, 8, what << " failed: " << params.conn);
+    if (const auto peer = params.conn->getPeer())
+        peerConnectFailed(peer);
+    params.conn->close(); // TODO: Comm::ConnOpener should do this instead.
+
+    // XXX: Some of this logic is wrong: If a master connection failed, and we
+    // do not have any spare paths to try, but we do have another master-family,
+    // same-peer path to try, then we should do another master attempt while
+    // still waiting for spare addresses. More related concerns below.
+    // Test case: a4.down4.up4.a6.happy.test
+
+    if (itWasMaster) {
+        if (spare.connector) {
+            // adjust spare connection accounting since we are going to convert
+            // this spare connection attempt into a master connection attempt
+            --SpareConnects;
+            HappyQueue.kickSparesLimitQueue();
+        }
+
+        std::swap(master, spare); // use spare (if any) as the new master
+
+        // We do not want to also transfer the current wait (or permission) to
+        // speed up the future spare attempt because the same-family attempt has
+        // just failed. Most likely, this family is not working.
+
+        // XXX: However, this only works well if there are spare-family
+        // addresses to try immediately. If we have only failed-family addresses
+        // (for the same peer), then this clearing will only delay future spare
+        // attempts. TODO: We should remember which family failed and give the
+        // other family a priority when its same-peer addresses arrive.
+        if (waitingForSparePermission) {
+            assert(!spare.path); // paranoid; the swap above guarantees this
+            waitingForSparePermission->cancel("master failure");
+            waitingForSparePermission = nullptr;
+        }
+        sparePermitted = false;
+    } else {
+        Must(!waitingForSparePermission);
+        Must(!sparePermitted);
+        // the master (if any) may continue its connection attempt
     }
 
-    callCallback(params.conn, Comm::OK, 0, false, "new connection");
-    return;
+    checkForNewConnection();
 }
 
 /// \returns usable master path (if possible) or nil (on failures)
@@ -311,6 +333,7 @@ void
 HappyConnOpener::noteSpareAllowed()
 {
     waitingForSparePermission = nullptr;
+    sparePermitted = true;
     checkForNewConnection();
 }
 
@@ -366,10 +389,21 @@ HappyConnOpener::ensureMasterConnection()
     debugs(17, 8, "to " << *dest);
     startConnecting(master, dest);
 
+    // We may already be waiting for (or even have a permission to) open a spare
+    // connection. This happens if a master connection fails while there is
+    // another same-family, same-peer path available and no spare paths
+    // available. We do not restart the wait (or forget the permission): Waiting
+    // avoids overspending resources when the master IP family works well. Since
+    // we just opened an N+1st master connection, it is the master family that
+    // is failing. TODO: Should we cancel the wait (and grant permission) then?
+    // Test case: a4.down4.up4.a6.happy.test
+
+    if (sparePermitted) {
+        debugs(17, 7, "already have a spare permission");
+        return;
+    }
+
     if (waitingForSparePermission) {
-        // This happens if a master connection fails while there is another
-        // same-family, same-peer path available and no spare paths available.
-        // Test case: a4.down4.up4.a6.happy.test
         debugs(17, 7, "already waiting for spare permission: " << waitingForSparePermission);
         return;
     }
@@ -392,14 +426,17 @@ HappyConnOpener::ensureSpareConnection()
 
     // TODO: Cancel wait if no spare candidates are going to be available?
 
-    if (waitingForSparePermission)
-        return; // honor spare connection gap
+    if (!sparePermitted)
+        return; // honor spare connection gap and other limits
+
+    Must(!waitingForSparePermission);
 
     auto dest = extractSpareCandidatePath();
     if (!dest)
         return;
 
     debugs(17, 8, "to " << *dest);
+    sparePermitted = false;
     startConnecting(spare, dest);
 
     // TODO: Check (and explain) why only the new attempts should count.
