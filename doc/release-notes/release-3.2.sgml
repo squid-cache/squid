@@ -744,6 +744,10 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
+	<tag>balance_on_multiple_ip</tag>
+	<p>Obsolete. The behaviour controlled by this directive is no longer possible
+	   with DNS parallel lookup and connection features (aka 'Happy Eyeballs').
+
 	<tag>chunked_request_body_max_size</tag>
 	<p>Obsolete. Squid is now HTTP/1.1 with support for streaming chunked encoded requests.
 
