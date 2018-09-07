@@ -14,6 +14,8 @@
 namespace Http
 {
 
+class ContentLengthInterpreter;
+
 class Message;
 typedef RefCount<Http::Message> MessagePointer;
 

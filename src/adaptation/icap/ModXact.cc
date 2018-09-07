@@ -25,6 +25,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "err_detail_type.h"
+#include "http/ContentLengthInterpreter.h"
 #include "http/one/TeChunkedParser.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -2063,7 +2064,11 @@ void Adaptation::Icap::ModXactLauncher::updateHistory(bool doStart)
 }
 
 bool Adaptation::Icap::TrailerParser::parse(const char *buf, int len, int atEnd, Http::StatusCode *error) {
-    const int parsed = trailer.parse(buf, len, atEnd, hdr_sz);
+    Http::ContentLengthInterpreter clen;
+    // RFC 7230 section 4.1.2: MUST NOT generate a trailer that contains
+    // a field necessary for message framing (e.g., Transfer-Encoding and Content-Length)
+    clen.applyTrailerRules();
+    const int parsed = trailer.parse(buf, len, atEnd, hdr_sz, clen);
     if (parsed < 0)
         *error = Http::scInvalidHeader; // TODO: should we add a new Http::scInvalidTrailer?
     return parsed > 0;

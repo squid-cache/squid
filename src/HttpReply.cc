@@ -13,6 +13,7 @@
 #include "acl/FilledChecklist.h"
 #include "base/EnumIterator.h"
 #include "globals.h"
+#include "http/ContentLengthInterpreter.h"
 #include "HttpBody.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
@@ -452,6 +453,19 @@ HttpReply::parseFirstLine(const char *blk_start, const char *blk_end)
     return sline.parse(protoPrefix, blk_start, blk_end);
 }
 
+void
+HttpReply::configureContentLengthInterpreter(Http::ContentLengthInterpreter &interpreter)
+{
+    interpreter.applyStatusCodeRules(sline.status());
+}
+
+bool
+HttpReply::parseHeader(Http1::Parser &hp)
+{
+    Http::ContentLengthInterpreter clen;
+    return Message::parseHeader(hp, clen);
+}
+
 /* handy: resets and returns -1 */
 int
 HttpReply::httpMsgParseError()
@@ -647,5 +661,12 @@ HttpReply::olderThan(const HttpReply *them) const
     if (!them || !them->date || !date)
         return false;
     return date < them->date;
+}
+
+void
+HttpReply::removeIrrelevantContentLength() {
+    if (Http::ProhibitsContentLength(sline.status()))
+        if (header.delById(Http::HdrType::CONTENT_LENGTH))
+            debugs(58, 3, "Removing unexpected Content-Length header");
 }
 

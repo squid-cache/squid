@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.1 release notes</title>
+<title>Squid 4.2 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.1 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.2 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -335,6 +335,8 @@ This section gives a thorough account of those changes in three categories:
 	<p>New parameter <em>on-persistent-overload=</em> to set the action taken
 	   when the helper queue is overloaded.
 	<p>Format field updated to accept any logformat %macro code.
+	<p>The optional <em>acl-value</em> fields in this helper input now expand
+	   to a dash ('-') if the %DATA macro is not specified explicitly.
 
 	<tag>http_port</tag>
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
