@@ -314,7 +314,6 @@ public:
         int surrogate_is_remote;
         int request_entities;
         int detect_broken_server_pconns;
-        int balance_on_multiple_ip;
         int relaxed_header_parser;
         int check_hostnames;
         int allow_underscore;
