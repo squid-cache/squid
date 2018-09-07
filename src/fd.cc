@@ -247,7 +247,7 @@ fd_note(int fd, const char *s)
 {
     fde *F = &fd_table[fd];
     safe_free(F->desc);
-    if (!s)
+    if (s)
         F->desc = xstrdup(s);
     else
         F->desc = xstrdup("");
