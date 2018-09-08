@@ -351,6 +351,7 @@ main(int argc, char *const argv[])
     char default_keytab[MAXPATHLEN];
 #if HAVE_KRB5_MEMORY_KEYTAB
     char *memory_keytab_name = NULL;
+    char *memory_keytab_name_env = NULL;
 #endif
     char *rcache_type = NULL;
     char *rcache_type_env = NULL;
@@ -560,10 +561,10 @@ main(int argc, char *const argv[])
                 debug((char *) "%s| %s: ERROR: Writing list into keytab %s\n",
                       LogTime(), PROGRAM, memory_keytab_name);
             } else {
-                keytab_name_env = (char *) xmalloc(strlen("KRB5_KTNAME=")+strlen(memory_keytab_name)+1);
-                strcpy(keytab_name_env, "KRB5_KTNAME=");
-                strcat(keytab_name_env, memory_keytab_name);
-                putenv(keytab_name_env);
+                memory_keytab_name_env = (char *) xmalloc(strlen("KRB5_KTNAME=")+strlen(memory_keytab_name)+1);
+                strcpy(memory_keytab_name_env, "KRB5_KTNAME=");
+                strcat(memory_keytab_name_env, memory_keytab_name);
+                putenv(memory_keytab_name_env);
                 xfree(keytab_name);
                 keytab_name = xstrdup(memory_keytab_name);
                 debug((char *) "%s| %s: INFO: Changed keytab to %s\n",
@@ -640,6 +641,16 @@ main(int argc, char *const argv[])
                 xfree(spnegoToken);
             }
             xfree(token);
+            xfree(rcache_type);
+            xfree(rcache_type_env);
+            xfree(rcache_dir);
+            xfree(rcache_dir_env);
+            xfree(keytab_name);
+            xfree(keytab_name_env);
+#if HAVE_KRB5_MEMORY_KEYTAB
+            xfree(memory_keytab_name);
+            xfree(memory_keytab_name_env);
+#endif
             fprintf(stdout, "BH quit command\n");
             exit(EXIT_SUCCESS);
         }
