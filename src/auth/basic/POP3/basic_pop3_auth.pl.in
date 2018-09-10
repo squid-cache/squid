@@ -89,14 +89,14 @@ if ( @ARGV != 1 ) {
     exit 1
 }
 
-$server = shift @ARGV;
+my $server = shift @ARGV;
 
 while(<>) {
     my ($username, $password) = split(/\s+/);
     $username =~ s/%([0-9a-f][0-9a-f])/pack("H2",$1)/gie;
     $password =~ s/%([0-9a-f][0-9a-f])/pack("H2",$1)/gie;
 
-    $pop = Net::POP3->new($server);
+    my $pop = Net::POP3->new($server);
     if (!$pop) {
 	print "ERR Server not responding\n";
 	next;
