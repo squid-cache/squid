@@ -56,6 +56,8 @@ typedef struct _krb5_kt_list {
 } *krb5_kt_list;
 krb5_kt_list ktlist = NULL;
 
+krb5_keytab memory_keytab;
+
 krb5_error_code krb5_free_kt_list(krb5_context context, krb5_kt_list kt_list);
 krb5_error_code krb5_write_keytab(krb5_context context,
                                   krb5_kt_list kt_list,
@@ -79,7 +81,7 @@ check_k5_err(krb5_context context, const char *function, krb5_error_code code)
 #elif HAVE_KRB5_FREE_ERROR_STRING
         krb5_free_error_string(context, (char *)errmsg);
 #else
-        xfree(errmsg);
+        ffree(errmsg);
 #endif
     }
     return code;
@@ -217,8 +219,8 @@ krb5_error_code krb5_free_kt_list(krb5_context context, krb5_kt_list list)
  */
 krb5_error_code krb5_read_keytab(krb5_context context, char *name, krb5_kt_list *list)
 {
-    krb5_kt_list lp = NULL, tail = NULL, back = NULL;
     krb5_keytab kt;
+    krb5_kt_list lp = NULL, tail = NULL, back = NULL;
     krb5_keytab_entry *entry;
     krb5_kt_cursor cursor;
     krb5_error_code retval = 0;
@@ -300,16 +302,15 @@ close_kt:
  */
 krb5_error_code krb5_write_keytab(krb5_context context, krb5_kt_list list, char *name)
 {
-    krb5_keytab kt;
     char ktname[MAXPATHLEN+sizeof("MEMORY:")+1];
     krb5_error_code retval = 0;
 
     snprintf(ktname, sizeof(ktname), "%s", name);
-    retval = krb5_kt_resolve(context, ktname, &kt);
+    retval = krb5_kt_resolve(context, ktname, &memory_keytab);
     if (retval)
         return retval;
     for (krb5_kt_list lp = list; lp; lp = lp->next) {
-        retval = krb5_kt_add_entry(context, kt, lp->entry);
+        retval = krb5_kt_add_entry(context, memory_keytab, lp->entry);
         if (retval)
             break;
     }
@@ -648,9 +649,11 @@ main(int argc, char *const argv[])
             xfree(keytab_name);
             xfree(keytab_name_env);
 #if HAVE_KRB5_MEMORY_KEYTAB
+            krb5_kt_close(context, memory_keytab);
             xfree(memory_keytab_name);
             xfree(memory_keytab_name_env);
 #endif
+            xfree(rfc_user);
             fprintf(stdout, "BH quit command\n");
             exit(EXIT_SUCCESS);
         }
