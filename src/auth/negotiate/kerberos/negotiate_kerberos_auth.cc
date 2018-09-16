@@ -219,8 +219,8 @@ krb5_error_code krb5_free_kt_list(krb5_context context, krb5_kt_list list)
  */
 krb5_error_code krb5_read_keytab(krb5_context context, char *name, krb5_kt_list *list)
 {
-    krb5_keytab kt;
     krb5_kt_list lp = NULL, tail = NULL, back = NULL;
+    krb5_keytab kt;
     krb5_keytab_entry *entry;
     krb5_kt_cursor cursor;
     krb5_error_code retval = 0;
