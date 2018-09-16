@@ -172,11 +172,13 @@ HappyConnOpener::noteCandidatesChange()
     checkForNewConnection();
 }
 
+// XXX: Rename pconn into something that does not clash with "persistent connection"
 void
 HappyConnOpener::startConnecting(PendingConnection &pconn, Comm::ConnectionPointer &dest)
 {
-    assert(!spare.path);
-    assert(!spare.connector);
+    Must(!pconn.path);
+    Must(!pconn.connector);
+
     // Use pconn to avoid opening a new connection.
     Comm::ConnectionPointer temp;
     if (allowPconn_)
@@ -253,6 +255,9 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     // still waiting for spare addresses. More related concerns below.
     // Test case: a4.down4.up4.a6.happy.test
 
+    // TODO: When the first connection has failed, switch to
+    // one-connection-at-a-time no-wait mode, alternating families.
+
     if (itWasMaster) {
         if (spare.connector) {
             // adjust spare connection accounting since we are going to convert
@@ -280,8 +285,9 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
         sparePermitted = false;
     } else {
         Must(!waitingForSparePermission);
-        Must(!sparePermitted);
+        Must(sparePermitted);
         // the master (if any) may continue its connection attempt
+        // and/or we may try to open another spare
     }
 
     checkForNewConnection();
@@ -423,6 +429,7 @@ void
 HappyConnOpener::ensureSpareConnection()
 {
     Must(master); // or we should be starting a master connection instead
+    Must(!spare); // only one spare at a time
 
     // TODO: Cancel wait if no spare candidates are going to be available?
 
@@ -436,7 +443,6 @@ HappyConnOpener::ensureSpareConnection()
         return;
 
     debugs(17, 8, "to " << *dest);
-    sparePermitted = false;
     startConnecting(spare, dest);
 
     // TODO: Check (and explain) why only the new attempts should count.
