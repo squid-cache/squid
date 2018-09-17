@@ -22,31 +22,6 @@ void operator delete(void *address)
 {
     xfree(address);
 }
-void *operator new[](size_t size)
-{
-    return xmalloc(size);
-}
-void operator delete[](void *address)
-{
-    xfree(address);
-}
-
-void *operator new(size_t size, const std::nothrow_t &tag)
-{
-    return xmalloc(size);
-}
-void operator delete(void *address, const std::nothrow_t &tag)
-{
-    xfree(address);
-}
-void *operator new[](size_t size, const std::nothrow_t &tag)
-{
-    return xmalloc(size);
-}
-void operator delete[](void *address, const std::nothrow_t &tag)
-{
-    xfree(address);
-}
 
 #endif /* !defined(__clang__) */
 
