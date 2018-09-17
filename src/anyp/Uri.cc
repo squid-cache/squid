@@ -945,7 +945,7 @@ AnyP::Uri::cleanup(const char *uri)
     switch (Config.uri_whitespace) {
     case URI_WHITESPACE_ALLOW:
         flags |= RFC1738_ESCAPE_NOSPACE;
-        // fall through to next case
+    // fall through to next case
     case URI_WHITESPACE_ENCODE:
         flags |= RFC1738_ESCAPE_UNESCAPED;
         cleanedUri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
