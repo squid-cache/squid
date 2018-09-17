@@ -611,8 +611,8 @@ HttpRequest::getRangeOffsetLimit()
     for (AclSizeLimit *l = Config.rangeOffsetLimit; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this limit value */
         if (!l->aclList || ch.fastCheck(l->aclList).allowed()) {
-            debugs(58, 4, HERE << "rangeOffsetLimit=" << rangeOffsetLimit);
             rangeOffsetLimit = l->size; // may be -1
+            debugs(58, 4, rangeOffsetLimit);
             break;
         }
     }
