@@ -8,12 +8,13 @@
 ar	ar-ae ar-bh ar-dz ar-eg ar-iq ar-jo ar-kw ar-lb ar-ly ar-ma ar-om ar-qa ar-sa ar-sy ar-tn ar-ye
 az	az-az
 bg	bg-bg
+ca	ca-es
 cs	cs-cz
 da	da-dk
 de	de-at de-ch de-de de-li de-lu
 el	el-gr
-en	en-au en-bz en-ca en-gb en-ie en-in en-jm en-nz en-ph en-sg en-tt en-uk en-us en-za en-zw
-es	es-ar es-bo es-cl es-co es-cr es-do es-ec es-es es-gt es-hn es-mx es-ni es-pa es-pe es-pr es-py es-sv es-us es-uy es-ve
+en	en-au en-bz en-ca en-cn en-gb en-ie en-in en-jm en-nz en-ph en-sg en-tt en-uk en-us en-za en-zw
+es	es-ar es-bo es-cl es-co es-cr es-do es-ec es-es es-gt es-hn es-mx es-ni es-pa es-pe es-pr es-py es-sv es-us es-uy es-ve es-xl
 et	et-ee
 fa	fa-fa fa-ir
 fi	fi-fi
@@ -32,7 +33,7 @@ ms	ms-my
 nl	nl-nl
 pl	pl-pl
 pt	pt-pt
-pt-br	pt-bz
+pt-br	pt-bz pt-xl
 ro	ro-ro ro-md
 ru	ru-ru
 sk	sk-sk
