@@ -66,6 +66,11 @@ public:
      */
     bool persistent() const;
 
+    /// Decrements the message lock count, deletes the message
+    /// when the lock count is zero.
+    /// \returns true if the message was deleted (or is nil)
+    static bool Destroy(Message *);
+
 public:
     /// HTTP-Version field in the first line of the message.
     /// see RFC 7230 section 3.1
@@ -141,23 +146,29 @@ protected:
     bool parseHeader(Http1::Parser &, Http::ContentLengthInterpreter &); // TODO move this function to the parser
 };
 
-} // namespace Http
-
-inline void
-HTTPMSGUNLOCK(Http::Message *a)
+inline bool
+Message::Destroy(Message *m)
 {
-    if (a) {
-        if (a->unlock() == 0)
-            delete a;
-        a = nullptr;
-    }
+    if (m && m->unlock() > 0)
+        return false;
+    delete m;
+    return true;
 }
+
+} // namespace Http
 
 inline void
 HTTPMSGLOCK(Http::Message *a)
 {
     if (a)
         a->lock();
+}
+
+inline void
+HTTPMSGUNLOCK(Http::Message *&m)
+{
+    if (Http::Message::Destroy(m))
+        m = nullptr;
 }
 
 #endif /* SQUID_HTTPMSG_H */

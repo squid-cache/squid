@@ -1644,8 +1644,6 @@ clientReplyContext::buildReplyHeader()
 void
 clientReplyContext::cloneReply()
 {
-    assert(reply == NULL);
-
     reply = http->storeEntry()->getReply()->clone();
     HTTPMSGLOCK(reply);
 
