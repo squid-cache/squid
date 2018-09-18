@@ -69,7 +69,7 @@ public:
     /// Decrements the message lock count, deletes the message
     /// when the lock count is zero.
     /// \returns true if the message was deleted (or is nil)
-    static bool Destroy(Message *);
+    static inline bool Destroy(Message *);
 
 public:
     /// HTTP-Version field in the first line of the message.
