@@ -164,8 +164,8 @@ String::append( char const *str, int len)
     assert(str && len >= 0);
 
     PROF_start(StringAppend);
-    if (len_ + len < size_) {
-        strncat(buf_, str, len);
+    if (len_ + len + 1 /*'\0'*/ < size_) {
+        xstrncpy(buf_+len_, str, len+1);
         len_ += len;
     } else {
         // Create a temporary string and absorb it later.
