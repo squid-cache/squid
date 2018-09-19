@@ -16,6 +16,7 @@
 #include "http/ProtocolVersion.h"
 #include "http/StatusCode.h"
 #include "HttpHeader.h"
+#include <type_traits>
 
 namespace Http
 {
@@ -65,11 +66,6 @@ public:
      * Factors other than the headers may result in connection closure.
      */
     bool persistent() const;
-
-    /// Decrements the message lock count, deletes the message
-    /// when the lock count is zero.
-    /// \returns true if the message was deleted (or is nil)
-    static inline bool Destroy(Message *);
 
 public:
     /// HTTP-Version field in the first line of the message.
@@ -146,29 +142,25 @@ protected:
     bool parseHeader(Http1::Parser &, Http::ContentLengthInterpreter &); // TODO move this function to the parser
 };
 
-inline bool
-Message::Destroy(Message *m)
-{
-    if (m && m->unlock() > 0)
-        return false;
-    delete m;
-    return true;
-}
-
 } // namespace Http
+
+template <class T>
+void
+HTTPMSGUNLOCK(T *&a)
+{
+    static_assert(std::is_base_of<Http::Message, T>::value, "T must inherit from Http::Message");
+    if (a) {
+        if (a->unlock() == 0)
+            delete a;
+        a = nullptr;
+    }
+}
 
 inline void
 HTTPMSGLOCK(Http::Message *a)
 {
     if (a)
         a->lock();
-}
-
-inline void
-HTTPMSGUNLOCK(Http::Message *&m)
-{
-    if (Http::Message::Destroy(m))
-        m = nullptr;
 }
 
 #endif /* SQUID_HTTPMSG_H */

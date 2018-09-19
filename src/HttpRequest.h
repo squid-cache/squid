@@ -271,12 +271,5 @@ void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs cons
 /// nil parameter(s) indicate missing caller information and are handled safely
 const Ip::Address *FindListeningPortAddress(const HttpRequest *, const AccessLogEntry *);
 
-inline void
-HTTPMSGUNLOCK(HttpRequest *&req)
-{
-    if (Http::Message::Destroy(req))
-        req = nullptr;
-}
-
 #endif /* SQUID_HTTPREQUEST_H */
 

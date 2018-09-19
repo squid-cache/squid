@@ -161,12 +161,5 @@ protected:
     virtual bool parseFirstLine(const char *start, const char *end);
 };
 
-inline void
-HTTPMSGUNLOCK(HttpReply *&rep)
-{
-    if (Http::Message::Destroy(rep))
-        rep = nullptr;
-}
-
 #endif /* SQUID_HTTPREPLY_H */
 
