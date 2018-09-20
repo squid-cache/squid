@@ -144,11 +144,11 @@ protected:
 
 } // namespace Http
 
-template <class T>
-void
-HTTPMSGUNLOCK(T *&a)
+template <class M>
+inline void
+HTTPMSGUNLOCK(M *&a)
 {
-    static_assert(std::is_base_of<Http::Message, T>::value, "T must inherit from Http::Message");
+    static_assert(std::is_base_of<Http::Message, M>::value, "M must inherit from Http::Message");
     if (a) {
         if (a->unlock() == 0)
             delete a;
