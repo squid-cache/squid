@@ -1052,7 +1052,7 @@ parseTimeLine(const char *units,  bool allowMsec,  bool expectMoreArguments = fa
         return 0;
     }
 
-    char *token = ConfigParser::NextToken();;
+    char *token = ConfigParser::NextToken();
     if (!token) {
         self_destruct();
         return 0;
@@ -1077,7 +1077,7 @@ parseTimeLine(const char *units,  bool allowMsec,  bool expectMoreArguments = fa
     } else
         token = NULL; // show default units if dying below.
 
-    time_msec_t result = static_cast<time_msec_t>(m * d);
+    const auto result = static_cast<time_msec_t>(m * d);
 
     if (static_cast<double>(result) * 2 != m * d * 2) {
         debugs(3, DBG_CRITICAL, "FATAL: Invalid value '" <<
@@ -4871,7 +4871,7 @@ static void free_ftp_epsv(acl_access **ftp_epsv)
 static void
 parse_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *config)
 {
-    time_msec_t tval = parseTimeLine(T_SECOND_STR, false, true);
+    const auto tval = parseTimeLine(T_SECOND_STR, false, true);
     Config.Timeout.urlRewrite = static_cast<time_t>(tval/1000);
 
     char *key, *value;
