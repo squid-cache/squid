@@ -24,6 +24,10 @@ Comm::AcceptLimiter::Instance()
 void
 Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd)
 {
+    if (afd->isLimited > Squid_MaxFD >> 2) {
+        // Do not push to deferred_ once we have reached our backlog size
+        return;
+    }
     ++ (afd->isLimited);
     debugs(5, 5, afd->conn << " x" << afd->isLimited);
     deferred_.push_back(afd);
