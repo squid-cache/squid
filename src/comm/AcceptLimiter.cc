@@ -26,20 +26,19 @@ Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd)
 {
     ++ (afd->isLimited);
     debugs(5, 5, afd->conn << " x" << afd->isLimited);
-    deferred_.push_back(afd);
     deferred_.insert(afd);
 }
 
 void
 Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
 {
-   std::set<TcpAcceptor::Pointer>::iterator it;
-   it = deferred_.find(afd);
-   if (it != deferred_.end()) {
-       -- afd->isLimited;
-       debugs(5, 5, afd->conn << " x" << afd->isLimited);
-       deferred_.erase(it);
-       debugs(5, 4, "Abandoned client TCP SYN by closing socket: " << afd->conn);
+    std::set<TcpAcceptor::Pointer>::iterator it;
+    it = deferred_.find(afd);
+    if (it != deferred_.end()) {
+        -- afd->isLimited;
+        debugs(5, 5, afd->conn << " x" << afd->isLimited);
+        deferred_.erase(it);
+        debugs(5, 4, "Abandoned client TCP SYN by closing socket: " << afd->conn);
     }
 }
 
