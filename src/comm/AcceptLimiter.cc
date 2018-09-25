@@ -32,8 +32,7 @@ Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd)
 void
 Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
 {
-    std::set<TcpAcceptor::Pointer>::iterator it;
-    it = deferred_.find(afd);
+    const auto it = deferred_.find(afd);
     if (it != deferred_.end()) {
         -- afd->isLimited;
         debugs(5, 5, afd->conn << " x" << afd->isLimited);
@@ -45,11 +44,10 @@ Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
 void
 Comm::AcceptLimiter::kick()
 {
-    std::set<TcpAcceptor::Pointer>::iterator it;
     debugs(5, 5, "size=" << deferred_.size());
 
     while (deferred_.size() > 0 && fdNFree() >= RESERVED_FD) {
-        it = deferred_.begin();
+        const auto it = deferred_.begin();
         TcpAcceptor::Pointer temp = *it;
         deferred_.erase(it);
         if (temp.valid()) {

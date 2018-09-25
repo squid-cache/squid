@@ -55,7 +55,6 @@ public:
 private:
     static AcceptLimiter Instance_;
 
-    /** FIFO queue */
     std::set<TcpAcceptor::Pointer> deferred_;
 };
 
