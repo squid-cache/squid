@@ -24,43 +24,35 @@ Comm::AcceptLimiter::Instance()
 void
 Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd)
 {
-    if (afd->isLimited > Squid_MaxFD >> 2) {
-        // Do not push to deferred_ once we have reached our backlog size
-        return;
-    }
     ++ (afd->isLimited);
     debugs(5, 5, afd->conn << " x" << afd->isLimited);
     deferred_.push_back(afd);
+    deferred_.insert(afd);
 }
 
 void
 Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
 {
-    uint64_t abandonedClients = 0;
-    for (unsigned int i = 0; i < deferred_.size() && afd->isLimited > 0; ++i) {
-        if (deferred_[i] == afd) {
-            -- deferred_[i]->isLimited;
-            deferred_[i] = NULL; // fast. kick() will skip empty entries later.
-            debugs(5, 5, afd->conn << " x" << afd->isLimited);
-            ++abandonedClients;
-        }
+   std::set<TcpAcceptor::Pointer>::iterator it;
+   it = deferred_.find(afd);
+   if (it != deferred_.end()) {
+       -- afd->isLimited;
+       debugs(5, 5, afd->conn << " x" << afd->isLimited);
+       deferred_.erase(it);
+       debugs(5, 4, "Abandoned client TCP SYN by closing socket: " << afd->conn);
     }
-    debugs(5,4, "Abandoned " << abandonedClients << " client TCP SYN by closing socket: " << afd->conn);
 }
 
 void
 Comm::AcceptLimiter::kick()
 {
-    // TODO: this could be optimized further with an iterator to search
-    //       looking for first non-NULL, followed by dumping the first N
-    //       with only one shift()/pop_front operation
-    //  OR, by reimplementing as a list instead of Vector.
-
+    std::set<TcpAcceptor::Pointer>::iterator it;
     debugs(5, 5, "size=" << deferred_.size());
+
     while (deferred_.size() > 0 && fdNFree() >= RESERVED_FD) {
-        /* NP: shift() is equivalent to pop_front(). Giving us a FIFO queue. */
-        TcpAcceptor::Pointer temp = deferred_.front();
-        deferred_.erase(deferred_.begin());
+        it = deferred_.begin();
+        TcpAcceptor::Pointer temp = *it;
+        deferred_.erase(it);
         if (temp.valid()) {
             debugs(5, 5, "doing one.");
             -- temp->isLimited;

@@ -41,6 +41,8 @@ public:
     Cbc *valid() const { return get(); } ///< was set and is valid
     bool operator !() const { return !valid(); } ///< invalid or was not set
     bool operator ==(const CbcPointer<Cbc> &o) const { return lock == o.lock; }
+    bool operator <(const CbcPointer<Cbc> &o) const { return lock < o.lock; }
+    bool operator >(const CbcPointer<Cbc> &o) const { return lock > o.lock; }
 
     CbcPointer &operator =(const CbcPointer &p);
     CbcPointer &operator =(CbcPointer &&);

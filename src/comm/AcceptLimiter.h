@@ -11,7 +11,7 @@
 
 #include "comm/TcpAcceptor.h"
 
-#include <vector>
+#include <set>
 
 namespace Comm
 {
@@ -56,7 +56,7 @@ private:
     static AcceptLimiter Instance_;
 
     /** FIFO queue */
-    std::vector<TcpAcceptor::Pointer> deferred_;
+    std::set<TcpAcceptor::Pointer> deferred_;
 };
 
 }; // namepace Comm

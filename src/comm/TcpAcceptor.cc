@@ -233,7 +233,6 @@ Comm::TcpAcceptor::doAccept(int fd, void *data)
         } else {
             afd->acceptNext();
         }
-        SetSelect(fd, COMM_SELECT_READ, Comm::TcpAcceptor::doAccept, afd, 0);
 
     } catch (const std::exception &e) {
         fatalf("FATAL: error while accepting new client connection: %s\n", e.what());
@@ -318,6 +317,7 @@ Comm::TcpAcceptor::acceptNext()
     Must(IsConnOpen(conn));
     debugs(5, 2, HERE << "connection on " << conn);
     acceptOne();
+    SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
 }
 
 void
