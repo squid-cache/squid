@@ -16,6 +16,7 @@
 #include "http/ProtocolVersion.h"
 #include "http/StatusCode.h"
 #include "HttpHeader.h"
+#include <type_traits>
 
 namespace Http
 {
@@ -143,9 +144,11 @@ protected:
 
 } // namespace Http
 
+template <class M>
 inline void
-HTTPMSGUNLOCK(Http::Message *a)
+HTTPMSGUNLOCK(M *&a)
 {
+    static_assert(std::is_base_of<Http::Message, M>::value, "M must inherit from Http::Message");
     if (a) {
         if (a->unlock() == 0)
             delete a;
