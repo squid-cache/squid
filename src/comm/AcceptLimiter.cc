@@ -24,8 +24,7 @@ Comm::AcceptLimiter::Instance()
 void
 Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd)
 {
-    ++ (afd->isLimited);
-    debugs(5, 5, afd->conn << " x" << afd->isLimited);
+    debugs(5, 5, "deferring " << afd->conn);
     deferred_.insert(afd);
 }
 
@@ -34,8 +33,6 @@ Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
 {
     const auto it = deferred_.find(afd);
     if (it != deferred_.end()) {
-        -- afd->isLimited;
-        debugs(5, 5, afd->conn << " x" << afd->isLimited);
         deferred_.erase(it);
         debugs(5, 4, "Abandoned client TCP SYN by closing socket: " << afd->conn);
     }
@@ -52,7 +49,6 @@ Comm::AcceptLimiter::kick()
         deferred_.erase(it);
         if (temp.valid()) {
             debugs(5, 5, "doing one.");
-            -- temp->isLimited;
             temp->acceptNext();
             break;
         }

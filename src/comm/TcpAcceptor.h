@@ -78,7 +78,6 @@ public:
 
 protected:
     friend class AcceptLimiter;
-    int32_t isLimited;                   ///< whether this socket is delayed and on the AcceptLimiter queue.
 
 private:
     Subscription::Pointer theCallSub;    ///< used to generate AsyncCalls handling our events.
