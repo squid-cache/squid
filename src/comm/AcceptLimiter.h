@@ -11,13 +11,13 @@
 
 #include "comm/TcpAcceptor.h"
 
-#include <set>
+#include <deque>
 
 namespace Comm
 {
 
 /**
- * Set holding listener socket handlers which have been activated
+ * Deque holding listener socket handlers which have been activated
  * ready to dupe their FD and accept() a new client connection.
  * But when doing so there were not enough FD available to handle the
  * new connection. These handlers are awaiting some FD to become free.
@@ -45,7 +45,8 @@ public:
 private:
     static AcceptLimiter Instance_;
 
-    std::set<TcpAcceptor::Pointer> deferred_;
+    /** FIFO queue */
+    std::deque<TcpAcceptor::Pointer> deferred_;
 };
 
 }; // namepace Comm

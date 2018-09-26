@@ -25,28 +25,30 @@ void
 Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd)
 {
     debugs(5, 5, "deferring " << afd->conn);
-    deferred_.insert(afd);
+    deferred_.push_back(afd);
 }
 
 void
 Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
 {
-    const auto it = deferred_.find(afd);
-    if (it != deferred_.end()) {
-        deferred_.erase(it);
-        debugs(5, 4, "Abandoned client TCP SYN by closing socket: " << afd->conn);
+    uint64_t abandonedClients = 0;
+    for (auto it = deferred_.begin(); it != deferred_.end(); ++it) {
+        if (*it == afd) {
+            *it = NULL; // fast. kick() will skip empty entries later.
+            ++abandonedClients;
+        }
     }
+    debugs(5,4, "Abandoned " << abandonedClients << " client TCP SYN by closing socket: " << afd->conn);
 }
 
 void
 Comm::AcceptLimiter::kick()
 {
     debugs(5, 5, "size=" << deferred_.size());
-
     while (deferred_.size() > 0 && fdNFree() >= RESERVED_FD) {
-        const auto it = deferred_.begin();
-        TcpAcceptor::Pointer temp = *it;
-        deferred_.erase(it);
+        /* NP: shift() is equivalent to pop_front(). Giving us a FIFO queue. */
+        TcpAcceptor::Pointer temp = deferred_.front();
+        deferred_.erase(deferred_.begin());
         if (temp.valid()) {
             debugs(5, 5, "doing one.");
             temp->acceptNext();
