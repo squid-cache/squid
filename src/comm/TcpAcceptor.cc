@@ -43,7 +43,6 @@ CBDATA_NAMESPACED_CLASS_INIT(Comm, TcpAcceptor);
 Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const char *, const Subscription::Pointer &aSub) :
     AsyncJob("Comm::TcpAcceptor"),
     errcode(0),
-    isLimited(0),
     theCallSub(aSub),
     conn(newConn),
     listenPort_()
@@ -52,7 +51,6 @@ Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const cha
 Comm::TcpAcceptor::TcpAcceptor(const AnyP::PortCfgPointer &p, const char *, const Subscription::Pointer &aSub) :
     AsyncJob("Comm::TcpAcceptor"),
     errcode(0),
-    isLimited(0),
     theCallSub(aSub),
     conn(p->listenConn),
     listenPort_(p)
@@ -233,7 +231,6 @@ Comm::TcpAcceptor::doAccept(int fd, void *data)
         } else {
             afd->acceptNext();
         }
-        SetSelect(fd, COMM_SELECT_READ, Comm::TcpAcceptor::doAccept, afd, 0);
 
     } catch (const std::exception &e) {
         fatalf("FATAL: error while accepting new client connection: %s\n", e.what());
@@ -310,6 +307,7 @@ Comm::TcpAcceptor::acceptOne()
            " accepted new connection " << newConnDetails <<
            " handler Subscription: " << theCallSub);
     notify(flag, newConnDetails);
+    SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
 }
 
 void

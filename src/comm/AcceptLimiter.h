@@ -11,7 +11,7 @@
 
 #include "comm/TcpAcceptor.h"
 
-#include <vector>
+#include <deque>
 
 namespace Comm
 {
@@ -25,16 +25,6 @@ namespace Comm
  * defer - used only by Comm layer ConnAcceptor adding themselves when FD are limited.
  * removeDead - used only by Comm layer ConnAcceptor to remove themselves when dying.
  * kick - used by Comm layer when FD are closed.
- */
-/* TODO this algorithm can be optimized further:
- *
- * 1) reduce overheads by only pushing one entry per port to the list?
- * use TcpAcceptor::isLimited as a flag whether to re-list when kick()'ing
- * or to NULL an entry while scanning the list for empty spaces.
- * Side effect: TcpAcceptor->kick() becomes allowed to pull off multiple accept()'s in bunches
- *
- * 2) re-implement as a std::queue instead of std::vector
- * storing head/tail pointers for fast push/pop and avoiding the whole shift() overhead
  */
 class AcceptLimiter
 {
@@ -56,7 +46,7 @@ private:
     static AcceptLimiter Instance_;
 
     /** FIFO queue */
-    std::vector<TcpAcceptor::Pointer> deferred_;
+    std::deque<TcpAcceptor::Pointer> deferred_;
 };
 
 }; // namepace Comm
