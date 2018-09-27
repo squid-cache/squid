@@ -24,21 +24,21 @@ Comm::AcceptLimiter::Instance()
 void
 Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd)
 {
-    debugs(5, 5, "deferring " << afd->conn);
+    debugs(5, 5, afd->conn << "; already queued: " << deferred_.size());
     deferred_.push_back(afd);
 }
 
 void
 Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
 {
-    uint64_t abandonedClients = 0;
     for (auto it = deferred_.begin(); it != deferred_.end(); ++it) {
         if (*it == afd) {
-            *it = NULL; // fast. kick() will skip empty entries later.
-            ++abandonedClients;
+            *it = nullptr; // fast. kick() will skip empty entries later.
+            debugs(5,4, "Abandoned client TCP SYN by closing socket: " << afd->conn);
+            return;
         }
     }
-    debugs(5,4, "Abandoned " << abandonedClients << " client TCP SYN by closing socket: " << afd->conn);
+    debugs(5,4, "Not found " << afd->conn << " in queue, size: " << deferred_.size());
 }
 
 void

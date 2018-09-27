@@ -307,6 +307,7 @@ Comm::TcpAcceptor::acceptOne()
            " accepted new connection " << newConnDetails <<
            " handler Subscription: " << theCallSub);
     notify(flag, newConnDetails);
+    SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
 }
 
 void
@@ -315,7 +316,6 @@ Comm::TcpAcceptor::acceptNext()
     Must(IsConnOpen(conn));
     debugs(5, 2, HERE << "connection on " << conn);
     acceptOne();
-    SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
 }
 
 void

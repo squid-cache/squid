@@ -17,7 +17,7 @@ namespace Comm
 {
 
 /**
- * Deque holding listener socket handlers which have been activated
+ * FIFO Queue holding listener socket handlers which have been activated
  * ready to dupe their FD and accept() a new client connection.
  * But when doing so there were not enough FD available to handle the
  * new connection. These handlers are awaiting some FD to become free.
