@@ -76,9 +76,12 @@ public:
     /// errno code of the last accept() or listen() action if one occurred.
     int errcode;
 
+    /// Method to test if there are enough file descriptors to open a new client connection
+    /// if not the accept() will be postponed
+    static bool okToAccept();
+
 protected:
     friend class AcceptLimiter;
-    int32_t isLimited;                   ///< whether this socket is delayed and on the AcceptLimiter queue.
 
 private:
     Subscription::Pointer theCallSub;    ///< used to generate AsyncCalls handling our events.
@@ -92,10 +95,6 @@ private:
 
     /// listen socket closure handler
     AsyncCall::Pointer closer_;
-
-    /// Method to test if there are enough file descriptors to open a new client connection
-    /// if not the accept() will be postponed
-    static bool okToAccept();
 
     /// Method callback for whenever an FD is ready to accept a client connection.
     static void doAccept(int fd, void *data);
