@@ -24,42 +24,33 @@ Comm::AcceptLimiter::Instance()
 void
 Comm::AcceptLimiter::defer(const Comm::TcpAcceptor::Pointer &afd)
 {
-    ++ (afd->isLimited);
-    debugs(5, 5, afd->conn << " x" << afd->isLimited);
+    debugs(5, 5, afd->conn << "; already queued: " << deferred_.size());
     deferred_.push_back(afd);
 }
 
 void
 Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor::Pointer &afd)
 {
-    uint64_t abandonedClients = 0;
-    for (unsigned int i = 0; i < deferred_.size() && afd->isLimited > 0; ++i) {
-        if (deferred_[i] == afd) {
-            -- deferred_[i]->isLimited;
-            deferred_[i] = NULL; // fast. kick() will skip empty entries later.
-            debugs(5, 5, afd->conn << " x" << afd->isLimited);
-            ++abandonedClients;
+    for (auto it = deferred_.begin(); it != deferred_.end(); ++it) {
+        if (*it == afd) {
+            *it = nullptr; // fast. kick() will skip empty entries later.
+            debugs(5,4, "Abandoned client TCP SYN by closing socket: " << afd->conn);
+            return;
         }
     }
-    debugs(5,4, "Abandoned " << abandonedClients << " client TCP SYN by closing socket: " << afd->conn);
+    debugs(5,4, "Not found " << afd->conn << " in queue, size: " << deferred_.size());
 }
 
 void
 Comm::AcceptLimiter::kick()
 {
-    // TODO: this could be optimized further with an iterator to search
-    //       looking for first non-NULL, followed by dumping the first N
-    //       with only one shift()/pop_front operation
-    //  OR, by reimplementing as a list instead of Vector.
-
     debugs(5, 5, "size=" << deferred_.size());
-    while (deferred_.size() > 0 && fdNFree() >= RESERVED_FD) {
+    while (deferred_.size() > 0 && Comm::TcpAcceptor::okToAccept()) {
         /* NP: shift() is equivalent to pop_front(). Giving us a FIFO queue. */
         TcpAcceptor::Pointer temp = deferred_.front();
         deferred_.erase(deferred_.begin());
         if (temp.valid()) {
             debugs(5, 5, "doing one.");
-            -- temp->isLimited;
             temp->acceptNext();
             break;
         }
