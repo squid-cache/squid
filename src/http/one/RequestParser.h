@@ -24,8 +24,8 @@ namespace One {
  * Works on a raw character I/O buffer and tokenizes the content into
  * the major CRLF delimited segments of an HTTP/1 request message:
  *
- * \item request-line (method, URL, protocol, version)
- * \item mime-header (set of RFC2616 syntax header fields)
+ * \li request-line (method, URL, protocol, version)
+ * \li mime-header (set of RFC2616 syntax header fields)
  */
 class RequestParser : public Http1::Parser
 {
