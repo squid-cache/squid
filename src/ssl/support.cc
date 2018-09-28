@@ -147,17 +147,17 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 
     default:
         debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Unexpected key length " << keylen);
-        return nullptr;
+        return NULL;
     }
 
-    if (rsa == nullptr) {
+    if (rsa == NULL) {
         debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Failed to generate key " << keylen);
-        return nullptr;
+        return NULL;
     }
 
     if (newkey) {
         if (Debug::Enabled(83, 5))
-            PEM_write_RSAPrivateKey(debug_log, rsa, nullptr, nullptr, 0, nullptr, nullptr);
+            PEM_write_RSAPrivateKey(debug_log, rsa, NULL, NULL, 0, NULL, NULL);
 
         debugs(83, DBG_IMPORTANT, "Generated ephemeral RSA key of length " << keylen);
     }

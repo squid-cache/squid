@@ -8,6 +8,7 @@
 #ifndef OPENSSL_COMPAT_H
 #define OPENSSL_COMPAT_H
 
+//#if USE_OPENSSL
 #if defined(__cplusplus)
 
 #if HAVE_OPENSSL_ASN1_H
@@ -32,6 +33,7 @@
 #include <openssl/x509.h>
 #endif
 
+extern "C" {
 
 #if !HAVE_LIBCRYPTO_ASN1_STRING_GET0_DATA
 inline const unsigned char *
@@ -61,7 +63,6 @@ BIO_set_init(BIO *table, int init)
 }
 #endif
 
-// BIO_get_init is not implemented in LibreSSL, even though BIO_set_init is
 #if !HAVE_LIBCRYPTO_BIO_GET_INIT
 inline int
 BIO_get_init(BIO *table)
@@ -75,8 +76,8 @@ BIO_get_init(BIO *table)
 inline int
 DH_up_ref(DH *t)
 {
-    if (t)
-        CRYPTO_add(&t->references, 1, CRYPTO_LOCK_DH);
+    if (t && (CRYPTO_add(&t->references, 1, CRYPTO_LOCK_DH) > 1))
+        return 1;
     return 0;
 }
 #else
@@ -99,8 +100,8 @@ EVP_PKEY_get0_RSA(EVP_PKEY *pkey)
 inline int
 EVP_PKEY_up_ref(EVP_PKEY *t)
 {
-    if (t)
-        CRYPTO_add(&t->references, 1, CRYPTO_LOCK_EVP_PKEY);
+    if (t && (CRYPTO_add(&t->references, 1, CRYPTO_LOCK_EVP_PKEY)) > 1)
+        return 1;
     return 0;
 }
 
@@ -137,8 +138,8 @@ SSL_SESSION_get_id(const SSL_SESSION *s, unsigned int *len)
 inline int
 X509_CRL_up_ref(X509_CRL *t)
 {
-    if (t)
-        CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509_CRL);
+    if (t && (CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509_CRL) > 1))
+        return 1;
     return 0;
 }
 #else
@@ -174,7 +175,7 @@ X509_STORE_CTX_get0_untrusted(X509_STORE_CTX *ctx)
 
 /// Note that all of the calls in this next group were renamed, or had the new
 /// name added at the same time as X509_STORE_CTX_get0_untrusted was implemented,
-/// in both OpenSSL 1.1.0, and LibreSSL 2.7.0.
+/// in all supported OpenSSL-compatible libraries
 #define X509_STORE_CTX_set0_untrusted X509_STORE_CTX_set_chain
 #define X509_getm_notAfter X509_get_notAfter
 #define X509_getm_notBefore X509_get_notBefore
@@ -187,8 +188,8 @@ X509_STORE_CTX_get0_untrusted(X509_STORE_CTX *ctx)
 inline int
 X509_up_ref(X509 *t)
 {
-    if (t)
-        CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509);
+    if (t && (CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509)) > 1)
+        return 1;
     return 0;
 }
 #else
@@ -205,5 +206,7 @@ X509_VERIFY_PARAM_get_depth(const X509_VERIFY_PARAM *param)
 }
 #endif
 
+} /* extern "C" */
 #endif /* __cplusplus */
+//#endif /* USE_OPENSSL */
 #endif /* OPENSSL_COMPAT_H */
