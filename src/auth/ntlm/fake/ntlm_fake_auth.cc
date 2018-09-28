@@ -86,7 +86,7 @@ usage(void)
             "Usage: %s [-d] [-t N] [-v] [-h]\n"
             " -d  enable debugging.\n"
             " -S  strip domain from username.\n"
-            " -t  timeout to delay responses.\n"
+            " -t  timeout to delay responses (milliseconds).\n"
             " -v  enable verbose NTLM packet debugging.\n"
             " -h  this message\n\n",
             my_program_name);
@@ -183,7 +183,7 @@ main(int argc, char *argv[])
             debug("Got '%s' from Squid\n", buf);
 
         if (response_delay > 0) {
-            std::this_thread::sleep_for(std::chrono::seconds(response_delay));
+            std::this_thread::sleep_for(std::chrono::milliseconds(response_delay));
         }
 
         if (strncmp(buf, "YR", 2) == 0) {
