@@ -17,7 +17,7 @@
 /**
  \defgroup ClientStreamAPI Client Streams API
  \ingroup Components
- \section Introduction Introduction
+ \section ClientStreamIntroduction Introduction
  \par
  *    A ClientStream implements a unidirectional, non-blocking,
  *    pull pipeline. They allow code to be inserted into the

@@ -17,7 +17,7 @@
 /**
  \defgroup FileSystems  Storage Filesystems
  *
- \section Introduction Introduction
+ \section FileSystemsIntroduction Introduction
  \par
  * Traditionally, Squid has always used the Unix filesystem (\link UFS UFS\endlink)
  * to store cache objects on disk.  Over the years, the

@@ -83,7 +83,7 @@ class CertError;
 typedef CbDataList<Security::CertError> CertErrors;
 
 #if USE_OPENSSL
-CtoCpp1(X509_free, X509 *)
+CtoCpp1(X509_free, X509 *);
 typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref> > CertPointer;
 #elif USE_GNUTLS
 typedef std::shared_ptr<struct gnutls_x509_crt_int> CertPointer;
@@ -92,10 +92,10 @@ typedef std::shared_ptr<void> CertPointer;
 #endif
 
 #if USE_OPENSSL
-CtoCpp1(X509_CRL_free, X509_CRL *)
+CtoCpp1(X509_CRL_free, X509_CRL *);
 typedef Security::LockingPointer<X509_CRL, X509_CRL_free_cpp, HardFun<int, X509_CRL *, X509_CRL_up_ref> > CrlPointer;
 #elif USE_GNUTLS
-CtoCpp1(gnutls_x509_crl_deinit, gnutls_x509_crl_t)
+CtoCpp1(gnutls_x509_crl_deinit, gnutls_x509_crl_t);
 typedef Security::LockingPointer<struct gnutls_x509_crl_int, gnutls_x509_crl_deinit> CrlPointer;
 #else
 typedef void *CrlPointer;
