@@ -114,6 +114,7 @@ process_options(int argc, char *argv[])
             if (!xstrtoui(optarg, nullptr, &response_delay, 0, 86400)) {
                 fprintf(stderr, "ERROR: invalid parameter value for -t '%s'", optarg);
                 usage();
+                had_error = 1;
             }
             break;
         case 'h':
