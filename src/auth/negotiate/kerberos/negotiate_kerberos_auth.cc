@@ -56,6 +56,8 @@ typedef struct _krb5_kt_list {
 } *krb5_kt_list;
 krb5_kt_list ktlist = NULL;
 
+krb5_keytab memory_keytab;
+
 krb5_error_code krb5_free_kt_list(krb5_context context, krb5_kt_list kt_list);
 krb5_error_code krb5_write_keytab(krb5_context context,
                                   krb5_kt_list kt_list,
@@ -300,16 +302,15 @@ close_kt:
  */
 krb5_error_code krb5_write_keytab(krb5_context context, krb5_kt_list list, char *name)
 {
-    krb5_keytab kt;
     char ktname[MAXPATHLEN+sizeof("MEMORY:")+1];
     krb5_error_code retval = 0;
 
     snprintf(ktname, sizeof(ktname), "%s", name);
-    retval = krb5_kt_resolve(context, ktname, &kt);
+    retval = krb5_kt_resolve(context, ktname, &memory_keytab);
     if (retval)
         return retval;
     for (krb5_kt_list lp = list; lp; lp = lp->next) {
-        retval = krb5_kt_add_entry(context, kt, lp->entry);
+        retval = krb5_kt_add_entry(context, memory_keytab, lp->entry);
         if (retval)
             break;
     }
@@ -351,6 +352,7 @@ main(int argc, char *const argv[])
     char default_keytab[MAXPATHLEN];
 #if HAVE_KRB5_MEMORY_KEYTAB
     char *memory_keytab_name = NULL;
+    char *memory_keytab_name_env = NULL;
 #endif
     char *rcache_type = NULL;
     char *rcache_type_env = NULL;
@@ -560,10 +562,10 @@ main(int argc, char *const argv[])
                 debug((char *) "%s| %s: ERROR: Writing list into keytab %s\n",
                       LogTime(), PROGRAM, memory_keytab_name);
             } else {
-                keytab_name_env = (char *) xmalloc(strlen("KRB5_KTNAME=")+strlen(memory_keytab_name)+1);
-                strcpy(keytab_name_env, "KRB5_KTNAME=");
-                strcat(keytab_name_env, memory_keytab_name);
-                putenv(keytab_name_env);
+                memory_keytab_name_env = (char *) xmalloc(strlen("KRB5_KTNAME=")+strlen(memory_keytab_name)+1);
+                strcpy(memory_keytab_name_env, "KRB5_KTNAME=");
+                strcat(memory_keytab_name_env, memory_keytab_name);
+                putenv(memory_keytab_name_env);
                 xfree(keytab_name);
                 keytab_name = xstrdup(memory_keytab_name);
                 debug((char *) "%s| %s: INFO: Changed keytab to %s\n",
@@ -640,6 +642,18 @@ main(int argc, char *const argv[])
                 xfree(spnegoToken);
             }
             xfree(token);
+            xfree(rcache_type);
+            xfree(rcache_type_env);
+            xfree(rcache_dir);
+            xfree(rcache_dir_env);
+            xfree(keytab_name);
+            xfree(keytab_name_env);
+#if HAVE_KRB5_MEMORY_KEYTAB
+            krb5_kt_close(context, memory_keytab);
+            xfree(memory_keytab_name);
+            xfree(memory_keytab_name_env);
+#endif
+            xfree(rfc_user);
             fprintf(stdout, "BH quit command\n");
             exit(0);
         }
