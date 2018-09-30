@@ -483,13 +483,7 @@ Ssl::Initialize(void)
         return;
     initialized = true;
 
-#if HAVE_LIBSSL_OPENSSL_INIT_SSL
-    // No explicit initialisation is required.
-    //OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS, nullptr);
-#else
-    SSL_load_error_strings();
-    SSLeay_add_ssl_algorithms();
-#endif
+    SQUID_OPENSSL_init_ssl();
 
 #if HAVE_OPENSSL_ENGINE_H
     if (::Config.SSL.ssl_engine) {

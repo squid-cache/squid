@@ -325,13 +325,7 @@ int main(int argc, char *argv[])
         }
 
         // Initialize SSL subsystem
-#if HAVE_LIBSSL_OPENSSL_INIT_SSL
-	// No explicit initialisation is required.
-	//OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS, nullptr);
-#else
-        SSL_load_error_strings();
-        SSLeay_add_ssl_algorithms();
-#endif
+        SQUID_OPENSSL_init_ssl();
         // process request.
         for (;;) {
             char request[HELPER_INPUT_BUFFER];

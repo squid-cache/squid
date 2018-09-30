@@ -8,7 +8,10 @@
 #ifndef OPENSSL_COMPAT_H
 #define OPENSSL_COMPAT_H
 
-//#if USE_OPENSSL
+#if !USE_OPENSSL
+#error compat/openssl.h depends on USE_OPENSSL
+#endif
+
 #if defined(__cplusplus)
 
 #if HAVE_OPENSSL_ASN1_H
@@ -115,6 +118,14 @@ EVP_PKEY_up_ref(EVP_PKEY *t)
 #define OPENSSL_LH_strhash lh_strhash
 #endif
 
+inline void SQUID_OPENSSL_init_ssl(void)
+{
+#if !HAVE_LIBSSL_OPENSSL_INIT_SSL
+    SSL_load_error_strings();
+    SSLeay_add_ssl_algorithms();
+#endif
+}
+
 #if !HAVE_LIBSSL_SSL_CIPHER_FIND
 inline const SSL_CIPHER *
 SSL_CIPHER_find(SSL *ssl, const unsigned char *ptr)
@@ -208,5 +219,4 @@ X509_VERIFY_PARAM_get_depth(const X509_VERIFY_PARAM *param)
 
 } /* extern "C" */
 #endif /* __cplusplus */
-//#endif /* USE_OPENSSL */
 #endif /* OPENSSL_COMPAT_H */
