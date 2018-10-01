@@ -139,8 +139,18 @@ Http::One::TeChunkedParser::parseChunkExtension(Http1::Tokenizer &tok, bool skip
             debugs(94, 5, "skipping unknown chunk extension " << ext);
 
             // unknown might have a value token or quoted-string
-            if (!tok.quotedStringOrToken(value))
-                return false; // needs more data
+            bool moreNeeded = false;
+            if (tok.quotedStringOrToken(value, moreNeeded)) {
+                if (!tok.atEnd()) {
+                    buf_ = tok.remaining(); // parse checkpoint
+                    continue;
+                }
+                break;
+            } else if (moreNeeded) {
+                return false;
+            } else {
+                break; // corrupt syntax
+            }
         }
 
         if (!tok.atEnd())

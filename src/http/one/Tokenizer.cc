@@ -9,33 +9,38 @@
 #include "squid.h"
 #include "Debug.h"
 #include "http/one/Tokenizer.h"
-#include "sbuf/Stream.h"
 
 bool
-Http::One::Tokenizer::quotedString(SBuf &returnedToken, const bool http1p0)
+Http::One::Tokenizer::quotedString(SBuf &returnedToken, bool &moreNeeded, const bool http1p0)
 {
     checkpoint();
+    moreNeeded = false;
 
     if (!skip('"'))
         return false;
 
-    return qdText(returnedToken, http1p0);
+    return qdText(returnedToken, moreNeeded, http1p0);
 }
 
 bool
-Http::One::Tokenizer::quotedStringOrToken(SBuf &returnedToken, const bool http1p0)
+Http::One::Tokenizer::quotedStringOrToken(SBuf &returnedToken, bool &moreNeeded, const bool http1p0)
 {
+    checkpoint();
+
     if (!skip('"')) {
-        if (prefix(returnedToken, CharacterSet::TCHAR))
-            return true;
-        throw TexcHere("invalid token");
+         const bool result = prefix(returnedToken, CharacterSet::TCHAR);
+         moreNeeded = (!result && !atEnd());
+         return result;
     }
-    return qdText(returnedToken, http1p0);
+
+    return qdText(returnedToken, moreNeeded, http1p0);
 }
 
 bool
-Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
+Http::One::Tokenizer::qdText(SBuf &returnedToken, bool &moreNeeded, const bool http1p0)
 {
+    moreNeeded = false;
+
     // the initial DQUOTE has been skipped by the caller
 
     /*
@@ -81,7 +86,8 @@ Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
             SBuf escaped;
             if (!prefix(escaped, qPairChars, 1)) {
                 returnedToken.clear();
-                throw TexcHere("invalid escaped characters");
+                restoreLastCheckpoint();
+                return false;
             }
             returnedToken.append(escaped);
             continue;
@@ -91,13 +97,17 @@ Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
 
         } else if (atEnd()) {
             // need more data
+            moreNeeded = true;
             returnedToken.clear();
+            restoreLastCheckpoint();
             return false;
         }
 
         // else, we have an error
+        debugs(24, 8, "invalid bytes for set " << tokenChars.name);
         returnedToken.clear();
-        throw TexcHere(ToSBuf("invalid bytes for set ", tokenChars.name));
+        restoreLastCheckpoint();
+        return false;
     }
 
     // found the whole string
