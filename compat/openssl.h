@@ -36,12 +36,6 @@
 #include <openssl/x509.h>
 #endif
 
-#if SQUID_USE_CONST_X509_GET0_SIGNATURE_ARGS
-#define SQUID_CONST_X509_GET0_SIGNATURE_ARGS const
-#else
-#define SQUID_CONST_X509_GET0_SIGNATURE_ARGS
-#endif
-
 extern "C" {
 
 #if !HAVE_LIBCRYPTO_ASN1_STRING_GET0_DATA
