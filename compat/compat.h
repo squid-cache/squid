@@ -124,9 +124,6 @@
  * access the struct members any more, so the solution is to use
  * the new API in the main code, and add the functions for older
  * versions in compat/openssl.h.
- * LibreSSL is trying to maintain both versions, keeping the structs
- * acessible while adding the access functions, but it is not 100%
- * compatible yet.
  * Once all the supported library versions use the new API, the shim
  * can be dropped.
  */
