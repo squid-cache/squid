@@ -126,6 +126,22 @@ inline void SQUID_OPENSSL_init_ssl(void)
 #endif
 }
 
+/// wrapper for OpenSSL X509_get0_signature() which takes care of
+/// portability issues with older OpenSSL versions
+inline const ASN1_BIT_STRING *
+SQUID_X509_get0_signature(const X509 *cert)
+{
+#if SQUID_USE_CONST_X509_GET0_SIGNATURE_ARGS
+    const ASN1_BIT_STRING *sig = nullptr;
+    const X509_ALGOR *sig_alg = nullptr;
+#else
+    ASN1_BIT_STRING *sig = nullptr;
+    X509_ALGOR *sig_alg = nullptr;
+#endif
+    X509_get0_signature(&sig, &sig_alg, cert);
+    return sig;
+}
+
 #if !HAVE_LIBSSL_SSL_CIPHER_FIND
 inline const SSL_CIPHER *
 SSL_CIPHER_find(SSL *ssl, const unsigned char *ptr)
