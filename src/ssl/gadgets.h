@@ -273,6 +273,10 @@ const char *getOrganization(X509 *x509);
 /// \return whether both certificates exist and are the same (e.g., have identical ASN.1 images)
 bool CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPointer &cert2);
 
+/// wrapper for OpenSSL X509_get0_signature() which takes care of
+/// portability issues with older OpenSSL versions
+const ASN1_BIT_STRING *X509_get_signature(const Security::CertPointer &);
+
 } // namespace Ssl
 #endif // SQUID_SSL_GADGETS_H
 

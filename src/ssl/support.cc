@@ -1230,7 +1230,7 @@ void Ssl::InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties
 {
     bool origSignatureAsKey = false;
     if (certProperties.mimicCert) {
-        if (auto *sig = SQUID_X509_get0_signature(certProperties.mimicCert.get())) {
+        if (auto *sig = Ssl::X509_get_signature(certProperties.mimicCert)) {
             origSignatureAsKey = true;
             key.append((const char *)sig->data, sig->length);
         }

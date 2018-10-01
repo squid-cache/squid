@@ -222,7 +222,7 @@ Ssl::CertificateProperties::CertificateProperties():
 static void
 printX509Signature(const Security::CertPointer &cert, std::string &out)
 {
-    const ASN1_BIT_STRING *sig = SQUID_X509_get0_signature(cert.get());
+    const ASN1_BIT_STRING *sig = Ssl::X509_get_signature(cert);
     if (sig && sig->data) {
         const unsigned char *s = sig->data;
         for (int i = 0; i < sig->length; ++i) {
@@ -939,3 +939,14 @@ Ssl::CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPoi
 
     return ret;
 }
+
+const ASN1_BIT_STRING *
+Ssl::X509_get_signature(const Security::CertPointer &cert)
+{
+    SQUID_CONST_X509_GET0_SIGNATURE_ARGS ASN1_BIT_STRING *sig = nullptr;
+    SQUID_CONST_X509_GET0_SIGNATURE_ARGS X509_ALGOR *sig_alg = nullptr;
+
+    X509_get0_signature(&sig, &sig_alg, cert.get());
+    return sig;
+}
+
