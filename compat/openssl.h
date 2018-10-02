@@ -155,6 +155,14 @@ SSL_SESSION_get_id(const SSL_SESSION *s, unsigned int *len)
 }
 #endif
 
+#if !HAVE_OPENSSL_TLS_CLIENT_METHOD
+#define TLS_client_method SSLv23_client_method
+#endif
+
+#if !HAVE_OPENSSL_TLS_SERVER_METHOD
+#define TLS_server_method SSLv23_server_method
+#endif
+
 #if !HAVE_LIBCRYPTO_X509_CRL_UP_REF // OpenSSL 1.1 API
 #if defined(CRYPTO_LOCK_X509_CRL) // OpenSSL 1.0 API
 inline int

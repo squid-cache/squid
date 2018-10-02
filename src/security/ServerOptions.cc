@@ -158,11 +158,7 @@ Security::ServerOptions::createBlankContext() const
 #if USE_OPENSSL
     Ssl::Initialize();
 
-#if HAVE_OPENSSL_SERVER_METHOD
     SSL_CTX *t = SSL_CTX_new(TLS_server_method());
-#else
-    SSL_CTX *t = SSL_CTX_new(SSLv23_server_method());
-#endif
     if (!t) {
         const auto x = ERR_get_error();
         debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate TLS server context: " << Security::ErrorString(x));

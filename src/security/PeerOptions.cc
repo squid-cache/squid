@@ -248,11 +248,7 @@ Security::PeerOptions::createBlankContext() const
 #if USE_OPENSSL
     Ssl::Initialize();
 
-#if HAVE_OPENSSL_TLS_CLIENT_METHOD
     SSL_CTX *t = SSL_CTX_new(TLS_client_method());
-#else
-    SSL_CTX *t = SSL_CTX_new(SSLv23_client_method());
-#endif
     if (!t) {
         const auto x = ERR_get_error();
         fatalf("Failed to allocate TLS client context: %s\n", Security::ErrorString(x));
