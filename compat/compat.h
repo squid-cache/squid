@@ -117,18 +117,5 @@
 /* cppunit is not quite C++0x compatible yet */
 #include "compat/cppunit.h"
 
-#if USE_OPENSSL
-/* OpenSSL API changed dramatically between 1.0.2 and 1.1.0, and
- * compatibility was broken.  Most of the structures became opaque,
- * and access functions were created.  There's no (safe) way to
- * access the struct members any more, so the solution is to use
- * the new API in the main code, and add the functions for older
- * versions in compat/openssl.h.
- * Once all the supported library versions use the new API, the shim
- * can be dropped.
- */
-#include "compat/openssl.h"
-#endif
-
 #endif /* _SQUID_COMPAT_H */
 

@@ -9,11 +9,6 @@
 #include "squid.h"
 #include "ssl/gadgets.h"
 
-#include <openssl/asn1.h>
-#if HAVE_OPENSSL_X509V3_H
-#include <openssl/x509v3.h>
-#endif
-
 EVP_PKEY * Ssl::createSslPrivateKey()
 {
     Security::PrivateKeyPointer pkey(EVP_PKEY_new());

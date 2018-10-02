@@ -11,6 +11,7 @@
 
 #if USE_OPENSSL
 
+#include "compat/openssl.h"
 #include "FadingCounter.h"
 #include "fd.h"
 #include "MemBuf.h"

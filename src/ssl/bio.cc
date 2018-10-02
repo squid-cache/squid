@@ -23,10 +23,6 @@
 #include "SquidTime.h"
 #include "ssl/bio.h"
 
-#if HAVE_OPENSSL_SSL_H
-#include <openssl/ssl.h>
-#endif
-
 #if _SQUID_WINDOWS_
 extern int socket_read_method(int, char *, int);
 extern int socket_write_method(int, const char *, int);

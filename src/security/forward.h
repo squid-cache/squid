@@ -18,6 +18,7 @@
 #endif
 #include <list>
 #if USE_OPENSSL
+#include "compat/openssl.h"
 #if HAVE_OPENSSL_BN_H
 #include <openssl/bn.h>
 #endif

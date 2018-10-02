@@ -11,6 +11,12 @@
 
 #include "anyp/forward.h"
 #include "security/PeerOptions.h"
+#if USE_OPENSSL
+#include "compat/openssl.h"
+#if HAVE_OPENSSL_X509_H
+#include <openssl/x509.h>
+#endif
+#endif
 
 namespace Security
 {

@@ -17,13 +17,10 @@
 #include "SquidConfig.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
-#endif
 
 #if HAVE_OPENSSL_ERR_H
 #include <openssl/err.h>
 #endif
-#if HAVE_OPENSSL_X509_H
-#include <openssl/x509.h>
 #endif
 
 Security::ServerOptions &
