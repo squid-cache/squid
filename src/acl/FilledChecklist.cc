@@ -109,7 +109,7 @@ ACLFilledChecklist::verifyAle() const
             showDebugWarning("URL");
             // XXX: al->url should be the request URL from client,
             // but request->url may be different (e.g.,redirected)
-            al->url = request->url.absolute();
+            al->url = request->effectiveRequestUri();
         }
     }
 
