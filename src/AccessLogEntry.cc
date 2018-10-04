@@ -115,7 +115,7 @@ AccessLogEntry::~AccessLogEntry()
 const SBuf *
 AccessLogEntry::effectiveVirginUrl() const
 {
-    const SBuf *effectiveUrl = request ? &request->url.absolute() : &virginUrlForMissingRequest_;
+    const SBuf *effectiveUrl = request ? &request->effectiveRequestUri() : &virginUrlForMissingRequest_;
     if (effectiveUrl && !effectiveUrl->isEmpty())
         return effectiveUrl;
     // We can not use ALE::url here because it may contain a request URI after
