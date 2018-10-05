@@ -248,6 +248,7 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     if (const auto peer = params.conn->getPeer())
         peerConnectFailed(peer);
     params.conn->close(); // TODO: Comm::ConnOpener should do this instead.
+    lastFailure = params.conn;
 
     // XXX: Some of this logic is wrong: If a master connection failed, and we
     // do not have any spare paths to try, but we do have another master-family,
@@ -298,8 +299,11 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
 Comm::ConnectionPointer
 HappyConnOpener::extractMasterCandidatePath()
 {
-    if (!dests_->empty())
-        return dests_->popFirst(); // found one
+    if (!dests_->empty()) {
+        const auto dest = dests_->popFirst();
+        Must(dest);
+        return dest;
+    }
 
     if (!dests_->destinationsFinalized)
         return Comm::ConnectionPointer(); // may get one later
@@ -315,10 +319,7 @@ Comm::ConnectionPointer
 HappyConnOpener::extractSpareCandidatePath()
 {
     Must(master);
-    // TODO: Rename/rafactor to popSamePeerDifferentFamily(master.path)
-    return dests_->popFirstFromDifferentFamily(
-        master.path->getPeer(),
-        CandidatePaths::ConnectionFamily(master.path));
+    return dests_->popIfDifferentFamily(*master.path); // may return nil
 }
 
 void
@@ -326,6 +327,9 @@ HappyConnOpener::checkForNewConnection()
 {
     assert(dests_); // TODO: remove this and others
     debugs(17, 7, "destinations: " << dests_->size() << " finalized: " << dests_->destinationsFinalized);
+
+    if (lastFailure)
+        return ensureRecoveryConnection();
 
     if (!master)
         return ensureMasterConnection();
@@ -381,12 +385,58 @@ HappyConnOpener::ConnectionClosed(const Comm::ConnectionPointer &conn)
     fwdPconnPool->noteUses(fd_table[conn->fd].pconn.uses);
 }
 
+/// if possible, starts to recover from the past connection attempt failure
+/// otherwise, either waits for more candidates or ends the job, as appropriate
+void
+HappyConnOpener::ensureRecoveryConnection()
+{
+    Must(lastFailure);
+    if (spare)
+        return; // already have two concurrent connections
+
+    if (master && CandidatePaths::ConnectionFamily(*master.path) != CandidatePaths::ConnectionFamily(*lastFailure))
+        return; // master connection may provide recovery from the last failure
+
+    if (dests_->empty()) {
+        if (dests_->destinationsFinalized && !master)
+            callCallback(nullptr, Comm::ERR_CONNECT, 0, false, "All destinations failed");
+        // else wait for master and/or more same-peer path(s)
+        return;
+    }
+
+    auto dest = dests_->popIfDifferentFamily(*lastFailure);
+
+    if (!dest) {
+        // Earlier check guarantees that a set master uses the failed family,
+        // and we do not want to open a concurrent failed family connection.
+        if (master)
+            return;
+        dest = dests_->popIfSamePeer(lastFailure->getPeer());
+    }
+
+    if (!dest) {
+        // We are done with the same-peer paths (that all failed) because
+        // there are other peer paths present already (dests_ is not empty).
+        // Forget the peer-specific failure and move on to another peer.
+        lastFailure = nullptr;
+        return ensureMasterConnection();
+    }
+
+    debugs(17, 8, "to " << *dest);
+    auto &recovery = master ? spare : master;
+    startConnecting(recovery, dest);
+    // XXX: Honor inter-spare gap if using spare.
+    // XXX: Increment SpareConnects if using spare.
+}
+
 /// if possible, starts a master connection attempt
 /// otherwise, either waits for more candidates or ends the job, as appropriate
 void
 HappyConnOpener::ensureMasterConnection()
 {
+    Must(!master);
     Must(!spare); // or that spare should have become master
+    Must(!lastFailure); // or we should still be recovering the failed peer
 
     auto dest = extractMasterCandidatePath();
     if (!dest)
@@ -430,6 +480,7 @@ HappyConnOpener::ensureSpareConnection()
 {
     Must(master); // or we should be starting a master connection instead
     Must(!spare); // only one spare at a time
+    Must(!lastFailure); // or we should still be recovering the failed peer
 
     // TODO: Cancel wait if no spare candidates are going to be available?
 

@@ -74,24 +74,29 @@ public:
     /// Whether the list is empty
     bool empty() {return paths_.empty();}
 
-    /// Retrieves and remove from list the first path. Throws on empty list
+    /// Retrieves and removes from list the first path suitable for trying
+    /// to connect to (after the given previous connection attempt, if any).
+    /// If there are no such paths (yet), returns nil.
+    /// If the previous path is known, a suitable path has the same peer and (if
+    /// familyIsImportant) a different IP address family. Otherwise, any path is
+    /// suitable.
+    /// XXX: Re-document these methods.
+    Comm::ConnectionPointer popIfDifferentFamily(const Comm::Connection &other);
+    Comm::ConnectionPointer popIfSamePeer(const CachePeer *peer);
     Comm::ConnectionPointer popFirst();
-
-    /// Retrieves and remove from list the first path for the given CachePeer which is
-    /// not in the passed protocol family
-    /// The CachePeer is null for origin server paths
-    Comm::ConnectionPointer popFirstFromDifferentFamily(const CachePeer *, int);
 
     /// the current number of candidate paths
     int size() {return paths_.size();}
 
     /// The protocol family of the given path, AF_INET or AF_INET6
-    static int ConnectionFamily(const Comm::ConnectionPointer &conn);
+    static int ConnectionFamily(const Comm::Connection &conn);
 
     ///< whether all of the available candidate paths received from DNS
     bool destinationsFinalized;
 
 private:
+    Comm::ConnectionPointer popFound(const char *description, const Comm::ConnectionList::iterator &found);
+
     Comm::ConnectionList paths_;
 };
 

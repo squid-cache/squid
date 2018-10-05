@@ -123,28 +123,54 @@ Comm::ConnectionPointer
 CandidatePaths::popFirst()
 {
     Must(!empty());
-    Comm::ConnectionPointer path;
-    path = paths_[0];
-    paths_.erase(paths_.begin());
-    return path;
+    return popFound("first: ", paths_.begin());
 }
 
 Comm::ConnectionPointer
-CandidatePaths::popFirstFromDifferentFamily(const CachePeer *p, int family)
+CandidatePaths::popIfSamePeer(const CachePeer *peerToMatch)
 {
-    Comm::ConnectionPointer path;
-    auto it = std::find_if(paths_.begin(), paths_.end(), [p, family](const Comm::ConnectionPointer &c) {return c->getPeer() == p && family != ConnectionFamily(c);});
-    if (it != paths_.end()) {
-        path = *it;
-        paths_.erase(it);
-    }
+    const auto it = std::find_if(paths_.begin(), paths_.end(),
+        [peerToMatch](const Comm::ConnectionPointer &conn) {
+            return conn->getPeer() == peerToMatch;
+    });
+    if (it != paths_.end())
+        return popFound("same-peer match: ", it);
+
+    debugs(17, 7, "no same-peer paths");
+    return nullptr;
+}
+
+Comm::ConnectionPointer
+CandidatePaths::popIfDifferentFamily(const Comm::Connection &other)
+{
+    const auto peerToMatch = other.getPeer();
+    const auto familyToAvoid = ConnectionFamily(other);
+    const auto it = std::find_if(paths_.begin(), paths_.end(),
+        [peerToMatch, familyToAvoid](const Comm::ConnectionPointer &conn) {
+            return peerToMatch == conn->getPeer() &&
+                familyToAvoid != ConnectionFamily(*conn);
+    });
+    if (it != paths_.end())
+        return popFound("same-peer different-family match: ", it);
+
+    debugs(17, 7, "no same-peer different-family paths");
+    return nullptr;
+}
+
+/// convenience method to finish a successful popIf*() or popFirst() call
+Comm::ConnectionPointer
+CandidatePaths::popFound(const char *description, const Comm::ConnectionList::iterator &found)
+{
+    const auto path = *found;
+    paths_.erase(found);
+    debugs(17, 7, description << path);
     return path;
 }
 
 int
-CandidatePaths::ConnectionFamily(const Comm::ConnectionPointer &conn)
+CandidatePaths::ConnectionFamily(const Comm::Connection &conn)
 {
-    return conn->remote.isIPv4() ? AF_INET : AF_INET6;
+    return conn.remote.isIPv4() ? AF_INET : AF_INET6;
 }
 
 void
@@ -812,11 +838,14 @@ FwdState::noteConnection(const HappyConnOpener::Answer &cd)
     n_tries += cd.n_tries;
 
     if (cd.ioStatus != Comm::OK) {
+        debugs(17, 3, (cd.status ? cd.status : "failure") << ": " << cd.conn);
+
         //? Type of Error?
         if (cd.conn == nullptr) {
             // There are not available destinations
             flags.dont_retry = true;
         }
+
 
         // Update the logging information about this new server connection.
         // Done here before anything else so the errors get logged for

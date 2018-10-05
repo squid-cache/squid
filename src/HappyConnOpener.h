@@ -124,6 +124,7 @@ private:
     virtual bool doneAll() const override;
     virtual void swanSong() override;
 
+    void ensureRecoveryConnection();
     void ensureMasterConnection();
     void ensureSpareConnection();
 
@@ -165,6 +166,8 @@ private:
 
     PendingConnection master; ///< Master pending connection
     PendingConnection spare;  ///< Spare pending connection
+
+    Comm::ConnectionPointer lastFailure; ///< the last failed connection or nil
 
     bool allowPconn_; ///< Whether to allow persistent connections
     bool retriable_; ///< Whether to open connection for retriable request
