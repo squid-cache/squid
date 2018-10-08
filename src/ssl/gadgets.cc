@@ -834,8 +834,8 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
         return false;
 
     if (!properties.setValidBefore) {
-        ASN1_TIME *aTime = X509_getm_notBefore(cert);
-        ASN1_TIME *bTime = X509_getm_notBefore(cert2);
+        const auto aTime = X509_getm_notBefore(cert);
+        const auto bTime = X509_getm_notBefore(cert2);
         if (asn1time_cmp(aTime, bTime) != 0)
             return false;
     } else if (X509_cmp_current_time(X509_getm_notBefore(cert)) >= 0) {
@@ -844,8 +844,8 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
     }
 
     if (!properties.setValidAfter) {
-        ASN1_TIME *aTime = X509_getm_notAfter(cert);
-        ASN1_TIME *bTime = X509_getm_notAfter(cert2);
+        const auto aTime = X509_getm_notAfter(cert);
+        const auto bTime = X509_getm_notAfter(cert2);
         if (asn1time_cmp(aTime, bTime) != 0)
             return false;
     } else if (X509_cmp_current_time(X509_getm_notAfter(cert)) <= 0) {

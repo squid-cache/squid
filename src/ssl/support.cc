@@ -918,8 +918,8 @@ Ssl::verifySslCertificate(Security::ContextPointer &ctx, CertificateProperties c
 #endif
     if (!cert)
         return false;
-    ASN1_TIME * time_notBefore = X509_getm_notBefore(cert);
-    ASN1_TIME * time_notAfter = X509_getm_notAfter(cert);
+    const auto time_notBefore = X509_getm_notBefore(cert);
+    const auto time_notAfter = X509_getm_notAfter(cert);
     return (X509_cmp_current_time(time_notBefore) < 0 && X509_cmp_current_time(time_notAfter) > 0);
 }
 

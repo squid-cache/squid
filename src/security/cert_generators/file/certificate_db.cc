@@ -336,7 +336,7 @@ Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Securi
         dbSize = size(); // get the current database size
     }
 
-    ASN1_UTCTIME * tm = X509_getm_notAfter(cert.get());
+    const auto tm = X509_getm_notAfter(cert.get());
     row.setValue(cnlExp_date, std::string(reinterpret_cast<char *>(tm->data), tm->length).c_str());
     std::unique_ptr<char, CharDeleter> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
     row.setValue(cnlName, subject.get());
