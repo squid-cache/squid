@@ -127,19 +127,6 @@ extern "C" {
 #define OPENSSL_LH_strhash lh_strhash
 #endif
 
-    inline void
-    SQUID_OPENSSL_init_ssl(void)
-    {
-#if HAVE_LIBSSL_OPENSSL_INIT_SSL
-        // OpenSSL will properly auto-initialize itself (in Squid context).
-        // No explicit initialization is required.
-        //OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS, nullptr);
-#else
-        SSL_load_error_strings();
-        SSLeay_add_ssl_algorithms();
-#endif
-    }
-
 #if !defined OPENSSL_VERSION
 #define OPENSSL_VERSION SSLEAY_VERSION
 #define OpenSSL_version SSLeay_version
@@ -244,5 +231,19 @@ extern "C" {
 #endif
 
 } /* extern "C" */
+
+inline void
+SQUID_OPENSSL_init_ssl(void)
+{
+#if HAVE_LIBSSL_OPENSSL_INIT_SSL
+    // OpenSSL will properly auto-initialize itself (in Squid context).
+    // No explicit initialization is required.
+    //OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS, nullptr);
+#else
+    SSL_load_error_strings();
+    SSLeay_add_ssl_algorithms();
+#endif
+}
+
 #endif /* OPENSSL_COMPAT_H */
 
