@@ -325,8 +325,7 @@ int main(int argc, char *argv[])
         }
 
         // Initialize SSL subsystem
-        SSL_load_error_strings();
-        SSLeay_add_ssl_algorithms();
+        SQUID_OPENSSL_init_ssl();
         // process request.
         for (;;) {
             char request[HELPER_INPUT_BUFFER];

@@ -290,13 +290,8 @@ store_session_cb(SSL *ssl, SSL_SESSION *session)
 
     SSL_SESSION_set_timeout(session, Config.SSL.session_ttl);
 
-#if HAVE_LIBSSL_SSL_SESSION_GET_ID
     unsigned int idlen;
     const unsigned char *id = SSL_SESSION_get_id(session, &idlen);
-#else
-    unsigned char *id = session->session_id;
-    unsigned int idlen = session->session_id_length;
-#endif
     // XXX: the other calls [to openForReading()] do not copy the sessionId to a char buffer, does this really have to?
     unsigned char key[MEMMAP_SLOT_KEY_SIZE];
     // Session ids are of size 32bytes. They should always fit to a

@@ -116,6 +116,17 @@ for FILENAME in `git ls-files`; do
 	esac
 
 	#
+	# If a file includes openssl headers, then it must include compat/openssl.h
+	#
+	if test "${FILENAME}" != "compat/openssl.h" && \
+	   (FI=`grep "#include.*openssl/" "${FILENAME}" 2>/dev/null`; \
+	    test "x${FI}" != "x") && \
+	   (FI=`grep "#include \"compat/openssl\.h\"" "${FILENAME}" 2>/dev/null`; \
+	    test "x${FI}" == "x"); then
+		echo "ERROR: ${FILENAME} includes openssl headers without including \"compat/openssl.h\""
+	fi
+
+	#
 	# forward.h means different things to Squid code depending on the path
 	# require the full path is explicit for every include
 	#

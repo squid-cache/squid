@@ -12,6 +12,7 @@
 #include "base/HardFun.h"
 
 #if USE_OPENSSL
+#include "compat/openssl.h"
 #if HAVE_OPENSSL_CRYPTO_H
 #include <openssl/crypto.h>
 #endif

@@ -16,6 +16,7 @@
 #include <memory>
 
 #if USE_OPENSSL
+#include "compat/openssl.h"
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
 #endif
