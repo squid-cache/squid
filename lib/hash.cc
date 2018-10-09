@@ -314,7 +314,7 @@ hashPrime(int n)
  * return the key of a hash_link as a const string
  */
 const char *
-hashKeyStr(hash_link * hl)
+hashKeyStr(const hash_link * hl)
 {
     return (const char *) hl->key;
 }
