@@ -127,7 +127,7 @@ CandidatePaths::extractFront()
 }
 
 Comm::ConnectionPointer
-CandidatePaths::extractMaster(const Comm::Connection &currentPeer)
+CandidatePaths::extractPrime(const Comm::Connection &currentPeer)
 {
     if (!paths_.empty()) {
         const auto peerToMatch = currentPeer.getPeer();

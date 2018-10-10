@@ -79,7 +79,7 @@ public:
 
     /// extracts and returns the first same-peer same-family address
     /// \returns nil if it cannot find the requested address
-    Comm::ConnectionPointer extractMaster(const Comm::Connection &currentPeer);
+    Comm::ConnectionPointer extractPrime(const Comm::Connection &currentPeer);
     /// extracts and returns the first same-peer different-family address
     /// \returns nil if it cannot find the requested address
     Comm::ConnectionPointer extractSpare(const Comm::Connection &currentPeer);

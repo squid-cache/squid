@@ -124,7 +124,7 @@ private:
     virtual bool doneAll() const override;
     virtual void swanSong() override;
 
-    void maybeOpenAnotherMasterConnection();
+    void maybeOpenAnotherPrimeConnection();
     void maybeStartWaitingForSpare();
     void maybeOpenSpareConnection();
 
@@ -132,7 +132,7 @@ private:
     /// Called after HappyConnector asyncJob started to start a connection
     void startConnecting(PendingConnection &pconn, Comm::ConnectionPointer &);
 
-    /// Callback called by Comm::ConnOpener objects after a master or spare
+    /// Callback called by Comm::ConnOpener objects after a prime or spare
     /// connection attempt completes.
     void connectDone(const CommConnectCbParams &);
 
@@ -147,7 +147,7 @@ private:
 
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
 
-    /// A noteSpareAllowed() callback. Designed to give the master connection
+    /// A noteSpareAllowed() callback. Designed to give the prime connection
     /// a chance to succeed before we spend resources on the spare connection
     /// (and also to obey various spare connection limits). A spare connection
     /// must not be opened while this callback is set.
@@ -156,8 +156,10 @@ private:
     /// The list with candidate destinations. Shared with the caller FwdState object.
     CandidatePathsPointer dests_;
 
-    PendingConnection master; ///< Master pending connection
-    PendingConnection spare;  ///< Spare pending connection
+    /// current connection opening attempt on the prime track (if any)
+    PendingConnection prime;
+    /// current connection opening attempt on the spare track (if any)
+    PendingConnection spare;
 
     /// CachePeer and IP address family of the peer we are trying to connect
     /// to now (or, if we are just waiting for paths to a new peer, nil)

@@ -36,7 +36,7 @@ public:
 
     ///< \return true if the happy_eyeballs_connect_timeout precondition
     /// satisfied
-    bool primaryConnectTooSlow(const HappyConnOpener::Pointer &happy) const;
+    bool primeConnectTooSlow(const HappyConnOpener::Pointer &happy) const;
 
     /// The configured connect_limit per worker basis
     static int ConnectLimit();
@@ -117,7 +117,7 @@ HappyConnOpener::doneAll() const
         return true; // (probably found a good path and) informed the requestor
     if (callback_->canceled())
         return true; // the requestor is gone or has lost interest
-    if (!master && !spare && dests_->empty() && dests_->destinationsFinalized)
+    if (!prime && !spare && dests_->empty() && dests_->destinationsFinalized)
         return true; // there are no more paths to try
     return false;
 }
@@ -134,11 +134,11 @@ HappyConnOpener::swanSong()
     if (waitingForSparePermission)
         cancelSpareWait("HappyConnOpener object destructed");
 
-    if (master.path) {
-        if (master.connector)
-            master.connector->cancel("HappyConnOpener object destructed");
-        master.connector = nullptr;
-        master.path = nullptr;
+    if (prime.path) {
+        if (prime.connector)
+            prime.connector->cancel("HappyConnOpener object destructed");
+        prime.connector = nullptr;
+        prime.path = nullptr;
     }
 
     if (!spare.path) {
@@ -228,14 +228,14 @@ void
 HappyConnOpener::connectDone(const CommConnectCbParams &params)
 {
     Must(params.conn);
-    const bool itWasMaster = (params.conn == master.path);
+    const bool itWasPrime = (params.conn == prime.path);
     const bool itWasSpare = (params.conn == spare.path);
-    Must(itWasMaster != itWasSpare);
-    const char *what = itWasMaster ? "master connection" : "spare connection";
+    Must(itWasPrime != itWasSpare);
+    const char *what = itWasPrime ? "prime connection" : "spare connection";
 
-    if (itWasMaster) {
-        master.path = nullptr;
-        master.connector = nullptr;
+    if (itWasPrime) {
+        prime.path = nullptr;
+        prime.connector = nullptr;
     } else {
         spare.path = nullptr;
         spare.connector = nullptr;
@@ -254,7 +254,7 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     params.conn->close(); // TODO: Comm::ConnOpener should do this instead.
 
     if (waitingForSparePermission) {
-        cancelSpareWait("master failure");
+        cancelSpareWait("prime failure");
         sparePermitted = true;
     }
 
@@ -272,12 +272,12 @@ HappyConnOpener::cancelSpareWait(const char *reason)
 }
 
 
-/** Called when an external event changes dests_, master, spare, or sparePermitted.
+/** Called when an external event changes dests_, prime, spare, or sparePermitted.
  * Leaves HappyConnOpener in one of these (mutually exclusive) "stable" states:
  *
  * 1. Processing a single peer: currentPeer
- *    1.1. Connecting: master || spare
- *    1.2. Waiting for spare gap and/or paths: !master && !spare
+ *    1.1. Connecting: prime || spare
+ *    1.2. Waiting for spare gap and/or paths: !prime && !spare
  * 2. Waiting for a new peer: dests-empty() && !dests_->destinationsFinalized && !currentPeer
  * 3. Done: dests-empty() && dests_->destinationsFinalized && !currentPeer
  */
@@ -296,26 +296,26 @@ HappyConnOpener::checkForNewConnection()
         else
             sparePermitted = false;
 
-        if (!master) {
+        if (!prime) {
             debugs(17, 7, "done with peer; " << *currentPeer);
             currentPeer = nullptr;
         }
     }
 
-    // open new master and/or spare connections if needed
+    // open new prime and/or spare connections if needed
     if (!dests_->empty()) {
         if (!currentPeer) {
             currentPeer = dests_->extractFront();
             Must(currentPeer);
             debugs(17, 7, "done waiting for a new peer; got " << *currentPeer);
-            startConnecting(master, currentPeer);
+            startConnecting(prime, currentPeer);
             maybeStartWaitingForSpare();
-            Must(master); // entering state #1.1
+            Must(prime); // entering state #1.1
             return;
         }
 
-        if (!master)
-            maybeOpenAnotherMasterConnection(); // may make dests_ empty()
+        if (!prime)
+            maybeOpenAnotherPrimeConnection(); // may make dests_ empty()
 
         if (!spare && sparePermitted)
             maybeOpenSpareConnection(); // may make dests_ empty()
@@ -386,29 +386,27 @@ HappyConnOpener::ConnectionClosed(const Comm::ConnectionPointer &conn)
     fwdPconnPool->noteUses(fd_table[conn->fd].pconn.uses);
 }
 
-/// If possible, starts a master connection attempt.
-/// Otherwise, checks that a master connection is not required.
+/// starts a prime connection attempt if possible or does nothing otherwise
 void
-HappyConnOpener::maybeOpenAnotherMasterConnection()
+HappyConnOpener::maybeOpenAnotherPrimeConnection()
 {
     Must(currentPeer);
 
-    if (auto dest = dests_->extractMaster(*currentPeer)) {
-        startConnecting(master, dest);
+    if (auto dest = dests_->extractPrime(*currentPeer)) {
+        startConnecting(prime, dest);
         return;
     }
 
-    debugs(17, 8, "no more master addresses for " << *currentPeer);
+    debugs(17, 8, "no more prime addresses for " << *currentPeer);
 }
 
-/// If allowed, starts a spare connection attempt.
-/// Otherwise, either starts waiting for a permission or
-/// checks that a spare connection is not required.
+/// starts waiting for a spare permission (if spare connections may be possible)
+/// or does nothing (otherwise)
 void
 HappyConnOpener::maybeStartWaitingForSpare()
 {
     Must(currentPeer);
-    Must(master); // or we should be opening, not waiting
+    Must(prime); // or we should be opening, not waiting
     Must(!spare);
     Must(!waitingForSparePermission);
     Must(!sparePermitted);
@@ -449,7 +447,7 @@ HappyConnQueue::queueASpareConnection(HappyConnOpener::Pointer happy)
         return nil;
     }
 
-    bool needsSpareNow = primaryConnectTooSlow(happy);
+    bool needsSpareNow = primeConnectTooSlow(happy);
     bool gapRuleOK = GapRule();
     bool connectionsLimitRuleOK = ConnectionsLimitRule();
     bool startSpareNow = happy->sparesBlockedOnCandidatePaths ||
@@ -521,7 +519,7 @@ HappyConnQueue::spareMayStartAfter(const HappyConnOpener::Pointer &happy) const
 }
 
 bool
-HappyConnQueue::primaryConnectTooSlow(const HappyConnOpener::Pointer &happy) const
+HappyConnQueue::primeConnectTooSlow(const HappyConnOpener::Pointer &happy) const
 {
     double nextAttemptTime = happy->lastAttemptTime + (double)Config.happyEyeballs.connect_timeout/1000.0;
     return (nextAttemptTime <= current_dtime);
