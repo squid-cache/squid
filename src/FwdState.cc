@@ -683,11 +683,9 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     destinations_->newPath(path);
 
     if (Comm::IsConnOpen(serverConn)) {
-        // If the connection is established abort here.
-        // We may still receiving destinations while we are using the current
-        // connection. We need them in the case the first established
-        // connection fails with null server response.
-        assert(connOpener == nullptr);
+        // We are already using a previously opened connection but continue to
+        // receive destinations in case we need to re-forward.
+        Must(connOpener == nullptr);
         return;
     }
 
