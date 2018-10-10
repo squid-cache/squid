@@ -654,7 +654,8 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
         return;
     }
 
-    debugs(17, 3, "new destination " << path);
+    debugs(17, 3, path);
+
     // Requests bumped at step2+ require their pinned connection. Since we
     // failed to reuse the pinned connection, we now must terminate the
     // bumped request. For client-first and step1 bumped requests, the
@@ -678,6 +679,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
         self = nullptr; // refcounted
         return;
     }
+
     if (!destinations_)
         destinations_ = new CandidatePaths();
     destinations_->newPath(path);
@@ -695,9 +697,10 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
         typedef NullaryMemFunT<HappyConnOpener> CbDialer;
         AsyncCall::Pointer call = JobCallback(50, 5, CbDialer, connOpener, HappyConnOpener::noteCandidatesChange);
         ScheduleCallHere(call);
-    } else {
-        useDestinations();
+        return;
     }
+
+    useDestinations();
 }
 
 void
