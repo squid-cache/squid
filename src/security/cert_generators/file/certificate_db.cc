@@ -216,7 +216,7 @@ void Ssl::CertificateDb::sq_TXT_DB_delete_row(TXT_DB *db, int idx) {
             data = lh_OPENSSL_STRING_delete(fieldIndex, rrow);
 #else
         if (LHASH *fieldIndex = db->index[db_indexes[i]])
-            data = lh_delete(fieldIndex, rrow);
+            data = OPENSSL_LH_delete(fieldIndex, rrow);
 #endif
         if (data)
             assert(data == rrow);
@@ -227,7 +227,7 @@ unsigned long Ssl::CertificateDb::index_serial_hash(const char **a) {
     const char *n = a[Ssl::CertificateDb::cnlSerial];
     while (*n == '0')
         ++n;
-    return lh_strhash(n);
+    return OPENSSL_LH_strhash(n);
 }
 
 int Ssl::CertificateDb::index_serial_cmp(const char **a, const char **b) {
@@ -238,7 +238,7 @@ int Ssl::CertificateDb::index_serial_cmp(const char **a, const char **b) {
 }
 
 unsigned long Ssl::CertificateDb::index_name_hash(const char **a) {
-    return(lh_strhash(a[Ssl::CertificateDb::cnlKey]));
+    return(OPENSSL_LH_strhash(a[Ssl::CertificateDb::cnlKey]));
 }
 
 int Ssl::CertificateDb::index_name_cmp(const char **a, const char **b) {
@@ -336,7 +336,7 @@ Ssl::CertificateDb::addCertAndPrivateKey(std::string const &useKey, const Securi
         dbSize = size(); // get the current database size
     }
 
-    ASN1_UTCTIME * tm = X509_get_notAfter(cert.get());
+    const auto tm = X509_getm_notAfter(cert.get());
     row.setValue(cnlExp_date, std::string(reinterpret_cast<char *>(tm->data), tm->length).c_str());
     std::unique_ptr<char, CharDeleter> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0));
     row.setValue(cnlName, subject.get());

@@ -16,14 +16,12 @@
 #include "security/Session.h"
 #include "SquidConfig.h"
 #if USE_OPENSSL
+#include "compat/openssl.h"
 #include "ssl/support.h"
-#endif
 
 #if HAVE_OPENSSL_ERR_H
 #include <openssl/err.h>
 #endif
-#if HAVE_OPENSSL_X509_H
-#include <openssl/x509.h>
 #endif
 
 Security::ServerOptions &
@@ -161,11 +159,7 @@ Security::ServerOptions::createBlankContext() const
 #if USE_OPENSSL
     Ssl::Initialize();
 
-#if HAVE_OPENSSL_SERVER_METHOD
     SSL_CTX *t = SSL_CTX_new(TLS_server_method());
-#else
-    SSL_CTX *t = SSL_CTX_new(SSLv23_server_method());
-#endif
     if (!t) {
         const auto x = ERR_get_error();
         debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate TLS server context: " << Security::ErrorString(x));

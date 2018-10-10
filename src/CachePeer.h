@@ -19,10 +19,6 @@
 //TODO: remove, it is unconditionally defined and always used.
 #define PEER_MULTICAST_SIBLINGS 1
 
-#if HAVE_OPENSSL_SSL_H
-#include <openssl/ssl.h>
-#endif
-
 class NeighborTypeDomainList;
 class PconnPool;
 class PeerDigest;
