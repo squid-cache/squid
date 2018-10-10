@@ -9,11 +9,6 @@
 #include "squid.h"
 #include "ssl/gadgets.h"
 
-#include <openssl/asn1.h>
-#if HAVE_OPENSSL_X509V3_H
-#include <openssl/x509v3.h>
-#endif
-
 EVP_PKEY * Ssl::createSslPrivateKey()
 {
     Security::PrivateKeyPointer pkey(EVP_PKEY_new());
@@ -381,13 +376,8 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
         DecipherOnly
     };
 
-#if HAVE_LIBCRYPTO_EVP_PKEY_GET0_RSA
     EVP_PKEY *certKey = X509_get_pubkey(mimicCert.get());
     const bool rsaPkey = (EVP_PKEY_get0_RSA(certKey) != nullptr);
-#else
-    const int mimicAlgo = OBJ_obj2nid(mimicCert.get()->cert_info->key->algor->algorithm);
-    const bool rsaPkey = (mimicAlgo == NID_rsaEncryption);
-#endif
 
     int added = 0;
     int nid;
@@ -496,25 +486,25 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     // objects.
     ASN1_TIME *aTime = NULL;
     if (!properties.setValidBefore && properties.mimicCert.get())
-        aTime = X509_get_notBefore(properties.mimicCert.get());
+        aTime = X509_getm_notBefore(properties.mimicCert.get());
     if (!aTime && properties.signWithX509.get())
-        aTime = X509_get_notBefore(properties.signWithX509.get());
+        aTime = X509_getm_notBefore(properties.signWithX509.get());
 
     if (aTime) {
-        if (!X509_set_notBefore(cert.get(), aTime))
+        if (!X509_set1_notBefore(cert.get(), aTime))
             return false;
-    } else if (!X509_gmtime_adj(X509_get_notBefore(cert.get()), (-2)*24*60*60))
+    } else if (!X509_gmtime_adj(X509_getm_notBefore(cert.get()), (-2)*24*60*60))
         return false;
 
     aTime = NULL;
     if (!properties.setValidAfter && properties.mimicCert.get())
-        aTime = X509_get_notAfter(properties.mimicCert.get());
+        aTime = X509_getm_notAfter(properties.mimicCert.get());
     if (!aTime && properties.signWithX509.get())
-        aTime = X509_get_notAfter(properties.signWithX509.get());
+        aTime = X509_getm_notAfter(properties.signWithX509.get());
     if (aTime) {
-        if (!X509_set_notAfter(cert.get(), aTime))
+        if (!X509_set1_notAfter(cert.get(), aTime))
             return false;
-    } else if (!X509_gmtime_adj(X509_get_notAfter(cert.get()), 60*60*24*356*3))
+    } else if (!X509_gmtime_adj(X509_getm_notAfter(cert.get()), 60*60*24*356*3))
         return false;
 
     int addedExtensions = 0;
@@ -844,21 +834,21 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
         return false;
 
     if (!properties.setValidBefore) {
-        ASN1_TIME *aTime = X509_get_notBefore(cert);
-        ASN1_TIME *bTime = X509_get_notBefore(cert2);
+        const auto aTime = X509_getm_notBefore(cert);
+        const auto bTime = X509_getm_notBefore(cert2);
         if (asn1time_cmp(aTime, bTime) != 0)
             return false;
-    } else if (X509_cmp_current_time(X509_get_notBefore(cert)) >= 0) {
+    } else if (X509_cmp_current_time(X509_getm_notBefore(cert)) >= 0) {
         // notBefore does not exist (=0) or it is in the future (>0)
         return false;
     }
 
     if (!properties.setValidAfter) {
-        ASN1_TIME *aTime = X509_get_notAfter(cert);
-        ASN1_TIME *bTime = X509_get_notAfter(cert2);
+        const auto aTime = X509_getm_notAfter(cert);
+        const auto bTime = X509_getm_notAfter(cert2);
         if (asn1time_cmp(aTime, bTime) != 0)
             return false;
-    } else if (X509_cmp_current_time(X509_get_notAfter(cert)) <= 0) {
+    } else if (X509_cmp_current_time(X509_getm_notAfter(cert)) <= 0) {
         // notAfter does not exist (0) or  it is in the past (<0)
         return false;
     }
@@ -948,18 +938,10 @@ Ssl::CertificatesCmp(const Security::CertPointer &cert1, const Security::CertPoi
 const ASN1_BIT_STRING *
 Ssl::X509_get_signature(const Security::CertPointer &cert)
 {
-#if HAVE_LIBCRYPTO_X509_GET0_SIGNATURE
-#if SQUID_USE_CONST_X509_GET0_SIGNATURE_ARGS
-    const ASN1_BIT_STRING *sig = nullptr;
-    const X509_ALGOR *sig_alg = nullptr;
-#else
-    ASN1_BIT_STRING *sig = nullptr;
-    X509_ALGOR *sig_alg = nullptr;
-#endif
+    SQUID_CONST_X509_GET0_SIGNATURE_ARGS ASN1_BIT_STRING *sig = nullptr;
+    SQUID_CONST_X509_GET0_SIGNATURE_ARGS X509_ALGOR *sig_alg = nullptr;
+
     X509_get0_signature(&sig, &sig_alg, cert.get());
     return sig;
-#else
-    return cert->signature;
-#endif
 }
 

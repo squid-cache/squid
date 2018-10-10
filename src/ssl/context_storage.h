@@ -13,6 +13,7 @@
 
 #include "base/LruMap.h"
 #include "CacheManager.h"
+#include "compat/openssl.h"
 #include "ip/Address.h"
 #include "mgr/Action.h"
 #include "mgr/Command.h"

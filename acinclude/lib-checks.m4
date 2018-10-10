@@ -61,42 +61,48 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TLS_METHODS],[
 
 dnl Checks whether the -lcrypto library provides various OpenSSL API functions
 AC_DEFUN([SQUID_CHECK_LIBCRYPTO_API],[
+  AH_TEMPLATE(HAVE_LIBCRYPTO_OPENSSL_LH_STRHASH, "Define to 1 if the OPENSSL_LH_strhash() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_EVP_PKEY_GET0_RSA, "Define to 1 if the EVP_PKEY_get0_RSA() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_BIO_METH_NEW, "Define to 1 if the BIO_meth_new() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_BIO_GET_DATA, "Define to 1 if the BIO_get_data() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_BIO_GET_INIT, "Define to 1 if the BIO_get_init() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_ASN1_STRING_GET0_DATA, "Define to 1 if the ASN1_STRING_get0_data() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBCRYPTO_EVP_PKEY_UP_REF, "Define to 1 if the EVP_PKEY_up_ref() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT, "Define to 1 if the X509_STORE_CTX_get0_cert() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH, "Define to 1 if the X509_VERIFY_PARAM_get_depth() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED, "Define to 1 if the X509_STORE_CTX_get0_untrusted() OpenSSL API function exists")
-  AH_TEMPLATE(HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED, "Define to 1 if the X509_STORE_CTX_set0_untrusted() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_UP_REF, "Define to 1 if the X509_up_ref() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_CRL_UP_REF, "Define to 1 if the X509_CRL_up_ref() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_DH_UP_REF, "Define to 1 if the DH_up_ref() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_X509_GET0_SIGNATURE, "Define to 1 if the X509_get0_signature() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_libcrypto_api)
   LIBS="$LIBS $SSLLIB"
+  AC_CHECK_LIB(crypto, OPENSSL_LH_strhash, AC_DEFINE(HAVE_LIBCRYPTO_OPENSSL_LH_STRHASH, 1))
   AC_CHECK_LIB(crypto, EVP_PKEY_get0_RSA, AC_DEFINE(HAVE_LIBCRYPTO_EVP_PKEY_GET0_RSA, 1))
   AC_CHECK_LIB(crypto, BIO_meth_new, AC_DEFINE(HAVE_LIBCRYPTO_BIO_METH_NEW, 1))
+  AC_CHECK_LIB(crypto, BIO_get_data, AC_DEFINE(HAVE_LIBCRYPTO_BIO_GET_DATA, 1))
   AC_CHECK_LIB(crypto, BIO_get_init, AC_DEFINE(HAVE_LIBCRYPTO_BIO_GET_INIT, 1))
   AC_CHECK_LIB(crypto, ASN1_STRING_get0_data, AC_DEFINE(HAVE_LIBCRYPTO_ASN1_STRING_GET0_DATA, 1))
+  AC_CHECK_LIB(crypto, EVP_PKEY_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_EVP_PKEY_UP_REF, 1))
   AC_CHECK_LIB(crypto, X509_STORE_CTX_get0_cert, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT, 1))
   AC_CHECK_LIB(crypto, X509_VERIFY_PARAM_get_depth, AC_DEFINE(HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH, 1))
   AC_CHECK_LIB(crypto, X509_STORE_CTX_get0_untrusted, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED, 1))
-  AC_CHECK_LIB(crypto, X509_STORE_CTX_set0_untrusted, AC_DEFINE(HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED, 1))
   AC_CHECK_LIB(crypto, X509_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_X509_UP_REF, 1))
   AC_CHECK_LIB(crypto, X509_CRL_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_X509_CRL_UP_REF, 1))
   AC_CHECK_LIB(crypto, DH_up_ref, AC_DEFINE(HAVE_LIBCRYPTO_DH_UP_REF, 1))
-  AC_CHECK_LIB(crypto, X509_get0_signature, AC_DEFINE(HAVE_LIBCRYPTO_X509_GET0_SIGNATURE, 1))
+  AC_CHECK_LIB(crypto, X509_get0_signature, AC_DEFINE(HAVE_LIBCRYPTO_X509_GET0_SIGNATURE, 1), AC_DEFINE(SQUID_CONST_X509_GET0_SIGNATURE_ARGS,))
   SQUID_STATE_ROLLBACK(check_openssl_libcrypto_api)
 ])
 
 dnl Checks whether the -lssl library provides various OpenSSL API functions
 AC_DEFUN([SQUID_CHECK_LIBSSL_API],[
+  AH_TEMPLATE(HAVE_LIBSSL_OPENSSL_INIT_SSL, "Define to 1 if the OPENSSL_init_ssl() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_CIPHER_FIND, "Define to 1 if the SSL_CIPHER_find() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, "Define to 1 if the SSL_CTX_set_tmp_rsa_callback() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_SESSION_GET_ID, "Define to 1 if the SSL_SESSION_get_id() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_libssl_api)
   LIBS="$LIBS $SSLLIB"
+  AC_CHECK_LIB(ssl, OPENSSL_init_ssl, AC_DEFINE(HAVE_LIBSSL_OPENSSL_INIT_SSL, 1))
   AC_CHECK_LIB(ssl, SSL_CIPHER_find, AC_DEFINE(HAVE_LIBSSL_SSL_CIPHER_FIND, 1))
   AC_CHECK_LIB(ssl, SSL_CTX_set_tmp_rsa_callback, AC_DEFINE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, 1))
   AC_CHECK_LIB(ssl, SSL_SESSION_get_id, AC_DEFINE(HAVE_LIBSSL_SSL_SESSION_GET_ID, 1))
@@ -122,7 +128,9 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
      #include <openssl/err.h>
     ],
     [
+#if defined(SSLeay_add_ssl_algorithms)
     SSLeay_add_ssl_algorithms();
+#endif
 #if HAVE_OPENSSL_TLS_METHOD
     SSL_CTX *sslContext = SSL_CTX_new(TLS_method());
 #else
@@ -153,7 +161,9 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
      #include <openssl/err.h>
     ],
     [
+#if defined(SSLeay_add_ssl_algorithms)
     SSLeay_add_ssl_algorithms();
+#endif
 #if HAVE_OPENSSL_TLS_METHOD
     SSL_CTX *sslContext = SSL_CTX_new(TLS_method());
 #else
@@ -261,7 +271,7 @@ return 0;
 
 dnl Checks whether the X509_get0_signature() has const arguments
 AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_X509_GET0_SIGNATURE_ARGS],[
-  AH_TEMPLATE(SQUID_USE_CONST_X509_GET0_SIGNATURE_ARGS, "Define if X509_get0_signature() accepts const parameters")
+  AH_TEMPLATE(SQUID_CONST_X509_GET0_SIGNATURE_ARGS, Define to const if X509_get0_signature() accepts const parameters; define as empty otherwise. Don't leave it undefined!)
   SQUID_STATE_SAVE(check_const_X509_get0_signature_args)
   AC_MSG_CHECKING("whether X509_get0_signature() accepts const parameters")
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
@@ -276,9 +286,10 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_CONST_X509_GET0_SIGNATURE_ARGS],[
 #endif
     ])
   ],[
-   AC_DEFINE(SQUID_USE_CONST_X509_GET0_SIGNATURE_ARGS, 1)
+   AC_DEFINE(SQUID_CONST_X509_GET0_SIGNATURE_ARGS, const)
    AC_MSG_RESULT([yes])
   ],[
+   AC_DEFINE(SQUID_CONST_X509_GET0_SIGNATURE_ARGS,)
    AC_MSG_RESULT([no])
   ])
   SQUID_STATE_ROLLBACK(check_const_X509_get0_signature_args)

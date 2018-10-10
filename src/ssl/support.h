@@ -15,6 +15,7 @@
 
 #include "base/CbDataList.h"
 #include "comm/forward.h"
+#include "compat/openssl.h"
 #include "sbuf/SBuf.h"
 #include "security/forward.h"
 #include "ssl/gadgets.h"

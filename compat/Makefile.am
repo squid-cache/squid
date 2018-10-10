@@ -42,6 +42,7 @@ libcompatsquid_la_SOURCES = \
 	initgroups.h \
 	memrchr.cc \
 	memrchr.h \
+	openssl.h \
 	osdetect.h \
 	psignal.h \
 	shm.cc \
