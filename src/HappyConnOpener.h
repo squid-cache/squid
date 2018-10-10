@@ -124,9 +124,9 @@ private:
     virtual bool doneAll() const override;
     virtual void swanSong() override;
 
-    void ensureRecoveryConnection();
-    void ensureMasterConnection();
-    void ensureSpareConnection();
+    void maybeOpenAnotherMasterConnection();
+    void maybeStartWaitingForSpare();
+    void maybeOpenSpareConnection();
 
     // TODO: Describe non-public methods when you define them.
     /// Called after HappyConnector asyncJob started to start a connection
@@ -136,22 +136,14 @@ private:
     /// connection attempt completes.
     void connectDone(const CommConnectCbParams &);
 
-    /// The first available candidate path.
-    /// The returned candidate path removed from CandidatePaths object.
-    Comm::ConnectionPointer extractMasterCandidatePath();
-
-    /// Return the first available candidate path for given CachePeer.
-    /// Ignore CandidatePaths with protocol family 'excludeFamily'.
-    /// The CachePeer is null for an origin server path.
-    /// The returned candidate path removed from CandidatePaths object.
-    Comm::ConnectionPointer extractSpareCandidatePath();
-
     /// Check and start a spare connection if preconditions are satisfied,
     /// or schedules a connection attempt for later.
     void checkForNewConnection();
 
     /// Calls the FwdState object back
     void callCallback(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno, bool reused, const char *msg);
+
+    void cancelSpareWait(const char *reason);
 
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
 
@@ -167,13 +159,15 @@ private:
     PendingConnection master; ///< Master pending connection
     PendingConnection spare;  ///< Spare pending connection
 
-    Comm::ConnectionPointer lastFailure; ///< the last failed connection or nil
+    /// CachePeer and IP address family of the peer we are trying to connect
+    /// to now (or, if we are just waiting for paths to a new peer, nil)
+    Comm::ConnectionPointer currentPeer;
 
     bool allowPconn_; ///< Whether to allow persistent connections
     bool retriable_; ///< Whether to open connection for retriable request
 
-    /// Whether we are allowed to open a spare connection.
-    /// See also: waitingForSparePermission
+    /// Whether we are allowed to open spare connection(s) to the currentPeer.
+    /// See also: waitingForSparePermission.
     bool sparePermitted;
 
     // TODO: Inline initializations?

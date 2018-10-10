@@ -74,16 +74,21 @@ public:
     /// Whether the list is empty
     bool empty() {return paths_.empty();}
 
-    /// Retrieves and removes from list the first path suitable for trying
-    /// to connect to (after the given previous connection attempt, if any).
-    /// If there are no such paths (yet), returns nil.
-    /// If the previous path is known, a suitable path has the same peer and (if
-    /// familyIsImportant) a different IP address family. Otherwise, any path is
-    /// suitable.
-    /// XXX: Re-document these methods.
-    Comm::ConnectionPointer popIfDifferentFamily(const Comm::Connection &other);
-    Comm::ConnectionPointer popIfSamePeer(const CachePeer *peer);
-    Comm::ConnectionPointer popFirst();
+    /// extracts and returns the first queued address
+    Comm::ConnectionPointer extractFront();
+
+    /// extracts and returns the first same-peer same-family address
+    /// \returns nil if it cannot find the requested address
+    Comm::ConnectionPointer extractMaster(const Comm::Connection &currentPeer);
+    /// extracts and returns the first same-peer different-family address
+    /// \returns nil if it cannot find the requested address
+    Comm::ConnectionPointer extractSpare(const Comm::Connection &currentPeer);
+
+    /// whether peer-related spare addresses are (or may become) known
+    bool doneWithSpare(const Comm::Connection &currentPeer) const;
+
+    /// whether peer-related addresses are (or may become) known
+    bool doneWithPeer(const Comm::Connection &currentPeer) const;
 
     /// the current number of candidate paths
     int size() {return paths_.size();}
@@ -95,7 +100,8 @@ public:
     bool destinationsFinalized;
 
 private:
-    Comm::ConnectionPointer popFound(const char *description, const Comm::ConnectionList::iterator &found);
+    Comm::ConnectionList::const_iterator findSpareOrNextPeer(const Comm::Connection &currentPeer) const;
+    Comm::ConnectionPointer extractFound(const char *description, const Comm::ConnectionList::const_iterator &found);
 
     Comm::ConnectionList paths_;
 };

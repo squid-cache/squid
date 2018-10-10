@@ -120,51 +120,84 @@ CandidatePaths::newPath(const Comm::ConnectionPointer &path)
 }
 
 Comm::ConnectionPointer
-CandidatePaths::popFirst()
+CandidatePaths::extractFront()
 {
     Must(!empty());
-    return popFound("first: ", paths_.begin());
+    return extractFound("first: ", paths_.begin());
 }
 
 Comm::ConnectionPointer
-CandidatePaths::popIfSamePeer(const CachePeer *peerToMatch)
+CandidatePaths::extractMaster(const Comm::Connection &currentPeer)
 {
-    const auto it = std::find_if(paths_.begin(), paths_.end(),
-        [peerToMatch](const Comm::ConnectionPointer &conn) {
-            return conn->getPeer() == peerToMatch;
-    });
-    if (it != paths_.end())
-        return popFound("same-peer match: ", it);
+    if (!paths_.empty()) {
+        const auto peerToMatch = currentPeer.getPeer();
+        const auto familyToMatch = ConnectionFamily(currentPeer);
+        const auto &conn = paths_.front();
+        if (conn->getPeer() == peerToMatch && familyToMatch == ConnectionFamily(*conn))
+            return extractFound("same-peer same-family match: ", paths_.begin());
+    }
 
-    debugs(17, 7, "no same-peer paths");
+    debugs(17, 7, "no same-peer same-family paths");
     return nullptr;
 }
 
-Comm::ConnectionPointer
-CandidatePaths::popIfDifferentFamily(const Comm::Connection &other)
+/// If spare paths exist for currentPeer, returns the first spare path iterator.
+/// Otherwise, if there are paths for other peers, returns one of those.
+/// Otherwise, returns the end() iterator.
+Comm::ConnectionList::const_iterator
+CandidatePaths::findSpareOrNextPeer(const Comm::Connection &currentPeer) const
 {
-    const auto peerToMatch = other.getPeer();
-    const auto familyToAvoid = ConnectionFamily(other);
-    const auto it = std::find_if(paths_.begin(), paths_.end(),
+    const auto peerToMatch = currentPeer.getPeer();
+    const auto familyToAvoid = ConnectionFamily(currentPeer);
+    // Optimization: Also stop at the first mismatching peer because all
+    // same-peer paths are grouped together.
+    const auto found = std::find_if(paths_.begin(), paths_.end(),
         [peerToMatch, familyToAvoid](const Comm::ConnectionPointer &conn) {
-            return peerToMatch == conn->getPeer() &&
+            return peerToMatch != conn->getPeer() ||
                 familyToAvoid != ConnectionFamily(*conn);
     });
-    if (it != paths_.end())
-        return popFound("same-peer different-family match: ", it);
+    if (found != paths_.end() && peerToMatch == (*found)->getPeer())
+        return found;
+    return paths_.end();
+}
+
+Comm::ConnectionPointer
+CandidatePaths::extractSpare(const Comm::Connection &currentPeer)
+{
+    const auto found = findSpareOrNextPeer(currentPeer);
+    if (found != paths_.end() && currentPeer.getPeer() == (*found)->getPeer())
+        return extractFound("same-peer different-family match: ", found);
 
     debugs(17, 7, "no same-peer different-family paths");
     return nullptr;
 }
 
-/// convenience method to finish a successful popIf*() or popFirst() call
+/// convenience method to finish a successful extract*() call
 Comm::ConnectionPointer
-CandidatePaths::popFound(const char *description, const Comm::ConnectionList::iterator &found)
+CandidatePaths::extractFound(const char *description, const Comm::ConnectionList::const_iterator &found)
 {
     const auto path = *found;
     paths_.erase(found);
     debugs(17, 7, description << path);
     return path;
+}
+
+bool
+CandidatePaths::doneWithSpare(const Comm::Connection &currentPeer) const
+{
+    const auto found = findSpareOrNextPeer(currentPeer);
+    if (found == paths_.end())
+        return destinationsFinalized;
+    return currentPeer.getPeer() != (*found)->getPeer();
+}
+
+bool
+CandidatePaths::doneWithPeer(const Comm::Connection &currentPeer) const
+{
+    const auto first = paths_.begin();
+    if (first == paths_.end())
+        return destinationsFinalized;
+    return currentPeer.getPeer() != (*first)->getPeer();
 }
 
 int
