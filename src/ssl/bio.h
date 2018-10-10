@@ -11,6 +11,7 @@
 
 #if USE_OPENSSL
 
+#include "compat/openssl.h"
 #include "FadingCounter.h"
 #include "fd.h"
 #include "MemBuf.h"
@@ -203,14 +204,6 @@ private:
 
 void
 applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl::BumpMode bumpMode);
-
-#if !HAVE_LIBCRYPTO_BIO_GET_INIT
-// OpenSSL v1.0 bio compatibility functions
-inline void *BIO_get_data(BIO *table) { return table->ptr; }
-inline void BIO_set_data(BIO *table, void *data) { table->ptr = data; }
-inline int BIO_get_init(BIO *table) { return table->init; }
-inline void BIO_set_init(BIO *table, int init) { table->init = init; }
-#endif
 
 #endif /* USE_OPENSSL */
 #endif /* SQUID_SSL_BIO_H */

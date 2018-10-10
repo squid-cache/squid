@@ -17,9 +17,18 @@
 #include <gnutls/abstract.h>
 #endif
 #include <list>
-#if USE_OPENSSL && HAVE_OPENSSL_ERR_H
+#if USE_OPENSSL
+#include "compat/openssl.h"
+#if HAVE_OPENSSL_BN_H
+#include <openssl/bn.h>
+#endif
+#if HAVE_OPENSSL_ERR_H
 #include <openssl/err.h>
 #endif
+#if HAVE_OPENSSL_RSA_H
+#include <openssl/rsa.h>
+#endif
+#endif /* USE_OPENSSL */
 #include <unordered_set>
 
 #if USE_OPENSSL
@@ -30,39 +39,6 @@
         struct sk_object ## _free_wrapper { \
             void operator()(argument_type a) { sk_object ## _pop_free(a, freefunction); } \
         }
-
-#if !HAVE_LIBCRYPTO_X509_UP_REF // OpenSSL 1.1 API
-#if defined(CRYPTO_LOCK_X509) // OpenSSL 1.0 API
-inline int X509_up_ref(X509 *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509); return 0;}
-#else
-#error missing both OpenSSL API features X509_up_ref (v1.1) and CRYPTO_LOCK_X509 (v1.0)
-#endif /* CRYPTO_LOCK_X509 */
-#endif /* X509_up_ref */
-
-#if !HAVE_LIBCRYPTO_X509_CRL_UP_REF // OpenSSL 1.1 API
-#if defined(CRYPTO_LOCK_X509_CRL) // OpenSSL 1.0 API
-inline int X509_CRL_up_ref(X509_CRL *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_X509_CRL); return 0;}
-#else
-#error missing both OpenSSL API features X509_up_ref (v1.1) and CRYPTO_LOCK_X509 (v1.0)
-#endif /* CRYPTO_LOCK_X509_CRL */
-#endif /* X509_CRL_up_ref */
-#if !HAVE_LIBCRYPTO_DH_UP_REF // OpenSSL 1.1 API
-#if defined(CRYPTO_LOCK_DH) // OpenSSL 1.0 API
-inline int DH_up_ref(DH *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_DH); return 0;}
-#else
-
-#error missing both OpenSSL API features DH_up_ref (v1.1) and CRYPTO_LOCK_DH (v1.0)
-#endif /* OpenSSL 1.0 CRYPTO_LOCK_X509_CRL */
-#endif /* OpenSSL 1.1 DH_up_ref */
-
-#if !HAVE_LIBCRYPTO_EVP_PKEY_UP_REF
-#if defined(CRYPTO_LOCK_EVP_PKEY) // OpenSSL 1.0
-inline int EVP_PKEY_up_ref(EVP_PKEY *t) {if (t) CRYPTO_add(&t->references, 1, CRYPTO_LOCK_EVP_PKEY); return 0;}
-#endif
-#else
-#error missing both OpenSSL API features EVP_PKEY_up_ref (v1.1) and CRYPTO_LOCK_EVP_PKEY (v1.0)
-#endif
-
 #endif /* USE_OPENSSL */
 
 /* flags a SSL connection can be configured with */

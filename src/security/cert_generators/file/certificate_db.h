@@ -11,9 +11,6 @@
 
 #include "ssl/gadgets.h"
 
-#if HAVE_OPENSSL_OPENSSLV_H
-#include <openssl/opensslv.h>
-#endif
 #include <string>
 
 namespace Ssl
