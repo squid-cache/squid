@@ -13,11 +13,17 @@
 #include "security/forward.h"
 #include "ssl/crtd_message.h"
 
+#if USE_OPENSSL
+#include "compat/openssl.h"
+#if HAVE_OPENSSL_ASN1_H
+#include <openssl/asn1.h>
+#endif
 #if HAVE_OPENSSL_TXT_DB_H
 #include <openssl/txt_db.h>
 #endif
 #if HAVE_OPENSSL_X509V3_H
 #include <openssl/x509v3.h>
+#endif
 #endif
 #include <string>
 
@@ -28,12 +34,6 @@ namespace Ssl
  These functions must not depend on Squid runtime code such as debug()
  because they are used by security_file_certgen helper.
  */
-
-#if SQUID_USE_CONST_SSL_METHOD
-typedef const SSL_METHOD * ContextMethod;
-#else
-typedef SSL_METHOD * ContextMethod;
-#endif
 
 #if !defined(SQUID_SSL_SIGN_HASH_IF_NONE)
 #define SQUID_SSL_SIGN_HASH_IF_NONE "sha256"
