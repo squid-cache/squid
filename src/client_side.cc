@@ -1089,7 +1089,8 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
     int vport = conn->port->vport;
     static char ipbuf[MAX_IPSTRLEN];
 
-    http->flags.accel = true;
+    if (!conn->switchedToHttps())
+        http->flags.accel = true;
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
