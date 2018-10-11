@@ -7290,22 +7290,22 @@ LOC: Config.visibleHostname
 DEFAULT: none
 DEFAULT_DOC: Automatically detect the system host name
 DOC_START
-	The public domain name (FQDN) of this Proxy.
+	The public domain name (FQDN) of this proxy.
 
 	This name will be used in generated URLs sent to clients for
-	objects they need to download directly from Squid, and for other
-	generated responses (eg error pages) needing to display the proxy
-	name.
+	objects they need to download directly from Squid (e.g. CSS,
+	FTP icons) and for other generated responses (e.g. error pages)
+	needing to display the proxy name.
 
 	If not set, auto-detection of the system host name will be performed
 	based on the following details (in this order):
-		- rDNS name of first listening port address
-		- the return value of gethostname()
-		- the fallback name of "localhost"
+		- rDNS name for the first listening port address
+		- the named returned by gethostname(2)
+		- the name "localhost"
 
-	If you have multiple caches in a cluster and get errors about
-	IP-forwarding you must set them to have individual names with
-	this setting or unique_hostname.
+	If you have multiple proxies in a cluster and get errors about
+	IP-forwarding, you must set each proxy to have individual names
+	with this directive or unique_hostname.
 DOC_END
 
 NAME: unique_hostname
