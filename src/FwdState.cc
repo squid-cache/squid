@@ -295,10 +295,10 @@ FwdState::stopAndDestroy(const char *reason)
 {
     // The following should removed after
     // The dependency FwdState/HappyConnOpener solved
-    if (calls.connector) {
+    if (opening()) {
         calls.connector->cancel("FwdState destructed");
         calls.connector = nullptr;
-        connOpener = nullptr;
+        connOpener.clear();
     }
 
     PeerSelectionInitiator::subscribed = false; // may already be false
@@ -402,7 +402,7 @@ FwdState::~FwdState()
 
     entry = NULL;
 
-    if (calls.connector != NULL) {
+    if (opening()) {
         calls.connector->cancel("FwdState destructed");
         calls.connector = NULL;
     }
@@ -528,7 +528,6 @@ FwdState::EnoughTimeToReForward(const time_t fwdStart)
 void
 FwdState::useDestinations()
 {
-    debugs(17, 3, destinations_->size() << " paths to " << entry->url());
     if (hasCandidatePath()) {
         connectStart();
     } else {
@@ -683,11 +682,11 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     if (Comm::IsConnOpen(serverConn)) {
         // We are already using a previously opened connection but also
         // receiving destinations in case we need to re-forward.
-        Must(!connOpener);
+        Must(!opening());
         return;
     }
 
-    if (connOpener) {
+    if (opening()) {
         CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
         return; // and continue to wait for FwdState::noteConnection() callback
     }
@@ -723,11 +722,11 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     if (Comm::IsConnOpen(serverConn)) {
         // We are already using a previously opened connection but also
         // receiving destinations in case we need to re-forward.
-        Must(!connOpener);
+        Must(!opening());
         return;
     }
 
-    Must(connOpener); // or we would be stuck with nothing to do or wait for
+    Must(opening()); // or we would be stuck with nothing to do or wait for
     CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
     // and continue to wait for FwdState::noteConnection() callback
 }
@@ -865,7 +864,7 @@ void
 FwdState::noteConnection(const HappyConnOpener::Answer &cd)
 {
     calls.connector = nullptr;
-    connOpener = nullptr;
+    connOpener.clear();
 
     n_tries += cd.n_tries;
 
@@ -1101,8 +1100,7 @@ FwdState::connectStart()
 {
     debugs(17, 3, HERE << entry->url());
 
-    assert(!calls.connector); // Must not called if we are waiting for connection
-    assert(!connOpener);
+    assert(!opening()); // Must not called if we are waiting for connection
 
     if (hasCandidatePath()) {
         // Ditch error page if it was created before.

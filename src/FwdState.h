@@ -208,6 +208,10 @@ private:
 
     void handlePinned(CachePeer *); ///< Handle pinned connections
 
+    /// whether we are waiting for HappyConnOpener
+    /// same as calls.connector but may differ from connOpener.valid()
+    bool opening() const { return connOpener.set(); }
+
     /// Whether there is at least one more candidate path available
     bool hasCandidatePath() {return destinations_ && !destinations_->empty();}
 
