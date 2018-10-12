@@ -7,6 +7,7 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
+#include "ResolvedPeers.h"
 #include "SquidConfig.h"
 
 CBDATA_CLASS_INIT(HappyConnOpener);
@@ -72,7 +73,7 @@ std::ostream &operator <<(std::ostream &os, const HappyConnOpener::Answer &answe
     return os << answer.conn << ", " << answer.ioStatus << ", " << answer.xerrno << ", " << (answer.reused ? "reused" : "new");
 }
 
-HappyConnOpener::HappyConnOpener(const CandidatePaths::Pointer &destinations, const AsyncCall::Pointer &aCall, const time_t fwdStart, int tries):
+HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &destinations, const AsyncCall::Pointer &aCall, const time_t fwdStart, int tries):
     AsyncJob("HappyConnOpener"),
     useTos(0),
     useNfmark(0),

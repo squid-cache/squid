@@ -14,18 +14,18 @@
 #include "comm/ConnOpener.h"
 
 class FwdState;
-class CandidatePaths;
-typedef RefCount<CandidatePaths> CandidatePathsPointer;
+class ResolvedPeers;
+typedef RefCount<ResolvedPeers> ResolvedPeersPointer;
 
 /// Implements Happy Eyeballs (RFC 6555)
-/// Each HappyConnOpener object shares a CandidatePaths object with the caller,
+/// Each HappyConnOpener object shares a ResolvedPeers object with the caller,
 /// and informed for changes using the  HappyConnOpener::noteCandidatePath()
 /// asyncCall.
-/// The CandidatePaths::destinationsFinalized flag is set by caller to inform
-/// HappyConnOpener object that the CandidatePaths will not receive any new
+/// The ResolvedPeers::destinationsFinalized flag is set by caller to inform
+/// HappyConnOpener object that the ResolvedPeers will not receive any new
 /// path.
-/// The HappyConnOpener object needs to update the CandidatePaths::readStatus
-/// with the current_dtime when access the CandidatePaths object
+/// The HappyConnOpener object needs to update the ResolvedPeers::readStatus
+/// with the current_dtime when access the ResolvedPeers object
 class HappyConnOpener: public AsyncJob
 {
     CBDATA_CLASS(HappyConnOpener);
@@ -83,7 +83,7 @@ public:
     /// Inform HappyConnOpener subsystem that the connection is closed
     static void ConnectionClosed(const Comm::ConnectionPointer &conn);
 
-    HappyConnOpener(const CandidatePathsPointer &, const AsyncCall::Pointer &, const time_t fwdStart, int tries);
+    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &, const time_t fwdStart, int tries);
     ~HappyConnOpener();
 
     /// reacts to changes in the destinations list
@@ -154,7 +154,7 @@ private:
     AsyncCall::Pointer waitingForSparePermission;
 
     /// The list with candidate destinations. Shared with the caller FwdState object.
-    CandidatePathsPointer dests_;
+    ResolvedPeersPointer dests_;
 
     /// current connection opening attempt on the prime track (if any)
     PendingConnection prime;

@@ -29,10 +29,12 @@
 
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
-class PconnPool;
-typedef RefCount<PconnPool> PconnPoolPointer;
 class ErrorState;
 class HttpRequest;
+class PconnPool;
+typedef RefCount<PconnPool> PconnPoolPointer;
+class ResolvedPeers;
+typedef RefCount<ResolvedPeers> ResolvedPeersPointer;
 
 #if USE_OPENSSL
 namespace Ssl
@@ -56,56 +58,6 @@ nfmark_t GetNfmarkToServer(HttpRequest * request);
 
 /// Sets initial TOS value and Netfilter for the future outgoing connection.
 void GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn);
-
-/// Holds the list with candidate connection paths for a host
-class CandidatePaths: public RefCountable
-{
-public:
-    typedef RefCount<CandidatePaths> Pointer;
-    CandidatePaths();
-
-    /// Add the path to the top of candidate paths. Normally used
-    /// to retry a failed connection.
-    void retryPath(const Comm::ConnectionPointer &);
-
-    /// Add a new path to the end of candidate paths.
-    void newPath(const Comm::ConnectionPointer &);
-
-    /// Whether the list is empty
-    bool empty() {return paths_.empty();}
-
-    /// extracts and returns the first queued address
-    Comm::ConnectionPointer extractFront();
-
-    /// extracts and returns the first same-peer same-family address
-    /// \returns nil if it cannot find the requested address
-    Comm::ConnectionPointer extractPrime(const Comm::Connection &currentPeer);
-    /// extracts and returns the first same-peer different-family address
-    /// \returns nil if it cannot find the requested address
-    Comm::ConnectionPointer extractSpare(const Comm::Connection &currentPeer);
-
-    /// whether peer-related spare addresses are (or may become) known
-    bool doneWithSpare(const Comm::Connection &currentPeer) const;
-
-    /// whether peer-related addresses are (or may become) known
-    bool doneWithPeer(const Comm::Connection &currentPeer) const;
-
-    /// the current number of candidate paths
-    int size() {return paths_.size();}
-
-    /// The protocol family of the given path, AF_INET or AF_INET6
-    static int ConnectionFamily(const Comm::Connection &conn);
-
-    ///< whether all of the available candidate paths received from DNS
-    bool destinationsFinalized;
-
-private:
-    Comm::ConnectionList::const_iterator findSpareOrNextPeer(const Comm::Connection &currentPeer) const;
-    Comm::ConnectionPointer extractFound(const char *description, const Comm::ConnectionList::const_iterator &found);
-
-    Comm::ConnectionList paths_;
-};
-
 
 class HelperReply;
 class FwdState: public RefCountable, public PeerSelectionInitiator
@@ -212,9 +164,6 @@ private:
     /// same as calls.connector but may differ from connOpener.valid()
     bool opening() const { return connOpener.set(); }
 
-    /// Whether there is at least one more candidate path available
-    bool hasCandidatePath() {return destinations_ && !destinations_->empty();}
-
 public:
     StoreEntry *entry;
     HttpRequest *request;
@@ -243,7 +192,7 @@ private:
 
      /// The active HappyConnOpener object or nil
     HappyConnOpener::Pointer connOpener;
-    CandidatePaths::Pointer destinations_; ///< The available candidate paths
+    ResolvedPeersPointer destinations_; ///< paths for forwarding the request
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
 
     AsyncCall::Pointer closeHandler; ///< The serverConn close handler

@@ -412,6 +412,8 @@ squid_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	RemovalPolicy.h \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	send-announce.h \
 	send-announce.cc \
 	SBufStatsAction.h \
@@ -1163,6 +1165,8 @@ tests_testRock_SOURCES = \
 	RemovalPolicy.cc \
 	RequestFlags.cc \
 	RequestFlags.h \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -1678,6 +1682,8 @@ tests_testDiskIO_SOURCES = \
 	RemovalPolicy.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	tests/stub_libsecurity.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -1807,6 +1813,8 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	dlink.cc \
 	globals.cc \
 	Parsing.cc \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	String.cc \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
@@ -1971,6 +1979,8 @@ tests_test_http_range_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -2366,6 +2376,8 @@ tests_testHttpRequest_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -3205,6 +3217,8 @@ tests_testEventLoop_SOURCES = \
 	Pipeline.cc \
 	Pipeline.h \
 	RemovalPolicy.cc \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	redirect.h \
 	tests/stub_redirect.cc \
 	refresh.h \
