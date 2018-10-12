@@ -451,8 +451,7 @@ HappyConnQueue::queueASpareConnection(HappyConnOpener::Pointer happy)
     bool needsSpareNow = primeConnectTooSlow(happy);
     bool gapRuleOK = GapRule();
     bool connectionsLimitRuleOK = ConnectionsLimitRule();
-    bool startSpareNow = happy->sparesBlockedOnCandidatePaths ||
-                         (needsSpareNow && gapRuleOK && connectionsLimitRuleOK);
+    bool startSpareNow = needsSpareNow && gapRuleOK && connectionsLimitRuleOK;
 
     typedef NullaryMemFunT<HappyConnOpener> Dialer;
     AsyncCall::Pointer call = JobCallback(17, 5, Dialer, happy, HappyConnOpener::noteSpareAllowed);

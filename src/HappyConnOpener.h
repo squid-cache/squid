@@ -101,12 +101,6 @@ public:
     tos_t useTos; ///< The tos to use for opened connection
     nfmark_t useNfmark;///< the nfmark to use for opened connection
 
-    /// Flag which is set to true if the last try to start a spare
-    /// connection failed because candidate paths are not available.
-    /// This flag is cleared (set to false), before a new spare
-    /// connection try is scheduled.
-    bool sparesBlockedOnCandidatePaths;
-
     /// When the last connection attempt started
     double lastAttemptTime;
 
