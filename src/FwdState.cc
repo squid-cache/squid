@@ -865,6 +865,9 @@ FwdState::handleUnregisteredServerEnd()
 void
 FwdState::noteConnection(const HappyConnOpener::Answer &cd)
 {
+    calls.connector = nullptr;
+    connOpener = nullptr;
+
     n_tries += cd.n_tries;
 
     if (cd.ioStatus != Comm::OK) {
@@ -889,11 +892,6 @@ FwdState::noteConnection(const HappyConnOpener::Answer &cd)
         retryOrBail();
         return;
     }
-
-    // clear callbacks
-    calls.connector = nullptr;
-    // We do not need the connector any more
-    connOpener = nullptr;
 
     serverConn = cd.conn;
     debugs(17, 3, (cd.status ? cd.status : "use connection") << ": " << serverConnection());
