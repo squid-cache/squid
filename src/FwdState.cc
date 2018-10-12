@@ -240,6 +240,7 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     clientConn(client),
     start_t(squid_curtime),
     n_tries(0),
+    destinations_(new CandidatePaths()), // TODO: Pool CandidatePaths
     pconnRace(raceImpossible)
 {
     debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
@@ -329,8 +330,6 @@ FwdState::selectPeerForIntercepted()
     getOutgoingAddress(request, p);
 
     debugs(17, 3, HERE << "using client original destination: " << *p);
-    assert(!destinations_);
-    destinations_ = new CandidatePaths();
     destinations_->newPath(p);
     destinations_->destinationsFinalized = true;
     PeerSelectionInitiator::subscribed = false;
@@ -566,7 +565,6 @@ FwdState::fail(ErrorState * errorState)
         debugs(17, 5, HERE << "pconn race happened");
         // we should retry the same destination if it failed due to pconn race
         assert(serverConn);
-        assert(destinations_);
         debugs(17, 4, "retrying the same destination");
         destinations_->retryPath(serverConn);
         pconnRace = raceHappened;
@@ -647,7 +645,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 {
     flags.destinationsFound = true;
     if (path == nullptr) {
-        assert(!destinations_); // no other destinations allowed
+        assert(!destinations_->size()); // no other destinations allowed
         // We do not expect and not need more results
         PeerSelectionInitiator::subscribed = false;
         usePinned();
@@ -680,8 +678,6 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
         return;
     }
 
-    if (!destinations_)
-        destinations_ = new CandidatePaths();
     destinations_->newPath(path);
 
     if (Comm::IsConnOpen(serverConn)) {
@@ -704,6 +700,7 @@ void
 FwdState::noteDestinationsEnd(ErrorState *selectionError)
 {
     PeerSelectionInitiator::subscribed = false;
+    destinations_->destinationsFinalized = true;
 
     if (!flags.destinationsFound) {
         if (selectionError) {
@@ -722,9 +719,6 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     // else continue to use one of the previously noted destinations;
     // if all of them fail, forwarding as whole will fail
     Must(!selectionError); // finding at least one path means selection succeeded
-
-    Must(destinations_);
-    destinations_->destinationsFinalized = true;
 
     if (Comm::IsConnOpen(serverConn)) {
         // We are already using a previously opened connection but also
