@@ -685,17 +685,18 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     destinations_->newPath(path);
 
     if (Comm::IsConnOpen(serverConn)) {
-        // We are already using a previously opened connection but continue to
-        // receive destinations in case we need to re-forward.
-        Must(connOpener == nullptr);
+        // We are already using a previously opened connection but also
+        // receiving destinations in case we need to re-forward.
+        Must(!connOpener);
         return;
     }
 
-    if (connOpener.valid()/*&& calls.connector*/) {
+    if (connOpener) {
         CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
         return; // and continue to wait for FwdState::noteConnection() callback
     }
 
+    // This is the first path candidate we have seen. Create connOpener.
     useDestinations();
 }
 
@@ -725,12 +726,16 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     Must(destinations_);
     destinations_->destinationsFinalized = true;
 
-    if (connOpener.valid()) {
-        CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
-        return; // and continue to wait for FwdState::noteConnection() callback
+    if (Comm::IsConnOpen(serverConn)) {
+        // We are already using a previously opened connection but also
+        // receiving destinations in case we need to re-forward.
+        Must(!connOpener);
+        return;
     }
 
-    // XXX: What happens here?
+    Must(connOpener); // or we would be stuck with nothing to do or wait for
+    CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
+    // and continue to wait for FwdState::noteConnection() callback
 }
 
 /**** CALLBACK WRAPPERS ************************************************************/
