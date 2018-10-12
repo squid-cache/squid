@@ -35,10 +35,6 @@ public:
     /// happy_eyeballs_connect_timeout.
     double spareMayStartAfter(const HappyConnOpener::Pointer &happy) const;
 
-    ///< \return true if the happy_eyeballs_connect_timeout precondition
-    /// satisfied
-    bool primeConnectTooSlow(const HappyConnOpener::Pointer &happy) const;
-
     /// The configured connect_limit per worker basis
     static int ConnectLimit();
 
@@ -256,7 +252,7 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
 
     if (waitingForSparePermission) {
         cancelSpareWait("prime failure");
-        sparePermitted = true;
+        sparePermitted = true; // XXX: sparePermitted || dests_->doneWithPrime();
     }
 
     checkForNewConnection();
@@ -445,13 +441,13 @@ HappyConnQueue::queueASpareConnection(HappyConnOpener::Pointer happy)
     if (ConnectLimit() == 0) {
         debugs(17, 8, "Spare connections are disabled");
         static AsyncCall::Pointer nil;
-        return nil;
+        return nil; // XXX: The caller does not disable spares on nil return
     }
 
-    bool needsSpareNow = primeConnectTooSlow(happy);
+    bool wantsSpareNow = !Config.happyEyeballs.connect_timeout;
     bool gapRuleOK = GapRule();
     bool connectionsLimitRuleOK = ConnectionsLimitRule();
-    bool startSpareNow = needsSpareNow && gapRuleOK && connectionsLimitRuleOK;
+    bool startSpareNow = wantsSpareNow && gapRuleOK && connectionsLimitRuleOK;
 
     typedef NullaryMemFunT<HappyConnOpener> Dialer;
     AsyncCall::Pointer call = JobCallback(17, 5, Dialer, happy, HappyConnOpener::noteSpareAllowed);
@@ -460,7 +456,7 @@ HappyConnQueue::queueASpareConnection(HappyConnOpener::Pointer happy)
         return call;
     }
 
-    if (needsSpareNow && gapRuleOK /*&& !connectionsLimitRuleOK*/) {
+    if (wantsSpareNow && gapRuleOK /*&& !connectionsLimitRuleOK*/) {
         debugs(17, 8, "A new attempt should start as soon as possible");
         sparesLimitQueue.push_back(call);
     } else {
@@ -516,13 +512,6 @@ HappyConnQueue::spareMayStartAfter(const HappyConnOpener::Pointer &happy) const
     double startAfter = nextAttemptTime > current_dtime ?
                         max(nextAttemptTime - current_dtime, remainGap) : remainGap;
     return startAfter;
-}
-
-bool
-HappyConnQueue::primeConnectTooSlow(const HappyConnOpener::Pointer &happy) const
-{
-    double nextAttemptTime = happy->lastAttemptTime + (double)Config.happyEyeballs.connect_timeout/1000.0;
-    return (nextAttemptTime <= current_dtime);
 }
 
 void
