@@ -691,13 +691,9 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
         return;
     }
 
-    // TODO: Remove HappyConnOpener::noteCandidatesChange() caller code duplication.
     if (connOpener.valid()/*&& calls.connector*/) {
-        // inform connection opener that a new destination was found
-        typedef NullaryMemFunT<HappyConnOpener> CbDialer;
-        AsyncCall::Pointer call = JobCallback(50, 5, CbDialer, connOpener, HappyConnOpener::noteCandidatesChange);
-        ScheduleCallHere(call);
-        return;
+        CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
+        return; // and continue to wait for FwdState::noteConnection() callback
     }
 
     useDestinations();
@@ -730,11 +726,11 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     destinations_->destinationsFinalized = true;
 
     if (connOpener.valid()) {
-        // inform connection opener that no more destinations are expected
-        typedef NullaryMemFunT<HappyConnOpener> CbDialer;
-        AsyncCall::Pointer call = JobCallback(17, 5, CbDialer, connOpener, HappyConnOpener::noteCandidatesChange);
-        ScheduleCallHere(call);
+        CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
+        return; // and continue to wait for FwdState::noteConnection() callback
     }
+
+    // XXX: What happens here?
 }
 
 /**** CALLBACK WRAPPERS ************************************************************/
