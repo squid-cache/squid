@@ -7300,7 +7300,7 @@ DOC_START
 	If not set, auto-detection of the system host name will be performed
 	based on the following details (in this order):
 		- rDNS name for the first listening port address
-		- the named returned by gethostname(2)
+		- the name returned by gethostname(2)
 		- the name "localhost"
 
 	If you have multiple proxies in a cluster and get errors about
