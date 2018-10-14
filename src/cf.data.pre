@@ -7290,21 +7290,25 @@ LOC: Config.visibleHostname
 DEFAULT: none
 DEFAULT_DOC: Automatically detect the system host name
 DOC_START
-	The public domain name (FQDN) of this proxy.
+	The hostname of this proxy.
 
-	This name will be used in generated URLs sent to clients for
-	objects they need to download directly from Squid. For example;
-	CSS stylesheets, FTP icons.
-
-	This name will be used in generated responses sent to clients
-	for objects they need to display the proxy name. For example;
-	error pages.
+	Hosts connected to the Internet or handling messages which travel
+	over the Internet are required by RFC 1123 to have a name which
+	can be resolved in DNS (an FQDN).
 
 	If not set, auto-detection of the system host name will be performed
 	based on the following details (in this order):
 		- rDNS name for the first listening port address
 		- the name returned by gethostname(2)
 		- the name "localhost"
+
+	This name will be used in generated responses sent to clients
+	for objects they need to display the proxy name. For example;
+	error pages.
+
+	This name will also be used in generated URLs sent to clients for
+	objects they need to download directly from Squid. For example;
+	CSS stylesheets, FTP icons.
 
 	See unique_hostname directive if you have multiple proxies in a
 	cluster which need to share a visible hostname.
