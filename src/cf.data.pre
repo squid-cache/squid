@@ -7293,9 +7293,12 @@ DOC_START
 	The public domain name (FQDN) of this proxy.
 
 	This name will be used in generated URLs sent to clients for
-	objects they need to download directly from Squid (e.g. CSS,
-	FTP icons) and for other generated responses (e.g. error pages)
-	needing to display the proxy name.
+	objects they need to download directly from Squid. For example;
+	CSS stylesheets, FTP icons.
+
+	This name will be used in generated responses sent to clients
+	for objects they need to display the proxy name. For example;
+	error pages.
 
 	If not set, auto-detection of the system host name will be performed
 	based on the following details (in this order):
