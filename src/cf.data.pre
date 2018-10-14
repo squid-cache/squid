@@ -7303,9 +7303,8 @@ DOC_START
 		- the name returned by gethostname(2)
 		- the name "localhost"
 
-	If you have multiple proxies in a cluster and get errors about
-	IP-forwarding, you must set each proxy to have individual names
-	with this directive or unique_hostname.
+	See unique_hostname directive if you have multiple proxies in a
+	cluster which need to share a visible hostname.
 DOC_END
 
 NAME: unique_hostname
