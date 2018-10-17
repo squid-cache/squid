@@ -252,6 +252,12 @@ DOC_START
 DOC_END
 
 # Options Removed in 3.2
+NAME: balance_on_multiple_ip
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid performs a 'Happy Eyeballs' algorithm, this multiple-IP algorithm is not longer relevant.
+DOC_END
+
 NAME: chunked_request_body_max_size
 TYPE: obsolete
 DOC_START
@@ -862,6 +868,8 @@ DOC_START
 
 			If you do not specify a DATA macro inside FORMAT,
 			Squid automatically appends %DATA to your FORMAT.
+			Note that Squid-3.x may expand %DATA to whitespace
+			or nothing in this case.
 
 			By default, Squid applies URL-encoding to each ACL
 			argument inside the argument string. If an explicit
@@ -10184,22 +10192,6 @@ DOC_START
 	privileges after initializing.  This means, for example, if you
 	use a HTTP port less than 1024 and try to reconfigure, you may
 	get an error saying that Squid can not open the port.
-DOC_END
-
-NAME: balance_on_multiple_ip
-TYPE: onoff
-LOC: Config.onoff.balance_on_multiple_ip
-DEFAULT: off
-DOC_START
-	Modern IP resolvers in squid sort lookup results by preferred access.
-	By default squid will use these IP in order and only rotates to
-	the next listed when the most preffered fails.
-
-	Some load balancing servers based on round robin DNS have been
-	found not to preserve user session state across requests
-	to different IP addresses.
-
-	Enabling this directive Squid rotates IP's per request.
 DOC_END
 
 NAME: pipeline_prefetch

@@ -44,7 +44,7 @@ SQUIDCEXTERN void hashFreeMemory(hash_table *);
 SQUIDCEXTERN void hashFreeItems(hash_table *, HASHFREE *);
 SQUIDCEXTERN HASHHASH hash_string;
 SQUIDCEXTERN HASHHASH hash4;
-SQUIDCEXTERN const char *hashKeyStr(hash_link *);
+SQUIDCEXTERN const char *hashKeyStr(const hash_link *);
 
 /*
  *  Here are some good prime number choices.  It's important not to

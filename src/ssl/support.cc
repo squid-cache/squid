@@ -97,18 +97,34 @@ ssl_ask_password(SSL_CTX * context, const char * prompt)
 static RSA *
 ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
 {
-    static RSA *rsa_512 = NULL;
-    static RSA *rsa_1024 = NULL;
-    RSA *rsa = NULL;
+    static RSA *rsa_512 = nullptr;
+    static RSA *rsa_1024 = nullptr;
+    static BIGNUM *e = nullptr;
+    RSA *rsa = nullptr;
     int newkey = 0;
+
+    if (!e) {
+        e = BN_new();
+        if (!e || !BN_set_word(e, RSA_F4)) {
+            debugs(83, DBG_IMPORTANT, "ssl_temp_rsa_cb: Failed to set exponent for key " << keylen);
+            BN_free(e);
+            e = nullptr;
+            return nullptr;
+        }
+    }
 
     switch (keylen) {
 
     case 512:
 
         if (!rsa_512) {
-            rsa_512 = RSA_generate_key(512, RSA_F4, NULL, NULL);
-            newkey = 1;
+            rsa_512 = RSA_new();
+            if (rsa_512 && RSA_generate_key_ex(rsa_512, 512, e, nullptr)) {
+                newkey = 1;
+            } else {
+                RSA_free(rsa_512);
+                rsa_512 = nullptr;
+            }
         }
 
         rsa = rsa_512;
@@ -117,8 +133,13 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
     case 1024:
 
         if (!rsa_1024) {
-            rsa_1024 = RSA_generate_key(1024, RSA_F4, NULL, NULL);
-            newkey = 1;
+            rsa_1024 = RSA_new();
+            if (rsa_1024 && RSA_generate_key_ex(rsa_1024, 1024, e, nullptr)) {
+                newkey = 1;
+            } else {
+                RSA_free(rsa_1024);
+                rsa_1024 = nullptr;
+            }
         }
 
         rsa = rsa_1024;
@@ -231,13 +252,6 @@ bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
 {
     return matchX509CommonNames(cert, (void *)server, check_domain);
 }
-
-#if !HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_CERT
-static inline X509 *X509_STORE_CTX_get0_cert(X509_STORE_CTX *ctx)
-{
-    return ctx->cert;
-}
-#endif
 
 /// \ingroup ServerProtocolSSLInternal
 static int
@@ -469,8 +483,7 @@ Ssl::Initialize(void)
         return;
     initialized = true;
 
-    SSL_load_error_strings();
-    SSLeay_add_ssl_algorithms();
+    SQUID_OPENSSL_init_ssl();
 
 #if HAVE_OPENSSL_ENGINE_H
     if (::Config.SSL.ssl_engine) {
@@ -905,8 +918,8 @@ Ssl::verifySslCertificate(Security::ContextPointer &ctx, CertificateProperties c
 #endif
     if (!cert)
         return false;
-    ASN1_TIME * time_notBefore = X509_get_notBefore(cert);
-    ASN1_TIME * time_notAfter = X509_get_notAfter(cert);
+    const auto time_notBefore = X509_getm_notBefore(cert);
+    const auto time_notAfter = X509_getm_notAfter(cert);
     return (X509_cmp_current_time(time_notBefore) < 0 && X509_cmp_current_time(time_notAfter) > 0);
 }
 
@@ -949,11 +962,7 @@ hasAuthorityInfoAccessCaIssuers(X509 *cert)
             if (ad->location->type == GEN_URI) {
                 xstrncpy(uri,
                          reinterpret_cast<const char *>(
-#if HAVE_LIBCRYPTO_ASN1_STRING_GET0_DATA
                              ASN1_STRING_get0_data(ad->location->d.uniformResourceIdentifier)
-#else
-                             ASN1_STRING_data(ad->location->d.uniformResourceIdentifier)
-#endif
                          ),
                          sizeof(uri));
             }
@@ -1115,12 +1124,8 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
 {
     debugs(83, 2,  "completing " << sk_X509_num(untrustedCerts) << " OpenSSL untrusted certs using " << SquidUntrustedCerts.size() << " configured untrusted certificates");
 
-#if HAVE_LIBCRYPTO_X509_VERIFY_PARAM_GET_DEPTH
     const X509_VERIFY_PARAM *param = X509_STORE_CTX_get0_param(ctx);
     int depth = X509_VERIFY_PARAM_get_depth(param);
-#else
-    int depth = ctx->param->depth;
-#endif
     X509 *current = X509_STORE_CTX_get0_cert(ctx);
     int i = 0;
     for (i = 0; current && (i < depth); ++i) {
@@ -1155,11 +1160,7 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
     // OpenSSL already maintains ctx->untrusted but we cannot modify
     // internal OpenSSL list directly. We have to give OpenSSL our own
     // list, but it must include certificates on the OpenSSL ctx->untrusted
-#if HAVE_LIBCRYPTO_X509_STORE_CTX_GET0_UNTRUSTED
     STACK_OF(X509) *oldUntrusted = X509_STORE_CTX_get0_untrusted(ctx);
-#else
-    STACK_OF(X509) *oldUntrusted = ctx->untrusted;
-#endif
     STACK_OF(X509) *sk = sk_X509_dup(oldUntrusted); // oldUntrusted is always not NULL
 
     for (int i = 0; i < sk_X509_num(sslUntrustedStack); ++i) {
@@ -1172,13 +1173,9 @@ untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
     if (SquidUntrustedCerts.size() > 0)
         completeIssuers(ctx, sk);
 
-    X509_STORE_CTX_set_chain(ctx, sk); // No locking/unlocking, just sets ctx->untrusted
+    X509_STORE_CTX_set0_untrusted(ctx, sk); // No locking/unlocking, just sets ctx->untrusted
     int ret = X509_verify_cert(ctx);
-#if HAVE_LIBCRYPTO_X509_STORE_CTX_SET0_UNTRUSTED
-    X509_STORE_CTX_set0_untrusted(ctx, oldUntrusted);
-#else
-    X509_STORE_CTX_set_chain(ctx, oldUntrusted); // Set back the old untrusted list
-#endif
+    X509_STORE_CTX_set0_untrusted(ctx, oldUntrusted); // Set back the old untrusted list
     sk_X509_free(sk); // Release sk list
     return ret;
 }

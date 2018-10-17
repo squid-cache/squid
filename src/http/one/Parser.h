@@ -33,8 +33,8 @@ enum ParseState {
  * Works on a raw character I/O buffer and tokenizes the content into
  * the major CRLF delimited segments of an HTTP/1 procotol message:
  *
- * \item first-line (request-line / simple-request / status-line)
- * \item mime-header 0*( header-name ':' SP field-value CRLF)
+ * \li first-line (request-line / simple-request / status-line)
+ * \li mime-header 0*( header-name ':' SP field-value CRLF)
  */
 class Parser : public RefCountable
 {
