@@ -132,7 +132,10 @@ internalRemoteUri(bool encrypt, const char *host, unsigned short port, const cha
 char *
 internalLocalUri(const char *dir, const SBuf &name)
 {
-    return internalRemoteUri(false, getMyHostname(),
+    // XXX: getMy*() may return https_port info, but we force http URIs
+    // because we have not checked whether the callers can handle https.
+    const bool secure = false;
+    return internalRemoteUri(secure, getMyHostname(),
                              getMyPort(), dir, name);
 }
 
