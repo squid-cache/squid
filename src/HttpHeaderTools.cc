@@ -273,7 +273,7 @@ httpHeaderQuoteString(const char *raw)
  * \retval 1    Header has no access controls to test
  */
 static int
-httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms)
+httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HttpReply * reply, HeaderManglers *hms)
 {
     int retval;
 
@@ -288,6 +288,10 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms)
     }
 
     ACLFilledChecklist checklist(hm->access_list, request, NULL);
+    if (reply) {
+        checklist.reply = reply;
+        HTTPMSGLOCK(checklist.reply);
+    }
 
     if (checklist.fastCheck().allowed()) {
         /* aclCheckFast returns true for allow. */
@@ -312,7 +316,7 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms)
 
 /** Mangles headers for a list of headers. */
 void
-httpHdrMangleList(HttpHeader *l, HttpRequest *request, const AccessLogEntryPointer &al, req_or_rep_t req_or_rep)
+httpHdrMangleList(HttpHeader *l, HttpRequest *request, HttpReply *reply, const AccessLogEntryPointer &al, req_or_rep_t req_or_rep)
 {
     HttpHeaderEntry *e;
     HttpHeaderPos p = HttpHeaderInitPos;
@@ -335,7 +339,7 @@ httpHdrMangleList(HttpHeader *l, HttpRequest *request, const AccessLogEntryPoint
     if (hms) {
         int headers_deleted = 0;
         while ((e = l->getEntry(&p))) {
-            if (0 == httpHdrMangle(e, request, hms))
+            if (0 == httpHdrMangle(e, request, reply, hms))
                 l->delAt(p, headers_deleted);
         }
 

@@ -25,6 +25,7 @@
 class HeaderWithAcl;
 class HttpHeader;
 class HttpRequest;
+class HttpReply;
 class StoreEntry;
 
 typedef std::list<HeaderWithAcl> HeaderWithAclList;
@@ -131,7 +132,7 @@ void httpHeaderPutStrf(HttpHeader * hdr, Http::HdrType id, const char *fmt,...) 
 
 const char *getStringPrefix(const char *str, size_t len);
 
-void httpHdrMangleList(HttpHeader *, HttpRequest *, const AccessLogEntryPointer &al, req_or_rep_t req_or_rep);
+void httpHdrMangleList(HttpHeader *, HttpRequest *, HttpReply *, const AccessLogEntryPointer &al, req_or_rep_t req_or_rep);
 
 #endif
 

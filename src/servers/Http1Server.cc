@@ -338,7 +338,7 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
     // paranoid: ContentLengthInterpreter has cleaned non-generated replies
     rep->removeIrrelevantContentLength();
     rep->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
-    httpHdrMangleList(&rep->header, http->request, http->al, ROR_REPLY);
+    httpHdrMangleList(&rep->header, http->request, nullptr, http->al, ROR_REPLY);
 
     MemBuf *mb = rep->pack();
 
