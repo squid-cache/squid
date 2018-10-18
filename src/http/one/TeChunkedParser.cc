@@ -56,7 +56,7 @@ Http::One::TeChunkedParser::parse(const SBuf &aBuf)
     // restart in the middle of a chunk/frame
     do {
 
-        if (parsingStage_ == Http1::HTTP_PARSE_CHUNK_EXT && !parseChunkExtension(tok, theChunkSize))
+        if (parsingStage_ == Http1::HTTP_PARSE_CHUNK_EXT && !parseChunkExtensions(tok, theChunkSize))
             return false;
 
         if (parsingStage_ == Http1::HTTP_PARSE_CHUNK && !parseChunkBody(tok))
@@ -115,56 +115,57 @@ Http::One::TeChunkedParser::parseChunkSize(Http1::Tokenizer &tok)
  * ICAP 'use-original-body=N' extension is supported.
  */
 bool
+Http::One::TeChunkedParser::parseChunkExtensions(Http1::Tokenizer &tok, bool skipKnown)
+{
+    while (!tok.atEnd()) {
+        if (tok.skip(Http1::CrLf()) || (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))) {
+            parsingStage_ = theChunkSize ? Http1::HTTP_PARSE_CHUNK : Http1::HTTP_PARSE_MIME;
+            return true; // reached the end of extensions (if any)
+        }
+
+        if (parseChunkExtension(tok, skipKnown)) {
+            buf_ = tok.remaining();
+            continue; // got one extension; there may be more
+        }
+
+        static const CharacterSet NonLF = (CharacterSet::LF).complement().rename("non-LF");
+        if (tok.skipAll(NonLF) && tok.skip('\n'))
+            throw TexcHere("cannot parse chunk extension"); // <garbage> CR*LF
+
+        return false; // need more data to finish parsing extension
+    }
+    return false; // need data to start parsing extension or CRLF
+}
+
+    bool
 Http::One::TeChunkedParser::parseChunkExtension(Http1::Tokenizer &tok, bool skipKnown)
 {
     SBuf ext;
     SBuf value;
-    while (
-        ParseBws(tok) && // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
+    if (!(ParseBws(tok) && // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
         tok.skip(';') &&
         ParseBws(tok) && // Bug 4492: ICAP servers send SP before chunk-ext-name
-        tok.prefix(ext, CharacterSet::TCHAR)) { // chunk-ext-name
+        tok.prefix(ext, CharacterSet::TCHAR))) // chunk-ext-name
+        return false;
 
-        // whole value part is optional. if no '=' expect next chunk-ext
-        if (ParseBws(tok) && tok.skip('=') && ParseBws(tok)) {
-
-            if (!skipKnown) {
-                if (ext.cmp("use-original-body",17) == 0 && tok.int64(useOriginBody, 10)) {
-                    debugs(94, 3, "Found chunk extension " << ext << "=" << useOriginBody);
-                    buf_ = tok.remaining(); // parse checkpoint
-                    continue;
-                }
-            }
-
-            debugs(94, 5, "skipping unknown chunk extension " << ext);
-
-            // unknown might have a value token or quoted-string
-            bool moreNeeded = false;
-            if (tok.quotedStringOrToken(value, moreNeeded)) {
-                if (!tok.atEnd()) {
-                    buf_ = tok.remaining(); // parse checkpoint
-                    continue;
-                }
-                break;
-            } else if (moreNeeded) {
-                return false;
-            } else {
-                break; // corrupt syntax
+    // whole value part is optional. if no '=' expect next chunk-ext
+    if (ParseBws(tok) && tok.skip('=') && ParseBws(tok)) {
+        if (!skipKnown) {
+            if (ext.cmp("use-original-body",17) == 0 && tok.int64(useOriginBody, 10)) {
+                debugs(94, 3, "Found chunk extension " << ext << "=" << useOriginBody);
+                return true;
             }
         }
 
-        if (!tok.atEnd())
-            buf_ = tok.remaining(); // parse checkpoint (unless there might be more token name)
-    }
+        debugs(94, 5, "skipping unknown chunk extension " << ext);
 
-    if (skipLineTerminator(tok)) {
-        buf_ = tok.remaining(); // checkpoint
-        // non-0 chunk means data, 0-size means optional Trailer follows
-        parsingStage_ = theChunkSize ? Http1::HTTP_PARSE_CHUNK : Http1::HTTP_PARSE_MIME;
-        return true;
-    }
+        // unknown might have a value token or quoted-string
+        if (tok.quotedStringOrToken(value) && !tok.atEnd())
+            return true;
 
-    return false;
+        return false;
+    }
+    return true;
 }
 
 bool

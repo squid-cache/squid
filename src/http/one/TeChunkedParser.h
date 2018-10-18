@@ -47,6 +47,7 @@ public:
 private:
     bool parseChunkSize(Http1::Tokenizer &tok);
     bool parseChunkExtension(Http1::Tokenizer &tok, bool skipKnown);
+    bool parseChunkExtensions(Http1::Tokenizer &tok, bool skipKnown);
     bool parseChunkBody(Http1::Tokenizer &tok);
     bool parseChunkEnd(Http1::Tokenizer &tok);
 

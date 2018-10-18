@@ -22,7 +22,7 @@ namespace One {
 class Tokenizer : public ::Parser::Tokenizer
 {
 public:
-    Tokenizer(SBuf &s) : ::Parser::Tokenizer(s), savedStats_(0) {}
+    Tokenizer(SBuf &s) : ::Parser::Tokenizer(s){}
 
     /**
      * Attempt to parse a quoted-string lexical construct.
@@ -55,22 +55,16 @@ public:
      * \param escaped HTTP/1.0 does not permit \-escaped characters
      */
     // TODO: unused
-    bool quotedString(SBuf &value, bool &moreNeeded, const bool http1p0 = false);
+    bool quotedString(SBuf &value, const bool http1p0 = false);
 
-    /// Attempts to parse a (token / quoted-string ) lexical construct.
-    /// \returns true on success
-    /// \returns false on invalid input characters or if more data is needed
-    bool quotedStringOrToken(SBuf &value, bool &moreNeeded, const bool http1p0 = false);
+    /**
+     * Attempt to parse a (token / quoted-string ) lexical construct.
+     */
+    bool quotedStringOrToken(SBuf &value, const bool http1p0 = false);
 
 private:
     /// parse the internal component of a quote-string, and terminal DQUOTE
-    bool qdText(SBuf &value, bool &moreNeeded, const bool http1p0);
-
-    void checkpoint() { savedCheckpoint_ = buf(); savedStats_ = parsedSize(); }
-    void restoreLastCheckpoint() { undoParse(savedCheckpoint_, savedStats_); }
-
-    SBuf savedCheckpoint_;
-    SBuf::size_type savedStats_;
+    bool qdText(SBuf &value, const bool http1p0);
 };
 
 } // namespace One
