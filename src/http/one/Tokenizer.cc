@@ -9,28 +9,14 @@
 #include "squid.h"
 #include "Debug.h"
 #include "http/one/Tokenizer.h"
+#include "parser/Tokenizer.h"
 
 bool
-Http::One::Tokenizer::quotedString(SBuf &returnedToken, const bool http1p0)
+Http::One::quotedStringOrToken(::Parser::Tokenizer &tok, SBuf &returnedToken, const bool http1p0)
 {
-    if (!skip('"'))
-        return false;
+    if (!tok.skip('"'))
+        return tok.prefix(returnedToken, CharacterSet::TCHAR);
 
-    return qdText(returnedToken, http1p0);
-}
-
-bool
-Http::One::Tokenizer::quotedStringOrToken(SBuf &returnedToken, const bool http1p0)
-{
-    if (!skip('"'))
-        return prefix(returnedToken, CharacterSet::TCHAR);
-
-    return qdText(returnedToken, http1p0);
-}
-
-bool
-Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
-{
     // the initial DQUOTE has been skipped by the caller
 
     /*
@@ -57,12 +43,14 @@ Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
     // best we can do is a conditional reference since http1p0 value may change per-client
     const CharacterSet &tokenChars = (http1p0 ? qdtext1p0 : qdtext1p1);
 
-    for (;;) {
-        SBuf::size_type prefixLen = buf().findFirstNotOf(tokenChars);
-        returnedToken.append(consume(prefixLen));
+    while (!tok.atEnd()) {
+        if (tok.skip('"'))
+            return true;
 
-        // HTTP/1.1 allows quoted-pair, HTTP/1.0 does not
-        if (!http1p0 && skip('\\')) {
+        SBuf qdText;
+        if (tok.prefix(qdText, tokenChars))
+            returnedToken.append(qdText);
+        else if (!http1p0 && tok.skip('\\')) { // HTTP/1.1 allows quoted-pair, HTTP/1.0 does not
             /* RFC 7230 section 3.2.6
              *
              * The backslash octet ("\") can be used as a single-octet quoting
@@ -74,29 +62,17 @@ Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
              */
             static const CharacterSet qPairChars = CharacterSet::HTAB + CharacterSet::SP + CharacterSet::VCHAR + CharacterSet::OBSTEXT;
             SBuf escaped;
-            if (!prefix(escaped, qPairChars, 1)) {
-                returnedToken.clear();
-                return false;
-            }
+            if (!tok.prefix(escaped, qPairChars, 1))
+                break;
+
             returnedToken.append(escaped);
-            continue;
-
-        } else if (skip('"')) {
-            break; // done
-
-        } else if (atEnd()) {
-            // need more data
-            returnedToken.clear();
-            return false;
+        } else {
+            debugs(24, 8, "invalid bytes for set " << tokenChars.name);
+            break;
         }
-
-        // else, we have an error
-        debugs(24, 8, "invalid bytes for set " << tokenChars.name);
-        returnedToken.clear();
-        return false;
     }
 
-    // found the whole string
-    return true;
+    returnedToken.clear();
+    return false;
 }
 

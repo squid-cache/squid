@@ -14,6 +14,10 @@
 #include "http/StatusCode.h"
 #include "sbuf/SBuf.h"
 
+namespace Parser {
+    class Tokenizer;
+}
+
 namespace Http {
 namespace One {
 
@@ -126,7 +130,7 @@ protected:
      * \retval true only if line terminator found.
      * \retval false incomplete or missing line terminator, need more data.
      */
-    bool skipLineTerminator(Http1::Tokenizer &tok) const;
+    bool skipLineTerminator(::Parser::Tokenizer &tok) const;
 
     /**
      * Scan to find the mime headers block for current message.
@@ -164,7 +168,7 @@ private:
 
 /// skips and, if needed, warns about RFC 7230 BWS ("bad" whitespace)
 /// \returns true (always; unlike all the skip*() functions)
-bool ParseBws(Tokenizer &tok);
+bool ParseBws(::Parser::Tokenizer &tok);
 
 /// the right debugs() level for logging HTTP violation messages
 int ErrorLevel();

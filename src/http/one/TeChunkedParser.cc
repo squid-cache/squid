@@ -11,6 +11,7 @@
 #include "Debug.h"
 #include "http/one/TeChunkedParser.h"
 #include "http/one/Tokenizer.h"
+#include "parser/Tokenizer.h"
 #include "http/ProtocolVersion.h"
 #include "MemBuf.h"
 #include "Parsing.h"
@@ -49,7 +50,7 @@ Http::One::TeChunkedParser::parse(const SBuf &aBuf)
     if (parsingStage_ == Http1::HTTP_PARSE_NONE)
         parsingStage_ = Http1::HTTP_PARSE_CHUNK_SZ;
 
-    Http1::Tokenizer tok(buf_);
+    ::Parser::Tokenizer tok(buf_);
 
     // loop for as many chunks as we can
     // use do-while instead of while so that we can incrementally
@@ -80,7 +81,7 @@ Http::One::TeChunkedParser::needsMoreSpace() const
 
 /// RFC 7230 section 4.1 chunk-size
 bool
-Http::One::TeChunkedParser::parseChunkSize(Http1::Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkSize(::Parser::Tokenizer &tok)
 {
     Must(theChunkSize <= 0); // Should(), really
 
@@ -115,7 +116,7 @@ Http::One::TeChunkedParser::parseChunkSize(Http1::Tokenizer &tok)
  * ICAP 'use-original-body=N' extension is supported.
  */
 bool
-Http::One::TeChunkedParser::parseChunkExtensions(Http1::Tokenizer &tok, bool skipKnown)
+Http::One::TeChunkedParser::parseChunkExtensions(::Parser::Tokenizer &tok, bool skipKnown)
 {
     while (!tok.atEnd()) {
         if (tok.skip(Http1::CrLf()) || (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))) {
@@ -138,7 +139,7 @@ Http::One::TeChunkedParser::parseChunkExtensions(Http1::Tokenizer &tok, bool ski
 }
 
     bool
-Http::One::TeChunkedParser::parseChunkExtension(Http1::Tokenizer &tok, bool skipKnown)
+Http::One::TeChunkedParser::parseChunkExtension(::Parser::Tokenizer &tok, bool skipKnown)
 {
     SBuf ext;
     SBuf value;
@@ -160,7 +161,7 @@ Http::One::TeChunkedParser::parseChunkExtension(Http1::Tokenizer &tok, bool skip
         debugs(94, 5, "skipping unknown chunk extension " << ext);
 
         // unknown might have a value token or quoted-string
-        if (tok.quotedStringOrToken(value) && !tok.atEnd())
+        if (quotedStringOrToken(tok, value) && !tok.atEnd())
             return true;
 
         return false;
@@ -169,7 +170,7 @@ Http::One::TeChunkedParser::parseChunkExtension(Http1::Tokenizer &tok, bool skip
 }
 
 bool
-Http::One::TeChunkedParser::parseChunkBody(Http1::Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkBody(::Parser::Tokenizer &tok)
 {
     if (theLeftBodySize > 0) {
         buf_ = tok.remaining(); // sync buffers before buf_ use
@@ -194,7 +195,7 @@ Http::One::TeChunkedParser::parseChunkBody(Http1::Tokenizer &tok)
 }
 
 bool
-Http::One::TeChunkedParser::parseChunkEnd(Http1::Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkEnd(::Parser::Tokenizer &tok)
 {
     Must(theLeftBodySize == 0); // Should(), really
 

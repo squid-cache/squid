@@ -9,23 +9,18 @@
 #ifndef SQUID_SRC_HTTP_ONE_TOKENIZER_H
 #define SQUID_SRC_HTTP_ONE_TOKENIZER_H
 
-#include "parser/Tokenizer.h"
+
+class SBuf;
+
+namespace Parser {
+    class Tokenizer;
+}
 
 namespace Http {
 namespace One {
 
-/**
- * Lexical processor extended to tokenize HTTP/1.x syntax.
- *
- * \see ::Parser::Tokenizer for more detail
- */
-class Tokenizer : public ::Parser::Tokenizer
-{
-public:
-    Tokenizer(SBuf &s) : ::Parser::Tokenizer(s){}
-
     /**
-     * Attempt to parse a quoted-string lexical construct.
+     * Attempt to parse a (token / quoted-string ) lexical construct.
      *
      * Governed by:
      *  - RFC 1945 section 2.1
@@ -54,18 +49,7 @@ public:
      *
      * \param escaped HTTP/1.0 does not permit \-escaped characters
      */
-    // TODO: unused
-    bool quotedString(SBuf &value, const bool http1p0 = false);
-
-    /**
-     * Attempt to parse a (token / quoted-string ) lexical construct.
-     */
-    bool quotedStringOrToken(SBuf &value, const bool http1p0 = false);
-
-private:
-    /// parse the internal component of a quote-string, and terminal DQUOTE
-    bool qdText(SBuf &value, const bool http1p0);
-};
+    bool quotedStringOrToken(::Parser::Tokenizer &tok, SBuf &value, const bool http1p0 = false);
 
 } // namespace One
 } // namespace Http

@@ -7,9 +7,10 @@
  */
 
 #include "squid.h"
+#include "base/CharacterSet.h"
 #include "Debug.h"
 #include "http/one/Parser.h"
-#include "http/one/Tokenizer.h"
+#include "parser/Tokenizer.h"
 #include "mime_header.h"
 #include "SquidConfig.h"
 
@@ -62,7 +63,7 @@ Http::One::Parser::DelimiterCharacters()
 }
 
 bool
-Http::One::Parser::skipLineTerminator(Http1::Tokenizer &tok) const
+Http::One::Parser::skipLineTerminator(::Parser::Tokenizer &tok) const
 {
     if (tok.skip(Http1::CrLf()))
         return true;
@@ -102,7 +103,7 @@ LineCharacters()
 void
 Http::One::Parser::cleanMimePrefix()
 {
-    Http1::Tokenizer tok(mimeHeaderBlock_);
+    ::Parser::Tokenizer tok(mimeHeaderBlock_);
     while (tok.skipOne(RelaxedDelimiterCharacters())) {
         (void)tok.skipAll(LineCharacters()); // optional line content
         // LF terminator is required.
@@ -137,7 +138,7 @@ Http::One::Parser::cleanMimePrefix()
 void
 Http::One::Parser::unfoldMime()
 {
-    Http1::Tokenizer tok(mimeHeaderBlock_);
+    ::Parser::Tokenizer tok(mimeHeaderBlock_);
     const auto szLimit = mimeHeaderBlock_.length();
     mimeHeaderBlock_.clear();
     // prevent the mime sender being able to make append() realloc/grow multiple times.
@@ -227,7 +228,7 @@ Http::One::Parser::getHeaderField(const char *name)
     debugs(25, 5, "looking for " << name);
 
     // while we can find more LF in the SBuf
-    Http1::Tokenizer tok(mimeHeaderBlock_);
+    ::Parser::Tokenizer tok(mimeHeaderBlock_);
     SBuf p;
 
     while (tok.prefix(p, LineCharacters())) {
@@ -249,7 +250,7 @@ Http::One::Parser::getHeaderField(const char *name)
         p.consume(namelen + 1);
 
         // TODO: optimize SBuf::trim to take CharacterSet directly
-        Http1::Tokenizer t(p);
+        ::Parser::Tokenizer t(p);
         t.skipAll(CharacterSet::WSP);
         p = t.remaining();
 
@@ -273,7 +274,7 @@ Http::One::ErrorLevel()
 
 // BWS = *( SP / HTAB ) ; WhitespaceCharacters() may relax this RFC 7230 rule
 bool
-Http::One::ParseBws(Tokenizer &tok)
+Http::One::ParseBws(::Parser::Tokenizer &tok)
 {
     if (const auto count = tok.skipAll(Parser::WhitespaceCharacters())) {
         // Generating BWS is a MUST-level violation so warn about it as needed.
