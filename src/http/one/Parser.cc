@@ -10,8 +10,8 @@
 #include "base/CharacterSet.h"
 #include "Debug.h"
 #include "http/one/Parser.h"
-#include "parser/Tokenizer.h"
 #include "mime_header.h"
+#include "parser/Tokenizer.h"
 #include "SquidConfig.h"
 
 /// RFC 7230 section 2.6 - 7 magic octets

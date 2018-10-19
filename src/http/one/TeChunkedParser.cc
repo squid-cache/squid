@@ -11,9 +11,9 @@
 #include "Debug.h"
 #include "http/one/TeChunkedParser.h"
 #include "http/one/Tokenizer.h"
-#include "parser/Tokenizer.h"
 #include "http/ProtocolVersion.h"
 #include "MemBuf.h"
+#include "parser/Tokenizer.h"
 #include "Parsing.h"
 #include "SquidConfig.h"
 
@@ -138,15 +138,15 @@ Http::One::TeChunkedParser::parseChunkExtensions(::Parser::Tokenizer &tok, bool 
     return false; // need data to start parsing extension or CRLF
 }
 
-    bool
+bool
 Http::One::TeChunkedParser::parseChunkExtension(::Parser::Tokenizer &tok, bool skipKnown)
 {
     SBuf ext;
     SBuf value;
     if (!(ParseBws(tok) && // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
-        tok.skip(';') &&
-        ParseBws(tok) && // Bug 4492: ICAP servers send SP before chunk-ext-name
-        tok.prefix(ext, CharacterSet::TCHAR))) // chunk-ext-name
+            tok.skip(';') &&
+            ParseBws(tok) && // Bug 4492: ICAP servers send SP before chunk-ext-name
+            tok.prefix(ext, CharacterSet::TCHAR))) // chunk-ext-name
         return false;
 
     // whole value part is optional. if no '=' expect next chunk-ext

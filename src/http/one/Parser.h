@@ -15,7 +15,7 @@
 #include "sbuf/SBuf.h"
 
 namespace Parser {
-    class Tokenizer;
+class Tokenizer;
 }
 
 namespace Http {

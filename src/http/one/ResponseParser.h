@@ -12,9 +12,8 @@
 #include "http/one/Parser.h"
 #include "http/StatusCode.h"
 
-
 namespace Parser {
-    class Tokenizer;
+class Tokenizer;
 }
 
 namespace Http {
