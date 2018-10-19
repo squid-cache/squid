@@ -119,7 +119,7 @@ bool
 Http::One::TeChunkedParser::parseChunkExtensions(::Parser::Tokenizer &tok, bool skipKnown)
 {
     while (!tok.atEnd()) {
-        if (tok.skip(Http1::CrLf()) || (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))) {
+        if (skipLineTerminator(tok)) {
             parsingStage_ = theChunkSize ? Http1::HTTP_PARSE_CHUNK : Http1::HTTP_PARSE_MIME;
             return true; // reached the end of extensions (if any)
         }
@@ -199,7 +199,7 @@ Http::One::TeChunkedParser::parseChunkEnd(::Parser::Tokenizer &tok)
 {
     Must(theLeftBodySize == 0); // Should(), really
 
-    if (skipLineTerminator(tok)) {
+    if (requireAndSkipLineTerminator(tok)) {
         buf_ = tok.remaining(); // parse checkpoint
         theChunkSize = 0; // done with the current chunk
         parsingStage_ = Http1::HTTP_PARSE_CHUNK_SZ;

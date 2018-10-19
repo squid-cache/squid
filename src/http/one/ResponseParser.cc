@@ -87,7 +87,7 @@ Http::One::ResponseParser::parseResponseStatusAndReason(::Parser::Tokenizer &tok
     static const CharacterSet phraseChars = CharacterSet::WSP + CharacterSet::VCHAR + CharacterSet::OBSTEXT;
     (void)tok.prefix(reasonPhrase_, phraseChars); // optional, no error if missing
     try {
-        if (skipLineTerminator(tok)) {
+        if (requireAndSkipLineTerminator(tok)) {
             debugs(74, DBG_DATA, "parse remaining buf={length=" << tok.remaining().length() << ", data='" << tok.remaining() << "'}");
             buf_ = tok.remaining(); // resume checkpoint
             return 1;

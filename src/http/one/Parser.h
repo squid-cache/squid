@@ -130,6 +130,10 @@ protected:
      * \retval true only if line terminator found.
      * \retval false incomplete or missing line terminator, need more data.
      */
+    bool requireAndSkipLineTerminator(::Parser::Tokenizer &tok) const;
+
+    /// Skips the CRLF or (if tolerant) LF line terminator, if any.
+    /// \returns true if the line terminator was skipped
     bool skipLineTerminator(::Parser::Tokenizer &tok) const;
 
     /**

@@ -71,6 +71,15 @@ Http::One::Parser::skipLineTerminator(::Parser::Tokenizer &tok) const
     if (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))
         return true;
 
+    return false;
+}
+
+bool
+Http::One::Parser::requireAndSkipLineTerminator(::Parser::Tokenizer &tok) const
+{
+    if (skipLineTerminator(tok))
+        return true;
+
     if (tok.atEnd() || (tok.remaining().length() == 1 && tok.remaining().at(0) == '\r'))
         return false; // need more data
 
