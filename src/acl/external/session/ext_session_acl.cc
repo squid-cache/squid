@@ -72,6 +72,8 @@ typedef DBT DB_ENTRY;
 TDB_CONTEXT *db = nullptr;
 typedef TDB_DATA DB_ENTRY;
 
+#else
+#error "Either Berkley DB or Trivial DB must be available"
 #endif
 
 static void

@@ -231,7 +231,7 @@ enum MatchDomainNameFlags {
  * \retval 1 means the host is greater than the domain
  * \retval -1 means the host is less than the domain
  */
-int matchDomainName(const char *host, const char *domain, uint flags = mdnNone);
+int matchDomainName(const char *host, const char *domain, uint8_t flags = mdnNone);
 int urlCheckRequest(const HttpRequest *);
 char *urlHostname(const char *url);
 void urlExtMethodConfigure(void);
