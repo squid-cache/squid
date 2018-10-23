@@ -55,7 +55,7 @@ Acl::ConnMark::match(ACLChecklist *cl)
             debugs(28, 7, "skipped " << m << " mismatching " << asHex(connmark));
         }
     } else {
-        debugs(28, 7, "Can't do CONNMARK check. No client connection");
+        debugs(28, 7, "fails: no client connection");
     }
 
     return 0;
