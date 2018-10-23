@@ -170,7 +170,7 @@ void
 File::open(const FileOpeningConfig &cfg)
 {
 #if _SQUID_WINDOWS_
-    fd_ = CreateFile(TEXT(name_.c_str()), desiredAccess, shareMode, nullptr, creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
+    fd_ = CreateFile(TEXT(name_.c_str()), cfg.desiredAccess, cfg.shareMode, nullptr, cfg.creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (fd_ == InvalidHandle) {
         const auto savedError = GetLastError();
         throw TexcHere(sysCallFailure("CreateFile", WindowsErrorMessage(savedError).c_str()));
@@ -199,7 +199,7 @@ File::close()
 #if _SQUID_WINDOWS_
     if (!CloseHandle(fd_)) {
         const auto savedError = GetLastError();
-        debugs(54, DBG_IMPORTANT, sysCallFailure("CloseHandle", WindowsErrorMessage(savedError)));
+        debugs(54, DBG_IMPORTANT, sysCallFailure("CloseHandle", WindowsErrorMessage(savedError).c_str()));
     }
 #else
     if (::close(fd_) != 0) {
@@ -370,3 +370,6 @@ File::sysCallError(const char *callName, const int savedErrno) const
     return sysCallFailure(callName, xstrerr(savedErrno));
 }
 
+#if _SQUID_WINDOWS_
+const HANDLE File::InvalidHandle = INVALID_HANDLE_VALUE;
+#endif /* _SQUID_WINDOWS_ */
