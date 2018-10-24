@@ -74,15 +74,22 @@ int
 Acl::ConnMark::match(ACLChecklist *cl)
 {
     const auto *checklist = Filled(cl);
-    const auto connmark = checklist->conn()->clientConnection->nfmark;
+    const auto conn = checklist->conn();
 
-    for (const auto &m : marks) {
-        if ((connmark & m.second) == m.first) {
-            debugs(28, 5, "found " << m << " matching " << asHex(connmark));
-            return 1;
+    if (conn && conn->clientConnection) {
+        const auto connmark = conn->clientConnection->nfmark;
+
+        for (const auto &m : marks) {
+            if ((connmark & m.second) == m.first) {
+                debugs(28, 5, "found " << m << " matching " << asHex(connmark));
+                return 1;
+            }
+            debugs(28, 7, "skipped " << m << " mismatching " << asHex(connmark));
         }
-        debugs(28, 7, "skipped " << m << " mismatching " << asHex(connmark));
+    } else {
+        debugs(28, 7, "fails: no client connection");
     }
+
     return 0;
 }
 
