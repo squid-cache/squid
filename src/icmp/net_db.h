@@ -55,7 +55,7 @@ public:
     int pings_sent = 0;
     int pings_recv = 0;
     double hops = 0;
-    double rtt = 1.0;
+    double rtt = 0.0;
     time_t next_ping_time = 0;
     time_t last_use_time = 0;
     int link_count = 0;
