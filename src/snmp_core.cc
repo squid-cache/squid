@@ -409,6 +409,7 @@ snmpDecodePacket(SnmpRequest * rq)
             snmpConstructReponse(rq);
         } else {
             debugs(49, DBG_IMPORTANT, "WARNING: SNMP agent query DENIED from : " << rq->from);
+            snmp_free_pdu(PDU);
         }
         xfree(Community);
 
