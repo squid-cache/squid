@@ -112,12 +112,16 @@ namespace Ssl
 {
 /// \ingroup ServerProtocolSSLAPI
 typedef char const *GETX509ATTRIBUTE(X509 *, const char *);
+typedef char const *GETX509PEM(X509 *);
 
 /// \ingroup ServerProtocolSSLAPI
 GETX509ATTRIBUTE GetX509UserAttribute;
 
 /// \ingroup ServerProtocolSSLAPI
 GETX509ATTRIBUTE GetX509CAAttribute;
+
+/// \ingroup ServerProtocolSSLAPI
+GETX509PEM GetX509PEM;
 
 /// \ingroup ServerProtocolSSLAPI
 GETX509ATTRIBUTE GetX509Fingerprint;

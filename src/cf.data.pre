@@ -4765,6 +4765,11 @@ DOC_START
 				not available. Consider encoding the logged
 				value because Issuer often has spaces.
 
+		ssl::<cert_pem
+				The server's certificate in PEM format.
+				When surrounded by quotes will output as a
+				single line, otherwise as multi-line.
+
 		ssl::<cert_errors
 				The list of certificate validation errors
 				detected by Squid (including OpenSSL and

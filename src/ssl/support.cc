@@ -651,6 +651,36 @@ Ssl::GetX509Fingerprint(X509 * cert, const char *)
     return buf;
 }
 
+const char *
+Ssl::GetX509PEM(X509 * cert)
+{
+    BIO *mem;
+    static char *str = NULL;
+    char *ptr;
+    long len;
+
+    if (!cert)
+        return NULL;
+
+    safe_free(str);
+
+    mem = BIO_new(BIO_s_mem());
+
+    PEM_write_bio_X509(mem, cert);
+
+    len = BIO_get_mem_data(mem, &ptr);
+
+    str = (char *)xmalloc(len + 1);
+
+    memcpy(str, ptr, len);
+
+    str[len] = '\0';
+
+    BIO_free(mem);
+
+    return str;
+}
+
 /// \ingroup ServerProtocolSSLInternal
 const char *
 Ssl::GetX509CAAttribute(X509 * cert, const char *attribute_name)
