@@ -183,6 +183,8 @@ ErrorState::ErrorHandler::handleError(const SBuf &msg)
     report(msg);
 }
 
+/// Like the ErrorState::ErrorHandler but throws after
+/// reports the error
 class ThrownErrorHandler: public ErrorState::ErrorHandler
 {
 public:
