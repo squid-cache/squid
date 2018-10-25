@@ -1149,7 +1149,7 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
         if (vport > 0) {
             thost[0] = '\0';
             char *t = NULL;
-            if (host[strlen(host) - 1] != ']' && (t = strrchr(host,':')) != NULL) {
+            if (host[strlen(host) - 1] != ']' && (t = strrchr(host,':')) != nullptr) {
                 strncpy(thost, host, (t-host));
                 snprintf(thost+(t-host), sizeof(thost)-(t-host), ":%d", vport);
                 host = thost;
@@ -1160,7 +1160,7 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
         } // else nothing to alter port-wise.
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
         const int url_sz = scheme.length() + strlen(host) + url.length() + 32;
-        char *uri = (char *)xcalloc(url_sz, 1);
+        char *uri = static_cast<char *>(xcalloc(url_sz, 1));
         snprintf(uri, url_sz, SQUIDSBUFPH "://%s" SQUIDSBUFPH, SQUIDSBUFPRINT(scheme), host, SQUIDSBUFPRINT(url));
         debugs(33, 5, "ACCEL VHOST REWRITE: " << uri);
         return uri;
@@ -1173,7 +1173,7 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
         }
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
         const int url_sz = scheme.length() + strlen(conn->port->defaultsite) + sizeof(vportStr) + url.length() + 32;
-        char *uri = (char *)xcalloc(url_sz, 1);
+        char *uri = static_cast<char *>(xcalloc(url_sz, 1));
         snprintf(uri, url_sz, SQUIDSBUFPH "://%s%s" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme), conn->port->defaultsite, vportStr, SQUIDSBUFPRINT(url));
         debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: " << uri);
@@ -1184,7 +1184,7 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
         conn->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
         const int url_sz = scheme.length() + sizeof(ipbuf) + url.length() + 32;
-        char *uri = (char *)xcalloc(url_sz, 1);
+        char *uri = static_cast<char *>(xcalloc(url_sz, 1));
         snprintf(uri, url_sz, SQUIDSBUFPH "://%s:%d" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme), ipbuf, vport, SQUIDSBUFPRINT(url));
         debugs(33, 5, "ACCEL VPORT REWRITE: " << uri);
@@ -1202,7 +1202,7 @@ buildUrlFromHost(ConnStateData * conn, const Http1::RequestParserPointer &hp)
     if (const char *host = hp->getHeaderField("Host")) {
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
         const int url_sz = scheme.length() + strlen(host) + hp->requestUri().length() + 32;
-        uri = (char *)xcalloc(url_sz, 1);
+        uri = static_cast<char *>(xcalloc(url_sz, 1));
         snprintf(uri, url_sz, SQUIDSBUFPH "://%s" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme),
                  host,
@@ -1232,7 +1232,7 @@ ConnStateData::prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp)
 
         const SBuf &scheme = AnyP::UriScheme(transferProtocol.protocol).image();
         const int url_sz = scheme.length() + useHost.length() + hp->requestUri().length() + 32;
-        uri = (char *)xcalloc(url_sz, 1);
+        uri = static_cast<char *>(xcalloc(url_sz, 1));
         snprintf(uri, url_sz, SQUIDSBUFPH "://" SQUIDSBUFPH ":%d" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme),
                  SQUIDSBUFPRINT(useHost),
@@ -1253,13 +1253,13 @@ prepareTransparentURL(ConnStateData * conn, const Http1::RequestParserPointer &h
         return nullptr; /* already in good shape */
 
     char *uri = buildUrlFromHost(conn, hp);
-    if (!uri){
+    if (!uri) {
         /* Put the local socket IP address as the hostname.  */
         static char ipbuf[MAX_IPSTRLEN];
         conn->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
         const int url_sz = sizeof(ipbuf) + hp->requestUri().length() + 32;
-        uri = (char *)xcalloc(url_sz, 1);
+        uri = static_cast<char *>(xcalloc(url_sz, 1));
         snprintf(uri, url_sz, SQUIDSBUFPH "://%s:%d" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme),
                  ipbuf, conn->clientConnection->local.port(), SQUIDSBUFPRINT(hp->requestUri()));
