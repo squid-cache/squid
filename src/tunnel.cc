@@ -27,6 +27,7 @@
 #include "globals.h"
 #include "http.h"
 #include "http/Stream.h"
+#include "icmp/net_db.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
 #include "LogTags.h"
@@ -1036,6 +1037,8 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
     if (conn->getPeer() && conn->getPeer()->options.no_delay)
         tunnelState->server.setDelayId(DelayId());
 #endif
+
+    netdbPingSite(tunnelState->request->url.host());
 
     tunnelState->request->hier.resetPeerNotes(conn, tunnelState->getHost());
 
