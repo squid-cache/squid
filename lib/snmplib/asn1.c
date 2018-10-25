@@ -409,7 +409,7 @@ asn_parse_string(u_char * data, int *datalength,
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
     }
-    if (asn_length > *strlength) {
+    if (asn_length >= *strlength) {
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
     }
