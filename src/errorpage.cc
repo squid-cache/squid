@@ -57,7 +57,6 @@
 #define DEFAULT_SQUID_ERROR_DIR   DEFAULT_SQUID_DATA_DIR"/errors"
 #endif
 
-
 /// \ingroup ErrorPageInternal
 CBDATA_CLASS_INIT(ErrorState);
 
@@ -162,41 +161,35 @@ private:
     }
 };
 
-class ReportErrorHandler: public ErrorState::ErrorHandler
+ErrorState::ErrorHandler::ErrorHandler(int aLevel, SBuf &aLabel, SBuf &aDescr):
+    level(aLevel),
+    label(aLabel),
+    ctxDescr(aDescr)
+{
+}
+
+void
+ErrorState::ErrorHandler::report(const SBuf &msg)
+{
+    if (!errors_)
+        debugs(4, level, label << ": " << ctxDescr);
+    debugs(4, level, label << ": " << msg);
+    ++errors_;
+}
+
+void
+ErrorState::ErrorHandler::handleError(const SBuf &msg)
+{
+    report(msg);
+}
+
+class ThrownErrorHandler: public ErrorState::ErrorHandler
 {
 public:
-    ReportErrorHandler(int aLevel, SBuf &aLabel, SBuf &aPrefix): level(aLevel), label(aLabel), prefix(aPrefix) {}
+    ThrownErrorHandler(int aLevel, SBuf &aLabel, SBuf &aPrefix) : ErrorHandler(aLevel, aLabel, aPrefix) {}
     void handleError(const SBuf &msg) {
-        ErrorState::ErrorHandler::handleError(msg);
-        if (!errors_)
-            debugs(4, level, label << ": " << prefix);
-        debugs(4, level, label << ": " << msg);
-    }
-
-protected:
-    int level;
-    SBuf label;
-    SBuf prefix;
-};
-
-class ThrownErrorHandler: public ReportErrorHandler
-{
-public:
-    ThrownErrorHandler(int aLevel, SBuf &aLabel, SBuf &aPrefix) : ReportErrorHandler(aLevel, aLabel, aPrefix) {}
-    void handleError(const SBuf &msg) {
-        ReportErrorHandler::handleError(msg);
+        ErrorHandler::handleError(msg);
         throw TexcHere(msg);
-    }
-};
-
-class FatalErrorHandler: public ReportErrorHandler
-{
-public:
-    FatalErrorHandler(int aLevel, SBuf &aLabel, SBuf &aPrefix) : ReportErrorHandler(aLevel, aLabel, aPrefix) {}
-    void handleError(const SBuf &msg) {
-        ReportErrorHandler::handleError(msg);
-        SBuf toStr(msg);
-        fatalf("Fatal: %s:'%s'", label.c_str(), toStr.c_str());
     }
 };
 
@@ -1139,14 +1132,8 @@ ErrorState::convert(const char *start, bool building_deny_info_url, bool allowRe
         break;
 
     default:
-        if (building_deny_info_url && errorHandler_) {
-            try {
-                // catch the exceptions we need only to report the error.
-                errorHandler_->handleError(ToSBuf("Wrong error code at  '%", SBuf(start).substr(0, 100), "'"));
-            } catch(...) {
-                // do nothing, errors printed inside errorHandler
-            }
-        }
+        if (building_deny_info_url && errorHandler_)
+            errorHandler_->report(ToSBuf("Wrong error code at  '%", SBuf(start).substr(0, 100), "'"));
         mb.appendf("%%%c", *start);
         do_quote = 0;
         break;
@@ -1431,22 +1418,32 @@ ErrTextValidator::validate(const char *text)
     AccessLogEntry::Pointer alp= new AccessLogEntry;
     ErrorState anErr(ERR_NONE, Http::scNone, NULL, alp);
     SBuf prefix;
-    if (ctx == CtxConfig)
+    switch(ctx) {
+    case CtxConfig:
         prefix = ToSBuf(name_ , ": " ,  ctxFilename , " line " , ctxLineNo_ , ": " , ctxLine_);
-    else if (ctx == CtxFile)
+        break;
+    case CtxFile:
         prefix = ToSBuf(name_, ": Error while parsing file ",  ctxFilename);
+        break;
+    default:
+        ;// do nothing
+    }
 
-    ErrorState::ErrorHandler *handler;
-    if (onError_ == doReport)
-        handler = new ReportErrorHandler(warn_, name_, prefix);
-    else if (onError_ == doQuit)
-        handler = new FatalErrorHandler(warn_, name_, prefix);
-    else
+    ErrorState::ErrorHandler *handler = nullptr;
+    switch (onError_) {
+    case doReport:
+        handler = new ErrorState::ErrorHandler(warn_, name_, prefix);
+        break;
+    case doThrow:
         handler = new ThrownErrorHandler(warn_, name_, prefix);
+        break;
+    default:
+        assert(0);
+    }
 
-    anErr.errorHandler_.reset(handler);
+    anErr.setErrorHandler(handler);
 
-    // Any possible thrown exceptions should handled from the caller.
+    // The caller should handle all possible thrown exceptions.
     anErr.convertAndWriteTo(text, content, (ctx == CtxConfig), true);
 
     return onError_ == doReport ? true : (handler->errors() != 0);

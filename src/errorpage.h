@@ -87,13 +87,32 @@ class ErrorState
     CBDATA_CLASS(ErrorState);
 
 public:
+    /// Class to handle parsing errors found in error template files.
+    /// It just report the found errors to log files, however
+    /// it is used as a base class to implement  more complex error
+    /// handlers.
     class ErrorHandler {
     public:
-        virtual void handleError(const SBuf &mesg) { ++errors_; };
+        ErrorHandler(int aLevel, SBuf &aLebel, SBuf &aDescription);
+
+        /// do the required actions when an error found
+        virtual void handleError(const SBuf &mesg);
+
+        /// \retval the number of reported errors
         int errors() { return errors_; }
 
+        /// Report an error to log files
+        void report(const SBuf &mesg);
+
     protected:
-        int errors_ = 0;
+        int errors_ = 0; ///< counts the reported errors
+        int level; ///< The debug level to report the error in log files
+        SBuf label; ///< A label to use when reporting parse errors
+
+        /// Description of the context where the ErrorHandler is used.
+        /// Logged once, before the first error, to report that errors
+        /// found at the given context.
+        SBuf ctxDescr;
     };
 
 public:
@@ -111,6 +130,9 @@ public:
 
     /// set error type-specific detail code
     void detailError(int dCode) {detailCode = dCode;}
+
+    /// Sets the ErrorHandler to use when parses templates
+    void setErrorHandler(ErrorHandler *handler) {errorHandler_.reset(handler);};
 
     /**
      * Lowlevel method to convert the given template string and write it
@@ -221,10 +243,10 @@ public:
     int detailCode = ERR_DETAIL_NONE;
     AccessLogEntryPointer al;
 
+private:
     // Error handler to use to report errors while parses error pages
     std::unique_ptr<ErrorHandler> errorHandler_;
 
-private:
     static const SBuf LogFormatStart;
 };
 
@@ -361,22 +383,24 @@ public:
     /// \par lineNo the number of parsed line
     /// \par line the configuration file line
     /// The parameters used to describe the error to the caller
+    /// \retval this
     ErrTextValidator &useCfgContext(const char *filename, int lineNo, const char *line);
 
     /// Setup the current object to handle checked text as a template error
     /// page.
+    /// \retval this
     ErrTextValidator &useFileContext(const char *templateFilename);
 
     /// The debug level to use for debug messages
+    /// \retval this
     ErrTextValidator &warn(int level) { warn_ = level; return *this; }
 
-    /// Treat the parse errors as fatal
-    ErrTextValidator &fatal() { onError_ = doQuit; return *this; }
-
     /// Throw on parse errors
+    /// \retval this
     ErrTextValidator &throws() { onError_ = doThrow; return *this; }
 
     /// Just report parse errors
+    /// \retval this
     ErrTextValidator &report() { onError_ = doReport; return *this; }
 
     /// Validate the passed text
@@ -385,8 +409,15 @@ public:
     /// \return true if the object initialized and can be used to validate text
     bool initialised() { return name_.length() != 0;}
 private:
-    enum Context {CtxUnknown, CtxFile, CtxConfig};
-    enum OnError {doReport, doQuit, doThrow};
+    enum Context {
+        CtxUnknown,
+        CtxFile, ///< It is used to parse a squid templates
+        CtxConfig ///< It is used to parse a text from squid configuration file (eg from deny_info line)
+    };
+    enum OnError {
+        doReport, ///< Just report the error using squid log
+        doThrow ///< Reports and then throws on error
+    };
 
     Context ctx = CtxUnknown; ///< The current context type
 
@@ -394,7 +425,7 @@ private:
     /// function name or caller class name.
     SBuf name_;
 
-    OnError onError_ = doReport; ///< Action when error detected
+    OnError onError_ = doReport; ///< Action when an error detected
     int warn_ = 3; ///< The debug level to use for error messages
     SBuf ctxFilename; ///< The configuration file or the error page template
 

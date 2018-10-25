@@ -254,7 +254,7 @@ Ssl::ErrorDetailFile::parse()
 
         textBuf.consume(size);
     }
-    debugs(83, 9, HERE << " unparsed data size: " << textBuf.length() << " Content: " << textBuf.c_str());
+    debugs(83, 9, "unparsed data size: " << textBuf.length() << " Content: " << textBuf.c_str());
     return true;
 }
 

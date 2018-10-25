@@ -112,7 +112,7 @@ clientReplyContext::setReplyToError(
 )
 {
     //TODO: check again http->al
-    ErrorState *errstate = clientBuildError(err, status, uri, addr, failedrequest, http->al);
+    auto errstate = clientBuildError(err, status, uri, addr, failedrequest, http->al);
 
     if (unparsedrequest)
         errstate->request_hdrs = xstrdup(unparsedrequest);
@@ -2340,7 +2340,7 @@ ErrorState *
 clientBuildError(err_type page_id, Http::StatusCode status, char const *url,
                  Ip::Address &src_addr, HttpRequest * request, const AccessLogEntry::Pointer &al)
 {
-    ErrorState *err = new ErrorState(page_id, status, request, al);
+    auto err = new ErrorState(page_id, status, request, al);
     err->src_addr = src_addr;
 
     if (url)

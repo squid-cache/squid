@@ -1150,7 +1150,7 @@ Ftp::Gateway::start()
     if (!checkAuth(&request->header)) {
         /* create appropriate reply */
         SBuf realm(ftpRealm()); // local copy so SBuf will not disappear too early
-        HttpReply *reply = ftpAuthRequired(request.getRaw(), realm, fwd->al);
+        auto reply = ftpAuthRequired(request.getRaw(), realm, fwd->al);
         entry->replaceHttpReply(reply);
         serverComplete();
         return;
@@ -2437,7 +2437,7 @@ ftpFail(Ftp::Gateway *ftpState)
     }
 
     Http::StatusCode sc = ftpState->failedHttpStatus(error_code);
-    ErrorState *ftperr = new ErrorState(error_code, sc, ftpState->fwd->request, ftpState->fwd->al);
+    auto ftperr = new ErrorState(error_code, sc, ftpState->fwd->request, ftpState->fwd->al);
     ftpState->failed(error_code, code, ftperr);
     ftperr->detailError(code);
     HttpReply *newrep = ftperr->BuildHttpReply();
