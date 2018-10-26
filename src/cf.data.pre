@@ -4782,7 +4782,7 @@ DOC_START
 				have the server certificate information.
 
 				The default encoding for this field is
-				"quoted string". When Squid cannot log a certificate,
+				multi-line. When Squid cannot log a certificate,
 				it logs a single dash (-).
 
 		ssl::<cert_errors
