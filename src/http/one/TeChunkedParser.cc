@@ -50,7 +50,7 @@ Http::One::TeChunkedParser::parse(const SBuf &aBuf)
     if (parsingStage_ == Http1::HTTP_PARSE_NONE)
         parsingStage_ = Http1::HTTP_PARSE_CHUNK_SZ;
 
-    ::Parser::Tokenizer tok(buf_);
+    Parser::Tokenizer tok(buf_);
 
     // loop for as many chunks as we can
     // use do-while instead of while so that we can incrementally
@@ -81,7 +81,7 @@ Http::One::TeChunkedParser::needsMoreSpace() const
 
 /// RFC 7230 section 4.1 chunk-size
 bool
-Http::One::TeChunkedParser::parseChunkSize(::Parser::Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkSize(Parser::Tokenizer &tok)
 {
     Must(theChunkSize <= 0); // Should(), really
 
@@ -116,10 +116,14 @@ Http::One::TeChunkedParser::parseChunkSize(::Parser::Tokenizer &tok)
  * ICAP 'use-original-body=N' extension is supported.
  */
 bool
-Http::One::TeChunkedParser::parseChunkExtensions(::Parser::Tokenizer &tok, bool skipKnown)
+Http::One::TeChunkedParser::parseChunkExtensions(Parser::Tokenizer &tok, bool skipKnown)
 {
     while (!tok.atEnd()) {
-        if (skipLineTerminator(tok)) {
+        if (!ParseBws(tok)) // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
+            return false;
+
+        if (skipLineTerminatorIfAny(tok)) {
+            buf_ = tok.remaining();
             parsingStage_ = theChunkSize ? Http1::HTTP_PARSE_CHUNK : Http1::HTTP_PARSE_MIME;
             return true; // reached the end of extensions (if any)
         }
@@ -133,24 +137,34 @@ Http::One::TeChunkedParser::parseChunkExtensions(::Parser::Tokenizer &tok, bool 
         if (tok.skipAll(NonLF) && tok.skip('\n'))
             throw TexcHere("cannot parse chunk extension"); // <garbage> CR*LF
 
-        return false; // need more data to finish parsing extension
+        return false; // need more data to finish parsing the extension
     }
-    return false; // need data to start parsing extension or CRLF
+    return false; // need data to start parsing the extension or CRLF
 }
 
 bool
-Http::One::TeChunkedParser::parseChunkExtension(::Parser::Tokenizer &tok, bool skipKnown)
+Http::One::TeChunkedParser::parseChunkExtension(Parser::Tokenizer &tok, bool skipKnown)
 {
     SBuf ext;
     SBuf value;
-    if (!(ParseBws(tok) && // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
-            tok.skip(';') &&
-            ParseBws(tok) && // Bug 4492: ICAP servers send SP before chunk-ext-name
+    if (tok.atEnd())
+        return false;
+    // no line terminators here: already checked
+    if (!tok.skip(';'))
+        throw TexcHere("cannot parse chunk extension: ';' expected");
+
+    if (!(ParseBws(tok) && // Bug 4492: ICAP servers send SP before chunk-ext-name
             tok.prefix(ext, CharacterSet::TCHAR))) // chunk-ext-name
         return false;
 
-    // whole value part is optional. if no '=' expect next chunk-ext
-    if (ParseBws(tok) && tok.skip('=') && ParseBws(tok)) {
+    if (!ParseBws(tok))
+        return false;
+
+    // need more data to check for optional '=' or the end of the chunk-ext
+    if (tok.atEnd())
+        return false;
+
+    if (tok.skip('=') && ParseBws(tok)) {
         if (!skipKnown) {
             if (ext.cmp("use-original-body",17) == 0 && tok.int64(useOriginBody, 10)) {
                 debugs(94, 3, "Found chunk extension " << ext << "=" << useOriginBody);
@@ -161,16 +175,18 @@ Http::One::TeChunkedParser::parseChunkExtension(::Parser::Tokenizer &tok, bool s
         debugs(94, 5, "skipping unknown chunk extension " << ext);
 
         // unknown might have a value token or quoted-string
-        if (quotedStringOrToken(tok, value) && !tok.atEnd())
+        if (tokenOrQuotedString(tok, value))
             return true;
 
         return false;
     }
+
+    // parsed the valueless chunk-ext
     return true;
 }
 
 bool
-Http::One::TeChunkedParser::parseChunkBody(::Parser::Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkBody(Parser::Tokenizer &tok)
 {
     if (theLeftBodySize > 0) {
         buf_ = tok.remaining(); // sync buffers before buf_ use
@@ -195,11 +211,11 @@ Http::One::TeChunkedParser::parseChunkBody(::Parser::Tokenizer &tok)
 }
 
 bool
-Http::One::TeChunkedParser::parseChunkEnd(::Parser::Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkEnd(Parser::Tokenizer &tok)
 {
     Must(theLeftBodySize == 0); // Should(), really
 
-    if (requireAndSkipLineTerminator(tok)) {
+    if (skipLineTerminator(tok)) {
         buf_ = tok.remaining(); // parse checkpoint
         theChunkSize = 0; // done with the current chunk
         parsingStage_ = Http1::HTTP_PARSE_CHUNK_SZ;

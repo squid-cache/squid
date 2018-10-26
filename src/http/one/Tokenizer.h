@@ -19,7 +19,9 @@ namespace Http {
 namespace One {
 
 /**
- * Attempt to parse a (token / quoted-string ) lexical construct.
+ * Extracts either an HTTP/1 token or a complete HTTP/1
+ * quoted-string.  Unescapes escaped characters in HTTP/1.1 quoted
+ * strings.
  *
  * Governed by:
  *  - RFC 1945 section 2.1
@@ -47,8 +49,11 @@ namespace One {
  *  "
  *
  * \param escaped HTTP/1.0 does not permit \-escaped characters
+ * \returns true (and sets the value) after successfully parsing the complete token or the entire quoted string
+ * \returns false (and leaves the value intact) if more data is needed to parse the token/string
+ * \throws on syntax violations
  */
-bool quotedStringOrToken(::Parser::Tokenizer &tok, SBuf &value, const bool http1p0 = false);
+bool tokenOrQuotedString(::Parser::Tokenizer &tok, SBuf &value, const bool http1p0 = false);
 
 } // namespace One
 } // namespace Http

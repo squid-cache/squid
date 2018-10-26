@@ -47,7 +47,7 @@ Http::One::ResponseParser::firstLineSize() const
 // NP: we found the protocol version and consumed it already.
 // just need the status code and reason phrase
 int
-Http::One::ResponseParser::parseResponseStatusAndReason(::Parser::Tokenizer &tok, const CharacterSet &WspDelim)
+Http::One::ResponseParser::parseResponseStatusAndReason(Parser::Tokenizer &tok, const CharacterSet &WspDelim)
 {
     if (!completedStatus_) {
         debugs(74, 9, "seek status-code in: " << tok.remaining().substr(0,10) << "...");
@@ -87,7 +87,7 @@ Http::One::ResponseParser::parseResponseStatusAndReason(::Parser::Tokenizer &tok
     static const CharacterSet phraseChars = CharacterSet::WSP + CharacterSet::VCHAR + CharacterSet::OBSTEXT;
     (void)tok.prefix(reasonPhrase_, phraseChars); // optional, no error if missing
     try {
-        if (requireAndSkipLineTerminator(tok)) {
+        if (skipLineTerminator(tok)) {
             debugs(74, DBG_DATA, "parse remaining buf={length=" << tok.remaining().length() << ", data='" << tok.remaining() << "'}");
             buf_ = tok.remaining(); // resume checkpoint
             return 1;
@@ -119,7 +119,7 @@ Http::One::ResponseParser::parseResponseStatusAndReason(::Parser::Tokenizer &tok
 int
 Http::One::ResponseParser::parseResponseFirstLine()
 {
-    ::Parser::Tokenizer tok(buf_);
+    Parser::Tokenizer tok(buf_);
 
     const CharacterSet &WspDelim = DelimiterCharacters();
 

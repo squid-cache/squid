@@ -10,15 +10,18 @@
 #include "Debug.h"
 #include "http/one/Tokenizer.h"
 #include "parser/Tokenizer.h"
+#include "sbuf/Stream.h"
 
 bool
-Http::One::quotedStringOrToken(::Parser::Tokenizer &tok, SBuf &returnedToken, const bool http1p0)
+Http::One::tokenOrQuotedString(::Parser::Tokenizer &tok, SBuf &returnedToken, const bool http1p0)
 {
-    if (!tok.skip('"'))
-        return tok.prefix(returnedToken, CharacterSet::TCHAR);
-
-    // the initial DQUOTE has been skipped by the caller
-
+    if (!tok.skip('"')) {
+        return tok.prefix(returnedToken, CharacterSet::TCHAR) &&
+            // Distinguish complete tokens from token prefixes:
+            // the presence of trailing non-token characters means
+            // a complete token.
+            !tok.atEnd();
+    }
     /*
      * RFC 1945 - defines qdtext:
      *   inclusive of LWS (which includes CR and LF)
@@ -44,13 +47,10 @@ Http::One::quotedStringOrToken(::Parser::Tokenizer &tok, SBuf &returnedToken, co
     const CharacterSet &tokenChars = (http1p0 ? qdtext1p0 : qdtext1p1);
 
     while (!tok.atEnd()) {
-        if (tok.skip('"'))
-            return true;
-
         SBuf qdText;
         if (tok.prefix(qdText, tokenChars))
             returnedToken.append(qdText);
-        else if (!http1p0 && tok.skip('\\')) { // HTTP/1.1 allows quoted-pair, HTTP/1.0 does not
+        if (!http1p0 && tok.skip('\\')) { // HTTP/1.1 allows quoted-pair, HTTP/1.0 does not
             /* RFC 7230 section 3.2.6
              *
              * The backslash octet ("\") can be used as a single-octet quoting
@@ -63,16 +63,18 @@ Http::One::quotedStringOrToken(::Parser::Tokenizer &tok, SBuf &returnedToken, co
             static const CharacterSet qPairChars = CharacterSet::HTAB + CharacterSet::SP + CharacterSet::VCHAR + CharacterSet::OBSTEXT;
             SBuf escaped;
             if (!tok.prefix(escaped, qPairChars, 1))
-                break;
+                throw TexcHere("invalid escaped characters");
 
             returnedToken.append(escaped);
-        } else {
-            debugs(24, 8, "invalid bytes for set " << tokenChars.name);
+            continue;
+        } else if (tok.skip('"')) {
+            return true;
+        } else if (tok.atEnd()) {
             break;
         }
+        throw TexcHere(ToSBuf("invalid bytes for set ", tokenChars.name));
     }
 
-    returnedToken.clear();
-    return false;
+    return false; // need more data
 }
 

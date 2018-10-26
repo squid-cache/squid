@@ -59,7 +59,7 @@ Http::One::RequestParser::skipGarbageLines()
  *  RFC 7230 section 2.6, 3.1 and 3.5
  */
 bool
-Http::One::RequestParser::parseMethodField(::Parser::Tokenizer &tok)
+Http::One::RequestParser::parseMethodField(Parser::Tokenizer &tok)
 {
     // method field is a sequence of TCHAR.
     // Limit to 32 characters to prevent overly long sequences of non-HTTP
@@ -140,7 +140,7 @@ Http::One::RequestParser::RequestTargetCharacters()
 }
 
 bool
-Http::One::RequestParser::parseUriField(::Parser::Tokenizer &tok)
+Http::One::RequestParser::parseUriField(Parser::Tokenizer &tok)
 {
     /* Arbitrary 64KB URI upper length limit.
      *
@@ -173,7 +173,7 @@ Http::One::RequestParser::parseUriField(::Parser::Tokenizer &tok)
 }
 
 bool
-Http::One::RequestParser::parseHttpVersionField(::Parser::Tokenizer &tok)
+Http::One::RequestParser::parseHttpVersionField(Parser::Tokenizer &tok)
 {
     static const SBuf http1p0("HTTP/1.0");
     static const SBuf http1p1("HTTP/1.1");
@@ -248,7 +248,7 @@ Http::One::RequestParser::skipDelimiter(const size_t count, const char *where)
 
 /// Parse CRs at the end of request-line, just before the terminating LF.
 bool
-Http::One::RequestParser::skipTrailingCrs(::Parser::Tokenizer &tok)
+Http::One::RequestParser::skipTrailingCrs(Parser::Tokenizer &tok)
 {
     if (Config.onoff.relaxed_header_parser) {
         (void)tok.skipAllTrailing(CharacterSet::CR); // optional; multiple OK
@@ -284,12 +284,12 @@ Http::One::RequestParser::parseRequestFirstLine()
     // Earlier, skipGarbageLines() took care of any leading LFs (if allowed).
     // Now, the request line has to end at the first LF.
     static const CharacterSet lineChars = CharacterSet::LF.complement("notLF");
-    ::Parser::Tokenizer lineTok(buf_);
+    Parser::Tokenizer lineTok(buf_);
     if (!lineTok.prefix(line, lineChars) || !lineTok.skip('\n')) {
         if (buf_.length() >= Config.maxRequestHeaderSize) {
             /* who should we blame for our failure to parse this line? */
 
-            ::Parser::Tokenizer methodTok(buf_);
+            Parser::Tokenizer methodTok(buf_);
             if (!parseMethodField(methodTok))
                 return -1; // blame a bad method (or its delimiter)
 
@@ -303,7 +303,7 @@ Http::One::RequestParser::parseRequestFirstLine()
         return 0;
     }
 
-    ::Parser::Tokenizer tok(line);
+    Parser::Tokenizer tok(line);
 
     if (!parseMethodField(tok))
         return -1;

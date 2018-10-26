@@ -13,10 +13,6 @@
 
 class MemBuf;
 
-namespace Parser {
-class Tokenizer;
-}
-
 namespace Http
 {
 namespace One
@@ -49,11 +45,11 @@ public:
     virtual Parser::size_type firstLineSize() const {return 0;} // has no meaning with multiple chunks
 
 private:
-    bool parseChunkSize(::Parser::Tokenizer &tok);
-    bool parseChunkExtension(::Parser::Tokenizer &tok, bool skipKnown);
-    bool parseChunkExtensions(::Parser::Tokenizer &tok, bool skipKnown);
-    bool parseChunkBody(::Parser::Tokenizer &tok);
-    bool parseChunkEnd(::Parser::Tokenizer &tok);
+    bool parseChunkSize(Parser::Tokenizer &tok);
+    bool parseChunkExtension(Parser::Tokenizer &tok, bool skipKnown);
+    bool parseChunkExtensions(Parser::Tokenizer &tok, bool skipKnown);
+    bool parseChunkBody(Parser::Tokenizer &tok);
+    bool parseChunkEnd(Parser::Tokenizer &tok);
 
     MemBuf *theOut;
     uint64_t theChunkSize;

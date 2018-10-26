@@ -12,10 +12,6 @@
 #include "http/one/Parser.h"
 #include "http/StatusCode.h"
 
-namespace Parser {
-class Tokenizer;
-}
-
 namespace Http {
 namespace One {
 
@@ -51,7 +47,7 @@ public:
 
 private:
     int parseResponseFirstLine();
-    int parseResponseStatusAndReason(::Parser::Tokenizer&, const CharacterSet &);
+    int parseResponseStatusAndReason(Parser::Tokenizer&, const CharacterSet &);
 
     /// magic prefix for identifying ICY response messages
     static const SBuf IcyMagic;
