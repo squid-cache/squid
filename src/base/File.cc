@@ -199,7 +199,7 @@ File::close()
 #if _SQUID_WINDOWS_
     if (!CloseHandle(fd_)) {
         const auto savedError = GetLastError();
-        debugs(54, DBG_IMPORTANT, sysCallFailure("CloseHandle", WindowsErrorMessage(savedError).c_str()));
+        debugs(54, DBG_IMPORTANT, sysCallFailure("CloseHandle", WindowsErrorMessage(savedError)));
     }
 #else
     if (::close(fd_) != 0) {
