@@ -1,3 +1,13 @@
+Changes to squid-4.3 (28 Oct 2018):
+
+	- Bug 4893: Malformed %>ru URIs for CONNECT requests
+	- Fix %USER_CA_CERT_xx and %USER_CERT_xx crashes
+	- SSL: support compilation with minimal OpenSSL
+	- SSL: certificate fields injection via %D in ERR_SECURE_CONNECT_FAIL
+	- Fix netdb not saving to disk
+	- Fix memory leak when parsing SNMP packet
+	- ... and some compile issues
+
 Changes to squid-4.3 (01 Oct 2018):
 
 	- Bug 4885: Excessive memory usage when running out of descriptors
