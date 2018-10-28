@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/sh -e
 #
 ## Copyright (C) 1996-2018 The Squid Software Foundation and contributors
 ##
