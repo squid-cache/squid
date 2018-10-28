@@ -16,9 +16,15 @@
 bool
 Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, bool &quoted, const bool http1p0)
 {
+    SBuf token;
     quoted = tok.skip('"');
-    if (!quoted)
-        return tok.prefix(returnedToken, CharacterSet::TCHAR);
+    if (!quoted) {
+        if (tok.prefix(token, CharacterSet::TCHAR)) {
+            returnedToken = token;
+            return true;
+        }
+        return false;
+    }
 
     /*
      * RFC 1945 - defines qdtext:
@@ -47,7 +53,7 @@ Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, bool
     while (!tok.atEnd()) {
         SBuf qdText;
         if (tok.prefix(qdText, tokenChars))
-            returnedToken.append(qdText);
+            token.append(qdText);
         if (!http1p0 && tok.skip('\\')) { // HTTP/1.1 allows quoted-pair, HTTP/1.0 does not
             if (tok.atEnd())
                 break;
@@ -65,9 +71,10 @@ Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, bool
             if (!tok.prefix(escaped, qPairChars, 1))
                 throw TexcHere("invalid escaped characters");
 
-            returnedToken.append(escaped);
+            token.append(escaped);
             continue;
         } else if (tok.skip('"')) {
+            returnedToken = token;
             return true;
         } else if (tok.atEnd()) {
             break;

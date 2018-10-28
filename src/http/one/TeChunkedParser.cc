@@ -145,14 +145,13 @@ Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok, bool skipKnown)
 bool
 Http::One::TeChunkedParser::parseChunkExtension(Tokenizer &tok, bool skipKnown)
 {
-    SBuf ext;
-    SBuf value;
     if (tok.atEnd())
         return false;
     // no line terminators here: already checked
     if (!tok.skip(';'))
         throw TexcHere("cannot parse chunk extension: ';' expected");
 
+    SBuf ext;
     if (!(ParseBws(tok) && // Bug 4492: ICAP servers send SP before chunk-ext-name
             tok.prefix(ext, CharacterSet::TCHAR))) // chunk-ext-name
         return false;
@@ -177,6 +176,7 @@ Http::One::TeChunkedParser::parseChunkExtension(Tokenizer &tok, bool skipKnown)
 
         debugs(94, 5, "skipping unknown chunk extension " << ext);
 
+        SBuf value;
         bool quoted = false;
         // unknown might have a value token or quoted-string
         return tokenOrQuotedString(tok, value, quoted) && (quoted || !tok.atEnd());
