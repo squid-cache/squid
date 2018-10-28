@@ -128,11 +128,11 @@ protected:
      * \retval true only if line terminator found.
      * \retval false incomplete or missing line terminator, need more data.
      */
-    bool skipLineTerminator(Parser::Tokenizer &tok) const;
+    bool skipLineTerminator(Tokenizer &tok) const;
 
     /// Skips the CRLF or (if tolerant) LF line terminator, if any.
     /// \returns true if the line terminator was skipped
-    bool skipLineTerminatorIfAny(Parser::Tokenizer &tok) const;
+    bool skipLineTerminatorIfAny(Tokenizer &tok) const;
 
     /**
      * Scan to find the mime headers block for current message.
@@ -169,8 +169,8 @@ private:
 };
 
 /// skips and, if needed, warns about RFC 7230 BWS ("bad" whitespace)
-/// \returns true (always; unlike all the skip*() functions)
-bool ParseBws(Http::One::Parser::Tokenizer &tok);
+/// \returns false when more data is needed, true otherwise
+bool ParseBws(Parser::Tokenizer &tok);
 
 /// the right debugs() level for logging HTTP violation messages
 int ErrorLevel();

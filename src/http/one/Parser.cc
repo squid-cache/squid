@@ -63,7 +63,7 @@ Http::One::Parser::DelimiterCharacters()
 }
 
 bool
-Http::One::Parser::skipLineTerminatorIfAny(Parser::Tokenizer &tok) const
+Http::One::Parser::skipLineTerminatorIfAny(Tokenizer &tok) const
 {
     if (tok.skip(Http1::CrLf()))
         return true;
@@ -75,7 +75,7 @@ Http::One::Parser::skipLineTerminatorIfAny(Parser::Tokenizer &tok) const
 }
 
 bool
-Http::One::Parser::skipLineTerminator(Parser::Tokenizer &tok) const
+Http::One::Parser::skipLineTerminator(Tokenizer &tok) const
 {
     if (skipLineTerminatorIfAny(tok))
         return true;
@@ -112,7 +112,7 @@ LineCharacters()
 void
 Http::One::Parser::cleanMimePrefix()
 {
-    Parser::Tokenizer tok(mimeHeaderBlock_);
+    Tokenizer tok(mimeHeaderBlock_);
     while (tok.skipOne(RelaxedDelimiterCharacters())) {
         (void)tok.skipAll(LineCharacters()); // optional line content
         // LF terminator is required.
@@ -147,7 +147,7 @@ Http::One::Parser::cleanMimePrefix()
 void
 Http::One::Parser::unfoldMime()
 {
-    Parser::Tokenizer tok(mimeHeaderBlock_);
+    Tokenizer tok(mimeHeaderBlock_);
     const auto szLimit = mimeHeaderBlock_.length();
     mimeHeaderBlock_.clear();
     // prevent the mime sender being able to make append() realloc/grow multiple times.
@@ -237,7 +237,7 @@ Http::One::Parser::getHeaderField(const char *name)
     debugs(25, 5, "looking for " << name);
 
     // while we can find more LF in the SBuf
-    Parser::Tokenizer tok(mimeHeaderBlock_);
+    Tokenizer tok(mimeHeaderBlock_);
     SBuf p;
 
     while (tok.prefix(p, LineCharacters())) {
@@ -259,7 +259,7 @@ Http::One::Parser::getHeaderField(const char *name)
         p.consume(namelen + 1);
 
         // TODO: optimize SBuf::trim to take CharacterSet directly
-        Parser::Tokenizer t(p);
+        Tokenizer t(p);
         t.skipAll(CharacterSet::WSP);
         p = t.remaining();
 
@@ -285,6 +285,9 @@ Http::One::ErrorLevel()
 bool
 Http::One::ParseBws(Parser::Tokenizer &tok)
 {
+    if (tok.atEnd())
+        return false; // need more data
+
     if (const auto count = tok.skipAll(Parser::WhitespaceCharacters())) {
         // Generating BWS is a MUST-level violation so warn about it as needed.
         debugs(33, ErrorLevel(), "found " << count << " BWS octets");

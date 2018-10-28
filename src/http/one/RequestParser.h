@@ -59,11 +59,11 @@ private:
     bool doParse(const SBuf &aBuf);
 
     /* all these return false and set parseStatusCode on parsing failures */
-    bool parseMethodField(Parser::Tokenizer &);
-    bool parseUriField(Parser::Tokenizer &);
-    bool parseHttpVersionField(Parser::Tokenizer &);
+    bool parseMethodField(Tokenizer &);
+    bool parseUriField(Tokenizer &);
+    bool parseHttpVersionField(Tokenizer &);
     bool skipDelimiter(const size_t count, const char *where);
-    bool skipTrailingCrs(Parser::Tokenizer &tok);
+    bool skipTrailingCrs(Tokenizer &tok);
 
     bool http0() const {return !msgProtocol_.major;}
     static const CharacterSet &RequestTargetCharacters();

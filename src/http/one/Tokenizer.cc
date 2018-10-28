@@ -8,20 +8,18 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "http/one/Parser.h"
 #include "http/one/Tokenizer.h"
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
 bool
-Http::One::tokenOrQuotedString(::Parser::Tokenizer &tok, SBuf &returnedToken, const bool http1p0)
+Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, bool &quoted, const bool http1p0)
 {
-    if (!tok.skip('"')) {
-        return tok.prefix(returnedToken, CharacterSet::TCHAR) &&
-            // Distinguish complete tokens from token prefixes:
-            // the presence of trailing non-token characters means
-            // a complete token.
-            !tok.atEnd();
-    }
+    quoted = tok.skip('"');
+    if (!quoted)
+        return tok.prefix(returnedToken, CharacterSet::TCHAR);
+
     /*
      * RFC 1945 - defines qdtext:
      *   inclusive of LWS (which includes CR and LF)
@@ -51,6 +49,8 @@ Http::One::tokenOrQuotedString(::Parser::Tokenizer &tok, SBuf &returnedToken, co
         if (tok.prefix(qdText, tokenChars))
             returnedToken.append(qdText);
         if (!http1p0 && tok.skip('\\')) { // HTTP/1.1 allows quoted-pair, HTTP/1.0 does not
+            if (tok.atEnd())
+                break;
             /* RFC 7230 section 3.2.6
              *
              * The backslash octet ("\") can be used as a single-octet quoting

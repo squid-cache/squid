@@ -9,19 +9,17 @@
 #ifndef SQUID_SRC_HTTP_ONE_TOKENIZER_H
 #define SQUID_SRC_HTTP_ONE_TOKENIZER_H
 
-class SBuf;
+#include "parser/forward.h"
 
-namespace Parser {
-class Tokenizer;
-}
+class SBuf;
 
 namespace Http {
 namespace One {
 
 /**
  * Extracts either an HTTP/1 token or a complete HTTP/1
- * quoted-string.  Unescapes escaped characters in HTTP/1.1 quoted
- * strings.
+ * quoted-string (and sets the quoted accordingly).
+ * Unescapes escaped characters in HTTP/1.1 quoted strings.
  *
  * Governed by:
  *  - RFC 1945 section 2.1
@@ -48,12 +46,13 @@ namespace One {
  *    obs-text       = %x80-FF
  *  "
  *
- * \param escaped HTTP/1.0 does not permit \-escaped characters
- * \returns true (and sets the value) after successfully parsing the complete token or the entire quoted string
+ * \param http1p0 HTTP/1.0 does not permit \-escaped characters
+ * \returns true (and sets the value) after successfully parsing the token prefix or the entire quoted string
  * \returns false (and leaves the value intact) if more data is needed to parse the token/string
  * \throws on syntax violations
+
  */
-bool tokenOrQuotedString(::Parser::Tokenizer &tok, SBuf &value, const bool http1p0 = false);
+bool tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &value, bool &quoted, const bool http1p0 = false);
 
 } // namespace One
 } // namespace Http
