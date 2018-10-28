@@ -14,8 +14,54 @@
 #include "comm/ConnOpener.h"
 
 class FwdState;
+class HappyConnOpener;
+class HappyOrderEnforcer;
+class JobGapEnforcer;
 class ResolvedPeers;
 typedef RefCount<ResolvedPeers> ResolvedPeersPointer;
+
+/// A FIFO queue of HappyConnOpener jobs waiting to open a spare connection.
+typedef std::list< CbcPointer<HappyConnOpener> > HappySpareWaitList;
+
+/// absolute time in fractional seconds; compatible with current_timed
+typedef double HappyAbsoluteTime;
+
+/// keeps track of HappyConnOpener spare track waiting state
+class HappySpareWait {
+public:
+    explicit operator bool() const { return toGivePrimeItsChance || forSpareAllowance || forPrimesToFail || forNewPeer; }
+
+    /// restores default-constructed state
+    /// nullifies but does not cancel the callback
+    void clear() { *this = HappySpareWait(); }
+
+    /// a pending noteGavePrimeItsChance() or noteSpareAllowance() call
+    AsyncCall::Pointer callback;
+
+    /// location on the toGivePrimeItsChance or forSpareAllowance wait list
+    /// invalidated when the callback is set
+    HappySpareWaitList::iterator position;
+
+    /* The following four fields represent mutually exclusive wait reasons. */
+
+    /// Honoring happy_eyeballs_connect_timeout (once per currentPeer).
+    /// A prime connection failure ends this wait.
+    bool toGivePrimeItsChance = false;
+
+    /// Honors happy_eyeballs_connect_gap and positive happy_eyeballs_connect_limit
+    /// (one allowance per spare path).
+    /// Does not start until there is a new spare path to try.
+    /// Prime exhaustion ends this wait (see ignoreSpareRestrictions).
+    bool forSpareAllowance = false;
+
+    /// Honors zero happy_eyeballs_connect_limit.
+    /// Prime exhaustion ends this wait (see ignoreSpareRestrictions).
+    bool forPrimesToFail = false;
+
+    /// The current peer has no spares left to try.
+    /// Prime exhaustion ends this wait (by changing currentPeer).
+    bool forNewPeer = false;
+};
 
 /// Implements Happy Eyeballs (RFC 6555)
 /// Each HappyConnOpener object shares a ResolvedPeers object with the caller,
@@ -83,11 +129,17 @@ public:
     /// Inform HappyConnOpener subsystem that the connection is closed
     static void ConnectionClosed(const Comm::ConnectionPointer &conn);
 
-    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &, const time_t fwdStart, int tries);
+    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &, const time_t aFwdStart, int tries);
     ~HappyConnOpener();
 
     /// reacts to changes in the destinations list
     void noteCandidatesChange();
+
+    /// reacts to expired happy_eyeballs_connect_timeout
+    void noteGavePrimeItsChance();
+
+    /// reacts to satisfying happy_eyeballs_connect_gap and happy_eyeballs_connect_limit
+    void noteSpareAllowance();
 
     /// Whether to use persistent connections
     void allowPersistent(bool p) { allowPconn_ = p; }
@@ -98,19 +150,16 @@ public:
     /// Sets the destination hostname
     void setHost(const char *host);
 
+    /* XXX: reorder and hide some */
+
     tos_t useTos; ///< The tos to use for opened connection
     nfmark_t useNfmark;///< the nfmark to use for opened connection
 
-    /// When the last connection attempt started
-    double lastAttemptTime;
+    /// the start of the first connection attempt to currentPeer
+    HappyAbsoluteTime primeStart = 0;
 
-    static double LastSpareAttempt; ///< The time of last spare connection attempt
-
-    /// The number of spare connections accross all connectors
-    static int SpareConnects;
-
-    // XXX: Make private?
-    void noteSpareAllowed();
+    const int maxTries; ///< n_tries limit (XXX: unused)
+    const time_t fwdStart; ///< requestor start time
 
 private:
     /* AsyncJob API */
@@ -119,8 +168,11 @@ private:
     virtual void swanSong() override;
 
     void maybeOpenAnotherPrimeConnection();
-    void maybeStartWaitingForSpare();
-    void maybeOpenSpareConnection();
+
+    void maybeGivePrimeItsChance();
+    void stopGivingPrimeItsChance();
+    void stopWaitingForSpareAllowance();
+    bool maybeOpenSpareConnection();
 
     // TODO: Describe non-public methods when you define them.
     /// Called after HappyConnector asyncJob started to start a connection
@@ -134,18 +186,14 @@ private:
     /// or schedules a connection attempt for later.
     void checkForNewConnection();
 
+    void updateSpareWaitAfterPrimeFailure();
+
     /// Calls the FwdState object back
     void callCallback(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno, bool reused, const char *msg);
 
     void cancelSpareWait(const char *reason);
 
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
-
-    /// A noteSpareAllowed() callback. Designed to give the prime connection
-    /// a chance to succeed before we spend resources on the spare connection
-    /// (and also to obey various spare connection limits). A spare connection
-    /// must not be opened while this callback is set.
-    AsyncCall::Pointer waitingForSparePermission;
 
     /// The list with candidate destinations. Shared with the caller FwdState object.
     ResolvedPeersPointer dests_;
@@ -159,19 +207,23 @@ private:
     /// to now (or, if we are just waiting for paths to a new peer, nil)
     Comm::ConnectionPointer currentPeer;
 
+    friend class HappyOrderEnforcer;
+    HappySpareWait spareWaiting; ///< spare waiting state
+
+    /// whether spare connection attempts disregard happy_eyeballs_* settings
+    bool ignoreSpareRestrictions = false;
+    /// whether we have received a permission to open a spare while spares are limited
+    bool gotSpareAllowance = false;
+
     bool allowPconn_; ///< Whether to allow persistent connections
     bool retriable_; ///< Whether to open connection for retriable request
 
-    /// Whether we are allowed to open spare connection(s) to the currentPeer.
-    /// See also: waitingForSparePermission.
-    bool sparePermitted;
-
     // TODO: Inline initializations?
 
-    const char *host_; ///< The destination hostname
-    time_t fwdStart_; ///< When the forwarding of the related request started
-    int maxTries; ///< The connector should not exceed the maxTries tries.
-    int n_tries; ///< The number of connection tries.
+    const char *host_; ///< The destination hostname (XXX: lifetime?)
+
+    /// number of connection opening attempts, including those in the requestor
+    int n_tries;
 };
 
 std::ostream &operator <<(std::ostream &os, const HappyConnOpener::Answer &answer);
