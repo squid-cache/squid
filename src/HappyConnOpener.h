@@ -169,8 +169,10 @@ private:
     bool maybeOpenSpareConnection();
 
     // TODO: Describe non-public methods when you define them.
-    /// Called after HappyConnector asyncJob started to start a connection
-    void startConnecting(PendingConnection &pconn, Comm::ConnectionPointer &);
+
+    void startConnecting(PendingConnection &, Comm::ConnectionPointer &);
+    bool reuseOldConnection(PendingConnection &, Comm::ConnectionPointer &);
+    void openFreshConnection(PendingConnection &, Comm::ConnectionPointer &);
 
     /// Callback called by Comm::ConnOpener objects after a prime or spare
     /// connection attempt completes.

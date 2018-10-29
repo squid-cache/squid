@@ -406,30 +406,42 @@ HappyConnOpener::noteCandidatesChange()
     checkForNewConnection();
 }
 
-// XXX: Rename pconn into something that does not clash with "persistent connection"
+/// starts opening (or reusing) a connection to the given destination
 void
-HappyConnOpener::startConnecting(PendingConnection &pconn, Comm::ConnectionPointer &dest)
+HappyConnOpener::startConnecting(PendingConnection &attempt, Comm::ConnectionPointer &dest)
 {
-    Must(!pconn.path);
-    Must(!pconn.connector);
+    Must(!attempt.path);
+    Must(!attempt.connector);
     Must(dest);
 
-    // Use pconn to avoid opening a new connection.
-    Comm::ConnectionPointer temp;
-    if (allowPconn_)
-        temp = PconnPop(dest, (dest->getPeer() ? nullptr : host_), retriable_);
+    if (!allowPconn_ || !reuseOldConnection(attempt, dest))
+        openFreshConnection(attempt, dest);
+}
 
-    const bool openedPconn = Comm::IsConnOpen(temp);
+/// reuses a persistent connection to the given destination (if possible)
+/// \returns true if and only if reuse was possible
+/// must be called via startConnecting()
+bool
+HappyConnOpener::reuseOldConnection(PendingConnection &attempt, Comm::ConnectionPointer &dest)
+{
+    assert(allowPconn_);
 
-    // if we found an open persistent connection to use. use it.
-    if (openedPconn) {
-        pconn.path = temp;
-        pconn.connector = nullptr;
-        ++n_tries;
-        callCallback(temp, Comm::OK, 0, true, "reusing pconn");
-        return;
-    }
+    const auto pconn = PconnPop(dest, (dest->getPeer() ? nullptr : host_), retriable_);
+    if (!Comm::IsConnOpen(pconn))
+        return false;
 
+    attempt.path = pconn;
+    attempt.connector = nullptr;
+    ++n_tries;
+    callCallback(pconn, Comm::OK, 0, true, "reusing pconn");
+    return true;
+}
+
+/// opens a fresh connection to the given destination
+/// must be called via startConnecting()
+void
+HappyConnOpener::openFreshConnection(PendingConnection &attempt, Comm::ConnectionPointer &dest)
+{
 #if URL_CHECKSUM_DEBUG
     entry->mem_obj->checkUrlChecksum();
 #endif
@@ -448,8 +460,8 @@ HappyConnOpener::startConnecting(PendingConnection &pconn, Comm::ConnectionPoint
     if (!dest->getPeer())
         cs->setHost(host_);
 
-    pconn.path = dest;
-    pconn.connector = callConnect;
+    attempt.path = dest;
+    attempt.connector = callConnect;
 
     AsyncJob::Start(cs);
 }
