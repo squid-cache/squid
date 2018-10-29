@@ -63,20 +63,14 @@ public:
     bool forNewPeer = false;
 };
 
-/// Implements Happy Eyeballs (RFC 6555)
-/// Each HappyConnOpener object shares a ResolvedPeers object with the caller,
-/// and informed for changes using the  HappyConnOpener::noteCandidatePath()
-/// asyncCall.
-/// The ResolvedPeers::destinationsFinalized flag is set by caller to inform
-/// HappyConnOpener object that the ResolvedPeers will not receive any new
-/// path.
-/// The HappyConnOpener object needs to update the ResolvedPeers::readStatus
-/// with the current_dtime when access the ResolvedPeers object
+/// A TCP connection opening algorithm based on Happy Eyeballs (RFC 8305).
+/// Maintains two concurrent connection opening tracks: prime and spare.
+/// Shares ResolvedPeers list with the job initiator.
 class HappyConnOpener: public AsyncJob
 {
     CBDATA_CLASS(HappyConnOpener);
 public:
-    /// Informations about connection status to be sent to the caller
+    /// Final result (an open connection or an error) sent to the job initiator.
     class Answer
     {
     public:
@@ -91,7 +85,7 @@ public:
         friend std::ostream &operator <<(std::ostream &os, const HappyConnOpener::Answer &answer);
     };
 
-    /// A dialer object to callback FwdState object
+    /// A callback dialer for setting the Answer.
     class CbDialer: public CallDialer {
     public:
         typedef void (FwdState::*Method)(const HappyConnOpener::Answer &);
