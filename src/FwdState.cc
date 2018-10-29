@@ -190,11 +190,10 @@ void FwdState::start(Pointer aSelf)
 void
 FwdState::stopAndDestroy(const char *reason)
 {
-    // The following should removed after
-    // The dependency FwdState/HappyConnOpener solved
     if (opening()) {
-        calls.connector->cancel("FwdState destructed");
+        calls.connector->cancel("FwdState stopped");
         calls.connector = nullptr;
+        notifyConnOpener();
         connOpener.clear();
     }
 
