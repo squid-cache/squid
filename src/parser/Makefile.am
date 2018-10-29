@@ -13,6 +13,7 @@ noinst_LTLIBRARIES = libparser.la
 libparser_la_SOURCES = \
 	BinaryTokenizer.h \
 	BinaryTokenizer.cc \
+	forward.h \
 	Tokenizer.h \
 	Tokenizer.cc
 
