@@ -32,7 +32,6 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class ErrorState;
 class HttpRequest;
 class PconnPool;
-typedef RefCount<PconnPool> PconnPoolPointer;
 class ResolvedPeers;
 typedef RefCount<ResolvedPeers> ResolvedPeersPointer;
 
@@ -205,6 +204,8 @@ private:
 };
 
 void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
+
+extern PconnPool *fwdPconnPool;
 
 #endif /* SQUID_FORWARD_H */
 

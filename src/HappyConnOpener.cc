@@ -12,8 +12,6 @@
 
 CBDATA_CLASS_INIT(HappyConnOpener);
 
-static PconnPool *fwdPconnPool = new PconnPool("server-peers", NULL);
-
 // HappyOrderEnforcer optimizes enforcement of the "pause before opening a spare
 // connection" requirements. Its inefficient alternative would add hundreds of
 // concurrent events to the Squid event queue in many busy configurations, one
@@ -414,7 +412,7 @@ HappyConnOpener::startConnecting(PendingConnection &attempt, Comm::ConnectionPoi
     Must(!attempt.connector);
     Must(dest);
 
-    if (!allowPconn_ || !reuseOldConnection(attempt, dest))
+    if (!allowPconn_ || !reuseOldConnection(dest))
         openFreshConnection(attempt, dest);
 }
 
@@ -422,19 +420,17 @@ HappyConnOpener::startConnecting(PendingConnection &attempt, Comm::ConnectionPoi
 /// \returns true if and only if reuse was possible
 /// must be called via startConnecting()
 bool
-HappyConnOpener::reuseOldConnection(PendingConnection &attempt, Comm::ConnectionPointer &dest)
+HappyConnOpener::reuseOldConnection(const Comm::ConnectionPointer &dest)
 {
     assert(allowPconn_);
 
-    const auto pconn = PconnPop(dest, (dest->getPeer() ? nullptr : host_), retriable_);
-    if (!Comm::IsConnOpen(pconn))
-        return false;
+    if (const auto pconn = fwdPconnPool->pop(dest, host_, retriable_)) {
+        ++n_tries;
+        callCallback(pconn, Comm::OK, 0, true, "reusing pconn");
+        return true;
+    }
 
-    attempt.path = pconn;
-    attempt.connector = nullptr;
-    ++n_tries;
-    callCallback(pconn, Comm::OK, 0, true, "reusing pconn");
-    return true;
+    return false;
 }
 
 /// opens a fresh connection to the given destination
@@ -446,10 +442,12 @@ HappyConnOpener::openFreshConnection(PendingConnection &attempt, Comm::Connectio
     entry->mem_obj->checkUrlChecksum();
 #endif
 
-    //GetMarkingsToServer(request, *dest);
+    // XXX: GetMarkingsToServer(request, *dest);
     dest->tos = useTos;
     dest->nfmark = useNfmark;
 
+    // ConnOpener modifies its destination argument so we reset the source port
+    // in case we are reusing the destination already used by our predecessor.
     dest->local.port(0);
     ++n_tries;
 
@@ -643,44 +641,6 @@ HappyConnOpener::noteSpareAllowance()
     gotSpareAllowance = true;
     auto dest = dests_->extractSpare(*currentPeer); // ought to succeed
     startConnecting(spare, dest);
-}
-
-/**
- * Decide where details need to be gathered to correctly describe a persistent connection.
- * What is needed:
- *  -  the address/port details about this link
- *  -  domain name of server at other end of this link (either peer or requested host)
- */
-void
-HappyConnOpener::PconnPush(Comm::ConnectionPointer &conn, const char *domain)
-{
-    if (conn->getPeer()) {
-        fwdPconnPool->push(conn, NULL);
-    } else {
-        fwdPconnPool->push(conn, domain);
-    }
-}
-
-Comm::ConnectionPointer
-HappyConnOpener::PconnPop(const Comm::ConnectionPointer &dest, const char *domain, bool retriable)
-{
-    // always call shared pool first because we need to close an idle
-    // connection there if we have to use a standby connection.
-    Comm::ConnectionPointer conn = fwdPconnPool->pop(dest, domain, retriable);
-    if (!Comm::IsConnOpen(conn)) {
-        // either there was no pconn to pop or this is not a retriable xaction
-        if (CachePeer *peer = dest->getPeer()) {
-            if (peer->standby.pool)
-                conn = peer->standby.pool->pop(dest, domain, true);
-        }
-    }
-    return conn; // open, closed, or nil
-}
-
-void
-HappyConnOpener::ConnectionClosed(const Comm::ConnectionPointer &conn)
-{
-    fwdPconnPool->noteUses(fd_table[conn->fd].pconn.uses);
 }
 
 /// starts a prime connection attempt if possible or does nothing otherwise

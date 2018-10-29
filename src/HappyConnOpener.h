@@ -115,14 +115,6 @@ public:
     };
 
 public:
-    /// Pops a connection from connection pool if available. If not
-    /// checks the peer stand-by connection pool for available connection.
-    static Comm::ConnectionPointer PconnPop(const Comm::ConnectionPointer &dest, const char *domain, bool retriable);
-    /// Push the connection back to connection pool
-    static void PconnPush(Comm::ConnectionPointer &conn, const char *domain);
-    /// Inform HappyConnOpener subsystem that the connection is closed
-    static void ConnectionClosed(const Comm::ConnectionPointer &conn);
-
     HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &, const time_t aFwdStart, int tries);
     ~HappyConnOpener();
 
@@ -171,8 +163,8 @@ private:
     // TODO: Describe non-public methods when you define them.
 
     void startConnecting(PendingConnection &, Comm::ConnectionPointer &);
-    bool reuseOldConnection(PendingConnection &, Comm::ConnectionPointer &);
     void openFreshConnection(PendingConnection &, Comm::ConnectionPointer &);
+    bool reuseOldConnection(const Comm::ConnectionPointer &);
 
     /// Callback called by Comm::ConnOpener objects after a prime or spare
     /// connection attempt completes.
