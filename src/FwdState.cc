@@ -584,7 +584,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     }
 
     if (opening()) {
-        CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
+        notifyConnOpener();
         return; // and continue to wait for FwdState::noteConnection() callback
     }
 
@@ -624,8 +624,20 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     }
 
     Must(opening()); // or we would be stuck with nothing to do or wait for
-    CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
+    notifyConnOpener();
     // and continue to wait for FwdState::noteConnection() callback
+}
+
+/// makes sure connOpener knows that destinations_ have changed
+void
+FwdState::notifyConnOpener()
+{
+    if (destinations_->updateNotificationPending) {
+        debugs(17, 7, "reusing pending notification");
+    } else {
+        destinations_->updateNotificationPending = true;
+        CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
+    }
 }
 
 /**** CALLBACK WRAPPERS ************************************************************/
@@ -1025,6 +1037,7 @@ FwdState::connectStart()
         //bool bumpThroughPeer = request->flags.sslBumped && serverDestinations[0]->getPeer();
         cs->allowPersistent(pconnRace != raceHappened/* && !bumpThroughPeer*/);
         GetMarkings(request, cs->useTos, cs->useNfmark);
+        destinations_->updateNotificationPending = true; // start() is async
         connOpener = cs;
         AsyncJob::Start(cs);
     }

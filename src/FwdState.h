@@ -164,6 +164,8 @@ private:
     /// same as calls.connector but may differ from connOpener.valid()
     bool opening() const { return connOpener.set(); }
 
+    void notifyConnOpener();
+
 public:
     StoreEntry *entry;
     HttpRequest *request;

@@ -331,7 +331,7 @@ HappyConnOpener::setHost(const char *h)
 void
 HappyConnOpener::start()
 {
-    debugs(17, 8, "Start connecting");
+    dests_->updateNotificationPending = false;
     checkForNewConnection();
 }
 
@@ -402,6 +402,7 @@ HappyConnOpener::noteCandidatesChange()
 {
     assert(dests_);
     debugs(17, 7, "destinations: " << dests_->size() << " finalized: " << dests_->destinationsFinalized);
+    dests_->updateNotificationPending = false;
     checkForNewConnection();
 }
 
