@@ -14,16 +14,17 @@
 #include "sbuf/Stream.h"
 
 bool
-Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, bool &quoted, const bool http1p0)
+Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, bool moreExpected, const bool http1p0)
 {
     SBuf token;
-    quoted = tok.skip('"');
-    if (!quoted) {
-        if (tok.prefix(token, CharacterSet::TCHAR)) {
-            returnedToken = token;
-            return true;
-        }
-        return false;
+    if (!tok.skip('"')) {
+        if (!tok.prefix(token, CharacterSet::TCHAR))
+            return false;
+        if (moreExpected && tok.atEnd())
+            return false; // got a token prefix
+        // got the complete token
+        returnedToken = token;
+        return true;
     }
 
     /*

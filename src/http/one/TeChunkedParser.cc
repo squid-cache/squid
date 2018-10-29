@@ -177,9 +177,8 @@ Http::One::TeChunkedParser::parseChunkExtension(Tokenizer &tok, bool skipKnown)
         debugs(94, 5, "skipping unknown chunk extension " << ext);
 
         SBuf value;
-        bool quoted = false;
         // unknown might have a value token or quoted-string
-        return tokenOrQuotedString(tok, value, quoted) && (quoted || !tok.atEnd());
+        return tokenOrQuotedString(tok, value, true);
     }
 
     // parsed the valueless chunk-ext

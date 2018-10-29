@@ -47,12 +47,13 @@ namespace One {
  *  "
  *
  * \param http1p0 HTTP/1.0 does not permit \-escaped characters
- * \returns true (and sets the value) after successfully parsing the token prefix or the entire quoted string
+ * \param moreExpected whether the input buffer may get more data
+ * \returns true (and sets the value) after successfully parsing the complete token or the entire quoted string
  * \returns false (and leaves the value intact) if more data is needed to parse the token/string
  * \throws on syntax violations
 
  */
-bool tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &value, bool &quoted, const bool http1p0 = false);
+bool tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &value, bool moreExpected, const bool http1p0 = false);
 
 } // namespace One
 } // namespace Http
