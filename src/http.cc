@@ -851,7 +851,7 @@ HttpStateData::upgradeProtocolsSupported(String &upgradeProtos)
     while (strListGetItem(&upgradeProtos, ',', &item, &ilen, &pos)) {
         auto it = std::find_if(upgradeProtocols->cbegin(), upgradeProtocols->cend(), SBufEqual(SBuf(item, ilen), caseInsensitive));
         if (it == upgradeProtocols->cend()) { //protocol not listed by client!
-            debugs(11, 2, "Upgrade to " << SBuf(item, len) << "is not allowed by client or squid configuration");
+            debugs(11, 2, "Upgrade to " << SBuf(item, ilen) << "is not allowed by client or squid configuration");
             return false;
         }
     }
