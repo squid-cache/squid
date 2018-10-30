@@ -935,15 +935,15 @@ HttpStateData::proceedAfter1xx()
         // squid subsystems.
         ConnStateData::ServerConnectionContext scc(serverConnection,
                                                    request,
-                                                   ConnStateData::ServerConnectionContext::UpgradeToWebSockets);
+                                                   ConnStateData::ServerConnectionContext::SwitchingProtocol);
         ServerConnectionControlDialer dialer(request->clientConnectionManager, scc);
         AsyncCall::Pointer call = asyncCall(11, 3, dialer.callName, dialer);
         ScheduleCallHere(call);
         fwd->unregister(serverConnection);
         comm_remove_close_handler(serverConnection->fd, closeHandler);
         serverConnection = nullptr;
-        doneWithFwd = "UpgradeToWebSockets";
-        mustStop("UpgradeToWebSockets");
+        doneWithFwd = "SwitchingProtocol";
+        mustStop("SwitchingProtocol");
     }
 
     debugs(11, 2, "continuing with " << payloadSeen << " bytes in buffer after 1xx");

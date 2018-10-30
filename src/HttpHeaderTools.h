@@ -117,10 +117,6 @@ public:
     bool quoted;
 };
 
-class HttpUpgradeProtocols: public std::map<SBuf, acl_access *>
-{
-};
-
 /// A strtoll(10) wrapper that checks for strtoll() failures and other problems.
 /// XXX: This function is not fully compatible with some HTTP syntax rules.
 /// Just like strtoll(), allows whitespace prefix, a sign, and _any_ suffix.

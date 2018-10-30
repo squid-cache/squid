@@ -61,7 +61,7 @@ private:
     Http1::RequestParserPointer parser_;
     HttpRequestMethod method_; ///< parsed HTTP method
 
-    // whether the client request to upgrade
+    /// whether the client requested to upgrade
     bool mayUpgrade = false;
 
     /// temporary hack to avoid creating a true HttpsServer class
