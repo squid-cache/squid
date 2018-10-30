@@ -30,6 +30,7 @@
 #include "FwdState.h"
 #include "globals.h"
 #include "gopher.h"
+#include "HappyConnOpener.h"
 #include "hier_code.h"
 #include "http.h"
 #include "http/Stream.h"
@@ -192,6 +193,8 @@ void FwdState::start(Pointer aSelf)
 void
 FwdState::stopAndDestroy(const char *reason)
 {
+    debugs(17, 3, "for " << reason);
+
     if (opening()) {
         calls.connector->cancel("FwdState stopped");
         calls.connector = nullptr;
@@ -228,7 +231,7 @@ FwdState::selectPeerForIntercepted()
     getOutgoingAddress(request, p);
 
     debugs(17, 3, HERE << "using client original destination: " << *p);
-    destinations_->newPath(p);
+    destinations_->addPath(p);
     destinations_->destinationsFinalized = true;
     PeerSelectionInitiator::subscribed = false;
     useDestinations();
@@ -460,11 +463,8 @@ FwdState::fail(ErrorState * errorState)
 
     if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
-        // we should retry the same destination if it failed due to pconn race
-        assert(serverConn);
-        debugs(17, 4, "retrying the same destination");
-        destinations_->retryPath(serverConn);
         pconnRace = raceHappened;
+        destinations_->retryPath(serverConn);
     }
 
     if (ConnStateData *pinned_connection = request->pinnedConnection()) {
@@ -543,7 +543,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     flags.destinationsFound = true;
     if (path == nullptr) {
         assert(!destinations_->size()); // no other destinations allowed
-        // We do not expect and not need more results
+        // we do not expect and do not need more paths
         PeerSelectionInitiator::subscribed = false;
         usePinned();
         return;
@@ -575,7 +575,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
         return;
     }
 
-    destinations_->newPath(path);
+    destinations_->addPath(path);
 
     if (Comm::IsConnOpen(serverConn)) {
         // We are already using a previously opened connection but also
@@ -633,10 +633,10 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
 void
 FwdState::notifyConnOpener()
 {
-    if (destinations_->updateNotificationPending) {
+    if (destinations_->notificationPending) {
         debugs(17, 7, "reusing pending notification");
     } else {
-        destinations_->updateNotificationPending = true;
+        destinations_->notificationPending = true;
         CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
     }
 }
@@ -1010,7 +1010,7 @@ FwdState::connectStart()
 {
     debugs(17, 3, HERE << entry->url());
 
-    assert(!opening()); // Must not called if we are waiting for connection
+    assert(!opening());
 
     if (!destinations_->empty()) {
         // Ditch error page if it was created before.
@@ -1025,7 +1025,7 @@ FwdState::connectStart()
         calls.connector = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer(&FwdState::noteConnection, this));
 
         assert(Config.forward_max_tries - n_tries > 0);
-        HappyConnOpener *cs = new HappyConnOpener(destinations_, calls.connector, start_t, Config.forward_max_tries - n_tries);
+        const auto cs = new HappyConnOpener(destinations_, calls.connector, start_t, Config.forward_max_tries - n_tries);
         cs->setHost(request->url.host());
         bool retriable = checkRetriable();
         if (!retriable && Config.accessList.serverPconnForNonretriable) {
@@ -1038,7 +1038,7 @@ FwdState::connectStart()
         //bool bumpThroughPeer = request->flags.sslBumped && serverDestinations[0]->getPeer();
         cs->allowPersistent(pconnRace != raceHappened/* && !bumpThroughPeer*/);
         GetMarkings(request, cs->useTos, cs->useNfmark);
-        destinations_->updateNotificationPending = true; // start() is async
+        destinations_->notificationPending = true; // start() is async
         connOpener = cs;
         AsyncJob::Start(cs);
     }

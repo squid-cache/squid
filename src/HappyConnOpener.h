@@ -63,6 +63,21 @@ public:
     bool forNewPeer = false;
 };
 
+/// Final result (an open connection or an error) sent to the job initiator.
+class HappyConnOpenerAnswer
+{
+public:
+    Comm::ConnectionPointer conn; ///< The last tried connection
+    Comm::Flag ioStatus = Comm::OK; ///< The last tried connection status
+    const char *host = nullptr; ///< The connected host. Used by pinned connections
+    int xerrno = 0; ///< The system error
+    const char *status = nullptr; ///< A status message for debugging reasons
+    bool reused = false; ///< True if this is a reused connection
+    int n_tries = 0; ///< The number of connection tries
+
+    friend std::ostream &operator <<(std::ostream &os, const HappyConnOpenerAnswer &answer);
+};
+
 /// A TCP connection opening algorithm based on Happy Eyeballs (RFC 8305).
 /// Maintains two concurrent connection opening tracks: prime and spare.
 /// Shares ResolvedPeers list with the job initiator.
@@ -70,20 +85,7 @@ class HappyConnOpener: public AsyncJob
 {
     CBDATA_CLASS(HappyConnOpener);
 public:
-    /// Final result (an open connection or an error) sent to the job initiator.
-    class Answer
-    {
-    public:
-        Comm::ConnectionPointer conn; ///< The last tried connection
-        Comm::Flag ioStatus = Comm::OK; ///< The last tried connection status
-        const char *host = nullptr; ///< The connected host. Used by pinned connections
-        int xerrno = 0; ///< The system error
-        const char *status = nullptr; ///< A status message for debugging reasons
-        bool reused = false; ///< True if this is a reused connection
-        int n_tries = 0; ///< The number of connection tries
-
-        friend std::ostream &operator <<(std::ostream &os, const HappyConnOpener::Answer &answer);
-    };
+    typedef HappyConnOpenerAnswer Answer;
 
     /// A callback dialer for setting the Answer.
     class CbDialer: public CallDialer {
@@ -116,7 +118,16 @@ public:
 
 public:
     HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &, const time_t aFwdStart, int tries);
-    ~HappyConnOpener();
+    virtual ~HappyConnOpener() override;
+
+    /// configures reuse of old connections
+    void allowPersistent(bool permitted) { allowPconn_ = permitted; }
+
+    /// configures whether the request may be retried later if things go wrong
+    void setRetriable(bool retriable) { retriable_ = retriable; }
+
+    /// configures the origin server domain name
+    void setHost(const char *);
 
     /// reacts to changes in the destinations list
     void noteCandidatesChange();
@@ -127,22 +138,14 @@ public:
     /// reacts to satisfying happy_eyeballs_connect_gap and happy_eyeballs_connect_limit
     void noteSpareAllowance();
 
-    /// Whether to use persistent connections
-    void allowPersistent(bool p) { allowPconn_ = p; }
-
-    /// Whether the opened connection can be used for a retriable request
-    void setRetriable(bool retriable) { retriable_ = retriable; }
-
-    /// Sets the destination hostname
-    void setHost(const char *host);
-
     /* XXX: reorder and hide some */
 
+    // XXX: Should not these depend on the connection destination?
     tos_t useTos; ///< The tos to use for opened connection
     nfmark_t useNfmark;///< the nfmark to use for opened connection
 
-    /// the start of the first connection attempt to currentPeer
-    HappyAbsoluteTime primeStart = 0;
+    /// the start of the first connection attempt for the currentPeer
+    HappyAbsoluteTime primeStart;
 
     const int maxTries; ///< n_tries limit (XXX: unused)
     const time_t fwdStart; ///< requestor start time
@@ -183,11 +186,12 @@ private:
 
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
 
-    /// The list with candidate destinations. Shared with the caller FwdState object.
-    ResolvedPeersPointer dests_;
+    /// Candidate paths. Shared with the initiator (i.e. FwdState object).
+    ResolvedPeersPointer destinations_;
 
     /// current connection opening attempt on the prime track (if any)
     PendingConnection prime;
+
     /// current connection opening attempt on the spare track (if any)
     PendingConnection spare;
 
@@ -195,25 +199,28 @@ private:
     /// to now (or, if we are just waiting for paths to a new peer, nil)
     Comm::ConnectionPointer currentPeer;
 
+    /// preconditions for an attempt to open a spare connection
+    HappySpareWait spareWaiting;
     friend class HappyOrderEnforcer;
-    HappySpareWait spareWaiting; ///< spare waiting state
 
     /// whether spare connection attempts disregard happy_eyeballs_* settings
-    bool ignoreSpareRestrictions = false;
+    bool ignoreSpareRestrictions;
+
     /// whether we have received a permission to open a spare while spares are limited
-    bool gotSpareAllowance = false;
+    bool gotSpareAllowance;
 
-    bool allowPconn_; ///< Whether to allow persistent connections
-    bool retriable_; ///< Whether to open connection for retriable request
+    /// whether persistent connections are allowed
+    bool allowPconn_;
 
-    // TODO: Inline initializations?
+    /// whether we are opening connections for a request that may be resent
+    bool retriable_;
 
-    const char *host_; ///< The destination hostname (XXX: lifetime?)
+    const char *host_; ///< origin server domain name
 
     /// number of connection opening attempts, including those in the requestor
     int n_tries;
 };
 
-std::ostream &operator <<(std::ostream &os, const HappyConnOpener::Answer &answer);
+std::ostream &operator <<(std::ostream &os, const HappyConnOpenerAnswer &answer);
 
 #endif

@@ -9,14 +9,15 @@
 #ifndef SQUID_FORWARD_H
 #define SQUID_FORWARD_H
 
+#include "base/CbcPointer.h"
 #include "base/RefCount.h"
+#include "base/forward.h"
 #include "clients/forward.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "err_type.h"
 #include "fde.h"
-#include "HappyConnOpener.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
 #include "PeerSelectState.h"
@@ -34,6 +35,10 @@ class HttpRequest;
 class PconnPool;
 class ResolvedPeers;
 typedef RefCount<ResolvedPeers> ResolvedPeersPointer;
+
+class HappyConnOpener;
+typedef CbcPointer<HappyConnOpener> HappyConnOpenerPointer;
+class HappyConnOpenerAnswer;
 
 #if USE_OPENSSL
 namespace Ssl
@@ -106,12 +111,6 @@ public:
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
-    /// Callback called by HappyConnOpener object when a connection is
-    /// established, or when all available candidate paths exceed.
-    void noteConnection(const HappyConnOpener::Answer &cd);
-
-    HttpRequest *httpRequest() {return request;}
-
 private:
     // hidden for safer management of self; use static fwdStart
     FwdState(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *, const AccessLogEntryPointer &alp);
@@ -121,6 +120,10 @@ private:
     /* PeerSelectionInitiator API */
     virtual void noteDestination(Comm::ConnectionPointer conn) override;
     virtual void noteDestinationsEnd(ErrorState *selectionError) override;
+
+    /// called when a connection has been successfully established or
+    /// when all candidate destinations have been tried and all have failed
+    void noteConnection(const HappyConnOpenerAnswer &);
 
 #if STRICT_ORIGINAL_DST
     void selectPeerForIntercepted();
@@ -191,8 +194,7 @@ private:
         bool destinationsFound; ///< At least one candidate path found
     } flags;
 
-     /// The active HappyConnOpener object or nil
-    HappyConnOpener::Pointer connOpener;
+    HappyConnOpenerPointer connOpener; ///< current connection opening job
     ResolvedPeersPointer destinations_; ///< paths for forwarding the request
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
 

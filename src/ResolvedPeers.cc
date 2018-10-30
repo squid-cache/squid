@@ -13,21 +13,24 @@
 #include "ResolvedPeers.h"
 #include "SquidConfig.h"
 
-ResolvedPeers::ResolvedPeers(): destinationsFinalized(false)
+ResolvedPeers::ResolvedPeers()
 {
-    paths_.reserve(Config.forward_max_tries);
+    if (Config.forward_max_tries > 0)
+        paths_.reserve(Config.forward_max_tries);
 }
 
 void
 ResolvedPeers::retryPath(const Comm::ConnectionPointer &path)
 {
-    paths_.insert(paths_.begin(), path);
+    debugs(17, 4, path);
+    assert(path);
+    paths_.emplace(paths_.begin(), path);
 }
 
 void
-ResolvedPeers::newPath(const Comm::ConnectionPointer &path)
+ResolvedPeers::addPath(const Comm::ConnectionPointer &path)
 {
-    paths_.push_back(path);
+    paths_.emplace_back(path);
 }
 
 Comm::ConnectionPointer
@@ -40,7 +43,7 @@ ResolvedPeers::extractFront()
 Comm::ConnectionPointer
 ResolvedPeers::extractPrime(const Comm::Connection &currentPeer)
 {
-    if (!paths_.empty()) {
+    if (!empty()) {
         const auto peerToMatch = currentPeer.getPeer();
         const auto familyToMatch = ConnectionFamily(currentPeer);
         const auto &conn = paths_.front();

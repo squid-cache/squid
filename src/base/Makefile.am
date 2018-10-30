@@ -27,6 +27,7 @@ libbase_la_SOURCES = \
 	EnumIterator.h \
 	File.cc \
 	File.h \
+	forward.h \
 	HardFun.h \
 	Here.cc \
 	Here.h \
