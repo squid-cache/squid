@@ -839,6 +839,27 @@ HttpStateData::handle1xx(HttpReply *reply)
     // for similar reasons without a 1xx response.
 }
 
+/// Matching protocols predicate function for std::find_if algorithm
+/// It handle the case the reference protocol includes a protocol version
+/// but the checking protocol does not (eg when squid requests upgrade to
+/// 'websockets' and server reports upgrade to 'websocket/1.2').
+class MatchProtocol
+{
+public:
+    explicit MatchProtocol(const char *s, size_t len) :ref(s), refLen(len) {}
+    bool operator() (const SBuf &checking) {
+        const char *p;
+        if (checking.find('/') == SBuf::npos && (p = std::find(ref, ref + refLen, '/')) != ref + refLen)
+            return checking.caseCmp(ref, p - ref) == 0;
+        else
+            return checking.caseCmp(ref, refLen) == 0;
+    }
+
+private:
+    const char *ref;
+    size_t refLen;
+};
+
 bool
 HttpStateData::upgradeProtocolsSupported(String &upgradeProtos)
 {
@@ -849,7 +870,7 @@ HttpStateData::upgradeProtocolsSupported(String &upgradeProtos)
     const char *item;
     int ilen = 0;
     while (strListGetItem(&upgradeProtos, ',', &item, &ilen, &pos)) {
-        auto it = std::find_if(upgradeProtocols->cbegin(), upgradeProtocols->cend(), SBufEqual(SBuf(item, ilen), caseInsensitive));
+        auto it = std::find_if(upgradeProtocols->cbegin(), upgradeProtocols->cend(), MatchProtocol(item, ilen));
         if (it == upgradeProtocols->cend()) { //protocol not listed by client!
             debugs(11, 2, "Upgrade to " << SBuf(item, ilen) << "is not allowed by client or squid configuration");
             return false;
