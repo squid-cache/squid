@@ -385,6 +385,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 void
 Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext scc)
 {
+    Must(scc.reason == ConnStateData::ServerConnectionContext::SwitchingProtocol);
     Comm::ConnectionPointer serverConnection = scc.connection;
     Http::StreamPointer context = pipeline.front();
     assert(context != nullptr);

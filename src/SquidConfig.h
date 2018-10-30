@@ -50,7 +50,7 @@ class external_acl;
 class HeaderManglers;
 class RefreshPattern;
 class RemovalPolicySettings;
-class HttpUpgradeProtocols;
+typedef  std::map<SBuf, acl_access *> HttpUpgradeProtocols;
 
 namespace AnyP
 {

@@ -63,7 +63,9 @@ public:
     /// connection manager members
     void serverCertificateVerified();
 
+    /// Aborts TLS negotiation and starts tunneling.
     void startTunneling();
+
     /// A wrapper function for checkForPeekAndSpliceDone for use with acl
     static void cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data);
 
