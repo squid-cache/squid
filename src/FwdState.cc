@@ -140,7 +140,7 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     clientConn(client),
     start_t(squid_curtime),
     n_tries(0),
-    destinations_(new ResolvedPeers()), // TODO: Pool ResolvedPeers
+    destinations(new ResolvedPeers()), // TODO: Pool ResolvedPeers
     pconnRace(raceImpossible)
 {
     debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
@@ -231,8 +231,8 @@ FwdState::selectPeerForIntercepted()
     getOutgoingAddress(request, p);
 
     debugs(17, 3, HERE << "using client original destination: " << *p);
-    destinations_->addPath(p);
-    destinations_->destinationsFinalized = true;
+    destinations->addPath(p);
+    destinations->destinationsFinalized = true;
     PeerSelectionInitiator::subscribed = false;
     useDestinations();
 }
@@ -429,7 +429,7 @@ FwdState::EnoughTimeToReForward(const time_t fwdStart)
 void
 FwdState::useDestinations()
 {
-    if (!destinations_->empty()) {
+    if (!destinations->empty()) {
         connectStart();
     } else {
         if (PeerSelectionInitiator::subscribed) {
@@ -464,7 +464,7 @@ FwdState::fail(ErrorState * errorState)
     if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
-        destinations_->retryPath(serverConn);
+        destinations->retryPath(serverConn);
     }
 
     if (ConnStateData *pinned_connection = request->pinnedConnection()) {
@@ -542,7 +542,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 {
     flags.destinationsFound = true;
     if (path == nullptr) {
-        assert(!destinations_->size()); // no other destinations allowed
+        assert(!destinations->size()); // no other destinations allowed
         // we do not expect and do not need more paths
         PeerSelectionInitiator::subscribed = false;
         usePinned();
@@ -575,7 +575,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
         return;
     }
 
-    destinations_->addPath(path);
+    destinations->addPath(path);
 
     if (Comm::IsConnOpen(serverConn)) {
         // We are already using a previously opened connection but also
@@ -597,7 +597,7 @@ void
 FwdState::noteDestinationsEnd(ErrorState *selectionError)
 {
     PeerSelectionInitiator::subscribed = false;
-    destinations_->destinationsFinalized = true;
+    destinations->destinationsFinalized = true;
 
     if (!flags.destinationsFound) {
         if (selectionError) {
@@ -629,14 +629,14 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     // and continue to wait for FwdState::noteConnection() callback
 }
 
-/// makes sure connOpener knows that destinations_ have changed
+/// makes sure connOpener knows that destinations have changed
 void
 FwdState::notifyConnOpener()
 {
-    if (destinations_->notificationPending) {
+    if (destinations->notificationPending) {
         debugs(17, 7, "reusing pending notification");
     } else {
-        destinations_->notificationPending = true;
+        destinations->notificationPending = true;
         CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
     }
 }
@@ -1012,7 +1012,7 @@ FwdState::connectStart()
 
     assert(!opening());
 
-    if (!destinations_->empty()) {
+    if (!destinations->empty()) {
         // Ditch error page if it was created before.
         // A new one will be created if there's another problem
         delete err;
@@ -1025,7 +1025,7 @@ FwdState::connectStart()
         calls.connector = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer(&FwdState::noteConnection, this));
 
         assert(Config.forward_max_tries - n_tries > 0);
-        const auto cs = new HappyConnOpener(destinations_, calls.connector, start_t, Config.forward_max_tries - n_tries);
+        const auto cs = new HappyConnOpener(destinations, calls.connector, start_t, Config.forward_max_tries - n_tries);
         cs->setHost(request->url.host());
         bool retriable = checkRetriable();
         if (!retriable && Config.accessList.serverPconnForNonretriable) {
@@ -1038,7 +1038,7 @@ FwdState::connectStart()
         //bool bumpThroughPeer = request->flags.sslBumped && serverDestinations[0]->getPeer();
         cs->allowPersistent(pconnRace != raceHappened/* && !bumpThroughPeer*/);
         GetMarkings(request, cs->useTos, cs->useNfmark);
-        destinations_->notificationPending = true; // start() is async
+        destinations->notificationPending = true; // start() is async
         connOpener = cs;
         AsyncJob::Start(cs);
     }
@@ -1241,7 +1241,7 @@ FwdState::reforward()
     if (request->bodyNibbled())
         return 0;
 
-    if (destinations_->empty() && !PeerSelectionInitiator::subscribed) {
+    if (destinations->empty() && !PeerSelectionInitiator::subscribed) {
         debugs(17, 3, HERE << "No alternative forwarding paths left");
         return 0;
     }

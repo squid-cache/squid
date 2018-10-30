@@ -296,7 +296,7 @@ SpareAllowanceGiver::concurrencyLimitReached() const
 
 /* HappyConnOpener */
 
-HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &destinations, const AsyncCall::Pointer &aCall, const time_t aFwdStart, int tries):
+HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, const time_t aFwdStart, int tries):
     AsyncJob("HappyConnOpener"),
     useTos(0),
     useNfmark(0),
@@ -304,7 +304,7 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &destinations, con
     maxTries(tries),
     fwdStart(aFwdStart),
     callback_(aCall),
-    destinations_(destinations),
+    destinations(dests),
     ignoreSpareRestrictions(false),
     gotSpareAllowance(false),
     allowPconn_(true),
@@ -312,7 +312,7 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &destinations, con
     host_(nullptr),
     n_tries(0)
 {
-    assert(destinations_);
+    assert(destinations);
     assert(dynamic_cast<HappyConnOpener::CbDialer *>(callback_->getDialer()));
 }
 
@@ -333,7 +333,7 @@ HappyConnOpener::setHost(const char *h)
 void
 HappyConnOpener::start()
 {
-    destinations_->notificationPending = false;
+    destinations->notificationPending = false;
     checkForNewConnection();
 }
 
@@ -344,7 +344,7 @@ HappyConnOpener::doneAll() const
         return true; // (probably found a good path and) informed the requestor
     if (callback_->canceled())
         return true; // the requestor is gone or has lost interest
-    if (!prime && !spare && destinations_->empty() && destinations_->destinationsFinalized)
+    if (!prime && !spare && destinations->empty() && destinations->destinationsFinalized)
         return true; // there are no more paths to try
     return false;
 }
@@ -402,8 +402,8 @@ HappyConnOpener::callCallback(const Comm::ConnectionPointer &conn, Comm::Flag er
 void
 HappyConnOpener::noteCandidatesChange()
 {
-    debugs(17, 7, "destinations: " << destinations_->size() << " finalized: " << destinations_->destinationsFinalized);
-    destinations_->notificationPending = false;
+    debugs(17, 7, "destinations: " << destinations->size() << " finalized: " << destinations->destinationsFinalized);
+    destinations->notificationPending = false;
     checkForNewConnection();
 }
 
@@ -512,7 +512,7 @@ HappyConnOpener::updateSpareWaitAfterPrimeFailure()
     Must(!prime);
     Must(spareWaiting);
 
-    if (destinations_->doneWithPrimes(*currentPeer)) {
+    if (destinations->doneWithPrimes(*currentPeer)) {
         cancelSpareWait("all primes failed");
         ignoreSpareRestrictions = true;
         return; // checkForNewConnection() will open a spare connection ASAP
@@ -557,24 +557,24 @@ HappyConnOpener::cancelSpareWait(const char *reason)
     spareWaiting.clear();
 }
 
-/** Called when an external event changes destinations_, prime, spare, or spareWaiting.
+/** Called when an external event changes destinations, prime, spare, or spareWaiting.
  * Leaves HappyConnOpener in one of these (mutually exclusive) "stable" states:
  *
  * 1. Processing a single peer: currentPeer
  *    1.1. Connecting: prime || spare
  *    1.2. Waiting for spare gap and/or paths: !prime && !spare
- * 2. Waiting for a new peer: destinations_->empty() && !destinations_->destinationsFinalized && !currentPeer
- * 3. Done: destinations_->empty() && destinations_->destinationsFinalized && !currentPeer
+ * 2. Waiting for a new peer: destinations->empty() && !destinations->destinationsFinalized && !currentPeer
+ * 3. Done: destinations->empty() && destinations->destinationsFinalized && !currentPeer
  */
 void
 HappyConnOpener::checkForNewConnection()
 {
-    debugs(17, 7, "destinations: " << destinations_->size() << " finalized: " << destinations_->destinationsFinalized);
+    debugs(17, 7, "destinations: " << destinations->size() << " finalized: " << destinations->destinationsFinalized);
 
     // The order of the top-level if-statements below is important.
 
     // update stale currentPeer and/or stale spareWaiting
-    if (currentPeer && !spare && !prime && destinations_->doneWithPeer(*currentPeer)) {
+    if (currentPeer && !spare && !prime && destinations->doneWithPeer(*currentPeer)) {
         debugs(17, 7, "done with peer; " << *currentPeer);
         if (spareWaiting.forNewPeer)
             cancelSpareWait("done with peer");
@@ -584,15 +584,15 @@ HappyConnOpener::checkForNewConnection()
         currentPeer = nullptr;
         ignoreSpareRestrictions = false;
         Must(!gotSpareAllowance);
-    } else if (currentPeer && !spareWaiting.forNewPeer && spareWaiting && destinations_->doneWithSpares(*currentPeer)) {
+    } else if (currentPeer && !spareWaiting.forNewPeer && spareWaiting && destinations->doneWithSpares(*currentPeer)) {
         cancelSpareWait("no spares are coming");
         spareWaiting.forNewPeer = true;
     }
 
     // open a new prime and/or a new spare connection if needed
-    if (!destinations_->empty()) {
+    if (!destinations->empty()) {
         if (!currentPeer) {
-            currentPeer = destinations_->extractFront();
+            currentPeer = destinations->extractFront();
             Must(currentPeer);
             debugs(17, 7, "new peer " << *currentPeer);
             primeStart = current_dtime;
@@ -601,11 +601,11 @@ HappyConnOpener::checkForNewConnection()
             Must(prime); // entering state #1.1
         } else {
             if (!prime)
-                maybeOpenAnotherPrimeConnection(); // may make destinations_ empty()
+                maybeOpenAnotherPrimeConnection(); // may make destinations empty()
         }
 
         if (!spare && !spareWaiting)
-            maybeOpenSpareConnection(); // may make destinations_ empty()
+            maybeOpenSpareConnection(); // may make destinations empty()
 
         Must(currentPeer);
     }
@@ -615,7 +615,7 @@ HappyConnOpener::checkForNewConnection()
         return; // remaining in state #1.1 or #1.2
     }
 
-    if (!destinations_->destinationsFinalized) {
+    if (!destinations->destinationsFinalized) {
         debugs(17, 7, "waiting for more peers");
         return; // remaining in state #2
     }
@@ -641,7 +641,7 @@ HappyConnOpener::noteSpareAllowance()
     spareWaiting.clear();
     Must(!gotSpareAllowance);
     gotSpareAllowance = true;
-    auto dest = destinations_->extractSpare(*currentPeer); // ought to succeed
+    auto dest = destinations->extractSpare(*currentPeer); // ought to succeed
     startConnecting(spare, dest);
 }
 
@@ -650,7 +650,7 @@ void
 HappyConnOpener::maybeOpenAnotherPrimeConnection()
 {
     Must(currentPeer);
-    if (auto dest = destinations_->extractPrime(*currentPeer))
+    if (auto dest = destinations->extractPrime(*currentPeer))
         startConnecting(prime, dest);
     // else wait for more prime paths or their exhaustion
 }
@@ -665,7 +665,7 @@ HappyConnOpener::maybeGivePrimeItsChance()
     Must(!spare);
     Must(!spareWaiting);
 
-    if (destinations_->doneWithSpares(*currentPeer)) {
+    if (destinations->doneWithSpares(*currentPeer)) {
         debugs(17, 7, "no spares for " << *currentPeer);
         spareWaiting.forNewPeer = true;
         return;
@@ -699,13 +699,13 @@ HappyConnOpener::maybeOpenSpareConnection()
     // jobGotInstantAllowance() call conditions below rely on the readyNow() check here
     if (!ignoreSpareRestrictions && // we have to honor spare restrictions
         !TheSpareAllowanceGiver.readyNow(*this) && // all new spares must wait
-        destinations_->haveSpare(*currentPeer)) { // and we do have a new spare
+        destinations->haveSpare(*currentPeer)) { // and we do have a new spare
         TheSpareAllowanceGiver.enqueue(*this);
         spareWaiting.forSpareAllowance = true;
         return false;
     }
 
-    if (auto dest = destinations_->extractSpare(*currentPeer)) {
+    if (auto dest = destinations->extractSpare(*currentPeer)) {
 
         if (!ignoreSpareRestrictions) {
             TheSpareAllowanceGiver.jobGotInstantAllowance();

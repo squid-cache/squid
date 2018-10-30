@@ -187,7 +187,7 @@ private:
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
 
     /// Candidate paths. Shared with the initiator (i.e. FwdState object).
-    ResolvedPeersPointer destinations_;
+    ResolvedPeersPointer destinations;
 
     /// current connection opening attempt on the prime track (if any)
     PendingConnection prime;
