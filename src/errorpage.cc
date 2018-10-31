@@ -1370,24 +1370,18 @@ ErrorState::handleLogFormat(const char *&start, MemBuf &result)
     const char *p = start + LogFormatStart.length();
     if (int tokenBytes = Format::Format::AssembleToken(p, result, al)) {
         p += tokenBytes;
-        if (*p != '}') {
-            if (errorHandler_)
-                errorHandler_->handleError(SBuf("unterminated @Squid{"));
-            start = p;
-        } else
+        if (*p == '}') {
             start = p + 1;
-        return;
-    }
+            return;
+        }
 
-    if (errorHandler_)
+        if (errorHandler_)
+            errorHandler_->handleError(SBuf("unterminated @Squid{"));
+    } else if (errorHandler_)
         errorHandler_->handleError(ToSBuf("Cannot parse @Squid{logformat} in error page template near '", SBuf(start).substr(0, 100), "'"));
 
-    // Try recover to continue parsing
-    // The p points after '@Squid{'. Try to find the '}'.
-    if (const char *endOfComment = strchr(p, '}'))
-        p = endOfComment + 1;
-    else
-        while (*p == '%') ++p; // just skip the first '%' after '@Squid{'
+    // Do not try to recover, stop interpreting the template
+    while (*p) ++p;
     result.append(start, p - start);
     start = p;
 }

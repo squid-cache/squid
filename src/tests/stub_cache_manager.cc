@@ -15,7 +15,7 @@
 #include "tests/STUB.h"
 
 Mgr::Action::Pointer CacheManager::createNamedAction(char const* action) STUB_RETVAL(NULL)
-void CacheManager::Start(const Comm::ConnectionPointer &conn, HttpRequest * request, StoreEntry * entry)
+void CacheManager::Start(const Comm::ConnectionPointer &conn, HttpRequest * request, StoreEntry * entry, const AccessLogEntryPointer &)
 {
     std::cerr << HERE << "\n";
     STUB

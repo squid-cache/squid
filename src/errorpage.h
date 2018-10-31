@@ -404,6 +404,7 @@ public:
     ErrTextValidator &report() { onError_ = doReport; return *this; }
 
     /// Validate the passed text
+    /// \retval true if text validated false otherwise
     bool validate(const char *text);
 
     /// \return true if the object initialized and can be used to validate text
