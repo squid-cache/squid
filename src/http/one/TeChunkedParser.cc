@@ -116,51 +116,41 @@ Http::One::TeChunkedParser::parseChunkSize(Tokenizer &tok)
  * ICAP 'use-original-body=N' extension is supported.
  */
 bool
-Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok, bool skipKnown)
+Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok, const bool skipKnown)
 {
-    while (!tok.atEnd()) {
-        if (!ParseBws(tok)) // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
-            return false;
-
-        if (skipLineTerminatorIfAny(tok)) {
-            buf_ = tok.remaining();
-            parsingStage_ = theChunkSize ? Http1::HTTP_PARSE_CHUNK : Http1::HTTP_PARSE_MIME;
-            return true; // reached the end of extensions (if any)
-        }
-
-        if (parseChunkExtension(tok, skipKnown)) {
-            buf_ = tok.remaining();
-            continue; // got one extension; there may be more
-        }
-
-        static const CharacterSet NonLF = (CharacterSet::LF).complement().rename("non-LF");
-        if (tok.skipAll(NonLF) && tok.skip('\n'))
-            throw TexcHere("cannot parse chunk extension"); // <garbage> CR*LF
-
-        return false; // need more data to finish parsing the extension
+    while (parseChunkExtension(tok, skipKnown)) {
+        buf_ = tok.remaining(); // got one extension; there may be more
     }
-    return false; // need data to start parsing an extension or CRLF
+
+    if (skipLineTerminatorIfAny(tok)) {
+        buf_ = tok.remaining();
+        parsingStage_ = theChunkSize ? Http1::HTTP_PARSE_CHUNK : Http1::HTTP_PARSE_MIME;
+        return true; // reached the end of extensions (if any)
+    }
+
+    static const CharacterSet NonLF = (CharacterSet::LF).complement().rename("non-LF");
+    if (tok.skipAll(NonLF) && tok.skip('\n'))
+        throw TexcHere("cannot parse chunk extension"); // <garbage> CR*LF
+    return false; // need more data to finish parsing the extension
 }
 
 bool
-Http::One::TeChunkedParser::parseChunkExtension(Tokenizer &tok, bool skipKnown)
+Http::One::TeChunkedParser::parseChunkExtension(Tokenizer &tok, const bool skipKnown)
 {
-    if (tok.atEnd())
+    if (!ParseBws(tok)) // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
         return false;
-    // no line terminators here: already checked
+
     if (!tok.skip(';'))
-        throw TexcHere("cannot parse chunk extension: ';' expected");
+        return false;
+
+    if (!ParseBws(tok)) // Bug 4492: ICAP servers send SP before chunk-ext-name
+        return false;
 
     SBuf ext;
-    if (!(ParseBws(tok) && // Bug 4492: ICAP servers send SP before chunk-ext-name
-            tok.prefix(ext, CharacterSet::TCHAR))) // chunk-ext-name
+    if (!tok.prefix(ext, CharacterSet::TCHAR)) // chunk-ext-name
         return false;
 
     if (!ParseBws(tok))
-        return false;
-
-    // need more data to check for optional '=' or the end of the chunk-ext
-    if (tok.atEnd())
         return false;
 
     if (tok.skip('=')) {
@@ -168,7 +158,7 @@ Http::One::TeChunkedParser::parseChunkExtension(Tokenizer &tok, bool skipKnown)
             return false;
 
         if (!skipKnown) {
-            if (ext.cmp("use-original-body",17) == 0 && tok.int64(useOriginBody, 10)) {
+            if (ext.cmp("use-original-body", 17) == 0 && tok.int64(useOriginBody, 10)) {
                 debugs(94, 3, "Found chunk extension " << ext << "=" << useOriginBody);
                 return true;
             }
@@ -176,13 +166,12 @@ Http::One::TeChunkedParser::parseChunkExtension(Tokenizer &tok, bool skipKnown)
 
         debugs(94, 5, "skipping unknown chunk extension " << ext);
 
-        SBuf value;
-        // unknown might have a value token or quoted-string
-        return tokenOrQuotedString(tok, value, true);
+        SBuf ignoredValue;
+        return tokenOrQuotedString(tok, ignoredValue, false);
     }
 
-    // parsed the valueless chunk-ext
-    return true;
+    // either parsed the valueless chunk-ext or need more data to check for optional '='
+    return (!tok.atEnd());
 }
 
 bool

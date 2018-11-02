@@ -13,20 +13,11 @@
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
-bool
-Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, bool moreExpected, const bool http1p0)
+/// Attempts to extract a token from the input, which is assumed to be
+/// a quoted string with the initial '"' removed.
+static bool
+quotedString(Parser::Tokenizer &tok, SBuf &returnedToken, const bool http1p0)
 {
-    SBuf token;
-    if (!tok.skip('"')) {
-        if (!tok.prefix(token, CharacterSet::TCHAR))
-            return false;
-        if (moreExpected && tok.atEnd())
-            return false; // got a token prefix
-        // got the complete token
-        returnedToken = token;
-        return true;
-    }
-
     /*
      * RFC 1945 - defines qdtext:
      *   inclusive of LWS (which includes CR and LF)
@@ -54,7 +45,7 @@ Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, bool
     while (!tok.atEnd()) {
         SBuf qdText;
         if (tok.prefix(qdText, tokenChars))
-            token.append(qdText);
+            returnedToken.append(qdText);
         if (!http1p0 && tok.skip('\\')) { // HTTP/1.1 allows quoted-pair, HTTP/1.0 does not
             if (tok.atEnd())
                 break;
@@ -72,10 +63,9 @@ Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, bool
             if (!tok.prefix(escaped, qPairChars, 1))
                 throw TexcHere("invalid escaped characters");
 
-            token.append(escaped);
+            returnedToken.append(escaped);
             continue;
         } else if (tok.skip('"')) {
-            returnedToken = token;
             return true;
         } else if (tok.atEnd()) {
             break;
@@ -84,5 +74,27 @@ Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, bool
     }
 
     return false; // need more data
+}
+
+bool
+Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, const bool tokenPrefixResult, const bool http1p0)
+{
+    if (tok.skip('"')) {
+        const auto savedTok = tok;
+        SBuf parsedToken;
+        if (!quotedString(tok, parsedToken, http1p0)) {
+            tok = savedTok;
+            return false;
+        }
+        returnedToken = parsedToken;
+        return true;
+    }
+
+    if (!tok.prefix(returnedToken, CharacterSet::TCHAR))
+        return false;
+    if (tok.atEnd() && !tokenPrefixResult)
+        return false;
+    // got the complete token
+    return true;
 }
 
