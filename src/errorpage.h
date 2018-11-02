@@ -395,16 +395,19 @@ public:
     /// \retval this
     ErrTextValidator &warn(int level) { warn_ = level; return *this; }
 
-    /// Throw on parse errors
+    /// The ErrTextValidator::validate throws on parse errors
     /// \retval this
     ErrTextValidator &throws() { onError_ = doThrow; return *this; }
 
-    /// Just report parse errors
+    /// Report and then ignore parse errors, the ErrTextValidator::validate
+    /// returns always true
     /// \retval this
     ErrTextValidator &report() { onError_ = doReport; return *this; }
 
-    /// Validate the passed text
-    /// \retval true if text validated false otherwise
+    /// Check the given template text for errors.
+    /// On errors it may throws, report the error in cache.log file or
+    /// return false, depending the configured error action.
+    /// \retval true if the text is validated false otherwise
     bool validate(const char *text);
 
     /// \return true if the object initialized and can be used to validate text
