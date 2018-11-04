@@ -1374,21 +1374,6 @@ tests_testString_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of fs/*
 
-SWAP_TEST_DS =\
-	repl_modules.o \
-	ident/libident.la \
-	acl/libacls.la \
-	acl/libstate.la \
-	acl/libapi.la \
-	base/libbase.la \
-	libsquid.la \
-	ip/libip.la \
-	fs/libfs.la \
-	DiskIO/libdiskio.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	$(REPL_OBJS)
-
 if ENABLE_FS_ROCK
 check_PROGRAMS += tests/testRock
 tests_testRock_SOURCES = \
@@ -1550,9 +1535,6 @@ tests_testRock_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testRock_LDFLAGS = $(AM_CPPFLAGS) $(LIBADD_DL)
-## XXX: remove the use of *_DEPENDENCIES
-tests_testRock_DEPENDENCIES = \
-	$(SWAP_TEST_DS)
 else
 EXTRA_DIST += \
         tests/testRock.cc \
@@ -1734,9 +1716,6 @@ tests_testUfs_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
-## XXX: remove the use of *_DEPENDENCIES
-tests_testUfs_DEPENDENCIES = \
-	$(SWAP_TEST_DS)
 else
 EXTRA_DIST += \
 	tests/testUfs.cc \
@@ -2082,10 +2061,6 @@ tests_testDiskIO_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
-## XXX: remove the use of *_DEPENDENCIES
-tests_testDiskIO_DEPENDENCIES = \
-	DiskIO/libdiskio.la \
-	$(SWAP_TEST_DS)
 
 ## Tests of auth/*
 
