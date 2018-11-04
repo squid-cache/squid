@@ -173,8 +173,6 @@ noinst_LTLIBRARIES = libsquid.la
 EXTRA_PROGRAMS = \
 	unlinkd \
 	recv-announce \
-	tests/testUfs \
-	tests/testRock \
 	ufsdump
 
 ## cfgen is used when building squid
