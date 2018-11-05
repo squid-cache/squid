@@ -79,22 +79,23 @@ parseQuotedStringSuffix(Parser::Tokenizer &tok, SBuf &returnedToken, const bool 
 bool
 Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, const bool tokenPrefixResult, const bool http1p0)
 {
+    SBuf parsedToken;
+    const auto savedTok = tok;
     if (tok.skip('"')) {
-        const auto savedTok = tok;
-        SBuf parsedToken;
         if (!parseQuotedStringSuffix(tok, parsedToken, http1p0)) {
             tok = savedTok;
             return false;
         }
-        returnedToken = parsedToken;
-        return true;
+    } else {
+        if (!tok.prefix(parsedToken, CharacterSet::TCHAR))
+            return false;
+        if (tok.atEnd() && !tokenPrefixResult) {
+            tok = savedTok;
+            return false;
+        }
     }
-
-    if (!tok.prefix(returnedToken, CharacterSet::TCHAR))
-        return false;
-    if (tok.atEnd())
-        return tokenPrefixResult;
     // got the complete token
+    returnedToken = parsedToken;
     return true;
 }
 
