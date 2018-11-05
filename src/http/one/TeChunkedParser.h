@@ -46,7 +46,7 @@ public:
 
 private:
     bool parseChunkSize(Tokenizer &tok);
-    bool parseChunkExtension(Tokenizer &tok, const bool skipKnown);
+    bool parseOneChunkExtension(Tokenizer &tok, const bool skipKnown);
     bool parseChunkExtensions(Tokenizer &tok, const bool skipKnown);
     bool parseChunkBody(Tokenizer &tok);
     bool parseChunkEnd(Tokenizer &tok);

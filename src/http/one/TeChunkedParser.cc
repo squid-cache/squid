@@ -118,7 +118,7 @@ Http::One::TeChunkedParser::parseChunkSize(Tokenizer &tok)
 bool
 Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok, const bool skipKnown)
 {
-    while (parseChunkExtension(tok, skipKnown)) {
+    while (parseOneChunkExtension(tok, skipKnown)) {
         buf_ = tok.remaining(); // got one extension; there may be more
     }
 
@@ -131,11 +131,11 @@ Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok, const bool skip
     static const CharacterSet NonLF = (CharacterSet::LF).complement().rename("non-LF");
     if (tok.skipAll(NonLF) && tok.skip('\n'))
         throw TexcHere("cannot parse chunk extension"); // <garbage> CR*LF
-    return false; // need more data to finish parsing the extension
+    return false; // need more data
 }
 
 bool
-Http::One::TeChunkedParser::parseChunkExtension(Tokenizer &tok, const bool skipKnown)
+Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok, const bool skipKnown)
 {
     if (!ParseBws(tok)) // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
         return false;
@@ -150,16 +150,10 @@ Http::One::TeChunkedParser::parseChunkExtension(Tokenizer &tok, const bool skipK
     if (!tok.prefix(ext, CharacterSet::TCHAR)) // chunk-ext-name
         return false;
 
-    if (!ParseBws(tok))
-        return false;
-
-    if (tok.skip('=')) {
-        if (!ParseBws(tok))
-            return false;
-
+    if (ParseBws(tok) && tok.skip('=') && ParseBws(tok)) {
         if (!skipKnown) {
             if (ext.cmp("use-original-body", 17) == 0 && tok.int64(useOriginBody, 10)) {
-                debugs(94, 3, "Found chunk extension " << ext << "=" << useOriginBody);
+                debugs(94, 3, "found " << ext << '=' << useOriginBody);
                 return true;
             }
         }
@@ -170,7 +164,7 @@ Http::One::TeChunkedParser::parseChunkExtension(Tokenizer &tok, const bool skipK
         return tokenOrQuotedString(tok, ignoredValue, false);
     }
 
-    // either parsed the valueless chunk-ext or need more data to check for optional '='
+    // either parsed a valueless chunk-ext or need more data to check for optional value
     return (!tok.atEnd());
 }
 

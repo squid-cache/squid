@@ -16,7 +16,7 @@
 /// Attempts to extract a token from the input, which is assumed to be
 /// a quoted string with the initial '"' removed.
 static bool
-quotedString(Parser::Tokenizer &tok, SBuf &returnedToken, const bool http1p0)
+parseQuotedStringSuffix(Parser::Tokenizer &tok, SBuf &returnedToken, const bool http1p0)
 {
     /*
      * RFC 1945 - defines qdtext:
@@ -82,7 +82,7 @@ Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, cons
     if (tok.skip('"')) {
         const auto savedTok = tok;
         SBuf parsedToken;
-        if (!quotedString(tok, parsedToken, http1p0)) {
+        if (!parseQuotedStringSuffix(tok, parsedToken, http1p0)) {
             tok = savedTok;
             return false;
         }
@@ -92,8 +92,8 @@ Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, cons
 
     if (!tok.prefix(returnedToken, CharacterSet::TCHAR))
         return false;
-    if (tok.atEnd() && !tokenPrefixResult)
-        return false;
+    if (tok.atEnd())
+        return tokenPrefixResult;
     // got the complete token
     return true;
 }
