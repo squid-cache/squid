@@ -48,10 +48,9 @@ namespace One {
  *
  * \param http1p0 HTTP/1.0 does not permit \-escaped characters
  * \param tokenPrefixResult function return value when input is a token prefix
- * \returns tokenPrefixResult if input contains nothing but a token (prefix)
- * \returns true if input starts with a token or quoted-string
- * \returns false if input does not start with a token or quoted-string
- * \throws on syntax violations
+ * \retval tokenPrefixResult if input contains nothing but a token (prefix)
+ * \retval true if input starts with a token or quoted-string
+ * \retval false if input does not start with a token or quoted-string
  * The function extracts parsed input and sets the value only when returning a true result.
  */
 bool tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &value, const bool tokenPrefixResult, const bool http1p0 = false);
