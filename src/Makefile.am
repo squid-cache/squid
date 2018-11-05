@@ -935,12 +935,12 @@ nodist_tests_testCharacterSet_SOURCES = \
 	tests/stub_MemBuf.cc \
 	tests/stub_SBuf.cc \
 	$(TESTSOURCES)
-tests_testCharacterSet_LDFLAGS = $(LIBADD_DL)
 tests_testCharacterSet_LDADD= \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
+tests_testCharacterSet_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testEnumIterator
 tests_testEnumIterator_SOURCES = \
@@ -952,12 +952,12 @@ tests_testEnumIterator_SOURCES = \
 	tests/testEnumIterator.cc
 nodist_tests_testEnumIterator_SOURCES = \
 	$(TESTSOURCES)
-tests_testEnumIterator_LDFLAGS = $(LIBADD_DL)
 tests_testEnumIterator_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
+tests_testEnumIterator_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testLookupTable
 tests_testLookupTable_SOURCES = \
@@ -968,13 +968,13 @@ tests_testLookupTable_SOURCES = \
 	tests/stub_SBufDetailedStats.cc \
 	base/LookupTable.h
 nodist_tests_testLookupTable_SOURCES = $(TESTSOURCES)
-tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 tests_testLookupTable_LDADD = \
 	sbuf/libsbuf.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
+tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += testRefCount
 testRefCount_SOURCES= \
@@ -991,7 +991,7 @@ testRefCount_LDADD = \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-# XXX MISSING: tests_testRefCount_LDFLAGS = $(LIBADD_DL)
+tests_testRefCount_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testYesNoNone
 tests_testYesNoNone_SOURCES = \
@@ -1282,7 +1282,6 @@ nodist_tests_testTokenizer_SOURCES = \
 	tests/stub_libmem.cc \
 	tests/stub_time.cc \
 	tests/stub_SBufDetailedStats.cc
-tests_testTokenizer_LDFLAGS = $(LIBADD_DL)
 tests_testTokenizer_LDADD = \
 	parser/libparser.la \
 	base/libbase.la \
@@ -1291,6 +1290,7 @@ tests_testTokenizer_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
+tests_testTokenizer_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of sbuf/* and String handling objects
 
@@ -1306,13 +1306,13 @@ tests_testSBuf_SOURCES= \
 	tests/stub_fatal.cc \
 	tests/stub_libmem.cc
 nodist_tests_testSBuf_SOURCES=$(TESTSOURCES)
-tests_testSBuf_LDFLAGS = $(LIBADD_DL)
 tests_testSBuf_LDADD= \
 	sbuf/libsbuf.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
+tests_testSBuf_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testSBufList
 tests_testSBufList_SOURCES= \
@@ -1324,13 +1324,13 @@ tests_testSBufList_SOURCES= \
 	tests/stub_fatal.cc \
 	tests/stub_libmem.cc
 nodist_tests_testSBufList_SOURCES=$(TESTSOURCES)
-tests_testSBufList_LDFLAGS = $(LIBADD_DL)
 tests_testSBufList_LDADD=\
 	sbuf/libsbuf.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
+tests_testSBufList_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testString
 ## string needs mem.cc.
@@ -2549,7 +2549,6 @@ tests_testHttpReply_SOURCES=\
 nodist_tests_testHttpReply_SOURCES=\
 	$(TESTSOURCES) \
 	hier_code.cc
-tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 tests_testHttpReply_LDADD=\
 	CommCalls.o \
 	http/libhttp.la \
@@ -2571,6 +2570,7 @@ tests_testHttpReply_LDADD=\
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
+tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpRequest
 tests_testHttpRequest_SOURCES = \
@@ -2838,7 +2838,6 @@ nodist_tests_testIcmp_SOURCES = \
 	tests/stub_SBuf.cc \
 	time.cc \
 	globals.cc
-tests_testIcmp_LDFLAGS = $(LIBADD_DL)
 tests_testIcmp_LDADD=\
 	icmp/libicmpcore.la \
 	ip/libip.la \
@@ -2846,6 +2845,7 @@ tests_testIcmp_LDADD=\
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
+tests_testIcmp_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testNetDb
 tests_testNetDb_SOURCES = \
@@ -2858,7 +2858,6 @@ nodist_tests_testNetDb_SOURCES = \
 	tests/stub_SBuf.cc \
 	time.cc \
 	globals.cc
-tests_testNetDb_LDFLAGS = $(LIBADD_DL)
 tests_testNetDb_LDADD = \
 	icmp/libicmp.la \
 	ip/libip.la \
@@ -2867,6 +2866,7 @@ tests_testNetDb_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
+tests_testNetDb_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of mgr/* and CacheManager objects
 
@@ -3134,7 +3134,6 @@ tests_testStatHist_SOURCES = \
 	tests/testStatHist.h
 nodist_tests_testStatHist_SOURCES = \
 	$(TESTSOURCES)
-tests_testStatHist_LDFLAGS = $(LIBADD_DL)
 tests_testStatHist_LDADD = \
 	sbuf/libsbuf.la \
 	base/libbase.la \
@@ -3142,6 +3141,7 @@ tests_testStatHist_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB)
+tests_testStatHist_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of ConfigParser
 
