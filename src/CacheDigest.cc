@@ -253,13 +253,13 @@ cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * se
 }
 
 void
-cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e)
+cacheDigestReport(CacheDigest * cd, const SBuf &label, StoreEntry * e)
 {
     CacheDigestStats stats;
     assert(cd && e);
     cacheDigestStats(cd, &stats);
-    storeAppendPrintf(e, "%s digest: size: %d bytes\n",
-                      label ? label : "", stats.bit_count / 8
+    storeAppendPrintf(e, SQUIDSBUFPH " digest: size: %d bytes\n",
+                      SQUIDSBUFPRINT(label), stats.bit_count / 8
                      );
     storeAppendPrintf(e, "\t entries: count: %" PRIu64 " capacity: %" PRIu64 " util: %d%%\n",
                       cd->count,

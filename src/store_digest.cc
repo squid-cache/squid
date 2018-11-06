@@ -197,7 +197,8 @@ storeDigestReport(StoreEntry * e)
     }
 
     if (store_digest) {
-        cacheDigestReport(store_digest, "store", e);
+        static const SBuf label("store");
+        cacheDigestReport(store_digest, label, e);
         storeAppendPrintf(e, "\t added: %d rejected: %d ( %.2f %%) del-ed: %d\n",
                           sd_stats.add_count,
                           sd_stats.rej_count,
