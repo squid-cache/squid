@@ -1054,7 +1054,7 @@ peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e)
     auto host = pd->host;
     storeAppendPrintf(e, "\npeer digest from " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(host));
 
-    cacheDigestGuessStatsReport(&pd->stats.guess, e, host.c_str());
+    cacheDigestGuessStatsReport(&pd->stats.guess, e, host);
 
     storeAppendPrintf(e, "\nevent\t timestamp\t secs from now\t secs from init\n");
     appendTime(initialized);
