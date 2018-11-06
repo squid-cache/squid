@@ -9,10 +9,11 @@
 #ifndef SQUID_ACLDENYINFOLIST_H_
 #define SQUID_ACLDENYINFOLIST_H_
 
-#include "acl/AclNameList.h"
+#include "acl/forward.h"
 #include "err_type.h"
 #include "errorpage.h"
 #include "mem/forward.h"
+//#include "sbuf/forward.h"
 
 /// deny_info representation. Currently a POD.
 class AclDenyInfoList
@@ -26,7 +27,6 @@ public:
     }
     ~AclDenyInfoList() {
         xfree(err_page_name);
-        delete acl_list;
         while (next) {
             auto *a = next;
             next = a->next;
@@ -36,7 +36,7 @@ public:
     }
     err_type err_page_id = ERR_NONE;
     char *err_page_name = nullptr;
-    AclNameList *acl_list = nullptr;
+    SBufList acl_list;
     AclDenyInfoList *next = nullptr;
 };
 
