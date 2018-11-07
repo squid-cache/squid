@@ -13,7 +13,6 @@
 #include "err_type.h"
 #include "errorpage.h"
 #include "mem/forward.h"
-//#include "sbuf/forward.h"
 
 /// deny_info representation. Currently a POD.
 class AclDenyInfoList
