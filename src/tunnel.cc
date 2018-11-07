@@ -842,7 +842,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
     ErrorState *error = answer.squidError.get();
     Must(error);
     answer.squidError.clear(); // preserve error for errorSendComplete()
-    sendError(error, "peer error");
+    sendError(error, "tunneler returns error");
 }
 
 void

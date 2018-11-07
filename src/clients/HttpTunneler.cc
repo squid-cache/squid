@@ -274,7 +274,7 @@ Http::Tunneler::handleResponse(const bool eof)
     }
 
     HttpReply::Pointer rep = new HttpReply;
-    rep->sources |= HttpMsg::srcHttp;
+    rep->sources |= Http::Message::srcHttp;
     rep->sline.set(hp->messageProtocol(), hp->messageStatus());
     if (!rep->parseHeader(*hp) && rep->sline.status() == Http::scOkay) {
         bailOnResponseError("malformed CONNECT response from peer", nullptr);

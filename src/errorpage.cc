@@ -699,7 +699,8 @@ ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply) :
 {
     Must(errorReply);
     httpStatus = errorReply->sline.status();
-    if (req != nullptr) {
+
+    if (req) {
         request = req;
         src_addr = req->client_addr;
     }
