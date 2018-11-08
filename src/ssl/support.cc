@@ -730,8 +730,6 @@ sslGetUserCertificateChainPEM(SSL *ssl)
 {
     assert(ssl);
 
-    SBuf sb;
-
     STACK_OF(X509) *chain = SSL_get_peer_cert_chain(ssl);
 
     if (!chain)
@@ -746,9 +744,7 @@ sslGetUserCertificateChainPEM(SSL *ssl)
 
     char *ptr;
     const auto len = BIO_get_mem_data(bio.get(), &ptr);
-    sb.assign(ptr, len);
-
-    return sb;
+    return SBuf(ptr, len);
 }
 
 /// Create SSL context and apply ssl certificate and private key to it.
