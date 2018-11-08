@@ -730,7 +730,7 @@ sslGetUserCertificateChainPEM(SSL *ssl)
 {
     assert(ssl);
 
-    STACK_OF(X509) *chain = SSL_get_peer_cert_chain(ssl);
+    auto chain = SSL_get_peer_cert_chain(ssl);
 
     if (!chain)
         return sslGetUserCertificatePEM(ssl);
