@@ -656,16 +656,12 @@ Ssl::GetX509PEM(X509 * cert)
 {
     assert(cert);
 
-    SBuf sb;
-
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
     PEM_write_bio_X509(bio.get(), cert);
 
     char *ptr;
     const auto len = BIO_get_mem_data(bio.get(), &ptr);
-    sb.assign(ptr, len);
-
-    return sb;
+    return SBuf(ptr, len);
 }
 
 /// \ingroup ServerProtocolSSLInternal
@@ -723,16 +719,10 @@ sslGetUserCertificatePEM(SSL *ssl)
 {
     assert(ssl);
 
-    SBuf sb;
+    if (const auto cert = SSL_get_peer_certificate(ssl))
+        return Ssl::GetX509PEM(cert);
 
-    X509 *cert = SSL_get_peer_certificate(ssl);
-
-    if (!cert)
-        return sb;
-
-    sb = Ssl::GetX509PEM(cert);
-
-    return sb;
+    return SBuf();
 }
 
 SBuf
