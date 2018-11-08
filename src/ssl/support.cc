@@ -654,10 +654,9 @@ Ssl::GetX509Fingerprint(X509 * cert, const char *)
 SBuf
 Ssl::GetX509PEM(X509 * cert)
 {
-    SBuf sb;
+    assert(cert);
 
-    if (!cert)
-        return sb;
+    SBuf sb;
 
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
     PEM_write_bio_X509(bio.get(), cert);
@@ -722,10 +721,9 @@ sslGetUserEmail(SSL * ssl)
 SBuf
 sslGetUserCertificatePEM(SSL *ssl)
 {
-    SBuf sb;
+    assert(ssl);
 
-    if (!ssl)
-        return sb;
+    SBuf sb;
 
     X509 *cert = SSL_get_peer_certificate(ssl);
 
