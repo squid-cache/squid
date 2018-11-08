@@ -728,10 +728,9 @@ sslGetUserCertificatePEM(SSL *ssl)
 SBuf
 sslGetUserCertificateChainPEM(SSL *ssl)
 {
-    SBuf sb;
+    assert(ssl);
 
-    if (!ssl)
-        return sb;
+    SBuf sb;
 
     STACK_OF(X509) *chain = SSL_get_peer_cert_chain(ssl);
 
