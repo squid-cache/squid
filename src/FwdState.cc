@@ -997,10 +997,14 @@ FwdState::connectStart()
     // When a connection bumped on step1 the result is equivalent to
     // client-first bumping mode. We can recognise such cases because there is
     // not ConnStateData::sslServerBump object.
-    bool clientFirstBump = request->clientConnectionManager.valid() &&
+#if USE_OPENSSL
+    const auto clientFirstBump = request->clientConnectionManager.valid() &&
         (request->clientConnectionManager->sslBumpMode == Ssl::bumpClientFirst ||
          (request->clientConnectionManager->sslBumpMode == Ssl::bumpBump && !request->clientConnectionManager->serverBump())
             );
+#else
+    const auto clientFirstBump = false;
+#endif /* USE_OPENSSL */
     if (request->flags.sslBumped && !clientFirstBump) {
         // TODO: Factor out/reuse as Occasionally(DBG_IMPORTANT, 2[, occurrences]).
         static int occurrences = 0;
