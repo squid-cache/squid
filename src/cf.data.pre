@@ -4767,12 +4767,15 @@ DOC_START
 
 		ssl::<cert
 				The received server x509 certificate in PEM
-				format, including BEGIN and END lines. The
-				logged certificate may have failed validation
-				and may not be trusted by Squid. This field
-				does not include any intermediate certificates
-				that may have been received from the server or
-				fetched during certificate validation process.
+				format, including BEGIN and END lines (or a
+				dash ('-') if the certificate is unavailable).
+
+				The logged certificate may have failed
+				validation and may not be trusted by Squid.
+				This field does not include any intermediate
+				certificates that may have been received from
+				the server or fetched during certificate
+				validation process.
 
 				Currently, Squid only collects server
 				certificates during step3 of SslBump
@@ -4781,9 +4784,8 @@ DOC_START
 				or stare rule at step2 will not have the
 				server certificate information.
 
-				The default encoding for this field is
-				multi-line. When Squid cannot log a
-				certificate, it logs a single dash (-).
+				This field is using pass-through URL encoding
+				by default.
 
 		ssl::<cert_errors
 				The list of certificate validation errors
