@@ -1279,6 +1279,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                         if (fmt->type == LFT_SSL_SERVER_CERT_ISSUER)
                             out = Ssl::GetX509CAAttribute(serverCert, "DN");
                         else {
+                            assert(fmt->type == LFT_SSL_SERVER_CERT_WHOLE);
                             sb = Ssl::GetX509PEM(serverCert);
                             out = sb.c_str();
                         }
