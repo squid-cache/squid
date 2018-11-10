@@ -182,6 +182,7 @@ Security::PeerOptions::updateTlsVersionLimits()
             if (sslOptions.isEmpty())
                 add.chop(1); // remove the initial ':'
             sslOptions.append(add);
+            parseOptions(); // sslOptions changed, reset parsedOptions
 #endif
 
         } else {
@@ -235,6 +236,7 @@ Security::PeerOptions::updateTlsVersionLimits()
                 sslOptions.append(add+1, strlen(add+1));
             else
                 sslOptions.append(add, strlen(add));
+            parseOptions(); // sslOptions changed, reset parsedOptions
 #endif
         }
         sslVersion = 0; // prevent sslOptions being repeatedly appended
