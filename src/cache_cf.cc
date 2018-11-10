@@ -2443,7 +2443,7 @@ dump_denyinfo(StoreEntry * entry, const char *name, AclDenyInfoList * var)
     while (var != NULL) {
         storeAppendPrintf(entry, "%s %s", name, var->err_page_name);
 
-        for (const auto aclName : var->acl_list)
+        for (const auto &aclName: var->acl_list)
             storeAppendPrintf(entry, " " SQUIDSBUFPH, SQUIDSBUFPRINT(aclName));
 
         storeAppendPrintf(entry, "\n");
