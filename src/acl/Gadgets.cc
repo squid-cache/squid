@@ -55,7 +55,7 @@ aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allow
         }
 
         for (const auto &aclName: A->acl_list) {
-            if (L.cmp(name) == 0) {
+            if (aclName.cmp(name) == 0) {
                 debugs(28, 8, "match on " << name);
                 return A->err_page_id;
             }
