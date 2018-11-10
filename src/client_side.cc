@@ -2522,9 +2522,10 @@ httpAccept(const CommAcceptCbParams &params)
 
 /// Create TLS connection structure and update fd_table
 static bool
-httpsCreate(const Comm::ConnectionPointer &conn, const Security::ContextPointer &ctx)
+httpsCreate(const ConnStateData *connState, const Security::ContextPointer &ctx)
 {
-    if (Security::CreateServerSession(ctx, conn, "client https start")) {
+    const auto conn = connState->clientConnection;
+    if (Security::CreateServerSession(ctx, conn, connState->port->secure, "client https start")) {
         debugs(33, 5, "will negotiate TLS on " << conn);
         return true;
     }
@@ -2709,7 +2710,7 @@ httpsEstablish(ConnStateData *connState, const Security::ContextPointer &ctx)
     assert(connState);
     const Comm::ConnectionPointer &details = connState->clientConnection;
 
-    if (!ctx || !httpsCreate(details, ctx))
+    if (!ctx || !httpsCreate(connState, ctx))
         return;
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
@@ -3072,7 +3073,7 @@ ConnStateData::getSslContextDone(Security::ContextPointer &ctx)
         }
     }
 
-    if (!httpsCreate(clientConnection, ctx))
+    if (!httpsCreate(this, ctx))
         return;
 
     // bumped intercepted conns should already have Config.Timeout.request set
@@ -3293,7 +3294,7 @@ ConnStateData::startPeekAndSplice()
     Security::ContextPointer unConfiguredCTX(Ssl::createSSLContext(port->secure.signingCa.cert, port->secure.signingCa.pkey, port->secure));
     fd_table[clientConnection->fd].dynamicTlsContext = unConfiguredCTX;
 
-    if (!httpsCreate(clientConnection, unConfiguredCTX))
+    if (!httpsCreate(this, unConfiguredCTX))
         return;
 
     switchedToHttps_ = true;

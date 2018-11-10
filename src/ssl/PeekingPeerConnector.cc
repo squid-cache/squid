@@ -185,7 +185,7 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
             srvBio->mode(csd->sslBumpMode);
         } else {
             // Set client SSL options
-            SSL_set_options(serverSession.get(), ::Security::ProxyOutgoingConfig.parsedOptions);
+            ::Security::ProxyOutgoingConfig.updateSessionOptions(serverSession);
 
             const bool redirected = request->flags.redirected && ::Config.onoff.redir_rewrites_host;
             const char *sniServer = (!hostName || redirected) ?

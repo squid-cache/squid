@@ -32,6 +32,9 @@ public:
     /// parse a TLS squid.conf option
     virtual void parse(const char *);
 
+    /// parse and verify the [tls-]options= string in sslOptions
+    void parseOptions();
+
     /// reset the configuration details to default
     virtual void clear() {*this = PeerOptions();}
 
@@ -45,7 +48,7 @@ public:
     void updateTlsVersionLimits();
 
     /// Setup the library specific 'options=' parameters for the given context.
-    void updateContextOptions(Security::ContextPointer &) const;
+    void updateContextOptions(Security::ContextPointer &);
 
     /// setup the NPN extension details for the given context
     void updateContextNpn(Security::ContextPointer &);
@@ -66,7 +69,6 @@ public:
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
 private:
-    void parseOptions(); ///< parsed value of sslOptions
     long parseFlags();
     void loadCrlFile();
     void loadKeysFile();
@@ -82,7 +84,19 @@ public:
 
     SBuf tlsMinVersion;  ///< version label for minimum TLS version to permit
 
-    Security::ParsedOptions parsedOptions; ///< parsed value of sslOptions
+private:
+    /// Library-specific options string generated from tlsMinVersion.
+    /// Call updateTlsVersionLimits() to regenerate this string.
+    SBuf tlsMinOptions;
+
+    /// Parsed value of sslOptions + tlsMinOptions settings.
+    /// Set optsReparse=true to have this re-parsed before next use.
+    Security::ParsedOptions parsedOptions;
+
+    /// whether parsedOptions content needs to be regenerated
+    bool optsReparse = true;
+
+public:
     long parsedFlags = 0;   ///< parsed value of sslFlags
 
     std::list<Security::KeyData> certs; ///< details from the cert= and file= config parameters
@@ -93,13 +107,15 @@ protected:
     template<typename T>
     Security::ContextPointer convertContextFromRawPtr(T ctx) const {
 #if USE_OPENSSL
+        debugs(83, 5, "SSL_CTX construct, this=" << (void*)ctx);
         return ContextPointer(ctx, [](SSL_CTX *p) {
-            debugs(83, 5, "SSL_free ctx=" << (void*)p);
+            debugs(83, 5, "SSL_CTX destruct, this=" << (void*)p);
             SSL_CTX_free(p);
         });
 #elif USE_GNUTLS
+        debugs(83, 5, "gnutls_certificate_credentials construct, this=" << (void*)ctx);
         return Security::ContextPointer(ctx, [](gnutls_certificate_credentials_t p) {
-            debugs(83, 5, "gnutls_certificate_free_credentials ctx=" << (void*)p);
+            debugs(83, 0, "gnutls_certificate_credentials destruct this=" << (void*)p);
             gnutls_certificate_free_credentials(p);
         });
 #else
