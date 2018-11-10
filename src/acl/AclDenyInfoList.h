@@ -35,7 +35,7 @@ public:
     }
     err_type err_page_id = ERR_NONE;
     char *err_page_name = nullptr;
-    SBufList acl_list;
+    SBufList acl_list; ///< ACL names in configured order
     AclDenyInfoList *next = nullptr;
 };
 
