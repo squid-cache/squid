@@ -147,7 +147,6 @@ libacls_la_SOURCES = \
 	UrlPort.h \
 	UserData.cc \
 	UserData.h \
-	AclNameList.h \
 	AclDenyInfoList.h \
 	Gadgets.cc \
 	Gadgets.h \
