@@ -654,19 +654,14 @@ Ssl::GetX509Fingerprint(X509 * cert, const char *)
 SBuf
 Ssl::GetX509PEM(X509 * cert)
 {
-    SBuf sb;
-
-    if (!cert)
-        return sb;
+    assert(cert);
 
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
     PEM_write_bio_X509(bio.get(), cert);
 
     char *ptr;
     const auto len = BIO_get_mem_data(bio.get(), &ptr);
-    sb.assign(ptr, len);
-
-    return sb;
+    return SBuf(ptr, len);
 }
 
 /// \ingroup ServerProtocolSSLInternal
@@ -722,30 +717,20 @@ sslGetUserEmail(SSL * ssl)
 SBuf
 sslGetUserCertificatePEM(SSL *ssl)
 {
-    SBuf sb;
+    assert(ssl);
 
-    if (!ssl)
-        return sb;
+    if (const auto cert = SSL_get_peer_certificate(ssl))
+        return Ssl::GetX509PEM(cert);
 
-    X509 *cert = SSL_get_peer_certificate(ssl);
-
-    if (!cert)
-        return sb;
-
-    sb = Ssl::GetX509PEM(cert);
-
-    return sb;
+    return SBuf();
 }
 
 SBuf
 sslGetUserCertificateChainPEM(SSL *ssl)
 {
-    SBuf sb;
+    assert(ssl);
 
-    if (!ssl)
-        return sb;
-
-    STACK_OF(X509) *chain = SSL_get_peer_cert_chain(ssl);
+    auto chain = SSL_get_peer_cert_chain(ssl);
 
     if (!chain)
         return sslGetUserCertificatePEM(ssl);
@@ -759,9 +744,7 @@ sslGetUserCertificateChainPEM(SSL *ssl)
 
     char *ptr;
     const auto len = BIO_get_mem_data(bio.get(), &ptr);
-    sb.assign(ptr, len);
-
-    return sb;
+    return SBuf(ptr, len);
 }
 
 /// Create SSL context and apply ssl certificate and private key to it.

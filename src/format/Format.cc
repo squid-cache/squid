@@ -1178,7 +1178,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->request) {
                 ConnStateData *conn = al->request->clientConnectionManager.get();
                 if (conn && Comm::IsConnOpen(conn->clientConnection)) {
-                    if (auto ssl = fd_table[conn->clientConnection->fd].ssl.get()) {
+                    if (const auto ssl = fd_table[conn->clientConnection->fd].ssl.get()) {
                         sb = sslGetUserCertificatePEM(ssl);
                         out = sb.c_str();
                     }
@@ -1190,7 +1190,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->request) {
                 ConnStateData *conn = al->request->clientConnectionManager.get();
                 if (conn && Comm::IsConnOpen(conn->clientConnection)) {
-                    if (auto ssl = fd_table[conn->clientConnection->fd].ssl.get()) {
+                    if (const auto ssl = fd_table[conn->clientConnection->fd].ssl.get()) {
                         sb = sslGetUserCertificatePEM(ssl);
                         out = sb.c_str();
                     }
@@ -1279,8 +1279,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                         if (fmt->type == LFT_SSL_SERVER_CERT_ISSUER)
                             out = Ssl::GetX509CAAttribute(serverCert, "DN");
                         else {
+                            assert(fmt->type == LFT_SSL_SERVER_CERT_WHOLE);
                             sb = Ssl::GetX509PEM(serverCert);
                             out = sb.c_str();
+                            quote = 1;
                         }
                     }
                 }

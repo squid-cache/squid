@@ -373,3 +373,4 @@ File::sysCallError(const char *callName, const int savedErrno) const
 #if _SQUID_WINDOWS_
 const HANDLE File::InvalidHandle = INVALID_HANDLE_VALUE;
 #endif /* _SQUID_WINDOWS_ */
+
