@@ -49,19 +49,16 @@ aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allow
     debugs(28, 8, HERE << "got called for " << name);
 
     for (A = *head; A; A = A->next) {
-        AclNameList *L = NULL;
-
         if (!redirect_allowed && strchr(A->err_page_name, ':') ) {
             debugs(28, 8, HERE << "Skip '" << A->err_page_name << "' 30x redirects not allowed as response here.");
             continue;
         }
 
-        for (L = A->acl_list; L; L = L->next) {
-            if (!strcmp(name, L->name)) {
-                debugs(28, 8, HERE << "match on " << name);
+        for (const auto &aclName: A->acl_list) {
+            if (aclName.cmp(name) == 0) {
+                debugs(28, 8, "match on " << name);
                 return A->err_page_id;
             }
-
         }
     }
 
@@ -106,8 +103,6 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
     char *t = NULL;
     AclDenyInfoList *B;
     AclDenyInfoList **T;
-    AclNameList *L = NULL;
-    AclNameList **Tail = NULL;
 
     /* first expect a page name */
 
@@ -120,15 +115,11 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
     AclDenyInfoList *A = new AclDenyInfoList(t);
 
     /* next expect a list of ACL names */
-    Tail = &A->acl_list;
-
     while ((t = ConfigParser::NextToken())) {
-        L = new AclNameList(t);
-        *Tail = L;
-        Tail = &L->next;
+        A->acl_list.emplace_back(t);
     }
 
-    if (A->acl_list == NULL) {
+    if (A->acl_list.empty()) {
         debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_CRITICAL, "aclParseDenyInfoLine: deny_info line contains no ACL's, skipping");
         delete A;
@@ -298,17 +289,10 @@ aclDestroyDenyInfoList(AclDenyInfoList ** list)
 {
     AclDenyInfoList *a = NULL;
     AclDenyInfoList *a_next = NULL;
-    AclNameList *l = NULL;
-    AclNameList *l_next = NULL;
 
     debugs(28, 8, "aclDestroyDenyInfoList: invoked");
 
     for (a = *list; a; a = a_next) {
-        for (l = a->acl_list; l; l = l_next) {
-            l_next = l->next;
-            safe_free(l);
-        }
-
         a_next = a->next;
         delete a;
     }
