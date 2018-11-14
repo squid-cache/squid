@@ -112,35 +112,21 @@ void
 logfilePrintf(Logfile * lf, const char *fmt,...)
 {
     va_list args;
+    char buf[8192];
+    int s;
+
     va_start(args, fmt);
 
-    // bufsize will be large enough for most log lines
-    int bufsize = 16 * 1024;
-    char* buf = NULL;
+    s = vsnprintf(buf, 8192, fmt, args);
 
-    for (int limit = 0; limit < 6; ++limit) {
-        buf = new char[bufsize];
-        if (!buf) {
-            break;
-        }
+    if (s > 8192) {
+        s = 8192;
 
-        auto s = vsnprintf(buf, bufsize, fmt, args);
-        if (s < bufsize) {
-            logfileWrite(lf, buf, (size_t) s);
-            delete buf;
-            break;
-        }
-
-        // Try again with a bigger buffer
-        delete buf;
-        buf = NULL;
-        bufsize *= 2;
+        if (fmt[strlen(fmt) - 1] == '\n')
+            buf[8191] = '\n';
     }
 
-    if (!buf) {
-        logfileWrite(lf, (char*)"-", 1);
-    }
-
+    logfileWrite(lf, buf, (size_t) s);
     va_end(args);
 }
 
