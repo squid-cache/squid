@@ -4394,6 +4394,37 @@ DOC_START
 		<qos	Server connection TOS/DSCP value set by Squid
 		<nfmark Server connection netfilter mark set by Squid
 
+		>handshake Raw client handshake
+			Initial client bytes received by Squid on a newly
+			accepted TCP connection or inside a just established
+			CONNECT tunnel. Squid stops accumulating handshake
+			bytes as soon as the handshake parser succeeds or
+			fails (determining whether the client is using the
+			expected protocol).
+
+			For HTTP clients, the handshake is the request line.
+			For TLS clients, the handshake consists of all TLS
+			records up to and including the TLS record that
+			contains the last byte of the first ClientHello
+			message. For clients using an unsupported protocol,
+			this field contains the bytes received by Squid at the
+			time of the handshake parsing failure.
+
+			See the on_unsupported_protocol directive for more
+			information on Squid handshake traffic expectations.
+
+			Current support is limited to these contexts:
+			- http_port connections, but only when the
+			  on_unsupported_protocol directive is in use.
+			- https_port connections (and CONNECT tunnels) that
+			  are subject to the ssl_bump peek or stare action.
+
+			To protect binary handshake data, this field is always
+			base64-encoded (RFC 4648 Section 4). If logformat
+			field encoding is configured, that encoding is applied
+			on top of base64. Otherwise, the computed base64 value
+			is recorded as is.
+
 	Time related format codes:
 
 		ts	Seconds since epoch
