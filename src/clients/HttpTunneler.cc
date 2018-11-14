@@ -127,7 +127,7 @@ Http::Tunneler::writeRequest()
     HttpHeader hdr_out(hoRequest);
     Http::StateFlags flags;
     memset(&flags, '\0', sizeof(flags));
-    flags.proxying = request->flags.proxying;
+    flags.proxying = true;
     MemBuf mb;
     mb.init();
     mb.appendf("CONNECT %s HTTP/1.1\r\n", url.c_str());

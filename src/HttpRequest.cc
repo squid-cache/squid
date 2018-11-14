@@ -460,8 +460,7 @@ HttpRequest::prepForPeering(const CachePeer &peer)
     peer_login = peer.login;
     peer_domain = peer.domain;
     flags.auth_no_keytab = peer.options.auth_no_keytab;
-    flags.proxying = !peer.options.originserver;
-    debugs(11, 4, this << " to " << peer.host << (flags.proxying ? " proxy" : " origin"));
+    debugs(11, 4, this << " to " << peer.host << (!peer.options.originserver ? " proxy" : " origin"));
 }
 
 void
@@ -470,7 +469,6 @@ HttpRequest::prepForDirect()
     peer_login = nullptr;
     peer_domain = nullptr;
     flags.auth_no_keytab = false;
-    flags.proxying = false;
     debugs(11, 4, this);
 }
 

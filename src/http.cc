@@ -96,15 +96,17 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     surrogateNoStore = false;
     serverConnection = fwd->serverConnection();
 
-    bool alwaysToOrigin = request->flags.sslBumped || // http request through bumped connection
-        request->url.getScheme() == AnyP::PROTO_HTTPS; // 'get https://xxx' request (this check superset request->flags.sslBump check)
-    if (!alwaysToOrigin && fwd->serverConnection() != NULL)
+    if (fwd->serverConnection() != NULL)
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
+    bool tlsTunnel = request->flags.sslBumped || // http request through bumped connection
+        request->url.getScheme() == AnyP::PROTO_HTTPS; // 'get https://xxx' request (this check superset request->flags.sslBump check)
+
+    // TODO: split {proxying,originserver} into {peering,toProxy,toOrigin}
+    flags.originpeer = (_peer != NULL && _peer->options.originserver);
+    flags.proxying =  (_peer != NULL && !tlsTunnel && !flags.originpeer);
+
     if (_peer) {
-        // XXX: HttpRequest::prepForPeering excludes originserver from proxying!
-        // TODO: split {proxying,originserver} into {peering,toProxy,toOrigin}
-        request->flags.proxying = true;
         /*
          * This NEIGHBOR_PROXY_ONLY check probably shouldn't be here.
          * We might end up getting the object from somewhere else if,
@@ -628,11 +630,11 @@ void
 HttpStateData::keepaliveAccounting(HttpReply *reply)
 {
     if (flags.keepalive)
-        if (_peer)
+        if (_peer && flags.proxying)
             ++ _peer->stats.n_keepalives_sent;
 
     if (reply->keep_alive) {
-        if (_peer)
+        if (_peer && flags.proxying)
             ++ _peer->stats.n_keepalives_recv;
 
         if (Config.onoff.detect_broken_server_pconns
@@ -647,7 +649,7 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
 void
 HttpStateData::checkDateSkew(HttpReply *reply)
 {
-    if (reply->date > -1 && !_peer) {
+    if (reply->date > -1 && !flags.proxying) {
         int skew = abs((int)(reply->date - squid_curtime));
 
         if (skew > 86400)
@@ -846,6 +848,9 @@ bool
 HttpStateData::peerSupportsConnectionPinning() const
 {
     if (!_peer)
+        return true;
+
+    if (!flags.proxying)
         return true;
 
     /*If this peer does not support connection pinning (authenticated
@@ -1661,7 +1666,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     Http::HdrType header = flags.originpeer ? Http::HdrType::AUTHORIZATION : Http::HdrType::PROXY_AUTHORIZATION;
 
     /* Nothing to do unless we are forwarding to a peer */
-    if (!request->flags.proxying)
+    if (!flags.proxying)
         return;
 
     /* Needs to be explicitly enabled */
@@ -1870,7 +1875,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Authorization if known in URL, not in header and going direct */
     if (!hdr_out->has(Http::HdrType::AUTHORIZATION)) {
-        if (!request->flags.proxying && !request->url.userInfo().isEmpty()) {
+        if (!flags.proxying && !request->url.userInfo().isEmpty()) {
             static char result[base64_encode_len(MAX_URL*2)]; // should be big enough for a single URI segment
             struct base64_encode_ctx ctx;
             base64_encode_init(&ctx);
@@ -2156,7 +2161,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
      * not the one we are sending. Needs checking.
      */
     const AnyP::ProtocolVersion httpver = Http::ProtocolVersion();
-    const SBuf url(_peer && !_peer->options.originserver ? request->effectiveRequestUri() : request->url.path());
+    const SBuf url(flags.proxying ? request->effectiveRequestUri() : request->url.path());
     mb->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\r\n",
                 SQUIDSBUFPRINT(request->method.image()),
                 SQUIDSBUFPRINT(url),
@@ -2219,9 +2224,6 @@ HttpStateData::sendRequest()
                                     Dialer, this,  HttpStateData::wroteLast);
     }
 
-    flags.originpeer = (_peer != NULL && _peer->options.originserver);
-    flags.proxying = (_peer != NULL && !flags.originpeer);
-
     /*
      * Is keep-alive okay for all request methods?
      */
@@ -2232,6 +2234,8 @@ HttpStateData::sendRequest()
     else if (!Config.onoff.server_pconns)
         flags.keepalive = false;
     else if (_peer == NULL)
+        flags.keepalive = true;
+    else if (!flags.proxying)
         flags.keepalive = true;
     else if (_peer->stats.n_keepalives_sent < 10)
         flags.keepalive = true;
@@ -2251,7 +2255,7 @@ HttpStateData::sendRequest()
 
            But I suppose it was a bug
          */
-        if (neighborType(_peer, request->url) == PEER_SIBLING && !_peer->options.allow_miss)
+        if (flags.proxying && neighborType(_peer, request->url) == PEER_SIBLING && !_peer->options.allow_miss)
             flags.only_if_cached = true;
 
         flags.front_end_https = _peer->front_end_https;
