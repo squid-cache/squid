@@ -25,7 +25,7 @@ namespace One
  *
  * The parser shovels content bytes from the raw
  * input buffer into the content output buffer, both caller-supplied.
- * Ignores chunk extensions except for ICAP's ieof.
+ * Ignores chunk extensions except for ICAP's use-original-body.
  * Trailers are available via mimeHeader() if wanted.
  */
 class TeChunkedParser : public Http1::Parser
@@ -37,6 +37,8 @@ public:
     /// set the buffer to be used to store decoded chunk data
     void setPayloadBuffer(MemBuf *parsedContent) {theOut = parsedContent;}
 
+    void setKnownExtensions(const std::set<SBuf> &extensions) { knownExtensions = extensions; }
+
     bool needsMoreSpace() const;
 
     /* Http1::Parser API */
@@ -46,14 +48,15 @@ public:
 
 private:
     bool parseChunkSize(Tokenizer &tok);
-    bool parseOneChunkExtension(Tokenizer &tok, const bool skipKnown);
-    bool parseChunkExtensions(Tokenizer &tok, const bool skipKnown);
+    bool parseOneChunkExtension(Tokenizer &tok);
+    bool parseChunkExtensions(Tokenizer &tok);
     bool parseChunkBody(Tokenizer &tok);
     bool parseChunkEnd(Tokenizer &tok);
 
     MemBuf *theOut;
     uint64_t theChunkSize;
     uint64_t theLeftBodySize;
+    std::set<SBuf> knownExtensions;
 
 public:
     int64_t useOriginBody;

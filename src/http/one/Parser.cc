@@ -288,6 +288,7 @@ Http::One::ParseBws(Parser::Tokenizer &tok)
     if (tok.atEnd())
         return false; // need more data
 
+    const auto savedTok = tok;
     if (const auto count = tok.skipAll(Parser::WhitespaceCharacters())) {
         // Generating BWS is a MUST-level violation so warn about it as needed.
         debugs(33, ErrorLevel(), "found " << count << " BWS octets");
@@ -296,6 +297,10 @@ Http::One::ParseBws(Parser::Tokenizer &tok)
     }
     // else we successfully "parsed" an empty BWS sequence
 
-    return true;
+    if (!tok.atEnd())
+        return true; // no more BWS expected
+
+    tok = savedTok;
+    return false;
 }
 

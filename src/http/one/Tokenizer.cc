@@ -42,10 +42,13 @@ parseQuotedStringSuffix(Parser::Tokenizer &tok, SBuf &returnedToken, const bool 
     // best we can do is a conditional reference since http1p0 value may change per-client
     const CharacterSet &tokenChars = (http1p0 ? qdtext1p0 : qdtext1p1);
 
+    const auto savedTok = tok;
+    SBuf parsedToken;
+
     while (!tok.atEnd()) {
         SBuf qdText;
         if (tok.prefix(qdText, tokenChars))
-            returnedToken.append(qdText);
+            parsedToken.append(qdText);
         if (!http1p0 && tok.skip('\\')) { // HTTP/1.1 allows quoted-pair, HTTP/1.0 does not
             if (tok.atEnd())
                 break;
@@ -63,9 +66,10 @@ parseQuotedStringSuffix(Parser::Tokenizer &tok, SBuf &returnedToken, const bool 
             if (!tok.prefix(escaped, qPairChars, 1))
                 throw TexcHere("invalid escaped characters");
 
-            returnedToken.append(escaped);
+            parsedToken.append(escaped);
             continue;
         } else if (tok.skip('"')) {
+            returnedToken = parsedToken;
             return true;
         } else if (tok.atEnd()) {
             break;
@@ -73,6 +77,7 @@ parseQuotedStringSuffix(Parser::Tokenizer &tok, SBuf &returnedToken, const bool 
         throw TexcHere(ToSBuf("invalid bytes for set ", tokenChars.name));
     }
 
+    tok = savedTok;
     return false; // need more data
 }
 

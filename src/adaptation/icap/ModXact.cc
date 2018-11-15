@@ -1144,7 +1144,8 @@ void Adaptation::Icap::ModXact::decideOnParsingBody()
         debugs(93, 5, HERE << "expecting a body");
         state.parsing = State::psBody;
         replyHttpBodySize = 0;
-        bodyParser = new Http1::TeChunkedParser;
+        bodyParser = new Http1::TeChunkedParser();
+        bodyParser->setKnownExtensions({SBuf("use-original-body")});
         makeAdaptedBodyPipe("adapted response from the ICAP server");
         Must(state.sending == State::sendingAdapted);
     } else {

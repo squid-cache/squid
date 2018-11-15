@@ -57,7 +57,7 @@ Http::One::TeChunkedParser::parse(const SBuf &aBuf)
     // restart in the middle of a chunk/frame
     do {
 
-        if (parsingStage_ == Http1::HTTP_PARSE_CHUNK_EXT && !parseChunkExtensions(tok, theChunkSize))
+        if (parsingStage_ == Http1::HTTP_PARSE_CHUNK_EXT && !parseChunkExtensions(tok))
             return false;
 
         if (parsingStage_ == Http1::HTTP_PARSE_CHUNK && !parseChunkBody(tok))
@@ -116,9 +116,9 @@ Http::One::TeChunkedParser::parseChunkSize(Tokenizer &tok)
  * ICAP 'use-original-body=N' extension is supported.
  */
 bool
-Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok, const bool skipKnown)
+Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok)
 {
-    while (parseOneChunkExtension(tok, skipKnown)) {
+    while (parseOneChunkExtension(tok)) {
         buf_ = tok.remaining(); // got one extension; there may be more
     }
 
@@ -134,38 +134,81 @@ Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok, const bool skip
     return false; // need more data
 }
 
-bool
-Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok, const bool skipKnown)
+/// parses use-original-body extension's value
+static bool
+parseUseOriginalBody(Parser::Tokenizer &tok, int64_t &value)
 {
-    if (!ParseBws(tok)) // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
-        return false;
+    const auto savedTok = tok;
+    int64_t parsedValue = 0;
 
-    if (!tok.skip(';'))
-        return false;
+    if (!tok.int64(parsedValue, 10))
+        throw TexcHere("invalid use-original-body extension's value");
 
-    if (!ParseBws(tok)) // Bug 4492: ICAP servers send SP before chunk-ext-name
-        return false;
+    if (!tok.atEnd()) {
+        value = parsedValue;
+        return true;
+    }
 
-    SBuf ext;
-    if (!tok.prefix(ext, CharacterSet::TCHAR)) // chunk-ext-name
+    tok = savedTok;
+    return false;
+}
+
+bool
+Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
+{
+    const auto savedTok = tok;
+
+    if (!ParseBws(tok))  { // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
+        tok = savedTok;
         return false;
+    }
+
+    if (!tok.skip(';')) {
+        tok = savedTok;
+        return false;
+    }
+
+    if (!ParseBws(tok)) { // Bg 4492: ICAP servers send SP before chunk-ext-name
+        tok = savedTok;
+        return false;
+    }
+
+    SBuf ext; // chunk-ext-name
+    if (!tok.prefix(ext, CharacterSet::TCHAR)) {
+        tok = savedTok;
+        return false;
+    }
 
     if (ParseBws(tok) && tok.skip('=') && ParseBws(tok)) {
-        if (!skipKnown) {
-            if (ext.cmp("use-original-body", 17) == 0 && tok.int64(useOriginBody, 10)) {
+        if (knownExtensions.find(ext) != knownExtensions.end()) {
+            static const SBuf useOriginalBodyName("use-original-body");
+            if (ext == useOriginalBodyName) {
+                if (!parseUseOriginalBody(tok, useOriginBody)) {
+                    tok = savedTok;
+                    return false;
+                }
                 debugs(94, 3, "found " << ext << '=' << useOriginBody);
                 return true;
             }
+            // parse here other known chunk extensions, if any
+        }
+
+        SBuf ignoredValue;
+        if (!tokenOrQuotedString(tok, ignoredValue, false)) {
+            tok = savedTok;
+            return false;
         }
 
         debugs(94, 5, "skipping unknown chunk extension " << ext);
-
-        SBuf ignoredValue;
-        return tokenOrQuotedString(tok, ignoredValue, false);
+        return true;
     }
 
     // either parsed a valueless chunk-ext or need more data to check for optional value
-    return (!tok.atEnd());
+    if (tok.atEnd()) {
+        tok = savedTok;
+        return false;
+    }
+    return true;
 }
 
 bool
