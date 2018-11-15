@@ -192,7 +192,7 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
         tok = savedTok;
         return false;
     }
-        // for now the only known extension belongs to the last chunk
+    // for now the only known extension belongs to the last chunk
     if (!theChunkSize && knownExtensions.find(extName) != knownExtensions.end()) {
         static const SBuf useOriginalBodyName("use-original-body");
         if (extName == useOriginalBodyName) {
