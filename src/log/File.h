@@ -16,6 +16,12 @@
 #include <sys/param.h>
 #endif
 
+/* Size of the logfile buffer */
+/*
+ * For optimal performance this should match LOGFILE_BUFSIZ in logfile-daemon.c
+ */
+#define LOGFILE_BUFSZ       32768
+
 class logfile_buffer_t
 {
 public:
