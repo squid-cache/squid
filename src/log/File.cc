@@ -113,7 +113,7 @@ logfilePrintf(Logfile * lf, const char *fmt,...)
 {
     va_list args;
     va_start(args, fmt);
-    static thread_local char sbuf[LOGFILE_BUFSZ];
+    static char sbuf[LOGFILE_BUFSZ];
 
     auto s = vsnprintf(sbuf, sizeof(sbuf), fmt, args);
 
