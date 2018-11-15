@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "fatal.h"
 #include "fde.h"
+#include "sbuf/SBuf.h"
 #include "log/File.h"
 #include "log/ModDaemon.h"
 #include "log/ModStdio.h"
@@ -103,7 +104,7 @@ logfileRotate(Logfile * lf, int16_t rotateCount)
 }
 
 void
-logfileWrite(Logfile * lf, char *buf, size_t len)
+logfileWrite(Logfile * lf, const char *buf, size_t len)
 {
     lf->f_linewrite(lf, buf, len);
 }
@@ -113,31 +114,10 @@ logfilePrintf(Logfile * lf, const char *fmt,...)
 {
     va_list args;
     va_start(args, fmt);
-    static char sbuf[LOGFILE_BUFSZ];
-
-    auto s = vsnprintf(sbuf, sizeof(sbuf), fmt, args);
-
-    if (s < (int)sizeof(sbuf)) {
-        logfileWrite(lf, sbuf, (size_t) s);
-    } else {
-        int bufsize = LOGFILE_BUFSZ;
-        char* abuf = NULL;
-
-        while (true) {
-            abuf = new char[bufsize];
-            s = vsnprintf(abuf, bufsize, fmt, args);
-            if (s < bufsize) {
-                logfileWrite(lf, abuf, (size_t) s);
-                delete abuf;
-                break;
-            }
-
-            // Try again with a bigger buffer
-            delete abuf;
-            bufsize *= 2;
-        }
-    }
-
+    static SBuf sbuf;
+    sbuf.clear();
+    sbuf.vappendf(fmt, args);
+    logfileWrite(lf, sbuf.c_str(), sbuf.length());
     va_end(args);
 }
 
