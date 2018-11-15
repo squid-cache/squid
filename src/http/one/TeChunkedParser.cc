@@ -15,6 +15,7 @@
 #include "MemBuf.h"
 #include "parser/Tokenizer.h"
 #include "Parsing.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 
 Http::One::TeChunkedParser::TeChunkedParser()
@@ -134,15 +135,15 @@ Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok)
     return false; // need more data
 }
 
-/// parses use-original-body extension's value
+/// parses an extension's value as an integer
 static bool
-parseUseOriginalBody(Parser::Tokenizer &tok, int64_t &value)
+parseIntExtension(Parser::Tokenizer &tok, const SBuf &name, int64_t &value)
 {
     const auto savedTok = tok;
     int64_t parsedValue = 0;
 
     if (!tok.int64(parsedValue, 10))
-        throw TexcHere("invalid use-original-body extension's value");
+        throw TexcHere(ToSBuf("invalid integer value for extension ", name));
 
     if (!tok.atEnd()) {
         value = parsedValue;
@@ -173,24 +174,24 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
         return false;
     }
 
-    SBuf ext; // chunk-ext-name
-    if (!tok.prefix(ext, CharacterSet::TCHAR)) {
+    SBuf extName;
+    if (!tok.prefix(extName, CharacterSet::TCHAR)) {
         tok = savedTok;
         return false;
     }
 
     if (ParseBws(tok) && tok.skip('=') && ParseBws(tok)) {
-        if (knownExtensions.find(ext) != knownExtensions.end()) {
+        // for now the only known extension belongs to the last chunk
+        if (!theChunkSize && knownExtensions.find(extName) != knownExtensions.end()) {
             static const SBuf useOriginalBodyName("use-original-body");
-            if (ext == useOriginalBodyName) {
-                if (!parseUseOriginalBody(tok, useOriginBody)) {
+            if (extName == useOriginalBodyName) {
+                if (!parseIntExtension(tok, useOriginalBodyName, useOriginBody)) {
                     tok = savedTok;
                     return false;
                 }
-                debugs(94, 3, "found " << ext << '=' << useOriginBody);
+                debugs(94, 3, "found " << extName << '=' << useOriginBody);
                 return true;
             }
-            // parse here other known chunk extensions, if any
         }
 
         SBuf ignoredValue;
@@ -199,7 +200,7 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
             return false;
         }
 
-        debugs(94, 5, "skipping unknown chunk extension " << ext);
+        debugs(94, 5, "skipping unknown chunk extension " << extName);
         return true;
     }
 
