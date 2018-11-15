@@ -180,35 +180,38 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
         return false;
     }
 
-    if (ParseBws(tok) && tok.skip('=') && ParseBws(tok)) {
-        // for now the only known extension belongs to the last chunk
-        if (!theChunkSize && knownExtensions.find(extName) != knownExtensions.end()) {
-            static const SBuf useOriginalBodyName("use-original-body");
-            if (extName == useOriginalBodyName) {
-                if (!parseIntExtension(tok, useOriginalBodyName, useOriginBody)) {
-                    tok = savedTok;
-                    return false;
-                }
-                debugs(94, 3, "found " << extName << '=' << useOriginBody);
-                return true;
-            }
-        }
-
-        SBuf ignoredValue;
-        if (!tokenOrQuotedString(tok, ignoredValue, false)) {
-            tok = savedTok;
-            return false;
-        }
-
-        debugs(94, 5, "skipping unknown chunk extension " << extName);
-        return true;
-    }
-
-    // either parsed a valueless chunk-ext or need more data to check for optional value
-    if (tok.atEnd()) {
+    if (!ParseBws(tok)) {
         tok = savedTok;
         return false;
     }
+
+    if (!tok.skip('='))
+        return true; // parsed a valueless chunk-ext
+
+    if (!ParseBws(tok)) {
+        tok = savedTok;
+        return false;
+    }
+        // for now the only known extension belongs to the last chunk
+    if (!theChunkSize && knownExtensions.find(extName) != knownExtensions.end()) {
+        static const SBuf useOriginalBodyName("use-original-body");
+        if (extName == useOriginalBodyName) {
+            if (!parseIntExtension(tok, useOriginalBodyName, useOriginBody)) {
+                tok = savedTok;
+                return false;
+            }
+            debugs(94, 3, "found " << extName << '=' << useOriginBody);
+            return true;
+        }
+    }
+
+    SBuf ignoredValue;
+    if (!tokenOrQuotedString(tok, ignoredValue, false)) {
+        tok = savedTok;
+        return false;
+    }
+
+    debugs(94, 5, "skipping unknown chunk extension " << extName);
     return true;
 }
 
