@@ -169,7 +169,7 @@ private:
 };
 
 /// skips and, if needed, warns about RFC 7230 BWS ("bad" whitespace)
-/// \returns false when more data is needed, true otherwise
+/// \returns true if a non-BWS character was found (and all BWS were skipped).
 bool ParseBws(Parser::Tokenizer &tok);
 
 /// the right debugs() level for logging HTTP violation messages
