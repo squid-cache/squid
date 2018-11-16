@@ -158,29 +158,13 @@ bool
 Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
 {
     const auto savedTok = tok;
-
-    if (!ParseBws(tok))  { // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
-        tok = savedTok;
-        return false;
-    }
-
-    if (!tok.skip(';')) {
-        tok = savedTok;
-        return false;
-    }
-
-    if (!ParseBws(tok)) { // Bg 4492: ICAP servers send SP before chunk-ext-name
-        tok = savedTok;
-        return false;
-    }
-
     SBuf extName;
-    if (!tok.prefix(extName, CharacterSet::TCHAR)) {
-        tok = savedTok;
-        return false;
-    }
 
-    if (!ParseBws(tok)) {
+    if (!ParseBws(tok) || // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
+        !tok.skip(';') ||
+        !ParseBws(tok) || // Bg 4492: ICAP servers send SP before chunk-ext-name
+        !tok.prefix(extName, CharacterSet::TCHAR) ||
+        !ParseBws(tok)) {
         tok = savedTok;
         return false;
     }
