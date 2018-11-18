@@ -141,7 +141,7 @@ for FILENAME in `git ls-files`; do
 	# sprintf() - not allowed anywhere.
 	#
 	STRDUP=`grep -e "[^x]strdup(" ${FILENAME}`;
-	if test "x${STRDUP}" != "x" -a "${FILENAME}" != "xstring.h"; then
+	if test "x${STRDUP}" != "x" -a "${FILENAME}" != "compat/xstring.h"; then
 		echo "ERROR: ${FILENAME} contains unprotected use of strdup()"
 	fi
 	SPRINTF=`grep -e "[^v]sprintf(" ${FILENAME}`;
