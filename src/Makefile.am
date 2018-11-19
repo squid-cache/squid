@@ -976,17 +976,17 @@ tests_testLookupTable_LDADD = \
 	$(XTRA_LIBS)
 tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 
-check_PROGRAMS += testRefCount
-testRefCount_SOURCES= \
+check_PROGRAMS += tests/testRefCount
+tests_testRefCount_SOURCES= \
 	base/Lock.h \
 	base/RefCount.h \
 	tests/testRefCount.cc
-nodist_testRefCount_SOURCES= \
+nodist_tests_testRefCount_SOURCES= \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
 	tests/stub_MemBuf.cc
-testRefCount_LDADD = \
+tests_testRefCount_LDADD = \
 	base/libbase.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
