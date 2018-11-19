@@ -930,16 +930,11 @@ tests_testCharacterSet_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testEnumIterator
 tests_testEnumIterator_SOURCES = \
-	base/EnumIterator.h \
-	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
-	tests/stub_SBuf.cc \
-	tests/testEnumIterator.h \
-	tests/testEnumIterator.cc
+	tests/testEnumIterator.cc \
+	tests/testEnumIterator.h
 nodist_tests_testEnumIterator_SOURCES = \
-	$(TESTSOURCES)
+	base/EnumIterator.h
 tests_testEnumIterator_LDADD = \
-	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
