@@ -904,12 +904,8 @@ tests_testMem_SOURCES = \
 	tests/testMem.cc \
 	tests/testMem.h
 nodist_tests_testMem_SOURCES = \
-	tests/stub_debug.cc \
-	tests/stub_SBuf.cc \
-	tests/stub_time.cc \
-	$(TESTSOURCES)
-tests_testMem_LDADD= \
-	base/libbase.la \
+	tests/stub_time.cc
+tests_testMem_LDADD = \
 	mem/libmem.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCPPUNIT_LIBS) \
