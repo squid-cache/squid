@@ -920,14 +920,8 @@ tests_testCharacterSet_SOURCES = \
 	tests/testCharacterSet.cc \
 	tests/testCharacterSet.h
 nodist_tests_testCharacterSet_SOURCES = \
-	base/CharacterSet.h \
-	tests/stub_cbdata.cc \
-	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
-	tests/stub_MemBuf.cc \
-	tests/stub_SBuf.cc \
-	$(TESTSOURCES)
-tests_testCharacterSet_LDADD= \
+	base/CharacterSet.h
+tests_testCharacterSet_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
