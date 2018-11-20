@@ -973,12 +973,10 @@ tests_testYesNoNone_SOURCES = \
 	tests/testYesNoNone.cc \
 	tests/testYesNoNone.h
 nodist_tests_testYesNoNone_SOURCES = \
-	tests/STUB.h \
+	base/YesNoNone.h \
 	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
-	tests/stub_SBuf.cc \
-	base/YesNoNone.h
-tests_testYesNoNone_LDADD= \
+	tests/stub_SBuf.cc
+tests_testYesNoNone_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
