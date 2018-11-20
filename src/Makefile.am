@@ -958,18 +958,12 @@ tests_testLookupTable_LDADD = \
 tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testRefCount
-tests_testRefCount_SOURCES= \
-	base/Lock.h \
-	base/RefCount.h \
+## TODO: make this use cppunit tests
+tests_testRefCount_SOURCES = \
 	tests/testRefCount.cc
-nodist_tests_testRefCount_SOURCES= \
-	tests/stub_cbdata.cc \
-	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
-	tests/stub_MemBuf.cc
+nodist_tests_testRefCount_SOURCES = \
+	base/RefCount.h
 tests_testRefCount_LDADD = \
-	base/libbase.la \
-	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testRefCount_LDFLAGS = $(LIBADD_DL)

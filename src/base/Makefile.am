@@ -37,6 +37,7 @@ libbase_la_SOURCES = \
 	Packable.h \
 	PackableStream.h \
 	Range.h \
+	RefCount.h \
 	RegexPattern.cc \
 	RegexPattern.h \
 	RunnersRegistry.cc \
