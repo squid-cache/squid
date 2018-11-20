@@ -942,13 +942,13 @@ tests_testEnumIterator_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testLookupTable
 tests_testLookupTable_SOURCES = \
-	tests/testLookupTable.h \
 	tests/testLookupTable.cc \
+	tests/testLookupTable.h
+nodist_tests_testLookupTable_SOURCES = \
+	base/LookupTable.h \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
-	tests/stub_SBufDetailedStats.cc \
-	base/LookupTable.h
-nodist_tests_testLookupTable_SOURCES = $(TESTSOURCES)
+	tests/stub_SBufDetailedStats.cc
 tests_testLookupTable_LDADD = \
 	sbuf/libsbuf.la \
 	base/libbase.la \
