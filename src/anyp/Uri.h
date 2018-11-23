@@ -10,13 +10,12 @@
 #define SQUID_SRC_ANYP_URI_H
 
 #include "anyp/UriScheme.h"
+#include "http/forward.h"
 #include "ip/Address.h"
 #include "rfc2181.h"
 #include "sbuf/SBuf.h"
 
 #include <iosfwd>
-
-class HttpRequestMethod;
 
 namespace AnyP
 {
@@ -212,14 +211,11 @@ operator <<(std::ostream &os, const Uri &url)
 
 /* Deprecated functions for Legacy code handling URLs */
 
-class HttpRequest;
-
 void urlInitialize(void);
 /// call HttpRequest::canonicalCleanUrl() instead if you have HttpRequest
-/// \returns a pointer to a local static buffer containing request URI
-/// that honors strip_query_terms and %-encodes unsafe URI characters
-char *urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &, const AnyP::UriScheme &);
-const char *urlCanonicalFakeHttps(const HttpRequest * request);
+/// \returns request URI that honors strip_query_terms and %-encodes unsafe characters
+SBuf urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &, const AnyP::UriScheme &);
+const SBuf urlCanonicalFakeHttps(const HttpRequestPointer &);
 bool urlIsRelative(const char *);
 char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);
 char *urlInternal(const char *dir, const char *name);

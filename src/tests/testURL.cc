@@ -11,10 +11,14 @@
 #include "anyp/Uri.h"
 #include "compat/cppunit.h"
 #include "debug/Stream.h"
+#include "http/RequestMethod.h"
+#include "SquidConfig.h"
+#include "tests/testURL.h"
 #include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
 #include <sstream>
+#include <vector>
 
 /*
  * test the Anyp::Uri-related classes
@@ -25,11 +29,13 @@ class TestUri : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE(TestUri);
     CPPUNIT_TEST(testConstructScheme);
     CPPUNIT_TEST(testDefaultConstructor);
+    CPPUNIT_TEST(testCanonicalCleanWithoutRequest);
     CPPUNIT_TEST_SUITE_END();
 
 protected:
     void testConstructScheme();
     void testDefaultConstructor();
+    void testCanonicalCleanWithoutRequest();
 };
 CPPUNIT_TEST_SUITE_REGISTRATION(TestUri);
 
@@ -81,9 +87,80 @@ TestUri::testDefaultConstructor()
     delete urlPointer;
 }
 
+void
+testURL::testCanonicalCleanWithoutRequest()
+{
+    const std::vector<std::pair<SBuf,SBuf>> authorityPrefix = {
+        {SBuf(),SBuf()},
+        {SBuf("http://example.com"),SBuf("http://example.com")},
+        {SBuf("http://example.com:1234"),SBuf("http://example.com:1234")}
+// XXX: path with CTL chars
+// XXX: path with ASCII-extended chars
+    };
+
+    const std::vector<std::pair<SBuf,SBuf>> path = {
+        {SBuf(),SBuf()},
+        {SBuf("/"),SBuf("/")},
+        {SBuf("/path"),SBuf("/path")}
+// XXX: path with CTL chars
+// XXX: path with ASCII-extended chars
+   };
+
+    const std::vector<std::pair<SBuf,SBuf>> query =  {
+        {SBuf(),SBuf()},
+        {SBuf("?"),SBuf("?")},
+        {SBuf("?query"),SBuf("?query")}
+// XXX: query with CTL chars
+// XXX: query with ASCII-extended chars
+    };
+
+    const std::vector<std::pair<SBuf,SBuf>> fragment = {
+        {SBuf(),SBuf()},
+        {SBuf("#"),SBuf("#")},
+        {SBuf("#fragment"),SBuf("#fragment")}
+// XXX: fragment with CTL chars
+// XXX: fragment with ASCII-extended chars
+    };
+
+    const HttpRequestMethod mNil; // METHOD_NONE is sufficient for non-CONNECT tests
+    const AnyP::UriScheme sNil;   // PROTO_NONE is sufficient for non-URN tests
+
+    for (const auto a : authorityPrefix) {
+        for (const auto p : path) {
+            for (const auto q : query) {
+                for (const auto f : fragment) {
+                    SBuf in(a.first);
+                    in.append(p.first);
+                    in.append(q.first);
+                    in.append(f.first);
+
+                    Config.onoff.strip_query_terms = false;
+                    SBuf outA(a.second);
+                    outA.append(p.second);
+                    outA.append(q.second);
+                    outA.append(f.second);
+                    CPPUNIT_ASSERT_EQUAL(outA, urlCanonicalCleanWithoutRequest(in, mNil, sNil));
+
+                    Config.onoff.strip_query_terms = true;
+                    SBuf outB(a.second);
+                    outB.append(p.second);
+                    if (!q.second.isEmpty())
+                        outB.append('?');
+                    else if (!f.second.isEmpty())
+                        outB.append('#');
+                    CPPUNIT_ASSERT_EQUAL(outB, urlCanonicalCleanWithoutRequest(in, mNil, sNil));
+                }
+            }
+        }
+    }
+
+    // TODO test CONNECT URI cleaning
+
+    // TODO test URN cleaning
+}
+
 int
 main(int argc, char *argv[])
 {
     return MyTestProgram().run(argc, argv);
 }
-

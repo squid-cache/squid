@@ -1168,9 +1168,10 @@ ErrorState::compileLegacyCode(Build &build)
     case 'U':
         /* Using the fake-https version of absolute-URI so error pages see https:// */
         /* even when the url-path cannot be shown as more than '*' */
-        if (request)
-            p = urlCanonicalFakeHttps(request.getRaw());
-        else if (url)
+        if (request) {
+            const SBuf tmp = urlCanonicalFakeHttps(request);
+            mb.append(tmp.rawContent(), tmp.length());
+        } else if (url)
             p = url;
         else if (!building_deny_info_url)
             p = "[no URL]";

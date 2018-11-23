@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "anyp/Uri.h"
+#include "base/CharacterSet.h"
 #include "base/Raw.h"
 #include "globals.h"
 #include "HttpRequest.h"
@@ -699,27 +700,27 @@ AnyP::Uri::absolute() const
  *        After copying it on in the first place! Would be less code to merge the two with a flag parameter.
  *        and never copy the query-string part in the first place
  */
-char *
+SBuf
 urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method, const AnyP::UriScheme &scheme)
 {
-    LOCAL_ARRAY(char, buf, MAX_URL);
-
-    snprintf(buf, sizeof(buf), SQUIDSBUFPH, SQUIDSBUFPRINT(url));
-    buf[sizeof(buf)-1] = '\0';
-
     // URN, CONNECT method, and non-stripped URIs can go straight out
+    SBuf out = url;
     if (Config.onoff.strip_query_terms && !(method == Http::METHOD_CONNECT || scheme == AnyP::PROTO_URN)) {
-        // strip anything AFTER a question-mark
-        // leaving the '?' in place
-        if (auto t = strchr(buf, '?')) {
-            *(++t) = '\0';
-        }
+        // strip anything after a path segment
+        // leaving the delimiter in place as a visual cue of truncation (if any)
+        static const CharacterSet pathDelims("path-delim", "?#");
+        const auto pathEnd = url.findFirstOf(pathDelims);
+        if (pathEnd != SBuf::npos)
+            out = url.substr(0, pathEnd+1);
     }
 
-    if (stringHasCntl(buf))
-        xstrncpy(buf, rfc1738_escape_unescaped(buf), MAX_URL);
+    // check for unescaped control characters
+    if (out.findFirstOf(CharacterSet::CTL) != SBuf::npos) {
+        SBuf tmp = out;
+        out = SBuf(rfc1738_escape_unescaped(tmp.c_str()));
+    }
 
-    return buf;
+    return out;
 }
 
 /**
@@ -728,15 +729,14 @@ urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method
  * for use in error page outputs.
  * Luckily we can leverage the others instead of duplicating.
  */
-const char *
-urlCanonicalFakeHttps(const HttpRequest * request)
+const SBuf
+urlCanonicalFakeHttps(const HttpRequestPointer &request)
 {
-    LOCAL_ARRAY(char, buf, MAX_URL);
-
     // method CONNECT and port HTTPS
     if (request->method == Http::METHOD_CONNECT && request->url.port() == 443) {
-        snprintf(buf, MAX_URL, "https://%s/*", request->url.host());
-        return buf;
+        SBuf out;
+        out.appendf("https://%s/*", request->url.host());
+        return out;
     }
 
     // else do the normal complete canonical thing.
