@@ -182,7 +182,6 @@ inline bool operator<(const String &a, const String &b)
 
 const char *checkNullString(const char *p);
 int stringHasWhitespace(const char *);
-int stringHasCntl(const char *);
 char *strwordtok(char *buf, char **t);
 
 #endif /* SQUID_STRING_H */
