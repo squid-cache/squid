@@ -715,7 +715,17 @@ urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method
     }
 
     // check for unescaped control characters
-    if (out.findFirstOf(CharacterSet::CTL) != SBuf::npos) {
+    // XXX: emulates old stringHasCtl() which matched true
+    //      only for the UTF-8 characters 0x80-09f.
+    // TODO: RFC 1738, 5234 and 7230 require the full UTF-8
+    //      range (0x80-0xFF) be encoded along with
+    //      the ASCII control characters 0x01-0x1F, 0x7f
+    //      and NUL (0x00)
+    static const CharacterSet partialUtf8 = CharacterSet("utf8-partial", 0x80, 0x9f);
+    static const CharacterSet ctls = (partialUtf8 + CharacterSet::CTL)
+                                     .add('\0')
+                                     .rename("controls");
+    if (out.findFirstOf(ctls) != SBuf::npos) {
         SBuf tmp = out;
         out = SBuf(rfc1738_escape_unescaped(tmp.c_str()));
     }
