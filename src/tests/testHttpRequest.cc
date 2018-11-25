@@ -109,11 +109,10 @@ void
 testHttpRequest::testIPv6HostColonBug()
 {
     unsigned short expected_port;
-    const char * url = nullptr;
     HttpRequest *aRequest = NULL;
 
     /* valid IPv6 address without port */
-    url = "http://[2000:800::45]/foo";
+    const char *url = "http://[2000:800::45]/foo";
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
     aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 80;
