@@ -61,7 +61,7 @@ public:
     bool parse(const HttpRequestMethod &, const SBuf &url);
 
     /// \return a new URI that honors uri_whitespace
-    static char *cleanup(const char *uri);
+    static SBuf Cleanup(SBuf &uri);
 
     AnyP::UriScheme const & getScheme() const {return scheme_;}
 

@@ -1894,14 +1894,11 @@ ClientHttpRequest::setLogUriToRawUri(const char *rawUri, const HttpRequestMethod
     // Should(!request);
 
     // TODO: SBuf() performance regression, fix by converting rawUri to SBuf
-    SBuf canonicalUri = urlCanonicalCleanWithoutRequest(SBuf(rawUri), method, AnyP::UriScheme());
+    auto rawUriBuf = SBuf(rawUri);
+    auto canonicalUri = urlCanonicalCleanWithoutRequest(rawUriBuf, method, AnyP::UriScheme());
 
-    // XXX: Performance Regression. c_str() reallocates
-    absorbLogUri(AnyP::Uri::cleanup(canonicalUri.c_str()));
-
-    char *cleanedRawUri = AnyP::Uri::cleanup(rawUri);
-    al->setVirginUrlForMissingRequest(SBuf(cleanedRawUri));
-    xfree(cleanedRawUri);
+    absorbLogUri(SBufToCstring(AnyP::Uri::Cleanup(canonicalUri)));
+    al->setVirginUrlForMissingRequest(AnyP::Uri::Cleanup(rawUriBuf));
 }
 
 void
