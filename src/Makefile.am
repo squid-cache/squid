@@ -1002,7 +1002,6 @@ nodist_tests_testURL_SOURCES = \
 	tests/stub_libmem.cc
 tests_testURL_LDADD = \
 	libsquid.la \
-	proxyp/libproxyp.la \
 	anyp/libanyp.la \
 	parser/libparser.la \
 	base/libbase.la \
