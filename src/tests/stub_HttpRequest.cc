@@ -24,6 +24,7 @@ HttpRequest * HttpRequest::clone() const STUB_RETVAL(NULL)
 bool HttpRequest::maybeCacheable() STUB_RETVAL(false)
 bool HttpRequest::conditional() const STUB_RETVAL(false)
 bool HttpRequest::canHandle1xx() const STUB_RETVAL(false)
+char * HttpRequest::canonicalCleanUrl() const STUB_RETVAL(nullptr)
 #if USE_ADAPTATION
 Adaptation::History::Pointer HttpRequest::adaptLogHistory() const STUB_RETVAL(Adaptation::History::Pointer())
 Adaptation::History::Pointer HttpRequest::adaptHistory(bool) const STUB_RETVAL(Adaptation::History::Pointer())
