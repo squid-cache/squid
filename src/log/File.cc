@@ -11,13 +11,13 @@
 #include "squid.h"
 #include "fatal.h"
 #include "fde.h"
-#include "sbuf/SBuf.h"
 #include "log/File.h"
 #include "log/ModDaemon.h"
 #include "log/ModStdio.h"
 #include "log/ModSyslog.h"
 #include "log/ModUdp.h"
 #include "log/TcpLogger.h"
+#include "sbuf/SBuf.h"
 
 CBDATA_CLASS_INIT(Logfile);
 
