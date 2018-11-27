@@ -1019,22 +1019,16 @@ tests_testURL_LDFLAGS = $(LIBADD_DL)
 ## Tests of dns/*
 
 check_PROGRAMS += tests/testDns
-tests_testDns_SOURCES= \
+tests_testDns_SOURCES = \
 	tests/testRFC1035.cc \
 	tests/testRFC1035.h
-nodist_tests_testDns_SOURCES= \
-	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
-	tests/stub_SBuf.cc \
-	tests/stub_tools.cc
-tests_testDns_LDADD= \
+nodist_tests_testDns_SOURCES=
+tests_testDns_LDADD = \
 	dns/libdns.la \
-	base/libbase.la \
-	$(top_builddir)/lib/libmiscutil.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testDns_LDFLAGS= $(LIBADD_DL)
+tests_testDns_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of parser/*
 
