@@ -217,7 +217,7 @@ cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, int gue
 }
 
 void
-cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const char *label)
+cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const SBuf &label)
 {
     const int true_count = stats->trueHits + stats->trueMisses;
     const int false_count = stats->falseHits + stats->falseMisses;
@@ -225,15 +225,15 @@ cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * se
     const int miss_count = stats->trueMisses + stats->falseMisses;
     const int tot_count = true_count + false_count;
 
-    assert(label);
+    assert(!label.isEmpty());
     assert(tot_count == hit_count + miss_count);    /* paranoid */
 
     if (!tot_count) {
-        storeAppendPrintf(sentry, "no guess stats for %s available\n", label);
+        storeAppendPrintf(sentry, "no guess stats for " SQUIDSBUFPH " available\n", SQUIDSBUFPRINT(label));
         return;
     }
 
-    storeAppendPrintf(sentry, "Digest guesses stats for %s:\n", label);
+    storeAppendPrintf(sentry, "Digest guesses stats for " SQUIDSBUFPH ":\n", SQUIDSBUFPRINT(label));
     storeAppendPrintf(sentry, "guess\t hit\t\t miss\t\t total\t\t\n");
     storeAppendPrintf(sentry, " \t #\t %%\t #\t %%\t #\t %%\t\n");
     storeAppendPrintf(sentry, "true\t %d\t %.2f\t %d\t %.2f\t %d\t %.2f\n",
@@ -253,13 +253,13 @@ cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * se
 }
 
 void
-cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e)
+cacheDigestReport(CacheDigest * cd, const SBuf &label, StoreEntry * e)
 {
     CacheDigestStats stats;
     assert(cd && e);
     cacheDigestStats(cd, &stats);
-    storeAppendPrintf(e, "%s digest: size: %d bytes\n",
-                      label ? label : "", stats.bit_count / 8
+    storeAppendPrintf(e, SQUIDSBUFPH " digest: size: %d bytes\n",
+                      SQUIDSBUFPRINT(label), stats.bit_count / 8
                      );
     storeAppendPrintf(e, "\t entries: count: %" PRIu64 " capacity: %" PRIu64 " util: %d%%\n",
                       cd->count,
