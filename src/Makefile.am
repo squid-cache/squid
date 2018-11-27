@@ -1089,38 +1089,16 @@ tests_testSBufList_LDADD=\
 tests_testSBufList_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testString
-## string needs mem.cc.
-## mem.cc needs ClientInfo.h
-## libsquid pulls in SquidConfig and children. stub them.
 tests_testString_SOURCES = \
-	ClientInfo.h \
-	MemBuf.cc \
-	String.cc \
-	tests/stub_SBufDetailedStats.cc \
 	tests/testString.cc \
-	tests/testString.h \
-	cache_cf.h \
-	tests/stub_cache_cf.cc \
-	tests/stub_cache_manager.cc \
-	tests/stub_cbdata.cc \
-	tests/stub_debug.cc \
-	tests/stub_HelperChildConfig.cc \
-	tests/stub_libmem.cc \
-	tools.h \
-	tests/stub_tools.cc \
-	tests/stub_time.cc \
-	wordlist.h \
-	wordlist.cc
+	tests/testString.h
 nodist_tests_testString_SOURCES = \
-	$(TESTSOURCES)
+	String.cc \
+	tests/stub_SBuf.cc \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc
 tests_testString_LDADD = \
 	base/libbase.la \
-	libsquid.la \
-	ip/libip.la \
-	sbuf/libsbuf.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(REGEXLIB) \
-	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
