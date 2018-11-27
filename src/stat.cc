@@ -1583,7 +1583,8 @@ statPeerSelect(StoreEntry * sentry)
     const int tot_used = f->cd.times_used + f->icp.times_used;
 
     /* totals */
-    cacheDigestGuessStatsReport(&f->cd.guess, sentry, "all peers");
+    static const SBuf label("all peers");
+    cacheDigestGuessStatsReport(&f->cd.guess, sentry, label);
     /* per-peer */
     storeAppendPrintf(sentry, "\nPer-peer statistics:\n");
 

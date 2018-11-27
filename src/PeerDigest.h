@@ -81,7 +81,7 @@ public:
 
     CachePeer *peer = nullptr;          /**< pointer back to peer structure, argh */
     CacheDigest *cd = nullptr;            /**< actual digest structure */
-    String host;                /**< copy of peer->host */
+    SBuf host;                        ///< copy of peer->host
     const char *req_result = nullptr;     /**< text status of the last request */
 
     struct {
