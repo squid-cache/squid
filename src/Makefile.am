@@ -866,17 +866,13 @@ TESTSOURCES= \
 ## - place stubs etc. requiredd to link in nodist_*_SOURCES
 ## - add other component .(h|cc) files needed to link and run tests
 ##
-## NP: (TESTSOURCES) defines stub debugs() and new/delete for testing
-##
 #check_PROGRAMS += tests/testX
 #tests_testX_SOURCES= \
 #	tests/testX.cc \
-#	tests/testX.h \
-#	X.cc \
-#	X.h
+#	tests/testX.h
 #nodist_tests_testX_SOURCES= \
-#	tests/stubs_as_needed.cc \
-#	$(TESTSOURCES)
+#	X.cc \
+#	tests/stubs_as_needed.cc
 #tests_testX_LDADD=\
 #	$(LIBCPPUNIT_LIBS) \
 #	$(COMPAT_LIB) \
