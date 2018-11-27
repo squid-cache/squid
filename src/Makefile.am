@@ -1053,18 +1053,16 @@ tests_testTokenizer_LDFLAGS = $(LIBADD_DL)
 ## Tests of sbuf/* and String handling objects
 
 check_PROGRAMS += tests/testSBuf
-tests_testSBuf_SOURCES= \
-	tests/testSBuf.h \
-	tests/testSBuf.cc \
-	tests/SBufFindTest.h \
+tests_testSBuf_SOURCES = \
 	tests/SBufFindTest.cc \
-	tests/stub_SBufDetailedStats.cc \
-	tests/stub_time.cc \
+	tests/SBufFindTest.h \
+	tests/testSBuf.cc \
+	tests/testSBuf.h
+nodist_tests_testSBuf_SOURCES = \
 	tests/stub_debug.cc \
-	tests/stub_fatal.cc \
-	tests/stub_libmem.cc
-nodist_tests_testSBuf_SOURCES=$(TESTSOURCES)
-tests_testSBuf_LDADD= \
+	tests/stub_libmem.cc \
+	tests/stub_StatHist.cc
+tests_testSBuf_LDADD = \
 	sbuf/libsbuf.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
