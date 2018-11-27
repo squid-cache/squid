@@ -1034,22 +1034,17 @@ tests_testDns_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testTokenizer
 tests_testTokenizer_SOURCES = \
-	tests/testTokenizer.h \
-	tests/testTokenizer.cc
+	tests/testTokenizer.cc \
+	tests/testTokenizer.h
 nodist_tests_testTokenizer_SOURCES = \
 	parser/Tokenizer.h \
-	SquidString.h \
-	String.cc \
-	$(TESTSOURCES) \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
-	tests/stub_time.cc \
-	tests/stub_SBufDetailedStats.cc
+	tests/stub_StatHist.cc
 tests_testTokenizer_LDADD = \
 	parser/libparser.la \
-	base/libbase.la \
 	sbuf/libsbuf.la \
-	$(top_builddir)/lib/libmiscutil.la \
+	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)

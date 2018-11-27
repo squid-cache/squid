@@ -61,7 +61,9 @@ SBuf::size_type SBuf::find(const SBuf &, size_type) const STUB_RETVAL(SBuf::npos
 SBuf::size_type SBuf::rfind(char, size_type) const STUB_RETVAL(SBuf::npos)
 SBuf::size_type SBuf::rfind(const SBuf &, size_type) const STUB_RETVAL(SBuf::npos)
 SBuf::size_type SBuf::findFirstOf(const CharacterSet &, size_type) const STUB_RETVAL(SBuf::npos)
+SBuf::size_type SBuf::findLastOf(const CharacterSet &, size_type) const STUB_RETVAL(SBuf::npos)
 SBuf::size_type SBuf::findFirstNotOf(const CharacterSet &, size_type) const STUB_RETVAL(SBuf::npos)
+SBuf::size_type SBuf::findLastNotOf(const CharacterSet &, size_type) const STUB_RETVAL(SBuf::npos)
 void SBuf::toLower() STUB
 void SBuf::toUpper() STUB
 
