@@ -301,6 +301,27 @@ PeerSelector::resolveSelected()
         return;
     }
 
+    if (fs && fs->code == PINNED) {
+#if 0
+        if (ConnStateData *pinned_connection = request->pinnedConnection()) {
+            Comm::ConnectionPointer p = new Comm::Connection();
+            Must(pinned_connection->pinning.serverConnection);
+            //Does not realy needed, we can have an empty address
+            p = pinned_connection->pinning.serverConnection;
+            handlePath(p, *fs);
+        }
+#else
+        // Send an empty IP address marked as PINNED
+        Comm::ConnectionPointer p = new Comm::Connection();
+        handlePath(p, *fs);
+#endif
+
+        servers = fs->next;
+        delete fs;
+        resolveSelected();
+        return;
+    }
+
     // convert the list of FwdServer destinations into destinations IP addresses
     if (fs && wantsMoreDestinations()) {
         // send the next one off for DNS lookup.

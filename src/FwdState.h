@@ -123,6 +123,7 @@ private:
     void doneWithRetries();
     void completed();
     void retryOrBail();
+    bool retryOrReforwardIfPinned() const;
     ErrorState *makeConnectingError(const err_type type) const;
     void connectedToPeer(Security::EncryptorAnswer &answer);
     static void RegisterWithCacheManager(void);

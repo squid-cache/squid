@@ -629,6 +629,12 @@ FwdState::checkRetry()
     if (exhaustedTries())
         return false;
 
+    if (!retryOrReforwardIfPinned())
+        return false;
+
+    if (n_tries > Config.forward_max_tries)
+        return false;
+
     if (!EnoughTimeToReForward(start_t))
         return false;
 
@@ -1107,6 +1113,11 @@ FwdState::reforward()
 
     debugs(17, 3, HERE << e->url() << "?" );
 
+    if (!retryOrReforwardIfPinned()) {
+        debugs(17, 3, "Non reforwardable pinned connection");
+        return 0;
+    }
+
     if (!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
         debugs(17, 3, HERE << "No, ENTRY_FWD_HDR_WAIT isn't set");
         return 0;
@@ -1266,6 +1277,26 @@ bool
 FwdState::exhaustedTries() const
 {
     return n_tries >= Config.forward_max_tries;
+}
+
+FwdState::retryOrReforwardIfPinned() const
+{
+    if (!request->flags.pinned)
+        return true;
+
+    // We should not reforward or retry requests on SSL bumped connections
+    // if the bumping mode is server-first, peek or stare.
+    // The client-first bumping mode can retried.
+    if (request->flags.sslBumped)
+        return false;
+
+    // Maybe we want to check for ZERO_SIZE_OBJECT errors for HTTP requests
+    // and does not allow retry or reforward.
+    // Currently these cases retried but not re-forwarded
+
+    // Retry and reforward any other pinned connections used on FTP proxying
+    // or on HTTP connection oriented authentication
+    return true;
 }
 
 /**** PRIVATE NON-MEMBER FUNCTIONS ********************************************/
