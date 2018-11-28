@@ -147,7 +147,7 @@ private:
     ErrorState *err;
     Comm::ConnectionPointer clientConn;        ///< a possibly open connection to the client.
     time_t start_t;
-    int n_tries;  ///< the number of forwarding attempts, done so far
+    int n_tries; ///< the number of forwarding attempts so far
 
     // AsyncCalls which we set and may need cancelling.
     struct {
