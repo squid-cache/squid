@@ -711,9 +711,11 @@ Rock::SwapDir::diskOffsetLimit() const
 }
 
 bool
-Rock::SwapDir::useFreeSlot(Ipc::Mem::PageId &pageId)
+Rock::SwapDir::useFreeSlot(Ipc::Mem::PageId &pageId, const sfileno filen)
 {
     if (freeSlots->pop(pageId)) {
+        const auto sid = pageId.number - 1;
+        map->writeableSlice(filen, sid).reset();
         debugs(47, 5, "got a previously free slot: " << pageId);
         return true;
     }
@@ -724,6 +726,8 @@ Rock::SwapDir::useFreeSlot(Ipc::Mem::PageId &pageId)
     if (map->purgeOne()) {
         assert(!waitingForPage); // noteFreeMapSlice() should have cleared it
         assert(pageId.set());
+        const auto sid = pageId.number - 1;
+        map->writeableSlice(filen, sid).reset();
         debugs(47, 5, "got a previously busy slot: " << pageId);
         return true;
     }

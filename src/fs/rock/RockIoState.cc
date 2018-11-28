@@ -311,7 +311,7 @@ Rock::SlotId
 Rock::IoState::reserveSlotForWriting()
 {
     Ipc::Mem::PageId pageId;
-    if (dir->useFreeSlot(pageId))
+    if (dir->useFreeSlot(pageId, swap_filen))
         return pageId.number-1;
 
     // This may happen when the number of available db slots is close to the

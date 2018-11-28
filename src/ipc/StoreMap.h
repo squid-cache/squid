@@ -30,7 +30,7 @@ class StoreMapSlice
 public:
     typedef uint32_t Size;
 
-    StoreMapSlice(): size(0), next(-1) {}
+    StoreMapSlice() { reset(); }
     StoreMapSlice(const StoreMapSlice &o) {
         size.exchange(o.size);
         next.exchange(o.next);
@@ -41,6 +41,8 @@ public:
         next.store(o.next);
         return *this;
     }
+
+    void reset() { size = 0; next = -1; }
 
     std::atomic<Size> size; ///< slice contents size
     std::atomic<StoreMapSliceId> next; ///< ID of the next entry slice
