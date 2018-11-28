@@ -48,20 +48,11 @@ class CertValidationResponse;
 };
 #endif
 
-/**
- * Returns the TOS value that we should be setting on the connection
- * to the server, based on the ACL.
- */
-tos_t GetTosToServer(HttpRequest * request);
-
-/**
- * Returns the Netfilter mark value that we should be setting on the
- * connection to the server, based on the ACL.
- */
-nfmark_t GetNfmarkToServer(HttpRequest * request);
-
 /// Sets initial TOS value and Netfilter for the future outgoing connection.
-void GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn);
+void GetMarkingsToServer(HttpRequest * request, Comm::ConnectionPointer &conn);
+
+/// Sets TOS value and Netfilter for the outgoing connection.
+void SetMarkingsToServer(HttpRequest * request, Comm::ConnectionPointer &conn);
 
 class HelperReply;
 class FwdState: public RefCountable, public PeerSelectionInitiator

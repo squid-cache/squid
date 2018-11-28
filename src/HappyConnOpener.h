@@ -12,6 +12,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "http/forward.h"
 
 class FwdState;
 class HappyConnOpener;
@@ -117,7 +118,7 @@ public:
     };
 
 public:
-    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &, const time_t aFwdStart, int tries);
+    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart, int tries);
     virtual ~HappyConnOpener() override;
 
     /// configures reuse of old connections
@@ -139,10 +140,6 @@ public:
     void noteSpareAllowance();
 
     /* XXX: reorder and hide some */
-
-    // XXX: Should not these depend on the connection destination?
-    tos_t useTos; ///< The tos to use for opened connection
-    nfmark_t useNfmark;///< the nfmark to use for opened connection
 
     /// the start of the first connection attempt for the currentPeer
     HappyAbsoluteTime primeStart;
@@ -216,6 +213,8 @@ private:
     bool retriable_;
 
     const char *host_; ///< origin server domain name
+
+    HttpRequestPointer cause; ///< the request triggered the connection openning
 
     /// number of connection opening attempts, including those in the requestor
     int n_tries;

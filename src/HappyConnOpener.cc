@@ -296,10 +296,8 @@ SpareAllowanceGiver::concurrencyLimitReached() const
 
 /* HappyConnOpener */
 
-HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, const time_t aFwdStart, int tries):
+HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart, int tries):
     AsyncJob("HappyConnOpener"),
-    useTos(0),
-    useNfmark(0),
     primeStart(0),
     maxTries(tries),
     fwdStart(aFwdStart),
@@ -310,6 +308,7 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
     allowPconn_(true),
     retriable_(true),
     host_(nullptr),
+    cause(request),
     n_tries(0)
 {
     assert(destinations);
@@ -445,9 +444,7 @@ HappyConnOpener::openFreshConnection(PendingConnection &attempt, Comm::Connectio
     entry->mem_obj->checkUrlChecksum();
 #endif
 
-    // XXX: GetMarkingsToServer(request, *dest);
-    dest->tos = useTos;
-    dest->nfmark = useNfmark;
+    GetMarkingsToServer(cause.getRaw(), dest);
 
     // ConnOpener modifies its destination argument so we reset the source port
     // in case we are reusing the destination already used by our predecessor.
