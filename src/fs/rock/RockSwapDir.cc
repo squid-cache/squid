@@ -857,11 +857,19 @@ Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
         return;
     }
 
+    if (sio.splicingPoint >= 0) {
+        Ipc::StoreMap::Slice &splicingSlice = map->writeableSlice(sio.swap_filen, sio.splicingPoint);
+        // this may happen if disk has dropped one of the previous write requests
+        if (splicingSlice.next != request->sidCurrent) {
+            debugs(79, 3, "splicing mismatch: expected " << splicingSlice.next << ", but got " << request->sidCurrent);
+            errflag = DISK_ERROR;
+        }
+    }
+
     debugs(79, 7, "errflag=" << errflag << " rlen=" << request->len << " eof=" << request->eof);
 
-    // TODO: Fail if disk dropped one of the previous write requests.
-
     if (errflag == DISK_OK) {
+        sio.splicingPoint = request->sidCurrent;
         // do not increment sio.offset_ because we do it in sio->write()
 
         // finalize the shared slice info after writing slice contents to disk
@@ -880,7 +888,6 @@ Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
                 // sio.e keeps the (now read) lock on the anchor
             }
             sio.writeableAnchor_ = NULL;
-            sio.splicingPoint = request->sidCurrent;
             sio.finishedWriting(errflag);
         }
     } else {
