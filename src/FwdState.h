@@ -132,8 +132,9 @@ private:
 
     void syncWithServerConn(const char *host);
     void syncHierNote(const Comm::ConnectionPointer &server, const char *host);
-    /// whether we have not yet run out of permitted forwarding attempts
-    bool forwardTriesAllowed() const;
+
+    /// whether we have used up all permitted forwarding attempts
+    bool exhaustedTries() const;
 
 public:
     StoreEntry *entry;
