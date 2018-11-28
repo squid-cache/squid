@@ -4766,6 +4766,10 @@ DOC_START
 				value because Issuer often has spaces.
 
 		ssl::<cert
+				WARNING: Some certificates are large and may
+				cause issues by exceeding limits which differ
+				by log module used. 
+
 				The received server x509 certificate in PEM
 				format, including BEGIN and END lines (or a
 				dash ('-') if the certificate is unavailable).
