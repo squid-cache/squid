@@ -97,17 +97,7 @@ void StoreEntry::append(char const *, int) STUB
 void StoreEntry::vappendf(const char *, va_list) STUB
 void StoreEntry::setCollapsingRequirement(const bool required) STUB
 
-Store::Controller &Store::Root() STUB_RETREF(Store::Controller)
-void Store::Init(Store::Controller *root) STUB
-void Store::FreeMemory() STUB
-void Store::Stats(StoreEntry * output) STUB
 void Store::Maintain(void *unused) STUB
-int Store::Controller::store_dirs_rebuilding = 0;
-StoreSearch *Store::Controller::search() STUB_RETVAL(NULL)
-void Store::Controller::maintain() STUB
-bool Store::Controller::markedForDeletion(const cache_key *) const STUB_RETVAL(false)
-void Store::Controller::freeMemorySpace(const int) STUB
-bool Store::Controller::SmpAware() STUB_RETVAL(false)
 
 std::ostream &operator <<(std::ostream &os, const StoreEntry &)
 {

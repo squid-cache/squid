@@ -1699,7 +1699,7 @@ tests_testDiskIO_SOURCES = \
 	String.cc \
 	StrList.h \
 	StrList.cc \
-	tests/stub_SwapDir.cc \
+	tests/stub_libstore.cc \
 	Transients.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
@@ -1848,7 +1848,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	store_key_md5.cc \
 	swap_log_op.cc \
 	swap_log_op.h \
-	tests/stub_SwapDir.cc \
+	tests/stub_libstore.cc \
 	Transients.cc \
 	log/access_log.h \
 	tests/stub_access_log.cc \
@@ -2084,7 +2084,7 @@ tests_test_http_range_SOURCES = \
 	String.cc \
 	StrList.h \
 	StrList.cc \
-	tests/stub_SwapDir.cc \
+	tests/stub_libstore.cc \
 	Transients.cc \
 	tests/test_http_range.cc \
 	tests/stub_external_acl.cc \
@@ -2481,7 +2481,7 @@ tests_testHttpRequest_SOURCES = \
 	tools.cc \
 	Transients.cc \
 	tests/stub_tunnel.cc \
-	tests/stub_SwapDir.cc \
+	tests/stub_libstore.cc \
 	MemStore.cc \
 	urn.h \
 	urn.cc \
@@ -2777,7 +2777,7 @@ tests_testCacheManager_SOURCES = \
 	tools.cc \
 	Transients.cc \
 	tests/stub_tunnel.cc \
-	tests/stub_SwapDir.cc \
+	tests/stub_libstore.cc \
 	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	urn.h \
@@ -3081,7 +3081,7 @@ tests_testEvent_SOURCES = \
 	StoreMetaUnpacker.cc \
 	StoreSwapLogData.cc \
 	String.cc \
-	tests/stub_SwapDir.cc \
+	tests/stub_libstore.cc \
 	tests/CapturingStoreEntry.h \
 	tests/testEvent.cc \
 	tests/testEvent.h \
@@ -3314,7 +3314,7 @@ tests_testEventLoop_SOURCES = \
 	String.cc \
 	StrList.h \
 	StrList.cc \
-	tests/stub_SwapDir.cc \
+	tests/stub_libstore.cc \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \
 	tests/stub_main_cc.cc \
