@@ -296,10 +296,9 @@ SpareAllowanceGiver::concurrencyLimitReached() const
 
 /* HappyConnOpener */
 
-HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart, int tries):
+HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart):
     AsyncJob("HappyConnOpener"),
     primeStart(0),
-    maxTries(tries),
     fwdStart(aFwdStart),
     callback_(aCall),
     destinations(dests),

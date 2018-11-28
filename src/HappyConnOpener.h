@@ -118,7 +118,7 @@ public:
     };
 
 public:
-    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart, int tries);
+    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart);
     virtual ~HappyConnOpener() override;
 
     /// configures reuse of old connections
@@ -139,13 +139,8 @@ public:
     /// reacts to satisfying happy_eyeballs_connect_gap and happy_eyeballs_connect_limit
     void noteSpareAllowance();
 
-    /* XXX: reorder and hide some */
-
     /// the start of the first connection attempt for the currentPeer
     HappyAbsoluteTime primeStart;
-
-    const int maxTries; ///< n_tries limit (XXX: unused)
-    const time_t fwdStart; ///< requestor start time
 
 private:
     /* AsyncJob API */
@@ -180,6 +175,8 @@ private:
     void callCallback(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno, bool reused, const char *msg);
 
     void cancelSpareWait(const char *reason);
+
+    const time_t fwdStart; ///< requestor start time
 
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
 
