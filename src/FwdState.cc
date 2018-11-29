@@ -165,6 +165,10 @@ void FwdState::start(Pointer aSelf)
     if (!request->flags.ftpNative)
         entry->registerAbort(FwdState::abort, this);
 
+    request->flags.pinned = false; // XXX: what if the ConnStateData set this to flag existing credentials?
+    // XXX: answer: the peer selection *should* catch it and give us only the pinned peer. so we reverse the =0 step below.
+    // XXX: also, logs will now lie if pinning is broken and leads to an error message.
+
 #if STRICT_ORIGINAL_DST
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
@@ -202,20 +206,9 @@ FwdState::selectPeerForIntercepted()
     // use pinned connection if available
     Comm::ConnectionPointer p;
     if (ConnStateData *client = request->pinnedConnection()) {
-        p = client->validatePinnedConnection(request, NULL);
-        if (Comm::IsConnOpen(p)) {
-            /* duplicate peerSelectPinned() effects */
-            p->peerType = PINNED;
-            entry->ping_status = PING_DONE;     /* Skip ICP */
-
-            debugs(17, 3, "reusing a pinned conn: " << *p);
-            serverDestinations.push_back(p);
-        } else {
-            debugs(17,2, "Pinned connection is not valid: " << p);
-            ErrorState *anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request);
-            fail(anErr);
-        }
-        // Either use the valid pinned connection or fail if it is invalid.
+        entry->ping_status = PING_DONE;     /* Skip ICP */
+        serverDestinations.push_back(p);
+        handlePinned(nullptr);
         return;
     }
 
@@ -553,6 +546,13 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 {
     const bool wasBlocked = serverDestinations.empty();
     serverDestinations.push_back(path);
+
+    if (!path) { // Found a valid pinned connection
+        assert(wasBlocked); // Should be the first available option
+        handlePinned();
+        return;
+    }
+
     if (wasBlocked)
         startConnectionOrFail();
     // else continue to use one of the previously noted destinations;
@@ -629,7 +629,7 @@ FwdState::checkRetry()
     if (exhaustedTries())
         return false;
 
-    if (!retryOrReforwardIfPinned())
+    if (request->flags.pinned && !supportsRepinning())
         return false;
 
     if (n_tries > Config.forward_max_tries)
@@ -861,6 +861,40 @@ FwdState::syncHierNote(const Comm::ConnectionPointer &server, const char *host)
         al->hier.resetPeerNotes(server, host);
 }
 
+void
+FwdState::handlePinned()
+{
+    ConnStateData *pinned_connection = request->pinnedConnection();
+    debugs(17,7, "pinned peer connection: " << pinned_connection);
+    // pinned_connection may become nil after a pconn race
+    Comm::ConnectionPointer temp = pinned_connection ? pinned_connection->borrowPinnedConnection(request) : nullptr;
+    if (Comm::IsConnOpen(temp)) {
+        serverConn = temp;
+        flags.connected_okay = true;
+        ++n_tries;
+        request->flags.pinned = true;
+
+        if (pinned_connection->pinnedAuth())
+            request->flags.auth = true;
+
+        closeHandler = comm_add_close_handler(temp->fd,  fwdServerClosedWrapper, this);
+
+        syncWithServerConn(pinned_connection->pinning.host);
+
+        // the server may close the pinned connection before this request
+        pconnRace = racePossible;
+        dispatch();
+        return;
+    }
+
+    // Pinned connection failure.
+    debugs(17,2,HERE << "Pinned connection failed: " << pinned_connection);
+    ErrorState *anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request);
+    fail(anErr);
+    stopAndDestroy("pinned connection failure");
+    return;
+}
+
 /**
  * Called after forwarding path selection (via peer select) has taken place
  * and whenever forwarding needs to attempt a new connection (routing failover).
@@ -870,6 +904,7 @@ void
 FwdState::connectStart()
 {
     assert(serverDestinations.size() > 0);
+    assert(serverDestinations[0] != nullptr);
 
     debugs(17, 3, "fwdConnectStart: " << entry->url());
 
@@ -882,40 +917,6 @@ FwdState::connectStart()
         ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request);
         fail(anErr);
         stopAndDestroy("SslBump misconfiguration");
-        return;
-    }
-
-    request->flags.pinned = false; // XXX: what if the ConnStateData set this to flag existing credentials?
-    // XXX: answer: the peer selection *should* catch it and give us only the pinned peer. so we reverse the =0 step below.
-    // XXX: also, logs will now lie if pinning is broken and leads to an error message.
-    if (serverDestinations[0]->peerType == PINNED) {
-        ConnStateData *pinned_connection = request->pinnedConnection();
-        debugs(17,7, "pinned peer connection: " << pinned_connection);
-        // pinned_connection may become nil after a pconn race
-        serverConn = pinned_connection ? pinned_connection->borrowPinnedConnection(request, serverDestinations[0]->getPeer()) : nullptr;
-        if (Comm::IsConnOpen(serverConn)) {
-            flags.connected_okay = true;
-            ++n_tries;
-            request->flags.pinned = true;
-
-            if (pinned_connection->pinnedAuth())
-                request->flags.auth = true;
-
-            closeHandler = comm_add_close_handler(serverConn->fd,  fwdServerClosedWrapper, this);
-
-            syncWithServerConn(pinned_connection->pinning.host);
-
-            // the server may close the pinned connection before this request
-            pconnRace = racePossible;
-            dispatch();
-            return;
-        }
-
-        // Pinned connection failure.
-        debugs(17,2,HERE << "Pinned connection failed: " << pinned_connection);
-        ErrorState *anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request);
-        fail(anErr);
-        stopAndDestroy("pinned connection failure");
         return;
     }
 
@@ -1113,7 +1114,7 @@ FwdState::reforward()
 
     debugs(17, 3, HERE << e->url() << "?" );
 
-    if (!retryOrReforwardIfPinned()) {
+    if (request->flags.pinned && !supportsRepinning()) {
         debugs(17, 3, "Non reforwardable pinned connection");
         return 0;
     }
@@ -1279,23 +1280,17 @@ FwdState::exhaustedTries() const
     return n_tries >= Config.forward_max_tries;
 }
 
-FwdState::retryOrReforwardIfPinned() const
+FwdState::supportsRepinning() const
 {
-    if (!request->flags.pinned)
-        return true;
+    assert(request->flags.pinned);
 
-    // We should not reforward or retry requests on SSL bumped connections
-    // if the bumping mode is server-first, peek or stare.
-    // The client-first bumping mode can retried.
+    // We should not reforward or retry requests on TLS bumped
+    // and pinned connections
     if (request->flags.sslBumped)
         return false;
 
-    // Maybe we want to check for ZERO_SIZE_OBJECT errors for HTTP requests
-    // and does not allow retry or reforward.
-    // Currently these cases retried but not re-forwarded
-
-    // Retry and reforward any other pinned connections used on FTP proxying
-    // or on HTTP connection oriented authentication
+    // The other pinned cases are FTP proxying and connection-based HTTP
+    // authentication. TODO: Do these cases have re-pinning restrictions?
     return true;
 }
 

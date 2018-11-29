@@ -1205,11 +1205,11 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
 }
 
 static Comm::ConnectionPointer
-borrowPinnedConnection(HttpRequest *request, Comm::ConnectionPointer &serverDestination)
+borrowPinnedConnection(HttpRequest *request)
 {
     // pinned_connection may become nil after a pconn race
     if (ConnStateData *pinned_connection = request ? request->pinnedConnection() : nullptr) {
-        Comm::ConnectionPointer serverConn = pinned_connection->borrowPinnedConnection(request, serverDestination->getPeer());
+        Comm::ConnectionPointer serverConn = pinned_connection->borrowPinnedConnection(request);
         return serverConn;
     }
 
@@ -1221,6 +1221,21 @@ TunnelStateData::noteDestination(Comm::ConnectionPointer path)
 {
     const bool wasBlocked = serverDestinations.empty();
     serverDestinations.push_back(path);
+
+    if (!path) {
+        assert(wasBlocked);
+        Comm::ConnectionPointer serverConn = borrowPinnedConnection(request.getRaw());
+        debugs(26,7, "pinned peer connection: " << serverConn);
+        if (Comm::IsConnOpen(serverConn)) {
+            tunnelConnectDone(serverConn, Comm::OK, 0, (void *)this);
+            return;
+        }
+        // a PINNED path failure is fatal; do not wait for more paths
+        sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw()),
+                  "pinned path failure");
+        return;
+    }
+
     if (wasBlocked)
         startConnecting();
     // else continue to use one of the previously noted destinations;
@@ -1291,20 +1306,8 @@ TunnelStateData::startConnecting()
 
     assert(!serverDestinations.empty());
     Comm::ConnectionPointer &dest = serverDestinations.front();
+    assert(dest != nullptr);
     debugs(26, 3, "to " << dest);
-
-    if (dest->peerType == PINNED) {
-        Comm::ConnectionPointer serverConn = borrowPinnedConnection(request.getRaw(), dest);
-        debugs(26,7, "pinned peer connection: " << serverConn);
-        if (Comm::IsConnOpen(serverConn)) {
-            tunnelConnectDone(serverConn, Comm::OK, 0, (void *)this);
-            return;
-        }
-        // a PINNED path failure is fatal; do not wait for more paths
-        sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw()),
-                  "pinned path failure");
-        return;
-    }
 
     GetMarkingsToServer(request.getRaw(), *dest);
 

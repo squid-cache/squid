@@ -123,7 +123,11 @@ private:
     void doneWithRetries();
     void completed();
     void retryOrBail();
-    bool retryOrReforwardIfPinned() const;
+
+    /// whether a pinned to-peer connection can be replaced with another one
+    /// via retrying or reforwarding a failed request
+    bool supportsRepinning() const;
+
     ErrorState *makeConnectingError(const err_type type) const;
     void connectedToPeer(Security::EncryptorAnswer &answer);
     static void RegisterWithCacheManager(void);
@@ -136,6 +140,8 @@ private:
 
     /// whether we have used up all permitted forwarding attempts
     bool exhaustedTries() const;
+
+    void handlePinned(); ///< Handle pinned connections
 
 public:
     StoreEntry *entry;

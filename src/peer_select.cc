@@ -302,20 +302,9 @@ PeerSelector::resolveSelected()
     }
 
     if (fs && fs->code == PINNED) {
-#if 0
-        if (ConnStateData *pinned_connection = request->pinnedConnection()) {
-            Comm::ConnectionPointer p = new Comm::Connection();
-            Must(pinned_connection->pinning.serverConnection);
-            //Does not realy needed, we can have an empty address
-            p = pinned_connection->pinning.serverConnection;
-            handlePath(p, *fs);
-        }
-#else
         // Send an empty IP address marked as PINNED
-        Comm::ConnectionPointer p = new Comm::Connection();
-        handlePath(p, *fs);
-#endif
-
+        Comm::ConnectionPointer nil;
+        handlePath(nil, *fs);
         servers = fs->next;
         delete fs;
         resolveSelected();
@@ -573,8 +562,9 @@ PeerSelector::selectPinned()
     // TODO: Avoid all repeated calls. Relying on PING_DONE is not enough.
     if (!request->pinnedConnection())
         return;
-    CachePeer *pear = request->pinnedConnection()->pinnedPeer();
-    if (Comm::IsConnOpen(request->pinnedConnection()->validatePinnedConnection(request, pear))) {
+
+    if (Comm::IsConnOpen(request->pinnedConnection()->validatePinnedConnection(request))) {
+        CachePeer *pear = request->pinnedConnection()->pinnedPeer();
         const bool usePinned = pear ? peerAllowedToUse(pear, this) : (direct != DIRECT_NO);
         if (usePinned) {
             addSelection(pear, PINNED);
@@ -1028,15 +1018,18 @@ PeerSelector::handlePath(Comm::ConnectionPointer &path, FwdServer &fs)
 {
     ++foundPaths;
 
-    path->peerType = fs.code;
-    path->setPeer(fs._peer.get());
+    if (path) {
+        path->peerType = fs.code;
+        path->setPeer(fs._peer.get());
 
-    // check for a configured outgoing address for this destination...
-    getOutgoingAddress(request, path);
+        // check for a configured outgoing address for this destination...
+        getOutgoingAddress(request, path);
+        debugs(44, 2, id << " found " << path << ", destination #" << foundPaths << " for " << url());
+    } else
+        debugs(44, 2, id << " found pinned, destination #" << foundPaths << " for " << url());
 
     request->hier.ping = ping; // may be updated later
 
-    debugs(44, 2, id << " found " << path << ", destination #" << foundPaths << " for " << url());
     debugs(44, 2, "  always_direct = " << always_direct);
     debugs(44, 2, "   never_direct = " << never_direct);
     debugs(44, 2, "       timedout = " << ping.timedout);
