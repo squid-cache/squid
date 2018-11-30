@@ -26,6 +26,8 @@ class WriteRequest;
 namespace Rock
 {
 
+class WriteRequest;
+
 /// \ingroup Rock
 class SwapDir: public ::SwapDir, public IORequestor, public Ipc::StoreMapCleaner
 {
@@ -136,6 +138,9 @@ protected:
 
 private:
     void createError(const char *const msg);
+    void handleWriteCompletionSuccess(WriteRequest &request);
+    void handleWriteCompletionProblem(const int errflag, WriteRequest &request);
+    bool droppedEarlierRequest(WriteRequest &request);
 
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir
