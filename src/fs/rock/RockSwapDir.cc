@@ -929,17 +929,13 @@ Rock::SwapDir::writeError(StoreIOState &sio)
 
 /// whether the disk has dropped one of the previous write requests
 bool
-Rock::SwapDir::droppedEarlierRequest(WriteRequest &request)
+Rock::SwapDir::droppedEarlierRequest(const WriteRequest &request) const
 {
-    auto &sio = *request.sio;
+    const auto &sio = *request.sio;
     assert(sio.writeableAnchor_);
-    Ipc::StoreMapSliceId expectedSliceId = sio.writeableAnchor_->start;
-
-    if (sio.splicingPoint >= 0) {
-        Ipc::StoreMap::Slice &lastSuccessfullyWrittenSlice = map->writeableSlice(sio.swap_filen, sio.splicingPoint);
-        expectedSliceId = lastSuccessfullyWrittenSlice.next;
-    }
-
+    const Ipc::StoreMapSliceId expectedSliceId = sio.splicingPoint < 0 ?
+        sio.writeableAnchor_->start :
+        map->writeableSlice(sio.swap_filen, sio.splicingPoint).next;
     if (expectedSliceId != request.sidCurrent) {
         debugs(79, 3, "yes; expected " << expectedSliceId << ", but got " << request.sidCurrent);
         return true;
