@@ -26,8 +26,6 @@ class WriteRequest;
 namespace Rock
 {
 
-class WriteRequest;
-
 /// \ingroup Rock
 class SwapDir: public ::SwapDir, public IORequestor, public Ipc::StoreMapCleaner
 {
