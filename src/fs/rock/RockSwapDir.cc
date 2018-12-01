@@ -870,7 +870,7 @@ Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
         CollapsedForwarding::Broadcast(*sio.e);
 }
 
-// actions performed after slice content has been successfully written to disk
+/// code shared by writeCompleted() success handling cases
 void
 Rock::SwapDir::handleWriteCompletionSuccess(WriteRequest &request)
 {
@@ -900,7 +900,7 @@ Rock::SwapDir::handleWriteCompletionSuccess(WriteRequest &request)
     }
 }
 
-// actions performed if slice content has failed to be written to disk
+/// code shared by writeCompleted() error handling cases
 void
 Rock::SwapDir::handleWriteCompletionProblem(const int errflag, WriteRequest &request)
 {
@@ -927,7 +927,7 @@ Rock::SwapDir::writeError(StoreIOState &sio)
     // All callers must also call IoState callback, to propagate the error.
 }
 
-/// whether the disk has dropped one of the previous write requests
+/// whether the disk has dropped at least one of the previous write requests
 bool
 Rock::SwapDir::droppedEarlierRequest(const WriteRequest &request) const
 {
