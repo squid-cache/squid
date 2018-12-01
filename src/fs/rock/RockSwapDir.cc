@@ -872,7 +872,7 @@ Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
 
 /// code shared by writeCompleted() success handling cases
 void
-Rock::SwapDir::handleWriteCompletionSuccess(WriteRequest &request)
+Rock::SwapDir::handleWriteCompletionSuccess(const WriteRequest &request)
 {
     auto &sio = *(request.sio);
     sio.splicingPoint = request.sidCurrent;
@@ -902,7 +902,7 @@ Rock::SwapDir::handleWriteCompletionSuccess(WriteRequest &request)
 
 /// code shared by writeCompleted() error handling cases
 void
-Rock::SwapDir::handleWriteCompletionProblem(const int errflag, WriteRequest &request)
+Rock::SwapDir::handleWriteCompletionProblem(const int errflag, const WriteRequest &request)
 {
     auto &sio = *request.sio;
 

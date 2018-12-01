@@ -136,8 +136,8 @@ protected:
 
 private:
     void createError(const char *const msg);
-    void handleWriteCompletionSuccess(WriteRequest &request);
-    void handleWriteCompletionProblem(const int errflag, WriteRequest &request);
+    void handleWriteCompletionSuccess(const WriteRequest &request);
+    void handleWriteCompletionProblem(const int errflag, const WriteRequest &request);
     bool droppedEarlierRequest(const WriteRequest &request) const;
 
     DiskIOStrategy *io;
