@@ -294,6 +294,9 @@ public:
     /// readable anchor for the entry created by openForReading()
     const Anchor &readableEntry(const AnchorId anchorId) const;
 
+    /// prepare a chain-unaffiliated slice for being added to an entry chain
+    void prepFreeSlice(const SliceId sliceId);
+
     /// Returns the ID of the entry slice containing n-th byte or
     /// a negative ID if the entry does not store that many bytes (yet).
     /// Requires a read lock.

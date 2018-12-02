@@ -66,7 +66,7 @@ public:
     bool validSlotId(const SlotId slotId) const;
 
     /// finds and returns a free db slot to fill or throws
-    SlotId reserveSlotForWriting(const sfileno);
+    SlotId reserveSlotForWriting();
 
     /// purges one or more entries to make full() false and free some slots
     void purgeSome();

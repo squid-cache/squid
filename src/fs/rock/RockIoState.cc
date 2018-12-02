@@ -190,7 +190,7 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
     // allocate the first slice during the first write
     if (!coreOff) {
         assert(sidCurrent < 0);
-        sidCurrent = dir->reserveSlotForWriting(swap_filen); // throws
+        sidCurrent = dir->reserveSlotForWriting(); // throws on failures
         assert(sidCurrent >= 0);
         writeAnchor().start = sidCurrent;
     }
@@ -207,7 +207,7 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
         // We do not write a full buffer without overflow because
         // we would not yet know what to set the nextSlot to.
         if (overflow) {
-            const SlotId sidNext = dir->reserveSlotForWriting(swap_filen); // throws
+            const auto sidNext = dir->reserveSlotForWriting(); // throws
             assert(sidNext >= 0);
             writeToDisk(sidNext);
         } else if (Store::Root().transientReaders(*e)) {

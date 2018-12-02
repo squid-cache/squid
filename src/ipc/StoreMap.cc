@@ -360,6 +360,14 @@ Ipc::StoreMap::freeChainAt(SliceId sliceId, const SliceId splicingPoint)
     debugs(54, 7, "freed chain #" << chainId << " in " << path);
 }
 
+void
+Ipc::StoreMap::prepFreeSlice(const SliceId sliceId)
+{
+    // TODO: Move freeSlots here, along with reserveSlotForWriting() logic.
+    assert(validSlice(sliceId));
+    sliceAt(sliceId).reset();
+}
+
 Ipc::StoreMap::SliceId
 Ipc::StoreMap::sliceContaining(const sfileno fileno, const uint64_t bytesNeeded) const
 {
