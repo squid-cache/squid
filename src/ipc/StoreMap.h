@@ -42,7 +42,8 @@ public:
         return *this;
     }
 
-    void reset() { size = 0; next = -1; }
+    /// restore default-constructed state
+    void clear() { size = 0; next = -1; }
 
     std::atomic<Size> size; ///< slice contents size
     std::atomic<StoreMapSliceId> next; ///< ID of the next entry slice

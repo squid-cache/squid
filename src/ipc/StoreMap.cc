@@ -346,8 +346,7 @@ Ipc::StoreMap::freeChainAt(SliceId sliceId, const SliceId splicingPoint)
     while (sliceId >= 0) {
         Slice &slice = sliceAt(sliceId);
         const SliceId nextId = slice.next;
-        slice.size = 0;
-        slice.next = -1;
+        slice.clear();
         if (cleaner)
             cleaner->noteFreeMapSlice(sliceId); // might change slice state
         if (sliceId == splicingPoint) {
@@ -365,7 +364,7 @@ Ipc::StoreMap::prepFreeSlice(const SliceId sliceId)
 {
     // TODO: Move freeSlots here, along with reserveSlotForWriting() logic.
     assert(validSlice(sliceId));
-    sliceAt(sliceId).reset();
+    sliceAt(sliceId).clear();
 }
 
 Ipc::StoreMap::SliceId
