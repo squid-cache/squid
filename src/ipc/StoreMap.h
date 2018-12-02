@@ -30,7 +30,7 @@ class StoreMapSlice
 public:
     typedef uint32_t Size;
 
-    StoreMapSlice() { reset(); }
+    StoreMapSlice(): size(0), next(-1) {}
     StoreMapSlice(const StoreMapSlice &o) {
         size.exchange(o.size);
         next.exchange(o.next);
