@@ -710,16 +710,16 @@ Rock::SwapDir::diskOffsetLimit() const
     return diskOffset(map->sliceLimit());
 }
 
-bool
-Rock::SwapDir::useFreeSlot(Ipc::StoreMapSliceId &slotId, const sfileno filen)
+Rock::SlotId
+Rock::SwapDir::reserveSlotForWriting(const sfileno filen)
 {
     Ipc::Mem::PageId pageId;
 
     if (freeSlots->pop(pageId)) {
-        slotId = pageId.number - 1;
+        const auto slotId = pageId.number - 1;
         map->writeableSlice(filen, slotId).reset();
         debugs(47, 5, "got a previously free slot: " << slotId);
-        return true;
+        return slotId;
     }
 
     // catch free slots delivered to noteFreeMapSlice()
@@ -728,16 +728,20 @@ Rock::SwapDir::useFreeSlot(Ipc::StoreMapSliceId &slotId, const sfileno filen)
     if (map->purgeOne()) {
         assert(!waitingForPage); // noteFreeMapSlice() should have cleared it
         assert(pageId.set());
-        slotId = pageId.number - 1;
+        const auto slotId = pageId.number - 1;
         map->writeableSlice(filen, slotId).reset();
         debugs(47, 5, "got a previously busy slot: " << slotId);
-        return true;
+        return slotId;
     }
     assert(waitingForPage == &pageId);
     waitingForPage = NULL;
 
+    // This may happen when the number of available db slots is close to the
+    // number of concurrent requests reading or writing those slots, which may
+    // happen when the db is "small" compared to the request traffic OR when we
+    // are rebuilding and have not loaded "many" entries or empty slots yet.
     debugs(47, 3, "cannot get a slot; entries: " << map->entryCount());
-    return false;
+    throw TexcHere("ran out of free db slots");
 }
 
 bool
