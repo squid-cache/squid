@@ -63,7 +63,7 @@ public:
     int64_t slotLimitActual() const; ///< total number of slots in this db
 
     /// removes a slot from a list of free slots or returns false
-    bool useFreeSlot(Ipc::Mem::PageId &pageId, const sfileno);
+    bool useFreeSlot(Ipc::StoreMapSliceId &slotId, const sfileno);
     /// whether the given slot ID may point to a slot in this db
     bool validSlotId(const SlotId slotId) const;
     /// purges one or more entries to make full() false and free some slots

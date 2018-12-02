@@ -310,9 +310,9 @@ Rock::IoState::writeBufToDisk(const SlotId sidNext, const bool eof, const bool l
 Rock::SlotId
 Rock::IoState::reserveSlotForWriting()
 {
-    Ipc::Mem::PageId pageId;
-    if (dir->useFreeSlot(pageId, swap_filen))
-        return pageId.number-1;
+    SlotId slotId;
+    if (dir->useFreeSlot(slotId, swap_filen))
+        return slotId;
 
     // This may happen when the number of available db slots is close to the
     // number of concurrent requests reading or writing those slots, which may
