@@ -2920,7 +2920,9 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     Must(http->request);
     auto &request = http->request;
 
-    sslConnectHostOrIp = request->url.host();
+    static char ip[MAX_IPSTRLEN];
+    sslConnectHostOrIp =  request->url.hostIsNumeric() ?
+        request->url.hostIP().toStr(ip, sizeof(ip)) :request->url.host();
     tlsConnectPort = request->url.port();
     resetSslCommonName(request->url.host());
 
@@ -3189,25 +3191,23 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::
 
     if (pinning.serverConnection != nullptr) {
         static char ip[MAX_IPSTRLEN];
-        pinning.serverConnection->remote.toHostStr(ip, sizeof(ip));
-        connectHost.assign(ip);
+        connectHost = pinning.serverConnection->remote.toStr(ip, sizeof(ip));
         connectPort = pinning.serverConnection->remote.port();
-    } else if (cause && cause->method == Http::METHOD_CONNECT) {
-        // We are inside a (not fully established) CONNECT request
-        connectHost = cause->url.host();
+    } else if (cause) {
+        static char ip[MAX_IPSTRLEN];
+        connectHost = cause->url.hostIsNumeric() ?
+            cause->url.hostIP().toStr(ip, sizeof(ip)) : cause->url.host();
         connectPort = cause->url.port();
 #if USE_OPENSSL
-    } else if (!cause && switchedToHttps_ && sslConnectHostOrIp.size()) {
-        // We are inside client-first bumped connection where there is not
-        // any pinned connection
+    } else if (sslConnectHostOrIp.size()) {
         connectHost.assign(sslConnectHostOrIp.rawBuf(), sslConnectHostOrIp.size());
         connectPort = tlsConnectPort;
 #endif
-    } else if (!cause && port->flags.isIntercepted()) {
+    } else if (transparent()) {
         static char ip[MAX_IPSTRLEN];
-        connectHost.assign(clientConnection->local.toStr(ip, sizeof(ip)));
+        connectHost = clientConnection->local.toStr(ip, sizeof(ip));
         connectPort = clientConnection->local.port();
-    }else {
+    } else {
         debugs(33, 2, "Not able to compute URL, abort request tunneling for " << reason);
         return false;
     }
@@ -3987,18 +3987,19 @@ ConnStateData::mayTunnelUnsupportedProto()
     if (!Config.accessList.on_unsupported_protocol)
         return false;
  #if USE_OPENSSL
-    // If bump is enabled but not switched to https yet, while reading
-    // first handshake bytes
-    if (sslBumpMode != Ssl::bumpEnd  && !switchedToHttps_)
+    // subject to SslBump processing and currently parsing the TLS
+    // client handshake
+    if (sslBumpMode != Ssl::bumpEnd && !switchedToHttps_)
         return true;
 
-    // The first request inside bumped connection
-    if (sslBumpMode != Ssl::bumpEnd  && pinning.serverConnection && pipeline.nrequests == 2)
+    // The first request inside a bumped connection. pipeline.nrequests is 2
+    // because it counts the (fake or real) CONNECT request as well.
+    if (sslBumpMode != Ssl::bumpEnd && pipeline.nrequests == 2)
         return true;
  #endif
 
-    // The first request in a plain intercepted port
-    if (port->flags.isIntercepted() && pipeline.nrequests == 1)
+    // the first request in a connection to a plain intercepting port
+    if (transparent() && pipeline.nrequests == 1)
         return true;
 
     return false;
