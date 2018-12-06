@@ -251,10 +251,8 @@ Http::One::Server::processParsedRequest(Http::StreamPointer &context)
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request = http->request;
 
-    if (request->header.has(Http::HdrType::UPGRADE)) {
-        const String upgrade = request->header.getList(Http::HdrType::UPGRADE);
+    if (request->header.has(Http::HdrType::UPGRADE))
         mayUpgrade = true;
-    }
 
     if (request->header.has(Http::HdrType::EXPECT)) {
         const String expect = request->header.getList(Http::HdrType::EXPECT);
@@ -350,7 +348,7 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
     const ClientHttpRequest *http = context->http;
 
     String upgradeHeader;
-    bool switching = (rep->sline.status() == Http::scSwitchingProtocols);
+    const bool switching = (rep->sline.status() == Http::scSwitchingProtocols);
     if (switching) // save Upgrade header
         upgradeHeader = rep->header.getList(Http::HdrType::UPGRADE);
 
@@ -392,7 +390,7 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext scc)
     const ClientHttpRequest *http = context->http;
     assert(http->request == scc.request.getRaw());
     stopReading(); // Stop reading for more requests, tunnel code starts now
-    switchToTunnel(scc.request.getRaw(), clientConnection, serverConnection, NULL);
+    switchToTunnel(scc.request.getRaw(), clientConnection, serverConnection, nullptr);
 }
 
 ConnStateData *

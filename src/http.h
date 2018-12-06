@@ -71,6 +71,9 @@ public:
     SBuf inBuf;                ///< I/O buffer for receiving server responses
     bool ignoreCacheControl;
     bool surrogateNoStore;
+
+    /// Stores the protocols allowed to upgrade to and included to
+    /// the Http request Upgrade header sent to the server.
     std::vector<SBuf> *upgradeProtocols = nullptr;
 
     void processSurrogateControl(HttpReply *);
@@ -144,9 +147,11 @@ private:
 
     /// Process an "101 Switching Protocols" reply.
     /// \return false if this 101 reply is not supported, true otherwise
-    bool processSwitchingProtocols(HttpReply *msg);
+    bool processSwitchingProtocols(const HttpReply *msg);
 
-    bool upgradeProtocolsSupported(String &upgradeProtos);
+    /// Check if the reply Upgrade header lists protocols included
+    /// in the Http request Upgrade header.
+    bool upgradeProtocolsSupported(const HttpReply *reply) const;
 
     /// Parser being used at present to parse the HTTP/ICY server response.
     Http1::ResponseParserPointer hp;

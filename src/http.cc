@@ -825,7 +825,7 @@ HttpStateData::handle1xx(HttpReply *reply)
 
     if (reply->sline.status() == Http::scSwitchingProtocols) {
         if (!processSwitchingProtocols(reply)) {
-            ErrorState *err = new ErrorState(ERR_INVALID_REQ, Http::scBadGateway, request.getRaw());
+            auto err = new ErrorState(ERR_INVALID_REQ, Http::scBadGateway, request.getRaw());
             fwd->fail(err);
             closeServer();
             return;
@@ -848,7 +848,7 @@ HttpStateData::handle1xx(HttpReply *reply)
 
 /// Matching protocols predicate function for std::find_if algorithm
 /// It handle the case the reference protocol includes a protocol version
-/// but the checking protocol does not (eg when squid requests upgrade to
+/// but the checking protocol does not (eg when Squid requests upgrade to
 /// 'websockets' and server reports upgrade to 'websocket/1.2').
 class MatchProtocol
 {
@@ -868,18 +868,19 @@ private:
 };
 
 bool
-HttpStateData::upgradeProtocolsSupported(String &upgradeProtos)
+HttpStateData::upgradeProtocolsSupported(const HttpReply *reply) const
 {
     if (!upgradeProtocols)
         return false;
 
-    const char *pos = NULL;
+    String upgradeProtos = reply->header.getList(Http::HdrType::UPGRADE);
+    const char *pos = nullptr;
     const char *item;
     int ilen = 0;
     while (strListGetItem(&upgradeProtos, ',', &item, &ilen, &pos)) {
         auto it = std::find_if(upgradeProtocols->cbegin(), upgradeProtocols->cend(), MatchProtocol(item, ilen));
-        if (it == upgradeProtocols->cend()) { //protocol not listed by client!
-            debugs(11, 2, "Upgrade to " << SBuf(item, ilen) << "is not allowed by client or squid configuration");
+        if (it == upgradeProtocols->cend()) { // protocol not listed by client!
+            debugs(11, 2, "Upgrade to " << SBuf(item, ilen) << " is not allowed by client or squid configuration");
             return false;
         }
     }
@@ -888,7 +889,7 @@ HttpStateData::upgradeProtocolsSupported(String &upgradeProtos)
 }
 
 bool
-HttpStateData::processSwitchingProtocols(HttpReply *reply)
+HttpStateData::processSwitchingProtocols(const HttpReply *reply)
 {
     // Must have an upgrade header
     if (!reply->header.has(Http::HdrType::UPGRADE))
@@ -898,11 +899,7 @@ HttpStateData::processSwitchingProtocols(HttpReply *reply)
     if (!reply->header.hasListMember(Http::HdrType::CONNECTION, "upgrade", ','))
         return false;
 
-    String upgrade = reply->header.getList(Http::HdrType::UPGRADE);
-
-    // We need to check if the HttpRequest Upgrade header lists the
-    // protocols appeared in HttpReply Upgrade header.
-    if (!upgradeProtocolsSupported(upgrade))
+    if (!upgradeProtocolsSupported(reply))
         return false;
 
     flags.handling101 = true;
@@ -920,7 +917,7 @@ public:
 
     ServerConnectionControlDialer(const CbcPointer<ConnStateData> &mgr, const ConnStateData::ServerConnectionContext &scc): Parent(mgr, &ConnStateData::noteTakeServerConnectionControl, scc) {}
 
-    virtual bool canDial(AsyncCall &call) {
+    virtual bool canDial(AsyncCall &call) override {
         if (!Parent::canDial(call)) {
             debugs(11, 2, "ConnStateData gone, close server connection to avoid orphan connection!");
             arg1.connection->close();
@@ -951,6 +948,7 @@ HttpStateData::proceedAfter1xx()
         serverConnection = nullptr;
         doneWithFwd = "SwitchingProtocol";
         mustStop("SwitchingProtocol");
+        return;
     }
 
     debugs(11, 2, "continuing with " << payloadSeen << " bytes in buffer after 1xx");
@@ -2049,7 +2047,7 @@ HttpStateData::httpBuildRequestHeader(HttpStateData *state,
         delete cc;
     }
 
-    if (hdr_in->has(Http::HdrType::UPGRADE)) {
+    if (state && hdr_in->has(Http::HdrType::UPGRADE)) {
         String upgradeValue = hdr_in->getList(Http::HdrType::UPGRADE);
         const char *upGrdValue = mkUpgradeHeader(state, request, upgradeValue);
         if (upGrdValue && *upGrdValue) {
@@ -2088,10 +2086,10 @@ static const char *
 mkUpgradeHeader(HttpStateData *state, HttpRequest *req, const String &value)
 {
     static String out;
-    const char *pos = NULL;
+    const char *pos = nullptr;
     const char *item;
     int ilen = 0;
-
+    assert(state);
     out.clean();
     while (strListGetItem(&value, ',', &item, &ilen, &pos)) {
         //Config.accessList.http_upgrade_protocols
@@ -2103,10 +2101,9 @@ mkUpgradeHeader(HttpStateData *state, HttpRequest *req, const String &value)
             it = Config.accessList.http_upgrade_protocols->find(SBuf("ANY"));
 
         if (it != Config.accessList.http_upgrade_protocols->end() && it->second != nullptr) {
-            acl_access *acl = it->second;
+            const acl_access *acl = it->second;
             ACLFilledChecklist ch(acl, req);
-            allow_t answer = ch.fastCheck();
-            if (answer.allowed()) {
+            if (ch.fastCheck().allowed()) {
                 strListAdd(&out, proto.c_str(), ',');
                 if (!state->upgradeProtocols)
                     state->upgradeProtocols = new std::vector<SBuf>;

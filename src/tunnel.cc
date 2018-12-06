@@ -1236,6 +1236,14 @@ TunnelStateData::notifyConnOpener()
     }
 }
 
+/**
+ * Establish a tunnel between a client and a server connections and
+ * starts transferring traffic.
+ * \param request The related HttpRequest object
+ * \param clientConn the client side connection.
+ * \param srvConn the server side connection
+ * \param serverPayload pre-read data from server side connection
+ */
 void
 switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn, const SBuf *serverPayload)
 {

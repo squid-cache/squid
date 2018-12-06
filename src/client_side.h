@@ -84,6 +84,9 @@ public:
         ServerConnectionContext(Comm::ConnectionPointer &conn, HttpRequest::Pointer &req, Reason aReason): connection(conn), request(req), reason(aReason) {}
         Comm::ConnectionPointer connection; ///< to-server connection to be pinned
         HttpRequest::Pointer request; ///< to-server request that initiated serverConnection
+
+        /// A code describing the reason for calling back the
+        /// noteTakeServerConnectionControl
         Reason reason;
     };
 

@@ -10538,6 +10538,12 @@ DOC_START
 	with 101 Switching reply to a protocol not listed in Upgrade request
 	header will result to error.
 
+	This option is applied to individual protocols listed in the client
+	Upgrade HTTP request header. If ACLs of an "allow" rule match then
+	the protocol is left in Upgrade request header. If ACLs of a "deny"
+	rule match then the protocol is removed from Upgrade request header.
+	If no rules within the set have matching ACLs, the protocol is removed.
+
 	The 'ANY' keyword corresponds to any protocol not explicitly configured
 	using this configuration option.
 

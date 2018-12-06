@@ -5116,8 +5116,8 @@ free_on_unsupported_protocol(acl_access **access)
 static void
 parse_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protocols)
 {
-    char *proto;
-    if ((proto = ConfigParser::NextToken()) == NULL) {
+    const char *proto = ConfigParser::NextToken();
+    if (!proto) {
         self_destruct();
         return;
     }
@@ -5132,7 +5132,7 @@ parse_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protoco
     else {
         access = new Acl::Tree;
         access->context(cfg_directive, config_input_line);
-        (*http_upgrade_protocols)->insert(std::pair<SBuf, acl_access *>(SBuf(proto), access));
+        (*http_upgrade_protocols)->insert(std::make_pair(SBuf(proto), access));
     }
 
     aclParseAccessLine(cfg_directive, LegacyParser, &access);
@@ -5141,11 +5141,11 @@ parse_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protoco
 static void
 dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocols *http_upgrade_protocols)
 {
-    for (auto it = http_upgrade_protocols->begin(); it != http_upgrade_protocols->end(); ++it) {
+    for (auto it : *http_upgrade_protocols) {
         SBufList line;
         line.push_back(SBuf(name));
-        line.push_back(it->first);
-        SBufList acld = it->second->treeDump("", &Acl::AllowOrDeny);
+        line.push_back(it.first);
+        SBufList acld = it.second->treeDump("", &Acl::AllowOrDeny);
         line.insert(line.end(), acld.begin(), acld.end());
         dump_SBufList(entry, line);
     }
@@ -5157,8 +5157,8 @@ free_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protocol
     if (!*http_upgrade_protocols)
         return;
 
-    for (auto it = (*http_upgrade_protocols)->begin(); it != (*http_upgrade_protocols)->end(); ++it)
-        free_acl_access(&it->second);
+    for (auto it : **http_upgrade_protocols)
+        free_acl_access(&it.second);
 
     delete *http_upgrade_protocols;
     *http_upgrade_protocols = nullptr;
