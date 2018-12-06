@@ -1929,6 +1929,11 @@ ConnStateData::clientParseRequests()
 
             context->registerWithConn();
 
+#if USE_OPENSSL
+            if (switchedToHttps())
+                parsedBumpedRequestCount++;
+#endif
+
             processParsedRequest(context);
 
             parsed_req = true; // XXX: do we really need to parse everything right NOW ?
@@ -2181,6 +2186,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
 #if USE_OPENSSL
     switchedToHttps_(false),
     parsingTlsHandshake(false),
+    parsedBumpedRequestCount(0),
     tlsConnectPort(0),
     sslServerBump(NULL),
     signAlgorithm(Ssl::algSignTrusted),
@@ -3986,20 +3992,17 @@ ConnStateData::mayTunnelUnsupportedProto()
 {
     if (!Config.accessList.on_unsupported_protocol)
         return false;
- #if USE_OPENSSL
-    // subject to SslBump processing and currently parsing the TLS
-    // client handshake
-    if (sslBumpMode != Ssl::bumpEnd && !switchedToHttps_)
-        return true;
 
-    // The first request inside a bumped connection. pipeline.nrequests is 2
-    // because it counts the (fake or real) CONNECT request as well.
-    if (sslBumpMode != Ssl::bumpEnd && pipeline.nrequests == 2)
+#if USE_OPENSSL
+    // SslBump processing:
+    //  1) parsing the TLS client handshake
+    //  2) reading and processing the first bumped HTTP request
+    if (sslBumpMode != Ssl::bumpEnd && parsedBumpedRequestCount <= 1)
         return true;
- #endif
+#endif
 
     // the first request in a connection to a plain intercepting port
-    if (transparent() && pipeline.nrequests == 1)
+    if (transparent() && pipeline.nrequests <= 1)
         return true;
 
     return false;

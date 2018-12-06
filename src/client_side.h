@@ -398,6 +398,7 @@ private:
 #if USE_OPENSSL
     bool switchedToHttps_;
     bool parsingTlsHandshake; ///< whether we are getting/parsing TLS Hello bytes
+    uint32_t parsedBumpedRequestCount; ///< The number of bumped HTTP requests
 
     /// The SSL server host name appears in CONNECT request or the server ip address for the intercepted requests
     String sslConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request
