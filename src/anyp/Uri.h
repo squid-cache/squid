@@ -80,6 +80,9 @@ public:
     int hostIsNumeric(void) const {return hostIsNumeric_;}
     Ip::Address const & hostIP(void) const {return hostAddr_;}
 
+    /// \return the hostname or the unformatted ip address
+    SBuf hostOrIp() const;
+
     void port(unsigned short p) {port_=p; touch();}
     unsigned short port() const {return port_;}
     /// reset the port to the default port number for the current scheme

@@ -1225,12 +1225,12 @@ ConnStateData::prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp)
 #if USE_OPENSSL
     if (!uri) {
         Must(tlsConnectPort);
-        Must(sslConnectHostOrIp.size());
+        Must(!sslConnectHostOrIp.isEmpty());
         SBuf useHost;
         if (!tlsClientSni().isEmpty())
             useHost = tlsClientSni();
         else
-            useHost.assign(sslConnectHostOrIp.rawBuf(), sslConnectHostOrIp.size());
+            useHost = sslConnectHostOrIp;
 
         const SBuf &scheme = AnyP::UriScheme(transferProtocol.protocol).image();
         const int url_sz = scheme.length() + useHost.length() + hp->requestUri().length() + 32;
@@ -2708,7 +2708,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
 
 void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties)
 {
-    certProperties.commonName =  sslCommonName_.isEmpty() ? sslConnectHostOrIp.termedBuf() : sslCommonName_.c_str();
+    certProperties.commonName =  sslCommonName_.isEmpty() ? sslConnectHostOrIp.c_str() : sslCommonName_.c_str();
 
     const bool connectedOk = sslServerBump && sslServerBump->connectedOk();
     if (connectedOk) {
@@ -2734,7 +2734,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
                 // CONNECT request.
                 if (ca->alg == Ssl::algSetCommonName) {
                     if (!param)
-                        param = sslConnectHostOrIp.termedBuf();
+                        param = sslConnectHostOrIp.c_str();
                     certProperties.commonName = param;
                     certProperties.setCommonName = true;
                 } else if (ca->alg == Ssl::algSetValidAfter)
@@ -2926,9 +2926,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     Must(http->request);
     auto &request = http->request;
 
-    static char ip[MAX_IPSTRLEN];
-    sslConnectHostOrIp =  request->url.hostIsNumeric() ?
-        request->url.hostIP().toStr(ip, sizeof(ip)) :request->url.host();
+    sslConnectHostOrIp =  request->url.hostOrIp();
     tlsConnectPort = request->url.port();
     resetSslCommonName(request->url.host());
 
@@ -3200,13 +3198,11 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::
         connectHost = pinning.serverConnection->remote.toStr(ip, sizeof(ip));
         connectPort = pinning.serverConnection->remote.port();
     } else if (cause) {
-        static char ip[MAX_IPSTRLEN];
-        connectHost = cause->url.hostIsNumeric() ?
-            cause->url.hostIP().toStr(ip, sizeof(ip)) : cause->url.host();
+        connectHost = cause->url.hostOrIp();
         connectPort = cause->url.port();
 #if USE_OPENSSL
-    } else if (sslConnectHostOrIp.size()) {
-        connectHost.assign(sslConnectHostOrIp.rawBuf(), sslConnectHostOrIp.size());
+    } else if (!sslConnectHostOrIp.isEmpty()) {
+        connectHost = sslConnectHostOrIp;
         connectPort = tlsConnectPort;
 #endif
     } else if (transparent()) {
@@ -3273,7 +3269,6 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
                      clientReplyStatus, newServer, clientSocketRecipient,
                      clientSocketDetach, newClient, tempBuffer);
 
-    http->uri = SBufToCstring(useHost);
     stream->flags.parsed_ok = 1; // Do we need it?
     stream->mayUseConnection(true);
 
@@ -3293,6 +3288,8 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
     request->method = method;
     request->url.host(useHost.c_str());
     request->url.port(usePort);
+
+    http->uri = SBufToCstring(request->effectiveRequestUri());
     http->initRequest(request.getRaw());
 
     request->manager(this, http->al);
@@ -3994,9 +3991,8 @@ ConnStateData::mayTunnelUnsupportedProto()
         return false;
 
 #if USE_OPENSSL
-    // SslBump processing:
-    //  1) parsing the TLS client handshake
-    //  2) reading and processing the first bumped HTTP request
+    // Tunneling may be possible when parsing the TLS client handshake
+    // and when parsing the first HTTP request on a bumped connection.
     if (sslBumpMode != Ssl::bumpEnd && parsedBumpedRequestCount <= 1)
         return true;
 #endif
