@@ -1980,7 +1980,7 @@ tests_test_http_range_SOURCES = \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
-	gopher.cc \
+	tests/stub_gopher.cc \
 	helper.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
@@ -2375,7 +2375,7 @@ tests_testHttpRequest_SOURCES = \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
-	gopher.cc \
+	tests/stub_gopher.cc \
 	helper.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
@@ -2671,7 +2671,7 @@ tests_testCacheManager_SOURCES = \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
-	gopher.cc \
+	tests/stub_gopher.cc \
 	hier_code.h \
 	helper.cc \
 	$(HTCPSOURCE) \
@@ -2976,7 +2976,7 @@ tests_testEvent_SOURCES = \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
-	gopher.cc \
+	tests/stub_gopher.cc \
 	helper.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
@@ -3210,7 +3210,7 @@ tests_testEventLoop_SOURCES = \
 	FwdState.cc \
 	FwdState.h \
 	gopher.h \
-	gopher.cc \
+	tests/stub_gopher.cc \
 	helper.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
