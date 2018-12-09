@@ -14,6 +14,10 @@
 #include "anyp/ProtocolType.h"
 #include "ip/Address.h"
 #include "LogTags.h"
+#if SQUID_SNMP
+#include "cache_snmp.h"
+#include "snmp_vars.h"
+#endif
 
 namespace Ip
 {
@@ -36,6 +40,7 @@ ClientInfo * clientdbGetInfo(const Ip::Address &addr);
 
 #if SQUID_SNMP
 Ip::Address *client_entry(Ip::Address *current);
+variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif
 
 #endif /* SQUID_CLIENT_DB_H_ */

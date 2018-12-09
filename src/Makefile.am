@@ -1193,7 +1193,6 @@ tests_testRock_SOURCES = \
 	tests/stub_access_log.cc \
 	cache_cf.h \
 	tests/stub_cache_cf.cc \
-	client_db.h \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_db.cc \
 	tests/stub_client_side_request.cc \
@@ -1941,8 +1940,7 @@ tests_test_http_range_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
-	client_db.h \
-	client_db.cc \
+	tests/stub_client_db.cc \
 	client_side.h \
 	client_side.cc \
 	client_side_reply.cc \
@@ -2340,8 +2338,7 @@ tests_testHttpRequest_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
-	client_db.h \
-	client_db.cc \
+	tests/stub_client_db.cc \
 	client_side.h \
 	client_side.cc \
 	client_side_reply.cc \
@@ -2633,8 +2630,7 @@ tests_testCacheManager_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
-	client_db.h \
-	client_db.cc \
+	tests/stub_client_db.cc \
 	client_side.h \
 	client_side.cc \
 	client_side_reply.cc \
@@ -2934,8 +2930,7 @@ tests_testEvent_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
-	client_db.h \
-	client_db.cc \
+	tests/stub_client_db.cc \
 	client_side.h \
 	client_side.cc \
 	client_side_reply.cc \
@@ -3168,8 +3163,7 @@ tests_testEventLoop_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
-	client_db.h \
-	client_db.cc \
+	tests/stub_client_db.cc \
 	client_side.h \
 	client_side.cc \
 	client_side_reply.cc \
