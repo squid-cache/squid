@@ -1275,8 +1275,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                     if (X509 *serverCert = srvBump->serverCert.get()) {
                         if (fmt->type == LFT_SSL_SERVER_CERT_SUBJECT)
                             out = Ssl::GetX509UserAttribute(serverCert, "DN");
-                        else
-                        if (fmt->type == LFT_SSL_SERVER_CERT_ISSUER)
+                        else if (fmt->type == LFT_SSL_SERVER_CERT_ISSUER)
                             out = Ssl::GetX509CAAttribute(serverCert, "DN");
                         else {
                             assert(fmt->type == LFT_SSL_SERVER_CERT_WHOLE);
