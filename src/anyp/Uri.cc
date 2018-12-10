@@ -1005,8 +1005,10 @@ AnyP::Uri::Cleanup(const SBuf &uri)
     static const CharacterSet wspChop = (CharacterSet::WSP +
                                          CharacterSet::LF +
                                          CharacterSet::CR).rename("wsp-chop");
+#if 0 // XXX: use these instead of xisspace() character match (it varies)
     static const CharacterSet wspStrip = (CharacterSet("VT,FF","\v\f") +
                                           wspChop).rename("wsp-strip");
+#endif
 
     int flags = 0;
     SBuf cleanedUri;
@@ -1036,24 +1038,22 @@ AnyP::Uri::Cleanup(const SBuf &uri)
     case URI_WHITESPACE_DENY:
     case URI_WHITESPACE_STRIP:
     default: {
-        // TODO: avoid duplication with urlParse()
-        const auto shiftFrom = uri.findFirstOf(wspStrip);
-        if (shiftFrom == SBuf::npos) {
-            cleanedUri = uri;
-            break; // nothing to do
-        }
-        char *tmp_uri = SBufToCstring(uri); // allocate and fill tmp_uri from uri
-        auto src = &tmp_uri[shiftFrom];
-        auto dst = &tmp_uri[shiftFrom];
-        while (*src) {
-            if (!wspStrip[*src]) {
-                *dst = *src;
-                ++dst;
+        // TODO: avoid duplication with AnyP::Uri::parse()
+        const char *t;
+        char *tmp_uri = static_cast<char*>(xmalloc(uri.length() + 1));
+        char *q = tmp_uri;
+        SBuf tmp = uri;
+        t = tmp.c_str();
+        while (*t) {
+            // XXX: isspace() changes characters matched depending on locale
+            // XXX: we should only strip the wspStrip characters (if any)
+            if (!xisspace(*t)) {
+                *q = *t;
+                ++q;
             }
-            ++src;
+            ++t;
         }
-        *dst = '\0';
-
+        *q = '\0';
         cleanedUri = SBuf(rfc1738_escape_unescaped(tmp_uri));
         xfree(tmp_uri);
     }
