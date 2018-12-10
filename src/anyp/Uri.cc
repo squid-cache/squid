@@ -999,7 +999,7 @@ AnyP::Uri::Uri(AnyP::UriScheme const &aScheme) :
 
 // TODO: fix code duplication with AnyP::Uri::parse()
 SBuf
-AnyP::Uri::Cleanup(SBuf &uri)
+AnyP::Uri::Cleanup(const SBuf &uri)
 {
     // 'whitespace' for chop and strip are different
     static const CharacterSet wspChop = (CharacterSet::WSP +
@@ -1011,23 +1011,27 @@ AnyP::Uri::Cleanup(SBuf &uri)
     int flags = 0;
     SBuf cleanedUri;
     switch (Config.uri_whitespace) {
-    case URI_WHITESPACE_ALLOW:
+    case URI_WHITESPACE_ALLOW: {
         flags |= RFC1738_ESCAPE_NOSPACE | RFC1738_ESCAPE_UNESCAPED;
-        cleanedUri = SBuf(rfc1738_do_escape(uri.c_str(), flags));
-        break;
+        SBuf tmp = uri;
+        cleanedUri = SBuf(rfc1738_do_escape(tmp.c_str(), flags));
+    }
+    break;
 
-    case URI_WHITESPACE_ENCODE:
+    case URI_WHITESPACE_ENCODE: {
         flags |= RFC1738_ESCAPE_UNESCAPED;
-        cleanedUri = SBuf(rfc1738_do_escape(uri.c_str(), flags));
-        break;
+        SBuf tmp = uri;
+        cleanedUri = SBuf(rfc1738_do_escape(tmp.c_str(), flags));
+    }
+    break;
 
     case URI_WHITESPACE_CHOP: {
         flags |= RFC1738_ESCAPE_UNESCAPED;
         const auto pos = uri.findFirstOf(wspChop);
         SBuf choppedUri = uri.substr(0, pos);
         cleanedUri = SBuf(rfc1738_do_escape(choppedUri.c_str(), flags));
-        break;
     }
+    break;
 
     case URI_WHITESPACE_DENY:
     case URI_WHITESPACE_STRIP:
@@ -1052,8 +1056,8 @@ AnyP::Uri::Cleanup(SBuf &uri)
 
         cleanedUri = SBuf(rfc1738_escape_unescaped(tmp_uri));
         xfree(tmp_uri);
-        break;
     }
+    break;
     }
 
     return cleanedUri;
