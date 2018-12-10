@@ -11,6 +11,7 @@
 #if USE_OPENSSL
 
 #include "fatal.h"
+#include "sbuf/SBuf.h"
 
 /* Stub File for the ssl/libsslsquid.la convenience library */
 
@@ -48,8 +49,6 @@ Ssl::ErrorDetail::ErrorDetail(ErrorDetail const &) STUB
 const String & Ssl::ErrorDetail::toString() const STUB_RETSTATREF(String)
 
 #include "ssl/support.h"
-#include "sbuf/SBuf.h"
-
 namespace Ssl
 {
 int AskPasswordCb(char *, int, int, void *) STUB_RETVAL(0)
