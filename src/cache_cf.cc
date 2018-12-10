@@ -5141,7 +5141,7 @@ parse_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protoco
 static void
 dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocols *http_upgrade_protocols)
 {
-    for (auto it : *http_upgrade_protocols) {
+    for (const auto it : *http_upgrade_protocols) {
         SBufList line;
         line.push_back(SBuf(name));
         line.push_back(it.first);

@@ -83,7 +83,7 @@ static const char *const crlf = "\r\n";
 static void httpMaybeRemovePublic(StoreEntry *, Http::StatusCode);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
         HttpHeader * hdr_out, const int we_do_ranges, const Http::StateFlags &);
-static const char *mkUpgradeHeader(HttpStateData *, HttpRequest *, const String &);
+static void makeUpgradeHeader(HttpStateData *, HttpRequest *, const HttpHeader &hdr_in, HttpHeader &hdr_out);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) :
     AsyncJob("HttpStateData"),
@@ -846,25 +846,38 @@ HttpStateData::handle1xx(HttpReply *reply)
     // for similar reasons without a 1xx response.
 }
 
-/// Matching protocols predicate function for std::find_if algorithm
-/// It handle the case the reference protocol includes a protocol version
-/// but the checking protocol does not (eg when Squid requests upgrade to
-/// 'websockets' and server reports upgrade to 'websocket/1.2').
+/// A protocol-comparing predicate for STL search algorithms.
+/// Helps to match a protocol versioned name to a name without
+/// version (for example, 'websocket/1.2' should match to 'websocket' ).
 class MatchProtocol
 {
 public:
-    explicit MatchProtocol(const char *s, size_t len) :ref(s), refLen(len) {}
+    explicit MatchProtocol(const char *s, size_t len) : ref(s), refLen(len) {
+        const char *p = std::find(s, s + len, '/');
+        refBasicLen = p - s;
+        refIsVersioned = (refBasicLen !=  len);
+    }
+
     bool operator() (const SBuf &checking) {
-        const char *p;
-        if (checking.find('/') == SBuf::npos && (p = std::find(ref, ref + refLen, '/')) != ref + refLen)
-            return checking.caseCmp(ref, p - ref) == 0;
+        const bool checkingIsVersioned = (checking.find('/') == SBuf::npos);
+        if (checkingIsVersioned && !refIsVersioned)
+            return checking.caseCmp(ref, refBasicLen) == 0;
         else
             return checking.caseCmp(ref, refLen) == 0;
     }
 
 private:
-    const char *ref;
+    const char *ref; ///< The reference protocol
+
+    /// The full length of reference protocol string, including the
+    /// version part
     size_t refLen;
+
+    /// The length of reference protocol string without version part
+    size_t refBasicLen;
+
+    /// \return true if the reference protocol includes version info
+    bool refIsVersioned;
 };
 
 bool
@@ -873,7 +886,7 @@ HttpStateData::upgradeProtocolsSupported(const HttpReply *reply) const
     if (!upgradeProtocols)
         return false;
 
-    String upgradeProtos = reply->header.getList(Http::HdrType::UPGRADE);
+    const String upgradeProtos = reply->header.getList(Http::HdrType::UPGRADE);
     const char *pos = nullptr;
     const char *item;
     int ilen = 0;
@@ -2047,13 +2060,9 @@ HttpStateData::httpBuildRequestHeader(HttpStateData *state,
         delete cc;
     }
 
-    if (state && hdr_in->has(Http::HdrType::UPGRADE)) {
-        String upgradeValue = hdr_in->getList(Http::HdrType::UPGRADE);
-        const char *upGrdValue = mkUpgradeHeader(state, request, upgradeValue);
-        if (upGrdValue && *upGrdValue) {
-            hdr_out->addEntry(new HttpHeaderEntry(Http::HdrType::UPGRADE, SBuf(), upGrdValue));
-        }
-    }
+    // Adds the Upgrade header if required. Must called before the Connection
+    // header is built.
+    makeUpgradeHeader(state, request, *hdr_in, *hdr_out);
 
     if (hdr_out->has(Http::HdrType::UPGRADE))
         hdr_out->putStr(Http::HdrType::CONNECTION, "Upgrade");
@@ -2082,16 +2091,21 @@ HttpStateData::httpBuildRequestHeader(HttpStateData *state,
     strConnection.clean();
 }
 
-static const char *
-mkUpgradeHeader(HttpStateData *state, HttpRequest *req, const String &value)
+static void
+makeUpgradeHeader(HttpStateData *state, HttpRequest *req, const HttpHeader &hdr_in, HttpHeader &hdr_out)
 {
-    static String out;
+    if (!state)
+        return;
+
+    if (!hdr_in.has(Http::HdrType::UPGRADE))
+        return;
+
+    const String upgradeIn = hdr_in.getList(Http::HdrType::UPGRADE);
+    String upgradeOut;
     const char *pos = nullptr;
     const char *item;
     int ilen = 0;
-    assert(state);
-    out.clean();
-    while (strListGetItem(&value, ',', &item, &ilen, &pos)) {
+    while (strListGetItem(&upgradeIn, ',', &item, &ilen, &pos)) {
         //Config.accessList.http_upgrade_protocols
         SBuf proto(item, ilen);
         auto it = Config.accessList.http_upgrade_protocols->find(proto);
@@ -2104,14 +2118,16 @@ mkUpgradeHeader(HttpStateData *state, HttpRequest *req, const String &value)
             const acl_access *acl = it->second;
             ACLFilledChecklist ch(acl, req);
             if (ch.fastCheck().allowed()) {
-                strListAdd(&out, proto.c_str(), ',');
+                strListAdd(&upgradeOut, proto.c_str(), ',');
                 if (!state->upgradeProtocols)
                     state->upgradeProtocols = new std::vector<SBuf>;
                 state->upgradeProtocols->push_back(proto);
             }
         }
     }
-    return out.termedBuf();
+
+    if (upgradeOut.size())
+        hdr_out.addEntry(new HttpHeaderEntry(Http::HdrType::UPGRADE, SBuf(), upgradeOut.termedBuf()));
 }
 
 /**
