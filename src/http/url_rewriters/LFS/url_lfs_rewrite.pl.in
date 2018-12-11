@@ -8,7 +8,7 @@ use Pod::Usage;
 
 =head1 NAME
 
-B<url_lfs_rewrite>
+ url_lfs_rewrite - a URL-rewriter based on local file existence
 
 =head1 SYNOPSIS
 
