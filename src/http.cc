@@ -851,32 +851,49 @@ HttpStateData::handle1xx(HttpReply *reply)
 class MatchProtocol
 {
 public:
-    explicit MatchProtocol(const char *s, size_t len) : ref(s), refLen(len) {
-        const char *p = std::find(s, s + len, '/');
-        refBasicLen = p - s;
-        refIsVersioned = (refBasicLen !=  len);
+    explicit MatchProtocol(const char *s, size_t len) :
+        reference(s),
+        referenceLen(len),
+        referenceBaseLen(static_cast<size_t>(-1))
+        {}
+
+    /// Operator to search in lists or vectors
+    bool operator() (const SBuf &checking) {
+        if (referenceIsVersioned()) {
+            const bool checkingIsVersioned = (checking.find('/') != SBuf::npos);
+            if (!checkingIsVersioned) {
+                assert(referenceBaseLen != static_cast<size_t>(-1));
+                return checking.caseCmp(reference, referenceBaseLen) == 0;
+            }
+        }
+        return checking.caseCmp(reference, referenceLen) == 0;
     }
 
-    bool operator() (const SBuf &checking) {
-        const bool checkingIsVersioned = (checking.find('/') == SBuf::npos);
-        if (checkingIsVersioned && !refIsVersioned)
-            return checking.caseCmp(ref, refBasicLen) == 0;
-        else
-            return checking.caseCmp(ref, refLen) == 0;
+    /// Operator to search in std::maps or similar
+    template<typename T>
+    bool operator() (const std::pair<const SBuf, T> &checkingPair) {
+        return (*this)(checkingPair.first);
     }
 
 private:
-    const char *ref; ///< The reference protocol
+    /// \return true if the reference protocol includes version info
+    /// Also computes the referenceBaseLen member,
+    bool referenceIsVersioned() {
+        if (referenceBaseLen == static_cast<size_t>(-1)) {
+            const char *end = std::find(reference, reference + referenceLen, '/');
+            referenceBaseLen = end - reference;
+        }
+        return (referenceBaseLen !=  referenceLen);
+    }
+
+    const char *reference; ///< The reference protocol
 
     /// The full length of reference protocol string, including the
     /// version part
-    size_t refLen;
+    size_t referenceLen;
 
     /// The length of reference protocol string without version part
-    size_t refBasicLen;
-
-    /// \return true if the reference protocol includes version info
-    bool refIsVersioned;
+    size_t referenceBaseLen;
 };
 
 bool
@@ -2093,8 +2110,7 @@ HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
     const char *item;
     int ilen = 0;
     while (strListGetItem(&upgradeIn, ',', &item, &ilen, &pos)) {
-        SBuf proto(item, ilen);
-        auto it = Config.http_upgrade_protocols->find(proto);
+        auto it = std::find_if(Config.http_upgrade_protocols->begin(), Config.http_upgrade_protocols->end(), MatchProtocol(item, ilen));
 
         // If protocol not found try the "ANY" protocol
         if (it == Config.http_upgrade_protocols->end()) {
@@ -2106,6 +2122,7 @@ HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
             const acl_access *acl = it->second;
             ACLFilledChecklist ch(acl, request.getRaw());
             if (ch.fastCheck().allowed()) {
+                SBuf proto(item, ilen);
                 strListAdd(&upgradeOut, proto.c_str(), ',');
                 if (!upgradeProtocolsSentToPeer)
                     upgradeProtocolsSentToPeer = new HttpStateData::ProtocolNamesList;
