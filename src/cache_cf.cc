@@ -251,9 +251,9 @@ static void parse_on_unsupported_protocol(acl_access **access);
 static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
 static void free_on_unsupported_protocol(acl_access **access);
 static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, ACL *acl = nullptr);
-static void parse_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protocols);
-static void dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocols *http_upgrade_protocols);
-static void free_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protocols);
+static void parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **http_upgrade_protocols);
+static void dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *http_upgrade_protocols);
+static void free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **http_upgrade_protocols);
 
 /*
  * LegacyParser is a parser for legacy code that uses the global
@@ -5114,7 +5114,7 @@ free_on_unsupported_protocol(acl_access **access)
 }
 
 static void
-parse_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protocols)
+parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **http_upgrade_protocols)
 {
     const char *proto = ConfigParser::NextToken();
     if (!proto) {
@@ -5123,9 +5123,9 @@ parse_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protoco
     }
 
     if (!*http_upgrade_protocols)
-        *http_upgrade_protocols = new HttpUpgradeProtocols;
+        *http_upgrade_protocols = new HttpUpgradeProtocolAccess;
 
-    auto it = (*http_upgrade_protocols)->find(SBuf(proto));
+    const auto it = (*http_upgrade_protocols)->find(SBuf(proto));
     acl_access *access = nullptr;
     if (it != (*http_upgrade_protocols)->end())
         access = it->second;
@@ -5139,7 +5139,7 @@ parse_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protoco
 }
 
 static void
-dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocols *http_upgrade_protocols)
+dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *http_upgrade_protocols)
 {
     for (const auto it : *http_upgrade_protocols) {
         SBufList line;
@@ -5152,7 +5152,7 @@ dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpg
 }
 
 static void
-free_http_upgrade_request_protocols(HttpUpgradeProtocols **http_upgrade_protocols)
+free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **http_upgrade_protocols)
 {
     if (!*http_upgrade_protocols)
         return;

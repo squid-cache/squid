@@ -251,8 +251,7 @@ Http::One::Server::processParsedRequest(Http::StreamPointer &context)
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request = http->request;
 
-    if (request->header.has(Http::HdrType::UPGRADE))
-        mayUpgrade = true;
+    mayUpgrade = request->header.has(Http::HdrType::UPGRADE);
 
     if (request->header.has(Http::HdrType::EXPECT)) {
         const String expect = request->header.getList(Http::HdrType::EXPECT);
@@ -383,7 +382,6 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 void
 Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext scc)
 {
-    Must(scc.reason == ConnStateData::ServerConnectionContext::SwitchingProtocol);
     Comm::ConnectionPointer serverConnection = scc.connection;
     Http::StreamPointer context = pipeline.front();
     assert(context != nullptr);

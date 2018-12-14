@@ -139,8 +139,7 @@ Http::Tunneler::writeRequest()
         mb.init();
         mb.appendf("CONNECT %s HTTP/1.1\r\n", url.c_str());
         HttpHeader hdr_out(hoRequest);
-        HttpStateData::httpBuildRequestHeader(nullptr,
-                                              request.getRaw(),
+        HttpStateData::httpBuildRequestHeader(request.getRaw(),
                                               nullptr, // StoreEntry
                                               al,
                                               &hdr_out,

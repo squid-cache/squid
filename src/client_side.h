@@ -80,14 +80,9 @@ public:
     /// through noteTakeServerConnectionControl callback
     class ServerConnectionContext {
     public:
-        enum Reason {SwitchingProtocol};
-        ServerConnectionContext(Comm::ConnectionPointer &conn, HttpRequest::Pointer &req, Reason aReason): connection(conn), request(req), reason(aReason) {}
+        ServerConnectionContext(Comm::ConnectionPointer &conn, HttpRequest::Pointer &req): connection(conn), request(req) {}
         Comm::ConnectionPointer connection; ///< to-server connection to be pinned
         HttpRequest::Pointer request; ///< to-server request that initiated serverConnection
-
-        /// A code describing the reason for calling back the
-        /// noteTakeServerConnectionControl
-        Reason reason;
     };
 
     explicit ConnStateData(const MasterXactionPointer &xact);

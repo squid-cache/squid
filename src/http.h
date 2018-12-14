@@ -45,8 +45,7 @@ public:
     HttpStateData(FwdState *);
     ~HttpStateData();
 
-    static void httpBuildRequestHeader(HttpStateData *state,
-                                       HttpRequest * request,
+    static void httpBuildRequestHeader(HttpRequest * request,
                                        StoreEntry * entry,
                                        const AccessLogEntryPointer &al,
                                        HttpHeader * hdr_out,
@@ -72,9 +71,9 @@ public:
     bool ignoreCacheControl;
     bool surrogateNoStore;
 
-    /// Stores the protocols allowed to upgrade to and included to
-    /// the Http request Upgrade header sent to the server.
-    std::vector<SBuf> *upgradeProtocols = nullptr;
+    typedef std::vector<SBuf> ProtocolNamesList; ///< protocol names list
+    /// Upgrade protocols, if any, sent to the origin server or cache peer.
+    ProtocolNamesList *upgradeProtocolsSentToPeer = nullptr;
 
     void processSurrogateControl(HttpReply *);
 
@@ -142,15 +141,19 @@ private:
     void httpTimeout(const CommTimeoutCbParams &params);
 
     mb_size_t buildRequestPrefix(MemBuf * mb);
+
+    /// Runs the required acl checks and adds the Upgrade related
+    /// headers to outgoing headers.
+    void makeUpgradeHeaders(HttpHeader &);
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
     bool peerSupportsConnectionPinning() const;
 
     /// Process an "101 Switching Protocols" reply.
-    /// \return false if this 101 reply is not supported, true otherwise
+    /// \return true if and only if we are going to switch the protocols
     bool processSwitchingProtocols(const HttpReply *msg);
 
-    /// Check if the reply Upgrade header lists protocols included
-    /// in the Http request Upgrade header.
+    /// Check if all of the protocols listed in the reply Upgrade header
+    /// included in the HTTP request Upgrade header.
     bool upgradeProtocolsSupported(const HttpReply *reply) const;
 
     /// Parser being used at present to parse the HTTP/ICY server response.

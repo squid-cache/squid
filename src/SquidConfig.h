@@ -50,7 +50,8 @@ class external_acl;
 class HeaderManglers;
 class RefreshPattern;
 class RemovalPolicySettings;
-typedef  std::map<SBuf, acl_access *> HttpUpgradeProtocols;
+// maps HTTP Upgrade protocol name/version to the access list guarding its usage
+typedef  std::map<SBuf, acl_access *> HttpUpgradeProtocolAccess;
 
 namespace AnyP
 {
@@ -409,7 +410,6 @@ public:
         acl_access *forceRequestBodyContinuation;
         acl_access *serverPconnForNonretriable;
         acl_access *collapsedForwardingAccess;
-        HttpUpgradeProtocols *http_upgrade_protocols;
     } accessList;
     AclDenyInfoList *denyInfoList;
 
@@ -481,6 +481,8 @@ public:
     HeaderWithAclList *request_header_add;
     ///reply_header_add access list
     HeaderWithAclList *reply_header_add;
+    ///http_upgrade_request_protocols access list
+    HttpUpgradeProtocolAccess *http_upgrade_protocols;
     ///note
     Notes notes;
     char *coredump_dir;

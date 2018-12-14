@@ -10526,7 +10526,7 @@ DOC_END
 
 NAME:  http_upgrade_request_protocols
 TYPE:  http_upgrade_request_protocols
-LOC: Config.accessList.http_upgrade_protocols
+LOC: Config.http_upgrade_protocols
 DEFAULT: none
 DEFAULT_DOC: Allow or deny upgrading from HTTP/1.1 to other protocols
 DOC_START
