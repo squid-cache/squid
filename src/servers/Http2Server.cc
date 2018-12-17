@@ -476,6 +476,10 @@ Http::Two::Server::handleFrame()
         debugs(11, 2, "HTTP/2 ignore ALTSVC received on " << clientConnection);
         break;
 
+    case Http2::ORIGIN: // MUST ignore, MUST NOT forward, only valid on origin server connections.
+        debugs(11, 2, "HTTP/2 ignore ORIGIN received on " << clientConnection);
+        break;
+
     default:
         debugs(33, 5, "Unknown Frame type=" << hp_->frameType() << " on " << clientConnection);
         break;

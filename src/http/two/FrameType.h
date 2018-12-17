@@ -28,8 +28,11 @@ enum FrameType {
     WINDOW_UPDATE = 0x08,
     CONTINUATION  = 0x09,
 
-    /* draft-ietf-httpbis-alt-svc-05 section 4 */
-    ALTSVC        = 0x0A
+    /* RFC 7838 section 4 */
+    ALTSVC        = 0x0A,
+
+    /* RFC 8336 section 2.1 */
+    ORIGIN        = 0x0C
 
     /* types 0xf0-0xff reserved for experimental use */
 };
