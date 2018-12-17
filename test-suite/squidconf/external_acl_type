@@ -44,3 +44,4 @@ external_acl_type foo \
 #	%ssl::>sni
 #	%ssl::<cert_subject
 #	%ssl::<cert_issuer
+#	%ssl::<cert

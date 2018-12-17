@@ -1178,8 +1178,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->request) {
                 ConnStateData *conn = al->request->clientConnectionManager.get();
                 if (conn && Comm::IsConnOpen(conn->clientConnection)) {
-                    if (auto ssl = fd_table[conn->clientConnection->fd].ssl.get())
-                        out = sslGetUserCertificatePEM(ssl);
+                    if (const auto ssl = fd_table[conn->clientConnection->fd].ssl.get()) {
+                        sb = sslGetUserCertificatePEM(ssl);
+                        out = sb.c_str();
+                    }
                 }
             }
             break;
@@ -1188,8 +1190,10 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->request) {
                 ConnStateData *conn = al->request->clientConnectionManager.get();
                 if (conn && Comm::IsConnOpen(conn->clientConnection)) {
-                    if (auto ssl = fd_table[conn->clientConnection->fd].ssl.get())
-                        out = sslGetUserCertificatePEM(ssl);
+                    if (const auto ssl = fd_table[conn->clientConnection->fd].ssl.get()) {
+                        sb = sslGetUserCertificatePEM(ssl);
+                        out = sb.c_str();
+                    }
                 }
             }
             break;
@@ -1265,13 +1269,20 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_SSL_SERVER_CERT_ISSUER:
         case LFT_SSL_SERVER_CERT_SUBJECT:
+        case LFT_SSL_SERVER_CERT_WHOLE:
             if (al->request && al->request->clientConnectionManager.valid()) {
                 if (Ssl::ServerBump * srvBump = al->request->clientConnectionManager->serverBump()) {
                     if (X509 *serverCert = srvBump->serverCert.get()) {
                         if (fmt->type == LFT_SSL_SERVER_CERT_SUBJECT)
                             out = Ssl::GetX509UserAttribute(serverCert, "DN");
-                        else
+                        else if (fmt->type == LFT_SSL_SERVER_CERT_ISSUER)
                             out = Ssl::GetX509CAAttribute(serverCert, "DN");
+                        else {
+                            assert(fmt->type == LFT_SSL_SERVER_CERT_WHOLE);
+                            sb = Ssl::GetX509PEM(serverCert);
+                            out = sb.c_str();
+                            quote = 1;
+                        }
                     }
                 }
             }
