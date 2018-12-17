@@ -626,7 +626,7 @@ FwdState::checkRetry()
     if (!entry->isEmpty())
         return false;
 
-    if (n_tries > Config.forward_max_tries)
+    if (exhaustedTries())
         return false;
 
     if (!EnoughTimeToReForward(start_t))
@@ -960,6 +960,7 @@ FwdState::connectStart()
     Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], calls.connector, connTimeout);
     if (host)
         cs->setHost(host);
+    ++n_tries;
     AsyncJob::Start(cs);
 }
 
@@ -1111,7 +1112,7 @@ FwdState::reforward()
         return 0;
     }
 
-    if (n_tries > Config.forward_max_tries)
+    if (exhaustedTries())
         return 0;
 
     if (request->bodyNibbled())
@@ -1259,6 +1260,12 @@ FwdState::logReplyStatus(int tries, const Http::StatusCode status)
         tries = MAX_FWD_STATS_IDX;
 
     ++ FwdReplyCodes[tries][status];
+}
+
+bool
+FwdState::exhaustedTries() const
+{
+    return n_tries >= Config.forward_max_tries;
 }
 
 /**** PRIVATE NON-MEMBER FUNCTIONS ********************************************/
