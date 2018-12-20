@@ -824,7 +824,7 @@ HttpStateData::handle1xx(HttpReply *reply)
 
     if (reply->sline.status() == Http::scSwitchingProtocols) {
         if (!processSwitchingProtocols(reply)) {
-            auto err = new ErrorState(ERR_INVALID_REQ, Http::scBadGateway, request.getRaw());
+            auto err = new ErrorState(ERR_INVALID_RESP, Http::scBadGateway, request.getRaw());
             fwd->fail(err);
             closeServer();
             return;
@@ -854,7 +854,7 @@ public:
     explicit MatchProtocol(const char *s, size_t len) :
         reference(s),
         referenceLen(len),
-        referenceBaseLen(static_cast<size_t>(-1))
+        referenceBaseLen(UndefLen)
         {}
 
     /// Operator to search in lists or vectors
@@ -862,7 +862,7 @@ public:
         if (referenceIsVersioned()) {
             const bool checkingIsVersioned = (checking.find('/') != SBuf::npos);
             if (!checkingIsVersioned) {
-                assert(referenceBaseLen != static_cast<size_t>(-1));
+                assert(referenceBaseLen != UndefLen);
                 return checking.caseCmp(reference, referenceBaseLen) == 0;
             }
         }
@@ -879,11 +879,11 @@ private:
     /// \return true if the reference protocol includes version info
     /// Also computes the referenceBaseLen member,
     bool referenceIsVersioned() {
-        if (referenceBaseLen == static_cast<size_t>(-1)) {
+        if (referenceBaseLen == UndefLen) {
             const char *end = std::find(reference, reference + referenceLen, '/');
             referenceBaseLen = end - reference;
         }
-        return (referenceBaseLen !=  referenceLen);
+        return (referenceBaseLen != referenceLen);
     }
 
     const char *reference; ///< The reference protocol
@@ -894,22 +894,28 @@ private:
 
     /// The length of reference protocol string without version part
     size_t referenceBaseLen;
+
+    /// Undefined length of a "const char *" string
+    static const size_t UndefLen = static_cast<size_t>(-1);
 };
 
 bool
 HttpStateData::upgradeProtocolsSupported(const HttpReply *reply) const
 {
-    if (!upgradeProtocolsSentToPeer)
-        return false;
-
     const String upgradeProtos = reply->header.getList(Http::HdrType::UPGRADE);
+
+    if (!upgradeProtocolsSentToPeer) {
+        debugs(11, 2, "Upgrade to '" << upgradeProtos << "' is not requested");
+        return false;
+    }
+
     const char *pos = nullptr;
     const char *item;
-    int ilen = 0;
+    int ilen;
     while (strListGetItem(&upgradeProtos, ',', &item, &ilen, &pos)) {
         const auto it = std::find_if(upgradeProtocolsSentToPeer->cbegin(), upgradeProtocolsSentToPeer->cend(), MatchProtocol(item, ilen));
         if (it == upgradeProtocolsSentToPeer->cend()) { // protocol not listed by client!
-            debugs(11, 2, "Upgrade to " << SBuf(item, ilen) << " is not allowed by client or squid configuration");
+            debugs(11, 2, "Upgrade to " << SBuf(item, ilen) << " is not requested by client or not allowed by squid configuration");
             return false;
         }
     }
@@ -972,6 +978,7 @@ HttpStateData::proceedAfter1xx()
         ScheduleCallHere(call);
         fwd->unregister(serverConnection);
         comm_remove_close_handler(serverConnection->fd, closeHandler);
+        closeHandler = nullptr;
         serverConnection = nullptr;
         doneWithFwd = "SwitchingProtocol";
         mustStop("SwitchingProtocol");
@@ -2101,7 +2108,7 @@ HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
 {
     // We need virgin request received by squid. This is stored to
     // AccessLogEntry::request member.
-    const HttpHeader &hdr_in = fwd->al->request ? fwd->al->request->header :request->header;
+    const HttpHeader &hdr_in = (fwd->al && fwd->al->request) ? fwd->al->request->header : request->header;
 
     if (!hdr_in.has(Http::HdrType::UPGRADE))
         return;
@@ -2110,7 +2117,7 @@ HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
     String upgradeOut;
     const char *pos = nullptr;
     const char *item;
-    int ilen = 0;
+    int ilen;
     while (strListGetItem(&upgradeIn, ',', &item, &ilen, &pos)) {
         auto it = std::find_if(Config.http_upgrade_protocols->begin(), Config.http_upgrade_protocols->end(), MatchProtocol(item, ilen));
 
@@ -2123,11 +2130,12 @@ HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
         if (it != Config.http_upgrade_protocols->end() && it->second != nullptr) {
             const acl_access *acl = it->second;
             ACLFilledChecklist ch(acl, request.getRaw());
+            ch.al = fwd->al;
             if (ch.fastCheck().allowed()) {
                 SBuf proto(item, ilen);
                 strListAdd(&upgradeOut, proto.c_str(), ',');
                 if (!upgradeProtocolsSentToPeer)
-                    upgradeProtocolsSentToPeer = new HttpStateData::ProtocolNamesList;
+                    upgradeProtocolsSentToPeer = new ProtocolNamesList;
                 upgradeProtocolsSentToPeer->push_back(proto);
             }
         }
