@@ -286,7 +286,7 @@ BodyPipe::expectNoConsumption()
         abortedConsumption = true;
 
         // in case somebody enabled auto-consumption before regular one aborted
-        if (mustAutoConsume)
+        if (mustAutoConsume && theProducer.valid())
             startAutoConsumption();
     }
 }
@@ -313,15 +313,16 @@ BodyPipe::consume(size_t size)
     postConsume(size);
 }
 
-// In the AutoConsumption  mode the consumer has gone but the producer continues
-// producing data. We are using a BodySink BodyConsumer which just discards the produced data.
+// In the AutoConsumption mode, the consumer is gone, but the producer continues
+// to produce data. We use a BodySink BodyConsumer to discard that data.
 void
 BodyPipe::enableAutoConsumption()
 {
     mustAutoConsume = true;
     debugs(91,5, HERE << "enabled auto consumption" << status());
-    if (!theConsumer && theBuf.hasContent())
+    if (!theConsumer && theProducer.valid() && theBuf.hasContent())
         startAutoConsumption();
+    // else already consuming, nobody needs consumption, or nothing to consume
 }
 
 // start auto consumption by creating body sink
@@ -393,15 +394,25 @@ BodyPipe::postAppend(size_t size)
     thePutSize += size;
     debugs(91,7, HERE << "added " << size << " bytes" << status());
 
-    if (mustAutoConsume && !theConsumer && size > 0)
-        startAutoConsumption();
+    if (!mayNeedMoreData())
+        clearProducer(true); // reached end-of-body
+
+    if (mustAutoConsume && !theConsumer) {
+        // the consumer will not show up later
+
+        // our caller still exists, of course, but see clearProducer() above
+        if (!theProducer) {
+            debugs(91, 7, "nobody needs [auto] consumption" << status());
+            return;
+        }
+
+        if (size > 0)
+            startAutoConsumption();
+    }
 
     // We should not consume here even if mustAutoConsume because the
     // caller may not be ready for the data to be consumed during this call.
     scheduleBodyDataNotification();
-
-    if (!mayNeedMoreData())
-        clearProducer(true); // reached end-of-body
 }
 
 void
