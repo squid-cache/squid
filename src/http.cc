@@ -2116,8 +2116,8 @@ HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
     const String upgradeIn = hdr_in.getList(Http::HdrType::UPGRADE);
     String upgradeOut;
     const char *pos = nullptr;
-    const char *item;
-    int ilen;
+    const char *item = nullptr;
+    int ilen = 0;
     while (strListGetItem(&upgradeIn, ',', &item, &ilen, &pos)) {
         auto it = std::find_if(Config.http_upgrade_protocols->begin(), Config.http_upgrade_protocols->end(), MatchProtocol(item, ilen));
 
