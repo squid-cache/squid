@@ -1389,7 +1389,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
      */
     if (csd->switchedToHttps()) {
         http->uri = csd->prepareTlsSwitchingURL(hp);
-    } else if (csd->transparent() || csd->switchedToHttps()) {
+    } else if (csd->transparent()) {
         /* intercept or transparent mode, properly working with no failures */
         http->uri = prepareTransparentURL(csd, hp);
 
@@ -3100,7 +3100,7 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     assert(!switchedToHttps_);
 
     sslConnectHostOrIp = request->url.host();
-    tlsConnectPort =  request->url.port();
+    tlsConnectPort = request->url.port();
     resetSslCommonName(request->url.host());
 
     // We are going to read new request
