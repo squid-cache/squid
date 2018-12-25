@@ -274,6 +274,7 @@ public:
 #else
     bool switchedToHttps() const { return false; }
 #endif
+    char *prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp);
 
     /* clt_conn_tag=tag annotation access */
     const SBuf &connectionTag() const { return connectionTag_; }
@@ -393,6 +394,7 @@ private:
 
     /// The SSL server host name appears in CONNECT request or the server ip address for the intercepted requests
     String sslConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request
+    unsigned short tlsConnectPort; ///< The TLS server port number as passed in the CONNECT request
     SBuf sslCommonName_; ///< CN name for SSL certificate generation
 
     /// TLS client delivered SNI value. Empty string if none has been received.
