@@ -24,7 +24,7 @@ void internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest *, Sto
 bool internalCheck(const SBuf &urlPath);
 bool internalStaticCheck(const SBuf &urlPath);
 char *internalLocalUri(const char *dir, const SBuf &name);
-char *internalRemoteUri(const char *, unsigned short, const char *, const SBuf &);
+char *internalRemoteUri(bool, const char *, unsigned short, const char *, const SBuf &);
 const char *internalHostname(void);
 int internalHostnameIs(const char *);
 

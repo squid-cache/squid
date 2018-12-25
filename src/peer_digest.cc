@@ -323,7 +323,7 @@ peerDigestRequest(PeerDigest * pd)
     if (p->digest_url)
         url = xstrdup(p->digest_url);
     else
-        url = xstrdup(internalRemoteUri(p->host, p->http_port, "/squid-internal-periodic/", SBuf(StoreDigestFileName)));
+        url = xstrdup(internalRemoteUri(p->secure.encryptTransport, p->host, p->http_port, "/squid-internal-periodic/", SBuf(StoreDigestFileName)));
     debugs(72, 2, url);
 
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initCacheDigest);
@@ -703,8 +703,10 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
 static int
 peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const char *step_name)
 {
+    static const SBuf hostUnknown("<unknown>"); // peer host (if any)
+    SBuf host = hostUnknown;
+
     PeerDigest *pd = NULL;
-    const char *host = "<unknown>"; /* peer host */
     const char *reason = NULL;  /* reason for completion */
     const char *no_bug = NULL;  /* successful completion if set */
     const int pdcb_valid = cbdataReferenceValid(fetch->pd);
@@ -725,7 +727,7 @@ peerDigestFetchedEnough(DigestFetchState * fetch, char *buf, ssize_t size, const
 #endif
 
         else
-            host = pd->host.termedBuf();
+            host = pd->host;
     }
 
     debugs(72, 6, step_name << ": peer " << host << ", offset: " <<
@@ -834,8 +836,7 @@ static void
 peerDigestPDFinish(DigestFetchState * fetch, int pcb_valid, int err)
 {
     PeerDigest *pd = fetch->pd;
-    const char *host = pd->host.termedBuf();
-
+    const auto host = pd->host;
     pd->times.received = squid_curtime;
     pd->times.req_delay = fetch->resp_time;
     pd->stats.sent.kbytes += fetch->sent.bytes;
@@ -931,7 +932,7 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
 {
     StoreDigestCBlock cblock;
     int freed_size = 0;
-    const char *host = pd->host.termedBuf();
+    const auto host = pd->host;
 
     memcpy(&cblock, buf, sizeof(cblock));
     /* network -> host conversions */
@@ -1050,8 +1051,8 @@ peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e)
 
     assert(pd);
 
-    const char *host = pd->host.termedBuf();
-    storeAppendPrintf(e, "\npeer digest from %s\n", host);
+    auto host = pd->host;
+    storeAppendPrintf(e, "\npeer digest from " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(host));
 
     cacheDigestGuessStatsReport(&pd->stats.guess, e, host);
 
