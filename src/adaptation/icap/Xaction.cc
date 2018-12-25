@@ -744,7 +744,7 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
     securer = NULL;
 
     if (closer != NULL) {
-        if (answer.conn != NULL)
+        if (Comm::IsConnOpen(answer.conn))
             comm_remove_close_handler(answer.conn->fd, closer);
         else
             closer->cancel("securing completed");
