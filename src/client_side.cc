@@ -1081,20 +1081,18 @@ findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end)
     return NULL;
 }
 
-static void
-prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1::RequestParserPointer &hp)
+static char *
+prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &hp)
 {
     int vhost = conn->port->vhost;
     int vport = conn->port->vport;
     static char ipbuf[MAX_IPSTRLEN];
 
-    http->flags.accel = true;
-
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
     static const SBuf cache_object("cache_object://");
     if (hp->requestUri().startsWith(cache_object))
-        return; /* already in good shape */
+        return nullptr; /* already in good shape */
 
     // XXX: re-use proper URL parser for this
     SBuf url = hp->requestUri(); // use full provided URI if we abort
@@ -1104,7 +1102,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
             break;
 
         if (conn->port->vhost)
-            return; /* already in good shape */
+            return nullptr; /* already in good shape */
 
         // skip the URI scheme
         static const CharacterSet uriScheme = CharacterSet("URI-scheme","+-.") + CharacterSet::ALPHA + CharacterSet::DIGIT;
@@ -1141,18 +1139,16 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
 #endif
 
     if (vport < 0)
-        vport = http->getConn()->clientConnection->local.port();
+        vport = conn->clientConnection->local.port();
 
-    const bool switchedToHttps = conn->switchedToHttps();
-    const bool tryHostHeader = vhost || switchedToHttps;
     char *host = NULL;
-    if (tryHostHeader && (host = hp->getHeaderField("Host"))) {
+    if (vhost && (host = hp->getHeaderField("Host"))) {
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
         char thost[256];
         if (vport > 0) {
             thost[0] = '\0';
             char *t = NULL;
-            if (host[strlen(host)] != ']' && (t = strrchr(host,':')) != NULL) {
+            if (host[strlen(host) - 1] != ']' && (t = strrchr(host,':')) != nullptr) {
                 strncpy(thost, host, (t-host));
                 snprintf(thost+(t-host), sizeof(thost)-(t-host), ":%d", vport);
                 host = thost;
@@ -1161,67 +1157,116 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
                 host = thost;
             }
         } // else nothing to alter port-wise.
-        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen + strlen(host);
-        http->uri = (char *)xcalloc(url_sz, 1);
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
-        snprintf(http->uri, url_sz, SQUIDSBUFPH "://%s" SQUIDSBUFPH, SQUIDSBUFPRINT(scheme), host, SQUIDSBUFPRINT(url));
-        debugs(33, 5, "ACCEL VHOST REWRITE: " << http->uri);
+        const int url_sz = scheme.length() + strlen(host) + url.length() + 32;
+        char *uri = static_cast<char *>(xcalloc(url_sz, 1));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://%s" SQUIDSBUFPH, SQUIDSBUFPRINT(scheme), host, SQUIDSBUFPRINT(url));
+        debugs(33, 5, "ACCEL VHOST REWRITE: " << uri);
+        return uri;
     } else if (conn->port->defaultsite /* && !vhost */) {
         debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: defaultsite=" << conn->port->defaultsite << " + vport=" << vport);
-        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen +
-                           strlen(conn->port->defaultsite);
-        http->uri = (char *)xcalloc(url_sz, 1);
         char vportStr[32];
         vportStr[0] = '\0';
         if (vport > 0) {
             snprintf(vportStr, sizeof(vportStr),":%d",vport);
         }
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
-        snprintf(http->uri, url_sz, SQUIDSBUFPH "://%s%s" SQUIDSBUFPH,
+        const int url_sz = scheme.length() + strlen(conn->port->defaultsite) + sizeof(vportStr) + url.length() + 32;
+        char *uri = static_cast<char *>(xcalloc(url_sz, 1));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://%s%s" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme), conn->port->defaultsite, vportStr, SQUIDSBUFPRINT(url));
-        debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: " << http->uri);
+        debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: " << uri);
+        return uri;
     } else if (vport > 0 /* && (!vhost || no Host:) */) {
         debugs(33, 5, "ACCEL VPORT REWRITE: *_port IP + vport=" << vport);
         /* Put the local socket IP address as the hostname, with whatever vport we found  */
-        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen;
-        http->uri = (char *)xcalloc(url_sz, 1);
-        http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
+        conn->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
-        snprintf(http->uri, url_sz, SQUIDSBUFPH "://%s:%d" SQUIDSBUFPH,
+        const int url_sz = scheme.length() + sizeof(ipbuf) + url.length() + 32;
+        char *uri = static_cast<char *>(xcalloc(url_sz, 1));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://%s:%d" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme), ipbuf, vport, SQUIDSBUFPRINT(url));
-        debugs(33, 5, "ACCEL VPORT REWRITE: " << http->uri);
+        debugs(33, 5, "ACCEL VPORT REWRITE: " << uri);
+        return uri;
     }
+
+    return nullptr;
 }
 
-static void
-prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, const Http1::RequestParserPointer &hp)
+static char *
+buildUrlFromHost(ConnStateData * conn, const Http1::RequestParserPointer &hp)
+{
+    char *uri = nullptr;
+    /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
+    if (const char *host = hp->getHeaderField("Host")) {
+        const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
+        const int url_sz = scheme.length() + strlen(host) + hp->requestUri().length() + 32;
+        uri = static_cast<char *>(xcalloc(url_sz, 1));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://%s" SQUIDSBUFPH,
+                 SQUIDSBUFPRINT(scheme),
+                 host,
+                 SQUIDSBUFPRINT(hp->requestUri()));
+    }
+    return uri;
+}
+
+char *
+ConnStateData::prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp)
+{
+    Must(switchedToHttps());
+
+    if (!hp->requestUri().isEmpty() && hp->requestUri()[0] != '/')
+        return nullptr; /* already in good shape */
+
+    char *uri = buildUrlFromHost(this, hp);
+#if USE_OPENSSL
+    if (!uri) {
+        Must(tlsConnectPort);
+        Must(sslConnectHostOrIp.size());
+        SBuf useHost;
+        if (!tlsClientSni().isEmpty())
+            useHost = tlsClientSni();
+        else
+            useHost.assign(sslConnectHostOrIp.rawBuf(), sslConnectHostOrIp.size());
+
+        const SBuf &scheme = AnyP::UriScheme(transferProtocol.protocol).image();
+        const int url_sz = scheme.length() + useHost.length() + hp->requestUri().length() + 32;
+        uri = static_cast<char *>(xcalloc(url_sz, 1));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://" SQUIDSBUFPH ":%d" SQUIDSBUFPH,
+                 SQUIDSBUFPRINT(scheme),
+                 SQUIDSBUFPRINT(useHost),
+                 tlsConnectPort,
+                 SQUIDSBUFPRINT(hp->requestUri()));
+    }
+#endif
+    if (uri)
+        debugs(33, 5, "TLS switching host rewrite: " << uri);
+    return uri;
+}
+
+static char *
+prepareTransparentURL(ConnStateData * conn, const Http1::RequestParserPointer &hp)
 {
     // TODO Must() on URI !empty when the parser supports throw. For now avoid assert().
     if (!hp->requestUri().isEmpty() && hp->requestUri()[0] != '/')
-        return; /* already in good shape */
+        return nullptr; /* already in good shape */
 
-    /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
-
-    if (const char *host = hp->getHeaderField("Host")) {
-        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen +
-                           strlen(host);
-        http->uri = (char *)xcalloc(url_sz, 1);
-        const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
-        snprintf(http->uri, url_sz, SQUIDSBUFPH "://%s" SQUIDSBUFPH,
-                 SQUIDSBUFPRINT(scheme), host, SQUIDSBUFPRINT(hp->requestUri()));
-        debugs(33, 5, "TRANSPARENT HOST REWRITE: " << http->uri);
-    } else {
+    char *uri = buildUrlFromHost(conn, hp);
+    if (!uri) {
         /* Put the local socket IP address as the hostname.  */
-        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen;
-        http->uri = (char *)xcalloc(url_sz, 1);
         static char ipbuf[MAX_IPSTRLEN];
-        http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
-        const SBuf &scheme = AnyP::UriScheme(http->getConn()->transferProtocol.protocol).image();
-        snprintf(http->uri, url_sz, SQUIDSBUFPH "://%s:%d" SQUIDSBUFPH,
+        conn->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
+        const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
+        const int url_sz = sizeof(ipbuf) + hp->requestUri().length() + 32;
+        uri = static_cast<char *>(xcalloc(url_sz, 1));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://%s:%d" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme),
-                 ipbuf, http->getConn()->clientConnection->local.port(), SQUIDSBUFPRINT(hp->requestUri()));
-        debugs(33, 5, "TRANSPARENT REWRITE: " << http->uri);
+                 ipbuf, conn->clientConnection->local.port(), SQUIDSBUFPRINT(hp->requestUri()));
     }
+
+    if (uri)
+        debugs(33, 5, "TRANSPARENT REWRITE: " << uri);
+    return uri;
 }
 
 /** Parse an HTTP request
@@ -1341,9 +1386,11 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
      *  - remote interception with PROXY protocol
      *  - remote reverse-proxy with PROXY protocol
      */
-    if (csd->transparent()) {
+    if (csd->switchedToHttps()) {
+        http->uri = csd->prepareTlsSwitchingURL(hp);
+    } else if (csd->transparent()) {
         /* intercept or transparent mode, properly working with no failures */
-        prepareTransparentURL(csd, http, hp);
+        http->uri = prepareTransparentURL(csd, hp);
 
     } else if (internalCheck(hp->requestUri())) { // NP: only matches relative-URI
         /* internal URL mode */
@@ -1353,9 +1400,10 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
         //  But have not parsed there yet!! flag for local-only handling.
         http->flags.internal = true;
 
-    } else if (csd->port->flags.accelSurrogate || csd->switchedToHttps()) {
+    } else if (csd->port->flags.accelSurrogate) {
         /* accelerator mode */
-        prepareAcceleratedURL(csd, http, hp);
+        http->uri = prepareAcceleratedURL(csd, hp);
+        http->flags.accel = true;
     }
 
     if (!http->uri) {
@@ -2315,6 +2363,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
 #if USE_OPENSSL
     switchedToHttps_(false),
     parsingTlsHandshake(false),
+    tlsConnectPort(0),
     sslServerBump(NULL),
     signAlgorithm(Ssl::algSignTrusted),
 #endif
@@ -3050,6 +3099,7 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     assert(!switchedToHttps_);
 
     sslConnectHostOrIp = request->url.host();
+    tlsConnectPort = request->url.port();
     resetSslCommonName(request->url.host());
 
     // We are going to read new request
