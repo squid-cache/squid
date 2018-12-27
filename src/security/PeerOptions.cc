@@ -598,7 +598,7 @@ Security::PeerOptions::updateContextOptions(Security::ContextPointer &ctx) const
 #if USE_OPENSSL
     SSL_CTX_set_options(ctx.get(), parsedOptions);
 #elif USE_GNUTLS
-    // NP: GnuTLS uses 'priorities' which are set per-session instead.
+    // NP: GnuTLS uses 'priorities' which are set only per-session instead.
 #endif
 }
 
@@ -726,7 +726,9 @@ void
 Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
 {
 #if USE_OPENSSL
-    // 'options=' value being set to session is a GnuTLS specific thing.
+    // XXX: Options already set before (via the context) are not cleared!
+    SSL_set_options(s.get(), parsedOptions);
+
 #elif USE_GNUTLS
     int x;
     SBuf errMsg;

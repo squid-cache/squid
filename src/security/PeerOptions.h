@@ -82,7 +82,9 @@ public:
 
     SBuf tlsMinVersion;  ///< version label for minimum TLS version to permit
 
+private:
     Security::ParsedOptions parsedOptions; ///< parsed value of sslOptions
+public:
     long parsedFlags = 0;   ///< parsed value of sslFlags
 
     std::list<Security::KeyData> certs; ///< details from the cert= and file= config parameters
