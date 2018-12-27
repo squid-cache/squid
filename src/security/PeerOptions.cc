@@ -53,13 +53,14 @@ Security::PeerOptions::parse(const char *token)
         KeyData &t = certs.back();
         t.privateKeyFile = SBuf(token + 4);
     } else if (strncmp(token, "version=", 8) == 0) {
-        debugs(0, DBG_PARSE_NOTE(1), "UPGRADE WARNING: SSL version= is deprecated. Use options= to limit protocols instead.");
+        debugs(0, DBG_PARSE_NOTE(1), "UPGRADE WARNING: SSL version= is deprecated. Use options= and tls-min-version= to limit protocols instead.");
         sslVersion = xatoi(token + 8);
+        optsReparse = true;
     } else if (strncmp(token, "min-version=", 12) == 0) {
         tlsMinVersion = SBuf(token + 12);
     } else if (strncmp(token, "options=", 8) == 0) {
         sslOptions = SBuf(token + 8);
-        parseOptions();
+        optsReparse = true;
     } else if (strncmp(token, "cipher=", 7) == 0) {
         sslCipher = SBuf(token + 7);
     } else if (strncmp(token, "cafile=", 7) == 0) {
@@ -182,7 +183,7 @@ Security::PeerOptions::updateTlsVersionLimits()
             if (sslOptions.isEmpty())
                 add.chop(1); // remove the initial ':'
             sslOptions.append(add);
-            parseOptions(); // sslOptions changed, reset parsedOptions
+            optsReparse = true;
 #endif
 
         } else {
@@ -236,7 +237,7 @@ Security::PeerOptions::updateTlsVersionLimits()
                 sslOptions.append(add+1, strlen(add+1));
             else
                 sslOptions.append(add, strlen(add));
-            parseOptions(); // sslOptions changed, reset parsedOptions
+            optsReparse = true;
 #endif
         }
         sslVersion = 0; // prevent sslOptions being repeatedly appended
@@ -434,6 +435,12 @@ static struct ssl_option {
 void
 Security::PeerOptions::parseOptions()
 {
+    // do not allow repeated parsing when multiple contexts are created
+    // NP: we cannot use !parsedOptions because a nil value does have meaning there
+    if (!optsReparse)
+        return;
+    optsReparse = false;
+
 #if USE_OPENSSL
     ::Parser::Tokenizer tok(sslOptions);
     long op = 0;
@@ -593,8 +600,9 @@ Security::PeerOptions::loadCrlFile()
 }
 
 void
-Security::PeerOptions::updateContextOptions(Security::ContextPointer &ctx) const
+Security::PeerOptions::updateContextOptions(Security::ContextPointer &ctx)
 {
+    parseOptions();
 #if USE_OPENSSL
     SSL_CTX_set_options(ctx.get(), parsedOptions);
 #elif USE_GNUTLS
@@ -725,6 +733,7 @@ Security::PeerOptions::updateContextTrust(Security::ContextPointer &ctx)
 void
 Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
 {
+    parseOptions();
 #if USE_OPENSSL
     // XXX: Options already set before (via the context) are not cleared!
     SSL_set_options(s.get(), parsedOptions);
