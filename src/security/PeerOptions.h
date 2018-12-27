@@ -45,7 +45,7 @@ public:
     void updateTlsVersionLimits();
 
     /// Setup the library specific 'options=' parameters for the given context.
-    void updateContextOptions(Security::ContextPointer &) const;
+    void updateContextOptions(Security::ContextPointer &);
 
     /// setup the NPN extension details for the given context
     void updateContextNpn(Security::ContextPointer &);
@@ -83,7 +83,12 @@ public:
     SBuf tlsMinVersion;  ///< version label for minimum TLS version to permit
 
 private:
-    Security::ParsedOptions parsedOptions; ///< parsed value of sslOptions
+    /// parsed value of sslOptions
+    Security::ParsedOptions parsedOptions;
+
+    /// whether parsedOptions content needs to be regenerated
+    bool optsReparse = true;
+
 public:
     long parsedFlags = 0;   ///< parsed value of sslFlags
 
