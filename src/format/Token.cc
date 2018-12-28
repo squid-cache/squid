@@ -11,7 +11,6 @@
 #include "format/Token.h"
 #include "format/TokenTableEntry.h"
 #include "globals.h"
-#include "parser/Tokenizer.h"
 #include "proxyp/Elements.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
