@@ -552,13 +552,13 @@ squid_LDADD = \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	eui/libeui.la \
 	icmp/libicmp.la \
 	log/liblog.la \
 	format/libformat.la \
 	sbuf/libsbuf.la \
-	proxyp/libproxyp.la \
 	$(XTRA_OBJS) \
 	$(REPL_OBJS) \
 	$(NETTLELIB) \
@@ -1212,6 +1212,7 @@ tests_testURL_LDADD = \
 	helper/libhelper.la \
 	http/libhttp.la \
 	ftp/libftp.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	anyp/libanyp.la \
 	ident/libident.la \
@@ -1233,7 +1234,6 @@ tests_testURL_LDADD = \
 	format/libformat.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
-	proxyp/libproxyp.la \
 	$(REGEXLIB) \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
@@ -2392,6 +2392,7 @@ tests_test_http_range_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -2410,7 +2411,6 @@ tests_test_http_range_LDADD = \
 	mgr/libmgr.la \
 	sbuf/libsbuf.la \
 	store/libstore.la \
-	proxyp/libproxyp.la \
 	$(SNMP_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -2780,6 +2780,7 @@ tests_testHttpRequest_LDADD = \
 	fs/libfs.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	dns/libdns.la \
 	base/libbase.la \
@@ -2792,7 +2793,6 @@ tests_testHttpRequest_LDADD = \
 	format/libformat.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
-	proxyp/libproxyp.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -3070,6 +3070,7 @@ tests_testCacheManager_LDADD = \
 	ftp/libftp.la \
 	helper/libhelper.la \
 	http/libhttp.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
@@ -3095,7 +3096,6 @@ tests_testCacheManager_LDADD = \
 	mem/libmem.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
-	proxyp/libproxyp.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -3388,6 +3388,7 @@ tests_testEvent_LDADD = \
 	ftp/libftp.la \
 	helper/libhelper.la \
 	http/libhttp.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
@@ -3402,7 +3403,6 @@ tests_testEvent_LDADD = \
 	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \
-	proxyp/libproxyp.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -3622,6 +3622,7 @@ tests_testEventLoop_LDADD = \
 	ftp/libftp.la \
 	helper/libhelper.la \
 	http/libhttp.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
@@ -3636,7 +3637,6 @@ tests_testEventLoop_LDADD = \
 	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \
-	proxyp/libproxyp.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
