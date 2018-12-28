@@ -19,6 +19,10 @@ void strListAdd(String * str, const char *item, char del);
 int strListIsMember(const String * str, const SBuf &item, char del);
 int strListIsSubstr(const String * list, const char *s, char del);
 int strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos);
+/// Searches for the first matching key=value pair
+/// within a delimiter-separated list of items.
+/// \returns the value of the found pair or an empty string.
+SBuf getListMember(const String &list, const char *key, const char del);
 
 #endif /* SQUID_STRLIST_H_ */
 

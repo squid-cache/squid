@@ -9,6 +9,7 @@
 /* DEBUG: section 24    SBuf */
 
 #include "squid.h"
+#include "ip/Address.h"
 #include "parser/BinaryTokenizer.h"
 
 Parser::BinaryTokenizer::BinaryTokenizer(): BinaryTokenizer(SBuf())
@@ -73,6 +74,14 @@ Parser::BinaryTokenizer::got(const SBuf &value, uint64_t size, const char *descr
            Raw(nullptr, value.rawContent(), value.length()).hex() <<
            BinaryTokenizer_tail(size, parsed_ - size));
 
+}
+
+/// debugging helper for parsed addresses
+void
+Parser::BinaryTokenizer::got(const Ip::Address &value, uint64_t size, const char *description) const
+{
+    debugs(24, 7, context << description << '=' << value <<
+           BinaryTokenizer_tail(size, parsed_ - size));
 }
 
 /// debugging helper for skipped fields
@@ -160,6 +169,33 @@ Parser::BinaryTokenizer::area(uint64_t size, const char *description)
     want(size, description);
     const SBuf result = data_.substr(parsed_, size);
     parsed_ += size;
+    got(result, size, description);
+    return result;
+}
+
+Ip::Address
+Parser::BinaryTokenizer::inet4(const char *description)
+{
+    struct in_addr addr;
+    const auto size = sizeof(addr);
+    want(size, description);
+    memcpy(&addr, data_.rawContent() + parsed_, size);
+    parsed_ += size;
+    const Ip::Address result(addr);
+    got(result, size, description);
+    return result;
+}
+
+// TODO: avoid code duplication with BinaryTokenizer::inet4()
+Ip::Address
+Parser::BinaryTokenizer::inet6(const char *description)
+{
+    struct in6_addr addr;
+    const auto size = sizeof(addr);
+    want(size, description);
+    memcpy(&addr, data_.rawContent() + parsed_, size);
+    parsed_ += size;
+    const Ip::Address result(addr);
     got(result, size, description);
     return result;
 }

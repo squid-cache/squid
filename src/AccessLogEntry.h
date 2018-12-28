@@ -21,6 +21,7 @@
 #include "LogTags.h"
 #include "MessageSizes.h"
 #include "Notes.h"
+#include "proxyp/forward.h"
 #include "sbuf/SBuf.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
@@ -41,7 +42,7 @@ class AccessLogEntry: public RefCountable
 public:
     typedef RefCount<AccessLogEntry> Pointer;
 
-    AccessLogEntry() {}
+    AccessLogEntry();
     ~AccessLogEntry();
 
     /// Fetch the client IP log string into the given buffer.
@@ -183,6 +184,9 @@ public:
     /// key:value pairs set by squid.conf note directive and
     /// key=value pairs returned from URL rewrite/redirect helper
     NotePairs::Pointer notes;
+
+    /// see ConnStateData::proxyProtocolMessage_
+    ProxyProtocol::MessagePointer proxyProtocolMessage;
 
 #if ICAP_CLIENT
     /** \brief This subclass holds log info for ICAP part of request

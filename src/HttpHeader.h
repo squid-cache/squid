@@ -118,8 +118,8 @@ public:
     bool hasNamed(const SBuf &s, String *value = 0) const;
     /// \deprecated use SBuf method instead.
     bool hasNamed(const char *name, unsigned int namelen, String *value = 0) const;
-    String getByNameListMember(const char *name, const char *member, const char separator) const;
-    String getListMember(Http::HdrType id, const char *member, const char separator) const;
+    SBuf getByNameListMember(const char *name, const char *member, const char separator) const;
+    SBuf getListMember(Http::HdrType id, const char *member, const char separator) const;
     int has(Http::HdrType id) const;
     /// Appends "this cache" information to VIA header field.
     /// Takes the initial VIA value from "from" parameter, if provided.

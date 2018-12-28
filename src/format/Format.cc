@@ -21,6 +21,7 @@
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "proxyp/Message.h"
 #include "rfc1738.h"
 #include "sbuf/StringConvert.h"
 #include "security/CertError.h"
@@ -683,7 +684,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->request) {
                 const Adaptation::History::Pointer ah = al->request->adaptHistory();
                 if (ah) { // XXX: add adapt::<all_h but use lastMeta here
-                    sb = StringToSBuf(ah->allMeta.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator));
+                    sb = ah->allMeta.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
                     out = sb.c_str();
                     quote = 1;
                 }
@@ -742,7 +743,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_ICAP_REQ_HEADER_ELEM:
             if (al->icap.request) {
-                sb = StringToSBuf(al->icap.request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator));
+                sb = al->icap.request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
                 out = sb.c_str();
                 quote = 1;
             }
@@ -772,7 +773,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_ICAP_REP_HEADER_ELEM:
             if (al->icap.reply) {
-                sb = StringToSBuf(al->icap.reply->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator));
+                sb = al->icap.reply->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
                 out = sb.c_str();
                 quote = 1;
             }
@@ -818,7 +819,31 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 #endif
         case LFT_REQUEST_HEADER_ELEM:
             if (const Http::Message *msg = actualRequestHeader(al)) {
-                sb = StringToSBuf(msg->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator));
+                sb = msg->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
+                out = sb.c_str();
+                quote = 1;
+            }
+            break;
+
+        case LFT_PROXY_PROTOCOL_RECEIVED_HEADER:
+            if (al->proxyProtocolMessage) {
+                sb = al->proxyProtocolMessage->getValues(fmt->data.headerId, fmt->data.header.separator);
+                out = sb.c_str();
+                quote = 1;
+            }
+            break;
+
+        case LFT_PROXY_PROTOCOL_RECEIVED_ALL_HEADERS:
+            if (al->proxyProtocolMessage) {
+                sb = al->proxyProtocolMessage->toMime();
+                out = sb.c_str();
+                quote = 1;
+            }
+            break;
+
+        case LFT_PROXY_PROTOCOL_RECEIVED_HEADER_ELEM:
+            if (al->proxyProtocolMessage) {
+                sb = al->proxyProtocolMessage->getElem(fmt->data.headerId, fmt->data.header.element, fmt->data.header.separator);
                 out = sb.c_str();
                 quote = 1;
             }
@@ -826,7 +851,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_ADAPTED_REQUEST_HEADER_ELEM:
             if (al->adapted_request) {
-                sb = StringToSBuf(al->adapted_request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator));
+                sb = al->adapted_request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
                 out = sb.c_str();
                 quote = 1;
             }
@@ -834,7 +859,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_REPLY_HEADER_ELEM:
             if (const Http::Message *msg = actualReplyHeader(al)) {
-                sb = StringToSBuf(msg->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator));
+                sb = msg->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
                 out = sb.c_str();
                 quote = 1;
             }

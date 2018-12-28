@@ -11,6 +11,9 @@
 #include "format/Token.h"
 #include "format/TokenTableEntry.h"
 #include "globals.h"
+#include "parser/Tokenizer.h"
+#include "proxyp/Elements.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "Store.h"
 
@@ -176,6 +179,10 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry(NULL, LFT_NONE)        /* this must be last */
 };
 
+static TokenTableEntry TokenTableProxyProtocol[] = {
+    TokenTableEntry(">h", LFT_PROXY_PROTOCOL_RECEIVED_HEADER),
+};
+
 #if USE_ADAPTATION
 static TokenTableEntry TokenTableAdapt[] = {
     TokenTableEntry("all_trs", LFT_ADAPTATION_ALL_XACT_TIMES),
@@ -251,6 +258,7 @@ Format::Token::Init()
     TheConfig.registerTokens(SBuf("tls"),::Format::TokenTableSsl);
     TheConfig.registerTokens(SBuf("ssl"),::Format::TokenTableSsl);
 #endif
+    TheConfig.registerTokens(SBuf("proxy_protocol"), ::Format::TokenTableProxyProtocol);
 }
 
 /// Scans a token table to see if the next token exists there
@@ -480,9 +488,14 @@ Format::Token::parse(const char *def, Quoting *quoting)
 
     case LFT_NOTE:
 
+    case LFT_PROXY_PROTOCOL_RECEIVED_HEADER:
+
         if (data.string) {
             char *header = data.string;
-            char *cp = strchr(header, ':');
+            // HTTP header field names cannot have ':' while
+            // PROXY protocol pseudo headers start with it.
+            const auto proxyPseudoHeader = type == LFT_PROXY_PROTOCOL_RECEIVED_HEADER && header[0] == ':';
+            char *cp = strchr(proxyPseudoHeader ? header+1 : header, ':');
 
             if (cp) {
                 *cp = '\0';
@@ -522,10 +535,19 @@ Format::Token::parse(const char *def, Quoting *quoting)
                     type = LFT_ICAP_REP_HEADER_ELEM;
                     break;
 #endif
+                case LFT_PROXY_PROTOCOL_RECEIVED_HEADER:
+                    type = LFT_PROXY_PROTOCOL_RECEIVED_HEADER_ELEM;
+                    break;
                 default:
                     break;
                 }
             }
+
+            if (!*header)
+                throw TexcHere(ToSBuf("Can't parse configuration token: '", def, "': missing header name"));
+
+            if (proxyPseudoHeader)
+                data.headerId = ProxyProtocol::HeaderNameToHeaderType(SBuf(header));
 
             data.header.header = header;
         } else {
@@ -554,6 +576,9 @@ Format::Token::parse(const char *def, Quoting *quoting)
                 type = LFT_ICAP_REP_ALL_HEADERS;
                 break;
 #endif
+            case LFT_PROXY_PROTOCOL_RECEIVED_HEADER:
+                type = LFT_PROXY_PROTOCOL_RECEIVED_ALL_HEADERS;
+                break;
             default:
                 break;
             }

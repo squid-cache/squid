@@ -131,3 +131,17 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
     return len > 0;
 }
 
+SBuf
+getListMember(const String &list, const char *key, const char delimiter)
+{
+    const char *pos = nullptr;
+    const char *item = nullptr;
+    int ilen = 0;
+    const auto keyLen = strlen(key);
+    while (strListGetItem(&list, delimiter, &item, &ilen, &pos)) {
+        if (static_cast<size_t>(ilen) > keyLen && strncmp(item, key, keyLen) == 0 && item[keyLen] == '=')
+            return SBuf(item + keyLen + 1, ilen - keyLen - 1);
+    }
+    return SBuf();
+}
+

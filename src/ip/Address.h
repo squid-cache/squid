@@ -190,6 +190,11 @@ public:
      */
     bool applyMask(const unsigned int cidr, int mtype);
 
+    /// Apply so-called 'privacy masking' to IPv4 addresses,
+    /// except localhost IP.
+    /// IPv6 clients use 'privacy addressing' instead.
+    int applyClientMask(const Address &mask);
+
     /** Return the ASCII equivalent of the address
      *  Semantically equivalent to the IPv4 inet_ntoa()
      *  eg. 127.0.0.1 (IPv4) or ::1 (IPv6)
