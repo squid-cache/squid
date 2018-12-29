@@ -83,7 +83,12 @@ public:
     SBuf tlsMinVersion;  ///< version label for minimum TLS version to permit
 
 private:
-    /// parsed value of sslOptions
+    /// Library-specific options string generated from tlsMinVersion.
+    /// Call updateTlsVersionLimits() to regenerate this string.
+    SBuf tlsMinOptions;
+
+    /// Parsed value of sslOptions + tlsMinOptions settings.
+    /// Set optsReparse=true to have this re-parsed before next use.
     Security::ParsedOptions parsedOptions;
 
     /// whether parsedOptions content needs to be regenerated

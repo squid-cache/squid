@@ -55,9 +55,9 @@ Security::PeerOptions::parse(const char *token)
     } else if (strncmp(token, "version=", 8) == 0) {
         debugs(0, DBG_PARSE_NOTE(1), "UPGRADE WARNING: SSL version= is deprecated. Use options= and tls-min-version= to limit protocols instead.");
         sslVersion = xatoi(token + 8);
-        optsReparse = true;
     } else if (strncmp(token, "min-version=", 12) == 0) {
         tlsMinVersion = SBuf(token + 12);
+        optsReparse = true;
     } else if (strncmp(token, "options=", 8) == 0) {
         sslOptions = SBuf(token + 8);
         optsReparse = true;
@@ -153,38 +153,31 @@ Security::PeerOptions::updateTlsVersionLimits()
     if (!tlsMinVersion.isEmpty()) {
         ::Parser::Tokenizer tok(tlsMinVersion);
         int64_t v = 0;
+        tlsMinOptions.clear();
         if (tok.skip('1') && tok.skip('.') && tok.int64(v, 10, false, 1) && v <= 3) {
             // only account for TLS here - SSL versions are handled by options= parameter
             // avoid affecting options= parameter in cachemgr config report
-#if USE_OPENSSL
-#if SSL_OP_NO_TLSv1
-            if (v > 0)
-                parsedOptions |= SSL_OP_NO_TLSv1;
-#endif
-#if SSL_OP_NO_TLSv1_1
-            if (v > 1)
-                parsedOptions |= SSL_OP_NO_TLSv1_1;
-#endif
-#if SSL_OP_NO_TLSv1_2
-            if (v > 2)
-                parsedOptions |= SSL_OP_NO_TLSv1_2;
-#endif
-
-#elif USE_GNUTLS
-            // XXX: update parsedOptions directly to avoid polluting 'options=' dumps
             SBuf add;
+#if USE_OPENSSL
+            if (v > 0)
+                add.append(":NO_TLSv1");
+            if (v > 1)
+                add.append(":NO_TLSv1_1");
+            if (v > 2)
+                add.append(":NO_TLSv1_2");
+#elif USE_GNUTLS
             if (v > 0)
                 add.append(":-VERS-TLS1.0");
             if (v > 1)
                 add.append(":-VERS-TLS1.1");
             if (v > 2)
                 add.append(":-VERS-TLS1.2");
-
-            if (sslOptions.isEmpty())
-                add.chop(1); // remove the initial ':'
-            sslOptions.append(add);
-            optsReparse = true;
 #endif
+
+            if (!tlsMinOptions.isEmpty())
+                add.chop(1); // remove the initial ':'
+            tlsMinOptions.append(add);
+            optsReparse = true;
 
         } else {
             debugs(0, DBG_PARSE_NOTE(1), "WARNING: Unknown TLS minimum version: " << tlsMinVersion);
@@ -202,28 +195,28 @@ Security::PeerOptions::updateTlsVersionLimits()
         switch (sslVersion) {
         case 3:
 #if USE_OPENSSL
-            parsedOptions |= (SSL_OP_NO_TLSv1|SSL_OP_NO_TLSv1_1|SSL_OP_NO_TLSv1_2);
+            add = ":NO_TLSv1:NO_TLSv1_1:NO_TLSv1_2";
 #elif USE_GNUTLS
             add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2";
 #endif
             break;
         case 4:
 #if USE_OPENSSL
-            parsedOptions |= (SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1_1|SSL_OP_NO_TLSv1_2);
+            add = ":NO_SSLv3:NO_TLSv1_1:NO_TLSv1_2";
 #elif USE_GNUTLS
             add = ":+VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2";
 #endif
             break;
         case 5:
 #if USE_OPENSSL
-            parsedOptions |= (SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1|SSL_OP_NO_TLSv1_2);
+            add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_2";
 #elif USE_GNUTLS
             add = ":-VERS-TLS1.0:+VERS-TLS1.1:-VERS-TLS1.2";
 #endif
             break;
         case 6:
 #if USE_OPENSSL
-            parsedOptions |= (SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1|SSL_OP_NO_TLSv1_1);
+            add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_1";
 #elif USE_GNUTLS
             add = ":-VERS-TLS1.0:-VERS-TLS1.1";
 #endif
@@ -232,13 +225,11 @@ Security::PeerOptions::updateTlsVersionLimits()
             break;
         }
         if (add) {
-#if USE_GNUTLS // do not bother otherwise
             if (sslOptions.isEmpty())
                 sslOptions.append(add+1, strlen(add+1));
             else
                 sslOptions.append(add, strlen(add));
             optsReparse = true;
-#endif
         }
         sslVersion = 0; // prevent sslOptions being repeatedly appended
     }
@@ -393,16 +384,22 @@ static struct ssl_option {
     {
         "NO_TLSv1", SSL_OP_NO_TLSv1
     },
+#else
+    { "NO_TLSv1", 0 },
 #endif
 #if SSL_OP_NO_TLSv1_1
     {
         "NO_TLSv1_1", SSL_OP_NO_TLSv1_1
     },
+#else
+    { "NO_TLSv1_1", 0 },
 #endif
 #if SSL_OP_NO_TLSv1_2
     {
         "NO_TLSv1_2", SSL_OP_NO_TLSv1_2
     },
+#else
+    { "NO_TLSv1_2", 0 },
 #endif
 #if SSL_OP_NO_COMPRESSION
     {
@@ -441,8 +438,14 @@ Security::PeerOptions::parseOptions()
         return;
     optsReparse = false;
 
+    // combination of settings we have to set via parsedOptions.
+    // options= with override by tls-min-version=
+    SBuf str;
+    str.append(sslOptions);
+    str.append(tlsMinOptions);
+
 #if USE_OPENSSL
-    ::Parser::Tokenizer tok(sslOptions);
+    ::Parser::Tokenizer tok(str);
     long op = 0;
 
     while (!tok.atEnd()) {
@@ -507,13 +510,13 @@ Security::PeerOptions::parseOptions()
     parsedOptions = op;
 
 #elif USE_GNUTLS
-    if (sslOptions.isEmpty()) {
+    if (str.isEmpty()) {
         parsedOptions.reset();
         return;
     }
 
     const char *err = nullptr;
-    const char *priorities = sslOptions.c_str();
+    const char *priorities = str.c_str();
     gnutls_priority_t op;
     if (gnutls_priority_init(&op, priorities, &err) != GNUTLS_E_SUCCESS) {
         fatalf("Unknown TLS option '%s'", err);
@@ -753,7 +756,7 @@ Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
     }
 
     if (x != GNUTLS_E_SUCCESS) {
-        debugs(83, DBG_IMPORTANT, "ERROR: Failed to set TLS options (" << errMsg << "). error: " << Security::ErrorString(x));
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to set TLS options (" << errMsg << ":" << tlsMinVersion << "). error: " << Security::ErrorString(x));
     }
 #endif
 }
