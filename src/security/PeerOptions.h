@@ -105,13 +105,15 @@ protected:
     template<typename T>
     Security::ContextPointer convertContextFromRawPtr(T ctx) const {
 #if USE_OPENSSL
+        debugs(83, 5, "SSL_CTX construct, this=" << (void*)ctx);
         return ContextPointer(ctx, [](SSL_CTX *p) {
-            debugs(83, 5, "SSL_free ctx=" << (void*)p);
+            debugs(83, 5, "SSL_CTX destruct, this=" << (void*)p);
             SSL_CTX_free(p);
         });
 #elif USE_GNUTLS
+        debugs(83, 5, "gnutls_certificate_credentials construct, this=" << (void*)ctx);
         return Security::ContextPointer(ctx, [](gnutls_certificate_credentials_t p) {
-            debugs(83, 5, "gnutls_certificate_free_credentials ctx=" << (void*)p);
+            debugs(83, 0, "gnutls_certificate_credentials destruct this=" << (void*)p);
             gnutls_certificate_free_credentials(p);
         });
 #else

@@ -518,8 +518,9 @@ Security::PeerOptions::parseOptions()
     const char *err = nullptr;
     const char *priorities = str.c_str();
     gnutls_priority_t op;
-    if (gnutls_priority_init(&op, priorities, &err) != GNUTLS_E_SUCCESS) {
-        fatalf("Unknown TLS option '%s'", err);
+    int x = gnutls_priority_init(&op, priorities, &err);
+    if (x != GNUTLS_E_SUCCESS) {
+        fatalf("(%s) in TLS options '%s'", ErrorString(x), err);
     }
     parsedOptions = Security::ParsedOptions(op, [](gnutls_priority_t p) {
         debugs(83, 5, "gnutls_priority_deinit p=" << (void*)p);
@@ -738,6 +739,7 @@ Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
 {
     parseOptions();
 #if USE_OPENSSL
+    debugs(83, 5, "set OpenSSL options for session=" << s << ", parsedOptions=" << parsedOptions);
     // XXX: Options already set before (via the context) are not cleared!
     SSL_set_options(s.get(), parsedOptions);
 
@@ -750,13 +752,13 @@ Security::PeerOptions::updateSessionOptions(Security::SessionPointer &s)
         static const SBuf defaults("default");
         errMsg = defaults;
     } else {
-        debugs(83, 5, "set GnuTLS options '" << sslOptions << "' for session=" << s);
+        debugs(83, 5, "set GnuTLS session=" << s << ", options='" << sslOptions << ":" << tlsMinOptions << "'");
         x = gnutls_priority_set(s.get(), parsedOptions.get());
         errMsg = sslOptions;
     }
 
     if (x != GNUTLS_E_SUCCESS) {
-        debugs(83, DBG_IMPORTANT, "ERROR: Failed to set TLS options (" << errMsg << ":" << tlsMinVersion << "). error: " << Security::ErrorString(x));
+        debugs(83, DBG_IMPORTANT, "ERROR: session=" << s << " Failed to set TLS options (" << errMsg << ":" << tlsMinVersion << "). error: " << Security::ErrorString(x));
     }
 #endif
 }
