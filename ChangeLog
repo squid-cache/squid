@@ -1,4 +1,16 @@
-Changes to squid-4.3 (28 Oct 2018):
+Changes to squid-4.5 (01 Jan 2019):
+
+	- Bug 4253: ssl_bump prevents access to some web contents
+	- TLS: add %>handshake logformat code
+	- Redesign forward_max_tries to count TCP connection attempts
+	- Fix client_connection_mark ACL handling of clientless transactions
+	- Fix netdb exchange with a TLS cache_peer
+	- Update netdb when tunneling requests
+	- Use pkg-config for detecting libxml2
+	- ... and some documentation updates
+	- ... and some code compile fixes
+
+Changes to squid-4.4 (28 Oct 2018):
 
 	- Bug 4893: Malformed %>ru URIs for CONNECT requests
 	- Fix %USER_CA_CERT_xx and %USER_CERT_xx crashes
