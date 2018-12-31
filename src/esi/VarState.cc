@@ -380,10 +380,10 @@ ESIVariableCookie::eval (ESIVarState &state, char const *subref, char const *fou
         if (!subref)
             s = state.header().getStr (Http::HdrType::COOKIE);
         else {
-            const auto S = state.header().getListMember(Http::HdrType::COOKIE, subref, ';');
+            const auto subCookie = state.header().getListMember(Http::HdrType::COOKIE, subref, ';');
 
-            if (S.length())
-                ESISegment::ListAppend(state.getOutput(), S.rawContent(), S.length());
+            if (subCookie.length())
+                ESISegment::ListAppend(state.getOutput(), subCookie.rawContent(), subCookie.length());
             else if (found_default)
                 ESISegment::ListAppend (state.getOutput(), found_default, strlen (found_default));
         }
