@@ -22,7 +22,7 @@ int strListGetItem(const String * str, char del, const char **item, int *ilen, c
 /// Searches for the first matching key=value pair
 /// within a delimiter-separated list of items.
 /// \returns the value of the found pair or an empty string.
-SBuf getListMember(const String &list, const char *key, const char del);
+SBuf getListMember(const String &list, const char *key, const char delimiter);
 
 #endif /* SQUID_STRLIST_H_ */
 
