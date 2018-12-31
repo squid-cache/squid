@@ -14,7 +14,7 @@
 #include "SquidConfig.h"
 #include "StrList.h"
 
-ProxyProtocol::Message::Message(const char *ver, const Two::Command cmd):
+ProxyProtocol::Message::Message(const SBuf &ver, const Two::Command cmd):
     version_(ver),
     command_(cmd),
     ignoreAddresses_(false)
@@ -41,7 +41,7 @@ ProxyProtocol::Message::getValues(const uint32_t headerType, const char sep) con
     switch (headerType) {
 
     case Two::htPseudoVersion:
-        return SBuf(version_);
+        return version_;
 
     case Two::htPseudoCommand:
         return ToSBuf(command_);

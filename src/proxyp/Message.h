@@ -23,7 +23,7 @@ public:
     typedef RefCount<Message> Pointer;
     typedef std::vector<Two::Tlv> Tlvs;
 
-    Message(const char *ver, const Two::Command cmd);
+    Message(const SBuf &ver, const Two::Command cmd);
 
     /// HTTP header-like string representation of the message.
     /// The returned string has one line per pseudo header and
@@ -39,8 +39,8 @@ public:
     /// \returns the value of the found pair or the empty string.
     SBuf getElem(const uint32_t headerType, const char *member, const char delimiter) const;
 
-    /// the message version
-    const char *version() const { return version_; }
+    /// PROXY protocol version
+    const SBuf &version() const { return version_; }
 
     /// whether source and destination addresses are valid addresses of the original "client" connection
     bool hasForwardedAddresses() const { return !localConnection() && hasAddresses(); }
@@ -68,8 +68,8 @@ private:
     /// Received addresses and TLVs are discarded in this mode.
     bool localConnection() const { return command_ == Two::cmdLocal; }
 
-    /// PROXY protocol version of the message, either "1.0" or "2.0".
-    const char *version_;
+    /// PROXY protocol version
+    SBuf version_;
 
     /// for v2 messages: the command field
     /// for v1 messages: Two::cmdProxy

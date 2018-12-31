@@ -127,7 +127,8 @@ ProxyProtocol::One::Parse(const SBuf &buf)
     }
     // extracted all PROXY protocol bytes
 
-    Message::Pointer message = new Message("1.0", Two::cmdProxy);
+    static const SBuf v1("1.0");
+    Message::Pointer message = new Message(v1, Two::cmdProxy);
 
     Parser::Tokenizer interiorTok(interior);
 
@@ -217,7 +218,8 @@ ProxyProtocol::Two::Parse(const SBuf &buf)
 
     const auto header = tokMessage.pstring16("header");
 
-    Message::Pointer message = new Message("2.0", Two::Command(command));
+    static const SBuf v2("2.0");
+    Message::Pointer message = new Message(v2, Two::Command(command));
 
     if (proto == tpUnspecified || family == afUnspecified) {
         message->ignoreAddresses();
