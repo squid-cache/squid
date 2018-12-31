@@ -957,7 +957,7 @@ SBuf
 HttpHeader::getByNameListMember(const char *name, const char *member, const char separator) const
 {
     assert(name);
-    String header = getByName(name);
+    const auto header = getByName(name);
     return ::getListMember(header, member, separator);
 }
 
@@ -968,7 +968,7 @@ SBuf
 HttpHeader::getListMember(Http::HdrType id, const char *member, const char separator) const
 {
     assert(any_registered_header(id));
-    String header = getStrOrList(id);
+    const auto header = getStrOrList(id);
     return ::getListMember(header, member, separator);
 }
 

@@ -23,11 +23,11 @@ public:
     typedef RefCount<Message> Pointer;
     typedef std::vector<Two::Tlv> Tlvs;
 
-    Message(const char *ver, const uint8_t cmd = Two::cmdProxy);
+    explicit Message(const char *ver, const Two::Command cmd);
 
     /// HTTP header-like string representation of the message.
-    /// The returned string has one line per pseudo header version,
-    /// command addresses and ports and one line per TLV (if any).
+    /// The returned string has one line per pseudo header and
+    /// one line per TLV (if any).
     SBuf toMime() const;
 
     /// \returns a delimiter-separated list of values of TLVs of the given type
@@ -83,18 +83,11 @@ private:
 class Parsed
 {
 public:
-    Parsed(const Message::Pointer &parsedMessage, const size_t parsedSize):
-        message(parsedMessage),
-        size(parsedSize) { assert(bool(parsedMessage)); }
+    Parsed(const Message::Pointer &parsedMessage, const size_t parsedSize);
 
     Message::Pointer message; ///< successfully parsed message; not nil
     size_t size; ///< raw bytes parsed, including any magic/delimiters
 };
-
-typedef std::map<SBuf, Two::HeaderType> FieldMap;
-
-/// a mapping between pseudo header names and ids
-extern const FieldMap PseudoHeaderFields;
 
 /// Parses a PROXY protocol message from the buffer, determining
 /// the protocol version (v1 or v2) by the signature.

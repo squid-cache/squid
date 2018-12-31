@@ -120,6 +120,9 @@ protected:
     void skipped(uint64_t size, const char *description) const;
 
 private:
+    template <class InAddr>
+    Ip::Address inetAny(const char *description);
+
     SBuf data_;
     uint64_t parsed_; ///< number of data bytes parsed or skipped
     uint64_t syncPoint_; ///< where to re-start the next parsing attempt

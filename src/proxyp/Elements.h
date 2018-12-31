@@ -15,6 +15,7 @@
 namespace ProxyProtocol {
 namespace Two {
 
+/// numeric IDs of registered PROXY protocol TLV types and pseudo headers
 typedef enum {
     htUnknown = 0x00,
 
@@ -75,7 +76,12 @@ public:
 
 } // namespace Two
 
-/// Parses PROXY protocol header type from the buffer.
+typedef std::map<SBuf, Two::HeaderType> FieldMap;
+/// a mapping between pseudo header names and ids
+extern const FieldMap PseudoHeaderFields;
+
+/// Parses human-friendly PROXY protocol header type representation.
+/// Only pseudo headers can (and should) be represented by their names.
 Two::HeaderType HeaderNameToHeaderType(const SBuf &nameOrId);
 
 } // namespace ProxyProtocol

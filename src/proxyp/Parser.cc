@@ -127,7 +127,7 @@ ProxyProtocol::One::Parse(const SBuf &buf)
     }
     // extracted all PROXY protocol bytes
 
-    Message::Pointer message = new Message("1.0");
+    Message::Pointer message = new Message("1.0", Two::cmdProxy);
 
     Parser::Tokenizer interiorTok(interior);
 
@@ -217,15 +217,16 @@ ProxyProtocol::Two::Parse(const SBuf &buf)
 
     const auto header = tokMessage.pstring16("header");
 
-    Message::Pointer message = new Message("2.0", command);
+    Message::Pointer message = new Message("2.0", Two::Command(command));
 
     if (proto == tpUnspecified || family == afUnspecified) {
         message->ignoreAddresses();
-        // discard address block and TLVs
+        // discard address block and TLVs because we cannot tell
+        // how to parse such addresses and where the TLVs start.
     } else {
         Parser::BinaryTokenizer tokHeader(header);
         ParseAddresses(family, tokHeader, message);
-        // TODO: parse TLVs for local connections
+        // TODO: parse TLVs for LOCAL connections
         if (message->hasForwardedAddresses())
             ParseTLVs(tokHeader, message);
     }

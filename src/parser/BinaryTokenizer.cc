@@ -173,10 +173,11 @@ Parser::BinaryTokenizer::area(uint64_t size, const char *description)
     return result;
 }
 
+template <class InAddr>
 Ip::Address
-Parser::BinaryTokenizer::inet4(const char *description)
+Parser::BinaryTokenizer::inetAny(const char *description)
 {
-    struct in_addr addr;
+    InAddr addr;
     const auto size = sizeof(addr);
     want(size, description);
     memcpy(&addr, data_.rawContent() + parsed_, size);
@@ -186,18 +187,16 @@ Parser::BinaryTokenizer::inet4(const char *description)
     return result;
 }
 
-// TODO: avoid code duplication with BinaryTokenizer::inet4()
+Ip::Address
+Parser::BinaryTokenizer::inet4(const char *description)
+{
+    return inetAny<struct in_addr>(description);
+}
+
 Ip::Address
 Parser::BinaryTokenizer::inet6(const char *description)
 {
-    struct in6_addr addr;
-    const auto size = sizeof(addr);
-    want(size, description);
-    memcpy(&addr, data_.rawContent() + parsed_, size);
-    parsed_ += size;
-    const Ip::Address result(addr);
-    got(result, size, description);
-    return result;
+    return inetAny<struct in6_addr>(description);
 }
 
 void
