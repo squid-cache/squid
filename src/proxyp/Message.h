@@ -51,7 +51,7 @@ public:
     /// whether the message relays address information (including LOCAL connections)
     bool hasAddresses() const { return !ignoreAddresses_; }
 
-    /// \returns "4" or "6" if both source and destination adddresses are IPv4 or IPv6
+    /// \returns "4" or "6" if both source and destination addresses are IPv4 or IPv6
     /// \returns "mix" otherwise
     const SBuf &addressFamily() const;
 
