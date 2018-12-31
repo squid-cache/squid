@@ -40,48 +40,48 @@ ProxyProtocol::Message::getValues(const uint32_t headerType, const char sep) con
 {
     switch (headerType) {
 
-        case Two::htPseudoVersion:
-            return SBuf(version_);
+    case Two::htPseudoVersion:
+        return SBuf(version_);
 
-        case Two::htPseudoCommand:
-              return ToSBuf(command_);
+    case Two::htPseudoCommand:
+        return ToSBuf(command_);
 
-        case Two::htPseudoSrcAddr: {
-            if (!hasAddresses())
-                return SBuf();
-            auto logAddr = sourceAddress;
-            (void)logAddr.applyClientMask(Config.Addrs.client_netmask);
-            char ipBuf[MAX_IPSTRLEN];
-            return SBuf(logAddr.toStr(ipBuf, sizeof(ipBuf)));
-        }
+    case Two::htPseudoSrcAddr: {
+        if (!hasAddresses())
+            return SBuf();
+        auto logAddr = sourceAddress;
+        (void)logAddr.applyClientMask(Config.Addrs.client_netmask);
+        char ipBuf[MAX_IPSTRLEN];
+        return SBuf(logAddr.toStr(ipBuf, sizeof(ipBuf)));
+    }
 
-        case Two::htPseudoDstAddr: {
-            if (!hasAddresses())
-                return SBuf();
-            char ipBuf[MAX_IPSTRLEN];
-            return SBuf(destinationAddress.toStr(ipBuf, sizeof(ipBuf)));
-        }
+    case Two::htPseudoDstAddr: {
+        if (!hasAddresses())
+            return SBuf();
+        char ipBuf[MAX_IPSTRLEN];
+        return SBuf(destinationAddress.toStr(ipBuf, sizeof(ipBuf)));
+    }
 
-        case Two::htPseudoSrcPort: {
-            return hasAddresses() ? ToSBuf(sourceAddress.port()) : SBuf();
-        }
+    case Two::htPseudoSrcPort: {
+        return hasAddresses() ? ToSBuf(sourceAddress.port()) : SBuf();
+    }
 
-        case Two::htPseudoDstPort: {
-            return hasAddresses() ? ToSBuf(destinationAddress.port()) : SBuf();
-        }
+    case Two::htPseudoDstPort: {
+        return hasAddresses() ? ToSBuf(destinationAddress.port()) : SBuf();
+    }
 
-        default: {
-            SBufStream result;
-            for (const auto &m: tlvs) {
-                if (m.type == headerType) {
-                    // XXX: result.tellp() always returns -1
-                    if (!result.buf().isEmpty())
-                        result << sep;
-                    result << m.value;
-                }
+    default: {
+        SBufStream result;
+        for (const auto &m: tlvs) {
+            if (m.type == headerType) {
+                // XXX: result.tellp() always returns -1
+                if (!result.buf().isEmpty())
+                    result << sep;
+                result << m.value;
             }
-            return result.buf();
         }
+        return result.buf();
+    }
     }
 }
 
