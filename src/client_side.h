@@ -370,9 +370,6 @@ private:
 
     /* PROXY protocol functionality */
     bool proxyProtocolValidateClient();
-    /// Attempts to parse a PROXY protocol message from the buffer,
-    /// supports both 1 and 2 versions of the protocol.
-    /// \returns true if the header was found and parsed, false otherwise
     bool parseProxyProtocolMessage();
     bool proxyProtocolError(const char *reason);
 

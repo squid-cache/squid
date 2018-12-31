@@ -1839,6 +1839,10 @@ ConnStateData::proxyProtocolError(const char *msg)
     return false;
 }
 
+/// Attempts to extract a PROXY protocol message from the input buffer and,
+/// upon success, stores the parsed message in proxyProtocolMessage_.
+/// \returns true if the message was successfully parsed
+/// \returns false if more data is needed to parse the message
 bool
 ConnStateData::parseProxyProtocolMessage()
 {
