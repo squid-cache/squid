@@ -90,8 +90,8 @@ public:
 };
 
 /// Parses a PROXY protocol message from the buffer, determining
-/// the protocol version (v1 or v2) by the signature.
-/// Throws on error or insufficient input.
+/// the protocol version (v1 or v2) by the leading magic string.
+/// \throws Parser::BinaryTokenizer::InsufficientInput to ask for more data
 /// \returns the successfully parsed message
 Parsed Parse(const SBuf &);
 
