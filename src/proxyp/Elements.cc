@@ -10,7 +10,6 @@
 
 #include "parser/Tokenizer.h"
 #include "proxyp/Elements.h"
-#include "proxyp/Message.h"
 #include "sbuf/Stream.h"
 
 #include <limits>
