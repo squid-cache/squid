@@ -23,7 +23,7 @@ public:
     typedef RefCount<Message> Pointer;
     typedef std::vector<Two::Tlv> Tlvs;
 
-    explicit Message(const char *ver, const Two::Command cmd);
+    Message(const char *ver, const Two::Command cmd);
 
     /// HTTP header-like string representation of the message.
     /// The returned string has one line per pseudo header and
