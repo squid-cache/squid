@@ -23,7 +23,7 @@
  *
  * Usage: squid_ldap_auth -b basedn [-s searchscope]
  *                        [-f searchfilter] [-D binddn -w bindpasswd]
- *                        [-u attr] [-h host] [-p port] [-P] [-R] [ldap_server_name[:port]] ...
+ *                        [-u attr] [-h host] [-p port] [-B] [-P] [-R] [ldap_server_name[:port]] ...
  *
  * Dependencies: You need to get the OpenLDAP libraries
  * from http://www.openldap.org or another compatible LDAP C-API
@@ -38,6 +38,8 @@
  * or (at your option) any later version.
  *
  * Changes:
+ * 2019-01-01: Amish
+ *             - Added support for BH error (for squid 3.4 or later)
  * 2005-01-07: Henrik Nordstrom <hno@squid-cache.org>
  *             - Added some sanity checks on login names to avoid
  *               users bypassing equality checks by exploring the
@@ -143,6 +145,7 @@ static const char *bindpasswd = NULL;
 static const char *userattr = "uid";
 static const char *passwdattr = NULL;
 static int searchscope = LDAP_SCOPE_SUBTREE;
+static int bherror = 0;
 static int persistent = 0;
 static int bind_once = 0;
 static int noreferrals = 0;
@@ -362,6 +365,7 @@ main(int argc, char **argv)
         const char *value = "";
         char option = argv[1][1];
         switch (option) {
+        case 'B':
         case 'P':
         case 'R':
         case 'z':
@@ -463,6 +467,9 @@ main(int argc, char **argv)
         case 'W':
             readSecret(value);
             break;
+        case 'B':
+            bherror = !bherror;
+            break;
         case 'P':
             persistent = !persistent;
             break;
@@ -539,6 +546,7 @@ main(int argc, char **argv)
 #endif
         fprintf(stderr, "\t-h server\t\tLDAP server (defaults to localhost)\n");
         fprintf(stderr, "\t-p port\t\t\tLDAP server port\n");
+        fprintf(stderr, "\t-B\t\t\treturn BH for internal error\n");
         fprintf(stderr, "\t-P\t\t\tpersistent LDAP connection\n");
 #if defined(NETSCAPE_SSL)
         fprintf(stderr, "\t-E sslcertpath\t\tenable LDAP over SSL\n");
@@ -602,7 +610,7 @@ recover:
                 ld = NULL;
                 goto recover;
             }
-            printf("ERR %s\n", ldap_err2string(squid_ldap_errno(ld)));
+            printf("%s %s\n", (!bherror || LDAP_SECURITY_ERROR(squid_ldap_errno(ld))) ? "ERR" : "BH", ldap_err2string(squid_ldap_errno(ld)));
         } else {
             printf("OK\n");
         }
