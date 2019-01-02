@@ -607,9 +607,9 @@ recover:
                 goto recover;
             }
             if (LDAP_SECURITY_ERROR(e))
-                SEND_ERR(HLP_MSG(ldap_err2string(e)));
+                SEND_ERR(ldap_err2string(e));
             else
-                SEND_BH(HLP_MSG(ldap_err2string(e)));
+                SEND_BH(ldap_err2string(e));
         } else {
             SEND_OK("");
         }
