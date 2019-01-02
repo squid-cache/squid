@@ -23,7 +23,7 @@
  *
  * Usage: squid_ldap_auth -b basedn [-s searchscope]
  *                        [-f searchfilter] [-D binddn -w bindpasswd]
- *                        [-u attr] [-h host] [-p port] [-B] [-P] [-R] [ldap_server_name[:port]] ...
+ *                        [-u attr] [-h host] [-p port] [-P] [-R] [ldap_server_name[:port]] ...
  *
  * Dependencies: You need to get the OpenLDAP libraries
  * from http://www.openldap.org or another compatible LDAP C-API
@@ -38,8 +38,8 @@
  * or (at your option) any later version.
  *
  * Changes:
- * 2019-01-01: Amish
- *             - Added support for BH error (for squid 3.4 or later)
+ * 2019-01-02: Amish
+ *             - Use SEND_*() macro and support for BH error
  * 2005-01-07: Henrik Nordstrom <hno@squid-cache.org>
  *             - Added some sanity checks on login names to avoid
  *               users bypassing equality checks by exploring the
@@ -93,6 +93,7 @@
  */
 
 #include "squid.h"
+#include "helper/protocol_defines.h"
 
 #define LDAP_DEPRECATED 1
 
@@ -145,7 +146,6 @@ static const char *bindpasswd = NULL;
 static const char *userattr = "uid";
 static const char *passwdattr = NULL;
 static int searchscope = LDAP_SCOPE_SUBTREE;
-static int bherror = 0;
 static int persistent = 0;
 static int bind_once = 0;
 static int noreferrals = 0;
@@ -365,7 +365,6 @@ main(int argc, char **argv)
         const char *value = "";
         char option = argv[1][1];
         switch (option) {
-        case 'B':
         case 'P':
         case 'R':
         case 'z':
@@ -467,9 +466,6 @@ main(int argc, char **argv)
         case 'W':
             readSecret(value);
             break;
-        case 'B':
-            bherror = !bherror;
-            break;
         case 'P':
             persistent = !persistent;
             break;
@@ -546,7 +542,6 @@ main(int argc, char **argv)
 #endif
         fprintf(stderr, "\t-h server\t\tLDAP server (defaults to localhost)\n");
         fprintf(stderr, "\t-p port\t\t\tLDAP server port\n");
-        fprintf(stderr, "\t-B\t\t\treturn BH for internal error\n");
         fprintf(stderr, "\t-P\t\t\tpersistent LDAP connection\n");
 #if defined(NETSCAPE_SSL)
         fprintf(stderr, "\t-E sslcertpath\t\tenable LDAP over SSL\n");
@@ -586,17 +581,17 @@ main(int argc, char **argv)
         passwd = strtok(NULL, "\r\n");
 
         if (!user) {
-            printf("ERR Missing username\n");
+            SEND_ERR(HLP_MSG("Missing username"));
             continue;
         }
         if (!passwd || !passwd[0]) {
-            printf("ERR Missing password '%s'\n", user);
+            SEND_ERR(HLP_MSG("Missing password"));
             continue;
         }
         rfc1738_unescape(user);
         rfc1738_unescape(passwd);
         if (!validUsername(user)) {
-            printf("ERR No such user '%s':'%s'\n",user, passwd);
+            SEND_ERR(HLP_MSG("Invalid username"));
             continue;
         }
         tryagain = (ld != NULL);
@@ -604,15 +599,19 @@ recover:
         if (ld == NULL && persistent)
             ld = open_ldap_connection(ldapServer, port);
         if (checkLDAP(ld, user, passwd, ldapServer, port) != 0) {
-            if (tryagain && squid_ldap_errno(ld) != LDAP_INVALID_CREDENTIALS) {
+            const auto e = squid_ldap_errno(ld);
+            if (tryagain && e != LDAP_INVALID_CREDENTIALS) {
                 tryagain = 0;
                 ldap_unbind(ld);
                 ld = NULL;
                 goto recover;
             }
-            printf("%s %s\n", (!bherror || LDAP_SECURITY_ERROR(squid_ldap_errno(ld))) ? "ERR" : "BH", ldap_err2string(squid_ldap_errno(ld)));
+            if (LDAP_SECURITY_ERROR(e))
+                SEND_ERR(HLP_MSG(ldap_err2string(e)));
+            else
+                SEND_BH(HLP_MSG(ldap_err2string(e)));
         } else {
-            printf("OK\n");
+            SEND_OK("");
         }
         if (ld && (squid_ldap_errno(ld) != LDAP_SUCCESS && squid_ldap_errno(ld) != LDAP_INVALID_CREDENTIALS)) {
             ldap_unbind(ld);
