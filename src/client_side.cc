@@ -104,6 +104,7 @@
 #include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
 #include "proxyp/Message.h"
+#include "proxyp/Parser.h"
 #include "security/NegotiationHistory.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"

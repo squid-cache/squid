@@ -11,6 +11,7 @@
 #include "parser/Tokenizer.h"
 #include "proxyp/Elements.h"
 #include "proxyp/Message.h"
+#include "proxyp/Parser.h"
 #include "sbuf/Stream.h"
 
 #include <algorithm>
@@ -263,5 +264,12 @@ ProxyProtocol::Parse(const SBuf &buf)
 
     // not enough bytes to parse magic yet
     throw Parser::BinaryTokenizer::InsufficientInput();
+}
+
+ProxyProtocol::Parsed::Parsed(const Message::Pointer &parsedMessage, const size_t parsedSize):
+    message(parsedMessage),
+    size(parsedSize)
+{
+    assert(bool(parsedMessage));
 }
 

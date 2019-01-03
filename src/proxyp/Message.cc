@@ -104,10 +104,3 @@ ProxyProtocol::Message::addressFamily() const
         vMix;
 }
 
-ProxyProtocol::Parsed::Parsed(const Message::Pointer &parsedMessage, const size_t parsedSize):
-    message(parsedMessage),
-    size(parsedSize)
-{
-    assert(bool(parsedMessage));
-}
-

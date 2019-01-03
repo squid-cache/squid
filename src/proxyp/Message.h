@@ -79,22 +79,6 @@ private:
     bool ignoreAddresses_;
 };
 
-/// successful parsing result
-class Parsed
-{
-public:
-    Parsed(const Message::Pointer &parsedMessage, const size_t parsedSize);
-
-    Message::Pointer message; ///< successfully parsed message; not nil
-    size_t size; ///< raw bytes parsed, including any magic/delimiters
-};
-
-/// Parses a PROXY protocol message from the buffer, determining
-/// the protocol version (v1 or v2) by the leading magic string.
-/// \throws Parser::BinaryTokenizer::InsufficientInput to ask for more data
-/// \returns the successfully parsed message
-Parsed Parse(const SBuf &);
-
 } // namespace ProxyProtocol
 
 #endif

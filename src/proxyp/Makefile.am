@@ -16,5 +16,6 @@ libproxyp_la_SOURCES = \
 	Elements.cc \
 	Message.cc \
 	Message.h \
-	Parser.cc
+	Parser.cc \
+	Parser.h
 
