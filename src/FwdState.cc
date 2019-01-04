@@ -165,9 +165,8 @@ void FwdState::start(Pointer aSelf)
     if (!request->flags.ftpNative)
         entry->registerAbort(FwdState::abort, this);
 
-    request->flags.pinned = false; // XXX: what if the ConnStateData set this to flag existing credentials?
-    // XXX: answer: the peer selection *should* catch it and give us only the pinned peer. so we reverse the =0 step below.
-    // XXX: also, logs will now lie if pinning is broken and leads to an error message.
+    // just in case; should already be initialized to false
+    request->flags.pinned = false;
 
 #if STRICT_ORIGINAL_DST
     // Bug 3243: CVE 2009-0801
@@ -749,6 +748,8 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
 
     closeHandler = comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
+    // XXX: request->flags.pinned cannot be true in connectDone(). The flag is
+    // only set when we dispatch the request to an existing (pinned) connection.
     if (!request->flags.pinned) {
         const CachePeer *p = serverConnection()->getPeer();
         const bool peerWantsTls = p && p->secure.encryptTransport;
@@ -909,6 +910,9 @@ FwdState::connectStart()
     debugs(17, 3, "fwdConnectStart: " << entry->url());
 
     request->hier.startPeerClock();
+
+    // pinned connections go through handlePinned() rather than connectStart()
+    request->flags.pinned = false;
 
     // Do not fowrward bumped connections to parent proxy unless it is an
     // origin server
