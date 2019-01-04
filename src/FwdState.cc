@@ -175,10 +175,7 @@ void FwdState::start(Pointer aSelf)
     const bool isIntercepted = request && !request->flags.redirected && (request->flags.intercepted || request->flags.interceptTproxy);
     const bool useOriginalDst = Config.onoff.client_dst_passthru || (request && !request->flags.hostVerified);
     if (isIntercepted && useOriginalDst) {
-        selectPeerForIntercepted();
-        // 3.2 does not suppro re-wrapping inside CONNECT.
-        // our only alternative is to fake destination "found" and continue with the forwarding.
-        startConnectionOrFail();
+        useOriginalDestination();
         return;
     }
 #endif
@@ -200,8 +197,11 @@ FwdState::stopAndDestroy(const char *reason)
 #if STRICT_ORIGINAL_DST
 /// bypasses peerSelect() when dealing with intercepted requests
 void
-FwdState::selectPeerForIntercepted()
+FwdState::useOriginalDestination()
 {
+    // We do not support re-wrapping inside CONNECT.
+    // Our only alternative is to fake a noteDestination() call.
+
     // use pinned connection if available
     if (ConnStateData *client = request->pinnedConnection()) {
         // emulate the PeerSelector::selectPinned() "Skip ICP" effect
@@ -220,6 +220,7 @@ FwdState::selectPeerForIntercepted()
 
     debugs(17, 3, HERE << "using client original destination: " << *p);
     serverDestinations.push_back(p);
+    startConnectionOrFail();
 }
 #endif
 
