@@ -918,6 +918,7 @@ FwdState::connectStart()
     request->hier.startPeerClock();
 
     // pinned connections go through usePinned() rather than connectStart()
+    assert(serverDestinations[0]->peerType != PINNED);
     request->flags.pinned = false;
 
     // Do not fowrward bumped connections to parent proxy unless it is an

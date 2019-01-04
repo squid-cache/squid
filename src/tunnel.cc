@@ -1306,8 +1306,9 @@ TunnelStateData::startConnecting()
 
     assert(!serverDestinations.empty());
     Comm::ConnectionPointer &dest = serverDestinations.front();
-    assert(dest != nullptr);
     debugs(26, 3, "to " << dest);
+    assert(dest != nullptr);
+    assert(dest->peerType != PINNED);
 
     GetMarkingsToServer(request.getRaw(), *dest);
 
