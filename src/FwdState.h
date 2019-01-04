@@ -124,6 +124,8 @@ private:
     void completed();
     void retryOrBail();
 
+    void usePinned();
+
     /// whether a pinned to-peer connection can be replaced with another one
     /// via retrying or reforwarding a failed request
     bool supportsRepinning() const;
@@ -141,7 +143,7 @@ private:
     /// whether we have used up all permitted forwarding attempts
     bool exhaustedTries() const;
 
-    void handlePinned(); ///< Handle pinned connections
+    void usePinned(); ///< Handle pinned connections
 
 public:
     StoreEntry *entry;

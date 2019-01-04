@@ -208,7 +208,7 @@ FwdState::selectPeerForIntercepted()
         entry->ping_status = PING_DONE;
 
         serverDestinations.push_back(nullptr);
-        handlePinned();
+        usePinned();
         return;
     }
 
@@ -549,7 +549,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 
     if (!path) { // Found a valid pinned connection
         assert(wasBlocked); // Should be the first available option
-        handlePinned();
+        usePinned();
         return;
     }
 
@@ -863,38 +863,41 @@ FwdState::syncHierNote(const Comm::ConnectionPointer &server, const char *host)
         al->hier.resetPeerNotes(server, host);
 }
 
+// send the request on an existing connection dedicated to the requesting client
 void
-FwdState::handlePinned()
+FwdState::usePinned()
 {
-    ConnStateData *pinned_connection = request->pinnedConnection();
-    debugs(17,7, "pinned peer connection: " << pinned_connection);
-    // pinned_connection may become nil after a pconn race
-    Comm::ConnectionPointer temp = pinned_connection ? pinned_connection->borrowPinnedConnection(request) : nullptr;
-    if (Comm::IsConnOpen(temp)) {
-        serverConn = temp;
-        flags.connected_okay = true;
-        ++n_tries;
-        request->flags.pinned = true;
+    const auto connManager = request->pinnedConnection();
+    debugs(17, 7, "connection manager: " << connManager);
 
-        if (pinned_connection->pinnedAuth())
-            request->flags.auth = true;
+    // the client connection may close while we get here, nullifying connManager
+    const auto temp = connManager ? connManager->borrowPinnedConnection(request) : nullptr;
+    debugs(17, 5, "connection: " << temp);
 
-        closeHandler = comm_add_close_handler(temp->fd,  fwdServerClosedWrapper, this);
-
-        syncWithServerConn(pinned_connection->pinning.host);
-
-        // the server may close the pinned connection before this request
-        pconnRace = racePossible;
-        dispatch();
+    // the previously pinned idle peer connection may get closed (by the peer)
+    if (!Comm::IsConnOpen(temp)) {
+        serverConn = nullptr;
+        const auto anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request);
+        fail(anErr);
+        stopAndDestroy("pinned connection failure");
         return;
     }
 
-    // Pinned connection failure.
-    debugs(17,2,HERE << "Pinned connection failed: " << pinned_connection);
-    ErrorState *anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request);
-    fail(anErr);
-    stopAndDestroy("pinned connection failure");
-    return;
+    serverConn = temp;
+    flags.connected_okay = true;
+    ++n_tries;
+    request->flags.pinned = true;
+
+    if (connManager->pinnedAuth())
+        request->flags.auth = true;
+
+    closeHandler = comm_add_close_handler(temp->fd,  fwdServerClosedWrapper, this);
+
+    syncWithServerConn(connManager->pinning.host);
+
+    // the server may close the pinned connection before this request
+    pconnRace = racePossible;
+    dispatch();
 }
 
 /**
@@ -912,7 +915,7 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    // pinned connections go through handlePinned() rather than connectStart()
+    // pinned connections go through usePinned() rather than connectStart()
     request->flags.pinned = false;
 
     // Do not fowrward bumped connections to parent proxy unless it is an
