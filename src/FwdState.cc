@@ -549,7 +549,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 
     if (!path) { // decided to use a pinned connection
         // We can call usePinned() without fear of clashing with an earlier
-        // forwarding attempt because PINNED should be the first destination.
+        // forwarding attempt because PINNED must be the first destination.
         assert(wasBlocked);
         usePinned();
         return;
@@ -865,7 +865,7 @@ FwdState::syncHierNote(const Comm::ConnectionPointer &server, const char *host)
         al->hier.resetPeerNotes(server, host);
 }
 
-// send the request on an existing connection dedicated to the requesting client
+/// send request on an existing connection dedicated to the requesting client
 void
 FwdState::usePinned()
 {

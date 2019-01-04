@@ -217,6 +217,8 @@ private:
         Security::EncryptorAnswer answer_;
     };
 
+    void usePinned();
+
     /// callback handler after connection setup (including any encryption)
     void connectedToPeer(Security::EncryptorAnswer &answer);
 
@@ -1222,17 +1224,11 @@ TunnelStateData::noteDestination(Comm::ConnectionPointer path)
     const bool wasBlocked = serverDestinations.empty();
     serverDestinations.push_back(path);
 
-    if (!path) {
+    if (!path) { // decided to use a pinned connection
+        // We can call usePinned() without fear of clashing with an earlier
+        // forwarding attempt because PINNED must be the first destination.
         assert(wasBlocked);
-        Comm::ConnectionPointer serverConn = borrowPinnedConnection(request.getRaw());
-        debugs(26,7, "pinned peer connection: " << serverConn);
-        if (Comm::IsConnOpen(serverConn)) {
-            tunnelConnectDone(serverConn, Comm::OK, 0, (void *)this);
-            return;
-        }
-        // a PINNED path failure is fatal; do not wait for more paths
-        sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw()),
-                  "pinned path failure");
+        usePinned();
         return;
     }
 
@@ -1317,6 +1313,22 @@ TunnelStateData::startConnecting()
     Comm::ConnOpener *cs = new Comm::ConnOpener(dest, call, connectTimeout);
     cs->setHost(url);
     AsyncJob::Start(cs);
+}
+
+/// send request on an existing connection dedicated to the requesting client
+void
+TunnelStateData::usePinned()
+{
+    const auto serverConn = borrowPinnedConnection(request.getRaw());
+    debugs(26,7, "pinned peer connection: " << serverConn);
+    if (!Comm::IsConnOpen(serverConn)) {
+        // a PINNED path failure is fatal; do not wait for more paths
+        sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw()),
+                  "pinned path failure");
+        return;
+    }
+
+    tunnelConnectDone(serverConn, Comm::OK, 0, (void *)this);
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);
