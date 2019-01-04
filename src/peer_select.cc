@@ -565,7 +565,7 @@ PeerSelector::selectPinned()
         return;
 
     if (Comm::IsConnOpen(request->pinnedConnection()->validatePinnedConnection(request))) {
-        CachePeer *pear = request->pinnedConnection()->pinnedPeer();
+        const auto pear = request->pinnedConnection()->pinnedPeer();
         const bool usePinned = pear ? peerAllowedToUse(pear, this) : (direct != DIRECT_NO);
         if (usePinned) {
             addSelection(pear, PINNED);
