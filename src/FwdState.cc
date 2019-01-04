@@ -1289,8 +1289,10 @@ FwdState::supportsRepinning() const
 {
     assert(request->flags.pinned);
 
-    // We should not reforward or retry requests on TLS bumped
-    // and pinned connections
+    // If a bumped connection was pinned, then the TLS client was given our peer
+    // details. Do not re-pin because we do not ensure that those details stay
+    // constant. Step1-bumped connections do not get our TLS peer details, are
+    // never pinned, and, hence, never reach this method.
     if (request->flags.sslBumped)
         return false;
 
