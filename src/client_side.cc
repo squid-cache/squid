@@ -4083,7 +4083,7 @@ Comm::ConnectionPointer
 ConnStateData::borrowPinnedConnection(HttpRequest *request)
 {
     debugs(33, 7, pinning.serverConnection);
-    if (validatePinnedConnection(request) != NULL)
+    if (validatePinnedConnection(request) != nullptr)
         stopPinnedConnectionMonitoring();
 
     return pinning.serverConnection; // closed if validation failed
