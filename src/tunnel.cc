@@ -1222,6 +1222,9 @@ void
 TunnelStateData::noteDestination(Comm::ConnectionPointer path)
 {
     const bool wasBlocked = serverDestinations.empty();
+    // XXX: Push even a nil path so that subsequent noteDestination() calls
+    // can rely on wasBlocked to detect ongoing/concurrent attempts.
+    // Upcoming Happy Eyeballs changes will handle this properly.
     serverDestinations.push_back(path);
 
     if (!path) { // decided to use a pinned connection

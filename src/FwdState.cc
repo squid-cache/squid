@@ -546,6 +546,9 @@ void
 FwdState::noteDestination(Comm::ConnectionPointer path)
 {
     const bool wasBlocked = serverDestinations.empty();
+    // XXX: Push even a nil path so that subsequent noteDestination() calls
+    // can rely on wasBlocked to detect ongoing/concurrent attempts.
+    // Upcoming Happy Eyeballs changes will handle this properly.
     serverDestinations.push_back(path);
 
     if (!path) { // decided to use a pinned connection
@@ -1127,7 +1130,7 @@ FwdState::reforward()
     debugs(17, 3, HERE << e->url() << "?" );
 
     if (request->flags.pinned && !supportsRepinning()) {
-        debugs(17, 3, "Non reforwardable pinned connection");
+        debugs(17, 3, "pinned connection; cannot re-pin");
         return 0;
     }
 

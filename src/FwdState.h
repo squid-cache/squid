@@ -128,7 +128,7 @@ private:
     void usePinned();
 
     /// whether a pinned to-peer connection can be replaced with another one
-    /// via retrying or reforwarding a failed request
+    /// (in order to retry or reforward a failed request)
     bool supportsRepinning() const;
 
     ErrorState *makeConnectingError(const err_type type) const;
