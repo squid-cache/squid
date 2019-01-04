@@ -691,6 +691,8 @@ FwdState::retryOrBail()
     if (checkRetry()) {
         debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
         // we should retry the same destination if it failed due to pconn race
+        // XXX: When checkRetry() returns true for a pinned connection, and
+        // raceHappened, we will use a nil destination w/o calling usePinned()!
         if (pconnRace == raceHappened)
             debugs(17, 4, HERE << "retrying the same destination");
         else
