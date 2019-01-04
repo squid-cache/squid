@@ -205,7 +205,9 @@ FwdState::selectPeerForIntercepted()
     // use pinned connection if available
     Comm::ConnectionPointer p;
     if (ConnStateData *client = request->pinnedConnection()) {
+        // emulate PeerSelector::selectPinned() effect
         entry->ping_status = PING_DONE;     /* Skip ICP */
+
         serverDestinations.push_back(p);
         handlePinned();
         return;
