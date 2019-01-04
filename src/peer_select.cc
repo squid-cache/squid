@@ -302,9 +302,10 @@ PeerSelector::resolveSelected()
     }
 
     if (fs && fs->code == PINNED) {
-        // Send an empty IP address marked as PINNED
-        Comm::ConnectionPointer nil;
-        handlePath(nil, *fs);
+        // Nil path signals a PINNED destination selection. Our initiator should
+        // borrow and use clientConnectionManager's pinned connection object
+        // (regardless of that connection destination).
+        handlePath(nullptr, *fs);
         servers = fs->next;
         delete fs;
         resolveSelected();
@@ -1014,7 +1015,7 @@ PeerSelector::wantsMoreDestinations() const {
 }
 
 void
-PeerSelector::handlePath(Comm::ConnectionPointer &path, FwdServer &fs)
+PeerSelector::handlePath(const Comm::ConnectionPointer &path, FwdServer &fs)
 {
     ++foundPaths;
 
