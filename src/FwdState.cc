@@ -547,8 +547,10 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     const bool wasBlocked = serverDestinations.empty();
     serverDestinations.push_back(path);
 
-    if (!path) { // Found a valid pinned connection
-        assert(wasBlocked); // Should be the first available option
+    if (!path) { // decided to use a pinned connection
+        // We can call usePinned() without fear of clashing with an earlier
+        // forwarding attempt because PINNED should be the first destination.
+        assert(wasBlocked);
         usePinned();
         return;
     }
