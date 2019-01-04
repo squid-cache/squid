@@ -203,18 +203,17 @@ void
 FwdState::selectPeerForIntercepted()
 {
     // use pinned connection if available
-    Comm::ConnectionPointer p;
     if (ConnStateData *client = request->pinnedConnection()) {
         // emulate PeerSelector::selectPinned() effect
         entry->ping_status = PING_DONE;     /* Skip ICP */
 
-        serverDestinations.push_back(p);
+        serverDestinations.push_back(nullptr);
         handlePinned();
         return;
     }
 
     // use client original destination as second preferred choice
-    p = new Comm::Connection();
+    const auto p = new Comm::Connection();
     p->peerType = ORIGINAL_DST;
     p->remote = clientConn->local;
     getOutgoingAddress(request, p);
