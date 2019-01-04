@@ -207,7 +207,7 @@ FwdState::selectPeerForIntercepted()
     if (ConnStateData *client = request->pinnedConnection()) {
         entry->ping_status = PING_DONE;     /* Skip ICP */
         serverDestinations.push_back(p);
-        handlePinned(nullptr);
+        handlePinned();
         return;
     }
 
