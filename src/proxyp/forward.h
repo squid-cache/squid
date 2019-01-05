@@ -9,6 +9,8 @@
 #ifndef _SQUID_SRC_PROXYP_FORWARD_H
 #define _SQUID_SRC_PROXYP_FORWARD_H
 
+#include "base/RefCount.h"
+
 namespace ProxyProtocol
 {
 

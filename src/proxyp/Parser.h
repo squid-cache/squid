@@ -10,8 +10,7 @@
 #define SQUID_PROXYP_PARSER_H
 
 #include "proxyp/forward.h"
-
-class SBuf;
+#include "sbuf/forward.h"
 
 namespace ProxyProtocol {
 

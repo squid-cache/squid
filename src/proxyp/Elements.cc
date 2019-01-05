@@ -7,7 +7,6 @@
  */
 
 #include "squid.h"
-
 #include "parser/Tokenizer.h"
 #include "proxyp/Elements.h"
 #include "sbuf/Stream.h"

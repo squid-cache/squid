@@ -118,7 +118,11 @@ public:
     bool hasNamed(const SBuf &s, String *value = 0) const;
     /// \deprecated use SBuf method instead.
     bool hasNamed(const char *name, unsigned int namelen, String *value = 0) const;
+    /// searches for the first matching key=value pair within the name-identified field
+    /// \returns the value of the found pair or an empty string
     SBuf getByNameListMember(const char *name, const char *member, const char separator) const;
+    /// searches for the first matching key=value pair within the field
+    /// \returns the value of the found pair or an empty string
     SBuf getListMember(Http::HdrType id, const char *member, const char separator) const;
     int has(Http::HdrType id) const;
     /// Appends "this cache" information to VIA header field.
