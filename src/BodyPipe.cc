@@ -286,8 +286,7 @@ BodyPipe::expectNoConsumption()
         abortedConsumption = true;
 
         // in case somebody enabled auto-consumption before regular one aborted
-        if (mustAutoConsume && theProducer.valid())
-            startAutoConsumption();
+        startAutoConsumptionIfNeeded();
     }
 }
 
@@ -313,24 +312,28 @@ BodyPipe::consume(size_t size)
     postConsume(size);
 }
 
-// In the AutoConsumption mode, the consumer is gone, but the producer continues
-// to produce data. We use a BodySink BodyConsumer to discard that data.
 void
 BodyPipe::enableAutoConsumption()
 {
     mustAutoConsume = true;
     debugs(91,5, HERE << "enabled auto consumption" << status());
-    if (!theConsumer && theProducer.valid() && theBuf.hasContent())
-        startAutoConsumption();
-    // else already consuming, nobody needs consumption, or nothing to consume
+    startAutoConsumptionIfNeeded();
 }
 
-// start auto consumption by creating body sink
+/// Check the current need and, if needed, start auto consumption. In auto
+/// consumption mode, the consumer is gone, but the producer continues to
+/// produce data. We use a BodySink BodyConsumer to discard that data.
 void
-BodyPipe::startAutoConsumption()
+BodyPipe::startAutoConsumptionIfNeeded()
 {
-    Must(mustAutoConsume);
-    Must(!theConsumer);
+    const auto startNow =
+        mustAutoConsume && // was enabled
+        !theConsumer && // has not started yet
+        theProducer.valid() && // still useful (and will eventually stop)
+        theBuf.hasContent(); // has something to consume right now
+    if (!startNow)
+        return;
+
     theConsumer = new BodySink(this);
     debugs(91,7, HERE << "starting auto consumption" << status());
     scheduleBodyDataNotification();
@@ -397,22 +400,11 @@ BodyPipe::postAppend(size_t size)
     if (!mayNeedMoreData())
         clearProducer(true); // reached end-of-body
 
-    if (mustAutoConsume && !theConsumer) {
-        // the consumer will not show up later
-
-        // our caller still exists, of course, but see clearProducer() above
-        if (!theProducer) {
-            debugs(91, 7, "nobody needs [auto] consumption" << status());
-            return;
-        }
-
-        if (size > 0)
-            startAutoConsumption();
-    }
-
     // We should not consume here even if mustAutoConsume because the
     // caller may not be ready for the data to be consumed during this call.
     scheduleBodyDataNotification();
+
+    startAutoConsumptionIfNeeded();
 }
 
 void
