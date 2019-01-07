@@ -1295,6 +1295,7 @@ FwdState::exhaustedTries() const
     return n_tries >= Config.forward_max_tries;
 }
 
+bool
 FwdState::supportsRepinning() const
 {
     assert(request->flags.pinned);

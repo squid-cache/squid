@@ -143,8 +143,6 @@ private:
     /// whether we have used up all permitted forwarding attempts
     bool exhaustedTries() const;
 
-    void usePinned(); ///< Handle pinned connections
-
 public:
     StoreEntry *entry;
     HttpRequest *request;
