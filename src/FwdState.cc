@@ -757,34 +757,34 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
 
     closeHandler = comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
-    // XXX: request->flags.pinned cannot be true in connectDone(). The flag is
+    // request->flags.pinned cannot be true in connectDone(). The flag is
     // only set when we dispatch the request to an existing (pinned) connection.
-    if (!request->flags.pinned) {
-        const CachePeer *p = serverConnection()->getPeer();
-        const bool peerWantsTls = p && p->secure.encryptTransport;
-        // userWillTlsToPeerForUs assumes CONNECT == HTTPS
-        const bool userWillTlsToPeerForUs = p && p->options.originserver &&
-                                            request->method == Http::METHOD_CONNECT;
-        const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
-        const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS;
-        if (needTlsToPeer || needTlsToOrigin || request->flags.sslPeek) {
-            HttpRequest::Pointer requestPointer = request;
-            AsyncCall::Pointer callback = asyncCall(17,4,
-                                                    "FwdState::ConnectedToPeer",
-                                                    FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
-            // Use positive timeout when less than one second is left.
-            const time_t connTimeout = serverDestinations[0]->connectTimeout(start_t);
-            const time_t sslNegotiationTimeout = positiveTimeout(connTimeout);
-            Security::PeerConnector *connector = nullptr;
+    assert(!request->flags.pinned);
+
+    const CachePeer *p = serverConnection()->getPeer();
+    const bool peerWantsTls = p && p->secure.encryptTransport;
+    // userWillTlsToPeerForUs assumes CONNECT == HTTPS
+    const bool userWillTlsToPeerForUs = p && p->options.originserver &&
+        request->method == Http::METHOD_CONNECT;
+    const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
+    const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS;
+    if (needTlsToPeer || needTlsToOrigin || request->flags.sslPeek) {
+        HttpRequest::Pointer requestPointer = request;
+        AsyncCall::Pointer callback = asyncCall(17,4,
+                                                "FwdState::ConnectedToPeer",
+                                                FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
+        // Use positive timeout when less than one second is left.
+        const time_t connTimeout = serverDestinations[0]->connectTimeout(start_t);
+        const time_t sslNegotiationTimeout = positiveTimeout(connTimeout);
+        Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
-            if (request->flags.sslPeek)
-                connector = new Ssl::PeekingPeerConnector(requestPointer, serverConnection(), clientConn, callback, al, sslNegotiationTimeout);
-            else
+        if (request->flags.sslPeek)
+            connector = new Ssl::PeekingPeerConnector(requestPointer, serverConnection(), clientConn, callback, al, sslNegotiationTimeout);
+        else
 #endif
-                connector = new Security::BlindPeerConnector(requestPointer, serverConnection(), callback, al, sslNegotiationTimeout);
-            AsyncJob::Start(connector); // will call our callback
-            return;
-        }
+            connector = new Security::BlindPeerConnector(requestPointer, serverConnection(), callback, al, sslNegotiationTimeout);
+        AsyncJob::Start(connector); // will call our callback
+        return;
     }
 
     // if not encrypting just run the post-connect actions
@@ -880,14 +880,13 @@ void
 FwdState::connectStart()
 {
     assert(serverDestinations.size() > 0);
-    assert(serverDestinations[0] != nullptr);
 
     debugs(17, 3, "fwdConnectStart: " << entry->url());
 
     request->hier.startPeerClock();
 
     // pinned connections go through usePinned() rather than connectStart()
-    assert(serverDestinations[0]->peerType != PINNED);
+    assert(serverDestinations[0] != nullptr);
     request->flags.pinned = false;
 
     // Do not fowrward bumped connections to parent proxy unless it is an
