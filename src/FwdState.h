@@ -117,9 +117,8 @@ private:
     virtual void noteDestinationsEnd(ErrorState *selectionError) override;
 
 #if STRICT_ORIGINAL_DST
-    void useOriginalDestination();
+    void selectPeerForIntercepted();
 #endif
-
     static void logReplyStatus(int tries, const Http::StatusCode status);
     void doneWithRetries();
     void completed();
