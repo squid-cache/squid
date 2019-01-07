@@ -131,7 +131,7 @@ public:
     bool exhausted() const; // saw eof/abort and all data consumed
     bool stillConsuming(const Consumer::Pointer &consumer) const { return theConsumer == consumer; }
 
-    // start or continue consuming when there is no consumer
+    /// start or continue consuming when producing without consumer
     void enableAutoConsumption();
 
     const MemBuf &buf() const { return theBuf; }
@@ -163,7 +163,7 @@ private:
 
     MemBuf theBuf; // produced but not yet consumed content, if any
 
-    bool mustAutoConsume; // consume when there is no consumer
+    bool mustAutoConsume; ///< keep theBuf empty when producing without consumer
     bool abortedConsumption; ///< called BodyProducer::noteBodyConsumerAborted
     bool isCheckedOut; // to keep track of checkout violations
 };
