@@ -639,9 +639,6 @@ FwdState::checkRetry()
     if (request->flags.pinned && !supportsRepinning())
         return false;
 
-    if (n_tries > Config.forward_max_tries)
-        return false;
-
     if (!EnoughTimeToReForward(start_t))
         return false;
 
