@@ -101,12 +101,11 @@ Ip::Address::applyMask(Ip::Address const &mask_addr)
     return changes;
 }
 
-int
+void
 Ip::Address::applyClientMask(const Address &mask)
 {
     if (!isLocalhost() && isIPv4())
-        return applyMask(mask);
-    return 0;
+        (void)applyMask(mask);
 }
 
 bool

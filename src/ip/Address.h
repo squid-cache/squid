@@ -193,7 +193,7 @@ public:
     /// Apply so-called 'privacy masking' to IPv4 addresses,
     /// except localhost IP.
     /// IPv6 clients use 'privacy addressing' instead.
-    int applyClientMask(const Address &mask);
+    void applyClientMask(const Address &mask);
 
     /** Return the ASCII equivalent of the address
      *  Semantically equivalent to the IPv4 inet_ntoa()

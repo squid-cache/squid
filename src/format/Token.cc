@@ -491,10 +491,9 @@ Format::Token::parse(const char *def, Quoting *quoting)
 
         if (data.string) {
             char *header = data.string;
-            // HTTP header field names cannot have ':' while
-            // PROXY protocol pseudo headers start with it.
-            const auto proxyPseudoHeader = type == LFT_PROXY_PROTOCOL_RECEIVED_HEADER && header[0] == ':';
-            char *cp = strchr(proxyPseudoHeader ? header+1 : header, ':');
+
+            const auto pseudoHeader = header[0] == ':';
+            char *cp = strchr(pseudoHeader ? header+1 : header, ':');
 
             if (cp) {
                 *cp = '\0';
@@ -545,8 +544,11 @@ Format::Token::parse(const char *def, Quoting *quoting)
             if (!*header)
                 throw TexcHere(ToSBuf("Can't parse configuration token: '", def, "': missing header name"));
 
-            if (proxyPseudoHeader)
-                data.headerId = ProxyProtocol::HeaderNameToHeaderType(SBuf(header));
+            if (pseudoHeader) {
+                if (type == LFT_PROXY_PROTOCOL_RECEIVED_HEADER)
+                    data.headerId = ProxyProtocol::HeaderNameToHeaderType(SBuf(header));
+                throw TexcHere(ToSBuf("Can't parse configuration token: '", def, "': wrong header name"));
+            }
 
             data.header.header = header;
         } else {

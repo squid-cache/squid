@@ -2200,7 +2200,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
 
     // store the details required for creating more MasterXaction objects as new requests come in
     log_addr = xact->tcpClient->remote;
-    (void)log_addr.applyClientMask(Config.Addrs.client_netmask);
+    log_addr.applyClientMask(Config.Addrs.client_netmask);
 
     // register to receive notice of Squid signal events
     // which may affect long persisting client connections

@@ -50,7 +50,7 @@ ProxyProtocol::Message::getValues(const uint32_t headerType, const char sep) con
         if (!hasAddresses())
             return SBuf();
         auto logAddr = sourceAddress;
-        (void)logAddr.applyClientMask(Config.Addrs.client_netmask);
+        logAddr.applyClientMask(Config.Addrs.client_netmask);
         char ipBuf[MAX_IPSTRLEN];
         return SBuf(logAddr.toStr(ipBuf, sizeof(ipBuf)));
     }

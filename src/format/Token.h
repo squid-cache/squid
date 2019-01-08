@@ -10,6 +10,7 @@
 #define _SQUID_FORMAT_TOKEN_H
 
 #include "format/ByteCode.h"
+#include "proxyp/Elements.h"
 
 /*
  * Squid configuration allows users to define custom formats in
@@ -52,7 +53,7 @@ public:
         char *string;
         // TODO: Add ID caching for protocols other than PROXY protocol.
         /// the cached ID of the parsed header or zero
-        uint32_t headerId;
+        ProxyProtocol::Two::HeaderType headerId;
 
         struct {
             char *header;
