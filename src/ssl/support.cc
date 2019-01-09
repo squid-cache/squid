@@ -485,7 +485,7 @@ Ssl::Initialize(void)
 
     SQUID_OPENSSL_init_ssl();
 
-#if HAVE_OPENSSL_ENGINE_H
+#if !defined(OPENSSL_NO_ENGINE)
     if (::Config.SSL.ssl_engine) {
         ENGINE_load_builtin_engines();
         ENGINE *e;
