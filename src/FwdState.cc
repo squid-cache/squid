@@ -423,7 +423,7 @@ FwdState::startConnectionOrFail()
         delete err;
         err = NULL;
 
-        if (serverDestinations[0] != nullptr) {
+        if (serverDestinations[0] == nullptr) {
             usePinned();
             return;
         }
