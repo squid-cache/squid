@@ -470,7 +470,6 @@ FwdState::fail(ErrorState * errorState)
 
     if (ConnStateData *pinned_connection = request->pinnedConnection()) {
         pinned_connection->pinning.zeroReply = true;
-        flags.dont_retry = true; // we want to propagate failure to the client
         debugs(17, 4, "zero reply on pinned connection");
     }
 }
@@ -1297,6 +1296,11 @@ bool
 FwdState::supportsRepinning() const
 {
     assert(request->flags.pinned);
+
+    // pconn race on pinned connection: Currently we do not have any mechanism
+    // to repin current pinned connection path.
+    if (!serverDestinations.empty() && serverDestinations[0] == nullptr)
+        return false;
 
     // If a bumped connection was pinned, then the TLS client was given our peer
     // details. Do not re-pin because we do not ensure that those details stay
