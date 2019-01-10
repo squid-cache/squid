@@ -175,10 +175,7 @@ void FwdState::start(Pointer aSelf)
     const bool isIntercepted = request && !request->flags.redirected && (request->flags.intercepted || request->flags.interceptTproxy);
     const bool useOriginalDst = Config.onoff.client_dst_passthru || (request && !request->flags.hostVerified);
     if (isIntercepted && useOriginalDst) {
-        selectPeerForIntercepted();
-        // 3.2 does not suppro re-wrapping inside CONNECT.
-        // our only alternative is to fake destination "found" and continue with the forwarding.
-        startConnectionOrFail();
+        useOriginalDestination();
         return;
     }
 #endif
@@ -200,14 +197,18 @@ FwdState::stopAndDestroy(const char *reason)
 #if STRICT_ORIGINAL_DST
 /// bypasses peerSelect() when dealing with intercepted requests
 void
-FwdState::selectPeerForIntercepted()
+FwdState::useOriginalDestination()
 {
+    // We do not support re-wrapping inside CONNECT.
+    // Our only alternative is to fake a noteDestination() call.
+
     // use pinned connection if available
     if (ConnStateData *client = request->pinnedConnection()) {
         // emulate the PeerSelector::selectPinned() "Skip ICP" effect
         entry->ping_status = PING_DONE;
 
         serverDestinations.push_back(nullptr);
+        usePinned();
         return;
     }
 
@@ -219,6 +220,7 @@ FwdState::selectPeerForIntercepted()
 
     debugs(17, 3, HERE << "using client original destination: " << *p);
     serverDestinations.push_back(p);
+    startConnectionOrFail();
 }
 #endif
 
@@ -423,11 +425,6 @@ FwdState::startConnectionOrFail()
         delete err;
         err = NULL;
 
-        if (serverDestinations[0] == nullptr) {
-            usePinned();
-            return;
-        }
-
         // Update the logging information about this new server connection.
         // Done here before anything else so the errors get logged for
         // this server link regardless of what happens when connecting to it.
@@ -469,6 +466,12 @@ FwdState::fail(ErrorState * errorState)
     if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
+    }
+
+    if (ConnStateData *pinned_connection = request->pinnedConnection()) {
+        pinned_connection->pinning.zeroReply = true;
+        flags.dont_retry = true; // we want to propagate failure to the client
+        debugs(17, 4, "zero reply on pinned connection");
     }
 }
 
@@ -552,6 +555,8 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
         // We can call usePinned() without fear of clashing with an earlier
         // forwarding attempt because PINNED must be the first destination.
         assert(wasBlocked);
+        usePinned();
+        return;
     }
 
     if (wasBlocked)
@@ -683,6 +688,8 @@ FwdState::retryOrBail()
     if (checkRetry()) {
         debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
         // we should retry the same destination if it failed due to pconn race
+        // XXX: When checkRetry() returns true for a pinned connection, and
+        // raceHappened, we will use a nil destination w/o calling usePinned()!
         if (pconnRace == raceHappened)
             debugs(17, 4, HERE << "retrying the same destination");
         else
