@@ -119,7 +119,6 @@ private:
 #if STRICT_ORIGINAL_DST
     void selectPeerForIntercepted();
 #endif
-
     static void logReplyStatus(int tries, const Http::StatusCode status);
     void doneWithRetries();
     void completed();
