@@ -30,10 +30,11 @@ SBuf::SBuf(const std::string &) {}
 SBuf::~SBuf() {}
 SBuf& SBuf::assign(const SBuf &) STUB_RETVAL(*this)
 SBuf& SBuf::assign(const char *, size_type) STUB_RETVAL(*this)
-void clear() STUB
+void SBuf::clear() STUB
 SBuf& SBuf::append(const SBuf &) STUB_RETVAL(*this)
 SBuf& SBuf::append(const char *, size_type) STUB_RETVAL(*this)
-SBuf& Printf(const char *, ...);
+SBuf& SBuf::append(const char) STUB_RETVAL(*this)
+SBuf& SBuf::Printf(const char *, ...) STUB_RETVAL(*this)
 SBuf& SBuf::appendf(const char *, ...) STUB_RETVAL(*this)
 SBuf& SBuf::vappendf(const char *, va_list) STUB_RETVAL(*this)
 std::ostream& SBuf::print(std::ostream &os) const STUB_RETVAL(os)
