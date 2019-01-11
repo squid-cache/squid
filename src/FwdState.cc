@@ -175,7 +175,8 @@ void FwdState::start(Pointer aSelf)
     const bool isIntercepted = request && !request->flags.redirected && (request->flags.intercepted || request->flags.interceptTproxy);
     const bool useOriginalDst = Config.onoff.client_dst_passthru || (request && !request->flags.hostVerified);
     if (isIntercepted && useOriginalDst) {
-        useOriginalDestination();
+        selectPeerForIntercepted();
+        useDestinations();
         return;
     }
 #endif
@@ -197,7 +198,7 @@ FwdState::stopAndDestroy(const char *reason)
 #if STRICT_ORIGINAL_DST
 /// bypasses peerSelect() when dealing with intercepted requests
 void
-FwdState::useOriginalDestination()
+FwdState::selectPeerForIntercepted()
 {
     // We do not support re-wrapping inside CONNECT.
     // Our only alternative is to fake a noteDestination() call.
@@ -208,7 +209,6 @@ FwdState::useOriginalDestination()
         entry->ping_status = PING_DONE;
 
         serverDestinations.push_back(nullptr);
-        usePinned();
         return;
     }
 
@@ -220,7 +220,6 @@ FwdState::useOriginalDestination()
 
     debugs(17, 3, HERE << "using client original destination: " << *p);
     serverDestinations.push_back(p);
-    startConnectionOrFail();
 }
 #endif
 
@@ -415,24 +414,14 @@ FwdState::EnoughTimeToReForward(const time_t fwdStart)
 }
 
 void
-FwdState::startConnectionOrFail()
+FwdState::useDestinations()
 {
-    debugs(17, 3, HERE << entry->url());
-
-    if (serverDestinations.size() > 0) {
-        // Ditch error page if it was created before.
-        // A new one will be created if there's another problem
-        delete err;
-        err = NULL;
-
-        // Update the logging information about this new server connection.
-        // Done here before anything else so the errors get logged for
-        // this server link regardless of what happens when connecting to it.
-        // IF sucessfuly connected this top destination will become the serverConnection().
-        syncHierNote(serverDestinations[0], request->url.host());
-        request->clearError();
-
-        connectStart();
+    debugs(17, 3, serverDestinations.size() << " paths to " << entry->url());
+    if (!serverDestinations.empty()) {
+        if (!serverDestinations[0])
+            usePinned();
+        else
+            connectStart();
     } else {
         if (PeerSelectionInitiator::subscribed) {
             debugs(17, 4, "wait for more destinations to try");
@@ -525,7 +514,7 @@ FwdState::complete()
         // drop the last path off the selection list. try the next one.
         if (!serverDestinations.empty()) // paranoid
             serverDestinations.erase(serverDestinations.begin());
-        startConnectionOrFail();
+        useDestinations();
 
     } else {
         if (Comm::IsConnOpen(serverConn))
@@ -549,17 +538,10 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     // can rely on wasBlocked to detect ongoing/concurrent attempts.
     // Upcoming Happy Eyeballs changes will handle this properly.
     serverDestinations.push_back(path);
-
-    if (!path) { // decided to use a pinned connection
-        // We can call usePinned() without fear of clashing with an earlier
-        // forwarding attempt because PINNED must be the first destination.
-        assert(wasBlocked);
-        usePinned();
-        return;
-    }
+    assert(wasBlocked || path); // pinned destinations are always selected first
 
     if (wasBlocked)
-        startConnectionOrFail();
+        useDestinations();
     // else continue to use one of the previously noted destinations;
     // if all of them fail, we may try this path
 }
@@ -580,7 +562,7 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
         else
             debugs(17, 3, "Will abort forwarding because path selection found no paths.");
 
-        startConnectionOrFail(); // will choose the OrFail code path
+        useDestinations(); // will detect and handle the lack of paths
         return;
     }
     // else continue to use one of the previously noted destinations;
@@ -687,13 +669,11 @@ FwdState::retryOrBail()
     if (checkRetry()) {
         debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
         // we should retry the same destination if it failed due to pconn race
-        // XXX: When checkRetry() returns true for a pinned connection, and
-        // raceHappened, we will use a nil destination w/o calling usePinned()!
         if (pconnRace == raceHappened)
             debugs(17, 4, HERE << "retrying the same destination");
         else
             serverDestinations.erase(serverDestinations.begin()); // last one failed. try another.
-        startConnectionOrFail();
+        useDestinations();
         return;
     }
 
@@ -879,11 +859,23 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: " << entry->url());
 
-    request->hier.startPeerClock();
-
     // pinned connections go through usePinned() rather than connectStart()
     assert(serverDestinations[0] != nullptr);
     request->flags.pinned = false;
+
+    // Ditch the previous error if any.
+    // A new error page will be created if there is another problem.
+    delete err;
+    err = nullptr;
+    request->clearError();
+
+    // Update logging information with the upcoming server connection
+    // destination. Do this early so that any connection establishment errors
+    // are attributed to this destination. If successfully connected, this
+    // destination becomes serverConnection().
+    syncHierNote(serverDestinations[0], request->url.host());
+
+    request->hier.startPeerClock();
 
     // Do not fowrward bumped connections to parent proxy unless it is an
     // origin server
@@ -950,6 +942,10 @@ FwdState::connectStart()
 void
 FwdState::usePinned()
 {
+    // we only handle pinned destinations; others are handled by connectStart()
+    assert(!serverDestinations.empty());
+    assert(!serverDestinations[0]);
+
     const auto connManager = request->pinnedConnection();
     debugs(17, 7, "connection manager: " << connManager);
 

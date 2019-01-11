@@ -78,7 +78,7 @@ public:
     /// This is the real beginning of server connection. Call it whenever
     /// the forwarding server destination has changed and a new one needs to be opened.
     /// Produces the cannot-forward error on fail if no better error exists.
-    void startConnectionOrFail();
+    void useDestinations();
 
     void fail(ErrorState *err);
     void unregister(Comm::ConnectionPointer &conn);
@@ -117,7 +117,7 @@ private:
     virtual void noteDestinationsEnd(ErrorState *selectionError) override;
 
 #if STRICT_ORIGINAL_DST
-    void useOriginalDestination();
+    void selectPeerForIntercepted();
 #endif
 
     static void logReplyStatus(int tries, const Http::StatusCode status);
