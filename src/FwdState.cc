@@ -1294,7 +1294,7 @@ FwdState::supportsRepinning() const
     assert(request->flags.pinned);
 
     // pconn race on pinned connection: Currently we do not have any mechanism
-    // to repin current pinned connection path.
+    // to re-pin current pinned connection path.
     if (!serverDestinations.empty() && serverDestinations[0] == nullptr)
         return false;
 
