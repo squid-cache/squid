@@ -14,12 +14,15 @@
 #include "auth/AclMaxUserIp.h"
 #include "auth/UserRequest.h"
 #include "ConfigParser.h"
-#include "testACLMaxUserIP.h"
+#include "tests/testACLMaxUserIP.h"
 #include "unitTestMain.h"
 
 #include <stdexcept>
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testACLMaxUserIP );
+
+/* globals required to resolve link issues */
+AnyP::PortCfgPointer HttpPortList;
 
 void
 testACLMaxUserIP::testDefaults()

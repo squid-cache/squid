@@ -38,7 +38,6 @@ if ENABLE_AUTH
 SUBDIRS += auth
 AUTH_LIBS= auth/libauth.la
 AUTH_ACL_LIBS= auth/libacls.la
-check_PROGRAMS += tests/testACLMaxUserIP
 endif
 DIST_SUBDIRS += auth
 
@@ -1795,132 +1794,53 @@ tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of auth/*
 
-tests_testACLMaxUserIP_SOURCES= \
-	cbdata.cc \
-	ClientInfo.h \
-	tests/stub_CollapsedForwarding.cc \
-	ConfigOption.cc \
+if ENABLE_AUTH
+check_PROGRAMS += tests/testACLMaxUserIP
+tests_testACLMaxUserIP_SOURCES = \
+	tests/testACLMaxUserIP.cc \
+	tests/testACLMaxUserIP.h
+nodist_tests_testACLMaxUserIP_SOURCES = \
 	ConfigParser.cc \
-	tests/stub_ETag.cc \
-	event.cc \
-	fatal.h \
-	tests/stub_fatal.cc \
-	FileMap.h \
-	filemap.cc \
-	HttpBody.cc \
-	HttpHeader.h \
-	HttpHeader.cc \
-	HttpHeaderFieldInfo.h \
-	HttpHeaderTools.h \
-	HttpHeaderTools.cc \
-	HttpHdrContRange.cc \
-	HttpHdrRange.cc \
-	HttpHeaderFieldStat.h \
-	HttpHdrCc.h \
-	HttpHdrCc.cc \
-	HttpHdrSc.cc \
-	HttpHdrScTarget.cc \
-	int.h \
-	int.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
-	Notes.cc \
-	Notes.h \
-	mem_node.cc \
+	dlink.cc \
+	globals.cc \
 	Parsing.cc \
-	tests/stub_libsecurity.cc \
-	SquidMath.cc \
-	StatCounters.cc \
-	StatCounters.h \
-	StatHist.h \
-	StrList.h \
-	StrList.cc \
-	tests/stub_StatHist.cc \
-	stmem.cc \
-	tests/stub_SBufDetailedStats.cc \
 	String.cc \
-	StoreIOState.cc \
-	tests/stub_StoreMeta.cc \
-	StoreMetaUnpacker.cc \
-	StoreSwapLogData.cc \
-	store_key_md5.h \
-	store_key_md5.cc \
-	swap_log_op.cc \
-	swap_log_op.h \
-	tests/stub_libstore.cc \
-	Transients.cc \
-	log/access_log.h \
 	tests/stub_access_log.cc \
-	cache_cf.h \
 	tests/stub_cache_cf.cc \
+	tests/stub_cbdata.cc \
 	tests/stub_client_side.cc \
 	tests/stub_debug.cc \
-	tests/stub_DelayId.cc \
 	tests/stub_errorpage.cc \
-	fd.h \
-	tests/stub_fd.cc \
+	tests/stub_fatal.cc \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_HttpHeader.cc \
 	tests/stub_HttpRequest.cc \
-	tests/stub_HttpReply.cc \
-	tests/stub_ipc_TypedMsgHdr.cc \
 	tests/stub_libauth.cc \
-	tests/stub_libcomm.cc \
-	tests/stub_libdiskio.cc \
-	tests/stub_libformat.cc \
+	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc \
-	tests/stub_libsslsquid.cc \
-	tests/stub_MemObject.cc \
-	tests/stub_MemStore.cc \
-	mime.h \
-	tests/stub_mime.cc \
-	tests/stub_pconn.cc \
-	tests/stub_Port.cc \
-	repl_modules.h \
-	tests/stub_store.cc \
-	tests/stub_store_client.cc \
-	store_rebuild.h \
-	tests/stub_store_rebuild.cc \
-	tests/stub_store_stats.cc \
-	tests/stub_store_swapout.cc \
-	tools.h \
-	tests/stub_tools.cc \
-	tests/stub_cache_manager.cc \
-	tests/stub_UdsOp.cc \
-	tests/testACLMaxUserIP.cc \
-	tests/testACLMaxUserIP.h \
-	tests/stub_time.cc \
-	tests/stub_libanyp.cc \
-	MemBuf.cc \
-	wordlist.h \
-	wordlist.cc
-nodist_tests_testACLMaxUserIP_SOURCES= \
-	$(TESTSOURCES)
-tests_testACLMaxUserIP_LDADD= \
-	libsquid.la \
-	helper/libhelper.la \
-	http/libhttp.la \
-	parser/libparser.la \
+	tests/stub_libsecurity.cc \
+	tests/stub_MemBuf.cc \
+	tests/stub_StatHist.cc
+tests_testACLMaxUserIP_LDADD = \
 	$(AUTH_ACL_LIBS) \
-	ident/libident.la \
-	acl/libacls.la \
-	eui/libeui.la \
-	acl/libstate.la \
 	acl/libapi.la \
-	anyp/libanyp.la \
-	base/libbase.la \
+	acl/libstate.la \
+	acl/libacls.la \
+	SquidConfig.o \
 	ip/libip.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
+	parser/libparser.la \
 	sbuf/libsbuf.la \
-	$(top_builddir)/lib/libmisccontainers.la \
-	$(top_builddir)/lib/libmiscencoding.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(NETTLELIB) \
-	$(REGEXLIB) \
+	base/libbase.la \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
+else
+EXTRA_DIST += \
+	tests/testACLMaxUserIP.cc \
+	tests/testACLMaxUserIP.h
+endif
 
 ## Tests of http/* and HTTP Protocol objects
 
