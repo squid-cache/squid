@@ -395,18 +395,22 @@ public:
     /// \retval this
     ErrTextValidator &warn(int level) { warn_ = level; return *this; }
 
-    /// The ErrTextValidator::validate throws on parse errors
+    /// If Squid is reconfiguring, report but then ignore parsing errors
+    /// instead of throwing. Otherwise, throw. Eventually, callers (possibly
+    /// indirect ones) should be fixed to catch thrown errors and reject
+    /// problematic reconfigurations.
     /// \retval this
-    ErrTextValidator &throws() { onError_ = doThrow; return *this; }
+    ErrTextValidator &bypassReconfigurationErrorsXXX();
 
-    /// Report and then ignore parse errors, the ErrTextValidator::validate
-    /// returns always true
+    /// Report but then ignore parsing errors instead of throwing. Eventually,
+    /// callers (possibly indirect ones) should be fixed to catch thrown
+    /// errors and reject problematic reconfigurations.
     /// \retval this
-    ErrTextValidator &report() { onError_ = doReport; return *this; }
+    ErrTextValidator &bypassAllErrorsXXX() { bypassErrors_ = true; return *this; }
 
-    /// Check the given error template text for problems. If problems are
+    /// Check the given error template text for problems. If a problem is
     /// found, either throw or just report the problem to cache.log, depending
-    /// on whether throws() was called to enable throwing.
+    /// on whether bypass*ErrorsXXX() was called to prevent throwing.
     void validate(const char *text);
 
     /// \return true if the object initialized and can be used to validate text
@@ -417,10 +421,6 @@ private:
         CtxFile, ///< It is used to parse a squid templates
         CtxConfig ///< It is used to parse a text from squid configuration file (eg from deny_info line)
     };
-    enum OnError {
-        doReport, ///< Just report the error using squid log
-        doThrow ///< Reports and then throws on error
-    };
 
     Context ctx = CtxUnknown; ///< The current context type
 
@@ -428,7 +428,7 @@ private:
     /// function name or caller class name.
     SBuf name_;
 
-    OnError onError_ = doReport; ///< Action when an error detected
+    bool bypassErrors_ = false; ///< whether to suppress throwing on errors
     int warn_ = 3; ///< The debug level to use for error messages
     SBuf ctxFilename; ///< The configuration file or the error page template
 

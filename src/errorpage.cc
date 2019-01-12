@@ -219,8 +219,7 @@ errorInitialize(void)
     // error pages validator to use as base
     ErrTextValidator validator("ErrorPageFile");
     validator.warn(DBG_CRITICAL);
-    if (!reconfiguring)
-        validator.throws();
+    validator.bypassReconfigurationErrorsXXX();
 
     for (i = ERR_NONE, ++i; i < error_page_count; ++i) {
         safe_free(error_text[i]);
@@ -1284,7 +1283,9 @@ ErrorState::BuildContent()
         if (err_language && err_language != Config.errorDefaultLanguage)
             safe_free(err_language);
 
-        localeTmpl = new ErrorPageFile(err_type_str[page_id], static_cast<err_type>(page_id), ErrTextValidator("ErrorPageFile").warn(5));
+        localeTmpl = new ErrorPageFile(err_type_str[page_id],
+            static_cast<err_type>(page_id),
+            ErrTextValidator("Locale-dependent ErrorPageFile").bypassAllErrorsXXX().warn(5));
         if (localeTmpl->loadFor(request.getRaw())) {
             m = localeTmpl->text();
             assert(localeTmpl->language());
@@ -1404,6 +1405,12 @@ ErrTextValidator::useFileContext(const char *templateFilename)
     return *this;
 }
 
+ErrTextValidator &
+ErrTextValidator::bypassReconfigurationErrorsXXX() {
+    bypassErrors_ = reconfiguring;
+    return *this;
+}
+
 void
 ErrTextValidator::validate(const char *text)
 {
@@ -1425,19 +1432,9 @@ ErrTextValidator::validate(const char *text)
         ;// do nothing
     }
 
-    ErrorState::ErrorHandler *handler = nullptr;
-    switch (onError_) {
-    case doReport:
-        handler = new ErrorState::ErrorHandler(warn_, name_, prefix);
-        break;
-    case doThrow:
-        handler = new ThrownErrorHandler(warn_, name_, prefix);
-        break;
-    default:
-        assert(0);
-    }
-
-    anErr.setErrorHandler(handler);
+    anErr.setErrorHandler(bypassErrors_ ?
+        new ErrorState::ErrorHandler(warn_, name_, prefix):
+        new ThrownErrorHandler(warn_, name_, prefix));
 
     // The caller should handle all possible thrown exceptions.
     anErr.convertAndWriteTo(text, content, (ctx == CtxConfig), true);
