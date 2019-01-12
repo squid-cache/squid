@@ -155,7 +155,7 @@ private:
     virtual bool parse() {
         if (validator.initialised()) {
             validator.useFileContext(lastTemplateFile.c_str());
-            return validator.validate(text());
+            validator.validate(text());
         }
         return true;
     }
@@ -1404,7 +1404,7 @@ ErrTextValidator::useFileContext(const char *templateFilename)
     return *this;
 }
 
-bool
+void
 ErrTextValidator::validate(const char *text)
 {
     Must (initialised());
@@ -1441,7 +1441,5 @@ ErrTextValidator::validate(const char *text)
 
     // The caller should handle all possible thrown exceptions.
     anErr.convertAndWriteTo(text, content, (ctx == CtxConfig), true);
-
-    return onError_ == doReport ? true : (handler->errors() != 0);
 }
 

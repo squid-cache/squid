@@ -404,11 +404,10 @@ public:
     /// \retval this
     ErrTextValidator &report() { onError_ = doReport; return *this; }
 
-    /// Check the given template text for errors.
-    /// On errors it may throws, report the error in cache.log file or
-    /// return false, depending the configured error action.
-    /// \retval true if the text is validated false otherwise
-    bool validate(const char *text);
+    /// Check the given error template text for problems. If problems are
+    /// found, either throw or just report the problem to cache.log, depending
+    /// on whether throws() was called to enable throwing.
+    void validate(const char *text);
 
     /// \return true if the object initialized and can be used to validate text
     bool initialised() { return name_.length() != 0;}
