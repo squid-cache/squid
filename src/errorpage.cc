@@ -267,6 +267,7 @@ errorInitialize(void)
     // look for and load stylesheet into global MemBuf for it.
     if (Config.errorStylesheet) {
         ErrorPageFile tmpl("StylesSheet", ERR_MAX, validator);
+        tmpl.loadFromFile(Config.errorStylesheet);
         if (tmpl.loaded())
             error_stylesheet.appendf("%s",tmpl.text());
     }
