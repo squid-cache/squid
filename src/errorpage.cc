@@ -268,8 +268,7 @@ errorInitialize(void)
     if (Config.errorStylesheet) {
         ErrorPageFile tmpl("StylesSheet", ERR_MAX, validator);
         tmpl.loadFromFile(Config.errorStylesheet);
-        if (tmpl.loaded())
-            error_stylesheet.appendf("%s",tmpl.text());
+        error_stylesheet.appendf("%s",tmpl.text());
     }
 
 #if USE_OPENSSL
