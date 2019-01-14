@@ -411,14 +411,16 @@ TemplateFile::loadFromFile(const char *path)
     while ((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
         textBuf.append(buf, len);
     }
-    file_close(fd);
 
     if (len < 0) {
         int xerrno = errno;
+        file_close(fd);
         debugs(4, DBG_CRITICAL, MYNAME << "ERROR: failed to fully read: '" << path << "': " << xstrerr(xerrno));
         wasLoaded = false;
         return false;
     }
+
+    file_close(fd);
 
     if (!parse()) {
         debugs(4, DBG_CRITICAL, "ERROR: parsing error in template file: " << path);
