@@ -22,20 +22,54 @@ const ProxyProtocol::FieldMap ProxyProtocol::PseudoHeaderFields = {
     { SBuf(":dst_port"), ProxyProtocol::Two::htPseudoDstPort }
 };
 
+namespace ProxyProtocol {
+static Two::HeaderType NameToHeaderType(const SBuf &);
+static Two::HeaderType IntegerToHeaderType(const SBuf &);
+} // namespace ProxyProtocol
+
+/// HeaderNameToHeaderType() helper that handles pseudo headers
 ProxyProtocol::Two::HeaderType
-ProxyProtocol::HeaderNameToHeaderType(const SBuf &nameOrId)
+ProxyProtocol::NameToHeaderType(const SBuf &name)
 {
-    const auto it = PseudoHeaderFields.find(nameOrId);
+    const auto it = PseudoHeaderFields.find(name);
     if (it != PseudoHeaderFields.end())
         return it->second;
 
-    Parser::Tokenizer ptok(nameOrId);
+    static const SBuf pseudoMark(":");
+    if (name.startsWith(pseudoMark))
+        throw TexcHere(ToSBuf("Unsupported PROXY protocol pseudo header: ", name));
+
+    throw TexcHere(ToSBuf("Invalid PROXY protocol pseudo header or TLV type name. ",
+                          "Expected a pseudo header like :src_addr but got '", name, "'"));
+}
+
+/// HeaderNameToHeaderType() helper that handles integer TLV types
+ProxyProtocol::Two::HeaderType
+ProxyProtocol::IntegerToHeaderType(const SBuf &rawInteger)
+{
     int64_t tlvType = 0;
-    if (!ptok.int64(tlvType, 10, false))
-        throw TexcHere(ToSBuf("Invalid PROXY protocol TLV type. Expecting a positive decimal integer but got ", nameOrId));
-    if (tlvType > std::numeric_limits<uint8_t>::max())
-        throw TexcHere(ToSBuf("Invalid PROXY protocol TLV type. Expecting an integer less than ",
-                              std::numeric_limits<uint8_t>::max(), " but got ", tlvType));
+
+    Parser::Tokenizer ptok(rawInteger);
+    if (!ptok.int64(tlvType, 10, false) || !ptok.atEnd())
+        throw TexcHere(ToSBuf("Invalid PROXY protocol TLV type value. ",
+                              "Expected a decimal integer but got '", rawInteger, "'"));
+
+    const auto limit = std::numeric_limits<uint8_t>::max();
+    if (tlvType > limit)
+        throw TexcHere(ToSBuf("Invalid PROXY protocol TLV type value. ",
+                              "Expected an integer less than ", limit,
+                              " but got '", tlvType, "'"));
+
     return Two::HeaderType(tlvType);
+}
+
+ProxyProtocol::Two::HeaderType
+ProxyProtocol::HeaderNameToHeaderType(const SBuf &tlvTypeRaw)
+{
+    // we could branch on ":" instead of DIGIT but then header names that lack a
+    // leading ":" (like "version") would get a less accurate error message
+    return Parser::Tokenizer(tlvTypeRaw).skipOne(CharacterSet::DIGIT) ?
+           IntegerToHeaderType(tlvTypeRaw):
+           NameToHeaderType(tlvTypeRaw);
 }
 
