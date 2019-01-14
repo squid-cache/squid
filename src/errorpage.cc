@@ -416,12 +416,17 @@ TemplateFile::loadFromFile(const char *path)
     if (len < 0) {
         int xerrno = errno;
         debugs(4, DBG_CRITICAL, MYNAME << "ERROR: failed to fully read: '" << path << "': " << xstrerr(xerrno));
+        wasLoaded = false;
         return false;
     }
 
-    if (!(wasLoaded = parse()))
+    if (!parse()) {
         debugs(4, DBG_CRITICAL, "ERROR: parsing error in template file: " << path);
+        wasLoaded = false;
+        return false;
+    }
 
+    wasLoaded = true;
     return wasLoaded;
 }
 
