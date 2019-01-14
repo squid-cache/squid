@@ -491,6 +491,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
 
         if (data.string) {
             char *header = data.string;
+            const auto initialType = type;
 
             const auto pseudoHeader = header[0] == ':';
             char *cp = strchr(pseudoHeader ? header+1 : header, ':');
@@ -544,7 +545,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
             if (!*header)
                 throw TexcHere(ToSBuf("Can't parse configuration token: '", def, "': missing header name"));
 
-            if (type == LFT_PROXY_PROTOCOL_RECEIVED_HEADER)
+            if (initialType == LFT_PROXY_PROTOCOL_RECEIVED_HEADER)
                 data.headerId = ProxyProtocol::HeaderNameToHeaderType(SBuf(header));
             else if (pseudoHeader)
                 throw TexcHere(ToSBuf("Pseudo headers are not supported in this context; got: '", def, "'"));
