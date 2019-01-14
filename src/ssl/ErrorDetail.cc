@@ -596,6 +596,7 @@ int Ssl::ErrorDetail::convert(const char *code, const char **value) const
             return len;
         }
     }
+    // TODO: Support logformat %codes.
     return 0;
 }
 

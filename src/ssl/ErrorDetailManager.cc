@@ -237,6 +237,7 @@ Ssl::ErrorDetailFile::parse()
                 const int detailsParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.detail);
                 tmp = parser.getByName("descr");
                 const int descrParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.descr);
+                // TODO: Validate "descr" and "detail" field values.
 
                 if (!detailsParseOk || !descrParseOk) {
                     debugs(83, DBG_IMPORTANT, HERE <<
