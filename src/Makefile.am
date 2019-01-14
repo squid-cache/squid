@@ -1070,16 +1070,14 @@ tests_testSBuf_LDADD = \
 tests_testSBuf_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testSBufList
-tests_testSBufList_SOURCES= \
-	tests/testSBufList.h \
+tests_testSBufList_SOURCES = \
 	tests/testSBufList.cc \
-	tests/stub_SBufDetailedStats.cc \
-	tests/stub_time.cc \
+	tests/testSBufList.h
+nodist_tests_testSBufList_SOURCES = \
 	tests/stub_debug.cc \
-	tests/stub_fatal.cc \
-	tests/stub_libmem.cc
-nodist_tests_testSBufList_SOURCES=$(TESTSOURCES)
-tests_testSBufList_LDADD=\
+	tests/stub_libmem.cc \
+	tests/stub_StatHist.cc
+tests_testSBufList_LDADD = \
 	sbuf/libsbuf.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
