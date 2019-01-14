@@ -2458,21 +2458,21 @@ tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 ## Tests of ip/*
 
 check_PROGRAMS += tests/testIpAddress
-tests_testIpAddress_SOURCES= \
-	tests/testAddress.cc \
-	tests/testAddress.h
-nodist_tests_testIpAddress_SOURCES= \
-	ip/Address.h \
+tests_testIpAddress_SOURCES = \
+	tests/testIpAddress.cc \
+	tests/testIpAddress.h
+nodist_tests_testIpAddress_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
+	tests/stub_SBuf.cc \
 	tests/stub_tools.cc
-tests_testIpAddress_LDADD= \
+tests_testIpAddress_LDADD = \
 	ip/libip.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testIpAddress_LDFLAGS= $(LIBADD_DL)
+tests_testIpAddress_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of icmp/*
 
