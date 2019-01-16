@@ -26,15 +26,15 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "rfc1738.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
+#include "SquidTime.h"
 #include "Store.h"
 #include "tools.h"
 #include "wordlist.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
-#include "sbuf/Stream.h"
-#include "SquidTime.h"
 #if USE_OPENSSL
 #include "ssl/ErrorDetailManager.h"
 #endif
