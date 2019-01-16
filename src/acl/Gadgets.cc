@@ -27,6 +27,7 @@
 #include "errorpage.h"
 #include "globals.h"
 #include "HttpRequest.h"
+#include "src/sbuf/Stream.h"
 
 #include <set>
 #include <algorithm>
@@ -112,11 +113,8 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
         return;
     }
 
-    if (ErrorState::IsDenyInfoUrl(t)) {
-        ErrTextValidator validator("aclParseDenyInfoLine");
-        validator.bypassReconfigurationErrorsXXX();
-        (void)validator.useCfgContext(cfg_filename, config_lineno, config_input_line).warn(DBG_CRITICAL).validate(t);
-    }
+    if (ErrorState::IsDenyInfoUrl(t))
+        ErrorPage::ValidateCodes(t, true, ToSBuf(ConfigParser::CurrentLocation()));
 
     AclDenyInfoList *A = new AclDenyInfoList(t);
 

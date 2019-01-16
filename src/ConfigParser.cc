@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/Here.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
@@ -240,6 +241,12 @@ ConfigParser::SetCfgLine(char *line)
         CfgLineTokens_.pop();
         free(token);
     }
+}
+
+SourceLocation
+ConfigParser::CurrentLocation()
+{
+    return SourceLocation(cfg_directive, cfg_filename, config_lineno);
 }
 
 char *

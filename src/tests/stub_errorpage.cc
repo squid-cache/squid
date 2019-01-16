@@ -19,5 +19,4 @@ void TemplateFile::loadDefault() STUB
 TemplateFile::TemplateFile(char const*, err_type) STUB
 bool TemplateFile::loadFor(const HttpRequest *) STUB_RETVAL(false)
 bool ErrorState::IsDenyInfoUrl(const char *) STUB_RETVAL(false)
-ErrTextValidator &ErrTextValidator::useCfgContext(const char *filename, int lineNo, const char *line) STUB_RETVAL(*this)
-bool ErrTextValidator::validate(char const*) STUB_RETVAL(false)
+void ErrorPage::ValidateCodes(const char *, bool, const SBuf &) STUB

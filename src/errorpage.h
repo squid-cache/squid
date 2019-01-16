@@ -87,35 +87,6 @@ class ErrorState
     CBDATA_CLASS(ErrorState);
 
 public:
-    /// Class to handle parsing errors found in error template files.
-    /// It just report the found errors to log files, however
-    /// it is used as a base class to implement  more complex error
-    /// handlers.
-    class ErrorHandler {
-    public:
-        ErrorHandler(int aLevel, SBuf &aLebel, SBuf &aDescription);
-
-        /// do the required actions when an error found
-        virtual void handleError(const SBuf &mesg);
-
-        /// \retval the number of reported errors
-        int errors() { return errors_; }
-
-        /// Report an error to log files
-        void report(const SBuf &mesg);
-
-    protected:
-        int errors_ = 0; ///< counts the reported errors
-        int level; ///< The debug level to report the error in log files
-        SBuf label; ///< A label to use when reporting parse errors
-
-        /// Description of the context where the ErrorHandler is used.
-        /// Logged once, before the first error, to report that errors
-        /// found at the given context.
-        SBuf ctxDescr;
-    };
-
-public:
     ErrorState(err_type type, Http::StatusCode, HttpRequest * request, const AccessLogEntryPointer &al);
     ErrorState() = delete; // not implemented.
     ~ErrorState();
@@ -130,9 +101,6 @@ public:
 
     /// set error type-specific detail code
     void detailError(int dCode) {detailCode = dCode;}
-
-    /// Sets the ErrorHandler to use when parses templates
-    void setErrorHandler(ErrorHandler *handler) {errorHandler_.reset(handler);};
 
     /**
      * Lowlevel method to convert the given template string and write it
@@ -150,6 +118,9 @@ public:
 
     /// True if the text is a URL deny info
     static bool IsDenyInfoUrl(const char *text);
+
+    /// the source of the error template (for reporting purposes)
+    SBuf inputLocation;
 
 private:
     /**
@@ -197,6 +168,23 @@ private:
     /// formatting code and appends the generated string to 'result'.
     /// Throws on parse error.
     void handleLogFormat(const char *&start, MemBuf &result);
+
+    /// React to a convertAndWriteTo() error, throwing if buildContext allows.
+    /// \param msg description of what went wrong
+    /// \param near approximate start of the problematic input
+    void noteBuildError(const char *msg, const char *near) {
+        noteBuildError_(msg, near, false);
+    }
+
+    /// Note a convertAndWriteTo() error but do not throw for backwards
+    /// compatibility with older configurations that may have such errors.
+    /// Should eventually be replaced with noteBuildError().
+    /// \param msg description of what went wrong
+    /// \param near approximate start of the problematic input
+    void bypassBuildErrorXXX(const char *msg, const char *near) {
+        noteBuildError_(msg, near, true);
+    }
+
     /**
      * CacheManager / Debug dump of the ErrorState object.
      * Writes output into the given MemBuf.
@@ -244,8 +232,7 @@ public:
     AccessLogEntryPointer al;
 
 private:
-    // Error handler to use to report errors while parses error pages
-    std::unique_ptr<ErrorHandler> errorHandler_;
+    void noteBuildError_(const char *msg, const char *near, const bool forceBypass);
 
     static const SBuf LogFormatStart;
 };
@@ -349,6 +336,8 @@ public:
     /// The language used for the template
     const char *language() {return errLanguage.termedBuf();}
 
+    SBuf filename; ///< where the template was loaded from
+
     bool silent; ///< Whether to print error messages on cache.log file or not. It is user defined.
 
 protected:
@@ -367,76 +356,6 @@ protected:
     String errLanguage; ///< The error language of the template.
     String templateName; ///< The name of the template
     err_type templateCode; ///< The internal code for this template.
-    SBuf lastTemplateFile; ///< The last used path
-};
-
-/// Checks error pages text for syntax errors
-class ErrTextValidator {
-public:
-    ErrTextValidator() {}
-    ErrTextValidator(const char *aName) : name_(aName) {}
-
-    /// Setup the current object to handle the checked text as a configuration
-    /// file error page formatted string like those can be found in deny_info
-    /// configuration parameter.
-    /// \par filename the configuration file path
-    /// \par lineNo the number of parsed line
-    /// \par line the configuration file line
-    /// The parameters used to describe the error to the caller
-    /// \retval this
-    ErrTextValidator &useCfgContext(const char *filename, int lineNo, const char *line);
-
-    /// Setup the current object to handle checked text as a template error
-    /// page.
-    /// \retval this
-    ErrTextValidator &useFileContext(const char *templateFilename);
-
-    /// The debug level to use for debug messages
-    /// \retval this
-    ErrTextValidator &warn(int level) { warn_ = level; return *this; }
-
-    /// If Squid is reconfiguring, report but then ignore parsing errors
-    /// instead of throwing. Otherwise, throw. Eventually, callers (possibly
-    /// indirect ones) should be fixed to catch thrown errors and reject
-    /// problematic reconfigurations.
-    /// \retval this
-    ErrTextValidator &bypassReconfigurationErrorsXXX();
-
-    /// Report but then ignore parsing errors instead of throwing. Eventually,
-    /// callers (possibly indirect ones) should be fixed to catch thrown
-    /// errors and reject problematic reconfigurations.
-    /// \retval this
-    ErrTextValidator &bypassAllErrorsXXX() { bypassErrors_ = true; return *this; }
-
-    /// Check the given error template text for problems. If a problem is
-    /// found, either throw or just report the problem to cache.log, depending
-    /// on whether bypass*ErrorsXXX() was called to prevent throwing.
-    void validate(const char *text);
-
-    /// \return true if the object initialized and can be used to validate text
-    bool initialised() { return name_.length() != 0;}
-private:
-    enum Context {
-        CtxUnknown,
-        CtxFile, ///< It is used to parse a squid templates
-        CtxConfig ///< It is used to parse a text from squid configuration file (eg from deny_info line)
-    };
-
-    Context ctx = CtxUnknown; ///< The current context type
-
-    /// A name for validator to be used for debugging. It can be the caller
-    /// function name or caller class name.
-    SBuf name_;
-
-    bool bypassErrors_ = false; ///< whether to suppress throwing on errors
-    int warn_ = 3; ///< The debug level to use for error messages
-    SBuf ctxFilename; ///< The configuration file or the error page template
-
-    /// The current configuration file line number on CtxConfig context.
-    int ctxLineNo_ = 0;
-
-    /// The current configuration file line on CtxConfig context.
-    SBuf ctxLine_;
 };
 
 /**
@@ -453,6 +372,13 @@ private:
  * \return true if something looking like a language token has been placed in lang, false otherwise
  */
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos);
+
+namespace ErrorPage {
+
+/// check loaded configuration text for %code errors
+void ValidateCodes(const char *text, bool building_deny_info_url, const SBuf &inputLocation);
+
+} // namespace ErrorPage
 
 #endif /* SQUID_ERRORPAGE_H */
 

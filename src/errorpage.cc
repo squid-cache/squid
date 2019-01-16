@@ -71,6 +71,35 @@ typedef struct {
     Http::StatusCode page_redirect;
 } ErrorDynamicPageInfo;
 
+namespace ErrorPage {
+
+/// pretty-prints error page/deny_info building error
+class BuildErrorPrinter
+{
+public:
+    BuildErrorPrinter(const SBuf &anInputLocation, int aPage, const char *aMsg, const char *aNear): inputLocation(anInputLocation), page_id(aPage), msg(aMsg), near(aNear) {}
+
+    /// reports error details (for admin-visible exceptions and debugging)
+    std::ostream &print(std::ostream &) const;
+
+    /// print() helper to report where the error was found
+    std::ostream &printLocation(std::ostream &os) const;
+
+    /* saved constructor parameters */
+    const SBuf &inputLocation;
+    const int page_id;
+    const char *msg;
+    const char *near;
+};
+
+static inline std::ostream &
+operator <<(std::ostream &os, const BuildErrorPrinter &context)
+{
+    return context.print(os);
+}
+
+} // namespace ErrorPage
+
 /* local constant and vars */
 
 /**
@@ -141,57 +170,15 @@ class ErrorPageFile: public TemplateFile
 {
 public:
     ErrorPageFile(const char *name, const err_type code) : TemplateFile(name, code) {}
-
-    ErrorPageFile(const char *name, const err_type code, const ErrTextValidator &useValidator) : TemplateFile(name, code), validator(useValidator) {}
-
-    ~ErrorPageFile() {}
+    virtual ~ErrorPageFile() override {}
 
     /// The template text data read from disk
     const char *text() { return textBuf.c_str(); }
 
-    ErrTextValidator validator;
 private:
-    /// stores the data read from disk to a local buffer
-    virtual bool parse() {
-        if (validator.initialised()) {
-            validator.useFileContext(lastTemplateFile.c_str());
-            validator.validate(text());
-        }
+    virtual bool parse() override {
+        ErrorPage::ValidateCodes(text(), false, filename);
         return true;
-    }
-};
-
-ErrorState::ErrorHandler::ErrorHandler(int aLevel, SBuf &aLabel, SBuf &aDescr):
-    level(aLevel),
-    label(aLabel),
-    ctxDescr(aDescr)
-{
-}
-
-void
-ErrorState::ErrorHandler::report(const SBuf &msg)
-{
-    if (!errors_)
-        debugs(4, level, label << ": " << ctxDescr);
-    debugs(4, level, label << ": " << msg);
-    ++errors_;
-}
-
-void
-ErrorState::ErrorHandler::handleError(const SBuf &msg)
-{
-    report(msg);
-}
-
-/// Like the ErrorState::ErrorHandler but throws after
-/// reports the error
-class ThrownErrorHandler: public ErrorState::ErrorHandler
-{
-public:
-    ThrownErrorHandler(int aLevel, SBuf &aLabel, SBuf &aPrefix) : ErrorHandler(aLevel, aLabel, aPrefix) {}
-    void handleError(const SBuf &msg) {
-        ErrorHandler::handleError(msg);
-        throw TexcHere(msg);
     }
 };
 
@@ -216,10 +203,6 @@ errorInitialize(void)
     const char *text;
     error_page_count = ERR_MAX + ErrorDynamicPages.size();
     error_text = static_cast<char **>(xcalloc(error_page_count, sizeof(char *)));
-    // error pages validator to use as base
-    ErrTextValidator validator("ErrorPageFile");
-    validator.warn(DBG_CRITICAL);
-    validator.bypassReconfigurationErrorsXXX();
 
     for (i = ERR_NONE, ++i; i < error_page_count; ++i) {
         safe_free(error_text[i]);
@@ -236,7 +219,7 @@ errorInitialize(void)
              *  (a) default language translation directory (error_default_language)
              *  (b) admin specified custom directory (error_directory)
              */
-            ErrorPageFile errTmpl(err_type_str[i], i, validator);
+            ErrorPageFile errTmpl(err_type_str[i], i);
             errTmpl.loadDefault();
 
             // ErrorPageFile::loadDefault always builds a template
@@ -254,7 +237,7 @@ errorInitialize(void)
 
             if (strchr(pg, ':') == NULL) {
                 /** But only if they are not redirection URL. */
-                ErrorPageFile errTmpl(pg, ERR_MAX, validator);
+                ErrorPageFile errTmpl(pg, ERR_MAX);
                 errTmpl.loadDefault();
 
                 error_text[i] = xstrdup(errTmpl.text());
@@ -266,7 +249,7 @@ errorInitialize(void)
 
     // look for and load stylesheet into global MemBuf for it.
     if (Config.errorStylesheet) {
-        ErrorPageFile tmpl("StylesSheet", ERR_MAX, validator);
+        ErrorPageFile tmpl("StylesSheet", ERR_MAX);
         tmpl.loadFromFile(Config.errorStylesheet);
         error_stylesheet.appendf("%s",tmpl.text());
     }
@@ -393,8 +376,6 @@ TemplateFile::loadFromFile(const char *path)
     if (loaded()) // already loaded?
         return true;
 
-    lastTemplateFile.assign(path);
-
     fd = file_open(path, O_RDONLY | O_TEXT);
 
     if (fd < 0) {
@@ -421,6 +402,8 @@ TemplateFile::loadFromFile(const char *path)
     }
 
     file_close(fd);
+
+    filename = SBuf(path);
 
     if (!parse()) {
         debugs(4, DBG_CRITICAL, "ERROR: parsing error in template file: " << path);
@@ -813,7 +796,7 @@ ErrorState::Dump(MemBuf * mb)
 #define CVT_BUF_SZ 512
 
 const char *
-ErrorState::convert(const char *start, bool building_deny_info_url, bool allowRecursion)
+ErrorState::convert(const char *code, bool building_deny_info_url, bool allowRecursion)
 {
     static MemBuf mb;
     const char *p = NULL;   /* takes priority over mb if set */
@@ -823,7 +806,9 @@ ErrorState::convert(const char *start, bool building_deny_info_url, bool allowRe
 
     mb.reset();
 
-    switch (*start) {
+    const auto letter = code[1];
+
+    switch (letter) {
 
     case 'a':
 #if USE_AUTH
@@ -1140,9 +1125,13 @@ ErrorState::convert(const char *start, bool building_deny_info_url, bool allowRe
         break;
 
     default:
-        if (building_deny_info_url && errorHandler_)
-            errorHandler_->report(ToSBuf("Wrong error code at  '%", SBuf(start).substr(0, 100), "'"));
-        mb.appendf("%%%c", *start);
+        if (building_deny_info_url)
+            bypassBuildErrorXXX("Unsupported deny_info %code", code);
+        else if (letter != ';')
+            bypassBuildErrorXXX("Unsupported error page %code", code);
+        // else too many "font-size: 100%;" template errors to report
+
+        mb.append(code, 2);
         do_quote = 0;
         break;
     }
@@ -1152,7 +1141,7 @@ ErrorState::convert(const char *start, bool building_deny_info_url, bool allowRe
 
     assert(p);
 
-    debugs(4, 3, "errorConvert: %%" << *start << " --> '" << p << "'" );
+    debugs(4, 3, "%" << letter << " --> '" << p << "'" );
 
     if (do_quote)
         p = html_quote(p);
@@ -1290,10 +1279,9 @@ ErrorState::BuildContent()
         if (err_language && err_language != Config.errorDefaultLanguage)
             safe_free(err_language);
 
-        localeTmpl = new ErrorPageFile(err_type_str[page_id],
-            static_cast<err_type>(page_id),
-            ErrTextValidator("Locale-dependent ErrorPageFile").bypassAllErrorsXXX().warn(5));
+        localeTmpl = new ErrorPageFile(err_type_str[page_id], static_cast<err_type>(page_id));
         if (localeTmpl->loadFor(request.getRaw())) {
+            inputLocation = localeTmpl->filename;
             m = localeTmpl->text();
             assert(localeTmpl->language());
             err_language = xstrdup(localeTmpl->language());
@@ -1356,7 +1344,7 @@ ErrorState::convertAndWriteTo(const char *text, MemBuf &result, bool building_de
     while (*(p = NextCode(m))) {
         result.append(m, p - m);
         if (*p == '%') {
-            const char *t = convert(++p, building_deny_info_url, allowRecursion);
+            const char *t = convert(p++, building_deny_info_url, allowRecursion);
             result.appendf("%s", t);
             m = p + 1;
         } else {
@@ -1383,10 +1371,9 @@ ErrorState::handleLogFormat(const char *&start, MemBuf &result)
             return;
         }
 
-        if (errorHandler_)
-            errorHandler_->handleError(SBuf("unterminated @Squid{"));
-    } else if (errorHandler_)
-        errorHandler_->handleError(ToSBuf("Cannot parse @Squid{logformat} in error page template near '", SBuf(start).substr(0, 100), "'"));
+        noteBuildError("unterminated @Squid{ sequence", start);
+    } else
+        noteBuildError("cannot parse logformat %code inside @Squid{}", p);
 
     // Do not try to recover, stop interpreting the template
     while (*p) ++p;
@@ -1394,56 +1381,82 @@ ErrorState::handleLogFormat(const char *&start, MemBuf &result)
     start = p;
 }
 
-ErrTextValidator &
-ErrTextValidator::useCfgContext(const char *filename, int lineNo, const char *line)
+/// react to a convertAndWriteTo() error
+/// \param msg description of what went wrong
+/// \param near approximate start of the problematic input
+/// \param forceBypass whether detection of this error was introduced late,
+/// after old configurations containing this error could have been
+/// successfully validated and deployed (i.e. the admin may not be
+/// able to fix this newly detected but old problem quickly)
+void
+ErrorState::noteBuildError_(const char *msg, const char *near, const bool forceBypass)
 {
-    ctx = CtxConfig;
-    ctxFilename = filename;
-    ctxLineNo_ = lineNo;
-    ctxLine_ = line;
-    return *this;
+    using ErrorPage::BuildErrorPrinter;
+    const auto runtime = !starting_up;
+    if (runtime || forceBypass) {
+        // swallow this problem because the admin may not be (and/or the page
+        // building code is not) ready to handle throwing consequences
+
+        static unsigned int seenErrors = 0;
+        ++seenErrors;
+
+        const auto debugLevel =
+            (seenErrors > 100) ? DBG_DATA:
+            (starting_up || reconfiguring) ? DBG_CRITICAL:
+            3; // most other errors have been reported as configuration errors
+
+        // Error fatality depends on the error context: Reconfiguration errors
+        // are, like startup ones, DBG_CRITICAL but will never become FATAL.
+        if (starting_up && seenErrors <= 10)
+            debugs(4, debugLevel, "WARNING: The following configuration error will be fatal in future Squid versions");
+
+        debugs(4, debugLevel, "ERROR: " << BuildErrorPrinter(inputLocation, page_id, msg, near));
+    } else {
+        throw TexcHere(ToSBuf(BuildErrorPrinter(inputLocation, page_id, msg, near)));
+    }
 }
 
-ErrTextValidator &
-ErrTextValidator::useFileContext(const char *templateFilename)
-{
-    ctx = CtxFile;
-    ctxFilename = templateFilename;
-    return *this;
+/* ErrorPage::BuildErrorPrinter */
+
+std::ostream &
+ErrorPage::BuildErrorPrinter::printLocation(std::ostream &os) const {
+    if (!inputLocation.isEmpty())
+        return os << inputLocation;
+
+    if (page_id < ERR_NONE || page_id >= error_page_count)
+        return os << "[error page " << page_id << "]"; // should not happen
+
+    if (page_id < ERR_MAX)
+        return os << err_type_str[page_id];
+
+    return os << "deny_info " << ErrorDynamicPages.at(page_id - ERR_MAX)->page_name;
 }
 
-ErrTextValidator &
-ErrTextValidator::bypassReconfigurationErrorsXXX() {
-    bypassErrors_ = reconfiguring;
-    return *this;
+std::ostream &
+ErrorPage::BuildErrorPrinter::print(std::ostream &os) const {
+    printLocation(os) << ": " << msg << " near ";
+
+    // TODO: Add support for prefix printing to Raw
+    const size_t maxContextLength = 15; // plus "..."
+    if (strlen(near) > maxContextLength) {
+        os.write(near, maxContextLength);
+        os << "...";
+    } else {
+        os << near;
+    }
+
+    return os;
 }
 
 void
-ErrTextValidator::validate(const char *text)
+ErrorPage::ValidateCodes(const char *text, bool building_deny_info_url, const SBuf &inputLocation)
 {
-    Must (initialised());
+    AccessLogEntry::Pointer alp = new AccessLogEntry; // TODO: static?
+    ErrorState anErr(ERR_NONE, Http::scNone, nullptr, alp);
+    anErr.inputLocation = inputLocation;
 
-    MemBuf content;
-    content.init();
-    AccessLogEntry::Pointer alp= new AccessLogEntry;
-    ErrorState anErr(ERR_NONE, Http::scNone, NULL, alp);
-    SBuf prefix;
-    switch(ctx) {
-    case CtxConfig:
-        prefix = ToSBuf(name_ , ": " ,  ctxFilename , " line " , ctxLineNo_ , ": " , ctxLine_);
-        break;
-    case CtxFile:
-        prefix = ToSBuf(name_, ": Error while parsing file ",  ctxFilename);
-        break;
-    default:
-        ;// do nothing
-    }
-
-    anErr.setErrorHandler(bypassErrors_ ?
-        new ErrorState::ErrorHandler(warn_, name_, prefix):
-        new ThrownErrorHandler(warn_, name_, prefix));
-
-    // The caller should handle all possible thrown exceptions.
-    anErr.convertAndWriteTo(text, content, (ctx == CtxConfig), true);
+    MemBuf discardedContent; // TODO: static?
+    discardedContent.init();
+    const auto recursiveBuild = true;
+    anErr.convertAndWriteTo(text, discardedContent, building_deny_info_url, recursiveBuild);
 }
-

@@ -16,6 +16,8 @@
 #include <string>
 
 class wordlist;
+class SourceLocation; // TODO: Add and use base/forward.h
+
 /**
  * Limit to how long any given config line may be.
  * This affects squid.conf and all included files.
@@ -124,6 +126,8 @@ public:
 
     /// Do not allow %macros inside quoted strings
     static void DisableMacros() {AllowMacros_ = false;}
+
+    static SourceLocation CurrentLocation();
 
     /// configuration_includes_quoted_values in squid.conf
     static bool RecognizeQuotedValues;
