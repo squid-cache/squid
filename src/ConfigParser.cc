@@ -13,6 +13,7 @@
 #include "Debug.h"
 #include "fatal.h"
 #include "globals.h"
+#include "sbuf/Stream.h"
 
 bool ConfigParser::RecognizeQuotedValues = true;
 bool ConfigParser::StrictMode = true;
@@ -243,10 +244,10 @@ ConfigParser::SetCfgLine(char *line)
     }
 }
 
-SourceLocation
+SBuf
 ConfigParser::CurrentLocation()
 {
-    return SourceLocation(cfg_directive, cfg_filename, config_lineno);
+    return ToSBuf(SourceLocation(cfg_directive, cfg_filename, config_lineno));
 }
 
 char *
