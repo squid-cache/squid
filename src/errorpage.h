@@ -264,6 +264,9 @@ public:
     /// return true if the data loaded from disk without any problem
     bool loaded() const {return wasLoaded;}
 
+    /// loaded template (or an empty string)
+    const char *text() { return textBuf.c_str(); }
+
     /**
      * Load the page_name template from a file which  probably exist at:
      *  (a) admin specified custom directory (error_directory)

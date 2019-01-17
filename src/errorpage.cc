@@ -204,18 +204,6 @@ static const char *errorFindHardText(err_type type);
 static IOCB errorSendComplete;
 
 /// \ingroup ErrorPageInternal
-/// manages an error page template
-class ErrorPageFile: public TemplateFile
-{
-public:
-    ErrorPageFile(const char *name, const err_type code) : TemplateFile(name, code) {}
-    virtual ~ErrorPageFile() override {}
-
-    /// The template text data read from disk
-    const char *text() { return textBuf.c_str(); }
-};
-
-/// \ingroup ErrorPageInternal
 err_type &operator++ (err_type &anErr)
 {
     int tmp = (int)anErr;
@@ -265,10 +253,10 @@ errorInitialize(void)
              *  (a) default language translation directory (error_default_language)
              *  (b) admin specified custom directory (error_directory)
              */
-            ErrorPageFile errTmpl(err_type_str[i], i);
+            TemplateFile errTmpl(err_type_str[i], i);
             errTmpl.loadDefault();
 
-            // ErrorPageFile::loadDefault always builds a template
+            // TemplateFile::loadDefault always builds a template
             ImportStaticErrorText(i, errTmpl.text(), errTmpl.filename);
         } else {
             /** \par
@@ -279,13 +267,13 @@ errorInitialize(void)
 
             if (info->filename) {
                 /** But only if they are not redirection URL. */
-                ErrorPageFile errTmpl(info->filename, ERR_MAX);
+                TemplateFile errTmpl(info->filename, ERR_MAX);
                 errTmpl.loadDefault();
 
                 ImportStaticErrorText(i, errTmpl.text(), errTmpl.filename);
             } else {
                 assert(info->uri);
-                ErrorPage::ValidateCodes(i, info->cfgLocation);
+                ErrorPage::ValidateStaticError(i, info->cfgLocation);
             }
         }
     }
@@ -294,7 +282,7 @@ errorInitialize(void)
 
     // look for and load stylesheet into global MemBuf for it.
     if (Config.errorStylesheet) {
-        ErrorPageFile tmpl("StylesSheet", ERR_MAX);
+        TemplateFile tmpl("StylesSheet", ERR_MAX);
         tmpl.loadFromFile(Config.errorStylesheet);
         error_stylesheet.appendf("%s",tmpl.text());
     }
@@ -1356,7 +1344,7 @@ ErrorState::buildBody()
         if (err_language && err_language != Config.errorDefaultLanguage)
             safe_free(err_language);
 
-        ErrorPageFile localeTmpl(err_type_str[page_id], static_cast<err_type>(page_id));
+        TemplateFile localeTmpl(err_type_str[page_id], static_cast<err_type>(page_id));
         if (localeTmpl.loadFor(request.getRaw())) {
             inputLocation = localeTmpl.filename;
             assert(localeTmpl.language());
