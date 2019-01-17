@@ -197,9 +197,10 @@ int operator - (err_type const &anErr, err_type const &anErr2)
 }
 
 bool
-ErrorPage::IsDenyInfoUrl(const char *text)
+ErrorPage::IsDenyInfoUrl(const char *input)
 {
-    return text[0] == '3' || (text[0] != '2' && text[0] != '4' && text[0] != '5' && strchr(text, ':'));
+    const auto start = input[0];
+    return start == '3' || (start != '2' && start != '4' && start != '5' && strchr(input, ':'));
 }
 
 void
