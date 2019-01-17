@@ -1499,8 +1499,7 @@ ErrorPage::ImportStaticErrorText(const int page_id, const char *text, const SBuf
 static void
 ErrorPage::ValidateCodes(const int page_id, const SBuf &inputLocation)
 {
-    AccessLogEntry::Pointer alp = new AccessLogEntry; // TODO: static?
-    ErrorState anErr(err_type(page_id), Http::scNone, nullptr, alp);
+    ErrorState anErr(err_type(page_id), Http::scNone, nullptr, nullptr);
     anErr.inputLocation = inputLocation;
     anErr.validate();
 }
