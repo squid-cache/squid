@@ -73,6 +73,16 @@ typedef struct {
 
 namespace ErrorPage {
 
+/// state and parameters shared by several ErrorState::compile*() methods
+class Build
+{
+public:
+    SBuf output; ///< compilation result
+    const char *input = nullptr; ///< template bytes that need to be compiled
+    bool building_deny_info_url = false; ///< whether we compile deny_info URI
+    bool allowRecursion = false; ///< whether top-level compile() calls are OK
+};
+
 /// pretty-prints error page/deny_info building error
 class BuildErrorPrinter
 {

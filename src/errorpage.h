@@ -80,15 +80,13 @@ class wordlist;
 
 namespace ErrorPage {
 
-/// state and parameters shared by several ErrorState::compile*() methods
-class Build
-{
-public:
-    SBuf output; ///< compilation result
-    const char *input = nullptr; ///< template bytes that need to be compiled
-    bool building_deny_info_url = false; ///< whether we compile deny_info URI
-    bool allowRecursion = false; ///< whether top-level compile() calls are OK
-};
+class Build;
+
+/// whether input looks like a deny_info redirect URL parameter
+bool IsDenyInfoUrl(const char *input);
+
+/// check input for %code errors
+void ValidateCodes(const char *input, bool building_deny_info_url, const SBuf &inputLocation);
 
 } // namespace ErrorPage
 
@@ -335,16 +333,6 @@ protected:
  * \return true if something looking like a language token has been placed in lang, false otherwise
  */
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos);
-
-namespace ErrorPage {
-
-/// whether input looks like a deny_info redirect URL parameter
-bool IsDenyInfoUrl(const char *input);
-
-/// check input for %code errors
-void ValidateCodes(const char *input, bool building_deny_info_url, const SBuf &inputLocation);
-
-} // namespace ErrorPage
 
 #endif /* SQUID_ERRORPAGE_H */
 
