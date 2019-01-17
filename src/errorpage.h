@@ -26,8 +26,6 @@
 #include "ssl/ErrorDetail.h"
 #endif
 
-#include <memory>
-
 /// error page callback
 typedef void ERCB(int fd, void *, size_t);
 
