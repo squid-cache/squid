@@ -82,12 +82,6 @@ namespace ErrorPage {
 
 class Build;
 
-/// whether input looks like a deny_info redirect URL parameter
-bool IsDenyInfoUrl(const char *input);
-
-/// check input for %code errors
-void ValidateCodes(const char *input, bool building_deny_info_url, const SBuf &inputLocation);
-
 } // namespace ErrorPage
 
 /// \ingroup ErrorPageAPI
@@ -111,12 +105,8 @@ public:
     /// set error type-specific detail code
     void detailError(int dCode) {detailCode = dCode;}
 
-    /// replaces all legacy and logformat %codes in the given input
-    /// \param input  the string to be converted
-    /// \param building_deny_info_url  Whether input is a deny_info parameter
-    /// \param allowRecursion  whether to compile %codes which produce %codes
-    /// \returns the given input with all %code replaced
-    SBuf compile(const char *input, bool building_deny_info_url, bool allowRecursion);
+    /// ensures that a future BuildHttpReply() is likely to succeed
+    void validate();
 
     /// the source of the error template (for reporting purposes)
     SBuf inputLocation;
@@ -129,6 +119,8 @@ private:
 
     void compileLegacyCode(Build &build);
     void compileLogformatCode(Build &build);
+
+    SBuf compile(const char *input, bool building_deny_info_url, bool allowRecursion);
 
     /// React to a compile() error, throwing if buildContext allows.
     /// \param msg description of what went wrong
@@ -252,8 +244,8 @@ void errorSend(const Comm::ConnectionPointer &conn, ErrorState *err);
  */
 void errorAppendEntry(StoreEntry *entry, ErrorState *err);
 
-/// \ingroup ErrorPageAPI
-err_type errorReservePageId(const char *page_name);
+/// allocates a new slot for the error page
+err_type errorReservePageId(const char *page_name, const SBuf &cfgLocation);
 
 const char *errorPageName(int pageId); ///< error ID to string
 
@@ -302,8 +294,8 @@ public:
     bool silent; ///< Whether to print error messages on cache.log file or not. It is user defined.
 
 protected:
-    /// Used to parse (if parsing required) the template data .
-    virtual bool parse() = 0;
+    /// post-processes the loaded template
+    virtual bool parse() { return true; }
 
     /**
      * Try to load the "page_name" template for a given language "lang"

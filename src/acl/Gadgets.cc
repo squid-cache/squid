@@ -113,10 +113,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
         return;
     }
 
-    if (ErrorPage::IsDenyInfoUrl(t))
-        ErrorPage::ValidateCodes(t, true, ToSBuf(ConfigParser::CurrentLocation()));
-
-    AclDenyInfoList *A = new AclDenyInfoList(t);
+    const auto A = new AclDenyInfoList(t, ConfigParser::CurrentLocation());
 
     /* next expect a list of ACL names */
     while ((t = ConfigParser::NextToken())) {

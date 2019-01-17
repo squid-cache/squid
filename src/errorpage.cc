@@ -64,12 +64,37 @@ const SBuf ErrorState::LogFormatStart("@Squid{");
 
 /* local types */
 
-/// \ingroup ErrorPageInternal
-typedef struct {
+/// an error page created from admin-configurable metadata (e.g. deny_info)
+class ErrorDynamicPageInfo {
+public:
+    ErrorDynamicPageInfo(const int anId, const char *aName, const SBuf &aCfgLocation);
+    ~ErrorDynamicPageInfo() { xfree(page_name); }
+
+    /// error_text[] index for response body (unused in redirection responses)
     int id;
+
+    /// Primary deny_info parameter:
+    /// * May start with an HTTP status code.
+    /// * Either a well-known error page name, a filename, or a redirect URL.
     char *page_name;
+
+    /// admin-configured HTTP Location header value for redirection responses
+    const char *uri;
+
+    /// admin-configured name for the error page template (custom or standard)
+    const char *filename;
+
+    /// deny_info directive position in squid.conf (for reporting)
+    SBuf cfgLocation;
+
+    // XXX: Misnamed. Not just for redirects.
+    /// admin-configured HTTP status code
     Http::StatusCode page_redirect;
-} ErrorDynamicPageInfo;
+
+private:
+    // no copying of any kind
+    ErrorDynamicPageInfo(ErrorDynamicPageInfo &&) = delete;
+};
 
 namespace ErrorPage {
 
@@ -107,6 +132,12 @@ operator <<(std::ostream &os, const BuildErrorPrinter &context)
 {
     return context.print(os);
 }
+
+static const char *IsDenyInfoUri(const int page_id);
+
+/// check input for %code errors
+static void ImportStaticErrorText(const int page_id, const char *text, const SBuf &inputLocation);
+static void ValidateCodes(const int page_id, const SBuf &inputLocation);
 
 } // namespace ErrorPage
 
@@ -170,8 +201,6 @@ static int error_page_count = 0;
 static MemBuf error_stylesheet;
 
 static const char *errorFindHardText(err_type type);
-static ErrorDynamicPageInfo *errorDynamicPageInfoCreate(int id, const char *page_name);
-static void errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info);
 static IOCB errorSendComplete;
 
 /// \ingroup ErrorPageInternal
@@ -184,12 +213,6 @@ public:
 
     /// The template text data read from disk
     const char *text() { return textBuf.c_str(); }
-
-private:
-    virtual bool parse() override {
-        ErrorPage::ValidateCodes(text(), false, filename);
-        return true;
-    }
 };
 
 /// \ingroup ErrorPageInternal
@@ -206,16 +229,21 @@ int operator - (err_type const &anErr, err_type const &anErr2)
     return (int)anErr - (int)anErr2;
 }
 
-bool
-ErrorPage::IsDenyInfoUrl(const char *input)
+/// \return deny_info URL if the given page is a deny_info page with a URL
+/// \return nullptr otherwise
+static const char *
+ErrorPage::IsDenyInfoUri(const int page_id)
 {
-    const auto start = input[0];
-    return start == '3' || (start != '2' && start != '4' && start != '5' && strchr(input, ':'));
+    if (ERR_MAX <= page_id && page_id < error_page_count)
+        return ErrorDynamicPages.at(page_id - ERR_MAX)->uri; // may be nil
+    return nullptr;
 }
 
 void
 errorInitialize(void)
 {
+    using ErrorPage::ImportStaticErrorText;
+
     err_type i;
     const char *text;
     error_page_count = ERR_MAX + ErrorDynamicPages.size();
@@ -228,7 +256,8 @@ errorInitialize(void)
             /**\par
              * Index any hard-coded error text into defaults.
              */
-            error_text[i] = xstrdup(text);
+            static const SBuf builtIn("built-in");
+            ImportStaticErrorText(i, text, builtIn);
 
         } else if (i < ERR_MAX) {
             /**\par
@@ -240,7 +269,7 @@ errorInitialize(void)
             errTmpl.loadDefault();
 
             // ErrorPageFile::loadDefault always builds a template
-            error_text[i] = xstrdup(errTmpl.text());
+            ImportStaticErrorText(i, errTmpl.text(), errTmpl.filename);
         } else {
             /** \par
              * Index any unknown file names used by deny_info.
@@ -248,16 +277,15 @@ errorInitialize(void)
             ErrorDynamicPageInfo *info = ErrorDynamicPages.at(i - ERR_MAX);
             assert(info && info->id == i && info->page_name);
 
-            const char *pg = info->page_name;
-            if (info->page_redirect != Http::scNone)
-                pg = info->page_name +4;
-
-            if (strchr(pg, ':') == NULL) {
+            if (info->filename) {
                 /** But only if they are not redirection URL. */
-                ErrorPageFile errTmpl(pg, ERR_MAX);
+                ErrorPageFile errTmpl(info->filename, ERR_MAX);
                 errTmpl.loadDefault();
 
-                error_text[i] = xstrdup(errTmpl.text());
+                ImportStaticErrorText(i, errTmpl.text(), errTmpl.filename);
+            } else {
+                assert(info->uri);
+                ErrorPage::ValidateCodes(i, info->cfgLocation);
             }
         }
     }
@@ -289,7 +317,7 @@ errorClean(void)
     }
 
     while (!ErrorDynamicPages.empty()) {
-        errorDynamicPageInfoDestroy(ErrorDynamicPages.back());
+        delete ErrorDynamicPages.back();
         ErrorDynamicPages.pop_back();
     }
 
@@ -525,14 +553,41 @@ TemplateFile::loadFor(const HttpRequest *request)
     return loaded();
 }
 
-/// \ingroup ErrorPageInternal
-static ErrorDynamicPageInfo *
-errorDynamicPageInfoCreate(int id, const char *page_name)
+ErrorDynamicPageInfo::ErrorDynamicPageInfo(const int anId, const char *aName, const SBuf &aCfgLocation):
+    id(anId),
+    page_name(xstrdup(aName)),
+    uri(nullptr),
+    filename(nullptr),
+    cfgLocation(aCfgLocation),
+    page_redirect(static_cast<Http::StatusCode>(atoi(page_name)))
 {
-    ErrorDynamicPageInfo *info = new ErrorDynamicPageInfo;
-    info->id = id;
-    info->page_name = xstrdup(page_name);
-    info->page_redirect = static_cast<Http::StatusCode>(atoi(page_name));
+    const char *filenameOrUri = nullptr;
+    if (xisdigit(*page_name)) {
+        if (const char *statusCodeEnd = strchr(page_name, ':'))
+            filenameOrUri = statusCodeEnd + 1;
+    } else {
+        assert(!page_redirect);
+        filenameOrUri = page_name;
+    }
+
+    // Guessed uri, filename, or both values may be nil or malformed.
+    // They are validated later.
+    if (!page_redirect) {
+        if (filenameOrUri && strchr(filenameOrUri, ':')) // looks like a URL
+            uri = filenameOrUri;
+        else
+            filename = filenameOrUri;
+    }
+    else if (page_redirect/100 == 3) {
+        // redirects imply a URL
+        uri = filenameOrUri;
+    } else {
+        // non-redirects imply an error page name
+        filename = filenameOrUri;
+    }
+
+    const auto info = this; // source code change reduction hack
+    // TODO: Move and refactor to avoid self_destruct()s in reconfigure.
 
     /* WARNING on redirection status:
      * 2xx are permitted, but not documented officially.
@@ -565,17 +620,6 @@ errorDynamicPageInfoCreate(int id, const char *page_name)
         self_destruct();
     }
     // else okay.
-
-    return info;
-}
-
-/// \ingroup ErrorPageInternal
-static void
-errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info)
-{
-    assert(info);
-    safe_free(info->page_name);
-    delete info;
 }
 
 /// \ingroup ErrorPageInternal
@@ -596,15 +640,14 @@ errorPageId(const char *page_name)
 }
 
 err_type
-errorReservePageId(const char *page_name)
+errorReservePageId(const char *page_name, const SBuf &cfgLocation)
 {
-    ErrorDynamicPageInfo *info;
     int id = errorPageId(page_name);
 
     if (id == ERR_NONE) {
-        info = errorDynamicPageInfoCreate(ERR_MAX + ErrorDynamicPages.size(), page_name);
+        id = ERR_MAX + ErrorDynamicPages.size();
+        const auto info = new ErrorDynamicPageInfo(id, page_name, cfgLocation);
         ErrorDynamicPages.push_back(info);
-        id = info->id;
     }
 
     return (err_type)id;
@@ -1199,6 +1242,18 @@ ErrorState::compileLegacyCode(Build &build)
     build.input += 2;
 }
 
+void
+ErrorState::validate()
+{
+    if (const char *urlTemplate = ErrorPage::IsDenyInfoUri(page_id)) {
+        (void)compile(urlTemplate, true, true);
+    } else {
+        assert(page_id > ERR_NONE);
+        assert(page_id < error_page_count);
+        (void)compileBody(error_text[page_id], true);
+    }
+}
+
 HttpReply *
 ErrorState::BuildHttpReply()
 {
@@ -1206,7 +1261,7 @@ ErrorState::BuildHttpReply()
     const char *name = errorPageName(page_id);
     /* no LMT for error pages; error pages expire immediately */
 
-    if (ErrorPage::IsDenyInfoUrl(name)) {
+    if (const char *urlTemplate = ErrorPage::IsDenyInfoUri(page_id)) {
         /* Redirection */
         Http::StatusCode status = Http::scFound;
         // Use configured 3xx reply status if set.
@@ -1221,8 +1276,6 @@ ErrorState::BuildHttpReply()
         rep->setHeaders(status, NULL, "text/html;charset=utf-8", 0, 0, -1);
 
         if (request) {
-            // skip the "3xx:" status code (if any)
-            const char *urlTemplate = (name[0] == '3') ? name + 4 : name;
             auto location = compile(urlTemplate, true, true);
             rep->header.putStr(Http::HdrType::LOCATION, location.c_str());
         }
@@ -1334,15 +1387,20 @@ ErrorState::compileBody(const char *text, bool allowRecursion)
     return compile(text, false, allowRecursion);
 }
 
+/// replaces all legacy and logformat %codes in the given input
+/// \param input  the string to be converted
+/// \param building_deny_info_url  whether input is a deny_info parameter
+/// \param allowRecursion  whether to compile %codes which produce %codes
+/// \returns the given input with all %codes substituted
 SBuf
-ErrorState::compile(const char *text, bool building_deny_info_url, bool allowRecursion)
+ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRecursion)
 {
-    assert(text);
+    assert(input);
 
     Build build;
     build.building_deny_info_url = building_deny_info_url;
     build.allowRecursion = allowRecursion;
-    build.input = text;
+    build.input = input;
 
     auto blockStart = build.input;
     while (const auto letter = *build.input) {
@@ -1430,13 +1488,19 @@ ErrorPage::BuildErrorPrinter::print(std::ostream &os) const {
     return os;
 }
 
-void
-ErrorPage::ValidateCodes(const char *text, bool building_deny_info_url, const SBuf &inputLocation)
+static void
+ErrorPage::ImportStaticErrorText(const int page_id, const char *text, const SBuf &inputLocation)
+{
+    assert(!error_text[page_id]);
+    error_text[page_id] = xstrdup(text);
+    ValidateCodes(page_id, inputLocation);
+}
+
+static void
+ErrorPage::ValidateCodes(const int page_id, const SBuf &inputLocation)
 {
     AccessLogEntry::Pointer alp = new AccessLogEntry; // TODO: static?
-    ErrorState anErr(ERR_NONE, Http::scNone, nullptr, alp);
+    ErrorState anErr(err_type(page_id), Http::scNone, nullptr, alp);
     anErr.inputLocation = inputLocation;
-
-    const auto recursiveBuild = true;
-    (void)anErr.compile(text, building_deny_info_url, recursiveBuild);
+    anErr.validate();
 }
