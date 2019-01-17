@@ -81,6 +81,20 @@ class MemBuf;
 class StoreEntry;
 class wordlist;
 
+namespace ErrorPage {
+
+/// state and parameters shared by several ErrorState::compile*() methods
+class Build
+{
+public:
+    SBuf output; ///< compilation result
+    const char *input = nullptr; ///< template bytes that need to be compiled
+    bool building_deny_info_url = false; ///< whether we compile deny_info URI
+    bool allowRecursion = false; ///< whether top-level compile() calls are OK
+};
+
+} // namespace ErrorPage
+
 /// \ingroup ErrorPageAPI
 class ErrorState
 {
@@ -103,15 +117,13 @@ public:
     void detailError(int dCode) {detailCode = dCode;}
 
     /**
-     * Lowlevel method to convert the given template string and write it
-     * to a given MemBuf object.
-     * Throws on parse error
+     * replaces all legacy and logformat %codes in the given input
      * \param text            The string to be converted
-     * \param result          where to write output.
      * \param building_deny_info_url  Whether the text input is a deny info url
      * \param allowRecursion  Whether to convert codes which output may contain codes
+     * \returns the given input with all %code replaced
      */
-    void convertAndWriteTo(const char *text, MemBuf &result, bool building_deny_info_url, bool allowRecursion);
+    SBuf compile(const char *input, bool building_deny_info_url, bool allowRecursion);
 
     /// Checks if the text can be parsed correctly.
     static bool ParseCheck(const char *text, bool is_deny_info_url, const char *&err);
@@ -123,18 +135,13 @@ public:
     SBuf inputLocation;
 
 private:
-    /**
-     * Searches in  a string for the next formating code and return a pointer
-     * to it, or a pointer to the end of input string.
-     * Return always a non-nil value.
-     */
-    static const char *NextCode(const char *p);
+    typedef ErrorPage::Build Build;
 
     /**
      * Locates error page template to be used for this error
      * and constructs the HTML page content from it.
      */
-    MemBuf *BuildContent(void);
+    SBuf BuildContent();
 
     /**
      * Convert the given template string into textual output
@@ -143,13 +150,7 @@ private:
      * \param text            The string to be converted
      * \param allowRecursion  Whether to convert codes which output may contain codes
      */
-    MemBuf *ConvertText(const char *text, bool allowRecursion);
-
-    /**
-     * Generates the Location: header value for a deny_info error page
-     * to be used for this error.
-     */
-    void DenyInfoLocation(const char *name, HttpRequest *request, MemBuf &result);
+    SBuf compileText(const char *text, bool allowRecursion);
 
     /**
      * Map the Error page and deny_info template % codes into textual output.
@@ -161,22 +162,22 @@ private:
      * \param building_deny_info_url   Perform special deny_info actions, such as URL-encoding and token skipping.
      * \ allowRecursion   True if the codes which do recursions should converted
      */
-    const char *convert(const char *start, bool building_deny_info_url, bool allowRecursion);
+    void compileLegacyCode(Build &build);
 
     /// Handle the @Squid{%logformat_code} formatting code.
     /// On success updates 'start' to point after the @Squid{}
     /// formatting code and appends the generated string to 'result'.
     /// Throws on parse error.
-    void handleLogFormat(const char *&start, MemBuf &result);
+    void compileLogformatCode(Build &build);
 
-    /// React to a convertAndWriteTo() error, throwing if buildContext allows.
+    /// React to a compile() error, throwing if buildContext allows.
     /// \param msg description of what went wrong
     /// \param near approximate start of the problematic input
     void noteBuildError(const char *msg, const char *near) {
         noteBuildError_(msg, near, false);
     }
 
-    /// Note a convertAndWriteTo() error but do not throw for backwards
+    /// Note a compile() error but do not throw for backwards
     /// compatibility with older configurations that may have such errors.
     /// Should eventually be replaced with noteBuildError().
     /// \param msg description of what went wrong

@@ -795,8 +795,37 @@ ErrorState::Dump(MemBuf * mb)
 /// \ingroup ErrorPageInternal
 #define CVT_BUF_SZ 512
 
-const char *
-ErrorState::convert(const char *code, bool building_deny_info_url, bool allowRecursion)
+/// compile @Squid{%code} sequence containing a single logformat %code
+void
+ErrorState::compileLogformatCode(Build &build)
+{
+    assert(LogFormatStart.cmp(build.input, LogFormatStart.length()) == 0);
+
+    const auto logformat = build.input + LogFormatStart.length();
+    static MemBuf result;
+    result.reset();
+    if (const auto logformatLen = Format::Format::AssembleToken(logformat, result, al)) {
+        const auto closure = logformat + logformatLen;
+        if (*closure == '}') {
+            build.output.append(result.content(), result.contentSize());
+            build.input = closure + 1;
+            return;
+        }
+
+        noteBuildError("unterminated @Squid{ sequence", build.input);
+    } else {
+        noteBuildError("cannot parse logformat %code inside @Squid{}", logformat);
+    }
+
+    // we cannot recover reliably so stop interpreting the rest of input
+    const auto remainingSize = strlen(build.input);
+    build.output.append(build.input, remainingSize);
+    build.input += remainingSize;
+}
+
+/// compile a single-letter %code like %D
+void
+ErrorState::compileLegacyCode(Build &build)
 {
     static MemBuf mb;
     const char *p = NULL;   /* takes priority over mb if set */
@@ -806,7 +835,9 @@ ErrorState::convert(const char *code, bool building_deny_info_url, bool allowRec
 
     mb.reset();
 
-    const auto letter = code[1];
+    const auto &building_deny_info_url = build.building_deny_info_url; // a change reduction hack
+
+    const auto letter = build.input[1];
 
     switch (letter) {
 
@@ -846,7 +877,7 @@ ErrorState::convert(const char *code, bool building_deny_info_url, bool allowRec
         break;
 
     case 'D':
-        if (!allowRecursion)
+        if (!build.allowRecursion)
             p = "%D";  // if recursion is not allowed, do not convert
 #if USE_OPENSSL
         // currently only SSL error details implemented
@@ -854,9 +885,8 @@ ErrorState::convert(const char *code, bool building_deny_info_url, bool allowRec
             detail->useRequest(request.getRaw());
             const String &errDetail = detail->toString();
             if (errDetail.size() > 0) {
-                MemBuf *detail_mb  = ConvertText(errDetail.termedBuf(), false);
-                mb.append(detail_mb->content(), detail_mb->contentSize());
-                delete detail_mb;
+                const auto compiledDetail = compileText(errDetail.termedBuf(), false);
+                mb.append(compiledDetail.rawContent(), compiledDetail.length());
                 do_quote = 0;
             }
         }
@@ -1037,10 +1067,8 @@ ErrorState::convert(const char *code, bool building_deny_info_url, bool allowRec
         if (page_id != ERR_SQUID_SIGNATURE) {
             const int saved_id = page_id;
             page_id = ERR_SQUID_SIGNATURE;
-            MemBuf *sign_mb = BuildContent();
-            mb.append(sign_mb->content(), sign_mb->contentSize());
-            sign_mb->clean();
-            delete sign_mb;
+            const auto signature = BuildContent();
+            mb.append(signature.rawContent(), signature.length());
             page_id = saved_id;
             do_quote = 0;
         } else {
@@ -1126,12 +1154,12 @@ ErrorState::convert(const char *code, bool building_deny_info_url, bool allowRec
 
     default:
         if (building_deny_info_url)
-            bypassBuildErrorXXX("Unsupported deny_info %code", code);
+            bypassBuildErrorXXX("Unsupported deny_info %code", build.input);
         else if (letter != ';')
-            bypassBuildErrorXXX("Unsupported error page %code", code);
+            bypassBuildErrorXXX("Unsupported error page %code", build.input);
         // else too many "font-size: 100%;" template errors to report
 
-        mb.append(code, 2);
+        mb.append(build.input, 2);
         do_quote = 0;
         break;
     }
@@ -1149,20 +1177,9 @@ ErrorState::convert(const char *code, bool building_deny_info_url, bool allowRec
     if (building_deny_info_url && !no_urlescape)
         p = rfc1738_escape_part(p);
 
-    return p;
-}
-
-void
-ErrorState::DenyInfoLocation(const char *name, HttpRequest *, MemBuf &result)
-{
-    char const *m = name;
-
-    if (m[0] == '3')
-        m += 4; // skip "3xx:"
-
-    convertAndWriteTo(m, result, true, true);
-
-    assert((size_t)result.contentSize() == strlen(result.content()));
+    // TODO: Optimize by replacing mb with direct build.output usage.
+    build.output.append(p, strlen(p));
+    build.input += 2;
 }
 
 bool
@@ -1193,16 +1210,16 @@ ErrorState::BuildHttpReply()
         rep->setHeaders(status, NULL, "text/html;charset=utf-8", 0, 0, -1);
 
         if (request) {
-            MemBuf redirect_location;
-            redirect_location.init();
-            DenyInfoLocation(name, request.getRaw(), redirect_location);
-            httpHeaderPutStrf(&rep->header, Http::HdrType::LOCATION, "%s", redirect_location.content() );
+            // skip the "3xx:" status code (if any)
+            const char *urlTemplate = (name[0] == '3') ? name + 4 : name;
+            auto location = compile(urlTemplate, true, true);
+            rep->header.putStr(Http::HdrType::LOCATION, location.c_str());
         }
 
         httpHeaderPutStrf(&rep->header, Http::HdrType::X_SQUID_ERROR, "%d %s", httpStatus, "Access Denied");
     } else {
-        MemBuf *content = BuildContent();
-        rep->setHeaders(httpStatus, NULL, "text/html;charset=utf-8", content->contentSize(), 0, -1);
+        const auto body = BuildContent();
+        rep->setHeaders(httpStatus, NULL, "text/html;charset=utf-8", body.length(), 0, -1);
         /*
          * include some information for downstream caches. Implicit
          * replaceable content. This isn't quite sufficient. xerrno is not
@@ -1238,8 +1255,7 @@ ErrorState::BuildHttpReply()
                 rep->header.putStr(Http::HdrType::CONTENT_LANGUAGE, "en");
         }
 
-        rep->body.setMb(content);
-        /* do not memBufClean() or delete the content, it was absorbed by httpBody */
+        rep->body.set(body);
     }
 
     // Make sure error codes get back to the client side for logging and
@@ -1261,16 +1277,12 @@ ErrorState::BuildHttpReply()
     return rep;
 }
 
-MemBuf *
+SBuf
 ErrorState::BuildContent()
 {
-    const char *m = NULL;
-
     assert(page_id > ERR_NONE && page_id < error_page_count);
 
 #if USE_ERR_LOCALES
-    ErrorPageFile *localeTmpl = NULL;
-
     /** error_directory option in squid.conf overrides translations.
      * Custom errors are always found either in error_directory or the templates directory.
      * Otherwise locate the Accept-Language header
@@ -1279,12 +1291,12 @@ ErrorState::BuildContent()
         if (err_language && err_language != Config.errorDefaultLanguage)
             safe_free(err_language);
 
-        localeTmpl = new ErrorPageFile(err_type_str[page_id], static_cast<err_type>(page_id));
-        if (localeTmpl->loadFor(request.getRaw())) {
-            inputLocation = localeTmpl->filename;
-            m = localeTmpl->text();
-            assert(localeTmpl->language());
-            err_language = xstrdup(localeTmpl->language());
+        ErrorPageFile localeTmpl(err_type_str[page_id], static_cast<err_type>(page_id));
+        if (localeTmpl.loadFor(request.getRaw())) {
+            inputLocation = localeTmpl.filename;
+            assert(localeTmpl.language());
+            err_language = xstrdup(localeTmpl.language());
+            return compileText(localeTmpl.text(), true);
         }
     }
 #endif /* USE_ERR_LOCALES */
@@ -1293,95 +1305,51 @@ ErrorState::BuildContent()
      * If client-specific error templates are not enabled or available.
      * fall back to the old style squid.conf settings.
      */
-    if (!m) {
-        m = error_text[page_id];
 #if USE_ERR_LOCALES
-        if (!Config.errorDirectory)
-            err_language = Config.errorDefaultLanguage;
+    if (!Config.errorDirectory)
+        err_language = Config.errorDefaultLanguage;
 #endif
-        debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
-    }
-
-    MemBuf *result = ConvertText(m, true);
-#if USE_ERR_LOCALES
-    if (localeTmpl)
-        delete localeTmpl;
-#endif
-    return result;
+    debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
+    return compileText(error_text[page_id], true);
 }
 
-MemBuf *ErrorState::ConvertText(const char *text, bool allowRecursion)
+/// compile error page or error detail template (i.e. not deny_url)
+SBuf
+ErrorState::compileText(const char *text, bool allowRecursion)
 {
-    MemBuf *content = new MemBuf;
-    content->init();
-    convertAndWriteTo(text, *content, false, allowRecursion);
-    content->terminate();
-    assert((size_t)content->contentSize() == strlen(content->content()));
-    return content;
+    return compile(text, false, allowRecursion);
 }
 
-const char *
-ErrorState::NextCode(const char *p)
+SBuf
+ErrorState::compile(const char *text, bool building_deny_info_url, bool allowRecursion)
 {
-    assert(p);
-    do {
-        while (*p && *p != '%' && *p != '@') ++p;
-        if (*p == '@' && LogFormatStart.cmp(p, LogFormatStart.length()) != 0) {
-            ++p;
-            continue;
+    assert(text);
+
+    Build build;
+    build.building_deny_info_url = building_deny_info_url;
+    build.allowRecursion = allowRecursion;
+    build.input = text;
+
+    auto blockStart = build.input;
+    while (const auto letter = *build.input) {
+        if (letter == '%') {
+            build.output.append(blockStart, build.input - blockStart);
+            compileLegacyCode(build);
+            blockStart = build.input;
         }
-        return p;
-    } while (1);
-}
-
-void
-ErrorState::convertAndWriteTo(const char *text, MemBuf &result, bool building_deny_info_url, bool allowRecursion)
-{
-    const char *p;
-    const char *m = text;
-    assert(m);
-
-    while (*(p = NextCode(m))) {
-        result.append(m, p - m);
-        if (*p == '%') {
-            const char *t = convert(p++, building_deny_info_url, allowRecursion);
-            result.appendf("%s", t);
-            m = p + 1;
+        else if (letter == '@' && LogFormatStart.cmp(build.input, LogFormatStart.length()) == 0) {
+            build.output.append(blockStart, build.input - blockStart);
+            compileLogformatCode(build);
+            blockStart = build.input;
         } else {
-            assert(*p == '@');
-            handleLogFormat(p, result);
-            m = p;
+            ++build.input;
         }
     }
-
-    if (*m)
-        result.appendf("%s", m);   /* copy tail */
+    build.output.append(blockStart, build.input - blockStart);
+    return build.output;
 }
 
-void
-ErrorState::handleLogFormat(const char *&start, MemBuf &result)
-{
-    assert(LogFormatStart.cmp(start, LogFormatStart.length()) == 0);
-
-    const char *p = start + LogFormatStart.length();
-    if (int tokenBytes = Format::Format::AssembleToken(p, result, al)) {
-        p += tokenBytes;
-        if (*p == '}') {
-            start = p + 1;
-            return;
-        }
-
-        noteBuildError("unterminated @Squid{ sequence", start);
-    } else
-        noteBuildError("cannot parse logformat %code inside @Squid{}", p);
-
-    // Do not try to recover, stop interpreting the template
-    while (*p) ++p;
-    result.append(start, p - start);
-    start = p;
-}
-
-/// react to a convertAndWriteTo() error
+/// react to a compile() error
 /// \param msg description of what went wrong
 /// \param near approximate start of the problematic input
 /// \param forceBypass whether detection of this error was introduced late,
@@ -1455,8 +1423,6 @@ ErrorPage::ValidateCodes(const char *text, bool building_deny_info_url, const SB
     ErrorState anErr(ERR_NONE, Http::scNone, nullptr, alp);
     anErr.inputLocation = inputLocation;
 
-    MemBuf discardedContent; // TODO: static?
-    discardedContent.init();
     const auto recursiveBuild = true;
-    anErr.convertAndWriteTo(text, discardedContent, building_deny_info_url, recursiveBuild);
+    (void)anErr.compile(text, building_deny_info_url, recursiveBuild);
 }
