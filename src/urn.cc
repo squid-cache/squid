@@ -267,7 +267,6 @@ urnHandleReply(void *data, StoreIOBuffer result)
     url_entry *urls;
     url_entry *u;
     url_entry *min_u;
-    MemBuf *mb = NULL;
     ErrorState *err;
     int i;
     int urlcnt = 0;
@@ -352,8 +351,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
     min_u = urnFindMinRtt(urls, urnState->request->method, NULL);
     qsort(urls, urlcnt, sizeof(*urls), url_entry_sort);
     e->buffer();
-    mb = new MemBuf;
-    mb->init();
+    SBuf body;
+    SBuf *mb = &body; // diff reduction hack; TODO: Remove
     mb->appendf( "<TITLE>Select URL for %s</TITLE>\n"
                  "<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}--></STYLE>\n"
                  "<H2>Select URL for %s</H2>\n"
@@ -382,7 +381,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         "</ADDRESS>\n",
         APP_FULLNAME, getMyHostname());
     rep = new HttpReply;
-    rep->setHeaders(Http::scFound, NULL, "text/html", mb->contentSize(), 0, squid_curtime);
+    rep->setHeaders(Http::scFound, NULL, "text/html", mb->length(), 0, squid_curtime);
 
     if (urnState->flags.force_menu) {
         debugs(51, 3, "urnHandleReply: forcing menu");
@@ -390,8 +389,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         rep->header.putStr(Http::HdrType::LOCATION, min_u->url);
     }
 
-    rep->body.setMb(mb);
-    /* don't clean or delete mb; rep->body owns it now */
+    rep->body.set(body);
     e->replaceHttpReply(rep);
     e->complete();
 
@@ -401,7 +399,6 @@ urnHandleReply(void *data, StoreIOBuffer result)
     }
 
     safe_free(urls);
-    /* mb was absorbed in httpBodySet call, so we must not clean it */
     storeUnregister(urnState->sc, urlres_e, urnState);
 
     urnHandleReplyError(urnState, urlres_e);
