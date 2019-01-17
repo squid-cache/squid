@@ -113,7 +113,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
         return;
     }
 
-    if (ErrorState::IsDenyInfoUrl(t))
+    if (ErrorPage::IsDenyInfoUrl(t))
         ErrorPage::ValidateCodes(t, true, ToSBuf(ConfigParser::CurrentLocation()));
 
     AclDenyInfoList *A = new AclDenyInfoList(t);

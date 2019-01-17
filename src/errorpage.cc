@@ -196,6 +196,12 @@ int operator - (err_type const &anErr, err_type const &anErr2)
     return (int)anErr - (int)anErr2;
 }
 
+bool
+ErrorPage::IsDenyInfoUrl(const char *text)
+{
+    return text[0] == '3' || (text[0] != '2' && text[0] != '4' && text[0] != '5' && strchr(text, ':'));
+}
+
 void
 errorInitialize(void)
 {
@@ -885,7 +891,7 @@ ErrorState::compileLegacyCode(Build &build)
             detail->useRequest(request.getRaw());
             const String &errDetail = detail->toString();
             if (errDetail.size() > 0) {
-                const auto compiledDetail = compileText(errDetail.termedBuf(), false);
+                const auto compiledDetail = compileBody(errDetail.termedBuf(), false);
                 mb.append(compiledDetail.rawContent(), compiledDetail.length());
                 do_quote = 0;
             }
@@ -1067,7 +1073,7 @@ ErrorState::compileLegacyCode(Build &build)
         if (page_id != ERR_SQUID_SIGNATURE) {
             const int saved_id = page_id;
             page_id = ERR_SQUID_SIGNATURE;
-            const auto signature = BuildContent();
+            const auto signature = buildBody();
             mb.append(signature.rawContent(), signature.length());
             page_id = saved_id;
             do_quote = 0;
@@ -1182,12 +1188,6 @@ ErrorState::compileLegacyCode(Build &build)
     build.input += 2;
 }
 
-bool
-ErrorState::IsDenyInfoUrl(const char *text)
-{
-    return text[0] == '3' || (text[0] != '2' && text[0] != '4' && text[0] != '5' && strchr(text, ':'));
-}
-
 HttpReply *
 ErrorState::BuildHttpReply()
 {
@@ -1195,7 +1195,7 @@ ErrorState::BuildHttpReply()
     const char *name = errorPageName(page_id);
     /* no LMT for error pages; error pages expire immediately */
 
-    if (IsDenyInfoUrl(name)) {
+    if (ErrorPage::IsDenyInfoUrl(name)) {
         /* Redirection */
         Http::StatusCode status = Http::scFound;
         // Use configured 3xx reply status if set.
@@ -1218,7 +1218,7 @@ ErrorState::BuildHttpReply()
 
         httpHeaderPutStrf(&rep->header, Http::HdrType::X_SQUID_ERROR, "%d %s", httpStatus, "Access Denied");
     } else {
-        const auto body = BuildContent();
+        const auto body = buildBody();
         rep->setHeaders(httpStatus, NULL, "text/html;charset=utf-8", body.length(), 0, -1);
         /*
          * include some information for downstream caches. Implicit
@@ -1277,8 +1277,9 @@ ErrorState::BuildHttpReply()
     return rep;
 }
 
+/// locates the right error page template for this error and compiles it
 SBuf
-ErrorState::BuildContent()
+ErrorState::buildBody()
 {
     assert(page_id > ERR_NONE && page_id < error_page_count);
 
@@ -1296,7 +1297,7 @@ ErrorState::BuildContent()
             inputLocation = localeTmpl.filename;
             assert(localeTmpl.language());
             err_language = xstrdup(localeTmpl.language());
-            return compileText(localeTmpl.text(), true);
+            return compileBody(localeTmpl.text(), true);
         }
     }
 #endif /* USE_ERR_LOCALES */
@@ -1310,12 +1311,14 @@ ErrorState::BuildContent()
         err_language = Config.errorDefaultLanguage;
 #endif
     debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
-    return compileText(error_text[page_id], true);
+    return compileBody(error_text[page_id], true);
 }
 
-/// compile error page or error detail template (i.e. not deny_url)
+/// compiles error page or error detail template (i.e. anything but deny_url)
+/// * \param text  template to be compiled
+/// * \param allowRecursion  whether to compile %codes which produce %codes
 SBuf
-ErrorState::compileText(const char *text, bool allowRecursion)
+ErrorState::compileBody(const char *text, bool allowRecursion)
 {
     return compile(text, false, allowRecursion);
 }

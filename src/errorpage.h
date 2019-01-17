@@ -73,8 +73,7 @@ typedef void ERCB(int fd, void *, size_t);
    Z - Preformatted error message               x
  \endverbatim
  *
- * Also the squid logformat codes supported using the @Squid{%logformat_code}
- * syntax.
+ * Plus logformat %codes embedded using @Squid{%logformat_code} syntax.
  */
 
 class MemBuf;
@@ -116,20 +115,12 @@ public:
     /// set error type-specific detail code
     void detailError(int dCode) {detailCode = dCode;}
 
-    /**
-     * replaces all legacy and logformat %codes in the given input
-     * \param text            The string to be converted
-     * \param building_deny_info_url  Whether the text input is a deny info url
-     * \param allowRecursion  Whether to convert codes which output may contain codes
-     * \returns the given input with all %code replaced
-     */
+    /// replaces all legacy and logformat %codes in the given input
+    /// \param input  the string to be converted
+    /// \param building_deny_info_url  Whether input is a deny_info parameter
+    /// \param allowRecursion  whether to compile %codes which produce %codes
+    /// \returns the given input with all %code replaced
     SBuf compile(const char *input, bool building_deny_info_url, bool allowRecursion);
-
-    /// Checks if the text can be parsed correctly.
-    static bool ParseCheck(const char *text, bool is_deny_info_url, const char *&err);
-
-    /// True if the text is a URL deny info
-    static bool IsDenyInfoUrl(const char *text);
 
     /// the source of the error template (for reporting purposes)
     SBuf inputLocation;
@@ -137,37 +128,10 @@ public:
 private:
     typedef ErrorPage::Build Build;
 
-    /**
-     * Locates error page template to be used for this error
-     * and constructs the HTML page content from it.
-     */
-    SBuf BuildContent();
+    SBuf buildBody();
+    SBuf compileBody(const char *text, bool allowRecursion);
 
-    /**
-     * Convert the given template string into textual output
-     * Throws on parse error
-     *
-     * \param text            The string to be converted
-     * \param allowRecursion  Whether to convert codes which output may contain codes
-     */
-    SBuf compileText(const char *text, bool allowRecursion);
-
-    /**
-     * Map the Error page and deny_info template % codes into textual output.
-     *
-     * Several of the codes produce blocks of non-URL compatible results.
-     * When processing the deny_info location URL they will be skipped.
-     *
-     * \param token                    The token following % which need to be converted
-     * \param building_deny_info_url   Perform special deny_info actions, such as URL-encoding and token skipping.
-     * \ allowRecursion   True if the codes which do recursions should converted
-     */
     void compileLegacyCode(Build &build);
-
-    /// Handle the @Squid{%logformat_code} formatting code.
-    /// On success updates 'start' to point after the @Squid{}
-    /// formatting code and appends the generated string to 'result'.
-    /// Throws on parse error.
     void compileLogformatCode(Build &build);
 
     /// React to a compile() error, throwing if buildContext allows.
@@ -376,8 +340,11 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
 
 namespace ErrorPage {
 
-/// check loaded configuration text for %code errors
-void ValidateCodes(const char *text, bool building_deny_info_url, const SBuf &inputLocation);
+/// whether input looks like a deny_info redirect URL parameter
+bool IsDenyInfoUrl(const char *input);
+
+/// check input for %code errors
+void ValidateCodes(const char *input, bool building_deny_info_url, const SBuf &inputLocation);
 
 } // namespace ErrorPage
 
