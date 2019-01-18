@@ -442,9 +442,8 @@ Format::Token::parse(const char *def, Quoting *quoting)
             }
         }
 
-        if (type == LFT_NONE) {
-            throw TexcHere(SBuf().appendf("Can't parse configuration token: '%s'\n", def));
-        }
+        if (type == LFT_NONE)
+            throw TexcHere(ToSBuf("Unsupported %code: '", def, "'"));
 
         // when {arg} field is after the token (old external_acl_type token syntax)
         // but accept only if there was none before the token
