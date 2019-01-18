@@ -264,9 +264,6 @@ public:
     /// return true if the data loaded from disk without any problem
     bool loaded() const {return wasLoaded;}
 
-    /// loaded template (or an empty string)
-    const char *text() { return textBuf.c_str(); }
-
     /**
      * Load the page_name template from a file which  probably exist at:
      *  (a) admin specified custom directory (error_directory)
@@ -297,8 +294,11 @@ public:
     bool silent; ///< Whether to print error messages on cache.log file or not. It is user defined.
 
 protected:
-    /// post-processes the loaded template
+    /// post-process the loaded template
     virtual bool parse() { return true; }
+
+    /// recover from loadDefault() failure to load or parse() a template
+    virtual void setDefault() {}
 
     /**
      * Try to load the "page_name" template for a given language "lang"

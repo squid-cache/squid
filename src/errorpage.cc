@@ -203,6 +203,24 @@ static const char *errorFindHardText(err_type type);
 static IOCB errorSendComplete;
 
 /// \ingroup ErrorPageInternal
+/// manages an error page template
+class ErrorPageFile: public TemplateFile
+{
+public:
+    ErrorPageFile(const char *name, const err_type code) : TemplateFile(name, code) {}
+    virtual ~ErrorPageFile() override {}
+
+    /// The template text data read from disk
+    const char *text() { return textBuf.c_str(); }
+
+protected:
+    virtual void setDefault() override {
+        textBuf = "Internal Error: Missing Template ";
+        textBuf.append(templateName.termedBuf());
+    }
+};
+
+/// \ingroup ErrorPageInternal
 err_type &operator++ (err_type &anErr)
 {
     int tmp = (int)anErr;
@@ -252,7 +270,7 @@ errorInitialize(void)
              *  (a) default language translation directory (error_default_language)
              *  (b) admin specified custom directory (error_directory)
              */
-            TemplateFile errTmpl(err_type_str[i], i);
+            ErrorPageFile errTmpl(err_type_str[i], i);
             errTmpl.loadDefault();
             ImportStaticErrorText(i, errTmpl.text(), errTmpl.filename);
         } else {
@@ -264,7 +282,7 @@ errorInitialize(void)
 
             if (info->filename) {
                 /** But only if they are not redirection URL. */
-                TemplateFile errTmpl(info->filename, ERR_MAX);
+                ErrorPageFile errTmpl(info->filename, ERR_MAX);
                 errTmpl.loadDefault();
                 ImportStaticErrorText(i, errTmpl.text(), errTmpl.filename);
             } else {
@@ -278,7 +296,7 @@ errorInitialize(void)
 
     // look for and load stylesheet into global MemBuf for it.
     if (Config.errorStylesheet) {
-        TemplateFile tmpl("StylesSheet", ERR_MAX);
+        ErrorPageFile tmpl("StylesSheet", ERR_MAX);
         tmpl.loadFromFile(Config.errorStylesheet);
         error_stylesheet.appendf("%s",tmpl.text());
     }
@@ -362,9 +380,8 @@ TemplateFile::loadDefault()
         // TODO: on reconfigure reject all of the new configuration
         debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
         textBuf.clear();
-        textBuf.append("Internal Error: Missing Template ");
-        textBuf.append(templateName.termedBuf());
-        wasLoaded = parse();
+        setDefault();
+        wasLoaded = true;
     }
 
     return;
@@ -1340,7 +1357,7 @@ ErrorState::buildBody()
         if (err_language && err_language != Config.errorDefaultLanguage)
             safe_free(err_language);
 
-        TemplateFile localeTmpl(err_type_str[page_id], static_cast<err_type>(page_id));
+        ErrorPageFile localeTmpl(err_type_str[page_id], static_cast<err_type>(page_id));
         if (localeTmpl.loadFor(request.getRaw())) {
             inputLocation = localeTmpl.filename;
             assert(localeTmpl.language());
