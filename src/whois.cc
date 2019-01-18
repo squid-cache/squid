@@ -128,7 +128,7 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
                                                  CommIoCbPtrFun(whoisReadReply, this));
             comm_read(conn, aBuffer, BUFSIZ, call);
         } else {
-            auto err = new ErrorState(ERR_READ_ERROR, Http::scInternalServerError, fwd->request, fwd->al);
+            const auto err = new ErrorState(ERR_READ_ERROR, Http::scInternalServerError, fwd->request, fwd->al);
             err->xerrno = xerrno;
             fwd->fail(err);
             conn->close();

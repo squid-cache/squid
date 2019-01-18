@@ -333,7 +333,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
             if (page_id == ERR_NONE)
                 page_id = ERR_FORWARDING_DENIED;
 
-            auto anErr = new ErrorState(page_id, Http::scForbidden, request, al);
+            const auto anErr = new ErrorState(page_id, Http::scForbidden, request, al);
             errorAppendEntry(entry, anErr); // frees anErr
             return;
         }
@@ -352,7 +352,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
 
     if (shutting_down) {
         /* more yuck */
-        auto anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request, al);
+        const auto anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request, al);
         errorAppendEntry(entry, anErr); // frees anErr
         return;
     }
@@ -430,7 +430,7 @@ FwdState::useDestinations()
 
         debugs(17, 3, HERE << "Connection failed: " << entry->url());
         if (!err) {
-            auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request, al);
+            const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request, al);
             fail(anErr);
         } // else use actual error from last connection attempt
 
@@ -683,7 +683,7 @@ FwdState::retryOrBail()
     request->hier.stopPeerClock(false);
 
     if (self != NULL && !err && shutting_down && entry->isEmpty()) {
-        auto anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request, al);
+        const auto anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request, al);
         errorAppendEntry(entry, anErr);
     }
 
@@ -809,7 +809,7 @@ FwdState::connectTimeout(int fd)
     assert(fd == serverDestinations[0]->fd);
 
     if (entry->isEmpty()) {
-        auto anErr = new ErrorState(ERR_CONNECT_FAIL, Http::scGatewayTimeout, request, al);
+        const auto anErr = new ErrorState(ERR_CONNECT_FAIL, Http::scGatewayTimeout, request, al);
         anErr->xerrno = ETIMEDOUT;
         fail(anErr);
 
@@ -881,7 +881,7 @@ FwdState::connectStart()
     // origin server
     if (serverDestinations[0]->getPeer() && !serverDestinations[0]->getPeer()->options.originserver && request->flags.sslBumped) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
-        auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
+        const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
         fail(anErr);
         stopAndDestroy("SslBump misconfiguration");
         return;
@@ -1088,7 +1088,7 @@ FwdState::dispatch()
 
         default:
             debugs(17, DBG_IMPORTANT, "WARNING: Cannot retrieve '" << entry->url() << "'.");
-            auto anErr = new ErrorState(ERR_UNSUP_REQ, Http::scBadRequest, request, al);
+            const auto anErr = new ErrorState(ERR_UNSUP_REQ, Http::scBadRequest, request, al);
             fail(anErr);
             // Set the dont_retry flag because this is not a transient (network) error.
             flags.dont_retry = true;

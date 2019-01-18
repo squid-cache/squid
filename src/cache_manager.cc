@@ -308,7 +308,7 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
 
     Mgr::Command::Pointer cmd = ParseUrl(entry->url());
     if (!cmd) {
-        auto err = new ErrorState(ERR_INVALID_URL, Http::scNotFound, request, al);
+        const auto err = new ErrorState(ERR_INVALID_URL, Http::scNotFound, request, al);
         err->url = xstrdup(entry->url());
         errorAppendEntry(entry, err);
         entry->expires = squid_curtime;

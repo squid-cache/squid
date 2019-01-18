@@ -1038,7 +1038,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
     TunnelStateData *tunnelState = (TunnelStateData *)data;
 
     if (status != Comm::OK) {
-        auto err = new ErrorState(ERR_CONNECT_FAIL, Http::scServiceUnavailable, tunnelState->request.getRaw(), tunnelState->al);
+        const auto err = new ErrorState(ERR_CONNECT_FAIL, Http::scServiceUnavailable, tunnelState->request.getRaw(), tunnelState->al);
         err->xerrno = xerrno;
         // on timeout is this still:    err->xerrno = ETIMEDOUT;
         err->port = conn->remote.port();

@@ -2340,7 +2340,7 @@ ErrorState *
 clientBuildError(err_type page_id, Http::StatusCode status, char const *url,
                  Ip::Address &src_addr, HttpRequest * request, const AccessLogEntry::Pointer &al)
 {
-    auto err = new ErrorState(page_id, status, request, al);
+    const auto err = new ErrorState(page_id, status, request, al);
     err->src_addr = src_addr;
 
     if (url)

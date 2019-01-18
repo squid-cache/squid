@@ -790,7 +790,7 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, Comm
                                                  CommIoCbPtrFun(gopherReadReply, gopherState));
             comm_read(conn, buf, read_sz, call);
         } else {
-            auto err = new ErrorState(ERR_READ_ERROR, Http::scInternalServerError, gopherState->fwd->request, gopherState->fwd->al);
+            const auto err = new ErrorState(ERR_READ_ERROR, Http::scInternalServerError, gopherState->fwd->request, gopherState->fwd->al);
             err->xerrno = xerrno;
             gopherState->fwd->fail(err);
             gopherState->serverConn->close();
@@ -838,7 +838,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Com
     }
 
     if (errflag) {
-        auto err = new ErrorState(ERR_WRITE_ERROR, Http::scServiceUnavailable, gopherState->fwd->request, gopherState->fwd->al);
+        const auto err = new ErrorState(ERR_WRITE_ERROR, Http::scServiceUnavailable, gopherState->fwd->request, gopherState->fwd->al);
         err->xerrno = xerrno;
         err->port = gopherState->fwd->request->url.port();
         err->url = xstrdup(entry->url());

@@ -2437,7 +2437,7 @@ ftpFail(Ftp::Gateway *ftpState)
     }
 
     Http::StatusCode sc = ftpState->failedHttpStatus(error_code);
-    auto ftperr = new ErrorState(error_code, sc, ftpState->fwd->request, ftpState->fwd->al);
+    const auto ftperr = new ErrorState(error_code, sc, ftpState->fwd->request, ftpState->fwd->al);
     ftpState->failed(error_code, code, ftperr);
     ftperr->detailError(code);
     HttpReply *newrep = ftperr->BuildHttpReply();

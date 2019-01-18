@@ -856,7 +856,7 @@ Client::handledEarlyAdaptationAbort()
 {
     if (entry->isEmpty()) {
         debugs(11,8, "adaptation failure with an empty entry: " << *entry);
-        auto err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, request.getRaw(), fwd->al);
+        const auto err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, request.getRaw(), fwd->al);
         err->detailError(ERR_DETAIL_ICAP_RESPMOD_EARLY);
         fwd->fail(err);
         fwd->dontRetry(true);
@@ -893,7 +893,7 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
     if (page_id == ERR_NONE)
         page_id = ERR_ACCESS_DENIED;
 
-    auto err = new ErrorState(page_id, Http::scForbidden, request.getRaw(), fwd->al);
+    const auto err = new ErrorState(page_id, Http::scForbidden, request.getRaw(), fwd->al);
     err->detailError(ERR_DETAIL_RESPMOD_BLOCK_EARLY);
     fwd->fail(err);
     fwd->dontRetry(true);
@@ -932,7 +932,7 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
 void
 Client::sendBodyIsTooLargeError()
 {
-    auto err = new ErrorState(ERR_TOO_BIG, Http::scForbidden, request.getRaw(), fwd->al);
+    const auto err = new ErrorState(ERR_TOO_BIG, Http::scForbidden, request.getRaw(), fwd->al);
     fwd->fail(err);
     fwd->dontRetry(true);
     abortOnData("Virgin body too large.");

@@ -163,7 +163,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
 
     if (!urlres_r) {
         debugs(52, 3, "Bad uri-res URL " << local_urlres);
-        auto err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, r, ale);
+        const auto err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, r, ale);
         err->url = xstrdup(local_urlres);
         errorAppendEntry(entry, err);
         return;
