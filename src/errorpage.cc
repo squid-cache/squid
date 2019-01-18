@@ -135,9 +135,8 @@ operator <<(std::ostream &os, const BuildErrorPrinter &context)
 
 static const char *IsDenyInfoUri(const int page_id);
 
-/// check input for %code errors
 static void ImportStaticErrorText(const int page_id, const char *text, const SBuf &inputLocation);
-static void ValidateCodes(const int page_id, const SBuf &inputLocation);
+static void ValidateStaticError(const int page_id, const SBuf &inputLocation);
 
 } // namespace ErrorPage
 
@@ -255,8 +254,6 @@ errorInitialize(void)
              */
             TemplateFile errTmpl(err_type_str[i], i);
             errTmpl.loadDefault();
-
-            // TemplateFile::loadDefault always builds a template
             ImportStaticErrorText(i, errTmpl.text(), errTmpl.filename);
         } else {
             /** \par
@@ -269,7 +266,6 @@ errorInitialize(void)
                 /** But only if they are not redirection URL. */
                 TemplateFile errTmpl(info->filename, ERR_MAX);
                 errTmpl.loadDefault();
-
                 ImportStaticErrorText(i, errTmpl.text(), errTmpl.filename);
             } else {
                 assert(info->uri);
@@ -1476,16 +1472,18 @@ ErrorPage::BuildErrorPrinter::print(std::ostream &os) const {
     return os;
 }
 
+/// add error page template to the global index
 static void
 ErrorPage::ImportStaticErrorText(const int page_id, const char *text, const SBuf &inputLocation)
 {
     assert(!error_text[page_id]);
     error_text[page_id] = xstrdup(text);
-    ValidateCodes(page_id, inputLocation);
+    ValidateStaticError(page_id, inputLocation);
 }
 
+/// validate static error page
 static void
-ErrorPage::ValidateCodes(const int page_id, const SBuf &inputLocation)
+ErrorPage::ValidateStaticError(const int page_id, const SBuf &inputLocation)
 {
     ErrorState anErr(err_type(page_id), Http::scNone, nullptr, nullptr);
     anErr.inputLocation = inputLocation;
