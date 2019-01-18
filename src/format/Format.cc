@@ -101,7 +101,7 @@ Format::Format::parse(const char *def)
 }
 
 int
-Format::Format::AssembleToken(const char *token, MemBuf &mb, const AccessLogEntryPointer &al)
+Format::AssembleOne(const char *token, MemBuf &mb, const AccessLogEntryPointer &al)
 {
     if (*token != '%')
         return 0;

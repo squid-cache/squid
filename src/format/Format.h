@@ -56,14 +56,14 @@ public:
     /// dump this whole list of formats into the provided StoreEntry
     void dump(StoreEntry * entry, const char *directiveName, bool eol = true) const;
 
-    /// assemble a single logformat code
-    /// \return true on success, false otherwise
-    static int AssembleToken(const char *token, MemBuf &mb, const AccessLogEntryPointer &al);
-
     char *name;
     Token *format;
     Format *next;
 };
+
+/// compile a single logformat %code expression into the given buffer
+/// \return the length of the %code expression (or zero on errors)s
+int AssembleOne(const char *start, MemBuf &buf, const AccessLogEntryPointer &al);
 
 } // namespace Format
 

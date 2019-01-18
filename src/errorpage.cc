@@ -60,7 +60,7 @@
 /// \ingroup ErrorPageInternal
 CBDATA_CLASS_INIT(ErrorState);
 
-const SBuf ErrorState::LogFormatStart("@Squid{");
+const SBuf ErrorState::LogformatMagic("@Squid{");
 
 /* local types */
 
@@ -675,11 +675,12 @@ ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const Acce
     return new ErrorState(type, status, request.getRaw(), al);
 }
 
-ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, const AccessLogEntry::Pointer &alp) :
+ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, const AccessLogEntry::Pointer &anAle) :
     type(t),
     page_id(t),
     httpStatus(status),
-    callback(nullptr)
+    callback(nullptr),
+    al(anAle)
 {
     if (page_id >= ERR_MAX && ErrorDynamicPages[page_id - ERR_MAX]->page_redirect != Http::scNone)
         httpStatus = ErrorDynamicPages[page_id - ERR_MAX]->page_redirect;
@@ -688,8 +689,6 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, c
         request = req;
         src_addr = req->client_addr;
     }
-
-    al = alp;
 }
 
 void
@@ -860,12 +859,12 @@ ErrorState::Dump(MemBuf * mb)
 void
 ErrorState::compileLogformatCode(Build &build)
 {
-    assert(LogFormatStart.cmp(build.input, LogFormatStart.length()) == 0);
+    assert(LogformatMagic.cmp(build.input, LogformatMagic.length()) == 0);
 
-    const auto logformat = build.input + LogFormatStart.length();
+    const auto logformat = build.input + LogformatMagic.length();
     static MemBuf result;
     result.reset();
-    if (const auto logformatLen = Format::Format::AssembleToken(logformat, result, al)) {
+    if (const auto logformatLen = Format::AssembleOne(logformat, result, al)) {
         const auto closure = logformat + logformatLen;
         if (*closure == '}') {
             build.output.append(result.content(), result.contentSize());
@@ -1246,7 +1245,7 @@ ErrorState::compileLegacyCode(Build &build)
 void
 ErrorState::validate()
 {
-    if (const char *urlTemplate = ErrorPage::IsDenyInfoUri(page_id)) {
+    if (const auto urlTemplate = ErrorPage::IsDenyInfoUri(page_id)) {
         (void)compile(urlTemplate, true, true);
     } else {
         assert(page_id > ERR_NONE);
@@ -1262,7 +1261,7 @@ ErrorState::BuildHttpReply()
     const char *name = errorPageName(page_id);
     /* no LMT for error pages; error pages expire immediately */
 
-    if (const char *urlTemplate = ErrorPage::IsDenyInfoUri(page_id)) {
+    if (const auto urlTemplate = ErrorPage::IsDenyInfoUri(page_id)) {
         /* Redirection */
         Http::StatusCode status = Http::scFound;
         // Use configured 3xx reply status if set.
@@ -1380,17 +1379,17 @@ ErrorState::buildBody()
 }
 
 /// compiles error page or error detail template (i.e. anything but deny_url)
-/// * \param text  template to be compiled
+/// * \param input  the template text to be compiled
 /// * \param allowRecursion  whether to compile %codes which produce %codes
 SBuf
-ErrorState::compileBody(const char *text, bool allowRecursion)
+ErrorState::compileBody(const char *input, bool allowRecursion)
 {
-    return compile(text, false, allowRecursion);
+    return compile(input, false, allowRecursion);
 }
 
 /// replaces all legacy and logformat %codes in the given input
-/// \param input  the string to be converted
-/// \param building_deny_info_url  whether input is a deny_info parameter
+/// \param input  the template text to be converted
+/// \param building_deny_info_url  whether input is a deny_info URL parameter
 /// \param allowRecursion  whether to compile %codes which produce %codes
 /// \returns the given input with all %codes substituted
 SBuf
@@ -1410,7 +1409,7 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
             compileLegacyCode(build);
             blockStart = build.input;
         }
-        else if (letter == '@' && LogFormatStart.cmp(build.input, LogFormatStart.length()) == 0) {
+        else if (letter == '@' && LogformatMagic.cmp(build.input, LogformatMagic.length()) == 0) {
             build.output.append(blockStart, build.input - blockStart);
             compileLogformatCode(build);
             blockStart = build.input;
@@ -1423,9 +1422,9 @@ ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRe
 }
 
 /// react to a compile() error
-/// \param msg description of what went wrong
-/// \param near approximate start of the problematic input
-/// \param forceBypass whether detection of this error was introduced late,
+/// \param msg  description of what went wrong
+/// \param near  approximate start of the problematic input
+/// \param  forceBypass whether detection of this error was introduced late,
 /// after old configurations containing this error could have been
 /// successfully validated and deployed (i.e. the admin may not be
 /// able to fix this newly detected but old problem quickly)

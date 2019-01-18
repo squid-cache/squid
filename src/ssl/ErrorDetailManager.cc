@@ -191,9 +191,9 @@ Ssl::ErrorDetailFile::parse()
     if (!theDetails)
         return false;
 
-    textBuf.append("\n\n");
+    textBuf.append("\n\n"); // ensure detailEntryEnd() finds the last entry
 
-    while (size_t size = detailEntryEnd(textBuf.rawContent(), textBuf.length())) {
+    while (const auto size = detailEntryEnd(textBuf.rawContent(), textBuf.length())) {
         const char *s = textBuf.c_str();
         const char *e = s + size;
 

@@ -176,18 +176,19 @@ public:
     char *request_hdrs = nullptr;
     char *err_msg = nullptr; /* Preformatted error message from the cache */
 
+    AccessLogEntryPointer al; ///< transaction details (or nil)
+
 #if USE_OPENSSL
     Ssl::ErrorDetail *detail = nullptr;
 #endif
     /// type-specific detail about the transaction error;
     /// overwrites xerrno; overwritten by detail, if any.
     int detailCode = ERR_DETAIL_NONE;
-    AccessLogEntryPointer al;
 
 private:
     void noteBuildError_(const char *msg, const char *near, const bool forceBypass);
 
-    static const SBuf LogFormatStart;
+    static const SBuf LogformatMagic; ///< marks each embedded logformat entry
 };
 
 /**
@@ -269,6 +270,7 @@ public:
      *  (a) admin specified custom directory (error_directory)
      *  (b) default language translation directory (error_default_language)
      *  (c) English sub-directory where errors should ALWAYS exist
+     * If all of the above fail, setDefault() is called.
      */
     void loadDefault();
 
@@ -307,7 +309,7 @@ protected:
      */
     bool tryLoadTemplate(const char *lang);
 
-    SBuf textBuf; ///< A Buffer to store the template
+    SBuf textBuf; ///< loaded template text
     bool wasLoaded; ///< True if the template data read from disk without any problem
     String errLanguage; ///< The error language of the template.
     String templateName; ///< The name of the template
