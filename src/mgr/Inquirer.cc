@@ -77,8 +77,7 @@ Mgr::Inquirer::start()
         const char *url = aggrAction->command().params.httpUri.termedBuf();
         const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIpc);
         HttpRequest *req = HttpRequest::FromUrl(url, mx);
-        AccessLogEntry::Pointer nilAl;
-        ErrorState err(ERR_INVALID_URL, Http::scNotFound, req, nilAl);
+        ErrorState err(ERR_INVALID_URL, Http::scNotFound, req, nullptr);
         std::unique_ptr<HttpReply> reply(err.BuildHttpReply());
         replyBuf.reset(reply->pack());
     } else {

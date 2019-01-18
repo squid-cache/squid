@@ -16,7 +16,7 @@
 class HttpRequest;
 class StoreEntry;
 
-void urnStart(HttpRequest *, StoreEntry *, const AccessLogEntryPointer &);
+void urnStart(HttpRequest *, StoreEntry *, const AccessLogEntryPointer &ale);
 
 #endif /* SQUID_URN_H_ */
 

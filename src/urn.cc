@@ -48,7 +48,7 @@ public:
     StoreEntry *urlres_e = nullptr;
     HttpRequest::Pointer request;
     HttpRequest::Pointer urlres_r;
-    AccessLogEntry::Pointer ale; ///< master transaction summary
+    AccessLogEntry::Pointer ale; ///< details of the requesting transaction
 
     struct {
         bool force_menu = false;

@@ -53,7 +53,7 @@ private:
     StoreEntry* entry; ///< Store entry expecting the response
     Comm::ConnectionPointer conn; ///< HTTP client connection descriptor
     AsyncCall::Pointer closer; ///< comm_close handler for the HTTP connection
-    AccessLogEntryPointer al; ///< info for the future access.log entry
+    AccessLogEntryPointer al; ///< more transaction details
 };
 
 } // namespace Mgr

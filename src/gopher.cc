@@ -838,8 +838,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *, size_t size, Com
     }
 
     if (errflag) {
-        ErrorState *err;
-        err = new ErrorState(ERR_WRITE_ERROR, Http::scServiceUnavailable, gopherState->fwd->request, gopherState->fwd->al);
+        auto err = new ErrorState(ERR_WRITE_ERROR, Http::scServiceUnavailable, gopherState->fwd->request, gopherState->fwd->al);
         err->xerrno = xerrno;
         err->port = gopherState->fwd->request->url.port();
         err->url = xstrdup(entry->url());

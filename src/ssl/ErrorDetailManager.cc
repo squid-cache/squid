@@ -194,8 +194,8 @@ Ssl::ErrorDetailFile::parse()
     textBuf.append("\n\n"); // ensure detailEntryEnd() finds the last entry
 
     while (const auto size = detailEntryEnd(textBuf.rawContent(), textBuf.length())) {
-        const char *s = textBuf.c_str();
-        const char *e = s + size;
+        auto *s = textBuf.c_str();
+        const auto e = s + size;
 
         //ignore spaces, new lines and comment lines (starting with #) at the beggining
         for (; (*s == '\n' || *s == ' '  || *s == '\t' || *s == '#')  && s < e; ++s) {
@@ -255,7 +255,7 @@ Ssl::ErrorDetailFile::parse()
 
         textBuf.consume(size);
     }
-    debugs(83, 9, "unparsed data size: " << textBuf.length() << " Content: " << textBuf.c_str());
+    debugs(83, 9, Raw("unparsed data", textBuf.rawContent(), textBuf.length()));
     return true;
 }
 
