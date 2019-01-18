@@ -44,7 +44,6 @@ public:
     /** parses a single token. Returns the token length in characters,
      * and fills in this item with the token information.
      * def is for sure null-terminated.
-     * Throws a TextException on parse error
      */
     int parse(const char *def, enum Quoting *quote);
 
