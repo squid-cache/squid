@@ -62,7 +62,7 @@ public:
 };
 
 /// compile a single logformat %code expression into the given buffer
-/// \return the length of the %code expression (or zero on errors)s
+/// \return the length of the parsed %code expression
 int AssembleOne(const char *start, MemBuf &buf, const AccessLogEntryPointer &al);
 
 } // namespace Format

@@ -861,20 +861,29 @@ ErrorState::compileLogformatCode(Build &build)
 {
     assert(LogformatMagic.cmp(build.input, LogformatMagic.length()) == 0);
 
-    const auto logformat = build.input + LogformatMagic.length();
-    static MemBuf result;
-    result.reset();
-    if (const auto logformatLen = Format::AssembleOne(logformat, result, al)) {
-        const auto closure = logformat + logformatLen;
-        if (*closure == '}') {
-            build.output.append(result.content(), result.contentSize());
-            build.input = closure + 1;
-            return;
-        }
+    try {
+        const auto logformat = build.input + LogformatMagic.length();
 
-        noteBuildError("unterminated @Squid{ sequence", build.input);
-    } else {
-        noteBuildError("cannot parse logformat %code inside @Squid{}", logformat);
+        // Logformat supports undocumented "external" encoding specifications
+        // like [%>h] or "%<a". To preserve the possibility of extending
+        // @Squid{} syntax to non-logformat sequences, we require logformat
+        // sequences to start with '%'. This restriction does not limit
+        // logformat quoting abilities. TODO: Deprecate "external" encoding?
+        if (*logformat != '%')
+            throw TexcHere("logformat expressions that do not start with % are not supported");
+
+        static MemBuf result;
+        result.reset();
+        const auto logformatLen = Format::AssembleOne(logformat, result, al);
+        assert(logformatLen > 0);
+        const auto closure = logformat + logformatLen;
+        if (*closure != '}')
+            throw TexcHere("Missing closing brace (})");
+        build.output.append(result.content(), result.contentSize());
+        build.input = closure + 1;
+        return;
+    } catch (...) {
+        noteBuildError("Bad @Squid{logformat} sequence", build.input);
     }
 
     // we cannot recover reliably so stop interpreting the rest of input
@@ -1484,6 +1493,12 @@ ErrorPage::BuildErrorPrinter::print(std::ostream &os) const {
     } else {
         os << near;
     }
+
+    // XXX: We should not be converting (inner) exception to text if we are
+    // going to throw again. See "add arbitrary (re)thrower-supplied details"
+    // TODO in TextException.h for a long-term in-catcher solution.
+    if (std::current_exception())
+        os << "\n    additional info: " << CurrentException;
 
     return os;
 }

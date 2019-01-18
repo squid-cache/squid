@@ -103,27 +103,17 @@ Format::Format::parse(const char *def)
 int
 Format::AssembleOne(const char *token, MemBuf &mb, const AccessLogEntryPointer &al)
 {
-    if (*token != '%')
-        return 0;
-
     Token tkn;
     enum Quoting quote = LOG_QUOTE_NONE;
-    int tokenSize;
-    try {
-        if ((tokenSize = tkn.parse(token, &quote))) {
-            if (al != nullptr) {
-                Format fmt("SimpleToken");
-                fmt.format = &tkn;
-                fmt.assemble(mb, al, 0);
-                fmt.format = nullptr;
-            } else
-                mb.append("-", 1);
-        }
-    } catch (...) {
-        debugs(46, 5, "Unknown token: " << token);
-        tokenSize = 0;
-    }
-
+    const auto tokenSize = tkn.parse(token, &quote);
+    assert(tokenSize > 0);
+    if (al != nullptr) {
+        Format fmt("SimpleToken");
+        fmt.format = &tkn;
+        fmt.assemble(mb, al, 0);
+        fmt.format = nullptr;
+    } else
+        mb.append("-", 1);
     return tokenSize;
 }
 
