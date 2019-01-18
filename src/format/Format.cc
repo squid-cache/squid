@@ -82,19 +82,14 @@ Format::Format::parse(const char *def)
      * token but it can be an escaped sequence), or a string. */
     cur = def;
     eos = def + strlen(def);
-    try {
-        format = new_lt = last_lt = new Token;
-        cur += new_lt->parse(cur, &quote);
+    format = new_lt = last_lt = new Token;
+    cur += new_lt->parse(cur, &quote);
 
-        while (cur < eos) {
-            new_lt = new Token;
-            last_lt->next = new_lt;
-            last_lt = new_lt;
-            cur += new_lt->parse(cur, &quote);
-        }
-    } catch (const std::exception &ex) {
-        debugs(46, DBG_CRITICAL, ex.what());
-        return false;
+    while (cur < eos) {
+        new_lt = new Token;
+        last_lt->next = new_lt;
+        last_lt = new_lt;
+        cur += new_lt->parse(cur, &quote);
     }
 
     return true;
