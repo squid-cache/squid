@@ -100,7 +100,7 @@ Format::Format::parse(const char *def)
     return true;
 }
 
-int
+size_t
 Format::AssembleOne(const char *token, MemBuf &mb, const AccessLogEntryPointer &al)
 {
     Token tkn;
@@ -114,7 +114,7 @@ Format::AssembleOne(const char *token, MemBuf &mb, const AccessLogEntryPointer &
         fmt.format = nullptr;
     } else
         mb.append("-", 1);
-    return tokenSize;
+    return static_cast<size_t>(tokenSize);
 }
 
 void

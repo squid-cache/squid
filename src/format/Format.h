@@ -61,9 +61,11 @@ public:
     Format *next;
 };
 
-/// compile a single logformat %code expression into the given buffer
+/// Compiles a single logformat %code expression into the given buffer.
+/// Ignores any input characters after the expression.
+/// \param start  where the logformat expression begins
 /// \return the length of the parsed %code expression
-int AssembleOne(const char *start, MemBuf &buf, const AccessLogEntryPointer &al);
+size_t AssembleOne(const char *start, MemBuf &buf, const AccessLogEntryPointer &al);
 
 } // namespace Format
 
