@@ -15,10 +15,11 @@
 #include "comm/forward.h"
 #include "err_detail_type.h"
 #include "err_type.h"
-#include "log/forward.h"
 #include "http/forward.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
+#include "log/forward.h"
+#include "sbuf/SBuf.h"
 #include "SquidString.h"
 /* auth/UserRequest.h is empty unless USE_AUTH is defined */
 #include "auth/UserRequest.h"
