@@ -211,12 +211,12 @@ public:
     virtual ~ErrorPageFile() override {}
 
     /// The template text data read from disk
-    const char *text() { return textBuf.c_str(); }
+    const char *text() { return template_.c_str(); }
 
 protected:
     virtual void setDefault() override {
-        textBuf = "Internal Error: Missing Template ";
-        textBuf.append(templateName.termedBuf());
+        template_ = "Internal Error: Missing Template ";
+        template_.append(templateName.termedBuf());
     }
 };
 
@@ -379,7 +379,7 @@ TemplateFile::loadDefault()
     if (!loaded()) {
         // TODO: on reconfigure reject all of the new configuration
         debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
-        textBuf.clear();
+        template_.clear();
         setDefault();
         wasLoaded = true;
     }
@@ -434,9 +434,9 @@ TemplateFile::loadFromFile(const char *path)
         return wasLoaded;
     }
 
-    textBuf.clear();
+    template_.clear();
     while ((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
-        textBuf.append(buf, len);
+        template_.append(buf, len);
     }
 
     if (len < 0) {

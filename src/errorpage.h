@@ -309,7 +309,7 @@ protected:
      */
     bool tryLoadTemplate(const char *lang);
 
-    SBuf textBuf; ///< loaded template text
+    SBuf template_; ///< raw template contents
     bool wasLoaded; ///< True if the template data read from disk without any problem
     String errLanguage; ///< The error language of the template.
     String templateName; ///< The name of the template

@@ -191,10 +191,11 @@ Ssl::ErrorDetailFile::parse()
     if (!theDetails)
         return false;
 
-    textBuf.append("\n\n"); // ensure detailEntryEnd() finds the last entry
+    auto buf = template_;
+    buf.append("\n\n"); // ensure detailEntryEnd() finds the last entry
 
-    while (const auto size = detailEntryEnd(textBuf.rawContent(), textBuf.length())) {
-        auto *s = textBuf.c_str();
+    while (const auto size = detailEntryEnd(buf.rawContent(), buf.length())) {
+        auto *s = buf.c_str();
         const auto e = s + size;
 
         //ignore spaces, new lines and comment lines (starting with #) at the beggining
@@ -253,9 +254,9 @@ Ssl::ErrorDetailFile::parse()
 
         }// else {only spaces and black lines; just ignore}
 
-        textBuf.consume(size);
+        buf.consume(size);
     }
-    debugs(83, 9, Raw("unparsed data", textBuf.rawContent(), textBuf.length()));
+    debugs(83, 9, Raw("unparsed data", buf.rawContent(), buf.length()));
     return true;
 }
 
