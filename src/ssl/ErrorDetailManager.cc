@@ -36,7 +36,7 @@ public:
 
 private:
     ErrorDetailsList::Pointer  theDetails;
-    virtual bool parse();
+    virtual bool parse() override;
 };
 }// namespace Ssl
 

@@ -383,8 +383,6 @@ TemplateFile::loadDefault()
         setDefault();
         wasLoaded = true;
     }
-
-    return;
 }
 
 bool
@@ -1516,6 +1514,11 @@ ErrorPage::ImportStaticErrorText(const int page_id, const char *text, const SBuf
 static void
 ErrorPage::ValidateStaticError(const int page_id, const SBuf &inputLocation)
 {
+    // Supplying nil ALE pointer limits validation to logformat %code
+    // recognition by Format::Token::parse(). This is probably desirable
+    // because actual %code assembly is slow and should not affect validation
+    // when our ALE cannot have any real data (this code is not associated
+    // with any real transaction).
     ErrorState anErr(err_type(page_id), Http::scNone, nullptr, nullptr);
     anErr.inputLocation = inputLocation;
     anErr.validate();
