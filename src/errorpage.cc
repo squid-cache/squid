@@ -1523,3 +1523,4 @@ ErrorPage::ValidateStaticError(const int page_id, const SBuf &inputLocation)
     anErr.inputLocation = inputLocation;
     anErr.validate();
 }
+
