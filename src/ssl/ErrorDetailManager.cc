@@ -194,8 +194,8 @@ Ssl::ErrorDetailFile::parse()
     textBuf.append("\n\n");
 
     while (size_t size = detailEntryEnd(textBuf.rawContent(), textBuf.length())) {
-        const char *s = textBuf.rawContent();
-        const char *e = textBuf.rawContent() + size;
+        const char *s = textBuf.c_str();
+        const char *e = s + size;
 
         //ignore spaces, new lines and comment lines (starting with #) at the beggining
         for (; (*s == '\n' || *s == ' '  || *s == '\t' || *s == '#')  && s < e; ++s) {
