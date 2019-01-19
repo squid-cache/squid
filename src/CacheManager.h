@@ -43,7 +43,7 @@ public:
     Mgr::Action::Pointer createRequestedAction(const Mgr::ActionParams &);
     const Menu& menu() const { return menu_; }
 
-    void Start(const Comm::ConnectionPointer &client, HttpRequest * request, StoreEntry * entry, const AccessLogEntryPointer &);
+    void start(const Comm::ConnectionPointer &client, HttpRequest *request, StoreEntry *entry, const AccessLogEntryPointer &ale);
 
     static CacheManager* GetInstance();
     const char *ActionProtection(const Mgr::ActionProfilePointer &profile);

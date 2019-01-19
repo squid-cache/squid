@@ -367,7 +367,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
 
     case AnyP::PROTO_CACHE_OBJECT:
         debugs(17, 2, "calling CacheManager due to request scheme " << request->url.getScheme());
-        CacheManager::GetInstance()->Start(clientConn, request, entry, al);
+        CacheManager::GetInstance()->start(clientConn, request, entry, al);
         return;
 
     case AnyP::PROTO_URN:

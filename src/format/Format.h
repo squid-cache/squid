@@ -65,7 +65,7 @@ public:
 /// Ignores any input characters after the expression.
 /// \param start  where the logformat expression begins
 /// \return the length of the parsed %code expression
-size_t AssembleOne(const char *start, MemBuf &buf, const AccessLogEntryPointer &al);
+size_t AssembleOne(const char *start, MemBuf &buf, const AccessLogEntryPointer &ale);
 
 } // namespace Format
 

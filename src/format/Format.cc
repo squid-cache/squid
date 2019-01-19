@@ -96,16 +96,16 @@ Format::Format::parse(const char *def)
 }
 
 size_t
-Format::AssembleOne(const char *token, MemBuf &mb, const AccessLogEntryPointer &al)
+Format::AssembleOne(const char *token, MemBuf &mb, const AccessLogEntryPointer &ale)
 {
     Token tkn;
     enum Quoting quote = LOG_QUOTE_NONE;
     const auto tokenSize = tkn.parse(token, &quote);
     assert(tokenSize > 0);
-    if (al != nullptr) {
+    if (ale != nullptr) {
         Format fmt("SimpleToken");
         fmt.format = &tkn;
-        fmt.assemble(mb, al, 0);
+        fmt.assemble(mb, ale, 0);
         fmt.format = nullptr;
     } else
         mb.append("-", 1);

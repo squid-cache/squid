@@ -303,13 +303,13 @@ CacheManager::CheckPassword(const Mgr::Command &cmd)
  * all needed internal work and renders the response.
  */
 void
-CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request, StoreEntry * entry, const AccessLogEntry::Pointer &al)
+CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request, StoreEntry *entry, const AccessLogEntry::Pointer &ale)
 {
     debugs(16, 3, "CacheManager::Start: '" << entry->url() << "'" );
 
     Mgr::Command::Pointer cmd = ParseUrl(entry->url());
     if (!cmd) {
-        const auto err = new ErrorState(ERR_INVALID_URL, Http::scNotFound, request, al);
+        const auto err = new ErrorState(ERR_INVALID_URL, Http::scNotFound, request, ale);
         err->url = xstrdup(entry->url());
         errorAppendEntry(entry, err);
         entry->expires = squid_curtime;
@@ -332,7 +332,7 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
 
     if (CheckPassword(*cmd) != 0) {
         /* build error message */
-        ErrorState errState(ERR_CACHE_MGR_ACCESS_DENIED, Http::scUnauthorized, request, al);
+        ErrorState errState(ERR_CACHE_MGR_ACCESS_DENIED, Http::scUnauthorized, request, ale);
         /* warn if user specified incorrect password */
 
         if (cmd->params.password.size()) {
@@ -386,7 +386,7 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
 
     // special case: /squid-internal-mgr/ index page
     if (!strcmp(cmd->profile->name, "index")) {
-        ErrorState err(MGR_INDEX, Http::scOkay, request, al);
+        ErrorState err(MGR_INDEX, Http::scOkay, request, ale);
         err.url = xstrdup(entry->url());
         HttpReply *rep = err.BuildHttpReply();
         if (strncmp(rep->body.content(),"Internal Error:", 15) == 0)
@@ -406,7 +406,7 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
 
     if (UsingSmp() && IamWorkerProcess()) {
         // is client the right connection to pass here?
-        AsyncJob::Start(new Mgr::Forwarder(client, cmd->params, request, entry, al));
+        AsyncJob::Start(new Mgr::Forwarder(client, cmd->params, request, entry, ale));
         return;
     }
 

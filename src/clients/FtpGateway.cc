@@ -2626,9 +2626,9 @@ Ftp::Gateway::haveParsedReplyHeaders()
 }
 
 HttpReply *
-Ftp::Gateway::ftpAuthRequired(HttpRequest * request, SBuf &realm, AccessLogEntry::Pointer &al)
+Ftp::Gateway::ftpAuthRequired(HttpRequest * request, SBuf &realm, AccessLogEntry::Pointer &ale)
 {
-    ErrorState err(ERR_CACHE_ACCESS_DENIED, Http::scUnauthorized, request, al);
+    ErrorState err(ERR_CACHE_ACCESS_DENIED, Http::scUnauthorized, request, ale);
     HttpReply *newrep = err.BuildHttpReply();
 #if HAVE_AUTH_MODULE_BASIC
     /* add Authenticate header */

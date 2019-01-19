@@ -29,7 +29,7 @@
  * return Http::scNotFound for others
  */
 void
-internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, StoreEntry * entry, const AccessLogEntry::Pointer &al)
+internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, StoreEntry * entry, const AccessLogEntry::Pointer &ale)
 {
     ErrorState *err;
     const SBuf upath = request->url.path();
@@ -56,11 +56,11 @@ internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, 
         entry->complete();
     } else if (upath.startsWith(mgrPfx)) {
         debugs(17, 2, "calling CacheManager due to URL-path " << mgrPfx);
-        CacheManager::GetInstance()->Start(clientConn, request, entry, al);
+        CacheManager::GetInstance()->start(clientConn, request, entry, ale);
     } else {
         debugObj(76, 1, "internalStart: unknown request:\n",
                  request, (ObjPackMethod) & httpRequestPack);
-        err = new ErrorState(ERR_INVALID_REQ, Http::scNotFound, request, al);
+        err = new ErrorState(ERR_INVALID_REQ, Http::scNotFound, request, ale);
         errorAppendEntry(entry, err);
     }
 }
