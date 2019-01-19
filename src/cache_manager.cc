@@ -9,6 +9,7 @@
 /* DEBUG: section 16    Cache Manager Objects */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "base/TextException.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
