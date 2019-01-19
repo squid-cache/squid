@@ -34,7 +34,7 @@ class Forwarder: public Ipc::Forwarder
 
 public:
     Forwarder(const Comm::ConnectionPointer &aConn, const ActionParams &aParams, HttpRequest* aRequest,
-              StoreEntry* anEntry, const AccessLogEntryPointer &);
+              StoreEntry* anEntry, const AccessLogEntryPointer &anAle);
     virtual ~Forwarder();
 
 protected:
@@ -53,7 +53,7 @@ private:
     StoreEntry* entry; ///< Store entry expecting the response
     Comm::ConnectionPointer conn; ///< HTTP client connection descriptor
     AsyncCall::Pointer closer; ///< comm_close handler for the HTTP connection
-    AccessLogEntryPointer al; ///< more transaction details
+    AccessLogEntryPointer ale; ///< more transaction details
 };
 
 } // namespace Mgr

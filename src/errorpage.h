@@ -177,7 +177,7 @@ public:
     char *request_hdrs = nullptr;
     char *err_msg = nullptr; /* Preformatted error message from the cache */
 
-    AccessLogEntryPointer al; ///< transaction details (or nil)
+    AccessLogEntryPointer ale; ///< transaction details (or nil)
 
 #if USE_OPENSSL
     Ssl::ErrorDetail *detail = nullptr;

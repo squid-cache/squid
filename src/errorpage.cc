@@ -208,7 +208,6 @@ class ErrorPageFile: public TemplateFile
 {
 public:
     ErrorPageFile(const char *name, const err_type code) : TemplateFile(name, code) {}
-    virtual ~ErrorPageFile() override {}
 
     /// The template text data read from disk
     const char *text() { return template_.c_str(); }
@@ -377,7 +376,6 @@ TemplateFile::loadDefault()
 
     /* giving up if failed */
     if (!loaded()) {
-        // TODO: on reconfigure reject all of the new configuration
         debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
         template_.clear();
         setDefault();
@@ -666,11 +664,11 @@ errorPageName(int pageId)
 }
 
 ErrorState *
-ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const AccessLogEntry::Pointer &al)
+ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const AccessLogEntry::Pointer &ale)
 {
     const Http::StatusCode status = (request && request->flags.needValidation) ?
                                     Http::scGatewayTimeout : Http::scServiceUnavailable;
-    return new ErrorState(type, status, request.getRaw(), al);
+    return new ErrorState(type, status, request.getRaw(), ale);
 }
 
 ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, const AccessLogEntry::Pointer &anAle) :
@@ -678,7 +676,7 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, c
     page_id(t),
     httpStatus(status),
     callback(nullptr),
-    al(anAle)
+    ale(anAle)
 {
     if (page_id >= ERR_MAX && ErrorDynamicPages[page_id - ERR_MAX]->page_redirect != Http::scNone)
         httpStatus = ErrorDynamicPages[page_id - ERR_MAX]->page_redirect;
@@ -872,7 +870,7 @@ ErrorState::compileLogformatCode(Build &build)
 
         static MemBuf result;
         result.reset();
-        const auto logformatLen = Format::AssembleOne(logformat, result, al);
+        const auto logformatLen = Format::AssembleOne(logformat, result, ale);
         assert(logformatLen > 0);
         const auto closure = logformat + logformatLen;
         if (*closure != '}')
@@ -1381,7 +1379,7 @@ ErrorState::buildBody()
     if (!Config.errorDirectory)
         err_language = Config.errorDefaultLanguage;
 #endif
-    debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
+    debugs(4, 2, "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
     return compileBody(error_text[page_id], true);
 }
 
