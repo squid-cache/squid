@@ -50,7 +50,8 @@ ProxyProtocol::IntegerToHeaderType(const SBuf &rawInteger)
     int64_t tlvType = 0;
 
     Parser::Tokenizer ptok(rawInteger);
-    if (!ptok.int64(tlvType, 10, false) || !ptok.atEnd())
+    const auto parsed = ptok.skip('0') || ptok.int64(tlvType, 10, false);
+    if (!parsed || !ptok.atEnd())
         throw TexcHere(ToSBuf("Invalid PROXY protocol TLV type value. ",
                               "Expected a decimal integer but got '", rawInteger, "'"));
 
