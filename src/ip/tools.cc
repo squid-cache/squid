@@ -60,7 +60,7 @@ Ip::ProbeTransport()
     // Test for IPv6 loopback/localhost address binding
     Ip::Address ip;
     ip.setLocalhost();
-    if (ip.isIPv6()) { // false on --disable-ipv6 builds
+    if (ip.isIPv6()) { // paranoid; always succeeds if we got this far
         struct sockaddr_in6 sin;
         ip.getSockAddr(sin);
         if (bind(s, reinterpret_cast<struct sockaddr *>(&sin), sizeof(sin)) != 0) {
