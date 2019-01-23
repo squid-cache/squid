@@ -66,7 +66,6 @@ private:
     size_t writeToBuffer(char const *buf, size_t size);
     void writeToDisk(const SlotId nextSlot);
     void writeBufToDisk(const SlotId nextSlot, const bool eof, const bool lastWrite);
-    SlotId reserveSlotForWriting();
 
     void callBack(int errflag);
 
