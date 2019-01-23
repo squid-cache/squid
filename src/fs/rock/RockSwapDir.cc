@@ -858,40 +858,57 @@ Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
 
     debugs(79, 7, "errflag=" << errflag << " rlen=" << request->len << " eof=" << request->eof);
 
-    // TODO: Fail if disk dropped one of the previous write requests.
-
-    if (errflag == DISK_OK) {
-        // do not increment sio.offset_ because we do it in sio->write()
-
-        // finalize the shared slice info after writing slice contents to disk
-        Ipc::StoreMap::Slice &slice =
-            map->writeableSlice(sio.swap_filen, request->sidCurrent);
-        slice.size = request->len - sizeof(DbCellHeader);
-        slice.next = request->sidNext;
-
-        if (request->eof) {
-            assert(sio.e);
-            assert(sio.writeableAnchor_);
-            if (sio.touchingStoreEntry()) {
-                sio.e->swap_file_sz = sio.writeableAnchor_->basics.swap_file_sz =
-                                          sio.offset_;
-                map->switchWritingToReading(sio.swap_filen);
-                // sio.e keeps the (now read) lock on the anchor
-            }
-            sio.writeableAnchor_ = NULL;
-            sio.splicingPoint = request->sidCurrent;
-            sio.finishedWriting(errflag);
-        }
-    } else {
-        noteFreeMapSlice(request->sidNext);
-
-        writeError(sio);
-        sio.finishedWriting(errflag);
-        // and wait for the finalizeSwapoutFailure() call to close the map entry
-    }
+    if (errflag != DISK_OK)
+        handleWriteCompletionProblem(errflag, *request);
+    else if (droppedEarlierRequest(*request))
+        handleWriteCompletionProblem(DISK_ERROR, *request);
+    else
+        handleWriteCompletionSuccess(*request);
 
     if (sio.touchingStoreEntry())
         CollapsedForwarding::Broadcast(*sio.e);
+}
+
+/// code shared by writeCompleted() success handling cases
+void
+Rock::SwapDir::handleWriteCompletionSuccess(const WriteRequest &request)
+{
+    auto &sio = *(request.sio);
+    sio.splicingPoint = request.sidCurrent;
+    // do not increment sio.offset_ because we do it in sio->write()
+
+    // finalize the shared slice info after writing slice contents to disk
+    Ipc::StoreMap::Slice &slice =
+        map->writeableSlice(sio.swap_filen, request.sidCurrent);
+    slice.size = request.len - sizeof(DbCellHeader);
+    slice.next = request.sidNext;
+
+    if (request.eof) {
+        assert(sio.e);
+        assert(sio.writeableAnchor_);
+        if (sio.touchingStoreEntry()) {
+            sio.e->swap_file_sz = sio.writeableAnchor_->basics.swap_file_sz =
+                                      sio.offset_;
+
+            map->switchWritingToReading(sio.swap_filen);
+            // sio.e keeps the (now read) lock on the anchor
+        }
+        sio.writeableAnchor_ = NULL;
+        sio.finishedWriting(DISK_OK);
+    }
+}
+
+/// code shared by writeCompleted() error handling cases
+void
+Rock::SwapDir::handleWriteCompletionProblem(const int errflag, const WriteRequest &request)
+{
+    auto &sio = *request.sio;
+
+    noteFreeMapSlice(request.sidNext);
+
+    writeError(sio);
+    sio.finishedWriting(errflag);
+    // and hope that Core will call disconnect() to close the map entry
 }
 
 void
@@ -906,6 +923,23 @@ Rock::SwapDir::writeError(StoreIOState &sio)
     // else noop: a fresh entry update error does not affect stale entry readers
 
     // All callers must also call IoState callback, to propagate the error.
+}
+
+/// whether the disk has dropped at least one of the previous write requests
+bool
+Rock::SwapDir::droppedEarlierRequest(const WriteRequest &request) const
+{
+    const auto &sio = *request.sio;
+    assert(sio.writeableAnchor_);
+    const Ipc::StoreMapSliceId expectedSliceId = sio.splicingPoint < 0 ?
+            sio.writeableAnchor_->start :
+            map->writeableSlice(sio.swap_filen, sio.splicingPoint).next;
+    if (expectedSliceId != request.sidCurrent) {
+        debugs(79, 3, "yes; expected " << expectedSliceId << ", but got " << request.sidCurrent);
+        return true;
+    }
+
+    return false;
 }
 
 void

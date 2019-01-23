@@ -40,6 +40,8 @@ class HeaderUpdater;
 
 class DbCellHeader;
 
+class WriteRequest;
+
 }
 
 #endif /* SQUID_FS_ROCK_FORWARD_H */
