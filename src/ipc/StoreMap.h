@@ -42,6 +42,9 @@ public:
         return *this;
     }
 
+    /// restore default-constructed state
+    void clear() { size = 0; next = -1; }
+
     std::atomic<Size> size; ///< slice contents size
     std::atomic<StoreMapSliceId> next; ///< ID of the next entry slice
 };
@@ -291,6 +294,9 @@ public:
     Anchor &writeableEntry(const AnchorId anchorId);
     /// readable anchor for the entry created by openForReading()
     const Anchor &readableEntry(const AnchorId anchorId) const;
+
+    /// prepare a chain-unaffiliated slice for being added to an entry chain
+    void prepFreeSlice(const SliceId sliceId);
 
     /// Returns the ID of the entry slice containing n-th byte or
     /// a negative ID if the entry does not store that many bytes (yet).
