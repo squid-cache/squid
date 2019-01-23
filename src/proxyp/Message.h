@@ -16,16 +16,16 @@
 
 namespace ProxyProtocol {
 
-/// PROXY protocol v1 or v2 message
-class Message: public RefCountable
+/// PROXY protocol v1 or v2 header
+class Header: public RefCountable
 {
 public:
-    typedef RefCount<Message> Pointer;
+    typedef RefCount<Header> Pointer;
     typedef std::vector<Two::Tlv> Tlvs;
 
-    Message(const SBuf &ver, const Two::Command cmd);
+    Header(const SBuf &ver, const Two::Command cmd);
 
-    /// HTTP header-like string representation of the message.
+    /// HTTP header-like string representation of the header.
     /// The returned string has one line per pseudo header and
     /// one line per TLV (if any).
     SBuf toMime() const;
@@ -45,10 +45,10 @@ public:
     /// whether source and destination addresses are valid addresses of the original "client" connection
     bool hasForwardedAddresses() const { return !localConnection() && hasAddresses(); }
 
-    /// marks the message as lacking address information
+    /// marks the header as lacking address information
     void ignoreAddresses() { ignoreAddresses_ = true; }
 
-    /// whether the message relays address information (including LOCAL connections)
+    /// whether the header relays address information (including LOCAL connections)
     bool hasAddresses() const { return !ignoreAddresses_; }
 
     /// \returns "4" or "6" if both source and destination addresses are IPv4 or IPv6
@@ -59,7 +59,7 @@ public:
     Ip::Address sourceAddress;
     /// intended destination address of the client connection
     Ip::Address destinationAddress;
-    /// empty in v1 messages and when ignored in v2 messages
+    /// empty in v1 headers and when ignored in v2 headers
     Tlvs tlvs;
 
 private:
@@ -71,11 +71,11 @@ private:
     /// PROXY protocol version
     SBuf version_;
 
-    /// for v2 messages: the command field
-    /// for v1 messages: Two::cmdProxy
+    /// for v2 headers: the command field
+    /// for v1 headers: Two::cmdProxy
     Two::Command command_;
 
-    /// true if the message relays no address information
+    /// true if the header relays no address information
     bool ignoreAddresses_;
 };
 

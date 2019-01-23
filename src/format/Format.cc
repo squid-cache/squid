@@ -826,24 +826,24 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_PROXY_PROTOCOL_RECEIVED_HEADER:
-            if (al->proxyProtocolMessage) {
-                sb = al->proxyProtocolMessage->getValues(fmt->data.headerId, fmt->data.header.separator);
+            if (al->proxyProtocolHeader) {
+                sb = al->proxyProtocolHeader->getValues(fmt->data.headerId, fmt->data.header.separator);
                 out = sb.c_str();
                 quote = 1;
             }
             break;
 
         case LFT_PROXY_PROTOCOL_RECEIVED_ALL_HEADERS:
-            if (al->proxyProtocolMessage) {
-                sb = al->proxyProtocolMessage->toMime();
+            if (al->proxyProtocolHeader) {
+                sb = al->proxyProtocolHeader->toMime();
                 out = sb.c_str();
                 quote = 1;
             }
             break;
 
         case LFT_PROXY_PROTOCOL_RECEIVED_HEADER_ELEM:
-            if (al->proxyProtocolMessage) {
-                sb = al->proxyProtocolMessage->getElem(fmt->data.headerId, fmt->data.header.element, fmt->data.header.separator);
+            if (al->proxyProtocolHeader) {
+                sb = al->proxyProtocolHeader->getElem(fmt->data.headerId, fmt->data.header.element, fmt->data.header.separator);
                 out = sb.c_str();
                 quote = 1;
             }

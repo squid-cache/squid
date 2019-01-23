@@ -32,7 +32,7 @@ typedef enum {
     htSslKeyAlg = 0x25, // PP2_SUBTYPE_SSL_KEY_ALG
     htNetns = 0x30, // PP2_TYPE_NETNS
 
-    // IDs for PROXY protocol message pseudo-headers.
+    // IDs for PROXY protocol header pseudo-headers.
     // Larger than 255 to avoid clashes with possible TLV type IDs.
     htPseudoVersion = 0x101,
     htPseudoCommand = 0x102,

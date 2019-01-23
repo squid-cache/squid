@@ -30,22 +30,22 @@ namespace ProxyProtocol {
 namespace One {
 /// magic octet prefix for PROXY protocol version 1
 static const SBuf Magic("PROXY", 5);
-/// extracts PROXY protocol v1 message from the given buffer
+/// extracts PROXY protocol v1 header from the given buffer
 static Parsed Parse(const SBuf &buf);
 
 static void ExtractIp(Parser::Tokenizer &tok, Ip::Address &addr);
 static void ExtractPort(Parser::Tokenizer &tok, Ip::Address &addr, const bool trailingSpace);
-static void ParseAddresses(Parser::Tokenizer &tok, Message::Pointer &message);
+static void ParseAddresses(Parser::Tokenizer &tok, Header::Pointer &header);
 }
 
 namespace Two {
 /// magic octet prefix for PROXY protocol version 2
 static const SBuf Magic("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A", 12);
-/// extracts PROXY protocol v2 message from the given buffer
+/// extracts PROXY protocol v2 header from the given buffer
 static Parsed Parse(const SBuf &buf);
 
-static void ParseAddresses(const uint8_t family, Parser::BinaryTokenizer &tok, Message::Pointer &message);
-static void ParseTLVs(Parser::BinaryTokenizer &tok, Message::Pointer &message);
+static void ParseAddresses(const uint8_t family, Parser::BinaryTokenizer &tok, Header::Pointer &header);
+static void ParseTLVs(Parser::BinaryTokenizer &tok, Header::Pointer &header);
 }
 }
 
@@ -85,7 +85,7 @@ ProxyProtocol::One::ExtractPort(Parser::Tokenizer &tok, Ip::Address &addr, const
 }
 
 void
-ProxyProtocol::One::ParseAddresses(Parser::Tokenizer &tok, Message::Pointer &message)
+ProxyProtocol::One::ParseAddresses(Parser::Tokenizer &tok, Header::Pointer &header)
 {
     static const CharacterSet addressFamilies("Address family", "46");
     SBuf parsedAddressFamily;
@@ -97,24 +97,24 @@ ProxyProtocol::One::ParseAddresses(Parser::Tokenizer &tok, Message::Pointer &mes
         throw TexcHere("PROXY/1.0 error: missing SP after the IP address family");
 
     // parse: src-IP SP dst-IP SP src-port SP dst-port
-    ExtractIp(tok, message->sourceAddress);
-    ExtractIp(tok, message->destinationAddress);
+    ExtractIp(tok, header->sourceAddress);
+    ExtractIp(tok, header->destinationAddress);
 
-    if (message->addressFamily() != parsedAddressFamily)
+    if (header->addressFamily() != parsedAddressFamily)
         throw TexcHere("PROXY/1.0 error: declared and/or actual IP address families mismatch");
 
-    ExtractPort(tok, message->sourceAddress, true);
-    ExtractPort(tok, message->destinationAddress, false);
+    ExtractPort(tok, header->sourceAddress, true);
+    ExtractPort(tok, header->destinationAddress, false);
 }
 
-/// parses PROXY protocol v1 message from the buffer
+/// parses PROXY protocol v1 header from the buffer
 ProxyProtocol::Parsed
 ProxyProtocol::One::Parse(const SBuf &buf)
 {
     Parser::Tokenizer tok(buf);
 
-    static const SBuf::size_type maxMessageLength = 107; // including CRLF
-    static const auto maxInteriorLength = maxMessageLength - Magic.length() - 2;
+    static const SBuf::size_type maxHeaderLength = 107; // including CRLF
+    static const auto maxInteriorLength = maxHeaderLength - Magic.length() - 2;
     static const auto interiorChars = CharacterSet::CR.complement().rename("non-CR");
     SBuf interior;
 
@@ -124,12 +124,12 @@ ProxyProtocol::One::Parse(const SBuf &buf)
         if (tok.atEnd())
             throw Parser::BinaryTokenizer::InsufficientInput();
         // "empty interior", "too-long interior", or "missing LF after CR"
-        throw TexcHere("PROXY/1.0 error: malformed message");
+        throw TexcHere("PROXY/1.0 error: malformed header");
     }
     // extracted all PROXY protocol bytes
 
     static const SBuf v1("1.0");
-    Message::Pointer message = new Message(v1, Two::cmdProxy);
+    Header::Pointer header = new Header(v1, Two::cmdProxy);
 
     Parser::Tokenizer interiorTok(interior);
 
@@ -140,33 +140,33 @@ ProxyProtocol::One::Parse(const SBuf &buf)
     static const SBuf protoTcp("TCP");
 
     if (interiorTok.skip(protoTcp))
-        ParseAddresses(interiorTok, message);
+        ParseAddresses(interiorTok, header);
     else if (interiorTok.skip(protoUnknown))
-        message->ignoreAddresses();
+        header->ignoreAddresses();
     else
         throw TexcHere("PROXY/1.0 error: invalid INET protocol or family");
 
-    return Parsed(message, tok.parsedSize());
+    return Parsed(header, tok.parsedSize());
 }
 
 void
-ProxyProtocol::Two::ParseAddresses(const uint8_t family, Parser::BinaryTokenizer &tok, Message::Pointer &message)
+ProxyProtocol::Two::ParseAddresses(const uint8_t family, Parser::BinaryTokenizer &tok, Header::Pointer &header)
 {
     switch (family) {
 
     case afInet: {
-        message->sourceAddress = tok.inet4("src_addr IPv4");
-        message->destinationAddress = tok.inet4("dst_addr IPv4");
-        message->sourceAddress.port(tok.uint16("src_port"));
-        message->destinationAddress.port(tok.uint16("dst_port"));
+        header->sourceAddress = tok.inet4("src_addr IPv4");
+        header->destinationAddress = tok.inet4("dst_addr IPv4");
+        header->sourceAddress.port(tok.uint16("src_port"));
+        header->destinationAddress.port(tok.uint16("dst_port"));
         break;
     }
 
     case afInet6: {
-        message->sourceAddress = tok.inet6("src_addr IPv6");
-        message->destinationAddress = tok.inet6("dst_addr IPv6");
-        message->sourceAddress.port(tok.uint16("src_port"));
-        message->destinationAddress.port(tok.uint16("dst_port"));
+        header->sourceAddress = tok.inet6("src_addr IPv6");
+        header->destinationAddress = tok.inet6("dst_addr IPv6");
+        header->sourceAddress.port(tok.uint16("src_port"));
+        header->destinationAddress.port(tok.uint16("dst_port"));
         break;
     }
 
@@ -185,19 +185,19 @@ ProxyProtocol::Two::ParseAddresses(const uint8_t family, Parser::BinaryTokenizer
 }
 
 void
-ProxyProtocol::Two::ParseTLVs(Parser::BinaryTokenizer &tok, Message::Pointer &message) {
+ProxyProtocol::Two::ParseTLVs(Parser::BinaryTokenizer &tok, Header::Pointer &header) {
     while (!tok.atEnd()) {
         const auto type = tok.uint8("pp2_tlv::type");
-        message->tlvs.emplace_back(type, tok.pstring16("pp2_tlv::value"));
+        header->tlvs.emplace_back(type, tok.pstring16("pp2_tlv::value"));
     }
 }
 
 ProxyProtocol::Parsed
 ProxyProtocol::Two::Parse(const SBuf &buf)
 {
-    Parser::BinaryTokenizer tokMessage(buf, true);
+    Parser::BinaryTokenizer tokHeader(buf, true);
 
-    const auto versionAndCommand = tokMessage.uint8("version and command");
+    const auto versionAndCommand = tokHeader.uint8("version and command");
 
     const auto version = (versionAndCommand & 0xF0) >> 4;
     if (version != 2) // version == 2 is mandatory
@@ -207,7 +207,7 @@ ProxyProtocol::Two::Parse(const SBuf &buf)
     if (command > cmdProxy)
         throw TexcHere(ToSBuf("PROXY/2.0 error: invalid command ", command));
 
-    const auto familyAndProto = tokMessage.uint8("family and proto");
+    const auto familyAndProto = tokHeader.uint8("family and proto");
 
     const auto family = (familyAndProto & 0xF0) >> 4;
     if (family > afUnix)
@@ -217,24 +217,24 @@ ProxyProtocol::Two::Parse(const SBuf &buf)
     if (proto > tpDgram)
         throw TexcHere(ToSBuf("PROXY/2.0 error: invalid transport protocol ", proto));
 
-    const auto header = tokMessage.pstring16("header");
+    const auto rawHeader = tokHeader.pstring16("header");
 
     static const SBuf v2("2.0");
-    Message::Pointer message = new Message(v2, Two::Command(command));
+    Header::Pointer header = new Header(v2, Two::Command(command));
 
     if (proto == tpUnspecified || family == afUnspecified) {
-        message->ignoreAddresses();
+        header->ignoreAddresses();
         // discard address block and TLVs because we cannot tell
         // how to parse such addresses and where the TLVs start.
     } else {
-        Parser::BinaryTokenizer tokHeader(header);
-        ParseAddresses(family, tokHeader, message);
+        Parser::BinaryTokenizer leftoverTok(rawHeader);
+        ParseAddresses(family, leftoverTok, header);
         // TODO: parse TLVs for LOCAL connections
-        if (message->hasForwardedAddresses())
-            ParseTLVs(tokHeader, message);
+        if (header->hasForwardedAddresses())
+            ParseTLVs(leftoverTok, header);
     }
 
-    return Parsed(message, tokMessage.parsed());
+    return Parsed(header, tokHeader.parsed());
 }
 
 ProxyProtocol::Parsed
@@ -249,7 +249,7 @@ ProxyProtocol::Parse(const SBuf &buf)
 
     if (parser) {
         const auto parsed = (parser)(magicTok.remaining());
-        return Parsed(parsed.message, magicTok.parsedSize() + parsed.size);
+        return Parsed(parsed.header, magicTok.parsedSize() + parsed.size);
     }
 
     // detect and terminate other protocols
@@ -266,10 +266,10 @@ ProxyProtocol::Parse(const SBuf &buf)
     throw Parser::BinaryTokenizer::InsufficientInput();
 }
 
-ProxyProtocol::Parsed::Parsed(const Message::Pointer &parsedMessage, const size_t parsedSize):
-    message(parsedMessage),
+ProxyProtocol::Parsed::Parsed(const Header::Pointer &parsedHeader, const size_t parsedSize):
+    header(parsedHeader),
     size(parsedSize)
 {
-    assert(bool(parsedMessage));
+    assert(bool(parsedHeader));
 }
 

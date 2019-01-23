@@ -14,9 +14,9 @@
 namespace ProxyProtocol
 {
 
-class Message;
+class Header;
 
-typedef RefCount<Message> MessagePointer;
+typedef RefCount<Header> HeaderPointer;
 
 }
 

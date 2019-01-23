@@ -185,8 +185,8 @@ public:
     /// key=value pairs returned from URL rewrite/redirect helper
     NotePairs::Pointer notes;
 
-    /// see ConnStateData::proxyProtocolMessage_
-    ProxyProtocol::MessagePointer proxyProtocolMessage;
+    /// see ConnStateData::proxyProtocolHeader_
+    ProxyProtocol::HeaderPointer proxyProtocolHeader;
 
 #if ICAP_CLIENT
     /** \brief This subclass holds log info for ICAP part of request

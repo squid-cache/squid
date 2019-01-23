@@ -1840,25 +1840,25 @@ ConnStateData::proxyProtocolError(const char *msg)
     return false;
 }
 
-/// Attempts to extract a PROXY protocol message from the input buffer and,
-/// upon success, stores the parsed message in proxyProtocolMessage_.
-/// \returns true if the message was successfully parsed
-/// \returns false if more data is needed to parse the message or on error
+/// Attempts to extract a PROXY protocol header from the input buffer and,
+/// upon success, stores the parsed header in proxyProtocolHeader_.
+/// \returns true if the header was successfully parsed
+/// \returns false if more data is needed to parse the header or on error
 bool
-ConnStateData::parseProxyProtocolMessage()
+ConnStateData::parseProxyProtocolHeader()
 {
     try {
         const auto parsed = ProxyProtocol::Parse(inBuf);
-        proxyProtocolMessage_ = parsed.message;
-        assert(bool(proxyProtocolMessage_));
+        proxyProtocolHeader_ = parsed.header;
+        assert(bool(proxyProtocolHeader_));
         inBuf.consume(parsed.size);
         needProxyProtocolHeader_ = false;
-        if (proxyProtocolMessage_->hasForwardedAddresses()) {
-            clientConnection->local = proxyProtocolMessage_->destinationAddress;
-            clientConnection->remote = proxyProtocolMessage_->sourceAddress;
+        if (proxyProtocolHeader_->hasForwardedAddresses()) {
+            clientConnection->local = proxyProtocolHeader_->destinationAddress;
+            clientConnection->remote = proxyProtocolHeader_->sourceAddress;
             if ((clientConnection->flags & COMM_TRANSPARENT))
                 clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
-            debugs(33, 5, "PROXY/" << proxyProtocolMessage_->version() << " upgrade: " << clientConnection);
+            debugs(33, 5, "PROXY/" << proxyProtocolHeader_->version() << " upgrade: " << clientConnection);
         }
     } catch (const Parser::BinaryTokenizer::InsufficientInput &) {
         debugs(33, 3, "PROXY protocol: waiting for more than " << inBuf.length() << " bytes");
@@ -1912,7 +1912,7 @@ ConnStateData::clientParseRequests()
 
         // try to parse the PROXY protocol header magic bytes
         if (needProxyProtocolHeader_) {
-            if (!parseProxyProtocolMessage())
+            if (!parseProxyProtocolHeader())
                 break;
 
             // we have been waiting for PROXY to provide client-IP
@@ -2629,7 +2629,7 @@ ConnStateData::postHttpsAccept()
         acl_checklist->al->tcpClient = clientConnection;
         acl_checklist->al->cache.port = port;
         acl_checklist->al->cache.caddr = log_addr;
-        acl_checklist->al->proxyProtocolMessage = proxyProtocolMessage_;
+        acl_checklist->al->proxyProtocolHeader = proxyProtocolHeader_;
         HTTPMSGUNLOCK(acl_checklist->al->request);
         acl_checklist->al->request = request;
         HTTPMSGLOCK(acl_checklist->al->request);

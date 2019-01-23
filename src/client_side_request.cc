@@ -173,7 +173,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
         al->tcpClient = clientConnection = aConn->clientConnection;
         al->cache.port = aConn->port;
         al->cache.caddr = aConn->log_addr;
-        al->proxyProtocolMessage = aConn->proxyProtocolMessage();
+        al->proxyProtocolHeader = aConn->proxyProtocolHeader();
 
 #if USE_OPENSSL
         if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {

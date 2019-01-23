@@ -14,14 +14,14 @@
 #include "SquidConfig.h"
 #include "StrList.h"
 
-ProxyProtocol::Message::Message(const SBuf &ver, const Two::Command cmd):
+ProxyProtocol::Header::Header(const SBuf &ver, const Two::Command cmd):
     version_(ver),
     command_(cmd),
     ignoreAddresses_(false)
 {}
 
 SBuf
-ProxyProtocol::Message::toMime() const
+ProxyProtocol::Header::toMime() const
 {
     SBufStream result;
     for (const auto &p: PseudoHeaderFields) {
@@ -29,14 +29,14 @@ ProxyProtocol::Message::toMime() const
         if (!value.isEmpty())
             result << p.first << ": " << value << "\r\n";
     }
-    // cannot reuse Message::getValues(): need the original TLVs layout
+    // cannot reuse Header::getValues(): need the original TLVs layout
     for (const auto &tlv: tlvs)
         result << tlv.type << ": " << tlv.value << "\r\n";
     return result.buf();
 }
 
 SBuf
-ProxyProtocol::Message::getValues(const uint32_t headerType, const char sep) const
+ProxyProtocol::Header::getValues(const uint32_t headerType, const char sep) const
 {
     switch (headerType) {
 
@@ -86,14 +86,14 @@ ProxyProtocol::Message::getValues(const uint32_t headerType, const char sep) con
 }
 
 SBuf
-ProxyProtocol::Message::getElem(const uint32_t headerType, const char *member, const char sep) const
+ProxyProtocol::Header::getElem(const uint32_t headerType, const char *member, const char sep) const
 {
     const auto whole = SBufToString(getValues(headerType, sep));
     return getListMember(whole, member, sep);
 }
 
 const SBuf &
-ProxyProtocol::Message::addressFamily() const
+ProxyProtocol::Header::addressFamily() const
 {
     static const SBuf v4("4");
     static const SBuf v6("6");
