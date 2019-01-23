@@ -53,7 +53,7 @@ public:
         char *string;
         // TODO: Add ID caching for protocols other than PROXY protocol.
         /// the cached ID of the parsed header or zero
-        ProxyProtocol::Two::HeaderType headerId;
+        ProxyProtocol::Two::FieldType headerId;
 
         struct {
             char *header;

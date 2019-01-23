@@ -40,7 +40,7 @@ typedef enum {
     htPseudoDstAddr = 0x104,
     htPseudoSrcPort = 0x105,
     htPseudoDstPort = 0x106
-} HeaderType;
+} FieldType;
 
 /// PROXY protocol 'command' field value
 typedef enum {
@@ -76,13 +76,13 @@ public:
 
 } // namespace Two
 
-typedef std::map<SBuf, Two::HeaderType> FieldMap;
+typedef std::map<SBuf, Two::FieldType> FieldMap;
 /// a mapping between pseudo header names and ids
 extern const FieldMap PseudoHeaderFields;
 
-/// Parses human-friendly PROXY protocol header type representation.
+/// Parses human-friendly PROXY protocol field type representation.
 /// Only pseudo headers can (and should) be represented by their names.
-Two::HeaderType HeaderNameToHeaderType(const SBuf &nameOrId);
+Two::FieldType FieldNameToFieldType(const SBuf &nameOrId);
 
 } // namespace ProxyProtocol
 

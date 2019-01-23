@@ -23,13 +23,13 @@ const ProxyProtocol::FieldMap ProxyProtocol::PseudoHeaderFields = {
 };
 
 namespace ProxyProtocol {
-static Two::HeaderType NameToHeaderType(const SBuf &);
-static Two::HeaderType IntegerToHeaderType(const SBuf &);
+static Two::FieldType NameToFieldType(const SBuf &);
+static Two::FieldType IntegerToFieldType(const SBuf &);
 } // namespace ProxyProtocol
 
-/// HeaderNameToHeaderType() helper that handles pseudo headers
-ProxyProtocol::Two::HeaderType
-ProxyProtocol::NameToHeaderType(const SBuf &name)
+/// FieldNameToFieldType() helper that handles pseudo headers
+ProxyProtocol::Two::FieldType
+ProxyProtocol::NameToFieldType(const SBuf &name)
 {
     const auto it = PseudoHeaderFields.find(name);
     if (it != PseudoHeaderFields.end())
@@ -43,9 +43,9 @@ ProxyProtocol::NameToHeaderType(const SBuf &name)
                           "Expected a pseudo header like :src_addr but got '", name, "'"));
 }
 
-/// HeaderNameToHeaderType() helper that handles integer TLV types
-ProxyProtocol::Two::HeaderType
-ProxyProtocol::IntegerToHeaderType(const SBuf &rawInteger)
+/// FieldNameToFieldType() helper that handles integer TLV types
+ProxyProtocol::Two::FieldType
+ProxyProtocol::IntegerToFieldType(const SBuf &rawInteger)
 {
     int64_t tlvType = 0;
 
@@ -70,16 +70,16 @@ ProxyProtocol::IntegerToHeaderType(const SBuf &rawInteger)
                               "Expected an integer less than ", limit,
                               " but got '", tlvType, "'"));
 
-    return Two::HeaderType(tlvType);
+    return Two::FieldType(tlvType);
 }
 
-ProxyProtocol::Two::HeaderType
-ProxyProtocol::HeaderNameToHeaderType(const SBuf &tlvTypeRaw)
+ProxyProtocol::Two::FieldType
+ProxyProtocol::FieldNameToFieldType(const SBuf &tlvTypeRaw)
 {
-    // we could branch on ":" instead of DIGIT but then header names that lack a
+    // we could branch on ":" instead of DIGIT but then field names that lack a
     // leading ":" (like "version") would get a less accurate error message
     return Parser::Tokenizer(tlvTypeRaw).skipOne(CharacterSet::DIGIT) ?
-           IntegerToHeaderType(tlvTypeRaw):
-           NameToHeaderType(tlvTypeRaw);
+           IntegerToFieldType(tlvTypeRaw):
+           NameToFieldType(tlvTypeRaw);
 }
 
