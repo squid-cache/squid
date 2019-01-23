@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "proxyp/Elements.h"
-#include "proxyp/Message.h"
+#include "proxyp/Header.h"
 #include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"

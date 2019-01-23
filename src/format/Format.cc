@@ -21,7 +21,7 @@
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "proxyp/Message.h"
+#include "proxyp/Header.h"
 #include "rfc1738.h"
 #include "sbuf/StringConvert.h"
 #include "security/CertError.h"

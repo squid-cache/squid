@@ -10,7 +10,7 @@
 #include "parser/BinaryTokenizer.h"
 #include "parser/Tokenizer.h"
 #include "proxyp/Elements.h"
-#include "proxyp/Message.h"
+#include "proxyp/Header.h"
 #include "proxyp/Parser.h"
 #include "sbuf/Stream.h"
 

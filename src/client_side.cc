@@ -103,7 +103,7 @@
 #include "mime_header.h"
 #include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
-#include "proxyp/Message.h"
+#include "proxyp/Header.h"
 #include "proxyp/Parser.h"
 #include "security/NegotiationHistory.h"
 #include "servers/forward.h"

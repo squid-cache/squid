@@ -48,7 +48,7 @@
 #include "MemObject.h"
 #include "Parsing.h"
 #include "profiler/Profiler.h"
-#include "proxyp/Message.h"
+#include "proxyp/Header.h"
 #include "redirect.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
