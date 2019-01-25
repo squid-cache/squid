@@ -29,10 +29,12 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_external_acl.cc \
 	tests/stub_fatal.cc \
 	tests/stub_fd.cc \
+	tests/stub_gopher.cc \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_http.cc \
 	tests/stub_HttpControlMsg.cc \
+	tests/stub_HttpHeader.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_icp.cc \
@@ -48,6 +50,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_libdiskio.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
+	tests/stub_libhttp.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_libip.cc \
 	tests/stub_liblog.cc \
@@ -55,6 +58,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
+	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_MemBuf.cc \
 	tests/stub_mem_node.cc \
@@ -77,7 +81,6 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_store_swapout.cc \
-	tests/stub_SwapDir.cc \
 	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tests/stub_tunnel.cc \

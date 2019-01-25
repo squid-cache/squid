@@ -39,19 +39,7 @@ Helper::ChildConfig::ChildConfig(const unsigned int m):
     defaultQueueSize(true)
 {}
 
-int
-Helper::ChildConfig::needNew() const
-{
-    /* during the startup and reconfigure use our special amount... */
-    if (starting_up || reconfiguring) return n_startup;
-
-    /* keep a minimum of n_idle helpers free... */
-    if ( (n_active + n_idle) < n_max) return n_idle;
-
-    /* do not ever start more than n_max processes. */
-    return (n_max - n_active);
-}
-
+int Helper::ChildConfig::needNew() const STUB_RETVAL(0)
 void Helper::ChildConfig::parseConfig() STUB
 Helper::ChildConfig & Helper::ChildConfig::updateLimits(const Helper::ChildConfig &) STUB_RETVAL(*this)
 
