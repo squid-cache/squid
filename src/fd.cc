@@ -16,6 +16,7 @@
 #include "fde.h"
 #include "globals.h"
 #include "profiler/Profiler.h"
+#include "sbuf/SBuf.h"
 #include "SquidTime.h"
 
 // Solaris and possibly others lack MSG_NOSIGNAL optimization
@@ -183,7 +184,7 @@ msghdr_write_method(int fd, const char *buf, int len)
 #endif
 
 void
-fd_open(int fd, unsigned int type, const char *desc)
+fd_open(int fd, unsigned int type, const SBuf &desc)
 {
     fde *F;
     assert(fd >= 0);
@@ -218,7 +219,8 @@ fd_open(int fd, unsigned int type, const char *desc)
         break;
 
     default:
-        fatalf("fd_open(): unknown FD type - FD#: %i, type: %u, desc %s\n", fd, type, desc);
+        // XXX: performance regression. c_str() reallocates
+        fatalf("fd_open(): unknown FD type - FD#: %i, type: %u, desc %s\n", fd, type, desc.c_str());
     }
 
 #else
@@ -243,14 +245,9 @@ fd_open(int fd, unsigned int type, const char *desc)
 }
 
 void
-fd_note(int fd, const char *s)
+fd_note(int fd, const SBuf &s)
 {
-    fde *F = &fd_table[fd];
-    safe_free(F->desc);
-    if (s)
-        F->desc = xstrdup(s);
-    else
-        F->desc = xstrdup("");
+    fd_table[fd].desc = s;
 }
 
 void

@@ -225,7 +225,8 @@ IcmpSquid::Open(void)
 
     icmp_sock = rfd;
 
-    fd_note(icmp_sock, "pinger");
+    static const SBuf desc("pinger");
+    fd_note(icmp_sock, desc);
 
     Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, NULL, 0);
 

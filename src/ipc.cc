@@ -129,16 +129,20 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             debugs(54, DBG_CRITICAL, "ipcCreate: pipe: " << xstrerr(xerrno));
             return -1; // maybe ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
-        fd_open(prfd = p2c[0], FD_PIPE, "IPC FIFO Parent Read");
-        fd_open(cwfd = p2c[1], FD_PIPE, "IPC FIFO Child Write");
+        static const SBuf descPr("IPC FIFO Parent Read");
+        fd_open(prfd = p2c[0], FD_PIPE, descPr);
+        static const SBuf descCw("IPC FIFO Child Write");
+        fd_open(cwfd = p2c[1], FD_PIPE, descCw);
 
         if (pipe(c2p) < 0) {
             xerrno = errno;
             debugs(54, DBG_CRITICAL, "ipcCreate: pipe: " << xstrerr(xerrno));
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
-        fd_open(crfd = c2p[0], FD_PIPE, "IPC FIFO Child Read");
-        fd_open(pwfd = c2p[1], FD_PIPE, "IPC FIFO Parent Write");
+        static const SBuf descCr("IPC FIFO Child Read");
+        fd_open(crfd = c2p[0], FD_PIPE, descCr);
+        static const SBuf descPw("IPC FIFO Parent Write");
+        fd_open(pwfd = c2p[1], FD_PIPE, descPw);
 
         IPC_CHECK_FAIL(crfd, "child read", "FIFO pipe");
         IPC_CHECK_FAIL(prfd, "parent read", "FIFO pipe");
@@ -176,8 +180,10 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             debugs(54, DBG_IMPORTANT, "setsockopt failed: " << xstrerr(xerrno));
             errno = 0;
         }
-        fd_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX STREAM Parent");
-        fd_open(crfd = cwfd = fds[1], FD_PIPE, "IPC UNIX STREAM Parent");
+        static const SBuf descPrw("IPC UNIX STREAM Parent");
+        fd_open(prfd = pwfd = fds[0], FD_PIPE, descPrw);
+        static const SBuf descCrw("IPC UNIX STREAM Child");
+        fd_open(crfd = cwfd = fds[1], FD_PIPE, descCrw);
         IPC_CHECK_FAIL(crfd, "child read", "UDS socket");
         IPC_CHECK_FAIL(prfd, "parent read", "UDS socket");
 
@@ -190,8 +196,10 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             return -1;
         }
 
-        fd_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX DGRAM Parent");
-        fd_open(crfd = cwfd = fds[1], FD_PIPE, "IPC UNIX DGRAM Parent");
+        static const SBuf descPrw("IPC UNIX DGRAM Parent");
+        fd_open(prfd = pwfd = fds[0], FD_PIPE, descPrw);
+        static const SBuf descCrw("IPC UNIX DGRAM Child");
+        fd_open(crfd = cwfd = fds[1], FD_PIPE, descCrw);
 
         IPC_CHECK_FAIL(crfd, "child read", "UDS datagram");
         IPC_CHECK_FAIL(prfd, "parent read", "UDS datagram");
@@ -341,6 +349,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         debugs(54, 3, "ipcCreate: CHILD accepted new FD " << fd);
         close(crfd);
         cwfd = crfd = fd;
+
     } else if (type == IPC_UDP_SOCKET) {
         if (comm_connect_addr(crfd, PaS) == Comm::COMM_ERROR)
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);

@@ -76,11 +76,11 @@ fde::dumpStats(StoreEntry &dumpEntry, int fdNumber) const
         return;
 
 #if _SQUID_WINDOWS_
-    storeAppendPrintf(&dumpEntry, "%4d 0x%-8lX %-6.6s %4d %7" PRId64 "%c %7" PRId64 "%c %-21s %s\n",
+    storeAppendPrintf(&dumpEntry, "%4d 0x%-8lX %-6.6s %4d %7" PRId64 "%c %7" PRId64 "%c %-21s " SQUIDSBUFPH "\n",
                       fdNumber,
                       win32.handle,
 #else
-    storeAppendPrintf(&dumpEntry, "%4d %-6.6s %4d %7" PRId64 "%c %7" PRId64 "%c %-21s %s\n",
+    storeAppendPrintf(&dumpEntry, "%4d %-6.6s %4d %7" PRId64 "%c %7" PRId64 "%c %-21s " SQUIDSBUFPH "\n",
                       fdNumber,
 #endif
                       fdTypeStr[type],
@@ -90,7 +90,7 @@ fde::dumpStats(StoreEntry &dumpEntry, int fdNumber) const
                       bytes_written,
                       write_handler ? '*' : ' ',
                       remoteAddr(),
-                      desc);
+                      SQUIDSBUFPRINT(desc));
 }
 
 void

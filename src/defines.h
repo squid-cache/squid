@@ -43,8 +43,6 @@
 
 #define DNS_INBUF_SZ 4096
 
-#define FD_DESC_SZ      64
-
 #define FQDN_LOOKUP_IF_MISS 0x01
 #define FQDN_MAX_NAMES 5
 

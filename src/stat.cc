@@ -1788,7 +1788,7 @@ statClientRequests(StoreEntry * s)
             const int fd = conn->clientConnection->fd;
             storeAppendPrintf(s, "\tFD %d, read %" PRId64 ", wrote %" PRId64 "\n", fd,
                               fd_table[fd].bytes_read, fd_table[fd].bytes_written);
-            storeAppendPrintf(s, "\tFD desc: %s\n", fd_table[fd].desc);
+            storeAppendPrintf(s, "\tFD desc: " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(fd_table[fd].desc));
             storeAppendPrintf(s, "\tin: buf %p, used %ld, free %ld\n",
                               conn->inBuf.rawContent(), (long int) conn->inBuf.length(), (long int) conn->inBuf.spaceSize());
             storeAppendPrintf(s, "\tremote: %s\n",

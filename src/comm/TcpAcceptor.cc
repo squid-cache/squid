@@ -429,7 +429,8 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     /* fdstat update */
     // XXX : these are not all HTTP requests. use a note about type and ip:port details->
     // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
-    fd_open(sock, FD_SOCKET, "HTTP Request");
+    static const SBuf desc("client TCP connect");
+    fd_open(sock, FD_SOCKET, desc);
 
     fde *F = &fd_table[sock];
     details->remote.toStr(F->ipaddr,MAX_IPSTRLEN);

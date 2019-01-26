@@ -15,6 +15,7 @@
 #include "defines.h"
 #include "ip/Address.h"
 #include "ip/forward.h"
+#include "sbuf/forward.h"
 #include "security/forward.h"
 #include "typedefs.h" //DRCB, DWCB
 
@@ -59,12 +60,9 @@ public:
         readMethod_ = nullptr;
         writeMethod_ = nullptr;
     }
-    ~fde() {
-        xfree(desc);
-    }
 
-    /// Clear the fde class back to NULL equivalent.
-    void clear() { safe_free(desc); *this = fde(); }
+    /// Clear the fde class back to nil equivalent.
+    void clear() { *this = fde(); }
 
     /// True if comm_close for this fd has been called
     bool closing() const { return flags.close_request; }
@@ -107,7 +105,7 @@ public:
                                         See also nfConnmarkFromServer. */
     int sock_family = 0;
     char ipaddr[MAX_IPSTRLEN];            /* dotted decimal address of peer */
-    char *desc = nullptr;
+    SBuf desc;
 
     struct _fde_flags {
         bool open = false;

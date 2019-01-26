@@ -758,7 +758,8 @@ icpOpenPorts(void)
         debugs(12, DBG_CRITICAL, "Sending ICP messages from " << icpOutgoingConn->local);
 
         Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
-        fd_note(icpOutgoingConn->fd, "Outgoing ICP socket");
+        static const SBuf desc("Outgoing ICP socket");
+        fd_note(icpOutgoingConn->fd, desc);
     }
 }
 
@@ -775,7 +776,8 @@ icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int)
 
     debugs(12, DBG_IMPORTANT, "Accepting ICP messages on " << conn->local);
 
-    fd_note(conn->fd, "Incoming ICP port");
+    static const SBuf desc("Incoming ICP port");
+    fd_note(conn->fd, desc);
 
     if (Config.Addrs.udp_outgoing.isNoAddr()) {
         icpOutgoingConn = conn;

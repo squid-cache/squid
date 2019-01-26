@@ -202,7 +202,8 @@ Comm::SelectLoopInit(void)
         fatalf("comm_select_init: can't open /dev/poll: %s\n", xstrerr(xerrno));
     }
 
-    fd_open(devpoll_fd, FD_UNKNOWN, "devpoll ctl");
+    static const SBuf desc("/dev/poll");
+    fd_open(devpoll_fd, FD_UNKNOWN, desc);
 
     commDevPollRegisterWithCacheManager();
 }

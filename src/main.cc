@@ -1153,7 +1153,8 @@ mainInitialize(void)
 
     // Do not register cache.log descriptor with Comm (for now).
     // See https://bugs.squid-cache.org/show_bug.cgi?id=4796
-    // fd_open(fileno(debug_log), FD_LOG, Debug::cache_log);
+    //const SBuf desc(Debug::cache_log);
+    //fd_open(fileno(debug_log), FD_LOG, desc);
 
     debugs(1, DBG_CRITICAL, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
     debugs(1, DBG_CRITICAL, "Service Name: " << service_name);
@@ -1649,9 +1650,12 @@ SquidMain(int argc, char **argv)
 
     if (opt_no_daemon) {
         /* we have to init fdstat here. */
-        fd_open(0, FD_LOG, "stdin");
-        fd_open(1, FD_LOG, "stdout");
-        fd_open(2, FD_LOG, "stderr");
+        static const SBuf inDesc("stdin");
+        fd_open(0, FD_LOG, inDesc);
+        static const SBuf outDesc("stdout");
+        fd_open(1, FD_LOG, outDesc);
+        static const SBuf errDesc("stderr");
+        fd_open(2, FD_LOG, errDesc);
     }
 
 #if USE_WIN32_SERVICE

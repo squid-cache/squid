@@ -106,7 +106,7 @@ Security::NewSessionObject(const Security::ContextPointer &ctx)
 #endif
 
 static bool
-CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &conn, Security::PeerOptions &opts, Security::Io::Type type, const char *squidCtx)
+CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &conn, Security::PeerOptions &opts, Security::Io::Type type, const SBuf &squidCtx)
 {
     if (!Comm::IsConnOpen(conn)) {
         debugs(83, DBG_IMPORTANT, "Gone connection");
@@ -181,7 +181,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 }
 
 bool
-Security::CreateClientSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
+Security::CreateClientSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const SBuf &squidCtx)
 {
     if (!c || !c->getPeer())
         return CreateSession(ctx, c, Security::ProxyOutgoingConfig, Security::Io::BIO_TO_SERVER, squidCtx);
@@ -191,7 +191,7 @@ Security::CreateClientSession(const Security::ContextPointer &ctx, const Comm::C
 }
 
 bool
-Security::CreateServerSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, Security::PeerOptions &o, const char *squidCtx)
+Security::CreateServerSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, Security::PeerOptions &o, const SBuf &squidCtx)
 {
     return CreateSession(ctx, c, o, Security::Io::BIO_TO_CLIENT, squidCtx);
 }

@@ -200,7 +200,6 @@ helperOpenServers(helper * hlp)
     char *shortname;
     char *procname;
     const char *args[HELPER_MAX_ARGS+1]; // save space for a NULL terminator
-    char fd_note_buf[FD_DESC_SZ];
     helper_server *srv;
     int nargs = 0;
     int k;
@@ -284,13 +283,16 @@ helperOpenServers(helper * hlp)
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
         if (rfd == wfd) {
-            snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d", shortname, k + 1);
-            fd_note(rfd, fd_note_buf);
+            SBuf desc;
+            desc.appendf("%s #%d", shortname, k + 1);
+            fd_note(rfd, desc);
         } else {
-            snprintf(fd_note_buf, FD_DESC_SZ, "reading %s #%d", shortname, k + 1);
-            fd_note(rfd, fd_note_buf);
-            snprintf(fd_note_buf, FD_DESC_SZ, "writing %s #%d", shortname, k + 1);
-            fd_note(wfd, fd_note_buf);
+            SBuf desc;
+            desc.appendf("reading %s #%d", shortname, k + 1);
+            fd_note(rfd, desc);
+            desc.clear();
+            desc.appendf("writing %s #%d", shortname, k + 1);
+            fd_note(wfd, desc);
         }
 
         commSetNonBlocking(rfd);
@@ -328,7 +330,6 @@ helperStatefulOpenServers(statefulhelper * hlp)
 {
     char *shortname;
     const char *args[HELPER_MAX_ARGS+1]; // save space for a NULL terminator
-    char fd_note_buf[FD_DESC_SZ];
     int nargs = 0;
 
     if (hlp->cmdline == NULL)
@@ -409,13 +410,16 @@ helperStatefulOpenServers(statefulhelper * hlp)
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
         if (rfd == wfd) {
-            snprintf(fd_note_buf, FD_DESC_SZ, "%s #%d", shortname, k + 1);
-            fd_note(rfd, fd_note_buf);
+            SBuf desc;
+            desc.appendf("%s #%d", shortname, k + 1);
+            fd_note(rfd, desc);
         } else {
-            snprintf(fd_note_buf, FD_DESC_SZ, "reading %s #%d", shortname, k + 1);
-            fd_note(rfd, fd_note_buf);
-            snprintf(fd_note_buf, FD_DESC_SZ, "writing %s #%d", shortname, k + 1);
-            fd_note(wfd, fd_note_buf);
+            SBuf desc;
+            desc.appendf("reading %s #%d", shortname, k + 1);
+            fd_note(rfd, desc);
+            desc.clear();
+            desc.appendf("writing %s #%d", shortname, k + 1);
+            fd_note(wfd, desc);
         }
 
         commSetNonBlocking(rfd);

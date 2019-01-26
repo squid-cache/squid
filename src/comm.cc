@@ -424,7 +424,7 @@ comm_init_opened(const Comm::ConnectionPointer &conn,
     debugs(5, 5, HERE << conn << " is a new socket");
 
     assert(!isOpen(conn->fd)); // NP: global isOpen checks the fde entry for openness not the Comm::Connection
-    fd_open(conn->fd, FD_SOCKET, note);
+    fd_open(conn->fd, FD_SOCKET, SBuf(note));
 
     fde *F = &fd_table[conn->fd];
     F->local_addr = conn->local;
@@ -767,7 +767,8 @@ comm_lingering_close(int fd)
         return;
     }
 
-    fd_note(fd, "lingering close");
+    static const SBuf desc("lingering close");
+    fd_note(fd, desc);
     AsyncCall::Pointer call = commCbCall(5,4, "commLingerTimeout", FdeCbPtrFun(commLingerTimeout, NULL));
 
     debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
@@ -1930,7 +1931,7 @@ comm_open_uds(int sock_type,
     debugs(50, 5, HERE << "FD " << new_socket << " is a new socket");
 
     assert(!isOpen(new_socket));
-    fd_open(new_socket, FD_MSGHDR, addr->sun_path);
+    fd_open(new_socket, FD_MSGHDR, SBuf(addr->sun_path));
 
     fd_table[new_socket].sock_family = AI.ai_family;
 

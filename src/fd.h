@@ -11,9 +11,11 @@
 #ifndef SQUID_FD_H_
 #define SQUID_FD_H_
 
+#include "sbuf/forward.h"
+
 void fd_close(int fd);
-void fd_open(int fd, unsigned int type, const char *);
-void fd_note(int fd, const char *);
+void fd_open(int fd, unsigned int type, const SBuf &);
+void fd_note(int fd, const SBuf &);
 void fd_bytes(int fd, int len, unsigned int type);
 void fdDumpOpen(void);
 int fdUsageHigh(void);

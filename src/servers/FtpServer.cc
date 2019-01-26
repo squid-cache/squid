@@ -252,7 +252,8 @@ Ftp::Server::AcceptCtrlConnection(const CommAcceptCbParams &params)
     }
 
     debugs(33, 4, params.conn << ": accepted");
-    fd_note(params.conn->fd, "client ftp connect");
+    static const SBuf desc("client FTP CTRL");
+    fd_note(params.conn->fd, desc);
 
     if (s->tcp_keepalive.enabled)
         commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
@@ -403,7 +404,8 @@ Ftp::Server::acceptDataConnection(const CommAcceptCbParams &params)
     }
 
     debugs(33, 4, "accepted " << params.conn);
-    fd_note(params.conn->fd, "passive client ftp data");
+    static const SBuf desc("client passive FTP DATA");
+    fd_note(params.conn->fd, desc);
     ++incoming_sockets_accepted;
 
     if (!clientConnection) {
@@ -1713,7 +1715,8 @@ Ftp::Server::connectedForData(const CommConnectCbParams &params)
     } else {
         Must(dataConn == params.conn);
         Must(Comm::IsConnOpen(params.conn));
-        fd_note(params.conn->fd, "active client ftp data");
+        static const SBuf desc("client active FTP DATA");
+        fd_note(params.conn->fd, desc);
     }
 
     doProcessRequest();

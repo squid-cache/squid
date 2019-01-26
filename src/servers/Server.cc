@@ -154,7 +154,8 @@ Server::doClientRead(const CommIoCbParams &io)
         /* It might be half-closed, we can't tell */
         fd_table[io.conn->fd].flags.socket_eof = true;
         commMarkHalfClosed(io.conn->fd);
-        fd_note(io.conn->fd, "half-closed");
+        static const SBuf desc("half-closed; write-only");
+        fd_note(io.conn->fd, desc);
 
         /* There is one more close check at the end, to detect aborted
          * (partial) requests. At this point we can't tell if the request

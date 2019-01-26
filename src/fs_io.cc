@@ -64,7 +64,7 @@ file_open(const char *path, int mode)
     } else {
         debugs(6, 5, "FD " << fd);
         commSetCloseOnExec(fd);
-        fd_open(fd, FD_FILE, path);
+        fd_open(fd, FD_FILE, SBuf(path));
     }
 
     PROF_stop(file_open);

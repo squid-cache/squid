@@ -26,8 +26,10 @@ CommIO::Initialize()
     if (pipe(DonePipe)) {}
     DoneFD = DonePipe[1];
     DoneReadFD = DonePipe[0];
-    fd_open(DoneReadFD, FD_PIPE, "async-io completion event: main");
-    fd_open(DoneFD, FD_PIPE, "async-io completion event: threads");
+    static const SBuf descM("async-io completion event: main");
+    fd_open(DoneReadFD, FD_PIPE, descM);
+    static const SBuf descT("async-io completion event: threads");
+    fd_open(DoneFD, FD_PIPE, descT);
     commSetNonBlocking(DoneReadFD);
     commSetNonBlocking(DoneFD);
     Comm::SetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, NULL, 0);

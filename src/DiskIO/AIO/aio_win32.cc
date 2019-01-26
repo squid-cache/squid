@@ -295,7 +295,7 @@ int aio_open(const char *path, int mode)
         ++ statCounter.syscalls.disk.opens;
         fd = _open_osfhandle((long) hndl, 0);
         commSetCloseOnExec(fd);
-        fd_open(fd, FD_FILE, path);
+        fd_open(fd, FD_FILE, SBuf(path));
     } else {
         errno = GetLastError();
         fd = DISK_ERROR;

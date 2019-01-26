@@ -148,7 +148,7 @@ DiskThreadsDiskFile::openDone(int, const char *, int anFD, int errflag)
     } else {
         ++store_open_disk_fd;
         commSetCloseOnExec(fd);
-        fd_open(fd, FD_FILE, path_);
+        fd_open(fd, FD_FILE, SBuf(path_));
     }
 
     IORequestor::Pointer t = ioRequestor;

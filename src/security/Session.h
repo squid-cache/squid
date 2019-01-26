@@ -11,6 +11,7 @@
 
 #include "base/HardFun.h"
 #include "comm/forward.h"
+#include "sbuf/forward.h"
 #include "security/LockingPointer.h"
 
 #include <memory>
@@ -32,13 +33,13 @@ namespace Security {
 
 /// Creates TLS Client connection structure (aka 'session' state) and initializes TLS/SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns false.
-bool CreateClientSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const char *squidCtx);
+bool CreateClientSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, const SBuf &squidCtx);
 
 class PeerOptions;
 
 /// Creates TLS Server connection structure (aka 'session' state) and initializes TLS/SSL I/O (Comm and BIO).
 /// On errors, emits DBG_IMPORTANT with details and returns false.
-bool CreateServerSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, Security::PeerOptions &, const char *squidCtx);
+bool CreateServerSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, Security::PeerOptions &, const SBuf &squidCtx);
 
 #if USE_OPENSSL
 typedef std::shared_ptr<SSL> SessionPointer;

@@ -224,9 +224,11 @@ unlinkdInit(void)
 
     xusleep(250000);
 
-    fd_note(unlinkd_wfd, "squid -> unlinkd");
+    static const SBuf descWfd("squid -> unlinkd");
+    fd_note(unlinkd_wfd, descWfd);
 
-    fd_note(unlinkd_rfd, "unlinkd -> squid");
+    static const SBuf descRfd("unlinkd -> squid");
+    fd_note(unlinkd_rfd, descRfd);
 
     commUnsetFdTimeout(unlinkd_rfd);
     commUnsetFdTimeout(unlinkd_wfd);

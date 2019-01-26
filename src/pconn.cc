@@ -439,7 +439,7 @@ PconnPool::push(const Comm::ConnectionPointer &conn, const char *domain)
     static const SBuf descPrefix("Idle server: ");
     SBuf desc(descPrefix);
     desc.append(aKey);
-    fd_note(conn->fd, desc.c_str());
+    fd_note(conn->fd, desc);
     debugs(48, 3, HERE << "pushed " << conn << " for " << aKey);
 
     // successful push notifications resume multi-connection opening sequence

@@ -856,7 +856,9 @@ ConnStateData::readNextRequest()
 {
     debugs(33, 5, HERE << clientConnection << " reading next req");
 
-    fd_note(clientConnection->fd, "Idle client: Waiting for next request");
+    static const SBuf desc("Idle client: Waiting for next request");
+    fd_note(clientConnection->fd, desc);
+
     /**
      * Set the timeout BEFORE calling readSomeData().
      */
@@ -1970,8 +1972,10 @@ ConnStateData::afterClientRead()
 #endif
 
     /* Process next request */
-    if (pipeline.empty())
-        fd_note(clientConnection->fd, "Reading next request");
+    if (pipeline.empty()) {
+        static const SBuf desc("Reading next request");
+        fd_note(clientConnection->fd, desc);
+    }
 
     if (!clientParseRequests()) {
         if (!isOpen())
@@ -2337,7 +2341,8 @@ httpAccept(const CommAcceptCbParams &params)
     }
 
     debugs(33, 4, params.conn << ": accepted");
-    fd_note(params.conn->fd, "client http connect");
+    static const SBuf desc("client HTTP connect");
+    fd_note(params.conn->fd, desc);
 
     if (s->tcp_keepalive.enabled)
         commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
@@ -2354,7 +2359,8 @@ static bool
 httpsCreate(const ConnStateData *connState, const Security::ContextPointer &ctx)
 {
     const auto conn = connState->clientConnection;
-    if (Security::CreateServerSession(ctx, conn, connState->port->secure, "client https start")) {
+    static const SBuf desc("client https start");
+    if (Security::CreateServerSession(ctx, conn, connState->port->secure, desc)) {
         debugs(33, 5, "will negotiate TLS on " << conn);
         return true;
     }
@@ -2597,7 +2603,8 @@ httpsAccept(const CommAcceptCbParams &params)
     }
 
     debugs(33, 4, HERE << params.conn << " accepted, starting SSL negotiation.");
-    fd_note(params.conn->fd, "client https connect");
+    static const SBuf desc("client HTTPS connect");
+    fd_note(params.conn->fd, desc);
 
     if (s->tcp_keepalive.enabled) {
         commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
@@ -2992,7 +2999,8 @@ ConnStateData::parseTlsHandshake()
 
     assert(!inBuf.isEmpty());
     receivedFirstByte();
-    fd_note(clientConnection->fd, "Parsing TLS handshake");
+    static const SBuf desc("client Parse TLS handshake");
+    fd_note(clientConnection->fd, desc);
 
     bool unsupportedProtocol = false;
     try {
@@ -3809,8 +3817,8 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, const Htt
         pinning.peer = cbdataReference(aPeer);
     pinning.auth = request.flags.connectionAuth;
     char stmp[MAX_IPSTRLEN];
-    char desc[FD_DESC_SZ];
-    snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
+    SBuf desc;
+    desc.appendf("%s pinned connection for %s (%d)",
              (pinning.auth || !pinning.peer) ? pinnedHost : pinning.peer->name,
              clientConnection->remote.toUrl(stmp,MAX_IPSTRLEN),
              clientConnection->fd);

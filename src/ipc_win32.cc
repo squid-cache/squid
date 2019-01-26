@@ -407,8 +407,9 @@ ipc_thread_1(void *in_params)
 
         debugs(54, 3, "ipcCreate: CHILD accepted new FD " << fd);
         comm_close(crfd);
-        snprintf(buf1, bufSz-1, "%s CHILD socket", prog);
-        fd_open(fd, FD_SOCKET, buf1);
+        SBuf desc;
+        desc.appendf("%s CHILD socket", prog);
+        fd_open(fd, FD_SOCKET, desc);
         fd_table[fd].flags.ipc = 1;
         cwfd = crfd = fd;
     } else if (type == IPC_UDP_SOCKET) {

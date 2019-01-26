@@ -189,7 +189,8 @@ DiskdIOStrategy::init()
     if (rfd != wfd)
         comm_close(rfd);
 
-    fd_note(wfd, "squid -> diskd");
+    static const SBuf desc("squid -> diskd");
+    fd_note(wfd, desc);
 
     commUnsetFdTimeout(wfd);
     commSetNonBlocking(wfd);
