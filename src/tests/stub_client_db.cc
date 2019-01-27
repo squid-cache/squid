@@ -25,3 +25,4 @@ ClientInfo *clientdbGetInfo(const Ip::Address &addr) STUB_RETVAL(nullptr)
 Ip::Address *client_entry(Ip::Address *) STUB_RETVAL(nullptr)
 variable_list *snmp_meshCtblFn(variable_list *, snint *) STUB_RETVAL(nullptr)
 #endif
+
