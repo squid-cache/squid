@@ -37,6 +37,9 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 <p>The most important of these new features are:
 <itemize>
 	<item>ICAP Trailers
+	<item>DNS Happy Eyeballs Update
+	<item>Kerberos Group Helper
+	<item>TrivialDB Support
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -57,6 +60,58 @@ Most user-facing changes are reflected in squid.conf (see below).
 </itemize>
 
 <p>For now Squid logs and ignores all parsed ICAP header fields.
+
+
+<sect1>DNS Happy Eyeballs Update
+
+<p>Algorithm Summary:
+   Do not wait for all request forwarding destinations to be resolved. Use
+   each resolved destination as soon as it is needed. Use A and AAAA responses
+   respectively as soon as the IP data arrives.
+
+<p>Please note that this is vastly different from the sequential and sorted
+   behaviour which allowed <em>dns_v4_first</em> choice by the proxy admin.
+   No effort has been made to retain the old behaviour. Admin are expected
+   to be using the Best Practice techniques of firewall control for rejecting
+   unwanted connections, or DNS resolver configuration for controlling type
+   of addresses presented.
+
+<p>The Cache Manager <em>mgr:ipcache</em> report no longer contains
+   <q>IPcache Entries In Use</q> but that info is now available as
+   <q>cbdata ipcache_entry</q> row in <em>mgr:mem</em>.
+
+
+<sect1>Kerberos Group Helper
+<p>This release adds a sample Kerberos group authentication external_acl helper
+   called <em>ext_kerberos_sid_group_acl</em>.
+   It uses <em>ldapsearch</em> from OpenLDAP to lookup the name of an AD group SID.
+
+<p>This helper must be used in with the <em>negotiate_kerberos_auth</em> helper in
+   a Microsft AD or Samba environment.
+
+<p>It reads from the standard input the domain username and a list of group SIDs
+   and tries to match the group SIDs to the AD group SIDs.
+
+
+<sect1>TrivialDB Support
+<p>This release deprecates use of BerkleyDB in favour of TrivialDB.
+
+<p>The BerkleyDB library code has been moved under a copyright licence which
+   causes problems for many OS distributors. The result of that is that most
+   are no longer providing the latest security supported libdb version.
+
+<p>TrivialDB by comparison has better OS support and security updates along
+   with functionality differences that resolve some long standing issues
+   libdb suffered with parallel concurrent access to the database.
+
+<p>The <em>ext_session_acl</em> and <em>ext_time_quota_acl</em> helpers may
+   now be built with either libdb or libtdb. Preferring libtdb if both are
+   enabled or auto-detected at build time. Use the <em>--without-tdb</em>
+   build option to retain BerkleyDB support.
+
+<p>Please note that the database formats are not guaranteed to be identical.
+   So when migrating it is recommended to erase the database file(s) and use
+   the helpers functionality to rebuild it as needed.
 
 
 <sect>Changes to squid.conf since Squid-4
@@ -80,6 +135,27 @@ This section gives a thorough account of those changes in three categories:
 	   and order in Squid generated HTTP 401 (Unauthorized) and 407
 	   (Proxy Authentication Required) responses.
 
+	<tag>collapsed_forwarding_access</tag>
+	<p>New access control to restrict collapsed forwarding to a subset of
+	   eligible HTTP, ICP and HTCP requests.
+
+	<tag>mark_client_connection</tag>
+	<p>New access control to apply a Netfilter CONNMARK value to a TCP client
+	   connection.
+
+	<tag>mark_client_packet</tag>
+	<p>New access control to apply a Netfilter MARK value to packets being
+	   transmitted on a client TCP connection.
+
+	<tag>response_delay_pool</tag>
+	<p>New access control to configure client response bandwidth limits.
+	   This feature is a port and update of the class 6 / Client Delay Pools
+	   feature planned for the abandoned <em>Squid-2.8</em> series.
+
+	<tag>response_delay_pool_access</tag>
+	<p>New access control to determines whether a specific named response
+	   delay pool is used for the HTTP transaction.
+
 </descrip>
 
 <sect1>Changes to existing directives<label id="modifieddirectives">
@@ -87,13 +163,40 @@ This section gives a thorough account of those changes in three categories:
 <descrip>
 	<tag>acl</tag>
 	<p>The <em>CONNECT</em> ACL definition is now built-in.
+	<p>New <em>annotate_client</em> type to annotate a client TCP connection.
+	   These annotations can be used by other ACLs, logs or helpers and
+	   persist until the client TCP connection is closed.
+	<p>New <em>annotate_transaction</em> type to annotate an HTTP transaction.
+	   Annotations can be used by other ACLs or helpers and persist until
+	   logging of the HTTP transaction is completed.
+	<p>Replaced <em>clientside_mark</em> with <em>client_connection_mark</em>
+	   type to match Netfilter CONNMARK of the client TCP connection.
+
+	<tag>deny_info</tag>
+	<p>New code <em>%A</em> to display Squid listening IP address the client
+	   TCP connection was connected to.
+
+	<tag>logformat</tag>
+	<p>New <em>ssl::&lt;cert</em> macro code to display received server X.509
+	   certificate in PEM format.
+	<p>New <em>CF</em> value for <em>%Ss</em> code to indicate the response
+	   was handled by Collapsed Forwarding.
 
 </descrip>
 
 <sect1>Removed directives<label id="removeddirectives">
 <p>
 <descrip>
-	<p>No removed directives in this version.
+	<tag>clientside_mark</tag>
+	<p>Replaced by <em>mark_client_packet</em>.
+
+	<tag>dns_v4_first</tag>
+	<p>Removed. The new <q>Happy Eyeballs</q> DNS query algorithm uses IP
+	   addresses immediately on arrival. This offers no opportunity to
+	   sort the response order from Squid.
+	<p>Firewall rules prohibiting use of IPv6 TCP connections remains the
+	   preferred configuration method for 'disabling' IPv6 connectivity.
+	   With DNS recursive-resolver configuration as secondary.
 
 </descrip>
 
@@ -136,7 +239,7 @@ This section gives an account of those changes in three categories:
 <p>
 <descrip>
 	<tag>--disable-inline</tag>
-	<p>Removed.
+	<p>Removed. Use compiler flags instead if necessary.
 
 	<tag>-DUSE_CHUNKEDMEMPOOLS=1</tag>
 	<p>Removed compiler flag. Use run-time environment variable <em>MEMPOOLS=1</em>
