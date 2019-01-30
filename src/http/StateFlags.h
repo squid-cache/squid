@@ -16,12 +16,13 @@ class StateFlags
 {
 public:
     unsigned int front_end_https = 0; ///< send "Front-End-Https: On" header (off/on/auto=2)
-    bool proxying = false;
     bool keepalive = false;
     bool only_if_cached = false;
     bool handling1xx = false;       ///< we are ignoring or forwarding 1xx response
     bool headers_parsed = false;
-    bool originpeer = false;
+    bool toOrigin = false; ///< Request destined to an origin (peer or direct)
+    bool toProxy = false; ///< Request destined to a proxy
+    bool peering = false; ///< Request destined to a proxy (origin peer or proxy)
     bool keepalive_broken = false;
     bool abuse_detected = false;
     bool request_sent = false;

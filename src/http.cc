@@ -102,9 +102,9 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     bool tlsTunnel = request->flags.sslBumped || // http request through bumped connection
         request->url.getScheme() == AnyP::PROTO_HTTPS; // 'get https://xxx' request (this check superset request->flags.sslBump check)
 
-    // TODO: split {proxying,originserver} into {peering,toProxy,toOrigin}
-    flags.originpeer = (_peer != NULL && _peer->options.originserver);
-    flags.proxying =  (_peer != NULL && !tlsTunnel && !flags.originpeer);
+    flags.toOrigin = (_peer || tlsTunnel || _peer->options.originserver);
+    flags.toProxy =  (_peer && !flags.toOrigin);
+    flags.peering =  (_peer && !tlsTunnel);
 
     if (_peer) {
         /*
@@ -112,7 +112,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
          * We might end up getting the object from somewhere else if,
          * for example, the request to this neighbor fails.
          */
-        if (_peer->options.proxy_only)
+        if (flags.peering && _peer->options.proxy_only)
             entry->releaseRequest(true);
 
 #if USE_DELAY_POOLS
@@ -630,11 +630,11 @@ void
 HttpStateData::keepaliveAccounting(HttpReply *reply)
 {
     if (flags.keepalive)
-        if (_peer && flags.proxying)
+        if (flags.peering)
             ++ _peer->stats.n_keepalives_sent;
 
     if (reply->keep_alive) {
-        if (_peer && flags.proxying)
+        if (flags.peering)
             ++ _peer->stats.n_keepalives_recv;
 
         if (Config.onoff.detect_broken_server_pconns
@@ -649,7 +649,7 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
 void
 HttpStateData::checkDateSkew(HttpReply *reply)
 {
-    if (reply->date > -1 && !flags.proxying) {
+    if (reply->date > -1 && !flags.peering) {
         int skew = abs((int)(reply->date - squid_curtime));
 
         if (skew > 86400)
@@ -847,10 +847,7 @@ HttpStateData::proceedAfter1xx()
 bool
 HttpStateData::peerSupportsConnectionPinning() const
 {
-    if (!_peer)
-        return true;
-
-    if (!flags.proxying)
+    if (!flags.peering) // implies _peer!=nil
         return true;
 
     /*If this peer does not support connection pinning (authenticated
@@ -1663,16 +1660,15 @@ HttpStateData::doneWithServer() const
 static void
 httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, const Http::StateFlags &flags)
 {
-    Http::HdrType header = flags.originpeer ? Http::HdrType::AUTHORIZATION : Http::HdrType::PROXY_AUTHORIZATION;
-
     /* Nothing to do unless we are forwarding to a peer */
-    if (!flags.proxying)
+    if (!flags.peering)
         return;
 
     /* Needs to be explicitly enabled */
     if (!request->peer_login)
         return;
 
+    Http::HdrType header = flags.toOrigin ? Http::HdrType::AUTHORIZATION : Http::HdrType::PROXY_AUTHORIZATION;
     /* Maybe already dealt with? */
     if (hdr_out->has(header))
         return;
@@ -1681,8 +1677,17 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     if (strcmp(request->peer_login, "PASSTHRU") == 0)
         return;
 
-    /* PROXYPASS is a special case, single-signon to servers with the proxy password (basic only) */
-    if (flags.originpeer && strcmp(request->peer_login, "PROXYPASS") == 0 && hdr_in->has(Http::HdrType::PROXY_AUTHORIZATION)) {
+    /* PROXYPASS is a special case, single-signon to servers with
+       the proxy password (basic only)
+       This is made undocumented with commit ee0b94f4
+
+       Documentation from commit 11e4c5e5:
+       Send login details received from client to this peer.
+       Only WWW-Authorization headers are passed to the peer. If the
+       'originserver' option is also used this will convert Proxy-Authorization:
+       to WWW-Authorization: before  relaying. The header content is not altered.
+    */
+    if (flags.toOrigin && strcmp(request->peer_login, "PROXYPASS") == 0 && hdr_in->has(Http::HdrType::PROXY_AUTHORIZATION)) {
         const char *auth = hdr_in->getStr(Http::HdrType::PROXY_AUTHORIZATION);
 
         if (auth && strncasecmp(auth, "basic ", 6) == 0) {
@@ -1875,7 +1880,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Authorization if known in URL, not in header and going direct */
     if (!hdr_out->has(Http::HdrType::AUTHORIZATION)) {
-        if (!flags.proxying && !request->url.userInfo().isEmpty()) {
+        if (!flags.peering && !request->url.userInfo().isEmpty()) {
             static char result[base64_encode_len(MAX_URL*2)]; // should be big enough for a single URI segment
             struct base64_encode_ctx ctx;
             base64_encode_init(&ctx);
@@ -1960,7 +1965,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * Only pass on proxy authentication to peers for which
          * authentication forwarding is explicitly enabled
          */
-        if (!flags.originpeer && flags.proxying && request->peer_login &&
+        if (flags.toProxy && request->peer_login &&
                 (strcmp(request->peer_login, "PASS") == 0 ||
                  strcmp(request->peer_login, "PROXYPASS") == 0 ||
                  strcmp(request->peer_login, "PASSTHRU") == 0)) {
@@ -1985,9 +1990,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         /** \par WWW-Authorization:
          * Pass on WWW authentication */
 
-        if (!flags.originpeer) {
-            hdr_out->addEntry(e->clone());
-        } else {
+        if (flags.toOrigin && flags.peering) {
             /** \note In accelerators, only forward authentication if enabled
              * (see also httpFixupAuthentication for special cases)
              */
@@ -1997,6 +2000,8 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
                      strcmp(request->peer_login, "PROXYPASS") == 0)) {
                 hdr_out->addEntry(e->clone());
             }
+        } else {
+            hdr_out->addEntry(e->clone());
         }
 
         break;
@@ -2161,7 +2166,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
      * not the one we are sending. Needs checking.
      */
     const AnyP::ProtocolVersion httpver = Http::ProtocolVersion();
-    const SBuf url(flags.proxying ? request->effectiveRequestUri() : request->url.path());
+    const SBuf url(flags.toProxy ? request->effectiveRequestUri() : request->url.path());
     mb->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\r\n",
                 SQUIDSBUFPRINT(request->method.image()),
                 SQUIDSBUFPRINT(url),
@@ -2235,7 +2240,7 @@ HttpStateData::sendRequest()
         flags.keepalive = false;
     else if (_peer == NULL)
         flags.keepalive = true;
-    else if (!flags.proxying)
+    else if (!flags.peering)
         flags.keepalive = true;
     else if (_peer->stats.n_keepalives_sent < 10)
         flags.keepalive = true;
@@ -2243,7 +2248,7 @@ HttpStateData::sendRequest()
              (double) _peer->stats.n_keepalives_sent > 0.50)
         flags.keepalive = true;
 
-    if (_peer) {
+    if (flags.peering) {
         /*The old code here was
           if (neighborType(_peer, request->url) == PEER_SIBLING && ...
           which is equivalent to:
@@ -2255,7 +2260,7 @@ HttpStateData::sendRequest()
 
            But I suppose it was a bug
          */
-        if (flags.proxying && neighborType(_peer, request->url) == PEER_SIBLING && !_peer->options.allow_miss)
+        if (neighborType(_peer, request->url) == PEER_SIBLING && !_peer->options.allow_miss)
             flags.only_if_cached = true;
 
         flags.front_end_https = _peer->front_end_https;
