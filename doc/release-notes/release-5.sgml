@@ -37,7 +37,7 @@ The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/
 <p>The most important of these new features are:
 <itemize>
 	<item>ICAP Trailers
-	<item>DNS Happy Eyeballs Update
+	<item>Happy Eyeballs Update
 	<item>Kerberos Group Helper
 	<item>TrivialDB Support
 </itemize>
@@ -62,23 +62,31 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>For now Squid logs and ignores all parsed ICAP header fields.
 
 
-<sect1>DNS Happy Eyeballs Update
+<sect1>Happy Eyeballs Update
 
-<p>Algorithm Summary:
-   Do not wait for all request forwarding destinations to be resolved. Use
-   each resolved destination as soon as it is needed. Use A and AAAA responses
-   respectively as soon as the IP data arrives.
+<p>Squid now uses a received IP address as soon as it is needed for request
+   forwarding instead of waiting for all of the potential forwarding
+   destinations to be fully resolved (i.e. complete both IPv4 and IPv6 domain
+   name resolution) before beginning to forward the request.
 
-<p>Please note that this is vastly different from the sequential and sorted
-   behaviour which allowed <em>dns_v4_first</em> choice by the proxy admin.
-   No effort has been made to retain the old behaviour. Admin are expected
-   to be using the Best Practice techniques of firewall control for rejecting
-   unwanted connections, or DNS resolver configuration for controlling type
-   of addresses presented.
+<p>Instead of obeying <em>dns_v4_first</em> settings, IP family usage order is
+   now primarily controlled by DNS response time: If a DNS AAAA response comes
+   first while Squid is waiting for an IP address, then Squid will use the
+   received IPv6 address(es) first. For previously cached IPs, Squid tries
+   IPv6 addresses first. To control IP address families used by Squid, admins
+   are expected to use firewalls, DNS recursive-resolver configuration, and/or
+   <em>--disable-ipv6</em>. When planning you configuration changes, please
+   keep in mind that the upcoming Happy Eyeballs improvements will favor
+   faster TCP connection establishment, decreasing the impact of DNS
+   resolution timing.
+
+<p>These Happy Eyeballs changes do not affect peer selection: Squid still does
+   not move on to the next selected destination until all IP addresses for the
+   previous destination have been received and tried.
 
 <p>The Cache Manager <em>mgr:ipcache</em> report no longer contains
    <q>IPcache Entries In Use</q> but that info is now available as
-   <q>cbdata ipcache_entry</q> row in <em>mgr:mem</em>.
+   <q>cbdata ipcache_entry</q> row on the <em>mgr:mem</em> page.
 
 
 <sect1>Kerberos Group Helper
@@ -191,12 +199,11 @@ This section gives a thorough account of those changes in three categories:
 	<p>Replaced by <em>mark_client_packet</em>.
 
 	<tag>dns_v4_first</tag>
-	<p>Removed. The new <q>Happy Eyeballs</q> DNS query algorithm uses IP
-	   addresses immediately on arrival. This offers no opportunity to
-	   sort the response order from Squid.
-	<p>Firewall rules prohibiting use of IPv6 TCP connections remains the
-	   preferred configuration method for 'disabling' IPv6 connectivity.
-	   With DNS recursive-resolver configuration as secondary.
+	<p>Removed. The new <q>Happy Eyeballs</q> algorithm uses received IP
+	   addresses as soon as they are needed.
+	<p>Firewall rules prohibiting IPv6 TCP connections remain the preferred
+	   configuration method for 'disabling' IPv6 connectivity, with DNS
+	   recursive-resolver configuration also available.
 
 </descrip>
 
