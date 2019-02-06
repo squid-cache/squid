@@ -955,6 +955,7 @@ FwdState::usePinned()
 
     // the previously pinned idle peer connection may get closed (by the peer)
     if (!Comm::IsConnOpen(temp)) {
+        syncHierNote(temp, connManager ? connManager->pinning.host : request->url.host());
         serverConn = nullptr;
         const auto anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request);
         fail(anErr);
