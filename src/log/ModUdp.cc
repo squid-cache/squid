@@ -109,22 +109,22 @@ logfile_mod_udp_rotate(Logfile *, const int16_t)
 {
 }
 
-/*                                                                             
- * only schedule a flush (write) if one isn't scheduled.                       
- */                                                                            
-static void                                                                    
-logfileUdpFlushEvent(void *data)                                               
-{                                                                              
-    Logfile *lf = static_cast<Logfile *>(data);                                
-                                                                               
-    /*                                                                         
-     * This might work better if we keep track of when we wrote last and only  
-     * schedule a write if we haven't done so in the last second or two.       
-     */                                                                        
-    logfile_mod_udp_flush(lf);                                                 
-    eventAdd("logfile_mod_udp_flush", logfileUdpFlushEvent, lf, 1.0, 1);       
-}                                                                              
-                                                                               
+/*
+ * only schedule a flush (write) if one isn't scheduled.
+ */
+static void
+logfileUdpFlushEvent(void *data)
+{
+    Logfile *lf = static_cast<Logfile *>(data);
+
+    /*
+     * This might work better if we keep track of when we wrote last and only
+     * schedule a write if we haven't done so in the last second or two.
+     */
+    logfile_mod_udp_flush(lf);
+    eventAdd("logfile_mod_udp_flush", logfileUdpFlushEvent, lf, 1.0, 1);
+}
+
 static void
 logfile_mod_udp_close(Logfile * lf)
 {
@@ -229,7 +229,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
         ll->bufsz = bufsz;
     }
 
-     /* Start the flush event */                                         
+     /* Start the flush event */
      eventAdd("logfile_mod_udp_flush", logfileUdpFlushEvent, lf, 1.0, 1);
 
     return 1;
