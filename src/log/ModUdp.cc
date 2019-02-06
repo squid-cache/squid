@@ -144,7 +144,7 @@ logfile_mod_udp_close(Logfile * lf)
 }
 
 /*
- * This code expects the path to be //host:port
+ * This code expects the path to be //host:port,flush_time
  */
 int
 logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag)
@@ -166,6 +166,14 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
         path += 2;
     }
     strAddr = xstrdup(path);
+    char *flush_time = (char *) strchr(strAddr, ','); 
+    if (flush_time) {
+        *flush_time = '\0';
+        ++flush_time;
+        int flushperiod = atoi(flush_time);
+        /* Start the flush event */
+        eventAdd("logfile_mod_udp_flush", logfileUdpFlushEvent, lf, flushperiod, 1);
+    }
     if (!GetHostWithPort(strAddr, &addr)) {
         if (lf->flags.fatal) {
             fatalf("Invalid UDP logging address '%s'\n", lf->path);
@@ -228,9 +236,6 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
         ll->buf = static_cast<char*>(xmalloc(bufsz));
         ll->bufsz = bufsz;
     }
-
-     /* Start the flush event */
-     eventAdd("logfile_mod_udp_flush", logfileUdpFlushEvent, lf, 1.0, 1);
 
     return 1;
 }
