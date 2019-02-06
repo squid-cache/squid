@@ -1295,7 +1295,7 @@ FwdState::supportsRepinning() const
 
     // pconn race on pinned connection: Currently we do not have any mechanism
     // to re-pin current pinned connection path.
-    if (!serverDestinations.empty() && serverDestinations[0] == nullptr)
+    if (pconnRace == raceHappened)
         return false;
 
     // If a bumped connection was pinned, then the TLS client was given our peer
