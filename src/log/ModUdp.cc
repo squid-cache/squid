@@ -166,7 +166,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
         path += 2;
     }
     strAddr = xstrdup(path);
-    char *flush_time = (char *) strchr(strAddr, ','); 
+    char *flush_time = (char *) strchr(strAddr, ',');
     if (flush_time) {
         *flush_time = '\0';
         ++flush_time;
