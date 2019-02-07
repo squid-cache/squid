@@ -109,29 +109,11 @@ logfile_mod_udp_rotate(Logfile *, const int16_t)
 {
 }
 
-/*
- * only schedule a flush (write) if one isn't scheduled.
- */
-static void
-logfileUdpFlushEvent(void *data)
-{
-    Logfile *lf = static_cast<Logfile *>(data);
-
-    /*
-     * This might work better if we keep track of when we wrote last and only
-     * schedule a write if we haven't done so in the last second or two.
-     */
-    logfile_mod_udp_flush(lf);
-    eventAdd("logfile_mod_udp_flush", logfileUdpFlushEvent, lf, 1.0, 1);
-}
-
 static void
 logfile_mod_udp_close(Logfile * lf)
 {
     l_udp_t *ll = (l_udp_t *) lf->data;
     lf->f_flush(lf);
-
-    eventDelete(logfileUdpFlushEvent, lf);
 
     if (ll->fd >= 0)
         file_close(ll->fd);
@@ -144,7 +126,7 @@ logfile_mod_udp_close(Logfile * lf)
 }
 
 /*
- * This code expects the path to be //host:port,flush_time
+ * This code expects the path to be //host:port
  */
 int
 logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag)
@@ -231,7 +213,8 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
      * applications like netcat have a small default receive buffer and will
      * truncate!
      */
-    bufsz = 1400;
+    if (bufsz > 1400)
+        bufsz = 1400;
     if (bufsz > 0) {
         ll->buf = static_cast<char*>(xmalloc(bufsz));
         ll->bufsz = bufsz;
