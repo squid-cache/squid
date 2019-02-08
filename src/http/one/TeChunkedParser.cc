@@ -139,11 +139,13 @@ Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok)
 static bool
 parseIntExtension(Parser::Tokenizer &tok, const SBuf &name, int64_t &value)
 {
+    assert(!tok.atEnd()); // guaranteed by ParseBws() after "="
+
     const auto savedTok = tok;
     int64_t parsedValue = 0;
 
     if (!tok.int64(parsedValue, 10))
-        throw TexcHere(ToSBuf("invalid integer value for extension ", name));
+        throw TexcHere(ToSBuf("invalid value for the decimal integer chunk extension ", name));
 
     if (!tok.atEnd()) {
         value = parsedValue;
