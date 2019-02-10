@@ -1306,7 +1306,8 @@ parseBytesOptionValue(size_t * bptr, const char *units, char const * value)
 static size_t
 parseBytesUnits(const char *unit)
 {
-    if (!strncasecmp(unit, B_BYTES_STR, strlen(B_BYTES_STR)))
+    if (!strncasecmp(unit, B_BYTES_STR, strlen(B_BYTES_STR)) ||
+            !strncasecmp(unit, "", strlen(unit)))
         return 1;
 
     if (!strncasecmp(unit, B_KBYTES_STR, strlen(B_KBYTES_STR)))
