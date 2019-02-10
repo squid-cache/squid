@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -89,3 +89,4 @@ int httpHeaderParseQuotedString(const char *, const int, String *) STUB_RETVAL(-
 SBuf httpHeaderQuoteString(const char *) STUB_RETVAL(SBuf())
 void httpHeaderCalcMask(HttpHeaderMask *, Http::HdrType [], size_t) STUB
 void httpHeaderInitModule() STUB
+
