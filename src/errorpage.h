@@ -115,12 +115,25 @@ public:
 private:
     typedef ErrorPage::Build Build;
 
+    /// locates the right error page template for this error and compiles it
     SBuf buildBody();
+
+    /// compiles error page or error detail template (i.e. anything but deny_url)
+    /// \param input  the template text to be compiled
+    /// \param allowRecursion  whether to compile %codes which produce %codes
     SBuf compileBody(const char *text, bool allowRecursion);
 
+    /// compile a single-letter %code like %D
     void compileLegacyCode(Build &build);
+
+    /// compile @Squid{%code} sequence containing a single logformat %code
     void compileLogformatCode(Build &build);
 
+    /// replaces all legacy and logformat %codes in the given input
+    /// \param input  the template text to be converted
+    /// \param building_deny_info_url  whether input is a deny_info URL parameter
+    /// \param allowRecursion  whether to compile %codes which produce %codes
+    /// \returns the given input with all %codes substituted
     SBuf compile(const char *input, bool building_deny_info_url, bool allowRecursion);
 
     /// React to a compile() error, throwing if buildContext allows.

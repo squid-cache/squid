@@ -851,7 +851,6 @@ ErrorState::Dump(MemBuf * mb)
 /// \ingroup ErrorPageInternal
 #define CVT_BUF_SZ 512
 
-/// compile @Squid{%code} sequence containing a single logformat %code
 void
 ErrorState::compileLogformatCode(Build &build)
 {
@@ -888,7 +887,6 @@ ErrorState::compileLogformatCode(Build &build)
     build.input += remainingSize;
 }
 
-/// compile a single-letter %code like %D
 void
 ErrorState::compileLegacyCode(Build &build)
 {
@@ -1346,7 +1344,6 @@ ErrorState::BuildHttpReply()
     return rep;
 }
 
-/// locates the right error page template for this error and compiles it
 SBuf
 ErrorState::buildBody()
 {
@@ -1383,20 +1380,12 @@ ErrorState::buildBody()
     return compileBody(error_text[page_id], true);
 }
 
-/// compiles error page or error detail template (i.e. anything but deny_url)
-/// * \param input  the template text to be compiled
-/// * \param allowRecursion  whether to compile %codes which produce %codes
 SBuf
 ErrorState::compileBody(const char *input, bool allowRecursion)
 {
     return compile(input, false, allowRecursion);
 }
 
-/// replaces all legacy and logformat %codes in the given input
-/// \param input  the template text to be converted
-/// \param building_deny_info_url  whether input is a deny_info URL parameter
-/// \param allowRecursion  whether to compile %codes which produce %codes
-/// \returns the given input with all %codes substituted
 SBuf
 ErrorState::compile(const char *input, bool building_deny_info_url, bool allowRecursion)
 {
