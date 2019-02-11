@@ -111,7 +111,6 @@ clientReplyContext::setReplyToError(
 #endif
 )
 {
-    //TODO: check again http->al
     auto errstate = clientBuildError(err, status, uri, addr, failedrequest, http->al);
 
     if (unparsedrequest)
