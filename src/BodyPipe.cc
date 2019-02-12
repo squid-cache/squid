@@ -397,12 +397,14 @@ BodyPipe::postAppend(size_t size)
     thePutSize += size;
     debugs(91,7, HERE << "added " << size << " bytes" << status());
 
-    if (!mayNeedMoreData())
-        clearProducer(true); // reached end-of-body
-
     // We should not consume here even if mustAutoConsume because the
     // caller may not be ready for the data to be consumed during this call.
     scheduleBodyDataNotification();
+
+    // Do this check after scheduleBodyDataNotification() to ensure the
+    // natural order of "more body data" and "production ended" events.
+    if (!mayNeedMoreData())
+        clearProducer(true); // reached end-of-body
 
     startAutoConsumptionIfNeeded();
 }
