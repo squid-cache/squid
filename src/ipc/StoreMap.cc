@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -346,8 +346,7 @@ Ipc::StoreMap::freeChainAt(SliceId sliceId, const SliceId splicingPoint)
     while (sliceId >= 0) {
         Slice &slice = sliceAt(sliceId);
         const SliceId nextId = slice.next;
-        slice.size = 0;
-        slice.next = -1;
+        slice.clear();
         if (cleaner)
             cleaner->noteFreeMapSlice(sliceId); // might change slice state
         if (sliceId == splicingPoint) {
@@ -358,6 +357,14 @@ Ipc::StoreMap::freeChainAt(SliceId sliceId, const SliceId splicingPoint)
         sliceId = nextId;
     }
     debugs(54, 7, "freed chain #" << chainId << " in " << path);
+}
+
+void
+Ipc::StoreMap::prepFreeSlice(const SliceId sliceId)
+{
+    // TODO: Move freeSlots here, along with reserveSlotForWriting() logic.
+    assert(validSlice(sliceId));
+    sliceAt(sliceId).clear();
 }
 
 Ipc::StoreMap::SliceId

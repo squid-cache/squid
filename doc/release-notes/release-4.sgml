@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.4 release notes</title>
+<title>Squid 4.6 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.4 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.6 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -283,8 +283,8 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>acl</tag>
 	<p>New <em>-m</em> flag for <em>note</em> ACL to match substrings.
-	<p>New <em>clientside_mark</em> type for matching Netfilter CONNMARK on
-	   the client TCP connection.
+	<p>New <em>client_connection_mark</em> type for matching Netfilter
+	   CONNMARK of the client TCP connection.
 	<p>New <em>connections_encrypted</em> type for matching transactions
 	   where all HTTP messages were received over TLS transport connections,
 	   including messages received from ICAP servers.
@@ -413,6 +413,8 @@ This section gives a thorough account of those changes in three categories:
 	   negotiated cipher of the client connection.
 	<p>New code <em>%ssl::&lt;negotiated_cipher</em> to display the
 	   negotiated cipher of the last server or peer connection.
+	<p>New code <em>%&gt;handshake</em> to display initial octets
+	   received on a client connection (Base64 encoded).
 	<p>Fixed <em>%&lt;Hs</em>, <em>%&lt;pt</em> and <em>%&lt;tt</em>
 	   codes for received CONNECT errors.
 	<p>Improved <em>%&lt;bs</em> logging on forwarding retries.
@@ -626,7 +628,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+Copyright (C) 1996-2019 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.

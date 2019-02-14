@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "ip/Address.h"
 #include "ip/tools.h"
 
 #if HAVE_UNISTD_H
@@ -55,8 +56,21 @@ Ip::ProbeTransport()
     debugs(3, 2, "Missing RFC 3493 compliance - attempting split IPv4 and IPv6 stacks ...");
     EnableIpv6 |= IPV6_SPECIAL_SPLITSTACK;
 #endif
-    // TODO: attempt to use the socket to connect somewhere ?
-    //  needs to be safe to contact and with guaranteed working IPv6 at the other end.
+
+    // Test for IPv6 loopback/localhost address binding
+    Ip::Address ip;
+    ip.setLocalhost();
+    if (ip.isIPv6()) { // paranoid; always succeeds if we got this far
+        struct sockaddr_in6 sin;
+        ip.getSockAddr(sin);
+        if (bind(s, reinterpret_cast<struct sockaddr *>(&sin), sizeof(sin)) != 0) {
+            debugs(3, DBG_CRITICAL, "WARNING: BCP 177 violation. Detected non-functional IPv6 loopback.");
+            EnableIpv6 = IPV6_OFF;
+        } else {
+            debugs(3, 2, "Detected functional IPv6 loopback ...");
+        }
+    }
+
     close(s);
 
 #if USE_IPV6

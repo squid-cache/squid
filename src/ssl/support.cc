@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -485,7 +485,7 @@ Ssl::Initialize(void)
 
     SQUID_OPENSSL_init_ssl();
 
-#if HAVE_OPENSSL_ENGINE_H
+#if !defined(OPENSSL_NO_ENGINE)
     if (::Config.SSL.ssl_engine) {
         ENGINE_load_builtin_engines();
         ENGINE *e;
