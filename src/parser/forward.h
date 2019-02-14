@@ -11,6 +11,7 @@
 
 namespace Parser {
 class Tokenizer;
+class BinaryTokenizer;
 }
 
 #endif

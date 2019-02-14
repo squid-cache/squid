@@ -193,7 +193,7 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
         return false;
     }
 
-    debugs(94, 5, "skipping unknown chunk extension " << extName);
+    debugs(94, 5, "skipping unknown chunk extension " << extName <<  " with value " << ignoredValue);
     return true;
 }
 
