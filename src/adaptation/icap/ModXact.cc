@@ -1145,8 +1145,6 @@ void Adaptation::Icap::ModXact::decideOnParsingBody()
         state.parsing = State::psBody;
         replyHttpBodySize = 0;
         bodyParser = new Http1::TeChunkedParser();
-        static const SBuf useOriginalBodyName("use-original-body");
-        bodyParser->setKnownExtensions({useOriginalBodyName});
         makeAdaptedBodyPipe("adapted response from the ICAP server");
         Must(state.sending == State::sendingAdapted);
     } else {
@@ -1159,6 +1157,31 @@ void Adaptation::Icap::ModXact::decideOnParsingBody()
     }
 }
 
+namespace Adaptation {
+namespace Icap {
+class ExtensionsParser : public Http1::CustomExtensionsParser
+{
+public:
+    ExtensionsParser() : useOriginBody_(-1) {}
+
+    virtual bool parse(Tokenizer &tok, const SBuf &extName) override {
+        assert(knownExtension(extName));
+        return parseIntExtension(tok, UseOriginalBodyName, useOriginBody_);
+    }
+    virtual bool knownExtension(const SBuf &extName) override { return extName == UseOriginalBodyName;}
+    int64_t useOriginBody() const { return useOriginBody_; }
+
+private:
+    static const SBuf UseOriginalBodyName;
+
+    int64_t useOriginBody_;
+};
+
+const SBuf ExtensionsParser::UseOriginalBodyName("use-original-body");
+
+}
+}
+
 void Adaptation::Icap::ModXact::parseBody()
 {
     Must(state.parsing == State::psBody);
@@ -1169,6 +1192,8 @@ void Adaptation::Icap::ModXact::parseBody()
     // the parser will throw on errors
     BodyPipeCheckout bpc(*adapted.body_pipe);
     bodyParser->setPayloadBuffer(&bpc.buf);
+    ExtensionsParser extensionsParser;
+    bodyParser->setCustomExtensionsParser(&extensionsParser);
     const bool parsed = bodyParser->parse(readBuf);
     readBuf = bodyParser->remaining(); // sync buffers after parse
     bpc.checkIn();
@@ -1184,8 +1209,8 @@ void Adaptation::Icap::ModXact::parseBody()
     }
 
     if (parsed) {
-        if (state.readyForUob && bodyParser->useOriginBody >= 0)
-            prepPartialBodyEchoing(static_cast<uint64_t>(bodyParser->useOriginBody));
+        if (state.readyForUob && extensionsParser.useOriginBody() >= 0)
+            prepPartialBodyEchoing(static_cast<uint64_t>(extensionsParser.useOriginBody()));
         else
             stopSending(true); // the parser succeeds only if all parsed data fits
         if (trailerParser)

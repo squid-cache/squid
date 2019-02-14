@@ -19,6 +19,7 @@
 #include "SquidConfig.h"
 
 Http::One::TeChunkedParser::TeChunkedParser()
+: customExtensionsParser(nullptr)
 {
     // chunked encoding only exists in HTTP/1.1
     Http1::Parser::msgProtocol_ = Http::ProtocolVersion(1,1);
@@ -33,7 +34,6 @@ Http::One::TeChunkedParser::clear()
     buf_.clear();
     theChunkSize = theLeftBodySize = 0;
     theOut = NULL;
-    useOriginBody = -1;
 }
 
 bool
@@ -135,9 +135,8 @@ Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok)
     return false; // need more data
 }
 
-/// parses an extension's value as an integer
-static bool
-parseIntExtension(Parser::Tokenizer &tok, const SBuf &name, int64_t &value)
+bool
+Http::One::CustomExtensionsParser::parseIntExtension(Parser::Tokenizer &tok, const SBuf &name, int64_t &value)
 {
     assert(!tok.atEnd()); // guaranteed by ParseBws() after "="
 
@@ -178,17 +177,14 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
         tok = savedTok;
         return false;
     }
-    // for now the only known extension belongs to the last chunk
-    if (!theChunkSize && knownExtensions.find(extName) != knownExtensions.end()) {
-        static const SBuf useOriginalBodyName("use-original-body");
-        if (extName == useOriginalBodyName) {
-            if (!parseIntExtension(tok, useOriginalBodyName, useOriginBody)) {
-                tok = savedTok;
-                return false;
-            }
-            debugs(94, 3, "found " << extName << '=' << useOriginBody);
+
+    if (customExtensionsParser && customExtensionsParser->knownExtension(extName))
+    {
+        if (customExtensionsParser->parse(tok, extName))
             return true;
-        }
+
+        tok = savedTok;
+        return false;
     }
 
     SBuf ignoredValue;

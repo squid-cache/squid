@@ -18,6 +18,23 @@ namespace Http
 namespace One
 {
 
+/// A base class for parsing custom chunked extensions.
+class CustomExtensionsParser
+{
+public:
+    typedef ::Parser::Tokenizer Tokenizer;
+
+    /// parses the extension value and stores the parsed result
+    virtual bool parse(Tokenizer &tok, const SBuf &extName) = 0;
+    /// whether the parser is aware of the the given extension
+    /// to call a subsequent parse() on it
+    virtual bool knownExtension(const SBuf &extName) = 0;
+
+protected:
+    /// parses an extension's value as an integer
+    bool parseIntExtension(Tokenizer &tok, const SBuf &name, int64_t &value);
+};
+
 /**
  * An incremental parser for chunked transfer coding
  * defined in RFC 7230 section 4.1.
@@ -37,7 +54,8 @@ public:
     /// set the buffer to be used to store decoded chunk data
     void setPayloadBuffer(MemBuf *parsedContent) {theOut = parsedContent;}
 
-    void setKnownExtensions(const std::set<SBuf> &extensions) { knownExtensions = extensions; }
+    /// delegate parsing of some extensions to an external parser
+    void setCustomExtensionsParser(CustomExtensionsParser *parser) { customExtensionsParser = parser; }
 
     bool needsMoreSpace() const;
 
@@ -56,10 +74,7 @@ private:
     MemBuf *theOut;
     uint64_t theChunkSize;
     uint64_t theLeftBodySize;
-    std::set<SBuf> knownExtensions;
-
-public:
-    int64_t useOriginBody;
+    CustomExtensionsParser *customExtensionsParser;
 };
 
 } // namespace One
