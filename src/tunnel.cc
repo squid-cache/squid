@@ -217,6 +217,8 @@ private:
         Security::EncryptorAnswer answer_;
     };
 
+    void usePinned();
+
     /// callback handler after connection setup (including any encryption)
     void connectedToPeer(Security::EncryptorAnswer &answer);
 
@@ -1205,11 +1207,11 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
 }
 
 static Comm::ConnectionPointer
-borrowPinnedConnection(HttpRequest *request, Comm::ConnectionPointer &serverDestination)
+borrowPinnedConnection(HttpRequest *request)
 {
     // pinned_connection may become nil after a pconn race
     if (ConnStateData *pinned_connection = request ? request->pinnedConnection() : nullptr) {
-        Comm::ConnectionPointer serverConn = pinned_connection->borrowPinnedConnection(request, serverDestination->getPeer());
+        Comm::ConnectionPointer serverConn = pinned_connection->borrowPinnedConnection(request);
         return serverConn;
     }
 
@@ -1220,7 +1222,19 @@ void
 TunnelStateData::noteDestination(Comm::ConnectionPointer path)
 {
     const bool wasBlocked = serverDestinations.empty();
+    // XXX: Push even a nil path so that subsequent noteDestination() calls
+    // can rely on wasBlocked to detect ongoing/concurrent attempts.
+    // Upcoming Happy Eyeballs changes will handle this properly.
     serverDestinations.push_back(path);
+
+    if (!path) { // decided to use a pinned connection
+        // We can call usePinned() without fear of clashing with an earlier
+        // forwarding attempt because PINNED must be the first destination.
+        assert(wasBlocked);
+        usePinned();
+        return;
+    }
+
     if (wasBlocked)
         startConnecting();
     // else continue to use one of the previously noted destinations;
@@ -1292,19 +1306,7 @@ TunnelStateData::startConnecting()
     assert(!serverDestinations.empty());
     Comm::ConnectionPointer &dest = serverDestinations.front();
     debugs(26, 3, "to " << dest);
-
-    if (dest->peerType == PINNED) {
-        Comm::ConnectionPointer serverConn = borrowPinnedConnection(request.getRaw(), dest);
-        debugs(26,7, "pinned peer connection: " << serverConn);
-        if (Comm::IsConnOpen(serverConn)) {
-            tunnelConnectDone(serverConn, Comm::OK, 0, (void *)this);
-            return;
-        }
-        // a PINNED path failure is fatal; do not wait for more paths
-        sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw()),
-                  "pinned path failure");
-        return;
-    }
+    assert(dest != nullptr);
 
     GetMarkingsToServer(request.getRaw(), *dest);
 
@@ -1313,6 +1315,22 @@ TunnelStateData::startConnecting()
     Comm::ConnOpener *cs = new Comm::ConnOpener(dest, call, connectTimeout);
     cs->setHost(url);
     AsyncJob::Start(cs);
+}
+
+/// send request on an existing connection dedicated to the requesting client
+void
+TunnelStateData::usePinned()
+{
+    const auto serverConn = borrowPinnedConnection(request.getRaw());
+    debugs(26,7, "pinned peer connection: " << serverConn);
+    if (!Comm::IsConnOpen(serverConn)) {
+        // a PINNED path failure is fatal; do not wait for more paths
+        sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw()),
+                  "pinned path failure");
+        return;
+    }
+
+    tunnelConnectDone(serverConn, Comm::OK, 0, (void *)this);
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);

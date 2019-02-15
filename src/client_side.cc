@@ -3875,7 +3875,7 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
 }
 
 const Comm::ConnectionPointer
-ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *aPeer)
+ConnStateData::validatePinnedConnection(HttpRequest *request)
 {
     debugs(33, 7, HERE << pinning.serverConnection);
 
@@ -3888,8 +3888,6 @@ ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *a
         valid = false;
     else if (pinning.peer && !cbdataReferenceValid(pinning.peer))
         valid = false;
-    else if (aPeer != pinning.peer)
-        valid = false;
 
     if (!valid) {
         /* The pinning info is not safe, remove any pinning info */
@@ -3900,10 +3898,10 @@ ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *a
 }
 
 Comm::ConnectionPointer
-ConnStateData::borrowPinnedConnection(HttpRequest *request, const CachePeer *aPeer)
+ConnStateData::borrowPinnedConnection(HttpRequest *request)
 {
     debugs(33, 7, pinning.serverConnection);
-    if (validatePinnedConnection(request, aPeer) != NULL)
+    if (validatePinnedConnection(request) != nullptr)
         stopPinnedConnectionMonitoring();
 
     return pinning.serverConnection; // closed if validation failed
