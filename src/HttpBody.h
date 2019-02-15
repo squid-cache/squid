@@ -23,7 +23,7 @@ class HttpBody
 public:
     HttpBody() {}
 
-    void set(const SBuf &content) { raw_ = content; }
+    void set(const SBuf &newContent) { raw_ = newContent; }
 
     /** output the HttpBody contents into the supplied container
      *
