@@ -959,10 +959,9 @@ FwdState::usePinned()
         serverConn = nullptr;
         const auto anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request);
         fail(anErr);
-        // The comm close handlers of pinned connection are already scheduled
-        // and if not already executed, will close the client side connection
-        // soon to propagate the zero reply to the client-side.
-        // Stop trying to connect here.
+        // Connection managers monitor their idle pinned to-server
+        // connections and close from-client connections upon seeing
+        // a to-server connection closure. Retrying here is futile.
         stopAndDestroy("pinned connection failure");
         return;
     }
