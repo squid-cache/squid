@@ -128,7 +128,7 @@ private:
 
     /// whether a pinned to-peer connection can be replaced with another one
     /// (in order to retry or reforward a failed request)
-    bool supportsRepinning() const;
+    bool pinnedCanRetry() const;
 
     ErrorState *makeConnectingError(const err_type type) const;
     void connectedToPeer(Security::EncryptorAnswer &answer);
