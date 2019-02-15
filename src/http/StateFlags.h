@@ -20,9 +20,14 @@ public:
     bool only_if_cached = false;
     bool handling1xx = false;       ///< we are ignoring or forwarding 1xx response
     bool headers_parsed = false;
-    bool toOrigin = false; ///< Request destined to an origin (peer or direct)
-    bool toProxy = false; ///< Request destined to a proxy
-    bool peering = false; ///< Request destined to a proxy (origin peer or proxy)
+
+    /* these three flags describe the next TCP hop */
+    // XXX: .toOrigin is !.toProxy
+    // TODO: confirm that .peering is needed or use _peer instead
+    bool toOrigin = false; ///< an origin server or originserver cache_peer
+    bool toProxy = false; ///< a non-originserver cache_peer
+    bool peering = false; ///< any cache_peer, including originserver
+
     bool keepalive_broken = false;
     bool abuse_detected = false;
     bool request_sent = false;
