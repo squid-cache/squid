@@ -31,8 +31,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients sbuf servers fs repl store DiskIO
-DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients sbuf servers fs repl store DiskIO
+SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients sbuf servers fs repl store DiskIO proxyp
+DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -551,6 +551,7 @@ squid_LDADD = \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	mgr/libmgr.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	eui/libeui.la \
 	icmp/libicmp.la \
@@ -1005,6 +1006,7 @@ nodist_tests_testURL_SOURCES = \
 	tests/stub_StatHist.cc
 tests_testURL_LDADD = \
 	libsquid.la \
+	proxyp/libproxyp.la \
 	anyp/libanyp.la \
 	base/libbase.la \
 	ip/libip.la \
@@ -2040,6 +2042,7 @@ tests_test_http_range_LDADD = \
 	acl/libacls.la \
 	acl/libstate.la \
 	acl/libapi.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	ip/libip.la \
 	fs/libfs.la \
@@ -2426,6 +2429,7 @@ tests_testHttpRequest_LDADD = \
 	fs/libfs.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	dns/libdns.la \
 	base/libbase.la \
@@ -2714,6 +2718,7 @@ tests_testCacheManager_LDADD = \
 	ftp/libftp.la \
 	helper/libhelper.la \
 	http/libhttp.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
@@ -3030,6 +3035,7 @@ tests_testEvent_LDADD = \
 	ftp/libftp.la \
 	helper/libhelper.la \
 	http/libhttp.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \
@@ -3262,6 +3268,7 @@ tests_testEventLoop_LDADD = \
 	ftp/libftp.la \
 	helper/libhelper.la \
 	http/libhttp.la \
+	proxyp/libproxyp.la \
 	parser/libparser.la \
 	ident/libident.la \
 	acl/libacls.la \

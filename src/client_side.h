@@ -18,6 +18,7 @@
 #include "http/forward.h"
 #include "HttpControlMsg.h"
 #include "ipc/FdNotes.h"
+#include "proxyp/forward.h"
 #include "sbuf/SBuf.h"
 #include "servers/Server.h"
 #if USE_AUTH
@@ -320,6 +321,8 @@ public:
     NotePairs::Pointer notes();
     bool hasNotes() const { return bool(theNotes) && !theNotes->empty(); }
 
+    const ProxyProtocol::HeaderPointer &proxyProtocolHeader() const { return proxyProtocolHeader_; }
+
 protected:
     void startDechunkingRequest();
     void finishDechunkingRequest(bool withSuccess);
@@ -368,8 +371,6 @@ private:
     /* PROXY protocol functionality */
     bool proxyProtocolValidateClient();
     bool parseProxyProtocolHeader();
-    bool parseProxy1p0();
-    bool parseProxy2p0();
     bool proxyProtocolError(const char *reason);
 
 #if USE_OPENSSL
@@ -383,6 +384,9 @@ private:
 
     /// whether PROXY protocol header is still expected
     bool needProxyProtocolHeader_;
+
+    /// the parsed PROXY protocol header
+    ProxyProtocol::HeaderPointer proxyProtocolHeader_;
 
 #if USE_AUTH
     /// some user details that can be used to perform authentication on this connection

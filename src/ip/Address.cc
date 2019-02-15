@@ -101,6 +101,13 @@ Ip::Address::applyMask(Ip::Address const &mask_addr)
     return changes;
 }
 
+void
+Ip::Address::applyClientMask(const Address &mask)
+{
+    if (!isLocalhost() && isIPv4())
+        (void)applyMask(mask);
+}
+
 bool
 Ip::Address::applyMask(const unsigned int cidrMask, int mtype)
 {
