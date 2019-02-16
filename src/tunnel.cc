@@ -932,19 +932,20 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
     tunnelState->request->peer_host = conn->getPeer() ? conn->getPeer()->host : NULL;
     comm_add_close_handler(conn->fd, tunnelServerClosed, tunnelState);
 
-    bool peering;
+    bool toOrigin = false; // same semantics as StateFlags::toOrigin
     if (const auto * const peer = conn->getPeer()) {
         tunnelState->request->prepForPeering(*peer);
-        peering = !peer->options.originserver;
+        toOrigin = peer->options.originserver;
     } else {
         tunnelState->request->prepForDirect();
-        peering = false;
+        toOrigin = true;
     }
 
-    if (peering)
+    if (!toOrigin)
         tunnelState->connectToPeer();
-    else
+    else {
         tunnelState->notePeerReadyToShovel();
+    }
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
