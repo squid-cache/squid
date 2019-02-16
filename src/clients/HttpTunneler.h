@@ -26,7 +26,7 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 namespace Http
 {
 
-/// Establishes an HTTP CONNECT tunnel through another proxy.
+/// Establishes an HTTP CONNECT tunnel through a forward proxy.
 ///
 /// The caller receives a call back with Http::TunnelerAnswer.
 ///
@@ -56,7 +56,7 @@ public:
 
     /* configuration; too many fields to use constructor parameters */
     HttpRequestPointer request; ///< peer connection trigger or cause
-    Comm::ConnectionPointer connection; ///< TCP connection to peer or origin
+    Comm::ConnectionPointer connection; ///< TCP connection to the cache_peer
     AccessLogEntryPointer al; ///< info for the future access.log entry
     AsyncCall::Pointer callback; ///< we call this with the results
     SBuf url; ///< request-target for the CONNECT request

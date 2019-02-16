@@ -70,10 +70,9 @@ Http::Tunneler::start()
     Must(url.length());
     Must(lifetimeLimit >= 0);
 
-    if (const auto peer = connection->getPeer())
-        request->prepForPeering(*peer);
-    else
-        request->prepForDirect();
+    const auto peer = connection->getPeer();
+    Must(peer); // bail if our peer was reconfigured away
+    request->prepForPeering(*peer);
 
     watchForClosures();
     writeRequest();
