@@ -1988,7 +1988,8 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * Pass on WWW authentication */
 
         if (flags.toOrigin && flags.peering) {
-            /** \note In accelerators, only forward authentication if enabled
+            /** \note Assume that talking to a cache_peer originserver makes
+             * us a reverse proxy and only forward authentication if enabled
              * (see also httpFixupAuthentication for special cases)
              */
             if (request->peer_login &&
