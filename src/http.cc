@@ -1677,17 +1677,14 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     if (strcmp(request->peer_login, "PASSTHRU") == 0)
         return;
 
-    /* PROXYPASS is a special case, single-signon to servers with
-       the proxy password (basic only)
-       This is made undocumented with commit ee0b94f4
+    // Dangerous and undocumented PROXYPASS is a single-signon to servers with
+    // the proxy password. Only Basic Authentication can work this way. This
+    // statement forwards a "basic" Proxy-Authorization value from our client
+    // to an originserver peer. Other PROXYPASS cases are handled lower.
+    if (flags.toOrigin &&
+        strcmp(request->peer_login, "PROXYPASS") == 0 &&
+        hdr_in->has(Http::HdrType::PROXY_AUTHORIZATION)) {
 
-       Documentation from commit 11e4c5e5:
-       Send login details received from client to this peer.
-       Only WWW-Authorization headers are passed to the peer. If the
-       'originserver' option is also used this will convert Proxy-Authorization:
-       to WWW-Authorization: before  relaying. The header content is not altered.
-    */
-    if (flags.toOrigin && strcmp(request->peer_login, "PROXYPASS") == 0 && hdr_in->has(Http::HdrType::PROXY_AUTHORIZATION)) {
         const char *auth = hdr_in->getStr(Http::HdrType::PROXY_AUTHORIZATION);
 
         if (auth && strncasecmp(auth, "basic ", 6) == 0) {
