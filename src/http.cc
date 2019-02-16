@@ -102,7 +102,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     bool tlsTunnel = request->flags.sslBumped || // http request through bumped connection
         request->url.getScheme() == AnyP::PROTO_HTTPS; // 'get https://xxx' request (this check superset request->flags.sslBump check)
 
-    flags.toOrigin = (_peer || tlsTunnel || _peer->options.originserver);
+    flags.toOrigin = (!_peer || tlsTunnel || _peer->options.originserver);
     flags.toProxy =  (_peer && !flags.toOrigin);
     flags.peering =  (_peer && !tlsTunnel);
 
