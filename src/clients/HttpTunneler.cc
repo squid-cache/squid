@@ -125,9 +125,9 @@ Http::Tunneler::writeRequest()
 
     HttpHeader hdr_out(hoRequest);
     Http::StateFlags flags;
-    memset(&flags, '\0', sizeof(flags));
-    flags.toProxy = true;
     flags.peering = true;
+    // flags.tunneling = false; // the CONNECT request itself is not tunneled
+    // flags.toOrigin = false; // the next HTTP hop is a non-originserver peer
     MemBuf mb;
     mb.init();
     mb.appendf("CONNECT %s HTTP/1.1\r\n", url.c_str());

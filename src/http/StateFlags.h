@@ -21,12 +21,24 @@ public:
     bool handling1xx = false;       ///< we are ignoring or forwarding 1xx response
     bool headers_parsed = false;
 
-    /* these three flags describe the next TCP hop */
-    // XXX: .toOrigin is !.toProxy
-    // TODO: confirm that .peering is needed or use _peer instead
-    bool toOrigin = false; ///< an origin server or originserver cache_peer
-    bool toProxy = false; ///< a non-originserver cache_peer
-    bool peering = false; ///< any cache_peer, including originserver
+    /// Whether the next TCP hop is a cache_peer, including originserver
+    bool peering = false;
+
+    /// Whether this request is being forwarded inside a CONNECT tunnel
+    /// through a [non-originserver] cache_peer; implies peering and toOrigin
+    bool tunneling = false;
+
+    /// Whether the next HTTP hop is an origin server, including an
+    /// originserver cache_peer. The three possible cases are:
+    /// 1. a direct TCP/HTTP connection to an origin server,
+    /// 2. a direct TCP/HTTP connection to an originserver cache_peer, and
+    /// 3. a CONNECT tunnel through a [non-originserver] cache_peer [to an origin server]
+    /// Thus, toOrigin is false only when the HTTP request is sent over
+    ///    a direct TCP/HTTP connection to a non-originserver cache_peer.
+    bool toOrigin = false;
+
+    /// Whether the next TCP/HTTP hop is an originserver cache_peer.
+    bool toOriginPeer() const { return toOrigin && peering && !tunneling; }
 
     bool keepalive_broken = false;
     bool abuse_detected = false;
