@@ -1,3 +1,15 @@
+Changes to squid-4.6 (19 Feb 2019):
+
+	- Bug 4915: Detect IPv6 loopback binding errors
+	- Bug 4914: Do not call setsid() in --foreground mode
+	- Bug 4875 pt2: GCC-8 compile errors with -O3 optimization
+	- Bug 4856: Exit when GoIntoBackground() fork() call fails
+	- basic_ldap_auth: Return BH on internal errors; polished messages
+	- Fix BodyPipe/Sink memory leaks associated with auto-consumption
+	- Fix OpenSSL builds that define OPENSSL_NO_ENGINE
+	- Fix several cases of rock cache corruption
+	- Add Georgian (ka) language translation
+
 Changes to squid-4.5 (01 Jan 2019):
 
 	- Bug 4253: ssl_bump prevents access to some web contents
