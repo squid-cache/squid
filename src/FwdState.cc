@@ -768,7 +768,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
         const bool originWantsEncryptedTraffic =
             request->method == Http::METHOD_CONNECT ||
             request->flags.sslPeek ||
-            request->url.getScheme() == AnyP::PROTO_HTTPS; // 'get https://xxx' or bump client-first
+            request->url.getScheme() == AnyP::PROTO_HTTPS; // 'GET https://...' or bump client-first
         if (originWantsEncryptedTraffic && // the "encrypted traffic" part
                 !peer->options.originserver && // the "through a proxy" part
                 !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
@@ -848,8 +848,8 @@ FwdState::secureConnectionToPeerIfNeeded()
                                         request->method == Http::METHOD_CONNECT;
     const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
 
-    // 'get https://xxx' requests or bump client-first, excluding
-    // https proxies (TLS inside TLS is not supported yet)
+    // 'GET https://...' requests or bump client-first, excluding HTTPS
+    // proxies (TLS inside TLS is not supported yet)
     const bool needTlsToOrigin = !peerWantsTls && request->url.getScheme() == AnyP::PROTO_HTTPS;
 
     if (needTlsToPeer || needTlsToOrigin || request->flags.sslPeek) {
@@ -990,13 +990,12 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    // Bumped requests require their pinned connection. Since we failed to reuse
-    // the pinned connection, we now must terminate the bumped request.
-    // For client-first bumping mode the request is already bumped but the
-    // connection to the server is not established yet.
-    // When a connection bumped on step1 the result is equivalent to
-    // client-first bumping mode. We can recognise such cases because there is
-    // not ConnStateData::sslServerBump object.
+    // Requests bumped at step2+ require their pinned connection. Since we
+    // failed to reuse the pinned connection, we now must terminate the
+    // bumped request. For client-first and step1 bumped requests, the
+    // from-client connection is already bumped, but the connection to the
+    // server is not established/pinned so they must be excluded. We can
+    // recognize step1 bumping by nil ConnStateData::serverBump().
 #if USE_OPENSSL
     const auto clientFirstBump = request->clientConnectionManager.valid() &&
         (request->clientConnectionManager->sslBumpMode == Ssl::bumpClientFirst ||
@@ -1011,7 +1010,7 @@ FwdState::connectStart()
         const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
         debugs(17, level, "BUG: Lost previously bumped from-Squid connection. Rejecting bumped request.");
         fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));
-        self = NULL; // refcounted
+        self = nullptr; // refcounted
         return;
     }
 
