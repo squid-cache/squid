@@ -2080,7 +2080,7 @@ bool Adaptation::Icap::TrailerParser::parse(const char *buf, int len, int atEnd,
 bool
 Adaptation::Icap::ExtensionsParser::parse(Tokenizer &tok, const SBuf &extName)
 {
-    assert(knownExtension(extName));
+    assert(nameMatched(extName));
     const auto parsed = parseIntExtension(tok, UseOriginalBodyName, useOriginalBody_);
     if (parsed && useOriginalBody_ < 0)
         throw TexcHere(ToSBuf("Unexpected negative ", UseOriginalBodyName, ' ', useOriginalBody_));

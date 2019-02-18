@@ -126,11 +126,13 @@ class ExtensionsParser : public Http1::CustomExtensionsParser
 {
 public:
     virtual bool parse(Tokenizer &tok, const SBuf &extName) override;
-    virtual bool knownExtension(const SBuf &extName) const override { return extName == UseOriginalBodyName;}
+    virtual bool knownExtension(const SBuf &extName, const uint64_t chunkSize) const override { return !chunkSize && nameMatched(extName); }
     bool sawUseOriginalBody() const { return useOriginalBody_ >= 0; }
     uint64_t useOriginalBody() const { assert(sawUseOriginalBody()); return static_cast<uint64_t>(useOriginalBody_); }
 
 private:
+    bool nameMatched(const SBuf &extName) const { return extName == UseOriginalBodyName; }
+
     static const SBuf UseOriginalBodyName;
 
     int64_t useOriginalBody_ = -1;

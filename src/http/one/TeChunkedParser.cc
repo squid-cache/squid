@@ -178,7 +178,7 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
         return false;
     }
 
-    if (customExtensionsParser && customExtensionsParser->knownExtension(extName)) {
+    if (customExtensionsParser && customExtensionsParser->knownExtension(extName, theChunkSize)) {
         if (customExtensionsParser->parse(tok, extName))
             return true;
 

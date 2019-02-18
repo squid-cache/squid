@@ -28,7 +28,7 @@ public:
     virtual bool parse(Tokenizer &tok, const SBuf &extName) = 0;
     /// whether the parser is aware of the the given extension
     /// to call a subsequent parse() on it
-    virtual bool knownExtension(const SBuf &extName) const = 0;
+    virtual bool knownExtension(const SBuf &extName, const uint64_t chunkSize) const = 0;
 
 protected:
     /// parses an extension's value as an integer
