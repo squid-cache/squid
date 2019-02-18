@@ -19,7 +19,7 @@
 #include "SquidConfig.h"
 
 Http::One::TeChunkedParser::TeChunkedParser():
-  customExtensionsParser(nullptr)
+    customExtensionsParser(nullptr)
 {
     // chunked encoding only exists in HTTP/1.1
     Http1::Parser::msgProtocol_ = Http::ProtocolVersion(1,1);
@@ -162,10 +162,10 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
     SBuf extName;
 
     if (!ParseBws(tok) || // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
-        !tok.skip(';') ||
-        !ParseBws(tok) || // Bg 4492: ICAP servers send SP before chunk-ext-name
-        !tok.prefix(extName, CharacterSet::TCHAR) ||
-        !ParseBws(tok)) {
+            !tok.skip(';') ||
+            !ParseBws(tok) || // Bg 4492: ICAP servers send SP before chunk-ext-name
+            !tok.prefix(extName, CharacterSet::TCHAR) ||
+            !ParseBws(tok)) {
         tok = savedTok;
         return false;
     }
