@@ -279,7 +279,7 @@ snmp_msg_Decode(u_char * Packet, int *PacketLenP,
         ASN_PARSE_ERROR(NULL);
     }
     if (*CommLenP < terminatorPos) {
-    	terminatorPos = *CommLenP;
+        terminatorPos = *CommLenP;
     }
     Community[terminatorPos] = '\0';
 
