@@ -2418,6 +2418,30 @@ DOC_START
 			The proxy_protocol_access is required to whitelist
 			downstream proxies which can be trusted.
 
+	   worker-queues
+			Ask TCP stack to maintain a dedicated listening queue
+			for each worker accepting requests at this port.
+			Requires TCP stack that supports the SO_REUSEPORT socket
+			option.
+
+			Cons: Enabling worker-specific queues allows any process
+			running as Squid's effective user to accept requests
+			destined to this port! Also, a stuck worker is assigned
+			the same number of new connections as active workers,
+			inconveniencing more users compared to the single shared
+			queue (default) configuration where a blocked worker
+			cannot affect new connections (as long as there are
+			other, active workers running).
+
+			Pros: Worker-specific listening queues significantly
+			improve CPU core utilization in most SMP environments by
+			reducing skew in mapping of new connections to workers.
+			Without this option, the TCP stack assigns more
+			connections to busier workers, often overloading some
+			CPU cores while underutilizing others. SO_REUSEPORT was
+			specifically designed for busy SMP servers, and is a
+			popular solution for reducing CPU allocation skew.
+
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface we recommend you to specify the
 	internal address:port in http_port. This way Squid will only be
