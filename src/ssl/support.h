@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -103,21 +103,25 @@ const char *sslGetUserAttribute(SSL *ssl, const char *attribute_name);
 const char *sslGetCAAttribute(SSL *ssl, const char *attribute_name);
 
 /// \ingroup ServerProtocolSSLAPI
-const char *sslGetUserCertificatePEM(SSL *ssl);
+SBuf sslGetUserCertificatePEM(SSL *ssl);
 
 /// \ingroup ServerProtocolSSLAPI
-const char *sslGetUserCertificateChainPEM(SSL *ssl);
+SBuf sslGetUserCertificateChainPEM(SSL *ssl);
 
 namespace Ssl
 {
 /// \ingroup ServerProtocolSSLAPI
 typedef char const *GETX509ATTRIBUTE(X509 *, const char *);
+typedef SBuf GETX509PEM(X509 *);
 
 /// \ingroup ServerProtocolSSLAPI
 GETX509ATTRIBUTE GetX509UserAttribute;
 
 /// \ingroup ServerProtocolSSLAPI
 GETX509ATTRIBUTE GetX509CAAttribute;
+
+/// \ingroup ServerProtocolSSLAPI
+GETX509PEM GetX509PEM;
 
 /// \ingroup ServerProtocolSSLAPI
 GETX509ATTRIBUTE GetX509Fingerprint;

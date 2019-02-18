@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1813,8 +1813,8 @@ void Adaptation::Icap::ModXact::fillDoneStatus(MemBuf &buf) const
 
 bool Adaptation::Icap::ModXact::gotEncapsulated(const char *section) const
 {
-    return icapReply->header.getByNameListMember("Encapsulated",
-            section, ',').size() > 0;
+    return !icapReply->header.getByNameListMember("Encapsulated",
+            section, ',').isEmpty();
 }
 
 // calculate whether there is a virgin HTTP body and

@@ -3,15 +3,15 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-09-16 17:53+1300\n"
-"PO-Revision-Date: 2013-10-31 13:16+0200\n"
-"Last-Translator: Amos <squid3@treenet.co.nz>\n"
+"PO-Revision-Date: 2018-12-30 03:57+0400\n"
+"Last-Translator: George Machitidze <giomac@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: ka\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Pootle 2.1.6\n"
+"X-Generator: Poedit 2.2\n"
 
 #: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.p:31-1
 msgid "%D"
@@ -19,7 +19,7 @@ msgstr ""
 
 #: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.pre:30-1
 msgid "%E (TLS code: %x)"
-msgstr ""
+msgstr "%E (TLS კოდი: %x)"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:30-1
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:30-1
@@ -55,17 +55,17 @@ msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:73
 msgid "%ssl_error_descr"
-msgstr ""
+msgstr "%ssl_error_descr"
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:101
 #: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:121
 #: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:129
 msgid "%ssl_error_descr: %ssl_ca_name"
-msgstr ""
+msgstr "%ssl_error_descr: %ssl_ca_name"
 
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:5
 msgid "%ssl_error_descr: %ssl_lib_error"
-msgstr ""
+msgstr "%ssl_error_descr: %ssl_lib_error"
 
 #: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.detail:1
 #: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:9
@@ -110,7 +110,7 @@ msgstr ""
 #: templates/error-details.txt+X509_V_ERR_CRL_PATH_VALIDATION_ERROR.detail:217
 #: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:221
 msgid "%ssl_error_descr: %ssl_subject"
-msgstr ""
+msgstr "%ssl_error_descr: %ssl_subject"
 
 #: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:23-1
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:29-1
@@ -120,6 +120,7 @@ msgstr ""
 #: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:29-1
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
+"<a href=\"../\">მშობელი დირექოტორია</a> (<a href=\"/\">სათაო დირექტორია</a>)"
 
 #: templates/ERR_INVALID_REQ+html.body.div.p:21-1
 msgid ""
@@ -151,7 +152,7 @@ msgstr ""
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.blockquote.p:24-1
 msgid "Access Denied."
-msgstr ""
+msgstr "წვდომა აკრძალულია."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:27-1
 msgid ""
@@ -159,6 +160,9 @@ msgid ""
 "this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
+"წვდომის კონფიგურაცია ამ მომენტში კრძალავს თქვენი მოთხოვნის შესრულებას. თუ "
+"თვლით, რომ ეს შეცდომით მოხდა, გთხოვთ დაიკავშირდეთ თქვენს სერვისის "
+"მომწოდებელს."
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:32-1
 msgid "All configured parent caches may be currently unreachable."
@@ -201,7 +205,7 @@ msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:221
 msgid "Application verification failure"
-msgstr ""
+msgstr "პროგრამის შემოწმების შეცდომა"
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:29-5
 msgid ""
@@ -236,7 +240,7 @@ msgstr ""
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:16-1
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:24-1
 msgid "Cache Access Denied."
-msgstr ""
+msgstr "კეშთან წვდომა აკრძალულია."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h2:16-1
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.blockquote.p:24-1
@@ -253,31 +257,31 @@ msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:93
 msgid "Certificate chain too long"
-msgstr ""
+msgstr "სერტიფიკატების ჯაჭვი ძალიან გრძელია"
 
 #: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:9
 msgid "Certificate does not match domainname"
-msgstr ""
+msgstr "სერტიფიკატი არ ემთხვევა დომენის სახელს"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:45
 msgid "Certificate has expired"
-msgstr ""
+msgstr "სერტიფიკატი ვადაგასულია"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:41
 msgid "Certificate is not yet valid"
-msgstr ""
+msgstr "სერტიფიკატი ჯერ არ არის სწორი"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:113
 msgid "Certificate not trusted"
-msgstr ""
+msgstr "სერტიფიკატი არ არის სანდო"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:117
 msgid "Certificate rejected"
-msgstr ""
+msgstr "სერტიფიკატი უარყოფილია"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:97
 msgid "Certificate revoked"
-msgstr ""
+msgstr "სერტიფიკატი გაიწვიეს"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:33
 msgid "Certificate signature failure"
@@ -289,7 +293,7 @@ msgstr ""
 
 #: templates/ERR_CONNECT_FAIL+html.body.div.blockquote.p:24-1
 msgid "Connection to %I failed."
-msgstr ""
+msgstr "%I-თან დაკავირება ვერ მოხერხდა."
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:33-5
 msgid "Content-Length missing for POST or PUT requests."
@@ -346,7 +350,7 @@ msgstr ""
 
 #: templates/ERR_DIR_LISTING+html.body.div.h4:20-1
 msgid "Directory Content:"
-msgstr ""
+msgstr "დირექტორიის შიგთავსი:"
 
 #: templates/ERR_DIR_LISTING+html.body.div.table:-1--1
 msgid "Directory Listing"
@@ -354,11 +358,11 @@ msgstr ""
 
 #: templates/ERR_DIR_LISTING+html.head.title:5-1
 msgid "Directory: %U"
-msgstr ""
+msgstr "დირექტორია: %U"
 
 #: templates/ERR_DIR_LISTING+html.body.div.h2:15-1
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr ""
+msgstr "დირექტორია: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.h1:15-1
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h1:15-1
@@ -400,19 +404,19 @@ msgstr ""
 #: templates/ERR_WRITE_ERROR+html.body.div.h1:15-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h1:15-1
 msgid "ERROR"
-msgstr ""
+msgstr "შეცდომა"
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.head.title:5-1
 msgid "ERROR: Cache Access Denied"
-msgstr ""
+msgstr "შეცდომა: კეშთან წვდომა აკრძალულია"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.head.title:5-1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr ""
+msgstr "შეცდომა: კეშის სამართავ ინტერფეისზე წვდომა აკრძალულია"
 
 #: templates/ERR_FTP_PUT_ERROR+html.head.title:5-1
 msgid "ERROR: FTP upload failed"
-msgstr ""
+msgstr "შეცდომა: FTP-ით ატვირთვა ვერ მოხერხდა"
 
 #: templates/ERR_ACCESS_DENIED+html.head.title:5-1
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:5-1
@@ -448,7 +452,7 @@ msgstr ""
 #: templates/ERR_WRITE_ERROR+html.head.title:5-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.head.title:5-1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr ""
+msgstr "შეცდომა: მოთხოვნილი რესურსის გამოძახება ვერ მოხერხდა"
 
 #: templates/ERR_URN_RESOLVE+html.head.title:5-1
 msgid "ERROR: The requested URN could not be retrieved"
@@ -461,7 +465,7 @@ msgstr ""
 #: templates/ERR_FTP_PUT_CREATED+html.head.title:5-1
 #: templates/ERR_FTP_PUT_MODIFIED+html.head.title:5-1
 msgid "FTP PUT Successful."
-msgstr ""
+msgstr "FTP PUT წარმატებით დასრულდა."
 
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.h2:16-1
 msgid "FTP PUT upload failed"
@@ -469,11 +473,11 @@ msgstr ""
 
 #: templates/ERR_FTP_DISABLED+html.body.div.blockquote.p:24-1
 msgid "FTP is Disabled"
-msgstr ""
+msgstr "FTP გათიშულია"
 
 #: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.blockquote.p:24-1
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "%I-თან უსაფრთხო კავშირის დამყარება ვერ მოხერხდა"
 
 #: templates/ERR_FTP_PUT_CREATED+html.body.div.h2:16-1
 msgid "File created"
@@ -565,7 +569,7 @@ msgstr ""
 #: templates/ERR_WRITE_ERROR+html.body.div.p:37-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:35-1
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "დაგენერირების დრო: %T, სერვისი: %h (%s)"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:35-5
 msgid ""
@@ -587,7 +591,7 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.blockquote.p:24-1
 msgid "ICAP protocol error."
-msgstr ""
+msgstr "ICAP ოქმის შეცდომა."
 
 #: templates/ERR_TOO_BIG+html.body.div.p:28-1
 msgid ""
@@ -618,11 +622,11 @@ msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:101
 msgid "Invalid CA certificate"
-msgstr "Invalid CA certificate"
+msgstr "მცდარი CA სერტიფიკატი"
 
 #: templates/ERR_INVALID_URL+html.body.div.blockquote.p:24-1
 msgid "Invalid URL"
-msgstr ""
+msgstr "არასწორი URL"
 
 #: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:133
 msgid "Key usage does not include certificate signing"
@@ -656,11 +660,11 @@ msgstr ""
 #: templates/ERR_FTP_PUT_CREATED+html.body.div.h1:15-1
 #: templates/ERR_FTP_PUT_MODIFIED+html.body.div.h1:15-1
 msgid "Operation successful"
-msgstr ""
+msgstr "ოპერაცია წარმატებით დასრულდა"
 
 #: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:73
 msgid "Out of memory"
-msgstr ""
+msgstr "მეხსიერება არასაკმარისია"
 
 #: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:105
 msgid "Path length constraint exceeded"
@@ -690,7 +694,7 @@ msgstr ""
 
 #: templates/ERR_READ_ERROR+html.body.div.blockquote.p:24-1
 msgid "Read Error"
-msgstr ""
+msgstr "წაკითხვის შეცდომა"
 
 #: templates/ERR_READ_TIMEOUT+html.body.div.blockquote.p:24-1
 msgid "Read Timeout"
@@ -698,7 +702,7 @@ msgstr ""
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:32-5
 msgid "Request is too large."
-msgstr ""
+msgstr "მოთხოვნა ძალიან დიდია."
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:13
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:85
@@ -822,7 +826,7 @@ msgstr ""
 
 #: templates/ERR_DNS_FAIL+html.body.div.p:27-1
 msgid "The DNS server returned:"
-msgstr ""
+msgstr "DNS სერვერმა დააბრუნა:"
 
 #: templates/ERR_ESI+html.body.div.p:27-1
 msgid "The ESI processor returned:"
@@ -855,7 +859,7 @@ msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.p:21-1
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr ""
+msgstr "მოთხოვნილი რესურსის გამოძახება ვერ მოხერხდა: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:21-1
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:21-1
@@ -938,7 +942,7 @@ msgstr ""
 #: templates/ERR_WRITE_ERROR+html.body.div.h2:16-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h2:16-1
 msgid "The requested URL could not be retrieved"
-msgstr ""
+msgstr "მოთხოვნილი რესურსის გამოძახება ვერ მოხერხდა"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.p:28-1
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:28-1
@@ -950,7 +954,7 @@ msgstr ""
 
 #: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.p:28-1
 msgid "The system returned:"
-msgstr ""
+msgstr "სისტემამ დააბრუნა:"
 
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:27-1
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:27-1
@@ -959,7 +963,7 @@ msgstr ""
 #: templates/ERR_SOCKET_FAILURE+html.body.div.p:27-1
 #: templates/ERR_WRITE_ERROR+html.body.div.p:27-1
 msgid "The system returned: <i>%E</i>"
-msgstr ""
+msgstr "სისტემამ დააბრუნა: <i>%E</i>"
 
 #: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:32-1
 msgid ""
@@ -1038,7 +1042,7 @@ msgstr ""
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.p:27-1
 msgid "This means:"
-msgstr ""
+msgstr "ეს ნიშნავს, რომ:"
 
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.p:34-1
 msgid ""
@@ -1169,7 +1173,7 @@ msgstr ""
 
 #: templates/ERR_WRITE_ERROR+html.body.div.blockquote.p:24-1
 msgid "Write Error"
-msgstr ""
+msgstr "ჩაწერის შეცდომა"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:27-1
 msgid ""
@@ -1219,7 +1223,7 @@ msgstr ""
 #: templates/ERR_WRITE_ERROR+html.body.div.p:31-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:29-1
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr ""
+msgstr "თქვენი კეშის ადმინისტრატორია <a href=\"mailto:%w%W\">%w</a>."
 
 #: templates/ERR_INVALID_RESP+html.body.div.p:29-1
 msgid ""
@@ -1240,9 +1244,8 @@ msgid "excluded subtree violation"
 msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_NON_CA.descr:153
-#, fuzzy
 msgid "invalid non-CA certificate (has CA markings)"
-msgstr "Invalid CA certificate"
+msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_EXTENSION.descr:169
 msgid "invalid or inconsistent certificate extension"

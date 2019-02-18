@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -161,7 +161,6 @@ static bool setLogformat(CustomLog *cl, const char *name, const bool dieWhenMiss
 static void configDoConfigure(void);
 static void parse_refreshpattern(RefreshPattern **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
-static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec, bool expectMoreArguments);
 static void parse_u_short(unsigned short * var);
 static void parse_string(char **);
 static void default_all(void);
@@ -1044,19 +1043,19 @@ parse_obsolete(const char *name)
 
 /* Parse a time specification from the config file.  Store the
  * result in 'tptr', after converting it to 'units' */
-static void
-parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec,  bool expectMoreArguments = false)
+static time_msec_t
+parseTimeLine(const char *units,  bool allowMsec,  bool expectMoreArguments = false)
 {
     time_msec_t u = parseTimeUnits(units, allowMsec);
     if (u == 0) {
         self_destruct();
-        return;
+        return 0;
     }
 
-    char *token = ConfigParser::NextToken();;
+    char *token = ConfigParser::NextToken();
     if (!token) {
         self_destruct();
-        return;
+        return 0;
     }
 
     double d = xatof(token);
@@ -1069,7 +1068,7 @@ parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec,  bool expe
 
         } else if (!expectMoreArguments) {
             self_destruct();
-            return;
+            return 0;
 
         } else {
             token = NULL; // show default units if dying below
@@ -1078,13 +1077,14 @@ parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec,  bool expe
     } else
         token = NULL; // show default units if dying below.
 
-    *tptr = static_cast<time_msec_t>(m * d);
+    const auto result = static_cast<time_msec_t>(m * d);
 
-    if (static_cast<double>(*tptr) * 2 != m * d * 2) {
+    if (static_cast<double>(result) * 2 != m * d * 2) {
         debugs(3, DBG_CRITICAL, "FATAL: Invalid value '" <<
                d << " " << (token ? token : units) << ": integer overflow (time_msec_t).");
         self_destruct();
     }
+    return result;
 }
 
 static uint64_t
@@ -2443,8 +2443,8 @@ dump_denyinfo(StoreEntry * entry, const char *name, AclDenyInfoList * var)
     while (var != NULL) {
         storeAppendPrintf(entry, "%s %s", name, var->err_page_name);
 
-        for (auto *a = var->acl_list; a != NULL; a = a->next)
-            storeAppendPrintf(entry, " %s", a->name);
+        for (const auto &aclName: var->acl_list)
+            storeAppendPrintf(entry, " " SQUIDSBUFPH, SQUIDSBUFPRINT(aclName));
 
         storeAppendPrintf(entry, "\n");
 
@@ -2976,8 +2976,7 @@ dump_time_t(StoreEntry * entry, const char *name, time_t var)
 void
 parse_time_t(time_t * var)
 {
-    time_msec_t tval;
-    parseTimeLine(&tval, T_SECOND_STR, false);
+    time_msec_t tval = parseTimeLine(T_SECOND_STR, false);
     *var = static_cast<time_t>(tval/1000);
 }
 
@@ -2999,7 +2998,7 @@ dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 void
 parse_time_msec(time_msec_t * var)
 {
-    parseTimeLine(var, T_SECOND_STR, true);
+    *var = parseTimeLine(T_SECOND_STR, true);
 }
 
 static void
@@ -4872,8 +4871,7 @@ static void free_ftp_epsv(acl_access **ftp_epsv)
 static void
 parse_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *config)
 {
-    time_msec_t tval;
-    parseTimeLine(&tval, T_SECOND_STR, false, true);
+    const auto tval = parseTimeLine(T_SECOND_STR, false, true);
     Config.Timeout.urlRewrite = static_cast<time_t>(tval/1000);
 
     char *key, *value;

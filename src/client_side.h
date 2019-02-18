@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@
 #include "http/forward.h"
 #include "HttpControlMsg.h"
 #include "ipc/FdNotes.h"
+#include "proxyp/forward.h"
 #include "sbuf/SBuf.h"
 #include "servers/Server.h"
 #if USE_AUTH
@@ -277,6 +278,7 @@ public:
 #else
     bool switchedToHttps() const { return false; }
 #endif
+    char *prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp);
 
     /// handle a control message received by context from a peer and call back
     virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) = 0;
@@ -318,6 +320,8 @@ public:
     /// creates and returns empty annotations otherwise
     NotePairs::Pointer notes();
     bool hasNotes() const { return bool(theNotes) && !theNotes->empty(); }
+
+    const ProxyProtocol::HeaderPointer &proxyProtocolHeader() const { return proxyProtocolHeader_; }
 
 protected:
     void startDechunkingRequest();
@@ -367,8 +371,6 @@ private:
     /* PROXY protocol functionality */
     bool proxyProtocolValidateClient();
     bool parseProxyProtocolHeader();
-    bool parseProxy1p0();
-    bool parseProxy2p0();
     bool proxyProtocolError(const char *reason);
 
 #if USE_OPENSSL
@@ -382,6 +384,9 @@ private:
 
     /// whether PROXY protocol header is still expected
     bool needProxyProtocolHeader_;
+
+    /// the parsed PROXY protocol header
+    ProxyProtocol::HeaderPointer proxyProtocolHeader_;
 
 #if USE_AUTH
     /// some user details that can be used to perform authentication on this connection
@@ -397,6 +402,7 @@ private:
 
     /// The SSL server host name appears in CONNECT request or the server ip address for the intercepted requests
     String sslConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request
+    unsigned short tlsConnectPort; ///< The TLS server port number as passed in the CONNECT request
     SBuf sslCommonName_; ///< CN name for SSL certificate generation
 
     /// TLS client delivered SNI value. Empty string if none has been received.

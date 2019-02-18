@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -66,7 +66,6 @@ private:
     size_t writeToBuffer(char const *buf, size_t size);
     void writeToDisk(const SlotId nextSlot);
     void writeBufToDisk(const SlotId nextSlot, const bool eof, const bool lastWrite);
-    SlotId reserveSlotForWriting();
 
     void callBack(int errflag);
 

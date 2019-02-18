@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -492,7 +492,7 @@ netdbSaveState(void *foo)
     unlink(Config.netdbFilename);
     lf = logfileOpen(Config.netdbFilename, 4096, 0);
 
-    if (lf) {
+    if (!lf) {
         int xerrno = errno;
         debugs(50, DBG_IMPORTANT, MYNAME << Config.netdbFilename << ": " << xstrerr(xerrno));
         return;
@@ -1272,7 +1272,7 @@ netdbExchangeStart(void *data)
 #if USE_ICMP
     CachePeer *p = (CachePeer *)data;
     static const SBuf netDB("netdb");
-    char *uri = internalRemoteUri(p->host, p->http_port, "/squid-internal-dynamic/", netDB);
+    char *uri = internalRemoteUri(p->secure.encryptTransport, p->host, p->http_port, "/squid-internal-dynamic/", netDB);
     debugs(38, 3, "Requesting '" << uri << "'");
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcmp);
     HttpRequestPointer req(HttpRequest::FromUrl(uri, mx));

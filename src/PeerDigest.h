@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -81,7 +81,7 @@ public:
 
     CachePeer *peer = nullptr;          /**< pointer back to peer structure, argh */
     CacheDigest *cd = nullptr;            /**< actual digest structure */
-    String host;                /**< copy of peer->host */
+    SBuf host;                        ///< copy of peer->host
     const char *req_result = nullptr;     /**< text status of the last request */
 
     struct {

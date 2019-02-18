@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -62,10 +62,12 @@ public:
     int64_t slotLimitAbsolute() const; ///< Rock store implementation limit
     int64_t slotLimitActual() const; ///< total number of slots in this db
 
-    /// removes a slot from a list of free slots or returns false
-    bool useFreeSlot(Ipc::Mem::PageId &pageId);
     /// whether the given slot ID may point to a slot in this db
     bool validSlotId(const SlotId slotId) const;
+
+    /// finds and returns a free db slot to fill or throws
+    SlotId reserveSlotForWriting();
+
     /// purges one or more entries to make full() false and free some slots
     void purgeSome();
 
@@ -136,6 +138,9 @@ protected:
 
 private:
     void createError(const char *const msg);
+    void handleWriteCompletionSuccess(const WriteRequest &request);
+    void handleWriteCompletionProblem(const int errflag, const WriteRequest &request);
+    bool droppedEarlierRequest(const WriteRequest &request) const;
 
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir
