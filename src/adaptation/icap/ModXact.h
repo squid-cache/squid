@@ -15,6 +15,7 @@
 #include "adaptation/icap/Xaction.h"
 #include "BodyPipe.h"
 #include "http/one/forward.h"
+#include "http/one/TeChunkedParser.h"
 
 /*
  * ICAPModXact implements ICAP REQMOD and RESPMOD transaction using
@@ -118,6 +119,21 @@ public:
     HttpHeader trailer;
     /// parsed trailer size if parse() was successful
     size_t hdr_sz; // pedantic XXX: wrong type dictated by HttpHeader::parse() API
+};
+
+/// handles ICAP-specific chunk extensions supported by Squid
+class ExtensionsParser : public Http1::CustomExtensionsParser
+{
+public:
+    virtual bool parse(Tokenizer &tok, const SBuf &extName) override;
+    virtual bool knownExtension(const SBuf &extName) const override { return extName == UseOriginalBodyName;}
+    bool sawUseOriginalBody() const { return useOriginalBody_ >= 0; }
+    uint64_t useOriginalBody() const { assert(sawUseOriginalBody()); return static_cast<uint64_t>(useOriginalBody_); }
+
+private:
+    static const SBuf UseOriginalBodyName;
+
+    int64_t useOriginalBody_ = -1;
 };
 
 class ModXact: public Xaction, public BodyProducer, public BodyConsumer
@@ -300,6 +316,8 @@ private:
     int adaptHistoryId; ///< adaptation history slot reservation
 
     TrailerParser *trailerParser;
+
+    ExtensionsParser extensionsParser;
 
     class State
     {

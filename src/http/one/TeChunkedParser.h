@@ -18,7 +18,7 @@ namespace Http
 namespace One
 {
 
-/// A base class for parsing custom chunked extensions.
+/// A base class for parsing custom chunk extensions.
 class CustomExtensionsParser
 {
 public:
@@ -28,7 +28,7 @@ public:
     virtual bool parse(Tokenizer &tok, const SBuf &extName) = 0;
     /// whether the parser is aware of the the given extension
     /// to call a subsequent parse() on it
-    virtual bool knownExtension(const SBuf &extName) = 0;
+    virtual bool knownExtension(const SBuf &extName) const = 0;
 
 protected:
     /// parses an extension's value as an integer
@@ -42,7 +42,7 @@ protected:
  *
  * The parser shovels content bytes from the raw
  * input buffer into the content output buffer, both caller-supplied.
- * Ignores chunk extensions except for ICAP's use-original-body.
+ * Chunk extensions like use-original-body are handled via setCustomExtensionsParser().
  * Trailers are available via mimeHeader() if wanted.
  */
 class TeChunkedParser : public Http1::Parser
@@ -54,7 +54,8 @@ public:
     /// set the buffer to be used to store decoded chunk data
     void setPayloadBuffer(MemBuf *parsedContent) {theOut = parsedContent;}
 
-    /// delegate parsing of some extensions to an external parser
+    /// instead of ignoring all chunk extension values,
+    /// give the supplied parser a chance to interpret them
     void setCustomExtensionsParser(CustomExtensionsParser *parser) { customExtensionsParser = parser; }
 
     bool needsMoreSpace() const;

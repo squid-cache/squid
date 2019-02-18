@@ -26,10 +26,10 @@
 #include "comm/Connection.h"
 #include "err_detail_type.h"
 #include "http/ContentLengthInterpreter.h"
-#include "http/one/TeChunkedParser.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "MasterXaction.h"
+#include "sbuf/Stream.h"
 #include "SquidTime.h"
 
 // flow and terminology:
@@ -42,6 +42,8 @@ CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXact);
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXactLauncher);
 
 static const size_t TheBackupLimit = BodyPipe::MaxCapacity;
+
+const SBuf Adaptation::Icap::ExtensionsParser::UseOriginalBodyName("use-original-body");
 
 Adaptation::Icap::ModXact::State::State()
 {
@@ -1144,7 +1146,8 @@ void Adaptation::Icap::ModXact::decideOnParsingBody()
         debugs(93, 5, HERE << "expecting a body");
         state.parsing = State::psBody;
         replyHttpBodySize = 0;
-        bodyParser = new Http1::TeChunkedParser();
+        bodyParser = new Http1::TeChunkedParser;
+        bodyParser->setCustomExtensionsParser(&extensionsParser);
         makeAdaptedBodyPipe("adapted response from the ICAP server");
         Must(state.sending == State::sendingAdapted);
     } else {
@@ -1157,31 +1160,6 @@ void Adaptation::Icap::ModXact::decideOnParsingBody()
     }
 }
 
-namespace Adaptation {
-namespace Icap {
-class ExtensionsParser : public Http1::CustomExtensionsParser
-{
-public:
-    ExtensionsParser() : useOriginBody_(-1) {}
-
-    virtual bool parse(Tokenizer &tok, const SBuf &extName) override {
-        assert(knownExtension(extName));
-        return parseIntExtension(tok, UseOriginalBodyName, useOriginBody_);
-    }
-    virtual bool knownExtension(const SBuf &extName) override { return extName == UseOriginalBodyName;}
-    int64_t useOriginBody() const { return useOriginBody_; }
-
-private:
-    static const SBuf UseOriginalBodyName;
-
-    int64_t useOriginBody_;
-};
-
-const SBuf ExtensionsParser::UseOriginalBodyName("use-original-body");
-
-}
-}
-
 void Adaptation::Icap::ModXact::parseBody()
 {
     Must(state.parsing == State::psBody);
@@ -1192,8 +1170,6 @@ void Adaptation::Icap::ModXact::parseBody()
     // the parser will throw on errors
     BodyPipeCheckout bpc(*adapted.body_pipe);
     bodyParser->setPayloadBuffer(&bpc.buf);
-    ExtensionsParser extensionsParser;
-    bodyParser->setCustomExtensionsParser(&extensionsParser);
     const bool parsed = bodyParser->parse(readBuf);
     readBuf = bodyParser->remaining(); // sync buffers after parse
     bpc.checkIn();
@@ -1209,8 +1185,8 @@ void Adaptation::Icap::ModXact::parseBody()
     }
 
     if (parsed) {
-        if (state.readyForUob && extensionsParser.useOriginBody() >= 0)
-            prepPartialBodyEchoing(static_cast<uint64_t>(extensionsParser.useOriginBody()));
+        if (state.readyForUob && extensionsParser.sawUseOriginalBody())
+            prepPartialBodyEchoing(extensionsParser.useOriginalBody());
         else
             stopSending(true); // the parser succeeds only if all parsed data fits
         if (trailerParser)
@@ -2099,5 +2075,15 @@ bool Adaptation::Icap::TrailerParser::parse(const char *buf, int len, int atEnd,
     if (parsed < 0)
         *error = Http::scInvalidHeader; // TODO: should we add a new Http::scInvalidTrailer?
     return parsed > 0;
+}
+
+bool
+Adaptation::Icap::ExtensionsParser::parse(Tokenizer &tok, const SBuf &extName)
+{
+    assert(knownExtension(extName));
+    const auto parsed = parseIntExtension(tok, UseOriginalBodyName, useOriginalBody_);
+    if (parsed && useOriginalBody_ < 0)
+        throw TexcHere(ToSBuf("Unexpected negative ", UseOriginalBodyName, ' ', useOriginalBody_));
+    return parsed;
 }
 

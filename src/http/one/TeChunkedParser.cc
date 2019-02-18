@@ -18,8 +18,8 @@
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 
-Http::One::TeChunkedParser::TeChunkedParser()
-: customExtensionsParser(nullptr)
+Http::One::TeChunkedParser::TeChunkedParser():
+  customExtensionsParser(nullptr)
 {
     // chunked encoding only exists in HTTP/1.1
     Http1::Parser::msgProtocol_ = Http::ProtocolVersion(1,1);
@@ -178,8 +178,7 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
         return false;
     }
 
-    if (customExtensionsParser && customExtensionsParser->knownExtension(extName))
-    {
+    if (customExtensionsParser && customExtensionsParser->knownExtension(extName)) {
         if (customExtensionsParser->parse(tok, extName))
             return true;
 
