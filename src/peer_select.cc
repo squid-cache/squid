@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -301,6 +301,17 @@ PeerSelector::resolveSelected()
         return;
     }
 
+    if (fs && fs->code == PINNED) {
+        // Nil path signals a PINNED destination selection. Our initiator should
+        // borrow and use clientConnectionManager's pinned connection object
+        // (regardless of that connection destination).
+        handlePath(nullptr, *fs);
+        servers = fs->next;
+        delete fs;
+        resolveSelected();
+        return;
+    }
+
     // convert the list of FwdServer destinations into destinations IP addresses
     if (fs && wantsMoreDestinations()) {
         // send the next one off for DNS lookup.
@@ -552,8 +563,9 @@ PeerSelector::selectPinned()
     // TODO: Avoid all repeated calls. Relying on PING_DONE is not enough.
     if (!request->pinnedConnection())
         return;
-    CachePeer *pear = request->pinnedConnection()->pinnedPeer();
-    if (Comm::IsConnOpen(request->pinnedConnection()->validatePinnedConnection(request, pear))) {
+
+    if (Comm::IsConnOpen(request->pinnedConnection()->validatePinnedConnection(request))) {
+        const auto pear = request->pinnedConnection()->pinnedPeer();
         const bool usePinned = pear ? peerAllowedToUse(pear, this) : (direct != DIRECT_NO);
         if (usePinned) {
             addSelection(pear, PINNED);
@@ -1003,19 +1015,22 @@ PeerSelector::wantsMoreDestinations() const {
 }
 
 void
-PeerSelector::handlePath(Comm::ConnectionPointer &path, FwdServer &fs)
+PeerSelector::handlePath(const Comm::ConnectionPointer &path, FwdServer &fs)
 {
     ++foundPaths;
 
-    path->peerType = fs.code;
-    path->setPeer(fs._peer.get());
+    if (path) {
+        path->peerType = fs.code;
+        path->setPeer(fs._peer.get());
 
-    // check for a configured outgoing address for this destination...
-    getOutgoingAddress(request, path);
+        // check for a configured outgoing address for this destination...
+        getOutgoingAddress(request, path);
+        debugs(44, 2, id << " found " << path << ", destination #" << foundPaths << " for " << url());
+    } else
+        debugs(44, 2, id << " found pinned, destination #" << foundPaths << " for " << url());
 
     request->hier.ping = ping; // may be updated later
 
-    debugs(44, 2, id << " found " << path << ", destination #" << foundPaths << " for " << url());
     debugs(44, 2, "  always_direct = " << always_direct);
     debugs(44, 2, "   never_direct = " << never_direct);
     debugs(44, 2, "       timedout = " << ping.timedout);

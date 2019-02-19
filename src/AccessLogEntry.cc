@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 #include "AccessLogEntry.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "proxyp/Header.h"
 #include "SquidConfig.h"
 #include "ssl/support.h"
 
@@ -39,8 +40,7 @@ AccessLogEntry::getLogClientIp(char *buf, size_t bufsz) const
     // - IPv4 clients masked with client_netmask
     // - IPv6 clients use 'privacy addressing' instead.
 
-    if (!log_ip.isLocalhost() && log_ip.isIPv4())
-        log_ip.applyMask(Config.Addrs.client_netmask);
+    log_ip.applyClientMask(Config.Addrs.client_netmask);
 
     log_ip.toStr(buf, bufsz);
 }
@@ -93,6 +93,8 @@ AccessLogEntry::getExtUser() const
 
     return nullptr;
 }
+
+AccessLogEntry::AccessLogEntry() {}
 
 AccessLogEntry::~AccessLogEntry()
 {

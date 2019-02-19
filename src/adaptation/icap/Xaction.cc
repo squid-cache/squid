@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -741,7 +741,7 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
     securer = NULL;
 
     if (closer != NULL) {
-        if (answer.conn != NULL)
+        if (Comm::IsConnOpen(answer.conn))
             comm_remove_close_handler(answer.conn->fd, closer);
         else
             closer->cancel("securing completed");

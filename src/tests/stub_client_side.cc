@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,7 +34,7 @@ bool ConnStateData::handleRequestBodyData() STUB_RETVAL(false)
 void ConnStateData::pinBusyConnection(const Comm::ConnectionPointer &, const HttpRequest::Pointer &) STUB
 void ConnStateData::notePinnedConnectionBecameIdle(PinnedIdleContext) STUB
 void ConnStateData::unpinConnection(const bool) STUB
-const Comm::ConnectionPointer ConnStateData::validatePinnedConnection(HttpRequest *, const CachePeer *) STUB_RETVAL(NULL)
+const Comm::ConnectionPointer ConnStateData::validatePinnedConnection(HttpRequest *) STUB_RETVAL(nullptr)
 void ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &) STUB
 void ConnStateData::connStateClosed(const CommCloseCbParams &) STUB
 void ConnStateData::requestTimeout(const CommTimeoutCbParams &) STUB

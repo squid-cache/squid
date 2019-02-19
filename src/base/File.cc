@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -373,3 +373,4 @@ File::sysCallError(const char *callName, const int savedErrno) const
 #if _SQUID_WINDOWS_
 const HANDLE File::InvalidHandle = INVALID_HANDLE_VALUE;
 #endif /* _SQUID_WINDOWS_ */
+

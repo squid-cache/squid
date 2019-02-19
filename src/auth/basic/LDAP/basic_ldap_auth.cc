@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,6 +38,8 @@
  * or (at your option) any later version.
  *
  * Changes:
+ * 2019-01-02: Amish
+ *             - Use SEND_*() macro and support for BH error
  * 2005-01-07: Henrik Nordstrom <hno@squid-cache.org>
  *             - Added some sanity checks on login names to avoid
  *               users bypassing equality checks by exploring the
@@ -91,6 +93,7 @@
  */
 
 #include "squid.h"
+#include "helper/protocol_defines.h"
 
 #define LDAP_DEPRECATED 1
 
@@ -578,17 +581,17 @@ main(int argc, char **argv)
         passwd = strtok(NULL, "\r\n");
 
         if (!user) {
-            printf("ERR Missing username\n");
+            SEND_ERR(HLP_MSG("Missing username"));
             continue;
         }
         if (!passwd || !passwd[0]) {
-            printf("ERR Missing password '%s'\n", user);
+            SEND_ERR(HLP_MSG("Missing password"));
             continue;
         }
         rfc1738_unescape(user);
         rfc1738_unescape(passwd);
         if (!validUsername(user)) {
-            printf("ERR No such user '%s':'%s'\n",user, passwd);
+            SEND_ERR(HLP_MSG("Invalid username"));
             continue;
         }
         tryagain = (ld != NULL);
@@ -596,15 +599,19 @@ recover:
         if (ld == NULL && persistent)
             ld = open_ldap_connection(ldapServer, port);
         if (checkLDAP(ld, user, passwd, ldapServer, port) != 0) {
-            if (tryagain && squid_ldap_errno(ld) != LDAP_INVALID_CREDENTIALS) {
+            const auto e = squid_ldap_errno(ld);
+            if (tryagain && e != LDAP_INVALID_CREDENTIALS) {
                 tryagain = 0;
                 ldap_unbind(ld);
                 ld = NULL;
                 goto recover;
             }
-            printf("ERR %s\n", ldap_err2string(squid_ldap_errno(ld)));
+            if (LDAP_SECURITY_ERROR(e))
+                SEND_ERR(ldap_err2string(e));
+            else
+                SEND_BH(ldap_err2string(e));
         } else {
-            printf("OK\n");
+            SEND_OK("");
         }
         if (ld && (squid_ldap_errno(ld) != LDAP_SUCCESS && squid_ldap_errno(ld) != LDAP_INVALID_CREDENTIALS)) {
             ldap_unbind(ld);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -103,6 +103,8 @@
 #include "mime_header.h"
 #include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
+#include "proxyp/Header.h"
+#include "proxyp/Parser.h"
 #include "security/NegotiationHistory.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"
@@ -1082,20 +1084,18 @@ findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end)
     return NULL;
 }
 
-static void
-prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1::RequestParserPointer &hp)
+static char *
+prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &hp)
 {
     int vhost = conn->port->vhost;
     int vport = conn->port->vport;
     static char ipbuf[MAX_IPSTRLEN];
 
-    http->flags.accel = true;
-
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
     static const SBuf cache_object("cache_object://");
     if (hp->requestUri().startsWith(cache_object))
-        return; /* already in good shape */
+        return nullptr; /* already in good shape */
 
     // XXX: re-use proper URL parser for this
     SBuf url = hp->requestUri(); // use full provided URI if we abort
@@ -1105,7 +1105,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
             break;
 
         if (conn->port->vhost)
-            return; /* already in good shape */
+            return nullptr; /* already in good shape */
 
         // skip the URI scheme
         static const CharacterSet uriScheme = CharacterSet("URI-scheme","+-.") + CharacterSet::ALPHA + CharacterSet::DIGIT;
@@ -1142,18 +1142,16 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
 #endif
 
     if (vport < 0)
-        vport = http->getConn()->clientConnection->local.port();
+        vport = conn->clientConnection->local.port();
 
-    const bool switchedToHttps = conn->switchedToHttps();
-    const bool tryHostHeader = vhost || switchedToHttps;
     char *host = NULL;
-    if (tryHostHeader && (host = hp->getHeaderField("Host"))) {
+    if (vhost && (host = hp->getHeaderField("Host"))) {
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
         char thost[256];
         if (vport > 0) {
             thost[0] = '\0';
             char *t = NULL;
-            if (host[strlen(host)] != ']' && (t = strrchr(host,':')) != NULL) {
+            if (host[strlen(host) - 1] != ']' && (t = strrchr(host,':')) != nullptr) {
                 strncpy(thost, host, (t-host));
                 snprintf(thost+(t-host), sizeof(thost)-(t-host), ":%d", vport);
                 host = thost;
@@ -1162,67 +1160,116 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, const Http1
                 host = thost;
             }
         } // else nothing to alter port-wise.
-        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen + strlen(host);
-        http->uri = (char *)xcalloc(url_sz, 1);
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
-        snprintf(http->uri, url_sz, SQUIDSBUFPH "://%s" SQUIDSBUFPH, SQUIDSBUFPRINT(scheme), host, SQUIDSBUFPRINT(url));
-        debugs(33, 5, "ACCEL VHOST REWRITE: " << http->uri);
+        const int url_sz = scheme.length() + strlen(host) + url.length() + 32;
+        char *uri = static_cast<char *>(xcalloc(url_sz, 1));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://%s" SQUIDSBUFPH, SQUIDSBUFPRINT(scheme), host, SQUIDSBUFPRINT(url));
+        debugs(33, 5, "ACCEL VHOST REWRITE: " << uri);
+        return uri;
     } else if (conn->port->defaultsite /* && !vhost */) {
         debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: defaultsite=" << conn->port->defaultsite << " + vport=" << vport);
-        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen +
-                           strlen(conn->port->defaultsite);
-        http->uri = (char *)xcalloc(url_sz, 1);
         char vportStr[32];
         vportStr[0] = '\0';
         if (vport > 0) {
             snprintf(vportStr, sizeof(vportStr),":%d",vport);
         }
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
-        snprintf(http->uri, url_sz, SQUIDSBUFPH "://%s%s" SQUIDSBUFPH,
+        const int url_sz = scheme.length() + strlen(conn->port->defaultsite) + sizeof(vportStr) + url.length() + 32;
+        char *uri = static_cast<char *>(xcalloc(url_sz, 1));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://%s%s" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme), conn->port->defaultsite, vportStr, SQUIDSBUFPRINT(url));
-        debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: " << http->uri);
+        debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: " << uri);
+        return uri;
     } else if (vport > 0 /* && (!vhost || no Host:) */) {
         debugs(33, 5, "ACCEL VPORT REWRITE: *_port IP + vport=" << vport);
         /* Put the local socket IP address as the hostname, with whatever vport we found  */
-        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen;
-        http->uri = (char *)xcalloc(url_sz, 1);
-        http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
+        conn->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
-        snprintf(http->uri, url_sz, SQUIDSBUFPH "://%s:%d" SQUIDSBUFPH,
+        const int url_sz = scheme.length() + sizeof(ipbuf) + url.length() + 32;
+        char *uri = static_cast<char *>(xcalloc(url_sz, 1));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://%s:%d" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme), ipbuf, vport, SQUIDSBUFPRINT(url));
-        debugs(33, 5, "ACCEL VPORT REWRITE: " << http->uri);
+        debugs(33, 5, "ACCEL VPORT REWRITE: " << uri);
+        return uri;
     }
+
+    return nullptr;
 }
 
-static void
-prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, const Http1::RequestParserPointer &hp)
+static char *
+buildUrlFromHost(ConnStateData * conn, const Http1::RequestParserPointer &hp)
+{
+    char *uri = nullptr;
+    /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
+    if (const char *host = hp->getHeaderField("Host")) {
+        const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
+        const int url_sz = scheme.length() + strlen(host) + hp->requestUri().length() + 32;
+        uri = static_cast<char *>(xcalloc(url_sz, 1));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://%s" SQUIDSBUFPH,
+                 SQUIDSBUFPRINT(scheme),
+                 host,
+                 SQUIDSBUFPRINT(hp->requestUri()));
+    }
+    return uri;
+}
+
+char *
+ConnStateData::prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp)
+{
+    Must(switchedToHttps());
+
+    if (!hp->requestUri().isEmpty() && hp->requestUri()[0] != '/')
+        return nullptr; /* already in good shape */
+
+    char *uri = buildUrlFromHost(this, hp);
+#if USE_OPENSSL
+    if (!uri) {
+        Must(tlsConnectPort);
+        Must(sslConnectHostOrIp.size());
+        SBuf useHost;
+        if (!tlsClientSni().isEmpty())
+            useHost = tlsClientSni();
+        else
+            useHost.assign(sslConnectHostOrIp.rawBuf(), sslConnectHostOrIp.size());
+
+        const SBuf &scheme = AnyP::UriScheme(transferProtocol.protocol).image();
+        const int url_sz = scheme.length() + useHost.length() + hp->requestUri().length() + 32;
+        uri = static_cast<char *>(xcalloc(url_sz, 1));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://" SQUIDSBUFPH ":%d" SQUIDSBUFPH,
+                 SQUIDSBUFPRINT(scheme),
+                 SQUIDSBUFPRINT(useHost),
+                 tlsConnectPort,
+                 SQUIDSBUFPRINT(hp->requestUri()));
+    }
+#endif
+    if (uri)
+        debugs(33, 5, "TLS switching host rewrite: " << uri);
+    return uri;
+}
+
+static char *
+prepareTransparentURL(ConnStateData * conn, const Http1::RequestParserPointer &hp)
 {
     // TODO Must() on URI !empty when the parser supports throw. For now avoid assert().
     if (!hp->requestUri().isEmpty() && hp->requestUri()[0] != '/')
-        return; /* already in good shape */
+        return nullptr; /* already in good shape */
 
-    /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
-
-    if (const char *host = hp->getHeaderField("Host")) {
-        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen +
-                           strlen(host);
-        http->uri = (char *)xcalloc(url_sz, 1);
-        const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
-        snprintf(http->uri, url_sz, SQUIDSBUFPH "://%s" SQUIDSBUFPH,
-                 SQUIDSBUFPRINT(scheme), host, SQUIDSBUFPRINT(hp->requestUri()));
-        debugs(33, 5, "TRANSPARENT HOST REWRITE: " << http->uri);
-    } else {
+    char *uri = buildUrlFromHost(conn, hp);
+    if (!uri) {
         /* Put the local socket IP address as the hostname.  */
-        const int url_sz = hp->requestUri().length() + 32 + Config.appendDomainLen;
-        http->uri = (char *)xcalloc(url_sz, 1);
         static char ipbuf[MAX_IPSTRLEN];
-        http->getConn()->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
-        const SBuf &scheme = AnyP::UriScheme(http->getConn()->transferProtocol.protocol).image();
-        snprintf(http->uri, url_sz, SQUIDSBUFPH "://%s:%d" SQUIDSBUFPH,
+        conn->clientConnection->local.toHostStr(ipbuf,MAX_IPSTRLEN);
+        const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
+        const int url_sz = sizeof(ipbuf) + hp->requestUri().length() + 32;
+        uri = static_cast<char *>(xcalloc(url_sz, 1));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://%s:%d" SQUIDSBUFPH,
                  SQUIDSBUFPRINT(scheme),
-                 ipbuf, http->getConn()->clientConnection->local.port(), SQUIDSBUFPRINT(hp->requestUri()));
-        debugs(33, 5, "TRANSPARENT REWRITE: " << http->uri);
+                 ipbuf, conn->clientConnection->local.port(), SQUIDSBUFPRINT(hp->requestUri()));
     }
+
+    if (uri)
+        debugs(33, 5, "TRANSPARENT REWRITE: " << uri);
+    return uri;
 }
 
 /** Parse an HTTP request
@@ -1342,9 +1389,11 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
      *  - remote interception with PROXY protocol
      *  - remote reverse-proxy with PROXY protocol
      */
-    if (csd->transparent()) {
+    if (csd->switchedToHttps()) {
+        http->uri = csd->prepareTlsSwitchingURL(hp);
+    } else if (csd->transparent()) {
         /* intercept or transparent mode, properly working with no failures */
-        prepareTransparentURL(csd, http, hp);
+        http->uri = prepareTransparentURL(csd, hp);
 
     } else if (internalCheck(hp->requestUri())) { // NP: only matches relative-URI
         /* internal URL mode */
@@ -1354,9 +1403,10 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
         //  But have not parsed there yet!! flag for local-only handling.
         http->flags.internal = true;
 
-    } else if (csd->port->flags.accelSurrogate || csd->switchedToHttps()) {
+    } else if (csd->port->flags.accelSurrogate) {
         /* accelerator mode */
-        prepareAcceleratedURL(csd, http, hp);
+        http->uri = prepareAcceleratedURL(csd, hp);
+        http->flags.accel = true;
     }
 
     if (!http->uri) {
@@ -1790,217 +1840,32 @@ ConnStateData::proxyProtocolError(const char *msg)
     return false;
 }
 
-/// magic octet prefix for PROXY protocol version 1
-static const SBuf Proxy1p0magic("PROXY ", 6);
-
-/// magic octet prefix for PROXY protocol version 2
-static const SBuf Proxy2p0magic("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A", 12);
-
-/**
- * Test the connection read buffer for PROXY protocol header.
- * Version 1 and 2 header currently supported.
- */
+/// Attempts to extract a PROXY protocol header from the input buffer and,
+/// upon success, stores the parsed header in proxyProtocolHeader_.
+/// \returns true if the header was successfully parsed
+/// \returns false if more data is needed to parse the header or on error
 bool
 ConnStateData::parseProxyProtocolHeader()
 {
-    // http://www.haproxy.org/download/1.5/doc/proxy-protocol.txt
-
-    // detect and parse PROXY/2.0 protocol header
-    if (inBuf.startsWith(Proxy2p0magic))
-        return parseProxy2p0();
-
-    // detect and parse PROXY/1.0 protocol header
-    if (inBuf.startsWith(Proxy1p0magic))
-        return parseProxy1p0();
-
-    // detect and terminate other protocols
-    if (inBuf.length() >= Proxy2p0magic.length()) {
-        // PROXY/1.0 magic is shorter, so we know that
-        // the input does not start with any PROXY magic
-        return proxyProtocolError("PROXY protocol error: invalid header");
+    try {
+        const auto parsed = ProxyProtocol::Parse(inBuf);
+        proxyProtocolHeader_ = parsed.header;
+        assert(bool(proxyProtocolHeader_));
+        inBuf.consume(parsed.size);
+        needProxyProtocolHeader_ = false;
+        if (proxyProtocolHeader_->hasForwardedAddresses()) {
+            clientConnection->local = proxyProtocolHeader_->destinationAddress;
+            clientConnection->remote = proxyProtocolHeader_->sourceAddress;
+            if ((clientConnection->flags & COMM_TRANSPARENT))
+                clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
+            debugs(33, 5, "PROXY/" << proxyProtocolHeader_->version() << " upgrade: " << clientConnection);
+        }
+    } catch (const Parser::BinaryTokenizer::InsufficientInput &) {
+        debugs(33, 3, "PROXY protocol: waiting for more than " << inBuf.length() << " bytes");
+        return false;
+    } catch (const std::exception &e) {
+        return proxyProtocolError(e.what());
     }
-
-    // TODO: detect short non-magic prefixes earlier to avoid
-    // waiting for more data which may never come
-
-    // not enough bytes to parse yet.
-    return false;
-}
-
-/// parse the PROXY/1.0 protocol header from the connection read buffer
-bool
-ConnStateData::parseProxy1p0()
-{
-    ::Parser::Tokenizer tok(inBuf);
-    tok.skip(Proxy1p0magic);
-
-    // skip to first LF (assumes it is part of CRLF)
-    static const CharacterSet lineContent = CharacterSet::LF.complement("non-LF");
-    SBuf line;
-    if (tok.prefix(line, lineContent, 107-Proxy1p0magic.length())) {
-        if (tok.skip('\n')) {
-            // found valid header
-            inBuf = tok.remaining();
-            needProxyProtocolHeader_ = false;
-            // reset the tokenizer to work on found line only.
-            tok.reset(line);
-        } else
-            return false; // no LF yet
-
-    } else // protocol error only if there are more than 107 bytes prefix header
-        return proxyProtocolError(inBuf.length() > 107? "PROXY/1.0 error: missing CRLF" : NULL);
-
-    static const SBuf unknown("UNKNOWN"), tcpName("TCP");
-    if (tok.skip(tcpName)) {
-
-        // skip TCP/IP version number
-        static const CharacterSet tcpVersions("TCP-version","46");
-        if (!tok.skipOne(tcpVersions))
-            return proxyProtocolError("PROXY/1.0 error: missing TCP version");
-
-        // skip SP after protocol version
-        if (!tok.skip(' '))
-            return proxyProtocolError("PROXY/1.0 error: missing SP");
-
-        SBuf ipa, ipb;
-        int64_t porta, portb;
-        static const CharacterSet ipChars = CharacterSet("IP Address",".:") + CharacterSet::HEXDIG;
-
-        // parse:  src-IP SP dst-IP SP src-port SP dst-port CR
-        // leave the LF until later.
-        const bool correct = tok.prefix(ipa, ipChars) && tok.skip(' ') &&
-                             tok.prefix(ipb, ipChars) && tok.skip(' ') &&
-                             tok.int64(porta) && tok.skip(' ') &&
-                             tok.int64(portb) &&
-                             tok.skip('\r');
-        if (!correct)
-            return proxyProtocolError("PROXY/1.0 error: invalid syntax");
-
-        // parse IP and port strings
-        Ip::Address originalClient, originalDest;
-
-        if (!originalClient.GetHostByName(ipa.c_str()))
-            return proxyProtocolError("PROXY/1.0 error: invalid src-IP address");
-
-        if (!originalDest.GetHostByName(ipb.c_str()))
-            return proxyProtocolError("PROXY/1.0 error: invalid dst-IP address");
-
-        if (porta > 0 && porta <= 0xFFFF) // max uint16_t
-            originalClient.port(static_cast<uint16_t>(porta));
-        else
-            return proxyProtocolError("PROXY/1.0 error: invalid src port");
-
-        if (portb > 0 && portb <= 0xFFFF) // max uint16_t
-            originalDest.port(static_cast<uint16_t>(portb));
-        else
-            return proxyProtocolError("PROXY/1.0 error: invalid dst port");
-
-        // we have original client and destination details now
-        // replace the client connection values
-        debugs(33, 5, "PROXY/1.0 protocol on connection " << clientConnection);
-        clientConnection->local = originalDest;
-        clientConnection->remote = originalClient;
-        if ((clientConnection->flags & COMM_TRANSPARENT))
-            clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
-        debugs(33, 5, "PROXY/1.0 upgrade: " << clientConnection);
-        return true;
-
-    } else if (tok.skip(unknown)) {
-        // found valid but unusable header
-        return true;
-
-    } else
-        return proxyProtocolError("PROXY/1.0 error: invalid protocol family");
-
-    return false;
-}
-
-/// parse the PROXY/2.0 protocol header from the connection read buffer
-bool
-ConnStateData::parseProxy2p0()
-{
-    static const SBuf::size_type prefixLen = Proxy2p0magic.length();
-    if (inBuf.length() < prefixLen + 4)
-        return false; // need more bytes
-
-    if ((inBuf[prefixLen] & 0xF0) != 0x20) // version == 2 is mandatory
-        return proxyProtocolError("PROXY/2.0 error: invalid version");
-
-    const char command = (inBuf[prefixLen] & 0x0F);
-    if ((command & 0xFE) != 0x00) // values other than 0x0-0x1 are invalid
-        return proxyProtocolError("PROXY/2.0 error: invalid command");
-
-    const char family = (inBuf[prefixLen+1] & 0xF0) >>4;
-    if (family > 0x3) // values other than 0x0-0x3 are invalid
-        return proxyProtocolError("PROXY/2.0 error: invalid family");
-
-    const char proto = (inBuf[prefixLen+1] & 0x0F);
-    if (proto > 0x2) // values other than 0x0-0x2 are invalid
-        return proxyProtocolError("PROXY/2.0 error: invalid protocol type");
-
-    const char *clen = inBuf.rawContent() + prefixLen + 2;
-    uint16_t len;
-    memcpy(&len, clen, sizeof(len));
-    len = ntohs(len);
-
-    if (inBuf.length() < prefixLen + 4 + len)
-        return false; // need more bytes
-
-    inBuf.consume(prefixLen + 4); // 4 being the extra bytes
-    const SBuf extra = inBuf.consume(len);
-    needProxyProtocolHeader_ = false; // found successfully
-
-    // LOCAL connections do nothing with the extras
-    if (command == 0x00/* LOCAL*/)
-        return true;
-
-    union pax {
-        struct {        /* for TCP/UDP over IPv4, len = 12 */
-            struct in_addr src_addr;
-            struct in_addr dst_addr;
-            uint16_t src_port;
-            uint16_t dst_port;
-        } ipv4_addr;
-        struct {        /* for TCP/UDP over IPv6, len = 36 */
-            struct in6_addr src_addr;
-            struct in6_addr dst_addr;
-            uint16_t src_port;
-            uint16_t dst_port;
-        } ipv6_addr;
-#if NOT_SUPPORTED
-        struct {        /* for AF_UNIX sockets, len = 216 */
-            uint8_t src_addr[108];
-            uint8_t dst_addr[108];
-        } unix_addr;
-#endif
-    };
-
-    pax ipu;
-    memcpy(&ipu, extra.rawContent(), sizeof(pax));
-
-    // replace the client connection values
-    debugs(33, 5, "PROXY/2.0 protocol on connection " << clientConnection);
-    switch (family) {
-    case 0x1: // IPv4
-        clientConnection->local = ipu.ipv4_addr.dst_addr;
-        clientConnection->local.port(ntohs(ipu.ipv4_addr.dst_port));
-        clientConnection->remote = ipu.ipv4_addr.src_addr;
-        clientConnection->remote.port(ntohs(ipu.ipv4_addr.src_port));
-        if ((clientConnection->flags & COMM_TRANSPARENT))
-            clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
-        break;
-    case 0x2: // IPv6
-        clientConnection->local = ipu.ipv6_addr.dst_addr;
-        clientConnection->local.port(ntohs(ipu.ipv6_addr.dst_port));
-        clientConnection->remote = ipu.ipv6_addr.src_addr;
-        clientConnection->remote.port(ntohs(ipu.ipv6_addr.src_port));
-        if ((clientConnection->flags & COMM_TRANSPARENT))
-            clientConnection->flags ^= COMM_TRANSPARENT; // prevent TPROXY spoofing of this new IP.
-        break;
-    default: // do nothing
-        break;
-    }
-    debugs(33, 5, "PROXY/2.0 upgrade: " << clientConnection);
     return true;
 }
 
@@ -2316,6 +2181,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
 #if USE_OPENSSL
     switchedToHttps_(false),
     parsingTlsHandshake(false),
+    tlsConnectPort(0),
     sslServerBump(NULL),
     signAlgorithm(Ssl::algSignTrusted),
 #endif
@@ -2334,7 +2200,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
 
     // store the details required for creating more MasterXaction objects as new requests come in
     log_addr = xact->tcpClient->remote;
-    log_addr.applyMask(Config.Addrs.client_netmask);
+    log_addr.applyClientMask(Config.Addrs.client_netmask);
 
     // register to receive notice of Squid signal events
     // which may affect long persisting client connections
@@ -2763,6 +2629,7 @@ ConnStateData::postHttpsAccept()
         acl_checklist->al->tcpClient = clientConnection;
         acl_checklist->al->cache.port = port;
         acl_checklist->al->cache.caddr = log_addr;
+        acl_checklist->al->proxyProtocolHeader = proxyProtocolHeader_;
         HTTPMSGUNLOCK(acl_checklist->al->request);
         acl_checklist->al->request = request;
         HTTPMSGLOCK(acl_checklist->al->request);
@@ -3051,6 +2918,7 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     assert(!switchedToHttps_);
 
     sslConnectHostOrIp = request->url.host();
+    tlsConnectPort = request->url.port();
     resetSslCommonName(request->url.host());
 
     // We are going to read new request
@@ -4007,7 +3875,7 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
 }
 
 const Comm::ConnectionPointer
-ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *aPeer)
+ConnStateData::validatePinnedConnection(HttpRequest *request)
 {
     debugs(33, 7, HERE << pinning.serverConnection);
 
@@ -4020,8 +3888,6 @@ ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *a
         valid = false;
     else if (pinning.peer && !cbdataReferenceValid(pinning.peer))
         valid = false;
-    else if (aPeer != pinning.peer)
-        valid = false;
 
     if (!valid) {
         /* The pinning info is not safe, remove any pinning info */
@@ -4032,10 +3898,10 @@ ConnStateData::validatePinnedConnection(HttpRequest *request, const CachePeer *a
 }
 
 Comm::ConnectionPointer
-ConnStateData::borrowPinnedConnection(HttpRequest *request, const CachePeer *aPeer)
+ConnStateData::borrowPinnedConnection(HttpRequest *request)
 {
     debugs(33, 7, pinning.serverConnection);
-    if (validatePinnedConnection(request, aPeer) != NULL)
+    if (validatePinnedConnection(request) != nullptr)
         stopPinnedConnectionMonitoring();
 
     return pinning.serverConnection; // closed if validation failed

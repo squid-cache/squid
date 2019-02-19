@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,6 +48,7 @@
 #include "MemObject.h"
 #include "Parsing.h"
 #include "profiler/Profiler.h"
+#include "proxyp/Header.h"
 #include "redirect.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
@@ -172,6 +173,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
         al->tcpClient = clientConnection = aConn->clientConnection;
         al->cache.port = aConn->port;
         al->cache.caddr = aConn->log_addr;
+        al->proxyProtocolHeader = aConn->proxyProtocolHeader();
 
 #if USE_OPENSSL
         if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {

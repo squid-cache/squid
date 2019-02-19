@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1583,7 +1583,8 @@ statPeerSelect(StoreEntry * sentry)
     const int tot_used = f->cd.times_used + f->icp.times_used;
 
     /* totals */
-    cacheDigestGuessStatsReport(&f->cd.guess, sentry, "all peers");
+    static const SBuf label("all peers");
+    cacheDigestGuessStatsReport(&f->cd.guess, sentry, label);
     /* per-peer */
     storeAppendPrintf(sentry, "\nPer-peer statistics:\n");
 

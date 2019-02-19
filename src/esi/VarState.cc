@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -380,10 +380,10 @@ ESIVariableCookie::eval (ESIVarState &state, char const *subref, char const *fou
         if (!subref)
             s = state.header().getStr (Http::HdrType::COOKIE);
         else {
-            String S = state.header().getListMember (Http::HdrType::COOKIE, subref, ';');
+            const auto subCookie = state.header().getListMember(Http::HdrType::COOKIE, subref, ';');
 
-            if (S.size())
-                ESISegment::ListAppend (state.getOutput(), S.rawBuf(), S.size());
+            if (subCookie.length())
+                ESISegment::ListAppend(state.getOutput(), subCookie.rawContent(), subCookie.length());
             else if (found_default)
                 ESISegment::ListAppend (state.getOutput(), found_default, strlen (found_default));
         }

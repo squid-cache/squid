@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -118,12 +118,12 @@ for FILENAME in `git ls-files`; do
 	#
 	# If a file includes openssl headers, then it must include compat/openssl.h
 	#
-	if test "${FILENAME}" != "compat/openssl.h" && \
-	   (FI=`grep "#include.*openssl/" "${FILENAME}" 2>/dev/null`; \
-	    test "x${FI}" != "x") && \
-	   (FI=`grep "#include \"compat/openssl\.h\"" "${FILENAME}" 2>/dev/null`; \
-	    test "x${FI}" == "x"); then
-		echo "ERROR: ${FILENAME} includes openssl headers without including \"compat/openssl.h\""
+	if test "${FILENAME}" != "compat/openssl.h"; then
+		FA=`grep "#include.*openssl/" "${FILENAME}" 2>/dev/null | head -1`;
+		FB=`grep '#include.*compat/openssl[.]h' "${FILENAME}" 2>/dev/null | head -1`;
+		if test "x${FA}" != "x" -a "x${FB}" = "x"; then
+			echo "ERROR: ${FILENAME} includes openssl headers without including \"compat/openssl.h\""
+		fi
 	fi
 
 	#
@@ -141,7 +141,7 @@ for FILENAME in `git ls-files`; do
 	# sprintf() - not allowed anywhere.
 	#
 	STRDUP=`grep -e "[^x]strdup(" ${FILENAME}`;
-	if test "x${STRDUP}" != "x" -a "${FILENAME}" != "xstring.h"; then
+	if test "x${STRDUP}" != "x" -a "${FILENAME}" != "compat/xstring.h"; then
 		echo "ERROR: ${FILENAME} contains unprotected use of strdup()"
 	fi
 	SPRINTF=`grep -e "[^v]sprintf(" ${FILENAME}`;

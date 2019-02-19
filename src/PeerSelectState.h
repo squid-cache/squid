@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -79,7 +79,7 @@ public:
     bool wantsMoreDestinations() const;
 
     /// processes a newly discovered/finalized path
-    void handlePath(Comm::ConnectionPointer &path, FwdServer &fs);
+    void handlePath(const Comm::ConnectionPointer &path, FwdServer &fs);
 
     /// a single selection loop iteration: attempts to add more destinations
     void selectMore();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -190,7 +190,7 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
     // allocate the first slice during the first write
     if (!coreOff) {
         assert(sidCurrent < 0);
-        sidCurrent = reserveSlotForWriting(); // throws on failures
+        sidCurrent = dir->reserveSlotForWriting(); // throws on failures
         assert(sidCurrent >= 0);
         writeAnchor().start = sidCurrent;
     }
@@ -207,7 +207,7 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
         // We do not write a full buffer without overflow because
         // we would not yet know what to set the nextSlot to.
         if (overflow) {
-            const SlotId sidNext = reserveSlotForWriting(); // throws
+            const auto sidNext = dir->reserveSlotForWriting(); // throws
             assert(sidNext >= 0);
             writeToDisk(sidNext);
         } else if (Store::Root().transientReaders(*e)) {
@@ -304,21 +304,6 @@ Rock::IoState::writeBufToDisk(const SlotId sidNext, const bool eof, const bool l
 
     // theFile->write may call writeCompleted immediatelly
     theFile->write(r);
-}
-
-/// finds and returns a free db slot to fill or throws
-Rock::SlotId
-Rock::IoState::reserveSlotForWriting()
-{
-    Ipc::Mem::PageId pageId;
-    if (dir->useFreeSlot(pageId))
-        return pageId.number-1;
-
-    // This may happen when the number of available db slots is close to the
-    // number of concurrent requests reading or writing those slots, which may
-    // happen when the db is "small" compared to the request traffic OR when we
-    // are rebuilding and have not loaded "many" entries or empty slots yet.
-    throw TexcHere("ran out of free db slots");
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -61,8 +61,8 @@ public:
 };
 
 void cacheDigestGuessStatsUpdate(CacheDigestGuessStats * stats, int real_hit, int guess_hit);
-void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const char *label);
-void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
+void cacheDigestGuessStatsReport(const CacheDigestGuessStats * stats, StoreEntry * sentry, const SBuf &label);
+void cacheDigestReport(CacheDigest * cd, const SBuf &label, StoreEntry * e);
 
 #endif /* SQUID_CACHEDIGEST_H_ */
 

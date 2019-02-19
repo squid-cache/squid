@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,8 @@
 #include "format/Token.h"
 #include "format/TokenTableEntry.h"
 #include "globals.h"
+#include "proxyp/Elements.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "Store.h"
 
@@ -176,6 +178,10 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry(NULL, LFT_NONE)        /* this must be last */
 };
 
+static TokenTableEntry TokenTableProxyProtocol[] = {
+    TokenTableEntry(">h", LFT_PROXY_PROTOCOL_RECEIVED_HEADER),
+};
+
 #if USE_ADAPTATION
 static TokenTableEntry TokenTableAdapt[] = {
     TokenTableEntry("all_trs", LFT_ADAPTATION_ALL_XACT_TIMES),
@@ -221,6 +227,7 @@ static TokenTableEntry TokenTableSsl[] = {
     TokenTableEntry("<cert_subject", LFT_SSL_SERVER_CERT_SUBJECT),
     TokenTableEntry("<cert_issuer", LFT_SSL_SERVER_CERT_ISSUER),
     TokenTableEntry("<cert_errors", LFT_SSL_SERVER_CERT_ERRORS),
+    TokenTableEntry("<cert", LFT_SSL_SERVER_CERT_WHOLE),
     TokenTableEntry(">negotiated_version", LFT_TLS_CLIENT_NEGOTIATED_VERSION),
     TokenTableEntry("<negotiated_version", LFT_TLS_SERVER_NEGOTIATED_VERSION),
     TokenTableEntry(">negotiated_cipher", LFT_TLS_CLIENT_NEGOTIATED_CIPHER),
@@ -250,6 +257,7 @@ Format::Token::Init()
     TheConfig.registerTokens(SBuf("tls"),::Format::TokenTableSsl);
     TheConfig.registerTokens(SBuf("ssl"),::Format::TokenTableSsl);
 #endif
+    TheConfig.registerTokens(SBuf("proxy_protocol"), ::Format::TokenTableProxyProtocol);
 }
 
 /// Scans a token table to see if the next token exists there
@@ -479,9 +487,14 @@ Format::Token::parse(const char *def, Quoting *quoting)
 
     case LFT_NOTE:
 
+    case LFT_PROXY_PROTOCOL_RECEIVED_HEADER:
+
         if (data.string) {
             char *header = data.string;
-            char *cp = strchr(header, ':');
+            const auto initialType = type;
+
+            const auto pseudoHeader = header[0] == ':';
+            char *cp = strchr(pseudoHeader ? header+1 : header, ':');
 
             if (cp) {
                 *cp = '\0';
@@ -521,10 +534,21 @@ Format::Token::parse(const char *def, Quoting *quoting)
                     type = LFT_ICAP_REP_HEADER_ELEM;
                     break;
 #endif
+                case LFT_PROXY_PROTOCOL_RECEIVED_HEADER:
+                    type = LFT_PROXY_PROTOCOL_RECEIVED_HEADER_ELEM;
+                    break;
                 default:
                     break;
                 }
             }
+
+            if (!*header)
+                throw TexcHere(ToSBuf("Can't parse configuration token: '", def, "': missing header name"));
+
+            if (initialType == LFT_PROXY_PROTOCOL_RECEIVED_HEADER)
+                data.headerId = ProxyProtocol::FieldNameToFieldType(SBuf(header));
+            else if (pseudoHeader)
+                throw TexcHere(ToSBuf("Pseudo headers are not supported in this context; got: '", def, "'"));
 
             data.header.header = header;
         } else {
@@ -553,6 +577,9 @@ Format::Token::parse(const char *def, Quoting *quoting)
                 type = LFT_ICAP_REP_ALL_HEADERS;
                 break;
 #endif
+            case LFT_PROXY_PROTOCOL_RECEIVED_HEADER:
+                type = LFT_PROXY_PROTOCOL_RECEIVED_ALL_HEADERS;
+                break;
             default:
                 break;
             }

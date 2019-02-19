@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -772,13 +772,15 @@ MemStore::reserveSapForWriting(Ipc::Mem::PageId &page)
 {
     Ipc::Mem::PageId slot;
     if (freeSlots->pop(slot)) {
-        debugs(20, 5, "got a previously free slot: " << slot);
+        const auto slotId = slot.number - 1;
+        debugs(20, 5, "got a previously free slot: " << slotId);
 
         if (Ipc::Mem::GetPage(Ipc::Mem::PageId::cachePage, page)) {
             debugs(20, 5, "and got a previously free page: " << page);
-            return slot.number - 1;
+            map->prepFreeSlice(slotId);
+            return slotId;
         } else {
-            debugs(20, 3, "but there is no free page, returning " << slot);
+            debugs(20, 3, "but there is no free page, returning " << slotId);
             freeSlots->push(slot);
         }
     }
@@ -791,8 +793,10 @@ MemStore::reserveSapForWriting(Ipc::Mem::PageId &page)
         assert(!waitingFor); // noteFreeMapSlice() should have cleared it
         assert(slot.set());
         assert(page.set());
-        debugs(20, 5, "got previously busy " << slot << " and " << page);
-        return slot.number - 1;
+        const auto slotId = slot.number - 1;
+        map->prepFreeSlice(slotId);
+        debugs(20, 5, "got previously busy " << slotId << " and " << page);
+        return slotId;
     }
     assert(waitingFor.slot == &slot && waitingFor.page == &page);
     waitingFor.slot = NULL;
