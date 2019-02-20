@@ -57,7 +57,11 @@ typedef enum {
     SWAPOUT_WRITING,
     /// StoreEntry is associated with a complete (i.e., fully swapped out) disk store entry.
     /// Guarantees the disk store entry existence.
-    SWAPOUT_DONE
+    SWAPOUT_DONE,
+    /// StoreEntry is associated with an unusable disk store entry.
+    /// Swapout attempt has failed. The entry should be marked for eventual deletion.
+    /// Guarantees the disk store entry existence.
+    SWAPOUT_FAILED
 } swap_status_t;
 
 typedef enum {

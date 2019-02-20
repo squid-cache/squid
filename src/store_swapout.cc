@@ -88,19 +88,9 @@ storeSwapOutStart(StoreEntry * e)
 
 /// XXX: unused, see a related StoreIOState::file_callback
 static void
-storeSwapOutFileNotify(void *data, int errflag, StoreIOState::Pointer self)
+storeSwapOutFileNotify(void *, int, StoreIOState::Pointer)
 {
-    StoreEntry *e;
-    static_cast<generic_cbdata *>(data)->unwrap(&e);
-
-    MemObject *mem = e->mem_obj;
-    assert(e->swappingOut());
-    assert(mem);
-    assert(mem->swapout.sio == self);
-    assert(errflag == 0);
-    assert(!e->hasDisk()); // if this fails, call SwapDir::disconnect(e)
-    e->swap_filen = mem->swapout.sio->swap_filen;
-    e->swap_dirn = mem->swapout.sio->swap_dirn;
+    assert(false);
 }
 
 static bool
@@ -304,8 +294,11 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
             storeConfigure();
         }
 
+        // mark the locked entry for deletion
+        // TODO: Keep the memory entry (if any)
+        e->releaseRequest();
+        e->swap_status = SWAPOUT_FAILED;
         e->disk().finalizeSwapoutFailure(*e);
-        e->releaseRequest(); // TODO: Keep the memory entry (if any)
     } else {
         /* swapping complete */
         debugs(20, 3, "storeSwapOutFileClosed: SwapOut complete: '" << e->url() << "' to " <<

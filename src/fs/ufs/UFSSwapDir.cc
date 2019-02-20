@@ -1185,6 +1185,8 @@ Fs::Ufs::UFSSwapDir::evictCached(StoreEntry & e)
     if (!e.hasDisk())
         return; // see evictIfFound()
 
+    // Since these fields grow only after swap out ends successfully,
+    // do not decrement them for e.swappingOut() and e.swapoutFailed().
     if (e.swappedOut()) {
         cur_size -= fs.blksize * sizeInBlocks(e.swap_file_sz);
         --n_disk_objects;
@@ -1274,7 +1276,7 @@ void
 Fs::Ufs::UFSSwapDir::finalizeSwapoutFailure(StoreEntry &entry)
 {
     debugs(47, 5, entry);
-    // rely on the expected subsequent StoreEntry::release(), evictCached(), or
+    // rely on the expected eventual StoreEntry::release(), evictCached(), or
     // a similar call to call unlink(), detachFromDisk(), etc. for the entry.
 }
 
