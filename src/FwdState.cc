@@ -971,6 +971,7 @@ FwdState::usePinned()
     ++n_tries;
     request->flags.pinned = true;
 
+    assert(connManager);
     if (connManager->pinnedAuth())
         request->flags.auth = true;
 
