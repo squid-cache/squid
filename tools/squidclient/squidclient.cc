@@ -189,7 +189,7 @@ public:
     void commit(std::ostream &os);
 
     std::string header; ///< HTTP header name to send
-    std::string destination = nullptr; ///< used when describing password
+    std::string destination; ///< used when describing password
     const char *user = nullptr; ///< user name to encode and send
     const char *password = nullptr; ///< user password to encode and send
 };
