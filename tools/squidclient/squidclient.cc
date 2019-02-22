@@ -183,7 +183,7 @@ class Authorization
 {
 public:
     Authorization(const char *aHeader, const char *aDestination):
-        header(aHeader), destination(aDestination), user(nullptr), password(nullptr) {}
+        header(aHeader), destination(aDestination) {}
 
     /// finalizes and writes the right HTTP header to the given stream
     void commit(std::ostream &os);
