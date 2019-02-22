@@ -188,7 +188,7 @@ public:
     /// finalizes and writes the right HTTP header to the given stream
     void commit(std::ostream &os);
 
-    std::string header = nullptr; ///< HTTP header name to send
+    std::string header; ///< HTTP header name to send
     std::string destination = nullptr; ///< used when describing password
     const char *user = nullptr; ///< user name to encode and send
     const char *password = nullptr; ///< user password to encode and send
