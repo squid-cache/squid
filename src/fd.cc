@@ -219,7 +219,6 @@ fd_open(int fd, unsigned int type, const SBuf &desc)
         break;
 
     default:
-        // XXX: performance regression. c_str() reallocates
         fatalf("fd_open(): unknown FD type - FD#: %i, type: %u, desc %s\n", fd, type, desc.c_str());
     }
 
