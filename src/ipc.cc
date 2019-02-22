@@ -349,7 +349,6 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         debugs(54, 3, "ipcCreate: CHILD accepted new FD " << fd);
         close(crfd);
         cwfd = crfd = fd;
-
     } else if (type == IPC_UDP_SOCKET) {
         if (comm_connect_addr(crfd, PaS) == Comm::COMM_ERROR)
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
