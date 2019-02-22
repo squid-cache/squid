@@ -1300,8 +1300,9 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
 
     /* FIXME PIPELINE: This is innacurate during pipelining */
 
+    assert(http->request);
     if (http->getConn() != NULL && Comm::IsConnOpen(http->getConn()->clientConnection))
-        fd_note(http->getConn()->clientConnection->fd, SBuf(http->uri));
+        fd_note(http->getConn()->clientConnection->fd, http->request->effectiveRequestUri());
 
     assert(http->uri);
 
