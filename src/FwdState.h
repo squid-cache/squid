@@ -151,8 +151,6 @@ private:
     /// \returns the time left for this connection to become connected or 1 second if it is less than one second left
     time_t connectingTimeout(const Comm::ConnectionPointer &conn) const;
 
-    void handlePinned(CachePeer *); ///< Handle pinned connections
-
     /// whether we are waiting for HappyConnOpener
     /// same as calls.connector but may differ from connOpener.valid()
     bool opening() const { return connOpener.set(); }
