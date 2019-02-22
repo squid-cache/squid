@@ -61,7 +61,7 @@ public:
         writeMethod_ = nullptr;
     }
 
-    /// Clear the fde class back to nil equivalent.
+    /// restore default-constructed state
     void clear() { *this = fde(); }
 
     /// True if comm_close for this fd has been called
