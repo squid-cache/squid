@@ -678,6 +678,7 @@ Format::Token::Token() : type(LFT_NONE),
     data.header.header = NULL;
     data.header.element = NULL;
     data.header.separator = ',';
+    data.headerId = ProxyProtocol::Two::htUnknown;
 }
 
 Format::Token::~Token()
