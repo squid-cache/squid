@@ -15,7 +15,7 @@
 #include "defines.h"
 #include "ip/Address.h"
 #include "ip/forward.h"
-#include "sbuf/forward.h"
+#include "sbuf/SBuf.h"
 #include "security/forward.h"
 #include "typedefs.h" //DRCB, DWCB
 
