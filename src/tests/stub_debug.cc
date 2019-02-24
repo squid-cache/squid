@@ -103,7 +103,8 @@ Debug::Context *Debug::Current = nullptr;
 Debug::Context::Context(const int aSection, const int aLevel):
     level(aLevel),
     sectionLevel(Levels[aSection]),
-    upper(Current)
+    upper(Current),
+    forceAlert(false)
 {
     buf.setf(std::ios::fixed);
     buf.precision(2);
