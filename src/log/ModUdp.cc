@@ -205,7 +205,8 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
      * applications like netcat have a small default receive buffer and will
      * truncate!
      */
-    bufsz = 1400;
+    if (bufsz > 1400)
+        bufsz = 1400;
     if (bufsz > 0) {
         ll->buf = static_cast<char*>(xmalloc(bufsz));
         ll->bufsz = bufsz;
