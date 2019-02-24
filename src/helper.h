@@ -25,8 +25,9 @@
 #include "sbuf/SBuf.h"
 
 #include <list>
-#include <unordered_map>
+#include <map>
 #include <queue>
+#include <unordered_map>
 
 class Packable;
 class wordlist;
