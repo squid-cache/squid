@@ -14,6 +14,8 @@
 #include "proxyp/Elements.h"
 #include "sbuf/SBuf.h"
 
+#include <vector>
+
 namespace ProxyProtocol {
 
 /// PROXY protocol v1 or v2 header
