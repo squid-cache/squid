@@ -2426,7 +2426,7 @@ DOC_START
 
 			SECURITY WARNING: Enabling worker-specific queues
 			allows any process running as Squid's effective user to
-			accept requests destined to this port.
+			easily accept requests destined to this port.
 
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface we recommend you to specify the
