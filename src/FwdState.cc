@@ -995,40 +995,40 @@ FwdState::syncHierNote(const Comm::ConnectionPointer &server, const char *host)
 void
 FwdState::connectStart()
 {
+    assert(!destinations->empty());
+
     debugs(17, 3, HERE << entry->url());
 
     assert(!opening());
 
-    if (!destinations->empty()) {
-        // Ditch error page if it was created before.
-        // A new one will be created if there's another problem
-        delete err;
-        err = NULL;
-        request->clearError();
-        serverConn = NULL;
+    // Ditch error page if it was created before.
+    // A new one will be created if there's another problem
+    delete err;
+    err = NULL;
+    request->clearError();
+    serverConn = NULL;
 
-        request->hier.startPeerClock();
+    request->hier.startPeerClock();
 
-        calls.connector = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer(&FwdState::noteConnection, this));
+    calls.connector = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer(&FwdState::noteConnection, this));
 
-        assert(Config.forward_max_tries - n_tries > 0);
-        HttpRequest::Pointer cause = request;
-        const auto cs = new HappyConnOpener(destinations, calls.connector, cause, start_t);
-        cs->setHost(request->url.host());
-        bool retriable = checkRetriable();
-        if (!retriable && Config.accessList.serverPconnForNonretriable) {
-            ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, NULL);
-            ch.al = al;
-            ch.syncAle(request, nullptr);
-            retriable = ch.fastCheck().allowed();
-        }
-        cs->setRetriable(retriable);
-        //bool bumpThroughPeer = request->flags.sslBumped && serverDestinations[0]->getPeer();
-        cs->allowPersistent(pconnRace != raceHappened/* && !bumpThroughPeer*/);
-        destinations->notificationPending = true; // start() is async
-        connOpener = cs;
-        AsyncJob::Start(cs);
+    assert(Config.forward_max_tries - n_tries > 0);
+    HttpRequest::Pointer cause = request;
+    const auto cs = new HappyConnOpener(destinations, calls.connector, cause, start_t);
+    cs->setHost(request->url.host());
+    bool retriable = checkRetriable();
+    if (!retriable && Config.accessList.serverPconnForNonretriable) {
+        ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, NULL);
+        ch.al = al;
+        ch.syncAle(request, nullptr);
+        retriable = ch.fastCheck().allowed();
     }
+    cs->setRetriable(retriable);
+    //bool bumpThroughPeer = request->flags.sslBumped && serverDestinations[0]->getPeer();
+    cs->allowPersistent(pconnRace != raceHappened/* && !bumpThroughPeer*/);
+    destinations->notificationPending = true; // start() is async
+    connOpener = cs;
+    AsyncJob::Start(cs);
 }
 
 /// send request on an existing connection dedicated to the requesting client
