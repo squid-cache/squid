@@ -540,9 +540,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 {
     flags.destinationsFound = true;
     if (path == nullptr) {
-        assert(!destinations->size()); // no other destinations allowed
-        // we do not expect and do not need more paths
-        PeerSelectionInitiator::subscribed = false;
+        assert(!destinations->size()); // Must be the first destination
         usePinned();
         return;
     }
