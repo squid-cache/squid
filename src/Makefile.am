@@ -1813,8 +1813,6 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	dlink.cc \
 	globals.cc \
 	Parsing.cc \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
 	String.cc \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
@@ -2674,6 +2672,8 @@ tests_testCacheManager_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
+	ResolvedPeers.h \
+	ResolvedPeers.cc \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -2986,6 +2986,8 @@ tests_testEvent_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
+	ResolvedPeers.h \
+	ResolvedPeers.cc \
 	StrList.h \
 	StrList.cc \
 	tests/stub_SBufDetailedStats.cc \
