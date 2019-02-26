@@ -1002,9 +1002,9 @@ FwdState::connectStart()
     // Ditch error page if it was created before.
     // A new one will be created if there's another problem
     delete err;
-    err = NULL;
+    err = nullptr;
     request->clearError();
-    serverConn = NULL;
+    serverConn = nullptr;
 
     request->hier.startPeerClock();
 
