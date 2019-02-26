@@ -16,6 +16,8 @@
 /// selected and resolved by the peering code
 class ResolvedPeers: public RefCountable
 {
+    MEMPROXY_CLASS(ResolvedPeers);
+
 public:
     typedef RefCount<ResolvedPeers> Pointer;
 
