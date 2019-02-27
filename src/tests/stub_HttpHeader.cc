@@ -28,7 +28,7 @@ HttpHeader::~HttpHeader() {STUB}
 HttpHeader &HttpHeader::operator =(const HttpHeader &other) STUB_RETVAL(*this)
 void HttpHeader::clean() STUB
 void HttpHeader::append(const HttpHeader *) STUB
-bool HttpHeader::update(HttpHeader const *) STUB_RETVAL(false)
+bool HttpHeader::update(HttpHeader const *, bool) STUB_RETVAL(false)
 void HttpHeader::compact() STUB
 int HttpHeader::parse(const char *, size_t, Http::ContentLengthInterpreter &) STUB_RETVAL(-1)
 int HttpHeader::parse(const char *, size_t, bool, size_t &, Http::ContentLengthInterpreter &) STUB_RETVAL(-1)
@@ -83,7 +83,7 @@ void HttpHeader::removeHopByHopEntries() STUB
 void HttpHeader::removeConnectionHeaderEntries() STUB
 bool HttpHeader::Isolate(const char **, size_t, const char **, const char **) STUB_RETVAL(false)
 bool HttpHeader::needUpdate(const HttpHeader *fresh) const STUB_RETVAL(false)
-bool HttpHeader::skipUpdateHeader(const Http::HdrType) const STUB_RETVAL(false)
+bool HttpHeader::skipUpdateHeader(const Http::HdrType, bool) const STUB_RETVAL(false)
 void HttpHeader::updateWarnings() STUB
 int httpHeaderParseQuotedString(const char *, const int, String *) STUB_RETVAL(-1)
 SBuf httpHeaderQuoteString(const char *) STUB_RETVAL(SBuf())
