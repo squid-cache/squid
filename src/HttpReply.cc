@@ -258,7 +258,7 @@ HttpReply::updateOnNotModified(HttpReply const * freshRep)
     assert(freshRep);
 
     /* update raw headers */
-    if (!header.update(&freshRep->header))
+    if (!header.update(&freshRep->header, false))
         return false;
 
     /* clean cache */

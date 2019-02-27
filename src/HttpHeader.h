@@ -82,7 +82,7 @@ public:
     /* Interface functions */
     void clean();
     void append(const HttpHeader * src);
-    bool update(HttpHeader const *fresh);
+    bool update(HttpHeader const *fresh, bool update_content_length=true);
     void compact();
     int parse(const char *header_start, size_t len, Http::ContentLengthInterpreter &interpreter);
     /// Parses headers stored in a buffer.
@@ -173,7 +173,7 @@ protected:
     /// If block starts where it ends, then there are no fields in the header.
     static bool Isolate(const char **parse_start, size_t l, const char **blk_start, const char **blk_end);
     bool needUpdate(const HttpHeader *fresh) const;
-    bool skipUpdateHeader(const Http::HdrType id) const;
+    bool skipUpdateHeader(const Http::HdrType id, bool update_content_length=true) const;
     void updateWarnings();
 
 private:

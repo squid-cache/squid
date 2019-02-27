@@ -273,14 +273,20 @@ HttpHeader::updateWarnings()
 }
 
 bool
-HttpHeader::skipUpdateHeader(const Http::HdrType id) const
+HttpHeader::skipUpdateHeader(const Http::HdrType id, bool update_content_length) const
 {
     // RFC 7234, section 4.3.4: use fields other from Warning for update
-    return id == Http::HdrType::WARNING;
+    if (id == Http::HdrType::WARNING)
+        return true;
+
+    if (update_content_length == false && id == Http::HdrType::CONTENT_LENGTH)
+        return true;
+
+    return false;
 }
 
 bool
-HttpHeader::update(HttpHeader const *fresh)
+HttpHeader::update(HttpHeader const *fresh, bool update_content_length)
 {
     assert(fresh);
     assert(this != fresh);
@@ -298,7 +304,7 @@ HttpHeader::update(HttpHeader const *fresh)
     while ((e = fresh->getEntry(&pos))) {
         /* deny bad guys (ok to check for Http::HdrType::OTHER) here */
 
-        if (skipUpdateHeader(e->id))
+        if (skipUpdateHeader(e->id, update_content_length))
             continue;
 
         if (e->id != Http::HdrType::OTHER)
@@ -311,7 +317,7 @@ HttpHeader::update(HttpHeader const *fresh)
     while ((e = fresh->getEntry(&pos))) {
         /* deny bad guys (ok to check for Http::HdrType::OTHER) here */
 
-        if (skipUpdateHeader(e->id))
+        if (skipUpdateHeader(e->id, update_content_length))
             continue;
 
         debugs(55, 7, "Updating header '" << Http::HeaderLookupTable.lookup(e->id).name << "' in cached entry");
