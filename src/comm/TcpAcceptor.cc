@@ -382,15 +382,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     details->fd = sock;
     details->remote = *gai;
 
-    if ( Config.client_ip_max_connections >= 0) {
-        if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
-            debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
-            Ip::Address::FreeAddr(gai);
-            PROF_stop(comm_accept);
-            return Comm::COMM_ERROR;
-        }
-    }
-
     // lookup the local-end details of this new connection
     Ip::Address::InitAddr(gai);
     details->local.setEmpty();
@@ -403,6 +394,14 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     }
     details->local = *gai;
     Ip::Address::FreeAddr(gai);
+
+    if ( Config.client_ip_max_connections >= 0) {
+        if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
+            debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
+            PROF_stop(comm_accept);
+            return Comm::COMM_ERROR;
+        }
+    }
 
     /* fdstat update */
     // XXX : these are not all HTTP requests. use a note about type and ip:port details->
