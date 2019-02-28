@@ -1008,7 +1008,7 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    calls.connector = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer(&FwdState::noteConnection, this));
+    calls.connector = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer<FwdState>(&FwdState::noteConnection, this));
 
     assert(Config.forward_max_tries - n_tries > 0);
     HttpRequest::Pointer cause = request;

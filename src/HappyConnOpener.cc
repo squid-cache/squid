@@ -311,7 +311,7 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
     n_tries(0)
 {
     assert(destinations);
-    assert(dynamic_cast<HappyConnOpener::CbDialer *>(callback_->getDialer()));
+    assert(dynamic_cast<HappyConnOpener::CbDialerBase *>(callback_->getDialer()));
 }
 
 HappyConnOpener::~HappyConnOpener()
@@ -384,7 +384,7 @@ void
 HappyConnOpener::callCallback(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno, bool reused, const char *msg)
 {
     if (callback_ && !callback_->canceled()) {
-        HappyConnOpener::CbDialer *cd = dynamic_cast<HappyConnOpener::CbDialer *>(callback_->getDialer());
+        HappyConnOpener::CbDialerBase *cd = dynamic_cast<HappyConnOpener::CbDialerBase *>(callback_->getDialer());
         cd->answer_.conn = conn;
         cd->answer_.host = nullptr;
         cd->answer_.ioStatus = err;

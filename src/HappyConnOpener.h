@@ -89,12 +89,25 @@ public:
     typedef HappyConnOpenerAnswer Answer;
 
     /// A callback dialer for setting the Answer.
-    class CbDialer: public CallDialer {
+    class CbDialerBase: public CallDialer {
     public:
-        typedef void (FwdState::*Method)(const HappyConnOpener::Answer &);
+
+        virtual ~CbDialerBase() {}
+        CbDialerBase() {}
+
+        /* CallDialer API */
+        virtual bool canDial(AsyncCall &call) = 0;
+        virtual void dial(AsyncCall &call) = 0;
+
+        HappyConnOpener::Answer answer_;
+    };
+
+    template <class Caller> class CbDialer: public CbDialerBase {
+    public:
+        typedef void (Caller::*Method)(const HappyConnOpener::Answer &);
 
         virtual ~CbDialer() {}
-        CbDialer(Method method, FwdState *fwd): method_(method), fwd_(fwd) {}
+        CbDialer(Method method, Caller *fwd): method_(method), fwd_(fwd) {}
 
         /* CallDialer API */
         virtual bool canDial(AsyncCall &call) {return fwd_.valid();};
@@ -104,8 +117,7 @@ public:
         }
 
         Method method_;
-        CbcPointer<FwdState> fwd_;
-        HappyConnOpener::Answer answer_;
+        CbcPointer<Caller> fwd_;
     };
 
     typedef CbcPointer<HappyConnOpener> Pointer;
