@@ -57,8 +57,8 @@ public:
     /// set the buffer to be used to store decoded chunk data
     void setPayloadBuffer(MemBuf *parsedContent) {theOut = parsedContent;}
 
-    /// instead of ignoring all chunk extension values,
-    /// give the supplied parser a chance to interpret them
+    /// Instead of ignoring all chunk extension values, give the supplied
+    /// parser a chance to handle them. Only applied to last-chunk (for now).
     void parseExtensionValuesWith(ChunkExtensionValueParser *parser) { customExtensionValueParser = parser; }
 
     bool needsMoreSpace() const;
@@ -79,6 +79,9 @@ private:
     MemBuf *theOut;
     uint64_t theChunkSize;
     uint64_t theLeftBodySize;
+
+    /// An optional plugin for parsing and interpreting custom chunk-ext-val.
+    /// This "visitor" object is owned by our creator.
     ChunkExtensionValueParser *customExtensionValueParser;
 };
 

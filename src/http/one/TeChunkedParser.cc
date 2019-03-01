@@ -34,6 +34,11 @@ Http::One::TeChunkedParser::clear()
     buf_.clear();
     theChunkSize = theLeftBodySize = 0;
     theOut = NULL;
+    // XXX: We do not reset customExtensionValueParser here. Based on the
+    // clear() API description, we must, but it makes little sense and could
+    // break method callers if they appear because some of them may forget to
+    // reset customExtensionValueParser. TODO: Remove Http1::Parser as our
+    // parent class and this unnecessary method with it.
 }
 
 bool
