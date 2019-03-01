@@ -918,6 +918,8 @@ TunnelStateData::noteConnection(const HappyConnOpener::Answer &cd)
         }
     }
 
+    request->hier.resetPeerNotes(cd.conn, getHost());
+
     connectDone(cd.conn);
 }
 
@@ -931,8 +933,6 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn)
 #endif
 
     netdbPingSite(request->url.host());
-
-    request->hier.resetPeerNotes(conn, getHost());
 
     server.conn = conn;
     request->peer_host = conn->getPeer() ? conn->getPeer()->host : NULL;
@@ -1184,7 +1184,7 @@ TunnelStateData::startConnecting()
 void
 TunnelStateData::usePinned()
 {
-    const auto serverConn = borrowPinnedConnection(request.getRaw());
+    auto serverConn = borrowPinnedConnection(request.getRaw());
     debugs(26,7, "pinned peer connection: " << serverConn);
     if (!Comm::IsConnOpen(serverConn)) {
         // a PINNED path failure is fatal; do not wait for more paths
@@ -1192,6 +1192,20 @@ TunnelStateData::usePinned()
                   "pinned path failure");
         return;
     }
+
+    Must(request);
+    const auto connManager = request->pinnedConnection();
+    Must(connManager);
+
+    // Set HttpRequest pinned related flags for consistency even if
+    // they are not really used by tunnel.cc code.
+    request->flags.pinned = true;
+    if (connManager->pinnedAuth())
+        request->flags.auth = true;
+
+    // sync with existing pinned connection
+    SetMarkingsToServer(request.getRaw(), serverConn);
+    request->hier.resetPeerNotes(serverConn, connManager->pinning.host);
 
     connectDone(serverConn);
 }
