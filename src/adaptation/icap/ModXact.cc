@@ -44,7 +44,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXactLauncher);
 
 static const size_t TheBackupLimit = BodyPipe::MaxCapacity;
 
-const SBuf Adaptation::Icap::ExtensionsParser::UseOriginalBodyName("use-original-body");
+const SBuf Adaptation::Icap::ChunkExtensionValueParser::UseOriginalBodyName("use-original-body");
 
 Adaptation::Icap::ModXact::State::State()
 {
@@ -1148,7 +1148,7 @@ void Adaptation::Icap::ModXact::decideOnParsingBody()
         state.parsing = State::psBody;
         replyHttpBodySize = 0;
         bodyParser = new Http1::TeChunkedParser;
-        bodyParser->parseExtensionValuesWith(&extensionsParser);
+        bodyParser->parseExtensionValuesWith(&extensionParser);
         makeAdaptedBodyPipe("adapted response from the ICAP server");
         Must(state.sending == State::sendingAdapted);
     } else {
@@ -1186,8 +1186,8 @@ void Adaptation::Icap::ModXact::parseBody()
     }
 
     if (parsed) {
-        if (state.readyForUob && extensionsParser.sawUseOriginalBody())
-            prepPartialBodyEchoing(extensionsParser.useOriginalBody());
+        if (state.readyForUob && extensionParser.sawUseOriginalBody())
+            prepPartialBodyEchoing(extensionParser.useOriginalBody());
         else
             stopSending(true); // the parser succeeds only if all parsed data fits
         if (trailerParser)
@@ -2079,7 +2079,7 @@ bool Adaptation::Icap::TrailerParser::parse(const char *buf, int len, int atEnd,
 }
 
 void
-Adaptation::Icap::ExtensionsParser::parse(Tokenizer &tok, const SBuf &extName)
+Adaptation::Icap::ChunkExtensionValueParser::parse(Tokenizer &tok, const SBuf &extName)
 {
     if (extName == UseOriginalBodyName) {
         useOriginalBody_ = tok.udec64("use-original-body");

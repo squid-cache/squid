@@ -122,7 +122,7 @@ public:
 };
 
 /// handles ICAP-specific chunk extensions supported by Squid
-class ExtensionsParser : public Http1::ChunkExtensionValueParser
+class ChunkExtensionValueParser: public Http1::ChunkExtensionValueParser
 {
 public:
     /* Http1::ChunkExtensionValueParser API */
@@ -319,7 +319,7 @@ private:
 
     TrailerParser *trailerParser;
 
-    ExtensionsParser extensionsParser;
+    ChunkExtensionValueParser extensionParser;
 
     class State
     {
