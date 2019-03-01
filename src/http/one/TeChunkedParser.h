@@ -18,21 +18,24 @@ namespace Http
 namespace One
 {
 
-/// A base class for parsing custom chunk extensions.
-class CustomExtensionsParser
+using ::Parser::InsufficientInput;
+
+// TODO: Move this class into http/one/ChunkExtensionValueParser.*
+/// A customizable parser of a single chunk extension value (chunk-ext-val).
+/// From RFC 7230 section 4.1.1 and its Errata #4667:
+/// chunk-ext = *( BWS  ";" BWS chunk-ext-name [ BWS "=" BWS chunk-ext-val ] )
+/// chunk-ext-name = token
+/// chunk-ext-val  = token / quoted-string
+class ChunkExtensionValueParser
 {
 public:
     typedef ::Parser::Tokenizer Tokenizer;
 
-    /// parses the extension value and stores the parsed result
-    virtual bool parse(Tokenizer &tok, const SBuf &extName) = 0;
-    /// whether the parser is aware of the the given extension
-    /// to call a subsequent parse() on it
-    virtual bool knownExtension(const SBuf &extName, const uint64_t chunkSize) const = 0;
+    /// extracts and ignores the value of a named extension
+    static void Ignore(Tokenizer &tok, const SBuf &extName);
 
-protected:
-    /// parses an extension's value as an integer
-    bool parseIntExtension(Tokenizer &tok, const SBuf &name, int64_t &value);
+    /// extracts and then interprets (or ignores) the extension value
+    virtual void parse(Tokenizer &tok, const SBuf &extName) = 0;
 };
 
 /**
@@ -42,7 +45,7 @@ protected:
  *
  * The parser shovels content bytes from the raw
  * input buffer into the content output buffer, both caller-supplied.
- * Chunk extensions like use-original-body are handled via setCustomExtensionsParser().
+ * Chunk extensions like use-original-body are handled via parseExtensionValuesWith().
  * Trailers are available via mimeHeader() if wanted.
  */
 class TeChunkedParser : public Http1::Parser
@@ -56,7 +59,7 @@ public:
 
     /// instead of ignoring all chunk extension values,
     /// give the supplied parser a chance to interpret them
-    void setCustomExtensionsParser(CustomExtensionsParser *parser) { customExtensionsParser = parser; }
+    void parseExtensionValuesWith(ChunkExtensionValueParser *parser) { customExtensionValueParser = parser; }
 
     bool needsMoreSpace() const;
 
@@ -67,15 +70,16 @@ public:
 
 private:
     bool parseChunkSize(Tokenizer &tok);
-    bool parseOneChunkExtension(Tokenizer &tok);
-    bool parseChunkExtensions(Tokenizer &tok);
+    bool parseChunkMetadataSuffix(Tokenizer &);
+    void parseChunkExtensions(Tokenizer &);
+    void parseOneChunkExtension(Tokenizer &);
     bool parseChunkBody(Tokenizer &tok);
     bool parseChunkEnd(Tokenizer &tok);
 
     MemBuf *theOut;
     uint64_t theChunkSize;
     uint64_t theLeftBodySize;
-    CustomExtensionsParser *customExtensionsParser;
+    ChunkExtensionValueParser *customExtensionValueParser;
 };
 
 } // namespace One

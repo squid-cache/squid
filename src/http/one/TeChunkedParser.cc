@@ -19,7 +19,7 @@
 #include "SquidConfig.h"
 
 Http::One::TeChunkedParser::TeChunkedParser():
-    customExtensionsParser(nullptr)
+    customExtensionValueParser(nullptr)
 {
     // chunked encoding only exists in HTTP/1.1
     Http1::Parser::msgProtocol_ = Http::ProtocolVersion(1,1);
@@ -58,7 +58,7 @@ Http::One::TeChunkedParser::parse(const SBuf &aBuf)
     // restart in the middle of a chunk/frame
     do {
 
-        if (parsingStage_ == Http1::HTTP_PARSE_CHUNK_EXT && !parseChunkExtensions(tok))
+        if (parsingStage_ == Http1::HTTP_PARSE_CHUNK_EXT && !parseChunkMetadataSuffix(tok))
             return false;
 
         if (parsingStage_ == Http1::HTTP_PARSE_CHUNK && !parseChunkBody(tok))
@@ -106,94 +106,74 @@ Http::One::TeChunkedParser::parseChunkSize(Tokenizer &tok)
     return false; // should not be reachable
 }
 
-/**
- * Parses chunk metadata suffix, looking for interesting extensions and/or
- * getting to the line terminator. RFC 7230 section 4.1.1 and its Errata #4667:
- *
- *   chunk-ext = *( BWS  ";" BWS chunk-ext-name [ BWS "=" BWS chunk-ext-val ] )
- *   chunk-ext-name = token
- *   chunk-ext-val  = token / quoted-string
- *
- * ICAP 'use-original-body=N' extension is supported.
- */
+/// Parses "[chunk-ext] CRLF" from RFC 7230 section 4.1.1:
+///   chunk = chunk-size [ chunk-ext ] CRLF chunk-data CRLF
+///   last-chunk = 1*"0" [ chunk-ext ] CRLF
 bool
-Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok)
+Http::One::TeChunkedParser::parseChunkMetadataSuffix(Tokenizer &tok)
 {
-    while (parseOneChunkExtension(tok)) {
-        buf_ = tok.remaining(); // got one extension; there may be more
-    }
-
-    if (skipLineTerminatorIfAny(tok)) {
+    // Code becomes much simpler when incremental parsing functions throw on
+    // bad or insufficient input, like in the code below. TODO: Expand up.
+    try {
+        parseChunkExtensions(tok); // a possibly empty chunk-ext list
+        skipLineTerminator(tok);
         buf_ = tok.remaining();
         parsingStage_ = theChunkSize ? Http1::HTTP_PARSE_CHUNK : Http1::HTTP_PARSE_MIME;
-        return true; // reached the end of extensions (if any)
-    }
-
-    static const CharacterSet NonLF = (CharacterSet::LF).complement().rename("non-LF");
-    if (tok.skipAll(NonLF) && tok.skip('\n'))
-        throw TexcHere("cannot parse chunk extension"); // <garbage> CR*LF
-    return false; // need more data
-}
-
-bool
-Http::One::CustomExtensionsParser::parseIntExtension(Parser::Tokenizer &tok, const SBuf &name, int64_t &value)
-{
-    assert(!tok.atEnd()); // guaranteed by ParseBws() after "="
-
-    const auto savedTok = tok;
-    int64_t parsedValue = 0;
-
-    if (!tok.int64(parsedValue, 10))
-        throw TexcHere(ToSBuf("invalid value for the decimal integer chunk extension ", name));
-
-    if (!tok.atEnd()) {
-        value = parsedValue;
         return true;
+    } catch (const InsufficientInput &) {
+        tok.reset(buf_); // backtrack to the last commit point
+        return false;
     }
-
-    tok = savedTok;
-    return false;
+    // other exceptions bubble up to kill message parsing
 }
 
-bool
+/// Parses the chunk-ext list (RFC 7230 section 4.1.1 and its Errata #4667):
+/// chunk-ext = *( BWS ";" BWS chunk-ext-name [ BWS "=" BWS chunk-ext-val ] )
+void
+Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok)
+{
+    do {
+        ParseBws(tok); // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
+
+        assert(!tok.atEnd());
+        if (!tok.skip(';'))
+            return; // reached the end of extensions (if any)
+
+        parseOneChunkExtension(tok);
+        buf_ = tok.remaining(); // got one extension
+    } while (true);
+}
+
+void
+Http::One::ChunkExtensionValueParser::Ignore(Tokenizer &tok, const SBuf &extName)
+{
+    const auto ignoredValue = tokenOrQuotedString(tok);
+    debugs(94, 5, extName << " with value " << ignoredValue);
+}
+
+/// Parses a single chunk-ext list element:
+/// chunk-ext = *( BWS ";" BWS chunk-ext-name [ BWS "=" BWS chunk-ext-val ] )
+void
 Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
 {
-    const auto savedTok = tok;
-    SBuf extName;
+    ParseBws(tok); // Bug 4492: ICAP servers send SP before chunk-ext-name
 
-    if (!ParseBws(tok) || // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
-            !tok.skip(';') ||
-            !ParseBws(tok) || // Bg 4492: ICAP servers send SP before chunk-ext-name
-            !tok.prefix(extName, CharacterSet::TCHAR) ||
-            !ParseBws(tok)) {
-        tok = savedTok;
-        return false;
-    }
+    assert(!tok.atEnd());
+    const auto extName = tok.prefix("chunk-ext-name", CharacterSet::TCHAR);
 
+    ParseBws(tok);
+
+    assert(!tok.atEnd());
     if (!tok.skip('='))
-        return true; // parsed a valueless chunk-ext
+        return; // parsed a valueless chunk-ext
 
-    if (!ParseBws(tok)) {
-        tok = savedTok;
-        return false;
-    }
+    ParseBws(tok);
 
-    if (customExtensionsParser && customExtensionsParser->knownExtension(extName, theChunkSize)) {
-        if (customExtensionsParser->parse(tok, extName))
-            return true;
-
-        tok = savedTok;
-        return false;
-    }
-
-    SBuf ignoredValue;
-    if (!tokenOrQuotedString(tok, ignoredValue, false)) {
-        tok = savedTok;
-        return false;
-    }
-
-    debugs(94, 5, "skipping unknown chunk extension " << extName <<  " with value " << ignoredValue);
-    return true;
+    // optimization: the only currently supported extension needs last-chunk
+    if (!theChunkSize && customExtensionValueParser)
+        customExtensionValueParser->parse(tok, extName);
+    else
+        ChunkExtensionValueParser::Ignore(tok, extName);
 }
 
 bool
@@ -226,13 +206,16 @@ Http::One::TeChunkedParser::parseChunkEnd(Tokenizer &tok)
 {
     Must(theLeftBodySize == 0); // Should(), really
 
-    if (skipLineTerminator(tok)) {
+    try {
+        skipLineTerminator(tok);
         buf_ = tok.remaining(); // parse checkpoint
         theChunkSize = 0; // done with the current chunk
         parsingStage_ = Http1::HTTP_PARSE_CHUNK_SZ;
         return true;
     }
-
-    return false;
+    catch (const InsufficientInput &) {
+        return false;
+    }
+    // other exceptions bubble up to kill message parsing
 }
 

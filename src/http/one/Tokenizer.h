@@ -10,16 +10,19 @@
 #define SQUID_SRC_HTTP_ONE_TOKENIZER_H
 
 #include "parser/forward.h"
-
-class SBuf;
+#include "sbuf/forward.h"
 
 namespace Http {
 namespace One {
 
 /**
- * Extracts either an HTTP/1 token or a complete HTTP/1
- * quoted-string (and sets the quoted accordingly).
+ * Extracts either an HTTP/1 token or quoted-string while dealing with
+ * possibly incomplete input typical for incremental text parsers.
  * Unescapes escaped characters in HTTP/1.1 quoted strings.
+ *
+ * \param http1p0 whether to prohibit \-escaped characters in quoted strings
+ * \throws InsufficientInput as appropriate, including on unterminated tokens
+ * \returns extracted token or quoted string (without quotes)
  *
  * Governed by:
  *  - RFC 1945 section 2.1
@@ -45,15 +48,8 @@ namespace One {
  *    qdtext         = HTAB / SP /%x21 / %x23-5B / %x5D-7E / obs-text
  *    obs-text       = %x80-FF
  *  "
- *
- * \param http1p0 HTTP/1.0 does not permit \-escaped characters
- * \param tokenPrefixResult function return value when input is a token prefix
- * \retval tokenPrefixResult if input contains nothing but a token (prefix)
- * \retval true if input starts with a token or quoted-string
- * \retval false if input does not start with a token or quoted-string
- * The function extracts parsed input and sets the value only when returning a true result.
  */
-bool tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &value, const bool tokenPrefixResult, const bool http1p0 = false);
+SBuf tokenOrQuotedString(Parser::Tokenizer &tok, const bool http1p0 = false);
 
 } // namespace One
 } // namespace Http

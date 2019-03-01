@@ -13,10 +13,12 @@
 #include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 
-/// Attempts to extract a token from the input, which is assumed to be
-/// a quoted string with the initial '"' removed.
-static bool
-parseQuotedStringSuffix(Parser::Tokenizer &tok, SBuf &returnedToken, const bool http1p0)
+/// Extracts quoted-string after the caller removes the initial '"'.
+/// \param http1p0 whether to prohibit \-escaped characters in quoted strings
+/// \throws InsufficientInput when input can be a token _prefix_
+/// \returns extracted quoted string (without quotes and with chars unescaped)
+static SBuf
+parseQuotedStringSuffix(Parser::Tokenizer &tok, const bool http1p0)
 {
     /*
      * RFC 1945 - defines qdtext:
@@ -42,16 +44,17 @@ parseQuotedStringSuffix(Parser::Tokenizer &tok, SBuf &returnedToken, const bool 
     // best we can do is a conditional reference since http1p0 value may change per-client
     const CharacterSet &tokenChars = (http1p0 ? qdtext1p0 : qdtext1p1);
 
-    const auto savedTok = tok;
     SBuf parsedToken;
 
     while (!tok.atEnd()) {
         SBuf qdText;
         if (tok.prefix(qdText, tokenChars))
             parsedToken.append(qdText);
+
         if (!http1p0 && tok.skip('\\')) { // HTTP/1.1 allows quoted-pair, HTTP/1.0 does not
             if (tok.atEnd())
                 break;
+
             /* RFC 7230 section 3.2.6
              *
              * The backslash octet ("\") can be used as a single-octet quoting
@@ -64,43 +67,40 @@ parseQuotedStringSuffix(Parser::Tokenizer &tok, SBuf &returnedToken, const bool 
             static const CharacterSet qPairChars = CharacterSet::HTAB + CharacterSet::SP + CharacterSet::VCHAR + CharacterSet::OBSTEXT;
             SBuf escaped;
             if (!tok.prefix(escaped, qPairChars, 1))
-                throw TexcHere("invalid escaped characters");
+                throw TexcHere("invalid escaped character in quoted-pair");
 
             parsedToken.append(escaped);
             continue;
-        } else if (tok.skip('"')) {
-            returnedToken = parsedToken;
-            return true;
-        } else if (tok.atEnd()) {
-            break;
         }
+
+        if (tok.skip('"'))
+            return parsedToken; // may be empty
+
+        if (tok.atEnd())
+            break;
+
         throw TexcHere(ToSBuf("invalid bytes for set ", tokenChars.name));
     }
 
-    tok = savedTok;
-    return false; // need more data
+    throw Http::One::InsufficientInput();
 }
 
-bool
-Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, SBuf &returnedToken, const bool tokenPrefixResult, const bool http1p0)
+SBuf
+Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, const bool http1p0)
 {
-    SBuf parsedToken;
-    const auto savedTok = tok;
-    if (tok.skip('"')) {
-        if (!parseQuotedStringSuffix(tok, parsedToken, http1p0)) {
-            tok = savedTok;
-            return false;
-        }
-    } else {
-        if (!tok.prefix(parsedToken, CharacterSet::TCHAR))
-            return false;
-        if (tok.atEnd() && !tokenPrefixResult) {
-            tok = savedTok;
-            return false;
-        }
-    }
-    // got the complete token
-    returnedToken = parsedToken;
-    return true;
-}
+    if (tok.skip('"'))
+        return parseQuotedStringSuffix(tok, http1p0);
 
+    if (tok.atEnd())
+        throw InsufficientInput();
+
+    SBuf parsedToken;
+    if (!tok.prefix(parsedToken, CharacterSet::TCHAR))
+        throw TexcHere("invalid input while expecting an HTTP token");
+
+    if (tok.atEnd())
+        throw InsufficientInput();
+
+    // got the complete token
+    return parsedToken;
+}

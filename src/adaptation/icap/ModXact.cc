@@ -29,6 +29,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "MasterXaction.h"
+#include "parser/Tokenizer.h"
 #include "sbuf/Stream.h"
 #include "SquidTime.h"
 
@@ -1147,7 +1148,7 @@ void Adaptation::Icap::ModXact::decideOnParsingBody()
         state.parsing = State::psBody;
         replyHttpBodySize = 0;
         bodyParser = new Http1::TeChunkedParser;
-        bodyParser->setCustomExtensionsParser(&extensionsParser);
+        bodyParser->parseExtensionValuesWith(&extensionsParser);
         makeAdaptedBodyPipe("adapted response from the ICAP server");
         Must(state.sending == State::sendingAdapted);
     } else {
@@ -2077,13 +2078,14 @@ bool Adaptation::Icap::TrailerParser::parse(const char *buf, int len, int atEnd,
     return parsed > 0;
 }
 
-bool
+void
 Adaptation::Icap::ExtensionsParser::parse(Tokenizer &tok, const SBuf &extName)
 {
-    assert(nameMatched(extName));
-    const auto parsed = parseIntExtension(tok, UseOriginalBodyName, useOriginalBody_);
-    if (parsed && useOriginalBody_ < 0)
-        throw TexcHere(ToSBuf("Unexpected negative ", UseOriginalBodyName, ' ', useOriginalBody_));
-    return parsed;
+    if (extName == UseOriginalBodyName) {
+        useOriginalBody_ = tok.udec64("use-original-body");
+        assert(useOriginalBody_ >= 0);
+    } else {
+        Ignore(tok, extName);
+    }
 }
 

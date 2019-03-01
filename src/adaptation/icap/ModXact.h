@@ -122,19 +122,19 @@ public:
 };
 
 /// handles ICAP-specific chunk extensions supported by Squid
-class ExtensionsParser : public Http1::CustomExtensionsParser
+class ExtensionsParser : public Http1::ChunkExtensionValueParser
 {
 public:
-    virtual bool parse(Tokenizer &tok, const SBuf &extName) override;
-    virtual bool knownExtension(const SBuf &extName, const uint64_t chunkSize) const override { return !chunkSize && nameMatched(extName); }
+    /* Http1::ChunkExtensionValueParser API */
+    virtual void parse(Tokenizer &tok, const SBuf &extName) override;
+
     bool sawUseOriginalBody() const { return useOriginalBody_ >= 0; }
     uint64_t useOriginalBody() const { assert(sawUseOriginalBody()); return static_cast<uint64_t>(useOriginalBody_); }
 
 private:
-    bool nameMatched(const SBuf &extName) const { return extName == UseOriginalBodyName; }
-
     static const SBuf UseOriginalBodyName;
 
+    /// the value of the parsed use-original-body chunk extension (or -1)
     int64_t useOriginalBody_ = -1;
 };
 

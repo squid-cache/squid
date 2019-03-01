@@ -124,15 +124,11 @@ protected:
      * detect and skip the CRLF or (if tolerant) LF line terminator
      * consume from the tokenizer.
      *
-     * throws if non-terminator is detected.
+     * \throws exception on bad or InsuffientInput.
      * \retval true only if line terminator found.
      * \retval false incomplete or missing line terminator, need more data.
      */
-    bool skipLineTerminator(Tokenizer &tok) const;
-
-    /// Skips the CRLF or (if tolerant) LF line terminator, if any.
-    /// \returns true if the line terminator was skipped
-    bool skipLineTerminatorIfAny(Tokenizer &tok) const;
+    void skipLineTerminator(Tokenizer &) const;
 
     /**
      * Scan to find the mime headers block for current message.
@@ -169,8 +165,8 @@ private:
 };
 
 /// skips and, if needed, warns about RFC 7230 BWS ("bad" whitespace)
-/// \returns true if a non-BWS character was found (and all BWS were skipped).
-bool ParseBws(Parser::Tokenizer &tok);
+/// \throws InsufficientInput when the end of BWS cannot be confirmed
+void ParseBws(Parser::Tokenizer &);
 
 /// the right debugs() level for logging HTTP violation messages
 int ErrorLevel();

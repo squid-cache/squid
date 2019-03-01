@@ -62,29 +62,19 @@ Http::One::Parser::DelimiterCharacters()
            RelaxedDelimiterCharacters() : CharacterSet::SP;
 }
 
-bool
-Http::One::Parser::skipLineTerminatorIfAny(Tokenizer &tok) const
-{
-    if (tok.skip(Http1::CrLf()))
-        return true;
-
-    if (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))
-        return true;
-
-    return false;
-}
-
-bool
+void
 Http::One::Parser::skipLineTerminator(Tokenizer &tok) const
 {
-    if (skipLineTerminatorIfAny(tok))
-        return true;
+    if (tok.skip(Http1::CrLf()))
+        return;
+
+    if (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))
+        return;
 
     if (tok.atEnd() || (tok.remaining().length() == 1 && tok.remaining().at(0) == '\r'))
-        return false; // need more data
+        throw InsufficientInput();
 
     throw TexcHere("garbage instead of CRLF line terminator");
-    return false; // unreachable, but make naive compilers happy
 }
 
 /// all characters except the LF line terminator
@@ -282,14 +272,15 @@ Http::One::ErrorLevel()
 }
 
 // BWS = *( SP / HTAB ) ; WhitespaceCharacters() may relax this RFC 7230 rule
-bool
+void
 Http::One::ParseBws(Parser::Tokenizer &tok)
 {
-    if (tok.atEnd())
-        return false; // need more data
+    const auto count = tok.skipAll(Parser::WhitespaceCharacters());
 
-    const auto savedTok = tok;
-    if (const auto count = tok.skipAll(Parser::WhitespaceCharacters())) {
+    if (tok.atEnd())
+        throw InsufficientInput(); // even if count is positive
+
+    if (count) {
         // Generating BWS is a MUST-level violation so warn about it as needed.
         debugs(33, ErrorLevel(), "found " << count << " BWS octets");
         // RFC 7230 says we MUST parse BWS, so we fall through even if
@@ -297,10 +288,6 @@ Http::One::ParseBws(Parser::Tokenizer &tok)
     }
     // else we successfully "parsed" an empty BWS sequence
 
-    if (!tok.atEnd())
-        return true; // no more BWS expected
-
-    tok = savedTok;
-    return false;
+    // success: no more BWS characters expected
 }
 

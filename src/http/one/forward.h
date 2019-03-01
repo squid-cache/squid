@@ -11,6 +11,7 @@
 
 #include "base/RefCount.h"
 #include "sbuf/forward.h"
+#include "parser/forward.h"
 
 namespace Http {
 namespace One {
@@ -30,6 +31,8 @@ typedef RefCount<Http::One::ResponseParser> ResponseParserPointer;
 
 /// CRLF textual representation
 const SBuf &CrLf();
+
+using ::Parser::InsufficientInput;
 
 } // namespace One
 } // namespace Http
