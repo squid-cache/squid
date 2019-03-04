@@ -91,8 +91,6 @@ public:
 
     /// the host we connected to; used by pinned connections (XXX: unused)
     const char *host = nullptr;
-
-    friend std::ostream &operator <<(std::ostream &os, const HappyConnOpenerAnswer &answer);
 };
 
 /// A TCP connection opening algorithm based on Happy Eyeballs (RFC 8305).
