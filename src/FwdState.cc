@@ -958,7 +958,7 @@ FwdState::successfullyConnectedToPeer()
 void
 FwdState::syncWithServerConn(const char *host)
 {
-    SetMarkingsToServer(request, serverConn);
+    SetMarkingsToServer(request, *serverConn);
     syncHierNote(serverConn, host);
 }
 
@@ -1425,14 +1425,14 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
  * to the server, based on the ACL.
  */
 static tos_t
-GetTosToServer(HttpRequest * request, Comm::ConnectionPointer &conn)
+GetTosToServer(HttpRequest * request, Comm::Connection &conn)
 {
     if (!Ip::Qos::TheConfig.tosToServer)
         return 0;
 
     ACLFilledChecklist ch(NULL, request, NULL);
-    ch.dst_peer_name = conn->getPeer() ? conn->getPeer()->name : NULL;
-    ch.dst_addr = conn->remote;
+    ch.dst_peer_name = conn.getPeer() ? conn.getPeer()->name : NULL;
+    ch.dst_addr = conn.remote;
     return aclMapTOS(Ip::Qos::TheConfig.tosToServer, &ch);
 }
 
@@ -1441,34 +1441,34 @@ GetTosToServer(HttpRequest * request, Comm::ConnectionPointer &conn)
  * connection to the server, based on the ACL.
  */
 static nfmark_t
-GetNfmarkToServer(HttpRequest * request, Comm::ConnectionPointer &conn)
+GetNfmarkToServer(HttpRequest * request, Comm::Connection &conn)
 {
     if (!Ip::Qos::TheConfig.nfmarkToServer)
         return 0;
 
     ACLFilledChecklist ch(NULL, request, NULL);
-    ch.dst_peer_name = conn->getPeer() ? conn->getPeer()->name : NULL;
-    ch.dst_addr = conn->remote;
+    ch.dst_peer_name = conn.getPeer() ? conn.getPeer()->name : NULL;
+    ch.dst_addr = conn.remote;
     const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToServer, &ch);
     return mc.mark;
 }
 
 void
-GetMarkingsToServer(HttpRequest * request, Comm::ConnectionPointer &conn)
+GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
 {
     // Get the server side TOS and Netfilter mark to be set on the connection.
-    conn->tos = GetTosToServer(request, conn);
-    conn->nfmark = GetNfmarkToServer(request, conn);
-    debugs(17, 3, "from " << conn->local << " tos " << int(conn->tos) << " netfilter mark " << conn->nfmark);
+    conn.tos = GetTosToServer(request, conn);
+    conn.nfmark = GetNfmarkToServer(request, conn);
+    debugs(17, 3, "from " << conn.local << " tos " << int(conn.tos) << " netfilter mark " << conn.nfmark);
 }
 
 void
-SetMarkingsToServer(HttpRequest * request, Comm::ConnectionPointer &conn)
+SetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
 {
     GetMarkingsToServer(request, conn);
-    if (conn->tos)
-        Ip::Qos::setSockTos(conn, conn->tos);
 
-    if (conn->nfmark)
-        Ip::Qos::setSockNfmark(conn, conn->nfmark);
+    if (conn.tos)
+        Ip::Qos::setSockTos(&conn, conn.tos);
+    if (conn.nfmark)
+        Ip::Qos::setSockNfmark(&conn, conn.nfmark);
 }
