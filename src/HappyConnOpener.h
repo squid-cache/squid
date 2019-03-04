@@ -90,6 +90,9 @@ public:
     bool reused = false;
 };
 
+/// reports Answer details (for AsyncCall parameter debugging)
+std::ostream &operator <<(std::ostream &, const HappyConnOpenerAnswer &);
+
 /// A TCP connection opening algorithm based on Happy Eyeballs (RFC 8305).
 /// Maintains two concurrent connection opening tracks: prime and spare.
 /// Shares ResolvedPeers list with the job initiator.
@@ -100,23 +103,25 @@ public:
     typedef HappyConnOpenerAnswer Answer;
 
     /// AsyncCall dialer for our callback. Gives us access to callback Answer.
-    template <class Caller>
+    template <class Initiator>
     class CbDialer: public CallDialer, public Answer {
     public:
-        typedef void (Caller::*Method)(HappyConnOpener::Answer &);
+        // initiator method to receive our answer
+        typedef void (Initiator::*Method)(Answer &);
 
-        virtual ~CbDialer() {}
-        CbDialer(Method method, Caller *fwd): method_(method), fwd_(fwd) {}
+        CbDialer(Method method, Initiator *initiator): initiator_(initiator), method_(method) {}
+        virtual ~CbDialer() = default;
 
         /* CallDialer API */
-        virtual bool canDial(AsyncCall &call) {return fwd_.valid();};
-        virtual void dial(AsyncCall &call) {((&(*fwd_))->*method_)(*this);};
-        virtual void print(std::ostream &os) const {
-            os << '(' << fwd_.get() << "," << static_cast<const Answer&>(*this) << ')';
+        bool canDial(AsyncCall &) { return initiator_.valid(); }
+        void dial(AsyncCall &) {((*initiator_).*method_)(*this); }
+        virtual void print(std::ostream &os) const override {
+            os << '(' << static_cast<const Answer&>(*this) << ')';
         }
 
-        Method method_;
-        CbcPointer<Caller> fwd_;
+    private:
+        CbcPointer<Initiator> initiator_; ///< object to deliver the answer to
+        Method method_; ///< initiator_ method to call with the answer
     };
 
     typedef CbcPointer<HappyConnOpener> Pointer;
@@ -235,7 +240,5 @@ private:
     /// number of connection opening attempts, including those in the requestor
     int n_tries;
 };
-
-std::ostream &operator <<(std::ostream &os, const HappyConnOpenerAnswer &answer);
 
 #endif
