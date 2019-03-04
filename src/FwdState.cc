@@ -785,11 +785,8 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 
     syncWithServerConn(answer.conn, request->url.host(), answer.reused);
 
-    if (answer.reused) {
-        flags.connected_okay = true;
-        dispatch();
-        return;
-    }
+    if (answer.reused)
+        return dispatch();
 
     // Check if we need to TLS before use
     if (const CachePeer *peer = serverConnection()->getPeer()) {
@@ -942,7 +939,6 @@ FwdState::successfullyConnectedToPeer()
     if (serverConnection()->getPeer())
         peerConnectSucceded(serverConnection()->getPeer());
 
-    flags.connected_okay = true;
     dispatch();
 }
 
@@ -1043,7 +1039,6 @@ FwdState::usePinned()
         return;
     }
 
-    flags.connected_okay = true;
     ++n_tries;
     request->flags.pinned = true;
 
@@ -1079,6 +1074,8 @@ FwdState::dispatch()
     assert(entry->locked());
 
     EBIT_SET(entry->flags, ENTRY_DISPATCHED);
+
+    flags.connected_okay = true;
 
     netdbPingSite(request->url.host());
 
