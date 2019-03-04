@@ -88,9 +88,6 @@ public:
 
     /// whether conn was open earlier, by/for somebody else
     bool reused = false;
-
-    /// the host we connected to; used by pinned connections (XXX: unused)
-    const char *host = nullptr;
 };
 
 /// A TCP connection opening algorithm based on Happy Eyeballs (RFC 8305).
