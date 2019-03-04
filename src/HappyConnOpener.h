@@ -99,21 +99,9 @@ class HappyConnOpener: public AsyncJob
 public:
     typedef HappyConnOpenerAnswer Answer;
 
-    /// A callback dialer for setting the Answer.
-    class CbDialerBase: public CallDialer {
-    public:
-
-        virtual ~CbDialerBase() {}
-        CbDialerBase() {}
-
-        /* CallDialer API */
-        virtual bool canDial(AsyncCall &call) = 0;
-        virtual void dial(AsyncCall &call) = 0;
-
-        HappyConnOpener::Answer answer_;
-    };
-
-    template <class Caller> class CbDialer: public CbDialerBase {
+    /// AsyncCall dialer for our callback. Gives us access to callback Answer.
+    template <class Caller>
+    class CbDialer: public CallDialer, public Answer {
     public:
         typedef void (Caller::*Method)(HappyConnOpener::Answer &);
 
@@ -122,9 +110,9 @@ public:
 
         /* CallDialer API */
         virtual bool canDial(AsyncCall &call) {return fwd_.valid();};
-        virtual void dial(AsyncCall &call) {((&(*fwd_))->*method_)(answer_);};
+        virtual void dial(AsyncCall &call) {((&(*fwd_))->*method_)(*this);};
         virtual void print(std::ostream &os) const {
-            os << '(' << fwd_.get() << "," << answer_ << ')';
+            os << '(' << fwd_.get() << "," << static_cast<const Answer&>(*this) << ')';
         }
 
         Method method_;
