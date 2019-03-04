@@ -183,6 +183,8 @@ public:
     virtual void noteDestination(Comm::ConnectionPointer conn) override;
     virtual void noteDestinationsEnd(ErrorState *selectionError) override;
 
+    void syncHierNote(const Comm::ConnectionPointer &server, const char *origin);
+
     /// called when a connection has been successfully established or
     /// when all candidate destinations have been tried and all have failed
     void noteConnection(HappyConnOpenerAnswer &);
@@ -325,6 +327,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     assert(clientRequest);
     url = xstrdup(clientRequest->uri);
     request = clientRequest->request;
+    Must(request);
     server.size_ptr = &clientRequest->out.size;
     client.size_ptr = &clientRequest->al->http.clientRequestSz.payloadData;
     status_ptr = &clientRequest->al->http.code;
@@ -380,6 +383,16 @@ TunnelStateData::Connection::bytesIn(int const &count)
 #endif
 
     len += count;
+}
+
+/// update "hierarchy" annotations with a new (possibly failed) destination
+/// \param origin the name of the origin server we were trying to reach
+void
+TunnelStateData::syncHierNote(const Comm::ConnectionPointer &conn, const char *origin)
+{
+    request->hier.resetPeerNotes(conn, origin);
+    if (al)
+        al->hier.resetPeerNotes(conn, origin);
 }
 
 int
@@ -877,6 +890,7 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
     connOpener.clear();
 
     if (const auto err = answer.error.get()) {
+        syncHierNote(answer.conn, request->url.host());
         saveError(err);
         answer.error.clear(); // savedError has it now
         sendError(savedError, "tried all destinations");
@@ -895,6 +909,8 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     if (reused)
         ResetMarkingsToServer(request.getRaw(), *conn);
     // else Comm::ConnOpener already applied proper/current markings
+
+    syncHierNote(server.conn, request->url.host());
 
     request->hier.resetPeerNotes(conn, origin);
     if (al)
@@ -1157,17 +1173,18 @@ TunnelStateData::startConnecting()
 void
 TunnelStateData::usePinned()
 {
+    Must(request);
+    const auto connManager = request->pinnedConnection();
     auto serverConn = borrowPinnedConnection(request.getRaw());
     debugs(26,7, "pinned peer connection: " << serverConn);
     if (!Comm::IsConnOpen(serverConn)) {
+        syncHierNote(serverConn, connManager ? connManager->pinning.host : request->url.host());
         // a PINNED path failure is fatal; do not wait for more paths
         sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw(), al),
                   "pinned path failure");
         return;
     }
 
-    Must(request);
-    const auto connManager = request->pinnedConnection();
     Must(connManager);
 
     // Set HttpRequest pinned related flags for consistency even if
