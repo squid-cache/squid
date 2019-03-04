@@ -889,9 +889,9 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
     calls.connector = nullptr;
     connOpener.clear();
 
-    if (const auto err = answer.error.get()) {
+    if (const auto error = answer.error.get()) {
         syncHierNote(answer.conn, request->url.host());
-        saveError(err);
+        saveError(error);
         answer.error.clear(); // savedError has it now
         sendError(savedError, "tried all destinations");
         return;
@@ -1072,7 +1072,6 @@ TunnelStateData::noteDestination(Comm::ConnectionPointer path)
         notifyConnOpener();
         return; // and continue to wait for tunnelConnectDone() callback
     }
-
 
     startConnecting();
 }
