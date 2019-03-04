@@ -12,6 +12,8 @@
 #include "base/RefCount.h"
 #include "comm/forward.h"
 
+#include <iosfwd>
+
 /// cache_peer and origin server addresses
 /// selected and resolved by the peering code
 class ResolvedPeers: public RefCountable
@@ -73,6 +75,9 @@ private:
 
     Comm::ConnectionList paths_;
 };
+
+/// summarized ResolvedPeers (for debugging)
+std::ostream &operator <<(std::ostream &, const ResolvedPeers &);
 
 #endif /* SQUID_RESOLVEDPEERS_H */
 

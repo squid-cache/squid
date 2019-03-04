@@ -137,3 +137,11 @@ ResolvedPeers::ConnectionFamily(const Comm::Connection &conn)
 {
     return conn.remote.isIPv4() ? AF_INET : AF_INET6;
 }
+
+std::ostream &
+operator <<(std::ostream &os, const ResolvedPeers &peers)
+{
+    if (peers.empty())
+        return os << "[no paths]";
+    return os << peers.size() << (peers.destinationsFinalized ? "" : "+") << " paths";
+}

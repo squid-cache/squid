@@ -633,8 +633,9 @@ void
 FwdState::notifyConnOpener()
 {
     if (destinations->notificationPending) {
-        debugs(17, 7, "reusing pending notification");
+        debugs(17, 7, "reusing pending notification about " << *destinations);
     } else {
+        debugs(17, 7, "notifying about " << *destinations);
         destinations->notificationPending = true;
         CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
     }
@@ -982,10 +983,9 @@ FwdState::syncHierNote(const Comm::ConnectionPointer &server, const char *host)
 void
 FwdState::connectStart()
 {
+    debugs(17, 3, *destinations << " to " << entry->url());
+
     assert(!destinations->empty());
-
-    debugs(17, 3, HERE << entry->url());
-
     assert(!opening());
 
     // Ditch error page if it was created before.

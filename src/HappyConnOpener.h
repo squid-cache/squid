@@ -15,6 +15,8 @@
 #include "http/forward.h"
 #include "log/forward.h"
 
+#include <iosfwd>
+
 class FwdState;
 class HappyConnOpener;
 class HappyOrderEnforcer;
