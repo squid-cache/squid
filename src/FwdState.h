@@ -114,7 +114,7 @@ private:
 
     /// called when a connection has been successfully established or
     /// when all candidate destinations have been tried and all have failed
-    void noteConnection(const HappyConnOpenerAnswer &);
+    void noteConnection(HappyConnOpenerAnswer &);
 
 #if STRICT_ORIGINAL_DST
     void selectPeerForIntercepted();

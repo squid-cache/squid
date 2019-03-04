@@ -13,6 +13,7 @@
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "http/forward.h"
+#include "log/forward.h"
 
 class FwdState;
 class HappyConnOpener;
@@ -68,13 +69,28 @@ public:
 class HappyConnOpenerAnswer
 {
 public:
-    Comm::ConnectionPointer conn; ///< The last tried connection
-    Comm::Flag ioStatus = Comm::OK; ///< The last tried connection status
-    const char *host = nullptr; ///< The connected host. Used by pinned connections
-    int xerrno = 0; ///< The system error
-    const char *status = nullptr; ///< A status message for debugging reasons
-    bool reused = false; ///< True if this is a reused connection
-    int n_tries = 0; ///< The number of connection tries
+    ~HappyConnOpenerAnswer();
+
+    /// The total number of attempts to establish a connection. Includes any
+    /// failed attempts and [always successful] persistent connection reuse.
+    int n_tries = 0;
+
+    // answer recipients must clear the error member in order to keep its info
+    // XXX: We should refcount ErrorState instead of cbdata-protecting it.
+    CbcPointer<ErrorState> error; ///< problem details (nil on success)
+
+    /// whether HappyConnOpener succeeded, returning a usable connection
+    bool success() const { return !error; }
+
+    /// on success: an open, ready-to-use Squid-to-peer connection
+    /// on failure: either a closed failed Squid-to-peer connection or nil
+    Comm::ConnectionPointer conn;
+
+    /// whether conn was open earlier, by/for somebody else
+    bool reused = false;
+
+    /// the host we connected to; used by pinned connections (XXX: unused)
+    const char *host = nullptr;
 
     friend std::ostream &operator <<(std::ostream &os, const HappyConnOpenerAnswer &answer);
 };
@@ -104,7 +120,7 @@ public:
 
     template <class Caller> class CbDialer: public CbDialerBase {
     public:
-        typedef void (Caller::*Method)(const HappyConnOpener::Answer &);
+        typedef void (Caller::*Method)(HappyConnOpener::Answer &);
 
         virtual ~CbDialer() {}
         CbDialer(Method method, Caller *fwd): method_(method), fwd_(fwd) {}
@@ -130,7 +146,7 @@ public:
     };
 
 public:
-    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart);
+    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart, const AccessLogEntryPointer &al);
     virtual ~HappyConnOpener() override;
 
     /// configures reuse of old connections
@@ -183,10 +199,12 @@ private:
 
     void updateSpareWaitAfterPrimeFailure();
 
-    /// Calls the FwdState object back
-    void callCallback(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno, bool reused, const char *msg);
-
     void cancelSpareWait(const char *reason);
+
+    ErrorState *makeError(const err_type type) const;
+    Answer *futureAnswer(const Comm::ConnectionPointer &);
+    void sendSuccess(const Comm::ConnectionPointer &conn, bool reused, const char *connKind);
+    void sendFailure();
 
     const time_t fwdStart; ///< requestor start time
 
@@ -208,6 +226,12 @@ private:
     /// preconditions for an attempt to open a spare connection
     HappySpareWait spareWaiting;
     friend class HappyOrderEnforcer;
+
+    AccessLogEntryPointer ale; ///< transaction details
+
+    // XXX: We should refcount ErrorState instead of cbdata-protecting it.
+    CbcPointer<ErrorState> lastError; ///< last problem details (or nil)
+    Comm::ConnectionPointer lastFailedConnection; ///< nil if none has failed
 
     /// whether spare connection attempts disregard happy_eyeballs_* settings
     bool ignoreSpareRestrictions;

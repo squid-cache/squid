@@ -1,6 +1,8 @@
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "CachePeer.h"
 #include "FwdState.h"
+#include "errorpage.h"
 #include "HappyConnOpener.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
@@ -73,7 +75,8 @@ private:
 
 std::ostream &operator <<(std::ostream &os, const HappyConnOpenerAnswer &answer)
 {
-    return os << answer.conn << ", " << answer.ioStatus << ", " << answer.xerrno << ", " << (answer.reused ? "reused" : "new");
+    // TODO: Print error. Do not print conn/reused for nil conn.
+    return os << answer.conn << ", " << (answer.reused ? "reused" : "new");
 }
 
 /// enforces happy_eyeballs_connect_timeout
@@ -294,14 +297,26 @@ SpareAllowanceGiver::concurrencyLimitReached() const
     return aggregateLevel >= Config.happyEyeballs.connect_limit;
 }
 
+/* HappyConnOpenerAnswer */
+
+HappyConnOpenerAnswer::~HappyConnOpenerAnswer()
+{
+    // XXX: When multiple copies of an answer exist, this delete in one copy
+    // invalidates error in other copies -- their error.get() returns nil. The
+    // current code "works", but probably only because the initiator gets the
+    // error before any answer copies are deleted. Same in ~EncryptorAnswer.
+    delete error.get();
+}
+
 /* HappyConnOpener */
 
-HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart):
+HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart, const AccessLogEntry::Pointer &anAle):
     AsyncJob("HappyConnOpener"),
     primeStart(0),
     fwdStart(aFwdStart),
     callback_(aCall),
     destinations(dests),
+    ale(anAle),
     ignoreSpareRestrictions(false),
     gotSpareAllowance(false),
     allowPconn_(true),
@@ -352,7 +367,7 @@ HappyConnOpener::swanSong()
 {
     debugs(17, 5, "HappyConnOpener::swanSong: Job finished, cleanup");
     if (callback_)
-        callCallback(nullptr, Comm::ERR_CONNECT, 0, false, "Found no usable destinations");
+        sendFailure();
 
     if (spareWaiting)
         cancelSpareWait("HappyConnOpener object destructed");
@@ -380,18 +395,56 @@ HappyConnOpener::swanSong()
     AsyncJob::swanSong();
 }
 
-void
-HappyConnOpener::callCallback(const Comm::ConnectionPointer &conn, Comm::Flag err, int xerrno, bool reused, const char *msg)
+/// Create "503 Service Unavailable" or "504 Gateway Timeout" error depending
+/// on whether this is a validation request. RFC 2616 says that we MUST reply
+/// with "504 Gateway Timeout" if validation fails and cached reply has
+/// proxy-revalidate, must-revalidate or s-maxage Cache-Control directive.
+ErrorState *
+HappyConnOpener::makeError(const err_type type) const
+{
+    const auto statusCode = cause->flags.needValidation ?
+                       Http::scGatewayTimeout : Http::scServiceUnavailable;
+    return new ErrorState(type, statusCode, cause.getRaw(), ale);
+}
+
+/// \returns pre-filled Answer if the initiator needs an answer (or nil)
+HappyConnOpener::Answer *
+HappyConnOpener::futureAnswer(const Comm::ConnectionPointer &conn)
 {
     if (callback_ && !callback_->canceled()) {
-        HappyConnOpener::CbDialerBase *cd = dynamic_cast<HappyConnOpener::CbDialerBase *>(callback_->getDialer());
-        cd->answer_.conn = conn;
-        cd->answer_.host = nullptr;
-        cd->answer_.ioStatus = err;
-        cd->answer_.xerrno = xerrno;
-        cd->answer_.status = msg;
-        cd->answer_.n_tries = n_tries;
-        cd->answer_.reused = reused;
+        const auto dialer = dynamic_cast<CbDialerBase *>(callback_->getDialer());
+        assert(dialer);
+        auto &answer = dialer->answer_;
+        answer.conn = conn;
+        answer.n_tries = n_tries;
+        return &answer;
+    }
+    return nullptr;
+}
+
+/// send a successful result to the initiator (if it still needs an answer)
+void
+HappyConnOpener::sendSuccess(const Comm::ConnectionPointer &conn, bool reused, const char *connKind)
+{
+    debugs(17, 4, connKind << ": " << conn);
+    if (auto *answer = futureAnswer(conn)) {
+        answer->reused = reused;
+        assert(!answer->error);
+        ScheduleCallHere(callback_);
+    }
+    callback_ = nullptr;
+}
+
+/// inform the initiator about our failure to connect (if needed)
+void
+HappyConnOpener::sendFailure()
+{
+    debugs(17, 3, lastFailedConnection);
+    if (auto *answer = futureAnswer(lastFailedConnection)) {
+        if (!lastError)
+            lastError = makeError(ERR_GATEWAY_FAILURE);
+        answer->error = lastError;
+        assert(answer->error.valid());
         ScheduleCallHere(callback_);
     }
     callback_ = nullptr;
@@ -427,7 +480,7 @@ HappyConnOpener::reuseOldConnection(const Comm::ConnectionPointer &dest)
 
     if (const auto pconn = fwdPconnPool->pop(dest, host_, retriable_)) {
         ++n_tries;
-        callCallback(pconn, Comm::OK, 0, true, "reusing pconn");
+        sendSuccess(pconn, true, "reused connection");
         return true;
     }
 
@@ -470,7 +523,6 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     const bool itWasPrime = (params.conn == prime.path);
     const bool itWasSpare = (params.conn == spare.path);
     Must(itWasPrime != itWasSpare);
-    const char *what = itWasPrime ? "prime connection" : "spare connection";
 
     if (itWasPrime) {
         prime.path = nullptr;
@@ -484,8 +536,9 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
         }
     }
 
+    const char *what = itWasPrime ? "new prime connection" : "new spare connection";
     if (params.flag == Comm::OK) {
-        callCallback(params.conn, Comm::OK, 0, false, what);
+        sendSuccess(params.conn, false, what);
         return;
     }
 
@@ -493,6 +546,12 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     if (const auto peer = params.conn->getPeer())
         peerConnectFailed(peer);
     params.conn->close(); // TODO: Comm::ConnOpener should do this instead.
+
+    // remember the last failure (we forward it if we cannot connect anywhere)
+    lastFailedConnection = params.conn;
+    lastError = makeError(ERR_CONNECT_FAIL);
+    lastError->xerrno = params.xerrno;
+    lastError->port = params.conn->remote.port(); // TODO: Needed?
 
     if (spareWaiting)
         updateSpareWaitAfterPrimeFailure();
@@ -568,6 +627,9 @@ HappyConnOpener::checkForNewConnection()
     debugs(17, 7, "destinations: " << destinations->size() << " finalized: " << destinations->destinationsFinalized);
 
     // The order of the top-level if-statements below is important.
+
+    // XXX: Do not ignore Config.Timeout.forward.
+    // XXX: Do not ignore Config.forward_max_tries.
 
     // update stale currentPeer and/or stale spareWaiting
     if (currentPeer && !spare && !prime && destinations->doneWithPeer(*currentPeer)) {

@@ -767,43 +767,29 @@ FwdState::handleUnregisteredServerEnd()
 
 /// handles an established TCP connection to peer (including origin servers)
 void
-FwdState::noteConnection(const HappyConnOpener::Answer &cd)
+FwdState::noteConnection(HappyConnOpener::Answer &answer)
 {
     calls.connector = nullptr;
     connOpener.clear();
 
-    n_tries += cd.n_tries;
+    n_tries += answer.n_tries;
 
-    if (cd.ioStatus != Comm::OK) {
-        debugs(17, 3, (cd.status ? cd.status : "failure") << ": " << cd.conn);
-
-        //? Type of Error?
-        if (cd.conn == nullptr) {
-            // There are not available destinations
-            flags.dont_retry = true;
-        }
-
-
-        // Update the logging information about this new server connection.
-        // Done here before anything else so the errors get logged for
-        // this server link regardless of what happens when connecting to it.
-        // IF sucessfuly connected this top destination will become the serverConnection().
-        syncHierNote(cd.conn, request->url.host());
-
-        ErrorState *const anErr = makeConnectingError(ERR_CONNECT_FAIL);
-        anErr->xerrno = cd.xerrno;
-        fail(anErr);
-        retryOrBail();
+    if (const auto error = answer.error.get()) {
+        flags.dont_retry = true; // or HappyConnOpener would not have given up
+        syncHierNote(answer.conn, request->url.host());
+        fail(error);
+        answer.error.clear(); // preserve error for errorSendComplete()
+        retryOrBail(); // will notice flags.dont_retry and bail
         return;
     }
 
-    serverConn = cd.conn;
-    debugs(17, 3, (cd.status ? cd.status : "use connection") << ": " << serverConnection());
+    Must(IsConnOpen(answer.conn));
+    serverConn = answer.conn;
 
     closeHandler = comm_add_close_handler(serverConnection()->fd,  fwdServerClosedWrapper, this);
 
-    if (cd.reused) {
-        syncWithServerConn(cd.host ? cd.host : request->url.host());
+    if (answer.reused) {
+        syncWithServerConn(request->url.host()); // XXX: Applies to !reused as well
         flags.connected_okay = true;
         pconnRace = racePossible;
         dispatch();
@@ -1012,7 +998,7 @@ FwdState::connectStart()
 
     assert(Config.forward_max_tries - n_tries > 0);
     HttpRequest::Pointer cause = request;
-    const auto cs = new HappyConnOpener(destinations, calls.connector, cause, start_t);
+    const auto cs = new HappyConnOpener(destinations, calls.connector, cause, start_t, al);
     cs->setHost(request->url.host());
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {
@@ -1234,19 +1220,6 @@ FwdState::reforward()
     const Http::StatusCode s = e->getReply()->sline.status();
     debugs(17, 3, HERE << "status " << s);
     return reforwardableStatus(s);
-}
-
-/**
- * Create "503 Service Unavailable" or "504 Gateway Timeout" error depending
- * on whether this is a validation request. RFC 2616 says that we MUST reply
- * with "504 Gateway Timeout" if validation fails and cached reply has
- * proxy-revalidate, must-revalidate or s-maxage Cache-Control directive.
- */
-ErrorState *
-FwdState::makeConnectingError(const err_type type) const
-{
-    return new ErrorState(type, request->flags.needValidation ?
-                          Http::scGatewayTimeout : Http::scServiceUnavailable, request, al);
 }
 
 static void
