@@ -192,7 +192,7 @@ public:
     bool opening() const { return connOpener.set(); }
 
     /// Start using an established connection
-    void connectDone(const Comm::ConnectionPointer &conn);
+    void connectDone(const Comm::ConnectionPointer &conn, const char *origin, const bool reused);
 
     void notifyConnOpener();
 
@@ -883,14 +883,23 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
         return;
     }
 
-    // XXX: Missing ResetMarkingsToServer(request.getRaw(), serverConn)?
-    request->hier.resetPeerNotes(answer.conn, getHost());
-    connectDone(answer.conn);
+    connectDone(answer.conn, request->url.host(), answer.reused);
 }
 
 void
-TunnelStateData::connectDone(const Comm::ConnectionPointer &conn)
+TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *origin, const bool reused)
 {
+    Must(Comm::IsConnOpen(conn));
+    server.conn = conn;
+
+    if (reused)
+        ResetMarkingsToServer(request.getRaw(), *conn);
+    // else Comm::ConnOpener already applied proper/current markings
+
+    request->hier.resetPeerNotes(conn, origin);
+    if (al)
+        al->hier.resetPeerNotes(conn, origin);
+
 #if USE_DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
     if (conn->getPeer() && conn->getPeer()->options.no_delay)
@@ -899,7 +908,6 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn)
 
     netdbPingSite(request->url.host());
 
-    server.conn = conn;
     request->peer_host = conn->getPeer() ? conn->getPeer()->host : NULL;
     comm_add_close_handler(conn->fd, tunnelServerClosed, this);
 
@@ -1168,11 +1176,9 @@ TunnelStateData::usePinned()
     if (connManager->pinnedAuth())
         request->flags.auth = true;
 
-    // sync with existing pinned connection
-    ResetMarkingsToServer(request.getRaw(), *serverConn);
-    request->hier.resetPeerNotes(serverConn, connManager->pinning.host);
-
-    connectDone(serverConn);
+    // the server may close the pinned connection before this request
+    const auto reused = true;
+    connectDone(serverConn, connManager->pinning.host, reused);
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);
