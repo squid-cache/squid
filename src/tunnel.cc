@@ -924,7 +924,7 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
 
     netdbPingSite(request->url.host());
 
-    request->peer_host = conn->getPeer() ? conn->getPeer()->host : NULL;
+    request->peer_host = conn->getPeer() ? conn->getPeer()->host : nullptr;
     comm_add_close_handler(conn->fd, tunnelServerClosed, this);
 
     bool toOrigin = false; // same semantics as StateFlags::toOrigin
