@@ -49,10 +49,12 @@ class CertValidationResponse;
 #endif
 
 /// Sets initial TOS value and Netfilter for the future outgoing connection.
+/// Updates the given Connection object, not the future transport connection.
 void GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn);
 
-/// Sets TOS value and Netfilter for the outgoing connection.
-void SetMarkingsToServer(HttpRequest *, Comm::Connection &);
+/// Recomputes and applies TOS value and Netfilter to the outgoing connection.
+/// Updates both the given Connection object and the transport connection.
+void ResetMarkingsToServer(HttpRequest *, Comm::Connection &);
 
 class HelperReply;
 class FwdState: public RefCountable, public PeerSelectionInitiator

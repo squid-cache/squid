@@ -958,7 +958,7 @@ FwdState::successfullyConnectedToPeer()
 void
 FwdState::syncWithServerConn(const char *host)
 {
-    SetMarkingsToServer(request, *serverConn);
+    ResetMarkingsToServer(request, *serverConn);
     syncHierNote(serverConn, host);
 }
 
@@ -1463,10 +1463,11 @@ GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
 }
 
 void
-SetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
+ResetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
 {
     GetMarkingsToServer(request, conn);
 
+    // TODO: Avoid these calls if markings has not changed.
     if (conn.tos)
         Ip::Qos::setSockTos(&conn, conn.tos);
     if (conn.nfmark)
