@@ -374,18 +374,16 @@ HappyConnOpener::swanSong()
 
     // TODO: These call cancellations should not be needed.
 
-    if (prime.path) {
+    if (prime) {
         if (prime.connector)
             prime.connector->cancel("HappyConnOpener object destructed");
-        prime.connector = nullptr;
-        prime.path = nullptr;
+        prime.clear();
     }
 
-    if (spare.path) {
+    if (spare) {
         if (spare.connector)
             spare.connector->cancel("HappyConnOpener object destructed");
-        spare.connector = nullptr;
-        spare.path = nullptr;
+        spare.clear();
         if (gotSpareAllowance) {
             TheSpareAllowanceGiver.jobDroppedAllowance();
             gotSpareAllowance = false;
@@ -459,7 +457,7 @@ HappyConnOpener::noteCandidatesChange()
 
 /// starts opening (or reusing) a connection to the given destination
 void
-HappyConnOpener::startConnecting(PendingConnection &attempt, Comm::ConnectionPointer &dest)
+HappyConnOpener::startConnecting(Attempt &attempt, Comm::ConnectionPointer &dest)
 {
     Must(!attempt.path);
     Must(!attempt.connector);
@@ -489,7 +487,7 @@ HappyConnOpener::reuseOldConnection(const Comm::ConnectionPointer &dest)
 /// opens a fresh connection to the given destination
 /// must be called via startConnecting()
 void
-HappyConnOpener::openFreshConnection(PendingConnection &attempt, Comm::ConnectionPointer &dest)
+HappyConnOpener::openFreshConnection(Attempt &attempt, Comm::ConnectionPointer &dest)
 {
 #if URL_CHECKSUM_DEBUG
     entry->mem_obj->checkUrlChecksum();
@@ -524,11 +522,9 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     Must(itWasPrime != itWasSpare);
 
     if (itWasPrime) {
-        prime.path = nullptr;
-        prime.connector = nullptr;
+        prime.clear();
     } else {
-        spare.path = nullptr;
-        spare.connector = nullptr;
+        spare.clear();
         if (gotSpareAllowance) {
             TheSpareAllowanceGiver.jobUsedAllowance();
             gotSpareAllowance = false;
