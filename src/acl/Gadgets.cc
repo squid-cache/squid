@@ -27,6 +27,7 @@
 #include "errorpage.h"
 #include "globals.h"
 #include "HttpRequest.h"
+#include "src/sbuf/Stream.h"
 
 #include <set>
 #include <algorithm>
@@ -112,7 +113,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
         return;
     }
 
-    AclDenyInfoList *A = new AclDenyInfoList(t);
+    const auto A = new AclDenyInfoList(t, ConfigParser::CurrentLocation());
 
     /* next expect a list of ACL names */
     while ((t = ConfigParser::NextToken())) {

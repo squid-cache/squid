@@ -10,12 +10,14 @@
 #define SQUID_CONFIGPARSER_H
 
 #include "SquidString.h"
+#include "sbuf/forward.h"
 
 #include <queue>
 #include <stack>
 #include <string>
 
 class wordlist;
+
 /**
  * Limit to how long any given config line may be.
  * This affects squid.conf and all included files.
@@ -124,6 +126,8 @@ public:
 
     /// Do not allow %macros inside quoted strings
     static void DisableMacros() {AllowMacros_ = false;}
+
+    static SBuf CurrentLocation();
 
     /// configuration_includes_quoted_values in squid.conf
     static bool RecognizeQuotedValues;

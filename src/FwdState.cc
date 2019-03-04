@@ -248,7 +248,7 @@ FwdState::completed()
     if (entry->store_status == STORE_PENDING) {
         if (entry->isEmpty()) {
             if (!err) // we quit (e.g., fd closed) before an error or content
-                fail(new ErrorState(ERR_READ_ERROR, Http::scBadGateway, request));
+                fail(new ErrorState(ERR_READ_ERROR, Http::scBadGateway, request, al));
             assert(err);
             errorAppendEntry(entry, err);
             err = NULL;
@@ -333,7 +333,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
             if (page_id == ERR_NONE)
                 page_id = ERR_FORWARDING_DENIED;
 
-            ErrorState *anErr = new ErrorState(page_id, Http::scForbidden, request);
+            const auto anErr = new ErrorState(page_id, Http::scForbidden, request, al);
             errorAppendEntry(entry, anErr); // frees anErr
             return;
         }
@@ -352,14 +352,14 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
 
     if (shutting_down) {
         /* more yuck */
-        ErrorState *anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request);
+        const auto anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request, al);
         errorAppendEntry(entry, anErr); // frees anErr
         return;
     }
 
     if (request->flags.internal) {
         debugs(17, 2, "calling internalStart() due to request flag");
-        internalStart(clientConn, request, entry);
+        internalStart(clientConn, request, entry, al);
         return;
     }
 
@@ -367,7 +367,7 @@ FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, Ht
 
     case AnyP::PROTO_CACHE_OBJECT:
         debugs(17, 2, "calling CacheManager due to request scheme " << request->url.getScheme());
-        CacheManager::GetInstance()->Start(clientConn, request, entry);
+        CacheManager::GetInstance()->start(clientConn, request, entry, al);
         return;
 
     case AnyP::PROTO_URN:
@@ -430,7 +430,7 @@ FwdState::useDestinations()
 
         debugs(17, 3, HERE << "Connection failed: " << entry->url());
         if (!err) {
-            ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request);
+            const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request, al);
             fail(anErr);
         } // else use actual error from last connection attempt
 
@@ -683,7 +683,7 @@ FwdState::retryOrBail()
     request->hier.stopPeerClock(false);
 
     if (self != NULL && !err && shutting_down && entry->isEmpty()) {
-        ErrorState *anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request);
+        const auto anErr = new ErrorState(ERR_SHUTTING_DOWN, Http::scServiceUnavailable, request, al);
         errorAppendEntry(entry, anErr);
     }
 
@@ -809,7 +809,7 @@ FwdState::connectTimeout(int fd)
     assert(fd == serverDestinations[0]->fd);
 
     if (entry->isEmpty()) {
-        ErrorState *anErr = new ErrorState(ERR_CONNECT_FAIL, Http::scGatewayTimeout, request);
+        const auto anErr = new ErrorState(ERR_CONNECT_FAIL, Http::scGatewayTimeout, request, al);
         anErr->xerrno = ETIMEDOUT;
         fail(anErr);
 
@@ -881,7 +881,7 @@ FwdState::connectStart()
     // origin server
     if (serverDestinations[0]->getPeer() && !serverDestinations[0]->getPeer()->options.originserver && request->flags.sslBumped) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
-        ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request);
+        const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
         fail(anErr);
         stopAndDestroy("SslBump misconfiguration");
         return;
@@ -957,7 +957,7 @@ FwdState::usePinned()
     if (!Comm::IsConnOpen(temp)) {
         syncHierNote(temp, connManager ? connManager->pinning.host : request->url.host());
         serverConn = nullptr;
-        const auto anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request);
+        const auto anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request, al);
         fail(anErr);
         // Connection managers monitor their idle pinned to-server
         // connections and close from-client connections upon seeing
@@ -1088,7 +1088,7 @@ FwdState::dispatch()
 
         default:
             debugs(17, DBG_IMPORTANT, "WARNING: Cannot retrieve '" << entry->url() << "'.");
-            ErrorState *anErr = new ErrorState(ERR_UNSUP_REQ, Http::scBadRequest, request);
+            const auto anErr = new ErrorState(ERR_UNSUP_REQ, Http::scBadRequest, request, al);
             fail(anErr);
             // Set the dont_retry flag because this is not a transient (network) error.
             flags.dont_retry = true;
@@ -1164,7 +1164,7 @@ ErrorState *
 FwdState::makeConnectingError(const err_type type) const
 {
     return new ErrorState(type, request->flags.needValidation ?
-                          Http::scGatewayTimeout : Http::scServiceUnavailable, request);
+                          Http::scGatewayTimeout : Http::scServiceUnavailable, request, al);
 }
 
 static void

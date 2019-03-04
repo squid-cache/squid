@@ -406,7 +406,7 @@ PeerSelector::noteIps(const Dns::CachedIps *ia, const Dns::LookupDetails &detail
         delete lastError;
         lastError = NULL;
         if (fs->code == HIER_DIRECT) {
-            lastError = new ErrorState(ERR_DNS_FAIL, Http::scServiceUnavailable, request);
+            lastError = new ErrorState(ERR_DNS_FAIL, Http::scServiceUnavailable, request, al);
             lastError->dnsError = details.error;
         }
     }

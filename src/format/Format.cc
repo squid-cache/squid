@@ -95,6 +95,23 @@ Format::Format::parse(const char *def)
     return true;
 }
 
+size_t
+Format::AssembleOne(const char *token, MemBuf &mb, const AccessLogEntryPointer &ale)
+{
+    Token tkn;
+    enum Quoting quote = LOG_QUOTE_NONE;
+    const auto tokenSize = tkn.parse(token, &quote);
+    assert(tokenSize > 0);
+    if (ale != nullptr) {
+        Format fmt("SimpleToken");
+        fmt.format = &tkn;
+        fmt.assemble(mb, ale, 0);
+        fmt.format = nullptr;
+    } else
+        mb.append("-", 1);
+    return static_cast<size_t>(tokenSize);
+}
+
 void
 Format::Format::dump(StoreEntry * entry, const char *directiveName, bool eol) const
 {

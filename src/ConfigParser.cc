@@ -7,11 +7,13 @@
  */
 
 #include "squid.h"
+#include "base/Here.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "fatal.h"
 #include "globals.h"
+#include "sbuf/Stream.h"
 
 bool ConfigParser::RecognizeQuotedValues = true;
 bool ConfigParser::StrictMode = true;
@@ -240,6 +242,12 @@ ConfigParser::SetCfgLine(char *line)
         CfgLineTokens_.pop();
         free(token);
     }
+}
+
+SBuf
+ConfigParser::CurrentLocation()
+{
+    return ToSBuf(SourceLocation(cfg_directive, cfg_filename, config_lineno));
 }
 
 char *

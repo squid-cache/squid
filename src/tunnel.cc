@@ -465,7 +465,7 @@ TunnelStateData::informUserOfPeerError(const char *errMsg, const size_t sz)
 
     // if we have no reply suitable to relay, use 502 Bad Gateway
     if (!sz || sz > static_cast<size_t>(connectRespBuf->contentSize()))
-        return sendError(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw()),
+        return sendError(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al),
                          "peer error without reply");
 
     // if we need to send back the server response. write its headers to the client
@@ -1038,7 +1038,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xe
     TunnelStateData *tunnelState = (TunnelStateData *)data;
 
     if (status != Comm::OK) {
-        ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, Http::scServiceUnavailable, tunnelState->request.getRaw());
+        const auto err = new ErrorState(ERR_CONNECT_FAIL, Http::scServiceUnavailable, tunnelState->request.getRaw(), tunnelState->al);
         err->xerrno = xerrno;
         // on timeout is this still:    err->xerrno = ETIMEDOUT;
         err->port = conn->remote.port();
@@ -1113,7 +1113,7 @@ tunnelStart(ClientHttpRequest * http)
         ch.syncAle(request, http->log_uri);
         if (ch.fastCheck().denied()) {
             debugs(26, 4, HERE << "MISS access forbidden.");
-            err = new ErrorState(ERR_FORWARDING_DENIED, Http::scForbidden, request);
+            err = new ErrorState(ERR_FORWARDING_DENIED, Http::scForbidden, request, http->al);
             http->al->http.code = Http::scForbidden;
             errorSend(http->getConn()->clientConnection, err);
             return;
@@ -1253,7 +1253,7 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
         if (savedError)
             return sendError(savedError, "all found paths have failed");
 
-        return sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw()),
+        return sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw(), al),
                          "path selection found no paths");
     }
     // else continue to use one of the previously noted destinations;
@@ -1325,7 +1325,7 @@ TunnelStateData::usePinned()
     debugs(26,7, "pinned peer connection: " << serverConn);
     if (!Comm::IsConnOpen(serverConn)) {
         // a PINNED path failure is fatal; do not wait for more paths
-        sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw()),
+        sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw(), al),
                   "pinned path failure");
         return;
     }

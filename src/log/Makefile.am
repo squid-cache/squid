@@ -29,6 +29,7 @@ liblog_la_SOURCES = \
 	FormatSquidNative.cc \
 	FormatSquidReferer.cc \
 	FormatSquidUseragent.cc \
+	forward.h \
 	ModDaemon.cc \
 	ModDaemon.h \
 	ModStdio.cc \

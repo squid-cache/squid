@@ -31,14 +31,12 @@ class ErrorDetailFile : public TemplateFile
 {
 public:
     explicit ErrorDetailFile(ErrorDetailsList::Pointer const details): TemplateFile("error-details.txt", ERR_NONE) {
-        buf.init();
         theDetails = details;
     }
 
 private:
-    MemBuf buf;
     ErrorDetailsList::Pointer  theDetails;
-    virtual bool parse(const char *buf, int len, bool eof);
+    virtual bool parse() override;
 };
 }// namespace Ssl
 
@@ -188,24 +186,20 @@ public:
 inline size_t detailEntryEnd(const char *s, size_t len) {return headersEnd(s, len);}
 
 bool
-Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
+Ssl::ErrorDetailFile::parse()
 {
     if (!theDetails)
         return false;
 
-    if (len) {
-        buf.append(buffer, len);
-    }
+    auto buf = template_;
+    buf.append("\n\n"); // ensure detailEntryEnd() finds the last entry
 
-    if (eof)
-        buf.append("\n\n", 1);
-
-    while (size_t size = detailEntryEnd(buf.content(), buf.contentSize())) {
-        const char *e = buf.content() + size;
+    while (const auto size = detailEntryEnd(buf.rawContent(), buf.length())) {
+        auto *s = buf.c_str();
+        const auto e = s + size;
 
         //ignore spaces, new lines and comment lines (starting with #) at the beggining
-        const char *s;
-        for (s = buf.content(); (*s == '\n' || *s == ' '  || *s == '\t' || *s == '#')  && s < e; ++s) {
+        for (; (*s == '\n' || *s == ' '  || *s == '\t' || *s == '#')  && s < e; ++s) {
             if (*s == '#')
                 while (s<e &&  *s != '\n')
                     ++s; // skip untill the end of line
@@ -244,6 +238,7 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
                 const int detailsParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.detail);
                 tmp = parser.getByName("descr");
                 const int descrParseOk = httpHeaderParseQuotedString(tmp.termedBuf(), tmp.size(), &entry.descr);
+                // TODO: Validate "descr" and "detail" field values.
 
                 if (!detailsParseOk || !descrParseOk) {
                     debugs(83, DBG_IMPORTANT, HERE <<
@@ -261,7 +256,7 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
 
         buf.consume(size);
     }
-    debugs(83, 9, HERE << " Remain size: " << buf.contentSize() << " Content: " << buf.content());
+    debugs(83, 9, Raw("unparsed data", buf.rawContent(), buf.length()));
     return true;
 }
 

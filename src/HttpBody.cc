@@ -9,41 +9,14 @@
 /* DEBUG: section 56    HTTP Message Body */
 
 #include "squid.h"
+#include "base/Packable.h"
 #include "HttpBody.h"
-#include "MemBuf.h"
-
-HttpBody::HttpBody() : mb(new MemBuf)
-{}
-
-HttpBody::~HttpBody()
-{
-    delete mb;
-}
-
-void
-HttpBody::clear()
-{
-    mb->clean();
-}
-
-/* set body by absorbing mb */
-void
-HttpBody::setMb(MemBuf * mb_)
-{
-    delete mb;
-    /* note: protection against assign-to-self is not needed
-     * as MemBuf doesn't have a copy-constructor. If such a constructor
-     * is ever added, add such protection here.
-     */
-    mb = mb_;       /* absorb */
-}
 
 void
 HttpBody::packInto(Packable * p) const
 {
     assert(p);
-
-    if (mb->contentSize())
-        p->append(mb->content(), mb->contentSize());
+    if (const auto size = contentSize())
+        p->append(content(), size);
 }
 

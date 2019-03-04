@@ -48,6 +48,7 @@ public:
     StoreEntry *urlres_e = nullptr;
     HttpRequest::Pointer request;
     HttpRequest::Pointer urlres_r;
+    AccessLogEntry::Pointer ale; ///< details of the requesting transaction
 
     struct {
         bool force_menu = false;
@@ -61,7 +62,6 @@ private:
     virtual void fillChecklist(ACLFilledChecklist &) const;
 
     char *urlres = nullptr;
-    AccessLogEntry::Pointer ale; ///< master transaction summary
 };
 
 typedef struct {
@@ -163,7 +163,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
 
     if (!urlres_r) {
         debugs(52, 3, "Bad uri-res URL " << local_urlres);
-        ErrorState *err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, r);
+        const auto err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, r, ale);
         err->url = xstrdup(local_urlres);
         errorAppendEntry(entry, err);
         return;
@@ -267,7 +267,6 @@ urnHandleReply(void *data, StoreIOBuffer result)
     url_entry *urls;
     url_entry *u;
     url_entry *min_u;
-    MemBuf *mb = NULL;
     ErrorState *err;
     int i;
     int urlcnt = 0;
@@ -320,7 +319,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     if (rep->sline.status() != Http::scOkay) {
         debugs(52, 3, "urnHandleReply: failed.");
-        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw());
+        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw(), urnState->ale);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
         delete rep;
@@ -337,7 +336,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     if (!urls) {     /* unknown URN error */
         debugs(52, 3, "urnTranslateDone: unknown URN " << e->url());
-        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw());
+        err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw(), urnState->ale);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
         urnHandleReplyError(urnState, urlres_e);
@@ -352,8 +351,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
     min_u = urnFindMinRtt(urls, urnState->request->method, NULL);
     qsort(urls, urlcnt, sizeof(*urls), url_entry_sort);
     e->buffer();
-    mb = new MemBuf;
-    mb->init();
+    SBuf body;
+    SBuf *mb = &body; // diff reduction hack; TODO: Remove
     mb->appendf( "<TITLE>Select URL for %s</TITLE>\n"
                  "<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}--></STYLE>\n"
                  "<H2>Select URL for %s</H2>\n"
@@ -382,7 +381,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         "</ADDRESS>\n",
         APP_FULLNAME, getMyHostname());
     rep = new HttpReply;
-    rep->setHeaders(Http::scFound, NULL, "text/html", mb->contentSize(), 0, squid_curtime);
+    rep->setHeaders(Http::scFound, NULL, "text/html", mb->length(), 0, squid_curtime);
 
     if (urnState->flags.force_menu) {
         debugs(51, 3, "urnHandleReply: forcing menu");
@@ -390,8 +389,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         rep->header.putStr(Http::HdrType::LOCATION, min_u->url);
     }
 
-    rep->body.setMb(mb);
-    /* don't clean or delete mb; rep->body owns it now */
+    rep->body.set(body);
     e->replaceHttpReply(rep);
     e->complete();
 
@@ -401,7 +399,6 @@ urnHandleReply(void *data, StoreIOBuffer result)
     }
 
     safe_free(urls);
-    /* mb was absorbed in httpBodySet call, so we must not clean it */
     storeUnregister(urnState->sc, urlres_e, urnState);
 
     urnHandleReplyError(urnState, urlres_e);
