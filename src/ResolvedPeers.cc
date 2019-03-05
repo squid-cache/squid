@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -66,9 +66,9 @@ ResolvedPeers::findSpareOrNextPeer(const Comm::Connection &currentPeer) const
     // Optimization: Also stop at the first mismatching peer because all
     // same-peer paths are grouped together.
     const auto found = std::find_if(paths_.begin(), paths_.end(),
-        [peerToMatch, familyToAvoid](const Comm::ConnectionPointer &conn) {
-            return peerToMatch != conn->getPeer() ||
-                familyToAvoid != ConnectionFamily(*conn);
+    [peerToMatch, familyToAvoid](const Comm::ConnectionPointer &conn) {
+        return peerToMatch != conn->getPeer() ||
+               familyToAvoid != ConnectionFamily(*conn);
     });
     if (found != paths_.end() && peerToMatch == (*found)->getPeer())
         return found;
@@ -101,7 +101,7 @@ ResolvedPeers::haveSpare(const Comm::Connection &currentPeer) const
 {
     const auto found = findSpareOrNextPeer(currentPeer);
     return found != paths_.end() &&
-        currentPeer.getPeer() == (*found)->getPeer();
+           currentPeer.getPeer() == (*found)->getPeer();
 }
 
 bool
@@ -120,7 +120,7 @@ ResolvedPeers::doneWithPrimes(const Comm::Connection &currentPeer) const
     if (first == paths_.end())
         return destinationsFinalized;
     return currentPeer.getPeer() != (*first)->getPeer() ||
-        ConnectionFamily(currentPeer) != ConnectionFamily(**first);
+           ConnectionFamily(currentPeer) != ConnectionFamily(**first);
 }
 
 bool
@@ -145,3 +145,4 @@ operator <<(std::ostream &os, const ResolvedPeers &peers)
         return os << "[no paths]";
     return os << peers.size() << (peers.destinationsFinalized ? "" : "+") << " paths";
 }
+
