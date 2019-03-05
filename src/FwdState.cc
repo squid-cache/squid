@@ -543,7 +543,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     if (!path) {
         // We can call usePinned() without fear of clashing with an earlier
         // forwarding attempt because PINNED must be the first destination.
-        assert(!destinations->size());
+        assert(destinations->empty());
         usePinned();
         return;
     }

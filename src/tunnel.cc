@@ -1054,7 +1054,7 @@ TunnelStateData::noteDestination(Comm::ConnectionPointer path)
     if (!path) { // decided to use a pinned connection
         // We can call usePinned() without fear of clashing with an earlier
         // forwarding attempt because PINNED must be the first destination.
-        assert(!destinations->size());
+        assert(destinations->empty());
         usePinned();
         return;
     }
