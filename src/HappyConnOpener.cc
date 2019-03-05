@@ -379,7 +379,7 @@ HappyConnOpener::swanSong()
 {
     debugs(17, 5, this);
 
-    if (callback_)
+    if (callback_ && !callback_->canceled())
         sendFailure();
 
     if (spareWaiting)
@@ -623,14 +623,16 @@ HappyConnOpener::cancelSpareWait(const char *reason)
     spareWaiting.clear();
 }
 
-/** Called when an external event changes destinations, prime, spare, or spareWaiting.
- * Leaves HappyConnOpener in one of these (mutually exclusive) "stable" states:
+/** Called when an external event changes initiator interest, destinations,
+ * prime, spare, or spareWaiting. Leaves HappyConnOpener in one of these
+ * (mutually exclusive) "stable" states:
  *
+ * 0. Initiator lost interest: callback_->canceled()
  * 1. Processing a single peer: currentPeer
  *    1.1. Connecting: prime || spare
  *    1.2. Waiting for spare gap and/or paths: !prime && !spare
  * 2. Waiting for a new peer: destinations->empty() && !destinations->destinationsFinalized && !currentPeer
- * 3. Done: destinations->empty() && destinations->destinationsFinalized && !currentPeer
+ * 3. Finished: destinations->empty() && destinations->destinationsFinalized && !currentPeer
  */
 void
 HappyConnOpener::checkForNewConnection()
@@ -638,6 +640,9 @@ HappyConnOpener::checkForNewConnection()
     debugs(17, 7, *destinations);
 
     // The order of the top-level if-statements below is important.
+
+    if (done())
+        return; // bail ASAP to minimize our waste and others delays (state #0)
 
     // XXX: Do not ignore Config.Timeout.forward.
     // XXX: Do not ignore Config.forward_max_tries.
