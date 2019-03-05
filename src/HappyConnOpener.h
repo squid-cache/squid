@@ -75,7 +75,6 @@ public:
     /// whether HappyConnOpener succeeded, returning a usable connection
     bool success() const { return !error; }
 
-
     /// on success: an open, ready-to-use Squid-to-peer connection
     /// on failure: either a closed failed Squid-to-peer connection or nil
     Comm::ConnectionPointer conn;
@@ -174,18 +173,12 @@ private:
     void stopWaitingForSpareAllowance();
     bool maybeOpenSpareConnection();
 
-    // TODO: Describe non-public methods when you define them.
-
     void startConnecting(Attempt &, Comm::ConnectionPointer &);
     void openFreshConnection(Attempt &, Comm::ConnectionPointer &);
     bool reuseOldConnection(const Comm::ConnectionPointer &);
 
-    /// Callback called by Comm::ConnOpener objects after a prime or spare
-    /// connection attempt completes.
     void connectDone(const CommConnectCbParams &);
 
-    /// Check and start a spare connection if preconditions are satisfied,
-    /// or schedules a connection attempt for later.
     void checkForNewConnection();
 
     void updateSpareWaitAfterPrimeFailure();

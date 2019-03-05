@@ -88,7 +88,7 @@ public:
     /* HappyOrderEnforcer API */
     virtual bool readyNow(const HappyConnOpener &job) const override;
 
-protected:
+private:
     /* HappyOrderEnforcer API */
     virtual AsyncCall::Pointer notify(const CbcPointer<HappyConnOpener> &) override;
 };
@@ -112,7 +112,7 @@ public:
     /// reacts to HappyConnOpener dropping its spare connection allowance
     void jobDroppedAllowance();
 
-protected:
+private:
     /* HappyOrderEnforcer API */
     virtual AsyncCall::Pointer notify(const CbcPointer<HappyConnOpener> &) override;
 
@@ -512,6 +512,8 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, Comm::ConnectionPointer &
     AsyncJob::Start(cs);
 }
 
+/// called by Comm::ConnOpener objects after a prime or spare connection attempt
+/// completes (successfully or not)
 void
 HappyConnOpener::connectDone(const CommConnectCbParams &params)
 {
@@ -574,6 +576,7 @@ HappyConnOpener::updateSpareWaitAfterPrimeFailure()
     // may still be spareWaiting.forPrimesToFail
 }
 
+/// called when the prime attempt has used up its chance for a solo victory
 void
 HappyConnOpener::stopGivingPrimeItsChance() {
     Must(spareWaiting.toGivePrimeItsChance);
@@ -581,6 +584,7 @@ HappyConnOpener::stopGivingPrimeItsChance() {
     ThePrimeChanceGiver.dequeue(*this);
 }
 
+/// called when the spare attempt should no longer obey spare connection limits
 void
 HappyConnOpener::stopWaitingForSpareAllowance() {
     Must(spareWaiting.forSpareAllowance);
@@ -677,7 +681,6 @@ HappyConnOpener::checkForNewConnection()
     // entering state #3
 }
 
-/// called after happy_eyeballs_connect_timeout expires
 void
 HappyConnOpener::noteGavePrimeItsChance()
 {

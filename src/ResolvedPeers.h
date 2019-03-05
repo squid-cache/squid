@@ -14,7 +14,7 @@
 
 #include <iosfwd>
 
-/// cache_peer and origin server addresses
+/// cache_peer and origin server addresses (a.k.a. paths)
 /// selected and resolved by the peering code
 class ResolvedPeers: public RefCountable
 {
@@ -25,7 +25,7 @@ public:
 
     ResolvedPeers();
 
-    /// whether any candidate paths are known
+    /// whether we lack any known candidate paths
     bool empty() const { return paths_.empty(); }
 
     /// add a candidate path to try after all the existing paths
