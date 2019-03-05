@@ -193,6 +193,8 @@ public:
     /// same as calls.connector but may differ from connOpener.valid()
     bool opening() const { return connOpener.set(); }
 
+    void cancelOpening(const char *reason);
+
     /// Start using an established connection
     void connectDone(const Comm::ConnectionPointer &conn, const char *origin, const bool reused);
 
@@ -348,10 +350,8 @@ TunnelStateData::~TunnelStateData()
     debugs(26, 3, "TunnelStateData destructed this=" << this);
     assert(noConnections());
     xfree(url);
-    if (opening()) {
-        calls.connector->cancel("TunnelStateData stopped");
-        calls.connector = nullptr;
-    }
+    if (opening())
+        cancelOpening("~TunnelStateData");
     delete savedError;
 }
 
@@ -1127,12 +1127,8 @@ TunnelStateData::sendError(ErrorState *finalError, const char *reason)
     if (request)
         request->hier.stopPeerClock(false);
 
-    if (opening()) {
-        calls.connector->cancel(reason);
-        calls.connector = nullptr;
-        notifyConnOpener();
-        connOpener.clear();
-    }
+    if (opening())
+        cancelOpening(reason);
 
     assert(finalError);
 
@@ -1148,6 +1144,20 @@ TunnelStateData::sendError(ErrorState *finalError, const char *reason)
     finalError->callback = tunnelErrorComplete;
     finalError->callback_data = this;
     errorSend(client.conn, finalError);
+}
+
+/// Notify connOpener that we no longer need connections. We do not have to do
+/// this -- connOpener would eventually notice on its own, but notifying reduces
+/// waste and speeds up spare connection opening for other transactions (that
+/// could otherwise wait for this transaction to use its spare allowance).
+void
+TunnelStateData::cancelOpening(const char *reason)
+{
+    assert(calls.connector);
+    calls.connector->cancel(reason);
+    calls.connector = nullptr;
+    notifyConnOpener();
+    connOpener.clear();
 }
 
 void

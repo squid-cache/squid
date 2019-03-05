@@ -156,6 +156,8 @@ private:
     /// same as calls.connector but may differ from connOpener.valid()
     bool opening() const { return connOpener.set(); }
 
+    void cancelOpening(const char *reason);
+
     void notifyConnOpener();
 
 public:

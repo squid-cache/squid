@@ -362,10 +362,15 @@ HappyConnOpener::doneAll() const
 {
     if (!callback_)
         return true; // (probably found a good path and) informed the requestor
+
+    // TODO: Expose AsyncCall::canFire() instead so that code like this can
+    // detect gone initiators without the need to explicitly cancel callbacks.
     if (callback_->canceled())
         return true; // the requestor is gone or has lost interest
+
     if (!prime && !spare && destinations->empty() && destinations->destinationsFinalized)
         return true; // there are no more paths to try
+
     return false;
 }
 

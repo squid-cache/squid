@@ -193,16 +193,26 @@ FwdState::stopAndDestroy(const char *reason)
 {
     debugs(17, 3, "for " << reason);
 
-    if (opening()) {
-        calls.connector->cancel(reason);
-        calls.connector = nullptr;
-        notifyConnOpener();
-        connOpener.clear();
-    }
+    if (opening())
+        cancelOpening(reason);
 
     PeerSelectionInitiator::subscribed = false; // may already be false
     self = nullptr; // we hope refcounting destroys us soon; may already be nil
     /* do not place any code here as this object may be gone by now */
+}
+
+/// Notify connOpener that we no longer need connections. We do not have to do
+/// this -- connOpener would eventually notice on its own, but notifying reduces
+/// waste and speeds up spare connection opening for other transactions (that
+/// could otherwise wait for this transaction to use its spare allowance).
+void
+FwdState::cancelOpening(const char *reason)
+{
+    assert(calls.connector);
+    calls.connector->cancel(reason);
+    calls.connector = nullptr;
+    notifyConnOpener();
+    connOpener.clear();
 }
 
 #if STRICT_ORIGINAL_DST
@@ -301,10 +311,8 @@ FwdState::~FwdState()
 
     entry = NULL;
 
-    if (opening()) {
-        calls.connector->cancel("FwdState destructed");
-        calls.connector = NULL;
-    }
+    if (opening())
+        cancelOpening("~FwdState");
 
     if (Comm::IsConnOpen(serverConn))
         closeServerConnection("~FwdState");
