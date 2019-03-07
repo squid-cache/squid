@@ -143,6 +143,19 @@ public:
      */
     bool int64(int64_t &result, int base = 0, bool allowSign = true, SBuf::size_type limit = SBuf::npos);
 
+    /*
+     * The methods below mimic their counterparts documented above, but they
+     * throw on errors, including InsufficientInput. The field description
+     * parameter is used for error reporting and debugging.
+     */
+
+    /// prefix() wrapper but throws InsufficientInput if input contains
+    /// nothing but the prefix (i.e. if the prefix is not "terminated")
+    SBuf prefix(const char *description, const CharacterSet &tokenChars, SBuf::size_type limit = SBuf::npos);
+
+    /// int64() wrapper but limited to unsigned decimal integers (for now)
+    int64_t udec64(const char *description, SBuf::size_type limit = SBuf::npos);
+
 protected:
     SBuf consume(const SBuf::size_type n);
     SBuf::size_type success(const SBuf::size_type n);

@@ -10,6 +10,7 @@
 #define SQUID_SRC_PARSER_BINARYTOKENIZER_H
 
 #include "ip/forward.h"
+#include "parser/forward.h"
 #include "sbuf/SBuf.h"
 
 namespace Parser
@@ -45,7 +46,7 @@ public:
 class BinaryTokenizer
 {
 public:
-    class InsufficientInput {}; // thrown when a method runs out of data
+    typedef ::Parser::InsufficientInput InsufficientInput;
     typedef uint64_t size_type; // enough for the largest supported offset
 
     BinaryTokenizer();
