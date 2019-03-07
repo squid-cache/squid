@@ -16,7 +16,6 @@
 #include "client_side.h"
 #include "client_side_request.h"
 #include "clients/HttpTunneler.h"
-#include "clients/HttpTunnelerAnswer.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
@@ -213,33 +212,6 @@ private:
 
     /// details of the "last tunneling attempt" failure (if it failed)
     ErrorState *savedError = nullptr;
-
-    // XXX: Find a better way to pass answers than to create a dedicated class
-    // for each service with a callback!
-    /// Gives Http::Tunneler access to Answer in the TunnelStateData callback dialer.
-    class MyAnswerDialer2: public CallDialer, public Http::Tunneler::CbDialer
-    {
-    public:
-        typedef void (TunnelStateData::*Method)(Http::TunnelerAnswer &);
-
-        MyAnswerDialer2(Method method, TunnelStateData *tunnel):
-            method_(method), tunnel_(tunnel), answer_() {}
-
-        /* CallDialer API */
-        virtual bool canDial(AsyncCall &call) { return tunnel_.valid(); }
-        void dial(AsyncCall &call) { ((&(*tunnel_))->*method_)(answer_); }
-        virtual void print(std::ostream &os) const {
-            os << '(' << tunnel_.get() << ", " << answer_ << ')';
-        }
-
-        /* Http::Tunneler::CbDialer API */
-        virtual Http::TunnelerAnswer &answer() { return answer_; }
-
-    private:
-        Method method_;
-        CbcPointer<TunnelStateData> tunnel_;
-        Http::TunnelerAnswer answer_;
-    };
 
     /// resumes operations after the (possibly failed) HTTP CONNECT exchange
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
@@ -1029,7 +1001,7 @@ TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
 
     AsyncCall::Pointer callback = asyncCall(5,4,
                                             "TunnelStateData::tunnelEstablishmentDone",
-                                            MyAnswerDialer2(&TunnelStateData::tunnelEstablishmentDone, this));
+                                            Http::Tunneler::CbDialer<TunnelStateData>(&TunnelStateData::tunnelEstablishmentDone, this));
     const auto tunneler = new Http::Tunneler(callback);
     tunneler->connection = server.conn;
     tunneler->al = al;

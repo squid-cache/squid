@@ -11,12 +11,14 @@
 
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
+#include "clients/forward.h"
+#include "clients/HttpTunnelerAnswer.h"
 #include "CommCalls.h"
 #if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
 #include "http/forward.h"
-#include "clients/forward.h"
+
 
 class HttpReply;
 class ErrorState;
@@ -41,12 +43,25 @@ class Tunneler: virtual public AsyncJob
 
 public:
     /// Callback dialer API to allow Tunneler to set the answer.
-    class CbDialer
+    template <class Initiator>
+    class CbDialer: public CallDialer, public Http::TunnelerAnswer
     {
     public:
-        virtual ~CbDialer() {}
-        /// gives Tunneler access to the in-dialer answer
-        virtual Http::TunnelerAnswer &answer() = 0;
+        // initiator method to receive our answer
+        typedef void (Initiator::*Method)(Http::TunnelerAnswer &);
+
+        CbDialer(Method method, Initiator *initiator): initiator_(initiator), method_(method) {}
+        virtual ~CbDialer() = default;
+
+        /* CallDialer API */
+        bool canDial(AsyncCall &) { return initiator_.valid(); }
+        void dial(AsyncCall &) {((*initiator_).*method_)(*this); }
+        virtual void print(std::ostream &os) const override {
+            os << '(' << static_cast<const Http::TunnelerAnswer&>(*this) << ')';
+        }
+    private:
+        CbcPointer<Initiator> initiator_; ///< object to deliver the answer to
+        Method method_; ///< initiator_ method to call with the answer
     };
 
 public:

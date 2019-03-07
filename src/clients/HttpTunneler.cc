@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "CachePeer.h"
 #include "clients/HttpTunneler.h"
-#include "clients/HttpTunnelerAnswer.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
 #include "errorpage.h"
@@ -34,7 +33,7 @@ Http::Tunneler::Tunneler(AsyncCall::Pointer &aCallback):
     debugs(83, 5, "Http::Tunneler constructed, this=" << (void*)this);
     // detect callers supplying cb dialers that are not our CbDialer
     assert(callback);
-    assert(dynamic_cast<CbDialer*>(callback->getDialer()));
+    assert(dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer()));
 }
 
 Http::Tunneler::~Tunneler()
@@ -53,9 +52,9 @@ Http::TunnelerAnswer &
 Http::Tunneler::answer()
 {
     Must(callback);
-    const auto dialer = dynamic_cast<CbDialer*>(callback->getDialer());
-    Must(dialer);
-    return dialer->answer();
+    const auto answer = dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer());
+    Must(answer);
+    return *answer;
 }
 
 void

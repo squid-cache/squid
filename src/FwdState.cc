@@ -19,7 +19,6 @@
 #include "client_side.h"
 #include "clients/forward.h"
 #include "clients/HttpTunneler.h"
-#include "clients/HttpTunnelerAnswer.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
@@ -101,33 +100,6 @@ private:
     Method method_;
     CbcPointer<FwdState> fwd_;
     Security::EncryptorAnswer answer_;
-};
-
-// XXX: Find a better way to pass answers than to create a dedicated class
-// for each peer connector/tunneler!
-/// Gives Http::Tunneler access to Answer in the FwdState callback dialer.
-class FwdStatePeerAnswerDialer2: public CallDialer, public Http::Tunneler::CbDialer
-{
-public:
-    typedef void (FwdState::*Method)(Http::TunnelerAnswer &);
-
-    FwdStatePeerAnswerDialer2(Method method, FwdState *fwd):
-        method_(method), fwd_(fwd), answer_() {}
-
-    /* CallDialer API */
-    virtual bool canDial(AsyncCall &call) { return fwd_.valid(); }
-    void dial(AsyncCall &call) { ((&(*fwd_))->*method_)(answer_); }
-    virtual void print(std::ostream &os) const {
-        os << '(' << fwd_.get() << ", " << answer_ << ')';
-    }
-
-    /* Http::Tunneler::CbDialer API */
-    virtual Http::TunnelerAnswer &answer() { return answer_; }
-
-private:
-    Method method_;
-    CbcPointer<FwdState> fwd_;
-    Http::TunnelerAnswer answer_;
 };
 
 void
@@ -783,7 +755,7 @@ FwdState::establishTunnelThruProxy()
 {
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::tunnelEstablishmentDone",
-                                            FwdStatePeerAnswerDialer2(&FwdState::tunnelEstablishmentDone, this));
+                                            Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
     const auto tunneler = new Http::Tunneler(callback);
     tunneler->connection = serverConnection();
     tunneler->al = al;
