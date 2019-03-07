@@ -341,8 +341,8 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
  *
  * \retval Comm::OK          success. details parameter filled.
  * \retval Comm::NOMESSAGE   attempted accept() but nothing useful came in.
- * \retval Comm::COMM_ERROR  an outright failure occurred.
  *                           Or this client has too many connections already.
+ * \retval Comm::COMM_ERROR  an outright failure occurred.
  */
 Comm::Flag
 Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
@@ -414,7 +414,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
             PROF_stop(comm_accept);
-            return Comm::COMM_ERROR;
+            return Comm::NOMESSAGE;
         }
     }
 
