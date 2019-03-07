@@ -10,8 +10,8 @@
 #define SQUID_SRC_HTTP_ONE_FORWARD_H
 
 #include "base/RefCount.h"
-#include "sbuf/forward.h"
 #include "parser/forward.h"
+#include "sbuf/forward.h"
 
 namespace Http {
 namespace One {

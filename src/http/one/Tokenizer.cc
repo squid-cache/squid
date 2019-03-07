@@ -104,3 +104,4 @@ Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, const bool http1p0)
     // got the complete token
     return parsedToken;
 }
+
