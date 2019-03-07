@@ -140,7 +140,6 @@ Http::One::TeChunkedParser::parseChunkExtensions(Tokenizer &tok)
     do {
         ParseBws(tok); // Bug 4492: IBM_HTTP_Server sends SP after chunk-size
 
-        assert(!tok.atEnd());
         if (!tok.skip(';'))
             return; // reached the end of extensions (if any)
 
@@ -163,12 +162,10 @@ Http::One::TeChunkedParser::parseOneChunkExtension(Tokenizer &tok)
 {
     ParseBws(tok); // Bug 4492: ICAP servers send SP before chunk-ext-name
 
-    assert(!tok.atEnd());
     const auto extName = tok.prefix("chunk-ext-name", CharacterSet::TCHAR);
 
     ParseBws(tok);
 
-    assert(!tok.atEnd());
     if (!tok.skip('='))
         return; // parsed a valueless chunk-ext
 
