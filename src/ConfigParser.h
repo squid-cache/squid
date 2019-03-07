@@ -9,8 +9,8 @@
 #ifndef SQUID_CONFIGPARSER_H
 #define SQUID_CONFIGPARSER_H
 
-#include "SquidString.h"
 #include "sbuf/forward.h"
+#include "SquidString.h"
 
 #include <queue>
 #include <stack>
