@@ -301,8 +301,6 @@ Comm::TcpAcceptor::acceptOne()
         return;
     }
 
-    newConnDetails->nfConnmark = Ip::Qos::getNfConnmark(newConnDetails, Ip::Qos::dirAccepted);
-
     debugs(5, 5, HERE << "Listener: " << conn <<
            " accepted new connection " << newConnDetails <<
            " handler Subscription: " << theCallSub);
@@ -395,7 +393,27 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     details->local = *gai;
     Ip::Address::FreeAddr(gai);
 
-    if ( Config.client_ip_max_connections >= 0) {
+    // Perform NAT or TPROXY operations to retrieve the real client/dest IP addresses
+    if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
+        debugs(50, DBG_IMPORTANT, "ERROR: NAT/TPROXY lookup failed to locate original IPs on " << details);
+        // Failed.
+        PROF_stop(comm_accept);
+        return Comm::COMM_ERROR;
+    }
+
+#if USE_SQUID_EUI
+    if (Eui::TheConfig.euiLookup) {
+        if (details->remote.isIPv4()) {
+            details->remoteEui48.lookup(details->remote);
+        } else if (details->remote.isIPv6()) {
+            details->remoteEui64.lookup(details->remote);
+        }
+    }
+#endif
+
+    details->nfConnmark = Ip::Qos::getNfConnmark(details, Ip::Qos::dirAccepted);
+
+    if (Config.client_ip_max_connections >= 0) {
         if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
             PROF_stop(comm_accept);
@@ -420,24 +438,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 
     /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
     F->flags.transparent = fd_table[conn->fd].flags.transparent; // XXX: can we remove this line yet?
-
-    // Perform NAT or TPROXY operations to retrieve the real client/dest IP addresses
-    if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
-        debugs(50, DBG_IMPORTANT, "ERROR: NAT/TPROXY lookup failed to locate original IPs on " << details);
-        // Failed.
-        PROF_stop(comm_accept);
-        return Comm::COMM_ERROR;
-    }
-
-#if USE_SQUID_EUI
-    if (Eui::TheConfig.euiLookup) {
-        if (details->remote.isIPv4()) {
-            details->remoteEui48.lookup(details->remote);
-        } else if (details->remote.isIPv6()) {
-            details->remoteEui64.lookup(details->remote);
-        }
-    }
-#endif
 
     PROF_stop(comm_accept);
     return Comm::OK;
