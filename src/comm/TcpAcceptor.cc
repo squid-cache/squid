@@ -282,16 +282,7 @@ Comm::TcpAcceptor::acceptOne()
     ConnectionPointer newConnDetails = new Connection();
     const Comm::Flag flag = oldAccept(newConnDetails);
 
-    /* Check for errors */
-    if (!newConnDetails->isOpen()) {
-
-        if (flag == Comm::NOMESSAGE) {
-            /* register interest again */
-            debugs(5, 5, HERE << "try later: " << conn << " handler Subscription: " << theCallSub);
-            SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
-            return;
-        }
-
+    if (flag == Comm::COMM_ERROR) {
         // A non-recoverable error; notify the caller */
         debugs(5, 5, HERE << "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
         if (intendedForUserConnections())
@@ -301,10 +292,16 @@ Comm::TcpAcceptor::acceptOne()
         return;
     }
 
-    debugs(5, 5, HERE << "Listener: " << conn <<
-           " accepted new connection " << newConnDetails <<
-           " handler Subscription: " << theCallSub);
-    notify(flag, newConnDetails);
+    if (flag == Comm::NOMESSAGE) {
+        /* register interest again */
+        debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
+    } else {
+        debugs(5, 5, "Listener: " << conn <<
+               " accepted new connection " << newConnDetails <<
+               " handler Subscription: " << theCallSub);
+        notify(flag, newConnDetails);
+    }
+
     SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
 }
 
