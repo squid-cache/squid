@@ -1225,12 +1225,12 @@ ConnStateData::prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp)
 #if USE_OPENSSL
     if (!uri) {
         Must(tlsConnectPort);
-        Must(!sslConnectHostOrIp.isEmpty());
+        Must(!tlsConnectHostOrIp.isEmpty());
         SBuf useHost;
         if (!tlsClientSni().isEmpty())
             useHost = tlsClientSni();
         else
-            useHost = sslConnectHostOrIp;
+            useHost = tlsConnectHostOrIp;
 
         const SBuf &scheme = AnyP::UriScheme(transferProtocol.protocol).image();
         const int url_sz = scheme.length() + useHost.length() + hp->requestUri().length() + 32;
@@ -2671,18 +2671,18 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
     }
 
     if (reply.result == Helper::BrokenHelper) {
-        debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply);
+        debugs(33, 5, HERE << "Certificate for " << tlsConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply);
     } else if (!reply.other().hasContent()) {
         debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper returned <NULL> reply.");
     } else {
         Ssl::CrtdMessage reply_message(Ssl::CrtdMessage::REPLY);
         if (reply_message.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK) {
-            debugs(33, 5, HERE << "Reply from ssl_crtd for " << sslConnectHostOrIp << " is incorrect");
+            debugs(33, 5, HERE << "Reply from ssl_crtd for " << tlsConnectHostOrIp << " is incorrect");
         } else {
             if (reply.result != Helper::Okay) {
-                debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
+                debugs(33, 5, HERE << "Certificate for " << tlsConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
-                debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " was successfully recieved from ssl_crtd");
+                debugs(33, 5, HERE << "Certificate for " << tlsConnectHostOrIp << " was successfully recieved from ssl_crtd");
                 if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
                     doPeekAndSpliceStep();
                     auto ssl = fd_table[clientConnection->fd].ssl.get();
@@ -2708,7 +2708,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
 
 void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties)
 {
-    certProperties.commonName =  sslCommonName_.isEmpty() ? sslConnectHostOrIp.c_str() : sslCommonName_.c_str();
+    certProperties.commonName =  sslCommonName_.isEmpty() ? tlsConnectHostOrIp.c_str() : sslCommonName_.c_str();
 
     const bool connectedOk = sslServerBump && sslServerBump->connectedOk();
     if (connectedOk) {
@@ -2734,7 +2734,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
                 // CONNECT request.
                 if (ca->alg == Ssl::algSetCommonName) {
                     if (!param)
-                        param = sslConnectHostOrIp.c_str();
+                        param = tlsConnectHostOrIp.c_str();
                     certProperties.commonName = param;
                     certProperties.setCommonName = true;
                 } else if (ca->alg == Ssl::algSetValidAfter)
@@ -2883,7 +2883,7 @@ void
 ConnStateData::getSslContextDone(Security::ContextPointer &ctx)
 {
     if (port->secure.generateHostCertificates && !ctx) {
-        debugs(33, 2, "Failed to generate TLS context for " << sslConnectHostOrIp);
+        debugs(33, 2, "Failed to generate TLS context for " << tlsConnectHostOrIp);
     }
 
     // If generated ssl context = NULL, try to use static ssl context.
@@ -2926,7 +2926,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     Must(http->request);
     auto &request = http->request;
 
-    sslConnectHostOrIp =  request->url.hostOrIp();
+    tlsConnectHostOrIp =  request->url.hostOrIp();
     tlsConnectPort = request->url.port();
     resetSslCommonName(request->url.host());
 
@@ -3177,9 +3177,9 @@ ConnStateData::httpsPeeked(PinnedIdleContext pic)
 
     if (Comm::IsConnOpen(pic.connection)) {
         notePinnedConnectionBecameIdle(pic);
-        debugs(33, 5, HERE << "bumped HTTPS server: " << sslConnectHostOrIp);
+        debugs(33, 5, HERE << "bumped HTTPS server: " << tlsConnectHostOrIp);
     } else
-        debugs(33, 5, HERE << "Error while bumping: " << sslConnectHostOrIp);
+        debugs(33, 5, HERE << "Error while bumping: " << tlsConnectHostOrIp);
 
     getSslContextStart();
 }
@@ -3201,8 +3201,8 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::
         connectHost = cause->url.hostOrIp();
         connectPort = cause->url.port();
 #if USE_OPENSSL
-    } else if (!sslConnectHostOrIp.isEmpty()) {
-        connectHost = sslConnectHostOrIp;
+    } else if (!tlsConnectHostOrIp.isEmpty()) {
+        connectHost = tlsConnectHostOrIp;
         connectPort = tlsConnectPort;
 #endif
     } else if (transparent()) {

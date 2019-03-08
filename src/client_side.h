@@ -402,7 +402,7 @@ private:
     uint64_t parsedBumpedRequestCount;
 
     /// The SSL server host name appears in CONNECT request or the server ip address for the intercepted requests
-    SBuf sslConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request
+    SBuf tlsConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request
     unsigned short tlsConnectPort; ///< The TLS server port number as passed in the CONNECT request
     SBuf sslCommonName_; ///< CN name for SSL certificate generation
 
