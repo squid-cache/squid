@@ -78,7 +78,7 @@ Http::One::Server::parseOneRequest()
     // a) do not have one already
     // b) have completed the previous request parsing already
     if (!parser_ || !parser_->needsMoreData())
-        parser_ = new Http1::RequestParser(mayTunnelUnsupportedProto());
+        parser_ = new Http1::RequestParser(preserveDataForTunnellingUnsupportedProto());
 
     /* Process request */
     Http::Stream *context = parseHttpRequest(this, parser_);

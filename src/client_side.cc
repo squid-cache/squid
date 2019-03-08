@@ -1300,7 +1300,10 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
             return NULL;
         }
 
-        if (csd->mayTunnelUnsupportedProto()) {
+        if (csd->ableToTunnelUnsupportedProto()) {
+            // The preserveDataForTunnelingUnsupportedProto is already checked
+            // inside Http::One::Server::parseOneRequest and the hp parser
+            // must preserved parsed data.
             csd->preservedClientData = hp->parsed();
             csd->preservedClientData.append(csd->inBuf);
         }
@@ -1556,7 +1559,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
 bool
 clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpRequest::Pointer &request, const HttpRequestMethod& method, err_type requestError)
 {
-    if (conn->mayTunnelUnsupportedProto()) {
+    if (conn->ableToTunnelUnsupportedProto()) {
         ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, request.getRaw(), nullptr);
         checklist.al = (context && context->http) ? context->http->al : nullptr;
         checklist.requestErrorType = requestError;
@@ -2145,7 +2148,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     if (!Comm::IsConnOpen(io.conn))
         return;
 
-    if (mayTunnelUnsupportedProto() && !receivedFirstByte_) {
+    if (!receivedFirstByte_ && preserveDataForTunnellingUnsupportedProto()) {
         Http::StreamPointer context = pipeline.front();
         Must(context && context->http);
         HttpRequest::Pointer request = context->http->request;
@@ -2990,6 +2993,7 @@ ConnStateData::parseTlsHandshake()
     // client data may be needed for splicing and for
     // tunneling unsupportedProtocol after an error
     preservedClientData = inBuf;
+    ableToTunnelUnsupportedProto_ = true;
 
     // Even if the parser failed, each TLS detail should either be set
     // correctly or still be "unknown"; copying unknown detail is a no-op.
@@ -3985,23 +3989,25 @@ ConnStateData::checkLogging()
 }
 
 bool
-ConnStateData::mayTunnelUnsupportedProto()
+ConnStateData::preserveDataForTunnellingUnsupportedProto()
 {
-    if (!Config.accessList.on_unsupported_protocol)
-        return false;
-
 #if USE_OPENSSL
     // Tunneling may be possible when parsing the TLS client handshake
     // and when parsing the first HTTP request on a bumped connection.
-    if (sslBumpMode != Ssl::bumpEnd && parsedBumpedRequestCount <= 1)
-        return true;
+    bool firstBumpedRequest = sslBumpMode != Ssl::bumpEnd && parsedBumpedRequestCount <= 1;
 #endif
 
     // the first request in a connection to a plain intercepting port
-    if (transparent() && pipeline.nrequests <= 1)
-        return true;
+    bool firstTransparentPlainRequest = !port->secure.encryptTransport && transparent() && pipeline.nrequests <= 1;
+    ableToTunnelUnsupportedProto_ = Config.accessList.on_unsupported_protocol &&
+                                    (
+#if USE_OPENSSL
+                                     firstBumpedRequest ||
+#endif
+                                     firstTransparentPlainRequest
+                                    );
 
-    return false;
+    return ableToTunnelUnsupportedProto_;
 }
 
 NotePairs::Pointer

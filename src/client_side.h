@@ -301,8 +301,12 @@ public:
     /// generates and sends to tunnel.cc a fake request with a given payload
     bool initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload);
 
+    /// whether we should preserve incoming data for a future possible
+    /// tunneling of unsupported protocol decision
+    bool preserveDataForTunnellingUnsupportedProto();
+
     /// whether tunneling of unsupported protocol is allowed for this connection
-    bool mayTunnelUnsupportedProto();
+    bool ableToTunnelUnsupportedProto() const {return ableToTunnelUnsupportedProto_;}
 
     /// build a fake http request
     ClientHttpRequest *buildFakeRequest(Http::MethodType const method, SBuf &useHost, unsigned short usePort, const SBuf &payload);
@@ -423,6 +427,8 @@ private:
     /// If set, are propagated to the current and all future master transactions
     /// on the connection.
     NotePairs::Pointer theNotes;
+
+    bool ableToTunnelUnsupportedProto_;
 };
 
 const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end = NULL);
