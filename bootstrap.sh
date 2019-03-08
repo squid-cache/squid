@@ -93,6 +93,11 @@ then
   LIBTOOL_BIN="glibtool"
 else
   LIBTOOL_BIN="libtool"
+  lsb_release_id="$(lsb_release -si)"
+  if [ -n "${lsb_release_id}" ] \
+         && [ "${lsb_release_id}" = "Debian" ]; then
+      LIBTOOL_BIN="libtoolize"
+  fi
 fi
 
 # Adjust paths of required autool packages
@@ -138,7 +143,7 @@ do
 	    # Bootstrap the autotool subsystems
 	    bootstrap aclocal$amver $acincludeflag
 	    bootstrap autoheader$acver
-	    bootstrap_libtoolize ${LIBTOOL_BIN}ize${ltver}
+	    bootstrap_libtoolize ${LIBTOOL_BIN}${ltver}
 	    bootstrap automake$amver --foreign --add-missing --copy -f
 	    bootstrap autoconf$acver --force
 	fi ); then
