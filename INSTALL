@@ -8,6 +8,7 @@
 
 To build and install the Squid Cache, type:
 
+        % ./bootstrap.sh
 	% ./configure --prefix=/usr/local/squid
         % make all
         % make install
