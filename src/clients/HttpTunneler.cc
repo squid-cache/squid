@@ -52,9 +52,9 @@ Http::TunnelerAnswer &
 Http::Tunneler::answer()
 {
     Must(callback);
-    const auto answer = dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer());
-    Must(answer);
-    return *answer;
+    const auto tunnelerAnswer = dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer());
+    Must(tunnelerAnswer);
+    return *tunnelerAnswer;
 }
 
 void
