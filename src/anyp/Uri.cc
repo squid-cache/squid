@@ -63,8 +63,10 @@ SBuf
 AnyP::Uri::hostOrIp() const
 {
     static char ip[MAX_IPSTRLEN];
-    SBuf hostOrIp_(hostIsNumeric() ? hostIP().toStr(ip, sizeof(ip)) : host());
-    return hostOrIp_;
+    if (hostIsNumeric())
+        return  SBuf(hostIP().toStr(ip, sizeof(ip)));
+    else
+        return SBuf(host());
 }
 
 const SBuf &
