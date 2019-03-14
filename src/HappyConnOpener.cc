@@ -83,8 +83,13 @@ private:
 
 std::ostream &operator <<(std::ostream &os, const HappyConnOpenerAnswer &answer)
 {
-    // TODO: Print error. Do not print conn/reused for nil conn.
-    return os << answer.conn << ", " << (answer.reused ? "reused" : "new");
+    if (answer.error.set())
+        os << "bad ";
+    if (answer.conn)
+        os << (answer.reused ? "reused " : "new ") << answer.conn;
+    if (answer.n_tries != 1)
+        os << " after " << answer.n_tries;
+    return os;
 }
 
 /// enforces happy_eyeballs_connect_timeout
