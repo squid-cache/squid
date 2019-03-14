@@ -560,7 +560,6 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     lastFailedConnection = params.conn;
     lastError = makeError(ERR_CONNECT_FAIL);
     lastError->xerrno = params.xerrno;
-    lastError->port = params.conn->remote.port(); // TODO: Needed?
 
     if (spareWaiting)
         updateSpareWaitAfterPrimeFailure();
