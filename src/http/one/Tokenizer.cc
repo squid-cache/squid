@@ -8,35 +8,18 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "http/one/Parser.h"
 #include "http/one/Tokenizer.h"
+#include "parser/Tokenizer.h"
+#include "sbuf/Stream.h"
 
-bool
-Http::One::Tokenizer::quotedString(SBuf &returnedToken, const bool http1p0)
+/// Extracts quoted-string after the caller removes the initial '"'.
+/// \param http1p0 whether to prohibit \-escaped characters in quoted strings
+/// \throws InsufficientInput when input can be a token _prefix_
+/// \returns extracted quoted string (without quotes and with chars unescaped)
+static SBuf
+parseQuotedStringSuffix(Parser::Tokenizer &tok, const bool http1p0)
 {
-    checkpoint();
-
-    if (!skip('"'))
-        return false;
-
-    return qdText(returnedToken, http1p0);
-}
-
-bool
-Http::One::Tokenizer::quotedStringOrToken(SBuf &returnedToken, const bool http1p0)
-{
-    checkpoint();
-
-    if (!skip('"'))
-        return prefix(returnedToken, CharacterSet::TCHAR);
-
-    return qdText(returnedToken, http1p0);
-}
-
-bool
-Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
-{
-    // the initial DQUOTE has been skipped by the caller
-
     /*
      * RFC 1945 - defines qdtext:
      *   inclusive of LWS (which includes CR and LF)
@@ -61,12 +44,17 @@ Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
     // best we can do is a conditional reference since http1p0 value may change per-client
     const CharacterSet &tokenChars = (http1p0 ? qdtext1p0 : qdtext1p1);
 
-    for (;;) {
-        SBuf::size_type prefixLen = buf().findFirstNotOf(tokenChars);
-        returnedToken.append(consume(prefixLen));
+    SBuf parsedToken;
 
-        // HTTP/1.1 allows quoted-pair, HTTP/1.0 does not
-        if (!http1p0 && skip('\\')) {
+    while (!tok.atEnd()) {
+        SBuf qdText;
+        if (tok.prefix(qdText, tokenChars))
+            parsedToken.append(qdText);
+
+        if (!http1p0 && tok.skip('\\')) { // HTTP/1.1 allows quoted-pair, HTTP/1.0 does not
+            if (tok.atEnd())
+                break;
+
             /* RFC 7230 section 3.2.6
              *
              * The backslash octet ("\") can be used as a single-octet quoting
@@ -78,32 +66,42 @@ Http::One::Tokenizer::qdText(SBuf &returnedToken, const bool http1p0)
              */
             static const CharacterSet qPairChars = CharacterSet::HTAB + CharacterSet::SP + CharacterSet::VCHAR + CharacterSet::OBSTEXT;
             SBuf escaped;
-            if (!prefix(escaped, qPairChars, 1)) {
-                returnedToken.clear();
-                restoreLastCheckpoint();
-                return false;
-            }
-            returnedToken.append(escaped);
+            if (!tok.prefix(escaped, qPairChars, 1))
+                throw TexcHere("invalid escaped character in quoted-pair");
+
+            parsedToken.append(escaped);
             continue;
-
-        } else if (skip('"')) {
-            break; // done
-
-        } else if (atEnd()) {
-            // need more data
-            returnedToken.clear();
-            restoreLastCheckpoint();
-            return false;
         }
 
-        // else, we have an error
-        debugs(24, 8, "invalid bytes for set " << tokenChars.name);
-        returnedToken.clear();
-        restoreLastCheckpoint();
-        return false;
+        if (tok.skip('"'))
+            return parsedToken; // may be empty
+
+        if (tok.atEnd())
+            break;
+
+        throw TexcHere(ToSBuf("invalid bytes for set ", tokenChars.name));
     }
 
-    // found the whole string
-    return true;
+    throw Http::One::InsufficientInput();
+}
+
+SBuf
+Http::One::tokenOrQuotedString(Parser::Tokenizer &tok, const bool http1p0)
+{
+    if (tok.skip('"'))
+        return parseQuotedStringSuffix(tok, http1p0);
+
+    if (tok.atEnd())
+        throw InsufficientInput();
+
+    SBuf parsedToken;
+    if (!tok.prefix(parsedToken, CharacterSet::TCHAR))
+        throw TexcHere("invalid input while expecting an HTTP token");
+
+    if (tok.atEnd())
+        throw InsufficientInput();
+
+    // got the complete token
+    return parsedToken;
 }
 

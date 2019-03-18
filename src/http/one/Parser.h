@@ -12,6 +12,7 @@
 #include "anyp/ProtocolVersion.h"
 #include "http/one/forward.h"
 #include "http/StatusCode.h"
+#include "parser/forward.h"
 #include "sbuf/SBuf.h"
 
 namespace Http {
@@ -40,6 +41,7 @@ class Parser : public RefCountable
 {
 public:
     typedef SBuf::size_type size_type;
+    typedef ::Parser::Tokenizer Tokenizer;
 
     Parser() = default;
     Parser(const Parser &) = default;
@@ -122,11 +124,11 @@ protected:
      * detect and skip the CRLF or (if tolerant) LF line terminator
      * consume from the tokenizer.
      *
-     * throws if non-terminator is detected.
+     * \throws exception on bad or InsuffientInput.
      * \retval true only if line terminator found.
      * \retval false incomplete or missing line terminator, need more data.
      */
-    bool skipLineTerminator(Http1::Tokenizer &tok) const;
+    void skipLineTerminator(Tokenizer &) const;
 
     /**
      * Scan to find the mime headers block for current message.
@@ -163,8 +165,8 @@ private:
 };
 
 /// skips and, if needed, warns about RFC 7230 BWS ("bad" whitespace)
-/// \returns true (always; unlike all the skip*() functions)
-bool ParseBws(Tokenizer &tok);
+/// \throws InsufficientInput when the end of BWS cannot be confirmed
+void ParseBws(Parser::Tokenizer &);
 
 /// the right debugs() level for logging HTTP violation messages
 int ErrorLevel();
