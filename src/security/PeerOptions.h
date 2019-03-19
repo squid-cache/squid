@@ -56,6 +56,9 @@ public:
     /// setup the CRL details for the given context
     void updateContextCrl(Security::ContextPointer &);
 
+    /// decide which CAs to trust
+    void updateContextTrust(Security::ContextPointer &);
+
     /// setup any library-specific options that can be set for the given session
     void updateSessionOptions(Security::SessionPointer &);
 
