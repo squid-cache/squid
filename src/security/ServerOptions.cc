@@ -439,6 +439,7 @@ Security::ServerOptions::updateContextClientCa(Security::ContextPointer &ctx)
         }
 
         updateContextCrl(ctx);
+        updateContextTrust(ctx);
 
     } else {
         debugs(83, 9, "Not requiring any client certificates");
