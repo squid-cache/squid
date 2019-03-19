@@ -1670,7 +1670,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     if (!flags.peering)
         return;
 
-    // our HTTP headers are not for the peer we tunnel this request through
+    // This request is going "through" rather than "to" our _peer.
     if (flags.tunneling)
         return;
 

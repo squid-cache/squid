@@ -2939,7 +2939,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
         sslServerBump = new Ssl::ServerBump(http);
     } else if (bumpServerMode == Ssl::bumpPeek || bumpServerMode == Ssl::bumpStare) {
         request->flags.sslPeek = true;
-        sslServerBump = new Ssl::ServerBump(http, NULL, bumpServerMode);
+        sslServerBump = new Ssl::ServerBump(http, nullptr, bumpServerMode);
     }
 
     // commSetConnTimeout() was called for this request before we switched.

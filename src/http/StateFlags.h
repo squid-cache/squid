@@ -30,9 +30,9 @@ public:
 
     /// Whether the next HTTP hop is an origin server, including an
     /// originserver cache_peer. The three possible cases are:
-    /// 1. a direct TCP/HTTP connection to an origin server,
-    /// 2. a direct TCP/HTTP connection to an originserver cache_peer, and
-    /// 3. a CONNECT tunnel through a [non-originserver] cache_peer [to an origin server]
+    /// -# a direct TCP/HTTP connection to an origin server,
+    /// -# a direct TCP/HTTP connection to an originserver cache_peer, and
+    /// -# a CONNECT tunnel through a [non-originserver] cache_peer [to an origin server]
     /// Thus, toOrigin is false only when the HTTP request is sent over
     ///    a direct TCP/HTTP connection to a non-originserver cache_peer.
     bool toOrigin = false;

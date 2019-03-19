@@ -32,7 +32,7 @@ class ServerBump
     CBDATA_CLASS(ServerBump);
 
 public:
-    explicit ServerBump(ClientHttpRequest *http, StoreEntry *e = NULL, Ssl::BumpMode mode = Ssl::bumpServerFirst);
+    explicit ServerBump(ClientHttpRequest *http, StoreEntry *e = nullptr, Ssl::BumpMode mode = Ssl::bumpServerFirst);
     ~ServerBump();
     void attachServerSession(const Security::SessionPointer &); ///< Sets the server TLS session object
     const Security::CertErrors *sslErrors() const; ///< SSL [certificate validation] errors

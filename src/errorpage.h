@@ -78,7 +78,6 @@ typedef void ERCB(int fd, void *, size_t);
 class MemBuf;
 class StoreEntry;
 class wordlist;
-typedef RefCount<HttpReply> HttpReplyPointer;
 
 namespace ErrorPage {
 

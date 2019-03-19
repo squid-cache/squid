@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
+#include "clients/HttpTunnelerAnswer.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
-#include "clients/HttpTunnelerAnswer.h"
 
 Http::TunnelerAnswer::~TunnelerAnswer()
 {

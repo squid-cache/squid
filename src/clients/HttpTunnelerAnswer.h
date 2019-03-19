@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,14 +18,14 @@ class ErrorState;
 
 namespace Http {
 
-// Three mutually exclusive answers are possible:
-//
-// * Squid-generated error object (TunnelerAnswer::squidError);
-// * peer-generated error message (TunnelerAnswer::peerError);
-// * successful tunnel establishment (none of the above are present).
-
-// HTTP CONNECT tunnel setup results (supplied via a callback). The tunnel
-// through the peer was established if and only if the error member is nil.
+/// Three mutually exclusive answers are possible:
+///
+/// * Squid-generated error object (TunnelerAnswer::squidError);
+/// * peer-generated error message (TunnelerAnswer::peerError);
+/// * successful tunnel establishment (none of the above are present).
+///
+/// HTTP CONNECT tunnel setup results (supplied via a callback). The tunnel
+/// through the peer was established if and only if the error member is nil.
 class TunnelerAnswer
 {
 public:
@@ -34,7 +34,8 @@ public:
 
     bool positive() const { return !squidError; }
 
-    // answer recipients must clear the error member in order to keep its info
+    // Destructor will erase squidError if it is still set. Answer recipients
+    // must clear this member to keep its info.
     // XXX: We should refcount ErrorState instead of cbdata-protecting it.
     CbcPointer<ErrorState> squidError; ///< problem details (or nil)
 

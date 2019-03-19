@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -285,8 +285,8 @@ Http::Tunneler::handleResponse(const bool eof)
     futureAnswer.peerResponseStatus = rep->sline.status();
     request->hier.peer_reply_status = rep->sline.status();
 
-    debugs(11, 2, "HTTP Server " << connection);
-    debugs(11, 2, "HTTP Server RESPONSE:\n---------\n" <<
+    debugs(11, 2, "Tunnel Server " << connection);
+    debugs(11, 2, "Tunnel Server RESPONSE:\n---------\n" <<
            Raw(nullptr, readBuf.rawContent(), rep->hdr_sz).minLevel(2).gap(false) <<
            "----------");
 
