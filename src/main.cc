@@ -1151,8 +1151,6 @@ mainInitialize(void)
 
     _db_init(Debug::cache_log, Debug::debugOptions);
 
-    fd_open(fileno(debug_log), FD_LOG, Debug::cache_log);
-
     debugs(1, DBG_CRITICAL, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
     debugs(1, DBG_CRITICAL, "Service Name: " << service_name);
 
