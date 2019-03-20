@@ -11,6 +11,8 @@
 
 #include "sbuf/SBuf.h"
 
+#include <map>
+
 // https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt
 namespace ProxyProtocol {
 namespace Two {
