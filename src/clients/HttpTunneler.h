@@ -63,19 +63,12 @@ public:
     };
 
 public:
-    explicit Tunneler(AsyncCall::Pointer &aCallback);
+explicit Tunneler(const Comm::ConnectionPointer &conn, const HttpRequestPointer &req, AsyncCall::Pointer &aCallback, time_t timeout, const AccessLogEntryPointer &alp);
     Tunneler(const Tunneler &) = delete;
     Tunneler &operator =(const Tunneler &) = delete;
 
-    /* configuration; too many fields to use constructor parameters */
-    HttpRequestPointer request; ///< peer connection trigger or cause
-    Comm::ConnectionPointer connection; ///< TCP connection to the cache_peer
-    AccessLogEntryPointer al; ///< info for the future access.log entry
-    AsyncCall::Pointer callback; ///< we call this with the results
-    SBuf url; ///< request-target for the CONNECT request
-    time_t lifetimeLimit; ///< do not run longer than this
 #if USE_DELAY_POOLS
-    DelayId delayId;
+    void setDelayId(DelayId delay_id);
 #endif
 
 protected:
@@ -105,6 +98,16 @@ private:
     AsyncCall::Pointer writer; ///< called when the request has been written
     AsyncCall::Pointer reader; ///< called when the response should be read
     AsyncCall::Pointer closer; ///< called when the connection is being closed
+
+    Comm::ConnectionPointer connection; ///< TCP connection to the cache_peer
+    HttpRequestPointer request; ///< peer connection trigger or cause
+    AsyncCall::Pointer callback; ///< we call this with the results
+    SBuf url; ///< request-target for the CONNECT request
+    time_t lifetimeLimit; ///< do not run longer than this
+    AccessLogEntryPointer al; ///< info for the future access.log entry
+#if USE_DELAY_POOLS
+    DelayId delayId;
+#endif
 
     SBuf readBuf; ///< either unparsed response or post-response bytes
     /// Parser being used at present to parse the HTTP peer response.

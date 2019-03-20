@@ -1002,14 +1002,9 @@ TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
     AsyncCall::Pointer callback = asyncCall(5,4,
                                             "TunnelStateData::tunnelEstablishmentDone",
                                             Http::Tunneler::CbDialer<TunnelStateData>(&TunnelStateData::tunnelEstablishmentDone, this));
-    const auto tunneler = new Http::Tunneler(callback);
-    tunneler->connection = server.conn;
-    tunneler->al = al;
-    tunneler->request = request;
-    tunneler->url = url;
-    tunneler->lifetimeLimit = Config.Timeout.lifetime;
+    const auto tunneler = new Http::Tunneler(server.conn, request, callback, Config.Timeout.lifetime, al);
 #if USE_DELAY_POOLS
-    tunneler->delayId = server.delayId;
+    tunneler->setDelayId(server.delayId);
 #endif
     AsyncJob::Start(tunneler);
     waitingForConnectExchange = true;

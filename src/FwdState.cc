@@ -756,16 +756,12 @@ FwdState::establishTunnelThruProxy()
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::tunnelEstablishmentDone",
                                             Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
-    const auto tunneler = new Http::Tunneler(callback);
-    tunneler->connection = serverConnection();
-    tunneler->al = al;
-    tunneler->request = request;
-    tunneler->url = request->url.authority();
-    tunneler->lifetimeLimit = connectingTimeout(serverDestinations[0]);
+    HttpRequest::Pointer requestPointer = request;
+    const auto tunneler = new Http::Tunneler(serverConnection(), requestPointer, callback, connectingTimeout(serverConnection()), al);
 #if USE_DELAY_POOLS
     Must(serverConnection()->getPeer());
     if (!serverConnection()->getPeer()->options.no_delay)
-        tunneler->delayId = entry->mem_obj->mostBytesAllowed();
+        tunneler->setDelayId(entry->mem_obj->mostBytesAllowed());
 #endif
     AsyncJob::Start(tunneler);
     // and wait for the tunnelEstablishmentDone() call

@@ -22,23 +22,35 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Http, Tunneler);
 
-Http::Tunneler::Tunneler(AsyncCall::Pointer &aCallback):
+Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, AsyncCall::Pointer &aCallback, time_t timeout, const AccessLogEntryPointer &alp):
     AsyncJob("Http::Tunneler"),
+    connection(conn),
+    request(req),
     callback(aCallback),
-    lifetimeLimit(0),
+    lifetimeLimit(timeout),
+    al(alp),
     startTime(squid_curtime),
     requestWritten(false),
     tunnelEstablished(false)
 {
     debugs(83, 5, "Http::Tunneler constructed, this=" << (void*)this);
     // detect callers supplying cb dialers that are not our CbDialer
+    assert(request);
+    assert(connection);
     assert(callback);
     assert(dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer()));
+    url = request->url.authority();
 }
 
 Http::Tunneler::~Tunneler()
 {
     debugs(83, 5, "Http::Tunneler destructed, this=" << (void*)this);
+}
+
+void
+Http::Tunneler::setDelayId(DelayId delay_id)
+{
+    delayId = delay_id;
 }
 
 bool
@@ -62,10 +74,7 @@ Http::Tunneler::start()
 {
     AsyncJob::start();
 
-    Must(request);
-    Must(connection);
     Must(al);
-    Must(callback);
     Must(url.length());
     Must(lifetimeLimit >= 0);
 
