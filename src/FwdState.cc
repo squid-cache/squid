@@ -735,12 +735,16 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
     assert(!request->flags.pinned);
 
     if (const CachePeer *peer = serverConnection()->getPeer()) {
+        // Assume that it is only possible for the client-first from the
+        // bumping modes to try connect to a remote server. The bumped
+        // requests with other modes are using pinned connections or fails.
+        const bool clientFirstBump = request->flags.sslBumped;
         // We need a CONNECT tunnel to send encrypted traffic through a proxy,
         // but we do not support TLS inside TLS, so we exclude HTTPS proxies.
         const bool originWantsEncryptedTraffic =
             request->method == Http::METHOD_CONNECT ||
             request->flags.sslPeek ||
-            request->url.getScheme() == AnyP::PROTO_HTTPS; // 'GET https://...' or bump client-first
+            clientFirstBump;
         if (originWantsEncryptedTraffic && // the "encrypted traffic" part
                 !peer->options.originserver && // the "through a proxy" part
                 !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
@@ -815,12 +819,14 @@ FwdState::secureConnectionToPeerIfNeeded()
     const bool userWillTlsToPeerForUs = p && p->options.originserver &&
                                         request->method == Http::METHOD_CONNECT;
     const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
+    const bool clientFirstBump = request->flags.sslBumped; // client-first (already) bumped connection
+    const bool needsBump = request->flags.sslPeek || clientFirstBump;
 
-    // 'GET https://...' requests or bump client-first, excluding HTTPS
-    // proxies (TLS inside TLS is not supported yet)
-    const bool needTlsToOrigin = !peerWantsTls && request->url.getScheme() == AnyP::PROTO_HTTPS;
+    // 'GET https://...' requests. If a peer is used the request is forwarded
+    // as is
+    const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS && !clientFirstBump;
 
-    if (needTlsToPeer || needTlsToOrigin || request->flags.sslPeek) {
+    if (needTlsToPeer || needTlsToOrigin || needsBump) {
         HttpRequest::Pointer requestPointer = request;
         AsyncCall::Pointer callback = asyncCall(17,4,
                                                 "FwdState::ConnectedToPeer",

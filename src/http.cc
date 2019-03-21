@@ -99,14 +99,9 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     if (fwd->serverConnection() != NULL)
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
-    // XXX: FwdState::connectDone() uses request->flags.sslPeek instead
-    const auto https =
-        request->flags.sslBumped || // HTTP request inside a bumped connection
-        request->url.getScheme() == AnyP::PROTO_HTTPS; // GET https://...
-
     flags.peering =  _peer;
-    flags.tunneling = (_peer && https);
-    flags.toOrigin = (!_peer || _peer->options.originserver || https);
+    flags.tunneling = (_peer && request->flags.sslBumped);
+    flags.toOrigin = (!_peer || _peer->options.originserver || request->flags.sslBumped);
 
     if (_peer) {
         /*
