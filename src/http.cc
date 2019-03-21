@@ -2242,7 +2242,8 @@ HttpStateData::sendRequest()
     else if (!Config.onoff.server_pconns)
         flags.keepalive = false;
     else if (flags.tunneling)
-        flags.keepalive = true;
+        // tunneled non pinned bumped requests must not keepalive
+        flags.keepalive = !request->flags.sslBumped;
     else if (_peer == NULL)
         flags.keepalive = true;
     else if (_peer->stats.n_keepalives_sent < 10)

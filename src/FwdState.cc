@@ -993,11 +993,12 @@ FwdState::connectStart()
     if (!serverDestinations[0]->getPeer())
         host = request->url.host();
 
+    bool bumpThroughPeer = request->flags.sslBumped && serverDestinations[0]->getPeer();
     Comm::ConnectionPointer temp;
     // Avoid pconns after races so that the same client does not suffer twice.
     // This does not increase the total number of connections because we just
     // closed the connection that failed the race. And re-pinning assumes this.
-    if (pconnRace != raceHappened)
+    if (pconnRace != raceHappened && !bumpThroughPeer)
         temp = pconnPop(serverDestinations[0], host);
 
     const bool openedPconn = Comm::IsConnOpen(temp);
