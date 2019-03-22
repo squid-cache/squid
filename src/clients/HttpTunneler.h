@@ -63,7 +63,7 @@ public:
     };
 
 public:
-explicit Tunneler(const Comm::ConnectionPointer &conn, const HttpRequestPointer &req, AsyncCall::Pointer &aCallback, time_t timeout, const AccessLogEntryPointer &alp);
+    Tunneler(const Comm::ConnectionPointer &conn, const HttpRequestPointer &req, AsyncCall::Pointer &aCallback, time_t timeout, const AccessLogEntryPointer &alp);
     Tunneler(const Tunneler &) = delete;
     Tunneler &operator =(const Tunneler &) = delete;
 
