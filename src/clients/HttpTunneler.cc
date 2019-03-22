@@ -47,12 +47,6 @@ Http::Tunneler::~Tunneler()
     debugs(83, 5, "Http::Tunneler destructed, this=" << (void*)this);
 }
 
-void
-Http::Tunneler::setDelayId(DelayId delay_id)
-{
-    delayId = delay_id;
-}
-
 bool
 Http::Tunneler::doneAll() const
 {

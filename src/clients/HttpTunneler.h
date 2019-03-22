@@ -68,7 +68,7 @@ explicit Tunneler(const Comm::ConnectionPointer &conn, const HttpRequestPointer 
     Tunneler &operator =(const Tunneler &) = delete;
 
 #if USE_DELAY_POOLS
-    void setDelayId(DelayId delay_id);
+    void setDelayId(DelayId delay_id) {delayId = delay_id;}
 #endif
 
 protected:
