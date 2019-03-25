@@ -32,7 +32,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 bool Comm::ConnOpener::doneAll() const STUB_RETVAL(false)
 void Comm::ConnOpener::start() STUB
 void Comm::ConnOpener::swanSong() STUB
-Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &, time_t) : AsyncJob("STUB Comm::ConnOpener") STUB
+Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &, const AsyncCall::Pointer &, time_t) : AsyncJob("STUB Comm::ConnOpener") STUB
     Comm::ConnOpener::~ConnOpener() STUB
     void Comm::ConnOpener::setHost(const char *) STUB
     const char * Comm::ConnOpener::getHost() const STUB_RETVAL(NULL)

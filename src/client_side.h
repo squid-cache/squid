@@ -247,7 +247,7 @@ public:
     /// Proccess response from ssl_crtd.
     void sslCrtdHandleReply(const Helper::Reply &reply);
 
-    void switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode);
+    void switchToHttps(ClientHttpRequest *, Ssl::BumpMode bumpServerMode);
     void parseTlsHandshake();
     bool switchedToHttps() const { return switchedToHttps_; }
     Ssl::ServerBump *serverBump() {return sslServerBump;}

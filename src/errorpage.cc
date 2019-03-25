@@ -671,15 +671,35 @@ ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const Acce
     return new ErrorState(type, status, request.getRaw(), ale);
 }
 
-ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, const AccessLogEntry::Pointer &anAle) :
+ErrorState::ErrorState(err_type t) :
     type(t),
     page_id(t),
-    httpStatus(status),
-    callback(nullptr),
-    ale(anAle)
+    callback(nullptr)
+{
+}
+
+ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, const AccessLogEntry::Pointer &anAle) :
+    ErrorState(t)
 {
     if (page_id >= ERR_MAX && ErrorDynamicPages[page_id - ERR_MAX]->page_redirect != Http::scNone)
         httpStatus = ErrorDynamicPages[page_id - ERR_MAX]->page_redirect;
+    else
+        httpStatus = status;
+
+    if (req) {
+        request = req;
+        src_addr = req->client_addr;
+    }
+
+    ale = anAle;
+}
+
+ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply) :
+    ErrorState(ERR_RELAY_REMOTE)
+{
+    Must(errorReply);
+    response_ = errorReply;
+    httpStatus = errorReply->sline.status();
 
     if (req) {
         request = req;
@@ -1260,6 +1280,9 @@ ErrorState::validate()
 HttpReply *
 ErrorState::BuildHttpReply()
 {
+    if (response_)
+        return response_.getRaw();
+
     HttpReply *rep = new HttpReply;
     const char *name = errorPageName(page_id);
     /* no LMT for error pages; error pages expire immediately */

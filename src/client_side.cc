@@ -2913,9 +2913,11 @@ ConnStateData::getSslContextDone(Security::ContextPointer &ctx)
 }
 
 void
-ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
+ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMode)
 {
     assert(!switchedToHttps_);
+    Must(http->request);
+    auto &request = http->request;
 
     sslConnectHostOrIp = request->url.host();
     tlsConnectPort = request->url.port();
@@ -2934,10 +2936,10 @@ ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
     // without even peeking at the origin server certificate.
     if (bumpServerMode == Ssl::bumpServerFirst && !sslServerBump) {
         request->flags.sslPeek = true;
-        sslServerBump = new Ssl::ServerBump(request);
+        sslServerBump = new Ssl::ServerBump(http);
     } else if (bumpServerMode == Ssl::bumpPeek || bumpServerMode == Ssl::bumpStare) {
         request->flags.sslPeek = true;
-        sslServerBump = new Ssl::ServerBump(request, NULL, bumpServerMode);
+        sslServerBump = new Ssl::ServerBump(http, nullptr, bumpServerMode);
     }
 
     // commSetConnTimeout() was called for this request before we switched.
@@ -3010,8 +3012,10 @@ ConnStateData::parseTlsHandshake()
         getSslContextStart();
         return;
     } else if (sslServerBump->act.step1 == Ssl::bumpServerFirst) {
+        Http::StreamPointer context = pipeline.front();
+        ClientHttpRequest *http = context ? context->http : nullptr;
         // will call httpsPeeked() with certificate and connection, eventually
-        FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw());
+        FwdState::Start(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw(), http ? http->al : nullptr);
     } else {
         Must(sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare);
         startPeekAndSplice();

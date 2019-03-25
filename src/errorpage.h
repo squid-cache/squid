@@ -91,8 +91,13 @@ class ErrorState
     CBDATA_CLASS(ErrorState);
 
 public:
+    /// creates an error of type other than ERR_RELAY_REMOTE
     ErrorState(err_type type, Http::StatusCode, HttpRequest * request, const AccessLogEntryPointer &al);
     ErrorState() = delete; // not implemented.
+
+    /// creates an ERR_RELAY_REMOTE error
+    ErrorState(HttpRequest * request, HttpReply *);
+
     ~ErrorState();
 
     /// Creates a general request forwarding error with the right http_status.
@@ -114,6 +119,9 @@ public:
 
 private:
     typedef ErrorPage::Build Build;
+
+    /// initializations shared by public constructors
+    explicit ErrorState(err_type type);
 
     /// locates the right error page template for this error and compiles it
     SBuf buildBody();
@@ -198,6 +206,8 @@ public:
     /// type-specific detail about the transaction error;
     /// overwrites xerrno; overwritten by detail, if any.
     int detailCode = ERR_DETAIL_NONE;
+
+    HttpReplyPointer response_;
 
 private:
     void noteBuildError_(const char *msg, const char *near, const bool forceBypass);

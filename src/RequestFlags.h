@@ -36,8 +36,6 @@ public:
     bool loopDetected = false;
     /** the connection can be kept alive */
     bool proxyKeepalive = false;
-    /* this should be killed, also in httpstateflags */
-    bool proxying = false;
     /** content has expired, need to refresh it */
     bool refresh = false;
     /** request was redirected by redirectors */

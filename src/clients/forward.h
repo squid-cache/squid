@@ -18,6 +18,12 @@ class AsyncJob;
 template <class Cbc> class CbcPointer;
 typedef CbcPointer<AsyncJob> AsyncJobPointer;
 
+namespace Http
+{
+class Tunneler;
+class TunnelerAnswer;
+}
+
 namespace Ftp
 {
 

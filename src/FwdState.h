@@ -10,6 +10,7 @@
 #define SQUID_FORWARD_H
 
 #include "base/RefCount.h"
+#include "clients/forward.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "err_type.h"
@@ -134,6 +135,11 @@ private:
     void connectedToPeer(Security::EncryptorAnswer &answer);
     static void RegisterWithCacheManager(void);
 
+    void establishTunnelThruProxy();
+    void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
+    void secureConnectionToPeerIfNeeded();
+    void successfullyConnectedToPeer();
+
     /// stops monitoring server connection for closure and updates pconn stats
     void closeServerConnection(const char *reason);
 
@@ -142,6 +148,9 @@ private:
 
     /// whether we have used up all permitted forwarding attempts
     bool exhaustedTries() const;
+
+    /// \returns the time left for this connection to become connected or 1 second if it is less than one second left
+    time_t connectingTimeout(const Comm::ConnectionPointer &conn) const;
 
 public:
     StoreEntry *entry;
@@ -156,11 +165,6 @@ private:
     Comm::ConnectionPointer clientConn;        ///< a possibly open connection to the client.
     time_t start_t;
     int n_tries; ///< the number of forwarding attempts so far
-
-    // AsyncCalls which we set and may need cancelling.
-    struct {
-        AsyncCall::Pointer connector;  ///< a call linking us to the ConnOpener producing serverConn.
-    } calls;
 
     struct {
         bool connected_okay; ///< TCP link ever opened properly. This affects retry of POST,PUT,CONNECT,etc

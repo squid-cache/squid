@@ -17,4 +17,8 @@ libclients_la_SOURCES = \
 	FtpClient.h \
 	FtpGateway.cc \
 	FtpRelay.cc \
+	HttpTunneler.cc \
+	HttpTunneler.h \
+	HttpTunnelerAnswer.cc \
+	HttpTunnelerAnswer.h \
 	forward.h

@@ -99,14 +99,17 @@ HttpStateData::HttpStateData(FwdState *theFwdState) :
     if (fwd->serverConnection() != NULL)
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
+    flags.peering =  _peer;
+    flags.tunneling = (_peer && request->flags.sslBumped);
+    flags.toOrigin = (!_peer || _peer->options.originserver || request->flags.sslBumped);
+
     if (_peer) {
-        request->flags.proxying = true;
         /*
          * This NEIGHBOR_PROXY_ONLY check probably shouldn't be here.
          * We might end up getting the object from somewhere else if,
          * for example, the request to this neighbor fails.
          */
-        if (_peer->options.proxy_only)
+        if (!flags.tunneling && _peer->options.proxy_only)
             entry->releaseRequest(true);
 
 #if USE_DELAY_POOLS
@@ -624,11 +627,11 @@ void
 HttpStateData::keepaliveAccounting(HttpReply *reply)
 {
     if (flags.keepalive)
-        if (_peer)
+        if (flags.peering && !flags.tunneling)
             ++ _peer->stats.n_keepalives_sent;
 
     if (reply->keep_alive) {
-        if (_peer)
+        if (flags.peering && !flags.tunneling)
             ++ _peer->stats.n_keepalives_recv;
 
         if (Config.onoff.detect_broken_server_pconns
@@ -643,7 +646,7 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
 void
 HttpStateData::checkDateSkew(HttpReply *reply)
 {
-    if (reply->date > -1 && !_peer) {
+    if (reply->date > -1 && flags.toOrigin) {
         int skew = abs((int)(reply->date - squid_curtime));
 
         if (skew > 86400)
@@ -842,6 +845,10 @@ bool
 HttpStateData::peerSupportsConnectionPinning() const
 {
     if (!_peer)
+        return true;
+
+    // we are talking "through" rather than "to" our _peer
+    if (flags.tunneling)
         return true;
 
     /*If this peer does not support connection pinning (authenticated
@@ -1654,16 +1661,19 @@ HttpStateData::doneWithServer() const
 static void
 httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, const Http::StateFlags &flags)
 {
-    Http::HdrType header = flags.originpeer ? Http::HdrType::AUTHORIZATION : Http::HdrType::PROXY_AUTHORIZATION;
-
     /* Nothing to do unless we are forwarding to a peer */
-    if (!request->flags.proxying)
+    if (!flags.peering)
+        return;
+
+    // This request is going "through" rather than "to" our _peer.
+    if (flags.tunneling)
         return;
 
     /* Needs to be explicitly enabled */
     if (!request->peer_login)
         return;
 
+    const auto header = flags.toOrigin ? Http::HdrType::AUTHORIZATION : Http::HdrType::PROXY_AUTHORIZATION;
     /* Maybe already dealt with? */
     if (hdr_out->has(header))
         return;
@@ -1672,8 +1682,14 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     if (strcmp(request->peer_login, "PASSTHRU") == 0)
         return;
 
-    /* PROXYPASS is a special case, single-signon to servers with the proxy password (basic only) */
-    if (flags.originpeer && strcmp(request->peer_login, "PROXYPASS") == 0 && hdr_in->has(Http::HdrType::PROXY_AUTHORIZATION)) {
+    // Dangerous and undocumented PROXYPASS is a single-signon to servers with
+    // the proxy password. Only Basic Authentication can work this way. This
+    // statement forwards a "basic" Proxy-Authorization value from our client
+    // to an originserver peer. Other PROXYPASS cases are handled lower.
+    if (flags.toOrigin &&
+        strcmp(request->peer_login, "PROXYPASS") == 0 &&
+        hdr_in->has(Http::HdrType::PROXY_AUTHORIZATION)) {
+
         const char *auth = hdr_in->getStr(Http::HdrType::PROXY_AUTHORIZATION);
 
         if (auth && strncasecmp(auth, "basic ", 6) == 0) {
@@ -1866,7 +1882,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Authorization if known in URL, not in header and going direct */
     if (!hdr_out->has(Http::HdrType::AUTHORIZATION)) {
-        if (!request->flags.proxying && !request->url.userInfo().isEmpty()) {
+        if (flags.toOrigin && !request->url.userInfo().isEmpty()) {
             static char result[base64_encode_len(MAX_URL*2)]; // should be big enough for a single URI segment
             struct base64_encode_ctx ctx;
             base64_encode_init(&ctx);
@@ -1951,7 +1967,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * Only pass on proxy authentication to peers for which
          * authentication forwarding is explicitly enabled
          */
-        if (!flags.originpeer && flags.proxying && request->peer_login &&
+        if (!flags.toOrigin && request->peer_login &&
                 (strcmp(request->peer_login, "PASS") == 0 ||
                  strcmp(request->peer_login, "PROXYPASS") == 0 ||
                  strcmp(request->peer_login, "PASSTHRU") == 0)) {
@@ -1976,10 +1992,11 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         /** \par WWW-Authorization:
          * Pass on WWW authentication */
 
-        if (!flags.originpeer) {
+        if (!flags.toOriginPeer()) {
             hdr_out->addEntry(e->clone());
         } else {
-            /** \note In accelerators, only forward authentication if enabled
+            /** \note Assume that talking to a cache_peer originserver makes
+             * us a reverse proxy and only forward authentication if enabled
              * (see also httpFixupAuthentication for special cases)
              */
             if (request->peer_login &&
@@ -2152,7 +2169,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
      * not the one we are sending. Needs checking.
      */
     const AnyP::ProtocolVersion httpver = Http::ProtocolVersion();
-    const SBuf url(_peer && !_peer->options.originserver ? request->effectiveRequestUri() : request->url.path());
+    const SBuf url(flags.toOrigin ? request->url.path() : request->effectiveRequestUri());
     mb->appendf(SQUIDSBUFPH " " SQUIDSBUFPH " %s/%d.%d\r\n",
                 SQUIDSBUFPRINT(request->method.image()),
                 SQUIDSBUFPRINT(url),
@@ -2215,9 +2232,6 @@ HttpStateData::sendRequest()
                                     Dialer, this,  HttpStateData::wroteLast);
     }
 
-    flags.originpeer = (_peer != NULL && _peer->options.originserver);
-    flags.proxying = (_peer != NULL && !flags.originpeer);
-
     /*
      * Is keep-alive okay for all request methods?
      */
@@ -2227,6 +2241,9 @@ HttpStateData::sendRequest()
         flags.keepalive = request->persistent();
     else if (!Config.onoff.server_pconns)
         flags.keepalive = false;
+    else if (flags.tunneling)
+        // tunneled non pinned bumped requests must not keepalive
+        flags.keepalive = !request->flags.sslBumped;
     else if (_peer == NULL)
         flags.keepalive = true;
     else if (_peer->stats.n_keepalives_sent < 10)
@@ -2235,7 +2252,7 @@ HttpStateData::sendRequest()
              (double) _peer->stats.n_keepalives_sent > 0.50)
         flags.keepalive = true;
 
-    if (_peer) {
+    if (_peer && !flags.tunneling) {
         /*The old code here was
           if (neighborType(_peer, request->url) == PEER_SIBLING && ...
           which is equivalent to:

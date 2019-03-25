@@ -50,6 +50,8 @@ void ReadCancel(int fd, AsyncCall::Pointer &callback);
 /// callback handler to process an FD which is available for reading
 extern PF HandleRead;
 
+/// maximum read delay for readers with limited lifetime
+time_t MortalReadTimeout(const time_t startTime, const time_t lifetimeLimit);
 } // namespace Comm
 
 // Legacy API to be removed

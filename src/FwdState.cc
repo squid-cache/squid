@@ -18,6 +18,7 @@
 #include "CachePeer.h"
 #include "client_side.h"
 #include "clients/forward.h"
+#include "clients/HttpTunneler.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Loops.h"
@@ -287,11 +288,6 @@ FwdState::~FwdState()
     entry->unlock("FwdState");
 
     entry = NULL;
-
-    if (calls.connector != NULL) {
-        calls.connector->cancel("FwdState destructed");
-        calls.connector = NULL;
-    }
 
     if (Comm::IsConnOpen(serverConn))
         closeServerConnection("~FwdState");
@@ -709,6 +705,7 @@ FwdState::handleUnregisteredServerEnd()
     retryOrBail();
 }
 
+/// handles an established TCP connection to peer (including origin servers)
 void
 FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno)
 {
@@ -737,21 +734,104 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
     // only set when we dispatch the request to an existing (pinned) connection.
     assert(!request->flags.pinned);
 
+    if (const CachePeer *peer = serverConnection()->getPeer()) {
+        // Assume that it is only possible for the client-first from the
+        // bumping modes to try connect to a remote server. The bumped
+        // requests with other modes are using pinned connections or fails.
+        const bool clientFirstBump = request->flags.sslBumped;
+        // We need a CONNECT tunnel to send encrypted traffic through a proxy,
+        // but we do not support TLS inside TLS, so we exclude HTTPS proxies.
+        const bool originWantsEncryptedTraffic =
+            request->method == Http::METHOD_CONNECT ||
+            request->flags.sslPeek ||
+            clientFirstBump;
+        if (originWantsEncryptedTraffic && // the "encrypted traffic" part
+                !peer->options.originserver && // the "through a proxy" part
+                !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
+            return establishTunnelThruProxy();
+    }
+
+    secureConnectionToPeerIfNeeded();
+}
+
+void
+FwdState::establishTunnelThruProxy()
+{
+    AsyncCall::Pointer callback = asyncCall(17,4,
+                                            "FwdState::tunnelEstablishmentDone",
+                                            Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
+    HttpRequest::Pointer requestPointer = request;
+    const auto tunneler = new Http::Tunneler(serverConnection(), requestPointer, callback, connectingTimeout(serverConnection()), al);
+#if USE_DELAY_POOLS
+    Must(serverConnection()->getPeer());
+    if (!serverConnection()->getPeer()->options.no_delay)
+        tunneler->setDelayId(entry->mem_obj->mostBytesAllowed());
+#endif
+    AsyncJob::Start(tunneler);
+    // and wait for the tunnelEstablishmentDone() call
+}
+
+/// resumes operations after the (possibly failed) HTTP CONNECT exchange
+void
+FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
+{
+    if (answer.positive()) {
+        if (answer.leftovers.isEmpty()) {
+            secureConnectionToPeerIfNeeded();
+            return;
+        }
+        // This should not happen because TLS servers do not speak first. If we
+        // have to handle this, then pass answer.leftovers via a PeerConnector
+        // to ServerBio. See ClientBio::setReadBufData().
+        static int occurrences = 0;
+        const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
+        debugs(17, level, "ERROR: Early data after CONNECT response. " <<
+               "Found " << answer.leftovers.length() << " bytes. " <<
+               "Closing " << serverConnection());
+        fail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request, al));
+        closeServerConnection("found early data after CONNECT response");
+        retryOrBail();
+        return;
+    }
+
+    // TODO: Reuse to-peer connections after a CONNECT error response.
+
+    if (const auto peer = serverConnection()->getPeer())
+        peerConnectFailed(peer);
+
+    const auto error = answer.squidError.get();
+    Must(error);
+    answer.squidError.clear(); // preserve error for fail()
+    fail(error);
+    closeServerConnection("Squid-generated CONNECT error");
+    retryOrBail();
+}
+
+/// handles an established TCP connection to peer (including origin servers)
+void
+FwdState::secureConnectionToPeerIfNeeded()
+{
+    assert(!request->flags.pinned);
+
     const CachePeer *p = serverConnection()->getPeer();
     const bool peerWantsTls = p && p->secure.encryptTransport;
     // userWillTlsToPeerForUs assumes CONNECT == HTTPS
     const bool userWillTlsToPeerForUs = p && p->options.originserver &&
                                         request->method == Http::METHOD_CONNECT;
     const bool needTlsToPeer = peerWantsTls && !userWillTlsToPeerForUs;
-    const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS;
-    if (needTlsToPeer || needTlsToOrigin || request->flags.sslPeek) {
+    const bool clientFirstBump = request->flags.sslBumped; // client-first (already) bumped connection
+    const bool needsBump = request->flags.sslPeek || clientFirstBump;
+
+    // 'GET https://...' requests. If a peer is used the request is forwarded
+    // as is
+    const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS && !clientFirstBump;
+
+    if (needTlsToPeer || needTlsToOrigin || needsBump) {
         HttpRequest::Pointer requestPointer = request;
         AsyncCall::Pointer callback = asyncCall(17,4,
                                                 "FwdState::ConnectedToPeer",
                                                 FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
-        // Use positive timeout when less than one second is left.
-        const time_t connTimeout = serverDestinations[0]->connectTimeout(start_t);
-        const time_t sslNegotiationTimeout = positiveTimeout(connTimeout);
+        const auto sslNegotiationTimeout = connectingTimeout(serverDestinations[0]);
         Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
         if (request->flags.sslPeek)
@@ -764,10 +844,10 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, in
     }
 
     // if not encrypting just run the post-connect actions
-    Security::EncryptorAnswer nil;
-    connectedToPeer(nil);
+    successfullyConnectedToPeer();
 }
 
+/// called when all negotiations with the TLS-speaking peer have been completed
 void
 FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
 {
@@ -790,6 +870,13 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
         return;
     }
 
+    successfullyConnectedToPeer();
+}
+
+/// called when all negotiations with the peer have been completed
+void
+FwdState::successfullyConnectedToPeer()
+{
     // should reach ConnStateData before the dispatched Client job starts
     CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                  ConnStateData::notePeerConnection, serverConnection());
@@ -877,13 +964,27 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    // Do not fowrward bumped connections to parent proxy unless it is an
-    // origin server
-    if (serverDestinations[0]->getPeer() && !serverDestinations[0]->getPeer()->options.originserver && request->flags.sslBumped) {
-        debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parent proxy are not allowed");
-        const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
-        fail(anErr);
-        stopAndDestroy("SslBump misconfiguration");
+    // Requests bumped at step2+ require their pinned connection. Since we
+    // failed to reuse the pinned connection, we now must terminate the
+    // bumped request. For client-first and step1 bumped requests, the
+    // from-client connection is already bumped, but the connection to the
+    // server is not established/pinned so they must be excluded. We can
+    // recognize step1 bumping by nil ConnStateData::serverBump().
+#if USE_OPENSSL
+    const auto clientFirstBump = request->clientConnectionManager.valid() &&
+        (request->clientConnectionManager->sslBumpMode == Ssl::bumpClientFirst ||
+         (request->clientConnectionManager->sslBumpMode == Ssl::bumpBump && !request->clientConnectionManager->serverBump())
+            );
+#else
+    const auto clientFirstBump = false;
+#endif /* USE_OPENSSL */
+    if (request->flags.sslBumped && !clientFirstBump) {
+        // TODO: Factor out/reuse as Occasionally(DBG_IMPORTANT, 2[, occurrences]).
+        static int occurrences = 0;
+        const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
+        debugs(17, level, "BUG: Lost previously bumped from-Squid connection. Rejecting bumped request.");
+        fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));
+        self = nullptr; // refcounted
         return;
     }
 
@@ -892,11 +993,12 @@ FwdState::connectStart()
     if (!serverDestinations[0]->getPeer())
         host = request->url.host();
 
+    bool bumpThroughPeer = request->flags.sslBumped && serverDestinations[0]->getPeer();
     Comm::ConnectionPointer temp;
     // Avoid pconns after races so that the same client does not suffer twice.
     // This does not increase the total number of connections because we just
     // closed the connection that failed the race. And re-pinning assumes this.
-    if (pconnRace != raceHappened)
+    if (pconnRace != raceHappened && !bumpThroughPeer)
         temp = pconnPop(serverDestinations[0], host);
 
     const bool openedPconn = Comm::IsConnOpen(temp);
@@ -929,9 +1031,9 @@ FwdState::connectStart()
 
     GetMarkingsToServer(request, *serverDestinations[0]);
 
-    calls.connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-    const time_t connTimeout = serverDestinations[0]->connectTimeout(start_t);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], calls.connector, connTimeout);
+    const AsyncCall::Pointer connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
+    const auto connTimeout = connectingTimeout(serverDestinations[0]);
+    const auto cs = new Comm::ConnOpener(serverDestinations[0], connector, connTimeout);
     if (host)
         cs->setHost(host);
     ++n_tries;
@@ -1041,17 +1143,13 @@ FwdState::dispatch()
     }
 #endif
 
-    if (serverConnection()->getPeer() != NULL) {
-        ++ serverConnection()->getPeer()->stats.fetches;
-        request->peer_login = serverConnection()->getPeer()->login;
-        request->peer_domain = serverConnection()->getPeer()->domain;
-        request->flags.auth_no_keytab = serverConnection()->getPeer()->options.auth_no_keytab;
+    if (const auto peer = serverConnection()->getPeer()) {
+        ++peer->stats.fetches;
+        request->prepForPeering(*peer);
         httpStart(this);
     } else {
         assert(!request->flags.sslPeek);
-        request->peer_login = NULL;
-        request->peer_domain = NULL;
-        request->flags.auth_no_keytab = 0;
+        request->prepForDirect();
 
         switch (request->url.getScheme()) {
 
@@ -1313,6 +1411,13 @@ FwdState::pinnedCanRetry() const
     // The other pinned cases are FTP proxying and connection-based HTTP
     // authentication. TODO: Do these cases have restrictions?
     return true;
+}
+
+time_t
+FwdState::connectingTimeout(const Comm::ConnectionPointer &conn) const
+{
+    const auto connTimeout = conn->connectTimeout(start_t);
+    return positiveTimeout(connTimeout);
 }
 
 /**** PRIVATE NON-MEMBER FUNCTIONS ********************************************/
