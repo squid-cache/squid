@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/EnumIterator.h"
 #include "proxyp/Elements.h"
 #include "proxyp/Header.h"
 #include "sbuf/Stream.h"
@@ -24,10 +25,10 @@ SBuf
 ProxyProtocol::Header::toMime() const
 {
     SBufStream result;
-    for (const auto &p: PseudoHeaderFields) {
-        const auto value = getValues(p.second);
+    for (const auto fieldType: EnumRange(Two::htPseudoBegin, Two::htPseudoEnd)) {
+        const auto value = getValues(fieldType);
         if (!value.isEmpty())
-            result << p.first << ": " << value << "\r\n";
+            result << PseudoFieldTypeToFieldName(fieldType) << ": " << value << "\r\n";
     }
     // cannot reuse Header::getValues(): need the original TLVs layout
     for (const auto &tlv: tlvs)
