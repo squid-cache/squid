@@ -397,7 +397,7 @@ HappyConnOpener::swanSong()
     if (spareWaiting)
         cancelSpareWait("HappyConnOpener object destructed");
 
-    // TODO: These call cancellations should not be needed.
+    // TODO: Find an automated, faster way to kill no-longer-needed jobs.
 
     if (prime) {
         if (prime.connector)
