@@ -41,15 +41,15 @@ const SBuf &
 ProxyProtocol::PseudoFieldTypeToFieldName(const Two::FieldType fieldType)
 {
     // "flip" PseudoHeaderFields so that we can look up names by FieldType
-    typedef std::vector<SBuf> PsuedoFieldNames;
-    static PsuedoFieldNames psuedoFieldNames;
-    if (psuedoFieldNames.empty()) {
+    typedef std::vector<SBuf> PseudoFieldNames;
+    static PseudoFieldNames pseudoFieldNames;
+    if (pseudoFieldNames.empty()) {
         std::for_each(Two::PseudoHeaderFields.begin(), Two::PseudoHeaderFields.end(),
             [](const Two::FieldMap::value_type &item) {
-                psuedoFieldNames.at(item.second) = item.first;
+                pseudoFieldNames.at(item.second) = item.first;
             });
     }
-    return psuedoFieldNames.at(fieldType - Two::htPseudoBegin);
+    return pseudoFieldNames.at(fieldType - Two::htPseudoBegin);
 }
 
 /// FieldNameToFieldType() helper that handles pseudo headers
