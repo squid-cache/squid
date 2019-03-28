@@ -40,7 +40,7 @@ static Two::FieldType IntegerToFieldType(const SBuf &);
 const SBuf &
 ProxyProtocol::PseudoFieldTypeToFieldName(const Two::FieldType fieldType)
 {
-    // reverse PseudoHeaderFields so that we can look up names by FieldType
+    // "flip" PseudoHeaderFields so that we can look up names by FieldType
     typedef std::vector<SBuf> PsuedoFieldNames;
     static PsuedoFieldNames psuedoFieldNames;
     if (psuedoFieldNames.empty()) {
