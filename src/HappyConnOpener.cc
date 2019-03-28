@@ -323,9 +323,10 @@ HappyConnOpenerAnswer::~HappyConnOpenerAnswer()
 
 /* HappyConnOpener */
 
-HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart, const AccessLogEntry::Pointer &anAle):
+HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart, int tries, const AccessLogEntry::Pointer &anAle):
     AsyncJob("HappyConnOpener"),
     primeStart(0),
+    maxTries(tries),
     fwdStart(aFwdStart),
     callback_(aCall),
     destinations(dests),
@@ -373,7 +374,13 @@ HappyConnOpener::doneAll() const
     if (callback_->canceled())
         return true; // the requestor is gone or has lost interest
 
-    if (!prime && !spare && destinations->empty() && destinations->destinationsFinalized)
+    if (prime || spare)
+        return false;
+
+    if (ranOutOfTimeOrAttempts())
+        return true; // trying new connection paths prohibited
+
+    if (destinations->empty() && destinations->destinationsFinalized)
         return true; // there are no more paths to try
 
     return false;
@@ -629,9 +636,9 @@ HappyConnOpener::cancelSpareWait(const char *reason)
 
 /** Called when an external event changes initiator interest, destinations,
  * prime, spare, or spareWaiting. Leaves HappyConnOpener in one of these
- * (mutually exclusive) "stable" states:
+ * (mutually exclusive beyond the exceptional state #0) "stable" states:
  *
- * 0. Initiator lost interest: callback_->canceled()
+ * 0. Exceptional termination: done()
  * 1. Processing a single peer: currentPeer
  *    1.1. Connecting: prime || spare
  *    1.2. Waiting for spare gap and/or paths: !prime && !spare
@@ -648,8 +655,10 @@ HappyConnOpener::checkForNewConnection()
     if (done())
         return; // bail ASAP to minimize our waste and others delays (state #0)
 
-    // XXX: Do not ignore Config.Timeout.forward.
-    // XXX: Do not ignore Config.forward_max_tries.
+    if (ranOutOfTimeOrAttempts()) {
+        Must(currentPeer); // or we would be done() already
+        return; // will continue working (state #1.1)
+    }
 
     // update stale currentPeer and/or stale spareWaiting
     if (currentPeer && !spare && !prime && destinations->doneWithPeer(*currentPeer)) {
@@ -693,7 +702,7 @@ HappyConnOpener::checkForNewConnection()
         return; // remaining in state #1.1 or #1.2
     }
 
-    if (!destinations->destinationsFinalized) {
+    if (!destinations->destinationsFinalized && n_tries < maxTries) {
         debugs(17, 7, "waiting for more peers");
         return; // remaining in state #2
     }
@@ -718,6 +727,10 @@ HappyConnOpener::noteSpareAllowance()
     spareWaiting.clear();
     Must(!gotSpareAllowance);
     gotSpareAllowance = true;
+
+    if (ranOutOfTimeOrAttempts())
+        return; // will quit or continue working on prime
+
     auto dest = destinations->extractSpare(*currentPeer); // ought to succeed
     startConnecting(spare, dest);
 }
@@ -773,6 +786,9 @@ HappyConnOpener::maybeOpenSpareConnection()
     Must(!spareWaiting);
     Must(!gotSpareAllowance);
 
+    if (ranOutOfTimeOrAttempts())
+        return false; // will quit or continue working on prime
+
     // jobGotInstantAllowance() call conditions below rely on the readyNow() check here
     if (!ignoreSpareRestrictions && // we have to honor spare restrictions
             !TheSpareAllowanceGiver.readyNow(*this) && // all new spares must wait
@@ -794,5 +810,15 @@ HappyConnOpener::maybeOpenSpareConnection()
     }
     // else wait for more spare paths or their exhaustion
     return false;
+}
+
+/// Check for maximum connection tries and forwarding time restrictions
+bool
+HappyConnOpener::ranOutOfTimeOrAttempts() const
+{
+    if (n_tries >= maxTries)
+        return true;
+
+    return (FwdState::ForwardTimeout(fwdStart) == 0);
 }
 

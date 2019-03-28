@@ -1009,7 +1009,7 @@ FwdState::connectStart()
 
     assert(Config.forward_max_tries - n_tries > 0);
     HttpRequest::Pointer cause = request;
-    const auto cs = new HappyConnOpener(destinations, calls.connector, cause, start_t, al);
+    const auto cs = new HappyConnOpener(destinations, calls.connector, cause, start_t, Config.forward_max_tries - n_tries, al);
     cs->setHost(request->url.host());
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {

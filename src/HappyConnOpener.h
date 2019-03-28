@@ -126,7 +126,7 @@ public:
     };
 
 public:
-    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart, const AccessLogEntryPointer &al);
+    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart, int tries, const AccessLogEntryPointer &al);
     virtual ~HappyConnOpener() override;
 
     /// configures reuse of old connections
@@ -185,11 +185,14 @@ private:
 
     void cancelSpareWait(const char *reason);
 
+    bool ranOutOfTimeOrAttempts() const;
+
     ErrorState *makeError(const err_type type) const;
     Answer *futureAnswer(const Comm::ConnectionPointer &);
     void sendSuccess(const Comm::ConnectionPointer &conn, bool reused, const char *connKind);
     void sendFailure();
 
+    const int maxTries; ///< n_tries limit
     const time_t fwdStart; ///< requestor start time
 
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
