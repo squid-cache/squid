@@ -851,7 +851,7 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
         return true;
     }
 
-    if (FwdState::ForwardTimeout(fwdStart) == 0) {
+    if (FwdState::ForwardTimeout(fwdStart) <= 0) {
         debugs(17, 5, "forwarding timeout");
         ranOutOfTimeOrAttemptsEarlier_ = "forwarding timeout";
         return true;
