@@ -778,7 +778,7 @@ HappyConnOpener::maybeGivePrimeItsChance()
 }
 
 /// if possible, starts a spare connection attempt, returning true
-bool
+void
 HappyConnOpener::maybeOpenSpareConnection()
 {
     Must(currentPeer);
@@ -787,7 +787,7 @@ HappyConnOpener::maybeOpenSpareConnection()
     Must(!gotSpareAllowance);
 
     if (ranOutOfTimeOrAttempts())
-        return false; // will quit or continue working on prime
+        return; // will quit or continue working on prime
 
     // jobGotInstantAllowance() call conditions below rely on the readyNow() check here
     if (!ignoreSpareRestrictions && // we have to honor spare restrictions
@@ -795,7 +795,7 @@ HappyConnOpener::maybeOpenSpareConnection()
             destinations->haveSpare(*currentPeer)) { // and we do have a new spare
         TheSpareAllowanceGiver.enqueue(*this);
         spareWaiting.forSpareAllowance = true;
-        return false;
+        return;
     }
 
     if (auto dest = destinations->extractSpare(*currentPeer)) {
@@ -806,10 +806,10 @@ HappyConnOpener::maybeOpenSpareConnection()
         }
 
         startConnecting(spare, dest);
-        return true;
+        return;
     }
     // else wait for more spare paths or their exhaustion
-    return false;
+    return;
 }
 
 /// Check for maximum connection tries and forwarding time restrictions

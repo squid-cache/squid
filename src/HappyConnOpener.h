@@ -171,7 +171,7 @@ private:
     void maybeGivePrimeItsChance();
     void stopGivingPrimeItsChance();
     void stopWaitingForSpareAllowance();
-    bool maybeOpenSpareConnection();
+    void maybeOpenSpareConnection();
 
     void startConnecting(Attempt &, Comm::ConnectionPointer &);
     void openFreshConnection(Attempt &, Comm::ConnectionPointer &);
