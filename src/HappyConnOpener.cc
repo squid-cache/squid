@@ -419,6 +419,28 @@ HappyConnOpener::swanSong()
     AsyncJob::swanSong();
 }
 
+const char *
+HappyConnOpener::status() const
+{
+    static MemBuf buf;
+    buf.reset();
+
+    buf.append(" [", 2);
+    if (stopReason != NULL) {
+        buf.appendf("Stopped, reason:%s", stopReason);
+    }
+    if (prime.connector)
+        buf.appendf(" prime %p", prime.connector);
+    if (spare.connector)
+        buf.appendf(" spare %p", spare.connector);
+    if (n_tries)
+        buf.appendf(" tries %d", n_tries);
+    buf.appendf(" %s%u]", id.prefix(), id.value);
+    buf.terminate();
+
+    return buf.content();
+}
+
 /// Create "503 Service Unavailable" or "504 Gateway Timeout" error depending
 /// on whether this is a validation request. RFC 2616 says that we MUST reply
 /// with "504 Gateway Timeout" if validation fails and cached reply has

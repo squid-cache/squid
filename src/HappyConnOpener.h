@@ -165,6 +165,7 @@ private:
     virtual void start() override;
     virtual bool doneAll() const override;
     virtual void swanSong() override;
+    virtual const char *status() const override;
 
     void maybeOpenAnotherPrimeConnection();
 
