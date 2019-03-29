@@ -337,7 +337,8 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
     retriable_(true),
     host_(nullptr),
     cause(request),
-    n_tries(0)
+    n_tries(0),
+    ranOutOfTimeOrAttemptsEarlier_(nullptr)
 {
     assert(destinations);
     assert(dynamic_cast<Answer*>(callback_->getDialer()));
@@ -816,9 +817,21 @@ HappyConnOpener::maybeOpenSpareConnection()
 bool
 HappyConnOpener::ranOutOfTimeOrAttempts() const
 {
-    if (n_tries >= maxTries)
+    if (ranOutOfTimeOrAttemptsEarlier_)
         return true;
 
-    return (FwdState::ForwardTimeout(fwdStart) == 0);
+    if (n_tries >= maxTries) {
+        debugs(17, 5, "maximum allowed tries exhausted");
+        ranOutOfTimeOrAttemptsEarlier_ = "maximum tries";
+        return true;
+    }
+
+    if (FwdState::ForwardTimeout(fwdStart) == 0) {
+        debugs(17, 5, "forwarding timeout");
+        ranOutOfTimeOrAttemptsEarlier_ = "forwarding timeout";
+        return true;
+    }
+
+    return false;
 }
 

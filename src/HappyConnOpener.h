@@ -240,6 +240,9 @@ private:
 
     /// number of connection opening attempts, including those in the requestor
     int n_tries;
+
+    /// Reason to ran out of time or attempts
+    mutable const char *ranOutOfTimeOrAttemptsEarlier_;
 };
 
 #endif
