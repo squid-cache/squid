@@ -702,7 +702,7 @@ HappyConnOpener::checkForNewConnection()
         return; // remaining in state #1.1 or #1.2
     }
 
-    if (!destinations->destinationsFinalized && n_tries < maxTries) {
+    if (!destinations->destinationsFinalized) {
         debugs(17, 7, "waiting for more peers");
         return; // remaining in state #2
     }
