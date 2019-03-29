@@ -326,7 +326,6 @@ HappyConnOpenerAnswer::~HappyConnOpenerAnswer()
 HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart, int tries, const AccessLogEntry::Pointer &anAle):
     AsyncJob("HappyConnOpener"),
     primeStart(0),
-    maxTries(tries),
     fwdStart(aFwdStart),
     callback_(aCall),
     destinations(dests),
@@ -337,7 +336,7 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
     retriable_(true),
     host_(nullptr),
     cause(request),
-    n_tries(0),
+    n_tries(tries),
     ranOutOfTimeOrAttemptsEarlier_(nullptr)
 {
     assert(destinations);
@@ -845,7 +844,7 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
     if (ranOutOfTimeOrAttemptsEarlier_)
         return true;
 
-    if (n_tries >= maxTries) {
+    if (n_tries >= Config.forward_max_tries) {
         debugs(17, 5, "maximum allowed tries exhausted");
         ranOutOfTimeOrAttemptsEarlier_ = "maximum tries";
         return true;

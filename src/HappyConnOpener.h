@@ -193,7 +193,6 @@ private:
     void sendSuccess(const Comm::ConnectionPointer &conn, bool reused, const char *connKind);
     void sendFailure();
 
-    const int maxTries; ///< n_tries limit
     const time_t fwdStart; ///< requestor start time
 
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
