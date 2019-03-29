@@ -748,11 +748,14 @@ HappyConnOpener::noteSpareAllowance()
 {
     Must(spareWaiting.forSpareAllowance);
     spareWaiting.clear();
+
+    if (ranOutOfTimeOrAttempts()) {
+        TheSpareAllowanceGiver.jobDroppedAllowance();
+        return; // will quit or continue working on prime
+    }
+
     Must(!gotSpareAllowance);
     gotSpareAllowance = true;
-
-    if (ranOutOfTimeOrAttempts())
-        return; // will quit or continue working on prime
 
     auto dest = destinations->extractSpare(*currentPeer); // ought to succeed
     startConnecting(spare, dest);
