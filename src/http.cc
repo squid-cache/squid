@@ -1687,8 +1687,8 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
     // statement forwards a "basic" Proxy-Authorization value from our client
     // to an originserver peer. Other PROXYPASS cases are handled lower.
     if (flags.toOrigin &&
-        strcmp(request->peer_login, "PROXYPASS") == 0 &&
-        hdr_in->has(Http::HdrType::PROXY_AUTHORIZATION)) {
+            strcmp(request->peer_login, "PROXYPASS") == 0 &&
+            hdr_in->has(Http::HdrType::PROXY_AUTHORIZATION)) {
 
         const char *auth = hdr_in->getStr(Http::HdrType::PROXY_AUTHORIZATION);
 
