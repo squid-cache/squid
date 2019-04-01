@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@
 #include "http/forward.h"
 #include "HttpControlMsg.h"
 #include "ipc/FdNotes.h"
+#include "proxyp/forward.h"
 #include "sbuf/SBuf.h"
 #include "servers/Server.h"
 #if USE_AUTH
@@ -181,15 +182,14 @@ public:
     /// Undo pinConnection() and, optionally, close the pinned connection.
     void unpinConnection(const bool andClose);
     /// Returns validated pinnned server connection (and stops its monitoring).
-    Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *request, const CachePeer *aPeer);
+    Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *request);
     /**
      * Checks if there is pinning info if it is valid. It can close the server side connection
      * if pinned info is not valid.
      \param request   if it is not NULL also checks if the pinning info refers to the request client side HttpRequest
-     \param CachePeer      if it is not NULL also check if the CachePeer is the pinning CachePeer
      \return          The details of the server side connection (may be closed if failures were present).
      */
-    const Comm::ConnectionPointer validatePinnedConnection(HttpRequest *request, const CachePeer *peer);
+    const Comm::ConnectionPointer validatePinnedConnection(HttpRequest *request);
     /**
      * returts the pinned CachePeer if exists, NULL otherwise
      */
@@ -247,7 +247,7 @@ public:
     /// Proccess response from ssl_crtd.
     void sslCrtdHandleReply(const Helper::Reply &reply);
 
-    void switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode);
+    void switchToHttps(ClientHttpRequest *, Ssl::BumpMode bumpServerMode);
     void parseTlsHandshake();
     bool switchedToHttps() const { return switchedToHttps_; }
     Ssl::ServerBump *serverBump() {return sslServerBump;}
@@ -320,6 +320,8 @@ public:
     NotePairs::Pointer notes();
     bool hasNotes() const { return bool(theNotes) && !theNotes->empty(); }
 
+    const ProxyProtocol::HeaderPointer &proxyProtocolHeader() const { return proxyProtocolHeader_; }
+
 protected:
     void startDechunkingRequest();
     void finishDechunkingRequest(bool withSuccess);
@@ -368,8 +370,6 @@ private:
     /* PROXY protocol functionality */
     bool proxyProtocolValidateClient();
     bool parseProxyProtocolHeader();
-    bool parseProxy1p0();
-    bool parseProxy2p0();
     bool proxyProtocolError(const char *reason);
 
 #if USE_OPENSSL
@@ -383,6 +383,9 @@ private:
 
     /// whether PROXY protocol header is still expected
     bool needProxyProtocolHeader_;
+
+    /// the parsed PROXY protocol header
+    ProxyProtocol::HeaderPointer proxyProtocolHeader_;
 
 #if USE_AUTH
     /// some user details that can be used to perform authentication on this connection

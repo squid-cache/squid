@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -210,7 +210,7 @@ store_client::store_client(StoreEntry *e) :
     if (getType() == STORE_DISK_CLIENT) {
         /* assert we'll be able to get the data we want */
         /* maybe we should open swapin_sio here */
-        assert(entry->hasDisk() || entry->swappingOut());
+        assert(entry->hasDisk() && !entry->swapoutFailed());
     }
 }
 
@@ -710,7 +710,8 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     dlinkDelete(&sc->node, &mem->clients);
     -- mem->nclients;
 
-    if (e->store_status == STORE_OK && !e->swappedOut())
+    const auto swapoutFinished = e->swappedOut() || e->swapoutFailed();
+    if (e->store_status == STORE_OK && !swapoutFinished)
         e->swapOut();
 
     if (sc->swapin_sio != NULL) {

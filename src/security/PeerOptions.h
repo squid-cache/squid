@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,6 +55,9 @@ public:
 
     /// setup the CRL details for the given context
     void updateContextCrl(Security::ContextPointer &);
+
+    /// decide which CAs to trust
+    void updateContextTrust(Security::ContextPointer &);
 
     /// setup any library-specific options that can be set for the given session
     void updateSessionOptions(Security::SessionPointer &);

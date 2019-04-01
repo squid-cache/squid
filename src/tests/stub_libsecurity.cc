@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -58,7 +58,6 @@ const char *PeerConnector::status() const STUB_RETVAL("")
 void PeerConnector::commCloseHandler(const CommCloseCbParams &) STUB
 void PeerConnector::connectionClosed(const char *) STUB
 bool PeerConnector::prepareSocket() STUB_RETVAL(false)
-void PeerConnector::setReadTimeout() STUB
 bool PeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
 void PeerConnector::negotiate() STUB
 bool PeerConnector::sslFinalized() STUB_RETVAL(false)
@@ -86,6 +85,7 @@ void Security::PeerOptions::updateTlsVersionLimits() STUB
 Security::ContextPointer Security::PeerOptions::createBlankContext() const STUB_RETVAL(Security::ContextPointer())
 void Security::PeerOptions::updateContextCa(Security::ContextPointer &) STUB
 void Security::PeerOptions::updateContextCrl(Security::ContextPointer &) STUB
+void Security::PeerOptions::updateContextTrust(Security::ContextPointer &) STUB
 void Security::PeerOptions::updateSessionOptions(Security::SessionPointer &) STUB
 void Security::PeerOptions::dumpCfg(Packable*, char const*) const STUB
 void Security::PeerOptions::parseOptions() STUB

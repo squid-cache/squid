@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -57,7 +57,11 @@ typedef enum {
     SWAPOUT_WRITING,
     /// StoreEntry is associated with a complete (i.e., fully swapped out) disk store entry.
     /// Guarantees the disk store entry existence.
-    SWAPOUT_DONE
+    SWAPOUT_DONE,
+    /// StoreEntry is associated with an unusable disk store entry.
+    /// Swapout attempt has failed. The entry should be marked for eventual deletion.
+    /// Guarantees the disk store entry existence.
+    SWAPOUT_FAILED
 } swap_status_t;
 
 typedef enum {

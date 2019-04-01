@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,6 +19,7 @@
 
 class ConnStateData;
 class store_client;
+class ClientHttpRequest;
 
 namespace Ssl
 {
@@ -31,7 +32,7 @@ class ServerBump
     CBDATA_CLASS(ServerBump);
 
 public:
-    explicit ServerBump(HttpRequest *fakeRequest, StoreEntry *e = NULL, Ssl::BumpMode mode = Ssl::bumpServerFirst);
+    explicit ServerBump(ClientHttpRequest *http, StoreEntry *e = nullptr, Ssl::BumpMode mode = Ssl::bumpServerFirst);
     ~ServerBump();
     void attachServerSession(const Security::SessionPointer &); ///< Sets the server TLS session object
     const Security::CertErrors *sslErrors() const; ///< SSL [certificate validation] errors

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -244,8 +244,12 @@ typedef enum {
     LFT_EXT_ACL_CLIENT_EUI48,
     LFT_EXT_ACL_CLIENT_EUI64,
     LFT_EXT_ACL_NAME,
-    LFT_EXT_ACL_DATA
+    LFT_EXT_ACL_DATA,
 
+    /* PROXY protocol details */
+    LFT_PROXY_PROTOCOL_RECEIVED_HEADER,
+    LFT_PROXY_PROTOCOL_RECEIVED_HEADER_ELEM,
+    LFT_PROXY_PROTOCOL_RECEIVED_ALL_HEADERS
 } ByteCode_t;
 
 /// Quoting style for a format output.

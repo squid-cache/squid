@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -50,8 +50,8 @@ String HttpHeader::getById(Http::HdrType) const STUB_RETVAL(String())
 bool HttpHeader::getByIdIfPresent(Http::HdrType, String *) const STUB_RETVAL(false)
 bool HttpHeader::hasNamed(const SBuf &, String *) const STUB_RETVAL(false)
 bool HttpHeader::hasNamed(const char *, unsigned int, String *) const STUB_RETVAL(false)
-String HttpHeader::getByNameListMember(const char *, const char *, const char) const STUB_RETVAL(String())
-String HttpHeader::getListMember(Http::HdrType, const char *, const char) const STUB_RETVAL(String())
+SBuf HttpHeader::getByNameListMember(const char *, const char *, const char) const STUB_RETVAL(SBuf())
+SBuf HttpHeader::getListMember(Http::HdrType, const char *, const char) const STUB_RETVAL(SBuf())
 int HttpHeader::has(Http::HdrType) const STUB_RETVAL(0)
 void HttpHeader::addVia(const AnyP::ProtocolVersion &, const HttpHeader *) STUB
 void HttpHeader::putInt(Http::HdrType, int) STUB
@@ -89,3 +89,4 @@ int httpHeaderParseQuotedString(const char *, const int, String *) STUB_RETVAL(-
 SBuf httpHeaderQuoteString(const char *) STUB_RETVAL(SBuf())
 void httpHeaderCalcMask(HttpHeaderMask *, Http::HdrType [], size_t) STUB
 void httpHeaderInitModule() STUB
+

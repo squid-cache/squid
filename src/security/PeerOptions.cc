@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -287,6 +287,7 @@ Security::PeerOptions::createClientContext(bool setOptions)
         updateContextNpn(t);
         updateContextCa(t);
         updateContextCrl(t);
+        updateContextTrust(t);
     }
 
     return t;
@@ -700,6 +701,23 @@ Security::PeerOptions::updateContextCrl(Security::ContextPointer &ctx)
 #endif
 
 #endif /* USE_OPENSSL */
+}
+
+void
+Security::PeerOptions::updateContextTrust(Security::ContextPointer &ctx)
+{
+#if USE_OPENSSL
+#if defined(X509_V_FLAG_PARTIAL_CHAIN)
+    const auto st = SSL_CTX_get_cert_store(ctx.get());
+    assert(st);
+    if (X509_STORE_set_flags(st, X509_V_FLAG_PARTIAL_CHAIN) != 1) {
+        debugs(83, DBG_IMPORTANT, "ERROR: Failed to enable trust in intermediate CA certificates: " <<
+               Security::ErrorString(ERR_get_error()));
+    }
+#endif
+#elif USE_GNUTLS
+    // Modern GnuTLS versions trust intermediate CA certificates by default.
+#endif /* TLS library */
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -53,7 +53,7 @@ CBDATA_CLASS_INIT(clientReplyContext);
 
 /* Local functions */
 extern "C" CSS clientReplyStatus;
-ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, Ip::Address &, HttpRequest *);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, Ip::Address &, HttpRequest *, const AccessLogEntry::Pointer &);
 
 /* privates */
 
@@ -111,7 +111,7 @@ clientReplyContext::setReplyToError(
 #endif
 )
 {
-    ErrorState *errstate = clientBuildError(err, status, uri, addr, failedrequest);
+    auto errstate = clientBuildError(err, status, uri, addr, failedrequest, http->al);
 
     if (unparsedrequest)
         errstate->request_hdrs = xstrdup(unparsedrequest);
@@ -767,7 +767,7 @@ clientReplyContext::processMiss()
         http->al->http.code = Http::scForbidden;
         Ip::Address tmp_noaddr;
         tmp_noaddr.setNoAddr();
-        err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr, conn ? conn->remote : tmp_noaddr, http->request);
+        err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr, conn ? conn->remote : tmp_noaddr, http->request, http->al);
         createStoreEntry(r->method, RequestFlags());
         errorAppendEntry(http->storeEntry(), err);
         triggerInitialStoreRead();
@@ -809,7 +809,7 @@ clientReplyContext::processOnlyIfCachedMiss()
     tmp_noaddr.setNoAddr();
     ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, Http::scGatewayTimeout, NULL,
                                        http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr,
-                                       http->request);
+                                       http->request, http->al);
     removeClientStoreReference(&sc, http);
     startError(err);
 }
@@ -986,7 +986,7 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
         tmp_noaddr.setNoAddr(); // TODO: make a global const
         ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL,
                                            http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr,
-                                           http->request);
+                                           http->request, http->al);
         startError(err);
         return; // XXX: leaking unused entry if some store does not keep it
     }
@@ -1026,7 +1026,7 @@ clientReplyContext::purgeRequest()
         Ip::Address tmp_noaddr;
         tmp_noaddr.setNoAddr();
         ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL,
-                                           http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr, http->request);
+                                           http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr, http->request, http->al);
         startError(err);
         return;
     }
@@ -1965,7 +1965,7 @@ clientReplyContext::sendBodyTooLargeError()
     http->logType.update(LOG_TCP_DENIED_REPLY);
     ErrorState *err = clientBuildError(ERR_TOO_BIG, Http::scForbidden, NULL,
                                        http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
-                                       http->request);
+                                       http->request, http->al);
     removeClientStoreReference(&(sc), http);
     HTTPMSGUNLOCK(reply);
     startError(err);
@@ -1981,7 +1981,7 @@ clientReplyContext::sendPreconditionFailedError()
     tmp_noaddr.setNoAddr();
     ErrorState *const err =
         clientBuildError(ERR_PRECONDITION_FAILED, Http::scPreconditionFailed,
-                         NULL, http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr, http->request);
+                         NULL, http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr, http->request, http->al);
     removeClientStoreReference(&sc, http);
     HTTPMSGUNLOCK(reply);
     startError(err);
@@ -2094,7 +2094,7 @@ clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
         tmp_noaddr.setNoAddr();
         err = clientBuildError(page_id, Http::scForbidden, NULL,
                                http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
-                               http->request);
+                               http->request, http->al);
 
         removeClientStoreReference(&sc, http);
 
@@ -2337,9 +2337,9 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
 
 ErrorState *
 clientBuildError(err_type page_id, Http::StatusCode status, char const *url,
-                 Ip::Address &src_addr, HttpRequest * request)
+                 Ip::Address &src_addr, HttpRequest * request, const AccessLogEntry::Pointer &al)
 {
-    ErrorState *err = new ErrorState(page_id, status, request);
+    const auto err = new ErrorState(page_id, status, request, al);
     err->src_addr = src_addr;
 
     if (url)

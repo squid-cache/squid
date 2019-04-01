@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 16    Cache Manager API */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "base/TextException.h"
 #include "comm.h"
 #include "comm/Connection.h"
@@ -77,7 +78,7 @@ Mgr::Inquirer::start()
         const char *url = aggrAction->command().params.httpUri.termedBuf();
         const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIpc);
         HttpRequest *req = HttpRequest::FromUrl(url, mx);
-        ErrorState err(ERR_INVALID_URL, Http::scNotFound, req);
+        ErrorState err(ERR_INVALID_URL, Http::scNotFound, req, nullptr);
         std::unique_ptr<HttpReply> reply(err.BuildHttpReply());
         replyBuf.reset(reply->pack());
     } else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,6 +27,7 @@
 #include "errorpage.h"
 #include "globals.h"
 #include "HttpRequest.h"
+#include "src/sbuf/Stream.h"
 
 #include <set>
 #include <algorithm>
@@ -112,7 +113,7 @@ aclParseDenyInfoLine(AclDenyInfoList ** head)
         return;
     }
 
-    AclDenyInfoList *A = new AclDenyInfoList(t);
+    const auto A = new AclDenyInfoList(t, ConfigParser::CurrentLocation());
 
     /* next expect a list of ACL names */
     while ((t = ConfigParser::NextToken())) {

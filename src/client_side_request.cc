@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,6 +48,7 @@
 #include "MemObject.h"
 #include "Parsing.h"
 #include "profiler/Profiler.h"
+#include "proxyp/Header.h"
 #include "redirect.h"
 #include "rfc1738.h"
 #include "SquidConfig.h"
@@ -83,7 +84,7 @@ static const char *const crlf = "\r\n";
 static void clientFollowXForwardedForCheck(allow_t answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, Ip::Address &, HttpRequest *);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, Ip::Address &, HttpRequest *, const AccessLogEntry::Pointer &);
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
@@ -172,6 +173,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
         al->tcpClient = clientConnection = aConn->clientConnection;
         al->cache.port = aConn->port;
         al->cache.caddr = aConn->log_addr;
+        al->proxyProtocolHeader = aConn->proxyProtocolHeader();
 
 #if USE_OPENSSL
         if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
@@ -806,7 +808,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
         error = clientBuildError(page_id, status,
                                  NULL,
                                  http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
-                                 http->request
+                                 http->request, http->al
                                 );
 
 #if USE_AUTH
@@ -1582,7 +1584,7 @@ ClientHttpRequest::sslBumpEstablish(Comm::Flag errflag)
 #endif
 
     assert(sslBumpNeeded());
-    getConn()->switchToHttps(request, sslBumpNeed_);
+    getConn()->switchToHttps(this, sslBumpNeed_);
 }
 
 void
@@ -1847,7 +1849,7 @@ ClientHttpRequest::doCallouts()
             // We have to serve an error, so bump the client first.
             sslBumpNeed(Ssl::bumpClientFirst);
             // set final error but delay sending until we bump
-            Ssl::ServerBump *srvBump = new Ssl::ServerBump(request, e, Ssl::bumpClientFirst);
+            Ssl::ServerBump *srvBump = new Ssl::ServerBump(this, e, Ssl::bumpClientFirst);
             errorAppendEntry(e, calloutContext->error);
             calloutContext->error = NULL;
             getConn()->setServerBump(srvBump);
@@ -2169,7 +2171,8 @@ ClientHttpRequest::calloutsError(const err_type error, const int errDetail)
         calloutContext->error = clientBuildError(error, Http::scInternalServerError,
                                 NULL,
                                 c != NULL ? c->clientConnection->remote : noAddr,
-                                request
+                                request,
+                                al
                                                 );
 #if USE_AUTH
         calloutContext->error->auth_user_request =
