@@ -1153,8 +1153,7 @@ mainInitialize(void)
 
     // Do not register cache.log descriptor with Comm (for now).
     // See https://bugs.squid-cache.org/show_bug.cgi?id=4796
-    //const SBuf desc(Debug::cache_log);
-    //fd_open(fileno(debug_log), FD_LOG, desc);
+    //fd_open(fileno(debug_log), FD_LOG, SBuf(Debug::cache_log));
 
     debugs(1, DBG_CRITICAL, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
     debugs(1, DBG_CRITICAL, "Service Name: " << service_name);

@@ -2341,7 +2341,7 @@ httpAccept(const CommAcceptCbParams &params)
     }
 
     debugs(33, 4, params.conn << ": accepted");
-    static const SBuf desc("client HTTP connect");
+    static const SBuf desc("HTTP client connection");
     fd_note(params.conn->fd, desc);
 
     if (s->tcp_keepalive.enabled)
@@ -2603,7 +2603,7 @@ httpsAccept(const CommAcceptCbParams &params)
     }
 
     debugs(33, 4, HERE << params.conn << " accepted, starting SSL negotiation.");
-    static const SBuf desc("client HTTPS connect");
+    static const SBuf desc("HTTPS client connection");
     fd_note(params.conn->fd, desc);
 
     if (s->tcp_keepalive.enabled) {
@@ -2999,7 +2999,7 @@ ConnStateData::parseTlsHandshake()
 
     assert(!inBuf.isEmpty());
     receivedFirstByte();
-    static const SBuf desc("client Parse TLS handshake");
+    static const SBuf desc("TLS client handshake");
     fd_note(clientConnection->fd, desc);
 
     bool unsupportedProtocol = false;
@@ -3817,6 +3817,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, const Htt
         pinning.peer = cbdataReference(aPeer);
     pinning.auth = request.flags.connectionAuth;
     char stmp[MAX_IPSTRLEN];
+    // XXX: Sacrificing too many CPU cycles for rarely seen FD debugging.
     SBuf desc;
     desc.appendf("%s pinned connection for %s (%d)",
              (pinning.auth || !pinning.peer) ? pinnedHost : pinning.peer->name,
