@@ -802,7 +802,7 @@ HappyConnOpener::maybeGivePrimeItsChance()
     // wait for a prime connect result or noteGavePrimeItsChance()
 }
 
-/// if possible, starts a spare connection attempt, returning true
+/// if possible, starts a spare connection attempt
 void
 HappyConnOpener::maybeOpenSpareConnection()
 {
@@ -833,8 +833,8 @@ HappyConnOpener::maybeOpenSpareConnection()
         startConnecting(spare, dest);
         return;
     }
-    // else wait for more spare paths or their exhaustion
-    return;
+
+    // wait for more spare paths or their exhaustion
 }
 
 /// Check for maximum connection tries and forwarding time restrictions
