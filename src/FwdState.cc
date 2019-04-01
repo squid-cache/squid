@@ -784,6 +784,7 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
     calls.connector = nullptr;
     connOpener.clear();
 
+    Must(n_tries <= answer.n_tries); // n_tries cannot decrease
     n_tries = answer.n_tries;
 
     if (const auto error = answer.error.get()) {
@@ -1007,7 +1008,6 @@ FwdState::connectStart()
 
     calls.connector = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer<FwdState>(&FwdState::noteConnection, this));
 
-    assert(Config.forward_max_tries - n_tries > 0);
     HttpRequest::Pointer cause = request;
     const auto cs = new HappyConnOpener(destinations, calls.connector, cause, start_t, n_tries, al);
     cs->setHost(request->url.host());
