@@ -199,6 +199,7 @@ private:
 
 void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
 
+/// a collection of previously used persistent Squid-to-peer HTTP(S) connections
 extern PconnPool *fwdPconnPool;
 
 #endif /* SQUID_FORWARD_H */
