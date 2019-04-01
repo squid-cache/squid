@@ -216,8 +216,7 @@ private:
 
     AccessLogEntryPointer ale; ///< transaction details
 
-    // XXX: We should refcount ErrorState instead of cbdata-protecting it.
-    CbcPointer<ErrorState> lastError; ///< last problem details (or nil)
+    ErrorState *lastError; ///< last problem details (or nil)
     Comm::ConnectionPointer lastFailedConnection; ///< nil if none has failed
 
     /// whether spare connection attempts disregard happy_eyeballs_* settings

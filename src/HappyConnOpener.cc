@@ -330,6 +330,7 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
     callback_(aCall),
     destinations(dests),
     ale(anAle),
+    lastError(nullptr),
     ignoreSpareRestrictions(false),
     gotSpareAllowance(false),
     allowPconn_(true),
@@ -346,6 +347,7 @@ HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const Asyn
 HappyConnOpener::~HappyConnOpener()
 {
     safe_free(host_);
+    delete lastError;
 }
 
 void
@@ -496,6 +498,7 @@ HappyConnOpener::sendFailure()
             lastError = makeError(ERR_GATEWAY_FAILURE);
         answer->error = lastError;
         assert(answer->error.valid());
+        lastError = nullptr; // the answer owns it now
         ScheduleCallHere(callback_);
     }
     callback_ = nullptr;
@@ -599,6 +602,8 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
 
     // remember the last failure (we forward it if we cannot connect anywhere)
     lastFailedConnection = params.conn;
+    delete lastError;
+    lastError = nullptr; // in case makeError() throws
     lastError = makeError(ERR_CONNECT_FAIL);
     lastError->xerrno = params.xerrno;
 
