@@ -1050,7 +1050,7 @@ FwdState::dispatch()
      */
     assert(Comm::IsConnOpen(serverConn));
 
-    fd_note(serverConnection()->fd, SBuf(entry->url()));
+    fd_note(serverConnection()->fd, request->effectiveRequestUri());
 
     fd_table[serverConnection()->fd].noteUse();
 
