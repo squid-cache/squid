@@ -425,13 +425,20 @@ HappyConnOpener::status() const
     buf.reset();
 
     buf.append(" [", 2);
-    if (stopReason != NULL) {
+    if (stopReason)
         buf.appendf("Stopped, reason:%s", stopReason);
+    if (prime) {
+        if (prime.path && prime.path->isOpen())
+            buf.appendf(" prime FD %d", prime.path->fd);
+        else if (prime.connector)
+            buf.appendf(" prime call%ud", prime.connector->id.value);
     }
-    if (prime.connector)
-        buf.appendf(" prime %p", prime.connector);
-    if (spare.connector)
-        buf.appendf(" spare %p", spare.connector);
+    if (spare) {
+        if (spare.path && spare.path->isOpen())
+            buf.appendf(" spare FD %d", spare.path->fd);
+        else if (spare.connector)
+            buf.appendf(" spare call%ud", spare.connector->id.value);
+    }
     if (n_tries)
         buf.appendf(" tries %d", n_tries);
     buf.appendf(" %s%u]", id.prefix(), id.value);
