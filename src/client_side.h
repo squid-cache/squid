@@ -301,12 +301,12 @@ public:
     /// generates and sends to tunnel.cc a fake request with a given payload
     bool initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload);
 
-    /// whether we should preserve incoming data for a future possible
-    /// tunneling of unsupported protocol decision
-    bool preserveDataForTunnellingUnsupportedProto();
+    /// whether we should preserve incoming HTTP request data for a future
+    /// possible tunneling of unsupported protocol decision
+    bool preserveHttpBytesForTunnellingUnsupportedProto() const;
 
     /// whether tunneling of unsupported protocol is allowed for this connection
-    bool ableToTunnelUnsupportedProto() const {return ableToTunnelUnsupportedProto_;}
+    bool ableToTunnelUnsupportedProto() const;
 
     /// build a fake http request
     ClientHttpRequest *buildFakeRequest(Http::MethodType const method, SBuf &useHost, unsigned short usePort, const SBuf &payload);
@@ -361,6 +361,7 @@ protected:
 
     BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
 
+    bool ableToTunnelUnsupportedProto_;
 private:
     /* ::Server API */
     virtual bool connFinishedWithConn(int size);
@@ -427,8 +428,6 @@ private:
     /// If set, are propagated to the current and all future master transactions
     /// on the connection.
     NotePairs::Pointer theNotes;
-
-    bool ableToTunnelUnsupportedProto_;
 };
 
 const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end = NULL);

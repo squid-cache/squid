@@ -1301,9 +1301,6 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
         }
 
         if (csd->ableToTunnelUnsupportedProto()) {
-            // The preserveDataForTunnelingUnsupportedProto is already checked
-            // inside Http::One::Server::parseOneRequest and the hp parser
-            // must preserved parsed data.
             csd->preservedClientData = hp->parsed();
             csd->preservedClientData.append(csd->inBuf);
         }
@@ -1879,6 +1876,10 @@ ConnStateData::receivedFirstByte()
         return;
 
     receivedFirstByte_ = true;
+
+    if (ableToTunnelUnsupportedProto_)
+        ableToTunnelUnsupportedProto_ = false;
+
     // Set timeout to Config.Timeout.request
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
@@ -2148,7 +2149,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     if (!Comm::IsConnOpen(io.conn))
         return;
 
-    if (!receivedFirstByte_ && preserveDataForTunnellingUnsupportedProto()) {
+    if (!receivedFirstByte_ && ableToTunnelUnsupportedProto()) {
         Http::StreamPointer context = pipeline.front();
         Must(context && context->http);
         HttpRequest::Pointer request = context->http->request;
@@ -2963,6 +2964,10 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     receivedFirstByte_ = false;
     // Get more data to peek at Tls
     parsingTlsHandshake = true;
+
+    // Able to tunnel after a timeout without receiving any data
+    ableToTunnelUnsupportedProto_ = true;
+
     readSomeData();
 }
 
@@ -2986,6 +2991,9 @@ ConnStateData::parseTlsHandshake()
     catch (const std::exception &ex) {
         debugs(83, 2, "error on FD " << clientConnection->fd << ": " << ex.what());
         unsupportedProtocol = true;
+
+        // We are still able to tunnel unsupported protocol if allowed
+        ableToTunnelUnsupportedProto_ = true;
     }
 
     parsingTlsHandshake = false;
@@ -2993,7 +3001,6 @@ ConnStateData::parseTlsHandshake()
     // client data may be needed for splicing and for
     // tunneling unsupportedProtocol after an error
     preservedClientData = inBuf;
-    ableToTunnelUnsupportedProto_ = true;
 
     // Even if the parser failed, each TLS detail should either be set
     // correctly or still be "unknown"; copying unknown detail is a no-op.
@@ -3989,25 +3996,25 @@ ConnStateData::checkLogging()
 }
 
 bool
-ConnStateData::preserveDataForTunnellingUnsupportedProto()
+ConnStateData::preserveHttpBytesForTunnellingUnsupportedProto() const
 {
 #if USE_OPENSSL
-    // Tunneling may be possible when parsing the TLS client handshake
-    // and when parsing the first HTTP request on a bumped connection.
-    bool firstBumpedRequest = sslBumpMode != Ssl::bumpEnd && parsedBumpedRequestCount <= 1;
+    // The first HTTP request on a bumped connection.
+    const bool firstBumpedRequest = sslBumpMode != Ssl::bumpEnd && parsedBumpedRequestCount <= 1;
+#else
+    const bool firstBumpedRequest = false;
 #endif
 
     // the first request in a connection to a plain intercepting port
     bool firstTransparentPlainRequest = !port->secure.encryptTransport && transparent() && pipeline.nrequests <= 1;
-    ableToTunnelUnsupportedProto_ = Config.accessList.on_unsupported_protocol &&
-                                    (
-#if USE_OPENSSL
-                                     firstBumpedRequest ||
-#endif
-                                     firstTransparentPlainRequest
-                                    );
 
-    return ableToTunnelUnsupportedProto_;
+    return firstBumpedRequest || firstTransparentPlainRequest;
+}
+
+bool
+ConnStateData::ableToTunnelUnsupportedProto() const
+{
+    return Config.accessList.on_unsupported_protocol && ableToTunnelUnsupportedProto_;
 }
 
 NotePairs::Pointer

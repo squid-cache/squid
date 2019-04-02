@@ -53,6 +53,11 @@ Http::One::Server::start()
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
                                       TimeoutDialer, this, Http1::Server::requestTimeout);
     commSetConnTimeout(clientConnection, Config.Timeout.request_start_timeout, timeoutCall);
+
+    // We may want to tunnel intercepted connection if timeout exceed before
+    // any bytes are received.
+    ableToTunnelUnsupportedProto_ = preserveHttpBytesForTunnellingUnsupportedProto();
+
     readSomeData();
 }
 
@@ -74,11 +79,12 @@ Http::One::Server::parseOneRequest()
 {
     PROF_start(HttpServer_parseOneRequest);
 
+    ableToTunnelUnsupportedProto_ = preserveHttpBytesForTunnellingUnsupportedProto();
     // parser is incremental. Generate new parser state if we,
     // a) do not have one already
     // b) have completed the previous request parsing already
     if (!parser_ || !parser_->needsMoreData())
-        parser_ = new Http1::RequestParser(preserveDataForTunnellingUnsupportedProto());
+        parser_ = new Http1::RequestParser(ableToTunnelUnsupportedProto());
 
     /* Process request */
     Http::Stream *context = parseHttpRequest(this, parser_);
