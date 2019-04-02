@@ -4000,13 +4000,13 @@ ConnStateData::preserveHttpBytesForTunnellingUnsupportedProto() const
 {
 #if USE_OPENSSL
     // The first HTTP request on a bumped connection.
-    const bool firstBumpedRequest = sslBumpMode != Ssl::bumpEnd && parsedBumpedRequestCount <= 1;
+    const auto firstBumpedRequest = sslBumpMode != Ssl::bumpEnd && parsedBumpedRequestCount <= 1;
 #else
-    const bool firstBumpedRequest = false;
+    const auto firstBumpedRequest = false;
 #endif
 
     // the first request in a connection to a plain intercepting port
-    bool firstTransparentPlainRequest = !port->secure.encryptTransport && transparent() && pipeline.nrequests <= 1;
+    const auto firstTransparentPlainRequest = !port->secure.encryptTransport && transparent() && pipeline.nrequests <= 1;
 
     return firstBumpedRequest || firstTransparentPlainRequest;
 }
