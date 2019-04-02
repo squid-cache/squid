@@ -19,7 +19,7 @@ namespace ProxyProtocol {
 namespace Two {
 
 /// a mapping between pseudo header names and ids
-typedef std::vector<std::pair<SBuf, FieldType> > FieldMap;
+typedef std::vector< std::pair<SBuf, FieldType> > FieldMap;
 static const FieldMap PseudoHeaderFields = {
     { SBuf(":version"), htPseudoVersion },
     { SBuf(":command"), htPseudoCommand },
@@ -36,14 +36,13 @@ static Two::FieldType IntegerToFieldType(const SBuf &);
 
 } // namespace ProxyProtocol
 
-
 const SBuf &
 ProxyProtocol::PseudoFieldTypeToFieldName(const Two::FieldType fieldType)
 {
     const auto it = std::find_if(Two::PseudoHeaderFields.begin(), Two::PseudoHeaderFields.end(),
-            [fieldType](const Two::FieldMap::value_type &item) {
-                return item.second == fieldType;
-            });
+    [fieldType](const Two::FieldMap::value_type &item) {
+        return item.second == fieldType;
+    });
 
     assert(it != Two::PseudoHeaderFields.end());
     return it->first;
@@ -54,9 +53,9 @@ ProxyProtocol::Two::FieldType
 ProxyProtocol::NameToFieldType(const SBuf &name)
 {
     const auto it = std::find_if(Two::PseudoHeaderFields.begin(), Two::PseudoHeaderFields.end(),
-            [&name](const Two::FieldMap::value_type &item) {
-                return item.first == name;
-            });
+    [&name](const Two::FieldMap::value_type &item) {
+        return item.first == name;
+    });
 
     if (it != Two::PseudoHeaderFields.end())
         return it->second;
