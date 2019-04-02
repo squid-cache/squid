@@ -13,13 +13,13 @@
 
 #include <algorithm>
 #include <limits>
-#include <map>
+#include <vector>
 
 namespace ProxyProtocol {
 namespace Two {
 
 /// a mapping between pseudo header names and ids
-typedef std::map<SBuf, FieldType> FieldMap;
+typedef std::vector<std::pair<SBuf, FieldType> > FieldMap;
 static const FieldMap PseudoHeaderFields = {
     { SBuf(":version"), htPseudoVersion },
     { SBuf(":command"), htPseudoCommand },
@@ -40,23 +40,24 @@ static Two::FieldType IntegerToFieldType(const SBuf &);
 const SBuf &
 ProxyProtocol::PseudoFieldTypeToFieldName(const Two::FieldType fieldType)
 {
-    // "flip" PseudoHeaderFields so that we can look up names by FieldType
-    typedef std::vector<SBuf> PseudoFieldNames;
-    static PseudoFieldNames pseudoFieldNames;
-    if (pseudoFieldNames.empty()) {
-        std::for_each(Two::PseudoHeaderFields.begin(), Two::PseudoHeaderFields.end(),
-            [](const Two::FieldMap::value_type &item) {
-                pseudoFieldNames.at(item.second) = item.first;
+    const auto it = std::find_if(Two::PseudoHeaderFields.begin(), Two::PseudoHeaderFields.end(),
+            [fieldType](const Two::FieldMap::value_type &item) {
+                return item.second == fieldType;
             });
-    }
-    return pseudoFieldNames.at(fieldType - Two::htPseudoBegin);
+
+    assert(it != Two::PseudoHeaderFields.end());
+    return it->first;
 }
 
 /// FieldNameToFieldType() helper that handles pseudo headers
 ProxyProtocol::Two::FieldType
 ProxyProtocol::NameToFieldType(const SBuf &name)
 {
-    const auto it = Two::PseudoHeaderFields.find(name);
+    const auto it = std::find_if(Two::PseudoHeaderFields.begin(), Two::PseudoHeaderFields.end(),
+            [&name](const Two::FieldMap::value_type &item) {
+                return item.first == name;
+            });
+
     if (it != Two::PseudoHeaderFields.end())
         return it->second;
 
