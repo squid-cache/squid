@@ -1019,8 +1019,7 @@ FwdState::connectStart()
         retriable = ch.fastCheck().allowed();
     }
     cs->setRetriable(retriable);
-    //bool bumpThroughPeer = request->flags.sslBumped && serverDestinations[0]->getPeer();
-    cs->allowPersistent(pconnRace != raceHappened/* && !bumpThroughPeer*/);
+    cs->allowPersistent(pconnRace != raceHappened);
     destinations->notificationPending = true; // start() is async
     connOpener = cs;
     AsyncJob::Start(cs);

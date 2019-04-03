@@ -519,7 +519,9 @@ HappyConnOpener::startConnecting(Attempt &attempt, Comm::ConnectionPointer &dest
     Must(!attempt.connector);
     Must(dest);
 
-    if (!allowPconn_ || !reuseOldConnection(dest))
+    const auto bumpThroughPeer = cause->flags.sslBumped && dest->getPeer();
+    const auto canReuseOld = allowPconn_ && !bumpThroughPeer;
+    if (!canReuseOld || !reuseOldConnection(dest))
         openFreshConnection(attempt, dest);
 }
 
