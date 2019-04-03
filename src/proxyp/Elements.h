@@ -34,12 +34,14 @@ typedef enum {
 
     // IDs for PROXY protocol header pseudo-headers.
     // Larger than 255 to avoid clashes with possible TLV type IDs.
-    htPseudoVersion = 0x101,
-    htPseudoCommand = 0x102,
-    htPseudoSrcAddr = 0x103,
-    htPseudoDstAddr = 0x104,
-    htPseudoSrcPort = 0x105,
-    htPseudoDstPort = 0x106
+    htPseudoBegin = 0x101, // smallest pseudo-header value (for iteration)
+    htPseudoVersion,
+    htPseudoCommand,
+    htPseudoSrcAddr,
+    htPseudoDstAddr,
+    htPseudoSrcPort,
+    htPseudoDstPort,
+    htPseudoEnd // largest pseudo-header value plus 1 (for iteration)
 } FieldType;
 
 /// PROXY protocol 'command' field value
@@ -76,9 +78,9 @@ public:
 
 } // namespace Two
 
-typedef std::map<SBuf, Two::FieldType> FieldMap;
-/// a mapping between pseudo header names and ids
-extern const FieldMap PseudoHeaderFields;
+/// \returns human-friendly PROXY protocol field name for the given field type
+/// from the [htPseudoBegin,htPseudoEnd) range
+const SBuf &PseudoFieldTypeToFieldName(const Two::FieldType);
 
 /// Parses human-friendly PROXY protocol field type representation.
 /// Only pseudo headers can (and should) be represented by their names.

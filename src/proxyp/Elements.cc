@@ -11,28 +11,53 @@
 #include "proxyp/Elements.h"
 #include "sbuf/Stream.h"
 
+#include <algorithm>
 #include <limits>
-
-const ProxyProtocol::FieldMap ProxyProtocol::PseudoHeaderFields = {
-    { SBuf(":version"), ProxyProtocol::Two::htPseudoVersion },
-    { SBuf(":command"), ProxyProtocol::Two::htPseudoCommand },
-    { SBuf(":src_addr"), ProxyProtocol::Two::htPseudoSrcAddr },
-    { SBuf(":dst_addr"), ProxyProtocol::Two::htPseudoDstAddr },
-    { SBuf(":src_port"), ProxyProtocol::Two::htPseudoSrcPort },
-    { SBuf(":dst_port"), ProxyProtocol::Two::htPseudoDstPort }
-};
+#include <vector>
 
 namespace ProxyProtocol {
+namespace Two {
+
+/// a mapping between pseudo header names and ids
+typedef std::vector< std::pair<SBuf, FieldType> > FieldMap;
+static const FieldMap PseudoHeaderFields = {
+    { SBuf(":version"), htPseudoVersion },
+    { SBuf(":command"), htPseudoCommand },
+    { SBuf(":src_addr"), htPseudoSrcAddr },
+    { SBuf(":dst_addr"), htPseudoDstAddr },
+    { SBuf(":src_port"), htPseudoSrcPort },
+    { SBuf(":dst_port"), htPseudoDstPort }
+};
+
+} // namespace Two
+
 static Two::FieldType NameToFieldType(const SBuf &);
 static Two::FieldType IntegerToFieldType(const SBuf &);
+
 } // namespace ProxyProtocol
+
+const SBuf &
+ProxyProtocol::PseudoFieldTypeToFieldName(const Two::FieldType fieldType)
+{
+    const auto it = std::find_if(Two::PseudoHeaderFields.begin(), Two::PseudoHeaderFields.end(),
+    [fieldType](const Two::FieldMap::value_type &item) {
+        return item.second == fieldType;
+    });
+
+    assert(it != Two::PseudoHeaderFields.end());
+    return it->first;
+}
 
 /// FieldNameToFieldType() helper that handles pseudo headers
 ProxyProtocol::Two::FieldType
 ProxyProtocol::NameToFieldType(const SBuf &name)
 {
-    const auto it = PseudoHeaderFields.find(name);
-    if (it != PseudoHeaderFields.end())
+    const auto it = std::find_if(Two::PseudoHeaderFields.begin(), Two::PseudoHeaderFields.end(),
+    [&name](const Two::FieldMap::value_type &item) {
+        return item.first == name;
+    });
+
+    if (it != Two::PseudoHeaderFields.end())
         return it->second;
 
     static const SBuf pseudoMark(":");
