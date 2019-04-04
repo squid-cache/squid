@@ -2360,6 +2360,9 @@ parse_peer(CachePeer ** head)
         peerDigestCreate(p);
 #endif
 
+    if (p->secure.encryptTransport)
+        p->secure.parseOptions();
+
     p->index =  ++Config.npeers;
 
     while (*head != NULL)
@@ -3830,6 +3833,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
             self_destruct();
             return;
         }
+        s->secure.parseOptions();
     }
 
     // *_port line should now be fully valid so we can clone it if necessary

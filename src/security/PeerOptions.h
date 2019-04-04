@@ -32,6 +32,9 @@ public:
     /// parse a TLS squid.conf option
     virtual void parse(const char *);
 
+    /// parse and verify the [tls-]options= string in sslOptions
+    void parseOptions();
+
     /// reset the configuration details to default
     virtual void clear() {*this = PeerOptions();}
 
@@ -66,7 +69,6 @@ public:
     virtual void dumpCfg(Packable *, const char *pfx) const;
 
 private:
-    void parseOptions(); ///< parsed value of sslOptions
     long parseFlags();
     void loadCrlFile();
     void loadKeysFile();
