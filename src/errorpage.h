@@ -171,7 +171,7 @@ public:
     err_type type = ERR_NONE;
     int page_id = ERR_NONE;
     char *err_language = nullptr;
-    Http::StatusCode httpStatus;
+    Http::StatusCode httpStatus = Http::scNone;
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request;
 #endif
