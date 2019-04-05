@@ -58,14 +58,14 @@ ResolvedPeers::extractPrime(const Comm::Connection &currentPeer)
 /// If spare paths exist for currentPeer, returns the first spare path iterator.
 /// Otherwise, if there are paths for other peers, returns one of those.
 /// Otherwise, returns the end() iterator.
-Comm::ConnectionList::const_iterator
-ResolvedPeers::findSpareOrNextPeer(const Comm::Connection &currentPeer) const
+Comm::ConnectionList::iterator
+ResolvedPeers::findSpareOrNextPeer(const Comm::Connection &currentPeer)
 {
     const auto peerToMatch = currentPeer.getPeer();
     const auto familyToAvoid = ConnectionFamily(currentPeer);
     // Optimization: Also stop at the first mismatching peer because all
     // same-peer paths are grouped together.
-    const auto found = std::find_if(paths_.begin(), paths_.end(),
+    auto found = std::find_if(paths_.begin(), paths_.end(),
     [peerToMatch, familyToAvoid](const Comm::ConnectionPointer &conn) {
         return peerToMatch != conn->getPeer() ||
                familyToAvoid != ConnectionFamily(*conn);
@@ -78,7 +78,7 @@ ResolvedPeers::findSpareOrNextPeer(const Comm::Connection &currentPeer) const
 Comm::ConnectionPointer
 ResolvedPeers::extractSpare(const Comm::Connection &currentPeer)
 {
-    const auto found = findSpareOrNextPeer(currentPeer);
+    auto found = findSpareOrNextPeer(currentPeer);
     if (found != paths_.end() && currentPeer.getPeer() == (*found)->getPeer())
         return extractFound("same-peer different-family match: ", found);
 
@@ -88,7 +88,7 @@ ResolvedPeers::extractSpare(const Comm::Connection &currentPeer)
 
 /// convenience method to finish a successful extract*() call
 Comm::ConnectionPointer
-ResolvedPeers::extractFound(const char *description, const Comm::ConnectionList::const_iterator &found)
+ResolvedPeers::extractFound(const char *description, const Comm::ConnectionList::iterator &found)
 {
     const auto path = *found;
     paths_.erase(found);
@@ -97,7 +97,7 @@ ResolvedPeers::extractFound(const char *description, const Comm::ConnectionList:
 }
 
 bool
-ResolvedPeers::haveSpare(const Comm::Connection &currentPeer) const
+ResolvedPeers::haveSpare(const Comm::Connection &currentPeer)
 {
     const auto found = findSpareOrNextPeer(currentPeer);
     return found != paths_.end() &&
@@ -105,7 +105,7 @@ ResolvedPeers::haveSpare(const Comm::Connection &currentPeer) const
 }
 
 bool
-ResolvedPeers::doneWithSpares(const Comm::Connection &currentPeer) const
+ResolvedPeers::doneWithSpares(const Comm::Connection &currentPeer)
 {
     const auto found = findSpareOrNextPeer(currentPeer);
     if (found == paths_.end())

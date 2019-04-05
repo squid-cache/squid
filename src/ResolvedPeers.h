@@ -46,13 +46,13 @@ public:
     Comm::ConnectionPointer extractSpare(const Comm::Connection &currentPeer);
 
     /// whether extractSpare() would return a non-nil path right now
-    bool haveSpare(const Comm::Connection &currentPeer) const;
+    bool haveSpare(const Comm::Connection &currentPeer);
 
     /// whether extractPrime() returns and will continue to return nil
     bool doneWithPrimes(const Comm::Connection &currentPeer) const;
 
     /// whether extractSpare() returns and will continue to return nil
-    bool doneWithSpares(const Comm::Connection &currentPeer) const;
+    bool doneWithSpares(const Comm::Connection &currentPeer);
 
     /// whether doneWithPrimes() and doneWithSpares() are true for currentPeer
     bool doneWithPeer(const Comm::Connection &currentPeer) const;
@@ -70,8 +70,8 @@ private:
     /// The protocol family of the given path, AF_INET or AF_INET6
     static int ConnectionFamily(const Comm::Connection &conn);
 
-    Comm::ConnectionList::const_iterator findSpareOrNextPeer(const Comm::Connection &currentPeer) const;
-    Comm::ConnectionPointer extractFound(const char *description, const Comm::ConnectionList::const_iterator &found);
+    Comm::ConnectionList::iterator findSpareOrNextPeer(const Comm::Connection &currentPeer);
+    Comm::ConnectionPointer extractFound(const char *description, const Comm::ConnectionList::iterator &found);
 
     Comm::ConnectionList paths_;
 };
