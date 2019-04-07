@@ -10479,8 +10479,8 @@ DOC_START
 	was answered first, then primary connections are connections to IPv6
 	peer addresses (while spare connections use IPv4 addresses).
 	Similarly, if Squid DNS A query was answered first, then primary
-	connections are connections to IPv6 peer addresses (while spare
-	connections use IPv4 addresses).
+	connections are connections to IPv4 peer addresses (while spare
+	connections use IPv6 addresses).
 
 	Shorter happy_eyeballs_connect_timeout values reduce master
 	transaction response time, potentially improving user-perceived
