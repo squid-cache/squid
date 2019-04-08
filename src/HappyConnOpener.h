@@ -99,7 +99,7 @@ std::ostream &operator <<(std::ostream &, const HappyConnOpenerAnswer &);
 /// Shares ResolvedPeers list with the job initiator.
 class HappyConnOpener: public AsyncJob
 {
-    CBDATA_CLASS(HappyConnOpener);
+    CBDATA_CHILD(HappyConnOpener);
 public:
     typedef HappyConnOpenerAnswer Answer;
 
