@@ -2675,18 +2675,18 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
     }
 
     if (reply.result == Helper::BrokenHelper) {
-        debugs(33, 5, HERE << "Certificate for " << tlsConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply);
+        debugs(33, 5, "Certificate for " << tlsConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply);
     } else if (!reply.other().hasContent()) {
         debugs(1, DBG_IMPORTANT, HERE << "\"ssl_crtd\" helper returned <NULL> reply.");
     } else {
         Ssl::CrtdMessage reply_message(Ssl::CrtdMessage::REPLY);
         if (reply_message.parse(reply.other().content(), reply.other().contentSize()) != Ssl::CrtdMessage::OK) {
-            debugs(33, 5, HERE << "Reply from ssl_crtd for " << tlsConnectHostOrIp << " is incorrect");
+            debugs(33, 5, "Reply from ssl_crtd for " << tlsConnectHostOrIp << " is incorrect");
         } else {
             if (reply.result != Helper::Okay) {
-                debugs(33, 5, HERE << "Certificate for " << tlsConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
+                debugs(33, 5, "Certificate for " << tlsConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
-                debugs(33, 5, HERE << "Certificate for " << tlsConnectHostOrIp << " was successfully recieved from ssl_crtd");
+                debugs(33, 5, "Certificate for " << tlsConnectHostOrIp << " was successfully recieved from ssl_crtd");
                 if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
                     doPeekAndSpliceStep();
                     auto ssl = fd_table[clientConnection->fd].ssl.get();
@@ -3188,9 +3188,9 @@ ConnStateData::httpsPeeked(PinnedIdleContext pic)
 
     if (Comm::IsConnOpen(pic.connection)) {
         notePinnedConnectionBecameIdle(pic);
-        debugs(33, 5, HERE << "bumped HTTPS server: " << tlsConnectHostOrIp);
+        debugs(33, 5, "bumped HTTPS server: " << tlsConnectHostOrIp);
     } else
-        debugs(33, 5, HERE << "Error while bumping: " << tlsConnectHostOrIp);
+        debugs(33, 5, "Error while bumping: " << tlsConnectHostOrIp);
 
     getSslContextStart();
 }

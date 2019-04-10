@@ -406,8 +406,8 @@ private:
     /// The number of parsed HTTP requests headers on a bumped client connection
     uint64_t parsedBumpedRequestCount;
 
-    /// The SSL server host name appears in CONNECT request or the server ip address for the intercepted requests
-    SBuf tlsConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request
+    /// The TLS server host name appears in CONNECT request or the server ip address for the intercepted requests
+    SBuf tlsConnectHostOrIp; ///< The TLS server host name as passed in the CONNECT request
     unsigned short tlsConnectPort; ///< The TLS server port number as passed in the CONNECT request
     SBuf sslCommonName_; ///< CN name for SSL certificate generation
 
