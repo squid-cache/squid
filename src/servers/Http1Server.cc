@@ -56,7 +56,7 @@ Http::One::Server::start()
 
     // We may want to tunnel intercepted connection if timeout exceed before
     // any bytes are received.
-    ableToTunnelUnsupportedProto_ = preserveHttpBytesForTunnellingUnsupportedProto();
+    preservingClientData_ = preserveHttpBytesForTunnellingUnsupportedProto();
 
     readSomeData();
 }
@@ -79,12 +79,12 @@ Http::One::Server::parseOneRequest()
 {
     PROF_start(HttpServer_parseOneRequest);
 
-    ableToTunnelUnsupportedProto_ = preserveHttpBytesForTunnellingUnsupportedProto();
+    preservingClientData_ = preserveHttpBytesForTunnellingUnsupportedProto();
     // parser is incremental. Generate new parser state if we,
     // a) do not have one already
     // b) have completed the previous request parsing already
     if (!parser_ || !parser_->needsMoreData())
-        parser_ = new Http1::RequestParser(ableToTunnelUnsupportedProto());
+        parser_ = new Http1::RequestParser(preservingClientData_);
 
     /* Process request */
     Http::Stream *context = parseHttpRequest(this, parser_);

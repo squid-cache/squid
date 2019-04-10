@@ -1290,6 +1290,9 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
 {
     /* Attempt to parse the first line; this will define where the method, url, version and header begin */
     {
+        // TODO: Convert parseHttpRequest() into a method and inline this call.
+        csd->preserveClientDataIfNeeded();
+
         const bool parsedOk = hp->parse(csd->inBuf);
 
         // sync the buffers after parsing.
@@ -1298,14 +1301,6 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
         if (hp->needsMoreData()) {
             debugs(33, 5, "Incomplete request, waiting for end of request line");
             return NULL;
-        }
-
-        // XXX: ableToTunnelUnsupportedProto() depends on Config which may
-        // change many times while we read/parse the request headers.
-        if (csd->ableToTunnelUnsupportedProto()) {
-            // TODO: preservedClientData=inBuf before resetting inBuf above.
-            csd->preservedClientData = hp->parsed();
-            csd->preservedClientData.append(csd->inBuf);
         }
 
         if (!parsedOk) {
@@ -1559,7 +1554,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
 bool
 clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpRequest::Pointer &request, const HttpRequestMethod& method, err_type requestError)
 {
-    if (conn->ableToTunnelUnsupportedProto()) {
+    if (Config.accessList.on_unsupported_protocol && conn->ableToTunnelUnsupportedProto()) {
         ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, request.getRaw(), nullptr);
         checklist.al = (context && context->http) ? context->http->al : nullptr;
         checklist.requestErrorType = requestError;
@@ -2148,9 +2143,9 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     if (!Comm::IsConnOpen(io.conn))
         return;
 
-    // XXX: clientTunnelOnError() also checks ableToTunnelUnsupportedProto().
+    // XXX: clientTunnelOnError() does the same checks.
     // TODO: Refactor to just call ConnStateData::tunnelOnError(mthd, err) here.
-    if (ableToTunnelUnsupportedProto()) {
+    if (Config.accessList.on_unsupported_protocol && ableToTunnelUnsupportedProto()) {
         Http::StreamPointer context = pipeline.front();
         Must(context && context->http);
         HttpRequest::Pointer request = context->http->request;
@@ -2941,7 +2936,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     resetSslCommonName(request->url.host());
 
     // Able to tunnel after a timeout without receiving any data
-    ableToTunnelUnsupportedProto_ = true;
+    preservingClientData_ = true;
 
     // We are going to read new request
     flags.readMore = true;
@@ -3999,6 +3994,11 @@ ConnStateData::checkLogging()
 bool
 ConnStateData::preserveHttpBytesForTunnellingUnsupportedProto() const
 {
+    // If our decision here is negative, configuration changes are irrelevant.
+    // Otherwise, clientTunnelOnError() rechecks configuration before tunneling.
+    if (!Config.accessList.on_unsupported_protocol)
+        return false;
+
 #if USE_OPENSSL
     // The first HTTP request on a bumped connection.
     const auto firstBumpedRequest = sslBumpMode != Ssl::bumpEnd && parsedBumpedRequestCount <= 1;
@@ -4015,7 +4015,7 @@ ConnStateData::preserveHttpBytesForTunnellingUnsupportedProto() const
 bool
 ConnStateData::ableToTunnelUnsupportedProto() const
 {
-    return Config.accessList.on_unsupported_protocol && ableToTunnelUnsupportedProto_;
+    return preservingClientData_;
 }
 
 NotePairs::Pointer

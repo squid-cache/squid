@@ -308,11 +308,16 @@ public:
     /// whether tunneling of unsupported protocol is allowed for this connection
     bool ableToTunnelUnsupportedProto() const;
 
+    /// keep preservedClientData up to date if we may use it later
+    void preserveClientDataIfNeeded() {
+        if (preservingClientData_)
+            preservedClientData = inBuf;
+    }
+
     /// build a fake http request
     ClientHttpRequest *buildFakeRequest(Http::MethodType const method, SBuf &useHost, unsigned short usePort, const SBuf &payload);
 
-    /// client data which may need to forward as-is to server after an
-    /// on_unsupported_protocol tunnel decision.
+    /// TLS or HTTP client data which may need to forward as-is
     SBuf preservedClientData;
 
     /* Registered Runner API */
@@ -361,7 +366,9 @@ protected:
 
     BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
 
-    bool ableToTunnelUnsupportedProto_;
+    /// whether preservedClientData_ is valid and should be kept up to date
+    bool preservingClientData_;
+
 private:
     /* ::Server API */
     virtual bool connFinishedWithConn(int size);
