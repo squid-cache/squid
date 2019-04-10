@@ -1300,7 +1300,10 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
             return NULL;
         }
 
+        // XXX: ableToTunnelUnsupportedProto() depends on Config which may
+        // change many times while we read/parse the request headers.
         if (csd->ableToTunnelUnsupportedProto()) {
+            // TODO: preservedClientData=inBuf before resetting inBuf above.
             csd->preservedClientData = hp->parsed();
             csd->preservedClientData.append(csd->inBuf);
         }
@@ -1876,10 +1879,6 @@ ConnStateData::receivedFirstByte()
         return;
 
     receivedFirstByte_ = true;
-
-    if (ableToTunnelUnsupportedProto_)
-        ableToTunnelUnsupportedProto_ = false;
-
     // Set timeout to Config.Timeout.request
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
@@ -2149,7 +2148,9 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     if (!Comm::IsConnOpen(io.conn))
         return;
 
-    if (!receivedFirstByte_ && ableToTunnelUnsupportedProto()) {
+    // XXX: clientTunnelOnError() also checks ableToTunnelUnsupportedProto().
+    // TODO: Refactor to just call ConnStateData::tunnelOnError(mthd, err) here.
+    if (ableToTunnelUnsupportedProto()) {
         Http::StreamPointer context = pipeline.front();
         Must(context && context->http);
         HttpRequest::Pointer request = context->http->request;
@@ -2930,13 +2931,20 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     Must(http->request);
     auto &request = http->request;
 
+    // Depending on receivedFirstByte_, we are at the start of either an
+    // established CONNECT tunnel with the client or an intercepted TCP (and
+    // presumably TLS) connection from the client. Expect TLS Client Hello.
+    debugs(33, 5, (receivedFirstByte_ ? "post-CONNECT " : "raw TLS ") << clientConnection);
+
     tlsConnectHostOrIp =  request->url.hostOrIp();
     tlsConnectPort = request->url.port();
     resetSslCommonName(request->url.host());
 
+    // Able to tunnel after a timeout without receiving any data
+    ableToTunnelUnsupportedProto_ = true;
+
     // We are going to read new request
     flags.readMore = true;
-    debugs(33, 5, HERE << "converting " << clientConnection << " to SSL");
 
     // keep version major.minor details the same.
     // but we are now performing the HTTPS handshake traffic
@@ -2964,10 +2972,6 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     receivedFirstByte_ = false;
     // Get more data to peek at Tls
     parsingTlsHandshake = true;
-
-    // Able to tunnel after a timeout without receiving any data
-    ableToTunnelUnsupportedProto_ = true;
-
     readSomeData();
 }
 
