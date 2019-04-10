@@ -2995,9 +2995,6 @@ ConnStateData::parseTlsHandshake()
     catch (const std::exception &ex) {
         debugs(83, 2, "error on FD " << clientConnection->fd << ": " << ex.what());
         unsupportedProtocol = true;
-
-        // We are still able to tunnel unsupported protocol if allowed
-        ableToTunnelUnsupportedProto_ = true;
     }
 
     parsingTlsHandshake = false;
