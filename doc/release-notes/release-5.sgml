@@ -85,8 +85,8 @@ Most user-facing changes are reflected in squid.conf (see below).
    previous destination have been received and tried.
 
 <p>The Cache Manager <em>mgr:ipcache</em> report no longer contains
-   <q>IPcache Entries In Use</q> but that info is now available as
-   <q>cbdata ipcache_entry</q> row on the <em>mgr:mem</em> page.
+   "IPcache Entries In Use" but that info is now available as
+   "cbdata ipcache_entry" row on the <em>mgr:mem</em> page.
 
 
 <sect1>Kerberos Group Helper
@@ -199,7 +199,7 @@ This section gives a thorough account of those changes in three categories:
 	<p>Replaced by <em>mark_client_packet</em>.
 
 	<tag>dns_v4_first</tag>
-	<p>Removed. The new <q>Happy Eyeballs</q> algorithm uses received IP
+	<p>Removed. The new "Happy Eyeballs" algorithm uses received IP
 	   addresses as soon as they are needed.
 	<p>Firewall rules prohibiting IPv6 TCP connections remain the preferred
 	   configuration method for 'disabling' IPv6 connectivity, with DNS
