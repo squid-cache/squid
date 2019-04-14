@@ -285,7 +285,7 @@ helperOpenServers(helper * hlp)
         if (rfd == wfd) {
             SBuf desc;
             desc.appendf("%s #%d", shortname, k + 1);
-            fd_note(rfd, desc);
+            fd_note(rfd, ToSBuf(shortname, " #", k + 1));
         } else {
             SBuf desc;
             desc.appendf("reading %s #%d", shortname, k + 1);
