@@ -38,6 +38,11 @@ storeSwapInStart(store_client * sc)
         return;
     }
 
+    if (e->swapoutFailed()) {
+        debugs(20, DBG_IMPORTANT, "BUG: Attempt to swap in a failed-to-store entry " << *e << ". Salvaged.");
+        return;
+    }
+
     assert(e->mem_obj != NULL);
     sc->swapin_sio = storeOpen(e, storeSwapInFileNotify, storeSwapInFileClosed, sc);
 }
