@@ -119,6 +119,8 @@ public:
     bool swappingOut() const { return swap_status == SWAPOUT_WRITING; }
     /// whether the entire entry is now on disk (possibly marked for deletion)
     bool swappedOut() const { return swap_status == SWAPOUT_DONE; }
+    /// whether we failed to write this entry to disk
+    bool swapoutFailed() const { return swap_status == SWAPOUT_FAILED; }
     void swapOutFileClose(int how);
     const char *url() const;
     /// Satisfies cachability requirements shared among disk and RAM caches.

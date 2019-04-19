@@ -83,7 +83,8 @@ const char *storeStatusStr[] = {
 const char *swapStatusStr[] = {
     "SWAPOUT_NONE",
     "SWAPOUT_WRITING",
-    "SWAPOUT_DONE"
+    "SWAPOUT_DONE",
+    "SWAPOUT_FAILED"
 };
 
 /*
@@ -257,6 +258,8 @@ StoreEntry::setNoDelay(bool const newValue)
 // XXX: Type names mislead. STORE_DISK_CLIENT actually means that we should
 //      open swapin file, aggressively trim memory, and ignore read-ahead gap.
 //      It does not mean we will read from disk exclusively (or at all!).
+//      STORE_MEM_CLIENT covers all other cases, including in-memory entries,
+//      newly created entries, and entries not backed by disk or memory cache.
 // XXX: May create STORE_DISK_CLIENT with no disk caching configured.
 // XXX: Collapsed clients cannot predict their type.
 store_client_t
@@ -278,6 +281,9 @@ StoreEntry::storeClientType() const
         debugs(20, DBG_IMPORTANT, "storeClientType: adding to ENTRY_ABORTED entry");
         return STORE_MEM_CLIENT;
     }
+
+    if (swapoutFailed())
+        return STORE_MEM_CLIENT;
 
     if (store_status == STORE_OK) {
         /* the object has completed. */
@@ -2044,13 +2050,23 @@ StoreEntry::detachFromDisk()
 void
 StoreEntry::checkDisk() const
 {
-    const bool ok = (swap_dirn < 0) == (swap_filen < 0) &&
-                    (swap_dirn < 0) == (swap_status == SWAPOUT_NONE) &&
-                    (swap_dirn < 0 || swap_dirn < Config.cacheSwap.n_configured);
-
-    if (!ok) {
-        debugs(88, DBG_IMPORTANT, "ERROR: inconsistent disk entry state " << *this);
-        throw std::runtime_error("inconsistent disk entry state ");
+    try {
+        if (swap_dirn < 0) {
+            Must(swap_filen < 0);
+            Must(swap_status == SWAPOUT_NONE);
+        } else {
+            Must(swap_filen >= 0);
+            Must(swap_dirn < Config.cacheSwap.n_configured);
+            if (swapoutFailed()) {
+                Must(EBIT_TEST(flags, RELEASE_REQUEST));
+            } else {
+                Must(swappingOut() || swappedOut());
+            }
+        }
+    } catch (...) {
+        debugs(88, DBG_IMPORTANT, "ERROR: inconsistent disk entry state " <<
+               *this << "; problem: " << CurrentException);
+        throw;
     }
 }
 
