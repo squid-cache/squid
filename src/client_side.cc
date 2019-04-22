@@ -2931,14 +2931,17 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     // Depending on receivedFirstByte_, we are at the start of either an
     // established CONNECT tunnel with the client or an intercepted TCP (and
     // presumably TLS) connection from the client. Expect TLS Client Hello.
-    debugs(33, 5, (receivedFirstByte_ ? "post-CONNECT " : "raw TLS ") << clientConnection);
+    const auto insideConnectTunnel = receivedFirstByte_;
+    debugs(33, 5, (insideConnectTunnel ? "post-CONNECT " : "raw TLS ") << clientConnection);
 
     tlsConnectHostOrIp =  request->url.hostOrIp();
     tlsConnectPort = request->url.port();
     resetSslCommonName(request->url.host());
 
-    // Able to tunnel after a timeout without receiving any data
-    preservingClientData_ = true;
+    // If the protocol has changed, then reset preservingClientData_.
+    // Otherwise, its value initially set in start() is still valid/fresh.
+    if (insideConnectTunnel)
+        preservingClientData_ = preserveHttpBytesForTunnellingUnsupportedProto();
 
     // We are going to read new request
     flags.readMore = true;
