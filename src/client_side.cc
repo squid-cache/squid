@@ -2248,6 +2248,8 @@ ConnStateData::start()
     } else
         whenClientIpKnown();
 
+    // requires needProxyProtocolHeader_ which is initialized above
+    preservingClientData_ = preserveHttpBytesForTunnellingUnsupportedProto();
 }
 
 void
@@ -3994,6 +3996,10 @@ ConnStateData::checkLogging()
 bool
 ConnStateData::preserveHttpBytesForTunnellingUnsupportedProto() const
 {
+    // do not tunnel on errors while expecting PROXY protocol bytes
+    if (needProxyProtocolHeader_)
+        return false;
+
     // If our decision here is negative, configuration changes are irrelevant.
     // Otherwise, clientTunnelOnError() rechecks configuration before tunneling.
     if (!Config.accessList.on_unsupported_protocol)

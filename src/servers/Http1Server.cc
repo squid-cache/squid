@@ -54,10 +54,6 @@ Http::One::Server::start()
                                       TimeoutDialer, this, Http1::Server::requestTimeout);
     commSetConnTimeout(clientConnection, Config.Timeout.request_start_timeout, timeoutCall);
 
-    // We may want to tunnel intercepted connection if timeout exceed before
-    // any bytes are received.
-    preservingClientData_ = preserveHttpBytesForTunnellingUnsupportedProto();
-
     readSomeData();
 }
 
