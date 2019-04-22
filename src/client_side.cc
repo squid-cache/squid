@@ -4015,15 +4015,18 @@ ConnStateData::preserveHttpBytesForTunnellingUnsupportedProto() const
 
 #if USE_OPENSSL
     // The first HTTP request on a bumped connection.
-    const auto firstBumpedRequest = sslBumpMode != Ssl::bumpEnd && parsedBumpedRequestCount <= 1;
-#else
-    const auto firstBumpedRequest = false;
+    // XXX: sslBumpMode != bumpEnd includes non-bumped bumpSplice and bumpNone.
+    // XXX: parsedBumpedRequestCount == 1 means the _second_ HTTP request
+    if (sslBumpMode != Ssl::bumpEnd && parsedBumpedRequestCount <= 1)
+        return true;
 #endif
 
     // the first request in a connection to a plain intercepting port
-    const auto firstTransparentPlainRequest = !port->secure.encryptTransport && transparent() && pipeline.nrequests <= 1;
+    // XXX: pipeline.nrequests == 1 may mean the _second_ request
+    if (!port->secure.encryptTransport && transparent() && pipeline.nrequests <= 1)
+        return true;
 
-    return firstBumpedRequest || firstTransparentPlainRequest;
+    return false;
 }
 
 bool
