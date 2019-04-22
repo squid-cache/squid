@@ -1916,6 +1916,11 @@ ConnStateData::clientParseRequests()
             // we have been waiting for PROXY to provide client-IP
             // for some lookups, ie rDNS and IDENT.
             whenClientIpKnown();
+
+            // Done with the PROXY protocol which clears preservingClientData_.
+            // If the next protocol supports on_unsupported_protocol, then its
+            // parseOneRequest() must reset preservingClientData_.
+            assert(!preservingClientData_);
         }
 
         if (Http::StreamPointer context = parseOneRequest()) {
