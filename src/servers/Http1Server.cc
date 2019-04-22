@@ -75,7 +75,10 @@ Http::One::Server::parseOneRequest()
 {
     PROF_start(HttpServer_parseOneRequest);
 
+    // reset because the protocol may have changed if this is the first request
+    // and because we never bypass parsing failures of N+1st same-proto request
     preservingClientData_ = preserveHttpBytesForTunnellingUnsupportedProto();
+
     // parser is incremental. Generate new parser state if we,
     // a) do not have one already
     // b) have completed the previous request parsing already
