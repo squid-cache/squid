@@ -2265,7 +2265,7 @@ ConnStateData::start()
         whenClientIpKnown();
 
     // requires needProxyProtocolHeader_ which is initialized above
-    preservingClientData_ = preserveHttpBytesForTunnellingUnsupportedProto();
+    preservingClientData_ = shouldPreserveClientData();
 }
 
 void
@@ -2957,7 +2957,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     // If the protocol has changed, then reset preservingClientData_.
     // Otherwise, its value initially set in start() is still valid/fresh.
     if (insideConnectTunnel)
-        preservingClientData_ = preserveHttpBytesForTunnellingUnsupportedProto();
+        preservingClientData_ = shouldPreserveClientData();
 
     // We are going to read new request
     flags.readMore = true;
@@ -4013,7 +4013,7 @@ ConnStateData::checkLogging()
 }
 
 bool
-ConnStateData::preserveHttpBytesForTunnellingUnsupportedProto() const
+ConnStateData::shouldPreserveClientData() const
 {
     // do not tunnel on errors while expecting PROXY protocol bytes
     if (needProxyProtocolHeader_)

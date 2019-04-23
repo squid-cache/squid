@@ -301,9 +301,9 @@ public:
     /// generates and sends to tunnel.cc a fake request with a given payload
     bool initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload);
 
-    /// whether we should preserve incoming HTTP request data for a future
-    /// possible tunneling of unsupported protocol decision
-    bool preserveHttpBytesForTunnellingUnsupportedProto() const;
+    /// whether we should start saving inBuf client bytes in anticipation of
+    /// tunneling them to the server later (on_unsupported_protocol)
+    bool shouldPreserveClientData() const;
 
     /// keep preservedClientData up to date if we may use it later
     void preserveClientDataIfNeeded() {
