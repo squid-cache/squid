@@ -317,7 +317,9 @@ public:
     /// build a fake http request
     ClientHttpRequest *buildFakeRequest(Http::MethodType const method, SBuf &useHost, unsigned short usePort, const SBuf &payload);
 
-    /// TLS or HTTP client data which may need to forward as-is
+    /// From-client handshake bytes (including bytes at the beginning of a
+    /// CONNECT tunnel) which we may need to forward as-is if their syntax does
+    /// not match the expected TLS or HTTP protocol (on_unsupported_protocol).
     SBuf preservedClientData;
 
     /* Registered Runner API */
@@ -366,7 +368,7 @@ protected:
 
     BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
 
-    /// whether preservedClientData_ is valid and should be kept up to date
+    /// whether preservedClientData is valid and should be kept up to date
     bool preservingClientData_;
 
 private:

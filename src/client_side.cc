@@ -1934,7 +1934,7 @@ ConnStateData::clientParseRequests()
             // for some lookups, ie rDNS and IDENT.
             whenClientIpKnown();
 
-            // Done with the PROXY protocol which clears preservingClientData_.
+            // Done with PROXY protocol which has cleared preservingClientData_.
             // If the next protocol supports on_unsupported_protocol, then its
             // parseOneRequest() must reset preservingClientData_.
             assert(!preservingClientData_);
@@ -2950,7 +2950,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     const auto insideConnectTunnel = receivedFirstByte_;
     debugs(33, 5, (insideConnectTunnel ? "post-CONNECT " : "raw TLS ") << clientConnection);
 
-    tlsConnectHostOrIp =  request->url.hostOrIp();
+    tlsConnectHostOrIp = request->url.hostOrIp();
     tlsConnectPort = request->url.port();
     resetSslCommonName(request->url.host());
 
@@ -4025,13 +4025,14 @@ ConnStateData::shouldPreserveClientData() const
         return false;
 
 #if USE_OPENSSL
-    // The first HTTP request on a bumped connection.
+    // the 1st HTTP request on a bumped connection
     // XXX: sslBumpMode != bumpEnd includes non-bumped bumpSplice and bumpNone.
     if (!parsedBumpedRequestCount && sslBumpMode != Ssl::bumpEnd)
         return true;
 #endif
 
-    // the first request in a connection to a plain intercepting port
+    // the 1st HTTP or FTP request on a connection to a plain intercepting port
+    // XXX: Exclude FTP ports. They do not support on_unsupported_protocol.
     if (!pipeline.nrequests && !port->secure.encryptTransport && transparent())
         return true;
 
