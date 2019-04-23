@@ -1547,37 +1547,54 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
 }
 #endif // USE_OPENSSL
 
-/**
- * Check on_unsupported_protocol checklist and return true if tunnel mode selected
- * or false otherwise
- */
+/// ConnStateData::tunnelOnError() wrapper. Reduces code changes. TODO: Remove.
 bool
 clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpRequest::Pointer &request, const HttpRequestMethod& method, err_type requestError)
 {
-    if (Config.accessList.on_unsupported_protocol && conn->ableToTunnelUnsupportedProto()) {
-        ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, request.getRaw(), nullptr);
-        checklist.al = (context && context->http) ? context->http->al : nullptr;
+    assert(conn);
+    assert(conn->pipeline.front() == context);
+    return conn->tunnelOnError(method, requestError);
+}
+
+/// initiate tunneling if possible or return false otherwise
+bool
+ConnStateData::tunnelOnError(const HttpRequestMethod &method, const err_type requestError)
+{
+    if (!Config.accessList.on_unsupported_protocol) {
+        debugs(33, 5, "disabled; send error: " << requestError);
+        return false;
+    }
+
+    if (!preservingClientData_) {
+        debugs(33, 3, "may have forgotten client data; send error: " << requestError);
+        return false;
+    }
+
+    const auto context = pipeline.front();
+    const auto http = context ? context->http : nullptr;
+    const auto request = http ? http->request : nullptr;
+
+    // TODO: Remove this change-reducing hack.
+    const auto conn = this;
+    {
+        ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, request, nullptr);
+        checklist.al = http ? http->al : nullptr;
         checklist.requestErrorType = requestError;
         checklist.src_addr = conn->clientConnection->remote;
         checklist.my_addr = conn->clientConnection->local;
         checklist.conn(conn);
-        ClientHttpRequest *http = context ? context->http : nullptr;
         const char *log_uri = http ? http->log_uri : nullptr;
         checklist.syncAle(request.getRaw(), log_uri);
         auto answer = checklist.fastCheck();
         if (answer.allowed() && answer.kind == 1) {
             debugs(33, 3, "Request will be tunneled to server");
-            if (context) {
-                assert(conn->pipeline.front() == context); // XXX: still assumes HTTP/1 semantics
-                context->finished(); // Will remove from conn->pipeline queue
-            }
+            if (context)
+                context->finished(); // Will remove from pipeline queue
             Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
             return conn->initiateTunneledRequest(request, Http::METHOD_NONE, "unknown-protocol", conn->preservedClientData);
-        } else {
-            debugs(33, 3, "Continue with returning the error: " << requestError);
         }
     }
-
+    debugs(33, 3, "denied; send error: " << requestError);
     return false;
 }
 
@@ -2148,15 +2165,9 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     if (!Comm::IsConnOpen(io.conn))
         return;
 
-    // XXX: clientTunnelOnError() does the same checks.
-    // TODO: Refactor to just call ConnStateData::tunnelOnError(mthd, err) here.
-    if (Config.accessList.on_unsupported_protocol && ableToTunnelUnsupportedProto()) {
-        Http::StreamPointer context = pipeline.front();
-        Must(context && context->http);
-        HttpRequest::Pointer request = context->http->request;
-        if (clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_REQUEST_START_TIMEOUT))
-            return;
-    }
+    if (tunnelOnError(HttpRequestMethod(), ERR_REQUEST_START_TIMEOUT))
+        return;
+
     /*
     * Just close the connection to not confuse browsers
     * using persistent connections. Some browsers open
@@ -4025,12 +4036,6 @@ ConnStateData::preserveHttpBytesForTunnellingUnsupportedProto() const
         return true;
 
     return false;
-}
-
-bool
-ConnStateData::ableToTunnelUnsupportedProto() const
-{
-    return preservingClientData_;
 }
 
 NotePairs::Pointer

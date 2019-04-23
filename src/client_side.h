@@ -305,14 +305,14 @@ public:
     /// possible tunneling of unsupported protocol decision
     bool preserveHttpBytesForTunnellingUnsupportedProto() const;
 
-    /// whether tunneling of unsupported protocol is allowed for this connection
-    bool ableToTunnelUnsupportedProto() const;
-
     /// keep preservedClientData up to date if we may use it later
     void preserveClientDataIfNeeded() {
         if (preservingClientData_)
             preservedClientData = inBuf;
     }
+
+    // TODO: move to the protected section when removing clientTunnelOnError()
+    bool tunnelOnError(const HttpRequestMethod &, const err_type);
 
     /// build a fake http request
     ClientHttpRequest *buildFakeRequest(Http::MethodType const method, SBuf &useHost, unsigned short usePort, const SBuf &payload);
