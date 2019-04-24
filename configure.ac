@@ -3301,7 +3301,6 @@ AC_CHECK_FUNCS(\
 	getdtablesize \
 	getpagesize \
 	getpass \
-	getrlimit \
 	getrusage \
 	getspnam \
 	gettimeofday \

@@ -164,7 +164,7 @@ dnl checks the maximum number of filedescriptor we can open
 dnl sets shell var squid_filedescriptors_num
 
 AC_DEFUN([SQUID_CHECK_MAXFD],[
-AC_CHECK_FUNCS(setrlimit)
+AC_CHECK_FUNCS(getrlimit setrlimit)
 AC_MSG_CHECKING(Maximum number of filedescriptors we can open)
 dnl damn! FreeBSD pthreads break dup2().
 SQUID_STATE_SAVE(maxfd)
@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
      */
     i = NOFILE;
 #else
-#if HAVE_SETRLIMIT
+#if HAVE_GETRLIMIT && HAVE_SETRLIMIT
     struct rlimit rl;
 #if defined(RLIMIT_NOFILE)
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
