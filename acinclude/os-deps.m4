@@ -248,9 +248,16 @@ SQUID_STATE_ROLLBACK(maxfd)
 
 AC_MSG_NOTICE([Default number of filedescriptors: $squid_filedescriptors_num])
 
-if test `expr $squid_filedescriptors_num % 64` != 0; then
-    AC_MSG_WARN([$squid_filedescriptors_num is not an multiple of 64. This may cause issues on certain platforms.])
-fi
+AS_IF([ test `expr $squid_filedescriptors_num % 64` != 0 ],[
+  AC_MSG_WARN([$squid_filedescriptors_num is not an multiple of 64. This may cause issues on certain platforms.])
+])
+
+AS_IF([ test "$squid_filedescriptors_num" -lt 512 ],[
+  AC_MSG_WARN([$squid_filedescriptors_num may not be enough filedescriptors if your])
+  AC_MSG_WARN([cache will be very busy.  Please see the FAQ page])
+  AC_MSG_WARN([http://wiki.squid-cache.org/SquidFaq/TroubleShooting])
+  AC_MSG_WARN([on how to increase your filedescriptor limit])
+])
 ])
 
 
