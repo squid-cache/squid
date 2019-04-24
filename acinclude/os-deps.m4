@@ -236,14 +236,17 @@ int main(int argc, char **argv) {
 	fprintf (fp, "%d\n", i & ~0x3F);
 	return 0;
 }
-  ]])],[squid_filedescriptors_num=`cat conftestval`],[squid_filedescriptors_num=256],[squid_filedescriptors_num=256])
+  ]])],[squid_filedescriptors_limit=`cat conftestval`],[],[])
   dnl Microsoft MSVCRT.DLL supports 2048 maximum FDs
   case "$host_os" in
   mingw|mingw32)
-    squid_filedescriptors_num="2048"
+    squid_filedescriptors_limit="2048"
     ;;
   esac
-  AC_MSG_RESULT($squid_filedescriptors_num)
+  AC_MSG_RESULT($squid_filedescriptors_limit)
+  AS_IF([ test "x$squid_filedescriptors_num" = "x" ],[
+    squid_filedescriptors_num=$squid_filedescriptors_limit
+  ])
 SQUID_STATE_ROLLBACK(maxfd)
 
 AC_MSG_NOTICE([Default number of filedescriptors: $squid_filedescriptors_num])
