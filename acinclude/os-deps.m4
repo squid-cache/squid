@@ -166,14 +166,9 @@ dnl sets shell var squid_filedescriptors_num
 AC_DEFUN([SQUID_CHECK_MAXFD],[
 AC_CHECK_FUNCS(getrlimit setrlimit)
 AC_MSG_CHECKING(Maximum number of filedescriptors we can open)
-dnl damn! FreeBSD pthreads break dup2().
 SQUID_STATE_SAVE(maxfd)
-  case $host in
-  i386-unknown-freebsd*)
-      if echo "$LDFLAGS" | grep -q pthread; then
-  	LDFLAGS=`echo $LDFLAGS | sed -e "s/-pthread//"`
-      fi
-  esac
+dnl FreeBSD pthreads break dup2().
+  AS_CASE([$host_os],[freebsd],[ LDFLAGS=`echo $LDFLAGS | sed -e "s/-pthread//"` ])
   AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdio.h>
 #include <unistd.h>
@@ -238,11 +233,7 @@ int main(int argc, char **argv) {
 }
   ]])],[squid_filedescriptors_limit=`cat conftestval`],[],[])
   dnl Microsoft MSVCRT.DLL supports 2048 maximum FDs
-  case "$host_os" in
-  mingw|mingw32)
-    squid_filedescriptors_limit="2048"
-    ;;
-  esac
+  AS_CASE(["$host_os"],[mingw|mingw32],[squid_filedescriptors_limit="2048"])
   AC_MSG_RESULT($squid_filedescriptors_limit)
   AS_IF([ test "x$squid_filedescriptors_num" = "x" ],[
     squid_filedescriptors_num=$squid_filedescriptors_limit
