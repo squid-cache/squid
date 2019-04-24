@@ -3156,9 +3156,6 @@ AC_ARG_WITH(filedescriptors,
 
 SQUID_CHECK_DEFAULT_FD_SETSIZE
 SQUID_CHECK_MAXFD
-if test "x$squid_filedescriptors_num" != "x"; then
-  AC_MSG_NOTICE([Default number of fieldescriptors: $squid_filedescriptors_num])
-fi
 if test "$squid_filedescriptors_num" -lt 512 ; then
     AC_MSG_WARN([$squid_filedescriptors_num may not be enough filedescriptors if your])
     AC_MSG_WARN([cache will be very busy.  Please see the FAQ page])

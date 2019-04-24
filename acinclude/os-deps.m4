@@ -246,6 +246,8 @@ int main(int argc, char **argv) {
   AC_MSG_RESULT($squid_filedescriptors_num)
 SQUID_STATE_ROLLBACK(maxfd)
 
+AC_MSG_NOTICE([Default number of filedescriptors: $squid_filedescriptors_num])
+
 if test `expr $squid_filedescriptors_num % 64` != 0; then
     AC_MSG_WARN([$squid_filedescriptors_num is not an multiple of 64. This may cause issues on certain platforms.])
 fi
