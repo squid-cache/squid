@@ -236,7 +236,12 @@ int main(int argc, char **argv) {
   AS_CASE(["$host_os"],[mingw|mingw32],[squid_filedescriptors_limit="2048"])
   AC_MSG_RESULT($squid_filedescriptors_limit)
   AS_IF([ test "x$squid_filedescriptors_num" = "x" ],[
-    squid_filedescriptors_num=$squid_filedescriptors_limit
+    AS_IF([ test "x$squid_filedescriptors_limit" != "x" ],[
+      squid_filedescriptors_num=$squid_filedescriptors_limit
+    ],[
+      AC_MSG_NOTICE([Unable to detect filedescriptor limits. Assuming 256 is okay.])
+      squid_filedescriptors_num=256
+    ])
   ])
 SQUID_STATE_ROLLBACK(maxfd)
 
