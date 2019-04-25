@@ -1134,6 +1134,16 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         s.clean();
     }
 
+    // headers only relevant to reverse-proxy
+    if (request->flags.accelerated) {
+        // check for surrogate_id value in the CDN-Loop header (if any)
+        if (req_hdr->hasListMember(Http::HdrType::CDN_LOOP, Config.Accel.surrogate_id, ',')) {
+            debugObj(33, DBG_IMPORTANT, "WARNING: Forwarding loop detected for:\n",
+                     request, (ObjPackMethod) & httpRequestPack);
+            request->flags.loopDetected = true;
+        }
+    }
+
 #if USE_FORW_VIA_DB
 
     if (req_hdr->has(Http::HdrType::X_FORWARDED_FOR)) {
