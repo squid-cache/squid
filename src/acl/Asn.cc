@@ -229,6 +229,7 @@ asnCacheStart(int as)
 {
     AnyP::Uri whoisUrl(AnyP::PROTO_WHOIS);
     whoisUrl.host(Config.as_whois_server);
+    whoisUrl.port(WHOIS_PORT);
 
     SBuf asPath("/!gAS");
     asPath.appendf("%d", as);
