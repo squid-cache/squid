@@ -1136,7 +1136,8 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     // headers only relevant to reverse-proxy
     if (request->flags.accelerated) {
-        // check for surrogate_id value in the CDN-Loop header (if any)
+        // check for a cdn-info member with a cdn-id matching surrogate_id
+        // XXX: HttpHeader::hasListMember() does not handle OWS around ";" yet
         if (req_hdr->hasListMember(Http::HdrType::CDN_LOOP, Config.Accel.surrogate_id, ',')) {
             debugObj(33, DBG_IMPORTANT, "WARNING: Forwarding loop detected for:\n",
                      request, (ObjPackMethod) & httpRequestPack);
