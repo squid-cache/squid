@@ -1121,8 +1121,6 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
          */
 
         if (strListIsSubstr(&s, ThisCache2, ',')) {
-            debugObj(33, 1, "WARNING: Forwarding loop detected for:\n",
-                     request, (ObjPackMethod) & httpRequestPack);
             request->flags.loopDetected = true;
         }
 
@@ -1138,11 +1136,13 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     if (request->flags.accelerated) {
         // check for a cdn-info member with a cdn-id matching surrogate_id
         // XXX: HttpHeader::hasListMember() does not handle OWS around ";" yet
-        if (req_hdr->hasListMember(Http::HdrType::CDN_LOOP, Config.Accel.surrogate_id, ',')) {
-            debugObj(33, DBG_IMPORTANT, "WARNING: Forwarding loop detected for:\n",
-                     request, (ObjPackMethod) & httpRequestPack);
+        if (req_hdr->hasListMember(Http::HdrType::CDN_LOOP, Config.Accel.surrogate_id, ','))
             request->flags.loopDetected = true;
-        }
+    }
+
+    if (request->flags.loopDetected) {
+        debugObj(33, DBG_IMPORTANT, "WARNING: Forwarding loop detected for:\n",
+                 request, (ObjPackMethod) & httpRequestPack);
     }
 
 #if USE_FORW_VIA_DB
