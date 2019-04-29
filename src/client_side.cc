@@ -2954,11 +2954,6 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     tlsConnectPort = request->url.port();
     resetSslCommonName(request->url.host());
 
-    // If the protocol has changed, then reset preservingClientData_.
-    // Otherwise, its value initially set in start() is still valid/fresh.
-    if (insideConnectTunnel)
-        preservingClientData_ = shouldPreserveClientData();
-
     // We are going to read new request
     flags.readMore = true;
 
@@ -2988,6 +2983,13 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     receivedFirstByte_ = false;
     // Get more data to peek at Tls
     parsingTlsHandshake = true;
+
+    // If the protocol has changed, then reset preservingClientData_.
+    // Otherwise, its value initially set in start() is still valid/fresh.
+    // Requires parsingTlsHandshake which is initialized above.
+    if (insideConnectTunnel)
+        preservingClientData_ = shouldPreserveClientData();
+
     readSomeData();
 }
 
@@ -4025,9 +4027,12 @@ ConnStateData::shouldPreserveClientData() const
         return false;
 
 #if USE_OPENSSL
+    // We are parsing client hello request
+    if (parsingTlsHandshake)
+        return true;
+
     // the 1st HTTP request on a bumped connection
-    // XXX: sslBumpMode != bumpEnd includes non-bumped bumpSplice and bumpNone.
-    if (!parsedBumpedRequestCount && sslBumpMode != Ssl::bumpEnd)
+    if (!parsedBumpedRequestCount && switchedToHttps())
         return true;
 #endif
 
