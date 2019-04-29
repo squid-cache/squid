@@ -28,7 +28,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 
-#define WHOIS_PORT 43
 #ifndef AS_REQBUF_SZ
 #define AS_REQBUF_SZ    4096
 #endif
@@ -229,7 +228,7 @@ asnCacheStart(int as)
 {
     AnyP::Uri whoisUrl(AnyP::PROTO_WHOIS);
     whoisUrl.host(Config.as_whois_server);
-    whoisUrl.port(WHOIS_PORT);
+    whoisUrl.defaultPort();
 
     SBuf asPath("/!gAS");
     asPath.appendf("%d", as);

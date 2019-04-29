@@ -82,6 +82,8 @@ public:
 
     void port(unsigned short p) {port_=p; touch();}
     unsigned short port() const {return port_;}
+    /// initialize the port with the default port number for this URL's scheme
+    void defaultPort();
 
     void path(const char *p) {path_=p; touch();}
     void path(const SBuf &p) {path_=p; touch();}
