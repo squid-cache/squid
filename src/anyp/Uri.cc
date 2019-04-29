@@ -466,12 +466,6 @@ AnyP::Uri::touch()
     authorityWithPort_.clear();
 }
 
-void
-AnyP::Uri::defaultPort()
-{
-    port(getScheme().defaultPort());
-}
-
 SBuf &
 AnyP::Uri::authority(bool requirePort) const
 {
