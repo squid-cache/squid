@@ -4026,6 +4026,10 @@ ConnStateData::shouldPreserveClientData() const
     if (!Config.accessList.on_unsupported_protocol)
         return false;
 
+    // Exclude FTP ports. They do not support on_unsupported_protocol.
+    if (port->transport.protocol == AnyP::PROTO_FTP)
+        return false;
+
 #if USE_OPENSSL
     // We are parsing client hello request
     if (parsingTlsHandshake)
@@ -4036,8 +4040,7 @@ ConnStateData::shouldPreserveClientData() const
         return true;
 #endif
 
-    // the 1st HTTP or FTP request on a connection to a plain intercepting port
-    // XXX: Exclude FTP ports. They do not support on_unsupported_protocol.
+    // the 1st HTTP request on a connection to a plain intercepting port
     if (!pipeline.nrequests && !port->secure.encryptTransport && transparent())
         return true;
 
