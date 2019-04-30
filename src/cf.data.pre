@@ -7310,7 +7310,7 @@ DOC_START
 	a farm of surrogates may all perform the same tasks, they may share
 	an identification token.
 
-	When the surrogate is a reverse-proxy this ID is also
+	When the surrogate is a reverse-proxy, this ID is also
 	used as cdn-id for CDN-Loop detection (RFC 8586).
 DOC_END
 
