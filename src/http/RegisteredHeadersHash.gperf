@@ -34,6 +34,7 @@ Alternate-Protocol, Http::HdrType::ALTERNATE_PROTOCOL, Http::HdrFieldType::ftStr
 Authentication-Info, Http::HdrType::AUTHENTICATION_INFO, Http::HdrFieldType::ftStr, HdrKind::ListHeader
 Authorization, Http::HdrType::AUTHORIZATION, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 Cache-Control, Http::HdrType::CACHE_CONTROL, Http::HdrFieldType::ftPCc, HdrKind::ListHeader|HdrKind::GeneralHeader
+CDN-Loop, Http::HdrType::CDN_LOOP, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
 Connection, Http::HdrType::CONNECTION, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader
 Content-Base, Http::HdrType::CONTENT_BASE, Http::HdrFieldType::ftStr, HdrKind::EntityHeader
 Content-Disposition, Http::HdrType::CONTENT_DISPOSITION, Http::HdrFieldType::ftStr, HdrKind::None
