@@ -70,6 +70,14 @@ AccessLogEntry::syncNotes(HttpRequest *req)
         assert(notes == req->notes());
 }
 
+void
+AccessLogEntry::setReply(HttpReply *rep)
+{
+    HTTPMSGUNLOCK(reply);
+    reply = rep;
+    HTTPMSGLOCK(reply);
+}
+
 const char *
 AccessLogEntry::getClientIdent() const
 {

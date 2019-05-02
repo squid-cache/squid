@@ -61,6 +61,8 @@ public:
 
     void syncNotes(HttpRequest *request);
 
+    void setReply(HttpReply *);
+
     SBuf url;
 
     /// TCP/IP level details about the client connection

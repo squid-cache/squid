@@ -312,8 +312,6 @@ Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
     }
 
     assert(rep);
-    http->al->reply = rep;
-    HTTPMSGLOCK(http->al->reply);
     context->sendStartOfMessage(rep, receivedData);
 }
 
