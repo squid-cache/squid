@@ -115,8 +115,7 @@ ACLFilledChecklist::verifyAle() const
 
     if (reply && !al->reply) {
         showDebugWarning("HttpReply object");
-        al->reply = reply;
-        HTTPMSGLOCK(al->reply);
+        al->setReply(reply);
     }
 
 #if USE_IDENT
