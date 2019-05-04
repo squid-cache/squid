@@ -787,7 +787,8 @@ HttpStateData::processReplyHeader()
 void
 HttpStateData::handle1xx(HttpReply *reply)
 {
-    fwd->al->setReply(reply);
+    if (fwd->al)
+        fwd->al->setReply(reply);
 
     HttpReply::Pointer msg(reply); // will destroy reply if unused
 
