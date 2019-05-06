@@ -23,8 +23,6 @@
 
 #include <cerrno>
 
-#define WHOIS_PORT 43
-
 class WhoisState
 {
     CBDATA_CLASS(WhoisState);
