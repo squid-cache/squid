@@ -225,6 +225,7 @@ EventScheduler::timeRemaining() const
 int
 EventScheduler::checkEvents(int)
 {
+    getCurrentTime();
     int result = timeRemaining();
     if (result != 0)
         return result;
