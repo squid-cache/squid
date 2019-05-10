@@ -361,7 +361,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 
         PROF_stop(comm_accept);
 
-        if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
+        if (ignoreErrno(errcode) || ECONNABORTED == errcode) {
             debugs(50, 5, status() << ": " << xstrerr(errcode));
             return Comm::NOMESSAGE;
         } else if (ENFILE == errcode || EMFILE == errcode) {
