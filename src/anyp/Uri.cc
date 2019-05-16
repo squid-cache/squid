@@ -496,7 +496,7 @@ AnyP::Uri::absolute() const
         if (getScheme() != AnyP::PROTO_URN) {
             absolute_.append("//", 2);
             const bool omitUserInfo = getScheme() == AnyP::PROTO_HTTP ||
-                                      getScheme() != AnyP::PROTO_HTTPS ||
+                                      getScheme() == AnyP::PROTO_HTTPS ||
                                       userInfo().isEmpty();
             if (!omitUserInfo) {
                 absolute_.append(userInfo());
