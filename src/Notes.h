@@ -200,6 +200,11 @@ public:
     void append(const NotePairs *src);
 
     /// Replace existing list entries with the src NotePairs entries.
+    /// Do not replace some special keys but append them instead.
+    /// Entries which do not exist in the destination set are added.
+    void replaceOrAddOrAppend(const NotePairs *src, const std::vector<SBuf> &appendKeys);
+
+    /// Replace existing list entries with the src NotePairs entries.
     /// Entries which do not exist in the destination set are added.
     void replaceOrAdd(const NotePairs *src);
 

@@ -355,6 +355,15 @@ NotePairs::appendNewOnly(const NotePairs *src)
 }
 
 void
+NotePairs::replaceOrAddOrAppend(const NotePairs *src, const std::vector<SBuf> &appendKeys)
+{
+    for (auto e: src->entries)
+        if (std::find(appendKeys.begin(), appendKeys.end(), e->name()) == appendKeys.end())
+            remove(e->name());
+    append(src);
+}
+
+void
 NotePairs::replaceOrAdd(const NotePairs *src)
 {
     for (auto e: src->entries)
