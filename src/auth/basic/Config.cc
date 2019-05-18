@@ -167,13 +167,15 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
     strtok(eek, "\n");
 
     const size_t srcLen = strlen(eek);
-    size_t dstLen = BASE64_DECODE_LENGTH(srcLen)+1; // +1 for extra terminator
-    char *cleartext = static_cast<char*>(xcalloc(dstLen, sizeof(char)));
+    char *cleartext = static_cast<char*>(xmalloc(BASE64_DECODE_LENGTH(srcLen)+1));
 
     struct base64_decode_ctx ctx;
     base64_decode_init(&ctx);
 
+    size_t dstLen = 0;
     if (base64_decode_update(&ctx, &dstLen, reinterpret_cast<uint8_t*>(cleartext), srcLen, eek) && base64_decode_final(&ctx)) {
+        cleartext[dstLen] = '\0';
+
         /*
          * Don't allow NL or CR in the credentials.
          * Oezguer Kesim <oec@codeblau.de>
@@ -185,6 +187,7 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
             safe_free(cleartext);
         }
     } else {
+        debugs(29, 2, "WARNING: Invalid Base64 character in authorization header '" << httpAuthHeader << "'");
         safe_free(cleartext);
     }
 
