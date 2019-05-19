@@ -112,7 +112,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
     char tbuff[MAX_AUTHTOKEN_LEN];
     char buff[MAX_AUTHTOKEN_LEN+2];
     char *c;
-    int length;
+    size_t length;
     uint8_t *token = NULL;
 
     while (1) {
@@ -136,7 +136,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
             *c = '\0';
             length = c - buf;
             if (debug_enabled)
-                fprintf(stderr, "%s| %s: Got '%s' from squid (length: %d).\n",
+                fprintf(stderr, "%s| %s: Got '%s' from squid (length: %" PRIuSIZE ").\n",
                         LogTime(), PROGRAM, buf, length);
         } else {
             if (debug_enabled)
@@ -181,11 +181,11 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
         }
         length = BASE64_DECODE_LENGTH(strlen(buf+3));
         if (debug_enabled)
-            fprintf(stderr, "%s| %s: Decode '%s' (decoded length: %d).\n",
-                    LogTime(), PROGRAM, buf + 3, (int) length);
+            fprintf(stderr, "%s| %s: Decode '%s' (decoded length: %" PRIuSIZE ").\n",
+                    LogTime(), PROGRAM, buf + 3, length);
 
         safe_free(token);
-        if (!(token = static_cast<uint8_t *>(xmalloc(length)))) {
+        if (!(token = static_cast<uint8_t *>(xmalloc(length+1)))) {
             fprintf(stderr, "%s| %s: Error allocating memory for token\n", LogTime(), PROGRAM);
             return 1;
         }
@@ -200,6 +200,7 @@ processingLoop(FILE *FDKIN, FILE *FDKOUT, FILE *FDNIN, FILE *FDNOUT)
             fprintf(stdout, "BH Invalid negotiate request token\n");
             continue;
         }
+        assert(dstLen <= length);
         length = dstLen;
         token[dstLen] = '\0';
 
