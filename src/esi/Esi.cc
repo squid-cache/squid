@@ -930,7 +930,7 @@ void
 ESIContext::addStackElement (ESIElement::Pointer element)
 {
     /* Put on the stack to allow skipping of 'invalid' markup */
-    assert (parserState.stackdepth <11);
+    Must(parserState.stackdepth < 10);
     assert (!failed());
     debugs(86, 5, "ESIContext::addStackElement: About to add ESI Node " << element.getRaw());
 
@@ -1188,7 +1188,7 @@ ESIContext::addLiteral (const char *s, int len)
     assert (len);
     debugs(86, 5, "literal length is " << len);
     /* give a literal to the current element */
-    assert (parserState.stackdepth <11);
+    Must(parserState.stackdepth < 10);
     ESIElement::Pointer element (new esiLiteral (this, s, len));
 
     if (!parserState.top()->addElement(element)) {
