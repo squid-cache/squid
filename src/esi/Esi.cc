@@ -29,6 +29,7 @@
 #include "esi/Expression.h"
 #include "esi/Segment.h"
 #include "esi/VarState.h"
+#include "FadingCounter.h"
 #include "fatal.h"
 #include "http/Stream.h"
 #include "HttpHdrSc.h"
@@ -930,13 +931,18 @@ void
 ESIContext::addStackElement (ESIElement::Pointer element)
 {
     /* Put on the stack to allow skipping of 'invalid' markup */
-    assert (parserState.stackdepth <11);
+
+    // throw an error if the stack location would be invalid
+    if (parserState.stackdepth >= ESI_STACK_DEPTH_LIMIT)
+        throw Esi::Error("ESI Too many nested elements");
+    if (parserState.stackdepth < 0)
+        throw Esi::Error("ESI elements stack error, probable error in ESI template");
+
     assert (!failed());
     debugs(86, 5, "ESIContext::addStackElement: About to add ESI Node " << element.getRaw());
 
     if (!parserState.top()->addElement(element)) {
-        debugs(86, DBG_IMPORTANT, "ESIContext::addStackElement: failed to add esi node, probable error in ESI template");
-        flags.error = 1;
+        throw Esi::Error("ESIContext::addStackElement failed, probable error in ESI template");
     } else {
         /* added ok, push onto the stack */
         parserState.stack[parserState.stackdepth] = element;
@@ -1188,13 +1194,10 @@ ESIContext::addLiteral (const char *s, int len)
     assert (len);
     debugs(86, 5, "literal length is " << len);
     /* give a literal to the current element */
-    assert (parserState.stackdepth <11);
     ESIElement::Pointer element (new esiLiteral (this, s, len));
 
-    if (!parserState.top()->addElement(element)) {
-        debugs(86, DBG_IMPORTANT, "ESIContext::addLiteral: failed to add esi node, probable error in ESI template");
-        flags.error = 1;
-    }
+    if (!parserState.top()->addElement(element))
+        throw Esi::Error("ESIContext::addLiteral failed, probable error in ESI template");
 }
 
 void
@@ -1256,8 +1259,24 @@ ESIContext::parse()
 
         PROF_start(esiParsing);
 
-        while (buffered.getRaw() && !flags.error)
-            parseOneBuffer();
+        try {
+            while (buffered.getRaw() && !flags.error)
+                parseOneBuffer();
+
+        } catch (Esi::ErrorDetail &errMsg) { // FIXME: non-const for c_str()
+            // level-2: these are protocol/syntax errors from upstream
+            debugs(86, 2, "WARNING: ESI syntax error: " << errMsg);
+            setError();
+            setErrorMessage(errMsg.c_str());
+
+        } catch (...) {
+            // DBG_IMPORTANT because these are local issues the admin needs to fix
+            static FadingCounter logEntries; // TODO: set horizon less than infinity
+            if (logEntries.count(1) < 100)
+                debugs(86, DBG_IMPORTANT, "ERROR: ESI parser: " << CurrentException);
+            setError();
+            setErrorMessage("ESI parser error");
+        }
 
         PROF_stop(esiParsing);
 
