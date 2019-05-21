@@ -564,16 +564,15 @@ PeerSelector::selectPinned()
     if (!request->pinnedConnection())
         return;
 
-    if (Comm::IsConnOpen(request->pinnedConnection()->validatePinnedConnection(request))) {
-        const auto pear = request->pinnedConnection()->pinnedPeer();
-        const bool usePinned = pear ? peerAllowedToUse(pear, this) : (direct != DIRECT_NO);
-        if (usePinned) {
-            addSelection(pear, PINNED);
-            if (entry)
-                entry->ping_status = PING_DONE; // skip ICP
-        }
+    const auto pear = request->pinnedConnection()->pinnedPeer();
+    const bool usePinned = pear ? peerAllowedToUse(pear, this) : (direct != DIRECT_NO);
+    if (usePinned) {
+        addSelection(pear, PINNED);
+        if (entry)
+            entry->ping_status = PING_DONE; // skip ICP
     }
-    // If the pinned connection is prohibited (for this request) or gone, then
+
+    // If the pinned connection is prohibited (for this request) then
     // the initiator must decide whether it is OK to open a new one instead.
 }
 

@@ -558,28 +558,26 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 
     debugs(17, 3, path);
 
-    // Requests bumped at step2+ require their pinned connection. Since we
-    // failed to reuse the pinned connection, we now must terminate the
-    // bumped request. For client-first and step1 bumped requests, the
-    // from-client connection is already bumped, but the connection to the
-    // server is not established/pinned so they must be excluded. We can
-    // recognize step1 bumping by nil ConnStateData::serverBump().
-#if USE_OPENSSL
-    const auto clientFirstBump = request->clientConnectionManager.valid() &&
-                                 (request->clientConnectionManager->sslBumpMode == Ssl::bumpClientFirst ||
-                                  (request->clientConnectionManager->sslBumpMode == Ssl::bumpBump && !request->clientConnectionManager->serverBump())
-                                 );
-#else
-    const auto clientFirstBump = false;
-#endif /* USE_OPENSSL */
-    if (request->flags.sslBumped && !clientFirstBump) {
-        // TODO: Factor out/reuse as Occasionally(DBG_IMPORTANT, 2[, occurrences]).
-        static int occurrences = 0;
-        const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
-        debugs(17, level, "BUG: Lost previously bumped from-Squid connection. Rejecting bumped request.");
-        fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));
-        self = nullptr; // refcounted
-        return;
+    if (request->pinnedConnection()) {
+        // This is a previously pinned connection which not allowed to be used
+        // any more probably because of peer selection policy.
+
+        if (!healthyPinnedConnection()) {
+            // client connection is going to be closed soon.
+            stopAndDestroy("pinned connection is closing");
+            return;
+        }
+
+        // We have a pinned connection and we should check if reconnect/retry
+        // is allowed for this type of pinned connections.
+        if (!retriablePinned()) {
+            debugs(17, 2, "Deny to use non re-triable pinned connection. Rejecting request.");
+            fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));
+            stopAndDestroy("non re-triable pinned connection");
+            return;
+        }
+
+        request->pinnedConnection()->unpinConnection(true);
     }
 
     destinations->addPath(path);
@@ -1025,13 +1023,10 @@ FwdState::connectStart()
     AsyncJob::Start(cs);
 }
 
-/// send request on an existing connection dedicated to the requesting client
-void
-FwdState::usePinned()
+Comm::ConnectionPointer
+FwdState::healthyPinnedConnection()
 {
     const auto connManager = request->pinnedConnection();
-    debugs(17, 7, "connection manager: " << connManager);
-
     // the client connection may close while we get here, nullifying connManager
     const auto temp = connManager ? connManager->borrowPinnedConnection(request) : nullptr;
     debugs(17, 5, "connection: " << temp);
@@ -1042,6 +1037,22 @@ FwdState::usePinned()
         serverConn = nullptr;
         const auto anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request, al);
         fail(anErr);
+        return Comm::ConnectionPointer(nullptr);
+    }
+
+    return temp;
+}
+
+/// send request on an existing connection dedicated to the requesting client
+void
+FwdState::usePinned()
+{
+    // we only handle pinned destinations; others are handled by connectStart()
+    assert(!serverDestinations.empty());
+    assert(!serverDestinations[0]);
+
+    serverConn = healthyPinnedConnection();
+    if (!serverConn) {
         // Connection managers monitor their idle pinned to-server
         // connections and close from-client connections upon seeing
         // a to-server connection closure. Retrying here is futile.
@@ -1052,6 +1063,8 @@ FwdState::usePinned()
     ++n_tries;
     request->flags.pinned = true;
 
+    const auto connManager = request->pinnedConnection();
+    debugs(17, 7, "connection manager: " << connManager);
     assert(connManager);
     if (connManager->pinnedAuth())
         request->flags.auth = true;
@@ -1318,14 +1331,9 @@ FwdState::exhaustedTries() const
 }
 
 bool
-FwdState::pinnedCanRetry() const
+FwdState::retriablePinned() const
 {
     assert(request->flags.pinned);
-
-    // pconn race on pinned connection: Currently we do not have any mechanism
-    // to retry current pinned connection path.
-    if (pconnRace == raceHappened)
-        return false;
 
     // If a bumped connection was pinned, then the TLS client was given our peer
     // details. Do not retry because we do not ensure that those details stay
@@ -1337,6 +1345,19 @@ FwdState::pinnedCanRetry() const
     // The other pinned cases are FTP proxying and connection-based HTTP
     // authentication. TODO: Do these cases have restrictions?
     return true;
+}
+
+bool
+FwdState::pinnedCanRetry() const
+{
+    assert(request->flags.pinned);
+
+    // pconn race on pinned connection: Currently we do not have any mechanism
+    // to retry current pinned connection path.
+    if (pconnRace == raceHappened)
+        return false;
+
+    return retriablePinned();
 }
 
 time_t
