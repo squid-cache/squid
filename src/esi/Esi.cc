@@ -930,7 +930,7 @@ void
 ESIContext::addStackElement (ESIElement::Pointer element)
 {
     /* Put on the stack to allow skipping of 'invalid' markup */
-    Must(parserState.stackdepth < 10);
+    Must2(parserState.stackdepth < 10, "Too many nested elements");
     assert (!failed());
     debugs(86, 5, "ESIContext::addStackElement: About to add ESI Node " << element.getRaw());
 
@@ -1188,7 +1188,7 @@ ESIContext::addLiteral (const char *s, int len)
     assert (len);
     debugs(86, 5, "literal length is " << len);
     /* give a literal to the current element */
-    Must(parserState.stackdepth < 10);
+    Must2(parserState.stackdepth < 10, "Too many nested elements");
     ESIElement::Pointer element (new esiLiteral (this, s, len));
 
     if (!parserState.top()->addElement(element)) {
@@ -1256,8 +1256,17 @@ ESIContext::parse()
 
         PROF_start(esiParsing);
 
-        while (buffered.getRaw() && !flags.error)
-            parseOneBuffer();
+        try {
+            while (buffered.getRaw() && !flags.error)
+                parseOneBuffer();
+
+        } catch (const TextException &ex) {
+            setError();
+            setErrorMessage(ex.what());
+
+        } catch (...) {
+            throw; // re-throw other exceptions
+        }
 
         PROF_stop(esiParsing);
 
