@@ -327,7 +327,8 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     // add new helper kv-pair notes to the credentials object
     // so that any transaction using those credentials can access them
-    auth_user_request->user()->notes.appendNewOnly(&reply.notes);
+    static const NotePairs::Names appendables = { SBuf("group"), SBuf("nonce"), SBuf("tag") };
+    auth_user_request->user()->notes.replaceOrAddOrAppend(&reply.notes, appendables);
     // remove any private credentials detail which got added.
     auth_user_request->user()->notes.remove("ha1");
 
