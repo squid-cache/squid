@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.6 release notes</title>
+<title>Squid 4.7 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.6 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.7 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -280,6 +280,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>New option <em>rotate=</em> to control the number of log file rotations
 	   to make when <em>-k rotate</em> command is received. Default is to
 	   obey the <em>logfile_rotate</em> directive.
+	<p>Extend <em>buffer-size=</em> support to UDP logging. Prior to Squid-4.7
+	   log entries would be buffered up to 1400 bytes before sending to UDP logger.
+	   This option may now set smaller buffers, but not larger than 1400 bytes.
 
 	<tag>acl</tag>
 	<p>New <em>-m</em> flag for <em>note</em> ACL to match substrings.

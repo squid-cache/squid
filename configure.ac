@@ -1420,7 +1420,7 @@ if test "x$with_mit_krb5" != "xno"; then
   ])
   if test "x$squid_pc_krb5_name" = "x" -a "$cross_compiling" = "no"; then
     # Look for krb5-config (unless cross-compiling)
-    AC_PATH_PROG(krb5_config,krb5-config,no)
+    AC_PATH_PROG(krb5_config,krb5-config,no,$krb5confpath)
     if test "x$ac_cv_path_krb5_config" != "xno" ; then
       krb5confpath="`dirname $ac_cv_path_krb5_config`"
       ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
@@ -1653,7 +1653,7 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
   fi
   if test "x$squid_pc_krb5_name" = "x" -a "$cross_compiling" = "no"; then
     # Look for krb5-config (unless cross-compiling)
-    AC_PATH_PROG(krb5_config,krb5-config,no)
+    AC_PATH_PROG(krb5_config,krb5-config,no,$krb5confpath)
     if test "x$ac_cv_path_krb5_config" != "xno" ; then
       krb5confpath="`dirname $ac_cv_path_krb5_config`"
       ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
@@ -3156,16 +3156,6 @@ AC_ARG_WITH(filedescriptors,
 
 SQUID_CHECK_DEFAULT_FD_SETSIZE
 SQUID_CHECK_MAXFD
-if test "x$squid_filedescriptors_num" != "x"; then
-  AC_MSG_NOTICE([Default number of fieldescriptors: $squid_filedescriptors_num])
-fi
-if test "$squid_filedescriptors_num" -lt 512 ; then
-    AC_MSG_WARN([$squid_filedescriptors_num may not be enough filedescriptors if your])
-    AC_MSG_WARN([cache will be very busy.  Please see the FAQ page])
-    AC_MSG_WARN([http://wiki.squid-cache.org/SquidFaq/TroubleShooting])
-    AC_MSG_WARN([on how to increase your filedescriptor limit])
-fi
-AC_DEFINE_UNQUOTED(SQUID_MAXFD, $squid_filedescriptors_num,[Maximum number of open filedescriptors])
 
 
 dnl Enable IPv6 support
@@ -3310,7 +3300,6 @@ AC_CHECK_FUNCS(\
 	getdtablesize \
 	getpagesize \
 	getpass \
-	getrlimit \
 	getrusage \
 	getspnam \
 	gettimeofday \

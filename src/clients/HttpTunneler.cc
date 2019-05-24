@@ -18,8 +18,8 @@
 #include "http/one/ResponseParser.h"
 #include "http/StateFlags.h"
 #include "HttpRequest.h"
-#include "StatCounters.h"
 #include "SquidConfig.h"
+#include "StatCounters.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Http, Tunneler);
 
