@@ -9,6 +9,7 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "Debug.h"
 #include "esi/Expression.h"
 #include "profiler/Profiler.h"
@@ -33,6 +34,8 @@
  */
 
 typedef struct _stackmember stackmember;
+
+static const int STACK_DEPTH_LIMIT = 20; // stack size allocated
 
 typedef int evaluate(stackmember * stack, int *depth, int whereAmI,
                      stackmember * candidate);
@@ -215,6 +218,7 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
     /* copy down */
     --(*depth);
 
+    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
     stack[whereAmI] = stack[(*depth)];
 
     cleanmember(candidate);
@@ -280,6 +284,7 @@ evalor(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 
     srv.precedence = 1;
 
+    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
     stack[(*depth)++] = srv;
 
     /* we're out of way, try adding now */
@@ -327,6 +332,7 @@ evaland(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 
     srv.precedence = 1;
 
+    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
     stack[(*depth)++] = srv;
 
     /* we're out of way, try adding now */
@@ -373,6 +379,7 @@ evallesseq(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 
     srv.precedence = 1;
 
+    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
     stack[(*depth)++] = srv;
 
     /* we're out of way, try adding now */
@@ -421,6 +428,7 @@ evallessthan(stackmember * stack, int *depth, int whereAmI, stackmember * candid
 
     srv.precedence = 1;
 
+    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
     stack[(*depth)++] = srv;
 
     /* we're out of way, try adding now */
@@ -469,6 +477,7 @@ evalmoreeq(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 
     srv.precedence = 1;
 
+    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
     stack[(*depth)++] = srv;
 
     /* we're out of way, try adding now */
@@ -517,6 +526,7 @@ evalmorethan(stackmember * stack, int *depth, int whereAmI, stackmember * candid
 
     srv.precedence = 1;
 
+    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
     stack[(*depth)++] = srv;
 
     /* we're out of way, try adding now */
@@ -566,6 +576,7 @@ evalequals(stackmember * stack, int *depth, int whereAmI,
 
     srv.precedence = 1;
 
+    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
     stack[(*depth)++] = srv;
 
     /* we're out of way, try adding now */
@@ -613,6 +624,7 @@ evalnotequals(stackmember * stack, int *depth, int whereAmI, stackmember * candi
 
     srv.precedence = 1;
 
+    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
     stack[(*depth)++] = srv;
 
     /* we're out of way, try adding now */
@@ -949,6 +961,8 @@ dumpstack(stackmember * stack, int depth)
 int
 addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
 {
+    Must2(*stackdepth < STACK_DEPTH_LIMIT, "expression too complex");
+
     if (candidate->valuetype != ESI_EXPR_LITERAL && *stackdepth > 1) {
         /* !(!(a==b))) is why thats safe */
         /* strictly less than until we unwind */
@@ -979,7 +993,7 @@ addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
 int
 ESIExpression::Evaluate(char const *s)
 {
-    stackmember stack[20];
+    stackmember stack[STACK_DEPTH_LIMIT];
     int stackdepth = 0;
     char const *end;
     PROF_start(esiExpressionEval);
