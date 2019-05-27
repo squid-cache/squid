@@ -218,7 +218,7 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
     /* copy down */
     --(*depth);
 
-    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
+    Must2(*depth < STACK_DEPTH_LIMIT && *depth > 0, "negate expression too complex");
     stack[whereAmI] = stack[(*depth)];
 
     cleanmember(candidate);
