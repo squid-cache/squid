@@ -14,7 +14,9 @@ CBDATA_NAMESPACED_CLASS_INIT(Acl, Address);
 
 Acl::Address::~Address()
 {
-    aclDestroyAclList(&aclList);
-    delete next;
+    if (aclList)
+        aclDestroyAclList(&aclList);
+    if (next)
+        delete next;
 }
 
