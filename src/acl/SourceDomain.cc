@@ -28,7 +28,8 @@ SourceDomainLookup::Instance()
 void
 SourceDomainLookup::checkForAsync(ACLChecklist *checklist) const
 {
-    fqdncache_nbgethostbyaddr(Filled(checklist)->src_addr, LookupDone, checklist);
+    ACLFilledChecklist *cl = Filled((ACLChecklist*)checklist);
+    fqdncache_nbgethostbyaddr(Filled(checklist)->src_addr, LookupDone, checklist, cl->request);
 }
 
 void
@@ -44,7 +45,7 @@ int
 ACLSourceDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     const char *fqdn = NULL;
-    fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS);
+    fqdn = fqdncache_gethostbyaddr(checklist->src_addr, FQDN_LOOKUP_IF_MISS, checklist->request);
 
     if (fqdn) {
         return data->match(fqdn);

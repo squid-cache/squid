@@ -1233,7 +1233,7 @@ peerRefreshDNS(void *data)
     }
 
     for (p = Config.peers; p; p = p->next)
-        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
+        ipcache_nbgethostbyname(p->host, peerDNSConfigure, p, nullptr);
 
     /* Reconfigure the peers every hour */
     eventAddIsh("peerRefreshDNS", peerRefreshDNS, NULL, 3600.0, 1);
@@ -1273,7 +1273,7 @@ peerConnectSucceded(CachePeer * p)
         p->tcp_up = p->connect_fail_limit; // NP: so peerAlive(p) works properly.
         peerAlive(p);
         if (!p->n_addresses)
-            ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
+            ipcache_nbgethostbyname(p->host, peerDNSConfigure, p, nullptr);
     } else
         p->tcp_up = p->connect_fail_limit;
 }

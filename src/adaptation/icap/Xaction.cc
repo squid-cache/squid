@@ -189,7 +189,7 @@ Adaptation::Icap::Xaction::openConnection()
     debugs(93,3, typeName << " opens connection to " << s.cfg().host.termedBuf() << ":" << s.cfg().port);
 
     // Locate the Service IP(s) to open
-    ipcache_nbgethostbyname(s.cfg().host.termedBuf(), icapLookupDnsResults, this);
+    ipcache_nbgethostbyname(s.cfg().host.termedBuf(), icapLookupDnsResults, this, nullptr);
 }
 
 void

@@ -13,6 +13,7 @@
 
 #include "ip/Address.h"
 #include "sbuf/forward.h"
+#include "HttpRequest.h"
 
 class StoreEntry;
 namespace Dns
@@ -29,8 +30,8 @@ void fqdncache_restart(void);
 void fqdncache_purgelru(void *);
 void fqdncacheAddEntryFromHosts(char *addr, SBufList &hostnames);
 
-const char *fqdncache_gethostbyaddr(const Ip::Address &, int flags);
-void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *);
+const char *fqdncache_gethostbyaddr(const Ip::Address &, int flags, HttpRequest *);
+void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *, HttpRequest *);
 
 #endif /* SQUID_FQDNCACHE_H_ */
 

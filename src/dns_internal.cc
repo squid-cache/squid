@@ -138,6 +138,7 @@ public:
             rfc1035MessageDestroy(&message);
         delete queue;
         delete slave;
+        HTTPMSGUNLOCK(client_req);
         // master is just a back-reference
         cbdataReferenceDone(callback_data);
     }
@@ -172,6 +173,7 @@ public:
     rfc1035_message *message;
     int ancount;
     const char *error;
+    HttpRequest *client_req;
 };
 
 InstanceIdDefinitions(idns_query,  "dns");
@@ -1696,7 +1698,7 @@ Dns::ConfigRr::startReconfigure()
 }
 
 static int
-idnsCachedLookup(const char *key, IDNSCB * callback, void *data)
+idnsCachedLookup(const char *key, IDNSCB * callback, void *data, HttpRequest *request)
 {
     idns_query *old = (idns_query *) hash_lookup(idns_lookup_hash, key);
 
@@ -1708,6 +1710,8 @@ idnsCachedLookup(const char *key, IDNSCB * callback, void *data)
 
     q->callback = callback;
     q->callback_data = cbdataReference(data);
+    q->client_req = request;
+    HTTPMSGLOCK(q->client_req);
 
     q->queue = old->queue;
     old->queue = q;
@@ -1737,6 +1741,8 @@ idnsSendSlaveAAAAQuery(idns_query *master)
     q->master = master;
     q->query_id = idnsQueryID();
     q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query, Config.dns.packet_max);
+    q->client_req = master->client_req;
+    HTTPMSGLOCK(q->client_req);
 
     debugs(78, 3, HERE << "buf is " << q->sz << " bytes for " << q->name <<
            ", id = 0x" << std::hex << q->query_id);
@@ -1754,7 +1760,7 @@ idnsSendSlaveAAAAQuery(idns_query *master)
 }
 
 void
-idnsALookup(const char *name, IDNSCB * callback, void *data)
+idnsALookup(const char *name, IDNSCB * callback, void *data, HttpRequest *request)
 {
     size_t nameLength = strlen(name);
 
@@ -1765,11 +1771,13 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
         return;
     }
 
-    if (idnsCachedLookup(name, callback, data))
+    if (idnsCachedLookup(name, callback, data, request))
         return;
 
     idns_query *q = new idns_query;
     q->query_id = idnsQueryID();
+    q->client_req = request;
+    HTTPMSGLOCK(q->client_req);
 
     int nd = 0;
     for (size_t i = 0; i < nameLength; ++i)
@@ -1813,7 +1821,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 }
 
 void
-idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
+idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data, HttpRequest *request)
 {
     char ip[MAX_IPSTRLEN];
 
@@ -1821,6 +1829,8 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
 
     idns_query *q = new idns_query;
     q->query_id = idnsQueryID();
+    q->client_req = request;
+    HTTPMSGLOCK(q->client_req);
 
     if (addr.isIPv6()) {
         struct in6_addr addr6;
@@ -1840,7 +1850,7 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
         return;
     }
 
-    if (idnsCachedLookup(q->query.name, callback, data)) {
+    if (idnsCachedLookup(q->query.name, callback, data, request)) {
         delete q;
         return;
     }

@@ -650,7 +650,7 @@ ClientRequestContext::hostHeaderVerify()
             // XXX: match the scheme default port against the apparent destination
 
             // verify the destination DNS is one of the Host: headers IPs
-            ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
+            ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this, http->request);
         }
     } else if (!Config.onoff.hostStrictVerify) {
         debugs(85, 3, "validate skipped.");

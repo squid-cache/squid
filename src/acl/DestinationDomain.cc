@@ -29,7 +29,7 @@ void
 DestinationDomainLookup::checkForAsync(ACLChecklist *cl) const
 {
     ACLFilledChecklist *checklist = Filled(cl);
-    fqdncache_nbgethostbyaddr(checklist->dst_addr, LookupDone, checklist);
+    fqdncache_nbgethostbyaddr(checklist->dst_addr, LookupDone, checklist, checklist->request);
 }
 
 void
@@ -86,7 +86,7 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledCheckl
     }
 
     checklist->dst_addr = ia->in_addrs[0];
-    const char *fqdn = fqdncache_gethostbyaddr(checklist->dst_addr, FQDN_LOOKUP_IF_MISS);
+    const char *fqdn = fqdncache_gethostbyaddr(checklist->dst_addr, FQDN_LOOKUP_IF_MISS, checklist->request);
 
     if (fqdn) {
         checklist->dst_rdns = xstrdup(fqdn);

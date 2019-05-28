@@ -25,9 +25,11 @@ void Init(void);
 
 } // namespace Dns
 
+#include "HttpRequest.h"
+
 // internal DNS client API
-void idnsALookup(const char *, IDNSCB *, void *);
-void idnsPTRLookup(const Ip::Address &, IDNSCB *, void *);
+void idnsALookup(const char *, IDNSCB *, void *, HttpRequest *);
+void idnsPTRLookup(const Ip::Address &, IDNSCB *, void *, HttpRequest *);
 
 #endif /* _SQUID_SRC_DNS_FORWARD_H */
 

@@ -411,7 +411,7 @@ fqdncacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char 
  *          and does not affect the FQDN cache.
  */
 void
-fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handlerData)
+fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handlerData, HttpRequest *request)
 {
     fqdncache_entry *f = NULL;
     char name[MAX_IPSTRLEN];
@@ -462,7 +462,7 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
     f->handlerData = cbdataReference(handlerData);
     f->request_time = current_time;
     c = new generic_cbdata(f);
-    idnsPTRLookup(addr, fqdncacheHandleReply, c);
+    idnsPTRLookup(addr, fqdncacheHandleReply, c, request);
 }
 
 /**
@@ -478,7 +478,7 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
  *
  */
 const char *
-fqdncache_gethostbyaddr(const Ip::Address &addr, int flags)
+fqdncache_gethostbyaddr(const Ip::Address &addr, int flags, HttpRequest *request)
 {
     char name[MAX_IPSTRLEN];
     fqdncache_entry *f = NULL;
@@ -512,7 +512,7 @@ fqdncache_gethostbyaddr(const Ip::Address &addr, int flags)
     ++ FqdncacheStats.misses;
 
     if (flags & FQDN_LOOKUP_IF_MISS) {
-        fqdncache_nbgethostbyaddr(addr, NULL, NULL);
+        fqdncache_nbgethostbyaddr(addr, NULL, NULL, request);
     }
 
     return NULL;

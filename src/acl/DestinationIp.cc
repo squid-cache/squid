@@ -62,7 +62,7 @@ ACLDestinationIP::match(ACLChecklist *cl)
         return 0;
     }
 
-    const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->url.host(), IP_LOOKUP_IF_MISS);
+    const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->url.host(), IP_LOOKUP_IF_MISS, checklist->request);
 
     if (ia) {
         /* Entry in cache found */
@@ -96,7 +96,7 @@ void
 DestinationIPLookup::checkForAsync(ACLChecklist *cl)const
 {
     ACLFilledChecklist *checklist = Filled(cl);
-    ipcache_nbgethostbyname(checklist->request->url.host(), LookupDone, checklist);
+    ipcache_nbgethostbyname(checklist->request->url.host(), LookupDone, checklist, checklist->request);
 }
 
 void

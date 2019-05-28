@@ -27,8 +27,8 @@ public:
 typedef void IPH(const ipcache_addrs *, const Dns::LookupDetails &details, void *);
 
 void ipcache_purgelru(void *);
-void ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData);
-const ipcache_addrs *ipcache_gethostbyname(const char *, int flags);
+void ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData, HttpRequest *);
+const ipcache_addrs *ipcache_gethostbyname(const char *, int flags, HttpRequest *);
 void ipcacheInvalidate(const char *);
 void ipcacheInvalidateNegative(const char *);
 void ipcache_init(void);

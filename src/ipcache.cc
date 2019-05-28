@@ -490,7 +490,7 @@ ipcacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *e
  * but some user code calls ipcache_nbgethostbyname directly.
  */
 void
-ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
+ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData, HttpRequest *request)
 {
     ipcache_entry *i = NULL;
     const ipcache_addrs *addrs = NULL;
@@ -550,7 +550,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     i->handlerData = cbdataReference(handlerData);
     i->request_time = current_time;
     c = new generic_cbdata(i);
-    idnsALookup(hashKeyStr(&i->hash), ipcacheHandleReply, c);
+    idnsALookup(hashKeyStr(&i->hash), ipcacheHandleReply, c, request);
 }
 
 /// \ingroup IPCacheInternal
@@ -606,7 +606,7 @@ ipcache_init(void)
  \retval *  Pointer to the ipcahce_addrs structure containing the lookup results
  */
 const ipcache_addrs *
-ipcache_gethostbyname(const char *name, int flags)
+ipcache_gethostbyname(const char *name, int flags, HttpRequest* request)
 {
     ipcache_entry *i = NULL;
     ipcache_addrs *addrs;
@@ -641,7 +641,7 @@ ipcache_gethostbyname(const char *name, int flags)
     ++IpcacheStats.misses;
 
     if (flags & IP_LOOKUP_IF_MISS)
-        ipcache_nbgethostbyname(name, NULL, NULL);
+        ipcache_nbgethostbyname(name, NULL, NULL, request);
 
     return NULL;
 }

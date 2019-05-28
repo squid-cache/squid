@@ -279,7 +279,7 @@ peerSelectDnsPaths(ps_state *psstate)
         // send the next one off for DNS lookup.
         const char *host = fs->_peer.valid() ? fs->_peer->host : psstate->request->url.host();
         debugs(44, 2, "Find IP destination for: " << psstate->url() << "' via " << host);
-        ipcache_nbgethostbyname(host, peerSelectDnsResults, psstate);
+        ipcache_nbgethostbyname(host, peerSelectDnsResults, psstate, psstate->request);
         return;
     }
 

@@ -400,7 +400,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->cache.caddr.isAnyAddr()) // e.g., ICAP OPTIONS lack client
                 out = "-";
             else
-                out = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
+                out = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS, al->request);
 
             if (!out) {
                 out = al->cache.caddr.toStr(tmp, sizeof(tmp));

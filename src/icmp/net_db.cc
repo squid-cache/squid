@@ -926,7 +926,7 @@ netdbPingSite(const char *hostname)
             return;
 
     ipcache_nbgethostbyname(hostname, netdbSendPing,
-                            new generic_cbdata(xstrdup(hostname)));
+                            new generic_cbdata(xstrdup(hostname)), nullptr);
 
 #endif
 }
@@ -1328,7 +1328,7 @@ netdbClosestParent(HttpRequest * request)
 
     if (NULL == n) {
         /* try IP addr */
-        ia = ipcache_gethostbyname(request->url.host(), 0);
+        ia = ipcache_gethostbyname(request->url.host(), 0, request);
 
         if (NULL != ia)
             n = netdbLookupAddr(ia->in_addrs[ia->cur]);

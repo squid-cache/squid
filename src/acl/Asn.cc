@@ -590,7 +590,7 @@ ACLSourceASNStrategy::match (ACLData<Ip::Address> * &data, ACLFilledChecklist *c
 int
 ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
-    const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->url.host(), IP_LOOKUP_IF_MISS);
+    const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->url.host(), IP_LOOKUP_IF_MISS, checklist->request);
 
     if (ia) {
         for (int k = 0; k < (int) ia->count; ++k) {

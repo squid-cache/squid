@@ -33,7 +33,7 @@ start_announce(void *)
     if (!Comm::IsConnOpen(icpOutgoingConn))
         return;
 
-    ipcache_nbgethostbyname(Config.Announce.host, send_announce, NULL);
+    ipcache_nbgethostbyname(Config.Announce.host, send_announce, NULL, nullptr);
 
     eventAdd("send_announce", start_announce, NULL, (double) Config.Announce.period, 1);
 }

@@ -2429,8 +2429,10 @@ ConnStateData::start()
 void
 ConnStateData::whenClientIpKnown()
 {
-    if (Config.onoff.log_fqdn)
-        fqdncache_gethostbyaddr(clientConnection->remote, FQDN_LOOKUP_IF_MISS);
+    // Jasmine - According to squid doc, log_fqdn option is not included in squid 4
+    // http://www.squid-cache.org/Doc/config/log_fqdn/
+    // if (Config.onoff.log_fqdn)
+    //     fqdncache_gethostbyaddr(clientConnection->remote, FQDN_LOOKUP_IF_MISS);
 
 #if USE_IDENT
     if (Ident::TheConfig.identLookup) {
