@@ -24,18 +24,16 @@ namespace Ipc
 class OpenListenerParams
 {
 public:
-    OpenListenerParams();
-
     bool operator <(const OpenListenerParams &p) const; ///< useful for map<>
 
     // bits to re-create the fde entry
-    int sock_type;
-    int proto;
-    int fdNote; ///< index into fd_note() comment strings
+    int sock_type = 0;
+    int proto = 0;
+    int fdNote = 0; ///< index into fd_note() comment strings
 
     // bits to re-create the listener Comm::Connection descriptor
     Ip::Address addr; ///< will be memset and memcopied
-    int flags;
+    int flags = 0;
 
     /// handler to subscribe to Comm::ConnAcceptor when we get the response
     Subscription::Pointer handlerSubscription;
