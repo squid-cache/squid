@@ -33,6 +33,7 @@
 #include "util.h"
 #include "wordlist.h"
 #include "acl/Address.h"
+#include "acl/FilledChecklist.h"
 
 #if SQUID_SNMP
 #include "snmp_core.h"
@@ -1000,6 +1001,19 @@ idnsSendQuery(idns_query * q)
             nsn = nns_mdns_count + q->nsends % (nsCount - nns_mdns_count);
         else
             nsn = q->nsends % nsCount;
+
+        // Check ACL against request
+        if (!nameservers[nsn]->S->aclList) {
+            ++ q->nsends;
+            continue;
+        }
+        if (nameservers[nsn]->S->aclList) {
+            ACLFilledChecklist ch(NULL, q->client_req, NULL);
+            if (!(ch.fastCheck(nameservers[nsn]->S->aclList).allowed())) {
+                ++ q->nsends;
+                continue;
+            }
+        }
 
         if (q->need_vc) {
             idnsSendQueryVC(q, nsn);
