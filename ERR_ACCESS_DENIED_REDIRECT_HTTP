@@ -1,0 +1,129 @@
+<html>
+  <head>
+    <style>
+      body {
+         font-family: 'Segoe UI', Tahoma, sans-serif;
+      }
+
+		.grad {
+			background: white;
+		}
+
+    .button:hover {
+      background-color:black;
+      box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+    }
+
+    .button {
+      background-color: #555555;
+      -webkit-transition-duration: 0.4s; /* Safari */
+      transition-duration: 0.4s;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      padding: 10px 10px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+    }
+	
+	h1 {
+		color: #333;
+		font-size: 1.6em;
+		font-weight: normal;
+		line-height: 1.25em;
+		margin-bottom: 16px;
+		}
+
+	h2 {
+		font-size: 1em;
+		line-height: 1.6em;
+		font-weight: normal;
+	}
+	
+	strong {
+		font-weight: 500;
+	}
+	
+    </style>
+	<title>Website Redirected</title>
+  </head>
+  <body class="grad" style="margin:100;padding:0" onload="onLoad();">
+  <script>
+    REDIRECT_URL = "http://100.127.255.255/redirect-url=";
+
+    function checkTimeElapsedSinceLastRedirect()
+    {
+        var currUrl = window.location.href.substring(window.location.protocol.length);
+        var prevTime = localStorage[currUrl];
+        var currTime = new Date().getTime()
+        localStorage[currUrl] = currTime;
+        
+        if ((currTime - prevTime > 10000) || (prevTime === undefined))
+        {
+            return true;
+        }
+        return false;
+    }
+    
+    function onLoad() {
+        var currUrl = window.location.href;
+        if (currUrl.indexOf(REDIRECT_URL) == 0) {
+          document.getElementById("mainBody").style.display = 'block';
+          var requestAccessElement = document.getElementById("requestAccessButton");
+          requestAccessElement.parentNode.removeChild(requestAccessElement);
+          document.getElementById("requestAccessText").innerText = "You will now be redirected";
+          return;
+        }
+        
+        if (location.protocol === 'http:')
+        {
+            if (checkTimeElapsedSinceLastRedirect())
+            {
+                location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+                return;
+            }
+        }
+        
+        document.getElementById("mainBody").style.display = 'block';
+        
+        var currUrl = window.location.href;
+        if (currUrl.indexOf(REDIRECT_URL) == 0) {
+          var requestAccessElement = document.getElementById("requestAccessButton");
+          requestAccessElement.parentNode.removeChild(requestAccessElement);
+          document.getElementById("requestAccessText").innerText = "You will now be redirected";
+          return;
+        }
+
+        if (!inIframe()) {
+          allowUrl();
+        }
+    }
+
+    function allowUrl() {
+        var currUrl = window.location.href;
+        var res = encodeURIComponent(currUrl);
+        var newUrl = REDIRECT_URL + res;
+        window.location.href = newUrl;
+    }
+
+    function inIframe () {
+      try {
+          return window.self !== window.top;
+      } catch (e) {
+          return true;
+      }
+    }
+  </script>
+  
+      <div style="margin-left:20%; margin-top:10%; width:600px;">
+	
+		<img style="width:70px;" alt="Embedded Image" src="data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTYuMC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjI0cHgiIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAwIDYxMiA2MTIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDYxMiA2MTI7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPGc+Cgk8Zz4KCQk8cGF0aCBkPSJNNjAxLjIzNCwxMC45MjJDNTk0LjIwMiwzLjg5LDU4NS42NzcsMC4xNSw1NzUuODA1LDAuMTVIMTQ3LjE2NmMtOS44NzIsMC0xOC41NDQsMy41OTMtMjUuNzIzLDEwLjc3MiAgICBjLTYuODc5LDYuODc5LTEwLjQ2NSwxNS4yNTEtMTAuNDY1LDI1LjEyM3YxMTcuODU2aDMzLjIwMmg0MzQuOTE4djI0My4xODZjMCwyLjA5Mi0xLjE5OSwyLjk4Ni0zLjI5MywyLjk4NmgtNDkuOTUydjMyLjkwMiAgICBoNDkuOTUyYzkuODcyLDAsMTguNTUxLTMuNTg4LDI1LjQzLTEwLjQ2N2M3LjE4LTcuMTc4LDEwLjc2Ni0xNS41NTcsMTAuNzY2LTI1LjQyMlYzNi4wNDUgICAgQzYxMiwyNi4xNzMsNjA4LjI2MSwxNy45NDgsNjAxLjIzNCwxMC45MjJ6IE01NzkuMDk4LDEyMC43SDE0NC4xNzlWMzYuMDQ1YzAtMS4xOTMsMS43OTMtMi45OTMsMi45ODctMi45OTNoNDI4LjYzOSAgICBjMS4yLDAsMy4yOTMsMS44LDMuMjkzLDIuOTkzVjEyMC43eiIgZmlsbD0iIzAwMDAwMCIvPgoJCTxwYXRoIGQ9Ik00NjQuNTM0LDE3OS4wMjVIMzYuMTk1QzE1Ljg1MSwxNzkuMDI1LDAsMTk1LjE3NiwwLDIxNS41MnYzNjAuNDM1YzAsMjAuMzQ0LDE1Ljg1MSwzNS44OTUsMzYuMTk1LDM1Ljg5NWg0MjguMzM5ICAgIGMyMC4zNDQsMCwzNi43OTUtMTUuNTUxLDM2Ljc5NS0zNS44OTVWMjE1LjUyYzAtMTAuMTcyLTMuNjctMTguNzY4LTEwLjc3MS0yNS43MjMgICAgQzQ4My4zMDIsMTgyLjY4OCw0NzQuNzA2LDE3OS4wMjUsNDY0LjUzNCwxNzkuMDI1eiBNNDY3LjUyNyw1NzUuOTU1YzAsMi4xLTAuOSwyLjk5NC0yLjk5MywyLjk5NEgzNi4xOTUgICAgYy0yLjA5MywwLTIuOTkzLTAuODk1LTIuOTkzLTIuOTk0VjMzMi43NzdoNDM0LjMyNVY1NzUuOTU1eiBNNDY3LjUyNywyOTkuNTY4SDMzLjIwMlYyMTUuNTJjMC0yLjM5MywwLjg5OS0zLjU5MywyLjk5My0zLjU5MyAgICBoNDI4LjMzOWMyLjA5MywwLDIuOTkzLDEuMiwyLjk5MywzLjU5M1YyOTkuNTY4eiIgZmlsbD0iIzAwMDAwMCIvPgoJCTxwYXRoIGQ9Ik0xNDguOTY1LDI0NS4xMjljLTYuMTM5LDYuNDI2LTYuMjg2LDE3LjA1MSwwLDIzLjMzN2M2LjI3OSw2LjI3OSwxNy4wNDQsNi4yNzksMjMuMzMsMCAgICBjNi4yNzktNi4yODYsNi4xMzItMTYuOTExLDAtMjMuMzM3QzE2NS44NjMsMjM4LjM5MSwxNTUuMzk4LDIzOC4zOTEsMTQ4Ljk2NSwyNDUuMTI5eiIgZmlsbD0iIzAwMDAwMCIvPgoJCTxwYXRoIGQ9Ik0xMDcuNjg1LDI0NS4xMjljLTYuMjc5LDYuMjg2LTYuNDI2LDE3LjE5OCwwLDIzLjMzN2M2LjczOSw2LjQzMiwxNy4zNTEsNi4yNzksMjMuNjMsMCAgICBjNi4yNzktNi4yODYsNi4xMzMtMTYuOTExLDAtMjMuMzM3QzEyNC44ODIsMjM4LjM5MSwxMTQuNTY0LDIzOC4yNSwxMDcuNjg1LDI0NS4xMjl6IiBmaWxsPSIjMDAwMDAwIi8+CgkJPHBhdGggZD0iTTY2LjcwNCwyNDUuMTI5Yy02LjEzMyw2LjQyNi02LjI3OSwxNy4wNTEsMCwyMy4zMzdjNi4yNzksNi4yNzksMTYuOTA0LDYuMTMyLDIzLjMzLDBjNi43MzgtNi40MzksNi44NzktMTcuMDUxLDAtMjMuMzM3ICAgIEM4My43NTUsMjM4LjI1LDczLjEzNiwyMzguMzkxLDY2LjcwNCwyNDUuMTI5eiIgZmlsbD0iIzAwMDAwMCIvPgoJPC9nPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+Cjwvc3ZnPgo=" />
+		<h1>The requested website is being redirected. </h1>
+		<h2>Your browser attempted to access a website that is not available in this environment:<strong><div id='url-placeholder'/> </h2>
+		<h2>The website will be launched in another environment. </h2>
+		<button class="button" onclick="allowUrl();" id="requestAccessButton">Launch Website</button>
+	</div>
+  </body>
+</html>
