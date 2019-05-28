@@ -24,7 +24,7 @@ if [ $# -eq 3 ] && [ "$3" = "disableOpt" ]; then
 	export CXXFLAGS="${CFLAGS}"
 fi
 
-OPENSSL_VERSION=1.1.0
+OPENSSL_VERSION=1.1.1b
 
 wget https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz -qO - | tar xz
 (
@@ -32,7 +32,7 @@ wget https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz -qO - | tar 
     ./Configure linux-x86_64 --openssldir=$PREFIX --prefix=$PREFIX enable-ec_nistp_64_gcc_128 \
     enable-heartbeats enable-md2 enable-rc5 \
     enable-ssl3 enable-ssl3-method enable-weak-ssl-ciphers
-    make
+    make -j$(nproc)
     make install
 )
 
@@ -51,7 +51,7 @@ $WORKING_DIRECTORY/configure --disable-shared --enable-static --disable-http-vio
     --disable-auth --enable-disk-io=Blocking --disable-unlinkd \
     --enable-linux-netfilter --without-netfilter-conntrack \
     --with-openssl=$PREFIX --prefix=$PREFIX
-make
+make -j$(nproc)
 make install
 
 rm -rf $WORKING_DIRECTORY/build/
