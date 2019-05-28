@@ -9551,6 +9551,15 @@ DOC_START
 	Example: dns_nameservers 10.0.0.1 192.172.0.4
 DOC_END
 
+NAME: dns_server
+TYPE: acl_address
+DEFAULT: none
+DEFAULT_DOC: Use operating system definitions
+LOC: Config.accessList.dns_servers
+DOC_START
+	HYSOLATE
+DOC_END
+
 NAME: hosts_file
 TYPE: string
 DEFAULT: @DEFAULT_HOSTS@

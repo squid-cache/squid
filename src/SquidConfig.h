@@ -376,6 +376,7 @@ public:
         acl_access *store_id;
         acl_access *reply;
         Acl::Address *outgoing_address;
+        Acl::Address *dns_servers;
 #if USE_HTCP
 
         acl_access *htcp;
