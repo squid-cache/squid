@@ -275,6 +275,7 @@ static int max_shared_edns = RFC1035_DEFAULT_PACKET_SZ;
 
 static OBJH idnsStats;
 static void idnsAddNameserver(const char *buf);
+static void idnsAddNameserver(Acl::Address *address);
 static void idnsAddMDNSNameservers();
 static void idnsAddPathComponent(const char *buf);
 static void idnsFreeSearchpath(void);
@@ -360,14 +361,21 @@ idnsAddNameserver(const char *buf)
         return;
     }
 
-    nameservers.emplace_back(ns());
-    A.port(NS_DEFAULTPORT);
-    nameservers.back().S.addr = A;
+    Acl::Address *addressAcl = new Acl::Address();
+    addressAcl->addr = A;
+    idnsAddNameserver(addressAcl);
+}
+
+static void
+idnsAddNameserver(Acl::Address *address)
+{
+    address->addr.port(NS_DEFAULTPORT);
+    nameservers.push_back(new ns(address));
 #if WHEN_EDNS_RESPONSES_ARE_PARSED
-    nameservers.back().last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
+    nameservers.back()->last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
     // TODO generate a test packet to probe this NS from EDNS size and ability.
 #endif
-    debugs(78, 3, "Added nameserver #" << nameservers.size()-1 << " (" << A << ")");
+    debugs(78, 3, "Added nameserver #" << nameservers.size()-1 << " (" << address->addr << ")");
 }
 
 static void
@@ -415,6 +423,11 @@ idnsParseNameservers(void)
         idnsAddNameserver(w->key);
         result = true;
     }
+    for (Acl::Address *l = Config.accessList.dns_servers; l; l = l->next) {
+		debugs(78, DBG_IMPORTANT, "Adding nameserver " << l->addr << " with acl from squid.conf");		
+		idnsAddNameserver(l);
+		result = true;
+	}
     return result;
 }
 
