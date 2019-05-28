@@ -14,8 +14,6 @@
 #include "StoreStats.h"
 #include <cstring>
 
-StoreInfoStats::StoreInfoStats() STUB
-
 StoreInfoStats &
 StoreInfoStats::operator +=(const StoreInfoStats &stats) STUB_RETVAL(*this)
 

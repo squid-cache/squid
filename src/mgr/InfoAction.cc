@@ -30,7 +30,8 @@ void DumpMallocStatistics(StoreEntry* sentry);
 
 Mgr::InfoActionData::InfoActionData()
 {
-    memset(this, 0, sizeof(*this));
+    memset(&squid_start, 0, sizeof(squid_start));
+    memset(&current_time, 0, sizeof(current_time));
 }
 
 Mgr::InfoActionData&
