@@ -591,7 +591,8 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData, Http
     i->handlerData = cbdataReference(handlerData);
     i->request_time = current_time;
     c = new generic_cbdata(i);
-    idnsALookup(hashKeyStr(&i->hash), ipcacheHandleReply, c, request);
+    char * dns_name = ((ipcache_key *)(i->hash.key))->name_key;
+    idnsALookup(dns_name, ipcacheHandleReply, c, request);
 }
 
 /// \ingroup IPCacheInternal
