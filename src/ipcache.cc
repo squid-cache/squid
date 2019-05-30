@@ -164,7 +164,7 @@ static void stat_ipcache_get(StoreEntry *);
 static FREE ipcacheFreeEntry;
 static IDNSCB ipcacheHandleReply;
 static int ipcacheExpiredEntry(ipcache_entry *);
-static ipcache_entry *ipcache_get(const char *);
+static ipcache_entry *ipcache_get(const char *, Ip::Address);
 static void ipcacheLockEntry(ipcache_entry *);
 static void ipcacheStatPrint(ipcache_entry *, StoreEntry *);
 static void ipcacheUnlockEntry(ipcache_entry *);
@@ -221,7 +221,7 @@ ipcacheRelease(ipcache_entry * i, bool dofree)
 
 /// \ingroup IPCacheInternal
 static ipcache_entry *
-ipcache_get(const char *name)
+ipcache_get(const char *name, Ip::Address address)
 {
     if (ip_table != NULL && address != NULL)
     {
@@ -555,7 +555,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData, Http
         return;
     }
 
-    i = ipcache_get(name);
+    i = ipcache_get(name, request->client_addr);
 
     if (NULL == i) {
         /* miss */
@@ -654,7 +654,7 @@ ipcache_gethostbyname(const char *name, int flags, HttpRequest* request)
     assert(name);
     debugs(14, 3, "ipcache_gethostbyname: '" << name  << "', flags=" << std::hex << flags);
     ++IpcacheStats.requests;
-    i = ipcache_get(name);
+    i = ipcache_get(name, request->client_addr);
 
     if (NULL == i) {
         (void) 0;
@@ -791,11 +791,11 @@ stat_ipcache_get(StoreEntry * sentry)
 
 /// \ingroup IPCacheAPI
 void
-ipcacheInvalidate(const char *name)
+ipcacheInvalidate(const char *name, Ip::Address addr)
 {
     ipcache_entry *i;
 
-    if ((i = ipcache_get(name)) == NULL)
+    if ((i = ipcache_get(name, addr)) == NULL)
         return;
 
     i->expires = squid_curtime;
@@ -808,11 +808,11 @@ ipcacheInvalidate(const char *name)
 
 /// \ingroup IPCacheAPI
 void
-ipcacheInvalidateNegative(const char *name)
+ipcacheInvalidateNegative(const char *name, Ip::Address addr)
 {
     ipcache_entry *i;
 
-    if ((i = ipcache_get(name)) == NULL)
+    if ((i = ipcache_get(name, addr)) == NULL)
         return;
 
     if (i->flags.negcached)
@@ -885,14 +885,14 @@ ipcacheUnlockEntry(ipcache_entry * i)
 
 /// \ingroup IPCacheAPI
 void
-ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
+ipcacheCycleAddr(const char *name, ipcache_addrs * ia, Ip::Address addr)
 {
     ipcache_entry *i;
     unsigned char k;
     assert(name || ia);
 
     if (NULL == ia) {
-        if ((i = ipcache_get(name)) == NULL)
+        if ((i = ipcache_get(name, addr)) == NULL)
             return;
 
         if (i->flags.negcached)
@@ -932,14 +932,14 @@ ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
  \param addr    specific addres to be marked bad
  */
 void
-ipcacheMarkBadAddr(const char *name, const Ip::Address &addr)
+ipcacheMarkBadAddr(const char *name, const Ip::Address &addr, Ip::Address source_ip)
 {
     ipcache_entry *i;
     ipcache_addrs *ia;
     int k;
 
     /** Does nothing if the domain name does not exist. */
-    if ((i = ipcache_get(name)) == NULL)
+    if ((i = ipcache_get(name, source_ip)) == NULL)
         return;
 
     ia = &i->addrs;
@@ -961,40 +961,40 @@ ipcacheMarkBadAddr(const char *name, const Ip::Address &addr)
     }
 
     /** then calls ipcacheCycleAddr() to advance the current pointer to the next OK address. */
-    ipcacheCycleAddr(name, ia);
+    ipcacheCycleAddr(name, ia, source_ip);
 }
+
+// /// \ingroup IPCacheAPI
+// void
+// ipcacheMarkAllGood(const char *name)
+// {
+//     ipcache_entry *i;
+//     ipcache_addrs *ia;
+//     int k;
+
+//     if ((i = ipcache_get(name)) == NULL)
+//         return;
+
+//     ia = &i->addrs;
+
+//     /* All bad, reset to All good */
+//     debugs(14, 3, "ipcacheMarkAllGood: Changing ALL " << name << " addrs to OK (" << ia->badcount << "/" << ia->count << " bad)");
+
+//     for (k = 0; k < ia->count; ++k)
+//         ia->bad_mask[k] = 0;
+
+//     ia->badcount = 0;
+// }
 
 /// \ingroup IPCacheAPI
 void
-ipcacheMarkAllGood(const char *name)
+ipcacheMarkGoodAddr(const char *name, const Ip::Address &addr, Ip::Address source_ip)
 {
     ipcache_entry *i;
     ipcache_addrs *ia;
     int k;
 
-    if ((i = ipcache_get(name)) == NULL)
-        return;
-
-    ia = &i->addrs;
-
-    /* All bad, reset to All good */
-    debugs(14, 3, "ipcacheMarkAllGood: Changing ALL " << name << " addrs to OK (" << ia->badcount << "/" << ia->count << " bad)");
-
-    for (k = 0; k < ia->count; ++k)
-        ia->bad_mask[k] = 0;
-
-    ia->badcount = 0;
-}
-
-/// \ingroup IPCacheAPI
-void
-ipcacheMarkGoodAddr(const char *name, const Ip::Address &addr)
-{
-    ipcache_entry *i;
-    ipcache_addrs *ia;
-    int k;
-
-    if ((i = ipcache_get(name)) == NULL)
+    if ((i = ipcache_get(name, source_ip)) == NULL)
         return;
 
     ia = &i->addrs;

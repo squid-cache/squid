@@ -11,6 +11,7 @@
 
 #include "dns/forward.h"
 #include "ip/forward.h"
+#include "ip/Address.h"
 
 class ipcache_addrs
 {
@@ -29,13 +30,13 @@ typedef void IPH(const ipcache_addrs *, const Dns::LookupDetails &details, void 
 void ipcache_purgelru(void *);
 void ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData, HttpRequest *);
 const ipcache_addrs *ipcache_gethostbyname(const char *, int flags, HttpRequest *);
-void ipcacheInvalidate(const char *);
-void ipcacheInvalidateNegative(const char *);
+void ipcacheInvalidate(const char *, Ip::Address);
+void ipcacheInvalidateNegative(const char *, Ip::Address);
 void ipcache_init(void);
-void ipcacheCycleAddr(const char *name, ipcache_addrs *);
-void ipcacheMarkBadAddr(const char *name, const Ip::Address &);
-void ipcacheMarkGoodAddr(const char *name, const Ip::Address &);
-void ipcacheMarkAllGood(const char *name);
+void ipcacheCycleAddr(const char *name, ipcache_addrs *, Ip::Address);
+void ipcacheMarkBadAddr(const char *name, const Ip::Address &, Ip::Address);
+void ipcacheMarkGoodAddr(const char *name, const Ip::Address &, Ip::Address);
+// void ipcacheMarkAllGood(const char *name);
 void ipcacheFreeMemory(void);
 ipcache_addrs *ipcacheCheckNumeric(const char *name);
 void ipcache_restart(void);

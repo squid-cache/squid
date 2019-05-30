@@ -113,9 +113,9 @@ Comm::ConnOpener::sendAnswer(Comm::Flag errFlag, int xerrno, const char *why)
     // only mark the address good/bad AFTER connect is finished.
     if (host_ != NULL) {
         if (xerrno == 0) // XXX: should not we use errFlag instead?
-            ipcacheMarkGoodAddr(host_, conn_->remote);
+            ipcacheMarkGoodAddr(host_, conn_->remote, conn_->local);
         else {
-            ipcacheMarkBadAddr(host_, conn_->remote);
+            ipcacheMarkBadAddr(host_, conn_->remote, conn_->local);
 #if USE_ICMP
             if (Config.onoff.test_reachability)
                 netdbDeleteAddrNetwork(conn_->remote);

@@ -1013,7 +1013,7 @@ clientReplyContext::purgeRequest()
     }
 
     /* Release both IP cache */
-    ipcacheInvalidate(http->request->url.host());
+    ipcacheInvalidate(http->request->url.host(), http->request->client_addr);
 
     if (!http->flags.purging)
         purgeRequestFindObjectToPurge();
@@ -1694,7 +1694,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
       * 'invalidate' the cached IP entries for this request ???
       */
     if (r->flags.noCache || r->flags.noCacheHack())
-        ipcacheInvalidateNegative(r->url.host());
+        ipcacheInvalidateNegative(r->url.host(), r->client_addr);
 
 #if USE_CACHE_DIGESTS
     lookup_type = http->storeEntry() ? "HIT" : "MISS";

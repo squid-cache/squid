@@ -371,7 +371,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &details,
             // when IPv6 is disabled we cannot use it
             if (!Ip::EnableIpv6 && p->remote.isIPv6()) {
                 const char *host = (fs->_peer.valid() ? fs->_peer->host : psstate->request->url.host());
-                ipcacheMarkBadAddr(host, p->remote);
+                ipcacheMarkBadAddr(host, p->remote, p->local);
                 continue;
             }
 
