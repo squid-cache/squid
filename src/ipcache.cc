@@ -68,6 +68,41 @@
  * the ipcache_high threshold.
  */
 
+class ipcache_key
+{
+public:
+    char *name_key;
+    Ip::Address ip_key;
+
+    ipcache_key(Ip::Address ip, const char *name) {
+        ip_key = ip;
+        name_key = xstrdup(name);
+        Tolower(name_key);
+    }
+    ~ipcache_key() {
+        xfree(name_key);
+    }
+
+    static int comapare_keys(const void *k1, const void *k2) {
+        ipcache_key * key1 = (ipcache_key *)k1;
+        ipcache_key * key2 = (ipcache_key *)k2;
+
+        int compare_addresses = key1->ip_key.matchIPAddr(key2->ip_key);
+
+        if (compare_addresses != 0)
+            return compare_addresses;
+
+        return strcmp(key1->name_key, key2->name_key);
+    }
+
+    static unsigned int hash_key(const void *data, unsigned int size) {
+        ipcache_key* key = (ipcache_key *)data;
+        struct sockaddr_in address;
+        key->ip_key.getSockAddr(address);
+        return (hash4(key->name_key, size) ^ (unsigned int)(address.sin_addr.s_addr)) % size;
+    }
+};
+
 /**
  \ingroup IPCacheAPI
  *
@@ -81,7 +116,7 @@ class ipcache_entry
     MEMPROXY_CLASS(ipcache_entry);
 
 public:
-    ipcache_entry(const char *);
+    ipcache_entry(const char *, Ip::Address);
     ~ipcache_entry();
 
     hash_link hash;     /* must be first */
@@ -188,8 +223,13 @@ ipcacheRelease(ipcache_entry * i, bool dofree)
 static ipcache_entry *
 ipcache_get(const char *name)
 {
-    if (ip_table != NULL)
-        return (ipcache_entry *) hash_lookup(ip_table, name);
+    if (ip_table != NULL && address != NULL)
+    {
+        ipcache_key *search_key = new ipcache_key(address, name);
+        ipcache_entry * result = (ipcache_entry *) hash_lookup(ip_table, search_key);
+        delete search_key;
+        return result;
+    }
     else
         return NULL;
 }
@@ -271,7 +311,7 @@ purge_entries_fromhosts(void)
         ipcacheRelease(i);
 }
 
-ipcache_entry::ipcache_entry(const char *name) :
+ipcache_entry::ipcache_entry(const char *name, Ip::Address address) :
     lastref(0),
     expires(0),
     handler(nullptr),
@@ -279,8 +319,7 @@ ipcache_entry::ipcache_entry(const char *name) :
     error_message(nullptr),
     locks(0) // XXX: use Lock type ?
 {
-    hash.key = xstrdup(name);
-    Tolower(static_cast<char*>(hash.key));
+    hash.key = new ipcache_key(address, name);    
     expires = squid_curtime + Config.negativeDnsTtl;
 
     memset(&request_time, 0, sizeof(request_time));
@@ -545,7 +584,9 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData, Http
 
     debugs(14, 5, "ipcache_nbgethostbyname: MISS for '" << name << "'");
     ++IpcacheStats.misses;
-    i = new ipcache_entry(name);
+    
+    debugs(14, DBG_IMPORTANT, "Adding new ip cache entry from ip " << request->client_addr << " for url " << name);
+    i = new ipcache_entry(name, request->client_addr);    
     i->handler = handler;
     i->handlerData = cbdataReference(handlerData);
     i->request_time = current_time;
@@ -585,7 +626,7 @@ ipcache_init(void)
     ipcache_low = (long) (((float) Config.ipcache.size *
                            (float) Config.ipcache.low) / (float) 100);
     n = hashPrime(ipcache_high / 4);
-    ip_table = hash_create((HASHCMP *) strcmp, n, hash4);
+    ip_table = hash_create(ipcache_key::comapare_keys, n, ipcache_key::hash_key);
 
     ipcacheRegisterWithCacheManager();
 }
@@ -989,7 +1030,7 @@ ipcache_entry::~ipcache_entry()
     xfree(addrs.in_addrs);
     xfree(addrs.bad_mask);
     xfree(error_message);
-    xfree(hash.key);
+    delete (ipcache_key *)hash.key;
 }
 
 /// \ingroup IPCacheAPI
