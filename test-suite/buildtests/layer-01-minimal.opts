@@ -30,6 +30,8 @@ MAKETEST="distcheck"
 #   --without-filedescriptors \
 #   --without-build-environment \
 #
+#  GCC-9 cannot (yet) test this due to segmentation faults in std::string template optimizations (via cppunit)
+#	--disable-optimizations \
 #
 # NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the 
 #     distcheck target recursive tests beteen scripted runs.
@@ -38,7 +40,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-build-info \
 	--disable-loadable-modules \
 	--disable-gnuregex \
-	--disable-optimizations \
 	--disable-debug-cbdata \
 	--disable-xmalloc-statistics \
 	--disable-async-io \
