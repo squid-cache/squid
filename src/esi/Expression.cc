@@ -100,6 +100,16 @@ stackpop(stackmember * s, int *depth)
     cleanmember(&s[*depth]);
 }
 
+/// push item onto the stack.
+/// Throws an exception with the given message if depth is not referencing
+/// a valid location of the stack both before and after the push.
+static void
+stackpush(stackmember *stack, stackmember &item, int *depth, const char *message)
+{
+    Must2(*depth >= 0 && *depth < STACK_DEPTH_LIMIT-1, message);
+    stack[(*depth)++] = item;
+}
+
 static evaluate evalnegate;
 static evaluate evalliteral;
 static evaluate evalor;
@@ -218,7 +228,7 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
     /* copy down */
     --(*depth);
 
-    Must2(*depth < STACK_DEPTH_LIMIT && *depth > 0, "negate expression too complex");
+    Must2(*depth >= 0 && *depth < STACK_DEPTH_LIMIT && whereAmI >= 0 && whereAmI < STACK_DEPTH_LIMIT, "negate expression too complex");
     stack[whereAmI] = stack[(*depth)];
 
     cleanmember(candidate);
@@ -284,8 +294,7 @@ evalor(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 
     srv.precedence = 1;
 
-    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth, "OR expression too complex");
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -332,8 +341,7 @@ evaland(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 
     srv.precedence = 1;
 
-    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth, "AND expression too complex");
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -379,8 +387,7 @@ evallesseq(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 
     srv.precedence = 1;
 
-    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth, "less-or-equal expression too complex");
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -428,8 +435,7 @@ evallessthan(stackmember * stack, int *depth, int whereAmI, stackmember * candid
 
     srv.precedence = 1;
 
-    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth, "less-than expression too complex");
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -477,8 +483,7 @@ evalmoreeq(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 
     srv.precedence = 1;
 
-    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth, "more-or-equal expression too complex");
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -526,8 +531,7 @@ evalmorethan(stackmember * stack, int *depth, int whereAmI, stackmember * candid
 
     srv.precedence = 1;
 
-    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth, "more-than expression too complex");
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -576,8 +580,7 @@ evalequals(stackmember * stack, int *depth, int whereAmI,
 
     srv.precedence = 1;
 
-    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth, "equality expression too complex");
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -624,8 +627,7 @@ evalnotequals(stackmember * stack, int *depth, int whereAmI, stackmember * candi
 
     srv.precedence = 1;
 
-    Must2(*depth < STACK_DEPTH_LIMIT-1, "expression too complex");
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth, "not-equal expression too complex");
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -961,7 +963,10 @@ dumpstack(stackmember * stack, int depth)
 int
 addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
 {
-    Must2(*stackdepth < STACK_DEPTH_LIMIT, "expression too complex");
+    // NP: stackdepth++ in else clauses may cause it to point at memory
+    //      outside the stack allocation. We only check that the location
+    //      being assigned to is valid.
+    Must2(*stackdepth < STACK_DEPTH_LIMIT && *stackdepth >= 0, "expression too complex to add member");
 
     if (candidate->valuetype != ESI_EXPR_LITERAL && *stackdepth > 1) {
         /* !(!(a==b))) is why thats safe */
