@@ -28,12 +28,6 @@ void GetInfo(Mgr::InfoActionData& stats);
 void DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry);
 void DumpMallocStatistics(StoreEntry* sentry);
 
-Mgr::InfoActionData::InfoActionData()
-{
-    memset(&squid_start, 0, sizeof(squid_start));
-    memset(&current_time, 0, sizeof(current_time));
-}
-
 Mgr::InfoActionData&
 Mgr::InfoActionData::operator += (const InfoActionData& stats)
 {

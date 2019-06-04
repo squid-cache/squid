@@ -22,12 +22,11 @@ namespace Mgr
 class InfoActionData
 {
 public:
-    InfoActionData();
     InfoActionData& operator += (const InfoActionData& stats);
 
 public:
-    struct timeval squid_start;
-    struct timeval current_time;
+    struct timeval squid_start = {};
+    struct timeval current_time = {};
     double client_http_clients = 0.0;
     double client_http_requests = 0.0;
     double icp_pkts_recv = 0.0;
