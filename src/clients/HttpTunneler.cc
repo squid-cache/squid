@@ -129,6 +129,9 @@ Http::Tunneler::writeRequest()
     HttpHeader hdr_out(hoRequest);
     Http::StateFlags flags;
     flags.peering = true;
+
+    Must(request->masterXaction);
+    request->masterXaction->generatingConnect = true;
     // flags.tunneling = false; // the CONNECT request itself is not tunneled
     // flags.toOrigin = false; // the next HTTP hop is a non-originserver peer
     MemBuf mb;
@@ -336,6 +339,9 @@ void
 Http::Tunneler::callBack()
 {
     debugs(83, 5, connection << status());
+    Must(request);
+    Must(request->masterXaction);
+    request->masterXaction->generatingConnect = false;
     auto cb = callback;
     callback = nullptr;
     ScheduleCallHere(cb);

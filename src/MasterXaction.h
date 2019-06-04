@@ -55,6 +55,10 @@ public:
     /// the initiator of this transaction
     XactionInitiator initiator;
 
+    /// It is true while squid is generating a CONNECT request to a peer
+    /// to serve the transaction
+    bool generatingConnect = false;
+
     // TODO: add state from other Jobs in the transaction
 };
 

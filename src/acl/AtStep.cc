@@ -8,8 +8,6 @@
 
 #include "squid.h"
 
-#if USE_OPENSSL
-
 #include "acl/AtStep.h"
 #include "acl/AtStepData.h"
 #include "acl/FilledChecklist.h"
@@ -18,15 +16,24 @@
 #include "ssl/ServerBump.h"
 
 int
-ACLAtStepStrategy::match (ACLData<Ssl::BumpStep> * &data, ACLFilledChecklist *checklist)
+ACLAtStepStrategy::match (ACLData<int> * &data, ACLFilledChecklist *checklist)
 {
+    Must(checklist->request);
+    Must(checklist->request->masterXaction);
+    if (checklist->request->masterXaction->generatingConnect && data->match(ACLAtStepData::atStepGeneratingConnect))
+        return 1;
+
+#if USE_OPENSSL
+    static std::map<Ssl::BumpStep, ACLAtStepData::AtStepValues> BumpAtStepMap= {
+        {Ssl::bumpStep1, ACLAtStepData::atStepSslBump1},
+        {Ssl::bumpStep2, ACLAtStepData::atStepSslBump2},
+        {Ssl::bumpStep3, ACLAtStepData::atStepSslBump3}
+    };
     Ssl::ServerBump *bump = NULL;
     if (checklist->conn() != NULL && (bump = checklist->conn()->serverBump()))
-        return data->match(bump->step);
+        return data->match(BumpAtStepMap[bump->step]);
     else
-        return data->match(Ssl::bumpStep1);
+        return data->match(BumpAtStepMap[Ssl::bumpStep1]);
+#endif
     return 0;
 }
-
-#endif /* USE_OPENSSL */
-

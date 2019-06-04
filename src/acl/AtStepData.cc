@@ -7,15 +7,22 @@
  */
 
 #include "squid.h"
-
-#if USE_OPENSSL
-
 #include "acl/AtStepData.h"
 #include "acl/Checklist.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "wordlist.h"
+
+const char *ACLAtStepData::AtStepValuesStr[] = {
+#if USE_OPENSSL
+    "SslBump1",
+    "SslBump2",
+    "SslBump3",
+#endif
+    "GeneratingCONNECT",
+    nullptr
+};
 
 ACLAtStepData::ACLAtStepData()
 {}
@@ -30,9 +37,9 @@ ACLAtStepData::~ACLAtStepData()
 }
 
 bool
-ACLAtStepData::match(Ssl::BumpStep  toFind)
+ACLAtStepData::match(int toFind)
 {
-    for (std::list<Ssl::BumpStep>::const_iterator it = values.begin(); it != values.end(); ++it) {
+    for (auto it = values.cbegin(); it != values.cend(); ++it) {
         if (*it == toFind)
             return true;
     }
@@ -43,10 +50,8 @@ SBufList
 ACLAtStepData::dump() const
 {
     SBufList sl;
-    for (std::list<Ssl::BumpStep>::const_iterator it = values.begin(); it != values.end(); ++it) {
-        sl.push_back(SBuf(*it == Ssl::bumpStep1 ? "SslBump1" :
-                          *it == Ssl::bumpStep2 ? "SslBump2" :
-                          *it == Ssl::bumpStep3 ? "SslBump3" : "???"));
+    for (auto it = values.cbegin(); it != values.cend(); ++it) {
+        sl.push_back(SBuf(AtStepStr(*it)));
     }
     return sl;
 }
@@ -55,16 +60,12 @@ void
 ACLAtStepData::parse()
 {
     while (const char *t = ConfigParser::strtokFile()) {
-        if (strcasecmp(t, "SslBump1") == 0) {
-            values.push_back(Ssl::bumpStep1);
-        } else if (strcasecmp(t, "SslBump2") == 0) {
-            values.push_back(Ssl::bumpStep2);
-        } else if (strcasecmp(t, "SslBump3") == 0) {
-            values.push_back(Ssl::bumpStep3);
-        } else {
+        const auto at = AtStep(t);
+        if (at == atStepValuesEnd) {
             debugs(28, DBG_CRITICAL, "FATAL: invalid AtStep step: " << t);
             self_destruct();
         }
+        values.push_back(at);
     }
 }
 
@@ -80,5 +81,22 @@ ACLAtStepData::clone() const
     return new ACLAtStepData(*this);
 }
 
-#endif /* USE_OPENSSL */
+const char *
+ACLAtStepData::AtStepStr(int at)
+{
+    if (at >=0 && at < atStepValuesEnd)
+        return AtStepValuesStr[at];
+    else
+        return "-";
+}
+
+int
+ACLAtStepData::AtStep(const char *atStr)
+{
+    for (auto at = 0; at < atStepValuesEnd; ++at)
+        if (strcasecmp(atStr, AtStepValuesStr[at]) == 0)
+            return at;
+
+    return atStepValuesEnd;
+}
 

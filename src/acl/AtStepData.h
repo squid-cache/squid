@@ -9,33 +9,43 @@
 #ifndef SQUID_ACLATSTEPDATA_H
 #define SQUID_ACLATSTEPDATA_H
 
-#if USE_OPENSSL
-
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "ssl/support.h"
-
 #include <list>
 
-class ACLAtStepData : public ACLData<Ssl::BumpStep>
+class ACLAtStepData : public ACLData<int>
 {
     MEMPROXY_CLASS(ACLAtStepData);
 
 public:
+    enum AtStepValues {
+#if USE_OPENSSL
+        atStepSslBump1,
+        atStepSslBump2,
+        atStepSslBump3,
+#endif
+        atStepGeneratingConnect,
+        atStepValuesEnd
+    };
+
     ACLAtStepData();
     ACLAtStepData(ACLAtStepData const &);
     ACLAtStepData &operator= (ACLAtStepData const &);
     virtual ~ACLAtStepData();
-    bool match(Ssl::BumpStep);
+    bool match(int);
     virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLAtStepData *clone() const;
 
-    std::list<Ssl::BumpStep> values;
-};
+    static const char *AtStepStr(int);
+    static int AtStep(const char *);
 
-#endif /* USE_OPENSSL */
+    std::list<int> values;
+
+private:
+    static const char *AtStepValuesStr[];
+};
 
 #endif /* SQUID_ACLSSL_ERRORDATA_H */
 

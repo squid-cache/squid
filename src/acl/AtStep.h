@@ -9,20 +9,16 @@
 #ifndef SQUID_ACLATSTEP_H
 #define SQUID_ACLATSTEP_H
 
-#if USE_OPENSSL
-
 #include "acl/Strategy.h"
-#include "ssl/support.h"
 
 /// \ingroup ACLAPI
-class ACLAtStepStrategy : public ACLStrategy<Ssl::BumpStep>
+class ACLAtStepStrategy : public ACLStrategy<int>
 {
 
 public:
     virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
 
-#endif /* USE_OPENSSL */
 
 #endif /* SQUID_ACLATSTEP_H */
 
