@@ -90,10 +90,6 @@ public:
     /// type to use for storing time-related members; must be signed
     typedef int64_t SwappedTime;
 
-    StoreSwapLogData() {
-        memset(&key, 0, SQUID_MD5_DIGEST_LENGTH);
-    }
-
     /// consistency self-check: whether the data appears to make sense
     bool sane() const;
 
@@ -175,7 +171,7 @@ public:
     /**
      * The 128-bit MD5 hash for this object.
      */
-    unsigned char key[SQUID_MD5_DIGEST_LENGTH];
+    unsigned char key[SQUID_MD5_DIGEST_LENGTH] = {};
 };
 
 /// \ingroup FileFormatSwapStateAPI
