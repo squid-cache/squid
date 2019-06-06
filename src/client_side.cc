@@ -2204,6 +2204,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     pinning.pinned = false;
     pinning.auth = false;
     pinning.zeroReply = false;
+    pinning.peerAccessDenied = false;
     pinning.peer = NULL;
 
     // store the details required for creating more MasterXaction objects as new requests come in
@@ -3966,6 +3967,7 @@ ConnStateData::unpinConnection(const bool andClose)
     safe_free(pinning.host);
 
     pinning.zeroReply = false;
+    pinning.peerAccessDenied = false;
 
     /* NOTE: pinning.pinned should be kept. This combined with fd == -1 at the end of a request indicates that the host
      * connection has gone away */

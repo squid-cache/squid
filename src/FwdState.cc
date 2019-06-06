@@ -558,28 +558,6 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 
     debugs(17, 3, path);
 
-    if (request->pinnedConnection()) {
-        // This is a previously pinned connection which not allowed to be used
-        // any more probably because of peer selection policy.
-
-        if (!healthyPinnedConnection()) {
-            // client connection is going to be closed soon.
-            stopAndDestroy("pinned connection is closing");
-            return;
-        }
-
-        // We have a pinned connection and we should check if reconnect/retry
-        // is allowed for this type of pinned connections.
-        if (!retriablePinned()) {
-            debugs(17, 2, "Deny to use non re-triable pinned connection. Rejecting request.");
-            fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));
-            stopAndDestroy("non re-triable pinned connection");
-            return;
-        }
-
-        request->pinnedConnection()->unpinConnection(true);
-    }
-
     destinations->addPath(path);
 
     if (Comm::IsConnOpen(serverConn)) {
@@ -992,6 +970,8 @@ FwdState::connectStart()
 {
     debugs(17, 3, *destinations << " to " << entry->url());
 
+    Must(!request->pinnedConnection());
+
     assert(!destinations->empty());
     assert(!opening());
 
@@ -1060,10 +1040,18 @@ FwdState::usePinned()
         return;
     }
 
+    const auto connManager = request->pinnedConnection();
+    if (connManager->pinning.peerAccessDenied) {
+        // The peer selection policy denies access to pinned connection.
+        // Return an error page to the client.
+        fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));
+        stopAndDestroy("pinned connection access denied");
+        return;
+    }
+
     ++n_tries;
     request->flags.pinned = true;
 
-    const auto connManager = request->pinnedConnection();
     debugs(17, 7, "connection manager: " << connManager);
     assert(connManager);
     if (connManager->pinnedAuth())
