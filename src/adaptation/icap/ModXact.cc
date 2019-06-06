@@ -1542,11 +1542,8 @@ void Adaptation::Icap::ModXact::makeAllowHeader(MemBuf &buf)
     const bool allow204 = allow204in || allow204out;
     const bool allow206 = allow206in || allow206out;
 
-    if (!allow204 && !allow206 && !allowTrailers)
-        return; // nothing to do
-
-    if (virginBody.expected()) // if there is a virgin body, plan to send it
-        virginBodySending.plan();
+    if ((allow204 || allow206) && virginBody.expected())
+        virginBodySending.plan(); // if there is a virgin body, plan to send it
 
     // writing Preview:...   means we will honor 204 inside preview
     // writing Allow/204     means we will honor 204 outside preview
