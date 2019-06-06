@@ -131,11 +131,6 @@ private:
     /// connection is alive and healthy return the pinned connection.
     Comm::ConnectionPointer healthyPinnedConnection();
 
-    /// Whether the kind of pinned to-peer connection can be replaced with
-    /// another one. For example the bumped connections can not be retried,
-    /// but FTP proxying related pinned connections can retried.
-    bool retriablePinned() const;
-
     /// whether a pinned to-peer connection can be replaced with another one
     /// (in order to retry or reforward a failed request)
     bool pinnedCanRetry() const;

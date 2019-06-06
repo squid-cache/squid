@@ -1319,9 +1319,14 @@ FwdState::exhaustedTries() const
 }
 
 bool
-FwdState::retriablePinned() const
+FwdState::pinnedCanRetry() const
 {
     assert(request->flags.pinned);
+
+    // pconn race on pinned connection: Currently we do not have any mechanism
+    // to retry current pinned connection path.
+    if (pconnRace == raceHappened)
+        return false;
 
     // If a bumped connection was pinned, then the TLS client was given our peer
     // details. Do not retry because we do not ensure that those details stay
@@ -1333,19 +1338,6 @@ FwdState::retriablePinned() const
     // The other pinned cases are FTP proxying and connection-based HTTP
     // authentication. TODO: Do these cases have restrictions?
     return true;
-}
-
-bool
-FwdState::pinnedCanRetry() const
-{
-    assert(request->flags.pinned);
-
-    // pconn race on pinned connection: Currently we do not have any mechanism
-    // to retry current pinned connection path.
-    if (pconnRace == raceHappened)
-        return false;
-
-    return retriablePinned();
 }
 
 time_t
