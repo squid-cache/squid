@@ -12,13 +12,6 @@
 #include "StoreStats.h"
 #include "tools.h"
 
-/* StoreInfoStats */
-
-StoreInfoStats::StoreInfoStats()
-{
-    memset(this, 0, sizeof(*this));
-}
-
 StoreInfoStats &
 StoreInfoStats::operator +=(const StoreInfoStats &stats)
 {

@@ -28,11 +28,6 @@ void GetInfo(Mgr::InfoActionData& stats);
 void DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry);
 void DumpMallocStatistics(StoreEntry* sentry);
 
-Mgr::InfoActionData::InfoActionData()
-{
-    memset(this, 0, sizeof(*this));
-}
-
 Mgr::InfoActionData&
 Mgr::InfoActionData::operator += (const InfoActionData& stats)
 {
