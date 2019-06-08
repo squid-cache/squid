@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/TextException.h"
 #include "Debug.h"
+#include "esi/Esi.h"
 #include "esi/Expression.h"
 #include "profiler/Profiler.h"
 
@@ -34,8 +35,6 @@
  */
 
 typedef struct _stackmember stackmember;
-
-static const int STACK_DEPTH_LIMIT = 20; // stack size allocated
 
 typedef int evaluate(stackmember * stack, int *depth, int whereAmI,
                      stackmember * candidate);
@@ -106,7 +105,7 @@ stackpop(stackmember * s, int *depth)
 static void
 stackpush(stackmember *stack, stackmember &item, int *depth, const char *message)
 {
-    Must2(*depth >= 0 && *depth < STACK_DEPTH_LIMIT-1, message);
+    Must2(*depth >= 0 && *depth < ESI_STACK_DEPTH_LIMIT-1, message);
     stack[(*depth)++] = item;
 }
 
@@ -221,6 +220,7 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
         /* invalid stack */
         return 1;
 
+    Must2(whereAmI >= 0 && whereAmI < ESI_STACK_DEPTH_LIMIT-1, "negate expression location invalid");
     if (stack[whereAmI + 1].valuetype != ESI_EXPR_EXPR)
         /* invalid operand */
         return 1;
@@ -228,7 +228,7 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
     /* copy down */
     --(*depth);
 
-    Must2(*depth >= 0 && *depth < STACK_DEPTH_LIMIT && whereAmI >= 0 && whereAmI < STACK_DEPTH_LIMIT, "negate expression too complex");
+    Must2(*depth >= 0 && *depth < ESI_STACK_DEPTH_LIMIT, "negate expression too complex");
     stack[whereAmI] = stack[(*depth)];
 
     cleanmember(candidate);
@@ -966,7 +966,7 @@ addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
     // NP: stackdepth++ in else clauses may cause it to point at memory
     //      outside the stack allocation. We only check that the location
     //      being assigned to is valid.
-    Must2(*stackdepth < STACK_DEPTH_LIMIT && *stackdepth >= 0, "expression too complex to add member");
+    Must2(*stackdepth < ESI_STACK_DEPTH_LIMIT && *stackdepth >= 0, "expression too complex to add member");
 
     if (candidate->valuetype != ESI_EXPR_LITERAL && *stackdepth > 1) {
         /* !(!(a==b))) is why thats safe */
@@ -998,7 +998,7 @@ addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
 int
 ESIExpression::Evaluate(char const *s)
 {
-    stackmember stack[STACK_DEPTH_LIMIT];
+    stackmember stack[ESI_STACK_DEPTH_LIMIT];
     int stackdepth = 0;
     char const *end;
     PROF_start(esiExpressionEval);

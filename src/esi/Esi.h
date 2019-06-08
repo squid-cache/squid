@@ -11,6 +11,10 @@
 
 #include "clientStream.h"
 
+#if !defined(ESI_STACK_DEPTH_LIMIT)
+#define ESI_STACK_DEPTH_LIMIT 20
+#endif
+
 /* ESI.c */
 extern CSR esiStreamRead;
 extern CSCB esiProcessStream;
