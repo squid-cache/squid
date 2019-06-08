@@ -781,14 +781,14 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
             if (keyName == SBuf("domain",6) || keyName == SBuf("uri",3)) {
                 // domain is Special. Not a quoted-string, must not be de-quoted. But is wrapped in '"'
                 // BUG 3077: uri= can also be sent to us in a mangled (invalid!) form like domain
-                if (*p == '"' && *(p + vlen -1) == '"') {
+                if (vlen > 1 && *p == '"' && *(p + vlen -1) == '"') {
                     value.limitInit(p+1, vlen-2);
                 }
             } else if (keyName == SBuf("qop",3)) {
                 // qop is more special.
                 // On request this must not be quoted-string de-quoted. But is several values wrapped in '"'
                 // On response this is a single un-quoted token.
-                if (*p == '"' && *(p + vlen -1) == '"') {
+                if (vlen > 1 && *p == '"' && *(p + vlen -1) == '"') {
                     value.limitInit(p+1, vlen-2);
                 } else {
                     value.limitInit(p, vlen);
