@@ -90,8 +90,6 @@ public:
     /// type to use for storing time-related members; must be signed
     typedef int64_t SwappedTime;
 
-    StoreSwapLogData();
-
     /// consistency self-check: whether the data appears to make sense
     bool sane() const;
 
@@ -102,7 +100,7 @@ public:
      * Either SWAP_LOG_ADD when an object is added to the disk storage,
      * or SWAP_LOG_DEL when an object is deleted.
      */
-    uint8_t op;
+    uint8_t op = 0;
 
     /**
      * Fingerprint to weed out bogus/corrupted swap.state entries.
@@ -116,7 +114,7 @@ public:
      * are set at run time because the order of storage directories
      * may change over time.
      */
-    sfileno swap_filen;
+    sfileno swap_filen = 0;
 
     /**
      * A Unix time value that represents the time when
@@ -125,12 +123,12 @@ public:
      * to that time. Otherwise, it is set to the Squid process time
      * when the response is read (as soon as the end of headers are found).
      */
-    SwappedTime timestamp;
+    SwappedTime timestamp = 0;
 
     /**
      * The last time that a client requested this object.
      */
-    SwappedTime lastref;
+    SwappedTime lastref = 0;
 
     /**
      * The value of the response's Expires: header, if any.
@@ -141,20 +139,20 @@ public:
      * where Squid sets expires to -2. This happens for the
      * internal "netdb" object and for FTP URL responses.
      */
-    SwappedTime expires;
+    SwappedTime expires = 0;
 
     /**
      * The value of the response's Last-modified: header, if any.
      * This is set to -1 if there is no Last-modified: header,
      * or if it is unparseable.
      */
-    SwappedTime lastmod;
+    SwappedTime lastmod = 0;
 
     /**
      * This is the number of bytes that the object occupies on
      * disk. It includes the Squid "swap file header".
      */
-    uint64_t swap_file_sz;
+    uint64_t swap_file_sz = 0;
 
     /**
      * The number of times that this object has been accessed (referenced).
@@ -168,12 +166,12 @@ public:
      * check when rebuilding the cache at startup. Objects that
      * have the KEY_PRIVATE flag set are not added back to the cache.
      */
-    uint16_t flags;
+    uint16_t flags = 0;
 
     /**
      * The 128-bit MD5 hash for this object.
      */
-    unsigned char key[SQUID_MD5_DIGEST_LENGTH];
+    unsigned char key[SQUID_MD5_DIGEST_LENGTH] = {};
 };
 
 /// \ingroup FileFormatSwapStateAPI

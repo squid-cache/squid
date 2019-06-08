@@ -54,11 +54,6 @@ AddToMap(const PendingOpenRequest &por)
     return -1;
 }
 
-Ipc::OpenListenerParams::OpenListenerParams()
-{
-    memset(this, 0, sizeof(*this));
-}
-
 bool
 Ipc::OpenListenerParams::operator <(const OpenListenerParams &p) const
 {
