@@ -822,7 +822,8 @@ main(int argc, char *const argv[])
                 goto cleanup;
             if (major_status & GSS_S_CONTINUE_NEEDED) {
                 debug((char *) "%s| %s: INFO: continuation needed\n", LogTime(), PROGRAM);
-                fprintf(stdout, "ERR token=%s\n", token);
+                // XXX: where to get the server token for delivery to client? token is nullptr here.
+                fprintf(stdout, "ERR\n");
                 goto cleanup;
             }
             gss_release_buffer(&minor_status, &output_token);
