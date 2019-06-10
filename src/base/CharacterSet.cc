@@ -150,6 +150,7 @@ CharacterSet::OBSTEXT("OBSTEXT",0x80,0xff),
 // RFC 7232
 CharacterSet::ETAGC("ETAGC", {{0x21,0x21},{0x23,0x7e},{0x80,0xff}}),
 // RFC 7235
-CharacterSet::TOKEN68C("TOKEN68C","-._~+/0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+CharacterSet::TOKEN68C("TOKEN68C","-._~+/0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+// RFC 8141
+CharacterSet::ALPHANUM("alphanum","0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 ;
-

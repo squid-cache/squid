@@ -115,6 +115,10 @@ public:
     // token68 (internal charaters only, excludes '=' terminator)
     static const CharacterSet TOKEN68C;
 
+    // URN character set, RFC 8141
+    // alphanum
+    static const CharacterSet ALPHANUM;
+
 private:
     /** index of characters in this set
      *

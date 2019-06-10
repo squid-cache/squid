@@ -126,6 +126,8 @@ public:
     SBuf &absolute() const;
 
 private:
+    bool parseUrn(Parser::Tokenizer&);
+
     /**
      \par
      * The scheme of this URL. This has the 'type code' smell about it.

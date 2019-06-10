@@ -254,13 +254,8 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
             return false; // invalid scheme
 
         // URN have a different schema from URL
-        if (scheme == AnyP::PROTO_URN) {
-            debugs(23, 3, "Split URI '" << urlStr << "' into proto='urn', path='" << tok.remaining() << "'");
-            debugs(50, 5, "urn=" << tok.remaining());
-            setScheme(scheme);
-            path(tok.remaining());
-            return true;
-        }
+        if (scheme == AnyP::PROTO_URN)
+            return parseUrn(tok);
 
         // URL then have "//"
         static SBuf doubleSlash("//");
@@ -467,6 +462,46 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
     return true;
 }
 
+/**
+ * Governerd by RFC 8141 section 2:
+ *
+ *  assigned-name = "urn" ":" NID ":" NSS
+ *  NID           = (alphanum) 0*30(ldh) (alphanum)
+ *  ldh           = alphanum / "-"
+ *  NSS           = pchar *(pchar / "/")
+ *
+ * Notice that NID is exactly 2-32 characters in length.
+ */
+bool
+AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
+{
+    static const CharacterSet nidChars = CharacterSet("NID","-") + CharacterSet::ALPHANUM;
+    SBuf nid;
+    if (tok.prefix(nid, nidChars, 32) && tok.skip(':')) {
+        debugs(23, 3, "Split URI into proto='urn', nid='" << nid << "', path='" << tok.remaining() << "'");
+        if (nid.length() < 2) {
+            debugs(23, 3, "URN has invalid NID length");
+            return false;
+        }
+        if (!CharacterSet::ALPHANUM[*nid.begin()]) {
+            debugs(23, 3, "URN has invalid NID prefix");
+            return false;
+        }
+        if (!CharacterSet::ALPHANUM[*nid.end()]) {
+            debugs(23, 3, "URN has invalid NID suffix");
+            return false;
+        }
+        setScheme(AnyP::PROTO_URN, nullptr);
+        host(nid.c_str());
+        // TODO validate path characters
+        path(tok.remaining());
+        return true;
+    }
+
+    debugs(23, 3, "URN has invalid character in NID " << tok.remaining());
+    return false; // invalid NID.
+}
+
 void
 AnyP::Uri::touch()
 {
@@ -512,6 +547,9 @@ AnyP::Uri::absolute() const
                 absolute_.append("@", 1);
             }
             absolute_.append(authority());
+        } else {
+            absolute_.append(host());
+            absolute_.append(":", 1);
         }
         absolute_.append(path());
     }
