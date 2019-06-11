@@ -38,7 +38,6 @@ public:
 
     void created (StoreEntry *newEntry);
     void start (HttpRequest *, StoreEntry *);
-    char *getHost(const SBuf &urlpath);
     void setUriResFromRequest(HttpRequest *);
 
     virtual ~UrnState();
@@ -131,18 +130,6 @@ urnFindMinRtt(url_entry * urls, const HttpRequestMethod &, int *rtt_ret)
     return min_u;
 }
 
-char *
-UrnState::getHost(const SBuf &urlpath)
-{
-    /** FIXME: this appears to be parsing the URL. *very* badly. */
-    /*   a proper encapsulated URI/URL type needs to clear this up. */
-    size_t p;
-    if ((p = urlpath.find(':')) != SBuf::npos)
-        return SBufToCstring(urlpath.substr(0, p-1));
-
-    return SBufToCstring(urlpath);
-}
-
 void
 UrnState::setUriResFromRequest(HttpRequest *r)
 {
@@ -152,12 +139,11 @@ UrnState::setUriResFromRequest(HttpRequest *r)
         flags.force_menu = true;
     }
 
-    SBuf uri = r->url.path();
+    SBuf query = r->url.absolute();
+    const char *host = r->url.host();
     // TODO: use class AnyP::Uri instead of generating a string and re-parsing
     LOCAL_ARRAY(char, local_urlres, 4096);
-    char *host = getHost(uri);
-    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:" SQUIDSBUFPH, host, SQUIDSBUFPRINT(uri));
-    safe_free(host);
+    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?" SQUIDSBUFPH, host, SQUIDSBUFPRINT(query));
     safe_free(urlres);
     urlres_r = HttpRequest::FromUrl(local_urlres, r->masterXaction);
 
