@@ -726,7 +726,7 @@ urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &method
     if (out.findFirstOf(ctls) != SBuf::npos) {
         SBuf tmp = out;
         // XXX: the rfc1738 encoder truncates strings containing 0x00
-        out = SBuf(rfc1738_escape_unescaped(tmp.c_str()));
+        return SBuf(rfc1738_escape_unescaped(out.c_str()));
     }
 
     return out;
