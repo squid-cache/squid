@@ -329,13 +329,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
     if (end < start)   // missing URI
         return false;
 
-    char save = *end;
-
-    * (char *) end = '\0';     // temp terminate URI, XXX dangerous?
-
-    const bool ret = url.parse(method, SBuf(start));
-
-    * (char *) end = save;
+    const bool ret = url.parse(method, SBuf(start, size_t(end-start)));
 
     return ret;
 }
