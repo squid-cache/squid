@@ -49,9 +49,6 @@ public:
     HttpRequest::Pointer urlres_r;
     AccessLogEntry::Pointer ale; ///< details of the requesting transaction
 
-    struct {
-        bool force_menu = false;
-    } flags;
     char reqbuf[URN_REQBUF_SZ] = { '\0' };
     int reqofs = 0;
 
@@ -133,12 +130,6 @@ urnFindMinRtt(url_entry * urls, const HttpRequestMethod &, int *rtt_ret)
 void
 UrnState::setUriResFromRequest(HttpRequest *r)
 {
-    static const SBuf menu(".menu");
-    if (r->url.path().startsWith(menu)) {
-        r->url.path(r->url.path().substr(5)); // strip prefix "menu."
-        flags.force_menu = true;
-    }
-
     SBuf query = r->url.absolute();
     const char *host = r->url.host();
     // TODO: use class AnyP::Uri instead of generating a string and re-parsing
@@ -369,9 +360,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     rep = new HttpReply;
     rep->setHeaders(Http::scFound, NULL, "text/html", mb->length(), 0, squid_curtime);
 
-    if (urnState->flags.force_menu) {
-        debugs(51, 3, "urnHandleReply: forcing menu");
-    } else if (min_u) {
+    if (min_u) {
         rep->header.putStr(Http::HdrType::LOCATION, min_u->url);
     }
 
