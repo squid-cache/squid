@@ -247,7 +247,6 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
 
     } else {
 
-        // first the "scheme:" part
         scheme = uriParseScheme(tok);
 
         if (scheme == AnyP::PROTO_NONE)
