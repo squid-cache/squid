@@ -148,11 +148,14 @@ uriParseScheme(Parser::Tokenizer &tok)
 
     AnyP::UriScheme result;
     SBuf str;
-    if (CharacterSet::ALPHA[tok.buf().at(0)] &&
-        tok.prefix(str, schemeChars, 16) && tok.skip(':')) {
-
+    auto saved = tok.remaining();
+    if (tok.prefix(str, schemeChars, 16) && tok.skip(':') && CharacterSet::ALPHA[str.at(0)]) {
         auto protocol = AnyP::UriScheme::FindProtocolType(str);
         result = AnyP::UriScheme(protocol, str.c_str());
+    } else {
+        // TODO: ideally we would use throw mechanism, but we still
+        //     have old code using URL parse for ad-hoc processing.
+        tok.reset(saved);
     }
 
     return result;
