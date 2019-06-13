@@ -329,9 +329,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
     if (end < start)   // missing URI
         return false;
 
-    const bool ret = url.parse(method, SBuf(start, size_t(end-start)));
-
-    return ret;
+    return url.parse(method, SBuf(start, size_t(end-start)));
 }
 
 /* swaps out request using httpRequestPack */
