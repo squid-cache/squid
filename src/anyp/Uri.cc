@@ -146,19 +146,13 @@ uriParseScheme(Parser::Tokenizer &tok)
      */
     static const auto schemeChars = CharacterSet("scheme", "+.-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
 
-    AnyP::UriScheme result;
     SBuf str;
-    auto saved = tok.remaining();
     if (tok.prefix(str, schemeChars, 16) && tok.skip(':') && CharacterSet::ALPHA[str.at(0)]) {
         auto protocol = AnyP::UriScheme::FindProtocolType(str);
-        result = AnyP::UriScheme(protocol, str.c_str());
-    } else {
-        // TODO: ideally we would use throw mechanism, but we still
-        //     have old code using URL parse for ad-hoc processing.
-        tok.reset(saved);
+        return AnyP::UriScheme(protocol, str.c_str());
     }
 
-    return result;
+    throw TextException("invalid URI scheme", Here());
 }
 
 /**
@@ -200,6 +194,8 @@ urlAppendDomain(char *host)
 bool
 AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
 {
+    try {
+
     LOCAL_ARRAY(char, login, MAX_URL);
     LOCAL_ARRAY(char, foundHost, MAX_URL);
     LOCAL_ARRAY(char, urlpath, MAX_URL);
@@ -462,6 +458,11 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
     userInfo(SBuf(login));
     port(foundPort);
     return true;
+
+    } catch (...) {
+        debugs(23, 2, "URI parse error: " << CurrentException);
+        return false;
+    }
 }
 
 /**
@@ -481,18 +482,16 @@ AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
     SBuf nid;
     if (tok.prefix(nid, nidChars, 32) && tok.skip(':')) {
         debugs(23, 3, "Split URI into proto='urn', nid='" << nid << "', path='" << tok.remaining() << "'");
-        if (nid.length() < 2) {
-            debugs(23, 3, "URN has invalid NID length");
-            return false;
-        }
-        if (!CharacterSet::ALPHANUM[*nid.begin()]) {
-            debugs(23, 3, "URN has invalid NID prefix");
-            return false;
-        }
-        if (!CharacterSet::ALPHANUM[*nid.end()]) {
-            debugs(23, 3, "URN has invalid NID suffix");
-            return false;
-        }
+
+        if (nid.length() < 2)
+            throw TextException("URN has invalid NID length", Here());
+
+        if (!CharacterSet::ALPHANUM[*nid.begin()])
+            throw TextException("URN has invalid NID prefix", Here());
+
+        if (!CharacterSet::ALPHANUM[*nid.end()])
+            throw TextException("URN has invalid NID suffix", Here());
+
         setScheme(AnyP::PROTO_URN, nullptr);
         host(nid.c_str());
         // TODO validate path characters
@@ -501,7 +500,7 @@ AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
     }
 
     debugs(23, 3, "URN has invalid character in NID " << tok.remaining());
-    return false; // invalid NID.
+    return false;
 }
 
 void
