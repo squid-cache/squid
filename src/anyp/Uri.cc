@@ -144,7 +144,7 @@ uriParseScheme(Parser::Tokenizer &tok)
      * letter and followed by any combination of letters, digits, plus
      * ("+"), period ("."), or hyphen ("-").
      */
-    static const CharacterSet schemeChars = CharacterSet("scheme", "+.-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+    static const auto schemeChars = CharacterSet("scheme", "+.-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
 
     AnyP::UriScheme result;
     SBuf str;
@@ -477,7 +477,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
 bool
 AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
 {
-    static const CharacterSet nidChars = CharacterSet("NID","-") + CharacterSet::ALPHANUM;
+    static const auto nidChars = CharacterSet("NID","-") + CharacterSet::ALPHANUM;
     SBuf nid;
     if (tok.prefix(nid, nidChars, 32) && tok.skip(':')) {
         debugs(23, 3, "Split URI into proto='urn', nid='" << nid << "', path='" << tok.remaining() << "'");
