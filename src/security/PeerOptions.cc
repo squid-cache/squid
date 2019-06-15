@@ -195,30 +195,30 @@ Security::PeerOptions::updateTlsVersionLimits()
         switch (sslVersion) {
         case 3:
 #if USE_OPENSSL
-            add = ":NO_TLSv1:NO_TLSv1_1:NO_TLSv1_2";
+            add = ":NO_TLSv1:NO_TLSv1_1:NO_TLSv1_2:NO_TLSv1_3";
 #elif USE_GNUTLS
-            add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2";
+            add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2:-VERS-TLS1.3";
 #endif
             break;
         case 4:
 #if USE_OPENSSL
-            add = ":NO_SSLv3:NO_TLSv1_1:NO_TLSv1_2";
+            add = ":NO_SSLv3:NO_TLSv1_1:NO_TLSv1_2:NO_TLSv1_3";
 #elif USE_GNUTLS
-            add = ":+VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2";
+            add = ":+VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2:-VERS-TLS1.3";
 #endif
             break;
         case 5:
 #if USE_OPENSSL
-            add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_2";
+            add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_2:NO_TLSv1_3";
 #elif USE_GNUTLS
-            add = ":-VERS-TLS1.0:+VERS-TLS1.1:-VERS-TLS1.2";
+            add = ":-VERS-TLS1.0:+VERS-TLS1.1:-VERS-TLS1.2:-VERS-TLS1.3";
 #endif
             break;
         case 6:
 #if USE_OPENSSL
-            add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_1";
+            add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_1:NO_TLSv1_3";
 #elif USE_GNUTLS
-            add = ":-VERS-TLS1.0:-VERS-TLS1.1";
+            add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.3";
 #endif
             break;
         default: // nothing
@@ -400,6 +400,13 @@ static struct ssl_option {
     },
 #else
     { "NO_TLSv1_2", 0 },
+#endif
+#if SSL_OP_NO_TLSv1_3
+    {
+        "NO_TLSv1_3", SSL_OP_NO_TLSv1_3
+    },
+#else
+    { "NO_TLSv1_3", 0 },
 #endif
 #if SSL_OP_NO_COMPRESSION
     {
