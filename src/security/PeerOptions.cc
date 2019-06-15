@@ -221,13 +221,6 @@ Security::PeerOptions::updateTlsVersionLimits()
             add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.3";
 #endif
             break;
-        case 7:
-#if USE_OPENSSL
-            add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_1:NO_TLSv1_2";
-#elif USE_GNUTLS
-            add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2";
-#endif
-            break;
         default: // nothing
             break;
         }
@@ -412,6 +405,8 @@ static struct ssl_option {
     {
         "NO_TLSv1_3", SSL_OP_NO_TLSv1_3
     },
+#else
+    { "NO_TLSv1_3", 0 },
 #endif
 #if SSL_OP_NO_COMPRESSION
     {
