@@ -49,14 +49,14 @@ AnyP::UriScheme::Init()
 }
 
 const AnyP::ProtocolType
-AnyP::UriScheme::FindProtocolType(const SBuf &str)
+AnyP::UriScheme::FindProtocolType(const SBuf &scheme)
 {
-    if (str.isEmpty())
+    if (scheme.isEmpty())
         return AnyP::PROTO_NONE;
 
     Init();
 
-    SBuf img = str;
+    SBuf img = scheme;
     img.toLower();
     // TODO: use base/EnumIterator.h if possible
     for (int i = AnyP::PROTO_NONE + 1; i < AnyP::PROTO_UNKNOWN; ++i) {
