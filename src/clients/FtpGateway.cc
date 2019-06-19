@@ -1039,7 +1039,7 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
 
 #if HAVE_AUTH_MODULE_BASIC
     /* Check HTTP Authorization: headers (better than defaults, but less than URL) */
-    const SBuf auth(req_hdr->getAuth(Http::HdrType::AUTHORIZATION, "Basic"));
+    const auto auth(req_hdr->getAuthToken(Http::HdrType::AUTHORIZATION, "Basic"));
     if (!auth.isEmpty()) {
         flags.authenticated = 1;
         loginParser(auth, false);
