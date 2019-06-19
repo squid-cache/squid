@@ -245,7 +245,7 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
     // TODO: use the authentication system decode to retrieve these details properly.
 
     /* base 64 _decoded_ user:passwd pair */
-    const SBuf basic_cookie(request->header.getAuthToken(Http::HdrType::AUTHORIZATION, "Basic"));
+    const auto basic_cookie(request->header.getAuthToken(Http::HdrType::AUTHORIZATION, "Basic"));
 
     if (basic_cookie.isEmpty())
         return;
