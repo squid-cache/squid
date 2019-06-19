@@ -27,6 +27,7 @@
 #include "mgr/FunAction.h"
 #include "mgr/QueryParams.h"
 #include "protos.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -243,20 +244,20 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
     // TODO: use the authentication system decode to retrieve these details properly.
 
     /* base 64 _decoded_ user:passwd pair */
-    const char *basic_cookie = request->header.getAuth(Http::HdrType::AUTHORIZATION, "Basic");
+    const auto basic_cookie(request->header.getAuthToken(Http::HdrType::AUTHORIZATION, "Basic"));
 
-    if (!basic_cookie)
+    if (basic_cookie.isEmpty())
         return;
 
-    const char *passwd_del;
-    if (!(passwd_del = strchr(basic_cookie, ':'))) {
+    const auto colonPos = basic_cookie.find(':');
+    if (colonPos == SBuf::npos) {
         debugs(16, DBG_IMPORTANT, "CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
         return;
     }
 
     /* found user:password pair, reset old values */
-    params.userName.limitInit(basic_cookie, passwd_del - basic_cookie);
-    params.password = passwd_del + 1;
+    params.userName = SBufToString(basic_cookie.substr(0, colonPos));
+    params.password = SBufToString(basic_cookie.substr(colonPos+1));
 
     /* warning: this prints decoded password which maybe not be what you want to do @?@ @?@ */
     debugs(16, 9, "CacheManager::ParseHeaders: got user: '" <<
