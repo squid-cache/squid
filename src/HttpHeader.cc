@@ -1319,7 +1319,7 @@ HttpHeader::getAuthToken(Http::HdrType id, const char *auth_scheme) const
 
     const auto fieldLen = strlen(field);
     SBuf result;
-    char *decodedAuthToken = result.rawAppendStart(BASE64_DECODE_LENGTH(fieldLen)+1);
+    char *decodedAuthToken = result.rawAppendStart(BASE64_DECODE_LENGTH(fieldLen));
     struct base64_decode_ctx ctx;
     base64_decode_init(&ctx);
     size_t decodedLen = 0;
