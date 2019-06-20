@@ -192,7 +192,7 @@ urlAppendDomain(char *host)
  * then rather than a URL a hostname:port is looked for.
  */
 bool
-AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
+AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
 {
     try {
 
@@ -208,13 +208,13 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
     char *dst;
     foundHost[0] = urlpath[0] = login[0] = '\0';
 
-    if ((l = urlStr.length()) + Config.appendDomainLen > (MAX_URL - 1)) {
+    if ((l = rawUrl.length()) + Config.appendDomainLen > (MAX_URL - 1)) {
         debugs(23, DBG_IMPORTANT, MYNAME << "URL too large (" << l << " bytes)");
         return false;
     }
 
     if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
-               Asterisk().cmp(urlStr) == 0) {
+               Asterisk().cmp(rawUrl) == 0) {
         // XXX: these methods might also occur in HTTPS traffic. Handle this better.
         setScheme(AnyP::PROTO_HTTP, nullptr);
         port(getScheme().defaultPort());
@@ -222,7 +222,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
         return true;
     }
 
-    Parser::Tokenizer tok(urlStr);
+    Parser::Tokenizer tok(rawUrl);
     AnyP::UriScheme scheme;
 
     if (method == Http::METHOD_CONNECT) {
@@ -383,7 +383,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
         }
     }
 
-    debugs(23, 3, "Split URL '" << urlStr << "' into proto='" << scheme.image() << "', host='" << foundHost << "', port='" << foundPort << "', path='" << urlpath << "'");
+    debugs(23, 3, "Split URL '" << rawUrl << "' into proto='" << scheme.image() << "', host='" << foundHost << "', port='" << foundPort << "', path='" << urlpath << "'");
 
     if (Config.onoff.check_hostnames &&
             strspn(foundHost, Config.onoff.allow_underscore ? valid_hostname_chars_u : valid_hostname_chars) != strlen(foundHost)) {
@@ -419,7 +419,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf urlStr)
 #endif
 
     if (stringHasWhitespace(urlpath)) {
-        debugs(23, 2, "URI has whitespace: {" << urlStr << "}");
+        debugs(23, 2, "URI has whitespace: {" << rawUrl << "}");
 
         switch (Config.uri_whitespace) {
 
