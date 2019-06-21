@@ -1926,10 +1926,10 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         delete cc;
     }
 
-    /* maybe append Connection: keep-alive */
-    if (flags.keepalive) {
-        hdr_out->putStr(Http::HdrType::CONNECTION, "keep-alive");
-    }
+    // Always send Connection because older servers need explicit "keep-alive"
+    // while modern servers need explicit "close", and we do not always know
+    // the server expectations.
+    hdr_out->putStr(Http::HdrType::CONNECTION, flags.keepalive ? "keep-alive" : "close");
 
     /* append Front-End-Https */
     if (flags.front_end_https) {
