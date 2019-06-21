@@ -1926,8 +1926,8 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         delete cc;
     }
 
-    // Always send Connection because older servers need explicit "keep-alive"
-    // while modern servers need explicit "close", and we do not always know
+    // Always send Connection because HTTP/1.0 servers need explicit "keep-alive"
+    // while HTTP/1.1 servers need explicit "close", and we do not always know
     // the server expectations.
     hdr_out->putStr(Http::HdrType::CONNECTION, flags.keepalive ? "keep-alive" : "close");
 
