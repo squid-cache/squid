@@ -122,8 +122,10 @@ void
 FwdState::closeServerConnection(const char *reason)
 {
     debugs(17, 3, "because " << reason << "; " << serverConn);
-    comm_remove_close_handler(serverConn->fd, closeHandler);
-    closeHandler = NULL;
+    if (closeHandler) {
+        comm_remove_close_handler(serverConn->fd, closeHandler);
+        closeHandler = NULL;
+    }
     fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
     serverConn->close();
 }
@@ -773,10 +775,12 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
         return;
     }
 
-    syncWithServerConn(answer.conn, request->url.host(), answer.reused);
-
-    if (answer.reused)
+    if (answer.reused) {
+        syncWithServerConn(answer.conn, request->url.host(), answer.reused);
         return dispatch();
+    }
+
+    serverConn = conn;
 
     // Check if we need to TLS before use
     if (const CachePeer *peer = serverConnection()->getPeer()) {
@@ -901,7 +905,9 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
         answer.error.clear(); // preserve error for errorSendComplete()
         if (CachePeer *p = serverConnection()->getPeer())
             peerConnectFailed(p);
-        serverConnection()->close();
+        if (Comm::IsConnOpen(serverConnection()))
+            serverConnection()->close();
+        retryOrBail();
         return;
     }
 
@@ -922,6 +928,8 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
 void
 FwdState::successfullyConnectedToPeer()
 {
+    syncWithServerConn(serverConn, request->url.host(), false);
+
     // should reach ConnStateData before the dispatched Client job starts
     CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                  ConnStateData::notePeerConnection, serverConnection());

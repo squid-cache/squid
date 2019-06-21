@@ -85,8 +85,8 @@ Http::Tunneler::start()
 void
 Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &params)
 {
+    bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
     mustStop("server connection gone");
-    callback = nullptr; // the caller must monitor closures
 }
 
 /// make sure we quit if/when the connection is gone
@@ -104,12 +104,20 @@ Http::Tunneler::watchForClosures()
     comm_add_close_handler(connection->fd, closer);
 }
 
+/// The connection read timeout callback handler.
+void
+Http::Tunneler::handleTimeout(const CommTimeoutCbParams &)
+{
+    bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al));
+    mustStop("server connection timedout");
+}
+
 void
 Http::Tunneler::handleException(const std::exception& e)
 {
     debugs(83, 2, e.what() << status());
-    connection->close();
     bailWith(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
+    connection->close();
 }
 
 void
@@ -236,6 +244,7 @@ Http::Tunneler::handleReadyRead(const CommIoCbParams &io)
         const auto error = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, request.getRaw(), al);
         error->xerrno = rd.xerrno;
         bailWith(error);
+        connection->close();
         return;
     }
     }
@@ -255,8 +264,11 @@ Http::Tunneler::readMore()
     Comm::Read(connection, reader);
 
     AsyncCall::Pointer nil;
+    typedef CommCbMemFunT<Http::Tunneler, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall = JobCallback(93, 5,
+                                     TimeoutDialer, this, Http::Tunneler::handleTimeout);
     const auto timeout = Comm::MortalReadTimeout(startTime, lifetimeLimit);
-    commSetConnTimeout(connection, timeout, nil);
+    commSetConnTimeout(connection, timeout, timeoutCall);
 }
 
 /// Parses [possibly incomplete] CONNECT response and reacts to it.
@@ -351,6 +363,14 @@ Http::Tunneler::callBack()
     debugs(83, 5, connection << status());
     auto cb = callback;
     callback = nullptr;
+
+    // remove close handler
+    comm_remove_close_handler(connection->fd, closer);
+    closer = nullptr;
+
+    // remove connection timeout handler
+    commUnsetConnTimeout(connection);
+
     ScheduleCallHere(cb);
 }
 

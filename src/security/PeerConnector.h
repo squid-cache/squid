@@ -90,6 +90,9 @@ protected:
     virtual void swanSong();
     virtual const char *status() const;
 
+    /// The connection read timeout callback handler.
+    void commTimeoutHandler(const CommTimeoutCbParams &);
+
     /// The comm_close callback handler.
     void commCloseHandler(const CommCloseCbParams &params);
 

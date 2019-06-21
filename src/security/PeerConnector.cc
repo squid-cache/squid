@@ -76,11 +76,25 @@ Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
 }
 
 void
+Security::PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &)
+{
+    debugs(83, 5, serverConnection() << " timedout. this=" << (void*)this);
+    auto anErr = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al);
+    anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
+    bail(anErr);
+    if (Comm::IsConnOpen(serverConnection()))
+        serverConnection()->close();
+    mustStop("Timedout");
+}
+
+void
 Security::PeerConnector::connectionClosed(const char *reason)
 {
     debugs(83, 5, reason << " socket closed/closing. this=" << (void*)this);
+    auto anErr = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
+    anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
+    bail(anErr);
     mustStop(reason);
-    callback = NULL;
 }
 
 bool
@@ -473,9 +487,11 @@ Security::PeerConnector::noteWantRead()
 #endif
 
     // read timeout to avoid getting stuck while reading from a silent server
-    AsyncCall::Pointer nil;
+    typedef CommCbMemFunT<Security::PeerConnector, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall = JobCallback(83, 5,
+                                     TimeoutDialer, this, Security::PeerConnector::commTimeoutHandler);
     const auto timeout = Comm::MortalReadTimeout(startTime, negotiationTimeout);
-    commSetConnTimeout(serverConnection(), timeout, nil);
+    commSetConnTimeout(serverConnection(), timeout, timeoutCall);
 
     Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, new Pointer(this), 0);
 }
@@ -566,6 +582,9 @@ Security::PeerConnector::callBack()
 
     // remove close handler
     comm_remove_close_handler(serverConnection()->fd, closeHandler);
+
+    // remove timeout handler
+    commUnsetConnTimeout(serverConnection());
 
     CbDialer *dialer = dynamic_cast<CbDialer*>(cb->getDialer());
     Must(dialer);

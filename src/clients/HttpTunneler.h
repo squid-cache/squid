@@ -81,6 +81,7 @@ protected:
 
     void handleConnectionClosure(const CommCloseCbParams&);
     void watchForClosures();
+    void handleTimeout(const CommTimeoutCbParams &);
     void handleException(const std::exception&);
     void startReadingResponse();
     void writeRequest();
