@@ -477,6 +477,7 @@ HttpReply::expectingBody(const HttpRequestMethod& req_method, int64_t& theSize) 
         expectBody = false;
     else if (sline.status() == Http::scNotModified)
         expectBody = false;
+    // TODO: Consider assuming that gray-area 0xx responses have bodies, like 9xx responses.
     else if (sline.status() < Http::scOkay)
         expectBody = false;
     else
