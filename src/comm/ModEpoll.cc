@@ -263,7 +263,6 @@ Comm::DoSelect(int msec)
             if ((hdl = F->read_handler) != NULL) {
                 debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "Calling read handler on FD " << fd);
                 PROF_start(comm_write_handler);
-                F->flags.read_pending = 0;
                 F->read_handler = NULL;
                 hdl(fd, F->read_data);
                 PROF_stop(comm_write_handler);

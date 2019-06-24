@@ -503,7 +503,6 @@ Comm::DoSelect(int msec)
 
             if ((hdl = F->read_handler)) {
                 F->read_handler = NULL;
-                F->flags.read_pending = 0;
                 commUpdateReadBits(fd, NULL);
                 hdl(fd, F->read_data);
                 ++ statCounter.select_fds;

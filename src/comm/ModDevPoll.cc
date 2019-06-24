@@ -384,7 +384,6 @@ Comm::DoSelect(int msec)
                     HERE << "Calling read handler on FD " << fd
                 );
                 PROF_start(comm_read_handler);
-                F->flags.read_pending = 0;
                 F->read_handler = NULL;
                 hdl(fd, F->read_data);
                 PROF_stop(comm_read_handler);
