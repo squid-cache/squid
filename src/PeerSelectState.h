@@ -104,8 +104,8 @@ protected:
 #endif
 
     int checkNetdbDirect();
-    void checkAlwaysDirectDone(const allow_t answer);
-    void checkNeverDirectDone(const allow_t answer);
+    void checkAlwaysDirectDone(const Acl::Answer answer);
+    void checkNeverDirectDone(const Acl::Answer answer);
 
     void selectSomeNeighbor();
     void selectSomeNeighborReplies();
@@ -124,8 +124,8 @@ protected:
     static EVH HandlePingTimeout;
 
 private:
-    allow_t always_direct;
-    allow_t never_direct;
+    Acl::Answer always_direct;
+    Acl::Answer never_direct;
     int direct;   // TODO: fold always_direct/never_direct/prefer_direct into this now that ACL can do a multi-state result.
     size_t foundPaths = 0; ///< number of unique destinations identified so far
     ErrorState *lastError;

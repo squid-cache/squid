@@ -23,6 +23,8 @@ class ConfigParser;
 
 namespace Acl {
 
+class Answer;
+
 /// the ACL type name known to admins
 typedef const char *TypeName;
 /// a "factory" function for making ACL objects (of some ACL child type)
@@ -109,14 +111,14 @@ typedef enum {
 } aclMatchCode;
 
 /// \ingroup ACLAPI
-/// ACL check answer; TODO: Rename to Acl::Answer
-class allow_t
+/// ACL check answer
+class Acl::Answer
 {
 public:
-    // not explicit: allow "aclMatchCode to allow_t" conversions (for now)
-    allow_t(const aclMatchCode aCode, int aKind = 0): code(aCode), kind(aKind) {}
+    // not explicit: allow "aclMatchCode to Acl::Answer" conversions (for now)
+    Answer(const aclMatchCode aCode, int aKind = 0): code(aCode), kind(aKind) {}
 
-    allow_t(): code(ACCESS_DUNNO), kind(0) {}
+    Answer(): code(ACCESS_DUNNO), kind(0) {}
 
     bool operator ==(const aclMatchCode aCode) const {
         return code == aCode;
@@ -126,7 +128,7 @@ public:
         return !(*this == aCode);
     }
 
-    bool operator ==(const allow_t allow) const {
+    bool operator ==(const Answer allow) const {
         return code == allow.code && kind == allow.kind;
     }
 
@@ -154,7 +156,7 @@ public:
 };
 
 inline std::ostream &
-operator <<(std::ostream &o, const allow_t a)
+operator <<(std::ostream &o, const Acl::Answer a)
 {
     switch (a) {
     case ACCESS_DENIED:

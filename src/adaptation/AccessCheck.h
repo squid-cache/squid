@@ -59,8 +59,8 @@ private:
 
 public:
     void checkCandidates();
-    static void AccessCheckCallbackWrapper(allow_t, void*);
-    void noteAnswer(allow_t answer);
+    static void AccessCheckCallbackWrapper(Acl::Answer, void*);
+    void noteAnswer(Acl::Answer answer);
 
 protected:
     // AsyncJob API

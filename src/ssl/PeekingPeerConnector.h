@@ -52,7 +52,7 @@ public:
     void checkForPeekAndSplice();
 
     /// Callback function for ssl_bump acl check in step3  SSL bump step.
-    void checkForPeekAndSpliceDone(allow_t answer);
+    void checkForPeekAndSpliceDone(Acl::Answer answer);
 
     /// Handles the final bumping decision.
     void checkForPeekAndSpliceMatched(const Ssl::BumpMode finalMode);
@@ -65,7 +65,7 @@ public:
     void serverCertificateVerified();
 
     /// A wrapper function for checkForPeekAndSpliceDone for use with acl
-    static void cbCheckForPeekAndSpliceDone(allow_t answer, void *data);
+    static void cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data);
 
 private:
 

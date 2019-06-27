@@ -30,27 +30,27 @@ public:
     SBufList treeDump(const char *name, ActionToStringConverter converter) const;
 
     /// Returns the corresponding action after a successful tree match.
-    allow_t winningAction() const;
+    Answer winningAction() const;
 
     /// what action to use if no nodes matched
-    allow_t lastAction() const;
+    Answer lastAction() const;
 
     /// appends and takes control over the rule with a given action
-    void add(ACL *rule, const allow_t &action);
+    void add(ACL *rule, const Answer &action);
     void add(ACL *rule); ///< same as InnerNode::add()
 
 protected:
     /// Acl::OrNode API
     virtual bool bannedAction(ACLChecklist *, Nodes::const_iterator) const override;
-    allow_t actionAt(const Nodes::size_type pos) const;
+    Answer actionAt(const Nodes::size_type pos) const;
 
     /// if not empty, contains actions corresponding to InnerNode::nodes
-    typedef std::vector<allow_t> Actions;
+    typedef std::vector<Answer> Actions;
     Actions actions;
 };
 
 inline const char *
-AllowOrDeny(const allow_t &action)
+AllowOrDeny(const Answer &action)
 {
     return action.allowed() ? "allow" : "deny";
 }

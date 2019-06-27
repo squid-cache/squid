@@ -1566,7 +1566,7 @@ clientTunnelOnError(ConnStateData *conn, Http::StreamPointer &context, HttpReque
         ClientHttpRequest *http = context ? context->http : nullptr;
         const char *log_uri = http ? http->log_uri : nullptr;
         checklist.syncAle(request.getRaw(), log_uri);
-        allow_t answer = checklist.fastCheck();
+        Acl::Answer answer = checklist.fastCheck();
         if (answer.allowed() && answer.kind == 1) {
             debugs(33, 3, "Request will be tunneled to server");
             if (context) {
@@ -2283,7 +2283,7 @@ ConnStateData::whenClientIpKnown()
             /* pools require explicit 'allow' to assign a client into them */
             if (pools[pool]->access) {
                 ch.changeAcl(pools[pool]->access);
-                allow_t answer = ch.fastCheck();
+                Acl::Answer answer = ch.fastCheck();
                 if (answer.allowed()) {
 
                     /*  request client information from db after we did all checks
@@ -2544,7 +2544,7 @@ httpsEstablish(ConnStateData *connState, const Security::ContextPointer &ctx)
  * A callback function to use with the ACLFilledChecklist callback.
  */
 static void
-httpsSslBumpAccessCheckDone(allow_t answer, void *data)
+httpsSslBumpAccessCheckDone(Acl::Answer answer, void *data)
 {
     ConnStateData *connState = (ConnStateData *) data;
 
@@ -3023,7 +3023,7 @@ ConnStateData::parseTlsHandshake()
     }
 }
 
-void httpsSslBumpStep2AccessCheckDone(allow_t answer, void *data)
+void httpsSslBumpStep2AccessCheckDone(Acl::Answer answer, void *data)
 {
     ConnStateData *connState = (ConnStateData *) data;
 
@@ -3104,9 +3104,9 @@ ConnStateData::startPeekAndSplice()
         acl_checklist->al = http ? http->al : nullptr;
         //acl_checklist->src_addr = params.conn->remote;
         //acl_checklist->my_addr = s->s;
-        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpNone));
-        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpClientFirst));
-        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpServerFirst));
+        acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpNone));
+        acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpClientFirst));
+        acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpServerFirst));
         const char *log_uri = http ? http->log_uri : nullptr;
         acl_checklist->syncAle(sslServerBump->request.getRaw(), log_uri);
         acl_checklist->nonBlockingCheck(httpsSslBumpStep2AccessCheckDone, this);

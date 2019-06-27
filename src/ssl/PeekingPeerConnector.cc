@@ -26,7 +26,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn);
 
 void
-Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(allow_t answer, void *data)
+Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data)
 {
     Ssl::PeekingPeerConnector *peerConnect = (Ssl::PeekingPeerConnector *) data;
     // Use job calls to add done() checks and other job logic/protections.
@@ -34,7 +34,7 @@ Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(allow_t answer, void *dat
 }
 
 void
-Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(allow_t answer)
+Ssl::PeekingPeerConnector::checkForPeekAndSpliceDone(Acl::Answer answer)
 {
     const Ssl::BumpMode finalAction = answer.allowed() ?
                                       static_cast<Ssl::BumpMode>(answer.kind):
@@ -58,18 +58,18 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
         ::Config.accessList.ssl_bump,
         request.getRaw(), NULL);
     acl_checklist->al = al;
-    acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpNone));
-    acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpPeek));
-    acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpStare));
-    acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpClientFirst));
-    acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpServerFirst));
+    acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpNone));
+    acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpPeek));
+    acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpStare));
+    acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpClientFirst));
+    acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpServerFirst));
     Security::SessionPointer session(fd_table[serverConn->fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
     if (!srvBio->canSplice())
-        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpSplice));
+        acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpSplice));
     if (!srvBio->canBump())
-        acl_checklist->banAction(allow_t(ACCESS_ALLOWED, Ssl::bumpBump));
+        acl_checklist->banAction(Acl::Answer(ACCESS_ALLOWED, Ssl::bumpBump));
     acl_checklist->syncAle(request.getRaw(), nullptr);
     acl_checklist->nonBlockingCheck(Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone, this);
 }

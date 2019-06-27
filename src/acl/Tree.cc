@@ -13,13 +13,13 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Acl, Tree);
 
-allow_t
+Acl::Answer
 Acl::Tree::winningAction() const
 {
     return actionAt(lastMatch_ - nodes.begin());
 }
 
-allow_t
+Acl::Answer
 Acl::Tree::lastAction() const
 {
     if (actions.empty())
@@ -28,7 +28,7 @@ Acl::Tree::lastAction() const
 }
 
 /// computes action that corresponds to the position of the matched rule
-allow_t
+Acl::Answer
 Acl::Tree::actionAt(const Nodes::size_type pos) const
 {
     assert(pos < nodes.size());
@@ -41,7 +41,7 @@ Acl::Tree::actionAt(const Nodes::size_type pos) const
 }
 
 void
-Acl::Tree::add(ACL *rule, const allow_t &action)
+Acl::Tree::add(ACL *rule, const Acl::Answer &action)
 {
     // either all rules have actions or none
     assert(nodes.size() == actions.size());

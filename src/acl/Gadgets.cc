@@ -145,7 +145,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
         return;
     }
 
-    allow_t action = ACCESS_DUNNO;
+    Acl::Answer action = ACCESS_DUNNO;
     if (!strcmp(t, "allow"))
         action = ACCESS_ALLOWED;
     else if (!strcmp(t, "deny"))

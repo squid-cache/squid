@@ -242,7 +242,7 @@ static void free_configuration_includes_quoted_values(bool *recognizeQuotedValue
 static void parse_on_unsupported_protocol(acl_access **access);
 static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
 static void free_on_unsupported_protocol(acl_access **access);
-static void ParseAclWithAction(acl_access **access, const allow_t &action, const char *desc, ACL *acl = nullptr);
+static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, ACL *acl = nullptr);
 
 /*
  * LegacyParser is a parser for legacy code that uses the global
@@ -1884,7 +1884,7 @@ parse_AuthSchemes(acl_access **authSchemes)
         return;
     }
     Auth::TheConfig.schemeLists.emplace_back(tok, ConfigParser::LastTokenWasQuoted());
-    const allow_t action = allow_t(ACCESS_ALLOWED, Auth::TheConfig.schemeLists.size() - 1);
+    const Acl::Answer action = Acl::Answer(ACCESS_ALLOWED, Auth::TheConfig.schemeLists.size() - 1);
     ParseAclWithAction(authSchemes, action, "auth_schemes");
 }
 
@@ -1899,7 +1899,7 @@ static void
 dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 {
     if (authSchemes)
-        dump_SBufList(entry, authSchemes->treeDump(name, [](const allow_t &action) {
+        dump_SBufList(entry, authSchemes->treeDump(name, [](const Acl::Answer &action) {
         return Auth::TheConfig.schemeLists.at(action.kind).rawSchemes;
     }));
 }
@@ -1907,7 +1907,7 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 #endif /* USE_AUTH */
 
 static void
-ParseAclWithAction(acl_access **access, const allow_t &action, const char *desc, ACL *acl)
+ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, ACL *acl)
 {
     assert(access);
     SBuf name;
@@ -4652,7 +4652,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
         sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
     }
 
-    allow_t action = allow_t(ACCESS_ALLOWED);
+    Acl::Answer action = Acl::Answer(ACCESS_ALLOWED);
 
     if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpClientFirst]) == 0) {
         action.kind = Ssl::bumpClientFirst;
@@ -4715,7 +4715,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump)
 {
     if (ssl_bump)
-        dump_SBufList(entry, ssl_bump->treeDump(name, [](const allow_t &action) {
+        dump_SBufList(entry, ssl_bump->treeDump(name, [](const Acl::Answer &action) {
         return Ssl::BumpModeStr.at(action.kind);
     }));
 }
@@ -4811,7 +4811,7 @@ static void free_note(Notes *notes)
 static bool FtpEspvDeprecated = false;
 static void parse_ftp_epsv(acl_access **ftp_epsv)
 {
-    allow_t ftpEpsvDeprecatedAction;
+    Acl::Answer ftpEpsvDeprecatedAction;
     bool ftpEpsvIsDeprecatedRule = false;
 
     char *t = ConfigParser::PeekAtToken();
@@ -4823,11 +4823,11 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
     if (!strcmp(t, "off")) {
         (void)ConfigParser::NextToken();
         ftpEpsvIsDeprecatedRule = true;
-        ftpEpsvDeprecatedAction = allow_t(ACCESS_DENIED);
+        ftpEpsvDeprecatedAction = Acl::Answer(ACCESS_DENIED);
     } else if (!strcmp(t, "on")) {
         (void)ConfigParser::NextToken();
         ftpEpsvIsDeprecatedRule = true;
-        ftpEpsvDeprecatedAction = allow_t(ACCESS_ALLOWED);
+        ftpEpsvDeprecatedAction = Acl::Answer(ACCESS_ALLOWED);
     }
 
     // Check for mixing "ftp_epsv on|off" and "ftp_epsv allow|deny .." rules:
@@ -4846,7 +4846,7 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
         delete *ftp_epsv;
         *ftp_epsv = nullptr;
 
-        if (ftpEpsvDeprecatedAction == allow_t(ACCESS_DENIED)) {
+        if (ftpEpsvDeprecatedAction == Acl::Answer(ACCESS_DENIED)) {
             if (ACL *a = ACL::FindByName("all"))
                 ParseAclWithAction(ftp_epsv, ftpEpsvDeprecatedAction, "ftp_epsv", a);
             else {
@@ -4976,7 +4976,7 @@ parse_on_unsupported_protocol(acl_access **access)
         return;
     }
 
-    allow_t action = allow_t(ACCESS_ALLOWED);
+    Acl::Answer action = Acl::Answer(ACCESS_ALLOWED);
     if (strcmp(tm, "tunnel") == 0)
         action.kind = 1;
     else if (strcmp(tm, "respond") == 0)
@@ -5000,7 +5000,7 @@ dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *ac
         "respond"
     };
     if (access) {
-        SBufList lines = access->treeDump(name, [](const allow_t &action) {
+        SBufList lines = access->treeDump(name, [](const Acl::Answer &action) {
             return onErrorTunnelMode.at(action.kind);
         });
         dump_SBufList(entry, lines);

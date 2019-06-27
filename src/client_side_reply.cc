@@ -2067,14 +2067,14 @@ clientReplyContext::processReplyAccess ()
 }
 
 void
-clientReplyContext::ProcessReplyAccessResult(allow_t rv, void *voidMe)
+clientReplyContext::ProcessReplyAccessResult(Acl::Answer rv, void *voidMe)
 {
     clientReplyContext *me = static_cast<clientReplyContext *>(voidMe);
     me->processReplyAccessResult(rv);
 }
 
 void
-clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
+clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
 {
     debugs(88, 2, "The reply for " << http->request->method
            << ' ' << http->uri << " is " << accessAllowed << ", because it matched "
