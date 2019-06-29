@@ -305,6 +305,7 @@ Http::One::Server::handleReply(HttpReply *rep, StoreIOBuffer receivedData)
     }
 
     assert(rep);
+    HTTPMSGUNLOCK(http->al->reply);
     http->al->reply = rep;
     HTTPMSGLOCK(http->al->reply);
     context->sendStartOfMessage(rep, receivedData);
