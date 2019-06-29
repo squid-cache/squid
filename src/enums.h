@@ -10,7 +10,7 @@
 #define SQUID_ENUMS_H
 
 enum fd_type {
-    FD_NONE,
+    FD_NONE_TYPE,
     FD_LOG,
     FD_FILE,
     FD_SOCKET,
