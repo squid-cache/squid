@@ -377,8 +377,14 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const char *url)
     }
 
     /* For IPV6 addresses also check for a colon */
-    if (Config.appendDomain && !strchr(foundHost, '.') && !strchr(foundHost, ':'))
-        strncat(foundHost, Config.appendDomain, SQUIDHOSTNAMELEN - strlen(foundHost) - 1);
+    if (Config.appendDomain && strchr(foundHost, '.') == 0 && strchr(foundHost, ':') == 0) {
+        const auto dlen = strlen(foundHost);
+        if (dlen > (SQUIDHOSTNAMELEN - Config.appendDomainLen - 1)) {
+            debugs(23, DBG_IMPORTANT, MYNAME << ": URL domain too large (" << dlen << " bytes)");
+            return false;
+        }
+        strncat(foundHost, Config.appendDomain, SQUIDHOSTNAMELEN - dlen - 1);
+    }
 
     /* remove trailing dots from hostnames */
     while ((l = strlen(foundHost)) > 0 && foundHost[--l] == '.')
