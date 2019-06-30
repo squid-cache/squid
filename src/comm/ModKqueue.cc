@@ -262,7 +262,6 @@ Comm::DoSelect(int msec)
         if (ke[i].filter == EVFILT_READ || F->flags.read_pending) {
             if ((hdl = F->read_handler) != NULL) {
                 F->read_handler = NULL;
-                F->flags.read_pending = 0;
                 hdl(fd, F->read_data);
             }
         }
