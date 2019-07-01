@@ -16,24 +16,19 @@
 #include "ssl/ServerBump.h"
 
 int
-ACLAtStepStrategy::match (ACLData<int> * &data, ACLFilledChecklist *checklist)
+ACLAtStepStrategy::match (ACLData<XactionSteps> * &data, ACLFilledChecklist *checklist)
 {
     Must(checklist->request);
     Must(checklist->request->masterXaction);
-    if (checklist->request->masterXaction->generatingConnect && data->match(ACLAtStepData::atStepGeneratingConnect))
+    if (checklist->request->masterXaction->generatingConnect && data->match(xaStepGeneratingConnect))
         return 1;
 
 #if USE_OPENSSL
-    static std::map<Ssl::BumpStep, ACLAtStepData::AtStepValues> BumpAtStepMap= {
-        {Ssl::bumpStep1, ACLAtStepData::atStepSslBump1},
-        {Ssl::bumpStep2, ACLAtStepData::atStepSslBump2},
-        {Ssl::bumpStep3, ACLAtStepData::atStepSslBump3}
-    };
     Ssl::ServerBump *bump = NULL;
     if (checklist->conn() != NULL && (bump = checklist->conn()->serverBump()))
-        return data->match(BumpAtStepMap[bump->step]);
+        return data->match(bump->step);
     else
-        return data->match(BumpAtStepMap[Ssl::bumpStep1]);
+        return data->match(xaStepTlsBump1);
 #endif
     return 0;
 }

@@ -12,6 +12,7 @@
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
 #include "comm/forward.h"
+#include "enums.h"
 #include "HttpRequest.h"
 #include "ip/Address.h"
 #include "security/forward.h"
@@ -51,7 +52,7 @@ public:
         Ssl::BumpMode step2; ///< The SSL bump mode at step2
         Ssl::BumpMode step3; ///< The SSL bump mode at step3
     } act; ///< bumping actions at various bumping steps
-    Ssl::BumpStep step; ///< The SSL bumping step
+    XactionSteps step; ///< The TLS bumping step
 
 private:
     Security::SessionPointer serverSession; ///< The TLS session object on server side.

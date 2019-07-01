@@ -11,37 +11,28 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
+#include "enums.h"
 #include <list>
 
-class ACLAtStepData : public ACLData<int>
+class ACLAtStepData : public ACLData<XactionSteps>
 {
     MEMPROXY_CLASS(ACLAtStepData);
 
 public:
-    enum AtStepValues {
-#if USE_OPENSSL
-        atStepSslBump1,
-        atStepSslBump2,
-        atStepSslBump3,
-#endif
-        atStepGeneratingConnect,
-        atStepValuesEnd
-    };
-
     ACLAtStepData();
     ACLAtStepData(ACLAtStepData const &);
     ACLAtStepData &operator= (ACLAtStepData const &);
     virtual ~ACLAtStepData();
-    bool match(int);
+    bool match(XactionSteps);
     virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLAtStepData *clone() const;
 
-    static const char *AtStepStr(int);
-    static int AtStep(const char *);
+    static const char *AtStepStr(XactionSteps);
+    static XactionSteps AtStep(const char *);
 
-    std::list<int> values;
+    std::list<XactionSteps> values;
 
 private:
     static const char *AtStepValuesStr[];
