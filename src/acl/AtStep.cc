@@ -13,7 +13,9 @@
 #include "acl/FilledChecklist.h"
 #include "client_side.h"
 #include "http/Stream.h"
+#if USE_OPENSSL
 #include "ssl/ServerBump.h"
+#endif
 
 int
 ACLAtStepStrategy::match (ACLData<XactionSteps> * &data, ACLFilledChecklist *checklist)
