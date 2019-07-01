@@ -1431,8 +1431,7 @@ endif
 acl aclname at_step step
 	  # match against various request processing steps [fast]
 	  # Valid steps are:
-	  #   GeneratingCONNECT: While generates and process CONNECT request
-	  #                      to a peer
+	  #   GeneratingCONNECT: While generates CONNECT request to a peer
 IF USE_OPENSSL
 	  # The following steps can also be used to match against the
 	  # current step during ssl_bump evaluation.

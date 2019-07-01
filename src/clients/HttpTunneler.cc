@@ -148,6 +148,7 @@ Http::Tunneler::writeRequest()
 
     debugs(11, 2, "Tunnel Server REQUEST: " << connection <<
            ":\n----------\n" << mb.buf << "\n----------");
+    request->masterXaction->generatingConnect = false;
     fd_note(connection->fd, "Tunnel Server CONNECT");
 
     typedef CommCbMemFunT<Http::Tunneler, CommIoCbParams> Dialer;
@@ -341,7 +342,6 @@ Http::Tunneler::callBack()
     debugs(83, 5, connection << status());
     Must(request);
     Must(request->masterXaction);
-    request->masterXaction->generatingConnect = false;
     auto cb = callback;
     callback = nullptr;
     ScheduleCallHere(cb);
