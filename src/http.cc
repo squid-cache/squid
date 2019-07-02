@@ -824,7 +824,7 @@ HttpStateData::handle1xx(HttpReply *reply)
 
     if (reply->sline.status() == Http::scSwitchingProtocols) {
         if (!processSwitchingProtocols(reply)) {
-            auto err = new ErrorState(ERR_INVALID_RESP, Http::scBadGateway, request.getRaw());
+            auto err = new ErrorState(ERR_INVALID_RESP, Http::scBadGateway, request.getRaw(), fwd->al);
             fwd->fail(err);
             closeServer();
             return;
