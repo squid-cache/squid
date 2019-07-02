@@ -23,8 +23,6 @@ class ConfigParser;
 
 namespace Acl {
 
-class Answer;
-
 /// the ACL type name known to admins
 typedef const char *TypeName;
 /// a "factory" function for making ACL objects (of some ACL child type)
@@ -112,7 +110,9 @@ typedef enum {
 
 /// \ingroup ACLAPI
 /// ACL check answer
-class Acl::Answer
+namespace Acl {
+
+class Answer
 {
 public:
     // not explicit: allow "aclMatchCode to Acl::Answer" conversions (for now)
@@ -154,6 +154,8 @@ public:
     aclMatchCode code; ///< ACCESS_* code
     int kind; ///< which custom access list verb matched
 };
+
+} // namespace Acl
 
 inline std::ostream &
 operator <<(std::ostream &o, const Acl::Answer a)

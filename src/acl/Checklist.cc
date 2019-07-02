@@ -59,8 +59,8 @@ ACLChecklist::markFinished(const Acl::Answer &finalAnswer, const char *reason)
 {
     assert (!finished() && !asyncInProgress());
     finished_ = true;
-    allow_ = finalAnswer;
-    debugs(28, 3, HERE << this << " answer " << allow_ << " for " << reason);
+    answer_ = finalAnswer;
+    debugs(28, 3, HERE << this << " answer " << answer_ << " for " << reason);
 }
 
 /// Called first (and once) by all checks to initialize their state
@@ -181,7 +181,7 @@ ACLChecklist::ACLChecklist() :
     asyncCaller_(false),
     occupied_(false),
     finished_(false),
-    allow_(ACCESS_DENIED),
+    answer_(ACCESS_DENIED),
     asyncStage_(asyncNone),
     state_(NullState::Instance()),
     asyncLoopDepth_(0)
@@ -370,13 +370,13 @@ ACLChecklist::fastCheck()
 void
 ACLChecklist::calcImplicitAnswer()
 {
-    const Acl::Answer lastAction = (accessList && cbdataReferenceValid(accessList)) ?
+    const auto lastAction = (accessList && cbdataReferenceValid(accessList)) ?
                                accessList->lastAction() : Acl::Answer(ACCESS_DUNNO);
-    Acl::Answer implicitRuleAnswer = ACCESS_DUNNO;
+    auto implicitRuleAnswer = Acl::Answer(ACCESS_DUNNO);
     if (lastAction == ACCESS_DENIED) // reverse last seen "deny"
-        implicitRuleAnswer = ACCESS_ALLOWED;
+        implicitRuleAnswer = Acl::Answer(ACCESS_ALLOWED);
     else if (lastAction == ACCESS_ALLOWED) // reverse last seen "allow"
-        implicitRuleAnswer = ACCESS_DENIED;
+        implicitRuleAnswer = Acl::Answer(ACCESS_DENIED);
     // else we saw no rules and will respond with ACCESS_DUNNO
 
     debugs(28, 3, HERE << this << " NO match found, last action " <<

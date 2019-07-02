@@ -153,7 +153,7 @@ public:
     /// prints a debugging message explaining the reason for that answer
     void markFinished(const Acl::Answer &newAnswer, const char *reason);
 
-    const Acl::Answer &currentAnswer() const { return allow_; }
+    const Acl::Answer &currentAnswer() const { return answer_; }
 
     /// whether the action is banned or not
     bool bannedAction(const Acl::Answer &action) const;
@@ -228,7 +228,7 @@ private: /* internal methods */
     bool asyncCaller_; ///< whether the caller supports async/slow ACLs
     bool occupied_; ///< whether a check (fast or non-blocking) is in progress
     bool finished_;
-    Acl::Answer allow_;
+    Acl::Answer answer_;
 
     enum AsyncStage { asyncNone, asyncStarting, asyncRunning, asyncFailed };
     AsyncStage asyncStage_;

@@ -1884,7 +1884,7 @@ parse_AuthSchemes(acl_access **authSchemes)
         return;
     }
     Auth::TheConfig.schemeLists.emplace_back(tok, ConfigParser::LastTokenWasQuoted());
-    const Acl::Answer action = Acl::Answer(ACCESS_ALLOWED, Auth::TheConfig.schemeLists.size() - 1);
+    const auto action = Acl::Answer(ACCESS_ALLOWED, Auth::TheConfig.schemeLists.size() - 1);
     ParseAclWithAction(authSchemes, action, "auth_schemes");
 }
 
@@ -4652,7 +4652,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
         sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
     }
 
-    Acl::Answer action = Acl::Answer(ACCESS_ALLOWED);
+    auto action = Acl::Answer(ACCESS_ALLOWED);
 
     if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpClientFirst]) == 0) {
         action.kind = Ssl::bumpClientFirst;
@@ -4976,7 +4976,7 @@ parse_on_unsupported_protocol(acl_access **access)
         return;
     }
 
-    Acl::Answer action = Acl::Answer(ACCESS_ALLOWED);
+    auto action = Acl::Answer(ACCESS_ALLOWED);
     if (strcmp(tm, "tunnel") == 0)
         action.kind = 1;
     else if (strcmp(tm, "respond") == 0)
