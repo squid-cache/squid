@@ -2106,9 +2106,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 void
 HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
 {
-    // We need virgin request received by squid. This is stored to
-    // AccessLogEntry::request member.
-    const HttpHeader &hdr_in = (fwd->al && fwd->al->request) ? fwd->al->request->header : request->header;
+    const HttpHeader &hdr_in = request->header;
 
     if (!hdr_in.has(Http::HdrType::UPGRADE))
         return;

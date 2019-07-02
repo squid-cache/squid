@@ -1611,6 +1611,11 @@ Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *section,
     headClone->header.delById(Http::HdrType::PROXY_AUTHENTICATE);
     headClone->header.removeHopByHopEntries();
 
+    // TODO: modify HttpHeader::removeHopByHopEntries to accept a list of
+    // excluded hop-by-hop headers
+    if (auto entry = head->header.findEntry(Http::HdrType::UPGRADE))
+        headClone->header.addEntry(entry->clone());
+
     // pack polished HTTP header
     packHead(httpBuf, headClone.getRaw());
 
