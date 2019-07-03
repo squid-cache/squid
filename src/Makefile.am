@@ -1458,7 +1458,6 @@ check_PROGRAMS += tests/testStore
 ## why so many sources? well httpHeaderTools requites ACLChecklist & friends.
 ## first line - what we are testing.
 tests_testStore_SOURCES= \
-	AccessLogEntry.cc \
 	CacheDigest.h \
 	tests/stub_CacheDigest.cc \
 	cbdata.cc \
@@ -1540,7 +1539,6 @@ tests_testStore_SOURCES= \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_http.cc \
-	tests/stub_icp.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libdiskio.cc \
@@ -1608,7 +1606,6 @@ tests_testStore_LDADD= \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(ADAPTATION_LIBS) \
 	$(NETTLELIB) \
 	$(REGEXLIB) \
 	$(SSLLIB) \
@@ -1800,7 +1797,6 @@ tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 if ENABLE_AUTH
 check_PROGRAMS += tests/testACLMaxUserIP
 tests_testACLMaxUserIP_SOURCES = \
-	AccessLogEntry.cc \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h
 nodist_tests_testACLMaxUserIP_SOURCES = \
@@ -1819,7 +1815,6 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpHeader.cc \
 	tests/stub_HttpRequest.cc \
-	tests/stub_icp.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc \
@@ -1836,7 +1831,6 @@ tests_testACLMaxUserIP_LDADD = \
 	parser/libparser.la \
 	sbuf/libsbuf.la \
 	base/libbase.la \
-	$(ADAPTATION_LIBS) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
@@ -2130,7 +2124,6 @@ tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpReply
 tests_testHttpReply_SOURCES=\
-	AccessLogEntry.cc \
 	cbdata.cc \
 	cbdata.h \
 	ConfigParser.cc \
@@ -2184,7 +2177,6 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_event.cc \
 	tests/stub_fd.cc \
 	tests/stub_HelperChildConfig.cc \
-	tests/stub_icp.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
@@ -2226,7 +2218,6 @@ tests_testHttpReply_LDADD=\
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(ADAPTATION_LIBS) \
 	$(NETTLELIB) \
 	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
