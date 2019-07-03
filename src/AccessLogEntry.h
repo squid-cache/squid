@@ -179,7 +179,7 @@ public:
     SBuf lastAclData; ///< string for external_acl_type %DATA format code
 
     HierarchyLogEntry hier;
-    HttpReply * const reply = nullptr; ///< virgin 1xx or adapted HTTP reply
+    HttpReply * const reply = nullptr; ///< virgin 1xx reply or a reply a to-be-sent to client
     HttpRequest *request = nullptr; //< virgin HTTP request
     HttpRequest *adapted_request = nullptr; //< HTTP request after adaptation and redirection
 

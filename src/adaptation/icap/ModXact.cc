@@ -1338,6 +1338,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     al.adapted_request = adapted_request_;
     HTTPMSGLOCK(al.adapted_request);
 
+    // XXX: This reply (and other ALE members!) may have been needed earlier.
     al.setReply(adapted_reply_);
 
     if (h->rfc931.size())
