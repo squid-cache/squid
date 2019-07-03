@@ -70,15 +70,6 @@ AccessLogEntry::syncNotes(HttpRequest *req)
         assert(notes == req->notes());
 }
 
-void
-AccessLogEntry::setReply(HttpReply *rep)
-{
-    HttpReply *oldReply = reply;
-    HTTPMSGUNLOCK(oldReply);
-    const_cast<HttpReply *&>(reply) = rep;
-    HTTPMSGLOCK(reply);
-}
-
 const char *
 AccessLogEntry::getClientIdent() const
 {
@@ -120,7 +111,6 @@ AccessLogEntry::~AccessLogEntry()
 
     safe_free(lastAclName);
 
-    setReply(nullptr);
     HTTPMSGUNLOCK(request);
 #if ICAP_CLIENT
     HTTPMSGUNLOCK(icap.reply);

@@ -1657,7 +1657,7 @@ clientReplyContext::cloneReply()
     /* do header conversions */
     buildReplyHeader();
 
-    http->al->setReply(reply);
+    http->al->reply = reply;
 }
 
 /// Safely disposes of an entry pointing to a cache hit that we do not want.

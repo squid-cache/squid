@@ -61,8 +61,6 @@ public:
 
     void syncNotes(HttpRequest *request);
 
-    void setReply(HttpReply *);
-
     SBuf url;
 
     /// TCP/IP level details about the client connection
@@ -179,7 +177,7 @@ public:
     SBuf lastAclData; ///< string for external_acl_type %DATA format code
 
     HierarchyLogEntry hier;
-    HttpReply * const reply = nullptr; ///< virgin 1xx reply or a reply a to-be-sent to client
+    HttpReplyPointer reply; ///< virgin 1xx reply or a reply a to-be-sent to client
     HttpRequest *request = nullptr; //< virgin HTTP request
     HttpRequest *adapted_request = nullptr; //< HTTP request after adaptation and redirection
 
