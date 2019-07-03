@@ -32,6 +32,7 @@ enum HdrType {
     AUTHENTICATION_INFO,            /**< RFC 2617 */
     AUTHORIZATION,                  /**< RFC 7235, 4559 */
     CACHE_CONTROL,                  /**< RFC 7234 */
+    CDN_LOOP,                       /**< RFC 8586 */
     CONNECTION,                     /**< RFC 7230 */
     CONTENT_BASE,                   /**< obsoleted RFC 2068 */
     CONTENT_DISPOSITION,            /**< RFC 2183, 6266 */

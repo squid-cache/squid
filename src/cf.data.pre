@@ -1003,7 +1003,7 @@ ENDIF
 DEFAULT: all src all
 DEFAULT: manager url_regex -i ^cache_object:// +i ^https?://[^/]+/squid-internal-mgr/
 DEFAULT: localhost src 127.0.0.1/32 ::1
-DEFAULT: to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
+DEFAULT: to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1/128 ::/128
 DEFAULT: CONNECT method CONNECT
 DEFAULT_DOC: ACLs all, manager, localhost, to_localhost, and CONNECT are predefined.
 DOC_START
@@ -2909,7 +2909,7 @@ DOC_START
 	min-version=1.N
 			The minimum TLS protocol version to permit.
 			To control SSLv3 use the options= parameter.
-			Supported Values: 1.0 (default), 1.1, 1.2
+			Supported Values: 1.0 (default), 1.1, 1.2, 1.3
 
 	options=...	Specify various TLS/SSL implementation options.
 
@@ -7309,6 +7309,9 @@ DOC_START
 	need an identification token to allow control targeting. Because
 	a farm of surrogates may all perform the same tasks, they may share
 	an identification token.
+
+	When the surrogate is a reverse-proxy, this ID is also
+	used as cdn-id for CDN-Loop detection (RFC 8586).
 DOC_END
 
 NAME: http_accel_surrogate_remote

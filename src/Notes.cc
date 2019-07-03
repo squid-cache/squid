@@ -355,6 +355,16 @@ NotePairs::appendNewOnly(const NotePairs *src)
 }
 
 void
+NotePairs::replaceOrAddOrAppend(const NotePairs *src, const NotePairs::Names &appendables)
+{
+    for (const auto e: src->entries) {
+        if (std::find(appendables.begin(), appendables.end(), e->name()) == appendables.end())
+            remove(e->name());
+    }
+    append(src);
+}
+
+void
 NotePairs::replaceOrAdd(const NotePairs *src)
 {
     for (auto e: src->entries)

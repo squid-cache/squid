@@ -148,7 +148,7 @@ public:
     HttpHdrRange *getRange() const;
     HttpHdrSc *getSc() const;
     HttpHdrContRange *getContRange() const;
-    const char *getAuth(Http::HdrType id, const char *auth_scheme) const;
+    SBuf getAuthToken(Http::HdrType id, const char *auth_scheme) const;
     ETag getETag(Http::HdrType id) const;
     TimeOrTag getTimeOrTag(Http::HdrType id) const;
     int hasListMember(Http::HdrType id, const char *member, const char separator) const;

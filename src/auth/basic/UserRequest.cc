@@ -168,7 +168,8 @@ Auth::Basic::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     // add new helper kv-pair notes to the credentials object
     // so that any transaction using those credentials can access them
-    r->auth_user_request->user()->notes.appendNewOnly(&reply.notes);
+    static const NotePairs::Names appendables = { SBuf("group"), SBuf("tag") };
+    r->auth_user_request->user()->notes.replaceOrAddOrAppend(&reply.notes, appendables);
 
     /* this is okay since we only play with the Auth::Basic::User child fields below
      * and do not pass the pointer itself anywhere */

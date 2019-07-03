@@ -358,6 +358,9 @@ typedef char * caddr_t;
 #ifndef ENOTSUP
 #define ENOTSUP WSAEOPNOTSUPP
 #endif
+#ifndef ECONNABORTED
+#define ECONNABORTED WSAECONNABORTED
+#endif
 
 #undef h_errno
 #define h_errno errno /* we'll set it ourselves */

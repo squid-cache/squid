@@ -191,6 +191,7 @@ public:
         SBuf theValue;
     };
     typedef std::vector<Entry::Pointer> Entries;      ///< The key/value pair entries
+    typedef std::vector<SBuf> Names;
 
     NotePairs() {}
     NotePairs &operator=(NotePairs const &) = delete;
@@ -198,6 +199,11 @@ public:
 
     /// Append the entries of the src NotePairs list to our list.
     void append(const NotePairs *src);
+
+    /// Replace existing list entries with the src NotePairs entries.
+    /// Do not replace but append entries named in the appendables
+    /// Entries which do not exist in the destination set are added.
+    void replaceOrAddOrAppend(const NotePairs *src, const Names &appendables);
 
     /// Replace existing list entries with the src NotePairs entries.
     /// Entries which do not exist in the destination set are added.

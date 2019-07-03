@@ -1,3 +1,14 @@
+Changes to squid-4.7 (06 May 2019):
+
+	- Bug 4942: --with-filedescriptors does not do anything
+	- Bug 4928: Cannot convert non-IPv4 to IPv4
+	- Bug 4823: assertion failed: "lowestOffset () <= target_offset"
+	- Bug 4796: comm.cc !isOpen(conn->fd) assertion when rotating logs
+	- Fix squidclient authentication to origin servers
+	- Fix stack-based buffer-overflow when parsing SNMP messages
+	- Add support for buffer-size= to UDP logging
+	- TLS: When using OpenSSL, trust intermediate CAs from trusted store
+
 Changes to squid-4.6 (08 Feb 2019):
 
 	- Bug 4915: Detect IPv6 loopback binding errors

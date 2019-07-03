@@ -1,5 +1,5 @@
-/* C++ code produced by gperf version 3.0.4 */
-/* Command-line: gperf --output-file=RegisteredHeadersHash.cci -m 100000 RegisteredHeadersHash.gperf  */
+/* C++ code produced by gperf version 3.1 */
+/* Command-line: gperf -m 100000 RegisteredHeadersHash.gperf  */
 /* Computed positions: -k'1,9,$' */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -26,7 +26,7 @@
 && ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
 && ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126))
 /* The character set is not based on ISO-646.  */
-#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gnu-gperf@gnu.org>."
+#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gperf@gnu.org>."
 #endif
 
 #line 1 "RegisteredHeadersHash.gperf"
@@ -44,14 +44,14 @@
 struct HeaderTableRecord;
         enum
 {
-    TOTAL_KEYWORDS = 88,
+    TOTAL_KEYWORDS = 89,
     MIN_WORD_LENGTH = 2,
     MAX_WORD_LENGTH = 25,
-    MIN_HASH_VALUE = 7,
-    MAX_HASH_VALUE = 113
+    MIN_HASH_VALUE = 13,
+    MAX_HASH_VALUE = 114
 };
 
-/* maximum key range = 107, duplicates = 0 */
+/* maximum key range = 102, duplicates = 0 */
 
 #ifndef GPERF_DOWNCASE
 #define GPERF_DOWNCASE 1
@@ -81,7 +81,7 @@ static unsigned char gperf_downcase[256] =
 #ifndef GPERF_CASE_MEMCMP
 #define GPERF_CASE_MEMCMP 1
 static int
-gperf_case_memcmp (const char *s1, const char *s2, unsigned int n)
+gperf_case_memcmp (const char *s1, const char *s2, size_t n)
 {
     for (; n > 0;)
     {
@@ -101,49 +101,49 @@ gperf_case_memcmp (const char *s1, const char *s2, unsigned int n)
 class HttpHeaderHashTable
 {
 private:
-    static inline unsigned int HttpHeaderHash (const char *str, unsigned int len);
+    static inline unsigned int HttpHeaderHash (const char *str, size_t len);
 public:
-    static const struct HeaderTableRecord *lookup (const char *str, unsigned int len);
+    static const struct HeaderTableRecord *lookup (const char *str, size_t len);
 };
 
 inline unsigned int
-HttpHeaderHashTable::HttpHeaderHash (const char *str, unsigned int len)
+HttpHeaderHashTable::HttpHeaderHash (const char *str, size_t len)
 {
     static const unsigned char asso_values[] =
     {
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114,  14, 114, 114,   5, 114, 114, 114, 114,
-        64, 114, 114,  14, 114, 114, 114, 114,   1, 114,
-        114, 114, 114, 114, 114,   4,   5,  15,  29,   1,
-        17,  60,  35,  19, 114,  51,  15,  42,   8,  50,
-        11, 114,   1,  19,   7,  28,   4,  41,  33,  15,
-        114, 114, 114, 114, 114, 114, 114,   4,   5,  15,
-        29,   1,  17,  60,  35,  19, 114,  51,  15,  42,
-        8,  50,  11, 114,   1,  19,   7,  28,   4,  41,
-        33,  15, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114, 114, 114, 114, 114,
-        114, 114, 114, 114, 114, 114
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115,  27, 115, 115,   4, 115, 115, 115, 115,
+        26, 115, 115,  33, 115, 115, 115, 115,  25, 115,
+        115, 115, 115, 115, 115,  15,   7,   7,  10,   4,
+        33,  66,  42,  22, 115,  63,  10,  33,  18,  44,
+        11, 115,   4,  28,  10,  42,  23,  26,  31,  30,
+        115, 115, 115, 115, 115, 115, 115,  15,   7,   7,
+        10,   4,  33,  66,  42,  22, 115,  63,  10,  33,
+        18,  44,  11, 115,   4,  28,  10,  42,  23,  26,
+        31,  30, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115, 115, 115, 115, 115,
+        115, 115, 115, 115, 115, 115
     };
-    int hval = len;
+    unsigned int hval = len;
 
     switch (hval)
     {
     default:
-        hval += asso_values[(unsigned char)str[8]];
+        hval += asso_values[static_cast<unsigned char>(str[8])];
     /*FALLTHROUGH*/
     case 8:
     case 7:
@@ -153,220 +153,226 @@ HttpHeaderHashTable::HttpHeaderHash (const char *str, unsigned int len)
     case 3:
     case 2:
     case 1:
-        hval += asso_values[(unsigned char)str[0]];
+        hval += asso_values[static_cast<unsigned char>(str[0])];
         break;
     }
-    return hval + asso_values[(unsigned char)str[len - 1]];
+    return hval + asso_values[static_cast<unsigned char>(str[len - 1])];
 }
 
 static const unsigned char lengthtable[] =
 {
-    0,  0,  0,  0,  0,  0,  0,  5,  3,  7,  2,  3,  0,  5,
-    6,  7, 13,  6,  9,  9, 11,  6,  6,  4, 15,  7,  6,  7,
-    8, 13, 13,  8,  6, 12,  4, 12,  7, 18, 18, 10, 13,  7,
-    13, 16,  0, 19,  4, 16, 13, 10,  5, 13, 17, 10, 16, 20,
-    17,  6, 19, 16, 14, 11,  8,  4,  6,  4, 10, 18, 15,  3,
-    4, 19, 13, 14, 10, 14, 13, 12, 15, 14, 15, 12, 11, 10,
-    9, 10,  7, 15, 19, 17,  0, 13, 16, 25,  0,  0,  0,  0,
-    0,  0, 21,  0,  0,  0,  0,  0,  0,  0,  7, 13,  0,  0,
-    0, 11
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  5,
+    0,  7,  2,  6,  4,  5,  6,  7,  3,  0,  6, 13,  8,  9,
+    13, 11, 12,  6,  6, 12,  8,  9,  8, 16,  6,  7,  7,  3,
+    7, 18,  7, 13,  5, 18, 13, 15, 16, 16, 13,  7, 19, 13,
+    4,  4, 19, 17, 15, 13,  9, 16, 10, 17, 14, 19,  6, 11,
+    4, 13,  8, 14,  4,  6, 13,  4, 15, 10, 10, 14, 20, 18,
+    11, 19, 15, 11, 12, 10, 25, 12,  0, 16, 14,  0,  3, 17,
+    0,  7, 10,  0,  0,  0,  0, 10,  0, 13,  0,  0, 13, 21,
+    0, 10, 15
 };
 
 static const struct HeaderTableRecord HttpHeaderDefinitionsTable[] =
 {
-    {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 78 "RegisteredHeadersHash.gperf"
+    {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+    {""}, {""}, {""}, {""},
+#line 79 "RegisteredHeadersHash.gperf"
     {"Range", Http::HdrType::RANGE, Http::HdrFieldType::ftPRange, HdrKind::RequestHeader},
+    {""},
+#line 80 "RegisteredHeadersHash.gperf"
+    {"Referer", Http::HdrType::REFERER, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
+#line 86 "RegisteredHeadersHash.gperf"
+    {"TE", Http::HdrType::TE, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader},
+#line 48 "RegisteredHeadersHash.gperf"
+    {"Cookie", Http::HdrType::COOKIE, Http::HdrFieldType::ftStr, HdrKind::None},
+#line 50 "RegisteredHeadersHash.gperf"
+    {"Date", Http::HdrType::DATE, Http::HdrFieldType::ftDate_1123, HdrKind::GeneralHeader},
+#line 87 "RegisteredHeadersHash.gperf"
+    {"Title", Http::HdrType::TITLE, Http::HdrFieldType::ftStr, HdrKind::None},
+#line 52 "RegisteredHeadersHash.gperf"
+    {"Expect", Http::HdrType::EXPECT, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
+#line 88 "RegisteredHeadersHash.gperf"
+    {"Trailer", Http::HdrType::TRAILER, Http::HdrFieldType::ftStr, HdrKind::HopByHopHeader},
 #line 31 "RegisteredHeadersHash.gperf"
     {"Age", Http::HdrType::AGE, Http::HdrFieldType::ftInt, HdrKind::ReplyHeader},
-#line 79 "RegisteredHeadersHash.gperf"
-    {"Referer", Http::HdrType::REFERER, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
-#line 85 "RegisteredHeadersHash.gperf"
-    {"TE", Http::HdrType::TE, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader},
-#line 94 "RegisteredHeadersHash.gperf"
-    {"Via", Http::HdrType::VIA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader},
     {""},
-#line 86 "RegisteredHeadersHash.gperf"
-    {"Title", Http::HdrType::TITLE, Http::HdrFieldType::ftStr, HdrKind::None},
-#line 51 "RegisteredHeadersHash.gperf"
-    {"Expect", Http::HdrType::EXPECT, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
-#line 87 "RegisteredHeadersHash.gperf"
-    {"Trailer", Http::HdrType::TRAILER, Http::HdrFieldType::ftStr, HdrKind::HopByHopHeader},
-#line 80 "RegisteredHeadersHash.gperf"
+#line 78 "RegisteredHeadersHash.gperf"
+    {"Public", Http::HdrType::PUBLIC, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
+#line 81 "RegisteredHeadersHash.gperf"
     {"Request-Range", Http::HdrType::REQUEST_RANGE, Http::HdrFieldType::ftPRange, HdrKind::None},
+#line 37 "RegisteredHeadersHash.gperf"
+    {"CDN-Loop", Http::HdrType::CDN_LOOP, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
+#line 90 "RegisteredHeadersHash.gperf"
+    {"Translate", Http::HdrType::TRANSLATE, Http::HdrFieldType::ftStr, HdrKind::None},
+#line 46 "RegisteredHeadersHash.gperf"
+    {"Content-Range", Http::HdrType::CONTENT_RANGE, Http::HdrFieldType::ftPContRange, HdrKind::EntityHeader},
+#line 82 "RegisteredHeadersHash.gperf"
+    {"Retry-After", Http::HdrType::RETRY_AFTER, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
+#line 39 "RegisteredHeadersHash.gperf"
+    {"Content-Base", Http::HdrType::CONTENT_BASE, Http::HdrFieldType::ftStr, HdrKind::EntityHeader},
 #line 26 "RegisteredHeadersHash.gperf"
     {"Accept", Http::HdrType::ACCEPT, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
-#line 89 "RegisteredHeadersHash.gperf"
-    {"Translate", Http::HdrType::TRANSLATE, Http::HdrFieldType::ftStr, HdrKind::None},
-#line 69 "RegisteredHeadersHash.gperf"
-    {"Negotiate", Http::HdrType::NEGOTIATE, Http::HdrFieldType::ftStr, HdrKind::None},
-#line 81 "RegisteredHeadersHash.gperf"
-    {"Retry-After", Http::HdrType::RETRY_AFTER, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
-#line 71 "RegisteredHeadersHash.gperf"
+#line 72 "RegisteredHeadersHash.gperf"
     {"Pragma", Http::HdrType::PRAGMA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader},
 #line 47 "RegisteredHeadersHash.gperf"
-    {"Cookie", Http::HdrType::COOKIE, Http::HdrFieldType::ftStr, HdrKind::None},
-#line 93 "RegisteredHeadersHash.gperf"
-    {"Vary", Http::HdrType::VARY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
-#line 29 "RegisteredHeadersHash.gperf"
-    {"Accept-Language", Http::HdrType::ACCEPT_LANGUAGE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
-#line 109 "RegisteredHeadersHash.gperf"
-    {"FTP-Pre", Http::HdrType::FTP_PRE, Http::HdrFieldType::ftStr, HdrKind::None},
-#line 82 "RegisteredHeadersHash.gperf"
-    {"Server", Http::HdrType::SERVER, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
-#line 52 "RegisteredHeadersHash.gperf"
-    {"Expires", Http::HdrType::EXPIRES, Http::HdrFieldType::ftDate_1123, HdrKind::EntityHeader},
-#line 60 "RegisteredHeadersHash.gperf"
-    {"If-Range", Http::HdrType::IF_RANGE, Http::HdrFieldType::ftDate_1123_or_ETag, HdrKind::None},
-#line 35 "RegisteredHeadersHash.gperf"
-    {"Authorization", Http::HdrType::AUTHORIZATION, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
-#line 45 "RegisteredHeadersHash.gperf"
-    {"Content-Range", Http::HdrType::CONTENT_RANGE, Http::HdrFieldType::ftPContRange, HdrKind::EntityHeader},
-#line 66 "RegisteredHeadersHash.gperf"
-    {"Location", Http::HdrType::LOCATION, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
-#line 77 "RegisteredHeadersHash.gperf"
-    {"Public", Http::HdrType::PUBLIC, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
-#line 38 "RegisteredHeadersHash.gperf"
-    {"Content-Base", Http::HdrType::CONTENT_BASE, Http::HdrFieldType::ftStr, HdrKind::EntityHeader},
-#line 49 "RegisteredHeadersHash.gperf"
-    {"Date", Http::HdrType::DATE, Http::HdrFieldType::ftDate_1123, HdrKind::GeneralHeader},
-#line 46 "RegisteredHeadersHash.gperf"
     {"Content-Type", Http::HdrType::CONTENT_TYPE, Http::HdrFieldType::ftStr, HdrKind::EntityHeader},
-#line 91 "RegisteredHeadersHash.gperf"
-    {"Upgrade", Http::HdrType::UPGRADE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader},
-#line 72 "RegisteredHeadersHash.gperf"
-    {"Proxy-Authenticate", Http::HdrType::PROXY_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
-#line 33 "RegisteredHeadersHash.gperf"
-    {"Alternate-Protocol", Http::HdrType::ALTERNATE_PROTOCOL, Http::HdrFieldType::ftStr, HdrKind::HopByHopHeader},
-#line 113 "RegisteredHeadersHash.gperf"
-    {"*INVALID*:", Http::HdrType::BAD_HDR, Http::HdrFieldType::ftInvalid, HdrKind::None},
-#line 30 "RegisteredHeadersHash.gperf"
-    {"Accept-Ranges", Http::HdrType::ACCEPT_RANGES, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
-#line 97 "RegisteredHeadersHash.gperf"
-    {"X-Cache", Http::HdrType::X_CACHE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
-#line 76 "RegisteredHeadersHash.gperf"
-    {"Proxy-support", Http::HdrType::PROXY_SUPPORT, Http::HdrFieldType::ftStr, HdrKind::ListHeader},
-#line 75 "RegisteredHeadersHash.gperf"
-    {"Proxy-Connection", Http::HdrType::PROXY_CONNECTION, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader},
-    {""},
-#line 74 "RegisteredHeadersHash.gperf"
-    {"Proxy-Authorization", Http::HdrType::PROXY_AUTHORIZATION, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader},
-#line 55 "RegisteredHeadersHash.gperf"
-    {"Host", Http::HdrType::HOST, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
-#line 41 "RegisteredHeadersHash.gperf"
+#line 61 "RegisteredHeadersHash.gperf"
+    {"If-Range", Http::HdrType::IF_RANGE, Http::HdrFieldType::ftDate_1123_or_ETag, HdrKind::None},
+#line 70 "RegisteredHeadersHash.gperf"
+    {"Negotiate", Http::HdrType::NEGOTIATE, Http::HdrFieldType::ftStr, HdrKind::None},
+#line 67 "RegisteredHeadersHash.gperf"
+    {"Location", Http::HdrType::LOCATION, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
+#line 42 "RegisteredHeadersHash.gperf"
     {"Content-Language", Http::HdrType::CONTENT_LANGUAGE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::EntityHeader},
-#line 101 "RegisteredHeadersHash.gperf"
-    {"X-Squid-Error", Http::HdrType::X_SQUID_ERROR, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
 #line 83 "RegisteredHeadersHash.gperf"
-    {"Set-Cookie", Http::HdrType::SET_COOKIE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
+    {"Server", Http::HdrType::SERVER, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
+#line 53 "RegisteredHeadersHash.gperf"
+    {"Expires", Http::HdrType::EXPIRES, Http::HdrFieldType::ftDate_1123, HdrKind::EntityHeader},
+#line 49 "RegisteredHeadersHash.gperf"
+    {"Cookie2", Http::HdrType::COOKIE2, Http::HdrFieldType::ftStr, HdrKind::None},
+#line 95 "RegisteredHeadersHash.gperf"
+    {"Via", Http::HdrType::VIA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader},
+#line 98 "RegisteredHeadersHash.gperf"
+    {"X-Cache", Http::HdrType::X_CACHE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
+#line 73 "RegisteredHeadersHash.gperf"
+    {"Proxy-Authenticate", Http::HdrType::PROXY_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
+#line 110 "RegisteredHeadersHash.gperf"
+    {"FTP-Pre", Http::HdrType::FTP_PRE, Http::HdrFieldType::ftStr, HdrKind::None},
+#line 77 "RegisteredHeadersHash.gperf"
+    {"Proxy-support", Http::HdrType::PROXY_SUPPORT, Http::HdrFieldType::ftStr, HdrKind::ListHeader},
 #line 32 "RegisteredHeadersHash.gperf"
     {"Allow", Http::HdrType::ALLOW, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::EntityHeader},
+#line 33 "RegisteredHeadersHash.gperf"
+    {"Alternate-Protocol", Http::HdrType::ALTERNATE_PROTOCOL, Http::HdrFieldType::ftStr, HdrKind::HopByHopHeader},
 #line 36 "RegisteredHeadersHash.gperf"
     {"Cache-Control", Http::HdrType::CACHE_CONTROL, Http::HdrFieldType::ftPCc, HdrKind::ListHeader|HdrKind::GeneralHeader},
-#line 105 "RegisteredHeadersHash.gperf"
-    {"Surrogate-Control", Http::HdrType::SURROGATE_CONTROL, Http::HdrFieldType::ftPSc, HdrKind::ListHeader|HdrKind::ReplyHeader},
-#line 92 "RegisteredHeadersHash.gperf"
-    {"User-Agent", Http::HdrType::USER_AGENT, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
-#line 43 "RegisteredHeadersHash.gperf"
-    {"Content-Location", Http::HdrType::CONTENT_LOCATION, Http::HdrFieldType::ftStr, HdrKind::EntityHeader},
-#line 104 "RegisteredHeadersHash.gperf"
-    {"Surrogate-Capability", Http::HdrType::SURROGATE_CAPABILITY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
-#line 58 "RegisteredHeadersHash.gperf"
-    {"If-Modified-Since", Http::HdrType::IF_MODIFIED_SINCE, Http::HdrFieldType::ftDate_1123, HdrKind::RequestHeader},
-#line 112 "RegisteredHeadersHash.gperf"
-    {"Other:", Http::HdrType::OTHER, Http::HdrFieldType::ftStr, HdrKind::EntityHeader},
-#line 61 "RegisteredHeadersHash.gperf"
-    {"If-Unmodified-Since", Http::HdrType::IF_UNMODIFIED_SINCE, Http::HdrFieldType::ftDate_1123, HdrKind::None},
-#line 96 "RegisteredHeadersHash.gperf"
+#line 29 "RegisteredHeadersHash.gperf"
+    {"Accept-Language", Http::HdrType::ACCEPT_LANGUAGE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
+#line 97 "RegisteredHeadersHash.gperf"
     {"WWW-Authenticate", Http::HdrType::WWW_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
+#line 44 "RegisteredHeadersHash.gperf"
+    {"Content-Location", Http::HdrType::CONTENT_LOCATION, Http::HdrFieldType::ftStr, HdrKind::EntityHeader},
+#line 102 "RegisteredHeadersHash.gperf"
+    {"X-Squid-Error", Http::HdrType::X_SQUID_ERROR, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
+#line 92 "RegisteredHeadersHash.gperf"
+    {"Upgrade", Http::HdrType::UPGRADE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader},
+#line 40 "RegisteredHeadersHash.gperf"
+    {"Content-Disposition", Http::HdrType::CONTENT_DISPOSITION, Http::HdrFieldType::ftStr, HdrKind::None},
+#line 65 "RegisteredHeadersHash.gperf"
+    {"Last-Modified", Http::HdrType::LAST_MODIFIED, Http::HdrFieldType::ftDate_1123, HdrKind::EntityHeader},
+#line 56 "RegisteredHeadersHash.gperf"
+    {"Host", Http::HdrType::HOST, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
+#line 94 "RegisteredHeadersHash.gperf"
+    {"Vary", Http::HdrType::VARY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
+#line 75 "RegisteredHeadersHash.gperf"
+    {"Proxy-Authorization", Http::HdrType::PROXY_AUTHORIZATION, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader},
+#line 106 "RegisteredHeadersHash.gperf"
+    {"Surrogate-Control", Http::HdrType::SURROGATE_CONTROL, Http::HdrFieldType::ftPSc, HdrKind::ListHeader|HdrKind::ReplyHeader},
+#line 100 "RegisteredHeadersHash.gperf"
+    {"X-Forwarded-For", Http::HdrType::X_FORWARDED_FOR, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader},
+#line 35 "RegisteredHeadersHash.gperf"
+    {"Authorization", Http::HdrType::AUTHORIZATION, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
+#line 54 "RegisteredHeadersHash.gperf"
+    {"Forwarded", Http::HdrType::FORWARDED, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader},
+#line 76 "RegisteredHeadersHash.gperf"
+    {"Proxy-Connection", Http::HdrType::PROXY_CONNECTION, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader},
+#line 84 "RegisteredHeadersHash.gperf"
+    {"Set-Cookie", Http::HdrType::SET_COOKIE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
+#line 59 "RegisteredHeadersHash.gperf"
+    {"If-Modified-Since", Http::HdrType::IF_MODIFIED_SINCE, Http::HdrFieldType::ftDate_1123, HdrKind::RequestHeader},
+#line 99 "RegisteredHeadersHash.gperf"
+    {"X-Cache-Lookup", Http::HdrType::X_CACHE_LOOKUP, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
+#line 62 "RegisteredHeadersHash.gperf"
+    {"If-Unmodified-Since", Http::HdrType::IF_UNMODIFIED_SINCE, Http::HdrFieldType::ftDate_1123, HdrKind::None},
+#line 71 "RegisteredHeadersHash.gperf"
+    {"Origin", Http::HdrType::ORIGIN, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
+#line 108 "RegisteredHeadersHash.gperf"
+    {"FTP-Command", Http::HdrType::FTP_COMMAND, Http::HdrFieldType::ftStr, HdrKind::None},
+#line 55 "RegisteredHeadersHash.gperf"
+    {"From", Http::HdrType::FROM, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
+#line 30 "RegisteredHeadersHash.gperf"
+    {"Accept-Ranges", Http::HdrType::ACCEPT_RANGES, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
+#line 58 "RegisteredHeadersHash.gperf"
+    {"If-Match", Http::HdrType::IF_MATCH, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
+#line 43 "RegisteredHeadersHash.gperf"
+    {"Content-Length", Http::HdrType::CONTENT_LENGTH, Http::HdrFieldType::ftInt64, HdrKind::EntityHeader},
+#line 51 "RegisteredHeadersHash.gperf"
+    {"ETag", Http::HdrType::ETAG, Http::HdrFieldType::ftETag, HdrKind::EntityHeader},
+#line 113 "RegisteredHeadersHash.gperf"
+    {"Other:", Http::HdrType::OTHER, Http::HdrFieldType::ftStr, HdrKind::EntityHeader},
+#line 101 "RegisteredHeadersHash.gperf"
+    {"X-Request-URI", Http::HdrType::X_REQUEST_URI, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
+#line 66 "RegisteredHeadersHash.gperf"
+    {"Link", Http::HdrType::LINK, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::EntityHeader},
+#line 104 "RegisteredHeadersHash.gperf"
+    {"X-Next-Services", Http::HdrType::X_NEXT_SERVICES, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
+#line 38 "RegisteredHeadersHash.gperf"
+    {"Connection", Http::HdrType::CONNECTION, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader},
+#line 93 "RegisteredHeadersHash.gperf"
+    {"User-Agent", Http::HdrType::USER_AGENT, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
 #line 27 "RegisteredHeadersHash.gperf"
     {"Accept-Charset", Http::HdrType::ACCEPT_CHARSET, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
-#line 107 "RegisteredHeadersHash.gperf"
-    {"FTP-Command", Http::HdrType::FTP_COMMAND, Http::HdrFieldType::ftStr, HdrKind::None},
-#line 57 "RegisteredHeadersHash.gperf"
-    {"If-Match", Http::HdrType::IF_MATCH, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
-#line 54 "RegisteredHeadersHash.gperf"
-    {"From", Http::HdrType::FROM, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
-#line 70 "RegisteredHeadersHash.gperf"
-    {"Origin", Http::HdrType::ORIGIN, Http::HdrFieldType::ftStr, HdrKind::RequestHeader},
-#line 50 "RegisteredHeadersHash.gperf"
-    {"ETag", Http::HdrType::ETAG, Http::HdrFieldType::ftETag, HdrKind::EntityHeader},
-#line 62 "RegisteredHeadersHash.gperf"
-    {"Keep-Alive", Http::HdrType::KEEP_ALIVE, Http::HdrFieldType::ftStr, HdrKind::HopByHopHeader},
-#line 102 "RegisteredHeadersHash.gperf"
-    {"X-Accelerator-Vary", Http::HdrType::HDR_X_ACCELERATOR_VARY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
+#line 105 "RegisteredHeadersHash.gperf"
+    {"Surrogate-Capability", Http::HdrType::SURROGATE_CAPABILITY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
 #line 103 "RegisteredHeadersHash.gperf"
-    {"X-Next-Services", Http::HdrType::X_NEXT_SERVICES, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
-#line 63 "RegisteredHeadersHash.gperf"
-    {"Key", Http::HdrType::KEY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
-#line 65 "RegisteredHeadersHash.gperf"
-    {"Link", Http::HdrType::LINK, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::EntityHeader},
-#line 39 "RegisteredHeadersHash.gperf"
-    {"Content-Disposition", Http::HdrType::CONTENT_DISPOSITION, Http::HdrFieldType::ftStr, HdrKind::None},
-#line 100 "RegisteredHeadersHash.gperf"
-    {"X-Request-URI", Http::HdrType::X_REQUEST_URI, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
-#line 98 "RegisteredHeadersHash.gperf"
-    {"X-Cache-Lookup", Http::HdrType::X_CACHE_LOOKUP, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
-#line 110 "RegisteredHeadersHash.gperf"
-    {"FTP-Status", Http::HdrType::FTP_STATUS, Http::HdrFieldType::ftInt, HdrKind::None},
-#line 56 "RegisteredHeadersHash.gperf"
-    {"HTTP2-Settings", Http::HdrType::HTTP2_SETTINGS, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader},
-#line 64 "RegisteredHeadersHash.gperf"
-    {"Last-Modified", Http::HdrType::LAST_MODIFIED, Http::HdrFieldType::ftDate_1123, HdrKind::EntityHeader},
-#line 67 "RegisteredHeadersHash.gperf"
-    {"Max-Forwards", Http::HdrType::MAX_FORWARDS, Http::HdrFieldType::ftInt64, HdrKind::RequestHeader},
-#line 99 "RegisteredHeadersHash.gperf"
-    {"X-Forwarded-For", Http::HdrType::X_FORWARDED_FOR, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader},
-#line 42 "RegisteredHeadersHash.gperf"
-    {"Content-Length", Http::HdrType::CONTENT_LENGTH, Http::HdrFieldType::ftInt64, HdrKind::EntityHeader},
-#line 106 "RegisteredHeadersHash.gperf"
-    {"Front-End-Https", Http::HdrType::FRONT_END_HTTPS, Http::HdrFieldType::ftStr, HdrKind::None},
-#line 68 "RegisteredHeadersHash.gperf"
-    {"Mime-Version", Http::HdrType::MIME_VERSION, Http::HdrFieldType::ftStr, HdrKind::GeneralHeader},
-#line 44 "RegisteredHeadersHash.gperf"
+    {"X-Accelerator-Vary", Http::HdrType::HDR_X_ACCELERATOR_VARY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
+#line 45 "RegisteredHeadersHash.gperf"
     {"Content-MD5", Http::HdrType::CONTENT_MD5, Http::HdrFieldType::ftStr, HdrKind::EntityHeader},
-#line 37 "RegisteredHeadersHash.gperf"
-    {"Connection", Http::HdrType::CONNECTION, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader},
-#line 53 "RegisteredHeadersHash.gperf"
-    {"Forwarded", Http::HdrType::FORWARDED, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader},
-#line 111 "RegisteredHeadersHash.gperf"
-    {"FTP-Reason", Http::HdrType::FTP_REASON, Http::HdrFieldType::ftStr, HdrKind::None},
-#line 48 "RegisteredHeadersHash.gperf"
-    {"Cookie2", Http::HdrType::COOKIE2, Http::HdrFieldType::ftStr, HdrKind::None},
-#line 28 "RegisteredHeadersHash.gperf"
-    {"Accept-Encoding", Http::HdrType::ACCEPT_ENCODING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader|HdrKind::ReplyHeader},
 #line 34 "RegisteredHeadersHash.gperf"
     {"Authentication-Info", Http::HdrType::AUTHENTICATION_INFO, Http::HdrFieldType::ftStr, HdrKind::ListHeader},
-#line 88 "RegisteredHeadersHash.gperf"
+#line 107 "RegisteredHeadersHash.gperf"
+    {"Front-End-Https", Http::HdrType::FRONT_END_HTTPS, Http::HdrFieldType::ftStr, HdrKind::None},
+#line 85 "RegisteredHeadersHash.gperf"
+    {"Set-Cookie2", Http::HdrType::SET_COOKIE2, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
+#line 68 "RegisteredHeadersHash.gperf"
+    {"Max-Forwards", Http::HdrType::MAX_FORWARDS, Http::HdrFieldType::ftInt64, HdrKind::RequestHeader},
+#line 114 "RegisteredHeadersHash.gperf"
+    {"*INVALID*:", Http::HdrType::BAD_HDR, Http::HdrFieldType::ftInvalid, HdrKind::None},
+#line 74 "RegisteredHeadersHash.gperf"
+    {"Proxy-Authentication-Info", Http::HdrType::PROXY_AUTHENTICATION_INFO, Http::HdrFieldType::ftStr, HdrKind::ListHeader},
+#line 69 "RegisteredHeadersHash.gperf"
+    {"Mime-Version", Http::HdrType::MIME_VERSION, Http::HdrFieldType::ftStr, HdrKind::GeneralHeader},
+    {""},
+#line 41 "RegisteredHeadersHash.gperf"
+    {"Content-Encoding", Http::HdrType::CONTENT_ENCODING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::EntityHeader},
+#line 57 "RegisteredHeadersHash.gperf"
+    {"HTTP2-Settings", Http::HdrType::HTTP2_SETTINGS, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader},
+    {""},
+#line 64 "RegisteredHeadersHash.gperf"
+    {"Key", Http::HdrType::KEY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
+#line 89 "RegisteredHeadersHash.gperf"
     {"Transfer-Encoding", Http::HdrType::TRANSFER_ENCODING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader},
     {""},
-#line 108 "RegisteredHeadersHash.gperf"
-    {"FTP-Arguments", Http::HdrType::FTP_ARGUMENTS, Http::HdrFieldType::ftStr, HdrKind::None},
-#line 40 "RegisteredHeadersHash.gperf"
-    {"Content-Encoding", Http::HdrType::CONTENT_ENCODING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::EntityHeader},
-#line 73 "RegisteredHeadersHash.gperf"
-    {"Proxy-Authentication-Info", Http::HdrType::PROXY_AUTHENTICATION_INFO, Http::HdrFieldType::ftStr, HdrKind::ListHeader},
-    {""}, {""}, {""}, {""}, {""}, {""},
-#line 90 "RegisteredHeadersHash.gperf"
-    {"Unless-Modified-Since", Http::HdrType::UNLESS_MODIFIED_SINCE, Http::HdrFieldType::ftStr, HdrKind::None},
-    {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 95 "RegisteredHeadersHash.gperf"
+#line 96 "RegisteredHeadersHash.gperf"
     {"Warning", Http::HdrType::WARNING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader},
-#line 59 "RegisteredHeadersHash.gperf"
+#line 63 "RegisteredHeadersHash.gperf"
+    {"Keep-Alive", Http::HdrType::KEEP_ALIVE, Http::HdrFieldType::ftStr, HdrKind::HopByHopHeader},
+    {""}, {""}, {""}, {""},
+#line 112 "RegisteredHeadersHash.gperf"
+    {"FTP-Reason", Http::HdrType::FTP_REASON, Http::HdrFieldType::ftStr, HdrKind::None},
+    {""},
+#line 109 "RegisteredHeadersHash.gperf"
+    {"FTP-Arguments", Http::HdrType::FTP_ARGUMENTS, Http::HdrFieldType::ftStr, HdrKind::None},
+    {""}, {""},
+#line 60 "RegisteredHeadersHash.gperf"
     {"If-None-Match", Http::HdrType::IF_NONE_MATCH, Http::HdrFieldType::ftStr, HdrKind::ListHeader},
-    {""}, {""}, {""},
-#line 84 "RegisteredHeadersHash.gperf"
-    {"Set-Cookie2", Http::HdrType::SET_COOKIE2, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader}
+#line 91 "RegisteredHeadersHash.gperf"
+    {"Unless-Modified-Since", Http::HdrType::UNLESS_MODIFIED_SINCE, Http::HdrFieldType::ftStr, HdrKind::None},
+    {""},
+#line 111 "RegisteredHeadersHash.gperf"
+    {"FTP-Status", Http::HdrType::FTP_STATUS, Http::HdrFieldType::ftInt, HdrKind::None},
+#line 28 "RegisteredHeadersHash.gperf"
+    {"Accept-Encoding", Http::HdrType::ACCEPT_ENCODING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader|HdrKind::ReplyHeader}
 };
 
 const struct HeaderTableRecord *
-HttpHeaderHashTable::lookup (const char *str, unsigned int len)
+HttpHeaderHashTable::lookup (const char *str, size_t len)
 {
     if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
-        int key = HttpHeaderHash (str, len);
+        unsigned int key = HttpHeaderHash (str, len);
 
-        if (key <= MAX_HASH_VALUE && key >= 0)
+        if (key <= MAX_HASH_VALUE)
             if (len == lengthtable[key])
             {
                 const char *s = HttpHeaderDefinitionsTable[key].name;
@@ -377,5 +383,5 @@ HttpHeaderHashTable::lookup (const char *str, unsigned int len)
     }
     return 0;
 }
-#line 114 "RegisteredHeadersHash.gperf"
+#line 115 "RegisteredHeadersHash.gperf"
 
