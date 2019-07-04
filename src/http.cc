@@ -914,9 +914,10 @@ HttpStateData::upgradeProtocolsSupported(const HttpReply *reply) const
     const char *item;
     int ilen;
     while (strListGetItem(&upgradeProtos, ',', &item, &ilen, &pos)) {
-        const auto it = std::find_if(upgradeProtocolsSentToPeer->cbegin(), upgradeProtocolsSentToPeer->cend(), MatchProtocol(item, ilen));
+        SBuf proto(BaseProtocolName(SBuf(item, ilen)));
+        const auto it = std::find_if(upgradeProtocolsSentToPeer->cbegin(), upgradeProtocolsSentToPeer->cend(), [&proto](const SBuf &checking) { return proto.caseCmp(checking) == 0; });
         if (it == upgradeProtocolsSentToPeer->cend()) { // protocol not listed by client!
-            debugs(11, 2, "Upgrade to " << SBuf(item, ilen) << " is not requested by client or not allowed by squid configuration");
+            debugs(11, 2, "Upgrade to " << proto << " is not requested by client or not allowed by squid configuration");
             return false;
         }
     }
@@ -2135,7 +2136,7 @@ HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
                 strListAdd(&upgradeOut, proto.c_str(), ',');
                 if (!upgradeProtocolsSentToPeer)
                     upgradeProtocolsSentToPeer = new ProtocolNamesList;
-                upgradeProtocolsSentToPeer->push_back(proto);
+                upgradeProtocolsSentToPeer->push_back(BaseProtocolName(proto));
             }
         }
     }
@@ -2685,6 +2686,15 @@ HttpStateData::ReuseDecision::make(const HttpStateData::ReuseDecision::Answers a
     answer = ans;
     reason = why;
     return answer;
+}
+
+SBuf HttpStateData::BaseProtocolName(const SBuf &proto)
+{
+    const size_t sep = proto.find('/');
+    if (sep == SBuf::npos)
+        return proto;
+    else
+        return proto.substr(0, sep);
 }
 
 std::ostream &operator <<(std::ostream &os, const HttpStateData::ReuseDecision &d)

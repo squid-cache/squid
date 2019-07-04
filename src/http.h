@@ -51,6 +51,9 @@ public:
                                        HttpHeader * hdr_out,
                                        const Http::StateFlags &flags);
 
+    /// Return the base protocol name for the versioned proto
+    static SBuf BaseProtocolName(const SBuf &proto);
+
     virtual const Comm::ConnectionPointer & dataConnection() const;
     /* should be private */
     bool sendRequest();
