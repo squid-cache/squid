@@ -167,6 +167,20 @@ urlParseProtocol(const char *b)
     return AnyP::PROTO_NONE;
 }
 
+bool
+urlAppendDomain(char *host)
+{
+    if (Config.appendDomain && !strchr(host, '.') && !strchr(host, ':')) {
+        const auto dlen = strlen(host);
+        if (dlen > (SQUIDHOSTNAMELEN - Config.appendDomainLen - 1)) {
+            debugs(23, 2, "URL domain too large (" << dlen << " bytes)");
+            return false;
+        }
+        strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN - dlen - 1);
+    }
+    return true;
+}
+
 /*
  * Parse a URI/URL.
  *
@@ -377,14 +391,8 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const char *url)
     }
 
     /* For IPV6 addresses also check for a colon */
-    if (Config.appendDomain && strchr(foundHost, '.') == 0 && strchr(foundHost, ':') == 0) {
-        const auto dlen = strlen(foundHost);
-        if (dlen > (SQUIDHOSTNAMELEN - Config.appendDomainLen - 1)) {
-            debugs(23, DBG_IMPORTANT, MYNAME << ": URL domain too large (" << dlen << " bytes)");
-            return false;
-        }
-        strncat(foundHost, Config.appendDomain, SQUIDHOSTNAMELEN - dlen - 1);
-    }
+    if (!urlAppendDomain(foundHost))
+        return false;
 
     /* remove trailing dots from hostnames */
     while ((l = strlen(foundHost)) > 0 && foundHost[--l] == '.')

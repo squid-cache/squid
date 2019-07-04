@@ -193,6 +193,7 @@ bool urlIsRelative(const char *);
 char *urlMakeAbsolute(const HttpRequest *, const char *);
 char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);
 char *urlInternal(const char *dir, const char *name);
+bool urlAppendDomain(char *host); ///< apply append_domain config to the given hostname
 
 enum MatchDomainNameFlags {
     mdnNone = 0,

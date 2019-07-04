@@ -99,18 +99,9 @@ internalRemoteUri(bool encrypt, const char *host, unsigned short port, const cha
 
     /*
      * append the domain in order to mirror the requests with appended
-     * domains
+     * domains. If that fails, just use the hostname anyway.
      */
-
-    /* For IPv6 addresses also check for a colon */
-    if (Config.appendDomain && strchr(lc_host, '.') == 0 && strchr(lc_host, ':') == 0) {
-        const auto dlen = strlen(lc_host);
-        if (dlen > (SQUIDHOSTNAMELEN - Config.appendDomainLen - 1)) {
-            debugs(23, DBG_IMPORTANT, MYNAME << ": URL domain too large (" << dlen << " bytes)");
-        } else {
-            strncat(lc_host, Config.appendDomain, SQUIDHOSTNAMELEN - dlen - 1);
-        }
-    }
+    (void)urlAppendDomain(lc_host);
 
     /* build URI */
     AnyP::Uri tmp(AnyP::PROTO_HTTP);
