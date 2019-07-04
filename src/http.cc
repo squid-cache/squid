@@ -846,8 +846,9 @@ HttpStateData::handle1xx(HttpReply *reply)
 }
 
 /// A protocol-comparing predicate for STL search algorithms.
-/// Helps to match a protocol versioned name to a name without
-/// version (for example, 'websocket/1.2' should match to 'websocket' ).
+/// Helps to match a versioned reference protocol name to a
+/// name without version (for example the reference 'websocket/1.2'
+/// should match to 'websocket').
 class MatchProtocol
 {
 public:
@@ -863,10 +864,10 @@ public:
             const bool checkingIsVersioned = (checking.find('/') != SBuf::npos);
             if (!checkingIsVersioned) {
                 assert(referenceBaseLen != UndefLen);
-                return checking.caseCmp(reference, referenceBaseLen) == 0;
+                return checking.length() == referenceBaseLen && checking.caseCmp(reference, referenceBaseLen) == 0;
             }
         }
-        return checking.caseCmp(reference, referenceLen) == 0;
+        return checking.length() == referenceLen && checking.caseCmp(reference, referenceLen) == 0;
     }
 
     /// Operator to search in std::maps or similar
