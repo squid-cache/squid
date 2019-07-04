@@ -2113,6 +2113,9 @@ HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
     if (!hdr_in.has(Http::HdrType::UPGRADE))
         return;
 
+    if (!Config.http_upgrade_protocols)
+        return;
+
     const String upgradeIn = hdr_in.getList(Http::HdrType::UPGRADE);
     String upgradeOut;
     const char *pos = nullptr;
