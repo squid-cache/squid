@@ -19,6 +19,7 @@
 
 class FwdState;
 class HttpHeader;
+class String;
 
 class HttpStateData : public Client
 {
@@ -51,9 +52,6 @@ public:
                                        HttpHeader * hdr_out,
                                        const Http::StateFlags &flags);
 
-    /// Return the base protocol name for the versioned proto
-    static SBuf BaseProtocolName(const SBuf &proto);
-
     virtual const Comm::ConnectionPointer & dataConnection() const;
     /* should be private */
     bool sendRequest();
@@ -74,9 +72,8 @@ public:
     bool ignoreCacheControl;
     bool surrogateNoStore;
 
-    typedef std::vector<SBuf> ProtocolNamesList; ///< protocol names list
-    /// Upgrade protocols, if any, sent to the origin server or cache peer.
-    ProtocolNamesList *upgradeProtocolsSentToPeer = nullptr;
+    /// Upgrade header value sent to the origin server or cache peer.
+    String *upgradeHeaderOut = nullptr;
 
     void processSurrogateControl(HttpReply *);
 

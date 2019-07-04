@@ -13,10 +13,17 @@
 
 #include "sbuf/forward.h"
 
+#include <functional>
+
 class String;
 
 void strListAdd(String * str, const char *item, char del);
 int strListIsMember(const String * str, const SBuf &item, char del);
+
+typedef std::function<bool (const char *item, int ilen)> MemberFilter;
+/// \return true if a member which matches the filter found
+bool strListIsMember_if(const String * str, char del, MemberFilter filter);
+
 int strListIsSubstr(const String * list, const char *s, char del);
 int strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos);
 /// Searches for the first matching key=value pair

@@ -138,7 +138,7 @@ HttpStateData::~HttpStateData()
 
     cbdataReferenceDone(_peer);
 
-    delete upgradeProtocolsSentToPeer;
+    delete upgradeHeaderOut;
 
     debugs(11,5, HERE << "HttpStateData " << this << " destroyed; " << serverConnection);
 }
@@ -905,7 +905,7 @@ HttpStateData::upgradeProtocolsSupported(const HttpReply *reply) const
 {
     const String upgradeProtos = reply->header.getList(Http::HdrType::UPGRADE);
 
-    if (!upgradeProtocolsSentToPeer) {
+    if (!upgradeHeaderOut) {
         debugs(11, 2, "Upgrade to '" << upgradeProtos << "' is not requested");
         return false;
     }
@@ -914,10 +914,16 @@ HttpStateData::upgradeProtocolsSupported(const HttpReply *reply) const
     const char *item;
     int ilen;
     while (strListGetItem(&upgradeProtos, ',', &item, &ilen, &pos)) {
-        SBuf proto(BaseProtocolName(SBuf(item, ilen)));
-        const auto it = std::find_if(upgradeProtocolsSentToPeer->cbegin(), upgradeProtocolsSentToPeer->cend(), [&proto](const SBuf &checking) { return proto.caseCmp(checking) == 0; });
-        if (it == upgradeProtocolsSentToPeer->cend()) { // protocol not listed by client!
-            debugs(11, 2, "Upgrade to " << proto << " is not requested by client or not allowed by squid configuration");
+        const auto *e = std::find(item, item + ilen, '/');
+        ilen = e - item; //Fix ilen to not include protocol version
+        bool found = strListIsMember_if(upgradeHeaderOut, ',',
+                                        [item, ilen](const char *check, int checkLen) {
+                                            const auto *chkE = std::find(check, check + checkLen, '/');
+                                            checkLen = chkE - check; // base protocol name length
+                                            return (ilen == checkLen && strncasecmp(item, check, checkLen) == 0);
+                                        });
+        if (!found) {
+            debugs(11, 2, "Upgrade to " << SBuf(item, ilen)<< " is not requested by client or not allowed by squid configuration");
             return false;
         }
     }
@@ -2137,9 +2143,6 @@ HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
             if (ch.fastCheck().allowed()) {
                 SBuf proto(item, ilen);
                 strListAdd(&upgradeOut, proto.c_str(), ',');
-                if (!upgradeProtocolsSentToPeer)
-                    upgradeProtocolsSentToPeer = new ProtocolNamesList;
-                upgradeProtocolsSentToPeer->push_back(BaseProtocolName(proto));
             }
         }
     }
@@ -2386,6 +2389,9 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
             request->flags.authSent = true;
         else if (hdr.has(Http::HdrType::AUTHORIZATION))
             request->flags.authSent = true;
+
+        if (hdr.has(Http::HdrType::UPGRADE))
+            upgradeHeaderOut = new String(hdr.getList(Http::HdrType::UPGRADE));
 
         hdr.packInto(mb);
         hdr.clean();
@@ -2689,15 +2695,6 @@ HttpStateData::ReuseDecision::make(const HttpStateData::ReuseDecision::Answers a
     answer = ans;
     reason = why;
     return answer;
-}
-
-SBuf HttpStateData::BaseProtocolName(const SBuf &proto)
-{
-    const size_t sep = proto.find('/');
-    if (sep == SBuf::npos)
-        return proto;
-    else
-        return proto.substr(0, sep);
 }
 
 std::ostream &operator <<(std::ostream &os, const HttpStateData::ReuseDecision &d)
