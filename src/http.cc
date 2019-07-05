@@ -2130,10 +2130,10 @@ HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
     while (strListGetItem(&upgradeIn, ',', &item, &ilen, &pos)) {
         auto it = std::find_if(Config.http_upgrade_protocols->begin(), Config.http_upgrade_protocols->end(), MatchProtocol(item, ilen));
 
-        // If protocol not found try the "ANY" protocol
+        // If protocol not found try the "OTHER" protocol
         if (it == Config.http_upgrade_protocols->end()) {
-            static const SBuf any("ANY");
-            it = Config.http_upgrade_protocols->find(any);
+            static const SBuf other("OTHER");
+            it = Config.http_upgrade_protocols->find(other);
         }
 
         if (it != Config.http_upgrade_protocols->end() && it->second != nullptr) {
