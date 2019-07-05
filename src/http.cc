@@ -852,18 +852,16 @@ HttpStateData::handle1xx(HttpReply *reply)
 class MatchProtocol
 {
 public:
-    explicit MatchProtocol(const char *s, size_t len) :
-        reference(s),
-        referenceLen(len),
-        referenceBaseLen(UndefLen)
-        {}
+    explicit MatchProtocol(const char *s, size_t len) : reference(s), referenceLen(len) {
+        const char *end = std::find(reference, reference + referenceLen, '/');
+        referenceBaseLen = end - reference;
+    }
 
     /// Operator to search in lists or vectors
     bool operator() (const SBuf &checking) {
         if (referenceIsVersioned()) {
             const bool checkingIsVersioned = (checking.find('/') != SBuf::npos);
             if (!checkingIsVersioned) {
-                assert(referenceBaseLen != UndefLen);
                 return checking.length() == referenceBaseLen && checking.caseCmp(reference, referenceBaseLen) == 0;
             }
         }
@@ -878,14 +876,7 @@ public:
 
 private:
     /// \return true if the reference protocol includes version info
-    /// Also computes the referenceBaseLen member,
-    bool referenceIsVersioned() {
-        if (referenceBaseLen == UndefLen) {
-            const char *end = std::find(reference, reference + referenceLen, '/');
-            referenceBaseLen = end - reference;
-        }
-        return (referenceBaseLen != referenceLen);
-    }
+    bool referenceIsVersioned() { return (referenceBaseLen != referenceLen); }
 
     const char *reference; ///< The reference protocol
 
@@ -895,9 +886,6 @@ private:
 
     /// The length of reference protocol string without version part
     size_t referenceBaseLen;
-
-    /// Undefined length of a "const char *" string
-    static const size_t UndefLen = static_cast<size_t>(-1);
 };
 
 bool
