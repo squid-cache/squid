@@ -9,7 +9,7 @@ Changes to squid-4.7 (06 May 2019):
 	- Add support for buffer-size= to UDP logging
 	- TLS: When using OpenSSL, trust intermediate CAs from trusted store
 
-Changes to squid-4.6 (08 Feb 2019):
+Changes to squid-4.6 (19 Feb 2019):
 
 	- Bug 4915: Detect IPv6 loopback binding errors
 	- Bug 4914: Do not call setsid() in --foreground mode
