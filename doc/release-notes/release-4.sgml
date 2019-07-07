@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.7 release notes</title>
+<title>Squid 4.8 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.7 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.8 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -298,6 +298,7 @@ This section gives a thorough account of those changes in three categories:
 	<p>New <em>--consensus</em>, <em>--client-requested</em> and
 	   <em>--server-provided</em> flags for the <em>ssl::server_name</em>
 	   type to control which server name to match against.
+	<p>Added <em>::/128</em> IPv6 range to <em>to_localhost</em> ACL.
 
 	<tag>auth_param</tag>
 	<p>New parameter <em>queue-size=</em> to set the maximum number
@@ -313,6 +314,7 @@ This section gives a thorough account of those changes in three categories:
 	<p>New option <em>tls-min-version=1.N</em> to set minimum TLS version allowed.
 	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>
 	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
+	<p>New <em>tls-options=</em> option value to disable TLS/1.3.
 	<p>All <em>ssloptions=</em> values for SSLv2 configuration or disabling
 	   have been removed.
 	<p>Removed <em>sslversion=</em> option. Use <em>tls-options=</em> instead.
@@ -346,6 +348,7 @@ This section gives a thorough account of those changes in three categories:
 	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>,
 	   the default is also changed to OFF.
 	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
+	<p>New <em>tls-options=</em> option value to disable TLS/1.3.
 	<p>All <em>option=</em> values for SSLv2 configuration or disabling
 	   have been removed.
 	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.
@@ -358,6 +361,7 @@ This section gives a thorough account of those changes in three categories:
 	<p>New option <em>tls-default-ca</em> replaces <em>sslflags=NO_DEFAULT_CA</em>,
 	   the default is also changed to OFF.
 	<p>New option <em>tls-no-npn</em> to disable sending TLS NPN extension.
+	<p>New <em>tls-options=</em> option value to disable TLS/1.3.
 	<p>All <em>options=</em> values for SSLv2
 	   configuration or disabling have been removed.
 	<p>Removed <em>version=</em> option. Use <em>tls-options=</em> instead.
@@ -376,6 +380,7 @@ This section gives a thorough account of those changes in three categories:
 	<p>New <em>tls-min-version=1.N</em> option to set minimum TLS version allowed
 	   on server connections.
 	<p>New <em>tls-options=</em> option to set OpenSSL library parameters.
+	<p>New <em>tls-options=</em> option value to disable TLS/1.3.
 	<p>New <em>tls-flags=</em> option to set flags modifying Squid TLS operations.
 	<p>New <em>tls-cipher=</em> option to set a list of ciphers permitted.
 	<p>New <em>tls-cafile=</em> option to set a file with additional CA
