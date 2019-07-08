@@ -3058,11 +3058,10 @@ ConnStateData::splice()
 {
     // normally we can splice here, because we just got client hello message
 
-    if (fd_table[clientConnection->fd].ssl.get()) {
-        // Restore default read methods
-        fd_table[clientConnection->fd].read_method = &default_read_method;
-        fd_table[clientConnection->fd].write_method = &default_write_method;
-    }
+    // fde::ssl/tls_read_method() probably reads from our own inBuf. If so, then
+    // we should not lose any raw bytes when switching to raw I/O here.
+    if (fd_table[clientConnection->fd].ssl.get())
+        fd_table[clientConnection->fd].useDefaultIo();
 
     // XXX: assuming that there was an HTTP/1.1 CONNECT to begin with...
     // reset the current protocol to HTTP/1.1 (was "HTTPS" for the bumping process)

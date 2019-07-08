@@ -1174,8 +1174,8 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 
     TunnelStateData *tunnelState = new TunnelStateData(context->http);
 
-    fd_table[clientConn->fd].read_method = &default_read_method;
-    fd_table[clientConn->fd].write_method = &default_write_method;
+    // tunnelStartShoveling() drains any buffered from-client data (inBuf)
+    fd_table[clientConn->fd].useDefaultIo();
 
     request->hier.resetPeerNotes(srvConn, tunnelState->getHost());
 
@@ -1199,8 +1199,9 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(srvConn, Config.Timeout.read, timeoutCall);
-    fd_table[srvConn->fd].read_method = &default_read_method;
-    fd_table[srvConn->fd].write_method = &default_write_method;
+
+    // we drain any already buffered from-server data below (rBufData)
+    fd_table[srvConn->fd].useDefaultIo();
 
     auto ssl = fd_table[srvConn->fd].ssl.get();
     assert(ssl);
