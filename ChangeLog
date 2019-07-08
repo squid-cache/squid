@@ -1,3 +1,22 @@
+Changes to squid-4.8 (09 Jul 2019):
+
+	- Bug 4957: Multiple XSS issues in cachemgr.cgi
+	- Bug 4953: to_localhost does not include ::
+	- Bug 4937: cachemgr.cgi: unallocated memory access
+	- Bug 4936: terminating c-strings beyond BASE64_DECODE_LENGTH
+	- Bug 4889: Ignore ECONNABORTED in accept(2)
+	- Bug 4842: Memory leak when http_reply_access uses external_acl
+	- TLS: Fix tls-min-version= being ignored
+	- TLS: Add the NO_TLSv1_3 option to available tls-options values
+	- HTTP: RFC 7230 forbids generation of userinfo subcomponent of https URL
+	- HTTP: Remove userinfo support from old protocols
+	- HTTP: Fix Digest auth parameter parsing
+	- HTTP: Send Connection:close with the known-last request on a connection
+	- HTTP: Fix handling of tiny invalid responses
+	- Replace uudecode with libnettle base64 decoder
+	- Update HttpHeader::getAuth to SBuf
+	- ... and some compile issues
+
 Changes to squid-4.7 (06 May 2019):
 
 	- Bug 4942: --with-filedescriptors does not do anything
@@ -9,7 +28,7 @@ Changes to squid-4.7 (06 May 2019):
 	- Add support for buffer-size= to UDP logging
 	- TLS: When using OpenSSL, trust intermediate CAs from trusted store
 
-Changes to squid-4.6 (08 Feb 2019):
+Changes to squid-4.6 (19 Feb 2019):
 
 	- Bug 4915: Detect IPv6 loopback binding errors
 	- Bug 4914: Do not call setsid() in --foreground mode
