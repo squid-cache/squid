@@ -167,12 +167,22 @@ urlParseProtocol(const char *b)
     return AnyP::PROTO_NONE;
 }
 
+/**
+ * Appends configured append_domain to hostname, assuming
+ * the given buffer is at least SQUIDHOSTNAMELEN bytes long,
+ * and that the host FQDN is not a 'dotless' TLD.
+ *
+ * \returns false if and only if there is not enough space to append
+ */
 bool
 urlAppendDomain(char *host)
 {
+    /* For IPv4 addresses check for a dot */
+    /* For IPv6 addresses also check for a colon */
     if (Config.appendDomain && !strchr(host, '.') && !strchr(host, ':')) {
-        const auto dlen = strlen(host);
-        if (dlen > (SQUIDHOSTNAMELEN - Config.appendDomainLen - 1)) {
+        const int64_t dlen = strlen(host);
+        const int64_t want = dlen + Config.appendDomainLen;
+        if (want > SQUIDHOSTNAMELEN - 1) {
             debugs(23, 2, "URL domain too large (" << dlen << " bytes)");
             return false;
         }
@@ -390,7 +400,6 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const char *url)
         return false;
     }
 
-    /* For IPV6 addresses also check for a colon */
     if (!urlAppendDomain(foundHost))
         return false;
 
