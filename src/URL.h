@@ -115,6 +115,7 @@ enum MatchDomainNameFlags {
 int matchDomainName(const char *host, const char *domain, uint flags = mdnNone);
 int urlCheckRequest(const HttpRequest *);
 int urlDefaultPort(AnyP::ProtocolType p);
+bool urlAppendDomain(char *host);
 char *urlHostname(const char *url);
 void urlExtMethodConfigure(void);
 
