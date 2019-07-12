@@ -84,7 +84,7 @@ public:
 
     void trimCache();
 
-    bool maybeCacheable(const allow_t &) const;
+    bool maybeCacheable(const Acl::Answer &) const;
 
     int ttl;
 
@@ -465,7 +465,7 @@ external_acl::trimCache()
 }
 
 bool
-external_acl::maybeCacheable(const allow_t &result) const
+external_acl::maybeCacheable(const Acl::Answer &result) const
 {
     if (cache_size <= 0)
         return false; // cache is disabled
@@ -594,7 +594,7 @@ copyResultsFromEntry(HttpRequest *req, const ExternalACLEntryPointer &entry)
     }
 }
 
-static allow_t
+static Acl::Answer
 aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 {
     debugs(82, 9, HERE << "acl=\"" << acl->def->name << "\"");
@@ -631,7 +631,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
         if (acl->def->require_auth) {
             /* Make sure the user is authenticated */
             debugs(82, 3, HERE << acl->def->name << " check user authenticated.");
-            const allow_t ti = AuthenticateAcl(ch);
+            const auto ti = AuthenticateAcl(ch);
             if (!ti.allowed()) {
                 debugs(82, 2, HERE << acl->def->name << " user not authenticated (" << ti << ")");
                 return ti;
@@ -705,7 +705,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 int
 ACLExternal::match(ACLChecklist *checklist)
 {
-    allow_t answer = aclMatchExternal(data, Filled(checklist));
+    auto answer = aclMatchExternal(data, Filled(checklist));
 
     // convert to tri-state ACL match 1,0,-1
     switch (answer) {

@@ -24,7 +24,7 @@
  * \retval ACCESS_DENIED        user not authorized
  * \retval ACCESS_ALLOWED       user authenticated and authorized
  */
-allow_t
+Acl::Answer
 AuthenticateAcl(ACLChecklist *ch)
 {
     ACLFilledChecklist *checklist = Filled(ch);

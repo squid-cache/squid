@@ -16,7 +16,7 @@
 class HttpRequest;
 
 /// ACL checklist callback
-typedef void ACLCB(allow_t, void *);
+typedef void ACLCB(Acl::Answer, void *);
 
 /** \ingroup ACLAPI
     Base class for maintaining Squid and transaction state for access checks.
@@ -109,7 +109,7 @@ public:
      *
      * If there are no rules to check at all, the result becomes ACCESS_DUNNO.
      */
-    allow_t const & fastCheck();
+    Acl::Answer const & fastCheck();
 
     /**
      * Perform a blocking (immediate) check whether a list of ACLs matches.
@@ -132,7 +132,7 @@ public:
      *
      * If there are no ACLs to check at all, the result becomes ACCESS_ALLOWED.
      */
-    allow_t const & fastCheck(const Acl::Tree *list);
+    Acl::Answer const & fastCheck(const Acl::Tree *list);
 
     /// If slow lookups are allowed, switches into "async in progress" state.
     /// Otherwise, returns false; the caller is expected to handle the failure.
@@ -151,14 +151,14 @@ public:
     bool asyncInProgress() const { return asyncStage_ != asyncNone; }
     /// called when no more ACLs should be checked; sets the final answer and
     /// prints a debugging message explaining the reason for that answer
-    void markFinished(const allow_t &newAnswer, const char *reason);
+    void markFinished(const Acl::Answer &newAnswer, const char *reason);
 
-    const allow_t &currentAnswer() const { return allow_; }
+    const Acl::Answer &currentAnswer() const { return answer_; }
 
     /// whether the action is banned or not
-    bool bannedAction(const allow_t &action) const;
+    bool bannedAction(const Acl::Answer &action) const;
     /// add action to the list of banned actions
-    void banAction(const allow_t &action);
+    void banAction(const Acl::Answer &action);
 
     // XXX: ACLs that need request or reply have to use ACLFilledChecklist and
     // should do their own checks so that we do not have to povide these two
@@ -184,7 +184,7 @@ public:
 
 private:
     /// Calls non-blocking check callback with the answer and destroys self.
-    void checkCallback(allow_t answer);
+    void checkCallback(Acl::Answer answer);
 
     void matchAndFinish();
 
@@ -228,7 +228,7 @@ private: /* internal methods */
     bool asyncCaller_; ///< whether the caller supports async/slow ACLs
     bool occupied_; ///< whether a check (fast or non-blocking) is in progress
     bool finished_;
-    allow_t allow_;
+    Acl::Answer answer_;
 
     enum AsyncStage { asyncNone, asyncStarting, asyncRunning, asyncFailed };
     AsyncStage asyncStage_;
@@ -242,7 +242,7 @@ private: /* internal methods */
     /// suspended (due to an async lookup) matches() in the ACL tree
     std::stack<Breadcrumb> matchPath;
     /// the list of actions which must ignored during acl checks
-    std::vector<allow_t> bannedActions_;
+    std::vector<Acl::Answer> bannedActions_;
 };
 
 #endif /* SQUID_ACLCHECKLIST_H */
