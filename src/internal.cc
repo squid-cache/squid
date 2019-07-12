@@ -98,13 +98,9 @@ internalRemoteUri(bool encrypt, const char *host, unsigned short port, const cha
 
     /*
      * append the domain in order to mirror the requests with appended
-     * domains
+     * domains. If that fails, just use the hostname anyway.
      */
-
-    /* For IPv6 addresses also check for a colon */
-    if (Config.appendDomain && !strchr(lc_host, '.') && !strchr(lc_host, ':'))
-        strncat(lc_host, Config.appendDomain, SQUIDHOSTNAMELEN -
-                strlen(lc_host) - 1);
+    (void)urlAppendDomain(lc_host);
 
     /* build URI */
     AnyP::Uri tmp(AnyP::PROTO_HTTP);
