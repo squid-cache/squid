@@ -2081,6 +2081,7 @@ parse_peer(CachePeer ** head)
 
     CachePeer *p = new CachePeer;
     p->host = xstrdup(host_str);
+    Tolower(p->host);
     p->name = xstrdup(host_str);
     p->type = parseNeighborType(token);
 
