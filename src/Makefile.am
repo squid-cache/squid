@@ -773,7 +773,7 @@ squid.conf.default squid.conf.documented: cf_parser.cci
 cf_parser.cci: cf.data cf_gen$(EXEEXT)
 	./cf_gen$(EXEEXT) cf.data $(srcdir)/cf.data.depend
 
-# The cf_gen_defines.cci is auto-generated and does not exist when the 
+# The cf_gen_defines.cci is auto-generated and does not exist when the
 # dependencies computed. We need to add its include files (autoconf.h) here
 cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(top_builddir)/include/autoconf.h
 	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
@@ -851,7 +851,7 @@ CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 	cp $(top_srcdir)/test-suite/test_tools.cc .
 
-# stock tools for unit tests - library independent versions of dlink_list 
+# stock tools for unit tests - library independent versions of dlink_list
 # etc.
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
@@ -958,12 +958,13 @@ tests_testLookupTable_LDADD = \
 tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testRefCount
-## TODO: make this use cppunit tests
 tests_testRefCount_SOURCES = \
-	tests/testRefCount.cc
+	tests/testRefCount.cc \
+	tests/testRefCount.h
 nodist_tests_testRefCount_SOURCES = \
 	base/RefCount.h
 tests_testRefCount_LDADD = \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testRefCount_LDFLAGS = $(LIBADD_DL)
