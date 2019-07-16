@@ -119,14 +119,15 @@ Security::KeyData::loadX509ChainFromFile()
             }
 #endif
             // checks that the chained certs are actually part of a chain for validating cert
-            if (X509_check_issued(ca, latestCert.get()) == X509_V_OK) {
+            int checkCode = X509_check_issued(ca, latestCert.get());
+            if (checkCode == X509_V_OK) {
                 debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << nameStr);
                 // OpenSSL API requires that we order certificates such that the
                 // chain can be appended directly into the on-wire traffic.
                 latestCert = CertPointer(ca);
                 chain.emplace_front(latestCert);
             } else {
-                debugs(83, DBG_PARSE_NOTE(2), "Ignoring non-issuer CA from " << certFile << ": " << nameStr);
+                debugs(83, DBG_PARSE_NOTE(2), "Ignoring non-issuer CA from " << certFile << ": " << nameStr << ". Reason: " << checkCode);
             }
             OPENSSL_free(nameStr);
         }
