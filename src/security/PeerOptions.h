@@ -115,7 +115,7 @@ protected:
 #elif USE_GNUTLS
         debugs(83, 5, "gnutls_certificate_credentials construct, this=" << (void*)ctx);
         return Security::ContextPointer(ctx, [](gnutls_certificate_credentials_t p) {
-            debugs(83, 0, "gnutls_certificate_credentials destruct this=" << (void*)p);
+            debugs(83, 5, "gnutls_certificate_credentials destruct, this=" << (void*)p);
             gnutls_certificate_free_credentials(p);
         });
 #else
