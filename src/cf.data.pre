@@ -4697,12 +4697,17 @@ DOC_START
 	    RESPONSE
 
 		[http::]<Hs	HTTP status code received from the next hop
-		[http::]>Hs	HTTP status code sent to the client
+		[http::]>Hs	HTTP status code of the last sent or to-be-sent reply.
 
-		[http::]<h	Reply header. Optional header name argument
-				as for >h
+		[http::]<h	The header of the last sent reply. If the
+				transaction sent no reply to the client (at the time
+				of logging), then, if available, the last to-be-sent
+				reply header is logged. If that last reply was an interim
+				reply (e.g., HTTP 100 Continue), then the interim reply
+				header is logged.
+				Optional header name argument as for >h.
 
-		[http::]mt	MIME content type
+		[http::]mt	MIME content type of the last sent or to-be-sent reply.
 
 
 	    SIZE COUNTERS
