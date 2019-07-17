@@ -4697,18 +4697,16 @@ DOC_START
 	    RESPONSE
 
 		[http::]<Hs	HTTP status code received from the next hop
-		[http::]>Hs	HTTP status code of the last sent or to-be-sent reply.
+		[http::]>Hs	HTTP status code of the last sent reply.
 
-		[http::]<h	The header of the last sent reply. If the
-				transaction sent no reply to the client (at the time
-				of logging), then, if available, the last to-be-sent
-				reply header is logged. If that last reply was an interim
-				reply (e.g., HTTP 100 Continue), then the interim reply
-				header is logged.
+		[http::]<h	The header of the last sent reply. If that last
+				reply was an interim reply (e.g., HTTP 100 Continue),
+				then the interim reply header is logged.
 				Optional header name argument as for >h.
 
-		[http::]mt	MIME content type of the last sent or to-be-sent reply.
+		[http::]mt	MIME content type of the last sent reply.
 
+		See http://wiki.squid-cache.org/ResponseTerms for details.
 
 	    SIZE COUNTERS
 
