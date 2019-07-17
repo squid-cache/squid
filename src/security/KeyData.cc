@@ -127,7 +127,7 @@ Security::KeyData::loadX509ChainFromFile()
                 latestCert = CertPointer(ca);
                 chain.emplace_front(latestCert);
             } else {
-                debugs(83, DBG_PARSE_NOTE(2), "Ignoring non-issuer CA from " << certFile << ": " << nameStr << ". Reason: " << X509_verify_cert_error_string(checkCode));
+                debugs(83, DBG_PARSE_NOTE(2), certFile << ": Ignoring non-issuer CA " << nameStr << ": " << X509_verify_cert_error_string(checkCode) << " (" << checkCode << ")");
             }
             OPENSSL_free(nameStr);
         }
