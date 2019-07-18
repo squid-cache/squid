@@ -401,7 +401,7 @@ int SMB_Negotiate(SMB_Handle_Type Con_Handle, const char *Prots[])
 
         p = (SMB_Hdr(pkt) + SMB_negrLM_buf_offset + Con_Handle -> Encrypt_Key_Len);
 
-        strncpy(p, Con_Handle -> Svr_PDom, sizeof(Con_Handle -> Svr_PDom) - 1);
+        xstrncpy(p, Con_Handle -> Svr_PDom, sizeof(Con_Handle -> Svr_PDom));
 
         break;
 
@@ -424,7 +424,7 @@ int SMB_Negotiate(SMB_Handle_Type Con_Handle, const char *Prots[])
 
         p = (SMB_Hdr(pkt) + SMB_negrLM_buf_offset + Con_Handle -> Encrypt_Key_Len);
 
-        strncpy(p, Con_Handle -> Svr_PDom, sizeof(Con_Handle -> Svr_PDom) - 1);
+        xstrncpy(p, Con_Handle -> Svr_PDom, sizeof(Con_Handle -> Svr_PDom));
 
         break;
 
@@ -538,8 +538,8 @@ SMB_Tree_Handle SMB_TreeConnect(SMB_Handle_Type Con_Handle,
 
     tree -> next = tree -> prev = NULL;
     tree -> con = Con_Handle;
-    strncpy(tree -> path, path, sizeof(tree -> path));
-    strncpy(tree -> device_type, device, sizeof(tree -> device_type));
+    xstrncpy(tree -> path, path, sizeof(tree -> path));
+    xstrncpy(tree -> device_type, device, sizeof(tree -> device_type));
 
     /* Now plug in the values ... */
 
