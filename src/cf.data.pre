@@ -55,6 +55,24 @@ COMMENT_START
 		MB - Megabyte
 		GB - Gigabyte
 
+  Values with time units
+
+	Time-related directives marked with either "time-units" or
+	"time-units-small" accept a time unit. The supported time units are:
+
+		nanosecond - one billionth (10^-9) of a second (time-units-small only)
+		microsecond - one millionth (10^-6) of a second (time-units-small only)
+		millisecond - one thousandth (10^-3) of a second
+		second
+		minute - 60 seconds
+		hour - 60 minutes
+		day - 24 hours
+		week - 7 days
+		fortnight - 2 weeks
+		month - 30 days
+		year - 31557790080 milliseconds (just over 365 days)
+		decade - 10 years
+
   Values with spaces, quotes, and other special characters
 
 	Squid supports directive parameters with spaces, quotes, and other
