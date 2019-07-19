@@ -466,19 +466,24 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
 }
 
 /**
- * Governerd by RFC 8141 section 2:
+ * Governed by RFC 8141 section 2:
  *
  *  assigned-name = "urn" ":" NID ":" NSS
  *  NID           = (alphanum) 0*30(ldh) (alphanum)
  *  ldh           = alphanum / "-"
  *  NSS           = pchar *(pchar / "/")
  *
+ * RFC 3986 Appendix D.2 defines (as deprecated):
+ *
+ *   alphanum     = ALPHA / DIGIT
+ *
  * Notice that NID is exactly 2-32 characters in length.
  */
 bool
 AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
 {
-    static const auto nidChars = CharacterSet("NID","-") + CharacterSet::ALPHANUM;
+    static const auto nidChars = CharacterSet("NID","-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+    static const auto alphanum = (CharacterSet::ALPHA + CharacterSet::DIGIT).rename("alphanum");
     SBuf nid;
     if (tok.prefix(nid, nidChars, 32) && tok.skip(':')) {
         debugs(23, 3, "Split URI into proto='urn', nid='" << nid << "', path='" << tok.remaining() << "'");
@@ -486,10 +491,10 @@ AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
         if (nid.length() < 2)
             throw TextException("URN has invalid NID length", Here());
 
-        if (!CharacterSet::ALPHANUM[*nid.begin()])
+        if (!alphanum[*nid.begin()])
             throw TextException("URN has invalid NID prefix", Here());
 
-        if (!CharacterSet::ALPHANUM[*nid.end()])
+        if (!alphanum[*nid.end()])
             throw TextException("URN has invalid NID suffix", Here());
 
         setScheme(AnyP::PROTO_URN, nullptr);
