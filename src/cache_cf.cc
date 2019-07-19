@@ -1117,7 +1117,7 @@ parseTimeUnit(const char *unitName, std::chrono::nanoseconds &ns)
 
     if (ns < MinimalUnit(1)) {
         throw TexcHere(ToSBuf("time unit '", unitName, "' is too small to be used in this context, the minimal unit is ",
-                TimeUnitToString<MinimalUnit>()));
+                              TimeUnitToString<MinimalUnit>()));
     }
 
     return true;
@@ -1145,8 +1145,8 @@ FromNanoseconds(const std::chrono::nanoseconds &ns, const double parsedValue)
     const auto result = std::chrono::duration_cast<TimeUnit>(ns);
     if (!result.count()) {
         throw TexcHere(ToSBuf("time value '", parsedValue,
-                    "' is too small to be used in this context, the minimal value is 1 ",
-                    TimeUnitToString<TimeUnit>()));
+                              "' is too small to be used in this context, the minimal value is 1 ",
+                              TimeUnitToString<TimeUnit>()));
     }
     return result;
 }
@@ -1181,8 +1181,8 @@ parseTimeLine()
     if (TimeUnit(1) <= std::chrono::microseconds(1)) {
         if (0 < nanoseconds.count() && nanoseconds.count() < 3) {
             debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), ConfigPosition << "WARNING: " <<
-                    "Squid time measurement precision is likely to be far worse than " <<
-                    "the nanosecond-level precision implied by the configured value: " << parsedValue << ' ' << token);
+                   "Squid time measurement precision is likely to be far worse than " <<
+                   "the nanosecond-level precision implied by the configured value: " << parsedValue << ' ' << token);
         }
     }
 
