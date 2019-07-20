@@ -306,7 +306,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         }
         *dst = '\0';
 
-        foundPort = scheme.defaultPort();
+        foundPort = scheme.defaultPort(); // may be reset later
 
         /* Is there any login information? (we should eventually parse it above) */
         t = strrchr(foundHost, '@');
