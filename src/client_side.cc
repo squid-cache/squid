@@ -387,6 +387,9 @@ ClientHttpRequest::logRequest()
         al->http.code = al->reply->sline.status();
         al->http.content_type = al->reply->content_type.termedBuf();
     } else if (loggingEntry() && loggingEntry()->mem_obj) {
+        // possibly unreachable code, since al->reply is always
+        // initialized before loggingEntry and TODO: if al->reply
+        // is nil, loggingEntry is nil either.`
         al->http.code = loggingEntry()->mem_obj->getReply()->sline.status();
         al->http.content_type = loggingEntry()->mem_obj->getReply()->content_type.termedBuf();
     }
