@@ -851,7 +851,7 @@ CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 	cp $(top_srcdir)/test-suite/test_tools.cc .
 
-# stock tools for unit tests - library independent versions of dlink_list
+# stock tools for unit tests - library independent versions of dlink_list 
 # etc.
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
