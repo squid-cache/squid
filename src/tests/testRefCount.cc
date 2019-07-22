@@ -51,6 +51,7 @@ void
 testRefCount::testCountability()
 {
     {
+        CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
         ToRefCount anObject(new _ToRefCount);
         CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
         CPPUNIT_ASSERT_EQUAL(1, anObject->someMethod());
@@ -67,10 +68,11 @@ testRefCount::testCountability()
 
         {
             ToRefCount aForthObject (anObject);
-            anObject = ToRefCount(NULL);
+            CPPUNIT_ASSERT_EQUAL(2, _ToRefCount::Instances);
+            anObject = ToRefCount(nullptr);
             CPPUNIT_ASSERT_EQUAL(2, _ToRefCount::Instances);
             CPPUNIT_ASSERT_EQUAL(1, aForthObject->someMethod());
-            aForthObject = NULL;
+            aForthObject = nullptr;
         }
         CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
     }
@@ -83,6 +85,7 @@ testRefCount::testObjectToRefCounted()
     /* Test creating an object, using it , and then making available as a
      * refcounted one:
      */
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
     _ToRefCount *aPointer = new _ToRefCount;
     CPPUNIT_ASSERT_EQUAL(1, aPointer->someMethod());
     ToRefCount anObject(aPointer);
@@ -102,11 +105,13 @@ testRefCount::testCheckPointers()
 {
     /* Can we check pointers for equality */
     ToRefCount anObject;
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
     ToRefCount anotherObject(new _ToRefCount);
 
     CPPUNIT_ASSERT(anObject != anotherObject);
 
-    anotherObject = NULL;
+    CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
+    anotherObject = nullptr;
 
     CPPUNIT_ASSERT_EQUAL(anObject, anotherObject);
     CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
@@ -116,6 +121,7 @@ void
 testRefCount::testPointerConst()
 {
     /* Can we get the pointer for a const object */
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
     ToRefCount anObject (new _ToRefCount);
     ToRefCount const aConstObject (anObject);
     _ToRefCount const *aPointer = aConstObject.getRaw();
@@ -127,6 +133,7 @@ testRefCount::testPointerConst()
 void testRefCount::testRefCountFromConst()
 {
     /* Can we get a refcounted pointer from a const object */
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
     _ToRefCount const * aPointer = new _ToRefCount;
     ToRefCount anObject (aPointer);
 
@@ -138,9 +145,11 @@ void
 testRefCount::testPointerFromRefCounter()
 {
     /* Can we get a pointer to nonconst from a nonconst refcounter */
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
     ToRefCount anObject (new _ToRefCount);
+    CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
     _ToRefCount *aPointer = anObject.getRaw();
-    CPPUNIT_ASSERT(aPointer != NULL);
+    CPPUNIT_ASSERT(aPointer != nullptr);
     CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
 }
 
