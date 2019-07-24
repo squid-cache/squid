@@ -30,11 +30,9 @@ namespace Http
 ///
 /// The caller receives a call back with Http::TunnelerAnswer.
 ///
-/// The caller must monitor the connection for closure because this job will not
-/// inform the caller about such events.
+/// The job reports success, errors or connection closures to the caller.
 ///
-/// This job never closes the connection, even on errors. If a 3rd-party closes
-/// the connection, this job simply quits without informing the caller.
+/// This job may close the connection on timeout.
 class Tunneler: virtual public AsyncJob
 {
     CBDATA_CLASS(Tunneler);

@@ -42,8 +42,7 @@ namespace Security
  * was not fully established. The error object is suitable for error response
  * generation.
  \par
- * The caller must monitor the connection for closure because this
- * job will not inform the caller about such events.
+ * The job reports to the caller connection closures.
  \par
  * PeerConnector class currently supports a form of TLS negotiation timeout,
  * which is accounted only when sets the read timeout from encrypted peers/servers.
@@ -57,8 +56,7 @@ namespace Security
  * start monitoring earlier and close on timeouts. This change may need to be
  * discussed on squid-dev.
  \par
- * This job never closes the connection, even on errors. If a 3rd-party
- * closes the connection, this job simply quits without informing the caller.
+ * This job may close the connection on timeouts.
  */
 class PeerConnector: virtual public AsyncJob
 {
