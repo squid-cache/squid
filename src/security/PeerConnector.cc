@@ -82,8 +82,7 @@ Security::PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &)
     auto anErr = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al);
     anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
     bail(anErr);
-    if (Comm::IsConnOpen(serverConnection()))
-        serverConnection()->close();
+    serverConnection()->close();
     mustStop("Timedout");
 }
 
