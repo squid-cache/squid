@@ -867,6 +867,12 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 void
 TunnelStateData::notePeerReadyToShovel()
 {
+    // Start monitoring for server-side connection problems
+    comm_add_close_handler(server.conn->fd, tunnelServerClosed, this);
+    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
+                                     CommTimeoutCbPtrFun(tunnelTimeout, this));
+    commSetConnTimeout(server.conn, Config.Timeout.read, timeoutCall);
+
     if (!clientExpectsConnectResponse())
         tunnelStartShoveling(this); // ssl-bumped connection, be quiet
     else {
@@ -938,7 +944,6 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     netdbPingSite(request->url.host());
 
     request->peer_host = conn->getPeer() ? conn->getPeer()->host : nullptr;
-    comm_add_close_handler(conn->fd, tunnelServerClosed, this);
 
     bool toOrigin = false; // same semantics as StateFlags::toOrigin
     if (const auto * const peer = conn->getPeer()) {
@@ -954,10 +959,6 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     else {
         notePeerReadyToShovel();
     }
-
-    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
-                                     CommTimeoutCbPtrFun(tunnelTimeout, this));
-    commSetConnTimeout(conn, Config.Timeout.read, timeoutCall);
 }
 
 void
