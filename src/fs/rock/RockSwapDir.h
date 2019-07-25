@@ -140,7 +140,6 @@ private:
     void createError(const char *const msg);
     void handleWriteCompletionSuccess(const WriteRequest &request);
     void handleWriteCompletionProblem(const int errflag, const WriteRequest &request);
-    bool droppedEarlierRequest(const WriteRequest &request) const;
 
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir
