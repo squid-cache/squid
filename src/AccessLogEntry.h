@@ -177,7 +177,7 @@ public:
     SBuf lastAclData; ///< string for external_acl_type %DATA format code
 
     HierarchyLogEntry hier;
-    HttpReplyPointer reply; ///< virgin 1xx reply or a reply a to-be-sent to client
+    HttpReplyPointer reply; ///< the last sent reply
     HttpRequest *request = nullptr; //< virgin HTTP request
     HttpRequest *adapted_request = nullptr; //< HTTP request after adaptation and redirection
 

@@ -1649,6 +1649,8 @@ clientReplyContext::cloneReply()
     reply = http->storeEntry()->getReply()->clone();
     HTTPMSGLOCK(reply);
 
+    http->al->reply = reply;
+
     if (reply->sline.protocol == AnyP::PROTO_HTTP) {
         /* RFC 2616 requires us to advertise our version (but only on real HTTP traffic) */
         reply->sline.version = Http::ProtocolVersion();
@@ -1656,8 +1658,6 @@ clientReplyContext::cloneReply()
 
     /* do header conversions */
     buildReplyHeader();
-
-    http->al->reply = reply;
 }
 
 /// Safely disposes of an entry pointing to a cache hit that we do not want.

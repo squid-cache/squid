@@ -4696,15 +4696,13 @@ DOC_START
 
 	    RESPONSE
 
-		[http::]<Hs	HTTP status code received from the next hop
+		[http::]<Hs	HTTP status code of the last received virgin final reply
 		[http::]>Hs	HTTP status code of the last sent reply.
 
-		[http::]<h	The header of the last sent reply. If that last
-				reply was an interim reply (e.g., HTTP 100 Continue),
-				then the interim reply header is logged.
+		[http::]<h	The header of the last sent reply.
 				Optional header name argument as for >h.
 
-		[http::]mt	MIME content type of the last sent reply.
+		[http::]mt	MIME type of the last sent reply.
 
 		See http://wiki.squid-cache.org/ResponseTerms for details.
 
