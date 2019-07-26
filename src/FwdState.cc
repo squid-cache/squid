@@ -1003,10 +1003,13 @@ FwdState::connectStart()
     AsyncJob::Start(cs);
 }
 
-Comm::ConnectionPointer
-FwdState::healthyPinnedConnection()
+/// send request on an existing connection dedicated to the requesting client
+void
+FwdState::usePinned()
 {
     const auto connManager = request->pinnedConnection();
+    debugs(17, 7, "connection manager: " << connManager);
+
     // the client connection may close while we get here, nullifying connManager
     const auto temp = connManager ? connManager->borrowPinnedConnection(request) : nullptr;
     debugs(17, 5, "connection: " << temp);
@@ -1017,22 +1020,6 @@ FwdState::healthyPinnedConnection()
         serverConn = nullptr;
         const auto anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request, al);
         fail(anErr);
-        return Comm::ConnectionPointer(nullptr);
-    }
-
-    return temp;
-}
-
-/// send request on an existing connection dedicated to the requesting client
-void
-FwdState::usePinned()
-{
-    // we only handle pinned destinations; others are handled by connectStart()
-    assert(!serverDestinations.empty());
-    assert(!serverDestinations[0]);
-
-    serverConn = healthyPinnedConnection();
-    if (!serverConn) {
         // Connection managers monitor their idle pinned to-server
         // connections and close from-client connections upon seeing
         // a to-server connection closure. Retrying here is futile.
@@ -1040,10 +1027,11 @@ FwdState::usePinned()
         return;
     }
 
-    const auto connManager = request->pinnedConnection();
     if (connManager->pinning.peerAccessDenied) {
         // The peer selection policy denies access to pinned connection.
         // Return an error page to the client.
+        serverConn = nullptr;
+        temp->close();
         fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));
         stopAndDestroy("pinned connection access denied");
         return;
@@ -1052,7 +1040,6 @@ FwdState::usePinned()
     ++n_tries;
     request->flags.pinned = true;
 
-    debugs(17, 7, "connection manager: " << connManager);
     assert(connManager);
     if (connManager->pinnedAuth())
         request->flags.auth = true;

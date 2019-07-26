@@ -127,10 +127,6 @@ private:
 
     void usePinned();
 
-    /// If request use an existing pinned to-peer connection and this
-    /// connection is alive and healthy return the pinned connection.
-    Comm::ConnectionPointer healthyPinnedConnection();
-
     /// whether a pinned to-peer connection can be replaced with another one
     /// (in order to retry or reforward a failed request)
     bool pinnedCanRetry() const;
