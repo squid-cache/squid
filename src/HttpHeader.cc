@@ -469,14 +469,11 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             break;      /* terminating blank line */
         }
 
-        HttpHeaderEntry *e;
-        if ((e = HttpHeaderEntry::parse(field_start, field_end)) == NULL) {
+        auto *e = HttpHeaderEntry::parse(field_start, field_end, owner);
+        if (!e) {
             debugs(55, warnOnError, "WARNING: unparseable HTTP header field {" <<
                    getStringPrefix(field_start, field_end-field_start) << "}");
             debugs(55, warnOnError, " in {" << getStringPrefix(header_start, hdrLen) << "}");
-
-            if (Config.onoff.relaxed_header_parser)
-                continue;
 
             PROF_stop(HttpHeaderParse);
             clean();
@@ -1407,7 +1404,7 @@ HttpHeaderEntry::~HttpHeaderEntry()
 
 /* parses and inits header entry, returns true/false */
 HttpHeaderEntry *
-HttpHeaderEntry::parse(const char *field_start, const char *field_end)
+HttpHeaderEntry::parse(const char *field_start, const char *field_end, http_hdr_owner_type &msgType)
 {
     /* note: name_start == field_start */
     const char *name_end = (const char *)memchr(field_start, ':', field_end - field_start);
@@ -1424,19 +1421,36 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (name_len > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, DBG_IMPORTANT, "WARNING: ignoring header name of " << name_len << " bytes");
+        debugs(55, DBG_IMPORTANT, "WARNING: rejecting due to header name of " << name_len << " bytes");
         return NULL;
     }
 
-    if (Config.onoff.relaxed_header_parser && xisspace(field_start[name_len - 1])) {
+    // check for BSP following header field-name
+    if (xisspace(field_start[name_len - 1])) {
+
+        // RFC 7230 section 3.2.4
+        // - server MUST reject any request message with this whitespace
+        // - a proxy MUST remove this whitespace from HTTP responses
+        //
+        // for now also let relaxed parser remove this BSP from any non-HTTP messages
+        if (msgType == hoRequest)
+            return nullptr;
+
+        const bool stripWhitespace = (msgType == hoReply) ||
+                                     Config.onoff.relaxed_header_parser;
+        if (!stripWhitespace)
+            return nullptr; // reject if we cannot strip
+
         debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
                "NOTICE: Whitespace after header name in '" << getStringPrefix(field_start, field_end-field_start) << "'");
 
         while (name_len > 0 && xisspace(field_start[name_len - 1]))
             --name_len;
 
-        if (!name_len)
+        if (!name_len) {
+            debugs(55, DBG_IMPORTANT, "WARNING: rejecting due to header with name of " << name_len << " bytes");
             return NULL;
+        }
     }
 
     /* now we know we can parse it */
@@ -1469,7 +1483,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, DBG_IMPORTANT, "WARNING: ignoring '" << theName << "' header of " << (field_end - value_start) << " bytes");
+        debugs(55, DBG_IMPORTANT, "WARNING: rejecting due to header of " << (field_end - value_start) << " bytes");
         return NULL;
     }
 
