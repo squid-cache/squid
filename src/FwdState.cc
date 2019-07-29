@@ -1018,20 +1018,13 @@ FwdState::usePinned()
     if (!Comm::IsConnOpen(temp)) {
         syncHierNote(temp, connManager ? connManager->pinning.host : request->url.host());
         serverConn = nullptr;
-        const auto anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request, al);
+        const auto errType = connManager && connManager->pinning.peerAccessDenied ? ERR_CANNOT_FORWARD : ERR_ZERO_SIZE_OBJECT;
+        const auto anErr = new ErrorState(errType, Http::scServiceUnavailable, request, al);
         fail(anErr);
         // Connection managers monitor their idle pinned to-server
         // connections and close from-client connections upon seeing
         // a to-server connection closure. Retrying here is futile.
         stopAndDestroy("pinned connection failure");
-        return;
-    }
-
-    if (connManager->pinning.peerAccessDenied) {
-        serverConn = nullptr;
-        temp->close();
-        fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));
-        stopAndDestroy("pinned connection access denied");
         return;
     }
 

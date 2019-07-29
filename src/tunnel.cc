@@ -1191,9 +1191,6 @@ TunnelStateData::usePinned()
     if (!Comm::IsConnOpen(serverConn))
         fail = "pinned path failure";
 
-    if (request->pinnedConnection()->pinning.peerAccessDenied)
-        fail = "pinned path access denied";
-
     if (fail) {
         syncHierNote(serverConn, connManager ? connManager->pinning.host : request->url.host());
         // a PINNED path failure is fatal; do not wait for more paths

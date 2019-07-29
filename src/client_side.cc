@@ -3917,6 +3917,8 @@ ConnStateData::validatePinnedConnection(HttpRequest *request)
     bool valid = true;
     if (!Comm::IsConnOpen(pinning.serverConnection))
         valid = false;
+    else if (pinning.peerAccessDenied)
+        valid = false;
     else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->url.host()) != 0)
         valid = false;
     else if (request && pinning.port != request->url.port())
