@@ -958,12 +958,13 @@ tests_testLookupTable_LDADD = \
 tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testRefCount
-## TODO: make this use cppunit tests
 tests_testRefCount_SOURCES = \
-	tests/testRefCount.cc
+	tests/testRefCount.cc \
+	tests/testRefCount.h
 nodist_tests_testRefCount_SOURCES = \
 	base/RefCount.h
 tests_testRefCount_LDADD = \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testRefCount_LDFLAGS = $(LIBADD_DL)
