@@ -1010,6 +1010,8 @@ FwdState::usePinned()
     const auto connManager = request->pinnedConnection();
     debugs(17, 7, "connection manager: " << connManager);
 
+    const auto peerDenied = connManager && connManager->pinning.peerAccessDenied;
+
     // the client connection may close while we get here, nullifying connManager
     const auto temp = connManager ? connManager->borrowPinnedConnection(request) : nullptr;
     debugs(17, 5, "connection: " << temp);
@@ -1018,7 +1020,7 @@ FwdState::usePinned()
     if (!Comm::IsConnOpen(temp)) {
         syncHierNote(temp, connManager ? connManager->pinning.host : request->url.host());
         serverConn = nullptr;
-        const auto errType = connManager && connManager->pinning.peerAccessDenied ? ERR_CANNOT_FORWARD : ERR_ZERO_SIZE_OBJECT;
+        const auto errType = peerDenied ? ERR_CANNOT_FORWARD : ERR_ZERO_SIZE_OBJECT;
         const auto anErr = new ErrorState(errType, Http::scServiceUnavailable, request, al);
         fail(anErr);
         // Connection managers monitor their idle pinned to-server
