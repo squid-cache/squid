@@ -568,8 +568,7 @@ PeerSelector::selectPinned()
     const bool usePinned = pear ? peerAllowedToUse(pear, this) : (direct != DIRECT_NO);
     // If the pinned connection is prohibited (for this request) then
     // the initiator must decide whether it is OK to open a new one instead.
-    if (!usePinned)
-        request->pinnedConnection()->pinning.peerAccessDenied = true;
+    request->pinnedConnection()->pinning.peerAccessDenied = !usePinned;
 
     addSelection(pear, PINNED);
     if (entry)
