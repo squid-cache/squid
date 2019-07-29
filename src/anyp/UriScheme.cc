@@ -56,7 +56,7 @@ AnyP::UriScheme::FindProtocolType(const SBuf &scheme)
 
     Init();
 
-    SBuf img = scheme;
+    auto img = scheme;
     img.toLower();
     // TODO: use base/EnumIterator.h if possible
     for (int i = AnyP::PROTO_NONE + 1; i < AnyP::PROTO_UNKNOWN; ++i) {

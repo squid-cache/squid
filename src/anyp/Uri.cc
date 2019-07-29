@@ -148,7 +148,7 @@ uriParseScheme(Parser::Tokenizer &tok)
 
     SBuf str;
     if (tok.prefix(str, schemeChars, 16) && tok.skip(':') && CharacterSet::ALPHA[str.at(0)]) {
-        auto protocol = AnyP::UriScheme::FindProtocolType(str);
+        const auto protocol = AnyP::UriScheme::FindProtocolType(str);
         return AnyP::UriScheme(protocol, str.c_str());
     }
 
@@ -256,7 +256,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             return parseUrn(tok);
 
         // URL then have "//"
-        static SBuf doubleSlash("//");
+        static const SBuf doubleSlash("//");
         if (!tok.skip(doubleSlash))
             return false;
 
