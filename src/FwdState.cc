@@ -1028,8 +1028,6 @@ FwdState::usePinned()
     }
 
     if (connManager->pinning.peerAccessDenied) {
-        // The peer selection policy denies access to pinned connection.
-        // Return an error page to the client.
         serverConn = nullptr;
         temp->close();
         fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));

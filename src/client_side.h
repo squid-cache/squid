@@ -139,7 +139,7 @@ public:
         bool auth;               /* pinned for www authentication */
         bool reading;   ///< we are monitoring for peer connection closure
         bool zeroReply; ///< server closed w/o response (ERR_ZERO_SIZE_OBJECT)
-        bool peerAccessDenied; ///< cache_peer_access acl rules denies the pinned connection use
+        bool peerAccessDenied; ///< cache_peer_access denied pinned connection reuse
         CachePeer *peer;             /* CachePeer the connection goes via */
         AsyncCall::Pointer readHandler; ///< detects serverConnection closure
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
