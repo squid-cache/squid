@@ -513,6 +513,12 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
         return true;
     }
 
+    if (anchor.writerHalted) {
+        debugs(20, 5, "mem-loaded aborted " << e.mem_obj->endOffset() << '/' <<
+           anchor.basics.swap_file_sz << " bytes of " << e);
+        return false;
+    }
+
     debugs(20, 5, "mem-loaded all " << e.mem_obj->endOffset() << '/' <<
            anchor.basics.swap_file_sz << " bytes of " << e);
 
@@ -578,6 +584,20 @@ MemStore::shouldCache(StoreEntry &e) const
 
     if (e.mem_obj && e.mem_obj->memCache.offset > 0) {
         debugs(20, 5, "already written to mem-cache: " << e);
+        return false;
+    }
+
+    // Store::Root() in the next check below is FATALly missing during shutdown
+    if (shutting_down) {
+        debugs(20, 5, "yield to shutdown: " << e);
+        return false;
+    }
+
+    // To avoid SMP workers releasing each other caching attempts, restrict disk
+    // caching to StoreEntry publisher . This check goes before memoryCachable()
+    // that may incorrectly release() publisher's entry via checkCachable().
+    if (Store::Root().transientsReader(e)) {
+        debugs(20, 5, "yield to entry publisher: " << e);
         return false;
     }
 
@@ -873,8 +893,8 @@ MemStore::completeWriting(StoreEntry &e)
     e.mem_obj->memCache.io = MemObject::ioDone;
     map->closeForWriting(index);
 
-    CollapsedForwarding::Broadcast(e); // before we close our transient entry!
-    Store::Root().transientsCompleteWriting(e);
+    CollapsedForwarding::Broadcast(e);
+    e.storeWriterDone();
 }
 
 void
@@ -913,7 +933,8 @@ MemStore::disconnect(StoreEntry &e)
             map->abortWriting(mem_obj.memCache.index);
             mem_obj.memCache.index = -1;
             mem_obj.memCache.io = MemObject::ioDone;
-            Store::Root().stopSharing(e); // broadcasts after the change
+            CollapsedForwarding::Broadcast(e);
+            e.storeWriterDone();
         } else {
             assert(mem_obj.memCache.io == MemObject::ioReading);
             map->closeForReading(mem_obj.memCache.index);
