@@ -127,10 +127,9 @@ urlInitialize(void)
 }
 
 /**
- * Parse the URI scheme details from tokenizer.
+ * Extract the URI scheme and ':' delimiter from the given input buffer.
  *
- * Schemes up to 16 characters are accepted, and a ':' delimiter
- * is expected.
+ * Schemes up to 16 characters are accepted.
  *
  * Governed by RFC 3986 section 3.1
  */
@@ -251,11 +250,10 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         if (scheme == AnyP::PROTO_NONE)
             return false; // invalid scheme
 
-        // URN have a different schema from URL
         if (scheme == AnyP::PROTO_URN)
             return parseUrn(tok);
 
-        // URL then have "//"
+        // URLs then have "//"
         static const SBuf doubleSlash("//");
         if (!tok.skip(doubleSlash))
             return false;
@@ -460,7 +458,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
     return true;
 
     } catch (...) {
-        debugs(23, 2, "URI parse error: " << CurrentException);
+        debugs(23, 2, "error: " << CurrentException << Raw("rawUrl", rawUrl.rawContent(), rawUrl.length()).minLevel(DBG_DATA));
         return false;
     }
 }
