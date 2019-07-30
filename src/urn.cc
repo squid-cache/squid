@@ -136,7 +136,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
     LOCAL_ARRAY(char, local_urlres, 4096);
     snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?" SQUIDSBUFPH, host, SQUIDSBUFPRINT(query));
     safe_free(urlres);
-    urlres_r = HttpRequest::FromUrl(local_urlres, r->masterXaction);
+    urlres_r = HttpRequest::FromUrlXXX(local_urlres, r->masterXaction);
 
     if (!urlres_r) {
         debugs(52, 3, "Bad uri-res URL " << local_urlres);

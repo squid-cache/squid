@@ -532,14 +532,20 @@ HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &theSize) const
  * If the request cannot be created cleanly, NULL is returned
  */
 HttpRequest *
-HttpRequest::FromUrl(const char * url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
+HttpRequest::FromUrl(const SBuf &url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
 {
     std::unique_ptr<HttpRequest> req(new HttpRequest(mx));
-    if (req->url.parse(method, SBuf(url))) {
+    if (req->url.parse(method, url)) {
         req->method = method;
         return req.release();
     }
     return nullptr;
+}
+
+HttpRequest *
+HttpRequest::FromUrlXXX(const char * url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
+{
+    return FromUrl(SBuf(url), mx, method);
 }
 
 /**

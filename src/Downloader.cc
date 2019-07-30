@@ -129,7 +129,7 @@ Downloader::buildRequest()
     const HttpRequestMethod method = Http::METHOD_GET;
 
     const MasterXaction::Pointer mx = new MasterXaction(initiator_);
-    HttpRequest *const request = HttpRequest::FromUrl(url_.c_str(), mx, method);
+    auto * const request = HttpRequest::FromUrl(url_, mx, method);
     if (!request) {
         debugs(33, 5, "Invalid URI: " << url_);
         return false; //earlyError(...)

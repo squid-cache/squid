@@ -47,7 +47,7 @@ testHttpRequest::testCreateFromUrl()
     unsigned short expected_port;
     const char * url = "http://foo:90/bar";
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
-    HttpRequest *aRequest = HttpRequest::FromUrl(url, mx);
+    auto aRequest = HttpRequest::FromUrlXXX(url, mx);
     expected_port = 90;
     CPPUNIT_ASSERT(aRequest != nullptr);
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
@@ -59,7 +59,7 @@ testHttpRequest::testCreateFromUrl()
 
     /* vanilla url */
     url = "http://foo:90/bar";
-    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
+    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_GET);
     expected_port = 90;
     CPPUNIT_ASSERT(aRequest != nullptr);
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
@@ -71,7 +71,7 @@ testHttpRequest::testCreateFromUrl()
 
     /* vanilla url, different method */
     url = "http://foo/bar";
-    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_PUT);
+    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_PUT);
     expected_port = 80;
     CPPUNIT_ASSERT(aRequest != nullptr);
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
@@ -84,12 +84,12 @@ testHttpRequest::testCreateFromUrl()
     /* a connect url with non-CONNECT data */
     HttpRequest *nullRequest = nullptr;
     url = ":foo/bar";
-    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_CONNECT);
+    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_CONNECT);
     CPPUNIT_ASSERT_EQUAL(nullRequest, aRequest);
 
     /* a CONNECT url with CONNECT data */
     url = "foo:45";
-    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_CONNECT);
+    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_CONNECT);
     expected_port = 45;
     CPPUNIT_ASSERT(aRequest != nullptr);
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
@@ -114,7 +114,7 @@ testHttpRequest::testIPv6HostColonBug()
     /* valid IPv6 address without port */
     const char *url = "http://[2000:800::45]/foo";
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
-    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
+    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_GET);
     expected_port = 80;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
@@ -125,7 +125,7 @@ testHttpRequest::testIPv6HostColonBug()
 
     /* valid IPv6 address with port */
     url = "http://[2000:800::45]:90/foo";
-    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
+    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_GET);
     expected_port = 90;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
@@ -136,7 +136,7 @@ testHttpRequest::testIPv6HostColonBug()
 
     /* IPv6 address as invalid (bug trigger) */
     url = "http://2000:800::45/foo";
-    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
+    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_GET);
     expected_port = 80;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);

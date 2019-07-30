@@ -347,7 +347,8 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     http->uri = (char *)xcalloc(url_sz, 1);
     strcpy(http->uri, url); // XXX: polluting http->uri before parser validation
 
-    if ((request = HttpRequest::FromUrl(http->uri, mx, method)) == NULL) {
+    request = HttpRequest::FromUrlXXX(http->uri, mx, method);
+    if (!request) {
         debugs(85, 5, "Invalid URL: " << http->uri);
         return -1;
     }
