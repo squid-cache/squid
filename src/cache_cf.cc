@@ -155,7 +155,7 @@ static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
 
-/// used below in time parsing routines
+// std::chrono::years requires C++20. Do our own rough calculation for now.
 static const double HoursPerYear = 24*365.2522;
 
 static void parse_access_log(CustomLog ** customlog_definitions);
