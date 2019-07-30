@@ -1034,18 +1034,6 @@ TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
     // and wait for the tunnelEstablishmentDone() call
 }
 
-static Comm::ConnectionPointer
-borrowPinnedConnection(HttpRequest *request)
-{
-    // pinned_connection may become nil after a pconn race
-    if (ConnStateData *pinned_connection = request ? request->pinnedConnection() : nullptr) {
-        Comm::ConnectionPointer serverConn = pinned_connection->borrowPinnedConnection(request);
-        return serverConn;
-    }
-
-    return nullptr;
-}
-
 void
 TunnelStateData::noteDestination(Comm::ConnectionPointer path)
 {
@@ -1184,32 +1172,27 @@ TunnelStateData::usePinned()
 {
     Must(request);
     const auto connManager = request->pinnedConnection();
-    const auto serverConn = borrowPinnedConnection(request.getRaw());
-    debugs(26,7, "pinned peer connection: " << serverConn);
+    try {
+        const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw());
+        debugs(26,7, "pinned peer connection: " << serverConn);
 
-    const char *fail = nullptr;
-    if (!Comm::IsConnOpen(serverConn))
-        fail = "pinned path failure";
+        Must(connManager);
 
-    if (fail) {
+        // Set HttpRequest pinned related flags for consistency even if
+        // they are not really used by tunnel.cc code.
+        request->flags.pinned = true;
+        if (connManager->pinnedAuth())
+            request->flags.auth = true;
+
+        // the server may close the pinned connection before this request
+        const auto reused = true;
+        connectDone(serverConn, connManager->pinning.host, reused);
+    } catch (const PinningException &ex) {
         syncHierNote(serverConn, connManager ? connManager->pinning.host : request->url.host());
         // a PINNED path failure is fatal; do not wait for more paths
-        sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw(), al),
-                  fail);
+        sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw(), al), ex.what());
         return;
     }
-
-    Must(connManager);
-
-    // Set HttpRequest pinned related flags for consistency even if
-    // they are not really used by tunnel.cc code.
-    request->flags.pinned = true;
-    if (connManager->pinnedAuth())
-        request->flags.auth = true;
-
-    // the server may close the pinned connection before this request
-    const auto reused = true;
-    connectDone(serverConn, connManager->pinning.host, reused);
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);

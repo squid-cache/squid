@@ -1010,23 +1010,21 @@ FwdState::usePinned()
     const auto connManager = request->pinnedConnection();
     debugs(17, 7, "connection manager: " << connManager);
 
-    const auto peerDenied = connManager && connManager->pinning.peerAccessDenied;
-
-    // the client connection may close while we get here, nullifying connManager
-    const auto temp = connManager ? connManager->borrowPinnedConnection(request) : nullptr;
-    debugs(17, 5, "connection: " << temp);
-
-    // the previously pinned idle peer connection may get closed (by the peer)
-    if (!Comm::IsConnOpen(temp)) {
-        syncHierNote(temp, connManager ? connManager->pinning.host : request->url.host());
+    try {
+        const auto temp = ConnStateData::BorrowPinnedConnection(request);
+        debugs(17, 5, "connection: " << temp);
+        serverConn = temp;
+    } catch (const PinningException &ex) {
+        // the previously pinned idle peer connection may get closed (by the peer)
+        syncHierNote(nullptr, connManager ? connManager->pinning.host : request->url.host());
         serverConn = nullptr;
-        const auto errType = peerDenied ? ERR_CANNOT_FORWARD : ERR_ZERO_SIZE_OBJECT;
+        const auto errType = (ex.errType == PinningException::errConnectionGone) ? ERR_ZERO_SIZE_OBJECT : ERR_CANNOT_FORWARD;
         const auto anErr = new ErrorState(errType, Http::scServiceUnavailable, request, al);
         fail(anErr);
         // Connection managers monitor their idle pinned to-server
         // connections and close from-client connections upon seeing
         // a to-server connection closure. Retrying here is futile.
-        stopAndDestroy("pinned connection failure");
+        stopAndDestroy(ex.what());
         return;
     }
 

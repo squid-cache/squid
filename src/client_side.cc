@@ -3909,39 +3909,55 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
         clientConnection->close();
 }
 
-const Comm::ConnectionPointer
+void
 ConnStateData::validatePinnedConnection(HttpRequest *request)
 {
     debugs(33, 7, HERE << pinning.serverConnection);
 
-    bool valid = true;
-    if (!Comm::IsConnOpen(pinning.serverConnection))
-        valid = false;
-    else if (pinning.peerAccessDenied)
-        valid = false;
-    else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->url.host()) != 0)
-        valid = false;
-    else if (request && pinning.port != request->url.port())
-        valid = false;
-    else if (pinning.peer && !cbdataReferenceValid(pinning.peer))
-        valid = false;
-
-    if (!valid) {
-        /* The pinning info is not safe, remove any pinning info */
-        unpinConnection(true);
+    PinningException::PinningErrorType errType = PinningException::errNone;
+    const char *error = nullptr;
+    if (!Comm::IsConnOpen(pinning.serverConnection)) {
+        error = "server connection closed";
+        errType = PinningException::errConnectionGone;
+    } else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->url.host()) != 0) {
+        error = "wrong destination";
+        errType = PinningException::errPolicy;
+    } else if (request && pinning.port != request->url.port()) {
+        error = "wrong destination port";
+        errType = PinningException::errPolicy;
+    } else if (pinning.peer && !cbdataReferenceValid(pinning.peer)) {
+        error = "cache peer is gone";
+        errType = PinningException::errConnectionGone;
+    } else if (pinning.peerAccessDenied) {
+        error = "peer access prohibited";
+        errType = PinningException::errPolicy;
     }
 
-    return pinning.serverConnection;
+    if (error) {
+        /* The pinning info is not safe, remove any pinning info */
+        unpinConnection(true);
+        SBuf tmp("pinned connection failure: ");
+        tmp.append(error);
+        throw PinningException(errType, tmp.c_str());
+    }
 }
 
 Comm::ConnectionPointer
 ConnStateData::borrowPinnedConnection(HttpRequest *request)
 {
     debugs(33, 7, pinning.serverConnection);
-    if (validatePinnedConnection(request) != nullptr)
-        stopPinnedConnectionMonitoring();
+    validatePinnedConnection(request); // throws on error
+    stopPinnedConnectionMonitoring();
+    return pinning.serverConnection;
+}
 
-    return pinning.serverConnection; // closed if validation failed
+Comm::ConnectionPointer
+ConnStateData::BorrowPinnedConnection(HttpRequest *request)
+{
+    if (const auto connManager = request ? request->pinnedConnection() : nullptr)
+        return connManager->borrowPinnedConnection(request);
+
+    throw PinningException(PinningException::errConnectionGone, "pinned connection failure: client connection gone");
 }
 
 void
