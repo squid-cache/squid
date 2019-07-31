@@ -171,3 +171,4 @@ testRefCount::testDoubleInheritToSingleInherit()
     }
     CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
 }
+
