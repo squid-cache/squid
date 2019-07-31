@@ -2018,6 +2018,9 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
         storeEntry()->replaceHttpReply(new_rep);
         storeEntry()->timestampsSet();
 
+        if (al)
+            al->reply = new_rep;
+
         if (!adaptedBodySource) // no body
             storeEntry()->complete();
         clientGetMoreData(node, this);

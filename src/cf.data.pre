@@ -4699,7 +4699,9 @@ DOC_START
 		[http::]<Hs	HTTP status code of the last received virgin final reply
 		[http::]>Hs	HTTP status code of the last sent reply.
 
-		[http::]<h	The header of the last sent reply.
+		[http::]<h	Usually the header of the last sent reply, but in some
+				exceptional cases (preliminary connection termination) may log
+				either received or adapted reply.
 				Optional header name argument as for >h.
 
 		[http::]mt	MIME type of the last sent reply.

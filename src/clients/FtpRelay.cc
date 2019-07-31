@@ -395,9 +395,6 @@ Ftp::Relay::forwardPreliminaryReply(const PreliminaryCb cb)
 
     const HttpReply::Pointer reply = createHttpReply(Http::scContinue);
 
-    if (fwd->al)
-        fwd->al->reply = reply;
-
     // the Sink will use this to call us back after writing 1xx to the client
     typedef NullaryMemFunT<Relay> CbDialer;
     const AsyncCall::Pointer call = JobCallback(11, 3, CbDialer, this,
