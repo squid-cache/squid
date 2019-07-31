@@ -244,7 +244,11 @@ Security::HandshakeParser::parseModernRecord()
     Must(record.fragment.length() || record.type == ContentType::ctApplicationData);
 
     if (currentContentType != record.type) {
+        tkMessages.reinput(fragments, false);
+        parseMessages();
+
         Must(tkMessages.atEnd()); // no currentContentType leftovers
+
         fragments = record.fragment;
         tkMessages.reset(fragments, true); // true because more fragments may come
         currentContentType = record.type;
@@ -253,7 +257,11 @@ Security::HandshakeParser::parseModernRecord()
         tkMessages.reinput(fragments, true); // true because more fragments may come
         tkMessages.rollback();
     }
-    parseMessages();
+
+    if (tkRecords.atEnd()) {
+        tkMessages.reinput(fragments, true);
+        parseMessages();
+    }
 }
 
 /// parses one or more "higher-level protocol" frames of currentContentType
