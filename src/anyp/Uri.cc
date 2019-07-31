@@ -250,8 +250,10 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         if (scheme == AnyP::PROTO_NONE)
             return false; // invalid scheme
 
-        if (scheme == AnyP::PROTO_URN)
-            return parseUrn(tok);
+        if (scheme == AnyP::PROTO_URN) {
+            parseUrn(tok); // throws on any error
+            return true;
+        }
 
         // URLs then have "//"
         static const SBuf doubleSlash("//");
@@ -477,33 +479,33 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
  *
  * Notice that NID is exactly 2-32 characters in length.
  */
-bool
+void
 AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
 {
     static const auto nidChars = CharacterSet("NID","-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
     static const auto alphanum = (CharacterSet::ALPHA + CharacterSet::DIGIT).rename("alphanum");
     SBuf nid;
-    if (tok.prefix(nid, nidChars, 32) && tok.skip(':')) {
-        debugs(23, 3, "Split URI into proto='urn', nid='" << nid << "', path='" << tok.remaining() << "'");
+    if (!tok.prefix(nid, nidChars, 32))
+        throw TextException("NID not found", Here());
 
-        if (nid.length() < 2)
-            throw TextException("URN has invalid NID length", Here());
+    if (!tok.skip(':'))
+        throw TextException("NID too long or missing ':' delimiter", Here());
 
-        if (!alphanum[*nid.begin()])
-            throw TextException("URN has invalid NID prefix", Here());
+    debugs(23, 3, "Split URI into proto='urn', nid='" << nid << "', path='" << tok.remaining() << "'");
 
-        if (!alphanum[*nid.end()])
-            throw TextException("URN has invalid NID suffix", Here());
+    if (nid.length() < 2)
+        throw TextException("NID too short", Here());
 
-        setScheme(AnyP::PROTO_URN, nullptr);
-        host(nid.c_str());
-        // TODO validate path characters
-        path(tok.remaining());
-        return true;
-    }
+    if (!alphanum[*nid.begin()])
+        throw TextException("NID prefix is not alphanumeric", Here());
 
-    debugs(23, 3, "URN has invalid character in NID " << tok.remaining());
-    return false;
+    if (!alphanum[*nid.end()])
+        throw TextException("NID suffixis not alphanumeric", Here());
+
+    setScheme(AnyP::PROTO_URN, nullptr);
+    host(nid.c_str());
+    // TODO validate path characters
+    path(tok.remaining());
 }
 
 void

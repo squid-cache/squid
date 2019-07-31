@@ -126,7 +126,7 @@ public:
     SBuf &absolute() const;
 
 private:
-    bool parseUrn(Parser::Tokenizer&);
+    void parseUrn(Parser::Tokenizer&);
 
     /**
      \par
