@@ -122,7 +122,7 @@ Client::setVirginReply(HttpReply *rep)
     theVirginReply = rep;
     HTTPMSGLOCK(theVirginReply);
     if (fwd->al)
-        fwd->al->reply = theVirginReply;
+        fwd->al->reply(theVirginReply);
     return theVirginReply;
 }
 
@@ -143,7 +143,7 @@ Client::setFinalReply(HttpReply *rep)
     theFinalReply = rep;
     HTTPMSGLOCK(theFinalReply);
     if (fwd->al)
-        fwd->al->reply = theFinalReply;
+        fwd->al->reply(theFinalReply);
 
     // give entry the reply because haveParsedReplyHeaders() expects it there
     entry->replaceHttpReply(theFinalReply, false); // but do not write yet

@@ -10,6 +10,7 @@
 #include "AccessLogEntry.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "MemBuf.h"
 #include "proxyp/Header.h"
 #include "SquidConfig.h"
 #include "ssl/support.h"
@@ -128,5 +129,16 @@ AccessLogEntry::effectiveVirginUrl() const
     // adaptation/redirection. When the request is missing, a non-empty ALE::url
     // means that we missed a setVirginUrlForMissingRequest() call somewhere.
     return nullptr;
+}
+
+void
+AccessLogEntry::reply(HttpReplyPointer rep)
+{
+    reply_ = rep;
+    MemBuf mb;
+    mb.init();
+    reply_->header.packInto(&mb);
+    safe_free(headers.reply);
+    headers.reply = xstrdup(mb.buf);
 }
 
