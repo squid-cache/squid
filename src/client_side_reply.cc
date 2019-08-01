@@ -1649,7 +1649,7 @@ clientReplyContext::cloneReply()
     reply = http->storeEntry()->getReply()->clone();
     HTTPMSGLOCK(reply);
 
-    http->al->reply(reply);
+    http->al->reply = reply;
 
     if (reply->sline.protocol == AnyP::PROTO_HTTP) {
         /* RFC 2616 requires us to advertise our version (but only on real HTTP traffic) */

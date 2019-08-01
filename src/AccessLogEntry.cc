@@ -105,8 +105,6 @@ AccessLogEntry::~AccessLogEntry()
     safe_free(adapt.last_meta);
 #endif
 
-    safe_free(headers.reply);
-
     safe_free(headers.adapted_request);
     HTTPMSGUNLOCK(adapted_request);
 
@@ -131,14 +129,14 @@ AccessLogEntry::effectiveVirginUrl() const
     return nullptr;
 }
 
-void
-AccessLogEntry::reply(HttpReplyPointer rep)
+const char *
+AccessLogEntry::replyHeaders() const
 {
-    reply_ = rep;
-    MemBuf mb;
-    mb.init();
-    reply_->header.packInto(&mb);
-    safe_free(headers.reply);
-    headers.reply = xstrdup(mb.buf);
+    if (!reply)
+        return nullptr;
+    static MemBuf mb;
+    mb.reset();
+    reply->header.packInto(&mb);
+    return mb.buf;
 }
 

@@ -357,7 +357,7 @@ sslErrorName(Security::ErrorCode err, char *buf, size_t size)
 static const Http::Message *
 actualReplyHeader(const AccessLogEntry::Pointer &al)
 {
-    const Http::Message *msg = al->reply().getRaw();
+    const Http::Message *msg = al->reply.getRaw();
 #if ICAP_CLIENT
     // al->icap.reqMethod is methodNone in access.log context
     if (!msg && al->icap.reqMethod == Adaptation::methodReqmod)
@@ -902,7 +902,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_REPLY_ALL_HEADERS:
-            out = al->headers.reply;
+            out = al->replyHeaders();
 #if ICAP_CLIENT
             if (!out && al->icap.reqMethod == Adaptation::methodReqmod)
                 out = al->headers.adapted_request;

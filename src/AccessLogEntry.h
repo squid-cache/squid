@@ -61,6 +61,9 @@ public:
 
     void syncNotes(HttpRequest *request);
 
+    /// string representation of the reply headers
+    const char *replyHeaders() const;
+
     SBuf url;
 
     /// TCP/IP level details about the client connection
@@ -158,8 +161,7 @@ public:
     public:
         char *request = nullptr; //< virgin HTTP request headers
         char *adapted_request = nullptr; //< HTTP request headers after adaptation and redirection
-        // XXX: is not updated if reply_ is modified,
-        // eliminate this field in favor of reply_.
+        // Used, see replyHeaders(). TODO: remove
         char *reply = nullptr;
     } headers;
 
@@ -179,8 +181,9 @@ public:
     SBuf lastAclData; ///< string for external_acl_type %DATA format code
 
     HierarchyLogEntry hier;
-    void reply(HttpReplyPointer);
-    const HttpReplyPointer &reply() const { return reply_; }
+    /// Starts as a virgin reply, is replaced after adaptation and
+    /// finalization (before sending to the client).
+    HttpReplyPointer reply;
 
     HttpRequest *request = nullptr; //< virgin HTTP request
     HttpRequest *adapted_request = nullptr; //< HTTP request after adaptation and redirection
@@ -254,9 +257,6 @@ private:
     /// Client URI (or equivalent) for effectiveVirginUrl() when HttpRequest is
     /// missing. This member is ignored unless the request member is nil.
     SBuf virginUrlForMissingRequest_;
-    /// Starts as a virgin reply, is replaced after adaptation and
-    /// finalization (before sending to the client).
-    HttpReplyPointer reply_;
 };
 
 class ACLChecklist;
