@@ -258,8 +258,7 @@ Security::HandshakeParser::parseModernRecord()
         tkMessages.rollback();
     }
 
-    if (tkRecords.atEnd()) {
-        tkMessages.reinput(fragments, true);
+    if (tkRecords.atEnd() && !done) {
         parseMessages();
     }
 }
