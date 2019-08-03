@@ -1425,17 +1425,21 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, http_hdr_
         return NULL;
     }
 
-    // check for BSP following header field-name
+    /*
+     * RFC 7230 section 3.2.4:
+     * "No whitespace is allowed between the header field-name and colon.
+     * ...
+     *  A server MUST reject any received request message that contains
+     *  whitespace between a header field-name and colon with a response code
+     *  of 400 (Bad Request).  A proxy MUST remove any such whitespace from a
+     *  response message before forwarding the message downstream."
+     */
     if (xisspace(field_start[name_len - 1])) {
 
-        // RFC 7230 section 3.2.4
-        // - server MUST reject any request message with this whitespace
-        // - a proxy MUST remove this whitespace from HTTP responses
-        //
-        // for now also let relaxed parser remove this BSP from any non-HTTP messages
         if (msgType == hoRequest)
             return nullptr;
 
+        // for now, also let relaxed parser remove this BWS from any non-HTTP messages
         const bool stripWhitespace = (msgType == hoReply) ||
                                      Config.onoff.relaxed_header_parser;
         if (!stripWhitespace)
