@@ -52,7 +52,7 @@
  *      Any good application has a set of tests to ensure it stays
  *      in a good condition. Squid tends to use cppunit tests.
  \par
- *      It is preferrable to automated tests for units of functionality. There
+ *      It is preferable to automated tests for units of functionality. There
  *      is a boilerplate for tests in "src/tests/testBoilerplate.[cc|h]". New
  *      tests need to be added to src/Makefile.am to build and run them during
  *      "make check". To add a new test script, just copy the references to
@@ -68,7 +68,7 @@
  * 
  \par
  *      Squid uses events to process asynchronous actions.
- *      These mehods are registered as callbacks to receive notice whenever a
+ *      These methods are registered as callbacks to receive notice whenever a
  *      specific event occurs.
  */
 
