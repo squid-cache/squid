@@ -133,6 +133,6 @@ void
 AccessLogEntry::replyHeaders(MemBuf &mb) const
 {
     if (reply)
-        reply->header.packInto(&mb);
+        reply->packHeadersUsingFastPacker(mb);
 }
 
