@@ -3666,7 +3666,7 @@ void
 ConnStateData::sendControlMsg(HttpControlMsg msg)
 {
     Http::StreamPointer context = pipeline.front();
-    if (context && context->http && context->http->al)
+    if (context && context->http)
         context->http->al->reply = msg.reply;
 
     if (!isOpen()) {

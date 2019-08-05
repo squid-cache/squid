@@ -4696,15 +4696,15 @@ DOC_START
 
 	    RESPONSE
 
-		[http::]<Hs	HTTP status code of the last received virgin final reply
+		[http::]<Hs	HTTP status code of the final virgin reply
 		[http::]>Hs	HTTP status code of the last sent reply.
 
-		[http::]<h	Usually the header of the last sent reply, but in some
-				exceptional cases (preliminary connection termination) may log
-				either received or adapted reply.
-				Optional header name argument as for >h.
+		[http::]<h	The header of the last sent reply.
+				Optional header name argument as for >h
 
-		[http::]mt	MIME type of the last sent reply.
+		[http::]mt	MIME type (i.e. the type/subtype part of the Content-Type header
+				value) of the last sent reply
+
 
 		See http://wiki.squid-cache.org/ResponseTerms for details.
 

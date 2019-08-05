@@ -901,14 +901,19 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             quote = 1;
             break;
 
-        case LFT_REPLY_ALL_HEADERS:
-            out = al->replyHeaders();
+        case LFT_REPLY_ALL_HEADERS: {
+            MemBuf allHeaders;
+            allHeaders.init();
+            al->replyHeaders(allHeaders);
+            sb.assign(allHeaders.content(), allHeaders.contentSize());
+            out = sb.c_str();
 #if ICAP_CLIENT
             if (!out && al->icap.reqMethod == Adaptation::methodReqmod)
                 out = al->headers.adapted_request;
 #endif
             quote = 1;
-            break;
+        }
+        break;
 
         case LFT_USER_NAME:
 #if USE_AUTH

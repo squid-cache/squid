@@ -62,7 +62,7 @@ public:
     void syncNotes(HttpRequest *request);
 
     /// string representation of the reply headers
-    const char *replyHeaders() const;
+    void replyHeaders(MemBuf &mb) const;
 
     SBuf url;
 
@@ -161,8 +161,6 @@ public:
     public:
         char *request = nullptr; //< virgin HTTP request headers
         char *adapted_request = nullptr; //< HTTP request headers after adaptation and redirection
-        // Used, see replyHeaders(). TODO: remove
-        char *reply = nullptr;
     } headers;
 
 #if USE_ADAPTATION

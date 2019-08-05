@@ -129,14 +129,10 @@ AccessLogEntry::effectiveVirginUrl() const
     return nullptr;
 }
 
-const char *
-AccessLogEntry::replyHeaders() const
+void
+AccessLogEntry::replyHeaders(MemBuf &mb) const
 {
-    if (!reply)
-        return nullptr;
-    static MemBuf mb;
-    mb.reset();
-    reply->header.packInto(&mb);
-    return mb.buf;
+    if (reply)
+        reply->header.packInto(&mb);
 }
 

@@ -526,8 +526,8 @@ Client::blockCaching()
         // That method lacks HttpRequest and may be called too many times.
         ACLFilledChecklist ch(acl, originalRequest().getRaw());
         ch.reply = const_cast<HttpReply*>(entry->getReply()); // ACLFilledChecklist API bug
-        ch.al = fwd->al;
         HTTPMSGLOCK(ch.reply);
+        ch.al = fwd->al;
         if (!ch.fastCheck().allowed()) { // when in doubt, block
             debugs(20, 3, "store_miss prohibits caching");
             return true;
