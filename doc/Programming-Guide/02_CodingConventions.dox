@@ -39,15 +39,15 @@
 \subsection CommentComponents	API vs Internal Component Commenting
 
 \par
-	First among these is a definition seperation between component API
+	First among these is a definition separation between component API
 	and Internal operations. API functions and objects should always be
-	commented and in the *.h file for the component. Internal logics and
+	commented and in the *.h file for the component. Internal logic and
 	objects should be commented in the *.cc file where they are defined.
         The group is to be defined in the components main files with the
 	overview paragraphs about the API usage or component structure.
 
 \par
-	With C++ classes it is easy to seperate API and Internals with the C++
+	With C++ classes it is easy to separate API and Internals with the C++
 	public: and private: distinctions on whichever class defines the
 	component API. An Internal group may not be required if there are no
 	additional items in the Internals (rare as globals are common in squid).
@@ -121,7 +121,7 @@ X::getFubar(char *g, int glen)
 \verbatim
 /**
  \retval 0	when FUBAR does not start with 'F'
- \retval 1	when FUBAR startes with F
+ \retval 1	when FUBAR starts with F
  */
 int
 X::saidFubar()
@@ -129,7 +129,7 @@ X::saidFubar()
 \endverbatim
 
 \par	Alternatively
-	when a state or other context-dependant object is returned the \b \\return
+	when a state or other context-dependent object is returned the \b \\return
 	tag is used. It is followed by a description of the object and ideally its
 	content.
 
@@ -143,7 +143,7 @@ X::saidFubar()
 
 \par	Long or Complex Functions
 	do however need some commenting.
-	A well-designed function does all its operatons in distinct blocks;
+	A well-designed function does all its operations in distinct blocks;
 	\arg Input validation
 	\arg Processing on some state
 	\arg Processing on the output of that earlier processing
