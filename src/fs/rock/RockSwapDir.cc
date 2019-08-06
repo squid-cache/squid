@@ -896,8 +896,8 @@ Rock::SwapDir::handleWriteCompletionSuccess(const WriteRequest &request)
         map->writeableSlice(sio.swap_filen, request.sidPrevious).next = request.sidCurrent;
     }
 
-    // finalize the shared slice info after writing slice contents to disk
-    // once done, the chain gets possession of the slice we were writing
+    // finalize the shared slice info after writing slice contents to disk;
+    // the chain gets possession of the slice we were writing
     Ipc::StoreMap::Slice &slice =
         map->writeableSlice(sio.swap_filen, request.sidCurrent);
     slice.size = request.len - sizeof(DbCellHeader);

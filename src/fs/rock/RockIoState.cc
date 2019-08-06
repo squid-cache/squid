@@ -205,7 +205,7 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
 {
     debugs(79, 7, swap_filen << " writes " << size << " more");
 
-    // either this is the first write or append
+    // either this is the first write or append;
     // we do not support write gaps or rewrites
     assert(!coreOff || coreOff == -1);
 
@@ -243,7 +243,7 @@ Rock::IoState::writeToBuffer(char const *buf, size_t size)
         return 0;
 
     if (!theBuf.size) {
-        // writeToDisk() will eventually fill this header space
+        // eventually, writeToDisk() will fill this header space
         theBuf.appended(sizeof(DbCellHeader));
     }
 

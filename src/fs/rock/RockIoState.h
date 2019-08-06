@@ -49,7 +49,7 @@ public:
     void finishedWriting(const int errFlag);
 
     /// notes that the disker has satisfied the given I/O request
-    /// \returns whether all earlier I/O requests have been already satisfied
+    /// \returns whether all earlier I/O requests have been satisfied already
     bool expectedReply(const IoXactionId receivedId);
 
     /* one and only one of these will be set and locked; access via *Anchor() */
