@@ -891,12 +891,16 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             } else
 #endif
             {
+                // just headers without start-line and CRLF
+                // XXX: reconcile with '<h'
                 out = al->headers.request;
                 quote = 1;
             }
             break;
 
         case LFT_ADAPTED_REQUEST_ALL_HEADERS:
+            // just headers without start-line and CRLF
+            // XXX: reconcile with '<h'
             out = al->headers.adapted_request;
             quote = 1;
             break;
@@ -904,6 +908,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_REPLY_ALL_HEADERS: {
             MemBuf allHeaders;
             allHeaders.init();
+            // status-line + headers + CRLF
+            // XXX: reconcile with '>h' and '>ha'
             al->replyHeaders(allHeaders);
             sb.assign(allHeaders.content(), allHeaders.contentSize());
             out = sb.c_str();
