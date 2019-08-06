@@ -16,7 +16,7 @@
 #include "HttpHeader.h"
 HttpHeaderEntry::HttpHeaderEntry(Http::HdrType, const SBuf &, const char *) {STUB}
 HttpHeaderEntry::~HttpHeaderEntry() {STUB}
-HttpHeaderEntry *HttpHeaderEntry::parse(const char *, const char *, http_hdr_owner_type &) STUB_RETVAL(nullptr)
+HttpHeaderEntry *HttpHeaderEntry::parse(const char *, const char *, const http_hdr_owner_type) STUB_RETVAL(nullptr)
 HttpHeaderEntry *HttpHeaderEntry::clone() const STUB_RETVAL(nullptr)
 void HttpHeaderEntry::packInto(Packable *) const STUB
 int HttpHeaderEntry::getInt() const STUB_RETVAL(0)

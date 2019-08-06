@@ -1404,7 +1404,7 @@ HttpHeaderEntry::~HttpHeaderEntry()
 
 /* parses and inits header entry, returns true/false */
 HttpHeaderEntry *
-HttpHeaderEntry::parse(const char *field_start, const char *field_end, http_hdr_owner_type &msgType)
+HttpHeaderEntry::parse(const char *field_start, const char *field_end, const http_hdr_owner_type msgType)
 {
     /* note: name_start == field_start */
     const char *name_end = (const char *)memchr(field_start, ':', field_end - field_start);
@@ -1421,7 +1421,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, http_hdr_
 
     if (name_len > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, DBG_IMPORTANT, "WARNING: rejecting due to header name of " << name_len << " bytes");
+        debugs(55, DBG_IMPORTANT, "WARNING: rejecting due to header name of " << name_len << " bytes (" << Raw('value_start', value_start) << ")");
         return NULL;
     }
 
@@ -1487,7 +1487,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, http_hdr_
 
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, DBG_IMPORTANT, "WARNING: rejecting due to header of " << (field_end - value_start) << " bytes");
+        debugs(55, DBG_IMPORTANT, "WARNING: rejecting due to '" << theName << "' header of " << (field_end - value_start) << " bytes");
         return NULL;
     }
 
