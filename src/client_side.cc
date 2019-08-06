@@ -2987,7 +2987,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
 
     // If the protocol has changed, then reset preservingClientData_.
     // Otherwise, its value initially set in start() is still valid/fresh.
-    // Requires parsingTlsHandshake which is initialized above.
+    // shouldPreserveClientData() uses parsingTlsHandshake which is reset above.
     if (insideConnectTunnel)
         preservingClientData_ = shouldPreserveClientData();
 
