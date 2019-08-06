@@ -4018,7 +4018,7 @@ ConnStateData::checkLogging()
 bool
 ConnStateData::shouldPreserveClientData() const
 {
-    // do not tunnel on errors while expecting PROXY protocol bytes
+    // PROXY protocol bytes are meant for us and, hence, cannot be tunneled
     if (needProxyProtocolHeader_)
         return false;
 
@@ -4027,7 +4027,7 @@ ConnStateData::shouldPreserveClientData() const
     if (!Config.accessList.on_unsupported_protocol)
         return false;
 
-    // Exclude FTP ports. They do not support on_unsupported_protocol.
+    // TODO: Explain why we do not tunnel intercepted ftp_port bytes.
     if (port->transport.protocol == AnyP::PROTO_FTP)
         return false;
 
