@@ -133,8 +133,8 @@ Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data
               static_cast<size_t>(objOffset + currentReadableSlice().size - coreOff));
     const uint64_t diskOffset = dir->diskOffset(sidCurrent);
     const auto start = diskOffset + sizeof(DbCellHeader) + coreOff - objOffset;
-    ++requestsSent;
-    const auto request = new ReadRequest(::ReadRequest(buf, start, len), this, requestsSent);
+    const auto id = ++requestsSent;
+    const auto request = new ReadRequest(::ReadRequest(buf, start, len), this, id);
     theFile->read(request);
 }
 
@@ -304,10 +304,10 @@ Rock::IoState::writeToDisk()
     const uint64_t diskOffset = dir->diskOffset(sidCurrent);
     debugs(79, 5, HERE << swap_filen << " at " << diskOffset << '+' <<
            theBuf.size);
-    ++requestsSent;
+    const auto id = ++requestsSent;
     WriteRequest *const r = new WriteRequest(
         ::WriteRequest(static_cast<char*>(wBuf), diskOffset, theBuf.size,
-                       memFreeBufFunc(wBufCap)), this, requestsSent);
+                       memFreeBufFunc(wBufCap)), this, id);
     r->sidCurrent = sidCurrent;
     r->sidPrevious = sidPrevious;
     r->eof = lastWrite;
