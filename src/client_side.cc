@@ -4032,7 +4032,6 @@ ConnStateData::shouldPreserveClientData() const
         return false;
 
 #if USE_OPENSSL
-    // We are parsing client hello request
     if (parsingTlsHandshake)
         return true;
 
