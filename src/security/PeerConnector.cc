@@ -309,14 +309,16 @@ Security::CertErrors *
 Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::ErrorDetail *& errDetails)
 {
     ACLFilledChecklist *check = NULL;
+    Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
+
     if (acl_access *acl = ::Config.ssl_client.cert_error) {
         check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
         check->al = al;
         check->syncAle(request.getRaw(), nullptr);
+        check->serverCert.resetWithoutLocking(SSL_get_peer_certificate(session.get()));
     }
 
     Security::CertErrors *errs = nullptr;
-    Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
     typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
     for (SVCRECI i = resp.errors.begin(); i != resp.errors.end(); ++i) {
         debugs(83, 7, "Error item: " << i->error_no << " " << i->error_reason);
