@@ -32,6 +32,9 @@ class SwapDir;
 /// db cell number, starting with cell 0 (always occupied by the db header)
 typedef sfileno SlotId;
 
+/// unique (within a given IoState object scope) I/O transaction identifier
+typedef uint64_t IoXactionId;
+
 class Rebuild;
 
 class IoState;
@@ -39,6 +42,8 @@ class IoState;
 class HeaderUpdater;
 
 class DbCellHeader;
+
+class ReadRequest;
 
 class WriteRequest;
 
