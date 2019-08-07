@@ -1421,7 +1421,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
 
     if (name_len > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, DBG_IMPORTANT, "WARNING: rejecting due to header name of " << name_len << " bytes (" << Raw('value_start', value_start) << ")");
+        debugs(55, 2, "found header name of " << name_len << " bytes (" << Raw("value_start", value_start, name_len) << ")");
         return NULL;
     }
 
@@ -1452,7 +1452,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
             --name_len;
 
         if (!name_len) {
-            debugs(55, DBG_IMPORTANT, "WARNING: rejecting due to header with name of " << name_len << " bytes");
+            debugs(55, 2, "found header with only whitespace for name");
             return NULL;
         }
     }
@@ -1487,7 +1487,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
 
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, DBG_IMPORTANT, "WARNING: rejecting due to '" << theName << "' header of " << (field_end - value_start) << " bytes");
+        debugs(55, 2, "WARNING: found '" << theName << "' header of " << (field_end - value_start) << " bytes");
         return NULL;
     }
 
