@@ -9,34 +9,65 @@
 #include "squid.h"
 #include "anyp/PortCfg.h"
 #include "fatal.h"
-#include "security/Certificate.h"
+#include "sbuf/Stream.h"
 #include "security/KeyData.h"
 #include "SquidConfig.h"
 #include "ssl/bio.h"
 #include "ssl/gadgets.h"
 
-#include <algorithm>
-
-/// load the signing certificate and its chain, if any, from certFile
-/// \return true if the signing certificate was obtained
+/**
+ * Read certificate from file.
+ * See also: Ssl::ReadX509Certificate function, gadgets.cc file
+ */
 bool
 Security::KeyData::loadCertificates()
 {
     debugs(83, 2, "from " << certFile);
     cert.reset(); // paranoid: ensure cert is unset
 
+    // Open the .PEM certificate file
 #if USE_OPENSSL
-    const char *certFilename = certFile.c_str();
-    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
-    if (!bio || !BIO_read_filename(bio.get(), certFilename)) {
+    CertFileRawPointer bio(BIO_new(BIO_s_file()));
+    if (!bio || !BIO_read_filename(bio.get(), certFile.c_str())) {
         const auto x = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << ErrorString(x));
         return false;
     }
+#elif HAVE_LIBGNUTLS
+    CertFileRawPointer bio(new gnutls_datum_t({.data=nullptr, .size=0}));
+    Security::LibErrorCode x = gnutls_load_file(certFile.c_str(), bio.get());
+    if (x != GNUTLS_E_SUCCESS) {
+        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << ErrorString(x));
+        return false;
+    }
+#else
+    CertFileRawPointer bio; // unused
+#endif
 
+    // Read the client/server/proxy leaf certificate
     try {
+#if USE_OPENSSL
         cert = Ssl::ReadCertificate(bio);
         debugs(83, DBG_PARSE_NOTE(2), "Loaded signing certificate: " << *cert);
+#elif HAVE_LIBGNUTLS
+        gnutls_pcert_st pcrt;
+        x = gnutls_pcert_import_x509_raw(&pcrt, bio.get(), GNUTLS_X509_FMT_PEM, 0);
+        if (x != GNUTLS_E_SUCCESS)
+            throw TextException(ToSBuf("failed to import certificate due to ", ErrorString(x)), Here());
+
+        gnutls_x509_crt_t certificate;
+        x = gnutls_pcert_export_x509(&pcrt, &certificate);
+        if (x != GNUTLS_E_SUCCESS)
+            throw TextException(ToSBuf("unable to X.509 convert certificate due to ", ErrorString(x)), Here());
+
+        if (certificate) {
+            cert = Security::CertPointer(certificate, [](gnutls_x509_crt_t p) {
+                debugs(83, 5, "gnutls_x509_crt_deinit cert=" << (void*)p);
+                gnutls_x509_crt_deinit(p);
+            });
+        }
+#endif
+        Assure(cert != nullptr);
     }
     catch (...) {
         // TODO: Convert the rest of this method to throw on errors instead.
@@ -45,41 +76,10 @@ Security::KeyData::loadCertificates()
         return false;
     }
 
-    try {
-        // Squid sends `cert` (loaded above) followed by certificates in `chain`
-        // (formed below by loading and sorting the remaining certificates).
-
-        // load all the remaining configured certificates
-        CertList candidates;
-        while (const auto c = Ssl::ReadOptionalCertificate(bio))
-            candidates.emplace_back(c);
-
-        // Push certificates into `chain` in on-the-wire order, as defined by
-        // RFC 8446 Section 4.4.2: "Each following certificate SHOULD directly
-        // certify the one immediately preceding it."
-        while (!candidates.empty()) {
-            const auto precedingCert = chain.empty() ? cert : chain.back();
-
-            // We cannot chain any certificate after a self-signed certificate.
-            // This check also protects the IssuedBy() search below from adding
-            // duplicated (i.e. listed multiple times) self-signed certificates.
-            if (SelfSigned(*precedingCert))
-                break;
-
-            const auto issuerPos = std::find_if(candidates.begin(), candidates.end(), [&](const CertPointer &i) {
-                return IssuedBy(*precedingCert, *i);
-            });
-            if (issuerPos == candidates.end())
-                break;
-
-            const auto &issuer = *issuerPos;
-            debugs(83, DBG_PARSE_NOTE(3), "Adding CA certificate: " << *issuer);
-            chain.emplace_back(issuer);
-            candidates.erase(issuerPos);
-        }
-
-        for (const auto &c: candidates)
-            debugs(83, DBG_IMPORTANT, "WARNING: Ignoring certificate that does not extend the chain: " << *c);
+    if (SelfSigned(*cert))
+        debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << *cert);
+    else try {
+        loadX509ChainFromFile(bio);
     }
     catch (...) {
         // TODO: Reject configs with malformed intermediate certs instead.
@@ -87,49 +87,86 @@ Security::KeyData::loadCertificates()
                Debug::Extra << "problem: " << CurrentException);
     }
 
+    return bool(cert);
+}
+
+/**
+ * Read certificate chain from BIO object.
+ * See also: Ssl::ReadX509Certificate function, gadgets.cc file
+ */
+void
+Security::KeyData::loadX509ChainFromFile(CertFileRawPointer &bio)
+{
+    if (!bio)
+        return;
+
+    debugs(83, DBG_PARSE_NOTE(2), "Using certificate chain in " << certFile);
+
+#if USE_OPENSSL && !TLS_CHAIN_NO_SELFSIGNED
+    const bool dropSelfSigned = false;
+#else
+    const bool dropSelfSigned = true;
+#endif
+
+    debugs(83, DBG_PARSE_NOTE(3), "NOTICE: will " << (dropSelfSigned?"drop":"send") << " self-signed CA (if any) in the chain");
+
+    // Squid sends `cert` (loaded above) followed by certificates in `chain`
+    // (formed below by loading and sorting the remaining certificates).
+
+    // load all the remaining configured certificates
+    CertList candidates;
+#if USE_OPENSSL
+    while (const auto c = Ssl::ReadOptionalCertificate(bio))
+        candidates.emplace_back(c);
 #elif HAVE_LIBGNUTLS
-    const char *certFilename = certFile.c_str();
-    gnutls_datum_t data;
-    Security::LibErrorCode x = gnutls_load_file(certFilename, &data);
-    if (x != GNUTLS_E_SUCCESS) {
-        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << ErrorString(x));
-        return false;
-    }
+    unsigned int loadedCertCount = 0;
+    gnutls_x509_crt_t *loadedCerts = nullptr;
+    const auto x = gnutls_x509_crt_list_import2(&loadedCerts, &loadedCertCount, bio.get(), GNUTLS_X509_FMT_PEM, 0);
+    if (x != GNUTLS_E_SUCCESS)
+        throw TextException(ToSBuf(ErrorString(x)), Here());
 
-    gnutls_pcert_st pcrt;
-    x = gnutls_pcert_import_x509_raw(&pcrt, &data, GNUTLS_X509_FMT_PEM, 0);
-    if (x != GNUTLS_E_SUCCESS) {
-        debugs(83, DBG_IMPORTANT, "ERROR: unable to import certificate from '" << certFile << "': " << ErrorString(x));
-        return false;
-    }
-    gnutls_free(data.data);
-
-    gnutls_x509_crt_t certificate;
-    x = gnutls_pcert_export_x509(&pcrt, &certificate);
-    if (x != GNUTLS_E_SUCCESS) {
-        debugs(83, DBG_IMPORTANT, "ERROR: unable to X.509 convert certificate from '" << certFile << "': " << ErrorString(x));
-        return false;
-    }
-
-    if (certificate) {
-        cert = Security::CertPointer(certificate, [](gnutls_x509_crt_t p) {
+    for (unsigned int i = 0; i < loadedCertCount; ++i) {
+        const auto ca = CertPointer(loadedCerts[i], [](const gnutls_x509_crt_t p) {
             debugs(83, 5, "gnutls_x509_crt_deinit cert=" << (void*)p);
             gnutls_x509_crt_deinit(p);
         });
+
+        // abuse fact that gnutls_x509_crt_t is actually a pointer in libgnutls
+        loadedCerts[i] = nullptr; // memory this points to is managed by 'ca' now
+        candidates.emplace_back(ca);
     }
-
-    // XXX: implement chain loading
-    debugs(83, 2, "Loading certificate chain from PEM files not implemented in this Squid.");
-
-#else
-    // do nothing.
+    // certs in loadedCerts are now either part of the chain, or destroyed by 'ca'
+    // we just have to free the loadedCerts array itself.
+    gnutls_free(loadedCerts);
 #endif
 
-    if (!cert) {
-        debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate from '" << certFile << "'");
+    // Push certificates into `chain` in on-the-wire order, as defined by
+    // RFC 8446 Section 4.4.2: "Each following certificate SHOULD directly
+    // certify the one immediately preceding it."
+    while (!candidates.empty()) {
+        const auto precedingCert = chain.empty() ? cert : chain.back();
+
+        // We cannot chain any certificate after a self-signed certificate.
+        // This check also protects the IssuedBy() search below from adding
+        // duplicated (i.e. listed multiple times) self-signed certificates.
+        if (dropSelfSigned && SelfSigned(*precedingCert))
+            break;
+
+        const auto issuerPos = std::find_if(candidates.begin(), candidates.end(), [&](const CertPointer &i) {
+            return IssuedBy(*precedingCert, *i);
+        });
+        if (issuerPos == candidates.end())
+            break;
+
+        const auto &issuer = *issuerPos;
+        debugs(83, DBG_PARSE_NOTE(3), "Adding CA certificate: " << *issuer);
+        chain.emplace_back(issuer);
+        candidates.erase(issuerPos);
     }
 
-    return bool(cert);
+    for (const auto &c: candidates) {
+        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring certificate that does not extend the chain: " << *c);
+    }
 }
 
 /**
@@ -154,11 +191,11 @@ Security::KeyData::loadX509PrivateKeyFromFile()
 
 #elif HAVE_LIBGNUTLS
     const char *keyFilename = privateKeyFile.c_str();
-    gnutls_datum_t data;
-    if (gnutls_load_file(keyFilename, &data) == GNUTLS_E_SUCCESS) {
+    gnutls_datum_t rawFileContent;
+    if (gnutls_load_file(keyFilename, &rawFileContent) == GNUTLS_E_SUCCESS) {
         gnutls_privkey_t key;
         (void)gnutls_privkey_init(&key);
-        Security::ErrorCode x = gnutls_privkey_import_x509_raw(key, &data, GNUTLS_X509_FMT_PEM, nullptr, 0);
+        Security::ErrorCode x = gnutls_privkey_import_x509_raw(key, &rawFileContent, GNUTLS_X509_FMT_PEM, nullptr, 0);
         if (x == GNUTLS_E_SUCCESS) {
             gnutls_x509_privkey_t xkey;
             gnutls_privkey_export_x509(key, &xkey);
@@ -169,7 +206,7 @@ Security::KeyData::loadX509PrivateKeyFromFile()
             });
         }
     }
-    gnutls_free(data.data);
+    gnutls_free(rawFileContent.data);
 
 #else
     // nothing to do.

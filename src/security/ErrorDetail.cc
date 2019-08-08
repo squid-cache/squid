@@ -14,7 +14,6 @@
 #include "sbuf/Stream.h"
 #include "security/Certificate.h"
 #include "security/ErrorDetail.h"
-#include "security/forward.h"
 #include "security/Io.h"
 #include "util.h"
 
