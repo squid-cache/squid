@@ -661,9 +661,9 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     // be able to accept collection of certificates.
     // TODO: support collection of certificates
     const unsigned char *raw = (const unsigned char*)obj.rawContent();
-    if (X509 *cert = d2i_X509(NULL, &raw, obj.length())) {
-        char buffer[1024];
-        debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
+    CertPointer cert(d2i_X509(nullptr, &raw, obj.length()));
+    if (cert) {
+        debugs(81, 5, "Retrieved certificate: " << CertSubjectName(cert));
 
         if (!downloadedCerts)
             downloadedCerts.reset(sk_X509_new_null());

@@ -95,7 +95,7 @@ Security::KeyData::loadX509ChainFromFile()
 
 #if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
     if (X509_check_issued(cert.get(), cert.get()) == X509_V_OK) {
-        char *nameStr = X509_NAME_oneline(X509_get_subject_name(cert.get()), nullptr, 0);
+        auto nameStr = CertSubjectName(cert);
         debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << nameStr);
         OPENSSL_free(nameStr);
     } else
@@ -107,7 +107,8 @@ Security::KeyData::loadX509ChainFromFile()
 
         while (const auto ca = Ssl::ReadX509Certificate(bio)) {
             // get Issuer name of the cert for debug display
-            char *nameStr = X509_NAME_oneline(X509_get_subject_name(ca.get()), nullptr, 0);
+            CertPointer caPtr(ca);
+            auto nameStr = CertSubjectName(caPtr);
 
 #if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
             // self-signed certificates are not valid in a sent chain
@@ -123,18 +124,19 @@ Security::KeyData::loadX509ChainFromFile()
                 debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << nameStr);
                 // OpenSSL API requires that we order certificates such that the
                 // chain can be appended directly into the on-wire traffic.
-                latestCert = CertPointer(ca);
+                latestCert = caPtr;
                 chain.emplace_back(latestCert);
             } else {
                 debugs(83, DBG_PARSE_NOTE(2), certFile << ": Ignoring non-issuer CA " << nameStr << ": " << X509_verify_cert_error_string(checkCode) << " (" << checkCode << ")");
             }
-            OPENSSL_free(nameStr);
         }
     }
 
 #elif USE_GNUTLS
+
     // XXX: implement chain loading
-    debugs(83, 2, "Loading certificate chain from PEM files not implemented in this Squid.");
+    auto nameStr = CertSubjectName(cert);
+    debugs(83, DBG_PARSE_NOTE(2), "Loading certificate chain of " << nameStr << " from PEM files not implemented in this Squid.");
 
 #else
     // nothing to do.
