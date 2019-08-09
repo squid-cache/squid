@@ -171,7 +171,7 @@ Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, std::string 
             return false;
         }
 
-        param = value + value_len +1;
+        param = value + value_len;
     }
 
     /*Run through parsed errors to check for errors*/
