@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "anyp/PortCfg.h"
 #include "fatal.h"
+#include "security/CertGadgets.h"
 #include "security/KeyData.h"
 #include "SquidConfig.h"
 #include "ssl/bio.h"
@@ -84,6 +85,26 @@ Security::KeyData::loadX509CertFromFile()
 void
 Security::KeyData::loadX509ChainFromFile()
 {
+    ErrorCode checkCode;
+    if (CertIssuerCheck(cert, cert, checkCode)) {
+        auto nameStr = CertSubjectName(cert);
+        debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << nameStr);
+        return;
+    }
+
+#if USE_OPENSSL
+#if TLS_CHAIN_NO_SELFSIGNED
+    const bool dropSelfSigned = true;
+#else
+    const bool dropSelfSigned = false;
+#endif
+#elif USE_GNUTLS
+    const bool dropSelfSigned = true;
+#else
+    const bool dropSelfSigned = true;
+#endif
+    debugs(83, DBG_PARSE_NOTE(3), "NOTICE: will " << (dropSelfSigned?"drop":"send") << " self-signed CA (if any) in the chain");
+
 #if USE_OPENSSL
     const char *certFilename = certFile.c_str();
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
@@ -93,42 +114,29 @@ Security::KeyData::loadX509ChainFromFile()
         return;
     }
 
-#if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
-    if (X509_check_issued(cert.get(), cert.get()) == X509_V_OK) {
-        auto nameStr = CertSubjectName(cert);
-        debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << nameStr);
-        OPENSSL_free(nameStr);
-    } else
-#endif
-    {
-        debugs(83, DBG_PARSE_NOTE(3), "Using certificate chain in " << certFile);
-        // and add to the chain any other certificate exist in the file
-        CertPointer latestCert = cert;
+    debugs(83, DBG_PARSE_NOTE(3), "Using certificate chain in " << certFile);
+    // and add to the chain any other certificate exist in the file
+    CertPointer latestCert = cert;
 
-        while (const auto ca = Ssl::ReadX509Certificate(bio)) {
-            // get Issuer name of the cert for debug display
-            CertPointer caPtr(ca);
-            auto nameStr = CertSubjectName(caPtr);
+    while (CertPointer ca = CertPointer(PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr))) {
+        // get Issuer name of the cert for debug display
+        auto nameStr = CertSubjectName(ca);
 
-#if TLS_CHAIN_NO_SELFSIGNED // ignore self-signed certs in the chain
-            // self-signed certificates are not valid in a sent chain
-            if (X509_check_issued(ca.get(), ca.get()) == X509_V_OK) {
-                debugs(83, DBG_PARSE_NOTE(2), "CA " << nameStr << " is self-signed, will not be chained: " << nameStr);
-                OPENSSL_free(nameStr);
-                continue;
-            }
-#endif
-            // checks that the chained certs are actually part of a chain for validating cert
-            const auto checkCode = X509_check_issued(ca.get(), latestCert.get());
-            if (checkCode == X509_V_OK) {
-                debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << nameStr);
-                // OpenSSL API requires that we order certificates such that the
-                // chain can be appended directly into the on-wire traffic.
-                latestCert = caPtr;
-                chain.emplace_back(latestCert);
-            } else {
-                debugs(83, DBG_PARSE_NOTE(2), certFile << ": Ignoring non-issuer CA " << nameStr << ": " << X509_verify_cert_error_string(checkCode) << " (" << checkCode << ")");
-            }
+        // self-signed certificates are not valid in a sent chain
+        if (dropSelfSigned && CertIssuerCheck(ca, ca, checkCode)) {
+            debugs(83, DBG_PARSE_NOTE(2), "CA " << nameStr << " is self-signed, will not be chained: " << nameStr);
+            continue;
+        }
+
+        // checks that the chained certs are actually part of a chain for validating cert
+        if (CertIssuerCheck(latestCert, ca, checkCode)) {
+            debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << nameStr);
+            // OpenSSL API requires that we order certificates such that the
+            // chain can be appended directly into the on-wire traffic.
+            latestCert = ca;
+            chain.emplace_back(latestCert);
+        } else {
+            debugs(83, DBG_PARSE_NOTE(2), certFile << ": Ignoring non-issuer CA " << nameStr << ": " << X509_verify_cert_error_string(checkCode) << " (" << checkCode << ")");
         }
     }
 

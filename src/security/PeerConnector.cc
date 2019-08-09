@@ -20,6 +20,7 @@
 #include "HttpRequest.h"
 #include "neighbors.h"
 #include "pconn.h"
+#include "security/CertGadgets.h"
 #include "security/Io.h"
 #include "security/NegotiationHistory.h"
 #include "security/PeerConnector.h"

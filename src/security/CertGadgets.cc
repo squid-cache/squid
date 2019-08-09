@@ -9,7 +9,13 @@
 #include "squid.h"
 #include "Debug.h"
 #include "sbuf/SBuf.h"
-#include "security/forward.h"
+#include "security/CertGadgets.h"
+
+#if USE_OPENSSL
+#if HAVE_OPENSSL_X509V3_H
+#include <openssl/x509v3.h>
+#endif
+#endif
 
 SBuf
 Security::CertSubjectName(const Security::CertPointer &cert)
@@ -51,3 +57,19 @@ Security::CertSubjectName(const Security::CertPointer &cert)
     return out;
 }
 
+bool
+Security::CertIssuerCheck(const CertPointer &cert, const CertPointer &issuer, ErrorCode &checkCode)
+{
+#if USE_OPENSSL
+    checkCode = X509_check_issued(issuer.get(), cert.get());
+    return (checkCode == X509_V_OK);
+
+#elif USE_GNUTLS
+    checkCode = gnutls_x509_crt_check_issuer(cert.get(), issuer.get());
+    return (checkCode == 1);
+
+#else
+    checkCode = -1;
+    return false; // not implemented
+#endif
+}

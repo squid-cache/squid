@@ -28,8 +28,9 @@ void BlindPeerConnector::noteNegotiationDone(ErrorState *) STUB
 Security::EncryptorAnswer::~EncryptorAnswer() {}
 std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorAnswer &) STUB_RETVAL(os)
 
-#include "security/forward.h"
+#include "security/CertGadgets.h"
 SBuf Security::CertSubjectName(const CertPointer &) STUB_RETVAL(SBuf())
+bool Security::CertIssuerCheck(const CertPointer &, const CertPointer &, ErrorCode &) STUB_RETVAL(false)
 
 #include "security/Handshake.h"
 Security::HandshakeParser::HandshakeParser(MessageSource) STUB

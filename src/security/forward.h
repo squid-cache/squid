@@ -93,9 +93,6 @@ typedef std::list<Security::CertPointer> CertList;
 
 typedef std::list<Security::CrlPointer> CertRevokeList;
 
-/// \return the SubjectName field of the given certificate
-SBuf CertSubjectName(const CertPointer &);
-
 #if USE_OPENSSL
 CtoCpp1(DH_free, DH *);
 typedef Security::LockingPointer<DH, DH_free_cpp, HardFun<int, DH *, DH_up_ref> > DhePointer;
