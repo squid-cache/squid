@@ -149,7 +149,7 @@ Ssl::CertValidationMsg::parseResponse(CertValidationResponse &resp, STACK_OF(X50
             return false;
         }
 
-        param = value + value_len +1;
+        param = value + value_len;
     }
 
     /*Run through parsed errors to check for errors*/
