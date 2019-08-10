@@ -3934,7 +3934,7 @@ ConnStateData::borrowPinnedConnection(HttpRequest *request, const AccessLogEntry
         throw pinningError(ERR_ZERO_SIZE_OBJECT);
 
     if (pinning.peerAccessDenied)
-        throw pinningError(ERR_CANNOT_FORWARD);
+        throw pinningError(ERR_CANNOT_FORWARD); // TODO: Why not ERR_ACCESS_DENIED?
 
     stopPinnedConnectionMonitoring();
     return pinning.serverConnection;
