@@ -183,12 +183,9 @@ public:
     void pinBusyConnection(const Comm::ConnectionPointer &pinServerConn, const HttpRequest::Pointer &request);
     /// Undo pinConnection() and, optionally, close the pinned connection.
     void unpinConnection(const bool andClose);
-    /// Returns validated pinnned server connection (and stops its monitoring).
-    /// \throws a pointer to ErrorState if validation fails
-    Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *, const AccessLogEntryPointer &);
 
-    /// borrowPinnedConnection() for callers w/o direct access to ConnStateData
-    /// \throws a pointer to ErrorState
+    /// \returns validated pinned to-server connection, stopping its monitoring
+    /// \throws a newly allocated ErrorState if validation fails
     static Comm::ConnectionPointer BorrowPinnedConnection(HttpRequest *, const AccessLogEntryPointer &);
     /**
      * returts the pinned CachePeer if exists, NULL otherwise
@@ -332,6 +329,9 @@ protected:
     void finishDechunkingRequest(bool withSuccess);
     void abortChunkedRequestBody(const err_type error);
     err_type handleChunkedRequestBody();
+
+    /// ConnStateData-specific part of BorrowPinnedConnection()
+    Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *, const AccessLogEntryPointer &);
 
     void startPinnedConnectionMonitoring();
     void clientPinnedConnectionRead(const CommIoCbParams &io);
