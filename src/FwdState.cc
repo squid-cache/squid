@@ -1011,9 +1011,8 @@ FwdState::usePinned()
     debugs(17, 7, "connection manager: " << connManager);
 
     try {
-        const auto temp = ConnStateData::BorrowPinnedConnection(request, al);
-        debugs(17, 5, "connection: " << temp);
-        serverConn = temp;
+        serverConn = ConnStateData::BorrowPinnedConnection(request, al);
+        debugs(17, 5, "connection: " << serverConn);
     } catch (ErrorState * const anErr) {
         syncHierNote(nullptr, connManager ? connManager->pinning.host : request->url.host());
         serverConn = nullptr;
