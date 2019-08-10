@@ -210,7 +210,7 @@
 	the callback function is executed.  The routines in cbdata.c
 	provide a uniform method for managing callback data memory,
 	canceling callbacks, and preventing erroneous memory accesses.
-\todo DOCS: get callback_data (object?) linking or repalcement named.
+\todo DOCS: get callback_data (object?) linking or replacement named.
 
 \section RefCountDataAllocator Refcount Data Allocator
 \since Squid 3.0

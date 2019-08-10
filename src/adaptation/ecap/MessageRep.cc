@@ -204,8 +204,7 @@ Adaptation::Ecap::RequestLineRep::uri(const Area &aUri)
 {
     // TODO: if method is not set, AnyP::Uri::parse will assume it is not connect;
     // Can we change AnyP::Uri::parse API to remove the method parameter?
-    const char *buf = aUri.toString().c_str();
-    const bool ok = theMessage.url.parse(theMessage.method, buf);
+    const auto ok = theMessage.url.parse(theMessage.method, aUri.toString().c_str());
     Must(ok);
 }
 
