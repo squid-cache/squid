@@ -564,13 +564,13 @@ PeerSelector::selectPinned()
     if (!request->pinnedConnection())
         return;
 
-    const auto pear = request->pinnedConnection()->pinnedPeer();
-    const bool usePinned = pear ? peerAllowedToUse(pear, this) : (direct != DIRECT_NO);
+    const auto peer = request->pinnedConnection()->pinnedPeer();
+    const auto usePinned = peer ? peerAllowedToUse(peer, this) : (direct != DIRECT_NO);
     // If the pinned connection is prohibited (for this request) then
     // the initiator must decide whether it is OK to open a new one instead.
     request->pinnedConnection()->pinning.peerAccessDenied = !usePinned;
 
-    addSelection(pear, PINNED);
+    addSelection(peer, PINNED);
     if (entry)
         entry->ping_status = PING_DONE; // skip ICP
 }
