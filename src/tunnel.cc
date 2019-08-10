@@ -1174,7 +1174,7 @@ TunnelStateData::usePinned()
     const auto connManager = request->pinnedConnection();
     try {
         const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
-        debugs(26,7, "pinned peer connection: " << serverConn);
+        debugs(26, 7, "pinned peer connection: " << serverConn);
 
         Must(connManager);
 
@@ -1187,12 +1187,13 @@ TunnelStateData::usePinned()
         // the server may close the pinned connection before this request
         const auto reused = true;
         connectDone(serverConn, connManager->pinning.host, reused);
-    } catch (const PinningException &ex) {
+    } catch (ErrorState * const error) {
         syncHierNote(serverConn, connManager ? connManager->pinning.host : request->url.host());
         // a PINNED path failure is fatal; do not wait for more paths
-        sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw(), al), ex.what());
+        sendError(error, "pinned path failure");
         return;
     }
+
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);
