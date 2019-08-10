@@ -3909,55 +3909,48 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
         clientConnection->close();
 }
 
-void
-ConnStateData::validatePinnedConnection(HttpRequest *request)
-{
-    debugs(33, 7, HERE << pinning.serverConnection);
-
-    PinningException::PinningErrorType errType = PinningException::errNone;
-    const char *error = nullptr;
-    if (!Comm::IsConnOpen(pinning.serverConnection)) {
-        error = "server connection closed";
-        errType = PinningException::errConnectionGone;
-    } else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->url.host()) != 0) {
-        error = "wrong destination";
-        errType = PinningException::errPolicy;
-    } else if (request && pinning.port != request->url.port()) {
-        error = "wrong destination port";
-        errType = PinningException::errPolicy;
-    } else if (pinning.peer && !cbdataReferenceValid(pinning.peer)) {
-        error = "cache peer is gone";
-        errType = PinningException::errConnectionGone;
-    } else if (pinning.peerAccessDenied) {
-        error = "peer access prohibited";
-        errType = PinningException::errPolicy;
-    }
-
-    if (error) {
-        /* The pinning info is not safe, remove any pinning info */
-        unpinConnection(true);
-        SBuf tmp("pinned connection failure: ");
-        tmp.append(error);
-        throw PinningException(errType, tmp.c_str());
-    }
-}
-
 Comm::ConnectionPointer
-ConnStateData::borrowPinnedConnection(HttpRequest *request)
+ConnStateData::borrowPinnedConnection(HttpRequest *request, const AccessLogEntryPointer &ale)
 {
     debugs(33, 7, pinning.serverConnection);
-    validatePinnedConnection(request); // throws on error
+
+    const auto pinningError = [&](const err_type type) {
+        unpinConnection(true);
+        // TODO: Should we return NewForwarding() here instead?
+        return new ErrorState(type, Http::scServiceUnavailable, request, ale);
+    };
+
+    // XXX: Remove this change-minimization hack before the official commit:
+    // 1. Remove "else"
+    // 2. Add empty lines between ifs
+    // 3. Replace request pointer with a request reference, simplifying ifs.
+    if (!Comm::IsConnOpen(pinning.serverConnection))
+        throw pinningError(ERR_ZERO_SIZE_OBJECT);
+    else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->url.host()) != 0)
+        throw pinningError(ERR_CANNOT_FORWARD);
+    else if (request && pinning.port != request->url.port())
+        throw pinningError(ERR_CANNOT_FORWARD);
+    else if (pinning.peer && !cbdataReferenceValid(pinning.peer))
+        throw pinningError(ERR_ZERO_SIZE_OBJECT);
+
+    if (pinning.peerAccessDenied)
+        throw pinningError(ERR_CANNOT_FORWARD);
+
     stopPinnedConnectionMonitoring();
     return pinning.serverConnection;
 }
 
 Comm::ConnectionPointer
-ConnStateData::BorrowPinnedConnection(HttpRequest *request)
+ConnStateData::BorrowPinnedConnection(HttpRequest *request, const AccessLogEntryPointer &ale)
 {
     if (const auto connManager = request ? request->pinnedConnection() : nullptr)
-        return connManager->borrowPinnedConnection(request);
+        return connManager->borrowPinnedConnection(request, ale);
 
-    throw PinningException(PinningException::errConnectionGone, "pinned connection failure: client connection gone");
+    // TODO: Should we return NewForwarding() here instead?
+
+    // ERR_CANNOT_FORWARD is somewhat misleading here; we can still forward, but
+    // there is no point since the client connection is now gone
+    throw new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, ale);
 }
 
 void

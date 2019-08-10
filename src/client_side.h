@@ -18,6 +18,7 @@
 #include "http/forward.h"
 #include "HttpControlMsg.h"
 #include "ipc/FdNotes.h"
+#include "log/forward.h"
 #include "proxyp/forward.h"
 #include "sbuf/SBuf.h"
 #include "servers/Server.h"
@@ -46,22 +47,6 @@ namespace Ssl
 class ServerBump;
 }
 #endif
-
-/// An std::runtime_error with an error type description.
-class PinningException: public std::runtime_error
-{
-public:
-    enum PinningErrorType {
-        errNone,
-        errPolicy, //< pinning policy error, eg authentication failure
-        errConnectionGone //< one of the pinned connection sides is gone
-    };
-    PinningException(const PinningErrorType type, const char *descr):
-        std::runtime_error(descr),
-        errType(type)
-        {}
-    PinningErrorType errType;
-};
 
 /**
  * Legacy Server code managing a connection to a client.
@@ -199,20 +184,12 @@ public:
     /// Undo pinConnection() and, optionally, close the pinned connection.
     void unpinConnection(const bool andClose);
     /// Returns validated pinnned server connection (and stops its monitoring).
-    /// Throws a PinningException on errors
-    Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *request);
+    /// \throws a pointer to ErrorState if validation fails
+    Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *, const AccessLogEntryPointer &);
 
-    /// A static borrowPinnedConnection variant which also check if the
-    /// HttpRequest object is linked with a valid ConnStateData object
-    /// Throws a PinningException on errors;
-    static Comm::ConnectionPointer BorrowPinnedConnection(HttpRequest *request);
-    /**
-     * Checks if pinning info is valid. It can close the server side connection
-     * if pinned info is not valid.
-     * It trows a PinningException if pinned info is not valid
-     \param request   if it is not NULL also checks if the pinning info refers to the request client side HttpRequest
-     */
-    void validatePinnedConnection(HttpRequest *request);
+    /// borrowPinnedConnection() for callers w/o direct access to ConnStateData
+    /// \throws a pointer to ErrorState
+    static Comm::ConnectionPointer BorrowPinnedConnection(HttpRequest *, const AccessLogEntryPointer &);
     /**
      * returts the pinned CachePeer if exists, NULL otherwise
      */
