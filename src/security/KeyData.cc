@@ -78,6 +78,33 @@ Security::KeyData::loadX509CertFromFile()
     return bool(cert);
 }
 
+#if USE_OPENSSL || USE_GNUTLS
+static void
+verifyChainCert(Security::CertPointer &ca, Security::CertPointer &latestCert, Security::CertList &chain)
+{
+    auto nameStr = Security::CertSubjectName(ca);
+    Security::ErrorCode checkCode;
+#if !USE_OPENSSL || TLS_CHAIN_NO_SELFSIGNED
+    // self-signed certificates are not valid in a sent chain
+    if (Security::CertIssuerCheck(ca, ca, checkCode)) {
+        debugs(83, DBG_PARSE_NOTE(2), "CA " << nameStr << " is self-signed, will not be chained: " << nameStr);
+        return;
+    }
+#endif
+
+    // checks that the chained certs are actually part of a chain for validating cert
+    if (Security::CertIssuerCheck(latestCert, ca, checkCode)) {
+        debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << nameStr);
+        // OpenSSL API requires that we order certificates such that the
+        // chain can be appended directly into the on-wire traffic.
+        latestCert = ca;
+        chain.emplace_back(latestCert);
+    } else {
+        debugs(83, DBG_PARSE_NOTE(2), "Ignoring non-issuer CA " << nameStr << ": " << Security::VerifyErrorString(checkCode) << " (" << checkCode << ")");
+    }
+}
+#endif
+
 /**
  * Read certificate from file.
  * See also: Ssl::ReadX509Certificate function, gadgets.cc file
@@ -92,18 +119,9 @@ Security::KeyData::loadX509ChainFromFile()
         return;
     }
 
-#if USE_OPENSSL
-#if TLS_CHAIN_NO_SELFSIGNED
-    const bool dropSelfSigned = true;
-#else
-    const bool dropSelfSigned = false;
-#endif
-#elif USE_GNUTLS
-    const bool dropSelfSigned = true;
-#else
-    const bool dropSelfSigned = true;
-#endif
-    debugs(83, DBG_PARSE_NOTE(3), "NOTICE: will " << (dropSelfSigned?"drop":"send") << " self-signed CA (if any) in the chain");
+    debugs(83, DBG_PARSE_NOTE(2), "Using certificate chain in " << certFile);
+    // and add to the chain any other certificate exist in the file
+    CertPointer latestCert = cert;
 
 #if USE_OPENSSL
     const char *certFilename = certFile.c_str();
@@ -114,40 +132,40 @@ Security::KeyData::loadX509ChainFromFile()
         return;
     }
 
-    debugs(83, DBG_PARSE_NOTE(3), "Using certificate chain in " << certFile);
-    // and add to the chain any other certificate exist in the file
-    CertPointer latestCert = cert;
-
     while (CertPointer ca = CertPointer(PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr))) {
-        // get Issuer name of the cert for debug display
-        auto nameStr = CertSubjectName(ca);
-
-        // self-signed certificates are not valid in a sent chain
-        if (dropSelfSigned && CertIssuerCheck(ca, ca, checkCode)) {
-            debugs(83, DBG_PARSE_NOTE(2), "CA " << nameStr << " is self-signed, will not be chained: " << nameStr);
-            continue;
-        }
-
-        // checks that the chained certs are actually part of a chain for validating cert
-        if (CertIssuerCheck(latestCert, ca, checkCode)) {
-            debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << nameStr);
-            // OpenSSL API requires that we order certificates such that the
-            // chain can be appended directly into the on-wire traffic.
-            latestCert = ca;
-            chain.emplace_back(latestCert);
-        } else {
-            debugs(83, DBG_PARSE_NOTE(2), certFile << ": Ignoring non-issuer CA " << nameStr << ": " << X509_verify_cert_error_string(checkCode) << " (" << checkCode << ")");
-        }
+        verifyChainCert(ca, latestCert, chain);
     }
 
 #elif USE_GNUTLS
+    const char *certFilename = certFile.c_str();
+    gnutls_datum_t data;
+    Security::ErrorCode x = gnutls_load_file(certFilename, &data);
+    if (x != GNUTLS_E_SUCCESS) {
+        debugs(83, DBG_IMPORTANT, "ERROR: unable to load chain file '" << certFile << "': " << ErrorString(x));
+        return;
+    }
 
-    // XXX: implement chain loading
-    auto nameStr = CertSubjectName(cert);
-    debugs(83, DBG_PARSE_NOTE(2), "Loading certificate chain of " << nameStr << " from PEM files not implemented in this Squid.");
+    unsigned int listSz = 0;
+    gnutls_x509_crt_t *certChain;
+    x = gnutls_x509_crt_list_import2(&certChain, &listSz, &data, GNUTLS_X509_FMT_PEM, 0);
+    if (x != GNUTLS_E_SUCCESS) {
+        debugs(83, DBG_IMPORTANT, "ERROR: unable to import chain file '" << certFile << "': " << ErrorString(x));
+        return;
+    }
+
+    for (unsigned int i = 0; i < listSz ; ++i) {
+        CertPointer ca = Security::CertPointer(certChain[i], [](gnutls_x509_crt_t p) {
+            debugs(83, 5, "gnutls_x509_crt_deinit cert=" << (void*)p);
+            gnutls_x509_crt_deinit(p);
+        });
+
+        verifyChainCert(ca, latestCert, chain);
+    }
+    gnutls_free(certChain);
 
 #else
-    // nothing to do.
+    auto nameStr = CertSubjectName(cert);
+    debugs(83, DBG_PARSE_NOTE(2), "Loading certificate chain of " << nameStr << " from PEM files not implemented in this Squid.");
 #endif
 }
 
