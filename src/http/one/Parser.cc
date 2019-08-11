@@ -256,6 +256,11 @@ Http::One::Parser::getHeaderField(const char *name)
         // prevent buffer overrun on char header[];
         p.chop(0, sizeof(header)-1);
 
+        // XXX: currently only used for pre-parse Host header, ensure valid domain[:port] or ip[:port]
+        static const CharacterSet hostValid = CharacterSet("host",":[].-_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+        if (p.findFirstNotOf(hostValid) != SBuf::npos)
+            return nullptr;
+
         // return the header field-value
         SBufToCstring(header, p);
         debugs(25, 5, "returning " << header);
