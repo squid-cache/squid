@@ -3927,14 +3927,14 @@ ConnStateData::borrowPinnedConnection(HttpRequest *request, const AccessLogEntry
     if (!Comm::IsConnOpen(pinning.serverConnection))
         throw pinningError(ERR_ZERO_SIZE_OBJECT);
     else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->url.host()) != 0)
-        throw pinningError(ERR_CANNOT_FORWARD);
+        throw pinningError(ERR_CANNOT_FORWARD); // or generalize ERR_CONFLICT_HOST
     else if (request && pinning.port != request->url.port())
-        throw pinningError(ERR_CANNOT_FORWARD);
+        throw pinningError(ERR_CANNOT_FORWARD); // or generalize ERR_CONFLICT_HOST
     else if (pinning.peer && !cbdataReferenceValid(pinning.peer))
         throw pinningError(ERR_ZERO_SIZE_OBJECT);
 
     if (pinning.peerAccessDenied)
-        throw pinningError(ERR_CANNOT_FORWARD); // TODO: Why not ERR_ACCESS_DENIED?
+        throw pinningError(ERR_CANNOT_FORWARD); // or generalize ERR_FORWARDING_DENIED
 
     stopPinnedConnectionMonitoring();
     return pinning.serverConnection;
