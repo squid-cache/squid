@@ -2727,7 +2727,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
 
 void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties)
 {
-    certProperties.commonName =  sslCommonName_.isEmpty() ? tlsConnectHostOrIp.c_str() : sslCommonName_.c_str();
+    certProperties.commonName = sslCommonName_.isEmpty() ? tlsConnectHostOrIp.c_str() : sslCommonName_.c_str();
 
     const bool connectedOk = sslServerBump && sslServerBump->connectedOk();
     if (connectedOk) {
