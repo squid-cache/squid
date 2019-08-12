@@ -179,7 +179,7 @@ public:
     SBuf lastAclData; ///< string for external_acl_type %DATA format code
 
     HierarchyLogEntry hier;
-    HttpReplyPointer reply; ///< sent reply
+    HttpReplyPointer reply; ///< sent reply (SeeSquidWiki)
 
     HttpRequest *request = nullptr; //< virgin HTTP request
     HttpRequest *adapted_request = nullptr; //< HTTP request after adaptation and redirection
