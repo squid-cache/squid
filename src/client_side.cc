@@ -1570,7 +1570,7 @@ ConnStateData::tunnelOnError(const HttpRequestMethod &method, const err_type req
     checklist.my_addr = clientConnection->local;
     checklist.conn(this);
     const char *log_uri = http ? http->log_uri : nullptr;
-    checklist.syncAle(request.getRaw(), log_uri);
+    checklist.syncAle(request, log_uri);
     auto answer = checklist.fastCheck();
     if (answer.allowed() && answer.kind == 1) {
         debugs(33, 3, "Request will be tunneled to server");
