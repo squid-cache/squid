@@ -305,12 +305,6 @@ public:
     /// tunneling them to the server later (on_unsupported_protocol)
     bool shouldPreserveClientData() const;
 
-    /// keep preservedClientData up to date if we may use it later
-    void preserveClientDataIfNeeded() {
-        if (preservingClientData_)
-            preservedClientData = inBuf;
-    }
-
     // TODO: move to the protected section when removing clientTunnelOnError()
     bool tunnelOnError(const HttpRequestMethod &, const err_type);
 
@@ -347,6 +341,16 @@ protected:
     /// \return false if and only if the connection should be closed.
     bool handleIdleClientPinnedTlsRead();
 #endif
+
+    /// Parse an HTTP request
+    /// \note Sets result->flags.parsed_ok to 0 if failed to parse the request,
+    ///       to 1 if the request was correctly parsed
+    /// \param[in] hp an Http1::RequestParser
+    /// \return NULL on incomplete requests,
+    ///         a Http::Stream on success or failure.
+    /// TODO: Move to HttpServer. Warning: Move requires large code nonchanges!
+    Http::Stream *parseHttpRequest(const Http1::RequestParserPointer &);
+
 
     /// parse input buffer prefix into a single transfer protocol request
     /// return NULL to request more header bytes (after checking any limits)
@@ -406,9 +410,6 @@ private:
     Auth::UserRequest::Pointer auth_;
 #endif
 
-    /// the parser state for current HTTP/1.x input buffer processing
-    Http1::RequestParserPointer parser_;
-
 #if USE_OPENSSL
     bool switchedToHttps_;
     bool parsingTlsHandshake; ///< whether we are getting/parsing TLS Hello bytes
@@ -466,8 +467,6 @@ SQUIDCEXTERN CSD clientReplyDetach;
 CSCB clientSocketRecipient;
 CSD clientSocketDetach;
 
-/* TODO: Move to HttpServer. Warning: Move requires large code nonchanges! */
-Http::Stream *parseHttpRequest(ConnStateData *, const Http1::RequestParserPointer &);
 void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, Http::Stream *);
 void clientPostHttpsAccept(ConnStateData *);
 

@@ -1272,31 +1272,20 @@ prepareTransparentURL(ConnStateData * conn, const Http1::RequestParserPointer &h
     return uri;
 }
 
-/** Parse an HTTP request
- *
- *  \note Sets result->flags.parsed_ok to 0 if failed to parse the request,
- *          to 1 if the request was correctly parsed.
- *  \param[in] csd a ConnStateData. The caller must make sure it is not null
- *  \param[in] hp an Http1::RequestParser
- *  \param[out] mehtod_p will be set as a side-effect of the parsing.
- *          Pointed-to value will be set to Http::METHOD_NONE in case of
- *          parsing failure
- *  \param[out] http_ver will be set as a side-effect of the parsing
- *  \return NULL on incomplete requests,
- *          a Http::Stream on success or failure.
- */
 Http::Stream *
-parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
+ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
 {
     /* Attempt to parse the first line; this will define where the method, url, version and header begin */
     {
-        // TODO: Convert parseHttpRequest() into a method and inline this call.
-        csd->preserveClientDataIfNeeded();
+        Must(hp);
 
-        const bool parsedOk = hp->parse(csd->inBuf);
+        if (preservingClientData_)
+            preservedClientData = inBuf;
+
+        const bool parsedOk = hp->parse(inBuf);
 
         // sync the buffers after parsing.
-        csd->inBuf = hp->remaining();
+        inBuf = hp->remaining();
 
         if (hp->needsMoreData()) {
             debugs(33, 5, "Incomplete request, waiting for end of request line");
@@ -1307,28 +1296,28 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
             const bool tooBig =
                 hp->parseStatusCode == Http::scRequestHeaderFieldsTooLarge ||
                 hp->parseStatusCode == Http::scUriTooLong;
-            auto result = csd->abortRequestParsing(
-                              tooBig ? "error:request-too-large" : "error:invalid-request");
+            auto result = abortRequestParsing(
+                          tooBig ? "error:request-too-large" : "error:invalid-request");
             // assume that remaining leftovers belong to this bad request
-            if (!csd->inBuf.isEmpty())
-                csd->consumeInput(csd->inBuf.length());
+            if (!inBuf.isEmpty())
+                consumeInput(inBuf.length());
             return result;
         }
     }
 
     /* We know the whole request is in parser now */
-    debugs(11, 2, "HTTP Client " << csd->clientConnection);
+    debugs(11, 2, "HTTP Client " << clientConnection);
     debugs(11, 2, "HTTP Client REQUEST:\n---------\n" <<
            hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol() << "\n" <<
            hp->mimeHeader() <<
            "\n----------");
 
     /* deny CONNECT via accelerated ports */
-    if (hp->method() == Http::METHOD_CONNECT && csd->port != NULL && csd->port->flags.accelSurrogate) {
-        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->transferProtocol << " Accelerator port " << csd->port->s.port());
+    if (hp->method() == Http::METHOD_CONNECT && port != NULL && port->flags.accelSurrogate) {
+        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << transferProtocol << " Accelerator port " << port->s.port());
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
         hp->parseStatusCode = Http::scMethodNotAllowed;
-        return csd->abortRequestParsing("error:method-not-allowed");
+        return abortRequestParsing("error:method-not-allowed");
     }
 
     /* RFC 7540 section 11.6 registers the method PRI as HTTP/2 specific
@@ -1336,16 +1325,16 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
      * If seen it signals a broken client or proxy has corrupted the traffic.
      */
     if (hp->method() == Http::METHOD_PRI && hp->messageProtocol() < Http::ProtocolVersion(2,0)) {
-        debugs(33, DBG_IMPORTANT, "WARNING: PRI method received on " << csd->transferProtocol << " port " << csd->port->s.port());
+        debugs(33, DBG_IMPORTANT, "WARNING: PRI method received on " << transferProtocol << " port " << port->s.port());
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
         hp->parseStatusCode = Http::scMethodNotAllowed;
-        return csd->abortRequestParsing("error:method-not-allowed");
+        return abortRequestParsing("error:method-not-allowed");
     }
 
     if (hp->method() == Http::METHOD_NONE) {
         debugs(33, DBG_IMPORTANT, "WARNING: Unsupported method: " << hp->method() << " " << hp->requestUri() << " " << hp->messageProtocol());
         hp->parseStatusCode = Http::scMethodNotAllowed;
-        return csd->abortRequestParsing("error:unsupported-request-method");
+        return abortRequestParsing("error:unsupported-request-method");
     }
 
     // Process headers after request line
@@ -1356,10 +1345,10 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
            ", mime header block:\n" << hp->mimeHeader() << "\n----------");
 
     /* Ok, all headers are received */
-    ClientHttpRequest *http = new ClientHttpRequest(csd);
+    ClientHttpRequest *http = new ClientHttpRequest(this);
 
     http->req_sz = hp->messageHeaderSize();
-    Http::Stream *result = new Http::Stream(csd->clientConnection, http);
+    Http::Stream *result = new Http::Stream(clientConnection, http);
 
     StoreIOBuffer tempBuffer;
     tempBuffer.data = result->reqbuf;
@@ -1373,7 +1362,7 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
 
     /* set url */
     debugs(33,5, "Prepare absolute URL from " <<
-           (csd->transparent()?"intercept":(csd->port->flags.accelSurrogate ? "accel":"")));
+           (transparent()?"intercept":(port->flags.accelSurrogate ? "accel":"")));
     /* Rewrite the URL in transparent or accelerator mode */
     /* NP: there are several cases to traverse here:
      *  - standard mode (forward proxy)
@@ -1387,11 +1376,11 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
      *  - remote interception with PROXY protocol
      *  - remote reverse-proxy with PROXY protocol
      */
-    if (csd->switchedToHttps()) {
-        http->uri = csd->prepareTlsSwitchingURL(hp);
-    } else if (csd->transparent()) {
+    if (switchedToHttps()) {
+        http->uri = prepareTlsSwitchingURL(hp);
+    } else if (transparent()) {
         /* intercept or transparent mode, properly working with no failures */
-        http->uri = prepareTransparentURL(csd, hp);
+        http->uri = prepareTransparentURL(this, hp);
 
     } else if (internalCheck(hp->requestUri())) { // NP: only matches relative-URI
         /* internal URL mode */
@@ -1401,9 +1390,9 @@ parseHttpRequest(ConnStateData *csd, const Http1::RequestParserPointer &hp)
         //  But have not parsed there yet!! flag for local-only handling.
         http->flags.internal = true;
 
-    } else if (csd->port->flags.accelSurrogate) {
+    } else if (port->flags.accelSurrogate) {
         /* accelerator mode */
-        http->uri = prepareAcceleratedURL(csd, hp);
+        http->uri = prepareAcceleratedURL(this, hp);
         http->flags.accel = true;
     }
 

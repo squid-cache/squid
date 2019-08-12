@@ -85,7 +85,7 @@ Http::One::Server::parseOneRequest()
         parser_ = new Http1::RequestParser(preservingClientData_);
 
     /* Process request */
-    Http::Stream *context = parseHttpRequest(this, parser_);
+    Http::Stream *context = parseHttpRequest(parser_);
 
     PROF_stop(HttpServer_parseOneRequest);
     return context;
