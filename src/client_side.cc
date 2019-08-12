@@ -1563,25 +1563,21 @@ ConnStateData::tunnelOnError(const HttpRequestMethod &method, const err_type req
     const auto http = context ? context->http : nullptr;
     const auto request = http ? http->request : nullptr;
 
-    // TODO: Remove this change-reducing hack.
-    const auto conn = this;
-    {
-        ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, request, nullptr);
-        checklist.al = http ? http->al : nullptr;
-        checklist.requestErrorType = requestError;
-        checklist.src_addr = conn->clientConnection->remote;
-        checklist.my_addr = conn->clientConnection->local;
-        checklist.conn(conn);
-        const char *log_uri = http ? http->log_uri : nullptr;
-        checklist.syncAle(request.getRaw(), log_uri);
-        auto answer = checklist.fastCheck();
-        if (answer.allowed() && answer.kind == 1) {
-            debugs(33, 3, "Request will be tunneled to server");
-            if (context)
-                context->finished(); // Will remove from pipeline queue
-            Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-            return conn->initiateTunneledRequest(request, Http::METHOD_NONE, "unknown-protocol", conn->preservedClientData);
-        }
+    ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, request, nullptr);
+    checklist.al = http ? http->al : nullptr;
+    checklist.requestErrorType = requestError;
+    checklist.src_addr = clientConnection->remote;
+    checklist.my_addr = clientConnection->local;
+    checklist.conn(this);
+    const char *log_uri = http ? http->log_uri : nullptr;
+    checklist.syncAle(request.getRaw(), log_uri);
+    auto answer = checklist.fastCheck();
+    if (answer.allowed() && answer.kind == 1) {
+        debugs(33, 3, "Request will be tunneled to server");
+        if (context)
+            context->finished(); // Will remove from pipeline queue
+        Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
+        return initiateTunneledRequest(request, Http::METHOD_NONE, "unknown-protocol", preservedClientData);
     }
     debugs(33, 3, "denied; send error: " << requestError);
     return false;
