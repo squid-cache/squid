@@ -4012,7 +4012,7 @@ ConnStateData::shouldPreserveClientData() const
     if (!Config.accessList.on_unsupported_protocol)
         return false;
 
-    // TODO: Explain why we do not tunnel intercepted ftp_port bytes.
+    // TODO: Figure out whether/how we can support FTP tunneling.
     if (port->transport.protocol == AnyP::PROTO_FTP)
         return false;
 
