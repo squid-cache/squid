@@ -3913,6 +3913,7 @@ Comm::ConnectionPointer
 ConnStateData::borrowPinnedConnection(HttpRequest *request, const AccessLogEntryPointer &ale)
 {
     debugs(33, 7, pinning.serverConnection);
+    Must(request);
 
     const auto pinningError = [&](const err_type type) {
         unpinConnection(true);
@@ -3920,17 +3921,16 @@ ConnStateData::borrowPinnedConnection(HttpRequest *request, const AccessLogEntry
         return ErrorState::NewForwarding(type, requestPointer, ale);
     };
 
-    // XXX: Remove this change-minimization hack before the official commit:
-    // 1. Remove "else"
-    // 2. Add empty lines between ifs
-    // 3. Replace request pointer with a request reference, simplifying ifs.
     if (!Comm::IsConnOpen(pinning.serverConnection))
         throw pinningError(ERR_ZERO_SIZE_OBJECT);
-    else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->url.host()) != 0)
+
+    if (pinning.auth && pinning.host && strcasecmp(pinning.host, request->url.host()) != 0)
         throw pinningError(ERR_CANNOT_FORWARD); // or generalize ERR_CONFLICT_HOST
-    else if (request && pinning.port != request->url.port())
+
+    if (pinning.port != request->url.port())
         throw pinningError(ERR_CANNOT_FORWARD); // or generalize ERR_CONFLICT_HOST
-    else if (pinning.peer && !cbdataReferenceValid(pinning.peer))
+
+    if (pinning.peer && !cbdataReferenceValid(pinning.peer))
         throw pinningError(ERR_ZERO_SIZE_OBJECT);
 
     if (pinning.peerAccessDenied)
