@@ -82,7 +82,6 @@ Security::PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &)
     auto anErr = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al);
     anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
     bail(anErr);
-    serverConnection()->close();
     mustStop("Timedout");
 }
 
@@ -217,7 +216,7 @@ Security::PeerConnector::negotiate()
     if (!sslFinalized())
         return;
 
-    callBack();
+    sendSuccess();
 }
 
 bool
@@ -254,7 +253,6 @@ Security::PeerConnector::sslFinalized()
 
             noteNegotiationDone(anErr);
             bail(anErr);
-            serverConn->close();
             return true;
         }
     }
@@ -294,7 +292,7 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 
     if (!errDetails && !validatorFailed) {
         noteNegotiationDone(NULL);
-        callBack();
+        sendSuccess();
         return;
     }
 
@@ -309,7 +307,6 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 
     noteNegotiationDone(anErr);
     bail(anErr);
-    serverConn->close();
     return;
 }
 #endif
@@ -561,12 +558,29 @@ Security::PeerConnector::bail(ErrorState *error)
     dialer->answer().error = error;
 
     callBack();
-    // Our job is done. The callabck recipient will probably close the failed
-    // peer connection and try another peer or go direct (if possible). We
-    // can close the connection ourselves (our error notification would reach
-    // the recipient before the fd-closure notification), but we would rather
-    // minimize the number of fd-closure notifications and let the recipient
-    // manage the TCP state of the connection.
+    disconnect(true);
+}
+
+void
+Security::PeerConnector::sendSuccess()
+{
+    callBack();
+    disconnect(false);
+}
+
+void
+Security::PeerConnector::disconnect(const bool andClose)
+{
+    // remove close handler
+    comm_remove_close_handler(serverConnection()->fd, closeHandler);
+
+    // remove timeout handler
+    commUnsetConnTimeout(serverConnection());
+
+    if (andClose) {
+        serverConn->close();
+        serverConn = nullptr;
+    }
 }
 
 void
@@ -578,13 +592,6 @@ Security::PeerConnector::callBack()
     // Do this now so that if we throw below, swanSong() assert that we _tried_
     // to call back holds.
     callback = NULL; // this should make done() true
-
-    // remove close handler
-    comm_remove_close_handler(serverConnection()->fd, closeHandler);
-
-    // remove timeout handler
-    commUnsetConnTimeout(serverConnection());
-
     CbDialer *dialer = dynamic_cast<CbDialer*>(cb->getDialer());
     Must(dialer);
     dialer->answer().conn = serverConnection();

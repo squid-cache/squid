@@ -117,7 +117,6 @@ Http::Tunneler::handleException(const std::exception& e)
 {
     debugs(83, 2, e.what() << status());
     bailWith(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
-    connection->close();
 }
 
 void
@@ -244,7 +243,6 @@ Http::Tunneler::handleReadyRead(const CommIoCbParams &io)
         const auto error = new ErrorState(ERR_READ_ERROR, Http::scBadGateway, request.getRaw(), al);
         error->xerrno = rd.xerrno;
         bailWith(error);
-        connection->close();
         return;
     }
     }
@@ -355,14 +353,22 @@ Http::Tunneler::bailWith(ErrorState *error)
     Must(error);
     answer().squidError = error;
     callBack();
+    disconnect(true);
 }
 
 void
-Http::Tunneler::callBack()
+Http::Tunneler::sendSuccess()
 {
-    debugs(83, 5, connection << status());
-    auto cb = callback;
-    callback = nullptr;
+    assert(answer().positive());
+    callBack();
+    disconnect(false);
+}
+
+void
+Http::Tunneler::disconnect(const bool andClose)
+{
+    if (!connection)
+        return;
 
     // remove close handler
     comm_remove_close_handler(connection->fd, closer);
@@ -371,6 +377,18 @@ Http::Tunneler::callBack()
     // remove connection timeout handler
     commUnsetConnTimeout(connection);
 
+    if (andClose) {
+        connection->close();
+        connection = nullptr;
+    }
+}
+
+void
+Http::Tunneler::callBack()
+{
+    debugs(83, 5, connection << status());
+    auto cb = callback;
+    callback = nullptr;
     ScheduleCallHere(cb);
 }
 
@@ -381,19 +399,13 @@ Http::Tunneler::swanSong()
 
     if (callback) {
         if (requestWritten && tunnelEstablished) {
-            assert(answer().positive());
-            callBack(); // success
+            sendSuccess();
         } else {
             // we should have bailed when we discovered the job-killing problem
             debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while establishing a CONNECT tunnel " << connection << status());
             bailWith(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
         }
         assert(!callback);
-    }
-
-    if (closer) {
-        comm_remove_close_handler(connection->fd, closer);
-        closer = nullptr;
     }
 
     if (reader) {

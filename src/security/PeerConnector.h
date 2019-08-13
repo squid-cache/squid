@@ -163,9 +163,16 @@ protected:
 
     void bail(ErrorState *error); ///< Return an error to the PeerConnector caller
 
+    /// Return a ready to use connection to the caller
+    void sendSuccess();
+
     /// Callback the caller class, and pass the ready to communicate secure
     /// connection or an error if PeerConnector failed.
     void callBack();
+
+    /// Stop monitoring the connection
+    /// \param andClose if true also closes the connection
+    void disconnect(const bool andClose);
 
     /// If called the certificates validator will not used
     void bypassCertValidator() {useCertValidator_ = false;}

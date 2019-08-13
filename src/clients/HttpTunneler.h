@@ -88,8 +88,20 @@ protected:
     void readMore();
     void handleResponse(const bool eof);
     void bailOnResponseError(const char *error, HttpReply *);
+
+    /// Return an error to the caller
     void bailWith(ErrorState*);
+
+    /// Return a ready to use connection to the caller
+    void sendSuccess();
+
+    /// Callback the caller class, and pass the ready to use
+    /// connection or an error if Tunneler failed.
     void callBack();
+
+    /// Stop monitoring the connection
+    /// \param andClose if true also closes the connection
+    void disconnect(const bool andClose);
 
     TunnelerAnswer &answer();
 
