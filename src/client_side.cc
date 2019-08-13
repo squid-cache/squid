@@ -3916,8 +3916,8 @@ ConnStateData::borrowPinnedConnection(HttpRequest *request, const AccessLogEntry
 
     const auto pinningError = [&](const err_type type) {
         unpinConnection(true);
-        // TODO: Should we return NewForwarding() here instead?
-        return new ErrorState(type, Http::scServiceUnavailable, request, ale);
+        HttpRequestPointer requestPointer = request;
+        return ErrorState::NewForwarding(type, requestPointer, ale);
     };
 
     // XXX: Remove this change-minimization hack before the official commit:
@@ -3946,11 +3946,10 @@ ConnStateData::BorrowPinnedConnection(HttpRequest *request, const AccessLogEntry
     if (const auto connManager = request ? request->pinnedConnection() : nullptr)
         return connManager->borrowPinnedConnection(request, ale);
 
-    // TODO: Should we return NewForwarding() here instead?
-
     // ERR_CANNOT_FORWARD is somewhat misleading here; we can still forward, but
     // there is no point since the client connection is now gone
-    throw new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, ale);
+    HttpRequestPointer requestPointer = request;
+    throw ErrorState::NewForwarding(ERR_CANNOT_FORWARD, requestPointer, ale);
 }
 
 void
