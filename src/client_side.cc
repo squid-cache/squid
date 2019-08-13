@@ -2050,6 +2050,23 @@ setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl)
     }
 }
 
+static char *
+getHostHeader(const char *req_hdr)
+{
+    char *host = mime_get_header(req_hdr, "Host");
+    if (!host)
+        return NULL;
+
+    // check the header contents are valid
+    for(const char *c = host; *c != '\0'; ++c) {
+        // currently only used for pre-parse Host header, ensure valid domain[:port] or ip[:port]
+        static const CharacterSet hostChars = CharacterSet("host",":[].-_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+        if (hostChars[*c])
+            return NULL; // error. line contains character not accepted in Host header
+    }
+    return host;
+}
+
 static void
 prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, const char *req_hdr)
 {
@@ -2092,7 +2109,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
     const bool switchedToHttps = conn->switchedToHttps();
     const bool tryHostHeader = vhost || switchedToHttps;
-    if (tryHostHeader && (host = mime_get_header(req_hdr, "Host")) != NULL) {
+    if (tryHostHeader && (host = getHostHeader(req_hdr)) != NULL) {
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
         char thost[256];
         if (vport > 0) {
@@ -2151,7 +2168,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
 
-    if ((host = mime_get_header(req_hdr, "Host")) != NULL) {
+    if ((host = getHostHeader(req_hdr)) != NULL) {
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
