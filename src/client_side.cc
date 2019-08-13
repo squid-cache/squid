@@ -1142,7 +1142,7 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
         vport = conn->clientConnection->local.port();
 
     char *host = NULL;
-    if (vhost && (host = hp->getHeaderField("Host"))) {
+    if (vhost && (host = hp->getHostHeaderField())) {
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
         char thost[256];
         if (vport > 0) {
@@ -1198,7 +1198,7 @@ buildUrlFromHost(ConnStateData * conn, const Http1::RequestParserPointer &hp)
 {
     char *uri = nullptr;
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
-    if (const char *host = hp->getHeaderField("Host")) {
+    if (const char *host = hp->getHostHeaderField()) {
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
         const int url_sz = scheme.length() + strlen(host) + hp->requestUri().length() + 32;
         uri = static_cast<char *>(xcalloc(url_sz, 1));
