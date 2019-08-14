@@ -59,6 +59,16 @@ AnyP::Uri::host(const char *src)
     touch();
 }
 
+SBuf
+AnyP::Uri::hostOrIp() const
+{
+    static char ip[MAX_IPSTRLEN];
+    if (hostIsNumeric())
+        return SBuf(hostIP().toStr(ip, sizeof(ip)));
+    else
+        return SBuf(host());
+}
+
 const SBuf &
 AnyP::Uri::path() const
 {

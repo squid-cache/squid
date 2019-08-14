@@ -80,6 +80,11 @@ public:
     int hostIsNumeric(void) const {return hostIsNumeric_;}
     Ip::Address const & hostIP(void) const {return hostAddr_;}
 
+    /// \returns the host subcomponent of the authority component
+    /// If the host is an IPv6 address, returns that IP address without
+    /// [brackets]! See RFC 3986 Section 3.2.2.
+    SBuf hostOrIp() const;
+
     void port(unsigned short p) {port_=p; touch();}
     unsigned short port() const {return port_;}
 
