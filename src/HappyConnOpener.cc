@@ -325,20 +325,12 @@ HappyConnOpenerAnswer::~HappyConnOpenerAnswer()
 
 HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart, int tries, const AccessLogEntry::Pointer &anAle):
     AsyncJob("HappyConnOpener"),
-    primeStart(0),
     fwdStart(aFwdStart),
     callback_(aCall),
     destinations(dests),
     ale(anAle),
-    lastError(nullptr),
-    ignoreSpareRestrictions(false),
-    gotSpareAllowance(false),
-    allowPconn_(true),
-    retriable_(true),
-    host_(nullptr),
     cause(request),
-    n_tries(tries),
-    ranOutOfTimeOrAttemptsEarlier_(nullptr)
+    n_tries(tries)
 {
     assert(destinations);
     assert(dynamic_cast<Answer*>(callback_->getDialer()));

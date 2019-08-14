@@ -148,7 +148,7 @@ public:
     void noteSpareAllowance();
 
     /// the start of the first connection attempt for the currentPeer
-    HappyAbsoluteTime primeStart;
+    HappyAbsoluteTime primeStart = 0;
 
 private:
     /// a connection opening attempt in progress (or falsy)
@@ -216,23 +216,23 @@ private:
 
     AccessLogEntryPointer ale; ///< transaction details
 
-    ErrorState *lastError; ///< last problem details (or nil)
+    ErrorState *lastError = nullptr; ///< last problem details (or nil)
     Comm::ConnectionPointer lastFailedConnection; ///< nil if none has failed
 
     /// whether spare connection attempts disregard happy_eyeballs_* settings
-    bool ignoreSpareRestrictions;
+    bool ignoreSpareRestrictions = false;
 
     /// whether we have received a permission to open a spare while spares are limited
-    bool gotSpareAllowance;
+    bool gotSpareAllowance = false;
 
     /// whether persistent connections are allowed
-    bool allowPconn_;
+    bool allowPconn_ = true;
 
     /// whether we are opening connections for a request that may be resent
-    bool retriable_;
+    bool retriable_ = true;
 
     /// origin server domain name (or equivalent)
-    const char *host_;
+    const char *host_ = nullptr;
 
     /// the request that needs a to-server connection
     HttpRequestPointer cause;
@@ -241,7 +241,7 @@ private:
     int n_tries;
 
     /// Reason to ran out of time or attempts
-    mutable const char *ranOutOfTimeOrAttemptsEarlier_;
+    mutable const char *ranOutOfTimeOrAttemptsEarlier_ = nullptr;
 };
 
 #endif
