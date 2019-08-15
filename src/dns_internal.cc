@@ -1667,6 +1667,9 @@ idnsCachedLookup(const char *key, IDNSCB * callback, void *data)
     if (!old)
         return 0;
 
+    // XXX: We are collapsing this DNS query (B) onto another one (A), but there
+    // is no code to later send B if the A answer has unshareable 0 TTL records.
+
     idns_query *q = new idns_query;
     // no query_id on this instance.
 

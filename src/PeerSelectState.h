@@ -18,6 +18,7 @@
 #include "ipcache.h"
 #include "mem/forward.h"
 #include "PingData.h"
+#include "typedefs.h" /* for IRCB */
 
 class ErrorState;
 class HtcpReplyData;

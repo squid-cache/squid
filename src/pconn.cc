@@ -333,6 +333,11 @@ PconnPool::key(const Comm::ConnectionPointer &destLink, const char *domain)
     LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN * 3 + 10);
 
     destLink->remote.toUrl(buf, SQUIDHOSTNAMELEN * 3 + 10);
+
+    // when connecting through a cache_peer, ignore the final destination
+    if (destLink->getPeer())
+        domain = nullptr;
+
     if (domain) {
         const int used = strlen(buf);
         snprintf(buf+used, SQUIDHOSTNAMELEN * 3 + 10-used, "/%s", domain);
@@ -443,28 +448,52 @@ PconnPool::push(const Comm::ConnectionPointer &conn, const char *domain)
 Comm::ConnectionPointer
 PconnPool::pop(const Comm::ConnectionPointer &dest, const char *domain, bool keepOpen)
 {
+    // always call shared pool first because we need to close an idle
+    // connection there if we have to use a standby connection.
+    if (const auto direct = popStored(dest, domain, keepOpen))
+        return direct;
 
+    // either there was no pconn to pop or this is not a retriable xaction
+    if (const auto peer = dest->getPeer()) {
+        if (peer->standby.pool)
+            return peer->standby.pool->popStored(dest, domain, true);
+    }
+
+    return nullptr;
+}
+
+/// implements pop() API while disregarding peer standby pools
+/// \returns an open connection or nil
+Comm::ConnectionPointer
+PconnPool::popStored(const Comm::ConnectionPointer &dest, const char *domain, const bool keepOpen)
+{
     const char * aKey = key(dest, domain);
 
     IdleConnList *list = (IdleConnList *)hash_lookup(table, aKey);
     if (list == NULL) {
         debugs(48, 3, HERE << "lookup for key {" << aKey << "} failed.");
         // failure notifications resume standby conn creation after fdUsageHigh
-        notifyManager("pop failure");
+        notifyManager("pop lookup failure");
         return Comm::ConnectionPointer();
     } else {
         debugs(48, 3, "found " << hashKeyStr(list) <<
                (keepOpen ? " to use" : " to kill"));
     }
 
-    /* may delete list */
-    Comm::ConnectionPointer popped = list->findUseable(dest);
-    if (!keepOpen && Comm::IsConnOpen(popped))
-        popped->close();
+    if (const auto popped = list->findUseable(dest)) { // may delete list
+        // successful pop notifications replenish standby connections pool
+        notifyManager("pop");
 
-    // successful pop notifications replenish standby connections pool
-    notifyManager("pop");
-    return popped;
+        if (keepOpen)
+            return popped;
+
+        popped->close();
+        return Comm::ConnectionPointer();
+    }
+
+    // failure notifications resume standby conn creation after fdUsageHigh
+    notifyManager("pop usability failure");
+    return Comm::ConnectionPointer();
 }
 
 void

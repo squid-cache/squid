@@ -10460,4 +10460,99 @@ DOC_START
 		server_pconn_for_nonretriable allow SpeedIsWorthTheRisk
 DOC_END
 
+NAME: happy_eyeballs_connect_timeout
+COMMENT: (msec)
+TYPE: int
+DEFAULT: 250
+LOC: Config.happyEyeballs.connect_timeout
+DOC_START
+	This Happy Eyeballs (RFC 8305) tuning directive specifies the minimum
+	delay between opening a primary to-server connection and opening a
+	spare to-server connection for the same master transaction. This delay
+	is similar to the Connection Attempt Delay in RFC 8305, but it is only
+	applied to the first spare connection attempt. Subsequent spare
+	connection attempts use happy_eyeballs_connect_gap, and primary
+	connection attempts are not artificially delayed at all.
+
+	Terminology: The "primary" and "spare" designations are determined by
+	the order of DNS answers received by Squid: If Squid DNS AAAA query
+	was answered first, then primary connections are connections to IPv6
+	peer addresses (while spare connections use IPv4 addresses).
+	Similarly, if Squid DNS A query was answered first, then primary
+	connections are connections to IPv4 peer addresses (while spare
+	connections use IPv6 addresses).
+
+	Shorter happy_eyeballs_connect_timeout values reduce master
+	transaction response time, potentially improving user-perceived
+	response times (i.e., making user eyeballs happier). Longer delays
+	reduce both concurrent connection level and server bombardment with
+	connection requests, potentially improving overall Squid performance
+	and reducing the chance of being blocked by servers for opening too
+	many unused connections.
+
+	RFC 8305 prohibits happy_eyeballs_connect_timeout values smaller than
+	10 (milliseconds) to "avoid congestion collapse in the presence of
+	high packet-loss rates".
+
+	The following Happy Eyeballs directives place additional connection
+	opening restrictions: happy_eyeballs_connect_gap and
+	happy_eyeballs_connect_limit.
+DOC_END
+
+NAME: happy_eyeballs_connect_gap
+COMMENT: (msec)
+TYPE: int
+DEFAULT: -1
+DEFAULT_DOC: no artificial delays between spare attempts
+LOC: Config.happyEyeballs.connect_gap
+DOC_START
+	This Happy Eyeballs (RFC 8305) tuning directive specifies the
+	minimum delay between opening spare to-server connections (to any
+	server; i.e. across all concurrent master transactions in a Squid
+	instance). Each SMP worker currently multiplies the configured gap
+	by the total number of workers so that the combined spare connection
+	opening rate of a Squid instance obeys the configured limit. The
+	workers do not coordinate connection openings yet; a micro burst
+	of spare connection openings may violate the configured gap.
+
+	This directive has similar trade-offs as
+	happy_eyeballs_connect_timeout, but its focus is on limiting traffic
+	amplification effects for Squid as a whole, while
+	happy_eyeballs_connect_timeout works on an individual master
+	transaction level.
+
+	The following Happy Eyeballs directives place additional connection
+	opening restrictions: happy_eyeballs_connect_timeout and
+	happy_eyeballs_connect_limit. See the former for related terminology.
+DOC_END
+
+NAME: happy_eyeballs_connect_limit
+TYPE: int
+DEFAULT: -1
+DEFAULT_DOC: no artificial limit on the number of concurrent spare attempts
+LOC: Config.happyEyeballs.connect_limit
+DOC_START
+	This Happy Eyeballs (RFC 8305) tuning directive specifies the
+	maximum number of spare to-server connections (to any server; i.e.
+	across all concurrent master transactions in a Squid instance).
+	Each SMP worker gets an equal share of the total limit. However,
+	the workers do not share the actual connection counts yet, so one
+	(busier) worker cannot "borrow" spare connection slots from another
+	(less loaded) worker.
+
+	Setting this limit to zero disables concurrent use of primary and
+	spare TCP connections: Spare connection attempts are made only after
+	all primary attempts fail. However, Squid would still use the
+	DNS-related optimizations of the Happy Eyeballs approach.
+
+	This directive has similar trade-offs as happy_eyeballs_connect_gap,
+	but its focus is on limiting Squid overheads, while
+	happy_eyeballs_connect_gap focuses on the origin server and peer
+	overheads.
+
+	The following Happy Eyeballs directives place additional connection
+	opening restrictions: happy_eyeballs_connect_timeout and
+	happy_eyeballs_connect_gap. See the former for related terminology.
+DOC_END
+
 EOF

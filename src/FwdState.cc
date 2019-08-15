@@ -30,6 +30,7 @@
 #include "FwdState.h"
 #include "globals.h"
 #include "gopher.h"
+#include "HappyConnOpener.h"
 #include "hier_code.h"
 #include "http.h"
 #include "http/Stream.h"
@@ -46,6 +47,7 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
+#include "ResolvedPeers.h"
 #include "security/BlindPeerConnector.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -68,14 +70,14 @@
 #include <cerrno>
 
 static CLCB fwdServerClosedWrapper;
-static CNCB fwdConnectDoneWrapper;
 
 static OBJH fwdStats;
 
 #define MAX_FWD_STATS_IDX 9
 static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][Http::scInvalidHeader + 1];
 
-static PconnPool *fwdPconnPool = new PconnPool("server-peers", NULL);
+PconnPool *fwdPconnPool = new PconnPool("server-peers", nullptr);
+
 CBDATA_CLASS_INIT(FwdState);
 
 class FwdStatePeerAnswerDialer: public CallDialer, public Security::PeerConnector::CbDialer
@@ -113,7 +115,6 @@ FwdState::abort(void* d)
     } else {
         debugs(17, 7, HERE << "store entry aborted; no connection to close");
     }
-    fwd->serverDestinations.clear();
     fwd->stopAndDestroy("store entry aborted");
 }
 
@@ -137,15 +138,16 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     clientConn(client),
     start_t(squid_curtime),
     n_tries(0),
+    destinations(new ResolvedPeers()),
     pconnRace(raceImpossible)
 {
     debugs(17, 2, "Forwarding client request " << client << ", url=" << e->url());
     HTTPMSGLOCK(request);
-    serverDestinations.reserve(Config.forward_max_tries);
     e->lock("FwdState");
     flags.connected_okay = false;
     flags.dont_retry = false;
     flags.forward_completed = false;
+    flags.destinationsFound = false;
     debugs(17, 3, "FwdState constructed, this=" << this);
 }
 
@@ -177,7 +179,6 @@ void FwdState::start(Pointer aSelf)
     const bool useOriginalDst = Config.onoff.client_dst_passthru || (request && !request->flags.hostVerified);
     if (isIntercepted && useOriginalDst) {
         selectPeerForIntercepted();
-        useDestinations();
         return;
     }
 #endif
@@ -191,9 +192,27 @@ void
 FwdState::stopAndDestroy(const char *reason)
 {
     debugs(17, 3, "for " << reason);
+
+    if (opening())
+        cancelOpening(reason);
+
     PeerSelectionInitiator::subscribed = false; // may already be false
     self = nullptr; // we hope refcounting destroys us soon; may already be nil
     /* do not place any code here as this object may be gone by now */
+}
+
+/// Notify connOpener that we no longer need connections. We do not have to do
+/// this -- connOpener would eventually notice on its own, but notifying reduces
+/// waste and speeds up spare connection opening for other transactions (that
+/// could otherwise wait for this transaction to use its spare allowance).
+void
+FwdState::cancelOpening(const char *reason)
+{
+    assert(calls.connector);
+    calls.connector->cancel(reason);
+    calls.connector = nullptr;
+    notifyConnOpener();
+    connOpener.clear();
 }
 
 #if STRICT_ORIGINAL_DST
@@ -209,7 +228,7 @@ FwdState::selectPeerForIntercepted()
         // emulate the PeerSelector::selectPinned() "Skip ICP" effect
         entry->ping_status = PING_DONE;
 
-        serverDestinations.push_back(nullptr);
+        usePinned();
         return;
     }
 
@@ -220,7 +239,10 @@ FwdState::selectPeerForIntercepted()
     getOutgoingAddress(request, p);
 
     debugs(17, 3, HERE << "using client original destination: " << *p);
-    serverDestinations.push_back(p);
+    destinations->addPath(p);
+    destinations->destinationsFinalized = true;
+    PeerSelectionInitiator::subscribed = false;
+    useDestinations();
 }
 #endif
 
@@ -289,10 +311,11 @@ FwdState::~FwdState()
 
     entry = NULL;
 
+    if (opening())
+        cancelOpening("~FwdState");
+
     if (Comm::IsConnOpen(serverConn))
         closeServerConnection("~FwdState");
-
-    serverDestinations.clear();
 
     debugs(17, 3, "FwdState destructed, this=" << this);
 }
@@ -412,12 +435,8 @@ FwdState::EnoughTimeToReForward(const time_t fwdStart)
 void
 FwdState::useDestinations()
 {
-    debugs(17, 3, serverDestinations.size() << " paths to " << entry->url());
-    if (!serverDestinations.empty()) {
-        if (!serverDestinations[0])
-            usePinned();
-        else
-            connectStart();
+    if (!destinations->empty()) {
+        connectStart();
     } else {
         if (PeerSelectionInitiator::subscribed) {
             debugs(17, 4, "wait for more destinations to try");
@@ -451,6 +470,7 @@ FwdState::fail(ErrorState * errorState)
     if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
+        destinations->retryPath(serverConn);
     }
 
     if (ConnStateData *pinned_connection = request->pinnedConnection()) {
@@ -507,9 +527,6 @@ FwdState::complete()
 
         entry->reset();
 
-        // drop the last path off the selection list. try the next one.
-        if (!serverDestinations.empty()) // paranoid
-            serverDestinations.erase(serverDestinations.begin());
         useDestinations();
 
     } else {
@@ -529,25 +546,67 @@ FwdState::complete()
 void
 FwdState::noteDestination(Comm::ConnectionPointer path)
 {
-    const bool wasBlocked = serverDestinations.empty();
-    // XXX: Push even a nil path so that subsequent noteDestination() calls
-    // can rely on wasBlocked to detect ongoing/concurrent attempts.
-    // Upcoming Happy Eyeballs changes will handle this properly.
-    serverDestinations.push_back(path);
-    assert(wasBlocked || path); // pinned destinations are always selected first
+    flags.destinationsFound = true;
 
-    if (wasBlocked)
-        useDestinations();
-    // else continue to use one of the previously noted destinations;
-    // if all of them fail, we may try this path
+    if (!path) {
+        // We can call usePinned() without fear of clashing with an earlier
+        // forwarding attempt because PINNED must be the first destination.
+        assert(destinations->empty());
+        usePinned();
+        return;
+    }
+
+    debugs(17, 3, path);
+
+    // Requests bumped at step2+ require their pinned connection. Since we
+    // failed to reuse the pinned connection, we now must terminate the
+    // bumped request. For client-first and step1 bumped requests, the
+    // from-client connection is already bumped, but the connection to the
+    // server is not established/pinned so they must be excluded. We can
+    // recognize step1 bumping by nil ConnStateData::serverBump().
+#if USE_OPENSSL
+    const auto clientFirstBump = request->clientConnectionManager.valid() &&
+        (request->clientConnectionManager->sslBumpMode == Ssl::bumpClientFirst ||
+         (request->clientConnectionManager->sslBumpMode == Ssl::bumpBump && !request->clientConnectionManager->serverBump())
+            );
+#else
+    const auto clientFirstBump = false;
+#endif /* USE_OPENSSL */
+    if (request->flags.sslBumped && !clientFirstBump) {
+        // TODO: Factor out/reuse as Occasionally(DBG_IMPORTANT, 2[, occurrences]).
+        static int occurrences = 0;
+        const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
+        debugs(17, level, "BUG: Lost previously bumped from-Squid connection. Rejecting bumped request.");
+        fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));
+        self = nullptr; // refcounted
+        return;
+    }
+
+    destinations->addPath(path);
+
+    if (Comm::IsConnOpen(serverConn)) {
+        // We are already using a previously opened connection, so we cannot be
+        // waiting for connOpener. We still receive destinations for backup.
+        Must(!opening());
+        return;
+    }
+
+    if (opening()) {
+        notifyConnOpener();
+        return; // and continue to wait for FwdState::noteConnection() callback
+    }
+
+    // This is the first path candidate we have seen. Create connOpener.
+    useDestinations();
 }
 
 void
 FwdState::noteDestinationsEnd(ErrorState *selectionError)
 {
     PeerSelectionInitiator::subscribed = false;
-    if (serverDestinations.empty()) { // was blocked, waiting for more paths
+    destinations->destinationsFinalized = true;
 
+    if (!flags.destinationsFound) {
         if (selectionError) {
             debugs(17, 3, "Will abort forwarding because path selection has failed.");
             Must(!err); // if we tried to connect, then path selection succeeded
@@ -564,6 +623,30 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     // else continue to use one of the previously noted destinations;
     // if all of them fail, forwarding as whole will fail
     Must(!selectionError); // finding at least one path means selection succeeded
+
+    if (Comm::IsConnOpen(serverConn)) {
+        // We are already using a previously opened connection, so we cannot be
+        // waiting for connOpener. We were receiving destinations for backup.
+        Must(!opening());
+        return;
+    }
+
+    Must(opening()); // or we would be stuck with nothing to do or wait for
+    notifyConnOpener();
+    // and continue to wait for FwdState::noteConnection() callback
+}
+
+/// makes sure connOpener knows that destinations have changed
+void
+FwdState::notifyConnOpener()
+{
+    if (destinations->notificationPending) {
+        debugs(17, 7, "reusing pending notification about " << *destinations);
+    } else {
+        debugs(17, 7, "notifying about " << *destinations);
+        destinations->notificationPending = true;
+        CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
+    }
 }
 
 /**** CALLBACK WRAPPERS ************************************************************/
@@ -573,13 +656,6 @@ fwdServerClosedWrapper(const CommCloseCbParams &params)
 {
     FwdState *fwd = (FwdState *)params.data;
     fwd->serverClosed(params.fd);
-}
-
-void
-fwdConnectDoneWrapper(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno, void *data)
-{
-    FwdState *fwd = (FwdState *) data;
-    fwd->connectDone(conn, status, xerrno);
 }
 
 /**** PRIVATE *****************************************************************/
@@ -664,11 +740,6 @@ FwdState::retryOrBail()
 {
     if (checkRetry()) {
         debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
-        // we should retry the same destination if it failed due to pconn race
-        if (pconnRace == raceHappened)
-            debugs(17, 4, HERE << "retrying the same destination");
-        else
-            serverDestinations.erase(serverDestinations.begin()); // last one failed. try another.
         useDestinations();
         return;
     }
@@ -705,35 +776,32 @@ FwdState::handleUnregisteredServerEnd()
     retryOrBail();
 }
 
-/// handles an established TCP connection to peer (including origin servers)
+/// called when a to-peer connection has been successfully obtained or
+/// when all candidate destinations have been tried and all have failed
 void
-FwdState::connectDone(const Comm::ConnectionPointer &conn, Comm::Flag status, int xerrno)
+FwdState::noteConnection(HappyConnOpener::Answer &answer)
 {
-    if (status != Comm::OK) {
-        ErrorState *const anErr = makeConnectingError(ERR_CONNECT_FAIL);
-        anErr->xerrno = xerrno;
-        fail(anErr);
+    calls.connector = nullptr;
+    connOpener.clear();
 
-        /* it might have been a timeout with a partially open link */
-        if (conn != NULL) {
-            if (conn->getPeer())
-                peerConnectFailed(conn->getPeer());
+    Must(n_tries <= answer.n_tries); // n_tries cannot decrease
+    n_tries = answer.n_tries;
 
-            conn->close();
-        }
-        retryOrBail();
+    if (const auto error = answer.error.get()) {
+        flags.dont_retry = true; // or HappyConnOpener would not have given up
+        syncHierNote(answer.conn, request->url.host());
+        fail(error);
+        answer.error.clear(); // preserve error for errorSendComplete()
+        retryOrBail(); // will notice flags.dont_retry and bail
         return;
     }
 
-    serverConn = conn;
-    debugs(17, 3, HERE << serverConnection() << ": '" << entry->url() << "'" );
+    syncWithServerConn(answer.conn, request->url.host(), answer.reused);
 
-    closeHandler = comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
+    if (answer.reused)
+        return dispatch();
 
-    // request->flags.pinned cannot be true in connectDone(). The flag is
-    // only set when we dispatch the request to an existing (pinned) connection.
-    assert(!request->flags.pinned);
-
+    // Check if we need to TLS before use
     if (const CachePeer *peer = serverConnection()->getPeer()) {
         // Assume that it is only possible for the client-first from the
         // bumping modes to try connect to a remote server. The bumped
@@ -831,7 +899,7 @@ FwdState::secureConnectionToPeerIfNeeded()
         AsyncCall::Pointer callback = asyncCall(17,4,
                                                 "FwdState::ConnectedToPeer",
                                                 FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
-        const auto sslNegotiationTimeout = connectingTimeout(serverDestinations[0]);
+        const auto sslNegotiationTimeout = connectingTimeout(serverConnection());
         Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
         if (request->flags.sslPeek)
@@ -884,43 +952,25 @@ FwdState::successfullyConnectedToPeer()
     if (serverConnection()->getPeer())
         peerConnectSucceded(serverConnection()->getPeer());
 
-    flags.connected_okay = true;
     dispatch();
 }
 
+/// commits to using the given open to-peer connection
 void
-FwdState::connectTimeout(int fd)
+FwdState::syncWithServerConn(const Comm::ConnectionPointer &conn, const char *host, const bool reused)
 {
-    debugs(17, 2, "fwdConnectTimeout: FD " << fd << ": '" << entry->url() << "'" );
-    assert(serverDestinations[0] != NULL);
-    assert(fd == serverDestinations[0]->fd);
+    Must(IsConnOpen(conn));
+    serverConn = conn;
 
-    if (entry->isEmpty()) {
-        const auto anErr = new ErrorState(ERR_CONNECT_FAIL, Http::scGatewayTimeout, request, al);
-        anErr->xerrno = ETIMEDOUT;
-        fail(anErr);
+    closeHandler = comm_add_close_handler(serverConn->fd,  fwdServerClosedWrapper, this);
 
-        /* This marks the peer DOWN ... */
-        if (serverDestinations[0]->getPeer())
-            peerConnectFailed(serverDestinations[0]->getPeer());
+    if (reused) {
+        pconnRace = racePossible;
+        ResetMarkingsToServer(request, *serverConn);
+    } else {
+        pconnRace = raceImpossible;
+        // Comm::ConnOpener already applied proper/current markings
     }
-
-    if (Comm::IsConnOpen(serverDestinations[0])) {
-        serverDestinations[0]->close();
-    }
-}
-
-/// called when serverConn is set to an _open_ to-peer connection
-void
-FwdState::syncWithServerConn(const char *host)
-{
-    if (Ip::Qos::TheConfig.isAclTosActive())
-        Ip::Qos::setSockTos(serverConn, GetTosToServer(request));
-
-#if SO_MARK
-    if (Ip::Qos::TheConfig.isAclNfmarkActive())
-        Ip::Qos::setSockNfmark(serverConn, GetNfmarkToServer(request));
-#endif
 
     syncHierNote(serverConn, host);
 }
@@ -942,101 +992,36 @@ FwdState::syncHierNote(const Comm::ConnectionPointer &server, const char *host)
 void
 FwdState::connectStart()
 {
-    assert(serverDestinations.size() > 0);
+    debugs(17, 3, *destinations << " to " << entry->url());
 
-    debugs(17, 3, "fwdConnectStart: " << entry->url());
+    assert(!destinations->empty());
+    assert(!opening());
 
-    // pinned connections go through usePinned() rather than connectStart()
-    assert(serverDestinations[0] != nullptr);
-    request->flags.pinned = false;
-
-    // Ditch the previous error if any.
-    // A new error page will be created if there is another problem.
+    // Ditch error page if it was created before.
+    // A new one will be created if there's another problem
     delete err;
     err = nullptr;
     request->clearError();
-
-    // Update logging information with the upcoming server connection
-    // destination. Do this early so that any connection establishment errors
-    // are attributed to this destination. If successfully connected, this
-    // destination becomes serverConnection().
-    syncHierNote(serverDestinations[0], request->url.host());
+    serverConn = nullptr;
 
     request->hier.startPeerClock();
 
-    // Requests bumped at step2+ require their pinned connection. Since we
-    // failed to reuse the pinned connection, we now must terminate the
-    // bumped request. For client-first and step1 bumped requests, the
-    // from-client connection is already bumped, but the connection to the
-    // server is not established/pinned so they must be excluded. We can
-    // recognize step1 bumping by nil ConnStateData::serverBump().
-#if USE_OPENSSL
-    const auto clientFirstBump = request->clientConnectionManager.valid() &&
-                                 (request->clientConnectionManager->sslBumpMode == Ssl::bumpClientFirst ||
-                                  (request->clientConnectionManager->sslBumpMode == Ssl::bumpBump && !request->clientConnectionManager->serverBump())
-                                 );
-#else
-    const auto clientFirstBump = false;
-#endif /* USE_OPENSSL */
-    if (request->flags.sslBumped && !clientFirstBump) {
-        // TODO: Factor out/reuse as Occasionally(DBG_IMPORTANT, 2[, occurrences]).
-        static int occurrences = 0;
-        const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
-        debugs(17, level, "BUG: Lost previously bumped from-Squid connection. Rejecting bumped request.");
-        fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));
-        self = nullptr; // refcounted
-        return;
+    calls.connector = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer<FwdState>(&FwdState::noteConnection, this));
+
+    HttpRequest::Pointer cause = request;
+    const auto cs = new HappyConnOpener(destinations, calls.connector, cause, start_t, n_tries, al);
+    cs->setHost(request->url.host());
+    bool retriable = checkRetriable();
+    if (!retriable && Config.accessList.serverPconnForNonretriable) {
+        ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, nullptr);
+        ch.al = al;
+        ch.syncAle(request, nullptr);
+        retriable = ch.fastCheck().allowed();
     }
-
-    // Use pconn to avoid opening a new connection.
-    const char *host = NULL;
-    if (!serverDestinations[0]->getPeer())
-        host = request->url.host();
-
-    bool bumpThroughPeer = request->flags.sslBumped && serverDestinations[0]->getPeer();
-    Comm::ConnectionPointer temp;
-    // Avoid pconns after races so that the same client does not suffer twice.
-    // This does not increase the total number of connections because we just
-    // closed the connection that failed the race. And re-pinning assumes this.
-    if (pconnRace != raceHappened && !bumpThroughPeer)
-        temp = pconnPop(serverDestinations[0], host);
-
-    const bool openedPconn = Comm::IsConnOpen(temp);
-    pconnRace = openedPconn ? racePossible : raceImpossible;
-
-    // if we found an open persistent connection to use. use it.
-    if (openedPconn) {
-        serverConn = temp;
-        flags.connected_okay = true;
-        debugs(17, 3, HERE << "reusing pconn " << serverConnection());
-        ++n_tries;
-
-        closeHandler = comm_add_close_handler(serverConnection()->fd,  fwdServerClosedWrapper, this);
-
-        syncWithServerConn(request->url.host());
-
-        dispatch();
-        return;
-    }
-
-    // We will try to open a new connection, possibly to the same destination.
-    // We reset serverDestinations[0] in case we are using it again because
-    // ConnOpener modifies its destination argument.
-    serverDestinations[0]->local.port(0);
-    serverConn = NULL;
-
-#if URL_CHECKSUM_DEBUG
-    entry->mem_obj->checkUrlChecksum();
-#endif
-
-    GetMarkingsToServer(request, *serverDestinations[0]);
-
-    const AsyncCall::Pointer connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-    const auto connTimeout = connectingTimeout(serverDestinations[0]);
-    const auto cs = new Comm::ConnOpener(serverDestinations[0], connector, connTimeout);
-    if (host)
-        cs->setHost(host);
-    ++n_tries;
+    cs->setRetriable(retriable);
+    cs->allowPersistent(pconnRace != raceHappened);
+    destinations->notificationPending = true; // start() is async
+    connOpener = cs;
     AsyncJob::Start(cs);
 }
 
@@ -1044,10 +1029,6 @@ FwdState::connectStart()
 void
 FwdState::usePinned()
 {
-    // we only handle pinned destinations; others are handled by connectStart()
-    assert(!serverDestinations.empty());
-    assert(!serverDestinations[0]);
-
     const auto connManager = request->pinnedConnection();
     debugs(17, 7, "connection manager: " << connManager);
 
@@ -1068,8 +1049,6 @@ FwdState::usePinned()
         return;
     }
 
-    serverConn = temp;
-    flags.connected_okay = true;
     ++n_tries;
     request->flags.pinned = true;
 
@@ -1077,12 +1056,10 @@ FwdState::usePinned()
     if (connManager->pinnedAuth())
         request->flags.auth = true;
 
-    closeHandler = comm_add_close_handler(temp->fd,  fwdServerClosedWrapper, this);
-
-    syncWithServerConn(connManager->pinning.host);
-
     // the server may close the pinned connection before this request
-    pconnRace = racePossible;
+    const auto reused = true;
+    syncWithServerConn(temp, connManager->pinning.host, reused);
+
     dispatch();
 }
 
@@ -1107,6 +1084,8 @@ FwdState::dispatch()
     assert(entry->locked());
 
     EBIT_SET(entry->flags, ENTRY_DISPATCHED);
+
+    flags.connected_okay = true;
 
     netdbPingSite(request->url.host());
 
@@ -1241,8 +1220,7 @@ FwdState::reforward()
     if (request->bodyNibbled())
         return 0;
 
-    if (serverDestinations.size() <= 1 && !PeerSelectionInitiator::subscribed) {
-        // NP: <= 1 since total count includes the recently failed one.
+    if (destinations->empty() && !PeerSelectionInitiator::subscribed) {
         debugs(17, 3, HERE << "No alternative forwarding paths left");
         return 0;
     }
@@ -1250,19 +1228,6 @@ FwdState::reforward()
     const Http::StatusCode s = e->getReply()->sline.status();
     debugs(17, 3, HERE << "status " << s);
     return reforwardableStatus(s);
-}
-
-/**
- * Create "503 Service Unavailable" or "504 Gateway Timeout" error depending
- * on whether this is a validation request. RFC 2616 says that we MUST reply
- * with "504 Gateway Timeout" if validation fails and cached reply has
- * proxy-revalidate, must-revalidate or s-maxage Cache-Control directive.
- */
-ErrorState *
-FwdState::makeConnectingError(const err_type type) const
-{
-    return new ErrorState(type, request->flags.needValidation ?
-                          Http::scGatewayTimeout : Http::scServiceUnavailable, request, al);
 }
 
 static void
@@ -1318,45 +1283,6 @@ FwdState::reforwardableStatus(const Http::StatusCode s) const
     }
 
     /* NOTREACHED */
-}
-
-/**
- * Decide where details need to be gathered to correctly describe a persistent connection.
- * What is needed:
- *  -  the address/port details about this link
- *  -  domain name of server at other end of this link (either peer or requested host)
- */
-void
-FwdState::pconnPush(Comm::ConnectionPointer &conn, const char *domain)
-{
-    if (conn->getPeer()) {
-        fwdPconnPool->push(conn, NULL);
-    } else {
-        fwdPconnPool->push(conn, domain);
-    }
-}
-
-Comm::ConnectionPointer
-FwdState::pconnPop(const Comm::ConnectionPointer &dest, const char *domain)
-{
-    bool retriable = checkRetriable();
-    if (!retriable && Config.accessList.serverPconnForNonretriable) {
-        ACLFilledChecklist ch(Config.accessList.serverPconnForNonretriable, request, NULL);
-        ch.al = al;
-        ch.syncAle(request, nullptr);
-        retriable = ch.fastCheck().allowed();
-    }
-    // always call shared pool first because we need to close an idle
-    // connection there if we have to use a standby connection.
-    Comm::ConnectionPointer conn = fwdPconnPool->pop(dest, domain, retriable);
-    if (!Comm::IsConnOpen(conn)) {
-        // either there was no pconn to pop or this is not a retriable xaction
-        if (CachePeer *peer = dest->getPeer()) {
-            if (peer->standby.pool)
-                conn = peer->standby.pool->pop(dest, domain, true);
-        }
-    }
-    return conn; // open, closed, or nil
 }
 
 void
@@ -1502,17 +1428,29 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
     }
 }
 
-tos_t
-GetTosToServer(HttpRequest * request)
+/// \returns the TOS value that should be set on the to-peer connection
+static tos_t
+GetTosToServer(HttpRequest * request, Comm::Connection &conn)
 {
+    if (!Ip::Qos::TheConfig.tosToServer)
+        return 0;
+
     ACLFilledChecklist ch(NULL, request, NULL);
+    ch.dst_peer_name = conn.getPeer() ? conn.getPeer()->name : nullptr;
+    ch.dst_addr = conn.remote;
     return aclMapTOS(Ip::Qos::TheConfig.tosToServer, &ch);
 }
 
-nfmark_t
-GetNfmarkToServer(HttpRequest * request)
+/// \returns the Netfilter mark that should be set on the to-peer connection
+static nfmark_t
+GetNfmarkToServer(HttpRequest * request, Comm::Connection &conn)
 {
+    if (!Ip::Qos::TheConfig.nfmarkToServer)
+        return 0;
+
     ACLFilledChecklist ch(NULL, request, NULL);
+    ch.dst_peer_name = conn.getPeer() ? conn.getPeer()->name : nullptr;
+    ch.dst_addr = conn.remote;
     const auto mc = aclFindNfMarkConfig(Ip::Qos::TheConfig.nfmarkToServer, &ch);
     return mc.mark;
 }
@@ -1521,16 +1459,20 @@ void
 GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
 {
     // Get the server side TOS and Netfilter mark to be set on the connection.
-    if (Ip::Qos::TheConfig.isAclTosActive()) {
-        conn.tos = GetTosToServer(request);
-        debugs(17, 3, "from " << conn.local << " tos " << int(conn.tos));
-    }
+    conn.tos = GetTosToServer(request, conn);
+    conn.nfmark = GetNfmarkToServer(request, conn);
+    debugs(17, 3, "from " << conn.local << " tos " << int(conn.tos) << " netfilter mark " << conn.nfmark);
+}
 
-#if SO_MARK && USE_LIBCAP
-    conn.nfmark = GetNfmarkToServer(request);
-    debugs(17, 3, "from " << conn.local << " netfilter mark " << conn.nfmark);
-#else
-    conn.nfmark = 0;
-#endif
+void
+ResetMarkingsToServer(HttpRequest * request, Comm::Connection &conn)
+{
+    GetMarkingsToServer(request, conn);
+
+    // TODO: Avoid these calls if markings has not changed.
+    if (conn.tos)
+        Ip::Qos::setSockTos(&conn, conn.tos);
+    if (conn.nfmark)
+        Ip::Qos::setSockNfmark(&conn, conn.nfmark);
 }
 
