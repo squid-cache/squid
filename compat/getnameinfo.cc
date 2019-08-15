@@ -24,6 +24,8 @@
  *
  *    13-Jan-2015 : Various fixed for C++ and MinGW native build
  *
+ *    16-Aug-2019 : Replace strncpy with xstrncpy for string termination
+ *
  *  Original License and code follows.
  */
 #include "squid.h"
@@ -203,12 +205,12 @@ found:
         if (sp) {
             if (strlen(sp->s_name) + 1 > servlen)
                 return EAI_OVERFLOW;
-            strncpy(serv, sp->s_name, servlen);
+            xstrncpy(serv, sp->s_name, servlen);
         } else {
             snprintf(numserv, sizeof(numserv), "%u", ntohs(port));
             if (strlen(numserv) + 1 > servlen)
                 return EAI_OVERFLOW;
-            strncpy(serv, numserv, servlen);
+            xstrncpy(serv, numserv, servlen);
         }
     }
 
@@ -301,7 +303,7 @@ found:
 #endif
                 return EAI_OVERFLOW;
             }
-            strncpy(host, hp->h_name, hostlen);
+            xstrncpy(host, hp->h_name, hostlen);
 #if USE_GETIPNODEBY
             freehostent(hp);
 #endif
@@ -351,7 +353,7 @@ int flags;
     numaddrlen = strlen(numaddr);
     if (numaddrlen + 1 > hostlen) /* don't forget terminator */
         return EAI_OVERFLOW;
-    strncpy(host, numaddr, hostlen);
+    xstrncpy(host, numaddr, hostlen);
 
     if (((const struct sockaddr_in6 *)sa)->sin6_scope_id) {
         char zonebuf[SQUIDHOSTNAMELEN];
