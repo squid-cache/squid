@@ -6777,6 +6777,8 @@ DOC_START
 
 	    note key value acl ...
 	    logformat myFormat ... %{key}note ...
+
+	This clause only supports fast acl types.
 DOC_END
 
 NAME: relaxed_header_parser
