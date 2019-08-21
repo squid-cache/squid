@@ -427,7 +427,7 @@ ClientHttpRequest::logRequest()
     if (request) {
         SBuf matched;
         for (auto h: Config.notes) {
-            if (h->match(request, al->reply.getRaw(), NULL, matched)) {
+            if (h->match(request, al->reply.getRaw(), nullptr, matched)) {
                 request->notes()->add(h->key(), matched);
                 debugs(33, 3, h->key() << " " << matched);
             }
