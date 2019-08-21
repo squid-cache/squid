@@ -4696,14 +4696,14 @@ DOC_START
 
 	    RESPONSE
 
-		[http::]<Hs	HTTP status code of the final virgin reply (SeeSquidWiki)
-		[http::]>Hs	HTTP status code of the last sent reply (SeeSquidWiki)
+		[http::]<Hs	HTTP status code of the final virgin reply
+		[http::]>Hs	HTTP status code of the last sent reply
 
-		[http::]<h	The header of the last sent reply (SeeSquidWiki).
+		[http::]<h	The header of the last sent reply.
 				Optional header name argument as for >h
 
 		[http::]mt	MIME type (i.e. the type/subtype part of the Content-Type header
-				value) of the last sent reply (SeeSquidWiki)
+				value) of the last sent reply
 
 	    SIZE COUNTERS
 
