@@ -150,8 +150,6 @@ public:
     };
     MemCache memCache; ///< current [shared] memory caching state for the entry
 
-    /* Read only - this reply must be preserved by store clients */
-    /* The original reply. possibly with updated metadata. */
     HttpRequestPointer request;
 
     struct timeval start_ping;
