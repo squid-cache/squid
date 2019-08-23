@@ -3665,9 +3665,10 @@ ConnStateData::finishDechunkingRequest(bool withSuccess)
 void
 ConnStateData::sendControlMsg(HttpControlMsg msg)
 {
-    Http::StreamPointer context = pipeline.front();
-    if (context && context->http)
-        context->http->al->reply = msg.reply;
+    if (const auto context = pipeline.front()) {
+        if (context->http)
+            context->http->al->reply = msg.reply;
+    }
 
     if (!isOpen()) {
         debugs(33, 3, HERE << "ignoring 1xx due to earlier closure");

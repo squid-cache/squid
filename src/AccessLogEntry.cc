@@ -130,7 +130,7 @@ AccessLogEntry::effectiveVirginUrl() const
 }
 
 void
-AccessLogEntry::replyHeaders(MemBuf &mb) const
+AccessLogEntry::packReplyHeaders(MemBuf &mb) const
 {
     if (reply)
         reply->packHeadersUsingFastPacker(mb);

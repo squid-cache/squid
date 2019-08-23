@@ -61,8 +61,8 @@ public:
 
     void syncNotes(HttpRequest *request);
 
-    /// string representation of the reply headers
-    void replyHeaders(MemBuf &mb) const;
+    /// dump all reply headers (for sending or risky logging)
+    void packReplyHeaders(MemBuf &mb) const;
 
     SBuf url;
 

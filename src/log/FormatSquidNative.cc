@@ -73,7 +73,7 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
         char *ereq = ::Format::QuoteMimeBlob(al->headers.request);
         MemBuf mb;
         mb.init();
-        al->replyHeaders(mb);
+        al->packReplyHeaders(mb);
         auto erep = ::Format::QuoteMimeBlob(mb.content());
         logfilePrintf(logfile, " [%s] [%s]\n", ereq, erep);
         safe_free(ereq);

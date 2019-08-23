@@ -910,7 +910,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             allHeaders.init();
             // status-line + headers + CRLF
             // XXX: reconcile with '>h' and '>ha'
-            al->replyHeaders(allHeaders);
+            al->packReplyHeaders(allHeaders);
             sb.assign(allHeaders.content(), allHeaders.contentSize());
             out = sb.c_str();
 #if ICAP_CLIENT
