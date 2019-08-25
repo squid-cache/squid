@@ -82,25 +82,25 @@ Security::KeyData::loadX509CertFromFile()
 static void
 verifyChainCert(Security::CertPointer &ca, Security::CertPointer &latestCert, Security::CertList &chain)
 {
-    auto nameStr = Security::CertSubjectName(ca);
+    const auto name = Security::CertSubjectName(ca);
     Security::ErrorCode checkCode;
 #if !USE_OPENSSL || TLS_CHAIN_NO_SELFSIGNED
     // self-signed certificates are not valid in a sent chain
     if (Security::CertIssuerCheck(ca, ca, checkCode)) {
-        debugs(83, DBG_PARSE_NOTE(2), "CA " << nameStr << " is self-signed, will not be chained: " << nameStr);
+        debugs(83, DBG_PARSE_NOTE(2), "CA " << name << " is self-signed, will not be chained: " << name);
         return;
     }
 #endif
 
     // checks that the chained certs are actually part of a chain for validating cert
     if (Security::CertIssuerCheck(latestCert, ca, checkCode)) {
-        debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << nameStr);
+        debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << name);
         // OpenSSL API requires that we order certificates such that the
         // chain can be appended directly into the on-wire traffic.
         latestCert = ca;
         chain.emplace_back(latestCert);
     } else {
-        debugs(83, DBG_PARSE_NOTE(2), "Ignoring non-issuer CA " << nameStr << ": " << Security::VerifyErrorString(checkCode) << " (" << checkCode << ")");
+        debugs(83, DBG_PARSE_NOTE(2), "Ignoring non-issuer CA " << name << ": " << Security::VerifyErrorString(checkCode) << " (" << checkCode << ")");
     }
 }
 #endif
@@ -114,8 +114,8 @@ Security::KeyData::loadX509ChainFromFile()
 {
     ErrorCode checkCode;
     if (CertIssuerCheck(cert, cert, checkCode)) {
-        auto nameStr = CertSubjectName(cert);
-        debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << nameStr);
+        const auto name = CertSubjectName(cert);
+        debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << name);
         return;
     }
 
@@ -164,8 +164,7 @@ Security::KeyData::loadX509ChainFromFile()
     gnutls_free(certChain);
 
 #else
-    auto nameStr = CertSubjectName(cert);
-    debugs(83, DBG_PARSE_NOTE(2), "Loading certificate chain of " << nameStr << " from PEM files not implemented in this Squid.");
+    debugs(83, DBG_PARSE_NOTE(2), "ERROR: Loading certificate chain from PEM files requires OpenSSL or GnuTLS.");
 #endif
 }
 

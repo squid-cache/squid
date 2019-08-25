@@ -17,9 +17,6 @@ namespace Security
 /// \return the SubjectName field of the given certificate
 SBuf CertSubjectName(const CertPointer &);
 
-/// Squid defined error code (<0), an error code returned by X.509 API, or SSL_ERROR_NONE
-typedef int ErrorCode;
-
 /// \return true if cert was issued by the given issuer CA.
 ///         sets checkCode to the library specific test result.
 bool CertIssuerCheck(const CertPointer &cert, const CertPointer &issuer, ErrorCode &checkCode);
