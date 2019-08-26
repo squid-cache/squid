@@ -84,7 +84,7 @@ verifyChainCert(Security::CertPointer &ca, Security::CertPointer &latestCert, Se
 {
     const auto name = Security::CertSubjectName(ca);
     Security::ErrorCode checkCode;
-#if !USE_OPENSSL || TLS_CHAIN_NO_SELFSIGNED
+#if TLS_CHAIN_NO_SELFSIGNED
     // self-signed certificates are not valid in a sent chain
     if (Security::CertIssuerCheck(ca, ca, checkCode)) {
         debugs(83, DBG_PARSE_NOTE(2), "CA " << name << " is self-signed, will not be chained: " << name);
