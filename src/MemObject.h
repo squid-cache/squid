@@ -54,8 +54,19 @@ public:
 
     void write(const StoreIOBuffer &buf);
     void unlinkRequest() { request = nullptr; }
+
+    /// Deprecated. Use either receivedReply() or updatedReply().
     const HttpReplyPointer &getReply() const { return reply_; }
-    void replaceReply(const HttpReplyPointer &r) { reply_ = r; }
+    /// (re)sets received reply, usually just replacing the initial/empty object
+    void replaceBaseReply(const HttpReplyPointer &r) { baseReply_ = r; }
+
+    /* XXX: Move and provide a getter/setter? */
+    /// response that corresponds to our StoreEntry; immune to 304 updates
+    /// always exists but starts as a dummy empty object until replaceBaseReply()
+    HttpReplyPointer &baseReply_ = reply_;
+    /// baseReply_ after 304 update(s); nil if no 304 updates since baseReply_
+    HttpReplyPointer updatedReply_;
+
     void stat (MemBuf * mb) const;
     int64_t endOffset () const;
     void markEndOfReplyHeaders(); ///< sets reply_->hdr_sz to endOffset()

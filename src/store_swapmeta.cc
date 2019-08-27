@@ -35,7 +35,7 @@ storeSwapTLVFree(tlv * n)
  * Build a TLV list for a StoreEntry
  */
 tlv *
-storeSwapMetaBuild(StoreEntry * e)
+storeSwapMetaBuild(const StoreEntry *e)
 {
     tlv *TLV = NULL;        /* we'll return this */
     tlv **T = &TLV;

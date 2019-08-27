@@ -252,23 +252,19 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
     return 1;
 }
 
-bool
-HttpReply::updateOnNotModified(HttpReply const * freshRep)
+HttpReply::Pointer
+HttpReply::updateOnNotModified(const HttpReply &reply304) const
 {
-    assert(freshRep);
+    // Optimization: Storing a reply is a lot more expensive than this check.
+    if (!header.needUpdate(&reply304.header))
+        return nullptr;
 
-    /* update raw headers */
-    if (!header.update(&freshRep->header))
-        return false;
-
-    /* clean cache */
-    hdrCacheClean();
-
-    header.compact();
-    /* init cache */
-    hdrCacheInit();
-
-    return true;
+    const Pointer cloned = clone();
+    cloned->header.update(&reply304.header);
+    cloned->hdrCacheClean();
+    cloned->header.compact();
+    cloned->hdrCacheInit();
+    return cloned;
 }
 
 /* internal routines */

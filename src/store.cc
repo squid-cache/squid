@@ -1459,7 +1459,11 @@ StoreEntry::validToSend() const
 bool
 StoreEntry::timestampsSet()
 {
-    const HttpReply *reply = getReply();
+    debugs(20, 7, *this << " had " << describeTimestamps());
+
+    // TODO: Remove change-reducing "&" before the official commit.
+    const auto * const reply = &(latestReply());
+
     time_t served_date = reply->date;
     int age = reply->header.getInt(Http::HdrType::AGE);
     /* Compute the timestamp, mimicking RFC2616 section 13.2.3. */
@@ -1513,6 +1517,7 @@ StoreEntry::timestampsSet()
 
     timestamp = served_date;
 
+    debugs(20, 5, *this << " has " << describeTimestamps());
     return true;
 }
 
@@ -1678,6 +1683,16 @@ StoreEntry::getReply() const
     return (mem_obj ? mem_obj->getReply().getRaw() : nullptr);
 }
 
+const HttpReply &
+StoreEntry::latestReply() const
+{
+    Must(mem_obj);
+    if (const auto &updated = mem_obj->updatedReply_)
+        return *updated;
+    Must(mem_obj->baseReply_);
+    return *mem_obj->baseReply_;
+}
+
 void
 StoreEntry::reset()
 {
@@ -1794,7 +1809,7 @@ StoreEntry::replaceHttpReply(HttpReply *rep, bool andStartWriting)
         return;
     }
 
-    mem_obj->replaceReply(HttpReplyPointer(rep));
+    mem_obj->replaceBaseReply(HttpReplyPointer(rep));
 
     if (andStartWriting)
         startWriting();
@@ -1828,14 +1843,14 @@ StoreEntry::startWriting()
 }
 
 char const *
-StoreEntry::getSerialisedMetaData()
+StoreEntry::getSerialisedMetaData(size_t &length) const
 {
     StoreMeta *tlv_list = storeSwapMetaBuild(this);
     int swap_hdr_sz;
     char *result = storeSwapMetaPack(tlv_list, &swap_hdr_sz);
     storeSwapTLVFree(tlv_list);
     assert (swap_hdr_sz >= 0);
-    mem_obj->swap_hdr_sz = (size_t) swap_hdr_sz;
+    length = static_cast<size_t>(swap_hdr_sz);
     return result;
 }
 

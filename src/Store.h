@@ -49,6 +49,9 @@ public:
     StoreEntry();
     virtual ~StoreEntry();
 
+    /// \returns the updated-by-304(s) response (if it exists)
+    /// \returns the received response (otherwise)
+    const HttpReply &latestReply() const;
     HttpReply const *getReply() const;
     void write(StoreIOBuffer);
 
@@ -67,7 +70,8 @@ public:
     void lengthWentBad(const char *reason);
     void complete();
     store_client_t storeClientType() const;
-    char const *getSerialisedMetaData();
+    /// \returns a malloc()ed buffer containing a length-long packed swap header
+    const char *getSerialisedMetaData(size_t &length) const;
     /// Store a prepared error response. MemObject locks the reply object.
     void storeErrorResponse(HttpReply *reply);
     void replaceHttpReply(HttpReply *, bool andStartWriting = true);

@@ -157,6 +157,7 @@ HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0
     httpHeaderMaskInit(&mask, 0);
 }
 
+// XXX: Delete as unused, expensive, and violating copy semantics by skipping Warnings
 HttpHeader::HttpHeader(const HttpHeader &other): owner(other.owner), len(other.len), conflictingContentLength_(false)
 {
     entries.reserve(other.entries.capacity());
@@ -169,6 +170,7 @@ HttpHeader::~HttpHeader()
     clean();
 }
 
+// XXX: Delete as unused, expensive, and violating assignment semantics by skipping Warnings
 HttpHeader &
 HttpHeader::operator =(const HttpHeader &other)
 {
@@ -244,10 +246,16 @@ HttpHeader::append(const HttpHeader * src)
     }
 }
 
-/// check whether the fresh header has any new/changed updatable fields
 bool
 HttpHeader::needUpdate(HttpHeader const *fresh) const
 {
+    // our 1xx Warnings must be removed
+    for (const auto e: entries) {
+        // TODO: Move into HttpHeaderEntry::is1xxWarning() before official commit.
+        if (e && e->id == Http::HdrType::WARNING && (e->getInt()/100 == 1))
+            return true;
+    }
+
     for (const auto e: fresh->entries) {
         if (!e || skipUpdateHeader(e->id))
             continue;
@@ -279,16 +287,11 @@ HttpHeader::skipUpdateHeader(const Http::HdrType id) const
     return id == Http::HdrType::WARNING;
 }
 
-bool
+void
 HttpHeader::update(HttpHeader const *fresh)
 {
     assert(fresh);
     assert(this != fresh);
-
-    // Optimization: Finding whether a header field changed is expensive
-    // and probably not worth it except for collapsed revalidation needs.
-    if (Config.onoff.collapsed_forwarding && !needUpdate(fresh))
-        return false;
 
     updateWarnings();
 
@@ -318,7 +321,6 @@ HttpHeader::update(HttpHeader const *fresh)
 
         addEntry(e->clone());
     }
-    return true;
 }
 
 bool

@@ -41,7 +41,7 @@ void Controller::updateLimits() STUB
 void Controller::handleIdleEntry(StoreEntry &) STUB
 void Controller::freeMemorySpace(const int) STUB
 void Controller::memoryOut(StoreEntry &, const bool) STUB
-void Controller::updateOnNotModified(StoreEntry *, const StoreEntry &) STUB
+void Controller::updateOnNotModified(StoreEntry *, StoreEntry &) STUB
 bool Controller::allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &) STUB_RETVAL(false)
 void Controller::addReading(StoreEntry *, const cache_key *) STUB
 void Controller::addWriting(StoreEntry *, const cache_key *) STUB

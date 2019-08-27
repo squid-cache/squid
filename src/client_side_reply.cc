@@ -1646,7 +1646,7 @@ clientReplyContext::cloneReply()
 {
     assert(reply == NULL);
 
-    reply = http->storeEntry()->getReply()->clone();
+    reply = http->storeEntry()->latestReply().clone();
     HTTPMSGLOCK(reply);
 
     if (reply->sline.protocol == AnyP::PROTO_HTTP) {

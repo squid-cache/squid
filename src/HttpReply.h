@@ -72,7 +72,9 @@ public:
 
     virtual bool inheritProperties(const Http::Message *);
 
-    bool updateOnNotModified(HttpReply const *other);
+    /// \returns nil (if no updates are necessary)
+    /// \returns a new reply combining this reply with 304 updates (otherwise)
+    Pointer updateOnNotModified(const HttpReply &reply304) const;
 
     /** set commonly used info with one call */
     void setHeaders(Http::StatusCode status,

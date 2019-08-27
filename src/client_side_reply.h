@@ -113,6 +113,7 @@ private:
     clientStreamNode * next() const;
     StoreIOBuffer holdingBuffer;
     HttpReply *reply;
+    HttpReplyPointer updatedReply; ///< cached reply updated with a 304 response
     void processReplyAccess();
     static ACLCB ProcessReplyAccessResult;
     void processReplyAccessResult(const Acl::Answer &accessAllowed);

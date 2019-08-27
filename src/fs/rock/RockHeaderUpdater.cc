@@ -176,22 +176,35 @@ Rock::HeaderUpdater::startWriting()
     IoState &rockWriter = dynamic_cast<IoState&>(*writer);
     rockWriter.staleSplicingPointNext = staleSplicingPointNext;
 
+    // here, prefix is swap header plus HTTP reply header (i.e., updated bytes)
+    uint64_t stalePrefixSz = 0;
+    uint64_t freshPrefixSz = 0;
+
     off_t offset = 0; // current writing offset (for debugging)
 
     {
         debugs(20, 7, "fresh store meta for " << *update.entry);
-        const char *freshSwapHeader = update.entry->getSerialisedMetaData();
-        const auto freshSwapHeaderSize = update.entry->mem_obj->swap_hdr_sz;
+        size_t freshSwapHeaderSize = 0;
+        const auto freshSwapHeader = update.entry->getSerialisedMetaData(freshSwapHeaderSize);
         Must(freshSwapHeader);
         writer->write(freshSwapHeader, freshSwapHeaderSize, 0, nullptr);
+        stalePrefixSz += update.entry->mem_obj->swap_hdr_sz;
+        freshPrefixSz += freshSwapHeaderSize;
         offset += freshSwapHeaderSize;
         xfree(freshSwapHeader);
     }
 
     {
         debugs(20, 7, "fresh HTTP header @ " << offset);
-        MemBuf *httpHeader = update.entry->mem_obj->getReply()->pack();
+        const auto httpHeader = update.entry->latestReply().pack();
         writer->write(httpHeader->content(), httpHeader->contentSize(), -1, nullptr);
+        Must(update.entry->mem_obj);
+        Must(update.entry->mem_obj->baseReply_);
+        const auto &staleReply = *update.entry->mem_obj->baseReply_;
+        Must(staleReply.hdr_sz >= 0); // for int-to-uint64_t conversion below
+        Must(staleReply.hdr_sz > 0); // already initialized
+        stalePrefixSz += staleReply.hdr_sz;
+        freshPrefixSz += httpHeader->contentSize();
         offset += httpHeader->contentSize();
         delete httpHeader;
     }
@@ -204,6 +217,10 @@ Rock::HeaderUpdater::startWriting()
     }
 
     debugs(20, 7, "wrote " << offset);
+    // TODO: Move these updates into StoreMap::closeForUpdating()?
+    Must(update.fresh.anchor->basics.swap_file_sz >= stalePrefixSz);
+    update.fresh.anchor->basics.swap_file_sz -= stalePrefixSz;
+    update.fresh.anchor->basics.swap_file_sz += freshPrefixSz;
 
     writer->close(StoreIOState::wroteAll); // should call noteDoneWriting()
 }

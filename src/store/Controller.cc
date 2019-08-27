@@ -677,20 +677,44 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
 }
 
 void
-Store::Controller::updateOnNotModified(StoreEntry *old, const StoreEntry &newer)
+Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
 {
-    /* update the old entry object */
     Must(old);
-    HttpReply *oldReply = const_cast<HttpReply*>(old->getReply());
+    const auto oldReply = old->getReply();
     Must(oldReply);
+    Must(e304.mem_obj);
 
-    const bool modified = oldReply->updateOnNotModified(newer.getReply());
-    if (!old->timestampsSet() && !modified)
+    // TODO: Also detect prior updateOnNotModified() calls that did not update
+    // reply headers, but keep in mind that timestampsSet() at least appears to
+    // depend on current time (in addition to the reply headers).
+    if (e304.mem_obj->updatedReply_) {
+        debugs(20, 5, "reusing precomputed update in " << *old);
+        assert(old->mem_obj->updatedReply_);
         return;
+    }
 
-    // XXX: Call memStore->updateHeaders(old) and swapDir->updateHeaders(old) to
-    // update stored headers, stored metadata, and in-transit metadata.
-    debugs(20, 3, *old << " headers were modified: " << modified);
+    Must(e304.mem_obj->baseReply_);
+    e304.mem_obj->updatedReply_ = oldReply->updateOnNotModified(*e304.mem_obj->baseReply_);
+
+    // (re)set updatedReply_ before calling timestampsSet() below
+    old->mem_obj->updatedReply_ = e304.mem_obj->updatedReply_; // may be nil
+
+    if (!old->timestampsSet() && !e304.mem_obj->updatedReply_) {
+        debugs(20, 5, "did nothing for " << *old);
+        return;
+    }
+
+    // XXX: Update old->mem_obj->vary_headers?
+
+    /* update stored image of the old entry */
+
+    debugs(20, 5, "updating storage for " << *old);
+
+    if (sharedMemStore && old->mem_status == IN_MEMORY && !EBIT_TEST(old->flags, ENTRY_SPECIAL))
+        sharedMemStore->updateHeaders(old);
+
+    if (old->swap_dirn > -1)
+        swapDir->updateHeaders(old);
 }
 
 bool
