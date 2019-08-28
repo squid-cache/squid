@@ -264,6 +264,8 @@ MemObject::reset()
     /* Should we check for clients? */
     if (reply_)
         reply_->reset();
+    updatedReply_ = nullptr;
+    appliedUpdates = false;
 }
 
 int64_t
