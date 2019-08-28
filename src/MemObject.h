@@ -66,6 +66,10 @@ public:
     HttpReplyPointer &baseReply_ = reply_;
     /// baseReply_ after 304 update(s); nil if no 304 updates since baseReply_
     HttpReplyPointer updatedReply_;
+    /// reflects past Controller::updateOnNotModified(old, e304) calls:
+    /// for HTTP 304 entries: whether our entry was used as "e304"
+    /// for other entries: whether our entry was updated as "old"
+    bool appliedUpdates = false;
 
     void stat (MemBuf * mb) const;
     int64_t endOffset () const;
