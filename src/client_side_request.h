@@ -109,8 +109,15 @@ public:
     struct Out {
         Out() : offset(0), size(0), headers_sz(0) {}
 
+        /// Body bytes received from Core. Often looks like (is abused as) body
+        /// bytes written to the client connection. The two values are often
+        /// the same, but code like Http::Stream::packRange() may increment
+        /// offset to skip (unwanted by the client) bytes received from Core.
         int64_t offset;
+        /// Header and body bytes written to the client connection.
         uint64_t size;
+        /// Header bytes written to the client connection.
+        /// Not to be confused with clientReplyContext::headers_sz.
         size_t headers_sz;
     } out;
 
