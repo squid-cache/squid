@@ -693,8 +693,6 @@ Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
     //         sake, it is best to detect and skip such repeated update calls.
     if (e304.mem_obj->appliedUpdates) {
         debugs(20, 5, "ignored repeated update of " << *old << " with " << e304);
-        assert(old->mem_obj->updatedReply_);
-        // old->timestampsSet() has been called when updatedReply_ was reset
         return;
     }
     e304.mem_obj->appliedUpdates = true;
