@@ -216,11 +216,14 @@ Rock::HeaderUpdater::startWriting()
         exchangeBuffer.clear();
     }
 
-    debugs(20, 7, "wrote " << offset);
-    // TODO: Move these updates into StoreMap::closeForUpdating()?
-    Must(update.fresh.anchor->basics.swap_file_sz >= stalePrefixSz);
-    update.fresh.anchor->basics.swap_file_sz -= stalePrefixSz;
-    update.fresh.anchor->basics.swap_file_sz += freshPrefixSz;
+    debugs(20, 7, "wrote " << offset <<
+           "; swap_file_sz delta: -" << stalePrefixSz << " +" << freshPrefixSz);
+
+    // Optimistic update OK: Our write lock prevents early swap_file_sz access.
+    auto &swap_file_sz = update.fresh.anchor->basics.swap_file_sz;
+    Must(swap_file_sz >= stalePrefixSz);
+    swap_file_sz -= stalePrefixSz;
+    swap_file_sz += freshPrefixSz;
 
     writer->close(StoreIOState::wroteAll); // should call noteDoneWriting()
 }
