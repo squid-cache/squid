@@ -458,7 +458,8 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         http->logType.update(LOG_TCP_REFRESH_UNMODIFIED);
         http->request->flags.staleIfHit = false; // old_entry is no longer stale
 
-        // update headers on existing entry
+        // TODO: The update may not be instantaneous. Should we wait for its
+        // completion to avoid spawning too much client-disassociated work?
         Store::Root().updateOnNotModified(old_entry, *http->storeEntry());
 
         // if client sent IMS
@@ -1646,7 +1647,7 @@ clientReplyContext::cloneReply()
 {
     assert(reply == NULL);
 
-    reply = http->storeEntry()->latestReply().clone();
+    reply = http->storeEntry()->freshestReply().clone();
     HTTPMSGLOCK(reply);
 
     if (reply->sline.protocol == AnyP::PROTO_HTTP) {

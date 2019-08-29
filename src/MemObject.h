@@ -55,17 +55,24 @@ public:
     void write(const StoreIOBuffer &buf);
     void unlinkRequest() { request = nullptr; }
 
-    /// Deprecated. Use either receivedReply() or updatedReply().
+    /// Deprecated. Use either baseReply() or updatedReply().
+    /// \returns baseReply() (but legacy callers do not know the difference)
     const HttpReplyPointer &getReply() const { return reply_; }
-    /// (re)sets received reply, usually just replacing the initial/empty object
-    void replaceBaseReply(const HttpReplyPointer &r) { baseReply_ = r; }
 
-    /* XXX: Move and provide a getter/setter? */
     /// response that corresponds to our StoreEntry; immune to 304 updates
     /// always exists but starts as a dummy empty object until replaceBaseReply()
-    HttpReplyPointer &baseReply_ = reply_;
-    /// baseReply_ after 304 update(s); nil if no 304 updates since baseReply_
-    HttpReplyPointer updatedReply_;
+    const HttpReply &baseReply() const { return *reply_; }
+
+    /// \returns nil if no 304 updates since replaceBaseReply()
+    /// \returns a combination of baseReply() and 304 updates (after updates)
+    const HttpReplyPointer &updatedReply() const { return updatedReply_; }
+
+    /// (re)sets base reply, usually just replacing the initial/empty object
+    void replaceBaseReply(const HttpReplyPointer &r) { reply_ = r; }
+
+    /// (re)sets updated reply; \see updatedReply()
+    void updateReply(const HttpReply &r) { updatedReply_ = &r; }
+
     /// reflects past Controller::updateOnNotModified(old, e304) calls:
     /// for HTTP 304 entries: whether our entry was used as "e304"
     /// for other entries: whether our entry was updated as "old"
@@ -190,7 +197,8 @@ public:
     void kickReads();
 
 private:
-    HttpReplyPointer reply_;
+    HttpReplyPointer reply_; ///< \copydoc baseReply()
+    HttpReplyPointer updatedReply_; ///< \copydoc updatedReply()
 
     mutable String storeId_; ///< StoreId for our entry (usually request URI)
     mutable String logUri_;  ///< URI used for logging (usually request URI)

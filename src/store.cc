@@ -1462,7 +1462,7 @@ StoreEntry::timestampsSet()
     debugs(20, 7, *this << " had " << describeTimestamps());
 
     // TODO: Remove change-reducing "&" before the official commit.
-    const auto * const reply = &(latestReply());
+    const auto * const reply = &(freshestReply());
 
     time_t served_date = reply->date;
     int age = reply->header.getInt(Http::HdrType::AGE);
@@ -1518,6 +1518,29 @@ StoreEntry::timestampsSet()
     timestamp = served_date;
 
     debugs(20, 5, *this << " has " << describeTimestamps());
+    return true;
+}
+
+bool
+StoreEntry::updateOnNotModified(const StoreEntry &e304)
+{
+    assert(mem_obj);
+    assert(e304.mem_obj);
+
+    // update reply before calling timestampsSet() below
+    const auto &oldReply = freshestReply();
+    const auto updatedReply = oldReply.recreateOnNotModified(e304.mem_obj->baseReply());
+    if (updatedReply) // HTTP 304 brought in new information
+       mem_obj->updateReply(*updatedReply);
+    // else continue to use the previous update, if any
+
+    if (!timestampsSet() && !updatedReply)
+        return false;
+
+    // XXX: Update old->mem_obj->vary_headers?
+
+    debugs(20, 5, "updated basics of " << *this << " after " << e304);
+    mem_obj->appliedUpdates = true; // helps in triage; may already be true
     return true;
 }
 
@@ -1684,13 +1707,12 @@ StoreEntry::getReply() const
 }
 
 const HttpReply &
-StoreEntry::latestReply() const
+StoreEntry::freshestReply() const
 {
     Must(mem_obj);
-    if (const auto &updated = mem_obj->updatedReply_)
+    if (const auto &updated = mem_obj->updatedReply())
         return *updated;
-    Must(mem_obj->baseReply_);
-    return *mem_obj->baseReply_;
+    return mem_obj->baseReply();
 }
 
 void

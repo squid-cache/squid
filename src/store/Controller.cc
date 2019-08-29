@@ -697,23 +697,10 @@ Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
     }
     e304.mem_obj->appliedUpdates = true;
 
-    // (re)set old updatedReply_ before calling timestampsSet() below
-    const auto &oldReply = old->latestReply();
-    Must(e304.mem_obj->baseReply_);
-    const auto updatedReply = oldReply.recreateOnNotModified(*e304.mem_obj->baseReply_);
-    if (updatedReply)
-       old->mem_obj->updatedReply_ = updatedReply;
-   // else old->mem_obj->updatedReply_ stays the same (and may still be nil)
-
-    if (!old->timestampsSet() && !updatedReply) {
+    if (!old->updateOnNotModified(e304)) {
         debugs(20, 5, "updated nothing in " << *old << " with " << e304);
         return;
     }
-
-    // XXX: Update old->mem_obj->vary_headers?
-
-    debugs(20, 5, "updating storage of " << *old << " after " << e304);
-    old->mem_obj->appliedUpdates = true; // helps in triage; may already be true
 
     if (sharedMemStore && old->mem_status == IN_MEMORY && !EBIT_TEST(old->flags, ENTRY_SPECIAL))
         sharedMemStore->updateHeaders(old);

@@ -161,6 +161,8 @@ MemObject::dump() const
     debugs(20, DBG_IMPORTANT, "MemObject->inmem_lo: " << inmem_lo);
     debugs(20, DBG_IMPORTANT, "MemObject->nclients: " << nclients);
     debugs(20, DBG_IMPORTANT, "MemObject->reply: " << reply_);
+    debugs(20, DBG_IMPORTANT, "MemObject->updatedReply: " << updatedReply_);
+    debugs(20, DBG_IMPORTANT, "MemObject->appliedUpdates: " << appliedUpdates);
     debugs(20, DBG_IMPORTANT, "MemObject->request: " << request);
     debugs(20, DBG_IMPORTANT, "MemObject->logUri: " << logUri_);
     debugs(20, DBG_IMPORTANT, "MemObject->storeId: " << storeId_);

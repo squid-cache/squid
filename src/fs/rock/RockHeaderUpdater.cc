@@ -196,11 +196,10 @@ Rock::HeaderUpdater::startWriting()
 
     {
         debugs(20, 7, "fresh HTTP header @ " << offset);
-        const auto httpHeader = update.entry->latestReply().pack();
+        const auto httpHeader = update.entry->freshestReply().pack();
         writer->write(httpHeader->content(), httpHeader->contentSize(), -1, nullptr);
         Must(update.entry->mem_obj);
-        Must(update.entry->mem_obj->baseReply_);
-        const auto &staleReply = *update.entry->mem_obj->baseReply_;
+        const auto &staleReply = update.entry->mem_obj->baseReply();
         Must(staleReply.hdr_sz >= 0); // for int-to-uint64_t conversion below
         Must(staleReply.hdr_sz > 0); // already initialized
         stalePrefixSz += staleReply.hdr_sz;

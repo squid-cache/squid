@@ -51,8 +51,12 @@ public:
 
     /// \returns the updated-by-304(s) response (if it exists)
     /// \returns the received response (otherwise)
-    const HttpReply &latestReply() const;
+    /// \throws exception if StoreEntry lacks mem_obj
+    const HttpReply &freshestReply() const;
+
+    /// Deprecated. Use either receivedReply() or freshestReply() instead.
     HttpReply const *getReply() const;
+
     void write(StoreIOBuffer);
 
     /** Check if the Store entry is empty
@@ -176,6 +180,11 @@ public:
     bool hasIfNoneMatchEtag(const HttpRequest &request) const;
     /// whether this entry has an ETag; if yes, puts ETag value into parameter
     bool hasEtag(ETag &etag) const;
+
+    /// Updates easily-accessible non-Store-specific parts of the entry.
+    /// Use Controller::updateOnNotModified() instead of this helper.
+    /// \returns whether anything was actually updated
+    bool updateOnNotModified(const StoreEntry &e304);
 
     /// the disk this entry is [being] cached on; asserts for entries w/o a disk
     Store::Disk &disk() const;
