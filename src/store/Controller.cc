@@ -700,7 +700,7 @@ Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
     // (re)set old updatedReply_ before calling timestampsSet() below
     const auto &oldReply = old->latestReply();
     Must(e304.mem_obj->baseReply_);
-    const auto updatedReply = oldReply.updateOnNotModified(*e304.mem_obj->baseReply_);
+    const auto updatedReply = oldReply.recreateOnNotModified(*e304.mem_obj->baseReply_);
     if (updatedReply)
        old->mem_obj->updatedReply_ = updatedReply;
    // else old->mem_obj->updatedReply_ stays the same (and may still be nil)

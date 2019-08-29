@@ -253,7 +253,7 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
 }
 
 HttpReply::Pointer
-HttpReply::updateOnNotModified(const HttpReply &reply304) const
+HttpReply::recreateOnNotModified(const HttpReply &reply304) const
 {
     // Optimization: Storing a reply is a lot more expensive than this check.
     if (!header.needUpdate(&reply304.header))
