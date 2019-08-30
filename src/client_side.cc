@@ -745,7 +745,7 @@ ClientHttpRequest::mRangeCLen()
     while (pos != request->range->end()) {
         /* account for headers for this range */
         mb.reset();
-        clientPackRangeHdr(memObject()->getReply(),
+        clientPackRangeHdr(&storeEntry()->freshestReply(),
                            *pos, range_iter.boundary, &mb);
         clen += mb.size;
 
