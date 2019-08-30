@@ -326,7 +326,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     debugs(22, 3, "Staleness = " << staleness);
 
-    const HttpReplyPointer reply(entry->mem_obj && entry->mem_obj->getReply() ? entry->mem_obj->getReply() : nullptr);
+    const HttpReplyPointer reply(entry->mem_obj ? &entry->freshestReply() : nullptr);
 
     // stale-if-error requires any failure be passed thru when its period is over.
     int staleIfError = -1;
