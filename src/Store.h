@@ -49,12 +49,20 @@ public:
     StoreEntry();
     virtual ~StoreEntry();
 
+    /// \returns base response; \see MemObject::baseReply()
+    /// \throws exception if StoreEntry lacks mem_obj
+    const HttpReply &baseReply() const;
+
     /// \returns the updated-by-304(s) response (if it exists)
-    /// \returns the received response (otherwise)
+    /// \returns baseReply() (otherwise)
     /// \throws exception if StoreEntry lacks mem_obj
     const HttpReply &freshestReply() const;
 
-    /// Deprecated. Use either receivedReply() or freshestReply() instead.
+    /// \returns the address of freshest reply (if it exists)
+    /// \returns nil (otherwise)
+    const HttpReply *hasFreshestReply() const { return mem_obj ? &freshestReply() : nullptr; }
+
+    /// Deprecated. Use baseReply(), freshestReply(), or hasFreshestReply() instead.
     HttpReply const *getReply() const;
 
     void write(StoreIOBuffer);

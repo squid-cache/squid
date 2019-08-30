@@ -1708,6 +1708,13 @@ StoreEntry::getReply() const
 }
 
 const HttpReply &
+StoreEntry::baseReply() const
+{
+    Must(mem_obj);
+    return mem_obj->baseReply();
+}
+
+const HttpReply &
 StoreEntry::freshestReply() const
 {
     Must(mem_obj);
