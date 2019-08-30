@@ -442,7 +442,6 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     /* update size of the request */
     reqsize = result.length + reqofs;
 
-    const Http::StatusCode status = http->storeEntry()->getReply()->sline.status();
 
     // request to origin was aborted
     if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
@@ -451,7 +450,9 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         sendClientOldEntry();
     }
 
-    const HttpReply *old_rep = old_entry->getReply();
+    const auto &old_rep = old_entry->freshestReply();
+    const auto &new_rep = http->storeEntry()->freshestReply();
+    const auto status = new_rep.sline.status();
 
     // origin replied 304
     if (status == Http::scNotModified) {
@@ -471,21 +472,20 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         } else {
             // send existing entry, it's still valid
             debugs(88, 3, "origin replied 304, revalidating existing entry and sending " <<
-                   old_rep->sline.status() << " to client");
+                   old_rep.sline.status() << " to client");
             sendClientOldEntry();
         }
     }
 
     // origin replied with a non-error code
     else if (status > Http::scNone && status < Http::scInternalServerError) {
-        const HttpReply *new_rep = http->storeEntry()->getReply();
         // RFC 7234 section 4: a cache MUST use the most recent response
         // (as determined by the Date header field)
-        if (new_rep->olderThan(old_rep)) {
+        if (new_rep.olderThan(&old_rep)) {
             http->logType.err.ignored = true;
             debugs(88, 3, "origin replied " << status <<
                    " but with an older date header, sending old entry (" <<
-                   old_rep->sline.status() << ") to client");
+                   old_rep.sline.status() << ") to client");
             sendClientOldEntry();
         } else {
             http->logType.update(LOG_TCP_REFRESH_MODIFIED);
@@ -509,7 +509,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         // ignore and let client have old entry
         http->logType.update(LOG_TCP_REFRESH_FAIL_OLD);
         debugs(88, 3, "origin replied with error " <<
-               status << ", sending old entry (" << old_rep->sline.status() << ") to client");
+               status << ", sending old entry (" << old_rep.sline.status() << ") to client");
         sendClientOldEntry();
     }
 }
@@ -878,18 +878,13 @@ clientReplyContext::blockedHit() const
     if (http->flags.internal)
         return false; // internal content "hits" cannot be blocked
 
-    if (const HttpReply *rep = http->storeEntry()->getReply()) {
+    const auto &rep = http->storeEntry()->freshestReply();
+    {
         std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
-        chl->reply = const_cast<HttpReply*>(rep); // ACLChecklist API bug
+        chl->reply = const_cast<HttpReply*>(&rep); // ACLChecklist API bug
         HTTPMSGLOCK(chl->reply);
         return !chl->fastCheck().allowed(); // when in doubt, block
     }
-
-    // This does not happen, I hope, because we are called from CacheHit, which
-    // is called via a storeClientCopy() callback, and store should initialize
-    // the reply before calling that callback.
-    debugs(88, 3, "Missing reply!");
-    return false;
 }
 
 void
@@ -1211,17 +1206,25 @@ clientReplyContext::storeNotOKTransferDone() const
         /* haven't found end of headers yet */
         return 0;
 
-    const HttpReplyPointer curReply(mem->getReply());
+    // Use base reply here -- it determines the body bytes we receive from Core.
+    // TODO: Use MemObject::expectedReplySize(method) after resolving XXX below.
+    const auto expectedBodySize = mem->baseReply().content_length;
+
+    // XXX: The code below talks about sending data, and checks stats about
+    // bytes written to the client connection, but this method must determine
+    // whether we are done _receiving_ data from Core. This code should work OK
+    // when expectedBodySize is unknown or matches written data, but it may
+    // malfunction when we are writing ranges while receiving a full response.
 
     /*
      * Figure out how much data we are supposed to send.
      * If we are sending a body and we don't have a content-length,
      * then we must wait for the object to become STORE_OK.
      */
-    if (curReply->content_length < 0)
+    if (expectedBodySize < 0)
         return 0;
 
-    uint64_t expectedLength = curReply->content_length + http->out.headers_sz;
+    const uint64_t expectedLength = expectedBodySize + http->out.headers_sz;
 
     if (http->out.size < expectedLength)
         return 0;
@@ -1317,8 +1320,9 @@ clientReplyContext::replyStatus()
             return STREAM_FAILED;
         }
 
+        // TODO: See also (and unify with) storeNotOKTransferDone() checks.
         const int64_t expectedBodySize =
-            http->storeEntry()->getReply()->bodySize(http->request->method);
+            http->storeEntry()->baseReply().bodySize(http->request->method);
         if (expectedBodySize >= 0 && !http->gotEnough()) {
             debugs(88, 5, "clientReplyStatus: client didn't get all it expected");
             return STREAM_UNPLANNED_COMPLETE;
@@ -1994,7 +1998,7 @@ clientReplyContext::sendNotModified()
 {
     StoreEntry *e = http->storeEntry();
     const time_t timestamp = e->timestamp;
-    HttpReply *const temprep = e->getReply()->make304();
+    std::unique_ptr<HttpReply> temprep(e->freshestReply().make304());
     // log as TCP_INM_HIT if code 304 generated for
     // If-None-Match request
     if (!http->request->flags.ims)
@@ -2008,7 +2012,7 @@ clientReplyContext::sendNotModified()
     // reply has a meaningful Age: header.
     e->timestampsSet();
     e->timestamp = timestamp;
-    e->replaceHttpReply(temprep);
+    e->replaceHttpReply(temprep.release());
     e->complete();
     /*
      * TODO: why put this in the store and then serialise it and
