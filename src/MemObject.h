@@ -68,7 +68,7 @@ public:
     const HttpReplyPointer &updatedReply() const { return updatedReply_; }
 
     /// (re)sets base reply, usually just replacing the initial/empty object
-    void replaceBaseReply(const HttpReplyPointer &r) { reply_ = r; }
+    void replaceBaseReply(const HttpReplyPointer &r);
 
     /// (re)sets updated reply; \see updatedReply()
     void updateReply(const HttpReply &r) { updatedReply_ = &r; }

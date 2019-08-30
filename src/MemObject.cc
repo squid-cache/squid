@@ -133,6 +133,13 @@ MemObject::~MemObject()
 }
 
 void
+MemObject::replaceBaseReply(const HttpReplyPointer &r)
+{
+    assert(r);
+    reply_ = r;
+}
+
+void
 MemObject::write(const StoreIOBuffer &writeBuffer)
 {
     PROF_start(MemObject_write);
