@@ -808,8 +808,7 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
     assert(store_status == STORE_PENDING);
 
     // XXX: caller uses content offset, but we also store headers
-    if (const HttpReplyPointer reply = mem_obj->getReply())
-        writeBuffer.offset += reply->hdr_sz;
+    writeBuffer.offset += mem_obj->baseReply().hdr_sz;
 
     debugs(20, 5, "storeWrite: writing " << writeBuffer.length << " bytes for '" << getMD5Text() << "'");
     PROF_stop(StoreEntry_write);
@@ -839,7 +838,7 @@ StoreEntry::append(char const *buf, int len)
      * XXX sigh, offset might be < 0 here, but it gets "corrected"
      * later.  This offset crap is such a mess.
      */
-    tempBuffer.offset = mem_obj->endOffset() - (getReply() ? getReply()->hdr_sz : 0);
+    tempBuffer.offset = mem_obj->endOffset() - mem_obj->baseReply().hdr_sz;
     write(tempBuffer);
 }
 
@@ -1268,13 +1267,15 @@ StoreEntry::locked() const
     return 0;
 }
 
+/// whether the base response has all the body bytes we expect
+/// \returns true for responses with unknown/unspecified body length
+/// \returns true for responses with the right number of accumulated body bytes
 bool
 StoreEntry::validLength() const
 {
     int64_t diff;
-    const HttpReply *reply;
     assert(mem_obj != NULL);
-    reply = getReply();
+    const auto reply = &mem_obj->baseReply();
     debugs(20, 3, "storeEntryValidLength: Checking '" << getMD5Text() << "'");
     debugs(20, 5, "storeEntryValidLength:     object_len = " <<
            objectLen());
