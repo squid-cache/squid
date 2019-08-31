@@ -21,6 +21,11 @@ SBuf CertSubjectName(const CertPointer &);
 ///         sets checkCode to the library specific test result.
 bool CertIssuerCheck(const CertPointer &cert, const CertPointer &issuer, ErrorCode &checkCode);
 
+/// convenience wrapper for checking self-signed certificates
+inline bool CertSelfSignedCheck(const CertPointer &cert, ErrorCode &checkCode) {
+    return CertIssuerCheck(cert, cert, checkCode);
+}
+
 } // namespace Security
 
 #endif /* SQUID_SRC_SECURITY_CERTGADGETS_H */

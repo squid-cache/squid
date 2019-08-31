@@ -85,7 +85,7 @@ Security::KeyData::tryAddChainCa(Security::CertPointer &ca)
     ErrorCode checkCode;
 #if TLS_CHAIN_NO_SELFSIGNED
     // self-signed certificates are not valid in a sent chain
-    if (CertIssuerCheck(ca, ca, checkCode)) {
+    if (CertSelfSignedCheck(ca, checkCode)) {
         debugs(83, DBG_PARSE_NOTE(2), "CA " << name << " is self-signed, will not be chained.");
         return;
     }
@@ -112,7 +112,7 @@ void
 Security::KeyData::loadX509ChainFromFile()
 {
     ErrorCode checkCode;
-    if (CertIssuerCheck(cert, cert, checkCode)) {
+    if (CertSelfSignedCheck(cert, checkCode)) {
         const auto name = CertSubjectName(cert);
         debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << name);
         return;
