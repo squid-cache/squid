@@ -81,12 +81,12 @@ Security::KeyData::loadX509CertFromFile()
 void
 Security::KeyData::tryAddChainCa(Security::CertPointer &ca)
 {
-    const auto name = Security::CertSubjectName(ca);
-    Security::ErrorCode checkCode;
+    const auto name = CertSubjectName(ca);
+    ErrorCode checkCode;
 #if TLS_CHAIN_NO_SELFSIGNED
     // self-signed certificates are not valid in a sent chain
-    if (Security::CertIssuerCheck(ca, ca, checkCode)) {
-        debugs(83, DBG_PARSE_NOTE(2), "CA " << name << " is self-signed, will not be chained: " << name);
+    if (CertIssuerCheck(ca, ca, checkCode)) {
+        debugs(83, DBG_PARSE_NOTE(2), "CA " << name << " is self-signed, will not be chained.");
         return;
     }
 #endif
@@ -94,13 +94,13 @@ Security::KeyData::tryAddChainCa(Security::CertPointer &ca)
     CertPointer latestCert(chain.size() > 0 ? chain.front() : cert);
 
     // checks that the chained certs are actually part of a chain for validating cert
-    if (Security::CertIssuerCheck(latestCert, ca, checkCode)) {
+    if (CertIssuerCheck(latestCert, ca, checkCode)) {
         debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << name);
         // OpenSSL API requires that we order certificates such that the
         // chain can be appended directly into the on-wire traffic.
         chain.emplace_back(ca);
     } else {
-        debugs(83, DBG_PARSE_NOTE(2), "Ignoring non-issuer CA " << name << ": " << Security::VerifyErrorString(checkCode) << " (" << checkCode << ")");
+        debugs(83, DBG_PARSE_NOTE(2), "Ignoring non-issuer CA " << name << ": " << VerifyErrorString(checkCode) << " (" << checkCode << ")");
     }
 }
 
