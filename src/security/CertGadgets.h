@@ -22,8 +22,9 @@ SBuf CertSubjectName(const CertPointer &);
 bool CertIssuerCheck(const CertPointer &cert, const CertPointer &issuer, ErrorCode &checkCode);
 
 /// convenience wrapper for checking self-signed certificates
-inline bool CertSelfSignedCheck(const CertPointer &cert, ErrorCode &checkCode) {
-    return CertIssuerCheck(cert, cert, checkCode);
+inline bool CertSelfSignedCheck(const CertPointer &cert) {
+    ErrorCode unused;
+    return CertIssuerCheck(cert, cert, unused);
 }
 
 } // namespace Security

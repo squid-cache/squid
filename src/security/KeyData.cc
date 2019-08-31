@@ -78,14 +78,19 @@ Security::KeyData::loadX509CertFromFile()
     return bool(cert);
 }
 
+/**
+ * Try to add a CA certificate as next in the X.509 chain of trust.
+ *
+ * Verify that the new CA is Issuer for the already known chain or
+ * certificate details. If that verify check fails, do not add the CA.
+ */
 void
 Security::KeyData::tryAddChainCa(Security::CertPointer &ca)
 {
     const auto name = CertSubjectName(ca);
-    ErrorCode checkCode;
 #if TLS_CHAIN_NO_SELFSIGNED
     // self-signed certificates are not valid in a sent chain
-    if (CertSelfSignedCheck(ca, checkCode)) {
+    if (CertSelfSignedCheck(ca)) {
         debugs(83, DBG_PARSE_NOTE(2), "CA " << name << " is self-signed, will not be chained.");
         return;
     }
@@ -94,6 +99,7 @@ Security::KeyData::tryAddChainCa(Security::CertPointer &ca)
     CertPointer latestCert(chain.size() > 0 ? chain.front() : cert);
 
     // checks that the chained certs are actually part of a chain for validating cert
+    ErrorCode checkCode;
     if (CertIssuerCheck(latestCert, ca, checkCode)) {
         debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << name);
         // OpenSSL API requires that we order certificates such that the
@@ -111,8 +117,7 @@ Security::KeyData::tryAddChainCa(Security::CertPointer &ca)
 void
 Security::KeyData::loadX509ChainFromFile()
 {
-    ErrorCode checkCode;
-    if (CertSelfSignedCheck(cert, checkCode)) {
+    if (CertSelfSignedCheck(cert)) {
         const auto name = CertSubjectName(cert);
         debugs(83, DBG_PARSE_NOTE(2), "Certificate is self-signed, will not be chained: " << name);
         return;
