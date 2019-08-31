@@ -38,6 +38,7 @@ private:
     bool loadX509CertFromFile();
     void loadX509ChainFromFile();
     bool loadX509PrivateKeyFromFile();
+    void tryAddChainCa(Security::CertPointer &);
 };
 
 } // namespace Security
