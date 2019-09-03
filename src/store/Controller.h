@@ -88,7 +88,7 @@ public:
     /// called to get rid of no longer needed entry data in RAM, if any
     void memoryOut(StoreEntry &, const bool preserveSwappable);
 
-    /// update old entry metadata and HTTP reply headers, using a 304 response
+    /// using a 304 response, update the old entry (metadata and reply headers)
     void updateOnNotModified(StoreEntry *old, StoreEntry &e304);
 
     /// tries to make the entry available for collapsing future requests

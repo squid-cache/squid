@@ -58,7 +58,7 @@ public:
     /// \throws exception if StoreEntry lacks mem_obj
     const HttpReply &freshestReply() const;
 
-    /// \returns the address of freshest reply (if it exists)
+    /// \returns the address of freshest reply (if mem_obj exists)
     /// \returns nil (otherwise)
     const HttpReply *hasFreshestReply() const { return mem_obj ? &freshestReply() : nullptr; }
 
