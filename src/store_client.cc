@@ -843,15 +843,13 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
         return true;
     }
 
-    int64_t expectlen = entry->getReply()->content_length + entry->getReply()->hdr_sz;
+    const auto &reply = entry->baseReply();
 
-    if (expectlen < 0) {
-        /* expectlen is < 0 if *no* information about the object has been received */
+    if (reply.hdr_sz <= 0) {
+        // TODO: Check whether this condition works for HTTP/0 responses.
         debugs(90, 3, "quick-abort? YES no object data received yet");
         return true;
     }
-
-    int64_t curlen =  mem->endOffset();
 
     if (Config.quickAbort.min < 0) {
         debugs(90, 3, "quick-abort? NO disabled");
@@ -859,10 +857,20 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
     }
 
     if (mem->request && mem->request->range && mem->request->getRangeOffsetLimit() < 0) {
-        /* Don't abort if the admin has configured range_ofset -1 to download fully for caching. */
+        // the admin has configured "range_offset_limit none"
         debugs(90, 3, "quick-abort? NO admin configured range replies to full-download");
         return false;
     }
+
+    if (reply.content_length < 0) {
+        // XXX: cf.data.pre does not document what should happen in this case
+        // We know that quick_abort is enabled, but no limits can be applied.
+        debugs(90, 3, "quick-abort? YES unknown content length");
+        return true;
+    }
+    const auto expectlen = reply.hdr_sz + reply.content_length;
+
+    int64_t curlen =  mem->endOffset();
 
     if (curlen > expectlen) {
         debugs(90, 3, "quick-abort? YES bad content length (" << curlen << " of " << expectlen << " bytes received)");
@@ -879,6 +887,7 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
         return true;
     }
 
+    // XXX: This is absurd! TODO: For positives, "a/(b/c) > d" is "a*c > b*d".
     if (expectlen < 100) {
         debugs(90, 3, "quick-abort? NO avoid FPE");
         return false;
