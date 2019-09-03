@@ -694,6 +694,7 @@ StoreEntry::adjustVary()
         return nullptr;
 
     HttpRequestPointer request(mem_obj->request);
+    const auto &reply = freshestReply();
 
     if (mem_obj->vary_headers.isEmpty()) {
         /* First handle the case where the object no longer varies */
@@ -710,7 +711,7 @@ StoreEntry::adjustVary()
 
         /* Make sure the request knows the variance status */
         if (request->vary_headers.isEmpty())
-            request->vary_headers = httpMakeVaryMark(request.getRaw(), mem_obj->getReply().getRaw());
+            request->vary_headers = httpMakeVaryMark(request.getRaw(), &reply);
     }
 
     // TODO: storeGetPublic() calls below may create unlocked entries.
@@ -729,7 +730,7 @@ StoreEntry::adjustVary()
         /* We are allowed to do this typecast */
         HttpReply *rep = new HttpReply;
         rep->setHeaders(Http::scOkay, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
-        String vary = mem_obj->getReply()->header.getList(Http::HdrType::VARY);
+        auto vary = reply.header.getList(Http::HdrType::VARY);
 
         if (vary.size()) {
             /* Again, we own this structure layout */
@@ -738,7 +739,7 @@ StoreEntry::adjustVary()
         }
 
 #if X_ACCELERATOR_VARY
-        vary = mem_obj->getReply()->header.getList(Http::HdrType::HDR_X_ACCELERATOR_VARY);
+        vary = reply.header.getList(Http::HdrType::HDR_X_ACCELERATOR_VARY);
 
         if (vary.size() > 0) {
             /* Again, we own this structure layout */
@@ -934,9 +935,9 @@ StoreEntry::checkTooSmall()
         if (mem_obj->object_sz >= 0 &&
                 mem_obj->object_sz < Config.Store.minObjectSize)
             return 1;
-    if (getReply()->content_length > -1)
-        if (getReply()->content_length < Config.Store.minObjectSize)
-            return 1;
+    const auto clen = freshestReply().content_length;
+    if (clen >= 0 && clen < Config.Store.minObjectSize)
+        return 1;
     return 0;
 }
 
@@ -946,10 +947,8 @@ StoreEntry::checkTooBig() const
     if (mem_obj->endOffset() > store_maxobjsize)
         return true;
 
-    if (getReply()->content_length < 0)
-        return false;
-
-    return (getReply()->content_length > store_maxobjsize);
+    const auto clen = freshestReply().content_length;
+    return (clen >= 0 && clen > store_maxobjsize);
 }
 
 // TODO: move "too many open..." checks outside -- we are called too early/late
@@ -983,7 +982,7 @@ StoreEntry::checkCachable()
             debugs(20, 3, "StoreEntry::checkCachable: NO: negative cached");
             ++store_check_cachable_hist.no.negative_cached;
             return 0;           /* avoid release call below */
-        } else if (!mem_obj || !getReply()) {
+        } else if (!mem_obj) {
             // XXX: In bug 4131, we forgetHit() without mem_obj, so we need
             // this segfault protection, but how can we get such a HIT?
             debugs(20, 2, "StoreEntry::checkCachable: NO: missing parts: " << *this);
@@ -1697,14 +1696,13 @@ int64_t
 StoreEntry::contentLen() const
 {
     assert(mem_obj != NULL);
-    assert(getReply() != NULL);
-    return objectLen() - getReply()->hdr_sz;
+    return objectLen() - mem_obj->baseReply().hdr_sz;
 }
 
 HttpReply const *
 StoreEntry::getReply() const
 {
-    return (mem_obj ? mem_obj->getReply().getRaw() : nullptr);
+    return (mem_obj ? &mem_obj->baseReply() : nullptr);
 }
 
 const HttpReply &
@@ -1854,8 +1852,12 @@ StoreEntry::startWriting()
     assert (isEmpty());
     assert(mem_obj);
 
-    const HttpReply *rep = getReply();
-    assert(rep);
+    // Per MemObject replies definitions, we can only write our base reply.
+    // Currently, all callers replaceHttpReply() first, so there is no updated
+    // reply here anyway. Eventually, we may need to support the
+    // updateOnNotModified(),startWriting() sequence as well.
+    assert(!mem_obj->updatedReply());
+    const auto rep = &mem_obj->baseReply();
 
     buffer();
     rep->packHeadersUsingSlowPacker(*this);
@@ -1980,7 +1982,7 @@ StoreEntry::modifiedSince(const time_t ims, const int imslen) const
 bool
 StoreEntry::hasEtag(ETag &etag) const
 {
-    if (const HttpReply *reply = getReply()) {
+    if (const auto reply = hasFreshestReply()) {
         etag = reply->header.getETag(Http::HdrType::ETAG);
         if (etag.str)
             return true;
@@ -2009,7 +2011,7 @@ StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const
 bool
 StoreEntry::hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const
 {
-    const ETag repETag = getReply()->header.getETag(Http::HdrType::ETAG);
+    const auto repETag = freshestReply().header.getETag(Http::HdrType::ETAG);
     if (!repETag.str) {
         static SBuf asterisk("*", 1);
         return strListIsMember(&reqETags, asterisk, ',');

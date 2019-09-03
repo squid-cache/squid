@@ -550,11 +550,7 @@ refreshIsCachable(const StoreEntry * entry)
         /* no mem_obj? */
         return true;
 
-    if (entry->getReply() == NULL)
-        /* no reply? */
-        return true;
-
-    if (entry->getReply()->content_length == 0)
+    if (entry->freshestReply().content_length == 0)
         /* No use refreshing (caching?) 0 byte objects */
         return false;
 

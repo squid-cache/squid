@@ -509,18 +509,16 @@ store_client::readBody(const char *, ssize_t len)
     if (len < 0)
         return fail();
 
-    if (copyInto.offset == 0 && len > 0 && entry->getReply()->sline.status() == Http::scNone) {
+    const auto rep = entry->mem_obj ? &entry->baseReply() : nullptr;
+    if (copyInto.offset == 0 && len > 0 && rep && rep->sline.status() == Http::scNone) {
         /* Our structure ! */
-        HttpReply *rep = (HttpReply *) entry->getReply(); // bypass const
-
-        if (!rep->parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
+        if (!const_cast<HttpReply*>(entry->getReply())->parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
             debugs(90, DBG_CRITICAL, "Could not parse headers from on disk object");
         } else {
             parsed_header = 1;
         }
     }
 
-    const HttpReply *rep = entry->getReply();
     if (len > 0 && rep && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
         storeGetMemSpace(len);
         // The above may start to free our object so we need to check again

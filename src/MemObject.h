@@ -55,10 +55,6 @@ public:
     void write(const StoreIOBuffer &buf);
     void unlinkRequest() { request = nullptr; }
 
-    /// Deprecated. Use either baseReply() or updatedReply().
-    /// \returns baseReply() (but legacy callers do not know the difference)
-    const HttpReplyPointer &getReply() const { return reply_; }
-
     /// response that corresponds to our StoreEntry; immune to 304 updates
     /// always exists but starts as a dummy empty object until replaceBaseReply()
     const HttpReply &baseReply() const { return *reply_; }
