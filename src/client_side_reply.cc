@@ -450,7 +450,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         sendClientOldEntry();
     }
 
-    const auto &old_rep = old_entry->freshestReply();
+    const auto oldStatus = old_entry->freshestReply().sline.status();
     const auto &new_rep = http->storeEntry()->freshestReply();
     const auto status = new_rep.sline.status();
 
@@ -472,7 +472,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         } else {
             // send existing entry, it's still valid
             debugs(88, 3, "origin replied 304, revalidating existing entry and sending " <<
-                   old_rep.sline.status() << " to client");
+                   oldStatus << " to client");
             sendClientOldEntry();
         }
     }
@@ -481,11 +481,11 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     else if (status > Http::scNone && status < Http::scInternalServerError) {
         // RFC 7234 section 4: a cache MUST use the most recent response
         // (as determined by the Date header field)
-        if (new_rep.olderThan(&old_rep)) {
+        if (new_rep.olderThan(&old_entry->freshestReply())) {
             http->logType.err.ignored = true;
             debugs(88, 3, "origin replied " << status <<
                    " but with an older date header, sending old entry (" <<
-                   old_rep.sline.status() << ") to client");
+                   oldStatus << ") to client");
             sendClientOldEntry();
         } else {
             http->logType.update(LOG_TCP_REFRESH_MODIFIED);
@@ -509,7 +509,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         // ignore and let client have old entry
         http->logType.update(LOG_TCP_REFRESH_FAIL_OLD);
         debugs(88, 3, "origin replied with error " <<
-               status << ", sending old entry (" << old_rep.sline.status() << ") to client");
+               status << ", sending old entry (" << oldStatus << ") to client");
         sendClientOldEntry();
     }
 }
