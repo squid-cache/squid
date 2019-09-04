@@ -935,7 +935,7 @@ StoreEntry::checkTooSmall()
         if (mem_obj->object_sz >= 0 &&
                 mem_obj->object_sz < Config.Store.minObjectSize)
             return 1;
-    const auto clen = freshestReply().content_length;
+    const auto clen = stableReply().content_length;
     if (clen >= 0 && clen < Config.Store.minObjectSize)
         return 1;
     return 0;
@@ -947,7 +947,7 @@ StoreEntry::checkTooBig() const
     if (mem_obj->endOffset() > store_maxobjsize)
         return true;
 
-    const auto clen = freshestReply().content_length;
+    const auto clen = stableReply().content_length;
     return (clen >= 0 && clen > store_maxobjsize);
 }
 
@@ -1274,7 +1274,7 @@ StoreEntry::validLength() const
 {
     int64_t diff;
     assert(mem_obj != NULL);
-    const auto reply = &mem_obj->baseReply();
+    const auto reply = &stableReply();
     debugs(20, 3, "storeEntryValidLength: Checking '" << getMD5Text() << "'");
     debugs(20, 5, "storeEntryValidLength:     object_len = " <<
            objectLen());

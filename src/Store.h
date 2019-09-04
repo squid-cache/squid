@@ -68,11 +68,11 @@ public:
     /// \throws exception if StoreEntry lacks mem_obj
     HttpReply &adjustableBaseReply();
 
-    /// \returns the associated HTTP reply status code
-    /// Exists to avoid making the decision which reply to query -- both base
-    /// and freshest replies have the same status code.
+    /// \returns base response; \see MemObject::baseReply()
+    /// Exists exclusively for callers that want to access response properties
+    /// that are not supposed to change across successful 304 updates.
     /// \throws exception if StoreEntry lacks mem_obj
-    Http::StatusCode replyStatus() const { return baseReply().sline.status(); }
+    const HttpReply &stableReply() const { return baseReply(); }
 
     void write(StoreIOBuffer);
 

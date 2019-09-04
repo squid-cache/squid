@@ -439,7 +439,7 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
     }
     else if (rep->content_length < 0)
         range_err = "unknown length";
-    else if (rep->content_length != http->storeEntry()->baseReply().content_length)
+    else if (rep->content_length != http->storeEntry()->stableReply().content_length)
         range_err = "INCONSISTENT length";  /* a bug? */
 
     /* hits only - upstream CachePeer determines correct behaviour on misses,
