@@ -807,7 +807,6 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
                                             Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
     HttpRequest::Pointer requestPointer = request;
     const auto tunneler = new Http::Tunneler(conn, requestPointer, callback, connectingTimeout(serverConnection()), al);
-    tunneler->usesPconn_ = true;
 #if USE_DELAY_POOLS
     Must(serverConnection()->getPeer());
     if (!serverConnection()->getPeer()->options.no_delay)
@@ -885,7 +884,6 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
         else
 #endif
             connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
-        connector->usesPconn_ = true;
         AsyncJob::Start(connector); // will call our callback
         return;
     }
