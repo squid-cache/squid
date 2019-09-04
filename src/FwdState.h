@@ -135,10 +135,10 @@ private:
     void connectedToPeer(Security::EncryptorAnswer &answer);
     static void RegisterWithCacheManager(void);
 
-    void establishTunnelThruProxy();
+    void establishTunnelThruProxy(const Comm::ConnectionPointer &);
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
-    void secureConnectionToPeerIfNeeded();
-    void successfullyConnectedToPeer();
+    void secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &);
+    void successfullyConnectedToPeer(const Comm::ConnectionPointer &);
 
     /// stops monitoring server connection for closure and updates pconn stats
     void closeServerConnection(const char *reason);

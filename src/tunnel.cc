@@ -113,7 +113,7 @@ public:
     void startConnecting();
 
     /// called when negotiations with the peer have been successfully completed
-    void notePeerReadyToShovel();
+    void notePeerReadyToShovel(const Comm::ConnectionPointer &conn);
 
     class Connection
     {
@@ -179,7 +179,7 @@ public:
     void copyRead(Connection &from, IOCB *completion);
 
     /// continue to set up connection to a peer, going async for SSL peers
-    void connectToPeer();
+    void connectToPeer(const Comm::ConnectionPointer &conn);
 
     /* PeerSelectionInitiator API */
     virtual void noteDestination(Comm::ConnectionPointer conn) override;
@@ -841,7 +841,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
     if (answer.positive()) {
         // copy any post-200 OK bytes to our buffer
         preReadServerData = answer.leftovers;
-        notePeerReadyToShovel();
+        notePeerReadyToShovel(answer.conn);
         return;
     }
 
@@ -853,8 +853,8 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 
     if (!clientExpectsConnectResponse()) {
         // closing the non-HTTP client connection is the best we can do
-        debugs(50, 3, server.conn << " closing on CONNECT-to-peer error");
-        server.closeIfOpen();
+        debugs(50, 3, client.conn << " closing on CONNECT-to-peer error");
+        client.closeIfOpen();
         return;
     }
 
@@ -865,8 +865,9 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 }
 
 void
-TunnelStateData::notePeerReadyToShovel()
+TunnelStateData::notePeerReadyToShovel(const Comm::ConnectionPointer &conn)
 {
+    server.conn = conn;
     // Start monitoring for server-side connection problems
     comm_add_close_handler(server.conn->fd, tunnelServerClosed, this);
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
@@ -923,7 +924,6 @@ void
 TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *origin, const bool reused)
 {
     Must(Comm::IsConnOpen(conn));
-    server.conn = conn;
 
     if (reused)
         ResetMarkingsToServer(request.getRaw(), *conn);
@@ -955,9 +955,9 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     }
 
     if (!toOrigin)
-        connectToPeer();
+        connectToPeer(conn);
     else {
-        notePeerReadyToShovel();
+        notePeerReadyToShovel(conn);
     }
 }
 
@@ -1008,20 +1008,21 @@ tunnelStart(ClientHttpRequest * http)
 }
 
 void
-TunnelStateData::connectToPeer()
+TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 {
-    if (CachePeer *p = server.conn->getPeer()) {
+    if (CachePeer *p = conn->getPeer()) {
         if (p->secure.encryptTransport) {
             AsyncCall::Pointer callback = asyncCall(5,4,
                                                     "TunnelStateData::ConnectedToPeer",
                                                     MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
-            auto *connector = new Security::BlindPeerConnector(request, server.conn, callback, al);
+            auto *connector = new Security::BlindPeerConnector(request, conn, callback, al);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
     }
 
     Security::EncryptorAnswer nil;
+    nil.conn = conn;
     connectedToPeer(nil);
 }
 
@@ -1039,7 +1040,7 @@ TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
     AsyncCall::Pointer callback = asyncCall(5,4,
                                             "TunnelStateData::tunnelEstablishmentDone",
                                             Http::Tunneler::CbDialer<TunnelStateData>(&TunnelStateData::tunnelEstablishmentDone, this));
-    const auto tunneler = new Http::Tunneler(server.conn, request, callback, Config.Timeout.lifetime, al);
+    const auto tunneler = new Http::Tunneler(answer.conn, request, callback, Config.Timeout.lifetime, al);
 #if USE_DELAY_POOLS
     tunneler->setDelayId(server.delayId);
 #endif

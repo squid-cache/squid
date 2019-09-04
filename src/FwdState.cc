@@ -122,10 +122,8 @@ void
 FwdState::closeServerConnection(const char *reason)
 {
     debugs(17, 3, "because " << reason << "; " << serverConn);
-    if (closeHandler) {
-        comm_remove_close_handler(serverConn->fd, closeHandler);
-        closeHandler = NULL;
-    }
+    comm_remove_close_handler(serverConn->fd, closeHandler);
+    closeHandler = NULL;
     fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
     serverConn->close();
 }
@@ -780,10 +778,8 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
         return dispatch();
     }
 
-    serverConn = conn;
-
     // Check if we need to TLS before use
-    if (const CachePeer *peer = serverConnection()->getPeer()) {
+    if (const CachePeer *peer = conn->getPeer()) {
         // Assume that it is only possible for the client-first from the
         // bumping modes to try connect to a remote server. The bumped
         // requests with other modes are using pinned connections or fails.
@@ -797,20 +793,21 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
         if (originWantsEncryptedTraffic && // the "encrypted traffic" part
                 !peer->options.originserver && // the "through a proxy" part
                 !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
-            return establishTunnelThruProxy();
+            return establishTunnelThruProxy(conn);
     }
 
-    secureConnectionToPeerIfNeeded();
+    secureConnectionToPeerIfNeeded(conn);
 }
 
 void
-FwdState::establishTunnelThruProxy()
+FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::tunnelEstablishmentDone",
                                             Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
     HttpRequest::Pointer requestPointer = request;
-    const auto tunneler = new Http::Tunneler(serverConnection(), requestPointer, callback, connectingTimeout(serverConnection()), al);
+    const auto tunneler = new Http::Tunneler(conn, requestPointer, callback, connectingTimeout(serverConnection()), al);
+    tunneler->usesPconn_ = true;
 #if USE_DELAY_POOLS
     Must(serverConnection()->getPeer());
     if (!serverConnection()->getPeer()->options.no_delay)
@@ -826,12 +823,13 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
     if (answer.positive()) {
         if (answer.leftovers.isEmpty()) {
-            secureConnectionToPeerIfNeeded();
+            secureConnectionToPeerIfNeeded(answer.conn);
             return;
         }
         // This should not happen because TLS servers do not speak first. If we
         // have to handle this, then pass answer.leftovers via a PeerConnector
         // to ServerBio. See ClientBio::setReadBufData().
+        syncWithServerConn(answer.conn, request->url.host(), false);
         static int occurrences = 0;
         const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
         debugs(17, level, "ERROR: Early data after CONNECT response. " <<
@@ -852,17 +850,16 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
     Must(error);
     answer.squidError.clear(); // preserve error for fail()
     fail(error);
-    closeServerConnection("Squid-generated CONNECT error");
     retryOrBail();
 }
 
 /// handles an established TCP connection to peer (including origin servers)
 void
-FwdState::secureConnectionToPeerIfNeeded()
+FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
 {
     assert(!request->flags.pinned);
 
-    const CachePeer *p = serverConnection()->getPeer();
+    const CachePeer *p = conn->getPeer();
     const bool peerWantsTls = p && p->secure.encryptTransport;
     // userWillTlsToPeerForUs assumes CONNECT == HTTPS
     const bool userWillTlsToPeerForUs = p && p->options.originserver &&
@@ -880,20 +877,21 @@ FwdState::secureConnectionToPeerIfNeeded()
         AsyncCall::Pointer callback = asyncCall(17,4,
                                                 "FwdState::ConnectedToPeer",
                                                 FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
-        const auto sslNegotiationTimeout = connectingTimeout(serverConnection());
+        const auto sslNegotiationTimeout = connectingTimeout(conn);
         Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
         if (request->flags.sslPeek)
-            connector = new Ssl::PeekingPeerConnector(requestPointer, serverConnection(), clientConn, callback, al, sslNegotiationTimeout);
+            connector = new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, callback, al, sslNegotiationTimeout);
         else
 #endif
-            connector = new Security::BlindPeerConnector(requestPointer, serverConnection(), callback, al, sslNegotiationTimeout);
+            connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
+        connector->usesPconn_ = true;
         AsyncJob::Start(connector); // will call our callback
         return;
     }
 
     // if not encrypting just run the post-connect actions
-    successfullyConnectedToPeer();
+    successfullyConnectedToPeer(conn);
 }
 
 /// called when all negotiations with the TLS-speaking peer have been completed
@@ -903,9 +901,6 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
     if (ErrorState *error = answer.error.get()) {
         fail(error);
         answer.error.clear(); // preserve error for errorSendComplete()
-        if (CachePeer *p = serverConnection()->getPeer())
-            peerConnectFailed(p);
-        serverConnection()->close();
         retryOrBail();
         return;
     }
@@ -915,19 +910,18 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
         // [in ways that may affect logging?]. Consider informing
         // ConnStateData about our tunnel or otherwise unifying tunnel
         // establishment [side effects].
-        unregister(serverConn); // async call owns it now
         complete(); // destroys us
         return;
     }
 
-    successfullyConnectedToPeer();
+    successfullyConnectedToPeer(answer.conn);
 }
 
 /// called when all negotiations with the peer have been completed
 void
-FwdState::successfullyConnectedToPeer()
+FwdState::successfullyConnectedToPeer(const Comm::ConnectionPointer &conn)
 {
-    syncWithServerConn(serverConn, request->url.host(), false);
+    syncWithServerConn(conn, request->url.host(), false);
 
     // should reach ConnStateData before the dispatched Client job starts
     CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
@@ -1038,6 +1032,8 @@ FwdState::usePinned()
     assert(connManager);
     if (connManager->pinnedAuth())
         request->flags.auth = true;
+
+    syncWithServerConn(connManager->pinning.host);
 
     // the server may close the pinned connection before this request
     const auto reused = true;

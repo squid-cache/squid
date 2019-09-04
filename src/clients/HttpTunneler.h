@@ -69,6 +69,7 @@ public:
     void setDelayId(DelayId delay_id) {delayId = delay_id;}
 #endif
 
+    bool usesPconn_; ///< whether persistent connections are supported
 protected:
     /* AsyncJob API */
     virtual ~Tunneler();

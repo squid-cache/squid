@@ -18,6 +18,8 @@
 #include "http/one/ResponseParser.h"
 #include "http/StateFlags.h"
 #include "HttpRequest.h"
+#include "neighbors.h"
+#include "pconn.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 
@@ -25,6 +27,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Http, Tunneler);
 
 Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, AsyncCall::Pointer &aCallback, time_t timeout, const AccessLogEntryPointer &alp):
     AsyncJob("Http::Tunneler"),
+    usesPconn_(false),
     connection(conn),
     request(req),
     callback(aCallback),
@@ -352,6 +355,10 @@ Http::Tunneler::bailWith(ErrorState *error)
 {
     Must(error);
     answer().squidError = error;
+
+    if (CachePeer *p = connection->getPeer())
+        peerConnectFailed(p);
+
     callBack();
     disconnect(true);
 }
@@ -378,6 +385,8 @@ Http::Tunneler::disconnect(const bool andClose)
     commUnsetConnTimeout(connection);
 
     if (andClose) {
+        if (usesPconn_)
+            fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
         connection->close();
         connection = nullptr;
     }
@@ -387,6 +396,7 @@ void
 Http::Tunneler::callBack()
 {
     debugs(83, 5, connection << status());
+    answer().conn = connection;
     auto cb = callback;
     callback = nullptr;
     ScheduleCallHere(cb);

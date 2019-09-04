@@ -15,8 +15,11 @@
 #include "Downloader.h"
 #include "errorpage.h"
 #include "fde.h"
+#include "FwdState.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
+#include "neighbors.h"
+#include "pconn.h"
 #include "security/NegotiationHistory.h"
 #include "security/PeerConnector.h"
 #include "SquidConfig.h"
@@ -31,6 +34,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 
 Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const AccessLogEntryPointer &alp, const time_t timeout) :
     AsyncJob("Security::PeerConnector"),
+    usesPconn_(false),
     serverConn(aServerConn),
     al(alp),
     callback(aCallback),
@@ -557,6 +561,9 @@ Security::PeerConnector::bail(ErrorState *error)
     Must(dialer);
     dialer->answer().error = error;
 
+    if (CachePeer *p = serverConnection()->getPeer())
+        peerConnectFailed(p);
+
     callBack();
     disconnect(true);
 }
@@ -578,6 +585,8 @@ Security::PeerConnector::disconnect(const bool andClose)
     commUnsetConnTimeout(serverConnection());
 
     if (andClose) {
+        if (usesPconn_)
+            fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
         serverConn->close();
         serverConn = nullptr;
     }
