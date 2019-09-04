@@ -56,12 +56,17 @@ public:
     void unlinkRequest() { request = nullptr; }
 
     /// response that corresponds to our StoreEntry; immune to 304 updates
-    /// always exists but starts as a dummy empty object until replaceBaseReply()
+    /// starts empty until replaceBaseReply() or adjustableBaseReply()
     const HttpReply &baseReply() const { return *reply_; }
 
     /// \returns nil if no 304 updates since replaceBaseReply()
     /// \returns a combination of baseReply() and 304 updates (after updates)
     const HttpReplyPointer &updatedReply() const { return updatedReply_; }
+
+    /// \returns writable base reply for parsing and other initial modifications
+    /// Base modifications can only be done when forming/loading the entry.
+    /// After that, use replaceBaseReply() to reset all of the replies.
+    HttpReply &adjustableBaseReply();
 
     /// (re)sets base reply, usually just replacing the initial/empty object
     /// also forgets the updated reply (if any)

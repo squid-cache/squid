@@ -189,7 +189,7 @@ testRock::createEntry(const int i)
     flags.cachable = true;
     StoreEntry *const pe =
         storeCreateEntry(storeId(i), "dummy log url", flags, Http::METHOD_GET);
-    HttpReply *const rep = const_cast<HttpReply *>(pe->getReply());
+    const auto rep = pe->adjustableBaseReply();
     rep->setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
 
     pe->setPublicKey();

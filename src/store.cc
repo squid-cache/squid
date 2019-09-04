@@ -1721,6 +1721,13 @@ StoreEntry::freshestReply() const
     return mem_obj->baseReply();
 }
 
+HttpReply &
+StoreEntry::adjustableBaseReply()
+{
+    assert(mem_obj);
+    return mem_obj->adjustableBaseReply();
+}
+
 void
 StoreEntry::reset()
 {

@@ -132,6 +132,13 @@ MemObject::~MemObject()
     ctx_exit(ctx);              /* must exit before we free mem->url */
 }
 
+HttpReply &
+MemObject::adjustableBaseReply()
+{
+    assert(!updatedReply_);
+    return *reply_;
+}
+
 void
 MemObject::replaceBaseReply(const HttpReplyPointer &r)
 {
