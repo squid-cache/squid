@@ -469,7 +469,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             break;      /* terminating blank line */
         }
 
-        auto *e = HttpHeaderEntry::parse(field_start, field_end, owner);
+        const auto e = HttpHeaderEntry::parse(field_start, field_end, owner);
         if (!e) {
             debugs(55, warnOnError, "WARNING: unparseable HTTP header field {" <<
                    getStringPrefix(field_start, field_end-field_start) << "}");
@@ -1421,7 +1421,8 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
 
     if (name_len > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, 2, "found header name of " << name_len << " bytes (" << Raw("value_start", value_start, name_len) << ")");
+        // TODO: update this to show proper name_len in Raw markup, but not print all that
+        debugs(55, 2, "ignoring huge header field (" << Raw("field_start", field_start, 100) << "...)");
         return NULL;
     }
 
