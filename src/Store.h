@@ -68,12 +68,6 @@ public:
     /// \throws exception if StoreEntry lacks mem_obj
     HttpReply &adjustableBaseReply();
 
-    /// \returns base response; \see MemObject::baseReply()
-    /// Exists exclusively for callers that want to access response properties
-    /// that are not supposed to change across successful 304 updates.
-    /// \throws exception if StoreEntry lacks mem_obj
-    const HttpReply &stableReply() const { return baseReply(); }
-
     void write(StoreIOBuffer);
 
     /** Check if the Store entry is empty

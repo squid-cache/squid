@@ -843,7 +843,7 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
         return true;
     }
 
-    const auto &reply = entry->baseReply(); // or stableReply()
+    const auto &reply = entry->baseReply();
 
     if (reply.hdr_sz <= 0) {
         // TODO: Check whether this condition works for HTTP/0 responses.

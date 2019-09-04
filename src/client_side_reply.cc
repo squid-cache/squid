@@ -821,7 +821,7 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
 {
     StoreEntry *const e = http->storeEntry();
 
-    const auto replyStatusCode = e->stableReply().sline.status();
+    const auto replyStatusCode = e->baseReply().sline.status();
     if (replyStatusCode != Http::scOkay) {
         debugs(88, 4, "miss because " << replyStatusCode << " != 200");
         http->logType.update(LOG_TCP_MISS);
@@ -1208,7 +1208,7 @@ clientReplyContext::storeNotOKTransferDone() const
         return 0;
 
     // TODO: Use MemObject::expectedReplySize(method) after resolving XXX below.
-    const auto expectedBodySize = http->storeEntry()->stableReply().content_length;
+    const auto expectedBodySize = http->storeEntry()->baseReply().content_length;
 
     // XXX: The code below talks about sending data, and checks stats about
     // bytes written to the client connection, but this method must determine
