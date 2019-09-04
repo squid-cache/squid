@@ -821,8 +821,9 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
 {
     StoreEntry *const e = http->storeEntry();
 
-    if (e->getReply()->sline.status() != Http::scOkay) {
-        debugs(88, 4, "Reply code " << e->getReply()->sline.status() << " != 200");
+    const auto replyStatus = e->replyStatus();
+    if (replyStatus != Http::scOkay) {
+        debugs(88, 4, "miss because " << replyStatus << " != 200");
         http->logType.update(LOG_TCP_MISS);
         processMiss();
         return true;

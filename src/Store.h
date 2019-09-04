@@ -68,8 +68,11 @@ public:
     /// \throws exception if StoreEntry lacks mem_obj
     HttpReply &adjustableBaseReply();
 
-    /// Deprecated. Use baseReply(), freshestReply(), or hasFreshestReply() instead.
-    HttpReply const *getReply() const;
+    /// \returns the associated HTTP reply status code
+    /// Exists to avoid making the decision which reply to query -- both base
+    /// and freshest replies have the same status code.
+    /// \throws exception if StoreEntry lacks mem_obj
+    Http::StatusCode replyStatus() const { return baseReply().sline.status(); }
 
     void write(StoreIOBuffer);
 

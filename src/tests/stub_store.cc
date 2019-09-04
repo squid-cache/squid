@@ -26,7 +26,6 @@ bool StoreEntry::checkDeferRead(int fd) const STUB_RETVAL(false)
 const char *StoreEntry::getMD5Text() const STUB_RETVAL(NULL)
 StoreEntry::StoreEntry() STUB
 StoreEntry::~StoreEntry() STUB
-HttpReply const *StoreEntry::getReply() const STUB_RETVAL(NULL)
 void StoreEntry::write(StoreIOBuffer) STUB
 bool StoreEntry::isAccepting() const STUB_RETVAL(false)
 size_t StoreEntry::bytesWanted(Range<size_t> const, bool) const STUB_RETVAL(0)

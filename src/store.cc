@@ -1699,12 +1699,6 @@ StoreEntry::contentLen() const
     return objectLen() - mem_obj->baseReply().hdr_sz;
 }
 
-HttpReply const *
-StoreEntry::getReply() const
-{
-    return (mem_obj ? &mem_obj->baseReply() : nullptr);
-}
-
 const HttpReply &
 StoreEntry::baseReply() const
 {

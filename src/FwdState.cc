@@ -511,16 +511,17 @@ FwdState::unregister(int fd)
 void
 FwdState::complete()
 {
-    debugs(17, 3, HERE << entry->url() << "\n\tstatus " << entry->getReply()->sline.status());
+    const auto replyStatus = entry->replyStatus();
+    debugs(17, 3, *entry << " status " << replyStatus << ' ' << entry->url());
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
 #endif
 
-    logReplyStatus(n_tries, entry->getReply()->sline.status());
+    logReplyStatus(n_tries, replyStatus);
 
     if (reforward()) {
-        debugs(17, 3, HERE << "re-forwarding " << entry->getReply()->sline.status() << " " << entry->url());
+        debugs(17, 3, "re-forwarding " << replyStatus << " " << entry->url());
 
         if (Comm::IsConnOpen(serverConn))
             unregister(serverConn);
@@ -531,9 +532,9 @@ FwdState::complete()
 
     } else {
         if (Comm::IsConnOpen(serverConn))
-            debugs(17, 3, HERE << "server FD " << serverConnection()->fd << " not re-forwarding status " << entry->getReply()->sline.status());
+            debugs(17, 3, "server FD " << serverConnection()->fd << " not re-forwarding status " << replyStatus);
         else
-            debugs(17, 3, HERE << "server (FD closed) not re-forwarding status " << entry->getReply()->sline.status());
+            debugs(17, 3, "server (FD closed) not re-forwarding status " << replyStatus);
         entry->complete();
 
         if (!Comm::IsConnOpen(serverConn))
@@ -1225,7 +1226,7 @@ FwdState::reforward()
         return 0;
     }
 
-    const Http::StatusCode s = e->getReply()->sline.status();
+    const auto s = entry->replyStatus();
     debugs(17, 3, HERE << "status " << s);
     return reforwardableStatus(s);
 }
