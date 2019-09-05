@@ -1460,7 +1460,7 @@ StoreEntry::timestampsSet()
     debugs(20, 7, *this << " had " << describeTimestamps());
 
     // TODO: Remove change-reducing "&" before the official commit.
-    const auto * const reply = &freshestReply();
+    const auto reply = &freshestReply();
 
     time_t served_date = reply->date;
     int age = reply->header.getInt(Http::HdrType::AGE);
