@@ -218,7 +218,7 @@ Rock::HeaderUpdater::startWriting()
     debugs(20, 7, "wrote " << offset <<
            "; swap_file_sz delta: -" << stalePrefixSz << " +" << freshPrefixSz);
 
-    // Optimistic update OK: Our write lock prevents early swap_file_sz access.
+    // Optimistic early update OK: Our write lock blocks access to swap_file_sz.
     auto &swap_file_sz = update.fresh.anchor->basics.swap_file_sz;
     Must(swap_file_sz >= stalePrefixSz);
     swap_file_sz -= stalePrefixSz;

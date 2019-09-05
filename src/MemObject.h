@@ -55,12 +55,12 @@ public:
     void write(const StoreIOBuffer &buf);
     void unlinkRequest() { request = nullptr; }
 
-    /// response that corresponds to our StoreEntry; immune to 304 updates
-    /// starts empty until replaceBaseReply() or adjustableBaseReply()
+    /// HTTP response before 304 (Not Modified) updates
+    /// starts "empty"; modified via replaceBaseReply() or adjustableBaseReply()
     const HttpReply &baseReply() const { return *reply_; }
 
-    /// \returns nil if no 304 updates since replaceBaseReply()
-    /// \returns a combination of baseReply() and 304 updates (after updates)
+    /// \returns nil -- if no 304 updates since replaceBaseReply()
+    /// \returns combination of baseReply() and 304 updates -- after updates
     const HttpReplyPointer &updatedReply() const { return updatedReply_; }
 
     /// \returns writable base reply for parsing and other initial modifications
@@ -82,10 +82,14 @@ public:
 
     void stat (MemBuf * mb) const;
     int64_t endOffset () const;
-    void markEndOfReplyHeaders(); ///< sets reply_->hdr_sz to endOffset()
+
+    /// sets baseReply().hdr_sz (i.e. written reply headers size) to endOffset()
+    void markEndOfReplyHeaders();
+
     /// negative if unknown; otherwise, expected object_sz, expected endOffset
     /// maximum, and stored reply headers+body size (all three are the same)
     int64_t expectedReplySize() const;
+
     int64_t size() const;
     void reset();
     int64_t lowestMemReaderOffset() const;

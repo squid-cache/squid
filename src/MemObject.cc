@@ -257,20 +257,21 @@ MemObject::size() const
 int64_t
 MemObject::expectedReplySize() const
 {
-    debugs(20, 7, "object_sz: " << object_sz);
-    if (object_sz >= 0) // complete() has been called; we know the exact answer
+    if (object_sz >= 0) {
+        debugs(20, 7, object_sz << " frozen by complete()");
         return object_sz;
+    }
 
     const auto hdr_sz = baseReply().hdr_sz;
 
-    // cannot predict future length using an empty/unset or HTTP/0 reply
-    // hdr_sz is positive for any HTTP/1 reply -- status-line cannot be empty
+    // Cannot predict future length using an empty/unset or HTTP/0 reply.
+    // For any HTTP/1 reply, hdr_sz is positive  -- status-line cannot be empty.
     if (hdr_sz <= 0)
         return -1;
 
     const auto clen = baseReply().bodySize(method);
     if (clen < 0) {
-        debugs(20, 7, "hdr: " << hdr_sz << " clen: unknown");
+        debugs(20, 7, "unknown; hdr: " << hdr_sz);
         return -1;
     }
 
@@ -306,12 +307,12 @@ MemObject::lowestMemReaderOffset() const
 bool
 MemObject::readAheadPolicyCanRead() const
 {
-    const auto storedHttpHeaders = baseReply().hdr_sz;
-    const bool canRead = endOffset() - storedHttpHeaders <
+    const auto savedHttpHeaders = baseReply().hdr_sz;
+    const bool canRead = endOffset() - savedHttpHeaders <
                          lowestMemReaderOffset() + Config.readAheadGap;
 
     if (!canRead) {
-        debugs(19, 9, "no: " << endOffset() << '-' << storedHttpHeaders <<
+        debugs(19, 5, "no: " << endOffset() << '-' << savedHttpHeaders <<
                " < " << lowestMemReaderOffset() << '+' << Config.readAheadGap);
     }
 

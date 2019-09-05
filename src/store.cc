@@ -935,6 +935,7 @@ StoreEntry::checkTooSmall()
         if (mem_obj->object_sz >= 0 &&
                 mem_obj->object_sz < Config.Store.minObjectSize)
             return 1;
+
     const auto clen = baseReply().content_length;
     if (clen >= 0 && clen < Config.Store.minObjectSize)
         return 1;
@@ -1076,9 +1077,6 @@ StoreEntry::complete()
         return;
     }
 
-    /* This is suspect: mem obj offsets include the headers. do we adjust for that
-     * in use of object_sz?
-     */
     mem_obj->object_sz = mem_obj->endOffset();
 
     store_status = STORE_OK;
@@ -1462,7 +1460,7 @@ StoreEntry::timestampsSet()
     debugs(20, 7, *this << " had " << describeTimestamps());
 
     // TODO: Remove change-reducing "&" before the official commit.
-    const auto * const reply = &(freshestReply());
+    const auto * const reply = &freshestReply();
 
     time_t served_date = reply->date;
     int age = reply->header.getInt(Http::HdrType::AGE);
