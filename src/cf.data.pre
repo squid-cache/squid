@@ -6563,6 +6563,9 @@ DOC_START
 
 	    note key value acl ...
 	    logformat myFormat ... %{key}note ...
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: relaxed_header_parser

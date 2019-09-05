@@ -425,7 +425,7 @@ ClientHttpRequest::logRequest()
         // The al->notes and request->notes must point to the same object.
         (void)SyncNotes(*al, *request);
         for (auto i = Config.notes.begin(); i != Config.notes.end(); ++i) {
-            if (const char *value = (*i)->match(request, al->reply, NULL)) {
+            if (const char *value = (*i)->match(request, al->reply, al)) {
                 NotePairs &notes = SyncNotes(*al, *request);
                 notes.add((*i)->key.termedBuf(), value);
                 debugs(33, 3, (*i)->key.termedBuf() << " " << value);
