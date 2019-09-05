@@ -1033,7 +1033,7 @@ FwdState::usePinned()
 
     // the server may close the pinned connection before this request
     const auto reused = true;
-    syncWithServerConn(temp, connManager->pinning.host, reused);
+    syncWithServerConn(serverConn, connManager->pinning.host, reused);
 
     dispatch();
 }

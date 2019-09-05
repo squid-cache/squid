@@ -1188,7 +1188,7 @@ TunnelStateData::usePinned()
         const auto reused = true;
         connectDone(serverConn, connManager->pinning.host, reused);
     } catch (ErrorState * const error) {
-        syncHierNote(serverConn, connManager ? connManager->pinning.host : request->url.host());
+        syncHierNote(nullptr, connManager ? connManager->pinning.host : request->url.host());
         // a PINNED path failure is fatal; do not wait for more paths
         sendError(error, "pinned path failure");
         return;
