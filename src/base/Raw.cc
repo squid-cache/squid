@@ -24,7 +24,7 @@ Raw::print(std::ostream &os) const
 
     // finalize debugging level if no level was set explicitly via minLevel()
     const int finalLevel = (level >= 0) ? level :
-                           (size_ > 40 ? DBG_DATA : Debug::SectionLevel());
+                           (printableSize_ > 40 ? DBG_DATA : Debug::SectionLevel());
     if (finalLevel <= Debug::SectionLevel()) {
         if (label_)
             os << '=';
@@ -32,9 +32,11 @@ Raw::print(std::ostream &os) const
             os << ' ';
         if (data_) {
             if (useHex_)
-                PrintHex(os, data_, size_);
+                PrintHex(os, data_, printableSize_);
             else
-                os.write(data_, size_);
+                os.write(data_, printableSize_);
+            if (printableSize_ < size_)
+                os << "[..." << (size_ - printableSize_) << " bytes...]";
         } else {
             os << "[null]";
         }
