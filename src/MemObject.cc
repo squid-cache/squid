@@ -144,6 +144,7 @@ MemObject::replaceBaseReply(const HttpReplyPointer &r)
 {
     assert(r);
     reply_ = r;
+    updatedReply_ = nullptr;
 }
 
 void
