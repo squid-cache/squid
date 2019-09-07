@@ -10,8 +10,8 @@
 #define SQUID_FORWARD_H
 
 #include "base/CbcPointer.h"
-#include "base/RefCount.h"
 #include "base/forward.h"
+#include "base/RefCount.h"
 #include "clients/forward.h"
 #include "comm.h"
 #include "comm/Connection.h"
