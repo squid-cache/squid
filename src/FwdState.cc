@@ -566,9 +566,9 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     // recognize step1 bumping by nil ConnStateData::serverBump().
 #if USE_OPENSSL
     const auto clientFirstBump = request->clientConnectionManager.valid() &&
-        (request->clientConnectionManager->sslBumpMode == Ssl::bumpClientFirst ||
-         (request->clientConnectionManager->sslBumpMode == Ssl::bumpBump && !request->clientConnectionManager->serverBump())
-            );
+                                 (request->clientConnectionManager->sslBumpMode == Ssl::bumpClientFirst ||
+                                  (request->clientConnectionManager->sslBumpMode == Ssl::bumpBump && !request->clientConnectionManager->serverBump())
+                                 );
 #else
     const auto clientFirstBump = false;
 #endif /* USE_OPENSSL */

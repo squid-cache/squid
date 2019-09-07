@@ -1297,7 +1297,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
                 hp->parseStatusCode == Http::scRequestHeaderFieldsTooLarge ||
                 hp->parseStatusCode == Http::scUriTooLong;
             auto result = abortRequestParsing(
-                          tooBig ? "error:request-too-large" : "error:invalid-request");
+                              tooBig ? "error:request-too-large" : "error:invalid-request");
             // assume that remaining leftovers belong to this bad request
             if (!inBuf.isEmpty())
                 consumeInput(inBuf.length());

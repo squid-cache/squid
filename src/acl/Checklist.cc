@@ -371,7 +371,7 @@ void
 ACLChecklist::calcImplicitAnswer()
 {
     const auto lastAction = (accessList && cbdataReferenceValid(accessList)) ?
-                               accessList->lastAction() : Acl::Answer(ACCESS_DUNNO);
+                            accessList->lastAction() : Acl::Answer(ACCESS_DUNNO);
     auto implicitRuleAnswer = Acl::Answer(ACCESS_DUNNO);
     if (lastAction == ACCESS_DENIED) // reverse last seen "deny"
         implicitRuleAnswer = Acl::Answer(ACCESS_ALLOWED);
