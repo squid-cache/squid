@@ -1529,7 +1529,7 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
     const auto &oldReply = mem_obj->freshestReply();
     const auto updatedReply = oldReply.recreateOnNotModified(e304.mem_obj->baseReply());
     if (updatedReply) // HTTP 304 brought in new information
-       mem_obj->updateReply(*updatedReply);
+        mem_obj->updateReply(*updatedReply);
     // else continue to use the previous update, if any
 
     if (!timestampsSet() && !updatedReply)

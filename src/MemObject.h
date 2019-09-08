@@ -99,7 +99,6 @@ public:
     /// negative if unknown; otherwise, expected object_sz, expected endOffset
     /// maximum, and stored reply headers+body size (all three are the same)
     int64_t expectedReplySize() const;
-
     int64_t size() const;
     void reset();
     int64_t lowestMemReaderOffset() const;
@@ -213,8 +212,8 @@ public:
     void kickReads();
 
 private:
-    HttpReplyPointer reply_; ///< \copydoc baseReply()
-    HttpReplyPointer updatedReply_; ///< \copydoc updatedReply()
+    HttpReplyPointer reply_; ///< \see baseReply()
+    HttpReplyPointer updatedReply_; ///< \see updatedReply()
 
     mutable String storeId_; ///< StoreId for our entry (usually request URI)
     mutable String logUri_;  ///< URI used for logging (usually request URI)
