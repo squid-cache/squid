@@ -821,7 +821,7 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
 {
     StoreEntry *const e = http->storeEntry();
 
-    const auto replyStatusCode = e->baseReply().sline.status();
+    const auto replyStatusCode = e->mem().baseReply().sline.status();
     if (replyStatusCode != Http::scOkay) {
         debugs(88, 4, "miss because " << replyStatusCode << " != 200");
         http->logType.update(LOG_TCP_MISS);
@@ -1208,7 +1208,7 @@ clientReplyContext::storeNotOKTransferDone() const
         return 0;
 
     // TODO: Use MemObject::expectedReplySize(method) after resolving XXX below.
-    const auto expectedBodySize = http->storeEntry()->baseReply().content_length;
+    const auto expectedBodySize = mem->baseReply().content_length;
 
     // XXX: The code below talks about sending data, and checks stats about
     // bytes written to the client connection, but this method must determine
@@ -1322,7 +1322,7 @@ clientReplyContext::replyStatus()
 
         // TODO: See also (and unify with) storeNotOKTransferDone() checks.
         const int64_t expectedBodySize =
-            http->storeEntry()->baseReply().bodySize(http->request->method);
+            http->storeEntry()->mem().baseReply().bodySize(http->request->method);
         if (expectedBodySize >= 0 && !http->gotEnough()) {
             debugs(88, 5, "clientReplyStatus: client didn't get all it expected");
             return STREAM_UNPLANNED_COMPLETE;

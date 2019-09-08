@@ -360,7 +360,7 @@ MemStore::updateHeadersOrThrow(Ipc::StoreMapUpdate &update)
     // our +/- hdr_sz math below does not work if the chains differ [in size]
     Must(update.stale.anchor->basics.swap_file_sz == update.fresh.anchor->basics.swap_file_sz);
 
-    const auto &reply = update.entry->baseReply();
+    const auto &reply = update.entry->mem().baseReply();
     const uint64_t staleHdrSz = reply.hdr_sz;
     debugs(20, 7, "stale hdr_sz: " << staleHdrSz);
 

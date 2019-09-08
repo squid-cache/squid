@@ -49,10 +49,6 @@ public:
     StoreEntry();
     virtual ~StoreEntry();
 
-    /// \returns base response; \see MemObject::baseReply()
-    /// Requires mem_obj.
-    const HttpReply &baseReply() const;
-
     /// \returns the updated-by-304(s) response (if it exists)
     /// \returns baseReply() (otherwise)
     /// Requires mem_obj.

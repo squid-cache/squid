@@ -509,7 +509,7 @@ store_client::readBody(const char *, ssize_t len)
     if (len < 0)
         return fail();
 
-    const auto rep = entry->mem_obj ? &entry->baseReply() : nullptr;
+    const auto rep = entry->mem_obj ? &entry->mem().baseReply() : nullptr;
     if (copyInto.offset == 0 && len > 0 && rep && rep->sline.status() == Http::scNone) {
         /* Our structure ! */
         if (!entry->mem_obj->adjustableBaseReply().parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
@@ -843,7 +843,7 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
         return true;
     }
 
-    const auto &reply = entry->baseReply();
+    const auto &reply = mem->baseReply();
 
     if (reply.hdr_sz <= 0) {
         // TODO: Check whether this condition works for HTTP/0 responses.

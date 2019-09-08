@@ -511,7 +511,7 @@ FwdState::unregister(int fd)
 void
 FwdState::complete()
 {
-    const auto replyStatus = entry->baseReply().sline.status();
+    const auto replyStatus = entry->mem().baseReply().sline.status();
     debugs(17, 3, *entry << " status " << replyStatus << ' ' << entry->url());
 #if URL_CHECKSUM_DEBUG
 
@@ -1226,7 +1226,7 @@ FwdState::reforward()
         return 0;
     }
 
-    const auto s = entry->baseReply().sline.status();
+    const auto s = entry->mem().baseReply().sline.status();
     debugs(17, 3, HERE << "status " << s);
     return reforwardableStatus(s);
 }

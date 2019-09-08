@@ -936,7 +936,7 @@ StoreEntry::checkTooSmall()
                 mem_obj->object_sz < Config.Store.minObjectSize)
             return 1;
 
-    const auto clen = baseReply().content_length;
+    const auto clen = mem().baseReply().content_length;
     if (clen >= 0 && clen < Config.Store.minObjectSize)
         return 1;
     return 0;
@@ -948,7 +948,7 @@ StoreEntry::checkTooBig() const
     if (mem_obj->endOffset() > store_maxobjsize)
         return true;
 
-    const auto clen = baseReply().content_length;
+    const auto clen = mem_obj->baseReply().content_length;
     return (clen >= 0 && clen > store_maxobjsize);
 }
 
@@ -1272,7 +1272,7 @@ StoreEntry::validLength() const
 {
     int64_t diff;
     assert(mem_obj != NULL);
-    const auto reply = &baseReply();
+    const auto reply = &mem_obj->baseReply();
     debugs(20, 3, "storeEntryValidLength: Checking '" << getMD5Text() << "'");
     debugs(20, 5, "storeEntryValidLength:     object_len = " <<
            objectLen());
@@ -1695,13 +1695,6 @@ StoreEntry::contentLen() const
 {
     assert(mem_obj != NULL);
     return objectLen() - mem_obj->baseReply().hdr_sz;
-}
-
-const HttpReply &
-StoreEntry::baseReply() const
-{
-    Must(mem_obj);
-    return mem_obj->baseReply();
 }
 
 const HttpReply &
