@@ -146,8 +146,8 @@ testUfs::testUfsSearch()
         RequestFlags flags;
         flags.cachable = true;
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, Http::METHOD_GET);
-        const auto rep = &pe->adjustableReply();
-        rep->setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
+        auto &reply = pe->mem().adjustableBaseReply();
+        reply.setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
 
         pe->setPublicKey();
 

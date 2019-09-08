@@ -544,7 +544,7 @@ MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
 
     // from store_client::readBody()
     // parse headers if needed; they might span multiple slices!
-    const auto rep = &e.adjustableBaseReply();
+    const auto rep = &e.mem().adjustableBaseReply();
     if (rep->pstate < Http::Message::psParsed) {
         // XXX: have to copy because httpMsgParseStep() requires 0-termination
         MemBuf mb;

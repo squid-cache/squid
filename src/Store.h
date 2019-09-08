@@ -62,11 +62,8 @@ public:
     /// \returns nil (otherwise)
     const HttpReply *hasFreshestReply() const { return mem_obj ? &freshestReply() : nullptr; }
 
-    /// \returns writable base reply for parsing and other initial modifications
-    /// Base modifications can only be done when forming/loading the entry.
-    /// After that, use replaceBaseReply() to reset all of the replies.
-    /// Requires mem_obj.
-    HttpReply &adjustableBaseReply();
+    MemObject &mem() { assert(mem_obj); return *mem_obj; }
+    const MemObject &mem() const { assert(mem_obj); return *mem_obj; }
 
     void write(StoreIOBuffer);
 

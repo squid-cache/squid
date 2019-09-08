@@ -512,7 +512,7 @@ store_client::readBody(const char *, ssize_t len)
     const auto rep = entry->mem_obj ? &entry->baseReply() : nullptr;
     if (copyInto.offset == 0 && len > 0 && rep && rep->sline.status() == Http::scNone) {
         /* Our structure ! */
-        if (!entry->adjustableBaseReply().parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
+        if (!entry->mem_obj->adjustableBaseReply().parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
             debugs(90, DBG_CRITICAL, "Could not parse headers from on disk object");
         } else {
             parsed_header = 1;
