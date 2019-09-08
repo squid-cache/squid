@@ -520,7 +520,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
         return -1;
 
     if ((hdr_size = headersEnd(buf, size))) {
-        const auto &reply = fetch->entry->freshestReply();
+        const auto &reply = fetch->entry->mem().freshestReply();
         const auto status = reply.sline.status();
         assert(status != Http::scNone);
         debugs(72, 3, "peerDigestFetchReply: " << pd->host << " status: " << status <<
@@ -603,7 +603,7 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
     assert(!fetch->offset);
 
     if ((hdr_size = headersEnd(buf, size))) {
-        const auto &reply = fetch->entry->freshestReply();
+        const auto &reply = fetch->entry->mem().freshestReply();
         const auto status = reply.sline.status();
         assert(status != Http::scNone);
 

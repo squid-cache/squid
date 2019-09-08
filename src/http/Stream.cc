@@ -646,9 +646,8 @@ Http::Stream::packRange(StoreIOBuffer const &source, MemBuf *mb)
              * multi-range
              */
             if (http->multipartRangeRequest() && i->debt() == i->currentSpec()->length) {
-                assert(http->memObject());
                 clientPackRangeHdr(
-                    &http->storeEntry()->freshestReply(),  /* original reply */
+                    &http->storeEntry()->mem().freshestReply(),
                     i->currentSpec(),       /* current range */
                     i->boundary,    /* boundary, the same for all */
                     mb);

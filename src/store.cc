@@ -694,7 +694,7 @@ StoreEntry::adjustVary()
         return nullptr;
 
     HttpRequestPointer request(mem_obj->request);
-    const auto &reply = freshestReply();
+    const auto &reply = mem_obj->freshestReply();
 
     if (mem_obj->vary_headers.isEmpty()) {
         /* First handle the case where the object no longer varies */
@@ -1460,7 +1460,7 @@ StoreEntry::timestampsSet()
     debugs(20, 7, *this << " had " << describeTimestamps());
 
     // TODO: Remove change-reducing "&" before the official commit.
-    const auto reply = &freshestReply();
+    const auto reply = &mem().freshestReply();
 
     time_t served_date = reply->date;
     int age = reply->header.getInt(Http::HdrType::AGE);
@@ -1526,7 +1526,7 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
     assert(e304.mem_obj);
 
     // update reply before calling timestampsSet() below
-    const auto &oldReply = freshestReply();
+    const auto &oldReply = mem_obj->freshestReply();
     const auto updatedReply = oldReply.recreateOnNotModified(e304.mem_obj->baseReply());
     if (updatedReply) // HTTP 304 brought in new information
        mem_obj->updateReply(*updatedReply);
@@ -1695,15 +1695,6 @@ StoreEntry::contentLen() const
 {
     assert(mem_obj != NULL);
     return objectLen() - mem_obj->baseReply().hdr_sz;
-}
-
-const HttpReply &
-StoreEntry::freshestReply() const
-{
-    Must(mem_obj);
-    if (const auto &updated = mem_obj->updatedReply())
-        return *updated;
-    return mem_obj->baseReply();
 }
 
 void
@@ -1985,7 +1976,7 @@ StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const
 bool
 StoreEntry::hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const
 {
-    const auto repETag = freshestReply().header.getETag(Http::HdrType::ETAG);
+    const auto repETag = mem().freshestReply().header.getETag(Http::HdrType::ETAG);
     if (!repETag.str) {
         static SBuf asterisk("*", 1);
         return strListIsMember(&reqETags, asterisk, ',');

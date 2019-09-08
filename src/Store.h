@@ -49,14 +49,10 @@ public:
     StoreEntry();
     virtual ~StoreEntry();
 
-    /// \returns the updated-by-304(s) response (if it exists)
-    /// \returns baseReply() (otherwise)
-    /// Requires mem_obj.
-    const HttpReply &freshestReply() const;
-
     /// \returns the address of freshest reply (if mem_obj exists)
     /// \returns nil (otherwise)
-    const HttpReply *hasFreshestReply() const { return mem_obj ? &freshestReply() : nullptr; }
+    /// \see MemObject::freshestReply()
+    const HttpReply *hasFreshestReply() const { return mem_obj ? &mem_obj->freshestReply() : nullptr; }
 
     MemObject &mem() { assert(mem_obj); return *mem_obj; }
     const MemObject &mem() const { assert(mem_obj); return *mem_obj; }

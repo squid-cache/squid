@@ -63,6 +63,16 @@ public:
     /// \returns combination of baseReply() and 304 updates -- after updates
     const HttpReplyPointer &updatedReply() const { return updatedReply_; }
 
+    /// \returns the updated-by-304(s) response (if it exists)
+    /// \returns baseReply() (otherwise)
+    /// Requires mem_obj.
+    const HttpReply &freshestReply() const {
+        if (updatedReply_)
+            return *updatedReply_;
+        else
+            return baseReply();
+    }
+
     /// \returns writable base reply for parsing and other initial modifications
     /// Base modifications can only be done when forming/loading the entry.
     /// After that, use replaceBaseReply() to reset all of the replies.

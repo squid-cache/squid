@@ -450,8 +450,8 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         sendClientOldEntry();
     }
 
-    const auto oldStatus = old_entry->freshestReply().sline.status();
-    const auto &new_rep = http->storeEntry()->freshestReply();
+    const auto oldStatus = old_entry->mem().freshestReply().sline.status();
+    const auto &new_rep = http->storeEntry()->mem().freshestReply();
     const auto status = new_rep.sline.status();
 
     // origin replied 304
@@ -481,7 +481,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     else if (status > Http::scNone && status < Http::scInternalServerError) {
         // RFC 7234 section 4: a cache MUST use the most recent response
         // (as determined by the Date header field)
-        if (new_rep.olderThan(&old_entry->freshestReply())) {
+        if (new_rep.olderThan(&old_entry->mem().freshestReply())) {
             http->logType.err.ignored = true;
             debugs(88, 3, "origin replied " << status <<
                    " but with an older date header, sending old entry (" <<
@@ -879,7 +879,7 @@ clientReplyContext::blockedHit() const
     if (http->flags.internal)
         return false; // internal content "hits" cannot be blocked
 
-    const auto &rep = http->storeEntry()->freshestReply();
+    const auto &rep = http->storeEntry()->mem().freshestReply();
     {
         std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
         chl->reply = const_cast<HttpReply*>(&rep); // ACLChecklist API bug
@@ -1651,7 +1651,7 @@ clientReplyContext::cloneReply()
 {
     assert(reply == NULL);
 
-    reply = http->storeEntry()->freshestReply().clone();
+    reply = http->storeEntry()->mem().freshestReply().clone();
     HTTPMSGLOCK(reply);
 
     if (reply->sline.protocol == AnyP::PROTO_HTTP) {
@@ -1998,7 +1998,7 @@ clientReplyContext::sendNotModified()
 {
     StoreEntry *e = http->storeEntry();
     const time_t timestamp = e->timestamp;
-    std::unique_ptr<HttpReply> temprep(e->freshestReply().make304());
+    std::unique_ptr<HttpReply> temprep(e->mem().freshestReply().make304());
     // log as TCP_INM_HIT if code 304 generated for
     // If-None-Match request
     if (!http->request->flags.ims)

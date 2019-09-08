@@ -182,13 +182,15 @@ Rock::HeaderUpdater::startWriting()
 
     off_t offset = 0; // current writing offset (for debugging)
 
+    const auto &mem = update.entry->mem();
+
     {
         debugs(20, 7, "fresh store meta for " << *update.entry);
         size_t freshSwapHeaderSize = 0;
         const auto freshSwapHeader = update.entry->getSerialisedMetaData(freshSwapHeaderSize);
         Must(freshSwapHeader);
         writer->write(freshSwapHeader, freshSwapHeaderSize, 0, nullptr);
-        stalePrefixSz += update.entry->mem_obj->swap_hdr_sz;
+        stalePrefixSz += mem.swap_hdr_sz;
         freshPrefixSz += freshSwapHeaderSize;
         offset += freshSwapHeaderSize;
         xfree(freshSwapHeader);
@@ -196,10 +198,9 @@ Rock::HeaderUpdater::startWriting()
 
     {
         debugs(20, 7, "fresh HTTP header @ " << offset);
-        const auto httpHeader = update.entry->freshestReply().pack();
+        const auto httpHeader = mem.freshestReply().pack();
         writer->write(httpHeader->content(), httpHeader->contentSize(), -1, nullptr);
-        Must(update.entry->mem_obj);
-        const auto &staleReply = update.entry->mem_obj->baseReply();
+        const auto &staleReply = mem.baseReply();
         Must(staleReply.hdr_sz >= 0); // for int-to-uint64_t conversion below
         Must(staleReply.hdr_sz > 0); // already initialized
         stalePrefixSz += staleReply.hdr_sz;

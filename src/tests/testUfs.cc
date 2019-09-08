@@ -152,7 +152,7 @@ testUfs::testUfsSearch()
         pe->setPublicKey();
 
         pe->buffer();
-        pe->freshestReply().packHeadersUsingSlowPacker(*pe);
+        pe->mem().freshestReply().packHeadersUsingSlowPacker(*pe);
         pe->flush();
         pe->timestampsSet();
         pe->complete();

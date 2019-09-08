@@ -858,7 +858,7 @@ HttpStateData::peerSupportsConnectionPinning() const
     if (!_peer->connection_auth)
         return false;
 
-    const auto &rep = entry->freshestReply();
+    const auto &rep = entry->mem().freshestReply();
 
     /*The peer supports connection pinning and the http reply status
       is not unauthorized, so the related connection can be pinned
