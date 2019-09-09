@@ -1535,7 +1535,7 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
     if (!timestampsSet() && !updatedReply)
         return false;
 
-    // XXX: Update old->mem_obj->vary_headers?
+    // Keep the old mem_obj->vary_headers; see HttpHeader::skipUpdateHeader().
 
     debugs(20, 5, "updated basics of " << *this << " after " << e304);
     mem_obj->appliedUpdates = true; // helps in triage; may already be true
