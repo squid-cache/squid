@@ -45,6 +45,7 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "neighbors.h"
+#include "pconn.h"
 #include "peer_proxy_negotiate_auth.h"
 #include "profiler/Profiler.h"
 #include "refresh.h"
@@ -1495,7 +1496,7 @@ HttpStateData::processReplyBody()
                     serverConnectionSaved->close();
                 }
             } else {
-                fwd->pconnPush(serverConnectionSaved, request->url.host());
+                fwdPconnPool->push(serverConnectionSaved, request->url.host());
             }
 
             serverComplete();

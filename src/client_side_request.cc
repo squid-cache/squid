@@ -81,7 +81,7 @@
 static const char *const crlf = "\r\n";
 
 #if FOLLOW_X_FORWARDED_FOR
-static void clientFollowXForwardedForCheck(allow_t answer, void *data);
+static void clientFollowXForwardedForCheck(Acl::Answer answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
 ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, Ip::Address &, HttpRequest *, const AccessLogEntry::Pointer &);
@@ -90,15 +90,15 @@ CBDATA_CLASS_INIT(ClientRequestContext);
 
 /* Local functions */
 /* other */
-static void clientAccessCheckDoneWrapper(allow_t, void *);
+static void clientAccessCheckDoneWrapper(Acl::Answer, void *);
 #if USE_OPENSSL
-static void sslBumpAccessCheckDoneWrapper(allow_t, void *);
+static void sslBumpAccessCheckDoneWrapper(Acl::Answer, void *);
 #endif
 static int clientHierarchical(ClientHttpRequest * http);
 static void clientInterpretRequestHeaders(ClientHttpRequest * http);
 static HLPCB clientRedirectDoneWrapper;
 static HLPCB clientStoreIdDoneWrapper;
-static void checkNoCacheDoneWrapper(allow_t, void *);
+static void checkNoCacheDoneWrapper(Acl::Answer, void *);
 SQUIDCEXTERN CSR clientGetMoreData;
 SQUIDCEXTERN CSS clientReplyStatus;
 SQUIDCEXTERN CSD clientReplyDetach;
@@ -437,7 +437,7 @@ ClientRequestContext::httpStateIsValid()
  * ++ indirect_client_addr contains the remote direct client from the trusted peers viewpoint.
  */
 static void
-clientFollowXForwardedForCheck(allow_t answer, void *data)
+clientFollowXForwardedForCheck(Acl::Answer answer, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *) data;
 
@@ -727,7 +727,7 @@ ClientRequestContext::clientAccessCheck2()
 }
 
 void
-clientAccessCheckDoneWrapper(allow_t answer, void *data)
+clientAccessCheckDoneWrapper(Acl::Answer answer, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *) data;
 
@@ -738,7 +738,7 @@ clientAccessCheckDoneWrapper(allow_t answer, void *data)
 }
 
 void
-ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
+ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
 {
     acl_checklist = NULL;
     err_type page_id;
@@ -860,7 +860,7 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
 #endif
 
 static void
-clientRedirectAccessCheckDone(allow_t answer, void *data)
+clientRedirectAccessCheckDone(Acl::Answer answer, void *data)
 {
     ClientRequestContext *context = (ClientRequestContext *)data;
     ClientHttpRequest *http = context->http;
@@ -891,7 +891,7 @@ ClientRequestContext::clientRedirectStart()
  * Will handle as "ERR" (no change) in a case Access is not allowed.
  */
 static void
-clientStoreIdAccessCheckDone(allow_t answer, void *data)
+clientStoreIdAccessCheckDone(Acl::Answer answer, void *data)
 {
     ClientRequestContext *context = static_cast<ClientRequestContext *>(data);
     ClientHttpRequest *http = context->http;
@@ -1375,7 +1375,7 @@ ClientRequestContext::checkNoCache()
 }
 
 static void
-checkNoCacheDoneWrapper(allow_t answer, void *data)
+checkNoCacheDoneWrapper(Acl::Answer answer, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *) data;
 
@@ -1386,7 +1386,7 @@ checkNoCacheDoneWrapper(allow_t answer, void *data)
 }
 
 void
-ClientRequestContext::checkNoCacheDone(const allow_t &answer)
+ClientRequestContext::checkNoCacheDone(const Acl::Answer &answer)
 {
     acl_checklist = NULL;
     if (answer.denied()) {
@@ -1473,7 +1473,7 @@ ClientRequestContext::sslBumpAccessCheck()
  * as ACLFilledChecklist callback
  */
 static void
-sslBumpAccessCheckDoneWrapper(allow_t answer, void *data)
+sslBumpAccessCheckDoneWrapper(Acl::Answer answer, void *data)
 {
     ClientRequestContext *calloutContext = static_cast<ClientRequestContext *>(data);
 
@@ -1483,7 +1483,7 @@ sslBumpAccessCheckDoneWrapper(allow_t answer, void *data)
 }
 
 void
-ClientRequestContext::sslBumpAccessCheckDone(const allow_t &answer)
+ClientRequestContext::sslBumpAccessCheckDone(const Acl::Answer &answer)
 {
     if (!httpStateIsValid())
         return;

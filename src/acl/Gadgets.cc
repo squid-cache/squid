@@ -145,11 +145,11 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
         return;
     }
 
-    allow_t action = ACCESS_DUNNO;
+    auto action = Acl::Answer(ACCESS_DUNNO);
     if (!strcmp(t, "allow"))
-        action = ACCESS_ALLOWED;
+        action = Acl::Answer(ACCESS_ALLOWED);
     else if (!strcmp(t, "deny"))
-        action = ACCESS_DENIED;
+        action = Acl::Answer(ACCESS_DENIED);
     else {
         debugs(28, DBG_CRITICAL, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
         debugs(28, DBG_CRITICAL, "aclParseAccessLine: expecting 'allow' or 'deny', got '" << t << "'.");

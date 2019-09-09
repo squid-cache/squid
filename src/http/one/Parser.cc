@@ -210,18 +210,19 @@ Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
     return true;
 }
 
-// arbitrary maximum-length for headers which can be found by Http1Parser::getHeaderField()
+// arbitrary maximum-length for headers which can be found by Http1Parser::getHostHeaderField()
 #define GET_HDR_SZ  1024
 
 // BUG: returns only the first header line with given name,
 //      ignores multi-line headers and obs-fold headers
 char *
-Http::One::Parser::getHeaderField(const char *name)
+Http::One::Parser::getHostHeaderField()
 {
-    if (!headerBlockSize() || !name)
+    if (!headerBlockSize())
         return NULL;
 
     LOCAL_ARRAY(char, header, GET_HDR_SZ);
+    const char *name = "Host";
     const int namelen = strlen(name);
 
     debugs(25, 5, "looking for " << name);
@@ -255,6 +256,11 @@ Http::One::Parser::getHeaderField(const char *name)
 
         // prevent buffer overrun on char header[];
         p.chop(0, sizeof(header)-1);
+
+        // currently only used for pre-parse Host header, ensure valid domain[:port] or ip[:port]
+        static const auto hostChars = CharacterSet("host",":[].-_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+        if (p.findFirstNotOf(hostChars) != SBuf::npos)
+            break; // error. line contains character not accepted in Host header
 
         // return the header field-value
         SBufToCstring(header, p);

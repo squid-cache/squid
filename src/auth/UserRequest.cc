@@ -468,7 +468,7 @@ schemesConfig(HttpRequest *request, HttpReply *rep)
         ACLFilledChecklist ch(NULL, request, NULL);
         ch.reply = rep;
         HTTPMSGLOCK(ch.reply);
-        const allow_t answer = ch.fastCheck(Auth::TheConfig.schemeAccess);
+        const auto answer = ch.fastCheck(Auth::TheConfig.schemeAccess);
         if (answer.allowed())
             return Auth::TheConfig.schemeLists.at(answer.kind).authConfigs;
     }

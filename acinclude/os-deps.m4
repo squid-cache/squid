@@ -231,7 +231,7 @@ int main(int argc, char **argv) {
 	fprintf (fp, "%d\n", i & ~0x3F);
 	return 0;
 }
-  ]])],[squid_filedescriptors_limit=`cat conftestval`],[],[])
+  ]])],[squid_filedescriptors_limit=`cat conftestval`],[],[:])
   dnl Microsoft MSVCRT.DLL supports 2048 maximum FDs
   AS_CASE(["$host_os"],[mingw|mingw32],[squid_filedescriptors_limit="2048"])
   AC_MSG_RESULT($squid_filedescriptors_limit)

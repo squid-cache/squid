@@ -244,22 +244,23 @@ Security::HandshakeParser::parseModernRecord()
     Must(record.fragment.length() || record.type == ContentType::ctApplicationData);
 
     if (currentContentType != record.type) {
+        parseMessages();
         Must(tkMessages.atEnd()); // no currentContentType leftovers
         fragments = record.fragment;
-        tkMessages.reset(fragments, true); // true because more fragments may come
         currentContentType = record.type;
     } else {
         fragments.append(record.fragment);
-        tkMessages.reinput(fragments, true); // true because more fragments may come
-        tkMessages.rollback();
     }
-    parseMessages();
+
+    if (tkRecords.atEnd() && !done)
+        parseMessages();
 }
 
 /// parses one or more "higher-level protocol" frames of currentContentType
 void
 Security::HandshakeParser::parseMessages()
 {
+    tkMessages.reset(fragments, false);
     for (; !tkMessages.atEnd(); tkMessages.commit()) {
         switch (currentContentType) {
         case ContentType::ctChangeCipherSpec:

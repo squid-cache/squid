@@ -31,7 +31,7 @@ class ExternalACLEntryData
 public:
     ExternalACLEntryData() : result(ACCESS_DUNNO) {}
 
-    allow_t result;
+    Acl::Answer result;
 
     /// list of all kv-pairs returned by the helper
     NotePairs notes;
@@ -61,7 +61,7 @@ public:
 
     void update(ExternalACLEntryData const &);
     dlink_node lru;
-    allow_t result;
+    Acl::Answer result;
     time_t date;
 
     /// list of all kv-pairs returned by the helper

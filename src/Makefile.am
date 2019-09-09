@@ -312,6 +312,8 @@ squid_SOURCES = \
 	globals.h \
 	gopher.h \
 	gopher.cc \
+	HappyConnOpener.cc \
+	HappyConnOpener.h \
 	helper.cc \
 	helper.h \
 	hier_code.h \
@@ -410,6 +412,8 @@ squid_SOURCES = \
 	refresh.cc \
 	RemovalPolicy.cc \
 	RemovalPolicy.h \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	send-announce.h \
 	send-announce.cc \
 	SBufStatsAction.h \
@@ -958,12 +962,13 @@ tests_testLookupTable_LDADD = \
 tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testRefCount
-## TODO: make this use cppunit tests
 tests_testRefCount_SOURCES = \
-	tests/testRefCount.cc
+	tests/testRefCount.cc \
+	tests/testRefCount.h
 nodist_tests_testRefCount_SOURCES = \
 	base/RefCount.h
 tests_testRefCount_LDADD = \
+	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testRefCount_LDFLAGS = $(LIBADD_DL)
@@ -1160,6 +1165,8 @@ tests_testRock_SOURCES = \
 	RemovalPolicy.cc \
 	RequestFlags.cc \
 	RequestFlags.h \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -1675,6 +1682,8 @@ tests_testDiskIO_SOURCES = \
 	RemovalPolicy.cc \
 	RequestFlags.h \
 	RequestFlags.cc \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	tests/stub_libsecurity.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -1899,6 +1908,8 @@ tests_test_http_range_SOURCES = \
 	FwdState.h \
 	gopher.h \
 	tests/stub_gopher.cc \
+	HappyConnOpener.cc \
+	HappyConnOpener.h \
 	helper.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
@@ -1966,6 +1977,8 @@ tests_test_http_range_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -2294,6 +2307,8 @@ tests_testHttpRequest_SOURCES = \
 	FwdState.h \
 	gopher.h \
 	tests/stub_gopher.cc \
+	HappyConnOpener.cc \
+	HappyConnOpener.h \
 	helper.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
@@ -2359,6 +2374,8 @@ tests_testHttpRequest_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -2590,6 +2607,8 @@ tests_testCacheManager_SOURCES = \
 	FwdState.h \
 	gopher.h \
 	tests/stub_gopher.cc \
+	HappyConnOpener.cc \
+	HappyConnOpener.h \
 	hier_code.h \
 	helper.cc \
 	$(HTCPSOURCE) \
@@ -2653,6 +2672,8 @@ tests_testCacheManager_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
+	ResolvedPeers.h \
+	ResolvedPeers.cc \
 	tests/stub_SBufDetailedStats.cc \
 	$(SNMP_SOURCE) \
 	SquidMath.h \
@@ -2895,6 +2916,8 @@ tests_testEvent_SOURCES = \
 	FwdState.h \
 	gopher.h \
 	tests/stub_gopher.cc \
+	HappyConnOpener.cc \
+	HappyConnOpener.h \
 	helper.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
@@ -2963,6 +2986,8 @@ tests_testEvent_SOURCES = \
 	refresh.h \
 	refresh.cc \
 	RemovalPolicy.cc \
+	ResolvedPeers.h \
+	ResolvedPeers.cc \
 	StrList.h \
 	StrList.cc \
 	tests/stub_SBufDetailedStats.cc \
@@ -3129,6 +3154,8 @@ tests_testEventLoop_SOURCES = \
 	FwdState.h \
 	gopher.h \
 	tests/stub_gopher.cc \
+	HappyConnOpener.cc \
+	HappyConnOpener.h \
 	helper.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
@@ -3192,6 +3219,8 @@ tests_testEventLoop_SOURCES = \
 	Pipeline.cc \
 	Pipeline.h \
 	RemovalPolicy.cc \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
 	redirect.h \
 	tests/stub_redirect.cc \
 	refresh.h \

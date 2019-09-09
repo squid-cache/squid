@@ -208,15 +208,13 @@ fd_open(int fd, unsigned int type, const char *desc)
     case FD_SOCKET:
 
     case FD_PIPE:
-        F->read_method = &socket_read_method;
-        F->write_method = &socket_write_method;
+        F->setIo(&socket_read_method, &socket_write_method);
         break;
 
     case FD_FILE:
 
     case FD_LOG:
-        F->read_method = &file_read_method;
-        F->write_method = &file_write_method;
+        F->setIo(&file_read_method, &file_write_method);
         break;
 
     default:
@@ -227,13 +225,11 @@ fd_open(int fd, unsigned int type, const char *desc)
     switch (type) {
 
     case FD_MSGHDR:
-        F->read_method = &msghdr_read_method;
-        F->write_method = &msghdr_write_method;
+        F->setIo(&msghdr_read_method, &msghdr_write_method);
         break;
 
     default:
-        F->read_method = &default_read_method;
-        F->write_method = &default_write_method;
+        F->setIo(&default_read_method, &default_write_method);
         break;
     }
 
