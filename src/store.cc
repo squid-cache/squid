@@ -1537,7 +1537,7 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
 
     // Keep the old mem_obj->vary_headers; see HttpHeader::skipUpdateHeader().
 
-    debugs(20, 5, "updated basics of " << *this << " after " << e304);
+    debugs(20, 5, "updated basics in " << *this << " with " << e304);
     mem_obj->appliedUpdates = true; // helps in triage; may already be true
     return true;
 }
