@@ -502,12 +502,11 @@ AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
     if (!alphanum[*nid.end()])
         throw TextException("NID suffix is not alphanumeric", Here());
 
-    debugs(23, 3, "Split URI into proto='urn', nid='" << nid << "', path='" << Raw("tok",tok.remaining().rawContent(),tok.remaining().length()) << "'");
-
     setScheme(AnyP::PROTO_URN, nullptr);
     host(nid.c_str());
     // TODO validate path characters
     path(tok.remaining());
+    debugs(23, 3, "Split URI into proto=urn, nid=" << nid << ", " << Raw("path",path().rawContent(),path().length()));
 }
 
 void
