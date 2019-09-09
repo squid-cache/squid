@@ -131,7 +131,7 @@ void
 UrnState::setUriResFromRequest(HttpRequest *r)
 {
     const auto &query = r->url.absolute();
-    const char *host = r->url.host();
+    const auto host = r->url.host();
     // TODO: use class AnyP::Uri instead of generating a string and re-parsing
     LOCAL_ARRAY(char, local_urlres, 4096);
     snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?" SQUIDSBUFPH, host, SQUIDSBUFPRINT(query));
