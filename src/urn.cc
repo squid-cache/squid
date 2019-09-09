@@ -130,7 +130,7 @@ urnFindMinRtt(url_entry * urls, const HttpRequestMethod &, int *rtt_ret)
 void
 UrnState::setUriResFromRequest(HttpRequest *r)
 {
-    SBuf query = r->url.absolute();
+    const auto &query = r->url.absolute();
     const char *host = r->url.host();
     // TODO: use class AnyP::Uri instead of generating a string and re-parsing
     LOCAL_ARRAY(char, local_urlres, 4096);
