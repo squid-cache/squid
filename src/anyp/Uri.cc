@@ -493,8 +493,6 @@ AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
     if (!tok.skip(':'))
         throw TextException("NID too long or missing ':' delimiter", Here());
 
-    debugs(23, 3, "Split URI into proto='urn', nid='" << nid << "', path='" << tok.remaining() << "'");
-
     if (nid.length() < 2)
         throw TextException("NID too short", Here());
 
@@ -502,7 +500,9 @@ AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
         throw TextException("NID prefix is not alphanumeric", Here());
 
     if (!alphanum[*nid.end()])
-        throw TextException("NID suffixis not alphanumeric", Here());
+        throw TextException("NID suffix is not alphanumeric", Here());
+
+    debugs(23, 3, "Split URI into proto='urn', nid='" << nid << "', path='" << Raw("tok",tok.remaining().rawContent(),tok.remaining().length()) << "'");
 
     setScheme(AnyP::PROTO_URN, nullptr);
     host(nid.c_str());
