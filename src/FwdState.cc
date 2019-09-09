@@ -558,30 +558,6 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 
     debugs(17, 3, path);
 
-    // Requests bumped at step2+ require their pinned connection. Since we
-    // failed to reuse the pinned connection, we now must terminate the
-    // bumped request. For client-first and step1 bumped requests, the
-    // from-client connection is already bumped, but the connection to the
-    // server is not established/pinned so they must be excluded. We can
-    // recognize step1 bumping by nil ConnStateData::serverBump().
-#if USE_OPENSSL
-    const auto clientFirstBump = request->clientConnectionManager.valid() &&
-                                 (request->clientConnectionManager->sslBumpMode == Ssl::bumpClientFirst ||
-                                  (request->clientConnectionManager->sslBumpMode == Ssl::bumpBump && !request->clientConnectionManager->serverBump())
-                                 );
-#else
-    const auto clientFirstBump = false;
-#endif /* USE_OPENSSL */
-    if (request->flags.sslBumped && !clientFirstBump) {
-        // TODO: Factor out/reuse as Occasionally(DBG_IMPORTANT, 2[, occurrences]).
-        static int occurrences = 0;
-        const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
-        debugs(17, level, "BUG: Lost previously bumped from-Squid connection. Rejecting bumped request.");
-        fail(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al));
-        self = nullptr; // refcounted
-        return;
-    }
-
     destinations->addPath(path);
 
     if (Comm::IsConnOpen(serverConn)) {
@@ -994,6 +970,8 @@ FwdState::connectStart()
 {
     debugs(17, 3, *destinations << " to " << entry->url());
 
+    Must(!request->pinnedConnection());
+
     assert(!destinations->empty());
     assert(!opening());
 
@@ -1032,15 +1010,12 @@ FwdState::usePinned()
     const auto connManager = request->pinnedConnection();
     debugs(17, 7, "connection manager: " << connManager);
 
-    // the client connection may close while we get here, nullifying connManager
-    const auto temp = connManager ? connManager->borrowPinnedConnection(request) : nullptr;
-    debugs(17, 5, "connection: " << temp);
-
-    // the previously pinned idle peer connection may get closed (by the peer)
-    if (!Comm::IsConnOpen(temp)) {
-        syncHierNote(temp, connManager ? connManager->pinning.host : request->url.host());
+    try {
+        serverConn = ConnStateData::BorrowPinnedConnection(request, al);
+        debugs(17, 5, "connection: " << serverConn);
+    } catch (ErrorState * const anErr) {
+        syncHierNote(nullptr, connManager ? connManager->pinning.host : request->url.host());
         serverConn = nullptr;
-        const auto anErr = new ErrorState(ERR_ZERO_SIZE_OBJECT, Http::scServiceUnavailable, request, al);
         fail(anErr);
         // Connection managers monitor their idle pinned to-server
         // connections and close from-client connections upon seeing
@@ -1058,7 +1033,7 @@ FwdState::usePinned()
 
     // the server may close the pinned connection before this request
     const auto reused = true;
-    syncWithServerConn(temp, connManager->pinning.host, reused);
+    syncWithServerConn(serverConn, connManager->pinning.host, reused);
 
     dispatch();
 }
