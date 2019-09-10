@@ -45,9 +45,9 @@ testHttpRequest::testCreateFromUrl()
 {
     /* vanilla url, implict method */
     unsigned short expected_port;
-    const char * url = "http://foo:90/bar";
+    SBuf url("http://foo:90/bar");
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
-    auto aRequest = HttpRequest::FromUrlXXX(url, mx);
+    HttpRequest *aRequest = HttpRequest::FromUrl(url, mx);
     expected_port = 90;
     CPPUNIT_ASSERT(aRequest != nullptr);
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
@@ -55,11 +55,11 @@ testHttpRequest::testCreateFromUrl()
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf("/bar"), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
-    CPPUNIT_ASSERT_EQUAL(String("http://foo:90/bar"), String(url));
+    CPPUNIT_ASSERT_EQUAL(SBuf("http://foo:90/bar"), url);
 
     /* vanilla url */
     url = "http://foo:90/bar";
-    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_GET);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 90;
     CPPUNIT_ASSERT(aRequest != nullptr);
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
@@ -67,11 +67,11 @@ testHttpRequest::testCreateFromUrl()
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf("/bar"), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
-    CPPUNIT_ASSERT_EQUAL(String("http://foo:90/bar"), String(url));
+    CPPUNIT_ASSERT_EQUAL(SBuf("http://foo:90/bar"), url);
 
     /* vanilla url, different method */
     url = "http://foo/bar";
-    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_PUT);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_PUT);
     expected_port = 80;
     CPPUNIT_ASSERT(aRequest != nullptr);
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
@@ -79,17 +79,18 @@ testHttpRequest::testCreateFromUrl()
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf("/bar"), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
-    CPPUNIT_ASSERT_EQUAL(String("http://foo/bar"), String(url));
+    CPPUNIT_ASSERT_EQUAL(SBuf("http://foo/bar"), url);
 
     /* a connect url with non-CONNECT data */
     HttpRequest *nullRequest = nullptr;
     url = ":foo/bar";
-    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_CONNECT);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_CONNECT);
     CPPUNIT_ASSERT_EQUAL(nullRequest, aRequest);
+    CPPUNIT_ASSERT_EQUAL(SBuf(":foo/bar"), url);
 
     /* a CONNECT url with CONNECT data */
     url = "foo:45";
-    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_CONNECT);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_CONNECT);
     expected_port = 45;
     CPPUNIT_ASSERT(aRequest != nullptr);
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
@@ -97,7 +98,7 @@ testHttpRequest::testCreateFromUrl()
     CPPUNIT_ASSERT_EQUAL(String("foo"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf(), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_NONE, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
-    CPPUNIT_ASSERT_EQUAL(String("foo:45"), String(url));
+    CPPUNIT_ASSERT_EQUAL(SBuf("foo:45"), url);
 
     // XXX: check METHOD_NONE input handling
 }
@@ -112,38 +113,38 @@ testHttpRequest::testIPv6HostColonBug()
     HttpRequest *aRequest = NULL;
 
     /* valid IPv6 address without port */
-    const char *url = "http://[2000:800::45]/foo";
+    SBuf url("http://[2000:800::45]/foo");
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
-    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_GET);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 80;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf("/foo"), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
-    CPPUNIT_ASSERT_EQUAL(String("http://[2000:800::45]/foo"), String(url));
+    CPPUNIT_ASSERT_EQUAL(SBuf("http://[2000:800::45]/foo"), url);
 
     /* valid IPv6 address with port */
     url = "http://[2000:800::45]:90/foo";
-    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_GET);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 90;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf("/foo"), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
-    CPPUNIT_ASSERT_EQUAL(String("http://[2000:800::45]:90/foo"), String(url));
+    CPPUNIT_ASSERT_EQUAL(SBuf("http://[2000:800::45]:90/foo"), url);
 
     /* IPv6 address as invalid (bug trigger) */
     url = "http://2000:800::45/foo";
-    aRequest = HttpRequest::FromUrlXXX(url, mx, Http::METHOD_GET);
+    aRequest = HttpRequest::FromUrl(url, mx, Http::METHOD_GET);
     expected_port = 80;
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->url.port());
     CPPUNIT_ASSERT(aRequest->method == Http::METHOD_GET);
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->url.host()));
     CPPUNIT_ASSERT_EQUAL(SBuf("/foo"), aRequest->url.path());
     CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, static_cast<AnyP::ProtocolType>(aRequest->url.getScheme()));
-    CPPUNIT_ASSERT_EQUAL(String("http://2000:800::45/foo"), String(url));
+    CPPUNIT_ASSERT_EQUAL(SBuf("http://2000:800::45/foo"), url);
 }
 
 void
