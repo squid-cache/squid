@@ -243,7 +243,7 @@ asnCacheStart(int as)
     snprintf(asres, 4096, "whois://%s/!gAS%d", Config.as_whois_server, as);
     asState->as_number = as;
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initAsn);
-    asState->request = HttpRequest::FromUrl(asres, mx);
+    asState->request = HttpRequest::FromUrlXXX(asres, mx);
     assert(asState->request != NULL);
 
     if ((e = storeGetPublic(asres, Http::METHOD_GET)) == NULL) {

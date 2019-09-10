@@ -1136,6 +1136,7 @@ tests_testACLMaxUserIP_LDADD= \
 	acl/libstate.la \
 	acl/libapi.la \
 	anyp/libanyp.la \
+	parser/libparser.la \
 	base/libbase.la \
 	ip/libip.la \
 	ipc/libipc.la \

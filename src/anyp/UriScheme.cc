@@ -48,6 +48,25 @@ AnyP::UriScheme::Init()
     }
 }
 
+const AnyP::ProtocolType
+AnyP::UriScheme::FindProtocolType(const SBuf &scheme)
+{
+    if (scheme.isEmpty())
+        return AnyP::PROTO_NONE;
+
+    Init();
+
+    auto img = scheme;
+    img.toLower();
+    // TODO: use base/EnumIterator.h if possible
+    for (int i = AnyP::PROTO_NONE + 1; i < AnyP::PROTO_UNKNOWN; ++i) {
+        if (LowercaseSchemeNames_.at(i) == img)
+            return AnyP::ProtocolType(i);
+    }
+
+    return AnyP::PROTO_UNKNOWN;
+}
+
 unsigned short
 AnyP::UriScheme::defaultPort() const
 {
