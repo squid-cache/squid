@@ -462,7 +462,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
     return true;
 
     } catch (...) {
-        debugs(23, 2, "error: " << CurrentException << Raw("rawUrl", rawUrl.rawContent(), rawUrl.length()).minLevel(DBG_DATA));
+        debugs(23, 2, "error: " << CurrentException << " " << Raw("rawUrl", rawUrl.rawContent(), rawUrl.length()));
         return false;
     }
 }
