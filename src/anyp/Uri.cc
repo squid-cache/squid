@@ -499,7 +499,7 @@ AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
     if (!alphanum[*nid.begin()])
         throw TextException("NID prefix is not alphanumeric", Here());
 
-    if (!alphanum[*nid.end()])
+    if (!alphanum[*nid.rbegin()])
         throw TextException("NID suffix is not alphanumeric", Here());
 
     setScheme(AnyP::PROTO_URN, nullptr);
