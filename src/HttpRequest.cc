@@ -327,15 +327,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
     if (end < start)   // missing URI
         return false;
 
-    char save = *end;
-
-    * (char *) end = '\0';     // temp terminate URI, XXX dangerous?
-
-    const bool ret = url.parse(method, start);
-
-    * (char *) end = save;
-
-    return ret;
+    return url.parse(method, SBuf(start, size_t(end-start)));
 }
 
 /* swaps out request using httpRequestPack */
@@ -519,7 +511,7 @@ HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &theSize) const
  * If the request cannot be created cleanly, NULL is returned
  */
 HttpRequest *
-HttpRequest::FromUrl(const char * url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
+HttpRequest::FromUrl(const SBuf &url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
 {
     std::unique_ptr<HttpRequest> req(new HttpRequest(mx));
     if (req->url.parse(method, url)) {
@@ -527,6 +519,12 @@ HttpRequest::FromUrl(const char * url, const MasterXaction::Pointer &mx, const H
         return req.release();
     }
     return nullptr;
+}
+
+HttpRequest *
+HttpRequest::FromUrlXXX(const char * url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
+{
+    return FromUrl(SBuf(url), mx, method);
 }
 
 /**

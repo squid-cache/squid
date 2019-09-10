@@ -14,7 +14,7 @@
 #include "anyp/Uri.h"
 AnyP::Uri::Uri(AnyP::UriScheme const &) {STUB}
 void AnyP::Uri::touch() STUB
-bool AnyP::Uri::parse(const HttpRequestMethod&, const char *) STUB_RETVAL(true)
+bool AnyP::Uri::parse(const HttpRequestMethod&, const SBuf &) STUB_RETVAL(true)
 void AnyP::Uri::host(const char *) STUB
 static SBuf nil;
 const SBuf &AnyP::Uri::path() const STUB_RETVAL(nil)

@@ -414,7 +414,7 @@ storeDigestRewriteStart(void *datanotused)
 
     const char *url = internalLocalUri("/squid-internal-periodic/", SBuf(StoreDigestFileName));
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initCacheDigest);
-    auto req = HttpRequest::FromUrl(url, mx);
+    auto req = HttpRequest::FromUrlXXX(url, mx);
 
     RequestFlags flags;
     flags.cachable = true;

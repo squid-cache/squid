@@ -327,7 +327,7 @@ peerDigestRequest(PeerDigest * pd)
     debugs(72, 2, url);
 
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initCacheDigest);
-    req = HttpRequest::FromUrl(url, mx);
+    req = HttpRequest::FromUrlXXX(url, mx);
 
     assert(req);
 
