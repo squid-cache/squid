@@ -1275,7 +1275,7 @@ netdbExchangeStart(void *data)
     char *uri = internalRemoteUri(p->secure.encryptTransport, p->host, p->http_port, "/squid-internal-dynamic/", netDB);
     debugs(38, 3, "Requesting '" << uri << "'");
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcmp);
-    HttpRequestPointer req(HttpRequest::FromUrl(uri, mx));
+    HttpRequestPointer req(HttpRequest::FromUrlXXX(uri, mx));
 
     if (!req) {
         debugs(38, DBG_IMPORTANT, MYNAME << ": Bad URI " << uri);

@@ -14,6 +14,7 @@
 namespace AnyP
 {
 
+// TODO order by current protocol popularity (eg HTTPS before FTP)
 /**
  * List of all protocols known and supported.
  * This is a combined list. It is used as type-codes where needed and
