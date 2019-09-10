@@ -61,6 +61,9 @@ public:
 
     void syncNotes(HttpRequest *request);
 
+    /// dump all reply headers (for sending or risky logging)
+    void packReplyHeaders(MemBuf &mb) const;
+
     SBuf url;
 
     /// TCP/IP level details about the client connection
@@ -158,7 +161,6 @@ public:
     public:
         char *request = nullptr; //< virgin HTTP request headers
         char *adapted_request = nullptr; //< HTTP request headers after adaptation and redirection
-        char *reply = nullptr;
     } headers;
 
 #if USE_ADAPTATION
@@ -177,7 +179,7 @@ public:
     SBuf lastAclData; ///< string for external_acl_type %DATA format code
 
     HierarchyLogEntry hier;
-    HttpReply *reply = nullptr;
+    HttpReplyPointer reply;
     HttpRequest *request = nullptr; //< virgin HTTP request
     HttpRequest *adapted_request = nullptr; //< HTTP request after adaptation and redirection
 

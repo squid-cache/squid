@@ -357,7 +357,7 @@ sslErrorName(Security::ErrorCode err, char *buf, size_t size)
 static const Http::Message *
 actualReplyHeader(const AccessLogEntry::Pointer &al)
 {
-    const Http::Message *msg = al->reply;
+    const Http::Message *msg = al->reply.getRaw();
 #if ICAP_CLIENT
     // al->icap.reqMethod is methodNone in access.log context
     if (!msg && al->icap.reqMethod == Adaptation::methodReqmod)
@@ -891,24 +891,35 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             } else
 #endif
             {
+                // just headers without start-line and CRLF
+                // XXX: reconcile with '<h'
                 out = al->headers.request;
                 quote = 1;
             }
             break;
 
         case LFT_ADAPTED_REQUEST_ALL_HEADERS:
+            // just headers without start-line and CRLF
+            // XXX: reconcile with '<h'
             out = al->headers.adapted_request;
             quote = 1;
             break;
 
-        case LFT_REPLY_ALL_HEADERS:
-            out = al->headers.reply;
+        case LFT_REPLY_ALL_HEADERS: {
+            MemBuf allHeaders;
+            allHeaders.init();
+            // status-line + headers + CRLF
+            // XXX: reconcile with '>h' and '>ha'
+            al->packReplyHeaders(allHeaders);
+            sb.assign(allHeaders.content(), allHeaders.contentSize());
+            out = sb.c_str();
 #if ICAP_CLIENT
             if (!out && al->icap.reqMethod == Adaptation::methodReqmod)
                 out = al->headers.adapted_request;
 #endif
             quote = 1;
-            break;
+        }
+        break;
 
         case LFT_USER_NAME:
 #if USE_AUTH

@@ -427,7 +427,7 @@ ClientHttpRequest::logRequest()
     if (request) {
         SBuf matched;
         for (auto h: Config.notes) {
-            if (h->match(request, al->reply, al, matched)) {
+            if (h->match(request, al->reply.getRaw(), al, matched)) {
                 request->notes()->add(h->key(), matched);
                 debugs(33, 3, h->key() << " " << matched);
             }
@@ -438,7 +438,7 @@ ClientHttpRequest::logRequest()
 
     ACLFilledChecklist checklist(NULL, request, NULL);
     if (al->reply) {
-        checklist.reply = al->reply;
+        checklist.reply = al->reply.getRaw();
         HTTPMSGLOCK(checklist.reply);
     }
 
@@ -456,7 +456,7 @@ ClientHttpRequest::logRequest()
         ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request, NULL);
         statsCheck.al = al;
         if (al->reply) {
-            statsCheck.reply = al->reply;
+            statsCheck.reply = al->reply.getRaw();
             HTTPMSGLOCK(statsCheck.reply);
         }
         updatePerformanceCounters = statsCheck.fastCheck().allowed();
@@ -3695,6 +3695,11 @@ ConnStateData::finishDechunkingRequest(bool withSuccess)
 void
 ConnStateData::sendControlMsg(HttpControlMsg msg)
 {
+    if (const auto context = pipeline.front()) {
+        if (context->http)
+            context->http->al->reply = msg.reply;
+    }
+
     if (!isOpen()) {
         debugs(33, 3, HERE << "ignoring 1xx due to earlier closure");
         return;

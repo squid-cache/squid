@@ -10,6 +10,7 @@
 #include "AccessLogEntry.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "MemBuf.h"
 #include "proxyp/Header.h"
 #include "SquidConfig.h"
 #include "ssl/support.h"
@@ -104,14 +105,11 @@ AccessLogEntry::~AccessLogEntry()
     safe_free(adapt.last_meta);
 #endif
 
-    safe_free(headers.reply);
-
     safe_free(headers.adapted_request);
     HTTPMSGUNLOCK(adapted_request);
 
     safe_free(lastAclName);
 
-    HTTPMSGUNLOCK(reply);
     HTTPMSGUNLOCK(request);
 #if ICAP_CLIENT
     HTTPMSGUNLOCK(icap.reply);
@@ -129,5 +127,12 @@ AccessLogEntry::effectiveVirginUrl() const
     // adaptation/redirection. When the request is missing, a non-empty ALE::url
     // means that we missed a setVirginUrlForMissingRequest() call somewhere.
     return nullptr;
+}
+
+void
+AccessLogEntry::packReplyHeaders(MemBuf &mb) const
+{
+    if (reply)
+        reply->packHeadersUsingFastPacker(mb);
 }
 
