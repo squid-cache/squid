@@ -421,14 +421,11 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
             break;      /* terminating blank line */
         }
 
-        HttpHeaderEntry *e;
-        if ((e = HttpHeaderEntry::parse(field_start, field_end)) == NULL) {
+        const auto e = HttpHeaderEntry::parse(field_start, field_end, owner);
+        if (!e) {
             debugs(55, warnOnError, "WARNING: unparseable HTTP header field {" <<
                    getStringPrefix(field_start, field_end-field_start) << "}");
             debugs(55, warnOnError, " in {" << getStringPrefix(header_start, hdrLen) << "}");
-
-            if (Config.onoff.relaxed_header_parser)
-                continue;
 
             PROF_stop(HttpHeaderParse);
             clean();
@@ -1386,7 +1383,7 @@ HttpHeaderEntry::~HttpHeaderEntry()
 
 /* parses and inits header entry, returns true/false */
 HttpHeaderEntry *
-HttpHeaderEntry::parse(const char *field_start, const char *field_end)
+HttpHeaderEntry::parse(const char *field_start, const char *field_end, const http_hdr_owner_type msgType)
 {
     /* note: name_start == field_start */
     const char *name_end = (const char *)memchr(field_start, ':', field_end - field_start);
@@ -1403,19 +1400,41 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (name_len > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, DBG_IMPORTANT, "WARNING: ignoring header name of " << name_len << " bytes");
+        // TODO: update this to show proper name_len in Raw markup, but not print all that
+        debugs(55, 2, "ignoring huge header field (" << Raw("field_start", field_start, 100) << "...)");
         return NULL;
     }
 
-    if (Config.onoff.relaxed_header_parser && xisspace(field_start[name_len - 1])) {
+    /*
+     * RFC 7230 section 3.2.4:
+     * "No whitespace is allowed between the header field-name and colon.
+     * ...
+     *  A server MUST reject any received request message that contains
+     *  whitespace between a header field-name and colon with a response code
+     *  of 400 (Bad Request).  A proxy MUST remove any such whitespace from a
+     *  response message before forwarding the message downstream."
+     */
+    if (xisspace(field_start[name_len - 1])) {
+
+        if (msgType == hoRequest)
+            return nullptr;
+
+        // for now, also let relaxed parser remove this BWS from any non-HTTP messages
+        const bool stripWhitespace = (msgType == hoReply) ||
+                                     Config.onoff.relaxed_header_parser;
+        if (!stripWhitespace)
+            return nullptr; // reject if we cannot strip
+
         debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
                "NOTICE: Whitespace after header name in '" << getStringPrefix(field_start, field_end-field_start) << "'");
 
         while (name_len > 0 && xisspace(field_start[name_len - 1]))
             --name_len;
 
-        if (!name_len)
+        if (!name_len) {
+            debugs(55, 2, "found header with only whitespace for name");
             return NULL;
+        }
     }
 
     /* now we know we can parse it */
@@ -1448,11 +1467,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, DBG_IMPORTANT, "WARNING: ignoring '" << name << "' header of " << (field_end - value_start) << " bytes");
-
-        if (id == Http::HdrType::OTHER)
-            name.clean();
-
+        debugs(55, 2, "WARNING: found '" << name << "' header of " << (field_end - value_start) << " bytes");
         return NULL;
     }
 
