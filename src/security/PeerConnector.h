@@ -81,6 +81,7 @@ public:
                   const time_t timeout = 0);
     virtual ~PeerConnector();
 
+    bool usesPconn_; ///< Whether persistent connections are supported
 protected:
     // AsyncJob API
     virtual void start();
