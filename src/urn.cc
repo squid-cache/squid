@@ -82,6 +82,11 @@ CBDATA_CLASS_INIT(UrnState);
 
 UrnState::~UrnState()
 {
+    if (urlres_e) {
+        storeUnregister(sc, urlres_e, this);
+        urlres_e->unlock("~UrnState+res");
+        entry->unlock("~UrnState+prime");
+    }
     safe_free(urlres);
 }
 
@@ -246,14 +251,6 @@ url_entry_sort(const void *A, const void *B)
         return u1->rtt - u2->rtt;
 }
 
-static void
-urnHandleReplyError(UrnState *urnState, StoreEntry *urlres_e)
-{
-    urlres_e->unlock("urnHandleReplyError+res");
-    urnState->entry->unlock("urnHandleReplyError+prime");
-    delete urnState;
-}
-
 /* TODO: use the clientStream support for this */
 static void
 urnHandleReply(void *data, StoreIOBuffer result)
@@ -275,8 +272,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     debugs(52, 3, "urnHandleReply: Called with size=" << result.length << ".");
 
-    if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED) || result.length == 0 || result.flags.error) {
-        urnHandleReplyError(urnState, urlres_e);
+    if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED) || result.flags.error) {
+        delete urnState;
         return;
     }
 
@@ -285,15 +282,15 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     /* Handle reqofs being bigger than normal */
     if (urnState->reqofs >= URN_REQBUF_SZ) {
-        urnHandleReplyError(urnState, urlres_e);
+        delete urnState;
         return;
     }
 
     /* If we haven't received the entire object (urn), copy more */
-    if (urlres_e->store_status == STORE_PENDING &&
-            urnState->reqofs < URN_REQBUF_SZ) {
+    if (urlres_e->store_status == STORE_PENDING) {
+        Must(result.length > 0); // zero length ought to imply STORE_OK
         tempBuffer.offset = urnState->reqofs;
-        tempBuffer.length = URN_REQBUF_SZ;
+        tempBuffer.length = URN_REQBUF_SZ - urnState->reqofs;
         tempBuffer.data = urnState->reqbuf + urnState->reqofs;
         storeClientCopy(urnState->sc, urlres_e,
                         tempBuffer,
@@ -307,7 +304,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     if (0 == k) {
         debugs(52, DBG_IMPORTANT, "urnHandleReply: didn't find end-of-headers for " << e->url()  );
-        urnHandleReplyError(urnState, urlres_e);
+        delete urnState;
         return;
     }
 
@@ -323,7 +320,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
         delete rep;
-        urnHandleReplyError(urnState, urlres_e);
+        delete urnState;
         return;
     }
 
@@ -339,7 +336,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         err = new ErrorState(ERR_URN_RESOLVE, Http::scNotFound, urnState->request.getRaw(), urnState->ale);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
-        urnHandleReplyError(urnState, urlres_e);
+        delete urnState;
         return;
     }
 
@@ -399,9 +396,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
     }
 
     safe_free(urls);
-    storeUnregister(urnState->sc, urlres_e, urnState);
 
-    urnHandleReplyError(urnState, urlres_e);
+    delete urnState;
 }
 
 static url_entry *
