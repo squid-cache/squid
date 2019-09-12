@@ -1433,13 +1433,7 @@ acl aclname at_step step
 	  # Valid steps are:
 	  #   GeneratingCONNECT: While generates CONNECT request to a peer
 IF USE_OPENSSL
-	  # The following steps can also be used to match against the
-	  # current step during ssl_bump evaluation.
-	  # Never matches and should not be used outside the ssl_bump context.
-	  #
-	  # At each SslBump step, Squid evaluates ssl_bump directives to find
-	  # the next bumping action (e.g., peek or splice). Valid SslBump step
-	  # values and the corresponding ssl_bump evaluation moments are:
+	  # The following ssl_bump processing steps are recognized:
 	  #   SslBump1: After getting TCP-level and HTTP CONNECT info.
 	  #   SslBump2: After getting SSL Client Hello info.
 	  #   SslBump3: After getting SSL Server Hello info.
