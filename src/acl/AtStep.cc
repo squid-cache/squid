@@ -18,7 +18,7 @@
 #endif
 
 int
-ACLAtStepStrategy::match (ACLData<XactionSteps> * &data, ACLFilledChecklist *checklist)
+ACLAtStepStrategy::match (ACLData<XactionStep> * &data, ACLFilledChecklist *checklist)
 {
     Must(checklist->request);
     Must(checklist->request->masterXaction);

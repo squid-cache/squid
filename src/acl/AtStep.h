@@ -10,10 +10,10 @@
 #define SQUID_ACLATSTEP_H
 
 #include "acl/Strategy.h"
-#include "enums.h"
+#include "XactionStep.h"
 
 /// \ingroup ACLAPI
-class ACLAtStepStrategy : public ACLStrategy<XactionSteps>
+class ACLAtStepStrategy : public ACLStrategy<XactionStep>
 {
 
 public:

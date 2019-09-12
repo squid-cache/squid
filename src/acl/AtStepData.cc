@@ -37,7 +37,7 @@ ACLAtStepData::~ACLAtStepData()
 }
 
 bool
-ACLAtStepData::match(XactionSteps toFind)
+ACLAtStepData::match(XactionStep toFind)
 {
     for (auto it = values.cbegin(); it != values.cend(); ++it) {
         if (*it == toFind)
@@ -82,7 +82,7 @@ ACLAtStepData::clone() const
 }
 
 const char *
-ACLAtStepData::AtStepStr(XactionSteps at)
+ACLAtStepData::AtStepStr(XactionStep at)
 {
     if (at >=0 && at < xaStepValuesEnd)
         return AtStepValuesStr[at];
@@ -90,12 +90,12 @@ ACLAtStepData::AtStepStr(XactionSteps at)
         return "-";
 }
 
-XactionSteps
+XactionStep
 ACLAtStepData::AtStep(const char *atStr)
 {
     for (auto at = 0; at < xaStepValuesEnd; ++at)
         if (strcasecmp(atStr, AtStepValuesStr[at]) == 0)
-            return static_cast<XactionSteps>(at);
+            return static_cast<XactionStep>(at);
 
     return xaStepValuesEnd;
 }

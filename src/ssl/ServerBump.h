@@ -12,11 +12,11 @@
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
 #include "comm/forward.h"
-#include "enums.h"
 #include "HttpRequest.h"
 #include "ip/Address.h"
 #include "security/forward.h"
 #include "Store.h"
+#include "XactionStep.h"
 
 class ConnStateData;
 class store_client;
@@ -52,7 +52,7 @@ public:
         Ssl::BumpMode step2; ///< The SSL bump mode at step2
         Ssl::BumpMode step3; ///< The SSL bump mode at step3
     } act; ///< bumping actions at various bumping steps
-    XactionSteps step; ///< The TLS bumping step
+    XactionStep step; ///< The TLS bumping step
 
 private:
     Security::SessionPointer serverSession; ///< The TLS session object on server side.

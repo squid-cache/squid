@@ -240,15 +240,5 @@ typedef enum {
 } htcp_clr_reason;
 #endif /* USE_HTCP */
 
-typedef enum {
-#if USE_OPENSSL
-    xaStepTlsBump1,
-    xaStepTlsBump2,
-    xaStepTlsBump3,
-#endif
-    xaStepGeneratingConnect,
-    xaStepValuesEnd
-} XactionSteps;
-
 #endif /* SQUID_ENUMS_H */
 

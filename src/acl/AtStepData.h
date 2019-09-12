@@ -11,10 +11,10 @@
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "enums.h"
+#include "XactionStep.h"
 #include <list>
 
-class ACLAtStepData : public ACLData<XactionSteps>
+class ACLAtStepData : public ACLData<XactionStep>
 {
     MEMPROXY_CLASS(ACLAtStepData);
 
@@ -23,16 +23,16 @@ public:
     ACLAtStepData(ACLAtStepData const &);
     ACLAtStepData &operator= (ACLAtStepData const &);
     virtual ~ACLAtStepData();
-    bool match(XactionSteps);
+    bool match(XactionStep);
     virtual SBufList dump() const;
     void parse();
     bool empty() const;
     virtual ACLAtStepData *clone() const;
 
-    static const char *AtStepStr(XactionSteps);
-    static XactionSteps AtStep(const char *);
+    static const char *AtStepStr(XactionStep);
+    static XactionStep AtStep(const char *);
 
-    std::list<XactionSteps> values;
+    std::list<XactionStep> values;
 
 private:
     static const char *AtStepValuesStr[];
