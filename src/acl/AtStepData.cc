@@ -61,7 +61,7 @@ ACLAtStepData::parse()
 {
     while (const char *t = ConfigParser::strtokFile()) {
         const auto at = AtStep(t);
-        if (at == xaStepValuesEnd) {
+        if (at == xstepValuesEnd) {
             debugs(28, DBG_CRITICAL, "FATAL: invalid AtStep step: " << t);
             self_destruct();
         }
@@ -84,7 +84,7 @@ ACLAtStepData::clone() const
 const char *
 ACLAtStepData::AtStepStr(XactionStep at)
 {
-    if (at >=0 && at < xaStepValuesEnd)
+    if (at >=0 && at < xstepValuesEnd)
         return AtStepValuesStr[at];
     else
         return "-";
@@ -93,10 +93,10 @@ ACLAtStepData::AtStepStr(XactionStep at)
 XactionStep
 ACLAtStepData::AtStep(const char *atStr)
 {
-    for (auto at = 0; at < xaStepValuesEnd; ++at)
+    for (auto at = 0; at < xstepValuesEnd; ++at)
         if (strcasecmp(atStr, AtStepValuesStr[at]) == 0)
             return static_cast<XactionStep>(at);
 
-    return xaStepValuesEnd;
+    return xstepValuesEnd;
 }
 

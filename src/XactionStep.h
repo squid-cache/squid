@@ -10,14 +10,14 @@
 #define SQUID_XACTIONSTEPS_H
 
 typedef enum {
-    xaStepUnknown = 0,
-    xaStepGeneratingConnect,
+    xstepUnknown = 0,
+    xstepGeneratingConnect,
 #if USE_OPENSSL
-    xaStepTlsBump1,
-    xaStepTlsBump2,
-    xaStepTlsBump3,
+    xstepTlsBump1,
+    xstepTlsBump2,
+    xstepTlsBump3,
 #endif
-    xaStepValuesEnd
+    xstepValuesEnd
 } XactionStep;
 
 #endif /* SQUID_XACTIONSTEPS_H */

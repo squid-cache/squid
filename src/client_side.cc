@@ -3118,8 +3118,8 @@ ConnStateData::startPeekAndSplice()
     Http::StreamPointer context = pipeline.front();
     ClientHttpRequest *http = context ? context->http : nullptr;
 
-    if (sslServerBump->at(xaStepTlsBump1)) {
-        sslServerBump->step = xaStepTlsBump2;
+    if (sslServerBump->at(xstepTlsBump1)) {
+        sslServerBump->step = xstepTlsBump2;
         // Run a accessList check to check if want to splice or continue bumping
 
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, sslServerBump->request.getRaw(), nullptr);

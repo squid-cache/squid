@@ -22,7 +22,7 @@ ACLAtStepStrategy::match (ACLData<XactionStep> * &data, ACLFilledChecklist *chec
 {
     Must(checklist->request);
     Must(checklist->request->masterXaction);
-    if (checklist->request->masterXaction->generatingConnect && data->match(xaStepGeneratingConnect))
+    if (checklist->request->masterXaction->generatingConnect && data->match(xstepGeneratingConnect))
         return 1;
 
 #if USE_OPENSSL
@@ -30,7 +30,7 @@ ACLAtStepStrategy::match (ACLData<XactionStep> * &data, ACLFilledChecklist *chec
     if (checklist->conn() != NULL && (bump = checklist->conn()->serverBump()))
         return data->match(bump->step);
     else
-        return data->match(xaStepTlsBump1);
+        return data->match(xstepTlsBump1);
 #endif
     return 0;
 }
