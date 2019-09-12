@@ -41,6 +41,12 @@ public:
     /// whether there was a successful connection to (and peeking at) the origin server
     bool connectedOk() const {return entry && entry->isEmpty();}
 
+    /// whether we are at the bumping step atStepVal
+    bool at(const XactionStep atStepVal) { return step == atStepVal;}
+
+    /// whether we are at one of the bumping steps atStepVal1 or atStepVal2
+    bool at(const XactionStep atStepVal1, const XactionStep atStepVal2) { return step == atStepVal1 || step == atStepVal2;}
+
     /// faked, minimal request; required by Client API
     HttpRequest::Pointer request;
     StoreEntry *entry; ///< for receiving Squid-generated error messages

@@ -3118,7 +3118,7 @@ ConnStateData::startPeekAndSplice()
     Http::StreamPointer context = pipeline.front();
     ClientHttpRequest *http = context ? context->http : nullptr;
 
-    if (sslServerBump->step == xaStepTlsBump1) {
+    if (sslServerBump->at(xaStepTlsBump1)) {
         sslServerBump->step = xaStepTlsBump2;
         // Run a accessList check to check if want to splice or continue bumping
 

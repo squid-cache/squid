@@ -101,7 +101,7 @@ public:
             return false;
 #if USE_OPENSSL
         // We are bumping and we had already send "OK CONNECTED"
-        if (http.valid() && http->getConn() && http->getConn()->serverBump() && http->getConn()->serverBump()->step > xaStepTlsBump1)
+        if (http.valid() && http->getConn() && http->getConn()->serverBump() && http->getConn()->serverBump()->at(xaStepTlsBump2, xaStepTlsBump3))
             return false;
 #endif
         return !(request != NULL &&
