@@ -126,29 +126,35 @@ Http::Tunneler::writeRequest()
 {
     debugs(83, 5, connection);
 
-    HttpHeader hdr_out(hoRequest);
     Http::StateFlags flags;
     flags.peering = true;
-
-    Must(request->masterXaction);
-    request->masterXaction->generatingConnect = true;
     // flags.tunneling = false; // the CONNECT request itself is not tunneled
     // flags.toOrigin = false; // the next HTTP hop is a non-originserver peer
+
     MemBuf mb;
     mb.init();
     mb.appendf("CONNECT %s HTTP/1.1\r\n", url.c_str());
-    HttpStateData::httpBuildRequestHeader(request.getRaw(),
-                                          nullptr, // StoreEntry
-                                          al,
-                                          &hdr_out,
-                                          flags);
-    hdr_out.packInto(&mb);
-    hdr_out.clean();
+    try {
+        Must(request->masterXaction);
+        request->masterXaction->generatingConnect = true;
+        HttpHeader hdr_out(hoRequest);
+        HttpStateData::httpBuildRequestHeader(request.getRaw(),
+                                              nullptr, // StoreEntry
+                                              al,
+                                              &hdr_out,
+                                              flags);
+        hdr_out.packInto(&mb);
+        hdr_out.clean();
+        request->masterXaction->generatingConnect = false;
+    } catch (const std::exception &e) {
+        request->masterXaction->generatingConnect = false;
+        handleException(e);
+        return;
+    }
     mb.append("\r\n", 2);
 
     debugs(11, 2, "Tunnel Server REQUEST: " << connection <<
            ":\n----------\n" << mb.buf << "\n----------");
-    request->masterXaction->generatingConnect = false;
     fd_note(connection->fd, "Tunnel Server CONNECT");
 
     typedef CommCbMemFunT<Http::Tunneler, CommIoCbParams> Dialer;
