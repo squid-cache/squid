@@ -25,6 +25,8 @@ class ClientHttpRequest;
 namespace Ssl
 {
 
+typedef XactionStep BumpStep;
+
 /**
  * Maintains bump-server-first related information.
  */
@@ -42,10 +44,10 @@ public:
     bool connectedOk() const {return entry && entry->isEmpty();}
 
     /// whether we are at the bumping step atStepVal
-    bool at(const XactionStep atStepVal) { return step == atStepVal;}
+    bool at(const Ssl::BumpStep atStepVal) { return step == atStepVal;}
 
     /// whether we are at one of the bumping steps atStepVal1 or atStepVal2
-    bool at(const XactionStep atStepVal1, const XactionStep atStepVal2) { return step == atStepVal1 || step == atStepVal2;}
+    bool at(const Ssl::BumpStep atStepVal1, const Ssl::BumpStep atStepVal2) { return step == atStepVal1 || step == atStepVal2;}
 
     /// faked, minimal request; required by Client API
     HttpRequest::Pointer request;
@@ -58,7 +60,7 @@ public:
         Ssl::BumpMode step2; ///< The SSL bump mode at step2
         Ssl::BumpMode step3; ///< The SSL bump mode at step3
     } act; ///< bumping actions at various bumping steps
-    XactionStep step; ///< The TLS bumping step
+    Ssl::BumpStep step; ///< The SSL bumping step
 
 private:
     Security::SessionPointer serverSession; ///< The TLS session object on server side.
