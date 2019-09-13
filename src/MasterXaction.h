@@ -44,7 +44,7 @@ public:
     explicit MasterXaction(const XactionInitiator anInitiator) : initiator(anInitiator) {};
 
     /// transaction ID.
-    InstanceId<MasterXaction> id;
+    InstanceId<MasterXaction, uint64_t> id;
 
     /// the listening port which originated this transaction
     AnyP::PortCfgPointer squidPort;

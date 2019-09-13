@@ -4533,6 +4533,14 @@ DOC_START
 			individual notes. There is currently no way to
 			specify both value and notes separators when logging
 			all notes with %note.
+		master_xaction  The master transaction identifier is an unsigned
+			integer. These IDs are guaranteed to monotonically
+			increase within a single worker process lifetime, with
+			higher values corresponding to transactions that were
+			accepted or initiated later. Due to current implementation
+			deficiencies, some IDs are skipped (i.e. never logged).
+			Concurrent workers and restarted workers use similar,
+			overlapping sequences of master transaction IDs.
 
 	Connection related format codes:
 

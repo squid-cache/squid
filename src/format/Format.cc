@@ -23,6 +23,7 @@
 #include "MemBuf.h"
 #include "proxyp/Header.h"
 #include "rfc1738.h"
+#include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "security/CertError.h"
 #include "security/NegotiationHistory.h"
@@ -398,6 +399,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         struct timeval outtv = {0, 0};
         int doMsec = 0;
         int doSec = 0;
+        bool doUint64 = false;
+        uint64_t outUint64 = 0;
 
         switch (fmt->type) {
 
@@ -1442,6 +1445,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (!al->lastAclData.isEmpty())
                 out = al->lastAclData.c_str();
             break;
+
+        case LFT_MASTER_XACTION:
+            if (al->request) {
+                doUint64 = true;
+                outUint64 = static_cast<uint64_t>(al->request->masterXaction->id.value);
+                break;
+            }
         }
 
         if (dooff) {
@@ -1450,6 +1460,9 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         } else if (doint) {
             sb.appendf("%0*ld", fmt->zero && fmt->widthMin >= 0 ? fmt->widthMin : 0, outint);
+            out = sb.c_str();
+        } else if (doUint64) {
+            sb.appendf("%0*" PRIu64, fmt->zero && fmt->widthMin >= 0 ? fmt->widthMin : 0, outUint64);
             out = sb.c_str();
         } else if (doMsec) {
             if (fmt->widthMax < 0) {
@@ -1526,7 +1539,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
 
             // enforce width limits if configured
-            const bool haveMaxWidth = fmt->widthMax >=0 && !doint && !dooff && !doMsec && !doSec;
+            const bool haveMaxWidth = fmt->widthMax >=0 && !doint && !dooff && !doMsec && !doSec && !doUint64;
             if (haveMaxWidth || fmt->widthMin) {
                 const int minWidth = fmt->widthMin >= 0 ?
                                      fmt->widthMin :0;
