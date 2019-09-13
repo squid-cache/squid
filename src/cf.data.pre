@@ -1429,9 +1429,9 @@ endif
 	  #  acl hasWhatMyLoggingDaemonNeeds has response
 
 acl aclname at_step step
-	  # match against various request processing steps [fast]
+	  # match against the current request processing step [fast]
 	  # Valid steps are:
-	  #   GeneratingCONNECT: While generates CONNECT request to a peer
+	  #   GeneratingCONNECT: Generating HTTP CONNECT request headers
 IF USE_OPENSSL
 	  # The following ssl_bump processing steps are recognized:
 	  #   SslBump1: After getting TCP-level and HTTP CONNECT info.
