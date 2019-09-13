@@ -12,6 +12,7 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
+#include "sbuf/Stream.h"
 #include "wordlist.h"
 
 const char *ACLAtStepData::AtStepValuesStr[] = {
@@ -56,11 +57,7 @@ void
 ACLAtStepData::parse()
 {
     while (const char *t = ConfigParser::strtokFile()) {
-        const auto at = AtStep(t);
-        if (at == xstepValuesEnd) {
-            debugs(28, DBG_CRITICAL, "FATAL: invalid AtStep step: " << t);
-            self_destruct();
-        }
+        const auto at = AtStep(t); // throws on error
         values.push_back(at);
     }
 }
@@ -93,6 +90,6 @@ ACLAtStepData::AtStep(const char *atStr)
         if (strcasecmp(atStr, AtStepValuesStr[at]) == 0)
             return static_cast<XactionStep>(at);
 
-    return xstepValuesEnd;
+    throw TexcHere(ToSBuf("invalid AtStep step: ", atStr));
 }
 
