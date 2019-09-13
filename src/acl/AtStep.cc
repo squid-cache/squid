@@ -20,17 +20,25 @@
 int
 ACLAtStepStrategy::match (ACLData<XactionStep> * &data, ACLFilledChecklist *checklist)
 {
-    Must(checklist->request);
-    Must(checklist->request->masterXaction);
-    if (checklist->request->masterXaction->generatingConnect && data->match(xstepGeneratingConnect))
-        return 1;
-
-#if USE_OPENSSL
+    #if USE_OPENSSL
     Ssl::ServerBump *bump = NULL;
     if (checklist->conn() != NULL && (bump = checklist->conn()->serverBump()))
         return data->match(bump->step);
     else
         return data->match(xstepTlsBump1);
 #endif
+
+    if (data->match(xstepGeneratingConnect)) {
+        if (!checklist->request)
+            return 0; // we have warned about the missing request earlier
+
+        if (!checklist->request->masterXaction) {
+            debugs(28, DBG_IMPORTANT, "missing MasterXaction object, treating as a mismatch");
+            return 0;
+        }
+
+        return checklist->request->masterXaction->generatingConnect ? 1 : 0;
+    }
+
     return 0;
 }
