@@ -39,20 +39,16 @@ ACLAtStepData::~ACLAtStepData()
 bool
 ACLAtStepData::match(XactionStep toFind)
 {
-    for (auto it = values.cbegin(); it != values.cend(); ++it) {
-        if (*it == toFind)
-            return true;
-    }
-    return false;
+    auto found = std::find(values.cbegin(), values.cend(), toFind);
+    return (found != values.cend());
 }
 
 SBufList
 ACLAtStepData::dump() const
 {
     SBufList sl;
-    for (auto it = values.cbegin(); it != values.cend(); ++it) {
-        sl.push_back(SBuf(AtStepStr(*it)));
-    }
+    for (const auto value : values)
+        sl.push_back(SBuf(AtStepStr(value)));
     return sl;
 }
 
@@ -84,7 +80,7 @@ ACLAtStepData::clone() const
 const char *
 ACLAtStepData::AtStepStr(XactionStep at)
 {
-    if (at >=0 && at < xstepValuesEnd)
+    if (0 <= at && at < xstepValuesEnd)
         return AtStepValuesStr[at];
     else
         return "-";
