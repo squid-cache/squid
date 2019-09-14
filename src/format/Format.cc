@@ -1087,9 +1087,11 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_REQUEST_METHOD:
-            sb = al->getLogMethod();
-            out = sb.c_str();
-            quote = 1;
+            if (al->hasLogMethod()) {
+                sb = al->getLogMethod();
+                out = sb.c_str();
+                quote = 1;
+            }
             break;
 
         case LFT_REQUEST_URI:
