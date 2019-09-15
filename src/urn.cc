@@ -83,10 +83,14 @@ CBDATA_CLASS_INIT(UrnState);
 UrnState::~UrnState()
 {
     if (urlres_e) {
-        storeUnregister(sc, urlres_e, this);
+        if (sc)
+            storeUnregister(sc, urlres_e, this);
         urlres_e->unlock("~UrnState+res");
-        entry->unlock("~UrnState+prime");
     }
+
+    if (entry)
+        entry->unlock("~UrnState+prime");
+
     safe_free(urlres);
 }
 
