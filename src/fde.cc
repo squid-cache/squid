@@ -138,3 +138,10 @@ fde::remoteAddr() const
     return buf;
 }
 
+void
+fde::Init()
+{
+    assert(!Table);
+    Table = static_cast<fde *>(xcalloc(Squid_MaxFD, sizeof(fde)));
+}
+

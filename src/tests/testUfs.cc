@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "DiskIO/DiskIOModule.h"
+#include "fde.h"
 #include "fs/ufs/UFSSwapDir.h"
 #include "globals.h"
 #include "HttpHeader.h"
@@ -71,6 +72,8 @@ testUfs::commonInit()
     storeReplAdd("lru", createRemovalPolicy_lru);
 
     Mem::Init();
+
+    fde::Init();
 
     comm_init();
 

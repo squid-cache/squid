@@ -591,13 +591,6 @@ parseConfigFileOrThrow(const char *file_name)
      */
     configDoConfigure();
 
-    if (!Config.chroot_dir) {
-        leave_suid();
-        setUmask(Config.umask);
-        _db_init(Debug::cache_log, Debug::debugOptions);
-        enter_suid();
-    }
-
     if (opt_send_signal == -1) {
         Mgr::RegisterAction("config",
                             "Current Squid Configuration",
