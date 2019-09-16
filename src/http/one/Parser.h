@@ -78,7 +78,7 @@ public:
     const AnyP::ProtocolVersion & messageProtocol() const {return msgProtocol_;}
 
     /**
-     * Scan the mime header block (badly) for a header with the given name.
+     * Scan the mime header block (badly) for a Host header.
      *
      * BUG: omits lines when searching for headers with obs-fold or multiple entries.
      *
@@ -86,7 +86,7 @@ public:
      *
      * \return A pointer to a field-value of the first matching field-name, or NULL.
      */
-    char *getHeaderField(const char *name);
+    char *getHostHeaderField();
 
     /// the remaining unprocessed section of buffer
     const SBuf &remaining() const {return buf_;}

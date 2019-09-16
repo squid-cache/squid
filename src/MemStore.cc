@@ -479,7 +479,7 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
         wasEof = anchor.complete() && slice.next < 0;
         const Ipc::StoreMapSlice::Size wasSize = slice.size;
 
-        debugs(20, 9, "entry " << index << " slice " << sid << " eof " <<
+        debugs(20, 8, "entry " << index << " slice " << sid << " eof " <<
                wasEof << " wasSize " << wasSize << " <= " <<
                anchor.basics.swap_file_sz << " sliceOffset " << sliceOffset <<
                " mem.endOffset " << e.mem_obj->endOffset());
@@ -497,7 +497,7 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
                                          page + prefixSize);
             if (!copyFromShmSlice(e, sliceBuf, wasEof))
                 return false;
-            debugs(20, 9, "entry " << index << " copied slice " << sid <<
+            debugs(20, 8, "entry " << index << " copied slice " << sid <<
                    " from " << extra.page << '+' << prefixSize);
         }
         // else skip a [possibly incomplete] slice that we copied earlier
@@ -521,7 +521,7 @@ MemStore::copyFromShm(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnc
         return true;
     }
 
-    debugs(20, 7, "mem-loaded all " << e.mem_obj->object_sz << '/' <<
+    debugs(20, 5, "mem-loaded all " << e.mem_obj->endOffset() << '/' <<
            anchor.basics.swap_file_sz << " bytes of " << e);
 
     // from StoreEntry::complete()

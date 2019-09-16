@@ -177,9 +177,9 @@ extern "C" {
     X509_get0_signature(ASN1_BIT_STRING **psig, X509_ALGOR **palg, const X509 *x)
     {
         if (psig)
-            *psig = (ASN1_BIT_STRING *)&x->signature;
+            *psig = x->signature;
         if (palg)
-            *palg = (X509_ALGOR *)&x->sig_alg;
+            *palg = x->sig_alg;
     }
 #endif
 

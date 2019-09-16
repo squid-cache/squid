@@ -13,7 +13,7 @@
 \par
 	A DelayPool is a Composite used to manage bandwidth for any request
 	assigned to the pool by an access expression. DelayId's are a used
-	to manage the bandwith on a given request, whereas a DelayPool 
+	to manage the bandwidth on a given request, whereas a DelayPool
 	manages the bandwidth availability and assigned DelayId's.
 
 \section ExtendingDelayPools Extending Delay Pools
@@ -23,7 +23,7 @@
 	delay pool functions:
 	\li	stats() - provide cachemanager statistics for itself.
 	\li	dump() - generate squid.conf syntax for the current configuration of the item.
-	\li	update() - allocate more bandwith to all buckets in the item.
+	\li	update() - allocate more bandwidth to all buckets in the item.
 	\li	parse() - accept squid.conf syntax for the item, and configure for use appropriately.
 	\li	id() - return a DelayId entry for the current item.
 
