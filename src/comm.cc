@@ -1582,7 +1582,7 @@ checkTimeouts(void)
                 // TODO: CodeContext::Reset(F's context);
                 F->writeQuotaHandler->selectWaiting = true;
                 Comm::SetSelect(fd, COMM_SELECT_WRITE, Comm::HandleWrite, COMMIO_FD_WRITECB(fd), 0);
-                CodeContext::Clear();
+                CodeContext::Reset();
             }
             continue;
 #endif
@@ -1605,7 +1605,7 @@ checkTimeouts(void)
 
     }
 
-    CodeContext::Clear();
+    CodeContext::Reset();
 }
 
 /// Start waiting for a possibly half-closed connection to close

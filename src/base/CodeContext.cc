@@ -25,7 +25,7 @@ CodeContext::Current()
 }
 
 void
-CodeContext::Clear()
+CodeContext::Reset()
 {
     if (auto &instance = Instance()) {
         debugs(1, 7, CurrentCodeContextBrief);
@@ -36,15 +36,14 @@ CodeContext::Clear()
 void
 CodeContext::Reset(const Pointer codeCtx)
 {
-    if (codeCtx) {
-        if (codeCtx == Current())
-            return; // no context changes
-        Instance() = codeCtx;
-        debugs(1, 5, CurrentCodeContextBrief);
-        return;
-    }
+    if (!codeCtx)
+        return Reset();
 
-    Clear();
+    if (codeCtx == Current())
+        return; // context has not actually changed
+
+    Instance() = codeCtx;
+    debugs(1, 5, CurrentCodeContextBrief);
 }
 
 std::ostream &

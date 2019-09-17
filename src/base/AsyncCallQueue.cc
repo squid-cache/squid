@@ -44,7 +44,7 @@ AsyncCallQueue::fire()
         fireNext();
     }
     if (made)
-        CodeContext::Clear();
+        CodeContext::Reset();
     return made;
 }
 

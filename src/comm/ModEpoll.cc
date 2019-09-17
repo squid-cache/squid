@@ -294,7 +294,7 @@ Comm::DoSelect(int msec)
         }
     }
 
-    CodeContext::Clear();
+    CodeContext::Reset();
 
     PROF_stop(comm_handle_ready_fd);
 

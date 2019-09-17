@@ -21,10 +21,14 @@ class CodeContext: public RefCountable
 public:
     typedef RefCount<CodeContext> Pointer;
 
-    // XXX: Document
-    static const Pointer &Current(); // may be nil (i.e. unknown)
-    static void Clear();
-    static void Reset(const Pointer codeCtx);
+    /// \returns the known global context or, to indicate unknown context, nil
+    static const Pointer &Current();
+
+    /// forgets the current context, setting it to nil/unknown
+    static void Reset();
+
+    /// changes the current context; nil argument sets it to nil/unknown
+    static void Reset(const Pointer);
 
     virtual ~CodeContext() {}
 
