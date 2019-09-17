@@ -930,13 +930,18 @@ void
 ESIContext::addStackElement (ESIElement::Pointer element)
 {
     /* Put on the stack to allow skipping of 'invalid' markup */
-    Must2(parserState.stackdepth < ESI_STACK_DEPTH_LIMIT, "Too many nested elements");
+
+    // throw an error if the stack location would be invalid
+    if (parserState.stackdepth >= ESI_STACK_DEPTH_LIMIT)
+        throw Esi::Error("ESI Too many nested elements");
+    if (parserState.stackdepth < 0)
+        throw Esi::Error("ESI elements stack error, probable error in ESI template");
+
     assert (!failed());
     debugs(86, 5, "ESIContext::addStackElement: About to add ESI Node " << element.getRaw());
 
     if (!parserState.top()->addElement(element)) {
-        debugs(86, DBG_IMPORTANT, "ESIContext::addStackElement: failed to add esi node, probable error in ESI template");
-        flags.error = 1;
+        throw Esi::Error("ESIContext::addStackElement failed, probable error in ESI template");
     } else {
         /* added ok, push onto the stack */
         parserState.stack[parserState.stackdepth] = element;
@@ -1188,13 +1193,10 @@ ESIContext::addLiteral (const char *s, int len)
     assert (len);
     debugs(86, 5, "literal length is " << len);
     /* give a literal to the current element */
-    Must2(parserState.stackdepth < ESI_STACK_DEPTH_LIMIT, "Too many nested elements");
     ESIElement::Pointer element (new esiLiteral (this, s, len));
 
-    if (!parserState.top()->addElement(element)) {
-        debugs(86, DBG_IMPORTANT, "ESIContext::addLiteral: failed to add esi node, probable error in ESI template");
-        flags.error = 1;
-    }
+    if (!parserState.top()->addElement(element))
+        throw Esi::Error("ESIContext::addLiteral failed, probable error in ESI template");
 }
 
 void
@@ -1260,12 +1262,15 @@ ESIContext::parse()
             while (buffered.getRaw() && !flags.error)
                 parseOneBuffer();
 
-        } catch (const TextException &ex) {
+        } catch (Esi::ErrorDetail &errMsg) { // FIXME: non-const for c_str()
+            debugs(86, DBG_IMPORTANT, errMsg);
             setError();
-            setErrorMessage(ex.what());
+            setErrorMessage(errMsg.c_str());
 
         } catch (...) {
-            throw; // re-throw other exceptions
+            setError();
+            setErrorMessage("ESI parse, unknown exception");
+            debugs(86, 5, "ESI parse error: " << CurrentException);
         }
 
         PROF_stop(esiParsing);

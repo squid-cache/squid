@@ -9,7 +9,6 @@
 /* DEBUG: section 86    ESI processing */
 
 #include "squid.h"
-#include "base/TextException.h"
 #include "Debug.h"
 #include "esi/Esi.h"
 #include "esi/Expression.h"
@@ -103,9 +102,13 @@ stackpop(stackmember * s, int *depth)
 /// Throws an exception with the given message if depth is not referencing
 /// a valid location of the stack both before and after the push.
 static void
-stackpush(stackmember *stack, stackmember &item, int *depth, const char *message)
+stackpush(stackmember *stack, stackmember &item, int *depth)
 {
-    Must2(*depth >= 0 && *depth < ESI_STACK_DEPTH_LIMIT-1, message);
+    if (*depth < 0)
+        throw Esi::Error("ESIExpression stack has negative size");
+    if (*depth >= ESI_STACK_DEPTH_LIMIT-1)
+        throw Esi::Error("ESIExpression stack is full, cannot push");
+
     stack[(*depth)++] = item;
 }
 
@@ -220,7 +223,11 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
         /* invalid stack */
         return 1;
 
-    Must2(whereAmI >= 0 && whereAmI < ESI_STACK_DEPTH_LIMIT-1, "negate expression location invalid");
+    if (whereAmI < 0)
+        throw Esi::Error("negate expression location too small");
+    if (*depth >= ESI_STACK_DEPTH_LIMIT)
+        throw Esi::Error("negate expression too complex");
+
     if (stack[whereAmI + 1].valuetype != ESI_EXPR_EXPR)
         /* invalid operand */
         return 1;
@@ -228,7 +235,6 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
     /* copy down */
     --(*depth);
 
-    Must2(*depth >= 0 && *depth < ESI_STACK_DEPTH_LIMIT, "negate expression too complex");
     stack[whereAmI] = stack[(*depth)];
 
     cleanmember(candidate);
@@ -294,7 +300,7 @@ evalor(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 
     srv.precedence = 1;
 
-    stackpush(stack, srv, depth, "OR expression too complex");
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -341,7 +347,7 @@ evaland(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 
     srv.precedence = 1;
 
-    stackpush(stack, srv, depth, "AND expression too complex");
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -387,7 +393,7 @@ evallesseq(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 
     srv.precedence = 1;
 
-    stackpush(stack, srv, depth, "less-or-equal expression too complex");
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -435,7 +441,7 @@ evallessthan(stackmember * stack, int *depth, int whereAmI, stackmember * candid
 
     srv.precedence = 1;
 
-    stackpush(stack, srv, depth, "less-than expression too complex");
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -483,7 +489,7 @@ evalmoreeq(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 
     srv.precedence = 1;
 
-    stackpush(stack, srv, depth, "more-or-equal expression too complex");
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -531,7 +537,7 @@ evalmorethan(stackmember * stack, int *depth, int whereAmI, stackmember * candid
 
     srv.precedence = 1;
 
-    stackpush(stack, srv, depth, "more-than expression too complex");
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -580,7 +586,7 @@ evalequals(stackmember * stack, int *depth, int whereAmI,
 
     srv.precedence = 1;
 
-    stackpush(stack, srv, depth, "equality expression too complex");
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -627,7 +633,7 @@ evalnotequals(stackmember * stack, int *depth, int whereAmI, stackmember * candi
 
     srv.precedence = 1;
 
-    stackpush(stack, srv, depth, "not-equal expression too complex");
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -963,14 +969,12 @@ dumpstack(stackmember * stack, int depth)
 int
 addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
 {
-    // NP: stackdepth++ in else clauses may cause it to point at memory
-    //      outside the stack allocation. We only check that the location
-    //      being assigned to is valid.
-    Must2(*stackdepth < ESI_STACK_DEPTH_LIMIT && *stackdepth >= 0, "expression too complex to add member");
-
     if (candidate->valuetype != ESI_EXPR_LITERAL && *stackdepth > 1) {
         /* !(!(a==b))) is why thats safe */
         /* strictly less than until we unwind */
+
+        if (*stackdepth >= ESI_STACK_DEPTH_LIMIT)
+            throw Esi::Error("ESI expression too complex to add member");
 
         if (candidate->precedence < stack[*stackdepth - 1].precedence ||
                 candidate->precedence < stack[*stackdepth - 2].precedence) {
@@ -987,10 +991,10 @@ addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
                 return 0;
             }
         } else {
-            stack[(*stackdepth)++] = *candidate;
+            stackpush(stack, *candidate, stackdepth);
         }
     } else if (candidate->valuetype != ESI_EXPR_INVALID)
-        stack[(*stackdepth)++] = *candidate;
+        stackpush(stack, *candidate, stackdepth);
 
     return 1;
 }
