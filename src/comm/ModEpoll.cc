@@ -256,7 +256,7 @@ Comm::DoSelect(int msec)
     for (i = 0, cevents = pevents; i < num; ++i, ++cevents) {
         fd = cevents->data.fd;
         F = &fd_table[fd];
-        CodeContext::SwitchTo(F->codeContext);
+        CodeContext::Reset(F->codeContext);
         debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "got FD " << fd << " events=" <<
                std::hex << cevents->events << " monitoring=" << F->epoll_state <<
                " F->read_handler=" << F->read_handler << " F->write_handler=" << F->write_handler);

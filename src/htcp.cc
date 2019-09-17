@@ -1295,7 +1295,7 @@ htcpForwardClr(char *buf, int sz)
 static void
 htcpHandleMsg(char *buf, int sz, Ip::Address &from)
 {
-    // TODO: function-scoped CodeContext::SwitchTo("HTCP message from", from);
+    // TODO: function-scoped CodeContext::Reset("HTCP message from", from);
 
     htcpHeader htcpHdr;
     htcpDataHeader hdr;

@@ -24,7 +24,7 @@ public:
     // XXX: Document
     static const Pointer &Current(); // may be nil (i.e. unknown)
     static void Clear();
-    static void SwitchTo(const Pointer codeCtx);
+    static void Reset(const Pointer codeCtx);
 
     virtual ~CodeContext() {}
 
@@ -40,3 +40,4 @@ std::ostream &CurrentCodeContextBrief(std::ostream &os);
 std::ostream &CurrentCodeContextDetail(std::ostream &os);
 
 #endif
+

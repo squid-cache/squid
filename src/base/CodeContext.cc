@@ -34,7 +34,7 @@ CodeContext::Clear()
 }
 
 void
-CodeContext::SwitchTo(const Pointer codeCtx)
+CodeContext::Reset(const Pointer codeCtx)
 {
     if (codeCtx) {
         if (codeCtx == Current())

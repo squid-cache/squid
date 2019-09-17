@@ -2634,7 +2634,7 @@ ConnStateData::postHttpsAccept()
         request->url.port(clientConnection->local.port());
         request->myportname = port->name;
         const AccessLogEntry::Pointer connectAle = new AccessLogEntry;
-        CodeContext::SwitchTo(connectAle);
+        CodeContext::Reset(connectAle);
         // TODO: Use these request/ALE when waiting for new bumped transactions.
 
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);

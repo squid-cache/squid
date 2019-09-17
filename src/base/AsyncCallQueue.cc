@@ -40,7 +40,7 @@ AsyncCallQueue::fire()
 {
     const bool made = theHead != NULL;
     while (theHead != NULL) {
-        CodeContext::SwitchTo(theHead->codeContext);
+        CodeContext::Reset(theHead->codeContext);
         fireNext();
     }
     if (made)
