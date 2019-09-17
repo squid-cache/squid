@@ -1445,6 +1445,7 @@ ConfigureDebugging()
         fd_open(2, FD_LOG, "stderr");
     }
     // we should not create cache.log outside chroot environment, if any
+    // XXX: With Config.chroot_dir set, SMP master process never calls db_init().
     if (!Config.chroot_dir || Chrooted)
         _db_init(Debug::cache_log, Debug::debugOptions);
 }
