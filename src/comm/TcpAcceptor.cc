@@ -74,6 +74,7 @@ Comm::TcpAcceptor::unsubscribe(const char *reason)
 void
 Comm::TcpAcceptor::start()
 {
+    // XXX: CodeContext::SwitchTo(context_);
     debugs(5, 5, HERE << status() << " AsyncCall Subscription: " << theCallSub);
 
     Must(IsConnOpen(conn));
@@ -259,6 +260,7 @@ static void
 logAcceptError(const Comm::ConnectionPointer &conn)
 {
     AccessLogEntry::Pointer al = new AccessLogEntry;
+    CodeContext::SwitchTo(al);
     al->tcpClient = conn;
     al->url = "error:accept-client-connection";
     al->setVirginUrlForMissingRequest(al->url);
@@ -267,6 +269,7 @@ logAcceptError(const Comm::ConnectionPointer &conn)
     ch.my_addr = conn->local;
     ch.al = al;
     accessLogLog(al, &ch);
+    // XXX: CodeContext::SwitchTo(context_);
 }
 
 void

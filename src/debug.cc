@@ -19,6 +19,10 @@
 /* for shutting_down flag in xassert() */
 #include "globals.h"
 
+#if SQUID_HACK_TO_MARK_DEBUG_LINES_THAT_KNOW_THEIR_CONTEXT
+#include "base/CodeContext.h"
+#endif
+
 char *Debug::debugOptions = NULL;
 int Debug::override_X = 0;
 int Debug::log_stderr = -1;
@@ -837,12 +841,20 @@ Debug::Start(const int section, const int level)
 
     Current = future;
 
+#if SQUID_HACK_TO_MARK_DEBUG_LINES_THAT_KNOW_THEIR_CONTEXT
+    Current->buf << (CodeContext::Current() ? "!! " : "?? ");
+#endif
+
     return future->buf;
 }
 
 void
 Debug::Finish()
 {
+    extern std::ostream &CurrentCodeContextDetail(std::ostream &os);
+    if (Current->level <= DBG_IMPORTANT)
+        Current->buf << CurrentCodeContextDetail;
+
     // TODO: Optimize to remove at least one extra copy.
     _db_print(Current->forceAlert, "%s\n", Current->buf.str().c_str());
     Current->forceAlert = false;

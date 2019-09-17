@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
-#include "AsyncCall.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncCallQueue.h"
+#include "base/CodeContext.h"
 #include "cbdata.h"
 #include "Debug.h"
 #include <ostream>
@@ -91,6 +91,8 @@ ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call)
 {
     debugs(call->debugSection, call->debugLevel, fileName << "(" << fileLine <<
            ") will call " << *call << " [" << call->id << ']' );
+    if (!call->codeContext)
+        call->codeContext = CodeContext::Current();
     AsyncCallQueue::Instance().schedule(call);
     return true;
 }

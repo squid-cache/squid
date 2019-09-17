@@ -35,12 +35,18 @@ public:
         dereference();
     }
 
-    RefCount (const RefCount &p) : p_(p.p_) {
+    RefCount(const RefCount<C> &p): p_(p.p_) {
         reference (p);
     }
 
-    RefCount (RefCount &&p) : p_(std::move(p.p_)) {
+    RefCount(RefCount<C> &&p): p_(p.p_) {
         p.p_=NULL;
+    }
+
+    /// Base::Pointer = Derived::Pointer
+    template <class Other>
+    RefCount(const RefCount<Other> &p): p_(p.getRaw()) {
+        reference(*this);
     }
 
     RefCount& operator = (const RefCount& p) {

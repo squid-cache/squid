@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncCallQueue.h"
+#include "base/CodeContext.h"
 #include "Debug.h"
 
 AsyncCallQueue *AsyncCallQueue::TheInstance = 0;
@@ -38,8 +39,12 @@ bool
 AsyncCallQueue::fire()
 {
     const bool made = theHead != NULL;
-    while (theHead != NULL)
+    while (theHead != NULL) {
+        CodeContext::SwitchTo(theHead->codeContext);
         fireNext();
+    }
+    if (made)
+        CodeContext::Clear();
     return made;
 }
 

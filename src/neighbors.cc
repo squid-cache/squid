@@ -1775,6 +1775,7 @@ neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Addres
     }
 
     debugs(15, 3, "neighborsHtcpReply: e = " << e);
+    // TODO: Refactor (ping_reply_callback,ircb_data) to add CodeContext.
     mem->ping_reply_callback(p, ntype, AnyP::PROTO_HTCP, htcp, mem->ircb_data);
 }
 

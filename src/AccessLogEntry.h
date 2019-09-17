@@ -10,7 +10,7 @@
 #define SQUID_HTTPACCESSLOGENTRY_H
 
 #include "anyp/PortCfg.h"
-#include "base/RefCount.h"
+#include "base/CodeContext.h"
 #include "comm/Connection.h"
 #include "HierarchyLogEntry.h"
 #include "http/ProtocolVersion.h"
@@ -36,14 +36,18 @@ class HttpReply;
 class HttpRequest;
 class CustomLog;
 
-class AccessLogEntry: public RefCountable
+class AccessLogEntry: public CodeContext
 {
 
 public:
     typedef RefCount<AccessLogEntry> Pointer;
 
     AccessLogEntry();
-    ~AccessLogEntry();
+    virtual ~AccessLogEntry();
+
+    /* CodeContext API */
+    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
+    virtual std::ostream &briefCodeContext(std::ostream &os) const override;
 
     /// Fetch the client IP log string into the given buffer.
     /// Knows about several alternate locations of the IP

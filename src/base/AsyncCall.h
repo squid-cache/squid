@@ -9,6 +9,7 @@
 #ifndef SQUID_ASYNCCALL_H
 #define SQUID_ASYNCCALL_H
 
+#include "base/forward.h"
 #include "base/InstanceId.h"
 #include "event.h"
 #include "RefCount.h"
@@ -32,9 +33,6 @@
  * method calls, but they give you a uniform interface and handy call
  * debugging.
  */
-
-class CallDialer;
-class AsyncCallQueue;
 
 /**
  \todo add unique call IDs
@@ -74,6 +72,10 @@ public:
 
 public:
     const char *const name;
+
+    /// what the callee is expected to work on
+    CodeContextPointer codeContext;
+
     const int debugSection;
     const int debugLevel;
     const InstanceId<AsyncCall> id;

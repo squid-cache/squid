@@ -32,6 +32,7 @@
 
 #if USE_EPOLL
 
+#include "base/CodeContext.h"
 #include "comm/Loops.h"
 #include "fde.h"
 #include "globals.h"
@@ -178,6 +179,8 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
 
     if (timeout)
         F->timeout = squid_curtime + timeout;
+
+    F->codeContext = CodeContext::Current(); // may be nil
 }
 
 static void commIncomingStats(StoreEntry * sentry);
@@ -253,6 +256,7 @@ Comm::DoSelect(int msec)
     for (i = 0, cevents = pevents; i < num; ++i, ++cevents) {
         fd = cevents->data.fd;
         F = &fd_table[fd];
+        CodeContext::SwitchTo(F->codeContext);
         debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "got FD " << fd << " events=" <<
                std::hex << cevents->events << " monitoring=" << F->epoll_state <<
                " F->read_handler=" << F->read_handler << " F->write_handler=" << F->write_handler);
@@ -289,6 +293,8 @@ Comm::DoSelect(int msec)
             }
         }
     }
+
+    CodeContext::Clear();
 
     PROF_stop(comm_handle_ready_fd);
 

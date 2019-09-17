@@ -9,6 +9,8 @@
 #ifndef SQUID_FDE_H
 #define SQUID_FDE_H
 
+#include "base/forward.h"
+#include "base/CodeContext.h" /* XXX: Remove by de-inlining ctor and clear() */
 #include "comm.h"
 #include "defines.h"
 #include "ip/Address.h"
@@ -164,6 +166,10 @@ public:
                                                 nfmarkToServer in that this is the value we *receive* from the,
                                                 connection, whereas nfmarkToServer is the value to set on packets
                                                 *leaving* Squid.   */
+
+    // XXX: Separate readerContext from writerContext (e.g., for pipelining).
+    /// What the I/O handlers are supposed to work on.
+    CodeContextPointer codeContext;
 
 private:
     // I/O methods connect Squid to the device/stack/library fde represents

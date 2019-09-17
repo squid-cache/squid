@@ -9,10 +9,16 @@
 #ifndef SQUID_SRC_BASE_FORWARD_H
 #define SQUID_SRC_BASE_FORWARD_H
 
-template<class Cbc> class CbcPointer;
-
+class AsyncCallQueue;
 class AsyncJob;
+class CallDialer;
+class CodeContext;
+
+template<class Cbc> class CbcPointer;
+template<class RefCountableKid> class RefCount;
+
 typedef CbcPointer<AsyncJob> AsyncJobPointer;
+typedef RefCount<CodeContext> CodeContextPointer;
 
 #endif /* SQUID_SRC_BASE_FORWARD_H */
 
