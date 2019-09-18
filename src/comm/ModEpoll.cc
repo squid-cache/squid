@@ -180,7 +180,11 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
     if (timeout)
         F->timeout = squid_curtime + timeout;
 
-    F->codeContext = CodeContext::Current(); // may be nil
+    if (timeout || handler) // exclude cleanup requests
+        F->codeContext = CodeContext::Current(); // may be nil
+    else if (!ev.events) // no more FD-associated work expected
+        F->codeContext = nullptr;
+    // other cleanup requests do not alter F->codeContext
 }
 
 static void commIncomingStats(StoreEntry * sentry);
