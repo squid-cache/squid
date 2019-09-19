@@ -341,7 +341,7 @@ httpHdrMangleList(HttpHeader *l, HttpRequest *request, const AccessLogEntryPoint
     if (hms) {
         int headers_deleted = 0;
         while ((e = l->getEntry(&p))) {
-            if (0 == httpHdrMangle(e, request, hms, al))
+            if (httpHdrMangle(e, request, hms, al) == 0)
                 l->delAt(p, headers_deleted);
         }
 
