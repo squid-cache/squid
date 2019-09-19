@@ -24,26 +24,41 @@ CodeContext::Current()
     return Instance();
 }
 
+/// Switches the current context to the given known context. Improves debugging
+/// output by replacing omni-directional "Reset" with directional "Entering".
+void
+CodeContext::Entering(const Pointer &codeCtx)
+{
+    Instance() = codeCtx;
+    debugs(1, 5, CurrentCodeContextBrief);
+}
+
+/// Forgets the current known context. Improves debugging output by replacing
+/// omni-directional "Reset" with directional "Leaving".
+void
+CodeContext::Leaving()
+{
+    debugs(1, 7, CurrentCodeContextBrief);
+    Instance() = nullptr;
+}
+
 void
 CodeContext::Reset()
 {
-    if (auto &instance = Instance()) {
-        debugs(1, 7, CurrentCodeContextBrief);
-        instance = nullptr;
-    }
+    if (Instance())
+        Leaving();
 }
 
 void
 CodeContext::Reset(const Pointer codeCtx)
 {
-    if (!codeCtx)
-        return Reset();
-
     if (codeCtx == Current())
         return; // context has not actually changed
 
-    Instance() = codeCtx;
-    debugs(1, 5, CurrentCodeContextBrief);
+    if (!codeCtx)
+        return Leaving();
+
+    Entering(codeCtx);
 }
 
 std::ostream &

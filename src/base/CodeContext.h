@@ -40,6 +40,10 @@ public:
 
     /// appends human-friendly context description line(s) to a cache.log record
     virtual std::ostream &detailCodeContext(std::ostream &os) const = 0;
+
+private:
+    static void Entering(const Pointer &codeCtx);
+    static void Leaving();
 };
 
 /* convenience context-reporting wrappers that also reduce linking problems */
