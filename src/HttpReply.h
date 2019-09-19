@@ -81,7 +81,7 @@ public:
     /** \return a ready to use mem buffer with a packed reply */
     MemBuf *pack() const;
 
-    /// construct and return a 200 (Connection established)
+    /// construct and return an HTTP/200 (Connection Established) response
     static HttpReply *MakeConnectionEstablished();
 
     /** construct a 304 reply and return it */
