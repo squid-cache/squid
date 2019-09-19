@@ -32,6 +32,7 @@
 #include "Store.h"
 #include "util.h"
 #include "wordlist.h"
+#include "helper/protocol_defines.h"
 
 /* Basic Scheme */
 static AUTHSSTATS authenticateBasicStats;
@@ -148,6 +149,76 @@ authenticateBasicStats(StoreEntry * sentry)
         basicauthenticators->packStatsInto(sentry, "Basic Authenticator Statistics");
 }
 
+inline size_t
+inlineUTF8SequenceLengthNonASCII(char b0)
+{
+    if ((b0 & 0xC0) != 0xC0)
+        return 0;
+    if ((b0 & 0xE0) == 0xC0)
+        return 2;
+    if ((b0 & 0xF0) == 0xE0)
+        return 3;
+    if ((b0 & 0xF8) == 0xF0)
+        return 4;
+    return 0;
+}
+
+inline size_t
+inlineUTF8SequenceLength(char b0)
+{
+    return (b0 & 0x80) == 0 ? 1 : inlineUTF8SequenceLengthNonASCII(b0);
+}
+
+/*
+ * Utility routine to tell whether a sequence of bytes is legal UTF-8.
+ * This must be called with the length pre-determined by the first byte.
+ * If presented with a length > 4, this returns false.  The Unicode
+ * definition of UTF-8 goes up to 4-byte sequences.
+ */
+static bool
+isLegalUTF8(const unsigned char* source, int length)
+{
+    unsigned char a;
+    const unsigned char* srcptr = source + length;
+    switch (length) {
+        default: return false;
+        // Everything else falls through when "true"...
+        case 4: if ((a = (*--srcptr)) < 0x80 || a > 0xBF) return false;
+        case 3: if ((a = (*--srcptr)) < 0x80 || a > 0xBF) return false;
+        case 2: if ((a = (*--srcptr)) > 0xBF) return false;
+
+
+        switch (*source) {
+            // no fall-through in this inner switch
+            case 0xE0: if (a < 0xA0) return false; break;
+            case 0xED: if (a > 0x9F) return false; break;
+            case 0xF0: if (a < 0x90) return false; break;
+            case 0xF4: if (a > 0x8F) return false; break;
+            default:   if (a < 0x80) return false;
+        }
+
+
+        case 1: if (*source >= 0x80 && *source < 0xC2) return false;
+    }
+    if (*source > 0xF4)
+        return false;
+    return true;
+}
+
+/*
+ * Returns whether a UTF-8 string is legal or not.
+ */
+static bool
+isLegalUTF8String(const char *source, const char *sourceEnd) {
+    while (source != sourceEnd) {
+        int length = inlineUTF8SequenceLength(*source);
+        if (length > sourceEnd - source || !isLegalUTF8((const unsigned char*) source, length))
+            return false;
+        source += length;
+    }
+    return true;
+}
+
 char *
 Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
 {
@@ -175,6 +246,13 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
     size_t dstLen = 0;
     if (base64_decode_update(&ctx, &dstLen, reinterpret_cast<uint8_t*>(cleartext), srcLen, eek) && base64_decode_final(&ctx)) {
         cleartext[dstLen] = '\0';
+
+	if (!isLegalUTF8String(cleartext, cleartext + dstLen)) {
+	    char buf[HELPER_INPUT_BUFFER];
+	    latin1_to_utf8(buf, sizeof(buf), cleartext);
+            safe_free(cleartext);
+	    cleartext = xstrdup(buf);
+	}
 
         /*
          * Don't allow NL or CR in the credentials.
