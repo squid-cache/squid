@@ -116,6 +116,14 @@ HttpReply::pack() const
     return mb;
 }
 
+HttpReplyPointer
+HttpReply::MakeConnectionEstablished() {
+
+    HttpReplyPointer rep(new HttpReply);
+    rep->sline.set(Http::ProtocolVersion(), Http::scOkay, "Connection established");
+    return rep;
+}
+
 HttpReply *
 HttpReply::make304() const
 {
