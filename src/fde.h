@@ -167,7 +167,7 @@ public:
                                                 connection, whereas nfmarkToServer is the value to set on packets
                                                 *leaving* Squid.   */
 
-    // XXX: Separate readerContext from writerContext (e.g., for pipelining).
+    // TODO: Separate readerContext from writerContext for pipelining users.
     /// What the I/O handlers are supposed to work on.
     CodeContextPointer codeContext;
 

@@ -100,7 +100,7 @@ public:
     /// configures the active debugging context to write syslog ALERT
     static void ForceAlert();
 
-    /// Prefixes debugs() lines after the first one.
+    /// prefixes each grouped debugs() line after the first one in the group
     static std::ostream& Extra(std::ostream &os) { return os << "\n    "; }
 
 private:

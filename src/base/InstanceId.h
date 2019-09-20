@@ -65,8 +65,9 @@ public:
     /// writes a compact text representation of the ID
     std::ostream &print(std::ostream &) const;
 
+    // TODO: Refactor into static Scope().
     /// \returns Class-specific nickname (with endless lifetime)
-    const char *prefix() const; // TODO: Refactor into static Scope().
+    const char * prefix() const;
 
     /// \returns a copy of the ID usable outside our Class context
     ScopedId detach() const { return ScopedId(prefix(), value); }

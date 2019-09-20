@@ -120,7 +120,7 @@ struct _htcpAuthHeader {
     Countstr signature;
 };
 
-class htcpSpecifier : public CodeContext, public StoreClient
+class htcpSpecifier: public CodeContext, public StoreClient
 {
     MEMPROXY_CLASS(htcpSpecifier);
 
@@ -1295,7 +1295,7 @@ htcpForwardClr(char *buf, int sz)
 static void
 htcpHandleMsg(char *buf, int sz, Ip::Address &from)
 {
-    // TODO: function-scoped CodeContext::Reset("HTCP message from", from);
+    // TODO: function-scoped CodeContext::Reset(...("HTCP message from", from))
 
     htcpHeader htcpHdr;
     htcpDataHeader hdr;

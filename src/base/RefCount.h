@@ -35,11 +35,11 @@ public:
         dereference();
     }
 
-    RefCount(const RefCount<C> &p): p_(p.p_) {
+    RefCount (const RefCount &p) : p_(p.p_) {
         reference (p);
     }
 
-    RefCount(RefCount<C> &&p): p_(p.p_) {
+    RefCount (RefCount &&p) : p_(std::move(p.p_)) {
         p.p_=NULL;
     }
 

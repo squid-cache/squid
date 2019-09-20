@@ -851,6 +851,7 @@ Debug::Start(const int section, const int level)
 void
 Debug::Finish()
 {
+    // TODO: #include "base/CodeContext.h" instead if doing so works well.
     extern std::ostream &CurrentCodeContextDetail(std::ostream &os);
     if (Current->level <= DBG_IMPORTANT)
         Current->buf << CurrentCodeContextDetail;

@@ -181,7 +181,7 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
         F->timeout = squid_curtime + timeout;
 
     if (timeout || handler) // exclude cleanup requests
-        F->codeContext = CodeContext::Current(); // may be nil
+        F->codeContext = CodeContext::Current(); // TODO: Avoid clearing if set?
     else if (!ev.events) // no more FD-associated work expected
         F->codeContext = nullptr;
     // other cleanup requests do not alter F->codeContext
