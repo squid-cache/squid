@@ -62,11 +62,11 @@ public:
     bool operator !=(const InstanceId &o) const { return !(*this == o); }
     void change();
 
-    /// prints class-pecific prefix followed by ID value; \todo: use HEX for value printing?
+    /// writes a compact text representation of the ID
     std::ostream &print(std::ostream &) const;
 
-    /// returns the class-pecific prefix
-    const char * prefix() const;
+    /// \returns Class-specific nickname (with endless lifetime)
+    const char *prefix() const; // TODO: Refactor into static Scope().
 
     /// \returns a copy of the ID usable outside our Class context
     ScopedId detach() const { return ScopedId(prefix(), value); }
