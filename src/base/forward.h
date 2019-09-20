@@ -13,6 +13,7 @@ class AsyncCallQueue;
 class AsyncJob;
 class CallDialer;
 class CodeContext;
+class ScopedId;
 
 template<class Cbc> class CbcPointer;
 template<class RefCountableKid> class RefCount;

@@ -120,14 +120,14 @@ AccessLogEntry::~AccessLogEntry()
 #endif
 }
 
-std::ostream &
-AccessLogEntry::briefCodeContext(std::ostream &os) const
+ScopedId
+AccessLogEntry::codeContextGist() const
 {
     if (request) {
         if (const auto &mx = request->masterXaction)
-            os << mx->id;
+            return mx->id.detach();
     }
-    return os;
+    return ScopedId();
 }
 
 std::ostream &

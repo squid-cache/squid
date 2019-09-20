@@ -136,7 +136,7 @@ public:
     }
 
     /* CodeContext API */
-    virtual std::ostream &briefCodeContext(std::ostream &os) const; // override
+    virtual ScopedId codeContextGist() const; // override
     virtual std::ostream &detailCodeContext(std::ostream &os) const; // override
 
     /* StoreClient API */
@@ -919,18 +919,18 @@ htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, Ip::Address &from)
     htcpSend(pkt, (int) pktlen, from);
 }
 
-std::ostream &
-htcpSpecifier::briefCodeContext(std::ostream &os) const
+ScopedId
+htcpSpecifier::codeContextGist() const
 {
     if (al)
-        return al->briefCodeContext(os);
+        return al->codeContextGist();
 
     if (request) {
         if (const auto &mx = request->masterXaction)
-            return os << mx->id;
+            return mx->id.detach();
     }
 
-    return os;
+    return ScopedId();
 }
 
 std::ostream &

@@ -10,7 +10,18 @@
 #include "base/CodeContext.h"
 #include "Debug.h"
 
-/// guarantees forever pointer existence starting from the first use
+/// represents a being-forgotten CodeContext (while it may be being destroyed)
+class FadingCodeContext: public CodeContext
+{
+public:
+    /* CodeContext API */
+    virtual ScopedId codeContextGist() const override { return gist; }
+    virtual std::ostream &detailCodeContext(std::ostream &os) const override { return os << gist; }
+
+    ScopedId gist; ///< identifies the being-forgotten CodeContext
+};
+
+/// guarantees the forever existence of the pointer, starting from the first use
 static CodeContext::Pointer &
 Instance()
 {
@@ -24,13 +35,29 @@ CodeContext::Current()
     return Instance();
 }
 
+/// Forgets the current known context, possibly triggering its destruction.
+/// Preserves the gist of the being-forgotten context during its destruction.
+/// Knows nothing about the next context -- the caller must set it.
+void
+CodeContext::ForgetCurrent()
+{
+    static const RefCount<FadingCodeContext> fadingCodeContext = new FadingCodeContext();
+    auto &current = Instance();
+    assert(current);
+    fadingCodeContext->gist = current->codeContextGist();
+    current = fadingCodeContext;
+}
+
 /// Switches the current context to the given known context. Improves debugging
 /// output by replacing omni-directional "Reset" with directional "Entering".
 void
 CodeContext::Entering(const Pointer &codeCtx)
 {
-    Instance() = codeCtx;
-    debugs(1, 5, CurrentCodeContextBrief);
+    auto &current = Instance();
+    if (current)
+        ForgetCurrent(); // ensure orderly closure of the old context
+    current = codeCtx;
+    debugs(1, 5, codeCtx->codeContextGist());
 }
 
 /// Forgets the current known context. Improves debugging output by replacing
@@ -38,8 +65,10 @@ CodeContext::Entering(const Pointer &codeCtx)
 void
 CodeContext::Leaving()
 {
-    debugs(1, 7, CurrentCodeContextBrief);
-    Instance() = nullptr;
+    ForgetCurrent();
+    auto &current = Instance();
+    debugs(1, 7, *current);
+    current = nullptr;
 }
 
 void
@@ -59,14 +88,6 @@ CodeContext::Reset(const Pointer codeCtx)
         return Leaving();
 
     Entering(codeCtx);
-}
-
-std::ostream &
-CurrentCodeContextBrief(std::ostream &os)
-{
-    if (const auto ctx = CodeContext::Current())
-        ctx->briefCodeContext(os);
-    return os;
 }
 
 std::ostream &

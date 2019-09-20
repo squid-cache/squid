@@ -11,6 +11,36 @@
 
 #include <iosfwd>
 
+/// Represents an InstanceId<C> value independent from its owner class C. These
+/// "detached" IDs can be stored by and exchanged among C-unaware users at the
+/// price of storing a short scope c-string (that InstanceIds hard-code instead)
+/// and, in some cases, using more bits/space than InstanceId<C>::value uses.
+class ScopedId
+{
+public:
+    ScopedId(): scope(nullptr), value(0) {}
+    ScopedId(const char *s, uint64_t v): scope(s), value(v) {}
+
+    /// whether the ID is "set" or "known"; the scope part does not matter
+    explicit operator bool() const { return value; }
+
+    /// the prefix() of the InstanceId object that we were detached from
+    const char *scope;
+
+    /// the value of the InstanceId object that we were detached from
+    uint64_t value;
+};
+
+inline std::ostream&
+operator <<(std::ostream &os, const ScopedId &id)
+{
+    if (id)
+        os << id.scope << id.value;
+    else
+        os << "[unknown]";
+    return os;
+}
+
 typedef unsigned int InstanceIdDefaultValueType;
 /** Identifier for class instances
  *   - unique IDs for a large number of concurrent instances, but may wrap;
@@ -37,6 +67,9 @@ public:
 
     /// returns the class-pecific prefix
     const char * prefix() const;
+
+    /// \returns a copy of the ID usable outside our Class context
+    ScopedId detach() const { return ScopedId(prefix(), value); }
 
 public:
     Value value = Value(); ///< instance identifier

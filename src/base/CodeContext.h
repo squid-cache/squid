@@ -9,6 +9,7 @@
 #ifndef SQUID_BASE_CODE_CONTEXT_H
 #define SQUID_BASE_CODE_CONTEXT_H
 
+#include "base/InstanceId.h"
 #include "base/RefCount.h"
 
 #include <iosfwd>
@@ -32,19 +33,25 @@ public:
 
     virtual ~CodeContext() {}
 
-    // TODO: This should probably become some kind of <char*,id> tuple so that
-    // we can preserve context gist across Reset()-triggered destruction _and_
-    // pass (master transaction?) context gist to SMP workers (e.g., disker).
-    /// writes a word or two to help identify code context in debug messages
-    virtual std::ostream &briefCodeContext(std::ostream &os) const = 0;
+    /// \returns a small, permanent ID of the current context
+    /// gists persist forever and are suitable for passing to other SMP workers
+    virtual ScopedId codeContextGist() const = 0;
 
     /// appends human-friendly context description line(s) to a cache.log record
     virtual std::ostream &detailCodeContext(std::ostream &os) const = 0;
 
 private:
+    static void ForgetCurrent();
     static void Entering(const Pointer &codeCtx);
     static void Leaving();
 };
+
+/// by default, only small context gist is printed
+inline
+std::ostream &operator <<(std::ostream &os, const CodeContext &ctx)
+{
+    return os << ctx.codeContextGist();
+}
 
 /* convenience context-reporting wrappers that also reduce linking problems */
 std::ostream &CurrentCodeContextBrief(std::ostream &os);

@@ -47,7 +47,7 @@ public:
 
     /* CodeContext API */
     virtual std::ostream &detailCodeContext(std::ostream &os) const override;
-    virtual std::ostream &briefCodeContext(std::ostream &os) const override;
+    virtual ScopedId codeContextGist() const override;
 
     /// Fetch the client IP log string into the given buffer.
     /// Knows about several alternate locations of the IP
