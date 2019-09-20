@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
+#include "base/TextException.h"
 #include "cbdata.h"
 #include "errorpage.h"
 #include "FwdState.h"
@@ -78,16 +79,18 @@ CBDATA_CLASS_INIT(UrnState);
 
 UrnState::~UrnState()
 {
-    if (urlres_e) {
-        if (sc)
-            storeUnregister(sc, urlres_e, this);
-        urlres_e->unlock("~UrnState+res");
-    }
+    SWALLOW_EXCEPTIONS({
+        if (urlres_e) {
+            if (sc)
+                storeUnregister(sc, urlres_e, this);
+            urlres_e->unlock("~UrnState+res");
+        }
 
-    if (entry)
-        entry->unlock("~UrnState+prime");
+        if (entry)
+            entry->unlock("~UrnState+prime");
 
-    safe_free(urlres);
+        safe_free(urlres);
+    });
 }
 
 static url_entry *
