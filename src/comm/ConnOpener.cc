@@ -291,6 +291,7 @@ Comm::ConnOpener::createFd()
     debugs(5, 3, conn_ << " will timeout in " << (deadline_ - squid_curtime));
 
     // Update the fd_table directly because commSetConnTimeout() needs open conn_
+    calls_.timeout_->codeContext = CodeContext::Current();
     assert(temporaryFd_ < Squid_MaxFD);
     assert(fd_table[temporaryFd_].flags.open);
     typedef CommTimeoutCbParams Params;

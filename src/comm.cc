@@ -562,6 +562,8 @@ commSetConnTimeout(const Comm::ConnectionPointer &conn, int timeout, AsyncCall::
         F->timeout = 0;
     } else {
         if (callback != NULL) {
+            if (!callback->codeContext)
+                callback->codeContext = CodeContext::Current();
             typedef CommTimeoutCbParams Params;
             Params &params = GetCommParams<Params>(callback);
             params.conn = conn;
@@ -863,6 +865,9 @@ _comm_close(int fd, char const *file, int line)
     /* XXX: is this obsolete behind F->closing() ? */
     if ( (shutting_down || reconfiguring) && (!F->flags.open || F->type == FD_FILE))
         return;
+
+    // TODO: CodeContext::Reset(F->codeContext) but only if it is set;
+    // and cleanup on unexceptional exit.
 
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
     if (!isOpen(fd)) {
@@ -1572,14 +1577,16 @@ checkTimeouts(void)
 
         if (writeTimedOut(fd)) {
             // We have an active write callback and we are timed out
-            // TODO: CodeContext::Reset(F's context);
+            CodeContext::Reset(F->codeContext);
             debugs(5, 5, "checkTimeouts: FD " << fd << " auto write timeout");
             Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
             COMMIO_FD_WRITECB(fd)->finish(Comm::COMM_ERROR, ETIMEDOUT);
+            CodeContext::Reset();
 #if USE_DELAY_POOLS
         } else if (F->writeQuotaHandler != nullptr && COMMIO_FD_WRITECB(fd)->conn != nullptr) {
+            // TODO: Move and extract quota() call to place it inside F->codeContext.
             if (!F->writeQuotaHandler->selectWaiting && F->writeQuotaHandler->quota() && !F->closing()) {
-                // TODO: CodeContext::Reset(F's context);
+                CodeContext::Reset(F->codeContext);
                 F->writeQuotaHandler->selectWaiting = true;
                 Comm::SetSelect(fd, COMM_SELECT_WRITE, Comm::HandleWrite, COMMIO_FD_WRITECB(fd), 0);
                 CodeContext::Reset();
@@ -1590,7 +1597,7 @@ checkTimeouts(void)
         else if (AlreadyTimedOut(F))
             continue;
 
-        // TODO: CodeContext::Reset(F's context);
+        CodeContext::Reset(F->codeContext);
         debugs(5, 5, "checkTimeouts: FD " << fd << " Expired");
 
         if (F->timeoutHandler != NULL) {
@@ -1603,9 +1610,8 @@ checkTimeouts(void)
             comm_close(fd);
         }
 
+        CodeContext::Reset();
     }
-
-    CodeContext::Reset();
 }
 
 /// Start waiting for a possibly half-closed connection to close
