@@ -1948,7 +1948,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     }
 
     /* Now mangle the headers. */
-    httpHdrMangleList(hdr_out, request, al, ROR_REQUEST);
+    httpHdrMangleList(hdr_out, request, nullptr, al, ROR_REQUEST);
 
     strConnection.clean();
 }
