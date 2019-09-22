@@ -562,8 +562,6 @@ commSetConnTimeout(const Comm::ConnectionPointer &conn, int timeout, AsyncCall::
         F->timeout = 0;
     } else {
         if (callback != NULL) {
-            if (!callback->codeContext)
-                callback->codeContext = CodeContext::Current();
             typedef CommTimeoutCbParams Params;
             Params &params = GetCommParams<Params>(callback);
             params.conn = conn;
@@ -775,8 +773,6 @@ comm_lingering_close(int fd)
     debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
     assert(fd_table[fd].flags.open);
     if (callback != NULL) {
-        if (!callback->codeContext)
-            callback->codeContext = CodeContext::Current();
         typedef FdeCbParams Params;
         Params &params = GetCommParams<Params>(callback);
         params.fd = fd;
@@ -991,8 +987,7 @@ comm_add_close_handler(int fd, AsyncCall::Pointer &call)
 //        assert(c->handler != handler || c->data != data);
 
     call->setNext(fd_table[fd].closeHandler);
-    if (!call->codeContext)
-        call->codeContext = CodeContext::Current();
+
     fd_table[fd].closeHandler = call;
 }
 
