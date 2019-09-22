@@ -922,15 +922,18 @@ htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, Ip::Address &from)
 ScopedId
 htcpSpecifier::codeContextGist() const
 {
-    if (al)
-        return al->codeContextGist();
+    if (al) {
+        const auto gist = al->codeContextGist();
+        if (gist.value)
+            return gist;
+    }
 
     if (request) {
         if (const auto &mx = request->masterXaction)
             return mx->id.detach();
     }
 
-    return ScopedId();
+    return ScopedId("HTCP w/o master");
 }
 
 std::ostream &

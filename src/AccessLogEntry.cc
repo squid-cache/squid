@@ -127,7 +127,8 @@ AccessLogEntry::codeContextGist() const
         if (const auto &mx = request->masterXaction)
             return mx->id.detach();
     }
-    return ScopedId();
+    // TODO: Carefully merge ALE and MasterXaction.
+    return ScopedId("ALE w/o master");
 }
 
 std::ostream &

@@ -19,23 +19,26 @@ class ScopedId
 {
 public:
     ScopedId(): scope(nullptr), value(0) {}
-    ScopedId(const char *s, uint64_t v): scope(s), value(v) {}
+    explicit ScopedId(const char *s): scope(s), value(0) {}
+    // when the values is zero/unknown, use other constructors
+    ScopedId(const char *s, uint64_t v): scope(s), value(v) { /* assert(value) */ }
 
-    /// whether the ID is "set" or "known"; the scope part does not matter
-    explicit operator bool() const { return value; }
-
-    /// the prefix() of the InstanceId object that we were detached from
+    /// either the prefix() of the InstanceId object that we were detached from
+    /// or, for 0 values, some other description (with endless lifetime) or nil
     const char *scope;
 
-    /// the value of the InstanceId object that we were detached from
+    /// either the value of the InstanceId object that we were detached from
+    /// or, if our creator did not know the exact value, zero
     uint64_t value;
 };
 
 inline std::ostream&
 operator <<(std::ostream &os, const ScopedId &id)
 {
-    if (id)
+    if (id.value)
         os << id.scope << id.value;
+    else if (id.scope)
+        os << id.scope;
     else
         os << "[unknown]";
     return os;
