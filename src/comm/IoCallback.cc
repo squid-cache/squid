@@ -63,6 +63,9 @@ Comm::IoCallback::setCallback(Comm::iocb_type t, AsyncCall::Pointer &cb, char *b
     freefunc = f;
     size = sz;
     offset = 0;
+
+    if (!callback->codeContext)
+        callback->codeContext = CodeContext::Current(); // may be nil
 }
 
 void

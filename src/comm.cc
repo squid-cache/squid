@@ -735,6 +735,7 @@ commCallCloseHandlers(int fd)
     }
 }
 
+// XXX: This code has been broken, unused, and untested since 933dd09. Remove.
 #if LINGERING_CLOSE
 static void
 commLingerClose(int fd, void *unused)
@@ -774,6 +775,8 @@ comm_lingering_close(int fd)
     debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
     assert(fd_table[fd].flags.open);
     if (callback != NULL) {
+        if (!callback->codeContext)
+            callback->codeContext = CodeContext::Current();
         typedef FdeCbParams Params;
         Params &params = GetCommParams<Params>(callback);
         params.fd = fd;
@@ -837,6 +840,7 @@ comm_close_complete(const FdeCbParams &params)
     ++ statCounter.syscalls.sock.closes;
 
     /* When one connection closes, give accept() a chance, if need be */
+    CodeContext::Reset(); // switch from an FD-specific context
     Comm::AcceptLimiter::Instance().kick();
 }
 
@@ -866,8 +870,6 @@ _comm_close(int fd, char const *file, int line)
     if ( (shutting_down || reconfiguring) && (!F->flags.open || F->type == FD_FILE))
         return;
 
-    // TODO: CodeContext::Reset(F->codeContext) but only if it is set;
-    // and cleanup on unexceptional exit.
 
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
     if (!isOpen(fd)) {
@@ -881,6 +883,11 @@ _comm_close(int fd, char const *file, int line)
     PROF_start(comm_close);
 
     F->flags.close_request = true;
+
+    // We have caller's context and fde::codeContext. In the unlikely event they
+    // differ, it is not clear which context is more applicable to this closure.
+    // For simplicity sake, we remain in the caller's context while still
+    // allowing individual advanced callbacks to overwrite it.
 
     if (F->ssl) {
         AsyncCall::Pointer startCall=commCbCall(5,4, "commStartTlsClose",
@@ -984,7 +991,8 @@ comm_add_close_handler(int fd, AsyncCall::Pointer &call)
 //        assert(c->handler != handler || c->data != data);
 
     call->setNext(fd_table[fd].closeHandler);
-
+    if (!call->codeContext)
+        call->codeContext = CodeContext::Current();
     fd_table[fd].closeHandler = call;
 }
 
