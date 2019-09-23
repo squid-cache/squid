@@ -233,8 +233,11 @@ private:
 
     void usePinned();
 
-    /// callback handler after connection setup (including any encryption)
-    void connectedToPeer(Security::EncryptorAnswer &answer);
+    /// callback handler for the Security::PeerConnector encryptor
+    void noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answer);
+
+    /// called after connection setup (including any encryption)
+    void connectedToPeer(const Comm::ConnectionPointer &conn);
 
     /// details of the "last tunneling attempt" failure (if it failed)
     ErrorState *savedError = nullptr;
@@ -1014,20 +1017,19 @@ TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
         if (p->secure.encryptTransport) {
             AsyncCall::Pointer callback = asyncCall(5,4,
                                                     "TunnelStateData::ConnectedToPeer",
-                                                    MyAnswerDialer(&TunnelStateData::connectedToPeer, this));
+                                                    MyAnswerDialer(&TunnelStateData::noteSecurityPeerConnectorAnswer, this));
             auto *connector = new Security::BlindPeerConnector(request, conn, callback, al);
             AsyncJob::Start(connector); // will call our callback
             return;
         }
     }
 
-    Security::EncryptorAnswer nil;
-    nil.conn = conn;
-    connectedToPeer(nil);
+    connectedToPeer(conn);
 }
 
+    /// callback handler for the connection encryptor
 void
-TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
+TunnelStateData::noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answer)
 {
     if (ErrorState *error = answer.error.get()) {
         answer.error.clear(); // sendError() will own the error
@@ -1035,12 +1037,18 @@ TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
         return;
     }
 
+    connectedToPeer(answer.conn);
+}
+
+void
+TunnelStateData::connectedToPeer(const Comm::ConnectionPointer &conn)
+{
     assert(!waitingForConnectExchange);
 
     AsyncCall::Pointer callback = asyncCall(5,4,
                                             "TunnelStateData::tunnelEstablishmentDone",
                                             Http::Tunneler::CbDialer<TunnelStateData>(&TunnelStateData::tunnelEstablishmentDone, this));
-    const auto tunneler = new Http::Tunneler(answer.conn, request, callback, Config.Timeout.lifetime, al);
+    const auto tunneler = new Http::Tunneler(conn, request, callback, Config.Timeout.lifetime, al);
 #if USE_DELAY_POOLS
     tunneler->setDelayId(server.delayId);
 #endif
