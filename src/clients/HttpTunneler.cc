@@ -396,7 +396,8 @@ void
 Http::Tunneler::callBack()
 {
     debugs(83, 5, connection << status());
-    answer().conn = connection;
+    if (answer().positive())
+        answer().conn = connection;
     auto cb = callback;
     callback = nullptr;
     ScheduleCallHere(cb);
