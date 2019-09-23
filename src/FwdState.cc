@@ -843,9 +843,6 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 
     // TODO: Reuse to-peer connections after a CONNECT error response.
 
-    if (const auto peer = serverConnection()->getPeer())
-        peerConnectFailed(peer);
-
     const auto error = answer.squidError.get();
     Must(error);
     answer.squidError.clear(); // preserve error for fail()
