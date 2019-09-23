@@ -32,7 +32,8 @@ Http::operator <<(std::ostream &os, const TunnelerAnswer &answer)
     if (answer.peerResponseStatus != Http::scNone)
         os << ' ' << answer.peerResponseStatus;
 
-    os << ' ' << answer.conn;
+    if (answer.conn)
+        os << ' ' << answer.conn;
 
     os << ']';
     return os;
