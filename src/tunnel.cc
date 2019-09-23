@@ -779,6 +779,11 @@ static void
 tunnelStartShoveling(TunnelStateData *tunnelState)
 {
     assert(!tunnelState->waitingForConnectExchange);
+    assert(tunnelState->server.conn);
+    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
+                                     CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
+    commSetConnTimeout(tunnelState->server.conn, Config.Timeout.read, timeoutCall);
+
     *tunnelState->status_ptr = Http::scOkay;
     if (tunnelState->logTag_ptr)
         tunnelState->logTag_ptr->update(LOG_TCP_TUNNEL);
@@ -873,9 +878,6 @@ TunnelStateData::notePeerReadyToShovel(const Comm::ConnectionPointer &conn)
     server.conn = conn;
     // Start monitoring for server-side connection problems
     comm_add_close_handler(server.conn->fd, tunnelServerClosed, this);
-    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
-                                     CommTimeoutCbPtrFun(tunnelTimeout, this));
-    commSetConnTimeout(server.conn, Config.Timeout.read, timeoutCall);
 
     if (!clientExpectsConnectResponse())
         tunnelStartShoveling(this); // ssl-bumped connection, be quiet
@@ -1286,10 +1288,6 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
         request->prepForPeering(*peer);
     else
         request->prepForDirect();
-
-    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
-                                     CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
-    commSetConnTimeout(srvConn, Config.Timeout.read, timeoutCall);
 
     // we drain any already buffered from-server data below (rBufData)
     fd_table[srvConn->fd].useDefaultIo();
