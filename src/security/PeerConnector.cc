@@ -86,7 +86,6 @@ Security::PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &)
     auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al);
     err->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
     bail(err);
-    mustStop("Timedout");
 }
 
 void
@@ -96,7 +95,6 @@ Security::PeerConnector::connectionClosed(const char *reason)
     auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
     err->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
     bail(err);
-    mustStop(reason);
 }
 
 bool
