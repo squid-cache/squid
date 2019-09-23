@@ -1013,12 +1013,12 @@ tunnelStart(ClientHttpRequest * http)
 void
 TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 {
-    if (CachePeer *p = conn->getPeer()) {
+    if (const auto *p = conn->getPeer()) {
         if (p->secure.encryptTransport) {
             AsyncCall::Pointer callback = asyncCall(5,4,
                                                     "TunnelStateData::ConnectedToPeer",
                                                     MyAnswerDialer(&TunnelStateData::noteSecurityPeerConnectorAnswer, this));
-            auto *connector = new Security::BlindPeerConnector(request, conn, callback, al);
+            const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
             AsyncJob::Start(connector); // will call our callback
             return;
         }

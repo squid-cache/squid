@@ -561,7 +561,7 @@ Security::PeerConnector::bail(ErrorState *error)
     Must(dialer);
     dialer->answer().error = error;
 
-    if (CachePeer *p = serverConnection()->getPeer())
+    if (auto *p = serverConnection()->getPeer())
         peerConnectFailed(p);
 
     callBack();

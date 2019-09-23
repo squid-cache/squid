@@ -779,7 +779,7 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
     }
 
     // Check if we need to TLS before use
-    if (const CachePeer *peer = conn->getPeer()) {
+    if (const auto *peer = conn->getPeer()) {
         // Assume that it is only possible for the client-first from the
         // bumping modes to try connect to a remote server. The bumped
         // requests with other modes are using pinned connections or fails.
