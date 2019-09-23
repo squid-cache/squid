@@ -807,7 +807,7 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
                                             Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
     HttpRequest::Pointer requestPointer = request;
     const auto tunneler = new Http::Tunneler(conn, requestPointer, callback, connectingTimeout(serverConnection()), al);
-    tunneler->usesPconn_ = true;
+    tunneler->usesPconn_ = true; // TODO: Replace this hack with proper Connection-Pool association
 #if USE_DELAY_POOLS
     Must(serverConnection()->getPeer());
     if (!serverConnection()->getPeer()->options.no_delay)
