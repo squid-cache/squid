@@ -89,7 +89,6 @@ void
 Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &params)
 {
     bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
-    mustStop("server connection gone");
 }
 
 /// make sure we quit if/when the connection is gone
@@ -112,7 +111,6 @@ void
 Http::Tunneler::handleTimeout(const CommTimeoutCbParams &)
 {
     bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al));
-    mustStop("server connection timedout");
 }
 
 void
