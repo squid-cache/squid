@@ -116,12 +116,12 @@ HttpReply::pack() const
     return mb;
 }
 
-HttpReply *
+HttpReplyPointer
 HttpReply::make304() const
 {
     static const Http::HdrType ImsEntries[] = {Http::HdrType::DATE, Http::HdrType::CONTENT_TYPE, Http::HdrType::EXPIRES, Http::HdrType::LAST_MODIFIED, /* eof */ Http::HdrType::OTHER};
 
-    HttpReply *rv = new HttpReply;
+    HttpReplyPointer rv(new HttpReply);
     int t;
     HttpHeaderEntry *e;
 
@@ -151,9 +151,8 @@ HttpReply::packed304Reply() const
     /* Not as efficient as skipping the header duplication,
      * but easier to maintain
      */
-    HttpReply *temp = make304();
+    auto temp = make304();
     MemBuf *rv = temp->pack();
-    delete temp;
     return rv;
 }
 

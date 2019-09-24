@@ -728,7 +728,7 @@ StoreEntry::adjustVary()
             throw TexcHere("failed to make Vary marker public");
         }
         /* We are allowed to do this typecast */
-        HttpReply *rep = new HttpReply;
+        HttpReplyPointer rep(new HttpReply);
         rep->setHeaders(Http::scOkay, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
         auto vary = reply.header.getList(Http::HdrType::VARY);
 
@@ -1683,26 +1683,11 @@ StoreEntry::flush()
     }
 }
 
-int64_t
-StoreEntry::objectLen() const
-{
-    assert(mem_obj != NULL);
-    return mem_obj->object_sz;
-}
-
-int64_t
-StoreEntry::contentLen() const
-{
-    assert(mem_obj != NULL);
-    return objectLen() - mem_obj->baseReply().hdr_sz;
-}
-
 void
 StoreEntry::reset()
 {
-    assert (mem_obj);
     debugs(20, 3, url());
-    mem_obj->reset();
+    mem().reset();
     expires = lastModified_ = timestamp = -1;
 }
 
@@ -1791,7 +1776,7 @@ StoreEntry::storeErrorResponse(HttpReply *reply)
 {
     lock("StoreEntry::storeErrorResponse");
     buffer();
-    replaceHttpReply(reply);
+    replaceHttpReply(HttpReplyPointer(reply));
     flush();
     complete();
     negativeCache();
@@ -1804,7 +1789,7 @@ StoreEntry::storeErrorResponse(HttpReply *reply)
  * a new reply. This eats the reply.
  */
 void
-StoreEntry::replaceHttpReply(HttpReply *rep, bool andStartWriting)
+StoreEntry::replaceHttpReply(const HttpReplyPointer &rep, const bool andStartWriting)
 {
     debugs(20, 3, "StoreEntry::replaceHttpReply: " << url());
 
@@ -1813,7 +1798,7 @@ StoreEntry::replaceHttpReply(HttpReply *rep, bool andStartWriting)
         return;
     }
 
-    mem_obj->replaceBaseReply(HttpReplyPointer(rep));
+    mem_obj->replaceBaseReply(rep);
 
     if (andStartWriting)
         startWriting();

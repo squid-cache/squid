@@ -64,10 +64,7 @@ public:
      * \retval false  Store contains 1 or more bytes of data.
      * \retval false  Store contains negative content !!!!!!
      */
-    bool isEmpty() const {
-        assert (mem_obj);
-        return mem_obj->endOffset() == 0;
-    }
+    bool isEmpty() const { return mem().endOffset() == 0; }
     bool isAccepting() const;
     size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const;
     /// flags [truncated or too big] entry with ENTRY_BAD_LENGTH and releases it
@@ -78,7 +75,7 @@ public:
     const char *getSerialisedMetaData(size_t &length) const;
     /// Store a prepared error response. MemObject locks the reply object.
     void storeErrorResponse(HttpReply *reply);
-    void replaceHttpReply(HttpReply *, bool andStartWriting = true);
+    void replaceHttpReply(const HttpReplyPointer &, const bool andStartWriting = true);
     void startWriting(); ///< pack and write reply headers and, maybe, body
     /// whether we may start writing to disk (now or in the future)
     bool mayStartSwapOut();
@@ -248,8 +245,8 @@ public:
 
     ESIElement::Pointer cachedESITree;
 #endif
-    int64_t objectLen() const;
-    int64_t contentLen() const;
+    int64_t objectLen() const { return mem().object_sz; }
+    int64_t contentLen() const { return objectLen() - mem().baseReply().hdr_sz; }
 
     /// claim shared ownership of this entry (for use in a given context)
     /// matching lock() and unlock() contexts eases leak triage but is optional

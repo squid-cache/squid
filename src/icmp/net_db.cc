@@ -737,7 +737,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
         if ((hdr_sz = headersEnd(p, ex->buf_ofs))) {
             debugs(38, 5, "netdbExchangeHandleReply: hdr_sz = " << hdr_sz);
-            const auto scode = ex->e->mem().freshestReply().sline.status();
+            const auto scode = ex->e->mem().baseReply().sline.status();
             assert(scode != Http::scNone);
             debugs(38, 3, "netdbExchangeHandleReply: reply status " << scode);
 

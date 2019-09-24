@@ -110,7 +110,7 @@ public:
         Out() : offset(0), size(0), headers_sz(0) {}
 
         /// Roughly speaking, this offset points to the next body byte we want
-        /// to receive from Core. Without Ranges (and I/O errors), we should
+        /// to receive from Store. Without Ranges (and I/O errors), we should
         /// have received (and written to the client) all the previous bytes.
         /// XXX: The offset is updated by various receive-write steps, making
         /// its exact meaning illusive. Its Out class placement is confusing.

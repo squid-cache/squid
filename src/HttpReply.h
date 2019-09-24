@@ -84,7 +84,7 @@ public:
     MemBuf *pack() const;
 
     /** construct a 304 reply and return it */
-    HttpReply *make304() const;
+    HttpReplyPointer make304() const;
 
     void redirect(Http::StatusCode, const char *);
 

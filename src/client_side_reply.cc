@@ -778,7 +778,7 @@ clientReplyContext::processMiss()
         triggerInitialStoreRead();
 
         if (http->redirect.status) {
-            HttpReply *rep = new HttpReply;
+            HttpReplyPointer rep(new HttpReply);
             http->logType.update(LOG_TCP_REDIRECT);
             http->storeEntry()->releaseRequest();
             rep->redirect(http->redirect.status, http->redirect.location);
@@ -1114,7 +1114,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
     triggerInitialStoreRead();
 
-    HttpReply *rep = new HttpReply;
+    HttpReplyPointer rep(new HttpReply);
     rep->setHeaders(purgeStatus, NULL, NULL, 0, 0, -1);
     http->storeEntry()->replaceHttpReply(rep);
     http->storeEntry()->complete();
@@ -1133,7 +1133,7 @@ clientReplyContext::traceReply(clientStreamNode * node)
                     localTempBuffer, SendMoreData, this);
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
-    HttpReply *rep = new HttpReply;
+    HttpReplyPointer rep(new HttpReply);
     rep->setHeaders(Http::scOkay, NULL, "text/plain", http->request->prefixLen(), 0, squid_curtime);
     http->storeEntry()->replaceHttpReply(rep);
     http->request->swapOut(http->storeEntry());
@@ -1211,7 +1211,7 @@ clientReplyContext::storeNotOKTransferDone() const
 
     // XXX: The code below talks about sending data, and checks stats about
     // bytes written to the client connection, but this method must determine
-    // whether we are done _receiving_ data from Core. This code should work OK
+    // whether we are done _receiving_ data from Store. This code should work OK
     // when expectedBodySize is unknown or matches written data, but it may
     // malfunction when we are writing ranges while receiving a full response.
 
@@ -1997,7 +1997,7 @@ clientReplyContext::sendNotModified()
 {
     StoreEntry *e = http->storeEntry();
     const time_t timestamp = e->timestamp;
-    std::unique_ptr<HttpReply> temprep(e->mem().freshestReply().make304());
+    auto temprep = e->mem().freshestReply().make304();
     // log as TCP_INM_HIT if code 304 generated for
     // If-None-Match request
     if (!http->request->flags.ims)
@@ -2011,7 +2011,7 @@ clientReplyContext::sendNotModified()
     // reply has a meaningful Age: header.
     e->timestampsSet();
     e->timestamp = timestamp;
-    e->replaceHttpReply(temprep.release());
+    e->replaceHttpReply(temprep);
     e->complete();
     /*
      * TODO: why put this in the store and then serialise it and

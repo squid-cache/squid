@@ -65,7 +65,6 @@ public:
 
     /// \returns the updated-by-304(s) response (if it exists)
     /// \returns baseReply() (otherwise)
-    /// Requires mem_obj.
     const HttpReply &freshestReply() const {
         if (updatedReply_)
             return *updatedReply_;

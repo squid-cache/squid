@@ -80,7 +80,7 @@ public:
     virtual LogTags *loggingTags();
 
     ClientHttpRequest *http;
-    /// Base reply header bytes received from Core.
+    /// Base reply header bytes received from Store.
     /// Compatible with ClientHttpRequest::Out::offset.
     /// Not to be confused with ClientHttpRequest::Out::headers_sz.
     int headers_sz;
