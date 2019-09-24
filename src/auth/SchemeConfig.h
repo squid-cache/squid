@@ -47,7 +47,7 @@ class SchemeConfig
 {
 
 public:
-    static UserRequest::Pointer CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al);
+    static UserRequest::Pointer CreateAuthUser(const char *proxy_auth, char const *accept_lang, AccessLogEntry::Pointer &al);
 
     static SchemeConfig *Find(const char *proxy_auth);
     /// Call this method if you need a guarantee that all auth schemes has been
@@ -73,9 +73,10 @@ public:
      * authentication in Auth::UserRequest::authenticate().
      *
      \param proxy_auth  Login Pattern to parse.
+     \param accept_lang Accept-Language header.
      \retval *      Details needed to authenticate.
      */
-    virtual UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm) = 0;
+    virtual UserRequest::Pointer decode(char const *proxy_auth, char const *accept_lang, const char *requestRealm) = 0;
 
     /**
      * squid is finished with this config, release any unneeded resources.

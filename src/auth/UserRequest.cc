@@ -351,7 +351,9 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
             /* beginning of a new request check */
             debugs(29, 4, HERE << "No connection authentication type");
 
-            *auth_user_request = Auth::SchemeConfig::CreateAuthUser(proxy_auth, al);
+	    String str = request->header.getStrOrList(Http::HdrType::ACCEPT_LANGUAGE);
+
+            *auth_user_request = Auth::SchemeConfig::CreateAuthUser(proxy_auth, str.termedBuf(), al);
             if (*auth_user_request == NULL)
                 return AUTH_ACL_CHALLENGE;
             else if (!(*auth_user_request)->valid()) {

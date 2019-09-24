@@ -29,7 +29,7 @@
  * It may also be NULL reflecting that no user could be created.
  */
 Auth::UserRequest::Pointer
-Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al)
+Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, char const *accept_lang, AccessLogEntry::Pointer &al)
 {
     assert(proxy_auth != NULL);
     debugs(29, 9, HERE << "header = '" << proxy_auth << "'");
@@ -51,7 +51,7 @@ Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Point
         config->keyExtras->assemble(rmb, al, 0);
     }
 
-    return config->decode(proxy_auth, rmb.hasContent() ? rmb.content() : NULL);
+    return config->decode(proxy_auth, accept_lang, rmb.hasContent() ? rmb.content() : NULL);
 }
 
 Auth::SchemeConfig *

@@ -219,8 +219,36 @@ isLegalUTF8String(const char *source, const char *sourceEnd) {
     return true;
 }
 
+/*
+ * Parse Accept-Language header and return whether a CP1251 encoding
+ * allowed or not.
+ */
+static bool
+isCP1251EncodingAllowed(const char *httpLangHeader)
+{
+    if (httpLangHeader == NULL)
+        return false;
+
+    const char *p = httpLangHeader;
+
+    while (*p) {
+	if ((strncmp(p, "ru", 2) == 0
+	     || strncmp(p, "uk", 2) == 0)
+	    && !xisalpha(p[2]))
+	    return true;
+
+	if ((p = strchr(p, ',')) == NULL)
+	    break;
+
+        for (; *p && !xisalpha(*p); ++p)
+	    ;
+    }
+
+    return false;
+}
+
 char *
-Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
+Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const char *httpLangHeader)
 {
     const char *proxy_auth = httpAuthHeader;
 
@@ -249,7 +277,12 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
 
 	if (!isLegalUTF8String(cleartext, cleartext + dstLen)) {
 	    char buf[HELPER_INPUT_BUFFER];
-	    latin1_to_utf8(buf, sizeof(buf), cleartext);
+
+	    if (isCP1251EncodingAllowed(httpLangHeader))
+	        cp1251_to_utf8(buf, sizeof(buf), cleartext);
+	    else
+	        latin1_to_utf8(buf, sizeof(buf), cleartext);
+
             safe_free(cleartext);
 	    cleartext = xstrdup(buf);
 	}
@@ -281,13 +314,13 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
  * descriptive message to the user.
  */
 Auth::UserRequest::Pointer
-Auth::Basic::Config::decode(char const *proxy_auth, const char *aRequestRealm)
+Auth::Basic::Config::decode(char const *proxy_auth, char const *accept_lang, const char *aRequestRealm)
 {
     Auth::UserRequest::Pointer auth_user_request = dynamic_cast<Auth::UserRequest*>(new Auth::Basic::UserRequest);
     /* decode the username */
 
     // retrieve the cleartext (in a dynamically allocated char*)
-    char *cleartext = decodeCleartext(proxy_auth);
+    char *cleartext = decodeCleartext(proxy_auth, accept_lang);
 
     // empty header? no auth details produced...
     if (!cleartext)

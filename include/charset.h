@@ -17,5 +17,13 @@ extern
 
 char *latin1_to_utf8(char *out, size_t size, const char *in);
 
+#ifdef __cplusplus
+extern "C"
+#else
+extern
+#endif
+
+char *cp1251_to_utf8(char *out, size_t size, const char *in);
+
 #endif /* _SQUID_CHARSET_H */
 
