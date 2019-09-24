@@ -167,7 +167,9 @@ public:
                                                 connection, whereas nfmarkToServer is the value to set on packets
                                                 *leaving* Squid.   */
 
-    // TODO: Separate readerContext from writerContext for pipelining users.
+    // TODO: Remove: Auto-convert legacy SetSelect() callers to AsyncCalls like
+    // comm_add_close_handler(CLCB) does, making readMethod_/writeMethod_
+    // AsyncCalls and giving each read/write a dedicated context instead.
     /// What the I/O handlers are supposed to work on.
     CodeContextPointer codeContext;
 

@@ -836,7 +836,7 @@ comm_close_complete(const FdeCbParams &params)
     ++ statCounter.syscalls.sock.closes;
 
     /* When one connection closes, give accept() a chance, if need be */
-    CodeContext::Reset(); // switch from an FD-specific context
+    CodeContext::Reset(); // exit FD-specific context
     Comm::AcceptLimiter::Instance().kick();
 }
 
