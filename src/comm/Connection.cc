@@ -171,9 +171,9 @@ std::ostream &
 operator << (std::ostream &os, const Comm::Connection &conn)
 {
     os << conn.id;
-    if (!conn.local.isNoAddr())
+    if (!conn.local.isNoAddr() || conn.local.port())
         os << " local=" << conn.local;
-    if (!conn.remote.isNoAddr())
+    if (!conn.remote.isNoAddr() || conn.remote.port())
         os << " remote=" << conn.remote;
     if (conn.peerType)
         os << ' ' << hier_code_str[conn.peerType];
