@@ -146,7 +146,11 @@ uriParseScheme(Parser::Tokenizer &tok)
      * The underscore ("_") required to match "cache_object://" squid
      * special URI scheme.
      */
-    static const auto schemeChars = CharacterSet("scheme", "+.-") + CharacterSet("special", "_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+    static const auto schemeChars =
+#if USE_HTTP_VIOLATIONS
+        CharacterSet("special", "_") +
+#endif
+        CharacterSet("scheme", "+.-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
 
     SBuf str;
     if (tok.prefix(str, schemeChars, 16) && tok.skip(':') && CharacterSet::ALPHA[str.at(0)]) {
