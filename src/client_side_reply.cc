@@ -778,7 +778,7 @@ clientReplyContext::processMiss()
         triggerInitialStoreRead();
 
         if (http->redirect.status) {
-            HttpReplyPointer rep(new HttpReply);
+            const HttpReplyPointer rep(new HttpReply);
             http->logType.update(LOG_TCP_REDIRECT);
             http->storeEntry()->releaseRequest();
             rep->redirect(http->redirect.status, http->redirect.location);
@@ -1114,7 +1114,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
     triggerInitialStoreRead();
 
-    HttpReplyPointer rep(new HttpReply);
+    const HttpReplyPointer rep(new HttpReply);
     rep->setHeaders(purgeStatus, NULL, NULL, 0, 0, -1);
     http->storeEntry()->replaceHttpReply(rep);
     http->storeEntry()->complete();
@@ -1133,7 +1133,7 @@ clientReplyContext::traceReply(clientStreamNode * node)
                     localTempBuffer, SendMoreData, this);
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
-    HttpReplyPointer rep(new HttpReply);
+    const HttpReplyPointer rep(new HttpReply);
     rep->setHeaders(Http::scOkay, NULL, "text/plain", http->request->prefixLen(), 0, squid_curtime);
     http->storeEntry()->replaceHttpReply(rep);
     http->request->swapOut(http->storeEntry());
@@ -1997,7 +1997,7 @@ clientReplyContext::sendNotModified()
 {
     StoreEntry *e = http->storeEntry();
     const time_t timestamp = e->timestamp;
-    auto temprep = e->mem().freshestReply().make304();
+    const auto temprep = e->mem().freshestReply().make304();
     // log as TCP_INM_HIT if code 304 generated for
     // If-None-Match request
     if (!http->request->flags.ims)

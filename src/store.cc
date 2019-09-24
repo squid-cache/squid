@@ -728,7 +728,7 @@ StoreEntry::adjustVary()
             throw TexcHere("failed to make Vary marker public");
         }
         /* We are allowed to do this typecast */
-        HttpReplyPointer rep(new HttpReply);
+        const HttpReplyPointer rep(new HttpReply);
         rep->setHeaders(Http::scOkay, "Internal marker object", "x-squid-internal/vary", -1, -1, squid_curtime + 100000);
         auto vary = reply.header.getList(Http::HdrType::VARY);
 
