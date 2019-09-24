@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "anyp/PortCfg.h"
-#include "base/CodeContext.h"
 #include "base/TextException.h"
 #include "client_db.h"
 #include "comm/AcceptLimiter.h"
@@ -38,21 +37,6 @@
 // required for accept_filter to build.
 #include <netinet/tcp.h>
 #endif
-
-/// Executes context `creator` in the service context. If an exception occurs,
-/// the creator context is preserved, so that the exception is associated with
-/// the creator that triggered them (rather than with the service).
-///
-/// Service code running in its own context should use this function to create
-/// new code contexts. TODO: Use or, if this pattern is not repeated, remove.
-template <typename Fun>
-inline void
-CallContextCreator(Fun &&creator)
-{
-    const auto savedCodeContext(CodeContext::Current());
-    creator();
-    CodeContext::Reset(savedCodeContext);
-}
 
 CBDATA_NAMESPACED_CLASS_INIT(Comm, TcpAcceptor);
 

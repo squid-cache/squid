@@ -12,7 +12,6 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
-#include "base/CodeContext.h"
 #include "CachePeer.h"
 #include "comm.h"
 #include "comm/Connection.h"

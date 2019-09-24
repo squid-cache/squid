@@ -102,5 +102,20 @@ CallService(const CodeContext::Pointer &serviceContext, Fun &&service)
     service();
 }
 
+/// Executes context `creator` in the service context. If an exception occurs,
+/// the creator context is preserved, so that the exception is associated with
+/// the creator that triggered them (rather than with the service).
+///
+/// Service code running in its own context should use this function to create
+/// new code contexts. TODO: Use or, if this pattern is not repeated, remove.
+template <typename Fun>
+inline void
+CallContextCreator(Fun &&creator)
+{
+    const auto savedCodeContext(CodeContext::Current());
+    creator();
+    CodeContext::Reset(savedCodeContext);
+}
+
 #endif
 
