@@ -47,7 +47,7 @@ class SchemeConfig
 {
 
 public:
-    static UserRequest::Pointer CreateAuthUser(const char *proxy_auth, char const *accept_lang, AccessLogEntry::Pointer &al);
+    static UserRequest::Pointer CreateAuthUser(const char *proxy_auth, AccessLogEntry::Pointer &al);
 
     static SchemeConfig *Find(const char *proxy_auth);
     /// Call this method if you need a guarantee that all auth schemes has been
