@@ -50,7 +50,7 @@ strListIsMember(const String * list, const SBuf &m, char del)
 }
 
 bool
-strListIsMember_if(const String *list, char del, MemberFilter filter)
+strListIsMember_if(const String *list, const char del, const MemberFilter filter)
 {
     const char *pos = NULL;
     const char *item;

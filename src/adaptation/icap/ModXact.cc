@@ -1614,7 +1614,7 @@ Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *section,
     // TODO: modify HttpHeader::removeHopByHopEntries to accept a list of
     // excluded hop-by-hop headers
     if (head->header.has(Http::HdrType::UPGRADE)) {
-        auto upgrade = head->header.getList(Http::HdrType::UPGRADE);
+        const auto upgrade = head->header.getList(Http::HdrType::UPGRADE);
         headClone->header.putStr(Http::HdrType::UPGRADE, upgrade.termedBuf());
     }
 
