@@ -42,7 +42,7 @@ ACLAtStepData::~ACLAtStepData()
 bool
 ACLAtStepData::match(XactionStep toFind)
 {
-    auto found = std::find(values.cbegin(), values.cend(), toFind);
+    const auto found = std::find(values.cbegin(), values.cend(), toFind);
     return (found != values.cend());
 }
 
