@@ -254,6 +254,7 @@ Ssl::PeekingPeerConnector::startTunneling()
 {
     // Replace with the raw socket io methods
     fd_table[serverConn->fd].useDefaultIo();
+    fd_table[clientConn->fd].useDefaultIo();
 
     Security::SessionPointer session(fd_table[serverConn->fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
