@@ -2378,8 +2378,10 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         else if (hdr.has(Http::HdrType::AUTHORIZATION))
             request->flags.authSent = true;
 
-        if (hdr.has(Http::HdrType::UPGRADE))
+        if (hdr.has(Http::HdrType::UPGRADE)) {
+            assert(!upgradeHeaderOut);
             upgradeHeaderOut = new String(hdr.getList(Http::HdrType::UPGRADE));
+        }
 
         hdr.packInto(mb);
         hdr.clean();
