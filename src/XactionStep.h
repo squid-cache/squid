@@ -21,3 +21,4 @@ typedef enum {
 } XactionStep;
 
 #endif /* SQUID_XACTIONSTEPS_H */
+

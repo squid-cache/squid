@@ -18,9 +18,9 @@
 #endif
 
 int
-ACLAtStepStrategy::match (ACLData<XactionStep> * &data, ACLFilledChecklist *checklist)
+ACLAtStepStrategy::match(ACLData<XactionStep> * &data, ACLFilledChecklist *checklist)
 {
-    #if USE_OPENSSL
+#if USE_OPENSSL
     Ssl::ServerBump *bump = NULL;
     if (checklist->conn() != NULL && (bump = checklist->conn()->serverBump()))
         return data->match(bump->step);
@@ -42,3 +42,4 @@ ACLAtStepStrategy::match (ACLData<XactionStep> * &data, ACLFilledChecklist *chec
 
     return 0;
 }
+

@@ -13,13 +13,12 @@
 #include "XactionStep.h"
 
 /// \ingroup ACLAPI
-class ACLAtStepStrategy : public ACLStrategy<XactionStep>
+class ACLAtStepStrategy: public ACLStrategy<XactionStep>
 {
 
 public:
     virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *) override;
 };
-
 
 #endif /* SQUID_ACLATSTEP_H */
 
