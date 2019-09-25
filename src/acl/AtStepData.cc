@@ -15,13 +15,15 @@
 #include "sbuf/Stream.h"
 #include "wordlist.h"
 
+// keep in sync with XactionStep
 const char *ACLAtStepData::AtStepValuesStr[] = {
+    "",
+    "GeneratingCONNECT",
 #if USE_OPENSSL
     "SslBump1",
     "SslBump2",
     "SslBump3",
 #endif
-    "GeneratingCONNECT",
     nullptr
 };
 
