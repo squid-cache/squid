@@ -150,11 +150,11 @@ private:
 
     /// Process an "101 Switching Protocols" reply.
     /// \return true if and only if we are going to switch the protocols
-    bool processSwitchingProtocols(const HttpReply *msg);
+    bool processSwitchingProtocols(const HttpReply *);
 
     /// Check if all of the protocols listed in the reply Upgrade header
     /// included in the HTTP request Upgrade header.
-    bool upgradeProtocolsSupported(const HttpReply *reply) const;
+    bool upgradeProtocolsSupported(const HttpReply *) const;
 
     /// Parser being used at present to parse the HTTP/ICY server response.
     Http1::ResponseParserPointer hp;
