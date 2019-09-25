@@ -553,7 +553,7 @@ AnyP::Uri::absolute() const
         absolute_.append(":",1);
         if (getScheme() != AnyP::PROTO_URN) {
             absolute_.append("//", 2);
-            const bool allowUserInfo = getScheme() == AnyP::PROTO_FTP ||
+            const auto allowUserInfo = getScheme() == AnyP::PROTO_FTP ||
                                        getScheme() == AnyP::PROTO_UNKNOWN;
 
             if (allowUserInfo && !userInfo().isEmpty()) {

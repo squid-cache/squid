@@ -383,9 +383,9 @@ void
 Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext scc)
 {
     Comm::ConnectionPointer serverConnection = scc.connection;
-    Http::StreamPointer context = pipeline.front();
+    const auto context = pipeline.front();
     assert(context != nullptr);
-    const ClientHttpRequest *http = context->http;
+    const auto http = context->http;
     assert(http->request == scc.request.getRaw());
     stopReading(); // Stop reading for more requests, tunnel code starts now
     switchToTunnel(scc.request.getRaw(), clientConnection, serverConnection, nullptr);

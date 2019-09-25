@@ -891,7 +891,7 @@ private:
 bool
 HttpStateData::upgradeProtocolsSupported(const HttpReply *reply) const
 {
-    const String upgradeProtos = reply->header.getList(Http::HdrType::UPGRADE);
+    const auto upgradeProtos = reply->header.getList(Http::HdrType::UPGRADE);
 
     if (!upgradeHeaderOut) {
         debugs(11, 2, "Upgrade to '" << upgradeProtos << "' is not requested");
@@ -902,11 +902,11 @@ HttpStateData::upgradeProtocolsSupported(const HttpReply *reply) const
     const char *item = nullptr;
     int ilen = 0;
     while (strListGetItem(&upgradeProtos, ',', &item, &ilen, &pos)) {
-        const auto *e = std::find(item, item + ilen, '/');
+        const auto e = std::find(item, item + ilen, '/');
         ilen = e - item; //Fix ilen to not include protocol version
         bool found = strListIsMember_if(upgradeHeaderOut, ',',
                                         [item, ilen](const char *check, int checkLen) {
-                                            const auto *chkE = std::find(check, check + checkLen, '/');
+                                            const auto chkE = std::find(check, check + checkLen, '/');
                                             checkLen = chkE - check; // base protocol name length
                                             return (ilen == checkLen && strncasecmp(item, check, checkLen) == 0);
                                         });
@@ -2110,7 +2110,7 @@ HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
     if (!Config.http_upgrade_protocols)
         return;
 
-    const String upgradeIn = hdr_in.getList(Http::HdrType::UPGRADE);
+    const auto upgradeIn = hdr_in.getList(Http::HdrType::UPGRADE);
     String upgradeOut;
     const char *pos = nullptr;
     const char *item = nullptr;
