@@ -36,8 +36,8 @@ strListAdd(String * str, const char *item, char del)
 int
 strListIsMember(const String * list, const SBuf &m, char del)
 {
-    const char *pos = NULL;
-    const char *item;
+    const char *pos = nullptr;
+    const char *item = nullptr;
     int ilen = 0;
 
     assert(list);

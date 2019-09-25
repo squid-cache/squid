@@ -899,8 +899,8 @@ HttpStateData::upgradeProtocolsSupported(const HttpReply *reply) const
     }
 
     const char *pos = nullptr;
-    const char *item;
-    int ilen;
+    const char *item = nullptr;
+    int ilen = 0;
     while (strListGetItem(&upgradeProtos, ',', &item, &ilen, &pos)) {
         const auto *e = std::find(item, item + ilen, '/');
         ilen = e - item; //Fix ilen to not include protocol version
