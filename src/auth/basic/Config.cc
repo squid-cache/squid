@@ -149,8 +149,13 @@ authenticateBasicStats(StoreEntry * sentry)
         basicauthenticators->packStatsInto(sentry, "Basic Authenticator Statistics");
 }
 
-inline size_t
-inlineUTF8SequenceLengthNonASCII(char b0)
+/*
+ * Returns the length of non ASCII UTF-8 sequence.
+ *
+ * \param b0 the first byte of UTF-8 sequence.
+ */
+static inline size_t
+utf8SequenceLengthNonASCII(char b0)
 {
     if ((b0 & 0xC0) != 0xC0)
         return 0;
@@ -163,10 +168,15 @@ inlineUTF8SequenceLengthNonASCII(char b0)
     return 0;
 }
 
-inline size_t
-inlineUTF8SequenceLength(char b0)
+/*
+ * Returns the length of UTF-8 sequence.
+ *
+ * \param b0 the first byte of UTF-8 sequence.
+ */
+static inline size_t
+utf8SequenceLength(char b0)
 {
-    return (b0 & 0x80) == 0 ? 1 : inlineUTF8SequenceLengthNonASCII(b0);
+    return (b0 & 0x80) == 0 ? 1 : utf8SequenceLengthNonASCII(b0);
 }
 
 /*
@@ -211,7 +221,7 @@ isLegalUTF8(const unsigned char* source, int length)
 static bool
 isLegalUTF8String(const char *source, const char *sourceEnd) {
     while (source != sourceEnd) {
-        int length = inlineUTF8SequenceLength(*source);
+        int length = utf8SequenceLength(*source);
         if (length > sourceEnd - source || !isLegalUTF8(reinterpret_cast<const unsigned char*>(source), length))
             return false;
         source += length;
