@@ -845,49 +845,6 @@ HttpStateData::handle1xx(HttpReply *reply)
     // for similar reasons without a 1xx response.
 }
 
-/// A protocol-comparing predicate for STL search algorithms.
-/// Helps to match a versioned reference protocol name to a
-/// name without version (for example the reference 'websocket/1.2'
-/// should match to 'websocket').
-class MatchProtocol
-{
-public:
-    explicit MatchProtocol(const char *s, size_t len) : reference(s), referenceLen(len) {
-        const char *end = std::find(reference, reference + referenceLen, '/');
-        referenceBaseLen = end - reference;
-    }
-
-    /// Operator to search in lists or vectors
-    bool operator() (const SBuf &checking) {
-        if (referenceIsVersioned()) {
-            const bool checkingIsVersioned = (checking.find('/') != SBuf::npos);
-            if (!checkingIsVersioned) {
-                return checking.length() == referenceBaseLen && checking.caseCmp(reference, referenceBaseLen) == 0;
-            }
-        }
-        return checking.length() == referenceLen && checking.caseCmp(reference, referenceLen) == 0;
-    }
-
-    /// Operator to search in std::maps or similar
-    template<typename T>
-    bool operator() (const std::pair<const SBuf, T> &checkingPair) {
-        return (*this)(checkingPair.first);
-    }
-
-private:
-    /// \return true if the reference protocol includes version info
-    bool referenceIsVersioned() { return (referenceBaseLen != referenceLen); }
-
-    const char *reference; ///< The reference protocol
-
-    /// The full length of reference protocol string, including the
-    /// version part
-    size_t referenceLen;
-
-    /// The length of reference protocol string without version part
-    size_t referenceBaseLen;
-};
-
 bool
 HttpStateData::upgradeProtocolsSupported(const HttpReply *reply) const
 {
@@ -2098,6 +2055,49 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     strConnection.clean();
 }
+
+/// A protocol-comparing predicate for STL search algorithms.
+/// Helps to match a versioned reference protocol name to a
+/// name without version (for example the reference 'websocket/1.2'
+/// should match to 'websocket').
+class MatchProtocol
+{
+public:
+    explicit MatchProtocol(const char *s, size_t len) : reference(s), referenceLen(len) {
+        const char *end = std::find(reference, reference + referenceLen, '/');
+        referenceBaseLen = end - reference;
+    }
+
+    /// Operator to search in lists or vectors
+    bool operator() (const SBuf &checking) {
+        if (referenceIsVersioned()) {
+            const bool checkingIsVersioned = (checking.find('/') != SBuf::npos);
+            if (!checkingIsVersioned) {
+                return checking.length() == referenceBaseLen && checking.caseCmp(reference, referenceBaseLen) == 0;
+            }
+        }
+        return checking.length() == referenceLen && checking.caseCmp(reference, referenceLen) == 0;
+    }
+
+    /// Operator to search in std::maps or similar
+    template<typename T>
+    bool operator() (const std::pair<const SBuf, T> &checkingPair) {
+        return (*this)(checkingPair.first);
+    }
+
+private:
+    /// \return true if the reference protocol includes version info
+    bool referenceIsVersioned() { return (referenceBaseLen != referenceLen); }
+
+    const char *reference; ///< The reference protocol
+
+    /// The full length of reference protocol string, including the
+    /// version part
+    size_t referenceLen;
+
+    /// The length of reference protocol string without version part
+    size_t referenceBaseLen;
+};
 
 void
 HttpStateData::makeUpgradeHeaders(HttpHeader &hdr_out)
