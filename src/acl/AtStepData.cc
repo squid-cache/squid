@@ -91,6 +91,6 @@ ACLAtStepData::AtStep(const char *atStr)
         if (strcasecmp(atStr, AtStepValuesStr[at]) == 0)
             return static_cast<XactionStep>(at);
 
-    throw TexcHere(ToSBuf("invalid AtStep step: ", atStr));
+    throw TextException(ToSBuf("invalid AtStep step: ", atStr), Here());
 }
 
