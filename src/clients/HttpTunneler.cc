@@ -348,8 +348,6 @@ void
 Http::Tunneler::callBack()
 {
     debugs(83, 5, connection << status());
-    Must(request);
-    Must(request->masterXaction);
     auto cb = callback;
     callback = nullptr;
     ScheduleCallHere(cb);
