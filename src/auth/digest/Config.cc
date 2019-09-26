@@ -21,7 +21,6 @@
 #include "auth/Gadgets.h"
 #include "auth/State.h"
 #include "base/LookupTable.h"
-#include "base64.h"
 #include "cache_cf.h"
 #include "event.h"
 #include "helper.h"
@@ -115,11 +114,8 @@ authDigestNonceEncode(digest_nonce_h * nonce)
     SquidMD5Update(&Md5Ctx, reinterpret_cast<const uint8_t *>(&nonce->noncedata), sizeof(nonce->noncedata));
     SquidMD5Final((unsigned char *) H, &Md5Ctx);
 
-    nonce->key = xcalloc(base64_encode_len(sizeof(H)), 1);
-    struct base64_encode_ctx ctx;
-    base64_encode_init(&ctx);
-    size_t blen = base64_encode_update(&ctx, reinterpret_cast<char*>(nonce->key), sizeof(H), reinterpret_cast<const uint8_t*>(H));
-    blen += base64_encode_final(&ctx, reinterpret_cast<char*>(nonce->key)+blen);
+    nonce->key = xcalloc(sizeof(HASHHEX), 1);
+    CvtHex(H, reinterpret_cast<char *>(nonce->key));
 }
 
 digest_nonce_h *
@@ -154,12 +150,12 @@ authenticateDigestNonceNew(void)
      *
      * Now for my reasoning:
      * We will not accept a unrecognised nonce->we have all recognisable
-     * nonces stored. If we send out unique base64 encodings we guarantee
+     * nonces stored. If we send out unique encodings we guarantee
      * that a given nonce applies to only one user (barring attacks or
      * really bad timing with expiry and creation).  Using a random
      * component in the nonce allows us to loop to find a unique nonce.
      * We use H(nonce_data) so the nonce is meaningless to the reciever.
-     * So our nonce looks like base64(H(timestamp,pointertohash,randomdata))
+     * So our nonce looks like hex(H(timestamp,pointertohash,randomdata))
      * And even if our randomness is not very random we don't really care
      * - the timestamp and memory pointer also guarantee local uniqueness
      * in the input to the hash function.
