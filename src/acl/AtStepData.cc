@@ -59,8 +59,7 @@ void
 ACLAtStepData::parse()
 {
     while (const char *t = ConfigParser::strtokFile()) {
-        const auto at = AtStep(t); // throws on error
-        values.push_back(at);
+        values.push_back(AtStep(t));
     }
 }
 
