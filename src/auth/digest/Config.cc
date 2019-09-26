@@ -28,6 +28,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "md5.h"
 #include "mgr/Registration.h"
 #include "rfc2617.h"
 #include "sbuf/SBuf.h"
@@ -108,10 +109,16 @@ authDigestNonceEncode(digest_nonce_h * nonce)
     if (nonce->key)
         xfree(nonce->key);
 
-    nonce->key = xcalloc(base64_encode_len(sizeof(digest_nonce_data)), 1);
+    SquidMD5_CTX Md5Ctx;
+    HASH H;
+    SquidMD5Init(&Md5Ctx);
+    SquidMD5Update(&Md5Ctx, reinterpret_cast<const uint8_t *>(&nonce->noncedata), sizeof(nonce->noncedata));
+    SquidMD5Final((unsigned char *) H, &Md5Ctx);
+
+    nonce->key = xcalloc(base64_encode_len(sizeof(H)), 1);
     struct base64_encode_ctx ctx;
     base64_encode_init(&ctx);
-    size_t blen = base64_encode_update(&ctx, reinterpret_cast<char*>(nonce->key), sizeof(digest_nonce_data), reinterpret_cast<const uint8_t*>(&(nonce->noncedata)));
+    size_t blen = base64_encode_update(&ctx, reinterpret_cast<char*>(nonce->key), sizeof(H), reinterpret_cast<const uint8_t*>(H));
     blen += base64_encode_final(&ctx, reinterpret_cast<char*>(nonce->key)+blen);
 }
 
