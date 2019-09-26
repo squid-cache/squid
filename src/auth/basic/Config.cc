@@ -33,6 +33,7 @@
 #include "util.h"
 #include "wordlist.h"
 #include "helper/protocol_defines.h"
+#include "errorpage.h"
 
 /* Basic Scheme */
 static AUTHSSTATS authenticateBasicStats;
@@ -232,33 +233,42 @@ isLegalUTF8String(const char *source, const char *sourceEnd) {
 /*
  * Parse Accept-Language header and return whether a CP1251 encoding
  * allowed or not.
+ *
+ * CP1251 (aka Windows-1251) is an 8-bit character encoding, designed
+ * to cover languages that use the Cyrillic script such as Russian,
+ * Ukrainian, Bulgarian, Serbian Cyrillic and other languages.
  */
 static bool
-isCP1251EncodingAllowed(const char *httpLangHeader)
+isCP1251EncodingAllowed(const HttpRequest *request)
 {
-    if (httpLangHeader == NULL)
+    String hdr;
+
+    if (!request || !request->header.getList(Http::HdrType::ACCEPT_LANGUAGE, &hdr))
         return false;
 
-    const char *p = httpLangHeader;
+    char lang[256];
+    size_t pos = 0; // current parsing position in header string
 
-    while (*p) {
-	if ((strncmp(p, "ru", 2) == 0
-	     || strncmp(p, "uk", 2) == 0)
-	    && !xisalpha(p[2]))
+    while ( strHdrAcptLangGetItem(hdr, lang, 256, pos) ) {
+
+        /* wildcard uses the configured default language */
+        if (lang[0] == '*' && lang[1] == '\0')
+            return false;
+
+	if ((strncmp(lang, "ru", 2) == 0     // Russian
+	     || strncmp(lang, "uk", 2) == 0  // Ukrainian
+	     || strncmp(lang, "be", 2) == 0  // Belarusian
+	     || strncmp(lang, "bg", 2) == 0  // Bulgarian
+	     || strncmp(lang, "sr", 2) == 0) // Serbian
+	    && !xisalpha(lang[2]))
 	    return true;
-
-	if ((p = strchr(p, ',')) == NULL)
-	    break;
-
-        for (; *p && !xisalpha(*p); ++p)
-	    ;
     }
 
     return false;
 }
 
 char *
-Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const char *httpLangHeader)
+Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const HttpRequest *request)
 {
     const char *proxy_auth = httpAuthHeader;
 
@@ -288,7 +298,7 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const char *htt
 	if (!isLegalUTF8String(cleartext, cleartext + dstLen)) {
 	    char buf[HELPER_INPUT_BUFFER];
 
-	    if (isCP1251EncodingAllowed(httpLangHeader))
+	    if (isCP1251EncodingAllowed(request))
 	        cp1251_to_utf8(buf, sizeof(buf), cleartext);
 	    else
 	        latin1_to_utf8(buf, sizeof(buf), cleartext);
@@ -324,13 +334,13 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const char *htt
  * descriptive message to the user.
  */
 Auth::UserRequest::Pointer
-Auth::Basic::Config::decode(char const *proxy_auth, char const *accept_lang, const char *aRequestRealm)
+Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, const char *aRequestRealm)
 {
     Auth::UserRequest::Pointer auth_user_request = dynamic_cast<Auth::UserRequest*>(new Auth::Basic::UserRequest);
     /* decode the username */
 
     // retrieve the cleartext (in a dynamically allocated char*)
-    char *cleartext = decodeCleartext(proxy_auth, accept_lang);
+    char *cleartext = decodeCleartext(proxy_auth, request);
 
     // empty header? no auth details produced...
     if (!cleartext)

@@ -76,7 +76,7 @@ public:
      \param accept_lang Accept-Language header.
      \retval *      Details needed to authenticate.
      */
-    virtual UserRequest::Pointer decode(char const *proxy_auth, char const *accept_lang, const char *requestRealm) = 0;
+    virtual UserRequest::Pointer decode(char const *proxy_auth, const HttpRequest *request, const char *requestRealm) = 0;
 
     /**
      * squid is finished with this config, release any unneeded resources.

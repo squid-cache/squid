@@ -51,9 +51,7 @@ Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Point
         config->keyExtras->assemble(rmb, al, 0);
     }
 
-    String str = al->request->header.getStrOrList(Http::HdrType::ACCEPT_LANGUAGE);
-
-    return config->decode(proxy_auth, str.termedBuf(), rmb.hasContent() ? rmb.content() : NULL);
+    return config->decode(proxy_auth, al->request, rmb.hasContent() ? rmb.content() : NULL);
 }
 
 Auth::SchemeConfig *

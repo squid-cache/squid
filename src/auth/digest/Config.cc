@@ -730,7 +730,7 @@ authDigestLogUsername(char *username, Auth::UserRequest::Pointer auth_user_reque
  * Auth_user structure.
  */
 Auth::UserRequest::Pointer
-Auth::Digest::Config::decode(char const *proxy_auth, char const *, const char *aRequestRealm)
+Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *, const char *aRequestRealm)
 {
     const char *item;
     const char *p;
