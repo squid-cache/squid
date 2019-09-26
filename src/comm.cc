@@ -866,7 +866,6 @@ _comm_close(int fd, char const *file, int line)
     if ( (shutting_down || reconfiguring) && (!F->flags.open || F->type == FD_FILE))
         return;
 
-
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
     if (!isOpen(fd)) {
         debugs(50, DBG_IMPORTANT, HERE << "BUG 3556: FD " << fd << " is not an open socket.");
