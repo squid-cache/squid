@@ -43,11 +43,11 @@ public:
     /// whether there was a successful connection to (and peeking at) the origin server
     bool connectedOk() const {return entry && entry->isEmpty();}
 
-    /// whether we are at the bumping step atStepVal
-    bool at(const Ssl::BumpStep atStepVal) { return step == atStepVal;}
+    /// whether we are currently performing the given processing step
+    bool at(const BumpStep stp) const { return step == stp; }
 
-    /// whether we are at one of the bumping steps atStepVal1 or atStepVal2
-    bool at(const Ssl::BumpStep atStepVal1, const Ssl::BumpStep atStepVal2) { return step == atStepVal1 || step == atStepVal2;}
+    /// whether we are currently performing one of the given processing steps
+    bool at(const BumpStep step1, const BumpStep step2) const { return at(step1) || at(step2); }
 
     /// faked, minimal request; required by Client API
     HttpRequest::Pointer request;
