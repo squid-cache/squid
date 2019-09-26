@@ -16,21 +16,19 @@
 #include "wordlist.h"
 
 // keep in sync with XactionStep
-static const char *StepNames[] = {
-    "",
-    "GeneratingCONNECT",
+static const char *StepNames[xstepValuesEnd] = {
+    "[unknown step]"
+    ,"GeneratingCONNECT"
 #if USE_OPENSSL
-    "SslBump1",
-    "SslBump2",
-    "SslBump3",
+    ,"SslBump1"
+    ,"SslBump2"
+    ,"SslBump3"
 #endif
-    nullptr // XXX: Why do we need an entry for xstepValuesEnd?
 };
 
 static const char *
 StepName(XactionStep xstep)
 {
-    // XXX: [0] has empty name
     return (0 <= xstep && xstep < xstepValuesEnd) ? StepNames[xstep] : "-";
 }
 
@@ -39,13 +37,12 @@ StepValue(const char *name)
 {
     assert(name);
 
-    // XXX: [0] has empty name
     for (auto step = 0; step < xstepValuesEnd; ++step) {
         if (strcasecmp(StepNames[step], name) == 0)
             return static_cast<XactionStep>(step);
     }
 
-    throw TextException(ToSBuf("invalid at_step step name: ", name), Here());
+    throw TextException(ToSBuf("unknown at_step step name: ", name), Here());
 }
 
 ACLAtStepData::ACLAtStepData()
@@ -79,8 +76,11 @@ ACLAtStepData::dump() const
 void
 ACLAtStepData::parse()
 {
-    while (const char *t = ConfigParser::strtokFile()) {
-        values.push_back(StepValue(t));
+    while (const auto name = ConfigParser::strtokFile()) {
+        const auto step = StepValue(name);
+        if (step == xstepUnknown)
+            throw TextException(ToSBuf("prohibited at_step step name: ", name), Here());
+        values.push_back(step);
     }
 }
 
