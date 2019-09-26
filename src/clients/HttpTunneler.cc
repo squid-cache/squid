@@ -132,11 +132,12 @@ Http::Tunneler::writeRequest()
     // flags.toOrigin = false; // the next HTTP hop is a non-originserver peer
 
     MemBuf mb;
-    mb.init();
-    mb.appendf("CONNECT %s HTTP/1.1\r\n", url.c_str());
+
     try {
-        Must(request->masterXaction);
         request->masterXaction->generatingConnect = true;
+
+        mb.init();
+        mb.appendf("CONNECT %s HTTP/1.1\r\n", url.c_str());
         HttpHeader hdr_out(hoRequest);
         HttpStateData::httpBuildRequestHeader(request.getRaw(),
                                               nullptr, // StoreEntry
@@ -145,13 +146,14 @@ Http::Tunneler::writeRequest()
                                               flags);
         hdr_out.packInto(&mb);
         hdr_out.clean();
+        mb.append("\r\n", 2);
+
         request->masterXaction->generatingConnect = false;
-    } catch (const std::exception &e) {
+    } catch (...) {
+        // TODO: Add scope_guard; do not wait until it is in the C++ standard.
         request->masterXaction->generatingConnect = false;
-        handleException(e);
-        return;
+        throw;
     }
-    mb.append("\r\n", 2);
 
     debugs(11, 2, "Tunnel Server REQUEST: " << connection <<
            ":\n----------\n" << mb.buf << "\n----------");
