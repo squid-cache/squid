@@ -38,7 +38,7 @@ bool
 AsyncCallQueue::fire()
 {
     const bool made = theHead != NULL;
-    while (theHead != NULL) {
+    while (theHead) {
         CodeContext::Reset(theHead->codeContext);
         fireNext();
     }
