@@ -29,13 +29,7 @@ public:
     bool empty() const;
     virtual ACLAtStepData *clone() const;
 
-    static const char *AtStepStr(XactionStep);
-    static XactionStep AtStep(const char *);
-
     std::list<XactionStep> values;
-
-private:
-    static const char *AtStepValuesStr[];
 };
 
 #endif /* SQUID_ACLSSL_ERRORDATA_H */

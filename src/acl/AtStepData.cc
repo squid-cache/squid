@@ -16,7 +16,7 @@
 #include "wordlist.h"
 
 // keep in sync with XactionStep
-const char *ACLAtStepData::AtStepValuesStr[] = {
+static const char *StepNames[] = {
     "",
     "GeneratingCONNECT",
 #if USE_OPENSSL
@@ -24,8 +24,29 @@ const char *ACLAtStepData::AtStepValuesStr[] = {
     "SslBump2",
     "SslBump3",
 #endif
-    nullptr
+    nullptr // XXX: Why do we need an entry for xstepValuesEnd?
 };
+
+static const char *
+StepName(XactionStep xstep)
+{
+    // XXX: [0] has empty name
+    return (0 <= xstep && xstep < xstepValuesEnd) ? StepNames[xstep] : "-";
+}
+
+static XactionStep
+StepValue(const char *name)
+{
+    assert(name);
+
+    // XXX: [0] has empty name
+    for (auto step = 0; step < xstepValuesEnd; ++step) {
+        if (strcasecmp(StepNames[step], name) == 0)
+            return static_cast<XactionStep>(step);
+    }
+
+    throw TextException(ToSBuf("invalid at_step step name: ", name), Here());
+}
 
 ACLAtStepData::ACLAtStepData()
 {}
@@ -51,7 +72,7 @@ ACLAtStepData::dump() const
 {
     SBufList sl;
     for (const auto value : values)
-        sl.push_back(SBuf(AtStepStr(value)));
+        sl.push_back(SBuf(StepName(value)));
     return sl;
 }
 
@@ -59,7 +80,7 @@ void
 ACLAtStepData::parse()
 {
     while (const char *t = ConfigParser::strtokFile()) {
-        values.push_back(AtStep(t));
+        values.push_back(StepValue(t));
     }
 }
 
@@ -74,23 +95,3 @@ ACLAtStepData::clone() const
 {
     return new ACLAtStepData(*this);
 }
-
-const char *
-ACLAtStepData::AtStepStr(XactionStep at)
-{
-    if (0 <= at && at < xstepValuesEnd)
-        return AtStepValuesStr[at];
-    else
-        return "-";
-}
-
-XactionStep
-ACLAtStepData::AtStep(const char *atStr)
-{
-    for (auto at = 0; at < xstepValuesEnd; ++at)
-        if (strcasecmp(atStr, AtStepValuesStr[at]) == 0)
-            return static_cast<XactionStep>(at);
-
-    throw TextException(ToSBuf("invalid AtStep step: ", atStr), Here());
-}
-
