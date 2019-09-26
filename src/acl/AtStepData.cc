@@ -27,9 +27,10 @@ static const char *StepNames[xstepValuesEnd] = {
 };
 
 static const char *
-StepName(XactionStep xstep)
+StepName(const XactionStep xstep)
 {
-    return (0 <= xstep && xstep < xstepValuesEnd) ? StepNames[xstep] : "-";
+    assert(0 <= xstep && xstep < xstepValuesEnd);
+    return StepNames[xstep];
 }
 
 static XactionStep
