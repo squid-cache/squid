@@ -9,8 +9,8 @@
 #ifndef SQUID_FDE_H
 #define SQUID_FDE_H
 
-#include "base/forward.h"
 #include "base/CodeContext.h" /* XXX: Remove by de-inlining ctor and clear() */
+#include "base/forward.h"
 #include "comm.h"
 #include "defines.h"
 #include "ip/Address.h"
