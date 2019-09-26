@@ -25,10 +25,10 @@ ACLAtStepStrategy::match(ACLData<XactionStep> * &data, ACLFilledChecklist *check
     if (checklist->conn() != NULL && (bump = checklist->conn()->serverBump()))
         return data->match(bump->step);
     else
-        return data->match(xstepTlsBump1);
+        return data->match(XactionStep::tlsBump1);
 #endif
 
-    if (data->match(xstepGeneratingConnect)) {
+    if (data->match(XactionStep::generatingConnect)) {
         if (!checklist->request)
             return 0; // we have warned about the missing request earlier
 

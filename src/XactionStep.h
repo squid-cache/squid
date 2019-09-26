@@ -9,16 +9,17 @@
 #ifndef SQUID_XACTIONSTEPS_H
 #define SQUID_XACTIONSTEPS_H
 
-typedef enum {
-    xstepUnknown = 0,
-    xstepGeneratingConnect,
+enum class XactionStep  {
+    enumBegin_ = 0, // for WholeEnum iteration
+    unknown = enumBegin_,
+    generatingConnect,
 #if USE_OPENSSL
-    xstepTlsBump1,
-    xstepTlsBump2,
-    xstepTlsBump3,
+    tlsBump1,
+    tlsBump2,
+    tlsBump3,
 #endif
-    xstepValuesEnd
-} XactionStep;
+    enumEnd_ // for WholeEnum iteration
+};
 
 #endif /* SQUID_XACTIONSTEPS_H */
 

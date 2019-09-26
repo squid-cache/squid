@@ -25,7 +25,7 @@ class ClientHttpRequest;
 namespace Ssl
 {
 
-typedef XactionStep BumpStep;
+using BumpStep = XactionStep;
 
 /**
  * Maintains bump-server-first related information.

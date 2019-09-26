@@ -9,28 +9,29 @@
 #include "squid.h"
 #include "acl/AtStepData.h"
 #include "acl/Checklist.h"
+#include "base/EnumIterator.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "sbuf/Stream.h"
 #include "wordlist.h"
 
-// keep in sync with XactionStep
-static const char *StepNames[xstepValuesEnd] = {
-    "[unknown step]"
-    ,"GeneratingCONNECT"
-#if USE_OPENSSL
-    ,"SslBump1"
-    ,"SslBump2"
-    ,"SslBump3"
-#endif
-};
-
-static const char *
+static inline const char *
 StepName(const XactionStep xstep)
 {
-    assert(0 <= xstep && xstep < xstepValuesEnd);
-    return StepNames[xstep];
+    // keep in sync with XactionStep
+    static const char *StepNames[static_cast<int>(XactionStep::enumEnd_)] = {
+        "[unknown step]"
+        ,"GeneratingCONNECT"
+#if USE_OPENSSL
+        ,"SslBump1"
+        ,"SslBump2"
+        ,"SslBump3"
+#endif
+    };
+
+    assert(XactionStep::enumBegin_ <= xstep && xstep < XactionStep::enumEnd_);
+    return StepNames[static_cast<int>(xstep)];
 }
 
 static XactionStep
@@ -38,8 +39,8 @@ StepValue(const char *name)
 {
     assert(name);
 
-    for (auto step = 0; step < xstepValuesEnd; ++step) {
-        if (strcasecmp(StepNames[step], name) == 0)
+    for (const auto step: WholeEnum<XactionStep>()) {
+        if (strcasecmp(StepName(step), name) == 0)
             return static_cast<XactionStep>(step);
     }
 
@@ -79,7 +80,7 @@ ACLAtStepData::parse()
 {
     while (const auto name = ConfigParser::strtokFile()) {
         const auto step = StepValue(name);
-        if (step == xstepUnknown)
+        if (step == XactionStep::unknown)
             throw TextException(ToSBuf("prohibited at_step step name: ", name), Here());
         values.push_back(step);
     }
@@ -96,3 +97,4 @@ ACLAtStepData::clone() const
 {
     return new ACLAtStepData(*this);
 }
+
