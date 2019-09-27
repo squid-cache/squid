@@ -431,7 +431,7 @@ ClientHttpRequest::logRequest()
     if (request) {
         SBuf matched;
         for (auto h: Config.notes) {
-            if (h->match(request, al->reply, NULL, matched)) {
+            if (h->match(request, al->reply.getRaw(), al, matched)) {
                 request->notes()->add(h->key(), matched);
                 debugs(33, 3, h->key() << " " << matched);
             }
@@ -442,7 +442,7 @@ ClientHttpRequest::logRequest()
 
     ACLFilledChecklist checklist(NULL, request, NULL);
     if (al->reply) {
-        checklist.reply = al->reply;
+        checklist.reply = al->reply.getRaw();
         HTTPMSGLOCK(checklist.reply);
     }
 
@@ -460,7 +460,7 @@ ClientHttpRequest::logRequest()
         ACLFilledChecklist statsCheck(Config.accessList.stats_collection, request, NULL);
         statsCheck.al = al;
         if (al->reply) {
-            statsCheck.reply = al->reply;
+            statsCheck.reply = al->reply.getRaw();
             HTTPMSGLOCK(statsCheck.reply);
         }
         updatePerformanceCounters = statsCheck.fastCheck().allowed();
@@ -1301,7 +1301,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
                 hp->parseStatusCode == Http::scRequestHeaderFieldsTooLarge ||
                 hp->parseStatusCode == Http::scUriTooLong;
             auto result = abortRequestParsing(
-                          tooBig ? "error:request-too-large" : "error:invalid-request");
+                              tooBig ? "error:request-too-large" : "error:invalid-request");
             // assume that remaining leftovers belong to this bad request
             if (!inBuf.isEmpty())
                 consumeInput(inBuf.length());
@@ -2208,6 +2208,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     pinning.pinned = false;
     pinning.auth = false;
     pinning.zeroReply = false;
+    pinning.peerAccessDenied = false;
     pinning.peer = NULL;
 
     // store the details required for creating more MasterXaction objects as new requests come in
@@ -3699,6 +3700,11 @@ ConnStateData::finishDechunkingRequest(bool withSuccess)
 void
 ConnStateData::sendControlMsg(HttpControlMsg msg)
 {
+    if (const auto context = pipeline.front()) {
+        if (context->http)
+            context->http->al->reply = msg.reply;
+    }
+
     if (!isOpen()) {
         debugs(33, 3, HERE << "ignoring 1xx due to earlier closure");
         return;
@@ -3913,37 +3919,47 @@ ConnStateData::clientPinnedConnectionRead(const CommIoCbParams &io)
         clientConnection->close();
 }
 
-const Comm::ConnectionPointer
-ConnStateData::validatePinnedConnection(HttpRequest *request)
+Comm::ConnectionPointer
+ConnStateData::borrowPinnedConnection(HttpRequest *request, const AccessLogEntryPointer &ale)
 {
-    debugs(33, 7, HERE << pinning.serverConnection);
+    debugs(33, 7, pinning.serverConnection);
+    Must(request);
 
-    bool valid = true;
-    if (!Comm::IsConnOpen(pinning.serverConnection))
-        valid = false;
-    else if (pinning.auth && pinning.host && request && strcasecmp(pinning.host, request->url.host()) != 0)
-        valid = false;
-    else if (request && pinning.port != request->url.port())
-        valid = false;
-    else if (pinning.peer && !cbdataReferenceValid(pinning.peer))
-        valid = false;
-
-    if (!valid) {
-        /* The pinning info is not safe, remove any pinning info */
+    const auto pinningError = [&](const err_type type) {
         unpinConnection(true);
-    }
+        HttpRequestPointer requestPointer = request;
+        return ErrorState::NewForwarding(type, requestPointer, ale);
+    };
 
+    if (!Comm::IsConnOpen(pinning.serverConnection))
+        throw pinningError(ERR_ZERO_SIZE_OBJECT);
+
+    if (pinning.auth && pinning.host && strcasecmp(pinning.host, request->url.host()) != 0)
+        throw pinningError(ERR_CANNOT_FORWARD); // or generalize ERR_CONFLICT_HOST
+
+    if (pinning.port != request->url.port())
+        throw pinningError(ERR_CANNOT_FORWARD); // or generalize ERR_CONFLICT_HOST
+
+    if (pinning.peer && !cbdataReferenceValid(pinning.peer))
+        throw pinningError(ERR_ZERO_SIZE_OBJECT);
+
+    if (pinning.peerAccessDenied)
+        throw pinningError(ERR_CANNOT_FORWARD); // or generalize ERR_FORWARDING_DENIED
+
+    stopPinnedConnectionMonitoring();
     return pinning.serverConnection;
 }
 
 Comm::ConnectionPointer
-ConnStateData::borrowPinnedConnection(HttpRequest *request)
+ConnStateData::BorrowPinnedConnection(HttpRequest *request, const AccessLogEntryPointer &ale)
 {
-    debugs(33, 7, pinning.serverConnection);
-    if (validatePinnedConnection(request) != nullptr)
-        stopPinnedConnectionMonitoring();
+    if (const auto connManager = request ? request->pinnedConnection() : nullptr)
+        return connManager->borrowPinnedConnection(request, ale);
 
-    return pinning.serverConnection; // closed if validation failed
+    // ERR_CANNOT_FORWARD is somewhat misleading here; we can still forward, but
+    // there is no point since the client connection is now gone
+    HttpRequestPointer requestPointer = request;
+    throw ErrorState::NewForwarding(ERR_CANNOT_FORWARD, requestPointer, ale);
 }
 
 void
@@ -3971,6 +3987,7 @@ ConnStateData::unpinConnection(const bool andClose)
     safe_free(pinning.host);
 
     pinning.zeroReply = false;
+    pinning.peerAccessDenied = false;
 
     /* NOTE: pinning.pinned should be kept. This combined with fd == -1 at the end of a request indicates that the host
      * connection has gone away */

@@ -18,6 +18,7 @@
 #include "http/forward.h"
 #include "HttpControlMsg.h"
 #include "ipc/FdNotes.h"
+#include "log/forward.h"
 #include "proxyp/forward.h"
 #include "sbuf/SBuf.h"
 #include "servers/Server.h"
@@ -139,6 +140,7 @@ public:
         bool auth;               /* pinned for www authentication */
         bool reading;   ///< we are monitoring for peer connection closure
         bool zeroReply; ///< server closed w/o response (ERR_ZERO_SIZE_OBJECT)
+        bool peerAccessDenied; ///< cache_peer_access denied pinned connection reuse
         CachePeer *peer;             /* CachePeer the connection goes via */
         AsyncCall::Pointer readHandler; ///< detects serverConnection closure
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
@@ -181,15 +183,10 @@ public:
     void pinBusyConnection(const Comm::ConnectionPointer &pinServerConn, const HttpRequest::Pointer &request);
     /// Undo pinConnection() and, optionally, close the pinned connection.
     void unpinConnection(const bool andClose);
-    /// Returns validated pinnned server connection (and stops its monitoring).
-    Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *request);
-    /**
-     * Checks if there is pinning info if it is valid. It can close the server side connection
-     * if pinned info is not valid.
-     \param request   if it is not NULL also checks if the pinning info refers to the request client side HttpRequest
-     \return          The details of the server side connection (may be closed if failures were present).
-     */
-    const Comm::ConnectionPointer validatePinnedConnection(HttpRequest *request);
+
+    /// \returns validated pinned to-server connection, stopping its monitoring
+    /// \throws a newly allocated ErrorState if validation fails
+    static Comm::ConnectionPointer BorrowPinnedConnection(HttpRequest *, const AccessLogEntryPointer &);
     /**
      * returts the pinned CachePeer if exists, NULL otherwise
      */
@@ -333,6 +330,9 @@ protected:
     void abortChunkedRequestBody(const err_type error);
     err_type handleChunkedRequestBody();
 
+    /// ConnStateData-specific part of BorrowPinnedConnection()
+    Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *, const AccessLogEntryPointer &);
+
     void startPinnedConnectionMonitoring();
     void clientPinnedConnectionRead(const CommIoCbParams &io);
 #if USE_OPENSSL
@@ -350,7 +350,6 @@ protected:
     ///         a Http::Stream on success or failure.
     /// TODO: Move to HttpServer. Warning: Move requires large code nonchanges!
     Http::Stream *parseHttpRequest(const Http1::RequestParserPointer &);
-
 
     /// parse input buffer prefix into a single transfer protocol request
     /// return NULL to request more header bytes (after checking any limits)

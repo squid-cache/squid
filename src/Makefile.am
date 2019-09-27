@@ -1013,6 +1013,7 @@ tests_testURL_LDADD = \
 	libsquid.la \
 	proxyp/libproxyp.la \
 	anyp/libanyp.la \
+	parser/libparser.la \
 	base/libbase.la \
 	ip/libip.la \
 	sbuf/libsbuf.la \

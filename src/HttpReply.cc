@@ -117,6 +117,14 @@ HttpReply::pack() const
 }
 
 HttpReplyPointer
+HttpReply::MakeConnectionEstablished() {
+
+    HttpReplyPointer rep(new HttpReply);
+    rep->sline.set(Http::ProtocolVersion(), Http::scOkay, "Connection established");
+    return rep;
+}
+
+HttpReplyPointer
 HttpReply::make304() const
 {
     static const Http::HdrType ImsEntries[] = {Http::HdrType::DATE, Http::HdrType::CONTENT_TYPE, Http::HdrType::EXPIRES, Http::HdrType::LAST_MODIFIED, /* eof */ Http::HdrType::OTHER};

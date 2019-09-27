@@ -1338,11 +1338,8 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     al.adapted_request = adapted_request_;
     HTTPMSGLOCK(al.adapted_request);
 
-    if (adapted_reply_) {
-        al.reply = adapted_reply_;
-        HTTPMSGLOCK(al.reply);
-    } else
-        al.reply = NULL;
+    // XXX: This reply (and other ALE members!) may have been needed earlier.
+    al.reply = adapted_reply_;
 
     if (h->rfc931.size())
         al.cache.rfc931 = h->rfc931.termedBuf();
@@ -1377,12 +1374,6 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         if (replyHttpBodySize >= 0)
             al.cache.highOffset = replyHttpBodySize;
         //don't set al.cache.objectSize because it hasn't exist yet
-
-        MemBuf mb;
-        mb.init();
-        adapted_reply_->header.packInto(&mb);
-        al.headers.reply = xstrdup(mb.buf);
-        mb.clean();
     }
     prepareLogWithRequestDetails(adapted_request_, alep);
     Xaction::finalizeLogInfo();

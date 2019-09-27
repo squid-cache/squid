@@ -168,6 +168,10 @@ peerAllowedToUse(const CachePeer * p, PeerSelector * ps)
 
     ACLFilledChecklist checklist(p->access, request, NULL);
     checklist.al = ps->al;
+    if (ps->al && ps->al->reply) {
+        checklist.reply = ps->al->reply.getRaw();
+        HTTPMSGLOCK(checklist.reply);
+    }
     checklist.syncAle(request, nullptr);
     return checklist.fastCheck().allowed();
 }
@@ -1403,7 +1407,7 @@ peerCountMcastPeersStart(void *data)
     p->in_addr.toUrl(url+7, MAX_URL -8 );
     strcat(url, "/");
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initPeerMcast);
-    HttpRequest *req = HttpRequest::FromUrl(url, mx);
+    auto *req = HttpRequest::FromUrlXXX(url, mx);
     assert(req != nullptr);
     StoreEntry *fake = storeCreateEntry(url, url, RequestFlags(), Http::METHOD_GET);
     const auto psstate = new PeerSelector(nullptr);

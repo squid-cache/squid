@@ -1653,6 +1653,8 @@ clientReplyContext::cloneReply()
     reply = http->storeEntry()->mem().freshestReply().clone();
     HTTPMSGLOCK(reply);
 
+    http->al->reply = reply;
+
     if (reply->sline.protocol == AnyP::PROTO_HTTP) {
         /* RFC 2616 requires us to advertise our version (but only on real HTTP traffic) */
         reply->sline.version = Http::ProtocolVersion();
@@ -2254,18 +2256,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     if (sc)
         sc->setDelayId(DelayId::DelayClient(http,reply));
 #endif
-
-    /* handle headers */
-
-    if (Config.onoff.log_mime_hdrs) {
-        size_t k;
-
-        if ((k = headersEnd(buf, reqofs))) {
-            safe_free(http->al->headers.reply);
-            http->al->headers.reply = (char *)xcalloc(k + 1, 1);
-            xstrncpy(http->al->headers.reply, buf, k);
-        }
-    }
 
     holdingBuffer = result;
     processReplyAccess();

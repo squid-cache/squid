@@ -59,7 +59,7 @@ public:
     }
     void touch(); ///< clear the cached URI display forms
 
-    bool parse(const HttpRequestMethod &, const char *url);
+    bool parse(const HttpRequestMethod &, const SBuf &url);
 
     /// \return a new URI that honors uri_whitespace
     static char *cleanup(const char *uri);
@@ -69,6 +69,10 @@ public:
     /// convert the URL scheme to that given
     void setScheme(const AnyP::ProtocolType &p, const char *str) {
         scheme_ = AnyP::UriScheme(p, str);
+        touch();
+    }
+    void setScheme(const AnyP::UriScheme &s) {
+        scheme_ = s;
         touch();
     }
 
@@ -122,7 +126,7 @@ public:
     SBuf &absolute() const;
 
 private:
-    void parseFinish(const AnyP::ProtocolType, const char *const, const char *const, const char *const, const SBuf &, const int);
+    void parseUrn(Parser::Tokenizer&);
 
     /**
      \par

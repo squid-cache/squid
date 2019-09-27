@@ -11,19 +11,19 @@
 
 #include <iosfwd>
 
+typedef unsigned int InstanceIdDefaultValueType;
 /** Identifier for class instances
  *   - unique IDs for a large number of concurrent instances, but may wrap;
  *   - useful for debugging and insecure request/response matching;
  *   - sequential IDs within a class except when wrapping;
  *   - always positive IDs.
- *  \todo: add storage type parameter to support configurable Value types?
  *  \todo: add creation/destruction debugging?
  */
-template <class Class>
+template <class Class, class ValueType = InstanceIdDefaultValueType>
 class InstanceId
 {
 public:
-    typedef unsigned int Value; ///< id storage type; \todo: parameterize?
+    typedef ValueType Value; ///< id storage type
 
     InstanceId() {change();}
 
@@ -39,33 +39,36 @@ public:
     const char * prefix() const;
 
 public:
-    Value value = 0; ///< instance identifier
+    Value value = Value(); ///< instance identifier
 
 private:
     InstanceId(const InstanceId &); ///< not implemented; IDs are unique
     InstanceId& operator=(const InstanceId &); ///< not implemented
 };
 
-/// convenience macro to instantiate Class-specific stuff in .cc files
-#define InstanceIdDefinitions(Class, pfx) \
+/// An InstanceIdDefinitions() helper. Avoid direct use.
+#define InstanceIdDefinitions3(Class, pfx, ValueType, ...) \
     template<> const char * \
-    InstanceId<Class>::prefix() const { \
+    InstanceId<Class, ValueType>::prefix() const { \
         return pfx; \
     } \
     template<> std::ostream & \
-    InstanceId<Class>::print(std::ostream &os) const { \
+    InstanceId<Class, ValueType>::print(std::ostream &os) const { \
         return os << pfx << value; \
     } \
     template<> void \
-    InstanceId<Class>::change() { \
-        static InstanceId<Class>::Value Last = 0; \
+    InstanceId<Class, ValueType>::change() { \
+        static auto Last = Value(); \
         value = ++Last ? Last : ++Last; \
     }
 
+/// convenience macro to instantiate Class-specific stuff in .cc files
+#define InstanceIdDefinitions(...) InstanceIdDefinitions3(__VA_ARGS__, InstanceIdDefaultValueType)
+
 /// print the id
-template <class Class>
+template <class Class, class ValueType>
 inline
-std::ostream &operator <<(std::ostream &os, const InstanceId<Class> &id)
+std::ostream &operator <<(std::ostream &os, const InstanceId<Class, ValueType> &id)
 {
     return id.print(os);
 }

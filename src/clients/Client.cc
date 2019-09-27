@@ -121,6 +121,8 @@ Client::setVirginReply(HttpReply *rep)
     assert(rep);
     theVirginReply = rep;
     HTTPMSGLOCK(theVirginReply);
+    if (fwd->al)
+        fwd->al->reply = theVirginReply;
     return theVirginReply;
 }
 
@@ -140,6 +142,8 @@ Client::setFinalReply(HttpReply *rep)
     assert(rep);
     theFinalReply = rep;
     HTTPMSGLOCK(theFinalReply);
+    if (fwd->al)
+        fwd->al->reply = theFinalReply;
 
     // give entry the reply because haveParsedReplyHeaders() expects it there
     entry->replaceHttpReply(theFinalReply, false); // but do not write yet
@@ -523,6 +527,7 @@ Client::blockCaching()
         ACLFilledChecklist ch(acl, originalRequest().getRaw());
         ch.reply = const_cast<HttpReply*>(&entry->mem().freshestReply()); // ACLFilledChecklist API bug
         HTTPMSGLOCK(ch.reply);
+        ch.al = fwd->al;
         if (!ch.fastCheck().allowed()) { // when in doubt, block
             debugs(20, 3, "store_miss prohibits caching");
             return true;
