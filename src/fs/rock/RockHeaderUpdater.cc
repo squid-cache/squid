@@ -186,8 +186,18 @@ Rock::HeaderUpdater::startWriting()
 
     {
         debugs(20, 7, "fresh store meta for " << *update.entry);
-        size_t freshSwapHeaderSize = 0;
+        size_t freshSwapHeaderSize = 0; // set by getSerialisedMetaData() below
+
+        // There is a circular dependency between the correct/fresh value of
+        // entry->swap_file_sz and freshSwapHeaderSize. We break that loop by
+        // serializing zero swap_file_sz, just like the regular first-time
+        // swapout code may do. De-serializing code will re-calculate it in
+        // storeRebuildParseEntry(). TODO: Stop serializing entry->swap_file_sz.
+        const auto savedEntrySwapFileSize = update.entry->swap_file_sz;
+        update.entry->swap_file_sz = 0;
         const auto freshSwapHeader = update.entry->getSerialisedMetaData(freshSwapHeaderSize);
+        update.entry->swap_file_sz = savedEntrySwapFileSize;
+
         Must(freshSwapHeader);
         writer->write(freshSwapHeader, freshSwapHeaderSize, 0, nullptr);
         stalePrefixSz += mem.swap_hdr_sz;
