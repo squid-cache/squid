@@ -49,13 +49,16 @@ AccessLogEntry::getLogClientIp(char *buf, size_t bufsz) const
 SBuf
 AccessLogEntry::getLogMethod() const
 {
+    static const SBuf dash("-");
     SBuf method;
     if (icp.opcode)
         method.append(icp_opcode_str[icp.opcode]);
     else if (htcp.opcode)
         method.append(htcp.opcode);
-    else
+    else if (http.method)
         method = http.method.image();
+    else
+        method = dash;
     return method;
 }
 
