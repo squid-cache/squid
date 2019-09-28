@@ -385,7 +385,7 @@ ClientHttpRequest::logRequest()
 
     const auto findReply = [this]() -> const HttpReply * {
         if (al->reply)
-            return al->reply;
+            return al->reply.getRaw();
         if (const auto le = loggingEntry())
             return le->hasFreshestReply();
         return nullptr;
