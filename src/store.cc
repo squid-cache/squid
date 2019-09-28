@@ -385,10 +385,10 @@ StoreEntry::destroyMemObject()
     if (hasMemStore() && !shutting_down)
         Store::Root().memoryDisconnect(*this);
 
-    if (MemObject *mem = mem_obj) {
+    if (auto memObj = mem_obj) {
         setMemStatus(NOT_IN_MEMORY);
         mem_obj = NULL;
-        delete mem;
+        delete memObj;
     }
 }
 
