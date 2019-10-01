@@ -29,9 +29,10 @@ ACLAtStepStrategy::match(ACLData<XactionStep> * &data, ACLFilledChecklist *check
     //   ConnStateData::serverBump() has not been built yet.
     auto currentSslBumpStep = XactionStep::tlsBump1;
 
-    if (checklist->conn() != NULL &&
-        checklist->conn()->serverBump())
-        currentSslBumpStep = checklist->conn()->serverBump()->step;
+    if (const auto mgr = checklist->conn()) {
+        if (const auto serverBump = mgr->serverBump())
+            currentSslBumpStep = serverBump->step;
+    }
 
     if (data->match(currentSslBumpStep))
         return 1;
