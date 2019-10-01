@@ -255,13 +255,13 @@ isCP1251EncodingAllowed(const HttpRequest *request)
         if (lang[0] == '*' && lang[1] == '\0')
             return false;
 
-	if ((strncmp(lang, "ru", 2) == 0     // Russian
-	     || strncmp(lang, "uk", 2) == 0  // Ukrainian
-	     || strncmp(lang, "be", 2) == 0  // Belarusian
-	     || strncmp(lang, "bg", 2) == 0  // Bulgarian
-	     || strncmp(lang, "sr", 2) == 0) // Serbian
-	    && !xisalpha(lang[2]))
-	    return true;
+        if ((strncmp(lang, "ru", 2) == 0     // Russian
+             || strncmp(lang, "uk", 2) == 0  // Ukrainian
+             || strncmp(lang, "be", 2) == 0  // Belarusian
+             || strncmp(lang, "bg", 2) == 0  // Bulgarian
+             || strncmp(lang, "sr", 2) == 0) // Serbian
+            && !xisalpha(lang[2]))
+            return true;
     }
 
     return false;
@@ -295,17 +295,17 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const HttpReque
     if (base64_decode_update(&ctx, &dstLen, reinterpret_cast<uint8_t*>(cleartext), srcLen, eek) && base64_decode_final(&ctx)) {
         cleartext[dstLen] = '\0';
 
-	if (!isLegalUTF8String(cleartext, cleartext + dstLen)) {
-	    SBuf str;
+        if (!isLegalUTF8String(cleartext, cleartext + dstLen)) {
+            SBuf str;
 
-	    if (isCP1251EncodingAllowed(request))
-	        str = Cp1251ToUtf8(cleartext);
-	    else
-	        str = Latin1ToUtf8(cleartext);
+            if (isCP1251EncodingAllowed(request))
+                str = Cp1251ToUtf8(cleartext);
+            else
+                str = Latin1ToUtf8(cleartext);
 
-	    safe_free(cleartext);
-	    cleartext = xstrdup(str.c_str());
-	}
+            safe_free(cleartext);
+            cleartext = xstrdup(str.c_str());
+        }
 
         /*
          * Don't allow NL or CR in the credentials.
