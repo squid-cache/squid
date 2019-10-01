@@ -47,6 +47,7 @@ public:
     StoreDigestCBlock cblock;
     int rebuild_lock = 0;                 ///< bucket number
     StoreEntry * rewrite_lock = nullptr;  ///< points to store entry with the digest
+    StoreEntry * publicEntry = nullptr;  ///< points to the previous store entry with the digest
     StoreSearchPointer theSearch;
     int rewrite_offset = 0;
     int rebuild_count = 0;
@@ -73,7 +74,7 @@ static void storeDigestRebuildStart(void *datanotused);
 static void storeDigestRebuildResume(void);
 static void storeDigestRebuildFinish(void);
 static void storeDigestRebuildStep(void *datanotused);
-static EVH storeDigestRewriteStart;
+static void storeDigestRewriteStart(void *);
 static void storeDigestRewriteResume(void);
 static void storeDigestRewriteFinish(StoreEntry * e);
 static EVH storeDigestSwapOutStep;
@@ -401,13 +402,12 @@ storeDigestRebuildStep(void *datanotused)
 
 /* starts swap out sequence for the digest */
 static void
-storeDigestRewriteStart(void *data)
+storeDigestRewriteStart(void *datanotused)
 {
     assert(store_digest);
     /* prevent overlapping if rewrite schedule is too tight */
 
     if (sd_state.rewrite_lock) {
-        assert(!data);
         debugs(71, DBG_IMPORTANT, "storeDigestRewrite: overlap detected, consider increasing rewrite period");
         return;
     }
@@ -420,11 +420,6 @@ storeDigestRewriteStart(void *data)
 
     RequestFlags flags;
     flags.cachable = true;
-
-    if (const auto oldEntry = static_cast<StoreEntry *>(data)) {
-        oldEntry->unlock("storeDigestRewriteStart");
-        data = nullptr;
-    }
 
     StoreEntry *e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
     assert(e);
@@ -451,8 +446,12 @@ storeDigestRewriteResume(void)
     e = sd_state.rewrite_lock;
     sd_state.rewrite_offset = 0;
     EBIT_SET(e->flags, ENTRY_SPECIAL);
-    /* setting public key will purge old digest entry if any */
+    /* setting public key will mark the old digest entry for removal once unlocked */
     e->setPublicKey();
+    if (sd_state.publicEntry) {
+        sd_state.publicEntry->unlock("storeDigestRewriteResume");
+        sd_state.publicEntry = nullptr;
+    }
     /* fake reply */
     HttpReply *rep = new HttpReply;
     rep->setHeaders(Http::scOkay, "Cache Digest OK",
@@ -472,16 +471,18 @@ static void
 storeDigestRewriteFinish(StoreEntry * e)
 {
     assert(e == sd_state.rewrite_lock);
+    assert(!sd_state.publicEntry);
     e->complete();
     e->timestampsSet();
     debugs(71, 2, "storeDigestRewriteFinish: digest expires at " << e->expires <<
            " (" << std::showpos << (int) (e->expires - squid_curtime) << ")");
     /* is this the write order? @?@ */
     e->mem_obj->unlinkRequest();
+    sd_state.publicEntry = e;
     sd_state.rewrite_lock = NULL;
     ++sd_state.rewrite_count;
-    eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, e, (double)
-             Config.digest.rewrite_period, 1, false);
+    eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, (double)
+             Config.digest.rewrite_period, 1);
     /* resume pending Rebuild if any */
 
     if (sd_state.rebuild_lock)
