@@ -401,8 +401,9 @@ storeDigestRebuildStep(void *datanotused)
 
 /* starts swap out sequence for the digest */
 static void
-storeDigestRewriteStart(void *datanotused)
+storeDigestRewriteStart(void *data)
 {
+    StoreEntry *e = static_cast<StoreEntry *>(data);
     assert(store_digest);
     /* prevent overlapping if rewrite schedule is too tight */
 
@@ -420,7 +421,11 @@ storeDigestRewriteStart(void *datanotused)
     RequestFlags flags;
     flags.cachable = true;
 
-    StoreEntry *e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
+    /* Unlock the previous StoreEntry if we had one */
+    if (e)
+        e->unlock("storeDigestRewriteStart");
+
+    e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
     assert(e);
     sd_state.rewrite_lock = e;
     debugs(71, 3, "storeDigestRewrite: url: " << url << " key: " << e->getMD5Text());
@@ -472,10 +477,9 @@ storeDigestRewriteFinish(StoreEntry * e)
            " (" << std::showpos << (int) (e->expires - squid_curtime) << ")");
     /* is this the write order? @?@ */
     e->mem_obj->unlinkRequest();
-    e->unlock("storeDigestRewriteFinish");
     sd_state.rewrite_lock = NULL;
     ++sd_state.rewrite_count;
-    eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, (double)
+    eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, e, (double)
              Config.digest.rewrite_period, 1);
     /* resume pending Rebuild if any */
 

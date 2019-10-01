@@ -436,7 +436,8 @@ MimeIcon::created(StoreEntry *newEntry)
     e->flush();
     e->complete();
     e->timestampsSet();
-    e->unlock("MimeIcon::created");
+    // MimeIcons are only loaded once, prevent accidental destruction
+    // e->unlock("MimeIcon::created");
     debugs(25, 3, "Loaded icon " << url_);
 }
 
