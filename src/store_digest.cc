@@ -73,7 +73,7 @@ static void storeDigestRebuildStart(void *datanotused);
 static void storeDigestRebuildResume(void);
 static void storeDigestRebuildFinish(void);
 static void storeDigestRebuildStep(void *datanotused);
-static void storeDigestRewriteStart(void *);
+static EVH storeDigestRewriteStart;
 static void storeDigestRewriteResume(void);
 static void storeDigestRewriteFinish(StoreEntry * e);
 static EVH storeDigestSwapOutStep;
@@ -480,7 +480,7 @@ storeDigestRewriteFinish(StoreEntry * e)
     sd_state.rewrite_lock = NULL;
     ++sd_state.rewrite_count;
     eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, e, (double)
-             Config.digest.rewrite_period, 1);
+             Config.digest.rewrite_period, 1, false);
     /* resume pending Rebuild if any */
 
     if (sd_state.rebuild_lock)
