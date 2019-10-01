@@ -228,7 +228,7 @@ String::substr(String::size_type from, String::size_type to) const
     Must(to > from);
 
     String rv;
-    rv.assign(rawBuf()+from,to-from);
+    rv.assign(rawBuf()+from, to-from);
     return rv;
 }
 
