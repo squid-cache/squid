@@ -21,20 +21,21 @@ int
 ACLAtStepStrategy::match(ACLData<XactionStep> * &data, ACLFilledChecklist *checklist)
 {
 #if USE_OPENSSL
-    Ssl::ServerBump *bump = NULL;
-    if (checklist->conn() != NULL &&
-        (bump = checklist->conn()->serverBump()) &&
-        data->match(bump->step))
-        return 1;
+    // We use step1 for all these very different cases:
+    // - The transaction is not subject to ssl_bump rules (if any).
+    // - No ssl_bump action has matched yet.
+    // - The ssl_bump client-first action has already matched.
+    // - Another ssl_bump action has already matched, but
+    //   ConnStateData::serverBump() has not been build yet.
+    auto currentSslBumpStep = XactionStep::tlsBump1;
 
-    // We need the following to cover the case of bumping at SslBump1 step
-    // where the connStateData::serverBump() is not build yet.
-    // The following also has the meaning that if no bumping preformed
-    // or a client-first bumping is applied then the request is remaining
-    // at SslBump1 bumping processing step.
-    if (data->match(XactionStep::tlsBump1))
+    if (checklist->conn() != NULL &&
+        checklist->conn()->serverBump())
+        currentSslBumpStep = checklist->conn()->serverBump()->step;
+
+    if (data->match(currentSslBumpStep))
         return 1;
-#endif
+#endif // USE_OPENSSL
 
     if (data->match(XactionStep::generatingConnect)) {
         if (!checklist->request)
