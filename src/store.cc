@@ -1201,12 +1201,8 @@ StoreEntry::release(const bool shareable)
 
     if (locked()) {
         releaseRequest(shareable);
-        /* "releaseRequest" may allow some entries such as cache digests to be
-         * unlocked immediately, so we should retest and release if possible. */
-        if (locked()) {
-            PROF_stop(storeRelease);
-            return;
-        }
+        PROF_stop(storeRelease);
+        return;
     }
 
     if (Store::Controller::store_dirs_rebuilding && hasDisk()) {
