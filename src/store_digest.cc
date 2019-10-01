@@ -426,7 +426,7 @@ storeDigestRewriteStart(void *data)
         data = nullptr;
     }
 
-    const auto e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
+    StoreEntry *e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
     assert(e);
     sd_state.rewrite_lock = e;
     debugs(71, 3, "storeDigestRewrite: url: " << url << " key: " << e->getMD5Text());
