@@ -26,7 +26,7 @@ ACLAtStepStrategy::match(ACLData<XactionStep> * &data, ACLFilledChecklist *check
     // - No ssl_bump action has matched yet.
     // - The ssl_bump client-first action has already matched.
     // - Another ssl_bump action has already matched, but
-    //   ConnStateData::serverBump() has not been build yet.
+    //   ConnStateData::serverBump() has not been built yet.
     auto currentSslBumpStep = XactionStep::tlsBump1;
 
     if (checklist->conn() != NULL &&
