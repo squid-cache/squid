@@ -155,7 +155,7 @@ authenticateBasicStats(StoreEntry * sentry)
  *
  * \param b0 the first byte of UTF-8 sequence.
  */
-static inline size_t
+static inline int
 utf8SequenceLengthNonASCII(char b0)
 {
     if ((b0 & 0xC0) != 0xC0)
@@ -174,7 +174,7 @@ utf8SequenceLengthNonASCII(char b0)
  *
  * \param b0 the first byte of UTF-8 sequence.
  */
-static inline size_t
+static inline int
 utf8SequenceLength(char b0)
 {
     return (b0 & 0x80) == 0 ? 1 : utf8SequenceLengthNonASCII(b0);
