@@ -10,31 +10,35 @@
 #include "charset.h"
 
 /** Convert ISO-LATIN-1 to UTF-8 */
-char *
-latin1_to_utf8(char *out, size_t size, const char *in)
+SBuf
+Latin1ToUtf8(const char *in)
 {
-    unsigned char *p = (unsigned char *)out;
-    for (; *in && size > 2; in++) {
-        unsigned char ch = (unsigned char)*in;
+    SBuf result;
+
+    if (in == NULL)
+        return result;
+
+    for (; *in; in++) {
+        unsigned char ch = static_cast<unsigned char>(*in);
+	size_t bytesToWrite = 0;
+	char sequence[3] = {0, 0, 0};
+
         if (ch < 0x80) {
-            *p++ = ch;
-            size--;
+            sequence[0] = ch;
+	    bytesToWrite = 1;
         } else {
-            *p++ = (ch >> 6) | 0xc0;
-            size--;
-            *p++ = (ch & 0x3f) | 0x80;
-            size--;
+	    sequence[0] = static_cast<char>((ch >> 6) | 0xc0);
+	    sequence[1] = static_cast<char>((ch & 0x3f) | 0x80);
+	    bytesToWrite = 2;
         }
+	result.append (sequence, bytesToWrite);
     }
-    *p = '\0';
-    if (*in)
-        return NULL;
-    return out;
+    return result;
 }
 
 /** Convert CP1251 to UTF-8 */
-char *
-cp1251_to_utf8(char *out, size_t size, const char *in)
+SBuf
+Cp1251ToUtf8(const char *in)
 {
     static const unsigned char firstByteMark[] = { 0x00, 0x00, 0xC0, 0xE0 };
     static const unsigned unicodevalues[] =
@@ -46,12 +50,16 @@ cp1251_to_utf8(char *out, size_t size, const char *in)
 	0x0401, 0x00A9, 0x0404, 0x00AB, 0x00AC, 0x00AD, 0x00AE, 0x0407,
 	0x00B0, 0x00B1, 0x0406, 0x0456, 0x0491, 0x00B5, 0x00B6, 0x00B7,
 	0x0451, 0x2116, 0x0454, 0x00BB, 0x0458, 0x0405, 0x0455, 0x0457 };
+    SBuf result;
 
-    unsigned char *p = (unsigned char *)out;
+    if (in == NULL)
+        return result;
+
     for (; *in; in++) {
-        unsigned char ch = (unsigned char)*in;
+        unsigned char ch = static_cast<unsigned char>(*in);
 	unsigned u = 0;
 	size_t bytesToWrite = 0;
+	char sequence[4] = {0, 0, 0, 0};
 
         if (ch < 0x80)
 	    u = ch;
@@ -67,20 +75,13 @@ cp1251_to_utf8(char *out, size_t size, const char *in)
         else
             bytesToWrite = 3;
 
-	if (size <= bytesToWrite)
-	    break;
-
 	switch (bytesToWrite) {
-	case 3: p[2] = (char)(u & 0x3f) | 0x80; u >>= 6;               // no break
-	case 2: p[1] = (char)(u & 0x3f) | 0x80; u >>= 6;               // no break
-	case 1: p[0] = (char)(u)        | firstByteMark[bytesToWrite]; // no break
+	case 3: sequence[2] = static_cast<char>(u & 0x3f) | 0x80; u >>= 6;               // no break
+	case 2: sequence[1] = static_cast<char>(u & 0x3f) | 0x80; u >>= 6;               // no break
+	case 1: sequence[0] = static_cast<char>(u)        | firstByteMark[bytesToWrite]; // no break
 	}
-	p += bytesToWrite;
-	size -= bytesToWrite;
+	result.append (sequence, bytesToWrite);
     }
-    *p = '\0';
-    if (*in)
-        return NULL;
-    return out;
+    return result;
 }
 

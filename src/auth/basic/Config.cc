@@ -296,15 +296,15 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const HttpReque
         cleartext[dstLen] = '\0';
 
 	if (!isLegalUTF8String(cleartext, cleartext + dstLen)) {
-	    char buf[HELPER_INPUT_BUFFER];
+	    SBuf str;
 
 	    if (isCP1251EncodingAllowed(request))
-	        cp1251_to_utf8(buf, sizeof(buf), cleartext);
+	        str = Cp1251ToUtf8(cleartext);
 	    else
-	        latin1_to_utf8(buf, sizeof(buf), cleartext);
+	        str = Latin1ToUtf8(cleartext);
 
-            safe_free(cleartext);
-	    cleartext = xstrdup(buf);
+	    safe_free(cleartext);
+	    cleartext = xstrdup(str.c_str());
 	}
 
         /*

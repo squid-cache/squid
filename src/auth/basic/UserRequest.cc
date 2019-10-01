@@ -131,10 +131,10 @@ Auth::Basic::UserRequest::startHelperLookup(HttpRequest *request, AccessLogEntry
     static char usern[HELPER_INPUT_BUFFER];
     static char pass[HELPER_INPUT_BUFFER];
     if (static_cast<Auth::Basic::Config*>(user()->config)->utf8) {
-        latin1_to_utf8(usern, sizeof(usern), user()->username());
-        latin1_to_utf8(pass, sizeof(pass), basic_auth->passwd);
-        xstrncpy(usern, rfc1738_escape(usern), sizeof(usern));
-        xstrncpy(pass, rfc1738_escape(pass), sizeof(pass));
+        SBuf strUsername = Latin1ToUtf8(user()->username());
+        SBuf strPassword = Latin1ToUtf8(basic_auth->passwd);
+        xstrncpy(usern, rfc1738_escape(strUsername.c_str()), sizeof(usern));
+        xstrncpy(pass, rfc1738_escape(strPassword.c_str()), sizeof(pass));
     } else {
         xstrncpy(usern, rfc1738_escape(user()->username()), sizeof(usern));
         xstrncpy(pass, rfc1738_escape(basic_auth->passwd), sizeof(pass));

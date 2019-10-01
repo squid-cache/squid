@@ -9,21 +9,11 @@
 #ifndef _SQUID_CHARSET_H
 #define _SQUID_CHARSET_H
 
-#ifdef __cplusplus
-extern "C"
-#else
-extern
-#endif
+#include "sbuf/SBuf.h"
 
-char *latin1_to_utf8(char *out, size_t size, const char *in);
+SBuf Latin1ToUtf8(const char *in);
 
-#ifdef __cplusplus
-extern "C"
-#else
-extern
-#endif
-
-char *cp1251_to_utf8(char *out, size_t size, const char *in);
+SBuf Cp1251ToUtf8(const char *in);
 
 #endif /* _SQUID_CHARSET_H */
 

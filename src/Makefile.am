@@ -204,6 +204,8 @@ ACL_REGISTRATION_SOURCES = AclRegs.cc AuthReg.cc
 # and smaller libraries split from this are encouraged. Using lt convenience
 # libraries, dependencies should not be a problem either.
 libsquid_la_SOURCES = \
+	charset.cc \
+	charset.h \
 	comm.cc \
 	comm.h \
 	CommCalls.cc \
