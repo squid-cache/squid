@@ -1493,7 +1493,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
     }
 
     /* set field value */
-    value.limitInit(value_start, field_end - value_start);
+    value.assign(value_start, field_end - value_start);
 
     if (id != Http::HdrType::BAD_HDR)
         ++ headerStatsTable[id].seenCount;

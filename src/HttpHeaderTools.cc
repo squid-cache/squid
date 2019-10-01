@@ -229,7 +229,7 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
     }
     /* Make sure it's defined even if empty "" */
     if (!val->termedBuf())
-        val->limitInit("", 0);
+        val->assign("", 0);
     return 1;
 }
 

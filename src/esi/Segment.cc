@@ -191,7 +191,7 @@ void
 ESISegment::dumpOne() const
 {
     String temp;
-    temp.limitInit(buf, len);
+    temp.assign(buf, len);
     debugs(86, 9, "ESISegment::dumpOne: \"" << temp << "\"");
 }
 
