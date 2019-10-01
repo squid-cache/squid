@@ -448,10 +448,12 @@ storeDigestRewriteResume(void)
     EBIT_SET(e->flags, ENTRY_SPECIAL);
     /* setting public key will mark the old digest entry for removal once unlocked */
     e->setPublicKey();
-    if (sd_state.publicEntry) {
-        sd_state.publicEntry->unlock("storeDigestRewriteResume");
+    if (const auto oldEntry = sd_state.publicEntry) {
+        oldEntry->release();
         sd_state.publicEntry = nullptr;
+        oldEntry->unlock("storeDigestRewriteResume");
     }
+    assert(e->locked());
     /* fake reply */
     HttpReply *rep = new HttpReply;
     rep->setHeaders(Http::scOkay, "Cache Digest OK",
