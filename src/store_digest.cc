@@ -403,11 +403,11 @@ storeDigestRebuildStep(void *datanotused)
 static void
 storeDigestRewriteStart(void *data)
 {
-    StoreEntry *e = static_cast<StoreEntry *>(data);
     assert(store_digest);
     /* prevent overlapping if rewrite schedule is too tight */
 
     if (sd_state.rewrite_lock) {
+        assert(!data);
         debugs(71, DBG_IMPORTANT, "storeDigestRewrite: overlap detected, consider increasing rewrite period");
         return;
     }
@@ -421,11 +421,12 @@ storeDigestRewriteStart(void *data)
     RequestFlags flags;
     flags.cachable = true;
 
-    /* Unlock the previous StoreEntry if we had one */
-    if (e)
-        e->unlock("storeDigestRewriteStart");
+    if (const auto oldEntry = static_cast<StoreEntry *>(data)) {
+        oldEntry->unlock("storeDigestRewriteStart");
+        data = nullptr;
+    }
 
-    e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
+    const auto e = storeCreateEntry(url, url, flags, Http::METHOD_GET);
     assert(e);
     sd_state.rewrite_lock = e;
     debugs(71, 3, "storeDigestRewrite: url: " << url << " key: " << e->getMD5Text());
