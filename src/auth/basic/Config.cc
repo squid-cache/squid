@@ -222,7 +222,7 @@ isLegalUTF8(const unsigned char* source, int length)
 static bool
 isLegalUTF8String(const char *source, const char *sourceEnd) {
     while (source != sourceEnd) {
-        int length = utf8SequenceLength(*source);
+        const auto length = utf8SequenceLength(*source);
         if (length > sourceEnd - source || !isLegalUTF8(reinterpret_cast<const unsigned char*>(source), length))
             return false;
         source += length;
