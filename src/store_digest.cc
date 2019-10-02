@@ -474,7 +474,6 @@ static void
 storeDigestRewriteFinish(StoreEntry * e)
 {
     assert(e == sd_state.rewrite_lock);
-    assert(!sd_state.publicEntry);
     e->complete();
     e->timestampsSet();
     debugs(71, 2, "storeDigestRewriteFinish: digest expires at " << e->expires <<
