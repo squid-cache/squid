@@ -21,7 +21,7 @@
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, ServerBump);
 
 Ssl::ServerBump::ServerBump(ClientHttpRequest *http, StoreEntry *e, Ssl::BumpMode md):
-    step(bumpStep1)
+    step(XactionStep::tlsBump1)
 {
     assert(http->request);
     request = http->request;
