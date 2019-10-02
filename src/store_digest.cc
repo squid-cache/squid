@@ -454,6 +454,7 @@ storeDigestRewriteResume(void)
         oldEntry->unlock("storeDigestRewriteResume");
     }
     assert(e->locked());
+    sd_state.publicEntry = e;
     /* fake reply */
     HttpReply *rep = new HttpReply;
     rep->setHeaders(Http::scOkay, "Cache Digest OK",
@@ -480,7 +481,6 @@ storeDigestRewriteFinish(StoreEntry * e)
            " (" << std::showpos << (int) (e->expires - squid_curtime) << ")");
     /* is this the write order? @?@ */
     e->mem_obj->unlinkRequest();
-    sd_state.publicEntry = e;
     sd_state.rewrite_lock = NULL;
     ++sd_state.rewrite_count;
     eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, (double)
