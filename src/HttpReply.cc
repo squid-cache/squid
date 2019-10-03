@@ -335,7 +335,7 @@ HttpReply::hdrCacheInit()
     const char *str = header.getStr(Http::HdrType::CONTENT_TYPE);
 
     if (str)
-        content_type.limitInit(str, strcspn(str, ";\t "));
+        content_type.assign(str, strcspn(str, ";\t "));
     else
         content_type = String();
 

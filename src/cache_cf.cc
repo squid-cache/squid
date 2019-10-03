@@ -1289,7 +1289,7 @@ parseBytesOptionValue(size_t * bptr, const char *units, char const * value)
     }
 
     String number;
-    number.limitInit(number_begin, number_end - number_begin);
+    number.assign(number_begin, number_end - number_begin);
 
     int d = xatoi(number.termedBuf());
     int m;
