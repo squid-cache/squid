@@ -733,6 +733,7 @@ commCallCloseHandlers(int fd)
     }
 }
 
+// XXX: This code has been broken, unused, and untested since 933dd09. Remove.
 #if LINGERING_CLOSE
 static void
 commLingerClose(int fd, void *unused)
@@ -835,6 +836,7 @@ comm_close_complete(const FdeCbParams &params)
     ++ statCounter.syscalls.sock.closes;
 
     /* When one connection closes, give accept() a chance, if need be */
+    CodeContext::Reset(); // exit FD-specific context
     Comm::AcceptLimiter::Instance().kick();
 }
 
@@ -876,6 +878,11 @@ _comm_close(int fd, char const *file, int line)
     PROF_start(comm_close);
 
     F->flags.close_request = true;
+
+    // We have caller's context and fde::codeContext. In the unlikely event they
+    // differ, it is not clear which context is more applicable to this closure.
+    // For simplicity sake, we remain in the caller's context while still
+    // allowing individual advanced callbacks to overwrite it.
 
     if (F->ssl) {
         AsyncCall::Pointer startCall=commCbCall(5,4, "commStartTlsClose",
@@ -1572,14 +1579,19 @@ checkTimeouts(void)
 
         if (writeTimedOut(fd)) {
             // We have an active write callback and we are timed out
+            CodeContext::Reset(F->codeContext);
             debugs(5, 5, "checkTimeouts: FD " << fd << " auto write timeout");
             Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
             COMMIO_FD_WRITECB(fd)->finish(Comm::COMM_ERROR, ETIMEDOUT);
+            CodeContext::Reset();
 #if USE_DELAY_POOLS
         } else if (F->writeQuotaHandler != nullptr && COMMIO_FD_WRITECB(fd)->conn != nullptr) {
+            // TODO: Move and extract quota() call to place it inside F->codeContext.
             if (!F->writeQuotaHandler->selectWaiting && F->writeQuotaHandler->quota() && !F->closing()) {
+                CodeContext::Reset(F->codeContext);
                 F->writeQuotaHandler->selectWaiting = true;
                 Comm::SetSelect(fd, COMM_SELECT_WRITE, Comm::HandleWrite, COMMIO_FD_WRITECB(fd), 0);
+                CodeContext::Reset();
             }
             continue;
 #endif
@@ -1587,6 +1599,7 @@ checkTimeouts(void)
         else if (AlreadyTimedOut(F))
             continue;
 
+        CodeContext::Reset(F->codeContext);
         debugs(5, 5, "checkTimeouts: FD " << fd << " Expired");
 
         if (F->timeoutHandler != NULL) {
@@ -1598,6 +1611,8 @@ checkTimeouts(void)
             debugs(5, 5, "checkTimeouts: FD " << fd << ": Forcing comm_close()");
             comm_close(fd);
         }
+
+        CodeContext::Reset();
     }
 }
 

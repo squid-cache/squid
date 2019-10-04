@@ -74,6 +74,8 @@ Comm::TcpAcceptor::unsubscribe(const char *reason)
 void
 Comm::TcpAcceptor::start()
 {
+    if (listenPort_)
+        CodeContext::Reset(listenPort_);
     debugs(5, 5, HERE << status() << " AsyncCall Subscription: " << theCallSub);
 
     Must(IsConnOpen(conn));
@@ -153,7 +155,7 @@ Comm::TcpAcceptor::setListen()
     errcode = errno = 0;
     if (listen(conn->fd, Squid_MaxFD >> 2) < 0) {
         errcode = errno;
-        debugs(50, DBG_CRITICAL, "ERROR: listen(" << status() << ", " << (Squid_MaxFD >> 2) << "): " << xstrerr(errcode));
+        debugs(50, DBG_CRITICAL, "ERROR: listen(..., " << (Squid_MaxFD >> 2) << ") system call failed: " << xstrerr(errcode));
         return;
     }
 
@@ -255,18 +257,21 @@ Comm::TcpAcceptor::okToAccept()
     return false;
 }
 
-static void
-logAcceptError(const Comm::ConnectionPointer &conn)
+void
+Comm::TcpAcceptor::logAcceptError(const ConnectionPointer &tcpClient) const
 {
     AccessLogEntry::Pointer al = new AccessLogEntry;
-    al->tcpClient = conn;
+    CodeContext::Reset(al);
+    al->tcpClient = tcpClient;
     al->url = "error:accept-client-connection";
     al->setVirginUrlForMissingRequest(al->url);
     ACLFilledChecklist ch(nullptr, nullptr, nullptr);
-    ch.src_addr = conn->remote;
-    ch.my_addr = conn->local;
+    ch.src_addr = tcpClient->remote;
+    ch.my_addr = tcpClient->local;
     ch.al = al;
     accessLogLog(al, &ch);
+
+    CodeContext::Reset(listenPort_);
 }
 
 void
@@ -296,10 +301,13 @@ Comm::TcpAcceptor::acceptOne()
         /* register interest again */
         debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
     } else {
+        // TODO: When ALE, MasterXaction merge, use them or ClientConn instead.
+        CodeContext::Reset(newConnDetails);
         debugs(5, 5, "Listener: " << conn <<
                " accepted new connection " << newConnDetails <<
                " handler Subscription: " << theCallSub);
         notify(flag, newConnDetails);
+        CodeContext::Reset(listenPort_);
     }
 
     SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
@@ -368,7 +376,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
             debugs(50, 3, status() << ": " << xstrerr(errcode));
             return Comm::COMM_ERROR;
         } else {
-            debugs(50, DBG_IMPORTANT, MYNAME << status() << ": " << xstrerr(errcode));
+            debugs(50, DBG_IMPORTANT, "ERROR: failed to accept an incoming connection: " << xstrerr(errcode));
             return Comm::COMM_ERROR;
         }
     }

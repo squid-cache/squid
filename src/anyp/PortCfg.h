@@ -12,6 +12,7 @@
 #include "anyp/forward.h"
 #include "anyp/ProtocolVersion.h"
 #include "anyp/TrafficMode.h"
+#include "base/CodeContext.h"
 #include "comm/Connection.h"
 #include "sbuf/SBuf.h"
 #include "security/ServerOptions.h"
@@ -19,12 +20,16 @@
 namespace AnyP
 {
 
-class PortCfg : public RefCountable
+class PortCfg : public CodeContext
 {
 public:
     PortCfg();
     ~PortCfg();
     AnyP::PortCfgPointer clone() const;
+
+    /* CodeContext API */
+    virtual ScopedId codeContextGist() const override;
+    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
 
     PortCfgPointer next;
 

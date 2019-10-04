@@ -11,6 +11,39 @@
 
 #include <iosfwd>
 
+/// Represents an InstanceId<C> value independent from its owner class C. These
+/// "detached" IDs can be stored by and exchanged among C-unaware users at the
+/// price of storing a short scope c-string (that InstanceIds hard-code instead)
+/// and, in some cases, using more bits/space than InstanceId<C>::value uses.
+class ScopedId
+{
+public:
+    ScopedId(): scope(nullptr), value(0) {}
+    explicit ScopedId(const char *s): scope(s), value(0) {}
+    // when the values is zero/unknown, use other constructors
+    ScopedId(const char *s, uint64_t v): scope(s), value(v) { /* assert(value) */ }
+
+    /// either the prefix() of the InstanceId object that we were detached from
+    /// or, for 0 values, some other description (with endless lifetime) or nil
+    const char *scope;
+
+    /// either the value of the InstanceId object that we were detached from
+    /// or, if our creator did not know the exact value, zero
+    uint64_t value;
+};
+
+inline std::ostream&
+operator <<(std::ostream &os, const ScopedId &id)
+{
+    if (id.value)
+        os << id.scope << id.value;
+    else if (id.scope)
+        os << id.scope;
+    else
+        os << "[unknown]";
+    return os;
+}
+
 typedef unsigned int InstanceIdDefaultValueType;
 /** Identifier for class instances
  *   - unique IDs for a large number of concurrent instances, but may wrap;
@@ -32,11 +65,15 @@ public:
     bool operator !=(const InstanceId &o) const { return !(*this == o); }
     void change();
 
-    /// prints class-pecific prefix followed by ID value; \todo: use HEX for value printing?
+    /// writes a compact text representation of the ID
     std::ostream &print(std::ostream &) const;
 
-    /// returns the class-pecific prefix
+    // TODO: Refactor into static Scope().
+    /// \returns Class-specific nickname (with endless lifetime)
     const char * prefix() const;
+
+    /// \returns a copy of the ID usable outside our Class context
+    ScopedId detach() const { return ScopedId(prefix(), value); }
 
 public:
     Value value = Value(); ///< instance identifier

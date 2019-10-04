@@ -26,6 +26,9 @@ Comm::ConnectionPointer Comm::Connection::copyDetails() const STUB_RETVAL(NULL)
 void Comm::Connection::close() STUB
 CachePeer * Comm::Connection::getPeer() const STUB_RETVAL(NULL)
 void Comm::Connection::setPeer(CachePeer * p) STUB
+ScopedId Comm::Connection::codeContextGist() const STUB_RETVAL(id.detach())
+std::ostream &Comm::Connection::detailCodeContext(std::ostream &os) const STUB_RETVAL(os)
+InstanceIdDefinitions(Comm::Connection, "conn");
 
 #include "comm/ConnOpener.h"
 CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);

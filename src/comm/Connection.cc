@@ -19,6 +19,8 @@
 #include "SquidTime.h"
 #include <ostream>
 
+InstanceIdDefinitions(Comm::Connection, "conn");
+
 class CachePeer;
 bool
 Comm::IsConnOpen(const Comm::ConnectionPointer &conn)
@@ -154,10 +156,25 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
     return min(ctimeout, ftimeout);
 }
 
+ScopedId
+Comm::Connection::codeContextGist() const {
+    return id.detach();
+}
+
+std::ostream &
+Comm::Connection::detailCodeContext(std::ostream &os) const
+{
+    return os << Debug::Extra << "connection: " << *this;
+}
+
 std::ostream &
 operator << (std::ostream &os, const Comm::Connection &conn)
 {
-    os << "local=" << conn.local << " remote=" << conn.remote;
+    os << conn.id;
+    if (!conn.local.isNoAddr() || conn.local.port())
+        os << " local=" << conn.local;
+    if (!conn.remote.isNoAddr() || conn.remote.port())
+        os << " remote=" << conn.remote;
     if (conn.peerType)
         os << ' ' << hier_code_str[conn.peerType];
     if (conn.fd >= 0)

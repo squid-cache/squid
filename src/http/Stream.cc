@@ -88,6 +88,8 @@ Http::Stream::writeComplete(size_t size)
     case STREAM_COMPLETE: {
         debugs(33, 5, clientConnection << " Stream complete, keepalive is " <<
                http->request->flags.proxyKeepalive);
+        // XXX: This code assumes we are done with the transaction, but we may
+        // still be receiving request body. TODO: Extend stopSending() instead.
         ConnStateData *c = getConn();
         if (!http->request->flags.proxyKeepalive)
             clientConnection->close();
@@ -570,6 +572,7 @@ Http::Stream::noteIoError(const int xerrno)
 void
 Http::Stream::finished()
 {
+    CodeContext::Reset(clientConnection);
     ConnStateData *conn = getConn();
 
     /* we can't handle any more stream data - detach */
