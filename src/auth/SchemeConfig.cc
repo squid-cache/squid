@@ -130,9 +130,6 @@ Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, int, char *param_str)
         parse_onoff(&keep_alive);
     } else if (strcmp(param_str, "utf8") == 0) {
         parse_onoff(&utf8);
-
-        if (strcmp(scheme->type(), "basic") == 0)
-            debugs(29, DBG_IMPORTANT, "basic auth scheme parameter 'utf8' is obsolete");
     } else {
         debugs(29, DBG_CRITICAL, "Unrecognised " << scheme->type() << " auth scheme parameter '" << param_str << "'");
     }
