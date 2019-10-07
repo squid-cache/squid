@@ -48,7 +48,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSplice()
     // Mark Step3 of bumping
     if (request->clientConnectionManager.valid()) {
         if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
-            serverBump->step = Ssl::bumpStep3;
+            serverBump->step = XactionStep::tlsBump3;
         }
     }
 
@@ -166,7 +166,7 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
         if (hostName)
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, (void*)hostName);
 
-        Must(!csd->serverBump() || csd->serverBump()->step <= Ssl::bumpStep2);
+        Must(!csd->serverBump() || csd->serverBump()->at(XactionStep::tlsBump1, XactionStep::tlsBump2));
         if (csd->sslBumpMode == Ssl::bumpPeek || csd->sslBumpMode == Ssl::bumpStare) {
             auto clientSession = fd_table[clientConn->fd].ssl.get();
             Must(clientSession);

@@ -56,6 +56,9 @@ public:
     /// Fetch the external ACL provided 'user=' string, or nil if none is available.
     const char *getExtUser() const;
 
+    /// whether we know what the request method is
+    bool hasLogMethod() const { return icp.opcode || htcp.opcode || http.method; }
+
     /// Fetch the transaction method string (ICP opcode, HTCP opcode or HTTP method)
     SBuf getLogMethod() const;
 

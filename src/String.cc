@@ -91,7 +91,7 @@ String::operator !=(String const &that) const
 
 // public interface, makes sure that we clean the old buffer first
 void
-String::limitInit(const char *str, int len)
+String::assign(const char *str, int len)
 {
     clean(); // TODO: optimize to avoid cleaning the buffer we can use
     allocAndFill(str, len);
@@ -228,7 +228,7 @@ String::substr(String::size_type from, String::size_type to) const
     Must(to > from);
 
     String rv;
-    rv.limitInit(rawBuf()+from,to-from);
+    rv.assign(rawBuf()+from, to-from);
     return rv;
 }
 

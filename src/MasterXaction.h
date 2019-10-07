@@ -55,6 +55,9 @@ public:
     /// the initiator of this transaction
     XactionInitiator initiator;
 
+    /// whether we are currently creating a CONNECT header (to be sent to peer)
+    bool generatingConnect = false;
+
     // TODO: add state from other Jobs in the transaction
 };
 

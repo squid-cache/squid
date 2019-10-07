@@ -1246,24 +1246,6 @@ storeLateRelease(void *)
     eventAdd("storeLateRelease", storeLateRelease, NULL, 0.0, 1);
 }
 
-/* return 1 if a store entry is locked */
-int
-StoreEntry::locked() const
-{
-    if (lock_count)
-        return 1;
-
-    /*
-     * SPECIAL, PUBLIC entries should be "locked";
-     * XXX: Their owner should lock them then instead of relying on this hack.
-     */
-    if (EBIT_TEST(flags, ENTRY_SPECIAL))
-        if (!EBIT_TEST(flags, KEY_PRIVATE))
-            return 1;
-
-    return 0;
-}
-
 /// whether the base response has all the body bytes we expect
 /// \returns true for responses with unknown/unspecified body length
 /// \returns true for responses with the right number of accumulated body bytes

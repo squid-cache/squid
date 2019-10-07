@@ -133,7 +133,7 @@ public:
     /// TODO: Rename and make private so only those two methods can call this.
     bool checkCachable();
     int checkNegativeHit() const;
-    int locked() const;
+    int locked() const { return lock_count; }
     int validToSend() const;
     bool memoryCachable(); ///< checkCachable() and can be cached in memory
 
