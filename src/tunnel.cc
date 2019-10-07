@@ -137,6 +137,9 @@ public:
         void dataSent (size_t amount);
         /// writes 'b' buffer, setting the 'writer' member to 'callback'.
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
+        /// sets a new close handler for the connection, removing the old one
+        void setCloseHandler(CLCB *, TunnelStateData *);
+        void resetCloseHandler() { closer = nullptr; }
         int len;
         char *buf;
         AsyncCall::Pointer writer; ///< pending Comm::Write callback
@@ -154,6 +157,9 @@ public:
         DelayId delayId;
 #endif
 
+    private:
+        /// the registered close handler for the connection
+        AsyncCall::Pointer closer;
     };
 
     Connection client, server;
@@ -201,6 +207,7 @@ public:
     void notifyConnOpener();
 
     void saveError(ErrorState *finalError);
+    bool hasError() const { return savedError; }
     void sendError(ErrorState *finalError, const char *reason);
 
 private:
@@ -259,59 +266,88 @@ static CTCB tunnelTimeout;
 static EVH tunnelDelayedClientRead;
 static EVH tunnelDelayedServerRead;
 
+static bool
+doneWithTunnel(TunnelStateData *tunnelState)
+{
+    if (!tunnelState->noConnections())
+        return false;
+    // ConnStateData pipeline should contain the CONNECT we are performing
+    // but it may be invalid already (bug 4392)
+    if (tunnelState->http.valid() && tunnelState->http->getConn()) {
+        auto ctx = tunnelState->http->getConn()->pipeline.front();
+        if (ctx != nullptr)
+            ctx->finished();
+    }
+    delete tunnelState;
+    return true;
+}
+
+static void
+doneWithServer(TunnelStateData *tunnelState)
+{
+    tunnelState->server.conn = nullptr;
+    tunnelState->server.writer = nullptr;
+
+    if (tunnelState->request)
+        tunnelState->request->hier.stopPeerClock(false);
+    if (doneWithTunnel(tunnelState))
+        return;
+    if (!tunnelState->client.writer)
+        tunnelState->client.conn->close();
+}
+
+static void
+doneWithClient(TunnelStateData *tunnelState)
+{
+    tunnelState->client.conn = nullptr;
+    tunnelState->client.writer = nullptr;
+
+    if (doneWithTunnel(tunnelState))
+        return;
+    if (!tunnelState->server.writer)
+        tunnelState->server.conn->close();
+}
+
+/// Server close handler applied on the TLS connection being established.
+/// If TLS handshake failures, retries connection to another destination.
+static void
+serverClosed(const CommCloseCbParams &params)
+{
+    auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
+    debugs(26, 3, tunnelState->server.conn);
+    tunnelState->server.resetCloseHandler();
+    if (!tunnelState->destinations->empty()) {
+        if (!tunnelState->opening())
+            tunnelState->startConnecting(); // try connecting to another destination
+    } else if (tunnelState->subscribed) {
+        if (!tunnelState->hasError()) {
+            const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError,
+                    tunnelState->request.getRaw(), tunnelState->al);
+            tunnelState->saveError(anErr);
+        } // else use actual error from last connection attempt
+        debugs(26, 4, "wait for more destinations to try");
+    } else {
+        doneWithServer(tunnelState);
+    }
+}
+
+/// server close handler applied on the established TLS connection
 static void
 tunnelServerClosed(const CommCloseCbParams &params)
 {
-    TunnelStateData *tunnelState = (TunnelStateData *)params.data;
-    debugs(26, 3, HERE << tunnelState->server.conn);
-    tunnelState->server.conn = NULL;
-    tunnelState->server.writer = NULL;
-
-    if (tunnelState->request != NULL)
-        tunnelState->request->hier.stopPeerClock(false);
-
-    if (tunnelState->noConnections()) {
-        // ConnStateData pipeline should contain the CONNECT we are performing
-        // but it may be invalid already (bug 4392)
-        if (tunnelState->http.valid() && tunnelState->http->getConn()) {
-            auto ctx = tunnelState->http->getConn()->pipeline.front();
-            if (ctx != nullptr)
-                ctx->finished();
-        }
-        delete tunnelState;
-        return;
-    }
-
-    if (!tunnelState->client.writer) {
-        tunnelState->client.conn->close();
-        return;
-    }
+    auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
+    debugs(26, 3, tunnelState->server.conn);
+    tunnelState->server.resetCloseHandler();
+    doneWithServer(tunnelState);
 }
 
 static void
 tunnelClientClosed(const CommCloseCbParams &params)
 {
-    TunnelStateData *tunnelState = (TunnelStateData *)params.data;
-    debugs(26, 3, HERE << tunnelState->client.conn);
-    tunnelState->client.conn = NULL;
-    tunnelState->client.writer = NULL;
-
-    if (tunnelState->noConnections()) {
-        // ConnStateData pipeline should contain the CONNECT we are performing
-        // but it may be invalid already (bug 4392)
-        if (tunnelState->http.valid() && tunnelState->http->getConn()) {
-            auto ctx = tunnelState->http->getConn()->pipeline.front();
-            if (ctx != nullptr)
-                ctx->finished();
-        }
-        delete tunnelState;
-        return;
-    }
-
-    if (!tunnelState->server.writer) {
-        tunnelState->server.conn->close();
-        return;
-    }
+    auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
+    debugs(26, 3, tunnelState->client.conn);
+    tunnelState->client.resetCloseHandler();
+    doneWithClient(tunnelState);
 }
 
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
@@ -336,7 +372,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     http = clientRequest;
 
     client.conn = clientRequest->getConn()->clientConnection;
-    comm_add_close_handler(client.conn->fd, tunnelClientClosed, this);
+    client.setCloseHandler(tunnelClientClosed, this);
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
@@ -626,6 +662,20 @@ TunnelStateData::Connection::write(const char *b, int size, AsyncCall::Pointer &
 }
 
 void
+TunnelStateData::Connection::setCloseHandler(CLCB *handler, TunnelStateData *tunnelState)
+{
+    assert(handler);
+    assert(tunnelState);
+    if (!Comm::IsConnOpen(conn)) {
+        closer = nullptr;
+        return;
+    }
+    if (closer)
+        comm_remove_close_handler(conn->fd, closer);
+    closer = comm_add_close_handler(conn->fd, handler, tunnelState);
+}
+
+void
 TunnelStateData::writeClientDone(char *, size_t len, Comm::Flag flag, int xerrno)
 {
     debugs(26, 3, HERE << client.conn << ", " << len << " bytes written, flag=" << flag);
@@ -855,6 +905,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 void
 TunnelStateData::notePeerReadyToShovel()
 {
+    server.setCloseHandler(tunnelServerClosed, this);
     if (!clientExpectsConnectResponse())
         tunnelStartShoveling(this); // ssl-bumped connection, be quiet
     else {
@@ -926,7 +977,7 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     netdbPingSite(request->url.host());
 
     request->peer_host = conn->getPeer() ? conn->getPeer()->host : nullptr;
-    comm_add_close_handler(conn->fd, tunnelServerClosed, this);
+    server.setCloseHandler(serverClosed, this);
 
     bool toOrigin = false; // same semantics as StateFlags::toOrigin
     if (const auto * const peer = conn->getPeer()) {
@@ -1016,8 +1067,11 @@ void
 TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
 {
     if (ErrorState *error = answer.error.get()) {
-        answer.error.clear(); // sendError() will own the error
-        sendError(error, "TLS peer connection error");
+        saveError(error);
+        answer.error.clear();
+        if (CachePeer *p = server.conn->getPeer())
+            peerConnectFailed(p);
+        server.conn->close();
         return;
     }
 
@@ -1257,7 +1311,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 #endif
 
     request->peer_host = srvConn->getPeer() ? srvConn->getPeer()->host : nullptr;
-    comm_add_close_handler(srvConn->fd, tunnelServerClosed, tunnelState);
+    tunnelState->server.setCloseHandler(tunnelServerClosed, tunnelState);
 
     debugs(26, 4, "determine post-connect handling pathway.");
     if (const auto peer = srvConn->getPeer())
