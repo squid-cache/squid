@@ -445,7 +445,7 @@ FwdState::useDestinations()
 
         debugs(17, 3, HERE << "Connection failed: " << entry->url());
         if (!err) {
-            const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request, al);
+            const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
             fail(anErr);
         } // else use actual error from last connection attempt
 
