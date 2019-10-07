@@ -32,7 +32,6 @@
 #include "Store.h"
 #include "util.h"
 #include "wordlist.h"
-#include "helper/protocol_defines.h"
 #include "errorpage.h"
 
 /* Basic Scheme */
@@ -295,12 +294,23 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const HttpReque
     if (base64_decode_update(&ctx, &dstLen, reinterpret_cast<uint8_t*>(cleartext), srcLen, eek) && base64_decode_final(&ctx)) {
         cleartext[dstLen] = '\0';
 
-        if (!isLegalUTF8String(cleartext, cleartext + dstLen)) {
+        const char *charset = NULL;
+
+        if (utf8) {
+            charset = "latin1";
+        } else if (!isLegalUTF8String(cleartext, cleartext + dstLen)) {
+            if (isCP1251EncodingAllowed(request))
+                charset = "cp1251";
+            else
+                charset = "latin1";
+        }
+
+        if (charset) {
             SBuf str;
 
-            if (isCP1251EncodingAllowed(request))
+            if (strcmp(charset, "cp1251") == 0)
                 str = Cp1251ToUtf8(cleartext);
-            else
+            else if (strcmp(charset, "latin1") == 0)
                 str = Latin1ToUtf8(cleartext);
 
             safe_free(cleartext);
