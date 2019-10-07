@@ -258,9 +258,16 @@ isCP1251EncodingAllowed(const HttpRequest *request)
              || strncmp(lang, "uk", 2) == 0  // Ukrainian
              || strncmp(lang, "be", 2) == 0  // Belarusian
              || strncmp(lang, "bg", 2) == 0  // Bulgarian
-             || strncmp(lang, "sr", 2) == 0) // Serbian
-            && !xisalpha(lang[2]))
+             || strncmp(lang, "sr", 2) == 0)) {// Serbian
+            if (lang[2] == '-') {
+                if (strcmp(lang + 3, "latn") == 0) // not Cyrillic
+                  return false;
+            } else if (xisalpha(lang[2])) {
+                return false;
+            }
+
             return true;
+        }
     }
 
     return false;
