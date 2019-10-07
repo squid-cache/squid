@@ -301,24 +301,13 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const HttpReque
     if (base64_decode_update(&ctx, &dstLen, reinterpret_cast<uint8_t*>(cleartext), srcLen, eek) && base64_decode_final(&ctx)) {
         cleartext[dstLen] = '\0';
 
-        const char *charset = NULL;
-
-        if (utf8) {
-            charset = "latin1";
-        } else if (!isLegalUTF8String(cleartext, cleartext + dstLen)) {
-            if (isCP1251EncodingAllowed(request))
-                charset = "cp1251";
-            else
-                charset = "latin1";
-        }
-
-        if (charset) {
+        if (utf8 && !isLegalUTF8String(cleartext, cleartext + dstLen)) {
             SBuf str;
 
-            if (strcmp(charset, "cp1251") == 0)
-                str = Cp1251ToUtf8(cleartext);
-            else if (strcmp(charset, "latin1") == 0)
-                str = Latin1ToUtf8(cleartext);
+            if (isCP1251EncodingAllowed(request))
+                str = Cp1251ToUtf8("cp1251");
+            else
+                str = Latin1ToUtf8("latin1");
 
             safe_free(cleartext);
             cleartext = xstrdup(str.c_str());
