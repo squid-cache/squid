@@ -247,6 +247,8 @@ private:
     /// resumes operations after the (possibly failed) HTTP CONNECT exchange
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
 
+    bool doneWithTunnel();
+
 public:
     bool keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to);
     void copy(size_t len, Connection &from, Connection &to, IOCB *);
@@ -257,6 +259,11 @@ public:
 
     void copyClientBytes();
     void copyServerBytes();
+
+    /// client connection closure cleanup
+    void doneWithClient();
+    /// server connection closure cleanup
+    void doneWithServer();
 };
 
 static ERCB tunnelErrorComplete;
@@ -266,46 +273,47 @@ static CTCB tunnelTimeout;
 static EVH tunnelDelayedClientRead;
 static EVH tunnelDelayedServerRead;
 
-static bool
-doneWithTunnel(TunnelStateData *tunnelState)
+/// cleanup when both tunnel ends are closed, may destroy 'this'
+bool
+TunnelStateData::doneWithTunnel()
 {
-    if (!tunnelState->noConnections())
+    if (!noConnections())
         return false;
     // ConnStateData pipeline should contain the CONNECT we are performing
     // but it may be invalid already (bug 4392)
-    if (tunnelState->http.valid() && tunnelState->http->getConn()) {
-        auto ctx = tunnelState->http->getConn()->pipeline.front();
+    if (http.valid() && http->getConn()) {
+        auto ctx = http->getConn()->pipeline.front();
         if (ctx != nullptr)
             ctx->finished();
     }
-    delete tunnelState;
+    delete this;
     return true;
 }
 
-static void
-doneWithServer(TunnelStateData *tunnelState)
+void
+TunnelStateData::doneWithServer()
 {
-    tunnelState->server.conn = nullptr;
-    tunnelState->server.writer = nullptr;
+    server.conn = nullptr;
+    server.writer = nullptr;
 
-    if (tunnelState->request)
-        tunnelState->request->hier.stopPeerClock(false);
-    if (doneWithTunnel(tunnelState))
+    if (request)
+        request->hier.stopPeerClock(false);
+    if (doneWithTunnel())
         return;
-    if (!tunnelState->client.writer)
-        tunnelState->client.conn->close();
+    if (!client.writer)
+        client.conn->close();
 }
 
-static void
-doneWithClient(TunnelStateData *tunnelState)
+void
+TunnelStateData::doneWithClient()
 {
-    tunnelState->client.conn = nullptr;
-    tunnelState->client.writer = nullptr;
+    client.conn = nullptr;
+    client.writer = nullptr;
 
-    if (doneWithTunnel(tunnelState))
+    if (doneWithTunnel())
         return;
-    if (!tunnelState->server.writer)
-        tunnelState->server.conn->close();
+    if (!server.writer)
+        server.conn->close();
 }
 
 /// Server close handler applied on the TLS connection being established.
@@ -327,7 +335,7 @@ tlsServerClosed(const CommCloseCbParams &params)
         } // else use actual error from last connection attempt
         debugs(26, 4, "wait for more destinations to try");
     } else {
-        doneWithServer(tunnelState);
+        tunnelState->doneWithServer();
     }
 }
 
@@ -338,7 +346,7 @@ tunnelServerClosed(const CommCloseCbParams &params)
     auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
     debugs(26, 3, tunnelState->server.conn);
     tunnelState->server.resetCloseHandler();
-    doneWithServer(tunnelState);
+    tunnelState->doneWithServer();
 }
 
 static void
@@ -347,7 +355,7 @@ tunnelClientClosed(const CommCloseCbParams &params)
     auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
     debugs(26, 3, tunnelState->client.conn);
     tunnelState->client.resetCloseHandler();
-    doneWithClient(tunnelState);
+    tunnelState->doneWithClient();
 }
 
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
