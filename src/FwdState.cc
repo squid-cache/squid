@@ -899,7 +899,7 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
         fail(error);
         answer.error.clear(); // preserve error for errorSendComplete()
         if (CachePeer *p = serverConnection()->getPeer())
-            peerConnectFailed(p);
+            peerConnectFailed(p); // XXX: Required for PeekingPeerConnector but duped by BlindPeerConnector
         serverConnection()->close();
         return;
     }
