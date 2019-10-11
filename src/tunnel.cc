@@ -974,6 +974,7 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
 {
     Must(Comm::IsConnOpen(conn));
     server.conn = conn;
+    server.resetCloseHandlerIfOpen(tlsServerClosed, "tlsServerClosed");
 
     if (reused)
         ResetMarkingsToServer(request.getRaw(), *conn);
@@ -994,7 +995,6 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     netdbPingSite(request->url.host());
 
     request->peer_host = conn->getPeer() ? conn->getPeer()->host : nullptr;
-    server.resetCloseHandlerIfOpen(tlsServerClosed, "tlsServerClosed");
 
     bool toOrigin = false; // same semantics as StateFlags::toOrigin
     if (const auto * const peer = conn->getPeer()) {
@@ -1318,6 +1318,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     request->hier.resetPeerNotes(srvConn, tunnelState->getHost());
 
     tunnelState->server.conn = srvConn;
+    tunnelState->server.resetCloseHandlerIfOpen(tunnelServerClosed, "tunnelServerClosed");
 
 #if USE_DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
@@ -1326,7 +1327,6 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 #endif
 
     request->peer_host = srvConn->getPeer() ? srvConn->getPeer()->host : nullptr;
-    tunnelState->server.resetCloseHandlerIfOpen(tunnelServerClosed, "tunnelServerClosed");
 
     debugs(26, 4, "determine post-connect handling pathway.");
     if (const auto peer = srvConn->getPeer())
