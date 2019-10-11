@@ -137,9 +137,15 @@ public:
         void dataSent (size_t amount);
         /// writes 'b' buffer, setting the 'writer' member to 'callback'.
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
-        /// sets a new close handler for the connection, removing the old one
-        void resetCloseHandlerIfOpen(AsyncCall::Pointer &);
+
+        /// either sets a new close handler for the open connection or
+        /// just forgets the old close handler set for a now-closed connection
+        template <typename Method>
+        void resetCloseHandlerIfOpen(Method method, const char *name);
+
+        /// forgets the close handler (of the likely recently closed connection)
         void resetCloseHandler() { closer = nullptr; }
+
         int len;
         char *buf;
         AsyncCall::Pointer writer; ///< pending Comm::Write callback
@@ -382,9 +388,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     http = clientRequest;
 
     client.conn = clientRequest->getConn()->clientConnection;
-    AsyncCall::Pointer closeHandler = commCbCall(5, 4, "tunnelClientClosed",
-            CommCloseCbPtrFun(tunnelClientClosed, this));
-    client.resetCloseHandlerIfOpen(closeHandler);
+    client.resetCloseHandlerIfOpen(tunnelClientClosed, "tunnelClientClosed");
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
@@ -673,16 +677,18 @@ TunnelStateData::Connection::write(const char *b, int size, AsyncCall::Pointer &
     Comm::Write(conn, b, size, callback, free_func);
 }
 
+template <typename Method>
 void
-TunnelStateData::Connection::resetCloseHandlerIfOpen(AsyncCall::Pointer &call)
+TunnelStateData::Connection::resetCloseHandlerIfOpen(Method method, const char *name)
 {
     if (!Comm::IsConnOpen(conn)) {
         resetCloseHandler();
         return;
     }
+
     if (closer)
         comm_remove_close_handler(conn->fd, closer);
-    closer = call;
+    closer = commCbCall(5, 4, name, CommCloseCbPtrFun(method, this));
     comm_add_close_handler(conn->fd, closer);
 }
 
@@ -916,9 +922,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 void
 TunnelStateData::notePeerReadyToShovel()
 {
-    AsyncCall::Pointer closeHandler = commCbCall(5, 4, "tunnelServerClosed",
-            CommCloseCbPtrFun(tunnelServerClosed, this));
-    server.resetCloseHandlerIfOpen(closeHandler);
+    server.resetCloseHandlerIfOpen(tunnelServerClosed, "tunnelServerClosed");
     if (!clientExpectsConnectResponse())
         tunnelStartShoveling(this); // ssl-bumped connection, be quiet
     else {
@@ -990,9 +994,7 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     netdbPingSite(request->url.host());
 
     request->peer_host = conn->getPeer() ? conn->getPeer()->host : nullptr;
-    AsyncCall::Pointer closeHandler = commCbCall(5, 4, "tlsServerClosed",
-            CommCloseCbPtrFun(tlsServerClosed, this));
-    server.resetCloseHandlerIfOpen(closeHandler);
+    server.resetCloseHandlerIfOpen(tlsServerClosed, "tlsServerClosed");
 
     bool toOrigin = false; // same semantics as StateFlags::toOrigin
     if (const auto * const peer = conn->getPeer()) {
@@ -1324,9 +1326,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 #endif
 
     request->peer_host = srvConn->getPeer() ? srvConn->getPeer()->host : nullptr;
-    AsyncCall::Pointer closeHandler = commCbCall(5, 4, "tunnelServerClosed",
-            CommCloseCbPtrFun(tunnelServerClosed, tunnelState));
-    tunnelState->server.resetCloseHandlerIfOpen(closeHandler);
+    tunnelState->server.resetCloseHandlerIfOpen(tunnelServerClosed, "tunnelServerClosed");
 
     debugs(26, 4, "determine post-connect handling pathway.");
     if (const auto peer = srvConn->getPeer())
