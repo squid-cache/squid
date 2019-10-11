@@ -138,10 +138,9 @@ public:
         /// writes 'b' buffer, setting the 'writer' member to 'callback'.
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
 
-        /// either sets a new close handler for the open connection or
-        /// just forgets the old close handler set for a now-closed connection
+        /// (re)sets a new close handler to the given method
         template <typename Method>
-        void resetCloseHandlerIfOpen(Method method, const char *name);
+        void resetCloseHandler(Method method, const char *name);
 
         /// forgets the close handler (of the likely recently closed connection)
         void resetCloseHandler() { closer = nullptr; }
@@ -388,7 +387,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     http = clientRequest;
 
     client.conn = clientRequest->getConn()->clientConnection;
-    client.resetCloseHandlerIfOpen(tunnelClientClosed, "tunnelClientClosed");
+    client.resetCloseHandler(tunnelClientClosed, "tunnelClientClosed");
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
@@ -679,13 +678,8 @@ TunnelStateData::Connection::write(const char *b, int size, AsyncCall::Pointer &
 
 template <typename Method>
 void
-TunnelStateData::Connection::resetCloseHandlerIfOpen(Method method, const char *name)
+TunnelStateData::Connection::resetCloseHandler(Method method, const char *name)
 {
-    if (!Comm::IsConnOpen(conn)) {
-        resetCloseHandler();
-        return;
-    }
-
     if (closer)
         comm_remove_close_handler(conn->fd, closer);
     closer = commCbCall(5, 4, name, CommCloseCbPtrFun(method, this));
@@ -922,7 +916,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 void
 TunnelStateData::notePeerReadyToShovel()
 {
-    server.resetCloseHandlerIfOpen(tunnelServerClosed, "tunnelServerClosed");
+    server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed");
     if (!clientExpectsConnectResponse())
         tunnelStartShoveling(this); // ssl-bumped connection, be quiet
     else {
@@ -974,7 +968,7 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
 {
     Must(Comm::IsConnOpen(conn));
     server.conn = conn;
-    server.resetCloseHandlerIfOpen(tlsServerClosed, "tlsServerClosed");
+    server.resetCloseHandler(tlsServerClosed, "tlsServerClosed");
 
     if (reused)
         ResetMarkingsToServer(request.getRaw(), *conn);
@@ -1318,7 +1312,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     request->hier.resetPeerNotes(srvConn, tunnelState->getHost());
 
     tunnelState->server.conn = srvConn;
-    tunnelState->server.resetCloseHandlerIfOpen(tunnelServerClosed, "tunnelServerClosed");
+    tunnelState->server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed");
 
 #if USE_DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
