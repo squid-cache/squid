@@ -53,7 +53,8 @@ public:
     const MemObject &mem() const { assert(mem_obj); return *mem_obj; }
 
     /// \returns the address of freshest reply (if mem_obj exists)
-    /// \returns nil (otherwise)
+    /// \retval * the address of freshest reply (if mem_obj exists)
+    /// \retval nullptr when mem_obj does not exist
     /// \see MemObject::freshestReply()
     const HttpReply *hasFreshestReply() const { return mem_obj ? &mem_obj->freshestReply() : nullptr; }
 
