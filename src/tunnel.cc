@@ -247,7 +247,7 @@ private:
     /// resumes operations after the (possibly failed) HTTP CONNECT exchange
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
 
-    bool doneWithTunnel();
+    void deleteThis();
 
 public:
     bool keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to);
@@ -260,10 +260,11 @@ public:
     void copyClientBytes();
     void copyServerBytes();
 
-    /// client connection closure cleanup
-    void doneWithClient();
-    /// server connection closure cleanup
-    void doneWithServer();
+    /// client-to-Squid connection closure cleanup; may destroy us
+    void handleClientClosure();
+
+    /// Squid-to-server connection closure cleanup; may destroy us
+    void handleServerClosure();
 };
 
 static ERCB tunnelErrorComplete;
@@ -273,12 +274,11 @@ static CTCB tunnelTimeout;
 static EVH tunnelDelayedClientRead;
 static EVH tunnelDelayedServerRead;
 
-/// cleanup when both tunnel ends are closed, may destroy 'this'
-bool
-TunnelStateData::doneWithTunnel()
+/// destroys the tunnel (after performing potentially-throwing cleanup)
+void
+TunnelStateData::deleteThis()
 {
-    if (!noConnections())
-        return false;
+    assert(noConnections());
     // ConnStateData pipeline should contain the CONNECT we are performing
     // but it may be invalid already (bug 4392)
     if (http.valid() && http->getConn()) {
@@ -287,31 +287,33 @@ TunnelStateData::doneWithTunnel()
             ctx->finished();
     }
     delete this;
-    return true;
 }
 
 void
-TunnelStateData::doneWithServer()
+TunnelStateData::handleServerClosure()
 {
     server.conn = nullptr;
     server.writer = nullptr;
 
     if (request)
         request->hier.stopPeerClock(false);
-    if (doneWithTunnel())
-        return;
+
+    if (noConnections())
+        return deleteThis();
+
     if (!client.writer)
         client.conn->close();
 }
 
 void
-TunnelStateData::doneWithClient()
+TunnelStateData::handleClientClosure()
 {
     client.conn = nullptr;
     client.writer = nullptr;
 
-    if (doneWithTunnel())
-        return;
+    if (noConnections())
+        return deleteThis();
+
     if (!server.writer)
         server.conn->close();
 }
@@ -335,7 +337,7 @@ tlsServerClosed(const CommCloseCbParams &params)
         } // else use actual error from last connection attempt
         debugs(26, 4, "wait for more destinations to try");
     } else {
-        tunnelState->doneWithServer();
+        tunnelState->handleServerClosure();
     }
 }
 
@@ -346,7 +348,7 @@ tunnelServerClosed(const CommCloseCbParams &params)
     auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
     debugs(26, 3, tunnelState->server.conn);
     tunnelState->server.resetCloseHandler();
-    tunnelState->doneWithServer();
+    tunnelState->handleServerClosure();
 }
 
 static void
@@ -355,7 +357,7 @@ tunnelClientClosed(const CommCloseCbParams &params)
     auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
     debugs(26, 3, tunnelState->client.conn);
     tunnelState->client.resetCloseHandler();
-    tunnelState->doneWithClient();
+    tunnelState->handleClientClosure();
 }
 
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
