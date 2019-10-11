@@ -268,7 +268,7 @@ public:
     /// client-to-Squid connection closure cleanup; may destroy us
     void handleClientClosure();
 
-    /// Squid-to-server connection closure cleanup; may destroy us
+    /// non-retriable Squid-to-server connection closure cleanup; may destroy us
     void handleServerClosure();
 };
 
@@ -323,30 +323,35 @@ TunnelStateData::handleClientClosure()
         server.conn->close();
 }
 
-/// Server close handler applied on the TLS connection being established.
-/// If TLS handshake failures, retries connection to another destination.
+/// handles the closure of a being-established Squid-to-server TLS connection
 static void
 tlsServerClosed(const CommCloseCbParams &params)
 {
     const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
     debugs(26, 3, tunnelState->server.conn);
     tunnelState->server.resetCloseHandler();
+
     if (!tunnelState->destinations->empty()) {
         if (!tunnelState->opening())
             tunnelState->startConnecting(); // try connecting to another destination
-    } else if (tunnelState->subscribed) {
-        if (!tunnelState->hasError()) {
-            const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError,
-                    tunnelState->request.getRaw(), tunnelState->al);
-            tunnelState->saveError(anErr);
-        } // else use actual error from last connection attempt
-        debugs(26, 4, "wait for more destinations to try");
-    } else {
-        tunnelState->handleServerClosure();
+        return;
     }
+
+    if (tunnelState->subscribed) {
+        debugs(26, 4, "wait for more destinations to try");
+        return;
+    }
+
+    if (!tunnelState->hasError()) {
+        const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError,
+                tunnelState->request.getRaw(), tunnelState->al);
+        tunnelState->saveError(anErr);
+    } // else use actual error from last connection attempt
+
+    tunnelState->handleServerClosure();
 }
 
-/// server close handler applied on the established TLS connection
+/// handles a non-retriable closure of the Squid-to-server connection
 static void
 tunnelServerClosed(const CommCloseCbParams &params)
 {
