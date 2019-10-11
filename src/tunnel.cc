@@ -287,10 +287,10 @@ TunnelStateData::deleteThis()
     assert(noConnections());
     // ConnStateData pipeline should contain the CONNECT we are performing
     // but it may be invalid already (bug 4392)
-    if (http.valid() && http->getConn()) {
-        auto ctx = http->getConn()->pipeline.front();
-        if (ctx != nullptr)
-            ctx->finished();
+    if (const auto h = http.valid()) {
+        if (const auto c = h->getConn())
+            if (const auto ctx = c->pipeline.front())
+                ctx->finished();
     }
     delete this;
 }
@@ -329,7 +329,7 @@ TunnelStateData::handleClientClosure()
 static void
 tlsServerClosed(const CommCloseCbParams &params)
 {
-    auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
+    const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
     debugs(26, 3, tunnelState->server.conn);
     tunnelState->server.resetCloseHandler();
     if (!tunnelState->destinations->empty()) {
@@ -351,7 +351,7 @@ tlsServerClosed(const CommCloseCbParams &params)
 static void
 tunnelServerClosed(const CommCloseCbParams &params)
 {
-    auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
+    const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
     debugs(26, 3, tunnelState->server.conn);
     tunnelState->server.resetCloseHandler();
     tunnelState->handleServerClosure();
@@ -360,7 +360,7 @@ tunnelServerClosed(const CommCloseCbParams &params)
 static void
 tunnelClientClosed(const CommCloseCbParams &params)
 {
-    auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
+    const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
     debugs(26, 3, tunnelState->client.conn);
     tunnelState->client.resetCloseHandler();
     tunnelState->handleClientClosure();
