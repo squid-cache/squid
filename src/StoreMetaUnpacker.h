@@ -41,14 +41,5 @@ private:
     StoreMeta **tail;
 };
 
-/*
- * store_swapmeta.c
- */
-char *storeSwapMetaPack(StoreMeta * tlv_list, int *length);
-StoreMeta *storeSwapMetaBuild(StoreEntry * e);
-StoreMeta *storeSwapMetaUnpack(const char *buf, int *hdrlen);
-void storeSwapTLVFree(StoreMeta * n);
-StoreMeta ** storeSwapTLVAdd(int type, const void *ptr, size_t len, StoreMeta ** tail);
-
 #endif /* SQUID_TYPELENGTHVALUEUNPACKER_H */
 

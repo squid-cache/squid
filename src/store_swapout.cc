@@ -57,7 +57,7 @@ storeSwapOutStart(StoreEntry * e)
      */
 
     // Create metadata now, possibly in vain: storeCreate needs swap_hdr_sz.
-    const char *buf = e->getSerialisedMetaData ();
+    const auto buf = e->getSerialisedMetaData(mem->swap_hdr_sz);
     assert(buf);
 
     /* Create the swap file */

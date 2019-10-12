@@ -383,12 +383,16 @@ ClientHttpRequest::logRequest()
     al->url = log_uri;
     debugs(33, 9, "clientLogRequest: al.url='" << al->url << "'");
 
-    if (al->reply) {
-        al->http.code = al->reply->sline.status();
-        al->http.content_type = al->reply->content_type.termedBuf();
-    } else if (loggingEntry() && loggingEntry()->mem_obj) {
-        al->http.code = loggingEntry()->mem_obj->getReply()->sline.status();
-        al->http.content_type = loggingEntry()->mem_obj->getReply()->content_type.termedBuf();
+    const auto findReply = [this]() -> const HttpReply * {
+        if (al->reply)
+            return al->reply.getRaw();
+        if (const auto le = loggingEntry())
+            return le->hasFreshestReply();
+        return nullptr;
+    };
+    if (const auto reply = findReply()) {
+        al->http.code = reply->sline.status();
+        al->http.content_type = reply->content_type.termedBuf();
     }
 
     debugs(33, 9, "clientLogRequest: http.code='" << al->http.code << "'");
@@ -741,7 +745,7 @@ ClientHttpRequest::mRangeCLen()
     while (pos != request->range->end()) {
         /* account for headers for this range */
         mb.reset();
-        clientPackRangeHdr(memObject()->getReply(),
+        clientPackRangeHdr(&storeEntry()->mem().freshestReply(),
                            *pos, range_iter.boundary, &mb);
         clen += mb.size;
 
@@ -3515,11 +3519,12 @@ int
 varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 {
     SBuf vary(request->vary_headers);
-    int has_vary = entry->getReply()->header.has(Http::HdrType::VARY);
+    const auto &reply = entry->mem().freshestReply();
+    auto has_vary = reply.header.has(Http::HdrType::VARY);
 #if X_ACCELERATOR_VARY
 
     has_vary |=
-        entry->getReply()->header.has(Http::HdrType::HDR_X_ACCELERATOR_VARY);
+        reply.header.has(Http::HdrType::HDR_X_ACCELERATOR_VARY);
 #endif
 
     if (!has_vary || entry->mem_obj->vary_headers.isEmpty()) {
@@ -3539,7 +3544,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
         /* virtual "vary" object found. Calculate the vary key and
          * continue the search
          */
-        vary = httpMakeVaryMark(request, entry->getReply());
+        vary = httpMakeVaryMark(request, &reply);
 
         if (!vary.isEmpty()) {
             request->vary_headers = vary;
@@ -3551,7 +3556,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
         }
     } else {
         if (vary.isEmpty()) {
-            vary = httpMakeVaryMark(request, entry->getReply());
+            vary = httpMakeVaryMark(request, &reply);
 
             if (!vary.isEmpty())
                 request->vary_headers = vary;

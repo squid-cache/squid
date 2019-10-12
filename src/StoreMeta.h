@@ -137,7 +137,7 @@ public:
 /// \ingroup SwapStoreAPI
 char *storeSwapMetaPack(tlv * tlv_list, int *length);
 /// \ingroup SwapStoreAPI
-tlv *storeSwapMetaBuild(StoreEntry * e);
+tlv *storeSwapMetaBuild(const StoreEntry *);
 /// \ingroup SwapStoreAPI
 void storeSwapTLVFree(tlv * n);
 

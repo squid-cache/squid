@@ -186,8 +186,8 @@ public:
     StoreMapUpdate &operator =(const StoreMapUpdate &other) = delete;
 
     StoreEntry *entry; ///< the store entry being updated
-    Edition stale; ///< old anchor and chain being updated
-    Edition fresh; ///< new anchor and updated chain prefix
+    Edition stale; ///< old anchor and chain
+    Edition fresh; ///< new anchor and the updated chain prefix
 };
 
 class StoreMapCleaner;

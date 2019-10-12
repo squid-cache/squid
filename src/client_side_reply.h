@@ -80,6 +80,9 @@ public:
     virtual LogTags *loggingTags();
 
     ClientHttpRequest *http;
+    /// Base reply header bytes received from Store.
+    /// Compatible with ClientHttpRequest::Out::offset.
+    /// Not to be confused with ClientHttpRequest::Out::headers_sz.
     int headers_sz;
     store_client *sc;       /* The store_client we're using */
     StoreIOBuffer tempBuffer;   /* For use in validating requests via IMS */

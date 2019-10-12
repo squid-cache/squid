@@ -293,7 +293,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     }
 
     s = buf + k;
-    assert(urlres_e->getReply());
+    // TODO: Check whether we should parse urlres_e reply, as before 528b2c61.
     rep = new HttpReply;
     rep->parseCharBuf(buf, k);
     debugs(52, 3, "reply exists, code=" << rep->sline.status() << ".");
