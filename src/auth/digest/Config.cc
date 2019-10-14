@@ -89,7 +89,7 @@ DigestFieldsLookupTable(DIGEST_INVALID_ATTR, DigestAttrs);
  */
 
 static void authenticateDigestNonceCacheCleanup(void *data);
-static digest_nonce_h *authenticateDigestNonceFindNonce(const char *nonceb64);
+static digest_nonce_h *authenticateDigestNonceFindNonce(const char *noncehex);
 static void authenticateDigestNonceDelete(digest_nonce_h * nonce);
 static void authenticateDigestNonceSetup(void);
 static void authDigestNonceEncode(digest_nonce_h * nonce);
@@ -254,7 +254,7 @@ static void
 authenticateDigestNonceCacheCleanup(void *)
 {
     /*
-     * We walk the hash by nonceb64 as that is the unique key we
+     * We walk the hash by noncehex as that is the unique key we
      * use.  For big hash tables we could consider stepping through
      * the cache, 100/200 entries at a time. Lets see how it flies
      * first.
@@ -323,7 +323,7 @@ authDigestNonceUnlink(digest_nonce_h * nonce)
 }
 
 const char *
-authenticateDigestNonceNonceb64(const digest_nonce_h * nonce)
+authenticateDigestNonceNonceHex(const digest_nonce_h * nonce)
 {
     if (!nonce)
         return NULL;
@@ -332,18 +332,18 @@ authenticateDigestNonceNonceb64(const digest_nonce_h * nonce)
 }
 
 static digest_nonce_h *
-authenticateDigestNonceFindNonce(const char *nonceb64)
+authenticateDigestNonceFindNonce(const char *noncehex)
 {
     digest_nonce_h *nonce = NULL;
 
-    if (nonceb64 == NULL)
+    if (noncehex == NULL)
         return NULL;
 
-    debugs(29, 9, "looking for nonceb64 '" << nonceb64 << "' in the nonce cache.");
+    debugs(29, 9, "looking for noncehex '" << noncehex << "' in the nonce cache.");
 
-    nonce = static_cast < digest_nonce_h * >(hash_lookup(digest_nonce_cache, nonceb64));
+    nonce = static_cast < digest_nonce_h * >(hash_lookup(digest_nonce_cache, noncehex));
 
-    if ((nonce == NULL) || (strcmp(authenticateDigestNonceNonceb64(nonce), nonceb64)))
+    if ((nonce == NULL) || (strcmp(authenticateDigestNonceNonceHex(nonce), noncehex)))
         return NULL;
 
     debugs(29, 9, "Found nonce '" << nonce << "'");
@@ -537,12 +537,12 @@ Auth::Digest::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, Ht
 
     debugs(29, 9, "Sending type:" << hdrType <<
            " header: 'Digest realm=\"" << realm << "\", nonce=\"" <<
-           authenticateDigestNonceNonceb64(nonce) << "\", qop=\"" << QOP_AUTH <<
+           authenticateDigestNonceNonceHex(nonce) << "\", qop=\"" << QOP_AUTH <<
            "\", stale=" << (stale ? "true" : "false"));
 
     /* in the future, for WWW auth we may want to support the domain entry */
     httpHeaderPutStrf(&rep->header, hdrType, "Digest realm=\"" SQUIDSBUFPH "\", nonce=\"%s\", qop=\"%s\", stale=%s",
-                      SQUIDSBUFPRINT(realm), authenticateDigestNonceNonceb64(nonce), QOP_AUTH, stale ? "true" : "false");
+                      SQUIDSBUFPRINT(realm), authenticateDigestNonceNonceHex(nonce), QOP_AUTH, stale ? "true" : "false");
 }
 
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
@@ -844,10 +844,10 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
             break;
 
         case DIGEST_NONCE:
-            safe_free(digest_request->nonceb64);
+            safe_free(digest_request->noncehex);
             if (value.size() != 0)
-                digest_request->nonceb64 = xstrndup(value.rawBuf(), value.size() + 1);
-            debugs(29, 9, "Found nonce '" << digest_request->nonceb64 << "'");
+                digest_request->noncehex = xstrndup(value.rawBuf(), value.size() + 1);
+            debugs(29, 9, "Found nonce '" << digest_request->noncehex << "'");
             break;
 
         case DIGEST_NC:
@@ -923,7 +923,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     }
 
     /* and a nonce? */
-    if (!digest_request->nonceb64 || digest_request->nonceb64[0] == '\0') {
+    if (!digest_request->noncehex || digest_request->noncehex[0] == '\0') {
         debugs(29, 2, "Empty or not present nonce");
         rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
@@ -998,7 +998,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     /** below nonce state dependent **/
 
     /* now the nonce */
-    nonce = authenticateDigestNonceFindNonce(digest_request->nonceb64);
+    nonce = authenticateDigestNonceFindNonce(digest_request->noncehex);
     /* check that we're not being hacked / the username hasn't changed */
     if (nonce && nonce->user && strcmp(username, nonce->user->username())) {
         debugs(29, 2, "Username for the nonce does not equal the username for the request");
@@ -1074,7 +1074,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
     debugs(29, 9, "username = '" << digest_user->username() << "'\nrealm = '" <<
            digest_request->realm << "'\nqop = '" << digest_request->qop <<
            "'\nalgorithm = '" << digest_request->algorithm << "'\nuri = '" <<
-           digest_request->uri << "'\nnonce = '" << digest_request->nonceb64 <<
+           digest_request->uri << "'\nnonce = '" << digest_request->noncehex <<
            "'\nnc = '" << digest_request->nc << "'\ncnonce = '" <<
            digest_request->cnonce << "'\nresponse = '" <<
            digest_request->response << "'\ndigestnonce = '" << nonce << "'");

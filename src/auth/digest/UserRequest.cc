@@ -23,7 +23,7 @@
 #include "SquidTime.h"
 
 Auth::Digest::UserRequest::UserRequest() :
-    nonceb64(NULL),
+    noncehex(NULL),
     cnonce(NULL),
     realm(NULL),
     pszPass(NULL),
@@ -46,7 +46,7 @@ Auth::Digest::UserRequest::~UserRequest()
 {
     assert(LockCount()==0);
 
-    safe_free(nonceb64);
+    safe_free(noncehex);
     safe_free(cnonce);
     safe_free(realm);
     safe_free(pszPass);
@@ -109,11 +109,11 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
     }
 
     DigestCalcHA1(digest_request->algorithm, NULL, NULL, NULL,
-                  authenticateDigestNonceNonceb64(digest_request->nonce),
+                  authenticateDigestNonceNonceHex(digest_request->nonce),
                   digest_request->cnonce,
                   digest_user->HA1, SESSIONKEY);
     SBuf sTmp = request->method.image();
-    DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceb64(digest_request->nonce),
+    DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceHex(digest_request->nonce),
                        digest_request->nc, digest_request->cnonce, digest_request->qop,
                        sTmp.c_str(), digest_request->uri, HA2, Response);
 
@@ -135,7 +135,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
              * used.
              */
             sTmp = HttpRequestMethod(Http::METHOD_GET).image();
-            DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceb64(digest_request->nonce),
+            DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceHex(digest_request->nonce),
                                digest_request->nc, digest_request->cnonce, digest_request->qop,
                                sTmp.c_str(), digest_request->uri, HA2, Response);
 
@@ -176,7 +176,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
     /* check Auth::Pending to avoid loop */
 
     if (!authDigestNonceIsValid(digest_request->nonce, digest_request->nc) && user()->credentials() != Auth::Pending) {
-        debugs(29, 3, auth_user->username() << "' validated OK but nonce stale: " << digest_request->nonceb64);
+        debugs(29, 3, auth_user->username() << "' validated OK but nonce stale: " << digest_request->noncehex);
         /* Pending prevent banner and makes a ldap control */
         auth_user->credentials(Auth::Pending);
         nonce->flags.valid = false;
@@ -244,8 +244,8 @@ Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int acce
             nextnonce = authenticateDigestNonceNew();
             authDigestUserLinkNonce(digest_user, nextnonce);
         }
-        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nextnonce) << "\"");
-        httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceb64(nextnonce));
+        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceHex(nextnonce) << "\"");
+        httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceHex(nextnonce));
     }
 }
 
@@ -276,8 +276,8 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
             nonce = authenticateDigestNonceNew();
             authDigestUserLinkNonce(digest_user, nonce);
         }
-        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nonce) << "\"");
-        httpTrailerPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceb64(nonce));
+        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceHex(nonce) << "\"");
+        httpTrailerPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceHex(nonce));
     }
 }
 #endif
