@@ -138,6 +138,8 @@ public:
         /// writes 'b' buffer, setting the 'writer' member to 'callback'.
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
 
+        bool monitorsClosures() const { return bool(closer); }
+
         /// (re)sets a new close handler to the given method
         template <typename Method>
         void resetCloseHandler(Method method, const char *name);
@@ -332,6 +334,7 @@ tlsServerClosed(const CommCloseCbParams &params)
     tunnelState->server.resetCloseHandler();
 
     if (!tunnelState->destinations->empty()) {
+        // XXX: opening() cannot be true when we have a (closing) connection
         if (!tunnelState->opening())
             tunnelState->startConnecting(); // try connecting to another destination
         return;
@@ -921,7 +924,6 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 void
 TunnelStateData::notePeerReadyToShovel()
 {
-    server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed");
     if (!clientExpectsConnectResponse())
         tunnelStartShoveling(this); // ssl-bumped connection, be quiet
     else {
@@ -973,6 +975,8 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
 {
     Must(Comm::IsConnOpen(conn));
     server.conn = conn;
+    // XXX: Double reset in toOrigin use case
+    // XXX: This connection may have nothing to do with TLS.
     server.resetCloseHandler(tlsServerClosed, "tlsServerClosed");
 
     if (reused)
@@ -1004,9 +1008,10 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
         toOrigin = true;
     }
 
-    if (!toOrigin)
+    if (!toOrigin) {
         connectToPeer();
-    else {
+    } else {
+        server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed");
         notePeerReadyToShovel();
     }
 
@@ -1085,9 +1090,18 @@ TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
     if (ErrorState *error = answer.error.get()) {
         saveError(error);
         answer.error.clear();
-        server.conn->close(); // tlsServerClosed() will retry as needed
+        Must(server.monitorsClosures()); // closure notification (is already pending or) will happen
+        if (IsConnOpen(server.conn))
+            server.conn->close();
+        return; // tlsServerClosed() will retry as needed
+    }
+
+    if (!IsConnOpen(server.conn)) {
+        Must(server.monitorsClosures()); // closure notification is already pending
+        // XXX: tlsServerClosed() will retry but we do not want to retry!
         return;
     }
+    server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed");
 
     assert(!waitingForConnectExchange);
 
