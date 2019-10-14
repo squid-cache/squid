@@ -112,7 +112,7 @@ authDigestNonceEncode(digest_nonce_h * nonce)
     HASH H;
     SquidMD5Init(&Md5Ctx);
     SquidMD5Update(&Md5Ctx, reinterpret_cast<const uint8_t *>(&nonce->noncedata), sizeof(nonce->noncedata));
-    SquidMD5Final((unsigned char *) H, &Md5Ctx);
+    SquidMD5Final(reinterpret_cast<uint8_t *>(H), &Md5Ctx);
 
     nonce->key = xcalloc(sizeof(HASHHEX), 1);
     CvtHex(H, static_cast<char *>(nonce->key));
