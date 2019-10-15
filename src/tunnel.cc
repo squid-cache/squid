@@ -181,6 +181,9 @@ public:
     HappyConnOpenerPointer connOpener; ///< current connection opening job
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     bool destinationsFound; ///< At least one candidate path found
+    /// whether another destination may be still attempted if the TCP connection
+    /// was unexpectedly closed
+    bool retriable;
 
     // AsyncCalls which we set and may need cancelling.
     struct {
@@ -275,7 +278,6 @@ public:
 };
 
 static ERCB tunnelErrorComplete;
-static CLCB tunnelServerClosed;
 static CLCB tunnelClientClosed;
 static CTCB tunnelTimeout;
 static EVH tunnelDelayedClientRead;
@@ -325,42 +327,34 @@ TunnelStateData::handleClientClosure()
         server.conn->close();
 }
 
-/// handles the closure of a being-established Squid-to-server TLS connection
-static void
-tlsServerClosed(const CommCloseCbParams &params)
-{
-    const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
-    debugs(26, 3, tunnelState->server.conn);
-    tunnelState->server.resetCloseHandler();
-
-    if (!tunnelState->destinations->empty()) {
-        // XXX: opening() cannot be true when we have a (closing) connection
-        if (!tunnelState->opening())
-            tunnelState->startConnecting(); // try connecting to another destination
-        return;
-    }
-
-    if (tunnelState->subscribed) {
-        debugs(26, 4, "wait for more destinations to try");
-        return;
-    }
-
-    if (!tunnelState->hasError()) {
-        const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError,
-                tunnelState->request.getRaw(), tunnelState->al);
-        tunnelState->saveError(anErr);
-    } // else use actual error from last connection attempt
-
-    tunnelState->handleServerClosure();
-}
-
-/// handles a non-retriable closure of the Squid-to-server connection
+/// handles closures of the Squid-to-server connection
 static void
 tunnelServerClosed(const CommCloseCbParams &params)
 {
     const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
     debugs(26, 3, tunnelState->server.conn);
     tunnelState->server.resetCloseHandler();
+
+    if (tunnelState->retriable) {
+        if (!tunnelState->destinations->empty()) {
+            // XXX: opening() cannot be true when we have a (closing) connection
+            if (!tunnelState->opening())
+                tunnelState->startConnecting(); // try connecting to another destination
+            return;
+        }
+
+        if (tunnelState->subscribed) {
+            debugs(26, 4, "wait for more destinations to try");
+            return;
+        }
+
+        if (!tunnelState->hasError()) {
+            const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError,
+                    tunnelState->request.getRaw(), tunnelState->al);
+            tunnelState->saveError(anErr);
+        } // else use actual error from last connection attempt
+    }
+
     tunnelState->handleServerClosure();
 }
 
@@ -377,7 +371,8 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     startTime(squid_curtime),
     waitingForConnectExchange(false),
     destinations(new ResolvedPeers()),
-    destinationsFound(false)
+    destinationsFound(false),
+    retriable(true)
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
     client.readPendingFunc = &tunnelDelayedClientRead;
@@ -688,6 +683,7 @@ template <typename Method>
 void
 TunnelStateData::Connection::resetCloseHandler(Method method, const char *name)
 {
+    Must(Comm::IsConnOpen(conn));
     if (closer)
         comm_remove_close_handler(conn->fd, closer);
     closer = commCbCall(5, 4, name, CommCloseCbPtrFun(method, this));
@@ -975,9 +971,7 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
 {
     Must(Comm::IsConnOpen(conn));
     server.conn = conn;
-    // XXX: Double reset in toOrigin use case
-    // XXX: This connection may have nothing to do with TLS.
-    server.resetCloseHandler(tlsServerClosed, "tlsServerClosed");
+    server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed");
 
     if (reused)
         ResetMarkingsToServer(request.getRaw(), *conn);
@@ -1011,7 +1005,7 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
     if (!toOrigin) {
         connectToPeer();
     } else {
-        server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed");
+        retriable = false;
         notePeerReadyToShovel();
     }
 
@@ -1093,15 +1087,10 @@ TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
         Must(server.monitorsClosures()); // closure notification (is already pending or) will happen
         if (IsConnOpen(server.conn))
             server.conn->close();
-        return; // tlsServerClosed() will retry as needed
+        return; // tunnelServerClosed() will retry as needed
     }
 
-    if (!IsConnOpen(server.conn)) {
-        Must(server.monitorsClosures()); // closure notification is already pending
-        // XXX: tlsServerClosed() will retry but we do not want to retry!
-        return;
-    }
-    server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed");
+    retriable = false;
 
     assert(!waitingForConnectExchange);
 
@@ -1324,6 +1313,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     debugs(26, 3, request->method << " " << context->http->uri << " " << request->http_ver);
 
     TunnelStateData *tunnelState = new TunnelStateData(context->http);
+    tunnelState->retriable = false;
 
     // tunnelStartShoveling() drains any buffered from-client data (inBuf)
     fd_table[clientConn->fd].useDefaultIo();
