@@ -142,7 +142,7 @@ public:
 
         /// (re)sets a new close handler to the given method
         template <typename Method>
-        void resetCloseHandler(Method method, const char *name);
+        void resetCloseHandler(Method method, const char *name, TunnelStateData *tunnelState);
 
         /// forgets the close handler (of the likely recently closed connection)
         void resetCloseHandler() { closer = nullptr; }
@@ -390,7 +390,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     http = clientRequest;
 
     client.conn = clientRequest->getConn()->clientConnection;
-    client.resetCloseHandler(tunnelClientClosed, "tunnelClientClosed");
+    client.resetCloseHandler(tunnelClientClosed, "tunnelClientClosed", this);
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
@@ -681,12 +681,12 @@ TunnelStateData::Connection::write(const char *b, int size, AsyncCall::Pointer &
 
 template <typename Method>
 void
-TunnelStateData::Connection::resetCloseHandler(Method method, const char *name)
+TunnelStateData::Connection::resetCloseHandler(Method method, const char *name, TunnelStateData *tunnelState)
 {
     Must(Comm::IsConnOpen(conn));
     if (closer)
         comm_remove_close_handler(conn->fd, closer);
-    closer = commCbCall(5, 4, name, CommCloseCbPtrFun(method, this));
+    closer = commCbCall(5, 4, name, CommCloseCbPtrFun(method, tunnelState));
     comm_add_close_handler(conn->fd, closer);
 }
 
@@ -971,7 +971,7 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
 {
     Must(Comm::IsConnOpen(conn));
     server.conn = conn;
-    server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed");
+    server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed", this);
 
     if (reused)
         ResetMarkingsToServer(request.getRaw(), *conn);
@@ -1321,7 +1321,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     request->hier.resetPeerNotes(srvConn, tunnelState->getHost());
 
     tunnelState->server.conn = srvConn;
-    tunnelState->server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed");
+    tunnelState->server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed", tunnelState);
 
 #if USE_DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
