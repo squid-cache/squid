@@ -31,32 +31,12 @@ namespace Security
 {
 
 /**
- * Initiates encryption on a connection to peers or servers.
- * Despite its name does not perform any connect(2) operations.
+ * Initiates encryption of a given open TCP connection to a peer or server.
+ * Despite its name does not perform any connect(2) operations. Owns the
+ * connection during TLS negotiations. The caller receives EncryptorAnswer.
  *
  * Contains common code and interfaces of various specialized PeerConnector's,
  * including peer certificate validation code.
- \par
- * The caller receives a call back with Security::EncryptorAnswer. If answer.error
- * is not nil, then there was an error and the encryption to the peer or server
- * was not fully established. The error object is suitable for error response
- * generation.
- \par
- * The job reports to the caller connection closures.
- \par
- * PeerConnector class currently supports a form of TLS negotiation timeout,
- * which is accounted only when sets the read timeout from encrypted peers/servers.
- * For a complete solution, the caller must monitor the overall connection
- * establishment timeout and close the connection on timeouts. This is probably
- * better than having dedicated (or none at all!) timeouts for peer selection,
- * DNS lookup, TCP handshake, SSL handshake, etc. Some steps may have their
- * own timeout, but not all steps should be forced to have theirs.
- * XXX: tunnel.cc and probably other subsystems do not have an "overall
- * connection establishment" timeout. We need to change their code so that they
- * start monitoring earlier and close on timeouts. This change may need to be
- * discussed on squid-dev.
- \par
- * This job may close the connection on timeouts.
  */
 class PeerConnector: virtual public AsyncJob
 {
@@ -81,7 +61,8 @@ public:
                   const time_t timeout = 0);
     virtual ~PeerConnector();
 
-    bool usesPconn_; ///< Whether persistent connections are supported
+    bool usesPconn_; ///< whether the connection came from a fwdPconnPool
+
 protected:
     // AsyncJob API
     virtual void start();
@@ -162,17 +143,16 @@ protected:
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }
 
-    void bail(ErrorState *error); ///< Return an error to the PeerConnector caller
+    /// Sends the given error to the initiator.
+    void bail(ErrorState *error);
 
-    /// Return a ready to use connection to the caller
+    /// Sends the encrypted connection to the initiator.
     void sendSuccess();
 
-    /// Callback the caller class, and pass the ready to communicate secure
-    /// connection or an error if PeerConnector failed.
+    /// A bail(), sendSuccess() helper: sends results to the initiator.
     void callBack();
 
-    /// Stop monitoring the connection
-    /// \param andClose if true also closes the connection
+    /// A bail(), sendSuccess() helper: stops monitoring the connection.
     void disconnect(const bool andClose);
 
     /// If called the certificates validator will not used

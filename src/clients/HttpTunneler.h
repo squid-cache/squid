@@ -26,13 +26,9 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 namespace Http
 {
 
-/// Establishes an HTTP CONNECT tunnel through a forward proxy.
-///
-/// The caller receives a call back with Http::TunnelerAnswer.
-///
-/// The job reports success, errors or connection closures to the caller.
-///
-/// This job may close the connection on timeout.
+/// Negotiates an HTTP CONNECT tunnel through a forward proxy using a given
+/// (open and, if needed, encrypted) TCP connection to that proxy. Owns the
+/// connection during these negotiations. The caller receives TunnelerAnswer.
 class Tunneler: virtual public AsyncJob
 {
     CBDATA_CLASS(Tunneler);
@@ -70,6 +66,7 @@ public:
 #endif
 
     bool usesPconn_; ///< whether persistent connections are supported
+
 protected:
     /* AsyncJob API */
     virtual ~Tunneler();
@@ -90,18 +87,16 @@ protected:
     void handleResponse(const bool eof);
     void bailOnResponseError(const char *error, HttpReply *);
 
-    /// Return an error to the caller
+    /// Sends the given error to the initiator.
     void bailWith(ErrorState*);
 
-    /// Return a ready to use connection to the caller
+    /// Sends the ready-to-use tunnel to the initiator.
     void sendSuccess();
 
-    /// Callback the caller class, and pass the ready to use
-    /// connection or an error if Tunneler failed.
+    /// A bailWith(), sendSuccess() helper: sends results to the initiator.
     void callBack();
 
-    /// Stop monitoring the connection
-    /// \param andClose if true also closes the connection
+    /// A bailWith(), sendSuccess() helper: stops monitoring the connection.
     void disconnect(const bool andClose);
 
     TunnelerAnswer &answer();
