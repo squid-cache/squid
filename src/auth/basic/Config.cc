@@ -160,7 +160,7 @@ authenticateBasicStats(StoreEntry * sentry)
  * \param b0 the first byte of UTF-8 code points.
  */
 static inline int
-utf8SequenceLength(const char b0)
+utf8CodePointsLength(const char b0)
 {
     if ((b0 & 0x80) == 0)
         return 1;
@@ -217,7 +217,7 @@ isValidUtf8(const unsigned char* source, int length)
 static bool
 isValidUtf8String(const char *source, const char *sourceEnd) {
     while (source < sourceEnd) {
-        const auto length = utf8SequenceLength(*source);
+        const auto length = utf8CodePointsLength(*source);
         if (length > sourceEnd - source || !isValidUtf8(reinterpret_cast<const unsigned char*>(source), length))
             return false;
         source += length;
