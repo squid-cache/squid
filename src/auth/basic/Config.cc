@@ -155,13 +155,15 @@ authenticateBasicStats(StoreEntry * sentry)
 }
 
 /**
- * Returns the length of non ASCII UTF-8 code points.
+ * Returns the length of UTF-8 code points including the first byte.
  *
  * \param b0 the first byte of UTF-8 code points.
  */
 static inline int
-utf8SequenceLengthNonASCII(const char b0)
+utf8SequenceLength(const char b0)
 {
+    if ((b0 & 0x80) == 0)
+        return 1;
     if ((b0 & 0xC0) != 0xC0)
         return 0;
     if ((b0 & 0xE0) == 0xC0)
@@ -171,17 +173,6 @@ utf8SequenceLengthNonASCII(const char b0)
     if ((b0 & 0xF8) == 0xF0)
         return 4;
     return 0;
-}
-
-/**
- * Returns the length of UTF-8 code points including the first byte.
- *
- * \param b0 the first byte of UTF-8 code points.
- */
-static inline int
-utf8SequenceLength(const char b0)
-{
-    return (b0 & 0x80) == 0 ? 1 : utf8SequenceLengthNonASCII(b0);
 }
 
 /**
