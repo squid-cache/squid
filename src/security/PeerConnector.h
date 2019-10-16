@@ -153,7 +153,7 @@ protected:
     void callBack();
 
     /// A bail(), sendSuccess() helper: stops monitoring the connection.
-    void disconnect(const bool andClose);
+    void disconnect();
 
     /// If called the certificates validator will not used
     void bypassCertValidator() {useCertValidator_ = false;}

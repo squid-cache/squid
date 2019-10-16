@@ -563,18 +563,23 @@ Security::PeerConnector::bail(ErrorState *error)
         peerConnectFailed(p);
 
     callBack();
-    disconnect(true);
+    disconnect();
+
+    if (usesPconn_)
+        fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
+    serverConn->close();
+    serverConn = nullptr;
 }
 
 void
 Security::PeerConnector::sendSuccess()
 {
     callBack();
-    disconnect(false);
+    disconnect();
 }
 
 void
-Security::PeerConnector::disconnect(const bool andClose)
+Security::PeerConnector::disconnect()
 {
     if (closeHandler) {
         comm_remove_close_handler(serverConnection()->fd, closeHandler);
@@ -582,13 +587,6 @@ Security::PeerConnector::disconnect(const bool andClose)
     }
 
     commUnsetConnTimeout(serverConnection());
-
-    if (andClose) {
-        if (usesPconn_)
-            fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
-        serverConn->close();
-        serverConn = nullptr;
-    }
 }
 
 void

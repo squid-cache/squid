@@ -97,7 +97,7 @@ protected:
     void callBack();
 
     /// A bailWith(), sendSuccess() helper: stops monitoring the connection.
-    void disconnect(const bool andClose);
+    void disconnect();
 
     TunnelerAnswer &answer();
 

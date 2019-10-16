@@ -358,7 +358,12 @@ Http::Tunneler::bailWith(ErrorState *error)
         peerConnectFailed(p);
 
     callBack();
-    disconnect(true);
+    disconnect();
+
+    if (usesPconn_)
+        fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
+    connection->close();
+    connection = nullptr;
 }
 
 void
@@ -366,11 +371,11 @@ Http::Tunneler::sendSuccess()
 {
     assert(answer().positive());
     callBack();
-    disconnect(false);
+    disconnect();
 }
 
 void
-Http::Tunneler::disconnect(const bool andClose)
+Http::Tunneler::disconnect()
 {
     if (!connection)
         return;
@@ -382,13 +387,6 @@ Http::Tunneler::disconnect(const bool andClose)
 
     // remove connection timeout handler
     commUnsetConnTimeout(connection);
-
-    if (andClose) {
-        if (usesPconn_)
-            fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
-        connection->close();
-        connection = nullptr;
-    }
 }
 
 void
