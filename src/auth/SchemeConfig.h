@@ -73,7 +73,6 @@ public:
      * authentication in Auth::UserRequest::authenticate().
      *
      \param proxy_auth  Login Pattern to parse.
-     \param accept_lang Accept-Language header.
      \retval *      Details needed to authenticate.
      */
     virtual UserRequest::Pointer decode(char const *proxy_auth, const HttpRequest *request, const char *requestRealm) = 0;

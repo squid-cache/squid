@@ -23,6 +23,7 @@
 #include "base64.h"
 #include "cache_cf.h"
 #include "charset.h"
+#include "errorpage.h"
 #include "helper.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -32,7 +33,6 @@
 #include "Store.h"
 #include "util.h"
 #include "wordlist.h"
-#include "errorpage.h"
 
 /* Basic Scheme */
 static AUTHSSTATS authenticateBasicStats;
@@ -154,7 +154,7 @@ authenticateBasicStats(StoreEntry * sentry)
         basicauthenticators->packStatsInto(sentry, "Basic Authenticator Statistics");
 }
 
-/*
+/**
  * Returns the length of non ASCII UTF-8 sequence.
  *
  * \param b0 the first byte of UTF-8 sequence.
@@ -173,7 +173,7 @@ utf8SequenceLengthNonASCII(char b0)
     return 0;
 }
 
-/*
+/**
  * Returns the length of UTF-8 sequence.
  *
  * \param b0 the first byte of UTF-8 sequence.
@@ -184,7 +184,7 @@ utf8SequenceLength(char b0)
     return (b0 & 0x80) == 0 ? 1 : utf8SequenceLengthNonASCII(b0);
 }
 
-/*
+/**
  * Utility routine to tell whether a sequence of bytes is legal UTF-8.
  * This must be called with the length pre-determined by the first byte.
  * If presented with a length > 4, this returns false.  The Unicode
@@ -220,8 +220,8 @@ isLegalUTF8(const unsigned char* source, int length)
     return true;
 }
 
-/*
- * Returns whether a UTF-8 string is legal or not.
+/**
+ * Returns whether the given input is a valid UTF-8 encoding.
  */
 static bool
 isLegalUTF8String(const char *source, const char *sourceEnd) {
@@ -234,7 +234,7 @@ isLegalUTF8String(const char *source, const char *sourceEnd) {
     return true;
 }
 
-/*
+/**
  * Parse Accept-Language header and return whether a CP1251 encoding
  * allowed or not.
  *
