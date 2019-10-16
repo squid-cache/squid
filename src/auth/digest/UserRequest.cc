@@ -299,11 +299,11 @@ Auth::Digest::UserRequest::startHelperLookup(HttpRequest *request, AccessLogEntr
 
     const char *keyExtras = helperRequestKeyExtras(request, al);
     if (static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->utf8) {
-        SBuf strUser = Latin1ToUtf8(user()->username());
+        const auto strUser = Latin1ToUtf8(user()->username());
         if (keyExtras)
-            snprintf(buf, 8192, "\"%s\":\"%s\" %s\n", strUser.c_str(), realm, keyExtras);
+            snprintf(buf, 8192, "\"" SQUIDSBUFPH "\":\"%s\" %s\n", SQUIDSBUFPRINT(strUser), realm, keyExtras);
         else
-            snprintf(buf, 8192, "\"%s\":\"%s\"\n", strUser.c_str(), realm);
+            snprintf(buf, 8192, "\"" SQUIDSBUFPH "\":\"%s\"\n", SQUIDSBUFPRINT(strUser), realm);
     } else {
         if (keyExtras)
             snprintf(buf, 8192, "\"%s\":\"%s\" %s\n", user()->username(), realm, keyExtras);

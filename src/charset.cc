@@ -15,11 +15,11 @@ Latin1ToUtf8(const char *in)
 {
     SBuf result;
 
-    if (in == NULL)
+    if (!in)
         return result;
 
     for (; *in; in++) {
-        unsigned char ch = static_cast<unsigned char>(*in);
+        const auto ch = static_cast<unsigned char>(*in);
         size_t bytesToWrite = 0;
         char sequence[3] = {0, 0, 0};
 
@@ -31,7 +31,7 @@ Latin1ToUtf8(const char *in)
             sequence[1] = static_cast<char>((ch & 0x3f) | 0x80);
             bytesToWrite = 2;
         }
-        result.append (sequence, bytesToWrite);
+        result.append(sequence, bytesToWrite);
     }
     return result;
 }
@@ -56,7 +56,7 @@ Cp1251ToUtf8(const char *in)
         return result;
 
     for (; *in; in++) {
-        unsigned char ch = static_cast<unsigned char>(*in);
+        const auto ch = static_cast<unsigned char>(*in);
         unsigned u = 0;
         size_t bytesToWrite = 0;
         char sequence[4] = {0, 0, 0, 0};
@@ -80,7 +80,7 @@ Cp1251ToUtf8(const char *in)
         case 2: sequence[1] = static_cast<char>(u & 0x3f) | 0x80; u >>= 6;               // no break
         case 1: sequence[0] = static_cast<char>(u)        | firstByteMark[bytesToWrite]; // no break
         }
-        result.append (sequence, bytesToWrite);
+        result.append(sequence, bytesToWrite);
     }
     return result;
 }

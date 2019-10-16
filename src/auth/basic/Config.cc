@@ -155,12 +155,12 @@ authenticateBasicStats(StoreEntry * sentry)
 }
 
 /**
- * Returns the length of non ASCII UTF-8 sequence.
+ * Returns the length of non ASCII UTF-8 code points.
  *
- * \param b0 the first byte of UTF-8 sequence.
+ * \param b0 the first byte of UTF-8 code points.
  */
 static inline int
-utf8SequenceLengthNonASCII(char b0)
+utf8SequenceLengthNonASCII(const char b0)
 {
     if ((b0 & 0xC0) != 0xC0)
         return 0;
@@ -174,21 +174,21 @@ utf8SequenceLengthNonASCII(char b0)
 }
 
 /**
- * Returns the length of UTF-8 sequence.
+ * Returns the length of UTF-8 code points including the first byte.
  *
- * \param b0 the first byte of UTF-8 sequence.
+ * \param b0 the first byte of UTF-8 code points.
  */
 static inline int
-utf8SequenceLength(char b0)
+utf8SequenceLength(const char b0)
 {
     return (b0 & 0x80) == 0 ? 1 : utf8SequenceLengthNonASCII(b0);
 }
 
 /**
- * Utility routine to tell whether a sequence of bytes is legal UTF-8.
+ * Utility routine to tell whether a sequence of bytes is valid UTF-8.
  * This must be called with the length pre-determined by the first byte.
  * If presented with a length > 4, this returns false.  The Unicode
- * definition of UTF-8 goes up to 4-byte sequences.
+ * definition of UTF-8 goes up to 4-byte code points.
  */
 static bool
 isValidUtf8(const unsigned char* source, int length)
@@ -209,7 +209,7 @@ isValidUtf8(const unsigned char* source, int length)
             case 0xED: if (a > 0x9F) return false; break;
             case 0xF0: if (a < 0x90) return false; break;
             case 0xF4: if (a > 0x8F) return false; break;
-            default:   if (a < 0x80) return false;
+            default:   if (a < 0x80) return false; break;
         }
 
 
@@ -225,13 +225,13 @@ isValidUtf8(const unsigned char* source, int length)
  */
 static bool
 isValidUtf8String(const char *source, const char *sourceEnd) {
-    while (source != sourceEnd) {
+    while (source < sourceEnd) {
         const auto length = utf8SequenceLength(*source);
         if (length > sourceEnd - source || !isValidUtf8(reinterpret_cast<const unsigned char*>(source), length))
             return false;
         source += length;
     }
-    return true;
+    return true; // including zero-length input
 }
 
 /**
@@ -253,7 +253,7 @@ isCP1251EncodingAllowed(const HttpRequest *request)
     char lang[256];
     size_t pos = 0; // current parsing position in header string
 
-    while ( strHdrAcptLangGetItem(hdr, lang, 256, pos) ) {
+    while (strHdrAcptLangGetItem(hdr, lang, 256, pos)) {
 
         /* wildcard uses the configured default language */
         if (lang[0] == '*' && lang[1] == '\0')
@@ -351,7 +351,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, 
     /* decode the username */
 
     // retrieve the cleartext (in a dynamically allocated char*)
-    char *cleartext = decodeCleartext(proxy_auth, request);
+    const auto cleartext = decodeCleartext(proxy_auth, request);
 
     // empty header? no auth details produced...
     if (!cleartext)
