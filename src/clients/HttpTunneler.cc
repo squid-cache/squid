@@ -27,7 +27,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Http, Tunneler);
 
 Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, AsyncCall::Pointer &aCallback, time_t timeout, const AccessLogEntryPointer &alp):
     AsyncJob("Http::Tunneler"),
-    usesPconn_(false),
+    noteFwdPconnUse(false),
     connection(conn),
     request(req),
     callback(aCallback),
@@ -360,7 +360,7 @@ Http::Tunneler::bailWith(ErrorState *error)
     callBack();
     disconnect();
 
-    if (usesPconn_)
+    if (noteFwdPconnUse)
         fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
     connection->close();
     connection = nullptr;

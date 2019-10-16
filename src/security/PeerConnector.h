@@ -61,7 +61,8 @@ public:
                   const time_t timeout = 0);
     virtual ~PeerConnector();
 
-    bool usesPconn_; ///< whether the connection came from a fwdPconnPool
+    /// hack: whether the connection requires fwdPconnPool->noteUses()
+    bool noteFwdPconnUse;
 
 protected:
     // AsyncJob API

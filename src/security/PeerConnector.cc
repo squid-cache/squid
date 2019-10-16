@@ -34,7 +34,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 
 Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const AccessLogEntryPointer &alp, const time_t timeout) :
     AsyncJob("Security::PeerConnector"),
-    usesPconn_(false),
+    noteFwdPconnUse(false),
     serverConn(aServerConn),
     al(alp),
     callback(aCallback),
@@ -565,7 +565,7 @@ Security::PeerConnector::bail(ErrorState *error)
     callBack();
     disconnect();
 
-    if (usesPconn_)
+    if (noteFwdPconnUse)
         fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
     serverConn->close();
     serverConn = nullptr;

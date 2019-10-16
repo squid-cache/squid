@@ -65,7 +65,8 @@ public:
     void setDelayId(DelayId delay_id) {delayId = delay_id;}
 #endif
 
-    bool usesPconn_; ///< whether persistent connections are supported
+    /// hack: whether the connection requires fwdPconnPool->noteUses()
+    bool noteFwdPconnUse;
 
 protected:
     /* AsyncJob API */
