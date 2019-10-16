@@ -191,7 +191,7 @@ utf8SequenceLength(char b0)
  * definition of UTF-8 goes up to 4-byte sequences.
  */
 static bool
-isLegalUTF8(const unsigned char* source, int length)
+isValidUtf8(const unsigned char* source, int length)
 {
     unsigned char a;
     const unsigned char* srcptr = source + length;
@@ -224,10 +224,10 @@ isLegalUTF8(const unsigned char* source, int length)
  * Returns whether the given input is a valid UTF-8 encoding.
  */
 static bool
-isLegalUTF8String(const char *source, const char *sourceEnd) {
+isValidUtf8String(const char *source, const char *sourceEnd) {
     while (source != sourceEnd) {
         const auto length = utf8SequenceLength(*source);
-        if (length > sourceEnd - source || !isLegalUTF8(reinterpret_cast<const unsigned char*>(source), length))
+        if (length > sourceEnd - source || !isValidUtf8(reinterpret_cast<const unsigned char*>(source), length))
             return false;
         source += length;
     }
@@ -306,7 +306,7 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const HttpReque
     if (base64_decode_update(&ctx, &dstLen, reinterpret_cast<uint8_t*>(cleartext), srcLen, eek) && base64_decode_final(&ctx)) {
         cleartext[dstLen] = '\0';
 
-        if (utf8 && !isLegalUTF8String(cleartext, cleartext + dstLen)) {
+        if (utf8 && !isValidUtf8String(cleartext, cleartext + dstLen)) {
             SBuf str;
 
             if (isCP1251EncodingAllowed(request))
