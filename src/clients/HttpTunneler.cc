@@ -375,9 +375,10 @@ Http::Tunneler::disconnect(const bool andClose)
     if (!connection)
         return;
 
-    // remove close handler
-    comm_remove_close_handler(connection->fd, closer);
-    closer = nullptr;
+    if (closer) {
+        comm_remove_close_handler(connection->fd, closer);
+        closer = nullptr;
+    }
 
     // remove connection timeout handler
     commUnsetConnTimeout(connection);

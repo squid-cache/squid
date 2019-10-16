@@ -576,7 +576,10 @@ Security::PeerConnector::sendSuccess()
 void
 Security::PeerConnector::disconnect(const bool andClose)
 {
-    comm_remove_close_handler(serverConnection()->fd, closeHandler);
+    if (closeHandler) {
+        comm_remove_close_handler(serverConnection()->fd, closeHandler);
+        closeHandler = nullptr;
+    }
 
     commUnsetConnTimeout(serverConnection());
 
