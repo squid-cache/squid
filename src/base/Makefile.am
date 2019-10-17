@@ -33,6 +33,7 @@ libbase_la_SOURCES = \
 	HardFun.h \
 	Here.cc \
 	Here.h \
+	InstanceId.cc \
 	InstanceId.h \
 	Lock.h \
 	LookupTable.h \
