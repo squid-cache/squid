@@ -9,6 +9,7 @@
 /* DEBUG: section 78    DNS lookups; interacts with dns/rfc1035.cc */
 
 #include "squid.h"
+#include "base/CodeContext.h"
 #include "base/InstanceId.h"
 #include "base/RunnersRegistry.h"
 #include "comm.h"
@@ -103,7 +104,7 @@ class idns_query
     CBDATA_CLASS(idns_query);
 
 public:
-    idns_query() {
+    idns_query() : codeContext(CodeContext::Current()) {
         callback = nullptr;
         memset(&query, 0, sizeof(query));
         *buf = 0;
@@ -153,6 +154,8 @@ public:
     rfc1035_message *message = nullptr;
     int ancount = 0;
     const char *error = nullptr;
+
+    CodeContext::Pointer codeContext; ///< requestor's context
 };
 
 InstanceIdDefinitions(idns_query,  "dns");
@@ -1116,8 +1119,10 @@ idnsCallbackAllCallersWithNewAnswer(const idns_query * const answered, const boo
     const auto master = answered->master ? answered->master : answered;
     // iterate all queued lookup callers
     for (auto looker = master; looker; looker = looker->queue) {
-        (void)idnsCallbackOneWithAnswer(looker->callback, looker->callback_data,
-                                        *answered, lastAnswer);
+        CallBack(looker->codeContext, [&] {
+            (void)idnsCallbackOneWithAnswer(looker->callback, looker->callback_data,
+                    *answered, lastAnswer);
+        });
     }
 }
 
