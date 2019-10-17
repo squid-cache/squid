@@ -155,7 +155,8 @@ authenticateBasicStats(StoreEntry * sentry)
 }
 
 /**
- * Returns the length of UTF-8 code points including the first byte.
+ * Returns the length of UTF-8 code points including the first byte,
+ * or 0 if it is an invalid code point.
  *
  * \param b0 the first byte of UTF-8 code points.
  */
@@ -165,14 +166,14 @@ utf8CodePointsLength(const char b0)
     if ((b0 & 0x80) == 0)
         return 1;
     if ((b0 & 0xC0) != 0xC0)
-        return 0;
+      return 0; // invalid code point
     if ((b0 & 0xE0) == 0xC0)
         return 2;
     if ((b0 & 0xF0) == 0xE0)
         return 3;
     if ((b0 & 0xF8) == 0xF0)
         return 4;
-    return 0;
+    return 0; // invalid code point
 }
 
 /**
