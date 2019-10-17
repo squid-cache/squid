@@ -20,18 +20,13 @@ Latin1ToUtf8(const char *in)
 
     for (; *in; in++) {
         const auto ch = static_cast<unsigned char>(*in);
-        size_t bytesToWrite = 0;
-        char sequence[3] = {0, 0, 0};
 
         if (ch < 0x80) {
-            sequence[0] = ch;
-            bytesToWrite = 1;
+            result.append(ch);
         } else {
-            sequence[0] = static_cast<char>((ch >> 6) | 0xc0);
-            sequence[1] = static_cast<char>((ch & 0x3f) | 0x80);
-            bytesToWrite = 2;
+            result.append(static_cast<char>((ch >> 6) | 0xc0));
+            result.append(static_cast<char>((ch & 0x3f) | 0x80));
         }
-        result.append(sequence, bytesToWrite);
     }
     return result;
 }
