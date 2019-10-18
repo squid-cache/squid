@@ -52,14 +52,6 @@ public:
     SBuf fragment;
 };
 
-/// TLS Handshake protocol's handshake types from RFC 5246 Section 7.4
-enum HandshakeType {
-    hskClientHello = 1,
-    hskServerHello = 2,
-    hskCertificate = 11,
-    hskServerHelloDone = 14
-};
-
 /// TLS Handshake Protocol frame from RFC 5246 Section 7.4.
 class Handshake
 {
@@ -191,6 +183,7 @@ Security::HandshakeParser::HandshakeParser():
     details(new TlsDetails),
     state(atHelloNone),
     resumingSession(false),
+    handshakeType(hskNone),
     currentContentType(0),
     done(nullptr),
     expectingModernRecords(false)
@@ -316,12 +309,14 @@ Security::HandshakeParser::parseHandshakeMessage()
     switch (message.msg_type) {
     case HandshakeType::hskClientHello:
         Must(state < atHelloReceived);
+        handshakeType = HandshakeType::hskClientHello;
         Security::HandshakeParser::parseClientHelloHandshakeMessage(message.msg_body);
         state = atHelloReceived;
         done = "ClientHello";
         return;
     case HandshakeType::hskServerHello:
         Must(state < atHelloReceived);
+        handshakeType = HandshakeType::hskServerHello;
         parseServerHelloHandshakeMessage(message.msg_body);
         state = atHelloReceived;
         return;
@@ -424,6 +419,10 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
         case 35: // SessionTicket TLS Extension; RFC 5077
             details->tlsTicketsExtension = true;
             details->hasTlsTicket = !extension.data.isEmpty();
+            break;
+        case 43: // supported_versions extension, RFC 8446
+            parseSupportedVersionsExtension(extension.data);
+            break;
         case 13172: // Next Protocol Negotiation Extension (expired draft?)
         default:
             break;
@@ -502,6 +501,27 @@ Security::HandshakeParser::parseSniExtension(const SBuf &extensionData) const
         // according to RFC 6066, MUST begin with a 16-bit length field
     }
     return SBuf(); // SNI extension lacks host_name
+}
+
+// RFC 8446 Section 4.2.1: SupportedVersions extension
+void
+Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extensionData) const
+{
+    if (handshakeType == hskClientHello) {
+        Parser::BinaryTokenizer tkList(extensionData);
+        Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersionsList"));
+        while (!tkVersions.atEnd()) {
+            Parser::BinaryTokenizerContext version(tkVersions, "SupportedVersion");
+            const uint16_t aVersion = tkVersions.uint16(".version");
+            if (aVersion == 0x0304)
+                details->tlsSupportedVersion = AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
+        }
+    } else if (handshakeType == hskServerHello) {
+        Parser::BinaryTokenizer tkVersion(extensionData);
+        const uint16_t supportedVersion = tkVersion.uint16(".supported_version");
+        if (supportedVersion == 0x0304)
+            details->tlsSupportedVersion = AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
+    }
 }
 
 void
@@ -646,6 +666,9 @@ Security::SupportedExtensions()
 #endif
 #if defined(TLSEXT_TYPE_next_proto_neg) // 13172
     extensions.insert(TLSEXT_TYPE_next_proto_neg);
+#endif
+#if defined(TLSEXT_TYPE_supported_versions)
+    extensions.insert(TLSEXT_TYPE_supported_versions);
 #endif
 
     /*

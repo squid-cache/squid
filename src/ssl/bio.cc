@@ -716,6 +716,8 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
     if (!details->compressionSupported)
         SSL_set_options(ssl, SSL_OP_NO_COMPRESSION);
 #endif
+    if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3))
+        SSL_set_options(ssl, SSL_OP_NO_TLSv1_3);
 
 #if defined(TLSEXT_STATUSTYPE_ocsp)
     if (details->tlsStatusRequest)

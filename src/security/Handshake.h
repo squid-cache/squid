@@ -52,6 +52,15 @@ std::ostream &operator <<(std::ostream &os, Security::TlsDetails const &details)
     return details.print(os);
 }
 
+/// TLS Handshake protocol's handshake types from RFC 5246 Section 7.4
+enum HandshakeType {
+    hskClientHello = 1,
+    hskServerHello = 2,
+    hskCertificate = 11,
+    hskServerHelloDone = 14,
+    hskNone = 255
+};
+
 /// Incremental TLS/SSL Handshake parser.
 class HandshakeParser
 {
@@ -75,6 +84,7 @@ public:
 
     bool resumingSession; ///< True if this is a resuming session
 
+    HandshakeType handshakeType; ///< hskClientHello or hskServerHello
 private:
     bool isSslv2Record(const SBuf &raw) const;
     void parseRecord();
@@ -96,6 +106,7 @@ private:
     bool parseCompressionMethods(const SBuf &raw);
     void parseExtensions(const SBuf &raw);
     SBuf parseSniExtension(const SBuf &extensionData) const;
+    void parseSupportedVersionsExtension(const SBuf &extensionData) const;
 
     void parseCiphers(const SBuf &raw);
     void parseV23Ciphers(const SBuf &raw);
