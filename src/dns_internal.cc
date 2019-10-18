@@ -104,7 +104,9 @@ class idns_query
     CBDATA_CLASS(idns_query);
 
 public:
-    idns_query() : codeContext(CodeContext::Current()) {
+    idns_query():
+        codeContext(CodeContext::Current())
+    {
         callback = nullptr;
         memset(&query, 0, sizeof(query));
         *buf = 0;
