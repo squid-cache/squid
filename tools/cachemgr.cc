@@ -245,6 +245,7 @@ auth_html(const char *host, int port, const char *user_name)
     if (fp == NULL)
         printf("X-Error: message=\"Unable to open config %s\"", DEFAULT_CACHEMGR_CONFIG);
 
+    printf("X-XSS-Protection: 1\r\n");
     printf("Content-Type: text/html\r\n\r\n");
 
     printf("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n");
@@ -647,6 +648,7 @@ read_reply(int s, cachemgr_request * req)
         case isHeaders:
             /* forward header field */
             if (!strcmp(buf, "\r\n")) {     /* end of headers */
+                fputs("X-XSS-Protection: 1\r\n"); /* add XSS protection for supported browsers */
                 fputs("Content-Type: text/html\r\n", stdout);   /* add our type */
                 istate = isBodyStart;
             }
