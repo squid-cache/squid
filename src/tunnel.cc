@@ -140,9 +140,9 @@ public:
 
         bool monitorsClosures() const { return bool(closer); }
 
-        /// (re)sets a new close handler to the given method
+        /// (re)sets the connection and assigns a new close handler to it
         template <typename Method>
-        void resetCloseHandler(Method method, const char *name, TunnelStateData *tunnelState);
+        void resetConnection(const Comm::ConnectionPointer &aConn, Method method, const char *name, TunnelStateData *tunnelState);
 
         /// forgets the close handler (of the likely recently closed connection)
         void resetCloseHandler() { closer = nullptr; }
@@ -275,6 +275,9 @@ public:
 
     /// non-retriable Squid-to-server connection closure cleanup; may destroy us
     void handleServerClosure();
+
+    /// handles closures of the Squid-to-server connection, retries if needed
+    void serverClosed();
 };
 
 static ERCB tunnelErrorComplete;
@@ -332,30 +335,7 @@ static void
 tunnelServerClosed(const CommCloseCbParams &params)
 {
     const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
-    debugs(26, 3, tunnelState->server.conn);
-    tunnelState->server.resetCloseHandler();
-
-    if (tunnelState->retriable) {
-        if (!tunnelState->destinations->empty()) {
-            // XXX: opening() cannot be true when we have a (closing) connection
-            if (!tunnelState->opening())
-                tunnelState->startConnecting(); // try connecting to another destination
-            return;
-        }
-
-        if (tunnelState->subscribed) {
-            debugs(26, 4, "wait for more destinations to try");
-            return;
-        }
-
-        if (!tunnelState->hasError()) {
-            const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError,
-                    tunnelState->request.getRaw(), tunnelState->al);
-            tunnelState->saveError(anErr);
-        } // else use actual error from last connection attempt
-    }
-
-    tunnelState->handleServerClosure();
+    tunnelState->serverClosed();
 }
 
 static void
@@ -389,8 +369,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     al = clientRequest->al;
     http = clientRequest;
 
-    client.conn = clientRequest->getConn()->clientConnection;
-    client.resetCloseHandler(tunnelClientClosed, "tunnelClientClosed", this);
+    client.resetConnection(clientRequest->getConn()->clientConnection, tunnelClientClosed, "tunnelClientClosed", this);
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
@@ -413,6 +392,35 @@ TunnelStateData::Connection::~Connection()
         eventDelete(readPendingFunc, readPending);
 
     safe_free(buf);
+}
+
+void
+TunnelStateData::serverClosed()
+{
+    debugs(26, 3, server.conn);
+    server.resetCloseHandler();
+
+    if (retriable) {
+        if (!destinations->empty()) {
+            // XXX: opening() cannot be true when we have a (closing) connection
+            if (!opening())
+                startConnecting(); // try connecting to another destination
+            return;
+        }
+
+        if (subscribed) {
+            debugs(26, 4, "wait for more destinations to try");
+            return;
+        }
+
+        if (!hasError()) {
+            const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError,
+                    request.getRaw(), al);
+            saveError(anErr);
+        } // else use actual error from last connection attempt
+    }
+
+    handleServerClosure();
 }
 
 int
@@ -681,9 +689,10 @@ TunnelStateData::Connection::write(const char *b, int size, AsyncCall::Pointer &
 
 template <typename Method>
 void
-TunnelStateData::Connection::resetCloseHandler(Method method, const char *name, TunnelStateData *tunnelState)
+TunnelStateData::Connection::resetConnection(const Comm::ConnectionPointer &aConn, Method method, const char *name, TunnelStateData *tunnelState)
 {
-    Must(Comm::IsConnOpen(conn));
+    Must(Comm::IsConnOpen(aConn));
+    conn = aConn;
     if (closer)
         comm_remove_close_handler(conn->fd, closer);
     closer = commCbCall(5, 4, name, CommCloseCbPtrFun(method, tunnelState));
@@ -920,6 +929,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 void
 TunnelStateData::notePeerReadyToShovel()
 {
+    retriable = false;
     if (!clientExpectsConnectResponse())
         tunnelStartShoveling(this); // ssl-bumped connection, be quiet
     else {
@@ -970,8 +980,7 @@ void
 TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *origin, const bool reused)
 {
     Must(Comm::IsConnOpen(conn));
-    server.conn = conn;
-    server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed", this);
+    server.resetConnection(conn, tunnelServerClosed, "tunnelServerClosed", this);
 
     if (reused)
         ResetMarkingsToServer(request.getRaw(), *conn);
@@ -1002,12 +1011,10 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
         toOrigin = true;
     }
 
-    if (!toOrigin) {
+    if (!toOrigin)
         connectToPeer();
-    } else {
-        retriable = false;
+    else
         notePeerReadyToShovel();
-    }
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
@@ -1089,8 +1096,6 @@ TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
             server.conn->close();
         return; // tunnelServerClosed() will retry as needed
     }
-
-    retriable = false;
 
     assert(!waitingForConnectExchange);
 
@@ -1320,8 +1325,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 
     request->hier.resetPeerNotes(srvConn, tunnelState->getHost());
 
-    tunnelState->server.conn = srvConn;
-    tunnelState->server.resetCloseHandler(tunnelServerClosed, "tunnelServerClosed", tunnelState);
+    tunnelState->server.resetConnection(srvConn, tunnelServerClosed, "tunnelServerClosed", tunnelState);
 
 #if USE_DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
