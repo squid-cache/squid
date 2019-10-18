@@ -649,7 +649,7 @@ read_reply(int s, cachemgr_request * req)
         case isHeaders:
             /* forward header field */
             if (!strcmp(buf, "\r\n")) {     /* end of headers */
-                fputs("X-XSS-Protection: 1\r\n"); /* add XSS protection for supported browsers */
+                fputs("X-XSS-Protection: 1\r\n", stdout); /* add XSS protection for supported browsers */
                 fputs("Content-Type: text/html\r\n", stdout);   /* add our type */
                 istate = isBodyStart;
             }
