@@ -554,6 +554,12 @@ Ssl::ServerBio::resumingSession()
     return parser_.resumingSession;
 }
 
+bool
+Ssl::ServerBio::tlsv1_3()
+{
+    return parser_.details->tlsSupportedVersion == AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
+}
+
 /// initializes BIO table after allocation
 static int
 squid_bio_create(BIO *bi)

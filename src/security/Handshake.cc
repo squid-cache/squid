@@ -280,9 +280,12 @@ Security::HandshakeParser::parseChangeCipherCpecMessage()
     // We are currently ignoring Change Cipher Spec Protocol messages.
     skipMessage("ChangeCipherCpec msg [fragment]");
 
+    // This is a TLSv1.3 message or a resuming session
+    if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3))
+        resumingSession = true;
+
     // Everything after the ChangeCipherCpec message may be encrypted.
     // Continuing parsing is pointless. Stop here.
-    resumingSession = true;
     done = "ChangeCipherCpec";
 }
 
