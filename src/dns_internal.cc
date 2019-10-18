@@ -144,8 +144,11 @@ public:
     struct timeval sent_t;
     struct timeval queue_t;
     dlink_node lru;
+
     IDNSCB *callback;
     void *callback_data = nullptr;
+    CodeContext::Pointer codeContext; ///< requestor's context
+
     int attempt = 0;
     int rcode = 0;
     idns_query *queue = nullptr;
@@ -156,8 +159,6 @@ public:
     rfc1035_message *message = nullptr;
     int ancount = 0;
     const char *error = nullptr;
-
-    CodeContext::Pointer codeContext; ///< requestor's context
 };
 
 InstanceIdDefinitions(idns_query,  "dns");
