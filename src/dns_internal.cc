@@ -1110,6 +1110,7 @@ idnsCallbackNewCallerWithOldAnswers(IDNSCB *callback, void *cbdata, const idns_q
     for (auto query = master; query; query = query->slave) {
         if (query->pending)
             continue; // no answer yet
+        // no CallBack(CodeContext...) -- we always run in requestor's context
         if (!idnsCallbackOneWithAnswer(callback, cbdata, *query, lastAnswer))
             break; // the caller disappeared
     }
