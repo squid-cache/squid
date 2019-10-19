@@ -32,17 +32,7 @@ public:
     uint64_t value;
 };
 
-inline std::ostream&
-operator <<(std::ostream &os, const ScopedId &id)
-{
-    if (id.value)
-        os << id.scope << id.value;
-    else if (id.scope)
-        os << id.scope;
-    else
-        os << "[unknown]";
-    return os;
-}
+std::ostream &operator <<(std::ostream &os, const ScopedId &id);
 
 typedef unsigned int InstanceIdDefaultValueType;
 /** Identifier for class instances
