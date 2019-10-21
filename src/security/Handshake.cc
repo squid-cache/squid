@@ -515,13 +515,13 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersionsList"));
         while (!tkVersions.atEnd()) {
             Parser::BinaryTokenizerContext version(tkVersions, "SupportedVersion");
-            const uint16_t aVersion = tkVersions.uint16(".version");
+            const auto aVersion = tkVersions.uint16(".version");
             if (aVersion == 0x0304)
                 details->tlsSupportedVersion = AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
         }
     } else if (handshakeType == hskServerHello) {
         Parser::BinaryTokenizer tkVersion(extensionData);
-        const uint16_t supportedVersion = tkVersion.uint16(".supported_version");
+        const auto supportedVersion = tkVersion.uint16(".supported_version");
         if (supportedVersion == 0x0304)
             details->tlsSupportedVersion = AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
     }
