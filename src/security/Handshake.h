@@ -52,7 +52,7 @@ std::ostream &operator <<(std::ostream &os, Security::TlsDetails const &details)
     return details.print(os);
 }
 
-/// TLS Handshake protocol's handshake types from RFC 5246 Section 7.4
+/// TLS Handshake protocol's handshake types from RFC 8446 Section B.3
 enum HandshakeType {
     hskClientHello = 1,
     hskServerHello = 2,
