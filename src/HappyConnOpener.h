@@ -38,6 +38,8 @@ public:
     /// nullifies but does not cancel the callback
     void clear() { *this = HappySpareWait(); }
 
+    CodeContext::Pointer codeContext; ///< requestor's context
+
     /// a pending noteGavePrimeItsChance() or noteSpareAllowance() call
     AsyncCall::Pointer callback;
 
