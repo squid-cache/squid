@@ -58,7 +58,7 @@ enum HandshakeType {
     hskServerHello = 2,
     hskCertificate = 11,
     hskServerHelloDone = 14,
-    hskNone = 255
+    hskOther = 255
 };
 
 /// Incremental TLS/SSL Handshake parser.

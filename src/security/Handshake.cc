@@ -183,7 +183,7 @@ Security::HandshakeParser::HandshakeParser():
     details(new TlsDetails),
     state(atHelloNone),
     resumingSession(false),
-    handshakeType(hskNone),
+    handshakeType(hskOther),
     currentContentType(0),
     done(nullptr),
     expectingModernRecords(false)
