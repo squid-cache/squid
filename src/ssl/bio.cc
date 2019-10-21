@@ -555,7 +555,7 @@ Ssl::ServerBio::resumingSession()
 }
 
 bool
-Ssl::ServerBio::tlsv1_3()
+Ssl::ServerBio::tlsv1_3() const
 {
     return parser_.details->tlsSupportedVersion == AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
 }
