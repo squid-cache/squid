@@ -693,7 +693,7 @@ Security::SupportedExtensions()
 #if defined(TLSEXT_TYPE_next_proto_neg) // 13172
     extensions.insert(TLSEXT_TYPE_next_proto_neg);
 #endif
-#if defined(TLSEXT_TYPE_supported_versions)
+#if defined(TLSEXT_TYPE_supported_versions) // 43
     extensions.insert(TLSEXT_TYPE_supported_versions);
 #endif
 
