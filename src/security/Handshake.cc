@@ -510,20 +510,43 @@ Security::HandshakeParser::parseSniExtension(const SBuf &extensionData) const
 void
 Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extensionData) const
 {
+    // RFC 8446 Section 4.1.2:
+    // In TLS 1.3, the client indicates its version preferences in the
+    //  "supported_versions" extension (Section 4.2.1) and the
+    // legacy_version field MUST be set to 0x0303, which is the version
+    // number for TLS 1.2.
+    //
+    // RFC 8446 Section 4.2.1:
+    // A server which negotiates TLS 1.3 MUST respond by sending
+    // a "supported_versions" extension containing the selected version
+    // value (0x0304).  It MUST set the ServerHello.legacy_version field to
+    // 0x0303 (TLS 1.2).
+    //
+    // For both Client and Server hello the legacy_version (highest supported
+    // version for TLSv1.2 and earlier) must be set to 0x0303
+    if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3))
+        return;
+
+    bool isHelloTLSv1_3 = false;
     if (handshakeType == hskClientHello) {
         Parser::BinaryTokenizer tkList(extensionData);
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersionsList"));
-        while (!tkVersions.atEnd()) {
+        while (!tkVersions.atEnd() && !isHelloTLSv1_3) {
             Parser::BinaryTokenizerContext version(tkVersions, "SupportedVersion");
             const auto aVersion = tkVersions.uint16(".version");
             if (aVersion == 0x0304)
-                details->tlsSupportedVersion = AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
+                isHelloTLSv1_3 = true;
         }
     } else if (handshakeType == hskServerHello) {
         Parser::BinaryTokenizer tkVersion(extensionData);
         const auto supportedVersion = tkVersion.uint16(".supported_version");
         if (supportedVersion == 0x0304)
-            details->tlsSupportedVersion = AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
+            isHelloTLSv1_3 = true;
+    }
+
+    if (isHelloTLSv1_3) {
+        // overwrite previously stored Hello-derived legacy_version
+        details->tlsSupportedVersion = AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
     }
 }
 
