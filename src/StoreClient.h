@@ -9,6 +9,7 @@
 #ifndef SQUID_STORECLIENT_H
 #define SQUID_STORECLIENT_H
 
+#include "base/forward.h"
 #include "dlink.h"
 #include "StoreIOBuffer.h"
 #include "StoreIOState.h"
@@ -124,6 +125,7 @@ public:
         bool pending() const;
         STCB *callback_handler;
         void *callback_data;
+        CodeContextPointer codeContext; ///< Store client context
     } _callback;
 };
 
