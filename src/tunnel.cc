@@ -84,6 +84,9 @@ public:
     static void WriteServerDone(const Comm::ConnectionPointer &, char *buf, size_t len, Comm::Flag flag, int xerrno, void *data);
 
     bool noConnections() const;
+    /// closes both client and server connections
+    void closeConnections();
+
     char *url;
     CbcPointer<ClientHttpRequest> http;
     HttpRequest::Pointer request;
@@ -133,7 +136,7 @@ public:
 
         void error(int const xerrno);
         int debugLevelForError(int const xerrno) const;
-        void closeIfOpen();
+        void close();
         void dataSent (size_t amount);
         /// writes 'b' buffer, setting the 'writer' member to 'callback'.
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
@@ -251,6 +254,9 @@ private:
     /// callback handler after connection setup (including any encryption)
     void connectedToPeer(Security::EncryptorAnswer &answer);
 
+    /// whether the request should be retried
+    bool checkRetry();
+
     /// details of the "last tunneling attempt" failure (if it failed)
     ErrorState *savedError = nullptr;
 
@@ -278,6 +284,10 @@ public:
 
     /// handles closures of the Squid-to-server connection, retries if needed
     void serverClosed();
+
+    /// tries connecting to another destination, if available,
+    /// otherwise, initiates the transaction termination
+    void retryOrBail(const char *context);
 };
 
 static ERCB tunnelErrorComplete;
@@ -327,7 +337,7 @@ TunnelStateData::handleClientClosure()
         return deleteThis();
 
     if (!server.writer)
-        server.conn->close();
+        server.close();
 }
 
 /// handles closures of the Squid-to-server connection
@@ -398,9 +408,27 @@ void
 TunnelStateData::serverClosed()
 {
     debugs(26, 3, server.conn);
-    server.resetCloseHandler();
+    retryOrBail("server closed");
+}
 
-    if (retriable) {
+bool
+TunnelStateData::checkRetry()
+{
+    if (shutting_down)
+        return false;
+    if (!retriable)
+        return false;
+    if (noConnections())
+        return false;
+    return true;
+}
+
+void
+TunnelStateData::retryOrBail(const char *context)
+{
+    server.close();
+
+    if (checkRetry()) {
         if (!destinations->empty()) {
             // XXX: opening() cannot be true when we have a (closing) connection
             if (!opening())
@@ -413,13 +441,15 @@ TunnelStateData::serverClosed()
             return;
         }
 
-        if (!hasError()) {
-            const auto anErr = new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError,
-                    request.getRaw(), al);
-            saveError(anErr);
-        } // else use actual error from last connection attempt
+        if (Comm::IsConnOpen(client.conn) && clientExpectsConnectResponse()) {
+            const auto error = savedError ? savedError : new ErrorState(ERR_CANNOT_FORWARD,
+                    Http::scInternalServerError, request.getRaw(), al);
+            sendError(error, context);
+            return;
+        }
     }
 
+    // closing the non-HTTP client connection is the best we can do
     handleServerClosure();
 }
 
@@ -746,15 +776,27 @@ tunnelTimeout(const CommTimeoutCbParams &io)
     /* Temporary lock to protect our own feets (comm_close -> tunnelClientClosed -> Free) */
     CbcPointer<TunnelStateData> safetyLock(tunnelState);
 
-    tunnelState->client.closeIfOpen();
-    tunnelState->server.closeIfOpen();
+    tunnelState->closeConnections();
 }
 
 void
-TunnelStateData::Connection::closeIfOpen()
+TunnelStateData::closeConnections()
 {
-    if (Comm::IsConnOpen(conn))
+    if (Comm::IsConnOpen(server.conn))
+        server.conn->close();
+    if (Comm::IsConnOpen(client.conn))
+        client.conn->close();
+}
+
+void
+TunnelStateData::Connection::close()
+{
+    if (Comm::IsConnOpen(conn)) {
+        Must(monitorsClosures());
+        comm_remove_close_handler(conn->fd, closer);
+        resetCloseHandler();
         conn->close();
+    }
 }
 
 static void
@@ -909,21 +951,12 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 
     // TODO: Reuse to-peer connections after a CONNECT error response.
 
-    // TODO: We can and, hence, should close now, but tunnelServerClosed()
-    // cannot yet tell whether ErrorState is still writing an error response.
-    // server.closeIfOpen();
-
-    if (!clientExpectsConnectResponse()) {
-        // closing the non-HTTP client connection is the best we can do
-        debugs(50, 3, server.conn << " closing on CONNECT-to-peer error");
-        server.closeIfOpen();
-        return;
-    }
-
-    ErrorState *error = answer.squidError.get();
+    const auto error = answer.squidError.get();
     Must(error);
+    saveError(error);
     answer.squidError.clear(); // preserve error for errorSendComplete()
-    sendError(error, "tunneler returns error");
+
+    retryOrBail("tunneler error");
 }
 
 void
@@ -1088,12 +1121,10 @@ TunnelStateData::connectToPeer()
 void
 TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
 {
-    if (ErrorState *error = answer.error.get()) {
+    if (const auto error = answer.error.get()) {
         saveError(error);
         answer.error.clear();
-        Must(server.monitorsClosures()); // closure notification (is already pending or) will happen
-        if (IsConnOpen(server.conn))
-            server.conn->close();
+        retryOrBail("TLS peer connection error");
         return; // tunnelServerClosed() will retry as needed
     }
 
