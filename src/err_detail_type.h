@@ -28,6 +28,9 @@ typedef enum {
     ERR_DETAIL_ICAP_INIT_GONE, // initiator gone
     ERR_DETAIL_ICAP_XACT_CLOSE, // ICAP connection closed unexpectedly
     ERR_DETAIL_ICAP_XACT_OTHER, // other ICAP transaction errors
+    ERR_DETAIL_TLS_CLIENT_CLOSED,
+    ERR_DETAIL_TLS_HANDSHAKE_ABORTED,
+    ERR_DETAIL_BUMP_SPLICE_FAIL,
     ERR_DETAIL_EXCEPTION_OTHER, //other errors ( eg std C++ lib errors)
     ERR_DETAIL_MAX,
     ERR_DETAIL_EXCEPTION_START = 110000 // offset for exception ID details

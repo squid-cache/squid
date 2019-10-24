@@ -2158,6 +2158,19 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     if (tunnelOnError(HttpRequestMethod(), error))
         return;
 
+#if USE_OPENSSL
+    const bool tlsHandshake = parsingTlsHandshake ||
+                              (fd_table[io.fd].ssl && !SSL_is_init_finished(fd_table[io.fd].ssl.get()));
+#else
+    const bool tlsHandshake = false;
+#endif
+    const err_detail_type errorDetail = tlsHandshake ? ERR_DETAIL_TLS_HANDSHAKE_ABORTED : ERR_DETAIL_NONE;
+
+    Http::StreamPointer context = pipeline.front();
+    Must(context && context->http);
+    HttpRequest::Pointer request = context->http->request;
+    request->detailError(error, errorDetail);
+
     /*
     * Just close the connection to not confuse browsers
     * using persistent connections. Some browsers open
@@ -2376,7 +2389,7 @@ httpsCreate(const ConnStateData *connState, const Security::ContextPointer &ctx)
  * \retval -1 on error
  */
 static int
-tlsAttemptHandshake(ConnStateData *conn, PF *callback)
+tlsAttemptHandshake(ConnStateData *conn, PF *callback, err_detail_type &errDetail)
 {
     // TODO: maybe throw instead of returning -1
     // see https://github.com/squid-cache/squid/pull/81#discussion_r153053278
@@ -2410,16 +2423,19 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
             debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
                    (xerrno == 0 ? Security::ErrorString(ssl_error) : xstrerr(xerrno)));
         }
+        errDetail = ERR_DETAIL_TLS_CLIENT_CLOSED;
         break;
 
     case SSL_ERROR_ZERO_RETURN:
         debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
+        errDetail = ERR_DETAIL_TLS_CLIENT_CLOSED;
         break;
 
     default:
         debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
                fd << ": " << Security::ErrorString(ssl_error) <<
                " (" << ssl_error << "/" << ret << ")");
+        errDetail = ERR_DETAIL_TLS_HANDSHAKE_ABORTED;
     }
 
 #elif USE_GNUTLS
@@ -2430,7 +2446,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
 
     if (gnutls_error_is_fatal(x)) {
         debugs(83, 2, "Error negotiating TLS on " << conn->clientConnection << ": Aborted by client: " << Security::ErrorString(x));
-
+        errDetail = ERR_DETAIL_TLS_HANDSHAKE_ABORTED;
     } else if (x == GNUTLS_E_INTERRUPTED || x == GNUTLS_E_AGAIN) {
         const auto ioAction = (gnutls_record_get_direction(session)==0 ? COMM_SELECT_READ : COMM_SELECT_WRITE);
         Comm::SetSelect(fd, ioAction, callback, (callback ? conn : nullptr), 0);
@@ -2452,10 +2468,11 @@ clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
 
-    const int ret = tlsAttemptHandshake(conn, clientNegotiateSSL);
+    err_detail_type errDetail = ERR_DETAIL_NONE;
+    const int ret = tlsAttemptHandshake(conn, clientNegotiateSSL, errDetail);
     if (ret <= 0) {
         if (ret < 0) // An error
-            conn->clientConnection->close();
+            conn->tlsNegotiateFailed(errDetail);
         return;
     }
 
@@ -3035,10 +3052,13 @@ ConnStateData::parseTlsHandshake()
         Must(context && context->http);
         HttpRequest::Pointer request = context->http->request;
         debugs(83, 5, "Got something other than TLS Client Hello. Cannot SslBump.");
-        sslBumpMode = Ssl::bumpSplice;
-        context->http->al->ssl.bumpMode = Ssl::bumpSplice;
-        if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_PROTOCOL_UNKNOWN))
+        if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_PROTOCOL_UNKNOWN)) {
+            request->detailError(ERR_PROTOCOL_UNKNOWN, ERR_DETAIL_TLS_HANDSHAKE_ABORTED);
             clientConnection->close();
+        } else {
+            sslBumpMode = Ssl::bumpSplice;
+            context->http->al->ssl.bumpMode = Ssl::bumpSplice;
+        }
         return;
     }
 
@@ -3075,15 +3095,19 @@ void httpsSslBumpStep2AccessCheckDone(Acl::Answer answer, void *data)
     connState->serverBump()->act.step2 = bumpAction;
     connState->sslBumpMode = bumpAction;
     Http::StreamPointer context = connState->pipeline.front();
-    if (ClientHttpRequest *http = (context ? context->http : nullptr))
+    auto http = (context ? context->http : nullptr);
+    if (http)
         http->al->ssl.bumpMode = bumpAction;
 
     if (bumpAction == Ssl::bumpTerminate) {
         connState->clientConnection->close();
     } else if (bumpAction != Ssl::bumpSplice) {
         connState->startPeekAndSplice();
-    } else if (!connState->splice())
+    } else if (!connState->splice()) {
+        HttpRequest::Pointer request = http->request;
+        request->detailError(ERR_SECURE_BUMP_FAIL, ERR_DETAIL_BUMP_SPLICE_FAIL);
         connState->clientConnection->close();
+    }
 }
 
 bool
@@ -3164,11 +3188,17 @@ ConnStateData::startPeekAndSplice()
     // tlsAttemptHandshake() should return 0.
     // This block exist only to force openSSL parse client hello and detect
     // ERR_SECURE_ACCEPT_FAIL error, which should be checked and splice if required.
-    if (tlsAttemptHandshake(this, nullptr) < 0) {
+    err_detail_type errDetail = ERR_DETAIL_NONE;
+    if (tlsAttemptHandshake(this, nullptr, errDetail) < 0) {
         debugs(83, 2, "TLS handshake failed.");
         HttpRequest::Pointer request(http ? http->request : nullptr);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_SECURE_ACCEPT_FAIL))
-            clientConnection->close();
+            tlsNegotiateFailed(errDetail);
+        else {
+            sslBumpMode = Ssl::bumpSplice;
+            if (http)
+                http->al->ssl.bumpMode = Ssl::bumpSplice;
+        }
         return;
     }
 
@@ -3209,6 +3239,20 @@ ConnStateData::httpsPeeked(PinnedIdleContext pic)
         debugs(33, 5, "Error while bumping: " << tlsConnectHostOrIp);
 
     getSslContextStart();
+}
+
+inline void
+ConnStateData::tlsNegotiateFailed(const int errDetail)
+{
+    if (errDetail != ERR_DETAIL_NONE) {
+        Http::StreamPointer context = pipeline.front();
+        Must(context);
+        Must(context->http);
+        Must(context->http->request);
+        HttpRequest::Pointer request = context->http->request;
+        request->detailError(ERR_SECURE_ACCEPT_FAIL, errDetail);
+    }
+    clientConnection->close();
 }
 
 #endif /* USE_OPENSSL */
