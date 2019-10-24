@@ -346,9 +346,10 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
 
     const ClientHttpRequest *http = context->http;
 
+    // remember Upgrade header; removeHopByHopEntries() will remove it
     String upgradeHeader;
-    const bool switching = (rep->sline.status() == Http::scSwitchingProtocols);
-    if (switching) // save Upgrade header
+    const auto switching = (rep->sline.status() == Http::scSwitchingProtocols);
+    if (switching)
         upgradeHeader = rep->header.getList(Http::HdrType::UPGRADE);
 
     // apply selected clientReplyContext::buildReplyHeader() mods
@@ -357,11 +358,12 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
     // paranoid: ContentLengthInterpreter has cleaned non-generated replies
     rep->removeIrrelevantContentLength();
 
-    if (switching) {
+    if (switching && /* paranoid: */ upgradeHeader.size()) {
         rep->header.putStr(Http::HdrType::UPGRADE, upgradeHeader.termedBuf());
-        rep->header.putStr(Http::HdrType::CONNECTION, "Upgrade");
-    } else
+        rep->header.putStr(Http::HdrType::CONNECTION, "upgrade");
+    } else {
         rep->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
+    }
 
     httpHdrMangleList(&rep->header, http->request, http->al, ROR_REPLY);
 
@@ -376,19 +378,22 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
     return true;
 }
 
-void
-switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn, const SBuf *serverPayload);
+void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn, const SBuf *serverPayload);
 
 void
-Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext scc)
+Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext server)
 {
-    Comm::ConnectionPointer serverConnection = scc.connection;
     const auto context = pipeline.front();
-    assert(context != nullptr);
+    assert(context);
     const auto http = context->http;
-    assert(http->request == scc.request.getRaw());
-    stopReading(); // Stop reading for more requests, tunnel code starts now
-    switchToTunnel(scc.request.getRaw(), clientConnection, serverConnection, nullptr);
+    assert(http);
+    assert(http->request == server.request.getRaw());
+
+    stopReading();
+    Must(!writer);
+
+    // XXX: Lost server-to-Squid payload that could have been read after HTTP/101?
+    switchToTunnel(server.request.getRaw(), clientConnection, server.connection, nullptr);
 }
 
 ConnStateData *

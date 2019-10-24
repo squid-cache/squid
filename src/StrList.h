@@ -21,8 +21,8 @@ void strListAdd(String * str, const char *item, char del);
 int strListIsMember(const String * str, const SBuf &item, char del);
 
 typedef std::function<bool (const char *item, int ilen)> MemberFilter;
-/// \return true if a member which matches the filter found
-bool strListIsMember_if(const String * str, const char del, const MemberFilter filter);
+/// \returns whether the delimiter-separated list contains a filter-passing item
+bool strListIsMember_if(const String *str, const char del, const MemberFilter filter);
 
 int strListIsSubstr(const String * list, const char *s, char del);
 int strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos);

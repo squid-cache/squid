@@ -251,9 +251,9 @@ static void parse_on_unsupported_protocol(acl_access **access);
 static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
 static void free_on_unsupported_protocol(acl_access **access);
 static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, ACL *acl = nullptr);
-static void parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **http_upgrade_protocols);
-static void dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *http_upgrade_protocols);
-static void free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **http_upgrade_protocols);
+static void parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
+static void dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *protoGuards);
+static void free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
 
 /*
  * LegacyParser is a parser for legacy code that uses the global
@@ -5114,52 +5114,56 @@ free_on_unsupported_protocol(acl_access **access)
 }
 
 static void
-parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **http_upgrade_protocols)
+parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuardsPtr)
 {
-    const char *proto = ConfigParser::NextToken();
-    if (!proto) {
-        self_destruct();
-        return;
-    }
+    const auto proto = ConfigParser::NextToken();
+    if (!proto)
+        throw TextException(ToSBuf(cfg_directive, " requires a protocol name"), Here());
 
-    if (!*http_upgrade_protocols)
-        *http_upgrade_protocols = new HttpUpgradeProtocolAccess;
+    assert(protoGuardsPtr);
+    if (!*protoGuardsPtr)
+        *protoGuardsPtr = new HttpUpgradeProtocolAccess();
 
-    const auto it = (*http_upgrade_protocols)->find(SBuf(proto));
+    auto &protoGuards = **protoGuardsPtr;
+    const auto protoGuard = protoGuards.find(SBuf(proto));
     acl_access *access = nullptr;
-    if (it != (*http_upgrade_protocols)->end())
-        access = it->second;
+    if (protoGuard != protoGuards.end())
+        access = protoGuard->second;
     else {
-        access = new Acl::Tree;
+        access = new Acl::Tree();
         access->context(cfg_directive, config_input_line);
-        (*http_upgrade_protocols)->insert(std::make_pair(SBuf(proto), access));
+        protoGuards.emplace(proto, access);
     }
 
     aclParseAccessLine(cfg_directive, LegacyParser, &access);
 }
 
 static void
-dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *http_upgrade_protocols)
+dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *protoGuards)
 {
-    for (const auto it : *http_upgrade_protocols) {
+    assert(protoGuards);
+    for (const auto &protoGuard: *protoGuards) {
         SBufList line;
         line.push_back(SBuf(name));
-        line.push_back(it.first);
-        SBufList acld = it.second->treeDump("", &Acl::AllowOrDeny);
+        line.push_back(protoGuard.first);
+        const auto acld = protoGuard.second->treeDump("", &Acl::AllowOrDeny);
         line.insert(line.end(), acld.begin(), acld.end());
         dump_SBufList(entry, line);
     }
 }
 
 static void
-free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **http_upgrade_protocols)
+free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuardsPtr)
 {
-    if (!*http_upgrade_protocols)
-        return;
+    assert(protoGuardsPtr);
+    if (auto &protoGuards = *protoGuardsPtr) {
+        for (const auto &protoGuard: *protoGuards) {
+            auto acls = protoGuard.second;
+            free_acl_access(&acls);
+        }
 
-    for (auto it : **http_upgrade_protocols)
-        free_acl_access(&it.second);
-
-    delete *http_upgrade_protocols;
-    *http_upgrade_protocols = nullptr;
+        delete protoGuards;
+        protoGuards = nullptr;
+    }
 }
+

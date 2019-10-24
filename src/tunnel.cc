@@ -1237,15 +1237,14 @@ TunnelStateData::notifyConnOpener()
 }
 
 /**
- * Establish a tunnel between a client and a server connections and
- * starts transferring traffic.
- * \param request The related HttpRequest object
- * \param clientConn the client side connection.
- * \param srvConn the server side connection
- * \param serverPayload pre-read data from server side connection
+ * Sets up a TCP tunnel through Squid and starts shoveling traffic.
+ * \param request the request that initiated/caused this tunnel
+ * \param clientConn the already accepted client-to-Squid TCP connection
+ * \param srvConn the already established Squid-to-server TCP connection
+ * \param preReadServerData server-sent bytes to be forwarded to the client
  */
 void
-switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn, const SBuf *serverPayload)
+switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn, const SBuf *preReadServerData)
 {
     debugs(26,5, "Revert to tunnel FD " << clientConn->fd << " with FD " << srvConn->fd);
 
@@ -1285,8 +1284,8 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(srvConn, Config.Timeout.read, timeoutCall);
 
-    if (serverPayload)
-        tunnelState->preReadServerData = *serverPayload;
+    if (preReadServerData)
+        tunnelState->preReadServerData = *preReadServerData;
 
     tunnelStartShoveling(tunnelState);
 }

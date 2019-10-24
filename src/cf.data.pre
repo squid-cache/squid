@@ -10531,11 +10531,11 @@ DEFAULT: none
 DEFAULT_DOC: Upgrade header dropped, effectively blocking an upgrade attempt.
 DOC_START
 	Controls client-initiated and server-confirmed switching from HTTP to
-	another protocol (or to several protocols) using HTTP Upgrade mechanism
-	(RFC 7230 Section 6.7). Squid itself does not understand the protocols
-	being upgraded to and participates in the upgraded communication only as
-	a dumb TCP proxy. Admins should not allow upgrading to protocols that
-	require a more meaningful proxy participation.
+	another protocol (or to several protocols) using HTTP Upgrade mechanism (RFC
+	7230 Section 6.7). Squid itself does not understand the protocols being
+	upgraded to and participates in the upgraded communication only as a dumb
+	TCP proxy. Admins should not allow upgrading to protocols that require a
+	more meaningful proxy participation.
 
 	Usage: http_upgrade_request_protocols <protocol> <allow|deny> [!]acl ...
 		protocol = OTHER | <name> [ / <version> ]
@@ -10544,60 +10544,59 @@ DOC_START
 	protocol name (e.g. "WebSocket") optionally followed by a slash and a
 	version token (e.g. "HTTP/3").
 
-	When an HTTP client sends an Upgrade request header, Squid iterates over
-	the listed protocols and, for each client-offered protocol P (with an
-	optional version V), evaluates the first non-empty set of
-	http_upgrade_request_protocols rules (if any):
+	When an HTTP client sends an Upgrade request header, Squid iterates over the
+	client-offered protocols and, for each protocol P (with an optional version
+	V), evaluates the first non-empty set of http_upgrade_request_protocols
+	rules (if any) from the following list:
 
 		* All rules with an explicit protocol name equal to P.
 		* All rules that use OTHER instead of a protocol name.
 
-	In other words, rules using OTHER are considered for protocol P if and
-	only if there are no rules mentioning P by name.
+	In other words, rules using OTHER are considered for protocol P if and only
+	if there are no rules mentioning P by name.
 
-	If both of the above sets are empty, then protocol P is removed
-	from the Upgrade offer.
+	If both of the above sets are empty, then Squid removes protocol P from the
+	Upgrade offer.
 
 	If the client sent a versioned protocol offer P/X, then explicit rules
-	referring to the same-name but different-version protocol P/Y are never
-	evaluated as inapplicable. They still belong to the first set of rules
-	for protocol P though.
+	referring to the same-name but different-version protocol P/Y are declared
+	inapplicable. Inapplicable rules are not evaluated (i.e. are ignored).
+	However, inapplicable rules still belong to the first set of rules for P.
 
-	Within the applicable rule subset, individual rules are evaluated in
-	their configuration order. If all ACLs of an applicable "allow" rule
-	match, the protocol offered by the client is forwarded to the next hop
-	as is. If ACLs of an applicable "deny" rule match, the offer is dropped.
-	If no applicable rules have matching ACLs, then the offer is also
-	dropped.
+	Within the applicable rule subset, individual rules are evaluated in their
+	configuration order. If all ACLs of an applicable "allow" rule match, the
+	protocol offered by the client is forwarded to the next hop as is. If all
+	ACLs of an applicable "deny" rule match, the offer is dropped. If no
+	applicable rules have matching ACLs, then the offer is also dropped.
 
-	If all client-offered protocols are removed, then Squid forwards the
-	client request without the Upgrade header.
+	If all client-offered protocols are removed, then Squid forwards the client
+	request without the Upgrade header.
 
-	Squid never sends an empty Upgrade request header. If Squid sends an
-	Upgrade request header, and the next hop (e.g., the origin server)
-	responds with HTTP 101 (Switching Protocols), then Squid forwards that
-	message to the client and becomes a TCP tunnel. Unsolicited HTTP 101
-	peer responses result in XXX errors and server connection closures.
+	Squid never sends an empty Upgrade request header. If Squid sends an Upgrade
+	request header, and the next hop (e.g., the origin server) responds with
+	HTTP 101 (Switching Protocols), then Squid forwards that message to the
+	client and becomes a TCP tunnel. Unsolicited HTTP 101 peer responses result
+	in XXX errors and server connection closures.
 
-	By default, Squid does not restrict Upgrade response protocols because
-	it is often difficult for a proxy to know for sure whether a combination
-	of protocols and their versions is meaningful to the client. Squid
-	behavior may become more restrictive in the future. Meanwhile, an admin
-	can restrict HTTP 101 (Switching Protocols) responses using
-	http_reply_access. Denied 101 responses result in XXX errors and server
-	connection closures.
+	By default, Squid does not restrict Upgrade response protocols because it is
+	often difficult for a proxy to know for sure whether a combination of
+	protocols and their versions is meaningful to the client. Squid behavior may
+	become more restrictive in the future. Meanwhile, an admin can restrict HTTP
+	101 (Switching Protocols) responses using http_reply_access. Denied 101
+	responses result in XXX errors and server connection closures.
 
-	An Upgrade header with a value violating HTTP syntax is dropped and
-	ignored without an attempt to use extractable protocol offers.
+	An Upgrade header with a value violating HTTP syntax is dropped and ignored
+	without an attempt to use extractable individual protocol offers.
 
-	The presence of an Upgrade header alone does not preclude cache lookups.
-	In other words, an Upgrade request might be satisfied from the cache,
-	using regular HTTP cachability rules.
+	The presence of an Upgrade header alone does not preclude cache lookups. In
+	other words, an Upgrade request might be satisfied from the cache, using
+	regular HTTP cachability rules.
 
-	Only fast ACLs are supported.
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
-	Each of the following groups of configuration lines represents a
-	separate configuration example:
+	Each of the following groups of configuration lines represents a separate
+	configuration example:
 
 	# never upgrade to protocol Foo; all others are OK
 	http_upgrade_request_protocols Foo deny all

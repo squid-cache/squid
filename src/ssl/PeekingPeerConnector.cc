@@ -252,13 +252,14 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
 void
 Ssl::PeekingPeerConnector::startTunneling()
 {
-    // Replace with the raw socket io methods
+    // switchToTunnel() drains any already buffered from-server data (rBufData)
     fd_table[serverConn->fd].useDefaultIo();
+    // tunnelStartShoveling() drains any buffered from-client data (inBuf)
     fd_table[clientConn->fd].useDefaultIo();
 
-    Security::SessionPointer session(fd_table[serverConn->fd].ssl);
+    const auto session = fd_table[serverConn->fd].ssl;
     auto b = SSL_get_rbio(session.get());
-    auto srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
+    auto srvBio = static_cast<Ssl::ServerBio*>(BIO_get_data(b));
 
     switchToTunnel(request.getRaw(), clientConn, serverConn, &srvBio->rBufData());
     tunnelInsteadOfNegotiating();

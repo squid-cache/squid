@@ -15,8 +15,6 @@
 #include "http/StateFlags.h"
 #include "sbuf/SBuf.h"
 
-#include <vector>
-
 class FwdState;
 class HttpHeader;
 class String;
@@ -142,19 +140,15 @@ private:
 
     mb_size_t buildRequestPrefix(MemBuf * mb);
 
-    /// Runs the required acl checks and adds the Upgrade related
-    /// headers to outgoing headers.
-    void makeUpgradeHeaders(HttpHeader &);
+    void forwardUpgrade(HttpHeader&);
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
     bool peerSupportsConnectionPinning() const;
 
-    /// Process an "101 Switching Protocols" reply.
-    /// \return true if and only if we are going to switch the protocols
-    bool processSwitchingProtocols(const HttpReply *);
+    /// whether an HTTP/101 (Switching Protocols) message should be forwarded
+    bool allowSwitchingProtocols(const HttpReply&) const;
 
-    /// Check if all of the protocols listed in the reply Upgrade header
-    /// included in the HTTP request Upgrade header.
-    bool upgradeProtocolsSupported(const HttpReply *) const;
+    /// whether server's Upgrade response header matches our Upgrade offer
+    bool serverSwitchedToOfferedProtocols(const HttpReply&) const;
 
     /// Parser being used at present to parse the HTTP/ICY server response.
     Http1::ResponseParserPointer hp;

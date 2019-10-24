@@ -63,7 +63,7 @@ public:
     /// connection manager members
     void serverCertificateVerified();
 
-    /// Aborts TLS negotiation and starts tunneling.
+    /// Abruptly stops TLS negotiation and starts tunneling.
     void startTunneling();
 
     /// A wrapper function for checkForPeekAndSpliceDone for use with acl

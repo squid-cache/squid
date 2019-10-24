@@ -61,7 +61,7 @@ private:
     Http1::RequestParserPointer parser_;
     HttpRequestMethod method_; ///< parsed HTTP method
 
-    /// true if the last client HTTP request wants to upgrade
+    /// whether the last parsed HTTP client request offered to switch protocols
     bool mayUpgrade = false;
 
     /// temporary hack to avoid creating a true HttpsServer class

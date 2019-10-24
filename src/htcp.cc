@@ -1535,7 +1535,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
     stuff.S.method = sb.c_str();
     stuff.S.uri = (char *) e->url();
     stuff.S.version = vbuf;
-    HttpStateData::httpBuildRequestHeader(req, e, nullptr, &hdr, flags);
+    HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
     MemBuf mb;
     mb.init();
     hdr.packInto(&mb);
@@ -1595,7 +1595,7 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     }
     stuff.S.version = vbuf;
     if (reason != HTCP_CLR_INVALIDATION) {
-        HttpStateData::httpBuildRequestHeader(req, e, nullptr, &hdr, flags);
+        HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
         mb.init();
         hdr.packInto(&mb);
         hdr.clean();

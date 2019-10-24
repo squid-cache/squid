@@ -20,9 +20,9 @@ public:
     bool only_if_cached = false;
     bool handling1xx = false;       ///< we are ignoring or forwarding 1xx response
 
-    /// Sets after an acceptable 101 Switching protocol Server response.
-    /// True handling101 implies true handling1xx.
-    bool handling101 = false;
+    /// whether we agreed to tunnel Upgrade protocols
+    bool switchingProtocols = false;
+
     bool headers_parsed = false;
 
     /// Whether the next TCP hop is a cache_peer, including originserver
