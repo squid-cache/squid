@@ -33,6 +33,7 @@
 #include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
+#include "HttpUpgrade.h"
 #include "icmp/IcmpConfig.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
@@ -5116,54 +5117,34 @@ free_on_unsupported_protocol(acl_access **access)
 static void
 parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuardsPtr)
 {
-    const auto proto = ConfigParser::NextToken();
-    if (!proto)
-        throw TextException(ToSBuf(cfg_directive, " requires a protocol name"), Here());
-
     assert(protoGuardsPtr);
-    if (!*protoGuardsPtr)
-        *protoGuardsPtr = new HttpUpgradeProtocolAccess();
-
-    auto &protoGuards = **protoGuardsPtr;
-    const auto protoGuard = protoGuards.find(SBuf(proto));
-    acl_access *access = nullptr;
-    if (protoGuard != protoGuards.end())
-        access = protoGuard->second;
-    else {
-        access = new Acl::Tree();
-        access->context(cfg_directive, config_input_line);
-        protoGuards.emplace(proto, access);
-    }
-
-    aclParseAccessLine(cfg_directive, LegacyParser, &access);
+    auto &protoGuards = *protoGuardsPtr;
+    if (!protoGuards)
+        protoGuards = new HttpUpgradeProtocolAccess();
+    protoGuards->configureGuard(LegacyParser);
 }
 
 static void
-dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *protoGuards)
+dump_http_upgrade_request_protocols(StoreEntry *entry, const char *rawName, HttpUpgradeProtocolAccess *protoGuards)
 {
     assert(protoGuards);
-    for (const auto &protoGuard: *protoGuards) {
+    const SBuf name(rawName);
+    protoGuards->forEachRule([entry,&name](const SBuf &proto, const acl_access *acls) {
         SBufList line;
-        line.push_back(SBuf(name));
-        line.push_back(protoGuard.first);
-        const auto acld = protoGuard.second->treeDump("", &Acl::AllowOrDeny);
+        line.push_back(name);
+        line.push_back(proto);
+        const auto acld = acls->treeDump("", &Acl::AllowOrDeny);
         line.insert(line.end(), acld.begin(), acld.end());
         dump_SBufList(entry, line);
-    }
+    });
 }
 
 static void
 free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuardsPtr)
 {
     assert(protoGuardsPtr);
-    if (auto &protoGuards = *protoGuardsPtr) {
-        for (const auto &protoGuard: *protoGuards) {
-            auto acls = protoGuard.second;
-            free_acl_access(&acls);
-        }
-
-        delete protoGuards;
-        protoGuards = nullptr;
-    }
+    auto &protoGuards = *protoGuardsPtr;
+    delete protoGuards;
+    protoGuards = nullptr;
 }
 

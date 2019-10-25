@@ -41,6 +41,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "HttpUpgrade.h"
 #include "log/access_log.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -2074,66 +2075,13 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     strConnection.clean();
 }
 
-/// A protocol-comparing predicate for STL search algorithms.
-/// Helps (and optimizes) checking whether the reference protocol belongs to an
-/// STL container, where the reference protocol and container protocols may be
-/// versioned. For example, it helps find "b/1" in ("a/1", "B").
-/// This predicate intentionally does not find "a" in ("a/1", "a/2").
-class MatchProtocol
-{
-public:
-    MatchProtocol(const char *p, size_t len):
-        reference(p),
-        referenceLen(len)
-    {
-        const auto end = std::find(reference, reference + referenceLen, '/');
-        referenceBaseLen = end - reference;
-    }
-
-    /// equality check for searching in sequence containers like std::list
-    bool operator() (const SBuf &item) const
-    {
-        // optimization: one of the lengths must match regardless of versioning
-        if (item.length() != referenceLen && item.length() != referenceBaseLen)
-            return false;
-
-        auto cmpLen = referenceLen;
-        if (referenceIsVersioned()) {
-            const auto itemIsVersioned = (item.find('/') != SBuf::npos);
-            if (!itemIsVersioned)
-                cmpLen = referenceBaseLen;
-        }
-        return item.length() == cmpLen && item.caseCmp(reference, cmpLen) == 0;
-    }
-
-    /// equality check for searching in associative containers like std::map
-    template<typename T>
-    bool operator() (const std::pair<const SBuf, T> &itemPair) const
-    {
-        return (*this)(itemPair.first);
-    }
-
-private:
-    /// \returns whether the reference protocol includes version info
-    bool referenceIsVersioned() const { return (referenceBaseLen != referenceLen); }
-
-    /// the protocol name[/version] that our user is looking for
-    const char *reference;
-
-    /// reference protocol length, including the /version part
-    size_t referenceLen;
-
-    /// reference protocol length, excluding the /version part
-    size_t referenceBaseLen;
-};
-
 /// copies from-client Upgrade info into the given to-server header while
 /// honoring configuration filters and following HTTP requirements
 void
 HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
 {
     if (!Config.http_upgrade_protocols)
-        return;
+        return; // forward nothing
 
     const auto &hdrIn = request->header;
     if (!hdrIn.has(Http::HdrType::UPGRADE))
@@ -2141,22 +2089,13 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
     const auto upgradeIn = hdrIn.getList(Http::HdrType::UPGRADE);
 
     String upgradeOut;
+
     const char *pos = nullptr;
     const char *item = nullptr;
     int ilen = 0;
     while (strListGetItem(&upgradeIn, ',', &item, &ilen, &pos)) {
-        const auto &cfgProtos = *Config.http_upgrade_protocols;
-        auto it = std::find_if(cfgProtos.begin(), cfgProtos.end(), MatchProtocol(item, ilen));
-
-        // if no rules mention the protocol explicitly, try OTHER protocol rules
-        if (it == cfgProtos.end()) {
-            static const SBuf other("OTHER");
-            it = cfgProtos.find(other);
-        }
-
-        if (it != cfgProtos.end()) {
-            const auto acl = it->second;
-            ACLFilledChecklist ch(acl, request.getRaw());
+        if (const auto guard = Config.http_upgrade_protocols->findGuard(item, ilen)) {
+            ACLFilledChecklist ch(guard, request.getRaw());
             ch.al = fwd->al;
             if (ch.fastCheck().allowed()) {
                 SBuf proto(item, ilen);
