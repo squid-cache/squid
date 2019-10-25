@@ -4562,7 +4562,11 @@ DOC_START
 		>lp	Local port number the client connected to
 		>qos    Client connection TOS/DSCP value set by Squid
 		>nfmark Client connection netfilter packet MARK set by Squid
-
+		>connection_id Client connection unique Id. Connection IDs are
+			guaranteed to monotonically increase within a single
+			worker process lifetime. Concurrent workers and
+			restarted workers use similar, overlapping sequences
+			of master transaction IDs.
 		la	Local listening IP address the client connection was connected to.
 		lp	Local listening port number the client connection was connected to.
 
