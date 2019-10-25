@@ -2206,7 +2206,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case Http::HdrType::TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
         break;
 
-    /** \par Upgrade is hop-by-hop by default but see forwardUpgrade() */
+    /// \par Upgrade is hop-by-hop but forwardUpgrade() may send a filtered one
     case Http::HdrType::UPGRADE:
         break;
 
