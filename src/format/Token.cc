@@ -149,6 +149,7 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry("note", LFT_NOTE ),
     TokenTableEntry("credentials", LFT_CREDENTIALS),
     TokenTableEntry("master_xaction", LFT_MASTER_XACTION),
+    TokenTableEntry(">connection_id", LFT_CLIENT_CONNECTION_ID),
     /*
      * Legacy external_acl_type format tokens
      */

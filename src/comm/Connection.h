@@ -175,7 +175,7 @@ public:
     Eui::Eui64 remoteEui64;
 #endif
 
-    InstanceId<Connection> id;
+    InstanceId<Connection, uint64_t> id;
 
 private:
     /** cache_peer data object (if any) */
