@@ -800,11 +800,17 @@ HttpStateData::handle1xx(HttpReply *reply)
     Must(!flags.handling1xx);
     flags.handling1xx = true;
 
-    if (!request->canHandle1xx() || request->forcedBodyContinuation) {
-        debugs(11, 2, "ignoring 1xx because it is " << (request->forcedBodyContinuation ? "already sent" : "not supported by client"));
-        proceedAfter1xx();
-        return;
-    }
+    const auto statusCode = reply->sline.status();
+
+    // drop1xx() needs to handle HTTP 101 (Switching Protocols) responses
+    // specially because they indicate that the server has stopped speaking HTTP
+    flags.switchingProtocols = statusCode == Http::scSwitchingProtocols;
+
+    if (statusCode == Http::scContinue && request->forcedBodyContinuation)
+        return drop1xx("we have sent it already");
+
+    if (!request->canHandle1xx())
+        return drop1xx("the client does not support it");
 
 #if USE_HTTP_VIOLATIONS
     // check whether the 1xx response forwarding is allowed by squid.conf
@@ -814,23 +820,14 @@ HttpStateData::handle1xx(HttpReply *reply)
         ch.reply = reply;
         ch.syncAle(originalRequest().getRaw(), nullptr);
         HTTPMSGLOCK(ch.reply);
-        if (!ch.fastCheck().allowed()) { // TODO: support slow lookups?
-            debugs(11, 3, HERE << "ignoring denied 1xx");
-            proceedAfter1xx();
-            return;
-        }
+        if (!ch.fastCheck().allowed()) // TODO: support slow lookups?
+            return drop1xx("http_reply_access bocked it");
     }
 #endif // USE_HTTP_VIOLATIONS
 
-    if (reply->sline.status() == Http::scSwitchingProtocols) {
-        if (!allowSwitchingProtocols(*reply)) {
-            const auto err = new ErrorState(ERR_INVALID_RESP, Http::scBadGateway, request.getRaw(), fwd->al);
-            fwd->fail(err);
-            closeServer();
-            // XXX: mustStop("prohibited HTTP/101 response")?
-            return;
-        }
-        flags.switchingProtocols = true;
+    if (flags.switchingProtocols) {
+        if (const auto reason = blockSwitchingProtocols(*reply))
+            return drop1xx(reason);
     }
 
     debugs(11, 2, HERE << "forwarding 1xx to client");
@@ -847,6 +844,24 @@ HttpStateData::handle1xx(HttpReply *reply)
     // for similar reasons without a 1xx response.
 }
 
+/// if possible, safely ignores the received 1xx control message
+/// otherwise, terminates the server connection
+void
+HttpStateData::drop1xx(const char *reason)
+{
+    if (flags.switchingProtocols) {
+        const auto err = new ErrorState(ERR_INVALID_RESP, Http::scBadGateway, request.getRaw(), fwd->al);
+        fwd->fail(err);
+        closeServer();
+        // XXX: mustStop("prohibited HTTP/101 response")?
+        return;
+    }
+
+    debugs(11, 2, "ignoring 1xx because " << reason);
+    proceedAfter1xx();
+}
+
+/// whether server's Upgrade response header matches Squid's Upgrade offer
 bool
 HttpStateData::serverSwitchedToOfferedProtocols(const HttpReply &reply) const
 {
@@ -878,22 +893,23 @@ HttpStateData::serverSwitchedToOfferedProtocols(const HttpReply &reply) const
     return true;
 }
 
-bool
-HttpStateData::allowSwitchingProtocols(const HttpReply &reply) const
+/// \retval nil if the HTTP/101 (Switching Protocols) reply should be forwarded
+/// \retval reason why an attempt to switch protocols should be stopped
+const char *
+HttpStateData::blockSwitchingProtocols(const HttpReply &reply) const
 {
-    // server MUST send an Upgrade header field (RFC 7230 section 6.7)
+    // See RFC 7230 section 6.7 for the corresponding MUSTs
+
     if (!reply.header.has(Http::HdrType::UPGRADE))
-        return false;
+        return "server did not send an Upgrade header field";
 
-    // server MUST send "Connection: upgrade" (RFC 7230 section 6.7)
     if (!reply.header.hasListMember(Http::HdrType::CONNECTION, "upgrade", ','))
-        return false;
+        return "server did not send 'Connection: upgrade'";
 
-    // server MUST NOT switch to a protocol that was not indicated by the client
     if (!serverSwitchedToOfferedProtocols(reply))
-        return false;
+        return "server switched to unsolicited protocol(s)";
 
-    return true;
+    return nullptr; // no Upgrade violations detected
 }
 
 // XXX: To control ownership, use a custom unique_ptr instead of a custom Dialer

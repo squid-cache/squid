@@ -10570,26 +10570,29 @@ DOC_START
 	applicable rules have matching ACLs, then the offer is also dropped.
 
 	If all client-offered protocols are removed, then Squid forwards the client
-	request without the Upgrade header.
+	request without the Upgrade header. Squid never sends an empty Upgrade
+	request header.
 
-	Squid never sends an empty Upgrade request header. If Squid sends an Upgrade
-	request header, and the next hop (e.g., the origin server) responds with a
-	matching HTTP 101 (Switching Protocols), then Squid forwards that message to
-	the client and becomes a TCP tunnel. Unsolicited HTTP 101 peer responses
-	result in ERR_INVALID_RESP errors and server connection closures.
+	If Squid sends an Upgrade request header, and the next hop (e.g., the origin
+	server) responds with a matching HTTP 101 (Switching Protocols), then Squid
+	forwards that message to the client and becomes a TCP tunnel.
 
-	Squid checks that each of the Upgrade protocols was offered by Squid in its
-	Upgrade request header. Responses switching to an unsolicited protocol
-	result in ERR_INVALID_RESP errors and server connection closures. An admin
-	can restrict HTTP 101 (Switching Protocols) responses further by denying
-	them in http_reply_access. Such denied responses result in XXX.
+	Upon receiving an HTTP 101 (Switching Protocols) control message, Squid
+	checks that each of the Upgrade response protocols was offered by Squid in
+	its Upgrade request header. An offer of a versionless protocol matches any
+	specific version of the same-name protocol in the received control message.
 
-	An Upgrade header with a value violating HTTP syntax is dropped and ignored
-	without an attempt to use extractable individual protocol offers.
+	An admin can restrict HTTP 101 (Switching Protocols) responses further by
+	denying them in http_reply_access. Denied responses and responses switching
+	to an unsolicited protocol (see the above paragraph) result in
+	ERR_INVALID_RESP errors and Squid-to-server connection closures.
 
-	The presence of an Upgrade header alone does not preclude cache lookups. In
-	other words, an Upgrade request might be satisfied from the cache, using
-	regular HTTP cachability rules.
+	An Upgrade request header with a value violating HTTP syntax is dropped and
+	ignored without an attempt to use extractable individual protocol offers.
+
+	The presence of an Upgrade request header alone does not preclude cache
+	lookups. In other words, an Upgrade request might be satisfied from the
+	cache, using regular HTTP cachability rules.
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.

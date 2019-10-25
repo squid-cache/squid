@@ -79,6 +79,7 @@ protected:
     void processReply();
     void proceedAfter1xx();
     void handle1xx(HttpReply *msg);
+    void drop1xx(const char *reason);
 
 private:
     /**
@@ -139,15 +140,10 @@ private:
     void httpTimeout(const CommTimeoutCbParams &params);
 
     mb_size_t buildRequestPrefix(MemBuf * mb);
-
     void forwardUpgrade(HttpHeader&);
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
     bool peerSupportsConnectionPinning() const;
-
-    /// whether an HTTP/101 (Switching Protocols) message should be forwarded
-    bool allowSwitchingProtocols(const HttpReply&) const;
-
-    /// whether server's Upgrade response header matches our Upgrade offer
+    const char *blockSwitchingProtocols(const HttpReply&) const;
     bool serverSwitchedToOfferedProtocols(const HttpReply&) const;
 
     /// Parser being used at present to parse the HTTP/ICY server response.
