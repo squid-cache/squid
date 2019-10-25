@@ -10531,11 +10531,11 @@ DEFAULT: none
 DEFAULT_DOC: Upgrade header dropped, effectively blocking an upgrade attempt.
 DOC_START
 	Controls client-initiated and server-confirmed switching from HTTP to
-	another protocol (or to several protocols) using HTTP Upgrade mechanism (RFC
-	7230 Section 6.7). Squid itself does not understand the protocols being
-	upgraded to and participates in the upgraded communication only as a dumb
-	TCP proxy. Admins should not allow upgrading to protocols that require a
-	more meaningful proxy participation.
+	another protocol (or to several protocols) using HTTP Upgrade mechanism
+	defined in RFC 7230 Section 6.7. Squid itself does not understand the
+	protocols being upgraded to and participates in the upgraded communication
+	only as a dumb TCP proxy. Admins should not allow upgrading to protocols
+	that require a more meaningful proxy participation.
 
 	Usage: http_upgrade_request_protocols <protocol> <allow|deny> [!]acl ...
 		protocol = OTHER | <name> [ / <version> ]
@@ -10573,9 +10573,8 @@ DOC_START
 	request without the Upgrade header. Squid never sends an empty Upgrade
 	request header.
 
-	If Squid sends an Upgrade request header, and the next hop (e.g., the origin
-	server) responds with a matching HTTP 101 (Switching Protocols), then Squid
-	forwards that message to the client and becomes a TCP tunnel.
+	An Upgrade request header with a value violating HTTP syntax is dropped and
+	ignored without an attempt to use extractable individual protocol offers.
 
 	Upon receiving an HTTP 101 (Switching Protocols) control message, Squid
 	checks that each of the Upgrade response protocols was offered by Squid in
@@ -10587,12 +10586,13 @@ DOC_START
 	to an unsolicited protocol (see the above paragraph) result in
 	ERR_INVALID_RESP errors and Squid-to-server connection closures.
 
-	An Upgrade request header with a value violating HTTP syntax is dropped and
-	ignored without an attempt to use extractable individual protocol offers.
+	If Squid sends an Upgrade request header, and the next hop (e.g., the origin
+	server) responds with a matching HTTP 101 (Switching Protocols), then Squid
+	forwards that message to the client and becomes a TCP tunnel.
 
 	The presence of an Upgrade request header alone does not preclude cache
 	lookups. In other words, an Upgrade request might be satisfied from the
-	cache, using regular HTTP cachability rules.
+	cache, using regular HTTP caching rules.
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
