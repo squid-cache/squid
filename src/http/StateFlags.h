@@ -18,10 +18,14 @@ public:
     unsigned int front_end_https = 0; ///< send "Front-End-Https: On" header (off/on/auto=2)
     bool keepalive = false; ///< whether to keep the connection persistent
     bool only_if_cached = false;
-    bool handling1xx = false;       ///< we are ignoring or forwarding 1xx response
 
-    /// whether we agreed to tunnel Upgrade protocols
-    bool switchingProtocols = false;
+    /// We are processing an HTTP 1xx control message.
+    bool handling1xx = false;
+
+    /// Whether we received an HTTP 101 (Switching Protocols) control message.
+    /// Implies handling1xx, but this state is permanent while handling of other
+    /// control messages may stop.
+    bool serverSwitchedProtocols = false;
 
     bool headers_parsed = false;
 

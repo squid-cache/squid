@@ -804,7 +804,8 @@ HttpStateData::handle1xx(HttpReply *reply)
 
     // drop1xx() needs to handle HTTP 101 (Switching Protocols) responses
     // specially because they indicate that the server has stopped speaking HTTP
-    flags.switchingProtocols = statusCode == Http::scSwitchingProtocols;
+    Must(!flags.serverSwitchedProtocols);
+    flags.serverSwitchedProtocols = (statusCode == Http::scSwitchingProtocols);
 
     if (statusCode == Http::scContinue && request->forcedBodyContinuation)
         return drop1xx("we have sent it already");
@@ -825,7 +826,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     }
 #endif // USE_HTTP_VIOLATIONS
 
-    if (flags.switchingProtocols) {
+    if (flags.serverSwitchedProtocols) {
         if (const auto reason = blockSwitchingProtocols(*reply))
             return drop1xx(reason);
     }
@@ -849,7 +850,7 @@ HttpStateData::handle1xx(HttpReply *reply)
 void
 HttpStateData::drop1xx(const char *reason)
 {
-    if (flags.switchingProtocols) {
+    if (flags.serverSwitchedProtocols) {
         const auto err = new ErrorState(ERR_INVALID_RESP, Http::scBadGateway, request.getRaw(), fwd->al);
         fwd->fail(err);
         closeServer();
@@ -940,7 +941,7 @@ HttpStateData::proceedAfter1xx()
 {
     Must(flags.handling1xx);
 
-    if (flags.switchingProtocols) {
+    if (flags.serverSwitchedProtocols) {
         // pass server connection ownership to request->clientConnectionManager
         ConnStateData::ServerConnectionContext scc(serverConnection, request);
         ServerConnectionControlDialer dialer(request->clientConnectionManager, scc);
