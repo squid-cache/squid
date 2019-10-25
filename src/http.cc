@@ -2137,7 +2137,7 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
             it = cfgProtos.find(other);
         }
 
-        if (it != cfgProtos.end() && it->second) {
+        if (it != cfgProtos.end()) {
             const auto acl = it->second;
             ACLFilledChecklist ch(acl, request.getRaw());
             ch.al = fwd->al;
