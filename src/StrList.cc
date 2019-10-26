@@ -49,19 +49,6 @@ strListIsMember(const String * list, const SBuf &m, char del)
     return 0;
 }
 
-bool
-strListIsMember_if(const String *list, const char del, const MemberFilter filter)
-{
-    const char *pos = nullptr;
-    const char *item = nullptr;
-    int ilen = 0;
-    while (strListGetItem(list, del, &item, &ilen, &pos)) {
-        if (filter(item, ilen))
-            return true;
-    }
-    return false;
-}
-
 /** returns true iff "s" is a substring of a member of the list */
 int
 strListIsSubstr(const String * list, const char *s, char del)

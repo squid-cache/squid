@@ -10,9 +10,48 @@
 #define SQUID_HTTP_UPGRADE_H
 
 #include "acl/forward.h"
-#include "acl/forward.h"
+#include "base/StringView.h"
 
 #include <map>
+
+/// a reference to a protocol name[/version] string; no 0-termination is assumed
+class ProtocolView
+{
+public:
+    ProtocolView(const char * const start, const size_t len);
+    explicit ProtocolView(const SBuf &proto);
+
+    StringView name; ///< everything up to (but excluding) the first slash('/')
+    StringView version; ///< everything after the name, including the slash('/')
+};
+
+std::ostream &operator <<(std::ostream &, const ProtocolView &);
+
+// HTTP is not explicit about case sensitivity of Upgrade protocol strings, but
+// there are bug reports showing different case variants used for WebSocket so
+// we preserve the received case but compare case-insensitively.
+
+/// Both have the same name and
+/// either both have the same version or some have no version restrictions.
+/// For example, "ws" is similar to "ws/1" while "ws/1" is similar to "ws".
+inline bool
+Similar(const ProtocolView &a, const ProtocolView &b)
+{
+    if (!SameButCase(a.name, b.name))
+        return false;
+    return a.version.empty() || b.version.empty() || a.version == b.version;
+}
+
+/// Both have the same name and
+/// either both have the same version or b has no version restrictions.
+/// For example, "ws/1" is in "ws" but "ws" is not in "ws/1".
+inline bool
+AinB(const ProtocolView &a, const ProtocolView &b)
+{
+    if (!SameButCase(a.name, b.name))
+        return false;
+    return b.version.empty() || a.version == b.version;
+}
 
 /// Allows or blocks HTTP Upgrade protocols (see http_upgrade_request_protocols)
 class HttpUpgradeProtocolAccess

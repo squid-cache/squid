@@ -874,20 +874,22 @@ HttpStateData::serverSwitchedToOfferedProtocols(const HttpReply &reply) const
         return false;
     }
 
-    const char *pos = nullptr;
-    const char *acceptedProto = nullptr;
-    int acceptedLenFull = 0;
-    while (strListGetItem(&acceptedProtos, ',', &acceptedProto, &acceptedLenFull, &pos)) {
-        const auto acceptedSlash = std::find(acceptedProto, acceptedProto + acceptedLenFull, '/');
-        const auto acceptedLen = acceptedSlash - acceptedProto; // ignore protocol version suffix in accepted protocol
-        const auto found = strListIsMember_if(upgradeHeaderOut, ',',
-        [acceptedProto, acceptedLen](const char *offeredProto, int offeredLenFull) {
-            const auto offeredSlash = std::find(offeredProto, offeredProto + offeredLenFull, '/');
-            const auto offeredLen = offeredSlash - offeredProto; // ignore protocol version suffix in offered protocol
-            return (acceptedLen == offeredLen && strncasecmp(acceptedProto, offeredProto, offeredLen) == 0);
-        });
+    const char *acceptedPos = nullptr;
+    const char *acceptedName = nullptr;
+    int acceptedLen = 0;
+    while (strListGetItem(&acceptedProtos, ',', &acceptedName, &acceptedLen, &acceptedPos)) {
+        const ProtocolView acceptedProto(acceptedName, acceptedLen);
+
+        bool found = false;
+        const char *offeredPos = nullptr;
+        const char *offeredName = nullptr;
+        int offeredLen = 0;
+        while (!found && strListGetItem(upgradeHeaderOut, ',', &offeredName, &offeredLen, &offeredPos)) {
+            const ProtocolView offeredProto(offeredName, offeredLen);
+            found = Similar(offeredProto, acceptedProto);
+        }
         if (!found) {
-            debugs(11, 2, "Squid did not offer, but server accepted " << SBuf(acceptedProto, acceptedLen));
+            debugs(11, 2, "Squid did not offer, but server accepted " << acceptedProto);
             return false;
         }
     }

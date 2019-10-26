@@ -46,6 +46,8 @@ libbase_la_SOURCES = \
 	RegexPattern.h \
 	RunnersRegistry.cc \
 	RunnersRegistry.h \
+	StringView.cc \
+	StringView.h \
 	Subscription.h \
 	TextException.cc \
 	TextException.h \

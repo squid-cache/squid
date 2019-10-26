@@ -12,62 +12,34 @@
 #include "ConfigParser.h"
 #include "globals.h"
 #include "HttpUpgrade.h"
+#include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 
-/// A protocol-comparing predicate for STL search algorithms.
-/// Helps (and optimizes) checking whether the reference protocol belongs to an
-/// STL container, where the reference protocol and container protocols may be
-/// versioned. For example, it helps find "b/1" in ("a/1", "B").
-/// This predicate intentionally does not find "a" in ("a/1", "a/2").
-class MatchProtocol
-{
-public:
-    MatchProtocol(const char *p, size_t len):
-        reference(p),
-        referenceLen(len)
-    {
-        const auto end = std::find(reference, reference + referenceLen, '/');
-        referenceBaseLen = end - reference;
-    }
-
-    /// equality check for searching in sequence containers like std::list
-    bool operator() (const SBuf &item) const
-    {
-        // optimization: one of the lengths must match regardless of versioning
-        if (item.length() != referenceLen && item.length() != referenceBaseLen)
-            return false;
-
-        auto cmpLen = referenceLen;
-        if (referenceIsVersioned()) {
-            const auto itemIsVersioned = (item.find('/') != SBuf::npos);
-            if (!itemIsVersioned)
-                cmpLen = referenceBaseLen;
-        }
-        return item.length() == cmpLen && item.caseCmp(reference, cmpLen) == 0;
-    }
-
-    /// equality check for searching in associative containers like std::map
-    template<typename T>
-    bool operator() (const std::pair<const SBuf, T> &itemPair) const
-    {
-        return (*this)(itemPair.first);
-    }
-
-private:
-    /// \returns whether the reference protocol includes version info
-    bool referenceIsVersioned() const { return (referenceBaseLen != referenceLen); }
-
-    /// the protocol name[/version] that our user is looking for
-    const char *reference;
-
-    /// reference protocol length, including the /version part
-    size_t referenceLen;
-
-    /// reference protocol length, excluding the /version part
-    size_t referenceBaseLen;
-};
+#include <algorithm>
 
 const SBuf HttpUpgradeProtocolAccess::ProtoOther("OTHER");
+
+ProtocolView::ProtocolView(const char * const start, const size_t len):
+    name(start, std::find(start, start + len, '/') - start),
+    version(start + name.size(), len - name.size())
+{
+}
+
+ProtocolView::ProtocolView(const SBuf &proto):
+    ProtocolView(proto.rawContent(), proto.length())
+{
+}
+
+std::ostream &
+operator <<(std::ostream &os, const ProtocolView &view)
+{
+    os << view.name;
+    if (!view.version.empty())
+        os << view.version;
+    return os;
+}
+
+/* HttpUpgradeProtocolAccess */
 
 HttpUpgradeProtocolAccess::~HttpUpgradeProtocolAccess()
 {
@@ -108,9 +80,9 @@ HttpUpgradeProtocolAccess::configureGuard(ConfigParser &parser)
 acl_access*
 HttpUpgradeProtocolAccess::findGuard(const char *name, const size_t len) const
 {
-    const MatchProtocol match(name, len);
+    const ProtocolView needle(name, len);
     for (auto &namedGuard: namedGuards) {
-        if (match(namedGuard.first))
+        if (AinB(needle, ProtocolView(namedGuard.first)))
             return namedGuard.second;
     }
 
