@@ -874,27 +874,19 @@ HttpStateData::serverSwitchedToOfferedProtocols(const HttpReply &reply) const
         return false;
     }
 
-    const char *acceptedPos = nullptr;
-    const char *acceptedName = nullptr;
-    int acceptedLen = 0;
-    while (strListGetItem(&acceptedProtos, ',', &acceptedName, &acceptedLen, &acceptedPos)) {
-        const ProtocolView acceptedProto(acceptedName, acceptedLen);
-
-        bool found = false;
-        const char *offeredPos = nullptr;
-        const char *offeredName = nullptr;
-        int offeredLen = 0;
-        while (!found && strListGetItem(upgradeHeaderOut, ',', &offeredName, &offeredLen, &offeredPos)) {
-            const ProtocolView offeredProto(offeredName, offeredLen);
-            found = Similar(offeredProto, acceptedProto);
+    for(const auto &accepted: StrList(acceptedProtos)) {
+        const ProtocolView acceptedProto(accepted);
+        for (const auto &offered: StrList(*upgradeHeaderOut)) {
+            const ProtocolView offeredProto(offered);
+            if (Similar(offeredProto, acceptedProto))
+                return true;
         }
-        if (!found) {
-            debugs(11, 2, "Squid did not offer, but server accepted " << acceptedProto);
-            return false;
-        }
+        debugs(11, 2, "Squid did not offer, but server accepted " << acceptedProto);
+        return false;
     }
 
-    return true;
+    debugs(11, 2, "server accepted no Upgrade protocols: " << acceptedProtos);
+    return false;
 }
 
 /// \retval nil if the HTTP/101 (Switching Protocols) reply should be forwarded
@@ -2092,16 +2084,13 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
 
     String upgradeOut;
 
-    const char *pos = nullptr;
-    const char *item = nullptr;
-    int ilen = 0;
-    while (strListGetItem(&upgradeIn, ',', &item, &ilen, &pos)) {
-        if (const auto guard = Config.http_upgrade_protocols->findGuard(item, ilen)) {
+    for (const auto &proto: StrList(upgradeIn)) {
+        if (const auto guard = Config.http_upgrade_protocols->findGuard(proto)) {
             ACLFilledChecklist ch(guard, request.getRaw());
             ch.al = fwd->al;
             if (ch.fastCheck().allowed()) {
-                SBuf proto(item, ilen);
-                strListAdd(&upgradeOut, proto.c_str(), ',');
+                SBuf protoCopy(proto.data(), proto.size());
+                strListAdd(&upgradeOut, protoCopy.c_str(), ',');
             }
         }
     }

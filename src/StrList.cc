@@ -145,3 +145,31 @@ getListMember(const String &list, const char *key, const char delimiter)
     return SBuf();
 }
 
+/* StrListIterator */
+
+StrListIterator::StrListIterator(const StrList *listOrNil):
+    list(listOrNil),
+    position(nullptr)
+{
+    if (list)
+        advance();
+}
+
+/// locates and fills either the very first or the next list member
+void
+StrListIterator::advance()
+{
+    assert(list);
+    const char *istart = nullptr;
+    int ilen = 0;
+    if (strListGetItem(&list->raw(), list->delimiter(), &istart, &ilen, &position)) {
+        assert(ilen > 0);
+        current = StringView(istart, static_cast<size_t>(ilen));
+    } else {
+        // no more members left
+        list = nullptr;
+        position = nullptr;
+        current = StringView();
+    }
+}
+

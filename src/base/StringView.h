@@ -17,6 +17,7 @@
 class StringView
 {
 public:
+    StringView(): start_(nullptr), size_(0) {}
     StringView(const char * const start, const size_t len): start_(start), size_(len) {}
 
     bool empty() const { return !size_; }

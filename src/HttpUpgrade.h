@@ -11,6 +11,7 @@
 
 #include "acl/forward.h"
 #include "base/StringView.h"
+#include "sbuf/forward.h"
 
 #include <map>
 
@@ -19,6 +20,7 @@ class ProtocolView
 {
 public:
     ProtocolView(const char * const start, const size_t len);
+    explicit ProtocolView(const StringView &proto);
     explicit ProtocolView(const SBuf &proto);
 
     StringView name; ///< everything up to (but excluding) the first slash('/')
@@ -61,10 +63,8 @@ public:
     ~HttpUpgradeProtocolAccess();
     HttpUpgradeProtocolAccess(HttpUpgradeProtocolAccess &&) = delete; // no copying of any kind
 
-    /// \returns the ACL list matching the named protocol (or nil)
-    /// \param proto versioned or versionless protocol name; not 0-terminated!
-    /// \param len proto length; includes the /version part, if any
-    acl_access *findGuard(const char *proto, const size_t len) const;
+    /// \returns the ACLs matching the given "name[/version]" protocol (or nil)
+    acl_access *findGuard(const StringView &proto) const;
 
     /// parses a single allow/deny rule
     void configureGuard(ConfigParser&);

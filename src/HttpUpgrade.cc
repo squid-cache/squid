@@ -30,6 +30,11 @@ ProtocolView::ProtocolView(const SBuf &proto):
 {
 }
 
+ProtocolView::ProtocolView(const StringView &proto):
+    ProtocolView(proto.data(), proto.size())
+{
+}
+
 std::ostream &
 operator <<(std::ostream &os, const ProtocolView &view)
 {
@@ -78,9 +83,9 @@ HttpUpgradeProtocolAccess::configureGuard(ConfigParser &parser)
 }
 
 acl_access*
-HttpUpgradeProtocolAccess::findGuard(const char *name, const size_t len) const
+HttpUpgradeProtocolAccess::findGuard(const StringView &proto) const
 {
-    const ProtocolView needle(name, len);
+    const ProtocolView needle(proto.data(), proto.size());
     for (auto &namedGuard: namedGuards) {
         if (AinB(needle, ProtocolView(namedGuard.first)))
             return namedGuard.second;
