@@ -823,7 +823,7 @@ HttpStateData::handle1xx(HttpReply *reply)
         ch.syncAle(originalRequest().getRaw(), nullptr);
         HTTPMSGLOCK(ch.reply);
         if (!ch.fastCheck().allowed()) // TODO: support slow lookups?
-            return drop1xx("http_reply_access bocked it");
+            return drop1xx("http_reply_access blocked it");
     }
 #endif // USE_HTTP_VIOLATIONS
 
@@ -852,6 +852,7 @@ void
 HttpStateData::drop1xx(const char *reason)
 {
     if (flags.serverSwitchedProtocols) {
+        debugs(11, 2, "bad 101 because " << reason);
         const auto err = new ErrorState(ERR_INVALID_RESP, Http::scBadGateway, request.getRaw(), fwd->al);
         fwd->fail(err);
         closeServer();
