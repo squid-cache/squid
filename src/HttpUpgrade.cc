@@ -82,7 +82,7 @@ HttpUpgradeProtocolAccess::configureGuard(ConfigParser &parser)
         namedGuards.emplace(proto, access);
 }
 
-acl_access*
+const acl_access*
 HttpUpgradeProtocolAccess::findGuard(const StringView &proto) const
 {
     const ProtocolView needle(proto.data(), proto.size());
