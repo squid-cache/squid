@@ -504,7 +504,7 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     if (aTime) {
         if (!X509_set1_notAfter(cert.get(), aTime))
             return false;
-    } else if (!X509_gmtime_adj(X509_getm_notAfter(cert.get()), 60*60*24*356*3))
+    } else if (!X509_gmtime_adj(X509_getm_notAfter(cert.get()), 60*60*24*365*3))
         return false;
 
     int addedExtensions = 0;
