@@ -14,22 +14,31 @@
 #include "SquidString.h"
 #include "StrList.h"
 
-/** appends an item to the list */
-void
-strListAdd(String * str, const char *item, char del)
+/// common parts of public strListAdd() functions
+static void
+strListAdd(String &str, const char *item, const size_t itemSize, const char del)
 {
-    assert(str && item);
-    const auto itemSize = strlen(item);
-    if (str->size()) {
-        char buf[3];
-        buf[0] = del;
-        buf[1] = ' ';
-        buf[2] = '\0';
-        Must(str->canGrowBy(2));
-        str->append(buf, 2);
+    if (str.size()) {
+        const char buf[] = { del, ' ' };
+        Must(str.canGrowBy(2));
+        str.append(buf, 2);
     }
-    Must(str->canGrowBy(itemSize));
-    str->append(item, itemSize);
+    Must(str.canGrowBy(itemSize));
+    str.append(item, itemSize);
+}
+
+void
+strListAdd(String *str, const char *item, char delimiter)
+{
+    assert(str);
+    assert(item);
+    strListAdd(*str, item, strlen(item), delimiter);
+}
+
+void
+strListAdd(String &str, const StringView &item, char delimiter)
+{
+    strListAdd(str, item.data(), item.size(), delimiter);
 }
 
 /** returns true iff "m" is a member of the list */

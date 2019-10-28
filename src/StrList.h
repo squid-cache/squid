@@ -17,7 +17,13 @@
 class String;
 class StrList;
 
+/// appends the given item to a delimiter-separated list in str
+/// use strListAdd(StringView) for non-0-terminated items
 void strListAdd(String * str, const char *item, char del);
+/// appends the given item to a delimiter-separated list in str
+/// use strListAdd(c-string) for c-string items with unknown length
+void strListAdd(String &str, const StringView &item, char delimiter = ',');
+
 int strListIsMember(const String * str, const SBuf &item, char del);
 int strListIsSubstr(const String * list, const char *s, char del);
 /// Iterates through delimiter-separated and optionally "quoted" list members.

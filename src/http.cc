@@ -2088,10 +2088,8 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
         if (const auto guard = Config.http_upgrade_protocols->findGuard(proto)) {
             ACLFilledChecklist ch(guard, request.getRaw());
             ch.al = fwd->al;
-            if (ch.fastCheck().allowed()) {
-                SBuf protoCopy(proto.data(), proto.size());
-                strListAdd(&upgradeOut, protoCopy.c_str(), ',');
-            }
+            if (ch.fastCheck().allowed())
+                strListAdd(upgradeOut, proto);
         }
     }
 
