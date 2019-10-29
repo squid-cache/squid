@@ -14,14 +14,16 @@
 #include "base/StringView.h"
 #include "sbuf/forward.h"
 
+#include <iterator>
+
 class String;
 class StrList;
 
-/// appends the given item to a delimiter-separated list in str
-/// use strListAdd(StringView) for non-0-terminated items
+/// Appends the given item to a delimiter-separated list in str.
+/// Use strListAdd(StringView) for non-0-terminated items.
 void strListAdd(String * str, const char *item, char del);
-/// appends the given item to a delimiter-separated list in str
-/// use strListAdd(c-string) for c-string items with unknown length
+/// Appends the given item to a delimiter-separated list in str.
+/// Use strListAdd(c-string) for c-string items with unknown length.
 void strListAdd(String &str, const StringView &item, char delimiter = ',');
 
 int strListIsMember(const String * str, const SBuf &item, char del);
@@ -46,7 +48,7 @@ public:
     const value_type &operator *() const { return current; }
 
     StrListIterator &operator++() {
-        advance();
+        proceed();
         return *this;
     }
 
@@ -57,7 +59,7 @@ public:
     }
 
 private:
-    void advance();
+    void proceed();
 
     const StrList *list; /// the list being iterated; nil when iteration ended
     const char *position; ///< where to start searching for the next list member

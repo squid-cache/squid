@@ -26,9 +26,8 @@ StringView::operator ==(const StringView &other) const
 bool
 SameButCase(const StringView &a, const StringView &b)
 {
-    if (a.size() != b.size())
-        return false;
-    return !a.size() || strncasecmp(a.data(), b.data(), a.size()) == 0;
+    return a.size() == b.size() &&
+           (!a.size() || strncasecmp(a.data(), b.data(), a.size()) == 0);
 }
 
 std::ostream &

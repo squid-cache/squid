@@ -24,7 +24,6 @@
 #endif
 #include "Notes.h"
 #include "security/forward.h"
-#include "sbuf/forward.h"
 #include "SquidTime.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -33,7 +32,6 @@
 #include "store/forward.h"
 
 #include <chrono>
-#include <map>
 
 #if USE_OPENSSL
 class sslproxy_cert_sign;

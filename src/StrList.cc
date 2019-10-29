@@ -161,12 +161,12 @@ StrListIterator::StrListIterator(const StrList *listOrNil):
     position(nullptr)
 {
     if (list)
-        advance();
+        proceed();
 }
 
 /// locates and fills either the very first or the next list member
 void
-StrListIterator::advance()
+StrListIterator::proceed()
 {
     assert(list);
     const char *istart = nullptr;

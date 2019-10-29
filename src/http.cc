@@ -52,7 +52,6 @@
 #include "refresh.h"
 #include "RefreshPattern.h"
 #include "rfc1738.h"
-#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -875,7 +874,7 @@ HttpStateData::serverSwitchedToOfferedProtocols(const HttpReply &reply) const
         return false;
     }
 
-    for(const auto &accepted: StrList(acceptedProtos)) {
+    for (const auto &accepted: StrList(acceptedProtos)) {
         const ProtocolView acceptedProto(accepted);
         for (const auto &offered: StrList(*upgradeHeaderOut)) {
             const ProtocolView offeredProto(offered);
@@ -2076,7 +2075,7 @@ void
 HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
 {
     if (!Config.http_upgrade_protocols)
-        return; // forward nothing
+        return; // forward nothing by default
 
     const auto &hdrIn = request->header;
     if (!hdrIn.has(Http::HdrType::UPGRADE))

@@ -19,12 +19,12 @@ public:
     bool keepalive = false; ///< whether to keep the connection persistent
     bool only_if_cached = false;
 
-    /// We are processing an HTTP 1xx control message.
+    /// Whether we are processing an HTTP 1xx control message.
     bool handling1xx = false;
 
     /// Whether we received an HTTP 101 (Switching Protocols) control message.
-    /// Implies handling1xx, but this state is permanent while handling of other
-    /// control messages may stop.
+    /// Implies true handling1xx, but the serverSwitchedProtocols state is
+    /// permanent/final while handling of other control messages usually stops.
     bool serverSwitchedProtocols = false;
 
     bool headers_parsed = false;

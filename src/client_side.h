@@ -482,7 +482,7 @@ void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, 
 void clientPostHttpsAccept(ConnStateData *);
 
 std::ostream &operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic);
-std::ostream &operator <<(std::ostream &os, const ConnStateData::ServerConnectionContext &scc);
+std::ostream &operator <<(std::ostream &, const ConnStateData::ServerConnectionContext &);
 
 #endif /* SQUID_CLIENTSIDE_H */
 

@@ -10583,8 +10583,8 @@ DOC_START
 
 	An admin can restrict HTTP 101 (Switching Protocols) responses further by
 	denying them in http_reply_access. Denied responses and responses switching
-	to an unsolicited protocol (see the above paragraph) result in
-	ERR_INVALID_RESP errors and Squid-to-server connection closures.
+	to an unsolicited protocol (see the above paragraph) result in HTTP 502 (Bad
+	Gateway) ERR_INVALID_RESP errors and Squid-to-server connection closures.
 
 	If Squid sends an Upgrade request header, and the next hop (e.g., the origin
 	server) responds with a matching HTTP 101 (Switching Protocols), then Squid
