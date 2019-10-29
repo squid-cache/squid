@@ -44,6 +44,7 @@ Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest:
     assert(callback);
     assert(dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer()));
     url = request->url.authority();
+    watchForClosures();
 }
 
 Http::Tunneler::~Tunneler()
@@ -80,7 +81,6 @@ Http::Tunneler::start()
     Must(peer); // bail if our peer was reconfigured away
     request->prepForPeering(*peer);
 
-    watchForClosures();
     writeRequest();
     startReadingResponse();
 }

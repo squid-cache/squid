@@ -46,6 +46,7 @@ Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerCon
     debugs(83, 5, "Security::PeerConnector constructed, this=" << (void*)this);
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
+    prepareSocket();
 }
 
 Security::PeerConnector::~PeerConnector()
@@ -66,7 +67,7 @@ Security::PeerConnector::start()
     debugs(83, 5, "this=" << (void*)this);
 
     Security::SessionPointer tmp;
-    if (prepareSocket() && initialize(tmp))
+    if (initialize(tmp))
         negotiate();
     else
         mustStop("Security::PeerConnector TLS socket initialize failed");
@@ -97,22 +98,17 @@ Security::PeerConnector::connectionClosed(const char *reason)
     bail(err);
 }
 
-bool
+void
 Security::PeerConnector::prepareSocket()
 {
     debugs(83, 5, serverConnection() << ", this=" << (void*)this);
-    if (!Comm::IsConnOpen(serverConnection()) || fd_table[serverConnection()->fd].closing()) {
-        connectionClosed("Security::PeerConnector::prepareSocket");
-        return false;
-    }
-
-    debugs(83, 5, serverConnection());
+    Must(Comm::IsConnOpen(serverConnection()));
+    Must(!fd_table[serverConnection()->fd].closing());
 
     // watch for external connection closures
     typedef CommCbMemFunT<Security::PeerConnector, CommCloseCbParams> Dialer;
     closeHandler = JobCallback(9, 5, Dialer, this, Security::PeerConnector::commCloseHandler);
     comm_add_close_handler(serverConnection()->fd, closeHandler);
-    return true;
 }
 
 bool

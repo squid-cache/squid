@@ -81,9 +81,9 @@ protected:
     void connectionClosed(const char *reason);
 
     /// Sets up TCP socket-related notification callbacks if things go wrong.
-    /// If socket already closed return false, else install the comm_close
+    /// If socket already closed throws, else install the comm_close
     /// handler to monitor the socket.
-    bool prepareSocket();
+    void prepareSocket();
 
     /// \returns true on successful TLS session initialization
     virtual bool initialize(Security::SessionPointer &);
