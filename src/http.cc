@@ -874,10 +874,12 @@ HttpStateData::serverSwitchedToOfferedProtocols(const HttpReply &reply) const
         return false;
     }
 
-    for (const auto &accepted: StrList(acceptedProtos)) {
-        const ProtocolView acceptedProto(accepted);
-        for (const auto &offered: StrList(*upgradeHeaderOut)) {
-            const ProtocolView offeredProto(offered);
+    // TODO: If enough Upgrade exchanges deal with multiple protocols, then we
+    // should optimize by indexing acceptedProtos first, to avoiding re-parsing.
+    for (const auto &offered: StrList(*upgradeHeaderOut)) {
+        const ProtocolView offeredProto(offered);
+        for (const auto &accepted: StrList(acceptedProtos)) {
+            const ProtocolView acceptedProto(accepted);
             if (Similar(offeredProto, acceptedProto))
                 return true;
         }
@@ -2342,7 +2344,6 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
         // The late placement of this check supports reply_header_add mangling,
         // but also forces redoing of some of the forwardUpgrade() work.
         if (hdr.has(Http::HdrType::UPGRADE)) {
-            // TODO: Use storage that supports quick searches instead!
             assert(!upgradeHeaderOut);
             upgradeHeaderOut = new String(hdr.getList(Http::HdrType::UPGRADE));
         }
