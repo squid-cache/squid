@@ -825,11 +825,20 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 void
 FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
-    if (answer.positive()) {
-        if (answer.leftovers.isEmpty()) {
-            secureConnectionToPeerIfNeeded(answer.conn);
-            return;
-        }
+    ErrorState *error = nullptr;
+
+    if (!answer.positive()) {
+        // TODO: Reuse to-peer connections after a CONNECT error response.
+
+        error = answer.squidError.get();
+        Must(error);
+        answer.squidError.clear(); // preserve error for fail()
+    }else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
+        // connection gone before we are called.
+        serverConnection(serverConn);
+        closeServerConnection("closing connection");
+        error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
+    } else if (!answer.leftovers.isEmpty()) {
         // This should not happen because TLS servers do not speak first. If we
         // have to handle this, then pass answer.leftovers via a PeerConnector
         // to ServerBio. See ClientBio::setReadBufData().
@@ -839,19 +848,17 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
         debugs(17, level, "ERROR: Early data after CONNECT response. " <<
                "Found " << answer.leftovers.length() << " bytes. " <<
                "Closing " << serverConnection());
-        fail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request, al));
+        error = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request, al);
         closeServerConnection("found early data after CONNECT response");
+    }
+
+    if (error) {
+        fail(error);
         retryOrBail();
         return;
     }
 
-    // TODO: Reuse to-peer connections after a CONNECT error response.
-
-    const auto error = answer.squidError.get();
-    Must(error);
-    answer.squidError.clear(); // preserve error for fail()
-    fail(error);
-    retryOrBail();
+    secureConnectionToPeerIfNeeded(answer.conn);
 }
 
 /// handles an established TCP connection to peer (including origin servers)
