@@ -1020,7 +1020,7 @@ msgstr "La requête ou la réponse est trop grande."
 #: templates/ERR_WRITE_ERROR+html.body.div.h2:16-1
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h2:16-1
 msgid "The requested URL could not be retrieved"
-msgstr "L'URL demandée n'a pas pu être trouvé"
+msgstr "L'URL demandée n'a pas pu être trouvée"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.p:28-1
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:28-1
