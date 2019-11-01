@@ -2086,13 +2086,19 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
 
     String upgradeOut;
 
-    for (const auto &proto: StrList(upgradeIn)) {
-        if (const auto guard = Config.http_upgrade_protocols->findGuard(proto)) {
-            ACLFilledChecklist ch(guard, request.getRaw());
-            ch.al = fwd->al;
-            if (ch.fastCheck().allowed())
-                strListAdd(upgradeOut, proto);
-        }
+    ACLFilledChecklist ch(nullptr, request.getRaw());
+    ch.al = fwd->al;
+    for (const auto &offeredStr: StrList(upgradeIn)) {
+        const ProtocolView offeredProto(offeredStr);
+        debugs(11, 5, "checks all rules applicable to " << offeredProto);
+        Config.http_upgrade_protocols->forApplicable(offeredProto, [&ch,&offeredStr,&upgradeOut] (const SBuf &cfgProto, const acl_access *guard) {
+            debugs(11, 5, "checks " << cfgProto << " rule(s)");
+            if (ch.fastCheck(guard).allowed()) {
+                strListAdd(upgradeOut, offeredStr);
+                return true;
+            }
+            return false;
+        });
     }
 
     if (upgradeOut.size()) {

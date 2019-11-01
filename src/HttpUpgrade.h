@@ -44,14 +44,12 @@ Similar(const ProtocolView &a, const ProtocolView &b)
     return a.version.empty() || b.version.empty() || a.version == b.version;
 }
 
-/// Both have the same name and
-/// either both have the same version or b has no version restrictions.
+/// Either b has no version restrictions or both have the same version.
 /// For example, "ws/1" is in "ws" but "ws" is not in "ws/1".
 inline bool
-AinB(const ProtocolView &a, const ProtocolView &b)
+vAinB(const ProtocolView &a, const ProtocolView &b)
 {
-    if (!SameButCase(a.name, b.name))
-        return false;
+    // Optimization: Do not assert(SameButCase(a.name, b.name)).
     return b.version.empty() || a.version == b.version;
 }
 
@@ -69,28 +67,65 @@ public:
     /// parses a single allow/deny rule
     void configureGuard(ConfigParser&);
 
-    /// iterate over all rules; TODO: We should add a general Dumper API instead
-    template <typename Visitor>
-    void forEachRule(const Visitor &visitor) const
-    {
-        for (const auto &namedGuard: namedGuards)
-            visitor(namedGuard.first, namedGuard.second);
-        visitor(ProtoOther, other);
-    }
+    /// iterates over all configured rules, calling the given visitor
+    template <typename Visitor> inline void forEachRule(const Visitor &) const;
+
+    /// iterates over rules applicable to the given protocol, calling visitor;
+    /// breaks iteration if the visitor returns true
+    template <typename Visitor> inline void forApplicable(const ProtocolView &, const Visitor &) const;
 
 private:
+    /// a single configured access rule for an explicitly named protocol
+    class NamedGuard
+    {
+    public:
+        NamedGuard(const char *rawProtocol, acl_access*);
+        NamedGuard(const NamedGuard &&) = delete; // no copying of any kind
+        ~NamedGuard();
+
+        SBuf protocol; ///< configured protocol name (and version)
+        ProtocolView proto; ///< optimization: compiled this->protocol info
+        acl_access *guard = nullptr; ///< configured access rule; never nil
+    };
+
+    /// maps HTTP Upgrade protocol name/version to the ACLs guarding its usage
+    typedef std::deque<NamedGuard> NamedGuards;
+
     /// pseudonym to specify rules for "all other protocols"
     static const SBuf ProtoOther;
 
-    /// maps HTTP Upgrade protocol name/version to the ACLs guarding its usage
-    typedef std::map<SBuf, acl_access*> NamedProtocolAccess;
-
     /// rules governing upgrades to explicitly named protocols
-    NamedProtocolAccess namedGuards;
+    NamedGuards namedGuards;
 
     /// OTHER rules governing unnamed protocols
     acl_access *other = nullptr;
 };
+
+template <typename Visitor>
+inline void
+HttpUpgradeProtocolAccess::forEachRule(const Visitor &visitor) const
+{
+    for (const auto &namedGuard: namedGuards)
+        visitor(namedGuard.protocol, namedGuard.guard);
+    if (other)
+        visitor(ProtoOther, other);
+}
+
+template <typename Visitor>
+inline void
+HttpUpgradeProtocolAccess::forApplicable(const ProtocolView &offer, const Visitor &visitor) const
+{
+    auto seenApplicable = false;
+    for (const auto &namedGuard: namedGuards) {
+        if (!SameButCase(offer.name, namedGuard.proto.name))
+            continue;
+        if (vAinB(offer, namedGuard.proto) && visitor(namedGuard.protocol, namedGuard.guard))
+            return;
+        seenApplicable = true; // may already be true
+    }
+    if (!seenApplicable && other) // OTHER is applicable if named rules were not
+        (void)visitor(ProtoOther, other);
+}
 
 #endif /* SQUID_HTTP_UPGRADE_H */
 

@@ -48,10 +48,6 @@ operator <<(std::ostream &os, const ProtocolView &view)
 
 HttpUpgradeProtocolAccess::~HttpUpgradeProtocolAccess()
 {
-    for (const auto &namedGuard: namedGuards) {
-        auto acls = namedGuard.second;
-        aclDestroyAccessList(&acls);
-    }
     aclDestroyAccessList(&other);
 }
 
@@ -67,31 +63,24 @@ HttpUpgradeProtocolAccess::configureGuard(ConfigParser &parser)
         return;
     }
 
-    const SBuf proto(rawProto);
-
-    const auto namedGuard = namedGuards.find(proto);
-    if (namedGuard != namedGuards.end()) {
-        assert(namedGuard->second);
-        aclParseAccessLine(cfg_directive, parser, &namedGuard->second);
-        return;
-    }
-
+    // To preserve ACL rules checking order, to exclude inapplicable (i.e. wrong
+    // protocol version) rules, and to keep things simple, we merge no rules.
     acl_access *access = nullptr;
     aclParseAccessLine(cfg_directive, parser, &access);
     if (access)
-        namedGuards.emplace(proto, access);
+        namedGuards.emplace_back(rawProto, access);
 }
 
-const acl_access*
-HttpUpgradeProtocolAccess::findGuard(const StringView &proto) const
-{
-    const ProtocolView needle(proto.data(), proto.size());
-    for (auto &namedGuard: namedGuards) {
-        if (AinB(needle, ProtocolView(namedGuard.first)))
-            return namedGuard.second;
-    }
+/* HttpUpgradeProtocolAccess::NamedGuard */
 
-    // if no rules mention the protocol explicitly, try OTHER protocol rules
-    return other; // may be nil
+HttpUpgradeProtocolAccess::NamedGuard::NamedGuard(const char *rawProtocol, acl_access *acls):
+    protocol(rawProtocol),
+    proto(protocol),
+    guard(acls)
+{
+}
+
+HttpUpgradeProtocolAccess::NamedGuard::~NamedGuard() {
+    aclDestroyAccessList(&guard);
 }
 
