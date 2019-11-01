@@ -874,21 +874,30 @@ HttpStateData::serverSwitchedToOfferedProtocols(const HttpReply &reply) const
         return false;
     }
 
-    // TODO: If enough Upgrade exchanges deal with multiple protocols, then we
-    // should optimize by indexing acceptedProtos first, to avoiding re-parsing.
-    for (const auto &offered: StrList(*upgradeHeaderOut)) {
-        const ProtocolView offeredProto(offered);
-        for (const auto &accepted: StrList(acceptedProtos)) {
-            const ProtocolView acceptedProto(accepted);
-            if (Similar(offeredProto, acceptedProto))
-                return true;
+    auto sawAccepted = false;
+    for (const auto &accepted: StrList(acceptedProtos)) {
+        const ProtocolView acceptedProto(accepted);
+        sawAccepted = true;
+
+        auto sawOffer = false;
+        for (const auto &offered: StrList(*upgradeHeaderOut)) {
+            const ProtocolView offeredProto(offered);
+            if (Similar(acceptedProto, offeredProto)) {
+                sawOffer = true;
+                break;
+            }
         }
-        debugs(11, 2, "Squid did not offer, but server accepted " << acceptedProto);
+        if (!sawOffer) {
+            debugs(11, 2, "Squid did not offer, but server accepted " << acceptedProto);
+            return false;
+        }
+    }
+    if (!sawAccepted) {
+        debugs(11, 2, "server accepted no Upgrade protocols: " << acceptedProtos);
         return false;
     }
 
-    debugs(11, 2, "server accepted no Upgrade protocols: " << acceptedProtos);
-    return false;
+    return true; // each server-accepted protocol was offered by Squid
 }
 
 /// \retval nil if the HTTP/101 (Switching Protocols) reply should be forwarded
