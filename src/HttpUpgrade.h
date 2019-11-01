@@ -68,7 +68,7 @@ public:
     void configureGuard(ConfigParser&);
 
     /// iterates over all configured rules, calling the given visitor
-    template <typename Visitor> inline void forEachRule(const Visitor &) const;
+    template <typename Visitor> inline void forEach(const Visitor &) const;
 
     /// iterates over rules applicable to the given protocol, calling visitor;
     /// breaks iteration if the visitor returns true
@@ -103,7 +103,7 @@ private:
 
 template <typename Visitor>
 inline void
-HttpUpgradeProtocolAccess::forEachRule(const Visitor &visitor) const
+HttpUpgradeProtocolAccess::forEach(const Visitor &visitor) const
 {
     for (const auto &namedGuard: namedGuards)
         visitor(namedGuard.protocol, namedGuard.guard);

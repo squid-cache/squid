@@ -5129,7 +5129,7 @@ dump_http_upgrade_request_protocols(StoreEntry *entry, const char *rawName, Http
 {
     assert(protoGuards);
     const SBuf name(rawName);
-    protoGuards->forEachRule([entry,&name](const SBuf &proto, const acl_access *acls) {
+    protoGuards->forEach([entry,&name](const SBuf &proto, const acl_access *acls) {
         SBufList line;
         line.push_back(name);
         line.push_back(proto);
