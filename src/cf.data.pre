@@ -10537,12 +10537,13 @@ DOC_START
 	only as a dumb TCP proxy. Admins should not allow upgrading to protocols
 	that require a more meaningful proxy participation.
 
-	Usage: http_upgrade_request_protocols <protocol> <allow|deny> [!]acl ...
-		protocol = OTHER | <name> [ / <version> ]
+	Usage: http_upgrade_request_protocols <protocol> allow|deny [!]acl ...
+		protocol = OTHER | name[/version]
 
-	The required "protocol" parameter is either a word OTHER or an explicit
-	protocol name (e.g. "WebSocket") optionally followed by a slash and a
-	version token (e.g. "HTTP/3").
+	The required "protocol" parameter is either an all-caps word OTHER or an
+	explicit protocol name (e.g. "WebSocket") optionally followed by a slash and
+	a version token (e.g. "HTTP/3"). Explicit protocol names and versions are
+	not case sensitive.
 
 	When an HTTP client sends an Upgrade request header, Squid iterates over the
 	client-offered protocols and, for each protocol P (with an optional version
@@ -10564,10 +10565,11 @@ DOC_START
 	However, inapplicable rules still belong to the first set of rules for P.
 
 	Within the applicable rule subset, individual rules are evaluated in their
-	configuration order. If all ACLs of an applicable "allow" rule match, the
-	protocol offered by the client is forwarded to the next hop as is. If all
-	ACLs of an applicable "deny" rule match, the offer is dropped. If no
-	applicable rules have matching ACLs, then the offer is also dropped.
+	configuration order. If all ACLs of an applicable "allow" rule match, then
+	the protocol offered by the client is forwarded to the next hop as is. If
+	all ACLs of an applicable "deny" rule match, then the offer is dropped. If
+	no applicable rules have matching ACLs, then the offer is also dropped. The
+	first matching rule also ends rules evaluation for the offered protocol.
 
 	If all client-offered protocols are removed, then Squid forwards the client
 	request without the Upgrade header. Squid never sends an empty Upgrade
@@ -10581,7 +10583,7 @@ DOC_START
 	was actually offered by Squid in its Upgrade request header. During this
 	check, a versionless protocol is treated as having a version wildcard: An
 	accepted versioned protocol matches the same-name versionless protocol in
-	the client offer, and an accepted versionless protocol matches any specific
+	Squid offer, and an accepted versionless protocol matches any specific
 	version of the same-name offered protocol.
 
 	An admin can restrict HTTP 101 (Switching Protocols) responses further by
