@@ -2357,7 +2357,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
             request->flags.authSent = true;
 
         // The late placement of this check supports reply_header_add mangling,
-        // but also forces redoing of some of the forwardUpgrade() work.
+        // but also complicates optimizing upgradeHeaderOut-like lookups.
         if (hdr.has(Http::HdrType::UPGRADE)) {
             assert(!upgradeHeaderOut);
             upgradeHeaderOut = new String(hdr.getList(Http::HdrType::UPGRADE));
