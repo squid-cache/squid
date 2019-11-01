@@ -41,7 +41,7 @@ Similar(const ProtocolView &a, const ProtocolView &b)
 {
     if (!SameButCase(a.name, b.name))
         return false;
-    return a.version.empty() || b.version.empty() || a.version == b.version;
+    return a.version.empty() || b.version.empty() || SameButCase(a.version, b.version);
 }
 
 /// Either b has no version restrictions or both have the same version.
@@ -50,7 +50,7 @@ inline bool
 vAinB(const ProtocolView &a, const ProtocolView &b)
 {
     // Optimization: Do not assert(SameButCase(a.name, b.name)).
-    return b.version.empty() || a.version == b.version;
+    return b.version.empty() || SameButCase(a.version, b.version);
 }
 
 /// Allows or blocks HTTP Upgrade protocols (see http_upgrade_request_protocols)
