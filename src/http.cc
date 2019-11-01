@@ -855,7 +855,7 @@ HttpStateData::drop1xx(const char *reason)
         const auto err = new ErrorState(ERR_INVALID_RESP, Http::scBadGateway, request.getRaw(), fwd->al);
         fwd->fail(err);
         closeServer();
-        // XXX: mustStop("prohibited HTTP/101 response")?
+        mustStop("prohibited HTTP/101 response");
         return;
     }
 
