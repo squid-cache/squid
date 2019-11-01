@@ -882,7 +882,7 @@ HttpStateData::serverSwitchedToOfferedProtocols(const HttpReply &reply) const
         auto sawOffer = false;
         for (const auto &offered: StrList(*upgradeHeaderOut)) {
             const ProtocolView offeredProto(offered);
-            if (Similar(acceptedProto, offeredProto)) {
+            if (SameButCase(acceptedProto.name, offeredProto.name)) {
                 sawOffer = true;
                 break;
             }

@@ -10579,12 +10579,12 @@ DOC_START
 	ignored without an attempt to use extractable individual protocol offers.
 
 	Upon receiving an HTTP 101 (Switching Protocols) control message, Squid
-	checks that each of the Upgrade response protocols accepted by the server
-	was actually offered by Squid in its Upgrade request header. During this
-	check, a versionless protocol is treated as having a version wildcard: An
-	accepted versioned protocol matches the same-name versionless protocol in
-	Squid offer, and an accepted versionless protocol matches any specific
-	version of the same-name offered protocol.
+	checks that each of the Upgrade protocol names accepted by the server
+	matches a protocol name offered by Squid. During this check, all protocol
+	versions are ignored. For example, a "ws/0.1" accepted protocol matches a
+	"ws/alpha" offer. Squid probably does not understand individual protocol
+	versioning enough to implement a stricter policy correctly, and relaxing a
+	bad policy later would be risky because some admins may start to rely on it.
 
 	An admin can restrict HTTP 101 (Switching Protocols) responses further by
 	denying them in http_reply_access. Denied responses and responses switching

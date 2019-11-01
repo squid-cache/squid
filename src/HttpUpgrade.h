@@ -33,17 +33,6 @@ std::ostream &operator <<(std::ostream &, const ProtocolView &);
 // there are bug reports showing different case variants used for WebSocket so
 // we preserve the received case but compare case-insensitively.
 
-/// Both have the same name and
-/// either both have the same version or some have no version restrictions.
-/// For example, "ws" is similar to "ws/1" while "ws/1" is similar to "ws".
-inline bool
-Similar(const ProtocolView &a, const ProtocolView &b)
-{
-    if (!SameButCase(a.name, b.name))
-        return false;
-    return a.version.empty() || b.version.empty() || SameButCase(a.version, b.version);
-}
-
 /// Either b has no version restrictions or both have the same version.
 /// For example, "ws/1" is in "ws" but "ws" is not in "ws/1".
 inline bool
