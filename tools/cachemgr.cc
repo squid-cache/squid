@@ -15,6 +15,7 @@
 #include "rfc1123.h"
 #include "rfc1738.h"
 #include "util.h"
+#include "base/CharacterSet.h"
 
 #include <cctype>
 #include <cerrno>
@@ -214,6 +215,20 @@ xstrtok(char **str, char del)
     } else
         return "";
 }
+
+int
+hostname_check(const char *uri) {
+    static CharacterSet hostChars = CharacterSet("host",".:[]_") +
+            CharacterSet::ALPHA + CharacterSet::DIGIT;
+  
+    const auto limit = strlen(uri);
+    for (size_t i = 0; i < limit; i++) {
+        if (!hostChars[uri[i]]){
+              return 1;
+        }
+    }
+    return 0;
+ }
 
 static void
 print_trailer(void)
@@ -807,9 +822,15 @@ process_request(cachemgr_request * req)
     } else if ((S = req->hostname))
         (void) 0;
     else {
-        snprintf(buf, sizeof(buf), "Unknown host: %s\n", req->hostname);
-        error_html(buf);
-        return 1;
+        if (hostname_check(req->hostname) == 0){
+            snprintf(buf, sizeof(buf), "Unknown Host: %s\n", req->hostname);
+            error_html(buf);
+            return 1;
+        } else {
+            snprintf(buf, sizeof(buf), "%s\n", "Invalid Hostname");
+            error_html(buf);
+            return 1;
+        }
     }
 
     S.port(req->port);
