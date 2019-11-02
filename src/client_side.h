@@ -345,7 +345,6 @@ protected:
     /// TODO: Move to HttpServer. Warning: Move requires large code nonchanges!
     Http::Stream *parseHttpRequest(const Http1::RequestParserPointer &);
 
-
     /// parse input buffer prefix into a single transfer protocol request
     /// return NULL to request more header bytes (after checking any limits)
     /// use abortRequestParsing() to handle parsing errors w/o creating request
