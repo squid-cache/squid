@@ -37,9 +37,6 @@ stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
 Here.cc: $(top_srcdir)/src/base/Here.cc
 	cp $(top_srcdir)/src/base/Here.cc $@
 	
-CharacterSet.h: $(top_srcdir)/src/base/CharacterSet.h
-	cp $(top_srcdir)/src/base/CharacterSet.h $@
-
 CharacterSet.cc: $(top_srcdir)/src/base/CharacterSet.cc
 	cp $(top_srcdir)/src/base/CharacterSet.cc $@
 
@@ -63,7 +60,7 @@ STUB.h: $(top_srcdir)/src/tests/STUB.h
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= test_tools.cc
-CLEANFILES += test_tools.cc Here.cc CharacterSet.h CharacterSet.cc MemBuf.cc stub_debug.cc time.cc stub_cbdata.cc stub_libmem.cc STUB.h
+CLEANFILES += test_tools.cc Here.cc CharacterSet.cc MemBuf.cc stub_debug.cc time.cc stub_cbdata.cc stub_libmem.cc STUB.h
 
 ## Test Scripts
 EXTRA_DIST += helper-ok-dying.pl helper-ok.pl
@@ -76,7 +73,6 @@ libexec_PROGRAMS = cachemgr$(CGIEXT)
 
 cachemgr__CGIEXT__SOURCES = cachemgr.cc \
 	Here.cc \
-	CharacterSet.h \
 	CharacterSet.cc \
 	MemBuf.cc \
 	stub_cbdata.cc \
