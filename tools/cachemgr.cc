@@ -227,7 +227,7 @@ hostname_check(const char *uri) {
               return false;
         }
     }
-    return 0;
+    return true;
 }
 
 static void
