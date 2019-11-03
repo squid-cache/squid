@@ -228,7 +228,7 @@ hostname_check(const char *uri) {
         }
     }
     return 0;
- }
+}
 
 static void
 print_trailer(void)
