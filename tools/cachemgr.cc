@@ -224,7 +224,7 @@ hostname_check(const char *uri) {
     const auto limit = strlen(uri);
     for (size_t i = 0; i < limit; i++) {
         if (!hostChars[uri[i]]) {
-              return 1;
+              return false;
         }
     }
     return 0;
