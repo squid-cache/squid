@@ -217,7 +217,8 @@ xstrtok(char **str, char del)
 }
 
 bool
-hostname_check(const char *uri) {
+hostname_check(const char *uri)
+{
     static CharacterSet hostChars = CharacterSet("host",".:[]_") +
             CharacterSet::ALPHA + CharacterSet::DIGIT;
 
