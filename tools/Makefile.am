@@ -72,8 +72,8 @@ DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 libexec_PROGRAMS = cachemgr$(CGIEXT)
 
 cachemgr__CGIEXT__SOURCES = cachemgr.cc \
-	Here.cc \
 	CharacterSet.cc \
+	Here.cc \
 	MemBuf.cc \
 	stub_cbdata.cc \
 	stub_debug.cc \
