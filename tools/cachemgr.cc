@@ -822,7 +822,7 @@ process_request(cachemgr_request * req)
     } else if ((S = req->hostname))
         (void) 0;
     else {
-        if (hostname_check(req->hostname) == 0){
+        if (hostname_check(req->hostname)) {
             snprintf(buf, sizeof(buf), "Unknown Host: %s\n", req->hostname);
             error_html(buf);
             return 1;
