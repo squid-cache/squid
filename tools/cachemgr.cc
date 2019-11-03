@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "base64.h"
+#include "base/CharacterSet.h"
 #include "getfullhostname.h"
 #include "html_quote.h"
 #include "ip/Address.h"
@@ -15,7 +16,6 @@
 #include "rfc1123.h"
 #include "rfc1738.h"
 #include "util.h"
-#include "base/CharacterSet.h"
 
 #include <cctype>
 #include <cerrno>
