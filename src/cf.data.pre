@@ -10524,8 +10524,8 @@ DOC_START
 	that the request body is needed. Delaying is the default behavior.
 DOC_END
 
-NAME:  http_upgrade_request_protocols
-TYPE:  http_upgrade_request_protocols
+NAME: http_upgrade_request_protocols
+TYPE: http_upgrade_request_protocols
 LOC: Config.http_upgrade_protocols
 DEFAULT: none
 DEFAULT_DOC: Upgrade header dropped, effectively blocking an upgrade attempt.
