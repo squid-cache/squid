@@ -18,6 +18,7 @@ Changes to squid-4.9 (05 Nov 2019):
 	- Fix several rock cache_dir corruption issues
 	- Debug detail validation errors for loaded-from-file certificate chains
 	- smblib: Improve SMB server name maintenance
+	- cachemgr.cgi: Add validation for hostname parameter
 	- ... and several compile issues
 	- ... and some documentation updates
 
