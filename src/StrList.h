@@ -72,7 +72,7 @@ private:
 class StrList
 {
 public:
-    explicit StrList(const String &s, const char delimiter = ','): raw_(s), delimiter_(delimiter) {}
+    explicit StrList(const String &s, const char delimitr = ','): raw_(s), delimiter_(delimitr) {}
 
     StrListIterator begin() const { return StrListIterator(this); }
     StrListIterator end() const { return StrListIterator(nullptr); }
