@@ -1,3 +1,27 @@
+Changes to squid-4.9 (05 Nov 2019):
+
+	- Bug 4978: eCAP crash after using MyHost().newRequest()
+	- Bug 4970: excessive gnutls_certificate_credentials debug msgs
+	- Bug 4969: GCC-9 build failure: stringop-truncation
+	- Bug 4966: Lower cache_peer hostname
+	- Bug 4918: Crashes when using OpenSSL prior to v1.0.2
+	- TLS: Fix parsing of certificate validator responses
+	- TLS: Fix parsing of TLS messages that span multiple records
+	- TLS: Fix on_unsupported_protocol tunnel action
+	- TLS: Fix expiration of self-signed generated certs to be 3 years
+	- HTTP: Ignore malformed Host header in intercept and reverse proxy mode
+	- HTTP: RFC 7230: server MUST reject messages with BWS after field-name
+	- HTTP: Fix URN response handling
+	- HTTP: Hash Digest noncedata
+	- Update URI parser to use SBuf parsing APIs
+	- Prevent truncation for large origin-relative domains
+	- Fix several rock cache_dir corruption issues
+	- Debug detail validation errors for loaded-from-file certificate chains
+	- smblib: Improve SMB server name maintenance
+	- cachemgr.cgi: Add validation for hostname parameter
+	- ... and several compile issues
+	- ... and some documentation updates
+
 Changes to squid-4.8 (09 Jul 2019):
 
 	- Bug 4957: Multiple XSS issues in cachemgr.cgi
