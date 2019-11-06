@@ -49,6 +49,7 @@
 #define SSL_FLAG_NO_SESSION_REUSE   (1<<4)
 #define SSL_FLAG_VERIFY_CRL         (1<<5)
 #define SSL_FLAG_VERIFY_CRL_ALL     (1<<6)
+#define SSL_FLAG_CONDITIONAL_AUTH   (1<<7)
 
 /// Network/connection security abstraction layer
 namespace Security

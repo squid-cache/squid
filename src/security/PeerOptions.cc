@@ -552,6 +552,7 @@ Security::PeerOptions::parseFlags()
         { SBuf("NO_DEFAULT_CA"), SSL_FLAG_NO_DEFAULT_CA },
         { SBuf("DELAYED_AUTH"), SSL_FLAG_DELAYED_AUTH },
         { SBuf("DONT_VERIFY_PEER"), SSL_FLAG_DONT_VERIFY_PEER },
+        { SBuf("CONDITIONAL_AUTH"), SSL_FLAG_CONDITIONAL_AUTH },
         { SBuf("DONT_VERIFY_DOMAIN"), SSL_FLAG_DONT_VERIFY_DOMAIN },
         { SBuf("NO_SESSION_REUSE"), SSL_FLAG_NO_SESSION_REUSE },
 #if X509_V_FLAG_CRL_CHECK
@@ -583,6 +584,10 @@ Security::PeerOptions::parseFlags()
         } else
             fl |= found;
     } while (tok.skipOne(delims));
+
+    if ((fl & (SSL_FLAG_DONT_VERIFY_PEER|SSL_FLAG_CONDITIONAL_AUTH)) ==
+        (SSL_FLAG_DONT_VERIFY_PEER|SSL_FLAG_CONDITIONAL_AUTH))
+        fatal("ERROR: DONT_VERIFY_PEER and CONDITIONAL_AUTH are mutually exclusive");
 
     return fl;
 }

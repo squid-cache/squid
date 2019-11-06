@@ -86,7 +86,8 @@ bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &);
 bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long flags);
 
 /// set the certificate verify callback for a context
-void SetupVerifyCallback(Security::ContextPointer &);
+void ConfigurePeerVerification(Security::ContextPointer &, int);
+void DisablePeerVerification(Security::ContextPointer &);
 
 /// if required, setup callback for generating ephemeral RSA keys
 void MaybeSetupRsaCallback(Security::ContextPointer &);

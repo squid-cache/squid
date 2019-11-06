@@ -2364,6 +2364,9 @@ DOC_START
 				Don't request client certificates
 				immediately, but wait until acl processing
 				requires a certificate (not yet implemented).
+			    CONDITIONAL_AUTH
+				Do not fail auth if client certificate is
+				not provided.
 			    NO_SESSION_REUSE
 				Don't allow for session reuse. Each connection
 				will result in a new SSL session.

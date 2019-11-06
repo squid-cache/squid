@@ -390,9 +390,40 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 }
 
 void
-Ssl::SetupVerifyCallback(Security::ContextPointer &ctx)
+Ssl::ConfigurePeerVerification(Security::ContextPointer &ctx, int flags)
 {
-    SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, ssl_verify_cb);
+    int mode;
+
+    if ((flags & (SSL_FLAG_DONT_VERIFY_PEER|SSL_FLAG_CONDITIONAL_AUTH)) ==
+        (SSL_FLAG_DONT_VERIFY_PEER|SSL_FLAG_CONDITIONAL_AUTH))
+        throw TextException("ERROR: DONT_VERIFY_PEER and CONDITIONAL_AUTH are mutually exclusive", Here());
+
+    if (flags & SSL_FLAG_DONT_VERIFY_PEER) {
+        debugs(83, DBG_IMPORTANT, "SECURITY WARNING: Peer certificates are not verified for validity!");
+        debugs(83, DBG_IMPORTANT, "UPGRADE NOTICE: The DONT_VERIFY_PEER flag is deprecated. Remove the clientca= option to disable client certificates.");
+        mode = SSL_VERIFY_NONE;
+    }
+    else if (flags & SSL_FLAG_DELAYED_AUTH) {
+        debugs(83, DBG_PARSE_NOTE(3), "not requesting client certificates until ACL processing requires one");
+        mode = SSL_VERIFY_NONE;
+    }
+    else if (flags & SSL_FLAG_CONDITIONAL_AUTH) {
+        debugs(83, DBG_PARSE_NOTE(3), "will request the client certificate but ignore its absense");
+        mode = SSL_VERIFY_PEER;
+    }
+    else {
+        debugs(83, DBG_PARSE_NOTE(3), "Requiring client certificates.");
+        mode = SSL_VERIFY_PEER|SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+    }
+
+    SSL_CTX_set_verify(ctx.get(),mode,(mode != SSL_VERIFY_NONE) ? ssl_verify_cb : nullptr);
+}
+
+void
+Ssl::DisablePeerVerification(Security::ContextPointer &ctx)
+{
+    debugs(83, DBG_PARSE_NOTE(3), "Not requiring any client certificates");
+    SSL_CTX_set_verify(ctx.get(),SSL_VERIFY_NONE,nullptr);
 }
 
 // "dup" function for SSL_get_ex_new_index("cert_err_check")
@@ -579,13 +610,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
 
     MaybeSetupRsaCallback(ctx);
 
-    if (fl & SSL_FLAG_DONT_VERIFY_PEER) {
-        debugs(83, 2, "SECURITY WARNING: Peer certificates are not verified for validity!");
-        SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_NONE, NULL);
-    } else {
-        debugs(83, 9, "Setting certificate verification callback.");
-        Ssl::SetupVerifyCallback(ctx);
-    }
+    Ssl::ConfigurePeerVerification(ctx, fl);
 
     return true;
 }
@@ -1308,4 +1333,3 @@ BIO *Ssl::BIO_new_SBuf(SBuf *buf)
 }
 
 #endif /* USE_OPENSSL */
-
