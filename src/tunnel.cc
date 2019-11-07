@@ -1003,6 +1003,7 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
         syncHierNote(answer.conn, request->url.host());
         saveError(error);
         answer.error.clear(); // savedError has it now
+        // XXX: should honor clientExpectsConnectResponse() before replying. Also check other occurrences.
         sendError(savedError, "tried all destinations");
         return;
     }
