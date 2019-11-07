@@ -441,12 +441,13 @@ TunnelStateData::retryOrBail(const char *context)
             return;
         }
 
+        const auto error = savedError ? savedError : new ErrorState(ERR_CANNOT_FORWARD,
+                Http::scInternalServerError, request.getRaw(), al);
         if (Comm::IsConnOpen(client.conn) && clientExpectsConnectResponse()) {
-            const auto error = savedError ? savedError : new ErrorState(ERR_CANNOT_FORWARD,
-                    Http::scInternalServerError, request.getRaw(), al);
             sendError(error, context);
             return;
         }
+        *status_ptr = error->httpStatus;
     }
 
     // closing the non-HTTP client connection is the best we can do
