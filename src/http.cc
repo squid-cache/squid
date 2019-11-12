@@ -2102,11 +2102,14 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
         debugs(11, 5, "checks all rules applicable to " << offeredProto);
         Config.http_upgrade_protocols->forApplicable(offeredProto, [&ch,&offeredStr,&upgradeOut] (const SBuf &cfgProto, const acl_access *guard) {
             debugs(11, 5, "checks " << cfgProto << " rule(s)");
-            if (ch.fastCheck(guard).allowed()) {
+            ch.changeAcl(guard);
+            const auto answer = ch.fastCheck();
+            if (answer.implicit)
+                return false; // keep looking for an explicit rule match
+            if (answer.allowed())
                 strListAdd(upgradeOut, offeredStr);
-                return true;
-            }
-            return false;
+            // else drop the offer (explicitly denied cases and ACL errors)
+            return true; // stop after an explicit rule match or an error
         });
     }
 
