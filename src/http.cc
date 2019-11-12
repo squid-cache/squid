@@ -863,48 +863,14 @@ HttpStateData::drop1xx(const char *reason)
     proceedAfter1xx();
 }
 
-/// whether server's Upgrade response header matches Squid's Upgrade offer
-bool
-HttpStateData::serverSwitchedToOfferedProtocols(const HttpReply &reply) const
-{
-    const auto acceptedProtos = reply.header.getList(Http::HdrType::UPGRADE);
-
-    if (!upgradeHeaderOut) {
-        debugs(11, 2, "Squid offered no Upgrade at all, but server accepted " << acceptedProtos);
-        return false;
-    }
-
-    auto sawAccepted = false;
-    for (const auto &accepted: StrList(acceptedProtos)) {
-        const ProtocolView acceptedProto(accepted);
-        sawAccepted = true;
-
-        auto sawOffer = false;
-        for (const auto &offered: StrList(*upgradeHeaderOut)) {
-            const ProtocolView offeredProto(offered);
-            if (SameButCase(acceptedProto.name, offeredProto.name)) {
-                sawOffer = true;
-                break;
-            }
-        }
-        if (!sawOffer) {
-            debugs(11, 2, "Squid did not offer, but server accepted " << acceptedProto);
-            return false;
-        }
-    }
-    if (!sawAccepted) {
-        debugs(11, 2, "server accepted no Upgrade protocols: " << acceptedProtos);
-        return false;
-    }
-
-    return true; // each server-accepted protocol was offered by Squid
-}
-
 /// \retval nil if the HTTP/101 (Switching Protocols) reply should be forwarded
 /// \retval reason why an attempt to switch protocols should be stopped
 const char *
 HttpStateData::blockSwitchingProtocols(const HttpReply &reply) const
 {
+    if (!upgradeHeaderOut)
+        return "Squid offered no Upgrade at all, but server switched to a tunnel";
+
     // See RFC 7230 section 6.7 for the corresponding MUSTs
 
     if (!reply.header.has(Http::HdrType::UPGRADE))
@@ -913,10 +879,13 @@ HttpStateData::blockSwitchingProtocols(const HttpReply &reply) const
     if (!reply.header.hasListMember(Http::HdrType::CONNECTION, "upgrade", ','))
         return "server did not send 'Connection: upgrade'";
 
-    if (!serverSwitchedToOfferedProtocols(reply))
-        return "server switched to unsolicited protocol(s)";
+    const auto acceptedProtos = reply.header.getList(Http::HdrType::UPGRADE);
+    for (const auto &accepted: StrList(acceptedProtos)) {
+        debugs(11, 5, "server accepted at least " << accepted);
+        return nullptr; // OK: let the client validate server's selection
+    }
 
-    return nullptr; // no Upgrade violations detected
+    return "server sent an essentially empty Upgrade header field";
 }
 
 // XXX: To control ownership, use a custom unique_ptr instead of a custom Dialer

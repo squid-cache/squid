@@ -10579,21 +10579,17 @@ DOC_START
 	ignored without an attempt to use extractable individual protocol offers.
 
 	Upon receiving an HTTP 101 (Switching Protocols) control message, Squid
-	checks that each of the Upgrade protocol names accepted by the server
-	matches a protocol name offered by Squid. During this check, all protocol
-	versions are ignored. For example, a "ws/0.1" accepted protocol matches a
-	"ws/alpha" offer. Squid probably does not understand individual protocol
-	versioning enough to implement a stricter policy correctly, and relaxing a
-	bad policy later would be risky because some admins may start to rely on it.
-
-	An admin can restrict HTTP 101 (Switching Protocols) responses further by
-	denying them in http_reply_access. Denied responses and responses switching
-	to an unsolicited protocol (see the above paragraph) result in HTTP 502 (Bad
+	checks that the server listed at least one protocol name and sent a
+	Connection:upgrade response header. Squid does not understand individual
+	protocol naming and versioning concepts enough to implement stricter checks,
+	but an admin can restrict HTTP 101 (Switching Protocols) responses further
+	using http_reply_access. Responses denied by http_reply_access rules and
+	responses flagged by the internal Upgrade checks result in HTTP 502 (Bad
 	Gateway) ERR_INVALID_RESP errors and Squid-to-server connection closures.
 
 	If Squid sends an Upgrade request header, and the next hop (e.g., the origin
-	server) responds with a matching HTTP 101 (Switching Protocols), then Squid
-	forwards that message to the client and becomes a TCP tunnel.
+	server) responds with an acceptable HTTP 101 (Switching Protocols), then
+	Squid forwards that message to the client and becomes a TCP tunnel.
 
 	The presence of an Upgrade request header alone does not preclude cache
 	lookups. In other words, an Upgrade request might be satisfied from the
