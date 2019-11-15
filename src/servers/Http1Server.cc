@@ -392,7 +392,8 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext serve
     stopReading();
     Must(!writer);
 
-    switchToTunnel(server.request.getRaw(), clientConnection, server.connection, server.payload);
+    switchToTunnel(server.request.getRaw(), clientConnection, server.connection,
+                   server.preReadServerBytes);
 }
 
 ConnStateData *

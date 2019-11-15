@@ -202,10 +202,10 @@ public:
     /// noteTakeServerConnectionControl() callback parameter
     class ServerConnectionContext {
     public:
-        ServerConnectionContext(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const SBuf &someData): connection(conn), request(req), payload(someData) {}
+        ServerConnectionContext(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const SBuf &post101Bytes): connection(conn), request(req), preReadServerBytes(post101Bytes) {}
         Comm::ConnectionPointer connection; ///< to-server connection to own
         HttpRequest::Pointer request; ///< the last to-server request on connection
-        SBuf payload; ///< Pre-read server bytes
+        SBuf preReadServerBytes; ///< post-101 bytes received from the server
     };
 
     /// Gives us the control of the Squid-to-server connection.
