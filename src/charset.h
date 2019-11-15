@@ -9,7 +9,7 @@
 #ifndef _SQUID_CHARSET_H
 #define _SQUID_CHARSET_H
 
-#include "sbuf/SBuf.h"
+#include "sbuf/forward.h"
 
 /// converts ISO-LATIN-1 to UTF-8
 SBuf Latin1ToUtf8(const char *in);

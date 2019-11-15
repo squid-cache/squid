@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "charset.h"
+#include "sbuf/SBuf.h"
 
 SBuf
 Latin1ToUtf8(const char *in)

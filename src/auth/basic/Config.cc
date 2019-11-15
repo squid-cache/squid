@@ -29,6 +29,7 @@
 #include "HttpReply.h"
 #include "mgr/Registration.h"
 #include "rfc1738.h"
+#include "sbuf/SBuf.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "util.h"
