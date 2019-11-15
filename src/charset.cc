@@ -47,7 +47,7 @@ Cp1251ToUtf8(const char *in)
         0x0451, 0x2116, 0x0454, 0x00BB, 0x0458, 0x0405, 0x0455, 0x0457 };
     SBuf result;
 
-    if (in == NULL)
+    if (!in)
         return result;
 
     for (; *in; in++) {
