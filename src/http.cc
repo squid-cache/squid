@@ -918,7 +918,7 @@ HttpStateData::proceedAfter1xx()
 
     if (flags.serverSwitchedProtocols) {
         // pass server connection ownership to request->clientConnectionManager
-        ConnStateData::ServerConnectionContext scc(serverConnection, request);
+        ConnStateData::ServerConnectionContext scc(serverConnection, request, inBuf);
         ServerConnectionControlDialer dialer(request->clientConnectionManager, scc);
         AsyncCall::Pointer call = asyncCall(11, 3, dialer.callName, dialer);
         ScheduleCallHere(call);

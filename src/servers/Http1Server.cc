@@ -392,8 +392,7 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext serve
     stopReading();
     Must(!writer);
 
-    // XXX: Lost server-to-Squid payload that could have been read after HTTP/101?
-    switchToTunnel(server.request.getRaw(), clientConnection, server.connection, nullptr);
+    switchToTunnel(server.request.getRaw(), clientConnection, server.connection, &server.payload);
 }
 
 ConnStateData *
