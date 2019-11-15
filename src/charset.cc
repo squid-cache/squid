@@ -74,14 +74,14 @@ Cp1251ToUtf8(const char *in)
         case 3:
             sequence[2] = static_cast<char>(u & 0x3f) | 0x80;
             u >>= 6;
-        // no break
+        // fall through
         case 2:
             sequence[1] = static_cast<char>(u & 0x3f) | 0x80;
             u >>= 6;
-        // no break
+        // fall through
         case 1:
             sequence[0] = static_cast<char>(u)        | firstByteMark[bytesToWrite];
-            // no break
+            // fall through
         }
         result.append(sequence, bytesToWrite);
     }
