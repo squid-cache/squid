@@ -155,13 +155,13 @@ authenticateBasicStats(StoreEntry * sentry)
 }
 
 /**
- * Returns the length of UTF-8 code points including the first byte,
- * or 0 if it is an invalid code point.
+ * \returns the length of a UTF-8 code point that starts at the given byte
+ * \retval 0 indicates an invalid code point
  *
- * \param b0 the first byte of UTF-8 code points.
+ * \param b0 the first byte of a UTF-8 code point
  */
 static inline int
-utf8CodePointsLength(const char b0)
+utf8CodePointLength(const char b0)
 {
     if ((b0 & 0x80) == 0)
         return 1;
@@ -213,12 +213,12 @@ isValidUtf8(const unsigned char* source, int length)
 }
 
 /**
- * Returns whether the given input is a valid UTF-8 encoding.
+ * \returns whether the given input is a valid (or empty) sequence of UTF-8 code points
  */
 static bool
 isValidUtf8String(const char *source, const char *sourceEnd) {
     while (source < sourceEnd) {
-        const auto length = utf8CodePointsLength(*source);
+        const auto length = utf8CodePointLength(*source);
         if (length > sourceEnd - source || !isValidUtf8(reinterpret_cast<const unsigned char*>(source), length))
             return false;
         source += length;
