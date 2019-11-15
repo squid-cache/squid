@@ -23,7 +23,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 
-void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn, const SBuf *);
+void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
 
 void
 Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data)
@@ -262,7 +262,7 @@ Ssl::PeekingPeerConnector::startTunneling()
     auto b = SSL_get_rbio(session.get());
     auto srvBio = static_cast<Ssl::ServerBio*>(BIO_get_data(b));
 
-    switchToTunnel(request.getRaw(), clientConn, serverConn, &srvBio->rBufData());
+    switchToTunnel(request.getRaw(), clientConn, serverConn, srvBio->rBufData());
     tunnelInsteadOfNegotiating();
 }
 

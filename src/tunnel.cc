@@ -1244,7 +1244,7 @@ TunnelStateData::notifyConnOpener()
  * \param preReadServerData server-sent bytes to be forwarded to the client
  */
 void
-switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn, const SBuf *preReadServerData)
+switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData)
 {
     debugs(26,5, "Revert to tunnel FD " << clientConn->fd << " with FD " << srvConn->fd);
 
@@ -1284,8 +1284,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(srvConn, Config.Timeout.read, timeoutCall);
 
-    if (preReadServerData)
-        tunnelState->preReadServerData = *preReadServerData;
+    tunnelState->preReadServerData = preReadServerData;
 
     tunnelStartShoveling(tunnelState);
 }
