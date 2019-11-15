@@ -245,8 +245,7 @@ isValidUtf8String(const char *source, const char *sourceEnd) {
  * allowed or not.
  *
  * CP1251 (aka Windows-1251) is an 8-bit character encoding, designed
- * to cover languages that use the Cyrillic script such as Russian,
- * Ukrainian, Bulgarian, Serbian Cyrillic and other languages.
+ * to cover languages that use the Cyrillic script.
  */
 static bool
 isCP1251EncodingAllowed(const HttpRequest *request)
@@ -267,7 +266,7 @@ isCP1251EncodingAllowed(const HttpRequest *request)
 
         if ((strncmp(lang, "ru", 2) == 0 // Russian
                 || strncmp(lang, "uk", 2) == 0 // Ukrainian
-                || strncmp(lang, "be", 2) == 0 // Belarusian
+                || strncmp(lang, "be", 2) == 0 // Belorussian
                 || strncmp(lang, "bg", 2) == 0 // Bulgarian
                 || strncmp(lang, "sr", 2) == 0)) { // Serbian
             if (lang[2] == '-') {
