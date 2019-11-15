@@ -167,7 +167,7 @@ utf8CodePointLength(const char b0)
     if ((b0 & 0x80) == 0)
         return 1;
     if ((b0 & 0xC0) != 0xC0)
-      return 0; // invalid code point
+        return 0; // invalid code point
     if ((b0 & 0xE0) == 0xC0)
         return 2;
     if ((b0 & 0xF0) == 0xE0)
@@ -189,24 +189,37 @@ isValidUtf8CodePoint(const unsigned char* source, const size_t length)
     unsigned char a;
     const unsigned char* srcptr = source + length;
     switch (length) {
-        default: return false;
-        // Everything else falls through when "true"...
-        case 4: if ((a = (*--srcptr)) < 0x80 || a > 0xBF) return false;
-        case 3: if ((a = (*--srcptr)) < 0x80 || a > 0xBF) return false;
-        case 2: if ((a = (*--srcptr)) > 0xBF) return false;
-
+    default:
+        return false;
+    // Everything else falls through when "true"...
+    case 4:
+        if ((a = (*--srcptr)) < 0x80 || a > 0xBF) return false;
+    case 3:
+        if ((a = (*--srcptr)) < 0x80 || a > 0xBF) return false;
+    case 2:
+        if ((a = (*--srcptr)) > 0xBF) return false;
 
         switch (*source) {
-            // no fall-through in this inner switch
-            case 0xE0: if (a < 0xA0) return false; break;
-            case 0xED: if (a > 0x9F) return false; break;
-            case 0xF0: if (a < 0x90) return false; break;
-            case 0xF4: if (a > 0x8F) return false; break;
-            default:   if (a < 0x80) return false; break;
+        // no fall-through in this inner switch
+        case 0xE0:
+            if (a < 0xA0) return false;
+            break;
+        case 0xED:
+            if (a > 0x9F) return false;
+            break;
+        case 0xF0:
+            if (a < 0x90) return false;
+            break;
+        case 0xF4:
+            if (a > 0x8F) return false;
+            break;
+        default:
+            if (a < 0x80) return false;
+            break;
         }
 
-
-        case 1: if (*source >= 0x80 && *source < 0xC2) return false;
+    case 1:
+        if (*source >= 0x80 && *source < 0xC2) return false;
     }
     if (*source > 0xF4)
         return false;
@@ -252,14 +265,14 @@ isCP1251EncodingAllowed(const HttpRequest *request)
         if (lang[0] == '*' && lang[1] == '\0')
             return false;
 
-        if ((strncmp(lang, "ru", 2) == 0     // Russian
-             || strncmp(lang, "uk", 2) == 0  // Ukrainian
-             || strncmp(lang, "be", 2) == 0  // Belarusian
-             || strncmp(lang, "bg", 2) == 0  // Bulgarian
-             || strncmp(lang, "sr", 2) == 0)) {// Serbian
+        if ((strncmp(lang, "ru", 2) == 0 // Russian
+                || strncmp(lang, "uk", 2) == 0 // Ukrainian
+                || strncmp(lang, "be", 2) == 0 // Belarusian
+                || strncmp(lang, "bg", 2) == 0 // Bulgarian
+                || strncmp(lang, "sr", 2) == 0)) { // Serbian
             if (lang[2] == '-') {
                 if (strcmp(lang + 3, "latn") == 0) // not Cyrillic
-                  return false;
+                    return false;
             } else if (xisalpha(lang[2])) {
                 return false;
             }
@@ -301,7 +314,7 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const HttpReque
 
         if (utf8 && !isValidUtf8String(cleartext, cleartext + dstLen)) {
             auto str = isCP1251EncodingAllowed(request) ?
-                Cp1251ToUtf8(cleartext) : Latin1ToUtf8(cleartext);
+                       Cp1251ToUtf8(cleartext) : Latin1ToUtf8(cleartext);
             safe_free(cleartext);
             cleartext = xstrdup(str.c_str());
         }
