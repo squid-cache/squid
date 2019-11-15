@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "charset.h"
 
-/** Convert ISO-LATIN-1 to UTF-8 */
 SBuf
 Latin1ToUtf8(const char *in)
 {
@@ -31,7 +30,6 @@ Latin1ToUtf8(const char *in)
     return result;
 }
 
-/** Convert CP1251 to UTF-8 */
 SBuf
 Cp1251ToUtf8(const char *in)
 {

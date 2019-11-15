@@ -11,8 +11,10 @@
 
 #include "sbuf/SBuf.h"
 
+/// converts ISO-LATIN-1 to UTF-8
 SBuf Latin1ToUtf8(const char *in);
 
+/// converts CP1251 to UTF-8
 SBuf Cp1251ToUtf8(const char *in);
 
 #endif /* _SQUID_CHARSET_H */
