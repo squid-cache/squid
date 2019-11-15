@@ -299,7 +299,7 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const HttpReque
         cleartext[dstLen] = '\0';
 
         if (utf8 && !isValidUtf8String(cleartext, cleartext + dstLen)) {
-            SBuf str = isCP1251EncodingAllowed(request) ?
+            auto str = isCP1251EncodingAllowed(request) ?
                 Cp1251ToUtf8(cleartext) : Latin1ToUtf8(cleartext);
             safe_free(cleartext);
             cleartext = xstrdup(str.c_str());
