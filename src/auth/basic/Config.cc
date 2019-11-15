@@ -183,7 +183,7 @@ utf8CodePointLength(const char b0)
  * definition of UTF-8 goes up to 4-byte code points.
  */
 static bool
-isValidUtf8(const unsigned char* source, int length)
+isValidUtf8CodePoint(const unsigned char* source, int length)
 {
     unsigned char a;
     const unsigned char* srcptr = source + length;
@@ -219,7 +219,7 @@ static bool
 isValidUtf8String(const char *source, const char *sourceEnd) {
     while (source < sourceEnd) {
         const auto length = utf8CodePointLength(*source);
-        if (length > sourceEnd - source || !isValidUtf8(reinterpret_cast<const unsigned char*>(source), length))
+        if (length > sourceEnd - source || !isValidUtf8CodePoint(reinterpret_cast<const unsigned char*>(source), length))
             return false;
         source += length;
     }
