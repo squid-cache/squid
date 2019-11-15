@@ -236,7 +236,9 @@ Http::One::Server::proceedAfterBodyContinuation(Http::StreamPointer context)
 int
 Http::One::Server::pipelinePrefetchMax() const
 {
-    if (mayUpgrade)
+    const auto context = pipeline.back();
+    const auto request = (context && context->http) ? context->http->request : nullptr;
+    if (request && request->header.has(Http::HdrType::UPGRADE))
         return 0;
 
     return ConnStateData::pipelinePrefetchMax();
@@ -250,8 +252,6 @@ Http::One::Server::processParsedRequest(Http::StreamPointer &context)
 
     ClientHttpRequest *http = context->http;
     HttpRequest::Pointer request = http->request;
-
-    mayUpgrade = request->header.has(Http::HdrType::UPGRADE);
 
     if (request->header.has(Http::HdrType::EXPECT)) {
         const String expect = request->header.getList(Http::HdrType::EXPECT);
