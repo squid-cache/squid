@@ -27,8 +27,8 @@ public:
         Entry & operator = (Entry &);
     public:
         Key key; ///< the key of entry
-        EntryValue *value; ///< A pointer to the stored value
-        time_t date; ///< The date the entry created
+        EntryValue *value = nullptr; ///< A pointer to the stored value
+        time_t date = 0; ///< The date the entry created
     };
     typedef std::list<Entry *> Queue;
     typedef typename std::list<Entry *>::iterator QueueIterator;
@@ -68,16 +68,15 @@ private:
 
     Map storage; ///< The Key/value * pairs
     Queue index; ///< LRU cache index
-    int ttl;///< >0 ttl for caching, == 0 cache is disabled, < 0 store for ever
-    size_t memLimit_; ///< The maximum memory to use
-    int entries_; ///< The stored entries
+    int ttl = 0;          ///< TTL >0 for caching, == 0 cache is disabled, <0 store for ever
+    size_t memLimit_ = 0; ///< The maximum memory to use
+    int entries_ = 0;     ///< The stored entries
 };
 
 template <class Key, class EntryValue, size_t EntryCost>
-LruMap<Key, EntryValue, EntryCost>::LruMap(int aTtl, size_t aSize): entries_(0)
+LruMap<Key, EntryValue, EntryCost>::LruMap(int aTtl, size_t aSize) :
+    ttl(aTtl)
 {
-    ttl = aTtl;
-
     setMemLimit(aSize);
 }
 
