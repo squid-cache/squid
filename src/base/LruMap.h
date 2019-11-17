@@ -53,7 +53,7 @@ public:
     /// The free space of the map
     size_t freeMem() const { return (memLimit() > memoryUsed() ? memLimit() - memoryUsed() : 0);}
     /// The current size of the map
-    size_t memoryUsed() const {return (entries_ * EntryCost);}
+    size_t memoryUsed() const {return memUsed_;}
     /// The number of stored entries
     int entries() const {return entries_;}
 private:
@@ -65,11 +65,13 @@ private:
     void touch(const MapIterator &i);
     bool del(const MapIterator &i);
     void findEntry(const Key &key, LruMap::MapIterator &i);
+    size_t memoryCountedFor(const Key &);
 
     Map storage; ///< The Key/value * pairs
     Queue index; ///< LRU cache index
     int ttl = 0;          ///< TTL >0 for caching, == 0 cache is disabled, <0 store for ever
     size_t memLimit_ = 0; ///< The maximum memory to use
+    size_t memUsed_ = 0;  ///< The amount of memory currently used
     int entries_ = 0;     ///< The stored entries
 };
 
@@ -135,6 +137,15 @@ LruMap<Key, EntryValue, EntryCost>::get(const Key &key)
 }
 
 template <class Key, class EntryValue, size_t EntryCost>
+size_t
+LruMap<Key, EntryValue, EntryCost>::memoryCountedFor(const Key &k)
+{
+    // TODO: handle Entry which change size while stored
+    size_t entrySz = sizeof(Entry) + EntryCost + k.length();
+    return sizeof(MapPair) + k.length() + entrySz;
+}
+
+template <class Key, class EntryValue, size_t EntryCost>
 bool
 LruMap<Key, EntryValue, EntryCost>::add(const Key &key, EntryValue *t)
 {
@@ -147,10 +158,15 @@ LruMap<Key, EntryValue, EntryCost>::add(const Key &key, EntryValue *t)
     del(key);
     trim();
 
+    const auto wantSz = memoryCountedFor(key);
+    if (wantSz >= memLimit())
+        return false;
+
     index.push_front(new Entry(key, t));
     storage.insert(MapPair(key, index.begin()));
 
     ++entries_;
+    memUsed_ += wantSz;
     return true;
 }
 
@@ -170,10 +186,12 @@ LruMap<Key, EntryValue, EntryCost>::del(LruMap::MapIterator const &i)
 {
     if (i != storage.end()) {
         Entry *e = *i->second;
+        const auto sz = memoryCountedFor(e->key);
         index.erase(i->second);
         storage.erase(i);
         delete e;
         --entries_;
+        memUsed_ -= sz;
         return true;
     }
     return false;
