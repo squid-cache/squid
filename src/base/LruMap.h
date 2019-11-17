@@ -142,11 +142,11 @@ LruMap<Key, EntryValue, EntryCost>::add(const Key &key, EntryValue *t)
     if (ttl == 0)
         return false;
 
-    del(key);
-    trim();
-
     if (memLimit() == 0)
         return false;
+
+    del(key);
+    trim();
 
     index.push_front(new Entry(key, t));
     storage.insert(MapPair(key, index.begin()));
@@ -207,7 +207,7 @@ void
 LruMap<Key, EntryValue, EntryCost>::touch(LruMap::MapIterator const &i)
 {
     // this must not be done when nothing is being cached.
-    if (ttl == 0)
+    if (ttl == 0 || memLimit() == 0)
         return;
 
     index.push_front(*(i->second));
