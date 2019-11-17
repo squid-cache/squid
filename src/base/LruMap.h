@@ -51,9 +51,9 @@ public:
     /// The available size for the map
     size_t memLimit() const {return memLimit_;}
     /// The free space of the map
-    size_t freeMem() const { return (memLimit() > size() ? memLimit() - size() : 0);}
+    size_t freeMem() const { return (memLimit() > memoryUsed() ? memLimit() - memoryUsed() : 0);}
     /// The current size of the map
-    size_t size() const {return (entries_ * EntryCost);}
+    size_t memoryUsed() const {return (entries_ * EntryCost);}
     /// The number of stored entries
     int entries() const {return entries_;}
 private:
@@ -193,7 +193,7 @@ template <class Key, class EntryValue, size_t EntryCost>
 void
 LruMap<Key, EntryValue, EntryCost>::trim()
 {
-    while (size() >= memLimit()) {
+    while (memoryUsed() >= memLimit()) {
         QueueIterator i = index.end();
         --i;
         if (i != index.end()) {

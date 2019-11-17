@@ -47,7 +47,7 @@ void Ssl::CertificateStorageAction::dump (StoreEntry *sentry)
         stream << ssl_store_policy.memLimit() / 1024 << delimiter;
         stream << ssl_store_policy.entries() << delimiter;
         stream << SSL_CTX_SIZE / 1024 << delimiter;
-        stream << ssl_store_policy.size() / 1024 << delimiter;
+        stream << ssl_store_policy.memoryUsed() / 1024 << delimiter;
         stream << ssl_store_policy.freeMem() / 1024 << endString;
     }
     stream << endString;
