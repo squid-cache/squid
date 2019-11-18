@@ -378,7 +378,7 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
     return true;
 }
 
-void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
+void switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, const Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
 
 void
 Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext server)
@@ -392,8 +392,8 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext serve
     stopReading();
     Must(!writer);
 
-    switchToTunnel(server.request.getRaw(), clientConnection, server.connection,
-                   server.preReadServerBytes);
+    switchToTunnel(server.request.getRaw(), clientConnection,
+                   server.connection(), server.preReadServerBytes);
 }
 
 ConnStateData *

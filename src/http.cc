@@ -888,28 +888,6 @@ HttpStateData::blockSwitchingProtocols(const HttpReply &reply) const
     return "server sent an essentially empty Upgrade header field";
 }
 
-// XXX: To control ownership, use a custom unique_ptr instead of a custom Dialer
-/// Passes server connection ownership to the ConnStateData object.
-/// Closes the connection if ConnStateData disappears.
-class ServerConnectionControlDialer: public UnaryMemFunT<ConnStateData, ConnStateData::ServerConnectionContext>
-{
-public:
-    typedef UnaryMemFunT<ConnStateData, ConnStateData::ServerConnectionContext> Parent;
-
-    ServerConnectionControlDialer(const CbcPointer<ConnStateData> &mgr, const ConnStateData::ServerConnectionContext &scc): Parent(mgr, &ConnStateData::noteTakeServerConnectionControl, scc) {}
-
-    virtual bool canDial(AsyncCall &call) override {
-        if (!Parent::canDial(call)) {
-            debugs(11, 2, "ConnStateData gone, close server connection to avoid orphan connection!");
-            arg1.connection->close();
-            return false;
-        }
-        return true;
-    }
-
-    const char *callName = "ConnStateData::noteTakeServerConnectionControl";
-};
-
 /// restores state and resumes processing after 1xx is ignored or forwarded
 void
 HttpStateData::proceedAfter1xx()
@@ -917,10 +895,13 @@ HttpStateData::proceedAfter1xx()
     Must(flags.handling1xx);
 
     if (flags.serverSwitchedProtocols) {
+        debugs(11, 2, "giving client " << serverConnection);
         // pass server connection ownership to request->clientConnectionManager
         ConnStateData::ServerConnectionContext scc(serverConnection, request, inBuf);
-        ServerConnectionControlDialer dialer(request->clientConnectionManager, scc);
-        AsyncCall::Pointer call = asyncCall(11, 3, dialer.callName, dialer);
+        typedef UnaryMemFunT<ConnStateData, ConnStateData::ServerConnectionContext> MyDialer;
+        AsyncCall::Pointer call = asyncCall(11, 3, "ConnStateData::noteTakeServerConnectionControl",
+             MyDialer(request->clientConnectionManager,
+                &ConnStateData::noteTakeServerConnectionControl, scc));
         ScheduleCallHere(call);
         fwd->unregister(serverConnection);
         comm_remove_close_handler(serverConnection->fd, closeHandler);

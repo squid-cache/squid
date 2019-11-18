@@ -202,10 +202,17 @@ public:
     /// noteTakeServerConnectionControl() callback parameter
     class ServerConnectionContext {
     public:
-        ServerConnectionContext(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const SBuf &post101Bytes): connection(conn), request(req), preReadServerBytes(post101Bytes) {}
-        Comm::ConnectionPointer connection; ///< to-server connection to own
+        ServerConnectionContext(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const SBuf &post101Bytes): request(req), preReadServerBytes(post101Bytes), conn_(conn) { conn_->enterOrphanage(); }
+
+        /// gives to-server connection to the new owner
+        Comm::ConnectionPointer connection() { conn_->leaveOrphanage(); return conn_; }
+
         HttpRequest::Pointer request; ///< the last to-server request on connection
         SBuf preReadServerBytes; ///< post-101 bytes received from the server
+
+    private:
+        friend std::ostream &operator <<(std::ostream &, const ServerConnectionContext &);
+        Comm::ConnectionPointer conn_; ///< to-server connection to own
     };
 
     /// Gives us the control of the Squid-to-server connection.
