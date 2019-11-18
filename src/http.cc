@@ -895,7 +895,6 @@ HttpStateData::proceedAfter1xx()
     Must(flags.handling1xx);
 
     if (flags.serverSwitchedProtocols) {
-        debugs(11, 2, "giving client " << serverConnection);
         // pass server connection ownership to request->clientConnectionManager
         ConnStateData::ServerConnectionContext scc(serverConnection, request, inBuf);
         typedef UnaryMemFunT<ConnStateData, ConnStateData::ServerConnectionContext> MyDialer;
