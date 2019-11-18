@@ -343,7 +343,7 @@ Valid_Global_Groups(char *UserName, const char **Groups)
             break;
     }
     if (domain_qualify == NULL) {
-        strcpy(User, NTDomain);
+        strncpy(User, NTDomain, sizeof(User));
         strcpy(NTDomain, DefaultDomain);
     } else {
         strcpy(User, domain_qualify + 1);
