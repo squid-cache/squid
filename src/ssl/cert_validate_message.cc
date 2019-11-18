@@ -197,6 +197,13 @@ Ssl::CertValidationMsg::getCertByName(std::vector<CertItem> const &certs, std::s
     return NULL;
 }
 
+size_t
+Ssl::CertValidationResponse::MemoryUsedByResponse(const Ssl::CertValidationResponse::Pointer *)
+{
+    // XXX: This math does not account for most of the response size!
+    return sizeof(Ssl::CertValidationResponse::Pointer) + sizeof(Ssl::CertValidationResponse);
+}
+
 Ssl::CertValidationResponse::RecvdError &
 Ssl::CertValidationResponse::getError(int errorId)
 {

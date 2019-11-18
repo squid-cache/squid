@@ -27,9 +27,6 @@
 #include <openssl/ssl.h>
 #endif
 
-/// TODO: Replace on real size.
-#define SSL_CTX_SIZE 1024
-
 namespace  Ssl
 {
 
@@ -49,7 +46,10 @@ public:
     virtual bool aggregatable() const { return false; }
 };
 
-typedef LruMap<SBuf, Security::ContextPointer, SSL_CTX_SIZE> LocalContextStorage;
+inline size_t MemoryUsedByContext(const Security::ContextPointer *) {
+    return 1024; // TODO: Replace on real size.
+}
+typedef LruMap<SBuf, Security::ContextPointer, MemoryUsedByContext> LocalContextStorage;
 
 /// Class for storing/manipulating LocalContextStorage per local listening address/port.
 class GlobalContextStorage

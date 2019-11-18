@@ -60,6 +60,9 @@ public:
 
     typedef std::vector<RecvdError> RecvdErrors;
     explicit CertValidationResponse(const Security::SessionPointer &aSession) : ssl(aSession) {}
+
+    static size_t MemoryUsedByResponse(const Ssl::CertValidationResponse::Pointer *);
+
     /// Search in errors list for the error item with id=errorId.
     /// If none found a new RecvdError item added with the given id;
     RecvdError &getError(int errorId);
