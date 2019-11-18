@@ -4093,6 +4093,6 @@ std::ostream &
 operator <<(std::ostream &os, const ConnStateData::ServerConnectionContext &scc)
 {
     return os << scc.conn_ << ", request=" << scc.request <<
-        ", srv_bytes="<< scc.preReadServerBytes.length();
+           ", srv_bytes="<< scc.preReadServerBytes.length();
 }
 

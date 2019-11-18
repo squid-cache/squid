@@ -899,8 +899,8 @@ HttpStateData::proceedAfter1xx()
         ConnStateData::ServerConnectionContext scc(serverConnection, request, inBuf);
         typedef UnaryMemFunT<ConnStateData, ConnStateData::ServerConnectionContext> MyDialer;
         AsyncCall::Pointer call = asyncCall(11, 3, "ConnStateData::noteTakeServerConnectionControl",
-             MyDialer(request->clientConnectionManager,
-                &ConnStateData::noteTakeServerConnectionControl, scc));
+                                            MyDialer(request->clientConnectionManager,
+                                                    &ConnStateData::noteTakeServerConnectionControl, scc));
         ScheduleCallHere(call);
         fwd->unregister(serverConnection);
         comm_remove_close_handler(serverConnection->fd, closeHandler);
