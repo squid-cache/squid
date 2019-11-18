@@ -35,7 +35,6 @@ public:
         // is more secure to have only a small set of trusted CA.
         flags.tlsDefaultCa.defaultTo(false);
     }
-    ServerOptions(const ServerOptions &) = default;
     ServerOptions &operator =(const ServerOptions &);
     ServerOptions(ServerOptions &&o) { this->operator =(o); }
     ServerOptions &operator =(ServerOptions &&o) { this->operator =(o); return *this; }
