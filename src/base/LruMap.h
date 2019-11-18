@@ -69,7 +69,7 @@ private:
     LruMap & operator = (LruMap const &);
 
     bool expired(const Entry &e) const;
-    void trim();
+    void trim(size_t wantSpace = 0);
     void touch(const MapIterator &i);
     bool del(const MapIterator &i);
     void findEntry(const Key &key, LruMap::MapIterator &i);
@@ -164,11 +164,11 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t)
         return false;
 
     del(key);
-    trim();
 
     const auto wantSz = memoryCountedFor(key, t);
     if (wantSz >= memLimit())
         return false;
+    trim(wantSz);
 
     index.push_front(new Entry(key, t));
     storage.insert(MapPair(key, index.begin()));
@@ -216,9 +216,9 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::del(const Key &key)
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 void
-LruMap<Key, EntryValue, MemoryUsedByEV>::trim()
+LruMap<Key, EntryValue, MemoryUsedByEV>::trim(size_t wantSpace)
 {
-    while (memoryUsed() >= memLimit()) {
+    while (memLimit() < (memoryUsed() + wantSpace)) {
         QueueIterator i = index.end();
         --i;
         if (i != index.end()) {
