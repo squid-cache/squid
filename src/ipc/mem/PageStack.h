@@ -28,6 +28,7 @@ class PageStack
 {
 public:
     typedef uint32_t Value; ///< stack item type (a free page number)
+    typedef std::atomic<size_t> Levels_t;
 
     PageStack(const uint32_t aPoolId, const unsigned int aCapacity, const size_t aPageSize);
 
@@ -51,6 +52,12 @@ public:
     /// shared counters and page data
     static size_t StackSize(const unsigned int capacity);
     size_t stackSize() const;
+    
+    /// padding a certain number of bytes to 
+    /// initialize TheLevels on the alignment boundary
+    static size_t PaddingSize(const unsigned int capacity);
+    size_t paddingSize() const;
+
 
 private:
     /// stack index and size type (may temporary go negative)

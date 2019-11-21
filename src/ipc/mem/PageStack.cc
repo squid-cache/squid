@@ -124,7 +124,7 @@ Ipc::Mem::PageStack::SharedMemorySize(const uint32_t, const unsigned int capacit
 {
     const size_t levelsSize = PageId::maxPurpose * sizeof(std::atomic<Ipc::Mem::PageStack::Value>);
     const size_t pagesDataSize = capacity * pageSize;
-    return StackSize(capacity) + pagesDataSize + levelsSize;
+    return StackSize(capacity) + PaddingSize(capacity) + pagesDataSize + levelsSize;
 }
 
 size_t
@@ -137,5 +137,17 @@ size_t
 Ipc::Mem::PageStack::stackSize() const
 {
     return StackSize(theCapacity);
+}
+
+size_t
+Ipc::Mem::PageStack::PaddingSize(const unsigned int capacity)
+{
+     return StackSize(capacity) % alignof(Levels_t) == 0 ? 0 : alignof(Levels_t) - StackSize(capacity) % alignof(Levels_t);
+}
+
+size_t
+Ipc::Mem::PageStack::paddingSize() const
+{
+    return PaddingSize(theCapacity);
 }
 
