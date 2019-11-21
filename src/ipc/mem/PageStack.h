@@ -52,11 +52,10 @@ public:
     /// shared counters and page data
     static size_t StackSize(const unsigned int capacity);
     size_t stackSize() const;
-    
+
     /// \returns the number of padding bytes to align PagePool::theLevels array
     static size_t LevelsPaddingSize(const unsigned int capacity);
     size_t levelsPaddingSize() const { return LevelsPaddingSize(theCapacity); }
-
 
 private:
     /// stack index and size type (may temporary go negative)
