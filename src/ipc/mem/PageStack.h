@@ -53,8 +53,7 @@ public:
     static size_t StackSize(const unsigned int capacity);
     size_t stackSize() const;
     
-    /// padding a certain number of bytes to 
-    /// initialize TheLevels on the alignment boundary
+    /// \returns the number of padding bytes to align PagePool::theLevels array
     static size_t LevelsPaddingSize(const unsigned int capacity);
     size_t levelsPaddingSize() const { return LevelsPaddingSize(theCapacity); }
 
