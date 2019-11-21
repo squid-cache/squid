@@ -55,8 +55,8 @@ public:
     
     /// padding a certain number of bytes to 
     /// initialize TheLevels on the alignment boundary
-    static size_t PaddingSize(const unsigned int capacity);
-    size_t paddingSize() const;
+    static size_t LevelsPaddingSize(const unsigned int capacity);
+    size_t levelsPaddingSize() const { return LevelsPaddingSize(theCapacity); }
 
 
 private:
