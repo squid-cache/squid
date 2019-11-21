@@ -142,7 +142,8 @@ Ipc::Mem::PageStack::stackSize() const
 size_t
 Ipc::Mem::PageStack::PaddingSize(const unsigned int capacity)
 {
-     return StackSize(capacity) % alignof(Levels_t) == 0 ? 0 : alignof(Levels_t) - StackSize(capacity) % alignof(Levels_t);
+     const auto displacement = StackSize(capacity) % alignof(Levels_t);
+     return displacement ? alignof(Levels_t) - displacement : 0;
 }
 
 size_t
