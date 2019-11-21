@@ -1109,6 +1109,10 @@ AC_ARG_ENABLE(eui,
 SQUID_YESNO([$enableval],[--disable-eui expects no arguments])
 ])
 if test "x${enable_eui:=yes}" = "xyes" ; then
+  SQUID_STATE_SAVE(LIBEUI)
+  # GLIBC 2.30 deprecates sysctl.h. Test with the same flags that (may) break includes later.
+  CFLAGS=$SQUID_CFLAGS
+  CXXFLAGS=$SQUID_CXXFLAGS
   case "$squid_host_os" in
     linux|solaris|freebsd|openbsd|netbsd|cygwin)
       ${TRUE}
@@ -1148,6 +1152,7 @@ include <windows.h>
 #include <sys/param.h>
 #endif
   ]])
+  SQUID_STATE_ROLLBACK(LIBEUI)
 fi
 AC_SUBST(EUILIB)
 AC_MSG_NOTICE([EUI (MAC address) controls enabled: $enable_eui])
