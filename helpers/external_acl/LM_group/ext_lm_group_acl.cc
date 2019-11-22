@@ -343,10 +343,10 @@ Valid_Global_Groups(char *UserName, const char **Groups)
             break;
     }
     if (domain_qualify == NULL) {
-        strcpy(User, NTDomain);
-        strcpy(NTDomain, DefaultDomain);
+        xstrncpy(User, NTDomain, sizeof(User));
+        xstrncpy(NTDomain, DefaultDomain, sizeof(NTDomain));
     } else {
-        strcpy(User, domain_qualify + 1);
+        xstrncpy(User, domain_qualify + 1, sizeof(User));
         domain_qualify[0] = '\0';
         strlwr(NTDomain);
     }
