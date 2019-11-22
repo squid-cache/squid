@@ -80,6 +80,14 @@ PconnPool *fwdPconnPool = new PconnPool("server-peers", nullptr);
 
 CBDATA_CLASS_INIT(FwdState);
 
+/// emulate AsyncJob call protections
+#define FwdStateEnterThrowingCode() try {
+#define FwdStateExitThrowingCode() } \
+    catch (...) { \
+    debugs (17, 2, "exception: " << CurrentException); \
+    retryOrBail(); \
+    }
+
 class FwdStatePeerAnswerDialer: public CallDialer, public Security::PeerConnector::CbDialer
 {
 public:
@@ -758,6 +766,8 @@ FwdState::handleUnregisteredServerEnd()
 void
 FwdState::noteConnection(HappyConnOpener::Answer &answer)
 {
+    FwdStateEnterThrowingCode();
+
     calls.connector = nullptr;
     connOpener.clear();
 
@@ -797,6 +807,8 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
     }
 
     secureConnectionToPeerIfNeeded(conn);
+
+    FwdStateExitThrowingCode();
 }
 
 void
@@ -825,6 +837,8 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 void
 FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
+    FwdStateEnterThrowingCode();
+
     ErrorState *error = nullptr;
 
     if (!answer.positive()) {
@@ -859,6 +873,8 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
     }
 
     secureConnectionToPeerIfNeeded(answer.conn);
+
+    FwdStateExitThrowingCode();
 }
 
 /// handles an established TCP connection to peer (including origin servers)
@@ -978,6 +994,8 @@ FwdState::syncHierNote(const Comm::ConnectionPointer &server, const char *host)
 void
 FwdState::connectStart()
 {
+    FwdStateEnterThrowingCode();
+
     debugs(17, 3, *destinations << " to " << entry->url());
 
     Must(!request->pinnedConnection());
@@ -1011,6 +1029,8 @@ FwdState::connectStart()
     destinations->notificationPending = true; // start() is async
     connOpener = cs;
     AsyncJob::Start(cs);
+
+    FwdStateExitThrowingCode();
 }
 
 /// send request on an existing connection dedicated to the requesting client
