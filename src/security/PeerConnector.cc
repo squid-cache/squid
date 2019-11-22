@@ -43,15 +43,22 @@ Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerCon
     useCertValidator_(true),
     certsDownloads(0)
 {
-    debugs(83, 5, "Security::PeerConnector constructed, this=" << (void*)this);
+    debugs(83, 5, serverConn);
+
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
-    prepareSocket();
+
+    // watch for external connection closures
+    Must(Comm::IsConnOpen(serverConn));
+    Must(!fd_table[serverConn->fd].closing());
+    typedef CommCbMemFunT<Security::PeerConnector, CommCloseCbParams> Dialer;
+    closeHandler = JobCallback(9, 5, Dialer, this, Security::PeerConnector::commCloseHandler);
+    comm_add_close_handler(serverConn->fd, closeHandler);
 }
 
 Security::PeerConnector::~PeerConnector()
 {
-    debugs(83, 5, "Security::PeerConnector destructed, this=" << (void*)this);
+    // TODO: Remove if it stays empty.
 }
 
 bool Security::PeerConnector::doneAll() const
@@ -96,19 +103,6 @@ Security::PeerConnector::connectionClosed(const char *reason)
     auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
     err->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
     bail(err);
-}
-
-void
-Security::PeerConnector::prepareSocket()
-{
-    debugs(83, 5, serverConnection() << ", this=" << (void*)this);
-    Must(Comm::IsConnOpen(serverConnection()));
-    Must(!fd_table[serverConnection()->fd].closing());
-
-    // watch for external connection closures
-    typedef CommCbMemFunT<Security::PeerConnector, CommCloseCbParams> Dialer;
-    closeHandler = JobCallback(9, 5, Dialer, this, Security::PeerConnector::commCloseHandler);
-    comm_add_close_handler(serverConnection()->fd, closeHandler);
 }
 
 bool
