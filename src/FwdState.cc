@@ -847,22 +847,21 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
         answer.squidError.clear(); // preserve error for fail()
         Must(!Comm::IsConnOpen(answer.conn));
     } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
-        // the connection could get closed while our callback was queued
-        serverConnection(serverConn);
-        closeServerConnection("closing connection");
+        // The socket could get closed while our callback was queued.
+        // We close Connection here to sync Connection::fd.
+        answer.conn->close();
         error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
     } else if (!answer.leftovers.isEmpty()) {
         // This should not happen because TLS servers do not speak first. If we
         // have to handle this, then pass answer.leftovers via a PeerConnector
         // to ServerBio. See ClientBio::setReadBufData().
-        syncWithServerConn(answer.conn, request->url.host(), false);
         static int occurrences = 0;
         const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
         debugs(17, level, "ERROR: Early data after CONNECT response. " <<
                "Found " << answer.leftovers.length() << " bytes. " <<
-               "Closing " << serverConnection());
+               "Closing " << answer.conn);
         error = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request, al);
-        closeServerConnection("found early data after CONNECT response");
+        answer.conn->close();
     }
     if (error) {
         fail(error);
