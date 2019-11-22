@@ -841,15 +841,13 @@ void
 FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
     ErrorState *error = nullptr;
-
     if (!answer.positive()) {
-        // TODO: Reuse to-peer connections after a CONNECT error response.
-
         error = answer.squidError.get();
         Must(error);
         answer.squidError.clear(); // preserve error for fail()
-    }else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
-        // connection gone before we are called.
+        Must(!Comm::IsConnOpen(answer.conn));
+    } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
+        // the connection could get closed while our callback was queued
         serverConnection(serverConn);
         closeServerConnection("closing connection");
         error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
@@ -866,7 +864,6 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
         error = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request, al);
         closeServerConnection("found early data after CONNECT response");
     }
-
     if (error) {
         fail(error);
         retryOrBail();

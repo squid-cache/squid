@@ -362,6 +362,7 @@ Http::Tunneler::bailWith(ErrorState *error)
 
     if (noteFwdPconnUse)
         fwdPconnPool->noteUses(fd_table[connection->fd].pconn.uses);
+    // TODO: Reuse to-peer connections after a CONNECT error response.
     connection->close();
     connection = nullptr;
 }
