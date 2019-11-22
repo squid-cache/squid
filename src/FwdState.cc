@@ -80,6 +80,8 @@ PconnPool *fwdPconnPool = new PconnPool("server-peers", nullptr);
 
 CBDATA_CLASS_INIT(FwdState);
 
+// TODO: Extract destination-specific handling from FwdState so that it can be
+// surrounded with a single try/catch,retry block written without these macros.
 /// emulate AsyncJob call protections
 #define FwdStateEnterThrowingCode() try {
 #define FwdStateExitThrowingCode() } \
@@ -766,8 +768,6 @@ FwdState::handleUnregisteredServerEnd()
 void
 FwdState::noteConnection(HappyConnOpener::Answer &answer)
 {
-    FwdStateEnterThrowingCode();
-
     calls.connector = nullptr;
     connOpener.clear();
 
@@ -807,13 +807,13 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
     }
 
     secureConnectionToPeerIfNeeded(conn);
-
-    FwdStateExitThrowingCode();
 }
 
 void
 FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
+    FwdStateEnterThrowingCode();
+
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::tunnelEstablishmentDone",
                                             Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
@@ -831,14 +831,14 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 #endif
     AsyncJob::Start(tunneler);
     // and wait for the tunnelEstablishmentDone() call
+
+    FwdStateExitThrowingCode();
 }
 
 /// resumes operations after the (possibly failed) HTTP CONNECT exchange
 void
 FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
-    FwdStateEnterThrowingCode();
-
     ErrorState *error = nullptr;
 
     if (!answer.positive()) {
@@ -873,8 +873,6 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
     }
 
     secureConnectionToPeerIfNeeded(answer.conn);
-
-    FwdStateExitThrowingCode();
 }
 
 /// handles an established TCP connection to peer (including origin servers)
@@ -897,6 +895,7 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
     const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS && !clientFirstBump;
 
     if (needTlsToPeer || needTlsToOrigin || needsBump) {
+        FwdStateEnterThrowingCode();
         HttpRequest::Pointer requestPointer = request;
         AsyncCall::Pointer callback = asyncCall(17,4,
                                                 "FwdState::ConnectedToPeer",
@@ -911,6 +910,7 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
             connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
         connector->noteFwdPconnUse = true;
         AsyncJob::Start(connector); // will call our callback
+        FwdStateExitThrowingCode();
         return;
     }
 
@@ -994,8 +994,6 @@ FwdState::syncHierNote(const Comm::ConnectionPointer &server, const char *host)
 void
 FwdState::connectStart()
 {
-    FwdStateEnterThrowingCode();
-
     debugs(17, 3, *destinations << " to " << entry->url());
 
     Must(!request->pinnedConnection());
@@ -1029,8 +1027,6 @@ FwdState::connectStart()
     destinations->notificationPending = true; // start() is async
     connOpener = cs;
     AsyncJob::Start(cs);
-
-    FwdStateExitThrowingCode();
 }
 
 /// send request on an existing connection dedicated to the requesting client
