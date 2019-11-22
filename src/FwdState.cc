@@ -84,9 +84,10 @@ CBDATA_CLASS_INIT(FwdState);
 // surrounded with a single try/catch,retry block written without these macros.
 /// emulate AsyncJob call protections
 #define FwdStateEnterThrowingCode() try {
-#define FwdStateExitThrowingCode() } \
+#define FwdStateExitThrowingCode(cleanupCode) } \
     catch (...) { \
     debugs (17, 2, "exception: " << CurrentException); \
+    cleanupCode(); \
     retryOrBail(); \
     }
 
@@ -832,7 +833,7 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
     AsyncJob::Start(tunneler);
     // and wait for the tunnelEstablishmentDone() call
 
-    FwdStateExitThrowingCode();
+    FwdStateExitThrowingCode([&conn] { conn->close(); });
 }
 
 /// resumes operations after the (possibly failed) HTTP CONNECT exchange
@@ -910,7 +911,7 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
             connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
         connector->noteFwdPconnUse = true;
         AsyncJob::Start(connector); // will call our callback
-        FwdStateExitThrowingCode();
+        FwdStateExitThrowingCode([&conn] { conn->close(); });
         return;
     }
 
@@ -1001,6 +1002,8 @@ FwdState::connectStart()
     assert(!destinations->empty());
     assert(!opening());
 
+    FwdStateEnterThrowingCode();
+
     // Ditch error page if it was created before.
     // A new one will be created if there's another problem
     delete err;
@@ -1027,6 +1030,8 @@ FwdState::connectStart()
     destinations->notificationPending = true; // start() is async
     connOpener = cs;
     AsyncJob::Start(cs);
+
+    FwdStateExitThrowingCode([] { /* no conn to cleanup yet */ });
 }
 
 /// send request on an existing connection dedicated to the requesting client
