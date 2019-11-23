@@ -246,14 +246,14 @@ Acl::ParseFlags(const Options &options, const ParameterFlags &flags)
 const Acl::Options &
 Acl::NoOptions()
 {
-    static const Options none = {};
+    static const Options none;
     return none;
 }
 
 const Acl::ParameterFlags &
 Acl::NoFlags()
 {
-    static const ParameterFlags none = {};
+    static const ParameterFlags none;
     return none;
 }
 
