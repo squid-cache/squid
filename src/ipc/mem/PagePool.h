@@ -49,7 +49,8 @@ public:
 
 private:
     Ipc::Mem::Pointer<PageStack> pageIndex; ///< free pages index
-    typedef std::atomic<size_t> Levels_t;
+    using Levels_t = PageStack::Levels_t;
+
     /// number of shared memory pages used now for each purpose
     Levels_t * const theLevels;
     char *const theBuf; ///< pages storage
