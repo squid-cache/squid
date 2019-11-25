@@ -37,6 +37,8 @@ libauth_la_SOURCES = \
 	SchemesConfig.cc \
 	State.h \
 	State.cc \
+	toUtf.h \
+	toUtf.cc \
 	User.h \
 	User.cc \
 	UserRequest.h \

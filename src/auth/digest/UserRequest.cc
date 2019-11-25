@@ -12,7 +12,7 @@
 #include "auth/digest/User.h"
 #include "auth/digest/UserRequest.h"
 #include "auth/State.h"
-#include "charset.h"
+#include "auth/toUtf.h"
 #include "format/Format.h"
 #include "helper.h"
 #include "helper/Reply.h"

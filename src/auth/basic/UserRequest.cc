@@ -12,7 +12,7 @@
 #include "auth/basic/UserRequest.h"
 #include "auth/QueueNode.h"
 #include "auth/State.h"
-#include "charset.h"
+#include "auth/toUtf.h"
 #include "Debug.h"
 #include "format/Format.h"
 #include "helper.h"
