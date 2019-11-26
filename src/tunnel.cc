@@ -182,7 +182,7 @@ public:
     void copyRead(Connection &from, IOCB *completion);
 
     /// continue to set up connection to a peer, going async for SSL peers
-    void connectToPeer(const Comm::ConnectionPointer &conn);
+    void connectToPeer(const Comm::ConnectionPointer &);
     void secureConnectionToPeer(const Comm::ConnectionPointer &);
 
     /* PeerSelectionInitiator API */
@@ -238,10 +238,10 @@ private:
     void usePinned();
 
     /// callback handler for the Security::PeerConnector encryptor
-    void noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answer);
+    void noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &);
 
     /// called after connection setup (including any encryption)
-    void connectedToPeer(const Comm::ConnectionPointer &conn);
+    void connectedToPeer(const Comm::ConnectionPointer &);
     void establishTunnelThruProxy(const Comm::ConnectionPointer &);
 
     template <typename StepStart>

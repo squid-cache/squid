@@ -56,11 +56,6 @@ Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerCon
     comm_add_close_handler(serverConn->fd, closeHandler);
 }
 
-Security::PeerConnector::~PeerConnector()
-{
-    // TODO: Remove if it stays empty.
-}
-
 bool Security::PeerConnector::doneAll() const
 {
     return (!callback || callback->canceled()) && AsyncJob::doneAll();
@@ -91,7 +86,7 @@ void
 Security::PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &)
 {
     debugs(83, 5, serverConnection() << " timedout. this=" << (void*)this);
-    auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al);
+    const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al);
     err->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
     bail(err);
 }
@@ -100,7 +95,7 @@ void
 Security::PeerConnector::connectionClosed(const char *reason)
 {
     debugs(83, 5, reason << " socket closed/closing. this=" << (void*)this);
-    auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
+    const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
     err->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
     bail(err);
 }

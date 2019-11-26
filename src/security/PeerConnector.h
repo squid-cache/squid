@@ -59,7 +59,7 @@ public:
                   AsyncCall::Pointer &aCallback,
                   const AccessLogEntryPointer &alp,
                   const time_t timeout = 0);
-    virtual ~PeerConnector();
+    virtual ~PeerConnector() = default;
 
     /// hack: whether the connection requires fwdPconnPool->noteUses()
     bool noteFwdPconnUse;

@@ -88,16 +88,16 @@ protected:
     void handleResponse(const bool eof);
     void bailOnResponseError(const char *error, HttpReply *);
 
-    /// Sends the given error to the initiator.
+    /// sends the given error to the initiator
     void bailWith(ErrorState*);
 
-    /// Sends the ready-to-use tunnel to the initiator.
+    /// sends the ready-to-use tunnel to the initiator
     void sendSuccess();
 
-    /// A bailWith(), sendSuccess() helper: sends results to the initiator.
+    /// a bailWith(), sendSuccess() helper: sends results to the initiator
     void callBack();
 
-    /// A bailWith(), sendSuccess() helper: stops monitoring the connection.
+    /// a bailWith(), sendSuccess() helper: stops monitoring the connection
     void disconnect();
 
     TunnelerAnswer &answer();
