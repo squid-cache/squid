@@ -102,6 +102,9 @@ public:
 
     void dontRetry(bool val) { flags.dont_retry = val; }
 
+    /// get rid of a to-server connection that failed to become serverConn
+    void closePendingConnection(const Comm::ConnectionPointer &conn, const char *reason);
+
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
@@ -131,6 +134,9 @@ private:
     /// (in order to retry or reforward a failed request)
     bool pinnedCanRetry() const;
 
+    template <typename StepStart>
+    void advanceDestination(const char *stepDescription, const Comm::ConnectionPointer &conn, const StepStart &startStep);
+
     ErrorState *makeConnectingError(const err_type type) const;
     void connectedToPeer(Security::EncryptorAnswer &answer);
     static void RegisterWithCacheManager(void);
@@ -138,6 +144,7 @@ private:
     void establishTunnelThruProxy(const Comm::ConnectionPointer &);
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
     void secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &);
+    void secureConnectionToPeer(const Comm::ConnectionPointer &conn);
     void successfullyConnectedToPeer(const Comm::ConnectionPointer &);
 
     /// stops monitoring server connection for closure and updates pconn stats
