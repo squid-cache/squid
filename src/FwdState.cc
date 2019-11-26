@@ -998,8 +998,6 @@ FwdState::connectStart()
     assert(!destinations->empty());
     assert(!opening());
 
-    FwdStateEnterThrowingCode();
-
     // Ditch error page if it was created before.
     // A new one will be created if there's another problem
     delete err;
@@ -1026,8 +1024,6 @@ FwdState::connectStart()
     destinations->notificationPending = true; // start() is async
     connOpener = cs;
     AsyncJob::Start(cs);
-
-    FwdStateExitThrowingCode([] { /* no conn to cleanup yet */ });
 }
 
 /// send request on an existing connection dedicated to the requesting client

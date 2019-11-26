@@ -1223,8 +1223,6 @@ TunnelStateData::cancelOpening(const char *reason)
 void
 TunnelStateData::startConnecting()
 {
-    TunnelStateEnterThrowingCode();
-
     if (request)
         request->hier.startPeerClock();
 
@@ -1238,8 +1236,6 @@ TunnelStateData::startConnecting()
     destinations->notificationPending = true; // start() is async
     connOpener = cs;
     AsyncJob::Start(cs);
-
-    TunnelStateExitThrowingCode([] { /* no conn to cleanup yet */ });
 }
 
 /// send request on an existing connection dedicated to the requesting client
