@@ -139,16 +139,16 @@ protected:
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }
 
-    /// Sends the given error to the initiator.
+    /// sends the given error to the initiator
     void bail(ErrorState *error);
 
-    /// Sends the encrypted connection to the initiator.
+    /// sends the encrypted connection to the initiator
     void sendSuccess();
 
-    /// A bail(), sendSuccess() helper: sends results to the initiator.
+    /// a bail(), sendSuccess() helper: sends results to the initiator
     void callBack();
 
-    /// A bail(), sendSuccess() helper: stops monitoring the connection.
+    /// a bail(), sendSuccess() helper: stops monitoring the connection
     void disconnect();
 
     /// If called the certificates validator will not used
