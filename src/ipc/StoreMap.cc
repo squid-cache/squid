@@ -253,6 +253,18 @@ Ipc::StoreMap::peekAtReader(const sfileno fileno) const
     return NULL;
 }
 
+const Ipc::StoreMap::Anchor *
+Ipc::StoreMap::peekAtWriter(const sfileno fileno) const
+{
+    const Anchor &s = anchorAt(fileno);
+    if (s.writing())
+        return &s; // immediate access by lock holder so no locking
+    if (s.reading())
+        return nullptr;
+    assert(false); // must be locked for reading or writing
+    return nullptr;
+}
+
 const Ipc::StoreMap::Anchor &
 Ipc::StoreMap::peekAtEntry(const sfileno fileno) const
 {

@@ -262,6 +262,9 @@ public:
     /// only works on locked entries; returns nil unless the slice is readable
     const Anchor *peekAtReader(const sfileno fileno) const;
 
+    /// only works on locked entries; returns nil unless the slice is writable
+    const Anchor *peekAtWriter(const sfileno fileno) const;
+
     /// only works on locked entries; returns the corresponding Anchor
     const Anchor &peekAtEntry(const sfileno fileno) const;
 

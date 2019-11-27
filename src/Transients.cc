@@ -251,6 +251,13 @@ Transients::addEntry(StoreEntry *e, const cache_key *key, const Store::IoStatus 
     }
 }
 
+bool
+Transients::hasWriter(const StoreEntry &e) {
+    if (!e.hasTransients() || !e.mem_obj)
+        return false;
+    return map->peekAtWriter(e.mem_obj->xitTable.index);
+}
+
 void
 Transients::noteFreeMapSlice(const Ipc::StoreMapSliceId)
 {

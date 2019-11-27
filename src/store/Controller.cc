@@ -355,6 +355,8 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
         const bool found = anchorToCache(entry, inSync);
         if (found && !inSync)
             throw TexcHere("cannot sync");
+        else if (!found && !transients->hasWriter(entry)) // cannot anchor right now and will not be able in the future
+            throw TexcHere("unattached transients entry");
     }
 }
 
