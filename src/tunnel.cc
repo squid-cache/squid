@@ -1078,7 +1078,7 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
         if (savedError)
             return sendError(savedError, "all found paths have failed");
 
-        return sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw(), al),
+        return sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request.getRaw(), al),
                          "path selection found no paths");
     }
     // else continue to use one of the previously noted destinations;
