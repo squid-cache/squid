@@ -274,6 +274,17 @@ peerSelectDnsPaths(ps_state *psstate)
         return;
     }
 
+    if (fs && fs->code == PINNED) {
+        // Send an empty IP address marked as PINNED
+        const Comm::ConnectionPointer p = new Comm::Connection();
+        p->peerType = PINNED;
+        psstate->paths->push_back(p);
+        psstate->servers = fs->next;
+        delete fs;
+        peerSelectDnsPaths(psstate);
+        return;
+    }
+
     // convert the list of FwdServer destinations into destinations IP addresses
     if (fs && psstate->paths->size() < (unsigned int)Config.forward_max_tries) {
         // send the next one off for DNS lookup.
