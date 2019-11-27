@@ -28,7 +28,7 @@ Ipc::Mem::PagePool::PagePool(const char *const id):
     pageIndex(shm_old(PageStack)(id)),
     theLevels(reinterpret_cast<Levels_t *>(
                   reinterpret_cast<char *>(pageIndex.getRaw()) +
-                  pageIndex->stackSize())),
+                  pageIndex->stackSize() + pageIndex->levelsPaddingSize())),
     theBuf(reinterpret_cast<char *>(theLevels + PageId::maxPurpose))
 {
 }

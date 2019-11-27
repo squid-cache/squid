@@ -843,6 +843,11 @@ Debug::Start(const int section, const int level)
 void
 Debug::Finish()
 {
+    // TODO: #include "base/CodeContext.h" instead if doing so works well.
+    extern std::ostream &CurrentCodeContextDetail(std::ostream &os);
+    if (Current->level <= DBG_IMPORTANT)
+        Current->buf << CurrentCodeContextDetail;
+
     // TODO: Optimize to remove at least one extra copy.
     _db_print(Current->forceAlert, "%s\n", Current->buf.str().c_str());
     Current->forceAlert = false;

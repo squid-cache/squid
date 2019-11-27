@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "base64.h"
+#include "base/CharacterSet.h"
 #include "getfullhostname.h"
 #include "html_quote.h"
 #include "ip/Address.h"
@@ -213,6 +214,21 @@ xstrtok(char **str, char del)
         return tok;
     } else
         return "";
+}
+
+bool
+hostname_check(const char *uri)
+{
+    static CharacterSet hostChars = CharacterSet("host",".:[]_") +
+            CharacterSet::ALPHA + CharacterSet::DIGIT;
+
+    const auto limit = strlen(uri);
+    for (size_t i = 0; i < limit; i++) {
+        if (!hostChars[uri[i]]) {
+              return false;
+        }
+    }
+    return true;
 }
 
 static void
@@ -807,9 +823,15 @@ process_request(cachemgr_request * req)
     } else if ((S = req->hostname))
         (void) 0;
     else {
-        snprintf(buf, sizeof(buf), "Unknown host: %s\n", req->hostname);
-        error_html(buf);
-        return 1;
+        if (hostname_check(req->hostname)) {
+            snprintf(buf, sizeof(buf), "Unknown Host: %s\n", req->hostname);
+            error_html(buf);
+            return 1;
+        } else {
+            snprintf(buf, sizeof(buf), "%s\n", "Invalid Hostname");
+            error_html(buf);
+            return 1;
+        }
     }
 
     S.port(req->port);

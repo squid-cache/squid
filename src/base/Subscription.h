@@ -50,7 +50,13 @@ class CallSubscription: public Subscription
 public:
     /// Must be passed an object. nil pointers are not permitted.
     explicit CallSubscription(const RefCount<Call_> &aCall) : call(aCall) { assert(aCall != NULL); }
-    virtual AsyncCall::Pointer callback() const { return new Call_(*call); }
+    virtual AsyncCall::Pointer callback() const
+    {
+        const AsyncCall::Pointer cb = new Call_(*call);
+        if (!cb->codeContext || CodeContext::Current())
+            cb->codeContext = CodeContext::Current();
+        return cb;
+    }
 
 private:
     const RefCount<Call_> call; ///< gets copied to create callback calls

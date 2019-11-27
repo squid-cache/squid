@@ -9,6 +9,8 @@
 #ifndef SQUID_FDE_H
 #define SQUID_FDE_H
 
+#include "base/CodeContext.h" /* XXX: Remove by de-inlining ctor and clear() */
+#include "base/forward.h"
 #include "comm.h"
 #include "defines.h"
 #include "ip/Address.h"
@@ -164,6 +166,12 @@ public:
                                                 nfmarkToServer in that this is the value we *receive* from the,
                                                 connection, whereas nfmarkToServer is the value to set on packets
                                                 *leaving* Squid.   */
+
+    // TODO: Remove: Auto-convert legacy SetSelect() callers to AsyncCalls like
+    // comm_add_close_handler(CLCB) does, making readMethod_/writeMethod_
+    // AsyncCalls and giving each read/write a dedicated context instead.
+    /// What the I/O handlers are supposed to work on.
+    CodeContextPointer codeContext;
 
 private:
     // I/O methods connect Squid to the device/stack/library fde represents

@@ -120,6 +120,49 @@ AccessLogEntry::~AccessLogEntry()
 #endif
 }
 
+ScopedId
+AccessLogEntry::codeContextGist() const
+{
+    if (request) {
+        if (const auto &mx = request->masterXaction)
+            return mx->id.detach();
+    }
+    // TODO: Carefully merge ALE and MasterXaction.
+    return ScopedId("ALE w/o master");
+}
+
+std::ostream &
+AccessLogEntry::detailCodeContext(std::ostream &os) const
+{
+    // TODO: Consider printing all instead of the first most important detail.
+
+    if (request) {
+        if (const auto &mx = request->masterXaction)
+            return os << Debug::Extra << "current master transaction: " << mx->id;
+    }
+
+    // provide helpful details since we cannot identify the transaction exactly
+
+    if (tcpClient)
+        return os << Debug::Extra << "current from-client connection: " << tcpClient;
+    else if (!cache.caddr.isNoAddr())
+        return os << Debug::Extra << "current client: " << cache.caddr;
+
+    const auto optionalMethod = [this,&os]() {
+        if (hasLogMethod())
+            os << getLogMethod() << ' ';
+        return "";
+    };
+    if (const auto uri = effectiveVirginUrl())
+        return os << Debug::Extra << "current client request: " << optionalMethod() << *uri;
+    else if (!url.isEmpty())
+        return os << Debug::Extra << "current request: " << optionalMethod() << url;
+    else if (hasLogMethod())
+        return os << Debug::Extra << "current request method: " << getLogMethod();
+
+    return os;
+}
+
 const SBuf *
 AccessLogEntry::effectiveVirginUrl() const
 {

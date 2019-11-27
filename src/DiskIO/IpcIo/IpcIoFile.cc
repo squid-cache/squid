@@ -9,6 +9,7 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
+#include "base/CodeContext.h"
 #include "base/RunnersRegistry.h"
 #include "base/TextException.h"
 #include "DiskIO/IORequestor.h"
@@ -332,7 +333,9 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
 {
     // prevent queue overflows: check for responses to earlier requests
     // warning: this call may result in indirect push() recursion
-    HandleResponses("before push");
+    CallService(nullptr, [] {
+        HandleResponses("before push");
+    });
 
     debugs(47, 7, HERE);
     Must(diskId >= 0);
@@ -460,16 +463,16 @@ void
 IpcIoFile::handleResponse(IpcIoMsg &ipcIo)
 {
     const int requestId = ipcIo.requestId;
-    debugs(47, 7, HERE << "popped disker response: " <<
-           SipcIo(KidIdentifier, ipcIo, diskId));
 
     Must(requestId);
     if (IpcIoPendingRequest *const pending = dequeueRequest(requestId)) {
-        pending->completeIo(&ipcIo);
-        delete pending; // XXX: leaking if throwing
+        CallBack(pending->codeContext, [&] {
+            debugs(47, 7, "popped disker response to " << SipcIo(KidIdentifier, ipcIo, diskId));
+            pending->completeIo(&ipcIo);
+            delete pending; // XXX: leaking if throwing
+        });
     } else {
-        debugs(47, 4, HERE << "LATE disker response to " << ipcIo.command <<
-               "; ipcIo" << KidIdentifier << '.' << requestId);
+        debugs(47, 4, "LATE disker response to " << SipcIo(KidIdentifier, ipcIo, diskId));
         // nothing we can do about it; completeIo() has been called already
     }
 }
@@ -556,13 +559,12 @@ IpcIoFile::checkTimeouts()
     typedef RequestMap::const_iterator RMCI;
     for (RMCI i = olderRequests->begin(); i != olderRequests->end(); ++i) {
         IpcIoPendingRequest *const pending = i->second;
-
-        const unsigned int requestId = i->first;
-        debugs(47, 7, HERE << "disker timeout; ipcIo" <<
-               KidIdentifier << '.' << requestId);
-
-        pending->completeIo(NULL); // no response
-        delete pending; // XXX: leaking if throwing
+        CallBack(pending->codeContext, [&] {
+            const auto requestId = i->first;
+            debugs(47, 7, "disker timeout; ipcIo" << KidIdentifier << '.' << requestId);
+            pending->completeIo(nullptr); // no response
+            delete pending; // XXX: leaking if throwing
+        });
     }
     olderRequests->clear();
 
@@ -575,10 +577,14 @@ IpcIoFile::checkTimeouts()
 void
 IpcIoFile::scheduleTimeoutCheck()
 {
-    // we check all older requests at once so some may be wait for 2*Timeout
-    eventAdd("IpcIoFile::CheckTimeouts", &IpcIoFile::CheckTimeouts,
-             reinterpret_cast<void *>(diskId), Timeout, 0, false);
-    timeoutCheckScheduled = true;
+    // We may be running in an I/O requestor CodeContext, but are scheduling
+    // one-for-all CheckTimeouts() that is not specific to any request.
+    CallService(nullptr, [&] {
+        // we check all older requests at once so some may be wait for 2*Timeout
+        eventAdd("IpcIoFile::CheckTimeouts", &IpcIoFile::CheckTimeouts,
+        reinterpret_cast<void *>(diskId), Timeout, 0, false);
+        timeoutCheckScheduled = true;
+    });
 }
 
 /// returns and forgets the right IpcIoFile pending request
@@ -629,7 +635,10 @@ IpcIoMsg::IpcIoMsg():
 /* IpcIoPendingRequest */
 
 IpcIoPendingRequest::IpcIoPendingRequest(const IpcIoFile::Pointer &aFile):
-    file(aFile), readRequest(NULL), writeRequest(NULL)
+    file(aFile),
+    readRequest(nullptr),
+    writeRequest(nullptr),
+    codeContext(CodeContext::Current())
 {
 }
 

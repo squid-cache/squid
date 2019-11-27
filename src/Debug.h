@@ -99,6 +99,10 @@ public:
 
     /// configures the active debugging context to write syslog ALERT
     static void ForceAlert();
+
+    /// prefixes each grouped debugs() line after the first one in the group
+    static std::ostream& Extra(std::ostream &os) { return os << "\n    "; }
+
 private:
     static Context *Current; ///< deepest active context; nil outside debugs()
 };

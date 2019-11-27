@@ -48,7 +48,7 @@ storeLog(int tag, const StoreEntry * e)
 
     ++storeLogTagsCounts[tag];
     if (mem != NULL) {
-        reply = e->getReply();
+        reply = &mem->freshestReply();
         /*
          * XXX Ok, where should we print the dir number here?
          * Because if we print it before the swap file number, it'll break

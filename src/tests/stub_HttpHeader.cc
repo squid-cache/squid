@@ -28,7 +28,7 @@ HttpHeader::~HttpHeader() {STUB}
 HttpHeader &HttpHeader::operator =(const HttpHeader &other) STUB_RETVAL(*this)
 void HttpHeader::clean() STUB
 void HttpHeader::append(const HttpHeader *) STUB
-bool HttpHeader::update(HttpHeader const *) STUB_RETVAL(false)
+void HttpHeader::update(const HttpHeader *) STUB
 void HttpHeader::compact() STUB
 int HttpHeader::parse(const char *, size_t, Http::ContentLengthInterpreter &) STUB_RETVAL(-1)
 int HttpHeader::parse(const char *, size_t, bool, size_t &, Http::ContentLengthInterpreter &) STUB_RETVAL(-1)

@@ -168,6 +168,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 {
     setConn(aConn);
     al = new AccessLogEntry;
+    CodeContext::Reset(al);
     al->cache.start_time = current_time;
     if (aConn) {
         al->tcpClient = clientConnection = aConn->clientConnection;
@@ -1627,9 +1628,9 @@ ClientHttpRequest::sslBumpStart()
 bool
 ClientHttpRequest::gotEnough() const
 {
-    /** TODO: should be querying the stream. */
+    // TODO: See also (and unify with) clientReplyContext::storeNotOKTransferDone()
     int64_t contentLength =
-        memObject()->getReply()->bodySize(request->method);
+        memObject()->baseReply().bodySize(request->method);
     assert(contentLength >= 0);
 
     if (out.offset < contentLength)

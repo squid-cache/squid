@@ -124,12 +124,12 @@ HttpReply::MakeConnectionEstablished() {
     return rep;
 }
 
-HttpReply *
+HttpReplyPointer
 HttpReply::make304() const
 {
     static const Http::HdrType ImsEntries[] = {Http::HdrType::DATE, Http::HdrType::CONTENT_TYPE, Http::HdrType::EXPIRES, Http::HdrType::LAST_MODIFIED, /* eof */ Http::HdrType::OTHER};
 
-    HttpReply *rv = new HttpReply;
+    const HttpReplyPointer rv(new HttpReply);
     int t;
     HttpHeaderEntry *e;
 
@@ -159,9 +159,8 @@ HttpReply::packed304Reply() const
     /* Not as efficient as skipping the header duplication,
      * but easier to maintain
      */
-    HttpReply *temp = make304();
+    const auto temp = make304();
     MemBuf *rv = temp->pack();
-    delete temp;
     return rv;
 }
 
@@ -260,23 +259,20 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
     return 1;
 }
 
-bool
-HttpReply::updateOnNotModified(HttpReply const * freshRep)
+HttpReply::Pointer
+HttpReply::recreateOnNotModified(const HttpReply &reply304) const
 {
-    assert(freshRep);
+    // If enough 304s do not update, then this expensive checking is cheaper
+    // than blindly storing reply prefix identical to the already stored one.
+    if (!header.needUpdate(&reply304.header))
+        return nullptr;
 
-    /* update raw headers */
-    if (!header.update(&freshRep->header))
-        return false;
-
-    /* clean cache */
-    hdrCacheClean();
-
-    header.compact();
-    /* init cache */
-    hdrCacheInit();
-
-    return true;
+    const Pointer cloned = clone();
+    cloned->header.update(&reply304.header);
+    cloned->hdrCacheClean();
+    cloned->header.compact();
+    cloned->hdrCacheInit();
+    return cloned;
 }
 
 /* internal routines */

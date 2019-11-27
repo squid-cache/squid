@@ -677,20 +677,36 @@ Store::Controller::handleIdleEntry(StoreEntry &e)
 }
 
 void
-Store::Controller::updateOnNotModified(StoreEntry *old, const StoreEntry &newer)
+Store::Controller::updateOnNotModified(StoreEntry *old, StoreEntry &e304)
 {
-    /* update the old entry object */
     Must(old);
-    HttpReply *oldReply = const_cast<HttpReply*>(old->getReply());
-    Must(oldReply);
+    Must(old->mem_obj);
+    Must(e304.mem_obj);
 
-    const bool modified = oldReply->updateOnNotModified(newer.getReply());
-    if (!old->timestampsSet() && !modified)
+    // updateOnNotModified() may be called many times for the same old entry.
+    // e304.mem_obj->appliedUpdates value distinguishes two cases:
+    //   false: Independent store clients revalidating the same old StoreEntry.
+    //          Each such update uses its own e304. The old StoreEntry
+    //          accumulates such independent updates.
+    //   true: Store clients feeding off the same 304 response. Each such update
+    //         uses the same e304. For timestamps correctness and performance
+    //         sake, it is best to detect and skip such repeated update calls.
+    if (e304.mem_obj->appliedUpdates) {
+        debugs(20, 5, "ignored repeated update of " << *old << " with " << e304);
         return;
+    }
+    e304.mem_obj->appliedUpdates = true;
 
-    // XXX: Call memStore->updateHeaders(old) and swapDir->updateHeaders(old) to
-    // update stored headers, stored metadata, and in-transit metadata.
-    debugs(20, 3, *old << " headers were modified: " << modified);
+    if (!old->updateOnNotModified(e304)) {
+        debugs(20, 5, "updated nothing in " << *old << " with " << e304);
+        return;
+    }
+
+    if (sharedMemStore && old->mem_status == IN_MEMORY && !EBIT_TEST(old->flags, ENTRY_SPECIAL))
+        sharedMemStore->updateHeaders(old);
+
+    if (old->swap_dirn > -1)
+        swapDir->updateHeaders(old);
 }
 
 bool

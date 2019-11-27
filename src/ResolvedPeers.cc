@@ -65,14 +65,11 @@ ResolvedPeers::findSpareOrNextPeer(const Comm::Connection &currentPeer)
     const auto familyToAvoid = ConnectionFamily(currentPeer);
     // Optimization: Also stop at the first mismatching peer because all
     // same-peer paths are grouped together.
-    auto found = std::find_if(paths_.begin(), paths_.end(),
+    return std::find_if(paths_.begin(), paths_.end(),
     [peerToMatch, familyToAvoid](const Comm::ConnectionPointer &conn) {
         return peerToMatch != conn->getPeer() ||
                familyToAvoid != ConnectionFamily(*conn);
     });
-    if (found != paths_.end() && peerToMatch == (*found)->getPeer())
-        return found;
-    return paths_.end();
 }
 
 Comm::ConnectionPointer

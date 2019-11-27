@@ -11,6 +11,8 @@
 #ifndef _SQUIDCONNECTIONDETAIL_H_
 #define _SQUIDCONNECTIONDETAIL_H_
 
+#include "base/CodeContext.h"
+#include "base/InstanceId.h"
 #include "comm/forward.h"
 #include "defines.h"
 #if USE_SQUID_EUI
@@ -62,7 +64,7 @@ namespace Comm
  * These objects should not be passed around directly,
  * but a Comm::ConnectionPointer should be passed instead.
  */
-class Connection : public RefCountable
+class Connection: public CodeContext
 {
     MEMPROXY_CLASS(Comm::Connection);
 
@@ -70,7 +72,7 @@ public:
     Connection();
 
     /** Clear the connection properties and close any open socket. */
-    ~Connection();
+    virtual ~Connection();
 
     /** Copy an existing connections IP and properties.
      * This excludes the FD. The new copy will be a closed connection.
@@ -123,6 +125,10 @@ public:
     Security::NegotiationHistory *tlsNegotiations();
     const Security::NegotiationHistory *hasTlsNegotiations() const {return tlsHistory;}
 
+    /* CodeContext API */
+    virtual ScopedId codeContextGist() const override;
+    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
+
 private:
     /** These objects may not be exactly duplicated. Use copyDetails() instead. */
     Connection(const Connection &c);
@@ -168,6 +174,8 @@ public:
     Eui::Eui48 remoteEui48;
     Eui::Eui64 remoteEui64;
 #endif
+
+    InstanceId<Connection> id;
 
 private:
     /** cache_peer data object (if any) */
