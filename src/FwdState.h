@@ -117,6 +117,11 @@ private:
     void doneWithRetries();
     void completed();
     void retryOrBail();
+
+    /// whether a pinned to-peer connection can be replaced with another one
+    /// (in order to retry or reforward a failed request)
+    bool pinnedCanRetry() const;
+
     ErrorState *makeConnectingError(const err_type type) const;
     void connectedToPeer(Security::EncryptorAnswer &answer);
     static void RegisterWithCacheManager(void);

@@ -587,6 +587,9 @@ FwdState::checkRetry()
     if (!entry->isEmpty())
         return false;
 
+    if (request->flags.pinned && !pinnedCanRetry())
+        return false;
+
     if (exhaustedTries())
         return false;
 
@@ -1068,6 +1071,11 @@ FwdState::reforward()
 
     debugs(17, 3, HERE << e->url() << "?" );
 
+    if (request->flags.pinned && !pinnedCanRetry()) {
+        debugs(17, 3, "pinned connection; cannot retry");
+        return 0;
+    }
+
     if (!EBIT_TEST(e->flags, ENTRY_FWD_HDR_WAIT)) {
         debugs(17, 3, HERE << "No, ENTRY_FWD_HDR_WAIT isn't set");
         return 0;
@@ -1227,6 +1235,28 @@ bool
 FwdState::exhaustedTries() const
 {
     return n_tries >= Config.forward_max_tries;
+}
+
+bool
+FwdState::pinnedCanRetry() const
+{
+    assert(request->flags.pinned);
+
+    // pconn race on pinned connection: Currently we do not have any mechanism
+    // to retry current pinned connection path.
+    if (pconnRace == raceHappened)
+        return false;
+
+    // If a bumped connection was pinned, then the TLS client was given our peer
+    // details. Do not retry because we do not ensure that those details stay
+    // constant. Step1-bumped connections do not get our TLS peer details, are
+    // never pinned, and, hence, never reach this method.
+    if (request->flags.sslBumped)
+        return false;
+
+    // The other pinned cases are FTP proxying and connection-based HTTP
+    // authentication. TODO: Do these cases have restrictions?
+    return true;
 }
 
 /**** PRIVATE NON-MEMBER FUNCTIONS ********************************************/
