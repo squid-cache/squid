@@ -278,6 +278,9 @@ peerSelectDnsPaths(ps_state *psstate)
         // Send an empty IP address marked as PINNED
         const Comm::ConnectionPointer p = new Comm::Connection();
         p->peerType = PINNED;
+        // Caller requires to check for pinned connections through
+        // CachePeer object:
+        p->setPeer(fs->_peer.get());
         psstate->paths->push_back(p);
         psstate->servers = fs->next;
         delete fs;
