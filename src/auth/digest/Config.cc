@@ -20,6 +20,7 @@
 #include "auth/digest/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
+#include "auth/toUtf.h"
 #include "base/LookupTable.h"
 #include "base64.h"
 #include "cache_cf.h"
@@ -807,8 +808,14 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *, const 
         switch (t) {
         case DIGEST_USERNAME:
             safe_free(username);
-            if (value.size() != 0)
-                username = xstrndup(value.rawBuf(), value.size() + 1);
+            if (value.size() != 0) {
+		if (utf8) {
+                    const auto strUser = Latin1ToUtf8(value.termedBuf());
+                    username = xstrndup(strUser.rawContent(), strUser.length() + 1);
+		} else {
+                    username = xstrndup(value.rawBuf(), value.size() + 1);
+		}
+	    }
             debugs(29, 9, "Found Username '" << username << "'");
             break;
 
