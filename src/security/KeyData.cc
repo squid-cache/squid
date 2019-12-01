@@ -85,7 +85,7 @@ Security::KeyData::loadX509CertFromFile()
  * certificate details. If that verify check fails, do not add the CA.
  */
 void
-Security::KeyData::tryAddChainCa(Security::CertPointer &ca)
+Security::KeyData::tryAddChainCa(const Security::CertPointer &ca)
 {
     const auto name = CertSubjectName(ca);
 #if TLS_CHAIN_NO_SELFSIGNED
@@ -134,7 +134,7 @@ Security::KeyData::loadX509ChainFromFile()
         return;
     }
 
-    while (auto ca = CertPointer(PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr))) {
+    while (const auto ca = CertPointer(PEM_read_bio_X509(bio.get(), nullptr, nullptr, nullptr))) {
         tryAddChainCa(ca);
     }
 
@@ -156,7 +156,7 @@ Security::KeyData::loadX509ChainFromFile()
     }
 
     for (unsigned int i = 0; i < listSz ; ++i) {
-        CertPointer ca = Security::CertPointer(certChain[i], [](gnutls_x509_crt_t p) {
+        const auto ca = CertPointer(certChain[i], [](const gnutls_x509_crt_t p) {
             debugs(83, 5, "gnutls_x509_crt_deinit cert=" << (void*)p);
             gnutls_x509_crt_deinit(p);
         });

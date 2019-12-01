@@ -38,7 +38,7 @@ private:
     bool loadX509CertFromFile();
     void loadX509ChainFromFile();
     bool loadX509PrivateKeyFromFile();
-    void tryAddChainCa(Security::CertPointer &);
+    void tryAddChainCa(const Security::CertPointer &);
 };
 
 } // namespace Security
