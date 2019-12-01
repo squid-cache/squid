@@ -731,7 +731,7 @@ authDigestLogUsername(char *username, Auth::UserRequest::Pointer auth_user_reque
  * Auth_user structure.
  */
 Auth::UserRequest::Pointer
-Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *, const char *aRequestRealm)
+Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request, const char *aRequestRealm)
 {
     const char *item;
     const char *p;
@@ -809,9 +809,10 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *, const 
         case DIGEST_USERNAME:
             safe_free(username);
             if (value.size() != 0) {
-		if (utf8) {
-                    const auto strUser = Latin1ToUtf8(value.termedBuf());
-                    username = xstrndup(strUser.rawContent(), strUser.length() + 1);
+                const auto v = value.termedBuf();
+		if (utf8 && !isValidUtf8String(v, v + value.size())) {
+                    auto str = isCP1251EncodingAllowed(request) ? Cp1251ToUtf8(v) : Latin1ToUtf8(v);
+                    username = xstrndup(str.rawContent(), str.length() + 1);
 		} else {
                     username = xstrndup(value.rawBuf(), value.size() + 1);
 		}

@@ -23,7 +23,6 @@
 #include "auth/toUtf.h"
 #include "base64.h"
 #include "cache_cf.h"
-#include "errorpage.h"
 #include "helper.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
@@ -153,49 +152,6 @@ authenticateBasicStats(StoreEntry * sentry)
 {
     if (basicauthenticators)
         basicauthenticators->packStatsInto(sentry, "Basic Authenticator Statistics");
-}
-
-/**
- * Parse Accept-Language header and return whether a CP1251 encoding
- * allowed or not.
- *
- * CP1251 (aka Windows-1251) is an 8-bit character encoding, designed
- * to cover languages that use the Cyrillic script.
- */
-static bool
-isCP1251EncodingAllowed(const HttpRequest *request)
-{
-    String hdr;
-
-    if (!request || !request->header.getList(Http::HdrType::ACCEPT_LANGUAGE, &hdr))
-        return false;
-
-    char lang[256];
-    size_t pos = 0; // current parsing position in header string
-
-    while (strHdrAcptLangGetItem(hdr, lang, 256, pos)) {
-
-        /* wildcard uses the configured default language */
-        if (lang[0] == '*' && lang[1] == '\0')
-            return false;
-
-        if ((strncmp(lang, "ru", 2) == 0 // Russian
-                || strncmp(lang, "uk", 2) == 0 // Ukrainian
-                || strncmp(lang, "be", 2) == 0 // Belorussian
-                || strncmp(lang, "bg", 2) == 0 // Bulgarian
-                || strncmp(lang, "sr", 2) == 0)) { // Serbian
-            if (lang[2] == '-') {
-                if (strcmp(lang + 3, "latn") == 0) // not Cyrillic
-                    return false;
-            } else if (xisalpha(lang[2])) {
-                return false;
-            }
-
-            return true;
-        }
-    }
-
-    return false;
 }
 
 char *
