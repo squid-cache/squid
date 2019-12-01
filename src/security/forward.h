@@ -233,4 +233,3 @@ enum {
 };
 
 #endif /* SQUID_SRC_SECURITY_FORWARD_H */
-
