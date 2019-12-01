@@ -810,13 +810,13 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
             safe_free(username);
             if (value.size() != 0) {
                 const auto v = value.termedBuf();
-		if (utf8 && !isValidUtf8String(v, v + value.size())) {
+                if (utf8 && !isValidUtf8String(v, v + value.size())) {
                     auto str = isCP1251EncodingAllowed(request) ? Cp1251ToUtf8(v) : Latin1ToUtf8(v);
                     username = xstrndup(str.rawContent(), str.length() + 1);
-		} else {
+                } else {
                     username = xstrndup(value.rawBuf(), value.size() + 1);
-		}
-	    }
+                }
+            }
             debugs(29, 9, "Found Username '" << username << "'");
             break;
 
