@@ -330,6 +330,9 @@ TunnelStateData::handleServerClosure()
 void
 TunnelStateData::handleClientClosure()
 {
+    debugs(26, 3, client.conn);
+    client.resetCloseHandler();
+
     client.conn = nullptr;
     client.writer = nullptr;
 
@@ -352,8 +355,6 @@ static void
 tunnelClientClosed(const CommCloseCbParams &params)
 {
     const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
-    debugs(26, 3, tunnelState->client.conn);
-    tunnelState->client.resetCloseHandler();
     tunnelState->handleClientClosure();
 }
 
