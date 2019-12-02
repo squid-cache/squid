@@ -279,14 +279,14 @@ public:
     void copyClientBytes();
     void copyServerBytes();
 
-    /// client-to-Squid connection closure cleanup; may destroy us
-    void handleClientClosure();
+    /// handles client-to-Squid connection closure; may destroy us
+    void clientClosed();
+
+    /// handles Squid-to-server connection closure; may destroy us
+    void serverClosed();
 
     /// non-retriable Squid-to-server connection closure cleanup; may destroy us
     void handleServerClosure();
-
-    /// handles closures of the Squid-to-server connection, retries if needed
-    void serverClosed();
 
     /// tries connecting to another destination, if available,
     /// otherwise, initiates the transaction termination
@@ -331,7 +331,7 @@ TunnelStateData::handleServerClosure()
 }
 
 void
-TunnelStateData::handleClientClosure()
+TunnelStateData::clientClosed()
 {
     debugs(26, 3, client.conn);
     client.resetCloseHandler();
@@ -358,7 +358,7 @@ static void
 tunnelClientClosed(const CommCloseCbParams &params)
 {
     const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
-    tunnelState->handleClientClosure();
+    tunnelState->clientClosed();
 }
 
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
