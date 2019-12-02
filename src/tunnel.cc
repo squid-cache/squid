@@ -136,7 +136,10 @@ public:
 
         void error(int const xerrno);
         int debugLevelForError(int const xerrno) const;
+
+        /// end the open connection (if any) without calling our closing handler
         void close();
+
         void dataSent (size_t amount);
         /// writes 'b' buffer, setting the 'writer' member to 'callback'.
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
@@ -340,7 +343,7 @@ TunnelStateData::handleClientClosure()
         return deleteThis();
 
     if (!server.writer)
-        server.close();
+        server.conn->close();
 }
 
 /// handles closures of the Squid-to-server connection
