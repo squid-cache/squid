@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #include "sbuf/SBuf.h"
-#include "toUtf.h"
+#include "auth/toUtf.h"
 
 SBuf
 Latin1ToUtf8(const char *in)
