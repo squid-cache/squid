@@ -393,6 +393,11 @@ void
 TunnelStateData::serverClosed()
 {
     debugs(26, 3, server.conn);
+    server.resetCloseHandler();
+
+    server.conn = nullptr;
+    server.writer = nullptr;
+
     retryOrBail("server closed");
 }
 
@@ -411,7 +416,9 @@ TunnelStateData::checkRetry()
 void
 TunnelStateData::retryOrBail(const char *context)
 {
-    server.close();
+    assert(!server.writer);
+    server.close(); // may already be closed
+    server.conn = nullptr; // TODO: Why not in TunnelStateData::Connection::close()?
 
     if (checkRetry()) {
         if (!destinations->empty()) {
@@ -434,9 +441,6 @@ TunnelStateData::retryOrBail(const char *context)
         }
         *status_ptr = error->httpStatus;
     }
-
-    server.conn = nullptr;
-    server.writer = nullptr;
 
     if (request)
         request->hier.stopPeerClock(false);
