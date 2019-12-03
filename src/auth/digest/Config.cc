@@ -812,7 +812,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
                 const auto v = value.rawBuf();
                 if (utf8 && !isValidUtf8String(v, v + value.size())) {
                     auto str = isCP1251EncodingAllowed(request) ? Cp1251ToUtf8(v) : Latin1ToUtf8(v);
-                    value.limitInit(str.rawContent(), str.length());
+                    value = SBufToString(str);
                 }
                 username = xstrndup(value.rawBuf(), value.size() + 1);
             }
@@ -1085,4 +1085,3 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
 
     return digest_request;
 }
-
