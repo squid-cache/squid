@@ -131,6 +131,9 @@ public:
         template <typename Method>
         void initConnection(const Comm::ConnectionPointer &aConn, Method method, const char *name, TunnelStateData *tunnelState);
 
+        /// reacts to the external closure of our connection
+        void noteClosure();
+
         int bytesWanted(int lower=0, int upper = INT_MAX) const;
         void bytesIn(int const &);
 #if USE_DELAY_POOLS
@@ -147,9 +150,6 @@ public:
         void dataSent (size_t amount);
         /// writes 'b' buffer, setting the 'writer' member to 'callback'.
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
-
-        /// forgets the close handler (of the likely recently closed connection)
-        void resetCloseHandler() { closer = nullptr; }
 
         int len;
         char *buf;
@@ -306,12 +306,7 @@ tunnelServerClosed(const CommCloseCbParams &params)
 void
 TunnelStateData::serverClosed()
 {
-    debugs(26, 3, server.conn);
-    server.resetCloseHandler();
-
-    server.conn = nullptr;
-    server.writer = nullptr;
-
+    server.noteClosure();
     retryOrBail("server closed");
 }
 
@@ -326,11 +321,7 @@ tunnelClientClosed(const CommCloseCbParams &params)
 void
 TunnelStateData::clientClosed()
 {
-    debugs(26, 3, client.conn);
-    client.resetCloseHandler();
-
-    client.conn = nullptr;
-    client.writer = nullptr;
+    client.noteClosure();
 
     if (noConnections())
         return deleteThis();
@@ -734,6 +725,15 @@ TunnelStateData::Connection::initConnection(const Comm::ConnectionPointer &aConn
 }
 
 void
+TunnelStateData::Connection::noteClosure()
+{
+    debugs(26, 3, conn);
+    conn = nullptr;
+    closer = nullptr;
+    writer = nullptr; // may already be nil
+}
+
+void
 TunnelStateData::writeClientDone(char *, size_t len, Comm::Flag flag, int xerrno)
 {
     debugs(26, 3, HERE << client.conn << ", " << len << " bytes written, flag=" << flag);
@@ -798,7 +798,7 @@ TunnelStateData::Connection::close()
     if (Comm::IsConnOpen(conn)) {
         Must(closer);
         comm_remove_close_handler(conn->fd, closer);
-        resetCloseHandler();
+        closer = nullptr;
         conn->close();
     }
     conn = nullptr;
