@@ -127,6 +127,10 @@ public:
 
         ~Connection();
 
+        /// initiates Comm::Connection ownership, including closure monitoring
+        template <typename Method>
+        void initConnection(const Comm::ConnectionPointer &aConn, Method method, const char *name, TunnelStateData *tunnelState);
+
         int bytesWanted(int lower=0, int upper = INT_MAX) const;
         void bytesIn(int const &);
 #if USE_DELAY_POOLS
@@ -145,10 +149,6 @@ public:
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
 
         bool monitorsClosures() const { return bool(closer); }
-
-        /// (re)sets the connection and assigns a new close handler to it
-        template <typename Method>
-        void resetConnection(const Comm::ConnectionPointer &aConn, Method method, const char *name, TunnelStateData *tunnelState);
 
         /// forgets the close handler (of the likely recently closed connection)
         void resetCloseHandler() { closer = nullptr; }
@@ -378,7 +378,7 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     al = clientRequest->al;
     http = clientRequest;
 
-    client.resetConnection(clientRequest->getConn()->clientConnection, tunnelClientClosed, "tunnelClientClosed", this);
+    client.initConnection(clientRequest->getConn()->clientConnection, tunnelClientClosed, "tunnelClientClosed", this);
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
@@ -725,12 +725,12 @@ TunnelStateData::Connection::write(const char *b, int size, AsyncCall::Pointer &
 
 template <typename Method>
 void
-TunnelStateData::Connection::resetConnection(const Comm::ConnectionPointer &aConn, Method method, const char *name, TunnelStateData *tunnelState)
+TunnelStateData::Connection::initConnection(const Comm::ConnectionPointer &aConn, Method method, const char *name, TunnelStateData *tunnelState)
 {
+    Must(!Comm::IsConnOpen(conn));
+    Must(!closer);
     Must(Comm::IsConnOpen(aConn));
     conn = aConn;
-    if (closer)
-        comm_remove_close_handler(conn->fd, closer);
     closer = commCbCall(5, 4, name, CommCloseCbPtrFun(method, tunnelState));
     comm_add_close_handler(conn->fd, closer);
 }
@@ -1021,7 +1021,7 @@ void
 TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *origin, const bool reused)
 {
     Must(Comm::IsConnOpen(conn));
-    server.resetConnection(conn, tunnelServerClosed, "tunnelServerClosed", this);
+    server.initConnection(conn, tunnelServerClosed, "tunnelServerClosed", this);
 
     if (reused)
         ResetMarkingsToServer(request.getRaw(), *conn);
@@ -1365,7 +1365,7 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
 
     request->hier.resetPeerNotes(srvConn, tunnelState->getHost());
 
-    tunnelState->server.resetConnection(srvConn, tunnelServerClosed, "tunnelServerClosed", tunnelState);
+    tunnelState->server.initConnection(srvConn, tunnelServerClosed, "tunnelServerClosed", tunnelState);
 
 #if USE_DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
