@@ -291,24 +291,38 @@ public:
 };
 
 static ERCB tunnelErrorComplete;
+static CLCB tunnelServerClosed;
 static CLCB tunnelClientClosed;
 static CTCB tunnelTimeout;
 static EVH tunnelDelayedClientRead;
 static EVH tunnelDelayedServerRead;
 
-/// destroys the tunnel (after performing potentially-throwing cleanup)
-void
-TunnelStateData::deleteThis()
+/// TunnelStateData::serverClosed() wrapper
+static void
+tunnelServerClosed(const CommCloseCbParams &params)
 {
-    assert(noConnections());
-    // ConnStateData pipeline should contain the CONNECT we are performing
-    // but it may be invalid already (bug 4392)
-    if (const auto h = http.valid()) {
-        if (const auto c = h->getConn())
-            if (const auto ctx = c->pipeline.front())
-                ctx->finished();
-    }
-    delete this;
+    const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
+    tunnelState->serverClosed();
+}
+
+void
+TunnelStateData::serverClosed()
+{
+    debugs(26, 3, server.conn);
+    server.resetCloseHandler();
+
+    server.conn = nullptr;
+    server.writer = nullptr;
+
+    retryOrBail("server closed");
+}
+
+/// TunnelStateData::clientClosed() wrapper
+static void
+tunnelClientClosed(const CommCloseCbParams &params)
+{
+    const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
+    tunnelState->clientClosed();
 }
 
 void
@@ -327,19 +341,19 @@ TunnelStateData::clientClosed()
         server.conn->close();
 }
 
-/// handles closures of the Squid-to-server connection
-static void
-tunnelServerClosed(const CommCloseCbParams &params)
+/// destroys the tunnel (after performing potentially-throwing cleanup)
+void
+TunnelStateData::deleteThis()
 {
-    const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
-    tunnelState->serverClosed();
-}
-
-static void
-tunnelClientClosed(const CommCloseCbParams &params)
-{
-    const auto tunnelState = reinterpret_cast<TunnelStateData *>(params.data);
-    tunnelState->clientClosed();
+    assert(noConnections());
+    // ConnStateData pipeline should contain the CONNECT we are performing
+    // but it may be invalid already (bug 4392)
+    if (const auto h = http.valid()) {
+        if (const auto c = h->getConn())
+            if (const auto ctx = c->pipeline.front())
+                ctx->finished();
+    }
+    delete this;
 }
 
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
@@ -387,18 +401,6 @@ TunnelStateData::Connection::~Connection()
         eventDelete(readPendingFunc, readPending);
 
     safe_free(buf);
-}
-
-void
-TunnelStateData::serverClosed()
-{
-    debugs(26, 3, server.conn);
-    server.resetCloseHandler();
-
-    server.conn = nullptr;
-    server.writer = nullptr;
-
-    retryOrBail("server closed");
 }
 
 bool
@@ -952,7 +954,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 
     // TODO: Reuse to-peer connections after a CONNECT error response.
 
-    const auto error = answer.squidError.get();
+    ErrorState *error = answer.squidError.get();
     Must(error);
     saveError(error);
     answer.squidError.clear(); // preserve error for errorSendComplete()
@@ -1048,8 +1050,9 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
 
     if (!toOrigin)
         connectToPeer();
-    else
+    else {
         notePeerReadyToShovel();
+    }
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, this));
@@ -1123,7 +1126,7 @@ TunnelStateData::connectToPeer()
 void
 TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
 {
-    if (const auto error = answer.error.get()) {
+    if (ErrorState *error = answer.error.get()) {
         saveError(error);
         answer.error.clear();
         retryOrBail("TLS peer connection error");
