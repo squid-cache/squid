@@ -148,8 +148,6 @@ public:
         /// writes 'b' buffer, setting the 'writer' member to 'callback'.
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
 
-        bool monitorsClosures() const { return bool(closer); }
-
         /// forgets the close handler (of the likely recently closed connection)
         void resetCloseHandler() { closer = nullptr; }
 
@@ -798,7 +796,7 @@ void
 TunnelStateData::Connection::close()
 {
     if (Comm::IsConnOpen(conn)) {
-        Must(monitorsClosures());
+        Must(closer);
         comm_remove_close_handler(conn->fd, closer);
         resetCloseHandler();
         conn->close();
