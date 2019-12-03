@@ -283,6 +283,11 @@ Transients::completeWriting(const StoreEntry &e)
 {
     assert(e.hasTransients());
     assert(isWriter(e));
+    // The not freed Transients entry may eventually become 'unattached',
+    // so that it cannot be anchored anymore. Though we handle this situation,
+    // there are some risks the entry metadata becomes stale and, hence, we
+    // should drop such entries. TODO: should we drop this entry immediately to
+    // avoid such risks?
     map->switchWritingToReading(e.mem_obj->xitTable.index);
     e.mem_obj->xitTable.io = Store::ioReading;
 }
