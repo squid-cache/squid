@@ -285,9 +285,6 @@ public:
     /// handles Squid-to-server connection closure; may destroy us
     void serverClosed();
 
-    /// non-retriable Squid-to-server connection closure cleanup; may destroy us
-    void handleServerClosure();
-
     /// tries connecting to another destination, if available,
     /// otherwise, initiates the transaction termination
     void retryOrBail(const char *context);
@@ -312,22 +309,6 @@ TunnelStateData::deleteThis()
                 ctx->finished();
     }
     delete this;
-}
-
-void
-TunnelStateData::handleServerClosure()
-{
-    server.conn = nullptr;
-    server.writer = nullptr;
-
-    if (request)
-        request->hier.stopPeerClock(false);
-
-    if (noConnections())
-        return deleteThis();
-
-    if (!client.writer)
-        client.conn->close();
 }
 
 void
@@ -454,8 +435,19 @@ TunnelStateData::retryOrBail(const char *context)
         *status_ptr = error->httpStatus;
     }
 
-    // closing the non-HTTP client connection is the best we can do
-    handleServerClosure();
+    server.conn = nullptr;
+    server.writer = nullptr;
+
+    if (request)
+        request->hier.stopPeerClock(false);
+
+    if (noConnections())
+        return deleteThis();
+
+    // closing the client connection is the best we can do
+    if (!client.writer)
+        client.conn->close();
+    // else writeClientDone() must notice a closed server and close the client
 }
 
 int
