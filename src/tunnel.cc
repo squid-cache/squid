@@ -442,7 +442,11 @@ TunnelStateData::retryOrBail(const char *context)
             return;
         }
         *status_ptr = error->httpStatus;
+
+        // fall through to bail
     }
+
+    /* bail */
 
     if (request)
         request->hier.stopPeerClock(false);
