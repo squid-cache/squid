@@ -420,7 +420,6 @@ TunnelStateData::retryOrBail(const char *context)
 {
     assert(!server.writer);
     server.close(); // may already be closed
-    server.conn = nullptr; // TODO: Why not in TunnelStateData::Connection::close()?
 
     if (checkRetry()) {
         if (!destinations->empty()) {
@@ -804,6 +803,7 @@ TunnelStateData::Connection::close()
         resetCloseHandler();
         conn->close();
     }
+    conn = nullptr;
 }
 
 static void
