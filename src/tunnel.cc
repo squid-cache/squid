@@ -436,7 +436,8 @@ TunnelStateData::retryOrBail(const char *context)
     if (noConnections())
         return deleteThis();
 
-    // closing the client connection is the best we can do
+    // This is Comm::IsConnOpen(client.conn) && !clientExpectsConnectResponse().
+    // Closing the connection (after finishing writing) is the best we can do.
     if (!client.writer)
         client.conn->close();
     // else writeClientDone() must notice a closed server and close the client
