@@ -410,16 +410,12 @@ TunnelStateData::retryOrBail(const char *context)
     server.closeQuietly(); // may already be closed
 
     if (checkRetry()) {
-        if (!destinations->empty()) {
-            // XXX: opening() cannot be true when we have a (closing) connection
-            if (!opening())
-                startConnecting(); // try connecting to another destination
-            return;
-        }
+        if (!destinations->empty())
+            return startConnecting(); // try connecting to another destination
 
         if (subscribed) {
             debugs(26, 4, "wait for more destinations to try");
-            return;
+            return; // expect a noteDestination*() call
         }
 
         // fall through to bail
@@ -1281,7 +1277,7 @@ TunnelStateData::startConnecting()
         request->hier.startPeerClock();
 
     assert(!destinations->empty());
-
+    assert(!opening());
     calls.connector = asyncCall(17, 5, "TunnelStateData::noteConnection", HappyConnOpener::CbDialer<TunnelStateData>(&TunnelStateData::noteConnection, this));
     const auto cs = new HappyConnOpener(destinations, calls.connector, request, startTime, 0, al);
     cs->setHost(request->url.host());
