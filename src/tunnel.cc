@@ -422,14 +422,6 @@ TunnelStateData::retryOrBail(const char *context)
             return;
         }
 
-        const auto error = savedError ? savedError : new ErrorState(ERR_CANNOT_FORWARD,
-                Http::scInternalServerError, request.getRaw(), al);
-        if (Comm::IsConnOpen(client.conn) && clientExpectsConnectResponse()) {
-            sendError(error, context);
-            return;
-        }
-        *status_ptr = error->httpStatus;
-
         // fall through to bail
     }
 
@@ -437,6 +429,14 @@ TunnelStateData::retryOrBail(const char *context)
 
     if (request)
         request->hier.stopPeerClock(false);
+
+    const auto error = savedError ? savedError : new ErrorState(ERR_CANNOT_FORWARD,
+            Http::scInternalServerError, request.getRaw(), al);
+    if (Comm::IsConnOpen(client.conn) && clientExpectsConnectResponse()) {
+        sendError(error, context);
+        return;
+    }
+    *status_ptr = error->httpStatus;
 
     if (noConnections())
         return deleteThis();
