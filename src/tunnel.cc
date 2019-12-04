@@ -144,8 +144,8 @@ public:
         void error(int const xerrno);
         int debugLevelForError(int const xerrno) const;
 
-        /// end the open connection (if any) without calling our closing handler
-        void close();
+        /// end connection ownership (if any) w/o calling our closing handler
+        void closeQuietly();
 
         void dataSent (size_t amount);
         /// writes 'b' buffer, setting the 'writer' member to 'callback'.
@@ -407,8 +407,7 @@ TunnelStateData::checkRetry()
 void
 TunnelStateData::retryOrBail(const char *context)
 {
-    assert(!server.writer);
-    server.close(); // may already be closed
+    server.closeQuietly(); // may already be closed
 
     if (checkRetry()) {
         if (!destinations->empty()) {
@@ -793,15 +792,27 @@ TunnelStateData::closeConnections()
 }
 
 void
-TunnelStateData::Connection::close()
+TunnelStateData::Connection::closeQuietly()
 {
+    assert(!writer);
+
     if (Comm::IsConnOpen(conn)) {
         Must(closer);
         comm_remove_close_handler(conn->fd, closer);
         closer = nullptr;
         conn->close();
+        conn = nullptr;
+        return;
     }
-    conn = nullptr;
+
+    if (closer) {
+        Must(conn);
+        Must(fd_table[conn->fd].closing()); // explains false IsConnOpen()
+        // our close callback has already been scheduled
+        closer->cancel("no longer needed by tunnel");
+        closer = nullptr;
+        conn = nullptr;
+    }
 }
 
 static void
