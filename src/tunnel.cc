@@ -221,7 +221,6 @@ public:
     void notifyConnOpener();
 
     void saveError(ErrorState *finalError);
-    bool hasError() const { return savedError; }
     void sendError(ErrorState *finalError, const char *reason);
 
 private:
