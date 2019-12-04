@@ -1143,7 +1143,7 @@ TunnelStateData::connectedToPeer(Security::EncryptorAnswer &answer)
         saveError(error);
         answer.error.clear();
         retryOrBail("TLS peer connection error");
-        return; // tunnelServerClosed() will retry as needed
+        return;
     }
 
     assert(!waitingForConnectExchange);
