@@ -151,7 +151,6 @@ public:
         void dataSent (size_t amount);
         /// writes 'b' buffer, setting the 'writer' member to 'callback'.
         void write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func);
-
         int len;
         char *buf;
         AsyncCall::Pointer writer; ///< pending Comm::Write callback
