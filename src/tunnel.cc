@@ -123,6 +123,7 @@ public:
 
     public:
         Connection() : len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(NULL), delayedLoops(0),
+            dirty(false),
             readPending(NULL), readPendingFunc(NULL) {}
 
         ~Connection();
@@ -158,6 +159,8 @@ public:
 
         Comm::ConnectionPointer conn;    ///< The currently connected connection.
         uint8_t delayedLoops; ///< how many times a read on this connection has been postponed.
+
+        bool dirty; ///< whether write() has been called (at least once)
 
         // XXX: make these an AsyncCall when event API can handle them
         TunnelStateData *readPending;
@@ -430,16 +433,16 @@ TunnelStateData::retryOrBail(const char *context)
     // sendNewError() and sendSavedErrorOr(), used in "error detected" cases.
     const auto error = savedError ? savedError : new ErrorState(ERR_CANNOT_FORWARD,
             Http::scInternalServerError, request.getRaw(), al);
-    if (Comm::IsConnOpen(client.conn) && clientExpectsConnectResponse()) {
-        sendError(error, context);
-        return;
-    }
+    const auto canSendError = Comm::IsConnOpen(client.conn) && !client.dirty &&
+        clientExpectsConnectResponse();
+    if (canSendError)
+        return sendError(error, context);
     *status_ptr = error->httpStatus;
 
     if (noConnections())
         return deleteThis();
 
-    // This is Comm::IsConnOpen(client.conn) && !clientExpectsConnectResponse().
+    // This is a "Comm::IsConnOpen(client.conn) but !canSendError" case.
     // Closing the connection (after finishing writing) is the best we can do.
     if (!client.writer)
         client.conn->close();
@@ -707,6 +710,7 @@ void
 TunnelStateData::Connection::write(const char *b, int size, AsyncCall::Pointer &callback, FREE * free_func)
 {
     writer = callback;
+    dirty = true;
     Comm::Write(conn, b, size, callback, free_func);
 }
 
@@ -977,6 +981,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 void
 TunnelStateData::notePeerReadyToShovel()
 {
+    assert(!client.dirty);
     retriable = false;
     if (!clientExpectsConnectResponse())
         tunnelStartShoveling(this); // ssl-bumped connection, be quiet
