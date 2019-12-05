@@ -431,9 +431,9 @@ TunnelStateData::retryOrBail(const char *context)
     // Then, the remaining method code (below) should become the common part of
     // sendNewError() and sendSavedErrorOr(), used in "error detected" cases.
     const auto error = savedError ? savedError : new ErrorState(ERR_CANNOT_FORWARD,
-            Http::scInternalServerError, request.getRaw(), al);
+                       Http::scInternalServerError, request.getRaw(), al);
     const auto canSendError = Comm::IsConnOpen(client.conn) && !client.dirty &&
-        clientExpectsConnectResponse();
+                              clientExpectsConnectResponse();
     if (canSendError)
         return sendError(error, context);
     *status_ptr = error->httpStatus;
