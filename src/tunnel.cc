@@ -425,6 +425,9 @@ TunnelStateData::retryOrBail(const char *context)
     if (request)
         request->hier.stopPeerClock(false);
 
+    // TODO: Add sendSavedErrorOr(err_type type, Http::StatusCode, context).
+    // Then, the remaining method code (below) should become the common part of
+    // sendNewError() and sendSavedErrorOr(), used in "error detected" cases.
     const auto error = savedError ? savedError : new ErrorState(ERR_CANNOT_FORWARD,
             Http::scInternalServerError, request.getRaw(), al);
     if (Comm::IsConnOpen(client.conn) && clientExpectsConnectResponse()) {
