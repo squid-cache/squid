@@ -941,18 +941,13 @@ tunnelErrorComplete(int fd/*const Comm::ConnectionPointer &*/, void *data, size_
 void
 TunnelStateData::retryOrBail()
 {
-    assert(!serverDestinations.empty());
-    debugs(26, 4, "removing the failed one from " << serverDestinations.size() <<
-           " destinations: " << serverDestinations.front());
-    serverDestinations.erase(serverDestinations.begin());
-
     // Since no TCP payload has been passed to client or server, we may
     // TCP-connect to other destinations (including alternate IPs).
 
     if (!FwdState::EnoughTimeToReForward(startTime))
         return sendError(savedError, "forwarding timeout");
 
-    if (!serverDestinations.empty())
+    if (!destinations->empty())
         return startConnecting();
 
     if (!PeerSelectionInitiator::subscribed)

@@ -809,7 +809,7 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
     }
 
     // Check if we need to TLS before use
-    if (const auto *peer = conn->getPeer()) {
+    if (const auto *peer = answer.conn->getPeer()) {
         // Assume that it is only possible for the client-first from the
         // bumping modes to try connect to a remote server. The bumped
         // requests with other modes are using pinned connections or fails.
@@ -824,12 +824,12 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
                 !peer->options.originserver && // the "through a proxy" part
                 !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
 
-            return advanceDestination("establish tunnel thru proxy", conn, [this,&conn] {
-                establishTunnelThruProxy(conn);
+            return advanceDestination("establish tunnel thru proxy", answer.conn, [this,&answer] {
+                establishTunnelThruProxy(answer.conn);
             });
     }
 
-    secureConnectionToPeerIfNeeded(conn);
+    secureConnectionToPeerIfNeeded(answer.conn);
 }
 
 void
@@ -1078,8 +1078,6 @@ FwdState::usePinned()
     assert(connManager);
     if (connManager->pinnedAuth())
         request->flags.auth = true;
-
-    syncWithServerConn(connManager->pinning.host);
 
     // the server may close the pinned connection before this request
     const auto reused = true;
