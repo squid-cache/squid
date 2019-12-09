@@ -2302,46 +2302,12 @@ DOC_START
 
 	   tls-options=	Library specific options.
 
-			For OpenSSL these are SSL OP flags.
-			The most important being:
-
-			    NO_SSLv3    Disallow the use of SSLv3
-
-			    SINGLE_DH_USE
-				      Always create a new key when using
-				      temporary/ephemeral DH key exchanges
-
-			    SINGLE_ECDH_USE
-				      Enable ephemeral ECDH key exchange.
-				      The adopted curve should be specified
-				      using the tls-dh option.
-
-			    NO_TICKET
-				      Disable use of RFC5077 session tickets.
-				      Some servers may have problems
-				      understanding the TLS extension due
-				      to ambiguous specification in RFC4507.
-
-			    ALL       Enable various bug workarounds
-				      suggested as "harmless" by OpenSSL
-				      Be warned that this reduces SSL/TLS
-				      strength to some attacks.
-
+			For OpenSSL these are SSL OP flags (without the "SSL_OP_" prefix).
+			Options relevant only to SSLv2 are not supported.
 			see https://wiki.openssl.org/index.php/List_of_SSL_OP_Flags
-			for a more complete list. Options relevant only to SSLv2 are
-			not supported.
 
 			For GnuTLS these are a list of priority strings.
-			The most important being:
-
-				%NO_TICKETS
-				      Disable use of RFC5077 session tickets.
-				      Some servers may have problems
-				      understanding the TLS extension due
-				      to ambiguous specification in RFC4507.
-
 			see https://www.gnutls.org/manual/gnutls.html#Priority-Strings
-			for a more complete list and documentation.
 
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate.
@@ -3723,46 +3689,12 @@ DOC_START
 
 	tls-options=	Library specific options.
 
-			For OpenSSL these are SSL OP flags.
-			The most important being:
-
-			    NO_SSLv3    Disallow the use of SSLv3
-
-			    SINGLE_DH_USE
-				      Always create a new key when using
-				      temporary/ephemeral DH key exchanges
-
-			    SINGLE_ECDH_USE
-				      Enable ephemeral ECDH key exchange.
-				      The adopted curve should be specified
-				      using the tls-dh option.
-
-			    NO_TICKET
-				      Disable use of RFC5077 session tickets.
-				      Some servers may have problems
-				      understanding the TLS extension due
-				      to ambiguous specification in RFC4507.
-
-			    ALL       Enable various bug workarounds
-				      suggested as "harmless" by OpenSSL
-				      Be warned that this reduces SSL/TLS
-				      strength to some attacks.
-
+			For OpenSSL these are SSL OP flags (without the "SSL_OP_" prefix).
+			Options relevant only to SSLv2 are not supported.
 			see https://wiki.openssl.org/index.php/List_of_SSL_OP_Flags
-			for a more complete list. Options relevant only to SSLv2 are
-			not supported.
 
 			For GnuTLS these are a list of priority strings.
-			The most important being:
-
-				%NO_TICKETS
-				      Disable use of RFC5077 session tickets.
-				      Some servers may have problems
-				      understanding the TLS extension due
-				      to ambiguous specification in RFC4507.
-
 			see https://www.gnutls.org/manual/gnutls.html#Priority-Strings
-			for a more complete list and documentation.
 
 	tls-cafile=	PEM file containing CA certificates to use when verifying
 			the peer certificate. May be repeated to load multiple files.
@@ -9350,46 +9282,12 @@ DOC_START
 
 	tls-options=	Library specific options.
 
-			For OpenSSL these are SSL OP flags.
-			The most important being:
-
-			    NO_SSLv3    Disallow the use of SSLv3
-
-			    SINGLE_DH_USE
-				      Always create a new key when using
-				      temporary/ephemeral DH key exchanges
-
-			    SINGLE_ECDH_USE
-				      Enable ephemeral ECDH key exchange.
-				      The adopted curve should be specified
-				      using the tls-dh option.
-
-			    NO_TICKET
-				      Disable use of RFC5077 session tickets.
-				      Some servers may have problems
-				      understanding the TLS extension due
-				      to ambiguous specification in RFC4507.
-
-			    ALL       Enable various bug workarounds
-				      suggested as "harmless" by OpenSSL
-				      Be warned that this reduces SSL/TLS
-				      strength to some attacks.
-
+			For OpenSSL these are SSL OP flags (without the "SSL_OP_" prefix).
+			Options relevant only to SSLv2 are not supported.
 			see https://wiki.openssl.org/index.php/List_of_SSL_OP_Flags
-			for a more complete list. Options relevant only to SSLv2 are
-			not supported.
 
 			For GnuTLS these are a list of priority strings.
-			The most important being:
-
-				%NO_TICKETS
-				      Disable use of RFC5077 session tickets.
-				      Some servers may have problems
-				      understanding the TLS extension due
-				      to ambiguous specification in RFC4507.
-
 			see https://www.gnutls.org/manual/gnutls.html#Priority-Strings
-			for a more complete list and documentation.
 
 	tls-cafile=	PEM file containing CA certificates to use when verifying
 			the icap server certificate.
