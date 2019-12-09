@@ -1037,24 +1037,11 @@ AnyP::Uri::Cleanup(const SBuf &uri)
     case URI_WHITESPACE_DENY:
     case URI_WHITESPACE_STRIP:
     default: {
-        // TODO: avoid duplication with AnyP::Uri::parse()
-        const char *t;
-        char *tmp_uri = static_cast<char*>(xmalloc(uri.length() + 1));
-        char *q = tmp_uri;
+        // XXX: isspace() changes characters matched depending on locale
+        // XXX: we should only strip the wspStrip characters (if any)
+        flags |= RFC1738_ESCAPE_UNESCAPED | RFC1738_ERASE_ISSPACE;
         SBuf tmp = uri;
-        t = tmp.c_str();
-        while (*t) {
-            // XXX: isspace() changes characters matched depending on locale
-            // XXX: we should only strip the wspStrip characters (if any)
-            if (!xisspace(*t)) {
-                *q = *t;
-                ++q;
-            }
-            ++t;
-        }
-        *q = '\0';
-        cleanedUri = SBuf(rfc1738_escape_unescaped(tmp_uri));
-        xfree(tmp_uri);
+        cleanedUri = SBuf(rfc1738_do_escape(tmp.c_str(), flags));
     }
     break;
     }
