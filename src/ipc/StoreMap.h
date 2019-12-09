@@ -259,10 +259,12 @@ public:
     /// undoes partial update, unlocks, and cleans up
     void abortUpdating(Update &update);
 
-    /// only works on locked entries; returns nil unless the slice is readable
+    /// the caller must hold a lock on the entry
+    /// \returns nullptr unless the slice is readable
     const Anchor *peekAtReader(const sfileno fileno) const;
 
-    /// only works on locked entries; returns nil unless the slice is writable
+    /// the caller must hold a lock on the entry
+    /// \returns nullptr unless the slice is writeable
     const Anchor *peekAtWriter(const sfileno fileno) const;
 
     /// only works on locked entries; returns the corresponding Anchor
