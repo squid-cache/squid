@@ -66,13 +66,17 @@ rfc1738_do_escape(const char *url, int flags)
         bufsize = strlen(url) * 3 + 1;
         buf = (char*)xcalloc(bufsize, 1);
     }
-    for (src = url, dst = buf; *src != '\0' && dst < (buf + bufsize - 1); src++, dst++) {
+    for (src = url, dst = buf; *src != '\0' && dst < (buf + bufsize - 1); src++) {
 
         /* a-z, A-Z and 0-9 are SAFE. */
         if ((*src >= 'a' && *src <= 'z') || (*src >= 'A' && *src <= 'Z') || (*src >= '0' && *src <= '9')) {
             *dst = *src;
+            dst++;
             continue;
         }
+
+        if ((flags & RFC1738_ERASE_ISSPACE) && xisspace(*src))
+            continue;
 
         do_escape = 0;
 
@@ -113,10 +117,12 @@ rfc1738_do_escape(const char *url, int flags)
         }
         /* Do the triplet encoding, or just copy the char */
         if (do_escape == 1) {
-            (void) snprintf(dst, (bufsize-(dst-buf)), "%%%02X", (unsigned char) *src);
-            dst += sizeof(char) * 2;
+            int sz = snprintf(dst, (bufsize-(dst-buf)), "%%%02X", (unsigned char) *src);
+            assert(sz > 0);
+            dst += sz;
         } else {
             *dst = *src;
+            dst++;
         }
     }
     *dst = '\0';

@@ -21,6 +21,7 @@ extern "C" {
 // exclusions
 #define RFC1738_ESCAPE_NOSPACE     128
 #define RFC1738_ESCAPE_NOPERCENT   256
+#define RFC1738_ERASE_ISSPACE      512  // erase any character matched by isspace()
 // Backward compatibility
 #define RFC1738_ESCAPE_UNESCAPED   (RFC1738_ESCAPE_UNSAFE|RFC1738_ESCAPE_CTRLS|RFC1738_ESCAPE_NOPERCENT)
 
@@ -43,6 +44,8 @@ extern "C" {
  * \param flags  RFC1738_ESCAPE_ALL       Encode all binary CTRL, unsafe and reserved characters.
  * \param flags  RFC1738_ESCAPE_NOSPACE   Ignore the space whitespace character.
  * \param flags  RFC1738_ESCAPE_NOPERCENT Ignore the escaping delimiter '%'.
+ *
+ * \param flags  RFC1738_ERASE_ISSPACE    Erase any character matched by isspace().
  */
 extern char *rfc1738_do_escape(const char *url, int flags);
 
