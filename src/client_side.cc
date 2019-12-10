@@ -1153,7 +1153,7 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
         SBuf host(receivedHost);
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
         if (vport > 0) {
-            const size_t lastColonPos = host.rfind(':');
+            const auto lastColonPos = host.rfind(':');
             if (lastColonPos != SBuf::npos) {
                 if (*host.rbegin() != ']') {
                     // address with a port (IPv4, IPv6, or domain name)
@@ -1167,7 +1167,7 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
             }
         } // else nothing to alter port-wise.
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
-        const int url_sz = scheme.length() + host.length() + url.length() + 32;
+        const auto url_sz = scheme.length() + host.length() + url.length() + 32;
         char *uri = static_cast<char *>(xcalloc(url_sz, 1));
         snprintf(uri, url_sz, SQUIDSBUFPH "://" SQUIDSBUFPH SQUIDSBUFPH, SQUIDSBUFPRINT(scheme), SQUIDSBUFPRINT(host), SQUIDSBUFPRINT(url));
         debugs(33, 5, "ACCEL VHOST REWRITE: " << uri);
