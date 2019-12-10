@@ -101,7 +101,7 @@ Security::PeerConnector::connectionClosed(const char *reason)
 }
 
 void
-Security::PeerConnector::handleException(const std::exception& e)
+Security::PeerConnector::handleException(const std::exception &e)
 {
     debugs(83, 2, e.what() << status());
     bail(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));

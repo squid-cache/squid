@@ -66,7 +66,7 @@ public:
 #endif
 
     /* AsyncJob API */
-    virtual void callException(const std::exception &e);
+    virtual void callException(const std::exception &);
 
     /// hack: whether the connection requires fwdPconnPool->noteUses()
     bool noteFwdPconnUse;
