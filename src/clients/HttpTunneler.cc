@@ -132,6 +132,9 @@ Http::Tunneler::startReadingResponse()
 void
 Http::Tunneler::writeRequest()
 {
+    Must(Comm::IsConnOpen(connection));
+    Must(!fd_table[connection->fd].closing());
+
     debugs(83, 5, connection);
 
     Http::StateFlags flags;
