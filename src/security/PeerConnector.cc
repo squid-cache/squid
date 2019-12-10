@@ -100,6 +100,25 @@ Security::PeerConnector::connectionClosed(const char *reason)
     bail(err);
 }
 
+void
+Security::PeerConnector::handleException(const std::exception& e)
+{
+    debugs(83, 2, e.what() << status());
+    bail(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
+}
+
+void
+Security::PeerConnector::callException(const std::exception &e)
+{
+    debugs(83, 5, status());
+    try {
+        handleException(e);
+    } catch (const std::exception &ex) {
+        debugs(83, DBG_CRITICAL, ex.what());
+    }
+    AsyncJob::callException(e);
+}
+
 bool
 Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 {
