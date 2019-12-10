@@ -1148,9 +1148,9 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
     if (vport < 0)
         vport = conn->clientConnection->local.port();
 
-    char* _host = nullptr;
-    if (vhost && (_host = hp->getHostHeaderField())) {
-        SBuf host(_host);
+    char *receivedHost = nullptr;
+    if (vhost && (receivedHost = hp->getHostHeaderField())) {
+        SBuf host(receivedHost);
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
         if (vport > 0) {
             const size_t lastColonPos = host.rfind(':');
