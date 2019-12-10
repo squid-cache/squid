@@ -65,6 +65,9 @@ public:
     void setDelayId(DelayId delay_id) {delayId = delay_id;}
 #endif
 
+    /* AsyncJob API */
+    virtual void callException(const std::exception &e);
+
     /// hack: whether the connection requires fwdPconnPool->noteUses()
     bool noteFwdPconnUse;
 
