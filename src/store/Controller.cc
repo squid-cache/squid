@@ -356,18 +356,14 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
         if (found && !inSync)
             throw TexcHere("cannot sync");
         if (!found) {
-            if (transients->hasWriter(entry)) {
-                Transients::EntryStatus entryStatus;
-                transients->status(entry, entryStatus);
-                if (!entryStatus.collapsed) {
-                    debugs(20, DBG_IMPORTANT, "BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
-                    throw TexcHere("transients entry missing ENTRY_REQUIRES_COLLAPSING");
-                }
-            } else {
+            if (!transients->hasWriter(entry)) {
                 // Cannot anchor right now and will not be able in the future.
                 // Prevent others from falling into the same trap.
                 stopSharing(entry);
                 throw TexcHere("unattached transients entry");
+            } else if (!entry.hittingRequiresCollapsing()) {
+                debugs(20, DBG_IMPORTANT, "BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
+                throw TexcHere("transients entry missing ENTRY_REQUIRES_COLLAPSING");
             }
         }
     }

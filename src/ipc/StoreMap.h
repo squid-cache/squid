@@ -267,7 +267,8 @@ public:
     /// \returns nullptr unless the slice is writeable
     const Anchor *peekAtWriter(const sfileno fileno) const;
 
-    /// only works on locked entries; returns the corresponding Anchor
+    /// the caller must hold a lock on the entry
+    /// \returns the corresponding Anchor
     const Anchor &peekAtEntry(const sfileno fileno) const;
 
     /// free the entry if possible or mark it as waiting to be freed if not
