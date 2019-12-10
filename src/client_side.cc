@@ -1156,10 +1156,13 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
             const size_t lastColonPos = host.rfind(':');
             if (lastColonPos != SBuf::npos) {
                 if (*host.rbegin() != ']') {
+                    // address with a port (IPv4, IPv6, or domain name)
                     host.chop(0, lastColonPos); // truncate until the last colon
                     host.appendf(":%d", vport);
                 }
+                // else: IPv6 address without a port
             } else {
+                // IPv4 address without a port OR domain name without a port
                 host.appendf(":%d", vport);
             }
         } // else nothing to alter port-wise.
