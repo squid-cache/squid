@@ -14,7 +14,7 @@ dns_timeout 1 millisecond
 dns_timeout 0.001 seconds
 dns_timeout 0.001 minute
 dns_timeout 100 seconds
-dns_timeout 292 years
+dns_timeout 292 years # absolute maximum allowed
 
 # a second-precision parameter (time-units)
 
