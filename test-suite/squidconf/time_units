@@ -1,0 +1,37 @@
+## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+
+#
+# Tests for directives with time units
+#
+
+# a millisecond-precision parameter (time-units)
+
+dns_timeout 1 millisecond
+dns_timeout 0.001 seconds
+dns_timeout 0.001 minute
+dns_timeout 100 seconds
+dns_timeout 292 years
+
+# a second-precision parameter (time-units)
+
+max_stale 1 second
+max_stale 0.1 minute
+max_stale 100 seconds
+max_stale 29.2 decade
+max_stale 292 years
+
+# a multiple-options parameter
+
+url_rewrite_timeout 1 second on_timeout=bypass
+url_rewrite_timeout 0.001 year on_timeout=bypass
+url_rewrite_timeout 292 year on_timeout=bypass
+
+# should be a WARNING (-k parse)
+url_rewrite_timeout 1 on_timeout=bypass
+
+# TODO: a nanosecond-precison parameter (time-units-small)
+
