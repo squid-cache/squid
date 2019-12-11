@@ -1153,18 +1153,12 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
         SBuf host(receivedHost);
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
         if (vport > 0) {
+            // truncate existing port (if any), cope with IPv6+ without port
             const auto lastColonPos = host.rfind(':');
-            if (lastColonPos != SBuf::npos) {
-                if (*host.rbegin() != ']') {
-                    // address with a port (IPv4, IPv6, or domain name)
-                    host.chop(0, lastColonPos); // truncate until the last colon
-                    host.appendf(":%d", vport);
-                }
-                // else: IPv6 address without a port
-            } else {
-                // IPv4 address without a port OR domain name without a port
-                host.appendf(":%d", vport);
+            if (lastColonPos != SBuf::npos && *host.rbegin() != ']') {
+                host.chop(0, lastColonPos); // truncate until the last colon
             }
+            host.appendf(":%d", vport);
         } // else nothing to alter port-wise.
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
         const auto url_sz = scheme.length() + host.length() + url.length() + 32;
