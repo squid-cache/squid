@@ -450,6 +450,23 @@ Ipc::StoreMap::closeForReading(const sfileno fileno)
     debugs(54, 5, "closed entry " << fileno << " for reading " << path);
 }
 
+void
+Ipc::StoreMap::closeForReadingAndFreeIdle(const sfileno fileno)
+{
+    Anchor &s = anchorAt(fileno);
+    assert(s.reading());
+
+    if (!s.lock.unlockSharedAndSwitchToExclusive()) {
+        debugs(54, 5, "closed entry " << fileno << " for reading " << path);
+        return;
+    }
+
+    assert(s.writing());
+    assert(!s.reading());
+    freeChain(fileno, s, false);
+    debugs(54, 5, "closed idle entry " << fileno << " for reading " << path);
+}
+
 bool
 Ipc::StoreMap::openForUpdating(Update &update, const sfileno fileNoHint)
 {

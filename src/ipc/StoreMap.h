@@ -291,6 +291,8 @@ public:
     const Anchor *openForReadingAt(const sfileno fileno);
     /// closes open entry after reading, decrements read level
     void closeForReading(const sfileno fileno);
+    /// same as closeForReading() but also frees the entry if it is unlocked
+    void closeForReadingAndFreeIdle(const sfileno fileno);
 
     /// writeable slice within an entry chain created by openForWriting()
     Slice &writeableSlice(const AnchorId anchorId, const SliceId sliceId);

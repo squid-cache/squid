@@ -157,7 +157,7 @@ Transients::get(const cache_key *key)
     if (StoreEntry *oldE = locals->at(index)) {
         debugs(20, 3, "not joining private " << *oldE);
         assert(EBIT_TEST(oldE->flags, KEY_PRIVATE));
-        map->closeForReading(index);
+        map->closeForReadingAndFreeIdle(index);
         return nullptr;
     }
 
@@ -283,11 +283,6 @@ Transients::completeWriting(const StoreEntry &e)
 {
     assert(e.hasTransients());
     assert(isWriter(e));
-    // The not freed Transients entry may eventually become 'unattached',
-    // so that it cannot be anchored anymore. Though we handle this situation,
-    // there are some risks the entry metadata becomes stale and, hence, we
-    // should drop such entries. TODO: should we drop this entry immediately to
-    // avoid such risks?
     map->switchWritingToReading(e.mem_obj->xitTable.index);
     e.mem_obj->xitTable.io = Store::ioReading;
 }
@@ -338,7 +333,7 @@ Transients::disconnect(StoreEntry &entry)
             map->abortWriting(xitTable.index);
         } else {
             assert(isReader(entry));
-            map->closeForReading(xitTable.index);
+            map->closeForReadingAndFreeIdle(xitTable.index);
         }
         locals->at(xitTable.index) = nullptr;
         xitTable.index = -1;
