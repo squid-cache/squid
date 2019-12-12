@@ -1153,7 +1153,7 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
         SBuf host(receivedHost);
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
         if (vport > 0) {
-            // truncate existing port (if any), cope with IPv6+ without port
+            // remove existing :port (if any), cope with IPv6+ without port
             const auto lastColonPos = host.rfind(':');
             if (lastColonPos != SBuf::npos && *host.rbegin() != ']') {
                 host.chop(0, lastColonPos); // truncate until the last colon
