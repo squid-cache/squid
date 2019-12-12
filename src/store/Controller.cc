@@ -356,7 +356,12 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
         if (found && !inSync)
             throw TexcHere("cannot sync");
         if (!found) {
-            assert(transients->hasWriter(entry));
+            if (!transients->hasWriter(entry)) {
+                // prevent others from falling into the same trap
+                stopSharing(entry);
+                throw TexcHere("unattached transients entry missing writer");
+            }
+
             if (!entry.hittingRequiresCollapsing()) {
                 debugs(20, DBG_IMPORTANT, "BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
                 throw TexcHere("transients entry missing ENTRY_REQUIRES_COLLAPSING");
