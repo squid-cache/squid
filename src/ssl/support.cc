@@ -390,7 +390,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 }
 
 void
-Ssl::ConfigurePeerVerification(Security::ContextPointer &ctx, int flags)
+Ssl::ConfigurePeerVerification(Security::ContextPointer &ctx, const Security::ParsedPortFlags flags)
 {
     int mode;
 
@@ -559,7 +559,7 @@ Ssl::InitServerContext(Security::ContextPointer &ctx, AnyP::PortCfg &port)
 }
 
 bool
-Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &peer, long fl)
+Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &peer, Security::ParsedPortFlags fl)
 {
     if (!ctx)
         return false;

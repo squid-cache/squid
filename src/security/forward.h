@@ -137,6 +137,11 @@ typedef std::shared_ptr<struct gnutls_priority_st> ParsedOptions;
 class ParsedOptions {}; // we never parse/use TLS options in this case
 #endif
 
+/// bitmask representing configured http(s)_port `sslflags`
+/// as well tls_outgoing_options `flags`, cache_peer `sslflags`, and
+/// icap_service `tls-flags`
+typedef long ParsedPortFlags;
+
 class PeerConnector;
 class PeerOptions;
 

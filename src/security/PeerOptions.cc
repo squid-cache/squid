@@ -539,7 +539,7 @@ Security::PeerOptions::parseOptions()
 /**
  * Parses the TLS flags squid.conf parameter
  */
-long
+Security::ParsedPortFlags
 Security::PeerOptions::parseFlags()
 {
     if (sslFlags.isEmpty())
@@ -547,7 +547,7 @@ Security::PeerOptions::parseFlags()
 
     static struct {
         SBuf label;
-        long mask;
+        ParsedPortFlags mask;
     } flagTokens[] = {
         { SBuf("NO_DEFAULT_CA"), SSL_FLAG_NO_DEFAULT_CA },
         { SBuf("DELAYED_AUTH"), SSL_FLAG_DELAYED_AUTH },
@@ -565,9 +565,9 @@ Security::PeerOptions::parseFlags()
     ::Parser::Tokenizer tok(sslFlags);
     static const CharacterSet delims("Flag-delimiter", ":,");
 
-    long fl = 0;
+    ParsedPortFlags fl = 0;
     do {
-        long found = 0;
+        ParsedPortFlags found = 0;
         for (size_t i = 0; flagTokens[i].mask; ++i) {
             if (tok.skip(flagTokens[i].label)) {
                 found = flagTokens[i].mask;

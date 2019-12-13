@@ -53,8 +53,8 @@ namespace Ssl
 {
 int AskPasswordCb(char *, int, int, void *) STUB_RETVAL(0)
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &) STUB_RETVAL(false)
-bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, const char *) STUB_RETVAL(false)
-void ConfigurePeerVerification(Security::ContextPointer &, int) STUB
+bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, Security::ParsedPortFlags) STUB_RETVAL(false)
+void ConfigurePeerVerification(Security::ContextPointer &, const Security::ParsedPortFlags) STUB
 void DisablePeerVerification(Security::ContextPointer &) STUB
 void MaybeSetupRsaCallback(Security::ContextPointer &) STUB
 } // namespace Ssl
