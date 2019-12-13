@@ -413,7 +413,7 @@ Ssl::ConfigurePeerVerification(Security::ContextPointer &ctx, const Security::Pa
         mode = SSL_VERIFY_PEER|SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
     }
 
-    SSL_CTX_set_verify(ctx.get(),mode,(mode != SSL_VERIFY_NONE) ? ssl_verify_cb : nullptr);
+    SSL_CTX_set_verify(ctx.get(), mode, (mode != SSL_VERIFY_NONE) ? ssl_verify_cb : nullptr);
 }
 
 void
@@ -1330,3 +1330,4 @@ BIO *Ssl::BIO_new_SBuf(SBuf *buf)
 }
 
 #endif /* USE_OPENSSL */
+

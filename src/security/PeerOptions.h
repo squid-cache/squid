@@ -98,7 +98,7 @@ private:
     bool optsReparse = true;
 
 public:
-    ParsedPortFlags parsedFlags = 0;   ///< parsed value of sslFlags
+    ParsedPortFlags parsedFlags = 0; ///< parsed value of sslFlags
 
     std::list<Security::KeyData> certs; ///< details from the cert= and file= config parameters
     std::list<SBuf> caFiles;  ///< paths of files containing trusted Certificate Authority
