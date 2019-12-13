@@ -394,10 +394,7 @@ Ssl::ConfigurePeerVerification(Security::ContextPointer &ctx, const Security::Pa
 {
     int mode;
 
-    if ((flags & (SSL_FLAG_DONT_VERIFY_PEER|SSL_FLAG_CONDITIONAL_AUTH)) ==
-        (SSL_FLAG_DONT_VERIFY_PEER|SSL_FLAG_CONDITIONAL_AUTH))
-        throw TextException("ERROR: DONT_VERIFY_PEER and CONDITIONAL_AUTH are mutually exclusive", Here());
-
+    // assume each flag is exclusive; flags creator must check this assumption
     if (flags & SSL_FLAG_DONT_VERIFY_PEER) {
         debugs(83, DBG_IMPORTANT, "SECURITY WARNING: Peer certificates are not verified for validity!");
         debugs(83, DBG_IMPORTANT, "UPGRADE NOTICE: The DONT_VERIFY_PEER flag is deprecated. Remove the clientca= option to disable client certificates.");

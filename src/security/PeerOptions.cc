@@ -19,6 +19,8 @@
 #include "ssl/support.h"
 #endif
 
+#include <bitset>
+
 Security::PeerOptions Security::ProxyOutgoingConfig;
 
 Security::PeerOptions::PeerOptions()
@@ -586,9 +588,17 @@ Security::PeerOptions::parseFlags()
             fl |= found;
     } while (tok.skipOne(delims));
 
-    if ((fl & (SSL_FLAG_DONT_VERIFY_PEER|SSL_FLAG_CONDITIONAL_AUTH)) ==
-        (SSL_FLAG_DONT_VERIFY_PEER|SSL_FLAG_CONDITIONAL_AUTH))
-        throw TextException("DONT_VERIFY_PEER and CONDITIONAL_AUTH are mutually exclusive", Here());
+    const auto mutuallyExclusive =
+        SSL_FLAG_DONT_VERIFY_PEER|
+        SSL_FLAG_DELAYED_AUTH|
+        SSL_FLAG_CONDITIONAL_AUTH;
+    typedef std::bitset<sizeof(decltype(fl))> ParsedPortFlagBits;
+    if (ParsedPortFlagBits(fl & mutuallyExclusive).count() > 1) {
+        if (fl & SSL_FLAG_CONDITIONAL_AUTH)
+            throw TextException("CONDITIONAL_AUTH is not compatible with NO_DEFAULT_CA and DELAYED_AUTH flags", Here());
+        debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Mixtures of incompatible TLS flags" <<
+               " are deprecated and will become a fatal configuration error");
+    }
 
     return fl;
 }
