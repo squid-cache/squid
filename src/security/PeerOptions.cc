@@ -569,6 +569,7 @@ Security::PeerOptions::parseFlags()
     do {
         ParsedPortFlags found = 0;
         for (size_t i = 0; flagTokens[i].mask; ++i) {
+            // XXX: skips FOO in FOOBAR, missing merged flags and trailing typos
             if (tok.skip(flagTokens[i].label)) {
                 found = flagTokens[i].mask;
                 break;
@@ -587,7 +588,7 @@ Security::PeerOptions::parseFlags()
 
     if ((fl & (SSL_FLAG_DONT_VERIFY_PEER|SSL_FLAG_CONDITIONAL_AUTH)) ==
         (SSL_FLAG_DONT_VERIFY_PEER|SSL_FLAG_CONDITIONAL_AUTH))
-        fatal("ERROR: DONT_VERIFY_PEER and CONDITIONAL_AUTH are mutually exclusive");
+        throw TextException("DONT_VERIFY_PEER and CONDITIONAL_AUTH are mutually exclusive", Here());
 
     return fl;
 }
