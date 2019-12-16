@@ -387,12 +387,12 @@ Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext serve
     assert(context);
     const auto http = context->http;
     assert(http);
-    assert(http->request == server.request.getRaw());
+    assert(http->request);
 
     stopReading();
     Must(!writer);
 
-    switchToTunnel(server.request.getRaw(), clientConnection,
+    switchToTunnel(http->request, clientConnection,
                    server.connection(), server.preReadServerBytes);
 }
 

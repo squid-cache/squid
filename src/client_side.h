@@ -202,12 +202,11 @@ public:
     /// noteTakeServerConnectionControl() callback parameter
     class ServerConnectionContext {
     public:
-        ServerConnectionContext(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const SBuf &post101Bytes): request(req), preReadServerBytes(post101Bytes), conn_(conn) { conn_->enterOrphanage(); }
+        ServerConnectionContext(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const SBuf &post101Bytes): preReadServerBytes(post101Bytes), conn_(conn) { conn_->enterOrphanage(); }
 
         /// gives to-server connection to the new owner
         Comm::ConnectionPointer connection() { conn_->leaveOrphanage(); return conn_; }
 
-        HttpRequest::Pointer request; ///< the last to-server request on connection
         SBuf preReadServerBytes; ///< post-101 bytes received from the server
 
     private:
