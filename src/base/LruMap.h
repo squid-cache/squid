@@ -102,10 +102,14 @@ template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)
 void
 LruMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(size_t aSize)
 {
+    const auto oldLimit = memLimit_;
     if (aSize > 0)
         memLimit_ = aSize;
     else
         memLimit_ = 0;
+
+    if (oldLimit > memLimit_)
+        trim();
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
