@@ -77,8 +77,14 @@ Http::Tunneler::start()
     Must(url.length());
     Must(lifetimeLimit >= 0);
 
+    // bail if somebody closed the connection while we were waiting to start()
+    if (!Comm::IsConnOpen(connection) || fd_table[connection->fd].closing())
+        return bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
+
     const auto peer = connection->getPeer();
-    Must(peer); // bail if our peer was reconfigured away
+    // bail if our peer was reconfigured away
+    if (!peer)
+        return bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scInternalServerError, request.getRaw(), al));
     request->prepForPeering(*peer);
 
     writeRequest();
@@ -144,9 +150,6 @@ Http::Tunneler::startReadingResponse()
 void
 Http::Tunneler::writeRequest()
 {
-    if (!Comm::IsConnOpen(connection) || fd_table[connection->fd].closing())
-        return;
-
     debugs(83, 5, connection);
 
     Http::StateFlags flags;

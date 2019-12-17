@@ -68,6 +68,10 @@ Security::PeerConnector::start()
     AsyncJob::start();
     debugs(83, 5, "this=" << (void*)this);
 
+    // bail if somebody closed the connection while we were waiting to start()
+    if (!Comm::IsConnOpen(serverConn) || fd_table[serverConn->fd].closing())
+        return bail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
+
     Security::SessionPointer tmp;
     if (initialize(tmp))
         negotiate();
