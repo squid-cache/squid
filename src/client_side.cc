@@ -4092,6 +4092,6 @@ operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic)
 std::ostream &
 operator <<(std::ostream &os, const ConnStateData::ServerConnectionContext &scc)
 {
-    return os << scc.conn_ << ", srv_bytes="<< scc.preReadServerBytes.length();
+    return os << scc.conn_ << ", srv_bytes=" << scc.preReadServerBytes.length();
 }
 
