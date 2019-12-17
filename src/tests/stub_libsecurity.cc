@@ -53,8 +53,6 @@ PeerConnector::PeerConnector(const Comm::ConnectionPointer &, AsyncCall::Pointer
 void PeerConnector::start() STUB
 bool PeerConnector::doneAll() const STUB_RETVAL(true)
 void PeerConnector::swanSong() STUB
-void PeerConnector::callException(const std::exception &) STUB
-void PeerConnector::handleException(const std::exception &) STUB
 const char *PeerConnector::status() const STUB_RETVAL("")
 void PeerConnector::commCloseHandler(const CommCloseCbParams &) STUB
 void PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &) STUB

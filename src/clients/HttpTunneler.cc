@@ -120,25 +120,6 @@ Http::Tunneler::handleTimeout(const CommTimeoutCbParams &)
 }
 
 void
-Http::Tunneler::handleException(const std::exception& e)
-{
-    debugs(83, 2, e.what() << status());
-    bailWith(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
-}
-
-void
-Http::Tunneler::callException(const std::exception &e)
-{
-    debugs(83, 5, status());
-    try {
-        handleException(e);
-    } catch (const std::exception &ex) {
-        debugs(83, DBG_CRITICAL, ex.what());
-    }
-    AsyncJob::callException(e);
-}
-
-void
 Http::Tunneler::startReadingResponse()
 {
     debugs(83, 5, connection << status());

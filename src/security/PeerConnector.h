@@ -64,9 +64,6 @@ public:
     /// hack: whether the connection requires fwdPconnPool->noteUses()
     bool noteFwdPconnUse;
 
-    // AsyncJob API
-    virtual void callException(const std::exception &);
-
 protected:
     // AsyncJob API
     virtual void start();
@@ -82,9 +79,6 @@ protected:
 
     /// Inform us that the connection is closed. Does the required clean-up.
     void connectionClosed(const char *reason);
-
-    /// Handle exceptions
-    void handleException(const std::exception &);
 
     /// \returns true on successful TLS session initialization
     virtual bool initialize(Security::SessionPointer &);
