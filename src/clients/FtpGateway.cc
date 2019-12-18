@@ -585,7 +585,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
     /* locate the Month field */
     for (i = 3; i < n_tokens - 2; ++i) {
-        char *size = tokens[i - 1].token;
+        const auto size = tokens[i - 1].token;
         char *month = tokens[i].token;
         char *day = tokens[i + 1].token;
         char *year = tokens[i + 2].token;
@@ -602,7 +602,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
         if (regexec(&scan_ftp_time, year, 0, NULL, 0) != 0) /* Yr | hh:mm */
             continue;
 
-        char const *copyFrom = buf + tokens[i].pos;
+        const auto *copyFrom = buf + tokens[i].pos;
 
         // "MMM DD [ YYYY|hh:mm]" with at most two spaces between DD and YYYY
         auto dateSize = snprintf(tbuf, sizeof(tbuf), "%s %2s %5s", month, day, year);
