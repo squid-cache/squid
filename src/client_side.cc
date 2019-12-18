@@ -2158,14 +2158,15 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     if (tunnelOnError(HttpRequestMethod(), error))
         return;
 
+    auto doingTls = parsingTlsHandshake; // may be refined below
 #if USE_OPENSSL
-    const auto sslConn = fd_table[io.conn->fd].ssl.get();
-    const auto negotiatingTls = sslConn && !SSL_is_init_finished(sslConn);
+    if (!doingTls) {
+        const auto sslConn = fd_table[io.conn->fd].ssl.get();
+        doingTls = sslConn && !SSL_is_init_finished(sslConn);
+    }
 #else
     // XXX: Either support GnuTLS (in a regular https_port context) or explain why we cannot.
-    const auto negotiatingTls = false;
 #endif
-    const auto doingTls = parsingTlsHandshake || negotiatingTls;
     const auto errorDetail = doingTls ? ERR_DETAIL_TLS_HANDSHAKE_ABORTED : ERR_DETAIL_NONE;
     const auto context = pipeline.front();
     Must(context);
