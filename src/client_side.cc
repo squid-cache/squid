@@ -2160,7 +2160,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
 
 #if USE_OPENSSL
     const auto doingTls = parsingTlsHandshake ||
-                          (fd_table[io.fd].ssl && !SSL_is_init_finished(fd_table[io.fd].ssl.get()));
+                          (fd_table[io.conn->fd].ssl && !SSL_is_init_finished(fd_table[io.conn->fd].ssl.get()));
 #else
     const auto doingTls = false;
 #endif
