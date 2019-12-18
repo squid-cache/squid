@@ -3114,7 +3114,7 @@ void httpsSslBumpStep2AccessCheckDone(Acl::Answer answer, void *data)
         connState->startPeekAndSplice();
     } else if (!connState->splice()) {
         if (http && http->request)
-            http->request->detailError(ERR_SSL_BUMP_FAILURE, ERR_DETAIL_BUMP_SPLICE_FAIL);
+            http->request->detailError(ERR_SSL_BUMP_FAILURE, ERR_DETAIL_SSL_BUMP_SPLICE);
         connState->clientConnection->close();
     }
 }
