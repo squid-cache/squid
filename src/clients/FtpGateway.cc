@@ -662,7 +662,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
             p->size = strtoll(tokens[2].token, NULL, 10);
         }
 
-        snprintf(tbuf, 128, "%s %s", tokens[0].token, tokens[1].token);
+        snprintf(tbuf, sizeof(tbuf), "%s %s", tokens[0].token, tokens[1].token);
         p->date = xstrdup(tbuf);
 
         if (p->type == 'd') {
