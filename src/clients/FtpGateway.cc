@@ -531,7 +531,6 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 {
     ftpListParts *p = NULL;
     char *t = NULL;
-    const char *ct = NULL;
     struct FtpLineToken {
         char *token = nullptr; ///< token image copied from the received line
         size_t pos = 0;  ///< token offset on the received line
@@ -682,7 +681,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
     /* Try EPLF format; carson@lehman.com */
     if (buf[0] == '+') {
-        ct = buf + 1;
+        const char *ct = buf + 1;
         p->type = 0;
 
         while (ct && *ct) {
