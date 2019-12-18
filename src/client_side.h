@@ -285,8 +285,9 @@ public:
     /// for SQUID_X509_V_ERR_DOMAIN_MISMATCH on bumped requests.
     bool serveDelayedError(Http::Stream *);
 
-     /// Update current state after TLS  negotiation failed
-    void tlsNegotiateFailed(const int err);
+    /// initiate teardown of the from-client connection
+    /// after a TLS negotiation failure (with the given detail)
+    void tlsNegotiateFailed(const int errDetail);
 
     Ssl::BumpMode sslBumpMode; ///< ssl_bump decision (Ssl::bumpEnd if n/a).
 
