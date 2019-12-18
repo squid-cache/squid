@@ -533,8 +533,8 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
     char *t = NULL;
     const char *ct = NULL;
     struct FtpLineToken {
-        char *token;
-        size_t pos;
+        char *token = nullptr; ///< token image copied from the received line
+        size_t pos = 0;  ///< token offset on the received line
     } tokens[MAX_TOKENS];
     int i;
     int n_tokens;
