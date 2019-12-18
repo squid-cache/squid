@@ -667,7 +667,7 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
         if (p->type == 'd') {
             // Directory.. name begins with first printable after <dir>
-            // Because of the "n_tokens > 3" the next printable after <dir>
+            // Because of the "n_tokens > 3", the next printable after <dir>
             // is stored at token[3]. No need for more checks here.
         } else {
             // A file. Name begins after size, with a space in between.
