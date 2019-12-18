@@ -605,18 +605,19 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
         char const *copyFrom = buf + tokens[i].pos;
 
         // "MMM DD [ YYYY|hh:mm]" with at most two spaces between DD and YYYY
-        size_t dateSize = snprintf(tbuf, sizeof(tbuf), "%s %2s %5s", month, day, year);
+        auto dateSize = snprintf(tbuf, sizeof(tbuf), "%s %2s %5s", month, day, year);
         bool isTypeA = (dateSize == 12) && (strncmp(copyFrom, tbuf, dateSize) == 0);
 
         // "MMM DD [YYYY|hh:mm]" with one space between DD and YYYY
-        dateSize = snprintf(tbuf, 128, "%s %2s %-5s", month, day, year);
+        dateSize = snprintf(tbuf, sizeof(tbuf), "%s %2s %-5s", month, day, year);
         bool isTypeB = (dateSize == 12 || dateSize == 11) && (strncmp(copyFrom, tbuf, dateSize) == 0);
 
         // TODO: replace isTypeA and isTypeB with a regex.
         if (isTypeA || isTypeB) {
             p->type = *tokens[0].token;
             p->size = strtoll(size, NULL, 10);
-            snprintf(tbuf, sizeof(tbuf), "%s %2s %5s", month, day, year);
+            const auto finalDateSize = snprintf(tbuf, sizeof(tbuf), "%s %2s %5s", month, day, year);
+            assert(finalDateSize >= 0);
             p->date = xstrdup(tbuf);
 
             // point after tokens[i+2] :
