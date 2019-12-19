@@ -1125,9 +1125,6 @@ TunnelStateData::connectedToPeer(const Comm::ConnectionPointer &conn)
     advanceDestination("establish tunnel thru proxy", conn, [this,&conn] {
         establishTunnelThruProxy(conn);
     });
-    // XXX: In tests, if establishTunnelThruProxy() throws and
-    // advanceDestination() does not close, then conn remains open forever(?).
-    // The expected outcome is a "BUG #3329" warning in ~Connection.
 }
 
 void
