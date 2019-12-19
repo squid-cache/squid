@@ -527,7 +527,7 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
     //
     // For both Client and Server hello the legacy_version (highest supported
     // version for TLSv1.2 and earlier) must be set to 0x0303
-    if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3))
+    if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2))
         return;
 
     bool isHelloTLSv1_3 = false;
