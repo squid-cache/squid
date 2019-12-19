@@ -980,11 +980,7 @@ TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *or
         ResetMarkingsToServer(request.getRaw(), *conn);
     // else Comm::ConnOpener already applied proper/current markings
 
-    syncHierNote(server.conn, request->url.host());
-
-    request->hier.resetPeerNotes(conn, origin);
-    if (al)
-        al->hier.resetPeerNotes(conn, origin);
+    syncHierNote(conn, origin);
 
 #if USE_DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
