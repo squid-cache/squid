@@ -2187,6 +2187,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     bodyParser(nullptr),
 #if USE_OPENSSL
     sslBumpMode(Ssl::bumpEnd),
+    tlsParser(Security::HandshakeParser::fromClient),
 #endif
     needProxyProtocolHeader_(false),
 #if USE_OPENSSL

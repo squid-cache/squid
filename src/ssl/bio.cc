@@ -250,7 +250,8 @@ Ssl::ServerBio::ServerBio(const int anFd):
     parsedHandshake(false),
     parseError(false),
     bumpMode_(bumpNone),
-    rbufConsumePos(0)
+    rbufConsumePos(0),
+    parser_(Security::HandshakeParser::fromServer)
 {
 }
 

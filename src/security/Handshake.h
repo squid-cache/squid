@@ -52,15 +52,6 @@ std::ostream &operator <<(std::ostream &os, Security::TlsDetails const &details)
     return details.print(os);
 }
 
-/// TLS Handshake protocol's handshake types from RFC 8446 Section B.3
-enum HandshakeType {
-    hskClientHello = 1,
-    hskServerHello = 2,
-    hskCertificate = 11,
-    hskServerHelloDone = 14,
-    hskOther = 255
-};
-
 /// Incremental TLS/SSL Handshake parser.
 class HandshakeParser
 {
@@ -68,7 +59,9 @@ public:
     /// The parsing states
     typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived, atCertificatesReceived, atHelloDoneReceived, atNstReceived, atCcsReceived, atFinishReceived} ParserState;
 
-    HandshakeParser();
+    typedef enum {fromClient = 0, fromServer} MessageSource;
+
+    explicit HandshakeParser(MessageSource);
 
     /// Parses the initial sequence of raw bytes sent by the TLS/SSL agent.
     /// Returns true upon successful completion (e.g., got HelloDone).
@@ -84,7 +77,8 @@ public:
 
     bool resumingSession; ///< True if this is a resuming session
 
-    HandshakeType handshakeType; ///< hskClientHello or hskServerHello
+    ///< whether we are parsing Server or Client TLS handshake messages
+    MessageSource messageSource;
 private:
     bool isSslv2Record(const SBuf &raw) const;
     void parseRecord();

@@ -52,6 +52,14 @@ public:
     SBuf fragment;
 };
 
+/// TLS Handshake protocol's handshake types from RFC 5246 Section 7.4
+enum HandshakeType {
+    hskClientHello = 1,
+    hskServerHello = 2,
+    hskCertificate = 11,
+    hskServerHelloDone = 14
+};
+
 /// TLS Handshake Protocol frame from RFC 5246 Section 7.4.
 class Handshake
 {
@@ -179,11 +187,11 @@ Security::TlsDetails::TlsDetails():
 
 /* Security::HandshakeParser */
 
-Security::HandshakeParser::HandshakeParser():
+Security::HandshakeParser::HandshakeParser(MessageSource source):
     details(new TlsDetails),
     state(atHelloNone),
     resumingSession(false),
-    handshakeType(hskOther),
+    messageSource(source),
     currentContentType(0),
     done(nullptr),
     expectingModernRecords(false)
@@ -315,14 +323,14 @@ Security::HandshakeParser::parseHandshakeMessage()
     switch (message.msg_type) {
     case HandshakeType::hskClientHello:
         Must(state < atHelloReceived);
-        handshakeType = HandshakeType::hskClientHello;
+        Must(messageSource == fromClient);
         Security::HandshakeParser::parseClientHelloHandshakeMessage(message.msg_body);
         state = atHelloReceived;
         done = "ClientHello";
         return;
     case HandshakeType::hskServerHello:
         Must(state < atHelloReceived);
-        handshakeType = HandshakeType::hskServerHello;
+        Must(messageSource == fromServer);
         parseServerHelloHandshakeMessage(message.msg_body);
         state = atHelloReceived;
         return;
@@ -531,7 +539,7 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         return;
 
     bool isHelloTLSv1_3 = false;
-    if (handshakeType == hskClientHello) {
+    if (messageSource == fromClient) {
         Parser::BinaryTokenizer tkList(extensionData);
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersionsList"));
         while (!tkVersions.atEnd() && !isHelloTLSv1_3) {
@@ -540,7 +548,7 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
             if (aVersion == 0x0304)
                 isHelloTLSv1_3 = true;
         }
-    } else if (handshakeType == hskServerHello) {
+    } else if (messageSource == fromServer) {
         Parser::BinaryTokenizer tkVersion(extensionData);
         const auto supportedVersion = tkVersion.uint16(".supported_version");
         if (supportedVersion == 0x0304)
