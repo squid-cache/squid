@@ -20,7 +20,7 @@
 // We are using uint32_t for Pointer because PageId::number is uint32_t.
 // PageId::number should probably be uint64_t to accommodate larger caches.
 static_assert(sizeof(Ipc::Mem::PageStackStorageSlot::Pointer) ==
-    sizeof(decltype(Ipc::Mem::PageId::number)), "inconsistent page storage types");
+    sizeof(decltype(Ipc::Mem::PageId::number)), "page indexing types are consistent");
 
 void
 Ipc::Mem::PageStackStorageSlot::take()

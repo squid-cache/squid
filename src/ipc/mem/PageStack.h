@@ -36,7 +36,7 @@ public:
     static const Pointer NilPtr = std::numeric_limits<PointerOrMarker>::max();
     /// marks a slot of a used (i.e. take()n) page
     static const Marker TakenPage = std::numeric_limits<PointerOrMarker>::max() - 1;
-    static_assert(TakenPage != NilPtr, "unique page stack markers");
+    static_assert(TakenPage != NilPtr, "magic PointerOrMarker values do not clash");
 
     explicit PageStackStorageSlot(const Pointer next = NilPtr): nextOrMarker(next) {}
 
