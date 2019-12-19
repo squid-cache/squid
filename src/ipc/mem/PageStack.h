@@ -38,7 +38,7 @@ public:
     static const Marker TakenPage = std::numeric_limits<PointerOrMarker>::max() - 1;
     static_assert(TakenPage != NilPtr, "magic PointerOrMarker values do not clash");
 
-    explicit PageStackStorageSlot(const Pointer next = NilPtr): nextOrMarker(next) {}
+    explicit PageStackStorageSlot(const Pointer nxt = NilPtr): nextOrMarker(nxt) {}
 
     /// returns a (possibly nil) pointer to the next free page
     Pointer next() const { return nextOrMarker.load(); }
