@@ -574,6 +574,9 @@ Security::PeerConnector::sendSuccess()
 void
 Security::PeerConnector::disconnect()
 {
+    if (!Comm::IsConnOpen(serverConnection()))
+         return;
+
     if (closeHandler) {
         comm_remove_close_handler(serverConnection()->fd, closeHandler);
         closeHandler = nullptr;
