@@ -46,9 +46,9 @@ public:
     /// marks our page as used
     void take();
 
-    /// marks our page as free, to be used before the given `next` page;
+    /// marks our page as free, to be used before the given `nxt` page;
     /// also checks that the slot state matches the caller expectations
-    void put(const PointerOrMarker expected, const Pointer next);
+    void put(const PointerOrMarker expected, const Pointer nxt);
 
 private:
     std::atomic<PointerOrMarker> nextOrMarker;

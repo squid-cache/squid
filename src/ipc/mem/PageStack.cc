@@ -25,15 +25,15 @@ static_assert(sizeof(Ipc::Mem::PageStackStorageSlot::Pointer) ==
 void
 Ipc::Mem::PageStackStorageSlot::take()
 {
-    const auto next = nextOrMarker.exchange(TakenPage);
-    assert(next != TakenPage);
+    const auto nxt = nextOrMarker.exchange(TakenPage);
+    assert(nxt != TakenPage);
 }
 
 void
-Ipc::Mem::PageStackStorageSlot::put(const PointerOrMarker expected, const Pointer next)
+Ipc::Mem::PageStackStorageSlot::put(const PointerOrMarker expected, const Pointer nxt)
 {
-    assert(next != TakenPage);
-    const auto old = nextOrMarker.exchange(next);
+    assert(nxt != TakenPage);
+    const auto old = nextOrMarker.exchange(nxt);
     assert(old == expected);
 }
 
