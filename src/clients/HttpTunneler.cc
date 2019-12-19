@@ -377,7 +377,7 @@ Http::Tunneler::sendSuccess()
 void
 Http::Tunneler::disconnect()
 {
-    if (!connection)
+    if (!Comm::IsConnOpen(connection))
         return;
 
     if (closer) {
