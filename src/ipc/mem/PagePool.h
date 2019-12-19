@@ -27,7 +27,7 @@ class PagePool
 public:
     typedef Ipc::Mem::Owner<PageStack> Owner;
 
-    static Owner *Init(const char *const id, const unsigned int capacity, const size_t pageSize);
+    static Owner *Init(const char *const shmId, const uint32_t stackId, const unsigned int capacity, const size_t pageSize);
 
     PagePool(const char *const id);
 

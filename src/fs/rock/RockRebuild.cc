@@ -593,7 +593,7 @@ Rock::Rebuild::freeSlot(const SlotId slotId, const bool invalid)
     }
 
     Ipc::Mem::PageId pageId;
-    pageId.pool = sd->index+1;
+    pageId.pool = Ipc::Mem::PageStack::IdForSwapDirSpace(sd->index);
     pageId.number = slotId+1;
     sd->freeSlots->push(pageId);
 }

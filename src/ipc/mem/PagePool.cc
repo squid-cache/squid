@@ -16,12 +16,9 @@
 // Ipc::Mem::PagePool
 
 Ipc::Mem::PagePool::Owner *
-Ipc::Mem::PagePool::Init(const char *const id, const unsigned int capacity, const size_t pageSize)
+Ipc::Mem::PagePool::Init(const char *const shmId, const uint32_t stackId, const unsigned int capacity, const size_t pageSize)
 {
-    static uint32_t LastPagePoolId = 0;
-    if (++LastPagePoolId == 0)
-        ++LastPagePoolId; // skip zero pool id
-    return shm_new(PageStack)(id, LastPagePoolId, capacity, pageSize);
+    return shm_new(PageStack)(shmId, stackId, capacity, pageSize);
 }
 
 Ipc::Mem::PagePool::PagePool(const char *const id):

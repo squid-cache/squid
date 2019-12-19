@@ -24,6 +24,8 @@ Ipc::Mem::PageStack::PageStack(const uint32_t aPoolId, const unsigned int aCapac
     theLastReadable(prev(theSize)), theFirstWritable(next(theLastReadable)),
     theItems(aCapacity)
 {
+    assert(thePoolId);
+
     // initially, all pages are free
     for (Offset i = 0; i < theSize; ++i)
         theItems[i] = i + 1; // skip page number zero to keep numbers positive

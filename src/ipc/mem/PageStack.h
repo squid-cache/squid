@@ -57,6 +57,19 @@ public:
     static size_t LevelsPaddingSize(const unsigned int capacity);
     size_t levelsPaddingSize() const { return LevelsPaddingSize(theCapacity); }
 
+    /**
+     * The following functions return PageStack IDs for the corresponding
+     * PagePool or a similar PageStack user. The exact values are unimportant,
+     * but their uniqueness and stability eases debugging.
+     */
+
+    /// stack of free cache_mem slot positions
+    static uint32_t IdForMemStoreSpace() { return 10; }
+    /// multipurpose PagePool of shared memory pages
+    static uint32_t IdForMultipurposePool() { return 200; } // segments could use 2xx
+    /// stack of free rock cache_dir slot numbers
+    static uint32_t IdForSwapDirSpace(const int dirIdx) { return 900 + dirIdx + 1; }
+
 private:
     /// stack index and size type (may temporary go negative)
     typedef int Offset;

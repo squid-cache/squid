@@ -118,7 +118,9 @@ void
 SharedMemPagesRr::create()
 {
     Must(!owner);
-    owner = Ipc::Mem::PagePool::Init(PagePoolId, Ipc::Mem::PageLimit(),
+    owner = Ipc::Mem::PagePool::Init(PagePoolId,
+                                     Ipc::Mem::PageStack::IdForMultipurposePool(),
+                                     Ipc::Mem::PageLimit(),
                                      Ipc::Mem::PageSize());
 }
 
