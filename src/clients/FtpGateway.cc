@@ -532,8 +532,10 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 {
     ftpListParts *p = NULL;
     char *t = NULL;
-    const char *ct = NULL;
-    char *tokens[MAX_TOKENS];
+    struct FtpLineToken {
+        char *token = nullptr; ///< token image copied from the received line
+        size_t pos = 0;  ///< token offset on the received line
+    } tokens[MAX_TOKENS];
     int i;
     int n_tokens;
     static char tbuf[128];
@@ -574,7 +576,8 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
     }
 
     for (t = strtok(xbuf, w_space); t && n_tokens < MAX_TOKENS; t = strtok(NULL, w_space)) {
-        tokens[n_tokens] = xstrdup(t);
+        tokens[n_tokens].token = xstrdup(t);
+        tokens[n_tokens].pos = t - xbuf;
         ++n_tokens;
     }
 
@@ -582,10 +585,10 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
     /* locate the Month field */
     for (i = 3; i < n_tokens - 2; ++i) {
-        char *size = tokens[i - 1];
-        char *month = tokens[i];
-        char *day = tokens[i + 1];
-        char *year = tokens[i + 2];
+        const auto size = tokens[i - 1].token;
+        char *month = tokens[i].token;
+        char *day = tokens[i + 1].token;
+        char *year = tokens[i + 2].token;
 
         if (!is_month(month))
             continue;
@@ -599,23 +602,27 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
         if (regexec(&scan_ftp_time, year, 0, NULL, 0) != 0) /* Yr | hh:mm */
             continue;
 
-        snprintf(tbuf, 128, "%s %2s %5s",
-                 month, day, year);
+        const auto *copyFrom = buf + tokens[i].pos;
 
-        if (!strstr(buf, tbuf))
-            snprintf(tbuf, 128, "%s %2s %-5s",
-                     month, day, year);
+        // "MMM DD [ YYYY|hh:mm]" with at most two spaces between DD and YYYY
+        auto dateSize = snprintf(tbuf, sizeof(tbuf), "%s %2s %5s", month, day, year);
+        bool isTypeA = (dateSize == 12) && (strncmp(copyFrom, tbuf, dateSize) == 0);
 
-        char const *copyFrom = NULL;
+        // "MMM DD [YYYY|hh:mm]" with one space between DD and YYYY
+        dateSize = snprintf(tbuf, sizeof(tbuf), "%s %2s %-5s", month, day, year);
+        bool isTypeB = (dateSize == 12 || dateSize == 11) && (strncmp(copyFrom, tbuf, dateSize) == 0);
 
-        if ((copyFrom = strstr(buf, tbuf))) {
-            p->type = *tokens[0];
+        // TODO: replace isTypeA and isTypeB with a regex.
+        if (isTypeA || isTypeB) {
+            p->type = *tokens[0].token;
             p->size = strtoll(size, NULL, 10);
+            const auto finalDateSize = snprintf(tbuf, sizeof(tbuf), "%s %2s %5s", month, day, year);
+            assert(finalDateSize >= 0);
             p->date = xstrdup(tbuf);
 
+            // point after tokens[i+2] :
+            copyFrom = buf + tokens[i + 2].pos + strlen(tokens[i + 2].token);
             if (flags.skip_whitespace) {
-                copyFrom += strlen(tbuf);
-
                 while (strchr(w_space, *copyFrom))
                     ++copyFrom;
             } else {
@@ -627,7 +634,6 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                  * Assuming a single space between date and filename
                  * suggested by:  Nathan.Bailey@cc.monash.edu.au and
                  * Mike Battersby <mike@starbug.bofh.asn.au> */
-                copyFrom += strlen(tbuf);
                 if (strchr(w_space, *copyFrom))
                     ++copyFrom;
             }
@@ -647,45 +653,36 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
     /* try it as a DOS listing, 04-05-70 09:33PM ... */
     if (n_tokens > 3 &&
-            regexec(&scan_ftp_dosdate, tokens[0], 0, NULL, 0) == 0 &&
-            regexec(&scan_ftp_dostime, tokens[1], 0, NULL, 0) == 0) {
-        if (!strcasecmp(tokens[2], "<dir>")) {
+            regexec(&scan_ftp_dosdate, tokens[0].token, 0, NULL, 0) == 0 &&
+            regexec(&scan_ftp_dostime, tokens[1].token, 0, NULL, 0) == 0) {
+        if (!strcasecmp(tokens[2].token, "<dir>")) {
             p->type = 'd';
         } else {
             p->type = '-';
-            p->size = strtoll(tokens[2], NULL, 10);
+            p->size = strtoll(tokens[2].token, NULL, 10);
         }
 
-        snprintf(tbuf, 128, "%s %s", tokens[0], tokens[1]);
+        snprintf(tbuf, sizeof(tbuf), "%s %s", tokens[0].token, tokens[1].token);
         p->date = xstrdup(tbuf);
 
         if (p->type == 'd') {
-            /* Directory.. name begins with first printable after <dir> */
-            ct = strstr(buf, tokens[2]);
-            ct += strlen(tokens[2]);
-
-            while (xisspace(*ct))
-                ++ct;
-
-            if (!*ct)
-                ct = NULL;
+            // Directory.. name begins with first printable after <dir>
+            // Because of the "n_tokens > 3", the next printable after <dir>
+            // is stored at token[3]. No need for more checks here.
         } else {
-            /* A file. Name begins after size, with a space in between */
-            snprintf(tbuf, 128, " %s %s", tokens[2], tokens[3]);
-            ct = strstr(buf, tbuf);
-
-            if (ct) {
-                ct += strlen(tokens[2]) + 2;
-            }
+            // A file. Name begins after size, with a space in between.
+            // Also a space should exist before size.
+            // But there is not needed to be very strict with spaces.
+            // The name is stored at token[3], take it from here.
         }
 
-        p->name = xstrdup(ct ? ct : tokens[3]);
+        p->name = xstrdup(tokens[3].token);
         goto found;
     }
 
     /* Try EPLF format; carson@lehman.com */
     if (buf[0] == '+') {
-        ct = buf + 1;
+        const char *ct = buf + 1;
         p->type = 0;
 
         while (ct && *ct) {
@@ -756,7 +753,7 @@ blank:
 found:
 
     for (i = 0; i < n_tokens; ++i)
-        xfree(tokens[i]);
+        xfree(tokens[i].token);
 
     if (!p->name)
         ftpListPartsFree(&p);   /* cleanup */
