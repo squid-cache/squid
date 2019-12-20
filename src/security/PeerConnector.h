@@ -77,9 +77,6 @@ protected:
     /// The comm_close callback handler.
     void commCloseHandler(const CommCloseCbParams &params);
 
-    /// Inform us that the connection is closed. Does the required clean-up.
-    void connectionClosed(const char *reason);
-
     /// \returns true on successful TLS session initialization
     virtual bool initialize(Security::SessionPointer &);
 

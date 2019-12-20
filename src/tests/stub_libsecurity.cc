@@ -56,7 +56,6 @@ void PeerConnector::swanSong() STUB
 const char *PeerConnector::status() const STUB_RETVAL("")
 void PeerConnector::commCloseHandler(const CommCloseCbParams &) STUB
 void PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &) STUB
-void PeerConnector::connectionClosed(const char *) STUB
 bool PeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
 void PeerConnector::negotiate() STUB
 bool PeerConnector::sslFinalized() STUB_RETVAL(false)
