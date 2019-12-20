@@ -281,7 +281,7 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
         // If the server selected TLSv1.3 protocol the server certificates
         // are not available.
         if (srvBio->tlsv1_3()) {
-            // we currently splice all resumed sessions unconditionally
+            // we currently splice all TLSv1.3 sessions unconditionally
             // if (const bool spliceTLSv1_3 = true) {
             bypassValidator = true;
             // } // else fall through to find a matching ssl_bump action (with limited info)
