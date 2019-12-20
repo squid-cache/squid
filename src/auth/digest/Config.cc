@@ -810,7 +810,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
         case DIGEST_USERNAME:
             safe_free(username);
             if (value.size() != 0) {
-                const auto v = value.rawBuf();
+                const auto v = value.termedBuf();
                 if (utf8 && !isValidUtf8String(v, v + value.size())) {
                     auto str = isCP1251EncodingAllowed(request) ? Cp1251ToUtf8(v) : Latin1ToUtf8(v);
                     value = SBufToString(str);
