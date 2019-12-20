@@ -285,7 +285,7 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
             // if (const bool spliceTLSv1_3 = true) {
             bypassValidator = true;
             // } // else fall through to find a matching ssl_bump action (with limited info)
-        } else if ((resumingSession = srvBio->resumingSession())) {
+        } else if (srvBio->resumingSession()) {
             // In Peek mode, the ClientHello message sent to the server. If the
             // server resuming a previous (spliced) SSL session with the client,
             // then probably we are here because local SSL object does not know
