@@ -17,8 +17,6 @@
 
 /* Ipc::Mem::PageStackStorageSlot */
 
-// We are using uint32_t for Pointer because PageId::number is uint32_t.
-// PageId::number should probably be uint64_t to accommodate larger caches.
 static_assert(sizeof(Ipc::Mem::PageStackStorageSlot::Pointer) ==
     sizeof(decltype(Ipc::Mem::PageId::number)), "page indexing types are consistent");
 
@@ -145,7 +143,7 @@ Ipc::Mem::PageStack::stackSize() const
 }
 
 size_t
-Ipc::Mem::PageStack::LevelsPaddingSize(const unsigned int capacity)
+Ipc::Mem::PageStack::LevelsPaddingSize(const PageCount capacity)
 {
     const auto displacement = StackSize(capacity) % alignof(Levels_t);
     return displacement ? alignof(Levels_t) - displacement : 0;
