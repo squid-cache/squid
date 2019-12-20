@@ -538,26 +538,29 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
     if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2))
         return;
 
-    bool isHelloTLSv1_3 = false;
+    AnyP::ProtocolVersion fixSupportedVersion;
     if (messageSource == fromClient) {
         Parser::BinaryTokenizer tkList(extensionData);
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersionsList"));
-        while (!tkVersions.atEnd() && !isHelloTLSv1_3) {
+        while (!tkVersions.atEnd()) {
             Parser::BinaryTokenizerContext version(tkVersions, "SupportedVersion");
             const auto aVersion = tkVersions.uint16(".version");
-            if (aVersion == 0x0304)
-                isHelloTLSv1_3 = true;
+            if (aVersion >= 0x0304) {
+                auto aProtoVersion = ParseProtocolVersion(tkVersions);
+                if (fixSupportedVersion.protocol == AnyP::PROTO_NONE || aProtoVersion > fixSupportedVersion)
+                    fixSupportedVersion = aProtoVersion;
+            }
         }
     } else if (messageSource == fromServer) {
         Parser::BinaryTokenizer tkVersion(extensionData);
         const auto supportedVersion = tkVersion.uint16(".supported_version");
-        if (supportedVersion == 0x0304)
-            isHelloTLSv1_3 = true;
+        if (supportedVersion >= 0x0304)
+            fixSupportedVersion = ParseProtocolVersion(tkVersion);
     }
 
-    if (isHelloTLSv1_3) {
+    if (fixSupportedVersion.protocol != AnyP::PROTO_NONE) {
         // overwrite previously stored Hello-derived legacy_version
-        details->tlsSupportedVersion = AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
+        details->tlsSupportedVersion = fixSupportedVersion;
     }
 }
 
