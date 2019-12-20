@@ -1096,7 +1096,8 @@ TunnelStateData::advanceDestination(const char *stepDescription, const Comm::Con
     } catch (...) {
         debugs (26, 2, "exception while trying to " << stepDescription << ": " << CurrentException);
         closePendingConnection(conn, "connection preparation exception");
-        saveError(new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request.getRaw(), al));
+        if (!savedError)
+            saveError(new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request.getRaw(), al));
         retryOrBail();
     }
 }
