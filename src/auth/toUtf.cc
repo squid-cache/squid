@@ -172,3 +172,4 @@ isValidUtf8String(const char *source, const char *sourceEnd) {
     }
     return true; // including zero-length input
 }
+

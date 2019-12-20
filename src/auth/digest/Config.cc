@@ -1086,3 +1086,4 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
 
     return digest_request;
 }
+
