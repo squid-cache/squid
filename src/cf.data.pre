@@ -686,7 +686,7 @@ DOC_START
 
 		This parameter is only honored for Basic and Digest schemes.
 		For Basic, the entire username:password credentials are
-		checked end, if necessary, re-encoded. For Digest -- just the
+		checked and, if necessary, re-encoded. For Digest -- just the
 		username component. For NTLM and Negotiate schemes, this
 		parameter is ignored.
 
