@@ -66,7 +66,8 @@ for FILENAME in `git ls-files`; do
 	#
 	# Code Style formatting maintenance
 	#
-        if test "${ASVER}"; then
+	awk -f ./scripts/maintenance.awk "${FILENAME}" >"${FILENAME}.awkbak" && mv "${FILENAME}.awkbak" "${FILENAME}"
+	if test "${ASVER}"; then
 		./scripts/formater.pl ${FILENAME}
 		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
 			md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
