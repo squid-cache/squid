@@ -173,7 +173,7 @@ File::open(const FileOpeningConfig &cfg)
     fd_ = CreateFile(TEXT(name_.c_str()), cfg.desiredAccess, cfg.shareMode, nullptr, cfg.creationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (fd_ == InvalidHandle) {
         const auto savedError = GetLastError();
-        throw TexcHere(sysCallFailure("CreateFile", WindowsErrorMessage(savedError).c_str()));
+        throw TexcHere(sysCallFailure("CreateFile", WindowsErrorMessage(savedError)));
     }
 #else
     mode_t oldCreationMask = 0;
@@ -199,7 +199,7 @@ File::close()
 #if _SQUID_WINDOWS_
     if (!CloseHandle(fd_)) {
         const auto savedError = GetLastError();
-        debugs(54, DBG_IMPORTANT, sysCallFailure("CloseHandle", WindowsErrorMessage(savedError).c_str()));
+        debugs(54, DBG_IMPORTANT, sysCallFailure("CloseHandle", WindowsErrorMessage(savedError)));
     }
 #else
     if (::close(fd_) != 0) {
@@ -216,12 +216,12 @@ File::truncate()
 #if _SQUID_WINDOWS_
     if (!SetFilePointer(fd_, 0, nullptr, FILE_BEGIN)) {
         const auto savedError = GetLastError();
-        throw TexcHere(sysCallFailure("SetFilePointer", WindowsErrorMessage(savedError).c_str()));
+        throw TexcHere(sysCallFailure("SetFilePointer", WindowsErrorMessage(savedError)));
     }
 
     if (!SetEndOfFile(fd_)) {
         const auto savedError = GetLastError();
-        throw TexcHere(sysCallFailure("SetEndOfFile", WindowsErrorMessage(savedError).c_str()));
+        throw TexcHere(sysCallFailure("SetEndOfFile", WindowsErrorMessage(savedError)));
     }
 #else
     if (::lseek(fd_, SEEK_SET, 0) < 0) {
@@ -246,7 +246,7 @@ File::readSmall(const SBuf::size_type minBytes, const SBuf::size_type maxBytes)
     DWORD result = 0;
     if (!ReadFile(fd_, rawBuf, readLimit, &result, nullptr)) {
         const auto savedError = GetLastError();
-        throw TexcHere(sysCallFailure("ReadFile", WindowsErrorMessage(savedError).c_str()));
+        throw TexcHere(sysCallFailure("ReadFile", WindowsErrorMessage(savedError)));
     }
 #else
     const auto result = ::read(fd_, rawBuf, readLimit);
@@ -261,12 +261,13 @@ File::readSmall(const SBuf::size_type minBytes, const SBuf::size_type maxBytes)
     buf.rawAppendFinish(rawBuf, bytesRead);
 
     if (buf.length() < minBytes) {
-        const auto failure = buf.length() ? "premature eof" : "empty file";
-        throw TexcHere(sysCallFailure("read", failure));
+        static const SBuf errPrematureEof("premature eof");
+        static const SBuf errEmptyFile("empty file");
+        throw TexcHere(sysCallFailure("read", buf.length() ? errPrematureEof : errEmptyFile));
     }
 
     if (buf.length() > maxBytes) {
-        const auto failure = "unreasonably large file";
+        static const SBuf failure("unreasonably large file");
         throw TexcHere(sysCallFailure("read", failure));
     }
 
@@ -281,7 +282,7 @@ File::writeAll(const SBuf &data)
     DWORD nBytesWritten = 0;
     if (!WriteFile(fd_, data.rawContent(), data.length(), &nBytesWritten, nullptr)) {
         const auto savedError = GetLastError();
-        throw TexcHere(sysCallFailure("WriteFile", WindowsErrorMessage(savedError).c_str()));
+        throw TexcHere(sysCallFailure("WriteFile", WindowsErrorMessage(savedError)));
     }
     const auto bytesWritten = static_cast<size_t>(nBytesWritten);
 #else
@@ -292,8 +293,10 @@ File::writeAll(const SBuf &data)
     }
     const auto bytesWritten = static_cast<size_t>(result);
 #endif
-    if (bytesWritten != data.length())
-        throw TexcHere(sysCallFailure("write", "partial write"));
+    if (bytesWritten != data.length()) {
+        static const SBuf failure("partial write");
+        throw TexcHere(sysCallFailure("write", failure));
+    }
 }
 
 void
@@ -302,7 +305,7 @@ File::synchronize()
 #if _SQUID_WINDOWS_
     if (!FlushFileBuffers(fd_)) {
         const auto savedError = GetLastError();
-        throw TexcHere(sysCallFailure("FlushFileBuffers", WindowsErrorMessage(savedError).c_str()));
+        throw TexcHere(sysCallFailure("FlushFileBuffers", WindowsErrorMessage(savedError)));
     }
 #else
     if (::fsync(fd_) != 0) {
@@ -340,7 +343,7 @@ File::lockOnce(const FileOpeningConfig &cfg)
 #if _SQUID_WINDOWS_
     if (!LockFileEx(fd_, cfg.lockFlags, 0, 0, 1, 0)) {
         const auto savedError = GetLastError();
-        throw TexcHere(sysCallFailure("LockFileEx", WindowsErrorMessage(savedError).c_str()));
+        throw TexcHere(sysCallFailure("LockFileEx", WindowsErrorMessage(savedError)));
     }
 #elif _SQUID_SOLARIS_
     if (fcntlLock(fd_, cfg.lockType) != 0) {
@@ -358,7 +361,7 @@ File::lockOnce(const FileOpeningConfig &cfg)
 
 /// \returns a description a system call-related failure
 SBuf
-File::sysCallFailure(const char *callName, const char *error) const
+File::sysCallFailure(const char *callName, const SBuf &error) const
 {
     return ToSBuf("failed to ", callName, ' ', name_, ": ", error);
 }
@@ -367,7 +370,7 @@ File::sysCallFailure(const char *callName, const char *error) const
 SBuf
 File::sysCallError(const char *callName, const int savedErrno) const
 {
-    return sysCallFailure(callName, xstrerr(savedErrno));
+    return sysCallFailure(callName, SBuf(xstrerr(savedErrno)));
 }
 
 #if _SQUID_WINDOWS_
