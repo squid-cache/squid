@@ -458,9 +458,18 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         http->logType.update(LOG_TCP_REFRESH_UNMODIFIED);
         http->request->flags.staleIfHit = false; // old_entry is no longer stale
 
-        // TODO: The update may not be instantaneous. Should we wait for its
-        // completion to avoid spawning too much client-disassociated work?
-        Store::Root().updateOnNotModified(old_entry, *http->storeEntry());
+        try {
+            // TODO: The update may not be instantaneous. Should we wait for its
+            // completion to avoid spawning too much client-disassociated work?
+            Store::Root().updateOnNotModified(old_entry, *http->storeEntry());
+        } catch (const std::exception &e) {
+            debugs(20, DBG_IMPORTANT, "error when updating entry " << *old_entry << ": " << e.what());
+            old_entry->release(true);
+            restoreState();
+            http->logType.update(LOG_TCP_MISS);
+            processMiss();
+            return;
+        }
 
         // if client sent IMS
 

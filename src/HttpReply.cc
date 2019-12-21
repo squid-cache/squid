@@ -21,6 +21,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -259,6 +260,16 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
     return 1;
 }
 
+static bool
+CheckReplyHeaderSize(const HttpReplyPointer &reply, size_t &size)
+{
+    MemBuf mb;
+    mb.init();
+    reply->header.packInto(&mb);
+    size = mb.contentSize();
+    return Config.maxReplyHeaderSize >= size;
+}
+
 HttpReply::Pointer
 HttpReply::recreateOnNotModified(const HttpReply &reply304) const
 {
@@ -271,6 +282,11 @@ HttpReply::recreateOnNotModified(const HttpReply &reply304) const
     cloned->header.update(&reply304.header);
     cloned->hdrCacheClean();
     cloned->header.compact();
+
+    size_t headerSize = 0;
+    if (!CheckReplyHeaderSize(cloned, headerSize))
+        throw TexcHere(ToSBuf("The updated header grew too large: ", headerSize, ">", Config.maxReplyHeaderSize));
+
     cloned->hdrCacheInit();
     return cloned;
 }
