@@ -64,7 +64,8 @@ libipc_la_SOURCES = \
 	mem/PageStack.h \
 	mem/Pointer.h \
 	mem/Segment.cc \
-	mem/Segment.h
+	mem/Segment.h \
+	mem/forward.h
 
 DEFS += -DDEFAULT_STATEDIR=\"$(localstatedir)/run/squid\"
 

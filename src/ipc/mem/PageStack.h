@@ -10,6 +10,7 @@
 #define SQUID_IPC_MEM_PAGE_STACK_H
 
 #include "ipc/mem/FlexibleArray.h"
+#include "ipc/mem/forward.h"
 
 #include <atomic>
 
@@ -30,7 +31,7 @@ public:
     typedef uint32_t Value; ///< stack item type (a free page number)
     typedef std::atomic<size_t> Levels_t;
 
-    PageStack(const uint32_t aPoolId, const unsigned int aCapacity, const size_t aPageSize);
+    PageStack(const PoolId aPoolId, const unsigned int aCapacity, const size_t aPageSize);
 
     unsigned int capacity() const { return theCapacity; }
     size_t pageSize() const { return thePageSize; }
@@ -45,7 +46,7 @@ public:
     bool pageIdIsValid(const PageId &page) const;
 
     /// total shared memory size required to share
-    static size_t SharedMemorySize(const uint32_t aPoolId, const unsigned int capacity, const size_t pageSize);
+    static size_t SharedMemorySize(const PoolId aPoolId, const unsigned int capacity, const size_t pageSize);
     size_t sharedMemorySize() const;
 
     /// shared memory size required only by PageStack, excluding
@@ -64,11 +65,11 @@ public:
      */
 
     /// stack of free cache_mem slot positions
-    static uint32_t IdForMemStoreSpace() { return 10; }
+    static PoolId IdForMemStoreSpace() { return 10; }
     /// multipurpose PagePool of shared memory pages
-    static uint32_t IdForMultipurposePool() { return 200; } // segments could use 2xx
+    static PoolId IdForMultipurposePool() { return 200; } // segments could use 2xx
     /// stack of free rock cache_dir slot numbers
-    static uint32_t IdForSwapDirSpace(const int dirIdx) { return 900 + dirIdx + 1; }
+    static PoolId IdForSwapDirSpace(const int dirIdx) { return 900 + dirIdx + 1; }
 
 private:
     /// stack index and size type (may temporary go negative)
@@ -78,7 +79,7 @@ private:
     Offset next(const Offset idx) const { return (idx + 1) % theCapacity; }
     Offset prev(const Offset idx) const { return (theCapacity + idx - 1) % theCapacity; }
 
-    const uint32_t thePoolId; ///< pool ID
+    const PoolId thePoolId; ///< pool ID
     const Offset theCapacity; ///< stack capacity, i.e. theItems size
     const size_t thePageSize; ///< page size, used to calculate shared memory size
     /// lower bound for the number of free pages (may get negative!)

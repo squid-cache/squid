@@ -18,7 +18,7 @@
 /// used to mark a stack slot available for storing free page offsets
 const Ipc::Mem::PageStack::Value Writable = 0;
 
-Ipc::Mem::PageStack::PageStack(const uint32_t aPoolId, const unsigned int aCapacity, const size_t aPageSize):
+Ipc::Mem::PageStack::PageStack(const PoolId aPoolId, const unsigned int aCapacity, const size_t aPageSize):
     thePoolId(aPoolId), theCapacity(aCapacity), thePageSize(aPageSize),
     theSize(theCapacity),
     theLastReadable(prev(theSize)), theFirstWritable(next(theLastReadable)),
@@ -122,7 +122,7 @@ Ipc::Mem::PageStack::sharedMemorySize() const
 }
 
 size_t
-Ipc::Mem::PageStack::SharedMemorySize(const uint32_t, const unsigned int capacity, const size_t pageSize)
+Ipc::Mem::PageStack::SharedMemorySize(const PoolId, const unsigned int capacity, const size_t pageSize)
 {
     const size_t levelsSize = PageId::maxPurpose * sizeof(std::atomic<Ipc::Mem::PageStack::Value>);
     const size_t pagesDataSize = capacity * pageSize;
