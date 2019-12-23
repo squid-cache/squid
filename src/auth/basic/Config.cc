@@ -20,14 +20,15 @@
 #include "auth/CredentialsCache.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
+#include "auth/toUtf.h"
 #include "base64.h"
 #include "cache_cf.h"
-#include "charset.h"
 #include "helper.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "mgr/Registration.h"
 #include "rfc1738.h"
+#include "sbuf/SBuf.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "util.h"
@@ -76,8 +77,13 @@ void
 Auth::Basic::Config::fixHeader(Auth::UserRequest::Pointer, HttpReply *rep, Http::HdrType hdrType, HttpRequest *)
 {
     if (authenticateProgram) {
-        debugs(29, 9, "Sending type:" << hdrType << " header: 'Basic realm=\"" << realm << "\"'");
-        httpHeaderPutStrf(&rep->header, hdrType, "Basic realm=\"" SQUIDSBUFPH "\"", SQUIDSBUFPRINT(realm));
+        if (utf8) {
+            debugs(29, 9, "Sending type:" << hdrType << " header: 'Basic realm=\"" << realm << "\", charset=\"UTF-8\"'");
+            httpHeaderPutStrf(&rep->header, hdrType, "Basic realm=\"" SQUIDSBUFPH "\", charset=\"UTF-8\"", SQUIDSBUFPRINT(realm));
+        } else {
+            debugs(29, 9, "Sending type:" << hdrType << " header: 'Basic realm=\"" << realm << "\"'");
+            httpHeaderPutStrf(&rep->header, hdrType, "Basic realm=\"" SQUIDSBUFPH "\"", SQUIDSBUFPRINT(realm));
+        }
     }
 }
 
@@ -149,7 +155,7 @@ authenticateBasicStats(StoreEntry * sentry)
 }
 
 char *
-Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
+Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const HttpRequest *request)
 {
     const char *proxy_auth = httpAuthHeader;
 
@@ -175,6 +181,13 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
     size_t dstLen = 0;
     if (base64_decode_update(&ctx, &dstLen, reinterpret_cast<uint8_t*>(cleartext), srcLen, eek) && base64_decode_final(&ctx)) {
         cleartext[dstLen] = '\0';
+
+        if (utf8 && !isValidUtf8String(cleartext, cleartext + dstLen)) {
+            auto str = isCP1251EncodingAllowed(request) ?
+                       Cp1251ToUtf8(cleartext) : Latin1ToUtf8(cleartext);
+            safe_free(cleartext);
+            cleartext = xstrdup(str.c_str());
+        }
 
         /*
          * Don't allow NL or CR in the credentials.
@@ -203,13 +216,13 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
  * descriptive message to the user.
  */
 Auth::UserRequest::Pointer
-Auth::Basic::Config::decode(char const *proxy_auth, const char *aRequestRealm)
+Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, const char *aRequestRealm)
 {
     Auth::UserRequest::Pointer auth_user_request = dynamic_cast<Auth::UserRequest*>(new Auth::Basic::UserRequest);
     /* decode the username */
 
     // retrieve the cleartext (in a dynamically allocated char*)
-    char *cleartext = decodeCleartext(proxy_auth);
+    const auto cleartext = decodeCleartext(proxy_auth, request);
 
     // empty header? no auth details produced...
     if (!cleartext)

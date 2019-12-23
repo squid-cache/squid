@@ -28,7 +28,7 @@ public:
     Config();
     virtual bool active() const;
     virtual bool configured() const;
-    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm);
+    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth, const HttpRequest *request, const char *requestRealm);
     virtual void done();
     virtual void rotateHelpers();
     virtual bool dump(StoreEntry *, const char *, Auth::SchemeConfig *) const;
@@ -44,7 +44,7 @@ public:
     int casesensitive;
 
 private:
-    char * decodeCleartext(const char *httpAuthHeader);
+    char * decodeCleartext(const char *httpAuthHeader, const HttpRequest *request);
 };
 
 } // namespace Basic

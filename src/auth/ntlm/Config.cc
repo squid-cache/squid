@@ -205,7 +205,7 @@ authenticateNTLMStats(StoreEntry * sentry)
  * Auth_user structure.
  */
 Auth::UserRequest::Pointer
-Auth::Ntlm::Config::decode(char const *proxy_auth, const char *aRequestRealm)
+Auth::Ntlm::Config::decode(char const *proxy_auth, const HttpRequest *, const char *aRequestRealm)
 {
     Auth::Ntlm::User *newUser = new Auth::Ntlm::User(Auth::SchemeConfig::Find("ntlm"), aRequestRealm);
     Auth::UserRequest::Pointer auth_user_request = new Auth::Ntlm::UserRequest();
