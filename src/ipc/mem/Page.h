@@ -9,6 +9,8 @@
 #ifndef SQUID_IPC_MEM_PAGE_H
 #define SQUID_IPC_MEM_PAGE_H
 
+#include "ipc/mem/forward.h"
+
 #include <iosfwd>
 
 namespace Ipc
@@ -30,7 +32,12 @@ public:
     typedef const uint32_t PageId::*SaferBool;
     operator SaferBool() const { return set() ? &PageId::number : NULL; }
 
-    uint32_t pool; ///< page pool ID within Squid
+    /// The ID of a PagePool (and/or PageStack) this page belongs to.
+    /// Positive values are (ab)used to detect in-use pages. See set().
+    /// Eventually, they may identify a PageStack in a multi-segment PagePool.
+    /// These IDs also distinguish page pools/stacks in debugging logs.
+    PoolId pool;
+
     // uint32_t segment; ///< memory segment ID within the pool; unused for now
     uint32_t number; ///< page number within the segment
 

@@ -10,6 +10,7 @@
 #define SQUID_IPC_MEM_PAGE_STACK_H
 
 #include "ipc/mem/FlexibleArray.h"
+#include "ipc/mem/forward.h"
 
 #include <atomic>
 #include <limits>
@@ -71,7 +72,7 @@ public:
     /// the number of (free and/or used) pages in a stack
     typedef unsigned int PageCount;
 
-    PageStack(const uint32_t aPoolId, const PageCount aCapacity, const size_t aPageSize);
+    PageStack(const PoolId aPoolId, const PageCount aCapacity, const size_t aPageSize);
 
     PageCount capacity() const { return capacity_; }
     size_t pageSize() const { return thePageSize; }
@@ -86,7 +87,7 @@ public:
     bool pageIdIsValid(const PageId &page) const;
 
     /// total shared memory size required to share
-    static size_t SharedMemorySize(const uint32_t aPoolId, const PageCount capacity, const size_t pageSize);
+    static size_t SharedMemorySize(const PoolId aPoolId, const PageCount capacity, const size_t pageSize);
     size_t sharedMemorySize() const;
 
     /// shared memory size required only by PageStack, excluding
@@ -98,13 +99,26 @@ public:
     static size_t LevelsPaddingSize(const PageCount capacity);
     size_t levelsPaddingSize() const { return LevelsPaddingSize(capacity_); }
 
+    /**
+     * The following functions return PageStack IDs for the corresponding
+     * PagePool or a similar PageStack user. The exact values are unimportant,
+     * but their uniqueness and stability eases debugging.
+     */
+
+    /// stack of free cache_mem slot positions
+    static PoolId IdForMemStoreSpace() { return 10; }
+    /// multipurpose PagePool of shared memory pages
+    static PoolId IdForMultipurposePool() { return 200; } // segments could use 2xx
+    /// stack of free rock cache_dir slot numbers
+    static PoolId IdForSwapDirSpace(const int dirIdx) { return 900 + dirIdx + 1; }
+
 private:
     using Slot = PageStackStorageSlot;
 
     // XXX: theFoo members look misplaced due to messy separation of PagePool
     // (which should support multiple Segments but does not) and PageStack
     // (which should not calculate the Segment size but does) duties.
-    const uint32_t thePoolId; ///< pool ID
+    const PoolId thePoolId; ///< pool ID
     const PageCount capacity_; ///< the maximum number of pages
     const size_t thePageSize; ///< page size, used to calculate shared memory size
     /// a lower bound for the number of free pages (for debugging purposes)
