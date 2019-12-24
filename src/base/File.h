@@ -105,7 +105,7 @@ protected:
     void close();
 
     /// \returns a description a system call-related failure
-    SBuf sysCallFailure(const char *callName, const char *error) const;
+    SBuf sysCallFailure(const char *callName, const SBuf &error) const;
     /// \returns a description of an errno-based system call failure
     SBuf sysCallError(const char *callName, const int savedErrno) const;
 

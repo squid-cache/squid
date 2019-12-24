@@ -12,7 +12,6 @@
 #include "auth/basic/UserRequest.h"
 #include "auth/QueueNode.h"
 #include "auth/State.h"
-#include "charset.h"
 #include "Debug.h"
 #include "format/Format.h"
 #include "helper.h"
@@ -130,15 +129,10 @@ Auth::Basic::UserRequest::startHelperLookup(HttpRequest *request, AccessLogEntry
     char buf[HELPER_INPUT_BUFFER];
     static char usern[HELPER_INPUT_BUFFER];
     static char pass[HELPER_INPUT_BUFFER];
-    if (static_cast<Auth::Basic::Config*>(user()->config)->utf8) {
-        latin1_to_utf8(usern, sizeof(usern), user()->username());
-        latin1_to_utf8(pass, sizeof(pass), basic_auth->passwd);
-        xstrncpy(usern, rfc1738_escape(usern), sizeof(usern));
-        xstrncpy(pass, rfc1738_escape(pass), sizeof(pass));
-    } else {
-        xstrncpy(usern, rfc1738_escape(user()->username()), sizeof(usern));
-        xstrncpy(pass, rfc1738_escape(basic_auth->passwd), sizeof(pass));
-    }
+
+    xstrncpy(usern, rfc1738_escape(user()->username()), sizeof(usern));
+    xstrncpy(pass, rfc1738_escape(basic_auth->passwd), sizeof(pass));
+
     int sz = 0;
     if (const char *keyExtras = helperRequestKeyExtras(request, al))
         sz = snprintf(buf, sizeof(buf), "%s %s %s\n", usern, pass, keyExtras);

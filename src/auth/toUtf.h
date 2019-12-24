@@ -9,13 +9,16 @@
 #ifndef _SQUID_CHARSET_H
 #define _SQUID_CHARSET_H
 
-#ifdef __cplusplus
-extern "C"
-#else
-extern
-#endif
+#include "sbuf/forward.h"
 
-char *latin1_to_utf8(char *out, size_t size, const char *in);
+/// converts ISO-LATIN-1 to UTF-8
+SBuf Latin1ToUtf8(const char *in);
+
+/// converts CP1251 to UTF-8
+SBuf Cp1251ToUtf8(const char *in);
+
+/// returns whether the given input is a valid (or empty) sequence of UTF-8 code points
+bool isValidUtf8String(const char *source, const char *sourceEnd);
 
 #endif /* _SQUID_CHARSET_H */
 
