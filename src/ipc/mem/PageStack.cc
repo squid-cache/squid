@@ -124,6 +124,7 @@ Ipc::Mem::PageStack::sharedMemorySize() const
     return SharedMemorySize(thePoolId, capacity_, thePageSize);
 }
 
+size_t
 Ipc::Mem::PageStack::SharedMemorySize(const PoolId, const PageCount capacity, const size_t pageSize)
 {
     const auto levelsSize = PageId::maxPurpose * sizeof(Levels_t);
