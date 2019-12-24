@@ -356,16 +356,20 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
         if (found && !inSync)
             throw TexcHere("cannot sync");
         if (!found) {
-            if (!transients->hasWriter(entry)) {
+            const auto hasWriter = transients->hasWriter(entry);
+            if (!hasWriter) {
                 // prevent others from falling into the same trap
                 stopSharing(entry);
-                throw TexcHere("unattached transients entry missing writer");
             }
 
+            // !found should imply hittingRequiresCollapsing() regardless of writer presence
             if (!entry.hittingRequiresCollapsing()) {
                 debugs(20, DBG_IMPORTANT, "BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
                 throw TexcHere("transients entry missing ENTRY_REQUIRES_COLLAPSING");
             }
+
+            if (!hasWriter)
+                throw TexcHere("unattached transients entry missing writer");
         }
     }
 }
