@@ -24,7 +24,10 @@ ACLServerCertificateStrategy::match(ACLData<MatchType> * &data, ACLFilledCheckli
     Security::CertPointer cert;
     if (checklist->serverCert)
         cert = checklist->serverCert;
-    else if (checklist->conn() != NULL && checklist->conn()->serverBump())
+    else if (checklist->al && Comm::IsConnOpen(checklist->al->hier.tcpServer)) {
+        const auto ssl = fd_table[checklist->al->hier.tcpServer->fd].ssl.get();
+        cert.resetWithoutLocking(SSL_get_peer_certificate(ssl));
+    } else if (checklist->conn() && checklist->conn()->serverBump())
         cert = checklist->conn()->serverBump()->serverCert;
 
     if (!cert)
