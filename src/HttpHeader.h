@@ -59,6 +59,8 @@ public:
     void packInto(Packable *p) const;
     int getInt() const;
     int64_t getInt64() const;
+    /// packed length, including ": " and crlf
+    size_t length() const { return name.length() + 2 + value.size() + 2; }
 
     Http::HdrType id;
     SBuf name;
@@ -179,6 +181,9 @@ protected:
     static bool Isolate(const char **parse_start, size_t l, const char **blk_start, const char **blk_end);
     bool skipUpdateHeader(const Http::HdrType id) const;
     void updateWarnings();
+    size_t maxLen() const; ///< the maximum packed length allowed
+    /// verify whether adding the entry will not exeed the maximum header size allowed
+    void checkMaxLen(const HttpHeaderEntry &e) const;
 
 private:
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;
