@@ -84,7 +84,10 @@ public:
 
     /// SSL [certificate validation] errors, in undefined order
     const Security::CertErrors *sslErrors;
-    /// The peer certificate
+
+    /// Peer certificate being checked by ssl_verify_cb() and by
+    /// Security::PeerConnector class. In other contexts, the peer
+    /// certificate is retrieved via ALE or ConnStateData::serverBump.
     Security::CertPointer serverCert;
 
     AccessLogEntry::Pointer al; ///< info for the future access.log, and external ACL
