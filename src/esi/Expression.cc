@@ -98,14 +98,12 @@ stackpop(stackmember * s, int *depth)
     cleanmember(&s[*depth]);
 }
 
-/// copies `item` onto the stack
-/// Throws an exception with the given message if depth is not referencing
-/// a valid location of the stack both before and after the push.
 static void
 stackpush(stackmember *stack, stackmember &item, int *depth)
 {
     if (*depth < 0)
         throw Esi::Error("ESIExpression stack has negative size");
+    // -1 to prevent depth pointing outside stack[] array bounds after the push
     if (*depth >= ESI_STACK_DEPTH_LIMIT-1)
         throw Esi::Error("ESIExpression stack is full, cannot push");
 

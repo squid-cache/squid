@@ -1263,14 +1263,14 @@ ESIContext::parse()
                 parseOneBuffer();
 
         } catch (Esi::ErrorDetail &errMsg) { // FIXME: non-const for c_str()
-            debugs(86, DBG_IMPORTANT, errMsg);
+            debugs(86, DBG_IMPORTANT, "ERROR: " << errMsg);
             setError();
             setErrorMessage(errMsg.c_str());
 
         } catch (...) {
-            setError();
-            setErrorMessage("ESI parse, unknown exception");
             debugs(86, 5, "ESI parse error: " << CurrentException);
+            setError();
+            setErrorMessage("ESI parse error");
         }
 
         PROF_stop(esiParsing);
