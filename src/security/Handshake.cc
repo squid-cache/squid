@@ -106,6 +106,14 @@ static Extensions SupportedExtensions();
 
 } // namespace Security
 
+/// Whether the given version is TLSv1.3 or latter
+static bool
+TlsVersion13OrLater(const AnyP::ProtocolVersion &version)
+{
+    return version.protocol == AnyP::PROTO_TLS &&
+        version >= AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
+}
+
 /// Convenience helper: We parse ProtocolVersion but store "int".
 static AnyP::ProtocolVersion
 ParseProtocolVersion(Parser::BinaryTokenizer &tk)
@@ -291,8 +299,7 @@ Security::HandshakeParser::parseChangeCipherCpecMessage()
     // In TLS v1.3, a dummy ChangeCipherSpec implies Middlebox Compatibility
     // Mode. In earlier TLS versions, ChangeCipherSpec starts (encrypted)
     // session resumption
-    const bool tlsv13OrLater = details->tlsSupportedVersion.protocol == AnyP::PROTO_TLS && details->tlsSupportedVersion >= AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
-    if (!tlsv13OrLater)
+    if (!TlsVersion13OrLater(details->tlsSupportedVersion))
         resumingSession = true;
 
     // Everything after the ChangeCipherSpec message may be encrypted.
@@ -333,6 +340,9 @@ Security::HandshakeParser::parseHandshakeMessage()
         Must(messageSource == fromServer);
         parseServerHelloHandshakeMessage(message.msg_body);
         state = atHelloReceived;
+        // For TLSv1.3 and later anything after the server hello is encrypted
+        if (TlsVersion13OrLater(details->tlsSupportedVersion))
+            done = "Tlsv13ServerHello";
         return;
     case HandshakeType::hskCertificate:
         Must(state < atCertificatesReceived);
