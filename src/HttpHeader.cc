@@ -762,19 +762,6 @@ HttpHeader::maxLen() const
     }
 }
 
-void
-HttpHeader::checkMaxLen(const HttpHeaderEntry &e) const
-{
-    if (const auto max = maxLen()) {
-        const auto delta = e.length();
-        if (len + delta > max) {
-            debugs(55, 1, "cannot add header entry " << e.id << " because the header length is becoming too large: " <<
-                    "hdr: " << this << " owner: " << owner << " len: " << len << "+" << delta << ">" << max);
-            throw TexcHere("too large header");
-        }
-    }
-}
-
 /* appends an entry;
  * does not call e->clone() so one should not reuse "*e"
  */
@@ -787,7 +774,15 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
 
     debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
 
-    checkMaxLen(*e);
+    // verify whether adding the entry will not exceed the maximum header size allowed
+    if (const auto max = maxLen()) {
+        const auto delta = e->length();
+        if (len + delta > max) {
+            debugs(55, DBG_IMPORTANT, "cannot add header entry " << e->id << " because the header length is becoming too large: " <<
+                    "hdr: " << this << " owner: " << owner << " len: " << len << "+" << delta << ">" << max);
+            throw TexcHere("too large header");
+        }
+    }
 
     if (e->id != Http::HdrType::BAD_HDR) {
         if (CBIT_TEST(mask, e->id)) {
@@ -799,32 +794,6 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
 
     entries.push_back(e);
 
-    len += e->length();
-}
-
-/* inserts an entry;
- * does not call e->clone() so one should not reuse "*e"
- */
-void
-HttpHeader::insertEntry(HttpHeaderEntry * e)
-{
-    assert(e);
-    assert(any_valid_header(e->id));
-
-    debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
-
-    checkMaxLen(*e);
-
-    // Http::HdrType::BAD_HDR is filtered out by assert_any_valid_header
-    if (CBIT_TEST(mask, e->id)) {
-        ++ headerStatsTable[e->id].repCount;
-    } else {
-        CBIT_SET(mask, e->id);
-    }
-
-    entries.insert(entries.begin(),e);
-
-    /* increment header length, allow for ": " and crlf */
     len += e->length();
 }
 

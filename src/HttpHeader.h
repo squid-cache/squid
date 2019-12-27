@@ -109,7 +109,6 @@ public:
     void delAt(HttpHeaderPos pos, int &headers_deleted);
     void refreshMask();
     void addEntry(HttpHeaderEntry * e);
-    void insertEntry(HttpHeaderEntry * e);
     String getList(Http::HdrType id) const;
     bool getList(Http::HdrType id, String *s) const;
     bool conflictingContentLength() const { return conflictingContentLength_; }
@@ -182,8 +181,6 @@ protected:
     bool skipUpdateHeader(const Http::HdrType id) const;
     void updateWarnings();
     size_t maxLen() const; ///< the maximum packed length allowed
-    /// verify whether adding the entry will not exeed the maximum header size allowed
-    void checkMaxLen(const HttpHeaderEntry &e) const;
 
 private:
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;

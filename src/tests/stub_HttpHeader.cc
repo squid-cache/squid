@@ -40,7 +40,6 @@ int HttpHeader::delById(Http::HdrType) STUB_RETVAL(0)
 void HttpHeader::delAt(HttpHeaderPos, int &) STUB
 void HttpHeader::refreshMask() STUB
 void HttpHeader::addEntry(HttpHeaderEntry *) STUB
-void HttpHeader::insertEntry(HttpHeaderEntry *) STUB
 String HttpHeader::getList(Http::HdrType) const STUB_RETVAL(String())
 bool HttpHeader::getList(Http::HdrType, String *) const STUB_RETVAL(false)
 String HttpHeader::getStrOrList(Http::HdrType) const STUB_RETVAL(String())
