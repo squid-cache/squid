@@ -98,7 +98,7 @@ stackpop(stackmember * s, int *depth)
     cleanmember(&s[*depth]);
 }
 
-/// push item onto the stack.
+/// copies `item` onto the stack
 /// Throws an exception with the given message if depth is not referencing
 /// a valid location of the stack both before and after the push.
 static void
@@ -1056,4 +1056,3 @@ ESIExpression::Evaluate(char const *s)
 
     return stack[0].value.integral ? 1 : 0;
 }
-
