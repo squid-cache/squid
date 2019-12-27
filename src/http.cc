@@ -2034,7 +2034,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 void
 HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
 {
-    if (!Config.http_upgrade_protocols)
+    if (!Config.http_upgrade_request_protocols)
         return; // forward nothing by default
 
     const auto &hdrIn = request->header;
@@ -2049,7 +2049,7 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
     for (const auto &offeredStr: StrList(upgradeIn)) {
         const ProtocolView offeredProto(offeredStr);
         debugs(11, 5, "checks all rules applicable to " << offeredProto);
-        Config.http_upgrade_protocols->forApplicable(offeredProto, [&ch,&offeredStr,&upgradeOut] (const SBuf &cfgProto, const acl_access *guard) {
+        Config.http_upgrade_request_protocols->forApplicable(offeredProto, [&ch,&offeredStr,&upgradeOut] (const SBuf &cfgProto, const acl_access *guard) {
             debugs(11, 5, "checks " << cfgProto << " rule(s)");
             ch.changeAcl(guard);
             const auto answer = ch.fastCheck();

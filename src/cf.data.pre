@@ -10526,7 +10526,7 @@ DOC_END
 
 NAME: http_upgrade_request_protocols
 TYPE: http_upgrade_request_protocols
-LOC: Config.http_upgrade_protocols
+LOC: Config.http_upgrade_request_protocols
 DEFAULT: none
 DEFAULT_DOC: Upgrade header dropped, effectively blocking an upgrade attempt.
 DOC_START
