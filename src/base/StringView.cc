@@ -23,13 +23,6 @@ StringView::operator ==(const StringView &other) const
            (empty() || memcmp(start_, other.start_, size_) == 0);
 }
 
-bool
-SameButCase(const StringView &a, const StringView &b)
-{
-    return a.size() == b.size() &&
-           (!a.size() || strncasecmp(a.data(), b.data(), a.size()) == 0);
-}
-
 std::ostream &
 operator <<(std::ostream &os, const StringView &view)
 {

@@ -35,9 +35,6 @@ private:
     size_t size_;
 };
 
-/// whether the two views are the same, ignoring the case of the characters
-bool SameButCase(const StringView &, const StringView &);
-
 std::ostream &operator <<(std::ostream &, const StringView &);
 
 #endif

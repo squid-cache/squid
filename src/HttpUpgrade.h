@@ -30,16 +30,16 @@ public:
 std::ostream &operator <<(std::ostream &, const ProtocolView &);
 
 // HTTP is not explicit about case sensitivity of Upgrade protocol strings, but
-// there are bug reports showing different case variants used for WebSocket so
-// we preserve the received case but compare case-insensitively.
+// there are bug reports showing different case variants used for WebSocket. We
+// conservatively preserve the received case and compare case-sensitively.
 
 /// Either b has no version restrictions or both have the same version.
 /// For example, "ws/1" is in "ws" but "ws" is not in "ws/1".
 inline bool
 vAinB(const ProtocolView &a, const ProtocolView &b)
 {
-    // Optimization: Do not assert(SameButCase(a.name, b.name)).
-    return b.version.empty() || SameButCase(a.version, b.version);
+    // Optimization: Do not assert(a.name == b.name).
+    return b.version.empty() || (a.version == b.version);
 }
 
 /// Allows or blocks HTTP Upgrade protocols (see http_upgrade_request_protocols)
@@ -106,7 +106,7 @@ HttpUpgradeProtocolAccess::forApplicable(const ProtocolView &offer, const Visito
 {
     auto seenApplicable = false;
     for (const auto &namedGuard: namedGuards) {
-        if (!SameButCase(offer.name, namedGuard.proto.name))
+        if (offer.name != namedGuard.proto.name)
             continue;
         if (vAinB(offer, namedGuard.proto) && visitor(namedGuard.protocol, namedGuard.guard))
             return;

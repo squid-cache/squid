@@ -10543,7 +10543,7 @@ DOC_START
 	The required "protocol" parameter is either an all-caps word OTHER or an
 	explicit protocol name (e.g. "WebSocket") optionally followed by a slash and
 	a version token (e.g. "HTTP/3"). Explicit protocol names and versions are
-	not case sensitive.
+	case sensitive.
 
 	When an HTTP client sends an Upgrade request header, Squid iterates over the
 	client-offered protocols and, for each protocol P (with an optional version
