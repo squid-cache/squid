@@ -180,7 +180,7 @@ protected:
     static bool Isolate(const char **parse_start, size_t l, const char **blk_start, const char **blk_end);
     bool skipUpdateHeader(const Http::HdrType id) const;
     void updateWarnings();
-    size_t maxLen() const; ///< the maximum packed length allowed
+    size_t maxLen() const; ///< the maximum packed length allowed, zero means 'not restricted'
 
 private:
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;

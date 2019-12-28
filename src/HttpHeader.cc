@@ -780,7 +780,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
         if (len + delta > max) {
             debugs(55, DBG_IMPORTANT, "cannot add header entry " << e->id << " because the header length is becoming too large: " <<
                     "hdr: " << this << " owner: " << owner << " len: " << len << "+" << delta << ">" << max);
-            throw TexcHere("too large header");
+            throw TextException("too large header", Here());
         }
     }
 
