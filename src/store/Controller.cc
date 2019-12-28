@@ -334,7 +334,7 @@ Store::Controller::find(const cache_key *key)
             return entry;
         } catch (const std::exception &ex) {
             debugs(20, 2, "failed with " << *entry << ": " << ex.what());
-            entry->release(true);
+            entry->release();
             // fall through
         }
     }
@@ -356,20 +356,16 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
         if (found && !inSync)
             throw TexcHere("cannot sync");
         if (!found) {
-            const auto hasWriter = transients->hasWriter(entry);
-            if (!hasWriter) {
-                // prevent others from falling into the same trap
-                stopSharing(entry);
-            }
-
             // !found should imply hittingRequiresCollapsing() regardless of writer presence
             if (!entry.hittingRequiresCollapsing()) {
                 debugs(20, DBG_IMPORTANT, "BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
                 throw TexcHere("transients entry missing ENTRY_REQUIRES_COLLAPSING");
             }
 
-            if (!hasWriter)
+            if (!transients->hasWriter(entry)) {
+                // prevent others from falling into the same trap
                 throw TexcHere("unattached transients entry missing writer");
+            }
         }
     }
 }
