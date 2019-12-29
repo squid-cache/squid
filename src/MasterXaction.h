@@ -41,12 +41,28 @@ class MasterXaction : public RefCountable
 public:
     typedef RefCount<MasterXaction> Pointer;
 
-    explicit MasterXaction(const XactionInitiator anInitiator) : initiator(anInitiator) {};
+    explicit MasterXaction(const XactionInitiator anInitiator, const char *name = nullptr) : layerName(name), initiator(anInitiator) {}
+
+    /// Create a new transaction context/sandbox for a nested
+    /// sub-protocol which inherits all state information of
+    /// the current transaction but leaves the original as read-only.
+    Pointer spawnChildLayer(const char *name) const;
 
 public: // Squid internal Metadata - not from any particular protocol.
 
     /// transaction ID.
     InstanceId<MasterXaction, uint64_t> id;
+
+    /// label to represent this transaction layer when displaying
+    /// nested layers of protocol transactions
+    const char *layerName = nullptr;
+
+    /// the transport/transfer protocol layer which initiated this transaction (read-only)
+    RefCount<MasterXaction> txParent;
+
+    /// A nested transport/transfer protocol layer which has
+    /// 'ownership' of our connection until it finishes.
+    mutable Pointer txChild;
 
     /// the listening port which originated this transaction
     AnyP::PortCfgPointer squidPort;
