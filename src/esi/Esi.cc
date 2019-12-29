@@ -1263,11 +1263,13 @@ ESIContext::parse()
                 parseOneBuffer();
 
         } catch (Esi::ErrorDetail &errMsg) { // FIXME: non-const for c_str()
+            // DBG_IMPORTANT because these are syntax bugs the ogirins' dev can fix
             debugs(86, DBG_IMPORTANT, "ERROR: " << errMsg);
             setError();
             setErrorMessage(errMsg.c_str());
 
         } catch (...) {
+            // level-5 because these are OS issues not easily fixed
             debugs(86, 5, "ESI parse error: " << CurrentException);
             setError();
             setErrorMessage("ESI parse error");
