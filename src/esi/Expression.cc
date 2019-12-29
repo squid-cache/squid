@@ -103,8 +103,7 @@ stackpush(stackmember *stack, stackmember &item, int *depth)
 {
     if (*depth < 0)
         throw Esi::Error("ESIExpression stack has negative size");
-    // -1 to prevent depth pointing outside stack[] array bounds after the push
-    if (*depth >= ESI_STACK_DEPTH_LIMIT-1)
+    if (*depth >= ESI_STACK_DEPTH_LIMIT)
         throw Esi::Error("ESIExpression stack is full, cannot push");
 
     stack[(*depth)++] = item;
