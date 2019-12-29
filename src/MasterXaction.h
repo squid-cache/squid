@@ -43,20 +43,27 @@ public:
 
     explicit MasterXaction(const XactionInitiator anInitiator) : initiator(anInitiator) {};
 
+public: // Squid internal Metadata - not from any particular protocol.
+
     /// transaction ID.
     InstanceId<MasterXaction, uint64_t> id;
 
     /// the listening port which originated this transaction
     AnyP::PortCfgPointer squidPort;
 
-    /// the client TCP connection which originated this transaction
-    Comm::ConnectionPointer tcpClient;
-
     /// the initiator of this transaction
     XactionInitiator initiator;
 
+public: // TCP protocol state
+
+    /// the client TCP connection which originated this transaction
+    Comm::ConnectionPointer tcpClient;
+
+public: // HTTP protocol state
+
     /// whether we are currently creating a CONNECT header (to be sent to peer)
     bool generatingConnect = false;
+
 
     // TODO: add state from other Jobs in the transaction
 };
