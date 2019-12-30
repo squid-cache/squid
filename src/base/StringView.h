@@ -18,7 +18,13 @@ class StringView
 {
 public:
     StringView(): start_(nullptr), size_(0) {}
-    StringView(const char * const start, const size_t len): start_(start), size_(len) {}
+    StringView(const char * const start, const size_t len):
+        start_(start),
+        size_(len)
+    {
+        // require zero length for nil start to stop bug propagation here
+        assert(start || !len);
+    }
 
     bool empty() const { return !size_; }
     size_t size() const { return size_; }
