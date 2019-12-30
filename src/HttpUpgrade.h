@@ -72,8 +72,8 @@ private:
         NamedGuard(const NamedGuard &&) = delete; // no copying of any kind
         ~NamedGuard();
 
-        SBuf protocol; ///< configured protocol name (and version)
-        ProtocolView proto; ///< optimization: compiled this->protocol info
+        const SBuf protocol; ///< configured protocol name (and version)
+        const ProtocolView proto; ///< optimization: compiled this->protocol
         acl_access *guard = nullptr; ///< configured access rule; never nil
     };
 
