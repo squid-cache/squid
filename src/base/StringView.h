@@ -36,7 +36,7 @@ public:
     bool operator ==(const StringView &other) const
     {
         return size_ == other.size_ &&
-               (empty() || memcmp(start_, other.start_, size_) == 0);
+               (empty() || std::memcmp(start_, other.start_, size_) == 0);
     }
 
     bool operator !=(const StringView &other) const { return !(*this == other); }
