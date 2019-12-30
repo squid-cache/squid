@@ -30,11 +30,6 @@ static const char *SpaceLabel = "cache_mem_space";
 static const char *ExtrasLabel = "cache_mem_ex";
 // TODO: sync with Rock::SwapDir::*Path()
 
-// We store free slot IDs (i.e., "space") as Page objects so that we can use
-// Ipc::Mem::PageStack. Pages require pool IDs. The value here is not really
-// used except for a positivity test. A unique value is handy for debugging.
-static const uint32_t SpacePoolId = 510716;
-
 /// Packs to shared memory, allocating new slots/pages as needed.
 /// Requires an Ipc::StoreMapAnchor locked for writing.
 class ShmWriter: public Packable
@@ -360,10 +355,7 @@ MemStore::updateHeadersOrThrow(Ipc::StoreMapUpdate &update)
     // our +/- hdr_sz math below does not work if the chains differ [in size]
     Must(update.stale.anchor->basics.swap_file_sz == update.fresh.anchor->basics.swap_file_sz);
 
-    const HttpReply *rawReply = update.entry->getReply();
-    Must(rawReply);
-    const HttpReply &reply = *rawReply;
-    const uint64_t staleHdrSz = reply.hdr_sz;
+    const uint64_t staleHdrSz = update.entry->mem().baseReply().hdr_sz;
     debugs(20, 7, "stale hdr_sz: " << staleHdrSz);
 
     /* we will need to copy same-slice payload after the stored headers later */
@@ -374,7 +366,7 @@ MemStore::updateHeadersOrThrow(Ipc::StoreMapUpdate &update)
 
     Must(update.stale.anchor);
     ShmWriter writer(*this, update.entry, update.fresh.fileNo);
-    reply.packHeadersUsingSlowPacker(writer);
+    update.entry->mem().freshestReply().packHeadersUsingSlowPacker(writer);
     const uint64_t freshHdrSz = writer.totalWritten;
     debugs(20, 7, "fresh hdr_sz: " << freshHdrSz << " diff: " << (freshHdrSz - staleHdrSz));
 
@@ -546,7 +538,7 @@ MemStore::copyFromShmSlice(StoreEntry &e, const StoreIOBuffer &buf, bool eof)
 
     // from store_client::readBody()
     // parse headers if needed; they might span multiple slices!
-    HttpReply *rep = (HttpReply *)e.getReply();
+    const auto rep = &e.mem().adjustableBaseReply();
     if (rep->pstate < Http::Message::psParsed) {
         // XXX: have to copy because httpMsgParseStep() requires 0-termination
         MemBuf mb;
@@ -813,7 +805,7 @@ MemStore::noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId)
     debugs(20, 9, "slice " << sliceId << " freed " << pageId);
     assert(pageId);
     Ipc::Mem::PageId slotId;
-    slotId.pool = SpacePoolId;
+    slotId.pool = Ipc::Mem::PageStack::IdForMemStoreSpace();
     slotId.number = sliceId + 1;
     if (!waitingFor) {
         // must zero pageId before we give slice (and pageId extras!) to others
@@ -1017,7 +1009,8 @@ MemStoreRr::create()
     const int64_t entryLimit = MemStore::EntryLimit();
     assert(entryLimit > 0);
     Must(!spaceOwner);
-    spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, SpacePoolId,
+    spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel,
+                 Ipc::Mem::PageStack::IdForMemStoreSpace(),
                  entryLimit, 0);
     Must(!mapOwner);
     mapOwner = MemStoreMap::Init(MapLabel, entryLimit);

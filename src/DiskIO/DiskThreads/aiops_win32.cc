@@ -279,7 +279,7 @@ squidaio_init(void)
     /* Create threads and get them to sit in their wait loop */
     squidaio_thread_pool = memPoolCreate("aio_thread", sizeof(squidaio_thread_t));
 
-    assert(NUMTHREADS);
+    assert(NUMTHREADS > 0);
 
     for (i = 0; i < NUMTHREADS; ++i) {
         threadp = (squidaio_thread_t *)squidaio_thread_pool->alloc();

@@ -27,7 +27,7 @@ class PagePool
 public:
     typedef Ipc::Mem::Owner<PageStack> Owner;
 
-    static Owner *Init(const char *const id, const unsigned int capacity, const size_t pageSize);
+    static Owner *Init(const char *const shmId, const Ipc::Mem::PoolId stackId, const unsigned int capacity, const size_t pageSize);
 
     PagePool(const char *const id);
 
@@ -49,7 +49,8 @@ public:
 
 private:
     Ipc::Mem::Pointer<PageStack> pageIndex; ///< free pages index
-    typedef std::atomic<size_t> Levels_t;
+    using Levels_t = PageStack::Levels_t;
+
     /// number of shared memory pages used now for each purpose
     Levels_t * const theLevels;
     char *const theBuf; ///< pages storage

@@ -101,7 +101,7 @@ public:
             return false;
 #if USE_OPENSSL
         // We are bumping and we had already send "OK CONNECTED"
-        if (http.valid() && http->getConn() && http->getConn()->serverBump() && http->getConn()->serverBump()->step > Ssl::bumpStep1)
+        if (http.valid() && http->getConn() && http->getConn()->serverBump() && http->getConn()->serverBump()->at(XactionStep::tlsBump2, XactionStep::tlsBump3))
             return false;
 #endif
         return !(request != NULL &&
@@ -251,8 +251,6 @@ public:
     void copyClientBytes();
     void copyServerBytes();
 };
-
-static const char *const conn_established = "HTTP/1.1 200 Connection established\r\n\r\n";
 
 static ERCB tunnelErrorComplete;
 static CLCB tunnelServerClosed;
@@ -863,7 +861,10 @@ TunnelStateData::notePeerReadyToShovel()
         *status_ptr = Http::scOkay;
         AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
                                              CommIoCbPtrFun(tunnelConnectedWriteDone, this));
-        client.write(conn_established, strlen(conn_established), call, nullptr);
+        al->reply = HttpReply::MakeConnectionEstablished();
+        const auto mb = al->reply->pack();
+        client.write(mb->content(), mb->contentSize(), call, mb->freeFunc());
+        delete mb;
     }
 }
 
@@ -1077,7 +1078,7 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
         if (savedError)
             return sendError(savedError, "all found paths have failed");
 
-        return sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw(), al),
+        return sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request.getRaw(), al),
                          "path selection found no paths");
     }
     // else continue to use one of the previously noted destinations;

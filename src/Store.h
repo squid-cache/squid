@@ -49,7 +49,14 @@ public:
     StoreEntry();
     virtual ~StoreEntry();
 
-    HttpReply const *getReply() const;
+    MemObject &mem() { assert(mem_obj); return *mem_obj; }
+    const MemObject &mem() const { assert(mem_obj); return *mem_obj; }
+
+    /// \retval * the address of freshest reply (if mem_obj exists)
+    /// \retval nullptr when mem_obj does not exist
+    /// \see MemObject::freshestReply()
+    const HttpReply *hasFreshestReply() const { return mem_obj ? &mem_obj->freshestReply() : nullptr; }
+
     void write(StoreIOBuffer);
 
     /** Check if the Store entry is empty
@@ -57,20 +64,18 @@ public:
      * \retval false  Store contains 1 or more bytes of data.
      * \retval false  Store contains negative content !!!!!!
      */
-    bool isEmpty() const {
-        assert (mem_obj);
-        return mem_obj->endOffset() == 0;
-    }
+    bool isEmpty() const { return mem().endOffset() == 0; }
     bool isAccepting() const;
     size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const;
     /// flags [truncated or too big] entry with ENTRY_BAD_LENGTH and releases it
     void lengthWentBad(const char *reason);
     void complete();
     store_client_t storeClientType() const;
-    char const *getSerialisedMetaData();
+    /// \returns a malloc()ed buffer containing a length-long packed swap header
+    const char *getSerialisedMetaData(size_t &length) const;
     /// Store a prepared error response. MemObject locks the reply object.
     void storeErrorResponse(HttpReply *reply);
-    void replaceHttpReply(HttpReply *, bool andStartWriting = true);
+    void replaceHttpReply(const HttpReplyPointer &, const bool andStartWriting = true);
     void startWriting(); ///< pack and write reply headers and, maybe, body
     /// whether we may start writing to disk (now or in the future)
     bool mayStartSwapOut();
@@ -128,7 +133,7 @@ public:
     /// TODO: Rename and make private so only those two methods can call this.
     bool checkCachable();
     int checkNegativeHit() const;
-    int locked() const;
+    int locked() const { return lock_count; }
     int validToSend() const;
     bool memoryCachable(); ///< checkCachable() and can be cached in memory
 
@@ -172,6 +177,11 @@ public:
     bool hasIfNoneMatchEtag(const HttpRequest &request) const;
     /// whether this entry has an ETag; if yes, puts ETag value into parameter
     bool hasEtag(ETag &etag) const;
+
+    /// Updates easily-accessible non-Store-specific parts of the entry.
+    /// Use Controller::updateOnNotModified() instead of this helper.
+    /// \returns whether anything was actually updated
+    bool updateOnNotModified(const StoreEntry &e304);
 
     /// the disk this entry is [being] cached on; asserts for entries w/o a disk
     Store::Disk &disk() const;
@@ -235,8 +245,8 @@ public:
 
     ESIElement::Pointer cachedESITree;
 #endif
-    int64_t objectLen() const;
-    int64_t contentLen() const;
+    int64_t objectLen() const { return mem().object_sz; }
+    int64_t contentLen() const { return objectLen() - mem().baseReply().hdr_sz; }
 
     /// claim shared ownership of this entry (for use in a given context)
     /// matching lock() and unlock() contexts eases leak triage but is optional

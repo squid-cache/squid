@@ -7,7 +7,19 @@
  */
 
 #include "squid.h"
-#include "MasterXaction.h"
+#include "base/InstanceId.h"
 
-InstanceIdDefinitions(MasterXaction, "master", uint64_t);
+#include <iostream>
+
+std::ostream&
+operator <<(std::ostream &os, const ScopedId &id)
+{
+    if (id.value)
+        os << id.scope << id.value;
+    else if (id.scope)
+        os << id.scope;
+    else
+        os << "[unknown]";
+    return os;
+}
 

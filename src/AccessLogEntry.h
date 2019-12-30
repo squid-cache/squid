@@ -10,7 +10,7 @@
 #define SQUID_HTTPACCESSLOGENTRY_H
 
 #include "anyp/PortCfg.h"
-#include "base/RefCount.h"
+#include "base/CodeContext.h"
 #include "comm/Connection.h"
 #include "HierarchyLogEntry.h"
 #include "http/ProtocolVersion.h"
@@ -36,14 +36,18 @@ class HttpReply;
 class HttpRequest;
 class CustomLog;
 
-class AccessLogEntry: public RefCountable
+class AccessLogEntry: public CodeContext
 {
 
 public:
     typedef RefCount<AccessLogEntry> Pointer;
 
     AccessLogEntry();
-    ~AccessLogEntry();
+    virtual ~AccessLogEntry();
+
+    /* CodeContext API */
+    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
+    virtual ScopedId codeContextGist() const override;
 
     /// Fetch the client IP log string into the given buffer.
     /// Knows about several alternate locations of the IP
@@ -55,6 +59,9 @@ public:
 
     /// Fetch the external ACL provided 'user=' string, or nil if none is available.
     const char *getExtUser() const;
+
+    /// whether we know what the request method is
+    bool hasLogMethod() const { return icp.opcode || htcp.opcode || http.method; }
 
     /// Fetch the transaction method string (ICP opcode, HTCP opcode or HTTP method)
     SBuf getLogMethod() const;

@@ -6,16 +6,18 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef _SQUID_CHARSET_H
-#define _SQUID_CHARSET_H
+#ifndef SQUID_IPC_MEM_FORWARD_H
+#define SQUID_IPC_MEM_FORWARD_H
 
-#ifdef __cplusplus
-extern "C"
-#else
-extern
-#endif
+namespace Ipc
+{
 
-char *latin1_to_utf8(char *out, size_t size, const char *in);
+namespace Mem
+{
+    typedef uint32_t PoolId;
+} // namespace Mem
 
-#endif /* _SQUID_CHARSET_H */
+} // namespace Ipc
+
+#endif /* SQUID_IPC_MEM_FORWARD_H */
 

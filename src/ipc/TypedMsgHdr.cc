@@ -143,7 +143,7 @@ Ipc::TypedMsgHdr::getString(String &s) const
     // TODO: use SBuf.reserve() instead of a temporary buffer
     char buf[maxSize];
     getRaw(&buf, length);
-    s.limitInit(buf, length);
+    s.assign(buf, length);
 }
 
 void

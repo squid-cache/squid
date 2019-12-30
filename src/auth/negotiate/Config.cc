@@ -214,7 +214,7 @@ authenticateNegotiateStats(StoreEntry * sentry)
  * Auth_user structure.
  */
 Auth::UserRequest::Pointer
-Auth::Negotiate::Config::decode(char const *proxy_auth, const char *aRequestRealm)
+Auth::Negotiate::Config::decode(char const *proxy_auth, const HttpRequest *, const char *aRequestRealm)
 {
     Auth::Negotiate::User *newUser = new Auth::Negotiate::User(Auth::SchemeConfig::Find("negotiate"), aRequestRealm);
     Auth::UserRequest *auth_user_request = new Auth::Negotiate::UserRequest();

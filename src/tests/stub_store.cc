@@ -26,14 +26,13 @@ bool StoreEntry::checkDeferRead(int fd) const STUB_RETVAL(false)
 const char *StoreEntry::getMD5Text() const STUB_RETVAL(NULL)
 StoreEntry::StoreEntry() STUB
 StoreEntry::~StoreEntry() STUB
-HttpReply const *StoreEntry::getReply() const STUB_RETVAL(NULL)
 void StoreEntry::write(StoreIOBuffer) STUB
 bool StoreEntry::isAccepting() const STUB_RETVAL(false)
 size_t StoreEntry::bytesWanted(Range<size_t> const, bool) const STUB_RETVAL(0)
 void StoreEntry::complete() STUB
 store_client_t StoreEntry::storeClientType() const STUB_RETVAL(STORE_NON_CLIENT)
-char const *StoreEntry::getSerialisedMetaData() STUB_RETVAL(NULL)
-void StoreEntry::replaceHttpReply(HttpReply *, bool andStartWriting) STUB
+char const *StoreEntry::getSerialisedMetaData(size_t &length) const STUB_RETVAL(NULL)
+void StoreEntry::replaceHttpReply(const HttpReplyPointer &, bool andStartWriting) STUB
 bool StoreEntry::mayStartSwapOut() STUB_RETVAL(false)
 void StoreEntry::trimMemory(const bool preserveSwappable) STUB
 void StoreEntry::abort() STUB
@@ -50,7 +49,6 @@ void StoreEntry::swapOutFileClose(int how) STUB
 const char *StoreEntry::url() const STUB_RETVAL(NULL)
 bool StoreEntry::checkCachable() STUB_RETVAL(false)
 int StoreEntry::checkNegativeHit() const STUB_RETVAL(0)
-int StoreEntry::locked() const STUB_RETVAL(0)
 int StoreEntry::validToSend() const STUB_RETVAL(0)
 bool StoreEntry::memoryCachable() STUB_RETVAL(false)
 void StoreEntry::createMemObject() STUB
@@ -88,8 +86,6 @@ void StoreEntry::operator delete(void *address) STUB
 void StoreEntry::buffer() STUB
 void StoreEntry::flush() STUB
 int StoreEntry::unlock(const char *) STUB_RETVAL(0)
-int64_t StoreEntry::objectLen() const STUB_RETVAL(0)
-int64_t StoreEntry::contentLen() const STUB_RETVAL(0)
 void StoreEntry::lock(const char *) STUB
 void StoreEntry::touch() STUB
 void StoreEntry::release(const bool shareable) STUB

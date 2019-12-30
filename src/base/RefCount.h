@@ -43,6 +43,12 @@ public:
         p.p_=NULL;
     }
 
+    /// Base::Pointer = Derived::Pointer
+    template <class Other>
+    RefCount(const RefCount<Other> &p): p_(p.getRaw()) {
+        reference(*this);
+    }
+
     RefCount& operator = (const RefCount& p) {
         // DO NOT CHANGE THE ORDER HERE!!!
         // This preserves semantics on self assignment

@@ -134,8 +134,6 @@ extern const EVP_MD *DefaultSignHash;
  */
 enum BumpMode {bumpNone = 0, bumpClientFirst, bumpServerFirst, bumpPeek, bumpStare, bumpBump, bumpSplice, bumpTerminate, /*bumpErr,*/ bumpEnd};
 
-enum BumpStep {bumpStep1, bumpStep2, bumpStep3};
-
 /**
  \ingroup  ServerProtocolSSLAPI
  * Short names for ssl-bump modes

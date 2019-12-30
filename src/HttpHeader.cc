@@ -157,6 +157,7 @@ HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0
     httpHeaderMaskInit(&mask, 0);
 }
 
+// XXX: Delete as unused, expensive, and violating copy semantics by skipping Warnings
 HttpHeader::HttpHeader(const HttpHeader &other): owner(other.owner), len(other.len), conflictingContentLength_(false)
 {
     entries.reserve(other.entries.capacity());
@@ -169,6 +170,7 @@ HttpHeader::~HttpHeader()
     clean();
 }
 
+// XXX: Delete as unused, expensive, and violating assignment semantics by skipping Warnings
 HttpHeader &
 HttpHeader::operator =(const HttpHeader &other)
 {
@@ -244,10 +246,16 @@ HttpHeader::append(const HttpHeader * src)
     }
 }
 
-/// check whether the fresh header has any new/changed updatable fields
 bool
 HttpHeader::needUpdate(HttpHeader const *fresh) const
 {
+    // our 1xx Warnings must be removed
+    for (const auto e: entries) {
+        // TODO: Move into HttpHeaderEntry::is1xxWarning() before official commit.
+        if (e && e->id == Http::HdrType::WARNING && (e->getInt()/100 == 1))
+            return true;
+    }
+
     for (const auto e: fresh->entries) {
         if (!e || skipUpdateHeader(e->id))
             continue;
@@ -275,20 +283,19 @@ HttpHeader::updateWarnings()
 bool
 HttpHeader::skipUpdateHeader(const Http::HdrType id) const
 {
-    // RFC 7234, section 4.3.4: use fields other from Warning for update
-    return id == Http::HdrType::WARNING;
+    return
+        // RFC 7234, section 4.3.4: use header fields other than Warning
+        (id == Http::HdrType::WARNING) ||
+        // TODO: Consider updating Vary headers after comparing the magnitude of
+        // the required changes (and/or cache losses) with compliance gains.
+        (id == Http::HdrType::VARY);
 }
 
-bool
+void
 HttpHeader::update(HttpHeader const *fresh)
 {
     assert(fresh);
     assert(this != fresh);
-
-    // Optimization: Finding whether a header field changed is expensive
-    // and probably not worth it except for collapsed revalidation needs.
-    if (Config.onoff.collapsed_forwarding && !needUpdate(fresh))
-        return false;
 
     updateWarnings();
 
@@ -318,7 +325,6 @@ HttpHeader::update(HttpHeader const *fresh)
 
         addEntry(e->clone());
     }
-    return true;
 }
 
 bool
@@ -1493,7 +1499,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
     }
 
     /* set field value */
-    value.limitInit(value_start, field_end - value_start);
+    value.assign(value_start, field_end - value_start);
 
     if (id != Http::HdrType::BAD_HDR)
         ++ headerStatsTable[id].seenCount;

@@ -673,12 +673,22 @@ DOC_START
 		For Basic and Digest this parameter is ignored.
 
 	"utf8" on|off
-		HTTP uses iso-latin-1 as character set, while some
-		authentication backends such as LDAP expects UTF-8. If this is
-		set to on Squid will translate the HTTP iso-latin-1 charset to
-		UTF-8 before sending the username and password to the helper.
+		Useful for sending credentials to authentication backends that
+		expect UTF-8 encoding (e.g., LDAP).
 
-		For NTLM and Negotiate this parameter is ignored.
+		When this option is enabled, Squid uses HTTP Accept-Language
+		request header to guess the received credentials encoding
+		(ISO-Latin-1, CP1251, or UTF-8) and then converts the first
+		two encodings into UTF-8.
+
+		When this option is disabled and by default, Squid sends
+		credentials in their original (i.e. received) encoding.
+
+		This parameter is only honored for Basic and Digest schemes.
+		For Basic, the entire username:password credentials are
+		checked and, if necessary, re-encoded. For Digest -- just the
+		username component. For NTLM and Negotiate schemes, this
+		parameter is ignored.
 
 IF HAVE_AUTH_MODULE_BASIC
 	=== Basic authentication parameters ===
@@ -1428,6 +1438,17 @@ endif
 	  #  acl hasWhatMyLoggingDaemonNeeds has request
 	  #  acl hasWhatMyLoggingDaemonNeeds has response
 
+acl aclname at_step step
+	  # match against the current request processing step [fast]
+	  # Valid steps are:
+	  #   GeneratingCONNECT: Generating HTTP CONNECT request headers
+IF USE_OPENSSL
+	  # The following ssl_bump processing steps are recognized:
+	  #   SslBump1: After getting TCP-level and HTTP CONNECT info.
+	  #   SslBump2: After getting SSL Client Hello info.
+	  #   SslBump3: After getting SSL Server Hello info.
+ENDIF
+
 IF USE_OPENSSL
 	acl aclname ssl_error errorname
 	  # match against SSL certificate validation error [fast]
@@ -1458,17 +1479,6 @@ IF USE_OPENSSL
 	  # Optional argument specifies the digest algorithm to use.
 	  # The SHA1 digest algorithm is the default and is currently
 	  # the only algorithm supported (-sha1).
-
-	acl aclname at_step step
-	  # match against the current step during ssl_bump evaluation [fast]
-	  # Never matches and should not be used outside the ssl_bump context.
-	  #
-	  # At each SslBump step, Squid evaluates ssl_bump directives to find
-	  # the next bumping action (e.g., peek or splice). Valid SslBump step
-	  # values and the corresponding ssl_bump evaluation moments are:
-	  #   SslBump1: After getting TCP-level and HTTP CONNECT info.
-	  #   SslBump2: After getting SSL Client Hello info.
-	  #   SslBump3: After getting SSL Server Hello info.
 
 	acl aclname ssl::server_name [option] .foo.com ...
 	  # matches server name obtained from various sources [fast]
@@ -4533,6 +4543,14 @@ DOC_START
 			individual notes. There is currently no way to
 			specify both value and notes separators when logging
 			all notes with %note.
+		master_xaction  The master transaction identifier is an unsigned
+			integer. These IDs are guaranteed to monotonically
+			increase within a single worker process lifetime, with
+			higher values corresponding to transactions that were
+			accepted or initiated later. Due to current implementation
+			deficiencies, some IDs are skipped (i.e. never logged).
+			Concurrent workers and restarted workers use similar,
+			overlapping sequences of master transaction IDs.
 
 	Connection related format codes:
 

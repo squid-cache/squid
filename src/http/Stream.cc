@@ -88,6 +88,8 @@ Http::Stream::writeComplete(size_t size)
     case STREAM_COMPLETE: {
         debugs(33, 5, clientConnection << " Stream complete, keepalive is " <<
                http->request->flags.proxyKeepalive);
+        // XXX: This code assumes we are done with the transaction, but we may
+        // still be receiving request body. TODO: Extend stopSending() instead.
         ConnStateData *c = getConn();
         if (!http->request->flags.proxyKeepalive)
             clientConnection->close();
@@ -439,7 +441,7 @@ Http::Stream::buildRangeHeader(HttpReply *rep)
     }
     else if (rep->content_length < 0)
         range_err = "unknown length";
-    else if (rep->content_length != http->memObject()->getReply()->content_length)
+    else if (rep->content_length != http->storeEntry()->mem().baseReply().content_length)
         range_err = "INCONSISTENT length";  /* a bug? */
 
     /* hits only - upstream CachePeer determines correct behaviour on misses,
@@ -570,6 +572,7 @@ Http::Stream::noteIoError(const int xerrno)
 void
 Http::Stream::finished()
 {
+    CodeContext::Reset(clientConnection);
     ConnStateData *conn = getConn();
 
     /* we can't handle any more stream data - detach */
@@ -646,9 +649,8 @@ Http::Stream::packRange(StoreIOBuffer const &source, MemBuf *mb)
              * multi-range
              */
             if (http->multipartRangeRequest() && i->debt() == i->currentSpec()->length) {
-                assert(http->memObject());
                 clientPackRangeHdr(
-                    http->memObject()->getReply(),  /* original reply */
+                    &http->storeEntry()->mem().freshestReply(),
                     i->currentSpec(),       /* current range */
                     i->boundary,    /* boundary, the same for all */
                     mb);

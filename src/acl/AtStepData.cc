@@ -7,15 +7,45 @@
  */
 
 #include "squid.h"
-
-#if USE_OPENSSL
-
 #include "acl/AtStepData.h"
 #include "acl/Checklist.h"
+#include "base/EnumIterator.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
+#include "sbuf/Stream.h"
 #include "wordlist.h"
+
+static inline const char *
+StepName(const XactionStep xstep)
+{
+    // keep in sync with XactionStep
+    static const char *StepNames[static_cast<int>(XactionStep::enumEnd_)] = {
+        "[unknown step]"
+        ,"GeneratingCONNECT"
+#if USE_OPENSSL
+        ,"SslBump1"
+        ,"SslBump2"
+        ,"SslBump3"
+#endif
+    };
+
+    assert(XactionStep::enumBegin_ <= xstep && xstep < XactionStep::enumEnd_);
+    return StepNames[static_cast<int>(xstep)];
+}
+
+static XactionStep
+StepValue(const char *name)
+{
+    assert(name);
+
+    for (const auto step: WholeEnum<XactionStep>()) {
+        if (strcasecmp(StepName(step), name) == 0)
+            return static_cast<XactionStep>(step);
+    }
+
+    throw TextException(ToSBuf("unknown at_step step name: ", name), Here());
+}
 
 ACLAtStepData::ACLAtStepData()
 {}
@@ -30,41 +60,29 @@ ACLAtStepData::~ACLAtStepData()
 }
 
 bool
-ACLAtStepData::match(Ssl::BumpStep  toFind)
+ACLAtStepData::match(XactionStep toFind)
 {
-    for (std::list<Ssl::BumpStep>::const_iterator it = values.begin(); it != values.end(); ++it) {
-        if (*it == toFind)
-            return true;
-    }
-    return false;
+    const auto found = std::find(values.cbegin(), values.cend(), toFind);
+    return (found != values.cend());
 }
 
 SBufList
 ACLAtStepData::dump() const
 {
     SBufList sl;
-    for (std::list<Ssl::BumpStep>::const_iterator it = values.begin(); it != values.end(); ++it) {
-        sl.push_back(SBuf(*it == Ssl::bumpStep1 ? "SslBump1" :
-                          *it == Ssl::bumpStep2 ? "SslBump2" :
-                          *it == Ssl::bumpStep3 ? "SslBump3" : "???"));
-    }
+    for (const auto value : values)
+        sl.push_back(SBuf(StepName(value)));
     return sl;
 }
 
 void
 ACLAtStepData::parse()
 {
-    while (const char *t = ConfigParser::strtokFile()) {
-        if (strcasecmp(t, "SslBump1") == 0) {
-            values.push_back(Ssl::bumpStep1);
-        } else if (strcasecmp(t, "SslBump2") == 0) {
-            values.push_back(Ssl::bumpStep2);
-        } else if (strcasecmp(t, "SslBump3") == 0) {
-            values.push_back(Ssl::bumpStep3);
-        } else {
-            debugs(28, DBG_CRITICAL, "FATAL: invalid AtStep step: " << t);
-            self_destruct();
-        }
+    while (const auto name = ConfigParser::strtokFile()) {
+        const auto step = StepValue(name);
+        if (step == XactionStep::unknown)
+            throw TextException(ToSBuf("prohibited at_step step name: ", name), Here());
+        values.push_back(step);
     }
 }
 
@@ -79,6 +97,4 @@ ACLAtStepData::clone() const
 {
     return new ACLAtStepData(*this);
 }
-
-#endif /* USE_OPENSSL */
 

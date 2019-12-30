@@ -47,6 +47,7 @@ public:
     StoreDigestCBlock cblock;
     int rebuild_lock = 0;                 ///< bucket number
     StoreEntry * rewrite_lock = nullptr;  ///< points to store entry with the digest
+    StoreEntry * publicEntry = nullptr;  ///< points to the previous store entry with the digest
     StoreSearchPointer theSearch;
     int rewrite_offset = 0;
     int rebuild_count = 0;
@@ -445,8 +446,15 @@ storeDigestRewriteResume(void)
     e = sd_state.rewrite_lock;
     sd_state.rewrite_offset = 0;
     EBIT_SET(e->flags, ENTRY_SPECIAL);
-    /* setting public key will purge old digest entry if any */
+    /* setting public key will mark the old digest entry for removal once unlocked */
     e->setPublicKey();
+    if (const auto oldEntry = sd_state.publicEntry) {
+        oldEntry->release(true);
+        sd_state.publicEntry = nullptr;
+        oldEntry->unlock("storeDigestRewriteResume");
+    }
+    assert(e->locked());
+    sd_state.publicEntry = e;
     /* fake reply */
     HttpReply *rep = new HttpReply;
     rep->setHeaders(Http::scOkay, "Cache Digest OK",
@@ -472,7 +480,6 @@ storeDigestRewriteFinish(StoreEntry * e)
            " (" << std::showpos << (int) (e->expires - squid_curtime) << ")");
     /* is this the write order? @?@ */
     e->mem_obj->unlinkRequest();
-    e->unlock("storeDigestRewriteFinish");
     sd_state.rewrite_lock = NULL;
     ++sd_state.rewrite_count;
     eventAdd("storeDigestRewriteStart", storeDigestRewriteStart, NULL, (double)

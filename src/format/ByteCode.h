@@ -233,6 +233,7 @@ typedef enum {
 
     LFT_NOTE,
     LFT_PERCENT,            /* special string cases for escaped chars */
+    LFT_MASTER_XACTION,
 
     // TODO assign better bytecode names and Token strings for these
 #if USE_OPENSSL

@@ -74,9 +74,9 @@ std::ostream &CurrentException(std::ostream &);
     try { \
         code \
     } catch (...) { \
-        debugs(0, DBG_IMPORTANT, "BUG: ignoring exception;\n" << \
-               "    bug location: " << Here() << "\n" << \
-               "    ignored exception: " << CurrentException); \
+        debugs(0, DBG_IMPORTANT, "BUG: ignoring exception;" << \
+               Debug::Extra << "bug location: " << Here() << \
+               Debug::Extra << "ignored exception: " << CurrentException); \
     }
 
 #endif /* SQUID__TEXTEXCEPTION_H */

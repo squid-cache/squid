@@ -6,6 +6,7 @@ squid \- HTTP web proxy caching server
 .SH SYNOPSIS
 .if !'po4a'hide' .B squid
 .if !'po4a'hide' .B [\-dhisrvzCFNRSVYX]
+.if !'po4a'hide' .B [\--foreground]
 .if !'po4a'hide' .B [\-l
 facility
 .if !'po4a'hide' .B ] [\-f
@@ -187,9 +188,15 @@ just exits. If you suspect cache_dir corruption, you must delete the top-level
 cache_dir directory before running squid -z.
 .IP
 By default, squid -z runs in daemon mode (so that configuration macros and
-other SMP features work as expected). Use
+other SMP features work as expected), returning control to the caller 
+before cache_dirs are fully initialized. If run from init scripts or
+daemon managers, the caller often needs to wait for the initialization to
+complete before proceeding further.
+Use
+.B \--foreground
+option to prevent premature exits. To disable daemon mode, use
 .B \-N
-option to overwrite this.
+option.
 .
 .SH FILES
 Squid configuration files located in @SYSCONFDIR@/:

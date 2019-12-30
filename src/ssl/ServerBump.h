@@ -16,6 +16,7 @@
 #include "ip/Address.h"
 #include "security/forward.h"
 #include "Store.h"
+#include "XactionStep.h"
 
 class ConnStateData;
 class store_client;
@@ -23,6 +24,8 @@ class ClientHttpRequest;
 
 namespace Ssl
 {
+
+using BumpStep = XactionStep;
 
 /**
  * Maintains bump-server-first related information.
@@ -39,6 +42,12 @@ public:
 
     /// whether there was a successful connection to (and peeking at) the origin server
     bool connectedOk() const {return entry && entry->isEmpty();}
+
+    /// whether we are currently performing the given processing step
+    bool at(const BumpStep stp) const { return step == stp; }
+
+    /// whether we are currently performing one of the given processing steps
+    bool at(const BumpStep step1, const BumpStep step2) const { return at(step1) || at(step2); }
 
     /// faked, minimal request; required by Client API
     HttpRequest::Pointer request;

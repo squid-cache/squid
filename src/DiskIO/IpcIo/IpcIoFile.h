@@ -166,6 +166,8 @@ public:
     ReadRequest *readRequest; ///< set if this is a read requests
     WriteRequest *writeRequest; ///< set if this is a write request
 
+    CodeContext::Pointer codeContext; ///< requestor's context
+
 private:
     IpcIoPendingRequest(const IpcIoPendingRequest &d); // not implemented
     IpcIoPendingRequest &operator =(const IpcIoPendingRequest &d); // ditto
