@@ -9,6 +9,7 @@
 #ifndef SQUID_BASE_STRING_VIEW_H
 #define SQUID_BASE_STRING_VIEW_H
 
+#include <cstring>
 #include <iosfwd>
 
 // TODO: Replace with std::string_view after switching to C+17
@@ -31,7 +32,13 @@ public:
     const char *data() const { return start_; }
 
     /* all operators are case-sensitive */
-    bool operator ==(const StringView &other) const;
+
+    bool operator ==(const StringView &other) const
+    {
+        return size_ == other.size_ &&
+               (empty() || memcmp(start_, other.start_, size_) == 0);
+    }
+
     bool operator !=(const StringView &other) const { return !(*this == other); }
 
     /* add more methods if needed but mimic std::string_view APIs */

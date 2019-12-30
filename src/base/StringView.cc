@@ -9,15 +9,7 @@
 #include "squid.h"
 #include "base/StringView.h"
 
-#include <cstring>
 #include <iostream>
-
-bool
-StringView::operator ==(const StringView &other) const
-{
-    return size_ == other.size_ &&
-           (empty() || memcmp(start_, other.start_, size_) == 0);
-}
 
 std::ostream &
 operator <<(std::ostream &os, const StringView &view)
