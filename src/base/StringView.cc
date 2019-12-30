@@ -12,10 +12,6 @@
 #include <cstring>
 #include <iostream>
 
-#if HAVE_STRINGS_H
-#include <strings.h>
-#endif
-
 bool
 StringView::operator ==(const StringView &other) const
 {
