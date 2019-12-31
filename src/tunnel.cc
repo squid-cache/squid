@@ -799,22 +799,30 @@ TunnelStateData::Connection::closeQuietly()
     assert(!writer);
 
     if (Comm::IsConnOpen(conn)) {
+        // We did not call conn->close().
         Must(closer);
         comm_remove_close_handler(conn->fd, closer);
         closer = nullptr;
-        conn->close();
+        conn->close(); // is already closing if others called comm_close()
         conn = nullptr;
         return;
     }
 
     if (closer) {
+        // We called conn->close() followed by this closeQuietly() call.
+        // Our close callback has already been scheduled but not yet fired.
         Must(conn);
-        Must(fd_table[conn->fd].closing()); // explains false IsConnOpen()
-        // our close callback has already been scheduled
         closer->cancel("no longer needed by tunnel");
         closer = nullptr;
+
+        // fd_table[old conn->fd].closing() ought to be true here,
+        // but we cannot check that because conn->close() clears conn->fd
+
         conn = nullptr;
+        return;
     }
+
+    Must(!conn);
 }
 
 static void
