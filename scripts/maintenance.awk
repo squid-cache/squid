@@ -8,7 +8,8 @@
 #
 # This script performs easily automated code updates for
 # removal or renaming of deprecated/obsolete syntax.
-# It is run by maintenance script over .h, .c, .cc, and .cci files
+# It is run by maintenance script over .h, .c, .cc, and .cci
+# files stored in the git repository
 #
 
 { print }
