@@ -28,7 +28,7 @@ This new release is available for download from <url url="http://www.squid-cache
 
 <sect1>Changes since earlier releases of Squid-5
 <p>
-The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/v5/changesets/" name="viewed here">.
+The Squid-5 change history can be <url url="http://www.squid-cache.org/Versions/v5/changesets/" name="viewed here">.
 
 
 <sect>Major new features since Squid-4
