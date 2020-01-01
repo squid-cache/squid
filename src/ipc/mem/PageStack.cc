@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,7 +18,7 @@
 /* Ipc::Mem::PageStackStorageSlot */
 
 static_assert(sizeof(Ipc::Mem::PageStackStorageSlot::Pointer) ==
-    sizeof(decltype(Ipc::Mem::PageId::number)), "page indexing types are consistent");
+              sizeof(decltype(Ipc::Mem::PageId::number)), "page indexing types are consistent");
 
 void
 Ipc::Mem::PageStackStorageSlot::take()
