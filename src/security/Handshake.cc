@@ -296,15 +296,17 @@ Security::HandshakeParser::parseChangeCipherCpecMessage()
     // We are currently ignoring Change Cipher Spec Protocol messages.
     skipMessage("ChangeCipherSpec msg [fragment]");
 
-    // In TLS v1.3, a dummy ChangeCipherSpec implies Middlebox Compatibility
-    // Mode. In earlier TLS versions, ChangeCipherSpec starts (encrypted)
+    // In earlier TLS v1.2 and earlier, ChangeCipherSpec starts (encrypted)
     // session resumption
-    if (!TlsVersion13OrLater(details->tlsSupportedVersion))
+    const bool tlsv12OrEarlier = details->tlsSupportedVersion.protocol != AnyP::PROTO_NONE &&
+                                 !TlsVersion13OrLater(details->tlsSupportedVersion);
+    if (tlsv12OrEarlier) {
         resumingSession = true;
 
-    // Everything after the ChangeCipherSpec message may be encrypted.
-    // Continuing parsing is pointless. Stop here.
-    done = "ChangeCipherSpec";
+        // Everything after the ChangeCipherSpec message may be encrypted.
+        // Continuing parsing is pointless. Stop here.
+        done = "ChangeCipherSpec";
+    }
 }
 
 void
