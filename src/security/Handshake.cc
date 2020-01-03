@@ -559,14 +559,14 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersionsList"));
         while (!tkVersions.atEnd()) {
             Parser::BinaryTokenizerContext version(tkVersions, "SupportedVersion");
-            auto aVersion = ParseProtocolVersion(tkVersions);
+            const auto aVersion = ParseProtocolVersion(tkVersions);
             if (TlsVersion13OrLater(aVersion) &&
                 (fixSupportedVersion.protocol == AnyP::PROTO_NONE || fixSupportedVersion < aVersion))
                 fixSupportedVersion = aVersion;
         }
     } else if (messageSource == fromServer) {
         Parser::BinaryTokenizer tkVersion(extensionData);
-        auto aVersion = ParseProtocolVersion(tkVersion);
+        const auto aVersion = ParseProtocolVersion(tkVersion);
         if (TlsVersion13OrLater(aVersion))
             fixSupportedVersion = aVersion;
     }
