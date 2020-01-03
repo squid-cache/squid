@@ -296,8 +296,11 @@ Security::HandshakeParser::parseChangeCipherCpecMessage()
     // We are currently ignoring Change Cipher Spec Protocol messages.
     skipMessage("ChangeCipherSpec msg [fragment]");
 
-    // In earlier TLS v1.2 and earlier, ChangeCipherSpec starts (encrypted)
-    // session resumption
+    // In TLS v1.2 and earlier, ChangeCipherSpec is sent after Hello (so the
+    // version is known by now) and indicates session resumption.
+    // In later TLS versions, ChangeCipherSpec may be sent before and after
+    // Hello, but it is no longer used for session resumption and should be
+    // ignored.
     const bool tlsv12OrEarlier = details->tlsSupportedVersion.protocol != AnyP::PROTO_NONE &&
                                  !TlsVersion13OrLater(details->tlsSupportedVersion);
     if (tlsv12OrEarlier) {
