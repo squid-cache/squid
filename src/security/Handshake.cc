@@ -106,14 +106,6 @@ static Extensions SupportedExtensions();
 
 } // namespace Security
 
-/// Whether the given version is TLSv1.3 or latter
-static bool
-TlsVersion13OrLater(const AnyP::ProtocolVersion &version)
-{
-    return version.protocol == AnyP::PROTO_TLS &&
-        version >= AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
-}
-
 /// Convenience helper: We parse ProtocolVersion but store "int".
 static AnyP::ProtocolVersion
 ParseProtocolVersion(Parser::BinaryTokenizer &tk)

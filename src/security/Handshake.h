@@ -125,6 +125,14 @@ private:
     YesNoNone expectingModernRecords;
 };
 
+/// Whether the given version is TLSv1.3 or latter
+inline bool
+TlsVersion13OrLater(const AnyP::ProtocolVersion &version)
+{
+    return version.protocol == AnyP::PROTO_TLS &&
+           version >= AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
+}
+
 }
 
 #endif // SQUID_SECURITY_HANDSHAKE_H

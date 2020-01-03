@@ -556,9 +556,9 @@ Ssl::ServerBio::resumingSession()
 }
 
 bool
-Ssl::ServerBio::tlsv1_3() const
+Ssl::ServerBio::tlsv13OrLater() const
 {
-    return parser_.details->tlsSupportedVersion == AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
+    return Security::TlsVersion13OrLater(parser_.details->tlsSupportedVersion);
 }
 
 /// initializes BIO table after allocation
