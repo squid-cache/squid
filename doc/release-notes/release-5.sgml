@@ -178,6 +178,19 @@ This section gives a thorough account of those changes in three categories:
 	<p>New access control to restrict collapsed forwarding to a subset of
 	   eligible HTTP, ICP and HTCP requests.
 
+	<tag>happy_eyeballs_connect_gap</tag>
+	<p>New directive to specify the minimum delay between opening spare
+	   connections to any server.
+
+	<tag>happy_eyeballs_connect_limit</tag>
+	<p>New directive to specify the maximum number of spare connections
+	   to any server.
+
+	<tag>happy_eyeballs_connect_timeout</tag>
+	<p>New directive to specify the minimum delay between opening a
+	   primary to-server connection and opening a spare to-server
+	   connection for the same transaction.
+
 	<tag>mark_client_connection</tag>
 	<p>New access control to apply a Netfilter CONNMARK value to a TCP client
 	   connection.
@@ -194,6 +207,9 @@ This section gives a thorough account of those changes in three categories:
 	<tag>response_delay_pool_access</tag>
 	<p>New access control to determines whether a specific named response
 	   delay pool is used for the HTTP transaction.
+
+	<tag>shared_transient_entries_limit</tag>
+	<p>Replacement for <em>collapsed_forwarding_shared_entries_limit</em>.
 
 </descrip>
 
@@ -214,8 +230,20 @@ This section gives a thorough account of those changes in three categories:
 	   type to match Netfilter CONNMARK of the client TCP connection.
 
 	<tag>auth_param</tag>
+	<p>New <em>reservation-timeout=</em> option to allow NTLM and Negotiate
+	   helpers to forget about clients with outstanding authentication
+	   requests.
 	<p>Added support for CP1251 charset conversion when <em>utf8</em> option
 	   is configured.
+
+	<tag>authenticate_cache_garbage_interval</tag>
+	<p>Now disabled when <em>--disable-auth</em> build parameter is used.
+
+	<tag>authenticate_ttl</tag>
+	<p>Now disabled when <em>--disable-auth</em> build parameter is used.
+
+	<tag>authenticate_ip_ttl</tag>
+	<p>Now disabled when <em>--disable-auth</em> build parameter is used.
 
 	<tag>deny_info</tag>
 	<p>New code <em>%A</em> to display Squid listening IP address the client
@@ -240,6 +268,9 @@ This section gives a thorough account of those changes in three categories:
 <descrip>
 	<tag>clientside_mark</tag>
 	<p>Replaced by <em>mark_client_packet</em>.
+
+	<tag>collapsed_forwarding_shared_entries_limit</tag>
+	<p>Replaced by <em>shared_transient_entries_limit</em>.
 
 	<tag>dns_v4_first</tag>
 	<p>Removed. The new "Happy Eyeballs" algorithm uses received IP
