@@ -24,8 +24,6 @@
  *
  *    13-Jan-2015 : Various fixed for C++ and MinGW native build
  *
- *    16-Aug-2019 : Replace strncpy with xstrncpy for string termination
- *
  *  Original License and code follows.
  */
 #include "squid.h"
