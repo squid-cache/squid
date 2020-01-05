@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -233,6 +233,7 @@ typedef enum {
 
     LFT_NOTE,
     LFT_PERCENT,            /* special string cases for escaped chars */
+    LFT_MASTER_XACTION,
 
     // TODO assign better bytecode names and Token strings for these
 #if USE_OPENSSL

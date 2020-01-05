@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -133,8 +133,6 @@ extern const EVP_MD *DefaultSignHash;
  * Supported ssl-bump modes
  */
 enum BumpMode {bumpNone = 0, bumpClientFirst, bumpServerFirst, bumpPeek, bumpStare, bumpBump, bumpSplice, bumpTerminate, /*bumpErr,*/ bumpEnd};
-
-enum BumpStep {bumpStep1, bumpStep2, bumpStep3};
 
 /**
  \ingroup  ServerProtocolSSLAPI

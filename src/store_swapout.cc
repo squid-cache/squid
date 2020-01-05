@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -57,7 +57,7 @@ storeSwapOutStart(StoreEntry * e)
      */
 
     // Create metadata now, possibly in vain: storeCreate needs swap_hdr_sz.
-    const char *buf = e->getSerialisedMetaData ();
+    const auto buf = e->getSerialisedMetaData(mem->swap_hdr_sz);
     assert(buf);
 
     /* Create the swap file */

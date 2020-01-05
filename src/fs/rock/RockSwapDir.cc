@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -754,7 +754,7 @@ void
 Rock::SwapDir::noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId)
 {
     Ipc::Mem::PageId pageId;
-    pageId.pool = index+1;
+    pageId.pool = Ipc::Mem::PageStack::IdForSwapDirSpace(index);
     pageId.number = sliceId+1;
     if (waitingForPage) {
         *waitingForPage = pageId;
@@ -1138,7 +1138,9 @@ void Rock::SwapDirRr::create()
             // TODO: somehow remove pool id and counters from PageStack?
             Ipc::Mem::Owner<Ipc::Mem::PageStack> *const freeSlotsOwner =
                 shm_new(Ipc::Mem::PageStack)(sd->freeSlotsPath(),
-                                             i+1, capacity, 0);
+                                             Ipc::Mem::PageStack::IdForSwapDirSpace(i),
+                                             capacity,
+                                             0);
             freeSlotsOwners.push_back(freeSlotsOwner);
 
             // TODO: add method to initialize PageStack with no free pages

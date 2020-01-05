@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,6 +45,7 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "neighbors.h"
+#include "pconn.h"
 #include "peer_proxy_negotiate_auth.h"
 #include "profiler/Profiler.h"
 #include "refresh.h"
@@ -787,6 +788,9 @@ HttpStateData::processReplyHeader()
 void
 HttpStateData::handle1xx(HttpReply *reply)
 {
+    if (fwd->al)
+        fwd->al->reply = reply;
+
     HttpReply::Pointer msg(reply); // will destroy reply if unused
 
     // one 1xx at a time: we must not be called while waiting for previous 1xx
@@ -857,12 +861,12 @@ HttpStateData::peerSupportsConnectionPinning() const
     if (!_peer->connection_auth)
         return false;
 
-    const HttpReplyPointer rep(entry->mem_obj->getReply());
+    const auto &rep = entry->mem().freshestReply();
 
     /*The peer supports connection pinning and the http reply status
       is not unauthorized, so the related connection can be pinned
      */
-    if (rep->sline.status() != Http::scUnauthorized)
+    if (rep.sline.status() != Http::scUnauthorized)
         return true;
 
     /*The server respond with Http::scUnauthorized and the peer configured
@@ -891,7 +895,7 @@ HttpStateData::peerSupportsConnectionPinning() const
       reply and has in its list the "Session-Based-Authentication"
       which means that the peer supports connection pinning.
      */
-    if (rep->header.hasListMember(Http::HdrType::PROXY_SUPPORT, "Session-Based-Authentication", ','))
+    if (rep.header.hasListMember(Http::HdrType::PROXY_SUPPORT, "Session-Based-Authentication", ','))
         return true;
 
     return false;
@@ -915,7 +919,7 @@ HttpStateData::haveParsedReplyHeaders()
 
     if (StoreEntry *oldEntry = findPreviouslyCachedEntry(entry)) {
         oldEntry->lock("HttpStateData::haveParsedReplyHeaders");
-        sawDateGoBack = rep->olderThan(oldEntry->getReply());
+        sawDateGoBack = rep->olderThan(oldEntry->hasFreshestReply());
         oldEntry->unlock("HttpStateData::haveParsedReplyHeaders");
     }
 
@@ -1492,7 +1496,7 @@ HttpStateData::processReplyBody()
                     serverConnectionSaved->close();
                 }
             } else {
-                fwd->pconnPush(serverConnectionSaved, request->url.host());
+                fwdPconnPool->push(serverConnectionSaved, request->url.host());
             }
 
             serverComplete();
@@ -1501,6 +1505,9 @@ HttpStateData::processReplyBody()
 
         case COMPLETE_NONPERSISTENT_MSG:
             debugs(11, 5, "processReplyBody: COMPLETE_NONPERSISTENT_MSG from " << serverConnection);
+            if (flags.chunked && !lastChunk)
+                entry->lengthWentBad("missing last-chunk");
+
             serverComplete();
             return;
         }

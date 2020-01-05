@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -1109,6 +1109,10 @@ AC_ARG_ENABLE(eui,
 SQUID_YESNO([$enableval],[--disable-eui expects no arguments])
 ])
 if test "x${enable_eui:=yes}" = "xyes" ; then
+  SQUID_STATE_SAVE(LIBEUI)
+  # GLIBC 2.30 deprecates sysctl.h. Test with the same flags that (may) break includes later.
+  CFLAGS=$SQUID_CFLAGS
+  CXXFLAGS=$SQUID_CXXFLAGS
   case "$squid_host_os" in
     linux|solaris|freebsd|openbsd|netbsd|cygwin)
       ${TRUE}
@@ -1148,6 +1152,7 @@ include <windows.h>
 #include <sys/param.h>
 #endif
   ]])
+  SQUID_STATE_ROLLBACK(LIBEUI)
 fi
 AC_SUBST(EUILIB)
 AC_MSG_NOTICE([EUI (MAC address) controls enabled: $enable_eui])
@@ -1335,7 +1340,7 @@ if test "x$with_openssl" = "xyes"; then
     AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
       AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
     ],$LIBOPENSSL_LIBS)
-    AC_CHECK_LIB(ssl,[SSL_library_init],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
+    AC_CHECK_LIB(ssl,[SSL_CTX_new],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
       AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
     ],$LIBOPENSSL_LIBS)
   ])

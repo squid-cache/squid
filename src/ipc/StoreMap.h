@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -186,8 +186,8 @@ public:
     StoreMapUpdate &operator =(const StoreMapUpdate &other) = delete;
 
     StoreEntry *entry; ///< the store entry being updated
-    Edition stale; ///< old anchor and chain being updated
-    Edition fresh; ///< new anchor and updated chain prefix
+    Edition stale; ///< old anchor and chain
+    Edition fresh; ///< new anchor and the updated chain prefix
 };
 
 class StoreMapCleaner;

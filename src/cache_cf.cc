@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1289,7 +1289,7 @@ parseBytesOptionValue(size_t * bptr, const char *units, char const * value)
     }
 
     String number;
-    number.limitInit(number_begin, number_end - number_begin);
+    number.assign(number_begin, number_end - number_begin);
 
     int d = xatoi(number.termedBuf());
     int m;

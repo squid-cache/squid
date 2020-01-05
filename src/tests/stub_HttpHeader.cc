@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@
 #include "HttpHeader.h"
 HttpHeaderEntry::HttpHeaderEntry(Http::HdrType, const SBuf &, const char *) {STUB}
 HttpHeaderEntry::~HttpHeaderEntry() {STUB}
-HttpHeaderEntry *HttpHeaderEntry::parse(const char *, const char *) STUB_RETVAL(nullptr)
+HttpHeaderEntry *HttpHeaderEntry::parse(const char *, const char *, const http_hdr_owner_type) STUB_RETVAL(nullptr)
 HttpHeaderEntry *HttpHeaderEntry::clone() const STUB_RETVAL(nullptr)
 void HttpHeaderEntry::packInto(Packable *) const STUB
 int HttpHeaderEntry::getInt() const STUB_RETVAL(0)
@@ -28,7 +28,7 @@ HttpHeader::~HttpHeader() {STUB}
 HttpHeader &HttpHeader::operator =(const HttpHeader &other) STUB_RETVAL(*this)
 void HttpHeader::clean() STUB
 void HttpHeader::append(const HttpHeader *) STUB
-bool HttpHeader::update(HttpHeader const *) STUB_RETVAL(false)
+void HttpHeader::update(const HttpHeader *) STUB
 void HttpHeader::compact() STUB
 int HttpHeader::parse(const char *, size_t, Http::ContentLengthInterpreter &) STUB_RETVAL(-1)
 int HttpHeader::parse(const char *, size_t, bool, size_t &, Http::ContentLengthInterpreter &) STUB_RETVAL(-1)
