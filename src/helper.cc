@@ -22,6 +22,7 @@
 #include "helper/Reply.h"
 #include "helper/Request.h"
 #include "MemBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "SquidMath.h"
@@ -283,16 +284,10 @@ helperOpenServers(helper * hlp)
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
         if (rfd == wfd) {
-            SBuf desc;
-            desc.appendf("%s #%d", shortname, k + 1);
             fd_note(rfd, ToSBuf(shortname, " #", k + 1));
         } else {
-            SBuf desc;
-            desc.appendf("reading %s #%d", shortname, k + 1);
-            fd_note(rfd, desc);
-            desc.clear();
-            desc.appendf("writing %s #%d", shortname, k + 1);
-            fd_note(wfd, desc);
+            fd_note(rfd, ToSBuf("reading ", shortname, " #", k + 1));
+            fd_note(wfd, ToSBuf("writing ", shortname, " #", k + 1));
         }
 
         commSetNonBlocking(rfd);
@@ -410,16 +405,10 @@ helperStatefulOpenServers(statefulhelper * hlp)
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
         if (rfd == wfd) {
-            SBuf desc;
-            desc.appendf("%s #%d", shortname, k + 1);
-            fd_note(rfd, desc);
+            fd_note(rfd, ToSBuf(shortname, " #", k + 1));
         } else {
-            SBuf desc;
-            desc.appendf("reading %s #%d", shortname, k + 1);
-            fd_note(rfd, desc);
-            desc.clear();
-            desc.appendf("writing %s #%d", shortname, k + 1);
-            fd_note(wfd, desc);
+            fd_note(rfd, ToSBuf("reading ", shortname, " #", k + 1));
+            fd_note(wfd, ToSBuf("writing ", shortname, " #", k + 1));
         }
 
         commSetNonBlocking(rfd);
