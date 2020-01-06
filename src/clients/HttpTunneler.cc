@@ -157,7 +157,8 @@ Http::Tunneler::writeRequest()
 
     debugs(11, 2, "Tunnel Server REQUEST: " << connection <<
            ":\n----------\n" << mb.buf << "\n----------");
-    fd_note(connection->fd, "Tunnel Server CONNECT");
+    static const SBuf desc("Tunnel Server CONNECT");
+    fd_note(connection->fd, desc);
 
     typedef CommCbMemFunT<Http::Tunneler, CommIoCbParams> Dialer;
     writer = JobCallback(5, 5, Dialer, this, Http::Tunneler::handleWrittenRequest);
