@@ -371,8 +371,7 @@ Ftp::Server::listenForDataConnection()
     conn->flags = COMM_NONBLOCKING;
     conn->local = transparent() ? port->s : clientConnection->local;
     conn->local.port(0);
-    const char *const note = uri.c_str();
-    comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, note);
+    comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn, uri);
     if (!Comm::IsConnOpen(conn)) {
         debugs(5, DBG_CRITICAL, "comm_open_listener failed for FTP data: " <<
                conn->local << " error: " << errno);
@@ -386,6 +385,7 @@ Ftp::Server::listenForDataConnection()
     Subscription::Pointer sub = new CallSubscription<AcceptCall>(call);
     listener = call.getRaw();
     dataListenConn = conn;
+    const char *const note = uri.c_str();
     AsyncJob::Start(new Comm::TcpAcceptor(conn, note, sub));
 
     const unsigned int listeningPort = comm_local_port(conn->fd);

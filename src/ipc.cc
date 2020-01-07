@@ -95,29 +95,31 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     } else void(0)
 
     if (type == IPC_TCP_SOCKET) {
+        SBuf desc(name);
         crfd = cwfd = comm_open(SOCK_STREAM,
                                 0,
                                 local_addr,
                                 COMM_NOCLOEXEC,
-                                name);
+                                desc);
         prfd = pwfd = comm_open(SOCK_STREAM,
                                 0,          /* protocol */
                                 local_addr,
                                 0,          /* blocking */
-                                name);
+                                desc);
         IPC_CHECK_FAIL(crfd, "child read", "TCP " << local_addr);
         IPC_CHECK_FAIL(prfd, "parent read", "TCP " << local_addr);
     } else if (type == IPC_UDP_SOCKET) {
+        SBuf desc(name);
         crfd = cwfd = comm_open(SOCK_DGRAM,
                                 0,
                                 local_addr,
                                 COMM_NOCLOEXEC,
-                                name);
+                                desc);
         prfd = pwfd = comm_open(SOCK_DGRAM,
                                 0,
                                 local_addr,
                                 0,
-                                name);
+                                desc);
         IPC_CHECK_FAIL(crfd, "child read", "UDP" << local_addr);
         IPC_CHECK_FAIL(prfd, "parent read", "UDP" << local_addr);
     } else if (type == IPC_FIFO) {

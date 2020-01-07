@@ -58,7 +58,7 @@
  */
 
 static IOCB commHalfClosedReader;
-static void comm_init_opened(const Comm::ConnectionPointer &conn, const char *note, struct addrinfo *AI);
+static void comm_init_opened(const Comm::ConnectionPointer &conn, const SBuf &note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
 #if USE_DELAY_POOLS
@@ -223,7 +223,7 @@ comm_open(int sock_type,
           int proto,
           Ip::Address &addr,
           int flags,
-          const char *note)
+          const SBuf &note)
 {
     return comm_openex(sock_type, proto, addr, flags, note);
 }
@@ -232,7 +232,7 @@ void
 comm_open_listener(int sock_type,
                    int proto,
                    Comm::ConnectionPointer &conn,
-                   const char *note)
+                   const SBuf &note)
 {
     /* all listener sockets require bind() */
     conn->flags |= COMM_DOBIND;
@@ -246,7 +246,7 @@ comm_open_listener(int sock_type,
                    int proto,
                    Ip::Address &addr,
                    int flags,
-                   const char *note)
+                   const SBuf &note)
 {
     int sock = -1;
 
@@ -331,7 +331,7 @@ comm_openex(int sock_type,
             int proto,
             Ip::Address &addr,
             int flags,
-            const char *note)
+            const SBuf &note)
 {
     int new_socket;
     struct addrinfo *AI = NULL;
@@ -414,7 +414,7 @@ comm_openex(int sock_type,
 /// update FD tables after a local or remote (IPC) comm_openex();
 void
 comm_init_opened(const Comm::ConnectionPointer &conn,
-                 const char *note,
+                 const SBuf &note,
                  struct addrinfo *AI)
 {
     assert(Comm::IsConnOpen(conn));
@@ -424,7 +424,7 @@ comm_init_opened(const Comm::ConnectionPointer &conn,
     debugs(5, 5, HERE << conn << " is a new socket");
 
     assert(!isOpen(conn->fd)); // NP: global isOpen checks the fde entry for openness not the Comm::Connection
-    fd_open(conn->fd, FD_SOCKET, SBuf(note));
+    fd_open(conn->fd, FD_SOCKET, note);
 
     fde *F = &fd_table[conn->fd];
     F->local_addr = conn->local;
@@ -497,7 +497,7 @@ comm_apply_flags(int new_socket,
 
 void
 comm_import_opened(const Comm::ConnectionPointer &conn,
-                   const char *note,
+                   const SBuf &note,
                    struct addrinfo *AI)
 {
     debugs(5, 2, HERE << conn);

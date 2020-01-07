@@ -166,7 +166,8 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
     if (addr.isIPv4())
         any_addr.setIPv4();
 
-    ll->fd = comm_open(SOCK_DGRAM, IPPROTO_UDP, any_addr, COMM_NONBLOCKING, "UDP log socket");
+    static const SBuf desc("UDP log socket");
+    ll->fd = comm_open(SOCK_DGRAM, IPPROTO_UDP, any_addr, COMM_NONBLOCKING, desc);
     int xerrno = errno;
     if (ll->fd < 0) {
         if (lf->flags.fatal) {

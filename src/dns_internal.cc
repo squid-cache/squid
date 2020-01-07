@@ -1550,20 +1550,22 @@ Dns::Init(void)
 
         if (Ip::EnableIpv6 && addrV6.isIPv6()) {
             debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addrV6);
+            static const SBuf desc("DNS Socket IPv6");
             DnsSocketB = comm_open_listener(SOCK_DGRAM,
                                             IPPROTO_UDP,
                                             addrV6,
                                             COMM_NONBLOCKING,
-                                            "DNS Socket IPv6");
+                                            desc);
         }
 
         if (addrV4.isIPv4()) {
             debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addrV4);
+            static const SBuf desc("DNS Socket IPv4");
             DnsSocketA = comm_open_listener(SOCK_DGRAM,
                                             IPPROTO_UDP,
                                             addrV4,
                                             COMM_NONBLOCKING,
-                                            "DNS Socket IPv4");
+                                            desc);
         }
 
         if (DnsSocketA < 0 && DnsSocketB < 0)

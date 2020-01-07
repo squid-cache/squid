@@ -36,10 +36,10 @@ int comm_connect_addr(int sock, const Ip::Address &addr);
 void comm_init(void);
 void comm_exit(void);
 
-int comm_open(int, int, Ip::Address &, int, const char *note);
+int comm_open(int, int, Ip::Address &, int, const SBuf &note);
 int comm_open_uds(int sock_type, int proto, struct sockaddr_un* addr, int flags);
 /// update Comm state after getting a comm_open() FD from another process
-void comm_import_opened(const Comm::ConnectionPointer &, const char *note, struct addrinfo *AI);
+void comm_import_opened(const Comm::ConnectionPointer &, const SBuf &note, struct addrinfo *AI);
 
 /**
  * Open a port specially bound for listening or sending through a specific port.
@@ -56,10 +56,10 @@ void comm_import_opened(const Comm::ConnectionPointer &, const char *note, struc
  * (in debugs or cachemgr) will occur in Native IPv4 format.
  * A reconfigure is needed to reset the stored IP in most cases and attempt a port re-open.
  */
-int comm_open_listener(int sock_type, int proto, Ip::Address &addr, int flags, const char *note);
-void comm_open_listener(int sock_type, int proto, Comm::ConnectionPointer &conn, const char *note);
+int comm_open_listener(int sock_type, int proto, Ip::Address &addr, int flags, const SBuf &note);
+void comm_open_listener(int sock_type, int proto, Comm::ConnectionPointer &conn, const SBuf &note);
 
-int comm_openex(int, int, Ip::Address &, int, const char *);
+int comm_openex(int, int, Ip::Address &, int, const SBuf &);
 unsigned short comm_local_port(int fd);
 
 int comm_udp_sendto(int sock, const Ip::Address &to, const void *buf, int buflen);

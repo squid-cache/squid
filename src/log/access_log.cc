@@ -416,12 +416,13 @@ accessLogInit(void)
         mcast_miss_to.sin_family = AF_INET;
         mcast_miss_to.sin_port = htons(Config.mcast_miss.port);
         mcast_miss_to.sin_addr.s_addr = Config.mcast_miss.addr.s_addr;
+        static const SBuf desc("Multicast Miss Stream");
         mcast_miss_fd = comm_open(SOCK_DGRAM,
                                   IPPROTO_UDP,
                                   Config.Addrs.udp_incoming,
                                   Config.mcast_miss.port,
                                   COMM_NONBLOCKING,
-                                  "Multicast Miss Stream");
+                                  desc);
 
         if (mcast_miss_fd < 0)
             fatal("Cannot open Multicast Miss Stream Socket");

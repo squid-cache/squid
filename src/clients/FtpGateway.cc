@@ -459,7 +459,7 @@ Ftp::Gateway::listenForDataChannel(const Comm::ConnectionPointer &conn)
 
     /* open the conn if its not already open */
     if (!Comm::IsConnOpen(conn)) {
-        conn->fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn->local, conn->flags, note);
+        conn->fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn->local, conn->flags, SBuf(note));
         if (!Comm::IsConnOpen(conn)) {
             debugs(5, DBG_CRITICAL, HERE << "comm_open_listener failed:" << conn->local << " error: " << errno);
             return;

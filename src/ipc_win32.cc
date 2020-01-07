@@ -128,27 +128,29 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     }
 
     if (type == IPC_TCP_SOCKET) {
+        SBuf desc(name);
         crfd = cwfd = comm_open(SOCK_STREAM,
                                 IPPROTO_TCP,
                                 local_addr,
                                 COMM_NOCLOEXEC,
-                                name);
+                                desc);
         prfd = pwfd = comm_open(SOCK_STREAM,
                                 IPPROTO_TCP,    /* protocol */
                                 local_addr,
                                 0,          /* blocking */
-                                name);
+                                desc);
     } else if (type == IPC_UDP_SOCKET) {
+        SBuf desc(name);
         crfd = cwfd = comm_open(SOCK_DGRAM,
                                 IPPROTO_UDP,
                                 local_addr,
                                 COMM_NOCLOEXEC,
-                                name);
+                                desc);
         prfd = pwfd = comm_open(SOCK_DGRAM,
                                 IPPROTO_UDP,
                                 local_addr,
                                 0,
-                                name);
+                                desc);
     } else if (type == IPC_FIFO) {
         debugs(54, DBG_CRITICAL, "ipcCreate: " << prog << ": use IPC_TCP_SOCKET instead of IP_FIFO on Windows");
         assert(0);
@@ -458,8 +460,8 @@ ipc_thread_1(void *in_params)
     }
 
     if (type == IPC_UDP_SOCKET) {
-        snprintf(buf1, bufSz, "%s(%ld) <-> ipc CHILD socket", prog, -1L);
-        crfd_ipc = cwfd_ipc = comm_open(SOCK_DGRAM, IPPROTO_UDP, local_addr, 0, buf1);
+        crfd_ipc = cwfd_ipc = comm_open(SOCK_DGRAM, IPPROTO_UDP, local_addr, 0,
+                                        ToSBuf(prog, "(", -1L, ") <-> ipc CHILD socket"));
 
         if (crfd_ipc < 0) {
             debugs(54, DBG_CRITICAL, "ipcCreate: CHILD: Failed to create child FD for " << prog << ".");
@@ -467,8 +469,9 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        snprintf(buf1, bufSz, "%s(%ld) <-> ipc PARENT socket", prog, -1L);
-        prfd_ipc = pwfd_ipc = comm_open(SOCK_DGRAM, IPPROTO_UDP, local_addr, 0, buf1);
+        prfd_ipc = pwfd_ipc = comm_open(SOCK_DGRAM, IPPROTO_UDP, local_addr, 0,
+                                        ToSBuf(prog, "(", -1L, ") <-> ipc PARENT socket"));
+
 
         if (pwfd_ipc < 0) {
             debugs(54, DBG_CRITICAL, "ipcCreate: CHILD: Failed to create server FD for " << prog << ".");

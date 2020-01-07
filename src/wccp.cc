@@ -127,11 +127,12 @@ wccpConnectionOpen(void)
     Config.Wccp.address.port(WCCP_PORT);
     Config.Wccp.router.port(WCCP_PORT);
 
+    static const SBuf desc("WCCP Socket");
     theWccpConnection = comm_open_listener(SOCK_DGRAM,
                                            IPPROTO_UDP,
                                            Config.Wccp.address,
                                            COMM_NONBLOCKING,
-                                           "WCCP Socket");
+                                           desc);
 
     if (theWccpConnection < 0)
         fatal("Cannot open WCCP Port");

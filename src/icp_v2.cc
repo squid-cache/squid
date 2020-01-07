@@ -749,7 +749,8 @@ icpOpenPorts(void)
         }
 
         enter_suid();
-        comm_open_listener(SOCK_DGRAM, IPPROTO_UDP, icpOutgoingConn, "Outgoing ICP Port");
+        static const SBuf desc("Outgoing ICP Socket");
+        comm_open_listener(SOCK_DGRAM, IPPROTO_UDP, icpOutgoingConn, desc);
         leave_suid();
 
         if (!Comm::IsConnOpen(icpOutgoingConn))
@@ -758,8 +759,6 @@ icpOpenPorts(void)
         debugs(12, DBG_CRITICAL, "Sending ICP messages from " << icpOutgoingConn->local);
 
         Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
-        static const SBuf desc("Outgoing ICP socket");
-        fd_note(icpOutgoingConn->fd, desc);
     }
 }
 

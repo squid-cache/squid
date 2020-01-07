@@ -1484,7 +1484,8 @@ htcpOpenPorts(void)
         }
 
         enter_suid();
-        comm_open_listener(SOCK_DGRAM, IPPROTO_UDP, htcpOutgoingConn, "Outgoing HTCP Socket");
+        static const SBuf desc("Outgoing HTCP Socket");
+        comm_open_listener(SOCK_DGRAM, IPPROTO_UDP, htcpOutgoingConn, desc);
         leave_suid();
 
         if (!Comm::IsConnOpen(htcpOutgoingConn))

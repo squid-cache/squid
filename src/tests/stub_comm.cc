@@ -43,12 +43,12 @@ void comm_lingering_close(int fd) STUB
 int comm_connect_addr(int sock, const Ip::Address &addr) STUB_RETVAL(-1)
 void comm_init(void) STUB
 void comm_exit(void) STUB
-int comm_open(int, int, Ip::Address &, int, const char *note) STUB_RETVAL(-1)
+int comm_open(int, int, Ip::Address &, int, const SBuf &) STUB_RETVAL(-1)
 int comm_open_uds(int sock_type, int proto, struct sockaddr_un* addr, int flags) STUB_RETVAL(-1)
-void comm_import_opened(const Comm::ConnectionPointer &, const char *note, struct addrinfo *AI) STUB
-int comm_open_listener(int sock_type, int proto, Ip::Address &addr, int flags, const char *note) STUB_RETVAL(-1)
-void comm_open_listener(int sock_type, int proto, Comm::ConnectionPointer &conn, const char *note) STUB
-int comm_openex(int, int, Ip::Address &, int, tos_t tos, nfmark_t nfmark, const char *) STUB_RETVAL(-1)
+void comm_import_opened(const Comm::ConnectionPointer &, const SBuf &, struct addrinfo *) STUB
+int comm_open_listener(int, int, Ip::Address &, int, const SBuf &) STUB_RETVAL(-1)
+void comm_open_listener(int, int, Comm::ConnectionPointer &, const SBuf &) STUB
+int comm_openex(int, int, Ip::Address &, int, tos_t, nfmark_t, const SBuf &) STUB_RETVAL(-1)
 unsigned short comm_local_port(int fd) STUB_RETVAL(0)
 int comm_udp_sendto(int sock, const Ip::Address &to, const void *buf, int buflen) STUB_RETVAL(-1)
 void commCallCloseHandlers(int fd) STUB

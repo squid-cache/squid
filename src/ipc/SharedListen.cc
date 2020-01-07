@@ -179,7 +179,7 @@ void Ipc::SharedListenJoined(const SharedListenResponse &response)
         p.addr.getAddrInfo(AI);
         AI->ai_socktype = p.sock_type;
         AI->ai_protocol = p.proto;
-        comm_import_opened(cbd->conn, FdNote(p.fdNote), AI);
+        comm_import_opened(cbd->conn, SBuf(FdNote(p.fdNote)), AI);
         Ip::Address::FreeAddr(AI);
     }
 
