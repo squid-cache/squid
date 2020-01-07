@@ -128,7 +128,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>Details in <url url="https://tools.ietf.org/html/rfc8586" name="RFC 8586">
 
 <p>Squid now uses the CDN-Loop header as a source for loop detection.
-    
+
 <p>This header is only relevant to CDN installations. For which the
    <em>surrogate_id</em> configuration directive specifies the authoritative
    ID.
