@@ -143,9 +143,9 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
 
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
 
-        // client connection is required in the case we need to splice
-        // or terminate client and server connections
-        assert(clientConn != NULL);
+        // client connection supplies TLS client details and is also used if we
+        // need to splice or terminate the client and server connections
+        assert(Comm::IsConnOpen(clientConn));
         SBuf *hostName = NULL;
 
         //Enable Status_request TLS extension, required to bump some clients
