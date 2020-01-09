@@ -510,7 +510,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
 
         case LFT_CLIENT_CONNECTION_ID:
             if (al->tcpClient) {
-                outUint64 = static_cast<uint64_t>(al->tcpClient->id.value);
+                outUint64 = al->tcpClient->id.value;
                 doUint64 = true;
             }
             break;
