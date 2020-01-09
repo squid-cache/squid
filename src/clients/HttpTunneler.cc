@@ -385,6 +385,11 @@ Http::Tunneler::disconnect()
         closer = nullptr;
     }
 
+    if (reader) {
+        Comm::ReadCancel(connection->fd, reader);
+        reader = nullptr;
+    }
+
     // remove connection timeout handler
     commUnsetConnTimeout(connection);
 }
@@ -414,11 +419,6 @@ Http::Tunneler::swanSong()
             bailWith(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
         }
         assert(!callback);
-    }
-
-    if (reader) {
-        Comm::ReadCancel(connection->fd, reader);
-        reader = nullptr;
     }
 }
 
