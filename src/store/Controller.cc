@@ -359,12 +359,12 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
             // !found should imply hittingRequiresCollapsing() regardless of writer presence
             if (!entry.hittingRequiresCollapsing()) {
                 debugs(20, DBG_IMPORTANT, "BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
-                throw TexcHere("transients entry missing ENTRY_REQUIRES_COLLAPSING");
+                throw TextException("transients entry missing ENTRY_REQUIRES_COLLAPSING", Here());
             }
 
             if (!transients->hasWriter(entry)) {
                 // prevent others from falling into the same trap
-                throw TexcHere("unattached transients entry missing writer");
+                throw TextException("unattached transients entry missing writer", Here());
             }
         }
     }
