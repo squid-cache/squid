@@ -92,7 +92,7 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
     al->ssl.bumpMode = finalAction;
 
     if (finalAction == Ssl::bumpTerminate) {
-        serverConn->close();
+        bail(new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scForbidden, request.getRaw(), al));
         clientConn->close();
     } else if (finalAction != Ssl::bumpSplice) {
         //Allow write, proceed with the connection
