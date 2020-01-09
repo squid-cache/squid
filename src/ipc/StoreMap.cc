@@ -453,7 +453,7 @@ Ipc::StoreMap::closeForReading(const sfileno fileno)
 void
 Ipc::StoreMap::closeForReadingAndFreeIdle(const sfileno fileno)
 {
-    Anchor &s = anchorAt(fileno);
+    auto &s = anchorAt(fileno);
     assert(s.reading());
 
     if (!s.lock.unlockSharedAndSwitchToExclusive()) {
