@@ -77,14 +77,22 @@ Http::Tunneler::start()
     Must(url.length());
     Must(lifetimeLimit >= 0);
 
+    // We are the only owners of connection Comm::Connection object and the
+    // only who can close it.
+    Must(Comm::IsConnOpen(connection));
+
     // bail if somebody closed the connection while we were waiting to start()
-    if (!Comm::IsConnOpen(connection) || fd_table[connection->fd].closing())
-        return bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
+    if (fd_table[connection->fd].closing()) {
+        bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
+        return;
+    }
 
     const auto peer = connection->getPeer();
     // bail if our peer was reconfigured away
-    if (!peer)
-        return bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scInternalServerError, request.getRaw(), al));
+    if (!peer) {
+        bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scInternalServerError, request.getRaw(), al));
+        return;
+    }
     request->prepForPeering(*peer);
 
     writeRequest();
@@ -94,6 +102,7 @@ Http::Tunneler::start()
 void
 Http::Tunneler::handleConnectionClosure(const CommCloseCbParams &params)
 {
+    closer = nullptr;
     bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
 }
 
@@ -377,9 +386,6 @@ Http::Tunneler::sendSuccess()
 void
 Http::Tunneler::disconnect()
 {
-    if (!Comm::IsConnOpen(connection))
-        return;
-
     if (closer) {
         comm_remove_close_handler(connection->fd, closer);
         closer = nullptr;
