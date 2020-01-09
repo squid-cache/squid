@@ -68,9 +68,15 @@ Security::PeerConnector::start()
     AsyncJob::start();
     debugs(83, 5, "this=" << (void*)this);
 
+    // We are the only owners of the serverConn Comm::Connection object,
+    // it can be closed only by us.
+    Must(Comm::IsConnOpen(serverConn));
+
     // bail if somebody closed the connection while we were waiting to start()
-    if (!Comm::IsConnOpen(serverConn) || fd_table[serverConn->fd].closing())
-        return bail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
+    if (fd_table[serverConn->fd].closing()) {
+        bail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
+        return;
+    }
 
     Security::SessionPointer tmp;
     if (initialize(tmp))
@@ -82,6 +88,8 @@ Security::PeerConnector::start()
 void
 Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
 {
+    closeHandler = nullptr;
+
     debugs(83, 5, "FD " << params.fd << ", Security::PeerConnector=" << params.data);
     const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
 #if USE_OPENSSL
@@ -163,9 +171,6 @@ Security::PeerConnector::recordNegotiationDetails()
 void
 Security::PeerConnector::negotiate()
 {
-    if (!Comm::IsConnOpen(serverConnection()))
-        return;
-
     const int fd = serverConnection()->fd;
     if (fd_table[fd].closing())
         return;
@@ -258,9 +263,6 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 
     Ssl::ErrorDetail *errDetails = NULL;
     bool validatorFailed = false;
-    if (!Comm::IsConnOpen(serverConnection())) {
-        return;
-    }
 
     if (Debug::Enabled(83, 5)) {
         Security::SessionPointer ssl(fd_table[serverConnection()->fd].ssl);
@@ -567,9 +569,6 @@ Security::PeerConnector::sendSuccess()
 void
 Security::PeerConnector::disconnect()
 {
-    if (!Comm::IsConnOpen(serverConnection()))
-         return;
-
     if (closeHandler) {
         comm_remove_close_handler(serverConnection()->fd, closeHandler);
         closeHandler = nullptr;
