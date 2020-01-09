@@ -77,11 +77,9 @@ Http::Tunneler::start()
     Must(url.length());
     Must(lifetimeLimit >= 0);
 
-    // We are the only owners of connection Comm::Connection object and the
-    // only who can close it.
-    Must(Comm::IsConnOpen(connection));
-
-    // bail if somebody closed the connection while we were waiting to start()
+    // we own this Comm::Connection object and its fd exclusively, but must bail
+    // if others started closing the socket while we were waiting to start()
+    assert(Comm::IsConnOpen(connection));
     if (fd_table[connection->fd].closing()) {
         bailWith(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
         return;

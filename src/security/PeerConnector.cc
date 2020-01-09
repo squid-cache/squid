@@ -68,11 +68,9 @@ Security::PeerConnector::start()
     AsyncJob::start();
     debugs(83, 5, "this=" << (void*)this);
 
-    // We are the only owners of the serverConn Comm::Connection object,
-    // it can be closed only by us.
-    Must(Comm::IsConnOpen(serverConn));
-
-    // bail if somebody closed the connection while we were waiting to start()
+    // we own this Comm::Connection object and its fd exclusively, but must bail
+    // if others started closing the socket while we were waiting to start()
+    assert(Comm::IsConnOpen(serverConn));
     if (fd_table[serverConn->fd].closing()) {
         bail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
         return;
