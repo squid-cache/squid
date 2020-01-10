@@ -141,11 +141,13 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
     if (!Security::PeerConnector::initialize(serverSession))
         return false;
 
+    // client connection supplies TLS client details and is also used if we
+    // need to splice or terminate the client and server connections
+    if (!Comm::IsConnOpen(clientConn))
+        return false;
+
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
 
-        // client connection supplies TLS client details and is also used if we
-        // need to splice or terminate the client and server connections
-        assert(Comm::IsConnOpen(clientConn));
         SBuf *hostName = NULL;
 
         //Enable Status_request TLS extension, required to bump some clients
@@ -214,6 +216,10 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
 {
     // Check the list error with
     if (!request->clientConnectionManager.valid() || !fd_table[serverConnection()->fd].ssl)
+        return;
+
+    // Abort if client connection is closed
+    if (!Comm::IsConnOpen(clientConn))
         return;
 
     // remember the server certificate from the ErrorDetail object
