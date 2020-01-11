@@ -1,4 +1,4 @@
-Changes to squid-5.0.1 (08 Jan 2020):
+Changes in squid-5.0.1 (08 Jan 2020):
 
 	- Bug 4989: Leaking StoreEntry objects on Cache Digest rebuilds
 	- Bug 4912: same-name notes being appended instead of replaced
