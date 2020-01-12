@@ -165,6 +165,22 @@ if test "$1" != "yes" -a "$1" != "no" ; then
 fi
 ])
 
+dnl check the build parameters for a library to auto-enable
+dnl Parameters for this macro are:
+dnl 1) binary library name (without 'lib' prefix)
+dnl 2) name of the library for human reading
+dnl 3) actions when a valid PATH is given
+AC_DEFUN([SQUID_AUTO_LIB],[
+  SQUID_TOLOWER_VAR_CONTENTS([1])
+  AC_ARG_WITH([$1],AS_HELP_STRING([--without-$1],[Compile without the $2 library.]),[
+    AS_CASE([$with_$1],[yes|no],,[
+      AS_IF([test ! -d "$withval"],AC_MSG_ERROR([--with-$1 path does not point to a directory]))
+      with_$1=yes
+      $3
+    ])
+  ])
+])
+
 AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
   AC_ARG_ENABLE([build-info],
     AS_HELP_STRING([--enable-build-info="build info string"],
