@@ -1,4 +1,4 @@
-Changes in squid-5.0.1 (08 Jan 2020):
+Changes in squid-5.0.1 (14 Jan 2020):
 
 	- Bug 4989: Leaking StoreEntry objects on Cache Digest rebuilds
 	- Bug 4912: same-name notes being appended instead of replaced
@@ -45,7 +45,7 @@ Changes in squid-5.0.1 (08 Jan 2020):
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
 
-Changes to squid-4.10 (08 Jan 2020):
+Changes to squid-4.10 (14 Jan 2020):
 
 	- Bug 5009: Build failure with older clang libc++
 	- Bug 5008: SIGBUS in PagePool::level() with custom rock slot size
