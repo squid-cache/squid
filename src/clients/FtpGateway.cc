@@ -471,7 +471,7 @@ Ftp::Gateway::listenForDataChannel(const Comm::ConnectionPointer &conn)
     conn->nfmark = ctrl.conn->nfmark;
 
     assert(Comm::IsConnOpen(conn));
-    AsyncJob::Start(new Comm::TcpAcceptor(conn, note, sub));
+    AsyncJob::Start(new Comm::TcpAcceptor(conn, sub));
 
     // Ensure we have a copy of the FD opened for listening and a close handler on it.
     data.opened(conn, dataCloser());
@@ -1981,6 +1981,7 @@ Ftp::Gateway::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     data.close();
     data.opened(io.conn, dataCloser());
     data.addr(io.conn->remote);
+    fd_note(io.conn->fd, SBuf(entry->url()));
 
     debugs(9, 3, HERE << "Connected data socket on " <<
            io.conn << ". FD table says: " <<

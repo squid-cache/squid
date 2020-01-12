@@ -3475,7 +3475,8 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
     Must(Comm::IsConnOpen(s->listenConn));
 
     // TCP: setup a job to handle accept() with subscribed handler
-    AsyncJob::Start(new Comm::TcpAcceptor(s, FdNote(portTypeNote), sub));
+    AsyncJob::Start(new Comm::TcpAcceptor(s, sub));
+    fd_note(s->listenConn->fd, SBuf(FdNote(portTypeNote)));
 
     debugs(1, DBG_IMPORTANT, "Accepting " <<
            (s->flags.natIntercept ? "NAT intercepted " : "") <<

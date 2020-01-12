@@ -385,8 +385,7 @@ Ftp::Server::listenForDataConnection()
     Subscription::Pointer sub = new CallSubscription<AcceptCall>(call);
     listener = call.getRaw();
     dataListenConn = conn;
-    const char *const note = uri.c_str();
-    AsyncJob::Start(new Comm::TcpAcceptor(conn, note, sub));
+    AsyncJob::Start(new Comm::TcpAcceptor(conn, sub));
 
     const unsigned int listeningPort = comm_local_port(conn->fd);
     conn->local.port(listeningPort);
@@ -404,8 +403,7 @@ Ftp::Server::acceptDataConnection(const CommAcceptCbParams &params)
     }
 
     debugs(33, 4, "accepted " << params.conn);
-    static const SBuf desc("client passive FTP DATA");
-    fd_note(params.conn->fd, desc);
+    fd_note(params.conn->fd, uri);
     ++incoming_sockets_accepted;
 
     if (!clientConnection) {

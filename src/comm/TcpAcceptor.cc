@@ -40,7 +40,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Comm, TcpAcceptor);
 
-Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const char *, const Subscription::Pointer &aSub) :
+Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const Subscription::Pointer &aSub) :
     AsyncJob("Comm::TcpAcceptor"),
     errcode(0),
     theCallSub(aSub),
@@ -48,7 +48,7 @@ Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const cha
     listenPort_()
 {}
 
-Comm::TcpAcceptor::TcpAcceptor(const AnyP::PortCfgPointer &p, const char *, const Subscription::Pointer &aSub) :
+Comm::TcpAcceptor::TcpAcceptor(const AnyP::PortCfgPointer &p, const Subscription::Pointer &aSub) :
     AsyncJob("Comm::TcpAcceptor"),
     errcode(0),
     theCallSub(aSub),

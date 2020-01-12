@@ -51,8 +51,8 @@ private:
     TcpAcceptor(const TcpAcceptor &); // not implemented.
 
 public:
-    TcpAcceptor(const Comm::ConnectionPointer &conn, const char *note, const Subscription::Pointer &aSub);
-    TcpAcceptor(const AnyP::PortCfgPointer &listenPort, const char *note, const Subscription::Pointer &aSub);
+    TcpAcceptor(const Comm::ConnectionPointer &conn, const Subscription::Pointer &aSub);
+    TcpAcceptor(const AnyP::PortCfgPointer &listenPort, const Subscription::Pointer &aSub);
 
     /** Subscribe a handler to receive calls back about new connections.
      * Unsubscribes any existing subscribed handler.
