@@ -3349,7 +3349,7 @@ OpenedHttpSocket(const Comm::ConnectionPointer &c, const Ipc::FdNoteId portType)
         Must(HttpSockets[NHttpSockets] < 0); // no extra fds received
 
         if (!NHttpSockets) // we could not open any listen sockets at all
-            fatalf("Unable to open %s",FdNote(portType));
+            fatalf("Unable to open " SQUIDSBUFPH, SQUIDSBUFPRINT(FdNote(portType)));
 
         return false;
     }
@@ -3476,7 +3476,7 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
 
     // TCP: setup a job to handle accept() with subscribed handler
     AsyncJob::Start(new Comm::TcpAcceptor(s, sub));
-    fd_note(s->listenConn->fd, SBuf(FdNote(portTypeNote)));
+    fd_note(s->listenConn->fd, FdNote(portTypeNote));
 
     debugs(1, DBG_IMPORTANT, "Accepting " <<
            (s->flags.natIntercept ? "NAT intercepted " : "") <<

@@ -11,6 +11,8 @@
 #ifndef SQUID_IPC_FD_NOTES_H
 #define SQUID_IPC_FD_NOTES_H
 
+#include "sbuf/forward.h"
+
 namespace Ipc
 {
 
@@ -24,7 +26,7 @@ typedef enum { fdnNone, fdnHttpSocket, fdnHttpsSocket, fdnFtpSocket,
                fdnInIcpSocket, fdnInHtcpSocket, fdnEnd
              } FdNoteId;
 
-const char *FdNote(int fdNodeId); ///< converts FdNoteId into a string
+const SBuf &FdNote(int fdNodeId); ///< converts FdNoteId into a string
 
 } // namespace Ipc;
 
