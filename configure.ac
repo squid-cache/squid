@@ -1259,24 +1259,9 @@ fi
 AC_MSG_NOTICE([GnuTLS library support: ${with_gnutls:=auto} ${LIBGNUTLS_PATH} ${LIBGNUTLS_LIBS}])
 
 dnl User may specify OpenSSL is needed from a non-standard location
-AC_ARG_WITH(openssl,
-  AS_HELP_STRING([--with-openssl=PATH],
-                 [Compile with the OpenSSL libraries. The path to
-                  the OpenSSL development libraries and headers
-                  installation can be specified if outside of the
-                  system standard directories]), [ 
-case "$with_openssl" in
-  yes|no)
-    : # Nothing special to do here
-    ;;
-  *)
-    if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--with-openssl path does not point to a directory])
-    fi
-    LIBOPENSSL_PATH="-L$with_openssl/lib"
-    CPPFLAGS="-I$with_openssl/include $CPPFLAGS"
-    with_openssl=yes
-  esac
+SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[
+  LIBOPENSSL_PATH="-L$with_openssl/lib"
+  CPPFLAGS="-I$with_openssl/include $CPPFLAGS"
 ])
 AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
 ## OpenSSL is default disable due to licensing issues on some OS
