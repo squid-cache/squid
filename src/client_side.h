@@ -285,10 +285,6 @@ public:
     /// for SQUID_X509_V_ERR_DOMAIN_MISMATCH on bumped requests.
     bool serveDelayedError(Http::Stream *);
 
-    /// initiate teardown of the from-client connection
-    /// after a TLS negotiation failure (with the given detail)
-    void tlsNegotiateFailed(const int errDetail);
-
     Ssl::BumpMode sslBumpMode; ///< ssl_bump decision (Ssl::bumpEnd if n/a).
 
     /// Tls parser to use for client HELLO messages parsing on bumped
@@ -297,6 +293,11 @@ public:
 #else
     bool switchedToHttps() const { return false; }
 #endif
+
+    /// initiate teardown of the from-client connection
+    /// after a TLS negotiation failure (with the given detail)
+    void tlsNegotiateFailed(const int errDetail);
+
     char *prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp);
 
     /// handle a control message received by context from a peer and call back

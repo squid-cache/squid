@@ -2158,15 +2158,25 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     if (tunnelOnError(HttpRequestMethod(), error))
         return;
 
-    auto doingTls = parsingTlsHandshake; // may be refined below
+    bool doingTls = false;
+
 #if USE_OPENSSL
+    doingTls = parsingTlsHandshake; // may be refined below
     if (!doingTls) {
         const auto sslConn = fd_table[io.conn->fd].ssl.get();
         doingTls = sslConn && !SSL_is_init_finished(sslConn);
     }
-#else
-    // XXX: Either support GnuTLS (in a regular https_port context) or explain why we cannot.
+#elif USE_GNUTLS
+    if (const auto sslConn = fd_table[io.conn->fd].ssl.get()) {
+        // The gnutls_session_get_desc will return nil if the initial
+        // negotiation is not finished.
+        if (auto descr = gnutls_session_get_desc(sslConn))
+            gnutls_free(descr);
+        else
+            doingTls = true;
+    }
 #endif
+
     const auto errorDetail = doingTls ? ERR_DETAIL_TLS_HANDSHAKE_ABORTED : ERR_DETAIL_NONE;
     const auto context = pipeline.front();
     Must(context);
@@ -3250,6 +3260,8 @@ ConnStateData::httpsPeeked(PinnedIdleContext pic)
     getSslContextStart();
 }
 
+#endif /* USE_OPENSSL */
+
 inline void
 ConnStateData::tlsNegotiateFailed(const int errDetail)
 {
@@ -3262,8 +3274,6 @@ ConnStateData::tlsNegotiateFailed(const int errDetail)
     }
     clientConnection->close();
 }
-
-#endif /* USE_OPENSSL */
 
 bool
 ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload)
