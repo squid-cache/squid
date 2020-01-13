@@ -882,7 +882,7 @@ HAVE_LIBXML2=0
 XMLLIB=
 
 # ESI support libraries: expat
-SQUID_AUTO_LIB(expat,[ESI expat],[])
+SQUID_AUTO_LIB(expat,[ESI expat],[],[LIBEXPAT])
 if test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno" ; then
   AC_CHECK_LIB([expat], [main], [EXPATLIB="-lexpat"; HAVE_LIBEXPAT=1])
   AC_CHECK_HEADERS([expat.h])
@@ -899,7 +899,7 @@ if test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno" ; then
 fi
 
 # TODO: remove this 'lib' prefix to match coding standard
-SQUID_AUTO_LIB(libxml2,[ESI libxml2],[])
+SQUID_AUTO_LIB(libxml2,[ESI libxml2],[],[LIBXML2])
 if test "x$squid_opt_use_esi" != "xno" -a "x$with_libxml2" != "xno" ; then
   SQUID_STATE_SAVE([squid_libxml2_save])
   PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[
@@ -1176,7 +1176,7 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 SQUID_AUTO_LIB(nettle,[Nettle crypto],[
     NETTLELIBDIR="-L$with_nettle/lib"
     CPPFLAGS="-I$with_nettle/include $CPPFLAGS"
-])
+],[LIBNETTLE])
 if test "x$with_nettle" != "xno" ; then
   AC_CHECK_LIB(nettle, nettle_md5_init,[
     NETTLELIB="$NETTLELIBDIR -lnettle"
@@ -1222,9 +1222,8 @@ AC_SUBST(CRYPTLIB)
 SSLLIB=""
 
 SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[
-    LIBGNUTLS_PATH="-L$with_gnutls/lib"
     CPPFLAGS="-I$with_gnutls/include $CPPFLAGS"
-])
+],[LIBGNUTLS])
 AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
 if test "x$with_gnutls" != "xno"; then
   SQUID_STATE_SAVE(squid_gnutls_state)
@@ -1260,9 +1259,8 @@ AC_MSG_NOTICE([GnuTLS library support: ${with_gnutls:=auto} ${LIBGNUTLS_PATH} ${
 
 dnl User may specify OpenSSL is needed from a non-standard location
 SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[
-  LIBOPENSSL_PATH="-L$with_openssl/lib"
   CPPFLAGS="-I$with_openssl/include $CPPFLAGS"
-])
+],[LIBOPENSSL])
 AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
 ## OpenSSL is default disable due to licensing issues on some OS
 if test "x$with_openssl" = "xyes"; then
@@ -1355,14 +1353,9 @@ AC_SUBST(SSLLIB)
 
 dnl User may specify MIT Kerberos is needed from a non-standard location
 SQUID_AUTO_LIB(mit-krb5,[MIT Kerberos],[
-    if test -d "$with_mit_krb5/lib64" ; then
-      LIB_KRB5_PATH="-L$with_mit_krb5/lib64 -L$with_mit_krb5/lib"
-    else
-      LIB_KRB5_PATH="-L$with_mit_krb5/lib"
-    fi
     CXXFLAGS="-I$with_mit_krb5/include $CXXFLAGS"
     krb5confpath="$with_mit_krb5/bin"
-])
+],[LIB_KRB5])
 AH_TEMPLATE(USE_APPLE_KRB5,[Apple Kerberos support is available])
 AH_TEMPLATE(USE_MIT_KRB5,[MIT Kerberos support is available])
 AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
@@ -1580,15 +1573,10 @@ fi
 
 dnl User may specify Heimdal Kerberos is needed from a non-standard location
 SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[
-    if test -d "$with_heimdal_krb5/lib64" ; then
-      LIB_KRB5_PATH="-L$with_heimdal_krb5/lib64 -L$with_heimdal_krb5/lib"
-    else 
-      LIB_KRB5_PATH="-L$with_heimdal_krb5/lib"
-    fi
     CXXFLAGS="-I$with_heimdal_krb5/include $CXXFLAGS"
     krb5confpath="$with_heimdal_krb5/bin"
     with_heimdal_krb5=yes
-])
+],[LIB_KRB5])
 AH_TEMPLATE(USE_HEIMDAL_KRB5,[Heimdal Kerberos support is available])
 if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
   # find installed libs via pkg-config or krb5-config
@@ -1738,15 +1726,10 @@ fi
 
 dnl User may specify GNU gss is needed from a non-standard location
 SQUID_AUTO_LIB(gnugss,[GNU gss],[
-    if test ! -d "$with_gnugss/lib64" ; then
-      LIB_KRB5_PATH="-L$with_gnugss/lib64 -L$with_gnugss/lib"
-    else
-      LIB_KRB5_PATH="-L$with_gnugss/lib"
-    fi
     CXXFLAGS="-I$with_gnugss/include $CXXFLAGS"
     krb5confpath=
     with_gnugss=yes
-])
+],[LIB_KRB5])
 AH_TEMPLATE(USE_GNUGSS,[GNU gss support is available])
 if test "x$with_gnugss" != "xno" -a "x$KRB5LIBS" = "x"; then
   SQUID_STATE_SAVE([squid_krb5_save])
@@ -2294,7 +2277,7 @@ SQUID_AUTO_LIB(netfilter-conntrack,[Netfilter conntrack],[
     squid_opt_netfilterconntrackpath=$withval
     LDFLAGS="-L$squid_opt_netfilterconntrackpath/lib $LDFLAGS"
     CPPFLAGS="-I$squid_opt_netfilterconntrackpath/include $CPPFLAGS"
-])
+],[LIBNETFILTER_CONNTRACK])
 squid_opt_netfilterconntrack=$with_netfilter_conntrack
 AC_MSG_NOTICE([Linux Netfilter Conntrack support requested: ${with_netfilter_conntrack:=auto}])
 if test "x$with_netfilter_conntrack" != "xno"; then
@@ -2699,9 +2682,8 @@ SQUID_DEFINE_BOOL(X_ACCELERATOR_VARY,${enable_x_accelerator_vary:=no},
 AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
 SQUID_AUTO_LIB(cppunit,[cppunit test framework],[
-  LIBCPPUNIT_CFLAGS="-I$with_cppunit/include"
   LIBCPPUNIT_LIBS="-L$with_cppunit/lib -lcppunit"
-])
+],[LIBCPPUNIT])
 AS_IF([test "x$with_cppunit" != "xno"],[
   PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
     squid_cv_cppunit_version="`pkg-config cppunit --version`"
@@ -2987,7 +2969,7 @@ AC_FUNC_ALLOCA
 # TODO: remove this 'lib' prefix to match coding standard
 SQUID_AUTO_LIB(libcap,[Linux capabilities],[
   AC_MSG_ERROR([unrecognized argument to --with-libcap : $withval])
-])
+],[LIBCAP])
 if test "x$with_libcap" != "xno"; then
   # cap_clear_flag is the most recent libcap function we require
   AC_CHECK_HEADERS(sys/capability.h)
