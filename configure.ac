@@ -882,7 +882,7 @@ HAVE_LIBXML2=0
 XMLLIB=
 
 # ESI support libraries: expat
-SQUID_AUTO_LIB(expat,[ESI expat],[],[LIBEXPAT])
+SQUID_AUTO_LIB(expat,[ESI expat],[LIBEXPAT])
 if test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno" ; then
   AC_CHECK_LIB([expat], [main], [EXPATLIB="-lexpat"; HAVE_LIBEXPAT=1])
   AC_CHECK_HEADERS([expat.h])
@@ -899,7 +899,7 @@ if test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno" ; then
 fi
 
 # TODO: remove this 'lib' prefix to match coding standard
-SQUID_AUTO_LIB(libxml2,[ESI libxml2],[],[LIBXML2])
+SQUID_AUTO_LIB(libxml2,[ESI libxml2],[LIBXML2])
 if test "x$squid_opt_use_esi" != "xno" -a "x$with_libxml2" != "xno" ; then
   SQUID_STATE_SAVE([squid_libxml2_save])
   PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[
@@ -1173,7 +1173,7 @@ AM_CONDITIONAL(ENABLE_HTCP, [test "x$enable_htcp" = "xyes"])
 AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 
 # Cryptograhic libraries
-SQUID_AUTO_LIB(nettle,[Nettle crypto],[],[LIBNETTLE])
+SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
 if test "x$with_nettle" != "xno" ; then
   CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
   AC_CHECK_LIB(nettle, nettle_md5_init,[
@@ -1219,7 +1219,7 @@ AC_SUBST(CRYPTLIB)
 
 SSLLIB=""
 
-SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[],[LIBGNUTLS])
+SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[LIBGNUTLS])
 AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
 if test "x$with_gnutls" != "xno"; then
   SQUID_STATE_SAVE(squid_gnutls_state)
@@ -1255,7 +1255,7 @@ fi
 AC_MSG_NOTICE([GnuTLS library support: ${with_gnutls:=auto} ${LIBGNUTLS_PATH} ${LIBGNUTLS_LIBS}])
 
 dnl User may specify OpenSSL is needed from a non-standard location
-SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[],[LIBOPENSSL])
+SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[LIBOPENSSL])
 AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
 ## OpenSSL is default disable due to licensing issues on some OS
 if test "x$with_openssl" = "xyes"; then
@@ -1348,7 +1348,7 @@ AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
 AC_SUBST(SSLLIB)
 
 dnl User may specify MIT Kerberos is needed from a non-standard location
-SQUID_AUTO_LIB(mit-krb5,[MIT Kerberos],[],[LIB_KRB5])
+SQUID_AUTO_LIB(mit-krb5,[MIT Kerberos],[LIB_KRB5])
 AH_TEMPLATE(USE_APPLE_KRB5,[Apple Kerberos support is available])
 AH_TEMPLATE(USE_MIT_KRB5,[MIT Kerberos support is available])
 AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
@@ -1567,7 +1567,7 @@ if test "x$with_solaris_krb5" = "xyes" -a "x$KRB5LIBS" = "x"; then
 fi
 
 dnl User may specify Heimdal Kerberos is needed from a non-standard location
-SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[],[LIB_KRB5])
+SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIB_KRB5])
 AH_TEMPLATE(USE_HEIMDAL_KRB5,[Heimdal Kerberos support is available])
 if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
   CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
@@ -1718,7 +1718,7 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
 fi
 
 dnl User may specify GNU gss is needed from a non-standard location
-SQUID_AUTO_LIB(gnugss,[GNU gss],[],[LIB_KRB5])
+SQUID_AUTO_LIB(gnugss,[GNU gss],[LIB_KRB5])
 AH_TEMPLATE(USE_GNUGSS,[GNU gss support is available])
 if test "x$with_gnugss" != "xno" -a "x$KRB5LIBS" = "x"; then
   CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
@@ -2263,7 +2263,7 @@ AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto
 
 
 dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
-SQUID_AUTO_LIB(netfilter-conntrack,[Netfilter conntrack],[],[LIBNETFILTER_CONNTRACK])
+SQUID_AUTO_LIB(netfilter-conntrack,[Netfilter conntrack],[LIBNETFILTER_CONNTRACK])
 AC_MSG_NOTICE([Linux Netfilter Conntrack support requested: ${with_netfilter_conntrack:=auto}])
 if test "x$with_netfilter_conntrack" != "xno"; then
     LDFLAGS="$LIBNETFILTER_CONNTRACK_PATH $LDFLAGS"
@@ -2668,7 +2668,7 @@ SQUID_DEFINE_BOOL(X_ACCELERATOR_VARY,${enable_x_accelerator_vary:=no},
                       [Enable support for the X-Accelerator-Vary HTTP header])
 AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
-SQUID_AUTO_LIB(cppunit,[cppunit test framework],[],[LIBCPPUNIT])
+SQUID_AUTO_LIB(cppunit,[cppunit test framework],[LIBCPPUNIT])
 AS_IF([test "x$with_cppunit" != "xno"],[
   LIBCPPUNIT_LIBS="$LIBCPPUNIT_PATH -lcppunit"
   PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
@@ -2953,7 +2953,7 @@ AC_FUNC_ALLOCA
 
 
 # TODO: remove this 'lib' prefix to match coding standard
-SQUID_AUTO_LIB(libcap,[Linux capabilities],[],[LIBCAP])
+SQUID_AUTO_LIB(libcap,[Linux capabilities],[LIBCAP])
 if test "x$with_libcap" != "xno"; then
   CXXFLAGS="$LIBCAP_CFLAGS $CXXFLAGS"
   LDFLAGS="$LIBCAP_PATH $LDFLAGS"
