@@ -2102,6 +2102,51 @@ esac
 AC_SUBST(LDAPLIB)
 AC_SUBST(LBERLIB)
 
+AC_ARG_WITH(systemd,
+  AS_HELP_STRING([--without-systemd],
+                 [Do not use systemd API to send start-up completion
+                  notification. Default: auto-detect]), [
+case "$with_systemd" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-systemd path does not point to a directory])
+    fi
+    SYSTEMD_PATH="-L$with_systemd/lib"
+    CPPFLAGS="-I$with_systemd/include $CPPFLAGS"
+  esac
+])
+AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
+if test "x$with_systemd" != "xno" -a "x$squid_host_os" = "xlinux"; then
+  SQUID_STATE_SAVE(squid_systemd_state)
+
+  # User may have provided a custom location for systemd. Otherwise...
+  LIBS="$LIBS $SYSTEMD_PATH"
+
+  # auto-detect using pkg-config
+  PKG_CHECK_MODULES(SYSTEMD,[libsystemd],,[
+    # systemd < 209
+    PKG_CHECK_MODULES(SYSTEMD,[libsystemd-daemon],,[:])
+  ])
+
+  AC_CHECK_HEADERS(systemd/sd-daemon.h)
+
+  SQUID_STATE_ROLLBACK(squid_systemd_state) #de-pollute LIBS
+
+  if test "x$with_systemd" = "xyes" -a "x$SYSTEMD_LIBS" = "x"; then
+    AC_MSG_ERROR([Required systemd library not found])
+  fi
+  if test "x$SYSTEMD_LIBS" != "x" ; then
+    CXXFLAGS="$SYSTEMD_CFLAGS $CXXFLAGS"
+    AC_DEFINE(USE_SYSTEMD,1,[systemd support is available])
+  else
+    with_systemd=no
+  fi
+fi
+AC_MSG_NOTICE([systemd library support: ${with_systemd:=auto} ${SYSTEMD_PATH} ${SYSTEMD_LIBS}])
+
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
   SQUID_YESNO([$enableval],[unrecognized argument to --enable-forw-via-db: $enableval])
