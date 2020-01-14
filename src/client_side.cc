@@ -3488,8 +3488,13 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
     // Subsequent sd_notify() calls, including calls during reconfiguration,
     // do nothing because the first call parameter is 1.
     // XXX: Send the notification only after opening all configured ports.
-    if ((opt_foreground || opt_no_daemon) && (sd_notify(1, "READY=1") < 0))
-        debugs(1, DBG_IMPORTANT, "WARNING: failed to send start-up notification to systemd");
+    if (opt_foreground || opt_no_daemon) {
+        const auto result = sd_notify(1, "READY=1");
+        if (result < 0) {
+            debugs(1, DBG_IMPORTANT, "WARNING: failed to send start-up notification to systemd" <<
+                   Debug::Extra << "sd_notify() error: " << xstrerr(-result));
+        }
+    }
 #endif
 }
 
