@@ -1,3 +1,64 @@
+Changes in squid-5.0.1 (14 Jan 2020):
+
+	- Bug 4989: Leaking StoreEntry objects on Cache Digest rebuilds
+	- Bug 4912: same-name notes being appended instead of replaced
+	- Bug 4864: !Comm::MonitorsRead assertion in maybeReadVirginBody()
+	- Bug 4579: cannot hit an entry being written by another worker
+	- ICAP: Initial support for trailers
+	- Add auth_schemes to control schemes presence and order in 401s/407s
+	- Make CONNECT ACL a built-in default
+	- Remove USE_CHUNKEDMEMPOOLS compiler flag
+	- Two new ACLs implemented: annotate_transaction and annotate_client
+	- Add response delay pools feature for Squid-to-client speed limiting
+	- QA: allow test-suite to be run without a full build
+	- Happy Eyeballs: Use each fully resolved forwarding destination ASAP
+	- Support selective CF: collapsed_forwarding_access
+	- Reworked packet/connection marking
+	- Add new deny_info %A macro
+	- Identify collapsed transactions
+	- Add sample Kerberos group authentication external_acl helper
+	- Optimization: Fewer memory (re)allocations for HTTP headers
+	- Add TrivialDB support
+	- Do not send Content-Length in 1xx or 204 responses
+	- negotiate_kerberos_auth: fix memory leaks
+	- ntlm_fake_auth: add ability to test delayed responses
+	- Add %ssl::<cert macro for logging server X.509 certificate
+	- Reuse reserved Negotiate and NTLM helpers after an idle timeout
+	- Log PROXY protocol v2 TLVs
+	- Support logformat %codes in error page templates
+	- Fix incremental parsing of chunked quoted extensions
+	- Peering support for SslBump
+	- RFC 8586: Loop Detection in Content Delivery Networks
+	- Prevent TLS transaction stalls by preserving flags.read_pending
+	- Fix "BUG: Lost previously bumped from-Squid connection"
+	- Add %master_xaction logformat code
+	- Log "-" instead of the made-up method "NONE"
+	- Add GeneratingCONNECT step for the existing at_step ACL
+	- Report context of level-0/1 cache.log messages
+	- Re-enabled updates of stored headers on HTTP 304 responses
+	- Translations: Fix grammatical error in French error pages
+	- Smarter auth_param utf8 handling, including CP1251 support
+	- Fix rock disk entry contamination related to aborted swapouts
+	- Send HTTP/500 (Internal Server Error) when lacking peers
+	- Fix prohibitively slow search for new SMP shm pages
+	- Centralized PagePool/PageStack ID generation
+	- ... and many documentation changes
+	- ... and much code cleanup and polishing
+
+Changes to squid-4.10 (14 Jan 2020):
+
+	- Bug 5009: Build failure with older clang libc++
+	- Bug 5008: SIGBUS in PagePool::level() with custom rock slot size
+	- Bug 5007: Docs: Fix max_filedescriptors description
+	- Bug 4735: Truncated chunked responses cached as whole
+	- ext_lm_group_acl: Improved username handling
+	- Fix FTP buffers handling
+	- Fix shared memory size calculation on 64-bit systems
+	- Fix server_cert_fingerprint on cert validator-reported errors
+	- Fix request URL generation in reverse proxy configurations
+	- ... and several documentation updates
+	- ... and several compile fixes
+
 Changes to squid-4.9 (05 Nov 2019):
 
 	- Bug 4978: eCAP crash after using MyHost().newRequest()
