@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,7 @@
 #include "auth/digest/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
+#include "auth/toUtf.h"
 #include "base/LookupTable.h"
 #include "cache_cf.h"
 #include "event.h"
@@ -31,6 +32,7 @@
 #include "mgr/Registration.h"
 #include "rfc2617.h"
 #include "sbuf/SBuf.h"
+#include "sbuf/StringConvert.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
@@ -733,7 +735,7 @@ authDigestLogUsername(char *username, Auth::UserRequest::Pointer auth_user_reque
  * Auth_user structure.
  */
 Auth::UserRequest::Pointer
-Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
+Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request, const char *aRequestRealm)
 {
     const char *item;
     const char *p;
@@ -810,8 +812,14 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
         switch (t) {
         case DIGEST_USERNAME:
             safe_free(username);
-            if (value.size() != 0)
+            if (value.size() != 0) {
+                const auto v = value.termedBuf();
+                if (utf8 && !isValidUtf8String(v, v + value.size())) {
+                    auto str = isCP1251EncodingAllowed(request) ? Cp1251ToUtf8(v) : Latin1ToUtf8(v);
+                    value = SBufToString(str);
+                }
                 username = xstrndup(value.rawBuf(), value.size() + 1);
+            }
             debugs(29, 9, "Found Username '" << username << "'");
             break;
 

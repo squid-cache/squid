@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,11 +29,6 @@ static const char *SpaceLabel = "cache_mem_space";
 /// shared memory segment path to use for IDs of shared pages with slice data
 static const char *ExtrasLabel = "cache_mem_ex";
 // TODO: sync with Rock::SwapDir::*Path()
-
-// We store free slot IDs (i.e., "space") as Page objects so that we can use
-// Ipc::Mem::PageStack. Pages require pool IDs. The value here is not really
-// used except for a positivity test. A unique value is handy for debugging.
-static const uint32_t SpacePoolId = 510716;
 
 /// Packs to shared memory, allocating new slots/pages as needed.
 /// Requires an Ipc::StoreMapAnchor locked for writing.
@@ -810,7 +805,7 @@ MemStore::noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId)
     debugs(20, 9, "slice " << sliceId << " freed " << pageId);
     assert(pageId);
     Ipc::Mem::PageId slotId;
-    slotId.pool = SpacePoolId;
+    slotId.pool = Ipc::Mem::PageStack::IdForMemStoreSpace();
     slotId.number = sliceId + 1;
     if (!waitingFor) {
         // must zero pageId before we give slice (and pageId extras!) to others
@@ -1014,7 +1009,8 @@ MemStoreRr::create()
     const int64_t entryLimit = MemStore::EntryLimit();
     assert(entryLimit > 0);
     Must(!spaceOwner);
-    spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, SpacePoolId,
+    spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel,
+                 Ipc::Mem::PageStack::IdForMemStoreSpace(),
                  entryLimit, 0);
     Must(!mapOwner);
     mapOwner = MemStoreMap::Init(MapLabel, entryLimit);

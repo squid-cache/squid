@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -673,12 +673,22 @@ DOC_START
 		For Basic and Digest this parameter is ignored.
 
 	"utf8" on|off
-		HTTP uses iso-latin-1 as character set, while some
-		authentication backends such as LDAP expects UTF-8. If this is
-		set to on Squid will translate the HTTP iso-latin-1 charset to
-		UTF-8 before sending the username and password to the helper.
+		Useful for sending credentials to authentication backends that
+		expect UTF-8 encoding (e.g., LDAP).
 
-		For NTLM and Negotiate this parameter is ignored.
+		When this option is enabled, Squid uses HTTP Accept-Language
+		request header to guess the received credentials encoding
+		(ISO-Latin-1, CP1251, or UTF-8) and then converts the first
+		two encodings into UTF-8.
+
+		When this option is disabled and by default, Squid sends
+		credentials in their original (i.e. received) encoding.
+
+		This parameter is only honored for Basic and Digest schemes.
+		For Basic, the entire username:password credentials are
+		checked and, if necessary, re-encoded. For Digest -- just the
+		username component. For NTLM and Negotiate schemes, this
+		parameter is ignored.
 
 IF HAVE_AUTH_MODULE_BASIC
 	=== Basic authentication parameters ===
@@ -10392,13 +10402,14 @@ DOC_END
 NAME: max_filedescriptors max_filedesc
 TYPE: int
 DEFAULT: 0
-DEFAULT_DOC: Use operating system limits set by ulimit.
+DEFAULT_DOC: Use operating system soft limit set by ulimit.
 LOC: Config.max_filedescriptors
 DOC_START
-	Reduce the maximum number of filedescriptors supported below
-	the usual operating system defaults.
+	Set the maximum number of filedescriptors, either below the
+	operating system default or up to the hard limit.
 
-	Remove from squid.conf to inherit the current ulimit setting.
+	Remove from squid.conf to inherit the current ulimit soft
+	limit setting.
 
 	Note: Changing this requires a restart of Squid. Also
 	not all I/O types supports large values (eg on Windows).

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,7 +27,7 @@ class PagePool
 public:
     typedef Ipc::Mem::Owner<PageStack> Owner;
 
-    static Owner *Init(const char *const id, const unsigned int capacity, const size_t pageSize);
+    static Owner *Init(const char *const shmId, const Ipc::Mem::PoolId stackId, const unsigned int capacity, const size_t pageSize);
 
     PagePool(const char *const id);
 

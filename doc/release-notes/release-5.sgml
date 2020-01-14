@@ -28,7 +28,7 @@ This new release is available for download from <url url="http://www.squid-cache
 
 <sect1>Changes since earlier releases of Squid-5
 <p>
-The Squid-4 change history can be <url url="http://www.squid-cache.org/Versions/v5/changesets/" name="viewed here">.
+The Squid-5 change history can be <url url="http://www.squid-cache.org/Versions/v5/changesets/" name="viewed here">.
 
 
 <sect>Major new features since Squid-4
@@ -309,7 +309,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.
