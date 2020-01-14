@@ -85,10 +85,6 @@ public:
     // XXX: We should refcount ErrorState instead of cbdata-protecting it.
     CbcPointer<ErrorState> error; ///< problem details (nil on success)
 
-    /// The total number of attempts to establish a connection. Includes any
-    /// failed attempts and [always successful] persistent connection reuse.
-    int n_tries = 0;
-
     /// whether conn was open earlier, by/for somebody else
     bool reused = false;
 };
@@ -128,7 +124,7 @@ public:
     };
 
 public:
-    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart, int tries, const AccessLogEntryPointer &al);
+    HappyConnOpener(const ResolvedPeersPointer &, const AsyncCall::Pointer &,  HttpRequestPointer &, const time_t aFwdStart, const AccessLogEntryPointer &al);
     virtual ~HappyConnOpener() override;
 
     /// configures reuse of old connections
@@ -195,6 +191,11 @@ private:
     void sendSuccess(const Comm::ConnectionPointer &conn, bool reused, const char *connKind);
     void sendFailure();
 
+    /// the total number of connection opening attempts
+    int tries() const { return ale ? ale->requestAttempts : 0; }
+    /// increments the connection opening attempts
+    void incTries() { if (ale) ale->requestAttempts++; }
+
     const time_t fwdStart; ///< requestor start time
 
     AsyncCall::Pointer callback_; ///< handler to be called on connection completion.
@@ -238,9 +239,6 @@ private:
 
     /// the request that needs a to-server connection
     HttpRequestPointer cause;
-
-    /// number of connection opening attempts, including those in the requestor
-    int n_tries;
 
     /// Reason to ran out of time or attempts
     mutable const char *ranOutOfTimeOrAttemptsEarlier_ = nullptr;

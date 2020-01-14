@@ -194,6 +194,10 @@ public:
     /// key=value pairs returned from URL rewrite/redirect helper
     NotePairs::Pointer notes;
 
+    /// The total number of attempts to establish a connection. Includes any
+    /// failed attempts and [always successful] persistent connection reuse.
+    /// See %request_attempts.
+    int requestAttempts = 0;
     /// see ConnStateData::proxyProtocolHeader_
     ProxyProtocol::HeaderPointer proxyProtocolHeader;
 
@@ -216,6 +220,7 @@ public:
         Adaptation::Icap::ICAP::Method reqMethod = Adaptation::methodNone; ///< ICAP request method
         int64_t bytesSent = 0;       ///< number of bytes sent to ICAP server so far
         int64_t bytesRead = 0;       ///< number of bytes read from ICAP server so far
+        int requestAttempts = 0; ///< the number of ICAP request sending attempts so far
         /**
          * number of ICAP body bytes read from ICAP server or -1 for no encapsulated
          * message data in ICAP reply (eg 204 responses)

@@ -88,8 +88,6 @@ std::ostream &operator <<(std::ostream &os, const HappyConnOpenerAnswer &answer)
         os << "bad ";
     if (answer.conn)
         os << (answer.reused ? "reused " : "new ") << answer.conn;
-    if (answer.n_tries != 1)
-        os << " after " << answer.n_tries;
     return os;
 }
 
@@ -326,14 +324,13 @@ HappyConnOpenerAnswer::~HappyConnOpenerAnswer()
 
 /* HappyConnOpener */
 
-HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart, int tries, const AccessLogEntry::Pointer &anAle):
+HappyConnOpener::HappyConnOpener(const ResolvedPeers::Pointer &dests, const AsyncCall::Pointer &aCall, HttpRequest::Pointer &request, const time_t aFwdStart, const AccessLogEntry::Pointer &anAle):
     AsyncJob("HappyConnOpener"),
     fwdStart(aFwdStart),
     callback_(aCall),
     destinations(dests),
     ale(anAle),
-    cause(request),
-    n_tries(tries)
+    cause(request)
 {
     assert(destinations);
     assert(dynamic_cast<Answer*>(callback_->getDialer()));
@@ -436,8 +433,8 @@ HappyConnOpener::status() const
         else if (spare.connector)
             buf.appendf(" spare call%ud", spare.connector->id.value);
     }
-    if (n_tries)
-        buf.appendf(" tries %d", n_tries);
+    if (tries())
+        buf.appendf(" tries %d", tries());
     buf.appendf(" %s%u]", id.prefix(), id.value);
     buf.terminate();
 
@@ -465,7 +462,6 @@ HappyConnOpener::futureAnswer(const Comm::ConnectionPointer &conn)
         const auto answer = dynamic_cast<Answer *>(callback_->getDialer());
         assert(answer);
         answer->conn = conn;
-        answer->n_tries = n_tries;
         return answer;
     }
     return nullptr;
@@ -530,7 +526,7 @@ HappyConnOpener::reuseOldConnection(const Comm::ConnectionPointer &dest)
     assert(allowPconn_);
 
     if (const auto pconn = fwdPconnPool->pop(dest, host_, retriable_)) {
-        ++n_tries;
+        incTries();
         sendSuccess(pconn, true, "reused connection");
         return true;
     }
@@ -552,7 +548,7 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, Comm::ConnectionPointer &
     // ConnOpener modifies its destination argument so we reset the source port
     // in case we are reusing the destination already used by our predecessor.
     dest->local.port(0);
-    ++n_tries;
+    incTries();
 
     typedef CommCbMemFunT<HappyConnOpener, CommConnectCbParams> Dialer;
     AsyncCall::Pointer callConnect = JobCallback(48, 5, Dialer, this, HappyConnOpener::connectDone);
@@ -854,7 +850,7 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
     if (ranOutOfTimeOrAttemptsEarlier_)
         return true;
 
-    if (n_tries >= Config.forward_max_tries) {
+    if (tries() >= Config.forward_max_tries) {
         debugs(17, 5, "maximum allowed tries exhausted");
         ranOutOfTimeOrAttemptsEarlier_ = "maximum tries";
         return true;

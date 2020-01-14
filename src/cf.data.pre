@@ -4757,6 +4757,19 @@ DOC_START
 		Ss	Squid request status (TCP_MISS etc)
 		Sh	Squid hierarchy status (DEFAULT_PARENT etc)
 
+		request_attempts	The number of request sending attempts
+
+		An attempt is counted when Squid either opens a new to-server
+		connection or writes the first request byte to a reused
+		to-server connection. Failed connection open and write attempts
+		are counted. Pure cache hits should have a zero count, but HTTP
+		cache revalidation requests are counted. DNS, ICMP, ICP, HTCP,
+		ESI, ICAP, eCAP, certificate fetching, helper and other
+		secondary requests sent by Squid as a part of a master
+		transaction are not counted.
+
+		See also: forward_max_tries.
+
 	SSL-related format codes:
 
 		ssl::bump_mode	SslBump decision for the transaction:
@@ -5139,6 +5152,9 @@ DOC_START
 		icap::>h	ICAP request header(s). Similar to >h.
 
 		icap::<h	ICAP response header(s). Similar to <h.
+
+		icap::request_attempts	The number of ICAP request sending
+					attempts. Similar to request_attempts.
 
 	The default ICAP log format, which can be used without an explicit
 	definition, is called icap_squid:

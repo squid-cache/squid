@@ -137,7 +137,6 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     err(NULL),
     clientConn(client),
     start_t(squid_curtime),
-    n_tries(0),
     destinations(new ResolvedPeers()),
     pconnRace(raceImpossible)
 {
@@ -518,7 +517,7 @@ FwdState::complete()
     entry->mem_obj->checkUrlChecksum();
 #endif
 
-    logReplyStatus(n_tries, replyStatus);
+    logReplyStatus(tries(), replyStatus);
 
     if (reforward()) {
         debugs(17, 3, "re-forwarding " << replyStatus << " " << entry->url());
@@ -716,7 +715,7 @@ void
 FwdState::retryOrBail()
 {
     if (checkRetry()) {
-        debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
+        debugs(17, 3, HERE << "re-forwarding (" << tries() << " tries, " << (squid_curtime - start_t) << " secs)");
         useDestinations();
         return;
     }
@@ -760,9 +759,6 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 {
     calls.connector = nullptr;
     connOpener.clear();
-
-    Must(n_tries <= answer.n_tries); // n_tries cannot decrease
-    n_tries = answer.n_tries;
 
     if (const auto error = answer.error.get()) {
         flags.dont_retry = true; // or HappyConnOpener would not have given up
@@ -988,7 +984,7 @@ FwdState::connectStart()
     calls.connector = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer<FwdState>(&FwdState::noteConnection, this));
 
     HttpRequest::Pointer cause = request;
-    const auto cs = new HappyConnOpener(destinations, calls.connector, cause, start_t, n_tries, al);
+    const auto cs = new HappyConnOpener(destinations, calls.connector, cause, start_t, al);
     cs->setHost(request->url.host());
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {
@@ -1025,8 +1021,10 @@ FwdState::usePinned()
         return;
     }
 
-    ++n_tries;
     request->flags.pinned = true;
+
+    if (al)
+        al->requestAttempts++;
 
     assert(connManager);
     if (connManager->pinnedAuth())
@@ -1290,7 +1288,7 @@ FwdState::logReplyStatus(int tries, const Http::StatusCode status)
 bool
 FwdState::exhaustedTries() const
 {
-    return n_tries >= Config.forward_max_tries;
+    return tries() >= Config.forward_max_tries;
 }
 
 bool

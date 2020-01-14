@@ -167,6 +167,7 @@ Adaptation::Icap::Xaction::openConnection()
     connection = s.getConnection(isRetriable, wasReused);
 
     if (wasReused && Comm::IsConnOpen(connection)) {
+        al.icap.requestAttempts++;
         // Set comm Close handler
         // fake the connect callback
         // TODO: can we sync call Adaptation::Icap::Xaction::noteCommConnected here instead?
@@ -219,6 +220,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     connection->remote.port(s.cfg().port);
     getOutgoingAddress(NULL, connection);
 
+    al.icap.requestAttempts++;
     // TODO: service bypass status may differ from that of a transaction
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> ConnectDialer;
     connector = JobCallback(93,3, ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
