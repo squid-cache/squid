@@ -35,6 +35,9 @@ public:
     void unlockExclusive(); ///< undo successful exclusiveLock()
     void unlockHeaders(); ///< undo successful lockHeaders()
     void switchExclusiveToShared(); ///< stop writing, start reading
+    /// same as unlockShared() but also attempts to get a writer lock beforehand
+    /// \returns whether the writer lock was acquired
+    bool unlockSharedAndSwitchToExclusive();
 
     void startAppending(); ///< writer keeps its lock but also allows reading
 
