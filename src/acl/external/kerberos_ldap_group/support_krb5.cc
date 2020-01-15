@@ -469,7 +469,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                  * Overwrite limitation of enctypes
                  */
                 creds->keyblock.enctype = 0;
-                if (creds->keyblock.contents != NULL)
+                if (creds->keyblock.contents)
                     krb5_free_keyblock_contents(kparam.context, &creds->keyblock);
                 code = krb5_get_credentials(kparam.context, 0, kparam.cc[ccindex], creds, &tgt_creds);
                 if (code) {
