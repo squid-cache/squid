@@ -218,10 +218,6 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
     if (!request->clientConnectionManager.valid() || !fd_table[serverConnection()->fd].ssl)
         return;
 
-    // Abort if client connection is closed
-    if (!Comm::IsConnOpen(clientConn))
-        return;
-
     // remember the server certificate from the ErrorDetail object
     if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
         if (!serverBump->serverCert.get()) {
@@ -252,6 +248,10 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
     if (!error) {
         serverCertificateVerified();
         if (splice) {
+            if (!Comm::IsConnOpen(clientConn)) {
+                bail(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
+                throw TexcHere("client connection gone");
+            }
             switchToTunnel(request.getRaw(), clientConn, serverConn);
             tunnelInsteadOfNegotiating();
         }
