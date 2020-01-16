@@ -360,7 +360,7 @@ Http::Tunneler::bailWith(ErrorState *error)
     Must(error);
     answer().squidError = error;
 
-    if (CachePeer *p = connection->getPeer())
+    if (const auto p = connection->getPeer())
         peerConnectFailed(p);
 
     callBack();

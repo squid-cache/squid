@@ -545,7 +545,7 @@ Security::PeerConnector::bail(ErrorState *error)
     Must(dialer);
     dialer->answer().error = error;
 
-    if (auto *p = serverConnection()->getPeer())
+    if (const auto p = serverConnection()->getPeer())
         peerConnectFailed(p);
 
     callBack();

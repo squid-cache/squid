@@ -823,7 +823,6 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
         if (originWantsEncryptedTraffic && // the "encrypted traffic" part
                 !peer->options.originserver && // the "through a proxy" part
                 !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
-
             return advanceDestination("establish tunnel thru proxy", answer.conn, [this,&answer] {
                 establishTunnelThruProxy(answer.conn);
             });
@@ -896,7 +895,7 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
 {
     assert(!request->flags.pinned);
 
-    const CachePeer *p = conn->getPeer();
+    const auto p = conn->getPeer();
     const bool peerWantsTls = p && p->secure.encryptTransport;
     // userWillTlsToPeerForUs assumes CONNECT == HTTPS
     const bool userWillTlsToPeerForUs = p && p->options.originserver &&
@@ -909,10 +908,11 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
     // as is
     const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS && !clientFirstBump;
 
-    if (needTlsToPeer || needTlsToOrigin || needsBump)
+    if (needTlsToPeer || needTlsToOrigin || needsBump) {
         return advanceDestination("secure connection to peer", conn, [this,&conn] {
             secureConnectionToPeer(conn);
         });
+    }
 
     // if not encrypting just run the post-connect actions
     successfullyConnectedToPeer(conn);

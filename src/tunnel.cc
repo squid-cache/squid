@@ -116,7 +116,7 @@ public:
     void retryOrBail();
 
     /// called when negotiations with the peer have been successfully completed
-    void notePeerReadyToShovel(const Comm::ConnectionPointer &conn);
+    void notePeerReadyToShovel(const Comm::ConnectionPointer &);
 
     class Connection
     {
@@ -863,7 +863,7 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 
     waitingForConnectExchange = false;
 
-    bool sawProblem = false;
+    auto sawProblem = false;
 
     if (!answer.positive()) {
         sawProblem = true;
@@ -1057,7 +1057,7 @@ tunnelStart(ClientHttpRequest * http)
 void
 TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 {
-    if (const auto *p = conn->getPeer()) {
+    if (const auto p = conn->getPeer()) {
         if (p->secure.encryptTransport)
             return advanceDestination("secure connection to peer", conn, [this,&conn] {
                 secureConnectionToPeer(conn);
