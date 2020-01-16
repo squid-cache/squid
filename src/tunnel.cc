@@ -1338,6 +1338,9 @@ TunnelStateData::notifyConnOpener()
 void
 switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn)
 {
+    Must(Comm::IsConnOpen(clientConn));
+    Must(Comm::IsConnOpen(srvConn));
+
     debugs(26,5, "Revert to tunnel FD " << clientConn->fd << " with FD " << srvConn->fd);
 
     /* Create state structure. */
