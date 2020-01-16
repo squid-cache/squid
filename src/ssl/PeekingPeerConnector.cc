@@ -250,7 +250,7 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
         if (splice) {
             if (!Comm::IsConnOpen(clientConn)) {
                 bail(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
-                throw TexcHere("client connection gone");
+                throw TextException("from-client connection gone", Here());
             }
             switchToTunnel(request.getRaw(), clientConn, serverConn);
             tunnelInsteadOfNegotiating();
