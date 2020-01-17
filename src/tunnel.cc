@@ -960,10 +960,17 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
     calls.connector = nullptr;
     connOpener.clear();
 
-    if (const auto error = answer.error.get()) {
+    ErrorState *error = nullptr;
+    if ((error = answer.error.get())) {
         syncHierNote(answer.conn, request->url.host());
+        answer.error.clear();
+    } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
+        error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw(), al);
+        closePendingConnection(answer.conn, "conn was closed while waiting for  noteConnection");
+    }
+
+    if (error) {
         saveError(error);
-        answer.error.clear(); // savedError has it now
         retryOrBail();
         return;
     }
