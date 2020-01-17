@@ -1121,6 +1121,7 @@ TunnelStateData::noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answ
 
     if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
         sendError(new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request.getRaw(), al), "connecion gone");
+        closePendingConnection(answer.conn, "conn was closed while waiting for noteSecurityPeerConnectorAnswer");
         return;
     }
 
