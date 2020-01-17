@@ -794,11 +794,20 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
     Must(n_tries <= answer.n_tries); // n_tries cannot decrease
     n_tries = answer.n_tries;
 
-    if (const auto error = answer.error.get()) {
+    ErrorState *error = nullptr;
+    if ((error = answer.error.get())) {
         flags.dont_retry = true; // or HappyConnOpener would not have given up
         syncHierNote(answer.conn, request->url.host());
-        fail(error);
         answer.error.clear(); // preserve error for errorSendComplete()
+        Must(!Comm::IsConnOpen(answer.conn));
+    } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
+        syncHierNote(answer.conn, request->url.host());
+        closePendingConnection(answer.conn, "conn was closed while waiting for noteConnection");
+        error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
+    }
+
+    if (error) {
+        fail(error);
         retryOrBail(); // will notice flags.dont_retry and bail
         return;
     }
