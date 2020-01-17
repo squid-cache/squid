@@ -944,19 +944,25 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 void
 FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
 {
-    if (ErrorState *error = answer.error.get()) {
-        fail(error);
+    ErrorState *error = nullptr;
+    if ((error = answer.error.get())) {
+        Must(!Comm::IsConnOpen(answer.conn));
         answer.error.clear(); // preserve error for errorSendComplete()
-        retryOrBail();
-        return;
-    }
-
-    if (answer.tunneled) {
+    } else if (answer.tunneled) {
         // TODO: When ConnStateData establishes tunnels, its state changes
         // [in ways that may affect logging?]. Consider informing
         // ConnStateData about our tunnel or otherwise unifying tunnel
         // establishment [side effects].
         complete(); // destroys us
+        return;
+    } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
+        closePendingConnection(answer.conn, "conn was closed while waiting for connectedToPeer");
+        error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
+    }
+
+    if (error) {
+        fail(error);
+        retryOrBail();
         return;
     }
 
