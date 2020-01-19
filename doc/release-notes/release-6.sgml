@@ -36,6 +36,7 @@ The Squid-6 change history can be <url url="http://www.squid-cache.org/Versions/
 
 <p>The most important of these new features are:
 <itemize>
+	<item>No new features documented yet.
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
