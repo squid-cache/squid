@@ -2416,6 +2416,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, err_detail_type &errDetai
         return 1;
 
     const int xerrno = errno;
+    unsigned long libError = 0;
     const auto ssl_error = SSL_get_error(session, ret);
 
     switch (ssl_error) {
@@ -2429,11 +2430,12 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, err_detail_type &errDetai
         return 0;
 
     case SSL_ERROR_SYSCALL:
+        libError = ERR_get_error();
         if (ret == 0) {
-            debugs(83, 2, "Error negotiating SSL connection on FD " << fd << ": Aborted by client: " << ssl_error);
+            debugs(83, 2, "Error negotiating SSL connection on FD " << fd << ": Aborted by client: " << libError);
         } else {
             debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
-                   (xerrno == 0 ? Security::ErrorString(ssl_error) : xstrerr(xerrno)));
+                   (xerrno == 0 ? Security::ErrorString(libError) : xstrerr(xerrno)));
         }
         // XXX: The client may not have actually closed the connection.
         // TODO: Detail ssl_error (via Ssl::ErrorDetail?) when appropriate.
@@ -2442,14 +2444,17 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, err_detail_type &errDetai
         break;
 
     case SSL_ERROR_ZERO_RETURN:
+        // The TLS/SSL peer has closed the connection for writing by sending
+        // the "close notify" alert.  No more data can be read.
         debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
         errDetail = ERR_DETAIL_TLS_CLIENT_CLOSED;
         break;
 
     default:
+        libError = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
-               fd << ": " << Security::ErrorString(ssl_error) <<
-               " (" << ssl_error << "/" << ret << ")");
+               fd << ": " << Security::ErrorString(libError) <<
+               " (" << libError << "/" << ret << ")");
         // TODO: Detail ssl_error (via Ssl::ErrorDetail?) when appropriate.
         errDetail = ERR_DETAIL_TLS_HANDSHAKE_ABORTED;
     }
