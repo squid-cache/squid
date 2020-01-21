@@ -3270,9 +3270,11 @@ ConnStateData::httpsPeeked(PinnedIdleContext pic)
 inline void
 ConnStateData::tlsNegotiateFailed(const int errDetail)
 {
-    if (errDetail != ERR_DETAIL_NONE) {
-        const auto context = pipeline.front();
-        Must(context);
+    // For non-bump enabled https_port we have not build a context yet.
+    // The checkLogging will print an logging line for us.
+    // XXX: if there is not any context where to store error details?
+    const auto context = pipeline.front();
+    if (context && errDetail != ERR_DETAIL_NONE) {
         Must(context->http);
         Must(context->http->request);
         context->http->request->detailError(ERR_SECURE_ACCEPT_FAIL, errDetail);
