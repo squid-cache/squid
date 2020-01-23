@@ -998,24 +998,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SQUID_ERROR_DETAIL:
-#if USE_OPENSSL
-            if (al->request && al->request->errType == ERR_SECURE_CONNECT_FAIL) {
-                out = Ssl::GetErrorName(al->request->errDetail, true);
-            } else
-#endif
-                if (al->request && al->request->errDetail != ERR_DETAIL_NONE) {
-                    if (al->request->errDetail > ERR_DETAIL_START && al->request->errDetail < ERR_DETAIL_MAX)
-                        out = errorDetailName(al->request->errDetail);
-                    else {
-                        if (al->request->errDetail >= ERR_DETAIL_EXCEPTION_START)
-                            sb.appendf("%s=0x%X",
-                                       errorDetailName(al->request->errDetail), (uint32_t) al->request->errDetail);
-                        else
-                            sb.appendf("%s=%d",
-                                       errorDetailName(al->request->errDetail), al->request->errDetail);
-                        out = sb.c_str();
-                    }
-                }
+            if (al->request && al->request->errDetail)
+                out = al->request->errDetail->logCode();
             break;
 
         case LFT_SQUID_HIERARCHY:

@@ -2181,7 +2181,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     const auto context = pipeline.front();
     Must(context);
     Must(context->http);
-    context->http->request->detailError(error, errorDetail);
+    context->http->request->detailError(error, new ErrorDetail(errorDetail));
 
     /*
     * Just close the connection to not confuse browsers
@@ -3075,7 +3075,7 @@ ConnStateData::parseTlsHandshake()
         debugs(83, 5, "Got something other than TLS Client Hello. Cannot SslBump.");
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_PROTOCOL_UNKNOWN)) {
             // XXX: The client did not necessarily abort (and may not be using TLS)
-            request->detailError(ERR_PROTOCOL_UNKNOWN, ERR_DETAIL_TLS_HANDSHAKE_ABORTED);
+            request->detailError(ERR_PROTOCOL_UNKNOWN, new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE_ABORTED));
             clientConnection->close();
         } else {
             sslBumpMode = Ssl::bumpSplice;
@@ -3129,7 +3129,7 @@ void httpsSslBumpStep2AccessCheckDone(Acl::Answer answer, void *data)
         connState->startPeekAndSplice();
     } else if (!connState->splice()) {
         if (http && http->request)
-            http->request->detailError(ERR_SSL_BUMP_FAILURE, ERR_DETAIL_SSL_BUMP_SPLICE);
+            http->request->detailError(ERR_SSL_BUMP_FAILURE, new ErrorDetail(ERR_DETAIL_SSL_BUMP_SPLICE));
         connState->clientConnection->close();
     }
 }
@@ -3277,7 +3277,7 @@ ConnStateData::tlsNegotiateFailed(const int errDetail)
     if (context && errDetail != ERR_DETAIL_NONE) {
         Must(context->http);
         Must(context->http->request);
-        context->http->request->detailError(ERR_SECURE_ACCEPT_FAIL, errDetail);
+        context->http->request->detailError(ERR_SECURE_ACCEPT_FAIL, new ErrorDetail(errDetail));
     }
     clientConnection->close();
 }

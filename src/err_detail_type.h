@@ -9,6 +9,8 @@
 #ifndef _SQUID_ERR_DETAIL_H
 #define  _SQUID_ERR_DETAIL_H
 
+#include "base/RefCount.h"
+
 typedef enum {
     ERR_DETAIL_NONE,
     ERR_DETAIL_START = 100000, // to avoid clashes with most OS error numbers
@@ -31,7 +33,11 @@ typedef enum {
     ERR_DETAIL_TLS_CLIENT_CLOSED, // TLS client closed its TCP connection prematurely
     ERR_DETAIL_TLS_HANDSHAKE_ABORTED, // TLS connection negotiation error (XXX: too general)
     ERR_DETAIL_SSL_BUMP_SPLICE, // an SslBump step2 splicing error (XXX: too general)
+    ERR_DETAIL_TLS_VERIFY, // TLS certificate verify errors
+    ERR_DETAIL_TLS_HANDSHAKE, // TLS library-based negotiation errors
     ERR_DETAIL_EXCEPTION_OTHER, //other errors ( eg std C++ lib errors)
+    ERR_DETAIL_SYS, // system error errors, errno
+    ERR_DETAIL_EXCEPTION, // Squid exception
     ERR_DETAIL_MAX,
     ERR_DETAIL_EXCEPTION_START = 110000 // offset for exception ID details
 } err_detail_type;
@@ -52,6 +58,40 @@ const char *errorDetailName(int errDetailId)
 
     return "UNKNOWN";
 }
+
+class ErrorDetail: public RefCountable
+{
+public:
+    typedef RefCount<ErrorDetail> Pointer;
+
+    ErrorDetail(int id): errorDetailId(id) {}
+    virtual const char *logCode() {
+        if (errorDetailId <= ERR_DETAIL_START && errorDetailId < ERR_DETAIL_MAX)
+            return err_detail_type_str[errorDetailId-ERR_DETAIL_START+2];
+
+        return "UNKNOWN";
+    }
+    const int type() {return errorDetailId;}
+
+protected:
+    int errorDetailId = 0;
+};
+
+class SysErrorDetail: public ErrorDetail {
+public:
+    SysErrorDetail(int error): ErrorDetail(ERR_DETAIL_SYS), errorNo(error) {}
+    virtual const char *logCode() final;
+private:
+    int errorNo;
+};
+
+class ExceptionErrorDetail: public ErrorDetail {
+public:
+    ExceptionErrorDetail(int id): ErrorDetail(ERR_DETAIL_EXCEPTION), exceptionId(ERR_DETAIL_EXCEPTION_START + id) {}
+    virtual const char *logCode() final;
+private:
+    int exceptionId;
+};
 
 #endif
 

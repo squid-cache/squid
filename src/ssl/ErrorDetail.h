@@ -93,6 +93,22 @@ private:
     HttpRequest::Pointer request;
 };
 
+// Merge to Ssl::ErrorDetail?
+class LogErrorDetail: public ::ErrorDetail {
+public:
+    LogErrorDetail(Security::ErrorCode code): ErrorDetail(ERR_DETAIL_TLS_VERIFY), errorCode(code) {}
+    virtual const char *logCode() final {return GetErrorName(errorCode);}
+    Security::ErrorCode errorCode;
+};
+
+// Merge to Ssl::ErrorDetail?
+class LibErrorDetail: public ::ErrorDetail {
+public:
+    LibErrorDetail(unsigned long error): ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE), libErrorNo(error) {}
+    virtual const char *logCode() final;
+    unsigned long libErrorNo;
+};
+
 }//namespace Ssl
 #endif
 

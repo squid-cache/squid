@@ -869,7 +869,7 @@ Client::handledEarlyAdaptationAbort()
     if (entry->isEmpty()) {
         debugs(11,8, "adaptation failure with an empty entry: " << *entry);
         const auto err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, request.getRaw(), fwd->al);
-        err->detailError(ERR_DETAIL_ICAP_RESPMOD_EARLY);
+        err->detailError(new ErrorDetail(ERR_DETAIL_ICAP_RESPMOD_EARLY));
         fwd->fail(err);
         fwd->dontRetry(true);
         abortAll("adaptation failure with an empty entry");
@@ -877,7 +877,7 @@ Client::handledEarlyAdaptationAbort()
     }
 
     if (request) // update logged info directly
-        request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_ICAP_RESPMOD_LATE);
+        request->detailError(ERR_ICAP_FAILURE, new ErrorDetail(ERR_DETAIL_ICAP_RESPMOD_LATE));
 
     return false; // the caller must handle
 }
@@ -893,7 +893,7 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
 
     if (!entry->isEmpty()) { // too late to block (should not really happen)
         if (request)
-            request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_RESPMOD_BLOCK_LATE);
+            request->detailError(ERR_ICAP_FAILURE, new ErrorDetail(ERR_DETAIL_RESPMOD_BLOCK_LATE));
         abortAll("late adaptation block");
         return;
     }
@@ -906,7 +906,7 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
         page_id = ERR_ACCESS_DENIED;
 
     const auto err = new ErrorState(page_id, Http::scForbidden, request.getRaw(), fwd->al);
-    err->detailError(ERR_DETAIL_RESPMOD_BLOCK_EARLY);
+    err->detailError(new ErrorDetail(ERR_DETAIL_RESPMOD_BLOCK_EARLY));
     fwd->fail(err);
     fwd->dontRetry(true);
 

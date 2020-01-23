@@ -2607,7 +2607,7 @@ HttpStateData::handleRequestBodyProducerAborted()
         // should not matter because either client-side will provide its own or
         // there will be no response at all (e.g., if the the client has left).
         const auto err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, fwd->request, fwd->al);
-        err->detailError(ERR_DETAIL_SRV_REQMOD_REQ_BODY);
+        err->detailError(new ErrorDetail(ERR_DETAIL_SRV_REQMOD_REQ_BODY));
         fwd->fail(err);
     }
 

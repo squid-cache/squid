@@ -1208,7 +1208,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
     switch (reply.result) {
     case Helper::TimedOut:
         if (Config.onUrlRewriteTimeout.action != toutActBypass) {
-            http->calloutsError(ERR_GATEWAY_FAILURE, ERR_DETAIL_REDIRECTOR_TIMEDOUT);
+            http->calloutsError(ERR_GATEWAY_FAILURE, new ErrorDetail(ERR_DETAIL_REDIRECTOR_TIMEDOUT));
             debugs(85, DBG_IMPORTANT, "ERROR: URL rewrite helper: Timedout");
         }
         break;
@@ -1980,7 +1980,7 @@ ClientHttpRequest::noteAdaptationAnswer(const Adaptation::Answer &answer)
         break;
 
     case Adaptation::Answer::akError:
-        handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_ABORT, !answer.final);
+        handleAdaptationFailure(new ErrorDetail(ERR_DETAIL_CLT_REQMOD_ABORT), !answer.final);
         break;
     }
 }
@@ -2033,7 +2033,7 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
 void
 ClientHttpRequest::handleAdaptationBlock(const Adaptation::Answer &answer)
 {
-    request->detailError(ERR_ACCESS_DENIED, ERR_DETAIL_REQMOD_BLOCK);
+    request->detailError(ERR_ACCESS_DENIED, new ErrorDetail(ERR_DETAIL_REQMOD_BLOCK));
     AclMatchedName = answer.ruleId.termedBuf();
     assert(calloutContext);
     calloutContext->clientAccessCheckDone(ACCESS_DENIED);
@@ -2114,17 +2114,17 @@ ClientHttpRequest::noteBodyProducerAborted(BodyPipe::Pointer)
 
     debugs(85,3, HERE << "REQMOD body production failed");
     if (request_satisfaction_mode) { // too late to recover or serve an error
-        request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_CLT_REQMOD_RESP_BODY);
+        request->detailError(ERR_ICAP_FAILURE, new ErrorDetail(ERR_DETAIL_CLT_REQMOD_RESP_BODY));
         const Comm::ConnectionPointer c = getConn()->clientConnection;
         Must(Comm::IsConnOpen(c));
         c->close(); // drastic, but we may be writing a response already
     } else {
-        handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_REQ_BODY);
+        handleAdaptationFailure(new ErrorDetail(ERR_DETAIL_CLT_REQMOD_REQ_BODY));
     }
 }
 
 void
-ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
+ClientHttpRequest::handleAdaptationFailure(const ErrorDetail::Pointer &errDetail, bool bypassable)
 {
     debugs(85,3, HERE << "handleAdaptationFailure(" << bypassable << ")");
 
@@ -2170,7 +2170,7 @@ ClientHttpRequest::callException(const std::exception &ex)
 
 // XXX: modify and use with ClientRequestContext::clientAccessCheckDone too.
 void
-ClientHttpRequest::calloutsError(const err_type error, const int errDetail)
+ClientHttpRequest::calloutsError(const err_type error, const ErrorDetail::Pointer &errDetail)
 {
     // The original author of the code also wanted to pass an errno to
     // setReplyToError, but it seems unlikely that the errno reflects the

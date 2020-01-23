@@ -812,3 +812,9 @@ Ssl::ErrorDetail::ErrorDetail(Ssl::ErrorDetail const &anErrDetail)
     lib_error_no = anErrDetail.lib_error_no;
 }
 
+const char *Ssl::LibErrorDetail::logCode()
+{
+    static char sbuf[512];
+    snprintf(sbuf, sizeof(sbuf), "SSL_ERR=%lu", libErrorNo);
+    return sbuf;
+}

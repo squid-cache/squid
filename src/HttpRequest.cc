@@ -92,7 +92,7 @@ HttpRequest::init()
     // hier
     dnsWait = -1;
     errType = ERR_NONE;
-    errDetail = ERR_DETAIL_NONE;
+    errDetail = nullptr;
     peer_login = NULL;      // not allocated/deallocated by this class
     peer_domain = NULL;     // not allocated/deallocated by this class
     peer_host = NULL;
@@ -465,11 +465,11 @@ HttpRequest::prepForDirect()
 }
 
 void
-HttpRequest::detailError(err_type aType, int aDetail)
+HttpRequest::detailError(err_type aType, const ErrorDetail::Pointer &aDetail)
 {
     if (errType || errDetail)
-        debugs(11, 5, HERE << "old error details: " << errType << '/' << errDetail);
-    debugs(11, 5, HERE << "current error details: " << aType << '/' << aDetail);
+        debugs(11, 5, HERE << "old error details: " << errType << '/' << errDetail->logCode());
+    debugs(11, 5, HERE << "current error details: " << aType << '/' << aDetail->logCode());
     // checking type and detail separately may cause inconsistency, but
     // may result in more details available if they only become available later
     if (!errType)
@@ -483,7 +483,7 @@ HttpRequest::clearError()
 {
     debugs(11, 7, HERE << "old error details: " << errType << '/' << errDetail);
     errType = ERR_NONE;
-    errDetail = ERR_DETAIL_NONE;
+    errDetail = nullptr;
 }
 
 void

@@ -324,7 +324,7 @@ void Adaptation::Icap::Xaction::dieOnConnectionFailure()
     debugs(93, 2, HERE << typeName <<
            " failed to connect to " << service().cfg().uri);
     service().noteConnectionFailed("failure");
-    detailError(ERR_DETAIL_ICAP_XACT_START);
+    detailError(new ErrorDetail(ERR_DETAIL_ICAP_XACT_START));
     throw TexcHere("cannot connect to the ICAP service");
 }
 
@@ -394,7 +394,7 @@ void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
 
 void Adaptation::Icap::Xaction::handleCommClosed()
 {
-    detailError(ERR_DETAIL_ICAP_XACT_CLOSE);
+    detailError(new ErrorDetail(ERR_DETAIL_ICAP_XACT_CLOSE));
     mustStop("ICAP service connection externally closed");
 }
 
@@ -575,7 +575,7 @@ void Adaptation::Icap::Xaction::noteInitiatorAborted()
     if (theInitiator.set()) {
         debugs(93,4, HERE << "Initiator gone before ICAP transaction ended");
         clearInitiator();
-        detailError(ERR_DETAIL_ICAP_INIT_GONE);
+        detailError(new ErrorDetail(ERR_DETAIL_ICAP_INIT_GONE));
         setOutcome(xoGone);
         mustStop("initiator aborted");
     }
@@ -754,7 +754,7 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
         debugs(93, 2, typeName <<
                " TLS negotiation to " << service().cfg().uri << " failed");
         service().noteConnectionFailed("failure");
-        detailError(ERR_DETAIL_ICAP_XACT_SSL_START);
+        detailError(new ErrorDetail(ERR_DETAIL_ICAP_XACT_SSL_START));
         throw TexcHere("cannot connect to the TLS ICAP service");
     }
 

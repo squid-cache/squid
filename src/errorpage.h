@@ -109,7 +109,7 @@ public:
     HttpReply *BuildHttpReply(void);
 
     /// set error type-specific detail code
-    void detailError(int dCode) {detailCode = dCode;}
+    void detailError(const ErrorDetail::Pointer &dCode) {detailCode = dCode;}
 
     /// ensures that a future BuildHttpReply() is likely to succeed
     void validate();
@@ -205,7 +205,7 @@ public:
 #endif
     /// type-specific detail about the transaction error;
     /// overwrites xerrno; overwritten by detail, if any.
-    int detailCode = ERR_DETAIL_NONE;
+    ErrorDetail::Pointer detailCode = nullptr;
 
     HttpReplyPointer response_;
 

@@ -13,6 +13,7 @@
 #include "base/CbcPointer.h"
 #include "dns/forward.h"
 #include "err_type.h"
+#include "err_detail_type.h"
 #include "HierarchyLogEntry.h"
 #include "http/Message.h"
 #include "http/RequestMethod.h"
@@ -98,7 +99,7 @@ public:
     void recordLookup(const Dns::LookupDetails &detail);
 
     /// sets error detail if no earlier detail was available
-    void detailError(err_type aType, int aDetail);
+    void detailError(err_type aType, const ErrorDetail::Pointer &aDetail);
     /// clear error details, useful for retries/repeats
     void clearError();
 
@@ -159,7 +160,7 @@ public:
     int dnsWait; ///< sum of DNS lookup delays in milliseconds, for %dt
 
     err_type errType;
-    int errDetail; ///< errType-specific detail about the transaction error
+    ErrorDetail::Pointer errDetail; ///< errType-specific detail about the transaction error
 
     char *peer_login;       /* Configured peer login:password */
 

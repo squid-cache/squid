@@ -2434,7 +2434,9 @@ ftpFail(Ftp::Gateway *ftpState)
     Http::StatusCode sc = ftpState->failedHttpStatus(error_code);
     const auto ftperr = new ErrorState(error_code, sc, ftpState->fwd->request, ftpState->fwd->al);
     ftpState->failed(error_code, code, ftperr);
-    ftperr->detailError(code);
+     // XXX: code is actually an FTP reply code not a sys errno as
+    // we are assuming here and inside Ftp::Client::failed
+    ftperr->detailError(new SysErrorDetail(code));
     HttpReply *newrep = ftperr->BuildHttpReply();
     delete ftperr;
 
@@ -2514,8 +2516,10 @@ ftpSendReply(Ftp::Gateway * ftpState)
     else
         err.ftp.reply = xstrdup("");
 
+    // XXX: code is an ftp reply code not a sys error
     // TODO: interpret as FTP-specific error code
-    err.detailError(code);
+    // probably building an FtpErrorDetail class.
+    err.detailError(new SysErrorDetail(code));
 
     ftpState->entry->replaceHttpReply(err.BuildHttpReply());
 
