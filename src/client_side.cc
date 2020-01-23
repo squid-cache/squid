@@ -136,6 +136,10 @@
 #include <cmath>
 #include <limits>
 
+#if HAVE_SYSTEMD_SD_DAEMON_H
+#include <systemd/sd-daemon.h>
+#endif
+
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
 #endif
@@ -3646,6 +3650,20 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
            << s->listenConn);
 
     Must(AddOpenedHttpSocket(s->listenConn)); // otherwise, we have received a fd we did not ask for
+
+#if USE_SYSTEMD
+    // When the very first port opens, tell systemd we are able to serve connections.
+    // Subsequent sd_notify() calls, including calls during reconfiguration,
+    // do nothing because the first call parameter is 1.
+    // XXX: Send the notification only after opening all configured ports.
+    if (opt_foreground || opt_no_daemon) {
+        const auto result = sd_notify(1, "READY=1");
+        if (result < 0) {
+            debugs(1, DBG_IMPORTANT, "WARNING: failed to send start-up notification to systemd" <<
+                   Debug::Extra << "sd_notify() error: " << xstrerr(-result));
+        }
+    }
+#endif
 }
 
 void
