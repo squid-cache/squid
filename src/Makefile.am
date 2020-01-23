@@ -581,6 +581,7 @@ squid_LDADD = \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
 	$(KRB5LIBS) \
+	$(SYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
