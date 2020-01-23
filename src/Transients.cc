@@ -157,7 +157,7 @@ Transients::get(const cache_key *key)
     if (StoreEntry *oldE = locals->at(index)) {
         debugs(20, 3, "not joining private " << *oldE);
         assert(EBIT_TEST(oldE->flags, KEY_PRIVATE));
-        map->closeForReading(index);
+        map->closeForReadingAndFreeIdle(index);
         return nullptr;
     }
 
@@ -251,6 +251,14 @@ Transients::addEntry(StoreEntry *e, const cache_key *key, const Store::IoStatus 
     }
 }
 
+bool
+Transients::hasWriter(const StoreEntry &e)
+{
+    if (!e.hasTransients())
+        return false;
+    return map->peekAtWriter(e.mem_obj->xitTable.index);
+}
+
 void
 Transients::noteFreeMapSlice(const Ipc::StoreMapSliceId)
 {
@@ -325,7 +333,7 @@ Transients::disconnect(StoreEntry &entry)
             map->abortWriting(xitTable.index);
         } else {
             assert(isReader(entry));
-            map->closeForReading(xitTable.index);
+            map->closeForReadingAndFreeIdle(xitTable.index);
         }
         locals->at(xitTable.index) = nullptr;
         xitTable.index = -1;
