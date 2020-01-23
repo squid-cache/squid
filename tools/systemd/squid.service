@@ -11,12 +11,13 @@ Documentation=man:squid(8)
 After=network.target network-online.target nss-lookup.target
 
 [Service]
-Type=forking
+Type=notify
 PIDFile=/var/run/squid.pid
 ExecStartPre=/usr/sbin/squid --foreground -z
-ExecStart=/usr/sbin/squid -sYC
+ExecStart=/usr/sbin/squid --foreground -sYC
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=mixed
+NotifyAccess=all
 
 [Install]
 WantedBy=multi-user.target
