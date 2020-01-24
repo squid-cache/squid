@@ -285,7 +285,7 @@ Ftp::Client::failed(err_type error, int xerrno, ErrorState *err)
         ftperr->ftp.reply = xstrdup(reply);
 
     if (!err) {
-        fwd->request->detailError(error, new SysErrorDetail(xerrno));
+        fwd->request->detailError(error, (xerrno ? new SysErrorDetail(xerrno) : nullptr));
         fwd->fail(ftperr);
         closeServer(); // we failed, so no serverComplete()
     }
