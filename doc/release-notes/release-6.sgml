@@ -1,0 +1,171 @@
+<!doctype linuxdoc system>
+<article>
+<title>Squid 6.0.0 release notes</title>
+<author>Squid Developers</author>
+
+<abstract>
+This document contains the release notes for version 6 of Squid.
+Squid is a WWW Cache application developed by the National Laboratory
+for Applied Network Research and members of the Web Caching community.
+</abstract>
+
+<toc>
+
+<sect>Notice
+<p>The Squid Team are pleased to announce the release of Squid-6.0.0 for testing.
+
+This new release is available for download from <url url="http://www.squid-cache.org/Versions/v6/"> or the
+ <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
+
+<p>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
+
+<p>We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting">
+   for how to submit a report with a stack trace.
+
+<sect1>Known issues
+<p>Although this release is deemed good enough for use in many setups, please note the existence of
+<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=6" name="open bugs against Squid-6">.
+
+<sect1>Changes since earlier releases of Squid-6
+<p>
+The Squid-6 change history can be <url url="http://www.squid-cache.org/Versions/v6/changesets/" name="viewed here">.
+
+
+<sect>Major new features since Squid-5
+<p>Squid-6 represents a new feature release above Squid-5.
+
+<p>The most important of these new features are:
+<itemize>
+	<item>No new features documented yet.
+</itemize>
+
+Most user-facing changes are reflected in squid.conf (see below).
+
+
+<sect>Changes to squid.conf since Squid-5
+<p>
+This section gives an account of those changes in three categories:
+
+<itemize>
+	<item><ref id="newdirectives" name="New directives">
+	<item><ref id="modifieddirectives" name="Changes to existing directives">
+	<item><ref id="removeddirectives" name="Removed directives">
+</itemize>
+<p>
+
+<sect1>New directives<label id="newdirectives">
+<p>
+<descrip>
+	<p>There have been no directives added.
+</descrip>
+
+<sect1>Changes to existing directives<label id="modifieddirectives">
+<p>
+<descrip>
+	<p>There have been no directives changed.
+
+</descrip>
+
+<sect1>Removed directives<label id="removeddirectives">
+<p>
+<descrip>
+	<p>There have been no directives changed.
+
+</descrip>
+
+
+<sect>Changes to ./configure options since Squid-5
+<p>
+This section gives an account of those changes in three categories:
+
+<itemize>
+	<item><ref id="newoptions" name="New options">
+	<item><ref id="modifiedoptions" name="Changes to existing options">
+	<item><ref id="removedoptions" name="Removed options">
+</itemize>
+
+
+<sect1>New options<label id="newoptions">
+<p>
+<descrip>
+	<p>There have been no options added.
+
+</descrip>
+
+<sect1>Changes to existing options<label id="modifiedoptions">
+<p>
+<descrip>
+	<p>There have been no options changed.
+
+</descrip>
+</p>
+
+<sect1>Removed options<label id="removedoptions">
+<p>
+<descrip>
+	<p>There have been no options changed.
+
+</descrip>
+
+
+<sect>Regressions since Squid-2.7
+
+<p>Some squid.conf options which were available in Squid-2.7 are not yet available in Squid-5
+
+<p>If you need something to do then porting one of these from Squid-2 is most welcome.
+
+<sect1>Missing squid.conf options available in Squid-2.7
+<p>
+<descrip>
+	<tag>broken_vary_encoding</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>cache_peer</tag>
+	<p><em>monitorinterval=</em> not yet ported from 2.6
+	<p><em>monitorsize=</em> not yet ported from 2.6
+	<p><em>monitortimeout=</em> not yet ported from 2.6
+	<p><em>monitorurl=</em> not yet ported from 2.6
+
+	<tag>cache_vary</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>error_map</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>external_refresh_check</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>location_rewrite_access</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>location_rewrite_children</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>location_rewrite_concurrency</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>location_rewrite_program</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>refresh_pattern</tag>
+	<p><em>stale-while-revalidate=</em> not yet ported from 2.7
+	<p><em>ignore-stale-while-revalidate=</em> not yet ported from 2.7
+	<p><em>negative-ttl=</em> not yet ported from 2.7
+
+	<tag>refresh_stale_hit</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>update_headers</tag>
+	<p>Not yet ported from 2.7
+
+</descrip>
+
+<sect>Copyright
+<p>
+Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+<p>
+Squid software is distributed under GPLv2+ license and includes
+contributions from numerous individuals and organizations.
+Please see the COPYING and CONTRIBUTORS files for details.
+
+</article>
