@@ -2457,8 +2457,11 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &err
         debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
                fd << ": " << Security::ErrorString(libError) <<
                " (" << libError << "/" << ret << ")");
-        // TODO: Detail ssl_error (via Ssl::ErrorDetail?) when appropriate.
-        errDetail = new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE_ABORTED);
+
+        if (libError)
+            errDetail = new Ssl::LibErrorDetail(libError);
+        else
+            errDetail = new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE_ABORTED);
     }
 
 #elif USE_GNUTLS
