@@ -481,7 +481,7 @@ HttpRequest::detailError(err_type aType, const ErrorDetail::Pointer &aDetail)
 void
 HttpRequest::clearError()
 {
-    debugs(11, 7, HERE << "old error details: " << errType << '/' << errDetail);
+    debugs(11, 7, HERE << "old error details: " << errType << '/' << (errDetail ? errDetail->logCode() : "-"));
     errType = ERR_NONE;
     errDetail = nullptr;
 }
