@@ -2401,7 +2401,7 @@ httpsCreate(const ConnStateData *connState, const Security::ContextPointer &ctx)
  * \retval -1 on error (and sets errDetail)
  */
 static int
-tlsAttemptHandshake(ConnStateData *conn, PF *callback, err_detail_type &errDetail)
+tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &errDetail)
 {
     // TODO: maybe throw instead of returning -1
     // see https://github.com/squid-cache/squid/pull/81#discussion_r153053278
@@ -2437,17 +2437,19 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, err_detail_type &errDetai
             debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
                    (xerrno == 0 ? Security::ErrorString(libError) : xstrerr(xerrno)));
         }
-        // XXX: The client may not have actually closed the connection.
-        // TODO: Detail ssl_error (via Ssl::ErrorDetail?) when appropriate.
-        // TODO: Detail system error (xerrno) when appropriate.
-        errDetail = ERR_DETAIL_TLS_CLIENT_CLOSED;
+        if (libError)
+            errDetail = new Ssl::LibErrorDetail(libError);
+        else if (xerrno)
+            errDetail = new SysErrorDetail(xerrno);
+        else
+            errDetail = new ErrorDetail(ERR_DETAIL_TLS_CLIENT_CLOSED);
         break;
 
     case SSL_ERROR_ZERO_RETURN:
         // The TLS/SSL peer has closed the connection for writing by sending
         // the "close notify" alert.  No more data can be read.
         debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
-        errDetail = ERR_DETAIL_TLS_CLIENT_CLOSED;
+        errDetail = new ErrorDetail(ERR_DETAIL_TLS_CLIENT_CLOSED);
         break;
 
     default:
@@ -2456,7 +2458,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, err_detail_type &errDetai
                fd << ": " << Security::ErrorString(libError) <<
                " (" << libError << "/" << ret << ")");
         // TODO: Detail ssl_error (via Ssl::ErrorDetail?) when appropriate.
-        errDetail = ERR_DETAIL_TLS_HANDSHAKE_ABORTED;
+        errDetail = new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE_ABORTED);
     }
 
 #elif USE_GNUTLS
@@ -2467,7 +2469,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, err_detail_type &errDetai
 
     if (gnutls_error_is_fatal(x)) {
         debugs(83, 2, "Error negotiating TLS on " << conn->clientConnection << ": Aborted by client: " << Security::ErrorString(x));
-        errDetail = ERR_DETAIL_TLS_HANDSHAKE_ABORTED;
+        errDetail = new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE_ABORTED);
     } else if (x == GNUTLS_E_INTERRUPTED || x == GNUTLS_E_AGAIN) {
         const auto ioAction = (gnutls_record_get_direction(session)==0 ? COMM_SELECT_READ : COMM_SELECT_WRITE);
         Comm::SetSelect(fd, ioAction, callback, (callback ? conn : nullptr), 0);
@@ -2489,7 +2491,7 @@ clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
 
-    auto errDetail = ERR_DETAIL_NONE;
+    ErrorDetail::Pointer errDetail;
     const auto ret = tlsAttemptHandshake(conn, clientNegotiateSSL, errDetail);
     if (ret <= 0) {
         if (ret < 0) // An error
@@ -3212,7 +3214,7 @@ ConnStateData::startPeekAndSplice()
     // tlsAttemptHandshake() should return 0.
     // This block exist only to force openSSL parse client hello and detect
     // ERR_SECURE_ACCEPT_FAIL error, which should be checked and splice if required.
-    auto errDetail = ERR_DETAIL_NONE;
+    ErrorDetail::Pointer errDetail;
     if (tlsAttemptHandshake(this, nullptr, errDetail) < 0) {
         debugs(83, 2, "TLS handshake failed.");
         HttpRequest::Pointer request(http ? http->request : nullptr);
@@ -3268,16 +3270,16 @@ ConnStateData::httpsPeeked(PinnedIdleContext pic)
 #endif /* USE_OPENSSL */
 
 inline void
-ConnStateData::tlsNegotiateFailed(const int errDetail)
+ConnStateData::tlsNegotiateFailed(const ErrorDetail::Pointer &errDetail)
 {
     // For non-bump enabled https_port we have not build a context yet.
     // The checkLogging will print an logging line for us.
     // XXX: if there is not any context where to store error details?
     const auto context = pipeline.front();
-    if (context && errDetail != ERR_DETAIL_NONE) {
+    if (context && errDetail) {
         Must(context->http);
         Must(context->http->request);
-        context->http->request->detailError(ERR_SECURE_ACCEPT_FAIL, new ErrorDetail(errDetail));
+        context->http->request->detailError(ERR_SECURE_ACCEPT_FAIL, errDetail);
     }
     clientConnection->close();
 }

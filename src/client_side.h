@@ -296,7 +296,7 @@ public:
 
     /// initiate teardown of the from-client connection
     /// after a TLS negotiation failure (with the given detail)
-    void tlsNegotiateFailed(const int errDetail);
+    void tlsNegotiateFailed(const ErrorDetail::Pointer &);
 
     char *prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp);
 
