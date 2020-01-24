@@ -9,11 +9,12 @@
 #ifndef _SQUID_ERR_DETAIL_H
 #define  _SQUID_ERR_DETAIL_H
 
+#include "base/Here.h"
 #include "base/RefCount.h"
 
 typedef enum {
     ERR_DETAIL_NONE,
-    ERR_DETAIL_START = 100000, // to avoid clashes with most OS error numbers
+    ERR_DETAIL_START,
     ERR_DETAIL_REDIRECTOR_TIMEDOUT = ERR_DETAIL_START, // External redirector request timed-out
     ERR_DETAIL_CLT_REQMOD_ABORT, // client-facing code detected transaction abort
     ERR_DETAIL_CLT_REQMOD_REQ_BODY, // client-facing code detected REQMOD request body adaptation failure
@@ -40,25 +41,9 @@ typedef enum {
     ERR_DETAIL_EXCEPTION, // Squid exception
     ERR_DETAIL_FTP_ERROR, // FTP errors
     ERR_DETAIL_MAX,
-    ERR_DETAIL_EXCEPTION_START = 110000 // offset for exception ID details
 } err_detail_type;
 
 extern const char *err_detail_type_str[];
-
-inline
-const char *errorDetailName(int errDetailId)
-{
-    if (errDetailId < ERR_DETAIL_START)
-        return "SYSERR";
-
-    if (errDetailId < ERR_DETAIL_MAX)
-        return err_detail_type_str[errDetailId-ERR_DETAIL_START+2];
-
-    if (errDetailId >=ERR_DETAIL_EXCEPTION_START)
-        return "EXCEPTION";
-
-    return "UNKNOWN";
-}
 
 class ErrorDetail: public RefCountable
 {
@@ -67,7 +52,7 @@ public:
 
     ErrorDetail(int id): errorDetailId(id) {}
     virtual const char *logCode() {
-        if (errorDetailId <= ERR_DETAIL_START && errorDetailId < ERR_DETAIL_MAX)
+        if (errorDetailId >= ERR_DETAIL_START && errorDetailId < ERR_DETAIL_MAX)
             return err_detail_type_str[errorDetailId-ERR_DETAIL_START+2];
 
         return "UNKNOWN";
@@ -86,12 +71,15 @@ private:
     int errorNo;
 };
 
+/// offset for exception ID details, for backward compatibility
+#define SQUID_EXCEPTION_START_BASE 110000
+
 class ExceptionErrorDetail: public ErrorDetail {
 public:
-    ExceptionErrorDetail(int id): ErrorDetail(ERR_DETAIL_EXCEPTION), exceptionId(ERR_DETAIL_EXCEPTION_START + id) {}
+    ExceptionErrorDetail(SourceLocationId id): ErrorDetail(ERR_DETAIL_EXCEPTION), exceptionId(SQUID_EXCEPTION_START_BASE + id) {}
     virtual const char *logCode() final;
 private:
-    int exceptionId;
+    SourceLocationId exceptionId;
 };
 
 #endif
