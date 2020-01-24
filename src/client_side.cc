@@ -3042,6 +3042,7 @@ ConnStateData::parseTlsHandshake()
     receivedFirstByte();
     fd_note(clientConnection->fd, "Parsing TLS handshake");
 
+    ErrorDetail::Pointer parseErrorDetails;
     bool unsupportedProtocol = false;
     try {
         if (!tlsParser.parseHello(inBuf)) {
@@ -3053,6 +3054,16 @@ ConnStateData::parseTlsHandshake()
     catch (const std::exception &ex) {
         debugs(83, 2, "error on FD " << clientConnection->fd << ": " << ex.what());
         unsupportedProtocol = true;
+
+        // XXX: The TLS handshake parser reports the errors with TextExceptions.
+        // This is does not produce clear error details to report to the user,
+        // just the location where the exception is raised. However creating a
+        // Security::HandshakeErrorDetails to provide more details is enough
+        // big project.
+        if (const TextException *te = dynamic_cast<const TextException *>(&ex))
+            parseErrorDetails = new ExceptionErrorDetail(te->id());
+        else
+            parseErrorDetails = new ErrorDetail(ERR_DETAIL_TLS_HELLO_PARSE_ERROR);
     }
 
     parsingTlsHandshake = false;
@@ -3079,8 +3090,7 @@ ConnStateData::parseTlsHandshake()
         HttpRequest::Pointer request = context->http->request;
         debugs(83, 5, "Got something other than TLS Client Hello. Cannot SslBump.");
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_PROTOCOL_UNKNOWN)) {
-            // XXX: Create a Security::HandshakeErrorDetails to provide more details
-            request->detailError(ERR_PROTOCOL_UNKNOWN, new ErrorDetail(ERR_DETAIL_TLS_HELLO_PARSE_ERROR));
+            request->detailError(ERR_PROTOCOL_UNKNOWN, parseErrorDetails);
             clientConnection->close();
         } else {
             sslBumpMode = Ssl::bumpSplice;
