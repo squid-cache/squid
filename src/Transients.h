@@ -85,6 +85,8 @@ public:
     bool isReader(const StoreEntry &) const;
     /// whether the entry is in "writing to Transients" I/O state
     bool isWriter(const StoreEntry &) const;
+    /// whether we or somebody else is in the "writing to Transients" I/O state
+    bool hasWriter(const StoreEntry &);
 
     static int64_t EntryLimit();
 
