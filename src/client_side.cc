@@ -3076,8 +3076,8 @@ ConnStateData::parseTlsHandshake()
         HttpRequest::Pointer request = context->http->request;
         debugs(83, 5, "Got something other than TLS Client Hello. Cannot SslBump.");
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_PROTOCOL_UNKNOWN)) {
-            // XXX: The client did not necessarily abort (and may not be using TLS)
-            request->detailError(ERR_PROTOCOL_UNKNOWN, new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE_ABORTED));
+            // XXX: Create a Security::HandshakeErrorDetails to provide more details
+            request->detailError(ERR_PROTOCOL_UNKNOWN, new ErrorDetail(ERR_DETAIL_TLS_HELLO_PARSE_ERROR));
             clientConnection->close();
         } else {
             sslBumpMode = Ssl::bumpSplice;

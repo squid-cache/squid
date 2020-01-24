@@ -33,6 +33,7 @@ typedef enum {
     ERR_DETAIL_ICAP_XACT_OTHER, // other ICAP transaction errors
     ERR_DETAIL_TLS_CLIENT_CLOSED, // TLS client closed its TCP connection prematurely
     ERR_DETAIL_TLS_HANDSHAKE_ABORTED, // TLS connection negotiation error (XXX: too general)
+    ERR_DETAIL_TLS_HELLO_PARSE_ERROR, // Squid TLS handshake parser failed
     ERR_DETAIL_SSL_BUMP_SPLICE, // an SslBump step2 splicing error (XXX: too general)
     ERR_DETAIL_TLS_VERIFY, // TLS certificate verify errors
     ERR_DETAIL_TLS_HANDSHAKE, // TLS library-based negotiation errors
