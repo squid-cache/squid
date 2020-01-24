@@ -12,12 +12,21 @@
 #define SQUID_FTP_CLIENT_H
 
 #include "clients/Client.h"
+#include "err_detail_type.h"
 
 class String;
 namespace Ftp
 {
 
 extern const char *const crlf;
+
+class ErrorDetail: public ::ErrorDetail {
+public:
+    ErrorDetail(int code): ::ErrorDetail(ERR_DETAIL_FTP_ERROR), ftpCode(code) {}
+    virtual const char *logCode() final;
+private:
+    int ftpCode; // An Ftp error code
+};
 
 /// Common code for FTP server control and data channels.
 /// Does not own the channel descriptor, which is managed by Ftp::Client.

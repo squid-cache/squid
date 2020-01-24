@@ -64,6 +64,13 @@ escapeIAC(const char *buf)
     return ret;
 }
 
+const char *Ftp::ErrorDetail::logCode()
+{
+    static char sbuf[512];
+    snprintf(sbuf, sizeof(sbuf), "FTP_ERR=%d", ftpCode);
+    return sbuf;
+}
+
 /* Ftp::Channel */
 
 /// configures the channel with a descriptor and registers a close handler

@@ -38,6 +38,7 @@ typedef enum {
     ERR_DETAIL_EXCEPTION_OTHER, //other errors ( eg std C++ lib errors)
     ERR_DETAIL_SYS, // system error errors, errno
     ERR_DETAIL_EXCEPTION, // Squid exception
+    ERR_DETAIL_FTP_ERROR, // FTP errors
     ERR_DETAIL_MAX,
     ERR_DETAIL_EXCEPTION_START = 110000 // offset for exception ID details
 } err_detail_type;
