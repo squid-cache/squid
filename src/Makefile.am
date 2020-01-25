@@ -1256,8 +1256,6 @@ tests_testRock_LDADD = \
 	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
-	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
 	anyp/libanyp.la \
 	eui/libeui.la \
 	$(SSL_LIBS) \
@@ -1265,6 +1263,7 @@ tests_testRock_LDADD = \
 	base/libbase.la \
 	mem/libmem.la \
 	store/libstore.la \
+	$(ADAPTATION_LIBS) \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \

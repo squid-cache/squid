@@ -4533,7 +4533,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 
     const auto algId = Security::certAdaptAlgorithmId(al); // throws on error
 
-    sslproxy_cert_adapt *ca = static_cast<sslproxy_cert_adapt *>(xcalloc(1, sizeof(sslproxy_cert_adapt)));
+    auto ca = static_cast<sslproxy_cert_adapt *>(xcalloc(1, sizeof(sslproxy_cert_adapt)));
     const char *param;
     if ( char *s = strchr(al, '{')) {
         *s = '\0'; // terminate the al string
@@ -4607,7 +4607,7 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
     }
 
     const auto algName = Security::certSignAlgorithmId(al); // throws on errors
-    sslproxy_cert_sign *cs = static_cast<sslproxy_cert_sign *>(xcalloc(1, sizeof(sslproxy_cert_sign)));
+    auto cs = static_cast<sslproxy_cert_sign *>(xcalloc(1, sizeof(sslproxy_cert_sign)));
     cs->alg = algName;
 
     aclParseAclList(LegacyParser, &cs->aclList, al);

@@ -259,7 +259,7 @@ public:
     const SBuf &tlsClientSni() const { return tlsClientSni_; }
     /// Fill the certAdaptParams with the required data for certificate adaptation
     /// and create the key for storing/retrieve the certificate to/from the cache
-    void buildSslCertGenerationParams(Security::CertificateProperties &certProperties);
+    void buildSslCertGenerationParams(Security::CertificateProperties &);
     /// Called when the client sends the first request on a bumped connection.
     /// Returns false if no [delayed] error should be written to the client.
     /// Otherwise, writes the error to the client and returns true. Also checks
@@ -391,7 +391,7 @@ private:
 
 #if USE_OPENSSL
     /// \returns a pointer to the matching cached TLS context or nil
-    Security::ContextPointer getTlsContextFromCache(const SBuf &cacheKey, const Security::CertificateProperties &certProperties);
+    Security::ContextPointer getTlsContextFromCache(const SBuf &cacheKey, const Security::CertificateProperties &);
 
     /// Attempts to add a given TLS context to the cache, replacing the old
     /// same-key context, if any

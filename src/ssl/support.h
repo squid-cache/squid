@@ -256,14 +256,14 @@ void chainCertificatesToSSLContext(Security::ContextPointer &, Security::ServerO
  \ingroup ServerProtocolSSLAPI
  * Configure a previously unconfigured SSL context object.
  */
-void configureUnconfiguredSslContext(Security::ContextPointer &, Security::CertSignAlgorithm signAlgorithm, AnyP::PortCfg &);
+void configureUnconfiguredSslContext(Security::ContextPointer &, Security::CertSignAlgorithm, AnyP::PortCfg &);
 
 /**
   \ingroup ServerProtocolSSLAPI
   * Generates a certificate and a private key using provided properies and set it
   * to SSL object.
  */
-bool configureSSL(SSL *ssl, Security::CertificateProperties const &properties, AnyP::PortCfg &port);
+bool configureSSL(SSL *, Security::CertificateProperties const &, AnyP::PortCfg &);
 
 /**
   \ingroup ServerProtocolSSLAPI
@@ -318,9 +318,9 @@ void setClientSNI(SSL *ssl, const char *fqdn);
 
 /**
   \ingroup ServerProtocolSSLAPI
-  * Generates a unique key based on Security::CertificateProperties object and store it to key
+  * Generate a unique key based on Security::CertificateProperties object and store it to key
  */
-void InRamCertificateDbKey(const Security::CertificateProperties &certProperties, SBuf &key);
+void InRamCertificateDbKey(const Security::CertificateProperties &, SBuf &key);
 
 /**
   \ingroup ServerProtocolSSLAPI
