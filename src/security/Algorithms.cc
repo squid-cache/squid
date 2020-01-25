@@ -22,7 +22,7 @@ const char *
 Security::certAdaptAlgorithmName(const int alg)
 {
     assert(alg >= 0);
-    assert(alg < Security::algSetEnd);
+    assert(alg < algSetEnd);
     return CertAdaptAlgorithm_str[alg];
 }
 
