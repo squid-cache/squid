@@ -508,6 +508,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 
+        case LFT_TRANSPORT_CLIENT_CONNECTION_ID:
+            if (al->tcpClient) {
+                outUint64 = al->tcpClient->id.value;
+                doUint64 = true;
+            }
+            break;
+
         case LFT_CLIENT_LOCAL_NFMARK:
             if (al->tcpClient) {
                 sb.appendf("0x%x", al->tcpClient->nfmark);
