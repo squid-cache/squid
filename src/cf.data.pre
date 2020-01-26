@@ -4563,13 +4563,18 @@ DOC_START
 		>qos    Client connection TOS/DSCP value set by Squid
 		>nfmark Client connection netfilter packet MARK set by Squid
 
-		>connection_id The client connection identifier is an unsigned
-			integer. These IDs are guaranteed to monotonically
-			increase within a single worker process lifetime, with
-			higher values corresponding to connections that were
-			accepted later. Many IDs are skipped (i.e. never
-			logged). Concurrent workers and restarted workers use
-			similar, partially overlapping sequences of IDs.
+		transport::>connection_id Identifies a transport connection
+			accepted by Squid (e.g., a connection carrying the
+			logged HTTP request). Currently, Squid only supports
+			TCP transport connections.
+
+			The logged identifier is an unsigned integer. These
+			IDs are guaranteed to monotonically increase within a
+			single worker process lifetime, with higher values
+			corresponding to connections that were accepted later.
+			Many IDs are skipped (i.e. never logged). Concurrent
+			workers and restarted workers use similar, partially
+			overlapping sequences of IDs.
 
 		la	Local listening IP address the client connection was connected to.
 		lp	Local listening port number the client connection was connected to.

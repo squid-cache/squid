@@ -508,7 +508,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             }
             break;
 
-        case LFT_CLIENT_CONNECTION_ID:
+        case LFT_TRANSPORT_CLIENT_CONNECTION_ID:
             if (al->tcpClient) {
                 outUint64 = al->tcpClient->id.value;
                 doUint64 = true;
