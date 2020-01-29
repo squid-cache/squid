@@ -52,8 +52,6 @@ public:
     /// can also contain normal error pages formatting codes.
     SBuf &detailString(const HttpRequest::Pointer &request) const;
 
-    /// The error name to embed in squid error pages
-    const char *errorName() const {return err_code();}
     /// The error no
     Security::ErrorCode errorNo() const {return error_no;}
     ///Sets the low-level error returned by OpenSSL ERR_get_error()
@@ -64,7 +62,7 @@ public:
     X509 *brokenCert() {return broken_cert.get(); }
 
     // ErrorDetail API
-    virtual const char *logCode() final {return errorName();}
+    virtual const char *logCode() final {return err_code();}
 private:
     ErrorDetail(ErrorDetail const &): ::ErrorDetail(ERR_DETAIL_TLS_VERIFY) {}
 

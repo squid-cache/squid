@@ -1200,11 +1200,9 @@ ErrorState::compileLegacyCode(Build &build)
         break;
 
     case 'x':
-#if USE_OPENSSL
-        if (const auto sslErrDetail = dynamic_cast<Ssl::ErrorDetail *>(detail.getRaw()))
-            mb.appendf("%s", sslErrDetail->errorName());
+        if (detail)
+            mb.appendf("%s", detail->logCode());
         else
-#endif
             if (!building_deny_info_url)
                 p = "[Unknown Error Code]";
         break;
