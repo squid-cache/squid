@@ -222,8 +222,9 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
     if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
         if (!serverBump->serverCert.get()) {
             // remember the server certificate from the ErrorDetail object
-            if (error && error->detail && error->detail->peerCert())
-                serverBump->serverCert.resetAndLock(error->detail->peerCert());
+            const auto errDetail = dynamic_cast<Ssl::ErrorDetail *>((error ? error->detail.getRaw() : nullptr));
+            if (errDetail && errDetail->peerCert())
+                serverBump->serverCert.resetAndLock(errDetail->peerCert());
             else {
                 handleServerCertificate();
             }

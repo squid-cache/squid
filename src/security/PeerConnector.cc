@@ -259,7 +259,7 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 {
     Must(validationResponse != NULL);
 
-    Ssl::ErrorDetail::Pointer errDetails;
+    ErrorDetail::Pointer errDetails;
     bool validatorFailed = false;
 
     if (Debug::Enabled(83, 5)) {
@@ -304,7 +304,7 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 /// The first honored error, if any, is returned via errDetails parameter.
 /// The method returns all seen errors except SSL_ERROR_NONE as Security::CertErrors.
 Security::CertErrors *
-Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::ErrorDetail::Pointer &errDetails)
+Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, ErrorDetail::Pointer &errDetails)
 {
     ACLFilledChecklist *check = NULL;
     Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
@@ -515,7 +515,7 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
 
 #if USE_OPENSSL
     Security::SessionPointer session(fd_table[fd].ssl);
-    auto *errFromFailure = static_cast<Ssl::ErrorDetail::Pointer *>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_error_detail));
+    auto *errFromFailure = static_cast<ErrorDetail::Pointer *>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_error_detail));
     if (errFromFailure != NULL) {
         // The errFromFailure is attached to the ssl object
         // and will be released when ssl object destroyed.
@@ -528,8 +528,10 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
         X509_free(server_cert);
     }
 
-    if (ssl_lib_error != SSL_ERROR_NONE)
-        anErr->detail->setLibError(ssl_lib_error);
+    if (ssl_lib_error != SSL_ERROR_NONE) {
+        if (const auto errDetail = dynamic_cast<Ssl::ErrorDetail *>(anErr->detail.getRaw()))
+            errDetail->setLibError(ssl_lib_error);
+    }
 #endif
 
     noteNegotiationDone(anErr);

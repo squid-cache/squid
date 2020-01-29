@@ -169,7 +169,7 @@ private:
     void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
-    Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail::Pointer &);
+    Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, ErrorDetail::Pointer &);
 #endif
 
     static void NegotiateSsl(int fd, void *data);

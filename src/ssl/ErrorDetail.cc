@@ -772,7 +772,7 @@ SBuf &Ssl::ErrorDetail::detailString(const HttpRequest::Pointer &request) const
     return errDetailStr;
 }
 
-Ssl::ErrorDetail::ErrorDetail( Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason): error_no (err_no), lib_error_no(SSL_ERROR_NONE), errReason(aReason)
+Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason): ::ErrorDetail(ERR_DETAIL_TLS_VERIFY), error_no (err_no), lib_error_no(SSL_ERROR_NONE), errReason(aReason)
 {
     if (cert)
         peer_cert.resetAndLock(cert);

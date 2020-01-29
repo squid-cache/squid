@@ -961,8 +961,8 @@ ErrorState::compileLegacyCode(Build &build)
             p = "%D";  // if recursion is not allowed, do not convert
 #if USE_OPENSSL
         // currently only SSL error details implemented
-        else if (detail) {
-            auto &errDetail = detail->detailString(request);
+        else if (const auto sslErrDetail = dynamic_cast<Ssl::ErrorDetail *>(detail.getRaw())) {
+            auto &errDetail = sslErrDetail->detailString(request);
             if (errDetail.length() > 0) {
                 const auto compiledDetail = compileBody(errDetail.c_str(), false);
                 mb.append(compiledDetail.rawContent(), compiledDetail.length());
@@ -1201,8 +1201,8 @@ ErrorState::compileLegacyCode(Build &build)
 
     case 'x':
 #if USE_OPENSSL
-        if (detail)
-            mb.appendf("%s", detail->errorName());
+        if (const auto sslErrDetail = dynamic_cast<Ssl::ErrorDetail *>(detail.getRaw()))
+            mb.appendf("%s", sslErrDetail->errorName());
         else
 #endif
             if (!building_deny_info_url)
@@ -1349,7 +1349,7 @@ ErrorState::BuildHttpReply()
     if (request) {
 #if USE_OPENSSL
         if (detail)
-            request->detailError(type, new Ssl::LogErrorDetail(detail->errorNo()));
+            request->detailError(type, detail);
         else
 #endif
             if (detailCode)

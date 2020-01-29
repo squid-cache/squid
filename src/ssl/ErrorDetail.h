@@ -40,11 +40,9 @@ bool ErrorIsOptional(const char *name);
  * Used to pass SSL error details to the error pages returned to the
  * end user.
  */
-class ErrorDetail:  public RefCountable
+class ErrorDetail:  public ::ErrorDetail
 {
 public:
-    typedef RefCount<Ssl::ErrorDetail> Pointer;
-
     // if broken certificate is nil, the peer certificate is broken
     ErrorDetail(Security::ErrorCode err_no, X509 *peer, X509 *broken, const char *aReason = NULL);
 
@@ -65,8 +63,10 @@ public:
     /// peer or intermediate certificate that failed validation
     X509 *brokenCert() {return broken_cert.get(); }
 
+    // ErrorDetail API
+    virtual const char *logCode() final {return errorName();}
 private:
-    ErrorDetail(ErrorDetail const &){}
+    ErrorDetail(ErrorDetail const &): ::ErrorDetail(ERR_DETAIL_TLS_VERIFY) {}
 
     typedef const char * (ErrorDetail::*fmt_action_t)() const;
     /**
@@ -97,14 +97,6 @@ private:
     Security::CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
     String errReason; ///< A custom reason for error, else retrieved from OpenSSL.
     mutable ErrorDetailEntry detailEntry;
-};
-
-// Merge to Ssl::ErrorDetail?
-class LogErrorDetail: public ::ErrorDetail {
-public:
-    LogErrorDetail(Security::ErrorCode code): ErrorDetail(ERR_DETAIL_TLS_VERIFY), errorCode(code) {}
-    virtual const char *logCode() final {return GetErrorName(errorCode);}
-    Security::ErrorCode errorCode;
 };
 
 // Merge to Ssl::ErrorDetail?
