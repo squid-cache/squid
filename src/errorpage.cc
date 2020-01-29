@@ -1347,15 +1347,10 @@ ErrorState::BuildHttpReply()
     // Make sure error codes get back to the client side for logging and
     // error tracking.
     if (request) {
-#if USE_OPENSSL
         if (detail)
             request->detailError(type, detail);
         else
-#endif
-            if (detailCode)
-                request->detailError(type, detailCode);
-            else
-                request->detailError(type, (xerrno ? new SysErrorDetail(xerrno) : nullptr));
+            request->detailError(type, (xerrno ? new SysErrorDetail(xerrno) : nullptr));
     }
 
     return rep;

@@ -109,7 +109,7 @@ public:
     HttpReply *BuildHttpReply(void);
 
     /// set error type-specific detail code
-    void detailError(const ErrorDetail::Pointer &dCode) {detailCode = dCode;}
+    void detailError(const ErrorDetail::Pointer &dCode) {detail = dCode;}
 
     /// ensures that a future BuildHttpReply() is likely to succeed
     void validate();
@@ -200,12 +200,9 @@ public:
 
     AccessLogEntryPointer ale; ///< transaction details (or nil)
 
-#if USE_OPENSSL
-    Ssl::ErrorDetail::Pointer detail;
-#endif
     /// type-specific detail about the transaction error;
-    /// overwrites xerrno; overwritten by detail, if any.
-    ErrorDetail::Pointer detailCode = nullptr;
+    /// overwrites xerrno;
+    ErrorDetail::Pointer detail;
 
     HttpReplyPointer response_;
 

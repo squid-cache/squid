@@ -1527,7 +1527,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
                 Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail(
                     SQUID_X509_V_ERR_DOMAIN_MISMATCH,
                     srvCert.get(), nullptr);
-                err->detail = errDetail;
+                err->detailError(errDetail);
                 repContext->setReplyToError(request->method, err);
                 assert(context->http->out.offset == 0);
                 context->pullData();

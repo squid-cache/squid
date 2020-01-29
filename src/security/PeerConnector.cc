@@ -289,7 +289,7 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
         anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al);
     }  else {
         anErr =  new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
-        anErr->detail = errDetails;
+        anErr->detailError(errDetails);
         /*anErr->xerrno= Should preserved*/
     }
 
@@ -520,11 +520,11 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
         // The errFromFailure is attached to the ssl object
         // and will be released when ssl object destroyed.
         // Copy errFromFailure to a new Ssl::ErrorDetail object
-        anErr->detail = *errFromFailure;
+        anErr->detailError(*errFromFailure);
     } else {
         // server_cert can be NULL here
         X509 *server_cert = SSL_get_peer_certificate(session.get());
-        anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, server_cert, NULL);
+        anErr->detailError(new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, server_cert, NULL));
         X509_free(server_cert);
     }
 
