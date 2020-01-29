@@ -11,7 +11,7 @@
 
 #include "err_detail_type.h"
 #include "ErrorDetailManager.h"
-#include "HttpRequest.h"
+#include "http/forward.h"
 #include "security/forward.h"
 
 namespace Ssl
@@ -46,12 +46,6 @@ public:
     // if broken certificate is nil, the peer certificate is broken
     ErrorDetail(Security::ErrorCode err_no, X509 *peer, X509 *broken, const char *aReason = NULL);
 
-    /// An error detail string to embed in squid error pages.
-    /// It uses the convert method to build the string using a template
-    /// message for the current SSL error. The template messages
-    /// can also contain normal error pages formatting codes.
-    SBuf &detailString(const HttpRequest::Pointer &request) const;
-
     /// The error no
     Security::ErrorCode errorNo() const {return error_no;}
     ///Sets the low-level error returned by OpenSSL ERR_get_error()
@@ -63,6 +57,12 @@ public:
 
     // ErrorDetail API
     virtual const char *logCode() final {return err_code();}
+
+    /// It uses the convert method to build the string using a template
+    /// message for the current SSL error. The template messages
+    /// can also contain normal error pages formatting codes.
+    virtual const char *detailString(const HttpRequestPointer &request) final;
+
 private:
     ErrorDetail(ErrorDetail const &): ::ErrorDetail(ERR_DETAIL_TLS_VERIFY) {}
 

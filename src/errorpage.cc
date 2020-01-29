@@ -959,17 +959,12 @@ ErrorState::compileLegacyCode(Build &build)
     case 'D':
         if (!build.allowRecursion)
             p = "%D";  // if recursion is not allowed, do not convert
-#if USE_OPENSSL
-        // currently only SSL error details implemented
-        else if (const auto sslErrDetail = dynamic_cast<Ssl::ErrorDetail *>(detail.getRaw())) {
-            auto &errDetail = sslErrDetail->detailString(request);
-            if (errDetail.length() > 0) {
-                const auto compiledDetail = compileBody(errDetail.c_str(), false);
-                mb.append(compiledDetail.rawContent(), compiledDetail.length());
-                do_quote = 0;
-            }
+        else if (detail) {
+            const auto errDetailStr = detail->detailString(request);
+            const auto compiledDetail = compileBody(errDetailStr, false);
+            mb.append(compiledDetail.rawContent(), compiledDetail.length());
+            do_quote = 0;
         }
-#endif
         if (!mb.contentSize())
             mb.append("[No Error Detail]", 17);
         break;

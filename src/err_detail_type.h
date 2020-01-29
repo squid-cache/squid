@@ -11,6 +11,7 @@
 
 #include "base/Here.h"
 #include "base/RefCount.h"
+#include "http/forward.h"
 
 typedef enum {
     ERR_DETAIL_NONE,
@@ -58,6 +59,10 @@ public:
 
         return "UNKNOWN";
     }
+
+    /// An error detail string to embed in squid error pages.
+    virtual const char *detailString(const HttpRequestPointer &) {return logCode();}
+
     const int type() {return errorDetailId;}
 
 protected:
@@ -68,6 +73,7 @@ class SysErrorDetail: public ErrorDetail {
 public:
     SysErrorDetail(int error): ErrorDetail(ERR_DETAIL_SYS), errorNo(error) {}
     virtual const char *logCode() final;
+    virtual const char *detailString(const HttpRequestPointer &) final;
 private:
     int errorNo;
 };

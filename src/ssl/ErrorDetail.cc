@@ -742,7 +742,7 @@ int Ssl::ErrorDetail::convert(const char *code, const char **value) const
     return 0;
 }
 
-SBuf &Ssl::ErrorDetail::detailString(const HttpRequest::Pointer &request) const
+const char *Ssl::ErrorDetail::detailString(const HttpRequest::Pointer &request)
 {
     char const *s = NULL;
     char const *p;
@@ -769,7 +769,7 @@ SBuf &Ssl::ErrorDetail::detailString(const HttpRequest::Pointer &request) const
     }
     errDetailStr.append(s, strlen(s));
 
-    return errDetailStr;
+    return errDetailStr.c_str();
 }
 
 Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason): ::ErrorDetail(ERR_DETAIL_TLS_VERIFY), error_no (err_no), lib_error_no(SSL_ERROR_NONE), errReason(aReason)
