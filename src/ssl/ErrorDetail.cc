@@ -742,18 +742,14 @@ int Ssl::ErrorDetail::convert(const char *code, const char **value) const
     return 0;
 }
 
-/**
- * It uses the convert method to build the string errDetailStr using
- * a template message for the current SSL error. The template messages
- * can also contain normal error pages formatting codes.
- * Currently the error template messages are hard-coded
- */
-void Ssl::ErrorDetail::buildDetail() const
+SBuf &Ssl::ErrorDetail::detailString(const HttpRequest::Pointer &request) const
 {
     char const *s = NULL;
     char const *p;
     char const *t;
     int code_len = 0;
+    static SBuf errDetailStr;
+    errDetailStr.clear();
 
     if (ErrorDetailsManager::GetInstance().getErrorDetail(error_no, request, detailEntry))
         s = detailEntry.detail.termedBuf();
@@ -772,12 +768,7 @@ void Ssl::ErrorDetail::buildDetail() const
         s = p + code_len;
     }
     errDetailStr.append(s, strlen(s));
-}
 
-const String &Ssl::ErrorDetail::toString() const
-{
-    if (errDetailStr.size() == 0)
-        buildDetail();
     return errDetailStr;
 }
 

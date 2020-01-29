@@ -962,10 +962,9 @@ ErrorState::compileLegacyCode(Build &build)
 #if USE_OPENSSL
         // currently only SSL error details implemented
         else if (detail) {
-            detail->useRequest(request.getRaw());
-            const String &errDetail = detail->toString();
-            if (errDetail.size() > 0) {
-                const auto compiledDetail = compileBody(errDetail.termedBuf(), false);
+            auto &errDetail = detail->detailString(request);
+            if (errDetail.length() > 0) {
+                const auto compiledDetail = compileBody(errDetail.c_str(), false);
                 mb.append(compiledDetail.rawContent(), compiledDetail.length());
                 do_quote = 0;
             }

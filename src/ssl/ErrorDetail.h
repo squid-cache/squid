@@ -47,8 +47,13 @@ public:
 
     // if broken certificate is nil, the peer certificate is broken
     ErrorDetail(Security::ErrorCode err_no, X509 *peer, X509 *broken, const char *aReason = NULL);
-    const String &toString() const;  ///< An error detail string to embed in squid error pages
-    void useRequest(HttpRequest *aRequest) { if (aRequest != NULL) request = aRequest;}
+
+    /// An error detail string to embed in squid error pages.
+    /// It uses the convert method to build the string using a template
+    /// message for the current SSL error. The template messages
+    /// can also contain normal error pages formatting codes.
+    SBuf &detailString(const HttpRequest::Pointer &request) const;
+
     /// The error name to embed in squid error pages
     const char *errorName() const {return err_code();}
     /// The error no
@@ -85,16 +90,13 @@ private:
     const char *err_lib_error() const;
 
     int convert(const char *code, const char **value) const;
-    void buildDetail() const;
 
-    mutable String errDetailStr; ///< Caches the error detail message
     Security::ErrorCode error_no;   ///< The error code
     unsigned long lib_error_no; ///< low-level error returned by OpenSSL ERR_get_error(3SSL)
     Security::CertPointer peer_cert; ///< A pointer to the peer certificate
     Security::CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
     String errReason; ///< A custom reason for error, else retrieved from OpenSSL.
     mutable ErrorDetailEntry detailEntry;
-    HttpRequest::Pointer request;
 };
 
 // Merge to Ssl::ErrorDetail?
