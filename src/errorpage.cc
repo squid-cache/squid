@@ -796,9 +796,6 @@ ErrorState::~ErrorState()
     if (err_language != Config.errorDefaultLanguage)
 #endif
         safe_free(err_language);
-#if USE_OPENSSL
-    delete detail;
-#endif
 }
 
 int

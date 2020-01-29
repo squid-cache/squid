@@ -17,6 +17,7 @@
 #include "security/EncryptorAnswer.h"
 #include "security/forward.h"
 #if USE_OPENSSL
+#include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
 #endif
 
@@ -168,7 +169,7 @@ private:
     void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
-    Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
+    Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail::Pointer &);
 #endif
 
     static void NegotiateSsl(int fd, void *data);

@@ -201,7 +201,7 @@ public:
     AccessLogEntryPointer ale; ///< transaction details (or nil)
 
 #if USE_OPENSSL
-    Ssl::ErrorDetail *detail = nullptr;
+    Ssl::ErrorDetail::Pointer detail;
 #endif
     /// type-specific detail about the transaction error;
     /// overwrites xerrno; overwritten by detail, if any.

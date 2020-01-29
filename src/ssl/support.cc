@@ -379,7 +379,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 broken_cert.resetAndLock(last_used_cert);
         }
 
-        auto *errDetail = new Ssl::ErrorDetail(error_no, peer_cert.get(), broken_cert.get());
+        auto *errDetail = new Ssl::ErrorDetail::Pointer(new Ssl::ErrorDetail(error_no, peer_cert.get(), broken_cert.get()));
         if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail, errDetail)) {
             debugs(83, 2, "Failed to set Ssl::ErrorDetail in ssl_verify_cb: Certificate " << buffer);
             delete errDetail;
@@ -425,7 +425,7 @@ static void
 ssl_free_ErrorDetail(void *, void *ptr, CRYPTO_EX_DATA *,
                      int, long, void *)
 {
-    Ssl::ErrorDetail  *errDetail = static_cast <Ssl::ErrorDetail *>(ptr);
+    auto  *errDetail = static_cast <Ssl::ErrorDetail::Pointer *>(ptr);
     delete errDetail;
 }
 

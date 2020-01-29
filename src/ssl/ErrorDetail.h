@@ -40,12 +40,13 @@ bool ErrorIsOptional(const char *name);
  * Used to pass SSL error details to the error pages returned to the
  * end user.
  */
-class ErrorDetail
+class ErrorDetail:  public RefCountable
 {
 public:
+    typedef RefCount<Ssl::ErrorDetail> Pointer;
+
     // if broken certificate is nil, the peer certificate is broken
     ErrorDetail(Security::ErrorCode err_no, X509 *peer, X509 *broken, const char *aReason = NULL);
-    ErrorDetail(ErrorDetail const &);
     const String &toString() const;  ///< An error detail string to embed in squid error pages
     void useRequest(HttpRequest *aRequest) { if (aRequest != NULL) request = aRequest;}
     /// The error name to embed in squid error pages
@@ -58,7 +59,10 @@ public:
     X509 *peerCert() { return peer_cert.get(); }
     /// peer or intermediate certificate that failed validation
     X509 *brokenCert() {return broken_cert.get(); }
+
 private:
+    ErrorDetail(ErrorDetail const &){}
+
     typedef const char * (ErrorDetail::*fmt_action_t)() const;
     /**
      * Holds a formatting code and its conversion method

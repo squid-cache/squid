@@ -794,24 +794,6 @@ Ssl::ErrorDetail::ErrorDetail( Security::ErrorCode err_no, X509 *cert, X509 *bro
     detailEntry.error_no = SSL_ERROR_NONE;
 }
 
-Ssl::ErrorDetail::ErrorDetail(Ssl::ErrorDetail const &anErrDetail)
-{
-    error_no = anErrDetail.error_no;
-    request = anErrDetail.request;
-
-    if (anErrDetail.peer_cert.get()) {
-        peer_cert.resetAndLock(anErrDetail.peer_cert.get());
-    }
-
-    if (anErrDetail.broken_cert.get()) {
-        broken_cert.resetAndLock(anErrDetail.broken_cert.get());
-    }
-
-    detailEntry = anErrDetail.detailEntry;
-
-    lib_error_no = anErrDetail.lib_error_no;
-}
-
 const char *Ssl::LibErrorDetail::logCode()
 {
     static char sbuf[512];
