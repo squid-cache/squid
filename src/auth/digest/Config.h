@@ -32,8 +32,6 @@ typedef struct _digest_nonce_h digest_nonce_h;
 /* data to be encoded into the nonce's hex representation */
 struct _digest_nonce_data {
     time_t creationtime;
-    /* in memory address of the nonce struct (similar purpose to an ETag) */
-    digest_nonce_h *self;
     uint32_t randomdata;
 };
 
