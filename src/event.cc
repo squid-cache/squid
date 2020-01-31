@@ -95,6 +95,7 @@ ev_entry::ev_entry(char const * aName, EVH * aFunction, void * aArgument, double
     when(evWhen),
     weight(aWeight),
     cbdata(haveArg),
+    codeContext(CodeContext::Current()),
     next(NULL)
 {
 }
@@ -238,6 +239,8 @@ EventScheduler::checkEvents(int)
         /* XXX assumes event->name is static memory! */
         AsyncCall::Pointer call = asyncCall(41,5, event->name,
                                             EventDialer(event->func, event->arg, event->cbdata));
+        call->codeContext = event->codeContext;
+
         ScheduleCallHere(call);
 
         last_event_ran = event->name; // XXX: move this to AsyncCallQueue

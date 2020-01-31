@@ -10,6 +10,7 @@
 #define SQUID_EVENT_H
 
 #include "AsyncEngine.h"
+#include "base/CodeContext.h"
 #include "mem/forward.h"
 
 class StoreEntry;
@@ -40,6 +41,7 @@ public:
     int weight;
     bool cbdata;
 
+    CodeContext::Pointer codeContext; ///< event creator's context
     ev_entry *next;
 };
 
