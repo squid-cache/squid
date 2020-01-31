@@ -1047,9 +1047,10 @@ clientReplyContext::purgeDoMissPurge()
 void
 clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 {
+    /* Move to new() when that is created */
+    purgeStatus = Http::scNotFound;
+
     if (newEntry) {
-        /* Move to new() when that is created */
-        purgeStatus = Http::scNotFound;
         /* Release the cached URI */
         debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
 #if USE_HTCP
