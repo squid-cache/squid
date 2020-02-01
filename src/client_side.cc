@@ -2109,9 +2109,9 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
     const bool switchedToHttps = conn->switchedToHttps();
     const bool tryHostHeader = vhost || switchedToHttps;
-    if (tryHostHeader && (host = getHostHeader(req_hdr)) != NULL) {
+    if (tryHostHeader && (host = getHostHeader(req_hdr)) != NULL && strlen(host) >= SQUIDHOSTNAMELEN) {
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
-        char thost[256];
+        char thost[SQUIDHOSTNAMELEN + 6 /* ':' vport */];
         if (vport > 0) {
             thost[0] = '\0';
             char *t = NULL;
