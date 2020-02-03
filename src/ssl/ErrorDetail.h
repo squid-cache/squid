@@ -43,8 +43,16 @@ bool ErrorIsOptional(const char *name);
 class ErrorDetail:  public ::ErrorDetail
 {
 public:
-    // if broken certificate is nil, the peer certificate is broken
+    /// Used for server-side TLS certificate verification failures to
+    /// detail server certificates and provide extra string describing
+    /// the failure.
+    /// If the broken certificate is nil then the broken certificate is
+    /// the peer certificate.
     ErrorDetail(Security::ErrorCode err_no, X509 *peer, X509 *broken, const char *aReason = NULL);
+
+    /// General TLS handshake failures or failures due to TLS/SSL
+    /// library errors
+    ErrorDetail(Security::ErrorCode err_no, unsigned long lib_err);
 
     /// The error no
     Security::ErrorCode errorNo() const {return error_no;}
@@ -56,7 +64,7 @@ public:
     X509 *brokenCert() {return broken_cert.get(); }
 
     // ErrorDetail API
-    virtual const char *logCode() final {return err_code();}
+    virtual const char *logCode() final;
 
     /// It uses the convert method to build the string using a template
     /// message for the current SSL error. The template messages
@@ -64,7 +72,7 @@ public:
     virtual const char *detailString(const HttpRequestPointer &request) final;
 
 private:
-    ErrorDetail(ErrorDetail const &): ::ErrorDetail(ERR_DETAIL_TLS_VERIFY) {}
+    ErrorDetail(ErrorDetail const &): ::ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE) {}
 
     typedef const char * (ErrorDetail::*fmt_action_t)() const;
     /**
@@ -95,14 +103,6 @@ private:
     Security::CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
     String errReason; ///< A custom reason for error, else retrieved from OpenSSL.
     mutable ErrorDetailEntry detailEntry;
-};
-
-// Merge to Ssl::ErrorDetail?
-class LibErrorDetail: public ::ErrorDetail {
-public:
-    LibErrorDetail(unsigned long error): ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE), libErrorNo(error) {}
-    virtual const char *logCode() final;
-    unsigned long libErrorNo;
 };
 
 }//namespace Ssl

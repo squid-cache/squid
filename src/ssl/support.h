@@ -38,6 +38,7 @@
  */
 
 // Custom SSL errors; assumes all official errors are positive
+#define SQUID_ERR_SSL_LIB -5
 #define SQUID_X509_V_ERR_INFINITE_VALIDATION -4
 #define SQUID_X509_V_ERR_CERT_CHANGE -3
 #define SQUID_ERR_SSL_HANDSHAKE -2

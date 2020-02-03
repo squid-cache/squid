@@ -2438,7 +2438,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &err
                    (xerrno == 0 ? Security::ErrorString(libError) : xstrerr(xerrno)));
         }
         if (libError)
-            errDetail = new Ssl::LibErrorDetail(libError);
+            errDetail = new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
         else if (xerrno)
             errDetail = new SysErrorDetail(xerrno);
         else
@@ -2459,7 +2459,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &err
                " (" << libError << "/" << ret << ")");
 
         if (libError)
-            errDetail = new Ssl::LibErrorDetail(libError);
+            errDetail = new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
         else
             errDetail = new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE_ABORTED);
     }

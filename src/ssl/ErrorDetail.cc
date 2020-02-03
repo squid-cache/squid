@@ -26,6 +26,9 @@ typedef std::map<Security::ErrorCode, const SslErrorEntry *> SslErrors;
 SslErrors TheSslErrors;
 
 static SslErrorEntry TheSslErrorArray[] = {
+    {   SQUID_ERR_SSL_LIB,
+        "SQUID_ERR_SSL_LIB"
+    },
     {   SQUID_X509_V_ERR_INFINITE_VALIDATION,
         "SQUID_X509_V_ERR_INFINITE_VALIDATION"
     },
@@ -772,7 +775,17 @@ const char *Ssl::ErrorDetail::detailString(const HttpRequest::Pointer &request)
     return errDetailStr.c_str();
 }
 
-Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason): ::ErrorDetail(ERR_DETAIL_TLS_VERIFY), error_no (err_no), lib_error_no(SSL_ERROR_NONE), errReason(aReason)
+const char *Ssl::ErrorDetail::logCode()
+{
+    if (error_no == SQUID_ERR_SSL_LIB) {
+        static char sbuf[512];
+        snprintf(sbuf, sizeof(sbuf), "SSL_ERR=%lu", lib_error_no);
+        return sbuf;
+    }
+    return err_code();
+}
+
+Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason): ::ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE), error_no (err_no), lib_error_no(SSL_ERROR_NONE), errReason(aReason)
 {
     if (cert)
         peer_cert.resetAndLock(cert);
@@ -785,9 +798,7 @@ Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *brok
     detailEntry.error_no = SSL_ERROR_NONE;
 }
 
-const char *Ssl::LibErrorDetail::logCode()
+Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, unsigned long err): ::ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE), error_no(SQUID_ERR_SSL_LIB), lib_error_no(err)
 {
-    static char sbuf[512];
-    snprintf(sbuf, sizeof(sbuf), "SSL_ERR=%lu", libErrorNo);
-    return sbuf;
+
 }

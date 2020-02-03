@@ -36,8 +36,7 @@ typedef enum {
     ERR_DETAIL_TLS_HANDSHAKE_ABORTED, // TLS connection negotiation error (XXX: too general)
     ERR_DETAIL_TLS_HELLO_PARSE_ERROR, // Squid TLS handshake parser failed
     ERR_DETAIL_SSL_BUMP_SPLICE, // an SslBump step2 splicing error (XXX: too general)
-    ERR_DETAIL_TLS_VERIFY, // TLS certificate verify errors
-    ERR_DETAIL_TLS_HANDSHAKE, // TLS library-based negotiation errors
+    ERR_DETAIL_TLS_HANDSHAKE, // TLS negotiation errors
     ERR_DETAIL_EXCEPTION_OTHER, //other errors ( eg std C++ lib errors)
     ERR_DETAIL_SYS, // system error errors, errno
     ERR_DETAIL_EXCEPTION, // Squid exception
