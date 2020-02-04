@@ -2061,7 +2061,7 @@ getHostHeader(const char *req_hdr)
     for(const char *c = host; *c != '\0'; ++c) {
         // currently only used for pre-parse Host header, ensure valid domain[:port] or ip[:port]
         static const CharacterSet hostChars = CharacterSet("host",":[].-_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
-        if (hostChars[*c])
+        if (!hostChars[*c])
             return NULL; // error. line contains character not accepted in Host header
     }
     return host;
@@ -2109,7 +2109,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
     const bool switchedToHttps = conn->switchedToHttps();
     const bool tryHostHeader = vhost || switchedToHttps;
-    if (tryHostHeader && (host = getHostHeader(req_hdr)) != NULL && strlen(host) >= SQUIDHOSTNAMELEN) {
+    if (tryHostHeader && (host = getHostHeader(req_hdr)) != NULL && strlen(host) <= SQUIDHOSTNAMELEN) {
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
         char thost[SQUIDHOSTNAMELEN + 6 /* ':' vport */];
         if (vport > 0) {
