@@ -26,6 +26,12 @@ typedef std::map<Security::ErrorCode, const SslErrorEntry *> SslErrors;
 SslErrors TheSslErrors;
 
 static SslErrorEntry TheSslErrorArray[] = {
+    {   SQUID_SSL_ABORTED,
+        "SQUID_SSL_ABORTED"
+    },
+    {   SQUID_SSL_CONNECTION_CLOSED,
+        "SQUID_SSL_CONNECTION_CLOSED"
+    },
     {   SQUID_ERR_SSL_LIB,
         "SQUID_ERR_SSL_LIB"
     },
@@ -798,7 +804,7 @@ Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *brok
     detailEntry.error_no = SSL_ERROR_NONE;
 }
 
-Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, unsigned long err): ::ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE), error_no(SQUID_ERR_SSL_LIB), lib_error_no(err)
+Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err, unsigned long lib_err): ::ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE), error_no(SQUID_ERR_SSL_LIB), lib_error_no(lib_err)
 {
 
 }

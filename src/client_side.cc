@@ -2442,14 +2442,14 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &err
         else if (xerrno)
             errDetail = new SysErrorDetail(xerrno);
         else
-            errDetail = new ErrorDetail(ERR_DETAIL_TLS_CLIENT_CLOSED);
+            errDetail = new Ssl::ErrorDetail(SQUID_SSL_ABORTED, 0);
         break;
 
     case SSL_ERROR_ZERO_RETURN:
         // The TLS/SSL peer has closed the connection for writing by sending
         // the "close notify" alert.  No more data can be read.
         debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
-        errDetail = new ErrorDetail(ERR_DETAIL_TLS_CLIENT_CLOSED);
+        errDetail = new Ssl::ErrorDetail(SQUID_SSL_CONNECTION_CLOSED, 0);
         break;
 
     default:
