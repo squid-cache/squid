@@ -2158,6 +2158,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     if (tunnelOnError(HttpRequestMethod(), error))
         return;
 
+    ErrorDetail::Pointer errorDetail;
     bool doingTls = false;
 
 #if USE_OPENSSL
@@ -2165,6 +2166,13 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     if (!doingTls) {
         const auto sslConn = fd_table[io.conn->fd].ssl.get();
         doingTls = sslConn && !SSL_is_init_finished(sslConn);
+    }
+
+    if (doingTls) {
+        // The ERR_REQUEST_PARSE_TIMEOUT err_type plus a general
+        // SQUID_ERR_SSL_HANDSHAKE detail is enough to mark that
+        // the tls connection aborted because of timeout
+        errorDetail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, 0);
     }
 #elif USE_GNUTLS
     if (const auto sslConn = fd_table[io.conn->fd].ssl.get()) {
@@ -2174,14 +2182,16 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
             gnutls_free(descr);
         else
             doingTls = true;
+
+        if (doingTls)
+            errorDetail = new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE);
     }
 #endif
 
-    const auto errorDetail = doingTls ? ERR_DETAIL_TLS_HANDSHAKE_ABORTED : ERR_DETAIL_NONE;
     const auto context = pipeline.front();
     Must(context);
     Must(context->http);
-    context->http->request->detailError(error, new ErrorDetail(errorDetail));
+    context->http->request->detailError(error, errorDetail);
 
     /*
     * Just close the connection to not confuse browsers
@@ -2461,7 +2471,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &err
         if (libError)
             errDetail = new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
         else
-            errDetail = new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE_ABORTED);
+            errDetail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, 0);
     }
 
 #elif USE_GNUTLS
@@ -2472,7 +2482,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &err
 
     if (gnutls_error_is_fatal(x)) {
         debugs(83, 2, "Error negotiating TLS on " << conn->clientConnection << ": Aborted by client: " << Security::ErrorString(x));
-        errDetail = new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE_ABORTED);
+        errDetail = new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE);
     } else if (x == GNUTLS_E_INTERRUPTED || x == GNUTLS_E_AGAIN) {
         const auto ioAction = (gnutls_record_get_direction(session)==0 ? COMM_SELECT_READ : COMM_SELECT_WRITE);
         Comm::SetSelect(fd, ioAction, callback, (callback ? conn : nullptr), 0);
