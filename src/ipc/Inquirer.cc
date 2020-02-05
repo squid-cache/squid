@@ -33,12 +33,13 @@ LesserStrandByKidId(const Ipc::StrandCoord &c1, const Ipc::StrandCoord &c2)
 Ipc::Inquirer::Inquirer(Request::Pointer aRequest, const StrandCoords& coords,
                         double aTimeout):
     AsyncJob("Ipc::Inquirer"),
-    request(aRequest), strands(coords), pos(strands.begin()), timeout(aTimeout)
+    request(aRequest), strands(coords), pos(), timeout(aTimeout)
 {
-    debugs(54, 5, HERE);
+    debugs(54, 5, strands.size());
 
     // order by ascending kid IDs; useful for non-aggregatable stats
     std::sort(strands.begin(), strands.end(), LesserStrandByKidId);
+    pos = strands.begin();
 }
 
 Ipc::Inquirer::~Inquirer()
