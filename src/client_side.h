@@ -11,6 +11,7 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#include "acl/forward.h"
 #include "base/RunnersRegistry.h"
 #include "clientStreamForward.h"
 #include "comm.h"
@@ -249,8 +250,12 @@ public:
     /// called by FwdState when it is done bumping the server
     void httpsPeeked(PinnedIdleContext pic);
 
+    /// Callback for bumping step2 acl check
+    void bumpStep2AccessCheckDone(const Acl::Answer &);
+
     /// Splice a bumped client connection on peek-and-splice mode
-    bool splice();
+    /// Throws on errors
+    void splice();
 
     /// Start to create dynamic Security::ContextPointer for host or uses static port SSL context.
     void getSslContextStart();
@@ -317,10 +322,11 @@ public:
 
     /// generate a fake CONNECT request with the given payload
     /// at the beginning of the client I/O buffer
-    bool fakeAConnectRequest(const char *reason, const SBuf &payload);
+    void fakeAConnectRequest(const char *reason, const SBuf &payload);
 
     /// generates and sends to tunnel.cc a fake request with a given payload
-    bool initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload);
+    /// throws on errors
+    void initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload);
 
     /// whether we should start saving inBuf client bytes in anticipation of
     /// tunneling them to the server later (on_unsupported_protocol)
@@ -392,6 +398,10 @@ protected:
     /// Perform client data lookups that depend on client src-IP.
     /// The PROXY protocol may require some data input first.
     void whenClientIpKnown();
+
+    /// Catches errors thrown by factor and complete error details if possible
+    template <typename Functor>
+    bool detailErrorFailures(const err_type err, const err_detail_type defaultErr, const Functor &functor);
 
     BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
 

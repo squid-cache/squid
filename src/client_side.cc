@@ -105,6 +105,7 @@
 #include "profiler/Profiler.h"
 #include "proxyp/Header.h"
 #include "proxyp/Parser.h"
+#include "sbuf/Stream.h"
 #include "security/NegotiationHistory.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"
@@ -1581,7 +1582,9 @@ ConnStateData::tunnelOnError(const HttpRequestMethod &method, const err_type req
         if (context)
             context->finished(); // Will remove from pipeline queue
         Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-        return initiateTunneledRequest(request, Http::METHOD_NONE, "unknown-protocol", preservedClientData);
+        return detailErrorFailures(requestError, ERR_DETAIL_TUNNEL_ON_ERROR, [this, &request] {
+                initiateTunneledRequest(request, Http::METHOD_NONE, "unknown-protocol", preservedClientData);
+            });
     }
     debugs(33, 3, "denied; send error: " << requestError);
     return false;
@@ -2634,8 +2637,7 @@ httpsSslBumpAccessCheckDone(Acl::Answer answer, void *data)
         return;
     }
 
-    if (!connState->fakeAConnectRequest("ssl-bump", connState->inBuf))
-        connState->clientConnection->close();
+    connState->fakeAConnectRequest("ssl-bump", connState->inBuf);
 }
 #endif
 
@@ -3126,22 +3128,27 @@ ConnStateData::parseTlsHandshake()
 void httpsSslBumpStep2AccessCheckDone(Acl::Answer answer, void *data)
 {
     ConnStateData *connState = (ConnStateData *) data;
+    connState->bumpStep2AccessCheckDone(answer);
+}
 
+void
+ConnStateData::bumpStep2AccessCheckDone(const Acl::Answer &answer)
+{
     // if the connection is closed or closing, just return.
-    if (!connState->isOpen())
+    if (!isOpen())
         return;
 
     debugs(33, 5, "Answer: " << answer << " kind:" << answer.kind);
-    assert(connState->serverBump());
+    assert(serverBump());
     Ssl::BumpMode bumpAction;
     if (answer.allowed()) {
         bumpAction = (Ssl::BumpMode)answer.kind;
     } else
         bumpAction = Ssl::bumpSplice;
 
-    connState->serverBump()->act.step2 = bumpAction;
-    connState->sslBumpMode = bumpAction;
-    Http::StreamPointer context = connState->pipeline.front();
+    serverBump()->act.step2 = bumpAction;
+    sslBumpMode = bumpAction;
+    Http::StreamPointer context = pipeline.front();
 
     const auto http = (context ? context->http : nullptr);
 
@@ -3149,17 +3156,16 @@ void httpsSslBumpStep2AccessCheckDone(Acl::Answer answer, void *data)
         http->al->ssl.bumpMode = bumpAction;
 
     if (bumpAction == Ssl::bumpTerminate) {
-        connState->clientConnection->close();
+        clientConnection->close();
     } else if (bumpAction != Ssl::bumpSplice) {
-        connState->startPeekAndSplice();
-    } else if (!connState->splice()) {
-        if (http && http->request)
-            http->request->detailError(ERR_SSL_BUMP_FAILURE, new ErrorDetail(ERR_DETAIL_SSL_BUMP_SPLICE));
-        connState->clientConnection->close();
+        startPeekAndSplice();
+    } else {
+        if (!detailErrorFailures(ERR_SSL_BUMP_FAILURE, ERR_DETAIL_SSL_BUMP_SPLICE, [this] { splice(); }))
+            clientConnection->close();
     }
 }
 
-bool
+void
 ConnStateData::splice()
 {
     // normally we can splice here, because we just got client hello message
@@ -3182,14 +3188,14 @@ ConnStateData::splice()
     if (transparent()) {
         // For transparent connections, make a new fake CONNECT request, now
         // with SNI as target. doCallout() checks, adaptations may need that.
-        return fakeAConnectRequest("splice", preservedClientData);
+        fakeAConnectRequest("splice", preservedClientData);
     } else {
         // For non transparent connections  make a new tunneled CONNECT, which
         // also sets the HttpRequest::flags::forceTunnel flag to avoid
         // respond with "Connection Established" to the client.
         // This fake CONNECT request required to allow use of SNI in
         // doCallout() checks and adaptations.
-        return initiateTunneledRequest(request, Http::METHOD_CONNECT, "splice", preservedClientData);
+        initiateTunneledRequest(request, Http::METHOD_CONNECT, "splice", preservedClientData);
     }
 }
 
@@ -3292,6 +3298,30 @@ ConnStateData::httpsPeeked(PinnedIdleContext pic)
 
 #endif /* USE_OPENSSL */
 
+template <typename Functor>
+bool
+ConnStateData::detailErrorFailures(const err_type err, const err_detail_type defaultErrDetail, const Functor &functor)
+{
+    ErrorDetail::Pointer detail;
+    try {
+        functor();
+        return true;
+    } catch (ErrorDetail *aDetail) {
+        detail = aDetail;
+    } catch (const TextException &tex) {
+        detail = new ExceptionErrorDetail(tex.id());
+    } catch (...) {
+        if (defaultErrDetail != ERR_DETAIL_NONE)
+            detail = new ErrorDetail(defaultErrDetail);
+    }
+    const auto context = pipeline.front();
+    const auto http = context ? context->http : nullptr;
+    const auto request = http ? http->request : nullptr;
+    if (request)
+        request->detailError(err, detail);
+    return false;
+}
+
 inline void
 ConnStateData::tlsNegotiateFailed(const ErrorDetail::Pointer &errDetail)
 {
@@ -3307,7 +3337,7 @@ ConnStateData::tlsNegotiateFailed(const ErrorDetail::Pointer &errDetail)
     clientConnection->close();
 }
 
-bool
+void
 ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload)
 {
     // fake a CONNECT request to force connState to tunnel
@@ -3331,8 +3361,13 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::
         connectHost = clientConnection->local.toStr(ip, sizeof(ip));
         connectPort = clientConnection->local.port();
     } else {
-        debugs(33, 2, "Not able to compute URL, abort request tunneling for " << reason);
-        return false;
+        // We are not able to compute destination only on
+        //  * bad requests on plain HTTP ports
+        //  * bad requests on non-bumping https ports.
+        //  * unexpected situation (bugs?)
+        // Currently we are not supporting tunneling after an error
+        // for plain HTTP and non-bumping HTTPS ports.
+        throw TextException(ToSBuf("Not able to compute URL, abort request tunneling for ", reason), Here());
     }
 
     debugs(33, 2, "Request tunneling for " << reason);
@@ -3342,10 +3377,9 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::
     http->calloutContext = new ClientRequestContext(http);
     http->doCallouts();
     clientProcessRequestFinished(this, request);
-    return true;
 }
 
-bool
+void
 ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 {
     debugs(33, 2, "fake a CONNECT request to force connState to tunnel for " << reason);
@@ -3371,7 +3405,6 @@ ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
     HttpRequest::Pointer request = http->request;
     http->doCallouts();
     clientProcessRequestFinished(this, request);
-    return true;
 }
 
 ClientHttpRequest *
