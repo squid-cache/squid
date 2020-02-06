@@ -2587,6 +2587,15 @@ clientNegotiateSSL(int fd, void *data)
     debugs(83, 2, "Client certificate requesting not yet implemented.");
 #endif
 
+    // If we are called, then bumped CONNECT has succeeded. Finalize it.
+    if (auto xact = conn->pipeline.front()) {
+        if (xact->http && xact->http->request && xact->http->request->method == Http::METHOD_CONNECT)
+            xact->finished();
+        // cannot proceed with encryption if requests wait for plain responses
+        Must(conn->pipeline.empty());
+    }
+    /* careful: finished() above frees request, host, etc. */
+
     conn->readSomeData();
 }
 
@@ -2883,15 +2892,6 @@ ConnStateData::storeTlsContextToCache(const SBuf &cacheKey, Security::ContextPoi
 void
 ConnStateData::getSslContextStart()
 {
-    // If we are called, then CONNECT has succeeded. Finalize it.
-    if (auto xact = pipeline.front()) {
-        if (xact->http && xact->http->request && xact->http->request->method == Http::METHOD_CONNECT)
-            xact->finished();
-        // cannot proceed with encryption if requests wait for plain responses
-        Must(pipeline.empty());
-    }
-    /* careful: finished() above frees request, host, etc. */
-
     if (port->secure.generateHostCertificates) {
         Ssl::CertificateProperties certProperties;
         buildSslCertGenerationParams(certProperties);
