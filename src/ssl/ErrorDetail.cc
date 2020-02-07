@@ -785,7 +785,7 @@ const char *Ssl::ErrorDetail::logCode()
 {
     if (error_no == SQUID_ERR_SSL_LIB) {
         static char sbuf[512];
-        snprintf(sbuf, sizeof(sbuf), "SSL_ERR=%lu", lib_error_no);
+        snprintf(sbuf, sizeof(sbuf), "SSL_ERR=%lx", lib_error_no);
         return sbuf;
     }
     return err_code();
