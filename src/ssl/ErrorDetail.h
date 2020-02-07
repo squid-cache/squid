@@ -12,6 +12,7 @@
 #include "err_detail_type.h"
 #include "ErrorDetailManager.h"
 #include "http/forward.h"
+#include "mem/forward.h"
 #include "security/forward.h"
 
 namespace Ssl
@@ -42,6 +43,7 @@ bool ErrorIsOptional(const char *name);
  */
 class ErrorDetail:  public ::ErrorDetail
 {
+    MEMPROXY_CLASS(Ssl::ErrorDetail);
 public:
     /// Used for server-side TLS certificate verification failures to
     /// detail server certificates and provide extra string describing

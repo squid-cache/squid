@@ -12,6 +12,7 @@
 #include "base/Here.h"
 #include "base/RefCount.h"
 #include "http/forward.h"
+#include "mem/forward.h"
 
 typedef enum {
     ERR_DETAIL_NONE,
@@ -47,6 +48,7 @@ extern const char *err_detail_type_str[];
 
 class ErrorDetail: public RefCountable
 {
+    MEMPROXY_CLASS(ErrorDetail);
 public:
     typedef RefCount<ErrorDetail> Pointer;
 
@@ -68,6 +70,7 @@ protected:
 };
 
 class SysErrorDetail: public ErrorDetail {
+    MEMPROXY_CLASS(SysErrorDetail);
 public:
     SysErrorDetail(int error): ErrorDetail(ERR_DETAIL_SYS), errorNo(error) {}
     virtual const char *logCode() final;
@@ -80,6 +83,7 @@ private:
 #define SQUID_EXCEPTION_START_BASE 110000
 
 class ExceptionErrorDetail: public ErrorDetail {
+    MEMPROXY_CLASS(ExceptionErrorDetail);
 public:
     ExceptionErrorDetail(SourceLocationId id): ErrorDetail(ERR_DETAIL_EXCEPTION), exceptionId(SQUID_EXCEPTION_START_BASE + id) {}
     virtual const char *logCode() final;
