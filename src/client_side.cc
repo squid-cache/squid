@@ -2409,15 +2409,13 @@ httpsCreate(const ConnStateData *connState, const Security::ContextPointer &ctx)
 
 /**
  *
- * \retval 1 on success
- * \retval 0 when needs more data
- * \retval -1 on error (and sets errDetail)
+ * \retval true on success
+ * \retval false when needs more data
+ * Throws an ErrorDetail object on errors
  */
-static int
-tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &errDetail)
+static bool
+tlsAttemptHandshake(ConnStateData *conn, PF *callback)
 {
-    // TODO: maybe throw instead of returning -1
-    // see https://github.com/squid-cache/squid/pull/81#discussion_r153053278
     int fd = conn->clientConnection->fd;
     auto session = fd_table[fd].ssl.get();
 
@@ -2426,7 +2424,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &err
 #if USE_OPENSSL
     const auto ret = SSL_accept(session);
     if (ret > 0)
-        return 1;
+        return true;
 
     const int xerrno = errno;
     unsigned long libError = 0;
@@ -2436,11 +2434,11 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &err
 
     case SSL_ERROR_WANT_READ:
         Comm::SetSelect(fd, COMM_SELECT_READ, callback, (callback ? conn : nullptr), 0);
-        return 0;
+        return false;
 
     case SSL_ERROR_WANT_WRITE:
         Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, (callback ? conn : nullptr), 0);
-        return 0;
+        return false;
 
     case SSL_ERROR_SYSCALL:
         libError = ERR_get_error();
@@ -2450,20 +2448,21 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &err
             debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
                    (xerrno == 0 ? Security::ErrorString(libError) : xstrerr(xerrno)));
         }
+
         if (libError)
-            errDetail = new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
-        else if (xerrno)
-            errDetail = new SysErrorDetail(xerrno);
-        else
-            errDetail = new Ssl::ErrorDetail(SQUID_SSL_ABORTED, 0);
-        break;
+            throw new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
+
+        if (xerrno)
+            throw new SysErrorDetail(xerrno);
+
+        throw new Ssl::ErrorDetail(SQUID_SSL_ABORTED, 0);
 
     case SSL_ERROR_ZERO_RETURN:
         // The TLS/SSL peer has closed the connection for writing by sending
-        // the "close notify" alert.  No more data can be read.
+        // the "close notify" alert.
         debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
-        errDetail = new Ssl::ErrorDetail(SQUID_SSL_CONNECTION_CLOSED, 0);
-        break;
+
+        throw new Ssl::ErrorDetail(SQUID_SSL_CONNECTION_CLOSED, 0);
 
     default:
         libError = ERR_get_error();
@@ -2471,26 +2470,26 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &err
                fd << ": " << Security::ErrorString(libError) <<
                " (" << libError << "/" << ret << ")");
 
-        if (libError)
-            errDetail = new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
-        else
-            errDetail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, 0);
+        throw new Ssl::ErrorDetail((libError ? SQUID_ERR_SSL_LIB : SQUID_ERR_SSL_HANDSHAKE), libError);
     }
 
 #elif USE_GNUTLS
 
     const auto x = gnutls_handshake(session);
     if (x == GNUTLS_E_SUCCESS)
-        return 1;
+        return true;
 
-    if (gnutls_error_is_fatal(x)) {
-        debugs(83, 2, "Error negotiating TLS on " << conn->clientConnection << ": Aborted by client: " << Security::ErrorString(x));
-        errDetail = new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE);
-    } else if (x == GNUTLS_E_INTERRUPTED || x == GNUTLS_E_AGAIN) {
+    if (x == GNUTLS_E_INTERRUPTED || x == GNUTLS_E_AGAIN) {
         const auto ioAction = (gnutls_record_get_direction(session)==0 ? COMM_SELECT_READ : COMM_SELECT_WRITE);
         Comm::SetSelect(fd, ioAction, callback, (callback ? conn : nullptr), 0);
-        return 0;
+        return false;
     }
+
+    // TODO: Handle the cases and provide more details:
+    // if (x == GNUTLS_E_WARNING_ALERT_RECEIVED || x == GNUTLS_E_FATAL_ALERT_RECEIVED)
+    // if (gnutls_error_is_fatal(x))
+    debugs(83, 2, "Error negotiating TLS on " << conn->clientConnection << ": Aborted by client: " << Security::ErrorString(x));
+    throw new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE);
 
 #else
     // Performing TLS handshake should never be reachable without a TLS/SSL library.
@@ -2498,7 +2497,8 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback, ErrorDetail::Pointer &err
     fatal("FATAL: HTTPS not supported by this Squid.");
 #endif
 
-    return -1;
+    assert(false); // not reached
+    return false;
 }
 
 /** negotiate an SSL connection */
@@ -2507,11 +2507,11 @@ clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
 
-    ErrorDetail::Pointer errDetail;
-    const auto ret = tlsAttemptHandshake(conn, clientNegotiateSSL, errDetail);
-    if (ret <= 0) {
-        if (ret < 0) // An error
-            conn->tlsNegotiateFailed(errDetail);
+    try {
+        if (!tlsAttemptHandshake(conn, clientNegotiateSSL))
+            return;
+    } catch (ErrorDetail *errDetail) {
+        conn->tlsNegotiateFailed(errDetail);
         return;
     }
 
@@ -3243,8 +3243,9 @@ ConnStateData::startPeekAndSplice()
     // tlsAttemptHandshake() should return 0.
     // This block exist only to force openSSL parse client hello and detect
     // ERR_SECURE_ACCEPT_FAIL error, which should be checked and splice if required.
-    ErrorDetail::Pointer errDetail;
-    if (tlsAttemptHandshake(this, nullptr, errDetail) < 0) {
+    try {
+        (void)tlsAttemptHandshake(this, nullptr);
+    } catch (ErrorDetail *errDetail) {
         debugs(83, 2, "TLS handshake failed.");
         HttpRequest::Pointer request(http ? http->request : nullptr);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_SECURE_ACCEPT_FAIL))
