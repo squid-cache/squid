@@ -38,8 +38,8 @@ const char *GetErrorDescr(Security::ErrorCode value);
 bool ErrorIsOptional(const char *name);
 
 /**
- * Used to pass SSL error details to the error pages returned to the
- * end user.
+ * Error details (library and custom squid errors) for access logging and
+ * error pages returned to the end user.
  */
 class ErrorDetail:  public ::ErrorDetail
 {
@@ -66,6 +66,10 @@ public:
     X509 *brokenCert() {return broken_cert.get(); }
 
     // ErrorDetail API
+    /// Short string describing the error. For OpenSSL library errors
+    /// returns a string in the form SSL_ERR=XXXXXX. The XXXXXX hes code
+    /// can be used with "openssl errstr" to retrieve more information
+    /// about the type of error.
     virtual const char *logCode() final;
 
     /// It uses the convert method to build the string using a template

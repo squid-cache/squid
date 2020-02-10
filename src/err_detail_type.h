@@ -46,49 +46,62 @@ typedef enum {
 
 extern const char *err_detail_type_str[];
 
+/// Holds general error details for access logging and presentation
+/// in error pages
 class ErrorDetail: public RefCountable
 {
     MEMPROXY_CLASS(ErrorDetail);
 public:
     typedef RefCount<ErrorDetail> Pointer;
 
-    ErrorDetail(int id): errorDetailId(id) {}
-    virtual const char *logCode() {
-        if (errorDetailId >= ERR_DETAIL_START && errorDetailId < ERR_DETAIL_MAX)
-            return err_detail_type_str[errorDetailId-ERR_DETAIL_START+2];
+    ErrorDetail(err_detail_type id): errorDetailId(id) {}
 
-        return "UNKNOWN";
-    }
+    /// \returns a short string code for use with access logs
+    virtual const char *logCode();
+    /// \return an error detail string to embed in squid error pages.
+    virtual const char *detailString(const HttpRequestPointer &);
 
-    /// An error detail string to embed in squid error pages.
-    virtual const char *detailString(const HttpRequestPointer &) {return logCode();}
-
-    const int type() {return errorDetailId;}
+    const err_detail_type type() {return errorDetailId;}
 
 protected:
-    int errorDetailId = 0;
+    err_detail_type errorDetailId = ERR_DETAIL_NONE;
 };
 
+/// Holds system error details. It is based on errno/strerror
 class SysErrorDetail: public ErrorDetail {
     MEMPROXY_CLASS(SysErrorDetail);
 public:
     SysErrorDetail(int error): ErrorDetail(ERR_DETAIL_SYS), errorNo(error) {}
+
+    // ErrorDetail API
+
+    /// \returns a short string in the form SYSERR=XXX where XXX is the errno
     virtual const char *logCode() final;
+    /// \returns an strerror based string
     virtual const char *detailString(const HttpRequestPointer &) final;
+
 private:
-    int errorNo;
+    int errorNo; ///< the system errno
 };
 
 /// offset for exception ID details, for backward compatibility
 #define SQUID_EXCEPTION_START_BASE 110000
 
+/// Squid exception error details. It stores exceptions ids which can
+/// examined with the calc-must-ids.sh squid utility to find the cause
+/// of the error.
 class ExceptionErrorDetail: public ErrorDetail {
     MEMPROXY_CLASS(ExceptionErrorDetail);
 public:
     ExceptionErrorDetail(SourceLocationId id): ErrorDetail(ERR_DETAIL_EXCEPTION), exceptionId(SQUID_EXCEPTION_START_BASE + id) {}
+
+    // ErrorDetail API
+
+    /// \returns a short string in the form EXCEPTION=0xXXXXXX
     virtual const char *logCode() final;
+
 private:
-    SourceLocationId exceptionId;
+    SourceLocationId exceptionId; ///< the exception id
 };
 
 #endif

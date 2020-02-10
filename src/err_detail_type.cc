@@ -4,6 +4,21 @@
 #include "HttpRequest.h"
 
 const char *
+ErrorDetail::logCode()
+{
+    if (errorDetailId >= ERR_DETAIL_START && errorDetailId < ERR_DETAIL_MAX)
+        return err_detail_type_str[errorDetailId-ERR_DETAIL_START+2];
+
+    return "UNKNOWN";
+}
+
+const char *
+ErrorDetail::detailString(const HttpRequest::Pointer &)
+{
+    return logCode();
+}
+
+const char *
 SysErrorDetail::logCode()
 {
     static char sbuf[512];
