@@ -1047,9 +1047,6 @@ clientReplyContext::purgeDoMissPurge()
 void
 clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 {
-    /* Move to new() when that is created */
-    purgeStatus = Http::scNotFound;
-
     if (newEntry) {
         /* Release the cached URI */
         debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
@@ -1103,6 +1100,9 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
             purgeStatus = Http::scOkay;
         }
     }
+
+    if (purgeStatus == Http::scNone)
+        purgeStatus = Http::scNotFound;
 
     /*
      * Make a new entry to hold the reply to be written
