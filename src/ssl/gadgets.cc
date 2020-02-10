@@ -508,7 +508,7 @@ generateFakeSslCertificate(Security::CertPointer &certToStore, Security::Private
     if (!ret)
         return false;
 
-    const Security::DigestAlgorithm hash = properties.signHash ? properties.signHash : Security::digestByName(SQUID_SSL_SIGN_HASH_IF_NONE);
+    const auto hash = (properties.signHash != UnknownDigestAlgorithm ? properties.signHash : Security::digestByName(SQUID_SSL_SIGN_HASH_IF_NONE));
     assert(hash);
     /*Now sign the request */
     if (properties.signAlgorithm != Security::algSignSelf && properties.signWithPkey)

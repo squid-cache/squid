@@ -407,7 +407,7 @@ Ssl::CertificateDb::dbKey(const Security::CertificateProperties &properties) con
         certKey.append(certSignAlgorithmName(properties.signAlgorithm));
     }
 
-    if (properties.signHash/* != nullptr*/) {
+    if (properties.signHash != UnknownDigestAlgorithm) {
         certKey.append("+SignHash=", 10);
         certKey.append(Security::digestName(properties.signHash));
     }

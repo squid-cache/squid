@@ -41,7 +41,7 @@ int ssl_ex_index_ssl_untrusted_chain = -1;
 
 static Ssl::CertsIndexedList SquidUntrustedCerts;
 
-Security::DigestAlgorithm Ssl::DefaultSignHash = nullptr;
+Security::DigestAlgorithm Ssl::DefaultSignHash = UnknownDigestAlgorithm;
 
 std::vector<const char *> Ssl::BumpModeStr = {
     "none",
@@ -1205,7 +1205,7 @@ Ssl::InRamCertificateDbKey(const Security::CertificateProperties &certProperties
     key.append(certProperties.setValidAfter ? '1' : '0');
     key.append(certProperties.setValidBefore ? '1' : '0');
     key.append(certProperties.signAlgorithm != Security::algSignEnd ? certSignAlgorithmName(certProperties.signAlgorithm) : "-");
-    key.append(certProperties.signHash ? Security::digestName(certProperties.signHash) : "-");
+    key.append(certProperties.signHash != UnknownDigestAlgorithm ? Security::digestName(certProperties.signHash) : "-");
 
     if (certProperties.mimicCert) {
         Ssl::BIO_Pointer bio(BIO_new_SBuf(&key));
