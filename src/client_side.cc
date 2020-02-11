@@ -1559,14 +1559,16 @@ ConnStateData::tunnelOnError(const HttpRequestMethod &method, const err_type req
         return false;
     }
 
-    if (!preservingClientData_) {
-        debugs(33, 3, "may have forgotten client data; send error: " << requestError);
-        return false;
-    }
-
     const auto context = pipeline.front();
     const auto http = context ? context->http : nullptr;
     const auto request = http ? http->request : nullptr;
+
+    if (!preservingClientData_) {
+        debugs(33, 3, "may have forgotten client data; send error: " << requestError << "/" << ERR_DETAIL_BUFFER);
+        if (request)
+            request->detailError(requestError, new ErrorDetail(ERR_DETAIL_BUFFER));
+        return false;
+    }
 
     ACLFilledChecklist checklist(Config.accessList.on_unsupported_protocol, request, nullptr);
     checklist.al = http ? http->al : nullptr;

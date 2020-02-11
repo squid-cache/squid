@@ -33,6 +33,7 @@ typedef enum {
     ERR_DETAIL_ICAP_INIT_GONE, // initiator gone
     ERR_DETAIL_ICAP_XACT_CLOSE, // ICAP connection closed unexpectedly
     ERR_DETAIL_ICAP_XACT_OTHER, // other ICAP transaction errors
+    ERR_DETAIL_BUFFER,  // Buffering issues
     ERR_DETAIL_TUNNEL_ON_ERROR, // Tunneling after error failed for an unknown reason
     ERR_DETAIL_TLS_HELLO_PARSE_ERROR, // Squid TLS handshake parser failed
     ERR_DETAIL_SSL_BUMP_SPLICE, // an SslBump step2 splicing error (XXX: too general)
