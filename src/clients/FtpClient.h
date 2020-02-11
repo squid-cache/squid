@@ -21,6 +21,7 @@ namespace Ftp
 extern const char *const crlf;
 
 class ErrorDetail: public ::ErrorDetail {
+    MEMPROXY_CLASS(Ftp::ErrorDetail);
 public:
     ErrorDetail(int code): ::ErrorDetail(ERR_DETAIL_FTP_ERROR), ftpCode(code) {}
     virtual const char *logCode() final;
