@@ -1,6 +1,6 @@
 #!/bin/sh -e
 #
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ RELEASE_TIME=`date +%s`
 #
 # check that $rev has the right syntax
 #
-checkrev=`expr $rev : '\([0-9]\.[0-9]\(\.[0-9\.]\)*\)'`
+checkrev=`expr $rev : '\([0-9]\.[0-9]\+\(\.[0-9\.]\)*\)'`
 if test "$rev" != "$checkrev" ; then
 	echo "revision '$rev' has incorrect syntax.  Should be like '3.1.0.1'"
 	exit 1;

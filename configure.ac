@@ -1,11 +1,11 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[4.9-VCS],[http://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[4.10-VCS],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -1131,6 +1131,10 @@ AC_ARG_ENABLE(eui,
 SQUID_YESNO([$enableval],[--disable-eui expects no arguments])
 ])
 if test "x${enable_eui:=yes}" = "xyes" ; then
+  SQUID_STATE_SAVE(LIBEUI)
+  # GLIBC 2.30 deprecates sysctl.h. Test with the same flags that (may) break includes later.
+  CFLAGS=$SQUID_CFLAGS
+  CXXFLAGS=$SQUID_CXXFLAGS
   case "$squid_host_os" in
     linux|solaris|freebsd|openbsd|netbsd|cygwin)
       ${TRUE}
@@ -1170,6 +1174,7 @@ include <windows.h>
 #include <sys/param.h>
 #endif
   ]])
+  SQUID_STATE_ROLLBACK(LIBEUI)
 fi
 AC_SUBST(EUILIB)
 AC_MSG_NOTICE([EUI (MAC address) controls enabled: $enable_eui])

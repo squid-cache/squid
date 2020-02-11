@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,7 @@ Ipc::Mem::PagePool::PagePool(const char *const id):
     pageIndex(shm_old(PageStack)(id)),
     theLevels(reinterpret_cast<Levels_t *>(
                   reinterpret_cast<char *>(pageIndex.getRaw()) +
-                  pageIndex->stackSize())),
+                  pageIndex->stackSize() + pageIndex->levelsPaddingSize())),
     theBuf(reinterpret_cast<char *>(theLevels + PageId::maxPurpose))
 {
 }

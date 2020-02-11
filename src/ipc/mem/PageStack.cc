@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -122,9 +122,9 @@ Ipc::Mem::PageStack::sharedMemorySize() const
 size_t
 Ipc::Mem::PageStack::SharedMemorySize(const uint32_t, const unsigned int capacity, const size_t pageSize)
 {
-    const size_t levelsSize = PageId::maxPurpose * sizeof(std::atomic<Ipc::Mem::PageStack::Value>);
+    const auto levelsSize = PageId::maxPurpose * sizeof(Levels_t);
     const size_t pagesDataSize = capacity * pageSize;
-    return StackSize(capacity) + pagesDataSize + levelsSize;
+    return StackSize(capacity) + LevelsPaddingSize(capacity) + levelsSize + pagesDataSize;
 }
 
 size_t
@@ -137,5 +137,12 @@ size_t
 Ipc::Mem::PageStack::stackSize() const
 {
     return StackSize(theCapacity);
+}
+
+size_t
+Ipc::Mem::PageStack::LevelsPaddingSize(const unsigned int capacity)
+{
+    const auto displacement = StackSize(capacity) % alignof(Levels_t);
+    return displacement ? alignof(Levels_t) - displacement : 0;
 }
 

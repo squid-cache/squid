@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1141,26 +1141,22 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
     if (vport < 0)
         vport = conn->clientConnection->local.port();
 
-    char *host = NULL;
-    if (vhost && (host = hp->getHostHeaderField())) {
+    char *receivedHost = nullptr;
+    if (vhost && (receivedHost = hp->getHostHeaderField())) {
+        SBuf host(receivedHost);
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
-        char thost[256];
         if (vport > 0) {
-            thost[0] = '\0';
-            char *t = NULL;
-            if (host[strlen(host) - 1] != ']' && (t = strrchr(host,':')) != nullptr) {
-                strncpy(thost, host, (t-host));
-                snprintf(thost+(t-host), sizeof(thost)-(t-host), ":%d", vport);
-                host = thost;
-            } else if (!t) {
-                snprintf(thost, sizeof(thost), "%s:%d",host, vport);
-                host = thost;
+            // remove existing :port (if any), cope with IPv6+ without port
+            const auto lastColonPos = host.rfind(':');
+            if (lastColonPos != SBuf::npos && *host.rbegin() != ']') {
+                host.chop(0, lastColonPos); // truncate until the last colon
             }
+            host.appendf(":%d", vport);
         } // else nothing to alter port-wise.
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
-        const int url_sz = scheme.length() + strlen(host) + url.length() + 32;
+        const auto url_sz = scheme.length() + host.length() + url.length() + 32;
         char *uri = static_cast<char *>(xcalloc(url_sz, 1));
-        snprintf(uri, url_sz, SQUIDSBUFPH "://%s" SQUIDSBUFPH, SQUIDSBUFPRINT(scheme), host, SQUIDSBUFPRINT(url));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://" SQUIDSBUFPH SQUIDSBUFPH, SQUIDSBUFPRINT(scheme), SQUIDSBUFPRINT(host), SQUIDSBUFPRINT(url));
         debugs(33, 5, "ACCEL VHOST REWRITE: " << uri);
         return uri;
     } else if (conn->port->defaultsite /* && !vhost */) {

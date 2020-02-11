@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,6 +28,7 @@ class PageStack
 {
 public:
     typedef uint32_t Value; ///< stack item type (a free page number)
+    typedef std::atomic<size_t> Levels_t;
 
     PageStack(const uint32_t aPoolId, const unsigned int aCapacity, const size_t aPageSize);
 
@@ -51,6 +52,10 @@ public:
     /// shared counters and page data
     static size_t StackSize(const unsigned int capacity);
     size_t stackSize() const;
+
+    /// \returns the number of padding bytes to align PagePool::theLevels array
+    static size_t LevelsPaddingSize(const unsigned int capacity);
+    size_t levelsPaddingSize() const { return LevelsPaddingSize(theCapacity); }
 
 private:
     /// stack index and size type (may temporary go negative)

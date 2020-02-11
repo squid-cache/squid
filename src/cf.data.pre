@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -10067,13 +10067,14 @@ DOC_END
 NAME: max_filedescriptors max_filedesc
 TYPE: int
 DEFAULT: 0
-DEFAULT_DOC: Use operating system limits set by ulimit.
+DEFAULT_DOC: Use operating system soft limit set by ulimit.
 LOC: Config.max_filedescriptors
 DOC_START
-	Reduce the maximum number of filedescriptors supported below
-	the usual operating system defaults.
+	Set the maximum number of filedescriptors, either below the
+	operating system default or up to the hard limit.
 
-	Remove from squid.conf to inherit the current ulimit setting.
+	Remove from squid.conf to inherit the current ulimit soft
+	limit setting.
 
 	Note: Changing this requires a restart of Squid. Also
 	not all I/O types supports large values (eg on Windows).
