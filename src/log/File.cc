@@ -116,7 +116,7 @@ logfilePrintf(Logfile * lf, const char *fmt,...)
     va_start(args, fmt);
     static SBuf sbuf;
     sbuf.clear();
-    sbuf.vappendf(fmt, args);
+    sbuf.vappendf(fmt, args); // Throws on overflow. TODO: handle that better
     logfileWrite(lf, sbuf.c_str(), sbuf.length());
     va_end(args);
 }
