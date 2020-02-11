@@ -20,13 +20,22 @@ namespace Ftp
 
 extern const char *const crlf;
 
+/// Holds FTP server reply error code
+/// Squid needs to interpret internally FTP reply codes and respond with
+/// custom error (eg in the case of Ftp::Gateway), however still we need
+/// to log the exact FTP server error reply code as the reason of error.
 class ErrorDetail: public ::ErrorDetail {
     MEMPROXY_CLASS(Ftp::ErrorDetail);
 public:
     ErrorDetail(int code): ::ErrorDetail(ERR_DETAIL_FTP_ERROR), ftpCode(code) {}
+
+    // ErrorDetail API
+
+    /// \return a short string in the form FTP_ERR=XXX where XXX is the ftp server reply code
     virtual const char *logCode() final;
+
 private:
-    int ftpCode; // An Ftp error code
+    int ftpCode; // Ftp server reply code
 };
 
 /// Common code for FTP server control and data channels.
