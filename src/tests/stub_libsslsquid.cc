@@ -44,9 +44,10 @@ void Ssl::GlobalContextStorage::reconfigureStart() STUB
 #include "ssl/ErrorDetail.h"
 Security::ErrorCode parseErrorString(const char *name) STUB_RETVAL(0)
 //const char *Ssl::getErrorName(Security::ErrorCode value) STUB_RETVAL(NULL)
-Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode, X509 *, X509 *, const char *) STUB
-Ssl::ErrorDetail::ErrorDetail(ErrorDetail const &) STUB
-const String & Ssl::ErrorDetail::toString() const STUB_RETSTATREF(String)
+Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode, X509 *, X509 *, const char *): ::ErrorDetail(ERR_DETAIL_NONE) STUB
+Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode, unsigned long): ::ErrorDetail(ERR_DETAIL_NONE) STUB
+const char *Ssl::ErrorDetail::detailString(const HttpRequestPointer &) STUB_RETSTATREF(const char *)
+const char *Ssl::ErrorDetail::logCode() STUB_RETSTATREF(const char *);
 
 #include "ssl/support.h"
 namespace Ssl
