@@ -46,7 +46,7 @@ vAinB(const ProtocolView &a, const ProtocolView &b)
 class HttpUpgradeProtocolAccess
 {
 public:
-    HttpUpgradeProtocolAccess() {}
+    HttpUpgradeProtocolAccess() = default;
     ~HttpUpgradeProtocolAccess();
     HttpUpgradeProtocolAccess(HttpUpgradeProtocolAccess &&) = delete; // no copying of any kind
 
@@ -117,4 +117,3 @@ HttpUpgradeProtocolAccess::forApplicable(const ProtocolView &offer, const Visito
 }
 
 #endif /* SQUID_HTTP_UPGRADE_H */
-
