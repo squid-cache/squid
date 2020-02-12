@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -118,7 +118,9 @@ void
 SharedMemPagesRr::create()
 {
     Must(!owner);
-    owner = Ipc::Mem::PagePool::Init(PagePoolId, Ipc::Mem::PageLimit(),
+    owner = Ipc::Mem::PagePool::Init(PagePoolId,
+                                     Ipc::Mem::PageStack::IdForMultipurposePool(),
+                                     Ipc::Mem::PageLimit(),
                                      Ipc::Mem::PageSize());
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -132,6 +132,21 @@ MemObject::~MemObject()
     ctx_exit(ctx);              /* must exit before we free mem->url */
 }
 
+HttpReply &
+MemObject::adjustableBaseReply()
+{
+    assert(!updatedReply_);
+    return *reply_;
+}
+
+void
+MemObject::replaceBaseReply(const HttpReplyPointer &r)
+{
+    assert(r);
+    reply_ = r;
+    updatedReply_ = nullptr;
+}
+
 void
 MemObject::write(const StoreIOBuffer &writeBuffer)
 {
@@ -161,6 +176,8 @@ MemObject::dump() const
     debugs(20, DBG_IMPORTANT, "MemObject->inmem_lo: " << inmem_lo);
     debugs(20, DBG_IMPORTANT, "MemObject->nclients: " << nclients);
     debugs(20, DBG_IMPORTANT, "MemObject->reply: " << reply_);
+    debugs(20, DBG_IMPORTANT, "MemObject->updatedReply: " << updatedReply_);
+    debugs(20, DBG_IMPORTANT, "MemObject->appliedUpdates: " << appliedUpdates);
     debugs(20, DBG_IMPORTANT, "MemObject->request: " << request);
     debugs(20, DBG_IMPORTANT, "MemObject->logUri: " << logUri_);
     debugs(20, DBG_IMPORTANT, "MemObject->storeId: " << storeId_);
@@ -241,18 +258,27 @@ MemObject::size() const
 int64_t
 MemObject::expectedReplySize() const
 {
-    debugs(20, 7, "object_sz: " << object_sz);
-    if (object_sz >= 0) // complete() has been called; we know the exact answer
+    if (object_sz >= 0) {
+        debugs(20, 7, object_sz << " frozen by complete()");
         return object_sz;
-
-    if (reply_) {
-        const int64_t clen = reply_->bodySize(method);
-        debugs(20, 7, "clen: " << clen);
-        if (clen >= 0 && reply_->hdr_sz > 0) // yuck: Http::Message sets hdr_sz to 0
-            return clen + reply_->hdr_sz;
     }
 
-    return -1; // not enough information to predict
+    const auto hdr_sz = baseReply().hdr_sz;
+
+    // Cannot predict future length using an empty/unset or HTTP/0 reply.
+    // For any HTTP/1 reply, hdr_sz is positive  -- status-line cannot be empty.
+    if (hdr_sz <= 0)
+        return -1;
+
+    const auto clen = baseReply().bodySize(method);
+    if (clen < 0) {
+        debugs(20, 7, "unknown; hdr: " << hdr_sz);
+        return -1;
+    }
+
+    const auto messageSize = clen + hdr_sz;
+    debugs(20, 7, messageSize << " hdr: " << hdr_sz << " clen: " << clen);
+    return messageSize;
 }
 
 void
@@ -262,8 +288,10 @@ MemObject::reset()
     data_hdr.freeContent();
     inmem_lo = 0;
     /* Should we check for clients? */
-    if (reply_)
-        reply_->reset();
+    assert(reply_);
+    reply_->reset();
+    updatedReply_ = nullptr;
+    appliedUpdates = false;
 }
 
 int64_t
@@ -280,11 +308,12 @@ MemObject::lowestMemReaderOffset() const
 bool
 MemObject::readAheadPolicyCanRead() const
 {
-    const bool canRead = endOffset() - getReply()->hdr_sz <
+    const auto savedHttpHeaders = baseReply().hdr_sz;
+    const bool canRead = endOffset() - savedHttpHeaders <
                          lowestMemReaderOffset() + Config.readAheadGap;
 
     if (!canRead) {
-        debugs(19, 9, "no: " << endOffset() << '-' << getReply()->hdr_sz <<
+        debugs(19, 5, "no: " << endOffset() << '-' << savedHttpHeaders <<
                " < " << lowestMemReaderOffset() << '+' << Config.readAheadGap);
     }
 

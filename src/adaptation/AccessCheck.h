@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,8 +59,8 @@ private:
 
 public:
     void checkCandidates();
-    static void AccessCheckCallbackWrapper(allow_t, void*);
-    void noteAnswer(allow_t answer);
+    static void AccessCheckCallbackWrapper(Acl::Answer, void*);
+    void noteAnswer(Acl::Answer answer);
 
 protected:
     // AsyncJob API

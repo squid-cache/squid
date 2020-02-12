@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -41,7 +41,7 @@ AC_DEFUN([SQUID_CC_REQUIRE_ARGUMENT],[
     SAVED_CFLAGS="$CFLAGS"
     SAVED_CXXFLAGS="$CXXFLAGS"
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM($3,$4)],[$1=no],[],[$1=no])
-    if test "x$1" != "xno" ; then
+    if test "x$$1" != "xno" ; then
       CFLAGS="$CFLAGS $2"
       CXXFLAGS="$CXXFLAGS $2"
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM($3,$4)],[$1=yes],[$1=no],[$1=no])

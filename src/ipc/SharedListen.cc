@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -52,11 +52,6 @@ AddToMap(const PendingOpenRequest &por)
     }
     assert(false); // not reached
     return -1;
-}
-
-Ipc::OpenListenerParams::OpenListenerParams()
-{
-    memset(this, 0, sizeof(*this));
 }
 
 bool

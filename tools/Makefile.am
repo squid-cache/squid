@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -37,6 +37,9 @@ stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
 Here.cc: $(top_srcdir)/src/base/Here.cc
 	cp $(top_srcdir)/src/base/Here.cc $@
 
+CharacterSet.cc: $(top_srcdir)/src/base/CharacterSet.cc
+	cp $(top_srcdir)/src/base/CharacterSet.cc $@
+
 MemBuf.cc: $(top_srcdir)/src/MemBuf.cc
 	cp $(top_srcdir)/src/MemBuf.cc $@
 
@@ -48,7 +51,7 @@ stub_cbdata.cc: $(top_srcdir)/src/tests/stub_cbdata.cc
 
 stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
-	
+
 STUB.h: $(top_srcdir)/src/tests/STUB.h
 	cp $(top_srcdir)/src/tests/STUB.h $@
 
@@ -57,7 +60,7 @@ STUB.h: $(top_srcdir)/src/tests/STUB.h
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= test_tools.cc
-CLEANFILES += test_tools.cc Here.cc MemBuf.cc stub_debug.cc time.cc stub_cbdata.cc stub_libmem.cc STUB.h
+CLEANFILES += test_tools.cc Here.cc CharacterSet.cc MemBuf.cc stub_debug.cc time.cc stub_cbdata.cc stub_libmem.cc STUB.h
 
 ## Test Scripts
 EXTRA_DIST += helper-ok-dying.pl helper-ok.pl
@@ -69,6 +72,7 @@ DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 libexec_PROGRAMS = cachemgr$(CGIEXT)
 
 cachemgr__CGIEXT__SOURCES = cachemgr.cc \
+	CharacterSet.cc \
 	Here.cc \
 	MemBuf.cc \
 	stub_cbdata.cc \

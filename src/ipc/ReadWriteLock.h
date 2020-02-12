@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,6 +35,9 @@ public:
     void unlockExclusive(); ///< undo successful exclusiveLock()
     void unlockHeaders(); ///< undo successful lockHeaders()
     void switchExclusiveToShared(); ///< stop writing, start reading
+    /// same as unlockShared() but also attempts to get a writer lock beforehand
+    /// \returns whether the writer lock was acquired
+    bool unlockSharedAndSwitchToExclusive();
 
     void startAppending(); ///< writer keeps its lock but also allows reading
 

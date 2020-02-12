@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 #define SQUID_SRC_HTTP_ONE_FORWARD_H
 
 #include "base/RefCount.h"
+#include "parser/forward.h"
 #include "sbuf/forward.h"
 
 namespace Http {
@@ -30,6 +31,8 @@ typedef RefCount<Http::One::ResponseParser> ResponseParserPointer;
 
 /// CRLF textual representation
 const SBuf &CrLf();
+
+using ::Parser::InsufficientInput;
 
 } // namespace One
 } // namespace Http

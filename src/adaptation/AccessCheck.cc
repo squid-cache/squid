@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -149,7 +149,7 @@ Adaptation::AccessCheck::checkCandidates()
 }
 
 void
-Adaptation::AccessCheck::AccessCheckCallbackWrapper(allow_t answer, void *data)
+Adaptation::AccessCheck::AccessCheckCallbackWrapper(Acl::Answer answer, void *data)
 {
     debugs(93, 8, HERE << "callback answer=" << answer);
     AccessCheck *ac = (AccessCheck*)data;
@@ -160,7 +160,7 @@ Adaptation::AccessCheck::AccessCheckCallbackWrapper(allow_t answer, void *data)
      */
 
     // convert to async call to get async call protections and features
-    typedef UnaryMemFunT<AccessCheck, allow_t> MyDialer;
+    typedef UnaryMemFunT<AccessCheck, Acl::Answer> MyDialer;
     AsyncCall::Pointer call =
         asyncCall(93,7, "Adaptation::AccessCheck::noteAnswer",
                   MyDialer(ac, &Adaptation::AccessCheck::noteAnswer, answer));
@@ -170,7 +170,7 @@ Adaptation::AccessCheck::AccessCheckCallbackWrapper(allow_t answer, void *data)
 
 /// process the results of the ACL check
 void
-Adaptation::AccessCheck::noteAnswer(allow_t answer)
+Adaptation::AccessCheck::noteAnswer(Acl::Answer answer)
 {
     Must(!candidates.empty()); // the candidate we were checking must be there
     debugs(93,5, HERE << topCandidate() << " answer=" << answer);

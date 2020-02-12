@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,6 @@
 #include "SquidTime.h"
 
 Auth::Negotiate::UserRequest::UserRequest() :
-    authserver(nullptr),
     server_blob(nullptr),
     client_blob(nullptr),
     waiting(0),
@@ -164,7 +163,7 @@ Auth::Negotiate::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::P
     safe_free(client_blob);
 
     helperStatefulSubmit(negotiateauthenticators, buf, Auth::Negotiate::UserRequest::HandleReply,
-                         new Auth::StateData(this, handler, data), authserver);
+                         new Auth::StateData(this, handler, data), reservationId);
 }
 
 /**
@@ -174,10 +173,10 @@ Auth::Negotiate::UserRequest::startHelperLookup(HttpRequest *, AccessLogEntry::P
 void
 Auth::Negotiate::UserRequest::releaseAuthServer()
 {
-    if (authserver) {
-        debugs(29, 6, HERE << "releasing Negotiate auth server '" << authserver << "'");
-        helperStatefulReleaseServer(authserver);
-        authserver = NULL;
+    if (reservationId) {
+        debugs(29, 6, reservationId);
+        negotiateauthenticators->cancelReservation(reservationId);
+        reservationId.clear();
     } else
         debugs(29, 6, HERE << "No Negotiate auth server to release.");
 }
@@ -266,10 +265,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
 
-    debugs(29, 8, HERE << "helper: '" << reply.whichServer << "' sent us reply=" << reply);
+    debugs(29, 8, reply.reservationId << " got reply=" << reply);
 
     if (!cbdataReferenceValid(r->data)) {
-        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication invalid callback data. helper '" << reply.whichServer << "'.");
+        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication invalid callback data (" << reply.reservationId << ")");
         delete r;
         return;
     }
@@ -279,7 +278,8 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
 
     // add new helper kv-pair notes to the credentials object
     // so that any transaction using those credentials can access them
-    auth_user_request->user()->notes.appendNewOnly(&reply.notes);
+    static const NotePairs::Names appendables = { SBuf("group"), SBuf("tag") };
+    auth_user_request->user()->notes.replaceOrAddOrAppend(&reply.notes, appendables);
     // remove any private credentials detail which got added.
     auth_user_request->user()->notes.remove("token");
 
@@ -293,10 +293,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
     assert(auth_user_request->user() != NULL);
     assert(auth_user_request->user()->auth_type == Auth::AUTH_NEGOTIATE);
 
-    if (lm_request->authserver == NULL)
-        lm_request->authserver = reply.whichServer.get(); // XXX: no locking?
+    if (!lm_request->reservationId)
+        lm_request->reservationId = reply.reservationId;
     else
-        assert(reply.whichServer == lm_request->authserver);
+        assert(reply.reservationId == lm_request->reservationId);
 
     switch (reply.result) {
     case Helper::TT:
@@ -368,7 +368,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
         break;
 
     case Helper::Unknown:
-        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication Helper '" << reply.whichServer << "' crashed!.");
+        debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication Helper crashed (" << reply.reservationId << ")");
     /* continue to the next case */
 
     case Helper::TimedOut:

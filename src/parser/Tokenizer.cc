@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,9 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "parser/forward.h"
 #include "parser/Tokenizer.h"
+#include "sbuf/Stream.h"
 
 #include <cerrno>
 #if HAVE_CTYPE_H
@@ -94,6 +96,23 @@ Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, c
     debugs(24, 8, "found with length " << prefixLen);
     returnedToken = consume(prefixLen); // cannot be empty after the npos check
     return true;
+}
+
+SBuf
+Parser::Tokenizer::prefix(const char *description, const CharacterSet &tokenChars, const SBuf::size_type limit)
+{
+    if (atEnd())
+        throw InsufficientInput();
+
+    SBuf result;
+
+    if (!prefix(result, tokenChars, limit))
+        throw TexcHere(ToSBuf("cannot parse ", description));
+
+    if (atEnd())
+        throw InsufficientInput();
+
+    return result;
 }
 
 bool
@@ -281,5 +300,26 @@ Parser::Tokenizer::int64(int64_t & result, int base, bool allowSign, const SBuf:
 
     result = acc;
     return success(s - range.rawContent());
+}
+
+int64_t
+Parser::Tokenizer::udec64(const char *description, const SBuf::size_type limit)
+{
+    if (atEnd())
+        throw InsufficientInput();
+
+    int64_t result = 0;
+
+    // Since we only support unsigned decimals, a parsing failure with a
+    // non-empty input always implies invalid/malformed input (or a buggy
+    // limit=0 caller). TODO: Support signed and non-decimal integers by
+    // refactoring int64() to detect insufficient input.
+    if (!int64(result, 10, false, limit))
+        throw TexcHere(ToSBuf("cannot parse ", description));
+
+    if (atEnd())
+        throw InsufficientInput(); // more digits may be coming
+
+    return result;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -24,6 +24,7 @@ HttpRequest * HttpRequest::clone() const STUB_RETVAL(NULL)
 bool HttpRequest::maybeCacheable() STUB_RETVAL(false)
 bool HttpRequest::conditional() const STUB_RETVAL(false)
 bool HttpRequest::canHandle1xx() const STUB_RETVAL(false)
+char * HttpRequest::canonicalCleanUrl() const STUB_RETVAL(nullptr)
 #if USE_ADAPTATION
 Adaptation::History::Pointer HttpRequest::adaptLogHistory() const STUB_RETVAL(Adaptation::History::Pointer())
 Adaptation::History::Pointer HttpRequest::adaptHistory(bool) const STUB_RETVAL(Adaptation::History::Pointer())
@@ -47,7 +48,8 @@ int HttpRequest::prefixLen() const STUB_RETVAL(0)
 void HttpRequest::swapOut(StoreEntry *) STUB
 void HttpRequest::pack(Packable *) const STUB
 void HttpRequest::httpRequestPack(void *, Packable *) STUB
-HttpRequest * HttpRequest::FromUrl(const char *, const MasterXaction::Pointer &, const HttpRequestMethod &) STUB_RETVAL(NULL)
+HttpRequest * HttpRequest::FromUrl(const SBuf &, const MasterXaction::Pointer &, const HttpRequestMethod &) STUB_RETVAL(nullptr)
+HttpRequest * HttpRequest::FromUrlXXX(const char *, const MasterXaction::Pointer &, const HttpRequestMethod &) STUB_RETVAL(nullptr)
 ConnStateData *HttpRequest::pinnedConnection() STUB_RETVAL(NULL)
 const SBuf HttpRequest::storeId() STUB_RETVAL(SBuf("."))
 void HttpRequest::ignoreRange(const char *) STUB

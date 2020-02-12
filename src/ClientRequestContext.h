@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,13 +37,13 @@ public:
     void hostHeaderVerifyFailed(const char *A, const char *B);
     void clientAccessCheck();
     void clientAccessCheck2();
-    void clientAccessCheckDone(const allow_t &answer);
+    void clientAccessCheckDone(const Acl::Answer &answer);
     void clientRedirectStart();
     void clientRedirectDone(const Helper::Reply &reply);
     void clientStoreIdStart();
     void clientStoreIdDone(const Helper::Reply &reply);
     void checkNoCache();
-    void checkNoCacheDone(const allow_t &answer);
+    void checkNoCacheDone(const Acl::Answer &answer);
 #if USE_ADAPTATION
 
     void adaptationAccessCheck();
@@ -56,7 +56,7 @@ public:
      */
     bool sslBumpAccessCheck();
     /// The callback function for ssl-bump access check list
-    void sslBumpAccessCheckDone(const allow_t &answer);
+    void sslBumpAccessCheckDone(const Acl::Answer &answer);
 #endif
 
     ClientHttpRequest *http;

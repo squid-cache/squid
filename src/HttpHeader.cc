@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -157,6 +157,7 @@ HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0
     httpHeaderMaskInit(&mask, 0);
 }
 
+// XXX: Delete as unused, expensive, and violating copy semantics by skipping Warnings
 HttpHeader::HttpHeader(const HttpHeader &other): owner(other.owner), len(other.len), conflictingContentLength_(false)
 {
     entries.reserve(other.entries.capacity());
@@ -169,6 +170,7 @@ HttpHeader::~HttpHeader()
     clean();
 }
 
+// XXX: Delete as unused, expensive, and violating assignment semantics by skipping Warnings
 HttpHeader &
 HttpHeader::operator =(const HttpHeader &other)
 {
@@ -244,10 +246,16 @@ HttpHeader::append(const HttpHeader * src)
     }
 }
 
-/// check whether the fresh header has any new/changed updatable fields
 bool
 HttpHeader::needUpdate(HttpHeader const *fresh) const
 {
+    // our 1xx Warnings must be removed
+    for (const auto e: entries) {
+        // TODO: Move into HttpHeaderEntry::is1xxWarning() before official commit.
+        if (e && e->id == Http::HdrType::WARNING && (e->getInt()/100 == 1))
+            return true;
+    }
+
     for (const auto e: fresh->entries) {
         if (!e || skipUpdateHeader(e->id))
             continue;
@@ -275,20 +283,19 @@ HttpHeader::updateWarnings()
 bool
 HttpHeader::skipUpdateHeader(const Http::HdrType id) const
 {
-    // RFC 7234, section 4.3.4: use fields other from Warning for update
-    return id == Http::HdrType::WARNING;
+    return
+        // RFC 7234, section 4.3.4: use header fields other than Warning
+        (id == Http::HdrType::WARNING) ||
+        // TODO: Consider updating Vary headers after comparing the magnitude of
+        // the required changes (and/or cache losses) with compliance gains.
+        (id == Http::HdrType::VARY);
 }
 
-bool
+void
 HttpHeader::update(HttpHeader const *fresh)
 {
     assert(fresh);
     assert(this != fresh);
-
-    // Optimization: Finding whether a header field changed is expensive
-    // and probably not worth it except for collapsed revalidation needs.
-    if (Config.onoff.collapsed_forwarding && !needUpdate(fresh))
-        return false;
 
     updateWarnings();
 
@@ -318,7 +325,6 @@ HttpHeader::update(HttpHeader const *fresh)
 
         addEntry(e->clone());
     }
-    return true;
 }
 
 bool
@@ -469,14 +475,11 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             break;      /* terminating blank line */
         }
 
-        HttpHeaderEntry *e;
-        if ((e = HttpHeaderEntry::parse(field_start, field_end)) == NULL) {
+        const auto e = HttpHeaderEntry::parse(field_start, field_end, owner);
+        if (!e) {
             debugs(55, warnOnError, "WARNING: unparseable HTTP header field {" <<
                    getStringPrefix(field_start, field_end-field_start) << "}");
             debugs(55, warnOnError, " in {" << getStringPrefix(header_start, hdrLen) << "}");
-
-            if (Config.onoff.relaxed_header_parser)
-                continue;
 
             PROF_stop(HttpHeaderParse);
             clean();
@@ -953,57 +956,23 @@ HttpHeader::hasNamed(const char *name, unsigned int namelen, String *result) con
 /*
  * Returns a the value of the specified list member, if any.
  */
-String
+SBuf
 HttpHeader::getByNameListMember(const char *name, const char *member, const char separator) const
 {
-    String header;
-    const char *pos = NULL;
-    const char *item;
-    int ilen;
-    int mlen = strlen(member);
-
     assert(name);
-
-    header = getByName(name);
-
-    String result;
-
-    while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
-        if (strncmp(item, member, mlen) == 0 && item[mlen] == '=') {
-            result.append(item + mlen + 1, ilen - mlen - 1);
-            break;
-        }
-    }
-
-    return result;
+    const auto header = getByName(name);
+    return ::getListMember(header, member, separator);
 }
 
 /*
  * returns a the value of the specified list member, if any.
  */
-String
+SBuf
 HttpHeader::getListMember(Http::HdrType id, const char *member, const char separator) const
 {
-    String header;
-    const char *pos = NULL;
-    const char *item;
-    int ilen;
-    int mlen = strlen(member);
-
     assert(any_registered_header(id));
-
-    header = getStrOrList(id);
-    String result;
-
-    while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
-        if (strncmp(item, member, mlen) == 0 && item[mlen] == '=') {
-            result.append(item + mlen + 1, ilen - mlen - 1);
-            break;
-        }
-    }
-
-    header.clean();
-    return result;
+    const auto header = getStrOrList(id);
+    return ::getListMember(header, member, separator);
 }
 
 /* test if a field is present */
@@ -1323,43 +1292,46 @@ HttpHeader::getContRange() const
     return cr;
 }
 
-const char *
-HttpHeader::getAuth(Http::HdrType id, const char *auth_scheme) const
+SBuf
+HttpHeader::getAuthToken(Http::HdrType id, const char *auth_scheme) const
 {
     const char *field;
     int l;
     assert(auth_scheme);
     field = getStr(id);
 
+    static const SBuf nil;
     if (!field)         /* no authorization field */
-        return NULL;
+        return nil;
 
     l = strlen(auth_scheme);
 
     if (!l || strncasecmp(field, auth_scheme, l))   /* wrong scheme */
-        return NULL;
+        return nil;
 
     field += l;
 
     if (!xisspace(*field))  /* wrong scheme */
-        return NULL;
+        return nil;
 
     /* skip white space */
     for (; field && xisspace(*field); ++field);
 
     if (!*field)        /* no authorization cookie */
-        return NULL;
+        return nil;
 
-    static char decodedAuthToken[8192];
+    const auto fieldLen = strlen(field);
+    SBuf result;
+    char *decodedAuthToken = result.rawAppendStart(BASE64_DECODE_LENGTH(fieldLen));
     struct base64_decode_ctx ctx;
     base64_decode_init(&ctx);
     size_t decodedLen = 0;
-    if (!base64_decode_update(&ctx, &decodedLen, reinterpret_cast<uint8_t*>(decodedAuthToken), strlen(field), field) ||
+    if (!base64_decode_update(&ctx, &decodedLen, reinterpret_cast<uint8_t*>(decodedAuthToken), fieldLen, field) ||
             !base64_decode_final(&ctx)) {
-        return NULL;
+        return nil;
     }
-    decodedAuthToken[decodedLen] = '\0';
-    return decodedAuthToken;
+    result.rawAppendFinish(decodedAuthToken, decodedLen);
+    return result;
 }
 
 ETag
@@ -1438,7 +1410,7 @@ HttpHeaderEntry::~HttpHeaderEntry()
 
 /* parses and inits header entry, returns true/false */
 HttpHeaderEntry *
-HttpHeaderEntry::parse(const char *field_start, const char *field_end)
+HttpHeaderEntry::parse(const char *field_start, const char *field_end, const http_hdr_owner_type msgType)
 {
     /* note: name_start == field_start */
     const char *name_end = (const char *)memchr(field_start, ':', field_end - field_start);
@@ -1455,19 +1427,41 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (name_len > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, DBG_IMPORTANT, "WARNING: ignoring header name of " << name_len << " bytes");
+        // TODO: update this to show proper name_len in Raw markup, but not print all that
+        debugs(55, 2, "ignoring huge header field (" << Raw("field_start", field_start, 100) << "...)");
         return NULL;
     }
 
-    if (Config.onoff.relaxed_header_parser && xisspace(field_start[name_len - 1])) {
+    /*
+     * RFC 7230 section 3.2.4:
+     * "No whitespace is allowed between the header field-name and colon.
+     * ...
+     *  A server MUST reject any received request message that contains
+     *  whitespace between a header field-name and colon with a response code
+     *  of 400 (Bad Request).  A proxy MUST remove any such whitespace from a
+     *  response message before forwarding the message downstream."
+     */
+    if (xisspace(field_start[name_len - 1])) {
+
+        if (msgType == hoRequest)
+            return nullptr;
+
+        // for now, also let relaxed parser remove this BWS from any non-HTTP messages
+        const bool stripWhitespace = (msgType == hoReply) ||
+                                     Config.onoff.relaxed_header_parser;
+        if (!stripWhitespace)
+            return nullptr; // reject if we cannot strip
+
         debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
                "NOTICE: Whitespace after header name in '" << getStringPrefix(field_start, field_end-field_start) << "'");
 
         while (name_len > 0 && xisspace(field_start[name_len - 1]))
             --name_len;
 
-        if (!name_len)
+        if (!name_len) {
+            debugs(55, 2, "found header with only whitespace for name");
             return NULL;
+        }
     }
 
     /* now we know we can parse it */
@@ -1500,12 +1494,12 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, DBG_IMPORTANT, "WARNING: ignoring '" << theName << "' header of " << (field_end - value_start) << " bytes");
+        debugs(55, 2, "WARNING: found '" << theName << "' header of " << (field_end - value_start) << " bytes");
         return NULL;
     }
 
     /* set field value */
-    value.limitInit(value_start, field_end - value_start);
+    value.assign(value_start, field_end - value_start);
 
     if (id != Http::HdrType::BAD_HDR)
         ++ headerStatsTable[id].seenCount;

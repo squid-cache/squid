@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -109,8 +109,16 @@ public:
     struct Out {
         Out() : offset(0), size(0), headers_sz(0) {}
 
+        /// Roughly speaking, this offset points to the next body byte we want
+        /// to receive from Store. Without Ranges (and I/O errors), we should
+        /// have received (and written to the client) all the previous bytes.
+        /// XXX: The offset is updated by various receive-write steps, making
+        /// its exact meaning illusive. Its Out class placement is confusing.
         int64_t offset;
+        /// Response header and body bytes written to the client connection.
         uint64_t size;
+        /// Response header bytes written to the client connection.
+        /// Not to be confused with clientReplyContext::headers_sz.
         size_t headers_sz;
     } out;
 

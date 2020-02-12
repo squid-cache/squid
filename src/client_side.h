@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,8 @@
 #include "http/forward.h"
 #include "HttpControlMsg.h"
 #include "ipc/FdNotes.h"
+#include "log/forward.h"
+#include "proxyp/forward.h"
 #include "sbuf/SBuf.h"
 #include "servers/Server.h"
 #if USE_AUTH
@@ -138,6 +140,7 @@ public:
         bool auth;               /* pinned for www authentication */
         bool reading;   ///< we are monitoring for peer connection closure
         bool zeroReply; ///< server closed w/o response (ERR_ZERO_SIZE_OBJECT)
+        bool peerAccessDenied; ///< cache_peer_access denied pinned connection reuse
         CachePeer *peer;             /* CachePeer the connection goes via */
         AsyncCall::Pointer readHandler; ///< detects serverConnection closure
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
@@ -180,16 +183,10 @@ public:
     void pinBusyConnection(const Comm::ConnectionPointer &pinServerConn, const HttpRequest::Pointer &request);
     /// Undo pinConnection() and, optionally, close the pinned connection.
     void unpinConnection(const bool andClose);
-    /// Returns validated pinnned server connection (and stops its monitoring).
-    Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *request, const CachePeer *aPeer);
-    /**
-     * Checks if there is pinning info if it is valid. It can close the server side connection
-     * if pinned info is not valid.
-     \param request   if it is not NULL also checks if the pinning info refers to the request client side HttpRequest
-     \param CachePeer      if it is not NULL also check if the CachePeer is the pinning CachePeer
-     \return          The details of the server side connection (may be closed if failures were present).
-     */
-    const Comm::ConnectionPointer validatePinnedConnection(HttpRequest *request, const CachePeer *peer);
+
+    /// \returns validated pinned to-server connection, stopping its monitoring
+    /// \throws a newly allocated ErrorState if validation fails
+    static Comm::ConnectionPointer BorrowPinnedConnection(HttpRequest *, const AccessLogEntryPointer &);
     /**
      * returts the pinned CachePeer if exists, NULL otherwise
      */
@@ -247,7 +244,7 @@ public:
     /// Proccess response from ssl_crtd.
     void sslCrtdHandleReply(const Helper::Reply &reply);
 
-    void switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode);
+    void switchToHttps(ClientHttpRequest *, Ssl::BumpMode bumpServerMode);
     void parseTlsHandshake();
     bool switchedToHttps() const { return switchedToHttps_; }
     Ssl::ServerBump *serverBump() {return sslServerBump;}
@@ -277,6 +274,7 @@ public:
 #else
     bool switchedToHttps() const { return false; }
 #endif
+    char *prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp);
 
     /// handle a control message received by context from a peer and call back
     virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) = 0;
@@ -300,14 +298,19 @@ public:
     /// generates and sends to tunnel.cc a fake request with a given payload
     bool initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload);
 
-    /// whether tunneling of unsupported protocol is allowed for this connection
-    bool mayTunnelUnsupportedProto();
+    /// whether we should start saving inBuf client bytes in anticipation of
+    /// tunneling them to the server later (on_unsupported_protocol)
+    bool shouldPreserveClientData() const;
+
+    // TODO: move to the protected section when removing clientTunnelOnError()
+    bool tunnelOnError(const HttpRequestMethod &, const err_type);
 
     /// build a fake http request
     ClientHttpRequest *buildFakeRequest(Http::MethodType const method, SBuf &useHost, unsigned short usePort, const SBuf &payload);
 
-    /// client data which may need to forward as-is to server after an
-    /// on_unsupported_protocol tunnel decision.
+    /// From-client handshake bytes (including bytes at the beginning of a
+    /// CONNECT tunnel) which we may need to forward as-is if their syntax does
+    /// not match the expected TLS or HTTP protocol (on_unsupported_protocol).
     SBuf preservedClientData;
 
     /* Registered Runner API */
@@ -319,11 +322,16 @@ public:
     NotePairs::Pointer notes();
     bool hasNotes() const { return bool(theNotes) && !theNotes->empty(); }
 
+    const ProxyProtocol::HeaderPointer &proxyProtocolHeader() const { return proxyProtocolHeader_; }
+
 protected:
     void startDechunkingRequest();
     void finishDechunkingRequest(bool withSuccess);
     void abortChunkedRequestBody(const err_type error);
     err_type handleChunkedRequestBody();
+
+    /// ConnStateData-specific part of BorrowPinnedConnection()
+    Comm::ConnectionPointer borrowPinnedConnection(HttpRequest *, const AccessLogEntryPointer &);
 
     void startPinnedConnectionMonitoring();
     void clientPinnedConnectionRead(const CommIoCbParams &io);
@@ -333,6 +341,15 @@ protected:
     /// \return false if and only if the connection should be closed.
     bool handleIdleClientPinnedTlsRead();
 #endif
+
+    /// Parse an HTTP request
+    /// \note Sets result->flags.parsed_ok to 0 if failed to parse the request,
+    ///       to 1 if the request was correctly parsed
+    /// \param[in] hp an Http1::RequestParser
+    /// \return NULL on incomplete requests,
+    ///         a Http::Stream on success or failure.
+    /// TODO: Move to HttpServer. Warning: Move requires large code nonchanges!
+    Http::Stream *parseHttpRequest(const Http1::RequestParserPointer &);
 
     /// parse input buffer prefix into a single transfer protocol request
     /// return NULL to request more header bytes (after checking any limits)
@@ -354,6 +371,9 @@ protected:
 
     BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
 
+    /// whether preservedClientData is valid and should be kept up to date
+    bool preservingClientData_;
+
 private:
     /* ::Server API */
     virtual bool connFinishedWithConn(int size);
@@ -367,8 +387,6 @@ private:
     /* PROXY protocol functionality */
     bool proxyProtocolValidateClient();
     bool parseProxyProtocolHeader();
-    bool parseProxy1p0();
-    bool parseProxy2p0();
     bool proxyProtocolError(const char *reason);
 
 #if USE_OPENSSL
@@ -383,20 +401,23 @@ private:
     /// whether PROXY protocol header is still expected
     bool needProxyProtocolHeader_;
 
+    /// the parsed PROXY protocol header
+    ProxyProtocol::HeaderPointer proxyProtocolHeader_;
+
 #if USE_AUTH
     /// some user details that can be used to perform authentication on this connection
     Auth::UserRequest::Pointer auth_;
 #endif
 
-    /// the parser state for current HTTP/1.x input buffer processing
-    Http1::RequestParserPointer parser_;
-
 #if USE_OPENSSL
     bool switchedToHttps_;
     bool parsingTlsHandshake; ///< whether we are getting/parsing TLS Hello bytes
+    /// The number of parsed HTTP requests headers on a bumped client connection
+    uint64_t parsedBumpedRequestCount;
 
-    /// The SSL server host name appears in CONNECT request or the server ip address for the intercepted requests
-    String sslConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request
+    /// The TLS server host name appears in CONNECT request or the server ip address for the intercepted requests
+    SBuf tlsConnectHostOrIp; ///< The TLS server host name as passed in the CONNECT request
+    unsigned short tlsConnectPort; ///< The TLS server port number as passed in the CONNECT request
     SBuf sslCommonName_; ///< CN name for SSL certificate generation
 
     /// TLS client delivered SNI value. Empty string if none has been received.
@@ -445,8 +466,6 @@ SQUIDCEXTERN CSD clientReplyDetach;
 CSCB clientSocketRecipient;
 CSD clientSocketDetach;
 
-/* TODO: Move to HttpServer. Warning: Move requires large code nonchanges! */
-Http::Stream *parseHttpRequest(ConnStateData *, const Http1::RequestParserPointer &);
 void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, Http::Stream *);
 void clientPostHttpsAccept(ConnStateData *);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,6 +41,12 @@ public:
 
     RefCount (RefCount &&p) : p_(std::move(p.p_)) {
         p.p_=NULL;
+    }
+
+    /// Base::Pointer = Derived::Pointer
+    template <class Other>
+    RefCount(const RefCount<Other> &p): p_(p.getRaw()) {
+        reference(*this);
     }
 
     RefCount& operator = (const RefCount& p) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -76,6 +76,8 @@ typedef enum {
 
     ERR_SECURE_ACCEPT_FAIL, // Rejects the SSL connection intead of error page
     ERR_REQUEST_START_TIMEOUT, // Aborts the connection instead of error page
+    ERR_REQUEST_PARSE_TIMEOUT, // Aborts the connection instead of error page
+    ERR_RELAY_REMOTE, // Sends server reply instead of error page
 
     /* Cache Manager GUI can install a manager index/home page */
     MGR_INDEX,

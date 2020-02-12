@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -511,9 +511,14 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
                 snmp_set_api_error(SNMPERR_OS_ERR);
                 PARSE_ERROR;
             }
+            int terminatorPos = Var->val_len - 1;
             bufp = asn_parse_string(DataPtr, &ThisVarLen,
                                     &Var->type, Var->val.string,
                                     &Var->val_len);
+            if (Var->val_len < terminatorPos) {
+                terminatorPos = Var->val_len;
+            }
+            Var->val.string[terminatorPos] = '\0';
 #if DEBUG_VARS_DECODE
             printf("VARS: Decoded string '%s' (length %d) (%d bytes left)\n",
                    (Var->val.string), Var->val_len, ThisVarLen);

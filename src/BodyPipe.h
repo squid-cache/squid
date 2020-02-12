@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -131,7 +131,7 @@ public:
     bool exhausted() const; // saw eof/abort and all data consumed
     bool stillConsuming(const Consumer::Pointer &consumer) const { return theConsumer == consumer; }
 
-    // start or continue consuming when there is no consumer
+    /// start or continue consuming when producing without consumer
     void enableAutoConsumption();
 
     const MemBuf &buf() const { return theBuf; }
@@ -151,7 +151,7 @@ protected:
     void postConsume(size_t size);
     void postAppend(size_t size);
 
-    void startAutoConsumption(); // delayed start of enabled consumption
+    void startAutoConsumptionIfNeeded();
 
 private:
     int64_t  theBodySize;   // expected total content length, if known
@@ -163,7 +163,7 @@ private:
 
     MemBuf theBuf; // produced but not yet consumed content, if any
 
-    bool mustAutoConsume; // consume when there is no consumer
+    bool mustAutoConsume; ///< keep theBuf empty when producing without consumer
     bool abortedConsumption; ///< called BodyProducer::noteBodyConsumerAborted
     bool isCheckedOut; // to keep track of checkout violations
 };

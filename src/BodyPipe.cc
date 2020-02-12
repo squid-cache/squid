@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -286,8 +286,7 @@ BodyPipe::expectNoConsumption()
         abortedConsumption = true;
 
         // in case somebody enabled auto-consumption before regular one aborted
-        if (mustAutoConsume)
-            startAutoConsumption();
+        startAutoConsumptionIfNeeded();
     }
 }
 
@@ -313,23 +312,28 @@ BodyPipe::consume(size_t size)
     postConsume(size);
 }
 
-// In the AutoConsumption  mode the consumer has gone but the producer continues
-// producing data. We are using a BodySink BodyConsumer which just discards the produced data.
 void
 BodyPipe::enableAutoConsumption()
 {
     mustAutoConsume = true;
     debugs(91,5, HERE << "enabled auto consumption" << status());
-    if (!theConsumer && theBuf.hasContent())
-        startAutoConsumption();
+    startAutoConsumptionIfNeeded();
 }
 
-// start auto consumption by creating body sink
+/// Check the current need and, if needed, start auto consumption. In auto
+/// consumption mode, the consumer is gone, but the producer continues to
+/// produce data. We use a BodySink BodyConsumer to discard that data.
 void
-BodyPipe::startAutoConsumption()
+BodyPipe::startAutoConsumptionIfNeeded()
 {
-    Must(mustAutoConsume);
-    Must(!theConsumer);
+    const auto startNow =
+        mustAutoConsume && // was enabled
+        !theConsumer && // has not started yet
+        theProducer.valid() && // still useful (and will eventually stop)
+        theBuf.hasContent(); // has something to consume right now
+    if (!startNow)
+        return;
+
     theConsumer = new BodySink(this);
     debugs(91,7, HERE << "starting auto consumption" << status());
     scheduleBodyDataNotification();
@@ -393,15 +397,16 @@ BodyPipe::postAppend(size_t size)
     thePutSize += size;
     debugs(91,7, HERE << "added " << size << " bytes" << status());
 
-    if (mustAutoConsume && !theConsumer && size > 0)
-        startAutoConsumption();
-
     // We should not consume here even if mustAutoConsume because the
     // caller may not be ready for the data to be consumed during this call.
     scheduleBodyDataNotification();
 
+    // Do this check after scheduleBodyDataNotification() to ensure the
+    // natural order of "more body data" and "production ended" events.
     if (!mayNeedMoreData())
         clearProducer(true); // reached end-of-body
+
+    startAutoConsumptionIfNeeded();
 }
 
 void

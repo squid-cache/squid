@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -38,8 +38,12 @@ bool
 AsyncCallQueue::fire()
 {
     const bool made = theHead != NULL;
-    while (theHead != NULL)
+    while (theHead) {
+        CodeContext::Reset(theHead->codeContext);
         fireNext();
+    }
+    if (made)
+        CodeContext::Reset();
     return made;
 }
 

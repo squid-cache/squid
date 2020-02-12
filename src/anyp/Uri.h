@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -59,7 +59,7 @@ public:
     }
     void touch(); ///< clear the cached URI display forms
 
-    bool parse(const HttpRequestMethod &, const char *url);
+    bool parse(const HttpRequestMethod &, const SBuf &url);
 
     /// \return a new URI that honors uri_whitespace
     static char *cleanup(const char *uri);
@@ -71,6 +71,10 @@ public:
         scheme_ = AnyP::UriScheme(p, str);
         touch();
     }
+    void setScheme(const AnyP::UriScheme &s) {
+        scheme_ = s;
+        touch();
+    }
 
     void userInfo(const SBuf &s) {userInfo_=s; touch();}
     const SBuf &userInfo() const {return userInfo_;}
@@ -80,8 +84,15 @@ public:
     int hostIsNumeric(void) const {return hostIsNumeric_;}
     Ip::Address const & hostIP(void) const {return hostAddr_;}
 
+    /// \returns the host subcomponent of the authority component
+    /// If the host is an IPv6 address, returns that IP address without
+    /// [brackets]! See RFC 3986 Section 3.2.2.
+    SBuf hostOrIp() const;
+
     void port(unsigned short p) {port_=p; touch();}
     unsigned short port() const {return port_;}
+    /// reset the port to the default port number for the current scheme
+    void defaultPort() { port(getScheme().defaultPort()); }
 
     void path(const char *p) {path_=p; touch();}
     void path(const SBuf &p) {path_=p; touch();}
@@ -115,7 +126,7 @@ public:
     SBuf &absolute() const;
 
 private:
-    void parseFinish(const AnyP::ProtocolType, const char *const, const char *const, const char *const, const SBuf &, const int);
+    void parseUrn(Parser::Tokenizer&);
 
     /**
      \par
@@ -191,6 +202,7 @@ bool urlIsRelative(const char *);
 char *urlMakeAbsolute(const HttpRequest *, const char *);
 char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);
 char *urlInternal(const char *dir, const char *name);
+bool urlAppendDomain(char *host); ///< apply append_domain config to the given hostname
 
 enum MatchDomainNameFlags {
     mdnNone = 0,
@@ -231,7 +243,7 @@ enum MatchDomainNameFlags {
  * \retval 1 means the host is greater than the domain
  * \retval -1 means the host is less than the domain
  */
-int matchDomainName(const char *host, const char *domain, uint8_t flags = mdnNone);
+int matchDomainName(const char *host, const char *domain, MatchDomainNameFlags flags = mdnNone);
 int urlCheckRequest(const HttpRequest *);
 char *urlHostname(const char *url);
 void urlExtMethodConfigure(void);

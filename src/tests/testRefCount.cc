@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,8 +10,10 @@
 
 #include "squid.h"
 #include "base/RefCount.h"
+#include "testRefCount.h"
+#include "unitTestMain.h"
 
-// XXX: upgrade these tests to CPPUnit testing framework
+CPPUNIT_TEST_SUITE_REGISTRATION( testRefCount );
 
 class _ToRefCount : public RefCountable
 {
@@ -21,7 +23,7 @@ public:
 
     int someMethod() {
         if (!Instances)
-            exit(EXIT_FAILURE);
+            return 0;
 
         return 1;
     }
@@ -31,7 +33,6 @@ public:
 
 typedef RefCount<_ToRefCount> ToRefCount;
 
-/* Must be zero at the end for the test to pass. */
 int _ToRefCount::Instances = 0;
 
 class AlsoRefCountable : public RefCountable, public _ToRefCount
@@ -41,91 +42,133 @@ public:
 
     int doSomething() {
         if (!Instances)
-            exit(EXIT_FAILURE);
+            return 0;
         return 1;
     }
 };
 
-int
-main (int argc, char **argv)
+void
+testRefCount::testCountability()
 {
     {
+        CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
         ToRefCount anObject(new _ToRefCount);
-        anObject->someMethod();
+        CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
+        CPPUNIT_ASSERT_EQUAL(1, anObject->someMethod());
         anObject = anObject;
+        CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
         ToRefCount objectTwo (anObject);
         anObject = objectTwo;
+        CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
         {
             ToRefCount anotherObject(new _ToRefCount);
             anObject = anotherObject;
+            CPPUNIT_ASSERT_EQUAL(2, _ToRefCount::Instances);
         }
 
         {
             ToRefCount aForthObject (anObject);
-            anObject = ToRefCount(NULL);
-            aForthObject->someMethod();
-            aForthObject = NULL;
+            CPPUNIT_ASSERT_EQUAL(2, _ToRefCount::Instances);
+            anObject = ToRefCount(nullptr);
+            CPPUNIT_ASSERT_EQUAL(2, _ToRefCount::Instances);
+            CPPUNIT_ASSERT_EQUAL(1, aForthObject->someMethod());
+            aForthObject = nullptr;
         }
+        CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
     }
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
+}
 
+void
+testRefCount::testObjectToRefCounted()
+{
     /* Test creating an object, using it , and then making available as a
      * refcounted one:
      */
-    {
-        _ToRefCount *aPointer = new _ToRefCount;
-        aPointer->someMethod();
-        ToRefCount anObject(aPointer);
-    }
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
+    _ToRefCount *aPointer = new _ToRefCount;
+    CPPUNIT_ASSERT_EQUAL(1, aPointer->someMethod());
+    ToRefCount anObject(aPointer);
+    CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
+}
+
+void
+testRefCount::testStandalonePointer()
+{
     /* standalone pointers should be usable */
-    {
-        ToRefCount anObject;
-    }
+    ToRefCount anObject;
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
+}
+
+void
+testRefCount::testCheckPointers()
+{
     /* Can we check pointers for equality */
-    {
-        ToRefCount anObject;
-        ToRefCount anotherObject(new _ToRefCount);
+    ToRefCount anObject;
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
+    ToRefCount anotherObject(new _ToRefCount);
 
-        if (anObject == anotherObject)
-            exit(1);
+    CPPUNIT_ASSERT(anObject != anotherObject);
 
-        anotherObject = NULL;
+    CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
+    anotherObject = nullptr;
 
-        if (!(anObject == anotherObject))
-            exit(1);
-    }
+    CPPUNIT_ASSERT_EQUAL(anObject, anotherObject);
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
+}
+
+void
+testRefCount::testPointerConst()
+{
     /* Can we get the pointer for a const object */
-    {
-        ToRefCount anObject (new _ToRefCount);
-        ToRefCount const aConstObject (anObject);
-        _ToRefCount const *aPointer = aConstObject.getRaw();
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
+    ToRefCount anObject (new _ToRefCount);
+    ToRefCount const aConstObject (anObject);
+    _ToRefCount const *aPointer = aConstObject.getRaw();
 
-        if (aPointer != anObject.getRaw())
-            exit(2);
-    }
+    CPPUNIT_ASSERT(aPointer == anObject.getRaw());
+    CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
+}
+
+void testRefCount::testRefCountFromConst()
+{
     /* Can we get a refcounted pointer from a const object */
-    {
-        _ToRefCount const * aPointer = new _ToRefCount;
-        ToRefCount anObject (aPointer);
-    }
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
+    _ToRefCount const * aPointer = new _ToRefCount;
+    ToRefCount anObject (aPointer);
+
+    CPPUNIT_ASSERT(aPointer == anObject.getRaw());
+    CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
+}
+
+void
+testRefCount::testPointerFromRefCounter()
+{
     /* Can we get a pointer to nonconst from a nonconst refcounter */
-    {
-        ToRefCount anObject (new _ToRefCount);
-        _ToRefCount *aPointer = anObject.getRaw();
-        if (aPointer == NULL)
-            exit(3);
-        aPointer = NULL;
-    }
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
+    ToRefCount anObject (new _ToRefCount);
+    CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
+    _ToRefCount *aPointer = anObject.getRaw();
+    CPPUNIT_ASSERT(aPointer != nullptr);
+    CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
+}
+
+void
+testRefCount::testDoubleInheritToSingleInherit()
+{
+
+    CPPUNIT_ASSERT_EQUAL(0, _ToRefCount::Instances);
     /* Create a doubley inheriting refcount instance,
      * cast to a single inheritance instance,
      * then hope :}
      */
+    ToRefCount aBaseObject;
     {
-        ToRefCount aBaseObject;
-        {
-            AlsoRefCountable::Pointer anObject (new AlsoRefCountable);
-            aBaseObject = anObject.getRaw();
-        }
+        AlsoRefCountable::Pointer anObject (new AlsoRefCountable);
+        aBaseObject = anObject.getRaw();
+        CPPUNIT_ASSERT_EQUAL(1, anObject->doSomething());
+        CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
     }
-    return _ToRefCount::Instances == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+    CPPUNIT_ASSERT_EQUAL(1, _ToRefCount::Instances);
 }
 

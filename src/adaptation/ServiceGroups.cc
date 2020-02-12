@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -252,7 +252,7 @@ Adaptation::DynamicServiceChain::Split(const ServiceFilter &filter,
     const char *pos = NULL;
     while (strListGetItem(&ids, ',', &item, &ilen, &pos)) {
         String id;
-        id.limitInit(item, ilen);
+        id.assign(item, ilen);
         ServicePointer service = FindService(id);
         if (doingCurrent) {
             if (!service || // cannot tell or matches current location

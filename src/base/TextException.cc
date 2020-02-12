@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,9 +36,9 @@ TextException::~TextException() throw()
 std::ostream &
 TextException::print(std::ostream &os) const
 {
-    os << std::runtime_error::what() << "\n" <<
-       "    exception location: " << where << "\n";
-    // TODO: error_detail: " << (ERR_DETAIL_EXCEPTION_START+id()) << "\n";
+    os << std::runtime_error::what() <<
+       Debug::Extra << "exception location: " << where;
+    // TODO: ...error_detail: " << (ERR_DETAIL_EXCEPTION_START+id());
     return os;
 }
 

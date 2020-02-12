@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -17,4 +17,8 @@ libclients_la_SOURCES = \
 	FtpClient.h \
 	FtpGateway.cc \
 	FtpRelay.cc \
+	HttpTunneler.cc \
+	HttpTunneler.h \
+	HttpTunnelerAnswer.cc \
+	HttpTunnelerAnswer.h \
 	forward.h

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #ifndef SQUID_CONFIGPARSER_H
 #define SQUID_CONFIGPARSER_H
 
+#include "sbuf/forward.h"
 #include "SquidString.h"
 
 #include <queue>
@@ -16,6 +17,7 @@
 #include <string>
 
 class wordlist;
+
 /**
  * Limit to how long any given config line may be.
  * This affects squid.conf and all included files.
@@ -124,6 +126,8 @@ public:
 
     /// Do not allow %macros inside quoted strings
     static void DisableMacros() {AllowMacros_ = false;}
+
+    static SBuf CurrentLocation();
 
     /// configuration_includes_quoted_values in squid.conf
     static bool RecognizeQuotedValues;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "anyp/ProtocolVersion.h"
 #include "http/one/forward.h"
 #include "http/StatusCode.h"
+#include "parser/forward.h"
 #include "sbuf/SBuf.h"
 
 namespace Http {
@@ -40,6 +41,7 @@ class Parser : public RefCountable
 {
 public:
     typedef SBuf::size_type size_type;
+    typedef ::Parser::Tokenizer Tokenizer;
 
     Parser() = default;
     Parser(const Parser &) = default;
@@ -82,7 +84,7 @@ public:
     const AnyP::ProtocolVersion & messageProtocol() const {return msgProtocol_;}
 
     /**
-     * Scan the mime header block (badly) for a header with the given name.
+     * Scan the mime header block (badly) for a Host header.
      *
      * BUG: omits lines when searching for headers with obs-fold or multiple entries.
      *
@@ -90,7 +92,7 @@ public:
      *
      * \return A pointer to a field-value of the first matching field-name, or NULL.
      */
-    char *getHeaderField(const char *name);
+    char *getHostHeaderField();
 
     /// the remaining unprocessed section of buffer
     const SBuf &remaining() const {return buf_;}
@@ -122,11 +124,11 @@ protected:
      * detect and skip the CRLF or (if tolerant) LF line terminator
      * consume from the tokenizer.
      *
-     * throws if non-terminator is detected.
+     * \throws exception on bad or InsuffientInput.
      * \retval true only if line terminator found.
      * \retval false incomplete or missing line terminator, need more data.
      */
-    bool skipLineTerminator(Http1::Tokenizer &tok) const;
+    void skipLineTerminator(Tokenizer &) const;
 
     /**
      * Scan to find the mime headers block for current message.
@@ -163,8 +165,8 @@ private:
 };
 
 /// skips and, if needed, warns about RFC 7230 BWS ("bad" whitespace)
-/// \returns true (always; unlike all the skip*() functions)
-bool ParseBws(Tokenizer &tok);
+/// \throws InsufficientInput when the end of BWS cannot be confirmed
+void ParseBws(Parser::Tokenizer &);
 
 /// the right debugs() level for logging HTTP violation messages
 int ErrorLevel();

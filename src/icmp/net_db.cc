@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -696,7 +696,6 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     double hops;
     char *p;
     int j;
-    HttpReply const *rep;
     size_t hdr_sz;
     int nused = 0;
     int size;
@@ -738,11 +737,11 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
         if ((hdr_sz = headersEnd(p, ex->buf_ofs))) {
             debugs(38, 5, "netdbExchangeHandleReply: hdr_sz = " << hdr_sz);
-            rep = ex->e->getReply();
-            assert(rep->sline.status() != Http::scNone);
-            debugs(38, 3, "netdbExchangeHandleReply: reply status " << rep->sline.status());
+            const auto scode = ex->e->mem().baseReply().sline.status();
+            assert(scode != Http::scNone);
+            debugs(38, 3, "netdbExchangeHandleReply: reply status " << scode);
 
-            if (rep->sline.status() != Http::scOkay) {
+            if (scode != Http::scOkay) {
                 delete ex;
                 return;
             }
@@ -1275,7 +1274,7 @@ netdbExchangeStart(void *data)
     char *uri = internalRemoteUri(p->secure.encryptTransport, p->host, p->http_port, "/squid-internal-dynamic/", netDB);
     debugs(38, 3, "Requesting '" << uri << "'");
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcmp);
-    HttpRequestPointer req(HttpRequest::FromUrl(uri, mx));
+    HttpRequestPointer req(HttpRequest::FromUrlXXX(uri, mx));
 
     if (!req) {
         debugs(38, DBG_IMPORTANT, MYNAME << ": Bad URI " << uri);

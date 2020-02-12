@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,7 +9,7 @@
 #include "squid.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
-#include "testAddress.h"
+#include "tests/testIpAddress.h"
 #include "unitTestMain.h"
 
 #include <cstring>
@@ -26,8 +26,6 @@
 #endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testIpAddress );
-
-#include "tests/stub_SBuf.cc"
 
 /* so that we don't break POD dependency just for the test */
 struct timeval current_time;

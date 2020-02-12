@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -257,7 +257,7 @@ Ftp::Client::failed(err_type error, int xerrno, ErrorState *err)
         ftperr = err;
     } else {
         Http::StatusCode httpStatus = failedHttpStatus(error);
-        ftperr = new ErrorState(error, httpStatus, fwd->request);
+        ftperr = new ErrorState(error, httpStatus, fwd->request, fwd->al);
     }
 
     ftperr->xerrno = xerrno;

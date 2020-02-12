@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -121,6 +121,8 @@ Client::setVirginReply(HttpReply *rep)
     assert(rep);
     theVirginReply = rep;
     HTTPMSGLOCK(theVirginReply);
+    if (fwd->al)
+        fwd->al->reply = theVirginReply;
     return theVirginReply;
 }
 
@@ -140,6 +142,8 @@ Client::setFinalReply(HttpReply *rep)
     assert(rep);
     theFinalReply = rep;
     HTTPMSGLOCK(theFinalReply);
+    if (fwd->al)
+        fwd->al->reply = theFinalReply;
 
     // give entry the reply because haveParsedReplyHeaders() expects it there
     entry->replaceHttpReply(theFinalReply, false); // but do not write yet
@@ -364,7 +368,7 @@ Client::sentRequestBody(const CommIoCbParams &io)
     if (io.flag) {
         debugs(11, DBG_IMPORTANT, "sentRequestBody error: FD " << io.fd << ": " << xstrerr(io.xerrno));
         ErrorState *err;
-        err = new ErrorState(ERR_WRITE_ERROR, Http::scBadGateway, fwd->request);
+        err = new ErrorState(ERR_WRITE_ERROR, Http::scBadGateway, fwd->request, fwd->al);
         err->xerrno = io.xerrno;
         fwd->fail(err);
         abortOnData("I/O error while sending request body");
@@ -521,8 +525,9 @@ Client::blockCaching()
         // This relatively expensive check is not in StoreEntry::checkCachable:
         // That method lacks HttpRequest and may be called too many times.
         ACLFilledChecklist ch(acl, originalRequest().getRaw());
-        ch.reply = const_cast<HttpReply*>(entry->getReply()); // ACLFilledChecklist API bug
+        ch.reply = const_cast<HttpReply*>(&entry->mem().freshestReply()); // ACLFilledChecklist API bug
         HTTPMSGLOCK(ch.reply);
+        ch.al = fwd->al;
         if (!ch.fastCheck().allowed()) { // when in doubt, block
             debugs(20, 3, "store_miss prohibits caching");
             return true;
@@ -856,7 +861,7 @@ Client::handledEarlyAdaptationAbort()
 {
     if (entry->isEmpty()) {
         debugs(11,8, "adaptation failure with an empty entry: " << *entry);
-        ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, request.getRaw());
+        const auto err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, request.getRaw(), fwd->al);
         err->detailError(ERR_DETAIL_ICAP_RESPMOD_EARLY);
         fwd->fail(err);
         fwd->dontRetry(true);
@@ -893,7 +898,7 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
     if (page_id == ERR_NONE)
         page_id = ERR_ACCESS_DENIED;
 
-    ErrorState *err = new ErrorState(page_id, Http::scForbidden, request.getRaw());
+    const auto err = new ErrorState(page_id, Http::scForbidden, request.getRaw(), fwd->al);
     err->detailError(ERR_DETAIL_RESPMOD_BLOCK_EARLY);
     fwd->fail(err);
     fwd->dontRetry(true);
@@ -932,7 +937,7 @@ Client::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
 void
 Client::sendBodyIsTooLargeError()
 {
-    ErrorState *err = new ErrorState(ERR_TOO_BIG, Http::scForbidden, request.getRaw());
+    const auto err = new ErrorState(ERR_TOO_BIG, Http::scForbidden, request.getRaw(), fwd->al);
     fwd->fail(err);
     fwd->dontRetry(true);
     abortOnData("Virgin body too large.");

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,12 +55,12 @@ ACLChecklist::completeNonBlocking()
 }
 
 void
-ACLChecklist::markFinished(const allow_t &finalAnswer, const char *reason)
+ACLChecklist::markFinished(const Acl::Answer &finalAnswer, const char *reason)
 {
     assert (!finished() && !asyncInProgress());
     finished_ = true;
-    allow_ = finalAnswer;
-    debugs(28, 3, HERE << this << " answer " << allow_ << " for " << reason);
+    answer_ = finalAnswer;
+    debugs(28, 3, HERE << this << " answer " << answer_ << " for " << reason);
 }
 
 /// Called first (and once) by all checks to initialize their state
@@ -156,7 +156,7 @@ ACLChecklist::goAsync(AsyncState *state)
 // ACLFilledChecklist overwrites this to unclock something before we
 // "delete this"
 void
-ACLChecklist::checkCallback(allow_t answer)
+ACLChecklist::checkCallback(Acl::Answer answer)
 {
     ACLCB *callback_;
     void *cbdata_;
@@ -181,7 +181,7 @@ ACLChecklist::ACLChecklist() :
     asyncCaller_(false),
     occupied_(false),
     finished_(false),
-    allow_(ACCESS_DENIED),
+    answer_(ACCESS_DENIED),
     asyncStage_(asyncNone),
     state_(NullState::Instance()),
     asyncLoopDepth_(0)
@@ -304,7 +304,7 @@ ACLChecklist::matchAndFinish()
         markFinished(accessList->winningAction(), "match");
 }
 
-allow_t const &
+Acl::Answer const &
 ACLChecklist::fastCheck(const Acl::Tree * list)
 {
     PROF_start(aclCheckFast);
@@ -332,7 +332,7 @@ ACLChecklist::fastCheck(const Acl::Tree * list)
 /* Warning: do not cbdata lock this here - it
  * may be static or on the stack
  */
-allow_t const &
+Acl::Answer const &
 ACLChecklist::fastCheck()
 {
     PROF_start(aclCheckFast);
@@ -370,13 +370,13 @@ ACLChecklist::fastCheck()
 void
 ACLChecklist::calcImplicitAnswer()
 {
-    const allow_t lastAction = (accessList && cbdataReferenceValid(accessList)) ?
-                               accessList->lastAction() : allow_t(ACCESS_DUNNO);
-    allow_t implicitRuleAnswer = ACCESS_DUNNO;
+    const auto lastAction = (accessList && cbdataReferenceValid(accessList)) ?
+                            accessList->lastAction() : Acl::Answer(ACCESS_DUNNO);
+    auto implicitRuleAnswer = Acl::Answer(ACCESS_DUNNO);
     if (lastAction == ACCESS_DENIED) // reverse last seen "deny"
-        implicitRuleAnswer = ACCESS_ALLOWED;
+        implicitRuleAnswer = Acl::Answer(ACCESS_ALLOWED);
     else if (lastAction == ACCESS_ALLOWED) // reverse last seen "allow"
-        implicitRuleAnswer = ACCESS_DENIED;
+        implicitRuleAnswer = Acl::Answer(ACCESS_DENIED);
     // else we saw no rules and will respond with ACCESS_DUNNO
 
     debugs(28, 3, HERE << this << " NO match found, last action " <<
@@ -391,7 +391,7 @@ ACLChecklist::callerGone()
 }
 
 bool
-ACLChecklist::bannedAction(const allow_t &action) const
+ACLChecklist::bannedAction(const Acl::Answer &action) const
 {
     const bool found = std::find(bannedActions_.begin(), bannedActions_.end(), action) != bannedActions_.end();
     debugs(28, 5, "Action '" << action << "/" << action.kind << (found ? "' is " : "' is not") << " banned");
@@ -399,7 +399,7 @@ ACLChecklist::bannedAction(const allow_t &action) const
 }
 
 void
-ACLChecklist::banAction(const allow_t &action)
+ACLChecklist::banAction(const Acl::Answer &action)
 {
     bannedActions_.push_back(action);
 }

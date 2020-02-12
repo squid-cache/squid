@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,6 +32,7 @@
 
 #if USE_EPOLL
 
+#include "base/CodeContext.h"
 #include "comm/Loops.h"
 #include "fde.h"
 #include "globals.h"
@@ -178,6 +179,12 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
 
     if (timeout)
         F->timeout = squid_curtime + timeout;
+
+    if (timeout || handler) // all non-cleanup requests
+        F->codeContext = CodeContext::Current(); // TODO: Avoid clearing if set?
+    else if (!ev.events) // full cleanup: no more FD-associated work expected
+        F->codeContext = nullptr;
+    // else: direction-specific/timeout cleanup requests preserve F->codeContext
 }
 
 static void commIncomingStats(StoreEntry * sentry);
@@ -253,6 +260,7 @@ Comm::DoSelect(int msec)
     for (i = 0, cevents = pevents; i < num; ++i, ++cevents) {
         fd = cevents->data.fd;
         F = &fd_table[fd];
+        CodeContext::Reset(F->codeContext);
         debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "got FD " << fd << " events=" <<
                std::hex << cevents->events << " monitoring=" << F->epoll_state <<
                " F->read_handler=" << F->read_handler << " F->write_handler=" << F->write_handler);
@@ -263,7 +271,6 @@ Comm::DoSelect(int msec)
             if ((hdl = F->read_handler) != NULL) {
                 debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "Calling read handler on FD " << fd);
                 PROF_start(comm_write_handler);
-                F->flags.read_pending = 0;
                 F->read_handler = NULL;
                 hdl(fd, F->read_data);
                 PROF_stop(comm_write_handler);
@@ -290,6 +297,8 @@ Comm::DoSelect(int msec)
             }
         }
     }
+
+    CodeContext::Reset();
 
     PROF_stop(comm_handle_ready_fd);
 

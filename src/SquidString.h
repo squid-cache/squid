@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -90,7 +90,7 @@ public:
      */
     char const * termedBuf() const { return buf_; }
 
-    void limitInit(const char *str, int len); // TODO: rename to assign()
+    void assign(const char *str, int len);
     void clean();
     void reset(char const *str);
     void append(char const *buf, int len);

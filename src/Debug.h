@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -99,6 +99,10 @@ public:
 
     /// configures the active debugging context to write syslog ALERT
     static void ForceAlert();
+
+    /// prefixes each grouped debugs() line after the first one in the group
+    static std::ostream& Extra(std::ostream &os) { return os << "\n    "; }
+
 private:
     static Context *Current; ///< deepest active context; nil outside debugs()
 };
@@ -185,13 +189,15 @@ class Raw
 {
 public:
     Raw(const char *label, const char *data, const size_t size):
-        level(-1), label_(label), data_(data), size_(size), useHex_(false) {}
+        level(-1), label_(label), data_(data), size_(size), useHex_(false), useGap_(true) {}
 
     /// limit data printing to at least the given debugging level
     Raw &minLevel(const int aLevel) { level = aLevel; return *this; }
 
     /// print data using two hex digits per byte (decoder: xxd -r -p)
     Raw &hex() { useHex_ = true; return *this; }
+
+    Raw &gap(bool useGap = true) { useGap_ = useGap; return *this; }
 
     /// If debugging is prohibited by the current debugs() or section level,
     /// prints nothing. Otherwise, dumps data using one of these formats:
@@ -213,6 +219,7 @@ private:
     const char *data_; ///< raw data to be printed
     size_t size_; ///< data length
     bool useHex_; ///< whether hex() has been called
+    bool useGap_; ///< whether to print leading space if label is missing
 };
 
 inline

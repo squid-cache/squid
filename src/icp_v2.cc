@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -495,9 +495,9 @@ icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
         return NULL;
     }
 
-    HttpRequest *result;
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcp);
-    if ((result = HttpRequest::FromUrl(url, mx)) == NULL)
+    auto *result = HttpRequest::FromUrlXXX(url, mx);
+    if (!result)
         icpCreateAndSend(ICP_ERR, 0, url, reqnum, 0, fd, from, nullptr);
 
     return result;

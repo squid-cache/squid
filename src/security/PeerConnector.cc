@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "comm/Loops.h"
+#include "comm/Read.h"
 #include "Downloader.h"
 #include "errorpage.h"
 #include "fde.h"
@@ -111,7 +112,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
         if (!ctx) {
             debugs(83, DBG_IMPORTANT, "Error initializing TLS connection: No security context.");
         } // else CreateClientSession() did the appropriate debugs() already
-        ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw());
+        const auto anErr = new ErrorState(ERR_SOCKET_FAILURE, Http::scInternalServerError, request.getRaw(), al);
         anErr->xerrno = xerrno;
         noteNegotiationDone(anErr);
         bail(anErr);
@@ -139,20 +140,6 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 #endif
 
     return true;
-}
-
-void
-Security::PeerConnector::setReadTimeout()
-{
-    int timeToRead;
-    if (negotiationTimeout) {
-        const int timeUsed = squid_curtime - startTime;
-        const int timeLeft = max(0, static_cast<int>(negotiationTimeout - timeUsed));
-        timeToRead = min(static_cast<int>(::Config.Timeout.read), timeLeft);
-    } else
-        timeToRead = ::Config.Timeout.read;
-    AsyncCall::Pointer nil;
-    commSetConnTimeout(serverConnection(), timeToRead, nil);
 }
 
 void
@@ -250,7 +237,7 @@ Security::PeerConnector::sslFinalized()
                    " certificate: " << e.what() << "; will now block to " <<
                    "validate that certificate.");
             // fall through to do blocking in-process generation.
-            ErrorState *anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw());
+            const auto anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al);
 
             noteNegotiationDone(anErr);
             bail(anErr);
@@ -300,9 +287,9 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 
     ErrorState *anErr = NULL;
     if (validatorFailed) {
-        anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw());
+        anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al);
     }  else {
-        anErr =  new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw());
+        anErr =  new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
         anErr->detail = errDetails;
         /*anErr->xerrno= Should preserved*/
     }
@@ -322,14 +309,16 @@ Security::CertErrors *
 Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::ErrorDetail *& errDetails)
 {
     ACLFilledChecklist *check = NULL;
+    Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
+
     if (acl_access *acl = ::Config.ssl_client.cert_error) {
         check = new ACLFilledChecklist(acl, request.getRaw(), dash_str);
         check->al = al;
         check->syncAle(request.getRaw(), nullptr);
+        check->serverCert.resetWithoutLocking(SSL_get_peer_certificate(session.get()));
     }
 
     Security::CertErrors *errs = nullptr;
-    Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
     typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
     for (SVCRECI i = resp.errors.begin(); i != resp.errors.end(); ++i) {
         debugs(83, 7, "Error item: " << i->error_no << " " << i->error_reason);
@@ -482,7 +471,12 @@ Security::PeerConnector::noteWantRead()
         }
     }
 #endif
-    setReadTimeout();
+
+    // read timeout to avoid getting stuck while reading from a silent server
+    AsyncCall::Pointer nil;
+    const auto timeout = Comm::MortalReadTimeout(startTime, negotiationTimeout);
+    commSetConnTimeout(serverConnection(), timeout, nil);
+
     Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, new Pointer(this), 0);
 }
 
@@ -516,7 +510,7 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
            ": " << Security::ErrorString(ssl_lib_error) << " (" <<
            ssl_error << "/" << ret << "/" << xerr << ")");
 
-    ErrorState *anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request);
+    const auto anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request, al);
     anErr->xerrno = sysErrNo;
 
 #if USE_OPENSSL
@@ -586,7 +580,7 @@ Security::PeerConnector::swanSong()
     AsyncJob::swanSong();
     if (callback != NULL) { // paranoid: we have left the caller waiting
         debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while connecting to a cache_peer or origin server");
-        ErrorState *anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw());
+        const auto anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al);
         bail(anErr);
         assert(!callback);
         return;

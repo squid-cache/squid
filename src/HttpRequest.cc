@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "AccessLogEntry.h"
 #include "acl/AclSizeLimit.h"
 #include "acl/FilledChecklist.h"
+#include "CachePeer.h"
 #include "client_side.h"
 #include "client_side_request.h"
 #include "dns/LookupDetails.h"
@@ -328,15 +329,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
     if (end < start)   // missing URI
         return false;
 
-    char save = *end;
-
-    * (char *) end = '\0';     // temp terminate URI, XXX dangerous?
-
-    const bool ret = url.parse(method, start);
-
-    * (char *) end = save;
-
-    return ret;
+    return url.parse(method, SBuf(start, size_t(end-start)));
 }
 
 /* swaps out request using httpRequestPack */
@@ -453,6 +446,25 @@ HttpRequest::bodyNibbled() const
 }
 
 void
+HttpRequest::prepForPeering(const CachePeer &peer)
+{
+    // XXX: Saving two pointers to memory controlled by an independent object.
+    peer_login = peer.login;
+    peer_domain = peer.domain;
+    flags.auth_no_keytab = peer.options.auth_no_keytab;
+    debugs(11, 4, this << " to " << peer.host << (!peer.options.originserver ? " proxy" : " origin"));
+}
+
+void
+HttpRequest::prepForDirect()
+{
+    peer_login = nullptr;
+    peer_domain = nullptr;
+    flags.auth_no_keytab = false;
+    debugs(11, 4, this);
+}
+
+void
 HttpRequest::detailError(err_type aType, int aDetail)
 {
     if (errType || errDetail)
@@ -520,7 +532,7 @@ HttpRequest::expectingBody(const HttpRequestMethod &, int64_t &theSize) const
  * If the request cannot be created cleanly, NULL is returned
  */
 HttpRequest *
-HttpRequest::FromUrl(const char * url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
+HttpRequest::FromUrl(const SBuf &url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
 {
     std::unique_ptr<HttpRequest> req(new HttpRequest(mx));
     if (req->url.parse(method, url)) {
@@ -528,6 +540,12 @@ HttpRequest::FromUrl(const char * url, const MasterXaction::Pointer &mx, const H
         return req.release();
     }
     return nullptr;
+}
+
+HttpRequest *
+HttpRequest::FromUrlXXX(const char * url, const MasterXaction::Pointer &mx, const HttpRequestMethod& method)
+{
+    return FromUrl(SBuf(url), mx, method);
 }
 
 /**

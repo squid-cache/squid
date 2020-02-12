@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -103,7 +103,8 @@ Debug::Context *Debug::Current = nullptr;
 Debug::Context::Context(const int aSection, const int aLevel):
     level(aLevel),
     sectionLevel(Levels[aSection]),
-    upper(Current)
+    upper(Current),
+    forceAlert(false)
 {
     buf.setf(std::ios::fixed);
     buf.precision(2);

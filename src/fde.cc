@@ -1,15 +1,16 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: none          FDE */
+/* DEBUG: section 05    Comm */
 
 #include "squid.h"
 #include "comm/Read.h"
+#include "Debug.h"
 #include "fd.h"
 #include "fde.h"
 #include "globals.h"
@@ -17,6 +18,47 @@
 #include "Store.h"
 
 fde *fde::Table = nullptr;
+
+void
+fde::setIo(READ_HANDLER *reader, WRITE_HANDLER *writer)
+{
+    assert(reader);
+    assert(writer);
+    assert(!flags.read_pending); // this method is only meant for new FDs
+
+    readMethod_ = reader;
+    writeMethod_ = writer;
+}
+
+void
+fde::useDefaultIo()
+{
+    debugs(5, 7, "old read_pending=" << flags.read_pending);
+
+    // Some buffering readers are using external-to-them buffers (e.g., inBuf)
+    // and might leave true flags.read_pending behind without losing data. We
+    // must clear the flag here because default I/O methods do not know about it
+    // and will leave it set forever, resulting in I/O loops.
+    flags.read_pending = false;
+
+    readMethod_ = default_read_method;
+    writeMethod_ = default_write_method;
+}
+
+/// use I/O methods that maintain an internal-to-them buffer
+void
+fde::useBufferedIo(READ_HANDLER *bufferingReader, WRITE_HANDLER *bufferingWriter)
+{
+    debugs(5, 7, "read_pending=" << flags.read_pending);
+
+    assert(bufferingReader);
+    assert(bufferingWriter);
+    // flags.read_pending ought to be false here, but these buffering methods
+    // can handle a stale true flag so we do not check or reset it
+
+    readMethod_ = bufferingReader;
+    writeMethod_ = bufferingWriter;
+}
 
 bool
 fde::readPending(int fdNumber) const

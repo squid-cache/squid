@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -54,7 +54,7 @@ class HttpHeaderEntry
 public:
     HttpHeaderEntry(Http::HdrType id, const SBuf &name, const char *value);
     ~HttpHeaderEntry();
-    static HttpHeaderEntry *parse(const char *field_start, const char *field_end);
+    static HttpHeaderEntry *parse(const char *field_start, const char *field_end, const http_hdr_owner_type msgType);
     HttpHeaderEntry *clone() const;
     void packInto(Packable *p) const;
     int getInt() const;
@@ -82,7 +82,12 @@ public:
     /* Interface functions */
     void clean();
     void append(const HttpHeader * src);
-    bool update(HttpHeader const *fresh);
+    /// replaces fields with matching names and adds fresh fields with new names
+    /// also updates Http::HdrType::WARNINGs, assuming `fresh` is a 304 reply
+    /// TODO: Refactor most callers to avoid special handling of WARNINGs.
+    void update(const HttpHeader *fresh);
+    /// \returns whether calling update(fresh) would change our set of fields
+    bool needUpdate(const HttpHeader *fresh) const;
     void compact();
     int parse(const char *header_start, size_t len, Http::ContentLengthInterpreter &interpreter);
     /// Parses headers stored in a buffer.
@@ -118,8 +123,12 @@ public:
     bool hasNamed(const SBuf &s, String *value = 0) const;
     /// \deprecated use SBuf method instead.
     bool hasNamed(const char *name, unsigned int namelen, String *value = 0) const;
-    String getByNameListMember(const char *name, const char *member, const char separator) const;
-    String getListMember(Http::HdrType id, const char *member, const char separator) const;
+    /// searches for the first matching key=value pair within the name-identified field
+    /// \returns the value of the found pair or an empty string
+    SBuf getByNameListMember(const char *name, const char *member, const char separator) const;
+    /// searches for the first matching key=value pair within the field
+    /// \returns the value of the found pair or an empty string
+    SBuf getListMember(Http::HdrType id, const char *member, const char separator) const;
     int has(Http::HdrType id) const;
     /// Appends "this cache" information to VIA header field.
     /// Takes the initial VIA value from "from" parameter, if provided.
@@ -144,7 +153,7 @@ public:
     HttpHdrRange *getRange() const;
     HttpHdrSc *getSc() const;
     HttpHdrContRange *getContRange() const;
-    const char *getAuth(Http::HdrType id, const char *auth_scheme) const;
+    SBuf getAuthToken(Http::HdrType id, const char *auth_scheme) const;
     ETag getETag(Http::HdrType id) const;
     TimeOrTag getTimeOrTag(Http::HdrType id) const;
     int hasListMember(Http::HdrType id, const char *member, const char separator) const;
@@ -168,7 +177,6 @@ protected:
     /// *blk_end points to the first header delimiter character (CR or LF in CR?LF).
     /// If block starts where it ends, then there are no fields in the header.
     static bool Isolate(const char **parse_start, size_t l, const char **blk_start, const char **blk_end);
-    bool needUpdate(const HttpHeader *fresh) const;
     bool skipUpdateHeader(const Http::HdrType id) const;
     void updateWarnings();
 

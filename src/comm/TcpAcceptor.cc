@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -74,6 +74,8 @@ Comm::TcpAcceptor::unsubscribe(const char *reason)
 void
 Comm::TcpAcceptor::start()
 {
+    if (listenPort_)
+        CodeContext::Reset(listenPort_);
     debugs(5, 5, HERE << status() << " AsyncCall Subscription: " << theCallSub);
 
     Must(IsConnOpen(conn));
@@ -153,7 +155,7 @@ Comm::TcpAcceptor::setListen()
     errcode = errno = 0;
     if (listen(conn->fd, Squid_MaxFD >> 2) < 0) {
         errcode = errno;
-        debugs(50, DBG_CRITICAL, "ERROR: listen(" << status() << ", " << (Squid_MaxFD >> 2) << "): " << xstrerr(errcode));
+        debugs(50, DBG_CRITICAL, "ERROR: listen(..., " << (Squid_MaxFD >> 2) << ") system call failed: " << xstrerr(errcode));
         return;
     }
 
@@ -255,18 +257,21 @@ Comm::TcpAcceptor::okToAccept()
     return false;
 }
 
-static void
-logAcceptError(const Comm::ConnectionPointer &conn)
+void
+Comm::TcpAcceptor::logAcceptError(const ConnectionPointer &tcpClient) const
 {
     AccessLogEntry::Pointer al = new AccessLogEntry;
-    al->tcpClient = conn;
+    CodeContext::Reset(al);
+    al->tcpClient = tcpClient;
     al->url = "error:accept-client-connection";
     al->setVirginUrlForMissingRequest(al->url);
     ACLFilledChecklist ch(nullptr, nullptr, nullptr);
-    ch.src_addr = conn->remote;
-    ch.my_addr = conn->local;
+    ch.src_addr = tcpClient->remote;
+    ch.my_addr = tcpClient->local;
     ch.al = al;
     accessLogLog(al, &ch);
+
+    CodeContext::Reset(listenPort_);
 }
 
 void
@@ -282,16 +287,7 @@ Comm::TcpAcceptor::acceptOne()
     ConnectionPointer newConnDetails = new Connection();
     const Comm::Flag flag = oldAccept(newConnDetails);
 
-    /* Check for errors */
-    if (!newConnDetails->isOpen()) {
-
-        if (flag == Comm::NOMESSAGE) {
-            /* register interest again */
-            debugs(5, 5, HERE << "try later: " << conn << " handler Subscription: " << theCallSub);
-            SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
-            return;
-        }
-
+    if (flag == Comm::COMM_ERROR) {
         // A non-recoverable error; notify the caller */
         debugs(5, 5, HERE << "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
         if (intendedForUserConnections())
@@ -301,12 +297,19 @@ Comm::TcpAcceptor::acceptOne()
         return;
     }
 
-    newConnDetails->nfConnmark = Ip::Qos::getNfConnmark(newConnDetails, Ip::Qos::dirAccepted);
+    if (flag == Comm::NOMESSAGE) {
+        /* register interest again */
+        debugs(5, 5, "try later: " << conn << " handler Subscription: " << theCallSub);
+    } else {
+        // TODO: When ALE, MasterXaction merge, use them or ClientConn instead.
+        CodeContext::Reset(newConnDetails);
+        debugs(5, 5, "Listener: " << conn <<
+               " accepted new connection " << newConnDetails <<
+               " handler Subscription: " << theCallSub);
+        notify(flag, newConnDetails);
+        CodeContext::Reset(listenPort_);
+    }
 
-    debugs(5, 5, HERE << "Listener: " << conn <<
-           " accepted new connection " << newConnDetails <<
-           " handler Subscription: " << theCallSub);
-    notify(flag, newConnDetails);
     SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
 }
 
@@ -346,8 +349,8 @@ Comm::TcpAcceptor::notify(const Comm::Flag flag, const Comm::ConnectionPointer &
  *
  * \retval Comm::OK          success. details parameter filled.
  * \retval Comm::NOMESSAGE   attempted accept() but nothing useful came in.
- * \retval Comm::COMM_ERROR  an outright failure occurred.
  *                           Or this client has too many connections already.
+ * \retval Comm::COMM_ERROR  an outright failure occurred.
  */
 Comm::Flag
 Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
@@ -366,14 +369,14 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 
         PROF_stop(comm_accept);
 
-        if (ignoreErrno(errcode)) {
+        if (ignoreErrno(errcode) || errcode == ECONNABORTED) {
             debugs(50, 5, status() << ": " << xstrerr(errcode));
             return Comm::NOMESSAGE;
-        } else if (ENFILE == errno || EMFILE == errno) {
+        } else if (errcode == ENFILE || errcode == EMFILE) {
             debugs(50, 3, status() << ": " << xstrerr(errcode));
             return Comm::COMM_ERROR;
         } else {
-            debugs(50, DBG_IMPORTANT, MYNAME << status() << ": " << xstrerr(errcode));
+            debugs(50, DBG_IMPORTANT, "ERROR: failed to accept an incoming connection: " << xstrerr(errcode));
             return Comm::COMM_ERROR;
         }
     }
@@ -381,15 +384,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     Must(sock >= 0);
     details->fd = sock;
     details->remote = *gai;
-
-    if ( Config.client_ip_max_connections >= 0) {
-        if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
-            debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
-            Ip::Address::FreeAddr(gai);
-            PROF_stop(comm_accept);
-            return Comm::COMM_ERROR;
-        }
-    }
 
     // lookup the local-end details of this new connection
     Ip::Address::InitAddr(gai);
@@ -403,24 +397,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     }
     details->local = *gai;
     Ip::Address::FreeAddr(gai);
-
-    /* fdstat update */
-    // XXX : these are not all HTTP requests. use a note about type and ip:port details->
-    // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
-    fd_open(sock, FD_SOCKET, "HTTP Request");
-
-    fde *F = &fd_table[sock];
-    details->remote.toStr(F->ipaddr,MAX_IPSTRLEN);
-    F->remote_port = details->remote.port();
-    F->local_addr = details->local;
-    F->sock_family = details->local.isIPv6()?AF_INET6:AF_INET;
-
-    // set socket flags
-    commSetCloseOnExec(sock);
-    commSetNonBlocking(sock);
-
-    /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
-    F->flags.transparent = fd_table[conn->fd].flags.transparent; // XXX: can we remove this line yet?
 
     // Perform NAT or TPROXY operations to retrieve the real client/dest IP addresses
     if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
@@ -439,6 +415,34 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
         }
     }
 #endif
+
+    details->nfConnmark = Ip::Qos::getNfConnmark(details, Ip::Qos::dirAccepted);
+
+    if (Config.client_ip_max_connections >= 0) {
+        if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
+            debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
+            PROF_stop(comm_accept);
+            return Comm::NOMESSAGE;
+        }
+    }
+
+    /* fdstat update */
+    // XXX : these are not all HTTP requests. use a note about type and ip:port details->
+    // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
+    fd_open(sock, FD_SOCKET, "HTTP Request");
+
+    fde *F = &fd_table[sock];
+    details->remote.toStr(F->ipaddr,MAX_IPSTRLEN);
+    F->remote_port = details->remote.port();
+    F->local_addr = details->local;
+    F->sock_family = details->local.isIPv6()?AF_INET6:AF_INET;
+
+    // set socket flags
+    commSetCloseOnExec(sock);
+    commSetNonBlocking(sock);
+
+    /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
+    F->flags.transparent = fd_table[conn->fd].flags.transparent; // XXX: can we remove this line yet?
 
     PROF_stop(comm_accept);
     return Comm::OK;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -468,7 +468,7 @@ schemesConfig(HttpRequest *request, HttpReply *rep)
         ACLFilledChecklist ch(NULL, request, NULL);
         ch.reply = rep;
         HTTPMSGLOCK(ch.reply);
-        const allow_t answer = ch.fastCheck(Auth::TheConfig.schemeAccess);
+        const auto answer = ch.fastCheck(Auth::TheConfig.schemeAccess);
         if (answer.allowed())
             return Auth::TheConfig.schemeLists.at(answer.kind).authConfigs;
     }

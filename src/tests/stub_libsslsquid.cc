@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -11,6 +11,7 @@
 #if USE_OPENSSL
 
 #include "fatal.h"
+#include "sbuf/SBuf.h"
 
 /* Stub File for the ssl/libsslsquid.la convenience library */
 
@@ -59,8 +60,8 @@ void MaybeSetupRsaCallback(Security::ContextPointer &) STUB
 const char *sslGetUserEmail(SSL *ssl) STUB_RETVAL(NULL)
 const char *sslGetUserAttribute(SSL *ssl, const char *attribute_name) STUB_RETVAL(NULL)
 const char *sslGetCAAttribute(SSL *ssl, const char *attribute_name) STUB_RETVAL(NULL)
-const char *sslGetUserCertificatePEM(SSL *ssl) STUB_RETVAL(NULL)
-const char *sslGetUserCertificateChainPEM(SSL *ssl) STUB_RETVAL(NULL)
+SBuf sslGetUserCertificatePEM(SSL *ssl) STUB_RETVAL(SBuf())
+SBuf sslGetUserCertificateChainPEM(SSL *ssl) STUB_RETVAL(SBuf())
 namespace Ssl
 {
 //GETX509ATTRIBUTE GetX509UserAttribute;
@@ -75,6 +76,7 @@ int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(vo
 bool checkX509ServerValidity(X509 *cert, const char *server) STUB_RETVAL(false)
 int asn1timeToString(ASN1_TIME *tm, char *buf, int len) STUB_RETVAL(0)
 void setClientSNI(SSL *ssl, const char *fqdn) STUB
+SBuf GetX509PEM(SSL *ssl) STUB_RETVAL(SBuf())
 } //namespace Ssl
 
 #endif

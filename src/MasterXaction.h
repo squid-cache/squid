@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,7 +44,7 @@ public:
     explicit MasterXaction(const XactionInitiator anInitiator) : initiator(anInitiator) {};
 
     /// transaction ID.
-    InstanceId<MasterXaction> id;
+    InstanceId<MasterXaction, uint64_t> id;
 
     /// the listening port which originated this transaction
     AnyP::PortCfgPointer squidPort;
@@ -54,6 +54,9 @@ public:
 
     /// the initiator of this transaction
     XactionInitiator initiator;
+
+    /// whether we are currently creating a CONNECT header (to be sent to peer)
+    bool generatingConnect = false;
 
     // TODO: add state from other Jobs in the transaction
 };

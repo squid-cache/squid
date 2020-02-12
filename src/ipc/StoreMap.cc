@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -247,10 +247,18 @@ Ipc::StoreMap::peekAtReader(const sfileno fileno) const
     const Anchor &s = anchorAt(fileno);
     if (s.reading())
         return &s; // immediate access by lock holder so no locking
+    assert(s.writing()); // must be locked for reading or writing
+    return nullptr;
+}
+
+const Ipc::StoreMap::Anchor *
+Ipc::StoreMap::peekAtWriter(const sfileno fileno) const
+{
+    const Anchor &s = anchorAt(fileno);
     if (s.writing())
-        return NULL; // the caller is not a read lock holder
-    assert(false); // must be locked for reading or writing
-    return NULL;
+        return &s; // immediate access by lock holder so no locking
+    assert(s.reading()); // must be locked for reading or writing
+    return nullptr;
 }
 
 const Ipc::StoreMap::Anchor &
@@ -346,8 +354,7 @@ Ipc::StoreMap::freeChainAt(SliceId sliceId, const SliceId splicingPoint)
     while (sliceId >= 0) {
         Slice &slice = sliceAt(sliceId);
         const SliceId nextId = slice.next;
-        slice.size = 0;
-        slice.next = -1;
+        slice.clear();
         if (cleaner)
             cleaner->noteFreeMapSlice(sliceId); // might change slice state
         if (sliceId == splicingPoint) {
@@ -358,6 +365,14 @@ Ipc::StoreMap::freeChainAt(SliceId sliceId, const SliceId splicingPoint)
         sliceId = nextId;
     }
     debugs(54, 7, "freed chain #" << chainId << " in " << path);
+}
+
+void
+Ipc::StoreMap::prepFreeSlice(const SliceId sliceId)
+{
+    // TODO: Move freeSlots here, along with reserveSlotForWriting() logic.
+    assert(validSlice(sliceId));
+    sliceAt(sliceId).clear();
 }
 
 Ipc::StoreMap::SliceId
@@ -433,6 +448,23 @@ Ipc::StoreMap::closeForReading(const sfileno fileno)
     assert(s.reading());
     s.lock.unlockShared();
     debugs(54, 5, "closed entry " << fileno << " for reading " << path);
+}
+
+void
+Ipc::StoreMap::closeForReadingAndFreeIdle(const sfileno fileno)
+{
+    auto &s = anchorAt(fileno);
+    assert(s.reading());
+
+    if (!s.lock.unlockSharedAndSwitchToExclusive()) {
+        debugs(54, 5, "closed entry " << fileno << " for reading " << path);
+        return;
+    }
+
+    assert(s.writing());
+    assert(!s.reading());
+    freeChain(fileno, s, false);
+    debugs(54, 5, "closed idle entry " << fileno << " for reading " << path);
 }
 
 bool
@@ -575,7 +607,10 @@ Ipc::StoreMap::closeForUpdating(Update &update)
     update.stale.anchor->splicingPoint = update.stale.splicingPoint;
     freeEntry(update.stale.fileNo);
 
-    // make the stale anchor/chain reusable, reachable via its new location
+    // Make the stale anchor/chain reusable, reachable via update.fresh.name. If
+    // update.entry->swap_filen is still update.stale.fileNo, and the entry is
+    // using store, then the entry must have a lock on update.stale.fileNo,
+    // preventing its premature reuse by others.
     relocate(update.fresh.name, update.stale.fileNo);
 
     const Update updateSaved = update; // for post-close debugging below

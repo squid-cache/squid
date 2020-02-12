@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,7 +26,7 @@ inline String
 SBufToString(const SBuf &s)
 {
     String rv;
-    rv.limitInit(s.rawContent(), s.length());
+    rv.assign(s.rawContent(), s.length());
     return rv;
 }
 

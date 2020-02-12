@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,7 @@
 #include "ipcache.h"
 #include "mem/forward.h"
 #include "PingData.h"
+#include "typedefs.h" /* for IRCB */
 
 class ErrorState;
 class HtcpReplyData;
@@ -79,7 +80,7 @@ public:
     bool wantsMoreDestinations() const;
 
     /// processes a newly discovered/finalized path
-    void handlePath(Comm::ConnectionPointer &path, FwdServer &fs);
+    void handlePath(const Comm::ConnectionPointer &path, FwdServer &fs);
 
     /// a single selection loop iteration: attempts to add more destinations
     void selectMore();
@@ -104,8 +105,8 @@ protected:
 #endif
 
     int checkNetdbDirect();
-    void checkAlwaysDirectDone(const allow_t answer);
-    void checkNeverDirectDone(const allow_t answer);
+    void checkAlwaysDirectDone(const Acl::Answer answer);
+    void checkNeverDirectDone(const Acl::Answer answer);
 
     void selectSomeNeighbor();
     void selectSomeNeighborReplies();
@@ -124,8 +125,8 @@ protected:
     static EVH HandlePingTimeout;
 
 private:
-    allow_t always_direct;
-    allow_t never_direct;
+    Acl::Answer always_direct;
+    Acl::Answer never_direct;
     int direct;   // TODO: fold always_direct/never_direct/prefer_direct into this now that ACL can do a multi-state result.
     size_t foundPaths = 0; ///< number of unique destinations identified so far
     ErrorState *lastError;

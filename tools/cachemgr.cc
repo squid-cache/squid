@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "base/CharacterSet.h"
 #include "base64.h"
 #include "getfullhostname.h"
 #include "html_quote.h"
@@ -215,6 +216,21 @@ xstrtok(char **str, char del)
         return "";
 }
 
+bool
+hostname_check(const char *uri)
+{
+    static CharacterSet hostChars = CharacterSet("host",".:[]_") +
+                                    CharacterSet::ALPHA + CharacterSet::DIGIT;
+
+    const auto limit = strlen(uri);
+    for (size_t i = 0; i < limit; i++) {
+        if (!hostChars[uri[i]]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static void
 print_trailer(void)
 {
@@ -355,7 +371,7 @@ auth_html(const char *host, int port, const char *user_name)
 
     printf("<TR><TH ALIGN=\"left\">Manager name:</TH><TD><INPUT NAME=\"user_name\" ");
 
-    printf("size=\"30\" VALUE=\"%s\"></TD></TR>\n", user_name);
+    printf("size=\"30\" VALUE=\"%s\"></TD></TR>\n", rfc1738_escape(user_name));
 
     printf("<TR><TH ALIGN=\"left\">Password:</TH><TD><INPUT TYPE=\"password\" NAME=\"passwd\" ");
 
@@ -419,7 +435,7 @@ menu_url(cachemgr_request * req, const char *action)
              script_name,
              req->hostname,
              req->port,
-             safe_str(req->user_name),
+             rfc1738_escape(safe_str(req->user_name)),
              action,
              safe_str(req->pub_auth));
     return url;
@@ -807,9 +823,15 @@ process_request(cachemgr_request * req)
     } else if ((S = req->hostname))
         (void) 0;
     else {
-        snprintf(buf, sizeof(buf), "Unknown host: %s\n", req->hostname);
-        error_html(buf);
-        return 1;
+        if (hostname_check(req->hostname)) {
+            snprintf(buf, sizeof(buf), "Unknown Host: %s\n", req->hostname);
+            error_html(buf);
+            return 1;
+        } else {
+            snprintf(buf, sizeof(buf), "%s\n", "Invalid Hostname");
+            error_html(buf);
+            return 1;
+        }
     }
 
     S.port(req->port);
@@ -1074,8 +1096,8 @@ make_pub_auth(cachemgr_request * req)
     const int bufLen = snprintf(buf, sizeof(buf), "%s|%d|%s|%s",
                                 req->hostname,
                                 (int) now,
-                                req->user_name ? req->user_name : "",
-                                req->passwd);
+                                rfc1738_escape(safe_str(req->user_name)),
+                                rfc1738_escape(req->passwd));
     debug("cmgr: pre-encoded for pub: %s\n", buf);
 
     const int encodedLen = base64_encode_len(bufLen);
@@ -1091,11 +1113,8 @@ make_pub_auth(cachemgr_request * req)
 static void
 decode_pub_auth(cachemgr_request * req)
 {
-    char *buf;
     const char *host_name;
     const char *time_str;
-    const char *user_name;
-    const char *passwd;
 
     debug("cmgr: decoding pub: '%s'\n", safe_str(req->pub_auth));
     safe_free(req->passwd);
@@ -1103,16 +1122,17 @@ decode_pub_auth(cachemgr_request * req)
     if (!req->pub_auth || strlen(req->pub_auth) < 4 + strlen(safe_str(req->hostname)))
         return;
 
-    size_t decodedLen = BASE64_DECODE_LENGTH(strlen(req->pub_auth));
-    buf = (char*)xmalloc(decodedLen);
+    char *buf = static_cast<char*>(xmalloc(BASE64_DECODE_LENGTH(strlen(req->pub_auth))+1));
     struct base64_decode_ctx ctx;
     base64_decode_init(&ctx);
+    size_t decodedLen = 0;
     if (!base64_decode_update(&ctx, &decodedLen, reinterpret_cast<uint8_t*>(buf), strlen(req->pub_auth), req->pub_auth) ||
             !base64_decode_final(&ctx)) {
         debug("cmgr: base64 decode failure. Incomplete auth token string.\n");
         xfree(buf);
         return;
     }
+    buf[decodedLen] = '\0';
 
     debug("cmgr: length ok\n");
 
@@ -1131,17 +1151,21 @@ decode_pub_auth(cachemgr_request * req)
 
     debug("cmgr: decoded time: '%s' (now: %d)\n", time_str, (int) now);
 
+    char *user_name;
     if ((user_name = strtok(NULL, "|")) == NULL) {
         xfree(buf);
         return;
     }
+    rfc1738_unescape(user_name);
 
     debug("cmgr: decoded uname: '%s'\n", user_name);
 
+    char *passwd;
     if ((passwd = strtok(NULL, "|")) == NULL) {
         xfree(buf);
         return;
     }
+    rfc1738_unescape(passwd);
 
     debug("cmgr: decoded passwd: '%s'\n", passwd);
 

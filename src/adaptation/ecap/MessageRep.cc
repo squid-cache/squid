@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -204,8 +204,7 @@ Adaptation::Ecap::RequestLineRep::uri(const Area &aUri)
 {
     // TODO: if method is not set, AnyP::Uri::parse will assume it is not connect;
     // Can we change AnyP::Uri::parse API to remove the method parameter?
-    const char *buf = aUri.toString().c_str();
-    const bool ok = theMessage.url.parse(theMessage.method, buf);
+    const auto ok = theMessage.url.parse(theMessage.method, SBuf(aUri.toString()));
     Must(ok);
 }
 

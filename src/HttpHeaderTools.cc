@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -229,7 +229,7 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
     }
     /* Make sure it's defined even if empty "" */
     if (!val->termedBuf())
-        val->limitInit("", 0);
+        val->assign("", 0);
     return 1;
 }
 
@@ -273,7 +273,7 @@ httpHeaderQuoteString(const char *raw)
  * \retval 1    Header has no access controls to test
  */
 static int
-httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms)
+httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, const AccessLogEntryPointer &al)
 {
     int retval;
 
@@ -288,6 +288,12 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms)
     }
 
     ACLFilledChecklist checklist(hm->access_list, request, NULL);
+
+    checklist.al = al;
+    if (al && al->reply) {
+        checklist.reply = al->reply.getRaw();
+        HTTPMSGLOCK(checklist.reply);
+    }
 
     if (checklist.fastCheck().allowed()) {
         /* aclCheckFast returns true for allow. */
@@ -335,7 +341,7 @@ httpHdrMangleList(HttpHeader *l, HttpRequest *request, const AccessLogEntryPoint
     if (hms) {
         int headers_deleted = 0;
         while ((e = l->getEntry(&p))) {
-            if (0 == httpHdrMangle(e, request, hms))
+            if (httpHdrMangle(e, request, hms, al) == 0)
                 l->delAt(p, headers_deleted);
         }
 

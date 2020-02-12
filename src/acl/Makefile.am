@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -65,6 +65,10 @@ libacls_la_SOURCES = \
 	AnyOf.h \
 	Asn.cc \
 	Asn.h \
+	AtStep.cc \
+	AtStep.h \
+	AtStepData.cc \
+	AtStepData.h \
 	ConnectionsEncrypted.cc \
 	ConnectionsEncrypted.h \
 	ConnMark.cc \
@@ -159,10 +163,6 @@ libacls_la_SOURCES = \
 EXTRA_libacls_la_SOURCES =
 
 SSL_ACLS = \
-	AtStep.cc \
-	AtStep.h \
-	AtStepData.cc \
-	AtStepData.h \
         CertificateData.cc \
         CertificateData.h  \
         Certificate.cc \

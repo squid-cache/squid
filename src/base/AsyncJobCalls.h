@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -46,12 +46,13 @@ private:
 
 /// schedule an async job call using a dialer; use CallJobHere macros instead
 template <class Dialer>
-bool
+AsyncCall::Pointer
 CallJob(int debugSection, int debugLevel, const char *fileName, int fileLine,
         const char *callName, const Dialer &dialer)
 {
     AsyncCall::Pointer call = asyncCall(debugSection, debugLevel, callName, dialer);
-    return ScheduleCall(fileName, fileLine, call);
+    ScheduleCall(fileName, fileLine, call);
+    return call;
 }
 
 #define CallJobHere(debugSection, debugLevel, job, Class, method) \

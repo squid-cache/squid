@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 78    DNS lookups; interacts with dns/rfc1035.cc */
 
 #include "squid.h"
+#include "base/CodeContext.h"
 #include "base/InstanceId.h"
 #include "base/RunnersRegistry.h"
 #include "comm.h"
@@ -103,7 +104,9 @@ class idns_query
     CBDATA_CLASS(idns_query);
 
 public:
-    idns_query() {
+    idns_query():
+        codeContext(CodeContext::Current())
+    {
         callback = nullptr;
         memset(&query, 0, sizeof(query));
         *buf = 0;
@@ -141,8 +144,11 @@ public:
     struct timeval sent_t;
     struct timeval queue_t;
     dlink_node lru;
+
     IDNSCB *callback;
     void *callback_data = nullptr;
+    CodeContext::Pointer codeContext; ///< requestor's context
+
     int attempt = 0;
     int rcode = 0;
     idns_query *queue = nullptr;
@@ -1104,6 +1110,7 @@ idnsCallbackNewCallerWithOldAnswers(IDNSCB *callback, void *cbdata, const idns_q
     for (auto query = master; query; query = query->slave) {
         if (query->pending)
             continue; // no answer yet
+        // no CallBack(CodeContext...) -- we always run in requestor's context
         if (!idnsCallbackOneWithAnswer(callback, cbdata, *query, lastAnswer))
             break; // the caller disappeared
     }
@@ -1116,8 +1123,10 @@ idnsCallbackAllCallersWithNewAnswer(const idns_query * const answered, const boo
     const auto master = answered->master ? answered->master : answered;
     // iterate all queued lookup callers
     for (auto looker = master; looker; looker = looker->queue) {
-        (void)idnsCallbackOneWithAnswer(looker->callback, looker->callback_data,
-                                        *answered, lastAnswer);
+        CallBack(looker->codeContext, [&] {
+            (void)idnsCallbackOneWithAnswer(looker->callback, looker->callback_data,
+            *answered, lastAnswer);
+        });
     }
 }
 
@@ -1666,6 +1675,9 @@ idnsCachedLookup(const char *key, IDNSCB * callback, void *data)
 
     if (!old)
         return 0;
+
+    // XXX: We are collapsing this DNS query (B) onto another one (A), but there
+    // is no code to later send B if the A answer has unshareable 0 TTL records.
 
     idns_query *q = new idns_query;
     // no query_id on this instance.

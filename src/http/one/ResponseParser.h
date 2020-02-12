@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,7 +47,7 @@ public:
 
 private:
     int parseResponseFirstLine();
-    int parseResponseStatusAndReason(Http1::Tokenizer&, const CharacterSet &);
+    int parseResponseStatusAndReason(Tokenizer&, const CharacterSet &);
 
     /// magic prefix for identifying ICY response messages
     static const SBuf IcyMagic;

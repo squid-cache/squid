@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,10 +26,11 @@
 #include "comm/Connection.h"
 #include "err_detail_type.h"
 #include "http/ContentLengthInterpreter.h"
-#include "http/one/TeChunkedParser.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "MasterXaction.h"
+#include "parser/Tokenizer.h"
+#include "sbuf/Stream.h"
 #include "SquidTime.h"
 
 // flow and terminology:
@@ -42,6 +43,8 @@ CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXact);
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXactLauncher);
 
 static const size_t TheBackupLimit = BodyPipe::MaxCapacity;
+
+const SBuf Adaptation::Icap::ChunkExtensionValueParser::UseOriginalBodyName("use-original-body");
 
 Adaptation::Icap::ModXact::State::State()
 {
@@ -1145,6 +1148,7 @@ void Adaptation::Icap::ModXact::decideOnParsingBody()
         state.parsing = State::psBody;
         replyHttpBodySize = 0;
         bodyParser = new Http1::TeChunkedParser;
+        bodyParser->parseExtensionValuesWith(&extensionParser);
         makeAdaptedBodyPipe("adapted response from the ICAP server");
         Must(state.sending == State::sendingAdapted);
     } else {
@@ -1182,8 +1186,8 @@ void Adaptation::Icap::ModXact::parseBody()
     }
 
     if (parsed) {
-        if (state.readyForUob && bodyParser->useOriginBody >= 0)
-            prepPartialBodyEchoing(static_cast<uint64_t>(bodyParser->useOriginBody));
+        if (state.readyForUob && extensionParser.sawUseOriginalBody())
+            prepPartialBodyEchoing(extensionParser.useOriginalBody());
         else
             stopSending(true); // the parser succeeds only if all parsed data fits
         if (trailerParser)
@@ -1334,11 +1338,8 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
     al.adapted_request = adapted_request_;
     HTTPMSGLOCK(al.adapted_request);
 
-    if (adapted_reply_) {
-        al.reply = adapted_reply_;
-        HTTPMSGLOCK(al.reply);
-    } else
-        al.reply = NULL;
+    // XXX: This reply (and other ALE members!) may have been needed earlier.
+    al.reply = adapted_reply_;
 
     if (h->rfc931.size())
         al.cache.rfc931 = h->rfc931.termedBuf();
@@ -1373,12 +1374,6 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         if (replyHttpBodySize >= 0)
             al.cache.highOffset = replyHttpBodySize;
         //don't set al.cache.objectSize because it hasn't exist yet
-
-        MemBuf mb;
-        mb.init();
-        adapted_reply_->header.packInto(&mb);
-        al.headers.reply = xstrdup(mb.buf);
-        mb.clean();
     }
     prepareLogWithRequestDetails(adapted_request_, alep);
     Xaction::finalizeLogInfo();
@@ -1538,11 +1533,8 @@ void Adaptation::Icap::ModXact::makeAllowHeader(MemBuf &buf)
     const bool allow204 = allow204in || allow204out;
     const bool allow206 = allow206in || allow206out;
 
-    if (!allow204 && !allow206 && !allowTrailers)
-        return; // nothing to do
-
-    if (virginBody.expected()) // if there is a virgin body, plan to send it
-        virginBodySending.plan();
+    if ((allow204 || allow206) && virginBody.expected())
+        virginBodySending.plan(); // if there is a virgin body, plan to send it
 
     // writing Preview:...   means we will honor 204 inside preview
     // writing Allow/204     means we will honor 204 outside preview
@@ -1810,8 +1802,8 @@ void Adaptation::Icap::ModXact::fillDoneStatus(MemBuf &buf) const
 
 bool Adaptation::Icap::ModXact::gotEncapsulated(const char *section) const
 {
-    return icapReply->header.getByNameListMember("Encapsulated",
-            section, ',').size() > 0;
+    return !icapReply->header.getByNameListMember("Encapsulated",
+            section, ',').isEmpty();
 }
 
 // calculate whether there is a virgin HTTP body and
@@ -2072,5 +2064,16 @@ bool Adaptation::Icap::TrailerParser::parse(const char *buf, int len, int atEnd,
     if (parsed < 0)
         *error = Http::scInvalidHeader; // TODO: should we add a new Http::scInvalidTrailer?
     return parsed > 0;
+}
+
+void
+Adaptation::Icap::ChunkExtensionValueParser::parse(Tokenizer &tok, const SBuf &extName)
+{
+    if (extName == UseOriginalBodyName) {
+        useOriginalBody_ = tok.udec64("use-original-body");
+        assert(useOriginalBody_ >= 0);
+    } else {
+        Ignore(tok, extName);
+    }
 }
 

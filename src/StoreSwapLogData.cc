@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -47,11 +47,6 @@ std::ostream &
 SwapChecksum24::print(std::ostream &os) const
 {
     return os << raw[0] << '-' << raw[1] << '-' << raw[2];
-}
-
-StoreSwapLogData::StoreSwapLogData()
-{
-    memset(this, 0, sizeof(*this));
 }
 
 bool

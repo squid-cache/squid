@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -24,12 +24,16 @@ libbase_la_SOURCES = \
 	CbDataList.h \
 	CharacterSet.cc \
 	CharacterSet.h \
+	CodeContext.cc \
+	CodeContext.h \
 	EnumIterator.h \
 	File.cc \
 	File.h \
+	forward.h \
 	HardFun.h \
 	Here.cc \
 	Here.h \
+	InstanceId.cc \
 	InstanceId.h \
 	Lock.h \
 	LookupTable.h \
@@ -37,6 +41,7 @@ libbase_la_SOURCES = \
 	Packable.h \
 	PackableStream.h \
 	Range.h \
+	RefCount.h \
 	RegexPattern.cc \
 	RegexPattern.h \
 	RunnersRegistry.cc \

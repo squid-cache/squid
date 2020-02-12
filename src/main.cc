@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1151,7 +1151,9 @@ mainInitialize(void)
 
     _db_init(Debug::cache_log, Debug::debugOptions);
 
-    fd_open(fileno(debug_log), FD_LOG, Debug::cache_log);
+    // Do not register cache.log descriptor with Comm (for now).
+    // See https://bugs.squid-cache.org/show_bug.cgi?id=4796
+    // fd_open(fileno(debug_log), FD_LOG, Debug::cache_log);
 
     debugs(1, DBG_CRITICAL, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
     debugs(1, DBG_CRITICAL, "Service Name: " << service_name);
@@ -1860,13 +1862,13 @@ GoIntoBackground()
     pid_t pid;
     if ((pid = fork()) < 0) {
         int xerrno = errno;
-        syslog(LOG_ALERT, "fork failed: %s", xstrerr(xerrno));
-        // continue anyway, mimicking --foreground mode (XXX?)
+        throw TexcHere(ToSBuf("failed to fork(2) the master process: ", xstrerr(xerrno)));
     } else if (pid > 0) {
         // parent
         exit(EXIT_SUCCESS);
     }
-    // child, running as a background daemon (or a failed-to-fork parent)
+    // child, running as a background daemon
+    Must(setsid() > 0); // ought to succeed after fork()
 }
 
 static void
@@ -1911,14 +1913,6 @@ watch_child(const CommandLine &masterCommand)
 
     if (!opt_foreground)
         GoIntoBackground();
-
-    // TODO: Fails with --foreground if the calling process is process group
-    //       leader, which is always (?) the case. Should probably moved to
-    //       GoIntoBackground and executed only after successfully forking
-    if (setsid() < 0) {
-        int xerrno = errno;
-        syslog(LOG_ALERT, "setsid failed: %s", xstrerr(xerrno));
-    }
 
     closelog();
 

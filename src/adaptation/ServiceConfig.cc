@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -244,7 +244,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
         len = e - s;
     }
 
-    host.limitInit(s, len);
+    host.assign(s, len);
 #if USE_OPENSSL
     if (secure.sslDomain.isEmpty())
         secure.sslDomain.assign(host.rawBuf(), host.size());
@@ -285,7 +285,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
                "long resource name (>1024), probably wrong");
     }
 
-    resource.limitInit(s, len + 1);
+    resource.assign(s, len + 1);
     return true;
 }
 

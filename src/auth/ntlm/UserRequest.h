@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 
 #include "auth/UserRequest.h"
 #include "helper/forward.h"
+#include "helper/ReservationId.h"
 
 class ConnStateData;
 class HttpReply;
@@ -38,8 +39,6 @@ public:
 
     virtual const char * connLastHeader();
 
-    /* we need to store the helper server between requests */
-    helper_stateful_server *authserver;
     virtual void releaseAuthServer(); ///< Release authserver NTLM helpers properly when finished or abandoning.
 
     /* our current blob to pass to the client */
@@ -54,6 +53,9 @@ public:
     /* need access to the request flags to mess around on pconn failure */
     HttpRequest *request;
 
+    /// a helper-issued reservation locking the helper state between
+    /// HTTP requests
+    Helper::ReservationId reservationId;
 private:
     static HLPCB HandleReply;
 };

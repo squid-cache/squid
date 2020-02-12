@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -161,7 +161,6 @@ static bool setLogformat(CustomLog *cl, const char *name, const bool dieWhenMiss
 static void configDoConfigure(void);
 static void parse_refreshpattern(RefreshPattern **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
-static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec, bool expectMoreArguments);
 static void parse_u_short(unsigned short * var);
 static void parse_string(char **);
 static void default_all(void);
@@ -243,7 +242,7 @@ static void free_configuration_includes_quoted_values(bool *recognizeQuotedValue
 static void parse_on_unsupported_protocol(acl_access **access);
 static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
 static void free_on_unsupported_protocol(acl_access **access);
-static void ParseAclWithAction(acl_access **access, const allow_t &action, const char *desc, ACL *acl = nullptr);
+static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, ACL *acl = nullptr);
 
 /*
  * LegacyParser is a parser for legacy code that uses the global
@@ -1044,19 +1043,19 @@ parse_obsolete(const char *name)
 
 /* Parse a time specification from the config file.  Store the
  * result in 'tptr', after converting it to 'units' */
-static void
-parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec,  bool expectMoreArguments = false)
+static time_msec_t
+parseTimeLine(const char *units,  bool allowMsec,  bool expectMoreArguments = false)
 {
     time_msec_t u = parseTimeUnits(units, allowMsec);
     if (u == 0) {
         self_destruct();
-        return;
+        return 0;
     }
 
-    char *token = ConfigParser::NextToken();;
+    char *token = ConfigParser::NextToken();
     if (!token) {
         self_destruct();
-        return;
+        return 0;
     }
 
     double d = xatof(token);
@@ -1069,7 +1068,7 @@ parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec,  bool expe
 
         } else if (!expectMoreArguments) {
             self_destruct();
-            return;
+            return 0;
 
         } else {
             token = NULL; // show default units if dying below
@@ -1078,13 +1077,14 @@ parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec,  bool expe
     } else
         token = NULL; // show default units if dying below.
 
-    *tptr = static_cast<time_msec_t>(m * d);
+    const auto result = static_cast<time_msec_t>(m * d);
 
-    if (static_cast<double>(*tptr) * 2 != m * d * 2) {
+    if (static_cast<double>(result) * 2 != m * d * 2) {
         debugs(3, DBG_CRITICAL, "FATAL: Invalid value '" <<
                d << " " << (token ? token : units) << ": integer overflow (time_msec_t).");
         self_destruct();
     }
+    return result;
 }
 
 static uint64_t
@@ -1289,7 +1289,7 @@ parseBytesOptionValue(size_t * bptr, const char *units, char const * value)
     }
 
     String number;
-    number.limitInit(number_begin, number_end - number_begin);
+    number.assign(number_begin, number_end - number_begin);
 
     int d = xatoi(number.termedBuf());
     int m;
@@ -1884,7 +1884,7 @@ parse_AuthSchemes(acl_access **authSchemes)
         return;
     }
     Auth::TheConfig.schemeLists.emplace_back(tok, ConfigParser::LastTokenWasQuoted());
-    const allow_t action = allow_t(ACCESS_ALLOWED, Auth::TheConfig.schemeLists.size() - 1);
+    const auto action = Acl::Answer(ACCESS_ALLOWED, Auth::TheConfig.schemeLists.size() - 1);
     ParseAclWithAction(authSchemes, action, "auth_schemes");
 }
 
@@ -1899,7 +1899,7 @@ static void
 dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 {
     if (authSchemes)
-        dump_SBufList(entry, authSchemes->treeDump(name, [](const allow_t &action) {
+        dump_SBufList(entry, authSchemes->treeDump(name, [](const Acl::Answer &action) {
         return Auth::TheConfig.schemeLists.at(action.kind).rawSchemes;
     }));
 }
@@ -1907,7 +1907,7 @@ dump_AuthSchemes(StoreEntry *entry, const char *name, acl_access *authSchemes)
 #endif /* USE_AUTH */
 
 static void
-ParseAclWithAction(acl_access **access, const allow_t &action, const char *desc, ACL *acl)
+ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, ACL *acl)
 {
     assert(access);
     SBuf name;
@@ -2139,6 +2139,7 @@ parse_peer(CachePeer ** head)
 
     CachePeer *p = new CachePeer;
     p->host = xstrdup(host_str);
+    Tolower(p->host);
     p->name = xstrdup(host_str);
     p->type = parseNeighborType(token);
 
@@ -2359,6 +2360,9 @@ parse_peer(CachePeer ** head)
     if (!p->options.no_digest)
         peerDigestCreate(p);
 #endif
+
+    if (p->secure.encryptTransport)
+        p->secure.parseOptions();
 
     p->index =  ++Config.npeers;
 
@@ -2976,8 +2980,7 @@ dump_time_t(StoreEntry * entry, const char *name, time_t var)
 void
 parse_time_t(time_t * var)
 {
-    time_msec_t tval;
-    parseTimeLine(&tval, T_SECOND_STR, false);
+    time_msec_t tval = parseTimeLine(T_SECOND_STR, false);
     *var = static_cast<time_t>(tval/1000);
 }
 
@@ -2999,7 +3002,7 @@ dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 void
 parse_time_msec(time_msec_t * var)
 {
-    parseTimeLine(var, T_SECOND_STR, true);
+    *var = parseTimeLine(T_SECOND_STR, true);
 }
 
 static void
@@ -3831,6 +3834,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
             self_destruct();
             return;
         }
+        s->secure.parseOptions();
     }
 
     // *_port line should now be fully valid so we can clone it if necessary
@@ -4649,7 +4653,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
         sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
     }
 
-    allow_t action = allow_t(ACCESS_ALLOWED);
+    auto action = Acl::Answer(ACCESS_ALLOWED);
 
     if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpClientFirst]) == 0) {
         action.kind = Ssl::bumpClientFirst;
@@ -4712,7 +4716,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
 static void dump_sslproxy_ssl_bump(StoreEntry *entry, const char *name, acl_access *ssl_bump)
 {
     if (ssl_bump)
-        dump_SBufList(entry, ssl_bump->treeDump(name, [](const allow_t &action) {
+        dump_SBufList(entry, ssl_bump->treeDump(name, [](const Acl::Answer &action) {
         return Ssl::BumpModeStr.at(action.kind);
     }));
 }
@@ -4808,7 +4812,7 @@ static void free_note(Notes *notes)
 static bool FtpEspvDeprecated = false;
 static void parse_ftp_epsv(acl_access **ftp_epsv)
 {
-    allow_t ftpEpsvDeprecatedAction;
+    Acl::Answer ftpEpsvDeprecatedAction;
     bool ftpEpsvIsDeprecatedRule = false;
 
     char *t = ConfigParser::PeekAtToken();
@@ -4820,11 +4824,11 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
     if (!strcmp(t, "off")) {
         (void)ConfigParser::NextToken();
         ftpEpsvIsDeprecatedRule = true;
-        ftpEpsvDeprecatedAction = allow_t(ACCESS_DENIED);
+        ftpEpsvDeprecatedAction = Acl::Answer(ACCESS_DENIED);
     } else if (!strcmp(t, "on")) {
         (void)ConfigParser::NextToken();
         ftpEpsvIsDeprecatedRule = true;
-        ftpEpsvDeprecatedAction = allow_t(ACCESS_ALLOWED);
+        ftpEpsvDeprecatedAction = Acl::Answer(ACCESS_ALLOWED);
     }
 
     // Check for mixing "ftp_epsv on|off" and "ftp_epsv allow|deny .." rules:
@@ -4843,7 +4847,7 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
         delete *ftp_epsv;
         *ftp_epsv = nullptr;
 
-        if (ftpEpsvDeprecatedAction == allow_t(ACCESS_DENIED)) {
+        if (ftpEpsvDeprecatedAction == Acl::Answer(ACCESS_DENIED)) {
             if (ACL *a = ACL::FindByName("all"))
                 ParseAclWithAction(ftp_epsv, ftpEpsvDeprecatedAction, "ftp_epsv", a);
             else {
@@ -4872,8 +4876,7 @@ static void free_ftp_epsv(acl_access **ftp_epsv)
 static void
 parse_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *config)
 {
-    time_msec_t tval;
-    parseTimeLine(&tval, T_SECOND_STR, false, true);
+    const auto tval = parseTimeLine(T_SECOND_STR, false, true);
     Config.Timeout.urlRewrite = static_cast<time_t>(tval/1000);
 
     char *key, *value;
@@ -4974,7 +4977,7 @@ parse_on_unsupported_protocol(acl_access **access)
         return;
     }
 
-    allow_t action = allow_t(ACCESS_ALLOWED);
+    auto action = Acl::Answer(ACCESS_ALLOWED);
     if (strcmp(tm, "tunnel") == 0)
         action.kind = 1;
     else if (strcmp(tm, "respond") == 0)
@@ -4998,7 +5001,7 @@ dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *ac
         "respond"
     };
     if (access) {
-        SBufList lines = access->treeDump(name, [](const allow_t &action) {
+        SBufList lines = access->treeDump(name, [](const Acl::Answer &action) {
             return onErrorTunnelMode.at(action.kind);
         });
         dump_SBufList(entry, lines);

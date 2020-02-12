@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -149,10 +149,10 @@ SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle,
     /* Now connect to the remote end, but first upper case the name of the
        service we are going to call, sine some servers want it in uppercase */
 
-    for (i=0; i < strlen(server); i++)
-        called[i] = xtoupper(server[i]);
+    for (i=0; i < strlen(con -> desthost); i++)
+        called[i] = xtoupper(con -> desthost[i]);
 
-    called[strlen(server)] = 0;    /* Make it a string */
+    called[strlen(con -> desthost)] = 0;    /* Make it a string */
 
     for (i=0; i < strlen(con -> myname); i++)
         calling[i] = xtoupper(con -> myname[i]);
@@ -265,10 +265,10 @@ SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
     /* Now connect to the remote end, but first upper case the name of the
        service we are going to call, sine some servers want it in uppercase */
 
-    for (i=0; i < strlen(host); i++)
-        called[i] = xtoupper(host[i]);
+    for (i=0; i < strlen(con -> desthost); i++)
+        called[i] = xtoupper(con -> desthost[i]);
 
-    called[strlen(host)] = 0;    /* Make it a string */
+    called[strlen(con -> desthost)] = 0;    /* Make it a string */
 
     for (i=0; i < strlen(con -> myname); i++)
         calling[i] = xtoupper(con -> myname[i]);

@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -164,16 +164,11 @@ dnl checks the maximum number of filedescriptor we can open
 dnl sets shell var squid_filedescriptors_num
 
 AC_DEFUN([SQUID_CHECK_MAXFD],[
-AC_CHECK_FUNCS(setrlimit)
+AC_CHECK_FUNCS(getrlimit setrlimit)
 AC_MSG_CHECKING(Maximum number of filedescriptors we can open)
-dnl damn! FreeBSD pthreads break dup2().
 SQUID_STATE_SAVE(maxfd)
-  case $host in
-  i386-unknown-freebsd*)
-      if echo "$LDFLAGS" | grep -q pthread; then
-  	LDFLAGS=`echo $LDFLAGS | sed -e "s/-pthread//"`
-      fi
-  esac
+dnl FreeBSD pthreads break dup2().
+  AS_CASE([$host_os],[freebsd],[ LDFLAGS=`echo $LDFLAGS | sed -e "s/-pthread//"` ])
   AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdio.h>
 #include <unistd.h>
@@ -191,7 +186,7 @@ int main(int argc, char **argv) {
      */
     i = NOFILE;
 #else
-#if HAVE_SETRLIMIT
+#if HAVE_GETRLIMIT && HAVE_SETRLIMIT
     struct rlimit rl;
 #if defined(RLIMIT_NOFILE)
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
@@ -236,19 +231,33 @@ int main(int argc, char **argv) {
 	fprintf (fp, "%d\n", i & ~0x3F);
 	return 0;
 }
-  ]])],[squid_filedescriptors_num=`cat conftestval`],[squid_filedescriptors_num=256],[squid_filedescriptors_num=256])
+  ]])],[squid_filedescriptors_limit=`cat conftestval`],[],[:])
   dnl Microsoft MSVCRT.DLL supports 2048 maximum FDs
-  case "$host_os" in
-  mingw|mingw32)
-    squid_filedescriptors_num="2048"
-    ;;
-  esac
-  AC_MSG_RESULT($squid_filedescriptors_num)
+  AS_CASE(["$host_os"],[mingw|mingw32],[squid_filedescriptors_limit="2048"])
+  AC_MSG_RESULT($squid_filedescriptors_limit)
+  AS_IF([ test "x$squid_filedescriptors_num" = "x" ],[
+    AS_IF([ test "x$squid_filedescriptors_limit" != "x" ],[
+      squid_filedescriptors_num=$squid_filedescriptors_limit
+    ],[
+      AC_MSG_NOTICE([Unable to detect filedescriptor limits. Assuming 256 is okay.])
+      squid_filedescriptors_num=256
+    ])
+  ])
 SQUID_STATE_ROLLBACK(maxfd)
 
-if test `expr $squid_filedescriptors_num % 64` != 0; then
-    AC_MSG_WARN([$squid_filedescriptors_num is not an multiple of 64. This may cause issues on certain platforms.])
-fi
+AC_MSG_NOTICE([Default number of filedescriptors: $squid_filedescriptors_num])
+
+AS_IF([ test `expr $squid_filedescriptors_num % 64` != 0 ],[
+  AC_MSG_WARN([$squid_filedescriptors_num is not an multiple of 64. This may cause issues on certain platforms.])
+])
+
+AS_IF([ test "$squid_filedescriptors_num" -lt 512 ],[
+  AC_MSG_WARN([$squid_filedescriptors_num may not be enough filedescriptors if your])
+  AC_MSG_WARN([cache will be very busy.  Please see the FAQ page])
+  AC_MSG_WARN([http://wiki.squid-cache.org/SquidFaq/TroubleShooting])
+  AC_MSG_WARN([on how to increase your filedescriptor limit])
+])
+AC_DEFINE_UNQUOTED(SQUID_MAXFD,$squid_filedescriptors_num,[Maximum number of open filedescriptors])
 ])
 
 

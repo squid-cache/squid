@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -122,7 +122,7 @@ int
 ACLMaxUserIP::match(ACLChecklist *cl)
 {
     ACLFilledChecklist *checklist = Filled(cl);
-    allow_t answer = AuthenticateAcl(checklist);
+    auto answer = AuthenticateAcl(checklist);
     int ti;
 
     // convert to tri-state ACL match 1,0,-1

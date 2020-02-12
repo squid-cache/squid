@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,6 +35,11 @@ storeSwapInStart(store_client * sc)
 
     if (!e->hasDisk()) {
         debugs(20, DBG_IMPORTANT, "BUG: Attempt to swap in a not-stored entry " << *e << ". Salvaged.");
+        return;
+    }
+
+    if (e->swapoutFailed()) {
+        debugs(20, DBG_IMPORTANT, "BUG: Attempt to swap in a failed-to-store entry " << *e << ". Salvaged.");
         return;
     }
 

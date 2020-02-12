@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 76    Internal Squid Object handling */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
@@ -28,7 +29,7 @@
  * return Http::scNotFound for others
  */
 void
-internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, StoreEntry * entry)
+internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, StoreEntry * entry, const AccessLogEntry::Pointer &ale)
 {
     ErrorState *err;
     const SBuf upath = request->url.path();
@@ -55,11 +56,11 @@ internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, 
         entry->complete();
     } else if (upath.startsWith(mgrPfx)) {
         debugs(17, 2, "calling CacheManager due to URL-path " << mgrPfx);
-        CacheManager::GetInstance()->Start(clientConn, request, entry);
+        CacheManager::GetInstance()->start(clientConn, request, entry, ale);
     } else {
         debugObj(76, 1, "internalStart: unknown request:\n",
                  request, (ObjPackMethod) & httpRequestPack);
-        err = new ErrorState(ERR_INVALID_REQ, Http::scNotFound, request);
+        err = new ErrorState(ERR_INVALID_REQ, Http::scNotFound, request, ale);
         errorAppendEntry(entry, err);
     }
 }
@@ -98,13 +99,9 @@ internalRemoteUri(bool encrypt, const char *host, unsigned short port, const cha
 
     /*
      * append the domain in order to mirror the requests with appended
-     * domains
+     * domains. If that fails, just use the hostname anyway.
      */
-
-    /* For IPv6 addresses also check for a colon */
-    if (Config.appendDomain && !strchr(lc_host, '.') && !strchr(lc_host, ':'))
-        strncat(lc_host, Config.appendDomain, SQUIDHOSTNAMELEN -
-                strlen(lc_host) - 1);
+    (void)urlAppendDomain(lc_host);
 
     /* build URI */
     AnyP::Uri tmp(AnyP::PROTO_HTTP);

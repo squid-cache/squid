@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -198,7 +198,7 @@ PeerSelectionInitiator::startSelectingDestinations(HttpRequest *request, const A
 }
 
 void
-PeerSelector::checkNeverDirectDone(const allow_t answer)
+PeerSelector::checkNeverDirectDone(const Acl::Answer answer)
 {
     acl_checklist = nullptr;
     debugs(44, 3, answer);
@@ -220,13 +220,13 @@ PeerSelector::checkNeverDirectDone(const allow_t answer)
 }
 
 void
-PeerSelector::CheckNeverDirectDone(allow_t answer, void *data)
+PeerSelector::CheckNeverDirectDone(Acl::Answer answer, void *data)
 {
     static_cast<PeerSelector*>(data)->checkNeverDirectDone(answer);
 }
 
 void
-PeerSelector::checkAlwaysDirectDone(const allow_t answer)
+PeerSelector::checkAlwaysDirectDone(const Acl::Answer answer)
 {
     acl_checklist = nullptr;
     debugs(44, 3, answer);
@@ -248,7 +248,7 @@ PeerSelector::checkAlwaysDirectDone(const allow_t answer)
 }
 
 void
-PeerSelector::CheckAlwaysDirectDone(allow_t answer, void *data)
+PeerSelector::CheckAlwaysDirectDone(Acl::Answer answer, void *data)
 {
     static_cast<PeerSelector*>(data)->checkAlwaysDirectDone(answer);
 }
@@ -295,6 +295,17 @@ PeerSelector::resolveSelected()
         }
 
         // clear the used fs and continue
+        servers = fs->next;
+        delete fs;
+        resolveSelected();
+        return;
+    }
+
+    if (fs && fs->code == PINNED) {
+        // Nil path signals a PINNED destination selection. Our initiator should
+        // borrow and use clientConnectionManager's pinned connection object
+        // (regardless of that connection destination).
+        handlePath(nullptr, *fs);
         servers = fs->next;
         delete fs;
         resolveSelected();
@@ -395,7 +406,7 @@ PeerSelector::noteIps(const Dns::CachedIps *ia, const Dns::LookupDetails &detail
         delete lastError;
         lastError = NULL;
         if (fs->code == HIER_DIRECT) {
-            lastError = new ErrorState(ERR_DNS_FAIL, Http::scServiceUnavailable, request);
+            lastError = new ErrorState(ERR_DNS_FAIL, Http::scServiceUnavailable, request, al);
             lastError->dnsError = details.error;
         }
     }
@@ -552,17 +563,16 @@ PeerSelector::selectPinned()
     // TODO: Avoid all repeated calls. Relying on PING_DONE is not enough.
     if (!request->pinnedConnection())
         return;
-    CachePeer *pear = request->pinnedConnection()->pinnedPeer();
-    if (Comm::IsConnOpen(request->pinnedConnection()->validatePinnedConnection(request, pear))) {
-        const bool usePinned = pear ? peerAllowedToUse(pear, this) : (direct != DIRECT_NO);
-        if (usePinned) {
-            addSelection(pear, PINNED);
-            if (entry)
-                entry->ping_status = PING_DONE; // skip ICP
-        }
-    }
-    // If the pinned connection is prohibited (for this request) or gone, then
+
+    const auto peer = request->pinnedConnection()->pinnedPeer();
+    const auto usePinned = peer ? peerAllowedToUse(peer, this) : (direct != DIRECT_NO);
+    // If the pinned connection is prohibited (for this request) then
     // the initiator must decide whether it is OK to open a new one instead.
+    request->pinnedConnection()->pinning.peerAccessDenied = !usePinned;
+
+    addSelection(peer, PINNED);
+    if (entry)
+        entry->ping_status = PING_DONE; // skip ICP
 }
 
 /**
@@ -1003,19 +1013,22 @@ PeerSelector::wantsMoreDestinations() const {
 }
 
 void
-PeerSelector::handlePath(Comm::ConnectionPointer &path, FwdServer &fs)
+PeerSelector::handlePath(const Comm::ConnectionPointer &path, FwdServer &fs)
 {
     ++foundPaths;
 
-    path->peerType = fs.code;
-    path->setPeer(fs._peer.get());
+    if (path) {
+        path->peerType = fs.code;
+        path->setPeer(fs._peer.get());
 
-    // check for a configured outgoing address for this destination...
-    getOutgoingAddress(request, path);
+        // check for a configured outgoing address for this destination...
+        getOutgoingAddress(request, path);
+        debugs(44, 2, id << " found " << path << ", destination #" << foundPaths << " for " << url());
+    } else
+        debugs(44, 2, id << " found pinned, destination #" << foundPaths << " for " << url());
 
     request->hier.ping = ping; // may be updated later
 
-    debugs(44, 2, id << " found " << path << ", destination #" << foundPaths << " for " << url());
     debugs(44, 2, "  always_direct = " << always_direct);
     debugs(44, 2, "   never_direct = " << never_direct);
     debugs(44, 2, "       timedout = " << ping.timedout);

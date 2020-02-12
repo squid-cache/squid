@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -90,7 +90,7 @@ html_quote(const char *string)
         }
         if (escape) {
             /* Ok, An escaped form was found above. Use it */
-            strncpy(dst, escape, 6);
+            strncpy(dst, escape, 7);
             dst += strlen(escape);
         } else {
             /* Apparently there is no need to escape this character */

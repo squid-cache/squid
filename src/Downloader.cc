@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -129,7 +129,7 @@ Downloader::buildRequest()
     const HttpRequestMethod method = Http::METHOD_GET;
 
     const MasterXaction::Pointer mx = new MasterXaction(initiator_);
-    HttpRequest *const request = HttpRequest::FromUrl(url_.c_str(), mx, method);
+    auto * const request = HttpRequest::FromUrl(url_, mx, method);
     if (!request) {
         debugs(33, 5, "Invalid URI: " << url_);
         return false; //earlyError(...)

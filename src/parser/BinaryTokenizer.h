@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_PARSER_BINARYTOKENIZER_H
 #define SQUID_SRC_PARSER_BINARYTOKENIZER_H
 
+#include "ip/forward.h"
+#include "parser/forward.h"
 #include "sbuf/SBuf.h"
 
 namespace Parser
@@ -44,7 +46,7 @@ public:
 class BinaryTokenizer
 {
 public:
-    class InsufficientInput {}; // thrown when a method runs out of data
+    typedef ::Parser::InsufficientInput InsufficientInput;
     typedef uint64_t size_type; // enough for the largest supported offset
 
     BinaryTokenizer();
@@ -82,6 +84,12 @@ public:
     /// parse size consecutive bytes as an opaque blob
     SBuf area(uint64_t size, const char *description);
 
+    /// interpret the next 4 bytes as a raw in_addr structure
+    Ip::Address inet4(const char *description);
+
+    /// interpret the next 16 bytes as a raw in6_addr structure
+    Ip::Address inet6(const char *description);
+
     /*
      * Variable-length arrays (a.k.a. Pascal or prefix strings).
      * pstringN() extracts and returns N-bit length followed by length bytes
@@ -109,9 +117,13 @@ protected:
     void want(uint64_t size, const char *description) const;
     void got(uint32_t value, uint64_t size, const char *description) const;
     void got(const SBuf &value, uint64_t size, const char *description) const;
+    void got(const Ip::Address &value, uint64_t size, const char *description) const;
     void skipped(uint64_t size, const char *description) const;
 
 private:
+    template <class InAddr>
+    Ip::Address inetAny(const char *description);
+
     SBuf data_;
     uint64_t parsed_; ///< number of data bytes parsed or skipped
     uint64_t syncPoint_; ///< where to re-start the next parsing attempt

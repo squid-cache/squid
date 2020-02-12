@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -352,6 +352,16 @@ NotePairs::appendNewOnly(const NotePairs *src)
         if (!hasPair(e->name(), e->value()))
             entries.push_back(new NotePairs::Entry(e->name(), e->value()));
     }
+}
+
+void
+NotePairs::replaceOrAddOrAppend(const NotePairs *src, const NotePairs::Names &appendables)
+{
+    for (const auto e: src->entries) {
+        if (std::find(appendables.begin(), appendables.end(), e->name()) == appendables.end())
+            remove(e->name());
+    }
+    append(src);
 }
 
 void

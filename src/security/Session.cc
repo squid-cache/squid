@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -106,7 +106,7 @@ Security::NewSessionObject(const Security::ContextPointer &ctx)
 #endif
 
 static bool
-CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &conn, Security::Io::Type type, const char *squidCtx)
+CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &conn, Security::PeerOptions &opts, Security::Io::Type type, const char *squidCtx)
 {
     if (!Comm::IsConnOpen(conn)) {
         debugs(83, DBG_IMPORTANT, "Gone connection");
@@ -122,6 +122,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     if (!session) {
         errCode = ERR_get_error();
         errAction = "failed to allocate handle";
+        debugs(83, DBG_IMPORTANT, "TLS error: " << errAction << ": " << Security::ErrorString(errCode));
     }
 #elif USE_GNUTLS
     gnutls_session_t tmp;
@@ -134,6 +135,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     if (errCode != GNUTLS_E_SUCCESS) {
         session.reset();
         errAction = "failed to initialize session";
+        debugs(83, DBG_IMPORTANT, "TLS error: " << errAction << ": " << Security::ErrorString(errCode));
     }
 #endif
 
@@ -148,10 +150,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         errCode = gnutls_credentials_set(session.get(), GNUTLS_CRD_CERTIFICATE, ctx.get());
         if (errCode == GNUTLS_E_SUCCESS) {
 
-            if (auto *peer = conn->getPeer())
-                peer->secure.updateSessionOptions(session);
-            else
-                Security::ProxyOutgoingConfig.updateSessionOptions(session);
+            opts.updateSessionOptions(session);
 
             // NP: GnuTLS does not yet support the BIO operations
             //     this does the equivalent of SSL_set_fd() for now.
@@ -160,9 +159,9 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 #endif
 
             debugs(83, 5, "link FD " << fd << " to TLS session=" << (void*)session.get());
+
             fd_table[fd].ssl = session;
-            fd_table[fd].read_method = &tls_read_method;
-            fd_table[fd].write_method = &tls_write_method;
+            fd_table[fd].useBufferedIo(&tls_read_method, &tls_write_method);
             fd_note(fd, squidCtx);
             return true;
         }
@@ -184,13 +183,17 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 bool
 Security::CreateClientSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
 {
-    return CreateSession(ctx, c, Security::Io::BIO_TO_SERVER, squidCtx);
+    if (!c || !c->getPeer())
+        return CreateSession(ctx, c, Security::ProxyOutgoingConfig, Security::Io::BIO_TO_SERVER, squidCtx);
+
+    auto *peer = c->getPeer();
+    return CreateSession(ctx, c, peer->secure, Security::Io::BIO_TO_SERVER, squidCtx);
 }
 
 bool
-Security::CreateServerSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, const char *squidCtx)
+Security::CreateServerSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer &c, Security::PeerOptions &o, const char *squidCtx)
 {
-    return CreateSession(ctx, c, Security::Io::BIO_TO_CLIENT, squidCtx);
+    return CreateSession(ctx, c, o, Security::Io::BIO_TO_CLIENT, squidCtx);
 }
 
 void

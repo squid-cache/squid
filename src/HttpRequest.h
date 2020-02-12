@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -34,10 +34,11 @@
 #include "eui/Eui64.h"
 #endif
 
-class ConnStateData;
-class Downloader;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
+class CachePeer;
+class ConnStateData;
+class Downloader;
 
 /*  Http Request */
 void httpRequestPack(void *obj, Packable *p);
@@ -86,6 +87,13 @@ public:
     /// Returns possibly nil history, creating it if icap logging is enabled
     Adaptation::Icap::History::Pointer icapHistory() const;
 #endif
+
+    /* If a request goes through several destinations, then the following two
+     * methods will be called several times, in destinations-dependent order. */
+    /// get ready to be sent to the given cache_peer, including originserver
+    void prepForPeering(const CachePeer &peer);
+    /// get ready to be sent directly to an origin server, excluding originserver
+    void prepForDirect();
 
     void recordLookup(const Dns::LookupDetails &detail);
 
@@ -203,7 +211,10 @@ public:
 
     static void httpRequestPack(void *obj, Packable *p);
 
-    static HttpRequest * FromUrl(const char * url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
+    static HttpRequest * FromUrl(const SBuf &url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
+
+    /// \deprecated use SBuf variant instead
+    static HttpRequest * FromUrlXXX(const char * url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
 
     ConnStateData *pinnedConnection();
 

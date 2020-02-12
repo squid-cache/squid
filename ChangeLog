@@ -1,4 +1,143 @@
-Changes to squid-4.3 (28 Oct 2018):
+Changes in squid-5.0.1 (14 Jan 2020):
+
+	- Bug 4989: Leaking StoreEntry objects on Cache Digest rebuilds
+	- Bug 4912: same-name notes being appended instead of replaced
+	- Bug 4864: !Comm::MonitorsRead assertion in maybeReadVirginBody()
+	- Bug 4579: cannot hit an entry being written by another worker
+	- ICAP: Initial support for trailers
+	- Add auth_schemes to control schemes presence and order in 401s/407s
+	- Make CONNECT ACL a built-in default
+	- Remove USE_CHUNKEDMEMPOOLS compiler flag
+	- Two new ACLs implemented: annotate_transaction and annotate_client
+	- Add response delay pools feature for Squid-to-client speed limiting
+	- QA: allow test-suite to be run without a full build
+	- Happy Eyeballs: Use each fully resolved forwarding destination ASAP
+	- Support selective CF: collapsed_forwarding_access
+	- Reworked packet/connection marking
+	- Add new deny_info %A macro
+	- Identify collapsed transactions
+	- Add sample Kerberos group authentication external_acl helper
+	- Optimization: Fewer memory (re)allocations for HTTP headers
+	- Add TrivialDB support
+	- Do not send Content-Length in 1xx or 204 responses
+	- negotiate_kerberos_auth: fix memory leaks
+	- ntlm_fake_auth: add ability to test delayed responses
+	- Add %ssl::<cert macro for logging server X.509 certificate
+	- Reuse reserved Negotiate and NTLM helpers after an idle timeout
+	- Log PROXY protocol v2 TLVs
+	- Support logformat %codes in error page templates
+	- Fix incremental parsing of chunked quoted extensions
+	- Peering support for SslBump
+	- RFC 8586: Loop Detection in Content Delivery Networks
+	- Prevent TLS transaction stalls by preserving flags.read_pending
+	- Fix "BUG: Lost previously bumped from-Squid connection"
+	- Add %master_xaction logformat code
+	- Log "-" instead of the made-up method "NONE"
+	- Add GeneratingCONNECT step for the existing at_step ACL
+	- Report context of level-0/1 cache.log messages
+	- Re-enabled updates of stored headers on HTTP 304 responses
+	- Translations: Fix grammatical error in French error pages
+	- Smarter auth_param utf8 handling, including CP1251 support
+	- Fix rock disk entry contamination related to aborted swapouts
+	- Send HTTP/500 (Internal Server Error) when lacking peers
+	- Fix prohibitively slow search for new SMP shm pages
+	- Centralized PagePool/PageStack ID generation
+	- ... and many documentation changes
+	- ... and much code cleanup and polishing
+
+Changes to squid-4.10 (14 Jan 2020):
+
+	- Bug 5009: Build failure with older clang libc++
+	- Bug 5008: SIGBUS in PagePool::level() with custom rock slot size
+	- Bug 5007: Docs: Fix max_filedescriptors description
+	- Bug 4735: Truncated chunked responses cached as whole
+	- ext_lm_group_acl: Improved username handling
+	- Fix FTP buffers handling
+	- Fix shared memory size calculation on 64-bit systems
+	- Fix server_cert_fingerprint on cert validator-reported errors
+	- Fix request URL generation in reverse proxy configurations
+	- ... and several documentation updates
+	- ... and several compile fixes
+
+Changes to squid-4.9 (05 Nov 2019):
+
+	- Bug 4978: eCAP crash after using MyHost().newRequest()
+	- Bug 4970: excessive gnutls_certificate_credentials debug msgs
+	- Bug 4969: GCC-9 build failure: stringop-truncation
+	- Bug 4966: Lower cache_peer hostname
+	- Bug 4918: Crashes when using OpenSSL prior to v1.0.2
+	- TLS: Fix parsing of certificate validator responses
+	- TLS: Fix parsing of TLS messages that span multiple records
+	- TLS: Fix on_unsupported_protocol tunnel action
+	- TLS: Fix expiration of self-signed generated certs to be 3 years
+	- HTTP: Ignore malformed Host header in intercept and reverse proxy mode
+	- HTTP: RFC 7230: server MUST reject messages with BWS after field-name
+	- HTTP: Fix URN response handling
+	- HTTP: Hash Digest noncedata
+	- Update URI parser to use SBuf parsing APIs
+	- Prevent truncation for large origin-relative domains
+	- Fix several rock cache_dir corruption issues
+	- Debug detail validation errors for loaded-from-file certificate chains
+	- smblib: Improve SMB server name maintenance
+	- cachemgr.cgi: Add validation for hostname parameter
+	- ... and several compile issues
+	- ... and some documentation updates
+
+Changes to squid-4.8 (09 Jul 2019):
+
+	- Bug 4957: Multiple XSS issues in cachemgr.cgi
+	- Bug 4953: to_localhost does not include ::
+	- Bug 4937: cachemgr.cgi: unallocated memory access
+	- Bug 4936: terminating c-strings beyond BASE64_DECODE_LENGTH
+	- Bug 4889: Ignore ECONNABORTED in accept(2)
+	- Bug 4842: Memory leak when http_reply_access uses external_acl
+	- TLS: Fix tls-min-version= being ignored
+	- TLS: Add the NO_TLSv1_3 option to available tls-options values
+	- HTTP: RFC 7230 forbids generation of userinfo subcomponent of https URL
+	- HTTP: Remove userinfo support from old protocols
+	- HTTP: Fix Digest auth parameter parsing
+	- HTTP: Send Connection:close with the known-last request on a connection
+	- HTTP: Fix handling of tiny invalid responses
+	- Replace uudecode with libnettle base64 decoder
+	- Update HttpHeader::getAuth to SBuf
+	- ... and some compile issues
+
+Changes to squid-4.7 (06 May 2019):
+
+	- Bug 4942: --with-filedescriptors does not do anything
+	- Bug 4928: Cannot convert non-IPv4 to IPv4
+	- Bug 4823: assertion failed: "lowestOffset () <= target_offset"
+	- Bug 4796: comm.cc !isOpen(conn->fd) assertion when rotating logs
+	- Fix squidclient authentication to origin servers
+	- Fix stack-based buffer-overflow when parsing SNMP messages
+	- Add support for buffer-size= to UDP logging
+	- TLS: When using OpenSSL, trust intermediate CAs from trusted store
+
+Changes to squid-4.6 (19 Feb 2019):
+
+	- Bug 4915: Detect IPv6 loopback binding errors
+	- Bug 4914: Do not call setsid() in --foreground mode
+	- Bug 4875 pt2: GCC-8 compile errors with -O3 optimization
+	- Bug 4856: Exit when GoIntoBackground() fork() call fails
+	- basic_ldap_auth: Return BH on internal errors; polished messages
+	- Fix BodyPipe/Sink memory leaks associated with auto-consumption
+	- Fix OpenSSL builds that define OPENSSL_NO_ENGINE
+	- Fix several cases of rock cache corruption
+	- Add Georgian (ka) language translation
+
+Changes to squid-4.5 (01 Jan 2019):
+
+	- Bug 4253: ssl_bump prevents access to some web contents
+	- TLS: add %>handshake logformat code
+	- Redesign forward_max_tries to count TCP connection attempts
+	- Fix client_connection_mark ACL handling of clientless transactions
+	- Fix netdb exchange with a TLS cache_peer
+	- Update netdb when tunneling requests
+	- Use pkg-config for detecting libxml2
+	- ... and some documentation updates
+	- ... and some code compile fixes
+
+Changes to squid-4.4 (28 Oct 2018):
 
 	- Bug 4893: Malformed %>ru URIs for CONNECT requests
 	- Fix %USER_CA_CERT_xx and %USER_CERT_xx crashes

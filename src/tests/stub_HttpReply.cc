@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@ bool HttpReply::parseFirstLine(const char *start, const char *end) STUB_RETVAL(f
 void HttpReply::hdrCacheInit() STUB
 HttpReply * HttpReply::clone() const STUB_RETVAL(NULL)
 bool HttpReply::inheritProperties(const Http::Message *aMsg) STUB_RETVAL(false)
-bool HttpReply::updateOnNotModified(HttpReply const*) STUB_RETVAL(false)
+HttpReply::Pointer HttpReply::recreateOnNotModified(const HttpReply &) const STUB_RETVAL(nullptr)
 int64_t HttpReply::bodySize(const HttpRequestMethod&) const STUB_RETVAL(0)
 const HttpHdrContRange *HttpReply::contentRange() const STUB_RETVAL(nullptr)
 void HttpReply::configureContentLengthInterpreter(Http::ContentLengthInterpreter &) STUB

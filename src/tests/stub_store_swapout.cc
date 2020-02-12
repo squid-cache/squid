@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,6 @@
 void storeUnlink(StoreEntry * e) STUB
 
 char *storeSwapMetaPack(tlv * tlv_list, int *length) STUB_RETVAL(NULL)
-tlv *storeSwapMetaBuild(StoreEntry * e) STUB_RETVAL(NULL)
+tlv *storeSwapMetaBuild(const StoreEntry *) STUB_RETVAL(nullptr)
 void storeSwapTLVFree(tlv * n) STUB
 

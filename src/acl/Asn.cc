@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,6 @@
 #include "Store.h"
 #include "StoreClient.h"
 
-#define WHOIS_PORT 43
 #ifndef AS_REQBUF_SZ
 #define AS_REQBUF_SZ    4096
 #endif
@@ -229,6 +228,7 @@ asnCacheStart(int as)
 {
     AnyP::Uri whoisUrl(AnyP::PROTO_WHOIS);
     whoisUrl.host(Config.as_whois_server);
+    whoisUrl.defaultPort();
 
     SBuf asPath("/!gAS");
     asPath.appendf("%d", as);
@@ -290,7 +290,7 @@ asHandleReply(void *data, StoreIOBuffer result)
         debugs(53, DBG_IMPORTANT, "asHandleReply: Called with Error set and size=" << (unsigned int) result.length);
         delete asState;
         return;
-    } else if (e->getReply()->sline.status() != Http::scOkay) {
+    } else if (e->mem().baseReply().sline.status() != Http::scOkay) {
         debugs(53, DBG_IMPORTANT, "WARNING: AS " << asState->as_number << " whois request failed");
         delete asState;
         return;

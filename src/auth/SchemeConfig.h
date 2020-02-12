@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -75,7 +75,7 @@ public:
      \param proxy_auth  Login Pattern to parse.
      \retval *      Details needed to authenticate.
      */
-    virtual UserRequest::Pointer decode(char const *proxy_auth, const char *requestRealm) = 0;
+    virtual UserRequest::Pointer decode(char const *proxy_auth, const HttpRequest *request, const char *requestRealm) = 0;
 
     /**
      * squid is finished with this config, release any unneeded resources.
@@ -133,6 +133,15 @@ public:
     int utf8 = 0; ///< wheter to accept UTF-8 characterset instead of ASCII. default: off
 
 protected:
+    /**
+     * Parse Accept-Language header and return whether a CP1251 encoding
+     * allowed or not.
+     *
+     * CP1251 (aka Windows-1251) is an 8-bit character encoding, designed
+     * to cover languages that use the Cyrillic script.
+     */
+    bool isCP1251EncodingAllowed(const HttpRequest *request);
+
     /// RFC 7235 section 2.2 - Protection Space (Realm)
     SBuf realm;
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -176,22 +176,45 @@ Rock::HeaderUpdater::startWriting()
     IoState &rockWriter = dynamic_cast<IoState&>(*writer);
     rockWriter.staleSplicingPointNext = staleSplicingPointNext;
 
+    // here, prefix is swap header plus HTTP reply header (i.e., updated bytes)
+    uint64_t stalePrefixSz = 0;
+    uint64_t freshPrefixSz = 0;
+
     off_t offset = 0; // current writing offset (for debugging)
+
+    const auto &mem = update.entry->mem();
 
     {
         debugs(20, 7, "fresh store meta for " << *update.entry);
-        const char *freshSwapHeader = update.entry->getSerialisedMetaData();
-        const auto freshSwapHeaderSize = update.entry->mem_obj->swap_hdr_sz;
+        size_t freshSwapHeaderSize = 0; // set by getSerialisedMetaData() below
+
+        // There is a circular dependency between the correct/fresh value of
+        // entry->swap_file_sz and freshSwapHeaderSize. We break that loop by
+        // serializing zero swap_file_sz, just like the regular first-time
+        // swapout code may do. De-serializing code will re-calculate it in
+        // storeRebuildParseEntry(). TODO: Stop serializing entry->swap_file_sz.
+        const auto savedEntrySwapFileSize = update.entry->swap_file_sz;
+        update.entry->swap_file_sz = 0;
+        const auto freshSwapHeader = update.entry->getSerialisedMetaData(freshSwapHeaderSize);
+        update.entry->swap_file_sz = savedEntrySwapFileSize;
+
         Must(freshSwapHeader);
         writer->write(freshSwapHeader, freshSwapHeaderSize, 0, nullptr);
+        stalePrefixSz += mem.swap_hdr_sz;
+        freshPrefixSz += freshSwapHeaderSize;
         offset += freshSwapHeaderSize;
         xfree(freshSwapHeader);
     }
 
     {
         debugs(20, 7, "fresh HTTP header @ " << offset);
-        MemBuf *httpHeader = update.entry->mem_obj->getReply()->pack();
+        const auto httpHeader = mem.freshestReply().pack();
         writer->write(httpHeader->content(), httpHeader->contentSize(), -1, nullptr);
+        const auto &staleReply = mem.baseReply();
+        Must(staleReply.hdr_sz >= 0); // for int-to-uint64_t conversion below
+        Must(staleReply.hdr_sz > 0); // already initialized
+        stalePrefixSz += staleReply.hdr_sz;
+        freshPrefixSz += httpHeader->contentSize();
         offset += httpHeader->contentSize();
         delete httpHeader;
     }
@@ -203,7 +226,14 @@ Rock::HeaderUpdater::startWriting()
         exchangeBuffer.clear();
     }
 
-    debugs(20, 7, "wrote " << offset);
+    debugs(20, 7, "wrote " << offset <<
+           "; swap_file_sz delta: -" << stalePrefixSz << " +" << freshPrefixSz);
+
+    // Optimistic early update OK: Our write lock blocks access to swap_file_sz.
+    auto &swap_file_sz = update.fresh.anchor->basics.swap_file_sz;
+    Must(swap_file_sz >= stalePrefixSz);
+    swap_file_sz -= stalePrefixSz;
+    swap_file_sz += freshPrefixSz;
 
     writer->close(StoreIOState::wroteAll); // should call noteDoneWriting()
 }

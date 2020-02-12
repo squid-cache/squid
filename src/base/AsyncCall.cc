@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,9 +7,9 @@
  */
 
 #include "squid.h"
-#include "AsyncCall.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncCallQueue.h"
+#include "base/CodeContext.h"
 #include "cbdata.h"
 #include "Debug.h"
 #include <ostream>
@@ -18,9 +18,13 @@ InstanceIdDefinitions(AsyncCall, "call");
 
 /* AsyncCall */
 
-AsyncCall::AsyncCall(int aDebugSection, int aDebugLevel,
-                     const char *aName): name(aName), debugSection(aDebugSection),
-    debugLevel(aDebugLevel), theNext(0), isCanceled(NULL)
+AsyncCall::AsyncCall(int aDebugSection, int aDebugLevel, const char *aName):
+    name(aName),
+    codeContext(CodeContext::Current()),
+    debugSection(aDebugSection),
+    debugLevel(aDebugLevel),
+    theNext(nullptr),
+    isCanceled(nullptr)
 {
     debugs(debugSection, debugLevel, "The AsyncCall " << name << " constructed, this=" << this <<
            " [" << id << ']');
@@ -91,6 +95,12 @@ ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call)
 {
     debugs(call->debugSection, call->debugLevel, fileName << "(" << fileLine <<
            ") will call " << *call << " [" << call->id << ']' );
+
+    // Support callback creators that did not get their context from service A,
+    // but the current caller (service B) got that context from another source.
+    if (!call->codeContext)
+        call->codeContext = CodeContext::Current();
+
     AsyncCallQueue::Instance().schedule(call);
     return true;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -33,7 +33,7 @@ public:
 
     virtual bool doneAll() const;
 
-    ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &handler, time_t connect_timeout);
+    ConnOpener(Comm::ConnectionPointer &, const AsyncCall::Pointer &handler, time_t connect_timeout);
     ~ConnOpener();
 
     void setHost(const char *);    ///< set the hostname note for this connection

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -35,7 +35,12 @@ Rock::IoState::IoState(Rock::SwapDir::Pointer &aDir,
     dir(aDir),
     slotSize(dir->slotSize),
     objOffset(0),
+    sidFirst(-1),
+    sidPrevious(-1),
     sidCurrent(-1),
+    sidNext(-1),
+    requestsSent(0),
+    repliesReceived(0),
     theBuf(dir->slotSize)
 {
     e = anEntry;
@@ -101,7 +106,8 @@ Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data
     // if we are dealing with the first read or
     // if the offset went backwords, start searching from the beginning
     if (sidCurrent < 0 || coreOff < objOffset) {
-        sidCurrent = readAnchor().start;
+        // readers do not need sidFirst but set it for consistency/triage sake
+        sidCurrent = sidFirst = readAnchor().start;
         objOffset = 0;
     }
 
@@ -126,14 +132,32 @@ Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data
     len = min(len,
               static_cast<size_t>(objOffset + currentReadableSlice().size - coreOff));
     const uint64_t diskOffset = dir->diskOffset(sidCurrent);
-    theFile->read(new ReadRequest(::ReadRequest(buf,
-                                  diskOffset + sizeof(DbCellHeader) + coreOff - objOffset, len), this));
+    const auto start = diskOffset + sizeof(DbCellHeader) + coreOff - objOffset;
+    const auto id = ++requestsSent;
+    const auto request = new ReadRequest(::ReadRequest(buf, start, len), this, id);
+    theFile->read(request);
 }
 
 void
+Rock::IoState::handleReadCompletion(Rock::ReadRequest &request, const int rlen, const int errFlag)
+{
+    if (errFlag != DISK_OK || rlen < 0) {
+        debugs(79, 3, errFlag << " failure for " << *e);
+        return callReaderBack(request.buf, -1);
+    }
+
+    if (!expectedReply(request.id))
+        return callReaderBack(request.buf, -1);
+
+    debugs(79, 5, '#' << request.id << " read " << rlen << " bytes at " << offset_ << " for " << *e);
+    offset_ += rlen;
+    callReaderBack(request.buf, rlen);
+}
+
+/// report (already sanitized/checked) I/O results to the read initiator
+void
 Rock::IoState::callReaderBack(const char *buf, int rlen)
 {
-    debugs(79, 5, rlen << " bytes for " << *e);
     splicingPoint = rlen >= 0 ? sidCurrent : -1;
     if (splicingPoint < 0)
         staleSplicingPointNext = -1;
@@ -181,38 +205,29 @@ Rock::IoState::tryWrite(char const *buf, size_t size, off_t coreOff)
 {
     debugs(79, 7, swap_filen << " writes " << size << " more");
 
-    // either this is the first write or append; we do not support write gaps
+    // either this is the first write or append;
+    // we do not support write gaps or rewrites
     assert(!coreOff || coreOff == -1);
 
     // throw if an accepted unknown-size entry grew too big or max-size changed
     Must(static_cast<uint64_t>(offset_ + size) <= static_cast<uint64_t>(dir->maxObjectSize()));
 
-    // allocate the first slice during the first write
-    if (!coreOff) {
-        assert(sidCurrent < 0);
-        sidCurrent = reserveSlotForWriting(); // throws on failures
-        assert(sidCurrent >= 0);
-        writeAnchor().start = sidCurrent;
-    }
-
     // buffer incoming data in slot buffer and write overflowing or final slots
     // quit when no data left or we stopped writing on reentrant error
     while (size > 0 && theFile != NULL) {
-        assert(sidCurrent >= 0);
         const size_t processed = writeToBuffer(buf, size);
         buf += processed;
         size -= processed;
         const bool overflow = size > 0;
 
         // We do not write a full buffer without overflow because
-        // we would not yet know what to set the nextSlot to.
+        // we do not want to risk writing a payload-free slot on EOF.
         if (overflow) {
-            const SlotId sidNext = reserveSlotForWriting(); // throws
+            Must(sidNext < 0);
+            sidNext = dir->reserveSlotForWriting();
             assert(sidNext >= 0);
-            writeToDisk(sidNext);
-        } else if (Store::Root().transientReaders(*e)) {
-            // write partial buffer for all remote hit readers to see
-            writeBufToDisk(-1, false, false);
+            writeToDisk();
+            Must(sidNext < 0); // short sidNext lifetime simplifies code logic
         }
     }
 
@@ -228,7 +243,7 @@ Rock::IoState::writeToBuffer(char const *buf, size_t size)
         return 0;
 
     if (!theBuf.size) {
-        // will fill the header in writeToDisk when the next slot is known
+        // eventually, writeToDisk() will fill this header space
         theBuf.appended(sizeof(DbCellHeader));
     }
 
@@ -239,44 +254,38 @@ Rock::IoState::writeToBuffer(char const *buf, size_t size)
 }
 
 /// write what was buffered during write() calls
-/// negative sidNext means this is the last write request for this entry
 void
-Rock::IoState::writeToDisk(const SlotId sidNextProposal)
+Rock::IoState::writeToDisk()
 {
     assert(theFile != NULL);
     assert(theBuf.size >= sizeof(DbCellHeader));
 
-    const bool lastWrite = sidNextProposal < 0;
+    assert((sidFirst < 0) == (sidCurrent < 0));
+    if (sidFirst < 0) // this is the first disk write
+        sidCurrent = sidFirst = dir->reserveSlotForWriting();
+
+    // negative sidNext means this is the last write request for this entry
+    const bool lastWrite = sidNext < 0;
+    // here, eof means that we are writing the right-most entry slot
     const bool eof = lastWrite &&
                      // either not updating or the updating reader has loaded everything
                      (touchingStoreEntry() || staleSplicingPointNext < 0);
-    // approve sidNextProposal unless _updating_ the last slot
-    const SlotId sidNext = (!touchingStoreEntry() && lastWrite) ?
-                           staleSplicingPointNext : sidNextProposal;
-    debugs(79, 5, "sidNext:" << sidNextProposal << "=>" << sidNext << " eof=" << eof);
+    debugs(79, 5, "sidCurrent=" << sidCurrent << " sidNext=" << sidNext << " eof=" << eof);
 
     // TODO: if DiskIO module is mmap-based, we should be writing whole pages
     // to avoid triggering read-page;new_head+old_tail;write-page overheads
 
-    writeBufToDisk(sidNext, eof, lastWrite);
-    theBuf.clear();
-
-    sidCurrent = sidNext;
-}
-
-/// creates and submits a request to write current slot buffer to disk
-/// eof is true if and only this is the last slot
-void
-Rock::IoState::writeBufToDisk(const SlotId sidNext, const bool eof, const bool lastWrite)
-{
-    // no slots after the last/eof slot (but partial slots may have a nil next)
-    assert(!eof || sidNext < 0);
+    assert(!eof || sidNext < 0); // no slots after eof
 
     // finalize db cell header
     DbCellHeader header;
     memcpy(header.key, e->key, sizeof(header.key));
-    header.firstSlot = writeAnchor().start;
-    header.nextSlot = sidNext;
+    header.firstSlot = sidFirst;
+
+    const auto lastUpdatingWrite = lastWrite && !touchingStoreEntry();
+    assert(!lastUpdatingWrite || sidNext < 0);
+    header.nextSlot = lastUpdatingWrite ? staleSplicingPointNext : sidNext;
+
     header.payloadSize = theBuf.size - sizeof(DbCellHeader);
     header.entrySize = eof ? offset_ : 0; // storeSwapOutFileClosed sets swap_file_sz after write
     header.version = writeAnchor().basics.timestamp;
@@ -294,36 +303,52 @@ Rock::IoState::writeBufToDisk(const SlotId sidNext, const bool eof, const bool l
     const uint64_t diskOffset = dir->diskOffset(sidCurrent);
     debugs(79, 5, HERE << swap_filen << " at " << diskOffset << '+' <<
            theBuf.size);
-
+    const auto id = ++requestsSent;
     WriteRequest *const r = new WriteRequest(
         ::WriteRequest(static_cast<char*>(wBuf), diskOffset, theBuf.size,
-                       memFreeBufFunc(wBufCap)), this);
+                       memFreeBufFunc(wBufCap)), this, id);
     r->sidCurrent = sidCurrent;
-    r->sidNext = sidNext;
+    r->sidPrevious = sidPrevious;
     r->eof = lastWrite;
+
+    sidPrevious = sidCurrent;
+    sidCurrent = sidNext; // sidNext may be cleared/negative already
+    sidNext = -1;
+
+    theBuf.clear();
 
     // theFile->write may call writeCompleted immediatelly
     theFile->write(r);
 }
 
-/// finds and returns a free db slot to fill or throws
-Rock::SlotId
-Rock::IoState::reserveSlotForWriting()
+bool
+Rock::IoState::expectedReply(const IoXactionId receivedId)
 {
-    Ipc::Mem::PageId pageId;
-    if (dir->useFreeSlot(pageId))
-        return pageId.number-1;
+    Must(requestsSent); // paranoid: we sent some requests
+    Must(receivedId); // paranoid: the request was sent by some sio
+    Must(receivedId <= requestsSent); // paranoid: within our range
+    ++repliesReceived;
+    const auto expectedId = repliesReceived;
+    if (receivedId == expectedId)
+        return true;
 
-    // This may happen when the number of available db slots is close to the
-    // number of concurrent requests reading or writing those slots, which may
-    // happen when the db is "small" compared to the request traffic OR when we
-    // are rebuilding and have not loaded "many" entries or empty slots yet.
-    throw TexcHere("ran out of free db slots");
+    debugs(79, 3, "no; expected reply #" << expectedId <<
+           ", but got #" << receivedId);
+    return false;
 }
 
 void
 Rock::IoState::finishedWriting(const int errFlag)
 {
+    if (sidCurrent >= 0) {
+        dir->noteFreeMapSlice(sidCurrent);
+        sidCurrent = -1;
+    }
+    if (sidNext >= 0) {
+        dir->noteFreeMapSlice(sidNext);
+        sidNext = -1;
+    }
+
     // we incremented offset_ while accumulating data in write()
     // we do not reset writeableAnchor_ here because we still keep the lock
     if (touchingStoreEntry())
@@ -335,7 +360,9 @@ void
 Rock::IoState::close(int how)
 {
     debugs(79, 3, swap_filen << " offset: " << offset_ << " how: " << how <<
-           " buf: " << theBuf.size << " callback: " << callback);
+           " leftovers: " << theBuf.size <<
+           " after " << requestsSent << '/' << repliesReceived <<
+           " callback: " << callback);
 
     if (!theFile) {
         debugs(79, 3, "I/O already canceled");
@@ -348,8 +375,17 @@ Rock::IoState::close(int how)
     switch (how) {
     case wroteAll:
         assert(theBuf.size > 0); // we never flush last bytes on our own
-        writeToDisk(-1); // flush last, yet unwritten slot to disk
-        return; // writeCompleted() will callBack()
+        try {
+            writeToDisk(); // flush last, yet unwritten slot to disk
+            return; // writeCompleted() will callBack()
+        }
+        catch (...) {
+            debugs(79, 2, "db flush error: " << CurrentException);
+            // TODO: Move finishedWriting() into SwapDir::writeError().
+            dir->writeError(*this);
+            finishedWriting(DISK_ERROR);
+        }
+        return;
 
     case writerGone:
         dir->writeError(*this); // abort a partially stored entry

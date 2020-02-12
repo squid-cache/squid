@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -710,12 +710,16 @@ Rock::SwapDir::diskOffsetLimit() const
     return diskOffset(map->sliceLimit());
 }
 
-bool
-Rock::SwapDir::useFreeSlot(Ipc::Mem::PageId &pageId)
+Rock::SlotId
+Rock::SwapDir::reserveSlotForWriting()
 {
+    Ipc::Mem::PageId pageId;
+
     if (freeSlots->pop(pageId)) {
-        debugs(47, 5, "got a previously free slot: " << pageId);
-        return true;
+        const auto slotId = pageId.number - 1;
+        debugs(47, 5, "got a previously free slot: " << slotId);
+        map->prepFreeSlice(slotId);
+        return slotId;
     }
 
     // catch free slots delivered to noteFreeMapSlice()
@@ -724,14 +728,20 @@ Rock::SwapDir::useFreeSlot(Ipc::Mem::PageId &pageId)
     if (map->purgeOne()) {
         assert(!waitingForPage); // noteFreeMapSlice() should have cleared it
         assert(pageId.set());
-        debugs(47, 5, "got a previously busy slot: " << pageId);
-        return true;
+        const auto slotId = pageId.number - 1;
+        debugs(47, 5, "got a previously busy slot: " << slotId);
+        map->prepFreeSlice(slotId);
+        return slotId;
     }
     assert(waitingForPage == &pageId);
     waitingForPage = NULL;
 
+    // This may happen when the number of available db slots is close to the
+    // number of concurrent requests reading or writing those slots, which may
+    // happen when the db is "small" compared to the request traffic OR when we
+    // are rebuilding and have not loaded "many" entries or empty slots yet.
     debugs(47, 3, "cannot get a slot; entries: " << map->entryCount());
-    return false;
+    throw TexcHere("ran out of free db slots");
 }
 
 bool
@@ -744,7 +754,7 @@ void
 Rock::SwapDir::noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId)
 {
     Ipc::Mem::PageId pageId;
-    pageId.pool = index+1;
+    pageId.pool = Ipc::Mem::PageStack::IdForSwapDirSpace(index);
     pageId.number = sliceId+1;
     if (waitingForPage) {
         *waitingForPage = pageId;
@@ -835,16 +845,15 @@ Rock::SwapDir::readCompleted(const char *, int rlen, int errflag, RefCount< ::Re
     ReadRequest *request = dynamic_cast<Rock::ReadRequest*>(r.getRaw());
     assert(request);
     IoState::Pointer sio = request->sio;
-
-    if (errflag == DISK_OK && rlen > 0)
-        sio->offset_ += rlen;
-
-    sio->callReaderBack(r->buf, rlen);
+    sio->handleReadCompletion(*request, rlen, errflag);
 }
 
 void
 Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
 {
+    // TODO: Move details into IoState::handleWriteCompletion() after figuring
+    // out how to deal with map access. See readCompleted().
+
     Rock::WriteRequest *request = dynamic_cast<Rock::WriteRequest*>(r.getRaw());
     assert(request);
     assert(request->sio !=  NULL);
@@ -853,46 +862,72 @@ Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
     // quit if somebody called IoState::close() while we were waiting
     if (!sio.stillWaiting()) {
         debugs(79, 3, "ignoring closed entry " << sio.swap_filen);
-        noteFreeMapSlice(request->sidNext);
+        noteFreeMapSlice(request->sidCurrent);
         return;
     }
 
     debugs(79, 7, "errflag=" << errflag << " rlen=" << request->len << " eof=" << request->eof);
 
-    // TODO: Fail if disk dropped one of the previous write requests.
-
-    if (errflag == DISK_OK) {
-        // do not increment sio.offset_ because we do it in sio->write()
-
-        // finalize the shared slice info after writing slice contents to disk
-        Ipc::StoreMap::Slice &slice =
-            map->writeableSlice(sio.swap_filen, request->sidCurrent);
-        slice.size = request->len - sizeof(DbCellHeader);
-        slice.next = request->sidNext;
-
-        if (request->eof) {
-            assert(sio.e);
-            assert(sio.writeableAnchor_);
-            if (sio.touchingStoreEntry()) {
-                sio.e->swap_file_sz = sio.writeableAnchor_->basics.swap_file_sz =
-                                          sio.offset_;
-                map->switchWritingToReading(sio.swap_filen);
-                // sio.e keeps the (now read) lock on the anchor
-            }
-            sio.writeableAnchor_ = NULL;
-            sio.splicingPoint = request->sidCurrent;
-            sio.finishedWriting(errflag);
-        }
-    } else {
-        noteFreeMapSlice(request->sidNext);
-
-        writeError(sio);
-        sio.finishedWriting(errflag);
-        // and wait for the finalizeSwapoutFailure() call to close the map entry
-    }
+    if (errflag != DISK_OK)
+        handleWriteCompletionProblem(errflag, *request);
+    else if (!sio.expectedReply(request->id))
+        handleWriteCompletionProblem(DISK_ERROR, *request);
+    else
+        handleWriteCompletionSuccess(*request);
 
     if (sio.touchingStoreEntry())
         CollapsedForwarding::Broadcast(*sio.e);
+}
+
+/// code shared by writeCompleted() success handling cases
+void
+Rock::SwapDir::handleWriteCompletionSuccess(const WriteRequest &request)
+{
+    auto &sio = *(request.sio);
+    sio.splicingPoint = request.sidCurrent;
+    // do not increment sio.offset_ because we do it in sio->write()
+
+    assert(sio.writeableAnchor_);
+    if (sio.writeableAnchor_->start < 0) { // wrote the first slot
+        Must(request.sidPrevious < 0);
+        sio.writeableAnchor_->start = request.sidCurrent;
+    } else {
+        Must(request.sidPrevious >= 0);
+        map->writeableSlice(sio.swap_filen, request.sidPrevious).next = request.sidCurrent;
+    }
+
+    // finalize the shared slice info after writing slice contents to disk;
+    // the chain gets possession of the slice we were writing
+    Ipc::StoreMap::Slice &slice =
+        map->writeableSlice(sio.swap_filen, request.sidCurrent);
+    slice.size = request.len - sizeof(DbCellHeader);
+    Must(slice.next < 0);
+
+    if (request.eof) {
+        assert(sio.e);
+        if (sio.touchingStoreEntry()) {
+            sio.e->swap_file_sz = sio.writeableAnchor_->basics.swap_file_sz =
+                                      sio.offset_;
+
+            map->switchWritingToReading(sio.swap_filen);
+            // sio.e keeps the (now read) lock on the anchor
+        }
+        sio.writeableAnchor_ = NULL;
+        sio.finishedWriting(DISK_OK);
+    }
+}
+
+/// code shared by writeCompleted() error handling cases
+void
+Rock::SwapDir::handleWriteCompletionProblem(const int errflag, const WriteRequest &request)
+{
+    auto &sio = *request.sio;
+
+    noteFreeMapSlice(request.sidCurrent);
+
+    writeError(sio);
+    sio.finishedWriting(errflag);
+    // and hope that Core will call disconnect() to close the map entry
 }
 
 void
@@ -1103,7 +1138,9 @@ void Rock::SwapDirRr::create()
             // TODO: somehow remove pool id and counters from PageStack?
             Ipc::Mem::Owner<Ipc::Mem::PageStack> *const freeSlotsOwner =
                 shm_new(Ipc::Mem::PageStack)(sd->freeSlotsPath(),
-                                             i+1, capacity, 0);
+                                             Ipc::Mem::PageStack::IdForSwapDirSpace(i),
+                                             capacity,
+                                             0);
             freeSlotsOwners.push_back(freeSlotsOwner);
 
             // TODO: add method to initialize PageStack with no free pages

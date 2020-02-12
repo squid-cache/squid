@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,6 +55,8 @@ public:
 
 class IpcIoPendingRequest;
 
+/// In a worker process, represents a single (remote) cache_dir disker file.
+/// In a disker process, used as a bunch of static methods handling that file.
 class IpcIoFile: public DiskFile
 {
     CBDATA_CLASS(IpcIoFile);
@@ -97,6 +99,10 @@ private:
     void trackPendingRequest(const unsigned int id, IpcIoPendingRequest *const pending);
     void push(IpcIoPendingRequest *const pending);
     IpcIoPendingRequest *dequeueRequest(const unsigned int requestId);
+
+    /// the total number of I/O requests in push queue and pop queue
+    /// (but no, the implementation does not add push and pop queue sizes)
+    size_t pendingRequests() const { return olderRequests->size() + newerRequests->size(); }
 
     static void Notify(const int peerId);
 
@@ -159,6 +165,8 @@ public:
     const IpcIoFile::Pointer file; ///< the file object waiting for the response
     ReadRequest *readRequest; ///< set if this is a read requests
     WriteRequest *writeRequest; ///< set if this is a write request
+
+    CodeContext::Pointer codeContext; ///< requestor's context
 
 private:
     IpcIoPendingRequest(const IpcIoPendingRequest &d); // not implemented

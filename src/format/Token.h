@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 #define _SQUID_FORMAT_TOKEN_H
 
 #include "format/ByteCode.h"
+#include "proxyp/Elements.h"
 
 /*
  * Squid configuration allows users to define custom formats in
@@ -50,6 +51,9 @@ public:
     const char *label;
     struct {
         char *string;
+        // TODO: Add ID caching for protocols other than PROXY protocol.
+        /// the cached ID of the parsed header or zero
+        ProxyProtocol::Two::FieldType headerId;
 
         struct {
             char *header;

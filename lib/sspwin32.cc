@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -492,12 +492,12 @@ const char * WINAPI SSP_MakeChallenge(PVOID PNegotiateBuf, int NegotiateLen)
         struct base64_encode_ctx ctx;
         base64_encode_init(&ctx);
         static char encoded[8192];
-        size_t dstLen = base64_encode_update(&ctx, encoded, cbOut, fResult);
+        size_t dstLen = base64_encode_update(&ctx, encoded, cbOut, reinterpret_cast<const uint8_t*>(fResult));
         assert(dstLen < sizeof(encoded));
         dstLen += base64_encode_final(&ctx, encoded+dstLen);
         assert(dstLen < sizeof(encoded));
         encoded[dstLen] = '\0';
-        return reinterpret_cast<char *>(encoded);
+        return encoded;
     }
     return NULL;
 }
@@ -558,12 +558,12 @@ const char * WINAPI SSP_MakeNegotiateBlob(PVOID PNegotiateBuf, int NegotiateLen,
         struct base64_encode_ctx ctx;
         base64_encode_init(&ctx);
         static char encoded[8192];
-        size_t dstLen = base64_encode_update(&ctx, encoded, cbOut, pServerBuf);
+        size_t dstLen = base64_encode_update(&ctx, encoded, cbOut, reinterpret_cast<const uint8_t*>(pServerBuf));
         assert(dstLen < sizeof(encoded));
         dstLen += base64_encode_final(&ctx, encoded+dstLen);
         assert(dstLen < sizeof(encoded));
         encoded[dstLen] = '\0';
-        return reinterpret_cast<char *>(encoded);
+        return encoded;
     }
     return NULL;
 }
@@ -593,12 +593,12 @@ const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID PAutenticateBuf, int 
         struct base64_encode_ctx ctx;
         base64_encode_init(&ctx);
         static char encoded[8192];
-        size_t dstLen = base64_encode_update(&ctx, encoded, cbOut, pServerBuf);
+        size_t dstLen = base64_encode_update(&ctx, encoded, cbOut, reinterpret_cast<const uint8_t*>(pServerBuf));
         assert(dstLen < sizeof(encoded));
         dstLen += base64_encode_final(&ctx, encoded+dstLen);
         assert(dstLen < sizeof(encoded));
         encoded[dstLen] = '\0';
-        return reinterpret_cast<char *>(encoded);
+        return encoded;
     }
     return NULL;
 }

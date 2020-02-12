@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -143,7 +143,7 @@ Ipc::TypedMsgHdr::getString(String &s) const
     // TODO: use SBuf.reserve() instead of a temporary buffer
     char buf[maxSize];
     getRaw(&buf, length);
-    s.limitInit(buf, length);
+    s.assign(buf, length);
 }
 
 void

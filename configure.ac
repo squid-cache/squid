@@ -1,11 +1,11 @@
-## Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-AC_INIT([Squid Web Proxy],[5.0.0-VCS],[http://bugs.squid-cache.org/],[squid])
+AC_INIT([Squid Web Proxy],[6.0.0-VCS],[http://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -900,41 +900,45 @@ fi
 
 AC_ARG_WITH(libxml2, AS_HELP_STRING([--without-libxml2],[Do not use libxml2 for ESI. Default: auto-detect]))
 if test "x$squid_opt_use_esi" != "xno" -a "x$with_libxml2" != "xno" ; then
-  AC_CHECK_LIB([xml2], [main], [XMLLIB="-lxml2"; HAVE_LIBXML2=1])
-  dnl Find the main header and include path...
-  AC_CACHE_CHECK([location of libxml2 include files], [ac_cv_libxml2_include], [
-    AC_CHECK_HEADERS([libxml/parser.h], [], [
-      AC_MSG_NOTICE([Testing in /usr/include/libxml2])
-      SAVED_CPPFLAGS="$CPPFLAGS"
-      CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
-      unset ac_cv_header_libxml_parser_h
-      AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="-I/usr/include/libxml2"], [
-        AC_MSG_NOTICE([Testing in /usr/local/include/libxml2])
-        CPPFLAGS="-I/usr/local/include/libxml2 $SAVED_CPPFLAGS"
+  SQUID_STATE_SAVE([squid_libxml2_save])
+  PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[
+    AC_CHECK_LIB([xml2], [main], [LIBXML2_LIBS="$LIBXML2_LIBS -lxml2"])
+    dnl Find the main header and include path...
+    AC_CACHE_CHECK([location of libxml2 include files], [ac_cv_libxml2_include], [
+      AC_CHECK_HEADERS([libxml/parser.h], [], [
+        AC_MSG_NOTICE([Testing in /usr/include/libxml2])
+        SAVED_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
         unset ac_cv_header_libxml_parser_h
-        AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="-I/usr/local/include/libxml2"], [
-          AC_MSG_NOTICE([Failed to find libxml2 header file libxml/parser.h])
+        AC_CHECK_HEADERS([libxml/parser.h], [LIBXML2_CFLAGS="$LIBXML2_CFLAGS -I/usr/include/libxml2"], [
+          AC_MSG_NOTICE([Testing in /usr/local/include/libxml2])
+          CPPFLAGS="-I/usr/local/include/libxml2 $SAVED_CPPFLAGS"
+          unset ac_cv_header_libxml_parser_h
+          AC_CHECK_HEADERS([libxml/parser.h], [LIBXML2_CFLAGS="$LIBXML2_CFLAGS -I/usr/local/include/libxml2"], [
+            AC_MSG_NOTICE([Failed to find libxml2 header file libxml/parser.h])
+          ])
         ])
+        CPPFLAGS="$SAVED_CPPFLAGS"
       ])
-      CPPFLAGS="$SAVED_CPPFLAGS"
     ])
   ])
-  if test "x$ac_cv_libxml2_include" != "x"; then
-      SQUID_CXXFLAGS="$ac_cv_libxml2_include $SQUID_CXXFLAGS"
-      CPPFLAGS="$ac_cv_libxml2_include $CPPFLAGS"
-  fi
+  CPPFLAGS="$CPPFLAGS $LIBXML2_CFLAGS"
   dnl Now that we know where to look find the headers...
   AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
-  AC_DEFINE_UNQUOTED(HAVE_LIBXML2, $HAVE_LIBXML2, [Define to 1 if you have the libxml2 library])
-  AS_IF(test "x$HAVE_LIBXML2" = "x1",[
+  SQUID_STATE_ROLLBACK([squid_libxml2_save])
+
+  if test "x$LIBXML2_LIBS" != "x"; then
+    HAVE_LIBXML2=1
     squid_opt_use_esi=yes
-  ],[
-    AS_IF(test "x$with_libxml2" = "xyes",[
-      AC_MSG_ERROR([Required library libxml2 not found.])
-    ],[
-      AC_MSG_NOTICE([Library libxml2 not found.])
-    ])
-  ])
+    SQUID_CXXFLAGS="$SQUID_CXXFLAGS $LIBXML2_CFLAGS"
+    CPPFLAGS="$CPPFLAGS $LIBXML2_CFLAGS"
+    XMLLIB="$LIBXML2_LIBS"
+    AC_DEFINE_UNQUOTED(HAVE_LIBXML2, $HAVE_LIBXML2, [Define to 1 if you have the libxml2 library])
+  elif test "x$with_libxml2" = "xyes"; then
+    AC_MSG_ERROR([Required library libxml2 not found])
+  else
+    AC_MSG_NOTICE([Library libxml2 not found.])
+  fi
 fi
 
 AS_IF([test "x$squid_opt_use_esi" = "xyes"],[
@@ -1105,6 +1109,10 @@ AC_ARG_ENABLE(eui,
 SQUID_YESNO([$enableval],[--disable-eui expects no arguments])
 ])
 if test "x${enable_eui:=yes}" = "xyes" ; then
+  SQUID_STATE_SAVE(LIBEUI)
+  # GLIBC 2.30 deprecates sysctl.h. Test with the same flags that (may) break includes later.
+  CFLAGS=$SQUID_CFLAGS
+  CXXFLAGS=$SQUID_CXXFLAGS
   case "$squid_host_os" in
     linux|solaris|freebsd|openbsd|netbsd|cygwin)
       ${TRUE}
@@ -1144,6 +1152,7 @@ include <windows.h>
 #include <sys/param.h>
 #endif
   ]])
+  SQUID_STATE_ROLLBACK(LIBEUI)
 fi
 AC_SUBST(EUILIB)
 AC_MSG_NOTICE([EUI (MAC address) controls enabled: $enable_eui])
@@ -1331,7 +1340,7 @@ if test "x$with_openssl" = "xyes"; then
     AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
       AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
     ],$LIBOPENSSL_LIBS)
-    AC_CHECK_LIB(ssl,[SSL_library_init],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
+    AC_CHECK_LIB(ssl,[SSL_CTX_new],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
       AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
     ],$LIBOPENSSL_LIBS)
   ])
@@ -1416,7 +1425,7 @@ if test "x$with_mit_krb5" != "xno"; then
   ])
   if test "x$squid_pc_krb5_name" = "x" -a "$cross_compiling" = "no"; then
     # Look for krb5-config (unless cross-compiling)
-    AC_PATH_PROG(krb5_config,krb5-config,no)
+    AC_PATH_PROG(krb5_config,krb5-config,no,$krb5confpath)
     if test "x$ac_cv_path_krb5_config" != "xno" ; then
       krb5confpath="`dirname $ac_cv_path_krb5_config`"
       ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
@@ -1649,7 +1658,7 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
   fi
   if test "x$squid_pc_krb5_name" = "x" -a "$cross_compiling" = "no"; then
     # Look for krb5-config (unless cross-compiling)
-    AC_PATH_PROG(krb5_config,krb5-config,no)
+    AC_PATH_PROG(krb5_config,krb5-config,no,$krb5confpath)
     if test "x$ac_cv_path_krb5_config" != "xno" ; then
       krb5confpath="`dirname $ac_cv_path_krb5_config`"
       ac_heimdal="`$ac_cv_path_krb5_config --version 2>/dev/null | grep -c -i heimdal`"
@@ -2092,6 +2101,51 @@ esac
 
 AC_SUBST(LDAPLIB)
 AC_SUBST(LBERLIB)
+
+AC_ARG_WITH(systemd,
+  AS_HELP_STRING([--without-systemd],
+                 [Do not use systemd API to send start-up completion
+                  notification. Default: auto-detect]), [
+case "$with_systemd" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--with-systemd path does not point to a directory])
+    fi
+    SYSTEMD_PATH="-L$with_systemd/lib"
+    CPPFLAGS="-I$with_systemd/include $CPPFLAGS"
+  esac
+])
+AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
+if test "x$with_systemd" != "xno" -a "x$squid_host_os" = "xlinux"; then
+  SQUID_STATE_SAVE(squid_systemd_state)
+
+  # User may have provided a custom location for systemd. Otherwise...
+  LIBS="$LIBS $SYSTEMD_PATH"
+
+  # auto-detect using pkg-config
+  PKG_CHECK_MODULES(SYSTEMD,[libsystemd],,[
+    # systemd < 209
+    PKG_CHECK_MODULES(SYSTEMD,[libsystemd-daemon],,[:])
+  ])
+
+  AC_CHECK_HEADERS(systemd/sd-daemon.h)
+
+  SQUID_STATE_ROLLBACK(squid_systemd_state) #de-pollute LIBS
+
+  if test "x$with_systemd" = "xyes" -a "x$SYSTEMD_LIBS" = "x"; then
+    AC_MSG_ERROR([Required systemd library not found])
+  fi
+  if test "x$SYSTEMD_LIBS" != "x" ; then
+    CXXFLAGS="$SYSTEMD_CFLAGS $CXXFLAGS"
+    AC_DEFINE(USE_SYSTEMD,1,[systemd support is available])
+  else
+    with_systemd=no
+  fi
+fi
+AC_MSG_NOTICE([systemd library support: ${with_systemd:=auto} ${SYSTEMD_PATH} ${SYSTEMD_LIBS}])
 
 AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
@@ -3152,16 +3206,6 @@ AC_ARG_WITH(filedescriptors,
 
 SQUID_CHECK_DEFAULT_FD_SETSIZE
 SQUID_CHECK_MAXFD
-if test "x$squid_filedescriptors_num" != "x"; then
-  AC_MSG_NOTICE([Default number of fieldescriptors: $squid_filedescriptors_num])
-fi
-if test "$squid_filedescriptors_num" -lt 512 ; then
-    AC_MSG_WARN([$squid_filedescriptors_num may not be enough filedescriptors if your])
-    AC_MSG_WARN([cache will be very busy.  Please see the FAQ page])
-    AC_MSG_WARN([http://wiki.squid-cache.org/SquidFaq/TroubleShooting])
-    AC_MSG_WARN([on how to increase your filedescriptor limit])
-fi
-AC_DEFINE_UNQUOTED(SQUID_MAXFD, $squid_filedescriptors_num,[Maximum number of open filedescriptors])
 
 
 dnl Enable IPv6 support
@@ -3306,7 +3350,6 @@ AC_CHECK_FUNCS(\
 	getdtablesize \
 	getpagesize \
 	getpass \
-	getrlimit \
 	getrusage \
 	getspnam \
 	gettimeofday \
@@ -3856,6 +3899,7 @@ AC_CONFIG_FILES([
 	src/mem/Makefile
 	src/mgr/Makefile
 	src/parser/Makefile
+	src/proxyp/Makefile
 	src/repl/Makefile
 	src/sbuf/Makefile
 	src/security/Makefile

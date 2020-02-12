@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,6 +22,7 @@ using namespace Squid;
 /** \endcond */
 #endif
 
+#include <cassert>
 #include <cerrno>
 #include <csignal>
 #include <cstring>
@@ -177,6 +178,56 @@ shellUnescape(char *buf)
     *d = '\0';
 }
 
+/// [Proxy-]Authorization header producer
+class Authorization
+{
+public:
+    Authorization(const char *aHeader, const char *aDestination):
+        header(aHeader), destination(aDestination) {}
+
+    /// finalizes and writes the right HTTP header to the given stream
+    void commit(std::ostream &os);
+
+    std::string header; ///< HTTP header name to send
+    std::string destination; ///< used when describing password
+    const char *user = nullptr; ///< user name to encode and send
+    const char *password = nullptr; ///< user password to encode and send
+};
+
+void
+Authorization::commit(std::ostream &os)
+{
+#if HAVE_GETPASS
+    if (!password)
+        password = getpass((destination + " password: ").c_str());
+#endif
+    if (!password) {
+        std::cerr << "ERROR: " << destination << " password missing\n";
+        exit(EXIT_FAILURE);
+    }
+
+    struct base64_encode_ctx ctx;
+    base64_encode_init(&ctx);
+    const auto bcapacity = base64_encode_len(strlen(user) + 1 + strlen(password));
+    const auto buf = new char[bcapacity];
+
+    size_t bsize = 0;
+    bsize += base64_encode_update(&ctx, buf, strlen(user), reinterpret_cast<const uint8_t*>(user));
+    bsize += base64_encode_update(&ctx, buf+bsize, 1, reinterpret_cast<const uint8_t*>(":"));
+    bsize += base64_encode_update(&ctx, buf+bsize, strlen(password), reinterpret_cast<const uint8_t*>(password));
+    bsize += base64_encode_final(&ctx, buf+bsize);
+    assert(bsize <= bcapacity); // paranoid and late but better than nothing
+
+    os << header << ": Basic ";
+    os.write(buf, bsize);
+    os << "\r\n";
+
+    delete[] buf;
+}
+
+static Authorization ProxyAuthorization("Proxy-Authorization", "proxy");
+static Authorization OriginAuthorization("Authorization", "origin server");
+
 int
 main(int argc, char *argv[])
 {
@@ -195,10 +246,6 @@ main(int argc, char *argv[])
     time_t ims = 0;
     int max_forwards = -1;
 
-    const char *proxy_user = NULL;
-    const char *proxy_password = NULL;
-    const char *www_user = NULL;
-    const char *www_password = NULL;
     const char *host = NULL;
     const char *version = "1.0";
     const char *useragent = NULL;
@@ -321,19 +368,19 @@ main(int argc, char *argv[])
                 break;
 
             case 'u':
-                proxy_user = optarg;
+                ProxyAuthorization.user = optarg;
                 break;
 
             case 'w':
-                proxy_password = optarg;
+                ProxyAuthorization.password = optarg;
                 break;
 
             case 'U':
-                www_user = optarg;
+                OriginAuthorization.user = optarg;
                 break;
 
             case 'W':
-                www_password = optarg;
+                OriginAuthorization.password = optarg;
                 break;
 
             case 'n':
@@ -380,7 +427,7 @@ main(int argc, char *argv[])
         char *t = xstrdup(url + 4);
         const char *at = NULL;
         if (!strrchr(t, '@')) { // ignore any -w password if @ is explicit already.
-            at = proxy_password;
+            at = ProxyAuthorization.password;
         }
         // embed the -w proxy password into old-style cachemgr URLs
         if (at)
@@ -461,47 +508,10 @@ main(int argc, char *argv[])
         if (max_forwards > -1) {
             msg << "Max-Forwards: " << max_forwards << "\r\n";
         }
-        struct base64_encode_ctx ctx;
-        base64_encode_init(&ctx);
-        size_t blen;
-        if (proxy_user) {
-            const char *user = proxy_user;
-            const char *password = proxy_password;
-#if HAVE_GETPASS
-            if (!password)
-                password = getpass("Proxy password: ");
-#endif
-            if (!password) {
-                std::cerr << "ERROR: Proxy password missing" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            char *pwdBuf = new char[base64_encode_len(strlen(user)+1+strlen(password))];
-            blen = base64_encode_update(&ctx, pwdBuf, strlen(user), reinterpret_cast<const uint8_t*>(user));
-            blen += base64_encode_update(&ctx, pwdBuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
-            blen += base64_encode_update(&ctx, pwdBuf+blen, strlen(password), reinterpret_cast<const uint8_t*>(password));
-            blen += base64_encode_final(&ctx, pwdBuf+blen);
-            msg << "Proxy-Authorization: Basic " << pwdBuf << "\r\n";
-            delete[] pwdBuf;
-        }
-        if (www_user) {
-            const char *user = www_user;
-            const char *password = www_password;
-#if HAVE_GETPASS
-            if (!password)
-                password = getpass("WWW password: ");
-#endif
-            if (!password) {
-                std::cerr << "ERROR: WWW password missing" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            char *pwdBuf = new char[base64_encode_len(strlen(user)+1+strlen(password))];
-            blen = base64_encode_update(&ctx, pwdBuf, strlen(user), reinterpret_cast<const uint8_t*>(user));
-            blen += base64_encode_update(&ctx, pwdBuf+blen, 1, reinterpret_cast<const uint8_t*>(":"));
-            blen += base64_encode_update(&ctx, pwdBuf+blen, strlen(password), reinterpret_cast<const uint8_t*>(password));
-            blen += base64_encode_final(&ctx, pwdBuf+blen);
-            msg << "Proxy-Authorization: Basic " << pwdBuf << "\r\n";
-            delete[] pwdBuf;
-        }
+        if (ProxyAuthorization.user)
+            ProxyAuthorization.commit(msg);
+        if (OriginAuthorization.user)
+            OriginAuthorization.commit(msg);
 #if HAVE_GSSAPI
         if (www_neg) {
             if (host) {

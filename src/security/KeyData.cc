@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -119,14 +119,15 @@ Security::KeyData::loadX509ChainFromFile()
             }
 #endif
             // checks that the chained certs are actually part of a chain for validating cert
-            if (X509_check_issued(ca, latestCert.get()) == X509_V_OK) {
+            const auto checkCode = X509_check_issued(ca, latestCert.get());
+            if (checkCode == X509_V_OK) {
                 debugs(83, DBG_PARSE_NOTE(3), "Adding issuer CA: " << nameStr);
                 // OpenSSL API requires that we order certificates such that the
                 // chain can be appended directly into the on-wire traffic.
                 latestCert = CertPointer(ca);
                 chain.emplace_front(latestCert);
             } else {
-                debugs(83, DBG_PARSE_NOTE(2), "Ignoring non-issuer CA from " << certFile << ": " << nameStr);
+                debugs(83, DBG_PARSE_NOTE(2), certFile << ": Ignoring non-issuer CA " << nameStr << ": " << X509_verify_cert_error_string(checkCode) << " (" << checkCode << ")");
             }
             OPENSSL_free(nameStr);
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -189,8 +189,8 @@ testRock::createEntry(const int i)
     flags.cachable = true;
     StoreEntry *const pe =
         storeCreateEntry(storeId(i), "dummy log url", flags, Http::METHOD_GET);
-    HttpReply *const rep = const_cast<HttpReply *>(pe->getReply());
-    rep->setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
+    auto &rep = pe->mem().adjustableBaseReply();
+    rep.setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
 
     pe->setPublicKey();
 
@@ -203,7 +203,7 @@ testRock::addEntry(const int i)
     StoreEntry *const pe = createEntry(i);
 
     pe->buffer();
-    pe->getReply()->packHeadersUsingSlowPacker(*pe);
+    pe->mem().freshestReply().packHeadersUsingSlowPacker(*pe);
     pe->flush();
     pe->timestampsSet();
     pe->complete();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -384,7 +384,6 @@ Comm::DoSelect(int msec)
                     HERE << "Calling read handler on FD " << fd
                 );
                 PROF_start(comm_read_handler);
-                F->flags.read_pending = 0;
                 F->read_handler = NULL;
                 hdl(fd, F->read_data);
                 PROF_stop(comm_read_handler);

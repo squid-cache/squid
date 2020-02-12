@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -153,7 +153,7 @@ public:
     virtual void timeout(const CommTimeoutCbParams &io);
     void ftpAcceptDataConnection(const CommAcceptCbParams &io);
 
-    static HttpReply *ftpAuthRequired(HttpRequest * request, SBuf &realm);
+    static HttpReply *ftpAuthRequired(HttpRequest * request, SBuf &realm, AccessLogEntry::Pointer &);
     SBuf ftpRealm();
     void loginFailed(void);
 
@@ -531,8 +531,10 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 {
     ftpListParts *p = NULL;
     char *t = NULL;
-    const char *ct = NULL;
-    char *tokens[MAX_TOKENS];
+    struct FtpLineToken {
+        char *token = nullptr; ///< token image copied from the received line
+        size_t pos = 0;  ///< token offset on the received line
+    } tokens[MAX_TOKENS];
     int i;
     int n_tokens;
     static char tbuf[128];
@@ -573,7 +575,8 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
     }
 
     for (t = strtok(xbuf, w_space); t && n_tokens < MAX_TOKENS; t = strtok(NULL, w_space)) {
-        tokens[n_tokens] = xstrdup(t);
+        tokens[n_tokens].token = xstrdup(t);
+        tokens[n_tokens].pos = t - xbuf;
         ++n_tokens;
     }
 
@@ -581,10 +584,10 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
     /* locate the Month field */
     for (i = 3; i < n_tokens - 2; ++i) {
-        char *size = tokens[i - 1];
-        char *month = tokens[i];
-        char *day = tokens[i + 1];
-        char *year = tokens[i + 2];
+        const auto size = tokens[i - 1].token;
+        char *month = tokens[i].token;
+        char *day = tokens[i + 1].token;
+        char *year = tokens[i + 2].token;
 
         if (!is_month(month))
             continue;
@@ -598,23 +601,27 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
         if (regexec(&scan_ftp_time, year, 0, NULL, 0) != 0) /* Yr | hh:mm */
             continue;
 
-        snprintf(tbuf, 128, "%s %2s %5s",
-                 month, day, year);
+        const auto *copyFrom = buf + tokens[i].pos;
 
-        if (!strstr(buf, tbuf))
-            snprintf(tbuf, 128, "%s %2s %-5s",
-                     month, day, year);
+        // "MMM DD [ YYYY|hh:mm]" with at most two spaces between DD and YYYY
+        auto dateSize = snprintf(tbuf, sizeof(tbuf), "%s %2s %5s", month, day, year);
+        bool isTypeA = (dateSize == 12) && (strncmp(copyFrom, tbuf, dateSize) == 0);
 
-        char const *copyFrom = NULL;
+        // "MMM DD [YYYY|hh:mm]" with one space between DD and YYYY
+        dateSize = snprintf(tbuf, sizeof(tbuf), "%s %2s %-5s", month, day, year);
+        bool isTypeB = (dateSize == 12 || dateSize == 11) && (strncmp(copyFrom, tbuf, dateSize) == 0);
 
-        if ((copyFrom = strstr(buf, tbuf))) {
-            p->type = *tokens[0];
+        // TODO: replace isTypeA and isTypeB with a regex.
+        if (isTypeA || isTypeB) {
+            p->type = *tokens[0].token;
             p->size = strtoll(size, NULL, 10);
+            const auto finalDateSize = snprintf(tbuf, sizeof(tbuf), "%s %2s %5s", month, day, year);
+            assert(finalDateSize >= 0);
             p->date = xstrdup(tbuf);
 
+            // point after tokens[i+2] :
+            copyFrom = buf + tokens[i + 2].pos + strlen(tokens[i + 2].token);
             if (flags.skip_whitespace) {
-                copyFrom += strlen(tbuf);
-
                 while (strchr(w_space, *copyFrom))
                     ++copyFrom;
             } else {
@@ -626,7 +633,6 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
                  * Assuming a single space between date and filename
                  * suggested by:  Nathan.Bailey@cc.monash.edu.au and
                  * Mike Battersby <mike@starbug.bofh.asn.au> */
-                copyFrom += strlen(tbuf);
                 if (strchr(w_space, *copyFrom))
                     ++copyFrom;
             }
@@ -646,45 +652,36 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
     /* try it as a DOS listing, 04-05-70 09:33PM ... */
     if (n_tokens > 3 &&
-            regexec(&scan_ftp_dosdate, tokens[0], 0, NULL, 0) == 0 &&
-            regexec(&scan_ftp_dostime, tokens[1], 0, NULL, 0) == 0) {
-        if (!strcasecmp(tokens[2], "<dir>")) {
+            regexec(&scan_ftp_dosdate, tokens[0].token, 0, NULL, 0) == 0 &&
+            regexec(&scan_ftp_dostime, tokens[1].token, 0, NULL, 0) == 0) {
+        if (!strcasecmp(tokens[2].token, "<dir>")) {
             p->type = 'd';
         } else {
             p->type = '-';
-            p->size = strtoll(tokens[2], NULL, 10);
+            p->size = strtoll(tokens[2].token, NULL, 10);
         }
 
-        snprintf(tbuf, 128, "%s %s", tokens[0], tokens[1]);
+        snprintf(tbuf, sizeof(tbuf), "%s %s", tokens[0].token, tokens[1].token);
         p->date = xstrdup(tbuf);
 
         if (p->type == 'd') {
-            /* Directory.. name begins with first printable after <dir> */
-            ct = strstr(buf, tokens[2]);
-            ct += strlen(tokens[2]);
-
-            while (xisspace(*ct))
-                ++ct;
-
-            if (!*ct)
-                ct = NULL;
+            // Directory.. name begins with first printable after <dir>
+            // Because of the "n_tokens > 3", the next printable after <dir>
+            // is stored at token[3]. No need for more checks here.
         } else {
-            /* A file. Name begins after size, with a space in between */
-            snprintf(tbuf, 128, " %s %s", tokens[2], tokens[3]);
-            ct = strstr(buf, tbuf);
-
-            if (ct) {
-                ct += strlen(tokens[2]) + 2;
-            }
+            // A file. Name begins after size, with a space in between.
+            // Also a space should exist before size.
+            // But there is not needed to be very strict with spaces.
+            // The name is stored at token[3], take it from here.
         }
 
-        p->name = xstrdup(ct ? ct : tokens[3]);
+        p->name = xstrdup(tokens[3].token);
         goto found;
     }
 
     /* Try EPLF format; carson@lehman.com */
     if (buf[0] == '+') {
-        ct = buf + 1;
+        const char *ct = buf + 1;
         p->type = 0;
 
         while (ct && *ct) {
@@ -755,7 +752,7 @@ blank:
 found:
 
     for (i = 0; i < n_tokens; ++i)
-        xfree(tokens[i]);
+        xfree(tokens[i].token);
 
     if (!p->name)
         ftpListPartsFree(&p);   /* cleanup */
@@ -1038,7 +1035,7 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
 
 #if HAVE_AUTH_MODULE_BASIC
     /* Check HTTP Authorization: headers (better than defaults, but less than URL) */
-    const SBuf auth(req_hdr->getAuth(Http::HdrType::AUTHORIZATION, "Basic"));
+    const auto auth(req_hdr->getAuthToken(Http::HdrType::AUTHORIZATION, "Basic"));
     if (!auth.isEmpty()) {
         flags.authenticated = 1;
         loginParser(auth, false);
@@ -1150,7 +1147,7 @@ Ftp::Gateway::start()
     if (!checkAuth(&request->header)) {
         /* create appropriate reply */
         SBuf realm(ftpRealm()); // local copy so SBuf will not disappear too early
-        HttpReply *reply = ftpAuthRequired(request.getRaw(), realm);
+        const auto reply = ftpAuthRequired(request.getRaw(), realm, fwd->al);
         entry->replaceHttpReply(reply);
         serverComplete();
         return;
@@ -1225,16 +1222,16 @@ Ftp::Gateway::loginFailed()
     if ((state == SENT_USER || state == SENT_PASS) && ctrl.replycode >= 400) {
         if (ctrl.replycode == 421 || ctrl.replycode == 426) {
             // 421/426 - Service Overload - retry permitted.
-            err = new ErrorState(ERR_FTP_UNAVAILABLE, Http::scServiceUnavailable, fwd->request);
+            err = new ErrorState(ERR_FTP_UNAVAILABLE, Http::scServiceUnavailable, fwd->request, fwd->al);
         } else if (ctrl.replycode >= 430 && ctrl.replycode <= 439) {
             // 43x - Invalid or Credential Error - retry challenge required.
-            err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scUnauthorized, fwd->request);
+            err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scUnauthorized, fwd->request, fwd->al);
         } else if (ctrl.replycode >= 530 && ctrl.replycode <= 539) {
             // 53x - Credentials Missing - retry challenge required
             if (password_url) // but they were in the URI! major fail.
-                err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scForbidden, fwd->request);
+                err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scForbidden, fwd->request, fwd->al);
             else
-                err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scUnauthorized, fwd->request);
+                err = new ErrorState(ERR_FTP_FORBIDDEN, Http::scUnauthorized, fwd->request, fwd->al);
         }
     }
 
@@ -2263,7 +2260,7 @@ Ftp::Gateway::completedListing()
 {
     assert(entry);
     entry->lock("Ftp::Gateway");
-    ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request.getRaw());
+    ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request.getRaw(), fwd->al);
     ferr.ftp.listing = &listing;
     ferr.ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
     ferr.ftp.server_msg = ctrl.message;
@@ -2437,7 +2434,7 @@ ftpFail(Ftp::Gateway *ftpState)
     }
 
     Http::StatusCode sc = ftpState->failedHttpStatus(error_code);
-    ErrorState *ftperr = new ErrorState(error_code, sc, ftpState->fwd->request);
+    const auto ftperr = new ErrorState(error_code, sc, ftpState->fwd->request, ftpState->fwd->al);
     ftpState->failed(error_code, code, ftperr);
     ftperr->detailError(code);
     HttpReply *newrep = ftperr->BuildHttpReply();
@@ -2505,7 +2502,7 @@ ftpSendReply(Ftp::Gateway * ftpState)
         http_code = Http::scInternalServerError;
     }
 
-    ErrorState err(err_code, http_code, ftpState->request.getRaw());
+    ErrorState err(err_code, http_code, ftpState->request.getRaw(), ftpState->fwd->al);
 
     if (ftpState->old_request)
         err.ftp.request = xstrdup(ftpState->old_request);
@@ -2626,9 +2623,9 @@ Ftp::Gateway::haveParsedReplyHeaders()
 }
 
 HttpReply *
-Ftp::Gateway::ftpAuthRequired(HttpRequest * request, SBuf &realm)
+Ftp::Gateway::ftpAuthRequired(HttpRequest * request, SBuf &realm, AccessLogEntry::Pointer &ale)
 {
-    ErrorState err(ERR_CACHE_ACCESS_DENIED, Http::scUnauthorized, request);
+    ErrorState err(ERR_CACHE_ACCESS_DENIED, Http::scUnauthorized, request, ale);
     HttpReply *newrep = err.BuildHttpReply();
 #if HAVE_AUTH_MODULE_BASIC
     /* add Authenticate header */

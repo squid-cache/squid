@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -104,6 +104,9 @@ public:
      * special configurations, for example when redirector_bypass is used.
      */
     bool defaultQueueSize;
+
+    /// older stateful helper server reservations may be forgotten
+    time_t reservationTimeout = 64; // reservation-timeout
 };
 
 } // namespace Helper

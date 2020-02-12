@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,19 +16,16 @@
 // Ipc::Mem::PagePool
 
 Ipc::Mem::PagePool::Owner *
-Ipc::Mem::PagePool::Init(const char *const id, const unsigned int capacity, const size_t pageSize)
+Ipc::Mem::PagePool::Init(const char *const shmId, const Ipc::Mem::PoolId stackId, const unsigned int capacity, const size_t pageSize)
 {
-    static uint32_t LastPagePoolId = 0;
-    if (++LastPagePoolId == 0)
-        ++LastPagePoolId; // skip zero pool id
-    return shm_new(PageStack)(id, LastPagePoolId, capacity, pageSize);
+    return shm_new(PageStack)(shmId, stackId, capacity, pageSize);
 }
 
 Ipc::Mem::PagePool::PagePool(const char *const id):
     pageIndex(shm_old(PageStack)(id)),
     theLevels(reinterpret_cast<Levels_t *>(
                   reinterpret_cast<char *>(pageIndex.getRaw()) +
-                  pageIndex->stackSize())),
+                  pageIndex->stackSize() + pageIndex->levelsPaddingSize())),
     theBuf(reinterpret_cast<char *>(theLevels + PageId::maxPurpose))
 {
 }

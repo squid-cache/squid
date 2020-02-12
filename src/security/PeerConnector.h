@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -100,10 +100,6 @@ protected:
     /// If socket already closed return false, else install the comm_close
     /// handler to monitor the socket.
     bool prepareSocket();
-
-    /// Sets the read timeout to avoid getting stuck while reading from a
-    /// silent server
-    void setReadTimeout();
 
     /// \returns true on successful TLS session initialization
     virtual bool initialize(Security::SessionPointer &);

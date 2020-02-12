@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -44,7 +44,7 @@ public:
     virtual void startHelperLookup(HttpRequest *request, AccessLogEntry::Pointer &al, AUTHCB *, void *);
     virtual const char *credentialsStr();
 
-    char *nonceb64;             /* "dcd98b7102dd2f0e8b11d0f600bfb0c093" */
+    char *noncehex;             /* "dcd98b7102dd2f0e8b11d0f600bfb0c093" */
     char *cnonce;               /* "0a4f113b" */
     char *realm;                /* = "testrealm@host.com" */
     char *pszPass;              /* = "Circle Of Life" */

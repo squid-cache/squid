@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,10 +7,11 @@
  */
 
 #include "squid.h"
+#include "base/CharacterSet.h"
 #include "Debug.h"
 #include "http/one/Parser.h"
-#include "http/one/Tokenizer.h"
 #include "mime_header.h"
+#include "parser/Tokenizer.h"
 #include "SquidConfig.h"
 
 /// RFC 7230 section 2.6 - 7 magic octets
@@ -61,20 +62,19 @@ Http::One::Parser::DelimiterCharacters()
            RelaxedDelimiterCharacters() : CharacterSet::SP;
 }
 
-bool
-Http::One::Parser::skipLineTerminator(Http1::Tokenizer &tok) const
+void
+Http::One::Parser::skipLineTerminator(Tokenizer &tok) const
 {
     if (tok.skip(Http1::CrLf()))
-        return true;
+        return;
 
     if (Config.onoff.relaxed_header_parser && tok.skipOne(CharacterSet::LF))
-        return true;
+        return;
 
     if (tok.atEnd() || (tok.remaining().length() == 1 && tok.remaining().at(0) == '\r'))
-        return false; // need more data
+        throw InsufficientInput();
 
     throw TexcHere("garbage instead of CRLF line terminator");
-    return false; // unreachable, but make naive compilers happy
 }
 
 /// all characters except the LF line terminator
@@ -102,7 +102,7 @@ LineCharacters()
 void
 Http::One::Parser::cleanMimePrefix()
 {
-    Http1::Tokenizer tok(mimeHeaderBlock_);
+    Tokenizer tok(mimeHeaderBlock_);
     while (tok.skipOne(RelaxedDelimiterCharacters())) {
         (void)tok.skipAll(LineCharacters()); // optional line content
         // LF terminator is required.
@@ -137,7 +137,7 @@ Http::One::Parser::cleanMimePrefix()
 void
 Http::One::Parser::unfoldMime()
 {
-    Http1::Tokenizer tok(mimeHeaderBlock_);
+    Tokenizer tok(mimeHeaderBlock_);
     const auto szLimit = mimeHeaderBlock_.length();
     mimeHeaderBlock_.clear();
     // prevent the mime sender being able to make append() realloc/grow multiple times.
@@ -210,24 +210,25 @@ Http::One::Parser::grabMimeBlock(const char *which, const size_t limit)
     return true;
 }
 
-// arbitrary maximum-length for headers which can be found by Http1Parser::getHeaderField()
+// arbitrary maximum-length for headers which can be found by Http1Parser::getHostHeaderField()
 #define GET_HDR_SZ  1024
 
 // BUG: returns only the first header line with given name,
 //      ignores multi-line headers and obs-fold headers
 char *
-Http::One::Parser::getHeaderField(const char *name)
+Http::One::Parser::getHostHeaderField()
 {
-    if (!headerBlockSize() || !name)
+    if (!headerBlockSize())
         return NULL;
 
     LOCAL_ARRAY(char, header, GET_HDR_SZ);
+    const char *name = "Host";
     const int namelen = strlen(name);
 
     debugs(25, 5, "looking for " << name);
 
     // while we can find more LF in the SBuf
-    Http1::Tokenizer tok(mimeHeaderBlock_);
+    Tokenizer tok(mimeHeaderBlock_);
     SBuf p;
 
     while (tok.prefix(p, LineCharacters())) {
@@ -249,12 +250,17 @@ Http::One::Parser::getHeaderField(const char *name)
         p.consume(namelen + 1);
 
         // TODO: optimize SBuf::trim to take CharacterSet directly
-        Http1::Tokenizer t(p);
+        Tokenizer t(p);
         t.skipAll(CharacterSet::WSP);
         p = t.remaining();
 
         // prevent buffer overrun on char header[];
         p.chop(0, sizeof(header)-1);
+
+        // currently only used for pre-parse Host header, ensure valid domain[:port] or ip[:port]
+        static const auto hostChars = CharacterSet("host",":[].-_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+        if (p.findFirstNotOf(hostChars) != SBuf::npos)
+            break; // error. line contains character not accepted in Host header
 
         // return the header field-value
         SBufToCstring(header, p);
@@ -272,10 +278,15 @@ Http::One::ErrorLevel()
 }
 
 // BWS = *( SP / HTAB ) ; WhitespaceCharacters() may relax this RFC 7230 rule
-bool
-Http::One::ParseBws(Tokenizer &tok)
+void
+Http::One::ParseBws(Parser::Tokenizer &tok)
 {
-    if (const auto count = tok.skipAll(Parser::WhitespaceCharacters())) {
+    const auto count = tok.skipAll(Parser::WhitespaceCharacters());
+
+    if (tok.atEnd())
+        throw InsufficientInput(); // even if count is positive
+
+    if (count) {
         // Generating BWS is a MUST-level violation so warn about it as needed.
         debugs(33, ErrorLevel(), "found " << count << " BWS octets");
         // RFC 7230 says we MUST parse BWS, so we fall through even if
@@ -283,6 +294,6 @@ Http::One::ParseBws(Tokenizer &tok)
     }
     // else we successfully "parsed" an empty BWS sequence
 
-    return true;
+    // success: no more BWS characters expected
 }
 

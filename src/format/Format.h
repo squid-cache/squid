@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -60,6 +60,12 @@ public:
     Token *format;
     Format *next;
 };
+
+/// Compiles a single logformat %code expression into the given buffer.
+/// Ignores any input characters after the expression.
+/// \param start  where the logformat expression begins
+/// \return the length of the parsed %code expression
+size_t AssembleOne(const char *start, MemBuf &buf, const AccessLogEntryPointer &ale);
 
 } // namespace Format
 

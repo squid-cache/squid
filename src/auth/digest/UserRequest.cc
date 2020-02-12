@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,6 @@
 #include "auth/digest/User.h"
 #include "auth/digest/UserRequest.h"
 #include "auth/State.h"
-#include "charset.h"
 #include "format/Format.h"
 #include "helper.h"
 #include "helper/Reply.h"
@@ -23,7 +22,7 @@
 #include "SquidTime.h"
 
 Auth::Digest::UserRequest::UserRequest() :
-    nonceb64(NULL),
+    noncehex(NULL),
     cnonce(NULL),
     realm(NULL),
     pszPass(NULL),
@@ -46,7 +45,7 @@ Auth::Digest::UserRequest::~UserRequest()
 {
     assert(LockCount()==0);
 
-    safe_free(nonceb64);
+    safe_free(noncehex);
     safe_free(cnonce);
     safe_free(realm);
     safe_free(pszPass);
@@ -109,11 +108,11 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
     }
 
     DigestCalcHA1(digest_request->algorithm, NULL, NULL, NULL,
-                  authenticateDigestNonceNonceb64(digest_request->nonce),
+                  authenticateDigestNonceNonceHex(digest_request->nonce),
                   digest_request->cnonce,
                   digest_user->HA1, SESSIONKEY);
     SBuf sTmp = request->method.image();
-    DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceb64(digest_request->nonce),
+    DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceHex(digest_request->nonce),
                        digest_request->nc, digest_request->cnonce, digest_request->qop,
                        sTmp.c_str(), digest_request->uri, HA2, Response);
 
@@ -135,7 +134,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
              * used.
              */
             sTmp = HttpRequestMethod(Http::METHOD_GET).image();
-            DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceb64(digest_request->nonce),
+            DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceHex(digest_request->nonce),
                                digest_request->nc, digest_request->cnonce, digest_request->qop,
                                sTmp.c_str(), digest_request->uri, HA2, Response);
 
@@ -176,7 +175,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
     /* check Auth::Pending to avoid loop */
 
     if (!authDigestNonceIsValid(digest_request->nonce, digest_request->nc) && user()->credentials() != Auth::Pending) {
-        debugs(29, 3, auth_user->username() << "' validated OK but nonce stale: " << digest_request->nonceb64);
+        debugs(29, 3, auth_user->username() << "' validated OK but nonce stale: " << digest_request->noncehex);
         /* Pending prevent banner and makes a ldap control */
         auth_user->credentials(Auth::Pending);
         nonce->flags.valid = false;
@@ -244,8 +243,8 @@ Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int acce
             nextnonce = authenticateDigestNonceNew();
             authDigestUserLinkNonce(digest_user, nextnonce);
         }
-        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nextnonce) << "\"");
-        httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceb64(nextnonce));
+        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceHex(nextnonce) << "\"");
+        httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceHex(nextnonce));
     }
 }
 
@@ -276,8 +275,8 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
             nonce = authenticateDigestNonceNew();
             authDigestUserLinkNonce(digest_user, nonce);
         }
-        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nonce) << "\"");
-        httpTrailerPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceb64(nonce));
+        debugs(29, 9, "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceHex(nonce) << "\"");
+        httpTrailerPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceHex(nonce));
     }
 }
 #endif
@@ -298,19 +297,10 @@ Auth::Digest::UserRequest::startHelperLookup(HttpRequest *request, AccessLogEntr
     }
 
     const char *keyExtras = helperRequestKeyExtras(request, al);
-    if (static_cast<Auth::Digest::Config*>(Auth::SchemeConfig::Find("digest"))->utf8) {
-        char userstr[1024];
-        latin1_to_utf8(userstr, sizeof(userstr), user()->username());
-        if (keyExtras)
-            snprintf(buf, 8192, "\"%s\":\"%s\" %s\n", userstr, realm, keyExtras);
-        else
-            snprintf(buf, 8192, "\"%s\":\"%s\"\n", userstr, realm);
-    } else {
-        if (keyExtras)
-            snprintf(buf, 8192, "\"%s\":\"%s\" %s\n", user()->username(), realm, keyExtras);
-        else
-            snprintf(buf, 8192, "\"%s\":\"%s\"\n", user()->username(), realm);
-    }
+    if (keyExtras)
+        snprintf(buf, 8192, "\"%s\":\"%s\" %s\n", user()->username(), realm, keyExtras);
+    else
+        snprintf(buf, 8192, "\"%s\":\"%s\"\n", user()->username(), realm);
 
     helperSubmit(digestauthenticators, buf, Auth::Digest::UserRequest::HandleReply,
                  new Auth::StateData(this, handler, data));
@@ -327,7 +317,8 @@ Auth::Digest::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
 
     // add new helper kv-pair notes to the credentials object
     // so that any transaction using those credentials can access them
-    auth_user_request->user()->notes.appendNewOnly(&reply.notes);
+    static const NotePairs::Names appendables = { SBuf("group"), SBuf("nonce"), SBuf("tag") };
+    auth_user_request->user()->notes.replaceOrAddOrAppend(&reply.notes, appendables);
     // remove any private credentials detail which got added.
     auth_user_request->user()->notes.remove("ha1");
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -72,7 +72,9 @@ public:
 
     virtual bool inheritProperties(const Http::Message *);
 
-    bool updateOnNotModified(HttpReply const *other);
+    /// \returns nil (if no updates are necessary)
+    /// \returns a new reply combining this reply with 304 updates (otherwise)
+    Pointer recreateOnNotModified(const HttpReply &reply304) const;
 
     /** set commonly used info with one call */
     void setHeaders(Http::StatusCode status,
@@ -81,8 +83,11 @@ public:
     /** \return a ready to use mem buffer with a packed reply */
     MemBuf *pack() const;
 
+    /// construct and return an HTTP/200 (Connection Established) response
+    static HttpReplyPointer MakeConnectionEstablished();
+
     /** construct a 304 reply and return it */
-    HttpReply *make304() const;
+    HttpReplyPointer make304() const;
 
     void redirect(Http::StatusCode, const char *);
 

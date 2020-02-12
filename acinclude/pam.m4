@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -21,7 +21,7 @@ AC_DEFUN([CHECK_STRUCT_PAM_CONV], [
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <security/pam_appl.h>
 static int
-password_conversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr) {}
+password_conversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr) { return 0; }
 static struct pam_conv conv = { &password_conversation, 0 };
 ]])], [
    squid_cv_pam_conv_signature=linux
@@ -29,7 +29,7 @@ static struct pam_conv conv = { &password_conversation, 0 };
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <security/pam_appl.h>
 static int
-password_conversation(int num_msg, struct pam_message **msg, struct pam_response **resp, void *appdata_ptr) {}
+password_conversation(int num_msg, struct pam_message **msg, struct pam_response **resp, void *appdata_ptr) { return 0; }
 static struct pam_conv conv = { &password_conversation, 0 };
 ]])], [ 
   squid_cv_pam_conv_signature=solaris

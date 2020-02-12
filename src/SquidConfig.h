@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -545,6 +545,12 @@ public:
         int v4_first;       ///< Place IPv4 first in the order of DNS results.
         ssize_t packet_max; ///< maximum size EDNS advertised for DNS replies.
     } dns;
+
+    struct {
+        int connect_limit;
+        int connect_gap;
+        int connect_timeout;
+    } happyEyeballs;
 };
 
 extern SquidConfig Config;

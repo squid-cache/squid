@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -327,7 +327,7 @@ peerDigestRequest(PeerDigest * pd)
     debugs(72, 2, url);
 
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initCacheDigest);
-    req = HttpRequest::FromUrl(url, mx);
+    req = HttpRequest::FromUrlXXX(url, mx);
 
     assert(req);
 
@@ -520,13 +520,12 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
         return -1;
 
     if ((hdr_size = headersEnd(buf, size))) {
-        HttpReply const *reply = fetch->entry->getReply();
-        assert(reply);
-        assert(reply->sline.status() != Http::scNone);
-        const Http::StatusCode status = reply->sline.status();
+        const auto &reply = fetch->entry->mem().freshestReply();
+        const auto status = reply.sline.status();
+        assert(status != Http::scNone);
         debugs(72, 3, "peerDigestFetchReply: " << pd->host << " status: " << status <<
-               ", expires: " << (long int) reply->expires << " (" << std::showpos <<
-               (int) (reply->expires - squid_curtime) << ")");
+               ", expires: " << (long int) reply.expires << " (" << std::showpos <<
+               (int) (reply.expires - squid_curtime) << ")");
 
         /* this "if" is based on clientHandleIMSReply() */
 
@@ -565,7 +564,7 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
             }
         } else {
             /* some kind of a bug */
-            peerDigestFetchAbort(fetch, buf, reply->sline.reason());
+            peerDigestFetchAbort(fetch, buf, reply.sline.reason());
             return -1;      /* XXX -1 will abort stuff in ReadReply! */
         }
 
@@ -604,13 +603,13 @@ peerDigestSwapInHeaders(void *data, char *buf, ssize_t size)
     assert(!fetch->offset);
 
     if ((hdr_size = headersEnd(buf, size))) {
-        assert(fetch->entry->getReply());
-        assert(fetch->entry->getReply()->sline.status() != Http::scNone);
+        const auto &reply = fetch->entry->mem().freshestReply();
+        const auto status = reply.sline.status();
+        assert(status != Http::scNone);
 
-        if (fetch->entry->getReply()->sline.status() != Http::scOkay) {
+        if (status != Http::scOkay) {
             debugs(72, DBG_IMPORTANT, "peerDigestSwapInHeaders: " << fetch->pd->host <<
-                   " status " << fetch->entry->getReply()->sline.status() <<
-                   " got cached!");
+                   " status " << status << " got cached!");
 
             peerDigestFetchAbort(fetch, buf, "internal status error");
             return -1;
@@ -642,7 +641,8 @@ peerDigestSwapInCBlock(void *data, char *buf, ssize_t size)
     if (size >= (ssize_t)StoreDigestCBlockSize) {
         PeerDigest *pd = fetch->pd;
 
-        assert(pd && fetch->entry->getReply());
+        assert(pd);
+        assert(fetch->entry->mem_obj);
 
         if (peerDigestSetCBlock(pd, buf)) {
             /* XXX: soon we will have variable header size */

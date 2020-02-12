@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -27,11 +27,6 @@
 void GetInfo(Mgr::InfoActionData& stats);
 void DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry);
 void DumpMallocStatistics(StoreEntry* sentry);
-
-Mgr::InfoActionData::InfoActionData()
-{
-    memset(this, 0, sizeof(*this));
-}
 
 Mgr::InfoActionData&
 Mgr::InfoActionData::operator += (const InfoActionData& stats)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -74,9 +74,9 @@ std::ostream &CurrentException(std::ostream &);
     try { \
         code \
     } catch (...) { \
-        debugs(0, DBG_IMPORTANT, "BUG: ignoring exception;\n" << \
-               "    bug location: " << Here() << "\n" << \
-               "    ignored exception: " << CurrentException); \
+        debugs(0, DBG_IMPORTANT, "BUG: ignoring exception;" << \
+               Debug::Extra << "bug location: " << Here() << \
+               Debug::Extra << "ignored exception: " << CurrentException); \
     }
 
 #endif /* SQUID__TEXTEXCEPTION_H */

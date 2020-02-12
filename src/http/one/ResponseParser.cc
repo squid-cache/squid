@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,8 +9,8 @@
 #include "squid.h"
 #include "Debug.h"
 #include "http/one/ResponseParser.h"
-#include "http/one/Tokenizer.h"
 #include "http/ProtocolVersion.h"
+#include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 
@@ -47,7 +47,7 @@ Http::One::ResponseParser::firstLineSize() const
 // NP: we found the protocol version and consumed it already.
 // just need the status code and reason phrase
 int
-Http::One::ResponseParser::parseResponseStatusAndReason(Http1::Tokenizer &tok, const CharacterSet &WspDelim)
+Http::One::ResponseParser::parseResponseStatusAndReason(Tokenizer &tok, const CharacterSet &WspDelim)
 {
     if (!completedStatus_) {
         debugs(74, 9, "seek status-code in: " << tok.remaining().substr(0,10) << "...");
@@ -87,14 +87,13 @@ Http::One::ResponseParser::parseResponseStatusAndReason(Http1::Tokenizer &tok, c
     static const CharacterSet phraseChars = CharacterSet::WSP + CharacterSet::VCHAR + CharacterSet::OBSTEXT;
     (void)tok.prefix(reasonPhrase_, phraseChars); // optional, no error if missing
     try {
-        if (skipLineTerminator(tok)) {
-            debugs(74, DBG_DATA, "parse remaining buf={length=" << tok.remaining().length() << ", data='" << tok.remaining() << "'}");
-            buf_ = tok.remaining(); // resume checkpoint
-            return 1;
-        }
+        skipLineTerminator(tok);
+        buf_ = tok.remaining(); // resume checkpoint
+        debugs(74, DBG_DATA, Raw("leftovers", buf_.rawContent(), buf_.length()));
+        return 1;
+    } catch (const InsufficientInput &) {
         reasonPhrase_.clear();
         return 0; // need more to be sure we have it all
-
     } catch (const std::exception &ex) {
         debugs(74, 6, "invalid status-line: " << ex.what());
     }
@@ -119,7 +118,7 @@ Http::One::ResponseParser::parseResponseStatusAndReason(Http1::Tokenizer &tok, c
 int
 Http::One::ResponseParser::parseResponseFirstLine()
 {
-    Http1::Tokenizer tok(buf_);
+    Tokenizer tok(buf_);
 
     const CharacterSet &WspDelim = DelimiterCharacters();
 
@@ -159,8 +158,13 @@ Http::One::ResponseParser::parseResponseFirstLine()
         debugs(74, DBG_DATA, "parse remaining buf={length=" << tok.remaining().length() << ", data='" << tok.remaining() << "'}");
         buf_ = tok.remaining(); // resume checkpoint
         return parseResponseStatusAndReason(tok, WspDelim);
-
-    } else if (buf_.length() > Http1magic.length() && buf_.length() > IcyMagic.length()) {
+    } else if (buf_.length() < Http1magic.length() && Http1magic.startsWith(buf_)) {
+        debugs(74, 7, Raw("valid HTTP/1 prefix", buf_.rawContent(), buf_.length()));
+        return 0;
+    } else if (buf_.length() < IcyMagic.length() && IcyMagic.startsWith(buf_)) {
+        debugs(74, 7, Raw("valid ICY prefix", buf_.rawContent(), buf_.length()));
+        return 0;
+    } else {
         debugs(74, 2, "unknown/missing prefix magic. Interpreting as HTTP/0.9");
         // found something that looks like an HTTP/0.9 response
         // Gateway/Transform it into HTTP/1.1
@@ -180,7 +184,9 @@ Http::One::ResponseParser::parseResponseFirstLine()
         return 1; // no more parsing
     }
 
-    return 0; // need more to parse anything.
+    // unreachable
+    assert(false);
+    return -1;
 }
 
 bool

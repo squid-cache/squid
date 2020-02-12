@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -13,6 +13,7 @@
 
 #include "comm/forward.h"
 #include "ipc/Forwarder.h"
+#include "log/forward.h"
 #include "mgr/ActionParams.h"
 
 class CommCloseCbParams;
@@ -33,7 +34,7 @@ class Forwarder: public Ipc::Forwarder
 
 public:
     Forwarder(const Comm::ConnectionPointer &aConn, const ActionParams &aParams, HttpRequest* aRequest,
-              StoreEntry* anEntry);
+              StoreEntry* anEntry, const AccessLogEntryPointer &anAle);
     virtual ~Forwarder();
 
 protected:
@@ -52,6 +53,7 @@ private:
     StoreEntry* entry; ///< Store entry expecting the response
     Comm::ConnectionPointer conn; ///< HTTP client connection descriptor
     AsyncCall::Pointer closer; ///< comm_close handler for the HTTP connection
+    AccessLogEntryPointer ale; ///< more transaction details
 };
 
 } // namespace Mgr

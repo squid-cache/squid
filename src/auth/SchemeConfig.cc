@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,6 +16,7 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
+#include "errorpage.h"
 #include "format/Format.h"
 #include "globals.h"
 #include "Store.h"
@@ -51,7 +52,7 @@ Auth::SchemeConfig::CreateAuthUser(const char *proxy_auth, AccessLogEntry::Point
         config->keyExtras->assemble(rmb, al, 0);
     }
 
-    return config->decode(proxy_auth, rmb.hasContent() ? rmb.content() : NULL);
+    return config->decode(proxy_auth, al->request, rmb.hasContent() ? rmb.content() : nullptr);
 }
 
 Auth::SchemeConfig *
@@ -176,5 +177,41 @@ Auth::SchemeConfig::done()
     delete keyExtras;
     keyExtras = NULL;
     keyExtrasLine.clean();
+}
+
+bool
+Auth::SchemeConfig::isCP1251EncodingAllowed(const HttpRequest *request)
+{
+    String hdr;
+
+    if (!request || !request->header.getList(Http::HdrType::ACCEPT_LANGUAGE, &hdr))
+        return false;
+
+    char lang[256];
+    size_t pos = 0; // current parsing position in header string
+
+    while (strHdrAcptLangGetItem(hdr, lang, 256, pos)) {
+
+        /* wildcard uses the configured default language */
+        if (lang[0] == '*' && lang[1] == '\0')
+            return false;
+
+        if ((strncmp(lang, "ru", 2) == 0 // Russian
+                || strncmp(lang, "uk", 2) == 0 // Ukrainian
+                || strncmp(lang, "be", 2) == 0 // Belorussian
+                || strncmp(lang, "bg", 2) == 0 // Bulgarian
+                || strncmp(lang, "sr", 2) == 0)) { // Serbian
+            if (lang[2] == '-') {
+                if (strcmp(lang + 3, "latn") == 0) // not Cyrillic
+                    return false;
+            } else if (xisalpha(lang[2])) {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    return false;
 }
 

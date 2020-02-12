@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -343,10 +343,10 @@ Valid_Global_Groups(char *UserName, const char **Groups)
             break;
     }
     if (domain_qualify == NULL) {
-        strcpy(User, NTDomain);
-        strcpy(NTDomain, DefaultDomain);
+        xstrncpy(User, NTDomain, sizeof(User));
+        xstrncpy(NTDomain, DefaultDomain, sizeof(NTDomain));
     } else {
-        strcpy(User, domain_qualify + 1);
+        xstrncpy(User, domain_qualify + 1, sizeof(User));
         domain_qualify[0] = '\0';
         strlwr(NTDomain);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,6 +19,7 @@
 #include "fd.h"
 #include "fde.h"
 #include "sbuf/SBuf.h"
+#include "SquidConfig.h"
 #include "StatCounters.h"
 
 // Does comm check this fd for read readiness?
@@ -239,5 +240,16 @@ Comm::ReadCancel(int fd, AsyncCall::Pointer &callback)
 
     /* And the IO event */
     Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+}
+
+time_t
+Comm::MortalReadTimeout(const time_t startTime, const time_t lifetimeLimit)
+{
+    if (lifetimeLimit > 0) {
+        const time_t timeUsed = (squid_curtime > startTime) ? (squid_curtime - startTime) : 0;
+        const time_t timeLeft = (lifetimeLimit > timeUsed) ? (lifetimeLimit - timeUsed) : 0;
+        return min(::Config.Timeout.read, timeLeft);
+    } else
+        return ::Config.Timeout.read;
 }
 

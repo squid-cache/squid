@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -113,7 +113,9 @@ Helper::ChildConfig::parseConfig()
                 self_destruct();
                 return;
             }
-        } else {
+        } else if (strncmp(token, "reservation-timeout=", 20) == 0)
+            reservationTimeout = xatoui(token + 20);
+        else {
             debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Undefined option: " << token << ".");
             self_destruct();
             return;

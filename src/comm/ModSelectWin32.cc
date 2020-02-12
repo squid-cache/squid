@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -503,7 +503,6 @@ Comm::DoSelect(int msec)
 
             if ((hdl = F->read_handler)) {
                 F->read_handler = NULL;
-                F->flags.read_pending = 0;
                 commUpdateReadBits(fd, NULL);
                 hdl(fd, F->read_data);
                 ++ statCounter.select_fds;

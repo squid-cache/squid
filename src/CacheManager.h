@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 #define SQUID_CACHEMANAGER_H
 
 #include "comm/forward.h"
+#include "log/forward.h"
 #include "mgr/Action.h"
 #include "mgr/ActionProfile.h"
 #include "mgr/Command.h"
@@ -42,7 +43,7 @@ public:
     Mgr::Action::Pointer createRequestedAction(const Mgr::ActionParams &);
     const Menu& menu() const { return menu_; }
 
-    void Start(const Comm::ConnectionPointer &client, HttpRequest * request, StoreEntry * entry);
+    void start(const Comm::ConnectionPointer &client, HttpRequest *request, StoreEntry *entry, const AccessLogEntryPointer &ale);
 
     static CacheManager* GetInstance();
     const char *ActionProtection(const Mgr::ActionProfilePointer &profile);

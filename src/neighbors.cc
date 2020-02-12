@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -168,6 +168,10 @@ peerAllowedToUse(const CachePeer * p, PeerSelector * ps)
 
     ACLFilledChecklist checklist(p->access, request, NULL);
     checklist.al = ps->al;
+    if (ps->al && ps->al->reply) {
+        checklist.reply = ps->al->reply.getRaw();
+        HTTPMSGLOCK(checklist.reply);
+    }
     checklist.syncAle(request, nullptr);
     return checklist.fastCheck().allowed();
 }
@@ -565,9 +569,8 @@ neighbors_init(void)
                 if (thisPeer->http_port != s->s.port())
                     continue;
 
-                debugs(15, DBG_IMPORTANT, "WARNING: Peer looks like this host");
-
-                debugs(15, DBG_IMPORTANT, "         Ignoring " <<
+                debugs(15, DBG_IMPORTANT, "WARNING: Peer looks like this host." <<
+                       Debug::Extra << "Ignoring " <<
                        neighborTypeStr(thisPeer) << " " << thisPeer->host <<
                        "/" << thisPeer->http_port << "/" <<
                        thisPeer->icp.port);
@@ -1403,7 +1406,7 @@ peerCountMcastPeersStart(void *data)
     p->in_addr.toUrl(url+7, MAX_URL -8 );
     strcat(url, "/");
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initPeerMcast);
-    HttpRequest *req = HttpRequest::FromUrl(url, mx);
+    auto *req = HttpRequest::FromUrlXXX(url, mx);
     assert(req != nullptr);
     StoreEntry *fake = storeCreateEntry(url, url, RequestFlags(), Http::METHOD_GET);
     const auto psstate = new PeerSelector(nullptr);
@@ -1775,6 +1778,7 @@ neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Addres
     }
 
     debugs(15, 3, "neighborsHtcpReply: e = " << e);
+    // TODO: Refactor (ping_reply_callback,ircb_data) to add CodeContext.
     mem->ping_reply_callback(p, ntype, AnyP::PROTO_HTCP, htcp, mem->ircb_data);
 }
 

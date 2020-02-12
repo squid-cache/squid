@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -46,13 +46,6 @@ struct LookupTableRecord
  * if (item != ENUM_INVALID_VALUE) { // do stuff }
  *
  */
-
-class SBufCaseInsensitiveLess : public std::binary_function<SBuf, SBuf, bool> {
-public:
-    bool operator() (const SBuf &x, const SBuf &y) const {
-        return x.caseCmp(y) < 0;
-    }
-};
 
 template<typename EnumType, typename RecordType = LookupTableRecord<EnumType>, typename Hasher = CaseInsensitiveSBufHash >
 class LookupTable

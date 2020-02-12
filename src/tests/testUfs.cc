@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -146,13 +146,13 @@ testUfs::testUfsSearch()
         RequestFlags flags;
         flags.cachable = true;
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, Http::METHOD_GET);
-        HttpReply *rep = (HttpReply *) pe->getReply();  // bypass const
-        rep->setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
+        auto &reply = pe->mem().adjustableBaseReply();
+        reply.setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
 
         pe->setPublicKey();
 
         pe->buffer();
-        pe->getReply()->packHeadersUsingSlowPacker(*pe);
+        pe->mem().freshestReply().packHeadersUsingSlowPacker(*pe);
         pe->flush();
         pe->timestampsSet();
         pe->complete();

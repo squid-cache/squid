@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -26,13 +26,16 @@ Comm::ConnectionPointer Comm::Connection::copyDetails() const STUB_RETVAL(NULL)
 void Comm::Connection::close() STUB
 CachePeer * Comm::Connection::getPeer() const STUB_RETVAL(NULL)
 void Comm::Connection::setPeer(CachePeer * p) STUB
+ScopedId Comm::Connection::codeContextGist() const STUB_RETVAL(id.detach())
+std::ostream &Comm::Connection::detailCodeContext(std::ostream &os) const STUB_RETVAL(os)
+InstanceIdDefinitions(Comm::Connection, "conn", uint64_t);
 
 #include "comm/ConnOpener.h"
 CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 bool Comm::ConnOpener::doneAll() const STUB_RETVAL(false)
 void Comm::ConnOpener::start() STUB
 void Comm::ConnOpener::swanSong() STUB
-Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &, time_t) : AsyncJob("STUB Comm::ConnOpener") STUB
+Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &, const AsyncCall::Pointer &, time_t) : AsyncJob("STUB Comm::ConnOpener") STUB
     Comm::ConnOpener::~ConnOpener() STUB
     void Comm::ConnOpener::setHost(const char *) STUB
     const char * Comm::ConnOpener::getHost() const STUB_RETVAL(NULL)

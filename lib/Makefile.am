@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -57,12 +57,10 @@ EXTRA_libmiscutil_la_SOURCES = \
 
 libmiscencoding_la_SOURCES = \
 	base64.c \
-	charset.c \
 	html_quote.c \
 	md5.c \
 	rfc1738.c \
-	rfc2617.c \
-	uudecode.c
+	rfc2617.c
 
 libmisccontainers_la_SOURCES = \
 	hash.cc

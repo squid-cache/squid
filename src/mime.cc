@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -404,7 +404,7 @@ MimeIcon::created(StoreEntry *newEntry)
     /* fill `e` with a canned 2xx response object */
 
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initIcon);
-    HttpRequestPointer r(HttpRequest::FromUrl(url_, mx));
+    HttpRequestPointer r(HttpRequest::FromUrlXXX(url_, mx));
     if (!r)
         fatalf("mimeLoadIcon: cannot parse internal URL: %s", url_);
 
@@ -436,7 +436,8 @@ MimeIcon::created(StoreEntry *newEntry)
     e->flush();
     e->complete();
     e->timestampsSet();
-    e->unlock("MimeIcon::created");
+    // MimeIcons are only loaded once, prevent accidental destruction
+    // e->unlock("MimeIcon::created");
     debugs(25, 3, "Loaded icon " << url_);
 }
 

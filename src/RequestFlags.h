@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,8 +36,6 @@ public:
     bool loopDetected = false;
     /** the connection can be kept alive */
     bool proxyKeepalive = false;
-    /* this should be killed, also in httpstateflags */
-    bool proxying = false;
     /** content has expired, need to refresh it */
     bool refresh = false;
     /** request was redirected by redirectors */

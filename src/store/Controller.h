@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -88,8 +88,8 @@ public:
     /// called to get rid of no longer needed entry data in RAM, if any
     void memoryOut(StoreEntry &, const bool preserveSwappable);
 
-    /// update old entry metadata and HTTP headers using a newer entry
-    void updateOnNotModified(StoreEntry *old, const StoreEntry &newer);
+    /// using a 304 response, update the old entry (metadata and reply headers)
+    void updateOnNotModified(StoreEntry *old, StoreEntry &e304);
 
     /// tries to make the entry available for collapsing future requests
     bool allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &);

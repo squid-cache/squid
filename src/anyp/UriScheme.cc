@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -46,6 +46,25 @@ AnyP::UriScheme::Init()
             LowercaseSchemeNames_.emplace_back(image);
         }
     }
+}
+
+const AnyP::ProtocolType
+AnyP::UriScheme::FindProtocolType(const SBuf &scheme)
+{
+    if (scheme.isEmpty())
+        return AnyP::PROTO_NONE;
+
+    Init();
+
+    auto img = scheme;
+    img.toLower();
+    // TODO: use base/EnumIterator.h if possible
+    for (int i = AnyP::PROTO_NONE + 1; i < AnyP::PROTO_UNKNOWN; ++i) {
+        if (LowercaseSchemeNames_.at(i) == img)
+            return AnyP::ProtocolType(i);
+    }
+
+    return AnyP::PROTO_UNKNOWN;
 }
 
 unsigned short

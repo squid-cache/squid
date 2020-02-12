@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2018 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -23,6 +23,7 @@ namespace Acl
 {
 
 class Address;
+class Answer;
 class InnerNode;
 class NotNode;
 class AndNode;
@@ -34,8 +35,7 @@ void Init(void);
 
 } // namespace Acl
 
-class allow_t;
-typedef void ACLCB(allow_t, void *);
+typedef void ACLCB(Acl::Answer, void *);
 
 #define ACL_NAME_SZ 64
 
