@@ -1010,7 +1010,8 @@ mainReconfigureFinish(void *)
 
     neighbors_init();
 
-    storeDirOpenSwapLogs();
+    if (!IamCoordinatorProcess())
+        storeDirOpenSwapLogs();
 
     mimeInit(Config.mimeTablePathname);
 
