@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -121,6 +121,8 @@ Client::setVirginReply(HttpReply *rep)
     assert(rep);
     theVirginReply = rep;
     HTTPMSGLOCK(theVirginReply);
+    if (fwd->al)
+        fwd->al->reply = theVirginReply;
     return theVirginReply;
 }
 
@@ -140,6 +142,8 @@ Client::setFinalReply(HttpReply *rep)
     assert(rep);
     theFinalReply = rep;
     HTTPMSGLOCK(theFinalReply);
+    if (fwd->al)
+        fwd->al->reply = theFinalReply;
 
     // give entry the reply because haveParsedReplyHeaders() expects it there
     entry->replaceHttpReply(theFinalReply, false); // but do not write yet
@@ -521,8 +525,9 @@ Client::blockCaching()
         // This relatively expensive check is not in StoreEntry::checkCachable:
         // That method lacks HttpRequest and may be called too many times.
         ACLFilledChecklist ch(acl, originalRequest().getRaw());
-        ch.reply = const_cast<HttpReply*>(entry->getReply()); // ACLFilledChecklist API bug
+        ch.reply = const_cast<HttpReply*>(&entry->mem().freshestReply()); // ACLFilledChecklist API bug
         HTTPMSGLOCK(ch.reply);
+        ch.al = fwd->al;
         if (!ch.fastCheck().allowed()) { // when in doubt, block
             debugs(20, 3, "store_miss prohibits caching");
             return true;

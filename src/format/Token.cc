@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -148,6 +148,7 @@ static TokenTableEntry TokenTableMisc[] = {
     TokenTableEntry("err_detail", LFT_SQUID_ERROR_DETAIL ),
     TokenTableEntry("note", LFT_NOTE ),
     TokenTableEntry("credentials", LFT_CREDENTIALS),
+    TokenTableEntry("master_xaction", LFT_MASTER_XACTION),
     /*
      * Legacy external_acl_type format tokens
      */
@@ -180,6 +181,10 @@ static TokenTableEntry TokenTableMisc[] = {
 
 static TokenTableEntry TokenTableProxyProtocol[] = {
     TokenTableEntry(">h", LFT_PROXY_PROTOCOL_RECEIVED_HEADER),
+};
+
+static TokenTableEntry TokenTableTransport[] = {
+    TokenTableEntry(">connection_id", LFT_TRANSPORT_CLIENT_CONNECTION_ID),
 };
 
 #if USE_ADAPTATION
@@ -258,6 +263,7 @@ Format::Token::Init()
     TheConfig.registerTokens(SBuf("ssl"),::Format::TokenTableSsl);
 #endif
     TheConfig.registerTokens(SBuf("proxy_protocol"), ::Format::TokenTableProxyProtocol);
+    TheConfig.registerTokens(SBuf("transport"), ::Format::TokenTableTransport);
 }
 
 /// Scans a token table to see if the next token exists there

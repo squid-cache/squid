@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -99,6 +99,10 @@ public:
 
     /// configures the active debugging context to write syslog ALERT
     static void ForceAlert();
+
+    /// prefixes each grouped debugs() line after the first one in the group
+    static std::ostream& Extra(std::ostream &os) { return os << "\n    "; }
+
 private:
     static Context *Current; ///< deepest active context; nil outside debugs()
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -140,7 +140,6 @@ private:
     void createError(const char *const msg);
     void handleWriteCompletionSuccess(const WriteRequest &request);
     void handleWriteCompletionProblem(const int errflag, const WriteRequest &request);
-    bool droppedEarlierRequest(const WriteRequest &request) const;
 
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir

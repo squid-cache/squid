@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -168,6 +168,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 {
     setConn(aConn);
     al = new AccessLogEntry;
+    CodeContext::Reset(al);
     al->cache.start_time = current_time;
     if (aConn) {
         al->tcpClient = clientConnection = aConn->clientConnection;
@@ -347,7 +348,8 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     http->uri = (char *)xcalloc(url_sz, 1);
     strcpy(http->uri, url); // XXX: polluting http->uri before parser validation
 
-    if ((request = HttpRequest::FromUrl(http->uri, mx, method)) == NULL) {
+    request = HttpRequest::FromUrlXXX(http->uri, mx, method);
+    if (!request) {
         debugs(85, 5, "Invalid URL: " << http->uri);
         return -1;
     }
@@ -1269,7 +1271,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
             // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
             if (urlNote != NULL && strcmp(urlNote, http->uri)) {
                 AnyP::Uri tmpUrl;
-                if (tmpUrl.parse(old_request->method, urlNote)) {
+                if (tmpUrl.parse(old_request->method, SBuf(urlNote))) {
                     HttpRequest *new_request = old_request->clone();
                     new_request->url = tmpUrl;
                     debugs(61, 2, "URL-rewriter diverts URL from " << old_request->effectiveRequestUri() << " to " << new_request->effectiveRequestUri());
@@ -1584,10 +1586,6 @@ ClientHttpRequest::sslBumpEstablish(Comm::Flag errflag)
         return;
     }
 
-    // We lack HttpReply which logRequest() uses to log the status code.
-    // TODO: Use HttpReply instead of the "200 Connection established" string.
-    al->http.code = 200;
-
 #if USE_AUTH
     // Preserve authentication info for the ssl-bumped request
     if (request->auth_user_request != NULL)
@@ -1616,10 +1614,13 @@ ClientHttpRequest::sslBumpStart()
         return;
     }
 
+    al->reply = HttpReply::MakeConnectionEstablished();
+
+    const auto mb = al->reply->pack();
     // send an HTTP 200 response to kick client SSL negotiation
     // TODO: Unify with tunnel.cc and add a Server(?) header
-    static const char *const conn_established = "HTTP/1.1 200 Connection established\r\n\r\n";
-    Comm::Write(getConn()->clientConnection, conn_established, strlen(conn_established), bumpCall, NULL);
+    Comm::Write(getConn()->clientConnection, mb, bumpCall);
+    delete mb;
 }
 
 #endif
@@ -1627,9 +1628,9 @@ ClientHttpRequest::sslBumpStart()
 bool
 ClientHttpRequest::gotEnough() const
 {
-    /** TODO: should be querying the stream. */
+    // TODO: See also (and unify with) clientReplyContext::storeNotOKTransferDone()
     int64_t contentLength =
-        memObject()->getReply()->bodySize(request->method);
+        memObject()->baseReply().bodySize(request->method);
     assert(contentLength >= 0);
 
     if (out.offset < contentLength)
@@ -2017,6 +2018,8 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
         request_satisfaction_offset = 0;
         storeEntry()->replaceHttpReply(new_rep);
         storeEntry()->timestampsSet();
+
+        al->reply = new_rep;
 
         if (!adaptedBodySource) // no body
             storeEntry()->complete();

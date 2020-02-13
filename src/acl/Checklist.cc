@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -371,7 +371,7 @@ void
 ACLChecklist::calcImplicitAnswer()
 {
     const auto lastAction = (accessList && cbdataReferenceValid(accessList)) ?
-                               accessList->lastAction() : Acl::Answer(ACCESS_DUNNO);
+                            accessList->lastAction() : Acl::Answer(ACCESS_DUNNO);
     auto implicitRuleAnswer = Acl::Answer(ACCESS_DUNNO);
     if (lastAction == ACCESS_DENIED) // reverse last seen "deny"
         implicitRuleAnswer = Acl::Answer(ACCESS_ALLOWED);

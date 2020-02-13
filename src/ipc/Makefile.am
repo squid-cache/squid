@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -64,7 +64,8 @@ libipc_la_SOURCES = \
 	mem/PageStack.h \
 	mem/Pointer.h \
 	mem/Segment.cc \
-	mem/Segment.h
+	mem/Segment.h \
+	mem/forward.h
 
 DEFS += -DDEFAULT_STATEDIR=\"$(localstatedir)/run/squid\"
 

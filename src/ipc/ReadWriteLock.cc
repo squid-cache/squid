@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -89,6 +89,26 @@ Ipc::ReadWriteLock::switchExclusiveToShared()
     ++readLevel; // must be done before we release exclusive control
     ++readers;
     unlockExclusive();
+}
+
+bool
+Ipc::ReadWriteLock::unlockSharedAndSwitchToExclusive()
+{
+    assert(readers > 0);
+    if (!writeLevel++) { // we are the first writer + lock "new" readers out
+        assert(!appending);
+        unlockShared();
+        if (!readers) {
+            writing = true;
+            return true;
+        }
+        // somebody is still reading: fall through
+    } else {
+        // somebody is still writing: just stop reading
+        unlockShared();
+    }
+    --writeLevel;
+    return false;
 }
 
 void

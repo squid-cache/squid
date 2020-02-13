@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -211,7 +211,10 @@ public:
 
     static void httpRequestPack(void *obj, Packable *p);
 
-    static HttpRequest * FromUrl(const char * url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
+    static HttpRequest * FromUrl(const SBuf &url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
+
+    /// \deprecated use SBuf variant instead
+    static HttpRequest * FromUrlXXX(const char * url, const MasterXaction::Pointer &, const HttpRequestMethod &method = Http::METHOD_GET);
 
     ConnStateData *pinnedConnection();
 
