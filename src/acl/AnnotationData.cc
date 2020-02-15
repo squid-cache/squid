@@ -16,23 +16,8 @@
 #include "format/Format.h"
 #include "sbuf/Algorithms.h"
 
-const char *AnnotationBlackList[] = {
-    "user",
-    "group",
-    "password",
-    "status",
-    "message",
-    "log",
-    "tag",
-    "ttl",
-    "ha1",
-    "rewrite-url",
-    "url",
-    nullptr
-};
-
 ACLAnnotationData::ACLAnnotationData()
-    : notes(new Notes("annotation_data", AnnotationBlackList)) {}
+    : notes(new Notes("annotation_data")) {}
 
 SBufList
 ACLAnnotationData::dump() const

@@ -1010,6 +1010,7 @@ nodist_tests_testURL_SOURCES = \
 	tests/stub_HttpRequest.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc \
+	tests/stub_Notes.cc \
 	tests/stub_StatHist.cc
 tests_testURL_LDADD = \
 	libsquid.la \
@@ -1832,6 +1833,7 @@ nodist_tests_testACLMaxUserIP_SOURCES = \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_MemBuf.cc \
+	tests/stub_Notes.cc \
 	tests/stub_StatHist.cc
 tests_testACLMaxUserIP_LDADD = \
 	$(AUTH_ACL_LIBS) \
@@ -2110,6 +2112,7 @@ tests_testHttp1Parser_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
+	tests/stub_Notes.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \

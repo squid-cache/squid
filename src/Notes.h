@@ -109,12 +109,13 @@ class Notes : public RefCountable
 {
 public:
     typedef RefCount<Notes> Pointer;
+    typedef std::vector<SBuf> KeysList;
     typedef std::vector<Note::Pointer> NotesList;
     typedef NotesList::iterator iterator; ///< iterates over the notes list
     typedef NotesList::const_iterator const_iterator; ///< iterates over the notes list
 
-    Notes(const char *aDescr, const char **metasBlacklist, bool allowFormatted = true): descr(aDescr), blacklisted(metasBlacklist), formattedValues(allowFormatted) {}
-    Notes(): descr(nullptr), blacklisted(nullptr), formattedValues(false) {}
+    Notes(const char *aDescr, const KeysList *metasBlacklist = nullptr, bool allowFormatted = true);
+    Notes();
     ~Notes() { notes.clear(); }
     Notes(const Notes&) = delete;
     Notes &operator=(const Notes&) = delete;
@@ -157,8 +158,11 @@ private:
 
     NotesList notes; ///< The Note::Pointer objects array list
     const char *descr; ///< A short description for notes list
-    const char **blacklisted; ///< Null terminated list of blacklisted note keys
+
+    KeysList blacklisted; ///< list of blacklisted note keys
     bool formattedValues; ///< Whether the formatted values are supported
+
+    static const KeysList BlackList; ///< Global blacklisted keys
 };
 
 /**

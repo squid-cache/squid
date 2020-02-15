@@ -124,6 +124,30 @@ Note::toString(const char *sep) const
     return result;
 }
 
+static const char *NotesBlackListStr[] = {
+    "user",
+    "group",
+    "password",
+    "status",
+    "message",
+    "log",
+    "tag",
+    "ttl",
+    "ha1",
+    "rewrite-url",
+    "url"
+};
+const Notes::KeysList Notes::BlackList(std::begin(NotesBlackListStr), std::end(NotesBlackListStr));
+
+Notes::Notes(const char *aDescr, const Notes::KeysList *metasBlacklist, bool allowFormatted): descr(aDescr), blacklisted(Notes::BlackList), formattedValues(allowFormatted)
+{
+    if (metasBlacklist)
+        blacklisted.insert(blacklisted.end(), metasBlacklist->begin(), metasBlacklist->end());
+}
+
+Notes::Notes(): descr(nullptr), blacklisted(Notes::BlackList), formattedValues(false)
+{}
+
 Note::Pointer
 Notes::add(const SBuf &noteKey)
 {
@@ -145,15 +169,12 @@ Notes::find(const SBuf &noteKey)
 void
 Notes::validateKey(const SBuf &key) const
 {
-    if (blacklisted) {
-        for (int i = 0; blacklisted[i] != nullptr; ++i) {
-            if (!key.cmp(blacklisted[i])) {
-                fatalf("%s:%d: meta key \"%.*s\" is a reserved %s name",
-                       cfg_filename, config_lineno, key.length(), key.rawContent(),
-                       descr ? descr : "");
-            }
-        }
+    if (std::find(blacklisted.begin(), blacklisted.end(), key) != blacklisted.end()) {
+        fatalf("%s:%d: meta key \"%.*s\" is a reserved %s name",
+               cfg_filename, config_lineno, key.length(), key.rawContent(),
+               descr ? descr : "");
     }
+
     // TODO: fix code duplication: the same set of specials is produced
     // by isKeyNameChar().
     static const CharacterSet allowedSpecials = CharacterSet::ALPHA +
