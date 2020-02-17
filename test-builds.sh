@@ -138,8 +138,7 @@ if [ -n "$cache_file" -a -e "$cache_file" -a "$remove_cache_file" = "true" ]; th
     rm $cache_file
 fi
 
-if test -e $top/SPONSORS && test -e $top/Makefile.in && test -e $top/libltdl/Makefile.in
-then
+if [ -f "$top/configure" -a -f "$top/libltdl/configure" ]; then
     echo "Already bootstrapped, skipping step"
 else
     (cd $top; ./bootstrap.sh)
