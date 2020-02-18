@@ -33,6 +33,11 @@ while [ $# -ge 1 ]; do
 	verbose="yes"
 	shift
 	;;
+    --builddir)
+    shift
+    builddir="$1"
+    shift
+    ;;
     --keep-going)
 	keepGoing="yes"
 	shift
@@ -69,20 +74,20 @@ buildtest() {
     opts=$1
     action=$2
     layer=`basename ${opts} .opts`
-    btlayer="bt${layer}"
-    log=${btlayer}.log
+    builddir="${builddir:-bt${layer}}"
+    log=bt${layer}.log
     echo "TESTING: ${layer}"
-    if test -e ${btlayer}; then
-	chmod -R 777 ${btlayer};
+    if test -e ${builddir}; then
+	chmod -R 777 ${builddir};
     fi
-    rm -f -r ${btlayer} || ( echo "FATAL: Failed to prepare test build sandpit." ; exit 1 )
-    mkdir ${btlayer}
+    rm -f -r ${builddir} || ( echo "FATAL: Failed to prepare test build sandpit." ; exit 1 )
+    mkdir ${builddir}
     if test "${verbose}" = "yes" ; then
-        ls -la ${btlayer}
+        ls -la ${builddir}
     fi
     {
 	result=255
-	cd ${btlayer}
+	cd ${builddir}
 	if test -e $top/test-suite/buildtest.sh ; then
 	    $top/test-suite/buildtest.sh "${action}" ${opts} 2>&1
 	    result=$?
@@ -116,9 +121,9 @@ buildtest() {
 	    echo "Build OK. Global result is $globalResult."
 	fi
 	if test "${cleanup}" = "yes" ; then
-	    echo "REMOVE DATA: ${btlayer}"
-	    chmod -R 777 ${btlayer}
-	    rm -f -r ${btlayer}
+	    echo "REMOVE DATA: ${builddir}"
+	    chmod -R 777 ${builddir}
+	    rm -f -r ${builddir}
 	    echo "REMOVE LOG: ${log}"
 	    rm -f -r ${log}
 	fi
