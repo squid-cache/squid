@@ -51,6 +51,7 @@ public:
 
     int vport;               ///< virtual port support. -1 if dynamic, >0 static
     int disable_pmtu_discovery;
+    bool workerQueues; ///< whether listening queues should be worker-specific
 
     struct {
         unsigned int idle;
