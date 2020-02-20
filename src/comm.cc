@@ -845,6 +845,7 @@ comm_close_complete(const FdeCbParams &params)
     fde *F = &fd_table[params.fd];
     F->ssl.reset();
     F->dynamicTlsContext.reset();
+    F->flags.client_connection = false; // reset
     fd_close(params.fd);        /* update fdstat */
     close(params.fd);
 

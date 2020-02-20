@@ -436,6 +436,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     F->remote_port = details->remote.port();
     F->local_addr = details->local;
     F->sock_family = details->local.isIPv6()?AF_INET6:AF_INET;
+    F->flags.client_connection = true;
 
     // set socket flags
     commSetCloseOnExec(sock);
