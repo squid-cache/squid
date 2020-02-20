@@ -73,6 +73,12 @@ public:
     /// Meant for cleanup and state saving that may require other modules.
     virtual void startShutdown() {}
 
+    /// Called once per second after receiving a shutdown request and before
+    /// stopping the main loop. At least one main loop iteration is guaranteed
+    /// after this call.
+    /// Meant for cleanup and state saving that may require other modules.
+    virtual void checkShutdown() {}
+
     /// Called after shutdown_lifetime grace period ends and before stopping
     /// the main loop. At least one main loop iteration is guaranteed after
     /// this call.

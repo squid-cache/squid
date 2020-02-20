@@ -215,6 +215,21 @@ private:
             EventLoop::Running->stop();
     }
 
+    // called once per second during shutdown sequence
+    static void ShutdownTick(void *arg) {
+        RunRegisteredHere(RegisteredRunner::checkShutdown);
+        // check if the shutdown still needs to wait for any clients
+        for (auto F = &fd_table[Biggest_FD]; F >= fd_table; --F) {
+            if (F->flags.client_connection) {
+                eventAdd("ShutdownTick", &ShutdownTick, arg, 1.0, 1, false);
+                return;
+            }
+        }
+        // else complete the shutdown early
+        eventDelete(&FinalShutdownRunners, arg);
+        FinalShutdownRunners(arg);
+    }
+
     static void FinalShutdownRunners(void *) {
         RunRegisteredHere(RegisteredRunner::endingShutdown);
 
@@ -324,6 +339,7 @@ SignalEngine::doShutdown(time_t wait)
 #endif
 
     eventAdd("SquidShutdown", &FinalShutdownRunners, this, (double) (wait + 1), 1, false);
+    eventAdd("ShutdownTick", &ShutdownTick, this, 1.0, 1, false);
 }
 
 void
