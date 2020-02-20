@@ -138,6 +138,12 @@ if [ -n "$cache_file" -a -e "$cache_file" -a "$remove_cache_file" = "true" ]; th
     rm $cache_file
 fi
 
+if [ -f "$top/configure" -a -f "$top/libltdl/configure" ]; then
+    echo "Already bootstrapped, skipping step"
+else
+    (cd "$top"; ./bootstrap.sh)
+fi
+
 # Decide what tests to run, $* contains test spec names or filenames.
 # Use all knows specs if $* is empty or a special macro called 'all'.
 if test -n "$*" -a "$*" != all; then

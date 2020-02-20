@@ -2446,6 +2446,16 @@ DOC_START
 			The proxy_protocol_access is required to whitelist
 			downstream proxies which can be trusted.
 
+	   worker-queues
+			Ask TCP stack to maintain a dedicated listening queue
+			for each worker accepting requests at this port.
+			Requires TCP stack that supports the SO_REUSEPORT socket
+			option.
+
+			SECURITY WARNING: Enabling worker-specific queues
+			allows any process running as Squid's effective user to
+			easily accept requests destined to this port.
+
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface we recommend you to specify the
 	internal address:port in http_port. This way Squid will only be
