@@ -724,6 +724,9 @@ Fs::Ufs::UFSSwapDir::logFile(char const *ext) const
 void
 Fs::Ufs::UFSSwapDir::openLog()
 {
+    if (!IamWorkerProcess())
+        return;
+
     assert(NumberOfUFSDirs || !UFSDirToGlobalDirMapping);
     ++NumberOfUFSDirs;
     assert(NumberOfUFSDirs <= Config.cacheSwap.n_configured);
