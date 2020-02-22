@@ -65,9 +65,6 @@ typedef std::list<std::string> EntryAliasList;
 class DefaultValues
 {
 public:
-    DefaultValues() : preset(), if_none(), docs() {}
-    ~DefaultValues() {}
-
     /// Default config lines to be defined before parsing the config files.
     LineList preset;
 
@@ -87,11 +84,7 @@ public:
 class Entry
 {
 public:
-    Entry(const char *str) :
-        name(str), alias(),type(), loc(),
-        defaults(), comment(), ifdef(), doc(), nocomment(),
-        array_flag(0) {}
-    ~Entry() {}
+    Entry(const char *str) : name(str) {}
 
     std::string name;
     EntryAliasList alias;
@@ -102,7 +95,7 @@ public:
     std::string ifdef;
     LineList doc;
     LineList nocomment;
-    int array_flag;
+    int array_flag = 0;
 
     void genParse(std::ostream &fout) const;
 
@@ -116,7 +109,6 @@ class Type
 {
 public:
     Type(const char *str) : name(str) {}
-    ~Type() {}
 
     std::string name;
     TypeDepList depend;
