@@ -339,7 +339,7 @@ main(int argc, char *argv[])
                     }
 
                     /* hack to support arrays, rather than pointers */
-                    if (0 == strcmp(ptr + strlen(ptr) - 2, "[]")) {
+                    if (strcmp(ptr + strlen(ptr) - 2, "[]") == 0) {
                         curr.array_flag = 1;
                         *(ptr + strlen(ptr) - 2) = '\0';
                     }
