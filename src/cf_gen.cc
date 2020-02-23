@@ -54,7 +54,7 @@ enum State {
     sSTART,
     s1,
     sDOC,
-    sNOCOMMENT,
+    sCFGLINES,
     sEXIT
 };
 
@@ -94,7 +94,7 @@ public:
     std::string comment;
     std::string ifdef;
     LineList doc;
-    LineList nocomment;
+    LineList cfgLines;
     int array_flag = 0;
 
     void genParse(std::ostream &fout) const;
@@ -367,20 +367,20 @@ main(int argc, char *argv[])
             case sDOC:
                 if (!strcmp(buff, "DOC_END") || !strcmp(buff, "COMMENT_END")) {
                     state = sSTART;
-                } else if (!strcmp(buff, "NOCOMMENT_START")) {
-                    state = sNOCOMMENT;
+                } else if (strcmp(buff, "CONFIG_START") == 0) {
+                    state = sCFGLINES;
                 } else { // if (buff != NULL) {
                     assert(buff != NULL);
                     entries.back().doc.push_back(buff);
                 }
                 break;
 
-            case sNOCOMMENT:
-                if (!strcmp(buff, "NOCOMMENT_END")) {
+            case sCFGLINES:
+                if (strcmp(buff, "CONFIG_END") == 0) {
                     state = sDOC;
                 } else { // if (buff != NULL) {
                     assert(buff != NULL);
-                    entries.back().nocomment.push_back(buff);
+                    entries.back().cfgLines.push_back(buff);
                 }
                 break;
 #if 0
@@ -806,7 +806,7 @@ gen_conf(const EntryList &head, std::ostream &fout, bool verbose_output)
         }
 
         // Display "none" if no default is set or comments to display
-        if (def.empty() && entry.nocomment.empty() && entry.name.compare("comment") != 0)
+        if (def.empty() && entry.cfgLines.empty() && entry.name.compare("comment") != 0)
             def.push_back("none");
 
         if (verbose_output && def.size()) {
@@ -815,15 +815,15 @@ gen_conf(const EntryList &head, std::ostream &fout, bool verbose_output)
                 fout << "# " << def.front() << std::endl;
                 def.pop_front();
             }
-            if (entry.doc.empty() && entry.nocomment.empty())
+            if (entry.doc.empty() && entry.cfgLines.empty())
                 fout << std::endl;
         }
 
-        if (verbose_output && entry.nocomment.size())
+        if (verbose_output && entry.cfgLines.size())
             fout << "#" << std::endl;
 
         if (enabled || verbose_output) {
-            for (const auto &line : entry.nocomment) {
+            for (const auto &line : entry.cfgLines) {
                 if (!enabled && line.at(0) != '#')
                     fout << "#";
                 fout << line << std::endl;

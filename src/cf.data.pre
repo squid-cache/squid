@@ -1580,7 +1580,7 @@ ENDIF
 		acl fileupload req_mime_type -i ^multipart/form-data$
 		acl javascript rep_mime_type -i ^application/x-javascript$
 
-NOCOMMENT_START
+CONFIG_START
 #
 # Recommended minimum configuration:
 #
@@ -1608,7 +1608,7 @@ acl Safe_ports port 280		# http-mgmt
 acl Safe_ports port 488		# gss-http
 acl Safe_ports port 591		# filemaker
 acl Safe_ports port 777		# multiling http
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: proxy_protocol_access
@@ -1816,7 +1816,7 @@ DOC_START
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
-NOCOMMENT_START
+CONFIG_START
 
 #
 # Recommended minimum Access Permission configuration:
@@ -1848,7 +1848,7 @@ http_access allow localhost
 
 # And finally deny all other access to this proxy
 http_access deny all
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: adapted_http_access http_access2
@@ -2433,11 +2433,11 @@ DOC_START
 	internal address:port in http_port. This way Squid will only be
 	visible on the internal address.
 
-NOCOMMENT_START
+CONFIG_START
 
 # Squid normally listens to port 3128
 http_port @DEFAULT_HTTP_PORT@
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: https_port
@@ -4317,11 +4317,11 @@ DOC_START
 	Note: To make optimal use of the max-size limits you should order
 	the cache_dir lines with the smallest max-size value first.
 
-NOCOMMENT_START
+CONFIG_START
 
 # Uncomment and adjust the following to add a disk cache directory.
 #cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: store_dir_select_algorithm
@@ -5413,11 +5413,11 @@ DOC_START
 	that exists, Squid will chdir() to that directory at startup
 	and coredump files will be left there.
 
-NOCOMMENT_START
+CONFIG_START
 
 # Leave coredumps in the first cache dir
 coredump_dir @DEFAULT_SWAP_DIR@
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 
@@ -6221,7 +6221,7 @@ DOC_START
 	to change one. The default setting is only active if none is
 	used.
 
-NOCOMMENT_START
+CONFIG_START
 
 #
 # Add any of your own refresh_pattern entries above these.
@@ -6230,7 +6230,7 @@ refresh_pattern ^ftp:		1440	20%	10080
 refresh_pattern ^gopher:	1440	0%	1440
 refresh_pattern -i (/cgi-bin/|\?) 0	0%	0
 refresh_pattern .		0	20%	4320
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: quick_abort_min
