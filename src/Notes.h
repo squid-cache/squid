@@ -159,10 +159,10 @@ private:
     NotesList notes; ///< The Note::Pointer objects array list
     const char *descr; ///< A short description for notes list
 
-    KeysList blacklisted; ///< list of blacklisted note keys
+    KeysList blacklisted; ///< list of prohibited key names
     bool formattedValues; ///< Whether the formatted values are supported
 
-    static const KeysList BlackList; ///< Global blacklisted keys
+    static const KeysList BlackList; ///< Global list of prohibited key names
 };
 
 /**
