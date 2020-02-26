@@ -206,6 +206,7 @@ Http::Tunneler::handleReadyRead(const CommIoCbParams &io)
 #else
     rd.size = readBuf.spaceSize();
 #endif
+    // XXX: defer read if rd.size <= 0
 
     switch (Comm::ReadNow(rd, readBuf)) {
     case Comm::INPROGRESS:
