@@ -10,6 +10,7 @@
 #define SQUID_IPC_READ_WRITE_LOCK_H
 
 #include <atomic>
+#include <iosfwd>
 
 class StoreEntry;
 
@@ -54,6 +55,9 @@ private:
     mutable std::atomic<uint32_t> readLevel; ///< number of users reading (or trying to)
     std::atomic<uint32_t> writeLevel; ///< number of users writing (or trying to write)
 };
+
+/// dumps approximate lock state (for debugging)
+std::ostream &operator <<(std::ostream &os, const Ipc::ReadWriteLock &);
 
 /// approximate stats of a set of ReadWriteLocks
 class ReadWriteLockStats

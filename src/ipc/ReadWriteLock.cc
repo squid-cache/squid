@@ -167,3 +167,12 @@ Ipc::ReadWriteLockStats::dump(StoreEntry &e) const
     }
 }
 
+std::ostream &
+Ipc::operator <<(std::ostream &os, const Ipc::ReadWriteLock &lock)
+{
+    return os << lock.readers << 'R' <<
+           (lock.writing ? "W" : "") <<
+           (lock.appending ? "A" : "");
+    // impossible to report lock.updating without setting/clearing that flag
+}
+

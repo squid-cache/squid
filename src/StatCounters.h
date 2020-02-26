@@ -156,6 +156,15 @@ public:
         int outs = 0;
         int ins = 0;
     } swap;
+
+    struct {
+        uint64_t attempts;
+        uint64_t refusalsDueToLocking;
+        uint64_t refusalsDueToZeroSize;
+        uint64_t refusalsDueToTimeLimit;
+        uint64_t failures;
+    } hitValidation;
+
 };
 
 extern StatCounters statCounter;
