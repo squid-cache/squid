@@ -158,11 +158,11 @@ public:
     } swap;
 
     struct {
-        uint64_t attempts;
-        uint64_t refusalsDueToLocking;
-        uint64_t refusalsDueToZeroSize;
-        uint64_t refusalsDueToTimeLimit;
-        uint64_t failures;
+        uint64_t attempts = 0;
+        uint64_t refusalsDueToLocking = 0;
+        uint64_t refusalsDueToZeroSize = 0;
+        uint64_t refusalsDueToTimeLimit = 0;
+        uint64_t failures = 0;
     } hitValidation;
 
 };
