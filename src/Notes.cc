@@ -17,6 +17,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "parser/Tokenizer.h"
+#include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -169,11 +170,8 @@ Notes::find(const SBuf &noteKey)
 void
 Notes::validateKey(const SBuf &key) const
 {
-    if (std::find(blacklisted.begin(), blacklisted.end(), key) != blacklisted.end()) {
-        fatalf("%s:%d: meta key \"%.*s\" is a reserved %s name",
-               cfg_filename, config_lineno, key.length(), key.rawContent(),
-               descr ? descr : "");
-    }
+    if (std::find(blacklisted.begin(), blacklisted.end(), key) != blacklisted.end())
+        throw TextException(ToSBuf("meta key \"", key, "\" is a reserved name"), Here());
 
     // TODO: fix code duplication: the same set of specials is produced
     // by isKeyNameChar().
