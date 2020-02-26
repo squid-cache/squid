@@ -114,8 +114,8 @@ public:
     typedef NotesList::iterator iterator; ///< iterates over the notes list
     typedef NotesList::const_iterator const_iterator; ///< iterates over the notes list
 
-    Notes(const char *aDescr, const KeysList *metasBlacklist = nullptr, bool allowFormatted = true);
-    Notes();
+    explicit Notes(const char *aDescr, const KeysList *metasBlacklist = nullptr, bool allowFormatted = true);
+    explicit Notes();
     ~Notes() { notes.clear(); }
     Notes(const Notes&) = delete;
     Notes &operator=(const Notes&) = delete;
