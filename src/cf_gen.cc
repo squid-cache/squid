@@ -84,7 +84,7 @@ public:
 class Entry
 {
 public:
-    Entry(const char *str) : name(str) {}
+    explicit Entry(const char *str) : name(str) {}
 
     std::string name;
     EntryAliasList alias;
@@ -265,7 +265,7 @@ main(int argc, char *argv[])
                         exit(EXIT_FAILURE);
                     }
 
-                    entries.push_back(name);
+                    entries.emplace_back(name);
 
                     while ((aliasname = strtok(NULL, WS)) != NULL)
                         entries.back().alias.push_front(aliasname);
@@ -274,7 +274,7 @@ main(int argc, char *argv[])
                 } else if (!strcmp(buff, "EOF")) {
                     state = sEXIT;
                 } else if (!strcmp(buff, "COMMENT_START")) {
-                    entries.push_back("comment");
+                    entries.emplace_back("comment");
                     entries.back().loc = "none";
                     state = sDOC;
                 } else {
