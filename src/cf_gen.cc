@@ -94,8 +94,8 @@ public:
     std::string comment;
     std::string ifdef;
     LineList doc;
-    LineList cfgLines;
-    int array_flag = 0;
+    LineList cfgLines; ///< between CONFIG_START and CONFIG_END
+    int array_flag = 0; ///< TYPE is a raw array[] declaration
 
     void genParse(std::ostream &fout) const;
 
