@@ -493,7 +493,7 @@ esiAlwaysPassthrough(Http::StatusCode sline)
 
     switch (sline) {
 
-    case Http::scContinue: /* Should never reach us... but squid needs to alter to accomodate this */
+    case Http::scContinue: /* Should never reach us... but squid needs to alter to accommodate this */
 
     case Http::scSwitchingProtocols: /* Ditto */
 
@@ -2022,7 +2022,7 @@ esiProcessResult_t
 esiChoose::process (int dovars)
 {
     /* process as much of the list as we can, stopping only on
-     * faliures
+     * failures
      */
     /* We MUST have a when clause */
     NULLUnChosen();

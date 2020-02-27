@@ -1644,7 +1644,7 @@ htcpSocketShutdown(void)
      * disable reading on the outgoing socket.
      */
     /* XXX Don't we need this handler to read replies while shutting down?
-     * I think there should be a separate hander for reading replies..
+     * I think there should be a separate handler for reading replies..
      */
     assert(Comm::IsConnOpen(htcpOutgoingConn));
 

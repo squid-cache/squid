@@ -93,7 +93,7 @@ protected:
     OfflineToggleAction(const CommandPointer &cmd);
 };
 
-/// Registeres profiles for the actions above; \todo move elsewhere?
+/// Registers profiles for the actions above; \todo move elsewhere?
 void RegisterBasics();
 
 } // namespace Mgr

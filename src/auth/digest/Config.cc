@@ -156,7 +156,7 @@ authenticateDigestNonceNew(void)
      * that a given nonce applies to only one user (barring attacks or
      * really bad timing with expiry and creation).  Using a random
      * component in the nonce allows us to loop to find a unique nonce.
-     * We use H(nonce_data) so the nonce is meaningless to the reciever.
+     * We use H(nonce_data) so the nonce is meaningless to the receiver.
      * So our nonce looks like hex(H(timestamp,randomdata))
      * And even if our randomness is not very random we don't really care
      * - the timestamp also guarantees local uniqueness in the input to
@@ -1034,7 +1034,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
 
     /* the method we'll check at the authenticate step as well */
 
-    /* we don't send or parse opaques. Ok so we're flexable ... */
+    /* we don't send or parse opaques. Ok so we're flexible ... */
 
     /* find the user */
     Auth::Digest::User *digest_user;

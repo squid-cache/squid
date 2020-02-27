@@ -791,7 +791,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
     // locked entry is safe, but no support for reading the entry we swap out.
     const Ipc::StoreMapAnchor *slot = map->peekAtReader(e.swap_filen);
     if (!slot)
-        return NULL; // we were writing afterall
+        return NULL; // we were writing after all
 
     Rock::SwapDir::Pointer self(this);
     IoState *sio = new IoState(self, &e, cbFile, cbIo, data);

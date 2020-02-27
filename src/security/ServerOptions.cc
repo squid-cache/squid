@@ -215,7 +215,7 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &port)
         if (certs.size() > 1) {
             // NOTE: calling SSL_CTX_use_certificate() repeatedly _replaces_ the previous cert details.
             //       so we cannot use it and support multiple server certificates with OpenSSL.
-            debugs(83, DBG_CRITICAL, "ERROR: OpenSSL does not support multiple server certificates. Ignoring addional cert= parameters.");
+            debugs(83, DBG_CRITICAL, "ERROR: OpenSSL does not support multiple server certificates. Ignoring additional cert= parameters.");
         }
 
         const auto &keys = certs.front();

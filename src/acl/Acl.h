@@ -65,7 +65,7 @@ public:
     /// configures ACL options, throwing on configuration errors
     virtual void parseFlags();
 
-    /// parses node represenation in squid.conf; dies on failures
+    /// parses node representation in squid.conf; dies on failures
     virtual void parse() = 0;
     virtual char const *typeString() const = 0;
     virtual bool isProxyAuth() const;

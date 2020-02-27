@@ -1046,7 +1046,7 @@ Ftp::Gateway::checkAuth(const HttpHeader * req_hdr)
     /* Test URL login syntax. Overrides any headers received. */
     loginParser(request->url.userInfo(), true);
 
-    /* name is missing. thats fatal. */
+    /* name is missing. that's fatal. */
     if (!user[0])
         fatal("FTP login parsing destroyed username info");
 
@@ -2414,7 +2414,7 @@ ftpFail(Ftp::Gateway *ftpState)
            "mdtm=" << ftpState->mdtm << ", size=" << ftpState->theSize <<
            "slashhack=" << (slashHack? "T":"F"));
 
-    /* Try the / hack to support "Netscape" FTP URL's for retreiving files */
+    /* Try the / hack to support "Netscape" FTP URL's for retrieving files */
     if (!ftpState->flags.isdir &&   /* Not a directory */
             !ftpState->flags.try_slash_hack && !slashHack && /* Not doing slash hack */
             ftpState->mdtm <= 0 && ftpState->theSize < 0) { /* Not known as a file */

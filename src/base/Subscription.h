@@ -42,7 +42,7 @@ public:
  * A subscription may be passed to multiple producers.
  *
  * Call_ must have a copy constructor.
- * A pointer to Call_ must be convertable to AsyncCall::Pointer
+ * A pointer to Call_ must be convertible to AsyncCall::Pointer
  */
 template<class Call_>
 class CallSubscription: public Subscription

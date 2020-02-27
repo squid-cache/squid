@@ -84,7 +84,7 @@ public:
 
     /// Walks through the  possible values list of the note, selects
     /// the first value, matching the given HttpRequest and HttpReply
-    /// and assignes the given 'matched' to it.
+    /// and assigns the given 'matched' to it.
     /// \return true if matched, false otherwise
     bool match(HttpRequest *request, HttpReply *reply, const AccessLogEntryPointer &al, SBuf &matched);
     const SBuf &key() const { return theKey; }
