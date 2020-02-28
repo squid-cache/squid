@@ -143,12 +143,11 @@ public:
     void updateNotePairs(NotePairsPointer pairs, const CharacterSet *delimiters,
                          const AccessLogEntryPointer &al);
 private:
-    /// makes sure the given key is not on the given list of banned names
+    /// Makes sure the given key is not on the given list of banned names.
     void banReservedKey(const SBuf &key, const KeysList &banned) const;
 
     /// Verifies that the key is not blacklisted (fatal error) and
     /// does not contain special characters (non-fatal error).
-    /// If keyLen is not provided, the key is assumed null-terminated.
     void validateKey(const SBuf &key) const;
 
     /// Adds a note to the notes list and returns a pointer to the
@@ -161,7 +160,7 @@ private:
     NotesList notes; ///< The Note::Pointer objects array list
     const char *descr = nullptr; ///< identifies note source in error messages
 
-    KeysList blacklisted; ///< a list of additional prohibited key names
+    KeysList blacklist; ///< a list of additional prohibited key names
     bool formattedValues = false; ///< whether to expand quoted logformat %codes
 
     static const Notes::KeysList &BlackList(); ///< always prohibited key names

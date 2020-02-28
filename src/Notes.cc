@@ -146,12 +146,12 @@ Notes::BlackList()
     return keys;
 }
 
-Notes::Notes(const char *aDescr, const Notes::KeysList *metasBlacklist, bool allowFormatted):
+Notes::Notes(const char *aDescr, const Notes::KeysList *extraBlacklist, bool allowFormatted):
     descr(aDescr),
     formattedValues(allowFormatted)
 {
-    if (metasBlacklist)
-        blacklisted = *metasBlacklist;
+    if (extraBlacklist)
+        blacklist = *extraBlacklist;
 }
 
 Note::Pointer
@@ -183,7 +183,7 @@ void
 Notes::validateKey(const SBuf &key) const
 {
     banReservedKey(key, BlackList());
-    banReservedKey(key, blacklisted);
+    banReservedKey(key, blacklist);
 
     // TODO: fix code duplication: the same set of specials is produced
     // by isKeyNameChar().
