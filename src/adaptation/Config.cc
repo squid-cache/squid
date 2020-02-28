@@ -28,7 +28,7 @@ int Adaptation::Config::service_iteration_limit = 16;
 int Adaptation::Config::send_client_ip = false;
 int Adaptation::Config::send_username = false;
 int Adaptation::Config::use_indirect_client = true;
-static const char *metasBlacklistStr[] = {
+static const char *protectedFieldNamesRaw[] = {
     "Methods",
     "Service",
     "ISTag",
@@ -44,8 +44,8 @@ static const char *metasBlacklistStr[] = {
     "Transfer-Ignore",
     "Transfer-Complete"
 };
-static const Notes::Keys metasBlacklist(std::begin(metasBlacklistStr), std::end(metasBlacklistStr));
-Notes Adaptation::Config::metaHeaders("ICAP header", &metasBlacklist);
+static const Notes::Keys protectedFieldNames(std::begin(protectedFieldNamesRaw), std::end(protectedFieldNamesRaw));
+Notes Adaptation::Config::metaHeaders("ICAP header", &protectedFieldNames);
 bool Adaptation::Config::needHistory = false;
 
 Adaptation::ServiceConfig*
