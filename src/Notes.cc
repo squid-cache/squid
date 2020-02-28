@@ -148,15 +148,11 @@ Notes::BlackList()
 
 Notes::Notes(const char *aDescr, const Notes::KeysList *metasBlacklist, bool allowFormatted):
     descr(aDescr),
-    blacklisted(Notes::BlackList()),
     formattedValues(allowFormatted)
 {
     if (metasBlacklist)
-        blacklisted.insert(blacklisted.end(), metasBlacklist->begin(), metasBlacklist->end());
+        blacklisted = *metasBlacklist;
 }
-
-Notes::Notes(): descr(nullptr), blacklisted(Notes::BlackList()), formattedValues(false)
-{}
 
 Note::Pointer
 Notes::add(const SBuf &noteKey)
@@ -177,10 +173,17 @@ Notes::find(const SBuf &noteKey)
 }
 
 void
+Notes::banReservedKey(const SBuf &key, const KeysList &banned) const
+{
+    if (std::find(banned.begin(), banned.end(), key) != banned.end())
+        throw TextException(ToSBuf("cannot use a reserved ", descr, " name: ", key), Here());
+}
+
+void
 Notes::validateKey(const SBuf &key) const
 {
-    if (std::find(blacklisted.begin(), blacklisted.end(), key) != blacklisted.end())
-        throw TextException(ToSBuf("meta key \"", key, "\" is a reserved name"), Here());
+    banReservedKey(key, BlackList());
+    banReservedKey(key, blacklisted);
 
     // TODO: fix code duplication: the same set of specials is produced
     // by isKeyNameChar().

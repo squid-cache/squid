@@ -115,7 +115,7 @@ public:
     typedef NotesList::const_iterator const_iterator; ///< iterates over the notes list
 
     explicit Notes(const char *aDescr, const KeysList *metasBlacklist = nullptr, bool allowFormatted = true);
-    explicit Notes();
+    Notes() = default;
     ~Notes() { notes.clear(); }
     Notes(const Notes&) = delete;
     Notes &operator=(const Notes&) = delete;
@@ -143,6 +143,8 @@ public:
     void updateNotePairs(NotePairsPointer pairs, const CharacterSet *delimiters,
                          const AccessLogEntryPointer &al);
 private:
+    /// makes sure the given key is not on the given list of banned names
+    void banReservedKey(const SBuf &key, const KeysList &banned) const;
 
     /// Verifies that the key is not blacklisted (fatal error) and
     /// does not contain special characters (non-fatal error).
@@ -157,10 +159,10 @@ private:
     Note::Pointer find(const SBuf &noteKey);
 
     NotesList notes; ///< The Note::Pointer objects array list
-    const char *descr; ///< A short description for notes list
+    const char *descr = nullptr; ///< identifies note source in error messages
 
-    KeysList blacklisted; ///< list of prohibited key names
-    bool formattedValues; ///< Whether the formatted values are supported
+    KeysList blacklisted; ///< a list of additional prohibited key names
+    bool formattedValues = false; ///< whether to expand quoted logformat %codes
 
     static const Notes::KeysList &BlackList(); ///< always prohibited key names
 };
