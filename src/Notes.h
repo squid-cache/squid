@@ -109,12 +109,12 @@ class Notes : public RefCountable
 {
 public:
     typedef RefCount<Notes> Pointer;
-    typedef std::vector<SBuf> KeysList;
+    typedef std::vector<SBuf> Keys; ///< unordered annotation names
     typedef std::vector<Note::Pointer> NotesList;
     typedef NotesList::iterator iterator; ///< iterates over the notes list
     typedef NotesList::const_iterator const_iterator; ///< iterates over the notes list
 
-    explicit Notes(const char *aDescr, const KeysList *metasBlacklist = nullptr, bool allowFormatted = true);
+    explicit Notes(const char *aDescr, const Keys *extraBlacklist = nullptr, bool allowFormatted = true);
     Notes() = default;
     ~Notes() { notes.clear(); }
     Notes(const Notes&) = delete;
@@ -144,7 +144,7 @@ public:
                          const AccessLogEntryPointer &al);
 private:
     /// Makes sure the given key is not on the given list of banned names.
-    void banReservedKey(const SBuf &key, const KeysList &banned) const;
+    void banReservedKey(const SBuf &key, const Keys &banned) const;
 
     /// Verifies that the key is not blacklisted (fatal error) and
     /// does not contain special characters (non-fatal error).
@@ -160,10 +160,10 @@ private:
     NotesList notes; ///< The Note::Pointer objects array list
     const char *descr = nullptr; ///< identifies note source in error messages
 
-    KeysList blacklist; ///< a list of additional prohibited key names
+    Keys blacklist; ///< a list of additional prohibited key names
     bool formattedValues = false; ///< whether to expand quoted logformat %codes
 
-    static const Notes::KeysList &BlackList(); ///< always prohibited key names
+    static const Notes::Keys &BlackList(); ///< always prohibited key names
 };
 
 /**

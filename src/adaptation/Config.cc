@@ -44,7 +44,7 @@ static const char *metasBlacklistStr[] = {
     "Transfer-Ignore",
     "Transfer-Complete"
 };
-static const Notes::KeysList metasBlacklist(std::begin(metasBlacklistStr), std::end(metasBlacklistStr));
+static const Notes::Keys metasBlacklist(std::begin(metasBlacklistStr), std::end(metasBlacklistStr));
 Notes Adaptation::Config::metaHeaders("ICAP header", &metasBlacklist);
 bool Adaptation::Config::needHistory = false;
 

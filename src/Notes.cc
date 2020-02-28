@@ -125,7 +125,7 @@ Note::toString(const char *sep) const
     return result;
 }
 
-const Notes::KeysList &
+const Notes::Keys &
 Notes::BlackList()
 {
     static const char *names[] = {
@@ -142,11 +142,11 @@ Notes::BlackList()
         "user"
     };
 
-    static KeysList keys(std::begin(names), std::end(names));
+    static Keys keys(std::begin(names), std::end(names));
     return keys;
 }
 
-Notes::Notes(const char *aDescr, const Notes::KeysList *extraBlacklist, bool allowFormatted):
+Notes::Notes(const char *aDescr, const Keys *extraBlacklist, bool allowFormatted):
     descr(aDescr),
     formattedValues(allowFormatted)
 {
@@ -173,7 +173,7 @@ Notes::find(const SBuf &noteKey)
 }
 
 void
-Notes::banReservedKey(const SBuf &key, const KeysList &banned) const
+Notes::banReservedKey(const SBuf &key, const Keys &banned) const
 {
     if (std::find(banned.begin(), banned.end(), key) != banned.end())
         throw TextException(ToSBuf("cannot use a reserved ", descr, " name: ", key), Here());
