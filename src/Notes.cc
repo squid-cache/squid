@@ -140,7 +140,10 @@ static const char *NotesBlackListStr[] = {
 };
 const Notes::KeysList Notes::BlackList(std::begin(NotesBlackListStr), std::end(NotesBlackListStr));
 
-Notes::Notes(const char *aDescr, const Notes::KeysList *metasBlacklist, bool allowFormatted): descr(aDescr), blacklisted(Notes::BlackList), formattedValues(allowFormatted)
+Notes::Notes(const char *aDescr, const Notes::KeysList *metasBlacklist, bool allowFormatted):
+    descr(aDescr),
+    blacklisted(Notes::BlackList),
+    formattedValues(allowFormatted)
 {
     if (metasBlacklist)
         blacklisted.insert(blacklisted.end(), metasBlacklist->begin(), metasBlacklist->end());
