@@ -125,31 +125,37 @@ Note::toString(const char *sep) const
     return result;
 }
 
-static const char *NotesBlackListStr[] = {
-    "user",
-    "group",
-    "password",
-    "status",
-    "message",
-    "log",
-    "tag",
-    "ttl",
-    "ha1",
-    "rewrite-url",
-    "url"
-};
-const Notes::KeysList Notes::BlackList(std::begin(NotesBlackListStr), std::end(NotesBlackListStr));
+const Notes::KeysList &
+Notes::BlackList()
+{
+    static const char *names[] = {
+        "group",
+        "ha1",
+        "log",
+        "message",
+        "password",
+        "rewrite-url",
+        "status",
+        "tag",
+        "ttl",
+        "url",
+        "user"
+    };
+
+    static KeysList keys(std::begin(names), std::end(names));
+    return keys;
+}
 
 Notes::Notes(const char *aDescr, const Notes::KeysList *metasBlacklist, bool allowFormatted):
     descr(aDescr),
-    blacklisted(Notes::BlackList),
+    blacklisted(Notes::BlackList()),
     formattedValues(allowFormatted)
 {
     if (metasBlacklist)
         blacklisted.insert(blacklisted.end(), metasBlacklist->begin(), metasBlacklist->end());
 }
 
-Notes::Notes(): descr(nullptr), blacklisted(Notes::BlackList), formattedValues(false)
+Notes::Notes(): descr(nullptr), blacklisted(Notes::BlackList()), formattedValues(false)
 {}
 
 Note::Pointer

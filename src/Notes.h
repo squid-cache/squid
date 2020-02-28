@@ -162,7 +162,7 @@ private:
     KeysList blacklisted; ///< list of prohibited key names
     bool formattedValues; ///< Whether the formatted values are supported
 
-    static const KeysList BlackList; ///< Global list of prohibited key names
+    static const Notes::KeysList &BlackList(); ///< always prohibited key names
 };
 
 /**
