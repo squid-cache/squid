@@ -128,6 +128,7 @@ Note::toString(const char *sep) const
 const Notes::Keys &
 Notes::BlackList()
 {
+    // these keys are used for internal Squid-helper communication
     static const char *names[] = {
         "group",
         "ha1",
