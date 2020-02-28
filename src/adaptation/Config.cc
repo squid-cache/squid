@@ -29,20 +29,20 @@ int Adaptation::Config::send_client_ip = false;
 int Adaptation::Config::send_username = false;
 int Adaptation::Config::use_indirect_client = true;
 static const char *protectedFieldNamesRaw[] = {
-    "Methods",
-    "Service",
-    "ISTag",
-    "Encapsulated",
-    "Opt-body-type",
-    "Max-Connections",
-    "Options-TTL",
-    "Date",
-    "Service-ID",
     "Allow",
+    "Date",
+    "Encapsulated",
+    "ISTag",
+    "Max-Connections",
+    "Methods",
+    "Opt-body-type",
+    "Options-TTL",
     "Preview",
-    "Transfer-Preview",
+    "Service",
+    "Service-ID",
+    "Transfer-Complete",
     "Transfer-Ignore",
-    "Transfer-Complete"
+    "Transfer-Preview"
 };
 static const Notes::Keys protectedFieldNames(std::begin(protectedFieldNamesRaw), std::end(protectedFieldNamesRaw));
 Notes Adaptation::Config::metaHeaders("ICAP header", &protectedFieldNames);
