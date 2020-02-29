@@ -14,7 +14,9 @@
 dns_timeout 1 millisecond
 dns_timeout 0.001 second
 
-# maximum checks
+# check support for the maximum value (expressed in each supported time unit)
+# XXX: Use a 32-bit maximum to avoid breaking tests on 32-bit platforms.
+# TODO: Generate these test lines based on the target build platform.
 dns_timeout 2147483647854 milliseconds
 dns_timeout 2147483647 seconds
 dns_timeout 2562047 minutes
@@ -53,4 +55,3 @@ url_rewrite_timeout 292 year on_timeout=bypass
 url_rewrite_timeout 1 on_timeout=bypass
 
 # TODO: a nanosecond-precison parameter (time-units-small)
-
