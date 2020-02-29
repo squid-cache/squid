@@ -34,7 +34,7 @@ dns_timeout 0.727 decades
 max_stale 1 second
 max_stale 0.0167 minute
 
-# maximum checks
+# maximum checks (see similar dns_timeout checks for details)
 max_stale 2147483647 seconds
 max_stale 2562047 minutes
 max_stale 42700 hours
