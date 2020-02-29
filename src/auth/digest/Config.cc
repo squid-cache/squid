@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -157,10 +157,10 @@ authenticateDigestNonceNew(void)
      * really bad timing with expiry and creation).  Using a random
      * component in the nonce allows us to loop to find a unique nonce.
      * We use H(nonce_data) so the nonce is meaningless to the reciever.
-     * So our nonce looks like hex(H(timestamp,pointertohash,randomdata))
+     * So our nonce looks like hex(H(timestamp,randomdata))
      * And even if our randomness is not very random we don't really care
-     * - the timestamp and memory pointer also guarantee local uniqueness
-     * in the input to the hash function.
+     * - the timestamp also guarantees local uniqueness in the input to
+     * the hash function.
      */
     // NP: this will likely produce the same randomness sequences for each worker
     // since they should all start within the 1-second resolution of seed value.
@@ -170,7 +170,6 @@ authenticateDigestNonceNew(void)
     /* create a new nonce */
     newnonce->nc = 0;
     newnonce->flags.valid = true;
-    newnonce->noncedata.self = newnonce;
     newnonce->noncedata.creationtime = current_time.tv_sec;
     newnonce->noncedata.randomdata = newRandomData(mt);
 

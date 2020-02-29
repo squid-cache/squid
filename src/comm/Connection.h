@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -49,6 +49,7 @@ namespace Comm
 #define COMM_DOBIND             0x08  // requires a bind()
 #define COMM_TRANSPARENT        0x10  // arrived via TPROXY
 #define COMM_INTERCEPTION       0x20  // arrived via NAT
+#define COMM_REUSEPORT          0x40 //< needs SO_REUSEPORT
 
 /**
  * Store data about the physical and logical attributes of a connection.
@@ -175,7 +176,7 @@ public:
     Eui::Eui64 remoteEui64;
 #endif
 
-    InstanceId<Connection> id;
+    InstanceId<Connection, uint64_t> id;
 
 private:
     /** cache_peer data object (if any) */

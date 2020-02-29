@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,6 +32,7 @@
 #include "pconn.h"
 #include "profiler/Profiler.h"
 #include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "StoreIOBuffer.h"
@@ -471,6 +472,20 @@ comm_apply_flags(int new_socket,
         if ( addr.isNoAddr() )
             debugs(5,0,"CRITICAL: Squid is attempting to bind() port " << addr << "!!");
 
+#if defined(SO_REUSEPORT)
+        if (flags & COMM_REUSEPORT) {
+            int on = 1;
+            if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEPORT, reinterpret_cast<char*>(&on), sizeof(on)) < 0) {
+                const auto savedErrno = errno;
+                const auto errorMessage = ToSBuf("cannot enable SO_REUSEPORT socket option when binding to ",
+                                                 addr, ": ", xstrerr(savedErrno));
+                if (reconfiguring)
+                    debugs(5, DBG_IMPORTANT, "ERROR: " << errorMessage);
+                else
+                    throw TexcHere(errorMessage);
+            }
+        }
+#endif
         if (commBind(new_socket, *AI) != Comm::OK) {
             comm_close(new_socket);
             return -1;

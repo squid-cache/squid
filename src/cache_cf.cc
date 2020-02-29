@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -92,6 +92,7 @@
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
+#include <chrono>
 #include <limits>
 #include <list>
 #if HAVE_PWD_H
@@ -99,6 +100,9 @@
 #endif
 #if HAVE_GRP_H
 #include <grp.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
 #endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -134,6 +138,8 @@ static void free_ecap_service_type(Adaptation::Ecap::Config *);
 
 static peer_t parseNeighborType(const char *s);
 
+static const char *const T_NANOSECOND_STR = "nanosecond";
+static const char *const T_MICROSECOND_STR = "microsecond";
 static const char *const T_MILLISECOND_STR = "millisecond";
 static const char *const T_SECOND_STR = "second";
 static const char *const T_MINUTE_STR = "minute";
@@ -152,6 +158,9 @@ static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
 
+// std::chrono::years requires C++20. Do our own rough calculation for now.
+static const double HoursPerYear = 24*365.2522;
+
 static void parse_access_log(CustomLog ** customlog_definitions);
 static int check_null_access_log(CustomLog *customlog_definitions);
 static void dump_access_log(StoreEntry * entry, const char *name, CustomLog * definitions);
@@ -160,7 +169,6 @@ static bool setLogformat(CustomLog *cl, const char *name, const bool dieWhenMiss
 
 static void configDoConfigure(void);
 static void parse_refreshpattern(RefreshPattern **);
-static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
 static void parse_u_short(unsigned short * var);
 static void parse_string(char **);
 static void default_all(void);
@@ -536,9 +544,17 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             /* Handle includes here */
             if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
                 err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
-            } else if (!parse_line(tmp_line)) {
-                debugs(3, DBG_CRITICAL, HERE << cfg_filename << ":" << config_lineno << " unrecognized: '" << tmp_line << "'");
-                ++err_count;
+            } else {
+                try {
+                    if (!parse_line(tmp_line)) {
+                        debugs(3, DBG_CRITICAL, ConfigParser::CurrentLocation() << ": unrecognized: '" << tmp_line << "'");
+                        ++err_count;
+                    }
+                } catch (...) {
+                    // fatal for now
+                    debugs(3, DBG_CRITICAL, "configuration error: " << CurrentException);
+                    self_destruct();
+                }
             }
         }
 
@@ -1034,88 +1050,134 @@ parse_obsolete(const char *name)
     }
 }
 
-/* Parse a time specification from the config file.  Store the
- * result in 'tptr', after converting it to 'units' */
-static time_msec_t
-parseTimeLine(const char *units,  bool allowMsec,  bool expectMoreArguments = false)
+template <class MinimalUnit>
+static const char *
+TimeUnitToString()
 {
-    time_msec_t u = parseTimeUnits(units, allowMsec);
-    if (u == 0) {
-        self_destruct();
-        return 0;
+    const auto minUnit = MinimalUnit(1);
+    if(minUnit == std::chrono::nanoseconds(1))
+        return T_NANOSECOND_STR;
+    else if (minUnit == std::chrono::microseconds(1))
+        return T_MICROSECOND_STR;
+    else if (minUnit == std::chrono::milliseconds(1))
+        return T_MILLISECOND_STR;
+    else {
+        assert(minUnit >= std::chrono::seconds(1));
+        return T_SECOND_STR;
+    }
+}
+
+/// Assigns 'ns' the number of nanoseconds corresponding to 'unitName'.
+/// \param MinimalUnit is a chrono duration type specifying the minimal
+/// allowed time unit.
+/// \returns true if unitName is correct and its time unit is not less
+/// than MinimalUnit.
+template <class MinimalUnit>
+static bool
+parseTimeUnit(const char *unitName, std::chrono::nanoseconds &ns)
+{
+    if (!unitName)
+        throw TexcHere("missing time unit");
+
+    if (!strncasecmp(unitName, T_NANOSECOND_STR, strlen(T_NANOSECOND_STR)))
+        ns = std::chrono::nanoseconds(1);
+    else if (!strncasecmp(unitName, T_MICROSECOND_STR, strlen(T_MICROSECOND_STR)))
+        ns = std::chrono::microseconds(1);
+    else if (!strncasecmp(unitName, T_MILLISECOND_STR, strlen(T_MILLISECOND_STR)))
+        ns = std::chrono::milliseconds(1);
+    else if (!strncasecmp(unitName, T_SECOND_STR, strlen(T_SECOND_STR)))
+        ns = std::chrono::seconds(1);
+    else if (!strncasecmp(unitName, T_MINUTE_STR, strlen(T_MINUTE_STR)))
+        ns = std::chrono::minutes(1);
+    else if (!strncasecmp(unitName, T_HOUR_STR, strlen(T_HOUR_STR)))
+        ns = std::chrono::hours(1);
+    else if (!strncasecmp(unitName, T_DAY_STR, strlen(T_DAY_STR)))
+        ns = std::chrono::hours(24);
+    else if (!strncasecmp(unitName, T_WEEK_STR, strlen(T_WEEK_STR)))
+        ns = std::chrono::hours(24 * 7);
+    else if (!strncasecmp(unitName, T_FORTNIGHT_STR, strlen(T_FORTNIGHT_STR)))
+        ns = std::chrono::hours(24 * 14);
+    else if (!strncasecmp(unitName, T_MONTH_STR, strlen(T_MONTH_STR)))
+        ns = std::chrono::hours(24 * 30);
+    else if (!strncasecmp(unitName, T_YEAR_STR, strlen(T_YEAR_STR)))
+        ns = std::chrono::hours(static_cast<std::chrono::hours::rep>(HoursPerYear));
+    else if (!strncasecmp(unitName, T_DECADE_STR, strlen(T_DECADE_STR)))
+        ns = std::chrono::hours(static_cast<std::chrono::hours::rep>(HoursPerYear * 10));
+    else
+        return false;
+
+    if (ns < MinimalUnit(1)) {
+        throw TexcHere(ToSBuf("time unit '", unitName, "' is too small to be used in this context, the minimal unit is ",
+                              TimeUnitToString<MinimalUnit>()));
     }
 
-    char *token = ConfigParser::NextToken();
-    if (!token) {
-        self_destruct();
-        return 0;
+    return true;
+}
+
+static std::chrono::nanoseconds
+CheckTimeValue(const double value, const std::chrono::nanoseconds &unit)
+{
+    if (value < 0)
+        throw TexcHere("time must have a positive value");
+
+    const auto maxNanoseconds = std::chrono::nanoseconds::max().count();
+    if (value > maxNanoseconds/static_cast<double>(unit.count())) {
+        const auto maxYears = maxNanoseconds/(HoursPerYear*3600*1000000000);
+        throw TexcHere(ToSBuf("time values cannot exceed ", maxYears, " years"));
     }
 
-    double d = xatof(token);
+    return std::chrono::nanoseconds(static_cast<std::chrono::nanoseconds::rep>(unit.count() * value));
+}
 
-    time_msec_t m = u; /* default to 'units' if none specified */
-
-    if (d) {
-        if ((token = ConfigParser::PeekAtToken()) && (m = parseTimeUnits(token, allowMsec))) {
-            (void)ConfigParser::NextToken();
-
-        } else if (!expectMoreArguments) {
-            self_destruct();
-            return 0;
-
-        } else {
-            token = NULL; // show default units if dying below
-            debugs(3, DBG_CRITICAL, "WARNING: No units on '" << config_input_line << "', assuming " << d << " " << units);
-        }
-    } else
-        token = NULL; // show default units if dying below.
-
-    const auto result = static_cast<time_msec_t>(m * d);
-
-    if (static_cast<double>(result) * 2 != m * d * 2) {
-        debugs(3, DBG_CRITICAL, "FATAL: Invalid value '" <<
-               d << " " << (token ? token : units) << ": integer overflow (time_msec_t).");
-        self_destruct();
+template <class TimeUnit>
+static TimeUnit
+FromNanoseconds(const std::chrono::nanoseconds &ns, const double parsedValue)
+{
+    const auto result = std::chrono::duration_cast<TimeUnit>(ns);
+    if (!result.count()) {
+        throw TexcHere(ToSBuf("time value '", parsedValue,
+                              "' is too small to be used in this context, the minimal value is 1 ",
+                              TimeUnitToString<TimeUnit>()));
     }
     return result;
 }
 
-static uint64_t
-parseTimeUnits(const char *unit, bool allowMsec)
+/// Parses a time specification from the config file and
+/// returns the time as a chrono duration object of 'TimeUnit' type.
+template <class TimeUnit>
+static TimeUnit
+parseTimeLine()
 {
-    if (allowMsec && !strncasecmp(unit, T_MILLISECOND_STR, strlen(T_MILLISECOND_STR)))
-        return 1;
+    const auto valueToken = ConfigParser::NextToken();
+    if (!valueToken)
+        throw TexcHere("cannot read a time value");
 
-    if (!strncasecmp(unit, T_SECOND_STR, strlen(T_SECOND_STR)))
-        return 1000;
+    const auto parsedValue = xatof(valueToken);
 
-    if (!strncasecmp(unit, T_MINUTE_STR, strlen(T_MINUTE_STR)))
-        return 60 * 1000;
+    if (parsedValue == 0)
+        return TimeUnit::zero();
 
-    if (!strncasecmp(unit, T_HOUR_STR, strlen(T_HOUR_STR)))
-        return 3600 * 1000;
+    std::chrono::nanoseconds parsedUnitDuration;
 
-    if (!strncasecmp(unit, T_DAY_STR, strlen(T_DAY_STR)))
-        return 86400 * 1000;
+    const auto token = ConfigParser::PeekAtToken();
 
-    if (!strncasecmp(unit, T_WEEK_STR, strlen(T_WEEK_STR)))
-        return 86400 * 7 * 1000;
+    if (!parseTimeUnit<TimeUnit>(token, parsedUnitDuration))
+        throw TexcHere(ToSBuf("unknown time unit '", token, "'"));
 
-    if (!strncasecmp(unit, T_FORTNIGHT_STR, strlen(T_FORTNIGHT_STR)))
-        return 86400 * 14 * 1000;
+    (void)ConfigParser::NextToken();
 
-    if (!strncasecmp(unit, T_MONTH_STR, strlen(T_MONTH_STR)))
-        return static_cast<uint64_t>(86400) * 30 * 1000;
+    const auto nanoseconds = CheckTimeValue(parsedValue, parsedUnitDuration);
 
-    if (!strncasecmp(unit, T_YEAR_STR, strlen(T_YEAR_STR)))
-        return static_cast<uint64_t>(86400 * 1000 * 365.2522);
+    // validate precisions (time-units-small only)
+    if (TimeUnit(1) <= std::chrono::microseconds(1)) {
+        if (0 < nanoseconds.count() && nanoseconds.count() < 3) {
+            debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), ConfigParser::CurrentLocation() << ": WARNING: " <<
+                   "Squid time measurement precision is likely to be far worse than " <<
+                   "the nanosecond-level precision implied by the configured value: " << parsedValue << ' ' << token);
+        }
+    }
 
-    if (!strncasecmp(unit, T_DECADE_STR, strlen(T_DECADE_STR)))
-        return static_cast<uint64_t>(86400 * 1000 * 365.2522 * 10);
-
-    debugs(3, DBG_IMPORTANT, "parseTimeUnits: unknown time unit '" << unit << "'");
-
-    return 0;
+    return FromNanoseconds<TimeUnit>(nanoseconds, parsedValue);
 }
 
 static void
@@ -2973,8 +3035,11 @@ dump_time_t(StoreEntry * entry, const char *name, time_t var)
 void
 parse_time_t(time_t * var)
 {
-    time_msec_t tval = parseTimeLine(T_SECOND_STR, false);
-    *var = static_cast<time_t>(tval/1000);
+    const auto maxTime = std::numeric_limits<time_t>::max();
+    const auto seconds = parseTimeLine<std::chrono::seconds>();
+    if (maxTime < seconds.count())
+        throw TexcHere(ToSBuf("directive supports time values up to ", maxTime, " but is given ", seconds.count(), " seconds"));
+    *var = static_cast<time_t>(seconds.count());
 }
 
 static void
@@ -2995,7 +3060,7 @@ dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 void
 parse_time_msec(time_msec_t * var)
 {
-    *var = parseTimeLine(T_SECOND_STR, true);
+    *var = parseTimeLine<std::chrono::milliseconds>().count();
 }
 
 static void
@@ -3003,6 +3068,27 @@ free_time_msec(time_msec_t * var)
 {
     *var = 0;
 }
+
+#if UNUSED_CODE
+// TODO: add a parameter with 'time_nanoseconds' TYPE and uncomment
+static void
+dump_time_nanoseconds(StoreEntry *entry, const char *name, const std::chrono::nanoseconds &var)
+{
+    storeAppendPrintf(entry, "%s %" PRId64 " nanoseconds\n", name, var.count());
+}
+
+static void
+parse_time_nanoseconds(std::chrono::nanoseconds *var)
+{
+    *var = parseTimeLine<std::chrono::nanoseconds>();
+}
+
+static void
+free_time_nanoseconds(std::chrono::nanoseconds *var)
+{
+    *var = std::chrono::nanoseconds::zero();
+}
+#endif
 
 #if UNUSED_CODE
 static void
@@ -3733,6 +3819,14 @@ parse_port_option(AnyP::PortCfgPointer &s, char *token)
         s->secure.parse(token+4);
     } else if (strcmp(token, "ftp-track-dirs") == 0) {
         s->ftp_track_dirs = true;
+    } else if (strcmp(token, "worker-queues") == 0) {
+#if !defined(SO_REUSEADDR)
+#error missing system #include that #defines SO_* constants
+#endif
+#if !defined(SO_REUSEPORT)
+        throw TexcHere(ToSBuf(cfg_directive, ' ', token, " option requires building Squid where SO_REUSEPORT is supported by the TCP stack"));
+#endif
+        s->workerQueues = true;
     } else {
         debugs(3, DBG_CRITICAL, "FATAL: Unknown " << cfg_directive << " option '" << token << "'.");
         self_destruct();
@@ -4401,8 +4495,6 @@ dump_ecap_service_type(StoreEntry * entry, const char *name, const Adaptation::E
 static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 {
     char *token;
-    time_t d;
-    time_t m;
     cfg->service_failure_limit = GetInteger();
 
     if ((token = ConfigParser::NextToken()) == NULL)
@@ -4414,27 +4506,7 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
         return;
     }
 
-    if ((token = ConfigParser::NextToken()) == NULL) {
-        self_destruct();
-        return;
-    }
-
-    d = static_cast<time_t> (xatoi(token));
-
-    m = static_cast<time_t> (1);
-
-    if (0 == d)
-        (void) 0;
-    else if ((token = ConfigParser::NextToken()) == NULL) {
-        debugs(3, DBG_CRITICAL, "No time-units on '" << config_input_line << "'");
-        self_destruct();
-        return;
-    } else if ((m = parseTimeUnits(token, false)) == 0) {
-        self_destruct();
-        return;
-    }
-
-    cfg->oldest_service_failure = (m * d);
+    parse_time_t(&cfg->oldest_service_failure);
 }
 
 static void dump_icap_service_failure_limit(StoreEntry *entry, const char *name, const Adaptation::Icap::Config &cfg)
@@ -4866,11 +4938,45 @@ static void free_ftp_epsv(acl_access **ftp_epsv)
     FtpEspvDeprecated = false;
 }
 
+/// Like parseTimeLine() but does not require the timeunit to be specified.
+/// If missed, the default 'second' timeunit is assumed.
+static std::chrono::seconds
+ParseUrlRewriteTimeout()
+{
+    const auto timeValueToken = ConfigParser::NextToken();
+    if (!timeValueToken)
+        throw TexcHere("cannot read a time value");
+
+    using Seconds = std::chrono::seconds;
+
+    const auto parsedTimeValue = xatof(timeValueToken);
+
+    if (parsedTimeValue == 0)
+        return std::chrono::seconds::zero();
+
+    std::chrono::nanoseconds parsedUnitDuration;
+
+    const auto unitToken = ConfigParser::PeekAtToken();
+    if (parseTimeUnit<Seconds>(unitToken, parsedUnitDuration))
+        (void)ConfigParser::NextToken();
+    else {
+        const auto defaultParsed = parseTimeUnit<Seconds>(T_SECOND_STR, parsedUnitDuration);
+        assert(defaultParsed);
+        debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), ConfigParser::CurrentLocation() <<
+                ": WARNING: missing time unit, using deprecated default '" << T_SECOND_STR << "'");
+    }
+
+    const auto nanoseconds = CheckTimeValue(parsedTimeValue, parsedUnitDuration);
+
+    return FromNanoseconds<Seconds>(nanoseconds, parsedTimeValue);
+}
+
 static void
 parse_UrlHelperTimeout(SquidConfig::UrlHelperTimeout *config)
 {
-    const auto tval = parseTimeLine(T_SECOND_STR, false, true);
-    Config.Timeout.urlRewrite = static_cast<time_t>(tval/1000);
+    // TODO: do not allow optional timeunit (as the documentation prescribes)
+    // and use parseTimeLine() instead.
+    Config.Timeout.urlRewrite = ParseUrlRewriteTimeout().count();
 
     char *key, *value;
     while(ConfigParser::NextKvPair(key, value)) {

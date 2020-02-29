@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -505,6 +505,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             if (al->tcpClient) {
                 sb.appendf("0x%x", static_cast<uint32_t>(al->tcpClient->tos));
                 out = sb.c_str();
+            }
+            break;
+
+        case LFT_TRANSPORT_CLIENT_CONNECTION_ID:
+            if (al->tcpClient) {
+                outUint64 = al->tcpClient->id.value;
+                doUint64 = true;
             }
             break;
 
