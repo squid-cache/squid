@@ -40,6 +40,7 @@ COPIED_SOURCE= \
 	globals.cc \
 	SquidConfig.cc \
 	SquidNew.cc \
+	stub_fd.cc \
 	stub_HelperChildConfig.cc \
 	stub_libmem.cc \
 	stub_SBuf.cc \
@@ -100,6 +101,9 @@ SquidNew.cc: $(top_srcdir)/src/SquidNew.cc
 
 stub_HelperChildConfig.cc: $(top_srcdir)/src/tests/stub_HelperChildConfig.cc
 	cp $(top_srcdir)/src/tests/stub_HelperChildConfig.cc $@
+
+stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc STUB.h
+	cp $(top_srcdir)/src/tests/stub_fd.cc $@
 
 stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
