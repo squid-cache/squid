@@ -41,8 +41,8 @@ max_stale 24855 days # floor(max_stale hours/24)
 max_stale 3550 weeks # floor(max_stale days/7)
 max_stale 1775 fortnights # floor(max_stale weeks/2)
 max_stale 828.5 months # max_stale days/30
-max_stale 68 years # approx(max_stale days/365)
-max_stale 6.8 decades
+max_stale 68.04 years # approx(max_stale days/365.2522)
+max_stale 6.804 decades # max_stale years/10
 
 # a multiple-options parameter
 
