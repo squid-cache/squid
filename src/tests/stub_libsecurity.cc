@@ -21,6 +21,8 @@ const char *Security::certAdaptAlgorithmName(const int) STUB_RETVAL("invalid")
 Security::CertAdaptAlgorithm Security::certAdaptAlgorithmId(const char *) STUB_RETVAL(algSetEnd)
 const char *Security::certSignAlgorithmName(const int) STUB_RETVAL("invalid")
 Security::CertSignAlgorithm Security::certSignAlgorithmId(const char *) STUB_RETVAL(algSignEnd)
+
+#include "security/DigestAlgorithm.h"
 const char *Security::digestName(const DigestAlgorithm) STUB_RETVAL("invalid")
 const Security::DigestAlgorithm Security::digestByName(const char *) STUB_RETVAL(UnknownDigestAlgorithm)
 

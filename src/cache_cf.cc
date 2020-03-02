@@ -57,6 +57,8 @@
 #include "rfc1738.h"
 #include "sbuf/List.h"
 #include "sbuf/Stream.h"
+#include "security/CertAdaptAlgorithm.h"
+#include "security/CertSignAlgorithm.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"

@@ -21,6 +21,7 @@
 #include "log/forward.h"
 #include "proxyp/forward.h"
 #include "sbuf/SBuf.h"
+#include "security/CertSignAlgorithm.h"
 #include "servers/Server.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"

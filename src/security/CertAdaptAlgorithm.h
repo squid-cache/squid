@@ -9,16 +9,18 @@
 #ifndef SQUID_SRC_SECURITY_CERTADAPTALGORITHM_H
 #define SQUID_SRC_SECURITY_CERTADAPTALGORITHM_H
 
+#include "security/forward.h"
+
 namespace Security
 {
 
 /// Supported certificate adaptation algorithms
-typedef enum {
+enum CertAdaptAlgorithm : short {
     algSetValidAfter = 0,
     algSetValidBefore,
     algSetCommonName,
     algSetEnd
-} CertAdaptAlgorithm;
+};
 
 /// Short names for certificate adaptation algorithms
 extern const char *CertAdaptAlgorithm_str[];

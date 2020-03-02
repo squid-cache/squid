@@ -9,15 +9,17 @@
 #ifndef SQUID_SRC_SECURITY_CERTSIGNALGORITHM_H
 #define SQUID_SRC_SECURITY_CERTSIGNALGORITHM_H
 
+#include "security/forward.h"
+
 namespace Security
 {
 
-typedef enum {
+enum CertSignAlgorithm : short {
     algSignTrusted = 0,
     algSignUntrusted,
     algSignSelf,
     algSignEnd
-} CertSignAlgorithm;
+};
 
 /// Short names for certificate signing algorithms
 extern const char *CertSignAlgorithm_str[];
