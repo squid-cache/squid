@@ -217,7 +217,8 @@ bool Ssl::CrtdMessage::parseRequest(Security::CertificateProperties &certPropert
 
     i = map.find(Ssl::CrtdMessage::param_SignHash);
     const char *signHashName = i != map.end() ? i->second.c_str() : SQUID_SSL_SIGN_HASH_IF_NONE;
-    if (!(certProperties.signHash = Security::digestByName(signHashName))) {
+    certProperties.signHash = Security::digestByName(signHashName);
+    if (certProperties.signHash == UnknownDigestAlgorithm) {
         error = "Wrong signing hash: ";
         error += signHashName;
         return false;
