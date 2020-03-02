@@ -33,7 +33,7 @@ dns_timeout 29.227 decades
 max_stale 1 second
 max_stale 0.0167 minute
 
-# maximum checks (see similar dns_timeout checks for details)
+# check support for the maximum value (expressed in each supported time unit)
 # XXX: Use a 32-bit maximum to avoid breaking tests on 32-bit platforms.
 # TODO: Generate these test lines based on the target build platform.
 max_stale 2147483647 seconds # 2^31-1
