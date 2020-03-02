@@ -25,6 +25,8 @@ dns_timeout 7625 fortnights
 dns_timeout 3558 months
 dns_timeout 292.27 years
 dns_timeout 29.227 decades
+
+
 # a second-precision parameter (time-units)
 
 # minimum checks
@@ -54,3 +56,4 @@ url_rewrite_timeout 292 year on_timeout=bypass
 url_rewrite_timeout 1 on_timeout=bypass
 
 # TODO: a nanosecond-precison parameter (time-units-small)
+
