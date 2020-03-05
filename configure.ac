@@ -3133,6 +3133,7 @@ AC_CONFIG_FILES([
 	src/auth/ntlm/SMB_LM/Makefile
 	src/auth/ntlm/SSPI/Makefile
 	src/base/Makefile
+	src/cfg/Makefile
 	src/clients/Makefile
 	src/comm/Makefile
 	src/debug/Makefile
