@@ -10,20 +10,16 @@
 #
 # This script runs codespell against selected files.
 #
-# Use -q or --quiet option to run quietly
-#
 
-CODESPELL_LOC=`which codespell`
-if test "${CODESPELL_LOC}" = ""; then
+set -e
+
+echo -n "Codespell version: "
+if ! codespell --version; then
     echo "This script requires codespell which was not found."
     exit 1
 fi
 
-CODESPELL_VER=`codespell --version 2>&1`
-echo "The codespell version is ${CODESPELL_VER}."
-
-UNSTAGED_CHANGES=`git diff | wc -l`
-if test "${UNSTAGED_CHANGES}" != "0"; then
+if ! git diff --quiet; then
     echo "There are unstaged changes. Stage these first to prevent conflict."
     exit 1
 fi	
@@ -34,20 +30,6 @@ if test ! -f "${WHITE_LIST}"; then
     exit 1
 fi
 
-QUIET=0
-while test "$1" != ""; do
-    case $1 in
-        -q | --quiet )
-            QUIET=1
-            ;;
-    esac
-    shift
-done
-
-#
-# Scan for file-specific actions
-#
-
 for FILENAME in `git ls-files`; do
     # skip subdirectories, git ls-files is recursive
     test -d $FILENAME && continue
@@ -57,15 +39,18 @@ for FILENAME in `git ls-files`; do
     doc/*.txt|doc/*/*.txt)
         ;;	    
 
-    *.h|*.c|*.cc|*.cci|*.pl|*.sh|*.pre|*.pl.in|*.pm|*.dox|*.html|*.txt|*.sql|errors/templates/ERR_*|INSTALL|README|QUICKSTART)
+    *.h|*.c|*.cc|*.cci|\
+    *.pl|*.sh|\
+    *.pre|*.pl.in|*.pm|\
+    *.dox|*.html|*.txt|\
+    *.sql|\
+    errors/templates/ERR_*|\
+    INSTALL|README|QUICKSTART)
         #
         # Run codespell against specific file
         #
-        if test "${QUIET}" = "0"; then
-            echo "Running codespell for ${FILENAME}"	
-        fi
- 	codespell -d -q 3 -w -I ${WHITE_LIST} ${FILENAME}
-        if test "$?" != "0"; then
+        echo "Running codespell for ${FILENAME}"
+        if ! codespell -d -q 3 -w -I "${WHITE_LIST}" ${FILENAME}; then
             echo "codespell failed for ${FILENAME}"
             exit 1
 	fi
