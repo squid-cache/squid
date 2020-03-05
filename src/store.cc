@@ -899,7 +899,7 @@ struct _store_check_cachable_hist {
         int non_get;
         int not_entry_cachable;
         int wrong_content_length;
-        int negative_cached;
+        int expired_negative_cached;
         int too_big;
         int too_small;
         int private_key;
@@ -910,6 +910,7 @@ struct _store_check_cachable_hist {
 
     struct {
         int Default;
+        int unexpired_negative_cached;
     } yes;
 } store_check_cachable_hist;
 
@@ -980,8 +981,13 @@ StoreEntry::checkCachable()
             debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
             ++store_check_cachable_hist.no.wrong_content_length;
         } else if (EBIT_TEST(flags, ENTRY_NEGCACHED)) {
-            debugs(20, 3, "StoreEntry::checkCachable: NO: negative cached");
-            ++store_check_cachable_hist.no.negative_cached;
+            if (squid_curtime < expires) {
+                debugs(20, 3, "StoreEntry::checkCachable: YES: unexpired negative cached");
+                ++store_check_cachable_hist.yes.unexpired_negative_cached;
+                return 1;
+            }
+            debugs(20, 3, "StoreEntry::checkCachable: NO: expired negative cached");
+            ++store_check_cachable_hist.no.expired_negative_cached;
             return 0;           /* avoid release call below */
         } else if (!mem_obj) {
             // XXX: In bug 4131, we forgetHit() without mem_obj, so we need
@@ -1033,8 +1039,8 @@ storeCheckCachableStats(StoreEntry *sentry)
                       store_check_cachable_hist.no.not_entry_cachable);
     storeAppendPrintf(sentry, "no.wrong_content_length\t%d\n",
                       store_check_cachable_hist.no.wrong_content_length);
-    storeAppendPrintf(sentry, "no.negative_cached\t%d\n",
-                      store_check_cachable_hist.no.negative_cached);
+    storeAppendPrintf(sentry, "no.expired_negative_cached\t%d\n",
+                      store_check_cachable_hist.no.expired_negative_cached);
     storeAppendPrintf(sentry, "no.missing_parts\t%d\n",
                       store_check_cachable_hist.no.missing_parts);
     storeAppendPrintf(sentry, "no.too_big\t%d\n",
@@ -1047,6 +1053,8 @@ storeCheckCachableStats(StoreEntry *sentry)
                       store_check_cachable_hist.no.too_many_open_files);
     storeAppendPrintf(sentry, "no.too_many_open_fds\t%d\n",
                       store_check_cachable_hist.no.too_many_open_fds);
+    storeAppendPrintf(sentry, "yes.unexpired_negative_cached\t%d\n",
+                      store_check_cachable_hist.yes.unexpired_negative_cached);
     storeAppendPrintf(sentry, "yes.default\t%d\n",
                       store_check_cachable_hist.yes.Default);
 }
@@ -1374,6 +1382,7 @@ StoreEntry::negativeCache()
 #else
         expires = squid_curtime;
 #endif
+    debugs(20, 6, "expires = " << expires << ", curtime = " << squid_curtime);
     EBIT_SET(flags, ENTRY_NEGCACHED);
 }
 
