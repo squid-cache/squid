@@ -1132,9 +1132,6 @@ mainSetCwd(void)
 static void
 mainInitialize(void)
 {
-    /* chroot if configured to run inside chroot */
-    mainSetCwd();
-
     if (opt_catch_signals) {
         squid_signal(SIGSEGV, death, SA_NODEFER | SA_RESETHAND);
         squid_signal(SIGBUS, death, SA_NODEFER | SA_RESETHAND);
@@ -1148,12 +1145,6 @@ mainInitialize(void)
 
     if (icpPortNumOverride != 1)
         Config.Port.icp = (unsigned short) icpPortNumOverride;
-
-    _db_init(Debug::cache_log, Debug::debugOptions);
-
-    // Do not register cache.log descriptor with Comm (for now).
-    // See https://bugs.squid-cache.org/show_bug.cgi?id=4796
-    // fd_open(fileno(debug_log), FD_LOG, Debug::cache_log);
 
     debugs(1, DBG_CRITICAL, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
     debugs(1, DBG_CRITICAL, "Service Name: " << service_name);
@@ -1443,10 +1434,55 @@ ConfigureCurrentKid(const CommandLine &cmdLine)
     }
 }
 
-static void StartUsingConfig()
+/// Start directing debugs() messages to the configured cache.log.
+/// Until this function is called, all allowed messages go to stderr.
+static void
+ConfigureDebugging()
+{
+    if (opt_no_daemon) {
+        fd_open(0, FD_LOG, "stdin");
+        fd_open(1, FD_LOG, "stdout");
+        fd_open(2, FD_LOG, "stderr");
+    }
+    // we should not create cache.log outside chroot environment, if any
+    // XXX: With Config.chroot_dir set, SMP master process never calls db_init().
+    if (!Config.chroot_dir || Chrooted)
+        _db_init(Debug::cache_log, Debug::debugOptions);
+}
+
+static void
+RunConfigUsers()
 {
     RunRegisteredHere(RegisteredRunner::claimMemoryNeeds);
     RunRegisteredHere(RegisteredRunner::useConfig);
+}
+
+static void
+StartUsingConfig()
+{
+    setMaxFD();
+    fde::Init();
+    const auto skipCwdAdjusting = IamMasterProcess() && InDaemonMode();
+    if (skipCwdAdjusting) {
+        ConfigureDebugging();
+        RunConfigUsers();
+    } else if (Config.chroot_dir) {
+        RunConfigUsers();
+        enter_suid();
+        // TODO: don't we need to RunConfigUsers() in the configured
+        // chroot environment?
+        mainSetCwd();
+        leave_suid();
+        ConfigureDebugging();
+    } else {
+        ConfigureDebugging();
+        RunConfigUsers();
+        enter_suid();
+        // TODO: since RunConfigUsers() may use a relative path, we
+        // need to change the process root first
+        mainSetCwd();
+        leave_suid();
+    }
 }
 
 int
@@ -1585,18 +1621,6 @@ SquidMain(int argc, char **argv)
     if (opt_send_signal == -1 && IamMasterProcess())
         Instance::ThrowIfAlreadyRunning();
 
-#if TEST_ACCESS
-
-    comm_init();
-
-    mainInitialize();
-
-    test_access();
-
-    return 0;
-
-#endif
-
     /* send signal to running copy and exit */
     if (opt_send_signal != -1) {
         /* chroot if configured to run inside chroot */
@@ -1628,9 +1652,6 @@ SquidMain(int argc, char **argv)
     enter_suid();
 
     if (opt_create_swap_dirs) {
-        /* chroot if configured to run inside chroot */
-        mainSetCwd();
-
         setEffectiveUser();
         debugs(0, DBG_CRITICAL, "Creating missing swap directories");
         Store::Root().create();
@@ -1642,17 +1663,8 @@ SquidMain(int argc, char **argv)
         CpuAffinityCheck();
     CpuAffinityInit();
 
-    setMaxFD();
-
     /* init comm module */
     comm_init();
-
-    if (opt_no_daemon) {
-        /* we have to init fdstat here. */
-        fd_open(0, FD_LOG, "stdin");
-        fd_open(1, FD_LOG, "stdout");
-        fd_open(2, FD_LOG, "stderr");
-    }
 
 #if USE_WIN32_SERVICE
 
