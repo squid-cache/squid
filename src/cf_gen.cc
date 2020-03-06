@@ -54,7 +54,7 @@ enum State {
     sSTART,
     s1,
     sDOC,
-    sNOCOMMENT,
+    sCFGLINES,
     sEXIT
 };
 
@@ -65,9 +65,6 @@ typedef std::list<std::string> EntryAliasList;
 class DefaultValues
 {
 public:
-    DefaultValues() : preset(), if_none(), docs() {}
-    ~DefaultValues() {}
-
     /// Default config lines to be defined before parsing the config files.
     LineList preset;
 
@@ -87,11 +84,7 @@ public:
 class Entry
 {
 public:
-    Entry(const char *str) :
-        name(str), alias(),type(), loc(),
-        defaults(), comment(), ifdef(), doc(), nocomment(),
-        array_flag(0) {}
-    ~Entry() {}
+    explicit Entry(const char *str) : name(str) {}
 
     std::string name;
     EntryAliasList alias;
@@ -101,8 +94,8 @@ public:
     std::string comment;
     std::string ifdef;
     LineList doc;
-    LineList nocomment;
-    int array_flag;
+    LineList cfgLines; ///< between CONFIG_START and CONFIG_END
+    int array_flag = 0; ///< TYPE is a raw array[] declaration
 
     void genParse(std::ostream &fout) const;
 
@@ -116,7 +109,6 @@ class Type
 {
 public:
     Type(const char *str) : name(str) {}
-    ~Type() {}
 
     std::string name;
     TypeDepList depend;
@@ -139,17 +131,17 @@ static const char *gen_quote_escape(const std::string &var);
 static void
 checkDepend(const std::string &directive, const char *name, const TypeList &types, const EntryList &entries)
 {
-    for (TypeList::const_iterator t = types.begin(); t != types.end(); ++t) {
-        if (t->name.compare(name) != 0)
+    for (const auto &t : types) {
+        if (t.name.compare(name) != 0)
             continue;
-        for (TypeDepList::const_iterator dep = t->depend.begin(); dep != t->depend.end(); ++dep) {
+        for (const auto &dep : t.depend) {
             EntryList::const_iterator entry = entries.begin();
             for (; entry != entries.end(); ++entry) {
-                if (entry->name.compare(*dep) == 0)
+                if (entry->name.compare(dep) == 0)
                     break;
             }
             if (entry == entries.end()) {
-                std::cerr << "ERROR: '" << directive << "' (" << name << ") depends on '" << *dep << "'\n";
+                std::cerr << "ERROR: '" << directive << "' (" << name << ") depends on '" << dep << "'\n";
                 exit(EXIT_FAILURE);
             }
         }
@@ -273,7 +265,7 @@ main(int argc, char *argv[])
                         exit(EXIT_FAILURE);
                     }
 
-                    entries.push_back(name);
+                    entries.emplace_back(name);
 
                     while ((aliasname = strtok(NULL, WS)) != NULL)
                         entries.back().alias.push_front(aliasname);
@@ -282,7 +274,7 @@ main(int argc, char *argv[])
                 } else if (!strcmp(buff, "EOF")) {
                     state = sEXIT;
                 } else if (!strcmp(buff, "COMMENT_START")) {
-                    entries.push_back("comment");
+                    entries.emplace_back("comment");
                     entries.back().loc = "none";
                     state = sDOC;
                 } else {
@@ -347,7 +339,7 @@ main(int argc, char *argv[])
                     }
 
                     /* hack to support arrays, rather than pointers */
-                    if (0 == strcmp(ptr + strlen(ptr) - 2, "[]")) {
+                    if (strcmp(ptr + strlen(ptr) - 2, "[]") == 0) {
                         curr.array_flag = 1;
                         *(ptr + strlen(ptr) - 2) = '\0';
                     }
@@ -375,20 +367,20 @@ main(int argc, char *argv[])
             case sDOC:
                 if (!strcmp(buff, "DOC_END") || !strcmp(buff, "COMMENT_END")) {
                     state = sSTART;
-                } else if (!strcmp(buff, "NOCOMMENT_START")) {
-                    state = sNOCOMMENT;
+                } else if (strcmp(buff, "CONFIG_START") == 0) {
+                    state = sCFGLINES;
                 } else { // if (buff != NULL) {
                     assert(buff != NULL);
                     entries.back().doc.push_back(buff);
                 }
                 break;
 
-            case sNOCOMMENT:
-                if (!strcmp(buff, "NOCOMMENT_END")) {
+            case sCFGLINES:
+                if (strcmp(buff, "CONFIG_END") == 0) {
                     state = sDOC;
                 } else { // if (buff != NULL) {
                     assert(buff != NULL);
-                    entries.back().nocomment.push_back(buff);
+                    entries.back().cfgLines.push_back(buff);
                 }
                 break;
 #if 0
@@ -492,38 +484,37 @@ gen_default(const EntryList &head, std::ostream &fout)
          "    cfg_filename = \"Default Configuration\";" << std::endl <<
          "    config_lineno = 0;" << std::endl;
 
-    for (EntryList::const_iterator entry = head.begin(); entry != head.end(); ++entry) {
-        assert(entry->name.size());
+    for (const auto &entry : head) {
+        assert(entry.name.size());
 
-        if (!entry->name.compare("comment"))
+        if (!entry.name.compare("comment"))
             continue;
 
-        if (!entry->type.compare("obsolete"))
+        if (!entry.type.compare("obsolete"))
             continue;
 
-        if (!entry->loc.size()) {
-            std::cerr << "NO LOCATION FOR " << entry->name << std::endl;
+        if (!entry.loc.size()) {
+            std::cerr << "NO LOCATION FOR " << entry.name << std::endl;
             rc |= 1;
             continue;
         }
 
-        if (!entry->defaults.preset.size() && entry->defaults.if_none.empty()) {
-            std::cerr << "NO DEFAULT FOR " << entry->name << std::endl;
+        if (!entry.defaults.preset.size() && entry.defaults.if_none.empty()) {
+            std::cerr << "NO DEFAULT FOR " << entry.name << std::endl;
             rc |= 1;
             continue;
         }
 
-        if (!entry->defaults.preset.size() || entry->defaults.preset.front().compare("none") == 0) {
-            fout << "    // No default for " << entry->name << std::endl;
+        if (!entry.defaults.preset.size() || entry.defaults.preset.front().compare("none") == 0) {
+            fout << "    // No default for " << entry.name << std::endl;
         } else {
-            if (entry->ifdef.size())
-                fout << "#if " << entry->ifdef << std::endl;
+            if (entry.ifdef.size())
+                fout << "#if " << entry.ifdef << std::endl;
 
-            for (LineList::const_iterator l = entry->defaults.preset.begin(); l != entry->defaults.preset.end(); ++l) {
-                fout << "    default_line(\"" << entry->name << " " << gen_quote_escape(*l) << "\");" << std::endl;
-            }
+            for (const auto &l : entry.defaults.preset)
+                fout << "    default_line(\"" << entry.name << " " << gen_quote_escape(l) << "\");" << std::endl;
 
-            if (entry->ifdef.size())
+            if (entry.ifdef.size())
                 fout << "#endif" << std::endl;
         }
     }
@@ -542,29 +533,29 @@ gen_default_if_none(const EntryList &head, std::ostream &fout)
          "    cfg_filename = \"Default Configuration (if absent)\";" << std::endl <<
          "    config_lineno = 0;" << std::endl;
 
-    for (EntryList::const_iterator entry = head.begin(); entry != head.end(); ++entry) {
-        assert(entry->name.size());
+    for (const auto &entry : head) {
+        assert(entry.name.size());
 
-        if (!entry->loc.size())
+        if (!entry.loc.size())
             continue;
 
-        if (entry->defaults.if_none.empty())
+        if (entry.defaults.if_none.empty())
             continue;
 
-        if (!entry->defaults.preset.empty()) {
-            std::cerr << "ERROR: " << entry->name << " has preset defaults. DEFAULT_IF_NONE cannot be true." << std::endl;
+        if (!entry.defaults.preset.empty()) {
+            std::cerr << "ERROR: " << entry.name << " has preset defaults. DEFAULT_IF_NONE cannot be true." << std::endl;
             exit(EXIT_FAILURE);
         }
 
-        if (entry->ifdef.size())
-            fout << "#if " << entry->ifdef << std::endl;
+        if (entry.ifdef.size())
+            fout << "#if " << entry.ifdef << std::endl;
 
-        fout << "    if (check_null_" << entry->type << "(" << entry->loc << ")) {" << std::endl;
-        for (LineList::const_iterator l = entry->defaults.if_none.begin(); l != entry->defaults.if_none.end(); ++l)
-            fout << "        default_line(\"" << entry->name << " " << gen_quote_escape(*l) <<"\");" << std::endl;
+        fout << "    if (check_null_" << entry.type << "(" << entry.loc << ")) {" << std::endl;
+        for (const auto &l : entry.defaults.if_none)
+            fout << "        default_line(\"" << entry.name << " " << gen_quote_escape(l) <<"\");" << std::endl;
         fout << "    }" << std::endl;
 
-        if (entry->ifdef.size())
+        if (entry.ifdef.size())
             fout << "#endif" << std::endl;
     }
 
@@ -582,22 +573,22 @@ gen_default_postscriptum(const EntryList &head, std::ostream &fout)
          "    cfg_filename = \"Default Configuration (postscriptum)\";" << std::endl <<
          "    config_lineno = 0;" << std::endl;
 
-    for (EntryList::const_iterator entry = head.begin(); entry != head.end(); ++entry) {
-        assert(entry->name.size());
+    for (const auto &entry : head) {
+        assert(entry.name.size());
 
-        if (!entry->loc.size())
+        if (!entry.loc.size())
             continue;
 
-        if (entry->defaults.postscriptum.empty())
+        if (entry.defaults.postscriptum.empty())
             continue;
 
-        if (entry->ifdef.size())
-            fout << "#if " << entry->ifdef << std::endl;
+        if (entry.ifdef.size())
+            fout << "#if " << entry.ifdef << std::endl;
 
-        for (LineList::const_iterator l = entry->defaults.postscriptum.begin(); l != entry->defaults.postscriptum.end(); ++l)
-            fout << "    default_line(\"" << entry->name << " " << *l <<"\");" << std::endl;
+        for (const auto &l : entry.defaults.postscriptum)
+            fout << "    default_line(\"" << entry.name << " " << l <<"\");" << std::endl;
 
-        if (entry->ifdef.size())
+        if (entry.ifdef.size())
             fout << "#endif" << std::endl;
     }
 
@@ -615,9 +606,9 @@ Entry::genParseAlias(const std::string &aName, std::ostream &fout) const
     fout << "        ";
     if (type.compare("obsolete") == 0) {
         fout << "debugs(0, DBG_CRITICAL, \"ERROR: Directive '" << aName << "' is obsolete.\");\n";
-        for (LineList::const_iterator l = doc.begin(); l != doc.end(); ++l) {
+        for (const auto &l : doc) {
             // offset line to strip initial whitespace tab byte
-            fout << "        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), \"" << aName << " : " << &(*l)[1] << "\");" << std::endl;
+            fout << "        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), \"" << aName << " : " << &l[1] << "\");" << std::endl;
         }
         fout << "        parse_obsolete(token);";
     } else if (!loc.size() || loc.compare("none") == 0) {
@@ -647,8 +638,8 @@ Entry::genParse(std::ostream &fout) const
     genParseAlias(name, fout);
 
     // All accepted aliases
-    for (EntryAliasList::const_iterator a = alias.begin(); a != alias.end(); ++a) {
-        genParseAlias(*a, fout);
+    for (const auto &a : alias) {
+        genParseAlias(a, fout);
     }
 }
 
@@ -664,8 +655,8 @@ gen_parse(const EntryList &head, std::ostream &fout)
          "\t\treturn 1;\t/* ignore empty lines */\n"
          "\tConfigParser::SetCfgLine(strtok(NULL, \"\"));\n";
 
-    for (EntryList::const_iterator e = head.begin(); e != head.end(); ++e)
-        e->genParse(fout);
+    for (const auto &e : head)
+        e.genParse(fout);
 
     fout << "\treturn 0; /* failure */\n"
          "}\n\n";
@@ -681,20 +672,20 @@ gen_dump(const EntryList &head, std::ostream &fout)
          "{" << std::endl <<
          "    debugs(5, 4, HERE);" << std::endl;
 
-    for (EntryList::const_iterator e = head.begin(); e != head.end(); ++e) {
+    for (const auto &e : head) {
 
-        if (!e->loc.size() || e->loc.compare("none") == 0)
+        if (!e.loc.size() || e.loc.compare("none") == 0)
             continue;
 
-        if (e->name.compare("comment") == 0)
+        if (e.name.compare("comment") == 0)
             continue;
 
-        if (e->ifdef.size())
-            fout << "#if " << e->ifdef << std::endl;
+        if (e.ifdef.size())
+            fout << "#if " << e.ifdef << std::endl;
 
-        fout << "    dump_" << e->type << "(entry, \"" << e->name << "\", " << e->loc << ");" << std::endl;
+        fout << "    dump_" << e.type << "(entry, \"" << e.name << "\", " << e.loc << ");" << std::endl;
 
-        if (e->ifdef.size())
+        if (e.ifdef.size())
             fout << "#endif" << std::endl;
     }
 
@@ -710,19 +701,19 @@ gen_free(const EntryList &head, std::ostream &fout)
          "{" << std::endl <<
          "    debugs(5, 4, HERE);" << std::endl;
 
-    for (EntryList::const_iterator e = head.begin(); e != head.end(); ++e) {
-        if (!e->loc.size() || e->loc.compare("none") == 0)
+    for (const auto &e : head) {
+        if (!e.loc.size() || e.loc.compare("none") == 0)
             continue;
 
-        if (e->name.compare("comment") == 0)
+        if (e.name.compare("comment") == 0)
             continue;
 
-        if (e->ifdef.size())
-            fout << "#if " << e->ifdef << std::endl;
+        if (e.ifdef.size())
+            fout << "#if " << e.ifdef << std::endl;
 
-        fout << "    free_" << e->type << "(&" << e->loc << (e->array_flag ? "[0]" : "") << ");" << std::endl;
+        fout << "    free_" << e.type << "(&" << e.loc << (e.array_flag ? "[0]" : "") << ");" << std::endl;
 
-        if (e->ifdef.size())
+        if (e.ifdef.size())
             fout << "#endif" << std::endl;
     }
 
@@ -759,63 +750,63 @@ available_if(const std::string &name)
 static void
 gen_conf(const EntryList &head, std::ostream &fout, bool verbose_output)
 {
-    for (EntryList::const_iterator entry = head.begin(); entry != head.end(); ++entry) {
+    for (const auto &entry : head) {
         char buf[8192];
         LineList def;
         int enabled = 1;
 
         // Display TAG: line
-        if (!entry->name.compare("comment"))
+        if (!entry.name.compare("comment"))
             (void) 0;
-        else if (!entry->name.compare("obsolete"))
+        else if (!entry.name.compare("obsolete"))
             (void) 0;
         else if (verbose_output) {
-            fout << "#  TAG: " << entry->name;
+            fout << "#  TAG: " << entry.name;
 
-            if (entry->comment.size())
-                fout << "\t" << entry->comment;
+            if (entry.comment.size())
+                fout << "\t" << entry.comment;
 
             fout << std::endl;
         }
 
         // Display --enable/--disable disclaimer
-        if (!isDefined(entry->ifdef)) {
+        if (!isDefined(entry.ifdef)) {
             if (verbose_output) {
                 fout << "# Note: This option is only available if Squid is rebuilt with the" << std::endl <<
-                     "#       " << available_if(entry->ifdef) << std::endl <<
+                     "#       " << available_if(entry.ifdef) << std::endl <<
                      "#" << std::endl;
             }
             enabled = 0;
         }
 
         // Display DOC_START section
-        if (verbose_output && entry->doc.size()) {
-            for (LineList::const_iterator line = entry->doc.begin(); line != entry->doc.end(); ++line) {
-                fout << "#" << *line << std::endl;
+        if (verbose_output && entry.doc.size()) {
+            for (const auto &line : entry.doc) {
+                fout << "#" << line << std::endl;
             }
         }
 
-        if (entry->defaults.docs.size()) {
+        if (entry.defaults.docs.size()) {
             // Display the DEFAULT_DOC line(s)
-            def = entry->defaults.docs;
+            def = entry.defaults.docs;
         } else {
-            if (entry->defaults.preset.size() && entry->defaults.preset.front().compare("none") != 0) {
+            if (entry.defaults.preset.size() && entry.defaults.preset.front().compare("none") != 0) {
                 // Display DEFAULT: line(s)
-                for (LineList::const_iterator l = entry->defaults.preset.begin(); l != entry->defaults.preset.end(); ++l) {
-                    snprintf(buf, sizeof(buf), "%s %s", entry->name.c_str(), l->c_str());
+                for (const auto &l : entry.defaults.preset) {
+                    snprintf(buf, sizeof(buf), "%s %s", entry.name.c_str(), l.c_str());
                     def.push_back(buf);
                 }
-            } else if (entry->defaults.if_none.size()) {
+            } else if (entry.defaults.if_none.size()) {
                 // Display DEFAULT_IF_NONE: line(s)
-                for (LineList::const_iterator l = entry->defaults.if_none.begin(); l != entry->defaults.if_none.end(); ++l) {
-                    snprintf(buf, sizeof(buf), "%s %s", entry->name.c_str(), l->c_str());
+                for (const auto &l : entry.defaults.if_none) {
+                    snprintf(buf, sizeof(buf), "%s %s", entry.name.c_str(), l.c_str());
                     def.push_back(buf);
                 }
             }
         }
 
         // Display "none" if no default is set or comments to display
-        if (def.empty() && entry->nocomment.empty() && entry->name.compare("comment") != 0)
+        if (def.empty() && entry.cfgLines.empty() && entry.name.compare("comment") != 0)
             def.push_back("none");
 
         if (verbose_output && def.size()) {
@@ -824,22 +815,22 @@ gen_conf(const EntryList &head, std::ostream &fout, bool verbose_output)
                 fout << "# " << def.front() << std::endl;
                 def.pop_front();
             }
-            if (entry->doc.empty() && entry->nocomment.empty())
+            if (entry.doc.empty() && entry.cfgLines.empty())
                 fout << std::endl;
         }
 
-        if (verbose_output && entry->nocomment.size())
+        if (verbose_output && entry.cfgLines.size())
             fout << "#" << std::endl;
 
         if (enabled || verbose_output) {
-            for (LineList::const_iterator line = entry->nocomment.begin(); line != entry->nocomment.end(); ++line) {
-                if (!enabled && line->at(0) != '#')
+            for (const auto &line : entry.cfgLines) {
+                if (!enabled && line.at(0) != '#')
                     fout << "#";
-                fout << *line << std::endl;
+                fout << line << std::endl;
             }
         }
 
-        if (verbose_output && entry->doc.size()) {
+        if (verbose_output && entry.doc.size()) {
             fout << std::endl;
         }
     }
