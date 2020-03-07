@@ -25,6 +25,7 @@
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"
 #include "CachePeer.h"
+#include "cfg/Exceptions.h"
 #include "ConfigOption.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
@@ -562,9 +563,12 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                         debugs(3, DBG_CRITICAL, ConfigParser::CurrentLocation() << ": unrecognized: '" << tmp_line << "'");
                         ++err_count;
                     }
+                } catch (const Cfg::FatalError &e) {
+                    debugs(3, DBG_CRITICAL, e.what());
+                    self_destruct();
                 } catch (...) {
                     // fatal for now
-                    debugs(3, DBG_CRITICAL, "ERROR: configuration failure: " << CurrentException);
+                    debugs(3, DBG_CRITICAL, "FATAL: configuration error: " << CurrentException);
                     self_destruct();
                 }
             }
