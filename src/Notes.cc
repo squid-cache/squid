@@ -17,6 +17,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "parser/Tokenizer.h"
+#include "sbuf/Stream.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -124,6 +125,36 @@ Note::toString(const char *sep) const
     return result;
 }
 
+const Notes::Keys &
+Notes::BlackList()
+{
+    // these keys are used for internal Squid-helper communication
+    static const char *names[] = {
+        "group",
+        "ha1",
+        "log",
+        "message",
+        "password",
+        "rewrite-url",
+        "status",
+        "tag",
+        "ttl",
+        "url",
+        "user"
+    };
+
+    static Keys keys(std::begin(names), std::end(names));
+    return keys;
+}
+
+Notes::Notes(const char *aDescr, const Keys *extraBlacklist, bool allowFormatted):
+    descr(aDescr),
+    formattedValues(allowFormatted)
+{
+    if (extraBlacklist)
+        blacklist = *extraBlacklist;
+}
+
 Note::Pointer
 Notes::add(const SBuf &noteKey)
 {
@@ -143,17 +174,18 @@ Notes::find(const SBuf &noteKey)
 }
 
 void
+Notes::banReservedKey(const SBuf &key, const Keys &banned) const
+{
+    if (std::find(banned.begin(), banned.end(), key) != banned.end())
+        throw TextException(ToSBuf("cannot use a reserved ", descr, " name: ", key), Here());
+}
+
+void
 Notes::validateKey(const SBuf &key) const
 {
-    if (blacklisted) {
-        for (int i = 0; blacklisted[i] != nullptr; ++i) {
-            if (!key.cmp(blacklisted[i])) {
-                fatalf("%s:%d: meta key \"%.*s\" is a reserved %s name",
-                       cfg_filename, config_lineno, key.length(), key.rawContent(),
-                       descr ? descr : "");
-            }
-        }
-    }
+    banReservedKey(key, BlackList());
+    banReservedKey(key, blacklist);
+
     // TODO: fix code duplication: the same set of specials is produced
     // by isKeyNameChar().
     static const CharacterSet allowedSpecials = CharacterSet::ALPHA +

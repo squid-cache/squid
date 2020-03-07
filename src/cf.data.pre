@@ -55,6 +55,24 @@ COMMENT_START
 		MB - Megabyte
 		GB - Gigabyte
 
+  Values with time units
+
+	Time-related directives marked with either "time-units" or
+	"time-units-small" accept a time unit. The supported time units are:
+
+		nanosecond (time-units-small only)
+		microsecond (time-units-small only)
+		millisecond
+		second
+		minute
+		hour
+		day
+		week
+		fortnight
+		month - 30 days
+		year - 31557790080 milliseconds (just over 365 days)
+		decade
+
   Values with spaces, quotes, and other special characters
 
 	Squid supports directive parameters with spaces, quotes, and other
@@ -2427,6 +2445,16 @@ DOC_START
 			Require PROXY protocol version 1 or 2 connections.
 			The proxy_protocol_access is required to whitelist
 			downstream proxies which can be trusted.
+
+	   worker-queues
+			Ask TCP stack to maintain a dedicated listening queue
+			for each worker accepting requests at this port.
+			Requires TCP stack that supports the SO_REUSEPORT socket
+			option.
+
+			SECURITY WARNING: Enabling worker-specific queues
+			allows any process running as Squid's effective user to
+			easily accept requests destined to this port.
 
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface we recommend you to specify the
