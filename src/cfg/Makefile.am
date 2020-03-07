@@ -10,4 +10,7 @@ include $(top_srcdir)/src/TestHeaders.am
 
 noinst_LTLIBRARIES = libcfg.la
 
-libcfg_la_SOURCES=
+libcfg_la_SOURCES= \
+	Exceptions.cc \
+	Exceptions.h \
+	forward.h
