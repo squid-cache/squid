@@ -15,6 +15,7 @@
 #include "acl/Options.h"
 #include "anyp/PortCfg.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "fatal.h"
@@ -53,15 +54,12 @@ ACL *
 Make(TypeName typeName)
 {
     const auto pos = TheMakers().find(typeName);
-    if (pos == TheMakers().end()) {
-        debugs(28, DBG_CRITICAL, "FATAL: Invalid ACL type '" << typeName << "'");
-        self_destruct();
-        assert(false); // not reached
-    }
-
+    if (pos == TheMakers().end())
+        throw Cfg::FatalError(ToSBuf("unknown ACL type '", typeName, "'"));
     ACL *result = (pos->second)(pos->first);
     debugs(28, 4, typeName << '=' << result);
-    assert(result);
+    if (!result)
+        throw Cfg::FatalError(ToSBuf("BUG: could not find maker for ACL type '", typeName, "'"));
     return result;
 }
 
@@ -198,28 +196,18 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 
     /* snarf the ACL name */
 
-    if ((t = ConfigParser::NextToken()) == nullptr) {
-        debugs(28, DBG_CRITICAL, "ERROR: aclParseAclLine: missing ACL name.");
-        parser.destruct();
-        return;
-    }
+    if (!(t = ConfigParser::NextToken()))
+        throw Cfg::FatalError("missing ACL name");
 
-    if (strlen(t) >= ACL_NAME_SZ) {
-        debugs(28, DBG_CRITICAL, "aclParseAclLine: aclParseAclLine: ACL name '" << t <<
-               "' too long, max " << ACL_NAME_SZ - 1 << " characters supported");
-        parser.destruct();
-        return;
-    }
+    if (strlen(t) >= ACL_NAME_SZ)
+        throw Cfg::FatalError(ToSBuf("ACL name '", t, "' too long, max ", (ACL_NAME_SZ-1), " characters supported"));
 
     xstrncpy(aclname, t, ACL_NAME_SZ);
     /* snarf the ACL type */
     const char *theType;
 
-    if ((theType = ConfigParser::NextToken()) == nullptr) {
-        debugs(28, DBG_CRITICAL, "ERROR: aclParseAclLine: missing ACL type.");
-        parser.destruct();
-        return;
-    }
+    if (!(theType = ConfigParser::NextToken()))
+        throw Cfg::FatalError("missing ACL type");
 
     // Is this ACL going to work?
     if (strcmp(theType, "myip") == 0) {
@@ -258,11 +246,8 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         A->context(aclname, config_input_line);
         new_acl = 1;
     } else {
-        if (strcmp (A->typeString(),theType) ) {
-            debugs(28, DBG_CRITICAL, "aclParseAclLine: ACL '" << A->name << "' already exists with different type.");
-            parser.destruct();
-            return;
-        }
+        if (strcmp(A->typeString(), theType) != 0)
+            throw Cfg::FatalError(ToSBuf("ACL '", A->name, "' already exists with different type"));
 
         debugs(28, 3, "aclParseAclLine: Appending to '" << aclname << "'");
         new_acl = 0;
@@ -291,10 +276,8 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         debugs(28, DBG_CRITICAL, "WARNING: empty ACL: " << A->cfgline);
     }
 
-    if (!A->valid()) {
-        fatalf("ERROR: Invalid ACL: %s\n",
-               A->cfgline);
-    }
+    if (!A->valid())
+        throw Cfg::FatalError("invalid ACL");
 
     // add to the global list for searching explicit ACLs by name
     assert(head && *head == Config.aclList);
