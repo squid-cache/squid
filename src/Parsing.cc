@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "compat/strtoll.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
@@ -27,15 +28,11 @@ xatof(const char *token)
     char *end = nullptr;
     double ret = strtod(token, &end);
 
-    if (ret == 0 && end == token) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: No digits were found in the input value '" << token << "'.");
-        self_destruct();
-    }
+    if (ret == 0 && end == token)
+        throw Cfg::FatalError(ToSBuf("no digits were found in the input value '", token, "'"));
 
-    if (*end) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Invalid value: '" << token << "' is supposed to be a number.");
-        self_destruct();
-    }
+    if (*end)
+        throw Cfg::FatalError(ToSBuf("invalid value: '", token, "' is supposed to be a number"));
 
     return ret;
 }
@@ -46,10 +43,8 @@ xatoi(const char *token)
     int64_t input = xatoll(token, 10);
     int ret = (int) input;
 
-    if (input != static_cast<int64_t>(ret)) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is larger than the type 'int'.");
-        self_destruct();
-    }
+    if (input != static_cast<int64_t>(ret))
+        throw Cfg::FatalError(ToSBuf("invalid value: '", token, "' is larger than the type 'int'"));
 
     return ret;
 }
@@ -59,11 +54,11 @@ xatoui(const char *token, char eov)
 {
     int64_t input = xatoll(token, 10, eov);
     if (input < 0)
-        throw TextException(ToSBuf("the input value '", token, "' cannot be less than 0"), Here());
+        throw Cfg::FatalError(ToSBuf("invalid value: '", token, "' cannot be less than 0"));
 
     unsigned int ret = (unsigned int) input;
     if (input != static_cast<int64_t>(ret))
-        throw TextException(ToSBuf("the value '", token, "' is larger than the type 'unsigned int'"), Here());
+        throw Cfg::FatalError(ToSBuf("invalid value: '", token, "' is larger than the type 'unsigned int'"));
 
     return ret;
 }
@@ -74,10 +69,8 @@ xatol(const char *token)
     int64_t input = xatoll(token, 10);
     long ret = (long) input;
 
-    if (input != static_cast<int64_t>(ret)) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is larger than the type 'long'.");
-        self_destruct();
-    }
+    if (input != static_cast<int64_t>(ret))
+        throw Cfg::FatalError(ToSBuf("invalid value: '", token, "' is larger than the type 'long'"));
 
     return ret;
 }
@@ -88,15 +81,11 @@ xatoll(const char *token, int base, char eov)
     char *end = nullptr;
     int64_t ret = strtoll(token, &end, base);
 
-    if (end == token) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: No digits were found in the input value '" << token << "'.");
-        self_destruct();
-    }
+    if (end == token)
+        throw Cfg::FatalError(ToSBuf("invalid value: no digits were found in '", token, "'"));
 
-    if (*end != eov) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Invalid value: '" << token << "' is supposed to be a number.");
-        self_destruct();
-    }
+    if (*end != eov)
+        throw Cfg::FatalError(ToSBuf("invalid value: '", token, "' is supposed to be a number"));
 
     return ret;
 }
@@ -115,15 +104,11 @@ xatos(const char *token)
 {
     long port = xatol(token);
 
-    if (port < 0) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' cannot be less than 0.");
-        self_destruct();
-    }
+    if (port < 0)
+        throw Cfg::FatalError(ToSBuf("invalid value: '", token, "' cannot be less than 0"));
 
-    if (port & ~0xFFFF) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is larger than the type 'short'.");
-        self_destruct();
-    }
+    if ((port & ~0xFFFF) != 0)
+        throw Cfg::FatalError(ToSBuf("invalid value: '", token, "' is larger than the type 'short'"));
 
     return port;
 }
@@ -132,10 +117,8 @@ int64_t
 GetInteger64(void)
 {
     char *token = ConfigParser::NextToken();
-    if (!token) {
-        self_destruct();
-        return -1; // not reachable
-    }
+    if (!token)
+        throw Cfg::FatalError("number is missing");
 
     return xatoll(token, 10);
 }
@@ -148,21 +131,15 @@ int
 GetInteger(void)
 {
     char *token = ConfigParser::NextToken();
-    int i;
-
-    if (!token) {
-        self_destruct();
-        return -1; // not reachable
-    }
+    if (!token)
+        throw Cfg::FatalError("number is missing");
 
     // The conversion must honor 0 and 0x prefixes, which are important for things like umask
     int64_t ret = xatoll(token, 0);
 
-    i = (int) ret;
-    if (ret != static_cast<int64_t>(i)) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is larger than the type 'int'.");
-        self_destruct();
-    }
+    int i = (int) ret;
+    if (ret != static_cast<int64_t>(i))
+        throw Cfg::FatalError(ToSBuf("invalid value: '", token, "' is larger than the type 'int'"));
 
     return i;
 }
@@ -178,12 +155,8 @@ double
 GetPercentage(bool limit)
 {
     char *token = ConfigParser::NextToken();
-
-    if (!token) {
-        debugs(3, DBG_CRITICAL, "FATAL: A percentage value is missing.");
-        self_destruct();
-        return 0.0; // not reachable
-    }
+    if (!token)
+        throw Cfg::FatalError("percentage value is missing");
 
     //if there is a % in the end of the digits, we remove it and go on.
     char* end = &token[strlen(token)-1];
@@ -192,11 +165,8 @@ GetPercentage(bool limit)
     }
 
     int p = xatoi(token);
-
-    if (p < 0 || (limit && p > 100)) {
-        debugs(3, DBG_CRITICAL, "FATAL: The value '" << token << "' is out of range. A percentage should be within [0, 100].");
-        self_destruct();
-    }
+    if (p < 0 || (limit && p > 100))
+        throw Cfg::FatalError(ToSBuf("invalid value: '", token, "' is out of range. A percentage should be within [0, 100]."));
 
     return static_cast<double>(p) / 100.0;
 }
@@ -205,11 +175,8 @@ unsigned short
 GetShort(void)
 {
     char *token = ConfigParser::NextToken();
-    if (!token) {
-        self_destruct();
-        return 0; // not reachable
-    }
-
+    if (!token)
+        throw Cfg::FatalError("number value is missing");
     return xatos(token);
 }
 
