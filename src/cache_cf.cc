@@ -624,8 +624,12 @@ parseConfigFileOrThrow(const char *file_name)
      * We must call configDoConfigure() before leave_suid() because
      * configDoConfigure() is where we turn username strings into
      * uid values.
+     *
+     * For -k parse skip these checks until the config has no errors
+     * to avoid false log warnings due to incomplete config.
      */
-    configDoConfigure();
+    if (!opt_parse_cfg_only || err_count == 0)
+        configDoConfigure();
 
     if (opt_send_signal == -1) {
         Mgr::RegisterAction("config",
