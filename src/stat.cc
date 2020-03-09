@@ -1157,7 +1157,7 @@ DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "hit_validation.refusals.due_to_timeLimit = %f/sec\n",
                       stats.hitValidationRefusalsDueToTimeLimit);
     storeAppendPrintf(sentry, "hit_validation.failures = %f/sec\n",
-                          stats.hitValidationFailures);
+                      stats.hitValidationFailures);
 
 #if USE_POLL
     storeAppendPrintf(sentry, "syscalls.polls = %f/sec\n", stats.syscalls_selects);
@@ -1594,7 +1594,7 @@ DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "hit_validation.refusals.due_to_timeLimit = %.0f\n",
                       stats.hitValidationRefusalsDueToTimeLimit);
     storeAppendPrintf(sentry, "hit_validation.failures = %.0f\n",
-                          stats.hitValidationFailures);
+                      stats.hitValidationFailures);
 }
 
 void
