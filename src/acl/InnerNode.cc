@@ -13,9 +13,12 @@
 #include "acl/Gadgets.h"
 #include "acl/InnerNode.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "globals.h"
+#include "sbuf/Stream.h"
+
 #include <algorithm>
 
 void
@@ -58,11 +61,8 @@ Acl::InnerNode::lineParse()
         debugs(28, 3, "looking for ACL " << t);
         ACL *a = ACL::FindByName(t);
 
-        if (a == nullptr) {
-            debugs(28, DBG_CRITICAL, "ERROR: ACL not found: " << t);
-            self_destruct();
-            return count; // not reached
-        }
+        if (!a)
+            throw Cfg::FatalError(ToSBuf("ACL not found: ", t));
 
         // append(negated ? new NotNode(a) : a);
         if (negated)

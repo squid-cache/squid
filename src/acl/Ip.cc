@@ -12,10 +12,12 @@
 #include "acl/Checklist.h"
 #include "acl/Ip.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
+#include "sbuf/Stream.h"
 #include "wordlist.h"
 
 void *
@@ -377,10 +379,8 @@ acl_ip_data::FactoryParse(const char *t)
             if (strcmp(addr1, "::1") == 0) {
                 debugs(28, DBG_IMPORTANT, "aclIpParseIpData: IPv6 has not been enabled in host DNS resolver.");
             } else {
-                debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: Bad host/IP: '" << addr1 <<
-                       "' in '" << t << "', flags=" << hints.ai_flags <<
-                       " : (" << errcode << ") " << gai_strerror(errcode) );
-                self_destruct();
+                throw Cfg::FatalError(ToSBuf("Bad host/IP: ", addr1, " in ", t, ", flags=", hints.ai_flags,
+                       " : (", errcode, ") ", gai_strerror(errcode)));
             }
             return nullptr;
         }
@@ -415,11 +415,8 @@ acl_ip_data::FactoryParse(const char *t)
 
         freeaddrinfo(hp);
 
-        if (*Q != nullptr) {
-            debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: Bad host/IP: '" << t << "'");
-            self_destruct();
-            return nullptr;
-        }
+        if (*Q)
+            throw Cfg::FatalError(ToSBuf("Bad host/IP: ", t));
 
         return q;
     }
@@ -433,28 +430,22 @@ acl_ip_data::FactoryParse(const char *t)
 
     /* Decode addr1 */
     if (!*addr1 || !(q->addr1 = addr1)) {
-        debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: unknown first address in '" << t << "'");
         delete q;
-        self_destruct();
-        return nullptr;
+        throw Cfg::FatalError(ToSBuf("unknown first address in ", t));
     }
 
     /* Decode addr2 */
     if (!*addr2)
         q->addr2.setAnyAddr();
     else if (!(q->addr2=addr2) ) {
-        debugs(28, DBG_CRITICAL, "ERROR: aclIpParseIpData: unknown second address in '" << t << "'");
         delete q;
-        self_destruct();
-        return nullptr;
+        throw Cfg::FatalError(ToSBuf("unknown second address in ", t));
     }
 
-    /* Decode mask (NULL or empty means a exact host mask) */
+    /* Decode mask (nil or empty means a exact host mask) */
     if (!DecodeMask(mask, q->mask, iptype)) {
-        debugs(28, DBG_CRITICAL, "ERROR: aclParseIpData: unknown netmask '" << mask << "' in '" << t << "'");
         delete q;
-        self_destruct();
-        return nullptr;
+        throw Cfg::FatalError(ToSBuf("unknown netmask ", mask, " in ", t));
     }
 
     changed = 0;

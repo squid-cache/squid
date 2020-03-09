@@ -12,6 +12,7 @@
 #include "acl/Checklist.h"
 #include "acl/TimeData.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "wordlist.h"
@@ -153,13 +154,9 @@ ACLTimeData::parse()
             /* assume its time-of-day spec */
 
             if ((sscanf(t, "%d:%d-%d:%d", &h1, &m1, &h2, &m2) < 4) || (!((h1 >= 0 && h1 < 24) && ((h2 >= 0 && h2 < 24) || (h2 == 24 && m2 == 0)) && (m1 >= 0 && m1 < 60) && (m2 >= 0 && m2 < 60)))) {
-                debugs(28, DBG_CRITICAL, "ERROR: aclParseTimeSpec: Bad time range '" << t << "'");
-                self_destruct();
-
                 if (q != this)
                     delete q;
-
-                return;
+                throw Cfg::FatalError(ToSBuf("bad time range '", t, "'"));
             }
 
             if ((parsed_weekbits == 0) && (start == 0) && (stop == 0))
@@ -176,13 +173,9 @@ ACLTimeData::parse()
             parsed_weekbits = 0;
 
             if (q->start > q->stop) {
-                debugs(28, DBG_CRITICAL, "aclParseTimeSpec: Reversed time range");
-                self_destruct();
-
                 if (q != this)
                     delete q;
-
-                return;
+                throw Cfg::FatalError("reversed time range");
             }
 
             if (q->weekbits == 0)

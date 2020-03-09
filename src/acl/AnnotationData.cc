@@ -11,10 +11,12 @@
 #include "acl/AnnotationData.h"
 #include "acl/Checklist.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "format/Format.h"
 #include "sbuf/Algorithms.h"
+#include "sbuf/Stream.h"
 
 ACLAnnotationData::ACLAnnotationData()
     : notes(new Notes("annotation_data")) {}
@@ -32,11 +34,8 @@ void
 ACLAnnotationData::parse()
 {
     notes->parseKvPair();
-    if (char *t = ConfigParser::PeekAtToken()) {
-        debugs(29, DBG_CRITICAL, "FATAL: Unexpected argument '" << t << "' after annotation specification");
-        self_destruct();
-        return;
-    }
+    if (const auto *t = ConfigParser::PeekAtToken())
+        throw Cfg::FatalError(ToSBuf("unexpected value '", t, "' after annotation specification"));
 }
 
 void

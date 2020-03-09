@@ -11,10 +11,12 @@
 #include "squid.h"
 #include "acl/IntRange.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "Parsing.h"
+#include "sbuf/Stream.h"
 
 void
 ACLIntRange::parse()
@@ -35,13 +37,10 @@ ACLIntRange::parse()
         else
             port2 = port1;
 
-        if (port2 >= port1) {
-            RangeType temp(port1, port2+1);
-            ranges.push_back(temp);
-        } else {
-            debugs(28, DBG_CRITICAL, "ERROR: ACLIntRange::parse: Invalid port value");
-            self_destruct();
-        }
+        if (port2 < port1)
+            throw Cfg::FatalError(ToSBuf("invalid port range: ", port1, '-', port2));
+
+        ranges.emplace_back(port1, port2+1);
     }
 }
 
@@ -84,4 +83,3 @@ ACLIntRange::dump() const
 
     return sl;
 }
-

@@ -12,6 +12,7 @@
 #include "acl/CertificateData.h"
 #include "acl/Checklist.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "wordlist.h"
@@ -79,10 +80,8 @@ ACLCertificateData::parse()
         char *newAttribute = ConfigParser::strtokFile();
 
         if (!newAttribute) {
-            if (!attributeIsOptional) {
-                debugs(28, DBG_CRITICAL, "FATAL: required attribute argument missing");
-                self_destruct();
-            }
+            if (!attributeIsOptional)
+                throw Cfg::FatalError("required attribute argument is missing");
             return;
         }
 
@@ -99,11 +98,8 @@ ACLCertificateData::parse()
                 }
             }
 
-            if (!valid) {
-                debugs(28, DBG_CRITICAL, "FATAL: Unknown option. Supported option(s) are: " << validAttributesStr);
-                self_destruct();
-                return;
-            }
+            if (!valid)
+                throw Cfg::FatalError(ToSBuf("unknown option. Supported option(s) are: ", validAttributesStr));
 
             // If attribute has been set already, then we do not need to call OBJ_create()
             // below because either we did that for the same attribute when we set it, or
@@ -124,11 +120,8 @@ ACLCertificateData::parse()
                             debugs(28, 7, "New SSL certificate attribute created with name: " << newAttribute << " and nid: " << nid);
                         }
                     }
-                    if (nid == 0) {
-                        debugs(28, DBG_CRITICAL, "FATAL: Not valid SSL certificate attribute name or numerical OID: " << newAttribute);
-                        self_destruct();
-                        return;
-                    }
+                    if (nid == 0)
+                        throw Cfg::FatalError(ToSBuf("Not valid SSL certificate attribute name or numerical OID: ", newAttribute));
                 }
             }
 

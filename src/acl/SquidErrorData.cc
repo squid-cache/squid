@@ -10,10 +10,12 @@
 #include "acl/Data.h"
 #include "acl/SquidErrorData.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "error/Error.h"
 #include "fatal.h"
+#include "sbuf/Stream.h"
 #include "wordlist.h"
 
 bool
@@ -52,11 +54,8 @@ ACLSquidErrorData::parse()
 
         if (err < ERR_MAX)
             errors.push_back(err);
-        else {
-            debugs(28, DBG_CRITICAL, "FATAL: Invalid squid error name");
-            if (!opt_parse_cfg_only)
-                self_destruct();
-        }
+        else
+            throw Cfg::FatalError(ToSBuf("invalid Squid error name ", token));
     }
 }
 

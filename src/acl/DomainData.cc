@@ -13,6 +13,7 @@
 #include "acl/DomainData.h"
 #include "anyp/Uri.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "util.h"
@@ -93,9 +94,8 @@ aclDomainCompare(T const &a, T const &b)
         // discarding the wildcard is critically bad.
         // or Maybe even both are wildcards. Things are very weird in those cases.
         bool d1big = (strlen(d1) > strlen(d2)); // Always suggest removing the longer one.
-        debugs(28, DBG_CRITICAL, "ERROR: '" << (d1big?d1:d2) << "' is a subdomain of '" << (d1big?d2:d1) << "'");
-        debugs(28, DBG_CRITICAL, "ERROR: You need to remove '" << (d1big?d1:d2) << "' from the ACL named '" << AclMatchedName << "'");
-        self_destruct();
+        throw Cfg::FatalError(ToSBuf((d1big?d1:d2), " is a subdomain of ", (d1big?d2:d1),
+                                     "\nYou need to remove ", (d1big?d1:d2), " from the ACL named ", AclMatchedName));
     }
 
     return ret;
