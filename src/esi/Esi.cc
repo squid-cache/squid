@@ -29,6 +29,7 @@
 #include "esi/Expression.h"
 #include "esi/Segment.h"
 #include "esi/VarState.h"
+#include "FadingCounter.h"
 #include "fatal.h"
 #include "http/Stream.h"
 #include "HttpHdrSc.h"
@@ -1263,16 +1264,18 @@ ESIContext::parse()
                 parseOneBuffer();
 
         } catch (Esi::ErrorDetail &errMsg) { // FIXME: non-const for c_str()
-            // DBG_IMPORTANT because these are syntax bugs the ogirins' dev can fix
-            debugs(86, DBG_IMPORTANT, "ERROR: " << errMsg);
+            // level-2: these are protocol/syntax errors from upstream
+            debugs(86, 2, "WARNING: ESI syntax error: " << errMsg);
             setError();
             setErrorMessage(errMsg.c_str());
 
         } catch (...) {
-            // level-5 because these are OS issues not easily fixed
-            debugs(86, 5, "ESI parse error: " << CurrentException);
+            // DBG_IMPORTANT because these are local issues the admin needs to fix
+            static FadingCounter logEntries(); // TODO: set horizon less than infinity
+            if (logEntries.count() < 100)
+                debugs(86, DBG_IMPORTANT, "ERROR: ESI parser: " << CurrentException);
             setError();
-            setErrorMessage("ESI parse error");
+            setErrorMessage("ESI parser error");
         }
 
         PROF_stop(esiParsing);
