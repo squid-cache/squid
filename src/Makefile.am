@@ -16,7 +16,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = mem base cfg anyp helper dns ftp parser comm eui acl format clients sbuf servers fs repl store DiskIO proxyp
+SUBDIRS = mem time debug base cfg anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -2699,6 +2699,7 @@ nodist_tests_testConfigParser_SOURCES = \
 	tests/stub_libmem.cc \
 	tests/stub_neighbors.cc
 tests_testConfigParser_LDADD = \
+	cfg/libcfg.la \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
