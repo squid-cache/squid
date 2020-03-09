@@ -565,7 +565,11 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                     }
                 } catch (const Cfg::FatalError &e) {
                     debugs(3, DBG_CRITICAL, e.what());
-                    self_destruct();
+                    // when -k parse is used try to report as many admin mistakes as possible before terminating
+                    if (opt_parse_cfg_only)
+                        ++err_count;
+                    else
+                        self_destruct();
                 } catch (...) {
                     // fatal for now
                     debugs(3, DBG_CRITICAL, "FATAL: configuration error: " << CurrentException);
