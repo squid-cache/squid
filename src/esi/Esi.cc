@@ -1272,7 +1272,7 @@ ESIContext::parse()
         } catch (...) {
             // DBG_IMPORTANT because these are local issues the admin needs to fix
             static FadingCounter logEntries(); // TODO: set horizon less than infinity
-            if (logEntries.count() < 100)
+            if (logEntries.count(1) < 100)
                 debugs(86, DBG_IMPORTANT, "ERROR: ESI parser: " << CurrentException);
             setError();
             setErrorMessage("ESI parser error");
