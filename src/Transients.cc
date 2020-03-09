@@ -47,6 +47,7 @@ Transients::init()
     Must(!map);
     map = new TransientsMap(MapLabel);
     map->cleaner = this;
+    map->disableHitValidation(); // Transients lacks slices to validate
 
     locals = new Locals(entryLimit, 0);
 }

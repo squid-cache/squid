@@ -79,6 +79,7 @@ string
 string
 time_msec
 time_t
+time_nanoseconds
 tristate
 uri_whitespace
 UrlHelperTimeout	acl
