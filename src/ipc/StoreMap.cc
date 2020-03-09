@@ -405,9 +405,9 @@ Ipc::StoreMap::openForReading(const cache_key *const key, sfileno &fileno)
     debugs(54, 5, "opening entry with key " << storeKeyText(key)
            << " for reading " << path);
     const int idx = fileNoByKey(key);
-    if (const Anchor *slot = openForReadingAt(idx, key)) {
+    if (const auto anchor = openForReadingAt(idx, key)) {
         fileno = idx;
-        return slot; // locked for reading
+        return anchor; // locked for reading
     }
     return NULL;
 }
