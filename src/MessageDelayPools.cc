@@ -11,6 +11,7 @@
 #if USE_DELAY_POOLS
 #include "acl/Gadgets.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "DelaySpec.h"
 #include "event.h"
@@ -129,26 +130,17 @@ MessageDelayConfig::parseResponseDelayPool()
     params[initialBucketPercent] = 50;
 
     const SBuf name(ConfigParser::NextToken());
-    if (name.isEmpty()) {
-        debugs(3, DBG_CRITICAL, "FATAL: response_delay_pool missing required \"name\" parameter.");
-        self_destruct();
-        return;
-    }
+    if (name.isEmpty())
+        throw Cfg::FatalError("missing 'name' parameter");
 
     char *key = nullptr;
     char *value = nullptr;
     while (ConfigParser::NextKvPair(key, value)) {
-        if (!value) {
-            debugs(3, DBG_CRITICAL, "FATAL: '" << key << "' option missing value");
-            self_destruct();
-            return;
-        }
+        if (!value)
+            throw Cfg::FatalError(ToSBuf("option '", key, "'  missing value"));
         auto it = params.find(SBuf(key));
-        if (it == params.end()) {
-            debugs(3, DBG_CRITICAL, "FATAL: response_delay_pool unknown option '" << key << "'");
-            self_destruct();
-            return;
-        }
+        if (it == params.end())
+            throw Cfg::FatalError(ToSBuf("unknown option '", key, "'"));
         it->second = (it->first == initialBucketPercent) ? xatos(value) : xatoll(value, 10);
     }
 
@@ -158,11 +150,8 @@ MessageDelayConfig::parseResponseDelayPool()
     else if ((params[aggregateSpeedLimit] < 0) != (params[maxAggregateSize] < 0))
         fatalMsg = "'aggregate-restore' and 'aggregate-maximum'";
 
-    if (fatalMsg) {
-        debugs(3, DBG_CRITICAL, "FATAL: must use " << fatalMsg << " options in conjunction");
-        self_destruct();
-        return;
-    }
+    if (fatalMsg)
+        throw Cfg::FatalError(ToSBuf("must use ", fatalMsg, " options in conjunction"));
 
     MessageDelayPool *pool = new MessageDelayPool(name,
             params[bucketSpeedLimit],
@@ -177,10 +166,8 @@ MessageDelayConfig::parseResponseDelayPool()
 void
 MessageDelayConfig::parseResponseDelayPoolAccess() {
     const char *token = ConfigParser::NextToken();
-    if (!token) {
-        debugs(3, DBG_CRITICAL, "ERROR: required pool_name option missing");
-        return;
-    }
+    if (!token)
+        throw Cfg::FatalError("missing 'pool_name' parameter");
     MessageDelayPool::Pointer pool = MessageDelayPools::Instance()->pool(SBuf(token));
     static ConfigParser parser;
     if (pool)

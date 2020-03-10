@@ -9,8 +9,9 @@
 #ifndef SQUID__SRC_CFG_EXCEPTIONS_H
 #define SQUID__SRC_CFG_EXCEPTIONS_H
 
-#include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 
+#include <limits>
 #include <stdexcept>
 
 namespace Cfg
@@ -38,6 +39,29 @@ public:
     /// the error message text to display
     SBuf message;
 };
+
+// Gadgets to throw consistent error messages on common squid.conf requirements.
+
+/// throws a Cfg::FatalError if value is unset
+void RequireValue(const char *key, const char *value);
+
+/// throws a Cfg::FatalError if value is zero or negative
+template<typename T>
+void
+RequirePositiveInt(const char *key, const T &value)
+{
+    if (value <= 0)
+        throw Cfg::FatalError(ToSBuf("option ", key, " value must be a positive number. Got: ", value));
+}
+
+/// throws a Cfg::FatalError if value is outside the given range
+template<typename T>
+void
+RequireRangedInt(const char *key, const char *value, T &result, const int low = 0, const int high = std::numeric_limits<T>::max())
+{
+    if (!xstrtoui(value, nullptr, &result, low, high))
+        throw Cfg::FatalError(ToSBuf("invalid value for ", key, value));
+}
 
 } // namespace Cfg
 

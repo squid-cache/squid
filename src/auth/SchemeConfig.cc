@@ -14,11 +14,13 @@
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "errorpage.h"
 #include "format/Format.h"
 #include "globals.h"
+#include "sbuf/Stream.h"
 #include "Store.h"
 #include "wordlist.h"
 
@@ -71,8 +73,7 @@ Auth::SchemeConfig::GetParsed(const char *proxy_auth)
 {
     if (auto *cfg = Find(proxy_auth))
         return cfg;
-    fatalf("auth_schemes: required authentication method '%s' is not configured", proxy_auth);
-    return nullptr;
+    throw Cfg::FatalError(ToSBuf("required authentication method '", proxy_auth, "' is not configured"));
 }
 
 /** Default behaviour is to expose nothing */
@@ -99,11 +100,9 @@ Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, int, char *param_str)
         while (token && *token && xisspace(*token))
             ++token;
 
-        if (!token || !*token) {
-            debugs(29, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Missing auth_param " << scheme->type() << " realm");
-            self_destruct();
-            return;
-        }
+        // TODO: fallback to default realm instead?
+        if (!token || !*token)
+            throw Cfg::FatalError(ToSBuf("missing auth_param ", scheme->type(), " realm"));
 
         realm = token;
 
@@ -113,20 +112,16 @@ Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, int, char *param_str)
     } else if (strcmp(param_str, "key_extras") == 0) {
         keyExtrasLine = ConfigParser::NextQuotedToken();
         Format::Format *nlf =  new ::Format::Format(scheme->type());
-        if (!nlf->parse(keyExtrasLine.termedBuf())) {
-            debugs(29, DBG_CRITICAL, "FATAL: Failed parsing key_extras formatting value");
-            self_destruct();
-            return;
-        }
+        if (!nlf->parse(keyExtrasLine.termedBuf()))
+            throw Cfg::FatalError("failed parsing key_extras formatting value");
         if (keyExtras)
             delete keyExtras;
 
         keyExtras = nlf;
 
-        if (char *t = strtok(nullptr, w_space)) {
-            debugs(29, DBG_CRITICAL, "FATAL: Unexpected argument '" << t << "' after request_format specification");
-            self_destruct();
-        }
+        if (const auto *t = strtok(nullptr, w_space))
+            throw Cfg::FatalError(ToSBuf("unexpected argument '", t, "' after request_format specification"));
+
     } else if (strcmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
     } else if (strcmp(param_str, "utf8") == 0) {

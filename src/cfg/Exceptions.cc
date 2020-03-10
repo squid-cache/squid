@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "cfg/Exceptions.h"
+#include "sbuf/Stream.h"
 
 const char *
 Cfg::FatalError::what() const throw()
@@ -17,4 +18,11 @@ Cfg::FatalError::what() const throw()
     result = prefix;
     result.append(message);
     return result.c_str();
+}
+
+void
+Cfg::RequireValue(const char *key, const char *value)
+{
+    if (!value)
+        throw Cfg::FatalError(ToSBuf("option ", key, " missing value"));
 }

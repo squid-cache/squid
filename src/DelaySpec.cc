@@ -12,8 +12,10 @@
 
 #if USE_DELAY_POOLS
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "DelaySpec.h"
 #include "Parsing.h"
+#include "sbuf/Stream.h"
 #include "Store.h"
 
 DelaySpec::DelaySpec() : restore_bps(-1), max_bytes (-1)
@@ -43,10 +45,8 @@ DelaySpec::parse()
 {
     // get the token.
     char *token = ConfigParser::NextToken();
-    if (!token) {
-        self_destruct();
-        return;
-    }
+    if (!token)
+        throw Cfg::FatalError("missing delay specification");
 
     // no-limit value
     if (strcmp(token, "none") == 0 || token[0] == '-') {
@@ -57,17 +57,13 @@ DelaySpec::parse()
 
     // parse the first digits into restore_bps
     const char *p = nullptr;
-    if (!StringToInt(token, restore_bps, &p, 10) || *p != '/') {
-        debugs(77, DBG_CRITICAL, "ERROR: invalid delay rate '" << token << "'. Expecting restore/max or 'none'.");
-        self_destruct();
-    }
+    if (!StringToInt(token, restore_bps, &p, 10) || *p != '/')
+        throw Cfg::FatalError(ToSBuf("invalid delay rate '", token, "'. Expecting restore/max or 'none'."));
     p++; // increment past the '/'
 
     // parse the rest into max_bytes
-    if (!StringToInt64(p, max_bytes, nullptr, 10)) {
-        debugs(77, DBG_CRITICAL, "ERROR: restore rate in '" << token << "' is not a number.");
-        self_destruct();
-    }
+    if (!StringToInt64(p, max_bytes, nullptr, 10))
+        throw Cfg::FatalError(ToSBuf("max rate in '", token, "' is not a number"));
 }
 
 #endif

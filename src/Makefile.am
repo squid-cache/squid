@@ -1142,6 +1142,7 @@ tests_testRock_LDADD = \
 	mem/libmem.la \
 	store/libstore.la \
 	$(ADAPTATION_LIBS) \
+	cfg/libcfg.la \
 	sbuf/libsbuf.la \
 	time/libtime.la \
 	$(top_builddir)/lib/libmisccontainers.la \

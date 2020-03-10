@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
-#include "cache_cf.h"
-#include "debug/Stream.h"
+#include "cfg/Exceptions.h"
+#include "sbuf/Stream.h"
 #include "XactionInitiator.h"
 
 #include <map>
@@ -37,11 +37,8 @@ XactionInitiator::ParseInitiators(const char *name)
         {"all", AllInitiators()}
     };
     const auto it = SupportedInitiators.find(name);
-    if (it != SupportedInitiators.cend())
-        return it->second;
-
-    debugs(28, DBG_CRITICAL, "FATAL: Invalid transaction_initiator value near " << name);
-    self_destruct();
-    return 0;
+    if (it == SupportedInitiators.cend())
+        throw Cfg::FatalError(ToSBuf("invalid transaction_initiator '", name, "'"));
+    return it->second;
 }
 

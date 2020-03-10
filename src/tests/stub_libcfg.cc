@@ -8,11 +8,12 @@
 
 #include "squid.h"
 
-#define STUB_API "lcfg/libcfg.la"
+#define STUB_API "cfg/libcfg.la"
 #include "tests/STUB.h"
 
 #include "cfg/Exceptions.h"
 namespace Cfg
 {
 const char *FatalError::what() const throw() STUB_RETVAL("")
+void RequireValue(const char *, const char *) STUB
 }

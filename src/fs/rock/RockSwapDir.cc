@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "CollapsedForwarding.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
@@ -404,20 +405,14 @@ Rock::SwapDir::parseTimeOption(char const *option, const char *value, int reconf
     else
         return false;
 
-    if (!value) {
-        self_destruct();
-        return false;
-    }
+    Cfg::RequireValue(option, value);
 
     // TODO: handle time units and detect parsing errors better
     const int64_t parsedValue = strtoll(value, nullptr, 10);
-    if (parsedValue < 0) {
-        debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must not be negative but is: " << parsedValue);
-        self_destruct();
-        return false;
-    }
+    Cfg::RequirePositiveInt(option, parsedValue);
 
     const time_msec_t newTime = static_cast<time_msec_t>(parsedValue);
+    Cfg::RequirePositiveInt(option, newTime);
 
     if (!reconfig)
         *storedTime = newTime;
@@ -449,26 +444,14 @@ Rock::SwapDir::parseRateOption(char const *option, const char *value, int isaRec
     else
         return false;
 
-    if (!value) {
-        self_destruct();
-        return false;
-    }
+    Cfg::RequireValue(option, value);
 
     // TODO: handle time units and detect parsing errors better
     const int64_t parsedValue = strtoll(value, nullptr, 10);
-    if (parsedValue < 0) {
-        debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must not be negative but is: " << parsedValue);
-        self_destruct();
-        return false;
-    }
+    Cfg::RequirePositiveInt(option, parsedValue);
 
     const int newRate = static_cast<int>(parsedValue);
-
-    if (newRate < 0) {
-        debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must not be negative but is: " << newRate);
-        self_destruct();
-        return false;
-    }
+    Cfg::RequirePositiveInt(option, newRate);
 
     if (!isaReconfig)
         *storedRate = newRate;
@@ -499,24 +482,14 @@ Rock::SwapDir::parseSizeOption(char const *option, const char *value, int reconf
     else
         return false;
 
-    if (!value) {
-        self_destruct();
-        return false;
-    }
+    Cfg::RequireValue(option, value);
 
     // TODO: handle size units and detect parsing errors better
     const uint64_t newSize = strtoll(value, nullptr, 10);
-    if (newSize <= 0) {
-        debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must be positive; got: " << newSize);
-        self_destruct();
-        return false;
-    }
+    Cfg::RequirePositiveInt(option, newSize);
 
-    if (newSize <= sizeof(DbCellHeader)) {
-        debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must exceed " << sizeof(DbCellHeader) << "; got: " << newSize);
-        self_destruct();
-        return false;
-    }
+    if (newSize <= sizeof(DbCellHeader))
+        throw Cfg::FatalError(ToSBuf("cache_dir ", path, ' ', option, " must exceed ", sizeof(DbCellHeader), "; got: ", newSize));
 
     if (!reconfig)
         *storedSize = newSize;

@@ -13,6 +13,7 @@
 #if USE_WCCPv2
 
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
@@ -21,6 +22,7 @@
 #include "ip/Address.h"
 #include "md5.h"
 #include "Parsing.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "wccp2.h"
@@ -2050,14 +2052,11 @@ wccp2AssignBuckets(void *)
 void
 parse_wccp2_method(int *method)
 {
-    char *t;
+    auto  *t = ConfigParser::NextToken();
 
     /* Snarf the method */
-    if ((t = ConfigParser::NextToken()) == nullptr) {
-        debugs(80, DBG_CRITICAL, "ERROR: wccp2_*_method: missing setting.");
-        self_destruct();
-        return;
-    }
+    if (!t)
+        throw Cfg::FatalError("wccp2_*_method: missing setting");
 
     /* update configuration if its valid */
     if (strcmp(t, "gre") == 0 || strcmp(t, "1") == 0) {
@@ -2065,8 +2064,7 @@ parse_wccp2_method(int *method)
     } else if (strcmp(t, "l2") == 0 || strcmp(t, "2") == 0) {
         *method = WCCP2_METHOD_L2;
     } else {
-        debugs(80, DBG_CRITICAL, "ERROR: wccp2_*_method: unknown setting, got " << t );
-        self_destruct();
+        throw Cfg::FatalError(ToSBuf("wccp2_*_method: unknown setting, got ", t));
     }
 }
 
@@ -2081,8 +2079,7 @@ dump_wccp2_method(StoreEntry * e, const char *label, int v)
         storeAppendPrintf(e, "%s l2\n", label);
         break;
     default:
-        debugs(80, DBG_CRITICAL, "FATAL: WCCPv2 configured method (" << v << ") is not valid.");
-        self_destruct();
+        fatalf("FATAL: WCCPv2 configured method (%d) is not valid.", v);
     }
 }
 
@@ -2098,14 +2095,11 @@ free_wccp2_method(int *)
 void
 parse_wccp2_amethod(int *method)
 {
-    char *t;
+    char *t= ConfigParser::NextToken();
 
     /* Snarf the method */
-    if ((t = ConfigParser::NextToken()) == nullptr) {
-        debugs(80, DBG_CRITICAL, "ERROR: wccp2_assignment_method: missing setting.");
-        self_destruct();
-        return;
-    }
+    if (!t)
+        throw Cfg::FatalError("wccp2_assignment_method: missing setting");
 
     /* update configuration if its valid */
     if (strcmp(t, "hash") == 0 || strcmp(t, "1") == 0) {
@@ -2113,8 +2107,7 @@ parse_wccp2_amethod(int *method)
     } else if (strcmp(t, "mask") == 0 || strcmp(t, "2") == 0) {
         *method = WCCP2_ASSIGNMENT_METHOD_MASK;
     } else {
-        debugs(80, DBG_CRITICAL, "ERROR: wccp2_assignment_method: unknown setting, got " << t );
-        self_destruct();
+        throw Cfg::FatalError(ToSBuf("wccp2_assignment_method: unknown setting, got ", t));
     }
 }
 
@@ -2129,8 +2122,7 @@ dump_wccp2_amethod(StoreEntry * e, const char *label, int v)
         storeAppendPrintf(e, "%s mask\n", label);
         break;
     default:
-        debugs(80, DBG_CRITICAL, "FATAL: WCCPv2 configured " << label << " (" << v << ") is not valid.");
-        self_destruct();
+        fatalf("FATAL: WCCPv2 configured %s (%d) is not valid.", label, v);
     }
 }
 
@@ -2146,7 +2138,6 @@ free_wccp2_amethod(int *)
 void
 parse_wccp2_service(void *)
 {
-    char *t;
     int service = 0;
     int service_id = 0;
     int security_type = WCCP2_NO_SECURITY;
@@ -2158,30 +2149,23 @@ parse_wccp2_service(void *)
     }
 
     /* Snarf the type */
-    if ((t = ConfigParser::NextToken()) == nullptr) {
-        debugs(80, DBG_CRITICAL, "ERROR: wccp2ParseServiceInfo: missing service info type (standard|dynamic)");
-        self_destruct();
-        return;
-    }
+    char *t = ConfigParser::NextToken();
+    if (!t)
+        throw Cfg::FatalError("missing service info type (standard|dynamic)");
 
     if (strcmp(t, "standard") == 0) {
         service = WCCP2_SERVICE_STANDARD;
     } else if (strcmp(t, "dynamic") == 0) {
         service = WCCP2_SERVICE_DYNAMIC;
     } else {
-        debugs(80, DBG_CRITICAL, "ERROR: wccp2ParseServiceInfo: bad service info type (expected standard|dynamic, got " << t << ")");
-        self_destruct();
-        return;
+        throw Cfg::FatalError(ToSBuf("invalid service info type ", t, " (valid: standard or dynamic)"));
     }
 
     /* Snarf the ID */
     service_id = GetInteger();
 
-    if (service_id < 0 || service_id > 255) {
-        debugs(80, DBG_CRITICAL, "ERROR: invalid WCCP service id " << service_id << " (must be between 0 .. 255)");
-        self_destruct();
-        return;
-    }
+    if (service_id < 0 || service_id > 255)
+        throw Cfg::FatalError(ToSBuf("invalid WCCP service id ", service_id, " (must be between 0 .. 255)"));
 
     memset(wccp_password, 0, sizeof(wccp_password));
     /* Handle password, if any */
@@ -2345,18 +2329,14 @@ parse_wccp2_service_info(void *)
     /* First argument: id */
     service_id = GetInteger();
 
-    if (service_id < 0 || service_id > 255) {
-        debugs(80, DBG_CRITICAL, "ERROR: invalid WCCP service id " << service_id << " (must be between 0 .. 255)");
-        self_destruct();
-        return;
-    }
+    if (service_id < 0 || service_id > 255)
+        throw Cfg::FatalError(ToSBuf("invalid WCCP service id ", service_id, " (must be between 0 .. 255)"));
 
     /* Next: find the (hopefully!) existing service */
     srv = wccp2_get_service_by_id(WCCP2_SERVICE_DYNAMIC, service_id);
 
-    if (srv == nullptr) {
-        fatalf("parse_wccp2_service_info: unknown dynamic service id %d: you need to define it using wccp2_service (and make sure you wish to configure it as a dynamic service.)\n", service_id);
-    }
+    if (!srv)
+        throw Cfg::FatalError(ToSBuf("missing dynamic service id ", service_id, ". You need to define it using wccp2_service."));
 
     /* Next: loop until we don't have any more tokens */
     while ((t = ConfigParser::NextToken()) != nullptr) {
@@ -2371,30 +2351,25 @@ parse_wccp2_service_info(void *)
         } else if (strncmp(t, "protocol=udp", 12) == 0) {
             protocol = IPPROTO_UDP;
         } else if (strncmp(t, "protocol=", 9) == 0) {
-            fatalf("parse_wccp2_service_info: id %d: unknown protocol (%s) - must be tcp or udp!\n", service_id, t);
+            throw Cfg::FatalError(ToSBuf("id ", service_id, ": unknown protocol=", t, " (valid: tcp or udp)"));
         } else if (strncmp(t, "priority=", 9) == 0) {
             priority = strtol(t + 9, &end, 0);
-
-            if (priority < 0 || priority > 255) {
-                fatalf("parse_wccp2_service_info: id %d: %s out of range (0..255)!\n", service_id, t);
-            }
+            if (priority < 0 || priority > 255)
+                throw Cfg::FatalError(ToSBuf("invalid WCCP service ", service_id, " priority=", t, " out of range (must be between 0 .. 255)"));
         } else {
-            fatalf("parse_wccp2_service_info: id %d: unknown option '%s'\n", service_id, t);
+            throw Cfg::FatalError(ToSBuf("id ", service_id, ": unknown option '", t, "'"));
         }
     }
 
     /* Check everything is set */
-    if (priority == -1) {
-        fatalf("parse_wccp2_service_info: service %d: no priority defined (valid: 0..255)!\n", service_id);
-    }
+    if (priority == -1)
+        throw Cfg::FatalError(ToSBuf("service ", service_id, ": no priority defined (valid: 0..255)"));
 
-    if (protocol == -1) {
-        fatalf("parse_wccp2_service_info: service %d: no protocol defined (valid: tcp or udp)!\n", service_id);
-    }
+    if (protocol == -1)
+        throw Cfg::FatalError(ToSBuf("service ", service_id, ": no protocol defined (valid: tcp or udp)"));
 
-    if (!(flags & WCCP2_SERVICE_PORTS_DEFINED)) {
-        fatalf("parse_wccp2_service_info: service %d: no ports defined!\n", service_id);
-    }
+    if (!(flags & WCCP2_SERVICE_PORTS_DEFINED))
+        throw Cfg::FatalError(ToSBuf("service ", service_id, ": no ports defined"));
 
     /* rightio! now we can update */
     wccp2_update_service(srv, WCCP2_SERVICE_DYNAMIC, service_id, priority,

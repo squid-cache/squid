@@ -13,6 +13,7 @@
 #include "squid.h"
 #include "base/Random.h"
 #include "cache_cf.h"
+#include "cfg/Exceptions.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"
@@ -222,17 +223,12 @@ Fs::Ufs::UFSSwapDir::optionIOParse(char const *option, const char *value, int is
         /* silently ignore this */
         return true;
 
-    if (!value) {
-        self_destruct();
-        return false;
-    }
+    Cfg::RequireValue(option, value);
 
     DiskIOModule *module = DiskIOModule::Find(value);
 
-    if (!module) {
-        self_destruct();
-        return false;
-    }
+    if (!module)
+        throw Cfg::FatalError(ToSBuf("unknown DiskIO module: ", value));
 
     changeIO(module);
 
