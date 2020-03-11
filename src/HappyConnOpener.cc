@@ -396,20 +396,17 @@ HappyConnOpener::swanSong()
 
     // TODO: Find an automated, faster way to kill no-longer-needed jobs.
 
-    if (prime) {
-        if (prime.connector)
-            prime.connector->cancel("HappyConnOpener object destructed");
-        prime.clear();
-    }
-
     if (spare) {
-        if (spare.connector)
-            spare.connector->cancel("HappyConnOpener object destructed");
-        spare.clear();
+        // cancel the spare attempt first to preserve destination order
+        cancelAttempt(spare, "job finished during a spare attempt");
         if (gotSpareAllowance) {
             TheSpareAllowanceGiver.jobDroppedAllowance();
             gotSpareAllowance = false;
         }
+    }
+
+    if (prime) {
+        cancelAttempt(prime, "job finished during a prime attempt");
     }
 
     AsyncJob::swanSong();
@@ -482,6 +479,16 @@ HappyConnOpener::sendSuccess(const Comm::ConnectionPointer &conn, bool reused, c
         ScheduleCallHere(callback_);
     }
     callback_ = nullptr;
+}
+
+/// if the given attempt is in progress, cancels it and re-inserts
+/// the path into the beginning of candidates list
+void
+HappyConnOpener::cancelAttempt(Attempt &attempt, const char *reason)
+{
+    Must(attempt);
+    destinations->retryPath(attempt.path);
+    attempt.cancel(reason);
 }
 
 /// inform the initiator about our failure to connect (if needed)
@@ -563,6 +570,7 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, Comm::ConnectionPointer &
 
     attempt.path = dest;
     attempt.connector = callConnect;
+    attempt.connOpener = cs;
 
     AsyncJob::Start(cs);
 }
@@ -867,5 +875,15 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
     }
 
     return false;
+}
+
+void
+HappyConnOpener::Attempt::cancel(const char *reason)
+{
+    if (connector) {
+        connector->cancel(reason);
+        CallJobHere(17, 3, connOpener, Comm::ConnOpener, noteAbort);
+    }
+    clear();
 }
 

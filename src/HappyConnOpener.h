@@ -157,10 +157,13 @@ private:
     class Attempt {
     public:
         explicit operator bool() const { return static_cast<bool>(path); }
-        void clear() { path = nullptr; connector = nullptr; }
+        void clear() { path = nullptr; connector = nullptr; connOpener = nullptr; }
+        /// cancels the attempt
+        void cancel(const char *reason);
 
         Comm::ConnectionPointer path; ///< the destination we are connecting to
         AsyncCall::Pointer connector; ///< our Comm::ConnOpener callback
+        Comm::ConnOpener::Pointer connOpener; ///< our Comm::ConnOpener job
     };
 
     /* AsyncJob API */
@@ -194,6 +197,7 @@ private:
     Answer *futureAnswer(const Comm::ConnectionPointer &);
     void sendSuccess(const Comm::ConnectionPointer &conn, bool reused, const char *connKind);
     void sendFailure();
+    void cancelAttempt(Attempt &, const char *reason);
 
     const time_t fwdStart; ///< requestor start time
 
