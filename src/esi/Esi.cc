@@ -1271,7 +1271,7 @@ ESIContext::parse()
 
         } catch (...) {
             // DBG_IMPORTANT because these are local issues the admin needs to fix
-            static FadingCounter logEntries(); // TODO: set horizon less than infinity
+            static FadingCounter logEntries; // TODO: set horizon less than infinity
             if (logEntries.count(1) < 100)
                 debugs(86, DBG_IMPORTANT, "ERROR: ESI parser: " << CurrentException);
             setError();
@@ -2276,4 +2276,3 @@ esiEnableProcessing (HttpReply *rep)
 }
 
 #endif /* USE_SQUID_ESI == 1 */
-
