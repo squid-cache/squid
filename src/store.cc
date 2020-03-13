@@ -908,7 +908,6 @@ struct _store_check_cachable_hist {
     } no;
 
     struct {
-        int negative_cached;
         int Default;
     } yes;
 } store_check_cachable_hist;
@@ -1005,10 +1004,6 @@ StoreEntry::checkCachable()
         } else if (fdNFree() < RESERVED_FD) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: too many FD's open");
             ++store_check_cachable_hist.no.too_many_open_fds;
-        } else if (EBIT_TEST(flags, ENTRY_NEGCACHED)) {
-            debugs(20, 3, "StoreEntry::checkCachable: YES: negative cached");
-            ++store_check_cachable_hist.yes.negative_cached;
-            return 1;
         } else {
             ++store_check_cachable_hist.yes.Default;
             return 1;
@@ -1033,6 +1028,8 @@ storeCheckCachableStats(StoreEntry *sentry)
                       store_check_cachable_hist.no.not_entry_cachable);
     storeAppendPrintf(sentry, "no.wrong_content_length\t%d\n",
                       store_check_cachable_hist.no.wrong_content_length);
+    /* for backward compatibility */
+    storeAppendPrintf(sentry, "no.negative_cached\t0\n");
     storeAppendPrintf(sentry, "no.missing_parts\t%d\n",
                       store_check_cachable_hist.no.missing_parts);
     storeAppendPrintf(sentry, "no.too_big\t%d\n",
@@ -1045,8 +1042,6 @@ storeCheckCachableStats(StoreEntry *sentry)
                       store_check_cachable_hist.no.too_many_open_files);
     storeAppendPrintf(sentry, "no.too_many_open_fds\t%d\n",
                       store_check_cachable_hist.no.too_many_open_fds);
-    storeAppendPrintf(sentry, "yes.negative_cached\t%d\n",
-                      store_check_cachable_hist.yes.negative_cached);
     storeAppendPrintf(sentry, "yes.default\t%d\n",
                       store_check_cachable_hist.yes.Default);
 }
@@ -2157,3 +2152,4 @@ Store::EntryGuard::onException() noexcept
         entry_->unlock(context_);
     });
 }
+
