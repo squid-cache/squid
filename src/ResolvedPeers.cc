@@ -32,7 +32,6 @@ ResolvedPeers::retrySparePath(const Comm::ConnectionPointer &spare)
 {
     debugs(17, 4, spare);
     assert(spare);
-    paths_.emplace(paths_.begin(), spare);
     const auto peerToAvoid = spare->getPeer();
     const auto familyToMatch = ConnectionFamily(*spare);
     const auto spareOrNextPeer = std::find_if(paths_.begin(), paths_.end(),
