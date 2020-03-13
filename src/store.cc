@@ -1374,9 +1374,10 @@ StoreEntry::negativeCache()
 #else
         expires = squid_curtime;
 #endif
-    debugs(20, 6, "expires = " << expires << ", curtime = " << squid_curtime);
-    if (expires > squid_curtime)
+    if (expires > squid_curtime) {
         EBIT_SET(flags, ENTRY_NEGCACHED);
+        debugs(20, 6, "expires = " << expires << " +" << (expires-squid_curtime) << ' ' << *this);
+    }
 }
 
 void
@@ -2156,4 +2157,3 @@ Store::EntryGuard::onException() noexcept
         entry_->unlock(context_);
     });
 }
-
