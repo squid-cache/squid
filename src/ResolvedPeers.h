@@ -32,7 +32,11 @@ public:
     void addPath(const Comm::ConnectionPointer &);
 
     /// add a candidate path to try before all the existing paths
-    void retryPath(const Comm::ConnectionPointer &);
+    void retryPrimePath(const Comm::ConnectionPointer &);
+
+    /// add a candidate spare path just after prime paths (if any)
+    /// or before all existing paths
+    void retrySparePath(const Comm::ConnectionPointer &spare);
 
     /// extracts and returns the first queued address
     Comm::ConnectionPointer extractFront();
@@ -73,7 +77,7 @@ private:
     Comm::ConnectionList::iterator findSpareOrNextPeer(const Comm::Connection &currentPeer);
     Comm::ConnectionPointer extractFound(const char *description, const Comm::ConnectionList::iterator &found);
 
-    Comm::ConnectionList paths_;
+    Comm::ConnectionList paths_; ///< resolved addresses in (peer, family) order
 };
 
 /// summarized ResolvedPeers (for debugging)
