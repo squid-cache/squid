@@ -1028,8 +1028,8 @@ storeCheckCachableStats(StoreEntry *sentry)
                       store_check_cachable_hist.no.not_entry_cachable);
     storeAppendPrintf(sentry, "no.wrong_content_length\t%d\n",
                       store_check_cachable_hist.no.wrong_content_length);
-    /* for backward compatibility */
-    storeAppendPrintf(sentry, "no.negative_cached\t0\n");
+    storeAppendPrintf(sentry, "no.negative_cached\t%d\n",
+                      0); // TODO: Remove this backward compatibility hack.
     storeAppendPrintf(sentry, "no.missing_parts\t%d\n",
                       store_check_cachable_hist.no.missing_parts);
     storeAppendPrintf(sentry, "no.too_big\t%d\n",
