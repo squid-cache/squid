@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "esi/Esi.h"
 #include "esi/Expression.h"
 #include "profiler/Profiler.h"
 
@@ -95,6 +96,17 @@ stackpop(stackmember * s, int *depth)
         return;
 
     cleanmember(&s[*depth]);
+}
+
+static void
+stackpush(stackmember *stack, stackmember &item, int *depth)
+{
+    if (*depth < 0)
+        throw Esi::Error("ESIExpression stack has negative size");
+    if (*depth >= ESI_STACK_DEPTH_LIMIT)
+        throw Esi::Error("ESIExpression stack is full, cannot push");
+
+    stack[(*depth)++] = item;
 }
 
 static evaluate evalnegate;
@@ -208,6 +220,11 @@ evalnegate(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
         /* invalid stack */
         return 1;
 
+    if (whereAmI < 0)
+        throw Esi::Error("negate expression location too small");
+    if (*depth >= ESI_STACK_DEPTH_LIMIT)
+        throw Esi::Error("negate expression too complex");
+
     if (stack[whereAmI + 1].valuetype != ESI_EXPR_EXPR)
         /* invalid operand */
         return 1;
@@ -280,7 +297,7 @@ evalor(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -327,7 +344,7 @@ evaland(stackmember * stack, int *depth, int whereAmI, stackmember * candidate)
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -373,7 +390,7 @@ evallesseq(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -421,7 +438,7 @@ evallessthan(stackmember * stack, int *depth, int whereAmI, stackmember * candid
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -469,7 +486,7 @@ evalmoreeq(stackmember * stack, int *depth, int whereAmI, stackmember * candidat
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -517,7 +534,7 @@ evalmorethan(stackmember * stack, int *depth, int whereAmI, stackmember * candid
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -566,7 +583,7 @@ evalequals(stackmember * stack, int *depth, int whereAmI,
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -613,7 +630,7 @@ evalnotequals(stackmember * stack, int *depth, int whereAmI, stackmember * candi
 
     srv.precedence = 1;
 
-    stack[(*depth)++] = srv;
+    stackpush(stack, srv, depth);
 
     /* we're out of way, try adding now */
     if (!addmember(stack, depth, candidate))
@@ -953,6 +970,9 @@ addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
         /* !(!(a==b))) is why thats safe */
         /* strictly less than until we unwind */
 
+        if (*stackdepth >= ESI_STACK_DEPTH_LIMIT)
+            throw Esi::Error("ESI expression too complex to add member");
+
         if (candidate->precedence < stack[*stackdepth - 1].precedence ||
                 candidate->precedence < stack[*stackdepth - 2].precedence) {
             /* must be an operator */
@@ -968,10 +988,10 @@ addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
                 return 0;
             }
         } else {
-            stack[(*stackdepth)++] = *candidate;
+            stackpush(stack, *candidate, stackdepth);
         }
     } else if (candidate->valuetype != ESI_EXPR_INVALID)
-        stack[(*stackdepth)++] = *candidate;
+        stackpush(stack, *candidate, stackdepth);
 
     return 1;
 }
@@ -979,7 +999,7 @@ addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
 int
 ESIExpression::Evaluate(char const *s)
 {
-    stackmember stack[20];
+    stackmember stack[ESI_STACK_DEPTH_LIMIT];
     int stackdepth = 0;
     char const *end;
     PROF_start(esiExpressionEval);
