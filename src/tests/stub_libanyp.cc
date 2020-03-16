@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -36,7 +36,7 @@ bool urlIsRelative(const char *) STUB_RETVAL(false)
 char *urlMakeAbsolute(const HttpRequest *, const char *)STUB_RETVAL(nullptr)
 char *urlRInternal(const char *, unsigned short, const char *, const char *) STUB_RETVAL(nullptr)
 char *urlInternal(const char *, const char *) STUB_RETVAL(nullptr)
-int matchDomainName(const char *, const char *, uint) STUB_RETVAL(0)
+int matchDomainName(const char *, const char *, enum MatchDomainNameFlags) STUB_RETVAL(0)
 int urlCheckRequest(const HttpRequest *) STUB_RETVAL(0)
 char *urlHostname(const char *) STUB_RETVAL(nullptr)
 void urlExtMethodConfigure() STUB

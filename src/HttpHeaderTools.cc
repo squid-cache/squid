@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -483,6 +483,12 @@ void
 httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headersAdd)
 {
     ACLFilledChecklist checklist(NULL, request, NULL);
+
+    checklist.al = al;
+    if (al && al->reply) {
+        checklist.reply = al->reply.getRaw();
+        HTTPMSGLOCK(checklist.reply);
+    }
 
     for (HeaderWithAclList::const_iterator hwa = headersAdd.begin(); hwa != headersAdd.end(); ++hwa) {
         if (!hwa->aclList || checklist.fastCheck(hwa->aclList).allowed()) {

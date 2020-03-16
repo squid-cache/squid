@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -17,6 +17,7 @@
 #include "log/ModSyslog.h"
 #include "log/ModUdp.h"
 #include "log/TcpLogger.h"
+#include "sbuf/SBuf.h"
 
 CBDATA_CLASS_INIT(Logfile);
 
@@ -103,7 +104,7 @@ logfileRotate(Logfile * lf, int16_t rotateCount)
 }
 
 void
-logfileWrite(Logfile * lf, char *buf, size_t len)
+logfileWrite(Logfile * lf, const char *buf, size_t len)
 {
     lf->f_linewrite(lf, buf, len);
 }
@@ -112,21 +113,11 @@ void
 logfilePrintf(Logfile * lf, const char *fmt,...)
 {
     va_list args;
-    char buf[8192];
-    int s;
-
     va_start(args, fmt);
-
-    s = vsnprintf(buf, 8192, fmt, args);
-
-    if (s > 8192) {
-        s = 8192;
-
-        if (fmt[strlen(fmt) - 1] == '\n')
-            buf[8191] = '\n';
-    }
-
-    logfileWrite(lf, buf, (size_t) s);
+    static SBuf sbuf;
+    sbuf.clear();
+    sbuf.vappendf(fmt, args); // Throws on overflow. TODO: handle that better
+    logfileWrite(lf, sbuf.c_str(), sbuf.length());
     va_end(args);
 }
 

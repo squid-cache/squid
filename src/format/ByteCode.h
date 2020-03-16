@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -45,6 +45,8 @@ typedef enum {
     /*LFT_CLIENT_LOCAL_FQDN, (rDNS) */
     LFT_CLIENT_LOCAL_TOS,
     LFT_CLIENT_LOCAL_NFMARK,
+
+    LFT_TRANSPORT_CLIENT_CONNECTION_ID,
 
     LFT_CLIENT_HANDSHAKE,
 

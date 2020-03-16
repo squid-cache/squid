@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,6 +30,8 @@
 #endif
 #include "store/Disk.h"
 #include "store/forward.h"
+
+#include <chrono>
 
 #if USE_OPENSSL
 class sslproxy_cert_sign;
@@ -351,6 +353,8 @@ public:
 
     int forward_max_tries;
     int connect_retries;
+
+    std::chrono::nanoseconds paranoid_hit_validation;
 
     class ACL *aclList;
 

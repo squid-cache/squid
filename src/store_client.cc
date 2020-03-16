@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/CodeContext.h"
 #include "event.h"
 #include "globals.h"
 #include "HttpReply.h"
@@ -772,13 +773,13 @@ StoreEntry::invokeHandlers()
 
     PROF_start(InvokeHandlers);
 
-    debugs(90, 3, "InvokeHandlers: " << getMD5Text()  );
+    debugs(90, 3, mem_obj->nclients << " clients; " << *this << ' ' << getMD5Text());
     /* walk the entire list looking for valid callbacks */
 
+    const auto savedContext = CodeContext::Current();
     for (node = mem_obj->clients.head; node; node = nx) {
         sc = (store_client *)node->data;
         nx = node->next;
-        debugs(90, 3, "StoreEntry::InvokeHandlers: checking client #" << i  );
         ++i;
 
         if (!sc->_callback.pending())
@@ -787,8 +788,11 @@ StoreEntry::invokeHandlers()
         if (sc->flags.disk_io_pending)
             continue;
 
+        CodeContext::Reset(sc->_callback.codeContext);
+        debugs(90, 3, "checking client #" << i);
         storeClientCopy2(this, sc);
     }
+    CodeContext::Reset(savedContext);
     PROF_stop(InvokeHandlers);
 }
 
@@ -931,7 +935,12 @@ store_client::Callback::pending() const
     return callback_handler && callback_data;
 }
 
-store_client::Callback::Callback(STCB *function, void *data) : callback_handler(function), callback_data (data) {}
+store_client::Callback::Callback(STCB *function, void *data):
+    callback_handler(function),
+    callback_data(data),
+    codeContext(CodeContext::Current())
+{
+}
 
 #if USE_DELAY_POOLS
 void

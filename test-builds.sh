@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 ##
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -136,6 +136,12 @@ buildtest() {
 # if using cache, make sure to clear it up first
 if [ -n "$cache_file" -a -e "$cache_file" -a "$remove_cache_file" = "true" ]; then
     rm $cache_file
+fi
+
+if [ -f "$top/configure" -a -f "$top/libltdl/configure" ]; then
+    echo "Already bootstrapped, skipping step"
+else
+    (cd "$top"; ./bootstrap.sh)
 fi
 
 # Decide what tests to run, $* contains test spec names or filenames.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -728,6 +728,9 @@ Fs::Ufs::UFSSwapDir::logFile(char const *ext) const
 void
 Fs::Ufs::UFSSwapDir::openLog()
 {
+    if (!IamWorkerProcess())
+        return;
+
     assert(NumberOfUFSDirs || !UFSDirToGlobalDirMapping);
     ++NumberOfUFSDirs;
     assert(NumberOfUFSDirs <= Config.cacheSwap.n_configured);

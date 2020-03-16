@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -54,6 +54,24 @@ COMMENT_START
 		KB - Kilobyte (1024 bytes)
 		MB - Megabyte
 		GB - Gigabyte
+
+  Values with time units
+
+	Time-related directives marked with either "time-units" or
+	"time-units-small" accept a time unit. The supported time units are:
+
+		nanosecond (time-units-small only)
+		microsecond (time-units-small only)
+		millisecond
+		second
+		minute
+		hour
+		day
+		week
+		fortnight
+		month - 30 days
+		year - 31557790080 milliseconds (just over 365 days)
+		decade
 
   Values with spaces, quotes, and other special characters
 
@@ -673,12 +691,22 @@ DOC_START
 		For Basic and Digest this parameter is ignored.
 
 	"utf8" on|off
-		HTTP uses iso-latin-1 as character set, while some
-		authentication backends such as LDAP expects UTF-8. If this is
-		set to on Squid will translate the HTTP iso-latin-1 charset to
-		UTF-8 before sending the username and password to the helper.
+		Useful for sending credentials to authentication backends that
+		expect UTF-8 encoding (e.g., LDAP).
 
-		For NTLM and Negotiate this parameter is ignored.
+		When this option is enabled, Squid uses HTTP Accept-Language
+		request header to guess the received credentials encoding
+		(ISO-Latin-1, CP1251, or UTF-8) and then converts the first
+		two encodings into UTF-8.
+
+		When this option is disabled and by default, Squid sends
+		credentials in their original (i.e. received) encoding.
+
+		This parameter is only honored for Basic and Digest schemes.
+		For Basic, the entire username:password credentials are
+		checked and, if necessary, re-encoded. For Digest -- just the
+		username component. For NTLM and Negotiate schemes, this
+		parameter is ignored.
 
 IF HAVE_AUTH_MODULE_BASIC
 	=== Basic authentication parameters ===
@@ -1570,7 +1598,7 @@ ENDIF
 		acl fileupload req_mime_type -i ^multipart/form-data$
 		acl javascript rep_mime_type -i ^application/x-javascript$
 
-NOCOMMENT_START
+CONFIG_START
 #
 # Recommended minimum configuration:
 #
@@ -1598,7 +1626,7 @@ acl Safe_ports port 280		# http-mgmt
 acl Safe_ports port 488		# gss-http
 acl Safe_ports port 591		# filemaker
 acl Safe_ports port 777		# multiling http
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: proxy_protocol_access
@@ -1806,7 +1834,7 @@ DOC_START
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
-NOCOMMENT_START
+CONFIG_START
 
 #
 # Recommended minimum Access Permission configuration:
@@ -1838,7 +1866,7 @@ http_access allow localhost
 
 # And finally deny all other access to this proxy
 http_access deny all
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: adapted_http_access http_access2
@@ -2418,16 +2446,26 @@ DOC_START
 			The proxy_protocol_access is required to whitelist
 			downstream proxies which can be trusted.
 
+	   worker-queues
+			Ask TCP stack to maintain a dedicated listening queue
+			for each worker accepting requests at this port.
+			Requires TCP stack that supports the SO_REUSEPORT socket
+			option.
+
+			SECURITY WARNING: Enabling worker-specific queues
+			allows any process running as Squid's effective user to
+			easily accept requests destined to this port.
+
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface we recommend you to specify the
 	internal address:port in http_port. This way Squid will only be
 	visible on the internal address.
 
-NOCOMMENT_START
+CONFIG_START
 
 # Squid normally listens to port 3128
 http_port @DEFAULT_HTTP_PORT@
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: https_port
@@ -4307,11 +4345,11 @@ DOC_START
 	Note: To make optimal use of the max-size limits you should order
 	the cache_dir lines with the smallest max-size value first.
 
-NOCOMMENT_START
+CONFIG_START
 
 # Uncomment and adjust the following to add a disk cache directory.
 #cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: store_dir_select_algorithm
@@ -4373,6 +4411,45 @@ DOC_START
 		cache_dir rock /ssd2 ... max-size=99999
 		cache_dir rock /hdd3 ... min-size=100000
 		cache_dir rock /ssd3 ... max-size=99999
+DOC_END
+
+NAME: paranoid_hit_validation
+COMMENT: time-units-small
+TYPE: time_nanoseconds
+DEFAULT: 0
+DEFAULT_DOC: validation disabled
+LOC: Config.paranoid_hit_validation
+DOC_START
+	Controls whether Squid should perform paranoid validation of cache entry
+	metadata integrity every time a cache entry is hit. This low-level
+	validation should always succeed. Each failed validation results in a
+	cache miss, a BUG line reported to cache.log, and the invalid entry
+	marked as unusable (and eventually purged from the cache).
+
+	Squid can only validate shared cache memory and rock cache_dir entries.
+
+	* Zero (default) value means that the validation is disabled.
+
+	* Positive values enable validation:
+	  - values less than 1 day approximate the maximum time that Squid is allowed
+	    to spend validating a single cache hit.
+	  - values greater or equal to 1 day are considered as no limitation:
+	    in this case all checks will be performed, regardless of how much time
+	    they take.
+
+	Hits are usually stored using 16KB slots (for rock, the size is
+	configurable via cache_dir slot-size). Larger hits require scanning more
+	slots and, hence, take more time. When validation is enabled, at least one
+	slot is always validated, regardless of the configured time limit.
+
+	A worker process validating an entry cannot do anything else (i.e. the
+	validation is blocking). The validation overhead is environment dependent,
+	but developers have observed Squid spending 3-10 microseconds to check each
+	slot of a Rock or shared memory hit entry. If Squid cuts validation short
+	because it runs out of configured time, it treats the entry as valid.
+
+	When hit validation is enabled, its statistics is included in Cache
+	Manager mgr:counters, mgr:5min, and mgr:60min reports.
 DOC_END
 
 NAME: max_open_disk_fds
@@ -4552,6 +4629,19 @@ DOC_START
 		>lp	Local port number the client connected to
 		>qos    Client connection TOS/DSCP value set by Squid
 		>nfmark Client connection netfilter packet MARK set by Squid
+
+		transport::>connection_id Identifies a transport connection
+			accepted by Squid (e.g., a connection carrying the
+			logged HTTP request). Currently, Squid only supports
+			TCP transport connections.
+
+			The logged identifier is an unsigned integer. These
+			IDs are guaranteed to monotonically increase within a
+			single worker process lifetime, with higher values
+			corresponding to connections that were accepted later.
+			Many IDs are skipped (i.e. never logged). Concurrent
+			workers and restarted workers use similar, partially
+			overlapping sequences of IDs.
 
 		la	Local listening IP address the client connection was connected to.
 		lp	Local listening port number the client connection was connected to.
@@ -5390,11 +5480,11 @@ DOC_START
 	that exists, Squid will chdir() to that directory at startup
 	and coredump files will be left there.
 
-NOCOMMENT_START
+CONFIG_START
 
 # Leave coredumps in the first cache dir
 coredump_dir @DEFAULT_SWAP_DIR@
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 
@@ -6198,7 +6288,7 @@ DOC_START
 	to change one. The default setting is only active if none is
 	used.
 
-NOCOMMENT_START
+CONFIG_START
 
 #
 # Add any of your own refresh_pattern entries above these.
@@ -6207,7 +6297,7 @@ refresh_pattern ^ftp:		1440	20%	10080
 refresh_pattern ^gopher:	1440	0%	1440
 refresh_pattern -i (/cgi-bin/|\?) 0	0%	0
 refresh_pattern .		0	20%	4320
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: quick_abort_min
@@ -10392,13 +10482,14 @@ DOC_END
 NAME: max_filedescriptors max_filedesc
 TYPE: int
 DEFAULT: 0
-DEFAULT_DOC: Use operating system limits set by ulimit.
+DEFAULT_DOC: Use operating system soft limit set by ulimit.
 LOC: Config.max_filedescriptors
 DOC_START
-	Reduce the maximum number of filedescriptors supported below
-	the usual operating system defaults.
+	Set the maximum number of filedescriptors, either below the
+	operating system default or up to the hard limit.
 
-	Remove from squid.conf to inherit the current ulimit setting.
+	Remove from squid.conf to inherit the current ulimit soft
+	limit setting.
 
 	Note: Changing this requires a restart of Squid. Also
 	not all I/O types supports large values (eg on Windows).

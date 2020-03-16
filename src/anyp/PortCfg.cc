@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,6 +39,7 @@ AnyP::PortCfg::PortCfg() :
     ftp_track_dirs(false),
     vport(0),
     disable_pmtu_discovery(0),
+    workerQueues(false),
     listenConn()
 {
     memset(&tcp_keepalive, 0, sizeof(tcp_keepalive));
@@ -71,6 +72,7 @@ AnyP::PortCfg::clone() const
     b->vhost = vhost;
     b->vport = vport;
     b->connection_auth_disabled = connection_auth_disabled;
+    b->workerQueues = workerQueues;
     b->ftp_track_dirs = ftp_track_dirs;
     b->disable_pmtu_discovery = disable_pmtu_discovery;
     b->tcp_keepalive = tcp_keepalive;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -20,6 +20,7 @@
 #include "auth/digest/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
+#include "auth/toUtf.h"
 #include "base/LookupTable.h"
 #include "cache_cf.h"
 #include "event.h"
@@ -31,6 +32,7 @@
 #include "mgr/Registration.h"
 #include "rfc2617.h"
 #include "sbuf/SBuf.h"
+#include "sbuf/StringConvert.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StrList.h"
@@ -155,10 +157,10 @@ authenticateDigestNonceNew(void)
      * really bad timing with expiry and creation).  Using a random
      * component in the nonce allows us to loop to find a unique nonce.
      * We use H(nonce_data) so the nonce is meaningless to the reciever.
-     * So our nonce looks like hex(H(timestamp,pointertohash,randomdata))
+     * So our nonce looks like hex(H(timestamp,randomdata))
      * And even if our randomness is not very random we don't really care
-     * - the timestamp and memory pointer also guarantee local uniqueness
-     * in the input to the hash function.
+     * - the timestamp also guarantees local uniqueness in the input to
+     * the hash function.
      */
     // NP: this will likely produce the same randomness sequences for each worker
     // since they should all start within the 1-second resolution of seed value.
@@ -168,7 +170,6 @@ authenticateDigestNonceNew(void)
     /* create a new nonce */
     newnonce->nc = 0;
     newnonce->flags.valid = true;
-    newnonce->noncedata.self = newnonce;
     newnonce->noncedata.creationtime = current_time.tv_sec;
     newnonce->noncedata.randomdata = newRandomData(mt);
 
@@ -733,7 +734,7 @@ authDigestLogUsername(char *username, Auth::UserRequest::Pointer auth_user_reque
  * Auth_user structure.
  */
 Auth::UserRequest::Pointer
-Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
+Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request, const char *aRequestRealm)
 {
     const char *item;
     const char *p;
@@ -810,8 +811,14 @@ Auth::Digest::Config::decode(char const *proxy_auth, const char *aRequestRealm)
         switch (t) {
         case DIGEST_USERNAME:
             safe_free(username);
-            if (value.size() != 0)
+            if (value.size() != 0) {
+                const auto v = value.termedBuf();
+                if (utf8 && !isValidUtf8String(v, v + value.size())) {
+                    auto str = isCP1251EncodingAllowed(request) ? Cp1251ToUtf8(v) : Latin1ToUtf8(v);
+                    value = SBufToString(str);
+                }
                 username = xstrndup(value.rawBuf(), value.size() + 1);
+            }
             debugs(29, 9, "Found Username '" << username << "'");
             break;
 

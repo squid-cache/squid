@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,24 +28,24 @@ int Adaptation::Config::service_iteration_limit = 16;
 int Adaptation::Config::send_client_ip = false;
 int Adaptation::Config::send_username = false;
 int Adaptation::Config::use_indirect_client = true;
-const char *metasBlacklist[] = {
-    "Methods",
-    "Service",
-    "ISTag",
-    "Encapsulated",
-    "Opt-body-type",
-    "Max-Connections",
-    "Options-TTL",
-    "Date",
-    "Service-ID",
+static const char *protectedFieldNamesRaw[] = {
     "Allow",
+    "Date",
+    "Encapsulated",
+    "ISTag",
+    "Max-Connections",
+    "Methods",
+    "Opt-body-type",
+    "Options-TTL",
     "Preview",
-    "Transfer-Preview",
-    "Transfer-Ignore",
+    "Service",
+    "Service-ID",
     "Transfer-Complete",
-    NULL
+    "Transfer-Ignore",
+    "Transfer-Preview"
 };
-Notes Adaptation::Config::metaHeaders("ICAP header", metasBlacklist);
+static const Notes::Keys protectedFieldNames(std::begin(protectedFieldNamesRaw), std::end(protectedFieldNamesRaw));
+Notes Adaptation::Config::metaHeaders("ICAP header", &protectedFieldNames);
 bool Adaptation::Config::needHistory = false;
 
 Adaptation::ServiceConfig*

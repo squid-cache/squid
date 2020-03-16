@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.9 release notes</title>
+<title>Squid 4.10 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.9 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-4.10.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -636,7 +636,7 @@ This section gives an account of those changes in three categories:
 
 <sect>Copyright
 <p>
-Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 <p>
 Squid software is distributed under GPLv2+ license and includes
 contributions from numerous individuals and organizations.
