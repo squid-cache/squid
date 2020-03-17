@@ -46,7 +46,7 @@ while [ $# -ge 1 ]; do
     --aggressively-use-config-cache)
         #environment variable will be picked up by buildtest.sh
         #note: use ONLY if you know what you're doing
-        cache_file=/tmp/config.cache
+        cache_file=${cache_file:-/tmp/config.cache}
         remove_cache_file="false"
         export cache_file
         shift
