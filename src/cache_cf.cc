@@ -4960,7 +4960,7 @@ ParseUrlRewriteTimeout()
         const auto defaultParsed = parseTimeUnit<Seconds>(T_SECOND_STR, parsedUnitDuration);
         assert(defaultParsed);
         debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), ConfigParser::CurrentLocation() <<
-                ": WARNING: missing time unit, using deprecated default '" << T_SECOND_STR << "'");
+               ": WARNING: missing time unit, using deprecated default '" << T_SECOND_STR << "'");
     }
 
     const auto nanoseconds = CheckTimeValue(parsedTimeValue, parsedUnitDuration);
