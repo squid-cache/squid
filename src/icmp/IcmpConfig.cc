@@ -11,6 +11,7 @@
 #include "squid.h"
 
 #if USE_ICMP
+#include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "IcmpConfig.h"
 
@@ -23,7 +24,7 @@ IcmpConfig::parse()
         program.clear();
         program.append(token);
     } else
-        self_destruct();
+        throw Cfg::FatalError("missing ICMP helper parameter");
 }
 
 #endif /* USE_ICMP */

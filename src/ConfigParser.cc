@@ -217,6 +217,13 @@ ConfigParser::CurrentLocation()
     return ToSBuf(SourceLocation(cfg_directive, cfg_filename, config_lineno));
 }
 
+ConfigParser &
+ConfigParser::LegacyInstance()
+{
+    static ConfigParser legacyParser = ConfigParser();
+    return legacyParser;
+}
+
 char *
 ConfigParser::TokenParse(const char * &nextToken, ConfigParser::TokenType &type)
 {

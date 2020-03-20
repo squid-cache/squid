@@ -111,8 +111,7 @@ Auth::SchemeConfig::parse(Auth::SchemeConfig * scheme, int, char *param_str)
     } else if (strcmp(param_str, "key_extras") == 0) {
         keyExtrasLine = ConfigParser::NextQuotedToken();
         Format::Format *nlf =  new ::Format::Format(scheme->type());
-        if (!nlf->parse(keyExtrasLine.termedBuf()))
-            throw Cfg::FatalError("failed parsing key_extras formatting value");
+        nlf->parse(keyExtrasLine.termedBuf()); // XXX: throws and leaks nlf on errors
         if (keyExtras)
             delete keyExtras;
 

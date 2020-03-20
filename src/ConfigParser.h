@@ -159,6 +159,9 @@ public:
      */
     static bool StrictMode;
 
+    /// a ConfigParser instance Squid-2 model config parse code can use
+    static ConfigParser &LegacyInstance();
+
 protected:
     /**
      * Class used to store required information for the current
