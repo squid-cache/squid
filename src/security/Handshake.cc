@@ -292,14 +292,13 @@ Security::HandshakeParser::parseChangeCipherCpecMessage()
     // tlsSupportedVersion is already known) and indicates session resumption.
     // In later TLS versions, ChangeCipherSpec may be sent before and after
     // Hello, but it is unused for session resumption and should be ignored.
-    const bool tls1p2orEarlier = details->tlsSupportedVersion &&
-                                 !TlsVersion13OrLater(details->tlsSupportedVersion);
-    if (tls1p2orEarlier) {
-        resumingSession = true;
+    if (!details->tlsSupportedVersion || TlsVersion13OrLater(details->tlsSupportedVersion))
+        return;
 
-        // Everything after the ChangeCipherSpec message may be encrypted. Stop.
-        done = "ChangeCipherSpec in v1.2-";
-    }
+    resumingSession = true;
+
+    // Everything after the ChangeCipherSpec message may be encrypted. Stop.
+    done = "ChangeCipherSpec in v1.2-";
 }
 
 void

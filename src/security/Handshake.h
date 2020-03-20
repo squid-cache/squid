@@ -129,7 +129,11 @@ private:
     YesNoNone expectingModernRecords;
 };
 
-/// whether the given protocol is TLS (v1.3 or later)
+/// \returns true when the given protocol is TLS with v1.3 or a later version
+/// Negating the result of this function may be misleading. For example,
+/// !TlsVersion13OrLater(x) does not imply that x is TLS v1.2 or lower; x could
+/// also be unknown or even HTTP/2. If you do need negation, consider adding and
+/// using Tls1p2orEarlier() instead (which should also return true for SSL).
 inline bool
 TlsVersion13OrLater(const AnyP::ProtocolVersion &version)
 {
