@@ -29,7 +29,11 @@ public:
     std::ostream & print(std::ostream &os) const;
 
     AnyP::ProtocolVersion tlsVersion; ///< The TLS hello message version
-    AnyP::ProtocolVersion tlsSupportedVersion; ///< The requested/used TLS version
+
+    /// For compliant TLS v1.3+ agents, this is supported_versions maximum.
+    /// For others agents, this is the legacy_version field.
+    AnyP::ProtocolVersion tlsSupportedVersion;
+
     bool compressionSupported; ///< The requested/used compressed  method
     SBuf serverName; ///< The SNI hostname, if any
     bool doHeartBeats;
@@ -125,7 +129,7 @@ private:
     YesNoNone expectingModernRecords;
 };
 
-/// Whether the given version is TLSv1.3 or latter
+/// whether the given protocol is TLS (v1.3 or later)
 inline bool
 TlsVersion13OrLater(const AnyP::ProtocolVersion &version)
 {

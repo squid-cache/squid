@@ -143,7 +143,7 @@ public:
 
     bool resumingSession();
 
-    bool tlsv13OrLater() const; ///< true if server choose the TLSv1.3 protocol
+    bool tlsv13OrLater() const; ///< whether the server chose TLS v1.3
 
     /// The write hold state
     bool holdWrite() const {return holdWrite_;}

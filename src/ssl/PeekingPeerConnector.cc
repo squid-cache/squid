@@ -277,22 +277,22 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
 
     if (srvBio->bumpMode() == Ssl::bumpPeek) {
-        bool bypassValidator = false;
-        // If the server selected TLSv1.3 protocol the server certificates
-        // are not available.
+        auto bypassValidator = false;
+        // If the server selected TLS v1.3 protocol, then we cannot peek at its
+        // (encrypted) certificates.
         if (srvBio->tlsv13OrLater()) {
-            // we currently splice all TLSv1.3 sessions unconditionally
-            // if (const bool spliceTLSv1_3 = true) {
+            // we currently splice all TLS v1.3 sessions unconditionally
+            // if (const auto spliceTLSv1_3 = true) {
             bypassValidator = true;
             // } // else fall through to find a matching ssl_bump action (with limited info)
         } else if (srvBio->resumingSession()) {
-            // In Peek mode, the ClientHello message sent to the server. If the
-            // server resuming a previous (spliced) SSL session with the client,
-            // then probably we are here because local SSL object does not know
-            // anything about the session being resumed.
+            // In peek mode, the ClientHello message is forwarded to the server.
+            // If the server is resuming a previous (spliced) SSL session with
+            // the client, then probably we are here because our local SSL
+            // object does not know anything about the session being resumed.
             //
             // we currently splice all resumed sessions unconditionally
-            // if (const bool spliceResumed = true) {
+            // if (const auto spliceResumed = true) {
             bypassValidator = true;
             // } // else fall through to find a matching ssl_bump action (with limited info)
         }

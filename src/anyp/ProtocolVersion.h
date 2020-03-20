@@ -40,6 +40,7 @@ public:
     unsigned int major;    ///< major version number
     unsigned int minor;    ///< minor version number
 
+    /// whether the version is "known" (e.g., has been parsed or explicitly set)
     explicit operator bool() const { return protocol != PROTO_NONE; }
 
     bool operator==(const ProtocolVersion& that) const {
