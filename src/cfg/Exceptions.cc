@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "cfg/Exceptions.h"
-#include "sbuf/Stream.h"
 
 const char *
 Cfg::FatalError::what() const throw()

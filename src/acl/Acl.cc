@@ -21,7 +21,6 @@
 #include "fatal.h"
 #include "globals.h"
 #include "sbuf/List.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 
 #include <algorithm>

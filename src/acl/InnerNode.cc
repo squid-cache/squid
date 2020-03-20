@@ -17,7 +17,6 @@
 #include "ConfigParser.h"
 #include "debug/Stream.h"
 #include "globals.h"
-#include "sbuf/Stream.h"
 
 #include <algorithm>
 

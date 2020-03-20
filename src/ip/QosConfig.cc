@@ -297,7 +297,7 @@ void
 Ip::Qos::Config::parseConfigLine()
 {
 #if !USE_QOS_TOS
-    throw Cfg::FatalError("invalid option 'qos_flows'. QOS features not enabled in this build");
+    throw Cfg::FatalError("QOS features not enabled in this build");
 #endif
 
     /* parse options ... */

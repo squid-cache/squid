@@ -136,8 +136,7 @@ MessageDelayConfig::parseResponseDelayPool()
     char *key = nullptr;
     char *value = nullptr;
     while (ConfigParser::NextKvPair(key, value)) {
-        if (!value)
-            throw Cfg::FatalError(ToSBuf("option '", key, "'  missing value"));
+        Cfg::RequireValue(key, value);
         auto it = params.find(SBuf(key));
         if (it == params.end())
             throw Cfg::FatalError(ToSBuf("unknown option '", key, "'"));

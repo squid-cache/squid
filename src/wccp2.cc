@@ -22,7 +22,6 @@
 #include "ip/Address.h"
 #include "md5.h"
 #include "Parsing.h"
-#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "wccp2.h"

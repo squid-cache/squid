@@ -16,7 +16,6 @@
 #include "debug/Stream.h"
 #include "fatal.h"
 #include "Parsing.h"
-#include "sbuf/Stream.h"
 
 void
 ACLIntRange::parse()

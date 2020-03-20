@@ -16,7 +16,6 @@
 #include "debug/Stream.h"
 #include "format/Format.h"
 #include "sbuf/Algorithms.h"
-#include "sbuf/Stream.h"
 
 ACLAnnotationData::ACLAnnotationData()
     : notes(new Notes("annotation_data")) {}

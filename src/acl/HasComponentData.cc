@@ -12,7 +12,6 @@
 #include "cfg/Exceptions.h"
 #include "ConfigParser.h"
 #include "sbuf/Algorithms.h"
-#include "sbuf/Stream.h"
 
 const SBuf ACLHasComponentData::RequestStr("request");
 const SBuf ACLHasComponentData::ResponseStr("response");

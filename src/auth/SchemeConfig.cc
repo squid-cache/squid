@@ -20,7 +20,6 @@
 #include "errorpage.h"
 #include "format/Format.h"
 #include "globals.h"
-#include "sbuf/Stream.h"
 #include "Store.h"
 #include "wordlist.h"
 

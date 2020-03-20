@@ -17,7 +17,6 @@
 #include "debug/Stream.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
-#include "sbuf/Stream.h"
 #include "wordlist.h"
 
 void *
