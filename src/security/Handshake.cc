@@ -541,6 +541,9 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
     if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2))
         return;
 
+    // The code below ignores older protocol versions in supported_versions.
+    // TODO: Document why. For example, why leave tlsSupportedVersion at v1.2
+    // when a v1.3 server negotiates v1.1 using supported_versions?
     AnyP::ProtocolVersion supportedVersionMax;
     if (messageSource == fromClient) {
         Parser::BinaryTokenizer tkList(extensionData);
