@@ -40,6 +40,8 @@ public:
     unsigned int major;    ///< major version number
     unsigned int minor;    ///< minor version number
 
+    explicit operator bool() const { return protocol != PROTO_NONE; }
+
     bool operator==(const ProtocolVersion& that) const {
         if (this->protocol != that.protocol)
             return false;

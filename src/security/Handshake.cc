@@ -293,7 +293,7 @@ Security::HandshakeParser::parseChangeCipherCpecMessage()
     // In later TLS versions, ChangeCipherSpec may be sent before and after
     // Hello, but it is no longer used for session resumption and should be
     // ignored.
-    const bool tlsv12OrEarlier = details->tlsSupportedVersion.protocol != AnyP::PROTO_NONE &&
+    const bool tlsv12OrEarlier = details->tlsSupportedVersion &&
                                  !TlsVersion13OrLater(details->tlsSupportedVersion);
     if (tlsv12OrEarlier) {
         resumingSession = true;
@@ -553,7 +553,7 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
             Parser::BinaryTokenizerContext version(tkVersions, "SupportedVersion");
             const auto aVersion = ParseProtocolVersion(tkVersions);
             if (TlsVersion13OrLater(aVersion) &&
-                (fixSupportedVersion.protocol == AnyP::PROTO_NONE || fixSupportedVersion < aVersion))
+                (!fixSupportedVersion || fixSupportedVersion < aVersion))
                 fixSupportedVersion = aVersion;
         }
     } else if (messageSource == fromServer) {
@@ -563,7 +563,7 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
             fixSupportedVersion = aVersion;
     }
 
-    if (fixSupportedVersion.protocol != AnyP::PROTO_NONE) {
+    if (fixSupportedVersion) {
         // overwrite previously stored Hello-derived legacy_version
         details->tlsSupportedVersion = fixSupportedVersion;
     }
