@@ -143,7 +143,9 @@ public:
 
     bool resumingSession();
 
-    bool tlsv13OrLater() const; ///< whether the server chose TLS v1.3
+    /// \returns true when the server chose TLS with v1.3 or a later version
+    /// avoid negating the result; \see Security::Tls1p3orLater()
+    bool tls1p3orLater() const;
 
     /// The write hold state
     bool holdWrite() const {return holdWrite_;}

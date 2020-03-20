@@ -556,9 +556,9 @@ Ssl::ServerBio::resumingSession()
 }
 
 bool
-Ssl::ServerBio::tlsv13OrLater() const
+Ssl::ServerBio::tls1p3orLater() const
 {
-    return Security::TlsVersion13OrLater(parser_.details->tlsSupportedVersion);
+    return Security::Tls1p3orLater(parser_.details->tlsSupportedVersion);
 }
 
 /// initializes BIO table after allocation

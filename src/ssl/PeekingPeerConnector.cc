@@ -280,7 +280,7 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
         auto bypassValidator = false;
         // If the server selected TLS v1.3 protocol, then we cannot peek at its
         // (encrypted) certificates.
-        if (srvBio->tlsv13OrLater()) {
+        if (srvBio->tls1p3orLater()) {
             // we currently splice all TLS v1.3 sessions unconditionally
             // if (const auto spliceTLSv1_3 = true) {
             bypassValidator = true;

@@ -292,7 +292,7 @@ Security::HandshakeParser::parseChangeCipherCpecMessage()
     // tlsSupportedVersion is already known) and indicates session resumption.
     // In later TLS versions, ChangeCipherSpec may be sent before and after
     // Hello, but it is unused for session resumption and should be ignored.
-    if (!details->tlsSupportedVersion || TlsVersion13OrLater(details->tlsSupportedVersion))
+    if (!details->tlsSupportedVersion || Tls1p3orLater(details->tlsSupportedVersion))
         return;
 
     resumingSession = true;
@@ -335,7 +335,7 @@ Security::HandshakeParser::parseHandshakeMessage()
         parseServerHelloHandshakeMessage(message.msg_body);
         state = atHelloReceived;
         // for TLSv1.3 and later, anything after the server Hello is encrypted
-        if (TlsVersion13OrLater(details->tlsSupportedVersion))
+        if (Tls1p3orLater(details->tlsSupportedVersion))
             done = "Tlsv13ServerHello in v1.3+";
         return;
     case HandshakeType::hskCertificate:
@@ -548,14 +548,14 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         while (!tkVersions.atEnd()) {
             Parser::BinaryTokenizerContext version(tkVersions, "SupportedVersion");
             const auto aVersion = ParseProtocolVersion(tkVersions);
-            if (TlsVersion13OrLater(aVersion) &&
+            if (Tls1p3orLater(aVersion) &&
                 (!supportedVersionMax || supportedVersionMax < aVersion))
                 supportedVersionMax = aVersion;
         }
     } else if (messageSource == fromServer) {
         Parser::BinaryTokenizer tkVersion(extensionData);
         const auto aVersion = ParseProtocolVersion(tkVersion);
-        if (TlsVersion13OrLater(aVersion))
+        if (Tls1p3orLater(aVersion))
             supportedVersionMax = aVersion;
     }
 
