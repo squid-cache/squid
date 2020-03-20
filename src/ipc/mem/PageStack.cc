@@ -404,7 +404,7 @@ Ipc::Mem::IdSet::MemorySize(const size_type capacity)
 
 /* Ipc::Mem::PageStack */
 
-Ipc::Mem::PageStack::PageStack(const uint32_t aPoolId, const PageCount aCapacity, const size_t aPageSize):
+Ipc::Mem::PageStack::PageStack(const PoolId aPoolId, const PageCount aCapacity, const size_t aPageSize):
     thePoolId(aPoolId), capacity_(aCapacity), thePageSize(aPageSize),
     size_(0),
     ids_(capacity_)
