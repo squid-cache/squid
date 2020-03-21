@@ -30,7 +30,7 @@ public:
 
     AnyP::ProtocolVersion tlsVersion; ///< The TLS hello message version
 
-    /// For compliant TLS v1.3+ agents, this is supported_versions maximum.
+    /// For most compliant TLS v1.3+ agents, this is supported_versions maximum.
     /// For others agents, this is the legacy_version field.
     AnyP::ProtocolVersion tlsSupportedVersion;
 
@@ -63,7 +63,8 @@ public:
     /// The parsing states
     typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived, atCertificatesReceived, atHelloDoneReceived, atNstReceived, atCcsReceived, atFinishReceived} ParserState;
 
-    typedef enum {fromClient = 0, fromServer} MessageSource;
+    /// the originator of the TLS handshake being parsed
+    typedef enum { fromClient = 0, fromServer } MessageSource;
 
     explicit HandshakeParser(MessageSource);
 
@@ -73,7 +74,7 @@ public:
     /// Throws on errors.
     bool parseHello(const SBuf &data);
 
-    TlsDetails::Pointer details; ///< TLS handshake meta info or nil.
+    TlsDetails::Pointer details; ///< TLS handshake meta info. Never nil.
 
     Security::CertList serverCertificates; ///< parsed certificates chain
 
@@ -83,6 +84,7 @@ public:
 
     ///< whether we are parsing Server or Client TLS handshake messages
     MessageSource messageSource;
+
 private:
     bool isSslv2Record(const SBuf &raw) const;
     void parseRecord();

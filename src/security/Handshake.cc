@@ -336,7 +336,7 @@ Security::HandshakeParser::parseHandshakeMessage()
         state = atHelloReceived;
         // for TLSv1.3 and later, anything after the server Hello is encrypted
         if (Tls1p3orLater(details->tlsSupportedVersion))
-            done = "Tlsv13ServerHello in v1.3+";
+            done = "ServerHello in v1.3+";
         return;
     case HandshakeType::hskCertificate:
         Must(state < atCertificatesReceived);
@@ -521,7 +521,7 @@ Security::HandshakeParser::parseSniExtension(const SBuf &extensionData) const
     return SBuf(); // SNI extension lacks host_name
 }
 
-// RFC 8446 Section 4.2.1: SupportedVersions extension
+/// RFC 8446 Section 4.2.1: SupportedVersions extension
 void
 Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extensionData) const
 {
@@ -537,7 +537,7 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
     // (TLS 1.2).
     //
     // To reduce misdetection of legacy agents and mishandling of malformed
-    // traffic, ignore supported_versions senders that violate the above MUSTs:
+    // input, ignore supported_versions senders violating legacy_version MUSTs:
     if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2))
         return;
 
@@ -551,7 +551,7 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         while (!tkVersions.atEnd()) {
             const auto version = ParseProtocolVersion(tkVersions, "supported_version");
             if (Tls1p3orLater(version) &&
-                (!supportedVersionMax || supportedVersionMax < version))
+                    (!supportedVersionMax || supportedVersionMax < version))
                 supportedVersionMax = version;
         }
     } else {
