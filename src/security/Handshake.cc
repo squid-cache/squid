@@ -106,11 +106,11 @@ static Extensions SupportedExtensions();
 
 } // namespace Security
 
-/// Convenience helper: We parse ProtocolVersion but store "int".
+/// parse TLS ProtocolVersion (uint16) and convert it to AnyP::ProtocolVersion
 static AnyP::ProtocolVersion
-ParseProtocolVersion(Parser::BinaryTokenizer &tk)
+ParseProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel = ".version")
 {
-    Parser::BinaryTokenizerContext context(tk, ".version");
+    Parser::BinaryTokenizerContext context(tk, contextLabel);
     uint8_t vMajor = tk.uint8(".major");
     uint8_t vMinor = tk.uint8(".minor");
     if (vMajor == 0 && vMinor == 2)
@@ -547,22 +547,22 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
     AnyP::ProtocolVersion supportedVersionMax;
     if (messageSource == fromClient) {
         Parser::BinaryTokenizer tkList(extensionData);
-        Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersionsList"));
+        Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
         while (!tkVersions.atEnd()) {
-            Parser::BinaryTokenizerContext version(tkVersions, "SupportedVersion");
-            const auto aVersion = ParseProtocolVersion(tkVersions);
-            if (Tls1p3orLater(aVersion) &&
-                (!supportedVersionMax || supportedVersionMax < aVersion))
-                supportedVersionMax = aVersion;
+            const auto version = ParseProtocolVersion(tkVersions, "supported_version");
+            if (Tls1p3orLater(version) &&
+                (!supportedVersionMax || supportedVersionMax < version))
+                supportedVersionMax = version;
         }
     } else if (messageSource == fromServer) {
-        Parser::BinaryTokenizer tkVersion(extensionData);
-        const auto aVersion = ParseProtocolVersion(tkVersion);
-        if (Tls1p3orLater(aVersion))
-            supportedVersionMax = aVersion;
+        Parser::BinaryTokenizer tkVersion(extensionData, "selected_version");
+        const auto version = ParseProtocolVersion(tkVersion);
+        if (Tls1p3orLater(version))
+            supportedVersionMax = version;
     }
 
     if (supportedVersionMax) {
+        debugs(83, 7, "found " << supportedVersionMax);
         // overwrite the previously stored Hello-derived legacy_version
         details->tlsSupportedVersion = supportedVersionMax;
     }
