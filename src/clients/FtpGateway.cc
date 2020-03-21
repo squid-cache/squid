@@ -564,8 +564,6 @@ ftpListParseParts(const char *buf, struct Ftp::GatewayFlags flags)
 
     n_tokens = 0;
 
-    memset(tokens, 0, sizeof(tokens));
-
     xbuf = xstrdup(buf);
 
     if (flags.tried_nlst) {
