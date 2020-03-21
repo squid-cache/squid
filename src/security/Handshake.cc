@@ -554,7 +554,8 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
                 (!supportedVersionMax || supportedVersionMax < version))
                 supportedVersionMax = version;
         }
-    } else if (messageSource == fromServer) {
+    } else {
+        assert(messageSource == fromServer);
         Parser::BinaryTokenizer tkVersion(extensionData, "selected_version");
         const auto version = ParseProtocolVersion(tkVersion);
         if (Tls1p3orLater(version))
