@@ -542,12 +542,20 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         return;
 
     // The code below ignores older protocol versions in supported_versions.
-    // TODO: Document why. For example, why leave tlsSupportedVersion at v1.2
-    // when a v1.3 server negotiates v1.1 using supported_versions?
+    // For client hello messages the RFC implies that the supported_versions
+    // includes at least 0x0304 value.
+    // For server hello if supported_versions included the only valid value
+    // is the 0x0304.
     AnyP::ProtocolVersion supportedVersionMax;
     if (messageSource == fromClient) {
         Parser::BinaryTokenizer tkList(extensionData);
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
+        // RFC 8446 Section 4.2.1:
+        // Implementations of this specification MUST send this extension in the
+        // ClientHello containing all versions of TLS which they are prepared to
+        // negotiate (for this specification, that means minimally 0x0304, but
+        // if previous versions of TLS are allowed to be negotiated, they MUST
+        // be present as well).
         while (!tkVersions.atEnd()) {
             const auto version = ParseProtocolVersion(tkVersions, "supported_version");
             if (Tls1p3orLater(version) &&
@@ -558,6 +566,12 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         assert(messageSource == fromServer);
         Parser::BinaryTokenizer tkVersion(extensionData, "selected_version");
         const auto version = ParseProtocolVersion(tkVersion);
+        // RFC 8446 Section 4.2.1:
+        // A server which negotiates a version of TLS prior to TLS 1.3 MUST set
+        // ServerHello.version and MUST NOT send the "supported_versions"
+        // extension.  A server which negotiates TLS 1.3 MUST respond by sending
+        // a "supported_versions" extension containing the selected version
+        // value (0x0304).
         if (Tls1p3orLater(version))
             supportedVersionMax = version;
     }
