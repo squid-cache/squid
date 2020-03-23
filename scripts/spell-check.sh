@@ -46,7 +46,6 @@ for FILENAME in `git ls-files`; do
     *.sql|\
     errors/templates/ERR_*|\
     INSTALL|README|QUICKSTART)
-        echo "Running codespell for ${FILENAME}"
         if ! codespell -d -q 3 -w -I "${WHITE_LIST}" ${FILENAME}; then
             echo "codespell failed for ${FILENAME}"
             exit 1
