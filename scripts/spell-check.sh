@@ -30,7 +30,7 @@ if test ! -f "${WHITE_LIST}"; then
     exit 1
 fi
 
-for FILENAME in `git ls-files`; do
+for FILENAME in `git ls-files "$@"`; do
     # skip subdirectories, git ls-files is recursive
     test -d $FILENAME && continue
 
