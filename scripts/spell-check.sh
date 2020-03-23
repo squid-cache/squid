@@ -22,7 +22,7 @@ fi
 if ! git diff --quiet; then
     echo "There are unstaged changes. Stage these first to prevent conflict."
     exit 1
-fi	
+fi
 
 WHITE_LIST=scripts/codespell-whitelist.txt
 if test ! -f "${WHITE_LIST}"; then
@@ -37,7 +37,7 @@ for FILENAME in `git ls-files`; do
     case ${FILENAME} in
 
     doc/*.txt|doc/*/*.txt)
-        ;;	    
+        ;;
 
     *.h|*.c|*.cc|*.cci|\
     *.pl|*.sh|\
