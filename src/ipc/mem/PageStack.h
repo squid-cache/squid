@@ -12,7 +12,6 @@
 #include "ipc/mem/FlexibleArray.h"
 #include "ipc/mem/forward.h"
 
-#include <array>
 #include <atomic>
 #include <limits>
 
