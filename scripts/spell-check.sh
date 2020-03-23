@@ -36,9 +36,15 @@ for FILENAME in `git ls-files`; do
 
     case ${FILENAME} in
 
-    doc/*.txt|doc/*/*.txt)
+    # skip (some) generated files with otherwise-checked extensions
+    doc/debug-sections.txt)
         ;;
 
+    # skip imported/foreign files with otherwise-checked extensions
+    doc/*/*.txt)
+        ;;
+
+    # check all these
     *.h|*.c|*.cc|*.cci|\
     *.sh|\
     *.pre|\
