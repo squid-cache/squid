@@ -40,8 +40,9 @@ for FILENAME in `git ls-files`; do
         ;;
 
     *.h|*.c|*.cc|*.cci|\
-    *.pl|*.sh|\
-    *.pre|*.pl.in|*.pm|\
+    *.sh|\
+    *.pre|\
+    *.pl|*.pl.in|*.pm|\
     *.dox|*.html|*.txt|\
     *.sql|\
     errors/templates/ERR_*|\
