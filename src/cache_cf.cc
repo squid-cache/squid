@@ -3322,7 +3322,7 @@ parsePortSpecification(const AnyP::PortCfgPointer &s, char *token)
         port = xatos(token);
         debugs(3, 3, portType << "_port: found Listen on Port: " << port);
     } else {
-        throw Cfg::FatalError(ToSBuf("missing Port in: ", token));
+        throw Cfg::FatalError(ToSBuf("missing port in: ", token));
     }
 
     if (port == 0 && host)
@@ -3581,7 +3581,7 @@ parsePortCfg(AnyP::PortCfgPointer *head, const char *optionName)
     else if (strcmp(optionName, "ftp_port") == 0)
         protoName = "FTP";
     if (protoName.isEmpty())
-        throw Cfg::FatalError("unsupported *_port directive");
+        throw Cfg::FatalError(ToSBuf("unsupported ", optionName, " directive"));
 
     char *token = ConfigParser::NextToken();
 
@@ -4716,4 +4716,3 @@ free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuardsPtr)
     delete protoGuards;
     protoGuards = nullptr;
 }
-
