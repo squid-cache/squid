@@ -8,7 +8,15 @@
 ##
 
 #
-# This script runs codespell against selected files.
+# This script uses codespell to automatically fix a subset of common spelling
+# mistakes in the current git-controlled workspace.
+#
+# Usage: ./scripts/spell-check.sh [target]...
+# ... where "target" is a git-controlled file or directory name to be fixed.
+#
+# By default, a hand-picked subset of Squid repository sources is fixed.
+#
+# See ${WHITE_LIST} below for the list of allowed misspellings.
 #
 
 set -e
