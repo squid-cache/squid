@@ -28,7 +28,8 @@ if ! codespell --version; then
 fi
 
 if ! git diff --quiet; then
-    echo "There are unstaged changes. Stage these first to prevent conflict."
+    echo "There are unstaged changes. This script may modify sources."
+    echo "Stage changes to avoid permanent losses when things go bad."
     exit 1
 fi
 
