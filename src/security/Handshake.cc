@@ -525,6 +525,15 @@ Security::HandshakeParser::parseSniExtension(const SBuf &extensionData) const
 void
 Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extensionData) const
 {
+    // Upon detecting a quoted RFC MUST violation, this parser immediately
+    // returns, ignoring the entire extension and resulting in Squid relying on
+    // the legacy_version field value or another (valid) supported_versions
+    // extension. The alternative would be to reject the whole handshake as
+    // invalid. Deployment experience will show which alternative is the best.
+
+    // Please note that several of these MUSTs also imply certain likely
+    // handling of a hypothetical next TLS version (e.g., v1.4).
+
     // RFC 8446 Section 4.1.2:
     // In TLS 1.3, the client indicates its version preferences in the
     // "supported_versions" extension (Section 4.2.1) and the legacy_version
@@ -536,8 +545,7 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
     // (0x0304).  It MUST set the ServerHello.legacy_version field to 0x0303
     // (TLS 1.2).
     //
-    // To reduce misdetection of legacy agents and mishandling of malformed
-    // input, ignore supported_versions senders violating legacy_version MUSTs:
+    // Ignore supported_versions senders violating legacy_version MUSTs above:
     if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2))
         return;
 
@@ -545,39 +553,45 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
     if (messageSource == fromClient) {
         Parser::BinaryTokenizer tkList(extensionData);
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
-        // RFC 8446 Section 4.2.1:
-        // If this extension is present in the ClientHello, servers MUST NOT use
-        // the ClientHello.legacy_version value for version negotiation and MUST
-        // use only the "supported_versions" extension to determine client
-        // preferences. Servers MUST only select a version of TLS present in
-        // that extension and MUST ignore any unknown versions that are present    
-        // in that extension.
         while (!tkVersions.atEnd()) {
             const auto version = ParseProtocolVersion(tkVersions, "supported_version");
+            // XXX: If versions have SSL vX, the operator "<" below may not work
             if (!supportedVersionMax || supportedVersionMax < version)
                 supportedVersionMax = version;
         }
+
+        // ignore empty supported_versions
+        if (!supportedVersionMax)
+            return;
+
+        // supportedVersionMax here may be "earlier" than tlsSupportedVersion: A
+        // TLS v1.3 client may try to negotiate a _legacy_ version X with a TLS
+        // v1.3 server by sending supported_versions containing just X.
     } else {
         assert(messageSource == fromServer);
         Parser::BinaryTokenizer tkVersion(extensionData, "selected_version");
         const auto version = ParseProtocolVersion(tkVersion);
-        // Ιf supported_versions included in server hello message the only
-        // valid value is the 0x0304.
         // RFC 8446 Section 4.2.1:
-        // A server which negotiates a version of TLS prior to TLS 1.3 MUST set
-        // ServerHello.version and MUST NOT send the "supported_versions"
-        // extension.  A server which negotiates TLS 1.3 MUST respond by sending
-        // a "supported_versions" extension containing the selected version
-        // value (0x0304).
-        if (Tls1p3orLater(version))
-            supportedVersionMax = version;
+        // A server which negotiates a version of TLS prior to TLS 1.3 [...]
+        // MUST NOT send the "supported_versions" extension.
+        if (Tls1p2orEarlier(version))
+            return;
+        supportedVersionMax = version;
     }
 
-    if (supportedVersionMax) {
-        debugs(83, 7, "found " << supportedVersionMax);
-        // overwrite the previously stored Hello-derived legacy_version
-        details->tlsSupportedVersion = supportedVersionMax;
-    }
+    // We overwrite Hello-derived legacy_version because the following MUSTs
+    // indicate that it is ignored in the presence of valid supported_versions
+    // as far as the negotiated version is concerned. For simplicity sake, we
+    // also overwrite previous valid supported_versions extensions (if any).
+    //
+    // RFC 8446 Section 4.2.1:
+    // If this extension is present in the ClientHello, servers MUST NOT use the
+    // ClientHello.legacy_version value for version negotiation and MUST use
+    // only the "supported_versions" extension to determine client preferences.
+    // Servers MUST only select a version of TLS present in that extension
+    debugs(83, 7, "found " << supportedVersionMax);
+    assert(supportedVersionMax);
+    details->tlsSupportedVersion = supportedVersionMax;
 }
 
 void

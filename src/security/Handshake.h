@@ -131,11 +131,10 @@ private:
     YesNoNone expectingModernRecords;
 };
 
-/// \returns true when the given protocol is TLS with v1.3 or a later version
+/// \returns true when the given protocol is TLS v1.3 or later
 /// Negating the result of this function may be misleading. For example,
 /// !Tls1p3orLater(x) does not imply that x is TLS v1.2 or lower; x could also
-/// be unknown or even HTTP/2. If you do need negation, consider using
-/// Tls1p2orEarlier() instead.
+/// be unknown or even HTTP/2. Use Tls1p2orEarlier() instead of negating.
 inline bool
 Tls1p3orLater(const AnyP::ProtocolVersion &version)
 {
@@ -143,8 +142,9 @@ Tls1p3orLater(const AnyP::ProtocolVersion &version)
            version >= AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
 }
 
-/// \returns true when the given protocol is SSL or TLS with v1.2 or a earlier version
-/// Negating the result of this function may be misleading.
+/// \returns true when the given protocol is TLS v1.2 or earlier, including SSL
+/// Negating the result of this function may be misleading. See Tls1p3orLater()
+/// for the discussion and a better alternative to negation.
 inline bool
 Tls1p2orEarlier(const AnyP::ProtocolVersion &version)
 {
