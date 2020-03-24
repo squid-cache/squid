@@ -541,31 +541,28 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
     if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2))
         return;
 
-    // The code below ignores older protocol versions in supported_versions.
-    // For client hello messages the RFC implies that the supported_versions
-    // includes at least 0x0304 value.
-    // For server hello if supported_versions included the only valid value
-    // is the 0x0304.
     AnyP::ProtocolVersion supportedVersionMax;
     if (messageSource == fromClient) {
         Parser::BinaryTokenizer tkList(extensionData);
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
         // RFC 8446 Section 4.2.1:
-        // Implementations of this specification MUST send this extension in the
-        // ClientHello containing all versions of TLS which they are prepared to
-        // negotiate (for this specification, that means minimally 0x0304, but
-        // if previous versions of TLS are allowed to be negotiated, they MUST
-        // be present as well).
+        // If this extension is present in the ClientHello, servers MUST NOT use
+        // the ClientHello.legacy_version value for version negotiation and MUST
+        // use only the "supported_versions" extension to determine client
+        // preferences. Servers MUST only select a version of TLS present in
+        // that extension and MUST ignore any unknown versions that are present    
+        // in that extension.
         while (!tkVersions.atEnd()) {
             const auto version = ParseProtocolVersion(tkVersions, "supported_version");
-            if (Tls1p3orLater(version) &&
-                    (!supportedVersionMax || supportedVersionMax < version))
+            if (!supportedVersionMax || supportedVersionMax < version)
                 supportedVersionMax = version;
         }
     } else {
         assert(messageSource == fromServer);
         Parser::BinaryTokenizer tkVersion(extensionData, "selected_version");
         const auto version = ParseProtocolVersion(tkVersion);
+        // Ιf supported_versions included in server hello message the only
+        // valid value is the 0x0304.
         // RFC 8446 Section 4.2.1:
         // A server which negotiates a version of TLS prior to TLS 1.3 MUST set
         // ServerHello.version and MUST NOT send the "supported_versions"
