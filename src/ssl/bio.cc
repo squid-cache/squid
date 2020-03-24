@@ -725,8 +725,8 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
 #endif
 
 #if defined(SSL_OP_NO_TLSv1_3)
-    // TODO: Explain why we should disable v1.3 support for, say, TLS v1.4.
-    if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3))
+    // avoid "inappropriate fallback" OpenSSL error messages
+    if (Security::Tls1p2orEarlier(details->tlsSupportedVersion))
         SSL_set_options(ssl, SSL_OP_NO_TLSv1_3);
 #endif
 
