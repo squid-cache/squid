@@ -47,7 +47,6 @@ static void logfile_mod_daemon_append(Logfile * lf, const char *buf, int len);
 struct _l_daemon {
     int rfd, wfd;
     char eol;
-    char command_written;
     pid_t pid;
     int flush_pending;
     dlink_list bufs;
@@ -227,7 +226,6 @@ logfile_mod_daemon_open(Logfile * lf, const char *path, size_t, int)
     ll = static_cast<l_daemon_t*>(xcalloc(1, sizeof(*ll)));
     lf->data = ll;
     ll->eol = 1;
-    ll->command_written = 0;
     {
         Ip::Address localhost;
         args[0] = "(logfile-daemon)";
@@ -301,12 +299,13 @@ logfile_mod_daemon_writeline(Logfile * lf, const char *buf, size_t len)
         return;
     }
 
-    if (!ll->command_written) {
+    /* Are we eol? If so, prefix with our logfile command byte */
+    if (ll->eol) {
 	char tb[2];
 	tb[0] = 'L';
 	tb[1] = '\0';
 	logfile_mod_daemon_append(lf, tb, 1);
-	ll->command_written = 1;
+	ll->eol = 0;
     }
 
     /* Append this data to the end buffer; create a new one if needed */
@@ -316,9 +315,10 @@ logfile_mod_daemon_writeline(Logfile * lf, const char *buf, size_t len)
 static void
 logfile_mod_daemon_linestart(Logfile * lf)
 {
-    l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
-    assert(ll->eol == 1);
-    ll->eol = 0;
+    /* 
+     * Sending the starting command byte has been moved to
+     * logfile_mod_daemon_writeline
+     */
 }
 
 static void
@@ -326,11 +326,7 @@ logfile_mod_daemon_lineend(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
     logfile_buffer_t *b;
-    assert(ll->eol == 0);
     ll->eol = 1;
-    if (!ll->command_written)
-	return;
-    ll->command_written = 0;
     /* Kick a write off if the head buffer is -full- */
     if (ll->bufs.head != NULL) {
         b = static_cast<logfile_buffer_t*>(ll->bufs.head->data);
