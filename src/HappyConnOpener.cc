@@ -486,7 +486,7 @@ void
 HappyConnOpener::cancelPrimeAttempt(Attempt &attempt, const char *reason)
 {
     Must(attempt);
-    destinations->retryPrimePath(attempt.path);
+    destinations->retryPath(attempt.path);
     attempt.cancel(reason);
 }
 
@@ -496,7 +496,7 @@ void
 HappyConnOpener::cancelSpareAttempt(Attempt &attempt, const char *reason)
 {
     Must(attempt);
-    destinations->retrySparePath(attempt.path);
+    destinations->retryPath(attempt.path);
     attempt.cancel(reason);
 }
 

@@ -14,6 +14,17 @@
 
 #include <iosfwd>
 
+class ResolvedPeerPath
+{
+public:
+    explicit ResolvedPeerPath(const Comm::ConnectionPointer &conn) : connection(conn), available(true) {}
+
+    Comm::ConnectionPointer connection;
+    bool available;
+};
+
+typedef std::vector<ResolvedPeerPath> ConnectionList;
+
 /// cache_peer and origin server addresses (a.k.a. paths)
 /// selected and resolved by the peering code
 class ResolvedPeers: public RefCountable
@@ -26,17 +37,13 @@ public:
     ResolvedPeers();
 
     /// whether we lack any known candidate paths
-    bool empty() const { return paths_.empty(); }
+    bool empty() const;
 
     /// add a candidate path to try after all the existing paths
     void addPath(const Comm::ConnectionPointer &);
 
-    /// add a candidate path to try before all the existing paths
-    void retryPrimePath(const Comm::ConnectionPointer &);
-
-    /// add a candidate spare path just after prime paths (if any)
-    /// or before all existing paths
-    void retrySparePath(const Comm::ConnectionPointer &spare);
+    /// re-inserts the previously extracted address into the same position
+    void retryPath(const Comm::ConnectionPointer &);
 
     /// extracts and returns the first queued address
     Comm::ConnectionPointer extractFront();
@@ -53,16 +60,16 @@ public:
     bool haveSpare(const Comm::Connection &currentPeer);
 
     /// whether extractPrime() returns and will continue to return nil
-    bool doneWithPrimes(const Comm::Connection &currentPeer) const;
+    bool doneWithPrimes(const Comm::Connection &currentPeer);
 
     /// whether extractSpare() returns and will continue to return nil
     bool doneWithSpares(const Comm::Connection &currentPeer);
 
     /// whether doneWithPrimes() and doneWithSpares() are true for currentPeer
-    bool doneWithPeer(const Comm::Connection &currentPeer) const;
+    bool doneWithPeer(const Comm::Connection &currentPeer);
 
     /// the current number of candidate paths
-    Comm::ConnectionList::size_type size() const { return paths_.size(); }
+    ConnectionList::size_type size() const;
 
     /// whether all of the available candidate paths received from DNS
     bool destinationsFinalized = false;
@@ -74,10 +81,12 @@ private:
     /// The protocol family of the given path, AF_INET or AF_INET6
     static int ConnectionFamily(const Comm::Connection &conn);
 
-    Comm::ConnectionList::iterator findSpareOrNextPeer(const Comm::Connection &currentPeer);
-    Comm::ConnectionPointer extractFound(const char *description, const Comm::ConnectionList::iterator &found);
+    ConnectionList::iterator findSpare(const Comm::Connection &currentPeer);
+    ConnectionList::iterator findPrime(const Comm::Connection &currentPeer);
+    ConnectionList::iterator findPeer(const Comm::Connection &currentPeer);
+    Comm::ConnectionPointer extractFound(const char *description, const ConnectionList::iterator &found);
 
-    Comm::ConnectionList paths_; ///< resolved addresses in (peer, family) order
+    ConnectionList paths_; ///< resolved addresses in (peer, family) order
 };
 
 /// summarized ResolvedPeers (for debugging)

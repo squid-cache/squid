@@ -20,25 +20,36 @@ ResolvedPeers::ResolvedPeers()
 }
 
 void
-ResolvedPeers::retryPrimePath(const Comm::ConnectionPointer &path)
+ResolvedPeers::retryPath(const Comm::ConnectionPointer &conn)
 {
-    debugs(17, 4, path);
-    assert(path);
-    paths_.emplace(paths_.begin(), path);
+    debugs(17, 4, conn);
+    assert(conn);
+    auto found = std::find_if(paths_.begin(), paths_.end(),
+    [conn](const ResolvedPeerPath &path) {
+        return path.connection == conn;
+    });
+    assert(found != paths_.end());
+    assert(found->available == false);
+    found->available = true;
 }
 
-void
-ResolvedPeers::retrySparePath(const Comm::ConnectionPointer &spare)
+bool
+ResolvedPeers::empty() const
 {
-    debugs(17, 4, spare);
-    assert(spare);
-    const auto peerToAvoid = spare->getPeer();
-    const auto familyToMatch = ConnectionFamily(*spare);
-    const auto spareOrNextPeer = std::find_if(paths_.begin(), paths_.end(),
-    [peerToAvoid, familyToMatch](const Comm::ConnectionPointer &conn) {
-        return peerToAvoid != conn->getPeer() || familyToMatch == ConnectionFamily(*conn);
+    const auto anyPath = std::find_if(paths_.begin(), paths_.end(),
+    [](const ResolvedPeerPath &path) {
+        return path.available;
     });
-    paths_.emplace(spareOrNextPeer, spare);
+    return anyPath == paths_.end();
+}
+
+ConnectionList::size_type
+ResolvedPeers::size() const
+{
+    return std::count_if(paths_.begin(), paths_.end(),
+    [](const ResolvedPeerPath &path) {
+        return path.available;
+    });
 }
 
 void
@@ -54,43 +65,63 @@ ResolvedPeers::extractFront()
     return extractFound("first: ", paths_.begin());
 }
 
+/// returns the first available same-peer different-family address iterator or end()
+ConnectionList::iterator
+ResolvedPeers::findSpare(const Comm::Connection &currentPeer)
+{
+    const auto peerToMatch = currentPeer.getPeer();
+    const auto familyToAvoid = ConnectionFamily(currentPeer);
+    return std::find_if(paths_.begin(), paths_.end(),
+    [peerToMatch, familyToAvoid](const ResolvedPeerPath &path) {
+        if (!path.available)
+            return false;
+        return peerToMatch == path.connection->getPeer() && familyToAvoid != ConnectionFamily(*path.connection);
+    });
+}
+
+/// returns the first available same-peer same-family address iterator or end()
+ConnectionList::iterator
+ResolvedPeers::findPrime(const Comm::Connection &currentPeer)
+{
+    const auto peerToMatch = currentPeer.getPeer();
+    const auto familyToMatch = ConnectionFamily(currentPeer);
+    return std::find_if(paths_.begin(), paths_.end(),
+    [peerToMatch, familyToMatch](const ResolvedPeerPath &path) {
+        if (!path.available)
+            return false;
+        return peerToMatch == path.connection->getPeer() && familyToMatch == ConnectionFamily(*path.connection);
+    });
+}
+
+/// returns the first available same-peer address iterator or end()
+ConnectionList::iterator
+ResolvedPeers::findPeer(const Comm::Connection &currentPeer)
+{
+    const auto peerToMatch = currentPeer.getPeer();
+    return std::find_if(paths_.begin(), paths_.end(),
+    [peerToMatch](const ResolvedPeerPath &path) {
+        if (!path.available)
+            return false;
+        return peerToMatch == path.connection->getPeer();
+    });
+}
+
 Comm::ConnectionPointer
 ResolvedPeers::extractPrime(const Comm::Connection &currentPeer)
 {
-    if (!empty()) {
-        const auto peerToMatch = currentPeer.getPeer();
-        const auto familyToMatch = ConnectionFamily(currentPeer);
-        const auto &conn = paths_.front();
-        if (conn->getPeer() == peerToMatch && familyToMatch == ConnectionFamily(*conn))
-            return extractFound("same-peer same-family match: ", paths_.begin());
-    }
+    auto found = findPrime(currentPeer);
+    if (found != paths_.end())
+        return extractFound("same-peer same-family match: ", found);
 
     debugs(17, 7, "no same-peer same-family paths");
     return nullptr;
 }
 
-/// If spare paths exist for currentPeer, returns the first spare path iterator.
-/// Otherwise, if there are paths for other peers, returns one of those.
-/// Otherwise, returns the end() iterator.
-Comm::ConnectionList::iterator
-ResolvedPeers::findSpareOrNextPeer(const Comm::Connection &currentPeer)
-{
-    const auto peerToMatch = currentPeer.getPeer();
-    const auto familyToAvoid = ConnectionFamily(currentPeer);
-    // Optimization: Also stop at the first mismatching peer because all
-    // same-peer paths are grouped together.
-    return std::find_if(paths_.begin(), paths_.end(),
-    [peerToMatch, familyToAvoid](const Comm::ConnectionPointer &conn) {
-        return peerToMatch != conn->getPeer() ||
-               familyToAvoid != ConnectionFamily(*conn);
-    });
-}
-
 Comm::ConnectionPointer
 ResolvedPeers::extractSpare(const Comm::Connection &currentPeer)
 {
-    auto found = findSpareOrNextPeer(currentPeer);
-    if (found != paths_.end() && currentPeer.getPeer() == (*found)->getPeer())
+    auto found = findSpare(currentPeer);
+    if (found != paths_.end())
         return extractFound("same-peer different-family match: ", found);
 
     debugs(17, 7, "no same-peer different-family paths");
@@ -99,48 +130,35 @@ ResolvedPeers::extractSpare(const Comm::Connection &currentPeer)
 
 /// convenience method to finish a successful extract*() call
 Comm::ConnectionPointer
-ResolvedPeers::extractFound(const char *description, const Comm::ConnectionList::iterator &found)
+ResolvedPeers::extractFound(const char *description, const ConnectionList::iterator &found)
 {
-    const auto path = *found;
-    paths_.erase(found);
-    debugs(17, 7, description << path);
-    return path;
+    found->available = false;
+    debugs(17, 7, description << found->connection);
+    return found->connection;
 }
 
 bool
 ResolvedPeers::haveSpare(const Comm::Connection &currentPeer)
 {
-    const auto found = findSpareOrNextPeer(currentPeer);
-    return found != paths_.end() &&
-           currentPeer.getPeer() == (*found)->getPeer();
+    return findSpare(currentPeer) != paths_.end();
 }
 
 bool
 ResolvedPeers::doneWithSpares(const Comm::Connection &currentPeer)
 {
-    const auto found = findSpareOrNextPeer(currentPeer);
-    if (found == paths_.end())
-        return destinationsFinalized;
-    return currentPeer.getPeer() != (*found)->getPeer();
+    return (findSpare(currentPeer) == paths_.end()) ? destinationsFinalized : false;
 }
 
 bool
-ResolvedPeers::doneWithPrimes(const Comm::Connection &currentPeer) const
+ResolvedPeers::doneWithPrimes(const Comm::Connection &currentPeer)
 {
-    const auto first = paths_.begin();
-    if (first == paths_.end())
-        return destinationsFinalized;
-    return currentPeer.getPeer() != (*first)->getPeer() ||
-           ConnectionFamily(currentPeer) != ConnectionFamily(**first);
+    return (findPrime(currentPeer) == paths_.end()) ? destinationsFinalized : false;
 }
 
 bool
-ResolvedPeers::doneWithPeer(const Comm::Connection &currentPeer) const
+ResolvedPeers::doneWithPeer(const Comm::Connection &currentPeer)
 {
-    const auto first = paths_.begin();
-    if (first == paths_.end())
-        return destinationsFinalized;
-    return currentPeer.getPeer() != (*first)->getPeer();
+    return (findPeer(currentPeer) == paths_.end()) ? destinationsFinalized : false;
 }
 
 int
@@ -152,8 +170,9 @@ ResolvedPeers::ConnectionFamily(const Comm::Connection &conn)
 std::ostream &
 operator <<(std::ostream &os, const ResolvedPeers &peers)
 {
-    if (peers.empty())
+    const auto size = peers.size();
+    if (!size)
         return os << "[no paths]";
-    return os << peers.size() << (peers.destinationsFinalized ? "" : "+") << " paths";
+    return os << size << (peers.destinationsFinalized ? "" : "+") << " paths";
 }
 

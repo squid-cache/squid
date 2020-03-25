@@ -470,7 +470,7 @@ FwdState::fail(ErrorState * errorState)
     if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
-        destinations->retryPrimePath(serverConn);
+        destinations->retryPath(serverConn);
     }
 
     if (ConnStateData *pinned_connection = request->pinnedConnection()) {
