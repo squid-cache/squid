@@ -54,6 +54,29 @@ RequirePositiveValue(const char *key, const T &value)
         throw Cfg::FatalError(ToSBuf("option ", key, " value must be a positive number. Got: ", value));
 }
 
+/// convert a value for storage in a smaller integral type T, or to have a limited numeric range.
+template<typename T>
+T
+DownsizeValue(const char *str, const int64_t &input, const T low = std::numeric_limits<T>::min(), const T high = std::numeric_limits<T>::max())
+{
+    // check this is actually a downsize, not upgrade
+    static_assert(std::numeric_limits<int64_t>::min() <= std::numeric_limits<T>::min());
+    static_assert(std::numeric_limits<int64_t>::max() >= std::numeric_limits<T>::max());
+    static_assert(sizeof(int64_t) >= sizeof(T));
+
+    if (input < low)
+        throw Cfg::FatalError(ToSBuf("invalid value: ", str, " must be above ", low));
+
+    if (input > high)
+        throw Cfg::FatalError(ToSBuf("invalid value: ", str, " must be below ", high));
+
+    T result = static_cast<T>(input);
+    if (input != static_cast<int64_t>(result))
+        throw Cfg::FatalError(ToSBuf("invalid value: '", str, "' (", input, ") overflows when converted to '", typeid(T).name(), "'"));
+
+    return result;
+}
+
 /// throws a Cfg::FatalError if value is outside the given range
 template<typename T>
 void
