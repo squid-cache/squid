@@ -14,7 +14,6 @@
 
 #include <iosfwd>
 
-
 class ResolvedPeerPath
 {
 public:
