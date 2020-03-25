@@ -48,9 +48,9 @@ void RequireValue(const char *key, const char *value);
 /// throws a Cfg::FatalError if value is zero or negative
 template<typename T>
 void
-RequirePositiveInt(const char *key, const T &value)
+RequirePositiveValue(const char *key, const T &value)
 {
-    if (value <= 0)
+    if (!std::is_unsigned<T>() && value <= 0)
         throw Cfg::FatalError(ToSBuf("option ", key, " value must be a positive number. Got: ", value));
 }
 

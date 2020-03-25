@@ -409,10 +409,10 @@ Rock::SwapDir::parseTimeOption(char const *option, const char *value, int reconf
 
     // TODO: handle time units and detect parsing errors better
     const int64_t parsedValue = strtoll(value, nullptr, 10);
-    Cfg::RequirePositiveInt(option, parsedValue);
+    Cfg::RequirePositiveValue(option, parsedValue);
 
     const time_msec_t newTime = static_cast<time_msec_t>(parsedValue);
-    Cfg::RequirePositiveInt(option, newTime);
+    Cfg::RequirePositiveValue(option, newTime);
 
     if (!reconfig)
         *storedTime = newTime;
@@ -448,10 +448,10 @@ Rock::SwapDir::parseRateOption(char const *option, const char *value, int isaRec
 
     // TODO: handle time units and detect parsing errors better
     const int64_t parsedValue = strtoll(value, nullptr, 10);
-    Cfg::RequirePositiveInt(option, parsedValue);
+    Cfg::RequirePositiveValue(option, parsedValue);
 
     const int newRate = static_cast<int>(parsedValue);
-    Cfg::RequirePositiveInt(option, newRate);
+    Cfg::RequirePositiveValue(option, newRate);
 
     if (!isaReconfig)
         *storedRate = newRate;
@@ -486,7 +486,7 @@ Rock::SwapDir::parseSizeOption(char const *option, const char *value, int reconf
 
     // TODO: handle size units and detect parsing errors better
     const uint64_t newSize = strtoll(value, nullptr, 10);
-    Cfg::RequirePositiveInt(option, newSize);
+    Cfg::RequirePositiveValue(option, newSize);
 
     if (newSize <= sizeof(DbCellHeader))
         throw Cfg::FatalError(ToSBuf("cache_dir ", path, ' ', option, " must exceed ", sizeof(DbCellHeader), "; got: ", newSize));
