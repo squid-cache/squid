@@ -14,13 +14,14 @@
 
 #include <iosfwd>
 
+
 class ResolvedPeerPath
 {
 public:
     explicit ResolvedPeerPath(const Comm::ConnectionPointer &conn) : connection(conn), available(true) {}
 
-    Comm::ConnectionPointer connection;
-    bool available;
+    Comm::ConnectionPointer connection; ///< a path(address) candidate
+    bool available; ///< whether this address may be used (i.e., has not been tried already)
 };
 
 typedef std::vector<ResolvedPeerPath> ConnectionList;
