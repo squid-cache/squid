@@ -197,8 +197,7 @@ private:
     Answer *futureAnswer(const Comm::ConnectionPointer &);
     void sendSuccess(const Comm::ConnectionPointer &conn, bool reused, const char *connKind);
     void sendFailure();
-    void cancelPrimeAttempt(Attempt &, const char *reason);
-    void cancelSpareAttempt(Attempt &, const char *reason);
+    void cancelAttempt(Attempt &, const char *reason);
 
     const time_t fwdStart; ///< requestor start time
 

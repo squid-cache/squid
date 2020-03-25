@@ -397,11 +397,11 @@ HappyConnOpener::swanSong()
     // TODO: Find an automated, faster way to kill no-longer-needed jobs.
 
     if (prime) {
-        cancelPrimeAttempt(prime, "job finished during a prime attempt");
+        cancelAttempt(prime, "job finished during a prime attempt");
     }
 
     if (spare) {
-        cancelSpareAttempt(spare, "job finished during a spare attempt");
+        cancelAttempt(spare, "job finished during a spare attempt");
         if (gotSpareAllowance) {
             TheSpareAllowanceGiver.jobDroppedAllowance();
             gotSpareAllowance = false;
@@ -480,20 +480,10 @@ HappyConnOpener::sendSuccess(const Comm::ConnectionPointer &conn, bool reused, c
     callback_ = nullptr;
 }
 
-/// if the given prime attempt is in progress, cancels it and re-inserts
-/// the path into the beginning of candidates list
-void
-HappyConnOpener::cancelPrimeAttempt(Attempt &attempt, const char *reason)
-{
-    Must(attempt);
-    destinations->retryPath(attempt.path);
-    attempt.cancel(reason);
-}
-
 /// if the given spare attempt is in progress, cancels it and re-inserts
 /// the path into the candidates list
 void
-HappyConnOpener::cancelSpareAttempt(Attempt &attempt, const char *reason)
+HappyConnOpener::cancelAttempt(Attempt &attempt, const char *reason)
 {
     Must(attempt);
     destinations->retryPath(attempt.path);
