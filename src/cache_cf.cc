@@ -623,7 +623,7 @@ parseConfigFileOrThrow(const char *file_name)
     if (!opt_parse_cfg_only || err_count == 0)
         configDoConfigure();
 
-    if (opt_send_signal == -1) {
+    if (opt_send_signal == -1 && err_count == 0) {
         Mgr::RegisterAction("config",
                             "Current Squid Configuration",
                             dump_config,
