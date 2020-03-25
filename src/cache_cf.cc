@@ -3072,7 +3072,7 @@ free_time_msec(time_msec_t * var)
 static void
 dump_time_nanoseconds(StoreEntry *entry, const char *name, const std::chrono::nanoseconds &var)
 {
-    storeAppendPrintf(entry, "%s %" PRId64 " nanoseconds\n", name, var.count());
+    storeAppendPrintf(entry, "%s %" PRId64 " nanoseconds\n", name, static_cast<int64_t>(var.count()));
 }
 
 static void

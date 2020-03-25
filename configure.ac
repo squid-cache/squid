@@ -3012,6 +3012,7 @@ AC_CHECK_TYPE([bool])
 #need the defines for PRId64
 AC_CHECK_SIZEOF(int64_t)
 AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(long long)
 #need the defines for PRIuSIZE
 AC_CHECK_SIZEOF(size_t)
 #need the define for overflow checks
