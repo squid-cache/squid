@@ -21,7 +21,7 @@
 # -c    -> set cache directory
 # -n    -> use Netscape cache format (default is CERN)
 # -p    -> port number to listen on (default 3130)
-# -v    -> verbose - writes activitiy log to stderr
+# -v    -> verbose - writes activity log to stderr
 #
 # group -> multicast group to listen on
 

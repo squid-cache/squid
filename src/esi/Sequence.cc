@@ -245,7 +245,7 @@ esiSequence::process (int inheritedVarsFlag)
     }
 
     /* process as much of the list as we can, stopping only on
-     * faliures
+     * failures
      */
     if (!processing || processedcount == 0)
         processingResult = ESI_PROCESS_COMPLETE;

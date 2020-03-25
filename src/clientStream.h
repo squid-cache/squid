@@ -56,7 +56,7 @@
  *    nodes to have any correspondence, as long as the callbacks provided are
  *    correct.
  *
- \section WhatsInANode Whats in a node
+ \section WhatsInANode What's in a node
  *
  \todo ClientStreams: These details should really be codified as a class which all ClientStream nodes inherit from.
  *
@@ -144,7 +144,7 @@ void clientStreamDetach(clientStreamNode *thisObject, ClientHttpRequest *http);
 /**
  \ingroup ClientStreamAPI
  *
- * Detachs the tail of the stream. CURRENTLY DOES NOT clean up the tail node data -
+ * Detaches the tail of the stream. CURRENTLY DOES NOT clean up the tail node data -
  * this must be done separately. Thus Abort may ONLY be called by the tail node.
  *
  \param thisObject  'this' reference for the client stream

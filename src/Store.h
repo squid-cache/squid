@@ -253,7 +253,7 @@ public:
     void lock(const char *context);
 
     /// disclaim shared ownership; may remove entry from store and delete it
-    /// returns remaning lock level (zero for unlocked and possibly gone entry)
+    /// returns remaining lock level (zero for unlocked and possibly gone entry)
     int unlock(const char *context);
 
     /// returns a local concurrent use counter, for debugging

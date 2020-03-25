@@ -162,7 +162,7 @@ UNION
         (SELECT COUNT(*) FROM access_log WHERE squid_request_status LIKE '%MISS%')
         /
         (SELECT COUNT(*) FROM access_log)*100
-        AS pecentage;
+        AS percentage;
 
 -- response times
 CREATE OR REPLACE VIEW time_response_ranges AS

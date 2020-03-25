@@ -450,7 +450,7 @@ Ip::Qos::Config::parseConfigLine()
 /**
  * NOTE: Due to the low-level nature of the library these
  * objects are part of the dump function must be self-contained.
- * which means no StoreEntry refrences. Just a basic char* buffer.
+ * which means no StoreEntry references. Just a basic char* buffer.
 */
 void
 Ip::Qos::Config::dumpConfigLine(char *entry, const char *name) const

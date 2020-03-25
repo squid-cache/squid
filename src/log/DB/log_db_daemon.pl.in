@@ -345,7 +345,7 @@ sub log_info {
 # we use logfile to pass database access information to this script
 # sample configuration:
 # access_log daemon:/host/database/table/username/password squid
-# to let a parmeter unspecified, e.g. the database host, use a double slash:
+# to let a parameter unspecified, e.g. the database host, use a double slash:
 # access_log daemon://database/table/username/password squid
 my ( $host, $database, $table, $user, $pass ) = $log_file =~ / \/(.*?)\/(.*?)\/(.*?)\/(.*?)\/(.*?) \z /xms;
 

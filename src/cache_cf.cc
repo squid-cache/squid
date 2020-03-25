@@ -939,7 +939,7 @@ configDoConfigure(void)
     }
 
     // prevent infinite fetch loops in the request parser
-    // due to buffer full but not enough data recived to finish parse
+    // due to buffer full but not enough data received to finish parse
     if (Config.maxRequestBufferSize <= Config.maxRequestHeaderSize) {
         fatalf("Client request buffer of %u bytes cannot hold a request with %u bytes of headers." \
                " Change client_request_buffer_max or request_header_max_size limits.",
@@ -4709,7 +4709,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
         return;
     }
 
-    // if this is the first rule proccessed
+    // if this is the first rule processed
     if (*ssl_bump == NULL) {
         bumpCfgStyleLast = bcsNone;
         sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;

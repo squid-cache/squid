@@ -95,7 +95,7 @@ while($out){
 
     my $pid;
     if($pid=fork()){
-	#do parrent staf
+	#do parent staf
 	close(FROM_ASTYLE);
 	
 	if(!open(IN, "<$in")){

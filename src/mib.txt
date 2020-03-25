@@ -544,7 +544,7 @@ squid MODULE-IDENTITY
 -- cacheNetwork group { squid 4 }
 --
 -- This material is probably best suited elsewhere, however for now it
--- will reside here until the both the Proxy and Squid MIBs are implimented.
+-- will reside here until the both the Proxy and Squid MIBs are implemented.
 --
 
 	cacheIpCache	OBJECT IDENTIFIER ::= { cacheNetwork 1 }

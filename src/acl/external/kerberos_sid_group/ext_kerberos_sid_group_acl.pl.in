@@ -22,7 +22,7 @@ B<ext_kerberos_sid_group_acl> is an installed executable script.
 It uses B<ldapsearch> from Openldap to lookup the name of a AD group sid.
 
 This helper must be used in with the negotiate_kerberos_auth helper in a
-Microsft AD or Samba environement.
+Microsoft AD or Samba environment.
 
 It reads from the standard input the domain username and a list of group sids
 and tries to match the group SIDs to the AD group sids.

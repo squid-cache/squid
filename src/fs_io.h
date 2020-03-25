@@ -55,7 +55,7 @@ void safeunlink(const char *path, int quiet);
  * consequences of errors.
  *
  * \retval true successful rename
- * \retval false an error occured
+ * \retval false an error occurred
  */
 bool FileRename(const SBuf &from, const SBuf &to);
 

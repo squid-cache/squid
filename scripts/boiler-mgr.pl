@@ -157,7 +157,7 @@ foreach my $fname (@FileNames) {
 	my $extras = ''; # DEBUG section, inspired by ..., etc.
 
 	if (defined $boiler) {
-		my $copyClaims = ''; # formatted Copyright claims extraced from sources
+		my $copyClaims = ''; # formatted Copyright claims extracted from sources
 		my $preserveClaims = 0; # whether to preserve them or not
 
 		if (my @rawClaims = ($boiler =~ m/$reClaims/g)) {
@@ -221,7 +221,7 @@ warn($c) if $c =~ /\S/;
 	}
 
 	# Some files have license declarations way down in the code so we may not
-	# find a boilerplate at all or find an "empty" boilerplate preceeding them.
+	# find a boilerplate at all or find an "empty" boilerplate preceding them.
 	my $license =
 		"Copyright|".
 		"This program is free software|".

@@ -112,7 +112,7 @@ int SMBapi_NetUserPasswordSet(SMB_Tree_Handle tree, char *user,
 
     SSVAL(SMB_Hdr(pkt), SMB_trans_len, param_len + strlen(SMB_LMAPI_SLOT) + 1);
 
-    p = SMB_Hdr(pkt) + SMB_trans_len + 2;  /* Skip the BCC and ect */
+    p = SMB_Hdr(pkt) + SMB_trans_len + 2;  /* Skip the BCC and etc */
 
     strcpy(p, SMB_LMAPI_SLOT);
     p = p + strlen(SMB_LMAPI_SLOT) + 1;
@@ -284,7 +284,7 @@ int SMBapi_NetSetUserInfo(SMB_Tree_Handle tree, char *user,
     SSVAL(SMB_Hdr(pkt), SMB_trans_len, param_len + strlen(SMB_LMAPI_SLOT) +
           1 + data_len);
 
-    p = SMB_Hdr(pkt) + SMB_trans_len + 2;  /* Skip the BCC and ect */
+    p = SMB_Hdr(pkt) + SMB_trans_len + 2;  /* Skip the BCC and etc */
 
     strcpy(p, SMB_LMAPI_SLOT);
     p = p + strlen(SMB_LMAPI_SLOT) + 1;
