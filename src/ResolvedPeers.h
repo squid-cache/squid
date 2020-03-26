@@ -77,10 +77,10 @@ public:
     /// whether HappyConnOpener::noteCandidatesChange() is scheduled to fire
     bool notificationPending = false;
 
-private:
     /// The protocol family of the given path, AF_INET or AF_INET6
     static int ConnectionFamily(const Comm::Connection &conn);
 
+private:
     ConnectionList::iterator findSpare(const Comm::Connection &currentPeer);
     ConnectionList::iterator findPrime(const Comm::Connection &currentPeer);
     ConnectionList::iterator findPeer(const Comm::Connection &currentPeer);

@@ -65,45 +65,59 @@ ResolvedPeers::extractFront()
     return extractFound("first: ", paths_.begin());
 }
 
+static bool
+PrimeFamilyMatch(const int family, const int currentPeerFamily)
+{
+    return family == currentPeerFamily;
+}
+
+static bool
+SpareFamilyMatch(const int family, const int currentPeerFamily)
+{
+    return family != currentPeerFamily;
+}
+
+static bool
+AnyFamilyMatch(const int, const int)
+{
+    return true;
+}
+
+typedef bool (*ValidateFamily)(int, int);
+
+static ConnectionList::iterator
+FindPeer(ConnectionList &paths, const Comm::Connection &currentPeer, const ValidateFamily &familyValidator)
+{
+    const auto peerToMatch = currentPeer.getPeer();
+    const auto familyToMatch = ResolvedPeers::ConnectionFamily(currentPeer);
+    return std::find_if(paths.begin(), paths.end(),
+    [peerToMatch, familyToMatch, familyValidator](const ResolvedPeerPath &path) {
+        if (!path.available)
+            return false;
+        return peerToMatch == path.connection->getPeer() &&
+            familyValidator(ResolvedPeers::ConnectionFamily(*path.connection), familyToMatch);
+    });
+}
+
 /// returns the first available same-peer different-family address iterator or end()
 ConnectionList::iterator
 ResolvedPeers::findSpare(const Comm::Connection &currentPeer)
 {
-    const auto peerToMatch = currentPeer.getPeer();
-    const auto familyToAvoid = ConnectionFamily(currentPeer);
-    return std::find_if(paths_.begin(), paths_.end(),
-    [peerToMatch, familyToAvoid](const ResolvedPeerPath &path) {
-        if (!path.available)
-            return false;
-        return peerToMatch == path.connection->getPeer() && familyToAvoid != ConnectionFamily(*path.connection);
-    });
+    return FindPeer(paths_, currentPeer, &SpareFamilyMatch);
 }
 
 /// returns the first available same-peer same-family address iterator or end()
 ConnectionList::iterator
 ResolvedPeers::findPrime(const Comm::Connection &currentPeer)
 {
-    const auto peerToMatch = currentPeer.getPeer();
-    const auto familyToMatch = ConnectionFamily(currentPeer);
-    return std::find_if(paths_.begin(), paths_.end(),
-    [peerToMatch, familyToMatch](const ResolvedPeerPath &path) {
-        if (!path.available)
-            return false;
-        return peerToMatch == path.connection->getPeer() && familyToMatch == ConnectionFamily(*path.connection);
-    });
+    return FindPeer(paths_, currentPeer, &PrimeFamilyMatch);
 }
 
 /// returns the first available same-peer address iterator or end()
 ConnectionList::iterator
 ResolvedPeers::findPeer(const Comm::Connection &currentPeer)
 {
-    const auto peerToMatch = currentPeer.getPeer();
-    return std::find_if(paths_.begin(), paths_.end(),
-    [peerToMatch](const ResolvedPeerPath &path) {
-        if (!path.available)
-            return false;
-        return peerToMatch == path.connection->getPeer();
-    });
+    return FindPeer(paths_, currentPeer, &AnyFamilyMatch);
 }
 
 Comm::ConnectionPointer
