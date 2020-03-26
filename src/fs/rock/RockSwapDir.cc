@@ -411,8 +411,8 @@ Rock::SwapDir::parseTimeOption(char const *option, const char *value, int reconf
     const int64_t parsedValue = strtoll(value, nullptr, 10);
     Cfg::RequirePositiveValue(option, parsedValue);
 
-    static_assert(std::numeric_limits<time_msec_t>::max() >= std::numeric_limits<decltype(parsedValue)>::max());
-    static_assert(sizeof(time_msec_t) >= sizeof(decltype(parsedValue)));
+    static_assert(std::numeric_limits<time_msec_t>::max() >= std::numeric_limits<decltype(parsedValue)>::max(), "time_msec_t less than 64-bit");
+    static_assert(sizeof(time_msec_t) >= sizeof(decltype(parsedValue)), "time_msec_t bit size too small to cast");
     const auto newTime = static_cast<time_msec_t>(parsedValue);
 
     if (!reconfig)

@@ -60,9 +60,9 @@ T
 DownsizeValue(const char *str, const int64_t &input, const T low = std::numeric_limits<T>::min(), const T high = std::numeric_limits<T>::max())
 {
     // check this is actually a downsize, not upgrade
-    static_assert(std::numeric_limits<int64_t>::min() <= std::numeric_limits<T>::min());
-    static_assert(std::numeric_limits<int64_t>::max() >= std::numeric_limits<T>::max());
-    static_assert(sizeof(int64_t) >= sizeof(T));
+    static_assert(std::numeric_limits<int64_t>::min() <= std::numeric_limits<T>::min(), "T min limit too small");
+    static_assert(std::numeric_limits<int64_t>::max() >= std::numeric_limits<T>::max(), "T max limit too large");
+    static_assert(sizeof(int64_t) >= sizeof(T),"destination type larger than 64-bit");
 
     if (input < low)
         throw Cfg::FatalError(ToSBuf("invalid value: ", str, " must be above ", low));
