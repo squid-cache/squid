@@ -3072,7 +3072,8 @@ free_time_msec(time_msec_t * var)
 static void
 dump_time_nanoseconds(StoreEntry *entry, const char *name, const std::chrono::nanoseconds &var)
 {
-    storeAppendPrintf(entry, "%s %" PRId64 " nanoseconds\n", name, static_cast<int64_t>(var.count()));
+    // This assumes that nothing in C++ is larger than long long. TODO: Avoid printf().
+    storeAppendPrintf(entry, "%s %lld nanoseconds\n", name, static_cast<long long>(var.count()));
 }
 
 static void
@@ -5109,4 +5110,3 @@ free_on_unsupported_protocol(acl_access **access)
 {
     free_acl_access(access);
 }
-
