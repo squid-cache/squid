@@ -158,13 +158,13 @@ Tls1p2orEarlier(const AnyP::ProtocolVersion &version)
 inline bool
 TlsVersionEarlierThan(const AnyP::ProtocolVersion &va, const AnyP::ProtocolVersion &vb)
 {
-    Must(va.protocol == AnyP::PROTO_SSL || va.protocol == AnyP::PROTO_TLS);
-    Must(vb.protocol == AnyP::PROTO_SSL || vb.protocol == AnyP::PROTO_TLS);
+    Must(va.protocol == AnyP::PROTO_TLS || va.protocol == AnyP::PROTO_SSL);
+    Must(vb.protocol == AnyP::PROTO_TLS || vb.protocol == AnyP::PROTO_SSL);
 
     if (va.protocol == vb.protocol)
         return va < vb;
 
-    return va.protocol == AnyP::PROTO_SSL;
+    return va.protocol == AnyP::PROTO_SSL; // implies that vb is TLS
 }
 
 }
