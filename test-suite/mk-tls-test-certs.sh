@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 #
 # test certificates and keys
@@ -28,16 +28,16 @@ if test "x$OPENSSL" != "x" -a -x $OPENSSL; then
 		commonName= Test CA. Do not Trust
 		[ root_ca_extensions ]
 		basicConstraints = CA:true
-	" > example.org-ca || exit $?
+	" > example.org-ca
 
 	openssl req --verbose --newkey rsa:2048 --x509 --nodes --set_serial 1 \
 		--config example.org-ca \
 		--keyout ca-root-rsa.pkey.tmp \
-		--out ca-root-rsa.crt || exit $?
+		--out ca-root-rsa.crt
 
-	openssl rsa --in ca-root-rsa.pkey.tmp --out ca-root-rsa.pkey || exit $?
+	openssl rsa --in ca-root-rsa.pkey.tmp --out ca-root-rsa.pkey
 
-	rm -f ca-root-rsa.pkey.tmp example.org-ca || exit $?
+	rm -f ca-root-rsa.pkey.tmp example.org-ca
 
 	#
 	# intermediary CA, signed by root
@@ -57,24 +57,24 @@ if test "x$OPENSSL" != "x" -a -x $OPENSSL; then
 		commonName= Test CA. Do not Trust
 		[ root_ca_extensions ]
 		basicConstraints= CA:true
-	" > example.net-ca || exit $?
+	" > example.net-ca
 
-	openssl genrsa --out ca-mid-rsa.pkey.tmp 4096 || exit $?
+	openssl genrsa --out ca-mid-rsa.pkey.tmp 4096
 
 	openssl req --new --sha256 --set_serial 2 \
 		--config example.net-ca \
 		--key ca-mid-rsa.pkey.tmp \
-		--out ca-mid-rsa.csr || exit $?
+		--out ca-mid-rsa.csr
 
-	openssl rsa --in ca-mid-rsa.pkey.tmp --out ca-mid-rsa.pkey || exit $?
+	openssl rsa --in ca-mid-rsa.pkey.tmp --out ca-mid-rsa.pkey
 
 	# CA signs Intermediate
 	openssl x509 --req --days 365 \
 		--in ca-mid-rsa.csr \
 		--CA ca-root-rsa.crt --CAkey ca-root-rsa.pkey --set_serial 2 \
-		--out ca-mid-rsa.crt || exit $?
+		--out ca-mid-rsa.crt
 
-	rm -f ca-mid-rsa.csr ca-mid-rsa.pkey.tmp example.net-ca || exit $?
+	rm -f ca-mid-rsa.csr ca-mid-rsa.pkey.tmp example.net-ca
 
 	#
 	# Standard leaf / non-CA certificate
@@ -94,31 +94,31 @@ if test "x$OPENSSL" != "x" -a -x $OPENSSL; then
 		commonName= Test CA. Do not Trust
 		[ user_extensions ]
 		basicConstraints= CA:false
-	" >example.com-leaf || exit $?
+	" >example.com-leaf
 
-	openssl genrsa --out leaf-rsa.pkey.tmp 4096 || exit $?
+	openssl genrsa --out leaf-rsa.pkey.tmp 4096
 
 	openssl req --new --sha256 --set_serial 3 \
 		--config example.com-leaf \
 		--key leaf-rsa.pkey.tmp \
-		--out leaf-rsa.csr || exit $?
+		--out leaf-rsa.csr
 
-	openssl rsa --in leaf-rsa.pkey.tmp --out leaf-rsa.pkey || exit $?
+	openssl rsa --in leaf-rsa.pkey.tmp --out leaf-rsa.pkey
 
 	openssl x509 --req --days 365 \
 		--in leaf-rsa.csr \
 		--CA ca-root-rsa.crt --CAkey ca-root-rsa.pkey --set_serial 3 \
-		--out leaf-rsa.crt || exit $?
+		--out leaf-rsa.crt
 
-	rm -f leaf-rsa.csr leaf-rsa.pkey.tmp example.com-leaf || exit $?
+	rm -f leaf-rsa.csr leaf-rsa.pkey.tmp example.com-leaf
 
 	#
 	# PEM files with CA chain
 	#
-	cat ca-root-rsa.pkey ca-root-rsa.crt > ca-root-rsa.pem || exit $?
-	cat ca-mid-rsa.pkey ca-mid-rsa.crt > ca-mid-rsa.pem || exit $?
-	cat ca-mid-rsa.pkey ca-mid-rsa.crt ca-root-rsa.crt > ca-chain-rsa.pem || exit $?
-	cat leaf-rsa.pkey leaf-rsa.crt ca-root-rsa.crt > leaf-chain-rsa.pem || exit $?
+	cat ca-root-rsa.pkey ca-root-rsa.crt > ca-root-rsa.pem
+	cat ca-mid-rsa.pkey ca-mid-rsa.crt > ca-mid-rsa.pem
+	cat ca-mid-rsa.pkey ca-mid-rsa.crt ca-root-rsa.crt > ca-chain-rsa.pem
+	cat leaf-rsa.pkey leaf-rsa.crt ca-root-rsa.crt > leaf-chain-rsa.pem
 
 elif test "x$CERTTOOL" != "x" -a -x $CERTTOOL; then
 
@@ -133,14 +133,14 @@ elif test "x$CERTTOOL" != "x" -a -x $CERTTOOL; then
 		ca
 		cert_signing_key
 		crl_signing_key
-		" > example.org-ca || exit $?
+		" > example.org-ca
 
-	$CERTTOOL --generate-privkey --rsa --outfile ca-root-rsa.pkey || exit $?
+	$CERTTOOL --generate-privkey --rsa --outfile ca-root-rsa.pkey
 
 	$CERTTOOL --generate-self-signed --template example.org-ca \
-		--rsa --load-privkey ca-root-rsa.pkey --outfile ca-root-rsa.crt || exit $?
+		--rsa --load-privkey ca-root-rsa.pkey --outfile ca-root-rsa.crt
 
-	rm example.org-ca || exit $?
+	rm example.org-ca
 
 	#
 	# intermediary CA, signed by root
@@ -153,15 +153,15 @@ elif test "x$CERTTOOL" != "x" -a -x $CERTTOOL; then
 	ca
 	cert_signing_key
 	crl_signing_key
-	" > example.net-ca || exit $?
+	" > example.net-ca
 
-	$CERTTOOL --generate-privkey --rsa --outfile ca-mid-rsa.pkey || exit $?
+	$CERTTOOL --generate-privkey --rsa --outfile ca-mid-rsa.pkey
 
 	$CERTTOOL --generate-certificate --load-privkey ca-mid-rsa.pkey \
 		--load-ca-certificate ca-root-rsa.crt --load-ca-privkey ca-root-rsa.pkey \
-		--template example.net-ca --outfile ca-mid-rsa.crt || exit $?
+		--template example.net-ca --outfile ca-mid-rsa.crt
 
-	rm example.net-ca || exit $?
+	rm example.net-ca
 
 	#
 	# Standard leaf / non-CA certificate
@@ -172,23 +172,23 @@ elif test "x$CERTTOOL" != "x" -a -x $CERTTOOL; then
 	dc = \"example.com\"
 	expiration_days = 365
 	tls_www_server
-	" >example.com-leaf || exit $?
+	" >example.com-leaf
 
-	$CERTTOOL --generate-privkey --rsa --outfile leaf-rsa.pkey || exit $?
+	$CERTTOOL --generate-privkey --rsa --outfile leaf-rsa.pkey
 
 	$CERTTOOL --generate-certificate --load-privkey leaf-rsa.pkey \
 		--load-ca-certificate ca-root-rsa.crt --load-ca-privkey ca-root-rsa.pkey \
-		--template example.com-leaf --outfile leaf-rsa.crt || exit $?
+		--template example.com-leaf --outfile leaf-rsa.crt
 
-	rm -f example.com-leaf || exit $?
+	rm -f example.com-leaf
 
 	#
 	# PEM files with CA chain
 	#
-	cat ca-root-rsa.pkey ca-root-rsa.crt > ca-root-rsa.pem || exit $?
-	cat ca-mid-rsa.pkey ca-mid-rsa.crt > ca-mid-rsa.pem || exit $?
-	cat ca-mid-rsa.pkey ca-mid-rsa.crt ca-root-rsa.crt > ca-chain-rsa.pem || exit $?
-	cat leaf-rsa.pkey leaf-rsa.crt ca-root-rsa.crt > leaf-chain-rsa.pem || exit $?
+	cat ca-root-rsa.pkey ca-root-rsa.crt > ca-root-rsa.pem
+	cat ca-mid-rsa.pkey ca-mid-rsa.crt > ca-mid-rsa.pem
+	cat ca-mid-rsa.pkey ca-mid-rsa.crt ca-root-rsa.crt > ca-chain-rsa.pem
+	cat leaf-rsa.pkey leaf-rsa.crt ca-root-rsa.crt > leaf-chain-rsa.pem
 
 else
 	echo "WARNING: cannot find a tool to generate certificates"
