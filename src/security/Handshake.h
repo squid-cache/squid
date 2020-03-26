@@ -153,6 +153,20 @@ Tls1p2orEarlier(const AnyP::ProtocolVersion &version)
             version <= AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2));
 }
 
+/// \returns true when the TLS/SSL protocol va is earlier than vb
+/// Throws if the given protocols are not TLS or SSL.
+inline bool
+TlsVersionEarlierThan(const AnyP::ProtocolVersion &va, const AnyP::ProtocolVersion &vb)
+{
+    Must(va.protocol == AnyP::PROTO_SSL || va.protocol == AnyP::PROTO_TLS);
+    Must(vb.protocol == AnyP::PROTO_SSL || vb.protocol == AnyP::PROTO_TLS);
+
+    if (va.protocol == vb.protocol)
+        return va < vb;
+
+    return va.protocol == AnyP::PROTO_SSL;
+}
+
 }
 
 #endif // SQUID_SECURITY_HANDSHAKE_H

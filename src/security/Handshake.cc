@@ -555,8 +555,7 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
         while (!tkVersions.atEnd()) {
             const auto version = ParseProtocolVersion(tkVersions, "supported_version");
-            // XXX: If versions have SSL vX, the operator "<" below may not work
-            if (!supportedVersionMax || supportedVersionMax < version)
+            if (!supportedVersionMax || TlsVersionEarlierThan(supportedVersionMax, version))
                 supportedVersionMax = version;
         }
 
