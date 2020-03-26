@@ -514,7 +514,7 @@ Rock::SwapDir::dumpSizeOption(StoreEntry * e) const
 void
 Rock::SwapDir::validateOptions()
 {
-    assert(slotSize <= 0); // validated by parseSizeOption()
+    assert(slotSize >= 0); // validated by parseSizeOption()
 
     const int64_t maxSizeRoundingWaste = 1024 * 1024; // size is configured in MB
     const int64_t slotSizeRoundingWaste = slotSize;
