@@ -2276,3 +2276,4 @@ esiEnableProcessing (HttpReply *rep)
 }
 
 #endif /* USE_SQUID_ESI == 1 */
+
