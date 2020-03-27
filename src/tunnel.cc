@@ -1115,6 +1115,7 @@ void
 TunnelStateData::noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answer)
 {
     if (ErrorState *error = answer.error.get()) {
+        Must(!Comm::IsConnOpen(answer.conn));
         answer.error.clear(); // sendError() will own the error
         sendError(error, "TLS peer connection error");
         return;
