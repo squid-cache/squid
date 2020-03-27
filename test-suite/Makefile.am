@@ -152,6 +152,8 @@ CLEANFILES += \
 	ca-root-rsa.pem \
 	ca-root-rsa.pkey \
 	leaf-chain-rsa.pem \
+	leaf-chain-nokey-rsa.pem \
+	leaf-key-rsa.pem \
 	leaf-rsa.crt \
 	leaf-rsa.pkey
 

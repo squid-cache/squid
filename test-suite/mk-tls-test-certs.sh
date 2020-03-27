@@ -119,6 +119,8 @@ if test "x$OPENSSL" != "x" -a -x $OPENSSL; then
 	cat ca-mid-rsa.pkey ca-mid-rsa.crt > ca-mid-rsa.pem
 	cat ca-mid-rsa.pkey ca-mid-rsa.crt ca-root-rsa.crt > ca-chain-rsa.pem
 	cat leaf-rsa.pkey leaf-rsa.crt ca-root-rsa.crt > leaf-chain-rsa.pem
+	cat leaf-rsa.pkey leaf-rsa.crt > leaf-key-rsa.pem
+	cat leaf-rsa.crt ca-root-rsa.crt > leaf-chain-nokey-rsa.pem
 
 elif test "x$CERTTOOL" != "x" -a -x $CERTTOOL; then
 
@@ -189,6 +191,8 @@ elif test "x$CERTTOOL" != "x" -a -x $CERTTOOL; then
 	cat ca-mid-rsa.pkey ca-mid-rsa.crt > ca-mid-rsa.pem
 	cat ca-mid-rsa.pkey ca-mid-rsa.crt ca-root-rsa.crt > ca-chain-rsa.pem
 	cat leaf-rsa.pkey leaf-rsa.crt ca-root-rsa.crt > leaf-chain-rsa.pem
+	cat leaf-rsa.pkey leaf-rsa.crt > leaf-key-rsa.pem
+	cat leaf-rsa.crt ca-root-rsa.crt > leaf-chain-nokey-rsa.pem
 
 else
 	echo "WARNING: cannot find a tool to generate certificates"
