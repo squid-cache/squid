@@ -1120,9 +1120,9 @@ CheckTimeValue(const double value, const std::chrono::nanoseconds &unit)
     if (value < 0)
         throw TexcHere("time must have a positive value");
 
-    const auto maxNanoseconds = std::chrono::nanoseconds::max().count();
-    if (value > maxNanoseconds/static_cast<double>(unit.count())) {
-        const auto maxYears = maxNanoseconds/(HoursPerYear*3600*1000000000);
+    if (unit > std::chrono::nanoseconds::max()) {
+        // XXX std::chrono::years is c++20
+        const auto maxYears = std::chrono::duration_cast<std::chrono::hours>(std::chrono::nanoseconds::max()).count()/HoursPerYear;
         throw TexcHere(ToSBuf("time values cannot exceed ", maxYears, " years"));
     }
 
