@@ -3072,8 +3072,8 @@ free_time_msec(time_msec_t * var)
 static void
 dump_time_nanoseconds(StoreEntry *entry, const char *name, const std::chrono::nanoseconds &var)
 {
-    // This assumes that nothing in C++ is larger than long long. TODO: Avoid printf().
-    storeAppendPrintf(entry, "%s %lld nanoseconds\n", name, static_cast<long long>(var.count()));
+    // std::chrono::nanoseconds::rep is unknown a priori so we cast to (and print) the largest supported integer
+    storeAppendPrintf(entry, "%s %jd nanoseconds\n", name, static_cast<intmax_t>(var.count()));
 }
 
 static void
@@ -5110,4 +5110,3 @@ free_on_unsupported_protocol(acl_access **access)
 {
     free_acl_access(access);
 }
-
