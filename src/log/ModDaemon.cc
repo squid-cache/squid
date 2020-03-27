@@ -301,10 +301,7 @@ logfile_mod_daemon_writeline(Logfile * lf, const char *buf, size_t len)
 
     /* Are we eol? If so, prefix with our logfile command byte */
     if (ll->eol) {
-	char tb[2];
-	tb[0] = 'L';
-	tb[1] = '\0';
-	logfile_mod_daemon_append(lf, tb, 1);
+	logfile_mod_daemon_append(lf, "L", 1);
 	ll->eol = 0;
     }
 
@@ -351,4 +348,3 @@ logfile_mod_daemon_flush(Logfile * lf)
         return;
     }
 }
-
