@@ -962,6 +962,7 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
 
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
+        Must(!Comm::IsConnOpen(answer.conn));
         syncHierNote(answer.conn, request->url.host());
         answer.error.clear();
     } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
