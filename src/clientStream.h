@@ -56,7 +56,7 @@
  *    nodes to have any correspondence, as long as the callbacks provided are
  *    correct.
  *
- \section WhatsInANode What's in a node
+ \section WhatsInANode Whats in a node
  *
  \todo ClientStreams: These details should really be codified as a class which all ClientStream nodes inherit from.
  *
