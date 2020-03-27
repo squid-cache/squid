@@ -320,6 +320,8 @@ logfile_mod_daemon_lineend(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
     logfile_buffer_t *b;
+    if (ll->eol == 1) // logfile_mod_daemon_writeline() wrote nothing
+        return;
     ll->eol = 1;
     /* Kick a write off if the head buffer is -full- */
     if (ll->bufs.head != NULL) {
