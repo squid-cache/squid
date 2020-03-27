@@ -65,59 +65,70 @@ ResolvedPeers::extractFront()
     return extractFound("first: ", paths_.begin());
 }
 
-static bool
-PrimeFamilyMatch(const int family, const int currentPeerFamily)
-{
-    return family == currentPeerFamily;
-}
-
-static bool
-SpareFamilyMatch(const int family, const int currentPeerFamily)
-{
-    return family != currentPeerFamily;
-}
-
-static bool
-AnyFamilyMatch(const int, const int)
-{
-    return true;
-}
-
-typedef bool (*ValidateFamily)(int, int);
-
-static ConnectionList::iterator
-FindPeer(ConnectionList &paths, const Comm::Connection &currentPeer, const ValidateFamily &familyValidator)
+/// \returns the first available same-peer same-family address iterator or end()
+/// If not found and there is an other-family or other-peer address, the optional *hasNext
+/// becomes true
+ConnectionList::iterator
+ResolvedPeers::findPrime(const Comm::Connection &currentPeer, bool *hasNext)
 {
     const auto peerToMatch = currentPeer.getPeer();
-    const auto familyToMatch = ResolvedPeers::ConnectionFamily(currentPeer);
-    return std::find_if(paths.begin(), paths.end(),
-    [peerToMatch, familyToMatch, familyValidator](const ResolvedPeerPath &path) {
-        if (!path.available)
+    const auto familyToMatch = ConnectionFamily(currentPeer);
+    bool foundSpareOrNext = false;
+    auto found = std::find_if(paths_.begin(), paths_.end(),
+    [&](const ResolvedPeerPath &path) {
+        if (!path.available) // skip unavailable
             return false;
-        return peerToMatch == path.connection->getPeer() &&
-            familyValidator(ResolvedPeers::ConnectionFamily(*path.connection), familyToMatch);
+        // a spare or an other-peer address means that there are no primes left
+        if (familyToMatch != ConnectionFamily(*path.connection) || peerToMatch != path.connection->getPeer())
+            foundSpareOrNext = true;
+        return true;
     });
+    if (hasNext)
+        *hasNext = foundSpareOrNext;
+    return foundSpareOrNext ? paths_.end() : found;
 }
 
-/// returns the first available same-peer different-family address iterator or end()
+/// \returns the first available same-peer different-family address iterator or end()
+/// If not found and there is an other-peer address, the optional *hasNext becomes true
 ConnectionList::iterator
-ResolvedPeers::findSpare(const Comm::Connection &currentPeer)
+ResolvedPeers::findSpare(const Comm::Connection &currentPeer, bool *hasNext)
 {
-    return FindPeer(paths_, currentPeer, &SpareFamilyMatch);
+    const auto peerToMatch = currentPeer.getPeer();
+    const auto familyToAvoid = ConnectionFamily(currentPeer);
+    bool foundNext = false;
+    auto found = std::find_if(paths_.begin(), paths_.end(),
+    [&](const ResolvedPeerPath &path) {
+        if (!path.available || familyToAvoid == ConnectionFamily(*path.connection)) // skip unavailable and prime
+            return false;
+        // an other-peer address means that there are no spares left
+        if (peerToMatch != path.connection->getPeer())
+            foundNext = true;
+        return true;
+    });
+    if (hasNext)
+        *hasNext = foundNext;
+    return foundNext ? paths_.end() : found;
 }
 
-/// returns the first available same-peer same-family address iterator or end()
+/// \returns the first available same-peer address iterator or end()
+/// If not found and there is an other-peer address, the optional *hasNext becomes true
 ConnectionList::iterator
-ResolvedPeers::findPrime(const Comm::Connection &currentPeer)
+ResolvedPeers::findPeer(const Comm::Connection &currentPeer, bool *hasNext)
 {
-    return FindPeer(paths_, currentPeer, &PrimeFamilyMatch);
-}
-
-/// returns the first available same-peer address iterator or end()
-ConnectionList::iterator
-ResolvedPeers::findPeer(const Comm::Connection &currentPeer)
-{
-    return FindPeer(paths_, currentPeer, &AnyFamilyMatch);
+    const auto peerToMatch = currentPeer.getPeer();
+    bool foundNext = false;
+    auto found = std::find_if(paths_.begin(), paths_.end(),
+    [&](const ResolvedPeerPath &path) {
+        if (!path.available) // skip unavailable
+            return false;
+        // an other-peer address means that there are no current peer addresses left
+        if (peerToMatch != path.connection->getPeer())
+            foundNext = true;
+        return true;
+    });
+    if (hasNext)
+        *hasNext = foundNext;
+    return foundNext ? paths_.end() : found;
 }
 
 Comm::ConnectionPointer
@@ -157,22 +168,32 @@ ResolvedPeers::haveSpare(const Comm::Connection &currentPeer)
     return findSpare(currentPeer) != paths_.end();
 }
 
+/// a common code for all ResolvedPeers::doneWith*()
+bool
+ResolvedPeers::doneWith(const Comm::Connection &currentPeer, findSmthFun findSmth)
+{
+    bool hasNext = false;
+    if ((*this.*findSmth)(currentPeer, &hasNext) != paths_.end())
+        return false;
+    return hasNext ? true : destinationsFinalized;
+}
+
 bool
 ResolvedPeers::doneWithSpares(const Comm::Connection &currentPeer)
 {
-    return (findSpare(currentPeer) == paths_.end()) ? destinationsFinalized : false;
+    return doneWith(currentPeer, &ResolvedPeers::findSpare);
 }
 
 bool
 ResolvedPeers::doneWithPrimes(const Comm::Connection &currentPeer)
 {
-    return (findPrime(currentPeer) == paths_.end()) ? destinationsFinalized : false;
+    return doneWith(currentPeer, &ResolvedPeers::findPrime);
 }
 
 bool
 ResolvedPeers::doneWithPeer(const Comm::Connection &currentPeer)
 {
-    return (findPeer(currentPeer) == paths_.end()) ? destinationsFinalized : false;
+    return doneWith(currentPeer, &ResolvedPeers::findPeer);
 }
 
 int

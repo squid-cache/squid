@@ -81,10 +81,13 @@ public:
     static int ConnectionFamily(const Comm::Connection &conn);
 
 private:
-    ConnectionList::iterator findSpare(const Comm::Connection &currentPeer);
-    ConnectionList::iterator findPrime(const Comm::Connection &currentPeer);
-    ConnectionList::iterator findPeer(const Comm::Connection &currentPeer);
+    ConnectionList::iterator findSpare(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
+    ConnectionList::iterator findPrime(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
+    ConnectionList::iterator findPeer(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
     Comm::ConnectionPointer extractFound(const char *description, const ConnectionList::iterator &found);
+
+    typedef ConnectionList::iterator (ResolvedPeers::*findSmthFun)(const Comm::Connection &, bool *);
+    bool doneWith(const Comm::Connection &currentPeer, findSmthFun);
 
     ConnectionList paths_; ///< resolved addresses in (peer, family) order
 };
