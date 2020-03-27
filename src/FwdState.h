@@ -144,7 +144,7 @@ private:
     void establishTunnelThruProxy(const Comm::ConnectionPointer &);
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
     void secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &);
-    void secureConnectionToPeer(const Comm::ConnectionPointer &conn);
+    void secureConnectionToPeer(const Comm::ConnectionPointer &);
     void successfullyConnectedToPeer(const Comm::ConnectionPointer &);
 
     /// stops monitoring server connection for closure and updates pconn stats
