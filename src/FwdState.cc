@@ -832,7 +832,7 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
         if (originWantsEncryptedTraffic && // the "encrypted traffic" part
                 !peer->options.originserver && // the "through a proxy" part
                 !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
-            return advanceDestination("establish tunnel thru proxy", answer.conn, [this,&answer] {
+            return advanceDestination("establish tunnel through proxy", answer.conn, [this,&answer] {
                 establishTunnelThruProxy(answer.conn);
             });
     }

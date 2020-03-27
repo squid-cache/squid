@@ -1133,7 +1133,7 @@ TunnelStateData::noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answ
 void
 TunnelStateData::connectedToPeer(const Comm::ConnectionPointer &conn)
 {
-    advanceDestination("establish tunnel thru proxy", conn, [this,&conn] {
+    advanceDestination("establish tunnel through proxy", conn, [this,&conn] {
         establishTunnelThruProxy(conn);
     });
 }
