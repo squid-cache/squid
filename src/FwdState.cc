@@ -798,8 +798,8 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
     if ((error = answer.error.get())) {
         flags.dont_retry = true; // or HappyConnOpener would not have given up
         syncHierNote(answer.conn, request->url.host());
-        answer.error.clear(); // preserve error for errorSendComplete()
         Must(!Comm::IsConnOpen(answer.conn));
+        answer.error.clear(); // preserve error for errorSendComplete()
     } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
         syncHierNote(answer.conn, request->url.host());
         closePendingConnection(answer.conn, "conn was closed while waiting for noteConnection");
