@@ -312,10 +312,7 @@ logfile_mod_daemon_writeline(Logfile * lf, const char *buf, size_t len)
 static void
 logfile_mod_daemon_linestart(Logfile * lf)
 {
-    /* 
-     * Sending the starting command byte has been moved to
-     * logfile_mod_daemon_writeline
-     */
+    // logfile_mod_daemon_writeline() sends the starting command
 }
 
 static void
