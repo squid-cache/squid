@@ -868,10 +868,10 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
     ErrorState *error = nullptr;
     if (!answer.positive()) {
+        Must(!Comm::IsConnOpen(answer.conn));
         error = answer.squidError.get();
         Must(error);
         answer.squidError.clear(); // preserve error for fail()
-        Must(!Comm::IsConnOpen(answer.conn));
     } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
         // The socket could get closed while our callback was queued.
         // We close Connection here to sync Connection::fd.
