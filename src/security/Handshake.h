@@ -131,26 +131,11 @@ private:
     YesNoNone expectingModernRecords;
 };
 
-/// \returns true when the given protocol is TLS v1.3 or later
-/// Negating the result of this function may be misleading. For example,
-/// !Tls1p3orLater(x) does not imply that x is TLS v1.2 or lower; x could also
-/// be unknown or even HTTP/2. Use Tls1p2orEarlier() instead of negating.
+/// \returns true when the given version is a TLS/SSL protocol
 inline bool
-Tls1p3orLater(const AnyP::ProtocolVersion &version)
+IsTlsProtocol(const AnyP::ProtocolVersion &version)
 {
-    return version.protocol == AnyP::PROTO_TLS &&
-           version >= AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3);
-}
-
-/// \returns true when the given protocol is TLS v1.2 or earlier, including SSL
-/// Negating the result of this function may be misleading. See Tls1p3orLater()
-/// for the discussion and a better alternative to negation.
-inline bool
-Tls1p2orEarlier(const AnyP::ProtocolVersion &version)
-{
-    return version.protocol == AnyP::PROTO_SSL ||
-           (version.protocol == AnyP::PROTO_TLS &&
-            version <= AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2));
+    return (version.protocol == AnyP::PROTO_TLS || version.protocol == AnyP::PROTO_SSL);
 }
 
 /// \returns true when the TLS/SSL protocol va is earlier than vb
@@ -158,13 +143,29 @@ Tls1p2orEarlier(const AnyP::ProtocolVersion &version)
 inline bool
 TlsVersionEarlierThan(const AnyP::ProtocolVersion &va, const AnyP::ProtocolVersion &vb)
 {
-    Must(va.protocol == AnyP::PROTO_TLS || va.protocol == AnyP::PROTO_SSL);
-    Must(vb.protocol == AnyP::PROTO_TLS || vb.protocol == AnyP::PROTO_SSL);
+    Must(IsTlsProtocol(va));
+    Must(IsTlsProtocol(vb));
 
     if (va.protocol == vb.protocol)
         return va < vb;
 
     return va.protocol == AnyP::PROTO_SSL; // implies that vb is TLS
+}
+
+/// \returns true when the given protocol is TLS v1.2 or earlier, including SSL
+/// Throws if the given protocol is not TLS or SSL.
+inline bool
+Tls1p2orEarlier(const AnyP::ProtocolVersion &version)
+{
+    return TlsVersionEarlierThan(version, AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3));
+}
+
+/// \returns true when the given protocol is TLS v1.3 or later
+/// Throws if the given protocol is not TLS or SSL.
+inline bool
+Tls1p3orLater(const AnyP::ProtocolVersion &version)
+{
+    return !Tls1p2orEarlier(version);
 }
 
 }

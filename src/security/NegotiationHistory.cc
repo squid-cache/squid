@@ -25,7 +25,7 @@ Security::NegotiationHistory::NegotiationHistory()
 const char *
 Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &v) const
 {
-    if (v.protocol != AnyP::PROTO_SSL && v.protocol != AnyP::PROTO_TLS)
+    if (!IsTlsProtocol(v))
         return nullptr;
 
     static char buf[512];
