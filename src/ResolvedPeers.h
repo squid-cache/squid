@@ -93,6 +93,8 @@ private:
     ConnectionList paths_; ///< resolved addresses in (peer, family) order
     /// The value returned by the last cachedCurrent() call.
     /// Do not use directly - use cachedCurrent() instead.
+    // The validity of this iterator should be guaranteed by absence of
+    // any container modifying operations, except appendings, see addPath().
     ConnectionList::iterator lastCurrentPeer;
 };
 

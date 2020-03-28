@@ -55,7 +55,11 @@ ResolvedPeers::size() const
 void
 ResolvedPeers::addPath(const Comm::ConnectionPointer &path)
 {
+    const auto oldCapacity = paths_.capacity();
     paths_.emplace_back(path);
+    const auto iteratorsInvalidated = oldCapacity < paths_.size();
+    if (paths_.size() == 1 || iteratorsInvalidated)
+        lastCurrentPeer = paths_.begin();
 }
 
 Comm::ConnectionPointer
@@ -68,6 +72,7 @@ ResolvedPeers::extractFront()
 const ConnectionList::iterator &
 ResolvedPeers::cachedCurrent(const CachePeer *currentPeer)
 {
+    Must(!paths_.empty()); // guarantees that lastCurrentPeer was initialized
     if (!currentPeer || (currentPeer != lastCurrentPeer->connection->getPeer())) {
         lastCurrentPeer = std::find_if(paths_.begin(), paths_.end(),
         [](const ResolvedPeerPath &path) {
