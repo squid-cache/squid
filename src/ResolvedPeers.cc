@@ -61,8 +61,12 @@ ResolvedPeers::addPath(const Comm::ConnectionPointer &path)
 Comm::ConnectionPointer
 ResolvedPeers::extractFront()
 {
-    Must(!empty());
-    return extractFound("first: ", paths_.begin());
+    auto found = std::find_if(paths_.begin(), paths_.end(),
+    [](const ResolvedPeerPath &path) {
+         return path.available;
+    });
+    Must(found != paths_.end());
+    return extractFound("first: ", found);
 }
 
 /// \returns the first available same-peer same-family address iterator or end()
