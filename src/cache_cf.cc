@@ -3074,7 +3074,8 @@ free_time_msec(time_msec_t * var)
 static void
 dump_time_nanoseconds(StoreEntry *entry, const char *name, const std::chrono::nanoseconds &var)
 {
-    storeAppendPrintf(entry, "%s %" PRId64 " nanoseconds\n", name, var.count());
+    // std::chrono::nanoseconds::rep is unknown a priori so we cast to (and print) the largest supported integer
+    storeAppendPrintf(entry, "%s %jd nanoseconds\n", name, static_cast<intmax_t>(var.count()));
 }
 
 static void
