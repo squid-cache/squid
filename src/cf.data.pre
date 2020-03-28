@@ -2828,6 +2828,18 @@ DOC_START
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
+NAME: allow_small_pids
+TYPE: onoff
+DEFAULT: off
+LOC: Config.onoff.allow_small_pids
+DOC_START
+    If allow_small_pids is off (the default), "squid -k" actions will
+    fail if squid has a pid of 1. This prevents erroneously sending
+    signals to init. If you are running squid in a containerized 
+    environment where it is actually pid 1, set allow_small_pids on
+    to permit "squid -k" commands to operate as intended.
+DOC_END
+
 NAME: host_verify_strict
 TYPE: onoff
 DEFAULT: off

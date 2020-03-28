@@ -80,7 +80,7 @@ GetOtherPid(File &pidFile)
 
     debugs(50, 7, "found PID " << rawPid << " in " << TheFile);
 
-    if (rawPid <= 1)
+    if ((rawPid <= 1 && !Config.onoff.allow_small_pids) || (rawPid < 1))
         throw TexcHere(ToSBuf("Bad ", TheFile, " contains unreasonably small PID value: ", rawPid));
     const auto finalPid = static_cast<pid_t>(rawPid);
     if (static_cast<int64_t>(finalPid) != rawPid)

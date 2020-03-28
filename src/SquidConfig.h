@@ -277,6 +277,7 @@ public:
     } Netdb;
 
     struct {
+        int allow_small_pids;
         int log_udp;
         int res_defnames;
         int anonymizer;
