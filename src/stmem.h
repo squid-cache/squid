@@ -36,7 +36,7 @@ public:
     mem_node const *start() const;
     mem_node *getBlockContainingLocation (int64_t location) const;
     /* access the contained nodes - easier than punning
-     * as a contianer ourselves
+     * as a container ourselves
      */
     const Splay<mem_node *> &getNodes() const;
     char * NodeGet(mem_node * aNode);

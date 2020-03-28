@@ -589,7 +589,7 @@ DOC_START
 
 		The expanded key_extras value is added to the Squid credentials
 		cache and, hence, will affect authentication. It can be used to
-		autenticate different users with identical user names (e.g.,
+		authenticate different users with identical user names (e.g.,
 		when user authentication depends on http_port).
 
 		Avoid adding frequently changing information to key_extras. For
@@ -923,7 +923,7 @@ DOC_START
 			(e.g., with %#DATA, spaces between arguments become
 			%20).
 
-	If SSL is enabled, the following formating codes become available:
+	If SSL is enabled, the following formatting codes become available:
 
 	  %USER_CERT		SSL User certificate in PEM format
 	  %USER_CERTCHAIN	SSL User certificate chain in PEM format
@@ -1180,7 +1180,7 @@ endif
 	  # regex matching on URL path [fast]
 
 	acl aclname port 80 70 21 0-1024...   # destination TCP port [fast]
-	                                      # ranges are alloed
+	                                      # ranges are allowed
 	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
 	                                      # NP: for interception mode this is usually '80'
 
@@ -1214,7 +1214,7 @@ endif
 	  # use REQUIRED to accept any valid username.
 	  #
 	  # Will use proxy authentication in forward-proxy scenarios, and plain
-	  # http authenticaiton in reverse-proxy scenarios
+	  # http authentication in reverse-proxy scenarios
 	  #
 	  # NOTE: when a Proxy-Authentication header is sent but it is not
 	  # needed during ACL checking the username is NOT logged
@@ -3442,7 +3442,7 @@ DOC_START
 		concurrency=
 	
 	The number of requests each certificate validator helper can handle in
-	parallel. A value of 0 indicates the certficate validator does not
+	parallel. A value of 0 indicates the certificate validator does not
 	support concurrency. Defaults to 1.
 	
 	When this directive is set to a value >= 1 then the protocol
@@ -4192,7 +4192,7 @@ DOC_END
 NAME: cache_dir
 TYPE: cachedir
 DEFAULT: none
-DEFAULT_DOC: No disk cache. Store cache ojects only in memory.
+DEFAULT_DOC: No disk cache. Store cache objects only in memory.
 LOC: Config.cacheSwap
 DOC_START
 	Format:
@@ -4479,11 +4479,11 @@ DOC_START
 	near the low-water mark.
 
 	As swap utilization increases towards the high-water mark set
-	by cache_swap_high object eviction becomes more agressive.
+	by cache_swap_high object eviction becomes more aggressive.
 
 	The value difference in percentages between low- and high-water
 	marks represent an eviction rate of 300 objects per second and
-	the rate continues to scale in agressiveness by multiples of
+	the rate continues to scale in aggressiveness by multiples of
 	this above the high-water mark.
 
 	Defaults are 90% and 95%. If you have a large cache, 5% could be
@@ -4507,11 +4507,11 @@ DOC_START
 	maintain utilization near the low-water mark.
 
 	As swap utilization increases towards this high-water mark object
-	eviction becomes more agressive.
+	eviction becomes more aggressive.
 
 	The value difference in percentages between low- and high-water
 	marks represent an eviction rate of 300 objects per second and
-	the rate continues to scale in agressiveness by multiples of
+	the rate continues to scale in aggressiveness by multiples of
 	this above the high-water mark.
 
 	Defaults are 90% and 95%. If you have a large cache, 5% could be
@@ -5584,7 +5584,7 @@ DOC_START
 	straight to using PORT for IPv4 servers.
 
 	Some devices are known to not handle this extension correctly and
-	may result in crashes. Devices which suport EPRT enough to fail
+	may result in crashes. Devices which support EPRT enough to fail
 	cleanly will result in Squid attempting PORT anyway. This directive
 	should only be disabled when EPRT results in device failures.
 
@@ -5736,7 +5736,7 @@ DOC_START
 
 	Re-write creates a difference in the state held by the client
 	and server. Possibly causing confusion when the server response
-	contains snippets of its view state. Embeded URLs, response
+	contains snippets of its view state. Embedded URLs, response
 	and content Location headers, etc. are not re-written by this
 	interface.
 
@@ -6183,7 +6183,7 @@ DEFAULT: 1 week
 DOC_START
 	This option puts an upper limit on how stale content Squid
 	will serve from the cache if cache validation fails.
-	Can be overriden by the refresh_pattern max-stale option.
+	Can be overridden by the refresh_pattern max-stale option.
 DOC_END
 
 NAME: refresh_pattern
@@ -8754,7 +8754,7 @@ DOC_START
 	    you may also specify them by your custom file name:
 	    Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
-	By defaut Squid will send "403 Forbidden". A different 4xx or 5xx
+	By default Squid will send "403 Forbidden". A different 4xx or 5xx
 	may be specified by prefixing the file name with the code and a colon.
 	e.g. 404:ERR_CUSTOM_ACCESS_DENIED
 
@@ -9054,7 +9054,7 @@ DOC_START
 
 	Requires client_db to be enabled (the default).
 
-	WARNING: This may noticably slow down traffic received via external proxies
+	WARNING: This may noticeably slow down traffic received via external proxies
 	or NAT devices and cause them to rebound error messages back to their clients.
 DOC_END
 
@@ -9211,7 +9211,7 @@ DOC_START
 
 	Activation of the Partial Content extension is negotiated with each
 	ICAP service during OPTIONS exchange. Most ICAP servers should handle
-	negotation correctly even if they do not support the extension, but
+	negotiation correctly even if they do not support the extension, but
 	some might fail. To disable Partial Content support for all ICAP
 	services and to avoid any negotiation, set this option to "off".
 

@@ -7,7 +7,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# test all header files (.h) for dependancy issues.
+# test all header files (.h) for dependency issues.
 #
 # Ideally this test should be performed twice before any code is accepted.
 # With or without inline enabled.  This is needed because the .cci files

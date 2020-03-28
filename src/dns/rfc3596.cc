@@ -40,7 +40,7 @@
  *
  * IPv4 equivalents are taken care of by the RFC1035 library.
  * Where one protocol lookup must be followed by another, the caller
- * is resposible for the order and handling of the lookups.
+ * is responsible for the order and handling of the lookups.
  *
  * KNOWN BUGS:
  *

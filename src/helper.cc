@@ -890,7 +890,7 @@ helper_server::popRequest(int request_number)
     Helper::Xaction *r = nullptr;
     helper_server::RequestIndex::iterator it;
     if (parent->childs.concurrency) {
-        // If concurency supported retrieve request from ID
+        // If concurrency supported retrieve request from ID
         it = requestsIndex.find(request_number);
         if (it != requestsIndex.end()) {
             r = *(it->second);
@@ -1032,7 +1032,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
                 char *e = NULL;
                 i = strtol(msg, &e, 10);
                 // Do we need to check for e == msg? Means wrong response from helper.
-                // Will be droped as "unexpected reply on channel 0"
+                // Will be dropped as "unexpected reply on channel 0"
                 needsMore = !(xisspace(*e) || (eom && e == eom));
                 if (!needsMore) {
                     msg = e;

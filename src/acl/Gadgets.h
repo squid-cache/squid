@@ -35,7 +35,7 @@ void aclParseAccessLine(const char *directive, ConfigParser &parser, Acl::Tree *
 /// The label parameter identifies the context (for debugging).
 /// \ingroup ACLAPI
 void aclParseAclList(ConfigParser &parser, Acl::Tree **, const char *label);
-/// Template to convert various context lables to strings. \ingroup ACLAPI
+/// Template to convert various context labels to strings. \ingroup ACLAPI
 template <class Any>
 inline
 void aclParseAclList(ConfigParser &parser, Acl::Tree **tree, const Any any)

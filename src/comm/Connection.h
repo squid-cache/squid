@@ -54,7 +54,7 @@ namespace Comm
 /**
  * Store data about the physical and logical attributes of a connection.
  *
- * Some link state can be infered from the data, however this is not an
+ * Some link state can be inferred from the data, however this is not an
  * object for state data. But a semantic equivalent for FD with easily
  * accessible cached properties not requiring repeated complex lookups.
  *

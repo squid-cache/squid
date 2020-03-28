@@ -17,8 +17,8 @@ namespace Ssl
 class CertificateProperties;
 
 /**
- * This class is responsible for composing and parsing messages destined to, or comming
- * from an ssl_crtd server. Format of these mesages is:
+ * This class is responsible for composing and parsing messages destined to, or coming
+ * from an ssl_crtd server. Format of these messages is:
  *   response/request-code SP body length SP body
  */
 class CrtdMessage

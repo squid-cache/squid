@@ -144,7 +144,7 @@ void clientStreamDetach(clientStreamNode *thisObject, ClientHttpRequest *http);
 /**
  \ingroup ClientStreamAPI
  *
- * Detachs the tail of the stream. CURRENTLY DOES NOT clean up the tail node data -
+ * Detaches the tail of the stream. CURRENTLY DOES NOT clean up the tail node data -
  * this must be done separately. Thus Abort may ONLY be called by the tail node.
  *
  \param thisObject  'this' reference for the client stream

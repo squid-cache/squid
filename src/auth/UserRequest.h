@@ -150,7 +150,7 @@ public:
      * Credentials may be found in one of the following locations (listed by order of preference):
      * - the source passed as parameter aUR
      * - cached in the HttpRequest parameter from a previous authentication of this request
-     * - cached in the ConnStateData paremeter from a previous authentication of this connection
+     * - cached in the ConnStateData parameter from a previous authentication of this connection
      *   (only applies to some situations. ie NTLM, Negotiate, Kerberos auth schemes,
      *    or decrypted SSL requests from inside an authenticated CONNECT tunnel)
      * - cached in the user credentials cache from a previous authentication of the same credentials
@@ -181,10 +181,10 @@ public:
 
     char const * denyMessage(char const * const default_message = NULL) const;
 
-    /** Possibly overrideable in future */
+    /** Possibly overridable in future */
     void setDenyMessage(char const *);
 
-    /** Possibly overrideable in future */
+    /** Possibly overridable in future */
     char const * getDenyMessage() const;
 
     /**
