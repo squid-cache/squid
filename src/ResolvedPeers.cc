@@ -65,7 +65,7 @@ ResolvedPeers::extractFront()
 }
 
 /// helps to optimize find*() searches, caching the 'current peer' iterator
-ConnectionList::iterator
+const ConnectionList::iterator &
 ResolvedPeers::cachedCurrent(const CachePeer *currentPeer)
 {
     if (!currentPeer || (currentPeer != lastCurrentPeer->connection->getPeer())) {
