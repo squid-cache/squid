@@ -81,7 +81,7 @@ private:
     /// The protocol family of the given path, AF_INET or AF_INET6
     static int ConnectionFamily(const Comm::Connection &conn);
 
-    const ConnectionList::iterator &cachedCurrent(const CachePeer *currentPeer = nullptr);
+    const ConnectionList::iterator &cachedCurrent(const Comm::Connection *currentPeer = nullptr);
     ConnectionList::iterator findSpare(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
     ConnectionList::iterator findPrime(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
     ConnectionList::iterator findPeer(const Comm::Connection &currentPeer, bool *hasNext = nullptr);

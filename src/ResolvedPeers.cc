@@ -70,10 +70,10 @@ ResolvedPeers::extractFront()
 
 /// helps to optimize find*() searches, caching the 'current peer' iterator
 const ConnectionList::iterator &
-ResolvedPeers::cachedCurrent(const CachePeer *currentPeer)
+ResolvedPeers::cachedCurrent(const Comm::Connection *currentPeer)
 {
     Must(!paths_.empty()); // guarantees that lastCurrentPeer was initialized
-    if (!currentPeer || (currentPeer != lastCurrentPeer->connection->getPeer())) {
+    if (!currentPeer || (currentPeer->getPeer() != lastCurrentPeer->connection->getPeer())) {
         lastCurrentPeer = std::find_if(paths_.begin(), paths_.end(),
         [](const ResolvedPeerPath &path) {
             return path.available;
@@ -92,7 +92,7 @@ ResolvedPeers::findPrime(const Comm::Connection &currentPeer, bool *hasNext)
     const auto peerToMatch = currentPeer.getPeer();
     const auto familyToMatch = ConnectionFamily(currentPeer);
     bool foundSpareOrNext = false;
-    auto found = std::find_if(cachedCurrent(peerToMatch), paths_.end(),
+    auto found = std::find_if(cachedCurrent(&currentPeer), paths_.end(),
     [&](const ResolvedPeerPath &path) {
         if (!path.available) // skip unavailable
             return false;
@@ -114,7 +114,7 @@ ResolvedPeers::findSpare(const Comm::Connection &currentPeer, bool *hasNext)
     const auto peerToMatch = currentPeer.getPeer();
     const auto familyToAvoid = ConnectionFamily(currentPeer);
     bool foundNext = false;
-    auto found = std::find_if(cachedCurrent(peerToMatch), paths_.end(),
+    auto found = std::find_if(cachedCurrent(&currentPeer), paths_.end(),
     [&](const ResolvedPeerPath &path) {
         if (!path.available || familyToAvoid == ConnectionFamily(*path.connection)) // skip unavailable and prime
             return false;
@@ -135,7 +135,7 @@ ResolvedPeers::findPeer(const Comm::Connection &currentPeer, bool *hasNext)
 {
     const auto peerToMatch = currentPeer.getPeer();
     bool foundNext = false;
-    auto found = std::find_if(cachedCurrent(peerToMatch), paths_.end(),
+    auto found = std::find_if(cachedCurrent(&currentPeer), paths_.end(),
     [&](const ResolvedPeerPath &path) {
         if (!path.available) // skip unavailable
             return false;
