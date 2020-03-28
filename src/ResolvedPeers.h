@@ -81,6 +81,7 @@ private:
     /// The protocol family of the given path, AF_INET or AF_INET6
     static int ConnectionFamily(const Comm::Connection &conn);
 
+    ConnectionList::iterator cachedCurrent(const CachePeer *currentPeer = nullptr);
     ConnectionList::iterator findSpare(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
     ConnectionList::iterator findPrime(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
     ConnectionList::iterator findPeer(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
@@ -90,6 +91,9 @@ private:
     bool doneWith(const Comm::Connection &currentPeer, findSmthFun);
 
     ConnectionList paths_; ///< resolved addresses in (peer, family) order
+    /// The value returned by the last cachedCurrent() call.
+    /// Do not use directly - use cachedCurrent() instead.
+    ConnectionList::iterator lastCurrentPeer;
 };
 
 /// summarized ResolvedPeers (for debugging)
