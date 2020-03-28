@@ -312,6 +312,7 @@ logfile_mod_daemon_writeline(Logfile * lf, const char *buf, size_t len)
 static void
 logfile_mod_daemon_linestart(Logfile * lf)
 {
+    l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
     assert(ll->eol == 1);
     // logfile_mod_daemon_writeline() sends the starting command
 }
