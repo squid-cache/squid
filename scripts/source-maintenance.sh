@@ -40,27 +40,24 @@ fi
 COPYRIGHT_YEARS=`date +"1996-%Y"`
 echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${COPYRIGHT_YEARS} The Squid Software Foundation and contributors/g" >>boilerplate_fix.sed
 
-updateifchanged()
+updateIfChanged ()
 {
-original="$1"
-updated="$2"
-message="$3"
+	original="$1"
+	updated="$2"
+	message="$3"
 
-if test -e "${original}" -a -e "${updated}"; then
+	test -e "${original}" -a -e "${updated}" || exit 1
 	md51=`cat "${original}" | tr -d "\n \t\r" | ${MD5}`;
 	md52=`cat "${updated}" | tr -d "\n \t\r" | ${MD5}`;
 	if test "${md51}" != "${md52}" ; then
 		echo "NOTICE: File ${original} changed: ${message}"
-		mv "${updated}" "${original}"
+		mv "${updated}" "${original}" || exit 1
 	else
 		rm -f "${updated}"
 	fi
-else
-	echo "BUG: invalid filename '$1' or '$2'. Skipped update for ${message}."
-fi
 }
 
-srcformat ()
+srcFormat ()
 {
 #
 # Scan for incorrect use of #ifdef/#ifndef
@@ -88,7 +85,7 @@ for FILENAME in `git ls-files`; do
 	#
 	for SCRIPT in `git ls-files scripts/maintenance/`; do
 		${SCRIPT} "${FILENAME}" >"${FILENAME}.new" &&
-			updateifchanged "${FILENAME}" "${FILENAME}.new" "by ${SCRIPT}"
+			updateIfChanged "${FILENAME}" "${FILENAME}.new" "by ${SCRIPT}"
 	done
 	if test "${ASVER}"; then
 		./scripts/formater.pl ${FILENAME}
@@ -311,7 +308,7 @@ make -C src/http gperf-files
 
 # Run formating
 echo "" >doc/debug-sections.tmp
-srcformat || exit 1
+srcFormat || exit 1
 sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
 cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
 rm doc/debug-sections.tmp doc/debug-sections.tmp2
