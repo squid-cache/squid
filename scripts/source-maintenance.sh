@@ -46,12 +46,12 @@ updateIfChanged ()
 	updated="$2"
 	message="$3"
 
-	test -e "${original}" -a -e "${updated}" || exit 1
+	test -e "${original}" -a -e "${updated}" || return
 	md51=`cat "${original}" | tr -d "\n \t\r" | ${MD5}`;
 	md52=`cat "${updated}" | tr -d "\n \t\r" | ${MD5}`;
 	if test "${md51}" != "${md52}" ; then
 		echo "NOTICE: File ${original} changed: ${message}"
-		mv "${updated}" "${original}" || exit 1
+		mv "${updated}" "${original}" || return
 	else
 		rm -f "${updated}"
 	fi
