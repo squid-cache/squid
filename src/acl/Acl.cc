@@ -57,8 +57,7 @@ Make(TypeName typeName)
         throw Cfg::FatalError(ToSBuf("unknown ACL type '", typeName, "'"));
     ACL *result = (pos->second)(pos->first);
     debugs(28, 4, typeName << '=' << result);
-    if (!result)
-        throw Cfg::FatalError(ToSBuf("BUG: could not find maker for ACL type '", typeName, "'"));
+    assert(result);
     return result;
 }
 
