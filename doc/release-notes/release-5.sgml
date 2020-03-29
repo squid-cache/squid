@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 5.0.1 release notes</title>
+<title>Squid 5.0.2 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-5.0.1 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-5.0.2 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v5/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -141,9 +141,9 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>Peering support for SSL-Bump
 <p>Squid now supports forwarding of bumped, re-encrypted HTTPS requests through
-   a cache_peer using a standard HTTP CONNECT tunnel.
+   a <em>cache_peer</em> using a standard HTTP CONNECT tunnel.
 
-<p>No support for triggering client authentication when a cache_peer
+<p>No support for triggering client authentication when a <em>cache_peer</em>
    configuration instructs the bumping Squid to relay authentication info
    contained in client CONNECT request. The bumping Squid still responds
    with HTTP 200 (Connection Established) to the client CONNECT request (to

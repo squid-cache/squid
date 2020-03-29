@@ -1,3 +1,13 @@
+Changes in squid-5.0.2 (04 Apr 2020):
+
+	- Bug 5030: Negative responses are never cached
+	- Bug 4796: comm.cc !isOpen(conn->fd) assertion when rotating logs
+	- Support worker-dedicated listening queues (SO_REUSEPORT)
+	- High precision time units
+	- Ban reserved annotations in "note", "adaptation_meta" directives
+	- ESI: convert parse exceptions into 500 status response
+	- ... and some compile fixes
+
 Changes in squid-5.0.1 (14 Jan 2020):
 
 	- Bug 4989: Leaking StoreEntry objects on Cache Digest rebuilds
@@ -44,6 +54,14 @@ Changes in squid-5.0.1 (14 Jan 2020):
 	- Centralized PagePool/PageStack ID generation
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+
+Changes to squid-4.11 (04 Apr 2020):
+
+	- Bug 5022: Reconfigure kills Coordinator in SMP+ufs configurations
+	- Bug 5016: systemd thinks Squid is ready before Squid listens
+	- kerberos_ldap_group: fix encryption type for cross realm check
+	- HTTP: Ignore malformed Host header in intercept and reverse proxy mode
+	- Supply ALE to request_header_add/reply_header_add
 
 Changes to squid-4.10 (14 Jan 2020):
 
