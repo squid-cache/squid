@@ -47,20 +47,15 @@ Http::StatusLine::packInto(Packable * p) const
 {
     assert(p);
 
-    Http::StatusCode useStatus;
-    const char *useReason;
-
-    if (!status()) {
+    auto useStatus = status();
+    if (!useStatus) {
         static int zeroStatusCount = 0;
         if (++zeroStatusCount < 100) {
             debugs(57, DBG_IMPORTANT, "BUG: Generated response lacks status code");
         }
         useStatus = Http::scInternalServerError;
-        useReason = Http::StatusCodeString(useStatus);
-    } else {
-        useStatus = status();
-        useReason = reason();
     }
+    const auto useReason = Http::StatusCodeString(useStatus);
 
     /* local constants */
     /* AYJ: see bug 2469 - RFC2616 confirms stating 'SP characters' plural! */
