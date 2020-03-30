@@ -50,7 +50,7 @@ Http::StatusLine::packInto(Packable * p) const
     auto useStatus = status();
     if (!useStatus) {
         static unsigned int zeroStatusCount = 0;
-        if (++zeroStatusCount < 100) {
+        if (++zeroStatusCount <= 100) {
             debugs(57, DBG_IMPORTANT, "BUG: Generated response lacks status code");
         }
         useStatus = Http::scInternalServerError;
