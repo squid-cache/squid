@@ -349,3 +349,4 @@ logfile_mod_daemon_flush(Logfile * lf)
         return;
     }
 }
+
