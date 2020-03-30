@@ -48,7 +48,7 @@ Http::StatusLine::packInto(Packable * p) const
     assert(p);
 
     auto packedStatus = status();
-    if (!packedStatus) {
+    if (packedStatus == Http::scNone) {
         static unsigned int reports = 0;
         if (++reports <= 100)
             debugs(57, DBG_IMPORTANT, "BUG: Generated response lacks status code");
