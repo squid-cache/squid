@@ -1115,19 +1115,17 @@ parseTimeUnit(const char *unitName, std::chrono::nanoseconds &ns)
 }
 
 static std::chrono::nanoseconds
-ConvertToNanoSeconds(const double value, const std::chrono::nanoseconds &unit)
+ToNanoSeconds(const double value, const std::chrono::nanoseconds &unit)
 {
     if (value < 0.0)
         throw TexcHere("time must have a positive value");
 
-    const auto result = static_cast<std::chrono::nanoseconds::rep>(value * unit.count());
-
-    if (result > std::chrono::nanoseconds::max().count()) {
+    if (value > (static_cast<double>(std::chrono::nanoseconds::max().count()) / unit.count())) {
         const auto maxYears = std::chrono::duration_cast<std::chrono::hours>(std::chrono::nanoseconds::max()).count()/HoursPerYear;
         throw TexcHere(ToSBuf("time values cannot exceed ", maxYears, " years"));
     }
 
-    return std::chrono::nanoseconds(result);
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(unit * value);
 }
 
 template <class TimeUnit>
@@ -1167,7 +1165,7 @@ parseTimeLine()
 
     (void)ConfigParser::NextToken();
 
-    const auto nanoseconds = ConvertToNanoSeconds(parsedValue, parsedUnitDuration);
+    const auto nanoseconds = ToNanoSeconds(parsedValue, parsedUnitDuration);
 
     // validate precisions (time-units-small only)
     if (TimeUnit(1) <= std::chrono::microseconds(1)) {
@@ -4964,7 +4962,7 @@ ParseUrlRewriteTimeout()
                ": WARNING: missing time unit, using deprecated default '" << T_SECOND_STR << "'");
     }
 
-    const auto nanoseconds = ConvertToNanoSeconds(parsedTimeValue, parsedUnitDuration);
+    const auto nanoseconds = ToNanoSeconds(parsedTimeValue, parsedUnitDuration);
 
     return FromNanoseconds<Seconds>(nanoseconds, parsedTimeValue);
 }
