@@ -55,33 +55,36 @@ ResolvedPeers::size() const
 void
 ResolvedPeers::addPath(const Comm::ConnectionPointer &path)
 {
-    const auto oldCapacity = paths_.capacity();
     paths_.emplace_back(path);
-    const auto iteratorsInvalidated = oldCapacity < paths_.size();
-    if (paths_.size() == 1 || iteratorsInvalidated)
-        lastCurrentPeer = paths_.begin();
 }
 
 Comm::ConnectionPointer
 ResolvedPeers::extractFront()
 {
-    return extractFound("first: ", cachedCurrent());
+    return extractFound("first: ", cacheFront());
 }
 
-/// helps to optimize find*() searches, caching the 'current peer' iterator
-const ConnectionList::iterator &
+/// helps to optimize find*() searches, caching the index of 'current peer'
+ConnectionList::iterator
+ResolvedPeers::cacheFront()
+{
+    const auto pathsSize = paths_.size();
+    Must(pathsSize);
+    for (currentPeerIndex = 0; currentPeerIndex < pathsSize; ++currentPeerIndex) {
+        if (paths_[currentPeerIndex].available)
+            break;
+    }
+    Must(currentPeerIndex < pathsSize);
+    return paths_.begin() + currentPeerIndex;
+}
+
+/// \returns the iterator of the cached 'current peer'
+ConnectionList::iterator
 ResolvedPeers::cachedCurrent(const Comm::Connection *currentPeer)
 {
-    Must(!paths_.empty()); // guarantees that lastCurrentPeer was initialized
-    if (!currentPeer || (currentPeer->getPeer() != lastCurrentPeer->connection->getPeer())) {
-        // synchronize lastCurrentPeer with currentPeer
-        lastCurrentPeer = std::find_if(paths_.begin(), paths_.end(),
-        [](const ResolvedPeerPath &path) {
-            return path.available;
-        });
-        Must(lastCurrentPeer != paths_.end());
-    }
-    return lastCurrentPeer;
+    Must(currentPeerIndex < paths_.size());
+    Must(currentPeer->getPeer() == paths_[currentPeerIndex].connection->getPeer());
+    return paths_.begin() + currentPeerIndex;
 }
 
 /// \returns the first available same-peer same-family address iterator or end()
