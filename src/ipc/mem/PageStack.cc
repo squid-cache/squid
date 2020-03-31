@@ -175,12 +175,13 @@ void
 Ipc::Mem::IdSet::truncateExtras()
 {
     // leaf nodes
-    // the left-most leaf with zero(s); it may even have no ones at all
+    // start with the left-most leaf that should have some 0s; it may even have
+    // no 1s at all (i.e. be completely unused)
     auto pos = Position(measurements.treeHeight-1, measurements.capacity/BitsPerLeaf);
     leafTruncate(pos, measurements.capacity % BitsPerLeaf);
     const auto rightLeaves = measurements.leafNodeCount - measurements.requestedLeafNodeCount;
-    // this nullification of leaves is only necessary to trigger asserts if
-    // there is a bug in the code that updates inner nodes/counters below
+    // this zeroing of the leaf nodes to the right from pos is only necessary to
+    // trigger asserts if the code dealing with the inner node counters is buggy
     if (rightLeaves > 1)
         std::fill_n(valueAddress(pos) + 1, rightLeaves-1, 0);
 
