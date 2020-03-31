@@ -55,8 +55,7 @@ Http::StatusLine::packInto(Packable * p) const
         if (++reports <= 100)
             debugs(57, DBG_IMPORTANT, "BUG: Generated response lacks status code");
         packedStatus = Http::scInternalServerError;
-        packedReason = Http::StatusCodeString(packedStatus);
-        // and ignore custom reason_ (if any)
+        packedReason = Http::StatusCodeString(packedStatus); // ignore custom reason_ (if any)
     }
 
     /* local constants */
