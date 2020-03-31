@@ -48,14 +48,16 @@ Http::StatusLine::packInto(Packable * p) const
     assert(p);
 
     auto packedStatus = status();
+    auto packedReason = reason();
+
     if (packedStatus == Http::scNone) {
         static unsigned int reports = 0;
         if (++reports <= 100)
             debugs(57, DBG_IMPORTANT, "BUG: Generated response lacks status code");
         packedStatus = Http::scInternalServerError;
+        packedReason = Http::StatusCodeString(packedStatus);
         // and ignore custom reason_ (if any)
     }
-    const auto packedReason = Http::StatusCodeString(packedStatus);
 
     /* local constants */
     /* AYJ: see bug 2469 - RFC2616 confirms stating 'SP characters' plural! */
