@@ -730,7 +730,7 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
 
 #if defined(SSL_OP_NO_TLSv1_3)
     // avoid "inappropriate fallback" OpenSSL error messages
-    if (Security::Tls1p2orEarlier(details->tlsSupportedVersion))
+    if (details->tlsSupportedVersion && Security::Tls1p2orEarlier(details->tlsSupportedVersion))
         SSL_set_options(ssl, SSL_OP_NO_TLSv1_3);
 #endif
 
