@@ -43,6 +43,7 @@
  */
 #include "mem/Pool.h"
 
+#include <climits>
 #include <random>
 
 static AUTHSSTATS authenticateDigestStats;
@@ -290,8 +291,13 @@ static void
 authDigestNonceLink(digest_nonce_h * nonce)
 {
     assert(nonce != NULL);
-    ++nonce->references;
-    debugs(29, 9, "nonce '" << nonce << "' now at '" << nonce->references << "'.");
+    if (nonce->references != UINT_MAX) {
+        ++nonce->references;
+        debugs(29, 9, "nonce '" << nonce << "' now at '" << nonce->references << "'.");
+    }
+    else {
+        debugs(29, 9, "nonce '" << nonce << "' refcount at maximum value!");
+    }
 }
 
 #if NOT_USED
