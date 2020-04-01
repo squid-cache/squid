@@ -82,7 +82,7 @@ public:
 
     bool resumingSession; ///< True if this is a resuming session
 
-    ///< whether we are parsing Server or Client TLS handshake messages
+    /// whether we are parsing Server or Client TLS handshake messages
     MessageSource messageSource;
 
 private:
@@ -131,41 +131,38 @@ private:
     YesNoNone expectingModernRecords;
 };
 
-/// \returns true when the given version is a TLS/SSL protocol
+/// whether the given protocol belongs to the TLS/SSL group of protocols
 inline bool
-IsTlsProtocol(const AnyP::ProtocolVersion &version)
+TlsFamilyProtocol(const AnyP::ProtocolVersion &version)
 {
     return (version.protocol == AnyP::PROTO_TLS || version.protocol == AnyP::PROTO_SSL);
 }
 
-/// \returns true when the TLS/SSL protocol va is earlier than vb
-/// Throws if the given protocols are not TLS or SSL.
+/// whether TLS/SSL protocol `a` precedes TLS/SSL protocol `b`
 inline bool
-TlsVersionEarlierThan(const AnyP::ProtocolVersion &va, const AnyP::ProtocolVersion &vb)
+TlsVersionEarlierThan(const AnyP::ProtocolVersion &a, const AnyP::ProtocolVersion &b)
 {
-    Must(IsTlsProtocol(va));
-    Must(IsTlsProtocol(vb));
+    Must(TlsFamilyProtocol(a));
+    Must(TlsFamilyProtocol(b));
 
-    if (va.protocol == vb.protocol)
-        return va < vb;
+    if (a.protocol == b.protocol)
+        return a < b;
 
-    return va.protocol == AnyP::PROTO_SSL; // implies that vb is TLS
+    return a.protocol == AnyP::PROTO_SSL; // implies that b is TLS
 }
 
-/// \returns true when the given protocol is TLS v1.2 or earlier, including SSL
-/// Throws if the given protocol is not TLS or SSL.
+/// whether the given TLS/SSL protocol is TLS v1.2 or earlier, including SSL
 inline bool
-Tls1p2orEarlier(const AnyP::ProtocolVersion &version)
+Tls1p2orEarlier(const AnyP::ProtocolVersion &p)
 {
-    return TlsVersionEarlierThan(version, AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3));
+    return TlsVersionEarlierThan(p, AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3));
 }
 
-/// \returns true when the given protocol is TLS v1.3 or later
-/// Throws if the given protocol is not TLS or SSL.
+/// whether the given TLS/SSL protocol is TLS v1.3 or later
 inline bool
-Tls1p3orLater(const AnyP::ProtocolVersion &version)
+Tls1p3orLater(const AnyP::ProtocolVersion &p)
 {
-    return !Tls1p2orEarlier(version);
+    return !Tls1p2orEarlier(p);
 }
 
 }

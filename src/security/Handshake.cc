@@ -581,7 +581,7 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
     // We overwrite Hello-derived legacy_version because the following MUSTs
     // indicate that it is ignored in the presence of valid supported_versions
     // as far as the negotiated version is concerned. For simplicity sake, we
-    // also overwrite previous valid supported_versions extensions (if any).
+    // may also overwrite previous valid supported_versions extensions (if any).
     //
     // RFC 8446 Section 4.2.1:
     // If this extension is present in the ClientHello, servers MUST NOT use the

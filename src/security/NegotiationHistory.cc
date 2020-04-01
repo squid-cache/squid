@@ -25,7 +25,7 @@ Security::NegotiationHistory::NegotiationHistory()
 const char *
 Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &v) const
 {
-    if (!IsTlsProtocol(v))
+    if (!TlsFamilyProtocol(v))
         return nullptr;
 
     static char buf[512];
