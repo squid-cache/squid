@@ -203,7 +203,7 @@ Ipc::Mem::IdSet::leafTruncate(const Position pos, const size_type idsToKeep)
     assert(node == std::numeric_limits<Node>::max()); // all 1s
     static_assert(std::is_unsigned<Node>::value, "right shift prepends 0s");
     node >>= BitsPerLeaf - idsToKeep;
-    // node be anything here, including becoming zero or staying the same
+    // node can be anything here, including all 0s and all 1s
 }
 
 /// accounts for toSubtract IDs removal from a subtree in the given direction of
