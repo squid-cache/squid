@@ -556,13 +556,10 @@ Ssl::ServerBio::resumingSession()
 }
 
 bool
-Ssl::ServerBio::tls1p3orLater() const
+Ssl::ServerBio::encryptedCertificates() const
 {
-    // Parsing may not be completed or aborted because of an error
-    if (!Security::IsTlsProtocol(parser_.details->tlsSupportedVersion))
-        return false;
-
-    return Security::Tls1p3orLater(parser_.details->tlsSupportedVersion);
+    return parser_.details->tlsSupportedVersion &&
+        Security::Tls1p3orLater(parser_.details->tlsSupportedVersion);
 }
 
 /// initializes BIO table after allocation

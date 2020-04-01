@@ -278,11 +278,11 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
 
     if (srvBio->bumpMode() == Ssl::bumpPeek) {
         auto bypassValidator = false;
-        // If the server selected TLS v1.3 protocol, then we cannot peek at its
-        // (encrypted) certificates.
-        if (srvBio->tls1p3orLater()) {
-            // we currently splice all TLS v1.3 sessions unconditionally
-            // if (const auto spliceTLSv1_3 = true) {
+        if (srvBio->encryptedCertificates()) {
+            // it is pointless to peek at encrypted certificates
+            //
+            // we currently splice all sessions with encrypted certificates
+            // if (const auto spliceEncryptedCertificates = true) {
             bypassValidator = true;
             // } // else fall through to find a matching ssl_bump action (with limited info)
         } else if (srvBio->resumingSession()) {
@@ -291,7 +291,7 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
             // the client, then probably we are here because our local SSL
             // object does not know anything about the session being resumed.
             //
-            // we currently splice all resumed sessions unconditionally
+            // we currently splice all resumed sessions
             // if (const auto spliceResumed = true) {
             bypassValidator = true;
             // } // else fall through to find a matching ssl_bump action (with limited info)

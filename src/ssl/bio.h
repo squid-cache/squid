@@ -143,9 +143,9 @@ public:
 
     bool resumingSession();
 
-    /// \returns true when the server chose TLS with v1.3 or a later version
-    /// avoid negating the result; \see Security::Tls1p3orLater()
-    bool tls1p3orLater() const;
+    /// whether the server encrypts its certificate (e.g., TLS v1.3)
+    /// \retval false the server uses plain certs or its intent is unknown
+    bool encryptedCertificates() const;
 
     /// The write hold state
     bool holdWrite() const {return holdWrite_;}
