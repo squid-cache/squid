@@ -224,7 +224,7 @@ Ipc::Mem::IdSet::innerTruncate(const Position pos, const NavigationDirection dir
         assert(dir == dirRight);
         toSubtractNext = toSubtract;
         assert(value.right >= toSubtract);
-        value.left = value.left;
+        // value.left is unchanged; we have only adjusted the right branch
         value.right -= toSubtract;
     }
     *valuePtr = value.pack();
