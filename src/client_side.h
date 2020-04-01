@@ -211,7 +211,7 @@ public:
 
     private:
         friend std::ostream &operator <<(std::ostream &, const ServerConnectionContext &);
-        Comm::ConnectionPointer conn_; ///< to-server connection to own
+        Comm::ConnectionPointer conn_; ///< to-server connection
     };
 
     /// Gives us the control of the Squid-to-server connection.
