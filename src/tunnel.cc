@@ -1079,15 +1079,11 @@ TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
-    { // TODO: Remove this diff reduction before commit
-        { // TODO: Remove this diff reduction before commit
-            AsyncCall::Pointer callback = asyncCall(5,4,
-                                                    "TunnelStateData::ConnectedToPeer",
-                                                    MyAnswerDialer(&TunnelStateData::noteSecurityPeerConnectorAnswer, this));
-            const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
-            AsyncJob::Start(connector); // will call our callback
-        }
-    }
+    AsyncCall::Pointer callback = asyncCall(5,4,
+                                            "TunnelStateData::ConnectedToPeer",
+                                            MyAnswerDialer(&TunnelStateData::noteSecurityPeerConnectorAnswer, this));
+    const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
+    AsyncJob::Start(connector); // will call our callback
 }
 
 /// starts a preparation step for an established connection; retries on failures

@@ -931,22 +931,20 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
 void
 FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
-    { // TODO: Remove this diff reduction before commit
-        HttpRequest::Pointer requestPointer = request;
-        AsyncCall::Pointer callback = asyncCall(17,4,
-                                                "FwdState::ConnectedToPeer",
-                                                FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
-        const auto sslNegotiationTimeout = connectingTimeout(conn);
-        Security::PeerConnector *connector = nullptr;
+    HttpRequest::Pointer requestPointer = request;
+    AsyncCall::Pointer callback = asyncCall(17,4,
+                                            "FwdState::ConnectedToPeer",
+                                            FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
+    const auto sslNegotiationTimeout = connectingTimeout(conn);
+    Security::PeerConnector *connector = nullptr;
 #if USE_OPENSSL
-        if (request->flags.sslPeek)
-            connector = new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, callback, al, sslNegotiationTimeout);
-        else
+    if (request->flags.sslPeek)
+        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, callback, al, sslNegotiationTimeout);
+    else
 #endif
-            connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
-        connector->noteFwdPconnUse = true;
-        AsyncJob::Start(connector); // will call our callback
-    }
+        connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
+    connector->noteFwdPconnUse = true;
+    AsyncJob::Start(connector); // will call our callback
 }
 
 /// called when all negotiations with the TLS-speaking peer have been completed
