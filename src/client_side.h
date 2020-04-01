@@ -216,7 +216,7 @@ public:
 
     /// Gives us the control of the Squid-to-server connection.
     /// Used, for example, to initiate a TCP tunnel after protocol switching.
-    virtual void noteTakeServerConnectionControl(ServerConnectionContext scc) {}
+    virtual void noteTakeServerConnectionControl(ServerConnectionContext) {}
 
     // comm callbacks
     void clientReadFtpData(const CommIoCbParams &io);
