@@ -360,7 +360,7 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
 
     if (switching && /* paranoid: */ upgradeHeader.size()) {
         rep->header.putStr(Http::HdrType::UPGRADE, upgradeHeader.termedBuf());
-        rep->header.putStr(Http::HdrType::CONNECTION, "upgrade");
+        rep->header.putStr(Http::HdrType::CONNECTION, "upgrade, keep-alive");
     } else {
         rep->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
     }
