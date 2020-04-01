@@ -39,7 +39,7 @@ while [ $# -ge 1 ]; do
 	;;
     --use-config-cache)
         #environment variable will be picked up by buildtest.sh
-        cache_file=/tmp/config.cache.$$
+        cache_file=${cache_file:-/tmp/config.cache.$$}
         export cache_file
         shift
         ;;
@@ -50,6 +50,12 @@ while [ $# -ge 1 ]; do
         remove_cache_file="false"
         export cache_file
         shift
+        ;;
+    --config-cache-file)
+        cache_file="$2"
+        remove_cache_file="false"
+        export cache_file
+        shift 2
         ;;
     *)
     	break
