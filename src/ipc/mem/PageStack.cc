@@ -302,8 +302,8 @@ Ipc::Mem::IdSet::leafPop(const Position pos)
     Node newValue;
     do {
         assert(oldValue > 0);
-        const auto mask = oldValue - 1; // flips (the last 1 and trailing 0s)
-        newValue = oldValue & mask;
+        const auto mask = oldValue - 1; // flips the rightmost 1 and trailing 0s
+        newValue = oldValue & mask; // clears the rightmost 1
     } while (!node.compare_exchange_weak(oldValue, newValue));
 
     return pos.offset*BitsPerLeaf + trailingZeros(oldValue);
