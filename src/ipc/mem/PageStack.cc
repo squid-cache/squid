@@ -17,6 +17,29 @@
 #include <cmath>
 #include <algorithm>
 
+/*
+
+Ipc::Mem::IdSet and related code maintains a perfect full binary tree structure:
+
+         (l,r)
+           /\
+    (ll,lr)  (rl,rr)
+       /\      /\
+      L1 L2   L3 L4
+
+where
+
+    * (l,r) is an always-present root node;
+    * inner nodes, including the root one, count the total number of available
+      IDs in the leaf nodes of the left and right subtrees (e.g., r = rl + rr);
+    * leaf nodes are bitsets of available IDs (e.g., rl = number of 1s in L3);
+      all leaf nodes are always present.
+
+The above sample tree would be stored as seven 64-bit atomic integers:
+    (l,r), (ll,lr), (rl,rr), L1, L2, L3, L4
+
+*/
+
 namespace Ipc
 {
 
