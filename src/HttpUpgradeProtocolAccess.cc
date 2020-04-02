@@ -12,7 +12,6 @@
 #include "ConfigParser.h"
 #include "globals.h"
 #include "HttpUpgradeProtocolAccess.h"
-#include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 
 #include <algorithm>

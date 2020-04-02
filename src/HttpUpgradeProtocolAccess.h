@@ -11,7 +11,7 @@
 
 #include "acl/forward.h"
 #include "base/StringView.h"
-#include "sbuf/forward.h"
+#include "sbuf/SBuf.h"
 
 #include <map>
 
