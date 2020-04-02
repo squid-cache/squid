@@ -298,8 +298,14 @@ logfile_mod_daemon_writeline(Logfile * lf, const char *buf, size_t len)
         }
         return;
     }
-    /* Append this data to the end buffer; create a new one if needed */
+
     /* Are we eol? If so, prefix with our logfile command byte */
+    if (ll->eol == 1) {
+	logfile_mod_daemon_append(lf, "L", 1);
+	ll->eol = 0;
+    }
+
+    /* Append this data to the end buffer; create a new one if needed */
     logfile_mod_daemon_append(lf, buf, len);
 }
 
@@ -307,12 +313,8 @@ static void
 logfile_mod_daemon_linestart(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
-    char tb[2];
     assert(ll->eol == 1);
-    ll->eol = 0;
-    tb[0] = 'L';
-    tb[1] = '\0';
-    logfile_mod_daemon_append(lf, tb, 1);
+    // logfile_mod_daemon_writeline() sends the starting command
 }
 
 static void
@@ -320,7 +322,8 @@ logfile_mod_daemon_lineend(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
     logfile_buffer_t *b;
-    assert(ll->eol == 0);
+    if (ll->eol == 1) // logfile_mod_daemon_writeline() wrote nothing
+        return;
     ll->eol = 1;
     /* Kick a write off if the head buffer is -full- */
     if (ll->bufs.head != NULL) {
