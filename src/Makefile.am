@@ -319,8 +319,8 @@ squid_SOURCES = \
 	hier_code.h \
 	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
-	HttpUpgrade.cc \
-	HttpUpgrade.h \
+	HttpUpgradeProtocolAccess.cc \
+	HttpUpgradeProtocolAccess.h \
 	http.cc \
 	http.h \
 	HttpHeaderFieldStat.h \
@@ -1915,8 +1915,8 @@ tests_test_http_range_SOURCES = \
 	helper.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
-	HttpUpgrade.cc \
-	HttpUpgrade.h \
+	HttpUpgradeProtocolAccess.cc \
+	HttpUpgradeProtocolAccess.h \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -2316,8 +2316,8 @@ tests_testHttpRequest_SOURCES = \
 	helper.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
-	HttpUpgrade.cc \
-	HttpUpgrade.h \
+	HttpUpgradeProtocolAccess.cc \
+	HttpUpgradeProtocolAccess.h \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -2618,8 +2618,8 @@ tests_testCacheManager_SOURCES = \
 	hier_code.h \
 	helper.cc \
 	$(HTCPSOURCE) \
-	HttpUpgrade.cc \
-	HttpUpgrade.h \
+	HttpUpgradeProtocolAccess.cc \
+	HttpUpgradeProtocolAccess.h \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -2929,8 +2929,8 @@ tests_testEvent_SOURCES = \
 	helper.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
-	HttpUpgrade.cc \
-	HttpUpgrade.h \
+	HttpUpgradeProtocolAccess.cc \
+	HttpUpgradeProtocolAccess.h \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -3169,8 +3169,8 @@ tests_testEventLoop_SOURCES = \
 	helper.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
-	HttpUpgrade.cc \
-	HttpUpgrade.h \
+	HttpUpgradeProtocolAccess.cc \
+	HttpUpgradeProtocolAccess.h \
 	http.cc \
 	HttpBody.h \
 	HttpBody.cc \

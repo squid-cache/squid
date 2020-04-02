@@ -41,7 +41,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "HttpUpgrade.h"
+#include "HttpUpgradeProtocolAccess.h"
 #include "log/access_log.h"
 #include "MemBuf.h"
 #include "MemObject.h"

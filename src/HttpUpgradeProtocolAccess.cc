@@ -11,7 +11,7 @@
 #include "acl/Gadgets.h"
 #include "ConfigParser.h"
 #include "globals.h"
-#include "HttpUpgrade.h"
+#include "HttpUpgradeProtocolAccess.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 
