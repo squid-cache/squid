@@ -118,7 +118,7 @@ public:
     // not explicit: allow "aclMatchCode to Acl::Answer" conversions (for now)
     Answer(const aclMatchCode aCode, int aKind = 0): code(aCode), kind(aKind) {}
 
-    Answer() {}
+    Answer() = default;
 
     bool operator ==(const aclMatchCode aCode) const {
         return code == aCode;
