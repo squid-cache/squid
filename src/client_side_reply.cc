@@ -1090,6 +1090,9 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
         }
     }
 
+    if (purgeStatus == Http::scNone)
+        purgeStatus = Http::scNotFound;
+
     /*
      * Make a new entry to hold the reply to be written
      * to the client.
