@@ -2037,6 +2037,13 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
     if (!Config.http_upgrade_request_protocols)
         return; // forward nothing by default
 
+    /* RFC 7230 section 6.7 paragraph 10:
+     * A server MUST ignore an Upgrade header field that is received in
+     * an HTTP/1.0 request.
+     */
+    if (request->http_ver == Http::ProtocolVersion(1,0))
+        return;
+
     const auto &hdrIn = request->header;
     if (!hdrIn.has(Http::HdrType::UPGRADE))
         return;
