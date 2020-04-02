@@ -2071,6 +2071,17 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
 
     if (upgradeOut.size()) {
         hdrOut.putStr(Http::HdrType::UPGRADE, upgradeOut.termedBuf());
+
+        /* RFC 7230 section 6.7 paragraph 10:
+         * When Upgrade is sent, the sender MUST also send a Connection header
+         * field that contains an "upgrade" connection option, in
+         * order to prevent Upgrade from being accidentally forwarded by
+         * intermediaries that might not implement the listed protocols.
+         *
+         * NP: Squid does not truly implement the protocol(s) in this Upgrade.
+         * For now we are treating an explicit blind tunnel as "implemented"
+         * regardless of the security implications.
+         */
         hdrOut.putStr(Http::HdrType::CONNECTION, "upgrade");
     }
 }
