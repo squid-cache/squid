@@ -96,9 +96,6 @@ static void authenticateDigestNonceDelete(digest_nonce_h * nonce);
 static void authenticateDigestNonceSetup(void);
 static void authDigestNonceEncode(digest_nonce_h * nonce);
 static void authDigestNonceLink(digest_nonce_h * nonce);
-#if NOT_USED
-static int authDigestNonceLinks(digest_nonce_h * nonce);
-#endif
 static void authDigestNonceUserUnlink(digest_nonce_h * nonce);
 
 static void
@@ -291,20 +288,9 @@ authDigestNonceLink(digest_nonce_h * nonce)
 {
     assert(nonce != NULL);
     ++nonce->references;
+    assert(nonce->references != 0); // no overflows
     debugs(29, 9, "nonce '" << nonce << "' now at '" << nonce->references << "'.");
 }
-
-#if NOT_USED
-static int
-authDigestNonceLinks(digest_nonce_h * nonce)
-{
-    if (!nonce)
-        return -1;
-
-    return nonce->references;
-}
-
-#endif
 
 void
 authDigestNonceUnlink(digest_nonce_h * nonce)
