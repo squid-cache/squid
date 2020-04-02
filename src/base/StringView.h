@@ -29,6 +29,8 @@ public:
 
     bool empty() const { return !size_; }
     size_t size() const { return size_; }
+
+    /// \returns an un-terminated char* pointer to heap memory
     const char *data() const { return start_; }
 
     /* all operators are case-sensitive */
