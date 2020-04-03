@@ -10,8 +10,10 @@
 #define SQUID_HTTPHDRSURROGATECONTROLTARGET_H
 
 #include "defines.h" //for bit mask operations
-#include "HttpHdrSc.h"
+#include "http/forward.h"
+#include "SquidString.h"
 
+class HttpHdrSc;
 class Packable;
 class StatHist;
 class StoreEntry;
@@ -30,11 +32,11 @@ public:
     static const int MAX_AGE_UNSET=-1; //max-age is unset
     static const int MAX_STALE_UNSET=0; //max-stale is unset
 
-    HttpHdrScTarget(const char *target_):
+    explicit HttpHdrScTarget(const char *target_) :
         mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
-    HttpHdrScTarget(const String &target_):
+    explicit HttpHdrScTarget(const String &target_) :
         mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
-    HttpHdrScTarget(const HttpHdrScTarget &t):
+    explicit HttpHdrScTarget(const HttpHdrScTarget &t) :
         mask(t.mask), max_age(t.max_age), max_stale(t.max_stale),
         content_(t.content_), target(t.target) {}
 
@@ -98,7 +100,6 @@ private:
     int max_stale;
     String content_;
     String target;
-    dlink_node node;
 };
 
 void httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);

@@ -189,32 +189,7 @@ HttpHdrSc::parse(const String * str)
         }
     }
 
-    return sc->targets.head != NULL;
-}
-
-HttpHdrSc::~HttpHdrSc()
-{
-    if (targets.head) {
-        dlink_node *sct = targets.head;
-
-        while (sct) {
-            HttpHdrScTarget *t = static_cast<HttpHdrScTarget *>(sct->data);
-            sct = sct->next;
-            dlinkDelete (&t->node, &targets);
-            delete t;
-        }
-    }
-}
-
-HttpHdrSc::HttpHdrSc(const HttpHdrSc &sc)
-{
-    dlink_node *node = sc.targets.head;
-
-    while (node) {
-        HttpHdrScTarget *dupsct = new HttpHdrScTarget(*static_cast<HttpHdrScTarget *>(node->data));
-        addTargetAtTail(dupsct);
-        node = node->next;
-    }
+    return !sc->targets.empty();
 }
 
 void
@@ -249,13 +224,9 @@ HttpHdrScTarget::packInto(Packable * p) const
 void
 HttpHdrSc::packInto(Packable * p) const
 {
-    dlink_node *node;
     assert(p);
-    node = targets.head;
-
-    while (node) {
-        static_cast<HttpHdrScTarget *>(node->data)->packInto(p);
-        node = node->next;
+    for (const auto &t : targets) {
+        t.packInto(p);
     }
 }
 
@@ -266,8 +237,8 @@ HttpHdrSc::setMaxAge(char const *target, int max_age)
     HttpHdrScTarget *sct = findTarget(target);
 
     if (!sct) {
-        sct = new HttpHdrScTarget(target);
-        dlinkAddTail (sct, &sct->node, &targets);
+        targets.emplace_back(target);
+        sct = &targets.back();
     }
 
     sct->maxAge(max_age);
@@ -276,11 +247,8 @@ HttpHdrSc::setMaxAge(char const *target, int max_age)
 void
 HttpHdrSc::updateStats(StatHist * hist) const
 {
-    dlink_node *sct = targets.head;
-
-    while (sct) {
-        static_cast<HttpHdrScTarget *>(sct->data)->updateStats(hist);
-        sct = sct->next;
+    for (auto &t : targets) {
+        t.updateStats(hist);
     }
 }
 
@@ -313,18 +281,9 @@ httpHdrScStatDumper(StoreEntry * sentry, int, double val, double, int count)
 HttpHdrScTarget *
 HttpHdrSc::findTarget(const char *target)
 {
-    dlink_node *node;
-    node = targets.head;
-
-    while (node) {
-        HttpHdrScTarget *sct = (HttpHdrScTarget *)node->data;
-
-        if (target && sct->target.size() > 0 && !strcmp(target, sct->target.termedBuf()))
-            return sct;
-        else if (!target && sct->target.size() == 0)
-            return sct;
-
-        node = node->next;
+    for (auto &sct : targets) {
+        if (sct.target.cmp(target) == 0)
+            return &sct;
     }
 
     return NULL;
@@ -352,12 +311,14 @@ HttpHdrSc::getMergedTarget(const char *ourtarget)
 }
 
 void
-HttpHdrSc::addTarget(HttpHdrScTarget *t) {
-    dlinkAdd(t, &t->node, &targets);
+HttpHdrSc::addTarget(HttpHdrScTarget *t)
+{
+    targets.emplace_front(std::move(*t));
 }
 
 void
-HttpHdrSc::addTargetAtTail(HttpHdrScTarget *t) {
-    dlinkAddTail (t, &t->node, &targets);
+HttpHdrSc::addTargetAtTail(HttpHdrScTarget *t)
+{
+    targets.emplace_back(std::move(*t));
 }
 
