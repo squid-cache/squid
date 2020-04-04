@@ -333,7 +333,8 @@ ACL::matchForCache(ACLChecklist *)
  * RBC
  * TODO: does a dlink_list perform well enough? Kinkie
  */
-int ACL::cacheMatchAcl(std::list<acl_proxy_auth_match_cache> &cache, ACLChecklist *checklist)
+int
+ACL::cacheMatchAcl(std::list<acl_proxy_auth_match_cache> &cache, ACLChecklist *checklist)
 {
     for (const auto &auth_match : cache) {
         if (auth_match.acl_data == this) {
