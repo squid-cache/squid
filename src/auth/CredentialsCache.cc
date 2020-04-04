@@ -141,6 +141,9 @@ CredentialsCache::doConfigChangeCleanup()
 {
     // purge expired entries entirely
     cleanup();
+    for (auto i : store_) {
+        i.second->proxy_match_cache.clear();
+    }
 }
 
 } /* namespace Auth */
