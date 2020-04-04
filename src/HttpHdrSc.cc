@@ -124,6 +124,8 @@ HttpHdrSc::parse(const String * str)
         sct = sc->findTarget(target);
 
         if (!sct) {
+            // XXX: if parse is left-to-right over field-value this should be emplace_back()
+            // currently placing on the front reverses the order of headers passed on downstream.
             targets.emplace_front(target);
             sct = &targets.front();
         }
@@ -192,6 +194,7 @@ HttpHdrSc::parse(const String * str)
     return !sc->targets.empty();
 }
 
+/// XXX: this function should be in HttpHdrScTarget.cc
 void
 HttpHdrScTarget::packInto(Packable * p) const
 {
@@ -295,6 +298,16 @@ HttpHdrSc::getMergedTarget(const char *ourtarget)
     HttpHdrScTarget *sctus = findTarget(ourtarget);
     HttpHdrScTarget *sctgeneric = findTarget(NULL);
 
+    /* W3C Edge Architecture Specification 1.0 section 3
+     *
+     * "If more than one is targetted at a surrogate, the most specific applies.
+     *  For example,
+     *    Surrogate-Control: max-age=60, no-store;abc
+     *  The surrogate that identified itself as 'abc' would apply no-store;
+     *  others would apply max-age=60.
+     *
+     * XXX: the if statements below will *merge* the no-store and max-age settings.
+     */
     if (sctgeneric || sctus) {
         HttpHdrScTarget *sctusable = new HttpHdrScTarget(NULL);
 
