@@ -30,7 +30,6 @@ Auth::User::User(Auth::SchemeConfig *aConfig, const char *aRequestRealm) :
     username_(nullptr),
     requestRealm_(aRequestRealm)
 {
-    proxy_match_cache.head = proxy_match_cache.tail = NULL;
     ip_list.head = ip_list.tail = NULL;
     debugs(29, 5, HERE << "Initialised auth_user '" << this << "'.");
 }
@@ -122,9 +121,6 @@ Auth::User::~User()
 {
     debugs(29, 5, HERE << "Freeing auth_user '" << this << "'.");
     assert(LockCount() == 0);
-
-    /* free cached acl results */
-    aclCacheMatchFlush(&proxy_match_cache);
 
     /* free seen ip address's */
     clearIp();

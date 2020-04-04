@@ -25,6 +25,7 @@
 #include "SquidConfig.h"
 
 #include <algorithm>
+#include <list>
 #include <map>
 
 const char *AclMatchedName = NULL;
@@ -332,46 +333,18 @@ ACL::matchForCache(ACLChecklist *)
  * RBC
  * TODO: does a dlink_list perform well enough? Kinkie
  */
-int
-ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
+int ACL::cacheMatchAcl(std::list<acl_proxy_auth_match_cache> &cache, ACLChecklist *checklist)
 {
-    acl_proxy_auth_match_cache *auth_match;
-    dlink_node *link;
-    link = cache->head;
-
-    while (link) {
-        auth_match = (acl_proxy_auth_match_cache *)link->data;
-
-        if (auth_match->acl_data == this) {
+    for (const auto &auth_match : cache) {
+        if (auth_match.acl_data == this) {
             debugs(28, 4, "ACL::cacheMatchAcl: cache hit on acl '" << name << "' (" << this << ")");
-            return auth_match->matchrv;
+            return auth_match.matchrv;
         }
-
-        link = link->next;
     }
-
-    auth_match = new acl_proxy_auth_match_cache(matchForCache(checklist), this);
-    dlinkAddTail(auth_match, &auth_match->link, cache);
-    debugs(28, 4, "ACL::cacheMatchAcl: miss for '" << name << "'. Adding result " << auth_match->matchrv);
-    return auth_match->matchrv;
-}
-
-void
-aclCacheMatchFlush(dlink_list * cache)
-{
-    acl_proxy_auth_match_cache *auth_match;
-    dlink_node *link, *tmplink;
-    link = cache->head;
-
-    debugs(28, 8, "aclCacheMatchFlush called for cache " << cache);
-
-    while (link) {
-        auth_match = (acl_proxy_auth_match_cache *)link->data;
-        tmplink = link;
-        link = link->next;
-        dlinkDelete(tmplink, cache);
-        delete auth_match;
-    }
+    auto auth_match = acl_proxy_auth_match_cache(matchForCache(checklist), this);
+    cache.emplace_back(auth_match);
+    debugs(28, 4, "ACL::cacheMatchAcl: miss for '" << name << "'. Adding result " << auth_match.matchrv);
+    return auth_match.matchrv;
 }
 
 bool

@@ -11,6 +11,7 @@
 
 #if USE_AUTH
 
+#include "acl/Acl.h"
 #include "auth/CredentialState.h"
 #include "auth/forward.h"
 #include "auth/Type.h"
@@ -20,6 +21,8 @@
 #include "ip/Address.h"
 #include "Notes.h"
 #include "sbuf/SBuf.h"
+
+#include <list>
 
 class StoreEntry;
 
@@ -48,7 +51,8 @@ public:
     Auth::Type auth_type;
     /** the config for this user */
     Auth::SchemeConfig *config;
-    dlink_list proxy_match_cache;
+    // XXX would be better served by unordered_map<void*, int> ?
+    std::list<acl_proxy_auth_match_cache> proxy_match_cache;
     size_t ipcount;
     long expiretime;
 

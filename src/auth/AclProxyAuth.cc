@@ -183,7 +183,7 @@ ACLProxyAuth::matchProxyAuth(ACLChecklist *cl)
         }
     }
     /* check to see if we have matched the user-acl before */
-    int result = cacheMatchAcl(&checklist->auth_user_request->user()->proxy_match_cache, checklist);
+    int result = cacheMatchAcl(checklist->auth_user_request->user()->proxy_match_cache, checklist);
     checklist->auth_user_request = NULL;
     return result;
 }
