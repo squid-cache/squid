@@ -124,8 +124,8 @@ HttpHdrSc::parse(const String * str)
         sct = sc->findTarget(target);
 
         if (!sct) {
-            sct = new HttpHdrScTarget(target);
-            addTarget(sct);
+            targets.emplace_front(target);
+            sct = &targets.front();
         }
 
         safe_free (temp);
@@ -309,16 +309,3 @@ HttpHdrSc::getMergedTarget(const char *ourtarget)
 
     return NULL;
 }
-
-void
-HttpHdrSc::addTarget(HttpHdrScTarget *t)
-{
-    targets.emplace_front(std::move(*t));
-}
-
-void
-HttpHdrSc::addTargetAtTail(HttpHdrScTarget *t)
-{
-    targets.emplace_back(std::move(*t));
-}
-
