@@ -20,13 +20,13 @@ ResolvedPeers::ResolvedPeers()
 }
 
 void
-ResolvedPeers::retryPath(const Comm::ConnectionPointer &conn)
+ResolvedPeers::retryPath(const Comm::ConnectionPointer &path)
 {
-    debugs(17, 4, conn);
-    assert(conn);
+    debugs(17, 4, path);
+    assert(path);
     const auto found = std::find_if(paths_.begin(), paths_.end(),
-    [conn](const ResolvedPeerPath &path) {
-        return path.connection == conn;
+    [path](const ResolvedPeerPath &candidate) {
+        return candidate.connection == path; // (refcounted) pointer comparison
     });
     assert(found != paths_.end());
     assert(found->available == false);
