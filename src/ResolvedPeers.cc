@@ -24,6 +24,10 @@ ResolvedPeers::retryPath(const Comm::ConnectionPointer &path)
 {
     debugs(17, 4, path);
     assert(path);
+    // Cannot use candidatesToSkip for a faster (reverse) search because there
+    // may be unavailable candidates past candidatesToSkip. We could remember
+    // the last extraction index, but, to completely avoid a linear search,
+    // extract*() methods should return the candidate index.
     const auto found = std::find_if(paths_.begin(), paths_.end(),
     [path](const ResolvedPeerPath &candidate) {
         return candidate.connection == path; // (refcounted) pointer comparison
