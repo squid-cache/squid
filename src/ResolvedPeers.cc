@@ -31,6 +31,15 @@ ResolvedPeers::retryPath(const Comm::ConnectionPointer &conn)
     assert(found != paths_.end());
     assert(found->available == false);
     found->available = true;
+
+    // if we restored availability of a candidate that we used to skip, update
+    const auto candidatesToTheLeft = static_cast<size_type>(found - paths_.begin());
+    if (candidatesToTheLeft < candidatesToSkip) {
+        candidatesToSkip = candidatesToTheLeft;
+    } else {
+        // *found was unavailable so candidatesToSkip could not end at it
+        Must(candidatesToTheLeft != candidatesToSkip);
+    }
 }
 
 bool
@@ -55,35 +64,21 @@ void
 ResolvedPeers::addPath(const Comm::ConnectionPointer &path)
 {
     paths_.emplace_back(path);
+    Must(paths_.back().available); // no candidatesToSkip updates are needed
 }
 
 Comm::ConnectionPointer
 ResolvedPeers::extractFront()
 {
-    return extractFound("first: ", cacheFront());
+    return extractFound("first: ", start());
 }
 
-/// helps to optimize find*() searches, caching the index of 'current peer'
+/// \returns the beginning iterator for any available-path search
 ConnectionList::iterator
-ResolvedPeers::cacheFront()
+ResolvedPeers::start()
 {
-    const auto pathsSize = paths_.size();
-    Must(pathsSize);
-    for (currentPeerIndex = 0; currentPeerIndex < pathsSize; ++currentPeerIndex) {
-        if (paths_[currentPeerIndex].available)
-            break;
-    }
-    Must(currentPeerIndex < pathsSize);
-    return paths_.begin() + currentPeerIndex;
-}
-
-/// \returns the iterator of the cached 'current peer'
-ConnectionList::iterator
-ResolvedPeers::cachedCurrent(const Comm::Connection *currentPeer)
-{
-    Must(currentPeerIndex < paths_.size());
-    Must(currentPeer->getPeer() == paths_[currentPeerIndex].connection->getPeer());
-    return paths_.begin() + currentPeerIndex;
+    Must(candidatesToSkip <= paths_.size());
+    return paths_.begin() + candidatesToSkip; // may return end()
 }
 
 /// \returns the first available same-peer same-family address iterator or end()
@@ -95,7 +90,7 @@ ResolvedPeers::findPrime(const Comm::Connection &currentPeer, bool *hasNext)
     const auto peerToMatch = currentPeer.getPeer();
     const auto familyToMatch = ConnectionFamily(currentPeer);
     bool foundSpareOrNext = false;
-    const auto found = std::find_if(cachedCurrent(&currentPeer), paths_.end(),
+    const auto found = std::find_if(start(), paths_.end(),
     [&](const ResolvedPeerPath &path) {
         if (!path.available) // skip unavailable
             return false;
@@ -117,7 +112,7 @@ ResolvedPeers::findSpare(const Comm::Connection &currentPeer, bool *hasNext)
     const auto peerToMatch = currentPeer.getPeer();
     const auto familyToAvoid = ConnectionFamily(currentPeer);
     bool foundNext = false;
-    const auto found = std::find_if(cachedCurrent(&currentPeer), paths_.end(),
+    const auto found = std::find_if(start(), paths_.end(),
     [&](const ResolvedPeerPath &path) {
         if (!path.available || familyToAvoid == ConnectionFamily(*path.connection)) // skip unavailable and prime
             return false;
@@ -138,7 +133,7 @@ ResolvedPeers::findPeer(const Comm::Connection &currentPeer, bool *hasNext)
 {
     const auto peerToMatch = currentPeer.getPeer();
     bool foundNext = false;
-    const auto found = std::find_if(cachedCurrent(&currentPeer), paths_.end(),
+    const auto found = std::find_if(start(), paths_.end(),
     [&](const ResolvedPeerPath &path) {
         if (!path.available) // skip unavailable
             return false;
@@ -181,6 +176,12 @@ ResolvedPeers::extractFound(const char *description, const ConnectionList::itera
     assert(found->available);
     found->available = false;
     debugs(17, 7, description << found->connection);
+
+    // if we extracted the left-most available candidate, find the next one
+    if (static_cast<size_type>(found - paths_.begin()) == candidatesToSkip) {
+        while (++candidatesToSkip < paths_.size() && !paths_[candidatesToSkip].available) {}
+    }
+
     return found->connection;
 }
 

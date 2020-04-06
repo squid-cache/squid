@@ -78,11 +78,12 @@ public:
     bool notificationPending = false;
 
 private:
+    using size_type = ConnectionList::size_type;
+
     /// The protocol family of the given path, AF_INET or AF_INET6
     static int ConnectionFamily(const Comm::Connection &conn);
 
-    ConnectionList::iterator cacheFront();
-    ConnectionList::iterator cachedCurrent(const Comm::Connection *currentPeer);
+    ConnectionList::iterator start();
     ConnectionList::iterator findSpare(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
     ConnectionList::iterator findPrime(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
     ConnectionList::iterator findPeer(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
@@ -92,9 +93,10 @@ private:
     bool doneWith(const Comm::Connection &currentPeer, findSmthFun);
 
     ConnectionList paths_; ///< resolved addresses in (peer, family) order
-    /// The index in paths_, calculated by the last cacheFront() call.
-    /// Do not use directly - use cachedCurrent() instead.
-    uint64_t currentPeerIndex = 0;
+    /// the number of leading paths_ elements that are all currently unavailable
+    /// i.e. the size of the front paths_ segment comprised of unavailable items
+    /// i.e. the position of the first available candidate (or paths_.size())
+    size_type candidatesToSkip = 0;
 };
 
 /// summarized ResolvedPeers (for debugging)
