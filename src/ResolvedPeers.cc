@@ -173,16 +173,17 @@ ResolvedPeers::extractSpare(const Comm::Connection &currentPeer)
 Comm::ConnectionPointer
 ResolvedPeers::extractFound(const char *description, const ConnectionList::iterator &found)
 {
-    assert(found->available);
-    found->available = false;
-    debugs(17, 7, description << found->connection);
+    auto &path = *found;
+    debugs(17, 7, description << path.connection);
+    assert(path.available);
+    path.available = false;
 
     // if we extracted the left-most available candidate, find the next one
     if (static_cast<size_type>(found - paths_.begin()) == candidatesToSkip) {
         while (++candidatesToSkip < paths_.size() && !paths_[candidatesToSkip].available) {}
     }
 
-    return found->connection;
+    return path.connection;
 }
 
 bool
