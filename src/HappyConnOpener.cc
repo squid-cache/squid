@@ -480,7 +480,7 @@ HappyConnOpener::sendSuccess(const Comm::ConnectionPointer &conn, bool reused, c
     callback_ = nullptr;
 }
 
-/// cancels the being in-progress attempt and re-inserts the path into the candidates list
+/// cancels the in-progress attempt, making its path a future candidate
 void
 HappyConnOpener::cancelAttempt(Attempt &attempt, const char *reason)
 {
@@ -584,9 +584,9 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     Must(itWasPrime != itWasSpare);
 
     if (itWasPrime) {
-        prime.clear();
+        prime.finish();
     } else {
-        spare.clear();
+        spare.finish();
         if (gotSpareAllowance) {
             TheSpareAllowanceGiver.jobUsedAllowance();
             gotSpareAllowance = false;

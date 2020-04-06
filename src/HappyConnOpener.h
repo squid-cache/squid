@@ -157,13 +157,20 @@ private:
     class Attempt {
     public:
         explicit operator bool() const { return static_cast<bool>(path); }
-        void clear() { path = nullptr; connector = nullptr; connOpener = nullptr; }
-        /// cancels the attempt
+
+        /// reacts to a natural attempt completion (successful or otherwise)
+        void finish() { clear(); }
+
+        /// aborts an in-progress attempt
         void cancel(const char *reason);
 
         Comm::ConnectionPointer path; ///< the destination we are connecting to
         AsyncCall::Pointer connector; ///< our Comm::ConnOpener callback
         Comm::ConnOpener::Pointer connOpener; ///< our Comm::ConnOpener job
+
+    private:
+        /// cleans up after the attempt ends (successfully or otherwise)
+        void clear() { path = nullptr; connector = nullptr; connOpener = nullptr; }
     };
 
     /* AsyncJob API */
