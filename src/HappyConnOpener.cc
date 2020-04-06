@@ -485,7 +485,7 @@ void
 HappyConnOpener::cancelAttempt(Attempt &attempt, const char *reason)
 {
     Must(attempt);
-    destinations->retryPath(attempt.path);
+    destinations->retryPath(attempt.path); // before attempt.cancel() clears path
     attempt.cancel(reason);
 }
 
