@@ -165,12 +165,12 @@ private:
         void cancel(const char *reason);
 
         Comm::ConnectionPointer path; ///< the destination we are connecting to
-        AsyncCall::Pointer connector; ///< our Comm::ConnOpener callback
-        Comm::ConnOpener::Pointer connOpener; ///< our Comm::ConnOpener job
+        AsyncCall::Pointer connector; ///< our opener callback
+        Comm::ConnOpener::Pointer opener; ///< connects to path and calls us
 
     private:
         /// cleans up after the attempt ends (successfully or otherwise)
-        void clear() { path = nullptr; connector = nullptr; connOpener = nullptr; }
+        void clear() { path = nullptr; connector = nullptr; opener = nullptr; }
     };
 
     /* AsyncJob API */

@@ -568,7 +568,7 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, Comm::ConnectionPointer &
 
     attempt.path = dest;
     attempt.connector = callConnect;
-    attempt.connOpener = cs;
+    attempt.opener = cs;
 
     AsyncJob::Start(cs);
 }
@@ -880,7 +880,7 @@ HappyConnOpener::Attempt::cancel(const char *reason)
 {
     if (connector) {
         connector->cancel(reason);
-        CallJobHere(17, 3, connOpener, Comm::ConnOpener, noteAbort);
+        CallJobHere(17, 3, opener, Comm::ConnOpener, noteAbort);
     }
     clear();
 }
