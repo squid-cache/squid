@@ -36,11 +36,10 @@ ResolvedPeers::retryPath(const Comm::ConnectionPointer &conn)
 bool
 ResolvedPeers::empty() const
 {
-    const auto anyPath = std::find_if(paths_.begin(), paths_.end(),
+    return !std::any_of(paths_.begin(), paths_.end(),
     [](const ResolvedPeerPath &path) {
         return path.available;
     });
-    return anyPath == paths_.end();
 }
 
 ConnectionList::size_type
