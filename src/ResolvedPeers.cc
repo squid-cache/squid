@@ -33,7 +33,7 @@ ResolvedPeers::retryPath(const Comm::ConnectionPointer &path)
         return candidate.connection == path; // (refcounted) pointer comparison
     });
     assert(found != paths_.end());
-    assert(found->available == false);
+    assert(!found->available);
     found->available = true;
 
     // if we restored availability of a candidate that we used to skip, update
