@@ -11,7 +11,7 @@
 
 #if USE_OPENSSL
 
-#include "base/LruMap.h"
+#include "base/ClpMap.h"
 #include "CacheManager.h"
 #include "compat/openssl.h"
 #include "ip/Address.h"
@@ -49,7 +49,7 @@ public:
 inline size_t MemoryUsedByContext(const Security::ContextPointer *) {
     return 1024; // TODO: Replace on real size.
 }
-typedef LruMap<SBuf, Security::ContextPointer, MemoryUsedByContext> LocalContextStorage;
+typedef ClpMap<SBuf, Security::ContextPointer, MemoryUsedByContext> LocalContextStorage;
 
 /// Class for storing/manipulating LocalContextStorage per local listening address/port.
 class GlobalContextStorage

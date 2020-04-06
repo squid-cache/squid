@@ -6,8 +6,8 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#ifndef SQUID_LRUMAP_H
-#define SQUID_LRUMAP_H
+#ifndef SQUID__SRC_BASE_CLPMAP_H
+#define SQUID__SRC_BASE_CLPMAP_H
 
 #include "SquidTime.h"
 
@@ -21,8 +21,14 @@ DefaultMemoryUsage(const EntryValue *e)
     return sizeof(*e);
 }
 
+/**
+ * A Map for caching data by Capacity, Lifetime, and Priority (CLP)
+ * Unlike other Map containers data is;
+ * - added only if it fits within a predetermined memory limit (Capacity),
+ * - gets expired based on TTL (Lifetime), and a fading Priority Queue.
+ */
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *) = DefaultMemoryUsage>
-class LruMap
+class ClpMap
 {
 public:
     class Entry
@@ -46,8 +52,8 @@ public:
     typedef typename Map::iterator MapIterator;
     typedef std::pair<Key, QueueIterator> MapPair;
 
-    LruMap(int ttl, size_t size);
-    ~LruMap();
+    ClpMap(int ttl, size_t size);
+    ~ClpMap();
     /// Search for an entry, and return a pointer
     EntryValue *get(const Key &key);
     /// Add an entry to the map
@@ -65,14 +71,14 @@ public:
     /// The number of stored entries
     int entries() const {return entries_;}
 private:
-    LruMap(LruMap const &);
-    LruMap & operator = (LruMap const &);
+    ClpMap(ClpMap const &);
+    ClpMap & operator = (ClpMap const &);
 
     bool expired(const Entry &e) const;
     void trim(size_t wantSpace = 0);
     void touch(const MapIterator &i);
     bool del(const MapIterator &i);
-    void findEntry(const Key &key, LruMap::MapIterator &i);
+    void findEntry(const Key &key, ClpMap::MapIterator &i);
     size_t memoryCountedFor(const Key &, const EntryValue *);
 
     Map storage; ///< The Key/value * pairs
@@ -84,14 +90,14 @@ private:
 };
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-LruMap<Key, EntryValue, MemoryUsedByEV>::LruMap(int aTtl, size_t aSize) :
+ClpMap<Key, EntryValue, MemoryUsedByEV>::ClpMap(int aTtl, size_t aSize) :
     ttl(aTtl)
 {
     setMemLimit(aSize);
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-LruMap<Key, EntryValue, MemoryUsedByEV>::~LruMap()
+ClpMap<Key, EntryValue, MemoryUsedByEV>::~ClpMap()
 {
     for (QueueIterator i = index.begin(); i != index.end(); ++i) {
         delete *i;
@@ -100,7 +106,7 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::~LruMap()
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 void
-LruMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(size_t aSize)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(size_t aSize)
 {
     const auto oldLimit = memLimit_;
     if (aSize > 0)
@@ -114,7 +120,7 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(size_t aSize)
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 void
-LruMap<Key, EntryValue, MemoryUsedByEV>::findEntry(const Key &key, LruMap::MapIterator &i)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::findEntry(const Key &key, ClpMap::MapIterator &i)
 {
     i = storage.find(key);
     if (i == storage.end()) {
@@ -136,7 +142,7 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::findEntry(const Key &key, LruMap::MapIt
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 EntryValue *
-LruMap<Key, EntryValue, MemoryUsedByEV>::get(const Key &key)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::get(const Key &key)
 {
     MapIterator i;
     findEntry(key, i);
@@ -150,7 +156,7 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::get(const Key &key)
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 size_t
-LruMap<Key, EntryValue, MemoryUsedByEV>::memoryCountedFor(const Key &k, const EntryValue *v)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::memoryCountedFor(const Key &k, const EntryValue *v)
 {
     // TODO: handle Entry which change size while stored
     size_t entrySz = sizeof(Entry) + MemoryUsedByEV(v) + k.length();
@@ -159,7 +165,7 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::memoryCountedFor(const Key &k, const En
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 bool
-LruMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t)
 {
     if (ttl == 0)
         return false;
@@ -184,7 +190,7 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t)
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 bool
-LruMap<Key, EntryValue, MemoryUsedByEV>::expired(const LruMap::Entry &entry) const
+ClpMap<Key, EntryValue, MemoryUsedByEV>::expired(const ClpMap::Entry &entry) const
 {
     if (ttl < 0)
         return false;
@@ -194,7 +200,7 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::expired(const LruMap::Entry &entry) con
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 bool
-LruMap<Key, EntryValue, MemoryUsedByEV>::del(LruMap::MapIterator const &i)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::del(ClpMap::MapIterator const &i)
 {
     if (i != storage.end()) {
         Entry *e = *i->second;
@@ -211,7 +217,7 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::del(LruMap::MapIterator const &i)
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 bool
-LruMap<Key, EntryValue, MemoryUsedByEV>::del(const Key &key)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::del(const Key &key)
 {
     MapIterator i;
     findEntry(key, i);
@@ -220,7 +226,7 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::del(const Key &key)
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 void
-LruMap<Key, EntryValue, MemoryUsedByEV>::trim(size_t wantSpace)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::trim(size_t wantSpace)
 {
     while (memLimit() < (memoryUsed() + wantSpace)) {
         QueueIterator i = index.end();
@@ -233,7 +239,7 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::trim(size_t wantSpace)
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 void
-LruMap<Key, EntryValue, MemoryUsedByEV>::touch(LruMap::MapIterator const &i)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::touch(ClpMap::MapIterator const &i)
 {
     // this must not be done when nothing is being cached.
     if (ttl == 0 || memLimit() == 0)
@@ -244,5 +250,4 @@ LruMap<Key, EntryValue, MemoryUsedByEV>::touch(LruMap::MapIterator const &i)
     i->second = index.begin();
 }
 
-#endif
-
+#endif /* SQUID__SRC_BASE_CLPMAP_H */

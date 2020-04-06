@@ -19,7 +19,7 @@
 #include "ssl/helper.h"
 #include "wordlist.h"
 
-Ssl::CertValidationHelper::LruCache *Ssl::CertValidationHelper::HelperCache = nullptr;
+Ssl::CertValidationHelper::CacheType *Ssl::CertValidationHelper::HelperCache = nullptr;
 
 #if USE_SSL_CRTD
 
@@ -212,7 +212,7 @@ void Ssl::CertValidationHelper::Init()
 
     //WARNING: initializing static member in an object initialization method
     assert(HelperCache == NULL);
-    HelperCache = new Ssl::CertValidationHelper::LruCache(ttl, cache);
+    HelperCache = new CacheType(ttl, cache);
 }
 
 void Ssl::CertValidationHelper::Shutdown()
