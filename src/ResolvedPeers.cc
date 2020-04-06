@@ -46,15 +46,6 @@ ResolvedPeers::retryPath(const Comm::ConnectionPointer &path)
     }
 }
 
-bool
-ResolvedPeers::empty() const
-{
-    return !std::any_of(paths_.begin(), paths_.end(),
-    [](const ResolvedPeerPath &path) {
-        return path.available;
-    });
-}
-
 ConnectionList::size_type
 ResolvedPeers::size() const
 {
@@ -74,6 +65,7 @@ ResolvedPeers::addPath(const Comm::ConnectionPointer &path)
 Comm::ConnectionPointer
 ResolvedPeers::extractFront()
 {
+    Must(!empty());
     return extractFound("first: ", start());
 }
 

@@ -37,7 +37,7 @@ public:
     ResolvedPeers();
 
     /// whether we lack any known candidate paths
-    bool empty() const;
+    bool empty() const { return candidatesToSkip == paths_.size(); }
 
     /// add a candidate path to try after all the existing paths
     void addPath(const Comm::ConnectionPointer &);
