@@ -465,7 +465,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
 
         if (field_start == field_end) {
             if (field_ptr < header_end) {
-                debugs(55, warnOnError, "WARNING: unparseable HTTP header field near {" <<
+                debugs(55, warnOnError, "WARNING: unparsable HTTP header field near {" <<
                        getStringPrefix(field_start, hdrLen-(field_start-header_start)) << "}");
                 PROF_stop(HttpHeaderParse);
                 clean();
@@ -477,7 +477,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
 
         const auto e = HttpHeaderEntry::parse(field_start, field_end, owner);
         if (!e) {
-            debugs(55, warnOnError, "WARNING: unparseable HTTP header field {" <<
+            debugs(55, warnOnError, "WARNING: unparsable HTTP header field {" <<
                    getStringPrefix(field_start, field_end-field_start) << "}");
             debugs(55, warnOnError, " in {" << getStringPrefix(header_start, hdrLen) << "}");
 

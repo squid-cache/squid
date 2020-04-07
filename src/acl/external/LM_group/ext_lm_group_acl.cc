@@ -55,7 +55,7 @@
  *              Added support for running on a Domain Controller.
  * Version 1.10
  * 01-05-2003 Guido Serassio
- *              Added option for case insensitive group name comparation.
+ *              Added option for case insensitive group name comparison.
  *              More debug info.
  *              Updated documentation.
  *              Segfault bug fix (Bugzilla #574)
@@ -184,7 +184,7 @@ GetDomainName(void)
                 debug("LsaQueryInformationPolicy Error: %ld\n", status);
             } else {
 
-                /* Get name in useable format */
+                /* Get name in usable format */
                 DomainName = AllocStrFromLSAStr(ppdiDomainInfo->Name);
 
                 /*

@@ -10,7 +10,7 @@
 #define SQUID_NTLMAUTH_H
 
 /* NP: All of this cruft is little endian */
-/* Endian functions are usualy handled by the OS but not always. */
+/* Endian functions are usually handled by the OS but not always. */
 #include "ntlmauth/support_endian.h"
 
 #ifdef __cplusplus

@@ -144,7 +144,7 @@ int Win32SockInit(void)
     } else if (s_iInitCount < 0)
         return (s_iInitCount);
 
-    /* s_iInitCount == 0. Do the initailization */
+    /* s_iInitCount == 0. Do the initialization */
     iVersionRequested = MAKEWORD(2, 0);
 
     err = WSAStartup((WORD) iVersionRequested, &wsaData);
@@ -651,7 +651,7 @@ read_reply(int s, cachemgr_request * req)
 
             if (status == 401 || status == 407) {
                 reset_auth(req);
-                status = 403;   /* Forbiden, see comments in case isForward: */
+                status = 403;   /* Forbidden, see comments in case isForward: */
             }
 
             /* this is a way to pass HTTP status to the Web server */

@@ -939,7 +939,7 @@ configDoConfigure(void)
     }
 
     // prevent infinite fetch loops in the request parser
-    // due to buffer full but not enough data recived to finish parse
+    // due to buffer full but not enough data received to finish parse
     if (Config.maxRequestBufferSize <= Config.maxRequestHeaderSize) {
         fatalf("Client request buffer of %u bytes cannot hold a request with %u bytes of headers." \
                " Change client_request_buffer_max or request_header_max_size limits.",
@@ -1115,18 +1115,17 @@ parseTimeUnit(const char *unitName, std::chrono::nanoseconds &ns)
 }
 
 static std::chrono::nanoseconds
-CheckTimeValue(const double value, const std::chrono::nanoseconds &unit)
+ToNanoSeconds(const double value, const std::chrono::nanoseconds &unit)
 {
-    if (value < 0)
+    if (value < 0.0)
         throw TexcHere("time must have a positive value");
 
-    const auto maxNanoseconds = std::chrono::nanoseconds::max().count();
-    if (value > maxNanoseconds/static_cast<double>(unit.count())) {
-        const auto maxYears = maxNanoseconds/(HoursPerYear*3600*1000000000);
+    if (value > (static_cast<double>(std::chrono::nanoseconds::max().count()) / unit.count())) {
+        const auto maxYears = std::chrono::duration_cast<std::chrono::hours>(std::chrono::nanoseconds::max()).count()/HoursPerYear;
         throw TexcHere(ToSBuf("time values cannot exceed ", maxYears, " years"));
     }
 
-    return std::chrono::nanoseconds(static_cast<std::chrono::nanoseconds::rep>(unit.count() * value));
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(unit * value);
 }
 
 template <class TimeUnit>
@@ -1166,7 +1165,7 @@ parseTimeLine()
 
     (void)ConfigParser::NextToken();
 
-    const auto nanoseconds = CheckTimeValue(parsedValue, parsedUnitDuration);
+    const auto nanoseconds = ToNanoSeconds(parsedValue, parsedUnitDuration);
 
     // validate precisions (time-units-small only)
     if (TimeUnit(1) <= std::chrono::microseconds(1)) {
@@ -3072,7 +3071,8 @@ free_time_msec(time_msec_t * var)
 static void
 dump_time_nanoseconds(StoreEntry *entry, const char *name, const std::chrono::nanoseconds &var)
 {
-    storeAppendPrintf(entry, "%s %" PRId64 " nanoseconds\n", name, var.count());
+    // std::chrono::nanoseconds::rep is unknown a priori so we cast to (and print) the largest supported integer
+    storeAppendPrintf(entry, "%s %jd nanoseconds\n", name, static_cast<intmax_t>(var.count()));
 }
 
 static void
@@ -4709,7 +4709,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
         return;
     }
 
-    // if this is the first rule proccessed
+    // if this is the first rule processed
     if (*ssl_bump == NULL) {
         bumpCfgStyleLast = bcsNone;
         sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
@@ -4963,7 +4963,7 @@ ParseUrlRewriteTimeout()
                ": WARNING: missing time unit, using deprecated default '" << T_SECOND_STR << "'");
     }
 
-    const auto nanoseconds = CheckTimeValue(parsedTimeValue, parsedUnitDuration);
+    const auto nanoseconds = ToNanoSeconds(parsedTimeValue, parsedUnitDuration);
 
     return FromNanoseconds<Seconds>(nanoseconds, parsedTimeValue);
 }

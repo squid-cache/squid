@@ -209,7 +209,7 @@ rfc1035HeaderUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_messa
      * all zero as per RFC 1035.  If not the message should be
      * rejected.
      * NO! RFCs say ignore inbound reserved, they may be used in future.
-     *  NEW messages need to be set 0, thats all.
+     *  NEW messages need to be set 0, that's all.
      */
     h->rcode = t & 0x0F;
     memcpy(&s, buf + (*off), sizeof(s));

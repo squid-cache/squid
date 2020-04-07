@@ -537,7 +537,7 @@ void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex) {
     subSize(filename);
     int ret = remove(filename.c_str());
     if (ret < 0 && errno != ENOENT)
-        throw std::runtime_error("Failed to remove certficate file " + filename + " from db");
+        throw std::runtime_error("Failed to remove certificate file " + filename + " from db");
 }
 
 bool Ssl::CertificateDb::deleteInvalidCertificate() {

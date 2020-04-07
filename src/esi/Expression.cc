@@ -967,7 +967,7 @@ int
 addmember(stackmember * stack, int *stackdepth, stackmember * candidate)
 {
     if (candidate->valuetype != ESI_EXPR_LITERAL && *stackdepth > 1) {
-        /* !(!(a==b))) is why thats safe */
+        /* !(!(a==b))) is why that's safe */
         /* strictly less than until we unwind */
 
         if (*stackdepth >= ESI_STACK_DEPTH_LIMIT)

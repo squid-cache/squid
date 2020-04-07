@@ -11,7 +11,7 @@
 
 /* Dispatch code to handle events that have completed. Completed events are queued
  * with a completion dispatcher by the OS Async engine - i.e. the poll or kqueue or
- * select loop, or a signal reciever, or the diskd/diskthreads/etc modules.
+ * select loop, or a signal receiver, or the diskd/diskthreads/etc modules.
  */
 
 class CompletionDispatcher

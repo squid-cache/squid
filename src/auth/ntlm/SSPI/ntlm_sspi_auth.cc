@@ -248,7 +248,7 @@ char * GetDomainName(void)
                 debug("LsaQueryInformationPolicy Error: %ld\n", status);
             } else  {
 
-                /* Get name in useable format */
+                /* Get name in usable format */
                 DomainName = AllocStrFromLSAStr(ppdiDomainInfo->Name);
 
                 /*
@@ -460,7 +460,7 @@ manage_request()
         char *c = static_cast<char*>(memchr(buf, '\n', sizeof(buf)));
         if (c) {
             if (oversized) {
-                helperfail("messge=\"illegal request received\"");
+                helperfail("message=\"illegal request received\"");
                 fprintf(stderr, "Illegal request received: '%s'\n", buf);
                 return 1;
             }

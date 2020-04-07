@@ -60,15 +60,15 @@ public:
 private:
     typedef const char * (ErrorDetail::*fmt_action_t)() const;
     /**
-     * Holds a formating code and its conversion method
+     * Holds a formatting code and its conversion method
      */
     class err_frm_code
     {
     public:
-        const char *code;             ///< The formating code
+        const char *code;             ///< The formatting code
         fmt_action_t fmt_action; ///< A pointer to the conversion method
     };
-    static err_frm_code  ErrorFormatingCodes[]; ///< The supported formating codes
+    static err_frm_code  ErrorFormatingCodes[]; ///< The supported formatting codes
 
     const char *subject() const;
     const char *ca_name() const;

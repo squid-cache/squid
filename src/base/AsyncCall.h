@@ -91,7 +91,7 @@ protected:
     AsyncCall::Pointer theNext; // used exclusively by AsyncCallQueue
 
 private:
-    const char *isCanceled; // set to the cancelation reason by cancel()
+    const char *isCanceled; // set to the cancellation reason by cancel()
 
     // not implemented to prevent nil calls from being passed around and unknowingly scheduled, for now.
     AsyncCall();
