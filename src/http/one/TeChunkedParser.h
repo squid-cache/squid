@@ -57,12 +57,16 @@ public:
     /// set the buffer to be used to store decoded chunk data
     void setPayloadBuffer(MemBuf *parsedContent) {theOut = parsedContent;}
 
+    /// syncs the input buffer to be used to store decoded chunk data
+    void syncInputBuffer(const SBuf &in) {buf_ = in;}
+
     /// Instead of ignoring all chunk extension values, give the supplied
     /// parser a chance to handle them. Only applied to last-chunk (for now).
     void parseExtensionValuesWith(ChunkExtensionValueParser *parser) { customExtensionValueParser = parser; }
 
     bool needsMoreSpace() const;
 
+    bool parseInput();
     /* Http1::Parser API */
     virtual void clear();
     virtual bool parse(const SBuf &);

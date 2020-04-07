@@ -1384,8 +1384,18 @@ HttpStateData::decodeAndWriteReplyBody()
     MemBuf decodedData;
     decodedData.init();
     httpChunkDecoder->setPayloadBuffer(&decodedData);
-    const bool doneParsing = httpChunkDecoder->parse(inBuf);
+    httpChunkDecoder->syncInputBuffer(inBuf);
+    // Allow httpChunkDecoder be the only owner of input buffer content
+    // to avoid reallocation on cow or and chop operations
+    inBuf = SBuf();
+
+    const bool doneParsing = httpChunkDecoder->parseInput();
     inBuf = httpChunkDecoder->remaining(); // sync buffers after parse
+
+    // Allow HttpStateData be the only owner of input buffer MemBlob
+    // to avoid reallocation on cow or consume/chop operations:
+    httpChunkDecoder->syncInputBuffer(SBuf());
+
     len = decodedData.contentSize();
     data=decodedData.content();
     addVirginReplyBody(data, len);
