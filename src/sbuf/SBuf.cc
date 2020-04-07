@@ -887,7 +887,8 @@ SBuf::cow(SBuf::size_type newsize)
     if (newsize == npos || newsize < length())
         newsize = length();
 
-    if (store_->LockCount() == 1 && newsize == length()) {
+    const auto needSpace = newsize - length();
+    if (store_->LockCount() == 1 && needSpace <= store_->spaceSize()) {
         debugs(24, 8, id << " no cow needed");
         ++stats.cowFast;
         return;
