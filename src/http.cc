@@ -1369,7 +1369,7 @@ HttpStateData::writeReplyBody()
     const char *data = inBuf.rawContent();
     int len = inBuf.length();
     addVirginReplyBody(data, len);
-    inBuf.consume(len);
+    inBuf.chop(len);
 }
 
 bool
