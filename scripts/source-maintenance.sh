@@ -21,6 +21,12 @@
 # If code alteration takes place the process is halted for manual intervention.
 #
 
+if ! git diff --quiet; then
+	echo "There are unstaged changes. This script may modify sources."
+	echo "Stage changes to avoid permanent losses when things go bad."
+	exit 1
+fi
+
 # On squid-cache.org we have to use the python scripted md5sum
 HOST=`hostname`
 if test "$HOST" = "squid-cache.org" ; then
@@ -47,8 +53,8 @@ updateIfChanged ()
 	message="$3"
 
 	test -e "${original}" -a -e "${updated}" || return
-	md51=`cat "${original}" | tr -d "\n \t\r" | ${MD5}`;
-	md52=`cat "${updated}" | tr -d "\n \t\r" | ${MD5}`;
+	md51=`cat "${original}" | ${MD5}`;
+	md52=`cat "${updated}" | ${MD5}`;
 	if test "${md51}" != "${md52}" ; then
 		echo "NOTICE: File ${original} changed: ${message}"
 		mv "${updated}" "${original}" || return
