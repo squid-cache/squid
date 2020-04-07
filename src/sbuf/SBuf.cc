@@ -167,9 +167,6 @@ SBuf::rawSpace(size_type minSpace)
         debugs(24, 7, id << " not growing");
         return bufEnd();
     }
-    // TODO: we may try to memmove before realloc'ing in order to avoid
-    //   one allocation operation, if we're the sole owners of a MemBlob.
-    //   Maybe some heuristic on off_ and length()?
     cow(minSpace+length());
     return bufEnd();
 }
@@ -887,11 +884,22 @@ SBuf::cow(SBuf::size_type newsize)
     if (newsize == npos || newsize < length())
         newsize = length();
 
-    const auto needSpace = newsize - length();
-    if (store_->LockCount() == 1 && needSpace <= store_->spaceSize()) {
-        debugs(24, 8, id << " no cow needed");
-        ++stats.cowFast;
-        return;
+    if (store_->LockCount() == 1) {
+        // If we are the only owners keep only our data on blob:
+        store_->crop(off_ + length());
+        const auto needSpace = newsize - length();
+        if (needSpace <= store_->spaceSize()) {
+            debugs(24, 8, id << " no cow needed");
+            ++stats.cowFast;
+            return;
+        }
+        if (needSpace <= off_ + store_->spaceSize()) {
+            store_->moveToStartAndKeep(off_, length());
+            off_ = 0;
+            debugs(24, 8, id << " no cow after move-to-start needed");
+            ++stats.cowFast;
+            return;
+        }
     }
     reAlloc(newsize);
 }

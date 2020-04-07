@@ -124,6 +124,17 @@ MemBlob::append(const char *source, const size_type n)
     ++Stats.append;
 }
 
+void
+MemBlob::moveToStartAndKeep(const size_type offset, const size_type n)
+{
+    if (n > 0) {
+        Must(offset);
+        Must(offset + n < size);
+        memmove(mem, mem + offset, n);
+        size = n;
+    }
+}
+
 const MemBlobStats&
 MemBlob::GetStats()
 {

@@ -94,6 +94,11 @@ public:
     /// extends the available space to the entire allocated blob
     void clear() { size = 0; }
 
+    // Keep only the first n bytes and drop the rest of data
+    /// \param n the number of bytes that were appended
+    void crop(const size_type n) {size = n;}
+
+    void moveToStartAndKeep(const size_type offset, const size_type n);
     /// dump debugging information
     std::ostream & dump(std::ostream &os) const;
 
