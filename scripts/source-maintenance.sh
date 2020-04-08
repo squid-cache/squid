@@ -52,10 +52,7 @@ updateIfChanged ()
 	updated="$2"
 	message="$3"
 
-	test -e "${original}" -a -e "${updated}" || return
-	md51=`cat "${original}" | ${MD5}`;
-	md52=`cat "${updated}" | ${MD5}`;
-	if test "${md51}" != "${md52}" ; then
+	if ! cmp -s "${original}" "${updated}"; then
 		echo "NOTICE: File ${original} changed: ${message}"
 		mv "${updated}" "${original}" || return
 	else
