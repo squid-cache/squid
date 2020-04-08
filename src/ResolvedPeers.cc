@@ -49,7 +49,7 @@ ResolvedPeers::retryPath(const Comm::ConnectionPointer &path)
 ConnectionList::size_type
 ResolvedPeers::size() const
 {
-    return std::count_if(paths_.begin(), paths_.end(),
+    return std::count_if(start(), paths_.end(),
     [](const ResolvedPeerPath &path) {
         return path.available;
     });
