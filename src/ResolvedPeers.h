@@ -13,6 +13,7 @@
 #include "comm/forward.h"
 
 #include <iosfwd>
+#include <utility>
 
 class ResolvedPeerPath
 {
@@ -80,18 +81,22 @@ public:
 private:
     using size_type = ConnectionList::size_type;
 
+    /// A find*() result: An iterator of the found path (or paths_.end()) and
+    /// whether the "other" path was found instead.
+    typedef std::pair<ConnectionList::iterator, bool> Finding;
+
     /// The protocol family of the given path, AF_INET or AF_INET6
     static int ConnectionFamily(const Comm::Connection &conn);
 
     ConnectionList::const_iterator start() const { return const_cast<ResolvedPeers*>(this)->start(); }
     ConnectionList::iterator start();
-    ConnectionList::iterator findSpare(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
-    ConnectionList::iterator findPrime(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
-    ConnectionList::iterator findPeer(const Comm::Connection &currentPeer, bool *hasNext = nullptr);
+    Finding findSpare(const Comm::Connection &currentPeer);
+    Finding findPrime(const Comm::Connection &currentPeer);
+    Finding findPeer(const Comm::Connection &currentPeer);
     Comm::ConnectionPointer extractFound(const char *description, const ConnectionList::iterator &found);
+    Finding makeFinding(const ConnectionList::iterator &found, bool foundOther);
 
-    typedef ConnectionList::iterator (ResolvedPeers::*findSmthFun)(const Comm::Connection &, bool *);
-    bool doneWith(const Comm::Connection &currentPeer, findSmthFun);
+    bool doneWith(const Finding &findings) const;
 
     ConnectionList paths_; ///< resolved addresses in (peer, family) order
     /// the number of leading paths_ elements that are all currently unavailable
