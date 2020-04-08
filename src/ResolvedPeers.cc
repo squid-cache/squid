@@ -75,13 +75,13 @@ ResolvedPeers::start()
 ConnectionList::iterator
 ResolvedPeers::findPrime(const Comm::Connection &currentPeer, bool *foundOther)
 {
-    const auto found = start();
-    const auto foundNextOrSpare = found != paths_.end() &&
-        (currentPeer.getPeer() != found->connection->getPeer() || // next peer
-            ConnectionFamily(currentPeer) != ConnectionFamily(*found->connection));
+    const auto candidate = start();
+    const auto foundNextOrSpare = candidate != paths_.end() &&
+        (currentPeer.getPeer() != candidate->connection->getPeer() || // next peer
+            ConnectionFamily(currentPeer) != ConnectionFamily(*candidate->connection));
     if (foundOther)
         *foundOther = foundNextOrSpare;
-    return foundNextOrSpare ? paths_.end() : found;
+    return foundNextOrSpare ? paths_.end() : candidate;
 }
 
 /// \returns the first available same-peer different-family address iterator or end()
@@ -90,19 +90,19 @@ ConnectionList::iterator
 ResolvedPeers::findSpare(const Comm::Connection &currentPeer, bool *foundOther)
 {
     const auto primeFamily = ConnectionFamily(currentPeer);
-    const auto found = std::find_if(start(), paths_.end(),
-    [&](const ResolvedPeerPath &path) {
+    const auto candidate = std::find_if(start(), paths_.end(),
+    [primeFamily](const ResolvedPeerPath &path) {
         if (!path.available)
             return false;
         if (primeFamily == ConnectionFamily(*path.connection))
             return false;
         return true; // found either spare or next peer
     });
-    const auto foundNext = found != paths_.end() &&
-        currentPeer.getPeer() != found->connection->getPeer();
+    const auto foundNext = candidate != paths_.end() &&
+        currentPeer.getPeer() != candidate->connection->getPeer();
     if (foundOther)
         *foundOther = foundNext;
-    return foundNext ? paths_.end() : found;
+    return foundNext ? paths_.end() : candidate;
 }
 
 /// \returns the first available same-peer address iterator or end()
@@ -110,12 +110,12 @@ ResolvedPeers::findSpare(const Comm::Connection &currentPeer, bool *foundOther)
 ConnectionList::iterator
 ResolvedPeers::findPeer(const Comm::Connection &currentPeer, bool *foundOther)
 {
-    const auto found = start();
-    const auto foundNext = found != paths_.end() &&
-        currentPeer.getPeer() != found->connection->getPeer();
+    const auto candidate = start();
+    const auto foundNext = candidate != paths_.end() &&
+        currentPeer.getPeer() != candidate->connection->getPeer();
     if (foundOther)
         *foundOther = foundNext;
-    return foundNext ? paths_.end() : found;
+    return foundNext ? paths_.end() : candidate;
 }
 
 Comm::ConnectionPointer
