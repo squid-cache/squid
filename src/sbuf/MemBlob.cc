@@ -129,7 +129,7 @@ MemBlob::moveToStartAndKeep(const size_type offset, const size_type n)
 {
     if (n > 0) {
         Must(offset);
-        Must(offset + n < size);
+        Must(offset + n <= size);
         memmove(mem, mem + offset, n);
         size = n;
     }
