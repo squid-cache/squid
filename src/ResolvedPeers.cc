@@ -62,13 +62,6 @@ ResolvedPeers::addPath(const Comm::ConnectionPointer &path)
     Must(paths_.back().available); // no candidatesToSkip updates are needed
 }
 
-Comm::ConnectionPointer
-ResolvedPeers::extractFront()
-{
-    Must(!empty());
-    return extractFound("first: ", start());
-}
-
 /// \returns the beginning iterator for any available-path search
 ConnectionList::iterator
 ResolvedPeers::start()
@@ -141,6 +134,13 @@ ResolvedPeers::findPeer(const Comm::Connection &currentPeer, bool *hasNext)
     if (hasNext)
         *hasNext = foundNext;
     return foundNext ? paths_.end() : found;
+}
+
+Comm::ConnectionPointer
+ResolvedPeers::extractFront()
+{
+    Must(!empty());
+    return extractFound("first: ", start());
 }
 
 Comm::ConnectionPointer
