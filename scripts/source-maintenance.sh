@@ -56,7 +56,7 @@ updateIfChanged ()
 		echo "NOTICE: File ${original} changed: ${message}"
 		mv "${updated}" "${original}" || return
 	else
-		rm -f "${updated}"
+		rm -f "${updated}" || exit $?
 	fi
 }
 
