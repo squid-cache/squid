@@ -87,7 +87,7 @@ for FILENAME in `git ls-files`; do
 	# Code Style formatting maintenance
 	#
 	for SCRIPT in `git ls-files scripts/maintenance/`; do
-		${SCRIPT} "${FILENAME}" >"${FILENAME}.new" &&
+		${SCRIPT} "${FILENAME}" > "${FILENAME}.new" &&
 			updateIfChanged "${FILENAME}" "${FILENAME}.new" "by ${SCRIPT}"
 	done
 	if test "${ASVER}"; then
