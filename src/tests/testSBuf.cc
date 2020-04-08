@@ -850,6 +850,33 @@ testSBuf::testReserve()
         buffer.reserve(requirements);
         CPPUNIT_ASSERT(buffer.spaceSize() >= requirements.minSpace);
     }
+
+    { // MemBlob move-to-start operation after chop
+        SBuf b(fox);
+        b.chop(5);
+        b.reserveSpace(5);
+        CPPUNIT_ASSERT(b.spaceSize() >= 5);
+        SBuf ref(fox + 5);
+        CPPUNIT_ASSERT_EQUAL(ref,b);
+    }
+
+    { // MemBlob crop operations after chop
+        SBuf b(fox);
+        b.chop(5, 10);
+        const auto space = static_cast<SBuf::size_type>(5) + b.spaceSize();
+        b.reserveSpace(space);
+        CPPUNIT_ASSERT(b.spaceSize() >= space);
+    }
+
+    { // MemBlob crop and move-to-start operations after chop
+        SBuf b(fox);
+        b.chop(b.length() - 5, 2);
+        const auto space = static_cast<SBuf::size_type>(5);
+        b.reserveSpace(space);
+        CPPUNIT_ASSERT(b.spaceSize() >= space);
+        SBuf ref(fox + (strlen(fox) - 5), 2);
+        CPPUNIT_ASSERT_EQUAL(ref,b);
+    }
 }
 
 void
