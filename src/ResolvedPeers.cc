@@ -76,13 +76,7 @@ ResolvedPeers::start()
 ConnectionList::iterator
 ResolvedPeers::findPrime(const Comm::Connection &currentPeer, bool *hasNext)
 {
-    const auto found = std::find_if(start(), paths_.end(),
-    [&](const ResolvedPeerPath &path) {
-        if (!path.available)
-            return false;
-        // prime, spare, or next peer
-        return true;
-    });
+    const auto found = start();
     const auto peerToMatch = currentPeer.getPeer();
     const auto familyToMatch = ConnectionFamily(currentPeer);
     const auto foundSpareOrNext = found != paths_.end() &&
