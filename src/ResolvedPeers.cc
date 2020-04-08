@@ -76,18 +76,17 @@ ResolvedPeers::start()
 ConnectionList::iterator
 ResolvedPeers::findPrime(const Comm::Connection &currentPeer, bool *hasNext)
 {
-    const auto peerToMatch = currentPeer.getPeer();
-    const auto familyToMatch = ConnectionFamily(currentPeer);
-    bool foundSpareOrNext = false;
     const auto found = std::find_if(start(), paths_.end(),
     [&](const ResolvedPeerPath &path) {
-        if (!path.available) // skip unavailable
+        if (!path.available)
             return false;
-        // a spare or an other-peer address means that there are no primes left
-        if (familyToMatch != ConnectionFamily(*path.connection) || peerToMatch != path.connection->getPeer())
-            foundSpareOrNext = true;
+        // prime, spare, or next peer
         return true;
     });
+    const auto peerToMatch = currentPeer.getPeer();
+    const auto familyToMatch = ConnectionFamily(currentPeer);
+    const auto foundSpareOrNext = found != paths_.end() &&
+        (peerToMatch != found->connection->getPeer() || familyToMatch != ConnectionFamily(*found->connection));
     if (hasNext)
         *hasNext = foundSpareOrNext;
     return foundSpareOrNext ? paths_.end() : found;
@@ -98,18 +97,19 @@ ResolvedPeers::findPrime(const Comm::Connection &currentPeer, bool *hasNext)
 ConnectionList::iterator
 ResolvedPeers::findSpare(const Comm::Connection &currentPeer, bool *hasNext)
 {
-    const auto peerToMatch = currentPeer.getPeer();
     const auto familyToAvoid = ConnectionFamily(currentPeer);
-    bool foundNext = false;
     const auto found = std::find_if(start(), paths_.end(),
     [&](const ResolvedPeerPath &path) {
-        if (!path.available || familyToAvoid == ConnectionFamily(*path.connection)) // skip unavailable and prime
+        if (!path.available)
             return false;
-        // an other-peer address means that there are no spares left
-        if (peerToMatch != path.connection->getPeer())
-            foundNext = true;
+        if (familyToAvoid == ConnectionFamily(*path.connection)) // prime
+            return false;
+        // either spare or next peer
         return true;
     });
+    const auto peerToMatch = currentPeer.getPeer();
+    const auto foundNext = found != paths_.end() &&
+        peerToMatch != found->connection->getPeer();
     if (hasNext)
         *hasNext = foundNext;
     return foundNext ? paths_.end() : found;
