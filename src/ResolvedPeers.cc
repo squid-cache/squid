@@ -106,21 +106,13 @@ ResolvedPeers::findSpare(const Comm::Connection &currentPeer, bool *foundOther)
 }
 
 /// \returns the first available same-peer address iterator or end()
-/// If not found and there is an other-peer address, the optional *foundOther becomes true
+/// \param foundOther (optional) filled with "found other-peer address"
 ConnectionList::iterator
 ResolvedPeers::findPeer(const Comm::Connection &currentPeer, bool *foundOther)
 {
-    const auto peerToMatch = currentPeer.getPeer();
-    bool foundNext = false;
-    const auto found = std::find_if(start(), paths_.end(),
-    [&](const ResolvedPeerPath &path) {
-        if (!path.available) // skip unavailable
-            return false;
-        // an other-peer address means that there are no current peer addresses left
-        if (peerToMatch != path.connection->getPeer())
-            foundNext = true;
-        return true;
-    });
+    const auto found = start();
+    const auto foundNext = found != paths_.end() &&
+        currentPeer.getPeer() != found->connection->getPeer();
     if (foundOther)
         *foundOther = foundNext;
     return foundNext ? paths_.end() : found;
