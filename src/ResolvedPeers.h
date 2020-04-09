@@ -33,12 +33,13 @@ class ResolvedPeers: public RefCountable
     MEMPROXY_CLASS(ResolvedPeers);
 
 public:
+    using size_type = ConnectionList::size_type;
     typedef RefCount<ResolvedPeers> Pointer;
 
     ResolvedPeers();
 
     /// whether we lack any known candidate paths
-    bool empty() const { return candidatesToSkip == paths_.size(); }
+    bool empty() const { return !availableCandidates; }
 
     /// add a candidate path to try after all the existing paths
     void addPath(const Comm::ConnectionPointer &);
@@ -70,7 +71,7 @@ public:
     bool doneWithPeer(const Comm::Connection &currentPeer);
 
     /// the current number of candidate paths
-    ConnectionList::size_type size() const;
+    size_type size() const { return availableCandidates; }
 
     /// whether all of the available candidate paths received from DNS
     bool destinationsFinalized = false;
@@ -79,8 +80,6 @@ public:
     bool notificationPending = false;
 
 private:
-    using size_type = ConnectionList::size_type;
-
     /// A find*() result: An iterator of the found path (or paths_.end()) and
     /// whether the "other" path was found instead.
     typedef std::pair<ConnectionList::iterator, bool> Finding;
@@ -88,7 +87,6 @@ private:
     /// The protocol family of the given path, AF_INET or AF_INET6
     static int ConnectionFamily(const Comm::Connection &conn);
 
-    ConnectionList::const_iterator start() const { return const_cast<ResolvedPeers*>(this)->start(); }
     ConnectionList::iterator start();
     Finding findSpare(const Comm::Connection &currentPeer);
     Finding findPrime(const Comm::Connection &currentPeer);
@@ -99,10 +97,14 @@ private:
     bool doneWith(const Finding &findings) const;
 
     ConnectionList paths_; ///< resolved addresses in (peer, family) order
+
     /// the number of leading paths_ elements that are all currently unavailable
     /// i.e. the size of the front paths_ segment comprised of unavailable items
     /// i.e. the position of the first available candidate (or paths_.size())
     size_type candidatesToSkip = 0;
+
+    /// the total number of currently available candidates in paths_
+    size_type availableCandidates = 0;
 };
 
 /// summarized ResolvedPeers (for debugging)
