@@ -925,8 +925,7 @@ AC_DEFUN([SQUID_CHECK_BROKEN_SOLARIS_IPFILTER],[
 ## Solaris 10+ backported IPv6 NAT to their IPFilter v4.1 instead of using v5
   AC_CHECK_MEMBERS([
     struct natlookup.nl_inipaddr.in6,
-    struct natlookup.nl_realipaddr.in6
-  ],,,[
+    struct natlookup.nl_realipaddr.in6],,,[
 #if USE_SOLARIS_IPFILTER_MINOR_T_HACK
 #define minor_t fubar
 #endif
