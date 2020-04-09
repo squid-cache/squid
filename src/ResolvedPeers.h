@@ -20,8 +20,8 @@ class ResolvedPeerPath
 public:
     explicit ResolvedPeerPath(const Comm::ConnectionPointer &conn) : connection(conn), available(true) {}
 
-    Comm::ConnectionPointer connection; ///< a path(address) candidate
-    bool available; ///< whether this address may be used (i.e., has not been tried already)
+    Comm::ConnectionPointer connection; ///< (the address of) a path candidate
+    bool available; ///< whether this path may be used (i.e., has not been tried already)
 };
 
 typedef std::vector<ResolvedPeerPath> ConnectionList;

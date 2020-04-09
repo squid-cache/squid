@@ -72,7 +72,7 @@ ResolvedPeers::makeFinding(const ConnectionList::iterator &candidate, bool found
     return std::make_pair((foundOther ? paths_.end() : candidate), foundOther);
 }
 
-/// \returns the first available same-peer same-family address iterator or end()
+/// \returns the first available same-peer same-family Finding or <end,...>
 ResolvedPeers::Finding
 ResolvedPeers::findPrime(const Comm::Connection &currentPeer)
 {
@@ -83,7 +83,7 @@ ResolvedPeers::findPrime(const Comm::Connection &currentPeer)
     return makeFinding(candidate, foundNextOrSpare);
 }
 
-/// \returns the first available same-peer different-family address iterator or end()
+/// \returns the first available same-peer different-family Finding or <end,...>
 ResolvedPeers::Finding
 ResolvedPeers::findSpare(const Comm::Connection &currentPeer)
 {
@@ -101,7 +101,7 @@ ResolvedPeers::findSpare(const Comm::Connection &currentPeer)
     return makeFinding(candidate, foundNext);
 }
 
-/// \returns the first available same-peer address iterator or end()
+/// \returns the first available same-peer Finding or <end,...>
 ResolvedPeers::Finding
 ResolvedPeers::findPeer(const Comm::Connection &currentPeer)
 {
@@ -174,7 +174,7 @@ ResolvedPeers::doneWith(const Finding &findings) const
         return false; // not done because the caller found a viable candidate X
 
     // The caller did not find any candidate X. If the caller found any "other"
-    // candidates, then we are doing with candidates X. If there are no
+    // candidates, then we are done with candidates X. If there are no
     // candidates in paths_, then destinationsFinalized is the answer.
     return findings.second ? true : destinationsFinalized;
 }
