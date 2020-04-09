@@ -24,8 +24,6 @@ public:
     bool available; ///< whether this path may be used (i.e., has not been tried already)
 };
 
-typedef std::vector<ResolvedPeerPath> ConnectionList;
-
 /// cache_peer and origin server addresses (a.k.a. paths)
 /// selected and resolved by the peering code
 class ResolvedPeers: public RefCountable
@@ -33,7 +31,9 @@ class ResolvedPeers: public RefCountable
     MEMPROXY_CLASS(ResolvedPeers);
 
 public:
-    using size_type = ConnectionList::size_type;
+    // ResolvedPeerPaths in addPath() call order
+    typedef std::vector<ResolvedPeerPath> Paths;
+    using size_type = Paths::size_type;
     typedef RefCount<ResolvedPeers> Pointer;
 
     ResolvedPeers();
@@ -82,21 +82,21 @@ public:
 private:
     /// A find*() result: An iterator of the found path (or paths_.end()) and
     /// whether the "other" path was found instead.
-    typedef std::pair<ConnectionList::iterator, bool> Finding;
+    typedef std::pair<Paths::iterator, bool> Finding;
 
     /// The protocol family of the given path, AF_INET or AF_INET6
     static int ConnectionFamily(const Comm::Connection &conn);
 
-    ConnectionList::iterator start();
+    Paths::iterator start();
     Finding findSpare(const Comm::Connection &currentPeer);
     Finding findPrime(const Comm::Connection &currentPeer);
     Finding findPeer(const Comm::Connection &currentPeer);
-    Comm::ConnectionPointer extractFound(const char *description, const ConnectionList::iterator &found);
-    Finding makeFinding(const ConnectionList::iterator &found, bool foundOther);
+    Comm::ConnectionPointer extractFound(const char *description, const Paths::iterator &found);
+    Finding makeFinding(const Paths::iterator &found, bool foundOther);
 
     bool doneWith(const Finding &findings) const;
 
-    ConnectionList paths_; ///< resolved addresses in (peer, family) order
+    Paths paths_; ///< resolved addresses in (peer, family) order
 
     /// the number of leading paths_ elements that are all currently unavailable
     /// i.e. the size of the front paths_ segment comprised of unavailable items

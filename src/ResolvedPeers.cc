@@ -58,7 +58,7 @@ ResolvedPeers::addPath(const Comm::ConnectionPointer &path)
 }
 
 /// \returns the beginning iterator for any available-path search
-ConnectionList::iterator
+ResolvedPeers::Paths::iterator
 ResolvedPeers::start()
 {
     Must(candidatesToSkip <= paths_.size());
@@ -67,7 +67,7 @@ ResolvedPeers::start()
 
 /// finalizes the iterator part of the given preliminary find*() result
 ResolvedPeers::Finding
-ResolvedPeers::makeFinding(const ConnectionList::iterator &candidate, bool foundOther)
+ResolvedPeers::makeFinding(const Paths::iterator &candidate, bool foundOther)
 {
     return std::make_pair((foundOther ? paths_.end() : candidate), foundOther);
 }
@@ -142,7 +142,7 @@ ResolvedPeers::extractSpare(const Comm::Connection &currentPeer)
 
 /// convenience method to finish a successful extract*() call
 Comm::ConnectionPointer
-ResolvedPeers::extractFound(const char *description, const ConnectionList::iterator &found)
+ResolvedPeers::extractFound(const char *description, const Paths::iterator &found)
 {
     auto &path = *found;
     debugs(17, 7, description << path.connection);
