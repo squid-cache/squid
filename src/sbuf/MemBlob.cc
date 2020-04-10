@@ -125,13 +125,15 @@ MemBlob::append(const char *source, const size_type n)
 }
 
 void
-MemBlob::moveToStartAndKeep(const size_type offset, const size_type n)
+MemBlob::shiftLeft(const size_type pos)
 {
-    if (offset && n) {
+    Must(pos <= size);
+    if (pos) {
         Must(LockCount() <= 1);
-        memmove(mem, mem + offset, n);
+        size -= pos;
+        if (size)
+            memmove(mem, mem + pos, size);
     }
-    size = n;
 }
 
 const MemBlobStats&

@@ -894,7 +894,7 @@ SBuf::cow(SBuf::size_type newsize)
             return;
         }
         if (needSpace <= off_ + store_->spaceSize()) {
-            store_->moveToStartAndKeep(off_, length());
+            store_->shiftLeft(off_);
             off_ = 0;
             debugs(24, 8, id << " no cow after move-to-start needed");
             ++stats.cowFast;
