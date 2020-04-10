@@ -127,12 +127,11 @@ MemBlob::append(const char *source, const size_type n)
 void
 MemBlob::moveToStartAndKeep(const size_type offset, const size_type n)
 {
-    if (n > 0) {
-        Must(offset);
-        Must(offset + n <= size);
+    if (offset && n) {
+        Must(LockCount() <= 1);
         memmove(mem, mem + offset, n);
-        size = n;
     }
+    size = n;
 }
 
 const MemBlobStats&
