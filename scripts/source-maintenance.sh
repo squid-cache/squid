@@ -74,7 +74,7 @@ echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${COPYRIGHT_
 
 # executes the specified command
 # in KeepGoing mode, remembers errors and hides them from callers
-run_()
+run_ ()
 {
         "$@" && return; # return on success
         error=$?
