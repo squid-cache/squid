@@ -851,29 +851,38 @@ testSBuf::testReserve()
         CPPUNIT_ASSERT(buffer.spaceSize() >= requirements.minSpace);
     }
 
-    { // MemBlob move-to-start operation after chop
+    { // MemBlob shiftLeft operation after chop
         SBuf b(fox);
+        const char * const bBlobStartBefore = b.rawContent();
         b.chop(5);
         b.reserveSpace(5);
-        CPPUNIT_ASSERT(b.spaceSize() >= 5);
+        const char * const bBlobStartAfter = b.rawContent();
+        CPPUNIT_ASSERT_EQUAL(bBlobStartBefore, bBlobStartAfter); // check no reallocation, but shiftLeft
+        CPPUNIT_ASSERT(b.spaceSize() == 5); // moved left by 5, so released space of size 5
         SBuf ref(fox + 5);
         CPPUNIT_ASSERT_EQUAL(ref,b);
     }
 
     { // MemBlob crop operations after chop
         SBuf b(fox);
-        b.chop(5, 10);
-        const auto space = static_cast<SBuf::size_type>(5) + b.spaceSize();
+        b.chop(4, 10);
+        const auto space = SBuf(fox).length() - static_cast<SBuf::size_type>(14);
+        const char * const bMemBefore = b.rawContent();
         b.reserveSpace(space);
-        CPPUNIT_ASSERT(b.spaceSize() >= space);
+        const char * const bMemAfter = b.rawContent();
+        CPPUNIT_ASSERT_EQUAL(bMemBefore, bMemAfter); // check no reallocation, or shift
+        CPPUNIT_ASSERT(b.spaceSize() == space);
     }
 
-    { // MemBlob crop and move-to-start operations after chop
+    { // MemBlob crop and shiftLeft operations after chop
         SBuf b(fox);
+        const char * const bBlobStartBefore = b.rawContent();
         b.chop(b.length() - 5, 2);
-        const auto space = static_cast<SBuf::size_type>(5);
+        const auto space = SBuf(fox).length() - static_cast<SBuf::size_type>(2);
         b.reserveSpace(space);
-        CPPUNIT_ASSERT(b.spaceSize() >= space);
+        const char * const bBlobStartAfter = b.rawContent();
+        CPPUNIT_ASSERT_EQUAL(bBlobStartBefore, bBlobStartAfter); // check no reallocation, but shiftLeft
+        CPPUNIT_ASSERT(b.spaceSize() == space);
         SBuf ref(fox + (strlen(fox) - 5), 2);
         CPPUNIT_ASSERT_EQUAL(ref,b);
     }
