@@ -197,7 +197,7 @@ Http::One::TeChunkedParser::parseChunkBody(Tokenizer &tok)
         const size_t safeSize = min(availSize, (size_t)theOut->potentialSpaceSize());
 
         theOut->append(buf_.rawContent(), safeSize);
-        buf_.chop(safeSize);
+        buf_.consume(safeSize);
         theLeftBodySize -= safeSize;
 
         tok.reset(buf_); // sync buffers after consume()
