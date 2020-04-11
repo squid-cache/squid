@@ -560,11 +560,11 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         return;
     }
 
-    // The previously identified hit suddenly became unsharable!
+    // The previously identified hit suddenly became unshareable!
     // This is common for collapsed forwarding slaves but might also
     // happen to regular hits because we are called asynchronously.
     if (!e->mayStartHitting()) {
-        debugs(88, 3, "unsharable " << *e << ". MISS");
+        debugs(88, 3, "unshareable " << *e << ". MISS");
         http->logType.update(LOG_TCP_MISS);
         processMiss();
         return;
@@ -1048,8 +1048,6 @@ void
 clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 {
     if (newEntry) {
-        /* Move to new() when that is created */
-        purgeStatus = Http::scNotFound;
         /* Release the cached URI */
         debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
 #if USE_HTCP
@@ -1102,6 +1100,9 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
             purgeStatus = Http::scOkay;
         }
     }
+
+    if (purgeStatus == Http::scNone)
+        purgeStatus = Http::scNotFound;
 
     /*
      * Make a new entry to hold the reply to be written
@@ -1345,7 +1346,7 @@ clientReplyContext::replyStatus()
 /* Responses with no body will not have a content-type header,
  * which breaks the rep_mime_type acl, which
  * coincidentally, is the most common acl for reply access lists.
- * A better long term fix for this is to allow acl matchs on the various
+ * A better long term fix for this is to allow acl matches on the various
  * status codes, and then supply a default ruleset that puts these
  * codes before any user defines access entries. That way the user
  * can choose to block these responses where appropriate, but won't get
@@ -1461,7 +1462,7 @@ clientReplyContext::buildReplyHeader()
             /* Signal old objects.  NB: rfc 2616 is not clear,
              * by implication, on whether we should do this to all
              * responses, or only cache hits.
-             * 14.46 states it ONLY applys for heuristically caclulated
+             * 14.46 states it ONLY applies for heuristically calculated
              * freshness values, 13.2.4 doesn't specify the same limitation.
              * We interpret RFC 2616 under the combination.
              */
@@ -1904,7 +1905,7 @@ clientReplyContext::SendMoreData(void *data, StoreIOBuffer result)
 void
 clientReplyContext::makeThisHead()
 {
-    /* At least, I think thats what this does */
+    /* At least, I think that's what this does */
     dlinkDelete(&http->active, &ClientActiveRequests);
     dlinkAdd(http, &http->active, &ClientActiveRequests);
 }
@@ -2290,7 +2291,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
 
     StoreEntry *e = storeCreateEntry(storeId(), http->log_uri, reqFlags, m);
 
-    // Make entry collapsable ASAP, to increase collapsing chances for others,
+    // Make entry collapsible ASAP, to increase collapsing chances for others,
     // TODO: every must-revalidate and similar request MUST reach the origin,
     // but do we have to prohibit others from collapsing on that request?
     if (reqFlags.cachable &&
@@ -2322,7 +2323,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
     /* So, we mark the store logic as complete */
     flags.storelogiccomplete = 1;
 
-    /* and get the caller to request a read, from whereever they are */
+    /* and get the caller to request a read, from wherever they are */
     /* NOTE: after ANY data flows down the pipe, even one step,
      * this function CAN NOT be used to manage errors
      */

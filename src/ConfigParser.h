@@ -77,7 +77,7 @@ public:
     static char *RegexStrtokFile();
 
     /**
-     * Parse the next token as a regex patern. The regex patterns are non quoted
+     * Parse the next token as a regex pattern. The regex patterns are non quoted
      * tokens.
      */
     static char *RegexPattern();
@@ -134,7 +134,7 @@ public:
 
     /**
      * Strict syntax mode. Does not allow not alphanumeric characters in unquoted tokens.
-     * Controled by the  configuration_includes_quoted_values in squid.conf but remains
+     * Controlled by the  configuration_includes_quoted_values in squid.conf but remains
      * false when the the legacy ConfigParser::NextQuotedToken() call forces
      * RecognizeQuotedValues to be temporary true.
      */
@@ -212,7 +212,7 @@ protected:
     static bool AllowMacros_;
     static bool ParseQuotedOrToEol_; ///< The next tokens will be handled as quoted or to_eol token
     static bool RecognizeQuotedPair_; ///< The next tokens may contain quoted-pair (\-escaped) characters
-    static bool PreviewMode_; ///< The next token will not poped from cfg files, will just previewd.
+    static bool PreviewMode_; ///< The next token will not popped from cfg files, will just previewd.
     static bool ParseKvPair_; ///<The next token will be handled as kv-pair token
     static enum ParsingStates {atParseKey, atParseValue} KvPairState_; ///< Parsing state while parsing kv-pair tokens
 };

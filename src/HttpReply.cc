@@ -428,7 +428,7 @@ HttpReply::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::Sta
         // catch missing or negative status value (negative '-' is not a digit)
         pos = protoPrefix.psize();
 
-        // skip arbitrary number of digits and a dot in the verion portion
+        // skip arbitrary number of digits and a dot in the version portion
         while ((size_t)pos <= hdr_len && (*(buf+pos) == '.' || xisdigit(*(buf+pos)) ) ) ++pos;
 
         // catch missing version info

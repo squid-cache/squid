@@ -422,7 +422,7 @@ ipcacheAddEntry(ipcache_entry * i)
     hash_link *e = (hash_link *)hash_lookup(ip_table, i->hash.key);
 
     if (NULL != e) {
-        /* avoid colission */
+        /* avoid collision */
         ipcache_entry *q = (ipcache_entry *) e;
         ipcacheRelease(q);
     }
@@ -1052,7 +1052,7 @@ Dns::CachedIps::forgetMarking(const char *name, const Ip::Address &ip)
  * Does nothing if the domain name does not exist.
  *
  \param name    domain name to have an IP marked bad
- \param addr    specific addres to be marked bad
+ \param addr    specific address to be marked bad
  */
 void
 ipcacheMarkBadAddr(const char *name, const Ip::Address &addr)

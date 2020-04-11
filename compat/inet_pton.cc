@@ -14,7 +14,7 @@
  * Update/Maintenance History:
  *
  *    24-Sep-2007 : Copied from bind 9.3.3
- *                      - Added protection around libray headers
+ *                      - Added protection around library headers
  *                      - Altered configure checks to import
  *
  *    06-Oct-2007 : Various fixes to allow the build on MinGW

@@ -53,6 +53,7 @@ upto
 vaid
 valuse
 whan
+whats
 whe
 wil
 wnat

@@ -569,7 +569,7 @@ const char *Ssl::ErrorDetail::err_lib_error() const
 }
 
 /**
- * Converts the code to a string value. Supported formating codes are:
+ * Converts the code to a string value. Supported formatting codes are:
  *
  * Error meta information:
  * %err_name: The name of a high-level SSL error (e.g., X509_V_ERR_*)
@@ -603,7 +603,7 @@ int Ssl::ErrorDetail::convert(const char *code, const char **value) const
 /**
  * It uses the convert method to build the string errDetailStr using
  * a template message for the current SSL error. The template messages
- * can also contain normal error pages formating codes.
+ * can also contain normal error pages formatting codes.
  * Currently the error template messages are hard-coded
  */
 void Ssl::ErrorDetail::buildDetail() const

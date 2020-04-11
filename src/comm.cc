@@ -631,7 +631,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
      * This case is presently handled here as it's both a known case and it's
      * uncertain what error will be returned by the IPv6 stack in such case. It's
      * possible this will also be handled by the errno checks below after connect()
-     * but needs carefull cross-platform verification, and verifying the address
+     * but needs careful cross-platform verification, and verifying the address
      * condition here is simple.
      */
     if (!F->local_addr.isIPv4() && address.isIPv4()) {
@@ -1762,7 +1762,7 @@ DeferredReadManager::delayRead(DeferredRead const &aRead)
                                            "DeferredReadManager::CloseHandler",
                                            CommCloseCbPtrFun(&CloseHandler, temp));
     comm_add_close_handler(aRead.theRead.conn->fd, closer);
-    temp->element.closer = closer; // remeber so that we can cancel
+    temp->element.closer = closer; // remember so that we can cancel
 }
 
 void

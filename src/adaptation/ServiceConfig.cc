@@ -274,7 +274,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
         }
     }
 
-    // if no port, the caller may use service_configConfigs or supply the default if neeeded
+    // if no port, the caller may use service_configConfigs or supply the default if needed
 
     ++s;
     e = strchr(s, '\0');

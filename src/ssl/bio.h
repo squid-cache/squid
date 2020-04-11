@@ -74,7 +74,7 @@ public:
 
     /// The ClientBio version of the Ssl::Bio::stateChanged method
     /// When the client hello message retrieved, fill the
-    /// "features" member with the client provided informations.
+    /// "features" member with the client provided information.
     virtual void stateChanged(const SSL *ssl, int where, int ret);
     /// The ClientBio version of the Ssl::Bio::write method
     virtual int write(const char *buf, int size, BIO *table);
@@ -82,7 +82,7 @@ public:
     /// If the holdRead flag is true then it does not write any data
     /// to socket and sets the "read retry" flag of the BIO to true
     virtual int read(char *buf, int size, BIO *table);
-    /// Prevents or allow writting on socket.
+    /// Prevents or allow writing on socket.
     void hold(bool h) {holdRead_ = holdWrite_ = h;}
 
     /// Sets the buffered input data (Bio::rbuf).
@@ -109,9 +109,9 @@ private:
 /// If bumping is enabled, analyses the SSL hello message sent by squid OpenSSL
 /// subsystem (step3 bumping step) against bumping mode:
 ///   * Peek mode:  Send client hello message instead of the openSSL generated
-///                 hello message and normaly denies bumping and allow only
+///                 hello message and normally denies bumping and allow only
 ///                 splice or terminate the SSL connection
-///   * Stare mode: Sends the openSSL generated hello message and normaly
+///   * Stare mode: Sends the openSSL generated hello message and normally
 ///                 denies splicing and allow bump or terminate the SSL
 ///                 connection
 ///  If SQUID_USE_OPENSSL_HELLO_OVERWRITE_HACK is enabled also checks if the

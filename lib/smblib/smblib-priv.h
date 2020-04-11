@@ -299,7 +299,7 @@ typedef unsigned char UCHAR;
 #define SMB_openx_mod_offset    39        /* mode to open with       */
 #define SMB_openx_atr_offset    41        /* search attributes       */
 #define SMB_openx_fat_offset    43        /* File attributes         */
-#define SMB_openx_tim_offset    45        /* time and date of creat  */
+#define SMB_openx_tim_offset    45        /* time and date of create  */
 #define SMB_openx_ofn_offset    49        /* Open function           */
 #define SMB_openx_als_offset    51        /* Space to allocate on    */
 #define SMB_openx_res_offset    55        /* reserved                */

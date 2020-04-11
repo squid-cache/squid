@@ -138,7 +138,7 @@ public:
     /**
      \par
      * Main cleanup handler. For MemPools to stay within upper idle limits,
-     * this function needs to be called periodically, preferrably at some
+     * this function needs to be called periodically, preferably at some
      * constant rate, eg. from Squid event. It looks through all pools and
      * chunks, cleans up internal states and checks for releasable chunks.
      *

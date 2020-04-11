@@ -140,7 +140,7 @@ void testRFC1738::PercentZeroNullDecoding()
     CPPUNIT_ASSERT(memcmp(unescaped_str, "w%0rd",6)==0);
     xfree(unescaped_str);
 
-    /* Handle '0' bytes embeded in encoded % */
+    /* Handle '0' bytes embedded in encoded % */
     unescaped_str = xstrdup("w%%00%rd");
     rfc1738_unescape(unescaped_str);
     CPPUNIT_ASSERT(memcmp(unescaped_str, "w%00%rd",8)==0);
