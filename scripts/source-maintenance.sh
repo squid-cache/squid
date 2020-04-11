@@ -21,6 +21,38 @@
 # If code alteration takes place the process is halted for manual intervention.
 #
 
+# whether to continue execution after a failure
+# TODO: Expand the subset of failures covered by this feature; see run_().
+KeepGoing="no"
+# the actual name of the directive that enabled keep-going mode
+KeepGoingDirective=""
+
+# command-line options
+while [ $# -ge 1 ]; do
+    case "$1" in
+    --keep-going|-k)
+        KeepGoing=yes
+        KeepGoingDirective=$1
+        shift
+        ;;
+    *)
+        echo "Usage: $0 [--keep-going|-k]"
+        echo "Unsupported command-line option: $1"
+        exit 1;
+        ;;
+    esac
+done
+
+# an error code seen by a KeepGoing-aware command (or zero)
+SeenErrors=0
+
+
+if ! git diff --quiet; then
+	echo "There are unstaged changes. This script may modify sources."
+	echo "Stage changes to avoid permanent losses when things go bad."
+	exit 1
+fi
+
 # On squid-cache.org we have to use the python scripted md5sum
 HOST=`hostname`
 if test "$HOST" = "squid-cache.org" ; then
@@ -39,6 +71,47 @@ fi
 
 COPYRIGHT_YEARS=`date +"1996-%Y"`
 echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${COPYRIGHT_YEARS} The Squid Software Foundation and contributors/g" >>boilerplate_fix.sed
+
+# executes the specified command
+# in KeepGoing mode, remembers errors and hides them from callers
+run_ ()
+{
+        "$@" && return; # return on success
+        error=$?
+
+        if test $KeepGoing = no; then
+                return $error
+        fi
+
+        echo "ERROR: Continuing after a failure ($error) due to $KeepGoingDirective"
+        SeenErrors=$error # TODO: Remember the _first_ error instead
+        return 0 # hide error from the caller
+}
+
+updateIfChanged ()
+{
+	original="$1"
+	updated="$2"
+	message="$3"
+
+	if ! cmp -s "${original}" "${updated}"; then
+		echo "NOTICE: File ${original} changed: ${message}"
+		run_ mv "${updated}" "${original}" || return
+	else
+		run_ rm -f "${updated}" || exit $?
+	fi
+}
+
+# uses the given script to update the given source file
+applyPlugin ()
+{
+        script="$1"
+        source="$2"
+
+        new="$source.new"
+        $script "$source" > "$new" &&
+                updateIfChanged "$source" "$new" "by $script"
+}
 
 # succeeds if all MakeNamedErrorDetail() names are unique
 checkMakeNamedErrorDetails ()
@@ -65,7 +138,7 @@ checkMakeNamedErrorDetails ()
     return $problems
 }
 
-srcformat ()
+srcFormat ()
 {
 #
 # Scan for incorrect use of #ifdef/#ifndef
@@ -91,7 +164,10 @@ for FILENAME in `git ls-files`; do
 	#
 	# Code Style formatting maintenance
 	#
-        if test "${ASVER}"; then
+	for SCRIPT in `git ls-files scripts/maintenance/`; do
+		run_ applyPlugin ${SCRIPT} "${FILENAME}" || return
+	done
+	if test "${ASVER}"; then
 		./scripts/formater.pl ${FILENAME}
 		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
 			md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
@@ -281,8 +357,10 @@ run_ checkMakeNamedErrorDetails || exit 1
 
 # Run formating
 echo "" >doc/debug-sections.tmp
-srcformat || exit 1
+srcFormat || exit 1
 sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
 cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
 rm doc/debug-sections.tmp doc/debug-sections.tmp2
 rm boilerplate_fix.sed
+
+exit $SeenErrors
