@@ -7609,7 +7609,7 @@ DEFAULT: 0.0.0.0
 DEFAULT_DOC: Address selected by the operating system.
 IFDEF: USE_WCCP
 DOC_START
-	Use this option if you require WCCPv2 to use a specific
+	Use this option if you require WCCP(v1) to use a specific
 	interface address.
 
 	The default behavior is to not bind to any specific address.
@@ -7622,7 +7622,7 @@ DEFAULT: 0.0.0.0
 DEFAULT_DOC: Address selected by the operating system.
 IFDEF: USE_WCCPv2
 DOC_START
-	Use this option if you require WCCP to use a specific
+	Use this option if you require WCCPv2 to use a specific
 	interface address.
 
 	The default behavior is to not bind to any specific address.
