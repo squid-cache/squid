@@ -1,5 +1,12 @@
 The following organizations have supported the Squid Project by providing
-their resources or funding various Squid development activities:
+their resources or funding various Squid development activities.
+We thank them for their generosity and support.
+
+@Squid-5:
+SpinUp - https://SpinUp.com
+
+    SpinUp has donated cloud resources to host our main website, wiki
+    and mailing lists.
 
 @Squid-4:
 Augur TBBS Pty Limited
@@ -15,7 +22,7 @@ Bloomberg L.P.
 DigialOcean - https://www.digitalocean.com/
 
 	DigitalOcean has donated droplets from their cloud infrastructure
-	to host some of the project's continuous integration farm
+	to host most of the project's continuous integration farm
 
 LaunchPad - http://launchpad.net/
 
@@ -25,9 +32,8 @@ LaunchPad - http://launchpad.net/
 RackSpace - http://www.rackspace.com/
 
 	RackSpace donated a number of virtual machines from their cloud
-	infrastructure to support and extend the continuous integration
-	testing infrastructure, and since late 2014 to host many of the
-	Squid Project services.
+	infrastructure to support and extend our continuous integration
+	testing infrastructure.
 
 RM Education - http://www.rm.com/
 
