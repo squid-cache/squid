@@ -20,7 +20,7 @@ class ResolvedPeerPath
 public:
     explicit ResolvedPeerPath(const Comm::ConnectionPointer &conn) : connection(conn), available(true) {}
 
-    Comm::ConnectionPointer connection; ///< (the address of) a path candidate
+    Comm::ConnectionPointer connection; ///< (the address of) a path
     bool available; ///< whether this path may be used (i.e., has not been tried already)
 };
 
@@ -39,7 +39,7 @@ public:
     ResolvedPeers();
 
     /// whether we lack any known candidate paths
-    bool empty() const { return !availableCandidates; }
+    bool empty() const { return !availablePaths; }
 
     /// add a candidate path to try after all the existing paths
     void addPath(const Comm::ConnectionPointer &);
@@ -71,7 +71,7 @@ public:
     bool doneWithPeer(const Comm::Connection &currentPeer);
 
     /// the current number of candidate paths
-    size_type size() const { return availableCandidates; }
+    size_type size() const { return availablePaths; }
 
     /// whether all of the available candidate paths received from DNS
     bool destinationsFinalized = false;
@@ -103,11 +103,11 @@ private:
 
     /// the number of leading paths_ elements that are all currently unavailable
     /// i.e. the size of the front paths_ segment comprised of unavailable items
-    /// i.e. the position of the first available candidate (or paths_.size())
-    size_type candidatesToSkip = 0;
+    /// i.e. the position of the first available path (or paths_.size())
+    size_type pathsToSkip = 0;
 
-    /// the total number of currently available candidates in paths_
-    size_type availableCandidates = 0;
+    /// the total number of currently available elements in paths_
+    size_type availablePaths = 0;
 };
 
 /// summarized ResolvedPeers (for debugging)

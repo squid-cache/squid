@@ -24,10 +24,10 @@ ResolvedPeers::retryPath(const Comm::ConnectionPointer &path)
 {
     debugs(17, 4, path);
     assert(path);
-    // Cannot use candidatesToSkip for a faster (reverse) search because there
-    // may be unavailable candidates past candidatesToSkip. We could remember
+    // Cannot use pathsToSkip for a faster (reverse) search because there
+    // may be unavailable paths past pathsToSkip. We could remember
     // the last extraction index, but, to completely avoid a linear search,
-    // extract*() methods should return the candidate index.
+    // extract*() methods should return the path index.
     const auto found = std::find_if(paths_.begin(), paths_.end(),
     [path](const ResolvedPeerPath &candidate) {
         return candidate.connection == path; // (refcounted) pointer comparison
@@ -37,13 +37,13 @@ ResolvedPeers::retryPath(const Comm::ConnectionPointer &path)
     found->available = true;
     increaseAvailability();
 
-    // if we restored availability of a candidate that we used to skip, update
-    const auto candidatesToTheLeft = static_cast<size_type>(found - paths_.begin());
-    if (candidatesToTheLeft < candidatesToSkip) {
-        candidatesToSkip = candidatesToTheLeft;
+    // if we restored availability of a path that we used to skip, update
+    const auto pathsToTheLeft = static_cast<size_type>(found - paths_.begin());
+    if (pathsToTheLeft < pathsToSkip) {
+        pathsToSkip = pathsToTheLeft;
     } else {
-        // *found was unavailable so candidatesToSkip could not end at it
-        Must(candidatesToTheLeft != candidatesToSkip);
+        // *found was unavailable so pathsToSkip could not end at it
+        Must(pathsToTheLeft != pathsToSkip);
     }
 }
 
@@ -51,7 +51,7 @@ void
 ResolvedPeers::addPath(const Comm::ConnectionPointer &path)
 {
     paths_.emplace_back(path);
-    Must(paths_.back().available); // no candidatesToSkip updates are needed
+    Must(paths_.back().available); // no pathsToSkip updates are needed
     increaseAvailability();
 }
 
@@ -59,26 +59,26 @@ ResolvedPeers::addPath(const Comm::ConnectionPointer &path)
 ResolvedPeers::Paths::iterator
 ResolvedPeers::start()
 {
-    Must(candidatesToSkip <= paths_.size());
-    return paths_.begin() + candidatesToSkip; // may return end()
+    Must(pathsToSkip <= paths_.size());
+    return paths_.begin() + pathsToSkip; // may return end()
 }
 
 /// finalizes the iterator part of the given preliminary find*() result
 ResolvedPeers::Finding
-ResolvedPeers::makeFinding(const Paths::iterator &candidate, bool foundOther)
+ResolvedPeers::makeFinding(const Paths::iterator &path, bool foundOther)
 {
-    return std::make_pair((foundOther ? paths_.end() : candidate), foundOther);
+    return std::make_pair((foundOther ? paths_.end() : path), foundOther);
 }
 
 /// \returns the first available same-peer same-family Finding or <end,...>
 ResolvedPeers::Finding
 ResolvedPeers::findPrime(const Comm::Connection &currentPeer)
 {
-    const auto candidate = start();
-    const auto foundNextOrSpare = candidate != paths_.end() &&
-        (currentPeer.getPeer() != candidate->connection->getPeer() || // next peer
-            ConnectionFamily(currentPeer) != ConnectionFamily(*candidate->connection));
-    return makeFinding(candidate, foundNextOrSpare);
+    const auto path = start();
+    const auto foundNextOrSpare = path != paths_.end() &&
+        (currentPeer.getPeer() != path->connection->getPeer() || // next peer
+            ConnectionFamily(currentPeer) != ConnectionFamily(*path->connection));
+    return makeFinding(path, foundNextOrSpare);
 }
 
 /// \returns the first available same-peer different-family Finding or <end,...>
@@ -87,29 +87,29 @@ ResolvedPeers::findSpare(const Comm::Connection &currentPeer)
 {
     const auto primeFamily = ConnectionFamily(currentPeer);
     const auto primePeer = currentPeer.getPeer();
-    const auto candidate = std::find_if(start(), paths_.end(),
-    [primeFamily, primePeer](const ResolvedPeerPath &path) {
-        if (!path.available)
+    const auto path = std::find_if(start(), paths_.end(),
+    [primeFamily, primePeer](const ResolvedPeerPath &candidate) {
+        if (!candidate.available)
             return false;
-        if (primePeer != path.connection->getPeer())
+        if (primePeer != candidate.connection->getPeer())
             return true; // found next peer
-        if (primeFamily != ConnectionFamily(*path.connection))
+        if (primeFamily != ConnectionFamily(*candidate.connection))
             return true; // found spare
         return false;
     });
-    const auto foundNext = candidate != paths_.end() &&
-        primePeer != candidate->connection->getPeer();
-    return makeFinding(candidate, foundNext);
+    const auto foundNext = path != paths_.end() &&
+        primePeer != path->connection->getPeer();
+    return makeFinding(path, foundNext);
 }
 
 /// \returns the first available same-peer Finding or <end,...>
 ResolvedPeers::Finding
 ResolvedPeers::findPeer(const Comm::Connection &currentPeer)
 {
-    const auto candidate = start();
-    const auto foundNext = candidate != paths_.end() &&
-        currentPeer.getPeer() != candidate->connection->getPeer();
-    return makeFinding(candidate, foundNext);
+    const auto path = start();
+    const auto foundNext = path != paths_.end() &&
+        currentPeer.getPeer() != path->connection->getPeer();
+    return makeFinding(path, foundNext);
 }
 
 Comm::ConnectionPointer
@@ -151,9 +151,9 @@ ResolvedPeers::extractFound(const char *description, const Paths::iterator &foun
     path.available = false;
     decreaseAvailability();
 
-    // if we extracted the left-most available candidate, find the next one
-    if (static_cast<size_type>(found - paths_.begin()) == candidatesToSkip) {
-        while (++candidatesToSkip < paths_.size() && !paths_[candidatesToSkip].available) {}
+    // if we extracted the left-most available path, find the next one
+    if (static_cast<size_type>(found - paths_.begin()) == pathsToSkip) {
+        while (++pathsToSkip < paths_.size() && !paths_[pathsToSkip].available) {}
     }
 
     return path.connection;
@@ -171,11 +171,11 @@ bool
 ResolvedPeers::doneWith(const Finding &findings) const
 {
     if (findings.first != paths_.end())
-        return false; // not done because the caller found a viable candidate X
+        return false; // not done because the caller found a viable path X
 
-    // The caller did not find any candidate X. If the caller found any "other"
-    // candidates, then we are done with candidates X. If there are no
-    // candidates in paths_, then destinationsFinalized is the answer.
+    // The caller did not find any path X. If the caller found any "other"
+    // paths, then we are done with paths X. If there are no "other" paths,
+    // then destinationsFinalized is the answer.
     return findings.second ? true : destinationsFinalized;
 }
 
@@ -207,16 +207,16 @@ ResolvedPeers::ConnectionFamily(const Comm::Connection &conn)
 void
 ResolvedPeers::increaseAvailability()
 {
-    ++availableCandidates;
-    assert(availableCandidates <= paths_.size());
+    ++availablePaths;
+    assert(availablePaths <= paths_.size());
 }
 
 /// decrements the number of available paths
 void
 ResolvedPeers::decreaseAvailability()
 {
-    assert(availableCandidates > 0);
-    --availableCandidates;
+    assert(availablePaths > 0);
+    --availablePaths;
 }
 
 std::ostream &
