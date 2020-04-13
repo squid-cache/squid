@@ -88,16 +88,19 @@ ResolvedPeers::Finding
 ResolvedPeers::findSpare(const Comm::Connection &currentPeer)
 {
     const auto primeFamily = ConnectionFamily(currentPeer);
+    const auto primePeer = currentPeer.getPeer();
     const auto candidate = std::find_if(start(), paths_.end(),
-    [primeFamily](const ResolvedPeerPath &path) {
+    [primeFamily, primePeer](const ResolvedPeerPath &path) {
         if (!path.available)
             return false;
-        if (primeFamily == ConnectionFamily(*path.connection))
-            return false;
-        return true; // found either spare or next peer
+        if (primePeer != path.connection->getPeer())
+            return true; // found next peer
+        if (primeFamily != ConnectionFamily(*path.connection))
+            return true; // found spare
+        return false;
     });
     const auto foundNext = candidate != paths_.end() &&
-        currentPeer.getPeer() != candidate->connection->getPeer();
+        primePeer != candidate->connection->getPeer();
     return makeFinding(candidate, foundNext);
 }
 
