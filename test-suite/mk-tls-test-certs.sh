@@ -4,8 +4,8 @@
 # test certificates and keys
 #
 
-CERTTOOL="$1"
-OPENSSL="$2"
+OPENSSL="$1"
+CERTTOOL="$2"
 
 if test "x$OPENSSL" != "x" -a -x $OPENSSL; then
 
