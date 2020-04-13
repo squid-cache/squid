@@ -672,7 +672,7 @@ void Adaptation::Icap::ModXact::callException(const std::exception &e)
             if (const TextException *te = dynamic_cast<const TextException *>(&e))
                 detailError(new ExceptionErrorDetail(te->id()));
             else
-                detailError(new ErrorDetail(ERR_DETAIL_EXCEPTION_OTHER));
+                detailError(ERR_DETAIL_EXCEPTION_OTHER);
         }
         Adaptation::Icap::Xaction::callException(e);
         return;
@@ -686,7 +686,7 @@ void Adaptation::Icap::ModXact::callException(const std::exception &e)
         detailError(new ExceptionErrorDetail(bypassTe.id()));
         Adaptation::Icap::Xaction::callException(bypassTe);
     } catch (const std::exception &bypassE) {
-        detailError(new ErrorDetail(ERR_DETAIL_EXCEPTION_OTHER));
+        detailError(ERR_DETAIL_EXCEPTION_OTHER);
         Adaptation::Icap::Xaction::callException(bypassE);
     }
 }
@@ -1281,7 +1281,7 @@ void Adaptation::Icap::ModXact::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 // adapted body consumer aborted
 void Adaptation::Icap::ModXact::noteBodyConsumerAborted(BodyPipe::Pointer)
 {
-    detailError(new ErrorDetail(ERR_DETAIL_ICAP_XACT_BODY_CONSUMER_ABORT));
+    detailError(ERR_DETAIL_ICAP_XACT_BODY_CONSUMER_ABORT);
     mustStop("adapted body consumer aborted");
 }
 
@@ -1300,7 +1300,7 @@ void Adaptation::Icap::ModXact::swanSong()
     stopSending(false);
 
     if (theInitiator.set()) // we have not sent the answer to the initiator
-        detailError(new ErrorDetail(ERR_DETAIL_ICAP_XACT_OTHER));
+        detailError(ERR_DETAIL_ICAP_XACT_OTHER);
 
     // update adaptation history if start was called and we reserved a slot
     Adaptation::History::Pointer ah = virginRequest().adaptLogHistory();

@@ -27,7 +27,7 @@ extern const char *const crlf;
 class ErrorDetail: public ::ErrorDetail {
     MEMPROXY_CLASS(Ftp::ErrorDetail);
 public:
-    ErrorDetail(int code): ::ErrorDetail(ERR_DETAIL_FTP_ERROR), ftpCode(code) {}
+    ErrorDetail(const int code): ::ErrorDetail(ERROR_DETAIL_FTP_ERROR), ftpCode(code) {}
 
     // ErrorDetail API
 

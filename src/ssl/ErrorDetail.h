@@ -78,8 +78,6 @@ public:
     virtual const char *detailString(const HttpRequestPointer &request) final;
 
 private:
-    ErrorDetail(ErrorDetail const &): ::ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE) {}
-
     typedef const char * (ErrorDetail::*fmt_action_t)() const;
     /**
      * Holds a formatting code and its conversion method

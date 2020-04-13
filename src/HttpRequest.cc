@@ -92,7 +92,7 @@ HttpRequest::init()
     // hier
     dnsWait = -1;
     errType = ERR_NONE;
-    errDetail = nullptr;
+    errDetail = ERR_DETAIL_NONE;
     peer_login = NULL;      // not allocated/deallocated by this class
     peer_domain = NULL;     // not allocated/deallocated by this class
     peer_host = NULL;
@@ -483,7 +483,7 @@ HttpRequest::clearError()
 {
     debugs(11, 7, HERE << "old error details: " << errType << '/' << (errDetail ? errDetail->logCode() : "-"));
     errType = ERR_NONE;
-    errDetail = nullptr;
+    errDetail = ERR_DETAIL_NONE;
 }
 
 void

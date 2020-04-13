@@ -1566,7 +1566,7 @@ ConnStateData::tunnelOnError(const HttpRequestMethod &method, const err_type req
     if (!preservingClientData_) {
         debugs(33, 3, "may have forgotten client data; send error: " << requestError << "/" << ERR_DETAIL_BUFFER);
         if (request)
-            request->detailError(requestError, new ErrorDetail(ERR_DETAIL_BUFFER));
+            request->detailError(requestError, ERR_DETAIL_BUFFER);
         return false;
     }
 
@@ -2189,7 +2189,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
             doingTls = true;
 
         if (doingTls)
-            errorDetail = new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE);
+            errorDetail = ERR_DETAIL_TLS_HANDSHAKE;
     }
 #endif
 
@@ -2491,7 +2491,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
     // if (x == GNUTLS_E_WARNING_ALERT_RECEIVED || x == GNUTLS_E_FATAL_ALERT_RECEIVED)
     // if (gnutls_error_is_fatal(x))
     debugs(83, 2, "Error negotiating TLS on " << conn->clientConnection << ": Aborted by client: " << Security::ErrorString(x));
-    throw new ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE);
+    throw ERR_DETAIL_TLS_HANDSHAKE;
 
 #else
     // Performing TLS handshake should never be reachable without a TLS/SSL library.
@@ -3075,7 +3075,7 @@ ConnStateData::parseTlsHandshake()
         if (const TextException *te = dynamic_cast<const TextException *>(&ex))
             parseErrorDetails = new ExceptionErrorDetail(te->id());
         else
-            parseErrorDetails = new ErrorDetail(ERR_DETAIL_TLS_HELLO_PARSE_ERROR);
+            parseErrorDetails = ERR_DETAIL_TLS_HELLO_PARSE_ERROR;
     }
 
     parsingTlsHandshake = false;
@@ -3301,19 +3301,18 @@ ConnStateData::httpsPeeked(PinnedIdleContext pic)
 
 template <typename Functor>
 bool
-ConnStateData::detailErrorFailures(const err_type err, const err_detail_type defaultErrDetail, const Functor &functor)
+ConnStateData::detailErrorFailures(const err_type err, const ErrorDetail::Pointer &defaultErrDetail, const Functor &functor)
 {
     ErrorDetail::Pointer detail;
     try {
         functor();
         return true;
-    } catch (ErrorDetail *aDetail) {
-        detail = aDetail;
+    } catch (const ErrorDetail::Pointer &ed) {
+        detail = ed;
     } catch (const TextException &tex) {
         detail = new ExceptionErrorDetail(tex.id());
     } catch (...) {
-        if (defaultErrDetail != ERR_DETAIL_NONE)
-            detail = new ErrorDetail(defaultErrDetail);
+        detail = defaultErrDetail;
     }
     const auto context = pipeline.front();
     const auto http = context ? context->http : nullptr;

@@ -791,7 +791,11 @@ const char *Ssl::ErrorDetail::logCode()
     return err_code();
 }
 
-Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason): ::ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE), error_no (err_no), lib_error_no(SSL_ERROR_NONE), errReason(aReason)
+Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason):
+    ::ErrorDetail(ERROR_DETAIL_TLS_HANDSHAKE),
+    error_no(err_no),
+    lib_error_no(SSL_ERROR_NONE),
+    errReason(aReason)
 {
     if (cert)
         peer_cert.resetAndLock(cert);
@@ -804,7 +808,9 @@ Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *brok
     detailEntry.error_no = SSL_ERROR_NONE;
 }
 
-Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err, unsigned long lib_err): ::ErrorDetail(ERR_DETAIL_TLS_HANDSHAKE), error_no(SQUID_ERR_SSL_LIB), lib_error_no(lib_err)
+Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err, unsigned long lib_err):
+    ::ErrorDetail(ERROR_DETAIL_TLS_HANDSHAKE),
+    error_no(SQUID_ERR_SSL_LIB),
+    lib_error_no(lib_err)
 {
-
 }

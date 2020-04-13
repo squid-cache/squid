@@ -401,7 +401,7 @@ protected:
 
     /// Catches errors thrown by factor and complete error details if possible
     template <typename Functor>
-    bool detailErrorFailures(const err_type err, const err_detail_type defaultErr, const Functor &functor);
+    bool detailErrorFailures(const err_type err, const ErrorDetail::Pointer &defaultErr, const Functor &functor);
 
     BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
 
