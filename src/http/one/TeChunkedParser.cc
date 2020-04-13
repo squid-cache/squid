@@ -44,17 +44,12 @@ Http::One::TeChunkedParser::clear()
 bool
 Http::One::TeChunkedParser::parse(const SBuf &aBuf)
 {
-    syncInputBuffer(aBuf); // sync buffers first
-    return parseInput();
-}
+    buf_ = aBuf; // sync buffers first so calls to remaining() work properly if nothing done.
 
-bool
-Http::One::TeChunkedParser::parseInput()
-{
     if (buf_.isEmpty()) // nothing to do (yet)
         return false;
 
-    debugs(74, DBG_DATA, "Parse buf={length=" << buf_.length() << ", data='" << buf_ << "'}");
+    debugs(74, DBG_DATA, "Parse buf={length=" << aBuf.length() << ", data='" << aBuf << "'}");
 
     Must(!buf_.isEmpty() && theOut);
 
@@ -188,9 +183,6 @@ Http::One::TeChunkedParser::parseChunkBody(Tokenizer &tok)
 {
     if (theLeftBodySize > 0) {
         buf_ = tok.remaining(); // sync buffers before buf_ use
-        // Do not hold any reference to buf_ content to avoid
-        // re-allocations if possible
-        tok.reset(SBuf());
 
         // TODO fix type mismatches and casting for these
         const size_t availSize = min(theLeftBodySize, (uint64_t)buf_.length());
