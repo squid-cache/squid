@@ -96,6 +96,9 @@ private:
 
     bool doneWith(const Finding &findings) const;
 
+    void increaseAvailability();
+    void decreaseAvailability();
+
     Paths paths_; ///< resolved addresses in (peer, family) order
 
     /// the number of leading paths_ elements that are all currently unavailable

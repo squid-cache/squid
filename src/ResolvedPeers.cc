@@ -35,8 +35,7 @@ ResolvedPeers::retryPath(const Comm::ConnectionPointer &path)
     assert(found != paths_.end());
     assert(!found->available);
     found->available = true;
-    ++availableCandidates;
-    assert(availableCandidates <= paths_.size());
+    increaseAvailability();
 
     // if we restored availability of a candidate that we used to skip, update
     const auto candidatesToTheLeft = static_cast<size_type>(found - paths_.begin());
@@ -53,8 +52,7 @@ ResolvedPeers::addPath(const Comm::ConnectionPointer &path)
 {
     paths_.emplace_back(path);
     Must(paths_.back().available); // no candidatesToSkip updates are needed
-    ++availableCandidates;
-    assert(availableCandidates <= paths_.size());
+    increaseAvailability();
 }
 
 /// \returns the beginning iterator for any available-path search
@@ -151,8 +149,7 @@ ResolvedPeers::extractFound(const char *description, const Paths::iterator &foun
     debugs(17, 7, description << path.connection);
     assert(path.available);
     path.available = false;
-    assert(availableCandidates > 0);
-    --availableCandidates;
+    decreaseAvailability();
 
     // if we extracted the left-most available candidate, find the next one
     if (static_cast<size_type>(found - paths_.begin()) == candidatesToSkip) {
@@ -204,6 +201,22 @@ int
 ResolvedPeers::ConnectionFamily(const Comm::Connection &conn)
 {
     return conn.remote.isIPv4() ? AF_INET : AF_INET6;
+}
+
+/// increments the number of available paths
+void
+ResolvedPeers::increaseAvailability()
+{
+    ++availableCandidates;
+    assert(availableCandidates <= paths_.size());
+}
+
+/// decrements the number of available paths
+void
+ResolvedPeers::decreaseAvailability()
+{
+    assert(availableCandidates > 0);
+    --availableCandidates;
 }
 
 std::ostream &
