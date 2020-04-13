@@ -98,9 +98,9 @@ public:
     /// \param n the number of bytes that were appended
     void crop(const size_type n) {size = n;}
 
-    /// Shift left the bytes starting from position pos
-    /// \throw TextException if pos is not valid or lockers are more than one
-    void shiftLeft(const size_type pos);
+    /// Shift left by n
+    /// \throw TextException if n is not valid or lockers are more than one
+    void shiftLeft(const size_type n);
 
     /// dump debugging information
     std::ostream & dump(std::ostream &os) const;
