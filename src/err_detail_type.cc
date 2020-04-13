@@ -65,3 +65,20 @@ ExceptionErrorDetail::logCode()
     snprintf(sbuf, sizeof(sbuf), "EXCEPTION=0x%X", exceptionId);
     return sbuf;
 }
+
+std::ostream &
+operator <<(std::ostream &os, const ErrorDetail &detail)
+{
+    os << detail.logCode();
+    return os;
+}
+
+std::ostream &
+operator <<(std::ostream &os, const ErrorDetail::Pointer &detail)
+{
+    if (detail)
+        os << *detail;
+    else
+        os << "[no details]";
+    return os;
+}

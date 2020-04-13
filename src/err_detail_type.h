@@ -103,6 +103,9 @@ private:
     SourceLocationId exceptionId; ///< the exception id
 };
 
+std::ostream &operator <<(std::ostream &os, const ErrorDetail &detail);
+std::ostream &operator <<(std::ostream &os, const ErrorDetail::Pointer &detail);
+
 /* pre-created error globals that reduce common error handling overheads */
 
 /// an absent error detail -- a nil pointer
