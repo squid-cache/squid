@@ -14,63 +14,26 @@
 #include "http/forward.h"
 #include "mem/forward.h"
 
-typedef enum {
-    ERROR_DETAIL_NONE,
-    ERR_DETAIL_START,
-    ERROR_DETAIL_REDIRECTOR_TIMEDOUT = ERR_DETAIL_START, // External redirector request timed-out
-    ERROR_DETAIL_CLT_REQMOD_ABORT, // client-facing code detected transaction abort
-    ERROR_DETAIL_CLT_REQMOD_REQ_BODY, // client-facing code detected REQMOD request body adaptation failure
-    ERROR_DETAIL_CLT_REQMOD_RESP_BODY, // client-facing code detected REQMOD satisfaction reply body failure
-    ERROR_DETAIL_SRV_REQMOD_REQ_BODY, // server-facing code detected REQMOD request body abort
-    ERROR_DETAIL_ICAP_RESPMOD_EARLY, // RESPMOD failed w/o store entry
-    ERROR_DETAIL_ICAP_RESPMOD_LATE,  // RESPMOD failed with a store entry
-    ERROR_DETAIL_REQMOD_BLOCK, // REQMOD denied client access
-    ERROR_DETAIL_RESPMOD_BLOCK_EARLY, // RESPMOD denied client access to HTTP response, before any part of the response was sent
-    ERROR_DETAIL_RESPMOD_BLOCK_LATE, // RESPMOD denied client access to HTTP response, after [a part of] the response was sent
-    ERROR_DETAIL_ICAP_XACT_START, // transaction start failure
-    ERROR_DETAIL_ICAP_XACT_SSL_START, // transaction start failure
-    ERROR_DETAIL_ICAP_XACT_BODY_CONSUMER_ABORT, // transaction body consumer gone
-    ERROR_DETAIL_ICAP_INIT_GONE, // initiator gone
-    ERROR_DETAIL_ICAP_XACT_CLOSE, // ICAP connection closed unexpectedly
-    ERROR_DETAIL_ICAP_XACT_OTHER, // other ICAP transaction errors
-    ERROR_DETAIL_BUFFER,  // Buffering issues
-    ERROR_DETAIL_TUNNEL_ON_ERROR, // Tunneling after error failed for an unknown reason
-    ERROR_DETAIL_TLS_HELLO_PARSE_ERROR, // Squid TLS handshake parser failed
-    ERROR_DETAIL_SSL_BUMP_SPLICE, // an SslBump step2 splicing error (XXX: too general)
-    ERROR_DETAIL_TLS_HANDSHAKE, // TLS negotiation errors
-    ERROR_DETAIL_EXCEPTION_OTHER, //other errors ( eg std C++ lib errors)
-    ERROR_DETAIL_SYS, // system errors reported via errno and such
-    ERROR_DETAIL_EXCEPTION, // Squid exception
-    ERROR_DETAIL_FTP_ERROR, // FTP errors
-    ERR_DETAIL_MAX,
-} err_detail_type;
-
-/// Holds general error details for access logging and presentation
-/// in error pages
+/// interface for supplying additional information about an error
 class ErrorDetail: public RefCountable
 {
-    MEMPROXY_CLASS(ErrorDetail);
 public:
     typedef RefCount<ErrorDetail> Pointer;
 
-    ErrorDetail(err_detail_type id): errorDetailId(id) {}
+    virtual ~ErrorDetail() {}
 
     /// \returns a short string code for use with access logs
-    virtual const char *logCode() const;
+    virtual const char *logCode() const = 0;
+
     /// \return an error detail string to embed in squid error pages.
     virtual const char *detailString(const HttpRequestPointer &) const;
-
-    const err_detail_type type() const {return errorDetailId;}
-
-protected:
-    err_detail_type errorDetailId = ERROR_DETAIL_NONE;
 };
 
 /// Holds system error details. It is based on errno/strerror
 class SysErrorDetail: public ErrorDetail {
     MEMPROXY_CLASS(SysErrorDetail);
 public:
-    SysErrorDetail(int error): ErrorDetail(ERROR_DETAIL_SYS), errorNo(error) {}
+    SysErrorDetail(const int anErrorNo): errorNo(anErrorNo) {}
 
     // ErrorDetail API
 
@@ -92,7 +55,7 @@ private:
 class ExceptionErrorDetail: public ErrorDetail {
     MEMPROXY_CLASS(ExceptionErrorDetail);
 public:
-    ExceptionErrorDetail(const SourceLocationId id): ErrorDetail(ERROR_DETAIL_EXCEPTION), exceptionId(SQUID_EXCEPTION_START_BASE + id) {}
+    ExceptionErrorDetail(const SourceLocationId id): exceptionId(SQUID_EXCEPTION_START_BASE + id) {}
 
     // ErrorDetail API
 
@@ -177,12 +140,6 @@ extern const ErrorDetail::Pointer ERR_DETAIL_TLS_HANDSHAKE;
 /// other errors that lead to exceptions caught by transactions
 /// (e.g., exceptions thrown by C++ STL)
 extern const ErrorDetail::Pointer ERR_DETAIL_EXCEPTION_OTHER;
-
-/// Squid exception
-extern const ErrorDetail::Pointer ERR_DETAIL_EXCEPTION;
-
-/// FTP errors
-extern const ErrorDetail::Pointer ERR_DETAIL_FTP_ERROR;
 
 #endif
 
