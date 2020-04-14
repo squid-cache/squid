@@ -854,8 +854,10 @@ testSBuf::testReserve()
     { // MemBlob shiftLeft operation after chop
         SBuf b(fox);
         const char * const bBlobStartBefore = b.rawContent();
+        const uint64_t allocations = b.GetStats().cowSlow;
         b.chop(5);
         b.reserveSpace(5);
+        CPPUNIT_ASSERT_EQUAL(allocations, b.GetStats().cowSlow); // assure no reallocation
         const char * const bBlobStartAfter = b.rawContent();
         CPPUNIT_ASSERT_EQUAL(bBlobStartBefore, bBlobStartAfter); // check no reallocation, but shiftLeft
         CPPUNIT_ASSERT(b.spaceSize() == 5); // moved left by 5, so released space of size 5
@@ -868,7 +870,9 @@ testSBuf::testReserve()
         b.chop(4, 10);
         const auto space = SBuf(fox).length() - static_cast<SBuf::size_type>(14);
         const char * const bMemBefore = b.rawContent();
+        const uint64_t allocations = b.GetStats().cowSlow;
         b.reserveSpace(space);
+        CPPUNIT_ASSERT_EQUAL(allocations, b.GetStats().cowSlow); // assure no reallocation
         const char * const bMemAfter = b.rawContent();
         CPPUNIT_ASSERT_EQUAL(bMemBefore, bMemAfter); // check no reallocation, or shift
         CPPUNIT_ASSERT(b.spaceSize() == space);
@@ -879,7 +883,9 @@ testSBuf::testReserve()
         const char * const bBlobStartBefore = b.rawContent();
         b.chop(b.length() - 5, 2);
         const auto space = SBuf(fox).length() - static_cast<SBuf::size_type>(2);
+        const uint64_t allocations = b.GetStats().cowSlow;
         b.reserveSpace(space);
+        CPPUNIT_ASSERT_EQUAL(allocations, b.GetStats().cowSlow); // assure no reallocation
         const char * const bBlobStartAfter = b.rawContent();
         CPPUNIT_ASSERT_EQUAL(bBlobStartBefore, bBlobStartAfter); // check no reallocation, but shiftLeft
         CPPUNIT_ASSERT(b.spaceSize() == space);
