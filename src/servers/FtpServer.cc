@@ -1099,11 +1099,9 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
     if (request->errType != ERR_NONE)
         mb.appendf("%i-%s\r\n", scode, errorPageName(request->errType));
 
-    if (request->errDetail != nullptr) {
-        // XXX: > 0 may not always mean that this is an errno
-        mb.appendf("%i-Error: (%d) %s\r\n", scode,
-                   request->errDetail->type(),
-                   request->errDetail->logCode());
+    if (const auto &detail = request->errDetail) {
+        mb.appendf("%i-Error-Detail-Brief: %s\r\n", scode, detail->logCode());
+        mb.appendf("%i-Error-Detail-Verbose: %s\r\n", scode, detail->detailString(request));
     }
 
 #if USE_ADAPTATION
