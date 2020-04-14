@@ -32,7 +32,7 @@ public:
     // ErrorDetail API
 
     /// \return a short string in the form FTP_ERR=XXX where XXX is the ftp server reply code
-    virtual const char *logCode() final;
+    virtual const char *logCode() const final;
 
 private:
     int ftpCode; // Ftp server reply code

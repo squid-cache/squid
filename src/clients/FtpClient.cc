@@ -64,7 +64,7 @@ escapeIAC(const char *buf)
     return ret;
 }
 
-const char *Ftp::ErrorDetail::logCode()
+const char *Ftp::ErrorDetail::logCode() const
 {
     static char sbuf[512];
     snprintf(sbuf, sizeof(sbuf), "FTP_ERR=%d", ftpCode);

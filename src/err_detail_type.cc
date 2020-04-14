@@ -30,7 +30,7 @@ const ErrorDetail::Pointer ERR_DETAIL_EXCEPTION = new ErrorDetail(ERROR_DETAIL_E
 const ErrorDetail::Pointer ERR_DETAIL_FTP_ERROR = new ErrorDetail(ERROR_DETAIL_FTP_ERROR);
 
 const char *
-ErrorDetail::logCode()
+ErrorDetail::logCode() const
 {
     if (errorDetailId >= ERR_DETAIL_START && errorDetailId < ERR_DETAIL_MAX)
         return err_detail_type_str[errorDetailId-ERR_DETAIL_START+2];
@@ -39,13 +39,13 @@ ErrorDetail::logCode()
 }
 
 const char *
-ErrorDetail::detailString(const HttpRequest::Pointer &)
+ErrorDetail::detailString(const HttpRequest::Pointer &) const
 {
     return logCode();
 }
 
 const char *
-SysErrorDetail::logCode()
+SysErrorDetail::logCode() const
 {
     static char sbuf[512];
     snprintf(sbuf, sizeof(sbuf), "SYSERR=%d", errorNo);
@@ -53,13 +53,13 @@ SysErrorDetail::logCode()
 }
 
 const char *
-SysErrorDetail::detailString(const HttpRequest::Pointer &)
+SysErrorDetail::detailString(const HttpRequest::Pointer &) const
 {
     return strerror(errorNo);
 }
 
 const char *
-ExceptionErrorDetail::logCode()
+ExceptionErrorDetail::logCode() const
 {
     static char sbuf[512];
     snprintf(sbuf, sizeof(sbuf), "EXCEPTION=0x%X", exceptionId);

@@ -751,7 +751,7 @@ int Ssl::ErrorDetail::convert(const char *code, const char **value) const
     return 0;
 }
 
-const char *Ssl::ErrorDetail::detailString(const HttpRequest::Pointer &request)
+const char *Ssl::ErrorDetail::detailString(const HttpRequest::Pointer &request) const
 {
     char const *s = NULL;
     char const *p;
@@ -781,7 +781,7 @@ const char *Ssl::ErrorDetail::detailString(const HttpRequest::Pointer &request)
     return errDetailStr.c_str();
 }
 
-const char *Ssl::ErrorDetail::logCode()
+const char *Ssl::ErrorDetail::logCode() const
 {
     if (error_no == SQUID_ERR_SSL_LIB) {
         static char sbuf[512];

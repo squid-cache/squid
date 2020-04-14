@@ -56,11 +56,11 @@ public:
     ErrorDetail(err_detail_type id): errorDetailId(id) {}
 
     /// \returns a short string code for use with access logs
-    virtual const char *logCode();
+    virtual const char *logCode() const;
     /// \return an error detail string to embed in squid error pages.
-    virtual const char *detailString(const HttpRequestPointer &);
+    virtual const char *detailString(const HttpRequestPointer &) const;
 
-    const err_detail_type type() {return errorDetailId;}
+    const err_detail_type type() const {return errorDetailId;}
 
 protected:
     err_detail_type errorDetailId = ERROR_DETAIL_NONE;
@@ -75,9 +75,9 @@ public:
     // ErrorDetail API
 
     /// \returns a short string in the form SYSERR=XXX where XXX is the errno
-    virtual const char *logCode() final;
+    virtual const char *logCode() const final;
     /// \returns an strerror based string
-    virtual const char *detailString(const HttpRequestPointer &) final;
+    virtual const char *detailString(const HttpRequestPointer &) const final;
 
 private:
     int errorNo; ///< the system errno
@@ -97,7 +97,7 @@ public:
     // ErrorDetail API
 
     /// \returns a short string in the form EXCEPTION=0xXXXXXX
-    virtual const char *logCode() final;
+    virtual const char *logCode() const final;
 
 private:
     SourceLocationId exceptionId; ///< the exception id
