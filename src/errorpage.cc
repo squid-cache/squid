@@ -1345,7 +1345,7 @@ ErrorState::BuildHttpReply()
         if (detail)
             request->detailError(type, detail);
         else
-            request->detailError(type, (xerrno ? new SysErrorDetail(xerrno) : nullptr));
+            request->detailError(type, SysErrorDetail::NewIfAny(xerrno));
     }
 
     return rep;

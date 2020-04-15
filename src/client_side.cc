@@ -2455,7 +2455,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
             throw new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
 
         if (xerrno)
-            throw new SysErrorDetail(xerrno);
+            throw SysErrorDetail::NewIfAny(xerrno);
 
         throw new Ssl::ErrorDetail(SQUID_SSL_ABORTED, 0);
 

@@ -33,19 +33,27 @@ public:
     virtual SBuf verbose(const HttpRequestPointer &) const;
 };
 
-/// Holds system error details. It is based on errno/strerror
+/// system call error detail based on standard errno(3)/strerror(3) APIs
 class SysErrorDetail: public ErrorDetail {
     MEMPROXY_CLASS(SysErrorDetail);
 
 public:
-    explicit SysErrorDetail(const int anErrorNo): errorNo(anErrorNo) {}
+    /// \returns a pointer to a SysErrorDetail instance (or nil for lost errnos)
+    static ErrorDetail::Pointer NewIfAny(const int errorNo)
+    {
+        // we could optimize by caching results for (frequently used?) errnos
+        return errorNo ? new SysErrorDetail(errorNo) : nullptr;
+    }
 
     /* ErrorDetail API */
     virtual SBuf brief() const final;
     virtual SBuf verbose(const HttpRequestPointer &) const final;
 
 private:
-    int errorNo; ///< the system errno
+    // hidden by NewIfAny() to avoid creating SysErrorDetail from zero errno
+    explicit SysErrorDetail(const int anErrorNo): errorNo(anErrorNo) {}
+
+    int errorNo; ///< errno(1) set by the last failed system call or equivalent
 };
 
 /// offset for exception ID details, for backward compatibility
