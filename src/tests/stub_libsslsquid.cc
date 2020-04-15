@@ -46,8 +46,8 @@ Security::ErrorCode parseErrorString(const char *name) STUB_RETVAL(0)
 //const char *Ssl::getErrorName(Security::ErrorCode value) STUB_RETVAL(NULL)
 Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode, X509 *, X509 *, const char *) STUB
 Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode, unsigned long) STUB
-const char *Ssl::ErrorDetail::detailString(const HttpRequestPointer &) const STUB_RETVAL(nullptr)
-const char *Ssl::ErrorDetail::logCode() const STUB_RETVAL(nullptr)
+SBuf Ssl::ErrorDetail::verbose(const HttpRequestPointer &) const STUB_RETVAL(SBuf())
+SBuf Ssl::ErrorDetail::brief() const STUB_RETVAL(SBuf())
 
 #include "ssl/support.h"
 namespace Ssl

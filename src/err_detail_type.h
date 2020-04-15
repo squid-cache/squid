@@ -13,8 +13,9 @@
 #include "base/RefCount.h"
 #include "http/forward.h"
 #include "mem/forward.h"
+#include "sbuf/forward.h"
 
-/// interface for supplying additional information about an error
+/// interface for supplying additional information about a transaction error
 class ErrorDetail: public RefCountable
 {
 public:
@@ -22,25 +23,26 @@ public:
 
     virtual ~ErrorDetail() {}
 
-    /// \returns a short string code for use with access logs
-    virtual const char *logCode() const = 0;
+    /// \returns a single "token" summarizing available details
+    /// suitable as an access.log field and similar output processed by programs
+    virtual SBuf brief() const = 0;
 
-    /// \return an error detail string to embed in squid error pages.
-    virtual const char *detailString(const HttpRequestPointer &) const;
+    /// \returns all available details; may be customized for the given request
+    /// suitable for error pages and other output meant for human consumption
+    /// by default (i.e. if kids do not override), returns brief()
+    virtual SBuf verbose(const HttpRequestPointer &) const;
 };
 
 /// Holds system error details. It is based on errno/strerror
 class SysErrorDetail: public ErrorDetail {
     MEMPROXY_CLASS(SysErrorDetail);
+
 public:
-    SysErrorDetail(const int anErrorNo): errorNo(anErrorNo) {}
+    explicit SysErrorDetail(const int anErrorNo): errorNo(anErrorNo) {}
 
-    // ErrorDetail API
-
-    /// \returns a short string in the form SYSERR=XXX where XXX is the errno
-    virtual const char *logCode() const final;
-    /// \returns an strerror based string
-    virtual const char *detailString(const HttpRequestPointer &) const final;
+    /* ErrorDetail API */
+    virtual SBuf brief() const final;
+    virtual SBuf verbose(const HttpRequestPointer &) const final;
 
 private:
     int errorNo; ///< the system errno
@@ -54,20 +56,23 @@ private:
 /// of the error.
 class ExceptionErrorDetail: public ErrorDetail {
     MEMPROXY_CLASS(ExceptionErrorDetail);
+
 public:
-    ExceptionErrorDetail(const SourceLocationId id): exceptionId(SQUID_EXCEPTION_START_BASE + id) {}
+    explicit ExceptionErrorDetail(const SourceLocationId id): exceptionId(SQUID_EXCEPTION_START_BASE + id) {}
 
-    // ErrorDetail API
-
-    /// \returns a short string in the form EXCEPTION=0xXXXXXX
-    virtual const char *logCode() const final;
+    /* ErrorDetail API */
+    virtual SBuf brief() const final;
+    virtual SBuf verbose(const HttpRequestPointer &) const final;
 
 private:
     SourceLocationId exceptionId; ///< the exception id
 };
 
-std::ostream &operator <<(std::ostream &os, const ErrorDetail &detail);
-std::ostream &operator <<(std::ostream &os, const ErrorDetail::Pointer &detail);
+/// dump the given ErrorDetail (for debugging)
+std::ostream &operator <<(std::ostream &os, const ErrorDetail &);
+
+/// dump the given ErrorDetail pointer which may be nil (for debugging)
+std::ostream &operator <<(std::ostream &os, const ErrorDetail::Pointer &);
 
 /* pre-created error globals that reduce common error handling overheads */
 

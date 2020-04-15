@@ -13,6 +13,7 @@
 
 #include "clients/Client.h"
 #include "err_detail_type.h"
+#include "http/forward.h"
 
 class String;
 namespace Ftp
@@ -26,16 +27,16 @@ extern const char *const crlf;
 /// to log the exact FTP server error reply code as the reason of error.
 class ErrorDetail: public ::ErrorDetail {
     MEMPROXY_CLASS(Ftp::ErrorDetail);
+
 public:
-    ErrorDetail(const int code): ftpCode(code) {}
+    explicit ErrorDetail(const int code): completionCode(code) {}
 
-    // ErrorDetail API
-
-    /// \return a short string in the form FTP_ERR=XXX where XXX is the ftp server reply code
-    virtual const char *logCode() const final;
+    /* ErrorDetail API */
+    virtual SBuf brief() const final;
+    virtual SBuf verbose(const HttpRequestPointer &) const final;
 
 private:
-    int ftpCode; // Ftp server reply code
+    int completionCode; ///< FTP reply completion code
 };
 
 /// Common code for FTP server control and data channels.

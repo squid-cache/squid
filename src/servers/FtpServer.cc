@@ -1100,8 +1100,8 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
         mb.appendf("%i-%s\r\n", scode, errorPageName(request->errType));
 
     if (const auto &detail = request->errDetail) {
-        mb.appendf("%i-Error-Detail-Brief: %s\r\n", scode, detail->logCode());
-        mb.appendf("%i-Error-Detail-Verbose: %s\r\n", scode, detail->detailString(request));
+        mb.appendf("%i-Error-Detail-Brief: " SQUIDSBUFPH "\r\n", scode, SQUIDSBUFPRINT(detail->brief()));
+        mb.appendf("%i-Error-Detail-Verbose: " SQUIDSBUFPH "\r\n", scode, SQUIDSBUFPRINT(detail->verbose(request)));
     }
 
 #if USE_ADAPTATION

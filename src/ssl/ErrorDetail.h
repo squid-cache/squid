@@ -65,17 +65,9 @@ public:
     /// peer or intermediate certificate that failed validation
     X509 *brokenCert() {return broken_cert.get(); }
 
-    // ErrorDetail API
-    /// Short string describing the error. For OpenSSL library errors
-    /// returns a string in the form SSL_ERR=XXXXXX. The XXXXXX hes code
-    /// can be used with "openssl errstr" to retrieve more information
-    /// about the type of error.
-    virtual const char *logCode() const final;
-
-    /// It uses the convert method to build the string using a template
-    /// message for the current SSL error. The template messages
-    /// can also contain normal error pages formatting codes.
-    virtual const char *detailString(const HttpRequestPointer &request) const final;
+    /* ErrorDetail API */
+    virtual SBuf brief() const final;
+    virtual SBuf verbose(const HttpRequestPointer &) const final;
 
 private:
     typedef const char * (ErrorDetail::*fmt_action_t)() const;

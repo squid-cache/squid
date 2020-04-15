@@ -21,6 +21,8 @@
 #include "ftp/Parsing.h"
 #include "http/Stream.h"
 #include "ip/tools.h"
+#include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "StatCounters.h"
@@ -64,11 +66,18 @@ escapeIAC(const char *buf)
     return ret;
 }
 
-const char *Ftp::ErrorDetail::logCode() const
+/* Ftp::ErrorDetail */
+
+SBuf
+Ftp::ErrorDetail::brief() const
 {
-    static char sbuf[512];
-    snprintf(sbuf, sizeof(sbuf), "FTP_ERR=%d", ftpCode);
-    return sbuf;
+    return ToSBuf("FTP_REPLY_CODE=", completionCode);
+}
+
+SBuf
+Ftp::ErrorDetail::verbose(const HttpRequest::Pointer &) const
+{
+    return ToSBuf("FTP reply with completion code ", completionCode);
 }
 
 /* Ftp::Channel */

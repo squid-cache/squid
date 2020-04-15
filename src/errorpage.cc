@@ -960,8 +960,9 @@ ErrorState::compileLegacyCode(Build &build)
         if (!build.allowRecursion)
             p = "%D";  // if recursion is not allowed, do not convert
         else if (detail) {
-            const auto errDetailStr = detail->detailString(request);
-            const auto compiledDetail = compileBody(errDetailStr, false);
+            auto rawDetail = detail->verbose(request);
+            // TODO: Support compilation of unterminated/SBuf bodies.
+            const auto compiledDetail = compileBody(rawDetail.c_str(), false);
             mb.append(compiledDetail.rawContent(), compiledDetail.length());
             do_quote = 0;
         }
@@ -1195,11 +1196,12 @@ ErrorState::compileLegacyCode(Build &build)
         break;
 
     case 'x':
-        if (detail)
-            mb.appendf("%s", detail->logCode());
-        else
-            if (!building_deny_info_url)
-                p = "[Unknown Error Code]";
+        if (detail) {
+            const auto brief = detail->brief();
+            mb.append(brief.rawContent(), brief.length());
+        } else if (!building_deny_info_url) {
+            p = "[Unknown Error Code]";
+        }
         break;
 
     case 'z':

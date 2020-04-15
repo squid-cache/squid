@@ -10,6 +10,8 @@
 #include "errorpage.h"
 #include "fatal.h"
 #include "html_quote.h"
+#include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "ssl/ErrorDetail.h"
 
 #include <climits>
@@ -751,14 +753,12 @@ int Ssl::ErrorDetail::convert(const char *code, const char **value) const
     return 0;
 }
 
-const char *Ssl::ErrorDetail::detailString(const HttpRequest::Pointer &request) const
+SBuf Ssl::ErrorDetail::verbose(const HttpRequest::Pointer &request) const
 {
     char const *s = NULL;
     char const *p;
     char const *t;
     int code_len = 0;
-    static SBuf errDetailStr;
-    errDetailStr.clear();
 
     if (ErrorDetailsManager::GetInstance().getErrorDetail(error_no, request, detailEntry))
         s = detailEntry.detail.termedBuf();
@@ -766,6 +766,7 @@ const char *Ssl::ErrorDetail::detailString(const HttpRequest::Pointer &request) 
     if (!s)
         s = SslErrorDetailDefaultStr;
 
+    SBuf errDetailStr;
     assert(s);
     while ((p = strchr(s, '%'))) {
         errDetailStr.append(s, p - s);
@@ -777,18 +778,17 @@ const char *Ssl::ErrorDetail::detailString(const HttpRequest::Pointer &request) 
         s = p + code_len;
     }
     errDetailStr.append(s, strlen(s));
-
-    return errDetailStr.c_str();
+    return errDetailStr;
 }
 
-const char *Ssl::ErrorDetail::logCode() const
+SBuf Ssl::ErrorDetail::brief() const
 {
     if (error_no == SQUID_ERR_SSL_LIB) {
-        static char sbuf[512];
-        snprintf(sbuf, sizeof(sbuf), "SSL_ERR=%lx", lib_error_no);
-        return sbuf;
+        // hex lib_error_no value can be fed to `openssl errstr` for more info
+        // TODO: Convert this and LFT_SSL_SERVER_CERT_ERRORS to TLS_ERR=0x...
+        return ToSBuf("SSL_ERR=", lib_error_no);
     }
-    return err_code();
+    return SBuf(err_code()); // TODO: Upgrade err_code() to return SBuf.
 }
 
 Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason):
