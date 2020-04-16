@@ -2164,10 +2164,9 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
         return;
 
     ErrorDetail::Pointer errorDetail;
-    bool doingTls = false;
 
 #if USE_OPENSSL
-    doingTls = parsingTlsHandshake; // may be refined below
+    auto doingTls = parsingTlsHandshake; // may be refined below
     if (!doingTls) {
         const auto sslConn = fd_table[io.conn->fd].ssl.get();
         doingTls = sslConn && !SSL_is_init_finished(sslConn);
@@ -2181,6 +2180,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     }
 #elif USE_GNUTLS
     if (const auto sslConn = fd_table[io.conn->fd].ssl.get()) {
+        auto doingTls = false;
         // The gnutls_session_get_desc will return nil if the initial
         // negotiation is not finished.
         if (auto descr = gnutls_session_get_desc(sslConn))
