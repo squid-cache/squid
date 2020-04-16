@@ -2413,7 +2413,13 @@ httpsCreate(const ConnStateData *connState, const Security::ContextPointer &ctx)
  *
  * \retval true on success
  * \retval false when needs more data
- * Throws an ErrorDetail object on errors
+ *
+ * TODO: Avoid Comm::SetSelect() calls with nil callback? The nil-callback
+ * caller claims we just want the TLS library to parse the already available
+ * data. Calling SetSelect() with nil callback feels outside that scope. If I am
+ * right, then we should probably throw if more data is needed and there is no
+ * callback (instead of returning false).
+ *
  */
 static bool
 tlsAttemptHandshake(ConnStateData *conn, PF *callback)
@@ -3248,11 +3254,12 @@ ConnStateData::startPeekAndSplice()
     bio->setReadBufData(inBuf);
     bio->hold(true);
 
-    // Here squid should have all of the client hello message so the
-    // tlsAttemptHandshake() should return 0.
     // This block exist only to force openSSL parse client hello and detect
     // ERR_SECURE_ACCEPT_FAIL error, which should be checked and splice if required.
     try {
+        // We should have just the client Hello so the tlsAttemptHandshake()
+        // should return false, asking for XXX data. See also TODO above the
+        // tlsAttemptHandshake() function definition.
         (void)tlsAttemptHandshake(this, nullptr);
     } catch (ErrorDetail *errDetail) {
         debugs(83, 2, "TLS handshake failed.");
