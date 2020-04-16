@@ -38,7 +38,9 @@
  */
 
 // Custom SSL errors; assumes all official errors are positive
-#define SQUID_SSL_ABORTED -7 // Aborted by the remote end
+#define SQUID_SSL_SHUTDOWN -8 // SSL_accept() returned 0
+#define SQUID_SSL_ACCEPT -7 // SSL_accept() returned a negative result
+#define SQUID_SSL_ABORTED -7 // XXX
 #define SQUID_SSL_CONNECTION_CLOSED -6 // Remote end sent the "close notify" alert
 #define SQUID_ERR_SSL_LIB -5
 #define SQUID_X509_V_ERR_INFINITE_VALIDATION -4

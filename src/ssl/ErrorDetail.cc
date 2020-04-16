@@ -590,6 +590,17 @@ Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
     {NULL,NULL}
 };
 
+void Ssl::ErrorDetail::absorbStackedErrors()
+{
+    if ((lib_error_no = ERR_get_error())) {
+        debugs(83, 7, "got " << AsHex(errorToForget));
+        // more errors may be stacked
+        // TODO: Save/report all stacked errors by always flushing stale ones.
+        while (const auto errorToForget = ERR_get_error())
+            debugs(83, 7, "forgot " << AsHex(errorToForget));
+    }
+}
+
 /**
  * The subject of the current certification in text form
  */
@@ -783,6 +794,7 @@ SBuf Ssl::ErrorDetail::verbose(const HttpRequest::Pointer &request) const
 
 SBuf Ssl::ErrorDetail::brief() const
 {
+    // XXX: Rework to report all saved details. Use "+" to concatenate?
     if (error_no == SQUID_ERR_SSL_LIB) {
         // hex lib_error_no value can be fed to `openssl errstr` for more info
         // TODO: Convert this and LFT_SSL_SERVER_CERT_ERRORS to TLS_ERR=0x...

@@ -2437,6 +2437,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
     const int xerrno = errno;
     const auto ssl_error = SSL_get_error(session, ret);
 
+    // quickly handle common, non-erroneous outcomes
     switch (ssl_error) {
 
     case SSL_ERROR_WANT_READ:
@@ -2447,49 +2448,38 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
         Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, (callback ? conn : nullptr), 0);
         return false;
 
-    case SSL_ERROR_SYSCALL: {
-        const auto libError = ERR_get_error();
-        if (ret == 0) {
-            debugs(83, 2, "Error negotiating SSL connection on FD " << fd << ": Aborted by client: " << libError);
-        } else {
-            debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
-                   (xerrno == 0 ? Security::ErrorString(libError) : xstrerr(xerrno)));
-        }
-
-        // XXX: Our debugging above implies that zero `ret` is a special case,
-        // but our throwing statements below do not act on that implication.
-
-        if (libError)
-            throw new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
-
-        if (const auto errnoDetail = SysErrorDetail::NewIfAny(xerrno))
-            throw errnoDetail;
-
-        throw new Ssl::ErrorDetail(SQUID_SSL_ABORTED, 0);
+    default:
+        ; // fall through to handle the problem
     }
+
+    // now we know that we are dealing with a real problem; detail it
+    const auto topError = (ret == 0 ? SQUID_SSL_SHUTDOWN : SQUID_SSL_ACCEPT);
+    const ErrorDetail::Pointer errorDetail = new Ssl::ErrorDetail(topError);
+    auto &sslDetail = static_cast<Ssl::ErrorDetail&>(*errorDetail); // XXX
+    sslDetail.setSysError(xerrno);
+    sslDetail.setIoError(ssl_error);
+    sslDetail.absorbStackedErrors(); // ERR_get_error()
+
+    // inform the admin (if needed)
+    switch (ssl_error) {
+    case SSL_ERROR_SYSCALL:
+        if (ret == 0)
+            debugs(83, 2, "Client aborted while negotiating TLS connection on FD " << fd << ": " << errorDetail);
+        else
+            debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "System call failure while negotiating TLS connection on FD " << fd << ": " << errorDetail);
+        break;
 
     case SSL_ERROR_ZERO_RETURN:
-        // The TLS/SSL peer has closed the connection for writing by sending
-        // the "close notify" alert.
-        debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
-        throw new Ssl::ErrorDetail(SQUID_SSL_CONNECTION_CLOSED, 0);
+        // peer sent a "close notify" alert, closing TLS connection for writing
+        debugs(83, DBG_IMPORTANT, "Client closed while negotiating TLS connection on FD " << fd << ": " << errorDetail);
+        break;
 
-    default: {
-        const auto libError = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
-               fd << ": " << Security::ErrorString(libError) <<
-               " (" << libError << "/" << ret << ")");
-
-        // TODO: Is it OK to ignore zero `ret` when throwing?
-        // TODO: Is it OK to ignore ssl_error when throwing?
-        // TODO: Is it OK to ignore both `xerrno` when throwing?
-
-        if (libError)
-            throw new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
-
-        throw new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, 0);
+    default:
+        // an ever-increasing number of possible cases but usually SSL_ERROR_SSL
+        debugs(83, DBG_IMPORTANT, "Error while negotiating TLS connection on FD " << fd << ": " << errorDetail);
     }
-    }
+
+    throw errorDetail;
 
 #elif USE_GNUTLS
 
@@ -2507,7 +2497,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
     // if (x == GNUTLS_E_WARNING_ALERT_RECEIVED || x == GNUTLS_E_FATAL_ALERT_RECEIVED)
     // if (gnutls_error_is_fatal(x))
     debugs(83, 2, "Error negotiating TLS on " << conn->clientConnection << ": Aborted by client: " << Security::ErrorString(x));
-    throw ERR_DETAIL_TLS_HANDSHAKE; // XXX: wrong type; we catch raw pointers
+    throw ERR_DETAIL_TLS_HANDSHAKE;
 
 #else
     // Performing TLS handshake should never be reachable without a TLS/SSL library.
@@ -2528,7 +2518,7 @@ clientNegotiateSSL(int fd, void *data)
     try {
         if (!tlsAttemptHandshake(conn, clientNegotiateSSL))
             return; // wait for more I/O (with us as an I/O callback)
-    } catch (ErrorDetail *errDetail) {
+    } catch (ErrorDetail *errDetail) { // XXX: wrong type; we throw ErrorDetail::Pointer
         conn->tlsNegotiateFailed(errDetail);
         return;
     }

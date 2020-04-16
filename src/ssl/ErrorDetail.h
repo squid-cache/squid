@@ -55,11 +55,20 @@ public:
     /// General TLS handshake failures or failures due to TLS/SSL
     /// library errors
     ErrorDetail(Security::ErrorCode err_no, unsigned long lib_err);
+    explicit ErrorDetail(const Security::ErrorCode err_no): error_no(err_no) {}
+
+    /// remember SSL_get_error() result
+    void setIoError(const int errorNo) { ioErrorNo = errorNo; }
+
+    /// extract and remember ERR_get_error()-reported error(s)
+    void absorbStackedErrors();
+
+    void setSysError(const int xerrno) { sysErrorNo = xerrno; }
 
     /// The error no
     Security::ErrorCode errorNo() const {return error_no;}
     ///Sets the low-level error returned by OpenSSL ERR_get_error()
-    void setLibError(unsigned long lib_err_no) {lib_error_no = lib_err_no;}
+    void setLibError(unsigned long lib_err_no) {lib_error_no = lib_err_no;} // XXX: replace with absorbStackedErrors()
     /// the peer certificate
     X509 *peerCert() { return peer_cert.get(); }
     /// peer or intermediate certificate that failed validation
@@ -93,8 +102,17 @@ private:
 
     int convert(const char *code, const char **value) const;
 
-    Security::ErrorCode error_no;   ///< The error code
-    unsigned long lib_error_no; ///< low-level error returned by OpenSSL ERR_get_error(3SSL)
+    Security::ErrorCode error_no;   ///< The error code (XXX)
+
+    /// the earliest error returned by OpenSSL ERR_get_error(3SSL) or zero
+    unsigned long lib_error_no = SSL_ERROR_NONE;
+
+    /// TLS I/O operation result returned by OpenSSL SSL_get_error(3SSL) or zero
+    int ioErrorNo = 0;
+
+    /// errno(3); system call failure code (or zero)
+    int sysErrorNo = 0;
+
     Security::CertPointer peer_cert; ///< A pointer to the peer certificate
     Security::CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
     String errReason; ///< A custom reason for error, else retrieved from OpenSSL.
