@@ -237,9 +237,6 @@ StoreEntry::bytesWanted (Range<size_t> const aRange, bool ignoreDelayPools) cons
 
 #endif
 
-    if (!mem_obj->readAheadPolicyCanRead())
-        return 0;
-
     return mem_obj->mostBytesWanted(aRange.end, ignoreDelayPools);
 }
 

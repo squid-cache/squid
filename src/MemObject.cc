@@ -305,12 +305,13 @@ MemObject::lowestMemReaderOffset() const
 }
 
 /* XXX: This is wrong. It breaks *badly* on range combining */
-bool
+int64_t
 MemObject::readAheadPolicyCanRead() const
 {
     const auto savedHttpHeaders = baseReply().hdr_sz;
-    const bool canRead = endOffset() - savedHttpHeaders <
-                         lowestMemReaderOffset() + Config.readAheadGap;
+    const int64_t alreadyRead = endOffset() - savedHttpHeaders;
+    const int64_t maximumAllowed = lowestMemReaderOffset() + Config.readAheadGap;
+    const int64_t canRead = alreadyRead < maximumAllowed ? maximumAllowed - alreadyRead : 0;
 
     if (!canRead) {
         debugs(19, 5, "no: " << endOffset() << '-' << savedHttpHeaders <<
@@ -429,6 +430,10 @@ MemObject::isContiguous() const
 int
 MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const
 {
+    int64_t aHeadCanRead = readAheadPolicyCanRead();
+    if (!aHeadCanRead)
+        return 0;
+
 #if USE_DELAY_POOLS
     if (!ignoreDelayPools) {
         /* identify delay id with largest allowance */
@@ -437,7 +442,7 @@ MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const
     }
 #endif
 
-    return max;
+    return std::min(static_cast<int>(aHeadCanRead), max);
 }
 
 void

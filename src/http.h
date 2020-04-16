@@ -111,12 +111,9 @@ private:
      * determine if read buffer can have space made available
      * for a read.
      *
-     * \param grow  whether to actually expand the buffer
-     *
-     * \return whether the buffer can be grown to provide space
-     *         regardless of whether the grow actually happened.
+     * \return the number of bytes the read buffer can accept
      */
-    bool maybeMakeSpaceAvailable(bool grow);
+    size_t maybeMakeSpaceAvailable();
 
     // consuming request body
     virtual void handleMoreRequestBodyAvailable();

@@ -101,7 +101,7 @@ public:
     int64_t size() const;
     void reset();
     int64_t lowestMemReaderOffset() const;
-    bool readAheadPolicyCanRead() const;
+    int64_t readAheadPolicyCanRead() const;
     void addClient(store_client *);
     /* XXX belongs in MemObject::swapout, once swaphdrsz is managed
      * better
