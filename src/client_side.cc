@@ -2480,7 +2480,9 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
                fd << ": " << Security::ErrorString(libError) <<
                " (" << libError << "/" << ret << ")");
 
-        // TODO: Is it OK to ignore both `ret` and `xerrno` when throwing?
+        // TODO: Is it OK to ignore zero `ret` when throwing?
+        // TODO: Is it OK to ignore ssl_error when throwing?
+        // TODO: Is it OK to ignore both `xerrno` when throwing?
 
         if (libError)
             throw new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
@@ -2505,7 +2507,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
     // if (x == GNUTLS_E_WARNING_ALERT_RECEIVED || x == GNUTLS_E_FATAL_ALERT_RECEIVED)
     // if (gnutls_error_is_fatal(x))
     debugs(83, 2, "Error negotiating TLS on " << conn->clientConnection << ": Aborted by client: " << Security::ErrorString(x));
-    throw ERR_DETAIL_TLS_HANDSHAKE;
+    throw ERR_DETAIL_TLS_HANDSHAKE; // XXX: wrong type; we catch raw pointers
 
 #else
     // Performing TLS handshake should never be reachable without a TLS/SSL library.
@@ -2525,7 +2527,7 @@ clientNegotiateSSL(int fd, void *data)
 
     try {
         if (!tlsAttemptHandshake(conn, clientNegotiateSSL))
-            return;
+            return; // wait for more I/O (with us as an I/O callback)
     } catch (ErrorDetail *errDetail) {
         conn->tlsNegotiateFailed(errDetail);
         return;
@@ -3261,7 +3263,7 @@ ConnStateData::startPeekAndSplice()
         // tlsAttemptHandshake() function definition.
         (void)tlsAttemptHandshake(this, nullptr);
     } catch (ErrorDetail *errDetail) {
-        debugs(83, 2, "TLS handshake failed.");
+        debugs(83, 2, "TLS handshake failed: " << errDetail);
         HttpRequest::Pointer request(http ? http->request : nullptr);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_SECURE_ACCEPT_FAIL))
             tlsNegotiateFailed(errDetail);
@@ -3340,9 +3342,9 @@ ConnStateData::detailErrorFailures(const err_type err, const ErrorDetail::Pointe
 inline void
 ConnStateData::tlsNegotiateFailed(const ErrorDetail::Pointer &errDetail)
 {
-    // For non-bump enabled https_port we have not build a context yet.
-    // The checkLogging will print an logging line for us.
-    // XXX: if there is not any context where to store error details?
+    // XXX: An https_port without ssl_bump does not have a context here. Later,
+    // checkLogging() will log the error, but without our error details.
+    // TODO: Consider adding ConnStateData::earlyErrorType/Detail or similar.
     const auto context = pipeline.front();
     if (context && errDetail) {
         Must(context->http);
