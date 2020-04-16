@@ -2429,7 +2429,6 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
         return true;
 
     const int xerrno = errno;
-    unsigned long libError = 0;
     const auto ssl_error = SSL_get_error(session, ret);
 
     switch (ssl_error) {
@@ -2442,14 +2441,17 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
         Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, (callback ? conn : nullptr), 0);
         return false;
 
-    case SSL_ERROR_SYSCALL:
-        libError = ERR_get_error();
+    case SSL_ERROR_SYSCALL: {
+        const auto libError = ERR_get_error();
         if (ret == 0) {
             debugs(83, 2, "Error negotiating SSL connection on FD " << fd << ": Aborted by client: " << libError);
         } else {
             debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "Error negotiating SSL connection on FD " << fd << ": " <<
                    (xerrno == 0 ? Security::ErrorString(libError) : xstrerr(xerrno)));
         }
+
+        // XXX: Our debugging above implies that zero `ret` is a special case,
+        // but our throwing statements below do not act on that implication.
 
         if (libError)
             throw new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
@@ -2458,6 +2460,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
             throw SysErrorDetail::NewIfAny(xerrno);
 
         throw new Ssl::ErrorDetail(SQUID_SSL_ABORTED, 0);
+    }
 
     case SSL_ERROR_ZERO_RETURN:
         // The TLS/SSL peer has closed the connection for writing by sending
@@ -2466,13 +2469,19 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
 
         throw new Ssl::ErrorDetail(SQUID_SSL_CONNECTION_CLOSED, 0);
 
-    default:
-        libError = ERR_get_error();
+    default: {
+        const auto libError = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " <<
                fd << ": " << Security::ErrorString(libError) <<
                " (" << libError << "/" << ret << ")");
 
-        throw new Ssl::ErrorDetail((libError ? SQUID_ERR_SSL_LIB : SQUID_ERR_SSL_HANDSHAKE), libError);
+        // TODO: Is it OK to ignore both `ret` and `xerrno` when throwing?
+
+        if (libError)
+            throw new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
+
+        throw new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, 0);
+    }
     }
 
 #elif USE_GNUTLS
