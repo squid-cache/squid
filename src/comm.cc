@@ -1639,6 +1639,7 @@ commStartHalfClosedMonitor(int fd)
     debugs(5, 5, HERE << "adding FD " << fd << " to " << *TheHalfClosed);
     assert(isOpen(fd) && !commHasHalfClosedMonitor(fd));
     (void)TheHalfClosed->add(fd); // could also assert the result
+    fd_table[fd].codeContext = CodeContext::Current();
     commPlanHalfClosedCheck(); // may schedule check if we added the first FD
 }
 
@@ -1666,10 +1667,12 @@ commHalfClosedCheck(void *)
         Comm::ConnectionPointer c = new Comm::Connection; // XXX: temporary. make HalfClosed a list of these.
         c->fd = *i;
         if (!fd_table[c->fd].halfClosedReader) { // not reading already
-            AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
-                                                 CommIoCbPtrFun(&commHalfClosedReader, NULL));
-            Comm::Read(c, call);
-            fd_table[c->fd].halfClosedReader = call;
+            CallBack(fd_table[c->fd].codeContext, [c] {
+                AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
+                                                     CommIoCbPtrFun(&commHalfClosedReader, nullptr));
+                Comm::Read(c, call);
+                fd_table[c->fd].halfClosedReader = call;
+            });
         } else
             c->fd = -1; // XXX: temporary. prevent c replacement erase closing listed FD
     }
