@@ -2462,8 +2462,8 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
         if (libError)
             throw new Ssl::ErrorDetail(SQUID_ERR_SSL_LIB, libError);
 
-        if (xerrno)
-            throw SysErrorDetail::NewIfAny(xerrno);
+        if (const auto errnoDetail = SysErrorDetail::NewIfAny(xerrno))
+            throw errnoDetail;
 
         throw new Ssl::ErrorDetail(SQUID_SSL_ABORTED, 0);
     }
@@ -2472,7 +2472,6 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
         // The TLS/SSL peer has closed the connection for writing by sending
         // the "close notify" alert.
         debugs(83, DBG_IMPORTANT, "Error negotiating SSL connection on FD " << fd << ": Closed by client");
-
         throw new Ssl::ErrorDetail(SQUID_SSL_CONNECTION_CLOSED, 0);
 
     default: {
