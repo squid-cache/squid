@@ -45,6 +45,8 @@ class ErrorDetail:  public ::ErrorDetail
 {
     MEMPROXY_CLASS(Ssl::ErrorDetail);
 public:
+    typedef RefCount<ErrorDetail> Pointer;
+
     /// Used for server-side TLS certificate verification failures to
     /// detail server certificates and provide extra string describing
     /// the failure.
@@ -57,18 +59,23 @@ public:
     ErrorDetail(Security::ErrorCode err_no, unsigned long lib_err);
     explicit ErrorDetail(const Security::ErrorCode err_no): error_no(err_no) {}
 
+    /* all methods returning `ErrorDetail*` return this */
+
+    /// remember errno(3)
+    ErrorDetail *sysError(const int xerrno) { sysErrorNo = xerrno; return this; }
+
     /// remember SSL_get_error() result
-    void setIoError(const int errorNo) { ioErrorNo = errorNo; }
+    ErrorDetail *ioError(const int errorNo) { ioErrorNo = errorNo; return this; }
 
     /// extract and remember ERR_get_error()-reported error(s)
-    void absorbStackedErrors();
-
-    void setSysError(const int xerrno) { sysErrorNo = xerrno; }
+    ErrorDetail *absorbStackedErrors();
 
     /// The error no
     Security::ErrorCode errorNo() const {return error_no;}
-    ///Sets the low-level error returned by OpenSSL ERR_get_error()
-    void setLibError(unsigned long lib_err_no) {lib_error_no = lib_err_no;} // XXX: replace with absorbStackedErrors()
+
+    /// \returns the previously saved errno(3) or zero
+    int sysError() const { return sysErrorNo; }
+
     /// the peer certificate
     X509 *peerCert() { return peer_cert.get(); }
     /// peer or intermediate certificate that failed validation

@@ -106,6 +106,7 @@
 #include "proxyp/Header.h"
 #include "proxyp/Parser.h"
 #include "sbuf/Stream.h"
+#include "security/Io.h"
 #include "security/NegotiationHistory.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"
@@ -2428,85 +2429,35 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
     auto session = fd_table[fd].ssl.get();
 
     errno = 0;
-
 #if USE_OPENSSL
-    const auto ret = SSL_accept(session);
-    if (ret > 0)
+    const auto rawResult = SSL_accept(session);
+#elif USE_GNUTLS
+    const auto rawResult = gnutls_handshake(session);
+#else
+    const int rawResult = 0; // the value is unused; should be unreachable
+#endif
+    const auto xerrno = errno;
+
+    const auto result = Security::InterpretIo(session, rawResult, xerrno);
+    switch (result.category) {
+    case Security::IoResult::ioSuccess:
         return true;
 
-    const int xerrno = errno;
-    const auto ssl_error = SSL_get_error(session, ret);
-
-    // quickly handle common, non-erroneous outcomes
-    switch (ssl_error) {
-
-    case SSL_ERROR_WANT_READ:
+    case Security::IoResult::ioWantRead:
         Comm::SetSelect(fd, COMM_SELECT_READ, callback, (callback ? conn : nullptr), 0);
         return false;
 
-    case SSL_ERROR_WANT_WRITE:
+    case Security::IoResult::ioWantWrite:
         Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, (callback ? conn : nullptr), 0);
         return false;
 
-    default:
-        ; // fall through to handle the problem
+    case Security::IoResult::ioError:
+        break; // fall through to error handling
     }
 
-    // now we know that we are dealing with a real problem; detail it
-    const auto topError = (ret == 0 ? SQUID_SSL_SHUTDOWN : SQUID_SSL_ACCEPT);
-    const ErrorDetail::Pointer errorDetail = new Ssl::ErrorDetail(topError);
-    auto &sslDetail = static_cast<Ssl::ErrorDetail&>(*errorDetail); // XXX
-    sslDetail.setSysError(xerrno);
-    sslDetail.setIoError(ssl_error);
-    sslDetail.absorbStackedErrors(); // ERR_get_error()
-
-    // inform the admin (if needed)
-    switch (ssl_error) {
-    case SSL_ERROR_SYSCALL:
-        if (ret == 0)
-            debugs(83, 2, "Client aborted while negotiating TLS connection on FD " << fd << ": " << errorDetail);
-        else
-            debugs(83, (xerrno == ECONNRESET) ? 1 : 2, "System call failure while negotiating TLS connection on FD " << fd << ": " << errorDetail);
-        break;
-
-    case SSL_ERROR_ZERO_RETURN:
-        // peer sent a "close notify" alert, closing TLS connection for writing
-        debugs(83, DBG_IMPORTANT, "Client closed while negotiating TLS connection on FD " << fd << ": " << errorDetail);
-        break;
-
-    default:
-        // an ever-increasing number of possible cases but usually SSL_ERROR_SSL
-        debugs(83, DBG_IMPORTANT, "Error while negotiating TLS connection on FD " << fd << ": " << errorDetail);
-    }
-
-    throw errorDetail;
-
-#elif USE_GNUTLS
-
-    const auto x = gnutls_handshake(session);
-    if (x == GNUTLS_E_SUCCESS)
-        return true;
-
-    if (x == GNUTLS_E_INTERRUPTED || x == GNUTLS_E_AGAIN) {
-        const auto ioAction = (gnutls_record_get_direction(session)==0 ? COMM_SELECT_READ : COMM_SELECT_WRITE);
-        Comm::SetSelect(fd, ioAction, callback, (callback ? conn : nullptr), 0);
-        return false;
-    }
-
-    // TODO: Handle the cases and provide more details:
-    // if (x == GNUTLS_E_WARNING_ALERT_RECEIVED || x == GNUTLS_E_FATAL_ALERT_RECEIVED)
-    // if (gnutls_error_is_fatal(x))
-    debugs(83, 2, "Error negotiating TLS on " << conn->clientConnection << ": Aborted by client: " << Security::ErrorString(x));
-    throw ERR_DETAIL_TLS_HANDSHAKE;
-
-#else
-    // Performing TLS handshake should never be reachable without a TLS/SSL library.
-    (void)session; // avoid compiler and static analysis complaints
-    fatal("FATAL: HTTPS not supported by this Squid.");
-#endif
-
-    assert(false); // not reached
-    return false;
+    debugs(83, (result.important ? DBG_IMPORTANT : 2), "ERROR: " << result.errorDescription <<
+           " while accepting a TLS connection on FD " << fd << ": " << result.errorDetail);
+    throw result.errorDetail;
 }
 
 /** negotiate an SSL connection */
@@ -2519,6 +2470,7 @@ clientNegotiateSSL(int fd, void *data)
         if (!tlsAttemptHandshake(conn, clientNegotiateSSL))
             return; // wait for more I/O (with us as an I/O callback)
     } catch (ErrorDetail *errDetail) { // XXX: wrong type; we throw ErrorDetail::Pointer
+        // XXX: Does catching ErrorDetail::Pointer catch Ssl::ErrorDetail::Pointer?
         conn->tlsNegotiateFailed(errDetail);
         return;
     }

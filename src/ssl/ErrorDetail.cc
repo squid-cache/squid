@@ -590,15 +590,16 @@ Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
     {NULL,NULL}
 };
 
-void Ssl::ErrorDetail::absorbStackedErrors()
+Ssl::ErrorDetail *Ssl::ErrorDetail::absorbStackedErrors()
 {
     if ((lib_error_no = ERR_get_error())) {
-        debugs(83, 7, "got " << AsHex(errorToForget));
+        debugs(83, 7, "got " << asHex(lib_error_no));
         // more errors may be stacked
         // TODO: Save/report all stacked errors by always flushing stale ones.
         while (const auto errorToForget = ERR_get_error())
-            debugs(83, 7, "forgot " << AsHex(errorToForget));
+            debugs(83, 7, "forgot " << asHex(errorToForget));
     }
+    return this;
 }
 
 /**

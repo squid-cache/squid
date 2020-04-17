@@ -20,6 +20,7 @@
 #include "HttpRequest.h"
 #include "neighbors.h"
 #include "pconn.h"
+#include "security/Io.h"
 #include "security/NegotiationHistory.h"
 #include "security/PeerConnector.h"
 #include "SquidConfig.h"
@@ -173,41 +174,43 @@ Security::PeerConnector::negotiate()
     if (fd_table[fd].closing())
         return;
 
+    auto session = fd_table[fd].ssl.get();
+
+    errno = 0;
 #if USE_OPENSSL
-    auto session = fd_table[fd].ssl.get();
-    debugs(83, 5, "SSL_connect session=" << (void*)session);
-    const int result = SSL_connect(session);
-    if (result <= 0) {
+    const auto rawResult = SSL_connect(session);
 #elif USE_GNUTLS
-    auto session = fd_table[fd].ssl.get();
-    const int result = gnutls_handshake(session);
-    debugs(83, 5, "gnutls_handshake session=" << (void*)session << ", result=" << result);
-
-    if (result == GNUTLS_E_SUCCESS) {
-        char *desc = gnutls_session_get_desc(session);
-        debugs(83, 2, serverConnection() << " TLS Session info: " << desc);
-        gnutls_free(desc);
-    }
-
-    if (result != GNUTLS_E_SUCCESS) {
-        // debug the TLS session state so far
-        auto descIn = gnutls_handshake_get_last_in(session);
-        debugs(83, 2, "handshake IN: " << gnutls_handshake_description_get_name(descIn));
-        auto descOut = gnutls_handshake_get_last_out(session);
-        debugs(83, 2, "handshake OUT: " << gnutls_handshake_description_get_name(descOut));
+    const auto rawResult = gnutls_handshake(session);
 #else
-    if (const int result = -1) {
+    const int rawResult = 0; // the value is unused; should be unreachable
 #endif
-        handleNegotiateError(result);
-        return; // we might be gone by now
-    }
+    const auto xerrno = errno;
 
-    recordNegotiationDetails();
+    const auto result = Security::InterpretIo(session, rawResult, xerrno);
+    switch (result.category) {
+    case Security::IoResult::ioSuccess:
+        recordNegotiationDetails();
+        if (sslFinalized())
+            sendSuccess();
+        return; // we may be gone by now
 
-    if (!sslFinalized())
+    case Security::IoResult::ioWantRead:
+        noteWantRead();
         return;
 
-    sendSuccess();
+    case Security::IoResult::ioWantWrite:
+        noteWantWrite();
+        return;
+
+    case Security::IoResult::ioError:
+        break; // fall through to error handling
+    }
+
+    // TODO: Honor result.important when working in a reverse proxy role?
+    debugs(83, 2, "ERROR: " << result.errorDescription <<
+           " while establishing TLS connection on FD: " << fd << result.errorDetail);
+    recordNegotiationDetails();
+    noteNegotiationError(result.errorDetail);
 }
 
 bool
@@ -379,70 +382,6 @@ Security::PeerConnector::negotiateSsl()
 }
 
 void
-Security::PeerConnector::handleNegotiateError(const int ret)
-{
-    const int fd = serverConnection()->fd;
-    const Security::SessionPointer session(fd_table[fd].ssl);
-    unsigned long ssl_lib_error = ret;
-
-#if USE_OPENSSL
-    const int ssl_error = SSL_get_error(session.get(), ret);
-
-    switch (ssl_error) {
-    case SSL_ERROR_WANT_READ:
-        noteWantRead();
-        return;
-
-    case SSL_ERROR_WANT_WRITE:
-        noteWantWrite();
-        return;
-
-    case SSL_ERROR_SSL:
-    case SSL_ERROR_SYSCALL:
-        ssl_lib_error = ERR_get_error();
-        // proceed to the general error handling code
-        break;
-    default:
-        // no special error handling for all other errors
-        ssl_lib_error = SSL_ERROR_NONE;
-        break;
-    }
-
-#elif USE_GNUTLS
-    const int ssl_error = ret;
-
-    switch (ret) {
-    case GNUTLS_E_WARNING_ALERT_RECEIVED: {
-        auto alert = gnutls_alert_get(session.get());
-        debugs(83, DBG_IMPORTANT, "TLS ALERT: " << gnutls_alert_get_name(alert));
-    }
-    // drop through to next case
-
-    case GNUTLS_E_AGAIN:
-    case GNUTLS_E_INTERRUPTED:
-        if (gnutls_record_get_direction(session.get()) == 0)
-            noteWantRead();
-        else
-            noteWantWrite();
-        return;
-
-    default:
-        // no special error handling for all other errors
-        break;
-    }
-
-#else
-    // this avoids unused variable compiler warnings.
-    Must(!session);
-    const int ssl_error = ret;
-#endif
-
-    // Log connection details, if any
-    recordNegotiationDetails();
-    noteNegotiationError(ret, ssl_error, ssl_lib_error);
-}
-
-void
 Security::PeerConnector::noteWantRead()
 {
     const int fd = serverConnection()->fd;
@@ -490,31 +429,15 @@ Security::PeerConnector::noteWantWrite()
 }
 
 void
-Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error, const int ssl_lib_error)
+Security::PeerConnector::noteNegotiationError(const Ssl::ErrorDetail::Pointer &errorDetail)
 {
-#if defined(EPROTO)
-    int sysErrNo = EPROTO;
-#else
-    int sysErrNo = EACCES;
-#endif
-
-#if USE_OPENSSL
-    // store/report errno when ssl_error is SSL_ERROR_SYSCALL, ssl_lib_error is 0, and ret is -1
-    if (ssl_error == SSL_ERROR_SYSCALL && ret == -1 && ssl_lib_error == 0)
-        sysErrNo = errno;
-#endif
-    int xerr = errno;
-
-    const int fd = serverConnection()->fd;
-    debugs(83, DBG_IMPORTANT, "ERROR: negotiating TLS on FD " << fd <<
-           ": " << Security::ErrorString(ssl_lib_error) << " (" <<
-           ssl_error << "/" << ret << "/" << xerr << ")");
-
     const auto anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request, al);
-    anErr->xerrno = sysErrNo;
+    anErr->xerrno = errorDetail->sysError();
 
 #if USE_OPENSSL
+    const auto fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
+    // XXX: Which details should take priority? errFromFailure or errorDetail?
     auto *errFromFailure = static_cast<ErrorDetail::Pointer *>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_error_detail));
     if (errFromFailure != NULL) {
         // The errFromFailure is attached to the ssl object
@@ -528,10 +451,13 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
         X509_free(server_cert);
     }
 
+    // TODO: Adjust once the errDetail vs errorDetail conflict is resolved.
+#if TODO_ADJUST
     if (ssl_lib_error != SSL_ERROR_NONE) {
         if (const auto errDetail = dynamic_cast<Ssl::ErrorDetail *>(anErr->detail.getRaw()))
-            errDetail->setLibError(ssl_lib_error);
+            errDetail->setLibError(errorDetail->ssl_lib_error);
     }
+#endif // TODO_ADJUST
 #endif
 
     noteNegotiationDone(anErr);

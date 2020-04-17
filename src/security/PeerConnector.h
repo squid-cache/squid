@@ -120,10 +120,7 @@ protected:
     virtual void noteWantWrite();
 
     /// Called when the SSL_connect function aborts with an SSL negotiation error
-    /// \param result the SSL_connect return code
-    /// \param ssl_error the error code returned from the SSL_get_error function
-    /// \param ssl_lib_error the error returned from the ERR_Get_Error function
-    virtual void noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
+    virtual void noteNegotiationError(const Ssl::ErrorDetail::Pointer &);
 
     /// Called when the SSL negotiation to the server completed and the certificates
     /// validated using the cert validator.

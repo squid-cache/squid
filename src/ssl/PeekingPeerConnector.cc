@@ -293,7 +293,7 @@ Ssl::PeekingPeerConnector::noteWantWrite()
 }
 
 void
-Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error)
+Ssl::PeekingPeerConnector::noteNegotiationError(const Ssl::ErrorDetail::Pointer &errorDetail)
 {
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
@@ -341,14 +341,14 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
             (srvBio->bumpMode() == Ssl::bumpPeek  || srvBio->bumpMode() == Ssl::bumpStare) && srvBio->holdWrite()) {
         Security::CertPointer serverCert(SSL_get_peer_certificate(session.get()));
         if (serverCert) {
-            debugs(81, 3, "Error ("  << Security::ErrorString(ssl_lib_error) <<  ") but, hold write on SSL connection on FD " << fd);
+            debugs(81, 3, "hold TLS write on FD " << fd << " despite " << errorDetail);
             checkForPeekAndSplice();
             return;
         }
     }
 
     // else call parent noteNegotiationError to produce an error page
-    Security::PeerConnector::noteNegotiationError(result, ssl_error, ssl_lib_error);
+    Security::PeerConnector::noteNegotiationError(errorDetail);
 }
 
 void
