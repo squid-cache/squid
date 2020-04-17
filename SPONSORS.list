@@ -1,7 +1,7 @@
 The following organizations have supported the Squid Project by providing
 their resources or funding various Squid development activities:
 
-Squid Software Foundation - http://foundation.squid-cache.org/
+The Squid Software Foundation - http://foundation.squid-cache.org/
 
 	The Foundation governs and facilitates Squid project activities,
 	providing the infrastructure and support framework for Squid
@@ -11,7 +11,7 @@ Squid Software Foundation - http://foundation.squid-cache.org/
 DigialOcean - https://www.digitalocean.com/
 
 	DigitalOcean has donated droplets from their cloud infrastructure
-	to host most of the project's continuous integration farm
+	to host most of Squid Project's continuous integration farm.
 
 SpinUp - https://SpinUp.com
 
@@ -20,8 +20,8 @@ SpinUp - https://SpinUp.com
 
 The Measurement Factory - http://www.measurement-factory.com/
 
-	Measurement Factory has contributed significant resources
-	toward Squid-3+ development and server maintenance.
+	The Measurement Factory has contributed significant resources to
+	Squid development and Squid Project infrastructure and support.
 
 Treehouse Networks, NZ - http://treenet.co.nz/
 
@@ -34,7 +34,7 @@ RackSpace - https://www.rackspace.com/
 
 	RackSpace donated a number of virtual machines from their cloud
 	infrastructure to support and extend our continuous integration
-	testing infrastructure, and in 2014-2019 to host many of the
+	testing infrastructure and, in 2014-2019, to host many of the
 	Squid Project services.
 
 @Squid-4:
