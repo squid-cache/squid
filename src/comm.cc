@@ -1667,7 +1667,7 @@ commHalfClosedCheck(void *)
         Comm::ConnectionPointer c = new Comm::Connection; // XXX: temporary. make HalfClosed a list of these.
         c->fd = *i;
         if (!fd_table[c->fd].halfClosedReader) { // not reading already
-            CallBack(fd_table[c->fd].codeContext, [c] {
+            CallBack(fd_table[c->fd].codeContext, [&c] {
                 AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
                                                      CommIoCbPtrFun(&commHalfClosedReader, nullptr));
                 Comm::Read(c, call);
