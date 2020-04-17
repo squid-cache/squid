@@ -1284,7 +1284,7 @@ commHandleWriteHelper(void * data)
             return;
     } while (clientInfo->hasQueue());
 
-    debugs(77,3, "emptied queue");
+    debugs(77, 3, "emptied queue");
 }
 
 void
