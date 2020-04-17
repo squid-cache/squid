@@ -77,12 +77,9 @@ public: // TCP protocol state
 
 public: // HTTP protocol state
 
-    /// whether we are currently creating a CONNECT header (to be sent to peer)
+    // FIXME: misplaced Server flag
+    /// whether HTTP is currently creating a CONNECT header (to be sent to peer)
     bool generatingConnect = false;
-
-
-    // TODO: add state from other Jobs in the transaction
 };
 
 #endif /* SQUID_SRC_MASTERXACTION_H */
-

@@ -25,7 +25,7 @@ MasterXaction::spawnChildLayer(const char *name) const
 
     txChild->tcpClient = tcpClient;
 
-    txChild->generatingConnect = generatingConnect; // FIXME: misplaced?
+    txChild->generatingConnect = generatingConnect;
 
     return txChild;
 }
