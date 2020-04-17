@@ -435,9 +435,12 @@ if test "x$squid_opt_aufs_threads" != "x"; then
                  [Defines how many threads aufs uses for I/O])
 fi
 
-AC_ARG_WITH(dl, AS_HELP_STRING([--with-dl],[Use dynamic linking]))
-if test "x$with_dl" = "xyes"; then
-  AC_MSG_NOTICE([With dl])
+## TODO check if this is necessary, LT_INIT does these checks
+SQUID_AUTO_LIB(dl,[dynamic linking],[LIBDL])
+if test "x$with_dl" != "xno"; then
+  CXXFLAGS="$LIBDL_CFLAGS $CXXFLAGS"
+  LDFLAGS="$LIBDL_PATH $LDFLAGS"
+  AC_CHECK_LIB(dl, dlopen)
 fi
 
 ## check for atomics library before anything that might need it
@@ -3100,11 +3103,6 @@ fi
 SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE
 SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
 
-
-dnl Check for libdl, used by auth_modules/PAM
-if test "x$with_dl" = "xyes"; then
-    AC_CHECK_LIB(dl, dlopen)
-fi
 
 dnl -lintl is needed on SCO version 3.2v4.2 for strftime()
 dnl Robert Side <rside@aiinc.bc.ca>
