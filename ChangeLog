@@ -1,3 +1,15 @@
+Changes to squid-4.11 (18 Apr 2020):
+
+	- Bug 5036: capital 'L's in logs when daemon queue overflows
+	- Bug 5022: Reconfigure kills Coordinator in SMP+ufs configurations
+	- Bug 5016: systemd thinks Squid is ready before Squid listens
+	- kerberos_ldap_group: fix encryption type for cross realm check
+	- HTTP: Ignore malformed Host header in intercept and reverse proxy mode
+	- Fix Digest authentication nonce handling
+	- Supply ALE to request_header_add/reply_header_add
+	- ... and some documentation updates
+	- ... and some compile fixes
+
 Changes to squid-4.10 (14 Jan 2020):
 
 	- Bug 5009: Build failure with older clang libc++
