@@ -9,6 +9,7 @@
 #ifndef SQUID_SRC_SECURITY_IO_H
 #define SQUID_SRC_SECURITY_IO_H
 
+#include "comm/forward.h"
 #include "security/forward.h"
 #include "ssl/ErrorDetail.h" // XXX: this should be Security::ErrorDetail
 
@@ -32,9 +33,11 @@ public:
     bool important = false; ///< whether the error was serious/unusual
 };
 
-/// analyses the given TLS I/O call outcome and TLS connection state
-/// handles alert logging and reaching supposedly unreachable I/O code
-IoResult InterpretIo(Security::SessionPointer::element_type *connection, int rawResult, int xerrno);
+/// accept a TLS connection over the specified to-Squid transport connection
+IoResult Accept(Comm::Connection &transport);
+
+/// establish a TLS connection over the specified from-Squid transport connection
+IoResult Connect(Comm::Connection &transport);
 
 } // namespace Security
 

@@ -14,6 +14,15 @@
 #define STUB_API "security/libsecurity.la"
 #include "tests/STUB.h"
 
+#if USE_OPENSSL
+namespace Ssl
+{
+// XXX: Move out
+class ErrorDetail;
+typedef RefCount<ErrorDetail> ErrorDetailPointer;
+}
+#endif
+
 #include "security/BlindPeerConnector.h"
 CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 namespace Security
@@ -30,6 +39,10 @@ std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorA
 #include "security/Handshake.h"
 Security::HandshakeParser::HandshakeParser(MessageSource) STUB
 bool Security::HandshakeParser::parseHello(const SBuf &) STUB_RETVAL(false)
+
+#include "security/Io.h"
+Security::IoResult Security::Accept(Comm::Connection &) STUB_RETVAL(IoResult(IoResult::ioError))
+Security::IoResult Security::Connect(Comm::Connection &) STUB_RETVAL(IoResult(IoResult::ioError))
 
 #include "security/KeyData.h"
 namespace Security
@@ -62,7 +75,7 @@ bool PeerConnector::sslFinalized() STUB_RETVAL(false)
 void PeerConnector::handleNegotiateError(const int) STUB
 void PeerConnector::noteWantRead() STUB
 void PeerConnector::noteWantWrite() STUB
-void PeerConnector::noteNegotiationError(const int, const int, const int) STUB
+void PeerConnector::noteNegotiationError(const Ssl::ErrorDetail::Pointer &) STUB
 //    virtual Security::ContextPointer getTlsContext() = 0;
 void PeerConnector::bail(ErrorState *) STUB
 void PeerConnector::sendSuccess() STUB

@@ -9,12 +9,33 @@
 /* DEBUG: section 83    TLS io management */
 
 #include "squid.h"
+#include "fde.h"
 #include "security/Io.h"
 
-Security::IoResult
-Security::InterpretIo(Security::SessionPointer::element_type *connection, const int rawResult, const int xerrno)
+namespace Security {
+    template <typename Fun>
+    static IoResult GuardedIo(Comm::Connection &, ErrorCode, Fun);
+
+    typedef SessionPointer::element_type *ConnectionPointer;
+}
+
+/// Calls the given TLS I/O function and analysis its outcome.
+/// Handles alert logging and reaching supposedly unreachable I/O code.
+template <typename Fun>
+static Security::IoResult
+Security::GuardedIo(Comm::Connection &transport, const ErrorCode topError, Fun ioCall)
 {
-    debugs(83, 5, rawResult << '/' << xerrno << " for TLS connection " << static_cast<void*>(connection));
+    assert(transport.isOpen());
+    const auto fd = transport.fd;
+    auto connection = fd_table[fd].ssl.get();
+
+    // reset and capture errno before anybody else can overwrite it
+    errno = 0;
+    const auto rawResult = ioCall(connection);
+    const auto xerrno = errno;
+
+    debugs(83, 5, rawResult << '/' << xerrno << " for TLS connection " <<
+           static_cast<void*>(connection) << " over " << transport);
 
 #if USE_OPENSSL
     if (rawResult > 0)
@@ -36,7 +57,6 @@ Security::InterpretIo(Security::SessionPointer::element_type *connection, const 
     }
 
     // now we know that we are dealing with a real problem; detail it
-    const auto topError = (rawResult == 0 ? SQUID_SSL_SHUTDOWN : SQUID_SSL_ACCEPT); // XXX
     const Ssl::ErrorDetail::Pointer errorDetail = (new Ssl::ErrorDetail(topError))
         ->sysError(xerrno) // see the comment about errno below
         ->ioError(ssl_error)
@@ -102,7 +122,6 @@ Security::InterpretIo(Security::SessionPointer::element_type *connection, const 
     }
 
     // now we know that we are dealing with a real problem; detail it
-    const auto topError = SQUID_SSL_ACCEPT; // XXX
     const ErrorDetail::Pointer errorDetail = (new Ssl::ErrorDetail(topError))
         ->sysError(xerrno)
         ->ioError(rawResult)
@@ -121,3 +140,33 @@ Security::InterpretIo(Security::SessionPointer::element_type *connection, const 
 #endif
 }
 
+// TODO: After dropping OpenSSL v1.1.0 support, this and Security::Connect() can
+// be simplified further by using SSL_do_handshake() and eliminating lambdas.
+Security::IoResult
+Security::Accept(Comm::Connection &transport)
+{
+    return GuardedIo(transport, SQUID_SSL_ACCEPT, [] (ConnectionPointer tlsConn) -> auto {
+#if USE_OPENSSL
+        return SSL_accept(tlsConn);
+#elif USE_GNUTLS
+        return gnutls_handshake(tlsConn);
+#else
+        return sizeof(tlsConn); // the value is unused; should be unreachable
+#endif
+    });
+}
+
+/// establish a TLS connection over the specified from-Squid transport connection
+Security::IoResult
+Security::Connect(Comm::Connection &transport)
+{
+    return GuardedIo(transport, SQUID_SSL_CONNECT, [] (ConnectionPointer tlsConn) -> auto {
+#if USE_OPENSSL
+        return SSL_connect(tlsConn);
+#elif USE_GNUTLS
+        return gnutls_handshake(tlsConn);
+#else
+        return sizeof(tlsConn); // the value is unused; should be unreachable
+#endif
+    });
+}

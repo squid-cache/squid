@@ -2425,30 +2425,17 @@ httpsCreate(const ConnStateData *connState, const Security::ContextPointer &ctx)
 static bool
 tlsAttemptHandshake(ConnStateData *conn, PF *callback)
 {
-    int fd = conn->clientConnection->fd;
-    auto session = fd_table[fd].ssl.get();
-
-    errno = 0;
-#if USE_OPENSSL
-    const auto rawResult = SSL_accept(session);
-#elif USE_GNUTLS
-    const auto rawResult = gnutls_handshake(session);
-#else
-    const int rawResult = 0; // the value is unused; should be unreachable
-#endif
-    const auto xerrno = errno;
-
-    const auto result = Security::InterpretIo(session, rawResult, xerrno);
+    const auto result = Security::Accept(*conn->clientConnection);
     switch (result.category) {
     case Security::IoResult::ioSuccess:
         return true;
 
     case Security::IoResult::ioWantRead:
-        Comm::SetSelect(fd, COMM_SELECT_READ, callback, (callback ? conn : nullptr), 0);
+        Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, callback, (callback ? conn : nullptr), 0);
         return false;
 
     case Security::IoResult::ioWantWrite:
-        Comm::SetSelect(fd, COMM_SELECT_WRITE, callback, (callback ? conn : nullptr), 0);
+        Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_WRITE, callback, (callback ? conn : nullptr), 0);
         return false;
 
     case Security::IoResult::ioError:
@@ -2456,7 +2443,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
     }
 
     debugs(83, (result.important ? DBG_IMPORTANT : 2), "ERROR: " << result.errorDescription <<
-           " while accepting a TLS connection on FD " << fd << ": " << result.errorDetail);
+           " while accepting a TLS connection on " << conn->clientConnection << ": " << result.errorDetail);
     throw result.errorDetail;
 }
 

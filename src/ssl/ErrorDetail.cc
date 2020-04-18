@@ -28,8 +28,11 @@ typedef std::map<Security::ErrorCode, const SslErrorEntry *> SslErrors;
 SslErrors TheSslErrors;
 
 static SslErrorEntry TheSslErrorArray[] = {
-    {   SQUID_SSL_ABORTED,
-        "SQUID_SSL_ABORTED"
+    {   SQUID_SSL_ACCEPT,
+        "SQUID_SSL_ACCEPT"
+    },
+    {   SQUID_SSL_CONNECT,
+        "SQUID_SSL_CONNECT"
     },
     {   SQUID_SSL_CONNECTION_CLOSED,
         "SQUID_SSL_CONNECTION_CLOSED"

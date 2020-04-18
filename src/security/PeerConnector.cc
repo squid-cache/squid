@@ -174,19 +174,7 @@ Security::PeerConnector::negotiate()
     if (fd_table[fd].closing())
         return;
 
-    auto session = fd_table[fd].ssl.get();
-
-    errno = 0;
-#if USE_OPENSSL
-    const auto rawResult = SSL_connect(session);
-#elif USE_GNUTLS
-    const auto rawResult = gnutls_handshake(session);
-#else
-    const int rawResult = 0; // the value is unused; should be unreachable
-#endif
-    const auto xerrno = errno;
-
-    const auto result = Security::InterpretIo(session, rawResult, xerrno);
+    const auto result = Security::Connect(*serverConnection());
     switch (result.category) {
     case Security::IoResult::ioSuccess:
         recordNegotiationDetails();
