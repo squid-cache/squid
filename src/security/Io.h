@@ -24,6 +24,12 @@ public:
     explicit IoResult(const Category aCategory): category(aCategory) {}
     explicit IoResult(const Ssl::ErrorDetail::Pointer &anErrorDetail): errorDetail(anErrorDetail) {}
 
+    /// convenience wrapper to detect successful I/O outcome; implies !wantsIo()
+    bool successful() const { return category == ioSuccess; }
+
+    /// convenience wrapper to detect whether more I/O is needed
+    bool wantsIo() const { return category == ioWantRead || category == ioWantWrite; }
+
     Ssl::ErrorDetail::Pointer errorDetail; ///< ioError case details (or nil)
 
     Category category = ioError; ///< primary outcome classification

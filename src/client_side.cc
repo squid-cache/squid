@@ -2418,25 +2418,25 @@ httpsCreate(const ConnStateData *connState, const Security::ContextPointer &ctx)
  * TODO: Avoid Comm::SetSelect() calls with nil callback? The nil-callback
  * caller claims we just want the TLS library to parse the already available
  * data. Calling SetSelect() with nil callback feels outside that scope. If I am
- * right, then we should probably throw if more data is needed and there is no
+ * right, then we should probably err if more data is needed and there is no
  * callback (instead of returning false).
  *
  */
-static bool
+static Security::IoResult
 tlsAttemptHandshake(ConnStateData *conn, PF *callback)
 {
     const auto result = Security::Accept(*conn->clientConnection);
     switch (result.category) {
     case Security::IoResult::ioSuccess:
-        return true;
+        return result;
 
     case Security::IoResult::ioWantRead:
         Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, callback, (callback ? conn : nullptr), 0);
-        return false;
+        return result;
 
     case Security::IoResult::ioWantWrite:
         Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_WRITE, callback, (callback ? conn : nullptr), 0);
-        return false;
+        return result;
 
     case Security::IoResult::ioError:
         break; // fall through to error handling
@@ -2444,7 +2444,7 @@ tlsAttemptHandshake(ConnStateData *conn, PF *callback)
 
     debugs(83, (result.important ? DBG_IMPORTANT : 2), "ERROR: " << result.errorDescription <<
            " while accepting a TLS connection on " << conn->clientConnection << ": " << result.errorDetail);
-    throw result.errorDetail;
+    return result;
 }
 
 /** negotiate an SSL connection */
@@ -2453,14 +2453,11 @@ clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
 
-    try {
-        if (!tlsAttemptHandshake(conn, clientNegotiateSSL))
-            return; // wait for more I/O (with us as an I/O callback)
-    } catch (ErrorDetail *errDetail) { // XXX: wrong type; we throw ErrorDetail::Pointer
-        // XXX: Does catching ErrorDetail::Pointer catch Ssl::ErrorDetail::Pointer?
-        conn->tlsNegotiateFailed(errDetail);
-        return;
-    }
+    const auto handshakeResult = tlsAttemptHandshake(conn, clientNegotiateSSL);
+    if (handshakeResult.wantsIo())
+        return; // wait for more I/O (with us as an I/O callback)
+    if (!handshakeResult.successful())
+        return conn->tlsNegotiateFailed(handshakeResult.errorDetail);
 
     Security::SessionPointer session(fd_table[fd].ssl);
 
@@ -3184,18 +3181,18 @@ ConnStateData::startPeekAndSplice()
     bio->setReadBufData(inBuf);
     bio->hold(true);
 
-    // This block exist only to force openSSL parse client hello and detect
-    // ERR_SECURE_ACCEPT_FAIL error, which should be checked and splice if required.
-    try {
-        // We should have just the client Hello so the tlsAttemptHandshake()
-        // should return false, asking for XXX data. See also TODO above the
-        // tlsAttemptHandshake() function definition.
-        (void)tlsAttemptHandshake(this, nullptr);
-    } catch (ErrorDetail *errDetail) {
-        debugs(83, 2, "TLS handshake failed: " << errDetail);
+    // We have successfully parsed client Hello, but our TLS handshake parser is
+    // forgiving. Now we use a TLS library to parse the same bytes, so that we
+    // can honor on_unsupported_protocol if needed.
+    //
+    // We should have just the client Hello so the tlsAttemptHandshake() should
+    // ask for more data (XXX: why?). And see TODO above the
+    // tlsAttemptHandshake() function definition.
+    const auto handshakeResult = tlsAttemptHandshake(this, nullptr);
+    if (handshakeResult.category == Security::IoResult::ioError) {
         HttpRequest::Pointer request(http ? http->request : nullptr);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_SECURE_ACCEPT_FAIL))
-            tlsNegotiateFailed(errDetail);
+            tlsNegotiateFailed(handshakeResult.errorDetail);
         else {
             sslBumpMode = Ssl::bumpSplice;
             if (http)
@@ -3269,7 +3266,7 @@ ConnStateData::detailErrorFailures(const err_type err, const ErrorDetail::Pointe
 }
 
 inline void
-ConnStateData::tlsNegotiateFailed(const ErrorDetail::Pointer &errDetail)
+ConnStateData::tlsNegotiateFailed(const Ssl::ErrorDetail::Pointer &errDetail)
 {
     // XXX: An https_port without ssl_bump does not have a context here. Later,
     // checkLogging() will log the error, but without our error details.

@@ -46,6 +46,10 @@ typedef RefCount<MasterXaction> MasterXactionPointer;
 namespace Ssl
 {
 class ServerBump;
+
+// XXX: Move out
+class ErrorDetail;
+typedef RefCount<ErrorDetail> ErrorDetailPointer;
 }
 #endif
 
@@ -301,7 +305,7 @@ public:
 
     /// initiate teardown of the from-client connection
     /// after a TLS negotiation failure (with the given detail)
-    void tlsNegotiateFailed(const ErrorDetail::Pointer &);
+    void tlsNegotiateFailed(const Ssl::ErrorDetailPointer &);
 
     char *prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp);
 
