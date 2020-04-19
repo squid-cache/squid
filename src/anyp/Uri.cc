@@ -276,7 +276,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             src = url;
             i = 0;
 
-            /* Then everything until first /; thats host (and port; which we'll look for here later) */
+            /* Then everything until first /; that's host (and port; which we'll look for here later) */
             // bug 1881: If we don't get a "/" then we imply it was there
             // bug 3074: We could just be given a "?" or "#". These also imply "/"
             // bug 3233: whitespace is also a hostname delimiter.
@@ -300,7 +300,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             } else {
                 dst = urlpath;
             }
-            /* Then everything from / (inclusive) until \r\n or \0 - thats urlpath */
+            /* Then everything from / (inclusive) until \r\n or \0 - that's urlpath */
             for (; i < l && *src != '\r' && *src != '\n' && *src != '\0'; ++i, ++src, ++dst) {
                 *dst = *src;
             }
@@ -821,7 +821,7 @@ urlCheckRequest(const HttpRequest * r)
     /* protocol "independent" methods
      *
      * actually these methods are specific to HTTP:
-     * they are methods we recieve on our HTTP port,
+     * they are methods we receive on our HTTP port,
      * and if we had a FTP listener would not be relevant
      * there.
      *
@@ -896,7 +896,7 @@ urlCheckRequest(const HttpRequest * r)
  *      Skip any '/' after the colon
  *      Copy the next SQUID_MAXHOSTNAMELEN bytes to host[]
  *      Look for an ending '/' or ':' and terminate
- *      Look for login info preceeded by '@'
+ *      Look for login info preceded by '@'
  */
 
 class URLHostName

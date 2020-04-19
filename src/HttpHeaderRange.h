@@ -42,7 +42,7 @@ public:
 
 /**
  * There may be more than one byte range specified in the request.
- * This object holds all range specs in order of their appearence
+ * This object holds all range specs in order of their appearance
  * in the request because we SHOULD preserve that order.
  */
 class HttpHdrRange

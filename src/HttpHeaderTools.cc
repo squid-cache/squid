@@ -115,7 +115,7 @@ getStringPrefix(const char *str, size_t sz)
 }
 
 /**
- * parses an int field, complains if soemthing went wrong, returns true on
+ * parses an int field, complains if something went wrong, returns true on
  * success
  */
 int

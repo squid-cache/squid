@@ -72,7 +72,7 @@ public:
     bool internal = false;
     /** if set, request to try very hard to keep the connection alive */
     bool mustKeepalive = false;
-    /** set if the rquest wants connection oriented auth */
+    /** set if the request wants connection oriented auth */
     bool connectionAuth = false;
     /** set if connection oriented auth can not be supported */
     bool connectionAuthDisabled = false;
@@ -83,7 +83,7 @@ public:
     bool pinned = false;
     /** Authentication was already sent upstream (e.g. due tcp-level auth) */
     bool authSent = false;
-    /** Deny direct forwarding unless overriden by always_direct
+    /** Deny direct forwarding unless overridden by always_direct
      * Used in accelerator mode */
     bool noDirect = false;
     /** Reply with chunked transfer encoding */

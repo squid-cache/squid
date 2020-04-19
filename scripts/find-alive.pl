@@ -7,7 +7,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# Reads cache.log from STDIN, preferrably with full debugging enabled.
+# Reads cache.log from STDIN, preferably with full debugging enabled.
 # Finds creation and destruction messages for a given class.
 # At the end, reports log lines that correspond to still-alive objects.
 # Also reports the number of objects found (total and still-alive).

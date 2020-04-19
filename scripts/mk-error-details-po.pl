@@ -19,7 +19,7 @@
 # The error-details.txt file consist of records like the following:
 #
 #  name: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT
-#  detail: "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+#  detail: "SSL Certificate error: certificate issuer (CA) not known: %ssl_ca_name"
 #  descr: "Unable to get issuer certificate"
 #
 # The records separated with an empty line.

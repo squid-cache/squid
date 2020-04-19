@@ -607,7 +607,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             /* Ours, use it.. if the key matches */
             const char *key = makeExternalAclKey(ch, acl);
             if (!key)
-                return ACCESS_DUNNO; // insufficent data to continue
+                return ACCESS_DUNNO; // insufficient data to continue
             if (strcmp(key, (char*)entry->key) != 0) {
                 debugs(82, 9, "entry key='" << (char *)entry->key << "', our key='" << key << "' do not match. Discarded.");
                 // too bad. need a new lookup.

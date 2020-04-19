@@ -42,7 +42,7 @@ struct _digest_nonce_h : public hash_link {
     /* number of uses we've seen of this nonce */
     unsigned long nc;
     /* reference count */
-    short references;
+    uint64_t references;
     /* the auth_user this nonce has been tied to */
     Auth::Digest::User *user;
     /* has this nonce been invalidated ? */

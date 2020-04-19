@@ -631,7 +631,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
      * This case is presently handled here as it's both a known case and it's
      * uncertain what error will be returned by the IPv6 stack in such case. It's
      * possible this will also be handled by the errno checks below after connect()
-     * but needs carefull cross-platform verification, and verifying the address
+     * but needs careful cross-platform verification, and verifying the address
      * condition here is simple.
      */
     if (!F->local_addr.isIPv4() && address.isIPv4()) {
@@ -1639,6 +1639,7 @@ commStartHalfClosedMonitor(int fd)
     debugs(5, 5, HERE << "adding FD " << fd << " to " << *TheHalfClosed);
     assert(isOpen(fd) && !commHasHalfClosedMonitor(fd));
     (void)TheHalfClosed->add(fd); // could also assert the result
+    fd_table[fd].codeContext = CodeContext::Current();
     commPlanHalfClosedCheck(); // may schedule check if we added the first FD
 }
 
@@ -1666,10 +1667,12 @@ commHalfClosedCheck(void *)
         Comm::ConnectionPointer c = new Comm::Connection; // XXX: temporary. make HalfClosed a list of these.
         c->fd = *i;
         if (!fd_table[c->fd].halfClosedReader) { // not reading already
-            AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
-                                                 CommIoCbPtrFun(&commHalfClosedReader, NULL));
-            Comm::Read(c, call);
-            fd_table[c->fd].halfClosedReader = call;
+            CallBack(fd_table[c->fd].codeContext, [&c] {
+                AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
+                                                     CommIoCbPtrFun(&commHalfClosedReader, nullptr));
+                Comm::Read(c, call);
+                fd_table[c->fd].halfClosedReader = call;
+            });
         } else
             c->fd = -1; // XXX: temporary. prevent c replacement erase closing listed FD
     }
@@ -1762,7 +1765,7 @@ DeferredReadManager::delayRead(DeferredRead const &aRead)
                                            "DeferredReadManager::CloseHandler",
                                            CommCloseCbPtrFun(&CloseHandler, temp));
     comm_add_close_handler(aRead.theRead.conn->fd, closer);
-    temp->element.closer = closer; // remeber so that we can cancel
+    temp->element.closer = closer; // remember so that we can cancel
 }
 
 void

@@ -956,7 +956,7 @@ regex_compile(const char *pattern, int size, reg_syntax_t syntax, struct re_patt
      * they can be reliably used as array indices.  */
     register unsigned char c, c1;
 
-    /* A random tempory spot in PATTERN.  */
+    /* A random temporary spot in PATTERN.  */
     const char *p1;
 
     /* Points to the end of the buffer, where we should append.  */

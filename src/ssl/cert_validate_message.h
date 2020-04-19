@@ -20,7 +20,7 @@ namespace Ssl
 {
 
 /**
- * This class is used to hold the required informations to build
+ * This class is used to hold the required information to build
  * a request message for the certificate validator helper
  */
 class CertValidationRequest
@@ -32,7 +32,7 @@ public:
 };
 
 /**
- * This class is used to store informations found in certificate validation
+ * This class is used to store information found in certificate validation
  * response messages read from certificate validator helper
  */
 class CertValidationResponse: public RefCountable
@@ -41,7 +41,7 @@ public:
     typedef RefCount<CertValidationResponse> Pointer;
 
     /**
-     * This class used to hold error informations returned from
+     * This class used to hold error information returned from
      * cert validator helper.
      */
     class  RecvdError
@@ -70,7 +70,7 @@ public:
 
 /**
  * This class is responsible for composing or parsing messages destined to
- * or comming from a certificate validation helper.
+ * or coming from a certificate validation helper.
  * The messages format is:
 \verbatim
    response/request-code SP body-length SP [key=value ...] EOL
@@ -99,10 +99,10 @@ public:
     CertValidationMsg(MessageKind kind): CrtdMessage(kind) {}
 
     /// Build a request message for the cert validation helper
-    /// using informations provided by vcert object
+    /// using information provided by vcert object
     void composeRequest(CertValidationRequest const &vcert);
 
-    /// Parse a response message and fill the resp object with parsed informations
+    /// Parse a response message and fill the resp object with parsed information
     bool parseResponse(CertValidationResponse &resp, std::string &error);
 
     /// Search a CertItems list for the certificate with ID "name"

@@ -69,7 +69,7 @@ Ipc::StoreMap::compareVersions(const sfileno fileno, time_t newVersion) const
 {
     const Anchor &inode = anchorAt(fileno);
 
-    // note: we do not lock, so comparison may be inacurate
+    // note: we do not lock, so comparison may be inaccurate
 
     if (inode.empty())
         return +2;

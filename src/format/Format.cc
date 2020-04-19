@@ -77,7 +77,7 @@ Format::Format::parse(const char *def)
         return false;
     }
 
-    /* very inefficent parser, but who cares, this needs to be simple */
+    /* very inefficient parser, but who cares, this needs to be simple */
     /* First off, let's tokenize, we'll optimize in a second pass.
      * A token can either be a %-prefixed sequence (usually a dynamic
      * token but it can be an escaped sequence), or a string. */
@@ -644,7 +644,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_DNS_WAIT_TIME:
             if (al->request && al->request->dnsWait >= 0) {
                 // TODO: microsecond precision for dns wait time.
-                // Convert miliseconds to timeval struct:
+                // Convert milliseconds to timeval struct:
                 outtv.tv_sec = al->request->dnsWait / 1000;
                 outtv.tv_usec = (al->request->dnsWait % 1000) * 1000;
                 doMsec = 1;
@@ -969,7 +969,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         /* case LFT_USER_SCHEME: */
 
         // the fmt->type can not be LFT_HTTP_SENT_STATUS_CODE_OLD_30
-        // but compiler complains if ommited
+        // but compiler complains if omitted
         case LFT_HTTP_SENT_STATUS_CODE_OLD_30:
         case LFT_HTTP_SENT_STATUS_CODE:
             outint = al->http.code;

@@ -73,7 +73,7 @@ for ($i = 0 ; $i < $no_cachedir; $i++) {
 	system("find ./ -print -type f > $tmpdir/fp$$");
 	chdir($tmpdir);
 # this cut prints only the lines with 4 fields so unnecessary lines
-# are supressed
+# are suppressed
 	system("cut -d'/' -f4 -s fp$$ >> cd$$ ; rm fp$$")
 }
 system("sort -T $tmpdir cd$$ >scd$$; rm cd$$");
