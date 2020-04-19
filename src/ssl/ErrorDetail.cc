@@ -593,6 +593,8 @@ Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
     {NULL,NULL}
 };
 
+uint64_t Ssl::ErrorDetail::Generations = 0;
+
 Ssl::ErrorDetail *Ssl::ErrorDetail::absorbStackedErrors()
 {
     if ((lib_error_no = ERR_get_error())) {
@@ -603,6 +605,14 @@ Ssl::ErrorDetail *Ssl::ErrorDetail::absorbStackedErrors()
             debugs(83, 7, "forgot " << asHex(errorToForget));
     }
     return this;
+}
+
+void Ssl::ErrorDetail::absorbPeerCertificate(X509 * const cert)
+{
+    assert(cert);
+    assert(!peer_cert);
+    assert(!broken_cert);
+    peer_cert.resetWithoutLocking(cert);
 }
 
 /**
@@ -807,11 +817,18 @@ SBuf Ssl::ErrorDetail::brief() const
     return SBuf(err_code()); // TODO: Upgrade err_code() to return SBuf.
 }
 
-Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason):
-    error_no(err_no),
-    lib_error_no(SSL_ERROR_NONE),
-    errReason(aReason)
+Ssl::ErrorDetail::ErrorDetail(const Security::ErrorCode err):
+    generation(++Generations),
+    error_no(err)
 {
+}
+
+Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason):
+    ErrorDetail(err_no)
+{
+    if (aReason)
+        errReason = aReason;
+
     if (cert)
         peer_cert.resetAndLock(cert);
 
@@ -824,7 +841,7 @@ Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *brok
 }
 
 Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err, unsigned long lib_err):
-    error_no(SQUID_ERR_SSL_LIB),
-    lib_error_no(lib_err)
+    ErrorDetail(err)
 {
+    lib_error_no = lib_err;
 }

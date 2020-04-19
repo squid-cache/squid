@@ -37,10 +37,22 @@ const char *GetErrorDescr(Security::ErrorCode value);
 /// \return true if the TLS error is optional and may not be supported by current squid version
 bool ErrorIsOptional(const char *name);
 
-/**
- * Error details (library and custom squid errors) for access logging and
- * error pages returned to the end user.
- */
+// TODO: Move to Security. This interface is meant to be TLS library-agnostic.
+/// Details a TLS-related error. Three kinds of errors can be detailed:
+/// * certificate validation errors (including built-in and helper-driven),
+/// * I/O errors,
+/// * general handling/logic errors (detected by Squid or the TLS library).
+///
+/// The following details may be available (only the first one is required):
+/// * for all errors: Squid-specific error classification (ErrorCode)
+/// * for all errors: peer certificate
+/// * for non-validation errors: TLS library-reported error(s)
+/// * for certificate validation errors: the broken certificate
+/// * for certificate validation errors: validation failure reason
+/// * for I/O errors: system errno(3)
+///
+/// Currently, Squid treats TLS library-returned validation errors (e.g.
+/// X509_V_ERR_INVALID_CA) as Squid-specific error classification.
 class ErrorDetail:  public ::ErrorDetail
 {
     MEMPROXY_CLASS(Ssl::ErrorDetail);
@@ -57,7 +69,7 @@ public:
     /// General TLS handshake failures or failures due to TLS/SSL
     /// library errors
     ErrorDetail(Security::ErrorCode err_no, unsigned long lib_err);
-    explicit ErrorDetail(const Security::ErrorCode err_no): error_no(err_no) {}
+    explicit ErrorDetail(const Security::ErrorCode err_no);
 
     /* all methods returning `ErrorDetail*` return this */
 
@@ -70,6 +82,9 @@ public:
     /// extract and remember ERR_get_error()-reported error(s)
     ErrorDetail *absorbStackedErrors();
 
+    /// extract and remember ERR_get_error()-reported error(s)
+    void absorbPeerCertificate(X509 *cert);
+
     /// The error no
     Security::ErrorCode errorNo() const {return error_no;}
 
@@ -80,6 +95,12 @@ public:
     X509 *peerCert() { return peer_cert.get(); }
     /// peer or intermediate certificate that failed validation
     X509 *brokenCert() {return broken_cert.get(); }
+
+    /// \returns whether we should detail ErrorState instead of `them`
+    bool takesPriorityOver(const ErrorDetail &them) const {
+        // to reduce pointless updates, return false if us is them
+        return this->generation < them.generation;
+    }
 
     /* ErrorDetail API */
     virtual SBuf brief() const final;
@@ -108,6 +129,9 @@ private:
     const char *err_lib_error() const;
 
     int convert(const char *code, const char **value) const;
+
+    static uint64_t Generations; ///< the total number of ErrorDetails ever made
+    uint64_t generation; ///< the number of ErrorDetails made before us plus one
 
     Security::ErrorCode error_no;   ///< The error code (XXX)
 

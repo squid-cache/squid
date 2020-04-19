@@ -417,34 +417,28 @@ Security::PeerConnector::noteWantWrite()
 }
 
 void
-Security::PeerConnector::noteNegotiationError(const Ssl::ErrorDetail::Pointer &errorDetail)
+Security::PeerConnector::noteNegotiationError(const Ssl::ErrorDetail::Pointer &callerDetail)
 {
-    const auto anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request, al);
-    anErr->xerrno = errorDetail->sysError();
-
 #if USE_OPENSSL
-    const auto fd = serverConnection()->fd;
-    Security::SessionPointer session(fd_table[fd].ssl);
-    // XXX: Which details should take priority? errFromFailure or errorDetail?
-    auto *errFromFailure = static_cast<ErrorDetail::Pointer *>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_error_detail));
-    if (errFromFailure != NULL) {
-        anErr->detailError(*errFromFailure);
-    } else {
-        // server_cert can be NULL here
-        X509 *server_cert = SSL_get_peer_certificate(session.get());
-        anErr->detailError(new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, server_cert, NULL));
-        X509_free(server_cert);
+    const auto tlsConnection = fd_table[serverConnection()->fd].ssl.get();
+
+    // find the highest priority detail
+    auto primaryDetail = callerDetail;
+    if (const auto storedDetailRaw = SSL_get_ex_data(tlsConnection, ssl_ex_index_ssl_error_detail)) {
+        const auto &storedDetail = *static_cast<Ssl::ErrorDetail::Pointer*>(storedDetailRaw);
+        if (storedDetail->takesPriorityOver(*primaryDetail))
+            primaryDetail = storedDetail;
     }
 
-    // TODO: Adjust once the errDetail vs errorDetail conflict is resolved.
-#if TODO_ADJUST
-    if (ssl_lib_error != SSL_ERROR_NONE) {
-        if (const auto errDetail = dynamic_cast<Ssl::ErrorDetail *>(anErr->detail.getRaw()))
-            errDetail->setLibError(errorDetail->ssl_lib_error);
+    if (!primaryDetail->peerCert()) {
+        if (const auto serverCert = SSL_get_peer_certificate(tlsConnection))
+            primaryDetail->absorbPeerCertificate(serverCert);
     }
-#endif // TODO_ADJUST
 #endif
 
+    const auto anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request, al);
+    anErr->xerrno = primaryDetail->sysError(); // TODO: Do this in detailError()?
+    anErr->detailError(primaryDetail);
     noteNegotiationDone(anErr);
     bail(anErr);
 }
