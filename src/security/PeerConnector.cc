@@ -428,9 +428,6 @@ Security::PeerConnector::noteNegotiationError(const Ssl::ErrorDetail::Pointer &e
     // XXX: Which details should take priority? errFromFailure or errorDetail?
     auto *errFromFailure = static_cast<ErrorDetail::Pointer *>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_error_detail));
     if (errFromFailure != NULL) {
-        // The errFromFailure is attached to the ssl object
-        // and will be released when ssl object destroyed.
-        // Copy errFromFailure to a new Ssl::ErrorDetail object
         anErr->detailError(*errFromFailure);
     } else {
         // server_cert can be NULL here
