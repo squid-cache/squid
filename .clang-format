@@ -67,11 +67,11 @@ ForEachMacros:
 IncludeBlocks:   Preserve
 IncludeCategories: 
   - Regex:           '^"squid.h"$'
-    Priority:        -1
+    Priority:        -3
   - Regex:           '^"'
-    Priority:        2
+    Priority:        -2
   - Regex:           '.*'
-    Priority:        3
+    Priority:        -1
 IncludeIsMainRegex: '(stub_)?$'
 IndentCaseLabels: false
 IndentPPDirectives: None
