@@ -2164,40 +2164,19 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     if (tunnelOnError(HttpRequestMethod(), error))
         return;
 
-    ErrorDetail::Pointer errorDetail;
-
-#if USE_OPENSSL
-    auto doingTls = parsingTlsHandshake; // may be refined below
-    if (!doingTls) {
-        const auto sslConn = fd_table[io.conn->fd].ssl.get();
-        doingTls = sslConn && !SSL_is_init_finished(sslConn);
-    }
-
-    if (doingTls) {
-        // The ERR_REQUEST_PARSE_TIMEOUT err_type plus a general
-        // SQUID_ERR_SSL_HANDSHAKE detail is enough to mark that
-        // the tls connection aborted because of timeout
-        errorDetail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, 0);
-    }
-#elif USE_GNUTLS
-    if (const auto sslConn = fd_table[io.conn->fd].ssl.get()) {
-        auto doingTls = false;
-        // The gnutls_session_get_desc will return nil if the initial
-        // negotiation is not finished.
-        if (auto descr = gnutls_session_get_desc(sslConn))
-            gnutls_free(descr);
-        else
-            doingTls = true;
-
-        if (doingTls)
-            errorDetail = ERR_DETAIL_TLS_HANDSHAKE;
-    }
-#endif
-
+    // XXX: tunnelOnError() already details the error in some "return false"
+    // cases. Other tunnelOnError() callers seem to suffer from a similar
+    // double-detailing problem. Moreover, it is not clear why we are waiting
+    // for tunnelOnError() to detail the failure that we already know everything
+    // about. The error has happened already and should be detailed ASAP. A
+    // successful tunnel is not going to change that fact!
+    //
+    // XXX: tunnelOnError() code and the possibility of receivedFirstByte_ being
+    // false seem to imply that context, http, or request may be nil.
     const auto context = pipeline.front();
     Must(context);
     Must(context->http);
-    context->http->request->detailError(error, errorDetail);
+    context->http->request->detailError(error, nullptr);
 
     /*
     * Just close the connection to not confuse browsers
