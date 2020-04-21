@@ -808,13 +808,25 @@ SBuf Ssl::ErrorDetail::verbose(const HttpRequest::Pointer &request) const
 
 SBuf Ssl::ErrorDetail::brief() const
 {
-    // XXX: Rework to report all saved details. Use "+" to concatenate?
-    if (error_no == SQUID_ERR_SSL_LIB) {
-        // hex lib_error_no value can be fed to `openssl errstr` for more info
-        // TODO: Convert this and LFT_SSL_SERVER_CERT_ERRORS to TLS_ERR=0x...
-        return ToSBuf("SSL_ERR=", lib_error_no);
+    SBuf buf(err_code()); // TODO: Upgrade err_code() to return SBuf.
+
+    // hex lib_error_no value can be fed to `openssl errstr` for more info
+    // TODO: Convert this and LFT_SSL_SERVER_CERT_ERRORS to TLS_ERR=0x...
+    if (lib_error_no != SSL_ERROR_NONE)
+        buf.append(ToSBuf("+SSL_ERR=", lib_error_no));
+
+    if (ioErrorNo)
+        buf.append(ToSBuf("+TLS_IO_ERR=", ioErrorNo));
+
+    if (sysErrorNo) {
+        buf.append('+');
+        buf.append(SysErrorDetail::Brief(sysErrorNo));
     }
-    return SBuf(err_code()); // TODO: Upgrade err_code() to return SBuf.
+
+    if (broken_cert)
+        buf.append("+broken_cert");
+
+    return buf;
 }
 
 Ssl::ErrorDetail::ErrorDetail(const Security::ErrorCode err):

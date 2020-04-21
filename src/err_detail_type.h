@@ -45,6 +45,8 @@ public:
         return errorNo ? new SysErrorDetail(errorNo) : nullptr;
     }
 
+    static SBuf Brief(int errorNo);
+
     /* ErrorDetail API */
     virtual SBuf brief() const final;
     virtual SBuf verbose(const HttpRequestPointer &) const final;

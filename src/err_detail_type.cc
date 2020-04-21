@@ -82,6 +82,12 @@ operator <<(std::ostream &os, const ErrorDetail::Pointer &detail)
 /* SysErrorDetail */
 
 SBuf
+SysErrorDetail::Brief(const int errorNo)
+{
+    return SysErrorDetail(errorNo).brief();
+}
+
+SBuf
 SysErrorDetail::brief() const
 {
     return ToSBuf("SYSERR=", errorNo); // TODO: Use lowercase?
