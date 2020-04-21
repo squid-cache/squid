@@ -2411,16 +2411,13 @@ httpsCreate(const ConnStateData *connState, const Security::ContextPointer &ctx)
 }
 
 /**
- *
- * \retval true on success
- * \retval false when needs more data
+ * Accepts (or resumes accepting) a TLS connections, scheduling any needed I/O.
  *
  * TODO: Avoid Comm::SetSelect() calls with nil callback? The nil-callback
  * caller claims we just want the TLS library to parse the already available
  * data. Calling SetSelect() with nil callback feels outside that scope. If I am
- * right, then we should probably err if more data is needed and there is no
- * callback (instead of returning false).
- *
+ * right, then we should probably remove this wrapper, allowing
+ * Security::Accept() callers to deal with Security::IoResult::ioWantRead/Write.
  */
 static Security::IoResult
 tlsAttemptHandshake(ConnStateData *conn, PF *callback)
@@ -3008,14 +3005,10 @@ ConnStateData::parseTlsHandshake()
     }
     catch (const std::exception &ex) {
         debugs(83, 2, "error on FD " << clientConnection->fd << ": " << ex.what());
-
-        // XXX: The TLS handshake parser reports the errors with TextExceptions.
-        // This is does not produce clear error details to report to the user,
-        // just the location where the exception is raised. However creating a
-        // Security::HandshakeErrorDetails to provide more details is enough
-        // big project.
-        if (const TextException *te = dynamic_cast<const TextException *>(&ex))
-            parseErrorDetails = new ExceptionErrorDetail(te->id());
+        // TODO: Consider changing TLS handshake parser to report an ErrorDetail
+        // instead of TextException, especially if it can share more details.
+        if (const auto tex = dynamic_cast<const TextException *>(&ex))
+            parseErrorDetails = new ExceptionErrorDetail(tex->id());
         else
             parseErrorDetails = ERR_DETAIL_TLS_HELLO_PARSE_ERROR;
     }
@@ -3304,13 +3297,9 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::
         connectHost = clientConnection->local.toStr(ip, sizeof(ip));
         connectPort = clientConnection->local.port();
     } else {
-        // We are not able to compute destination only on
-        //  * bad requests on plain HTTP ports
-        //  * bad requests on non-bumping https ports.
-        //  * unexpected situation (bugs?)
-        // Currently we are not supporting tunneling after an error
-        // for plain HTTP and non-bumping HTTPS ports.
-        throw TextException(ToSBuf("Not able to compute URL, abort request tunneling for ", reason), Here());
+        // Typical cases are malformed HTTP requests on http_port and malformed
+        // TLS handshakes on non-bumping https_port.
+        throw TextException(ToSBuf("Unable to compute request target, aborting request tunneling for ", reason), Here());
     }
 
     debugs(33, 2, "Request tunneling for " << reason);
