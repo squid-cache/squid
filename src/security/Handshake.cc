@@ -546,7 +546,8 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
     // (TLS 1.2).
     //
     // Ignore supported_versions senders violating legacy_version MUSTs above:
-    if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2))
+    static const AnyP::ProtocolVersion Tls1p2(AnyP::PROTO_TLS, 1, 2);
+    if (details->tlsSupportedVersion != Tls1p2)
         return;
 
     AnyP::ProtocolVersion supportedVersionMax;
