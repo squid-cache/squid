@@ -47,7 +47,6 @@ const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_BODY_CONSUMER_ABORT = new Enumer
 const ErrorDetail::Pointer ERR_DETAIL_ICAP_INIT_GONE = new EnumeratedErrorDetail("ICAP_INIT_GONE");
 const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_CLOSE = new EnumeratedErrorDetail("ICAP_XACT_CLOSE");
 const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_OTHER = new EnumeratedErrorDetail("ICAP_XACT_OTHER");
-const ErrorDetail::Pointer ERR_DETAIL_BUFFER = new EnumeratedErrorDetail("BUFFER");
 const ErrorDetail::Pointer ERR_DETAIL_TUNNEL_ON_ERROR = new EnumeratedErrorDetail("TUNNEL_ON_ERROR");
 const ErrorDetail::Pointer ERR_DETAIL_SSL_BUMP_SPLICE = new EnumeratedErrorDetail("SSL_BUMP_SPLICE");
 const ErrorDetail::Pointer ERR_DETAIL_TLS_HANDSHAKE = new EnumeratedErrorDetail("TLS_HANDSHAKE");

@@ -137,9 +137,6 @@ extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_CLOSE;
 /// other ICAP transaction errors
 extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_OTHER;
 
-/// buffering issues
-extern const ErrorDetail::Pointer ERR_DETAIL_BUFFER;
-
 /// tunneling after error failed for an unknown reason
 extern const ErrorDetail::Pointer ERR_DETAIL_TUNNEL_ON_ERROR;
 
