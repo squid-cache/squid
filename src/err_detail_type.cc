@@ -49,7 +49,6 @@ const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_CLOSE = new EnumeratedErrorDetai
 const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_OTHER = new EnumeratedErrorDetail("ICAP_XACT_OTHER");
 const ErrorDetail::Pointer ERR_DETAIL_BUFFER = new EnumeratedErrorDetail("BUFFER");
 const ErrorDetail::Pointer ERR_DETAIL_TUNNEL_ON_ERROR = new EnumeratedErrorDetail("TUNNEL_ON_ERROR");
-const ErrorDetail::Pointer ERR_DETAIL_TLS_HELLO_PARSE_ERROR = new EnumeratedErrorDetail("TLS_HELLO_PARSE_ERROR");
 const ErrorDetail::Pointer ERR_DETAIL_SSL_BUMP_SPLICE = new EnumeratedErrorDetail("SSL_BUMP_SPLICE");
 const ErrorDetail::Pointer ERR_DETAIL_TLS_HANDSHAKE = new EnumeratedErrorDetail("TLS_HANDSHAKE");
 const ErrorDetail::Pointer ERR_DETAIL_EXCEPTION_OTHER = new EnumeratedErrorDetail("EXCEPTION_OTHER");

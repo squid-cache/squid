@@ -3010,7 +3010,7 @@ ConnStateData::parseTlsHandshake()
         if (const auto tex = dynamic_cast<const TextException *>(&ex))
             parseErrorDetails = new ExceptionErrorDetail(tex->id());
         else
-            parseErrorDetails = ERR_DETAIL_TLS_HELLO_PARSE_ERROR;
+            parseErrorDetails = ERR_DETAIL_TLS_HANDSHAKE;
     }
 
     parsingTlsHandshake = false;

@@ -143,13 +143,10 @@ extern const ErrorDetail::Pointer ERR_DETAIL_BUFFER;
 /// tunneling after error failed for an unknown reason
 extern const ErrorDetail::Pointer ERR_DETAIL_TUNNEL_ON_ERROR;
 
-/// Squid TLS handshake parser failed
-extern const ErrorDetail::Pointer ERR_DETAIL_TLS_HELLO_PARSE_ERROR;
-
 /// an SslBump step2 splicing error (XXX: too general)
 extern const ErrorDetail::Pointer ERR_DETAIL_SSL_BUMP_SPLICE;
 
-/// TLS negotiation errors
+/// TLS parsing or negotiation failure at the beginning of a TLS connection
 extern const ErrorDetail::Pointer ERR_DETAIL_TLS_HANDSHAKE;
 
 /// other errors that lead to exceptions caught by transactions
