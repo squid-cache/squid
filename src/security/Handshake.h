@@ -155,7 +155,8 @@ TlsVersionEarlierThan(const AnyP::ProtocolVersion &a, const AnyP::ProtocolVersio
 inline bool
 Tls1p2orEarlier(const AnyP::ProtocolVersion &p)
 {
-    return TlsVersionEarlierThan(p, AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3));
+    static const AnyP::ProtocolVersion Tls1p3(AnyP::PROTO_TLS, 1, 3);
+    return TlsVersionEarlierThan(p, Tls1p3);
 }
 
 /// whether the given TLS/SSL protocol is TLS v1.3 or later
