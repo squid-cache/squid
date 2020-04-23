@@ -30,7 +30,7 @@ if test "x$OPENSSL" != "x" -a -x $OPENSSL; then
 		basicConstraints = CA:true
 	" > example.org-ca
 
-	openssl req --verbose --newkey rsa:2048 --x509 --nodes --set_serial 1 \
+	openssl req --newkey rsa:2048 --x509 --nodes --set_serial 1 \
 		--config example.org-ca \
 		--keyout ca-root-rsa.pkey.tmp \
 		--out ca-root-rsa.crt
