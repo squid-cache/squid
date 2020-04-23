@@ -187,7 +187,7 @@ Security::TlsDetails::TlsDetails():
 
 /* Security::HandshakeParser */
 
-Security::HandshakeParser::HandshakeParser(MessageSource source):
+Security::HandshakeParser::HandshakeParser(const MessageSource source):
     details(new TlsDetails),
     state(atHelloNone),
     resumingSession(false),
