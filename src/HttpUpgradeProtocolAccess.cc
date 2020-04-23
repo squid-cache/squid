@@ -20,7 +20,7 @@ const SBuf HttpUpgradeProtocolAccess::ProtoOther("OTHER");
 
 ProtocolView::ProtocolView(const char * const start, const size_t len):
     name(start, std::find(start, start + len, '/') - start),
-    version(start + name.size(), len - name.size())
+    version(start + name.length(), len - name.length())
 {
 }
 
@@ -29,16 +29,11 @@ ProtocolView::ProtocolView(const SBuf &proto):
 {
 }
 
-ProtocolView::ProtocolView(const StringView &proto):
-    ProtocolView(proto.data(), proto.size())
-{
-}
-
 std::ostream &
 operator <<(std::ostream &os, const ProtocolView &view)
 {
     os << view.name;
-    if (!view.version.empty())
+    if (!view.version.isEmpty())
         os << view.version;
     return os;
 }

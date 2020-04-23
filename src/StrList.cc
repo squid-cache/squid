@@ -36,9 +36,9 @@ strListAdd(String *str, const char *item, char delimiter)
 }
 
 void
-strListAdd(String &str, const StringView &item, char delimiter)
+strListAdd(String &str, const SBuf &item, char delimiter)
 {
-    strListAdd(str, item.data(), item.size(), delimiter);
+    strListAdd(str, item.rawContent(), item.length(), delimiter);
 }
 
 /** returns true iff "m" is a member of the list */
@@ -173,12 +173,12 @@ StrListIterator::proceed()
     int ilen = 0;
     if (strListGetItem(&list->raw(), list->delimiter(), &istart, &ilen, &position)) {
         assert(ilen > 0);
-        current = StringView(istart, static_cast<size_t>(ilen));
+        current = SBuf(istart, static_cast<size_t>(ilen));
     } else {
         // no more members left
         list = nullptr;
         position = nullptr;
-        current = StringView();
+        current = SBuf();
     }
 }
 

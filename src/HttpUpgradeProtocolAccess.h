@@ -10,7 +10,6 @@
 #define SQUID_HTTP_UPGRADE_H
 
 #include "acl/forward.h"
-#include "base/StringView.h"
 #include "sbuf/SBuf.h"
 
 #include <map>
@@ -20,11 +19,10 @@ class ProtocolView
 {
 public:
     ProtocolView(const char * const start, const size_t len);
-    explicit ProtocolView(const StringView &proto);
     explicit ProtocolView(const SBuf &proto);
 
-    StringView name; ///< everything up to (but excluding) the first slash('/')
-    StringView version; ///< everything after the name, including the slash('/')
+    SBuf name; ///< everything up to (but excluding) the first slash('/')
+    SBuf version; ///< everything after the name, including the slash('/')
 };
 
 std::ostream &operator <<(std::ostream &, const ProtocolView &);
@@ -39,7 +37,7 @@ inline bool
 vAinB(const ProtocolView &a, const ProtocolView &b)
 {
     // Optimization: Do not assert(a.name == b.name).
-    return b.version.empty() || (a.version == b.version);
+    return b.version.isEmpty() || (a.version == b.version);
 }
 
 /// Allows or blocks HTTP Upgrade protocols (see http_upgrade_request_protocols)
@@ -51,7 +49,7 @@ public:
     HttpUpgradeProtocolAccess(HttpUpgradeProtocolAccess &&) = delete; // no copying of any kind
 
     /// \returns the ACLs matching the given "name[/version]" protocol (or nil)
-    const acl_access *findGuard(const StringView &proto) const;
+    const acl_access *findGuard(const SBuf &proto) const;
 
     /// parses a single allow/deny rule
     void configureGuard(ConfigParser&);

@@ -18,7 +18,7 @@ const SBuf HttpUpgradeProtocolAccess::ProtoOther("STUB-OTHER");
 
 HttpUpgradeProtocolAccess::~HttpUpgradeProtocolAccess() STUB
 void HttpUpgradeProtocolAccess::configureGuard(ConfigParser &) STUB
-ProtocolView::ProtocolView(StringView const&) STUB
+ProtocolView::ProtocolView(SBuf const&) STUB
 
 std::ostream &operator <<(std::ostream &os, const ProtocolView &view)
 {

@@ -11,7 +11,6 @@
 #ifndef SQUID_STRLIST_H_
 #define SQUID_STRLIST_H_
 
-#include "base/StringView.h"
 #include "sbuf/forward.h"
 
 #include <iterator>
@@ -20,11 +19,11 @@ class String;
 class StrList;
 
 /// Appends the given item to a delimiter-separated list in str.
-/// Use strListAdd(StringView) for non-0-terminated items.
 void strListAdd(String * str, const char *item, char del);
+
 /// Appends the given item to a delimiter-separated list in str.
 /// Use strListAdd(c-string) for c-string items with unknown length.
-void strListAdd(String &str, const StringView &item, char delimiter = ',');
+void strListAdd(String &str, const SBuf &item, char delimiter = ',');
 
 int strListIsMember(const String * str, const SBuf &item, char del);
 int strListIsSubstr(const String * list, const char *s, char del);
@@ -38,7 +37,7 @@ int strListGetItem(const String * str, char del, const char **item, int *ilen, c
 SBuf getListMember(const String &list, const char *key, const char delimiter);
 
 /// a forward iterator for StrList
-class StrListIterator: public std::iterator<std::forward_iterator_tag, StringView>
+class StrListIterator: public std::iterator<std::forward_iterator_tag, SBuf>
 {
 public:
     explicit StrListIterator(const StrList *list);
