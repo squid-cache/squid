@@ -2162,6 +2162,7 @@ if test "x$with_systemd" != "xno" -a "x$squid_host_os" = "xlinux"; then
   fi
   if test "x$SYSTEMD_LIBS" != "x" ; then
     CXXFLAGS="$SYSTEMD_CFLAGS $CXXFLAGS"
+    LDFLAGS="$SYSTEMD_LIBS $LDFLAGS"
     AC_DEFINE(USE_SYSTEMD,1,[systemd support is available])
   else
     with_systemd=no
