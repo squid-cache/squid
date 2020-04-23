@@ -47,6 +47,17 @@ Http::StatusLine::packInto(Packable * p) const
 {
     assert(p);
 
+    auto packedStatus = status();
+    auto packedReason = reason();
+
+    if (packedStatus == Http::scNone) {
+        static unsigned int reports = 0;
+        if (++reports <= 100)
+            debugs(57, DBG_IMPORTANT, "BUG: Generated response lacks status code");
+        packedStatus = Http::scInternalServerError;
+        packedReason = Http::StatusCodeString(packedStatus); // ignore custom reason_ (if any)
+    }
+
     /* local constants */
     /* AYJ: see bug 2469 - RFC2616 confirms stating 'SP characters' plural! */
     static const char *Http1StatusLineFormat = "HTTP/%d.%d %3d %s\r\n";
@@ -56,15 +67,15 @@ Http::StatusLine::packInto(Packable * p) const
     if (protocol == AnyP::PROTO_ICY) {
         debugs(57, 9, "packing sline " << this << " using " << p << ":");
         debugs(57, 9, "FORMAT=" << IcyStatusLineFormat );
-        debugs(57, 9, "ICY " << status() << " " << reason());
-        p->appendf(IcyStatusLineFormat, status(), reason());
+        debugs(57, 9, "ICY " << packedStatus << " " << packedReason);
+        p->appendf(IcyStatusLineFormat, packedStatus, packedReason);
         return;
     }
 
     debugs(57, 9, "packing sline " << this << " using " << p << ":");
     debugs(57, 9, "FORMAT=" << Http1StatusLineFormat );
-    debugs(57, 9, "HTTP/" << version.major << "." << version.minor << " " << status() << " " << reason());
-    p->appendf(Http1StatusLineFormat, version.major, version.minor, status(), reason());
+    debugs(57, 9, "HTTP/" << version.major << "." << version.minor << " " << packedStatus << " " << packedReason);
+    p->appendf(Http1StatusLineFormat, version.major, version.minor, packedStatus, packedReason);
 }
 
 /*

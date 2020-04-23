@@ -11,7 +11,7 @@
 
 /* Abstract interface for async engines which an event loop can utilise.
  *
- * Some implementations will be truely async, others like the event engine
+ * Some implementations will be truly async, others like the event engine
  * will be pseudo async.
  */
 
@@ -50,7 +50,7 @@ public:
      *
      * The timeout value is a requested timeout for this engine - the engine
      * should not block for more than this period. (If it takes longer than the
-     * timeout to do actual checks thats fine though undesirable).
+     * timeout to do actual checks that's fine though undesirable).
      */
     virtual int checkEvents(int timeout) = 0;
 };

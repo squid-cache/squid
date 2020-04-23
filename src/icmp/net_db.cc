@@ -786,7 +786,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
             case NETDB_EX_NETWORK:
                 ++o;
-                /* FIXME INET6 : NetDB can still ony send IPv4 */
+                /* FIXME INET6 : NetDB can still only send IPv4 */
                 memcpy(&line_addr, p + o, sizeof(struct in_addr));
                 addr = line_addr;
                 o += sizeof(struct in_addr);

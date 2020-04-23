@@ -658,7 +658,7 @@ asn_build_length(u_char * data, int *datalength,
 }
 
 /*
- * asn_parse_objid - pulls an object indentifier out of an ASN object
+ * asn_parse_objid - pulls an object identifier out of an ASN object
  * identifier type.
  *  On entry, datalength is input as the number of valid bytes following
  *   "data".  On exit, it is returned as the number of valid bytes
@@ -985,7 +985,7 @@ asn_build_bitstring(u_char * data, int *datalength,
 /*
  * To do: Write an asn_parse_exception function to go with the new
  * asn_build_exception function below so that the exceptional values can
- * be handled in input packets aswell as output ones.
+ * be handled in input packets as well as output ones.
  */
 
 /*

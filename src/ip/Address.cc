@@ -172,7 +172,7 @@ Ip::Address::isAnyAddr() const
     return IN6_IS_ADDR_UNSPECIFIED(&mSocketAddr_.sin6_addr) || IN6_ARE_ADDR_EQUAL(&mSocketAddr_.sin6_addr, &v4_anyaddr);
 }
 
-/// NOTE: Does NOT clear the Port stored. Ony the Address and Type.
+/// NOTE: Does NOT clear the Port stored. Only the Address and Type.
 void
 Ip::Address::setAnyAddr()
 {
@@ -807,7 +807,7 @@ Ip::Address::toStr(char* buf, const unsigned int blen, int force) const
     }
 
     /* some external code may have blindly memset a parent. */
-    /* thats okay, our default is known */
+    /* that's okay, our default is known */
     if ( isAnyAddr() ) {
         if (isIPv6())
             memcpy(buf,"::\0", min(static_cast<unsigned int>(3),blen));

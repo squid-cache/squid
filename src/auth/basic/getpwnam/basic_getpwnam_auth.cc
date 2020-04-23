@@ -63,7 +63,7 @@ passwd_auth(char *user, char *passwd)
         if (!crypted || strcmp(pwd->pw_passwd, crypted)) {
             return 2;       /* Wrong password */
         } else {
-            return 1;       /* Authentication Sucessful */
+            return 1;       /* Authentication Successful */
         }
     }
 }
@@ -81,7 +81,7 @@ shadow_auth(char *user, char *passwd)
         if (!crypted || strcmp(pwd->sp_pwdp, crypted)) {
             return 2;       /* Wrong password */
         } else {
-            return 1;       /* Authentication Sucessful */
+            return 1;       /* Authentication Successful */
         }
     }
 }

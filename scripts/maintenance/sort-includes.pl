@@ -14,7 +14,7 @@
 # 
 # The output of the tool is a source file where each block of consecutive
 # include directives for project-specific files (#include "header.h")
-# is sorted with this specification: squid.h (if present) is alwasy first,
+# is sorted with this specification: squid.h (if present) is always first,
 # then the other directives are sorted in case-insensitive alphabetical order.
 #
 # Suggested usage:

@@ -24,7 +24,7 @@
  *
  \par
  * Each pipe node has a data push function, and a data request function.
- * This limits flexability - the data flow is no longer assembled at each
+ * This limits flexibility - the data flow is no longer assembled at each
  * step.
  *
  \par
@@ -61,7 +61,7 @@
  \par
  * No data member may hold a reference to it's stream node.
  * The stream guarantees that DETACH will be called before
- * freeing the node, alowing data members to cleanup.
+ * freeing the node, allowing data members to cleanup.
  *
  \par
  * If a node's data holds a reference to something that needs to

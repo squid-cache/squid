@@ -50,7 +50,7 @@ inline bool LoopDone(int i)
 /// start timing a new transaction
 void TimerStart();
 
-/// calculate and display the statictics for a complete transaction
+/// calculate and display the statistics for a complete transaction
 /// \param fsize number of bytes transferred during this transaction (for KB/s measure)
 void TimerStop(size_t fsize);
 

@@ -27,7 +27,7 @@ extern time_t squid_curtime;
 time_t getCurrentTime(void);
 int tvSubMsec(struct timeval, struct timeval);
 
-/// timeval substraction operation
+/// timeval subtraction operation
 /// \param[out] res = t2 - t1
 void tvSub(struct timeval &res, struct timeval const &t1, struct timeval const &t2);
 

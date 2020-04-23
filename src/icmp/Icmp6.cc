@@ -241,7 +241,7 @@ Icmp6::Recv(void)
 
     debugs(42, 8, HERE << n << " bytes from " << preply.from);
 
-// FIXME INET6 : The IPv6 Header (ip6_hdr) is not availble directly >:-(
+// FIXME INET6 : The IPv6 Header (ip6_hdr) is not available directly >:-(
 //
 // TTL still has to come from the IP header somewhere.
 //  still need to strip and process it properly.
@@ -303,7 +303,7 @@ Icmp6::Recv(void)
 
     /*
      * FIXME INET6: Without access to the IPv6-Hops header we must rely on the total RTT
-     *      and could caculate the hops from that, but it produces some weird value mappings using ipHops
+     *      and could calculate the hops from that, but it produces some weird value mappings using ipHops
      *  for now everything is 1 v6 hop away with variant RTT
      * WANT:    preply.hops = ip->ip6_hops; // ipHops(ip->ip_hops);
      */

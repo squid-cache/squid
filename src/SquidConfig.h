@@ -394,7 +394,7 @@ public:
         acl_access *followXFF;
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-        /// acceptible PROXY protocol clients
+        /// acceptable PROXY protocol clients
         acl_access *proxyProtocol;
 
         /// spoof_client_ip squid.conf acl.

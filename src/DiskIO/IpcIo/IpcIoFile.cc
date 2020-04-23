@@ -419,7 +419,7 @@ IpcIoFile::canWait() const
     const int expectedWait = max(oldestWait, rateWait);
     if (expectedWait < 0 ||
             static_cast<time_msec_t>(expectedWait) < config.ioTimeout)
-        return true; // expected wait time is acceptible
+        return true; // expected wait time is acceptable
 
     debugs(47,2, HERE << "cannot wait: " << expectedWait <<
            " oldest: " << SipcIo(KidIdentifier, oldestIo, diskId));

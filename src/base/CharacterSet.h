@@ -112,7 +112,7 @@ public:
     static const CharacterSet ETAGC;
 
     // HTTP character sets, RFC 7235
-    // token68 (internal charaters only, excludes '=' terminator)
+    // token68 (internal characters only, excludes '=' terminator)
     static const CharacterSet TOKEN68C;
 
 private:

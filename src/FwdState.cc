@@ -1353,7 +1353,7 @@ aclFindNfMarkConfig(acl_nfmark * head, ACLChecklist * ch)
 }
 
 void
-getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
+getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn)
 {
     // skip if an outgoing address is already set.
     if (!conn->local.isAnyAddr()) return;

@@ -154,7 +154,7 @@ static bool replaceCommonName(Security::CertPointer & cert, std::string const &r
     std::string cn = rawCn;
 
     if (cn.length() > MaxCnLen) {
-        // In the case the length od CN is more than the maximum supported size
+        // In the case the length of CN is more than the maximum supported size
         // try to use the first upper level domain.
         size_t pos = 0;
         do {
@@ -388,7 +388,7 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
             if (X509_add_ext(cert.get(), ext, -1))
                 ++added;
             if (nid == NID_key_usage && !rsaPkey) {
-                // NSS does not requre the KeyEncipherment flag on EC keys
+                // NSS does not require the KeyEncipherment flag on EC keys
                 // but it does require it for RSA keys.  Since ssl-bump
                 // substitutes RSA keys for EC ones, we need to ensure that
                 // that the more stringent requirements are met.

@@ -71,7 +71,7 @@ static void comm_poll_dns_incoming(void);
  * The variables 'incoming_icp_interval' and 'incoming_http_interval'
  * determine how many normal I/O events to process before checking
  * incoming sockets again.  Note we store the incoming_interval
- * multipled by a factor of (2^INCOMING_FACTOR) to have some
+ * multiplied by a factor of (2^INCOMING_FACTOR) to have some
  * pseudo-floating point precision.
  *
  * The variable 'udp_io_events' and 'tcp_io_events' counts how many normal

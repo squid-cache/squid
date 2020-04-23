@@ -241,7 +241,7 @@ public:
 
     /// Callback function. It is called when squid receive message from ssl_crtd.
     static void sslCrtdHandleReplyWrapper(void *data, const Helper::Reply &reply);
-    /// Proccess response from ssl_crtd.
+    /// Process response from ssl_crtd.
     void sslCrtdHandleReply(const Helper::Reply &reply);
 
     void switchToHttps(ClientHttpRequest *, Ssl::BumpMode bumpServerMode);

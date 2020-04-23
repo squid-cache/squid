@@ -974,7 +974,7 @@ Client::adjustBodyBytesRead(const int64_t delta)
 
     bodyBytesRead += delta; // supports negative and zero deltas
 
-    // check for overflows ("infinite" response?) and undeflows (a bug)
+    // check for overflows ("infinite" response?) and underflows (a bug)
     Must(bodyBytesRead >= 0);
 }
 
