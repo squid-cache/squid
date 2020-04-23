@@ -30,12 +30,14 @@ if test "x$OPENSSL" != "x" -a -x $OPENSSL; then
 		basicConstraints = CA:true
 	" > example.org-ca
 
-	openssl req --newkey rsa:2048 --x509 --nodes --set_serial 1 \
+	$OPENSSL version
+
+	$OPENSSL req --newkey rsa:2048 --x509 --nodes --set_serial 1 \
 		--config example.org-ca \
 		--keyout ca-root-rsa.pkey.tmp \
 		--out ca-root-rsa.crt
 
-	openssl rsa --in ca-root-rsa.pkey.tmp --out ca-root-rsa.pkey
+	$OPENSSL rsa --in ca-root-rsa.pkey.tmp --out ca-root-rsa.pkey
 
 	rm -f ca-root-rsa.pkey.tmp example.org-ca
 
@@ -59,17 +61,17 @@ if test "x$OPENSSL" != "x" -a -x $OPENSSL; then
 		basicConstraints= CA:true
 	" > example.net-ca
 
-	openssl genrsa --out ca-mid-rsa.pkey.tmp 4096
+	$OPENSSL genrsa --out ca-mid-rsa.pkey.tmp 4096
 
-	openssl req --new --sha256 --set_serial 2 \
+	$OPENSSL req --new --sha256 --set_serial 2 \
 		--config example.net-ca \
 		--key ca-mid-rsa.pkey.tmp \
 		--out ca-mid-rsa.csr
 
-	openssl rsa --in ca-mid-rsa.pkey.tmp --out ca-mid-rsa.pkey
+	$OPENSSL rsa --in ca-mid-rsa.pkey.tmp --out ca-mid-rsa.pkey
 
 	# CA signs Intermediate
-	openssl x509 --req --days 365 \
+	$OPENSSL x509 --req --days 365 \
 		--in ca-mid-rsa.csr \
 		--CA ca-root-rsa.crt --CAkey ca-root-rsa.pkey --set_serial 2 \
 		--out ca-mid-rsa.crt
@@ -96,16 +98,16 @@ if test "x$OPENSSL" != "x" -a -x $OPENSSL; then
 		basicConstraints= CA:false
 	" >example.com-leaf
 
-	openssl genrsa --out leaf-rsa.pkey.tmp 4096
+	$OPENSSL genrsa --out leaf-rsa.pkey.tmp 4096
 
-	openssl req --new --sha256 --set_serial 3 \
+	$OPENSSL req --new --sha256 --set_serial 3 \
 		--config example.com-leaf \
 		--key leaf-rsa.pkey.tmp \
 		--out leaf-rsa.csr
 
-	openssl rsa --in leaf-rsa.pkey.tmp --out leaf-rsa.pkey
+	$OPENSSL rsa --in leaf-rsa.pkey.tmp --out leaf-rsa.pkey
 
-	openssl x509 --req --days 365 \
+	$OPENSSL x509 --req --days 365 \
 		--in leaf-rsa.csr \
 		--CA ca-root-rsa.crt --CAkey ca-root-rsa.pkey --set_serial 3 \
 		--out leaf-rsa.crt
@@ -137,6 +139,8 @@ elif test "x$CERTTOOL" != "x" -a -x $CERTTOOL; then
 		crl_signing_key
 		" > example.org-ca
 
+	$CERTTOOL -v
+	
 	$CERTTOOL --generate-privkey --rsa --outfile ca-root-rsa.pkey
 
 	$CERTTOOL --generate-self-signed --template example.org-ca \
