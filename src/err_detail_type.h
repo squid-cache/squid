@@ -145,8 +145,8 @@ extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_CLOSE;
 /// other ICAP transaction errors
 extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_OTHER;
 
-/// tunneling after error failed for an unknown reason
-extern const ErrorDetail::Pointer ERR_DETAIL_TUNNEL_ON_ERROR;
+/// cannot figure out where to tunnel the client traffic to
+extern const ErrorDetail::Pointer ERR_DETAIL_TUNNEL_TARGET;
 
 /// an SslBump step2 splicing error (XXX: too general)
 extern const ErrorDetail::Pointer ERR_DETAIL_SSL_BUMP_SPLICE;

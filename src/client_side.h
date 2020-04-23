@@ -262,8 +262,7 @@ public:
     void bumpStep2AccessCheckDone(const Acl::Answer &);
 
     /// Splice a bumped client connection on peek-and-splice mode
-    /// Throws on errors
-    void splice();
+    bool splice();
 
     /// Start to create dynamic Security::ContextPointer for host or uses static port SSL context.
     void getSslContextStart();
@@ -330,11 +329,10 @@ public:
 
     /// generate a fake CONNECT request with the given payload
     /// at the beginning of the client I/O buffer
-    void fakeAConnectRequest(const char *reason, const SBuf &payload);
+    bool fakeAConnectRequest(const char *reason, const SBuf &payload);
 
     /// generates and sends to tunnel.cc a fake request with a given payload
-    /// throws on errors
-    void initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload);
+    bool initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload);
 
     /// whether we should start saving inBuf client bytes in anticipation of
     /// tunneling them to the server later (on_unsupported_protocol)
@@ -407,9 +405,8 @@ protected:
     /// The PROXY protocol may require some data input first.
     void whenClientIpKnown();
 
-    /// Catches errors thrown by factor and complete error details if possible
-    template <typename Functor>
-    bool detailErrorFailures(const err_type err, const ErrorDetail::Pointer &defaultErr, const Functor &functor);
+    /// if necessary, stores additional error information (if any)
+    void detailError(const ErrorDetailPointer &);
 
     BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
 

@@ -622,7 +622,12 @@ ConnStateData::callException(const std::exception &ex)
         errorDetail = new ExceptionErrorDetail(tex->id());
     else
         errorDetail = ERR_DETAIL_EXCEPTION_OTHER;
+    detailError(errorDetail);
+}
 
+void
+ConnStateData::detailError(const ErrorDetail::Pointer &errorDetail)
+{
     if (const auto context = pipeline.front()) {
         const auto http = context->http;
         assert(http);
@@ -631,6 +636,7 @@ ConnStateData::callException(const std::exception &ex)
         else
             http->al->detailError(errorDetail);
     } else {
+        debugs(33, 2, errorDetail);
         Update(earlyErrorDetail, errorDetail);
     }
 }
@@ -1606,9 +1612,7 @@ ConnStateData::tunnelOnError(const HttpRequestMethod &method, const err_type req
         if (context)
             context->finished(); // Will remove from pipeline queue
         Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
-        return detailErrorFailures(requestError, ERR_DETAIL_TUNNEL_ON_ERROR, [this, &request] {
-                initiateTunneledRequest(request, Http::METHOD_NONE, "unknown-protocol", preservedClientData);
-            });
+        return initiateTunneledRequest(request, Http::METHOD_NONE, "unknown-protocol", preservedClientData);
     }
     debugs(33, 3, "denied; send error: " << requestError);
     return false;
@@ -2587,7 +2591,8 @@ httpsSslBumpAccessCheckDone(Acl::Answer answer, void *data)
         return;
     }
 
-    connState->fakeAConnectRequest("ssl-bump", connState->inBuf);
+    if (!connState->fakeAConnectRequest("ssl-bump", connState->inBuf))
+        connState->clientConnection->close();
 }
 #endif
 
@@ -3094,13 +3099,12 @@ ConnStateData::bumpStep2AccessCheckDone(const Acl::Answer &answer)
         clientConnection->close();
     } else if (bumpAction != Ssl::bumpSplice) {
         startPeekAndSplice();
-    } else {
-        if (!detailErrorFailures(ERR_SSL_BUMP_FAILURE, ERR_DETAIL_SSL_BUMP_SPLICE, [this] { splice(); }))
-            clientConnection->close();
+    } else if (!splice()) {
+        clientConnection->close();
     }
 }
 
-void
+bool
 ConnStateData::splice()
 {
     // normally we can splice here, because we just got client hello message
@@ -3123,14 +3127,14 @@ ConnStateData::splice()
     if (transparent()) {
         // For transparent connections, make a new fake CONNECT request, now
         // with SNI as target. doCallout() checks, adaptations may need that.
-        fakeAConnectRequest("splice", preservedClientData);
+        return fakeAConnectRequest("splice", preservedClientData);
     } else {
         // For non transparent connections  make a new tunneled CONNECT, which
         // also sets the HttpRequest::flags::forceTunnel flag to avoid
         // respond with "Connection Established" to the client.
         // This fake CONNECT request required to allow use of SNI in
         // doCallout() checks and adaptations.
-        initiateTunneledRequest(request, Http::METHOD_CONNECT, "splice", preservedClientData);
+        return initiateTunneledRequest(request, Http::METHOD_CONNECT, "splice", preservedClientData);
     }
 }
 
@@ -3235,45 +3239,14 @@ ConnStateData::httpsPeeked(PinnedIdleContext pic)
 
 #endif /* USE_OPENSSL */
 
-template <typename Functor>
-bool
-ConnStateData::detailErrorFailures(const err_type err, const ErrorDetail::Pointer &defaultErrDetail, const Functor &functor)
+void
+ConnStateData::tlsNegotiateFailed(const Ssl::ErrorDetail::Pointer &errorDetail)
 {
-    ErrorDetail::Pointer detail;
-    try {
-        functor();
-        return true;
-    } catch (const ErrorDetail::Pointer &ed) {
-        detail = ed;
-    } catch (const TextException &tex) {
-        detail = new ExceptionErrorDetail(tex.id());
-    } catch (...) {
-        detail = defaultErrDetail;
-    }
-    const auto context = pipeline.front();
-    const auto http = context ? context->http : nullptr;
-    const auto request = http ? http->request : nullptr;
-    if (request)
-        request->detailError(err, detail);
-    return false;
-}
-
-inline void
-ConnStateData::tlsNegotiateFailed(const Ssl::ErrorDetail::Pointer &errDetail)
-{
-    // XXX: An https_port without ssl_bump does not have a context here. Later,
-    // checkLogging() will log the error, but without our error details.
-    // TODO: Consider adding ConnStateData::earlyErrorType/Detail or similar.
-    const auto context = pipeline.front();
-    if (context && errDetail) {
-        Must(context->http);
-        Must(context->http->request);
-        context->http->request->detailError(ERR_SECURE_ACCEPT_FAIL, errDetail);
-    }
+    detailError(errorDetail);
     clientConnection->close();
 }
 
-void
+bool
 ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload)
 {
     // fake a CONNECT request to force connState to tunnel
@@ -3299,7 +3272,10 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::
     } else {
         // Typical cases are malformed HTTP requests on http_port and malformed
         // TLS handshakes on non-bumping https_port.
-        throw TextException(ToSBuf("Unable to compute request target, aborting request tunneling for ", reason), Here());
+        debugs(33, 2, "Not able to compute URL, abort request tunneling for " << reason);
+        // TODO: throw when nonBlockingCheck() callbacks gain job protections
+        detailError(ERR_DETAIL_TUNNEL_TARGET);
+        return false;
     }
 
     debugs(33, 2, "Request tunneling for " << reason);
@@ -3309,9 +3285,10 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::
     http->calloutContext = new ClientRequestContext(http);
     http->doCallouts();
     clientProcessRequestFinished(this, request);
+    return true;
 }
 
-void
+bool
 ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
 {
     debugs(33, 2, "fake a CONNECT request to force connState to tunnel for " << reason);
@@ -3337,6 +3314,7 @@ ConnStateData::fakeAConnectRequest(const char *reason, const SBuf &payload)
     HttpRequest::Pointer request = http->request;
     http->doCallouts();
     clientProcessRequestFinished(this, request);
+    return true;
 }
 
 ClientHttpRequest *

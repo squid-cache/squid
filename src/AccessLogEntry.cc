@@ -189,6 +189,10 @@ AccessLogEntry::errorDetail() const
 void
 AccessLogEntry::detailError(const ErrorDetail::Pointer &detail)
 {
+    if (!detail)
+        return; // nothing to do
+
+    debugs(33, 2, detail);
     // preserve the "first detail wins" order
     Update((request ? request->errDetail : errorDetail_), detail);
 }
