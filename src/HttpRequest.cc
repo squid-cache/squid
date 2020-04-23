@@ -474,8 +474,7 @@ HttpRequest::detailError(err_type aType, const ErrorDetail::Pointer &aDetail)
     // may result in more details available if they only become available later
     if (!errType)
         errType = aType;
-    if (!errDetail)
-        errDetail = aDetail;
+    Update(errDetail, aDetail);
 }
 
 void

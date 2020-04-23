@@ -31,6 +31,10 @@
 #include "ssl/support.h"
 #endif
 
+// XXX: Move out
+class ErrorDetail;
+typedef RefCount<ErrorDetail> ErrorDetailPointer;
+
 /* forward decls */
 class HttpReply;
 class HttpRequest;
@@ -255,7 +259,18 @@ public:
             virginUrlForMissingRequest_ = vu;
     }
 
+    /// \returns additional information about the error (or nil)
+    const ErrorDetail *errorDetail() const;
+
+    /// stores additional information about the error
+    /// the first detail wins: does nothing if some info was already stored
+    void detailError(const ErrorDetailPointer &);
+
 private:
+    /// additional information about the error (or nil)
+    /// if set, overrides (and should eventually replace) request->errDetail
+    ErrorDetailPointer errorDetail_;
+
     /// Client URI (or equivalent) for effectiveVirginUrl() when HttpRequest is
     /// missing. This member is ignored unless the request member is nil.
     SBuf virginUrlForMissingRequest_;

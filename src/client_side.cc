@@ -612,6 +612,29 @@ ConnStateData::swanSong()
     flags.swanSang = true;
 }
 
+void
+ConnStateData::callException(const std::exception &ex)
+{
+    Server::callException(ex); // logs ex and stops the job
+
+    ErrorDetail::Pointer errorDetail;
+    if (const auto tex = dynamic_cast<const TextException*>(&ex))
+        errorDetail = new ExceptionErrorDetail(tex->id());
+    else
+        errorDetail = ERR_DETAIL_EXCEPTION_OTHER;
+
+    if (const auto context = pipeline.front()) {
+        const auto http = context->http;
+        assert(http);
+        if (const auto request = http->request)
+            request->detailError(ERR_NONE, errorDetail);
+        else
+            http->al->detailError(errorDetail);
+    } else {
+        Update(earlyErrorDetail, errorDetail);
+    }
+}
+
 bool
 ConnStateData::isOpen() const
 {
@@ -4075,6 +4098,8 @@ ConnStateData::checkLogging()
     /* Create a temporary ClientHttpRequest object. Its destructor will log. */
     ClientHttpRequest http(this);
     http.req_sz = inBuf.length();
+    if (earlyErrorDetail)
+        http.al->detailError(earlyErrorDetail);
     // XXX: Or we died while waiting for the pinned connection to become idle.
     http.setErrorUri("error:transaction-end-before-headers");
 }

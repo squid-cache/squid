@@ -52,6 +52,9 @@ class ErrorDetail;
 typedef RefCount<ErrorDetail> ErrorDetailPointer;
 }
 #endif
+// XXX: Move out
+class ErrorDetail;
+typedef RefCount<ErrorDetail> ErrorDetailPointer;
 
 /**
  * Legacy Server code managing a connection to a client.
@@ -232,6 +235,7 @@ public:
     virtual void start();
     virtual bool doneAll() const { return BodyProducer::doneAll() && false;}
     virtual void swanSong();
+    virtual void callException(const std::exception &);
 
     /// Changes state so that we close the connection and quit after serving
     /// the client-side-detected error response instead of getting stuck.
@@ -466,6 +470,9 @@ private:
     Ssl::ServerBump *sslServerBump;
     Ssl::CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
 #endif
+
+    /// information about a problem that occurred before the first request
+    ErrorDetailPointer earlyErrorDetail;
 
     /// the reason why we no longer write the response or nil
     const char *stoppedSending_;

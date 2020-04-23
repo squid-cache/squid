@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "err_detail_type.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
@@ -173,6 +174,23 @@ AccessLogEntry::effectiveVirginUrl() const
     // adaptation/redirection. When the request is missing, a non-empty ALE::url
     // means that we missed a setVirginUrlForMissingRequest() call somewhere.
     return nullptr;
+}
+
+const ErrorDetail *
+AccessLogEntry::errorDetail() const
+{
+    if (const auto detail = errorDetail_.getRaw())
+        return detail;
+    if (request)
+        return request->errDetail.getRaw(); // may be nil
+    return nullptr;
+}
+
+void
+AccessLogEntry::detailError(const ErrorDetail::Pointer &detail)
+{
+    // preserve the "first detail wins" order
+    Update((request ? request->errDetail : errorDetail_), detail);
 }
 
 void

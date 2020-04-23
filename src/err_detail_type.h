@@ -33,6 +33,14 @@ public:
     virtual SBuf verbose(const HttpRequestPointer &) const;
 };
 
+/// records the first seen detail; eventually, we might store more than one
+inline void
+Update(ErrorDetail::Pointer &storage, const ErrorDetail::Pointer &latest)
+{
+    if (!storage)
+        storage = latest; // may still be nil
+}
+
 /// system call error detail based on standard errno(3)/strerror(3) APIs
 class SysErrorDetail: public ErrorDetail {
     MEMPROXY_CLASS(SysErrorDetail);

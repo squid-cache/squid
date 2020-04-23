@@ -998,8 +998,8 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SQUID_ERROR_DETAIL:
-            if (al->request && al->request->errDetail) {
-                sb = al->request->errDetail->brief();
+            if (const auto errorDetail = al->errorDetail()) {
+                sb = errorDetail->brief();
                 out = sb.c_str();
             }
             break;
