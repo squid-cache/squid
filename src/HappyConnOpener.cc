@@ -397,15 +397,11 @@ HappyConnOpener::swanSong()
     // TODO: Find an automated, faster way to kill no-longer-needed jobs.
 
     if (prime) {
-        if (prime.connector)
-            prime.connector->cancel("HappyConnOpener object destructed");
-        prime.clear();
+        cancelAttempt(prime, "job finished during a prime attempt");
     }
 
     if (spare) {
-        if (spare.connector)
-            spare.connector->cancel("HappyConnOpener object destructed");
-        spare.clear();
+        cancelAttempt(spare, "job finished during a spare attempt");
         if (gotSpareAllowance) {
             TheSpareAllowanceGiver.jobDroppedAllowance();
             gotSpareAllowance = false;
@@ -482,6 +478,15 @@ HappyConnOpener::sendSuccess(const Comm::ConnectionPointer &conn, bool reused, c
         ScheduleCallHere(callback_);
     }
     callback_ = nullptr;
+}
+
+/// cancels the in-progress attempt, making its path a future candidate
+void
+HappyConnOpener::cancelAttempt(Attempt &attempt, const char *reason)
+{
+    Must(attempt);
+    destinations->retryPath(attempt.path); // before attempt.cancel() clears path
+    attempt.cancel(reason);
 }
 
 /// inform the initiator about our failure to connect (if needed)
@@ -563,6 +568,7 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, Comm::ConnectionPointer &
 
     attempt.path = dest;
     attempt.connector = callConnect;
+    attempt.opener = cs;
 
     AsyncJob::Start(cs);
 }
@@ -578,9 +584,9 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     Must(itWasPrime != itWasSpare);
 
     if (itWasPrime) {
-        prime.clear();
+        prime.finish();
     } else {
-        spare.clear();
+        spare.finish();
         if (gotSpareAllowance) {
             TheSpareAllowanceGiver.jobUsedAllowance();
             gotSpareAllowance = false;
@@ -867,5 +873,15 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
     }
 
     return false;
+}
+
+void
+HappyConnOpener::Attempt::cancel(const char *reason)
+{
+    if (connector) {
+        connector->cancel(reason);
+        CallJobHere(17, 3, opener, Comm::ConnOpener, noteAbort);
+    }
+    clear();
 }
 
