@@ -65,12 +65,6 @@ public:
     ConnStateData * getConn() const {
         return (cbdataReferenceValid(conn_) ? conn_ : nullptr);
     }
-    void setConn(ConnStateData *aConn) {
-        if (conn_ != aConn) {
-            cbdataReferenceDone(conn_);
-            conn_ = cbdataReference(aConn);
-        }
-    }
 
     /// Initializes the current request with the virgin request.
     /// Call this method when the virgin request becomes known.

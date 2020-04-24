@@ -187,14 +187,15 @@ AccessLogEntry::errorDetail() const
 }
 
 void
-AccessLogEntry::detailError(const ErrorDetail::Pointer &detail)
+AccessLogEntry::detailError(err_type errorType, const ErrorDetail::Pointer &errorDetail)
 {
-    if (!detail)
+    if (errorType == ERR_NONE && !errorDetail)
         return; // nothing to do
 
-    debugs(33, 2, detail);
+    debugs(33, 2, errorTypeName(errorType) << ' ' << errorDetail);
     // preserve the "first detail wins" order
-    Update((request ? request->errDetail : errorDetail_), detail);
+    Update((request ? request->errType : errorType_), errorType);
+    Update((request ? request->errDetail : errorDetail_), errorDetail);
 }
 
 void

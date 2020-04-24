@@ -108,5 +108,13 @@ errorTypeName(err_type err)
     return err_type_str[err];
 }
 
+/// records the first seen error; eventually, we might store more than one
+inline void
+Update(err_type &storage, const err_type latest)
+{
+    if (storage == ERR_NONE)
+        storage = latest; // may still be ERR_NONE
+}
+
 #endif /* _SQUID_ERR_TYPE_H */
 

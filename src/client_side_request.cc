@@ -157,7 +157,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     maxReplyBodySize_(0),
     entry_(NULL),
     loggingEntry_(NULL),
-    conn_(NULL)
+    conn_(cbdataReference(aConn))
 #if USE_OPENSSL
     , sslBumpNeed_(Ssl::bumpEnd)
 #endif
@@ -166,7 +166,6 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     , request_satisfaction_offset(0)
 #endif
 {
-    setConn(aConn);
     al = new AccessLogEntry;
     CodeContext::Reset(al);
     al->cache.start_time = current_time;
@@ -175,6 +174,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
         al->cache.port = aConn->port;
         al->cache.caddr = aConn->log_addr;
         al->proxyProtocolHeader = aConn->proxyProtocolHeader();
+        al->detailError(aConn->earlyErrorType, aConn->earlyErrorDetail);
 
 #if USE_OPENSSL
         if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {

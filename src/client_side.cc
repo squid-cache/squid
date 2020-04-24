@@ -626,17 +626,18 @@ ConnStateData::callException(const std::exception &ex)
 }
 
 void
-ConnStateData::detailError(const ErrorDetail::Pointer &errorDetail)
+ConnStateData::detailError(const err_type errorType, const ErrorDetail::Pointer &errorDetail)
 {
     if (const auto context = pipeline.front()) {
         const auto http = context->http;
         assert(http);
         if (const auto request = http->request)
-            request->detailError(ERR_NONE, errorDetail);
+            request->detailError(errorType, errorDetail);
         else
-            http->al->detailError(errorDetail);
+            http->al->detailError(errorType, errorDetail);
     } else {
         debugs(33, 2, errorDetail);
+        Update(earlyErrorType, errorType);
         Update(earlyErrorDetail, errorDetail);
     }
 }
@@ -2457,8 +2458,13 @@ clientNegotiateSSL(int fd, void *data)
     const auto handshakeResult = tlsAttemptHandshake(conn, clientNegotiateSSL);
     if (handshakeResult.wantsIo())
         return; // wait for more I/O (with us as an I/O callback)
-    if (!handshakeResult.successful())
-        return conn->tlsNegotiateFailed(handshakeResult.errorDetail);
+    if (!handshakeResult.successful()) {
+        // TODO: No ConnStateData::tunnelOnError() on this forward-proxy code
+        // path because we cannot know the intended connection target?
+        conn->detailError(ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
+        conn->clientConnection->close();
+        return;
+    }
 
     Security::SessionPointer session(fd_table[fd].ssl);
 
@@ -2662,6 +2668,7 @@ ConnStateData::postHttpsAccept()
         acl_checklist->al->cache.port = port;
         acl_checklist->al->cache.caddr = log_addr;
         acl_checklist->al->proxyProtocolHeader = proxyProtocolHeader_;
+        acl_checklist->al->detailError(earlyErrorType, earlyErrorDetail);
         HTTPMSGUNLOCK(acl_checklist->al->request);
         acl_checklist->al->request = request;
         HTTPMSGLOCK(acl_checklist->al->request);
@@ -3041,10 +3048,15 @@ ConnStateData::parseTlsHandshake()
         Must(context && context->http);
         HttpRequest::Pointer request = context->http->request;
         debugs(83, 5, "Got something other than TLS Client Hello. Cannot SslBump.");
-        if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_PROTOCOL_UNKNOWN)) {
-            request->detailError(ERR_PROTOCOL_UNKNOWN, parseErrorDetails);
+        detailError(ERR_PROTOCOL_UNKNOWN, parseErrorDetails);
+        if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_PROTOCOL_UNKNOWN))
             clientConnection->close();
-        } else {
+        else {
+            // XXX: Why do we need to set these? The tunnels initiated by
+            // clientTunnelOnError() seem a bit different than splicing tunnels;
+            // for example, they work for configurations with disabled SslBump.
+            // And if all SslBump-related callers should set these, then perhaps
+            // clientTunnelOnError() or the code it calls can do that instead?
             sslBumpMode = Ssl::bumpSplice;
             context->http->al->ssl.bumpMode = Ssl::bumpSplice;
         }
@@ -3187,10 +3199,12 @@ ConnStateData::startPeekAndSplice()
     // tlsAttemptHandshake() function definition.
     const auto handshakeResult = tlsAttemptHandshake(this, nullptr);
     if (handshakeResult.category == Security::IoResult::ioError) {
+        detailError(ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
         HttpRequest::Pointer request(http ? http->request : nullptr);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_SECURE_ACCEPT_FAIL))
-            tlsNegotiateFailed(handshakeResult.errorDetail);
+            clientConnection->close();
         else {
+            // XXX: See questions in a similar parseTlsHandshake() spot.
             sslBumpMode = Ssl::bumpSplice;
             if (http)
                 http->al->ssl.bumpMode = Ssl::bumpSplice;
@@ -3239,13 +3253,6 @@ ConnStateData::httpsPeeked(PinnedIdleContext pic)
 
 #endif /* USE_OPENSSL */
 
-void
-ConnStateData::tlsNegotiateFailed(const Ssl::ErrorDetail::Pointer &errorDetail)
-{
-    detailError(errorDetail);
-    clientConnection->close();
-}
-
 bool
 ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::MethodType const method, const char *reason, const SBuf &payload)
 {
@@ -3271,7 +3278,8 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::
         connectPort = clientConnection->local.port();
     } else {
         // Typical cases are malformed HTTP requests on http_port and malformed
-        // TLS handshakes on non-bumping https_port.
+        // TLS handshakes on non-bumping https_port. TODO: Discover these
+        // problems earlier so that they can be classified/detailed better.
         debugs(33, 2, "Not able to compute URL, abort request tunneling for " << reason);
         // TODO: throw when nonBlockingCheck() callbacks gain job protections
         detailError(ERR_DETAIL_TUNNEL_TARGET);
@@ -4076,8 +4084,7 @@ ConnStateData::checkLogging()
     /* Create a temporary ClientHttpRequest object. Its destructor will log. */
     ClientHttpRequest http(this);
     http.req_sz = inBuf.length();
-    if (earlyErrorDetail)
-        http.al->detailError(earlyErrorDetail);
+    http.al->detailError(earlyErrorType, earlyErrorDetail);
     // XXX: Or we died while waiting for the pinned connection to become idle.
     http.setErrorUri("error:transaction-end-before-headers");
 }

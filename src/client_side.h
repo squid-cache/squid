@@ -306,10 +306,6 @@ public:
     bool switchedToHttps() const { return false; }
 #endif
 
-    /// initiate teardown of the from-client connection
-    /// after a TLS negotiation failure (with the given detail)
-    void tlsNegotiateFailed(const Ssl::ErrorDetailPointer &);
-
     char *prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp);
 
     /// handle a control message received by context from a peer and call back
@@ -405,8 +401,11 @@ protected:
     /// The PROXY protocol may require some data input first.
     void whenClientIpKnown();
 
+    /// if necessary, stores error information (if any)
+    void detailError(err_type, const ErrorDetailPointer &);
+
     /// if necessary, stores additional error information (if any)
-    void detailError(const ErrorDetailPointer &);
+    void detailError(const ErrorDetailPointer &errorDetail) { detailError(ERR_NONE, errorDetail); }
 
     BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
 
@@ -468,7 +467,10 @@ private:
     Ssl::CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
 #endif
 
-    /// information about a problem that occurred before the first request
+    /// primary classification of a problem that occurred before the first request
+    err_type earlyErrorType = ERR_NONE;
+
+    /// details about a problem that occurred before the first request
     ErrorDetailPointer earlyErrorDetail;
 
     /// the reason why we no longer write the response or nil

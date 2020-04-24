@@ -12,6 +12,7 @@
 #include "anyp/PortCfg.h"
 #include "base/CodeContext.h"
 #include "comm/Connection.h"
+#include "err_type.h"
 #include "HierarchyLogEntry.h"
 #include "http/ProtocolVersion.h"
 #include "http/RequestMethod.h"
@@ -262,11 +263,16 @@ public:
     /// \returns additional information about the error (or nil)
     const ErrorDetail *errorDetail() const;
 
-    /// stores additional information about the error
-    /// the first detail wins: does nothing if some info was already stored
-    void detailError(const ErrorDetailPointer &);
+    /// stores information about the error
+    /// the first info wins: does not overwrite already stored info
+    /// eventually, we may store multiple details
+    void detailError(err_type, const ErrorDetailPointer &);
 
 private:
+    /// additional information about the error (or nil)
+    /// if set, overrides (and should eventually replace) request->errDetail
+    err_type errorType_;
+
     /// additional information about the error (or nil)
     /// if set, overrides (and should eventually replace) request->errDetail
     ErrorDetailPointer errorDetail_;
