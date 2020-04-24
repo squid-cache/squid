@@ -816,6 +816,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
 
     if (spec) {
         stuff.S.method = spec->method;
+        stuff.S.request = spec->request;
         stuff.S.uri = spec->uri;
         stuff.S.version = spec->version;
         stuff.S.req_hdrs = spec->req_hdrs;
@@ -850,15 +851,15 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         hdr.clean();
 
 #if USE_ICMP
-        if (char *host = urlHostname(spec->uri)) {
+        if (const char *host = spec->request->url.host()) {
             int rtt = 0;
             int hops = 0;
             int samp = 0;
             netdbHostData(host, &samp, &rtt, &hops);
 
             if (rtt || hops) {
-                char cto_buf[128];
-                snprintf(cto_buf, 128, "%s %d %f %d",
+                char cto_buf[SQUIDHOSTNAMELEN+128];
+                snprintf(cto_buf, sizeof(cto_buf), "%s %d %f %d",
                          host, samp, 0.001 * rtt, hops);
                 hdr.putExt("Cache-to-Origin", cto_buf);
             }
