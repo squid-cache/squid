@@ -145,7 +145,7 @@ public:
 
 public:
     const char *method = nullptr;
-    char *uri = nullptr;
+    const char *uri = nullptr;
     char *version = nullptr;
     char *req_hdrs = nullptr;
     size_t reqHdrsSz = 0; ///< size of the req_hdrs content
@@ -1563,7 +1563,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
  * Send an HTCP CLR message for a specified item to a given CachePeer.
  */
 void
-htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &, CachePeer * p, htcp_clr_reason reason)
+htcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &, CachePeer * p, htcp_clr_reason reason)
 {
     static char pkt[8192];
     ssize_t pktlen;
@@ -1585,14 +1585,9 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
 
     SBuf sb = req->method.image();
     stuff.S.method = sb.c_str();
-    if (e == NULL || e->mem_obj == NULL) {
-        if (uri == NULL) {
-            return;
-        }
-        stuff.S.uri = xstrdup(uri);
-    } else {
-        stuff.S.uri = (char *) e->url();
-    }
+    stuff.S.request = req;
+    SBuf uri = req->effectiveRequestUri();
+    stuff.S.uri = uri.c_str();
     stuff.S.version = vbuf;
     if (reason != HTCP_CLR_INVALIDATION) {
         HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
@@ -1606,9 +1601,6 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
     if (reason != HTCP_CLR_INVALIDATION) {
         mb.clean();
-    }
-    if (e == NULL) {
-        xfree(stuff.S.uri);
     }
     if (!pktlen) {
         debugs(31, 3, "htcpClear: htcpBuildPacket() failed");
