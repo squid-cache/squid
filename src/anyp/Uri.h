@@ -104,6 +104,9 @@ public:
     /// the static '*' pseudo-URI
     static const SBuf &Asterisk();
 
+    /// %-encode characters in a buffer
+    static SBuf Encoder(const SBuf &, const CharacterSet &);
+
     /**
      * The authority-form URI for currently stored values.
      *

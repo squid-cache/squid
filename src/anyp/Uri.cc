@@ -30,6 +30,45 @@ static const char valid_hostname_chars[] =
     "[:]"
     ;
 
+/// Characters which are valid within a URI userinfo section
+static const CharacterSet &
+UserInfoChars()
+{
+    /*
+     * RFC 3986 section 3.2.1
+     *
+     *  userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
+     *  unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
+     *  pct-encoded   = "%" HEXDIG HEXDIG
+     *  sub-delims    = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+     */
+    static const auto userInfoValid = CharacterSet("userinfo", ":-._~%!$&'()*+,;=") +
+                                      CharacterSet::ALPHA +
+                                      CharacterSet::DIGIT;
+    return userInfoValid;
+}
+
+/**
+ * Governed by RFC 3986 section 2.1
+ */
+SBuf
+AnyP::Uri::Encoder(const SBuf &buf, const CharacterSet &encode)
+{
+    if (buf.isEmpty())
+        return buf;
+
+    SBuf output;
+    output.reserveSpace(buf.length()*3); // worst-case every byte is encoded
+
+    for (const auto C : buf) {
+        if (encode[C])
+            output.appendf("%%%02X", C);
+        else
+            output.append(C);
+    }
+    return output;
+}
+
 const SBuf &
 AnyP::Uri::Asterisk()
 {
@@ -557,7 +596,8 @@ AnyP::Uri::absolute() const
                                        getScheme() == AnyP::PROTO_UNKNOWN;
 
             if (allowUserInfo && !userInfo().isEmpty()) {
-                absolute_.append(userInfo());
+                static const auto encodeChars = UserInfoChars().complement().add('%');
+                absolute_.append(Encoder(userInfo(), encodeChars));
                 absolute_.append("@", 1);
             }
             absolute_.append(authority());
