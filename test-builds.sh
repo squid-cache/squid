@@ -73,7 +73,7 @@ logtee() {
         tee $1
         ;;
     progress)
-        tee $1 | awk '{printf "."} END {print "\n"}'
+        tee $1 | awk '{printf "."; n++; if (!(n % 80)) print "" } END {print ""}'
         ;;
     *)
         cat >$1
