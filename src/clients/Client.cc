@@ -439,7 +439,7 @@ Client::getMoreRequestBody(MemBuf &buf)
 static bool
 sameUrlHosts(const char *url1, const char *url2)
 {
-    // XXX: Want urlHostname() here, but it uses static storage and copying
+    // XXX: Want AnyP::Uri::parse() here, but it uses static storage and copying
     const char *host1 = strchr(url1, ':');
     const char *host2 = strchr(url2, ':');
 
