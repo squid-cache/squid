@@ -38,6 +38,5 @@ char *urlRInternal(const char *, unsigned short, const char *, const char *) STU
 char *urlInternal(const char *, const char *) STUB_RETVAL(nullptr)
 int matchDomainName(const char *, const char *, enum MatchDomainNameFlags) STUB_RETVAL(0)
 int urlCheckRequest(const HttpRequest *) STUB_RETVAL(0)
-char *urlHostname(const char *) STUB_RETVAL(nullptr)
 void urlExtMethodConfigure() STUB
 
