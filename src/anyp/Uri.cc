@@ -60,11 +60,11 @@ AnyP::Uri::Encoder(const SBuf &buf, const CharacterSet &encode)
     SBuf output;
     output.reserveSpace(buf.length()*3); // worst-case every byte is encoded
 
-    for (const auto C : buf) {
-        if (encode[C])
-            output.appendf("%%%02X", C);
+    for (const auto ch: buf) {
+        if (encode[ch])
+            output.appendf("%%%02X", ch);
         else
-            output.append(C);
+            output.append(ch);
     }
     return output;
 }
@@ -990,4 +990,3 @@ AnyP::Uri::cleanup(const char *uri)
     assert(cleanedUri);
     return cleanedUri;
 }
-
