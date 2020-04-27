@@ -62,7 +62,7 @@ AnyP::Uri::Encoder(const SBuf &buf, const CharacterSet &encode)
 
     for (const auto ch: buf) {
         if (encode[ch])
-            output.appendf("%%%02X", ch);
+            output.appendf("%%%02X", static_cast<unsinged int>(ch)); // TODO: Optimize using a table
         else
             output.append(ch);
     }
@@ -596,7 +596,7 @@ AnyP::Uri::absolute() const
                                        getScheme() == AnyP::PROTO_UNKNOWN;
 
             if (allowUserInfo && !userInfo().isEmpty()) {
-                static const auto encodeChars = UserInfoChars().complement().add('%');
+                static const auto encodeChars = UserInfoChars().complement("!userinfo").add('%');
                 absolute_.append(Encoder(userInfo(), encodeChars));
                 absolute_.append("@", 1);
             }
