@@ -20,8 +20,4 @@ HttpUpgradeProtocolAccess::~HttpUpgradeProtocolAccess() STUB
 void HttpUpgradeProtocolAccess::configureGuard(ConfigParser &) STUB
 ProtocolView::ProtocolView(SBuf const&) STUB
 
-std::ostream &operator <<(std::ostream &os, const ProtocolView &view)
-{
-    STUB;
-    return os;
-}
+std::ostream &operator <<(std::ostream &os, const ProtocolView &view) STUB_RETVAL(os)
