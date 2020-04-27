@@ -52,7 +52,7 @@ UserInfoChars()
  * Governed by RFC 3986 section 2.1
  */
 SBuf
-AnyP::Uri::Encoder(const SBuf &buf, const CharacterSet &encode)
+AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &encode)
 {
     if (buf.isEmpty())
         return buf;
@@ -597,7 +597,7 @@ AnyP::Uri::absolute() const
 
             if (allowUserInfo && !userInfo().isEmpty()) {
                 static const auto encodeChars = UserInfoChars().complement("!userinfo").add('%');
-                absolute_.append(Encoder(userInfo(), encodeChars));
+                absolute_.append(Encode(userInfo(), encodeChars));
                 absolute_.append("@", 1);
             }
             absolute_.append(authority());
