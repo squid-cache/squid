@@ -105,7 +105,7 @@ public:
     static const SBuf &Asterisk();
 
     /// %-encode characters in a buffer
-    static SBuf Encoder(const SBuf &, const CharacterSet &);
+    static SBuf Encode(const SBuf &, const CharacterSet &);
 
     /**
      * The authority-form URI for currently stored values.

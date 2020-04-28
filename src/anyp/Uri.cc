@@ -62,7 +62,7 @@ AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &encode)
 
     for (const auto ch: buf) {
         if (encode[ch])
-            output.appendf("%%%02X", static_cast<unsinged int>(ch)); // TODO: Optimize using a table
+            output.appendf("%%%02X", static_cast<unsigned int>(ch)); // TODO: Optimize using a table
         else
             output.append(ch);
     }
