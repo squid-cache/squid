@@ -163,11 +163,6 @@ xgetnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t host
     if (!sa)
         return EAI_FAIL;
 
-#if HAVE_SA_LEN /*XXX*/
-    if (sa->sa_len != salen)
-        return EAI_FAIL;
-#endif
-
     family = sa->sa_family;
     for (i = 0; afdl[i].a_af; i++)
         if (afdl[i].a_af == family) {
@@ -313,7 +308,7 @@ ip6_parsenumeric(const struct sockaddr *sa, const char *addr, char *host, size_t
         int zonelen;
 
         zonelen = ip6_sa2str(
-            (const struct sockaddr_in6 *)(const void *)sa,
+            reinterpret_cast<const struct sockaddr_in6 *>(sa),
             zonebuf, sizeof(zonebuf), flags);
         if (zonelen < 0)
             return EAI_OVERFLOW;
