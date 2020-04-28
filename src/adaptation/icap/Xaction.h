@@ -13,7 +13,7 @@
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
 #include "comm/ConnOpener.h"
-#include "err_detail_type.h"
+#include "error/forward.h"
 #include "HttpReply.h"
 #include "ipcache.h"
 #include "sbuf/SBuf.h"
@@ -74,7 +74,7 @@ protected:
 
     void handleSecuredPeer(Security::EncryptorAnswer &answer);
     /// record error detail if possible
-    virtual void detailError(const ErrorDetail::Pointer &) {}
+    virtual void detailError(const ErrorDetailPointer &) {}
 
     void openConnection();
     void closeConnection();

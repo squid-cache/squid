@@ -174,7 +174,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
         al->cache.port = aConn->port;
         al->cache.caddr = aConn->log_addr;
         al->proxyProtocolHeader = aConn->proxyProtocolHeader();
-        al->detailError(aConn->earlyErrorType, aConn->earlyErrorDetail);
+        al->updateError(aConn->bareError);
 
 #if USE_OPENSSL
         if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
@@ -285,7 +285,7 @@ ClientHttpRequest::~ClientHttpRequest()
     loggingEntry(NULL);
 
     if (request)
-        checkFailureRatio(request->errType, al->hier.code);
+        checkFailureRatio(request->error.category, al->hier.code);
 
     freeResources();
 

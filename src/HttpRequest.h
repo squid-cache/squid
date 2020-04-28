@@ -12,8 +12,7 @@
 #include "anyp/Uri.h"
 #include "base/CbcPointer.h"
 #include "dns/forward.h"
-#include "err_type.h"
-#include "err_detail_type.h"
+#include "error/Error.h"
 #include "HierarchyLogEntry.h"
 #include "http/Message.h"
 #include "http/RequestMethod.h"
@@ -99,7 +98,7 @@ public:
     void recordLookup(const Dns::LookupDetails &detail);
 
     /// sets error detail if no earlier detail was available
-    void detailError(err_type aType, const ErrorDetail::Pointer &aDetail);
+    void detailError(const err_type c, const ErrorDetail::Pointer &d) { error.update(c, d); }
     /// clear error details, useful for retries/repeats
     void clearError();
 
@@ -159,8 +158,7 @@ public:
 
     int dnsWait; ///< sum of DNS lookup delays in milliseconds, for %dt
 
-    err_type errType;
-    ErrorDetail::Pointer errDetail; ///< errType-specific detail about the transaction error
+    Error error; ///< transaction error
 
     char *peer_login;       /* Configured peer login:password */
 

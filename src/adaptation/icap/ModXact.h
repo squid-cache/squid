@@ -14,7 +14,6 @@
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
 #include "BodyPipe.h"
-#include "err_detail_type.h"
 #include "http/one/forward.h"
 #include "http/one/TeChunkedParser.h"
 

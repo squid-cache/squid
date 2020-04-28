@@ -12,7 +12,7 @@
 #include "anyp/PortCfg.h"
 #include "base/CodeContext.h"
 #include "comm/Connection.h"
-#include "err_type.h"
+#include "error/Error.h"
 #include "HierarchyLogEntry.h"
 #include "http/ProtocolVersion.h"
 #include "http/RequestMethod.h"
@@ -31,10 +31,6 @@
 #include "ssl/gadgets.h"
 #include "ssl/support.h"
 #endif
-
-// XXX: Move out
-class ErrorDetail;
-typedef RefCount<ErrorDetail> ErrorDetailPointer;
 
 /* forward decls */
 class HttpReply;
@@ -260,22 +256,16 @@ public:
             virginUrlForMissingRequest_ = vu;
     }
 
-    /// \returns additional information about the error (or nil)
-    const ErrorDetail *errorDetail() const;
+    /// \returns stored transaction error information (or nil)
+    const Error *error() const;
 
-    /// stores information about the error
-    /// the first info wins: does not overwrite already stored info
-    /// eventually, we may store multiple details
-    void detailError(err_type, const ErrorDetailPointer &);
+    /// sets (or updates the already stored) transaction error as needed
+    void updateError(const Error &);
 
 private:
-    /// additional information about the error (or nil)
-    /// if set, overrides (and should eventually replace) request->errDetail
-    err_type errorType_;
-
-    /// additional information about the error (or nil)
-    /// if set, overrides (and should eventually replace) request->errDetail
-    ErrorDetailPointer errorDetail_;
+    /// transaction problem
+    /// if set, overrides (and should eventually replace) request->error
+    Error error_;
 
     /// Client URI (or equivalent) for effectiveVirginUrl() when HttpRequest is
     /// missing. This member is ignored unless the request member is nil.

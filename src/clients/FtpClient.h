@@ -12,7 +12,7 @@
 #define SQUID_FTP_CLIENT_H
 
 #include "clients/Client.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "http/forward.h"
 
 class String;

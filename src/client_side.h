@@ -15,6 +15,7 @@
 #include "base/RunnersRegistry.h"
 #include "clientStreamForward.h"
 #include "comm.h"
+#include "error/Error.h"
 #include "helper/forward.h"
 #include "http/forward.h"
 #include "HttpControlMsg.h"
@@ -46,15 +47,8 @@ typedef RefCount<MasterXaction> MasterXactionPointer;
 namespace Ssl
 {
 class ServerBump;
-
-// XXX: Move out
-class ErrorDetail;
-typedef RefCount<ErrorDetail> ErrorDetailPointer;
 }
 #endif
-// XXX: Move out
-class ErrorDetail;
-typedef RefCount<ErrorDetail> ErrorDetailPointer;
 
 /**
  * Legacy Server code managing a connection to a client.
@@ -356,6 +350,17 @@ public:
 
     const ProxyProtocol::HeaderPointer &proxyProtocolHeader() const { return proxyProtocolHeader_; }
 
+    /// if necessary, stores new error information (if any)
+    void updateError(const Error &);
+
+    /// emplacement/convenience wrapper for updateError(const Error &)
+    void updateError(const err_type c, const ErrorDetailPointer &d) { updateError(Error(c, d)); }
+
+    // Exposed to be accessible inside the ClientHttpRequest constructor.
+    // TODO: Remove. Make sure there is always a suitable ALE instead.
+    /// a problem that occurred without a request (e.g., while parsing headers)
+    Error bareError;
+
 protected:
     void startDechunkingRequest();
     void finishDechunkingRequest(bool withSuccess);
@@ -400,12 +405,6 @@ protected:
     /// Perform client data lookups that depend on client src-IP.
     /// The PROXY protocol may require some data input first.
     void whenClientIpKnown();
-
-    /// if necessary, stores error information (if any)
-    void detailError(err_type, const ErrorDetailPointer &);
-
-    /// if necessary, stores additional error information (if any)
-    void detailError(const ErrorDetailPointer &errorDetail) { detailError(ERR_NONE, errorDetail); }
 
     BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
 
@@ -466,12 +465,6 @@ private:
     Ssl::ServerBump *sslServerBump;
     Ssl::CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
 #endif
-
-    /// primary classification of a problem that occurred before the first request
-    err_type earlyErrorType = ERR_NONE;
-
-    /// details about a problem that occurred before the first request
-    ErrorDetailPointer earlyErrorDetail;
 
     /// the reason why we no longer write the response or nil
     const char *stoppedSending_;

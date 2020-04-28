@@ -993,14 +993,16 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SQUID_ERROR:
-            if (al->request && al->request->errType != ERR_NONE)
-                out = errorPageName(al->request->errType);
+            if (const auto error = al->error())
+                out = errorPageName(error->category);
             break;
 
         case LFT_SQUID_ERROR_DETAIL:
-            if (const auto errorDetail = al->errorDetail()) {
-                sb = errorDetail->brief();
-                out = sb.c_str();
+            if (const auto error = al->error()) {
+                if (const auto detail = error->detail) {
+                    sb = detail->brief();
+                    out = sb.c_str();
+                }
             }
             break;
 

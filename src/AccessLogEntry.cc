@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "err_detail_type.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
@@ -176,26 +175,25 @@ AccessLogEntry::effectiveVirginUrl() const
     return nullptr;
 }
 
-const ErrorDetail *
-AccessLogEntry::errorDetail() const
+const Error *
+AccessLogEntry::error() const
 {
-    if (const auto detail = errorDetail_.getRaw())
-        return detail;
-    if (request)
-        return request->errDetail.getRaw(); // may be nil
-    return nullptr;
+    // the order ensures that the first-imported error is returned
+    if (error_) // updateError() was called before importing the request
+        return &error_;
+    if (request) // the request was imported before calling updateError()
+        return &request->error;
+    return nullptr; // we imported no errors and no request
 }
 
 void
-AccessLogEntry::detailError(err_type errorType, const ErrorDetail::Pointer &errorDetail)
+AccessLogEntry::updateError(const Error &error)
 {
-    if (errorType == ERR_NONE && !errorDetail)
-        return; // nothing to do
-
-    debugs(33, 2, errorTypeName(errorType) << ' ' << errorDetail);
-    // preserve the "first detail wins" order
-    Update((request ? request->errType : errorType_), errorType);
-    Update((request ? request->errDetail : errorDetail_), errorDetail);
+    // the order ensures that error() returns the first-imported error
+    if (request)
+        request->error.update(error);
+    else
+        error_.update(error);
 }
 
 void

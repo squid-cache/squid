@@ -317,7 +317,7 @@ ClientHttpRequest::updateCounters()
 {
     clientUpdateStatCounters(logType);
 
-    if (request->errType != ERR_NONE)
+    if (request->error)
         ++ statCounter.client_http.errors;
 
     clientUpdateStatHistCounters(logType,
@@ -374,8 +374,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
     // TODO: avoid losses by keeping these stats in a shared history object?
     if (aLogEntry->request) {
         aLogEntry->request->dnsWait = request->dnsWait;
-        aLogEntry->request->errType = request->errType;
-        aLogEntry->request->errDetail = request->errDetail;
+        aLogEntry->request->error = request->error;
     }
 }
 
@@ -622,23 +621,21 @@ ConnStateData::callException(const std::exception &ex)
         errorDetail = new ExceptionErrorDetail(tex->id());
     else
         errorDetail = ERR_DETAIL_EXCEPTION_OTHER;
-    detailError(errorDetail);
+    updateError(ERR_GATEWAY_FAILURE, errorDetail);
 }
 
 void
-ConnStateData::detailError(const err_type errorType, const ErrorDetail::Pointer &errorDetail)
+ConnStateData::updateError(const Error &error)
 {
     if (const auto context = pipeline.front()) {
         const auto http = context->http;
         assert(http);
         if (const auto request = http->request)
-            request->detailError(errorType, errorDetail);
+            request->error.update(error);
         else
-            http->al->detailError(errorType, errorDetail);
+            http->al->updateError(error);
     } else {
-        debugs(33, 2, errorDetail);
-        Update(earlyErrorType, errorType);
-        Update(earlyErrorDetail, errorDetail);
+        bareError.update(error);
     }
 }
 
@@ -1519,7 +1516,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
         repContext->setReplyToStoreEntry(sslServerBump->entry, "delayed SslBump error");
 
         // Get error details from the fake certificate-peeking request.
-        http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
+        http->request->error.update(sslServerBump->request->error);
         context->pullData();
         return true;
     }
@@ -1556,10 +1553,10 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
                 // Create an error object and fill it
                 const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request, http->al);
                 err->src_addr = clientConnection->remote;
-                Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail(
+                Ssl::ErrorDetail::Pointer errDetail = new Ssl::ErrorDetail(
                     SQUID_X509_V_ERR_DOMAIN_MISMATCH,
                     srvCert.get(), nullptr);
-                err->detailError(errDetail);
+                updateError(ERR_SECURE_CONNECT_FAIL, errDetail);
                 repContext->setReplyToError(request->method, err);
                 assert(context->http->out.offset == 0);
                 context->pullData();
@@ -2196,13 +2193,8 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     // for tunnelOnError() to detail the failure that we already know everything
     // about. The error has happened already and should be detailed ASAP. A
     // successful tunnel is not going to change that fact!
-    //
-    // XXX: tunnelOnError() code and the possibility of receivedFirstByte_ being
-    // false seem to imply that context, http, or request may be nil.
-    const auto context = pipeline.front();
-    Must(context);
-    Must(context->http);
-    context->http->request->detailError(error, nullptr);
+
+    updateError(error);
 
     /*
     * Just close the connection to not confuse browsers
@@ -2461,7 +2453,7 @@ clientNegotiateSSL(int fd, void *data)
     if (!handshakeResult.successful()) {
         // TODO: No ConnStateData::tunnelOnError() on this forward-proxy code
         // path because we cannot know the intended connection target?
-        conn->detailError(ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
+        conn->updateError(ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
         conn->clientConnection->close();
         return;
     }
@@ -2668,7 +2660,7 @@ ConnStateData::postHttpsAccept()
         acl_checklist->al->cache.port = port;
         acl_checklist->al->cache.caddr = log_addr;
         acl_checklist->al->proxyProtocolHeader = proxyProtocolHeader_;
-        acl_checklist->al->detailError(earlyErrorType, earlyErrorDetail);
+        acl_checklist->al->updateError(bareError);
         HTTPMSGUNLOCK(acl_checklist->al->request);
         acl_checklist->al->request = request;
         HTTPMSGLOCK(acl_checklist->al->request);
@@ -3048,7 +3040,7 @@ ConnStateData::parseTlsHandshake()
         Must(context && context->http);
         HttpRequest::Pointer request = context->http->request;
         debugs(83, 5, "Got something other than TLS Client Hello. Cannot SslBump.");
-        detailError(ERR_PROTOCOL_UNKNOWN, parseErrorDetails);
+        updateError(ERR_PROTOCOL_UNKNOWN, parseErrorDetails);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_PROTOCOL_UNKNOWN))
             clientConnection->close();
         else {
@@ -3199,7 +3191,7 @@ ConnStateData::startPeekAndSplice()
     // tlsAttemptHandshake() function definition.
     const auto handshakeResult = tlsAttemptHandshake(this, nullptr);
     if (handshakeResult.category == Security::IoResult::ioError) {
-        detailError(ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
+        updateError(ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
         HttpRequest::Pointer request(http ? http->request : nullptr);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_SECURE_ACCEPT_FAIL))
             clientConnection->close();
@@ -3282,7 +3274,7 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::
         // problems earlier so that they can be classified/detailed better.
         debugs(33, 2, "Not able to compute URL, abort request tunneling for " << reason);
         // TODO: throw when nonBlockingCheck() callbacks gain job protections
-        detailError(ERR_DETAIL_TUNNEL_TARGET);
+        updateError(ERR_INVALID_REQ, ERR_DETAIL_TUNNEL_TARGET);
         return false;
     }
 
@@ -4084,7 +4076,6 @@ ConnStateData::checkLogging()
     /* Create a temporary ClientHttpRequest object. Its destructor will log. */
     ClientHttpRequest http(this);
     http.req_sz = inBuf.length();
-    http.al->detailError(earlyErrorType, earlyErrorDetail);
     // XXX: Or we died while waiting for the pinned connection to become idle.
     http.setErrorUri("error:transaction-end-before-headers");
 }

@@ -807,7 +807,7 @@ Ftp::Server::handleReply(HttpReply *reply, StoreIOBuffer data)
 void
 Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer)
 {
-    if (pipeline.front()->http->request->errType != ERR_NONE) {
+    if (pipeline.front()->http->request->error) {
         writeCustomReply(502, "Server does not support FEAT", reply);
         return;
     }
@@ -879,7 +879,7 @@ Ftp::Server::handlePasvReply(const HttpReply *reply, StoreIOBuffer)
     const Http::StreamPointer context(pipeline.front());
     assert(context != nullptr);
 
-    if (context->http->request->errType != ERR_NONE) {
+    if (context->http->request->error) {
         writeCustomReply(502, "Server does not support PASV", reply);
         return;
     }
@@ -916,7 +916,7 @@ Ftp::Server::handlePasvReply(const HttpReply *reply, StoreIOBuffer)
 void
 Ftp::Server::handlePortReply(const HttpReply *reply, StoreIOBuffer)
 {
-    if (pipeline.front()->http->request->errType != ERR_NONE) {
+    if (pipeline.front()->http->request->error) {
         writeCustomReply(502, "Server does not support PASV (converted from PORT)", reply);
         return;
     }
@@ -1054,7 +1054,7 @@ Ftp::Server::writeForwardedReply(const HttpReply *reply)
 void
 Ftp::Server::handleEprtReply(const HttpReply *reply, StoreIOBuffer)
 {
-    if (pipeline.front()->http->request->errType != ERR_NONE) {
+    if (pipeline.front()->http->request->error) {
         writeCustomReply(502, "Server does not support PASV (converted from EPRT)", reply);
         return;
     }
@@ -1067,7 +1067,7 @@ Ftp::Server::handleEprtReply(const HttpReply *reply, StoreIOBuffer)
 void
 Ftp::Server::handleEpsvReply(const HttpReply *reply, StoreIOBuffer)
 {
-    if (pipeline.front()->http->request->errType != ERR_NONE) {
+    if (pipeline.front()->http->request->error) {
         writeCustomReply(502, "Cannot connect to server", reply);
         return;
     }
@@ -1096,10 +1096,10 @@ Ftp::Server::writeErrorReply(const HttpReply *reply, const int scode)
     MemBuf mb;
     mb.init();
 
-    if (request->errType != ERR_NONE)
-        mb.appendf("%i-%s\r\n", scode, errorPageName(request->errType));
+    if (request->error)
+        mb.appendf("%i-%s\r\n", scode, errorPageName(request->error.category));
 
-    if (const auto &detail = request->errDetail) {
+    if (const auto &detail = request->error.detail) {
         mb.appendf("%i-Error-Detail-Brief: " SQUIDSBUFPH "\r\n", scode, SQUIDSBUFPRINT(detail->brief()));
         mb.appendf("%i-Error-Detail-Verbose: " SQUIDSBUFPH "\r\n", scode, SQUIDSBUFPRINT(detail->verbose(request)));
     }

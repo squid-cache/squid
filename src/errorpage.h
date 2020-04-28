@@ -200,6 +200,7 @@ public:
 
     AccessLogEntryPointer ale; ///< transaction details (or nil)
 
+    // TODO: Replace type, xerrno, and detail with Error
     /// type-specific detail about the transaction error;
     /// overwrites xerrno;
     ErrorDetail::Pointer detail;
