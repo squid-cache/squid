@@ -66,7 +66,7 @@ testURL::benchmarkEncoder()
 {
     typedef std::chrono::high_resolution_clock Clock;
 
-    const auto delta = [](const auto value) -> double {
+    const auto delta = [](const std::chrono::nanoseconds &value) -> double {
         return static_cast<double>(std::chrono::nanoseconds(value).count())/1000000;
     };
 
