@@ -7,14 +7,14 @@
  */
 
 #include "squid.h"
-
-#include <cppunit/TestAssert.h>
-
 #include "anyp/Uri.h"
+#include "base/CharacterSet.h"
 #include "Debug.h"
 #include "tests/testURL.h"
 #include "unitTestMain.h"
 
+#include <chrono>
+#include <cppunit/TestAssert.h>
 #include <sstream>
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testURL );
@@ -59,5 +59,66 @@ testURL::testDefaultConstructor()
     auto *urlPointer = new AnyP::Uri;
     CPPUNIT_ASSERT(urlPointer != NULL);
     delete urlPointer;
+}
+
+void
+testURL::benchmarkEncoder()
+{
+    typedef std::chrono::high_resolution_clock Clock;
+
+    const auto delta = [](const auto value) -> double {
+        return static_cast<double>(std::chrono::nanoseconds(value).count())/1000000;
+    };
+
+    const int testLength = 2<<15;
+    const CharacterSet charX("xX","xX");
+    const CharacterSet charA("aA","aA");
+    SBuf result;
+    result.reserveSpace(testLength);
+
+    std::cout << "Benchmark setup ";
+    SBuf inputA("a");
+    inputA.reserveSpace(testLength);
+    for (int i = 0; i < 15; ++i) {
+        inputA.append(inputA);
+    }
+
+    std::cout << std::endl << "AnyP::Uri::Encode non-change: ";
+    std::cout.flush();
+    auto start = Clock::now();
+    for (const auto ch : inputA) {
+        if (charX[ch])
+            result.appendf("%%%02X", static_cast<unsigned int>(ch));
+        else
+            result.append(ch);
+    }
+    auto end = Clock::now();
+    std::cout << "baseline= " << delta(end-start);
+    std::cout.flush();
+
+    start = Clock::now();
+    (void)AnyP::Uri::Encode(inputA, charX);
+    end = Clock::now();
+    std::cout << " , encoder= " << delta(end-start) << std::endl;
+    std::cout.flush();
+
+    std::cout << "AnyP::Uri::Encode all changed: ";
+    std::cout.flush();
+    start = Clock::now();
+    for (const auto ch : inputA) {
+        if (charA[ch])
+            result.appendf("%%%02X", static_cast<unsigned int>(ch));
+        else
+            result.append(ch);
+    }
+    end = Clock::now();
+    std::cout << "baseline= " << delta(end-start);
+    std::cout.flush();
+
+    start = Clock::now();
+    (void)AnyP::Uri::Encode(inputA, charA);
+    end = Clock::now();
+    std::cout << " , encoder= " << delta(end-start) << std::endl;
+    std::cout.flush();
 }
 
