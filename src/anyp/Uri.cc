@@ -618,7 +618,7 @@ AnyP::Uri::absolute() const
             absolute_.append(host());
             absolute_.append(":", 1);
         }
-        absolute_.append(path());
+        absolute_.append(path()); // TODO: Encode each URI subcomponent in path_ as needed.
     }
 
     return absolute_;
