@@ -1003,3 +1003,4 @@ AnyP::Uri::cleanup(const char *uri)
     assert(cleanedUri);
     return cleanedUri;
 }
+
