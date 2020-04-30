@@ -52,17 +52,15 @@ UserInfoChars()
  * Governed by RFC 3986 section 2.1
  */
 SBuf
-AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &encode)
+AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
 {
     if (buf.isEmpty())
         return buf;
 
     Parser::Tokenizer tk(buf);
-    const CharacterSet goodChars = encode.complement("ignore-chars");
-
     SBuf goodSection;
     // optimization for the arguably common "no encoding necessary" case
-    if (tk.prefix(goodSection, goodChars) && tk.atEnd())
+    if (tk.prefix(goodSection, ignore) && tk.atEnd())
         return buf;
 
     SBuf output;
@@ -75,7 +73,7 @@ AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &encode)
         output.appendf("%%%02X", static_cast<unsigned int>(ch)); // TODO: Optimize using a table
         (void)tk.skip(ch);
 
-        if (tk.prefix(goodSection, goodChars))
+        if (tk.prefix(goodSection, ignore))
             output.append(goodSection);
     }
 
@@ -609,8 +607,10 @@ AnyP::Uri::absolute() const
                                        getScheme() == AnyP::PROTO_UNKNOWN;
 
             if (allowUserInfo && !userInfo().isEmpty()) {
-                static const auto encodeChars = UserInfoChars().complement("!userinfo").add('%');
-                absolute_.append(Encode(userInfo(), encodeChars));
+                static const CharacterSet uiChars = CharacterSet(UserInfoChars())
+                                                    .rename("userinfo-reserved")
+                                                    .remove('%');
+                absolute_.append(Encode(userInfo(), uiChars));
                 absolute_.append("@", 1);
             }
             absolute_.append(authority());

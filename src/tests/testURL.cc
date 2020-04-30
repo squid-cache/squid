@@ -64,6 +64,7 @@ testURL::testDefaultConstructor()
 void
 testURL::benchmarkEncoder()
 {
+#if USE_BENCHMARKS
     typedef std::chrono::high_resolution_clock Clock;
 
     const auto delta = [](const std::chrono::nanoseconds &value) -> double {
@@ -87,7 +88,7 @@ testURL::benchmarkEncoder()
     std::cout.flush();
     auto start = Clock::now();
     for (const auto ch : inputA) {
-        if (charX[ch])
+        if (charA[ch])
             result.appendf("%%%02X", static_cast<unsigned int>(ch));
         else
             result.append(ch);
@@ -97,7 +98,7 @@ testURL::benchmarkEncoder()
     std::cout.flush();
 
     start = Clock::now();
-    (void)AnyP::Uri::Encode(inputA, charX);
+    (void)AnyP::Uri::Encode(inputA, charA);
     end = Clock::now();
     std::cout << " , encoder= " << delta(end-start) << std::endl;
     std::cout.flush();
@@ -106,7 +107,7 @@ testURL::benchmarkEncoder()
     std::cout.flush();
     start = Clock::now();
     for (const auto ch : inputA) {
-        if (charA[ch])
+        if (charX[ch])
             result.appendf("%%%02X", static_cast<unsigned int>(ch));
         else
             result.append(ch);
@@ -116,9 +117,10 @@ testURL::benchmarkEncoder()
     std::cout.flush();
 
     start = Clock::now();
-    (void)AnyP::Uri::Encode(inputA, charA);
+    (void)AnyP::Uri::Encode(inputA, charX);
     end = Clock::now();
     std::cout << " , encoder= " << delta(end-start) << std::endl;
     std::cout.flush();
+#endif
 }
 

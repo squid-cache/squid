@@ -104,9 +104,9 @@ public:
     /// the static '*' pseudo-URI
     static const SBuf &Asterisk();
 
-    /// %-encode characters in a buffer.
-    /// The set of characters to encode are provided by the caller.
-    static SBuf Encode(const SBuf &, const CharacterSet &);
+    /// %-encode characters in a buffer which do not conform to
+    /// the provided set of expected characters.
+    static SBuf Encode(const SBuf &, const CharacterSet &expected);
 
     /**
      * The authority-form URI for currently stored values.
