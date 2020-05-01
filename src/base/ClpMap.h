@@ -10,6 +10,7 @@
 #define SQUID__SRC_BASE_CLPMAP_H
 
 #include "SquidTime.h"
+#include "mem/PoolingAllocator.h"
 
 #include <list>
 #include <map>
@@ -44,8 +45,8 @@ public:
         EntryValue *value = nullptr; ///< A pointer to the stored value
         time_t date = 0; ///< The date the entry created
     };
-    typedef std::list<Entry *> Queue;
-    typedef typename std::list<Entry *>::iterator QueueIterator;
+    typedef std::list<Entry *, PoolingAllocator<Entry *> > Queue;
+    typedef typename Queue::iterator QueueIterator;
 
     /// key:queue_item mapping for fast lookups by key
     typedef std::map<Key, QueueIterator> Map;
