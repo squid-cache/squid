@@ -98,6 +98,13 @@ public:
     void path(const SBuf &p) {path_=p; touch();}
     const SBuf &path() const;
 
+    /**
+     * Merge a relative-URL path into the existing URI details.
+     *
+     * It is assumed that you have already ensured that the addition is relative.
+     */
+    void addRelativePath(const char *relUrl);
+
     /// the static '/' default URL-path
     static const SBuf &SlashPath();
 
@@ -203,7 +210,6 @@ void urlInitialize(void);
 char *urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &, const AnyP::UriScheme &);
 const char *urlCanonicalFakeHttps(const HttpRequest * request);
 bool urlIsRelative(const char *);
-char *urlMakeAbsolute(const HttpRequest *, const char *);
 char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);
 char *urlInternal(const char *dir, const char *name);
 bool urlAppendDomain(char *host); ///< apply append_domain config to the given hostname

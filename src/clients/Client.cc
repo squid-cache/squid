@@ -455,33 +455,34 @@ sameUrlHosts(const char *url1, const char *url2)
 static void
 purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, Http::Message *rep, Http::HdrType hdr)
 {
-    const char *hdrUrl, *absUrl;
-
-    absUrl = NULL;
-    hdrUrl = rep->header.getStr(hdr);
-    if (hdrUrl == NULL) {
+    const char *hdrUrl;
+    if (!(hdrUrl = rep->header.getStr(hdr)))
         return;
-    }
 
     /*
      * If the URL is relative, make it absolute so we can find it.
      * If it's absolute, make sure the host parts match to avoid DOS attacks
      * as per RFC 2616 13.10.
      */
+    SBuf absUrl;
     if (urlIsRelative(hdrUrl)) {
-        absUrl = urlMakeAbsolute(req, hdrUrl);
-        if (absUrl != NULL) {
-            hdrUrl = absUrl;
+        // TODO: CONNECT authority-uri is capable of completing a relative-path URL
+        if (req->method.id() == Http::METHOD_CONNECT)
+            ;
+        else if (req->url.getScheme() == AnyP::PROTO_URN)
+            absUrl = req->url.absolute();
+        else {
+            AnyP::Uri tmpUrl = req->url;
+            tmpUrl.addRelativePath(reqUrl);
+            absUrl = tmpUrl.absolute();
         }
+        if (!absUrl.isEmpty())
+            hdrUrl = absUrl.c_str();
     } else if (!sameUrlHosts(reqUrl, hdrUrl)) {
         return;
     }
 
     purgeEntriesByUrl(req, hdrUrl);
-
-    if (absUrl != NULL) {
-        safe_free(absUrl);
-    }
 }
 
 // some HTTP methods should purge matching cache entries
