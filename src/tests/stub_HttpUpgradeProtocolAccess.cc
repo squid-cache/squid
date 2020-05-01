@@ -7,17 +7,18 @@
  */
 
 #include "squid.h"
+#include "ConfigParser.h"
 
 #define STUB_API "HttpUpgradeProtocolAccess.cc"
 #include "STUB.h"
 
-#include "ConfigParser.h"
 #include "HttpUpgradeProtocolAccess.h"
-
-const SBuf HttpUpgradeProtocolAccess::ProtoOther("STUB-OTHER");
-
+// ProtocolView(const char * const, const size_t) STUB
+ProtocolView::ProtocolView(SBuf const &) STUB
+std::ostream &operator <<(std::ostream &os, const ProtocolView &) STUB_RETVAL(os)
 HttpUpgradeProtocolAccess::~HttpUpgradeProtocolAccess() STUB
+const acl_access *findGuard(const SBuf &) const STUB_RETVAL(nullptr)
 void HttpUpgradeProtocolAccess::configureGuard(ConfigParser &) STUB
-ProtocolView::ProtocolView(SBuf const&) STUB
-
-std::ostream &operator <<(std::ostream &os, const ProtocolView &view) STUB_RETVAL(os)
+HttpUpgradeProtocolAccess::NamedGuard::NamedGuard(const char *, acl_access *) STUB_NOP
+HttpUpgradeProtocolAccess::NamedGuard::~NamedGuard() STUB_NOP
+const SBuf HttpUpgradeProtocolAccess::ProtoOther("STUB-OTHER");
