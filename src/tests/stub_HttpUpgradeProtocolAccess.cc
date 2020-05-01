@@ -13,11 +13,11 @@
 #include "STUB.h"
 
 #include "HttpUpgradeProtocolAccess.h"
-// ProtocolView(const char * const, const size_t) STUB
+ProtocolView::ProtocolView(const char * const, const size_t) STUB
 ProtocolView::ProtocolView(SBuf const &) STUB
 std::ostream &operator <<(std::ostream &os, const ProtocolView &) STUB_RETVAL(os)
 HttpUpgradeProtocolAccess::~HttpUpgradeProtocolAccess() STUB
-const acl_access *findGuard(const SBuf &) const STUB_RETVAL(nullptr)
+const acl_access *HttpUpgradeProtocolAccess::findGuard(const SBuf &) const STUB_RETVAL(nullptr)
 void HttpUpgradeProtocolAccess::configureGuard(ConfigParser &) STUB
 HttpUpgradeProtocolAccess::NamedGuard::NamedGuard(const char *, acl_access *) STUB_NOP
 HttpUpgradeProtocolAccess::NamedGuard::~NamedGuard() STUB_NOP
