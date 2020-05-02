@@ -139,8 +139,8 @@ buildtest() {
 	fi
     else
         if test "${verbose}" != "yes" ; then
-            echo "Build Failed. Last log lines are:"
-            tail -20 ${log}
+            echo "Build Failed. Full log dump:"
+            cat ${log}
         else
             echo "Build FAILED."
         fi
