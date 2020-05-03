@@ -853,7 +853,7 @@ StoreEntry::vappendf(const char *fmt, va_list vargs)
     va_list ap;
     /* Fix of bug 753r. The value of vargs is undefined
      * after vsnprintf() returns. Make a copy of vargs
-     * incase we loop around and call vsnprintf() again.
+     * in case we loop around and call vsnprintf() again.
      */
     va_copy(ap,vargs);
     errno = 0;
@@ -899,7 +899,6 @@ struct _store_check_cachable_hist {
         int non_get;
         int not_entry_cachable;
         int wrong_content_length;
-        int negative_cached;
         int too_big;
         int too_small;
         int private_key;
@@ -979,10 +978,6 @@ StoreEntry::checkCachable()
         if (store_status == STORE_OK && EBIT_TEST(flags, ENTRY_BAD_LENGTH)) {
             debugs(20, 2, "StoreEntry::checkCachable: NO: wrong content-length");
             ++store_check_cachable_hist.no.wrong_content_length;
-        } else if (EBIT_TEST(flags, ENTRY_NEGCACHED)) {
-            debugs(20, 3, "StoreEntry::checkCachable: NO: negative cached");
-            ++store_check_cachable_hist.no.negative_cached;
-            return 0;           /* avoid release call below */
         } else if (!mem_obj) {
             // XXX: In bug 4131, we forgetHit() without mem_obj, so we need
             // this segfault protection, but how can we get such a HIT?
@@ -1034,7 +1029,7 @@ storeCheckCachableStats(StoreEntry *sentry)
     storeAppendPrintf(sentry, "no.wrong_content_length\t%d\n",
                       store_check_cachable_hist.no.wrong_content_length);
     storeAppendPrintf(sentry, "no.negative_cached\t%d\n",
-                      store_check_cachable_hist.no.negative_cached);
+                      0); // TODO: Remove this backward compatibility hack.
     storeAppendPrintf(sentry, "no.missing_parts\t%d\n",
                       store_check_cachable_hist.no.missing_parts);
     storeAppendPrintf(sentry, "no.too_big\t%d\n",
@@ -1374,7 +1369,10 @@ StoreEntry::negativeCache()
 #else
         expires = squid_curtime;
 #endif
-    EBIT_SET(flags, ENTRY_NEGCACHED);
+    if (expires > squid_curtime) {
+        EBIT_SET(flags, ENTRY_NEGCACHED);
+        debugs(20, 6, "expires = " << expires << " +" << (expires-squid_curtime) << ' ' << *this);
+    }
 }
 
 void

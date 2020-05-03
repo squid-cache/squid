@@ -54,7 +54,7 @@
 //
 // Revision 1.12  2000/03/29 07:54:41  voeckler
 // added mechanism to give a port specification precedence over a host
-// specificiation with the -p option and not colon.
+// specification with the -p option and not colon.
 //
 // Revision 1.11  1999/06/18 13:18:28  voeckler
 // added refcount, fixed missing LF in -s output.
@@ -203,7 +203,7 @@ concat( const char* start, ... )
 // purpose: concatinate an arbitrary number of C strings.
 // paramtr: start (IN): first C string
 //          ... (IN): further C strings, terminated with a NULL pointer
-// returns: memory allocated via new(), containing the concatinated string.
+// returns: memory allocated via new(), containing the concatenated string.
 {
     va_list ap;
     const char* s;
@@ -303,7 +303,7 @@ log_extended( const char* fn, int code, long size, const SquidMetaList* meta )
     }
 }
 
-// o.k., this is pure lazyness...
+// o.k., this is pure laziness...
 static struct in_addr serverHost;
 static unsigned short serverPort;
 
@@ -413,7 +413,7 @@ match( const char* fn, const REList* list )
             ::linebuffer[ ::buffersize-1 ] = '\0'; // force-terminate string
 
             // check the offset into the start of object data. The offset is
-            // stored in a host endianess after the first byte.
+            // stored in a host endianness after the first byte.
             unsigned int datastart;
             memcpy( &datastart, ::linebuffer + 1, sizeof(unsigned int) );
             if ( datastart > ::buffersize - addon - 1 ) {

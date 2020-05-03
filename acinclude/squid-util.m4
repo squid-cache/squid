@@ -165,6 +165,40 @@ if test "$1" != "yes" -a "$1" != "no" ; then
 fi
 ])
 
+dnl check the build parameters for a library to auto-enable
+dnl Parameters for this macro are:
+dnl 1) binary library name (without 'lib' prefix)
+dnl 2) name of the library for human reading
+dnl 3) prefix used for pkg-check macros
+AC_DEFUN([SQUID_AUTO_LIB],[
+  squid_auto_lib=`echo $1|tr "\-" "_"`
+  AC_ARG_WITH([$1],AS_HELP_STRING([--without-$1],[Compile without the $2 library.]),[
+    AS_CASE(["$withval"],[yes|no],,[
+      AS_IF([test ! -d "$withval"],AC_MSG_ERROR([--with-$1 path does not point to a directory]))
+      set with_$squid_auto_lib = yes
+      AS_IF([test -d "$withval/lib64"],[$3_PATH += "-L$withval/lib64"])
+      AS_IF([test -d "$withval/lib"],[$3_PATH += "-L$withval/lib"])
+      $3_CFLAGS="-I$withval/include"
+    ])
+  ])
+  unset squid_auto_lib
+])
+dnl same as SQUID_AUTO_LIB but for default-disabled libraries
+AC_DEFUN([SQUID_OPTIONAL_LIB],[
+  squid_auto_lib=`echo $1|tr "\-" "_"`
+  set with_$squid_auto_lib = no
+  AC_ARG_WITH([$1],AS_HELP_STRING([--with-$1],[Compile with the $2 library.]),[
+    AS_CASE(["$with_$1"],[yes|no],,[
+      AS_IF([test ! -d "$with_$1"],AC_MSG_ERROR([--with-$1 path does not point to a directory]))
+      with_$squid_auto_lib=yes
+      AS_IF([test -d "$withval/lib64"],[$3_PATH += "-L$withval/lib64"])
+      AS_IF([test -d "$withval/lib"],[$3_PATH += "-L$withval/lib"])
+      $3_CFLAGS="-I$withval/include"
+    ])
+  ])
+  unset squid_auto_lib
+])
+
 AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
   AC_ARG_ENABLE([build-info],
     AS_HELP_STRING([--enable-build-info="build info string"],

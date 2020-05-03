@@ -224,7 +224,7 @@ SBuf&
 SBuf::Printf(const char *fmt, ...)
 {
     // with printf() the fmt or an arg might be a dangerous char*
-    // NP: cant rely on vappendf() Locker because of clear()
+    // NP: can't rely on vappendf() Locker because of clear()
     const Locker blobKeeper(this, buf());
 
     va_list args;
@@ -528,7 +528,7 @@ SBuf::c_str()
     ++stats.rawAccess;
     /* null-terminate the current buffer, by hand-appending a \0 at its tail but
      * without increasing its length. May COW, the side-effect is to guarantee that
-     * the MemBlob's tail is availabe for us to use */
+     * the MemBlob's tail is available for us to use */
     *rawSpace(1) = '\0';
     ++store_->size;
     ++stats.setChar;
@@ -651,7 +651,7 @@ SBuf::find(const SBuf &needle, size_type startPos) const
             debugs(24, 8, "First byte not found");
             return npos;
         }
-        // lastPossible guarrantees no out-of-bounds with memcmp()
+        // lastPossible guarantees no out-of-bounds with memcmp()
         if (0 == memcmp(needle.buf(), tmp, needle.length())) {
             debugs(24, 8, "Found at " << (tmp-buf()));
             return (tmp-buf());
@@ -849,7 +849,7 @@ SBuf::toUpper()
  * NO verifications are made on the size parameters, it's up to the caller to
  * make sure that the new size is big enough to hold the copied contents.
  * The re-allocated storage MAY be bigger than the requested size due to size-chunking
- * algorithms in MemBlock, it is guarranteed NOT to be smaller.
+ * algorithms in MemBlock, it is guaranteed NOT to be smaller.
  */
 void
 SBuf::reAlloc(size_type newsize)

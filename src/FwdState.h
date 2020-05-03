@@ -197,7 +197,7 @@ private:
     PconnRace pconnRace; ///< current pconn race state
 };
 
-void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
+void getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn);
 
 /// a collection of previously used persistent Squid-to-peer HTTP(S) connections
 extern PconnPool *fwdPconnPool;

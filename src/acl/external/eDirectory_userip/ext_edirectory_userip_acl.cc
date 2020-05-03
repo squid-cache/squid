@@ -135,7 +135,7 @@ typedef struct {
 #define LDAP_ERR_NULL           -1              /* Null edui_ldap_t pointer */
 #define LDAP_ERR_POINTER        -2              /* Null l->lp pointer */
 #define LDAP_ERR_PARAM          -3              /* Null or Missing parameters */
-#define LDAP_ERR_INIT           -4              /* Not initalized */
+#define LDAP_ERR_INIT           -4              /* Not initialized */
 #define LDAP_ERR_OPEN           -5              /* Not open */
 #define LDAP_ERR_CONNECT        -6              /* Unable to connect */
 #define LDAP_ERR_BIND           -7              /* Not bound */
@@ -384,7 +384,7 @@ DisplayUsage()
     local_printfx("\n");
 }
 
-/* Initalizes program's configuration paremeters */
+/* Initializes program's configuration parameters */
 static void
 InitConf()
 {
@@ -544,7 +544,7 @@ DisplayConf()
 
 /* InitLDAP() - <edui_ldap_t>
  *
- * Initalize LDAP structure for use, zeroing out all variables.
+ * Initialize LDAP structure for use, zeroing out all variables.
  *
  */
 static void
@@ -603,7 +603,7 @@ static int
 OpenLDAP(edui_ldap_t *l, char *h, unsigned int p)
 {
     if ((l == NULL) || (h == NULL)) return LDAP_ERR_NULL;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initalized, or might be in use */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initialized, or might be in use */
     if (l->status & LDAP_OPEN_S) return LDAP_ERR_OPEN;          /* Already open */
     if (l->status & LDAP_BIND_S) return LDAP_ERR_BIND;          /* Already bound */
 
@@ -646,7 +646,7 @@ CloseLDAP(edui_ldap_t *l)
     int s;
     if (l == NULL) return LDAP_ERR_NULL;
     if (l->lp == NULL) return LDAP_ERR_NULL;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Connection not initalized */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Connection not initialized */
     if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;       /* Connection not open */
 
     if (l->lm != NULL) {
@@ -683,7 +683,7 @@ SetVerLDAP(edui_ldap_t *l, int v)
     if (l == NULL) return LDAP_ERR_NULL;
     if ((v > 3) || (v < 1)) return LDAP_ERR_PARAM;
     if (l->lp == NULL) return LDAP_ERR_POINTER;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initalized */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initialized */
     if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;       /* Not open */
     if (l->status & LDAP_BIND_S) return LDAP_ERR_BIND;          /* Already bound */
 
@@ -709,7 +709,7 @@ BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
 {
     int s;
     if (l == NULL) return LDAP_ERR_NULL;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initalized */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initialized */
     if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;       /* Not open */
     if (l->status & LDAP_BIND_S) return LDAP_ERR_BIND;          /* Already bound */
     if (l->lp == NULL) return LDAP_ERR_POINTER;             /* Error */
@@ -852,7 +852,7 @@ ConvertIP(edui_ldap_t *l, char *ip)
     void *y, *z;
     if (l == NULL) return LDAP_ERR_NULL;
     if (ip == NULL) return LDAP_ERR_PARAM;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initalized */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initialized */
     if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;       /* Not open */
     if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;       /* Not bound */
 
@@ -913,7 +913,7 @@ static int
 ResetLDAP(edui_ldap_t *l)
 {
     if (l == NULL) return LDAP_ERR_NULL;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;                 /* Not initalized */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;                 /* Not initialized */
     if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;                 /* Not open */
     if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;                 /* Not bound */
     if (!(l->status & LDAP_PERSIST_S)) return LDAP_ERR_PERSIST;           /* Not persistent */
@@ -960,7 +960,7 @@ SearchFilterLDAP(edui_ldap_t *l, char *group)
     int swi;
     char bufa[EDUI_MAXLEN], bufb[EDUI_MAXLEN], bufc[EDUI_MAXLEN], bufd[EDUI_MAXLEN], bufg[EDUI_MAXLEN];
     if (l == NULL) return LDAP_ERR_NULL;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;           /* Not initalized */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;           /* Not initialized */
     if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;           /* Not open */
     if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;           /* Not Bound */
     if (l->search_ip[0] == '\0') return LDAP_ERR_DATA;              /* Search IP is required */
@@ -1049,7 +1049,7 @@ SearchLDAP(edui_ldap_t *l, int scope, char *filter, char **attrs)
     if (l == NULL) return LDAP_ERR_NULL;
     if ((scope < 0) || (filter == NULL)) return LDAP_ERR_PARAM;     /* If attrs is NULL, then all attrs will return */
     if (l->lp == NULL) return LDAP_ERR_POINTER;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initalized */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;       /* Not initialized */
     if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;       /* Not open */
     if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;       /* Not bound */
     if (l->status & LDAP_SEARCH_S) return LDAP_ERR_SEARCHED;        /* Already searching */
@@ -1106,7 +1106,7 @@ SearchIPLDAP(edui_ldap_t *l)
     LDAPMessage *ent;
     if (l == NULL) return LDAP_ERR_NULL;
     if (l->lp == NULL) return LDAP_ERR_POINTER;
-    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;               /* Not initalized */
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;               /* Not initialized */
     if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;               /* Not open */
     if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;               /* Not bound */
     if (!(l->status & LDAP_SEARCH_S)) return LDAP_ERR_NOT_SEARCHED;         /* Not searched */
@@ -1286,9 +1286,9 @@ const char
     case LDAP_ERR_POINTER:
         return "Null LDAP pointer";
     case LDAP_ERR_PARAM:
-        return "Null or Missing paremeter(s)";
+        return "Null or Missing parameter(s)";
     case LDAP_ERR_INIT:
-        return "LDAP data not initalized";
+        return "LDAP data not initialized";
     case LDAP_ERR_OPEN:
         return "LDAP connection is not active";
     case LDAP_ERR_CONNECT:
@@ -1300,9 +1300,9 @@ const char
     case LDAP_ERR_NOT_SEARCHED:
         return "LDAP connection has not been searched";
     case LDAP_ERR_INVALID:
-        return "Invalid paremeters";
+        return "Invalid parameters";
     case LDAP_ERR_OOB:
-        return "Paremeter is out of bounds";
+        return "Parameter is out of bounds";
     case LDAP_ERR_PERSIST:
         return "Persistent mode is not active";
     case LDAP_ERR_DATA:
@@ -1546,7 +1546,7 @@ MainSafe(int argc, char **argv)
         }
     }
 
-    /* Set predefined required paremeters if none are given, localhost:LDAP_PORT, etc */
+    /* Set predefined required parameters if none are given, localhost:LDAP_PORT, etc */
     if (edui_conf.host[0] == '\0')              /* Default to localhost */
         xstrncpy(edui_conf.host, "localhost", sizeof(edui_conf.host));
     if (edui_conf.port < 0)
@@ -1630,7 +1630,7 @@ MainSafe(int argc, char **argv)
         if (!(edui_ldap.status & LDAP_INIT_S)) {
             InitLDAP(&edui_ldap);
             debug("InitLDAP() -> %s\n", ErrLDAP(LDAP_ERR_SUCCESS));
-            if (edui_conf.mode & EDUI_MODE_PERSIST)                 /* Setup persistant mode */
+            if (edui_conf.mode & EDUI_MODE_PERSIST)                 /* Setup persistent mode */
                 edui_ldap.status |= LDAP_PERSIST_S;
         }
         if ((edui_ldap.status & LDAP_IDLE_S) && (edui_elap > 0)) {

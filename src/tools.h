@@ -96,7 +96,7 @@ typedef int PidStatus;
 
 /**
  * Compatibility wrapper function for waitpid
- * \pid the pid of child proccess to wait for.
+ * \pid the pid of child process to wait for.
  * \param status the exit status returned by waitpid
  * \param flags WNOHANG or 0
  */

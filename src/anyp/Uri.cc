@@ -276,7 +276,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             src = url;
             i = 0;
 
-            /* Then everything until first /; thats host (and port; which we'll look for here later) */
+            /* Then everything until first /; that's host (and port; which we'll look for here later) */
             // bug 1881: If we don't get a "/" then we imply it was there
             // bug 3074: We could just be given a "?" or "#". These also imply "/"
             // bug 3233: whitespace is also a hostname delimiter.
@@ -300,7 +300,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
             } else {
                 dst = urlpath;
             }
-            /* Then everything from / (inclusive) until \r\n or \0 - thats urlpath */
+            /* Then everything from / (inclusive) until \r\n or \0 - that's urlpath */
             for (; i < l && *src != '\r' && *src != '\n' && *src != '\0'; ++i, ++src, ++dst) {
                 *dst = *src;
             }
@@ -821,7 +821,7 @@ urlCheckRequest(const HttpRequest * r)
     /* protocol "independent" methods
      *
      * actually these methods are specific to HTTP:
-     * they are methods we recieve on our HTTP port,
+     * they are methods we receive on our HTTP port,
      * and if we had a FTP listener would not be relevant
      * there.
      *
@@ -888,105 +888,6 @@ urlCheckRequest(const HttpRequest * r)
     }
 
     return rc;
-}
-
-/*
- * Quick-n-dirty host extraction from a URL.  Steps:
- *      Look for a colon
- *      Skip any '/' after the colon
- *      Copy the next SQUID_MAXHOSTNAMELEN bytes to host[]
- *      Look for an ending '/' or ':' and terminate
- *      Look for login info preceeded by '@'
- */
-
-class URLHostName
-{
-
-public:
-    char * extract(char const *url);
-
-private:
-    static char Host [SQUIDHOSTNAMELEN];
-    void init(char const *);
-    void findHostStart();
-    void trimTrailingChars();
-    void trimAuth();
-    char const *hostStart;
-    char const *url;
-};
-
-char *
-urlHostname(const char *url)
-{
-    return URLHostName().extract(url);
-}
-
-char URLHostName::Host[SQUIDHOSTNAMELEN];
-
-void
-URLHostName::init(char const *aUrl)
-{
-    Host[0] = '\0';
-    url = aUrl;
-}
-
-void
-URLHostName::findHostStart()
-{
-    if (NULL == (hostStart = strchr(url, ':')))
-        return;
-
-    ++hostStart;
-
-    while (*hostStart != '\0' && *hostStart == '/')
-        ++hostStart;
-
-    if (*hostStart == ']')
-        ++hostStart;
-}
-
-void
-URLHostName::trimTrailingChars()
-{
-    char *t;
-
-    if ((t = strchr(Host, '/')))
-        *t = '\0';
-
-    if ((t = strrchr(Host, ':')))
-        *t = '\0';
-
-    if ((t = strchr(Host, ']')))
-        *t = '\0';
-}
-
-void
-URLHostName::trimAuth()
-{
-    char *t;
-
-    if ((t = strrchr(Host, '@'))) {
-        ++t;
-        memmove(Host, t, strlen(t) + 1);
-    }
-}
-
-char *
-URLHostName::extract(char const *aUrl)
-{
-    init(aUrl);
-    findHostStart();
-
-    if (hostStart == NULL)
-        return NULL;
-
-    xstrncpy(Host, hostStart, SQUIDHOSTNAMELEN);
-
-    trimTrailingChars();
-
-    trimAuth();
-
-    return Host;
 }
 
 AnyP::Uri::Uri(AnyP::UriScheme const &aScheme) :

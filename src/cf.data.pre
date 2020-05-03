@@ -589,7 +589,7 @@ DOC_START
 
 		The expanded key_extras value is added to the Squid credentials
 		cache and, hence, will affect authentication. It can be used to
-		autenticate different users with identical user names (e.g.,
+		authenticate different users with identical user names (e.g.,
 		when user authentication depends on http_port).
 
 		Avoid adding frequently changing information to key_extras. For
@@ -923,7 +923,7 @@ DOC_START
 			(e.g., with %#DATA, spaces between arguments become
 			%20).
 
-	If SSL is enabled, the following formating codes become available:
+	If SSL is enabled, the following formatting codes become available:
 
 	  %USER_CERT		SSL User certificate in PEM format
 	  %USER_CERTCHAIN	SSL User certificate chain in PEM format
@@ -1180,7 +1180,7 @@ endif
 	  # regex matching on URL path [fast]
 
 	acl aclname port 80 70 21 0-1024...   # destination TCP port [fast]
-	                                      # ranges are alloed
+	                                      # ranges are allowed
 	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
 	                                      # NP: for interception mode this is usually '80'
 
@@ -1214,7 +1214,7 @@ endif
 	  # use REQUIRED to accept any valid username.
 	  #
 	  # Will use proxy authentication in forward-proxy scenarios, and plain
-	  # http authenticaiton in reverse-proxy scenarios
+	  # http authentication in reverse-proxy scenarios
 	  #
 	  # NOTE: when a Proxy-Authentication header is sent but it is not
 	  # needed during ACL checking the username is NOT logged
@@ -1598,7 +1598,7 @@ ENDIF
 		acl fileupload req_mime_type -i ^multipart/form-data$
 		acl javascript rep_mime_type -i ^application/x-javascript$
 
-NOCOMMENT_START
+CONFIG_START
 #
 # Recommended minimum configuration:
 #
@@ -1626,7 +1626,7 @@ acl Safe_ports port 280		# http-mgmt
 acl Safe_ports port 488		# gss-http
 acl Safe_ports port 591		# filemaker
 acl Safe_ports port 777		# multiling http
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: proxy_protocol_access
@@ -1834,7 +1834,7 @@ DOC_START
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
-NOCOMMENT_START
+CONFIG_START
 
 #
 # Recommended minimum Access Permission configuration:
@@ -1866,7 +1866,7 @@ http_access allow localhost
 
 # And finally deny all other access to this proxy
 http_access deny all
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: adapted_http_access http_access2
@@ -2461,11 +2461,11 @@ DOC_START
 	internal address:port in http_port. This way Squid will only be
 	visible on the internal address.
 
-NOCOMMENT_START
+CONFIG_START
 
 # Squid normally listens to port 3128
 http_port @DEFAULT_HTTP_PORT@
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: https_port
@@ -3442,7 +3442,7 @@ DOC_START
 		concurrency=
 	
 	The number of requests each certificate validator helper can handle in
-	parallel. A value of 0 indicates the certficate validator does not
+	parallel. A value of 0 indicates the certificate validator does not
 	support concurrency. Defaults to 1.
 	
 	When this directive is set to a value >= 1 then the protocol
@@ -4192,7 +4192,7 @@ DOC_END
 NAME: cache_dir
 TYPE: cachedir
 DEFAULT: none
-DEFAULT_DOC: No disk cache. Store cache ojects only in memory.
+DEFAULT_DOC: No disk cache. Store cache objects only in memory.
 LOC: Config.cacheSwap
 DOC_START
 	Format:
@@ -4345,11 +4345,11 @@ DOC_START
 	Note: To make optimal use of the max-size limits you should order
 	the cache_dir lines with the smallest max-size value first.
 
-NOCOMMENT_START
+CONFIG_START
 
 # Uncomment and adjust the following to add a disk cache directory.
 #cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: store_dir_select_algorithm
@@ -4413,6 +4413,45 @@ DOC_START
 		cache_dir rock /ssd3 ... max-size=99999
 DOC_END
 
+NAME: paranoid_hit_validation
+COMMENT: time-units-small
+TYPE: time_nanoseconds
+DEFAULT: 0
+DEFAULT_DOC: validation disabled
+LOC: Config.paranoid_hit_validation
+DOC_START
+	Controls whether Squid should perform paranoid validation of cache entry
+	metadata integrity every time a cache entry is hit. This low-level
+	validation should always succeed. Each failed validation results in a
+	cache miss, a BUG line reported to cache.log, and the invalid entry
+	marked as unusable (and eventually purged from the cache).
+
+	Squid can only validate shared cache memory and rock cache_dir entries.
+
+	* Zero (default) value means that the validation is disabled.
+
+	* Positive values enable validation:
+	  - values less than 1 day approximate the maximum time that Squid is allowed
+	    to spend validating a single cache hit.
+	  - values greater or equal to 1 day are considered as no limitation:
+	    in this case all checks will be performed, regardless of how much time
+	    they take.
+
+	Hits are usually stored using 16KB slots (for rock, the size is
+	configurable via cache_dir slot-size). Larger hits require scanning more
+	slots and, hence, take more time. When validation is enabled, at least one
+	slot is always validated, regardless of the configured time limit.
+
+	A worker process validating an entry cannot do anything else (i.e. the
+	validation is blocking). The validation overhead is environment dependent,
+	but developers have observed Squid spending 3-10 microseconds to check each
+	slot of a Rock or shared memory hit entry. If Squid cuts validation short
+	because it runs out of configured time, it treats the entry as valid.
+
+	When hit validation is enabled, its statistics is included in Cache
+	Manager mgr:counters, mgr:5min, and mgr:60min reports.
+DOC_END
+
 NAME: max_open_disk_fds
 TYPE: int
 LOC: Config.max_open_disk_fds
@@ -4440,11 +4479,11 @@ DOC_START
 	near the low-water mark.
 
 	As swap utilization increases towards the high-water mark set
-	by cache_swap_high object eviction becomes more agressive.
+	by cache_swap_high object eviction becomes more aggressive.
 
 	The value difference in percentages between low- and high-water
 	marks represent an eviction rate of 300 objects per second and
-	the rate continues to scale in agressiveness by multiples of
+	the rate continues to scale in aggressiveness by multiples of
 	this above the high-water mark.
 
 	Defaults are 90% and 95%. If you have a large cache, 5% could be
@@ -4468,11 +4507,11 @@ DOC_START
 	maintain utilization near the low-water mark.
 
 	As swap utilization increases towards this high-water mark object
-	eviction becomes more agressive.
+	eviction becomes more aggressive.
 
 	The value difference in percentages between low- and high-water
 	marks represent an eviction rate of 300 objects per second and
-	the rate continues to scale in agressiveness by multiples of
+	the rate continues to scale in aggressiveness by multiples of
 	this above the high-water mark.
 
 	Defaults are 90% and 95%. If you have a large cache, 5% could be
@@ -5441,11 +5480,11 @@ DOC_START
 	that exists, Squid will chdir() to that directory at startup
 	and coredump files will be left there.
 
-NOCOMMENT_START
+CONFIG_START
 
 # Leave coredumps in the first cache dir
 coredump_dir @DEFAULT_SWAP_DIR@
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 
@@ -5545,7 +5584,7 @@ DOC_START
 	straight to using PORT for IPv4 servers.
 
 	Some devices are known to not handle this extension correctly and
-	may result in crashes. Devices which suport EPRT enough to fail
+	may result in crashes. Devices which support EPRT enough to fail
 	cleanly will result in Squid attempting PORT anyway. This directive
 	should only be disabled when EPRT results in device failures.
 
@@ -5697,7 +5736,7 @@ DOC_START
 
 	Re-write creates a difference in the state held by the client
 	and server. Possibly causing confusion when the server response
-	contains snippets of its view state. Embeded URLs, response
+	contains snippets of its view state. Embedded URLs, response
 	and content Location headers, etc. are not re-written by this
 	interface.
 
@@ -6144,7 +6183,7 @@ DEFAULT: 1 week
 DOC_START
 	This option puts an upper limit on how stale content Squid
 	will serve from the cache if cache validation fails.
-	Can be overriden by the refresh_pattern max-stale option.
+	Can be overridden by the refresh_pattern max-stale option.
 DOC_END
 
 NAME: refresh_pattern
@@ -6249,7 +6288,7 @@ DOC_START
 	to change one. The default setting is only active if none is
 	used.
 
-NOCOMMENT_START
+CONFIG_START
 
 #
 # Add any of your own refresh_pattern entries above these.
@@ -6258,7 +6297,7 @@ refresh_pattern ^ftp:		1440	20%	10080
 refresh_pattern ^gopher:	1440	0%	1440
 refresh_pattern -i (/cgi-bin/|\?) 0	0%	0
 refresh_pattern .		0	20%	4320
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: quick_abort_min
@@ -7984,7 +8023,7 @@ DEFAULT: 0.0.0.0
 DEFAULT_DOC: Address selected by the operating system.
 IFDEF: USE_WCCP
 DOC_START
-	Use this option if you require WCCPv2 to use a specific
+	Use this option if you require WCCP(v1) to use a specific
 	interface address.
 
 	The default behavior is to not bind to any specific address.
@@ -7997,7 +8036,7 @@ DEFAULT: 0.0.0.0
 DEFAULT_DOC: Address selected by the operating system.
 IFDEF: USE_WCCPv2
 DOC_START
-	Use this option if you require WCCP to use a specific
+	Use this option if you require WCCPv2 to use a specific
 	interface address.
 
 	The default behavior is to not bind to any specific address.
@@ -8715,7 +8754,7 @@ DOC_START
 	    you may also specify them by your custom file name:
 	    Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
-	By defaut Squid will send "403 Forbidden". A different 4xx or 5xx
+	By default Squid will send "403 Forbidden". A different 4xx or 5xx
 	may be specified by prefixing the file name with the code and a colon.
 	e.g. 404:ERR_CUSTOM_ACCESS_DENIED
 
@@ -9015,7 +9054,7 @@ DOC_START
 
 	Requires client_db to be enabled (the default).
 
-	WARNING: This may noticably slow down traffic received via external proxies
+	WARNING: This may noticeably slow down traffic received via external proxies
 	or NAT devices and cause them to rebound error messages back to their clients.
 DOC_END
 
@@ -9172,7 +9211,7 @@ DOC_START
 
 	Activation of the Partial Content extension is negotiated with each
 	ICAP service during OPTIONS exchange. Most ICAP servers should handle
-	negotation correctly even if they do not support the extension, but
+	negotiation correctly even if they do not support the extension, but
 	some might fail. To disable Partial Content support for all ICAP
 	services and to avoid any negotiation, set this option to "off".
 

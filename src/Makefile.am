@@ -759,9 +759,6 @@ swap_log_op.cc: swap_log_op.h mk-string-arrays.awk
 
 ## other generated files...
 
-cache_diff: cache_diff.o debug.o globals.o store_key_md5.o
-	$(CC) -o $@ $(LDFLAGS) $@.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
-
 test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key_md5.o
 	$(CC) -o $@ $(LDFLAGS) $@.o CacheDigest.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
 

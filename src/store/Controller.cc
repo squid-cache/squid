@@ -28,7 +28,7 @@
  * store_dirs_rebuilding is initialized to _1_ as a hack so that
  * storeDirWriteCleanLogs() doesn't try to do anything unless _all_
  * cache_dirs have been read.  For example, without this hack, Squid
- * will try to write clean log files if -kparse fails (becasue it
+ * will try to write clean log files if -kparse fails (because it
  * calls fatal()).
  */
 int Store::Controller::store_dirs_rebuilding = 1;
@@ -227,12 +227,12 @@ Store::Controller::sync(void)
 }
 
 /*
- * handle callbacks all avaliable fs'es
+ * handle callbacks all available fs'es
  */
 int
 Store::Controller::callback()
 {
-    /* This will likely double count. Thats ok. */
+    /* This will likely double count. That's ok. */
     PROF_start(storeDirCallback);
 
     /* mem cache callbacks ? */

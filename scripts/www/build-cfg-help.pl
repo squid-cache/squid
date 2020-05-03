@@ -338,7 +338,7 @@ foreach $name (@names) {
 	generate_page("${top}/${pagetemplate}", $option{$name});
 }
 
-# and now, the alpabetic index file!
+# and now, the alphabetic index file!
 my $fh;
 my $fh_open = 0;
 

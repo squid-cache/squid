@@ -48,7 +48,7 @@ Acl::InnerNode::lineParse()
     if (!cfgline)
         cfgline = xstrdup(config_input_line);
 
-    // expect a list of ACL names, each possibly preceeded by '!' for negation
+    // expect a list of ACL names, each possibly preceded by '!' for negation
 
     while (const char *t = ConfigParser::strtokFile()) {
         const bool negated = (*t == '!');
