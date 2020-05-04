@@ -140,9 +140,6 @@ extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_OTHER;
 /// cannot figure out where to tunnel the client traffic to
 extern const ErrorDetail::Pointer ERR_DETAIL_TUNNEL_TARGET;
 
-/// an SslBump step2 splicing error (XXX: too general)
-extern const ErrorDetail::Pointer ERR_DETAIL_SSL_BUMP_SPLICE;
-
 /// TLS parsing or negotiation failure at the beginning of a TLS connection
 extern const ErrorDetail::Pointer ERR_DETAIL_TLS_HANDSHAKE;
 
