@@ -111,6 +111,5 @@ ExceptionErrorDetail::brief() const
 SBuf
 ExceptionErrorDetail::verbose(const HttpRequest::Pointer &) const
 {
-    // TODO: Report the entire exception text, not just its location/ID.
     return ToSBuf("Exception (ID=", std::hex, exceptionId, ')');
 }
