@@ -3021,15 +3021,6 @@ ConnStateData::parseTlsHandshake()
         updateError(ERR_PROTOCOL_UNKNOWN, parseErrorDetails);
         if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_PROTOCOL_UNKNOWN))
             clientConnection->close();
-        else {
-            // XXX: Why do we need to set these? The tunnels initiated by
-            // clientTunnelOnError() seem a bit different than splicing tunnels;
-            // for example, they work for configurations with disabled SslBump.
-            // And if all SslBump-related callers should set these, then perhaps
-            // clientTunnelOnError() or the code it calls can do that instead?
-            sslBumpMode = Ssl::bumpSplice;
-            context->http->al->ssl.bumpMode = Ssl::bumpSplice;
-        }
         return;
     }
 
@@ -3203,14 +3194,6 @@ ConnStateData::handleSslBumpHandshakeError(const Security::IoResult &handshakeRe
 
     if (!tunnelOnError(HttpRequestMethod(), errCategory))
         clientConnection->close();
-    else {
-        assert(sslServerBump);
-        // XXX: See questions in a similar parseTlsHandshake() spot.
-        sslBumpMode = Ssl::bumpSplice;
-        const auto context = pipeline.front();
-        if (const auto http = context ? context->http : nullptr)
-            http->al->ssl.bumpMode = Ssl::bumpSplice;
-    }
 }
 
 void
