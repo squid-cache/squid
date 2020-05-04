@@ -444,10 +444,20 @@ if test "x$with_dl" != "xno"; then
 fi
 
 ## check for atomics library before anything that might need it
-# AC_SEARCH_LIBS pollutes LIBS
 SQUID_STATE_SAVE(LIBATOMIC)
-AC_SEARCH_LIBS([__atomic_load_8],[atomic],[
-  test "$ac_res" = "none required" || ATOMICLIB=$ac_res],[])
+AC_MSG_CHECKING(library containing __atomic_is_lock_free)
+LIBS="-latomic"
+AC_LINK_IFELSE(
+  [AC_LANG_SOURCE([[
+    int main(void) {
+        char lockRequired[256];
+        return __atomic_is_lock_free(sizeof(lockRequired),&lockRequired);
+    }
+  ]])],
+  [AC_MSG_RESULT(-latomic)
+   ATOMICLIB='-latomic'],
+  [AC_MSG_RESULT(no)]
+)
 SQUID_STATE_ROLLBACK(LIBATOMIC)
 AC_SUBST(ATOMICLIB)
 
