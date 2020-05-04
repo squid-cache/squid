@@ -1238,6 +1238,7 @@ tests_testRock_LDADD = \
 	acl/libapi.la \
 	acl/libstate.la \
 	anyp/libanyp.la \
+	error/liberror.la \
 	eui/libeui.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
@@ -1418,6 +1419,7 @@ tests_testUfs_LDADD = \
 	DiskIO/libdiskio.la \
 	acl/libapi.la \
 	anyp/libanyp.la \
+	error/liberror.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	comm/libcomm.la \
@@ -1769,6 +1771,7 @@ tests_testDiskIO_LDADD = \
 	DiskIO/libdiskio.la \
 	acl/libapi.la \
 	anyp/libanyp.la \
+	error/liberror.la \
 	mgr/libmgr.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
