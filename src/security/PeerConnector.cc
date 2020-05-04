@@ -437,7 +437,7 @@ Security::PeerConnector::noteNegotiationError(const Ssl::ErrorDetail::Pointer &c
 #endif
 
     const auto anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request, al);
-    anErr->xerrno = primaryDetail->sysError(); // TODO: Do this in detailError()?
+    anErr->xerrno = primaryDetail->sysError();
     anErr->detailError(primaryDetail);
     noteNegotiationDone(anErr);
     bail(anErr);
