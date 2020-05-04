@@ -126,6 +126,8 @@ enum Type {
 
 } // namespace Io
 
+class IoResult; // TODO: move to Security::Io
+
 class KeyData;
 
 #if USE_OPENSSL

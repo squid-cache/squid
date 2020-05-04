@@ -146,6 +146,17 @@ extern const ErrorDetail::Pointer ERR_DETAIL_SSL_BUMP_SPLICE;
 /// TLS parsing or negotiation failure at the beginning of a TLS connection
 extern const ErrorDetail::Pointer ERR_DETAIL_TLS_HANDSHAKE;
 
+/// BUG: TLS library succeeded in negotiation without the expected I/O
+extern const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_SUCCESS;
+
+/// BUG: TLS library requested reading while negotiating a TLS connection
+/// with enough data buffered before the start of the negotiation
+extern const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_READ;
+
+/// BUG: TLS library requested writing while negotiating a TLS connection
+/// but Squid code has somehow missed that request
+extern const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_WRITE;
+
 /// other errors that lead to exceptions caught by transactions
 /// (e.g., exceptions thrown by C++ STL)
 extern const ErrorDetail::Pointer ERR_DETAIL_EXCEPTION_OTHER;

@@ -50,6 +50,9 @@ const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_OTHER = new EnumeratedErrorDetai
 const ErrorDetail::Pointer ERR_DETAIL_TUNNEL_TARGET = new EnumeratedErrorDetail("TUNNEL_TARGET");
 const ErrorDetail::Pointer ERR_DETAIL_SSL_BUMP_SPLICE = new EnumeratedErrorDetail("SSL_BUMP_SPLICE");
 const ErrorDetail::Pointer ERR_DETAIL_TLS_HANDSHAKE = new EnumeratedErrorDetail("TLS_HANDSHAKE");
+const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_SUCCESS = new EnumeratedErrorDetail("ERR_DETAIL_UNEXPECTED_SUCCESS");
+const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_READ = new EnumeratedErrorDetail("ERR_DETAIL_UNEXPECTED_READ");
+const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_WRITE = new EnumeratedErrorDetail("ERR_DETAIL_UNEXPECTED_WRITE");
 const ErrorDetail::Pointer ERR_DETAIL_EXCEPTION_OTHER = new EnumeratedErrorDetail("EXCEPTION_OTHER");
 
 /* ErrorDetail */

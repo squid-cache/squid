@@ -2407,50 +2407,28 @@ httpsCreate(const ConnStateData *connState, const Security::ContextPointer &ctx)
     return false;
 }
 
-/**
- * Accepts (or resumes accepting) a TLS connections, scheduling any needed I/O.
- *
- * TODO: Avoid Comm::SetSelect() calls with nil callback? The nil-callback
- * caller claims we just want the TLS library to parse the already available
- * data. Calling SetSelect() with nil callback feels outside that scope. If I am
- * right, then we should probably remove this wrapper, allowing
- * Security::Accept() callers to deal with Security::IoResult::ioWantRead/Write.
- */
-static Security::IoResult
-tlsAttemptHandshake(ConnStateData *conn, PF *callback)
-{
-    const auto result = Security::Accept(*conn->clientConnection);
-    switch (result.category) {
-    case Security::IoResult::ioSuccess:
-        return result;
-
-    case Security::IoResult::ioWantRead:
-        Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, callback, (callback ? conn : nullptr), 0);
-        return result;
-
-    case Security::IoResult::ioWantWrite:
-        Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_WRITE, callback, (callback ? conn : nullptr), 0);
-        return result;
-
-    case Security::IoResult::ioError:
-        break; // fall through to error handling
-    }
-
-    debugs(83, (result.important ? DBG_IMPORTANT : 2), "ERROR: " << result.errorDescription <<
-           " while accepting a TLS connection on " << conn->clientConnection << ": " << result.errorDetail);
-    return result;
-}
-
 /** negotiate an SSL connection */
 static void
 clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
 
-    const auto handshakeResult = tlsAttemptHandshake(conn, clientNegotiateSSL);
-    if (handshakeResult.wantsIo())
-        return; // wait for more I/O (with us as an I/O callback)
-    if (!handshakeResult.successful()) {
+    const auto handshakeResult = Security::Accept(*conn->clientConnection);
+    switch (handshakeResult.category) {
+    case Security::IoResult::ioSuccess:
+        break;
+
+    case Security::IoResult::ioWantRead:
+        Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_READ, clientNegotiateSSL, conn, 0);
+        return;
+
+    case Security::IoResult::ioWantWrite:
+        Comm::SetSelect(conn->clientConnection->fd, COMM_SELECT_WRITE, clientNegotiateSSL, conn, 0);
+        return;
+
+    case Security::IoResult::ioError:
+        debugs(83, (handshakeResult.important ? DBG_IMPORTANT : 2), "ERROR: " << handshakeResult.errorDescription <<
+               " while accepting a TLS connection on " << conn->clientConnection << ": " << handshakeResult.errorDetail);
         // TODO: No ConnStateData::tunnelOnError() on this forward-proxy code
         // path because we cannot know the intended connection target?
         conn->updateError(ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
@@ -3184,25 +3162,11 @@ ConnStateData::startPeekAndSplice()
 
     // We have successfully parsed client Hello, but our TLS handshake parser is
     // forgiving. Now we use a TLS library to parse the same bytes, so that we
-    // can honor on_unsupported_protocol if needed.
-    //
-    // We should have just the client Hello so the tlsAttemptHandshake() should
-    // ask for more data (XXX: why?). And see TODO above the
-    // tlsAttemptHandshake() function definition.
-    const auto handshakeResult = tlsAttemptHandshake(this, nullptr);
-    if (handshakeResult.category == Security::IoResult::ioError) {
-        updateError(ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
-        HttpRequest::Pointer request(http ? http->request : nullptr);
-        if (!clientTunnelOnError(this, context, request, HttpRequestMethod(), ERR_SECURE_ACCEPT_FAIL))
-            clientConnection->close();
-        else {
-            // XXX: See questions in a similar parseTlsHandshake() spot.
-            sslBumpMode = Ssl::bumpSplice;
-            if (http)
-                http->al->ssl.bumpMode = Ssl::bumpSplice;
-        }
-        return;
-    }
+    // can honor on_unsupported_protocol if needed. If there are no errors, we
+    // expect Security::Accept() to ask us to write (our) TLS server Hello.
+    const auto handshakeResult = Security::Accept(*clientConnection);
+    if (handshakeResult.category != Security::IoResult::ioWantWrite)
+        return handleSslBumpHandshakeError(handshakeResult);
 
     // We need to reset inBuf here, to be used by incoming requests in the case
     // of SSL bump
@@ -3210,6 +3174,43 @@ ConnStateData::startPeekAndSplice()
 
     debugs(83, 5, "Peek and splice at step2 done. Start forwarding the request!!! ");
     FwdState::Start(clientConnection, sslServerBump->entry, sslServerBump->request.getRaw(), http ? http->al : NULL);
+}
+
+/// process a problematic Security::Accept() result on the SslBump code path
+void
+ConnStateData::handleSslBumpHandshakeError(const Security::IoResult &handshakeResult)
+{
+    auto errCategory = ERR_NONE;
+    switch (handshakeResult.category) {
+    case Security::IoResult::ioSuccess:
+        updateError(errCategory = ERR_GATEWAY_FAILURE, ERR_DETAIL_UNEXPECTED_SUCCESS);
+
+    case Security::IoResult::ioWantRead:
+        updateError(errCategory = ERR_GATEWAY_FAILURE, ERR_DETAIL_UNEXPECTED_READ);
+        break;
+
+    case Security::IoResult::ioWantWrite:
+        updateError(errCategory = ERR_GATEWAY_FAILURE, ERR_DETAIL_UNEXPECTED_WRITE);
+        break;
+
+    case Security::IoResult::ioError:
+        debugs(83, (handshakeResult.important ? DBG_IMPORTANT : 2), "ERROR: " << handshakeResult.errorDescription <<
+               " while SslBump-accepting a TLS connection on " << clientConnection << ": " << handshakeResult.errorDetail);
+        updateError(errCategory = ERR_SECURE_ACCEPT_FAIL, handshakeResult.errorDetail);
+        break;
+
+    }
+
+    if (!tunnelOnError(HttpRequestMethod(), errCategory))
+        clientConnection->close();
+    else {
+        assert(sslServerBump);
+        // XXX: See questions in a similar parseTlsHandshake() spot.
+        sslBumpMode = Ssl::bumpSplice;
+        const auto context = pipeline.front();
+        if (const auto http = context ? context->http : nullptr)
+            http->al->ssl.bumpMode = Ssl::bumpSplice;
+    }
 }
 
 void

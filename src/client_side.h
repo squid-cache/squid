@@ -28,6 +28,7 @@
 #include "auth/UserRequest.h"
 #endif
 #if USE_OPENSSL
+#include "security/forward.h"
 #include "security/Handshake.h"
 #include "ssl/support.h"
 #endif
@@ -433,6 +434,7 @@ private:
     /// Attempts to add a given TLS context to the cache, replacing the old
     /// same-key context, if any
     void storeTlsContextToCache(const SBuf &cacheKey, Security::ContextPointer &ctx);
+    void handleSslBumpHandshakeError(const Security::IoResult &);
 #endif
 
     /// whether PROXY protocol header is still expected
