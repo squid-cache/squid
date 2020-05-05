@@ -28,20 +28,17 @@ typedef std::map<Security::ErrorCode, const SslErrorEntry *> SslErrors;
 SslErrors TheSslErrors;
 
 static SslErrorEntry TheSslErrorArray[] = {
-    {   SQUID_SSL_ACCEPT,
-        "SQUID_SSL_ACCEPT"
+    {   SQUID_TLS_ERR_ACCEPT,
+        "SQUID_TLS_ERR_ACCEPT"
     },
-    {   SQUID_SSL_CONNECT,
-        "SQUID_SSL_CONNECT"
+    {   SQUID_TLS_ERR_CONNECT,
+        "SQUID_TLS_ERR_CONNECT"
     },
     {   SQUID_X509_V_ERR_INFINITE_VALIDATION,
         "SQUID_X509_V_ERR_INFINITE_VALIDATION"
     },
     {   SQUID_X509_V_ERR_CERT_CHANGE,
         "SQUID_X509_V_ERR_CERT_CHANGE"
-    },
-    {   SQUID_ERR_SSL_HANDSHAKE,
-        "SQUID_ERR_SSL_HANDSHAKE"
     },
     {   SQUID_X509_V_ERR_DOMAIN_MISMATCH,
         "SQUID_X509_V_ERR_DOMAIN_MISMATCH"
@@ -395,6 +392,12 @@ static SslErrorEntry TheSslErrorArray[] = {
     },
 #endif
     { SSL_ERROR_NONE, "SSL_ERROR_NONE"},
+
+    // redirector to support legacy error translations
+    {   SQUID_TLS_ERR_CONNECT,
+        "SQUID_ERR_SSL_HANDSHAKE"
+    },
+
     {SSL_ERROR_NONE, NULL}
 };
 
@@ -521,7 +524,8 @@ Ssl::ParseErrorString(const char *name, Security::Errors &errors)
 
     if (xisdigit(*name)) {
         const long int value = strtol(name, NULL, 0);
-        if (SQUID_SSL_ERROR_MIN <= value && value <= SQUID_SSL_ERROR_MAX) {
+        if ((SQUID_TLS_ERR_OFFSET < value && value < SQUID_TLS_ERR_END) || // custom
+            (value >= 0)) { // an official error, including SSL_ERROR_NONE
             errors.emplace(value);
             return true;
         }
