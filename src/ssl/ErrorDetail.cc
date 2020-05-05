@@ -34,12 +34,6 @@ static SslErrorEntry TheSslErrorArray[] = {
     {   SQUID_SSL_CONNECT,
         "SQUID_SSL_CONNECT"
     },
-    {   SQUID_SSL_CONNECTION_CLOSED,
-        "SQUID_SSL_CONNECTION_CLOSED"
-    },
-    {   SQUID_ERR_SSL_LIB,
-        "SQUID_ERR_SSL_LIB"
-    },
     {   SQUID_X509_V_ERR_INFINITE_VALIDATION,
         "SQUID_X509_V_ERR_INFINITE_VALIDATION"
     },

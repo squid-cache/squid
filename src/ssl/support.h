@@ -38,10 +38,8 @@
  */
 
 // Custom SSL errors; assumes all official errors are positive
-#define SQUID_SSL_ACCEPT -8 // failure to accept a TLS connection
-#define SQUID_SSL_CONNECT -7 // failure to establish a TLS connection
-#define SQUID_SSL_CONNECTION_CLOSED -6 // Remote end sent the "close notify" alert (XXX: Unused?)
-#define SQUID_ERR_SSL_LIB -5
+#define SQUID_SSL_ACCEPT -6 // failure to accept a TLS connection
+#define SQUID_SSL_CONNECT -5 // failure to establish a TLS connection
 #define SQUID_X509_V_ERR_INFINITE_VALIDATION -4
 #define SQUID_X509_V_ERR_CERT_CHANGE -3
 #define SQUID_ERR_SSL_HANDSHAKE -2
