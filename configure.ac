@@ -445,16 +445,18 @@ fi
 
 ## check for atomics library before anything that might need it
 SQUID_STATE_SAVE(LIBATOMIC)
-AC_MSG_CHECKING(library containing __atomic_is_lock_free)
-LIBS="-latomic"
+AC_MSG_CHECKING(whether -latomic is a good idea)
+LIBS="$LIBS -latomic"
 AC_LINK_IFELSE(
   [AC_LANG_SOURCE([[
-    int main(void) {
-        char lockRequired[256];
-        return __atomic_is_lock_free(sizeof(lockRequired),&lockRequired);
+    #include <atomic>
+    struct LockRequired { char data[256]; };
+    int
+    main() {
+        return std::atomic<LockRequired>{}.is_lock_free();
     }
   ]])],
-  [AC_MSG_RESULT(-latomic)
+  [AC_MSG_RESULT(yes)
    ATOMICLIB='-latomic'],
   [AC_MSG_RESULT(no)]
 )
