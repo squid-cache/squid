@@ -139,10 +139,11 @@ static void init_db(void)
 #elif USE_TRIVIALDB
 #if _SQUID_FREEBSD_
     // FreeBSD lacks O_DSYNC, O_SYNC is closest to correct behaviour
-    db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, O_CREAT|O_SYNC, 0666);
+    const auto openFlags = O_CREAT|O_SYNC;
 #else
-    db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, O_CREAT|O_DSYNC, 0666);
+    const auto openFlags = O_CREAT|O_DSYNC;
 #endif
+    db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, openFlags, 0666);
 #endif
     if (!db) {
         fprintf(stderr, "FATAL: %s: Failed to open session db '%s'\n", program_name, db_path);
