@@ -71,16 +71,17 @@ public:
     ErrorDetail(Security::ErrorCode err_no, unsigned long lib_err);
     explicit ErrorDetail(const Security::ErrorCode err_no);
 
-    /* all methods returning `ErrorDetail*` return this */
-
     /// remember errno(3)
-    ErrorDetail *sysError(const int xerrno) { sysErrorNo = xerrno; return this; }
+    void sysError(const int xerrno) { sysErrorNo = xerrno; }
 
-    /// remember SSL_get_error() result
-    ErrorDetail *ioError(const int errorNo) { ioErrorNo = errorNo; return this; }
+    /// Remember the outcome of a TLS I/O function.
+    /// For OpenSSL, these are functions that need SSL_get_error() follow up.
+    void ioError(const int errorNo) { ioErrorNo = errorNo; }
 
-    /// extract and remember ERR_get_error()-reported error(s)
-    ErrorDetail *absorbStackedErrors();
+    // TODO: Rename to absorbLibraryErrors().
+    /// Extract and remember errors stored internally by the library.
+    /// For OpenSSL, these are ERR_get_error()-reported errors.
+    void absorbStackedErrors();
 
     /// extract and remember ERR_get_error()-reported error(s)
     void absorbPeerCertificate(X509 *cert);

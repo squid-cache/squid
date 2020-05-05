@@ -41,6 +41,7 @@ Security::GuardedIo(Comm::Connection &transport, const ErrorCode topError, Fun i
     if (rawResult > 0)
         return IoResult(IoResult::ioSuccess);
 
+    // TODO: Rename to ioError
     const auto ssl_error = SSL_get_error(connection, rawResult);
 
     // quickly handle common, non-erroneous outcomes
@@ -57,15 +58,14 @@ Security::GuardedIo(Comm::Connection &transport, const ErrorCode topError, Fun i
     }
 
     // now we know that we are dealing with a real problem; detail it
-    const Ssl::ErrorDetail::Pointer errorDetail = (new Ssl::ErrorDetail(topError))
-        ->sysError(xerrno) // see the comment about errno below
-        ->ioError(ssl_error)
-        ->absorbStackedErrors();
-
-    // We could restrict errno collection to cases where ssl_error is
+    const Ssl::ErrorDetail::Pointer errorDetail = new Ssl::ErrorDetail(topError);
+    errorDetail->absorbStackedErrors();
+    errorDetail->ioError(ssl_error);
+    // We could restrict errno(3) collection to cases where ssl_error is
     // SSL_ERROR_SYSCALL, ssl_lib_error is 0, and rawResult is negative, but we
     // do not do that in hope that all other cases will either have a useful
-    // errno or a zero errno. The caller is expected to reset errno before I/O.
+    // errno or a zero errno. We reset errno before I/O.
+    errorDetail->sysError(xerrno);
 
     IoResult ioResult(errorDetail);
 
@@ -122,10 +122,11 @@ Security::GuardedIo(Comm::Connection &transport, const ErrorCode topError, Fun i
     }
 
     // now we know that we are dealing with a real problem; detail it
-    const ErrorDetail::Pointer errorDetail = (new Ssl::ErrorDetail(topError))
-        ->sysError(xerrno)
-        ->ioError(rawResult)
-        ->absorbStackedErrors();
+    const Ssl::ErrorDetail::Pointer errorDetail = new Ssl::ErrorDetail(topError);
+    errorDetail->absorbStackedErrors();
+    errorDetail->ioError(ssl_error);
+    errorDetail->sysError(xerrno);
+
     IoResult ioResult(errorDetail);
 
     ioResult.errorDescription = "failure";
@@ -136,7 +137,7 @@ Security::GuardedIo(Comm::Connection &transport, const ErrorCode topError, Fun i
     debugs(1, DBG_CRITICAL, ForceAlert << "BUG: " <<
            "Unexpected TLS I/O in Squid built without a TLS/SSL library");
     assert(false); // we want a stack trace which fatal() does not produce
-    return IoResult(Ssl::ErrorDetail::Pointer(nullptr)); // not reachable
+    return IoResult(nullptr); // not reachable
 #endif
 }
 

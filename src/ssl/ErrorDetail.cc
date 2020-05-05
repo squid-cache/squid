@@ -593,7 +593,8 @@ Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
 
 uint64_t Ssl::ErrorDetail::Generations = 0;
 
-Ssl::ErrorDetail *Ssl::ErrorDetail::absorbStackedErrors()
+void
+Ssl::ErrorDetail::absorbStackedErrors()
 {
     if ((lib_error_no = ERR_get_error())) {
         debugs(83, 7, "got " << asHex(lib_error_no));
@@ -602,7 +603,6 @@ Ssl::ErrorDetail *Ssl::ErrorDetail::absorbStackedErrors()
         while (const auto errorToForget = ERR_get_error())
             debugs(83, 7, "forgot " << asHex(errorToForget));
     }
-    return this;
 }
 
 void Ssl::ErrorDetail::absorbPeerCertificate(X509 * const cert)
