@@ -648,6 +648,8 @@ ipcache_nbgethostbyname_(const char *name, IpCacheLookupForwarder handler)
         /* hit */
         debugs(14, 4, "ipcache_nbgethostbyname: HIT for '" << name << "'");
 
+        ipcacheCycleAddr(name, &i->addrs);
+
         if (i->flags.negcached)
             ++IpcacheStats.negative_hits;
         else
