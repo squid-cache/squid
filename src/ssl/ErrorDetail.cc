@@ -808,8 +808,8 @@ SBuf Ssl::ErrorDetail::brief() const
 {
     SBuf buf(err_code()); // TODO: Upgrade err_code() to return SBuf.
 
-    // hex lib_error_no value can be fed to `openssl errstr` for more info
-    // TODO: Convert this and LFT_SSL_SERVER_CERT_ERRORS to TLS_ERR=0x...
+    // HEX lib_error_no value can be fed to `openssl errstr` for more info.
+    // TODO: Convert this and sslErrorName() in Format.cc to TLS_ERR=<HEX>.
     if (lib_error_no != SSL_ERROR_NONE)
         buf.append(ToSBuf("+SSL_ERR=", lib_error_no));
 
