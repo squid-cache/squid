@@ -41,9 +41,7 @@ public:
 
     /// RefCount<Derived> to RefCount<Base> conversion is always safe
     template <class Base>
-    RefCount(const RefCount<Base> &p) : p_(p.getRaw()) {
-        reference(p);
-    }
+    RefCount(const RefCount<Base> &p) : RefCount(p.getRaw()) {}
 
     RefCount (RefCount &&p) : p_(std::move(p.p_)) {
         p.p_=NULL;
