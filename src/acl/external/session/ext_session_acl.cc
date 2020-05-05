@@ -144,7 +144,6 @@ static void init_db(void)
     db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, O_CREAT|O_DSYNC, 0666);
 #endif
     if (!db) {
-    db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, , 0666);
         fprintf(stderr, "FATAL: %s: Failed to open session db '%s'\n", program_name, db_path);
         shutdown_db();
         exit(EXIT_FAILURE);
