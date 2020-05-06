@@ -447,7 +447,7 @@ AC_DEFUN([LIBATOMIC_CHECKER],[
   AC_LINK_IFELSE([
     AC_LANG_SOURCE([[
       #include <atomic>
-      struct LockRequired { char data[2]; };
+      struct LockRequired { char data[256]; };
       int
       main() {
           return std::atomic<LockRequired>{}.is_lock_free();
