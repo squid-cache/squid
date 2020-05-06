@@ -276,18 +276,32 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
     BIO *b = SSL_get_rbio(session.get());
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
 
-    // In Peek mode, the ClientHello message sent to the server. If the
-    // server resuming a previous (spliced) SSL session with the client,
-    // then probably we are here because local SSL object does not know
-    // anything about the session being resumed.
-    //
-    if (srvBio->bumpMode() == Ssl::bumpPeek && (resumingSession = srvBio->resumingSession())) {
-        // we currently splice all resumed sessions unconditionally
-        // if (const bool spliceResumed = true) {
-        bypassCertValidator();
-        checkForPeekAndSpliceMatched(Ssl::bumpSplice);
-        return;
-        // } // else fall through to find a matching ssl_bump action (with limited info)
+    if (srvBio->bumpMode() == Ssl::bumpPeek) {
+        auto bypassValidator = false;
+        if (srvBio->encryptedCertificates()) {
+            // it is pointless to peek at encrypted certificates
+            //
+            // we currently splice all sessions with encrypted certificates
+            // if (const auto spliceEncryptedCertificates = true) {
+            bypassValidator = true;
+            // } // else fall through to find a matching ssl_bump action (with limited info)
+        } else if (srvBio->resumingSession()) {
+            // In peek mode, the ClientHello message is forwarded to the server.
+            // If the server is resuming a previous (spliced) SSL session with
+            // the client, then probably we are here because our local SSL
+            // object does not know anything about the session being resumed.
+            //
+            // we currently splice all resumed sessions
+            // if (const auto spliceResumed = true) {
+            bypassValidator = true;
+            // } // else fall through to find a matching ssl_bump action (with limited info)
+        }
+
+        if (bypassValidator) {
+            bypassCertValidator();
+            checkForPeekAndSpliceMatched(Ssl::bumpSplice);
+            return;
+        }
     }
 
     // If we are in peek-and-splice mode and still we did not write to
