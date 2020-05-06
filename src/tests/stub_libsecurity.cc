@@ -28,7 +28,7 @@ Security::EncryptorAnswer::~EncryptorAnswer() {}
 std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorAnswer &) STUB_RETVAL(os)
 
 #include "security/Handshake.h"
-Security::HandshakeParser::HandshakeParser() STUB
+Security::HandshakeParser::HandshakeParser(MessageSource) STUB
 bool Security::HandshakeParser::parseHello(const SBuf &) STUB_RETVAL(false)
 
 #include "security/KeyData.h"
