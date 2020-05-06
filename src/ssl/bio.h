@@ -143,6 +143,10 @@ public:
 
     bool resumingSession();
 
+    /// whether the server encrypts its certificate (e.g., TLS v1.3)
+    /// \retval false the server uses plain certs or its intent is unknown
+    bool encryptedCertificates() const;
+
     /// The write hold state
     bool holdWrite() const {return holdWrite_;}
     /// Enables or disables the write hold state

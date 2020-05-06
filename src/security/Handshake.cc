@@ -106,11 +106,11 @@ static Extensions SupportedExtensions();
 
 } // namespace Security
 
-/// Convenience helper: We parse ProtocolVersion but store "int".
+/// parse TLS ProtocolVersion (uint16) and convert it to AnyP::ProtocolVersion
 static AnyP::ProtocolVersion
-ParseProtocolVersion(Parser::BinaryTokenizer &tk)
+ParseProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel = ".version")
 {
-    Parser::BinaryTokenizerContext context(tk, ".version");
+    Parser::BinaryTokenizerContext context(tk, contextLabel);
     uint8_t vMajor = tk.uint8(".major");
     uint8_t vMinor = tk.uint8(".minor");
     if (vMajor == 0 && vMinor == 2)
@@ -187,10 +187,11 @@ Security::TlsDetails::TlsDetails():
 
 /* Security::HandshakeParser */
 
-Security::HandshakeParser::HandshakeParser():
+Security::HandshakeParser::HandshakeParser(const MessageSource source):
     details(new TlsDetails),
     state(atHelloNone),
     resumingSession(false),
+    messageSource(source),
     currentContentType(0),
     done(nullptr),
     expectingModernRecords(false)
@@ -285,12 +286,19 @@ Security::HandshakeParser::parseChangeCipherCpecMessage()
 {
     Must(currentContentType == ContentType::ctChangeCipherSpec);
     // We are currently ignoring Change Cipher Spec Protocol messages.
-    skipMessage("ChangeCipherCpec msg [fragment]");
+    skipMessage("ChangeCipherSpec msg [fragment]");
 
-    // Everything after the ChangeCipherCpec message may be encrypted.
-    // Continuing parsing is pointless. Stop here.
+    // In TLS v1.2 and earlier, ChangeCipherSpec is sent after Hello (when
+    // tlsSupportedVersion is already known) and indicates session resumption.
+    // In later TLS versions, ChangeCipherSpec may be sent before and after
+    // Hello, but it is unused for session resumption and should be ignored.
+    if (!details->tlsSupportedVersion || Tls1p3orLater(details->tlsSupportedVersion))
+        return;
+
     resumingSession = true;
-    done = "ChangeCipherCpec";
+
+    // Everything after the ChangeCipherSpec message may be encrypted. Stop.
+    done = "ChangeCipherSpec in v1.2-";
 }
 
 void
@@ -316,14 +324,19 @@ Security::HandshakeParser::parseHandshakeMessage()
     switch (message.msg_type) {
     case HandshakeType::hskClientHello:
         Must(state < atHelloReceived);
+        Must(messageSource == fromClient);
         Security::HandshakeParser::parseClientHelloHandshakeMessage(message.msg_body);
         state = atHelloReceived;
         done = "ClientHello";
         return;
     case HandshakeType::hskServerHello:
         Must(state < atHelloReceived);
+        Must(messageSource == fromServer);
         parseServerHelloHandshakeMessage(message.msg_body);
         state = atHelloReceived;
+        // for TLSv1.3 and later, anything after the server Hello is encrypted
+        if (Tls1p3orLater(details->tlsSupportedVersion))
+            done = "ServerHello in v1.3+";
         return;
     case HandshakeType::hskCertificate:
         Must(state < atCertificatesReceived);
@@ -424,6 +437,10 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
         case 35: // SessionTicket TLS Extension; RFC 5077
             details->tlsTicketsExtension = true;
             details->hasTlsTicket = !extension.data.isEmpty();
+            break;
+        case 43: // supported_versions extension; RFC 8446
+            parseSupportedVersionsExtension(extension.data);
+            break;
         case 13172: // Next Protocol Negotiation Extension (expired draft?)
         default:
             break;
@@ -502,6 +519,78 @@ Security::HandshakeParser::parseSniExtension(const SBuf &extensionData) const
         // according to RFC 6066, MUST begin with a 16-bit length field
     }
     return SBuf(); // SNI extension lacks host_name
+}
+
+/// RFC 8446 Section 4.2.1: SupportedVersions extension
+void
+Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extensionData) const
+{
+    // Upon detecting a quoted RFC MUST violation, this parser immediately
+    // returns, ignoring the entire extension and resulting in Squid relying on
+    // the legacy_version field value or another (valid) supported_versions
+    // extension. The alternative would be to reject the whole handshake as
+    // invalid. Deployment experience will show which alternative is the best.
+
+    // Please note that several of these MUSTs also imply certain likely
+    // handling of a hypothetical next TLS version (e.g., v1.4).
+
+    // RFC 8446 Section 4.1.2:
+    // In TLS 1.3, the client indicates its version preferences in the
+    // "supported_versions" extension (Section 4.2.1) and the legacy_version
+    // field MUST be set to 0x0303, which is the version number for TLS 1.2.
+    //
+    // RFC 8446 Section 4.2.1:
+    // A server which negotiates TLS 1.3 MUST respond by sending a
+    // "supported_versions" extension containing the selected version value
+    // (0x0304).  It MUST set the ServerHello.legacy_version field to 0x0303
+    // (TLS 1.2).
+    //
+    // Ignore supported_versions senders violating legacy_version MUSTs above:
+    if (details->tlsSupportedVersion != AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 2))
+        return;
+
+    AnyP::ProtocolVersion supportedVersionMax;
+    if (messageSource == fromClient) {
+        Parser::BinaryTokenizer tkList(extensionData);
+        Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
+        while (!tkVersions.atEnd()) {
+            const auto version = ParseProtocolVersion(tkVersions, "supported_version");
+            if (!supportedVersionMax || TlsVersionEarlierThan(supportedVersionMax, version))
+                supportedVersionMax = version;
+        }
+
+        // ignore empty supported_versions
+        if (!supportedVersionMax)
+            return;
+
+        // supportedVersionMax here may be "earlier" than tlsSupportedVersion: A
+        // TLS v1.3 client may try to negotiate a _legacy_ version X with a TLS
+        // v1.3 server by sending supported_versions containing just X.
+    } else {
+        assert(messageSource == fromServer);
+        Parser::BinaryTokenizer tkVersion(extensionData);
+        const auto version = ParseProtocolVersion(tkVersion, "selected_version");
+        // RFC 8446 Section 4.2.1:
+        // A server which negotiates a version of TLS prior to TLS 1.3 [...]
+        // MUST NOT send the "supported_versions" extension.
+        if (Tls1p2orEarlier(version))
+            return;
+        supportedVersionMax = version;
+    }
+
+    // We overwrite Hello-derived legacy_version because the following MUSTs
+    // indicate that it is ignored in the presence of valid supported_versions
+    // as far as the negotiated version is concerned. For simplicity sake, we
+    // may also overwrite previous valid supported_versions extensions (if any).
+    //
+    // RFC 8446 Section 4.2.1:
+    // If this extension is present in the ClientHello, servers MUST NOT use the
+    // ClientHello.legacy_version value for version negotiation and MUST use
+    // only the "supported_versions" extension to determine client preferences.
+    // Servers MUST only select a version of TLS present in that extension
+    debugs(83, 7, "found " << supportedVersionMax);
+    assert(supportedVersionMax);
+    details->tlsSupportedVersion = supportedVersionMax;
 }
 
 void
@@ -646,6 +735,9 @@ Security::SupportedExtensions()
 #endif
 #if defined(TLSEXT_TYPE_next_proto_neg) // 13172
     extensions.insert(TLSEXT_TYPE_next_proto_neg);
+#endif
+#if defined(TLSEXT_TYPE_supported_versions) // 43
+    extensions.insert(TLSEXT_TYPE_supported_versions);
 #endif
 
     /*
