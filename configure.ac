@@ -443,23 +443,34 @@ if test "x$with_dl" != "xno"; then
   AC_CHECK_LIB(dl, dlopen)
 fi
 
+AC_DEFUN([LIBATOMIC_CHECKER],[
+  AC_LINK_IFELSE([
+    AC_LANG_SOURCE([[
+      #include <atomic>
+      struct LockRequired { char data[2]; };
+      int
+      main() {
+          return std::atomic<LockRequired>{}.is_lock_free();
+      }
+  ]])],[
+    AC_MSG_RESULT(yes)
+    libatomic_checker_result="yes"],[
+    AC_MSG_RESULT(no)
+    libatomic_checker_result="no"
+])])
+
 ## check for atomics library before anything that might need it
 SQUID_STATE_SAVE(LIBATOMIC)
-AC_MSG_CHECKING(whether -latomic is a good idea)
-LIBS="$LIBS -latomic"
-AC_LINK_IFELSE(
-  [AC_LANG_SOURCE([[
-    #include <atomic>
-    struct LockRequired { char data[256]; };
-    int
-    main() {
-        return std::atomic<LockRequired>{}.is_lock_free();
-    }
-  ]])],
-  [AC_MSG_RESULT(yes)
-   ATOMICLIB='-latomic'],
-  [AC_MSG_RESULT(no)]
-)
+AC_MSG_CHECKING(whether linking without -latomic works)
+LIBATOMIC_CHECKER()
+if test "x$libatomic_checker_result" = "xno"; then
+  AC_MSG_CHECKING(whether linking with -latomic works)
+  LIBS="$LIBS -latomic"
+  LIBATOMIC_CHECKER()
+  if test "x$libatomic_checker_result" = "xyes"; then
+    ATOMICLIB="-latomic"
+  fi
+fi
 SQUID_STATE_ROLLBACK(LIBATOMIC)
 AC_SUBST(ATOMICLIB)
 
