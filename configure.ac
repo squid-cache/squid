@@ -444,6 +444,7 @@ if test "x$with_dl" != "xno"; then
 fi
 
 AC_DEFUN([LIBATOMIC_CHECKER],[
+  AC_MSG_CHECKING(whether linking $1 -latomic works)
   AC_LINK_IFELSE([
     AC_LANG_SOURCE([[
       #include <atomic>
@@ -461,12 +462,10 @@ AC_DEFUN([LIBATOMIC_CHECKER],[
 
 ## check for atomics library before anything that might need it
 SQUID_STATE_SAVE(LIBATOMIC)
-AC_MSG_CHECKING(whether linking without -latomic works)
-LIBATOMIC_CHECKER()
+LIBATOMIC_CHECKER(without)
 if test "x$libatomic_checker_result" = "xno"; then
-  AC_MSG_CHECKING(whether linking with -latomic works)
   LIBS="$LIBS -latomic"
-  LIBATOMIC_CHECKER()
+  LIBATOMIC_CHECKER(with)
   if test "x$libatomic_checker_result" = "xyes"; then
     ATOMICLIB="-latomic"
   fi
