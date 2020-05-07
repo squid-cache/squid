@@ -47,6 +47,8 @@ public:
         EntryValue *value = nullptr; ///< A pointer to the stored value
         time_t date = 0; ///< The date the entry created
     };
+
+    /// container for LRU algorithm management
     typedef std::list<Entry *, PoolingAllocator<Entry *> > Queue;
 
     typedef std::pair<Key, typename Queue::iterator> MapPair;
@@ -84,7 +86,7 @@ private:
     size_t memoryCountedFor(const Key &, const EntryValue *);
 
     Map storage; ///< The Key/value * pairs
-    Queue index; ///< LRU cache index
+    Queue lruIndex; ///< LRU cache index
     int ttl = 0;          ///< TTL >0 for caching, == 0 cache is disabled, <0 store for ever
     size_t memLimit_ = 0; ///< The maximum memory to use
     size_t memUsed_ = 0;  ///< The amount of memory currently used
@@ -101,7 +103,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::ClpMap(int aTtl, size_t aSize) :
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 ClpMap<Key, EntryValue, MemoryUsedByEV>::~ClpMap()
 {
-    for (auto i : index)
+    for (auto i : lruIndex)
         delete i;
 }
 
@@ -127,9 +129,9 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::findEntry(const Key &key, ClpMap::MapIt
     if (i == storage.end()) {
         return;
     }
-    index.push_front(*(i->second));
-    index.erase(i->second);
-    i->second = index.begin();
+    lruIndex.push_front(*(i->second));
+    lruIndex.erase(i->second);
+    i->second = lruIndex.begin();
 
     if (const Entry *e = *i->second) {
         if (!expired(*e))
@@ -181,8 +183,8 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t)
         return false;
     trim(wantSz);
 
-    index.push_front(new Entry(key, t));
-    storage.insert(MapPair(key, index.begin()));
+    lruIndex.push_front(new Entry(key, t));
+    storage.insert(MapPair(key, lruIndex.begin()));
 
     ++entries_;
     memUsed_ += wantSz;
@@ -206,7 +208,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::del(ClpMap::MapIterator const &i)
     if (i != storage.end()) {
         Entry *e = *i->second;
         const auto sz = memoryCountedFor(e->key, e->value);
-        index.erase(i->second);
+        lruIndex.erase(i->second);
         storage.erase(i);
         delete e;
         --entries_;
@@ -230,9 +232,9 @@ void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::trim(size_t wantSpace)
 {
     while (memLimit() < (memoryUsed() + wantSpace)) {
-        auto i = index.end();
+        auto i = lruIndex.end();
         --i;
-        if (i != index.end()) {
+        if (i != lruIndex.end()) {
             del((*i)->key);
         }
     }
@@ -246,9 +248,9 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::touch(ClpMap::MapIterator const &i)
     if (ttl == 0 || memLimit() == 0)
         return;
 
-    index.push_front(*(i->second));
-    index.erase(i->second);
-    i->second = index.begin();
+    lruIndex.push_front(*(i->second));
+    lruIndex.erase(i->second);
+    i->second = lruIndex.begin();
 }
 
 #endif /* SQUID__SRC_BASE_CLPMAP_H */
