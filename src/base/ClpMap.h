@@ -9,11 +9,13 @@
 #ifndef SQUID__SRC_BASE_CLPMAP_H
 #define SQUID__SRC_BASE_CLPMAP_H
 
-#include "SquidTime.h"
 #include "mem/PoolingAllocator.h"
+#include "sbuf/Algorithms.h"
+#include "SquidTime.h"
 
+#include <functional>
 #include <list>
-#include <map>
+#include <unordered_map>
 
 template<class EntryValue>
 size_t
@@ -47,10 +49,10 @@ public:
     };
     typedef std::list<Entry *, PoolingAllocator<Entry *> > Queue;
 
-    /// key:queue_item mapping for fast lookups by key
-    typedef std::map<Key, typename Queue::iterator> Map;
-    typedef typename Map::iterator MapIterator;
     typedef std::pair<Key, typename Queue::iterator> MapPair;
+    /// key:queue_item mapping for fast lookups by key
+    typedef std::unordered_map<Key, typename Queue::iterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapPair> > Map;
+    typedef typename Map::iterator MapIterator;
 
     ClpMap(int ttl, size_t size);
     ~ClpMap();
