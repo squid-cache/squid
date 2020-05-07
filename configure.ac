@@ -447,10 +447,10 @@ AC_DEFUN([LIBATOMIC_CHECKER],[
   AC_MSG_CHECKING(whether linking $1 -latomic works)
   AC_LINK_IFELSE([
     AC_LANG_SOURCE([[
-      #include <atomic>
+#include <atomic>
       struct LockRequired { char data[256]; };
       int
-      main() {
+      main(int, char **) {
           return std::atomic<LockRequired>{}.is_lock_free();
       }
   ]])],[
@@ -463,13 +463,12 @@ AC_DEFUN([LIBATOMIC_CHECKER],[
 ## check for atomics library before anything that might need it
 SQUID_STATE_SAVE(LIBATOMIC)
 LIBATOMIC_CHECKER(without)
-if test "x$libatomic_checker_result" = "xno"; then
+AS_IF([test "x$libatomic_checker_result" = "xno"],[
   LIBS="$LIBS -latomic"
   LIBATOMIC_CHECKER(with)
-  if test "x$libatomic_checker_result" = "xyes"; then
+  AS_IF([test "x$libatomic_checker_result" = "xyes"],[
     ATOMICLIB="-latomic"
-  fi
-fi
+])])
 SQUID_STATE_ROLLBACK(LIBATOMIC)
 AC_SUBST(ATOMICLIB)
 
