@@ -46,12 +46,11 @@ public:
         time_t date = 0; ///< The date the entry created
     };
     typedef std::list<Entry *, PoolingAllocator<Entry *> > Queue;
-    typedef typename Queue::iterator QueueIterator;
 
     /// key:queue_item mapping for fast lookups by key
-    typedef std::map<Key, QueueIterator> Map;
+    typedef std::map<Key, typename Queue::iterator> Map;
     typedef typename Map::iterator MapIterator;
-    typedef std::pair<Key, QueueIterator> MapPair;
+    typedef std::pair<Key, typename Queue::iterator> MapPair;
 
     ClpMap(int ttl, size_t size);
     ~ClpMap();
@@ -100,9 +99,8 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::ClpMap(int aTtl, size_t aSize) :
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 ClpMap<Key, EntryValue, MemoryUsedByEV>::~ClpMap()
 {
-    for (QueueIterator i = index.begin(); i != index.end(); ++i) {
-        delete *i;
-    }
+    for (auto i : index)
+        delete i;
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
@@ -230,7 +228,7 @@ void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::trim(size_t wantSpace)
 {
     while (memLimit() < (memoryUsed() + wantSpace)) {
-        QueueIterator i = index.end();
+        auto i = index.end();
         --i;
         if (i != index.end()) {
             del((*i)->key);
