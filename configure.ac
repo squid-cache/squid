@@ -448,10 +448,10 @@ AC_DEFUN([LIBATOMIC_CHECKER],[
   AC_LINK_IFELSE([
     AC_LANG_SOURCE([[
 #include <atomic>
-      struct LockRequired { char data[256]; };
+#include <cstdint>
       int
       main(int, char **) {
-          return std::atomic<LockRequired>{}.is_lock_free();
+          return std::atomic<uint64_t>{}.is_lock_free() ? 0 : 1;
       }
   ]])],[
     AC_MSG_RESULT(yes)
