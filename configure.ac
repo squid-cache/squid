@@ -467,7 +467,8 @@ AS_IF([test "x$libatomic_checker_result" = "xno"],[
   LIBS="$LIBS -latomic"
   LIBATOMIC_CHECKER(with)
   AS_IF([test "x$libatomic_checker_result" = "xyes"],[
-    ATOMICLIB="-latomic"
+    ATOMICLIB="-latomic"],[
+    AC_MSG_ERROR([Required library libatomic not found.])
 ])])
 SQUID_STATE_ROLLBACK(LIBATOMIC)
 AC_SUBST(ATOMICLIB)
