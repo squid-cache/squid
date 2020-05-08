@@ -39,9 +39,11 @@ public:
     public:
         Entry(const Key &aKey, EntryValue *t): key(aKey), value(t), date(squid_curtime) {}
         ~Entry() {delete value;}
+        Entry(Entry &&) = default;
+        Entry & operator = (Entry &&) = default;
     private:
-        Entry(Entry &);
-        Entry & operator = (Entry &);
+        Entry(const Entry &) = delete;
+        Entry & operator = (const Entry &) = delete;
     public:
         Key key; ///< the key of entry
         EntryValue *value = nullptr; ///< A pointer to the stored value
@@ -51,13 +53,13 @@ public:
     /// container for LRU algorithm management
     typedef std::list<Entry *, PoolingAllocator<Entry *> > Queue;
 
-    typedef std::pair<Key, typename Queue::iterator> MapPair;
+    typedef std::pair<Key, Entry> MapPair;
     /// key:queue_item mapping for fast lookups by key
-    typedef std::unordered_map<Key, typename Queue::iterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapPair> > Map;
+    typedef std::unordered_map<Key, Entry, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapPair> > Map;
     typedef typename Map::iterator MapIterator;
 
     ClpMap(int ttl, size_t size);
-    ~ClpMap();
+    ~ClpMap() = default;
     /// Search for an entry, and return a pointer
     EntryValue *get(const Key &key);
     /// Add an entry to the map
@@ -101,13 +103,6 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::ClpMap(int aTtl, size_t aSize) :
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-ClpMap<Key, EntryValue, MemoryUsedByEV>::~ClpMap()
-{
-    for (auto i : lruIndex)
-        delete i;
-}
-
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(size_t aSize)
 {
@@ -129,15 +124,12 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::findEntry(const Key &key, ClpMap::MapIt
     if (i == storage.end()) {
         return;
     }
-    lruIndex.push_front(*(i->second));
-    lruIndex.erase(i->second);
-    i->second = lruIndex.begin();
 
-    if (const Entry *e = *i->second) {
-        if (!expired(*e))
-            return;
-        // else fall through to cleanup
-    }
+    touch(i); // update LRU state
+
+    if (!expired(i->second))
+        return;
+    // else fall through to cleanup
 
     del(i);
     i = storage.end();
@@ -151,8 +143,8 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::get(const Key &key)
     findEntry(key, i);
     if (i != storage.end()) {
         touch(i);
-        Entry *e = *i->second;
-        return e->value;
+        const Entry &e = i->second;
+        return e.value;
     }
     return NULL;
 }
@@ -183,8 +175,9 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t)
         return false;
     trim(wantSz);
 
-    lruIndex.push_front(new Entry(key, t));
-    storage.insert(MapPair(key, lruIndex.begin()));
+    auto result = storage.emplace(key, Entry(key, t));
+    assert(result.second);
+    lruIndex.emplace_front(&result.first->second);
 
     ++entries_;
     memUsed_ += wantSz;
@@ -206,11 +199,10 @@ bool
 ClpMap<Key, EntryValue, MemoryUsedByEV>::del(ClpMap::MapIterator const &i)
 {
     if (i != storage.end()) {
-        Entry *e = *i->second;
+        Entry *e = &i->second;
         const auto sz = memoryCountedFor(e->key, e->value);
-        lruIndex.erase(i->second);
+        lruIndex.remove(e);
         storage.erase(i);
-        delete e;
         --entries_;
         memUsed_ -= sz;
         return true;
@@ -248,9 +240,9 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::touch(ClpMap::MapIterator const &i)
     if (ttl == 0 || memLimit() == 0)
         return;
 
-    lruIndex.push_front(*(i->second));
-    lruIndex.erase(i->second);
-    i->second = lruIndex.begin();
+    // XXX: optimize to avoid allocation cycle within the Queue container
+    lruIndex.remove(&i->second);
+    lruIndex.emplace_front(&i->second);
 }
 
 #endif /* SQUID__SRC_BASE_CLPMAP_H */
