@@ -125,10 +125,10 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::findEntry(const Key &key, ClpMap::MapIt
         return;
     }
 
-    touch(i); // update LRU state
-
-    if (!expired(i->second))
+    if (!expired(i->second)) {
+        touch(i); // update LRU state
         return;
+    }
     // else fall through to cleanup
 
     del(i);
@@ -142,7 +142,6 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::get(const Key &key)
     MapIterator i;
     findEntry(key, i);
     if (i != storage.end()) {
-        touch(i);
         const Entry &e = i->second;
         return e.value;
     }
@@ -240,9 +239,10 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::touch(ClpMap::MapIterator const &i)
     if (ttl == 0 || memLimit() == 0)
         return;
 
-    // XXX: optimize to avoid allocation cycle within the Queue container
-    lruIndex.remove(&i->second);
-    lruIndex.emplace_front(&i->second);
+    auto pos = std::find(lruIndex.begin(), lruIndex.end(), &i->second);
+    if (pos != lruIndex.begin()) {
+        lruIndex.splice(lruIndex.begin(), lruIndex, pos, std::next(pos));
+    }
 }
 
 #endif /* SQUID__SRC_BASE_CLPMAP_H */
