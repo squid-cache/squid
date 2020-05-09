@@ -32,7 +32,7 @@ void RegisterMaker(TypeName typeName, Maker maker);
 
 } // namespace Acl
 
-class acl_proxy_auth_match_cache;
+class acl_proxy_auth_match_cache_entry;
 
 /// A configurable condition. A node in the ACL expression tree.
 /// Can evaluate itself in FilledChecklist context.
@@ -75,7 +75,8 @@ public:
     virtual bool empty() const = 0;
     virtual bool valid() const;
 
-    int cacheMatchAcl(std::list<acl_proxy_auth_match_cache> &cache, ACLChecklist *);
+    using proxy_auth_match_cache = std::list<acl_proxy_auth_match_cache_entry>;
+    int cacheMatchAcl(proxy_auth_match_cache &cache, ACLChecklist *);
     virtual int matchForCache(ACLChecklist *checklist);
 
     virtual void prepareForUse() {}
@@ -185,10 +186,10 @@ operator <<(std::ostream &o, const Acl::Answer a)
 }
 
 /// \ingroup ACLAPI
-class acl_proxy_auth_match_cache
+class acl_proxy_auth_match_cache_entry
 {
 public:
-    acl_proxy_auth_match_cache(int matchRv, void * aclData) :
+    acl_proxy_auth_match_cache_entry(int matchRv, void * aclData) :
         matchrv(matchRv),
         acl_data(aclData)
     {}
