@@ -77,6 +77,8 @@ public:
     }
 
     void userInfo(const SBuf &s) {userInfo_=s; touch();}
+    /// \returns raw userinfo subcomponent (or an empty string)
+    /// the caller is responsible for caller-specific encoding
     const SBuf &userInfo() const {return userInfo_;}
 
     void host(const char *src);
@@ -99,9 +101,10 @@ public:
     const SBuf &path() const;
 
     /**
-     * Merge a relative-URL path into the existing URI details.
+     * Merge a relative-path URL into the existing URI details.
+     * Implements RFC 3986 section 5.2.3
      *
-     * It is assumed that you have already ensured that the addition is relative.
+     * The caller must ensure relUrl is a valid relative-path.
      */
     void addRelativePath(const char *relUrl);
 
