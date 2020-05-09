@@ -50,13 +50,15 @@ public:
         time_t expires = 0; ///< When the entry is to be removed
     };
 
-    /// container for LRU algorithm management
-    typedef std::list<Entry *, PoolingAllocator<Entry *> > Queue;
+    /// container for stored data
+    typedef std::list<Entry, PoolingAllocator<Entry> > Storage;
+    typedef typename Storage::iterator StorageIterator;
 
-    typedef std::pair<Key, Entry> MapPair;
+    /// Key:Entry* mapping for fast lookups by key
+    typedef std::pair<Key, StorageIterator> MapItem;
     /// key:queue_item mapping for fast lookups by key
-    typedef std::unordered_map<Key, Entry, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapPair> > Map;
-    typedef typename Map::iterator MapIterator;
+    typedef std::unordered_map<Key, StorageIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapItem> > KeyMapping;
+    typedef typename KeyMapping::iterator KeyMapIterator;
 
     ClpMap(int ttl, size_t size);
     ~ClpMap() = default;
@@ -84,13 +86,16 @@ private:
 
     bool expired(const Entry &e) const;
     void trim(size_t wantSpace = 0);
-    void touch(const MapIterator &i);
-    bool del(const MapIterator &i);
-    void findEntry(const Key &key, ClpMap::MapIterator &i);
+    bool del(const KeyMapIterator &);
+    void findEntry(const Key &, KeyMapIterator &);
     size_t memoryCountedFor(const Key &, const EntryValue *);
 
-    Map storage; ///< The Key/value * pairs
-    Queue lruIndex; ///< LRU cache index
+    /// The {key, value, ttl} tuples.
+    /// Currently stored and maintained in LRU sequence.
+    Storage data;
+
+    /// index of stored data by key
+    KeyMapping index;
 
     /// TTL to use if none provided to add(). 0 to disable caching.
     int defaultTtl = std::numeric_limits<int>::max;
@@ -122,31 +127,33 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(size_t aSize)
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 void
-ClpMap<Key, EntryValue, MemoryUsedByEV>::findEntry(const Key &key, ClpMap::MapIterator &i)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::findEntry(const Key &key, KeyMapIterator &i)
 {
-    i = storage.find(key);
-    if (i == storage.end()) {
+    i = index.find(key);
+    if (i == index.end()) {
         return;
     }
 
-    if (!expired(i->second)) {
-        touch(i); // update LRU state
+    auto &e = (*i).second;
+    if (!expired(*e)) {
+        if (e != data.begin())
+            data.splice(data.begin(), data, e, std::next(e));
         return;
     }
     // else fall through to cleanup
 
     del(i);
-    i = storage.end();
+    i = index.end();
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 EntryValue *
 ClpMap<Key, EntryValue, MemoryUsedByEV>::get(const Key &key)
 {
-    MapIterator i;
+    KeyMapIterator i;
     findEntry(key, i);
-    if (i != storage.end()) {
-        const Entry &e = i->second;
+    if (i != index.end()) {
+        const Entry &e = *(i->second);
         return e.value;
     }
     return NULL;
@@ -158,7 +165,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::memoryCountedFor(const Key &k, const En
 {
     // TODO: handle Entry which change size while stored
     size_t entrySz = sizeof(Entry) + MemoryUsedByEV(v) + k.length();
-    return sizeof(MapPair) + k.length() + entrySz;
+    return sizeof(MapItem) + k.length() + entrySz;
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
@@ -185,9 +192,8 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, int 
         return false;
     trim(wantSz);
 
-    auto result = storage.emplace(key, Entry(key, t, ttl));
-    assert(result.second);
-    lruIndex.emplace_front(&result.first->second);
+    data.emplace_front(key, t, ttl);
+    index.emplace(key, data.begin());
 
     ++entries_;
     memUsed_ += wantSz;
@@ -203,13 +209,13 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::expired(const ClpMap::Entry &entry) con
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 bool
-ClpMap<Key, EntryValue, MemoryUsedByEV>::del(ClpMap::MapIterator const &i)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::del(const KeyMapIterator &i)
 {
-    if (i != storage.end()) {
-        Entry *e = &i->second;
+    if (i != index.end()) {
+        auto &e = (*i).second;
         const auto sz = memoryCountedFor(e->key, e->value);
-        lruIndex.remove(e);
-        storage.erase(i);
+        data.erase(e);
+        index.erase(i);
         --entries_;
         memUsed_ -= sz;
         return true;
@@ -221,7 +227,7 @@ template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)
 bool
 ClpMap<Key, EntryValue, MemoryUsedByEV>::del(const Key &key)
 {
-    MapIterator i;
+    KeyMapIterator i;
     findEntry(key, i);
     return del(i);
 }
@@ -231,25 +237,11 @@ void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::trim(size_t wantSpace)
 {
     while (memLimit() < (memoryUsed() + wantSpace)) {
-        auto i = lruIndex.end();
+        auto i = data.end();
         --i;
-        if (i != lruIndex.end()) {
-            del((*i)->key);
+        if (i != data.end()) {
+            del(i->key);
         }
-    }
-}
-
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-void
-ClpMap<Key, EntryValue, MemoryUsedByEV>::touch(ClpMap::MapIterator const &i)
-{
-    // this must not be done when nothing is being cached.
-    if (defaultTtl == 0 || memLimit() == 0)
-        return;
-
-    auto pos = std::find(lruIndex.begin(), lruIndex.end(), &i->second);
-    if (pos != lruIndex.begin()) {
-        lruIndex.splice(lruIndex.begin(), lruIndex, pos, std::next(pos));
     }
 }
 
