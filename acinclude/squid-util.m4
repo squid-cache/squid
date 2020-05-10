@@ -175,10 +175,10 @@ AC_DEFUN([SQUID_AUTO_LIB],[
   AC_ARG_WITH([$1],AS_HELP_STRING([--without-$1],[Compile without the $2 library.]),[
     AS_CASE(["$withval"],[yes|no],,[
       AS_IF([test ! -d "$withval"],AC_MSG_ERROR([--with-$1 path does not point to a directory]))
-      set with_$squid_auto_lib = yes
-      AS_IF([test -d "$withval/lib64"],[$3_PATH += "-L$withval/lib64"])
-      AS_IF([test -d "$withval/lib"],[$3_PATH += "-L$withval/lib"])
-      $3_CFLAGS="-I$withval/include"
+      set with_$squid_auto_lib=yes
+      AS_IF([test -d "$withval/lib64"],[$3_PATH+="-L$withval/lib64"])
+      AS_IF([test -d "$withval/lib"],[$3_PATH+="-L$withval/lib"])
+      AS_IF([test -d "$withval/include"],[$3_CFLAGS+="-I$withval/include"])
     ])
   ])
   unset squid_auto_lib
@@ -186,14 +186,14 @@ AC_DEFUN([SQUID_AUTO_LIB],[
 dnl same as SQUID_AUTO_LIB but for default-disabled libraries
 AC_DEFUN([SQUID_OPTIONAL_LIB],[
   squid_auto_lib=`echo $1|tr "\-" "_"`
-  set with_$squid_auto_lib = no
+  set with_$squid_auto_lib=no
   AC_ARG_WITH([$1],AS_HELP_STRING([--with-$1],[Compile with the $2 library.]),[
-    AS_CASE(["$with_$1"],[yes|no],,[
-      AS_IF([test ! -d "$with_$1"],AC_MSG_ERROR([--with-$1 path does not point to a directory]))
-      with_$squid_auto_lib=yes
-      AS_IF([test -d "$withval/lib64"],[$3_PATH += "-L$withval/lib64"])
-      AS_IF([test -d "$withval/lib"],[$3_PATH += "-L$withval/lib"])
-      $3_CFLAGS="-I$withval/include"
+    AS_CASE(["$withval"],[yes|no],,[
+      AS_IF([test ! -d "$withval"],AC_MSG_ERROR([--with-$1 path does not point to a directory]))
+      set with_$squid_auto_lib=yes
+      AS_IF([test -d "$withval/lib64"],[$3_PATH+="-L$withval/lib64"])
+      AS_IF([test -d "$withval/lib"],[$3_PATH+="-L$withval/lib"])
+      AS_IF([test -d "$withval/include"],[$3_CFLAGS+="-I$withval/include"])
     ])
   ])
   unset squid_auto_lib
