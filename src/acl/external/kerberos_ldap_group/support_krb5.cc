@@ -469,7 +469,7 @@ krb5_create_cache(char *domain, char *service_principal_name)
                 // overwrite limitation of enctypes
 #if USE_HEIMDAL_KRB5
                 creds->session.keytype = 0;
-                if (creds->session.keyvalue.length>0)
+                if (creds->session.keyvalue.length > 0)
                     krb5_free_keyblock_contents(kparam.context, &creds->session);
 #else
                 creds->keyblock.enctype = 0;
