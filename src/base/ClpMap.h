@@ -37,7 +37,7 @@ public:
     class Entry
     {
     public:
-        Entry(const Key &aKey, EntryValue *t): key(aKey), value(t), date(squid_curtime) {}
+        Entry(const Key &aKey, EntryValue *t, int ttl): key(aKey), value(t), expires(squid_curtime+ttl) {}
         ~Entry() {delete value;}
         Entry(Entry &&) = default;
         Entry & operator = (Entry &&) = default;
@@ -47,7 +47,7 @@ public:
     public:
         Key key; ///< the key of entry
         EntryValue *value = nullptr; ///< A pointer to the stored value
-        time_t date = 0; ///< The date the entry created
+        time_t expires = 0; ///< When the entry is to be removed
     };
 
     /// container for LRU algorithm management
@@ -64,6 +64,8 @@ public:
     EntryValue *get(const Key &key);
     /// Add an entry to the map
     bool add(const Key &key, EntryValue *t);
+    /// Add an entry to the map with specific TTL
+    bool add(const Key &key, EntryValue *t, int ttl);
     /// Delete an entry from the map
     bool del(const Key &key);
     /// (Re-)set the maximum size for this map
@@ -89,7 +91,9 @@ private:
 
     Map storage; ///< The Key/value * pairs
     Queue lruIndex; ///< LRU cache index
-    int ttl = 0;          ///< TTL >0 for caching, == 0 cache is disabled, <0 store for ever
+
+    /// TTL to use if none provided to add(). 0 to disable caching.
+    int defaultTtl = std::numeric_limits<int>::max;
     size_t memLimit_ = 0; ///< The maximum memory to use
     size_t memUsed_ = 0;  ///< The amount of memory currently used
     int entries_ = 0;     ///< The stored entries
@@ -97,7 +101,7 @@ private:
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 ClpMap<Key, EntryValue, MemoryUsedByEV>::ClpMap(int aTtl, size_t aSize) :
-    ttl(aTtl)
+    defaultTtl(aTtl)
 {
     setMemLimit(aSize);
 }
@@ -161,6 +165,13 @@ template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)
 bool
 ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t)
 {
+    return add(key, t, defaultTtl);
+}
+
+template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
+bool
+ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, int ttl)
+{
     if (ttl == 0)
         return false;
 
@@ -174,7 +185,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t)
         return false;
     trim(wantSz);
 
-    auto result = storage.emplace(key, Entry(key, t));
+    auto result = storage.emplace(key, Entry(key, t, ttl));
     assert(result.second);
     lruIndex.emplace_front(&result.first->second);
 
@@ -187,10 +198,7 @@ template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)
 bool
 ClpMap<Key, EntryValue, MemoryUsedByEV>::expired(const ClpMap::Entry &entry) const
 {
-    if (ttl < 0)
-        return false;
-
-    return (entry.date + ttl < squid_curtime);
+    return entry.expires < squid_curtime;
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
@@ -236,7 +244,7 @@ void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::touch(ClpMap::MapIterator const &i)
 {
     // this must not be done when nothing is being cached.
-    if (ttl == 0 || memLimit() == 0)
+    if (defaultTtl == 0 || memLimit() == 0)
         return;
 
     auto pos = std::find(lruIndex.begin(), lruIndex.end(), &i->second);
