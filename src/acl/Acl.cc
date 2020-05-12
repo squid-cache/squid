@@ -331,10 +331,9 @@ ACL::matchForCache(ACLChecklist *)
  * Note that caching of time based acl's is not
  * wise in long lived caches (i.e. the auth_user proxy match cache)
  * RBC
- * TODO: does a dlink_list perform well enough? Kinkie
  */
 int
-ACL::cacheMatchAcl(proxy_auth_match_cache &cache, ACLChecklist *checklist)
+ACL::cacheMatchAcl(Acl::ProxyAuthMatchCache &cache, ACLChecklist *checklist)
 {
     for (const auto &auth_match : cache) {
         if (auth_match.acl_data == this) {
@@ -342,7 +341,7 @@ ACL::cacheMatchAcl(proxy_auth_match_cache &cache, ACLChecklist *checklist)
             return auth_match.matchrv;
         }
     }
-    auto auth_match = acl_proxy_auth_match_cache_entry(matchForCache(checklist), this);
+    auto auth_match = Acl::ProxyAuthMatchCacheEntry(matchForCache(checklist), this);
     cache.emplace_back(auth_match);
     debugs(28, 4, "miss for '" << name << "'. Adding result " << auth_match.matchrv);
     return auth_match.matchrv;

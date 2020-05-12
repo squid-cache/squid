@@ -14,6 +14,7 @@
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
+#include "mem/PoolingAllocator.h"
 #include "sbuf/forward.h"
 
 #include <algorithm>
@@ -30,9 +31,24 @@ typedef ACL *(*Maker)(TypeName typeName);
 /// use the given ACL Maker for all ACLs of the named type
 void RegisterMaker(TypeName typeName, Maker maker);
 
+class ProxyAuthMatchCacheEntry
+{
+public:
+    ProxyAuthMatchCacheEntry(int matchRv, void *aclData) :
+        matchrv(matchRv),
+        acl_data(aclData)
+    {
+    }
+
+    int matchrv;
+    void *acl_data;
+};
+
+using ProxyAuthMatchCache =
+    std::list < ProxyAuthMatchCacheEntry, PoolingAllocator<ProxyAuthMatchCacheEntry> >;
+
 } // namespace Acl
 
-class acl_proxy_auth_match_cache_entry;
 
 /// A configurable condition. A node in the ACL expression tree.
 /// Can evaluate itself in FilledChecklist context.
@@ -75,8 +91,7 @@ public:
     virtual bool empty() const = 0;
     virtual bool valid() const;
 
-    using proxy_auth_match_cache = std::list<acl_proxy_auth_match_cache_entry>;
-    int cacheMatchAcl(proxy_auth_match_cache &cache, ACLChecklist *);
+    int cacheMatchAcl(Acl::ProxyAuthMatchCache &cache, ACLChecklist *);
     virtual int matchForCache(ACLChecklist *checklist);
 
     virtual void prepareForUse() {}
@@ -184,19 +199,6 @@ operator <<(std::ostream &o, const Acl::Answer a)
     }
     return o;
 }
-
-/// \ingroup ACLAPI
-class acl_proxy_auth_match_cache_entry
-{
-public:
-    acl_proxy_auth_match_cache_entry(int matchRv, void * aclData) :
-        matchrv(matchRv),
-        acl_data(aclData)
-    {}
-
-    int matchrv;
-    void *acl_data;
-};
 
 /// \ingroup ACLAPI
 /// XXX: find a way to remove or at least use a refcounted ACL pointer

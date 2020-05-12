@@ -51,8 +51,8 @@ public:
     Auth::Type auth_type;
     /** the config for this user */
     Auth::SchemeConfig *config;
-    // XXX would be better served by unordered_map<void*, int> ?
-    ACL::proxy_auth_match_cache proxy_match_cache;
+    /// cache mapping ACLs to their results
+    Acl::ProxyAuthMatchCache proxy_match_cache;
     size_t ipcount;
     long expiretime;
 
