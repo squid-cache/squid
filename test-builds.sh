@@ -139,8 +139,10 @@ buildtest() {
 	fi
     else
         if test "${verbose}" != "yes" ; then
-            echo "Build Failed. Full log dump:"
+            echo "Build Failed."
+            echo "Log start: ${log}"
             cat ${log}
+            echo "Log end: ${log}"
         else
             echo "Build FAILED."
         fi
