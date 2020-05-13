@@ -46,6 +46,7 @@ public:
     bool sawGood;
 
 protected:
+    const char *findDigits(const char *prefix, const char *valueEnd) const;
     bool goodSuffix(const char *suffix, const char * const end) const;
     bool checkValue(const char *start, const int size);
     bool checkList(const String &list);
