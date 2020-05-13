@@ -33,6 +33,10 @@ while [ $# -ge 1 ]; do
 	verbose="yes"
 	shift
 	;;
+    --progress)
+    verbose="progress"
+    shift
+    ;;
     --keep-going)
 	keepGoing="yes"
 	shift
@@ -64,11 +68,16 @@ while [ $# -ge 1 ]; do
 done
 
 logtee() {
-    if [ $verbose = yes ]; then
-	tee $1
-    else
-	cat >$1
-    fi
+    case $verbose in
+    yes)
+        tee $1
+        ;;
+    progress)
+        tee $1 | awk '{printf "."; n++; if (!(n % 80)) print "" } END {print ""}'
+        ;;
+    *)
+        cat >$1
+    esac
 }
 
 buildtest() {

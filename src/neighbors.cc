@@ -1811,7 +1811,7 @@ neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Addres
  * Send HTCP CLR messages to all peers configured to receive them.
  */
 void
-neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, htcp_clr_reason reason)
+neighborsHtcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &method, htcp_clr_reason reason)
 {
     CachePeer *p;
     char buf[128];
@@ -1827,7 +1827,7 @@ neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const Htt
             continue;
         }
         debugs(15, 3, "neighborsHtcpClear: sending CLR to " << p->in_addr.toUrl(buf, 128));
-        htcpClear(e, uri, req, method, p, reason);
+        htcpClear(e, req, method, p, reason);
     }
 }
 

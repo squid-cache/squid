@@ -107,6 +107,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-gnutls \
 	--without-openssl \
 	--without-po2html \
+	--without-systemd \
 	--without-tdb \
 	"
 
