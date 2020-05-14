@@ -547,7 +547,7 @@ const char *Ssl::GetErrorName(Security::ErrorCode value, const bool prefixRawCod
         return it->second->name;
 
     static char tmpBuffer[128];
-    snprintf(tmpBuffer, sizeof(tmpBuffer), "%s%d", prefixRawCode ? "SSL_ERR=" : "", (int)error_no);
+    snprintf(tmpBuffer, sizeof(tmpBuffer), "%s%d", prefixRawCode ? "SSL_ERR=" : "", (int)value);
     return tmpBuffer;
 }
 
