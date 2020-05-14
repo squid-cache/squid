@@ -65,8 +65,7 @@ Ssl::CertValidationMsg::composeRequest(CertValidationRequest const &vcert)
         int i = 0;
         for (const Security::CertErrors *err = vcert.errors; err; err = err->next, ++i) {
             body +="\n";
-            const char *errName = GetErrorName(err->element.code);
-            body = body + param_error_name + xitoa(i) + "=" + errName + "\n";
+            body = body + param_error_name + xitoa(i) + "=" + GetErrorName(err->element.code) + "\n";
             int errorCertPos = -1;
             if (err->element.cert.get())
                 errorCertPos = sk_X509_find(peerCerts, err->element.cert.get());
