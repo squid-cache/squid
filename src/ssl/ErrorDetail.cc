@@ -680,14 +680,12 @@ const char *Ssl::ErrorDetail::err_code() const
 {
     // We can use the GetErrorName but using the detailEntry is faster,
     // so try it first.
-    const char *err = detailEntry.name.termedBuf();
+    if (const char *err = detailEntry.name.termedBuf())
+        return err;
 
     // error details not loaded yet or not defined in error_details.txt,
     // try the GetErrorName...
-    if (!err)
-        err = GetErrorName(error_no);
-
-    return err;
+    return GetErrorName(error_no);
 }
 
 /**
