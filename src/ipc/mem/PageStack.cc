@@ -156,8 +156,6 @@ Ipc::Mem::IdSet::IdSet(const size_type capacity):
     // atomic wrappers in nodes_ must be zero-size. Check the best we can. Once.
     static_assert(sizeof(StoredNode) == sizeof(Node), "atomic locks use no storage");
     assert(StoredNode().is_lock_free());
-
-    makeFullBeforeSharing();
 }
 
 void
@@ -428,12 +426,15 @@ Ipc::Mem::IdSet::MemorySize(const size_type capacity)
 
 /* Ipc::Mem::PageStack */
 
-Ipc::Mem::PageStack::PageStack(const PoolId aPoolId, const PageCount aCapacity, const size_t aPageSize):
-    thePoolId(aPoolId), capacity_(aCapacity), thePageSize(aPageSize),
+Ipc::Mem::PageStack::PageStack(const Config &config):
+    config_(config),
     size_(0),
-    ids_(capacity_)
+    ids_(config_.capacity)
 {
-    size_ = capacity_;
+    if (config.createFull) {
+        ids_.makeFullBeforeSharing();
+        size_ = config_.capacity;
+    }
 }
 
 bool
@@ -441,7 +442,7 @@ Ipc::Mem::PageStack::pop(PageId &page)
 {
     assert(!page);
 
-    if (!capacity_)
+    if (!config_.capacity)
         return false;
 
     IdSet::size_type pageIndex = 0;
@@ -450,10 +451,10 @@ Ipc::Mem::PageStack::pop(PageId &page)
 
     // must decrement after removing the page to avoid underflow
     const auto newSize = --size_;
-    assert(newSize < capacity_);
+    assert(newSize < config_.capacity);
 
     page.number = pageIndex + 1;
-    page.pool = thePoolId;
+    page.pool = config_.poolId;
     debugs(54, 8, page << " size: " << newSize);
     assert(pageIdIsValid(page));
     return true;
@@ -468,7 +469,7 @@ Ipc::Mem::PageStack::push(PageId &page)
 
     // must increment before inserting the page to avoid underflow in pop()
     const auto newSize = ++size_;
-    assert(newSize <= capacity_);
+    assert(newSize <= config_.capacity);
 
     const auto pageIndex = page.number - 1;
     ids_.push(pageIndex);
@@ -480,22 +481,22 @@ Ipc::Mem::PageStack::push(PageId &page)
 bool
 Ipc::Mem::PageStack::pageIdIsValid(const PageId &page) const
 {
-    return page.pool == thePoolId &&
+    return page.pool == config_.poolId &&
            0 < page.number && page.number <= capacity();
 }
 
 size_t
 Ipc::Mem::PageStack::sharedMemorySize() const
 {
-    return SharedMemorySize(thePoolId, capacity_, thePageSize);
+    return SharedMemorySize(config_);
 }
 
 size_t
-Ipc::Mem::PageStack::SharedMemorySize(const PoolId, const PageCount capacity, const size_t pageSize)
+Ipc::Mem::PageStack::SharedMemorySize(const Config &cfg)
 {
     const auto levelsSize = PageId::maxPurpose * sizeof(Levels_t);
-    const size_t pagesDataSize = capacity * pageSize;
-    return StackSize(capacity) + LevelsPaddingSize(capacity) + levelsSize + pagesDataSize;
+    const size_t pagesDataSize = cfg.capacity * cfg.pageSize;
+    return StackSize(cfg.capacity) + pagesDataSize + levelsSize;
 }
 
 size_t
@@ -510,7 +511,7 @@ Ipc::Mem::PageStack::StackSize(const PageCount capacity)
 size_t
 Ipc::Mem::PageStack::stackSize() const
 {
-    return StackSize(capacity_);
+    return StackSize(config_.capacity);
 }
 
 size_t
