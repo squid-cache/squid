@@ -537,7 +537,7 @@ Ssl::ParseErrorString(const char *name, Security::Errors &errors)
     return false; // not reached
 }
 
-const char *Ssl::GetErrorName(Security::ErrorCode value)
+const char *Ssl::GetErrorName(Security::ErrorCode value, const bool prefixRawCode)
 {
     if (TheSslErrors.empty())
         loadSslErrorMap();
@@ -546,7 +546,9 @@ const char *Ssl::GetErrorName(Security::ErrorCode value)
     if (it != TheSslErrors.end())
         return it->second->name;
 
-    return NULL;
+    static char tmpBuffer[128];
+    snprintf(tmpBuffer, sizeof(tmpBuffer), "%s%d", prefixRawCode ? "SSL_ERR=" : "", (int)error_no);
+    return tmpBuffer;
 }
 
 bool
@@ -676,7 +678,6 @@ const char *Ssl::ErrorDetail::notafter() const
  */
 const char *Ssl::ErrorDetail::err_code() const
 {
-    static char tmpBuffer[64];
     // We can use the GetErrorName but using the detailEntry is faster,
     // so try it first.
     const char *err = detailEntry.name.termedBuf();
@@ -686,10 +687,6 @@ const char *Ssl::ErrorDetail::err_code() const
     if (!err)
         err = GetErrorName(error_no);
 
-    if (!err) {
-        snprintf(tmpBuffer, 64, "%d", (int)error_no);
-        err = tmpBuffer;
-    }
     return err;
 }
 

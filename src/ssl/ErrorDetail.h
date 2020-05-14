@@ -26,8 +26,9 @@ bool ParseErrorString(const char *name, Security::Errors &);
 /// The Security::ErrorCode code of the error described by  "name".
 Security::ErrorCode GetErrorCode(const char *name);
 
-/// The string representation of the TLS error "value"
-const char *GetErrorName(Security::ErrorCode value);
+/// \return string representation of the TLS error "value" or a raw code if error is unknown
+/// \param prefixRawCode if true adds the prefix "SSL_ERR=" to raw codes
+const char *GetErrorName(Security::ErrorCode value, const bool prefixRawCode = false);
 
 /// A short description of the TLS error "value"
 const char *GetErrorDescr(Security::ErrorCode value);
