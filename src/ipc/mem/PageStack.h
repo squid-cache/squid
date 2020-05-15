@@ -126,7 +126,7 @@ public:
         size_t pageSize = 0; ///< page size, used to calculate shared memory size
         PageCount capacity = 0; ///< the maximum number of pages
 
-        /// whether a newly created PageStack should contain capacity IDs
+        /// whether a newly created PageStack should be prefilled with PageIds
         bool createFull = false;
     };
 
