@@ -37,8 +37,12 @@ typedef enum _mem_status_t {
 } mem_status_t;
 
 typedef enum {
+    /// Has not considered whether to send ICP queries to peers yet.
     PING_NONE,
+    /// Sent ICP queries to peers and still awaiting responses.
     PING_WAITING,
+    /// Not waiting for ICP responses now and will not send ICP queries later.
+    /// The ICP queries may (or may not) have been sent earlier.
     PING_DONE
 } ping_status_t;
 
