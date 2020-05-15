@@ -322,15 +322,6 @@ log_quoted_string(const char *str, char *out)
     *p = '\0';
 }
 
-#if USE_OPENSSL
-static char *
-sslErrorName(Security::ErrorCode err, char *buf, size_t size)
-{
-    snprintf(buf, size, "SSL_ERR=%d", err);
-    return buf;
-}
-#endif
-
 /// XXX: Misnamed. TODO: Split <h (and this function) to distinguish received
 /// headers from sent headers rather than failing to distinguish requests from responses.
 /// \retval HttpReply sent to the HTTP client (access.log and default context).
@@ -959,9 +950,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_SQUID_ERROR_DETAIL:
 #if USE_OPENSSL
             if (al->request && al->request->errType == ERR_SECURE_CONNECT_FAIL) {
-                out = Ssl::GetErrorName(al->request->errDetail);
-                if (!out)
-                    out = sslErrorName(al->request->errDetail, tmp, sizeof(tmp));
+                out = Ssl::GetErrorName(al->request->errDetail, true);
             } else
 #endif
                 if (al->request && al->request->errDetail != ERR_DETAIL_NONE) {
@@ -1263,10 +1252,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                     for (const Security::CertErrors *sslError = srvBump->sslErrors(); sslError; sslError = sslError->next) {
                         if (!sb.isEmpty())
                             sb.append(separator);
-                        if (const char *errorName = Ssl::GetErrorName(sslError->element.code))
-                            sb.append(errorName);
-                        else
-                            sb.append(sslErrorName(sslError->element.code, tmp, sizeof(tmp)));
+                        sb.append(Ssl::GetErrorName(sslError->element.code, true));
                         if (sslError->element.depth >= 0)
                             sb.appendf("@depth=%d", sslError->element.depth);
                     }
