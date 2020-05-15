@@ -64,11 +64,6 @@ public:
     /// \param aSysErrorNo saved errno(3); \see ErrorDetail::sysErrorNo
     ErrorDetail(Security::ErrorCode anErrorCode, int anIoErrorNo, int aSysErrorNo);
 
-    // TODO: Rename to absorbLibraryErrors().
-    /// Extract and remember errors stored internally by the library.
-    /// For OpenSSL, these are ERR_get_error()-reported errors.
-    void absorbStackedErrors();
-
     /// remember SSL certificate of our peer
     /// uses "move" semantics -- the caller does not unlock the certificate
     void absorbPeerCertificate(X509 *cert);

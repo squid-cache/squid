@@ -594,17 +594,6 @@ Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
 
 uint64_t Ssl::ErrorDetail::Generations = 0;
 
-void
-Ssl::ErrorDetail::absorbStackedErrors()
-{
-    if ((lib_error_no = ERR_get_error())) {
-        debugs(83, 7, "got " << asHex(lib_error_no));
-        // more errors may be stacked
-        // TODO: Save/report all stacked errors by always flushing stale ones.
-        Security::ForgetErrors();
-    }
-}
-
 void Ssl::ErrorDetail::absorbPeerCertificate(X509 * const cert)
 {
     assert(cert);
@@ -831,7 +820,15 @@ Ssl::ErrorDetail::ErrorDetail(const Security::ErrorCode err):
     generation(++Generations),
     error_no(err)
 {
-    absorbStackedErrors();
+#if USE_OPENSSL
+    /// Extract and remember errors stored internally by the TLS library.
+    if ((lib_error_no = ERR_get_error())) {
+        debugs(83, 7, "got " << asHex(lib_error_no));
+        // more errors may be stacked
+        // TODO: Save/detail all stacked errors by always flushing stale ones.
+        Security::ForgetErrors();
+    }
+#endif
 }
 
 Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason):
