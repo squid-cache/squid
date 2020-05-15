@@ -15,12 +15,29 @@
 namespace Security {
     template <typename Fun>
     static IoResult GuardedIo(Comm::Connection &, ErrorCode, Fun);
+    static void PrepForIo();
 
     typedef SessionPointer::element_type *ConnectionPointer;
 }
 
-/// Calls the given TLS I/O function and analysis its outcome.
-/// Handles alert logging and reaching supposedly unreachable I/O code.
+/// the steps necessary to perform before the upcoming TLS I/O
+/// to correctly interpret/detail the outcome of that I/O
+static void
+Security::PrepForIo()
+{
+#if USE_OPENSSL
+    // flush earlier errors that some call forgot to extract, so that we will
+    // only get the error(s) specific to the upcoming I/O operation
+    while (const auto errorToForget = ERR_get_error())
+        debugs(83, 7, "forgot " << asHex(errorToForget));
+#endif
+
+    // as the last step, reset errno to know when the I/O operation set it
+    errno = 0;
+}
+
+/// Calls the given TLS handshake function and analysis its outcome.
+/// Handles alert logging and being called without adequate TLS library support.
 template <typename Fun>
 static Security::IoResult
 Security::GuardedIo(Comm::Connection &transport, const ErrorCode topError, Fun ioCall)
@@ -29,23 +46,21 @@ Security::GuardedIo(Comm::Connection &transport, const ErrorCode topError, Fun i
     const auto fd = transport.fd;
     auto connection = fd_table[fd].ssl.get();
 
-    // reset and capture errno before anybody else can overwrite it
-    errno = 0;
-    const auto rawResult = ioCall(connection);
+    PrepForIo();
+    const auto callResult = ioCall(connection);
     const auto xerrno = errno;
 
-    debugs(83, 5, rawResult << '/' << xerrno << " for TLS connection " <<
+    debugs(83, 5, callResult << '/' << xerrno << " for TLS connection " <<
            static_cast<void*>(connection) << " over " << transport);
 
 #if USE_OPENSSL
-    if (rawResult > 0)
+    if (callResult > 0)
         return IoResult(IoResult::ioSuccess);
 
-    // TODO: Rename to ioError
-    const auto ssl_error = SSL_get_error(connection, rawResult);
+    const auto ioError = SSL_get_error(connection, callResult);
 
     // quickly handle common, non-erroneous outcomes
-    switch (ssl_error) {
+    switch (ioError) {
 
     case SSL_ERROR_WANT_READ:
         return IoResult(IoResult::ioWantRead);
@@ -58,21 +73,15 @@ Security::GuardedIo(Comm::Connection &transport, const ErrorCode topError, Fun i
     }
 
     // now we know that we are dealing with a real problem; detail it
-    const Ssl::ErrorDetail::Pointer errorDetail = new Ssl::ErrorDetail(topError);
-    errorDetail->absorbStackedErrors();
-    errorDetail->ioError(ssl_error);
-    // We could restrict errno(3) collection to cases where ssl_error is
-    // SSL_ERROR_SYSCALL, ssl_lib_error is 0, and rawResult is negative, but we
-    // do not do that in hope that all other cases will either have a useful
-    // errno or a zero errno. We reset errno before I/O.
-    errorDetail->sysError(xerrno);
+    const Ssl::ErrorDetail::Pointer errorDetail =
+        new Ssl::ErrorDetail(topError, ioError, xerrno);
 
     IoResult ioResult(errorDetail);
 
     // collect debugging-related details
-    switch (ssl_error) {
+    switch (ioError) {
     case SSL_ERROR_SYSCALL:
-        if (rawResult == 0) {
+        if (callResult == 0) {
             ioResult.errorDescription = "peer aborted";
         } else {
             ioResult.errorDescription = "system call failure";
@@ -95,7 +104,7 @@ Security::GuardedIo(Comm::Connection &transport, const ErrorCode topError, Fun i
     return ioResult;
 
 #elif USE_GNUTLS
-    if (rawResult == GNUTLS_E_SUCCESS) {
+    if (callResult == GNUTLS_E_SUCCESS) {
         // TODO: Avoid gnutls_*() calls if debugging is off.
         const auto desc = gnutls_session_get_desc(connection);
         debugs(83, 2, "TLS session info: " << desc);
@@ -110,25 +119,22 @@ Security::GuardedIo(Comm::Connection &transport, const ErrorCode topError, Fun i
     const auto descOut = gnutls_handshake_get_last_out(connection);
     debugs(83, 2, "handshake OUT: " << gnutls_handshake_description_get_name(descOut));
 
-    if (rawResult == GNUTLS_E_WARNING_ALERT_RECEIVED) {
+    if (callResult == GNUTLS_E_WARNING_ALERT_RECEIVED) {
         const auto alert = gnutls_alert_get(connection);
         debugs(83, DBG_IMPORTANT, "WARNING: TLS alert: " << gnutls_alert_get_name(alert));
         // fall through to retry
     }
 
-    if (!gnutls_error_is_fatal(rawResult)) {
+    if (!gnutls_error_is_fatal(callResult)) {
         const auto reading = gnutls_record_get_direction(connection) == 0;
         return IoResult(reading ? IoResult::ioWantRead : IoResult::ioWantWrite);
     }
 
     // now we know that we are dealing with a real problem; detail it
-    const Ssl::ErrorDetail::Pointer errorDetail = new Ssl::ErrorDetail(topError);
-    errorDetail->absorbStackedErrors();
-    errorDetail->ioError(ssl_error);
-    errorDetail->sysError(xerrno);
+    const Ssl::ErrorDetail::Pointer errorDetail =
+        new Ssl::ErrorDetail(topError, callResult, xerrno);
 
     IoResult ioResult(errorDetail);
-
     ioResult.errorDescription = "failure";
     return ioResult;
 

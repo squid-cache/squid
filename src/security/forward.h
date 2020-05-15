@@ -126,7 +126,8 @@ enum Type {
 
 } // namespace Io
 
-class IoResult; // TODO: move to Security::Io
+// TODO: Either move to Security::Io or remove/restrict the Io namespace.
+class IoResult;
 
 class KeyData;
 

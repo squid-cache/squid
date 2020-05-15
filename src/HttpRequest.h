@@ -158,7 +158,7 @@ public:
 
     int dnsWait; ///< sum of DNS lookup delays in milliseconds, for %dt
 
-    Error error; ///< transaction error
+    Error error; ///< the first transaction problem encountered (or falsy)
 
     char *peer_login;       /* Configured peer login:password */
 

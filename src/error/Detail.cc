@@ -90,7 +90,7 @@ SysErrorDetail::Brief(const int errorNo)
 SBuf
 SysErrorDetail::brief() const
 {
-    return ToSBuf("SYSERR=", errorNo); // TODO: Use lowercase?
+    return ToSBuf("SYSERR=", errorNo); // TODO: Use errno=... instead?
 }
 
 SBuf
@@ -104,7 +104,7 @@ SysErrorDetail::verbose(const HttpRequest::Pointer &) const
 SBuf
 ExceptionErrorDetail::brief() const
 {
-    return ToSBuf("EXCEPTION=", std::hex, exceptionId);
+    return ToSBuf("EXCEPTION=", std::hex, exceptionId); // TODO: Use exception=... instead?
 }
 
 SBuf

@@ -37,7 +37,7 @@
  \ingroup ServerProtocol
  */
 
-/// Squid-specific TLS handling errors.
+/// Squid-specific TLS handling errors (a subset of ErrorCode)
 /// These errors either distinguish high-level library calls/contexts or
 /// supplement official certificate validation errors to cover special cases.
 /// We use negative values, assuming that those official errors are positive.

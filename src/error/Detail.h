@@ -15,7 +15,7 @@
 #include "mem/forward.h"
 #include "sbuf/forward.h"
 
-/// interface for supplying additional information about a transaction error
+/// interface for supplying additional information about a transaction failure
 class ErrorDetail: public RefCountable
 {
 public:
@@ -33,7 +33,7 @@ public:
     virtual SBuf verbose(const HttpRequestPointer &) const;
 };
 
-/// system call error detail based on standard errno(3)/strerror(3) APIs
+/// system call failure detail based on standard errno(3)/strerror(3) APIs
 class SysErrorDetail: public ErrorDetail {
     MEMPROXY_CLASS(SysErrorDetail);
 
@@ -55,15 +55,14 @@ private:
     // hidden by NewIfAny() to avoid creating SysErrorDetail from zero errno
     explicit SysErrorDetail(const int anErrorNo): errorNo(anErrorNo) {}
 
-    int errorNo; ///< errno(1) set by the last failed system call or equivalent
+    int errorNo; ///< errno(3) set by the last failed system call or equivalent
 };
 
 /// offset for exception ID details, for backward compatibility
 #define SQUID_EXCEPTION_START_BASE 110000
 
-/// Squid exception error details. It stores exceptions ids which can
-/// examined with the calc-must-ids.sh squid utility to find the cause
-/// of the error.
+/// Details a failure reported via a C++ exception. Stores exception ID which
+/// scripts/calc-must-ids.sh can map to a relevant source code location.
 class ExceptionErrorDetail: public ErrorDetail {
     MEMPROXY_CLASS(ExceptionErrorDetail);
 
@@ -75,7 +74,7 @@ public:
     virtual SBuf verbose(const HttpRequestPointer &) const final;
 
 private:
-    SourceLocationId exceptionId; ///< the exception id
+    SourceLocationId exceptionId; ///< identifies the thrower or catcher
 };
 
 /// dump the given ErrorDetail (for debugging)
@@ -147,7 +146,7 @@ extern const ErrorDetail::Pointer ERR_DETAIL_TLS_HANDSHAKE;
 extern const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_SUCCESS;
 
 /// BUG: TLS library requested reading while negotiating a TLS connection
-/// with enough data buffered before the start of the negotiation
+/// but Squid code has somehow missed that request
 extern const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_READ;
 
 /// BUG: TLS library requested writing while negotiating a TLS connection

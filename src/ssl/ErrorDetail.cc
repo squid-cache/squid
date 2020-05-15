@@ -831,6 +831,7 @@ Ssl::ErrorDetail::ErrorDetail(const Security::ErrorCode err):
     generation(++Generations),
     error_no(err)
 {
+    absorbStackedErrors();
 }
 
 Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason):
@@ -850,8 +851,14 @@ Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *brok
     detailEntry.error_no = SSL_ERROR_NONE;
 }
 
-Ssl::ErrorDetail::ErrorDetail(Security::ErrorCode err, unsigned long lib_err):
-    ErrorDetail(err)
+Ssl::ErrorDetail::ErrorDetail(const Security::ErrorCode anErrorCode, const int anIoErrorNo, const int aSysErrorNo):
+    ErrorDetail(anErrorCode)
 {
-    lib_error_no = lib_err;
+    ioErrorNo = anIoErrorNo;
+
+    // We could restrict errno(3) collection to cases where ioError is
+    // SSL_ERROR_SYSCALL, ERR_get_error() is 0, and callResult is negative, but
+    // we do not do that in hope that all other cases will either have a useful
+    // errno or a zero errno. Callers must call PrepForIo() to reset errno.
+    sysErrorNo = aSysErrorNo;
 }

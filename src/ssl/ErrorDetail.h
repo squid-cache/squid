@@ -38,52 +38,39 @@ const char *GetErrorDescr(Security::ErrorCode value);
 bool ErrorIsOptional(const char *name);
 
 // TODO: Move to Security. This interface is meant to be TLS library-agnostic.
-/// Details a TLS-related error. Three kinds of errors can be detailed:
-/// * certificate validation errors (including built-in and helper-driven),
-/// * I/O errors,
-/// * general handling/logic errors (detected by Squid or the TLS library).
+/// Details a TLS-related error. Two kinds of errors can be detailed:
+/// * certificate validation errors (including built-in and helper-driven) and
+/// * TLS logic and I/O errors (detected by Squid or the TLS library).
 ///
 /// The following details may be available (only the first one is required):
-/// * for all errors: Squid-specific error classification (ErrorCode)
+/// * for all errors: problem classification (\see Security::ErrorCode)
 /// * for all errors: peer certificate
-/// * for non-validation errors: TLS library-reported error(s)
 /// * for certificate validation errors: the broken certificate
 /// * for certificate validation errors: validation failure reason
-/// * for I/O errors: system errno(3)
-///
-/// Currently, Squid treats TLS library-returned validation errors (e.g.
-/// X509_V_ERR_INVALID_CA) as Squid-specific error classification.
+/// * for non-validation errors: TLS library-reported error(s)
+/// * for non-validation errors: system call errno(3)
 class ErrorDetail:  public ::ErrorDetail
 {
     MEMPROXY_CLASS(Ssl::ErrorDetail);
 public:
     typedef RefCount<ErrorDetail> Pointer;
 
-    /// Used for server-side TLS certificate verification failures to
-    /// detail server certificates and provide extra string describing
-    /// the failure.
-    /// If the broken certificate is nil then the broken certificate is
-    /// the peer certificate.
+    /// Details a server-side certificate verification failure.
+    /// If `broken` is nil, then the broken certificate is the peer certificate.
     ErrorDetail(Security::ErrorCode err_no, X509 *peer, X509 *broken, const char *aReason = NULL);
 
-    /// General TLS handshake failures or failures due to TLS/SSL
-    /// library errors
-    ErrorDetail(Security::ErrorCode err_no, unsigned long lib_err);
-    explicit ErrorDetail(const Security::ErrorCode err_no);
-
-    /// remember errno(3)
-    void sysError(const int xerrno) { sysErrorNo = xerrno; }
-
-    /// Remember the outcome of a TLS I/O function.
-    /// For OpenSSL, these are functions that need SSL_get_error() follow up.
-    void ioError(const int errorNo) { ioErrorNo = errorNo; }
+    /// Details (or starts detailing) a non-validation failure.
+    /// \param anIoErrorNo TLS I/O function outcome; \see ErrorDetail::ioErrorNo
+    /// \param aSysErrorNo saved errno(3); \see ErrorDetail::sysErrorNo
+    ErrorDetail(Security::ErrorCode anErrorCode, int anIoErrorNo, int aSysErrorNo);
 
     // TODO: Rename to absorbLibraryErrors().
     /// Extract and remember errors stored internally by the library.
     /// For OpenSSL, these are ERR_get_error()-reported errors.
     void absorbStackedErrors();
 
-    /// extract and remember ERR_get_error()-reported error(s)
+    /// remember SSL certificate of our peer
+    /// uses "move" semantics -- the caller does not unlock the certificate
     void absorbPeerCertificate(X509 *cert);
 
     /// The error no
@@ -120,6 +107,8 @@ private:
     };
     static err_frm_code  ErrorFormatingCodes[]; ///< The supported formatting codes
 
+    explicit ErrorDetail(Security::ErrorCode);
+
     const char *subject() const;
     const char *ca_name() const;
     const char *cn() const;
@@ -134,15 +123,21 @@ private:
     static uint64_t Generations; ///< the total number of ErrorDetails ever made
     uint64_t generation; ///< the number of ErrorDetails made before us plus one
 
-    Security::ErrorCode error_no;   ///< The error code (XXX)
+    /// error category; \see Security::ErrorCode
+    Security::ErrorCode error_no;
 
-    /// the earliest error returned by OpenSSL ERR_get_error(3SSL) or zero
+    /// Non-validation error reported by the TLS library or zero.
+    /// For OpenSSL, this is the result of the first ERR_get_error(3SSL) call,
+    /// which `openssl errstr` can expand into details like
+    /// `error:1408F09C:SSL routines:ssl3_get_record:http request`.
     unsigned long lib_error_no = SSL_ERROR_NONE;
 
-    /// TLS I/O operation result returned by OpenSSL SSL_get_error(3SSL) or zero
+    /// TLS I/O operation result or zero
+    /// For OpenSSL, a SSL_get_error(3SSL) result (e.g., SSL_ERROR_SYSCALL).
+    /// For GnuTLS, a result of an I/O function like gnutls_handshake() (e.g., GNUTLS_E_WARNING_ALERT_RECEIVED)
     int ioErrorNo = 0;
 
-    /// errno(3); system call failure code (or zero)
+    /// errno(3); system call failure code or zero
     int sysErrorNo = 0;
 
     Security::CertPointer peer_cert; ///< A pointer to the peer certificate
