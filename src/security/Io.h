@@ -45,6 +45,9 @@ IoResult Accept(Comm::Connection &transport);
 /// establish a TLS connection over the specified from-Squid transport connection
 IoResult Connect(Comm::Connection &transport);
 
+/// clear any errors that a TLS library has accumulated in its global storage
+void ForgetErrors();
+
 } // namespace Security
 
 #endif /* SQUID_SRC_SECURITY_IO_H */

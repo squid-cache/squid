@@ -20,17 +20,26 @@ namespace Security {
     typedef SessionPointer::element_type *ConnectionPointer;
 }
 
+// TODO: Replace high-level ERR_get_error() calls with a new std::ostream
+// ReportErrors manipulator inside debugs(), followed by a ForgetErrors() call.
+void
+Security::ForgetErrors()
+{
+#if USE_OPENSSL
+    unsigned int reported = 0; // efficiently marks ForgetErrors() call boundary
+    while (const auto errorToForget = ERR_get_error())
+        debugs(83, 7, '#' << (++reported) << ": " << asHex(errorToForget));
+#endif
+}
+
 /// the steps necessary to perform before the upcoming TLS I/O
 /// to correctly interpret/detail the outcome of that I/O
 static void
 Security::PrepForIo()
 {
-#if USE_OPENSSL
     // flush earlier errors that some call forgot to extract, so that we will
     // only get the error(s) specific to the upcoming I/O operation
-    while (const auto errorToForget = ERR_get_error())
-        debugs(83, 7, "forgot " << asHex(errorToForget));
-#endif
+    ForgetErrors();
 
     // as the last step, reset errno to know when the I/O operation set it
     errno = 0;

@@ -12,6 +12,7 @@
 #include "html_quote.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
+#include "security/Io.h"
 #include "ssl/ErrorDetail.h"
 
 #include <climits>
@@ -600,8 +601,7 @@ Ssl::ErrorDetail::absorbStackedErrors()
         debugs(83, 7, "got " << asHex(lib_error_no));
         // more errors may be stacked
         // TODO: Save/report all stacked errors by always flushing stale ones.
-        while (const auto errorToForget = ERR_get_error())
-            debugs(83, 7, "forgot " << asHex(errorToForget));
+        Security::ForgetErrors();
     }
 }
 
