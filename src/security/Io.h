@@ -51,3 +51,4 @@ void ForgetErrors();
 } // namespace Security
 
 #endif /* SQUID_SRC_SECURITY_IO_H */
+

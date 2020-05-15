@@ -425,7 +425,7 @@ static void
 ssl_free_ErrorDetail(void *, void *ptr, CRYPTO_EX_DATA *,
                      int, long, void *)
 {
-    auto  *errDetail = static_cast <ErrorDetail::Pointer *>(ptr);
+    auto *errDetail = static_cast<ErrorDetail::Pointer*>(ptr);
     delete errDetail;
 }
 

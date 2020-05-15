@@ -112,3 +112,4 @@ ExceptionErrorDetail::verbose(const HttpRequest::Pointer &) const
 {
     return ToSBuf("Exception (ID=", std::hex, exceptionId, ')');
 }
+

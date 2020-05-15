@@ -93,6 +93,5 @@ class ErrorDetail;
 
 typedef RefCount<ErrorDetail> ErrorDetailPointer;
 
-
 #endif /* _SQUID_SRC_ERROR_FORWARD_H */
 

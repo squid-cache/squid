@@ -526,7 +526,7 @@ Ssl::ParseErrorString(const char *name, Security::Errors &errors)
     if (xisdigit(*name)) {
         const long int value = strtol(name, NULL, 0);
         if ((SQUID_TLS_ERR_OFFSET < value && value < SQUID_TLS_ERR_END) || // custom
-            (value >= 0)) { // an official error, including SSL_ERROR_NONE
+                (value >= 0)) { // an official error, including SSL_ERROR_NONE
             errors.emplace(value);
             return true;
         }
@@ -859,3 +859,4 @@ Ssl::ErrorDetail::ErrorDetail(const Security::ErrorCode anErrorCode, const int a
     // errno or a zero errno. Callers must call PrepForIo() to reset errno.
     sysErrorNo = aSysErrorNo;
 }
+

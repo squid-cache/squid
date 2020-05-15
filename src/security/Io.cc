@@ -13,12 +13,14 @@
 #include "security/Io.h"
 
 namespace Security {
-    template <typename Fun>
-    static IoResult GuardedIo(Comm::Connection &, ErrorCode, Fun);
-    static void PrepForIo();
 
-    typedef SessionPointer::element_type *ConnectionPointer;
-}
+template <typename Fun>
+static IoResult GuardedIo(Comm::Connection &, ErrorCode, Fun);
+static void PrepForIo();
+
+typedef SessionPointer::element_type *ConnectionPointer;
+
+} // namespace Security
 
 // TODO: Replace high-level ERR_get_error() calls with a new std::ostream
 // ReportErrors manipulator inside debugs(), followed by a ForgetErrors() call.
@@ -186,3 +188,4 @@ Security::Connect(Comm::Connection &transport)
 #endif
     });
 }
+

@@ -34,3 +34,4 @@ operator <<(std::ostream &os, const Error &error)
         os << '/' << *error.detail;
     return os;
 }
+

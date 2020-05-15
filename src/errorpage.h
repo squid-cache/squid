@@ -109,7 +109,7 @@ public:
     HttpReply *BuildHttpReply(void);
 
     /// set error type-specific detail code
-    void detailError(const ErrorDetail::Pointer &dCode) {detail = dCode;}
+    void detailError(const ErrorDetail::Pointer &dCode) { detail = dCode; }
 
     /// ensures that a future BuildHttpReply() is likely to succeed
     void validate();
