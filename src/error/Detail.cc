@@ -23,7 +23,7 @@ public:
     explicit EnumeratedErrorDetail(const char *aName): name(aName) {}
 
     /* ErrorDetail API */
-    virtual SBuf brief() const final { return name; }
+    virtual SBuf brief() const override { return name; }
 
 private:
     /// distinguishes us from all other EnumeratedErrorDetail objects

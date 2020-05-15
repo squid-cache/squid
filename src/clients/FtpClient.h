@@ -32,8 +32,8 @@ public:
     explicit ErrorDetail(const int code): completionCode(code) {}
 
     /* ErrorDetail API */
-    virtual SBuf brief() const final;
-    virtual SBuf verbose(const HttpRequestPointer &) const final;
+    virtual SBuf brief() const override;
+    virtual SBuf verbose(const HttpRequestPointer &) const override;
 
 private:
     int completionCode; ///< FTP reply completion code

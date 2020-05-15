@@ -86,8 +86,8 @@ public:
     }
 
     /* ErrorDetail API */
-    virtual SBuf brief() const final;
-    virtual SBuf verbose(const HttpRequestPointer &) const final;
+    virtual SBuf brief() const override;
+    virtual SBuf verbose(const HttpRequestPointer &) const override;
 
 private:
     typedef const char * (ErrorDetail::*fmt_action_t)() const;

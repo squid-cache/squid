@@ -48,8 +48,8 @@ public:
     static SBuf Brief(int errorNo);
 
     /* ErrorDetail API */
-    virtual SBuf brief() const final;
-    virtual SBuf verbose(const HttpRequestPointer &) const final;
+    virtual SBuf brief() const override;
+    virtual SBuf verbose(const HttpRequestPointer &) const override;
 
 private:
     // hidden by NewIfAny() to avoid creating SysErrorDetail from zero errno
@@ -70,8 +70,8 @@ public:
     explicit ExceptionErrorDetail(const SourceLocationId id): exceptionId(SQUID_EXCEPTION_START_BASE + id) {}
 
     /* ErrorDetail API */
-    virtual SBuf brief() const final;
-    virtual SBuf verbose(const HttpRequestPointer &) const final;
+    virtual SBuf brief() const override;
+    virtual SBuf verbose(const HttpRequestPointer &) const override;
 
 private:
     SourceLocationId exceptionId; ///< identifies the thrower or catcher
