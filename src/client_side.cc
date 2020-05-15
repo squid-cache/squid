@@ -3154,9 +3154,11 @@ ConnStateData::startPeekAndSplice()
     // We have successfully parsed client Hello, but our TLS handshake parser is
     // forgiving. Now we use a TLS library to parse the same bytes, so that we
     // can honor on_unsupported_protocol if needed. If there are no errors, we
-    // expect Security::Accept() to ask us to write (our) TLS server Hello.
+    // expect Security::Accept() to ask us to write (our) TLS server Hello. We
+    // also allow an ioWantRead result in case some fancy TLS extension that
+    // Squid does not yet understand requires reading post-Hello client bytes.
     const auto handshakeResult = Security::Accept(*clientConnection);
-    if (handshakeResult.category != Security::IoResult::ioWantWrite)
+    if (!handshakeResult.wantsIo())
         return handleSslBumpHandshakeError(handshakeResult);
 
     // We need to reset inBuf here, to be used by incoming requests in the case
