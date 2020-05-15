@@ -233,6 +233,9 @@ static SslErrorEntry TheSslErrorArray[] = {
         "X509_V_ERR_SUBTREE_MINMAX"
     },
 #endif
+    {   X509_V_ERR_APPLICATION_VERIFICATION, //50
+        "X509_V_ERR_APPLICATION_VERIFICATION"
+    },
 #if defined(X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE)
     {
         X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE, //51
@@ -257,9 +260,132 @@ static SslErrorEntry TheSslErrorArray[] = {
         "X509_V_ERR_CRL_PATH_VALIDATION_ERROR"
     },
 #endif
-    {   X509_V_ERR_APPLICATION_VERIFICATION,
-        "X509_V_ERR_APPLICATION_VERIFICATION"
+#if defined(X509_V_ERR_PATH_LOOP)
+    {
+        X509_V_ERR_PATH_LOOP, //55
+        "X509_V_ERR_PATH_LOOP"
     },
+#endif
+#if defined(X509_V_ERR_SUITE_B_INVALID_VERSION)
+    {
+        X509_V_ERR_SUITE_B_INVALID_VERSION, //56
+        "X509_V_ERR_SUITE_B_INVALID_VERSION"
+    },
+#endif
+#if defined(X509_V_ERR_SUITE_B_INVALID_ALGORITHM)
+    {
+        X509_V_ERR_SUITE_B_INVALID_ALGORITHM, //57
+        "X509_V_ERR_SUITE_B_INVALID_ALGORITHM"
+    },
+#endif
+#if defined(X509_V_ERR_SUITE_B_INVALID_CURVE)
+    {
+        X509_V_ERR_SUITE_B_INVALID_CURVE, //58
+        "X509_V_ERR_SUITE_B_INVALID_CURVE"
+    },
+#endif
+#if defined(X509_V_ERR_SUITE_B_INVALID_SIGNATURE_ALGORITHM)
+    {
+        X509_V_ERR_SUITE_B_INVALID_SIGNATURE_ALGORITHM, //59
+        "X509_V_ERR_SUITE_B_INVALID_SIGNATURE_ALGORITHM"
+    },
+#endif
+#if defined(X509_V_ERR_SUITE_B_LOS_NOT_ALLOWED)
+    {
+        X509_V_ERR_SUITE_B_LOS_NOT_ALLOWED, //60
+        "X509_V_ERR_SUITE_B_LOS_NOT_ALLOWED"
+    },
+#endif
+#if defined(X509_V_ERR_SUITE_B_CANNOT_SIGN_P_384_WITH_P_256)
+    {
+        X509_V_ERR_SUITE_B_CANNOT_SIGN_P_384_WITH_P_256, //61
+        "X509_V_ERR_SUITE_B_CANNOT_SIGN_P_384_WITH_P_256"
+    },
+#endif
+#if defined(X509_V_ERR_HOSTNAME_MISMATCH)
+    {
+        X509_V_ERR_HOSTNAME_MISMATCH, //62
+        "X509_V_ERR_HOSTNAME_MISMATCH"
+    },
+#endif
+#if defined(X509_V_ERR_EMAIL_MISMATCH)
+    {
+        X509_V_ERR_EMAIL_MISMATCH, //63
+        "X509_V_ERR_EMAIL_MISMATCH"
+    },
+#endif
+#if defined(X509_V_ERR_IP_ADDRESS_MISMATCH)
+    {
+        X509_V_ERR_IP_ADDRESS_MISMATCH, //64
+        "X509_V_ERR_IP_ADDRESS_MISMATCH"
+    },
+#endif
+#if defined(X509_V_ERR_DANE_NO_MATCH)
+    {
+        X509_V_ERR_DANE_NO_MATCH, //65
+        "X509_V_ERR_DANE_NO_MATCH"
+    },
+#endif
+#if defined(X509_V_ERR_EE_KEY_TOO_SMALL)
+    {
+        X509_V_ERR_EE_KEY_TOO_SMALL, //66
+        "X509_V_ERR_EE_KEY_TOO_SMALL"
+    },
+#endif
+#if defined(X509_V_ERR_CA_KEY_TOO_SMALL)
+    {
+        X509_V_ERR_CA_KEY_TOO_SMALL, //67
+        "X509_V_ERR_CA_KEY_TOO_SMALL"
+    },
+#endif
+#if defined(X509_V_ERR_CA_MD_TOO_WEAK)
+    {
+        X509_V_ERR_CA_MD_TOO_WEAK, //68
+        "X509_V_ERR_CA_MD_TOO_WEAK"
+    },
+#endif
+#if defined(X509_V_ERR_INVALID_CALL)
+    {
+        X509_V_ERR_INVALID_CALL, //69
+        "X509_V_ERR_INVALID_CALL"
+    },
+#endif
+#if defined(X509_V_ERR_STORE_LOOKUP)
+    {
+        X509_V_ERR_STORE_LOOKUP, //70
+        "X509_V_ERR_STORE_LOOKUP"
+    },
+#endif
+#if defined(X509_V_ERR_NO_VALID_SCTS)
+    {
+        X509_V_ERR_NO_VALID_SCTS, //71
+        "X509_V_ERR_NO_VALID_SCTS"
+    },
+#endif
+#if defined(X509_V_ERR_PROXY_SUBJECT_NAME_VIOLATION)
+    {
+        X509_V_ERR_PROXY_SUBJECT_NAME_VIOLATION, //72
+        "X509_V_ERR_PROXY_SUBJECT_NAME_VIOLATION"
+    },
+#endif
+#if defined(X509_V_ERR_OCSP_VERIFY_NEEDED)
+    {
+        X509_V_ERR_OCSP_VERIFY_NEEDED, //73
+        "X509_V_ERR_OCSP_VERIFY_NEEDED"
+    },
+#endif
+#if defined(X509_V_ERR_OCSP_VERIFY_FAILED)
+    {
+        X509_V_ERR_OCSP_VERIFY_FAILED, //74
+        "X509_V_ERR_OCSP_VERIFY_FAILED"
+    },
+#endif
+#if defined(X509_V_ERR_OCSP_CERT_UNKNOWN)
+    {
+        X509_V_ERR_OCSP_CERT_UNKNOWN, //75
+        "X509_V_ERR_OCSP_CERT_UNKNOWN"
+    },
+#endif
     { SSL_ERROR_NONE, "SSL_ERROR_NONE"},
     {SSL_ERROR_NONE, NULL}
 };
@@ -286,6 +412,27 @@ static const char *OptionalSslErrors[] = {
     "X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX",
     "X509_V_ERR_UNSUPPORTED_NAME_SYNTAX",
     "X509_V_ERR_CRL_PATH_VALIDATION_ERROR",
+    "X509_V_ERR_PATH_LOOP",
+    "X509_V_ERR_SUITE_B_INVALID_VERSION",
+    "X509_V_ERR_SUITE_B_INVALID_ALGORITHM",
+    "X509_V_ERR_SUITE_B_INVALID_CURVE",
+    "X509_V_ERR_SUITE_B_INVALID_SIGNATURE_ALGORITHM",
+    "X509_V_ERR_SUITE_B_LOS_NOT_ALLOWED",
+    "X509_V_ERR_SUITE_B_CANNOT_SIGN_P_384_WITH_P_256",
+    "X509_V_ERR_HOSTNAME_MISMATCH",
+    "X509_V_ERR_EMAIL_MISMATCH",
+    "X509_V_ERR_IP_ADDRESS_MISMATCH",
+    "X509_V_ERR_DANE_NO_MATCH",
+    "X509_V_ERR_EE_KEY_TOO_SMALL",
+    "X509_V_ERR_CA_KEY_TOO_SMALL",
+    "X509_V_ERR_CA_MD_TOO_WEAK",
+    "X509_V_ERR_INVALID_CALL",
+    "X509_V_ERR_STORE_LOOKUP",
+    "X509_V_ERR_NO_VALID_SCTS",
+    "X509_V_ERR_PROXY_SUBJECT_NAME_VIOLATION",
+    "X509_V_ERR_OCSP_VERIFY_NEEDED",
+    "X509_V_ERR_OCSP_VERIFY_FAILED",
+    "X509_V_ERR_OCSP_CERT_UNKNOWN",
     NULL
 };
 
@@ -390,7 +537,7 @@ Ssl::ParseErrorString(const char *name, Security::Errors &errors)
     return false; // not reached
 }
 
-const char *Ssl::GetErrorName(Security::ErrorCode value)
+const char *Ssl::GetErrorName(Security::ErrorCode value, const bool prefixRawCode)
 {
     if (TheSslErrors.empty())
         loadSslErrorMap();
@@ -399,7 +546,9 @@ const char *Ssl::GetErrorName(Security::ErrorCode value)
     if (it != TheSslErrors.end())
         return it->second->name;
 
-    return NULL;
+    static char tmpBuffer[128];
+    snprintf(tmpBuffer, sizeof(tmpBuffer), "%s%d", prefixRawCode ? "SSL_ERR=" : "", (int)value);
+    return tmpBuffer;
 }
 
 bool
@@ -529,21 +678,14 @@ const char *Ssl::ErrorDetail::notafter() const
  */
 const char *Ssl::ErrorDetail::err_code() const
 {
-    static char tmpBuffer[64];
     // We can use the GetErrorName but using the detailEntry is faster,
     // so try it first.
-    const char *err = detailEntry.name.termedBuf();
+    if (const char *err = detailEntry.name.termedBuf())
+        return err;
 
     // error details not loaded yet or not defined in error_details.txt,
     // try the GetErrorName...
-    if (!err)
-        err = GetErrorName(error_no);
-
-    if (!err) {
-        snprintf(tmpBuffer, 64, "%d", (int)error_no);
-        err = tmpBuffer;
-    }
-    return err;
+    return GetErrorName(error_no);
 }
 
 /**
