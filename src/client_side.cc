@@ -2184,17 +2184,9 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
         return;
 
     const err_type error = receivedFirstByte_ ? ERR_REQUEST_PARSE_TIMEOUT : ERR_REQUEST_START_TIMEOUT;
+    updateError(error);
     if (tunnelOnError(HttpRequestMethod(), error))
         return;
-
-    // XXX: tunnelOnError() already details the error in some "return false"
-    // cases. Other tunnelOnError() callers seem to suffer from a similar
-    // double-detailing problem. Moreover, it is not clear why we are waiting
-    // for tunnelOnError() to detail the failure that we already know everything
-    // about. The error has happened already and should be detailed ASAP. A
-    // successful tunnel is not going to change that fact!
-
-    updateError(error);
 
     /*
     * Just close the connection to not confuse browsers
