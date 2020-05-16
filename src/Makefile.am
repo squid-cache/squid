@@ -386,7 +386,6 @@ squid_SOURCES = \
 	dlink.h \
 	enums.h \
 	err_detail_type.h \
-	err_detail_type.cc \
 	err_type.h \
 	errorpage.cc \
 	errorpage.h \
