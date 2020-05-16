@@ -253,9 +253,6 @@ public:
     /// called by FwdState when it is done bumping the server
     void httpsPeeked(PinnedIdleContext pic);
 
-    /// Callback for bumping step2 acl check
-    void bumpStep2AccessCheckDone(const Acl::Answer &);
-
     /// Splice a bumped client connection on peek-and-splice mode
     bool splice();
 

@@ -3041,40 +3041,31 @@ ConnStateData::parseTlsHandshake()
 void httpsSslBumpStep2AccessCheckDone(Acl::Answer answer, void *data)
 {
     ConnStateData *connState = (ConnStateData *) data;
-    connState->bumpStep2AccessCheckDone(answer);
-}
 
-void
-ConnStateData::bumpStep2AccessCheckDone(const Acl::Answer &answer)
-{
     // if the connection is closed or closing, just return.
-    if (!isOpen())
+    if (!connState->isOpen())
         return;
 
     debugs(33, 5, "Answer: " << answer << " kind:" << answer.kind);
-    assert(serverBump());
+    assert(connState->serverBump());
     Ssl::BumpMode bumpAction;
     if (answer.allowed()) {
         bumpAction = (Ssl::BumpMode)answer.kind;
     } else
         bumpAction = Ssl::bumpSplice;
 
-    serverBump()->act.step2 = bumpAction;
-    sslBumpMode = bumpAction;
-    Http::StreamPointer context = pipeline.front();
-
-    const auto http = (context ? context->http : nullptr);
-
-    if (http)
+    connState->serverBump()->act.step2 = bumpAction;
+    connState->sslBumpMode = bumpAction;
+    Http::StreamPointer context = connState->pipeline.front();
+    if (ClientHttpRequest *http = (context ? context->http : nullptr))
         http->al->ssl.bumpMode = bumpAction;
 
     if (bumpAction == Ssl::bumpTerminate) {
-        clientConnection->close();
+        connState->clientConnection->close();
     } else if (bumpAction != Ssl::bumpSplice) {
-        startPeekAndSplice();
-    } else if (!splice()) {
-        clientConnection->close();
-    }
+        connState->startPeekAndSplice();
+    } else if (!connState->splice())
+        connState->clientConnection->close();
 }
 
 bool
