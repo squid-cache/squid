@@ -31,7 +31,28 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS	= mem base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+SUBDIRS = \
+	mem \
+	base \
+	anyp \
+	helper \
+	dns \
+	ftp \
+	parser \
+	comm \
+	error \
+	eui \
+	acl \
+	format \
+	clients \
+	sbuf \
+	servers \
+	fs \
+	repl \
+	store \
+	DiskIO \
+	proxyp
+
 DIST_SUBDIRS = $(SUBDIRS)
 
 if ENABLE_AUTH
