@@ -59,11 +59,21 @@ TextException::what() const throw()
 }
 
 std::ostream &
+operator <<(std::ostream &os, const TextException &ex)
+{
+    ex.print(os);
+    return os;
+}
+
+std::ostream &
 CurrentException(std::ostream &os)
 {
     if (std::current_exception()) {
         try {
             throw; // re-throw to recognize the exception type
+        }
+        catch (const TextException &ex) {
+            os << ex; // optimization: this is a lot cheaper than what() below
         }
         catch (const std::exception &ex) {
             os << ex.what();

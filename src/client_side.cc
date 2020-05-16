@@ -2977,14 +2977,13 @@ ConnStateData::parseTlsHandshake()
             return;
         }
     }
-    catch (const std::exception &ex) {
-        debugs(83, 2, "error on FD " << clientConnection->fd << ": " << ex.what());
-        // TODO: Consider changing TLS handshake parser to report an ErrorDetail
-        // instead of TextException, especially if it can share more details.
-        if (const auto tex = dynamic_cast<const TextException *>(&ex))
-            parseErrorDetails = new ExceptionErrorDetail(tex->id());
-        else
-            parseErrorDetails = ERR_DETAIL_TLS_HANDSHAKE;
+    catch (const TextException &ex) {
+        debugs(83, 2, "exception: " << ex);
+        parseErrorDetails = new ExceptionErrorDetail(ex.id());
+    }
+    catch (...) {
+        debugs(83, 2, "exception: " << CurrentException);
+        parseErrorDetails = ERR_DETAIL_TLS_HANDSHAKE;
     }
 
     parsingTlsHandshake = false;
