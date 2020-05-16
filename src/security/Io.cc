@@ -15,7 +15,7 @@
 namespace Security {
 
 template <typename Fun>
-static IoResult GuardedIo(Comm::Connection &, ErrorCode, Fun);
+static IoResult Handshake(Comm::Connection &, ErrorCode, Fun);
 static void PrepForIo();
 
 typedef SessionPointer::element_type *ConnectionPointer;
@@ -51,7 +51,7 @@ Security::PrepForIo()
 /// Handles alert logging and being called without adequate TLS library support.
 template <typename Fun>
 static Security::IoResult
-Security::GuardedIo(Comm::Connection &transport, const ErrorCode topError, Fun ioCall)
+Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun ioCall)
 {
     assert(transport.isOpen());
     const auto fd = transport.fd;
@@ -163,7 +163,7 @@ Security::GuardedIo(Comm::Connection &transport, const ErrorCode topError, Fun i
 Security::IoResult
 Security::Accept(Comm::Connection &transport)
 {
-    return GuardedIo(transport, SQUID_TLS_ERR_ACCEPT, [] (ConnectionPointer tlsConn) -> auto {
+    return Handshake(transport, SQUID_TLS_ERR_ACCEPT, [] (ConnectionPointer tlsConn) -> auto {
 #if USE_OPENSSL
         return SSL_accept(tlsConn);
 #elif USE_GNUTLS
@@ -178,7 +178,7 @@ Security::Accept(Comm::Connection &transport)
 Security::IoResult
 Security::Connect(Comm::Connection &transport)
 {
-    return GuardedIo(transport, SQUID_TLS_ERR_CONNECT, [] (ConnectionPointer tlsConn) -> auto {
+    return Handshake(transport, SQUID_TLS_ERR_CONNECT, [] (ConnectionPointer tlsConn) -> auto {
 #if USE_OPENSSL
         return SSL_connect(tlsConn);
 #elif USE_GNUTLS
