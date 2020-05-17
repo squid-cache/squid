@@ -85,9 +85,6 @@ std::ostream &operator <<(std::ostream &os, const ErrorDetail::Pointer &);
 
 /* pre-created error globals that reduce common error handling overheads */
 
-/// an absent error detail -- a nil pointer
-extern const ErrorDetail::Pointer ERR_DETAIL_NONE;
-
 /// external redirector request timed-out
 extern const ErrorDetail::Pointer ERR_DETAIL_REDIRECTOR_TIMEDOUT;
 

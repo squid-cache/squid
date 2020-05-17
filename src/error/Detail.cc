@@ -30,7 +30,6 @@ private:
     Name name;
 };
 
-const ErrorDetail::Pointer ERR_DETAIL_NONE = nullptr;
 const ErrorDetail::Pointer ERR_DETAIL_REDIRECTOR_TIMEDOUT = new EnumeratedErrorDetail("REDIRECTOR_TIMEDOUT");
 const ErrorDetail::Pointer ERR_DETAIL_CLT_REQMOD_ABORT = new EnumeratedErrorDetail("CLT_REQMOD_ABORT");
 const ErrorDetail::Pointer ERR_DETAIL_CLT_REQMOD_REQ_BODY = new EnumeratedErrorDetail("CLT_REQMOD_REQ_BODY");
