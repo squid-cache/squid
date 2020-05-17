@@ -105,6 +105,9 @@ public:
      * Implements RFC 3986 section 5.2.3
      *
      * The caller must ensure relUrl is a valid relative-path.
+     *
+     * NP: absolute-path are also accepted, but path() method
+     * should be used instead when possible.
      */
     void addRelativePath(const char *relUrl);
 

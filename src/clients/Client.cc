@@ -465,7 +465,7 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, Http::Message *rep, H
      * as per RFC 2616 13.10.
      */
     SBuf absUrlMaker;
-    const char *absUrl;
+    const char *absUrl = nullptr;
     if (urlIsRelative(hdrUrl)) {
         if (req->method.id() == Http::METHOD_CONNECT)
             absUrl = hdrUrl; // TODO: merge authority-uri and hdrUrl

@@ -608,8 +608,8 @@ AnyP::Uri::absolute() const
 
             if (allowUserInfo && !userInfo().isEmpty()) {
                 static const CharacterSet uiChars = CharacterSet(UserInfoChars())
-                                                    .rename("userinfo-reserved")
-                                                    .remove('%');
+                                                    .remove('%')
+                                                    .rename("userinfo-reserved");
                 absolute_.append(Encode(userInfo(), uiChars));
                 absolute_.append("@", 1);
             }
@@ -705,7 +705,7 @@ AnyP::Uri::addRelativePath(const char *relUrl)
     if (getScheme() == AnyP::PROTO_URN)
         return;
 
-    // if the first char is '/' assume its a relative path
+    // if the first char is '/' assume it is an absolute-path
     // XXX: this breaks on scheme-relative URLs,
     // but we should not see those outside ESI, and rarely there.
     // XXX: also breaks on any URL containing a '/' in the query-string portion
