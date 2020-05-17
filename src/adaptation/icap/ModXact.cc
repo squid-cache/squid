@@ -672,7 +672,7 @@ void Adaptation::Icap::ModXact::callException(const std::exception &e)
             if (const TextException *te = dynamic_cast<const TextException *>(&e))
                 detailError(new ExceptionErrorDetail(te->id()));
             else
-                detailError(ERR_DETAIL_EXCEPTION_OTHER);
+                detailError(new ExceptionErrorDetail(Here().id()));
         }
         Adaptation::Icap::Xaction::callException(e);
         return;
@@ -686,7 +686,7 @@ void Adaptation::Icap::ModXact::callException(const std::exception &e)
         detailError(new ExceptionErrorDetail(bypassTe.id()));
         Adaptation::Icap::Xaction::callException(bypassTe);
     } catch (const std::exception &bypassE) {
-        detailError(ERR_DETAIL_EXCEPTION_OTHER);
+        detailError(new ExceptionErrorDetail(Here().id()));
         Adaptation::Icap::Xaction::callException(bypassE);
     }
 }

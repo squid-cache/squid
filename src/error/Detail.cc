@@ -51,7 +51,6 @@ const ErrorDetail::Pointer ERR_DETAIL_TLS_HANDSHAKE = new EnumeratedErrorDetail(
 const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_SUCCESS = new EnumeratedErrorDetail("ERR_DETAIL_UNEXPECTED_SUCCESS");
 const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_READ = new EnumeratedErrorDetail("ERR_DETAIL_UNEXPECTED_READ");
 const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_WRITE = new EnumeratedErrorDetail("ERR_DETAIL_UNEXPECTED_WRITE");
-const ErrorDetail::Pointer ERR_DETAIL_EXCEPTION_OTHER = new EnumeratedErrorDetail("EXCEPTION_OTHER");
 
 /* ErrorDetail */
 

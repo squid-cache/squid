@@ -150,9 +150,5 @@ extern const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_READ;
 /// but Squid code has somehow missed that request
 extern const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_WRITE;
 
-/// other errors that lead to exceptions caught by transactions
-/// (e.g., exceptions thrown by C++ STL)
-extern const ErrorDetail::Pointer ERR_DETAIL_EXCEPTION_OTHER;
-
 #endif /* _SQUID_SRC_ERROR_DETAIL_H */
 

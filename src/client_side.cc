@@ -620,7 +620,7 @@ ConnStateData::callException(const std::exception &ex)
     if (const auto tex = dynamic_cast<const TextException*>(&ex))
         errorDetail = new ExceptionErrorDetail(tex->id());
     else
-        errorDetail = ERR_DETAIL_EXCEPTION_OTHER;
+        errorDetail = new ExceptionErrorDetail(Here().id());
     updateError(ERR_GATEWAY_FAILURE, errorDetail);
 }
 
