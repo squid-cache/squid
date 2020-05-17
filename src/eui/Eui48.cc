@@ -45,8 +45,10 @@ struct arpreq {
 /* required by Solaris */
 #include <sys/sockio.h>
 #endif
+#if _SQUID_FREEBSD_ || _SQUID_NETBSD_ || _SQUID_OPENBSD_ || _SQUID_DRAGONFLY_ || _SQUID_KFREEBSD_
 #if HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
+#endif
 #endif
 #if HAVE_NET_ROUTE_H
 #include <net/route.h>
