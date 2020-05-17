@@ -126,8 +126,13 @@ private:
     WaitingPeerSelectors selectors; ///< \see WaitingPeerSelectors
 };
 
-/// monitors all PeerSelector ICP ping timeouts
-PeerSelectorPingMonitor ThePeerSelectorPingMonitor;
+static PeerSelectorPingMonitor &
+PingMonitor()
+{
+    /// monitors all PeerSelector ICP ping timeouts
+    static const auto Instance = new PeerSelectorPingMonitor();
+    return *Instance;
+}
 
 /* PeerSelectorPingMonitor */
 
@@ -204,7 +209,7 @@ PeerSelectorPingMonitor::forget(PeerSelector *selector)
     assert(selector);
 
     if (selector->ping.monitorRegistration == npos())
-        return; // already forgotten, handlePingTimeout() is queued
+        return; // already forgotten
 
     const auto wasFirst = selector->ping.monitorRegistration == selectors.begin();
     selectors.erase(selector->ping.monitorRegistration);
@@ -227,12 +232,10 @@ PeerSelector::~PeerSelector()
         servers = next;
     }
 
+    cancelPingTimeoutMonitoring();
+
     if (entry) {
         debugs(44, 3, entry->url());
-
-        if (entry->ping_status == PING_WAITING)
-            cancelPingTimeoutMonitoring();
-
         entry->ping_status = PING_DONE;
     }
 
@@ -257,16 +260,14 @@ PeerSelector::startPingWaiting()
 {
     assert(entry);
     assert(entry->ping_status != PING_WAITING);
-    ThePeerSelectorPingMonitor.monitor(this);
+    PingMonitor().monitor(this);
     entry->ping_status = PING_WAITING;
 }
 
 void
 PeerSelector::cancelPingTimeoutMonitoring()
 {
-    assert(entry);
-    assert(entry->ping_status == PING_WAITING);
-    ThePeerSelectorPingMonitor.forget(this);
+    PingMonitor().forget(this);
 }
 
 static int
@@ -1186,7 +1187,7 @@ ping_data::ping_data() :
     timedout(0),
     w_rtt(0),
     p_rtt(0),
-    monitorRegistration(ThePeerSelectorPingMonitor.npos())
+    monitorRegistration(PingMonitor().npos())
 {
     start.tv_sec = 0;
     start.tv_usec = 0;
