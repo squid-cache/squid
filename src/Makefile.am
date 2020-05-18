@@ -3121,6 +3121,8 @@ tests_testEventLoop_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
+	ClientRequestContext.h \
+	ClientRequestContext.cc \
 	tests/stub_client_db.cc \
 	client_side.h \
 	client_side.cc \
