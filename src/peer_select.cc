@@ -126,10 +126,10 @@ private:
     WaitingPeerSelectors selectors; ///< \see WaitingPeerSelectors
 };
 
+/// monitors all PeerSelector ICP ping timeouts
 static PeerSelectorPingMonitor &
 PingMonitor()
 {
-    /// monitors all PeerSelector ICP ping timeouts
     static const auto Instance = new PeerSelectorPingMonitor();
     return *Instance;
 }
