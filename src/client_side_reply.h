@@ -156,5 +156,9 @@ private:
     CollapsedRevalidation collapsedRevalidation;
 };
 
+ErrorState *
+clientBuildError(err_type, Http::StatusCode, char const *,
+    Ip::Address &, HttpRequest *, const AccessLogEntry::Pointer &);
+
 #endif /* SQUID_CLIENTSIDEREPLY_H */
 
