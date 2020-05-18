@@ -1876,6 +1876,8 @@ tests_test_http_range_SOURCES = \
 	client_side_reply.cc \
 	client_side_request.cc \
 	ClientInfo.h \
+	ClientRequestContext.h \
+	ClientRequestContext.cc \
 	clientStream.cc \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
@@ -2275,6 +2277,8 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_carp.cc \
 	cbdata.cc \
 	tests/stub_client_db.cc \
+	ClientRequestContext.h \
+	ClientRequestContext.cc \
 	client_side.h \
 	client_side.cc \
 	client_side_reply.cc \
@@ -2572,6 +2576,8 @@ tests_testCacheManager_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
+	ClientRequestContext.h \
+	ClientRequestContext.cc \
 	tests/stub_client_db.cc \
 	client_side.h \
 	client_side.cc \
@@ -2878,6 +2884,8 @@ tests_testEvent_SOURCES = \
 	carp.h \
 	tests/stub_carp.cc \
 	cbdata.cc \
+	ClientRequestContext.h \
+	ClientRequestContext.cc \
 	tests/stub_client_db.cc \
 	client_side.h \
 	client_side.cc \

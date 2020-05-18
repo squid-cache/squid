@@ -80,22 +80,13 @@
 
 static const char *const crlf = "\r\n";
 
-#if FOLLOW_X_FORWARDED_FOR
-static void clientFollowXForwardedForCheck(Acl::Answer answer, void *data);
-#endif /* FOLLOW_X_FORWARDED_FOR */
 
 ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, Ip::Address &, HttpRequest *, const AccessLogEntry::Pointer &);
 
 /* Local functions */
 /* other */
-static void clientAccessCheckDoneWrapper(Acl::Answer, void *);
-#if USE_OPENSSL
-static void sslBumpAccessCheckDoneWrapper(Acl::Answer, void *);
-#endif
 static int clientHierarchical(ClientHttpRequest * http);
 static void clientInterpretRequestHeaders(ClientHttpRequest * http);
-static HLPCB clientRedirectDoneWrapper;
-static HLPCB clientStoreIdDoneWrapper;
 static void checkNoCacheDoneWrapper(Acl::Answer, void *);
 SQUIDCEXTERN CSR clientGetMoreData;
 SQUIDCEXTERN CSS clientReplyStatus;
@@ -367,109 +358,6 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     return 0;
 }
 
-#if FOLLOW_X_FORWARDED_FOR
-/**
- * clientFollowXForwardedForCheck() checks the content of X-Forwarded-For:
- * against the followXFF ACL, or cleans up and passes control to
- * clientAccessCheck().
- *
- * The trust model here is a little ambiguous. So to clarify the logic:
- * - we may always use the direct client address as the client IP.
- * - these trust tests merey tell whether we trust given IP enough to believe the
- *   IP string which it appended to the X-Forwarded-For: header.
- * - if at any point we don't trust what an IP adds we stop looking.
- * - at that point the current contents of indirect_client_addr are the value set
- *   by the last previously trusted IP.
- * ++ indirect_client_addr contains the remote direct client from the trusted peers viewpoint.
- */
-static void
-clientFollowXForwardedForCheck(Acl::Answer answer, void *data)
-{
-    ClientRequestContext *calloutContext = (ClientRequestContext *) data;
-
-    if (!calloutContext->httpStateIsValid())
-        return;
-
-    ClientHttpRequest *http = calloutContext->http;
-    HttpRequest *request = http->request;
-
-    if (answer.allowed() && request->x_forwarded_for_iterator.size() != 0) {
-
-        /*
-         * Remove the last comma-delimited element from the
-         * x_forwarded_for_iterator and use it to repeat the cycle.
-         */
-        const char *p;
-        const char *asciiaddr;
-        int l;
-        Ip::Address addr;
-        p = request->x_forwarded_for_iterator.termedBuf();
-        l = request->x_forwarded_for_iterator.size();
-
-        /*
-        * XXX x_forwarded_for_iterator should really be a list of
-        * IP addresses, but it's a String instead.  We have to
-        * walk backwards through the String, biting off the last
-        * comma-delimited part each time.  As long as the data is in
-        * a String, we should probably implement and use a variant of
-        * strListGetItem() that walks backwards instead of forwards
-        * through a comma-separated list.  But we don't even do that;
-        * we just do the work in-line here.
-        */
-        /* skip trailing space and commas */
-        while (l > 0 && (p[l-1] == ',' || xisspace(p[l-1])))
-            --l;
-        request->x_forwarded_for_iterator.cut(l);
-        /* look for start of last item in list */
-        while (l > 0 && ! (p[l-1] == ',' || xisspace(p[l-1])))
-            --l;
-        asciiaddr = p+l;
-        if ((addr = asciiaddr)) {
-            request->indirect_client_addr = addr;
-            request->x_forwarded_for_iterator.cut(l);
-            calloutContext->acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
-            if (!Config.onoff.acl_uses_indirect_client) {
-                /* override the default src_addr tested if we have to go deeper than one level into XFF */
-                Filled(calloutContext->acl_checklist)->src_addr = request->indirect_client_addr;
-            }
-            calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
-            return;
-        }
-    }
-
-    /* clean up, and pass control to clientAccessCheck */
-    if (Config.onoff.log_uses_indirect_client) {
-        /*
-        * Ensure that the access log shows the indirect client
-        * instead of the direct client.
-        */
-        http->al->cache.caddr = request->indirect_client_addr;
-        if (ConnStateData *conn = http->getConn())
-            conn->log_addr = request->indirect_client_addr;
-    }
-    request->x_forwarded_for_iterator.clean();
-    request->flags.done_follow_x_forwarded_for = true;
-
-    if (answer.conflicted()) {
-        debugs(28, DBG_CRITICAL, "ERROR: Processing X-Forwarded-For. Stopping at IP address: " << request->indirect_client_addr );
-    }
-
-    /* process actual access ACL as normal. */
-    calloutContext->clientAccessCheck();
-}
-#endif /* FOLLOW_X_FORWARDED_FOR */
-
-void
-clientAccessCheckDoneWrapper(Acl::Answer answer, void *data)
-{
-    ClientRequestContext *calloutContext = (ClientRequestContext *) data;
-
-    if (!calloutContext->httpStateIsValid())
-        return;
-
-    calloutContext->clientAccessCheckDone(answer);
-}
-
 #if USE_ADAPTATION
 void
 ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
@@ -502,41 +390,6 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
 }
 
 #endif
-
-static void
-clientRedirectAccessCheckDone(Acl::Answer answer, void *data)
-{
-    ClientRequestContext *context = (ClientRequestContext *)data;
-    ClientHttpRequest *http = context->http;
-    context->acl_checklist = NULL;
-
-    if (answer.allowed())
-        redirectStart(http, clientRedirectDoneWrapper, context);
-    else {
-        Helper::Reply const nilReply(Helper::Error);
-        context->clientRedirectDone(nilReply);
-    }
-}
-
-/**
- * This methods handles Access checks result of StoreId access list.
- * Will handle as "ERR" (no change) in a case Access is not allowed.
- */
-static void
-clientStoreIdAccessCheckDone(Acl::Answer answer, void *data)
-{
-    ClientRequestContext *context = static_cast<ClientRequestContext *>(data);
-    ClientHttpRequest *http = context->http;
-    context->acl_checklist = NULL;
-
-    if (answer.allowed())
-        storeIdStart(http, clientStoreIdDoneWrapper, context);
-    else {
-        debugs(85, 3, "access denied expected ERR reply handling: " << answer);
-        Helper::Reply const nilReply(Helper::Error);
-        context->clientStoreIdDone(nilReply);
-    }
-}
 
 static int
 clientHierarchical(ClientHttpRequest * http)
@@ -782,28 +635,6 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     debugs(85, 5, "clientInterpretRequestHeaders: REQ_HIERARCHICAL = " <<
            (request->flags.hierarchical ? "SET" : "NOT SET"));
 
-}
-
-void
-clientRedirectDoneWrapper(void *data, const Helper::Reply &result)
-{
-    ClientRequestContext *calloutContext = (ClientRequestContext *)data;
-
-    if (!calloutContext->httpStateIsValid())
-        return;
-
-    calloutContext->clientRedirectDone(result);
-}
-
-void
-clientStoreIdDoneWrapper(void *data, const Helper::Reply &result)
-{
-    ClientRequestContext *calloutContext = (ClientRequestContext *)data;
-
-    if (!calloutContext->httpStateIsValid())
-        return;
-
-    calloutContext->clientStoreIdDone(result);
 }
 
 /*
