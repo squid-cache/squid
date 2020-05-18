@@ -9,6 +9,7 @@
 #ifndef SQUID_CLIENTREQUESTCONTEXT_H
 #define SQUID_CLIENTREQUESTCONTEXT_H
 
+#include "acl/Acl.h"
 #include "base/RefCount.h"
 #include "cbdata.h"
 #include "dns/forward.h"
@@ -28,7 +29,7 @@ class ClientRequestContext : public RefCountable
     CBDATA_CLASS(ClientRequestContext);
 
 public:
-    ClientRequestContext(ClientHttpRequest *);
+    explicit ClientRequestContext(ClientHttpRequest *);
     ~ClientRequestContext();
 
     bool httpStateIsValid();
@@ -59,27 +60,27 @@ public:
     void sslBumpAccessCheckDone(const Acl::Answer &answer);
 #endif
 
-    ClientHttpRequest *http;
-    ACLChecklist *acl_checklist;        /* need ptr back so we can unreg if needed */
-    int redirect_state;
-    int store_id_state;
+    ClientHttpRequest *http = nullptr;
+    ACLChecklist *acl_checklist = nullptr;  /* need ptr back so we can unreg if needed */
+    int redirect_state = REDIRECT_NONE;
+    int store_id_state = REDIRECT_NONE;
 
-    bool host_header_verify_done;
-    bool http_access_done;
-    bool adapted_http_access_done;
+    bool host_header_verify_done = false;
+    bool http_access_done = false;
+    bool adapted_http_access_done = false;
 #if USE_ADAPTATION
-    bool adaptation_acl_check_done;
+    bool adaptation_acl_check_done = false;
 #endif
-    bool redirect_done;
-    bool store_id_done;
-    bool no_cache_done;
-    bool interpreted_req_hdrs;
-    bool toClientMarkingDone;
+    bool redirect_done = false;
+    bool store_id_done = false;
+    bool no_cache_done = false;
+    bool interpreted_req_hdrs = false;
+    bool toClientMarkingDone = false;
 #if USE_OPENSSL
-    bool sslBumpCheckDone;
+    bool sslBumpCheckDone = false;
 #endif
-    ErrorState *error; ///< saved error page for centralized/delayed processing
-    bool readNextRequest; ///< whether Squid should read after error handling
+    ErrorState *error = nullptr; ///< saved error page for centralized/delayed processing
+    bool readNextRequest = false; ///< whether Squid should read after error handling
 };
 
 #endif /* SQUID_CLIENTREQUESTCONTEXT_H */

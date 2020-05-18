@@ -248,6 +248,7 @@ squid_SOURCES = \
 	BodyPipe.h \
 	ClientInfo.h \
 	ClientRequestContext.h \
+	ClientRequestContext.cc \
 	clientStream.cc \
 	clientStream.h \
 	clientStreamForward.h \
