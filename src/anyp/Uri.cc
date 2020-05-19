@@ -714,19 +714,19 @@ AnyP::Uri::addRelativePath(const char *relUrl)
         return;
     }
 
-    SBuf tmpPath = path();
-    auto lastSlashPos = tmpPath.rfind('/');
+    const auto lastSlashPos = path_.rfind('/');
+    // TODO: To optimize and simplify, add and use SBuf::replace().
+    const auto relUrlLength = strlen(relUrl);
     if (lastSlashPos == SBuf::npos) {
-        // replace the whole path with the given bit(s)
-        tmpPath.assign(SlashPath());
-        if (*relUrl)
-            tmpPath.append(relUrl);
+        // start replacing the whole path
+        path_.reserveCapacity(1 + relUrlLength);
+        path_.assign("/", 1);
     } else {
-        // replace only the last (file?) segment with the given bit(s)
-        tmpPath.chop(0, lastSlashPos+1);
-        tmpPath.append(relUrl);
+        // start replacing just the last segment
+        path_.reserveCapacity(lastSlashPos + 1 + relUrlLength);
+        path_.chop(0, lastSlashPos+1);
     }
-    path(tmpPath);
+    path_.append(relUrl, relUrlLength);
 }
 
 int
