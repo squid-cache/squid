@@ -672,30 +672,52 @@ urlCanonicalFakeHttps(const HttpRequest * request)
     return request->canonicalCleanUrl();
 }
 
-/*
- * Test if a URL is relative.
+/**
+ * Test if a URL is a relative reference.
  *
- * RFC 2396, Section 5 (Page 17) implies that in a relative URL, a '/' will
- * appear before a ':'.
+ * Governed by RFC 3986 section 4.2
+ *
+ *  relative-ref  = relative-part [ "?" query ] [ "#" fragment ]
+ *
+ *  relative-part = "//" authority path-abempty
+ *                / path-absolute
+ *                / path-noscheme
+ *                / path-empty
  */
 bool
 urlIsRelative(const char *url)
 {
-    const char *p;
+    if (!url)
+        return false; // no URL
 
-    if (url == NULL) {
-        return (false);
-    }
-    if (*url == '\0') {
-        return (false);
+    /*
+     * RFC 3986 section 5.2.3
+     *
+     * path          = path-abempty    ; begins with "/" or is empty
+     *               / path-absolute   ; begins with "/" but not "//"
+     *               / path-noscheme   ; begins with a non-colon segment
+     *               / path-rootless   ; begins with a segment
+     *               / path-empty      ; zero characters
+     */
+
+    if (*url == '\0')
+        return true; // path-empty
+
+    if (*url == '/') {
+        // RFC 3986 section 5.2.3
+        // path-absolute   ; begins with "/" but not "//"
+        if (url[1] == '/')
+            return true; // network-path reference, aka. 'scheme-relative URI'
+        else
+            return true; // path-absolute, aka 'absolute-path reference'
     }
 
-    for (p = url; *p != '\0' && *p != ':' && *p != '/'; ++p);
-
-    if (*p == ':') {
-        return (false);
+    for (const auto *p = url; *p != '\0' && *p != '/' && *p != '?' && *p != '#'; ++p) {
+        if (*p == ':')
+            return false; // colon is forbidden in first segment
     }
-    return (true);
+
+    return true; // path-noscheme, path-abempty, path-rootless
 }
 
 void
@@ -705,14 +727,7 @@ AnyP::Uri::addRelativePath(const char *relUrl)
     if (getScheme() == AnyP::PROTO_URN)
         return;
 
-    // if the first char is '/' assume it is an absolute-path
-    // XXX: this breaks on scheme-relative URLs,
-    // but we should not see those outside ESI, and rarely there.
-    // XXX: also breaks on any URL containing a '/' in the query-string portion
-    if (relUrl[0] == '/') {
-        path(relUrl);
-        return;
-    }
+    // TODO: Handle . and .. segment normalization
 
     const auto lastSlashPos = path_.rfind('/');
     // TODO: To optimize and simplify, add and use SBuf::replace().
