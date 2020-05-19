@@ -473,7 +473,7 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, Http::Message *rep, H
             absUrl = req->url.absolute().c_str();
         else {
             AnyP::Uri tmpUrl = req->url;
-            if (hdrUrl == '/') {
+            if (*hdrUrl == '/') {
                 // RFC 3986 section 4.2: absolute-path reference
                 // for this logic replace the entire request-target URI path
                 tmpUrl.path(hdrUrl);
