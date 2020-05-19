@@ -87,7 +87,6 @@ ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, Ip::Ad
 /* other */
 static int clientHierarchical(ClientHttpRequest * http);
 static void clientInterpretRequestHeaders(ClientHttpRequest * http);
-static void checkNoCacheDoneWrapper(Acl::Answer, void *);
 SQUIDCEXTERN CSR clientGetMoreData;
 SQUIDCEXTERN CSS clientReplyStatus;
 SQUIDCEXTERN CSD clientReplyDetach;
