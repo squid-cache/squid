@@ -29,6 +29,24 @@ Http::ContentLengthInterpreter::ContentLengthInterpreter():
 {
 }
 
+/// checks whether all characters before the Content-Length number are allowed
+/// \returns the start of the digit sequence (or nil on errors)
+const char *
+Http::ContentLengthInterpreter::findDigits(const char *prefix, const char * const valueEnd) const
+{
+    // skip leading OWS in RFC 7230's `OWS field-value OWS`
+    const CharacterSet &whitespace = Http::One::Parser::WhitespaceCharacters();
+    while (prefix < valueEnd) {
+        const auto ch = *prefix;
+        if (CharacterSet::DIGIT[ch])
+            return prefix; // common case: a pre-trimmed field value
+        if (!whitespace[ch])
+            return nullptr; // (trimmed) length does not start with a digit
+        ++prefix;
+    }
+    return nullptr; // empty or whitespace-only value
+}
+
 /// checks whether all characters after the Content-Length are allowed
 bool
 Http::ContentLengthInterpreter::goodSuffix(const char *suffix, const char * const end) const
@@ -53,10 +71,19 @@ Http::ContentLengthInterpreter::checkValue(const char *rawValue, const int value
 {
     Must(!sawBad);
 
+    const auto valueEnd = rawValue + valueSize;
+
+    const auto digits = findDigits(rawValue, valueEnd);
+    if (!digits) {
+        debugs(55, debugLevel, "WARNING: Leading garbage or empty value in" << Raw("Content-Length", rawValue, valueSize));
+        sawBad = true;
+        return false;
+    }
+
     int64_t latestValue = -1;
     char *suffix = nullptr;
-    // TODO: Handle malformed values with leading signs (e.g., "-0" or "+1").
-    if (!httpHeaderParseOffset(rawValue, &latestValue, &suffix)) {
+
+    if (!httpHeaderParseOffset(digits, &latestValue, &suffix)) {
         debugs(55, DBG_IMPORTANT, "WARNING: Malformed" << Raw("Content-Length", rawValue, valueSize));
         sawBad = true;
         return false;
@@ -69,7 +96,7 @@ Http::ContentLengthInterpreter::checkValue(const char *rawValue, const int value
     }
 
     // check for garbage after the number
-    if (!goodSuffix(suffix, rawValue + valueSize)) {
+    if (!goodSuffix(suffix, valueEnd)) {
         debugs(55, debugLevel, "WARNING: Trailing garbage in" << Raw("Content-Length", rawValue, valueSize));
         sawBad = true;
         return false;

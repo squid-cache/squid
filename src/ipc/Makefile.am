@@ -71,3 +71,6 @@ DEFS += -DDEFAULT_STATEDIR=\"$(localstatedir)/run/squid\"
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(localstatedir)/run/squid;
+
+libipc_la_LIBADD = $(ATOMICLIB)
+
