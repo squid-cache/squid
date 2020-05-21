@@ -43,6 +43,8 @@ public:
 
     /// the status code of the successfully parsed CONNECT response (or scNone)
     StatusCode peerResponseStatus = scNone;
+
+    Comm::ConnectionPointer conn;
 };
 
 std::ostream &operator <<(std::ostream &, const Http::TunnelerAnswer &);
