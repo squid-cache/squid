@@ -69,7 +69,7 @@ public:
     /// Add an entry to the map with specific TTL
     bool add(const Key &key, EntryValue *t, int ttl);
     /// Delete an entry from the map
-    bool del(const Key &key);
+    void del(const Key &key);
     /// (Re-)set the maximum size for this map
     void setMemLimit(size_t aSize);
     /// The available size for the map
@@ -86,7 +86,7 @@ private:
 
     bool expired(const Entry &e) const;
     void trim(size_t wantSpace);
-    bool del(const KeyMapIterator &);
+    void erase(const KeyMapIterator &);
     void findEntry(const Key &, KeyMapIterator &);
     size_t memoryCountedFor(const Key &, const EntryValue *);
 
@@ -141,7 +141,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::findEntry(const Key &key, KeyMapIterato
     }
     // else fall through to cleanup
 
-    del(i);
+    erase(i);
     i = index.end();
 }
 
@@ -206,27 +206,24 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::expired(const ClpMap::Entry &entry) con
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-bool
-ClpMap<Key, EntryValue, MemoryUsedByEV>::del(const KeyMapIterator &i)
+void
+ClpMap<Key, EntryValue, MemoryUsedByEV>::erase(const KeyMapIterator &i)
 {
-    if (i != index.end()) {
-        auto &e = (*i).second;
-        const auto sz = memoryCountedFor(e->key, e->value);
-        data.erase(e);
-        index.erase(i);
-        memUsed_ -= sz;
-        return true;
-    }
-    return false;
+    assert(i != index.end());
+    auto &e = (*i).second;
+    const auto sz = memoryCountedFor(e->key, e->value);
+    data.erase(e);
+    index.erase(i);
+    memUsed_ -= sz;
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-bool
+void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::del(const Key &key)
 {
     KeyMapIterator i;
     findEntry(key, i);
-    return del(i);
+    erase(i);
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
