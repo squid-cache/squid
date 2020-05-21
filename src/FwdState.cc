@@ -119,6 +119,18 @@ FwdState::abort(void* d)
 }
 
 void
+FwdState::closePendingConnection(const Comm::ConnectionPointer &conn, const char *reason)
+{
+    debugs(17, 3, "because " << reason << "; " << conn);
+    assert(!serverConn);
+    assert(!closeHandler);
+    if (IsConnOpen(conn)) {
+        fwdPconnPool->noteUses(fd_table[conn->fd].pconn.uses);
+        conn->close();
+    }
+}
+
+void
 FwdState::closeServerConnection(const char *reason)
 {
     debugs(17, 3, "because " << reason << "; " << serverConn);
@@ -753,6 +765,24 @@ FwdState::handleUnregisteredServerEnd()
     retryOrBail();
 }
 
+/// starts a preparation step for an established connection; retries on failures
+template <typename StepStart>
+void
+FwdState::advanceDestination(const char *stepDescription, const Comm::ConnectionPointer &conn, const StepStart &startStep)
+{
+    // TODO: Extract destination-specific handling from FwdState so that all the
+    // awkward, limited-scope advanceDestination() calls can be replaced with a
+    // single simple try/catch,retry block.
+    try {
+        startStep();
+        // now wait for the step callback
+    } catch (...) {
+        debugs (17, 2, "exception while trying to " << stepDescription << ": " << CurrentException);
+        closePendingConnection(conn, "connection preparation exception");
+        retryOrBail();
+    }
+}
+
 /// called when a to-peer connection has been successfully obtained or
 /// when all candidate destinations have been tried and all have failed
 void
@@ -764,22 +794,31 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
     Must(n_tries <= answer.n_tries); // n_tries cannot decrease
     n_tries = answer.n_tries;
 
-    if (const auto error = answer.error.get()) {
+    ErrorState *error = nullptr;
+    if ((error = answer.error.get())) {
         flags.dont_retry = true; // or HappyConnOpener would not have given up
         syncHierNote(answer.conn, request->url.host());
-        fail(error);
+        Must(!Comm::IsConnOpen(answer.conn));
         answer.error.clear(); // preserve error for errorSendComplete()
+    } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
+        syncHierNote(answer.conn, request->url.host());
+        closePendingConnection(answer.conn, "conn was closed while waiting for noteConnection");
+        error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
+    }
+
+    if (error) {
+        fail(error);
         retryOrBail(); // will notice flags.dont_retry and bail
         return;
     }
 
-    syncWithServerConn(answer.conn, request->url.host(), answer.reused);
-
-    if (answer.reused)
+    if (answer.reused) {
+        syncWithServerConn(answer.conn, request->url.host(), answer.reused);
         return dispatch();
+    }
 
     // Check if we need to TLS before use
-    if (const CachePeer *peer = serverConnection()->getPeer()) {
+    if (const auto *peer = answer.conn->getPeer()) {
         // Assume that it is only possible for the client-first from the
         // bumping modes to try connect to a remote server. The bumped
         // requests with other modes are using pinned connections or fails.
@@ -793,20 +832,27 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
         if (originWantsEncryptedTraffic && // the "encrypted traffic" part
                 !peer->options.originserver && // the "through a proxy" part
                 !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
-            return establishTunnelThruProxy();
+            return advanceDestination("establish tunnel through proxy", answer.conn, [this,&answer] {
+                establishTunnelThruProxy(answer.conn);
+            });
     }
 
-    secureConnectionToPeerIfNeeded();
+    secureConnectionToPeerIfNeeded(answer.conn);
 }
 
 void
-FwdState::establishTunnelThruProxy()
+FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::tunnelEstablishmentDone",
                                             Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
     HttpRequest::Pointer requestPointer = request;
-    const auto tunneler = new Http::Tunneler(serverConnection(), requestPointer, callback, connectingTimeout(serverConnection()), al);
+    const auto tunneler = new Http::Tunneler(conn, requestPointer, callback, connectingTimeout(serverConnection()), al);
+
+    // TODO: Replace this hack with proper Comm::Connection-Pool association
+    // that is not tied to fwdPconnPool and can handle disappearing pools.
+    tunneler->noteFwdPconnUse = true;
+
 #if USE_DELAY_POOLS
     Must(serverConnection()->getPeer());
     if (!serverConnection()->getPeer()->options.no_delay)
@@ -820,11 +866,18 @@ FwdState::establishTunnelThruProxy()
 void
 FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
-    if (answer.positive()) {
-        if (answer.leftovers.isEmpty()) {
-            secureConnectionToPeerIfNeeded();
-            return;
-        }
+    ErrorState *error = nullptr;
+    if (!answer.positive()) {
+        Must(!Comm::IsConnOpen(answer.conn));
+        error = answer.squidError.get();
+        Must(error);
+        answer.squidError.clear(); // preserve error for fail()
+    } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
+        // The socket could get closed while our callback was queued.
+        // We close Connection here to sync Connection::fd.
+        closePendingConnection(answer.conn, "conn was closed while waiting for tunnelEstablishmentDone");
+        error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
+    } else if (!answer.leftovers.isEmpty()) {
         // This should not happen because TLS servers do not speak first. If we
         // have to handle this, then pass answer.leftovers via a PeerConnector
         // to ServerBio. See ClientBio::setReadBufData().
@@ -832,33 +885,26 @@ FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
         const auto level = (occurrences++ < 100) ? DBG_IMPORTANT : 2;
         debugs(17, level, "ERROR: Early data after CONNECT response. " <<
                "Found " << answer.leftovers.length() << " bytes. " <<
-               "Closing " << serverConnection());
-        fail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request, al));
-        closeServerConnection("found early data after CONNECT response");
+               "Closing " << answer.conn);
+        error = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request, al);
+        closePendingConnection(answer.conn, "server spoke before tunnelEstablishmentDone");
+    }
+    if (error) {
+        fail(error);
         retryOrBail();
         return;
     }
 
-    // TODO: Reuse to-peer connections after a CONNECT error response.
-
-    if (const auto peer = serverConnection()->getPeer())
-        peerConnectFailed(peer);
-
-    const auto error = answer.squidError.get();
-    Must(error);
-    answer.squidError.clear(); // preserve error for fail()
-    fail(error);
-    closeServerConnection("Squid-generated CONNECT error");
-    retryOrBail();
+    secureConnectionToPeerIfNeeded(answer.conn);
 }
 
 /// handles an established TCP connection to peer (including origin servers)
 void
-FwdState::secureConnectionToPeerIfNeeded()
+FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
 {
     assert(!request->flags.pinned);
 
-    const CachePeer *p = serverConnection()->getPeer();
+    const auto p = conn->getPeer();
     const bool peerWantsTls = p && p->secure.encryptTransport;
     // userWillTlsToPeerForUs assumes CONNECT == HTTPS
     const bool userWillTlsToPeerForUs = p && p->options.originserver &&
@@ -872,56 +918,70 @@ FwdState::secureConnectionToPeerIfNeeded()
     const bool needTlsToOrigin = !p && request->url.getScheme() == AnyP::PROTO_HTTPS && !clientFirstBump;
 
     if (needTlsToPeer || needTlsToOrigin || needsBump) {
-        HttpRequest::Pointer requestPointer = request;
-        AsyncCall::Pointer callback = asyncCall(17,4,
-                                                "FwdState::ConnectedToPeer",
-                                                FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
-        const auto sslNegotiationTimeout = connectingTimeout(serverConnection());
-        Security::PeerConnector *connector = nullptr;
-#if USE_OPENSSL
-        if (request->flags.sslPeek)
-            connector = new Ssl::PeekingPeerConnector(requestPointer, serverConnection(), clientConn, callback, al, sslNegotiationTimeout);
-        else
-#endif
-            connector = new Security::BlindPeerConnector(requestPointer, serverConnection(), callback, al, sslNegotiationTimeout);
-        AsyncJob::Start(connector); // will call our callback
-        return;
+        return advanceDestination("secure connection to peer", conn, [this,&conn] {
+            secureConnectionToPeer(conn);
+        });
     }
 
     // if not encrypting just run the post-connect actions
-    successfullyConnectedToPeer();
+    successfullyConnectedToPeer(conn);
+}
+
+/// encrypts an established TCP connection to peer (including origin servers)
+void
+FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
+{
+    HttpRequest::Pointer requestPointer = request;
+    AsyncCall::Pointer callback = asyncCall(17,4,
+                                            "FwdState::ConnectedToPeer",
+                                            FwdStatePeerAnswerDialer(&FwdState::connectedToPeer, this));
+    const auto sslNegotiationTimeout = connectingTimeout(conn);
+    Security::PeerConnector *connector = nullptr;
+#if USE_OPENSSL
+    if (request->flags.sslPeek)
+        connector = new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, callback, al, sslNegotiationTimeout);
+    else
+#endif
+        connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
+    connector->noteFwdPconnUse = true;
+    AsyncJob::Start(connector); // will call our callback
 }
 
 /// called when all negotiations with the TLS-speaking peer have been completed
 void
 FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
 {
-    if (ErrorState *error = answer.error.get()) {
-        fail(error);
+    ErrorState *error = nullptr;
+    if ((error = answer.error.get())) {
+        Must(!Comm::IsConnOpen(answer.conn));
         answer.error.clear(); // preserve error for errorSendComplete()
-        if (CachePeer *p = serverConnection()->getPeer())
-            peerConnectFailed(p);
-        serverConnection()->close();
-        return;
-    }
-
-    if (answer.tunneled) {
+    } else if (answer.tunneled) {
         // TODO: When ConnStateData establishes tunnels, its state changes
         // [in ways that may affect logging?]. Consider informing
         // ConnStateData about our tunnel or otherwise unifying tunnel
         // establishment [side effects].
-        unregister(serverConn); // async call owns it now
         complete(); // destroys us
+        return;
+    } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
+        closePendingConnection(answer.conn, "conn was closed while waiting for connectedToPeer");
+        error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
+    }
+
+    if (error) {
+        fail(error);
+        retryOrBail();
         return;
     }
 
-    successfullyConnectedToPeer();
+    successfullyConnectedToPeer(answer.conn);
 }
 
 /// called when all negotiations with the peer have been completed
 void
-FwdState::successfullyConnectedToPeer()
+FwdState::successfullyConnectedToPeer(const Comm::ConnectionPointer &conn)
 {
+    syncWithServerConn(conn, request->url.host(), false);
+
     // should reach ConnStateData before the dispatched Client job starts
     CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                  ConnStateData::notePeerConnection, serverConnection());
@@ -1146,7 +1206,7 @@ FwdState::dispatch()
             // Set the dont_retry flag because this is not a transient (network) error.
             flags.dont_retry = true;
             if (Comm::IsConnOpen(serverConn)) {
-                serverConn->close();
+                serverConn->close(); // trigger cleanup
             }
             break;
         }

@@ -92,8 +92,9 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
     al->ssl.bumpMode = finalAction;
 
     if (finalAction == Ssl::bumpTerminate) {
-        serverConn->close();
+        bail(new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scForbidden, request.getRaw(), al));
         clientConn->close();
+        clientConn = nullptr;
     } else if (finalAction != Ssl::bumpSplice) {
         //Allow write, proceed with the connection
         srvBio->holdWrite(false);
@@ -140,11 +141,13 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
     if (!Security::PeerConnector::initialize(serverSession))
         return false;
 
+    // client connection supplies TLS client details and is also used if we
+    // need to splice or terminate the client and server connections
+    if (!Comm::IsConnOpen(clientConn))
+        return false;
+
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
 
-        // client connection is required in the case we need to splice
-        // or terminate client and server connections
-        assert(clientConn != NULL);
         SBuf *hostName = NULL;
 
         //Enable Status_request TLS extension, required to bump some clients
@@ -245,6 +248,10 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
     if (!error) {
         serverCertificateVerified();
         if (splice) {
+            if (!Comm::IsConnOpen(clientConn)) {
+                bail(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
+                throw TextException("from-client connection gone", Here());
+            }
             switchToTunnel(request.getRaw(), clientConn, serverConn);
             tunnelInsteadOfNegotiating();
         }
