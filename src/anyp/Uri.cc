@@ -30,6 +30,56 @@ static const char valid_hostname_chars[] =
     "[:]"
     ;
 
+/// Characters which are valid within a URI userinfo section
+static const CharacterSet &
+UserInfoChars()
+{
+    /*
+     * RFC 3986 section 3.2.1
+     *
+     *  userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
+     *  unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
+     *  pct-encoded   = "%" HEXDIG HEXDIG
+     *  sub-delims    = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+     */
+    static const auto userInfoValid = CharacterSet("userinfo", ":-._~%!$&'()*+,;=") +
+                                      CharacterSet::ALPHA +
+                                      CharacterSet::DIGIT;
+    return userInfoValid;
+}
+
+/**
+ * Governed by RFC 3986 section 2.1
+ */
+SBuf
+AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
+{
+    if (buf.isEmpty())
+        return buf;
+
+    Parser::Tokenizer tk(buf);
+    SBuf goodSection;
+    // optimization for the arguably common "no encoding necessary" case
+    if (tk.prefix(goodSection, ignore) && tk.atEnd())
+        return buf;
+
+    SBuf output;
+    output.reserveSpace(buf.length() * 3); // worst case: encode all chars
+    output.append(goodSection); // may be empty
+
+    while (!tk.atEnd()) {
+        // TODO: Add Tokenizer::parseOne(void).
+        const auto ch = tk.remaining()[0];
+        output.appendf("%%%02X", static_cast<unsigned int>(ch)); // TODO: Optimize using a table
+        (void)tk.skip(ch);
+
+        if (tk.prefix(goodSection, ignore))
+            output.append(goodSection);
+    }
+
+    return output;
+}
+
 const SBuf &
 AnyP::Uri::Asterisk()
 {
@@ -557,7 +607,10 @@ AnyP::Uri::absolute() const
                                        getScheme() == AnyP::PROTO_UNKNOWN;
 
             if (allowUserInfo && !userInfo().isEmpty()) {
-                absolute_.append(userInfo());
+                static const CharacterSet uiChars = CharacterSet(UserInfoChars())
+                                                    .remove('%')
+                                                    .rename("userinfo-reserved");
+                absolute_.append(Encode(userInfo(), uiChars));
                 absolute_.append("@", 1);
             }
             absolute_.append(authority());
@@ -565,7 +618,7 @@ AnyP::Uri::absolute() const
             absolute_.append(host());
             absolute_.append(":", 1);
         }
-        absolute_.append(path());
+        absolute_.append(path()); // TODO: Encode each URI subcomponent in path_ as needed.
     }
 
     return absolute_;
@@ -619,102 +672,76 @@ urlCanonicalFakeHttps(const HttpRequest * request)
     return request->canonicalCleanUrl();
 }
 
-/*
- * Test if a URL is relative.
+/**
+ * Test if a URL is a relative reference.
  *
- * RFC 2396, Section 5 (Page 17) implies that in a relative URL, a '/' will
- * appear before a ':'.
+ * Governed by RFC 3986 section 4.2
+ *
+ *  relative-ref  = relative-part [ "?" query ] [ "#" fragment ]
+ *
+ *  relative-part = "//" authority path-abempty
+ *                / path-absolute
+ *                / path-noscheme
+ *                / path-empty
  */
 bool
 urlIsRelative(const char *url)
 {
-    const char *p;
+    if (!url)
+        return false; // no URL
 
-    if (url == NULL) {
-        return (false);
-    }
-    if (*url == '\0') {
-        return (false);
+    /*
+     * RFC 3986 section 5.2.3
+     *
+     * path          = path-abempty    ; begins with "/" or is empty
+     *               / path-absolute   ; begins with "/" but not "//"
+     *               / path-noscheme   ; begins with a non-colon segment
+     *               / path-rootless   ; begins with a segment
+     *               / path-empty      ; zero characters
+     */
+
+    if (*url == '\0')
+        return true; // path-empty
+
+    if (*url == '/') {
+        // RFC 3986 section 5.2.3
+        // path-absolute   ; begins with "/" but not "//"
+        if (url[1] == '/')
+            return true; // network-path reference, aka. 'scheme-relative URI'
+        else
+            return true; // path-absolute, aka 'absolute-path reference'
     }
 
-    for (p = url; *p != '\0' && *p != ':' && *p != '/'; ++p);
-
-    if (*p == ':') {
-        return (false);
+    for (const auto *p = url; *p != '\0' && *p != '/' && *p != '?' && *p != '#'; ++p) {
+        if (*p == ':')
+            return false; // colon is forbidden in first segment
     }
-    return (true);
+
+    return true; // path-noscheme, path-abempty, path-rootless
 }
 
-/*
- * Convert a relative URL to an absolute URL using the context of a given
- * request.
- *
- * It is assumed that you have already ensured that the URL is relative.
- *
- * If NULL is returned it is an indication that the method in use in the
- * request does not distinguish between relative and absolute and you should
- * use the url unchanged.
- *
- * If non-NULL is returned, it is up to the caller to free the resulting
- * memory using safe_free().
- */
-char *
-urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
+void
+AnyP::Uri::addRelativePath(const char *relUrl)
 {
+    // URN cannot be merged
+    if (getScheme() == AnyP::PROTO_URN)
+        return;
 
-    if (req->method.id() == Http::METHOD_CONNECT) {
-        return (NULL);
-    }
+    // TODO: Handle . and .. segment normalization
 
-    char *urlbuf = (char *)xmalloc(MAX_URL * sizeof(char));
-
-    if (req->url.getScheme() == AnyP::PROTO_URN) {
-        // XXX: this is what the original code did, but it seems to break the
-        // intended behaviour of this function. It returns the stored URN path,
-        // not converting the given one into a URN...
-        snprintf(urlbuf, MAX_URL, SQUIDSBUFPH, SQUIDSBUFPRINT(req->url.absolute()));
-        return (urlbuf);
-    }
-
-    SBuf authorityForm = req->url.authority(); // host[:port]
-    const SBuf &scheme = req->url.getScheme().image();
-    size_t urllen = snprintf(urlbuf, MAX_URL, SQUIDSBUFPH "://" SQUIDSBUFPH "%s" SQUIDSBUFPH,
-                             SQUIDSBUFPRINT(scheme),
-                             SQUIDSBUFPRINT(req->url.userInfo()),
-                             !req->url.userInfo().isEmpty() ? "@" : "",
-                             SQUIDSBUFPRINT(authorityForm));
-
-    // if the first char is '/' assume its a relative path
-    // XXX: this breaks on scheme-relative URLs,
-    // but we should not see those outside ESI, and rarely there.
-    // XXX: also breaks on any URL containing a '/' in the query-string portion
-    if (relUrl[0] == '/') {
-        xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
+    const auto lastSlashPos = path_.rfind('/');
+    // TODO: To optimize and simplify, add and use SBuf::replace().
+    const auto relUrlLength = strlen(relUrl);
+    if (lastSlashPos == SBuf::npos) {
+        // start replacing the whole path
+        path_.reserveCapacity(1 + relUrlLength);
+        path_.assign("/", 1);
     } else {
-        SBuf path = req->url.path();
-        SBuf::size_type lastSlashPos = path.rfind('/');
-
-        if (lastSlashPos == SBuf::npos) {
-            // replace the whole path with the given bit(s)
-            urlbuf[urllen] = '/';
-            ++urllen;
-            xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
-        } else {
-            // replace only the last (file?) segment with the given bit(s)
-            ++lastSlashPos;
-            if (lastSlashPos > MAX_URL - urllen - 1) {
-                // XXX: crops bits in the middle of the combined URL.
-                lastSlashPos = MAX_URL - urllen - 1;
-            }
-            SBufToCstring(&urlbuf[urllen], path.substr(0,lastSlashPos));
-            urllen += lastSlashPos;
-            if (urllen + 1 < MAX_URL) {
-                xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
-            }
-        }
+        // start replacing just the last segment
+        path_.reserveCapacity(lastSlashPos + 1 + relUrlLength);
+        path_.chop(0, lastSlashPos+1);
     }
-
-    return (urlbuf);
+    path_.append(relUrl, relUrlLength);
 }
 
 int

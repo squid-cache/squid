@@ -78,6 +78,8 @@ public:
     }
 
     void userInfo(const SBuf &s) {userInfo_=s; touch();}
+    /// \returns raw userinfo subcomponent (or an empty string)
+    /// the caller is responsible for caller-specific encoding
     const SBuf &userInfo() const {return userInfo_;}
 
     void host(const char *src);
@@ -97,11 +99,26 @@ public:
     void path(const SBuf &p) {path_=p; touch();}
     const SBuf &path() const;
 
+    /**
+     * Merge a relative-path URL into the existing URI details.
+     * Implements RFC 3986 section 5.2.3
+     *
+     * The caller must ensure relUrl is a valid relative-path.
+     *
+     * NP: absolute-path are also accepted, but path() method
+     * should be used instead when possible.
+     */
+    void addRelativePath(const char *relUrl);
+
     /// the static '/' default URL-path
     static const SBuf &SlashPath();
 
     /// the static '*' pseudo-URI
     static const SBuf &Asterisk();
+
+    /// %-encode characters in a buffer which do not conform to
+    /// the provided set of expected characters.
+    static SBuf Encode(const SBuf &, const CharacterSet &expected);
 
     /**
      * The authority-form URI for currently stored values.
@@ -198,7 +215,6 @@ void urlInitialize(void);
 char *urlCanonicalCleanWithoutRequest(const SBuf &url, const HttpRequestMethod &, const AnyP::UriScheme &);
 const char *urlCanonicalFakeHttps(const HttpRequest * request);
 bool urlIsRelative(const char *);
-char *urlMakeAbsolute(const HttpRequest *, const char *);
 char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);
 char *urlInternal(const char *dir, const char *name);
 bool urlAppendDomain(char *host); ///< apply append_domain config to the given hostname
