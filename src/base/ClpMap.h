@@ -79,13 +79,13 @@ public:
     /// The current size of the map
     size_t memoryUsed() const {return memUsed_;}
     /// The number of stored entries
-    int entries() const {return entries_;}
+    size_t entries() const { return data.size(); }
 private:
     ClpMap(ClpMap const &);
     ClpMap & operator = (ClpMap const &);
 
     bool expired(const Entry &e) const;
-    void trim(size_t wantSpace = 0);
+    void trim(size_t wantSpace);
     bool del(const KeyMapIterator &);
     void findEntry(const Key &, KeyMapIterator &);
     size_t memoryCountedFor(const Key &, const EntryValue *);
@@ -101,7 +101,6 @@ private:
     int defaultTtl = std::numeric_limits<int>::max;
     size_t memLimit_ = 0; ///< The maximum memory to use
     size_t memUsed_ = 0;  ///< The amount of memory currently used
-    int entries_ = 0;     ///< The stored entries
 };
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
@@ -122,7 +121,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(size_t aSize)
         memLimit_ = 0;
 
     if (oldLimit > memLimit_)
-        trim();
+        trim(0);
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
@@ -187,16 +186,15 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, int 
 
     del(key);
 
-    const auto wantSz = memoryCountedFor(key, t);
-    if (wantSz >= memLimit())
+    const auto wantSpace = memoryCountedFor(key, t);
+    if (wantSpace >= memLimit())
         return false;
-    trim(wantSz);
+    trim(wantSpace);
 
     data.emplace_front(key, t, ttl);
     index.emplace(key, data.begin());
 
-    ++entries_;
-    memUsed_ += wantSz;
+    memUsed_ += wantSpace;
     return true;
 }
 
@@ -216,7 +214,6 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::del(const KeyMapIterator &i)
         const auto sz = memoryCountedFor(e->key, e->value);
         data.erase(e);
         index.erase(i);
-        --entries_;
         memUsed_ -= sz;
         return true;
     }
