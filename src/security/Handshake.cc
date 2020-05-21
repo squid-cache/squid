@@ -568,8 +568,8 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         // v1.3 server by sending supported_versions containing just X.
     } else {
         assert(messageSource == fromServer);
-        Parser::BinaryTokenizer tkVersion(extensionData, "selected_version");
-        const auto version = ParseProtocolVersion(tkVersion);
+        Parser::BinaryTokenizer tkVersion(extensionData);
+        const auto version = ParseProtocolVersion(tkVersion, "selected_version");
         // RFC 8446 Section 4.2.1:
         // A server which negotiates a version of TLS prior to TLS 1.3 [...]
         // MUST NOT send the "supported_versions" extension.

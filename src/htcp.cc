@@ -145,7 +145,7 @@ public:
 
 public:
     const char *method = nullptr;
-    char *uri = nullptr;
+    const char *uri = nullptr;
     char *version = nullptr;
     char *req_hdrs = nullptr;
     size_t reqHdrsSz = 0; ///< size of the req_hdrs content
@@ -816,6 +816,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
 
     if (spec) {
         stuff.S.method = spec->method;
+        stuff.S.request = spec->request;
         stuff.S.uri = spec->uri;
         stuff.S.version = spec->version;
         stuff.S.req_hdrs = spec->req_hdrs;
@@ -850,15 +851,15 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         hdr.clean();
 
 #if USE_ICMP
-        if (char *host = urlHostname(spec->uri)) {
+        if (const char *host = spec->request->url.host()) {
             int rtt = 0;
             int hops = 0;
             int samp = 0;
             netdbHostData(host, &samp, &rtt, &hops);
 
             if (rtt || hops) {
-                char cto_buf[128];
-                snprintf(cto_buf, 128, "%s %d %f %d",
+                char cto_buf[SQUIDHOSTNAMELEN+128];
+                snprintf(cto_buf, sizeof(cto_buf), "%s %d %f %d",
                          host, samp, 0.001 * rtt, hops);
                 hdr.putExt("Cache-to-Origin", cto_buf);
             }
@@ -1563,7 +1564,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
  * Send an HTCP CLR message for a specified item to a given CachePeer.
  */
 void
-htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &, CachePeer * p, htcp_clr_reason reason)
+htcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &, CachePeer * p, htcp_clr_reason reason)
 {
     static char pkt[8192];
     ssize_t pktlen;
@@ -1585,14 +1586,9 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
 
     SBuf sb = req->method.image();
     stuff.S.method = sb.c_str();
-    if (e == NULL || e->mem_obj == NULL) {
-        if (uri == NULL) {
-            return;
-        }
-        stuff.S.uri = xstrdup(uri);
-    } else {
-        stuff.S.uri = (char *) e->url();
-    }
+    stuff.S.request = req;
+    SBuf uri = req->effectiveRequestUri();
+    stuff.S.uri = uri.c_str();
     stuff.S.version = vbuf;
     if (reason != HTCP_CLR_INVALIDATION) {
         HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
@@ -1606,9 +1602,6 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
     if (reason != HTCP_CLR_INVALIDATION) {
         mb.clean();
-    }
-    if (e == NULL) {
-        xfree(stuff.S.uri);
     }
     if (!pktlen) {
         debugs(31, 3, "htcpClear: htcpBuildPacket() failed");

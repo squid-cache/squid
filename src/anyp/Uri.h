@@ -245,7 +245,6 @@ enum MatchDomainNameFlags {
  */
 int matchDomainName(const char *host, const char *domain, MatchDomainNameFlags flags = mdnNone);
 int urlCheckRequest(const HttpRequest *);
-char *urlHostname(const char *url);
 void urlExtMethodConfigure(void);
 
 #endif /* SQUID_SRC_ANYP_URI_H */
