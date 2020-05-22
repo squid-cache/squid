@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -238,7 +238,7 @@ Auth::User::BuildUserKey(const char *username, const char *realm)
 }
 
 /**
- * Dump the username cache statictics for viewing...
+ * Dump the username cache statistics for viewing...
  */
 void
 Auth::User::CredentialsCacheStats(StoreEntry *output)

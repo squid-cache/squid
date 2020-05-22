@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -95,7 +95,7 @@ while($out){
 
     my $pid;
     if($pid=fork()){
-	#do parrent staf
+	#do parent staf
 	close(FROM_ASTYLE);
 	
 	if(!open(IN, "<$in")){

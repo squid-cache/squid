@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -157,10 +157,20 @@ private:
     class Attempt {
     public:
         explicit operator bool() const { return static_cast<bool>(path); }
-        void clear() { path = nullptr; connector = nullptr; }
+
+        /// reacts to a natural attempt completion (successful or otherwise)
+        void finish() { clear(); }
+
+        /// aborts an in-progress attempt
+        void cancel(const char *reason);
 
         Comm::ConnectionPointer path; ///< the destination we are connecting to
-        AsyncCall::Pointer connector; ///< our Comm::ConnOpener callback
+        AsyncCall::Pointer connector; ///< our opener callback
+        Comm::ConnOpener::Pointer opener; ///< connects to path and calls us
+
+    private:
+        /// cleans up after the attempt ends (successfully or otherwise)
+        void clear() { path = nullptr; connector = nullptr; opener = nullptr; }
     };
 
     /* AsyncJob API */
@@ -194,6 +204,7 @@ private:
     Answer *futureAnswer(const Comm::ConnectionPointer &);
     void sendSuccess(const Comm::ConnectionPointer &conn, bool reused, const char *connKind);
     void sendFailure();
+    void cancelAttempt(Attempt &, const char *reason);
 
     const time_t fwdStart; ///< requestor start time
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -256,7 +256,7 @@ mem_hdr::copy(StoreIOBuffer const &target) const
     char *ptr_to_buf = target.data;
     int64_t location = target.offset;
 
-    /* Start copying begining with this block until
+    /* Start copying beginning with this block until
      * we're satiated */
 
     while (p && bytes_to_go > 0) {
@@ -292,7 +292,7 @@ mem_hdr::hasContigousContentRange(Range<int64_t> const & range) const
             return true;
     }
 
-    return !range.size(); // empty range is contigous
+    return !range.size(); // empty range is contiguous
 }
 
 bool

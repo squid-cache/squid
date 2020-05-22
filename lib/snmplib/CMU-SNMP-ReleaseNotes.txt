@@ -122,7 +122,7 @@ Parser
 The parser now accepts two additional pieces of information in a mib:
 DESCRIPTION and INDEX.  It also handles "ACCESS" and "MAX-ACCESS".
 With these additions, SNMPv2 SMI MIBs can be parsed with minimal
-changes.  (Specificly, with the removal of text conventions, etc.)
+changes.  (Specifically, with the removal of text conventions, etc.)
 
 The included CMU MIB should be a good example.
 

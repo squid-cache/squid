@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -206,6 +206,7 @@ Http::Tunneler::handleReadyRead(const CommIoCbParams &io)
 #else
     rd.size = readBuf.spaceSize();
 #endif
+    // XXX: defer read if rd.size <= 0
 
     switch (Comm::ReadNow(rd, readBuf)) {
     case Comm::INPROGRESS:

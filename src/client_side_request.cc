@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -316,7 +316,7 @@ ClientHttpRequest::~ClientHttpRequest()
  * \retval 0     success
  * \retval -1    failure
  *
- * TODO: Pass in the buffers to be used in the inital Read request, as they are
+ * TODO: Pass in the buffers to be used in the initial Read request, as they are
  * determined by the user
  */
 int
@@ -909,7 +909,7 @@ clientStoreIdAccessCheckDone(Acl::Answer answer, void *data)
 }
 
 /**
- * Start locating an alternative storeage ID string (if any) from admin
+ * Start locating an alternative storage ID string (if any) from admin
  * configured helper program. This is an asynchronous operation terminating in
  * ClientRequestContext::clientStoreIdDone() when completed.
  */
@@ -1298,7 +1298,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
     break;
     }
 
-    /* FIXME PIPELINE: This is innacurate during pipelining */
+    /* FIXME PIPELINE: This is inaccurate during pipelining */
 
     if (http->getConn() != NULL && Comm::IsConnOpen(http->getConn()->clientConnection))
         fd_note(http->getConn()->clientConnection->fd, http->uri);

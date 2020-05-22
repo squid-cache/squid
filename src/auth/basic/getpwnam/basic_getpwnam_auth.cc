@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -63,7 +63,7 @@ passwd_auth(char *user, char *passwd)
         if (!crypted || strcmp(pwd->pw_passwd, crypted)) {
             return 2;       /* Wrong password */
         } else {
-            return 1;       /* Authentication Sucessful */
+            return 1;       /* Authentication Successful */
         }
     }
 }
@@ -81,7 +81,7 @@ shadow_auth(char *user, char *passwd)
         if (!crypted || strcmp(pwd->sp_pwdp, crypted)) {
             return 2;       /* Wrong password */
         } else {
-            return 1;       /* Authentication Sucessful */
+            return 1;       /* Authentication Successful */
         }
     }
 }

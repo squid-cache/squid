@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -7,8 +7,8 @@
  */
 
 #include "squid.h"
-#include "base64.h"
 #include "base/CharacterSet.h"
+#include "base64.h"
 #include "getfullhostname.h"
 #include "html_quote.h"
 #include "ip/Address.h"
@@ -144,7 +144,7 @@ int Win32SockInit(void)
     } else if (s_iInitCount < 0)
         return (s_iInitCount);
 
-    /* s_iInitCount == 0. Do the initailization */
+    /* s_iInitCount == 0. Do the initialization */
     iVersionRequested = MAKEWORD(2, 0);
 
     err = WSAStartup((WORD) iVersionRequested, &wsaData);
@@ -220,12 +220,12 @@ bool
 hostname_check(const char *uri)
 {
     static CharacterSet hostChars = CharacterSet("host",".:[]_") +
-            CharacterSet::ALPHA + CharacterSet::DIGIT;
+                                    CharacterSet::ALPHA + CharacterSet::DIGIT;
 
     const auto limit = strlen(uri);
     for (size_t i = 0; i < limit; i++) {
         if (!hostChars[uri[i]]) {
-              return false;
+            return false;
         }
     }
     return true;
@@ -651,7 +651,7 @@ read_reply(int s, cachemgr_request * req)
 
             if (status == 401 || status == 407) {
                 reset_auth(req);
-                status = 403;   /* Forbiden, see comments in case isForward: */
+                status = 403;   /* Forbidden, see comments in case isForward: */
             }
 
             /* this is a way to pass HTTP status to the Web server */

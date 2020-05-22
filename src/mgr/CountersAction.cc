@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -85,6 +85,11 @@ Mgr::CountersActionData::operator += (const CountersActionData& stats)
     swap_ins += stats.swap_ins;
     swap_files_cleaned += stats.swap_files_cleaned;
     aborted_requests += stats.aborted_requests;
+    hitValidationAttempts += stats.hitValidationAttempts;
+    hitValidationRefusalsDueToLocking += stats.hitValidationRefusalsDueToLocking;
+    hitValidationRefusalsDueToZeroSize += stats.hitValidationRefusalsDueToZeroSize;
+    hitValidationRefusalsDueToTimeLimit += stats.hitValidationRefusalsDueToTimeLimit;
+    hitValidationFailures += stats.hitValidationFailures;
 
     return *this;
 }

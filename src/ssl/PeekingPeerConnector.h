@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -30,7 +30,6 @@ public:
         Security::PeerConnector(aServerConn, aCallback, alp, timeout),
         clientConn(aClientConn),
         splice(false),
-        resumingSession(false),
         serverCertificateHandled(false)
     {
         request = aRequest;
@@ -75,7 +74,6 @@ private:
     Comm::ConnectionPointer clientConn; ///< TCP connection to the client
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
     bool splice; ///< whether we are going to splice or not
-    bool resumingSession; ///< whether it is an SSL resuming session connection
     bool serverCertificateHandled; ///< whether handleServerCertificate() succeeded
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -105,7 +105,7 @@ protected:
     virtual bool initialize(Security::SessionPointer &);
 
     /// Performs a single secure connection negotiation step.
-    /// It is called multiple times untill the negotiation finishes or aborts.
+    /// It is called multiple times until the negotiation finishes or aborts.
     void negotiate();
 
     /// Called after negotiation has finished. Cleans up TLS/SSL state.

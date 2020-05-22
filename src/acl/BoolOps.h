@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -37,7 +37,7 @@ private:
     virtual int doMatch(ACLChecklist *checklist, Nodes::const_iterator start) const;
 };
 
-/// An inner ACL expression tree node representing a boolean conjuction (AND)
+/// An inner ACL expression tree node representing a boolean conjunction (AND)
 /// operator applied to a list of child tree nodes.
 /// For example, conditions expressed on a single http_access line are ANDed.
 class AndNode: public InnerNode

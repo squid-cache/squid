@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -136,7 +136,7 @@ Adaptation::Iterator::handleAdaptedHeader(Http::Message *aMsg)
     if (!theCause) { // probably sent a request message
         if (dynamic_cast<HttpReply*>(aMsg)) { // we got a response message
             if (HttpRequest *cause = dynamic_cast<HttpRequest*>(theMsg)) {
-                // definately sent request, now use it as the cause
+                // definitely sent request, now use it as the cause
                 theCause = cause; // moving the lock
                 theMsg = 0;
                 debugs(93,3, HERE << "in request satisfaction mode");
@@ -151,14 +151,14 @@ Adaptation::Iterator::handleAdaptedHeader(Http::Message *aMsg)
     adapted = true;
 
     clearAdaptation(theLauncher);
-    if (!updatePlan(true)) // do not immediatelly advance the new plan
+    if (!updatePlan(true)) // do not immediately advance the new plan
         thePlan.next(filter());
     step();
 }
 
 void Adaptation::Iterator::noteInitiatorAborted()
 {
-    announceInitiatorAbort(theLauncher); // propogate to the transaction
+    announceInitiatorAbort(theLauncher); // propagate to the transaction
     clearInitiator();
     mustStop("initiator gone");
 }

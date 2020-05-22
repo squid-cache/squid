@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -85,6 +85,8 @@ public:
     bool isReader(const StoreEntry &) const;
     /// whether the entry is in "writing to Transients" I/O state
     bool isWriter(const StoreEntry &) const;
+    /// whether we or somebody else is in the "writing to Transients" I/O state
+    bool hasWriter(const StoreEntry &);
 
     static int64_t EntryLimit();
 

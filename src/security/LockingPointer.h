@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -148,7 +148,7 @@ private:
      * their reference counts independently, or it may not. This varies between
      * API functions, though it is usually documented.
      *
-     * This means the caller code needs to be carefuly written to use the correct
+     * This means the caller code needs to be carefully written to use the correct
      * reset method and avoid the raw-pointer constructor unless OpenSSL function
      * producing the pointer is clearly documented as incrementing a lock for it.
      */

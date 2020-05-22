@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -319,7 +319,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     /* child */
     TheProcessKind = pkHelper;
-    no_suid();          /* give up extra priviliges */
+    no_suid();          /* give up extra privileges */
 
     /* close shared socket with parent */
     close(prfd);

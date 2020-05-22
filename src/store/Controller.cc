@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,7 @@
  * store_dirs_rebuilding is initialized to _1_ as a hack so that
  * storeDirWriteCleanLogs() doesn't try to do anything unless _all_
  * cache_dirs have been read.  For example, without this hack, Squid
- * will try to write clean log files if -kparse fails (becasue it
+ * will try to write clean log files if -kparse fails (because it
  * calls fatal()).
  */
 int Store::Controller::store_dirs_rebuilding = 1;
@@ -227,12 +227,12 @@ Store::Controller::sync(void)
 }
 
 /*
- * handle callbacks all avaliable fs'es
+ * handle callbacks all available fs'es
  */
 int
 Store::Controller::callback()
 {
-    /* This will likely double count. Thats ok. */
+    /* This will likely double count. That's ok. */
     PROF_start(storeDirCallback);
 
     /* mem cache callbacks ? */
@@ -334,7 +334,7 @@ Store::Controller::find(const cache_key *key)
             return entry;
         } catch (const std::exception &ex) {
             debugs(20, 2, "failed with " << *entry << ": " << ex.what());
-            entry->release(true);
+            entry->release();
             // fall through
         }
     }
@@ -355,6 +355,18 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
         const bool found = anchorToCache(entry, inSync);
         if (found && !inSync)
             throw TexcHere("cannot sync");
+        if (!found) {
+            // !found should imply hittingRequiresCollapsing() regardless of writer presence
+            if (!entry.hittingRequiresCollapsing()) {
+                debugs(20, DBG_IMPORTANT, "BUG: missing ENTRY_REQUIRES_COLLAPSING for " << entry);
+                throw TextException("transients entry missing ENTRY_REQUIRES_COLLAPSING", Here());
+            }
+
+            if (!transients->hasWriter(entry)) {
+                // prevent others from falling into the same trap
+                throw TextException("unattached transients entry missing writer", Here());
+            }
+        }
     }
 }
 

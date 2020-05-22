@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -61,7 +61,7 @@ if test "${FILECOUNT}" != "0" ; then
 fi
 
 #
-# above command currently encounters dependancy problems on cleanup.
+# above command currently encounters dependency problems on cleanup.
 #
 # do not build any of the install's ...
 #

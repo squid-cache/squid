@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -91,7 +91,7 @@ protected:
     AsyncCall::Pointer theNext; // used exclusively by AsyncCallQueue
 
 private:
-    const char *isCanceled; // set to the cancelation reason by cancel()
+    const char *isCanceled; // set to the cancellation reason by cancel()
 
     // not implemented to prevent nil calls from being passed around and unknowingly scheduled, for now.
     AsyncCall();

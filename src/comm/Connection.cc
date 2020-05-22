@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -19,7 +19,7 @@
 #include "SquidTime.h"
 #include <ostream>
 
-InstanceIdDefinitions(Comm::Connection, "conn");
+InstanceIdDefinitions(Comm::Connection, "conn", uint64_t);
 
 class CachePeer;
 bool

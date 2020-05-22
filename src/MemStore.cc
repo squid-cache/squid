@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -1008,10 +1008,14 @@ MemStoreRr::create()
 
     const int64_t entryLimit = MemStore::EntryLimit();
     assert(entryLimit > 0);
+
+    Ipc::Mem::PageStack::Config spaceConfig;
+    spaceConfig.poolId = Ipc::Mem::PageStack::IdForMemStoreSpace(),
+    spaceConfig.pageSize = 0; // the pages are stored in Ipc::Mem::Pages
+    spaceConfig.capacity = entryLimit;
+    spaceConfig.createFull = true; // all pages are initially available
     Must(!spaceOwner);
-    spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel,
-                 Ipc::Mem::PageStack::IdForMemStoreSpace(),
-                 entryLimit, 0);
+    spaceOwner = shm_new(Ipc::Mem::PageStack)(SpaceLabel, spaceConfig);
     Must(!mapOwner);
     mapOwner = MemStoreMap::Init(MapLabel, entryLimit);
     Must(!extrasOwner);

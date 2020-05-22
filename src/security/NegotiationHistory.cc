@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -25,7 +25,7 @@ Security::NegotiationHistory::NegotiationHistory()
 const char *
 Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &v) const
 {
-    if (v.protocol != AnyP::PROTO_SSL && v.protocol != AnyP::PROTO_TLS)
+    if (!TlsFamilyProtocol(v))
         return nullptr;
 
     static char buf[512];

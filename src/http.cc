@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,7 +10,7 @@
 
 /*
  * Anonymizing patch by lutz@as-node.jena.thur.de
- * have a look into http-anon.c to get more informations.
+ * have a look into http-anon.c to get more information.
  */
 
 #include "squid.h"
@@ -253,7 +253,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (pe != NULL) {
         assert(e != pe);
 #if USE_HTCP
-        neighborsHtcpClear(e, nullptr, e->mem_obj->request.getRaw(), e->mem_obj->method, HTCP_CLR_INVALIDATION);
+        neighborsHtcpClear(e, e->mem_obj->request.getRaw(), e->mem_obj->method, HTCP_CLR_INVALIDATION);
 #endif
         pe->release(true);
     }
@@ -270,7 +270,7 @@ httpMaybeRemovePublic(StoreEntry * e, Http::StatusCode status)
     if (pe != NULL) {
         assert(e != pe);
 #if USE_HTCP
-        neighborsHtcpClear(e, nullptr, e->mem_obj->request.getRaw(), HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_INVALIDATION);
+        neighborsHtcpClear(e, e->mem_obj->request.getRaw(), HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_INVALIDATION);
 #endif
         pe->release(true);
     }
@@ -1098,7 +1098,7 @@ HttpStateData::persistentConnStatus() const
     /** \par
      * In chunked response we do not know the content length but we are absolutely
      * sure about the end of response, so we are calling the statusIfComplete to
-     * decide if we can be persistant
+     * decide if we can be persistent
      */
     if (lastChunk && flags.chunked)
         return statusIfComplete();
@@ -1351,7 +1351,7 @@ HttpStateData::truncateVirginBody()
         // server sent more that the advertised content length
         debugs(11, 5, "payloadSeen=" << payloadSeen <<
                " clen=" << clen << '/' << vrep->content_length <<
-               " trucated=" << payloadTruncated << '+' << extras);
+               " truncated=" << payloadTruncated << '+' << extras);
 
         inBuf.chop(0, inBuf.length() - extras);
         payloadTruncated += extras;
@@ -2310,7 +2310,7 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
     buf.append(raw.content(), rawDataSize);
     buf.append("\r\n", 2);
 
-    Must(rawDataSize > 0); // we did not accidently created last-chunk above
+    Must(rawDataSize > 0); // we did not accidentally created last-chunk above
 
     // Do not send last-chunk unless we successfully received everything
     if (receivedWholeRequestBody) {

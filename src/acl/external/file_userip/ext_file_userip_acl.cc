@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -116,7 +116,7 @@ load_dict(FILE * FH) {
                     current_entry->address =
                         (((inet_addr (tmpbuf))) & current_entry->netmask);
                 } else {
-                    /* when theres no slash, we figure the netmask is /32 */
+                    /* when there's no slash, we figure the netmask is /32 */
                     current_entry->address = (inet_addr(tmpbuf));
                     current_entry->netmask = (inet_addr("255.255.255.255"));
                 }

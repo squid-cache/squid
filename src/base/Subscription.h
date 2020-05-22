@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,7 +42,7 @@ public:
  * A subscription may be passed to multiple producers.
  *
  * Call_ must have a copy constructor.
- * A pointer to Call_ must be convertable to AsyncCall::Pointer
+ * A pointer to Call_ must be convertible to AsyncCall::Pointer
  */
 template<class Call_>
 class CallSubscription: public Subscription

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -104,7 +104,7 @@ bool AsyncJob::canBeCalled(AsyncCall &call) const
         // This may happen when we have bugs or some module is not calling
         // us asynchronously (comm used to do that).
         debugs(93, 5, HERE << inCall << " is in progress; " <<
-               call << " canot reenter the job.");
+               call << " cannot reenter the job.");
         return call.cancel("reentrant job call");
     }
 

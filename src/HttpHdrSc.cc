@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -98,7 +98,7 @@ HttpHdrSc::parse(const String * str)
             ++p;
         }
 
-        /* decrease ilen to still match the token for ';' qualified non '=' statments */
+        /* decrease ilen to still match the token for ';' qualified non '=' statements */
         else if ((p = strchr(item, ';')) && (p - item < ilen)) {
             ilen = p - item;
             ++p;
@@ -113,7 +113,7 @@ HttpHdrSc::parse(const String * str)
         }
 
         /* Is this a targeted directive? */
-        /* TODO: remove the temporary useage and use memrchr and the information we have instead */
+        /* TODO: remove the temporary usage and use memrchr and the information we have instead */
         temp = xstrndup (item, initiallen + 1);
 
         if (!((target = strrchr (temp, ';')) && !strchr (target, '"') && *(target + 1) != '\0'))

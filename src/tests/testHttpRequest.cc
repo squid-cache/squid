@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -43,7 +43,7 @@ testHttpRequest::setUp()
 void
 testHttpRequest::testCreateFromUrl()
 {
-    /* vanilla url, implict method */
+    /* vanilla url, implicit method */
     unsigned short expected_port;
     SBuf url("http://foo:90/bar");
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);

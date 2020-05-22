@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -72,7 +72,7 @@ void Adaptation::Icap::Launcher::noteAdaptationAnswer(const Answer &answer)
 void Adaptation::Icap::Launcher::noteInitiatorAborted()
 {
 
-    announceInitiatorAbort(theXaction); // propogate to the transaction
+    announceInitiatorAbort(theXaction); // propagate to the transaction
     clearInitiator();
     Must(done()); // should be nothing else to do
 

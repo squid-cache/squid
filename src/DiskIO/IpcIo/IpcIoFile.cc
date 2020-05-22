@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -419,7 +419,7 @@ IpcIoFile::canWait() const
     const int expectedWait = max(oldestWait, rateWait);
     if (expectedWait < 0 ||
             static_cast<time_msec_t>(expectedWait) < config.ioTimeout)
-        return true; // expected wait time is acceptible
+        return true; // expected wait time is acceptable
 
     debugs(47,2, HERE << "cannot wait: " << expectedWait <<
            " oldest: " << SipcIo(KidIdentifier, oldestIo, diskId));

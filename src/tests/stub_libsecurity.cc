@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -28,7 +28,7 @@ Security::EncryptorAnswer::~EncryptorAnswer() {}
 std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorAnswer &) STUB_RETVAL(os)
 
 #include "security/Handshake.h"
-Security::HandshakeParser::HandshakeParser() STUB
+Security::HandshakeParser::HandshakeParser(MessageSource) STUB
 bool Security::HandshakeParser::parseHello(const SBuf &) STUB_RETVAL(false)
 
 #include "security/KeyData.h"

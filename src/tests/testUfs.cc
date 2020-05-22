@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "DiskIO/DiskIOModule.h"
+#include "fde.h"
 #include "fs/ufs/UFSSwapDir.h"
 #include "globals.h"
 #include "HttpHeader.h"
@@ -71,6 +72,8 @@ testUfs::commonInit()
     storeReplAdd("lru", createRemovalPolicy_lru);
 
     Mem::Init();
+
+    fde::Init();
 
     comm_init();
 

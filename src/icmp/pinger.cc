@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -65,7 +65,7 @@
 /* windows uses the control socket for feedback to squid */
 #define LINK_TO_SQUID squid_link
 
-// windows still requires WSAFD but there are too many dependancy problems
+// windows still requires WSAFD but there are too many dependency problems
 // to just link to win32.cc where it is normally defined.
 
 int

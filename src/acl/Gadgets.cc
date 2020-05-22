@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -189,7 +189,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
 void
 aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 {
-    // accomodate callers unable to convert their ACL list context to string
+    // accommodate callers unable to convert their ACL list context to string
     if (!label)
         label = "...";
 

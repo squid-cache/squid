@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -46,7 +46,7 @@ public:
      */
     bool runOnce();
 
-    /** set the primary async engine. The primary async engine recieves the
+    /** set the primary async engine. The primary async engine receives the
      * lowest requested timeout gathered from the other engines each loop.
      * (There is a default of 10ms if all engines are idle or request higher
      * delays).

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -136,5 +136,12 @@ fde::remoteAddr() const
     }
 
     return buf;
+}
+
+void
+fde::Init()
+{
+    assert(!Table);
+    Table = static_cast<fde *>(xcalloc(Squid_MaxFD, sizeof(fde)));
 }
 

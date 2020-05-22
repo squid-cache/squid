@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,7 +29,7 @@ TrieNode::~TrieNode()
 bool
 TrieNode::add(char const *aString, size_t theLength, void *privatedata, TrieCharTransform *transform)
 {
-    /* We trust that privatedata and existant keys have already been checked */
+    /* We trust that privatedata and existent keys have already been checked */
 
     if (theLength) {
         int index = transform ? (*transform)(*aString): *aString;

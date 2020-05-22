@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -19,7 +19,7 @@
 # The error-details.txt file consist of records like the following:
 #
 #  name: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT
-#  detail: "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+#  detail: "SSL Certificate error: certificate issuer (CA) not known: %ssl_ca_name"
 #  descr: "Unable to get issuer certificate"
 #
 # The records separated with an empty line.

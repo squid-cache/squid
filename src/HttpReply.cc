@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -428,7 +428,7 @@ HttpReply::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::Sta
         // catch missing or negative status value (negative '-' is not a digit)
         pos = protoPrefix.psize();
 
-        // skip arbitrary number of digits and a dot in the verion portion
+        // skip arbitrary number of digits and a dot in the version portion
         while ((size_t)pos <= hdr_len && (*(buf+pos) == '.' || xisdigit(*(buf+pos)) ) ) ++pos;
 
         // catch missing version info

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "ConfigParser.h"
 #include "DiskIO/DiskIOModule.h"
+#include "fde.h"
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
 #include "HttpHeader.h"
@@ -141,6 +142,8 @@ testRock::commonInit()
     visible_appname_string = xstrdup(APP_FULLNAME);
 
     Mem::Init();
+
+    fde::Init();
 
     comm_init();
 

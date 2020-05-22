@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -274,7 +274,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
         }
     }
 
-    // if no port, the caller may use service_configConfigs or supply the default if neeeded
+    // if no port, the caller may use service_configConfigs or supply the default if needed
 
     ++s;
     e = strchr(s, '\0');

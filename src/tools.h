@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -96,7 +96,7 @@ typedef int PidStatus;
 
 /**
  * Compatibility wrapper function for waitpid
- * \pid the pid of child proccess to wait for.
+ * \pid the pid of child process to wait for.
  * \param status the exit status returned by waitpid
  * \param flags WNOHANG or 0
  */

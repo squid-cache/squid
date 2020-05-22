@@ -1,4 +1,4 @@
--- Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+-- Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 --
 -- Squid software is distributed under GPLv2+ license and includes
 -- contributions from numerous individuals and organizations.
@@ -162,7 +162,7 @@ UNION
         (SELECT COUNT(*) FROM access_log WHERE squid_request_status LIKE '%MISS%')
         /
         (SELECT COUNT(*) FROM access_log)*100
-        AS pecentage;
+        AS percentage;
 
 -- response times
 CREATE OR REPLACE VIEW time_response_ranges AS

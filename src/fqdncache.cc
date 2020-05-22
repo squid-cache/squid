@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -271,7 +271,7 @@ fqdncacheAddEntry(fqdncache_entry * f)
     hash_link *e = (hash_link *)hash_lookup(fqdn_table, f->hash.key);
 
     if (NULL != e) {
-        /* avoid colission */
+        /* avoid collision */
         fqdncache_entry *q = (fqdncache_entry *) e;
         fqdncacheRelease(q);
     }

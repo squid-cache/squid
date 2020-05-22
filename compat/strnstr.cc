@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,7 +16,7 @@
  * Update/Maintenance History:
  *
  *    26-Apr-2008 : Copied from FreeBSD via OpenGrok
- *          - added protection around libray headers
+ *          - added protection around library headers
  *          - added squid_ prefix for uniqueness
  *            so we can use it where OS copy is broken.
  *

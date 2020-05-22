@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -130,7 +130,7 @@ public:
     String keyExtrasLine;  ///< The format of the request to the auth helper
     Format::Format *keyExtras = nullptr; ///< The compiled request format
     int keep_alive = 1; ///< whether to close the connection on auth challenges. default: on
-    int utf8 = 0; ///< wheter to accept UTF-8 characterset instead of ASCII. default: off
+    int utf8 = 0; ///< whether to accept UTF-8 characterset instead of ASCII. default: off
 
 protected:
     /**

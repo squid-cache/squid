@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -201,7 +201,7 @@ testEventLoop::testStopOnIdle()
     theLoop.run();
     CPPUNIT_ASSERT_EQUAL(2, engine.calls);
     /* add an engine which is suffering errors. This should result in 10
-     * loops until the loop stops - because thats the error retry amount
+     * loops until the loop stops - because that's the error retry amount
      */
     RecordingEngine failing_engine(AsyncEngine::EVENT_ERROR);
     theLoop.registerEngine(&failing_engine);

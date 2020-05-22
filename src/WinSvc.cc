@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -494,7 +494,7 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
         if (svcHandle == 0)
             return 1;
 
-        /* Set Process work dir to directory cointaining squid.exe */
+        /* Set Process work dir to directory containing squid.exe */
         GetModuleFileName(NULL, path, 512);
 
         WIN32_module_name=xstrdup(path);
@@ -940,7 +940,7 @@ static int Win32SockInit(void)
     } else if (s_iInitCount < 0)
         return (s_iInitCount);
 
-    /* s_iInitCount == 0. Do the initailization */
+    /* s_iInitCount == 0. Do the initialization */
     iVersionRequested = MAKEWORD(2, 0);
 
     err = WSAStartup((WORD) iVersionRequested, &wsaData);
