@@ -33,15 +33,14 @@ ClientRequestContext::~ClientRequestContext()
      * still have one
      */
 
-    if (http)
-        cbdataReferenceDone(http);
+    cbdataReferenceDone(http);
 
     delete error;
     debugs(85,3, "ClientRequestContext destructed, this=" << this);
 }
 
 ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) :
-    http(anHttp)
+    http(cbdataReference(anHttp))
 {
     debugs(85, 3, "ClientRequestContext constructed, this=" << this);
 }
