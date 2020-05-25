@@ -1,4 +1,14 @@
 #!/usr/bin/perl
+#
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
+use strict;
+use warnings;
 
 while (<>) {
     if (/^(\S+_SOURCES)\s*=\s*\\$/) {
@@ -10,9 +20,15 @@ while (<>) {
     # accumulate files and prep for sorting
     my %files;
     while (<>) {
-        chop;
-        /\s*(tests\/stub_|tests\/test)?(\S+)(\s+\\\s*)?$/ || die "no parse";
-        $files{"$2.$1"}="$1$2";
+        my $prefix='';
+        my $filename='';
+        
+        chomp;
+        m!\s*(tests/stub_|tests/test)?(\S+)(\s+\\\s*)?$! || die "no parse";
+        $prefix=$1 if (defined $1);
+        $filename=$2 if (defined $2);
+        
+        $files{"$filename.$prefix"}="$prefix$filename";
         if (! /\\$/ ) {  # last line in the list
             &print_files(\%files);
             last;
