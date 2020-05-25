@@ -867,12 +867,12 @@ TESTSOURCES= \
 ## - add other component .(h|cc) files needed to link and run tests
 ##
 #check_PROGRAMS += tests/testX
-#tests_testX_SOURCES = \
-	tests/testX.cc \
-	tests/testX.h
-#nodist_tests_testX_SOURCES = \
-	tests/stubs_as_needed.cc \
-	X.cc
+#tests_testX_SOURCES= \
+#	tests/testX.cc \
+#	tests/testX.h
+#nodist_tests_testX_SOURCES= \
+#	X.cc \
+#	tests/stubs_as_needed.cc
 #tests_testX_LDADD=\
 #	$(LIBCPPUNIT_LIBS) \
 #	$(COMPAT_LIB) \
