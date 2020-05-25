@@ -11,6 +11,10 @@ use strict;
 use warnings;
 
 while (<>) {
+    if (m!^#!) {
+        print;
+        next;
+    }
     if (/^(\S+_SOURCES)\s*=\s*\\$/) {
         print "$1 = \\\n";
     } else {
@@ -22,7 +26,7 @@ while (<>) {
     while (<>) {
         my $prefix='';
         my $filename='';
-        
+
         chomp;
         m!\s*(tests/stub_|tests/test)?(\S+)(\s+\\\s*)?$! || die "no parse";
         $prefix=$1 if (defined $1);
