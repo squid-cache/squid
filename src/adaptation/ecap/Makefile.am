@@ -21,7 +21,6 @@ libecapsquid_la_SOURCES = \
 	ServiceRep.cc \
 	XactionRep.h \
 	XactionRep.cc \
-	\
 	Registry.h
 
 # add libecap using its pkg-config-produced configuration variables
