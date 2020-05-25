@@ -233,9 +233,9 @@ for FILENAME in `git ls-files`; do
 	;;
 
     Makefile.am)
-
-    	perl -p -e 's/@([A-Z0-9_]+)@/\$($1)/g' <${FILENAME} >${FILENAME}.styled
-	mv ${FILENAME}.styled ${FILENAME}
+    	perl -p -e 's/@([A-Z0-9_]+)@/\$($1)/g' <${FILENAME} | \
+			scripts/sort-makefile-am-sources.pl >${FILENAME}.styled
+		mv ${FILENAME}.styled ${FILENAME}
 	;;
 
     ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.list|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
@@ -252,6 +252,7 @@ for FILENAME in `git ls-files`; do
         #
         skip_copyright_check=1
         ;;
+		
     esac
 
     # check for Foundation copyright blurb
