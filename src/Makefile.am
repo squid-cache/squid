@@ -990,10 +990,10 @@ tests_testYesNoNone_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testURL
 tests_testURL_SOURCES = \
-	tests/testURL.cc \
-	tests/testURL.h \
 	tests/testUriScheme.cc \
-	tests/testUriScheme.h
+	tests/testUriScheme.h \
+	tests/testURL.cc \
+	tests/testURL.h
 nodist_tests_testURL_SOURCES = \
 	tests/stub_access_log.cc \
 	anyp/Uri.h \
