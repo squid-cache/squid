@@ -19,20 +19,20 @@ libdiskd_la_SOURCES = \
 	diskd/StoreFSdiskd.cc
 
 libufs_la_SOURCES = \
-	ufs/StoreFSufs.h \
+	ufs/RebuildState.cc \
+	ufs/RebuildState.h \
 	ufs/StoreFSufs.cc \
+	ufs/StoreFSufs.h \
+	ufs/StoreSearchUFS.cc \
+	ufs/StoreSearchUFS.h \
 	ufs/UFSStoreState.cc \
-	ufs/UFSSwapDir.cc \
-	ufs/UFSSwapDir.h \
+	ufs/UFSStoreState.h \
 	ufs/UFSStrategy.cc \
 	ufs/UFSStrategy.h \
-	ufs/UFSStoreState.h \
-	ufs/StoreSearchUFS.h \
-	ufs/StoreSearchUFS.cc \
-	ufs/UFSSwapLogParser.h \
+	ufs/UFSSwapDir.cc \
+	ufs/UFSSwapDir.h \
 	ufs/UFSSwapLogParser.cc \
-	ufs/RebuildState.h \
-	ufs/RebuildState.cc
+	ufs/UFSSwapLogParser.h
 
 librock_la_SOURCES = \
 	rock/forward.h \
@@ -40,10 +40,10 @@ librock_la_SOURCES = \
 	rock/RockDbCell.h \
 	rock/RockHeaderUpdater.cc \
 	rock/RockHeaderUpdater.h \
-	rock/RockIoState.cc \
-	rock/RockIoState.h \
 	rock/RockIoRequests.cc \
 	rock/RockIoRequests.h \
+	rock/RockIoState.cc \
+	rock/RockIoState.h \
 	rock/RockRebuild.cc \
 	rock/RockRebuild.h \
 	rock/RockStoreFileSystem.cc \

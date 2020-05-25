@@ -11,48 +11,21 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libipc.la
 
 libipc_la_SOURCES = \
-	FdNotes.cc \
-	FdNotes.h \
-	Kid.cc \
-	Kid.h \
-	Kids.cc \
-	Kids.h \
-	Messages.h \
-	MemMap.cc \
-	MemMap.h \
-	Queue.cc \
-	Queue.h \
-	ReadWriteLock.cc \
-	ReadWriteLock.h \
-	StartListening.cc \
-	StartListening.h \
-	StoreMap.cc \
-	StoreMap.h \
-	StrandCoord.cc \
-	StrandCoord.h \
-	StrandCoords.h \
-	StrandSearch.cc \
-	StrandSearch.h \
-	SharedListen.cc \
-	SharedListen.h \
-	TypedMsgHdr.cc \
-	TypedMsgHdr.h \
 	Coordinator.cc \
 	Coordinator.h \
-	UdsOp.cc \
-	UdsOp.h \
-	Port.cc \
-	Port.h \
-	Strand.cc \
-	Strand.h \
+	FdNotes.cc \
+	FdNotes.h \
 	forward.h \
 	Forwarder.cc \
 	Forwarder.h \
 	Inquirer.cc \
 	Inquirer.h \
-	Request.h \
-	Response.h \
+	Kid.cc \
+	Kid.h \
+	Kids.cc \
+	Kids.h \
 	mem/FlexibleArray.h \
+	mem/forward.h \
 	mem/Page.cc \
 	mem/Page.h \
 	mem/PagePool.cc \
@@ -64,7 +37,34 @@ libipc_la_SOURCES = \
 	mem/Pointer.h \
 	mem/Segment.cc \
 	mem/Segment.h \
-	mem/forward.h
+	MemMap.cc \
+	MemMap.h \
+	Messages.h \
+	Port.cc \
+	Port.h \
+	Queue.cc \
+	Queue.h \
+	ReadWriteLock.cc \
+	ReadWriteLock.h \
+	Request.h \
+	Response.h \
+	SharedListen.cc \
+	SharedListen.h \
+	StartListening.cc \
+	StartListening.h \
+	StoreMap.cc \
+	StoreMap.h \
+	Strand.cc \
+	Strand.h \
+	StrandCoord.cc \
+	StrandCoord.h \
+	StrandCoords.h \
+	StrandSearch.cc \
+	StrandSearch.h \
+	TypedMsgHdr.cc \
+	TypedMsgHdr.h \
+	UdsOp.cc \
+	UdsOp.h
 
 DEFS += -DDEFAULT_STATEDIR=\"$(localstatedir)/run/squid\"
 

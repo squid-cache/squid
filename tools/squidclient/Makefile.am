@@ -61,10 +61,10 @@ squidclient_SOURCES = \
 	Ping.cc \
 	Ping.h \
 	squidclient.cc \
-	stub_debug.cc \
-	test_tools.cc \
-	stub_libmem.cc \
 	STUB.h \
+	stub_debug.cc \
+	stub_libmem.cc \
+	test_tools.cc \
 	time.cc \
 	Transport.cc \
 	Transport.h

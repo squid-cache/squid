@@ -26,10 +26,10 @@ STOREMETA_SOURCE = \
 	StoreMetaVary.h
 
 LOADABLE_MODULES_SOURCES = \
-	LoadableModule.h \
 	LoadableModule.cc \
-	LoadableModules.h \
-	LoadableModules.cc
+	LoadableModule.h \
+	LoadableModules.cc \
+	LoadableModules.h
 
 SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients sbuf servers fs repl store DiskIO proxyp
 DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients sbuf servers fs repl store DiskIO proxyp
@@ -210,42 +210,49 @@ libsquid_la_SOURCES = \
 	CommCalls.h \
 	DescriptorSet.cc \
 	DescriptorSet.h \
-	SquidConfig.h \
-	SquidConfig.cc
+	SquidConfig.cc \
+	SquidConfig.h
 
 squid_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
+	$(DELAY_POOL_SOURCE) \
+	$(DNSSOURCE) \
+	$(HTCPSOURCE) \
+	$(IPC_SOURCE) \
+	$(LEAKFINDERSOURCE) \
+	$(SNMP_SOURCE) \
+	$(STOREMETA_SOURCE) \
+	$(UNLINKDSOURCE) \
+	$(WIN32_SOURCE) \
+	$(WINSVC_SOURCE) \
+	$(XPROF_STATS_SOURCE) \
 	AccessLogEntry.cc \
 	AccessLogEntry.h \
 	AsyncEngine.cc \
 	AsyncEngine.h \
-	cache_cf.h \
 	AuthReg.h \
-	RefreshPattern.h \
+	BodyPipe.cc \
+	BodyPipe.h \
 	cache_cf.cc \
-	CacheDigest.h \
-	CacheDigest.cc \
+	cache_cf.h \
 	cache_manager.cc \
-	NeighborTypeDomainList.h \
+	CacheDigest.cc \
+	CacheDigest.h \
+	CacheManager.h \
 	CachePeer.cc \
 	CachePeer.h \
-	CacheManager.h \
-	carp.h \
 	carp.cc \
+	carp.h \
 	cbdata.cc \
 	cbdata.h \
-	client_db.h \
 	client_db.cc \
-	client_side.h \
+	client_db.h \
 	client_side.cc \
 	client_side.h \
 	client_side_reply.cc \
 	client_side_reply.h \
 	client_side_request.cc \
 	client_side_request.h \
-	ClientInfo.h \
-	BodyPipe.cc \
-	BodyPipe.h \
 	ClientInfo.h \
 	ClientRequestContext.h \
 	clientStream.cc \
@@ -256,9 +263,9 @@ squid_SOURCES = \
 	CollapsingHistory.h \
 	CommandLine.cc \
 	CommandLine.h \
+	CommRead.h \
 	CompletionDispatcher.cc \
 	CompletionDispatcher.h \
-	CommRead.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ConfigParser.h \
@@ -271,98 +278,92 @@ squid_SOURCES = \
 	debug.cc \
 	Debug.h \
 	defines.h \
-	$(DELAY_POOL_SOURCE) \
-	fs_io.h \
-	fs_io.cc \
-	dlink.h \
 	dlink.cc \
-	$(DNSSOURCE) \
+	dlink.h \
 	Downloader.cc \
 	Downloader.h \
 	enums.h \
-	err_type.h \
 	err_detail_type.h \
+	err_type.h \
 	errorpage.cc \
 	errorpage.h \
 	ETag.cc \
 	ETag.h \
 	event.cc \
 	event.h \
-	EventLoop.h \
 	EventLoop.cc \
+	EventLoop.h \
 	external_acl.cc \
 	ExternalACL.h \
 	ExternalACLEntry.cc \
 	ExternalACLEntry.h \
-	FadingCounter.h \
 	FadingCounter.cc \
-	fatal.h \
+	FadingCounter.h \
 	fatal.cc \
-	fd.h \
+	fatal.h \
 	fd.cc \
+	fd.h \
 	fde.cc \
 	fde.h \
-	FileMap.h \
 	filemap.cc \
-	fqdncache.h \
+	FileMap.h \
 	fqdncache.cc \
+	fqdncache.h \
+	fs_io.cc \
+	fs_io.h \
 	FwdState.cc \
 	FwdState.h \
 	Generic.h \
 	globals.h \
-	gopher.h \
 	gopher.cc \
+	gopher.h \
 	HappyConnOpener.cc \
 	HappyConnOpener.h \
 	helper.cc \
 	helper.h \
 	hier_code.h \
 	HierarchyLogEntry.h \
-	$(HTCPSOURCE) \
 	http.cc \
 	http.h \
-	HttpHeaderFieldStat.h \
-	HttpHdrCc.h \
+	HttpBody.cc \
+	HttpBody.h \
+	HttpControlMsg.cc \
+	HttpControlMsg.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.h \
+	HttpHdrContRange.cc \
+	HttpHdrContRange.h \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrSc.h \
 	HttpHdrScTarget.cc \
 	HttpHdrScTarget.h \
-	HttpHdrContRange.cc \
-	HttpHdrContRange.h \
-	HttpHeaderStat.h \
-	HttpHeader.h \
 	HttpHeader.cc \
+	HttpHeader.h \
+	HttpHeaderFieldInfo.h \
+	HttpHeaderFieldStat.h \
 	HttpHeaderMask.h \
 	HttpHeaderRange.h \
-	HttpHeaderFieldInfo.h \
-	HttpHeaderTools.h \
+	HttpHeaderStat.h \
 	HttpHeaderTools.cc \
-	HttpBody.h \
-	HttpBody.cc \
-	HttpControlMsg.cc \
-	HttpControlMsg.h \
+	HttpHeaderTools.h \
 	HttpReply.cc \
 	HttpReply.h \
-	RequestFlags.h \
-	RequestFlags.cc \
 	HttpRequest.cc \
 	HttpRequest.h \
 	ICP.h \
 	icp_opcode.h \
 	icp_v2.cc \
 	icp_v3.cc \
-	Instance.h \
 	Instance.cc \
-	int.h \
+	Instance.h \
 	int.cc \
-	internal.h \
+	int.h \
 	internal.cc \
-	$(IPC_SOURCE) \
+	internal.h \
+	IoStats.h \
 	ipcache.cc \
 	ipcache.h \
-	$(LEAKFINDERSOURCE) \
 	LogTags.cc \
 	LogTags.h \
 	lookup_t.h \
@@ -374,141 +375,138 @@ squid_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	MemObject.h \
+	MemStore.cc \
+	MemStore.h \
 	MessageSizes.h \
-	mime.h \
 	mime.cc \
-	mime_header.h \
+	mime.h \
 	mime_header.cc \
-	multicast.h \
+	mime_header.h \
 	multicast.cc \
-	neighbors.h \
+	multicast.h \
 	neighbors.cc \
-	Notes.h \
+	neighbors.h \
+	NeighborTypeDomainList.h \
 	Notes.cc \
+	Notes.h \
 	Parsing.cc \
 	Parsing.h \
-	$(XPROF_STATS_SOURCE) \
 	pconn.cc \
 	pconn.h \
-	PeerDigest.h \
 	peer_digest.cc \
-	peer_proxy_negotiate_auth.h \
 	peer_proxy_negotiate_auth.cc \
+	peer_proxy_negotiate_auth.h \
 	peer_select.cc \
-	peer_sourcehash.h \
 	peer_sourcehash.cc \
-	peer_userhash.h \
+	peer_sourcehash.h \
 	peer_userhash.cc \
-	PeerPoolMgr.h \
+	peer_userhash.h \
+	PeerDigest.h \
 	PeerPoolMgr.cc \
+	PeerPoolMgr.h \
 	PeerSelectState.h \
 	PingData.h \
 	Pipeline.cc \
 	Pipeline.h \
 	protos.h \
-	redirect.h \
 	redirect.cc \
-	refresh.h \
+	redirect.h \
 	refresh.cc \
+	refresh.h \
+	RefreshPattern.h \
 	RemovalPolicy.cc \
 	RemovalPolicy.h \
+	repl_modules.h \
+	RequestFlags.cc \
+	RequestFlags.h \
 	ResolvedPeers.cc \
 	ResolvedPeers.h \
-	send-announce.h \
-	send-announce.cc \
-	SBufStatsAction.h \
-	SBufStatsAction.cc \
 	sbuf/StringConvert.h \
-	$(SNMP_SOURCE) \
-	SquidMath.h \
+	SBufStatsAction.cc \
+	SBufStatsAction.h \
+	send-announce.cc \
+	send-announce.h \
 	SquidMath.cc \
+	SquidMath.h \
 	SquidNew.cc \
-	IoStats.h \
-	stat.h \
 	stat.cc \
-	StatCounters.h \
+	stat.h \
 	StatCounters.cc \
-	StatHist.h \
+	StatCounters.h \
 	StatHist.cc \
-	String.cc \
-	StrList.h \
-	StrList.cc \
+	StatHist.h \
 	stmem.cc \
 	stmem.h \
-	repl_modules.h \
 	store.cc \
 	Store.h \
+	store_client.cc \
+	store_digest.cc \
+	store_digest.h \
+	store_io.cc \
+	store_key_md5.cc \
+	store_key_md5.h \
+	store_log.cc \
+	store_log.h \
+	store_rebuild.cc \
+	store_rebuild.h \
+	store_swapin.cc \
+	store_swapin.h \
+	store_swapmeta.cc \
+	store_swapout.cc \
+	StoreClient.h \
 	StoreFileSystem.cc \
 	StoreFileSystem.h \
-	store_io.cc \
 	StoreIOBuffer.h \
 	StoreIOState.cc \
 	StoreIOState.h \
-	store_client.cc \
-	StoreClient.h \
-	store_digest.h \
-	store_digest.cc \
-	store_key_md5.h \
-	store_key_md5.cc \
-	store_log.h \
-	store_log.cc \
-	store_rebuild.h \
-	store_rebuild.cc \
-	store_swapin.h \
-	store_swapin.cc \
-	store_swapmeta.cc \
-	store_swapout.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaUnpacker.h \
-	$(STOREMETA_SOURCE) \
 	StoreSearch.h \
 	StoreStats.cc \
 	StoreStats.h \
 	StoreSwapLogData.cc \
 	StoreSwapLogData.h \
+	String.cc \
+	StrList.cc \
+	StrList.h \
 	swap_log_op.h \
-	Transients.cc \
-	Transients.h \
-	MemStore.cc \
-	MemStore.h \
 	time.cc \
 	TimeOrTag.h \
-	tools.h \
 	tools.cc \
+	tools.h \
+	Transients.cc \
+	Transients.h \
 	tunnel.cc \
 	typedefs.h \
-	$(UNLINKDSOURCE) \
-	urn.h \
 	urn.cc \
-	wccp.h \
+	urn.h \
 	wccp.cc \
-	wccp2.h \
+	wccp.h \
 	wccp2.cc \
-	whois.h \
+	wccp2.h \
 	whois.cc \
-	wordlist.h \
+	whois.h \
 	wordlist.cc \
-	XactionInitiator.h \
+	wordlist.h \
 	XactionInitiator.cc \
-	XactionStep.h \
-	$(WIN32_SOURCE) \
-	$(WINSVC_SOURCE)
+	XactionInitiator.h \
+	XactionStep.h
 
 EXTRA_squid_SOURCES = \
 	$(all_AUTHMODULES) \
-	ConfigOption.h \
 	$(DELAY_POOL_ALL_SOURCE) \
+	$(LOADABLE_MODULES_SOURCES) \
+	$(SNMP_ALL_SOURCE) \
+	$(UNLINKDSOURCE) \
+	$(WIN32_ALL_SOURCE) \
+	ConfigOption.h \
 	htcp.cc \
 	htcp.h \
 	ipc.cc \
 	ipc_win32.cc \
-	ProfStats.cc \
 	LeakFinder.cc \
 	LeakFinder.h \
-	$(SNMP_ALL_SOURCE) \
-	$(UNLINKDSOURCE) \
-	$(WIN32_ALL_SOURCE) \
-	$(LOADABLE_MODULES_SOURCES)
+	ProfStats.cc
 
 noinst_HEADERS = \
 	MemBuf.h \
@@ -518,8 +516,8 @@ noinst_HEADERS = \
 BUILT_SOURCES = \
 	cf_gen_defines.cci \
 	cf_parser.cci \
-	err_type.cc \
 	err_detail_type.cc \
+	err_type.cc \
 	globals.cc \
 	hier_code.cc \
 	icp_opcode.cc \
@@ -624,32 +622,32 @@ recv_announce_SOURCES = recv-announce.cc
 ## libbase.la wants cbdata.*
 ## libbase.la wants MemBuf.*
 ufsdump_SOURCES = \
-	ClientInfo.h \
-	cbdata.h \
+	$(WIN32_SOURCE) \
 	cbdata.cc \
+	cbdata.h \
+	ClientInfo.h \
 	debug.cc \
-	int.h \
+	dlink.cc \
+	dlink.h \
+	tests/stub_fd.cc \
+	fd.h \
+	helper/ChildConfig.h \
+	tests/stub_HelperChildConfig.cc \
 	int.cc \
+	int.h \
 	mem/forward.h \
 	MemBuf.cc \
 	MemBuf.h \
 	Parsing.h \
-	store_key_md5.h \
+	RemovalPolicy.cc \
+	SquidNew.cc \
 	store_key_md5.cc \
+	store_key_md5.h \
 	tests/stub_StoreMeta.cc \
 	StoreMetaUnpacker.cc \
 	String.cc \
-	SquidNew.cc \
 	tests/stub_time.cc \
-	ufsdump.cc \
-	dlink.h \
-	dlink.cc \
-	helper/ChildConfig.h \
-	tests/stub_HelperChildConfig.cc \
-	RemovalPolicy.cc \
-	$(WIN32_SOURCE) \
-	fd.h \
-	tests/stub_fd.cc
+	ufsdump.cc
 ufsdump_LDADD = \
 	ident/libident.la \
 	acl/libacls.la \
@@ -869,12 +867,12 @@ TESTSOURCES= \
 ## - add other component .(h|cc) files needed to link and run tests
 ##
 #check_PROGRAMS += tests/testX
-#tests_testX_SOURCES= \
-#	tests/testX.cc \
-#	tests/testX.h
-#nodist_tests_testX_SOURCES= \
-#	X.cc \
-#	tests/stubs_as_needed.cc
+#tests_testX_SOURCES = \
+	tests/testX.cc \
+	tests/testX.h
+#nodist_tests_testX_SOURCES = \
+	tests/stubs_as_needed.cc \
+	X.cc
 #tests_testX_LDADD=\
 #	$(LIBCPPUNIT_LIBS) \
 #	$(COMPAT_LIB) \
@@ -1462,7 +1460,7 @@ endif
 check_PROGRAMS += tests/testStore
 ## why so many sources? well httpHeaderTools requites ACLChecklist & friends.
 ## first line - what we are testing.
-tests_testStore_SOURCES= \
+tests_testStore_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
@@ -1584,7 +1582,7 @@ tests_testStore_SOURCES= \
 	tests/stub_UdsOp.cc \
 	wordlist.cc \
 	wordlist.h
-nodist_tests_testStore_SOURCES= \
+nodist_tests_testStore_SOURCES = \
 	$(TESTSOURCES) \
 	SquidMath.cc \
 	SquidMath.h \
@@ -1756,7 +1754,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_UdsOp.cc \
 	wordlist.cc \
 	wordlist.h
-nodist_tests_testDiskIO_SOURCES= \
+nodist_tests_testDiskIO_SOURCES = \
 	$(TESTSOURCES) \
 	hier_code.cc \
 	SquidMath.cc \
@@ -2134,7 +2132,7 @@ tests_testHttp1Parser_LDADD= \
 tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpReply
-tests_testHttpReply_SOURCES=\
+tests_testHttpReply_SOURCES = \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
@@ -2210,7 +2208,7 @@ tests_testHttpReply_SOURCES=\
 	tools.h \
 	wordlist.cc \
 	wordlist.h
-nodist_tests_testHttpReply_SOURCES=\
+nodist_tests_testHttpReply_SOURCES = \
 	$(TESTSOURCES) \
 	hier_code.cc
 tests_testHttpReply_LDADD=\

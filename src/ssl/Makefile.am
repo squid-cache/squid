@@ -16,27 +16,27 @@ libsslsquid_la_SOURCES = \
 	bio.h \
 	cert_validate_message.cc \
 	cert_validate_message.h \
-	context_storage.cc \
-	context_storage.h \
 	Config.cc \
 	Config.h \
+	context_storage.cc \
+	context_storage.h \
 	ErrorDetail.cc \
 	ErrorDetail.h \
 	ErrorDetailManager.cc \
 	ErrorDetailManager.h \
+	helper.cc \
+	helper.h \
 	PeekingPeerConnector.cc \
 	PeekingPeerConnector.h \
 	ProxyCerts.h \
 	ServerBump.cc \
 	ServerBump.h \
 	support.cc \
-	support.h \
-	helper.cc \
-	helper.h
+	support.h
 
 ## SSL stuff used by main Squid and certgen helper
 libsslutil_la_SOURCES = \
-	gadgets.cc \
-	gadgets.h \
 	crtd_message.cc \
-	crtd_message.h
+	crtd_message.h \
+	gadgets.cc \
+	gadgets.h

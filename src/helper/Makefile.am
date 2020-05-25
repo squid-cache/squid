@@ -17,8 +17,8 @@ libhelper_la_SOURCES = \
 	Reply.cc \
 	Reply.h \
 	Request.h \
-	ResultCode.h \
+	ReservationId.cc \
 	ReservationId.h \
-	ReservationId.cc
+	ResultCode.h
 
 EXTRA_DIST= protocol_defines.h

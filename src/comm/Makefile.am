@@ -11,13 +11,14 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libcomm.la
 
 ## Library holding comm socket handlers
-libcomm_la_SOURCES= \
+libcomm_la_SOURCES = \
 	AcceptLimiter.cc \
 	AcceptLimiter.h \
-	ConnOpener.cc \
-	ConnOpener.h \
+	comm_internal.h \
 	Connection.cc \
 	Connection.h \
+	ConnOpener.cc \
+	ConnOpener.h \
 	Flag.h \
 	forward.h \
 	IoCallback.cc \
@@ -35,5 +36,4 @@ libcomm_la_SOURCES= \
 	TcpAcceptor.h \
 	UdpOpenDialer.h \
 	Write.cc \
-	Write.h \
-	comm_internal.h
+	Write.h

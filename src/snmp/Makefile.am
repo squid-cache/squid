@@ -11,9 +11,9 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libsnmp.la
 
 libsnmp_la_SOURCES = \
+	forward.h \
 	Forwarder.cc \
 	Forwarder.h \
-	forward.h \
 	Inquirer.cc \
 	Inquirer.h \
 	Pdu.cc \

@@ -12,12 +12,12 @@ noinst_LTLIBRARIES = libmgr.la
 
 libmgr_la_SOURCES = \
 	Action.cc \
-	ActionCreator.h \
 	Action.h \
+	ActionCreator.h \
 	ActionParams.cc \
 	ActionParams.h \
-	ActionPasswordList.h \
 	ActionPasswordList.cc \
+	ActionPasswordList.h \
 	ActionProfile.h \
 	ActionWriter.cc \
 	ActionWriter.h \
@@ -29,9 +29,9 @@ libmgr_la_SOURCES = \
 	CountersAction.h \
 	Filler.cc \
 	Filler.h \
+	forward.h \
 	Forwarder.cc \
 	Forwarder.h \
-	forward.h \
 	FunAction.cc \
 	FunAction.h \
 	InfoAction.cc \
@@ -40,8 +40,13 @@ libmgr_la_SOURCES = \
 	Inquirer.h \
 	IntervalAction.cc \
 	IntervalAction.h \
+	IntParam.cc \
+	IntParam.h \
 	IoAction.cc \
 	IoAction.h \
+	QueryParam.h \
+	QueryParams.cc \
+	QueryParams.h \
 	Registration.cc \
 	Registration.h \
 	Request.cc \
@@ -54,10 +59,5 @@ libmgr_la_SOURCES = \
 	StoreIoAction.h \
 	StoreToCommWriter.cc \
 	StoreToCommWriter.h \
-	QueryParam.h \
-	QueryParams.cc \
-	QueryParams.h \
-	IntParam.cc \
-	IntParam.h \
 	StringParam.cc \
 	StringParam.h

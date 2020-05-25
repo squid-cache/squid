@@ -15,10 +15,12 @@ EXTRA_DIST= helpers.m4
 noinst_LTLIBRARIES = liblog.la
 
 liblog_la_SOURCES = \
-	access_log.h \
 	access_log.cc \
+	access_log.h \
 	Config.cc \
 	Config.h \
+	CustomLog.cc \
+	CustomLog.h \
 	File.cc \
 	File.h \
 	FormatHttpdCombined.cc \
@@ -38,8 +40,6 @@ liblog_la_SOURCES = \
 	ModSyslog.h \
 	ModUdp.cc \
 	ModUdp.h \
-	CustomLog.h \
-	CustomLog.cc \
 	TcpLogger.cc \
 	TcpLogger.h
 

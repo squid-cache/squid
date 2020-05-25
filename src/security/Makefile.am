@@ -12,16 +12,16 @@ SUBDIRS= cert_generators cert_validators
 
 noinst_LTLIBRARIES = libsecurity.la
 
-libsecurity_la_SOURCES= \
+libsecurity_la_SOURCES = \
 	BlindPeerConnector.cc \
 	BlindPeerConnector.h \
 	CertError.h \
 	Context.h \
 	EncryptorAnswer.cc \
 	EncryptorAnswer.h \
+	forward.h \
 	Handshake.cc \
 	Handshake.h \
-	forward.h \
 	KeyData.cc \
 	KeyData.h \
 	LockingPointer.h \

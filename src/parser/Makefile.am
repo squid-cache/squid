@@ -11,9 +11,9 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libparser.la
 
 libparser_la_SOURCES = \
-	BinaryTokenizer.h \
 	BinaryTokenizer.cc \
+	BinaryTokenizer.h \
 	forward.h \
-	Tokenizer.h \
-	Tokenizer.cc
+	Tokenizer.cc \
+	Tokenizer.h
 

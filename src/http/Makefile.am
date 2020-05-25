@@ -22,8 +22,8 @@ libhttp_la_SOURCES = \
 	MethodType.cc \
 	MethodType.h \
 	ProtocolVersion.h \
-	RegisteredHeaders.h \
 	RegisteredHeaders.cc \
+	RegisteredHeaders.h \
 	RegisteredHeadersHash.cci \
 	RequestMethod.cc \
 	RequestMethod.h \

@@ -15,12 +15,12 @@ libDiskDaemon_la_SOURCES = \
 	diomsg.h \
 	DiskdAction.cc \
 	DiskdAction.h \
+	DiskDaemonDiskIOModule.cc \
+	DiskDaemonDiskIOModule.h \
 	DiskdFile.cc \
 	DiskdFile.h \
 	DiskdIOStrategy.cc \
-	DiskdIOStrategy.h \
-	DiskDaemonDiskIOModule.cc \
-	DiskDaemonDiskIOModule.h
+	DiskdIOStrategy.h
 
 diskd_SOURCES = diskd.cc
 nodist_diskd_SOURCES = time.cc

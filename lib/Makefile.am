@@ -66,12 +66,12 @@ libmisccontainers_la_SOURCES = \
 	hash.cc
 
 libmiscutil_la_SOURCES = \
+	$(SNPRINTFSOURCE) \
 	getfullhostname.c \
 	heap.c \
 	iso3307.c \
 	radix.c \
 	rfc1123.c \
-	$(SNPRINTFSOURCE) \
 	Splay.cc \
 	stub_memaccount.c \
 	util.c \
@@ -81,7 +81,7 @@ TESTS += tests/testRFC1738
 
 check_PROGRAMS += tests/testRFC1738
 
-tests_testRFC1738_SOURCES= \
+tests_testRFC1738_SOURCES = \
 	tests/testRFC1738.cc \
 	tests/testRFC1738.h
 
