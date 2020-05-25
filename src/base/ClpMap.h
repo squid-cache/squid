@@ -114,14 +114,10 @@ template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)
 void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(size_t aSize)
 {
-    const auto oldLimit = memLimit_;
-    if (aSize > 0)
-        memLimit_ = aSize;
-    else
-        memLimit_ = 0;
-
-    if (oldLimit > memLimit_)
-        trim(0);
+    assert(aSize >= 0);
+    if (memUsed_ > aSize)
+        trim(memLimit_ - aSize);
+    memLimit_ = aSize;
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
