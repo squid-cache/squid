@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -779,7 +779,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
         const auto eLen = e->length();
         if (len + eLen > max) {
             throw TextException(ToSBuf("cannot add header entry ", e->id, " because the header length is becoming too large: ",
-                    "hdr: ", this, " owner: ", owner, " len: ", len, "+", eLen, ">", max), Here());
+                                       "hdr: ", this, " owner: ", owner, " len: ", len, "+", eLen, ">", max), Here());
         }
     }
 
