@@ -35,14 +35,6 @@ while [ $# -ge 1 ]; do
         KeepGoingDirective=$1
         shift
         ;;
-    --skip-astyle-version-check)
-        SkipAstyleVersionCheck=yes
-        shift
-        ;;
-    --verbose|-v)
-        Verbose=yes
-        shift
-        ;;
     *)
         echo "Usage: $0 [--keep-going|-k]"
         echo "Unsupported command-line option: $1"
@@ -75,10 +67,6 @@ if test "${ASVER}" != "2.04" ; then
 	ASVER=""
 else
 	echo "Found astyle ${ASVER}. Formatting..."
-fi
-if test "${SkipAstyleVersionCheck}" = "yes" && test -z "${ASVER}" ; then
-    echo "Ignoring astyle version mismatch as instrcuted"
-    ASVER="any"
 fi
 
 COPYRIGHT_YEARS=`date +"1996-%Y"`
@@ -127,7 +115,6 @@ applyPlugin ()
 
 srcFormat ()
 {
-test -n "${Verbose}" && echo "Source formatting"
 #
 # Scan for incorrect use of #ifdef/#ifndef
 #
@@ -141,7 +128,6 @@ git grep "ifn?def .*_SQUID_" |
 #
 for FILENAME in `git ls-files`; do
     skip_copyright_check=""
-    test -n "${Verbose}" && echo ${FILENAME}
 
     # skip subdirectories, git ls-files is recursive
     test -d $FILENAME && continue
