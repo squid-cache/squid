@@ -19,18 +19,18 @@ libicap_la_SOURCES = \
 	Elements.h \
 	History.cc \
 	History.h \
-	icap_log.cc \
-	icap_log.h \
 	InOut.h \
 	Launcher.cc \
 	Launcher.h \
 	ModXact.cc \
 	ModXact.h \
-	Options.cc \
-	Options.h \
 	OptXact.cc \
 	OptXact.h \
+	Options.cc \
+	Options.h \
 	ServiceRep.cc \
 	ServiceRep.h \
 	Xaction.cc \
-	Xaction.h
+	Xaction.h \
+	icap_log.cc \
+	icap_log.h

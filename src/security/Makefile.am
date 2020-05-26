@@ -19,7 +19,6 @@ libsecurity_la_SOURCES = \
 	Context.h \
 	EncryptorAnswer.cc \
 	EncryptorAnswer.h \
-	forward.h \
 	Handshake.cc \
 	Handshake.h \
 	KeyData.cc \
@@ -34,4 +33,5 @@ libsecurity_la_SOURCES = \
 	ServerOptions.cc \
 	ServerOptions.h \
 	Session.cc \
-	Session.h
+	Session.h \
+	forward.h

@@ -12,25 +12,25 @@ noinst_LTLIBRARIES = libsslsquid.la libsslutil.la
 
 ## SSL stuff used by main Squid but not by certgen helper
 libsslsquid_la_SOURCES = \
-	bio.cc \
-	bio.h \
-	cert_validate_message.cc \
-	cert_validate_message.h \
 	Config.cc \
 	Config.h \
-	context_storage.cc \
-	context_storage.h \
 	ErrorDetail.cc \
 	ErrorDetail.h \
 	ErrorDetailManager.cc \
 	ErrorDetailManager.h \
-	helper.cc \
-	helper.h \
 	PeekingPeerConnector.cc \
 	PeekingPeerConnector.h \
 	ProxyCerts.h \
 	ServerBump.cc \
 	ServerBump.h \
+	bio.cc \
+	bio.h \
+	cert_validate_message.cc \
+	cert_validate_message.h \
+	context_storage.cc \
+	context_storage.h \
+	helper.cc \
+	helper.h \
 	support.cc \
 	support.h
 

@@ -15,7 +15,6 @@ libipc_la_SOURCES = \
 	Coordinator.h \
 	FdNotes.cc \
 	FdNotes.h \
-	forward.h \
 	Forwarder.cc \
 	Forwarder.h \
 	Inquirer.cc \
@@ -24,19 +23,6 @@ libipc_la_SOURCES = \
 	Kid.h \
 	Kids.cc \
 	Kids.h \
-	mem/FlexibleArray.h \
-	mem/forward.h \
-	mem/Page.cc \
-	mem/Page.h \
-	mem/PagePool.cc \
-	mem/PagePool.h \
-	mem/Pages.cc \
-	mem/Pages.h \
-	mem/PageStack.cc \
-	mem/PageStack.h \
-	mem/Pointer.h \
-	mem/Segment.cc \
-	mem/Segment.h \
 	MemMap.cc \
 	MemMap.h \
 	Messages.h \
@@ -64,7 +50,21 @@ libipc_la_SOURCES = \
 	TypedMsgHdr.cc \
 	TypedMsgHdr.h \
 	UdsOp.cc \
-	UdsOp.h
+	UdsOp.h \
+	forward.h \
+	mem/FlexibleArray.h \
+	mem/Page.cc \
+	mem/Page.h \
+	mem/PagePool.cc \
+	mem/PagePool.h \
+	mem/PageStack.cc \
+	mem/PageStack.h \
+	mem/Pages.cc \
+	mem/Pages.h \
+	mem/Pointer.h \
+	mem/Segment.cc \
+	mem/Segment.h \
+	mem/forward.h
 
 DEFS += -DDEFAULT_STATEDIR=\"$(localstatedir)/run/squid\"
 

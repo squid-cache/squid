@@ -19,11 +19,10 @@ noinst_LTLIBRARIES = libauth.la libacls.la
 libauth_la_SOURCES = \
 	Config.cc \
 	Config.h \
-	CredentialsCache.cc \
-	CredentialsCache.h \
 	CredentialState.cc \
 	CredentialState.h \
-	forward.h \
+	CredentialsCache.cc \
+	CredentialsCache.h \
 	Gadgets.cc \
 	Gadgets.h \
 	QueueNode.h \
@@ -35,14 +34,15 @@ libauth_la_SOURCES = \
 	SchemesConfig.h \
 	State.cc \
 	State.h \
-	toUtf.cc \
-	toUtf.h \
 	Type.cc \
 	Type.h \
 	User.cc \
 	User.h \
 	UserRequest.cc \
-	UserRequest.h
+	UserRequest.h \
+	forward.h \
+	toUtf.cc \
+	toUtf.h
 
 libauth_la_LIBADD = $(AUTH_LIBS_TO_BUILD)
 libauth_la_DEPENDENCIES = $(AUTH_LIBS_TO_BUILD)

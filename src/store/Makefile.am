@@ -20,7 +20,7 @@ libstore_la_SOURCES = \
 	Disk.h \
 	Disks.cc \
 	Disks.h \
-	forward.h \
 	LocalSearch.cc \
 	LocalSearch.h \
-	Storage.h
+	Storage.h \
+	forward.h

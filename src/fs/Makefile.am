@@ -35,7 +35,6 @@ libufs_la_SOURCES = \
 	ufs/UFSSwapLogParser.h
 
 librock_la_SOURCES = \
-	rock/forward.h \
 	rock/RockDbCell.cc \
 	rock/RockDbCell.h \
 	rock/RockHeaderUpdater.cc \
@@ -49,7 +48,8 @@ librock_la_SOURCES = \
 	rock/RockStoreFileSystem.cc \
 	rock/RockStoreFileSystem.h \
 	rock/RockSwapDir.cc \
-	rock/RockSwapDir.h
+	rock/RockSwapDir.h \
+	rock/forward.h
 
 libfs_la_SOURCES = Module.cc Module.h
 libfs_la_LIBADD =  $(STORE_LIBS_TO_BUILD)

@@ -14,13 +14,11 @@ noinst_LTLIBRARIES = libcomm.la
 libcomm_la_SOURCES = \
 	AcceptLimiter.cc \
 	AcceptLimiter.h \
-	comm_internal.h \
-	Connection.cc \
-	Connection.h \
 	ConnOpener.cc \
 	ConnOpener.h \
+	Connection.cc \
+	Connection.h \
 	Flag.h \
-	forward.h \
 	IoCallback.cc \
 	IoCallback.h \
 	Loops.h \
@@ -36,4 +34,6 @@ libcomm_la_SOURCES = \
 	TcpAcceptor.h \
 	UdpOpenDialer.h \
 	Write.cc \
-	Write.h
+	Write.h \
+	comm_internal.h \
+	forward.h

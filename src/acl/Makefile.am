@@ -20,13 +20,13 @@ libapi_la_SOURCES = \
 	BoolOps.h \
 	Checklist.cc \
 	Checklist.h \
-	forward.h \
 	InnerNode.cc \
 	InnerNode.h \
 	Options.cc \
 	Options.h \
 	Tree.cc \
-	Tree.h
+	Tree.h \
+	forward.h
 
 ## Data-dependent Squid/transaction state used by specific ACLs.
 ## Does not refer to specific ACLs to avoid circular dependencies.
@@ -62,10 +62,10 @@ libacls_la_SOURCES = \
 	AtStep.h \
 	AtStepData.cc \
 	AtStepData.h \
-	ConnectionsEncrypted.cc \
-	ConnectionsEncrypted.h \
 	ConnMark.cc \
 	ConnMark.h \
+	ConnectionsEncrypted.cc \
+	ConnectionsEncrypted.h \
 	DestinationAsn.h \
 	DestinationDomain.cc \
 	DestinationDomain.h \

@@ -13,9 +13,9 @@ noinst_LTLIBRARIES = libproxyp.la
 libproxyp_la_SOURCES = \
 	Elements.cc \
 	Elements.h \
-	forward.h \
 	Header.cc \
 	Header.h \
 	Parser.cc \
-	Parser.h
+	Parser.h \
+	forward.h
 

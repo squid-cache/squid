@@ -16,7 +16,6 @@ noinst_LTLIBRARIES = libhttp.la
 libhttp_la_SOURCES = \
 	ContentLengthInterpreter.cc \
 	ContentLengthInterpreter.h \
-	forward.h \
 	Message.cc \
 	Message.h \
 	MethodType.cc \
@@ -33,7 +32,8 @@ libhttp_la_SOURCES = \
 	StatusLine.cc \
 	StatusLine.h \
 	Stream.cc \
-	Stream.h
+	Stream.h \
+	forward.h
 
 libhttp_la_LIBADD= one/libhttp1.la
 

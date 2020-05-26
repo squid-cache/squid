@@ -13,12 +13,12 @@ noinst_LTLIBRARIES = libip.la
 libip_la_SOURCES = \
 	Address.cc \
 	Address.h \
-	forward.h \
 	Intercept.cc \
 	Intercept.h \
 	NfMarkConfig.cc \
 	NfMarkConfig.h \
 	QosConfig.cc \
 	QosConfig.h \
+	forward.h \
 	tools.cc \
 	tools.h

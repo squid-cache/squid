@@ -67,12 +67,12 @@ libmisccontainers_la_SOURCES = \
 
 libmiscutil_la_SOURCES = \
 	$(SNPRINTFSOURCE) \
+	Splay.cc \
 	getfullhostname.c \
 	heap.c \
 	iso3307.c \
 	radix.c \
 	rfc1123.c \
-	Splay.cc \
 	stub_memaccount.c \
 	util.c \
 	xusleep.c

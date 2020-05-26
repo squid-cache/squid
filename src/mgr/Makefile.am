@@ -29,7 +29,6 @@ libmgr_la_SOURCES = \
 	CountersAction.h \
 	Filler.cc \
 	Filler.h \
-	forward.h \
 	Forwarder.cc \
 	Forwarder.h \
 	FunAction.cc \
@@ -38,10 +37,10 @@ libmgr_la_SOURCES = \
 	InfoAction.h \
 	Inquirer.cc \
 	Inquirer.h \
-	IntervalAction.cc \
-	IntervalAction.h \
 	IntParam.cc \
 	IntParam.h \
+	IntervalAction.cc \
+	IntervalAction.h \
 	IoAction.cc \
 	IoAction.h \
 	QueryParam.h \
@@ -60,4 +59,5 @@ libmgr_la_SOURCES = \
 	StoreToCommWriter.cc \
 	StoreToCommWriter.h \
 	StringParam.cc \
-	StringParam.h
+	StringParam.h \
+	forward.h

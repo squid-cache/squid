@@ -206,14 +206,14 @@ ACL_REGISTRATION_SOURCES = \
 # and smaller libraries split from this are encouraged. Using lt convenience
 # libraries, dependencies should not be a problem either.
 libsquid_la_SOURCES = \
-	comm.cc \
-	comm.h \
 	CommCalls.cc \
 	CommCalls.h \
 	DescriptorSet.cc \
 	DescriptorSet.h \
 	SquidConfig.cc \
-	SquidConfig.h
+	SquidConfig.h \
+	comm.cc \
+	comm.h
 
 squid_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
@@ -235,37 +235,19 @@ squid_SOURCES = \
 	AuthReg.h \
 	BodyPipe.cc \
 	BodyPipe.h \
-	cache_cf.cc \
-	cache_cf.h \
-	cache_manager.cc \
 	CacheDigest.cc \
 	CacheDigest.h \
 	CacheManager.h \
 	CachePeer.cc \
 	CachePeer.h \
-	carp.cc \
-	carp.h \
-	cbdata.cc \
-	cbdata.h \
-	client_db.cc \
-	client_db.h \
-	client_side.cc \
-	client_side.h \
-	client_side_reply.cc \
-	client_side_reply.h \
-	client_side_request.cc \
-	client_side_request.h \
 	ClientInfo.h \
 	ClientRequestContext.h \
-	clientStream.cc \
-	clientStream.h \
-	clientStreamForward.h \
 	CollapsedForwarding.cc \
 	CollapsedForwarding.h \
 	CollapsingHistory.h \
+	CommRead.h \
 	CommandLine.cc \
 	CommandLine.h \
-	CommRead.h \
 	CompletionDispatcher.cc \
 	CompletionDispatcher.h \
 	ConfigOption.cc \
@@ -277,56 +259,25 @@ squid_SOURCES = \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
-	debug.cc \
 	Debug.h \
-	defines.h \
-	dlink.cc \
-	dlink.h \
 	Downloader.cc \
 	Downloader.h \
-	enums.h \
-	err_detail_type.h \
-	err_type.h \
-	errorpage.cc \
-	errorpage.h \
 	ETag.cc \
 	ETag.h \
-	event.cc \
-	event.h \
 	EventLoop.cc \
 	EventLoop.h \
-	external_acl.cc \
 	ExternalACL.h \
 	ExternalACLEntry.cc \
 	ExternalACLEntry.h \
 	FadingCounter.cc \
 	FadingCounter.h \
-	fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	fde.h \
-	filemap.cc \
 	FileMap.h \
-	fqdncache.cc \
-	fqdncache.h \
-	fs_io.cc \
-	fs_io.h \
 	FwdState.cc \
 	FwdState.h \
 	Generic.h \
-	globals.h \
-	gopher.cc \
-	gopher.h \
 	HappyConnOpener.cc \
 	HappyConnOpener.h \
-	helper.cc \
-	helper.h \
-	hier_code.h \
 	HierarchyLogEntry.h \
-	http.cc \
-	http.h \
 	HttpBody.cc \
 	HttpBody.h \
 	HttpControlMsg.cc \
@@ -354,32 +305,132 @@ squid_SOURCES = \
 	HttpRequest.cc \
 	HttpRequest.h \
 	ICP.h \
-	icp_opcode.h \
-	icp_v2.cc \
-	icp_v3.cc \
 	Instance.cc \
 	Instance.h \
-	int.cc \
-	int.h \
-	internal.cc \
-	internal.h \
 	IoStats.h \
-	ipcache.cc \
-	ipcache.h \
 	LogTags.cc \
 	LogTags.h \
-	lookup_t.h \
-	main.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
-	mem_node.cc \
-	mem_node.h \
 	MemBuf.cc \
 	MemObject.cc \
 	MemObject.h \
 	MemStore.cc \
 	MemStore.h \
 	MessageSizes.h \
+	NeighborTypeDomainList.h \
+	Notes.cc \
+	Notes.h \
+	Parsing.cc \
+	Parsing.h \
+	PeerDigest.h \
+	PeerPoolMgr.cc \
+	PeerPoolMgr.h \
+	PeerSelectState.h \
+	PingData.h \
+	Pipeline.cc \
+	Pipeline.h \
+	RefreshPattern.h \
+	RemovalPolicy.cc \
+	RemovalPolicy.h \
+	RequestFlags.cc \
+	RequestFlags.h \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
+	SBufStatsAction.cc \
+	SBufStatsAction.h \
+	SquidMath.cc \
+	SquidMath.h \
+	SquidNew.cc \
+	StatCounters.cc \
+	StatCounters.h \
+	StatHist.cc \
+	StatHist.h \
+	Store.h \
+	StoreClient.h \
+	StoreFileSystem.cc \
+	StoreFileSystem.h \
+	StoreIOBuffer.h \
+	StoreIOState.cc \
+	StoreIOState.h \
+	StoreMetaUnpacker.cc \
+	StoreMetaUnpacker.h \
+	StoreSearch.h \
+	StoreStats.cc \
+	StoreStats.h \
+	StoreSwapLogData.cc \
+	StoreSwapLogData.h \
+	StrList.cc \
+	StrList.h \
+	String.cc \
+	TimeOrTag.h \
+	Transients.cc \
+	Transients.h \
+	XactionInitiator.cc \
+	XactionInitiator.h \
+	XactionStep.h \
+	cache_cf.cc \
+	cache_cf.h \
+	cache_manager.cc \
+	carp.cc \
+	carp.h \
+	cbdata.cc \
+	cbdata.h \
+	clientStream.cc \
+	clientStream.h \
+	clientStreamForward.h \
+	client_db.cc \
+	client_db.h \
+	client_side.cc \
+	client_side.h \
+	client_side_reply.cc \
+	client_side_reply.h \
+	client_side_request.cc \
+	client_side_request.h \
+	debug.cc \
+	defines.h \
+	dlink.cc \
+	dlink.h \
+	enums.h \
+	err_detail_type.h \
+	err_type.h \
+	errorpage.cc \
+	errorpage.h \
+	event.cc \
+	event.h \
+	external_acl.cc \
+	fatal.cc \
+	fatal.h \
+	fd.cc \
+	fd.h \
+	fde.cc \
+	fde.h \
+	filemap.cc \
+	fqdncache.cc \
+	fqdncache.h \
+	fs_io.cc \
+	fs_io.h \
+	globals.h \
+	gopher.cc \
+	gopher.h \
+	helper.cc \
+	helper.h \
+	hier_code.h \
+	http.cc \
+	http.h \
+	icp_opcode.h \
+	icp_v2.cc \
+	icp_v3.cc \
+	int.cc \
+	int.h \
+	internal.cc \
+	internal.h \
+	ipcache.cc \
+	ipcache.h \
+	lookup_t.h \
+	main.cc \
+	mem_node.cc \
+	mem_node.h \
 	mime.cc \
 	mime.h \
 	mime_header.cc \
@@ -388,11 +439,6 @@ squid_SOURCES = \
 	multicast.h \
 	neighbors.cc \
 	neighbors.h \
-	NeighborTypeDomainList.h \
-	Notes.cc \
-	Notes.h \
-	Parsing.cc \
-	Parsing.h \
 	pconn.cc \
 	pconn.h \
 	peer_digest.cc \
@@ -403,44 +449,20 @@ squid_SOURCES = \
 	peer_sourcehash.h \
 	peer_userhash.cc \
 	peer_userhash.h \
-	PeerDigest.h \
-	PeerPoolMgr.cc \
-	PeerPoolMgr.h \
-	PeerSelectState.h \
-	PingData.h \
-	Pipeline.cc \
-	Pipeline.h \
 	protos.h \
 	redirect.cc \
 	redirect.h \
 	refresh.cc \
 	refresh.h \
-	RefreshPattern.h \
-	RemovalPolicy.cc \
-	RemovalPolicy.h \
 	repl_modules.h \
-	RequestFlags.cc \
-	RequestFlags.h \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
 	sbuf/StringConvert.h \
-	SBufStatsAction.cc \
-	SBufStatsAction.h \
 	send-announce.cc \
 	send-announce.h \
-	SquidMath.cc \
-	SquidMath.h \
-	SquidNew.cc \
 	stat.cc \
 	stat.h \
-	StatCounters.cc \
-	StatCounters.h \
-	StatHist.cc \
-	StatHist.h \
 	stmem.cc \
 	stmem.h \
 	store.cc \
-	Store.h \
 	store_client.cc \
 	store_digest.cc \
 	store_digest.h \
@@ -455,29 +477,10 @@ squid_SOURCES = \
 	store_swapin.h \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	StoreClient.h \
-	StoreFileSystem.cc \
-	StoreFileSystem.h \
-	StoreIOBuffer.h \
-	StoreIOState.cc \
-	StoreIOState.h \
-	StoreMetaUnpacker.cc \
-	StoreMetaUnpacker.h \
-	StoreSearch.h \
-	StoreStats.cc \
-	StoreStats.h \
-	StoreSwapLogData.cc \
-	StoreSwapLogData.h \
-	String.cc \
-	StrList.cc \
-	StrList.h \
 	swap_log_op.h \
 	time.cc \
-	TimeOrTag.h \
 	tools.cc \
 	tools.h \
-	Transients.cc \
-	Transients.h \
 	tunnel.cc \
 	typedefs.h \
 	urn.cc \
@@ -489,26 +492,23 @@ squid_SOURCES = \
 	whois.cc \
 	whois.h \
 	wordlist.cc \
-	wordlist.h \
-	XactionInitiator.cc \
-	XactionInitiator.h \
-	XactionStep.h
+	wordlist.h
 
 EXTRA_squid_SOURCES = \
-	$(all_AUTHMODULES) \
 	$(DELAY_POOL_ALL_SOURCE) \
 	$(LOADABLE_MODULES_SOURCES) \
 	$(SNMP_ALL_SOURCE) \
 	$(UNLINKDSOURCE) \
 	$(WIN32_ALL_SOURCE) \
+	$(all_AUTHMODULES) \
 	ConfigOption.h \
+	LeakFinder.cc \
+	LeakFinder.h \
+	ProfStats.cc \
 	htcp.cc \
 	htcp.h \
 	ipc.cc \
-	ipc_win32.cc \
-	LeakFinder.cc \
-	LeakFinder.h \
-	ProfStats.cc
+	ipc_win32.cc
 
 noinst_HEADERS = \
 	MemBuf.h \
@@ -625,29 +625,29 @@ recv_announce_SOURCES = recv-announce.cc
 ## libbase.la wants MemBuf.*
 ufsdump_SOURCES = \
 	$(WIN32_SOURCE) \
+	ClientInfo.h \
+	tests/stub_HelperChildConfig.cc \
+	MemBuf.cc \
+	MemBuf.h \
+	Parsing.h \
+	RemovalPolicy.cc \
+	SquidNew.cc \
+	tests/stub_StoreMeta.cc \
+	StoreMetaUnpacker.cc \
+	String.cc \
 	cbdata.cc \
 	cbdata.h \
-	ClientInfo.h \
 	debug.cc \
 	dlink.cc \
 	dlink.h \
 	tests/stub_fd.cc \
 	fd.h \
 	helper/ChildConfig.h \
-	tests/stub_HelperChildConfig.cc \
 	int.cc \
 	int.h \
 	mem/forward.h \
-	MemBuf.cc \
-	MemBuf.h \
-	Parsing.h \
-	RemovalPolicy.cc \
-	SquidNew.cc \
 	store_key_md5.cc \
 	store_key_md5.h \
-	tests/stub_StoreMeta.cc \
-	StoreMetaUnpacker.cc \
-	String.cc \
 	tests/stub_time.cc \
 	ufsdump.cc
 ufsdump_LDADD = \
@@ -947,10 +947,10 @@ tests_testLookupTable_SOURCES = \
 	tests/testLookupTable.cc \
 	tests/testLookupTable.h
 nodist_tests_testLookupTable_SOURCES = \
+	tests/stub_SBufDetailedStats.cc \
 	base/LookupTable.h \
 	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
-	tests/stub_SBufDetailedStats.cc
+	tests/stub_libmem.cc
 tests_testLookupTable_LDADD = \
 	sbuf/libsbuf.la \
 	base/libbase.la \
@@ -976,9 +976,9 @@ tests_testYesNoNone_SOURCES = \
 	tests/testYesNoNone.cc \
 	tests/testYesNoNone.h
 nodist_tests_testYesNoNone_SOURCES = \
+	tests/stub_SBuf.cc \
 	base/YesNoNone.h \
-	tests/stub_debug.cc \
-	tests/stub_SBuf.cc
+	tests/stub_debug.cc
 tests_testYesNoNone_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
@@ -990,23 +990,23 @@ tests_testYesNoNone_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testURL
 tests_testURL_SOURCES = \
-	tests/testUriScheme.cc \
-	tests/testUriScheme.h \
 	tests/testURL.cc \
-	tests/testURL.h
+	tests/testURL.h \
+	tests/testUriScheme.cc \
+	tests/testUriScheme.h
 nodist_tests_testURL_SOURCES = \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_HttpHeader.cc \
+	tests/stub_HttpRequest.cc \
+	tests/stub_StatHist.cc \
+	String.cc \
 	tests/stub_access_log.cc \
 	anyp/Uri.h \
 	anyp/UriScheme.h \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
-	tests/stub_HelperChildConfig.cc \
-	tests/stub_HttpHeader.cc \
-	tests/stub_HttpRequest.cc \
 	tests/stub_libhttp.cc \
-	tests/stub_libmem.cc \
-	tests/stub_StatHist.cc \
-	String.cc
+	tests/stub_libmem.cc
 tests_testURL_LDADD = \
 	libsquid.la \
 	proxyp/libproxyp.la \
@@ -1041,10 +1041,10 @@ tests_testTokenizer_SOURCES = \
 	tests/testTokenizer.cc \
 	tests/testTokenizer.h
 nodist_tests_testTokenizer_SOURCES = \
+	tests/stub_StatHist.cc \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
-	parser/Tokenizer.h \
-	tests/stub_StatHist.cc
+	parser/Tokenizer.h
 tests_testTokenizer_LDADD = \
 	parser/libparser.la \
 	sbuf/libsbuf.la \
@@ -1063,9 +1063,9 @@ tests_testSBuf_SOURCES = \
 	tests/SBufFindTest.cc \
 	tests/SBufFindTest.h
 nodist_tests_testSBuf_SOURCES = \
+	tests/stub_StatHist.cc \
 	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
-	tests/stub_StatHist.cc
+	tests/stub_libmem.cc
 tests_testSBuf_LDADD = \
 	sbuf/libsbuf.la \
 	base/libbase.la \
@@ -1079,9 +1079,9 @@ tests_testSBufList_SOURCES = \
 	tests/testSBufList.cc \
 	tests/testSBufList.h
 nodist_tests_testSBufList_SOURCES = \
+	tests/stub_StatHist.cc \
 	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
-	tests/stub_StatHist.cc
+	tests/stub_libmem.cc
 tests_testSBufList_LDADD = \
 	sbuf/libsbuf.la \
 	base/libbase.la \
@@ -1095,10 +1095,10 @@ tests_testString_SOURCES = \
 	tests/testString.cc \
 	tests/testString.h
 nodist_tests_testString_SOURCES = \
-	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
 	tests/stub_SBuf.cc \
-	String.cc
+	String.cc \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc
 tests_testString_LDADD = \
 	base/libbase.la \
 	$(LIBCPPUNIT_LIBS) \
@@ -1114,39 +1114,19 @@ tests_testRock_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	$(STOREMETA_SOURCE) \
 	$(UNLINKDSOURCE) \
-	tests/stub_access_log.cc \
 	AccessLogEntry.cc \
 	AccessLogEntry.h \
-	tests/stub_cache_cf.cc \
-	cache_cf.h \
-	tests/stub_cache_manager.cc \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
-	cbdata.cc \
-	tests/stub_client_db.cc \
-	tests/stub_client_side_request.cc \
 	CollapsedForwarding.cc \
 	CollapsedForwarding.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
-	tests/stub_debug.cc \
-	tests/stub_errorpage.cc \
 	ETag.cc \
-	event.cc \
 	EventLoop.cc \
 	FadingCounter.cc \
-	fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	fde.h \
-	filemap.cc \
 	FileMap.h \
-	fs_io.cc \
-	fs_io.h \
 	tests/stub_HelperChildConfig.cc \
-	tests/stub_http.cc \
 	HttpBody.cc \
 	HttpBody.h \
 	HttpHdrCc.cc \
@@ -1162,6 +1142,59 @@ tests_testRock_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	LogTags.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
+	MemBuf.cc \
+	MemObject.cc \
+	MemStore.cc \
+	Notes.cc \
+	Notes.h \
+	Parsing.cc \
+	tests/stub_Port.cc \
+	RemovalPolicy.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
+	tests/testRock.cc \
+	tests/testRock.h \
+	tests/stub_SBufDetailedStats.cc \
+	StatCounters.cc \
+	StatCounters.h \
+	tests/stub_StatHist.cc \
+	StatHist.h \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	StoreMetaUnpacker.cc \
+	tests/testStoreSupport.cc \
+	tests/testStoreSupport.h \
+	StoreSwapLogData.cc \
+	StrList.cc \
+	StrList.h \
+	String.cc \
+	Transients.cc \
+	Transients.h \
+	tests/stub_access_log.cc \
+	tests/stub_cache_cf.cc \
+	cache_cf.h \
+	tests/stub_cache_manager.cc \
+	cbdata.cc \
+	tests/stub_client_db.cc \
+	tests/stub_client_side_request.cc \
+	tests/stub_debug.cc \
+	tests/stub_errorpage.cc \
+	event.cc \
+	fatal.cc \
+	fatal.h \
+	fd.cc \
+	fd.h \
+	fde.cc \
+	fde.h \
+	filemap.cc \
+	fs_io.cc \
+	fs_io.h \
+	tests/stub_http.cc \
 	tests/stub_icp.cc \
 	int.cc \
 	int.h \
@@ -1176,35 +1209,13 @@ tests_testRock_SOURCES = \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
 	log/access_log.h \
-	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	mem_node.cc \
-	MemBuf.cc \
-	MemObject.cc \
-	MemStore.cc \
 	tests/stub_mime.cc \
 	mime.h \
 	tests/stub_neighbors.cc \
-	Notes.cc \
-	Notes.h \
-	Parsing.cc \
 	tests/stub_pconn.cc \
-	tests/stub_Port.cc \
-	RemovalPolicy.cc \
 	repl_modules.h \
-	RequestFlags.cc \
-	RequestFlags.h \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
-	tests/testRock.cc \
-	tests/testRock.h \
-	tests/stub_SBufDetailedStats.cc \
 	tests/stub_stat.cc \
-	StatCounters.cc \
-	StatCounters.h \
-	tests/stub_StatHist.cc \
-	StatHist.h \
 	stmem.cc \
 	store.cc \
 	tests/stub_store_client.cc \
@@ -1216,27 +1227,16 @@ tests_testRock_SOURCES = \
 	tests/stub_store_stats.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	StoreFileSystem.cc \
-	StoreIOState.cc \
-	StoreMetaUnpacker.cc \
-	tests/testStoreSupport.cc \
-	tests/testStoreSupport.h \
-	StoreSwapLogData.cc \
-	String.cc \
-	StrList.cc \
-	StrList.h \
 	time.cc \
 	tests/stub_tools.cc \
 	tools.h \
-	Transients.cc \
-	Transients.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testRock_SOURCES = \
 	$(TESTSOURCES) \
-	hier_code.cc \
 	SquidMath.cc \
 	SquidMath.h \
+	hier_code.cc \
 	swap_log_op.cc
 tests_testRock_LDADD = \
 	http/libhttp.la \
@@ -1285,42 +1285,19 @@ tests_testUfs_SOURCES = \
 	$(STOREMETA_SOURCE) \
 	$(UNLINKDSOURCE) \
 	$(WIN32_SOURCE) \
-	tests/stub_access_log.cc \
 	AccessLogEntry.cc \
 	AccessLogEntry.h \
-	tests/stub_acl.cc \
-	tests/stub_cache_cf.cc \
-	cache_cf.h \
-	tests/stub_cache_manager.cc \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
-	cbdata.cc \
-	tests/stub_client_db.cc \
-	client_db.h \
-	tests/stub_client_side_request.cc \
 	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
-	tests/stub_debug.cc \
-	tests/stub_errorpage.cc \
 	ETag.cc \
-	event.cc \
 	EventLoop.cc \
 	FadingCounter.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	fde.h \
-	filemap.cc \
 	FileMap.h \
-	fs_io.cc \
-	fs_io.h \
-	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
-	tests/stub_http.cc \
 	HttpBody.cc \
 	HttpBody.h \
 	HttpHdrCc.cc \
@@ -1337,6 +1314,60 @@ tests_testUfs_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	LogTags.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
+	MemBuf.cc \
+	MemObject.cc \
+	MemStore.cc \
+	Notes.cc \
+	Notes.h \
+	Parsing.cc \
+	tests/stub_Port.cc \
+	RemovalPolicy.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
+	tests/stub_SBufDetailedStats.cc \
+	StatCounters.cc \
+	StatCounters.h \
+	StatHist.cc \
+	StatHist.h \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	StoreMetaUnpacker.cc \
+	tests/testStoreSupport.cc \
+	tests/testStoreSupport.h \
+	StoreSwapLogData.cc \
+	StrList.cc \
+	StrList.h \
+	String.cc \
+	Transients.cc \
+	tests/stub_UdsOp.cc \
+	tests/testUfs.cc \
+	tests/testUfs.h \
+	tests/stub_access_log.cc \
+	tests/stub_acl.cc \
+	tests/stub_cache_cf.cc \
+	cache_cf.h \
+	tests/stub_cache_manager.cc \
+	cbdata.cc \
+	tests/stub_client_db.cc \
+	client_db.h \
+	tests/stub_client_side_request.cc \
+	tests/stub_debug.cc \
+	tests/stub_errorpage.cc \
+	event.cc \
+	tests/stub_fatal.cc \
+	fatal.h \
+	fd.cc \
+	fd.h \
+	fde.cc \
+	fde.h \
+	filemap.cc \
+	fs_io.cc \
+	fs_io.h \
+	tests/stub_helper.cc \
+	tests/stub_http.cc \
 	tests/stub_icp.cc \
 	int.cc \
 	int.h \
@@ -1352,33 +1383,15 @@ tests_testUfs_SOURCES = \
 	tests/stub_liblog.cc \
 	tests/stub_libsecurity.cc \
 	log/access_log.h \
-	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	mem_node.cc \
-	MemBuf.cc \
-	MemObject.cc \
-	MemStore.cc \
 	tests/stub_mime.cc \
 	mime.h \
 	tests/stub_neighbors.cc \
-	Notes.cc \
-	Notes.h \
-	Parsing.cc \
 	tests/stub_pconn.cc \
-	tests/stub_Port.cc \
 	refresh.cc \
 	refresh.h \
-	RemovalPolicy.cc \
 	repl_modules.h \
-	RequestFlags.cc \
-	RequestFlags.h \
-	tests/stub_SBufDetailedStats.cc \
 	tests/stub_stat.cc \
-	StatCounters.cc \
-	StatCounters.h \
-	StatHist.cc \
-	StatHist.h \
 	stmem.cc \
 	store.cc \
 	tests/stub_store_client.cc \
@@ -1390,29 +1403,16 @@ tests_testUfs_SOURCES = \
 	tests/stub_store_stats.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	StoreFileSystem.cc \
-	StoreIOState.cc \
-	StoreMetaUnpacker.cc \
-	tests/testStoreSupport.cc \
-	tests/testStoreSupport.h \
-	StoreSwapLogData.cc \
-	String.cc \
-	StrList.cc \
-	StrList.h \
 	time.cc \
 	tests/stub_tools.cc \
 	tools.h \
-	Transients.cc \
-	tests/stub_UdsOp.cc \
-	tests/testUfs.cc \
-	tests/testUfs.h \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testUfs_SOURCES = \
 	$(TESTSOURCES) \
-	hier_code.cc \
 	SquidMath.cc \
 	SquidMath.h \
+	hier_code.cc \
 	swap_log_op.cc
 tests_testUfs_LDADD = \
 	http/libhttp.la \
@@ -1464,37 +1464,16 @@ check_PROGRAMS += tests/testStore
 ## first line - what we are testing.
 tests_testStore_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
-	tests/stub_access_log.cc \
-	tests/stub_acl.cc \
-	tests/stub_cache_cf.cc \
-	cache_cf.h \
-	tests/stub_cache_manager.cc \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
-	cbdata.cc \
-	tests/stub_client_side_request.cc \
 	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
-	tests/stub_comm.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
-	tests/stub_debug.cc \
-	tests/stub_errorpage.cc \
 	ETag.cc \
-	event.cc \
 	EventLoop.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
-	tests/stub_fd.cc \
-	fd.h \
-	fde.h \
-	filemap.cc \
 	FileMap.h \
-	fs_io.cc \
-	fs_io.h \
-	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
-	tests/stub_http.cc \
 	HttpBody.cc \
 	HttpBody.h \
 	HttpHdrCc.cc \
@@ -1511,6 +1490,63 @@ tests_testStore_SOURCES = \
 	HttpHeaderTools.h \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
+	MemBuf.cc \
+	MemObject.cc \
+	MemStore.cc \
+	Notes.cc \
+	Notes.h \
+	tests/testPackableStream.cc \
+	tests/testPackableStream.h \
+	Parsing.cc \
+	tests/stub_Port.cc \
+	RemovalPolicy.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
+	tests/stub_SBufDetailedStats.cc \
+	StatCounters.cc \
+	StatCounters.h \
+	StatHist.cc \
+	StatHist.h \
+	tests/testStore.cc \
+	tests/testStore.h \
+	tests/testStoreController.cc \
+	tests/testStoreController.h \
+	tests/testStoreHashIndex.cc \
+	tests/testStoreHashIndex.h \
+	StoreIOState.cc \
+	tests/stub_StoreMeta.cc \
+	StoreMetaUnpacker.cc \
+	tests/testStoreSupport.cc \
+	tests/testStoreSupport.h \
+	StoreSwapLogData.cc \
+	StrList.cc \
+	StrList.h \
+	String.cc \
+	Transients.cc \
+	tests/stub_UdsOp.cc \
+	tests/stub_access_log.cc \
+	tests/stub_acl.cc \
+	tests/stub_cache_cf.cc \
+	cache_cf.h \
+	tests/stub_cache_manager.cc \
+	cbdata.cc \
+	tests/stub_client_side_request.cc \
+	tests/stub_comm.cc \
+	tests/stub_debug.cc \
+	tests/stub_errorpage.cc \
+	event.cc \
+	tests/stub_fatal.cc \
+	fatal.h \
+	tests/stub_fd.cc \
+	fd.h \
+	fde.h \
+	filemap.cc \
+	fs_io.cc \
+	fs_io.h \
+	tests/stub_helper.cc \
+	tests/stub_http.cc \
 	int.cc \
 	int.h \
 	tests/stub_libanyp.cc \
@@ -1522,36 +1558,15 @@ tests_testStore_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
 	log/access_log.h \
-	MasterXaction.cc \
-	MasterXaction.h \
 	mem_node.cc \
-	MemBuf.cc \
-	MemObject.cc \
-	MemStore.cc \
 	tests/stub_mime.cc \
 	mime.h \
-	Notes.cc \
-	Notes.h \
-	tests/testPackableStream.cc \
-	tests/testPackableStream.h \
-	Parsing.cc \
-	tests/stub_Port.cc \
 	refresh.cc \
 	refresh.h \
-	RemovalPolicy.cc \
 	repl_modules.h \
-	RequestFlags.cc \
-	RequestFlags.h \
-	tests/stub_SBufDetailedStats.cc \
 	tests/stub_stat.cc \
-	StatCounters.cc \
-	StatCounters.h \
-	StatHist.cc \
-	StatHist.h \
 	stmem.cc \
 	store.cc \
-	tests/testStore.cc \
-	tests/testStore.h \
 	tests/stub_store_client.cc \
 	store_io.cc \
 	store_key_md5.cc \
@@ -1561,27 +1576,12 @@ tests_testStore_SOURCES = \
 	tests/stub_store_stats.cc \
 	store_swapout.cc \
 	tests/stub_store_swapout.cc \
-	tests/testStoreController.cc \
-	tests/testStoreController.h \
-	tests/testStoreHashIndex.cc \
-	tests/testStoreHashIndex.h \
-	StoreIOState.cc \
-	tests/stub_StoreMeta.cc \
-	StoreMetaUnpacker.cc \
-	tests/testStoreSupport.cc \
-	tests/testStoreSupport.h \
-	StoreSwapLogData.cc \
-	String.cc \
-	StrList.cc \
-	StrList.h \
 	tests/CapturingStoreEntry.h \
 	tests/TestSwapDir.cc \
 	tests/TestSwapDir.h \
 	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tools.h \
-	Transients.cc \
-	tests/stub_UdsOp.cc \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testStore_SOURCES = \
@@ -1627,45 +1627,21 @@ tests_testDiskIO_SOURCES = \
 	$(DELAY_POOL_SOURCE) \
 	$(UNLINKDSOURCE) \
 	$(WIN32_SOURCE) \
-	tests/stub_access_log.cc \
 	AccessLogEntry.cc \
 	AccessLogEntry.h \
-	tests/stub_acl.cc \
-	tests/stub_cache_cf.cc \
-	cache_cf.h \
-	tests/stub_cache_manager.cc \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
-	cbdata.cc \
-	tests/stub_client_db.cc \
-	client_db.h \
-	tests/stub_client_side_request.cc \
-	client_side_request.h \
 	ClientInfo.h \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
-	tests/stub_debug.cc \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
-	tests/stub_errorpage.cc \
 	tests/stub_ETag.cc \
-	event.cc \
 	EventLoop.cc \
 	FadingCounter.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	fde.h \
-	filemap.cc \
 	FileMap.h \
-	fs_io.cc \
-	fs_io.h \
-	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
-	tests/stub_http.cc \
 	HttpBody.cc \
 	HttpBody.h \
 	HttpHdrCc.cc \
@@ -1682,6 +1658,62 @@ tests_testDiskIO_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	LogTags.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
+	MemBuf.cc \
+	MemObject.cc \
+	tests/stub_MemStore.cc \
+	Notes.cc \
+	Notes.h \
+	Parsing.cc \
+	tests/stub_Port.cc \
+	RemovalPolicy.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
+	tests/stub_SBufDetailedStats.cc \
+	StatCounters.cc \
+	StatCounters.h \
+	tests/stub_StatHist.cc \
+	StatHist.h \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	tests/stub_StoreMeta.cc \
+	StoreMetaUnpacker.cc \
+	tests/testStoreSupport.cc \
+	tests/testStoreSupport.h \
+	StoreSwapLogData.cc \
+	StrList.cc \
+	StrList.h \
+	String.cc \
+	Transients.cc \
+	tests/stub_UdsOp.cc \
+	tests/stub_access_log.cc \
+	tests/stub_acl.cc \
+	tests/stub_cache_cf.cc \
+	cache_cf.h \
+	tests/stub_cache_manager.cc \
+	cbdata.cc \
+	tests/stub_client_db.cc \
+	client_db.h \
+	tests/stub_client_side_request.cc \
+	client_side_request.h \
+	tests/stub_debug.cc \
+	tests/stub_errorpage.cc \
+	event.cc \
+	tests/stub_fatal.cc \
+	fatal.h \
+	fd.cc \
+	fd.h \
+	fde.cc \
+	fde.h \
+	filemap.cc \
+	fs_io.cc \
+	fs_io.h \
+	tests/stub_helper.cc \
+	tests/stub_http.cc \
 	tests/stub_icp.cc \
 	int.cc \
 	int.h \
@@ -1699,35 +1731,15 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	log/access_log.h \
-	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	mem_node.cc \
-	MemBuf.cc \
-	MemObject.cc \
-	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
 	mime.h \
 	tests/stub_neighbors.cc \
-	Notes.cc \
-	Notes.h \
-	Parsing.cc \
 	tests/stub_pconn.cc \
-	tests/stub_Port.cc \
 	refresh.cc \
 	refresh.h \
-	RemovalPolicy.cc \
 	repl_modules.h \
-	RequestFlags.cc \
-	RequestFlags.h \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
-	tests/stub_SBufDetailedStats.cc \
 	tests/stub_stat.cc \
-	StatCounters.cc \
-	StatCounters.h \
-	tests/stub_StatHist.cc \
-	StatHist.h \
 	stmem.cc \
 	store.cc \
 	tests/stub_store_client.cc \
@@ -1739,28 +1751,16 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_store_stats.cc \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	StoreFileSystem.cc \
-	StoreIOState.cc \
-	tests/stub_StoreMeta.cc \
-	StoreMetaUnpacker.cc \
-	tests/testStoreSupport.cc \
-	tests/testStoreSupport.h \
-	StoreSwapLogData.cc \
-	String.cc \
-	StrList.cc \
-	StrList.h \
 	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tools.h \
-	Transients.cc \
-	tests/stub_UdsOp.cc \
 	wordlist.cc \
 	wordlist.h
 nodist_tests_testDiskIO_SOURCES = \
 	$(TESTSOURCES) \
-	hier_code.cc \
 	SquidMath.cc \
 	SquidMath.h \
+	hier_code.cc \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
 	libsquid.la \
@@ -1807,27 +1807,27 @@ tests_testACLMaxUserIP_SOURCES = \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h
 nodist_tests_testACLMaxUserIP_SOURCES = \
+	ConfigParser.cc \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_HttpHeader.cc \
+	tests/stub_HttpRequest.cc \
+	tests/stub_MemBuf.cc \
+	Parsing.cc \
+	tests/stub_StatHist.cc \
+	String.cc \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_client_side.cc \
-	ConfigParser.cc \
 	tests/stub_debug.cc \
 	dlink.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_fatal.cc \
 	globals.cc \
-	tests/stub_HelperChildConfig.cc \
-	tests/stub_HttpHeader.cc \
-	tests/stub_HttpRequest.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libhttp.cc \
 	tests/stub_libmem.cc \
-	tests/stub_libsecurity.cc \
-	tests/stub_MemBuf.cc \
-	Parsing.cc \
-	tests/stub_StatHist.cc \
-	String.cc
+	tests/stub_libsecurity.cc
 tests_testACLMaxUserIP_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	acl/libapi.la \
@@ -1860,27 +1860,14 @@ tests_test_http_range_SOURCES = \
 	$(SNMP_SOURCE) \
 	$(UNLINKDSOURCE) \
 	$(WIN32_SOURCE) \
-	tests/test_http_range.cc \
 	AccessLogEntry.cc \
 	AuthReg.h \
 	BodyPipe.cc \
-	cache_cf.cc \
-	cache_cf.h \
-	cache_manager.cc \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
 	CachePeer.cc \
 	CachePeer.h \
-	tests/stub_carp.cc \
-	carp.h \
-	cbdata.cc \
-	tests/stub_client_db.cc \
-	client_side.cc \
-	client_side.h \
-	client_side_reply.cc \
-	client_side_request.cc \
 	ClientInfo.h \
-	clientStream.cc \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -1888,35 +1875,14 @@ tests_test_http_range_SOURCES = \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
-	debug.cc \
-	dlink.cc \
-	dlink.h \
-	errorpage.cc \
 	tests/stub_ETag.cc \
-	event.cc \
 	tests/stub_EventLoop.cc \
-	tests/stub_external_acl.cc \
 	FadingCounter.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	filemap.cc \
 	FileMap.h \
-	fqdncache.cc \
-	fqdncache.h \
-	fs_io.cc \
-	fs_io.h \
 	FwdState.cc \
 	FwdState.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	HappyConnOpener.cc \
 	HappyConnOpener.h \
-	helper.cc \
-	hier_code.h \
-	http.cc \
 	HttpBody.cc \
 	HttpBody.h \
 	tests/stub_HttpControlMsg.cc \
@@ -1934,13 +1900,82 @@ tests_test_http_range_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	HttpRequest.cc \
+	IoStats.h \
+	LogTags.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
+	MemBuf.cc \
+	MemObject.cc \
+	tests/stub_MemStore.cc \
+	Notes.cc \
+	Notes.h \
+	Parsing.cc \
+	PeerPoolMgr.cc \
+	PeerPoolMgr.h \
+	Pipeline.cc \
+	Pipeline.h \
+	RefreshPattern.h \
+	RemovalPolicy.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
+	tests/stub_SBufDetailedStats.cc \
+	SquidMath.cc \
+	SquidMath.h \
+	StatCounters.cc \
+	StatCounters.h \
+	StatHist.cc \
+	StatHist.h \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	tests/stub_StoreMeta.cc \
+	StoreMetaUnpacker.cc \
+	StoreSwapLogData.cc \
+	StrList.cc \
+	StrList.h \
+	String.cc \
+	Transients.cc \
+	tests/test_http_range.cc \
+	cache_cf.cc \
+	cache_cf.h \
+	cache_manager.cc \
+	tests/stub_carp.cc \
+	carp.h \
+	cbdata.cc \
+	clientStream.cc \
+	tests/stub_client_db.cc \
+	client_side.cc \
+	client_side.h \
+	client_side_reply.cc \
+	client_side_request.cc \
+	debug.cc \
+	dlink.cc \
+	dlink.h \
+	errorpage.cc \
+	event.cc \
+	tests/stub_external_acl.cc \
+	tests/stub_fatal.cc \
+	fatal.h \
+	fd.cc \
+	fd.h \
+	fde.cc \
+	filemap.cc \
+	fqdncache.cc \
+	fqdncache.h \
+	fs_io.cc \
+	fs_io.h \
+	tests/stub_gopher.cc \
+	gopher.h \
+	helper.cc \
+	hier_code.h \
+	http.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.cc \
 	int.h \
 	internal.cc \
 	internal.h \
-	IoStats.h \
 	tests/stub_ipc_Forwarder.cc \
 	ipcache.cc \
 	tests/stub_libauth.cc \
@@ -1949,14 +1984,8 @@ tests_test_http_range_SOURCES = \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
-	LogTags.cc \
 	tests/stub_main_cc.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	mem_node.cc \
-	MemBuf.cc \
-	MemObject.cc \
-	tests/stub_MemStore.cc \
 	mime.cc \
 	mime.h \
 	mime_header.cc \
@@ -1965,9 +1994,6 @@ tests_test_http_range_SOURCES = \
 	multicast.h \
 	neighbors.cc \
 	neighbors.h \
-	Notes.cc \
-	Notes.h \
-	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.cc \
@@ -1977,30 +2003,13 @@ tests_test_http_range_SOURCES = \
 	peer_sourcehash.h \
 	peer_userhash.cc \
 	peer_userhash.h \
-	PeerPoolMgr.cc \
-	PeerPoolMgr.h \
-	Pipeline.cc \
-	Pipeline.h \
 	tests/stub_redirect.cc \
 	redirect.h \
 	refresh.cc \
 	refresh.h \
-	RefreshPattern.h \
-	RemovalPolicy.cc \
 	repl_modules.h \
-	RequestFlags.cc \
-	RequestFlags.h \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
-	tests/stub_SBufDetailedStats.cc \
-	SquidMath.cc \
-	SquidMath.h \
 	stat.cc \
 	stat.h \
-	StatCounters.cc \
-	StatCounters.h \
-	StatHist.cc \
-	StatHist.h \
 	stmem.cc \
 	store.cc \
 	store_client.cc \
@@ -2018,18 +2027,9 @@ tests_test_http_range_SOURCES = \
 	store_swapin.h \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	StoreFileSystem.cc \
-	StoreIOState.cc \
-	tests/stub_StoreMeta.cc \
-	StoreMetaUnpacker.cc \
-	StoreSwapLogData.cc \
-	String.cc \
-	StrList.cc \
-	StrList.h \
 	time.cc \
 	tools.cc \
 	tools.h \
-	Transients.cc \
 	tests/stub_tunnel.cc \
 	urn.cc \
 	urn.h \
@@ -2087,30 +2087,30 @@ tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttp1Parser
 tests_testHttp1Parser_SOURCES = \
+	Debug.h \
+	tests/stub_HelperChildConfig.cc \
+	tests/testHttp1Parser.cc \
+	tests/testHttp1Parser.h \
+	MemBuf.cc \
+	MemBuf.h \
+	tests/stub_MemObject.cc \
+	tests/stub_SBufDetailedStats.cc \
+	String.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_comm.cc \
 	tests/stub_debug.cc \
-	Debug.h \
 	tests/stub_event.cc \
-	tests/stub_HelperChildConfig.cc \
-	tests/testHttp1Parser.cc \
-	tests/testHttp1Parser.h \
 	tests/stub_libanyp.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
-	MemBuf.cc \
-	MemBuf.h \
-	tests/stub_MemObject.cc \
 	mime_header.cc \
 	mime_header.h \
-	tests/stub_SBufDetailedStats.cc \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
-	String.cc \
 	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tools.h \
@@ -2135,21 +2135,8 @@ tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpReply
 tests_testHttpReply_SOURCES = \
-	tests/stub_access_log.cc \
-	tests/stub_cache_cf.cc \
-	cache_cf.h \
-	tests/stub_cache_manager.cc \
-	cbdata.cc \
-	cbdata.h \
-	tests/stub_comm.cc \
 	ConfigParser.cc \
-	tests/stub_debug.cc \
-	tests/stub_errorpage.cc \
 	tests/stub_ETag.cc \
-	tests/stub_event.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
-	tests/stub_fd.cc \
 	tests/stub_HelperChildConfig.cc \
 	HttpBody.cc \
 	HttpBody.h \
@@ -2176,6 +2163,35 @@ tests_testHttpReply_SOURCES = \
 	HttpReply.h \
 	tests/testHttpReply.h \
 	tests/stub_HttpRequest.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
+	MemBuf.cc \
+	MemBuf.h \
+	Notes.cc \
+	Notes.h \
+	tests/stub_SBufDetailedStats.cc \
+	SquidString.h \
+	SquidTime.h \
+	StatCounters.cc \
+	StatCounters.h \
+	tests/stub_StatHist.cc \
+	StatHist.h \
+	StrList.cc \
+	StrList.h \
+	String.cc \
+	tests/stub_access_log.cc \
+	tests/stub_cache_cf.cc \
+	cache_cf.h \
+	tests/stub_cache_manager.cc \
+	cbdata.cc \
+	cbdata.h \
+	tests/stub_comm.cc \
+	tests/stub_debug.cc \
+	tests/stub_errorpage.cc \
+	tests/stub_event.cc \
+	tests/stub_fatal.cc \
+	fatal.h \
+	tests/stub_fd.cc \
 	tests/stub_libanyp.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
@@ -2184,27 +2200,11 @@ tests_testHttpReply_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libsslsquid.cc \
 	log/access_log.h \
-	MasterXaction.cc \
-	MasterXaction.h \
-	MemBuf.cc \
-	MemBuf.h \
 	mime_header.cc \
 	mime_header.h \
-	Notes.cc \
-	Notes.h \
 	repl_modules.h \
-	tests/stub_SBufDetailedStats.cc \
-	SquidString.h \
-	SquidTime.h \
-	StatCounters.cc \
-	StatCounters.h \
-	tests/stub_StatHist.cc \
-	StatHist.h \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
-	String.cc \
-	StrList.cc \
-	StrList.h \
 	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tools.h \
@@ -2247,23 +2247,11 @@ tests_testHttpRequest_SOURCES = \
 	AccessLogEntry.cc \
 	AuthReg.h \
 	BodyPipe.cc \
-	cache_cf.cc \
-	cache_cf.h \
-	cache_manager.cc \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
 	CachePeer.cc \
 	CachePeer.h \
-	tests/stub_carp.cc \
-	carp.h \
-	cbdata.cc \
-	tests/stub_client_db.cc \
-	client_side.cc \
-	client_side.h \
-	client_side_reply.cc \
-	client_side_request.cc \
 	ClientInfo.h \
-	clientStream.cc \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -2271,34 +2259,14 @@ tests_testHttpRequest_SOURCES = \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
-	debug.cc \
-	dlink.cc \
-	dlink.h \
-	errorpage.cc \
 	tests/stub_ETag.cc \
-	event.cc \
 	tests/stub_EventLoop.cc \
-	external_acl.cc \
 	ExternalACLEntry.cc \
 	FadingCounter.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	fqdncache.cc \
-	fqdncache.h \
-	fs_io.cc \
-	fs_io.h \
 	FwdState.cc \
 	FwdState.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	HappyConnOpener.cc \
 	HappyConnOpener.h \
-	helper.cc \
-	hier_code.h \
-	http.cc \
 	HttpBody.cc \
 	HttpBody.h \
 	tests/stub_HttpControlMsg.cc \
@@ -2320,13 +2288,80 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequest.h \
 	tests/testHttpRequestMethod.cc \
 	tests/testHttpRequestMethod.h \
+	IoStats.h \
+	LogTags.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
+	MemBuf.cc \
+	MemObject.cc \
+	MemStore.cc \
+	Notes.cc \
+	Notes.h \
+	Parsing.cc \
+	PeerPoolMgr.cc \
+	PeerPoolMgr.h \
+	Pipeline.cc \
+	Pipeline.h \
+	RefreshPattern.h \
+	RemovalPolicy.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
+	tests/stub_SBufDetailedStats.cc \
+	SquidMath.cc \
+	SquidMath.h \
+	StatCounters.cc \
+	StatCounters.h \
+	StatHist.cc \
+	StatHist.h \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	tests/stub_StoreMeta.cc \
+	StoreMetaUnpacker.cc \
+	StoreSwapLogData.cc \
+	StrList.cc \
+	StrList.h \
+	String.cc \
+	Transients.cc \
+	cache_cf.cc \
+	cache_cf.h \
+	cache_manager.cc \
+	tests/stub_carp.cc \
+	carp.h \
+	cbdata.cc \
+	clientStream.cc \
+	tests/stub_client_db.cc \
+	client_side.cc \
+	client_side.h \
+	client_side_reply.cc \
+	client_side_request.cc \
+	debug.cc \
+	dlink.cc \
+	dlink.h \
+	errorpage.cc \
+	event.cc \
+	external_acl.cc \
+	tests/stub_fatal.cc \
+	fatal.h \
+	fd.cc \
+	fd.h \
+	fde.cc \
+	fqdncache.cc \
+	fqdncache.h \
+	fs_io.cc \
+	fs_io.h \
+	tests/stub_gopher.cc \
+	gopher.h \
+	helper.cc \
+	hier_code.h \
+	http.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.cc \
 	int.h \
 	internal.cc \
 	internal.h \
-	IoStats.h \
 	tests/stub_ipc_Forwarder.cc \
 	ipcache.cc \
 	tests/stub_libauth.cc \
@@ -2336,14 +2371,8 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
-	LogTags.cc \
 	tests/stub_main_cc.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	mem_node.cc \
-	MemBuf.cc \
-	MemObject.cc \
-	MemStore.cc \
 	mime.cc \
 	mime.h \
 	mime_header.cc \
@@ -2352,9 +2381,6 @@ tests_testHttpRequest_SOURCES = \
 	multicast.h \
 	neighbors.cc \
 	neighbors.h \
-	Notes.cc \
-	Notes.h \
-	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.cc \
@@ -2364,30 +2390,13 @@ tests_testHttpRequest_SOURCES = \
 	peer_sourcehash.h \
 	peer_userhash.cc \
 	peer_userhash.h \
-	PeerPoolMgr.cc \
-	PeerPoolMgr.h \
-	Pipeline.cc \
-	Pipeline.h \
 	tests/stub_redirect.cc \
 	redirect.h \
 	refresh.cc \
 	refresh.h \
-	RefreshPattern.h \
-	RemovalPolicy.cc \
 	repl_modules.h \
-	RequestFlags.cc \
-	RequestFlags.h \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
-	tests/stub_SBufDetailedStats.cc \
-	SquidMath.cc \
-	SquidMath.h \
 	stat.cc \
 	stat.h \
-	StatCounters.cc \
-	StatCounters.h \
-	StatHist.cc \
-	StatHist.h \
 	stmem.cc \
 	store.cc \
 	store_client.cc \
@@ -2405,18 +2414,9 @@ tests_testHttpRequest_SOURCES = \
 	store_swapin.h \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	StoreFileSystem.cc \
-	StoreIOState.cc \
-	tests/stub_StoreMeta.cc \
-	StoreMetaUnpacker.cc \
-	StoreSwapLogData.cc \
-	String.cc \
-	StrList.cc \
-	StrList.h \
 	time.cc \
 	tools.cc \
 	tools.h \
-	Transients.cc \
 	tests/stub_tunnel.cc \
 	urn.cc \
 	urn.h \
@@ -2479,9 +2479,9 @@ tests_testIpAddress_SOURCES = \
 	tests/testIpAddress.cc \
 	tests/testIpAddress.h
 nodist_tests_testIpAddress_SOURCES = \
+	tests/stub_SBuf.cc \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
-	tests/stub_SBuf.cc \
 	tests/stub_tools.cc
 tests_testIpAddress_LDADD = \
 	ip/libip.la \
@@ -2499,12 +2499,12 @@ tests_testIcmp_SOURCES = \
 	tests/testIcmp.cc \
 	tests/testIcmp.h
 nodist_tests_testIcmp_SOURCES = \
+	tests/stub_SBuf.cc \
+	SquidTime.h \
 	tests/stub_debug.cc \
 	globals.cc \
 	icmp/Icmp.h \
 	tests/stub_libmem.cc \
-	tests/stub_SBuf.cc \
-	SquidTime.h \
 	time.cc
 tests_testIcmp_LDADD=\
 	icmp/libicmpcore.la \
@@ -2520,11 +2520,11 @@ tests_testNetDb_SOURCES = \
 	tests/testNetDb.cc \
 	tests/testNetDb.h
 nodist_tests_testNetDb_SOURCES = \
+	tests/stub_SBuf.cc \
+	SquidTime.h \
 	tests/stub_debug.cc \
 	globals.cc \
 	tests/stub_libmem.cc \
-	tests/stub_SBuf.cc \
-	SquidTime.h \
 	time.cc
 tests_testNetDb_LDADD = \
 	icmp/libicmp.la \
@@ -2550,25 +2550,13 @@ tests_testCacheManager_SOURCES = \
 	AccessLogEntry.cc \
 	AuthReg.h \
 	BodyPipe.cc \
-	cache_cf.cc \
-	cache_cf.h \
-	cache_manager.cc \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
 	tests/testCacheManager.cc \
 	tests/testCacheManager.h \
 	CachePeer.cc \
 	CachePeer.h \
-	tests/stub_carp.cc \
-	carp.h \
-	cbdata.cc \
-	tests/stub_client_db.cc \
-	client_side.cc \
-	client_side.h \
-	client_side_reply.cc \
-	client_side_request.cc \
 	ClientInfo.h \
-	clientStream.cc \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -2576,36 +2564,15 @@ tests_testCacheManager_SOURCES = \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
-	debug.cc \
-	dlink.cc \
-	dlink.h \
-	errorpage.cc \
 	tests/stub_ETag.cc \
-	event.cc \
 	tests/stub_EventLoop.cc \
-	external_acl.cc \
 	ExternalACLEntry.cc \
 	FadingCounter.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	filemap.cc \
 	FileMap.h \
-	fqdncache.cc \
-	fqdncache.h \
-	fs_io.cc \
-	fs_io.h \
 	FwdState.cc \
 	FwdState.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	HappyConnOpener.cc \
 	HappyConnOpener.h \
-	helper.cc \
-	hier_code.h \
-	http.cc \
 	HttpBody.cc \
 	HttpBody.h \
 	tests/stub_HttpControlMsg.cc \
@@ -2623,13 +2590,81 @@ tests_testCacheManager_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	HttpRequest.cc \
+	IoStats.h \
+	LogTags.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
+	MemBuf.cc \
+	MemObject.cc \
+	MemStore.cc \
+	Notes.cc \
+	Notes.h \
+	Parsing.cc \
+	PeerPoolMgr.cc \
+	PeerPoolMgr.h \
+	Pipeline.cc \
+	Pipeline.h \
+	RefreshPattern.h \
+	RemovalPolicy.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
+	tests/stub_SBufDetailedStats.cc \
+	SquidMath.cc \
+	SquidMath.h \
+	StatCounters.cc \
+	StatCounters.h \
+	tests/stub_StatHist.cc \
+	StatHist.h \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	tests/stub_StoreMeta.cc \
+	StoreMetaUnpacker.cc \
+	StoreSwapLogData.cc \
+	StrList.cc \
+	StrList.h \
+	String.cc \
+	Transients.cc \
+	cache_cf.cc \
+	cache_cf.h \
+	cache_manager.cc \
+	tests/stub_carp.cc \
+	carp.h \
+	cbdata.cc \
+	clientStream.cc \
+	tests/stub_client_db.cc \
+	client_side.cc \
+	client_side.h \
+	client_side_reply.cc \
+	client_side_request.cc \
+	debug.cc \
+	dlink.cc \
+	dlink.h \
+	errorpage.cc \
+	event.cc \
+	external_acl.cc \
+	tests/stub_fatal.cc \
+	fatal.h \
+	fd.cc \
+	fd.h \
+	fde.cc \
+	filemap.cc \
+	fqdncache.cc \
+	fqdncache.h \
+	fs_io.cc \
+	fs_io.h \
+	tests/stub_gopher.cc \
+	gopher.h \
+	helper.cc \
+	hier_code.h \
+	http.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.cc \
 	int.h \
 	internal.cc \
 	internal.h \
-	IoStats.h \
 	tests/stub_ipc_Forwarder.cc \
 	ipcache.cc \
 	tests/stub_libauth.cc \
@@ -2637,14 +2672,8 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_libdiskio.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
-	LogTags.cc \
 	tests/stub_main_cc.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	mem_node.cc \
-	MemBuf.cc \
-	MemObject.cc \
-	MemStore.cc \
 	mime.cc \
 	mime.h \
 	mime_header.cc \
@@ -2653,9 +2682,6 @@ tests_testCacheManager_SOURCES = \
 	multicast.h \
 	neighbors.cc \
 	neighbors.h \
-	Notes.cc \
-	Notes.h \
-	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.cc \
@@ -2665,30 +2691,13 @@ tests_testCacheManager_SOURCES = \
 	peer_sourcehash.h \
 	peer_userhash.cc \
 	peer_userhash.h \
-	PeerPoolMgr.cc \
-	PeerPoolMgr.h \
-	Pipeline.cc \
-	Pipeline.h \
 	tests/stub_redirect.cc \
 	redirect.h \
 	refresh.cc \
 	refresh.h \
-	RefreshPattern.h \
-	RemovalPolicy.cc \
 	repl_modules.h \
-	RequestFlags.cc \
-	RequestFlags.h \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
-	tests/stub_SBufDetailedStats.cc \
-	SquidMath.cc \
-	SquidMath.h \
 	stat.cc \
 	stat.h \
-	StatCounters.cc \
-	StatCounters.h \
-	tests/stub_StatHist.cc \
-	StatHist.h \
 	stmem.cc \
 	store.cc \
 	store_client.cc \
@@ -2706,18 +2715,9 @@ tests_testCacheManager_SOURCES = \
 	store_swapin.h \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	StoreFileSystem.cc \
-	StoreIOState.cc \
-	tests/stub_StoreMeta.cc \
-	StoreMetaUnpacker.cc \
-	StoreSwapLogData.cc \
-	String.cc \
-	StrList.cc \
-	StrList.h \
 	time.cc \
 	tools.cc \
 	tools.h \
-	Transients.cc \
 	tests/stub_tunnel.cc \
 	urn.cc \
 	urn.h \
@@ -2777,30 +2777,30 @@ tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testStatHist
 tests_testStatHist_SOURCES = \
-	tests/stub_cache_manager.cc \
-	tests/stub_cbdata.cc \
-	tests/stub_comm.cc \
-	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
 	tests/stub_HelperChildConfig.cc \
-	tests/stub_libmem.cc \
 	tests/stub_MemBuf.cc \
 	tests/stub_MemObject.cc \
-	tests/stub_mime.cc \
-	mime.h \
-	tests/stub_pconn.cc \
-	repl_modules.h \
 	tests/stub_SBufDetailedStats.cc \
 	StatHist.cc \
 	tests/testStatHist.cc \
 	StatHist.h \
 	tests/testStatHist.h \
+	String.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_cbdata.cc \
+	tests/stub_comm.cc \
+	tests/stub_debug.cc \
+	tests/stub_fatal.cc \
+	fatal.h \
+	tests/stub_libmem.cc \
+	tests/stub_mime.cc \
+	mime.h \
+	tests/stub_pconn.cc \
+	repl_modules.h \
 	tests/stub_stmem.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
-	String.cc \
 	time.cc \
 	tests/stub_tools.cc \
 	tools.h
@@ -2819,21 +2819,21 @@ tests_testStatHist_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testConfigParser
 tests_testConfigParser_SOURCES = \
-	tests/stub_cache_cf.cc \
-	cache_cf.h \
-	tests/stub_cbdata.cc \
 	ClientInfo.h \
 	ConfigParser.cc \
 	tests/testConfigParser.cc \
 	tests/testConfigParser.h \
-	tests/stub_debug.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
 	tests/stub_HelperChildConfig.cc \
-	tests/stub_libmem.cc \
 	tests/stub_MemBuf.cc \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
+	tests/stub_cache_cf.cc \
+	cache_cf.h \
+	tests/stub_cbdata.cc \
+	tests/stub_debug.cc \
+	tests/stub_fatal.cc \
+	fatal.h \
+	tests/stub_libmem.cc \
 	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tools.h \
@@ -2868,23 +2868,11 @@ tests_testEvent_SOURCES = \
 	AccessLogEntry.cc \
 	AuthReg.h \
 	BodyPipe.cc \
-	cache_cf.cc \
-	cache_cf.h \
-	cache_manager.cc \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
 	CachePeer.cc \
 	CachePeer.h \
-	tests/stub_carp.cc \
-	carp.h \
-	cbdata.cc \
-	tests/stub_client_db.cc \
-	client_side.cc \
-	client_side.h \
-	client_side_reply.cc \
-	client_side_request.cc \
 	ClientInfo.h \
-	clientStream.cc \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -2892,39 +2880,18 @@ tests_testEvent_SOURCES = \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
-	debug.cc \
-	dlink.cc \
-	dlink.h \
-	errorpage.cc \
 	tests/stub_ETag.cc \
-	event.cc \
 	tests/testEvent.cc \
 	tests/testEvent.h \
 	EventLoop.cc \
 	EventLoop.h \
-	external_acl.cc \
 	ExternalACLEntry.cc \
 	FadingCounter.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	filemap.cc \
 	FileMap.h \
-	fqdncache.cc \
-	fqdncache.h \
-	fs_io.cc \
-	fs_io.h \
 	FwdState.cc \
 	FwdState.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	HappyConnOpener.cc \
 	HappyConnOpener.h \
-	helper.cc \
-	hier_code.h \
-	http.cc \
 	HttpBody.cc \
 	HttpBody.h \
 	tests/stub_HttpControlMsg.cc \
@@ -2942,13 +2909,81 @@ tests_testEvent_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	HttpRequest.cc \
+	IoStats.h \
+	LogTags.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
+	MemBuf.cc \
+	MemObject.cc \
+	MemStore.cc \
+	Notes.cc \
+	Notes.h \
+	Parsing.cc \
+	PeerPoolMgr.cc \
+	PeerPoolMgr.h \
+	Pipeline.cc \
+	Pipeline.h \
+	RefreshPattern.h \
+	RemovalPolicy.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
+	tests/stub_SBufDetailedStats.cc \
+	SquidMath.cc \
+	SquidMath.h \
+	StatCounters.cc \
+	StatCounters.h \
+	StatHist.cc \
+	StatHist.h \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	tests/stub_StoreMeta.cc \
+	StoreMetaUnpacker.cc \
+	StoreSwapLogData.cc \
+	StrList.cc \
+	StrList.h \
+	String.cc \
+	Transients.cc \
+	cache_cf.cc \
+	cache_cf.h \
+	cache_manager.cc \
+	tests/stub_carp.cc \
+	carp.h \
+	cbdata.cc \
+	clientStream.cc \
+	tests/stub_client_db.cc \
+	client_side.cc \
+	client_side.h \
+	client_side_reply.cc \
+	client_side_request.cc \
+	debug.cc \
+	dlink.cc \
+	dlink.h \
+	errorpage.cc \
+	event.cc \
+	external_acl.cc \
+	tests/stub_fatal.cc \
+	fatal.h \
+	fd.cc \
+	fd.h \
+	fde.cc \
+	filemap.cc \
+	fqdncache.cc \
+	fqdncache.h \
+	fs_io.cc \
+	fs_io.h \
+	tests/stub_gopher.cc \
+	gopher.h \
+	helper.cc \
+	hier_code.h \
+	http.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.cc \
 	int.h \
 	internal.cc \
 	internal.h \
-	IoStats.h \
 	tests/stub_ipc_Forwarder.cc \
 	ipcache.cc \
 	tests/stub_libauth.cc \
@@ -2958,14 +2993,8 @@ tests_testEvent_SOURCES = \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
-	LogTags.cc \
 	tests/stub_main_cc.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	mem_node.cc \
-	MemBuf.cc \
-	MemObject.cc \
-	MemStore.cc \
 	mime.cc \
 	mime.h \
 	mime_header.cc \
@@ -2974,9 +3003,6 @@ tests_testEvent_SOURCES = \
 	multicast.h \
 	neighbors.cc \
 	neighbors.h \
-	Notes.cc \
-	Notes.h \
-	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.cc \
@@ -2986,30 +3012,13 @@ tests_testEvent_SOURCES = \
 	peer_sourcehash.h \
 	peer_userhash.cc \
 	peer_userhash.h \
-	PeerPoolMgr.cc \
-	PeerPoolMgr.h \
-	Pipeline.cc \
-	Pipeline.h \
 	tests/stub_redirect.cc \
 	redirect.h \
 	refresh.cc \
 	refresh.h \
-	RefreshPattern.h \
-	RemovalPolicy.cc \
 	repl_modules.h \
-	RequestFlags.cc \
-	RequestFlags.h \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
-	tests/stub_SBufDetailedStats.cc \
-	SquidMath.cc \
-	SquidMath.h \
 	stat.cc \
 	stat.h \
-	StatCounters.cc \
-	StatCounters.h \
-	StatHist.cc \
-	StatHist.h \
 	stmem.cc \
 	store.cc \
 	store_client.cc \
@@ -3027,19 +3036,10 @@ tests_testEvent_SOURCES = \
 	store_swapin.h \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	StoreFileSystem.cc \
-	StoreIOState.cc \
-	tests/stub_StoreMeta.cc \
-	StoreMetaUnpacker.cc \
-	StoreSwapLogData.cc \
-	String.cc \
-	StrList.cc \
-	StrList.h \
 	tests/CapturingStoreEntry.h \
 	time.cc \
 	tools.cc \
 	tools.h \
-	Transients.cc \
 	tests/stub_tunnel.cc \
 	urn.cc \
 	urn.h \
@@ -3106,23 +3106,11 @@ tests_testEventLoop_SOURCES = \
 	AccessLogEntry.cc \
 	AuthReg.h \
 	BodyPipe.cc \
-	cache_cf.cc \
-	cache_cf.h \
-	cache_manager.cc \
 	tests/stub_CacheDigest.cc \
 	CacheDigest.h \
 	CachePeer.cc \
 	CachePeer.h \
-	tests/stub_carp.cc \
-	carp.h \
-	cbdata.cc \
-	tests/stub_client_db.cc \
-	client_side.cc \
-	client_side.h \
-	client_side_reply.cc \
-	client_side_request.cc \
 	ClientInfo.h \
-	clientStream.cc \
 	tests/stub_CollapsedForwarding.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -3130,39 +3118,18 @@ tests_testEventLoop_SOURCES = \
 	CpuAffinityMap.h \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
-	debug.cc \
-	dlink.cc \
-	dlink.h \
-	errorpage.cc \
 	tests/stub_ETag.cc \
-	event.cc \
 	EventLoop.cc \
 	tests/testEventLoop.cc \
 	EventLoop.h \
 	tests/testEventLoop.h \
-	external_acl.cc \
 	ExternalACLEntry.cc \
 	FadingCounter.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	filemap.cc \
 	FileMap.h \
-	fqdncache.cc \
-	fqdncache.h \
-	fs_io.cc \
-	fs_io.h \
 	FwdState.cc \
 	FwdState.h \
-	tests/stub_gopher.cc \
-	gopher.h \
 	HappyConnOpener.cc \
 	HappyConnOpener.h \
-	helper.cc \
-	hier_code.h \
-	http.cc \
 	HttpBody.cc \
 	HttpBody.h \
 	tests/stub_HttpControlMsg.cc \
@@ -3180,13 +3147,81 @@ tests_testEventLoop_SOURCES = \
 	HttpHeaderTools.h \
 	HttpReply.cc \
 	HttpRequest.cc \
+	IoStats.h \
+	LogTags.cc \
+	MasterXaction.cc \
+	MasterXaction.h \
+	MemBuf.cc \
+	MemObject.cc \
+	MemStore.cc \
+	Notes.cc \
+	Notes.h \
+	Parsing.cc \
+	PeerPoolMgr.cc \
+	PeerPoolMgr.h \
+	Pipeline.cc \
+	Pipeline.h \
+	RefreshPattern.h \
+	RemovalPolicy.cc \
+	RequestFlags.cc \
+	RequestFlags.h \
+	ResolvedPeers.cc \
+	ResolvedPeers.h \
+	tests/stub_SBufDetailedStats.cc \
+	SquidMath.cc \
+	SquidMath.h \
+	StatCounters.cc \
+	StatCounters.h \
+	StatHist.cc \
+	StatHist.h \
+	StoreFileSystem.cc \
+	StoreIOState.cc \
+	tests/stub_StoreMeta.cc \
+	StoreMetaUnpacker.cc \
+	StoreSwapLogData.cc \
+	StrList.cc \
+	StrList.h \
+	String.cc \
+	Transients.cc \
+	cache_cf.cc \
+	cache_cf.h \
+	cache_manager.cc \
+	tests/stub_carp.cc \
+	carp.h \
+	cbdata.cc \
+	clientStream.cc \
+	tests/stub_client_db.cc \
+	client_side.cc \
+	client_side.h \
+	client_side_reply.cc \
+	client_side_request.cc \
+	debug.cc \
+	dlink.cc \
+	dlink.h \
+	errorpage.cc \
+	event.cc \
+	external_acl.cc \
+	tests/stub_fatal.cc \
+	fatal.h \
+	fd.cc \
+	fd.h \
+	fde.cc \
+	filemap.cc \
+	fqdncache.cc \
+	fqdncache.h \
+	fs_io.cc \
+	fs_io.h \
+	tests/stub_gopher.cc \
+	gopher.h \
+	helper.cc \
+	hier_code.h \
+	http.cc \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.cc \
 	int.h \
 	internal.cc \
 	internal.h \
-	IoStats.h \
 	tests/stub_ipc_Forwarder.cc \
 	ipcache.cc \
 	tests/stub_libauth.cc \
@@ -3196,14 +3231,8 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
-	LogTags.cc \
 	tests/stub_main_cc.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
 	mem_node.cc \
-	MemBuf.cc \
-	MemObject.cc \
-	MemStore.cc \
 	mime.cc \
 	mime.h \
 	mime_header.cc \
@@ -3212,9 +3241,6 @@ tests_testEventLoop_SOURCES = \
 	multicast.h \
 	neighbors.cc \
 	neighbors.h \
-	Notes.cc \
-	Notes.h \
-	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
 	peer_proxy_negotiate_auth.cc \
@@ -3224,30 +3250,13 @@ tests_testEventLoop_SOURCES = \
 	peer_sourcehash.h \
 	peer_userhash.cc \
 	peer_userhash.h \
-	PeerPoolMgr.cc \
-	PeerPoolMgr.h \
-	Pipeline.cc \
-	Pipeline.h \
 	tests/stub_redirect.cc \
 	redirect.h \
 	refresh.cc \
 	refresh.h \
-	RefreshPattern.h \
-	RemovalPolicy.cc \
 	repl_modules.h \
-	RequestFlags.cc \
-	RequestFlags.h \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
-	tests/stub_SBufDetailedStats.cc \
-	SquidMath.cc \
-	SquidMath.h \
 	stat.cc \
 	stat.h \
-	StatCounters.cc \
-	StatCounters.h \
-	StatHist.cc \
-	StatHist.h \
 	stmem.cc \
 	store.cc \
 	store_client.cc \
@@ -3265,18 +3274,9 @@ tests_testEventLoop_SOURCES = \
 	store_swapin.h \
 	store_swapmeta.cc \
 	store_swapout.cc \
-	StoreFileSystem.cc \
-	StoreIOState.cc \
-	tests/stub_StoreMeta.cc \
-	StoreMetaUnpacker.cc \
-	StoreSwapLogData.cc \
-	String.cc \
-	StrList.cc \
-	StrList.h \
 	time.cc \
 	tools.cc \
 	tools.h \
-	Transients.cc \
 	tests/stub_tunnel.cc \
 	urn.cc \
 	urn.h \
