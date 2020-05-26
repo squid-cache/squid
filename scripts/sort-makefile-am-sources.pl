@@ -12,7 +12,6 @@ use warnings;
 
 my $current_source_section='';
 while (<>) {
-    s/@([A-Z0-9_]+)@/\$($1)/g;  # @VARNAME -> $(VARNAME)
     if (m!^#!) {
         print;
         next;
