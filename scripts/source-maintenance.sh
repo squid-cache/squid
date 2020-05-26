@@ -77,7 +77,7 @@ else
 	echo "Found astyle ${ASVER}. Formatting..."
 fi
 if test "${SkipAstyleVersionCheck}" = "yes" && test -z "${ASVER}" ; then
-    echo "Ignoring astyle version mismatch as instrcuted"
+    echo "Ignoring astyle version mismatch due to --skip-astyle-version-check"
     ASVER="any"
 fi
 
