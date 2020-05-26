@@ -15,9 +15,9 @@
 #include "CommCalls.h"
 #include "http/forward.h"
 #include "security/EncryptorAnswer.h"
+#include "security/ErrorDetail.h"
 #include "security/forward.h"
 #if USE_OPENSSL
-#include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
 #endif
 
@@ -120,7 +120,7 @@ protected:
     virtual void noteWantWrite();
 
     /// Called when the SSL_connect function aborts with an SSL negotiation error
-    virtual void noteNegotiationError(const Ssl::ErrorDetail::Pointer &);
+    virtual void noteNegotiationError(const Security::ErrorDetailPointer &);
 
     /// Called when the SSL negotiation to the server completed and the certificates
     /// validated using the cert validator.

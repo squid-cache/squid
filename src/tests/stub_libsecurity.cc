@@ -76,7 +76,7 @@ bool PeerConnector::sslFinalized() STUB_RETVAL(false)
 void PeerConnector::handleNegotiateError(const int) STUB
 void PeerConnector::noteWantRead() STUB
 void PeerConnector::noteWantWrite() STUB
-void PeerConnector::noteNegotiationError(const Ssl::ErrorDetail::Pointer &) STUB
+void PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer &) STUB
 //    virtual Security::ContextPointer getTlsContext() = 0;
 void PeerConnector::bail(ErrorState *) STUB
 void PeerConnector::sendSuccess() STUB

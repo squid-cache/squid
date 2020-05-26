@@ -13,6 +13,7 @@
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"
 #include "security/Io.h"
+#include "security/ErrorDetail.h"
 #include "ssl/ErrorDetail.h"
 
 #include <climits>

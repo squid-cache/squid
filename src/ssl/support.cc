@@ -24,12 +24,12 @@
 #include "globals.h"
 #include "ipc/MemMap.h"
 #include "security/CertError.h"
+#include "security/ErrorDetail.h"
 #include "security/Session.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "ssl/bio.h"
 #include "ssl/Config.h"
-#include "ssl/ErrorDetail.h"
 #include "ssl/gadgets.h"
 #include "ssl/support.h"
 

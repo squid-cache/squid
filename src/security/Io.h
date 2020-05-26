@@ -11,7 +11,7 @@
 
 #include "comm/forward.h"
 #include "security/forward.h"
-#include "ssl/ErrorDetail.h" // XXX: this should be Security::ErrorDetail
+#include "security/ErrorDetail.h"
 
 namespace Security {
 
@@ -22,7 +22,7 @@ public:
     typedef enum { ioSuccess, ioWantRead, ioWantWrite, ioError } Category;
 
     explicit IoResult(const Category aCategory): category(aCategory) {}
-    explicit IoResult(const Ssl::ErrorDetail::Pointer &anErrorDetail): errorDetail(anErrorDetail) {}
+    explicit IoResult(const ErrorDetailPointer &anErrorDetail): errorDetail(anErrorDetail) {}
 
     /// convenience wrapper to detect successful I/O outcome; implies !wantsIo()
     bool successful() const { return category == ioSuccess; }
@@ -30,7 +30,7 @@ public:
     /// convenience wrapper to detect whether more I/O is needed
     bool wantsIo() const { return category == ioWantRead || category == ioWantWrite; }
 
-    Ssl::ErrorDetail::Pointer errorDetail; ///< ioError case details (or nil)
+    ErrorDetailPointer errorDetail; ///< ioError case details (or nil)
 
     Category category = ioError; ///< primary outcome classification
 

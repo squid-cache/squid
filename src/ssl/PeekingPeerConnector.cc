@@ -293,7 +293,7 @@ Ssl::PeekingPeerConnector::noteWantWrite()
 }
 
 void
-Ssl::PeekingPeerConnector::noteNegotiationError(const Ssl::ErrorDetail::Pointer &errorDetail)
+Ssl::PeekingPeerConnector::noteNegotiationError(const Security::ErrorDetailPointer &errorDetail)
 {
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);

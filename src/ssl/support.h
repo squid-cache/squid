@@ -37,25 +37,6 @@
  \ingroup ServerProtocol
  */
 
-/// Squid-specific TLS handling errors (a subset of ErrorCode)
-/// These errors either distinguish high-level library calls/contexts or
-/// supplement official certificate validation errors to cover special cases.
-/// We use negative values, assuming that those official errors are positive.
-enum {
-    SQUID_TLS_ERR_OFFSET = INT_MIN,
-
-    /* TLS library calls/contexts other than validation (e.g., I/O) */
-    SQUID_TLS_ERR_ACCEPT, ///< failure to accept a connection from a TLS client
-    SQUID_TLS_ERR_CONNECT, ///< failure to establish a connection with a TLS server
-
-    /* certificate validation problems not covered by official errors */
-    SQUID_X509_V_ERR_CERT_CHANGE,
-    SQUID_X509_V_ERR_DOMAIN_MISMATCH,
-    SQUID_X509_V_ERR_INFINITE_VALIDATION,
-
-    SQUID_TLS_ERR_END
-};
-
 // Maximum certificate validation callbacks. OpenSSL versions exceeding this
 // limit are deemed stuck in an infinite validation loop (OpenSSL bug #3090)
 // and will trigger the SQUID_X509_V_ERR_INFINITE_VALIDATION error.
