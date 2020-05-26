@@ -59,7 +59,7 @@ public:
     void packInto(Packable *p) const;
     int getInt() const;
     int64_t getInt64() const;
-    /// packed length, including ": " and crlf
+    /// packed length, including ": " and CRLF
     size_t length() const { return name.length() + 2 + value.size() + 2; }
 
     Http::HdrType id;
@@ -169,6 +169,8 @@ public:
     int len;            /**< length when packed, not counting terminating null-byte */
 
 protected:
+    static const size_t UnrestrictedSize = std::numeric_limits<size_t>::max();
+
     /** \deprecated Public access replaced by removeHopByHopEntries() */
     void removeConnectionHeaderEntries();
     /// either finds the end of headers or returns false

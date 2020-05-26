@@ -751,14 +751,13 @@ HttpHeader::refreshMask()
 size_t
 HttpHeader::maxLen() const
 {
-    switch (owner)
-    {
-        case hoRequest:
-            return Config.maxRequestHeaderSize;
-        case hoReply:
-            return Config.maxReplyHeaderSize;
-        default:
-            return 0; // not restricted
+    switch (owner) {
+    case hoRequest:
+        return Config.maxRequestHeaderSize;
+    case hoReply:
+        return Config.maxReplyHeaderSize;
+    default:
+        return UnrestrictedSize;
     }
 }
 
@@ -775,12 +774,12 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
     debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
 
     // verify whether adding the entry will not exceed the maximum header size allowed
-    if (const auto max = maxLen()) {
-        const auto delta = e->length();
-        if (len + delta > max) {
-            debugs(55, DBG_IMPORTANT, "cannot add header entry " << e->id << " because the header length is becoming too large: " <<
-                    "hdr: " << this << " owner: " << owner << " len: " << len << "+" << delta << ">" << max);
-            throw TextException("too large header", Here());
+    const auto max = maxLen();
+    if (max != UnrestrictedSize) {
+        const auto eLen = e->length();
+        if (len + eLen > max) {
+            throw TextException(ToSBuf("cannot add header entry ", e->id, " because the header length is becoming too large: ",
+                    "hdr: ", this, " owner: ", owner, " len: ", len, "+", eLen, ">", max), Here());
         }
     }
 

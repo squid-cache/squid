@@ -455,9 +455,6 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
 
     // origin replied 304
     if (status == Http::scNotModified) {
-        http->logType.update(LOG_TCP_REFRESH_UNMODIFIED);
-        http->request->flags.staleIfHit = false; // old_entry is no longer stale
-
         try {
             // TODO: The update may not be instantaneous. Should we wait for its
             // completion to avoid spawning too much client-disassociated work?
@@ -470,6 +467,9 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
             processMiss();
             return;
         }
+
+        http->logType.update(LOG_TCP_REFRESH_UNMODIFIED);
+        http->request->flags.staleIfHit = false; // old_entry is no longer stale
 
         // if client sent IMS
 
