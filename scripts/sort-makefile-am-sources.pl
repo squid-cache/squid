@@ -34,7 +34,7 @@ while (<>) {
         
         print STDERR "WARNING: duplicate $prefix$filename ".
             "detected in $current_source_section"
-            if (exists($files{"$filename.$prefix"}));
+            if exists($files{"$filename.$prefix"});
 
         $files{"$filename.$prefix"}="$prefix$filename";
         if (! /\\$/ ) {  # last line in the list
