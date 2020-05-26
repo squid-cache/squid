@@ -198,7 +198,9 @@ cf_gen.$(OBJEXT): cf_gen_defines.cci
 AM_CPPFLAGS += -I$(top_builddir)/src
 
 
-ACL_REGISTRATION_SOURCES = AclRegs.cc AuthReg.cc
+ACL_REGISTRATION_SOURCES = \
+	AclRegs.cc \
+	AuthReg.cc
 
 # common library for all the binaries and tests. This is kindof a catch all
 # and smaller libraries split from this are encouraged. Using lt convenience
