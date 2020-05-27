@@ -52,7 +52,6 @@ libipc_la_SOURCES = \
 	Inquirer.h \
 	Request.h \
 	Response.h \
-	\
 	mem/FlexibleArray.h \
 	mem/Page.cc \
 	mem/Page.h \
