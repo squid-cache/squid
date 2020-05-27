@@ -11,6 +11,7 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libDiskThreads.la
 
 libDiskThreads_la_SOURCES = \
+	async_io.cc \
 	CommIO.cc \
 	CommIO.h \
 	DiskThreads.h \
@@ -19,8 +20,7 @@ libDiskThreads_la_SOURCES = \
 	DiskThreadsDiskIOModule.cc \
 	DiskThreadsDiskIOModule.h \
 	DiskThreadsIOStrategy.cc \
-	DiskThreadsIOStrategy.h \
-	async_io.cc
+	DiskThreadsIOStrategy.h
 
 if ENABLE_WIN32_AIOPS
 libDiskThreads_la_SOURCES += aiops_win32.cc

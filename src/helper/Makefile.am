@@ -13,12 +13,12 @@ noinst_LTLIBRARIES = libhelper.la
 libhelper_la_SOURCES = \
 	ChildConfig.cc \
 	ChildConfig.h \
+	forward.h \
 	Reply.cc \
 	Reply.h \
 	Request.h \
-	ReservationId.cc \
-	ReservationId.h \
 	ResultCode.h \
-	forward.h
+	ReservationId.h \
+	ReservationId.cc
 
 EXTRA_DIST= protocol_defines.h

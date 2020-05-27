@@ -15,20 +15,21 @@ EXTRA_DIST= helpers.m4
 noinst_LTLIBRARIES = liblog.la
 
 liblog_la_SOURCES = \
+	access_log.h \
+	access_log.cc \
 	Config.cc \
 	Config.h \
-	CustomLog.cc \
-	CustomLog.h \
 	File.cc \
 	File.h \
 	FormatHttpdCombined.cc \
 	FormatHttpdCommon.cc \
+	Formats.h \
 	FormatSquidCustom.cc \
 	FormatSquidIcap.cc \
 	FormatSquidNative.cc \
 	FormatSquidReferer.cc \
 	FormatSquidUseragent.cc \
-	Formats.h \
+	forward.h \
 	ModDaemon.cc \
 	ModDaemon.h \
 	ModStdio.cc \
@@ -37,9 +38,8 @@ liblog_la_SOURCES = \
 	ModSyslog.h \
 	ModUdp.cc \
 	ModUdp.h \
+	CustomLog.h \
+	CustomLog.cc \
 	TcpLogger.cc \
-	TcpLogger.h \
-	access_log.cc \
-	access_log.h \
-	forward.h
+	TcpLogger.h
 

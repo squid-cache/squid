@@ -20,17 +20,17 @@ noinst_LTLIBRARIES = libicmpcore.la libicmp.la
 
 # ICMP API definition ...
 libicmpcore_la_SOURCES = \
-	Icmp.cc \
-	Icmp.h
+	Icmp.h \
+	Icmp.cc
 
 # Squid Internal ICMP helper interface
 libicmp_la_SOURCES = \
 	IcmpConfig.cc \
 	IcmpConfig.h \
-	IcmpSquid.cc \
 	IcmpSquid.h \
-	net_db.cc \
-	net_db.h
+	IcmpSquid.cc \
+	net_db.h \
+	net_db.cc
 
 libicmp_la_LIBADD= libicmpcore.la
 
@@ -50,12 +50,12 @@ COPIED_SOURCE= \
 # ICMP lookup helper
 pinger_SOURCES = \
 	Icmp.h \
-	Icmp4.cc \
-	Icmp4.h \
-	Icmp6.cc \
-	Icmp6.h \
-	IcmpPinger.cc \
 	IcmpPinger.h \
+	IcmpPinger.cc \
+	Icmp4.h \
+	Icmp4.cc \
+	Icmp6.h \
+	Icmp6.cc \
 	pinger.cc
 nodist_pinger_SOURCES = $(COPIED_SOURCE)
 pinger_LDFLAGS = $(LIBADD_DL)

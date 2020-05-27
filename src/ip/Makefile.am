@@ -11,14 +11,14 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libip.la
 
 libip_la_SOURCES = \
-	Address.cc \
-	Address.h \
-	Intercept.cc \
-	Intercept.h \
-	NfMarkConfig.cc \
-	NfMarkConfig.h \
-	QosConfig.cc \
-	QosConfig.h \
 	forward.h \
+	Address.h \
+	Address.cc \
+	Intercept.h \
+	Intercept.cc \
+	NfMarkConfig.h \
+	NfMarkConfig.cc \
+	QosConfig.h \
+	QosConfig.cc \
 	tools.cc \
 	tools.h

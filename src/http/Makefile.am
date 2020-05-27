@@ -16,13 +16,14 @@ noinst_LTLIBRARIES = libhttp.la
 libhttp_la_SOURCES = \
 	ContentLengthInterpreter.cc \
 	ContentLengthInterpreter.h \
+	forward.h \
 	Message.cc \
 	Message.h \
 	MethodType.cc \
 	MethodType.h \
 	ProtocolVersion.h \
-	RegisteredHeaders.cc \
 	RegisteredHeaders.h \
+	RegisteredHeaders.cc \
 	RegisteredHeadersHash.cci \
 	RequestMethod.cc \
 	RequestMethod.h \
@@ -32,8 +33,7 @@ libhttp_la_SOURCES = \
 	StatusLine.cc \
 	StatusLine.h \
 	Stream.cc \
-	Stream.h \
-	forward.h
+	Stream.h
 
 libhttp_la_LIBADD= one/libhttp1.la
 

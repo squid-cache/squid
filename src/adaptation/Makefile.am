@@ -26,8 +26,7 @@ libadaptation_la_SOURCES = \
 	DynamicGroupCfg.h \
 	Elements.cc \
 	Elements.h \
-	History.cc \
-	History.h \
+	forward.h \
 	Initiate.cc \
 	Initiate.h \
 	Initiator.cc \
@@ -40,11 +39,12 @@ libadaptation_la_SOURCES = \
 	Service.h \
 	ServiceConfig.cc \
 	ServiceConfig.h \
-	ServiceFilter.cc \
-	ServiceFilter.h \
 	ServiceGroups.cc \
 	ServiceGroups.h \
-	forward.h
+	ServiceFilter.cc \
+	ServiceFilter.h \
+	History.cc \
+	History.h
 
 libadaptation_la_LIBADD =
 

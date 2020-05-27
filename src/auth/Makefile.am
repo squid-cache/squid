@@ -17,12 +17,15 @@ noinst_LTLIBRARIES = libauth.la libacls.la
 
 ## authentication framework; this library is always built
 libauth_la_SOURCES = \
+	Type.h \
+	Type.cc \
 	Config.cc \
 	Config.h \
+	CredentialsCache.h \
+	CredentialsCache.cc \
 	CredentialState.cc \
 	CredentialState.h \
-	CredentialsCache.cc \
-	CredentialsCache.h \
+	forward.h \
 	Gadgets.cc \
 	Gadgets.h \
 	QueueNode.h \
@@ -30,19 +33,16 @@ libauth_la_SOURCES = \
 	Scheme.h \
 	SchemeConfig.cc \
 	SchemeConfig.h \
-	SchemesConfig.cc \
 	SchemesConfig.h \
-	State.cc \
+	SchemesConfig.cc \
 	State.h \
-	Type.cc \
-	Type.h \
-	User.cc \
-	User.h \
-	UserRequest.cc \
-	UserRequest.h \
-	forward.h \
+	State.cc \
+	toUtf.h \
 	toUtf.cc \
-	toUtf.h
+	User.h \
+	User.cc \
+	UserRequest.h \
+	UserRequest.cc
 
 libauth_la_LIBADD = $(AUTH_LIBS_TO_BUILD)
 libauth_la_DEPENDENCIES = $(AUTH_LIBS_TO_BUILD)
@@ -51,6 +51,7 @@ libauth_la_DEPENDENCIES = $(AUTH_LIBS_TO_BUILD)
 libacls_la_SOURCES = \
 	Acl.cc \
 	Acl.h \
+	\
 	AclMaxUserIp.cc \
 	AclMaxUserIp.h \
 	AclProxyAuth.cc \

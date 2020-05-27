@@ -14,13 +14,13 @@ noinst_LTLIBRARIES = libsmblib.la
 libsmblib_la_SOURCES = \
 	md4.c \
 	md4.h \
-	smbdes.c \
-	smbdes.h \
-	smbencrypt.c \
-	smbencrypt.h \
+	smblib.c \
+	smblib.h \
 	smblib-common.h \
 	smblib-priv.h \
 	smblib-util.c \
-	smblib.c \
-	smblib.h \
+	smbencrypt.c \
+	smbencrypt.h \
+	smbdes.c \
+	smbdes.h \
 	std-defines.h

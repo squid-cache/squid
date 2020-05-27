@@ -13,6 +13,7 @@ noinst_LTLIBRARIES = libsnmp.la
 libsnmp_la_SOURCES = \
 	Forwarder.cc \
 	Forwarder.h \
+	forward.h \
 	Inquirer.cc \
 	Inquirer.h \
 	Pdu.cc \
@@ -24,5 +25,4 @@ libsnmp_la_SOURCES = \
 	Session.cc \
 	Session.h \
 	Var.cc \
-	Var.h \
-	forward.h
+	Var.h

@@ -12,15 +12,15 @@ noinst_LTLIBRARIES = libDiskDaemon.la
 libexec_PROGRAMS = diskd
 
 libDiskDaemon_la_SOURCES = \
-	DiskDaemonDiskIOModule.cc \
-	DiskDaemonDiskIOModule.h \
+	diomsg.h \
 	DiskdAction.cc \
 	DiskdAction.h \
 	DiskdFile.cc \
 	DiskdFile.h \
 	DiskdIOStrategy.cc \
 	DiskdIOStrategy.h \
-	diomsg.h
+	DiskDaemonDiskIOModule.cc \
+	DiskDaemonDiskIOModule.h
 
 diskd_SOURCES = diskd.cc
 nodist_diskd_SOURCES = time.cc
