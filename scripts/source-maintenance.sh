@@ -79,6 +79,13 @@ if test "${ASVER}" != "${TargetAstyleVersion}" ; then
 else
 	echo "Found astyle ${ASVER}. Formatting..."
 fi
+<<<<<<< HEAD
+=======
+if test "${SkipAstyleVersionCheck}" = "yes" && test -z "${ASVER}" ; then
+    echo "Ignoring astyle version mismatch due to --skip-astyle-version-check"
+    ASVER="any"
+fi
+>>>>>>> 732c3c5b2533d25de4e2979a4c62d4df0acb813b
 
 COPYRIGHT_YEARS=`date +"1996-%Y"`
 echo "s/1996-2[0-9]+ The Squid Software Foundation and contributors/${COPYRIGHT_YEARS} The Squid Software Foundation and contributors/g" >>boilerplate_fix.sed
