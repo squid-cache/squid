@@ -42,10 +42,6 @@ while [ $# -ge 1 ]; do
 		TargetAstyleVersion=$2
         shift 2
         ;;
-    --verbose|-v)
-        Verbose=yes
-        shift
-        ;;
     *)
         echo "Usage: $0 [--keep-going|-k]"
         echo "Unsupported command-line option: $1"
@@ -126,7 +122,6 @@ applyPlugin ()
 
 srcFormat ()
 {
-test -n "${Verbose}" && echo "Source formatting"
 #
 # Scan for incorrect use of #ifdef/#ifndef
 #
@@ -140,7 +135,6 @@ git grep "ifn?def .*_SQUID_" |
 #
 for FILENAME in `git ls-files`; do
     skip_copyright_check=""
-    test -n "${Verbose}" && echo ${FILENAME}
 
     # skip subdirectories, git ls-files is recursive
     test -d $FILENAME && continue
