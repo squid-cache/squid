@@ -36,4 +36,5 @@ libcomm_la_SOURCES= \
 	UdpOpenDialer.h \
 	Write.cc \
 	Write.h \
+	\
 	comm_internal.h

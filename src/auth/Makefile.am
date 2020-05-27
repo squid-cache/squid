@@ -51,6 +51,7 @@ libauth_la_DEPENDENCIES = $(AUTH_LIBS_TO_BUILD)
 libacls_la_SOURCES = \
 	Acl.cc \
 	Acl.h \
+	\
 	AclMaxUserIp.cc \
 	AclMaxUserIp.h \
 	AclProxyAuth.cc \

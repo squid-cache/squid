@@ -67,6 +67,7 @@ libcompatsquid_la_SOURCES = \
 	xstring.h \
 	xstrto.cc \
 	xstrto.h \
+	\
 	os/aix.h \
 	os/android.h \
 	os/dragonfly.h \
