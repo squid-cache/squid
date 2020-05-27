@@ -35,7 +35,7 @@ while (<>) {
         m!^\s+(.*?)\s*\\?$!;
         foreach my $file (split(/\s+/, $1)) {
             &addfile(\%files, $file, $current_source_section) if (length $file);
-        }   
+        }
         if (! /\\$/ ) {  # last line in the list
             &print_files(\%files);
             last;
