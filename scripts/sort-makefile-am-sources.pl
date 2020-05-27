@@ -16,9 +16,9 @@ while (<>) {
         print;
         next;
     }
-    if (/^(\S+_SOURCES)\s*=\s*\\$/) {
+    if (/^(\S+_SOURCES)\s*(\+?=)\s*\\$/) {
         $current_source_section=$1;
-        print "$1 = \\\n";
+        print "$1 $2 \\\n";
     } else {
         print;
         next;
