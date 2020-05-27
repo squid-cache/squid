@@ -41,7 +41,7 @@ AsyncJobPointer StartRelay(FwdState *const fwdState);
  *  We use standard URI-encoding on the second / making it
  *  ftp:host:port/%2froot/path  AKA 'the FTP %2f hack'.
  *
- * \todo Should be a URL class API call.
+ * TODO: Should be an AnyP::Uri member
  */
 const SBuf &UrlWith2f(HttpRequest *);
 

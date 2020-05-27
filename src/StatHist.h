@@ -29,9 +29,9 @@ public:
      * \note the default constructor doesn't fully initialize.
      *       you have to call one of the *init functions to specialize the
      *       histogram
-     * \todo merge functionality from the *init functions to the constructor and
+     * TODO: merge functionality from the *init functions to the constructor and
      *       drop these
-     * \todo specialize the class in a small hierarchy so that all
+     * TODO: specialize the class in a small hierarchy so that all
      *       relevant initializations are done at build-time
      */
     StatHist() = default;

@@ -62,10 +62,6 @@ class MemImplementingAllocator;
 class MemPoolStats;
 
 /// \ingroup MemPoolsAPI
-/// \todo Kill this typedef for C++
-typedef struct _MemPoolGlobalStats MemPoolGlobalStats;
-
-/// \ingroup MemPoolsAPI
 class MemPoolIterator
 {
 public:
@@ -143,20 +139,17 @@ public:
      * chunks, cleans up internal states and checks for releasable chunks.
      *
      \par
+     * Sorts chunks in suitable order as to reduce free memory
+     * fragmentation and increase chunk utilisation.
+     * Suitable frequency for cleanup is in range of few tens of seconds to
+     * few minutes, depending of memory activity.
+     *
+     \par
      * Between the calls to this function objects are placed onto internal
      * cache instead of returning to their home chunks, mainly for speedup
      * purpose. During that time state of chunk is not known, it is not
      * known whether chunk is free or in use. This call returns all objects
      * to their chunks and restores consistency.
-     *
-     \par
-     * Should be called relatively often, as it sorts chunks in suitable
-     * order as to reduce free memory fragmentation and increase chunk
-     * utilisation.
-     * Suitable frequency for cleanup is in range of few tens of seconds to
-     * few minutes, depending of memory activity.
-     *
-     \todo DOCS: Re-write this shorter!
      *
      \param maxage   Release all totally idle chunks that
      *               have not been referenced for maxage seconds.
@@ -299,25 +292,26 @@ public:
 };
 
 /// \ingroup MemPoolsAPI
-/// \todo Classify and add constructor/destructor to initialize properly.
-struct _MemPoolGlobalStats {
-    MemPoolMeter *TheMeter;
+class MemPoolGlobalStats
+{
+public:
+    MemPoolMeter *TheMeter = nullptr;
 
-    int tot_pools_alloc;
-    int tot_pools_inuse;
-    int tot_pools_mempid;
+    int tot_pools_alloc = 0;
+    int tot_pools_inuse = 0;
+    int tot_pools_mempid = 0;
 
-    int tot_chunks_alloc;
-    int tot_chunks_inuse;
-    int tot_chunks_partial;
-    int tot_chunks_free;
+    int tot_chunks_alloc = 0;
+    int tot_chunks_inuse = 0;
+    int tot_chunks_partial = 0;
+    int tot_chunks_free = 0;
 
-    int tot_items_alloc;
-    int tot_items_inuse;
-    int tot_items_idle;
+    int tot_items_alloc = 0;
+    int tot_items_inuse = 0;
+    int tot_items_idle = 0;
 
-    int tot_overhead;
-    ssize_t mem_idle_limit;
+    int tot_overhead = 0;
+    ssize_t mem_idle_limit = 0;
 };
 
 /// \ingroup MemPoolsAPI
@@ -346,7 +340,6 @@ extern void memPoolIterateDone(MemPoolIterator ** iter);
 
 /**
  \ingroup MemPoolsAPI
- \todo Stats API - not sured how to refactor yet
  *
  * Fills a MemPoolGlobalStats with statistical data about overall
  * usage for all pools.

@@ -18,7 +18,7 @@
 /*
  \ingroup DelayPoolsAPI
  *
- \todo Next steps: make this a composite, and TypeLabel a composite method.
+ * TODO: Next steps: make this a composite, and TypeLabel a composite method.
  * Then we have a legacy composite which returns class 1/2/3, and new
  * composites which return a descriptor of some sort.
  */

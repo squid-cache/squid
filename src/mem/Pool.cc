@@ -253,7 +253,7 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     MemAllocator *pool;
     MemPoolIterator *iter;
 
-    memset(stats, 0, sizeof(MemPoolGlobalStats));
+    *stats = MemPoolGlobalStats();
     memset(&pp_stats, 0, sizeof(MemPoolStats));
 
     MemPools::GetInstance().flushMeters(); /* recreate TheMeter */

@@ -82,7 +82,7 @@ public:
      * If a singleton, delete will not occur. if not a singleton (future),
      * delete will occur when no references are held.
      *
-     \todo we need a 'done for reconfigure' and a 'done permanently' concept.
+     * TODO: need a 'done for reconfigure' and a 'done permanently' concept.
      */
     virtual void done();
 

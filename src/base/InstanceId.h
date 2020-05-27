@@ -40,7 +40,7 @@ typedef unsigned int InstanceIdDefaultValueType;
  *   - useful for debugging and insecure request/response matching;
  *   - sequential IDs within a class except when wrapping;
  *   - always positive IDs.
- *  \todo: add creation/destruction debugging?
+ * TODO: add creation/destruction debugging?
  */
 template <class Class, class ValueType = InstanceIdDefaultValueType>
 class InstanceId

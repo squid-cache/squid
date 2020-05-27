@@ -21,7 +21,7 @@ public:
     int falseHits = 0;
     int trueMisses = 0;
     int falseMisses = 0;
-    int closeHits = 0;     /// \todo: temporary remove it later
+    int closeHits = 0;     // TODO: temporary. remove it later
 };
 #endif
 

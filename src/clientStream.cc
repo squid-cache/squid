@@ -78,7 +78,7 @@
    return;
  \endcode
  *
- \todo rather than each node undeleting the next, have a clientStreamDelete that walks the list.
+ * TODO: rather than each node undeleting the next, have a clientStreamDelete that walks the list.
  */
 
 CBDATA_CLASS_INIT(clientStreamNode);

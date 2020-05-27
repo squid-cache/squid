@@ -100,7 +100,7 @@ protected:
     };
     std::queue<Ufs::UFSStoreState::_queued_write> pending_writes;
 
-    /** \todo These should be in the IO strategy */
+    // TODO: These should be in the IO strategy
 
     struct {
         /**
