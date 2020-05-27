@@ -234,6 +234,8 @@ for FILENAME in `git ls-files`; do
 
     *.am)
 		run_ applyPlugin scripts/sort-makefile-am-sources.pl ${FILENAME} || return
+		# in case more scripts are needed, do not hardcode but extend the
+		# plugins interface to support *.am files as well
 	;;
 
     ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.list|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
@@ -250,7 +252,6 @@ for FILENAME in `git ls-files`; do
         #
         skip_copyright_check=1
         ;;
-		
     esac
 
     # check for Foundation copyright blurb
