@@ -14,7 +14,7 @@
 #include "globals.h"
 #include "Store.h"
 #include "StoreClient.h"
-/* FIXME: Abstract the use of this more */
+// TODO: Abstract the use of this more
 #include "mem_node.h"
 #include "MemObject.h"
 #include "SquidConfig.h"
@@ -287,7 +287,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
                e->swap_filen << ", errflag=" << errflag);
 
         if (errflag == DISK_NO_SPACE_LEFT) {
-            /* FIXME: this should be handle by the link from store IO to
+            /* TODO: this should be handle by the link from store IO to
              * Store, rather than being a top level API call.
              */
             e->disk().diskFull();

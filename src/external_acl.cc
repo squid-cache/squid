@@ -69,8 +69,9 @@ static ExternalACLEntryPointer external_acl_cache_add(external_acl * def, const 
 
 class external_acl
 {
-    /* FIXME: These are not really cbdata, but it is an easy way
+    /* XXX: These are not really cbdata, but it is an easy way
      * to get them pooled, refcounted, accounted and freed properly...
+     * Use RefCountable MEMPROXY_CLASS instead
      */
     CBDATA_CLASS(external_acl);
 

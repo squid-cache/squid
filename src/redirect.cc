@@ -408,7 +408,7 @@ redirectInit(void)
 void
 redirectShutdown(void)
 {
-    /** FIXME: Temporary unified helpers Shutdown
+    /** TODO: Temporary unified helpers Shutdown
      * When and if needed for more helpers a separated shutdown
      * method will be added for each of them.
      */

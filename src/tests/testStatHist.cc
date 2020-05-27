@@ -79,7 +79,7 @@ testStatHist::testStatHistLog()
     CPPUNIT_ASSERT(test.counter(max)==1);
     test=raw;
     test.count(max);
-    //CPPUNIT_ASSERT(test.val(capacity-1)==1); //FIXME: val() returns a density
+    //CPPUNIT_ASSERT(test.val(capacity-1)==1); // XXX: val() returns a density
 }
 
 void

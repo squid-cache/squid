@@ -936,9 +936,9 @@ Ip::Address::getSockAddr(struct sockaddr_storage &addr, const int family) const
     struct sockaddr_in *sin = NULL;
 
     if ( family == AF_INET && !isIPv4()) {
-        // FIXME INET6: caller using the wrong socket type!
+        // XXX: caller using the wrong socket type!
         debugs(14, DBG_CRITICAL, HERE << "Ip::Address::getSockAddr : Cannot convert non-IPv4 to IPv4. from " << *this);
-        assert(false);
+        assert(family == AF_INET && !isIPv4());
     }
 
     if ( family == AF_INET6 || (family == AF_UNSPEC && isIPv6()) ) {

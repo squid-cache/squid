@@ -240,7 +240,7 @@ public:
         Ip::Address snmp_incoming;
         Ip::Address snmp_outgoing;
 #endif
-        /* FIXME INET6 : this should really be a CIDR value */
+        // TODO: this should really be a CIDR value
         Ip::Address client_netmask;
     } Addrs;
     size_t tcpRcvBufsz;

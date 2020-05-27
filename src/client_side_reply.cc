@@ -1108,7 +1108,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
      * Make a new entry to hold the reply to be written
      * to the client.
      */
-    /* FIXME: This doesn't need to go through the store. Simply
+    /* TODO: This doesn't need to go through the store. Simply
      * push down the client chain
      */
     createStoreEntry(http->request->method, RequestFlags());
