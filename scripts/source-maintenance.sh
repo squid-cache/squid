@@ -26,6 +26,9 @@
 KeepGoing="no"
 # the actual name of the directive that enabled keep-going mode
 KeepGoingDirective=""
+#
+# the accepted astyle version. Can be overridden with --enable-astyle <version>
+TargetAstyleVersion="2.04"
 
 # command-line options
 while [ $# -ge 1 ]; do
@@ -35,9 +38,9 @@ while [ $# -ge 1 ]; do
         KeepGoingDirective=$1
         shift
         ;;
-    --skip-astyle-version-check)
-        SkipAstyleVersionCheck=yes
-        shift
+    --enable-astyle)
+		TargetAstyleVersion=$2
+        shift 2
         ;;
     --verbose|-v)
         Verbose=yes
@@ -70,15 +73,11 @@ else
 fi
 
 ASVER=`astyle --version 2>&1 | grep -o -E "[0-9.]+"`
-if test "${ASVER}" != "2.04" ; then
-	echo "Astyle version problem. You have ${ASVER} instead of 2.04"
+if test "${ASVER}" != "${TargetAstyleVersion}" ; then
+	echo "Astyle version problem. You have ${ASVER} instead of ${TargetAstyleVersion}"
 	ASVER=""
 else
 	echo "Found astyle ${ASVER}. Formatting..."
-fi
-if test "${SkipAstyleVersionCheck}" = "yes" && test -z "${ASVER}" ; then
-    echo "Ignoring astyle version mismatch as instrcuted"
-    ASVER="any"
 fi
 
 COPYRIGHT_YEARS=`date +"1996-%Y"`
