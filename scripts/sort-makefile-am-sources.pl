@@ -18,12 +18,13 @@ while (<>) {
     }
     # accumulate files and prep for sorting
     my %files = ();
-#    if (/^(\S+_SOURCES)\s*(\+?=)(\s+\S+)*\s*\\$/) {
-    if (/^(\S+_SOURCES)\s*(\+?=)\s*\\$/) {
+    if (/^(\S+_SOURCES)\s*(\+?=)\s*(.*?)\s*\\$/) {
         $current_source_section=$1;
         print "$1 $2 \\\n";
         if (defined $3) {
-
+            foreach my $file (split(/\s+/, $3)) {
+                &addfile(\%files, $file, $current_source_section);
+            }
         }
     } else {
         print;
@@ -31,7 +32,10 @@ while (<>) {
     }
     while (<>) {
         chomp;
-        &addfile(\%files, $_, $current_source_section);
+        m!^\s+(.*?)\s*\\?$!;
+        foreach my $file (split(/\s+/, $1)) {
+            &addfile(\%files, $file, $current_source_section) if (length $file);
+        }   
         if (! /\\$/ ) {  # last line in the list
             &print_files(\%files);
             last;
@@ -53,7 +57,7 @@ sub addfile
     my $filename = (defined $2) ? $2 : '';
 
     print STDERR "WARNING: duplicate $prefix$filename ".
-        "detected in $current_source_section"
+        "detected in $current_source_section\n"
         if exists($files->{"$filename.$prefix"});
 
     $files->{"$filename.$prefix"}="$prefix$filename";
