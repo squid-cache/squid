@@ -16,27 +16,22 @@ while (<>) {
         print;
         next;
     }
+    # accumulate files and prep for sorting
+    my %files = ();
+#    if (/^(\S+_SOURCES)\s*(\+?=)(\s+\S+)*\s*\\$/) {
     if (/^(\S+_SOURCES)\s*(\+?=)\s*\\$/) {
         $current_source_section=$1;
         print "$1 $2 \\\n";
+        if (defined $3) {
+
+        }
     } else {
         print;
         next;
     }
-    # accumulate files and prep for sorting
-    my %files = ();
     while (<>) {
-
         chomp;
-        m!\s*(tests/stub_|tests/test)?(\S+)(\s+\\\s*)?$! || die "no parse";
-        my $prefix = (defined $1) ? $1 : '';
-        my $filename = (defined $2) ? $2 : '';
-        
-        print STDERR "WARNING: duplicate $prefix$filename ".
-            "detected in $current_source_section"
-            if exists($files{"$filename.$prefix"});
-
-        $files{"$filename.$prefix"}="$prefix$filename";
+        &addfile(\%files, $_, $current_source_section);
         if (! /\\$/ ) {  # last line in the list
             &print_files(\%files);
             last;
@@ -45,6 +40,24 @@ while (<>) {
 }
 
 exit 0;
+
+# arg: ref to hash to add the file to, filename
+sub addfile
+{
+    my $files = shift @_;
+    my $fn = shift @_;
+    my $current_source_section = shift @_;
+
+    $fn =~ m!\s*(tests/stub_|tests/test)?(\S+)(\s+\\\s*)?$! || die "no parse";
+    my $prefix = (defined $1) ? $1 : '';
+    my $filename = (defined $2) ? $2 : '';
+
+    print STDERR "WARNING: duplicate $prefix$filename ".
+        "detected in $current_source_section"
+        if exists($files->{"$filename.$prefix"});
+
+    $files->{"$filename.$prefix"}="$prefix$filename";
+}
 
 # arg is hash ref, print values in order of key
 sub print_files
