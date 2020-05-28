@@ -12,12 +12,26 @@ use warnings;
 
 my $current_source_section='';
 while (<>) {
+    chomp;
     if (m!^#!) {
-        print;
+        print "$_\n";
         next;
     }
     # accumulate files and prep for sorting
     my %files = ();
+    if (/^(\S+_SOURCES)\s*(\+?=)\s*(.*[^\\])$/ ) {
+        my @parts = split(/\s+/, $3);
+        if ($#parts == 0) { # one file only specified on same line as SOURCES
+            print "$1 $2 $3\n";
+            next;
+        }
+        foreach my $file (@parts) {
+            &addfile(\%files, $file, $1);
+        }
+        print "$1 $2 \\\n";
+        &print_files(\%files);
+        next;
+    }
     if (/^(\S+_SOURCES)\s*(\+?=)\s*(.*?)\s*\\$/) {
         $current_source_section=$1;
         print "$1 $2 \\\n";
@@ -27,7 +41,7 @@ while (<>) {
             }
         }
     } else {
-        print;
+        print "$_\n";
         next;
     }
     while (<>) {
