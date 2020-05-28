@@ -91,9 +91,7 @@ Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
 
     debugs(83, 5, "FD " << params.fd << ", Security::PeerConnector=" << params.data);
     const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
-#if USE_OPENSSL
-    err->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
-#endif
+    err->detailError(ERR_DETAIL_SERVER_CLOSED);
     bail(err);
 }
 
@@ -102,9 +100,7 @@ Security::PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &)
 {
     debugs(83, 5, serverConnection() << " timedout. this=" << (void*)this);
     const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al);
-#if USE_OPENSSL
-    err->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
-#endif
+    err->detailError(ERR_DETAIL_CONNECT_TIMEOUT);
     bail(err);
 }
 

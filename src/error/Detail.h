@@ -150,5 +150,12 @@ extern const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_READ;
 /// but Squid code has somehow missed that request
 extern const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_WRITE;
 
+/// Connection to the server closed by remote end
+extern const ErrorDetail::Pointer ERR_DETAIL_SERVER_CLOSED;
+
+/// Connection to the remote server timed out
+extern const ErrorDetail::Pointer ERR_DETAIL_CONNECT_TIMEOUT;
+
+
 #endif /* _SQUID_SRC_ERROR_DETAIL_H */
 
