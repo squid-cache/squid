@@ -18,7 +18,7 @@ allocation under MITRE policy.
 To report security-sensitive bugs, please post to the squid-bugs mailing
 (list)[http://www.squid-cache.org/Support/mailing-lists.html#squid-bugs]. It
 is a closed list (although anyone can post), and security related bug reports
-are treated in confidence until the impact has been established.
+are treated in confidence at least until the impact has been established.
 
 The security team strives to manually acknowledge each new report within 48
 hours. Please feel free to email a reminder if you have not heard from us
