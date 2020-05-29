@@ -880,8 +880,11 @@ HttpStateData::blockSwitchingProtocols(const HttpReply &reply) const
         return "server did not send 'Connection: upgrade'";
 
     const auto acceptedProtos = reply.header.getList(Http::HdrType::UPGRADE);
-    for (const auto &accepted: StrList(acceptedProtos)) {
-        debugs(11, 5, "server accepted at least " << accepted);
+    const char *pos = nullptr;
+    const char *accepted = nullptr;
+    int acceptedLen = 0;
+    while (strListGetItem(&acceptedProtos, ',', &accepted, &acceptedLen, &pos)) {
+        debugs(11, 5, "server accepted at least " << SBuf(accepted, acceptedLen));
         return nullptr; // OK: let the client validate server's selection
     }
 
@@ -2053,17 +2056,20 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
 
     ACLFilledChecklist ch(nullptr, request.getRaw());
     ch.al = fwd->al;
-    for (const auto &offeredStr: StrList(upgradeIn)) {
-        const ProtocolView offeredProto(offeredStr);
+    const char *pos = nullptr;
+    const char *offeredStr = nullptr;
+    int offeredStrLen = 0;
+    while (strListGetItem(&upgradeIn, ',', &offeredStr, &offeredStrLen, &pos)) {
+        const ProtocolView offeredProto(offeredStr, offeredStrLen);
         debugs(11, 5, "checks all rules applicable to " << offeredProto);
-        Config.http_upgrade_request_protocols->forApplicable(offeredProto, [&ch,&offeredStr,&upgradeOut] (const SBuf &cfgProto, const acl_access *guard) {
+        Config.http_upgrade_request_protocols->forApplicable(offeredProto, [&ch, offeredStr, offeredStrLen, &upgradeOut] (const SBuf &cfgProto, const acl_access *guard) {
             debugs(11, 5, "checks " << cfgProto << " rule(s)");
             ch.changeAcl(guard);
             const auto answer = ch.fastCheck();
             if (answer.implicit)
                 return false; // keep looking for an explicit rule match
             if (answer.allowed())
-                strListAdd(upgradeOut, offeredStr);
+                strListAdd(upgradeOut, offeredStr, offeredStrLen);
             // else drop the offer (explicitly denied cases and ACL errors)
             return true; // stop after an explicit rule match or an error
         });

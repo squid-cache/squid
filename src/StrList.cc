@@ -14,8 +14,7 @@
 #include "SquidString.h"
 #include "StrList.h"
 
-/// common parts of public strListAdd() functions
-static void
+void
 strListAdd(String &str, const char *item, const size_t itemSize, const char del)
 {
     if (str.size()) {
@@ -152,33 +151,5 @@ getListMember(const String &list, const char *key, const char delimiter)
             return SBuf(item + keyLen + 1, ilen - keyLen - 1);
     }
     return SBuf();
-}
-
-/* StrListIterator */
-
-StrListIterator::StrListIterator(const StrList *listOrNil):
-    list(listOrNil),
-    position(nullptr)
-{
-    if (list)
-        proceed();
-}
-
-/// locates and fills either the very first or the next list member
-void
-StrListIterator::proceed()
-{
-    assert(list);
-    const char *istart = nullptr;
-    int ilen = 0;
-    if (strListGetItem(&list->raw(), list->delimiter(), &istart, &ilen, &position)) {
-        assert(ilen > 0);
-        current = SBuf(istart, static_cast<size_t>(ilen));
-    } else {
-        // no more members left
-        list = nullptr;
-        position = nullptr;
-        current = SBuf();
-    }
 }
 
