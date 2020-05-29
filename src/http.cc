@@ -884,7 +884,7 @@ HttpStateData::blockSwitchingProtocols(const HttpReply &reply) const
     const char *accepted = nullptr;
     int acceptedLen = 0;
     while (strListGetItem(&acceptedProtos, ',', &accepted, &acceptedLen, &pos)) {
-        debugs(11, 5, "server accepted at least " << SBuf(accepted, acceptedLen));
+        debugs(11, 5, "server accepted at least" << Raw(nullptr, accepted, acceptedLen));
         return nullptr; // OK: let the client validate server's selection
     }
 
