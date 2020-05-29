@@ -16,7 +16,6 @@
 #include <iterator>
 
 class String;
-class StrList;
 
 /// Appends the given item to a delimiter-separated list in str.
 void strListAdd(String * str, const char *item, char del);
@@ -32,7 +31,6 @@ int strListIsMember(const String * str, const SBuf &item, char del);
 int strListIsSubstr(const String * list, const char *s, char del);
 /// Iterates through delimiter-separated and optionally "quoted" list members.
 /// Follows HTTP #rule, including skipping OWS and empty members.
-/// \deprecated use a C++ range-based "for" loop with StrList instead
 int strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos);
 /// Searches for the first matching key=value pair
 /// within a delimiter-separated list of items.
