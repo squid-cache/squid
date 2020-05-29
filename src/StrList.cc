@@ -15,19 +15,20 @@
 #include "StrList.h"
 
 void
-strListAdd(String &str, const char *item, const size_t itemSize, const char del)
+strListAdd(String &str, const char *item, const size_t itemSize, const char delimiter)
 {
     if (str.size()) {
-        const char buf[] = { del, ' ' };
-        Must(str.canGrowBy(2));
-        str.append(buf, 2);
+        const char buf[] = { delimiter, ' ' };
+        const auto bufSize = sizeof(buf);
+        Must(str.canGrowBy(bufSize));
+        str.append(buf, bufSize);
     }
     Must(str.canGrowBy(itemSize));
     str.append(item, itemSize);
 }
 
 void
-strListAdd(String *str, const char *item, char delimiter)
+strListAdd(String *str, const char *item, const char delimiter)
 {
     assert(str);
     assert(item);
