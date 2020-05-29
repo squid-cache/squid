@@ -23,7 +23,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 
-void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn);
+void switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, const Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
 
 void
 Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data)
@@ -252,10 +252,26 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
                 bail(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
                 throw TextException("from-client connection gone", Here());
             }
-            switchToTunnel(request.getRaw(), clientConn, serverConn);
-            tunnelInsteadOfNegotiating();
+            startTunneling();
         }
     }
+}
+
+void
+Ssl::PeekingPeerConnector::startTunneling()
+{
+    // switchToTunnel() drains any already buffered from-server data (rBufData)
+    fd_table[serverConn->fd].useDefaultIo();
+    // tunnelStartShoveling() drains any buffered from-client data (inBuf)
+    fd_table[clientConn->fd].useDefaultIo();
+
+    // TODO: Encapsulate this frequently repeated logic into a method.
+    const auto session = fd_table[serverConn->fd].ssl;
+    auto b = SSL_get_rbio(session.get());
+    auto srvBio = static_cast<Ssl::ServerBio*>(BIO_get_data(b));
+
+    switchToTunnel(request.getRaw(), clientConn, serverConn, srvBio->rBufData());
+    tunnelInsteadOfNegotiating();
 }
 
 void

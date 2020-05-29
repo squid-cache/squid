@@ -41,6 +41,7 @@
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "HttpUpgradeProtocolAccess.h"
 #include "log/access_log.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -136,6 +137,8 @@ HttpStateData::~HttpStateData()
         delete httpChunkDecoder;
 
     cbdataReferenceDone(_peer);
+
+    delete upgradeHeaderOut;
 
     debugs(11,5, HERE << "HttpStateData " << this << " destroyed; " << serverConnection);
 }
@@ -797,11 +800,18 @@ HttpStateData::handle1xx(HttpReply *reply)
     Must(!flags.handling1xx);
     flags.handling1xx = true;
 
-    if (!request->canHandle1xx() || request->forcedBodyContinuation) {
-        debugs(11, 2, "ignoring 1xx because it is " << (request->forcedBodyContinuation ? "already sent" : "not supported by client"));
-        proceedAfter1xx();
-        return;
-    }
+    const auto statusCode = reply->sline.status();
+
+    // drop1xx() needs to handle HTTP 101 (Switching Protocols) responses
+    // specially because they indicate that the server has stopped speaking HTTP
+    Must(!flags.serverSwitchedProtocols);
+    flags.serverSwitchedProtocols = (statusCode == Http::scSwitchingProtocols);
+
+    if (statusCode == Http::scContinue && request->forcedBodyContinuation)
+        return drop1xx("we have sent it already");
+
+    if (!request->canHandle1xx())
+        return drop1xx("the client does not support it");
 
 #if USE_HTTP_VIOLATIONS
     // check whether the 1xx response forwarding is allowed by squid.conf
@@ -811,13 +821,15 @@ HttpStateData::handle1xx(HttpReply *reply)
         ch.reply = reply;
         ch.syncAle(originalRequest().getRaw(), nullptr);
         HTTPMSGLOCK(ch.reply);
-        if (!ch.fastCheck().allowed()) { // TODO: support slow lookups?
-            debugs(11, 3, HERE << "ignoring denied 1xx");
-            proceedAfter1xx();
-            return;
-        }
+        if (!ch.fastCheck().allowed()) // TODO: support slow lookups?
+            return drop1xx("http_reply_access blocked it");
     }
 #endif // USE_HTTP_VIOLATIONS
+
+    if (flags.serverSwitchedProtocols) {
+        if (const auto reason = blockSwitchingProtocols(*reply))
+            return drop1xx(reason);
+    }
 
     debugs(11, 2, HERE << "forwarding 1xx to client");
 
@@ -833,11 +845,75 @@ HttpStateData::handle1xx(HttpReply *reply)
     // for similar reasons without a 1xx response.
 }
 
+/// if possible, safely ignores the received 1xx control message
+/// otherwise, terminates the server connection
+void
+HttpStateData::drop1xx(const char *reason)
+{
+    if (flags.serverSwitchedProtocols) {
+        debugs(11, 2, "bad 101 because " << reason);
+        const auto err = new ErrorState(ERR_INVALID_RESP, Http::scBadGateway, request.getRaw(), fwd->al);
+        fwd->fail(err);
+        closeServer();
+        mustStop("prohibited HTTP/101 response");
+        return;
+    }
+
+    debugs(11, 2, "ignoring 1xx because " << reason);
+    proceedAfter1xx();
+}
+
+/// \retval nil if the HTTP/101 (Switching Protocols) reply should be forwarded
+/// \retval reason why an attempt to switch protocols should be stopped
+const char *
+HttpStateData::blockSwitchingProtocols(const HttpReply &reply) const
+{
+    if (!upgradeHeaderOut)
+        return "Squid offered no Upgrade at all, but server switched to a tunnel";
+
+    // See RFC 7230 section 6.7 for the corresponding MUSTs
+
+    if (!reply.header.has(Http::HdrType::UPGRADE))
+        return "server did not send an Upgrade header field";
+
+    if (!reply.header.hasListMember(Http::HdrType::CONNECTION, "upgrade", ','))
+        return "server did not send 'Connection: upgrade'";
+
+    const auto acceptedProtos = reply.header.getList(Http::HdrType::UPGRADE);
+    const char *pos = nullptr;
+    const char *accepted = nullptr;
+    int acceptedLen = 0;
+    while (strListGetItem(&acceptedProtos, ',', &accepted, &acceptedLen, &pos)) {
+        debugs(11, 5, "server accepted at least" << Raw(nullptr, accepted, acceptedLen));
+        return nullptr; // OK: let the client validate server's selection
+    }
+
+    return "server sent an essentially empty Upgrade header field";
+}
+
 /// restores state and resumes processing after 1xx is ignored or forwarded
 void
 HttpStateData::proceedAfter1xx()
 {
     Must(flags.handling1xx);
+
+    if (flags.serverSwitchedProtocols) {
+        // pass server connection ownership to request->clientConnectionManager
+        ConnStateData::ServerConnectionContext scc(serverConnection, request, inBuf);
+        typedef UnaryMemFunT<ConnStateData, ConnStateData::ServerConnectionContext> MyDialer;
+        AsyncCall::Pointer call = asyncCall(11, 3, "ConnStateData::noteTakeServerConnectionControl",
+                                            MyDialer(request->clientConnectionManager,
+                                                    &ConnStateData::noteTakeServerConnectionControl, scc));
+        ScheduleCallHere(call);
+        fwd->unregister(serverConnection);
+        comm_remove_close_handler(serverConnection->fd, closeHandler);
+        closeHandler = nullptr;
+        serverConnection = nullptr;
+        doneWithFwd = "switched protocols";
+        mustStop(doneWithFwd);
+        return;
+    }
+
     debugs(11, 2, "continuing with " << payloadSeen << " bytes in buffer after 1xx");
     CallJobHere(11, 3, this, HttpStateData, HttpStateData::processReply);
 }
@@ -1956,6 +2032,66 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     strConnection.clean();
 }
 
+/// copies from-client Upgrade info into the given to-server header while
+/// honoring configuration filters and following HTTP requirements
+void
+HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
+{
+    if (!Config.http_upgrade_request_protocols)
+        return; // forward nothing by default
+
+    /* RFC 7230 section 6.7 paragraph 10:
+     * A server MUST ignore an Upgrade header field that is received in
+     * an HTTP/1.0 request.
+     */
+    if (request->http_ver == Http::ProtocolVersion(1,0))
+        return;
+
+    const auto &hdrIn = request->header;
+    if (!hdrIn.has(Http::HdrType::UPGRADE))
+        return;
+    const auto upgradeIn = hdrIn.getList(Http::HdrType::UPGRADE);
+
+    String upgradeOut;
+
+    ACLFilledChecklist ch(nullptr, request.getRaw());
+    ch.al = fwd->al;
+    const char *pos = nullptr;
+    const char *offeredStr = nullptr;
+    int offeredStrLen = 0;
+    while (strListGetItem(&upgradeIn, ',', &offeredStr, &offeredStrLen, &pos)) {
+        const ProtocolView offeredProto(offeredStr, offeredStrLen);
+        debugs(11, 5, "checks all rules applicable to " << offeredProto);
+        Config.http_upgrade_request_protocols->forApplicable(offeredProto, [&ch, offeredStr, offeredStrLen, &upgradeOut] (const SBuf &cfgProto, const acl_access *guard) {
+            debugs(11, 5, "checks " << cfgProto << " rule(s)");
+            ch.changeAcl(guard);
+            const auto answer = ch.fastCheck();
+            if (answer.implicit)
+                return false; // keep looking for an explicit rule match
+            if (answer.allowed())
+                strListAdd(upgradeOut, offeredStr, offeredStrLen);
+            // else drop the offer (explicitly denied cases and ACL errors)
+            return true; // stop after an explicit rule match or an error
+        });
+    }
+
+    if (upgradeOut.size()) {
+        hdrOut.putStr(Http::HdrType::UPGRADE, upgradeOut.termedBuf());
+
+        /* RFC 7230 section 6.7 paragraph 10:
+         * When Upgrade is sent, the sender MUST also send a Connection header
+         * field that contains an "upgrade" connection option, in
+         * order to prevent Upgrade from being accidentally forwarded by
+         * intermediaries that might not implement the listed protocols.
+         *
+         * NP: Squid does not truly implement the protocol(s) in this Upgrade.
+         * For now we are treating an explicit blind tunnel as "implemented"
+         * regardless of the security implications.
+         */
+        hdrOut.putStr(Http::HdrType::CONNECTION, "upgrade");
+    }
+}
+
 /**
  * Decides whether a particular header may be cloned from the received Clients request
  * to our outgoing fetch request.
@@ -1989,8 +2125,11 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case Http::HdrType::KEEP_ALIVE:          /** \par Keep-Alive: */
     case Http::HdrType::PROXY_AUTHENTICATE:  /** \par Proxy-Authenticate: */
     case Http::HdrType::TRAILER:             /** \par Trailer: */
-    case Http::HdrType::UPGRADE:             /** \par Upgrade: */
     case Http::HdrType::TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
+        break;
+
+    /// \par Upgrade is hop-by-hop but forwardUpgrade() may send a filtered one
+    case Http::HdrType::UPGRADE:
         break;
 
     /** \par OTHER headers I haven't bothered to track down yet. */
@@ -2185,12 +2324,20 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     /* build and pack headers */
     {
         HttpHeader hdr(hoRequest);
+        forwardUpgrade(hdr);
         httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, flags);
 
         if (request->flags.pinned && request->flags.connectionAuth)
             request->flags.authSent = true;
         else if (hdr.has(Http::HdrType::AUTHORIZATION))
             request->flags.authSent = true;
+
+        // The late placement of this check supports reply_header_add mangling,
+        // but also complicates optimizing upgradeHeaderOut-like lookups.
+        if (hdr.has(Http::HdrType::UPGRADE)) {
+            assert(!upgradeHeaderOut);
+            upgradeHeaderOut = new String(hdr.getList(Http::HdrType::UPGRADE));
+        }
 
         hdr.packInto(mb);
         hdr.clean();
