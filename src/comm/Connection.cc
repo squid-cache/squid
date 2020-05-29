@@ -41,12 +41,16 @@ Comm::Connection::Connection() :
     *rfc931 = 0; // quick init the head. the rest does not matter.
 }
 
-static int64_t lost_conn = 0;
 Comm::Connection::~Connection()
 {
     if (fd >= 0) {
-        debugs(5, 4, "BUG #3329: Orphan Comm::Connection: " << *this);
-        debugs(5, 4, "NOTE: " << ++lost_conn << " Orphans since last started.");
+        if (flags & COMM_ORPHANED) {
+            debugs(5, 5, "closing orphan: " << *this);
+        } else {
+            static uint64_t losses = 0;
+            ++losses;
+            debugs(5, 4, "BUG #3329: Lost orphan #" << losses << ": " << *this);
+        }
         close();
     }
 

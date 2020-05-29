@@ -33,6 +33,7 @@
 #include "ftp/Elements.h"
 #include "globals.h"
 #include "HttpHeaderTools.h"
+#include "HttpUpgradeProtocolAccess.h"
 #include "icmp/IcmpConfig.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
@@ -251,6 +252,9 @@ static void parse_on_unsupported_protocol(acl_access **access);
 static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
 static void free_on_unsupported_protocol(acl_access **access);
 static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, ACL *acl = nullptr);
+static void parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
+static void dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *protoGuards);
+static void free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
 
 /*
  * LegacyParser is a parser for legacy code that uses the global
@@ -5111,5 +5115,39 @@ static void
 free_on_unsupported_protocol(acl_access **access)
 {
     free_acl_access(access);
+}
+
+static void
+parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuardsPtr)
+{
+    assert(protoGuardsPtr);
+    auto &protoGuards = *protoGuardsPtr;
+    if (!protoGuards)
+        protoGuards = new HttpUpgradeProtocolAccess();
+    protoGuards->configureGuard(LegacyParser);
+}
+
+static void
+dump_http_upgrade_request_protocols(StoreEntry *entry, const char *rawName, HttpUpgradeProtocolAccess *protoGuards)
+{
+    assert(protoGuards);
+    const SBuf name(rawName);
+    protoGuards->forEach([entry,&name](const SBuf &proto, const acl_access *acls) {
+        SBufList line;
+        line.push_back(name);
+        line.push_back(proto);
+        const auto acld = acls->treeDump("", &Acl::AllowOrDeny);
+        line.insert(line.end(), acld.begin(), acld.end());
+        dump_SBufList(entry, line);
+    });
+}
+
+static void
+free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuardsPtr)
+{
+    assert(protoGuardsPtr);
+    auto &protoGuards = *protoGuardsPtr;
+    delete protoGuards;
+    protoGuards = nullptr;
 }
 

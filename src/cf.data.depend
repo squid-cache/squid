@@ -43,6 +43,7 @@ hostdomain		cache_peer
 hostdomaintype		cache_peer
 http_header_access	acl
 http_header_replace
+http_upgrade_request_protocols acl
 HeaderWithAclList	acl
 adaptation_access_type	adaptation_service_set adaptation_service_chain acl icap_service icap_class
 adaptation_service_set_type	icap_service ecap_service
