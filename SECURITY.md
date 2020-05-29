@@ -10,7 +10,7 @@ the current series.
 
 Reports about security issues in the Development series are welcomed. However,
 development series contains experimental code that does not qualify for CVE
-allocation under MITRE policy.
+allocation.
 
 
 ## Reporting a Vulnerability
