@@ -20,7 +20,7 @@ class String;
 /// Appends the given item to a delimiter-separated list in str.
 void strListAdd(String * str, const char *item, char del);
 
-/// Appends the given item of size itemSize to a delimiter-separated list in str.
+/// Appends the given item of a given size to a delimiter-separated list in str.
 void strListAdd(String &str, const char *item, const size_t itemSize, const char del = ',');
 
 /// Appends the given item to a delimiter-separated list in str.
