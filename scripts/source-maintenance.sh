@@ -42,6 +42,7 @@ while [ $# -ge 1 ]; do
         ;;
     --with-astyle)
 		ASTYLE=$2
+		export ASTYLE
         shift 2
         ;;
     *)

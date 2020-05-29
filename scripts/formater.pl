@@ -32,12 +32,19 @@ use IPC::Open2;
 #
 # NP: The Squid code requires astyle version 2.04 (exactly for now)
 #
-my $ASTYLE_BIN="/usr/local/bin/astyle";
-if (! -x $ASTYLE_BIN) {
-  $ASTYLE_BIN="/usr/bin/astyle";
-}
-if (! -x $ASTYLE_BIN) {
-  $ASTYLE_BIN="/usr/local/src/astyle-2.04/bin/astyle";
+my @ASTYLE_PATHS=(
+    $ENV{'ASTYLE'},
+    "/usr/local/bin/astyle",
+    "/usr/bin/astylee",
+    "/usr/local/src/astyle-2.04/bin/astyle"
+);
+
+my $ASTYLE_BIN;
+for my $ASTYLE (@ASTYLE_PATHS) {
+    if (defined $ASTYLE && -x $ASTYLE) {
+        $ASTYLE_BIN=$ASTYLE;
+        last;
+    }
 }
 
 my $ASTYLE_ARGS ="--mode=c -s4 --convert-tabs --keep-one-line-blocks --lineend=linux";
@@ -45,8 +52,9 @@ my $ASTYLE_ARGS ="--mode=c -s4 --convert-tabs --keep-one-line-blocks --lineend=l
 
 
 if(! -e $ASTYLE_BIN || ! -x $ASTYLE_BIN){
-    print "\nFile $ASTYLE_BIN not found\n";
-    print "Please fix the ASTYLE_BIN variable in this script!\n\n";
+    print "\nastyle not found\n";
+    print "Please fix the ASTYLE_BIN variable in $0\n";
+    print "or point environment variable ASTYLE to it\n";
     exit -1;
 }
 $ASTYLE_BIN=$ASTYLE_BIN." ".$ASTYLE_ARGS;
