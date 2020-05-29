@@ -51,6 +51,13 @@ CharacterSet::add(const unsigned char c)
 }
 
 CharacterSet &
+CharacterSet::remove(const unsigned char c)
+{
+    chars_[static_cast<uint8_t>(c)] = 0;
+    return *this;
+}
+
+CharacterSet &
 CharacterSet::addRange(unsigned char low, unsigned char high)
 {
     //manual loop splitting is needed to cover case where high is 255
