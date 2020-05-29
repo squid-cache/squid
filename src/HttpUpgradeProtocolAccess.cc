@@ -19,13 +19,13 @@
 const SBuf HttpUpgradeProtocolAccess::ProtoOther("OTHER");
 
 ProtocolView::ProtocolView(const char * const start, const size_t len):
-    name(start, std::find(start, start + len, '/') - start),
-    version(start + name.length(), len - name.length())
+    ProtocolView(SBuf(start, len))
 {
 }
 
 ProtocolView::ProtocolView(const SBuf &proto):
-    ProtocolView(proto.rawContent(), proto.length())
+    name(proto.substr(0, proto.find('/'))),
+    version(proto.substr(name.length()))
 {
 }
 
