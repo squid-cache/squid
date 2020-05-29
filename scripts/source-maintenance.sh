@@ -27,8 +27,10 @@ KeepGoing="no"
 # the actual name of the directive that enabled keep-going mode
 KeepGoingDirective=""
 #
-# the accepted astyle version. Can be overridden with --enable-astyle <version>
+# the accepted astyle version.
+# Can be overridden with --with-astyle /path/to/astyle
 TargetAstyleVersion="2.04"
+ASTYLE='astyle'
 
 # command-line options
 while [ $# -ge 1 ]; do
@@ -38,8 +40,8 @@ while [ $# -ge 1 ]; do
         KeepGoingDirective=$1
         shift
         ;;
-    --enable-astyle)
-		TargetAstyleVersion=$2
+    --with-astyle)
+		ASTYLE=$2
         shift 2
         ;;
     *)
@@ -68,8 +70,14 @@ else
 	MD5="md5sum"
 fi
 
-ASVER=`astyle --version 2>&1 | grep -o -E "[0-9.]+"`
-if test "${ASVER}" != "${TargetAstyleVersion}" ; then
+${ASTYLE} --version >/dev/null 2>/dev/null
+result=$?
+if test $result -gt 0 ; then
+	echo "ERROR: cannot run ${ASTYLE}"
+	exit 1
+fi
+ASVER=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
+if test "${ASTYLE}" = "astyle" &&  test "${ASVER}" != "${TargetAstyleVersion}" ; then
 	echo "Astyle version problem. You have ${ASVER} instead of ${TargetAstyleVersion}"
 	ASVER=""
 else
