@@ -242,7 +242,7 @@ for FILENAME in `git ls-files`; do
 	;;
 
     *.am)
-		applyPluginsTo ${FILENAME} scripts/sort-makefile-am-sources.pl || return
+		applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
 	;;
 
     ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.list|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
