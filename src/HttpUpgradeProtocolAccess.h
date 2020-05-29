@@ -115,3 +115,4 @@ HttpUpgradeProtocolAccess::forApplicable(const ProtocolView &offer, const Visito
 }
 
 #endif /* SQUID_HTTP_UPGRADE_H */
+
