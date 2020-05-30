@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TEST_REFCOUNT_H
 #define SQUID_SRC_TEST_REFCOUNT_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 class testRefCount : public CPPUNIT_NS::TestFixture
 {
