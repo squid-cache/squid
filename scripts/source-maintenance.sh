@@ -78,9 +78,15 @@ if test $result -gt 0 ; then
 	exit 1
 fi
 ASVER=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
-if test "${ASTYLE}" = "astyle" &&  test "${ASVER}" != "${TargetAstyleVersion}" ; then
-	echo "Astyle version problem. You have ${ASVER} instead of ${TargetAstyleVersion}"
-	ASVER=""
+if test "${ASVER}" != "${TargetAstyleVersion}" ; then
+	if test "${ASTYLE}" = "astyle" ; then
+		echo "Astyle version problem. You have ${ASVER} instead of ${TargetAstyleVersion}"
+		echo "Formatting step skipped due to version mismatch"
+		ASVER=""
+	else
+		echo "WARNING: ${ASTYLE} is version ${ASVER} instead of target ${TargetAstyleVersion}"
+		echo "Formatting anyway, please double check output before submitting"
+	fi
 else
 	echo "Found astyle ${ASVER}. Formatting..."
 fi
