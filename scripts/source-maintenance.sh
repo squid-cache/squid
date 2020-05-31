@@ -27,8 +27,12 @@ KeepGoing="no"
 # the actual name of the directive that enabled keep-going mode
 KeepGoingDirective=""
 #
-# the accepted astyle version.
-# Can be overridden with --with-astyle /path/to/astyle
+# The script checks that the version of astyle is TargetAstyleVersion.
+# if it isn't, the default behaviour is to not perform the formatting stage
+# in order to avoid unexpected massive changes if the behaviour of astyle
+# has changed in different releases.
+# if --with-astyle /path/to/astyle is used, the check is still performed
+# and a warning is printed, but the sources are reformatted
 TargetAstyleVersion="2.04"
 ASTYLE='astyle'
 
@@ -84,7 +88,7 @@ if test "${ASVER}" != "${TargetAstyleVersion}" ; then
 		echo "Formatting step skipped due to version mismatch"
 		ASVER=""
 	else
-		echo "WARNING: ${ASTYLE} is version ${ASVER} instead of target ${TargetAstyleVersion}"
+		echo "WARNING: ${ASTYLE} is version ${ASVER} instead of ${TargetAstyleVersion}"
 		echo "Formatting anyway, please double check output before submitting"
 	fi
 else
