@@ -22,8 +22,8 @@ libcompatsquid_la_SOURCES = \
 	compat.cc \
 	compat.h \
 	compat_shared.h \
-	cppunit.h \
 	cpu.h \
+	cppunit.h \
 	debug.cc \
 	debug.h \
 	eui64_aton.h \
