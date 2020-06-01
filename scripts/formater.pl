@@ -29,26 +29,10 @@
 use strict;
 use IPC::Open2;
 
-#
-# NP: The Squid code requires astyle version 2.04 (exactly for now)
-#
-my $ASTYLE_BIN="/usr/local/bin/astyle";
-if (! -x $ASTYLE_BIN) {
-  $ASTYLE_BIN="/usr/bin/astyle";
-}
-if (! -x $ASTYLE_BIN) {
-  $ASTYLE_BIN="/usr/local/src/astyle-2.04/bin/astyle";
-}
-
+my $ASTYLE_BIN = defined $ENV{'ASTYLE'} ? $ENV{'ASTYLE'} : 'astyle';
 my $ASTYLE_ARGS ="--mode=c -s4 --convert-tabs --keep-one-line-blocks --lineend=linux";
 #$ASTYLE_ARGS="--mode=c -s4 -O --break-blocks -l";
 
-
-if(! -e $ASTYLE_BIN || ! -x $ASTYLE_BIN){
-    print "\nFile $ASTYLE_BIN not found\n";
-    print "Please fix the ASTYLE_BIN variable in this script!\n\n";
-    exit -1;
-}
 $ASTYLE_BIN=$ASTYLE_BIN." ".$ASTYLE_ARGS;
 
 my $INDENT = "";
@@ -90,8 +74,8 @@ while($out){
     my $pid_style=open2(\*FROM_ASTYLE, \*TO_ASTYLE, $ASTYLE_BIN);
 
     if(!$pid_style){
-	print "An error while open2\n";
-	exit -1;
+        print "An error while running $ASTYLE_BIN\n";
+        exit -1;
     }
 
     my $pid;
