@@ -319,6 +319,8 @@ squid_SOURCES = \
 	hier_code.h \
 	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
+	HttpUpgradeProtocolAccess.cc \
+	HttpUpgradeProtocolAccess.h \
 	http.cc \
 	http.h \
 	HttpHeaderFieldStat.h \
@@ -1859,7 +1861,6 @@ tests_test_http_range_SOURCES = \
 	cache_cf.h \
 	AuthReg.h \
 	RefreshPattern.h \
-	cache_cf.cc \
 	CachePeer.cc \
 	CachePeer.h \
 	cache_manager.cc \
@@ -2017,7 +2018,9 @@ tests_test_http_range_SOURCES = \
 	tests/stub_libstore.cc \
 	Transients.cc \
 	tests/test_http_range.cc \
+	tests/stub_cache_cf.cc \
 	tests/stub_external_acl.cc \
+	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libdiskio.cc \
 	tests/stub_libeui.cc \
@@ -2262,7 +2265,6 @@ tests_testHttpRequest_SOURCES = \
 	cache_cf.h \
 	AuthReg.h \
 	RefreshPattern.h \
-	cache_cf.cc \
 	debug.cc \
 	CacheDigest.h \
 	tests/stub_CacheDigest.cc \
@@ -2414,6 +2416,8 @@ tests_testHttpRequest_SOURCES = \
 	tools.h \
 	tools.cc \
 	Transients.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_tunnel.cc \
 	tests/stub_libstore.cc \
 	MemStore.cc \
@@ -2560,7 +2564,6 @@ tests_testCacheManager_SOURCES = \
 	cache_cf.h \
 	AuthReg.h \
 	RefreshPattern.h \
-	cache_cf.cc \
 	CachePeer.cc \
 	CachePeer.h \
 	CacheDigest.h \
@@ -2714,6 +2717,8 @@ tests_testCacheManager_SOURCES = \
 	tools.h \
 	tools.cc \
 	Transients.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_tunnel.cc \
 	tests/stub_libstore.cc \
 	MemStore.cc \
@@ -2866,7 +2871,6 @@ tests_testEvent_SOURCES = \
 	cache_cf.h \
 	AuthReg.h \
 	RefreshPattern.h \
-	cache_cf.cc \
 	CachePeer.cc \
 	CachePeer.h \
 	cache_manager.cc \
@@ -3023,6 +3027,8 @@ tests_testEvent_SOURCES = \
 	StoreMetaUnpacker.cc \
 	StoreSwapLogData.cc \
 	String.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_libstore.cc \
 	tests/CapturingStoreEntry.h \
 	tests/testEvent.cc \
@@ -3105,7 +3111,6 @@ tests_testEventLoop_SOURCES = \
 	cache_cf.h \
 	AuthReg.h \
 	RefreshPattern.h \
-	cache_cf.cc \
 	CachePeer.cc \
 	CachePeer.h \
 	carp.h \
@@ -3260,6 +3265,8 @@ tests_testEventLoop_SOURCES = \
 	String.cc \
 	StrList.h \
 	StrList.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_libstore.cc \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \

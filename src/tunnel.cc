@@ -1068,8 +1068,8 @@ TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
     if (const auto p = conn->getPeer()) {
         if (p->secure.encryptTransport)
             return advanceDestination("secure connection to peer", conn, [this,&conn] {
-                secureConnectionToPeer(conn);
-            });
+            secureConnectionToPeer(conn);
+        });
     }
 
     connectedToPeer(conn);
@@ -1339,9 +1339,15 @@ TunnelStateData::notifyConnOpener()
     }
 }
 
-#if USE_OPENSSL
+/**
+ * Sets up a TCP tunnel through Squid and starts shoveling traffic.
+ * \param request the request that initiated/caused this tunnel
+ * \param clientConn the already accepted client-to-Squid TCP connection
+ * \param srvConn the already established Squid-to-server TCP connection
+ * \param preReadServerData server-sent bytes to be forwarded to the client
+ */
 void
-switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn)
+switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, const Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData)
 {
     Must(Comm::IsConnOpen(clientConn));
     Must(Comm::IsConnOpen(srvConn));
@@ -1360,9 +1366,6 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     debugs(26, 3, request->method << " " << context->http->uri << " " << request->http_ver);
 
     TunnelStateData *tunnelState = new TunnelStateData(context->http);
-
-    // tunnelStartShoveling() drains any buffered from-client data (inBuf)
-    fd_table[clientConn->fd].useDefaultIo();
 
     request->hier.resetPeerNotes(srvConn, tunnelState->getHost());
 
@@ -1383,15 +1386,8 @@ switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::
     else
         request->prepForDirect();
 
-    // we drain any already buffered from-server data below (rBufData)
-    fd_table[srvConn->fd].useDefaultIo();
+    tunnelState->preReadServerData = preReadServerData;
 
-    auto ssl = fd_table[srvConn->fd].ssl.get();
-    assert(ssl);
-    BIO *b = SSL_get_rbio(ssl);
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
-    tunnelState->preReadServerData = srvBio->rBufData();
     tunnelStartShoveling(tunnelState);
 }
-#endif //USE_OPENSSL
 

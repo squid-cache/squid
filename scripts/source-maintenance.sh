@@ -113,6 +113,17 @@ applyPlugin ()
                 updateIfChanged "$source" "$new" "by $script"
 }
 
+# updates the given source file using the given script(s)
+applyPluginsTo ()
+{
+        source="$1"
+        shift
+
+        for script in `git ls-files "$@"`; do
+                run_ applyPlugin $script $source || return
+        done
+}
+
 srcFormat ()
 {
 #
@@ -139,9 +150,7 @@ for FILENAME in `git ls-files`; do
 	#
 	# Code Style formatting maintenance
 	#
-	for SCRIPT in `git ls-files scripts/maintenance/`; do
-		run_ applyPlugin ${SCRIPT} "${FILENAME}" || return
-	done
+	applyPluginsTo ${FILENAME} scripts/maintenance/ || return
 	if test "${ASVER}"; then
 		./scripts/formater.pl ${FILENAME}
 		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
@@ -232,10 +241,8 @@ for FILENAME in `git ls-files`; do
 	chmod 755 ${FILENAME}
 	;;
 
-    Makefile.am)
-
-    	perl -p -e 's/@([A-Z0-9_]+)@/\$($1)/g' <${FILENAME} >${FILENAME}.styled
-	mv ${FILENAME}.styled ${FILENAME}
+    *.am)
+		applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
 	;;
 
     ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.list|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)

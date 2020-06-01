@@ -49,6 +49,7 @@ class external_acl;
 class HeaderManglers;
 class RefreshPattern;
 class RemovalPolicySettings;
+class HttpUpgradeProtocolAccess;
 
 namespace AnyP
 {
@@ -478,6 +479,8 @@ public:
     HeaderWithAclList *request_header_add;
     ///reply_header_add access list
     HeaderWithAclList *reply_header_add;
+    /// http_upgrade_request_protocols
+    HttpUpgradeProtocolAccess *http_upgrade_request_protocols;
     ///note
     Notes notes;
     char *coredump_dir;
