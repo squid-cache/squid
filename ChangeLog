@@ -1,6 +1,10 @@
-Changes in squid-5.0.3 (04 Jun 2020):
+Changes in squid-5.0.3 (05 Jun 2020):
 
 	- Bug 5046: FreeBSD lacks open(2) O_DSYNC flag
+	- Happy Eyeballs: Do not discard viable reforwarding destinations
+	- Reduced startup time with large rock cache_dirs
+	- Fix the ABA problem with Ipc::Mem::PageStack::pop() in v5.0.1
+	- Fix sending of unknown validation errors to certificate validator
 	- ... and several debug improvements
 	- ... and all fixes from 4.12
 
@@ -65,8 +69,9 @@ Changes in squid-5.0.1 (14 Jan 2020):
 	- ... and much code cleanup and polishing
 	- ... and all fixes from 4.10
 
-Changes to squid-4.12 (04 Jun 2020):
+Changes to squid-4.12 (05 Jun 2020):
 
+	- Regression Fix: Revert to slow search for new SMP shm pages
 	- Bug 5045: ext_edirectory_userip_acl is missing include files
 	- Bug 5041: Missing Debug::Extra breaks build on hosts with systemd
 	- Bug 5030: Negative responses are never cached
