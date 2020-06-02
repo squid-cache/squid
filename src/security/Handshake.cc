@@ -107,8 +107,9 @@ static Extensions SupportedExtensions();
 } // namespace Security
 
 /// parse TLS ProtocolVersion (uint16) and convert it to AnyP::ProtocolVersion
+/// param beStrict if true throws on non supported TLS protocols.
 static AnyP::ProtocolVersion
-ParseProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel = ".version")
+ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, bool beStrict)
 {
     Parser::BinaryTokenizerContext context(tk, contextLabel);
     uint8_t vMajor = tk.uint8(".major");
@@ -116,11 +117,33 @@ ParseProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel = ".v
     if (vMajor == 0 && vMinor == 2)
         return AnyP::ProtocolVersion(AnyP::PROTO_SSL, 2, 0);
 
-    Must(vMajor == 3);
-    if (vMinor == 0)
-        return AnyP::ProtocolVersion(AnyP::PROTO_SSL, 3, 0);
+    if (vMajor == 3) {
+        if (vMinor == 0)
+            return AnyP::ProtocolVersion(AnyP::PROTO_SSL, 3, 0);
+        return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, (vMinor - 1));
+    }
 
-    return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, (vMinor - 1));
+    if (beStrict)
+        Must(vMajor == 3);
+
+    Must(vMajor >= 3);
+    return AnyP::ProtocolVersion(AnyP::PROTO_TLS, (vMajor - 2), vMinor);
+}
+
+/// parse TLS ProtocolVersion and convert it to AnyP::ProtocolVersion
+/// Throws on non-supported TLS version
+static AnyP::ProtocolVersion
+ParseProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel = ".version")
+{
+    return ParseProtocolVersionBase(tk, contextLabel, true);
+}
+
+/// parse TLS ProtocolVersion and convert it to AnyP::ProtocolVersion
+/// Throws on non valid TLS versions
+static AnyP::ProtocolVersion
+ParseOptionalProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel = ".version")
+{
+    return ParseProtocolVersionBase(tk, contextLabel, false);
 }
 
 Security::TLSPlaintext::TLSPlaintext(Parser::BinaryTokenizer &tk)
@@ -554,7 +577,11 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         Parser::BinaryTokenizer tkList(extensionData);
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
         while (!tkVersions.atEnd()) {
-            const auto version = ParseProtocolVersion(tkVersions, "supported_version");
+            const auto version = ParseOptionalProtocolVersion(tkVersions, "supported_version");
+            if (TlsVersionGREASEd(version)) {
+                debugs(83, 2, "Ignore GREASEd TLS supported version: " << version);
+                continue;
+            }
             if (!supportedVersionMax || TlsVersionEarlierThan(supportedVersionMax, version))
                 supportedVersionMax = version;
         }

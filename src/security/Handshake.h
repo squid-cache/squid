@@ -165,6 +165,14 @@ Tls1p3orLater(const AnyP::ProtocolVersion &p)
     return !Tls1p2orEarlier(p);
 }
 
+///
+inline bool
+TlsVersionGREASEd(const AnyP::ProtocolVersion &p)
+{
+    Must(TlsFamilyProtocol(p));
+    return (((p.major + 2) & 0x0A) == 0x0A) && ((p.minor & 0x0A) == 0x0A);
+}
+
 }
 
 #endif // SQUID_SECURITY_HANDSHAKE_H
