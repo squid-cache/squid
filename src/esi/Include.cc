@@ -335,8 +335,9 @@ ESIInclude::ESIInclude(esiTreeParentPtr aParent, int attrcount, char const **att
              */
             debugs(86, 5, "ESIIncludeNew: Requesting alternate '" << attr[i+1] << "'");
 
-            assert(!alt.getRaw());
+            assert (alt.getRaw() == NULL); /* TODO: FIXME */
             alt = ESIStreamContextNew (this);
+            assert (alt.getRaw() != NULL);
             alturl = xstrdup(attr[i+1]);
         } else if (!strcmp(attr[i],"onerror")) {
             if (!strcmp(attr[i+1], "continue")) {
