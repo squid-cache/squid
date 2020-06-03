@@ -26,6 +26,15 @@
 KeepGoing="no"
 # the actual name of the directive that enabled keep-going mode
 KeepGoingDirective=""
+#
+# The script checks that the version of astyle is TargetAstyleVersion.
+# if it isn't, the default behaviour is to not perform the formatting stage
+# in order to avoid unexpected massive changes if the behaviour of astyle
+# has changed in different releases.
+# if --with-astyle /path/to/astyle is used, the check is still performed
+# and a warning is printed, but the sources are reformatted
+TargetAstyleVersion="2.04"
+ASTYLE='astyle'
 
 # command-line options
 while [ $# -ge 1 ]; do
@@ -34,6 +43,11 @@ while [ $# -ge 1 ]; do
         KeepGoing=yes
         KeepGoingDirective=$1
         shift
+        ;;
+    --with-astyle)
+        ASTYLE=$2
+        export ASTYLE
+        shift 2
         ;;
     *)
         echo "Usage: $0 [--keep-going|-k]"
@@ -61,10 +75,22 @@ else
 	MD5="md5sum"
 fi
 
-ASVER=`astyle --version 2>&1 | grep -o -E "[0-9.]+"`
-if test "${ASVER}" != "2.04" ; then
-	echo "Astyle version problem. You have ${ASVER} instead of 2.04"
-	ASVER=""
+${ASTYLE} --version >/dev/null 2>/dev/null
+result=$?
+if test $result -gt 0 ; then
+	echo "ERROR: cannot run ${ASTYLE}"
+	exit 1
+fi
+ASVER=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
+if test "${ASVER}" != "${TargetAstyleVersion}" ; then
+	if test "${ASTYLE}" = "astyle" ; then
+		echo "Astyle version problem. You have ${ASVER} instead of ${TargetAstyleVersion}"
+		echo "Formatting step skipped due to version mismatch"
+		ASVER=""
+	else
+		echo "WARNING: ${ASTYLE} is version ${ASVER} instead of ${TargetAstyleVersion}"
+		echo "Formatting anyway, please double check output before submitting"
+	fi
 else
 	echo "Found astyle ${ASVER}. Formatting..."
 fi
@@ -113,6 +139,17 @@ applyPlugin ()
                 updateIfChanged "$source" "$new" "by $script"
 }
 
+# updates the given source file using the given script(s)
+applyPluginsTo ()
+{
+        source="$1"
+        shift
+
+        for script in `git ls-files "$@"`; do
+                run_ applyPlugin $script $source || return
+        done
+}
+
 srcFormat ()
 {
 #
@@ -139,9 +176,7 @@ for FILENAME in `git ls-files`; do
 	#
 	# Code Style formatting maintenance
 	#
-	for SCRIPT in `git ls-files scripts/maintenance/`; do
-		run_ applyPlugin ${SCRIPT} "${FILENAME}" || return
-	done
+	applyPluginsTo ${FILENAME} scripts/maintenance/ || return
 	if test "${ASVER}"; then
 		./scripts/formater.pl ${FILENAME}
 		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
@@ -232,10 +267,8 @@ for FILENAME in `git ls-files`; do
 	chmod 755 ${FILENAME}
 	;;
 
-    Makefile.am)
-
-    	perl -p -e 's/@([A-Z0-9_]+)@/\$($1)/g' <${FILENAME} >${FILENAME}.styled
-	mv ${FILENAME}.styled ${FILENAME}
+    *.am)
+		applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
 	;;
 
     ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.list|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)

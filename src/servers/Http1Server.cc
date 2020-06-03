@@ -233,6 +233,17 @@ Http::One::Server::proceedAfterBodyContinuation(Http::StreamPointer context)
     clientProcessRequest(this, parser_, context.getRaw());
 }
 
+int
+Http::One::Server::pipelinePrefetchMax() const
+{
+    const auto context = pipeline.back();
+    const auto request = (context && context->http) ? context->http->request : nullptr;
+    if (request && request->header.has(Http::HdrType::UPGRADE))
+        return 0;
+
+    return ConnStateData::pipelinePrefetchMax();
+}
+
 void
 Http::One::Server::processParsedRequest(Http::StreamPointer &context)
 {
@@ -335,12 +346,25 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
 
     const ClientHttpRequest *http = context->http;
 
+    // remember Upgrade header; removeHopByHopEntries() will remove it
+    String upgradeHeader;
+    const auto switching = (rep->sline.status() == Http::scSwitchingProtocols);
+    if (switching)
+        upgradeHeader = rep->header.getList(Http::HdrType::UPGRADE);
+
     // apply selected clientReplyContext::buildReplyHeader() mods
     // it is not clear what headers are required for control messages
     rep->header.removeHopByHopEntries();
     // paranoid: ContentLengthInterpreter has cleaned non-generated replies
     rep->removeIrrelevantContentLength();
-    rep->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
+
+    if (switching && /* paranoid: */ upgradeHeader.size()) {
+        rep->header.putStr(Http::HdrType::UPGRADE, upgradeHeader.termedBuf());
+        rep->header.putStr(Http::HdrType::CONNECTION, "upgrade, keep-alive");
+    } else {
+        rep->header.putStr(Http::HdrType::CONNECTION, "keep-alive");
+    }
+
     httpHdrMangleList(&rep->header, http->request, http->al, ROR_REPLY);
 
     MemBuf *mb = rep->pack();
@@ -352,6 +376,24 @@ Http::One::Server::writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &ca
 
     delete mb;
     return true;
+}
+
+void switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, const Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
+
+void
+Http::One::Server::noteTakeServerConnectionControl(ServerConnectionContext server)
+{
+    const auto context = pipeline.front();
+    assert(context);
+    const auto http = context->http;
+    assert(http);
+    assert(http->request);
+
+    stopReading();
+    Must(!writer);
+
+    switchToTunnel(http->request, clientConnection,
+                   server.connection(), server.preReadServerBytes);
 }
 
 ConnStateData *

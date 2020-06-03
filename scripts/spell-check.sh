@@ -58,7 +58,7 @@ for FILENAME in `git ls-files "$@"`; do
     *.sh|\
     *.pre|\
     *.pl|*.pl.in|*.pm|\
-    *.dox|*.html|*.txt|\
+    *.dox|*.html|*.md|*.txt|\
     *.sql|\
     errors/templates/ERR_*|\
     INSTALL|README|QUICKSTART)
