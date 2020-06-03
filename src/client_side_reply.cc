@@ -503,6 +503,10 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         http->logType.update(LOG_TCP_REFRESH_FAIL_ERR);
         debugs(88, 3, "origin replied with error " << status <<
                ", forwarding to client due to fail_on_validation_err");
+
+        if (collapsedRevalidation)
+            http->storeEntry()->clearPublicKeyScope();
+
         sendClientUpstreamResponse();
     } else {
         // ignore and let client have old entry
