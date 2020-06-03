@@ -1,0 +1,16 @@
+#!/usr/bin/gawk -f
+#
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
+/HERE/ {
+  # HERE is deprecated by debugs() internal logic
+  sub(/[ ]*HERE[ ]*<<[ ]*":[ ]/, " \"", $0);
+  sub(/[ ]*HERE[ ]*<<[ ]*/, " ", $0);
+}
+
+{ print }
