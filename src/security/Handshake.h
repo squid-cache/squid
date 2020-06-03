@@ -170,7 +170,7 @@ inline bool
 TlsVersionGREASEd(const AnyP::ProtocolVersion &p)
 {
     Must(TlsFamilyProtocol(p));
-    return (((p.major + 2) & 0x0A) == 0x0A) && ((p.minor & 0x0A) == 0x0A);
+    return !(((p.major + 2) & 0x0F) ^ 0x0A) && !((p.minor & 0x0F) ^ 0x0A);
 }
 
 }
