@@ -754,6 +754,9 @@ Security::SupportedExtensions()
 #if defined(TLSEXT_TYPE_heartbeat) // 15
     extensions.insert(TLSEXT_TYPE_heartbeat);
 #endif
+#if defined(TLSEXT_TYPE_application_layer_protocol_negotiation) // 16
+    extensions.insert(TLSEXT_TYPE_application_layer_protocol_negotiation);
+#endif
 #if defined(TLSEXT_TYPE_session_ticket) // 35
     extensions.insert(TLSEXT_TYPE_session_ticket);
 #endif
