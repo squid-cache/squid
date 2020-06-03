@@ -714,6 +714,8 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
                 if (!strCiphers.isEmpty())
                     strCiphers.append(":");
                 strCiphers.append(SSL_CIPHER_get_name(c));
+            } else {
+                debugs(83, 2, "Ignore " << (Security::TlsCipherGREASEd(cipherId) ? "GREASEd" : "unsupported") <<  " cipher: " << cipherId);
             }
         }
         if (!strCiphers.isEmpty())

@@ -173,6 +173,13 @@ TlsVersionGREASEd(const AnyP::ProtocolVersion &p)
     return !(((p.major + 2) & 0x0F) ^ 0x0A) && !((p.minor & 0x0F) ^ 0x0A);
 }
 
+/// Whether the given cipher is a GREASEd cipher (RFC8701)
+inline bool
+TlsCipherGREASEd(uint16_t cipher)
+{
+    return !((cipher & 0x0F0F) ^ 0x0A0A);
+}
+
 }
 
 #endif // SQUID_SECURITY_HANDSHAKE_H
