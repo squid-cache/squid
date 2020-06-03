@@ -71,7 +71,7 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     else if (payload && len == 0)
         len = strlen(payload);
 
-    // BUG: If length specified or auto-detected is greater than the possible payload squid will die with an assert.
+    // XXX: If length specified or auto-detected is greater than the possible payload squid will die with an assert.
     // TODO: This should perhapse be reduced to a truncated payload? or no payload. A WARNING is due anyway.
     assert(len <= PINGER_PAYLOAD_SZ);
 
@@ -282,4 +282,3 @@ IcmpSquid::Close(void)
 
 #endif
 }
-
