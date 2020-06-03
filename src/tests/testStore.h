@@ -12,7 +12,7 @@
 #include "Store.h"
 #include "store/Controlled.h"
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 /*
  * test the store framework

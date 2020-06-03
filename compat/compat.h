@@ -114,8 +114,5 @@
  */
 #include "compat/GnuRegex.h"
 
-/* cppunit is not quite C++0x compatible yet */
-#include "compat/cppunit.h"
-
 #endif /* _SQUID_COMPAT_H */
 
