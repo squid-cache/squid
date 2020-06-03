@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TESTS_TESTHTTP1PARSER_H
 #define SQUID_SRC_TESTS_TESTHTTP1PARSER_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 class testHttp1Parser : public CPPUNIT_NS::TestFixture
 {

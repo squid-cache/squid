@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TESTS_TESTNETDB_H
 #define SQUID_SRC_TESTS_TESTNETDB_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 class testNetDb : public CPPUNIT_NS::TestFixture
 {
