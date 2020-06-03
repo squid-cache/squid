@@ -96,6 +96,9 @@ public:
     /// after peeking or spliced after staring (subject to other restrictions)
     bool supported() const;
 
+    /// Whether this extension is a GREASEd extension (RFC8701)
+    bool isGREASEd() const {return !((type & 0x0F0F) ^ 0x0A0A); }
+
     Type type;
     SBuf data;
 };
@@ -440,6 +443,10 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
         if (!details->unsupportedExtensions && !extension.supported()) {
             debugs(83, 5, "first unsupported extension: " << extension.type);
             details->unsupportedExtensions = true;
+        }
+
+        if (extension.isGREASEd()) {
+            debugs(83, 2, "GREASEd extension: " << extension.type);
         }
 
         switch(extension.type) {
