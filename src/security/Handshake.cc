@@ -445,9 +445,10 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
             details->unsupportedExtensions = true;
         }
 
-        if (extension.isGREASEd()) {
+        if (messageSource == fromServer)
+            Must(!extension.isGREASEd());
+        else if (extension.isGREASEd())
             debugs(83, 2, "GREASEd extension: " << extension.type);
-        }
 
         switch(extension.type) {
         case 0: // The SNI extension; RFC 6066, Section 3
@@ -518,7 +519,9 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
     details->tlsSupportedVersion = ParseProtocolVersion(tk);
     tk.skip(HelloRandomSize, ".random");
     details->sessionId = tk.pstring8(".session_id");
-    details->ciphers.insert(tk.uint16(".cipher_suite"));
+    const uint16_t cipherSuite = tk.uint16(".cipher_suite");
+    Must(!TlsCipherGREASEd(cipherSuite));
+    details->ciphers.insert(cipherSuite);
     details->compressionSupported = tk.uint8(".compression_method") != 0; // not null
     if (!tk.atEnd()) // extensions present
         parseExtensions(tk.pstring16(".extensions"));
