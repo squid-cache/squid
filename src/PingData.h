@@ -16,7 +16,7 @@
 class PeerSelector;
 class PeerSelectorPingMonitor;
 
-typedef std::pair<const timeval, PeerSelector *> WaitingPeerSelector;
+typedef std::pair<timeval, PeerSelector *> WaitingPeerSelector;
 /// waiting PeerSelector objects, ordered by their absolute deadlines
 typedef std::multimap<timeval, PeerSelector *, std::less<timeval>, PoolingAllocator<WaitingPeerSelector> > WaitingPeerSelectors;
 typedef WaitingPeerSelectors::iterator WaitingPeerSelectorPosition;
