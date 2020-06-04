@@ -740,9 +740,10 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
 
 #if defined(TLSEXT_TYPE_application_layer_protocol_negotiation)
     if (!details->tlsAppLayerProtoNeg.isEmpty()) {
-        if (bumpMode == Ssl::bumpPeek)
+        if (bumpMode == Ssl::bumpPeek) {
+            // it may include GREASEd protocol values in list
             SSL_set_alpn_protos(ssl, (const unsigned char*)details->tlsAppLayerProtoNeg.rawContent(), details->tlsAppLayerProtoNeg.length());
-        else {
+        } else {
             static const unsigned char supported_protos[] = {8, 'h','t','t', 'p', '/', '1', '.', '1'};
             SSL_set_alpn_protos(ssl, supported_protos, sizeof(supported_protos));
         }

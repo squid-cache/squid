@@ -461,6 +461,8 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
             break;
         case 16: { // Application-Layer Protocol Negotiation Extension, RFC 7301
             Parser::BinaryTokenizer tkAPN(extension.data);
+            // We are storing the protocol list as received in wire-format
+            // It may include GREASEd values.
             details->tlsAppLayerProtoNeg = tkAPN.pstring16("APN");
             break;
         }
