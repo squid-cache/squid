@@ -216,6 +216,9 @@ PeerSelectorPingMonitor::forget(PeerSelector *selector)
     selector->ping.monitorRegistration = npos();
 
     if (wasFirst) {
+        // do not reschedule if there are still elements with the same deadline
+        if (!selectors.empty() && selectors.begin()->first == selector->ping.deadline())
+            return;
         abortWaiting();
         if (!selectors.empty())
             startWaiting();
