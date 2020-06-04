@@ -715,6 +715,9 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
                     strCiphers.append(":");
                 strCiphers.append(SSL_CIPHER_get_name(c));
             } else {
+                // RFC8701 3.2:
+                // "When processing a ClientHello, servers MUST NOT treat
+                // GREASE values differently from any unknown value."
                 debugs(83, 2, "Ignore " << (Security::TlsCipherGREASEd(cipherId) ? "GREASEd" : "unsupported") <<  " cipher: " << cipherId);
             }
         }

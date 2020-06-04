@@ -165,7 +165,7 @@ Tls1p3orLater(const AnyP::ProtocolVersion &p)
     return !Tls1p2orEarlier(p);
 }
 
-///
+/// Whether the given TLS version is a GREASEd version (RFC8701)
 inline bool
 TlsVersionGREASEd(const AnyP::ProtocolVersion &p)
 {

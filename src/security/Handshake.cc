@@ -446,8 +446,8 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
         }
 
         if (messageSource == fromServer)
-            Must(!extension.isGREASEd());
-        else if (extension.isGREASEd())
+            Must(!extension.isGREASEd()); // RFC8701 Section 3.1
+        else if (extension.isGREASEd()) // RFC8701 Section 3.2
             debugs(83, 2, "GREASEd extension: " << extension.type);
 
         switch(extension.type) {
@@ -520,7 +520,7 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
     tk.skip(HelloRandomSize, ".random");
     details->sessionId = tk.pstring8(".session_id");
     const uint16_t cipherSuite = tk.uint16(".cipher_suite");
-    Must(!TlsCipherGREASEd(cipherSuite));
+    Must(!TlsCipherGREASEd(cipherSuite)); // RFC8701 Section 3.1
     details->ciphers.insert(cipherSuite);
     details->compressionSupported = tk.uint8(".compression_method") != 0; // not null
     if (!tk.atEnd()) // extensions present
@@ -591,6 +591,11 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         while (!tkVersions.atEnd()) {
             const auto version = ParseOptionalProtocolVersion(tkVersions, "supported_version");
             if (TlsVersionGREASEd(version)) {
+                // RFC 8701 Section 3.2 says:
+                // "When processing a ClientHello, servers MUST NOT treat
+                // GREASE values differently from any unknown value."
+                // However we have to ignore GREASEd versions here, where
+                // we are accounting and logging unknown versions.
                 debugs(83, 2, "Ignore GREASEd TLS supported version: " << version);
                 continue;
             }
