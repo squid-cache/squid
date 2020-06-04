@@ -377,6 +377,10 @@ clientReplyContext::sendClientUpstreamResponse()
 {
     StoreIOBuffer tempresult;
     removeStoreReference(&old_sc, &old_entry);
+
+    if (collapsedRevalidation)
+        http->storeEntry()->clearPublicKeyScope();
+
     /* here the data to send is the data we just received */
     tempBuffer.offset = 0;
     old_reqsize = 0;
@@ -490,10 +494,6 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
             http->logType.update(LOG_TCP_REFRESH_MODIFIED);
             debugs(88, 3, "origin replied " << status <<
                    ", replacing existing entry and forwarding to client");
-
-            if (collapsedRevalidation)
-                http->storeEntry()->clearPublicKeyScope();
-
             sendClientUpstreamResponse();
         }
     }
@@ -503,10 +503,6 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         http->logType.update(LOG_TCP_REFRESH_FAIL_ERR);
         debugs(88, 3, "origin replied with error " << status <<
                ", forwarding to client due to fail_on_validation_err");
-
-        if (collapsedRevalidation)
-            http->storeEntry()->clearPublicKeyScope();
-
         sendClientUpstreamResponse();
     } else {
         // ignore and let client have old entry
