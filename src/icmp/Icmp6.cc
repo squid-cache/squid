@@ -17,7 +17,6 @@
 #include "Debug.h"
 #include "Icmp6.h"
 #include "IcmpPinger.h"
-#include "leakcheck.h"
 #include "SquidTime.h"
 
 // Some system headers are only neeed internally here.
