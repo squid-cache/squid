@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 5.0.2 release notes</title>
+<title>Squid 5.0.3 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-5.0.2 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-5.0.3 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v5/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -249,6 +249,10 @@ This section gives a thorough account of those changes in three categories:
 	<p>New code <em>%A</em> to display Squid listening IP address the client
 	   TCP connection was connected to.
 
+	<tag>http_port</tag>
+	<p>New <em>worker-queues</em> option to have TCP stack maintain dedicated
+	   listening queue for each worker in SMP.
+
 	<tag>logformat</tag>
 	<p>New <em>ssl::&lt;cert</em> macro code to display received server X.509
 	   certificate in PEM format.
@@ -312,6 +316,10 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--disable-optimizations</tag>
 	<p>No longer implies <em>--disable-inline</em> option (which is removed).
+
+	<tag>--enable-external-acl-helpers</tag>
+	<p>New helper type <em>kerberos_sid_group</em> to match <em>group=</em>
+	   annotations AD Domain group SID.
 
 </descrip>
 </p>
