@@ -83,10 +83,5 @@ public:
     bool readNextRequest = false; ///< whether Squid should read after error handling
 };
 
-void
-clientStoreIdDoneWrapper(void *data, const Helper::Reply &result);
-void
-clientRedirectDoneWrapper(void *data, const Helper::Reply &result);
-
 #endif /* SQUID_CLIENTREQUESTCONTEXT_H */
 
