@@ -93,6 +93,7 @@ class ErrorState
 public:
     /// creates an error of type other than ERR_RELAY_REMOTE
     ErrorState(err_type type, Http::StatusCode, HttpRequest * request, const AccessLogEntryPointer &al);
+    ErrorState(err_type type, Http::StatusCode status, char const *url, Ip::Address &src_addr, HttpRequest *request, const AccessLogEntry::Pointer &al);
     ErrorState() = delete; // not implemented.
 
     /// creates an ERR_RELAY_REMOTE error
