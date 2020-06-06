@@ -29,7 +29,7 @@ CBDATA_CLASS_INIT(ClientRequestContext);
 static void clientRedirectDoneWrapper(void *data, const Helper::Reply &result);
 static void clientStoreIdDoneWrapper(void *data, const Helper::Reply &result);
 
-    ClientRequestContext::~ClientRequestContext()
+ClientRequestContext::~ClientRequestContext()
 {
     /*
      * Release our "lock" on our parent, ClientHttpRequest, if we
