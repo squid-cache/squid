@@ -28,28 +28,28 @@ my $inside = 0;
 my $entering;
 
 while (<>) {
-	$entering = $_ if !$inside && /[|:] entering\b/;
-	undef $entering if /[|:] leaving\b/;
+    $entering = $_ if !$inside && /[|:] entering\b/;
+    undef $entering if /[|:] leaving\b/;
 
-	# if (!$inside && /\bcalled\b.*\b$XactId\b/o) {
-	if (!$inside && /\bstatus in\b.*\b$XactId\b/o) {
-		print $entering if defined $entering;
-		$inside = 1;
-	}
+    # if (!$inside && /\bcalled\b.*\b$XactId\b/o) {
+    if (!$inside && /\bstatus in\b.*\b$XactId\b/o) {
+        print $entering if defined $entering;
+        $inside = 1;
+    }
 
-	my $external = !$inside && /\b$XactId\b/o;
-	
-	print $_ if $inside || $external;
-	print "\n" if $external;
+    my $external = !$inside && /\b$XactId\b/o;
+    
+    print $_ if $inside || $external;
+    print "\n" if $external;
 
-	next unless $inside;
+    next unless $inside;
 
-	# if (/\bended\b.*\b$XactId\b/o || /\bswan\s+sang\b.*\b$XactId\b/o) {
-	# if (/\bstatus out\b.*\b$XactId\b/o || /\bswan\s+sang\b.*\b$XactId\b/o ||
-	if (/[|:] leaving\b/) {
-		print "\n";
-		$inside = 0;
-	}
+    # if (/\bended\b.*\b$XactId\b/o || /\bswan\s+sang\b.*\b$XactId\b/o) {
+    # if (/\bstatus out\b.*\b$XactId\b/o || /\bswan\s+sang\b.*\b$XactId\b/o ||
+    if (/[|:] leaving\b/) {
+        print "\n";
+        $inside = 0;
+    }
 }
 
 exit(0);

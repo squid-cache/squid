@@ -17,20 +17,20 @@ require "getopts.pl";
 open (ACCESS, "/opt/Squid/logs/useragent.0");
 
 while (<ACCESS>) {
-	($host, $timestamp, $agent) = 
-	/^(\S+) \[(.+)\] \"(.+)\"\s/;
-	if ($agent ne '-') {
-		if ($opt_M) {
-		 	$agent =~ tr/\// /;
-			$agent =~ tr/\(/ /;
-		}
-		if ($opt_F) {
-			next unless $seen{$agent}++;
-		} else {
-			@inline=split(/ /, $agent);
-			next unless $seen{$inline[0]}++;
-		}
-	}
+    ($host, $timestamp, $agent) = 
+    /^(\S+) \[(.+)\] \"(.+)\"\s/;
+    if ($agent ne '-') {
+        if ($opt_M) {
+            $agent =~ tr/\// /;
+            $agent =~ tr/\(/ /;
+        }
+        if ($opt_F) {
+            next unless $seen{$agent}++;
+        } else {
+            @inline=split(/ /, $agent);
+            next unless $seen{$inline[0]}++;
+        }
+    }
 }
 
 $total=0;
@@ -43,8 +43,8 @@ foreach $browser (keys(%seen)) {
 }
 
 foreach $browser (sort keys(%seen)) {
-	$percent=$seen{$browser}/$total*100;
-	if ($percent >= $opt_L) { write; }
+    $percent=$seen{$browser}/$total*100;
+    if ($percent >= $opt_L) { write; }
 }
 
 print "\n\nTotal entries in log = $total\n";

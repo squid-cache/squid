@@ -63,8 +63,8 @@ while($out){
     my($new_in) = $in;
     my($i) = 0;
     while(-e $new_in) {
-	$new_in=$in.".".$i;
-	$i++;
+        $new_in=$in.".".$i;
+        $i++;
     }
     $in=$new_in;
     rename($out, $in);
@@ -79,50 +79,50 @@ while($out){
 
     my $pid;
     if($pid=fork()){
-	#do parent staf
-	close(FROM_ASTYLE);
-	
-	if(!open(IN, "<$in")){
-	    print "Can not open input file: $in\n";
-	    exit -1;
-	}
-	my($line) = '';
-	while(<IN>){
-	    $line=$line.$_;
-	    if(input_filter(\$line)==0){
-		next;
-	    }
-	    print TO_ASTYLE $line;
-	    $line = '';
-	}
-	if($line){
-	    print TO_ASTYLE $line;
-	}
-	close(TO_ASTYLE);
-	waitpid($pid,0);
+        #do parent staf
+        close(FROM_ASTYLE);
+        
+        if(!open(IN, "<$in")){
+            print "Can not open input file: $in\n";
+            exit -1;
+        }
+        my($line) = '';
+        while(<IN>){
+            $line=$line.$_;
+            if(input_filter(\$line)==0){
+            next;
+            }
+            print TO_ASTYLE $line;
+            $line = '';
+        }
+        if($line){
+            print TO_ASTYLE $line;
+        }
+        close(TO_ASTYLE);
+        waitpid($pid,0);
     }
     else{
-	# child staf
-	close(TO_ASTYLE);
+    # child staf
+        close(TO_ASTYLE);
 
-	if(!open(OUT,">$out")){
-	    print "Can't open output file: $out\n";
-	    exit -1;
-	}
-	my($line)='';
-	while(<FROM_ASTYLE>){
-	    $line = $line.$_;
-	    if(output_filter(\$line)==0){
-		next;
-	    }
-	    print OUT $line;
-	    $line = '';
-	}
-	if($line){
-	    print OUT $line;
-	}
-	close(OUT);
-	exit 0;
+        if(!open(OUT,">$out")){
+            print "Can't open output file: $out\n";
+            exit -1;
+        }
+        my($line)='';
+        while(<FROM_ASTYLE>){
+            $line = $line.$_;
+            if(output_filter(\$line)==0){
+            next;
+            }
+            print OUT $line;
+            $line = '';
+        }
+        if($line){
+            print OUT $line;
+        }
+        close(OUT);
+        exit 0;
     }
 
     $out = shift @ARGV;
@@ -134,40 +134,40 @@ sub input_filter{
 
     if($$line =~/\s+int\s+.*/s || $$line=~ /\s+unsigned\s+.*/s ||
        $$line =~/^int\s+.*/s || $$line=~ /^unsigned\s+.*/s
-       ){
-	if( $$line =~ /(\(|,|\)|\#|typedef)/s ){
-	    #excluding int/unsigned appeared inside function prototypes,typedefs etc....
-	    return 1;
-	}
+       ) {
+        if( $$line =~ /(\(|,|\)|\#|typedef)/s ){
+            #excluding int/unsigned appeared inside function prototypes,typedefs etc....
+            return 1;
+        }
 
-	if(index($$line,";") == -1){
-#	    print "Getting one more for \"".$$line."\"\n";
-	    return 0;
-	}
+        if(index($$line,";") == -1){
+#        print "Getting one more for \"".$$line."\"\n";
+            return 0;
+        }
 
-	if($$line =~ /(.*)\s*int\s+([^:]*):\s*(\w+)\s*\;(.*)/s){
-#	    print ">>>>> ".$$line."    ($1)\n";
+        if($$line =~ /(.*)\s*int\s+([^:]*):\s*(\w+)\s*\;(.*)/s){
+#        print ">>>>> ".$$line."    ($1)\n";
             my ($prx,$name,$val,$extra)=($1,$2,$3,$4);
             $prx =~ s/\s*$//g;
-	    $$line= $prx." int ".$name."__FORASTYLE__".$val.";".$extra;
-#	    print "----->".$$line."\n";
-	}
-	elsif($$line =~ /\s*unsigned\s+([^:]*):\s*(\w+)\s*\;(.*)/s){
-#	    print ">>>>> ".$$line."    ($1)\n";
+            $$line= $prx." int ".$name."__FORASTYLE__".$val.";".$extra;
+#        print "----->".$$line."\n";
+        }
+        elsif($$line =~ /\s*unsigned\s+([^:]*):\s*(\w+)\s*\;(.*)/s){
+#        print ">>>>> ".$$line."    ($1)\n";
             my ($name,$val,$extra)=($1,$2,$3);
             my $prx =~ s/\s*$//g;
-	    $$line= "unsigned ".$name."__FORASTYLE__".$val.";".$extra;
-#	    print "----->".$$line."\n";
-	}
-	return 1;
+            $$line= "unsigned ".$name."__FORASTYLE__".$val.";".$extra;
+#        print "----->".$$line."\n";
+        }
+        return 1;
     }
 
     if($$line =~ /\#endif/ ||
        $$line =~ /\#else/ ||
        $$line =~ /\#if/
-       ){
-	$$line =$$line."//__ASTYLECOMMENT__\n";
-	return 1;
+       ) {
+        $$line =$$line."//__ASTYLECOMMENT__\n";
+        return 1;
     }
 
     return 1;
@@ -182,19 +182,19 @@ sub output_filter{
 
     # collapse multiple empty lines onto the first one
     if($$line =~ /^\s*$/){
-      if ($last_line_was_empty==1) {
-        $$line="";
-        return 0;
-      } else {
-        $last_line_was_empty=1;
-        return 1;
-      }
+        if ($last_line_was_empty==1) {
+            $$line="";
+            return 0;
+        } else {
+            $last_line_was_empty=1;
+            return 1;
+        }
     } else {
-      $last_line_was_empty=0;
+        $last_line_was_empty=0;
     }
 
     if($$line =~ s/\s*\/\/__ASTYLECOMMENT__//) {
-	chomp($$line);
+        chomp($$line);
     }
     
    # "The "unsigned int:1; case ....."

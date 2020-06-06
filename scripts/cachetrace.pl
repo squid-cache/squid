@@ -34,12 +34,12 @@ sub try_http_11 {
 	
 	die "socket: $!\n" unless
                 socket (SOCK, &AF_INET, &SOCK_STREAM, $proto);
-        die "bind: $!\n" unless
-                bind (SOCK, $thissock);
-        die "$proxy:$port: $!\n" unless
-                connect (SOCK, $that);
-        select (SOCK); $| = 1;
-        select (STDOUT);
+    die "bind: $!\n" unless
+            bind (SOCK, $thissock);
+    die "$proxy:$port: $!\n" unless
+            connect (SOCK, $that);
+    select (SOCK); $| = 1;
+    select (STDOUT);
 	print SOCK "TRACE $url HTTP/1.1\r\nHost: $host\r\nAccept: */*\r\n\r\n";
 	while (<SOCK>) {
 		s/\r//g;

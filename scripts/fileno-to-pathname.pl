@@ -49,25 +49,25 @@ if ($ncache_dirs == 0) {
 }
 
 while (<>) {
-	chop;
-	print &storeSwapFullPath(hex($_)), "\n";
+    chop;
+    print &storeSwapFullPath(hex($_)), "\n";
 }
 
 sub storeSwapFullPath {
-	my($fn) = @_;
+    my($fn) = @_;
 
         my $dirn = ($fn >> $SWAP_DIR_SHIFT) % $ncache_dirs;
         my $filn = $fn & $SWAP_FILE_MASK;
 
-	sprintf "%s/%02X/%02X/%08X",
-		$CD[$dirn],
-		(($fn / $L2[$dirn]) / $L2[$dirn]) % $L1[$dirn],
-		($fn / $L2[$dirn]) % $L2[$dirn],
-		$fn;
+    sprintf "%s/%02X/%02X/%08X",
+        $CD[$dirn],
+        (($fn / $L2[$dirn]) / $L2[$dirn]) % $L1[$dirn],
+        ($fn / $L2[$dirn]) % $L2[$dirn],
+        $fn;
 }
 
 sub usage {
-	print STDERR "usage: $0 -c config\n";
-	print STDERR "hexadecimal file numbers are read from stdin\n";
-	exit 1;
+    print STDERR "usage: $0 -c config\n";
+    print STDERR "hexadecimal file numbers are read from stdin\n";
+    exit 1;
 }

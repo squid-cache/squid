@@ -74,11 +74,11 @@ my ($index) = new IO::File;
 my $top = dirname($0);
 
 GetOptions(
-	'verbose' => \$verbose, 'v' => \$verbose,
-	'out=s' => \$path,
-	'version=s' => \$version,
-	'format=s' => \$format
-	);
+    'verbose' => \$verbose, 'v' => \$verbose,
+    'out=s' => \$path,
+    'version=s' => \$version,
+    'format=s' => \$format
+);
 
 if ($format eq "splithtml") {
     $pagetemplate = "template.html";
@@ -99,25 +99,25 @@ undef $df;
 # XXX should implement this!
 sub uriescape($)
 {
-	my ($line) = @_;
-	return $line;
+    my ($line) = @_;
+    return $line;
 }
 
 sub filename($)
 {
-	my ($name) = @_;
-	return $path . "/" . $name . ".html";
+    my ($name) = @_;
+    return $path . "/" . $name . ".html";
 }
 
 sub htmlescape($)
 {
-	my ($line) = @_;
-	return "" if !defined $line;
-	$line =~ s/&/\&amp;/g;
-	$line =~ s/</\&lt;/g;
-	$line =~ s/>/\&gt;/g;
-	$line =~ s/[^\x{20}-\x{7e}\s]/sprintf ("&#%d;", ord ($1))/ge;
-	return $line;
+    my ($line) = @_;
+    return "" if !defined $line;
+    $line =~ s/&/\&amp;/g;
+    $line =~ s/</\&lt;/g;
+    $line =~ s/>/\&gt;/g;
+    $line =~ s/[^\x{20}-\x{7e}\s]/sprintf ("&#%d;", ord ($1))/ge;
+    return $line;
 }
 
 sub section_link($)
@@ -142,48 +142,48 @@ sub alpha_link($)
 #
 sub generate_page($$)
 {
-	my ($template, $data) = @_;
-	my $fh;
-	my $fh_open = 0;
-	# XXX should make sure the config option is a valid unix filename!
-	if ($format eq "splithtml") {
-	    my ($fn) = filename($data->{'name'});
-	    $fh = new IO::File;
-	    $fh->open($fn, "w") || die "Couldn't open $fn: $!\n";
-	    $fh_open = 1;
-	} else {
-	    $fh = $index;
-	}
+    my ($template, $data) = @_;
+    my $fh;
+    my $fh_open = 0;
+    # XXX should make sure the config option is a valid unix filename!
+    if ($format eq "splithtml") {
+        my ($fn) = filename($data->{'name'});
+        $fh = new IO::File;
+        $fh->open($fn, "w") || die "Couldn't open $fn: $!\n";
+        $fh_open = 1;
+    } else {
+        $fh = $index;
+    }
 
-	$data->{"ifdef"} = $defines{$data->{"ifdef"}} if (exists $data->{"ifdef"} && exists $defines{$data->{"ifdef"}});
+    $data->{"ifdef"} = $defines{$data->{"ifdef"}} if (exists $data->{"ifdef"} && exists $defines{$data->{"ifdef"}});
 
-	my ($th) = new IO::File;
-	$th->open($template, "r") || die "Couldn't open $template: $!\n";
+    my ($th) = new IO::File;
+    $th->open($template, "r") || die "Couldn't open $template: $!\n";
 
-	# add in the local variables
-	$data->{"title"} = $data->{"name"};
-	$data->{"ldoc"} = $data->{"doc"};
-	$data->{"toc_link"} = toc_link($data->{"name"});
-	$data->{"alpha_link"} = alpha_link($data->{"name"});
-	if (exists $data->{"aliases"}) {
-		$data->{"aliaslist"} = join(", ", @{$data->{"aliases"}});
-	}
-	# XXX can't do this and then HTML escape..
-	# $data->{"ldoc"} =~ s/\n\n/<\/p>\n<p>\n/;
-	# XXX and the end-of-line formatting to turn single \n's into <BR>\n's.
+    # add in the local variables
+    $data->{"title"} = $data->{"name"};
+    $data->{"ldoc"} = $data->{"doc"};
+    $data->{"toc_link"} = toc_link($data->{"name"});
+    $data->{"alpha_link"} = alpha_link($data->{"name"});
+    if (exists $data->{"aliases"}) {
+        $data->{"aliaslist"} = join(", ", @{$data->{"aliases"}});
+    }
+    # XXX can't do this and then HTML escape..
+    # $data->{"ldoc"} =~ s/\n\n/<\/p>\n<p>\n/;
+    # XXX and the end-of-line formatting to turn single \n's into <BR>\n's.
 
-	while (<$th>) {
-		# Do variable substitution
-		s/%(.*?)%/htmlescape($data->{$1})/ge;
-		print $fh $_;
-	}
-	close $th;
-	undef $th;
+    while (<$th>) {
+        # Do variable substitution
+        s/%(.*?)%/htmlescape($data->{$1})/ge;
+        print $fh $_;
+    }
+    close $th;
+    undef $th;
 
-	if ($fh_open) {
-	    close $fh;
-	    undef $fh;
-	}
+    if ($fh_open) {
+        close $fh;
+        undef $fh;
+    }
 }
 
 $index->open(filename("index"), "w") || die "Couldn't open ".filename("index").": $!\n" if ($format eq "splithtml");
@@ -212,8 +212,8 @@ sub start_option($$)
 {
     my ($name, $type) = @_;
     if (!$in_options) {
-	print $index "<ul>\n";
-	$in_options = 1;
+    print $index "<ul>\n";
+    $in_options = 1;
     }
     return if $type eq "obsolete";
     print $index '    <li><a href="' . htmlescape(section_link($name)) . '" name="toc_' . htmlescape($name) . '">' . htmlescape($name) . "</a></li>\n";
@@ -226,105 +226,105 @@ sub end_options()
 }
 sub section_heading($)
 {
-	my ($comment) = @_;
-	print $index "<pre>\n";
-	print $index $comment;
-	print $index "</pre>\n";
+    my ($comment) = @_;
+    print $index "<pre>\n";
+    print $index $comment;
+    print $index "</pre>\n";
 }
 sub update_defaults()
 {
-	if (defined($data->{"default_doc"})) {
-		# default text description masks out the default value display
-		if($data->{"default_doc"} ne "") {
-			print "REPLACE: default '". $data->{"default"} ."' with '" . $data->{"default_doc"} . "'\n" if $verbose;
-			$data->{"default"} = $data->{"default_doc"};
-		}
-	}
-	# when we have no predefined default use the DEFAULT_IF_NONE
-	if (defined($data->{"default_if_none"})) {
-		print "REPLACE: default '". $data->{"default"} ."' with '" . $data->{"default_if_none"} . "'\n" if $verbose && $data->{"default"} eq "";
-		$data->{"default"} = $data->{"default_if_none"} if $data->{"default"} eq "";
-	}
+    if (defined($data->{"default_doc"})) {
+        # default text description masks out the default value display
+        if($data->{"default_doc"} ne "") {
+            print "REPLACE: default '". $data->{"default"} ."' with '" . $data->{"default_doc"} . "'\n" if $verbose;
+            $data->{"default"} = $data->{"default_doc"};
+        }
+    }
+    # when we have no predefined default use the DEFAULT_IF_NONE
+    if (defined($data->{"default_if_none"})) {
+        print "REPLACE: default '". $data->{"default"} ."' with '" . $data->{"default_if_none"} . "'\n" if $verbose && $data->{"default"} eq "";
+        $data->{"default"} = $data->{"default_if_none"} if $data->{"default"} eq "";
+    }
 }
 
 while (<>) {
-	chomp;
-	last if (/^EOF$/);
-	if ($_ =~ /^NAME: (.*)$/) {
-		my (@aliases) = split(/ /, $1);
-		$data = {};
-		$data->{'version'} = $version;
-		foreach (@aliases) {
-		    $all_names{$_} = $data;
-		}
+    chomp;
+    last if (/^EOF$/);
+    if ($_ =~ /^NAME: (.*)$/) {
+        my (@aliases) = split(/ /, $1);
+        $data = {};
+        $data->{'version'} = $version;
+        foreach (@aliases) {
+            $all_names{$_} = $data;
+        }
 
-		$name = shift @aliases;
+        $name = shift @aliases;
 
-		$option{$name} = $data;
-		$data->{'name'} = $name;
-		$data->{'aliases'} = \@aliases;
-		$data->{'default'} = "";
-		$data->{'default_doc'} = "";
-		$data->{'default_if_none'} = "";
+        $option{$name} = $data;
+        $data->{'name'} = $name;
+        $data->{'aliases'} = \@aliases;
+        $data->{'default'} = "";
+        $data->{'default_doc'} = "";
+        $data->{'default_if_none'} = "";
 
-		print "DEBUG: new option: $name\n" if $verbose;
-		next;
-	} elsif ($_ =~ /^COMMENT: (.*)$/) {
-		$data->{"comment"} = $1;
-	} elsif ($_ =~ /^TYPE: (.*)$/) {
-		$data->{"type"} = $1;
-		start_option($data->{"name"}, $data->{"type"});
-	} elsif ($_ =~ /^DEFAULT: (.*)$/) {
-		if ($1 eq "none") {
-		    $data->{"default"} = "$1\n";
-		} else {
-		    $data->{"default"} .= "$name $1\n";
-		}
-	} elsif ($_ =~ /^DEFAULT_DOC: (.*)$/) {
-		$data->{"default_doc"} .= "$1\n";
-	} elsif ($_ =~ /^DEFAULT_IF_NONE: (.*)$/) {
-		$data->{"default_if_none"} .= "$1\n";
-	} elsif ($_ =~ /^LOC:(.*)$/) {
-		$data->{"loc"} = $1;
-		$data->{"loc"} =~ s/^[\s\t]*//;
-	} elsif ($_ =~ /^DOC_START$/) {
-		update_defaults;
-		$state = "doc";
-	} elsif ($_ =~ /^DOC_END$/) {
-		$state = "";
-		my $othername;
-		foreach $othername (@chained) {
-		    $option{$othername}{'doc'} = $data->{'doc'};
-		}
-		undef @chained;
-	} elsif ($_ =~ /^DOC_NONE$/) {
-		update_defaults;
-		push(@chained, $name);
-	} elsif ($_ =~ /^NOCOMMENT_START$/) {
-		$state = "nocomment";
-	} elsif ($_ =~ /^NOCOMMENT_END$/) {
-		$state = "";
-	} elsif ($_ =~ /^IFDEF: (.*)$/) {
-		$data->{"ifdef"} = $1;
-	} elsif ($_ =~ /^#/ && $state eq "doc") {
-		$data->{"config"} .= $_ . "\n";
-	} elsif ($state eq "nocomment") {
-		$data->{"config"} .= $_ . "\n";
-	} elsif ($state eq "doc") {
-		$data->{"doc"} .= $_ . "\n";
-	} elsif ($_ =~ /^COMMENT_START$/) {
-		end_options;
-		$state = "comment";
-		$comment = "";
-	} elsif ($_ =~ /^COMMENT_END$/) {
-		section_heading($comment);
-	} elsif ($state eq "comment") {
-		$comment .= $_ . "\n";
-	} elsif (/^#/) {
-		next;
-	} elsif ($_ ne "") {
-		print "NOTICE: unknown line '$_'\n";
-	}
+        print "DEBUG: new option: $name\n" if $verbose;
+        next;
+    } elsif ($_ =~ /^COMMENT: (.*)$/) {
+        $data->{"comment"} = $1;
+    } elsif ($_ =~ /^TYPE: (.*)$/) {
+        $data->{"type"} = $1;
+        start_option($data->{"name"}, $data->{"type"});
+    } elsif ($_ =~ /^DEFAULT: (.*)$/) {
+        if ($1 eq "none") {
+            $data->{"default"} = "$1\n";
+        } else {
+            $data->{"default"} .= "$name $1\n";
+        }
+    } elsif ($_ =~ /^DEFAULT_DOC: (.*)$/) {
+        $data->{"default_doc"} .= "$1\n";
+    } elsif ($_ =~ /^DEFAULT_IF_NONE: (.*)$/) {
+        $data->{"default_if_none"} .= "$1\n";
+    } elsif ($_ =~ /^LOC:(.*)$/) {
+        $data->{"loc"} = $1;
+        $data->{"loc"} =~ s/^[\s\t]*//;
+    } elsif ($_ =~ /^DOC_START$/) {
+        update_defaults;
+        $state = "doc";
+    } elsif ($_ =~ /^DOC_END$/) {
+        $state = "";
+        my $othername;
+        foreach $othername (@chained) {
+            $option{$othername}{'doc'} = $data->{'doc'};
+        }
+        undef @chained;
+    } elsif ($_ =~ /^DOC_NONE$/) {
+        update_defaults;
+        push(@chained, $name);
+    } elsif ($_ =~ /^NOCOMMENT_START$/) {
+        $state = "nocomment";
+    } elsif ($_ =~ /^NOCOMMENT_END$/) {
+        $state = "";
+    } elsif ($_ =~ /^IFDEF: (.*)$/) {
+        $data->{"ifdef"} = $1;
+    } elsif ($_ =~ /^#/ && $state eq "doc") {
+        $data->{"config"} .= $_ . "\n";
+    } elsif ($state eq "nocomment") {
+        $data->{"config"} .= $_ . "\n";
+    } elsif ($state eq "doc") {
+        $data->{"doc"} .= $_ . "\n";
+    } elsif ($_ =~ /^COMMENT_START$/) {
+        end_options;
+        $state = "comment";
+        $comment = "";
+    } elsif ($_ =~ /^COMMENT_END$/) {
+        section_heading($comment);
+    } elsif ($state eq "comment") {
+        $comment .= $_ . "\n";
+    } elsif (/^#/) {
+        next;
+    } elsif ($_ ne "") {
+        print "NOTICE: unknown line '$_'\n";
+    }
 }
 end_options;
 print $index "<p><a href=\"index_all.html\">Alphabetic index</a></p>\n" if $format eq "splithtml";
@@ -334,8 +334,8 @@ print $index "<hr />\n" if $format eq "singlehtml";
 # and now, build the option pages
 my (@names) = keys %option;
 foreach $name (@names) {
-	next if $option{$name}->{'type'} eq "obsolete";
-	generate_page("${top}/${pagetemplate}", $option{$name});
+    next if $option{$name}->{'type'} eq "obsolete";
+    generate_page("${top}/${pagetemplate}", $option{$name});
 }
 
 # and now, the alphabetic index file!
@@ -363,7 +363,7 @@ if ($format eq "splithtml") {
         <div id="logo">
             <h1><a href="http://www.squid-cache.org/"><span>Squid-</span>Cache.org</a></h1>
             <h2>Optimising Web Delivery</h2>
-	</div>
+    </div>
     </div>
 
   <p>| <a href="index.html">Table of contents</a> |</p>
@@ -379,9 +379,9 @@ EOF
 print $fh "<ul>\n";
 
 foreach $name (sort keys %all_names) {
-	my ($data) = $all_names{$name};
-	next if $data->{'type'} eq "obsolete";
-	print $fh '    <li><a href="' . uriescape($data->{'name'}) . '.html" name="toc_' . htmlescape($name) . '">' . htmlescape($name) . "</a></li>\n";
+    my ($data) = $all_names{$name};
+    next if $data->{'type'} eq "obsolete";
+    print $fh '    <li><a href="' . uriescape($data->{'name'}) . '.html" name="toc_' . htmlescape($name) . '">' . htmlescape($name) . "</a></li>\n";
 }
 
 print $fh "</ul>\n";
