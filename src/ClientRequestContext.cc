@@ -26,7 +26,12 @@
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
-ClientRequestContext::~ClientRequestContext()
+static void
+clientRedirectDoneWrapper(void *data, const Helper::Reply &result);
+static void
+clientStoreIdDoneWrapper(void *data, const Helper::Reply &result);
+
+    ClientRequestContext::~ClientRequestContext()
 {
     /*
      * Release our "lock" on our parent, ClientHttpRequest, if we
@@ -491,7 +496,7 @@ ClientRequestContext::clientRedirectStart()
         redirectStart(http, clientRedirectDoneWrapper, this);
 }
 
-void
+static void
 clientStoreIdDoneWrapper(void *data, const Helper::Reply &result)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *)data;
@@ -502,7 +507,7 @@ clientStoreIdDoneWrapper(void *data, const Helper::Reply &result)
     calloutContext->clientStoreIdDone(result);
 }
 
-void
+static void
 clientRedirectDoneWrapper(void *data, const Helper::Reply &result)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *)data;
