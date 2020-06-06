@@ -10,12 +10,7 @@
 #define SQUID_CONFIG_H
 
 #include "autoconf.h"       /* For GNU autoconf variables */
-
-#if !defined(HAVE_SQUID)
-/* sub-packages define their own version details */
 #include "version.h"
-
-#endif
 
 /* default values for listen ports. Usually specified in squid.conf really */
 #define CACHE_HTTP_PORT 3128
