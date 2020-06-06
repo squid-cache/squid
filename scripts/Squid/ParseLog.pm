@@ -25,26 +25,26 @@ use strict;
 package Squid::ParseLog;
 
 sub parse($) {
-	my ($line) = @_;
-	my (%t);
-	chomp $line;
+    my ($line) = @_;
+    my (%t);
+    chomp $line;
 
-	$line =~ m/^(.*?) (\d+?) (.*?) (.*?)\/(\d+?) (\d+?) (.*?) (.*?) (.*?) (.*?)\/(.*?) (.*)$/;
+    $line =~ m/^(.*?) (\d+?) (.*?) (.*?)\/(\d+?) (\d+?) (.*?) (.*?) (.*?) (.*?)\/(.*?) (.*)$/;
 
-	$t{"timestamp"} = $1;
-	$t{"reqtime"} = $2;
-	$t{"clientip"} = $3;
-	$t{"code"} = $4;
-	$t{"httpcode"} = $5;
-	$t{"size"} = $6;
-	$t{"method"} = $7;
-	$t{"url"} = $8;
-	$t{"username"} = $9;
-	$t{"fwdcode"} = $10;
-	$t{"fwdip"} = $11;
-	$t{"mime"} = $12;
+    $t{"timestamp"} = $1;
+    $t{"reqtime"} = $2;
+    $t{"clientip"} = $3;
+    $t{"code"} = $4;
+    $t{"httpcode"} = $5;
+    $t{"size"} = $6;
+    $t{"method"} = $7;
+    $t{"url"} = $8;
+    $t{"username"} = $9;
+    $t{"fwdcode"} = $10;
+    $t{"fwdip"} = $11;
+    $t{"mime"} = $12;
 
-	return \%t;
+    return \%t;
 }
 
 1;

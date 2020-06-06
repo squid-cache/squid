@@ -116,7 +116,7 @@ while (<>) {
         my @responseErrors = ();
 
         while($readlen < $bodylen) {
-	    my $t = <>;
+            my $t = <>;
             if (defined $t) {
                 $body  = $body . $t;
                 $readlen = length($body);

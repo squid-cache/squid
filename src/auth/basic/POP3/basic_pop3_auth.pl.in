@@ -98,15 +98,15 @@ while(<>) {
 
     my $pop = Net::POP3->new($server);
     if (!$pop) {
-	print "ERR Server not responding\n";
-	next;
+        print "ERR Server not responding\n";
+        next;
     }
 
     # Here apop could be used instead for MD5 support
     if ($pop->login($username, $password)) {
-	print "OK\n";
+        print "OK\n";
     } else {
-	print "ERR\n";
+        print "ERR\n";
     }
     $pop->quit;
     undef $pop;
