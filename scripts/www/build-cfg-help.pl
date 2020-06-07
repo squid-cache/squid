@@ -51,7 +51,7 @@ use File::Basename;
 # XXX a configuration index entry for each, linking back to the one entry.
 # XXX I'll probably just choose the first entry in the list.
 
-# 
+#
 # This code is ugly, but meh. We'll keep reading, line by line, and appending
 # lines into 'state' variables until the next NAME comes up. We'll then
 # shuffle everything off to a function to generate the page.

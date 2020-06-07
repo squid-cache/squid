@@ -10,15 +10,15 @@
 #
 # This is a simple module which takes in a Squid format logfile line and breaks it up into
 # a perl hash.
-# 
+#
 # I'm not going to pretend this is 100% accurate just yet but its a start.
 # I'm hoping that by placing it into the public domain it (and the other stuff
 # I sneak in here) will be debugged and improved by others.
-# 
+#
 # Adrian Chadd <adrian@squid-cache.org>
-# 
+#
 # $Id: ParseLog.pm,v 1.1 2007/01/24 06:50:35 adrian Exp $
-# 
+#
 
 use strict;
 

@@ -63,7 +63,7 @@ Condition, defaults to enabled=1. Specify 1 or "" for no condition
 
 =item B<--persist>
 
-Keep a persistent database connection open between queries. 
+Keep a persistent database connection open between queries.
 
 =item B<--debug>
 

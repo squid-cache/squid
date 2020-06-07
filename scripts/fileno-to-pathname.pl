@@ -7,7 +7,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# Convert hexadecimal cache file numbers (from swap log) into full pathnames.  
+# Convert hexadecimal cache file numbers (from swap log) into full pathnames.
 # Duane Wessels 6/30/97
 
 # 2001-12-18 Adapted for squid-2.x Alain Thivillon <at@rominet.net>

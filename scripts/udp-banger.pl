@@ -7,7 +7,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# udp-banger.pl 
+# udp-banger.pl
 #
 # Duane Wessels, Dec 1995
 #

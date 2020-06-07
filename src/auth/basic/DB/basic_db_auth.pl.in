@@ -73,11 +73,11 @@ Selects the correct salt to evaluate passwords
 
 =item B<--persist>
 
-Keep a persistent database connection open between queries. 
+Keep a persistent database connection open between queries.
 
 =item B<--joomla>
 
-Tells helper that user database is Joomla DB.  So their unusual salt 
+Tells helper that user database is Joomla DB.  So their unusual salt
 hashing is understood.
 
 =back

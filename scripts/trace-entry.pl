@@ -14,7 +14,7 @@
 #
 # Currently, the script reads and remembers many irrelevant lines because it
 # does not know which one should be tracked in advance.
-# 
+#
 
 use strict;
 use warnings;

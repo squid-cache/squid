@@ -148,7 +148,7 @@ while (<>) {
         # Echo back the errors: fill the responseErrors array  with the errors we read.
         foreach my $err (keys %errors) {
             $haserror = 1;
-            appendError (\@responseErrors, 
+            appendError (\@responseErrors,
                          $errors{$err}{"name"}, #The error name
                          "Checked by Cert Validator", # An error reason
                          $errors{$err}{"cert"} # The cert ID. We are always filling with the peer certificate.

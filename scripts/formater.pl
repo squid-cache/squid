@@ -68,10 +68,10 @@ while($out){
     }
     $in=$new_in;
     rename($out, $in);
-    
+
     local (*FROM_ASTYLE, *TO_ASTYLE);
     my $pid_style=open2(\*FROM_ASTYLE, \*TO_ASTYLE, $ASTYLE_BIN);
-    
+
     if(!$pid_style){
         print "An error while running $ASTYLE_BIN\n";
         exit -1;
@@ -81,7 +81,7 @@ while($out){
     if($pid=fork()){
         #do parent staf
         close(FROM_ASTYLE);
-        
+
         if(!open(IN, "<$in")){
             print "Can not open input file: $in\n";
             exit -1;
@@ -196,7 +196,7 @@ sub output_filter{
     if($$line =~ s/\s*\/\/__ASTYLECOMMENT__//) {
         chomp($$line);
     }
-    
+
    # "The "unsigned int:1; case ....."
    $$line =~ s/__FORASTYLE__/:/;
 

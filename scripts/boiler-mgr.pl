@@ -10,7 +10,7 @@
 # Adds or adjusts the source file boilerplate, such as a Copyright statement.
 # The boilerplate is meant to remain constant from one source file to another.
 #
-# The old boilerplate is assumed to be the first /* comment */ in a source 
+# The old boilerplate is assumed to be the first /* comment */ in a source
 # file, before the first #include statement other than #include "squid.h".
 # Common old boilerplates are removed, with copyright-related claims contained
 # in them logged on stdout for recording in CONTRIBUTORS or some such.
@@ -61,7 +61,7 @@ my $reClaims = qr{
          Based.upon.original.+code.by\s*\n|  # or this common pearl
          Modified\sby\s|               # or this
          BASED\sON:\s                  # or this
-        )        
+        )
         .*?                             # and the claim content itself
     )$
 }xmi;
@@ -96,7 +96,7 @@ my $reClaimsOkToMove = qr{
 my $reInspiration = qr/^[\s*]*(inspired by previous work.*?)$/mi;
 
 # The most common GPL text, with some address variations.
-my $strGpl = 
+my $strGpl =
     "This program is free software; you can redistribute it and/or modify".
     "([^*]|[*][^/])+". # not a /* comment */ closure
     "Foundation, Inc., [^\\n]+MA\\s+[-\\d]+, USA\\.";
@@ -194,7 +194,7 @@ warn($c) if $c =~ /\S/;
                 $ReportedClaims{$claim} = $fname;
             }
         }
-        
+
         if ($preserveClaims) {
             die("Internal error: $copyClaims") unless length($copyClaims);
             my $prefix = " * Portions of this code are copyrighted and released under GPLv2+ by:";

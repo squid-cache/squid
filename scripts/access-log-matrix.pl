@@ -8,9 +8,9 @@
 ##
 #
 # access-log-matrix.pl
-# 
+#
 # Duane Wessels, Dec 1995
-# 
+#
 # Stdin is a Harvest access log (in the old, non-common logfile format!).
 # The output is a matrix of hostnames and log entry types, plus totals.
 
@@ -20,14 +20,14 @@ while (<>) {
     $when = $F[0];
     $first = $when unless ($first);
     $last = $when;
-    
+
     $what = pop @F;
     $size = pop @F;
     $host = pop @F;
 
     $HOSTS{$host}++;
     $HOSTS{'TOTAL'}++;
-    
+
     if ($what eq 'TCP_DONE') {
         $TCP_DONE{$host}++;
         $TCP_DONE{'TOTAL'}++;

@@ -7,7 +7,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# icp-test.pl 
+# icp-test.pl
 #
 # Duane Wessels, Nov 1996
 #

@@ -8,7 +8,7 @@
 ##
 
 # Reads cache.log and displays lines that correspond to a given async job.
-# 
+#
 # If job entering/exiting line format changes, the script must be updated.
 # Keep the old RE around for a while because they may be handy for working
 # with folks running older Squids.
@@ -38,7 +38,7 @@ while (<>) {
     }
 
     my $external = !$inside && /\b$XactId\b/o;
-    
+
     print $_ if $inside || $external;
     print "\n" if $external;
 

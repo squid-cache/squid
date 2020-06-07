@@ -7,7 +7,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# check_cache.pl 
+# check_cache.pl
 #
 # Squid-1.0 version by martin hamilton <m.t.hamilton@lut.ac.uk>
 # Squid-1.1 version by Bertold Kolics <bertold@tohotom.vein.hu>

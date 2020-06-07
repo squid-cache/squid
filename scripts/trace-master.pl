@@ -20,7 +20,7 @@
 # Currently, the script reads and remembers all master transactions because it
 # does not know which one should be tracked in advance. Eventually, we may
 # have a more efficient way of tying master transaction to a job.
-# 
+#
 
 
 use strict;
@@ -42,7 +42,7 @@ while (<STDIN>) {
         &enterJob($inside);
         &updateJob($inside, $entering) if defined $entering;
         undef $entering;
-    } 
+    }
     elsif (!$inside && /\b(?:async|job|icapx)(\d+)\b/o) {
         updateJob($1, "$_\n"); # isolated line
     }
@@ -54,7 +54,7 @@ while (<STDIN>) {
     if (/AsyncJob constructed.*\[\S+?(\d+)\]/) {
         &linkJobs($inside, $1, $_);
     }
-    
+
     if (/[|:] leaving\b/) {
         $inside = 0;
     }
@@ -90,7 +90,7 @@ sub linkJobs {
 
     my $parent = $Jobs{$parentId} or die("missing linked job $parentId");
     push @{$parent->{kids}}, $kidId;
-    
+
     my $kid = &getJob($kidId);
     die("two parents for $kidId: ". $kid->{parent}. " and $parentId") if $kid->{parent};
     $kid->{parent} = $parentId;

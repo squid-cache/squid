@@ -17,7 +17,7 @@
 # user's credentials, it just takes the client's domain and username
 # at face value.
 # It's included mostly for demonstration purposes.
-# 
+#
 # TODO: use command-line arguments
 
 #use MIME::Base64;

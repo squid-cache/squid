@@ -17,7 +17,7 @@ require "getopts.pl";
 open (ACCESS, "/opt/Squid/logs/useragent.0");
 
 while (<ACCESS>) {
-    ($host, $timestamp, $agent) = 
+    ($host, $timestamp, $agent) =
     /^(\S+) \[(.+)\] \"(.+)\"\s/;
     if ($agent ne '-') {
         if ($opt_M) {

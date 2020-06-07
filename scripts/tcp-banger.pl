@@ -7,7 +7,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# tcp-banger.pl    
+# tcp-banger.pl
 #
 # Duane Wessels, Dec 1995
 #

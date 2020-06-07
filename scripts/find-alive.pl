@@ -94,7 +94,7 @@ while (<STDIN>) {
         #die($_) if $Alive{$id};
         $AliveImage{$id} = $_;
         ++$Count unless $AliveCount{$id}++;
-    } 
+    }
     elsif (my @deIds = (/$reDestructor/)) {
         my $id = join(':', @deIds);
         if ($AliveCount{$id}) {

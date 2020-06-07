@@ -123,7 +123,7 @@ URL: while (<STDIN>) {
     foreach my $rule (@rules) {
         if (my @match = /$rule->[0]/) {
             $_ = $rule->[1];
-            
+
             for (my $i=1; $i<=scalar(@match); $i++) {
                 s/\$$i/$match[$i-1]/g;
             }
