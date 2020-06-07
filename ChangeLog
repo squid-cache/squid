@@ -1,3 +1,17 @@
+Changes to squid-4.12 (05 Jun 2020):
+
+	- Regression Fix: Revert to slow search for new SMP shm pages
+	- Bug 5045: ext_edirectory_userip_acl is missing include files
+	- Bug 5041: Missing Debug::Extra breaks build on hosts with systemd
+	- Bug 5030: Negative responses are never cached
+	- HTTP: validate Content-Length value prefix
+	- HTTP: add flexible RFC 3986 URI encoder
+	- SslBump: disable OpenSSL TLSv1.3 support for older TLS traffic
+	- Tests: Support passing a custom config.cache to test builds
+	- Fix IPFilter IPv6 detection, especially on NetBSD
+	- Fix stall if transaction overwrites a recently active cache entry
+	- ... and some compile fixes
+
 Changes to squid-4.11 (18 Apr 2020):
 
 	- Bug 5036: capital 'L's in logs when daemon queue overflows
