@@ -2391,7 +2391,7 @@ AC_ARG_ENABLE(leakfinder,
   AS_HELP_STRING([--enable-leakfinder],
     [Enable Leak Finding code. Enabling this alone does nothing;
      you also have to modify the source code to use the leak
-     finding functions. Probably Useful for hackers only.]), [
+     finding functions. Probably Useful for hackers only.]), [ 
   SQUID_YESNO([$enableval],
      [unrecognized argument to --enable-leakfinder: $enableval])
 ])
