@@ -1,7 +1,6 @@
 .vscode
 btlayer-*
 Makefile.in
-**/Makefile.in
 configure
 SPONSORS
 aclocal.m4
