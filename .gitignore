@@ -1,5 +1,4 @@
 .vscode
-.bzr
 btlayer-*
 Makefile.in
 **/Makefile.in
