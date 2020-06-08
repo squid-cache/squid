@@ -31,7 +31,7 @@ sub try_http_11 {
 	local($path) = undef;
 
 	$source = $1 if ($url =~ /^[^:]+:\/\/([^:\/]+)/);
-	
+
 	die "socket: $!\n" unless
                 socket (SOCK, &AF_INET, &SOCK_STREAM, $proto);
     die "bind: $!\n" unless

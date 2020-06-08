@@ -10,8 +10,8 @@
 #
 # Author: Tsantilas Christos
 # (C) 2011 The Measurement Factory
-# 
-# Usage: 
+#
+# Usage:
 #     mk-error-details-po.pl error-details.txt
 #
 # This script read the error-details.txt error details template, and prints to the
@@ -32,7 +32,7 @@ use strict;
 my $File;
 my $mode;
 
-$File = shift @ARGV or 
+$File = shift @ARGV or
     die "Usage: \n ".$0." error-detail-file\n\n";
 
 open(IN, "<$File") or
@@ -98,7 +98,7 @@ sub processRecord
     }
 
     my (%poRecDetail, %poRecDescr);
-    
+
     $poRecDetail{"comment"} = "#: $File+".$currentRec{"name"}.".detail:$lnumber\n";
     $poRecDetail{"msgid"} = $currentRec{"detail"};
     merge(\@$RECS, \%poRecDetail);

@@ -20,7 +20,7 @@ require "stat.pl";
 # -d -> turn on debugging output
 
 # pass filenames on command line or via STDIN
-@things = $#ARGV >= 0 ? @ARGV : <STDIN>; 
+@things = $#ARGV >= 0 ? @ARGV : <STDIN>;
 
 $total_objects = 0, $content_length = 0;
 
@@ -50,7 +50,7 @@ foreach $thing (@things) {
       print STDERR ">> skipping $_\n" if $opt_d;
       next;
     }
-    
+
     if (/^Content-length:\s+(\d+)/i) {
       $expected = $1;
       $content_length++;

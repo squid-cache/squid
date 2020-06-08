@@ -11,7 +11,7 @@
 #
 # This tool helps to sort the #include directives in a c or c++ source file
 # according to the Squid Coding guidelines.
-# 
+#
 # The output of the tool is a source file where each block of consecutive
 # include directives for project-specific files (#include "header.h")
 # is sorted with this specification: squid.h (if present) is always first,

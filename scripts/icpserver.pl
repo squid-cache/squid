@@ -14,7 +14,7 @@
 # by looking at CERN or Netscape style cache directory $cachedir
 #
 # martin hamilton <m.t.hamilton@lut.ac.uk>
-#  Id: icpserver,v 1.11 1995/11/24 16:20:13 martin Exp martin 
+#  Id: icpserver,v 1.11 1995/11/24 16:20:13 martin Exp martin
 
 # usage: icpserver [-c cachedir] [-n] [-p port] [multicast_group]
 #
@@ -33,7 +33,7 @@ require "getopts.pl";
 $CACHEDIR=$opt_c||"/usr/local/www/cache";
 $PORT=$opt_p||3130;
 $SERVER=$ARGV[0]||"0.0.0.0";
-$SERVERIP= ($SERVER =~ m!\d+.\d+.\d+.\d+!) ? 
+$SERVERIP= ($SERVER =~ m!\d+.\d+.\d+.\d+!) ?
   pack("C4", split(/\./, $SERVER)) : (gethostbyname($SERVER))[4]; # lazy!
 
 $SOCKADDR = 'S n a4 x8';
@@ -52,7 +52,7 @@ if ($SERVER ne "0.0.0.0") { # i.e. multicast
   $whoami =~ /OSF1/ && ($IP_MULTICAST_TTL=12);
   # any more funnies ?
 
-  setsockopt(S, 0, $IP_ADD_MEMBERSHIP, $SERVERIP."\0\0\0\0") 
+  setsockopt(S, 0, $IP_ADD_MEMBERSHIP, $SERVERIP."\0\0\0\0")
     || die "Couldn't join multicast group $SERVER: $!";
 }
 
@@ -78,7 +78,7 @@ while(1) {
 
   $URL_length = length($ICP_request) - 24;
   $request_template = 'CCnx4x8x4a4a' . $URL_length;
-  ($type, $version, $length, $requester, $URL) = 
+  ($type, $version, $length, $requester, $URL) =
     unpack($request_template, $ICP_request);
 
   $URL =~ s/\.\.\///g; # be cautious - any others to watch out for ?
@@ -108,11 +108,11 @@ while(1) {
       $hitmisserr = 2 if -f "$CACHEDIR/$scheme/$hostport/$path";
     }
   }
-  
+
   print "$type $hitmisserr ", join(".", @theirip), " $URL\n" if $opt_v;
 
   $response_template = 'CCnx4x8x4A' . length($URL);
-  $ICP_response = 
+  $ICP_response =
     pack($response_template, $hitmisserr, 2, 20 + length($URL), $URL);
   send(S, $ICP_response, 0, $theiraddr) || die "Couldn't send request: $!";
 }

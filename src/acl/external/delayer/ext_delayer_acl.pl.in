@@ -147,7 +147,7 @@ $delay /= 1000.0; # transform msec into sec
 if ($logfilename) {
   open ($logfile,">>", "$opts{l}");
   $debug=1;
-} 
+}
 
 my @p=split(/[\\\/]/,$0);
 my $prg_basename=pop @p;
