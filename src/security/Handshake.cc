@@ -96,8 +96,8 @@ public:
     /// after peeking or spliced after staring (subject to other restrictions)
     bool supported() const;
 
-    /// Whether this extension is a GREASEd extension (RFC8701)
-    bool isGREASEd() const {return !((type & 0x0F0F) ^ 0x0A0A); }
+    /// whether this extension is a GREASEd extension (RFC 8701)
+    bool greased() const {return !((type & 0x0F0F) ^ 0x0A0A); }
 
     Type type;
     SBuf data;
@@ -110,7 +110,7 @@ static Extensions SupportedExtensions();
 } // namespace Security
 
 /// parse TLS ProtocolVersion (uint16) and convert it to AnyP::ProtocolVersion
-/// param beStrict if true throws on non supported TLS protocols.
+/// \param beStrict whether to throw on unsupported TLS protocols
 static AnyP::ProtocolVersion
 ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, bool beStrict)
 {
@@ -133,16 +133,14 @@ ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, 
     return AnyP::ProtocolVersion(AnyP::PROTO_TLS, (vMajor - 2), vMinor);
 }
 
-/// parse TLS ProtocolVersion and convert it to AnyP::ProtocolVersion
-/// Throws on non-supported TLS version
+/// parse a framing-related TLS ProtocolVersion
 static AnyP::ProtocolVersion
 ParseProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel = ".version")
 {
     return ParseProtocolVersionBase(tk, contextLabel, true);
 }
 
-/// parse TLS ProtocolVersion and convert it to AnyP::ProtocolVersion
-/// Throws on non valid TLS versions
+/// parse a framing-unrelated TLS ProtocolVersion
 static AnyP::ProtocolVersion
 ParseOptionalProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel = ".version")
 {
@@ -445,10 +443,11 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
             details->unsupportedExtensions = true;
         }
 
+        // TODO: Move these extra checks to the default switch case.
         if (messageSource == fromServer)
-            Must(!extension.isGREASEd()); // RFC8701 Section 3.1
-        else if (extension.isGREASEd()) // RFC8701 Section 3.2
-            debugs(83, 2, "GREASEd extension: " << extension.type);
+            Must(!extension.greased()); // RFC 8701 Section 3.1
+        else if (extension.greased()) // RFC 8701 Section 3.2
+            debugs(83, 7, "GREASEd extension: " << extension.type);
 
         switch(extension.type) {
         case 0: // The SNI extension; RFC 6066, Section 3
@@ -462,8 +461,8 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
             break;
         case 16: { // Application-Layer Protocol Negotiation Extension, RFC 7301
             Parser::BinaryTokenizer tkAPN(extension.data);
-            // We are storing the protocol list as received in wire-format
-            // It may include GREASEd values.
+            // Store the entire protocol list, including any unsupported and
+            // GREASEd values. We have to use it when peeking at the server.
             details->tlsAppLayerProtoNeg = tkAPN.pstring16("APN");
             break;
         }
@@ -519,8 +518,8 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
     details->tlsSupportedVersion = ParseProtocolVersion(tk);
     tk.skip(HelloRandomSize, ".random");
     details->sessionId = tk.pstring8(".session_id");
-    const uint16_t cipherSuite = tk.uint16(".cipher_suite");
-    Must(!TlsCipherGREASEd(cipherSuite)); // RFC8701 Section 3.1
+    const auto cipherSuite = tk.uint16(".cipher_suite");
+    Must(!GreasedTlsCipher(cipherSuite)); // RFC 8701 Section 3.1
     details->ciphers.insert(cipherSuite);
     details->compressionSupported = tk.uint8(".compression_method") != 0; // not null
     if (!tk.atEnd()) // extensions present
@@ -590,13 +589,11 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
         while (!tkVersions.atEnd()) {
             const auto version = ParseOptionalProtocolVersion(tkVersions, "supported_version");
-            if (TlsVersionGREASEd(version)) {
-                // RFC 8701 Section 3.2 says:
-                // "When processing a ClientHello, servers MUST NOT treat
-                // GREASE values differently from any unknown value."
-                // However we have to ignore GREASEd versions here, where
-                // we are accounting and logging unknown versions.
-                debugs(83, 2, "Ignore GREASEd TLS supported version: " << version);
+            if (GreasedTlsVersion(version)) {
+                // RFC 8701 Section 3.2 says that "When processing a
+                // ClientHello, servers MUST NOT treat GREASE values differently
+                // from any unknown value" but we violate that MUST (XXX).
+                debugs(83, 7, "ignoring GREASEd TLS supported version: " << version);
                 continue;
             }
             if (!supportedVersionMax || TlsVersionEarlierThan(supportedVersionMax, version))

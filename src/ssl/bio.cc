@@ -715,10 +715,8 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
                     strCiphers.append(":");
                 strCiphers.append(SSL_CIPHER_get_name(c));
             } else {
-                // RFC8701 3.2:
-                // "When processing a ClientHello, servers MUST NOT treat
-                // GREASE values differently from any unknown value."
-                debugs(83, 2, "Ignore " << (Security::TlsCipherGREASEd(cipherId) ? "GREASEd" : "unsupported") <<  " cipher: " << cipherId);
+                debugs(83, 7, "ignoring " << (Security::GreasedTlsCipher(cipherId) ? "GREASEd" : "unsupported") <<
+                       " cipher: " << cipherId);
             }
         }
         if (!strCiphers.isEmpty())
@@ -744,7 +742,7 @@ applyTlsDetailsToSSL(SSL *ssl, Security::TlsDetails::Pointer const &details, Ssl
 #if defined(TLSEXT_TYPE_application_layer_protocol_negotiation)
     if (!details->tlsAppLayerProtoNeg.isEmpty()) {
         if (bumpMode == Ssl::bumpPeek) {
-            // it may include GREASEd protocol values in list
+            // the list may include GREASEd and unsupported protocol values
             SSL_set_alpn_protos(ssl, (const unsigned char*)details->tlsAppLayerProtoNeg.rawContent(), details->tlsAppLayerProtoNeg.length());
         } else {
             static const unsigned char supported_protos[] = {8, 'h','t','t', 'p', '/', '1', '.', '1'};

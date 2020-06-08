@@ -165,17 +165,20 @@ Tls1p3orLater(const AnyP::ProtocolVersion &p)
     return !Tls1p2orEarlier(p);
 }
 
-/// Whether the given TLS version is a GREASEd version (RFC8701)
+// XXX: These should not be exported because nobody but the low-level parser
+// should treat GREASEd values specially.
+
+/// Whether the given TLS version is a GREASEd version (RFC 8701)
 inline bool
-TlsVersionGREASEd(const AnyP::ProtocolVersion &p)
+GreasedTlsVersion(const AnyP::ProtocolVersion &p)
 {
     Must(TlsFamilyProtocol(p));
     return !(((p.major + 2) & 0x0F) ^ 0x0A) && !((p.minor & 0x0F) ^ 0x0A);
 }
 
-/// Whether the given cipher is a GREASEd cipher (RFC8701)
+/// Whether the given cipher is a GREASEd cipher (RFC 8701)
 inline bool
-TlsCipherGREASEd(uint16_t cipher)
+GreasedTlsCipher(uint16_t cipher)
 {
     return !((cipher & 0x0F0F) ^ 0x0A0A);
 }
