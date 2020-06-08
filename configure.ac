@@ -2386,21 +2386,6 @@ else
   fi
 fi
 
-dnl Enable Leak Finding Functions
-AC_ARG_ENABLE(leakfinder,
-  AS_HELP_STRING([--enable-leakfinder],
-    [Enable Leak Finding code. Enabling this alone does nothing;
-     you also have to modify the source code to use the leak
-     finding functions. Probably Useful for hackers only.]), [ 
-  SQUID_YESNO([$enableval],
-     [unrecognized argument to --enable-leakfinder: $enableval])
-])
-AC_MSG_NOTICE([Leak Finder enabled: ${enable_leakfinder:=no}])
-SQUID_DEFINE_BOOL(USE_LEAKFINDER,$enable_leakfinder,
-  [Enable code for assisting in finding memory leaks. Not for the faint of heart])
-AM_CONDITIONAL(ENABLE_LEAKFINDER, [test "x$enable_leakfinder" = "xyes"])
-
-
 AC_ARG_ENABLE(follow-x-forwarded-for,
   AS_HELP_STRING([--enable-follow-x-forwarded-for],
                  [Enable support for following the X-Forwarded-For

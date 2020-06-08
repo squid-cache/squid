@@ -2092,7 +2092,6 @@ PREDEFINED             = __cplusplus \
                          USE_IDENT \
                          USE_IPV6 \
                          USE_KQUEUE \
-                         USE_LEAKFINDER \
                          USE_LIBCAP \
                          USE_LOADABLE_MODULES \
                          USE_MIT_KRB5 \
