@@ -80,7 +80,7 @@ my $reClaimsOkToMove = qr{
 
     Duane.Wessels|
 
-    Francesco.Chemolli|<kinkie\@squid-cache.org>|
+    Francesco.Chemolli|<kinkie\@squid-cache.org>|<kinkie\@kame.usr.dsi.unimi.it>|
 
     Amos.Jeffries|<amosjeffries\@squid-cache.org>|<squid3\@treenet.co.nz>|
     Treehouse.Networks.Ltd.|
