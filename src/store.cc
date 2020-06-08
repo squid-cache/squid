@@ -1510,8 +1510,11 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
     // update reply before calling timestampsSet() below
     const auto &oldReply = mem_obj->freshestReply();
     const auto updatedReply = oldReply.recreateOnNotModified(e304.mem_obj->baseReply());
-    if (updatedReply) // HTTP 304 brought in new information
+    if (updatedReply) { // HTTP 304 brought in new information
+        if (updatedReply->header.tooLarge())
+            throw TextException("cannot update the header because the header length became too large", Here());
         mem_obj->updateReply(*updatedReply);
+    }
     // else continue to use the previous update, if any
 
     if (!timestampsSet() && !updatedReply)

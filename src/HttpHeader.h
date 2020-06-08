@@ -161,6 +161,7 @@ public:
     int hasByNameListMember(const char *name, const char *member, const char separator) const;
     void removeHopByHopEntries();
     inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
+    bool tooLarge() const; ///< whether the packed length exceeds the configured limit
 
     /* protected, do not use these, use interface functions instead */
     std::vector<HttpHeaderEntry*, PoolingAllocator<HttpHeaderEntry*> > entries; /**< parsed fields in raw format */
@@ -169,8 +170,6 @@ public:
     int len;            /**< length when packed, not counting terminating null-byte */
 
 protected:
-    static const size_t UnrestrictedSize = std::numeric_limits<size_t>::max();
-
     /** \deprecated Public access replaced by removeHopByHopEntries() */
     void removeConnectionHeaderEntries();
     /// either finds the end of headers or returns false
@@ -182,7 +181,6 @@ protected:
     static bool Isolate(const char **parse_start, size_t l, const char **blk_start, const char **blk_end);
     bool skipUpdateHeader(const Http::HdrType id) const;
     void updateWarnings();
-    size_t maxLen() const; ///< the maximum packed length allowed, zero means 'not restricted'
 
 private:
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;

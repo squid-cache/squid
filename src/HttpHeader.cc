@@ -748,17 +748,20 @@ HttpHeader::refreshMask()
     }
 }
 
-size_t
-HttpHeader::maxLen() const
+bool
+HttpHeader::tooLarge() const
 {
+    size_t max = 0;
     switch (owner) {
     case hoRequest:
-        return Config.maxRequestHeaderSize;
+        max = Config.maxRequestHeaderSize;
     case hoReply:
-        return Config.maxReplyHeaderSize;
+         max = Config.maxReplyHeaderSize;
     default:
-        return UnrestrictedSize;
+        return false;
     }
+    debugs(55, 3, "hdr: " << this << ", owner: " << owner << ", len: " << len << ", max: " << max);
+    return len >=0 && static_cast<size_t>(len) > max;
 }
 
 /* appends an entry;
@@ -772,16 +775,6 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
     assert(e->name.length());
 
     debugs(55, 7, this << " adding entry: " << e->id << " at " << entries.size());
-
-    // verify whether adding the entry will not exceed the maximum header size allowed
-    const auto max = maxLen();
-    if (max != UnrestrictedSize) {
-        const auto eLen = e->length();
-        if (len + eLen > max) {
-            throw TextException(ToSBuf("cannot add header entry ", e->id, " because the header length is becoming too large: ",
-                                       "hdr: ", this, " owner: ", owner, " len: ", len, "+", eLen, ">", max), Here());
-        }
-    }
 
     if (e->id != Http::HdrType::BAD_HDR) {
         if (CBIT_TEST(mask, e->id)) {
