@@ -538,7 +538,14 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
 
             assert(fetch->old_entry->mem_obj->request);
 
-            Store::Root().updateOnNotModified(fetch->old_entry, *fetch->entry);
+            try {
+                Store::Root().updateOnNotModified(fetch->old_entry, *fetch->entry);
+            } catch (...) {
+                static const char *reason = "error when updating entry";
+                debugs(20, DBG_IMPORTANT, reason << fetch->old_entry << ": " << CurrentException);
+                peerDigestFetchAbort(fetch, buf, reason);
+                return -1;
+            }
 
             /* get rid of 304 reply */
             storeUnregister(fetch->sc, fetch->entry, fetch);
