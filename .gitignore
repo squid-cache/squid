@@ -1,10 +1,11 @@
+# Sorted with: LC_ALL=C sort --stable --unique --output=.gitignore .gitignore
 .vscode
-btlayer-*
 Makefile.in
-configure
 SPONSORS
 aclocal.m4
 autom4te.cache
+btlayer-*
 cfgaux
+configure
 include/autoconf.h.in
 libltdl
