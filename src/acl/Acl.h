@@ -44,6 +44,7 @@ public:
     void *acl_data;
 };
 
+/// LRU cache used for User ACL match
 using ProxyAuthMatchCache =
     std::list < ProxyAuthMatchCacheEntry, PoolingAllocator<ProxyAuthMatchCacheEntry> >;
 
