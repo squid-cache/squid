@@ -97,7 +97,7 @@ public:
     bool supported() const;
 
     /// whether this extension is a GREASEd extension (RFC 8701)
-    bool greased() const {return !((type & 0x0F0F) ^ 0x0A0A); }
+    bool greased() const { return Greased(type); }
 
     Type type;
     SBuf data;
@@ -519,7 +519,7 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
     tk.skip(HelloRandomSize, ".random");
     details->sessionId = tk.pstring8(".session_id");
     const auto cipherSuite = tk.uint16(".cipher_suite");
-    Must(!GreasedTlsCipher(cipherSuite)); // RFC 8701 Section 3.1
+    Must(!Greased(cipherSuite)); // RFC 8701 Section 3.1
     details->ciphers.insert(cipherSuite);
     details->compressionSupported = tk.uint8(".compression_method") != 0; // not null
     if (!tk.atEnd()) // extensions present
@@ -589,7 +589,7 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
         while (!tkVersions.atEnd()) {
             const auto version = ParseOptionalProtocolVersion(tkVersions, "supported_version");
-            if (GreasedTlsVersion(version)) {
+            if (Greased(version)) {
                 // RFC 8701 Section 3.2 says that "When processing a
                 // ClientHello, servers MUST NOT treat GREASE values differently
                 // from any unknown value" but we violate that MUST (XXX).

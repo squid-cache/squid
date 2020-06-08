@@ -168,19 +168,36 @@ Tls1p3orLater(const AnyP::ProtocolVersion &p)
 // XXX: These should not be exported because nobody but the low-level parser
 // should treat GREASEd values specially.
 
-/// Whether the given TLS version is a GREASEd version (RFC 8701)
-inline bool
-GreasedTlsVersion(const AnyP::ProtocolVersion &p)
+/* RFC 8701: GREASEd value detection helpers */
+
+/// \returns nibble at the given index for a given 16-bit (i.e. 4-nibble) value
+/// nibble[0] has the right-most (i.e. least significant) bits
+constexpr uint16_t Nibble(const uint16_t v, const uint16_t index)
 {
-    Must(TlsFamilyProtocol(p));
-    return !(((p.major + 2) & 0x0F) ^ 0x0A) && !((p.minor & 0x0F) ^ 0x0A);
+    return (v >> (index*4)) & 0x000F;
 }
 
-/// Whether the given cipher is a GREASEd cipher (RFC 8701)
-inline bool
-GreasedTlsCipher(uint16_t cipher)
+/// whether the value is a GREASEd TLS 16-bit value (version, cipher, etc.)
+constexpr bool Greased(const uint16_t value)
 {
-    return !((cipher & 0x0F0F) ^ 0x0A0A);
+    return (value & 0x0F0F) == 0x0A0A && // nibble[0] and nibble[2] equal 0xA
+           Nibble(value, 1) == Nibble(value, 3); // nibble[1] equals nibble[3]
+}
+
+/// Prevent accidental Greased() calls with wrong integer types.
+template <class Prohibited>
+constexpr bool Greased(const Prohibited) = delete;
+
+/// whether the given TLS version is a GREASEd version
+inline bool
+Greased(const AnyP::ProtocolVersion &p)
+{
+    Must(TlsFamilyProtocol(p));
+    if (p.major > 0xFF - 2U || p.minor > 0xFF)
+        return false;
+    const auto rawMajor = p.major + 2U;
+    const auto rawVersion = (rawMajor << 8) | p.minor;
+    return Greased(static_cast<uint16_t>(rawVersion));
 }
 
 }
