@@ -170,18 +170,12 @@ Tls1p3orLater(const AnyP::ProtocolVersion &p)
 
 /* RFC 8701: GREASEd value detection helpers */
 
-/// \returns nibble at the given index for a given 16-bit (i.e. 4-nibble) value
-/// nibble[0] has the right-most (i.e. least significant) bits
-constexpr uint16_t Nibble(const uint16_t v, const uint16_t index)
-{
-    return (v >> (index*4)) & 0x000F;
-}
-
 /// whether the value is a GREASEd TLS 16-bit value (version, cipher, etc.)
-constexpr bool Greased(const uint16_t value)
+constexpr bool
+Greased(const uint16_t value)
 {
-    return (value & 0x0F0F) == 0x0A0A && // nibble[0] and nibble[2] equal 0xA
-           Nibble(value, 1) == Nibble(value, 3); // nibble[1] equals nibble[3]
+    // the last nibble is 0xA and the left byte is equal to the right one
+    return (value & 0xF) == 0xA && (value >> 8) == (value & 0xFF);
 }
 
 /// Prevent accidental Greased() calls with wrong integer types.
