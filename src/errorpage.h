@@ -91,9 +91,12 @@ class ErrorState
     CBDATA_CLASS(ErrorState);
 
 public:
+    // TODO: consolidate constructors onto a single one
     /// creates an error of type other than ERR_RELAY_REMOTE
     ErrorState(err_type type, Http::StatusCode, HttpRequest * request, const AccessLogEntryPointer &al);
-    ErrorState(err_type type, Http::StatusCode status, char const *url, Ip::Address &src_addr, HttpRequest *request, const AccessLogEntry::Pointer &al);
+    // TODO: AccessLogEntry should contain src_addr already, minimise arguments
+    // \deprecated
+    ErrorState(err_type type, Http::StatusCode status, char const *url, Ip::Address &src_addr, HttpRequest *request, const AccessLogEntryPointer &al);
     ErrorState() = delete; // not implemented.
 
     /// creates an ERR_RELAY_REMOTE error
