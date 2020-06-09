@@ -182,18 +182,6 @@ Greased(const uint16_t value)
 template <class Prohibited>
 constexpr bool Greased(const Prohibited) = delete;
 
-/// whether the given TLS version is a GREASEd version
-inline bool
-Greased(const AnyP::ProtocolVersion &p)
-{
-    Must(TlsFamilyProtocol(p));
-    if (p.major > 0xFF - 2U || p.minor > 0xFF)
-        return false;
-    const auto rawMajor = p.major + 2U;
-    const auto rawVersion = (rawMajor << 8) | p.minor;
-    return Greased(static_cast<uint16_t>(rawVersion));
-}
-
 }
 
 #endif // SQUID_SECURITY_HANDSHAKE_H
