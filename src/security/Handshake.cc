@@ -767,50 +767,8 @@ Security::SupportedExtensions()
 #if defined(TLSEXT_TYPE_heartbeat) // 15
     extensions.insert(TLSEXT_TYPE_heartbeat);
 #endif
-#if defined(TLSEXT_TYPE_application_layer_protocol_negotiation) // 16
-    extensions.insert(TLSEXT_TYPE_application_layer_protocol_negotiation);
-#endif
-#if defined(TLSEXT_TYPE_signed_certificate_timestamp) // 18
-    extensions.insert(TLSEXT_TYPE_signed_certificate_timestamp);
-#endif
-#if defined(TLSEXT_TYPE_padding) // 21
-    extensions.insert(TLSEXT_TYPE_padding);
-#endif
-#if defined(TLSEXT_TYPE_encrypt_then_mac) // 22
-    extensions.insert(TLSEXT_TYPE_encrypt_then_mac);
-#endif
-#if defined(TLSEXT_TYPE_extended_master_secret) // 23
-    extensions.insert(TLSEXT_TYPE_extended_master_secret);
-#endif
 #if defined(TLSEXT_TYPE_session_ticket) // 35
     extensions.insert(TLSEXT_TYPE_session_ticket);
-#endif
-    #if defined(TLSEXT_TYPE_psk) // 41
-    extensions.insert(TLSEXT_TYPE_psk);
-#endif
-#if defined(TLSEXT_TYPE_early_data) // 42
-    extensions.insert(TLSEXT_TYPE_early_data);
-#endif
-#if defined(TLSEXT_TYPE_supported_versions) // 43
-    extensions.insert(TLSEXT_TYPE_supported_versions);
-#endif
-#if defined(TLSEXT_TYPE_cookie) // 44
-    extensions.insert(TLSEXT_TYPE_cookie);
-#endif
-#if defined(TLSEXT_TYPE_psk_kex_modes) // 45
-    extensions.insert(TLSEXT_TYPE_psk_kex_modes);
-#endif
-#if defined(TLSEXT_TYPE_certificate_authorities) // 47
-    extensions.insert(TLSEXT_TYPE_certificate_authorities);
-#endif
-#if defined(TLSEXT_TYPE_post_handshake_auth) // 49
-    extensions.insert(TLSEXT_TYPE_post_handshake_auth);
-#endif
-#if defined(TLSEXT_TYPE_signature_algorithms_cert) // 50
-    extensions.insert(TLSEXT_TYPE_signature_algorithms_cert);
-#endif
-#if defined(TLSEXT_TYPE_key_share) // 51
-    extensions.insert(TLSEXT_TYPE_key_share);
 #endif
 #if defined(TLSEXT_TYPE_renegotiate) // 0xff01
     extensions.insert(TLSEXT_TYPE_renegotiate);
