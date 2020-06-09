@@ -9,6 +9,7 @@
 /* DEBUG: section 83    SSL-Bump Server/Peer negotiation */
 
 #include "squid.h"
+#include "sbuf/Stream.h"
 #include "security/Handshake.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -107,16 +108,15 @@ public:
 typedef std::unordered_set<Extension::Type> Extensions;
 static Extensions SupportedExtensions();
 
-} // namespace Security
-
 /// parse TLS ProtocolVersion (uint16) and convert it to AnyP::ProtocolVersion
-/// \param beStrict whether to throw on unsupported TLS protocols
+/// \retval PROTO_NONE for unsupported and GREASEd values (in relaxed mode)
 static AnyP::ProtocolVersion
-ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, bool beStrict)
+ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, const bool beStrict)
 {
     Parser::BinaryTokenizerContext context(tk, contextLabel);
     uint8_t vMajor = tk.uint8(".major");
     uint8_t vMinor = tk.uint8(".minor");
+
     if (vMajor == 0 && vMinor == 2)
         return AnyP::ProtocolVersion(AnyP::PROTO_SSL, 2, 0);
 
@@ -126,26 +126,32 @@ ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, 
         return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, (vMinor - 1));
     }
 
-    if (beStrict)
-        Must(vMajor == 3);
-
-    Must(vMajor >= 3);
-    return AnyP::ProtocolVersion(AnyP::PROTO_TLS, (vMajor - 2), vMinor);
+    const uint16_t vRaw = (vMajor << 8) | vMinor;
+    debugs(83, 7, (Greased(vRaw) ? "GREASEd: " : "unsupported: ") << asHex(vRaw));
+    if (beStrict) {
+        const auto adjective = Greased(vRaw) ? "GREASEd" : "unsupported";
+        throw TextException(ToSBuf(adjective, " version: ", asHex(vRaw)), Here());
+    }
+    return AnyP::ProtocolVersion();
 }
 
 /// parse a framing-related TLS ProtocolVersion
+/// \returns a supported SSL or TLS Anyp::ProtocolVersion, never PROTO_NONE
 static AnyP::ProtocolVersion
-ParseProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel = ".version")
+ParseProtocolVersion(Parser::BinaryTokenizer &tk)
 {
-    return ParseProtocolVersionBase(tk, contextLabel, true);
+    return ParseProtocolVersionBase(tk, ".version", true);
 }
 
 /// parse a framing-unrelated TLS ProtocolVersion
+/// \retval PROTO_NONE for unsupported and GREASEd values; caller must ignore them
 static AnyP::ProtocolVersion
-ParseOptionalProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel = ".version")
+ParseOptionalProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel)
 {
     return ParseProtocolVersionBase(tk, contextLabel, false);
 }
+
+} // namespace Security
 
 Security::TLSPlaintext::TLSPlaintext(Parser::BinaryTokenizer &tk)
 {
@@ -589,18 +595,14 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
         while (!tkVersions.atEnd()) {
             const auto version = ParseOptionalProtocolVersion(tkVersions, "supported_version");
-            if (Greased(version)) {
-                // RFC 8701 Section 3.2 says that "When processing a
-                // ClientHello, servers MUST NOT treat GREASE values differently
-                // from any unknown value" but we violate that MUST (XXX).
-                debugs(83, 7, "ignoring GREASEd TLS supported version: " << version);
+            // Ignore unsupported and GREASEd values.
+            if (!version)
                 continue;
-            }
             if (!supportedVersionMax || TlsVersionEarlierThan(supportedVersionMax, version))
                 supportedVersionMax = version;
         }
 
-        // ignore empty supported_versions
+        // ignore empty and ignored-values-only supported_versions
         if (!supportedVersionMax)
             return;
 
@@ -610,7 +612,10 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
     } else {
         assert(messageSource == fromServer);
         Parser::BinaryTokenizer tkVersion(extensionData);
-        const auto version = ParseProtocolVersion(tkVersion, "selected_version");
+        const auto version = ParseOptionalProtocolVersion(tkVersion, "selected_version");
+        // Ignore unsupported and GREASEd values.
+        if (!version)
+            return;
         // RFC 8446 Section 4.2.1:
         // A server which negotiates a version of TLS prior to TLS 1.3 [...]
         // MUST NOT send the "supported_versions" extension.
