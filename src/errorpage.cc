@@ -664,7 +664,7 @@ errorPageName(int pageId)
 }
 
 ErrorState *
-ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const AccessLogEntry::Pointer &ale)
+ErrorState::NewForwarding(err_type type, HttpRequestPointer &request, const AccessLogEntryPointer &ale)
 {
     const Http::StatusCode status = (request && request->flags.needValidation) ?
                                     Http::scGatewayTimeout : Http::scServiceUnavailable;

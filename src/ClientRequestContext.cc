@@ -9,20 +9,20 @@
 /* DEBUG: section 85    Client-side Request Routines */
 
 #include "squid.h"
-#include "ClientRequestContext.h"
-#include "SquidConfig.h"
 #include "acl/Checklist.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "cbdata.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
+#include "ClientRequestContext.h"
 #include "comm/forward.h"
 #include "errorpage.h"
 #include "fd.h"
 #include "helper/ResultCode.h"
 #include "http/Stream.h"
 #include "redirect.h"
+#include "SquidConfig.h"
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
@@ -31,7 +31,7 @@ clientRedirectDoneWrapper(void *data, const Helper::Reply &result);
 static void
 clientStoreIdDoneWrapper(void *data, const Helper::Reply &result);
 
-    ClientRequestContext::~ClientRequestContext()
+ClientRequestContext::~ClientRequestContext()
 {
     /*
      * Release our "lock" on our parent, ClientHttpRequest, if we
