@@ -125,11 +125,8 @@ ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, 
 
     const uint16_t vRaw = (vMajor << 8) | vMinor;
     debugs(83, 7, "unsupported: " << asHex(vRaw));
-    if (beStrict) {
-        const auto greased = vMajor == vMinor && (vMinor & 0xF) == 0xA;
-        const auto extra = greased ? "GREASE " : "";
-        throw TextException(ToSBuf("unsupported ", extra, "TLS version: ", asHex(vRaw)), Here());
-    }
+    if (beStrict)
+        throw TextException(ToSBuf("unsupported TLS version: ", asHex(vRaw)), Here());
     return AnyP::ProtocolVersion();
 }
 
