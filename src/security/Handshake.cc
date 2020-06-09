@@ -86,6 +86,18 @@ public:
 /// The size of the TLS Random structure from RFC 5246 Section 7.4.1.2.
 static const uint64_t HelloRandomSize = 32;
 
+/// whether the value is an RFC 8701 GREASEd 16-bit value (e.g., TLS version)
+constexpr bool
+Greased(const uint16_t value)
+{
+    // the last nibble is 0xA and the left byte is equal to the right byte
+    return (value & 0xF) == 0xA && (value >> 8) == (value & 0xFF);
+}
+
+/// prevents accidental Greased() calls with wrong integer types
+template <class Prohibited>
+constexpr bool Greased(const Prohibited) = delete;
+
 /// TLS Hello Extension from RFC 5246 Section 7.4.1.4.
 class Extension
 {
@@ -97,7 +109,7 @@ public:
     /// after peeking or spliced after staring (subject to other restrictions)
     bool supported() const;
 
-    /// whether this extension is a GREASEd extension (RFC 8701)
+    /// whether this extension is an RFC 8701 GREASEd extension
     bool greased() const { return Greased(type); }
 
     Type type;
@@ -493,7 +505,7 @@ Security::HandshakeParser::parseCiphers(const SBuf &raw)
     Parser::BinaryTokenizer tk(raw);
     while (!tk.atEnd()) {
         const uint16_t cipher = tk.uint16("cipher");
-        details->ciphers.insert(cipher);
+        details->ciphers.insert(cipher); // including unsupported/GREASEd
     }
 }
 
@@ -511,7 +523,7 @@ Security::HandshakeParser::parseV23Ciphers(const SBuf &raw)
         const uint8_t prefix = tk.uint8("prefix");
         const uint16_t cipher = tk.uint16("cipher");
         if (prefix == 0)
-            details->ciphers.insert(cipher);
+            details->ciphers.insert(cipher); // including unsupported/GREASEd
     }
 }
 
@@ -524,9 +536,8 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
     details->tlsSupportedVersion = ParseProtocolVersion(tk);
     tk.skip(HelloRandomSize, ".random");
     details->sessionId = tk.pstring8(".session_id");
-    const auto cipherSuite = tk.uint16(".cipher_suite");
-    Must(!Greased(cipherSuite)); // RFC 8701 Section 3.1
-    details->ciphers.insert(cipherSuite);
+    // when a server violates TLS, cipherSuite may be unsupported/GREASED
+    details->ciphers.insert(tk.uint16(".cipher_suite"));
     details->compressionSupported = tk.uint8(".compression_method") != 0; // not null
     if (!tk.atEnd()) // extensions present
         parseExtensions(tk.pstring16(".extensions"));

@@ -165,23 +165,6 @@ Tls1p3orLater(const AnyP::ProtocolVersion &p)
     return !Tls1p2orEarlier(p);
 }
 
-// XXX: These should not be exported because nobody but the low-level parser
-// should treat GREASEd values specially.
-
-/* RFC 8701: GREASEd value detection helpers */
-
-/// whether the value is a GREASEd TLS 16-bit value (version, cipher, etc.)
-constexpr bool
-Greased(const uint16_t value)
-{
-    // the last nibble is 0xA and the left byte is equal to the right one
-    return (value & 0xF) == 0xA && (value >> 8) == (value & 0xFF);
-}
-
-/// Prevent accidental Greased() calls with wrong integer types.
-template <class Prohibited>
-constexpr bool Greased(const Prohibited) = delete;
-
 }
 
 #endif // SQUID_SECURITY_HANDSHAKE_H
