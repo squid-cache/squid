@@ -106,7 +106,7 @@ typedef std::unordered_set<Extension::Type> Extensions;
 static Extensions SupportedExtensions();
 
 /// parse TLS ProtocolVersion (uint16) and convert it to AnyP::ProtocolVersion
-/// \retval PROTO_NONE for unsupported and GREASEd values (in relaxed mode)
+/// \retval PROTO_NONE for unsupported values (in relaxed mode)
 static AnyP::ProtocolVersion
 ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, const bool beStrict)
 {
@@ -127,7 +127,7 @@ ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, 
     debugs(83, 7, "unsupported: " << asHex(vRaw));
     if (beStrict) {
         const auto greased = vMajor == vMinor && (vMinor & 0xF) == 0xA;
-        const auto extra = greased ? "GREASEd " : "";
+        const auto extra = greased ? "GREASE " : "";
         throw TextException(ToSBuf("unsupported ", extra, "TLS version: ", asHex(vRaw)), Here());
     }
     return AnyP::ProtocolVersion();
@@ -142,7 +142,7 @@ ParseProtocolVersion(Parser::BinaryTokenizer &tk)
 }
 
 /// parse a framing-unrelated TLS ProtocolVersion
-/// \retval PROTO_NONE for unsupported and GREASEd values; caller must ignore them
+/// \retval PROTO_NONE for unsupported values
 static AnyP::ProtocolVersion
 ParseOptionalProtocolVersion(Parser::BinaryTokenizer &tk, const char *contextLabel)
 {
@@ -459,8 +459,8 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
             break;
         case 16: { // Application-Layer Protocol Negotiation Extension, RFC 7301
             Parser::BinaryTokenizer tkAPN(extension.data);
-            // Store the entire protocol list, including any unsupported and
-            // GREASEd values. We have to use it when peeking at the server.
+            // Store the entire protocol list, including unsupported-by-Squid
+            // values (if any). We have to use all when peeking at the server.
             details->tlsAppLayerProtoNeg = tkAPN.pstring16("APN");
             break;
         }
@@ -472,8 +472,8 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
             parseSupportedVersionsExtension(extension.data);
             break;
         default:
-            // when a server violates TLS, its extension may be unsupported/GREASED
-            // client unsupported/GREASED extensions do not violate TLS
+            // other extensions, including those that Squid does not support, do
+            // not require special handling here, but see unsupportedExtensions
             break;
         }
     }
@@ -486,7 +486,7 @@ Security::HandshakeParser::parseCiphers(const SBuf &raw)
     Parser::BinaryTokenizer tk(raw);
     while (!tk.atEnd()) {
         const uint16_t cipher = tk.uint16("cipher");
-        details->ciphers.insert(cipher); // including unsupported/GREASEd
+        details->ciphers.insert(cipher); // including Squid-unsupported ones
     }
 }
 
@@ -504,7 +504,7 @@ Security::HandshakeParser::parseV23Ciphers(const SBuf &raw)
         const uint8_t prefix = tk.uint8("prefix");
         const uint16_t cipher = tk.uint16("cipher");
         if (prefix == 0)
-            details->ciphers.insert(cipher); // including unsupported/GREASEd
+            details->ciphers.insert(cipher); // including Squid-unsupported ones
     }
 }
 
@@ -517,7 +517,7 @@ Security::HandshakeParser::parseServerHelloHandshakeMessage(const SBuf &raw)
     details->tlsSupportedVersion = ParseProtocolVersion(tk);
     tk.skip(HelloRandomSize, ".random");
     details->sessionId = tk.pstring8(".session_id");
-    // when a server violates TLS, cipherSuite may be unsupported/GREASED
+    // cipherSuite may be unsupported by a peeking Squid
     details->ciphers.insert(tk.uint16(".cipher_suite"));
     details->compressionSupported = tk.uint8(".compression_method") != 0; // not null
     if (!tk.atEnd()) // extensions present
@@ -587,7 +587,11 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
         while (!tkVersions.atEnd()) {
             const auto version = ParseOptionalProtocolVersion(tkVersions, "supported_version");
-            // Ignore unsupported and GREASEd values.
+            // Ignore values unsupported by Squid. Today, those are likely to be
+            // RFC 8701 GREASE values. Eventually, we may start seeing TLS v2+.
+            // By that time, we would probably add explicit TLS v2+ support or
+            // would not have to disable TLS v1.3 support in OpenSSL. In either
+            // case, we would continue ignoring all the unsupported values here.
             if (!version)
                 continue;
             if (!supportedVersionMax || TlsVersionEarlierThan(supportedVersionMax, version))
@@ -605,7 +609,8 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         assert(messageSource == fromServer);
         Parser::BinaryTokenizer tkVersion(extensionData);
         const auto version = ParseOptionalProtocolVersion(tkVersion, "selected_version");
-        // Ignore unsupported and GREASEd values.
+        // Ignore values unsupported by Squid. There should not be any until we
+        // start seeing TLS v2+, but they do not affect TLS framing anyway.
         if (!version)
             return;
         // RFC 8446 Section 4.2.1:
