@@ -109,9 +109,6 @@ public:
     /// after peeking or spliced after staring (subject to other restrictions)
     bool supported() const;
 
-    /// whether this extension is an RFC 8701 GREASEd extension
-    bool greased() const { return Greased(type); }
-
     Type type;
     SBuf data;
 };
@@ -461,12 +458,6 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
             details->unsupportedExtensions = true;
         }
 
-        // TODO: Move these extra checks to the default switch case.
-        if (messageSource == fromServer)
-            Must(!extension.greased()); // RFC 8701 Section 3.1
-        else if (extension.greased()) // RFC 8701 Section 3.2
-            debugs(83, 7, "GREASEd extension: " << extension.type);
-
         switch(extension.type) {
         case 0: // The SNI extension; RFC 6066, Section 3
             details->serverName = parseSniExtension(extension.data);
@@ -491,8 +482,9 @@ Security::HandshakeParser::parseExtensions(const SBuf &raw)
         case 43: // supported_versions extension; RFC 8446
             parseSupportedVersionsExtension(extension.data);
             break;
-        case 13172: // Next Protocol Negotiation Extension (expired draft?)
         default:
+            // when a server violates TLS, its extension may be unsupported/GREASED
+            // client unsupported/GREASED extensions do not violate TLS
             break;
         }
     }
