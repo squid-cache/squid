@@ -86,18 +86,6 @@ public:
 /// The size of the TLS Random structure from RFC 5246 Section 7.4.1.2.
 static const uint64_t HelloRandomSize = 32;
 
-/// whether the value is an RFC 8701 GREASEd 16-bit value (e.g., TLS version)
-constexpr bool
-Greased(const uint16_t value)
-{
-    // the last nibble is 0xA and the left byte is equal to the right byte
-    return (value & 0xF) == 0xA && (value >> 8) == (value & 0xFF);
-}
-
-/// prevents accidental Greased() calls with wrong integer types
-template <class Prohibited>
-constexpr bool Greased(const Prohibited) = delete;
-
 /// TLS Hello Extension from RFC 5246 Section 7.4.1.4.
 class Extension
 {
@@ -136,10 +124,11 @@ ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, 
     }
 
     const uint16_t vRaw = (vMajor << 8) | vMinor;
-    debugs(83, 7, (Greased(vRaw) ? "GREASEd: " : "unsupported: ") << asHex(vRaw));
+    debugs(83, 7, "unsupported: " << asHex(vRaw));
     if (beStrict) {
-        const auto adjective = Greased(vRaw) ? "GREASEd" : "unsupported";
-        throw TextException(ToSBuf(adjective, " version: ", asHex(vRaw)), Here());
+        const auto greased = vMajor == vMinor && (vMinor & 0xF) == 0xA;
+        const auto extra = greased ? "GREASEd " : "";
+        throw TextException(ToSBuf("unsupported ", extra, "TLS version: ", asHex(vRaw)), Here());
     }
     return AnyP::ProtocolVersion();
 }
