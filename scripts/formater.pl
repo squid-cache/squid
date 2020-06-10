@@ -43,8 +43,7 @@ while($out eq "" ||  $out =~ /^-\w+$/){
     if($out eq "-h") {
         usage($0);
         exit 0;
-    }
-    else {
+    } else {
         usage($0);
         exit -1;
     }
@@ -82,20 +81,20 @@ while($out){
         #do parent staf
         close(FROM_ASTYLE);
 
-        if(!open(IN, "<$in")){
+        if (!open(IN, "<$in")) {
             print "Can not open input file: $in\n";
             exit -1;
         }
-        my($line) = '';
-        while(<IN>){
+        my $line  = '';
+        while (<IN>) {
             $line=$line.$_;
-            if(input_filter(\$line)==0){
+            if (input_filter(\$line)==0) {
                 next;
             }
             print TO_ASTYLE $line;
             $line = '';
         }
-        if($line){
+        if ($line) {
             print TO_ASTYLE $line;
         }
         close(TO_ASTYLE);
@@ -136,28 +135,29 @@ sub input_filter{
         $$line =~/^int\s+.*/s || $$line=~ /^unsigned\s+.*/s
         ) {
         if( $$line =~ /(\(|,|\)|\#|typedef)/s ){
-    #excluding int/unsigned appeared inside function prototypes,typedefs etc....
+            # excluding int/unsigned appeared inside function prototypes,
+            # typedefs etc....
             return 1;
         }
 
         if(index($$line,";") == -1){
-#        print "Getting one more for \"".$$line."\"\n";
+            # print "Getting one more for \"".$$line."\"\n";
             return 0;
         }
 
         if($$line =~ /(.*)\s*int\s+([^:]*):\s*(\w+)\s*\;(.*)/s){
-#        print ">>>>> ".$$line."    ($1)\n";
+            # print ">>>>> ".$$line."    ($1)\n";
             my ($prx,$name,$val,$extra)=($1,$2,$3,$4);
             $prx =~ s/\s*$//g;
             $$line= $prx." int ".$name."__FORASTYLE__".$val.";".$extra;
-#        print "----->".$$line."\n";
+            # print "----->".$$line."\n";
         }
         elsif($$line =~ /\s*unsigned\s+([^:]*):\s*(\w+)\s*\;(.*)/s){
-#        print ">>>>> ".$$line."    ($1)\n";
+            # print ">>>>> ".$$line."    ($1)\n";
             my ($name,$val,$extra)=($1,$2,$3);
             my $prx =~ s/\s*$//g;
             $$line= "unsigned ".$name."__FORASTYLE__".$val.";".$extra;
-#        print "----->".$$line."\n";
+            # print "----->".$$line."\n";
         }
         return 1;
     }
