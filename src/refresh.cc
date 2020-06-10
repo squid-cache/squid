@@ -282,7 +282,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     if (check_time > entry->timestamp)
         age = check_time - entry->timestamp;
 
-    // FIXME: what to do when age < 0 or counter overflow?
+    // XXX: what to do when age < 0 or counter overflow?
     assert(age >= 0);
 
     /* We need a refresh rule. In order of preference:

@@ -45,7 +45,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
-#include <vector> //todo: turn into multimap
+#include <vector>
 #include <syslog.h>
 
 #include "auth/basic/SMB_LM/msntauth.h"

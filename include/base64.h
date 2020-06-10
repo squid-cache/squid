@@ -104,8 +104,8 @@ base64_encode_final(struct base64_encode_ctx *ctx,
 
 /* Encodes a string in one go, including any padding at the end.
  * Generates exactly BASE64_ENCODE_RAW_LENGTH(length) bytes of output.
- * Supports overlapped operation, if src <= dst. FIXME: Use of overlap
- * is deprecated, if needed there should be a separate public fucntion
+ * Supports overlapped operation, if src <= dst.
+ * TODO: Use of overlap is deprecated, if needed there should be a separate public function
  * to do that.*/
 void
 base64_encode_raw(char *dst, size_t length, const uint8_t *src);

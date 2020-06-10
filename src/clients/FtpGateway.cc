@@ -1928,7 +1928,7 @@ Ftp::Gateway::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         data.listenConn->close();
         data.listenConn = NULL;
         debugs(9, DBG_IMPORTANT, "FTP AcceptDataConnection: " << io.conn << ": " << xstrerr(io.xerrno));
-        /** \todo Need to send error message on control channel*/
+        // TODO: need to send error message on control channel
         ftpFail(this);
         return;
     }
@@ -2680,7 +2680,7 @@ Ftp::Gateway::writeReplyBody(const char *dataToWrite, size_t dataLength)
 /**
  * A hack to ensure we do not double-complete on the forward entry.
  *
- \todo Ftp::Gateway logic should probably be rewritten to avoid
+ * TODO: Ftp::Gateway logic should probably be rewritten to avoid
  *  double-completion or FwdState should be rewritten to allow it.
  */
 void

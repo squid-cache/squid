@@ -391,7 +391,7 @@ HttpHdrRange::canonize (int64_t newClen)
     merge (goods);
     debugs(64, 3, "HttpHdrRange::canonize: finished with " << specs.size() <<
            " specs");
-    return specs.size() > 0; // fixme, should return bool
+    return specs.size() > 0; // TODO: should return bool
 }
 
 /* hack: returns true if range specs are too "complex" for Squid to handle */

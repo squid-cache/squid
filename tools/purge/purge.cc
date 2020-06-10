@@ -463,7 +463,7 @@ match( const char* fn, const REList* list )
 
             // "meta" will be deleted when exiting from this block
         } else {
-            // weird file, FIXME: stat() it!
+            // weird file, TODO: stat() it!
             struct stat st;
             long size = ( fstat(fd,&st) == -1 ? -1 : st.st_size );
             if ( ::verbose ) flag = ( log_extended( fn, -1, size, 0 ) >= 0 );

@@ -18,7 +18,7 @@
  ****************************************************************************/
 
 /*
-*  FIXME: the os2 port of bash seems to have problems checking
+*  XXX: the os2 port of bash seems to have problems checking
 *  the return codes of programs in if statements.  These options
 *  need to be overridden.
 */

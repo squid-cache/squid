@@ -805,7 +805,7 @@ ESIVariableProcessor::~ESIVariableProcessor()
     delete currentFunction;
 }
 
-/* XXX FIXME: this should be comma delimited, no? */
+/* XXX: this should be comma delimited, no? */
 void
 ESIVarState::buildVary (HttpReply *rep)
 {

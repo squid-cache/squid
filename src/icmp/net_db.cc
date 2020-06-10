@@ -786,7 +786,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
             case NETDB_EX_NETWORK:
                 ++o;
-                /* FIXME INET6 : NetDB can still ony send IPv4 */
+                // XXX: NetDB can still only send IPv4
                 memcpy(&line_addr, p + o, sizeof(struct in_addr));
                 addr = line_addr;
                 o += sizeof(struct in_addr);
@@ -1211,7 +1211,7 @@ netdbBinaryExchange(StoreEntry * s)
         if (! (addr = n->network) )
             continue;
 
-        /* FIXME INET6 : NetDB cannot yet handle IPv6 addresses. Ensure only IPv4 get sent. */
+        // XXX: NetDB cannot yet handle IPv6 addresses
         if ( !addr.isIPv4() )
             continue;
 

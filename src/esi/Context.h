@@ -128,8 +128,8 @@ public:
     private:
         bool inited_;
     }
+    parserState; // TODO: refactor this to somewhere else
 
-    parserState; /* todo factor this off somewhere else; */
     ESIVarState *varState;
     ESIElement::Pointer tree;
 

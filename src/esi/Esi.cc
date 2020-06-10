@@ -802,7 +802,7 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
     }
 
     /* ok.. no data sent, try to pull more data in from upstream.
-     * FIXME: Don't try thisNode if we have finished reading the template
+     * TODO: Don't try thisNode if we have finished reading the template
      */
     if (!context->flags.finishedtemplate && !context->reading()
             && !context->cachedASTInUse) {
@@ -1263,7 +1263,7 @@ ESIContext::parse()
             while (buffered.getRaw() && !flags.error)
                 parseOneBuffer();
 
-        } catch (Esi::ErrorDetail &errMsg) { // FIXME: non-const for c_str()
+        } catch (Esi::ErrorDetail &errMsg) { // XXX: non-const for c_str()
             // level-2: these are protocol/syntax errors from upstream
             debugs(86, 2, "WARNING: ESI syntax error: " << errMsg);
             setError();
