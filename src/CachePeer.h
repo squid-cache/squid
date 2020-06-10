@@ -172,7 +172,7 @@ public:
     } sourcehash;
 
     char *login = nullptr;        /* Proxy authorization */
-    time_t connect_timeout_raw = 0; ///< connect_timeout; use onnectTimeout() instead!
+    time_t connect_timeout_raw = 0; ///< connect_timeout; use connectTimeout() instead!
     int connect_fail_limit = 0;
     int max_conn = 0;
 
@@ -196,4 +196,3 @@ public:
 };
 
 #endif /* SQUID_CACHEPEER_H_ */
-
