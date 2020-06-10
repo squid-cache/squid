@@ -49,7 +49,7 @@ $|=1;
     "UDP_DENIED",
     "UDP_HIT_OBJ",
     "ICP_END"
-);
+    );
 
 require 'sys/socket.ph';
 

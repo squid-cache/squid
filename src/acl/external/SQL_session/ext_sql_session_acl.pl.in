@@ -162,10 +162,10 @@ sub open_db()
         return undef;
     }
     $_sth = $_dbh->prepare("SELECT $db_usercol as 'user', $db_tagcol as 'tag' FROM $db_table WHERE ($db_uidcol = ?) " .
-        ($db_cond ne "" ? " AND $db_cond" : "")) || die;
+            ($db_cond ne "" ? " AND $db_cond" : "")) || die;
 
     print(stderr "Query: SELECT $db_usercol as 'user', $db_tagcol as 'tag' FROM $db_table WHERE ($db_uidcol = ?) " .
-        ($db_cond ne "" ? " AND $db_cond" : "")) if ($debug);
+            ($db_cond ne "" ? " AND $db_cond" : "")) if ($debug);
 
     return $_sth;
 }

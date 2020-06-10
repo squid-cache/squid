@@ -29,55 +29,55 @@ my %Pairs = (
     AsyncCall => [
         'AsyncCall.* constructed, this=(\S+)',
         'AsyncCall.* destruct.*, this=(\S+)',
-    ],
+        ],
     HttpHeaderEntry => [
         '\bHttpHeaderEntry.* created HttpHeaderEntry (\S+)',
         '\bHttpHeaderEntry.* destroying entry (\S+)',
-    ],
+        ],
     ClientSocketContext => [
         '\bClientSocketContext constructing, this=(\S+)',
         '\bClientSocketContext destructed, this=(\S+)',
-    ],
+        ],
     ICAP => [
         '(?:ICAP|Icap).* constructed, this=(\S+)',
         '(?:ICAP|Icap).* destruct.*, this=(\S+)',
-    ],
+        ],
     IcapModXact => [
         'Adaptation::Icap::ModXact.* constructed, this=(\S+)',
         'Adaptation::Icap::ModXact.* destruct.*, this=(\S+)',
-    ],
+        ],
     ICAPClientReqmodPrecache => [
         'ICAPClientReqmodPrecache constructed, this=(\S+)',
         'ICAPClientReqmodPrecache destruct.*, this=(\S+)',
-    ],
+        ],
     HttpStateData => [
         'HttpStateData (\S+) created',
         'HttpStateData (\S+) destroyed',
-    ],
+        ],
     cbdata => [
         'cbdataInternalAlloc: Allocating (\S+)',
         'cbdataRealFree: Freeing (\S+)',
-    ],
+        ],
     FD => [
         'fd_open.*\sFD (\d+)',
         'fd_close\s+FD (\d+)',
-    ],
+        ],
     IpcStoreMapEntry => [
         'StoreMap.* opened .*entry (\d+) for \S+ (\S+)',
         'StoreMap.* closed .*entry (\d+) for \S+ (\S+)',
-    ],
+        ],
     sh_page => [
         'PageStack.* pop: (sh_page\S+) at',
         'PageStack.* push: (sh_page\S+) at',
-    ],
-);
+        ],
+    );
 
 if (!$Pairs{$Thing}) {
     warn("guessing construction/destruction pattern for $Thing\n");
     $Pairs{$Thing} = [
         "\\b$Thing construct.*, this=(\\S+)",
         "\\b$Thing destruct.*, this=(\\S+)",
-    ];
+        ];
 }
 
 die("unsupported Thing, stopped") unless $Pairs{$Thing};

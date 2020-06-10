@@ -81,7 +81,7 @@ while (<STDIN>) {
 
     &leaveBlock() if
         (/[|:] leaving\b/ && !/Port::noteRead/) ||
-            (/Port::noteRead/ && /handled/);
+        (/Port::noteRead/ && /handled/);
 }
 
 
@@ -170,7 +170,7 @@ sub linkEntries {
 sub mergeAllLinkedEntries {
     my ($entry) = @_;
 
-    #warn(sprintf("merging %d <-- * %s\n", $entry->{id}, $entry->{merged} ? "skipped" : ""));
+#warn(sprintf("merging %d <-- * %s\n", $entry->{id}, $entry->{merged} ? "skipped" : ""));
 
     return 0 if $entry->{merged};
     $entry->{merged} = 1;
@@ -220,7 +220,7 @@ sub getEntry {
         parts => {},
         history => '',
         reported => 0,
-    };
+        };
 
     $entry->{parts}->{$part} = {};
     $EntriesByPartId{$part}->{$id} = $entry;

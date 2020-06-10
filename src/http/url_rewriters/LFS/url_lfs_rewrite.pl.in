@@ -137,7 +137,7 @@ GetOptions(
     'to-scheme=s' => \$redirect_scheme,
     'to-host=s' => \$redirect_host,
     'to-path=s' => \$redirect_path,
-);
+    );
 
 # flush after every print
 $| = 1;

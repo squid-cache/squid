@@ -33,19 +33,19 @@ my $CF = $opt_c || '/usr/local/squid/etc/squid.conf';
 my $ncache_dirs = 0;
 
 while (<CF>) {
-   # Squid 2.3 ===>
-   # cache_dir ufs path size L1 L2
-   if (/^cache_dir\s+(\S+)\s+(\S+)\s+\d+\s+(\S+)\s+(\S+)/i) {
-     $CD[$ncache_dirs] = $2;
-     $L1[$ncache_dirs] = $3;
-     $L2[$ncache_dirs++] = $4;
-   }
+    # Squid 2.3 ===>
+    # cache_dir ufs path size L1 L2
+    if (/^cache_dir\s+(\S+)\s+(\S+)\s+\d+\s+(\S+)\s+(\S+)/i) {
+        $CD[$ncache_dirs] = $2;
+        $L1[$ncache_dirs] = $3;
+        $L2[$ncache_dirs++] = $4;
+    }
 }
 close(CF);
 
 if ($ncache_dirs == 0) {
-  print STDERR "No proper cache_dir line found\n";
-  exit 2;
+    print STDERR "No proper cache_dir line found\n";
+    exit 2;
 }
 
 while (<>) {
@@ -56,8 +56,8 @@ while (<>) {
 sub storeSwapFullPath {
     my($fn) = @_;
 
-        my $dirn = ($fn >> $SWAP_DIR_SHIFT) % $ncache_dirs;
-        my $filn = $fn & $SWAP_FILE_MASK;
+    my $dirn = ($fn >> $SWAP_DIR_SHIFT) % $ncache_dirs;
+    my $filn = $fn & $SWAP_FILE_MASK;
 
     sprintf "%s/%02X/%02X/%08X",
         $CD[$dirn],

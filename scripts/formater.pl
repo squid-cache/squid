@@ -40,23 +40,23 @@ my $INDENT = "";
 my $out = shift @ARGV;
 #read options, currently no options available
 while($out eq "" ||  $out =~ /^-\w+$/){
-   if($out eq "-h") {
+    if($out eq "-h") {
         usage($0);
         exit 0;
-   }
-   else {
-       usage($0);
-       exit -1;
-   }
+    }
+    else {
+        usage($0);
+        exit -1;
+    }
 }
 
 
 while($out){
 
     if( $out !~ /\.cc$|\.cci$|\.h$|\.c$/) {
-         print "Unknown suffix for file $out, ignoring....\n";
-         $out = shift @ARGV;
-         next;
+        print "Unknown suffix for file $out, ignoring....\n";
+        $out = shift @ARGV;
+        next;
     }
 
     my $in= "$out.astylebak";
@@ -90,7 +90,7 @@ while($out){
         while(<IN>){
             $line=$line.$_;
             if(input_filter(\$line)==0){
-            next;
+                next;
             }
             print TO_ASTYLE $line;
             $line = '';
@@ -102,7 +102,7 @@ while($out){
         waitpid($pid,0);
     }
     else{
-    # child staf
+        # child staf
         close(TO_ASTYLE);
 
         if(!open(OUT,">$out")){
@@ -113,7 +113,7 @@ while($out){
         while(<FROM_ASTYLE>){
             $line = $line.$_;
             if(output_filter(\$line)==0){
-            next;
+                next;
             }
             print OUT $line;
             $line = '';
@@ -130,13 +130,13 @@ while($out){
 
 sub input_filter{
     my($line)=@_;
-     #if we have integer declaration, get it all before processing it..
+    #if we have integer declaration, get it all before processing it..
 
     if($$line =~/\s+int\s+.*/s || $$line=~ /\s+unsigned\s+.*/s ||
-       $$line =~/^int\s+.*/s || $$line=~ /^unsigned\s+.*/s
-       ) {
+        $$line =~/^int\s+.*/s || $$line=~ /^unsigned\s+.*/s
+        ) {
         if( $$line =~ /(\(|,|\)|\#|typedef)/s ){
-            #excluding int/unsigned appeared inside function prototypes,typedefs etc....
+    #excluding int/unsigned appeared inside function prototypes,typedefs etc....
             return 1;
         }
 
@@ -163,9 +163,9 @@ sub input_filter{
     }
 
     if($$line =~ /\#endif/ ||
-       $$line =~ /\#else/ ||
-       $$line =~ /\#if/
-       ) {
+        $$line =~ /\#else/ ||
+        $$line =~ /\#if/
+        ) {
         $$line =$$line."//__ASTYLECOMMENT__\n";
         return 1;
     }
@@ -197,10 +197,10 @@ sub output_filter{
         chomp($$line);
     }
 
-   # "The "unsigned int:1; case ....."
-   $$line =~ s/__FORASTYLE__/:/;
+    # "The "unsigned int:1; case ....."
+    $$line =~ s/__FORASTYLE__/:/;
 
-   return 1;
+    return 1;
 }
 
 sub usage{

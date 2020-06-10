@@ -28,7 +28,7 @@ my %opcodes = (
     MON => 2,
     SET => 3,
     CLR => 4,
-);
+    );
 
 print "sending $op $url to $server\n";
 
@@ -41,8 +41,8 @@ my $auth = auth();
 my $htcp = packet($data, $auth);
 
 my $sock = IO::Socket::INET->new(PeerAddr => $server,
-        PeerPort => 4827,
-        Proto => 'udp');
+    PeerPort => 4827,
+    Proto => 'udp');
 
 die "$server: $!" unless $sock;
 

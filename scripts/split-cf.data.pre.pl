@@ -52,7 +52,7 @@ my $top = dirname($0);
 GetOptions(
     'verbose' => \$verbose, 'v' => \$verbose,
     'out=s' => \$path,
-);
+    );
 
 sub filename($)
 {

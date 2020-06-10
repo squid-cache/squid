@@ -37,11 +37,11 @@ while (<>) {
     chop ($url = $_);
 
     die "socket: $!\n" unless
-            socket (SOCK, &AF_INET, &SOCK_STREAM, $proto);
+        socket (SOCK, &AF_INET, &SOCK_STREAM, $proto);
     die "bind: $!\n" unless
-            bind (SOCK, $thissock);
+        bind (SOCK, $thissock);
     die "$host:$port: $!\n" unless
-    connect (SOCK, $that);
+        connect (SOCK, $that);
     select (SOCK); $| = 1;
     select (STDOUT);
 

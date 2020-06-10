@@ -78,7 +78,7 @@ GetOptions(
     'out=s' => \$path,
     'version=s' => \$version,
     'format=s' => \$format
-);
+    );
 
 if ($format eq "splithtml") {
     $pagetemplate = "template.html";
@@ -201,7 +201,7 @@ print $index <<EOF
 </head>
 <body>
 EOF
-;
+    ;
 
 
 my ($name, $data);
@@ -212,8 +212,8 @@ sub start_option($$)
 {
     my ($name, $type) = @_;
     if (!$in_options) {
-    print $index "<ul>\n";
-    $in_options = 1;
+        print $index "<ul>\n";
+        $in_options = 1;
     }
     return if $type eq "obsolete";
     print $index '    <li><a href="' . htmlescape(section_link($name)) . '" name="toc_' . htmlescape($name) . '">' . htmlescape($name) . "</a></li>\n";
@@ -370,7 +370,7 @@ if ($format eq "splithtml") {
 
   <h1>Alphabetic index of all options</h1>
 EOF
-;
+        ;
 } elsif ($format eq "singlehtml") {
     $fh = $index;
     print $fh "<h2><a name=\"index\">Alphabetic index of all options</a></h2>\n";
@@ -386,13 +386,13 @@ foreach $name (sort keys %all_names) {
 
 print $fh "</ul>\n";
 if ($fh_open) {
-print $fh <<EOF
+    print $fh <<EOF
   <p>| <a href="index.html">Table of contents</a> |</p>
   </body>
 </html>
 EOF
-;
-$fh->close;
+        ;
+    $fh->close;
 }
 undef $fh;
 
@@ -400,6 +400,6 @@ print $index <<EOF
   </body>
 </html>
 EOF
-;
+    ;
 $index->close;
 undef $index;

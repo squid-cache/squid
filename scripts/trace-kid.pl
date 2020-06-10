@@ -22,7 +22,7 @@ my $IncludeMentions = 0; # include other kid references to the targeted kid
 GetOptions(
     "prefix!"  => \$IncludePrefix,
     "mentions!"  => \$IncludeMentions,
-) or die(usage());
+    ) or die(usage());
 
 my $Kid = shift or die(usage());
 die("$0: error: expecting an integer kid ID but got $Kid\n")

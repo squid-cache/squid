@@ -26,30 +26,30 @@ use warnings;
 my %Seen = (); # preprocessor #include lines, indexed by file name
 
 while (<>) {
-  if (/^\s*#\s*include\s*"(.+?)"/) {
-    my $fname = $1;
-    # skip repeated file names that have identical #include lines
-    if (defined $Seen{$fname}) {
-      next if $Seen{$fname} eq $_;
-      warn("$ARGV:$.: Warning: inconsistent $fname #include lines:\n");
-      warn("    $Seen{$fname}");
-      warn("    $_");
-      # fall through to preserve every unique #include line
+    if (/^\s*#\s*include\s*"(.+?)"/) {
+        my $fname = $1;
+        # skip repeated file names that have identical #include lines
+        if (defined $Seen{$fname}) {
+            next if $Seen{$fname} eq $_;
+            warn("$ARGV:$.: Warning: inconsistent $fname #include lines:\n");
+            warn("    $Seen{$fname}");
+            warn("    $_");
+            # fall through to preserve every unique #include line
+        }
+        $Seen{$fname} = $_;
+    } else {
+        &dumpSeen();
+        print;
     }
-    $Seen{$fname} = $_;
-  } else {
-    &dumpSeen();
-    print;
-  }
 }
 &dumpSeen();
 
 sub dumpSeen {
-  my $alwaysFirst = 'squid.h';
-  if (defined $Seen{$alwaysFirst}) {
-    print $Seen{$alwaysFirst};
-    delete $Seen{$alwaysFirst};
-  }
-  print sort { lc($a) cmp lc($b) } values %Seen;
-  %Seen = ();
+    my $alwaysFirst = 'squid.h';
+    if (defined $Seen{$alwaysFirst}) {
+        print $Seen{$alwaysFirst};
+        delete $Seen{$alwaysFirst};
+    }
+    print sort { lc($a) cmp lc($b) } values %Seen;
+    %Seen = ();
 }

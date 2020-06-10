@@ -55,7 +55,7 @@ while(my $line = <IN>) {
         $rec = $rec.$line;
         $line = <IN>;
         $lineOffset++;
-    } while($line && $line !~ /^\s*$/);
+        } while($line && $line !~ /^\s*$/);
 
     processRecord(\@PO_RECORDS, $rec, $lineNumber);
     $lineNumber= $lineNumber + $lineOffset;

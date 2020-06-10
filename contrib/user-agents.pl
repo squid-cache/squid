@@ -18,7 +18,7 @@ open (ACCESS, "/opt/Squid/logs/useragent.0");
 
 while (<ACCESS>) {
     ($host, $timestamp, $agent) =
-    /^(\S+) \[(.+)\] \"(.+)\"\s/;
+        /^(\S+) \[(.+)\] \"(.+)\"\s/;
     if ($agent ne '-') {
         if ($opt_M) {
             $agent =~ tr/\// /;
@@ -39,7 +39,7 @@ if (!$opt_L) {$opt_L=0}
 print "Summary of User-Agent Strings\n(greater than $opt_L percent)\n\n";
 
 foreach $browser (keys(%seen)) {
-        $total=$total+$seen{$browser};
+    $total=$total+$seen{$browser};
 }
 
 foreach $browser (sort keys(%seen)) {

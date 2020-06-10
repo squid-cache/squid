@@ -127,7 +127,7 @@ foreach my $fname (@FileNames) {
     my $virginCode = $code;
 
     &WarnQuiet("Correct boilerplate already present, skipping:", $code), next if
-            $code =~ /\Q$CorrectBoiler\E/s;
+        $code =~ /\Q$CorrectBoiler\E/s;
 
     my $boiler;
 
@@ -185,7 +185,7 @@ foreach my $fname (@FileNames) {
 
                     # But if one claim is preserved, all must be preserved.
                     $preserveClaims = 1 if $c =~ /\S/;
-warn($c) if $c =~ /\S/;
+                    warn($c) if $c =~ /\S/;
                 }
 
                 next if exists $ReportedClaims{$claim};

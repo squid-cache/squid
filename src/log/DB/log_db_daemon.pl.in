@@ -331,8 +331,8 @@ my $log_file = shift;
 # others may be options
 my $debug = 0;
 GetOptions(
-        'debug' => \$debug,
-        );
+    'debug' => \$debug,
+    );
 
 
 # utility routine to print messages on stderr (so they appear in cache log)
@@ -389,7 +389,7 @@ my @db_fields = qw(
     squid_hier_status
     ip_server
     http_mime_type
-);
+    );
 
 # perform db connection
 my $dsn = "DBI:mysql:database=$database" . ($host ne "localhost" ? ":$host" : "");
@@ -398,7 +398,7 @@ my $sth;
 eval {
     warn "Connecting... dsn='$dsn', username='$user', password='...'";
     $dbh = DBI->connect($dsn, $user, $pass, { AutoCommit => 1, RaiseError => 1, PrintError => 1 });
-};
+    };
 if ($EVAL_ERROR) {
     die "Cannot connect to database: $DBI::errstr";
 }
@@ -409,24 +409,24 @@ eval {
     my $q = 'SELECT ' . join(',',@db_fields) . " FROM $table LIMIT 1";
     my $sth = $dbh->prepare($q);
     $sth->execute;
-};
+    };
 if ($EVAL_ERROR) {
     # run a query to create the table of required syntax
     my $create_query = 'CREATE TABLE ' . $table . ' (' .
-    " id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY," .
-    " time_since_epoch     DECIMAL(15,3)," .
-    " time_response        INTEGER," .
-    " ip_client            CHAR(15)," .
-    " ip_server            CHAR(15)," .
-    " http_status_code     VARCHAR(10)," .
-    " http_reply_size      INTEGER," .
-    " http_method          VARCHAR(20)," .
-    " http_url             TEXT," .
-    " http_username        VARCHAR(20)," .
-    " http_mime_type       VARCHAR(50)," .
-    " squid_request_status VARCHAR(50)," .
-    " squid_hier_status    VARCHAR(20)" .
-    ");" ;
+        " id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY," .
+        " time_since_epoch     DECIMAL(15,3)," .
+        " time_response        INTEGER," .
+        " ip_client            CHAR(15)," .
+        " ip_server            CHAR(15)," .
+        " http_status_code     VARCHAR(10)," .
+        " http_reply_size      INTEGER," .
+        " http_method          VARCHAR(20)," .
+        " http_url             TEXT," .
+        " http_username        VARCHAR(20)," .
+        " http_mime_type       VARCHAR(50)," .
+        " squid_request_status VARCHAR(50)," .
+        " squid_hier_status    VARCHAR(20)" .
+        ");" ;
 
     $sth = $dbh->prepare($create_query);
     $sth->execute;
@@ -435,7 +435,7 @@ if ($EVAL_ERROR) {
         my $q = 'SELECT ' . join(',',@db_fields) . " FROM $table LIMIT 1";
         my $sth = $dbh->prepare($q);
         $sth->execute;
-    };
+        };
     if ($EVAL_ERROR) {
         die "Error initializing database table: $EVAL_ERROR";
     };
@@ -445,9 +445,9 @@ if ($EVAL_ERROR) {
 # for better performance, prepare the statement at startup
 eval {
     my $q = "INSERT INTO $table (" . join(',',@db_fields) . ") VALUES(NULL" . ',?' x (scalar(@db_fields)-1) . ')';
-    #$sth = $dbh->prepare("INSERT INTO $table VALUES(NULL,?,?,?,?,?,?,?,?,?,?,?,?)");
+#$sth = $dbh->prepare("INSERT INTO $table VALUES(NULL,?,?,?,?,?,?,?,?,?,?,?,?)");
     $sth = $dbh->prepare($q);
-};
+    };
 if ($EVAL_ERROR) {
     die "Error while preparing sql statement: $EVAL_ERROR";
 }
@@ -467,7 +467,7 @@ while (my $line = <>) {
         my @log_entry = parse($line);
         eval {                  # we catch db errors to avoid crashing squid in case something goes wrong...
             $sth->execute(@log_entry) or die $sth->errstr
-        };
+            };
         if ( $EVAL_ERROR ) {    # leave a trace of the error in the logs
             warn $EVAL_ERROR . " values=(" . join(', ', @log_entry) . ')';
         }

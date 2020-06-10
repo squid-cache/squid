@@ -55,7 +55,7 @@ $port=(shift || '3130') ;
     "UDP_DENIED",
     "UDP_HIT_OBJ",
     "ICP_END"
-);
+    );
 
 $sock = IO::Socket::INET->new(PeerAddr => "$host:$port", Proto => 'udp');
 die "socket: $!\n" unless defined($sock);
@@ -86,14 +86,14 @@ while (<>) {
     $len = length($_) + 1;
     $request_template = sprintf 'CCnNNa4a4x4a%d', $len;
     $request = pack($request_template,
-            1,              # C opcode
-            2,              # C version
-            24 + $len,      # n length
-            ++$rn,          # N reqnum
-            $flags,         # N flags
-            '',             # a4 pad
-            $myip,          # a4 shostid
-            $_);            # a%d payload
+        1,              # C opcode
+        2,              # C version
+        24 + $len,      # n length
+        ++$rn,          # N reqnum
+        $flags,         # N flags
+        '',             # a4 pad
+        $myip,          # a4 shostid
+        $_);            # a%d payload
     die "send: $!\n" unless
         send($sock, $request, 0);
     $nsent++;
@@ -110,10 +110,10 @@ while (<>) {
             if (($nsent & 0xFF) == 0) {
                 $dt = time - $start;
                 printf "SENT %d %f/sec; RECV %d %f/sec\n",
-                $nsent,
-                $nsent / $dt,
-                $nrecv,
-                $nrecv / $dt;
+                    $nsent,
+                    $nsent / $dt,
+                    $nrecv,
+                    $nrecv / $dt;
             }
         } else {
             # print the whole reply

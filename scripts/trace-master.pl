@@ -112,7 +112,7 @@ sub getJob {
         start => undef(),
         history => '',
         reported => 0,
-    };
+        };
 
     $Jobs{$id} = $job;
     return $job;

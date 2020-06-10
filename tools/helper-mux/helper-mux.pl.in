@@ -147,7 +147,7 @@ while(1) {
     #      != won't work.
     foreach $h (keys %helpers) {
         my %hlp=%{$helpers{$h}};
-        #print STDERR "examining helper slot $h, fileno $hlp{fno}, filemask ", vec($rd,$hlp{fno},1) , "\n";
+#print STDERR "examining helper slot $h, fileno $hlp{fno}, filemask ", vec($rd,$hlp{fno},1) , "\n";
         if (vec($rd,$hlp{fno},1)==1) {
             #print STDERR "found\n";
             handle_helper_response($h);
@@ -165,7 +165,7 @@ sub dispatch_request {
     my $reqId=$1;
     my $req=$2;
 
-        undef $h;
+    undef $h;
     # Find a free helper
     foreach $slot ( 1 .. ($helpers_running)) {
         if (!defined($helpers{$slot}->{lastcmd})) {
