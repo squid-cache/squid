@@ -90,7 +90,7 @@ esiSequence::render(ESISegment::Pointer output)
     for (size_t i = 0; i < processedcount; ++i) {
         elements[i]->render(output);
         FinishAnElement(elements[i], i);
-        /* FIXME: pass a ESISegment ** ? */
+        // TODO: pass an "ESISegment **" ?
         output = output->tail();
     }
 

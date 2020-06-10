@@ -6,14 +6,12 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 64    HTTP Range Header */
-
 #include "squid.h"
 #include "fatal.h"
 #include "HttpHeader.h"
 #include "HttpHeaderRange.h"
 
-/** \todo CLEANUP: This file should be called something_stub.cc */
+// TODO: refactor as cppunit test
 
 void httpHeaderPutStr(HttpHeader * hdr, Http::HdrType type, const char *str)
 {

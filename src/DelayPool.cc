@@ -75,7 +75,7 @@ DelayPool::freeData()
     pool = NULL;
 }
 
-/** \todo XXX create DelayIdComposite.cc */
+// TODO: create DelayIdComposite.cc
 void
 CompositePoolNode::delayRead(DeferredRead const &aRead)
 {

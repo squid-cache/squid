@@ -63,7 +63,7 @@
 
 #define STORE_IN_MEM_BUCKETS            (229)
 
-/** \todo Convert these string constants to enum string-arrays generated */
+// TODO: Convert these string constants to enum string-arrays generated
 
 const char *memStatusStr[] = {
     "NOT_IN_MEMORY",

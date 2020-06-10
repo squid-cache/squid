@@ -116,7 +116,7 @@ public:
     /// for eventual removal from the Store.
     void releaseRequest(const bool shareable = false);
     void negativeCache();
-    bool cacheNegatively();     /** \todo argh, why both? */
+    bool cacheNegatively();     // TODO: why both negativeCache() and cacheNegatively() ?
     void invokeHandlers();
     void cacheInMemory(); ///< start or continue storing in memory cache
     void swapOut();

@@ -180,7 +180,7 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
     }
 
     // find double CRLF sequence (actually, look at the FSM below)
-    // FIXME: this only looks at the already known buffer read previously,
+    // XXX: this only looks at the already known buffer read previously,
     // which is globally passed (yuck)! As a limitation, the content data
     // *must* begin within the buffer size (that is: 16k)!
     if ( ! copyHdr ) {

@@ -3177,7 +3177,7 @@ else
       AC_MSG_NOTICE([skipping libmalloc check for $host])
       ;;
     *)
-      #used later. FIXME
+      # XXX: used later
       AC_CHECK_LIB(malloc, main)
       ;;
   esac

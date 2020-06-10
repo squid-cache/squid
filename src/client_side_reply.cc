@@ -1108,7 +1108,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
      * Make a new entry to hold the reply to be written
      * to the client.
      */
-    /* FIXME: This doesn't need to go through the store. Simply
+    /* TODO: This doesn't need to go through the store. Simply
      * push down the client chain
      */
     createStoreEntry(http->request->method, RequestFlags());
@@ -1549,7 +1549,7 @@ clientReplyContext::buildReplyHeader()
               reply->sline.status() == Http::scUnauthorized)
        ) {
         /* Add authentication header */
-        /*! \todo alter errorstate to be accel on|off aware. The 0 on the next line
+        /* TODO: alter errorstate to be accel on|off aware. The 0 on the next line
          * depends on authenticate behaviour: all schemes to date send no extra
          * data on 407/401 responses, and do not check the accel state on 401/407
          * responses

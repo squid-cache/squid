@@ -1155,7 +1155,7 @@ wccp2HandleUdp(int sock, void *)
 
     Comm::SetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
-    /* FIXME INET6 : drop conversion boundary */
+    // TODO: drop conversion boundary
     Ip::Address from_tmp;
     from_tmp.setIPv4();
 
@@ -1174,7 +1174,7 @@ wccp2HandleUdp(int sock, void *)
     if (ntohl(wccp2_i_see_you.type) != WCCP2_I_SEE_YOU)
         return;
 
-    /* FIXME INET6 : drop conversion boundary */
+    // XXX: drop conversion boundary
     from_tmp.getSockAddr(from);
 
     debugs(80, 3, "Incoming WCCPv2 I_SEE_YOU length " << ntohs(wccp2_i_see_you.length) << ".");
@@ -1964,7 +1964,7 @@ wccp2AssignBuckets(void *)
             if (ntohl(router_list_ptr->num_caches)) {
                 /* send packet */
 
-                /* FIXME INET6 : drop temp conversion */
+                // XXX: drop temp conversion
                 Ip::Address tmp_rtr(router);
 
                 if (wccp2_numrouters > 1) {

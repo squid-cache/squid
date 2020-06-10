@@ -39,8 +39,6 @@ addSwapDir(MySwapDirPointer aStore)
     ++Config.cacheSwap.n_configured;
 }
 
-/* TODO make this a cbdata class */
-
 static bool cbcalled;
 
 static void
@@ -208,7 +206,7 @@ testUfs::testUfsSearch()
 
     free_cachedir(&Config.cacheSwap);
 
-    /* todo: here we should test a dirty rebuild */
+    // TODO: here we should test a dirty rebuild
 
     safe_free(Config.replPolicy->type);
     delete Config.replPolicy;

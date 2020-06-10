@@ -49,7 +49,6 @@
  \li             satisfies the read request, or
  \li             inserts a new node above it and calls clientStreamRead(), or
  \li             calls clientStreamRead()
- \todo DOCS: make the above list nested.
  *
  \par
  *    There is no requirement for the Read parameters from different
@@ -58,7 +57,7 @@
  *
  \section WhatsInANode Whats in a node
  *
- \todo ClientStreams: These details should really be codified as a class which all ClientStream nodes inherit from.
+ * TODO: ClientStreams: These details should really be codified as a class which all ClientStream nodes inherit from.
  *
  \par   Each node must have:
  \li    read method - to allow loose coupling in the pipeline. (The reader may

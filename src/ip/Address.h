@@ -299,7 +299,7 @@ public:
     bool GetHostByName(const char *s);
 
 public:
-    /* FIXME: When C => C++ conversion is done will be fully private.
+    /* XXX: When C => C++ conversion is done will be fully private.
      * Legacy Transition Methods.
      * These are here solely to simplify the transition
      * when moving from converted code to unconverted
