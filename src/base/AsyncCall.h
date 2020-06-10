@@ -166,3 +166,4 @@ bool ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call);
 #define ScheduleCallHere(call) ScheduleCall(__FILE__, __LINE__, (call))
 
 #endif /* SQUID_ASYNCCALL_H */
+
