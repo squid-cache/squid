@@ -356,5 +356,11 @@ protected:
  */
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos);
 
+// deprecated
+// TODO: consolidate onto ErrorState constructor
+ErrorState *
+clientBuildError(err_type, Http::StatusCode, char const *,
+                 Ip::Address &, HttpRequest *, const AccessLogEntryPointer &);
+
 #endif /* SQUID_ERRORPAGE_H */
 
