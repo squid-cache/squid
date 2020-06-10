@@ -1116,6 +1116,7 @@ check_PROGRAMS += tests/testRock
 tests_testRock_SOURCES = \
 	AccessLogEntry.cc \
 	AccessLogEntry.h \
+	tests/stub_CachePeer.cc \
 	cbdata.cc \
 	CacheDigest.h \
 	CollapsedForwarding.h \
@@ -1288,6 +1289,7 @@ tests_testUfs_SOURCES = \
 	AccessLogEntry.h \
 	tests/testUfs.cc \
 	tests/testUfs.h \
+	tests/stub_CachePeer.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_client_db.cc \
 	tests/stub_CollapsedForwarding.cc \
@@ -1631,6 +1633,7 @@ tests_testDiskIO_SOURCES = \
 	AccessLogEntry.h \
 	CacheDigest.h \
 	tests/stub_CacheDigest.cc \
+	tests/stub_CachePeer.cc \
 	cbdata.cc \
 	client_db.h \
 	ClientInfo.h \

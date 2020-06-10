@@ -1182,14 +1182,6 @@ neighborUp(const CachePeer * p)
     return 1;
 }
 
-/// \returns the effective connect timeout for this peer
-time_t
-peerConnectTimeout(const CachePeer *peer)
-{
-    return peer->connect_timeout_raw > 0 ?
-           peer->connect_timeout_raw : Config.Timeout.peer_connect;
-}
-
 time_t
 positiveTimeout(const time_t timeout)
 {
@@ -1339,7 +1331,7 @@ peerProbeConnect(CachePeer *p, const bool reprobeIfBusy)
     }
     p->reprobe = false;
 
-    const time_t ctimeout = peerConnectTimeout(p);
+    const time_t ctimeout = p->connectTimeout();
     /* for each IP address of this CachePeer. find one that we can connect to and probe it. */
     for (int i = 0; i < p->n_addresses; ++i) {
         Comm::ConnectionPointer conn = new Comm::Connection;

@@ -145,7 +145,7 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
 {
     // a connection opening timeout (ignoring forwarding time limits for now)
     const CachePeer *peer = getPeer();
-    const time_t ctimeout = peer ? peerConnectTimeout(peer) : Config.Timeout.connect;
+    const time_t ctimeout = peer ? peer->connectTimeout() : Config.Timeout.connect;
 
     // time we have left to finish the whole forwarding process
     const time_t fwdTimeLeft = FwdState::ForwardTimeout(fwdStart);
