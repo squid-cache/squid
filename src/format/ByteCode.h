@@ -113,10 +113,10 @@ typedef enum {
     /*LFT_REQUEST_SIZE_BODY_NO_TE, */
 
     /* original Status-Line details received from server */
-    // XXX: todo
+    // TODO: implement server detail logging
 
     /* Status-Line details sent to the client */
-    // XXX: todo
+    // TODO: implement server detail logging
 
     /* response Status-Line details (legacy, filtered) */
     LFT_HTTP_SENT_STATUS_CODE_OLD_30,

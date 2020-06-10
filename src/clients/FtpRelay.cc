@@ -261,7 +261,7 @@ Ftp::Relay::serverState(const Ftp::ServerState newState)
  * (but we may still be waiting for 226 from the FTP server) and
  * also when we get that 226 from the server (and adaptation is done).
  *
- \todo Rewrite FwdState to ignore double completion?
+ * TODO: Rewrite FwdState to ignore double completion?
  */
 void
 Ftp::Relay::completeForwarding()

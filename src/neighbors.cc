@@ -410,8 +410,9 @@ getWeightedRoundRobinParent(PeerSelector *ps)
  * period. The larger the number of requests between cycled resets the
  * more balanced the operations.
  *
- \param data    unused.
- \todo Make the reset timing a selectable parameter in squid.conf
+ * \param data    unused
+ *
+ * TODO: Make the reset timing a selectable parameter in squid.conf
  */
 static void
 peerClearRRLoop(void *data)
