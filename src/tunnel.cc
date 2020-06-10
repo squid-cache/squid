@@ -1029,7 +1029,7 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
         syncHierNote(answer.conn, request->url.host());
         saveError(error);
         answer.error.clear(); // savedError has it now
-        // XXX: should honor clientExpectsConnectResponse() before replying. Also check other occurrences.
+        // XXX: Honor clientExpectsConnectResponse() before replying.
         sendError(savedError, "tried all destinations");
         return;
     }
@@ -1208,6 +1208,8 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
     destinations->destinationsFinalized = true;
     if (!destinationsFound) {
 
+        // XXX: Honor clientExpectsConnectResponse() before replying.
+
         if (selectionError)
             return sendError(selectionError, "path selection has failed");
 
@@ -1324,6 +1326,7 @@ TunnelStateData::usePinned()
         connectDone(serverConn, connManager->pinning.host, reused);
     } catch (ErrorState * const error) {
         syncHierNote(nullptr, connManager ? connManager->pinning.host : request->url.host());
+        // XXX: Honor clientExpectsConnectResponse() before replying.
         // a PINNED path failure is fatal; do not wait for more paths
         sendError(error, "pinned path failure");
         return;
