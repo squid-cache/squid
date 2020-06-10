@@ -49,6 +49,7 @@ public:
     int storeNotOKTransferDone() const;
     /// replaces current response store entry with the given one
     void setReplyToStoreEntry(StoreEntry *e, const char *reason);
+    /// builds error using clientBuildError() and calls setReplyToError() below
     void setReplyToError(err_type, Http::StatusCode, const HttpRequestMethod&, char const *, Ip::Address &, HttpRequest *, const char *,
 #if USE_AUTH
                          Auth::UserRequest::Pointer);
@@ -154,6 +155,10 @@ private:
 
     CollapsedRevalidation collapsedRevalidation;
 };
+
+ErrorState *
+clientBuildError(err_type, Http::StatusCode, char const *,
+    Ip::Address &, HttpRequest *, const AccessLogEntry::Pointer &);
 
 #endif /* SQUID_CLIENTSIDEREPLY_H */
 

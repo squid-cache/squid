@@ -447,10 +447,11 @@ ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
 
         Ip::Address tmpnoaddr;
         tmpnoaddr.setNoAddr();
-        error = new ErrorState(page_id, status,
-                               NULL,
-                               http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
-                               http->request, http->al);
+        error = clientBuildError(page_id, status,
+                                 NULL,
+                                 http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
+                                 http->request, http->al
+                                );
 
 #if USE_AUTH
         error->auth_user_request =

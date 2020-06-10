@@ -694,18 +694,8 @@ ErrorState::ErrorState(err_type t, Http::StatusCode status, HttpRequest * req, c
     ale = anAle;
 }
 
-ErrorState::ErrorState(err_type aType, Http::StatusCode status, char const *anUrl,
-                       Ip::Address &srcAddress, HttpRequest *aRequest,
-                       const AccessLogEntry::Pointer &al) : 
-                       ErrorState(aType, status, aRequest, al)
-{
-    src_addr = srcAddress;
-    if (anUrl)
-        url = xstrdup(anUrl);
-}
-
-
-ErrorState::ErrorState(HttpRequest *req, HttpReply *errorReply) : ErrorState(ERR_RELAY_REMOTE)
+ErrorState::ErrorState(HttpRequest * req, HttpReply *errorReply) :
+    ErrorState(ERR_RELAY_REMOTE)
 {
     Must(errorReply);
     response_ = errorReply;
