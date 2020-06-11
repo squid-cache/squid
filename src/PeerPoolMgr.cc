@@ -120,7 +120,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         securer = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
                             MyAnswerDialer(this, &PeerPoolMgr::handleSecuredPeer));
 
-        auto peerTimeout = peer->connectTimeout();
+        const auto peerTimeout = peer->connectTimeout();
         const int timeUsed = squid_curtime - params.conn->startTime();
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = positiveTimeout(peerTimeout - timeUsed);
