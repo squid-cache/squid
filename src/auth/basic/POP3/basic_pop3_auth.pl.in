@@ -42,18 +42,18 @@ This manual was written by I<Amos Jeffries <squid3@treenet.co.nz>>
  # it under the terms of the GNU General Public License as published by
  # the Free Software Foundation; either version 2 of the License, or
  # (at your option) any later version.
- # 
+ #
  # This program is distributed in the hope that it will be useful,
  # but WITHOUT ANY WARRANTY; without even the implied warranty of
  # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  # GNU General Public License for more details.
- # 
+ #
  # You should have received a copy of the GNU General Public License
  # along with this program; if not, write to the Free Software
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- # 
+ #
  # Change log:
- #   2006-12-10	henrik	Initial revision
+ #   2006-12-10    henrik    Initial revision
  #
 
 =head1 QUESTIONS
@@ -98,15 +98,15 @@ while(<>) {
 
     my $pop = Net::POP3->new($server);
     if (!$pop) {
-	print "ERR Server not responding\n";
-	next;
+        print "ERR Server not responding\n";
+        next;
     }
 
     # Here apop could be used instead for MD5 support
     if ($pop->login($username, $password)) {
-	print "OK\n";
+        print "OK\n";
     } else {
-	print "ERR\n";
+        print "ERR\n";
     }
     $pop->quit;
     undef $pop;
