@@ -14,7 +14,7 @@
 # by looking at CERN or Netscape style cache directory $cachedir
 #
 # martin hamilton <m.t.hamilton@lut.ac.uk>
-#  Id: icpserver,v 1.11 1995/11/24 16:20:13 martin Exp martin 
+#  Id: icpserver,v 1.11 1995/11/24 16:20:13 martin Exp martin
 
 # usage: icpserver [-c cachedir] [-n] [-p port] [multicast_group]
 #
@@ -33,8 +33,8 @@ require "getopts.pl";
 $CACHEDIR=$opt_c||"/usr/local/www/cache";
 $PORT=$opt_p||3130;
 $SERVER=$ARGV[0]||"0.0.0.0";
-$SERVERIP= ($SERVER =~ m!\d+.\d+.\d+.\d+!) ? 
-  pack("C4", split(/\./, $SERVER)) : (gethostbyname($SERVER))[4]; # lazy!
+$SERVERIP= ($SERVER =~ m!\d+.\d+.\d+.\d+!) ?
+    pack("C4", split(/\./, $SERVER)) : (gethostbyname($SERVER))[4]; # lazy!
 
 $SOCKADDR = 'S n a4 x8';
 
@@ -45,15 +45,15 @@ bind(S, $us1) || bind(S, $us2) || die "Couldn't bind socket: $!";
 #bind(S, $us2) || die "Couldn't bind socket: $!";
 
 if ($SERVER ne "0.0.0.0") { # i.e. multicast
-  $whoami = (`uname -a`)[0];
-  $IP_ADD_MEMBERSHIP=5;
-  $whoami =~ /SunOS [^\s]+ 5/ && ($IP_MULTICAST_TTL=19);
-  $whoami =~ /IRIX [^\s]+ 5/ && ($IP_MULTICAST_TTL=23);
-  $whoami =~ /OSF1/ && ($IP_MULTICAST_TTL=12);
-  # any more funnies ?
+    $whoami = (`uname -a`)[0];
+    $IP_ADD_MEMBERSHIP=5;
+    $whoami =~ /SunOS [^\s]+ 5/ && ($IP_MULTICAST_TTL=19);
+    $whoami =~ /IRIX [^\s]+ 5/ && ($IP_MULTICAST_TTL=23);
+    $whoami =~ /OSF1/ && ($IP_MULTICAST_TTL=12);
+    # any more funnies ?
 
-  setsockopt(S, 0, $IP_ADD_MEMBERSHIP, $SERVERIP."\0\0\0\0") 
-    || die "Couldn't join multicast group $SERVER: $!";
+    setsockopt(S, 0, $IP_ADD_MEMBERSHIP, $SERVERIP."\0\0\0\0")
+        || die "Couldn't join multicast group $SERVER: $!";
 }
 
 # Common header for ICP datagrams ... (size in bytes - total 20)
@@ -72,48 +72,48 @@ if ($SERVER ne "0.0.0.0") { # i.e. multicast
 
 # Might be fast enough to get away without forking or non-blocking I/O ... ?
 while(1) {
-  $theiraddr = recv(S, $ICP_request, 1024, 0);
-  ($junk, $junk, $sourceaddr, $junk) = unpack($SOCKADDR, $theiraddr);
-  @theirip = unpack('C4', $sourceaddr);
+    $theiraddr = recv(S, $ICP_request, 1024, 0);
+    ($junk, $junk, $sourceaddr, $junk) = unpack($SOCKADDR, $theiraddr);
+    @theirip = unpack('C4', $sourceaddr);
 
-  $URL_length = length($ICP_request) - 24;
-  $request_template = 'CCnx4x8x4a4a' . $URL_length;
-  ($type, $version, $length, $requester, $URL) = 
-    unpack($request_template, $ICP_request);
+    $URL_length = length($ICP_request) - 24;
+    $request_template = 'CCnx4x8x4a4a' . $URL_length;
+    ($type, $version, $length, $requester, $URL) =
+        unpack($request_template, $ICP_request);
 
-  $URL =~ s/\.\.\///g; # be cautious - any others to watch out for ?
+    $URL =~ s/\.\.\///g; # be cautious - any others to watch out for ?
 
-  # lookup object in cache
-  $hitmisserr = 3;
-  if ($type eq 1 && $URL =~ m!^([^:]+):/?/?([^/]+)/(.*)!) {
-    $scheme = $1; $hostport = $2; $path = $3;
-    if ($path eq "") { $path = "index.html"; }
+    # lookup object in cache
+    $hitmisserr = 3;
+    if ($type eq 1 && $URL =~ m!^([^:]+):/?/?([^/]+)/(.*)!) {
+        $scheme = $1; $hostport = $2; $path = $3;
+        if ($path eq "") { $path = "index.html"; }
 
-    if ($opt_n) {
-      ($host, $port) = split(/:/, $hostport); # strip off port number
-      $port = ":$port" if ($port);
-      $match = "";
-      foreach (split(/\./, $hostport)) {
-        $match = "$_/$match"; # little-endian -> big-endian conversion
-      }
-      $match = "$CACHEDIR/hosts/$match$scheme$port.urls"; # full path
-      if (-f "$match") {
-        #### optimize! ####
-        open(IN, "$match") && do {
-          while(<IN>) { /^$URL / && ($hitmisserr = 2, last); }
-          close(IN);
+        if ($opt_n) {
+            ($host, $port) = split(/:/, $hostport); # strip off port number
+            $port = ":$port" if ($port);
+            $match = "";
+            foreach (split(/\./, $hostport)) {
+                $match = "$_/$match"; # little-endian -> big-endian conversion
+            }
+            $match = "$CACHEDIR/hosts/$match$scheme$port.urls"; # full path
+            if (-f "$match") {
+                #### optimize! ####
+                open(IN, "$match") && do {
+                    while(<IN>) { /^$URL / && ($hitmisserr = 2, last); }
+                    close(IN);
+                    }
+            }
+        } else {
+            $hitmisserr = 2 if -f "$CACHEDIR/$scheme/$hostport/$path";
         }
-      }
-    } else {
-      $hitmisserr = 2 if -f "$CACHEDIR/$scheme/$hostport/$path";
     }
-  }
-  
-  print "$type $hitmisserr ", join(".", @theirip), " $URL\n" if $opt_v;
 
-  $response_template = 'CCnx4x8x4A' . length($URL);
-  $ICP_response = 
-    pack($response_template, $hitmisserr, 2, 20 + length($URL), $URL);
-  send(S, $ICP_response, 0, $theiraddr) || die "Couldn't send request: $!";
+    print "$type $hitmisserr ", join(".", @theirip), " $URL\n" if $opt_v;
+
+    $response_template = 'CCnx4x8x4A' . length($URL);
+    $ICP_response =
+        pack($response_template, $hitmisserr, 2, 20 + length($URL), $URL);
+    send(S, $ICP_response, 0, $theiraddr) || die "Couldn't send request: $!";
 }
 

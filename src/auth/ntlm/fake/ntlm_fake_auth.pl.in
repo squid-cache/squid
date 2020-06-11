@@ -17,7 +17,7 @@
 # user's credentials, it just takes the client's domain and username
 # at face value.
 # It's included mostly for demonstration purposes.
-# 
+#
 # TODO: use command-line arguments
 
 #use MIME::Base64;
@@ -31,105 +31,105 @@ $authdomain=$ARGV[0] if ($#ARGV >=0);
 die ("Edit $0 to configure a domain!") unless (defined($authdomain));
 
 while(<STDIN>) {
-	chop;
-	if (substr($_, 0, 2) eq "YR") {
-		print "TT ".encode_base64(&make_ntlm_static_challenge);
-		next;
-	}
-	$got=substr($_,3);
-	%res=decode_ntlm_any(decode_base64($got));
-#	print STDERR "got: ".hash_to_string(%res);
-	if (!res) {										# broken NTLM, deny
-		print "BH Couldn't decode NTLM packet\n";
-		next;
-	}
-	if ($res{type} eq "negotiate") { # ok, send a challenge
-		print "BH Squid-helper protocol error: unexpected negotiate-request\n";
-		next;
-	}
-	if ($res{type} eq "challenge") { # Huh? WE are the challengers.
-		print "BH Squid-helper protocol error: unexpected challenge-request\n";
-		next;
-	}
-	if ($res{type} eq "authentication") {
-		print "AF $res{domain}\\$res{user}\n";
-		next;
-	}
-	print "BH internal error\n";	# internal error
+    chop;
+    if (substr($_, 0, 2) eq "YR") {
+        print "TT ".encode_base64(&make_ntlm_static_challenge);
+        next;
+    }
+    $got=substr($_,3);
+    %res=decode_ntlm_any(decode_base64($got));
+#    print STDERR "got: ".hash_to_string(%res);
+    if (!res) {                                        # broken NTLM, deny
+        print "BH Couldn't decode NTLM packet\n";
+        next;
+    }
+    if ($res{type} eq "negotiate") { # ok, send a challenge
+        print "BH Squid-helper protocol error: unexpected negotiate-request\n";
+        next;
+    }
+    if ($res{type} eq "challenge") { # Huh? WE are the challengers.
+        print "BH Squid-helper protocol error: unexpected challenge-request\n";
+        next;
+    }
+    if ($res{type} eq "authentication") {
+        print "AF $res{domain}\\$res{user}\n";
+        next;
+    }
+    print "BH internal error\n";    # internal error
 }
 
 
 sub make_ntlm_static_challenge {
-	$rv = pack ("a8 V", "NTLMSSP", 0x2);
-	$payload = "";
+    $rv = pack ("a8 V", "NTLMSSP", 0x2);
+    $payload = "";
 
-	$rv .= add_to_data(uc($authdomain),\$payload);
-	$rv .= pack ("V Z8 v8", 0x18206, $challenge,0,0,0,0,0,0,0x3a,0);
-	#flags, challenge, 8 bytes of unknown stuff
+    $rv .= add_to_data(uc($authdomain),\$payload);
+    $rv .= pack ("V Z8 v8", 0x18206, $challenge,0,0,0,0,0,0,0x3a,0);
+    #flags, challenge, 8 bytes of unknown stuff
 
-	return $rv.$payload;
+    return $rv.$payload;
 }
 
 #gets as argument the decoded authenticate packet.
 #returns either undef (failure to decode) or an hash with the decoded
 # fields.
 sub decode_ntlm_authentication {
-	my ($got)=$_[0];
-	my ($signature, $type, %rv, $hdr, $rest);
-	($signature, $type, $rest) = unpack ("a8 V a*",$got);
-	return unless ($signature eq "NTLMSSP\0");
-	return unless ($type == 0x3);
-	$rv{type}="authentication";
-	($hdr, $rest) = unpack ("a8 a*", $rest);
-	$rv{lmresponse}=get_from_data($hdr,$got);
-	($hdr, $rest) = unpack ("a8 a*", $rest);
-	$rv{ntresponse}=get_from_data($hdr,$got);
-	($hdr, $rest) = unpack ("a8 a*", $rest);
-	$rv{domain}=get_from_data($hdr,$got);
-	($hdr, $rest) = unpack ("a8 a*", $rest);
-	$rv{user}=get_from_data($hdr,$got);
-	($hdr, $rest) = unpack ("a8 a*", $rest);
-	$rv{workstation}=get_from_data($hdr,$got);
-	($hdr, $rest) = unpack ("a8 a*", $rest);
-	$rv{sessionkey}=get_from_data($hdr,$got);
-	$rv{flags}=unpack("V",$rest);
-	return %rv;
+    my ($got)=$_[0];
+    my ($signature, $type, %rv, $hdr, $rest);
+    ($signature, $type, $rest) = unpack ("a8 V a*",$got);
+    return unless ($signature eq "NTLMSSP\0");
+    return unless ($type == 0x3);
+    $rv{type}="authentication";
+    ($hdr, $rest) = unpack ("a8 a*", $rest);
+    $rv{lmresponse}=get_from_data($hdr,$got);
+    ($hdr, $rest) = unpack ("a8 a*", $rest);
+    $rv{ntresponse}=get_from_data($hdr,$got);
+    ($hdr, $rest) = unpack ("a8 a*", $rest);
+    $rv{domain}=get_from_data($hdr,$got);
+    ($hdr, $rest) = unpack ("a8 a*", $rest);
+    $rv{user}=get_from_data($hdr,$got);
+    ($hdr, $rest) = unpack ("a8 a*", $rest);
+    $rv{workstation}=get_from_data($hdr,$got);
+    ($hdr, $rest) = unpack ("a8 a*", $rest);
+    $rv{sessionkey}=get_from_data($hdr,$got);
+    $rv{flags}=unpack("V",$rest);
+    return %rv;
 }
 
 #args: len, maxlen, offset
 sub make_ntlm_hdr {
-	return pack ("v v V", @_);
+    return pack ("v v V", @_);
 }
 
 #args: string to add, ref to payload
 # returns ntlm header.
 sub add_to_data {
-	my ($toadd, $pl) = @_;
-	my ($offset);
-#	$toadd.='\0' unless ($toadd[-1]=='\0'); #broken
-	$offset=48+length $pl;  #48 is the length of the header
-	$$pl.=$toadd;
-	return make_ntlm_hdr (length $toadd, length $toadd, $offset);
+    my ($toadd, $pl) = @_;
+    my ($offset);
+#    $toadd.='\0' unless ($toadd[-1]=='\0'); #broken
+    $offset=48+length $pl;  #48 is the length of the header
+    $$pl.=$toadd;
+    return make_ntlm_hdr (length $toadd, length $toadd, $offset);
 }
 
 #args: encoded descriptor, entire decoded packet
 # returns the decoded data
 sub get_from_data {
-	my($desc,$packet) = @_;
-	my($offset,$length, $rv);
-	($length, undef, $offset) = unpack ("v v V", $desc);
-	return unless ($length+$offset <= length $packet);
-	$rv = unpack ("x$offset a$length",$packet);
-	return $rv;
+    my($desc,$packet) = @_;
+    my($offset,$length, $rv);
+    ($length, undef, $offset) = unpack ("v v V", $desc);
+    return unless ($length+$offset <= length $packet);
+    $rv = unpack ("x$offset a$length",$packet);
+    return $rv;
 }
 
 sub hash_to_string {
-	my (%hash) = @_;
-	my ($rv);
-	foreach (sort keys %hash) {
-		$rv.=$_." => ".$hash{$_}."\n";
-	}
-	return $rv;
+    my (%hash) = @_;
+    my ($rv);
+    foreach (sort keys %hash) {
+        $rv.=$_." => ".$hash{$_}."\n";
+    }
+    return $rv;
 }
 
 
@@ -138,46 +138,46 @@ sub hash_to_string {
 #args: the base64-decoded packet
 #returns: either undef or an hash describing the packet.
 sub decode_ntlm_negotiate {
-	my($got)=$_[0];
-	my($signature, $type, %rv, $hdr, $rest);
-	($signature, $type, $rest) = unpack ("a8 V a*",$got);
-	return unless ($signature eq "NTLMSSP\0");
-	return unless ($type == 0x1);
-	$rv{type}="negotiate";
-	($rv{flags}, $rest)=unpack("V a*",$rest);
-	($hdr, $rest) = unpack ("a8 a*", $rest);
-	$rv{domain}=get_from_data($hdr,$got);
-	($hdr, $rest) = unpack ("a8 a*", $rest);
-	$rv{workstation}=get_from_data($hdr,$got);
-	return %rv;
+    my($got)=$_[0];
+    my($signature, $type, %rv, $hdr, $rest);
+    ($signature, $type, $rest) = unpack ("a8 V a*",$got);
+    return unless ($signature eq "NTLMSSP\0");
+    return unless ($type == 0x1);
+    $rv{type}="negotiate";
+    ($rv{flags}, $rest)=unpack("V a*",$rest);
+    ($hdr, $rest) = unpack ("a8 a*", $rest);
+    $rv{domain}=get_from_data($hdr,$got);
+    ($hdr, $rest) = unpack ("a8 a*", $rest);
+    $rv{workstation}=get_from_data($hdr,$got);
+    return %rv;
 }
 
 sub decode_ntlm_challenge {
-	my($got)=$_[0];
-	my($signature, $type, %rv, $hdr, $rest, $j);
-	($signature, $type, $rest) = unpack ("a8 V a*",$got);
-	return unless ($signature eq "NTLMSSP\0");
-	return unless ($type == 0x2);
-	$rv{type}="challenge";
-	($rv{flags}, $rest)=unpack("V a*",$rest);
-	($rv{challenge}, $rest)=unpack("a8 a*",$rest);
-	for ($j=0;$j<8;$j++) {				# don't shoot on the programmer, please.
-		($rv{"context.$j"},$rest)=unpack("v a*",$rest);
-	}
-	return %rv;
+    my($got)=$_[0];
+    my($signature, $type, %rv, $hdr, $rest, $j);
+    ($signature, $type, $rest) = unpack ("a8 V a*",$got);
+    return unless ($signature eq "NTLMSSP\0");
+    return unless ($type == 0x2);
+    $rv{type}="challenge";
+    ($rv{flags}, $rest)=unpack("V a*",$rest);
+    ($rv{challenge}, $rest)=unpack("a8 a*",$rest);
+    for ($j=0;$j<8;$j++) {                # don't shoot on the programmer, please.
+        ($rv{"context.$j"},$rest)=unpack("v a*",$rest);
+    }
+    return %rv;
 }
 
 #decodes any NTLMSSP packet.
 #arg: the encoded packet, returns an hash with packet info
 sub decode_ntlm_any {
-	my($got)=$_[0];
-	my ($signature, $type);
-	($signature, $type, undef) = unpack ("a8 V a*",$got);
-	return unless ($signature eq "NTLMSSP\0");
-	return decode_ntlm_negotiate($got) if ($type == 1);
-	return decode_ntlm_challenge($got) if ($type == 2);
-	return decode_ntlm_authentication($got) if ($type == 3);
-	return undef;									# default
+    my($got)=$_[0];
+    my ($signature, $type);
+    ($signature, $type, undef) = unpack ("a8 V a*",$got);
+    return unless ($signature eq "NTLMSSP\0");
+    return decode_ntlm_negotiate($got) if ($type == 1);
+    return decode_ntlm_challenge($got) if ($type == 2);
+    return decode_ntlm_authentication($got) if ($type == 3);
+    return undef;                                    # default
 }
 
 
@@ -190,8 +190,8 @@ sub encode_base64 ($;$)
     $eol = "\n" unless defined $eol;
     pos($_[0]) = 0;                          # ensure start at the beginning
     while ($_[0] =~ /(.{1,45})/gs) {
-	$res .= substr(pack('u', $1), 1);
-	chop($res);
+        $res .= substr(pack('u', $1), 1);
+        chop($res);
     }
     $res =~ tr|` -_|AA-Za-z0-9+/|;               # `# help emacs
     # fix padding at the end
@@ -199,7 +199,7 @@ sub encode_base64 ($;$)
     $res =~ s/.{$padding}$/'=' x $padding/e if $padding;
     # break encoded string into lines of no more than 76 characters each
     if (length $eol) {
-	$res =~ s/(.{1,76})/$1$eol/g;
+        $res =~ s/(.{1,76})/$1$eol/g;
     }
     $res;
 }
@@ -214,14 +214,14 @@ sub decode_base64 ($)
 
     $str =~ tr|A-Za-z0-9+=/||cd;            # remove non-base64 chars
     if (length($str) % 4) {
-	require Carp;
-	Carp::carp("Length of base64 data not a multiple of 4")
+        require Carp;
+        Carp::carp("Length of base64 data not a multiple of 4")
     }
     $str =~ s/=+$//;                        # remove padding
     $str =~ tr|A-Za-z0-9+/| -_|;            # convert to uuencoded format
     while ($str =~ /(.{1,60})/gs) {
-	my $len = chr(32 + length($1)*3/4); # compute length byte
-	$res .= unpack("u", $len . $1 );    # uudecode
+        my $len = chr(32 + length($1)*3/4); # compute length byte
+        $res .= unpack("u", $len . $1 );    # uudecode
     }
     $res;
 }
