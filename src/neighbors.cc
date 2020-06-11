@@ -1331,7 +1331,7 @@ peerProbeConnect(CachePeer *p, const bool reprobeIfBusy)
     }
     p->reprobe = false;
 
-    auto ctimeout = p->connectTimeout();
+    const auto ctimeout = p->connectTimeout();
     /* for each IP address of this CachePeer. find one that we can connect to and probe it. */
     for (int i = 0; i < p->n_addresses; ++i) {
         Comm::ConnectionPointer conn = new Comm::Connection;
