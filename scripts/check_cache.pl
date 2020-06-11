@@ -7,7 +7,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# check_cache.pl 
+# check_cache.pl
 #
 # Squid-1.0 version by martin hamilton <m.t.hamilton@lut.ac.uk>
 # Squid-1.1 version by Bertold Kolics <bertold@tohotom.vein.hu>
@@ -17,22 +17,22 @@
 
 require "getopts.pl";
 &Getopts("c:drt:vh");
-# -c		: the full path to squid.conf
-# -d		: turn on debugging
-# -r		: actually remove stale files
-# -t tmpdir	: temporary directory
-# -v 		: list stale files
-# -h 		: print the help
+# -c        : the full path to squid.conf
+# -d        : turn on debugging
+# -r        : actually remove stale files
+# -t tmpdir    : temporary directory
+# -v         : list stale files
+# -h         : print the help
 
 if ($opt_h) {
-	print "Usage: check_cache.pl -drvh -c squid.conf\n";
-	print "\t-c the full path to squid.conf\n";
-	print "\t-d turn on debugging\n";
-	print "\t-r actually remove stale files\n";
-	print "\t-t temporary directory\n";
-	print "\t-v list stale files\n";
-	print "\t-h print the help\n";
-	exit;
+    print "Usage: check_cache.pl -drvh -c squid.conf\n";
+    print "\t-c the full path to squid.conf\n";
+    print "\t-d turn on debugging\n";
+    print "\t-r actually remove stale files\n";
+    print "\t-t temporary directory\n";
+    print "\t-v list stale files\n";
+    print "\t-h print the help\n";
+    exit;
 }
 
 $squidconf = $opt_c || "/usr/local/squid/etc/squid.conf";
@@ -42,16 +42,16 @@ $swaplog = '';
 $level1dirno = 16;
 $level2dirno = 256;
 while (<squidconf>) {
-	chop;
-	if (/^cache_dir\s+(.*)/) {
-		push (@cachedir, $1);
-	} elsif (/cache_swap_log\s+(.*)/) {
-		$swaplog = $1;
-	} elsif (/swap_level1_dirs/) {
-		$level1dirno = $1;
-	} elsif (/swap_level21_dirs/) {
-		$level2dirno = $1;
-	}
+    chop;
+    if (/^cache_dir\s+(.*)/) {
+        push (@cachedir, $1);
+    } elsif (/cache_swap_log\s+(.*)/) {
+        $swaplog = $1;
+    } elsif (/swap_level1_dirs/) {
+        $level1dirno = $1;
+    } elsif (/swap_level21_dirs/) {
+        $level2dirno = $1;
+    }
 }
 close (squidconf);
 push (@cachedir, '/usr/local/squid/cache') unless ($#cachedir > $[-1);
@@ -69,12 +69,12 @@ system("sort -T $tmpdir pl$$ >spl$$; rm pl$$");
 
 # get list of files in cache & sort em
 for ($i = 0 ; $i < $no_cachedir; $i++) {
-	chdir($cachedir[i]);
-	system("find ./ -print -type f > $tmpdir/fp$$");
-	chdir($tmpdir);
+    chdir($cachedir[i]);
+    system("find ./ -print -type f > $tmpdir/fp$$");
+    chdir($tmpdir);
 # this cut prints only the lines with 4 fields so unnecessary lines
-# are supressed
-	system("cut -d'/' -f4 -s fp$$ >> cd$$ ; rm fp$$")
+# are suppressed
+    system("cut -d'/' -f4 -s fp$$ >> cd$$ ; rm fp$$")
 }
 system("sort -T $tmpdir cd$$ >scd$$; rm cd$$");
 
@@ -86,27 +86,27 @@ chdir($tmpdir);
 open(IN, "comm$$") || die "Can't open temporary file $tmpdir/comm$$: $!";
 unlink("comm$$");
 while(<IN>) {
-	chop;
-	$filename = $_;
+    chop;
+    $filename = $_;
 
 # calculate the full path of the current filename
-	$fileno = hex($filename);
-	$dirno = $fileno % $no_cachedir;
-	$a = $fileno / $no_cachedir;
-	$level1 = sprintf("%02X", $a % $level1dirno);
-	$level2 = sprintf("%02X", $a / $level1dirno % $level2dirno);
-	$filename = "$cachedir[dirno]/$level1/$level2/$filename";
+    $fileno = hex($filename);
+    $dirno = $fileno % $no_cachedir;
+    $a = $fileno / $no_cachedir;
+    $level1 = sprintf("%02X", $a % $level1dirno);
+    $level2 = sprintf("%02X", $a / $level1dirno % $level2dirno);
+    $filename = "$cachedir[dirno]/$level1/$level2/$filename";
 
-	next if -d "$filename"; # don't want directories
+    next if -d "$filename"; # don't want directories
 
-	print "$filename\n" if $opt_v; # print filename if asked
+    print "$filename\n" if $opt_v; # print filename if asked
 
-	# skip if cached file appeared since script started running
-	if (-M $filename < 0) {
-		print STDERR "skipping $filename\n" if $opt_d;
-		next;
-	}
-	print "Orphan: $filename\n";
-	unlink($filename) if $opt_r; # only remove if asked!
+    # skip if cached file appeared since script started running
+    if (-M $filename < 0) {
+        print STDERR "skipping $filename\n" if $opt_d;
+        next;
+    }
+    print "Orphan: $filename\n";
+    unlink($filename) if $opt_r; # only remove if asked!
 }
 close(IN);

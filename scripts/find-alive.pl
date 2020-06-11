@@ -26,58 +26,58 @@ my $Thing = $ARGV[0] or die("usage: $0 <Thing-to-look-for>\n");
 # We try to do that now (see "guessing ..." below), but it does
 # not always work.
 my %Pairs = (
-	AsyncCall => [
-		'AsyncCall.* constructed, this=(\S+)',
-		'AsyncCall.* destruct.*, this=(\S+)',
-	],
-	HttpHeaderEntry => [
-		'\bHttpHeaderEntry.* created HttpHeaderEntry (\S+)',
-		'\bHttpHeaderEntry.* destroying entry (\S+)',
-	],
-	ClientSocketContext => [
-		'\bClientSocketContext constructing, this=(\S+)',
-		'\bClientSocketContext destructed, this=(\S+)',
-	],
-	ICAP => [
-		'(?:ICAP|Icap).* constructed, this=(\S+)',
-		'(?:ICAP|Icap).* destruct.*, this=(\S+)',
-	],
-	IcapModXact => [
-		'Adaptation::Icap::ModXact.* constructed, this=(\S+)',
-		'Adaptation::Icap::ModXact.* destruct.*, this=(\S+)',
-	],
-	ICAPClientReqmodPrecache => [
-		'ICAPClientReqmodPrecache constructed, this=(\S+)',
-		'ICAPClientReqmodPrecache destruct.*, this=(\S+)',
-	],
-	HttpStateData => [
-		'HttpStateData (\S+) created',
-		'HttpStateData (\S+) destroyed',
-	],
-	cbdata => [
-		'cbdataInternalAlloc: Allocating (\S+)',
-		'cbdataRealFree: Freeing (\S+)',
-	],
-	FD => [
-		'fd_open.*\sFD (\d+)',
-		'fd_close\s+FD (\d+)',
-	],
-	IpcStoreMapEntry => [
-		'StoreMap.* opened .*entry (\d+) for \S+ (\S+)',
-		'StoreMap.* closed .*entry (\d+) for \S+ (\S+)',
-	],
-	sh_page => [
-		'PageStack.* pop: (sh_page\S+) at',
-		'PageStack.* push: (sh_page\S+) at',
-	],
-);
+    AsyncCall => [
+        'AsyncCall.* constructed, this=(\S+)',
+        'AsyncCall.* destruct.*, this=(\S+)',
+        ],
+    HttpHeaderEntry => [
+        '\bHttpHeaderEntry.* created HttpHeaderEntry (\S+)',
+        '\bHttpHeaderEntry.* destroying entry (\S+)',
+        ],
+    ClientSocketContext => [
+        '\bClientSocketContext constructing, this=(\S+)',
+        '\bClientSocketContext destructed, this=(\S+)',
+        ],
+    ICAP => [
+        '(?:ICAP|Icap).* constructed, this=(\S+)',
+        '(?:ICAP|Icap).* destruct.*, this=(\S+)',
+        ],
+    IcapModXact => [
+        'Adaptation::Icap::ModXact.* constructed, this=(\S+)',
+        'Adaptation::Icap::ModXact.* destruct.*, this=(\S+)',
+        ],
+    ICAPClientReqmodPrecache => [
+        'ICAPClientReqmodPrecache constructed, this=(\S+)',
+        'ICAPClientReqmodPrecache destruct.*, this=(\S+)',
+        ],
+    HttpStateData => [
+        'HttpStateData (\S+) created',
+        'HttpStateData (\S+) destroyed',
+        ],
+    cbdata => [
+        'cbdataInternalAlloc: Allocating (\S+)',
+        'cbdataRealFree: Freeing (\S+)',
+        ],
+    FD => [
+        'fd_open.*\sFD (\d+)',
+        'fd_close\s+FD (\d+)',
+        ],
+    IpcStoreMapEntry => [
+        'StoreMap.* opened .*entry (\d+) for \S+ (\S+)',
+        'StoreMap.* closed .*entry (\d+) for \S+ (\S+)',
+        ],
+    sh_page => [
+        'PageStack.* pop: (sh_page\S+) at',
+        'PageStack.* push: (sh_page\S+) at',
+        ],
+    );
 
 if (!$Pairs{$Thing}) {
     warn("guessing construction/destruction pattern for $Thing\n");
     $Pairs{$Thing} = [
-		"\\b$Thing construct.*, this=(\\S+)",
-		"\\b$Thing destruct.*, this=(\\S+)",
-	];
+        "\\b$Thing construct.*, this=(\\S+)",
+        "\\b$Thing destruct.*, this=(\\S+)",
+        ];
 }
 
 die("unsupported Thing, stopped") unless $Pairs{$Thing};
@@ -89,30 +89,30 @@ my %AliveCount = ();
 my %AliveImage = ();
 my $Count = 0;
 while (<STDIN>) {
-	if (my @conIds = (/$reConstructor/)) {
-		my $id = join(':', @conIds);
-		#die($_) if $Alive{$id};
-		$AliveImage{$id} = $_;
-		++$Count unless $AliveCount{$id}++;
-	} 
-	elsif (my @deIds = (/$reDestructor/)) {
-		my $id = join(':', @deIds);
-		if ($AliveCount{$id}) {
-			$AliveImage{$id} = undef() unless --$AliveCount{$id};
-		} else {
-			#warn("unborn: $_");
-			# do nothing; we are probably looking at a partial log
-		}
-	}
+    if (my @conIds = (/$reConstructor/)) {
+        my $id = join(':', @conIds);
+        #die($_) if $Alive{$id};
+        $AliveImage{$id} = $_;
+        ++$Count unless $AliveCount{$id}++;
+    }
+    elsif (my @deIds = (/$reDestructor/)) {
+        my $id = join(':', @deIds);
+        if ($AliveCount{$id}) {
+            $AliveImage{$id} = undef() unless --$AliveCount{$id};
+        } else {
+            #warn("unborn: $_");
+            # do nothing; we are probably looking at a partial log
+        }
+    }
 }
 
 printf(STDERR "Found %d %s\n", $Count, $Thing);
 
 my $aliveCount = 0;
 foreach my $alive (sort grep { defined($_) } values %AliveImage) {
-	next unless defined $alive;
-	printf("Alive: %s", $alive);
-	++$aliveCount;
+    next unless defined $alive;
+    printf("Alive: %s", $alive);
+    ++$aliveCount;
 }
 
 printf(STDERR "found %d still-alive %s\n", $aliveCount, $Thing);
