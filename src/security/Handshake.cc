@@ -587,11 +587,12 @@ Security::HandshakeParser::parseSupportedVersionsExtension(const SBuf &extension
         Parser::BinaryTokenizer tkVersions(tkList.pstring8("SupportedVersions"));
         while (!tkVersions.atEnd()) {
             const auto version = ParseOptionalProtocolVersion(tkVersions, "supported_version");
-            // Ignore values unsupported by Squid. Today, those are likely to be
-            // RFC 8701 GREASE values. Eventually, we may start seeing TLS v2+.
-            // By that time, we would probably add explicit TLS v2+ support or
-            // would not have to disable TLS v1.3 support in OpenSSL. In either
-            // case, we would continue ignoring all the unsupported values here.
+            // Ignore values unsupported by Squid (represented by a falsy
+            // version). Today, those are likely to be RFC 8701 GREASE values.
+            // Eventually, we may start seeing TLS v2+. By that time, we would
+            // probably add explicit TLS v2+ support or would not have to
+            // disable TLS v1.3 support in OpenSSL. In either case, we would
+            // continue ignoring all the unsupported values here.
             if (!version)
                 continue;
             if (!supportedVersionMax || TlsVersionEarlierThan(supportedVersionMax, version))
