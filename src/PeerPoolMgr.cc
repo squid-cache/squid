@@ -225,7 +225,7 @@ PeerPoolMgr::openNewConnection()
     getOutgoingAddress(request.getRaw(), conn);
     GetMarkingsToServer(request.getRaw(), *conn);
 
-    auto ctimeout = peer->connectTimeout();
+    const auto ctimeout = peer->connectTimeout();
     typedef CommCbMemFunT<PeerPoolMgr, CommConnectCbParams> Dialer;
     opener = JobCallback(48, 5, Dialer, this, PeerPoolMgr::handleOpenedConnection);
     Comm::ConnOpener *cs = new Comm::ConnOpener(conn, opener, ctimeout);
