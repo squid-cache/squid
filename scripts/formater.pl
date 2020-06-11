@@ -85,7 +85,7 @@ while($out){
             print "Can not open input file: $in\n";
             exit -1;
         }
-        my $line  = '';
+        my $line = '';
         while (<IN>) {
             $line=$line.$_;
             if (input_filter(\$line)==0) {
