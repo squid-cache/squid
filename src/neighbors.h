@@ -61,10 +61,6 @@ void peerConnectSucceded(CachePeer *);
 void dump_peer_options(StoreEntry *, CachePeer *);
 int peerHTTPOkay(const CachePeer *, PeerSelector *);
 
-// TODO: Consider moving this method to CachePeer class.
-/// \returns the effective connect timeout for the given peer
-time_t peerConnectTimeout(const CachePeer *peer);
-
 /// \returns max(1, timeout)
 time_t positiveTimeout(const time_t timeout);
 

@@ -8,17 +8,9 @@
 
 #include "squid.h"
 
-#define STUB_API "neighbors.cc"
+#define STUB_API "CachePeer.cc"
 #include "tests/STUB.h"
 
-#include "FwdState.h"
-#include "neighbors.h"
+#include "CachePeer.h"
 
-void
-peerConnClosed(CachePeer *p) STUB
-
-time_t
-FwdState::ForwardTimeout(const time_t) STUB_RETVAL(0)
-bool
-FwdState::EnoughTimeToReForward(const time_t fwdStart) STUB_RETVAL(false)
-
+time_t CachePeer::connectTimeout() const STUB_RETVAL(0)

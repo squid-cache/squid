@@ -32,6 +32,9 @@ public:
     CachePeer() = default;
     ~CachePeer();
 
+    /// \returns the effective connect timeout for the given peer
+    time_t connectTimeout() const;
+
     u_int index = 0;
     char *name = nullptr;
     char *host = nullptr;
@@ -169,7 +172,7 @@ public:
     } sourcehash;
 
     char *login = nullptr;        /* Proxy authorization */
-    time_t connect_timeout_raw = 0; ///< connect_timeout; use peerConnectTimeout() instead!
+    time_t connect_timeout_raw = 0; ///< connect_timeout; use connectTimeout() instead!
     int connect_fail_limit = 0;
     int max_conn = 0;
 
@@ -193,4 +196,3 @@ public:
 };
 
 #endif /* SQUID_CACHEPEER_H_ */
-
