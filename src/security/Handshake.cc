@@ -123,10 +123,13 @@ ParseProtocolVersionBase(Parser::BinaryTokenizer &tk, const char *contextLabel, 
         return AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, (vMinor - 1));
     }
 
+    /* handle unsupported versions, including any RFC 8701 GREASE values */
+
     const uint16_t vRaw = (vMajor << 8) | vMinor;
     debugs(83, 7, "unsupported: " << asHex(vRaw));
     if (beStrict)
         throw TextException(ToSBuf("unsupported TLS version: ", asHex(vRaw)), Here());
+    // else hide unsupported version details from the caller behind PROTO_NONE
     return AnyP::ProtocolVersion();
 }
 
