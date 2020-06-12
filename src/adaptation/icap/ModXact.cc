@@ -1281,7 +1281,8 @@ void Adaptation::Icap::ModXact::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 // adapted body consumer aborted
 void Adaptation::Icap::ModXact::noteBodyConsumerAborted(BodyPipe::Pointer)
 {
-    detailError(ERR_DETAIL_ICAP_XACT_BODY_CONSUMER_ABORT);
+    static const auto d = MakeNamedErrorDetail("ICAP_XACT_BODY_CONSUMER_ABORT");
+    detailError(d);
     mustStop("adapted body consumer aborted");
 }
 
@@ -1299,8 +1300,10 @@ void Adaptation::Icap::ModXact::swanSong()
     stopWriting(false);
     stopSending(false);
 
-    if (theInitiator.set()) // we have not sent the answer to the initiator
-        detailError(ERR_DETAIL_ICAP_XACT_OTHER);
+    if (theInitiator.set()) { // we have not sent the answer to the initiator
+        static const auto d = MakeNamedErrorDetail("ICAP_XACT_OTHER");
+        detailError(d);
+    }
 
     // update adaptation history if start was called and we reserved a slot
     Adaptation::History::Pointer ah = virginRequest().adaptLogHistory();

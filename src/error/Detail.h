@@ -33,6 +33,10 @@ public:
     virtual SBuf verbose(const HttpRequestPointer &) const;
 };
 
+/// creates a new NamedErrorDetail object with a unique name
+/// \see NamedErrorDetail::Name for naming restrictions
+ErrorDetail::Pointer MakeNamedErrorDetail(const char *name);
+
 /// system call failure detail based on standard errno(3)/strerror(3) APIs
 class SysErrorDetail: public ErrorDetail {
     MEMPROXY_CLASS(SysErrorDetail);
@@ -82,80 +86,6 @@ std::ostream &operator <<(std::ostream &os, const ErrorDetail &);
 
 /// dump the given ErrorDetail pointer which may be nil (for debugging)
 std::ostream &operator <<(std::ostream &os, const ErrorDetail::Pointer &);
-
-/* pre-created error globals that reduce common error handling overheads */
-
-/// external redirector request timed-out
-extern const ErrorDetail::Pointer ERR_DETAIL_REDIRECTOR_TIMEDOUT;
-
-/// client-facing code detected transaction abort
-extern const ErrorDetail::Pointer ERR_DETAIL_CLT_REQMOD_ABORT;
-
-/// client-facing code detected REQMOD request body adaptation failure
-extern const ErrorDetail::Pointer ERR_DETAIL_CLT_REQMOD_REQ_BODY;
-
-/// client-facing code detected REQMOD satisfaction reply body failure
-extern const ErrorDetail::Pointer ERR_DETAIL_CLT_REQMOD_RESP_BODY;
-
-/// server-facing code detected REQMOD request body abort
-extern const ErrorDetail::Pointer ERR_DETAIL_SRV_REQMOD_REQ_BODY;
-
-/// RESPMOD failed w/o store entry
-extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_RESPMOD_EARLY;
-
-/// RESPMOD failed with a store entry
-extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_RESPMOD_LATE;
-
-/// REQMOD denied client access
-extern const ErrorDetail::Pointer ERR_DETAIL_REQMOD_BLOCK;
-
-/// RESPMOD denied client access to HTTP response, before any part of the response was sent
-extern const ErrorDetail::Pointer ERR_DETAIL_RESPMOD_BLOCK_EARLY;
-
-/// RESPMOD denied client access to HTTP response, after [a part of] the response was sent
-extern const ErrorDetail::Pointer ERR_DETAIL_RESPMOD_BLOCK_LATE;
-
-/// transaction start failure
-extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_START;
-
-/// transaction start failure
-extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_SSL_START;
-
-/// transaction body consumer gone
-extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_BODY_CONSUMER_ABORT;
-
-/// initiator gone
-extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_INIT_GONE;
-
-/// ICAP connection closed unexpectedly
-extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_CLOSE;
-
-/// other ICAP transaction errors
-extern const ErrorDetail::Pointer ERR_DETAIL_ICAP_XACT_OTHER;
-
-/// cannot figure out where to tunnel the client traffic to
-extern const ErrorDetail::Pointer ERR_DETAIL_TUNNEL_TARGET;
-
-/// TLS parsing or negotiation failure at the beginning of a TLS connection
-extern const ErrorDetail::Pointer ERR_DETAIL_TLS_HANDSHAKE;
-
-/// BUG: TLS library succeeded in negotiation without the expected I/O
-extern const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_SUCCESS;
-
-/// BUG: TLS library requested reading while negotiating a TLS connection
-/// but Squid code has somehow missed that request
-extern const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_READ;
-
-/// BUG: TLS library requested writing while negotiating a TLS connection
-/// but Squid code has somehow missed that request
-extern const ErrorDetail::Pointer ERR_DETAIL_UNEXPECTED_WRITE;
-
-/// Connection to the server closed by remote end
-extern const ErrorDetail::Pointer ERR_DETAIL_SERVER_CLOSED;
-
-/// Connection to the remote server timed out
-extern const ErrorDetail::Pointer ERR_DETAIL_CONNECT_TIMEOUT;
-
 
 #endif /* _SQUID_SRC_ERROR_DETAIL_H */
 

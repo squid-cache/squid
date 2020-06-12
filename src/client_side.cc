@@ -2983,7 +2983,8 @@ ConnStateData::parseTlsHandshake()
     }
     catch (...) {
         debugs(83, 2, "exception: " << CurrentException);
-        parseErrorDetails = ERR_DETAIL_TLS_HANDSHAKE;
+        static const auto d = MakeNamedErrorDetail("TLS_PARSE_HANDSHAKE");
+        parseErrorDetails = d;
     }
 
     parsingTlsHandshake = false;
@@ -3156,17 +3157,25 @@ void
 ConnStateData::handleSslBumpHandshakeError(const Security::IoResult &handshakeResult)
 {
     auto errCategory = ERR_NONE;
+
     switch (handshakeResult.category) {
-    case Security::IoResult::ioSuccess:
-        updateError(errCategory = ERR_GATEWAY_FAILURE, ERR_DETAIL_UNEXPECTED_SUCCESS);
-
-    case Security::IoResult::ioWantRead:
-        updateError(errCategory = ERR_GATEWAY_FAILURE, ERR_DETAIL_UNEXPECTED_READ);
+    case Security::IoResult::ioSuccess: {
+        static const auto d = MakeNamedErrorDetail("UNEXPECTED_SUCCESS");
+        updateError(errCategory = ERR_GATEWAY_FAILURE, d);
         break;
+    }
 
-    case Security::IoResult::ioWantWrite:
-        updateError(errCategory = ERR_GATEWAY_FAILURE, ERR_DETAIL_UNEXPECTED_WRITE);
+    case Security::IoResult::ioWantRead: {
+        static const auto d = MakeNamedErrorDetail("UNEXPECTED_READ");
+        updateError(errCategory = ERR_GATEWAY_FAILURE, d);
         break;
+    }
+
+    case Security::IoResult::ioWantWrite: {
+        static const auto d = MakeNamedErrorDetail("UNEXPECTED_WRITE");
+        updateError(errCategory = ERR_GATEWAY_FAILURE, d);
+        break;
+    }
 
     case Security::IoResult::ioError:
         debugs(83, (handshakeResult.important ? DBG_IMPORTANT : 2), "ERROR: " << handshakeResult.errorDescription <<
@@ -3242,7 +3251,8 @@ ConnStateData::initiateTunneledRequest(HttpRequest::Pointer const &cause, Http::
         // problems earlier so that they can be classified/detailed better.
         debugs(33, 2, "Not able to compute URL, abort request tunneling for " << reason);
         // TODO: throw when nonBlockingCheck() callbacks gain job protections
-        updateError(ERR_INVALID_REQ, ERR_DETAIL_TUNNEL_TARGET);
+        static const auto d = MakeNamedErrorDetail("TUNNEL_TARGET");
+        updateError(ERR_INVALID_REQ, d);
         return false;
     }
 

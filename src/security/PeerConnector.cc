@@ -91,7 +91,8 @@ Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
 
     debugs(83, 5, "FD " << params.fd << ", Security::PeerConnector=" << params.data);
     const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
-    err->detailError(ERR_DETAIL_SERVER_CLOSED);
+    static const auto d = MakeNamedErrorDetail("SERVER_CLOSED");
+    err->detailError(d);
     bail(err);
 }
 
@@ -100,7 +101,8 @@ Security::PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &)
 {
     debugs(83, 5, serverConnection() << " timedout. this=" << (void*)this);
     const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al);
-    err->detailError(ERR_DETAIL_CONNECT_TIMEOUT);
+    static const auto d = MakeNamedErrorDetail("CONNECT_TIMEOUT");
+    err->detailError(d);
     bail(err);
 }
 
