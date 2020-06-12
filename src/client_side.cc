@@ -2983,7 +2983,7 @@ ConnStateData::parseTlsHandshake()
     }
     catch (...) {
         debugs(83, 2, "exception: " << CurrentException);
-        static const auto d = MakeNamedErrorDetail("TLS_PARSE_HANDSHAKE");
+        static const auto d = MakeNamedErrorDetail("TLS_ACCEPT_PARSE");
         parseErrorDetails = d;
     }
 
@@ -3160,19 +3160,19 @@ ConnStateData::handleSslBumpHandshakeError(const Security::IoResult &handshakeRe
 
     switch (handshakeResult.category) {
     case Security::IoResult::ioSuccess: {
-        static const auto d = MakeNamedErrorDetail("UNEXPECTED_SUCCESS");
+        static const auto d = MakeNamedErrorDetail("TLS_ACCEPT_UNEXPECTED_SUCCESS");
         updateError(errCategory = ERR_GATEWAY_FAILURE, d);
         break;
     }
 
     case Security::IoResult::ioWantRead: {
-        static const auto d = MakeNamedErrorDetail("UNEXPECTED_READ");
+        static const auto d = MakeNamedErrorDetail("TLS_ACCEPT_UNEXPECTED_READ");
         updateError(errCategory = ERR_GATEWAY_FAILURE, d);
         break;
     }
 
     case Security::IoResult::ioWantWrite: {
-        static const auto d = MakeNamedErrorDetail("UNEXPECTED_WRITE");
+        static const auto d = MakeNamedErrorDetail("TLS_ACCEPT_UNEXPECTED_WRITE");
         updateError(errCategory = ERR_GATEWAY_FAILURE, d);
         break;
     }
