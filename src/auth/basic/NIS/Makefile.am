@@ -9,10 +9,10 @@ include $(top_srcdir)/src/Common.am
 
 libexec_PROGRAMS = basic_nis_auth
 
-basic_nis_auth_SOURCES= \
+basic_nis_auth_SOURCES = \
 	basic_nis_auth.cc \
-	nis_support.h \
-	nis_support.cc
+	nis_support.cc \
+	nis_support.h
 
 basic_nis_auth_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
