@@ -126,7 +126,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::findEntry(const Key &key, KeyMapIterato
     auto &e = (*i).second;
     if (!expired(*e)) {
         if (e != data.begin())
-            data.splice(data.begin(), data, e, std::next(e));
+            data.splice(data.begin(), data, e);
         return;
     }
     // else fall through to cleanup
