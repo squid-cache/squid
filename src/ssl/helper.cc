@@ -197,6 +197,10 @@ void Ssl::CertValidationHelper::Init()
             if (parseParams) {
                 if (strncmp(token, "ttl=", 4) == 0) {
                     ttl = atoi(token + 4);
+                    if (ttl < 0) {
+                        debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "FATAL: TTL must have a value of 0 or more.");
+                        self_destruct();
+                    }
                     continue;
                 } else if (strncmp(token, "cache=", 6) == 0) {
                     cache = atoi(token + 6);
