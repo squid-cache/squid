@@ -78,7 +78,7 @@ public:
     /// The available size for the map
     size_t memLimit() const {return memLimit_;}
     /// The free space of the map
-    size_t freeMem() const { return (memLimit() > memoryUsed() ? memLimit() - memoryUsed() : 0);}
+    size_t freeMem() const { return memLimit() - memoryUsed(); }
     /// The current size of the map
     size_t memoryUsed() const {return memUsed_;}
     /// The number of stored entries
