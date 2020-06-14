@@ -74,13 +74,13 @@ public:
     bool add(const Key &key, EntryValue *t, int ttl);
     /// Delete an entry from the map
     void del(const Key &key);
-    /// (Re-)set the maximum size for this map
+    /// (re-)set the memory capacity for this map
     void setMemLimit(size_t aSize);
-    /// The available size for the map
+    /// The memory capacity for the map
     size_t memLimit() const {return memLimit_;}
     /// The free space of the map
     size_t freeMem() const { return memLimit() - memoryUsed(); }
-    /// The current size of the map
+    /// The current memory usage of the map
     size_t memoryUsed() const {return memUsed_;}
     /// The number of stored entries
     size_t entries() const { return data.size(); }
