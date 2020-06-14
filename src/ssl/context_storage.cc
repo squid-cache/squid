@@ -46,6 +46,7 @@ void Ssl::CertificateStorageAction::dump (StoreEntry *sentry)
         LocalContextStorage & ssl_store_policy(*(i->second));
         stream << ssl_store_policy.memLimit() / 1024 << delimiter;
         stream << ssl_store_policy.entries() << delimiter;
+        stream << MemoryUsedByContext(nullptr) / 1024 << delimiter; // XXX: complicated way to print "1"
         stream << ssl_store_policy.memoryUsed() / 1024 << delimiter;
         stream << ssl_store_policy.freeMem() / 1024 << endString;
     }
