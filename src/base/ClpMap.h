@@ -60,7 +60,7 @@ public:
     typedef std::unordered_map<Key, StorageIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapItem> > KeyMapping;
     typedef typename KeyMapping::iterator KeyMapIterator;
 
-    ClpMap(int aTtl, size_t aSize) : defaultTtl(aTtl) { setMemLimit(aSize); }
+    ClpMap(int aTtl, size_t aSize) : defaultTtl(aTtl) { assert(aTtl >= 0); setMemLimit(aSize); }
     ~ClpMap() = default;
     ClpMap(ClpMap const &) = delete;
     ClpMap & operator = (ClpMap const &) = delete;
@@ -98,7 +98,7 @@ private:
     /// index of stored data by key
     KeyMapping index;
 
-    /// TTL to use if none provided to add(). 0 to disable caching.
+    /// TTL to use if none provided to add().
     int defaultTtl = std::numeric_limits<int>::max;
     size_t memLimit_ = 0; ///< The maximum memory to use
     size_t memUsed_ = 0;  ///< The amount of memory currently used
