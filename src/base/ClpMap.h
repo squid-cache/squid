@@ -177,7 +177,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, int 
     del(key);
 
     const auto wantSpace = memoryCountedFor(key, t);
-    if (wantSpace >= memLimit())
+    if (wantSpace > memLimit())
         return false;
     trim(wantSpace);
 
@@ -220,12 +220,9 @@ template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)
 void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::trim(size_t wantSpace)
 {
-    while (memLimit() < (memoryUsed() + wantSpace)) {
-        auto i = data.end();
-        --i;
-        if (i != data.end()) {
-            del(i->key);
-        }
+    while (freeMem() < wantSpace) {
+        assert(!data.empty());
+        del(data.rbegin()->key);
     }
 }
 
