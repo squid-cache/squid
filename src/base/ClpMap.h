@@ -39,11 +39,11 @@ public:
     public:
         Entry(const Key &aKey, EntryValue *t, int ttl): key(aKey), value(t), expires(squid_curtime+ttl) {}
         ~Entry() {delete value;}
-        Entry(Entry &&) = default;
-        Entry & operator = (Entry &&) = default;
-    private:
         Entry(const Entry &) = delete;
         Entry & operator = (const Entry &) = delete;
+        Entry(Entry &&) = default;
+        Entry & operator = (Entry &&) = default;
+
     public:
         Key key; ///< the key of entry
         EntryValue *value = nullptr; ///< A pointer to the stored value
@@ -60,8 +60,11 @@ public:
     typedef std::unordered_map<Key, StorageIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapItem> > KeyMapping;
     typedef typename KeyMapping::iterator KeyMapIterator;
 
-    ClpMap(int ttl, size_t size);
+    ClpMap(int aTtl, size_t aSize) : defaultTtl(aTtl) { setMemLimit(aSize); }
     ~ClpMap() = default;
+    ClpMap(ClpMap const &) = delete;
+    ClpMap & operator = (ClpMap const &) = delete;
+
     /// Search for an entry, and return a pointer
     EntryValue *get(const Key &key);
     /// Add an entry to the map
@@ -80,10 +83,8 @@ public:
     size_t memoryUsed() const {return memUsed_;}
     /// The number of stored entries
     size_t entries() const { return data.size(); }
-private:
-    ClpMap(ClpMap const &);
-    ClpMap & operator = (ClpMap const &);
 
+private:
     bool expired(const Entry &e) const;
     void trim(size_t wantSpace);
     void erase(const KeyMapIterator &);
@@ -102,13 +103,6 @@ private:
     size_t memLimit_ = 0; ///< The maximum memory to use
     size_t memUsed_ = 0;  ///< The amount of memory currently used
 };
-
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-ClpMap<Key, EntryValue, MemoryUsedByEV>::ClpMap(int aTtl, size_t aSize) :
-    defaultTtl(aTtl)
-{
-    setMemLimit(aSize);
-}
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 void
