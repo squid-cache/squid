@@ -48,6 +48,7 @@ public:
         Key key; ///< the key of entry
         EntryValue *value = nullptr; ///< A pointer to the stored value
         time_t expires = 0; ///< When the entry is to be removed
+        size_t memCounted = 0; ///< memory accounted for this entry in parent ClpMap
     };
 
     /// container for stored data
@@ -183,6 +184,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, int 
     data.emplace_front(key, t, ttl);
     index.emplace(key, data.begin());
 
+    data.begin()->memCounted = wantSpace;
     memUsed_ += wantSpace;
     return true;
 }
@@ -200,7 +202,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::erase(const KeyMapIterator &i)
 {
     assert(i != index.end());
     auto &e = (*i).second;
-    const auto sz = memoryCountedFor(e->key, e->value);
+    const auto sz = e->memCounted;
     data.erase(e);
     index.erase(i);
     memUsed_ -= sz;
