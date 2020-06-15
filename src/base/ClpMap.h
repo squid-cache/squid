@@ -116,7 +116,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(size_t aSize)
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-const KeyMapIterator
+const typename ClpMap<Key, EntryValue, MemoryUsedByEV>::KeyMapIterator
 ClpMap<Key, EntryValue, MemoryUsedByEV>::findEntry(const Key &key)
 {
     const auto i = index.find(key);
@@ -125,7 +125,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::findEntry(const Key &key)
     }
 
     const auto e = i->second;
-    if (!expired(e)) {
+    if (!expired(*e)) {
         if (e != data.begin())
             data.splice(data.begin(), data, e);
         return i;
