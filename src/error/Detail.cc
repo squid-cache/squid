@@ -24,6 +24,7 @@ public:
 
     /* ErrorDetail API */
     virtual SBuf brief() const override { return name; }
+    virtual SBuf verbose(const HttpRequestPointer &) const override { return name; }
 
 private:
     /// distinguishes us from all other NamedErrorDetail objects
@@ -31,12 +32,6 @@ private:
 };
 
 /* ErrorDetail */
-
-SBuf
-ErrorDetail::verbose(const HttpRequest::Pointer &) const
-{
-    return brief();
-}
 
 std::ostream &
 operator <<(std::ostream &os, const ErrorDetail &detail)

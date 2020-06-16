@@ -29,8 +29,7 @@ public:
 
     /// \returns all available details; may be customized for the given request
     /// suitable for error pages and other output meant for human consumption
-    /// by default (i.e. if kids do not override), returns brief()
-    virtual SBuf verbose(const HttpRequestPointer &) const;
+    virtual SBuf verbose(const HttpRequestPointer &) const = 0;
 };
 
 /// creates a new NamedErrorDetail object with a unique name
