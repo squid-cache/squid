@@ -41,7 +41,7 @@ public:
 
     /// Details a server-side certificate verification failure.
     /// If `broken` is nil, then the broken certificate is the peer certificate.
-    ErrorDetail(ErrorCode err_no, Certificate *peer, Certificate *broken, const char *aReason = NULL);
+    ErrorDetail(ErrorCode err_no, const CertPointer &peer, const CertPointer &broken, const char *aReason = NULL);
 
     /// Details (or starts detailing) a non-validation failure.
     /// \param anIoErrorNo TLS I/O function outcome; \see ErrorDetail::ioErrorNo
@@ -66,15 +66,15 @@ public:
 
     /* Certificate manipulation API. TODO: Add GnuTLS implementations, users. */
 
-    /// remember SSL certificate of our peer
-    /// uses "move" semantics -- the caller does not unlock the certificate
-    void absorbPeerCertificate(Certificate *cert);
-
     /// the peer certificate (or nil)
     Certificate *peerCert() { return peer_cert.get(); }
 
     /// peer or intermediate certificate that failed validation (or nil)
     Certificate *brokenCert() {return broken_cert.get(); }
+
+    /// remember the SSL certificate of our peer; requires nil peerCert()
+    /// unlike the cert-setting constructor, does not assume the cert is bad
+    void setPeerCertificate(const CertPointer &);
 
 private:
     explicit ErrorDetail(Security::ErrorCode);

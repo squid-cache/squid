@@ -73,7 +73,7 @@ typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_
 #elif USE_GNUTLS
 typedef std::shared_ptr<struct gnutls_x509_crt_int> CertPointer;
 #else
-typedef std::shared_ptr<void> CertPointer;
+typedef std::shared_ptr<Certificate> CertPointer;
 #endif
 
 #if USE_OPENSSL

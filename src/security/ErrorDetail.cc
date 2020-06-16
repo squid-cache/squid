@@ -453,25 +453,12 @@ Security::ErrorDetail::ErrorDetail(const Security::ErrorCode err):
 #endif
 }
 
-Security::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, X509 *cert, X509 *broken, const char *aReason):
+Security::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, const CertPointer &cert, const CertPointer &broken, const char *aReason):
     ErrorDetail(err_no)
 {
-    if (aReason)
-        errReason = aReason;
-
-    if (cert)
-        peer_cert.resetAndLock(cert);
-
-    if (broken)
-        broken_cert.resetAndLock(broken);
-    else
-        broken_cert.resetAndLock(cert);
-
-#if USE_OPENSSL
-    detailEntry.error_no = SSL_ERROR_NONE;
-#else
-    // other libraries do not support admins-configurable error details
-#endif
+    errReason = aReason;
+    peer_cert = cert;
+    broken_cert = broken ? broken : cert;
 }
 
 Security::ErrorDetail::ErrorDetail(const Security::ErrorCode anErrorCode, const int anIoErrorNo, const int aSysErrorNo):
@@ -487,12 +474,13 @@ Security::ErrorDetail::ErrorDetail(const Security::ErrorCode anErrorCode, const 
 }
 
 void
-Security::ErrorDetail::absorbPeerCertificate(Certificate * const cert)
+Security::ErrorDetail::setPeerCertificate(const CertPointer &cert)
 {
     assert(cert);
     assert(!peer_cert);
     assert(!broken_cert);
-    peer_cert.resetWithoutLocking(cert);
+    peer_cert = cert;
+    // unlike the constructor, the supplied certificate is not a broken_cert
 }
 
 SBuf

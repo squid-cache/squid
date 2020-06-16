@@ -43,9 +43,9 @@ void KeyData::loadFromFiles(const AnyP::PortCfg &, const char *) STUB
 }
 
 #include "security/ErrorDetail.h"
-Security::ErrorDetail::ErrorDetail(ErrorCode, Certificate *, Certificate *, const char *) STUB
+Security::ErrorDetail::ErrorDetail(ErrorCode, const CertPointer &, const CertPointer &, const char *) STUB
 Security::ErrorDetail::ErrorDetail(ErrorCode, int, int) STUB
-void Security::ErrorDetail::absorbPeerCertificate(Certificate *) STUB
+void Security::ErrorDetail::setPeerCertificate(const CertPointer &) STUB
 SBuf Security::ErrorDetail::verbose(const HttpRequestPointer &) const STUB_RETVAL(SBuf())
 SBuf Security::ErrorDetail::brief() const STUB_RETVAL(SBuf())
 Security::ErrorCode Security::ErrorCodeFromName(const char *) STUB_RETVAL(0)

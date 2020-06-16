@@ -326,10 +326,10 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
                 debugs(83, 3, "bypassing SSL error " << i->error_no << " in " << "buffer");
             } else {
                 debugs(83, 5, "confirming SSL error " << i->error_no);
-                X509 *brokenCert = i->cert.get();
+                const auto &brokenCert = i->cert;
                 Security::CertPointer peerCert(SSL_get_peer_certificate(session.get()));
                 const char *aReason = i->error_reason.empty() ? NULL : i->error_reason.c_str();
-                errDetails = new ErrorDetail(i->error_no, peerCert.get(), brokenCert, aReason);
+                errDetails = new ErrorDetail(i->error_no, peerCert, brokenCert, aReason);
             }
             if (check) {
                 delete check->sslErrors;
@@ -430,7 +430,7 @@ Security::PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer
 
     if (!primaryDetail->peerCert()) {
         if (const auto serverCert = SSL_get_peer_certificate(tlsConnection))
-            primaryDetail->absorbPeerCertificate(serverCert);
+            primaryDetail->setPeerCertificate(CertPointer(serverCert));
     }
 #endif
 
