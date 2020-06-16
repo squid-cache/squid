@@ -381,7 +381,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
 
         std::unique_ptr<Security::ErrorDetail::Pointer> edp(new Security::ErrorDetail::Pointer(
-            new Security::ErrorDetail(error_no, peer_cert, broken_cert)));
+                    new Security::ErrorDetail(error_no, peer_cert, broken_cert)));
         if (SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail, edp.get()))
             edp.reset();
         else

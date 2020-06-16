@@ -428,7 +428,7 @@ Security::ErrorNameFromCode(const ErrorCode err, const bool prefixRawCode)
 
     static char tmpBuffer[128];
     snprintf(tmpBuffer, sizeof(tmpBuffer), "%s%d",
-        (prefixRawCode ? "SSL_ERR=" : ""), static_cast<int>(err));
+             (prefixRawCode ? "SSL_ERR=" : ""), static_cast<int>(err));
     return tmpBuffer;
 }
 
