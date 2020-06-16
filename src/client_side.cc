@@ -1553,7 +1553,7 @@ bool ConnStateData::serveDelayedError(Http::Stream *context)
                 // Create an error object and fill it
                 const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request, http->al);
                 err->src_addr = clientConnection->remote;
-                Ssl::ErrorDetail::Pointer errDetail = new Ssl::ErrorDetail(
+                const Security::ErrorDetail::Pointer errDetail = new Security::ErrorDetail(
                     SQUID_X509_V_ERR_DOMAIN_MISMATCH,
                     srvCert.get(), nullptr);
                 updateError(ERR_SECURE_CONNECT_FAIL, errDetail);

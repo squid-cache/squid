@@ -23,9 +23,6 @@
 #include "SquidString.h"
 /* auth/UserRequest.h is empty unless USE_AUTH is defined */
 #include "auth/UserRequest.h"
-#if USE_OPENSSL
-#include "ssl/ErrorDetail.h"
-#endif
 
 /// error page callback
 typedef void ERCB(int fd, void *, size_t);

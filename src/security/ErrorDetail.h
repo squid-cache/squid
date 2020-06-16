@@ -11,67 +11,123 @@
 
 #include "base/RefCount.h"
 #include "err_detail_type.h"
+#include "http/forward.h"
 #include "security/forward.h"
+
 #if USE_OPENSSL
-#include "ssl/ErrorDetail.h"
+#include "ssl/ErrorDetailManager.h"
 #endif
-
-/// Squid-specific TLS handling errors (a subset of ErrorCode)
-/// These errors either distinguish high-level library calls/contexts or
-/// supplement official certificate validation errors to cover special cases.
-/// We use negative values, assuming that those official errors are positive.
-enum {
-    SQUID_TLS_ERR_OFFSET = INT_MIN,
-
-    /* TLS library calls/contexts other than validation (e.g., I/O) */
-    SQUID_TLS_ERR_ACCEPT, ///< failure to accept a connection from a TLS client
-    SQUID_TLS_ERR_CONNECT, ///< failure to establish a connection with a TLS server
-
-    /* certificate validation problems not covered by official errors */
-    SQUID_X509_V_ERR_CERT_CHANGE,
-    SQUID_X509_V_ERR_DOMAIN_MISMATCH,
-    SQUID_X509_V_ERR_INFINITE_VALIDATION,
-
-    SQUID_TLS_ERR_END
-};
 
 namespace Security {
 
-#if USE_OPENSSL
-
-typedef RefCount<Ssl::ErrorDetail> ErrorDetailPointer;
-
-#elif USE_GNUTLS
-
+/// Details a TLS-related error. Two kinds of errors can be detailed:
+/// * certificate validation errors (including built-in and helper-driven) and
+/// * TLS logic and I/O errors (detected by Squid or the TLS library).
+///
+/// The following details may be available (only the first one is required):
+/// * for all errors: problem classification (\see ErrorCode)
+/// * for all errors: peer certificate
+/// * for certificate validation errors: the broken certificate
+/// * for certificate validation errors: validation failure reason
+/// * for non-validation errors: TLS library-reported error(s)
+/// * for non-validation errors: system call errno(3)
 class ErrorDetail: public ::ErrorDetail
 {
     MEMPROXY_CLASS(Security::ErrorDetail);
 
 public:
-    typedef RefCount<ErrorDetail> Pointer;
+    typedef ErrorDetailPointer Pointer;
+
+    /// Details a server-side certificate verification failure.
+    /// If `broken` is nil, then the broken certificate is the peer certificate.
+    ErrorDetail(ErrorCode err_no, Certificate *peer, Certificate *broken, const char *aReason = NULL);
 
     /// Details (or starts detailing) a non-validation failure.
-    /// \param anErrorNo an error reported by the TLS library.
-    ErrorDetail(int anErrorCode, int anErrorNo) : error_no(anErrorCode), libErrorNo(anErrorNo) {}
+    /// \param anIoErrorNo TLS I/O function outcome; \see ErrorDetail::ioErrorNo
+    /// \param aSysErrorNo saved errno(3); \see ErrorDetail::sysErrorNo
+    ErrorDetail(ErrorCode anErrorCode, int anIoErrorNo, int aSysErrorNo);
 
+    /// \returns whether we (rather than `them`) should detail ErrorState
+    bool takesPriorityOver(const ErrorDetail &them) const {
+        // to reduce pointless updates, return false if us is them
+        return this->generation < them.generation;
+    }
 
+    /* ErrorDetail API */
     virtual SBuf brief() const;
     virtual SBuf verbose(const HttpRequestPointer &) const;
 
-    /// error category; \see Security::ErrorCode
-    Security::ErrorCode error_no = 0;
+    /// \returns error category; \see ErrorCode
+    ErrorCode errorNo() const { return error_no; }
 
-    /// The error reported by GnuTLS library
-    int libErrorNo = 0;
+    /// \returns the previously saved errno(3) or zero
+    int sysError() const { return sysErrorNo; }
+
+    /* Certificate manipulation API. TODO: Add GnuTLS implementations, users. */
+
+    /// remember SSL certificate of our peer
+    /// uses "move" semantics -- the caller does not unlock the certificate
+    void absorbPeerCertificate(Certificate *cert);
+
+    /// the peer certificate (or nil)
+    Certificate *peerCert() { return peer_cert.get(); }
+
+    /// peer or intermediate certificate that failed validation (or nil)
+    Certificate *brokenCert() {return broken_cert.get(); }
+
+private:
+    explicit ErrorDetail(Security::ErrorCode);
+
+    /* methods for formatting error details using admin-configurable %codes */
+    const char *subject() const;
+    const char *ca_name() const;
+    const char *cn() const;
+    const char *notbefore() const;
+    const char *notafter() const;
+    const char *err_code() const;
+    const char *err_descr() const;
+    const char *err_lib_error() const;
+    size_t convert(const char *code, const char **value) const;
+
+    static uint64_t Generations; ///< the total number of ErrorDetails ever made
+    uint64_t generation; ///< the number of ErrorDetails made before us plus one
+
+    CertPointer peer_cert; ///< A pointer to the peer certificate
+    CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
+
+    /// error category; \see ErrorCode
+    ErrorCode error_no = 0;
+
+    /// TLS I/O operation result or zero
+    /// For OpenSSL, a SSL_get_error(3SSL) result (e.g., SSL_ERROR_SYSCALL).
+    /// For GnuTLS, a result of an I/O function like gnutls_handshake() (e.g., GNUTLS_E_WARNING_ALERT_RECEIVED)
+    int ioErrorNo = 0;
+
+    /// errno(3); system call failure code or zero
+    int sysErrorNo = 0;
+
+#if USE_OPENSSL
+    /// Non-validation error reported by the TLS library or zero.
+    /// For OpenSSL, this is the result of the first ERR_get_error(3SSL) call,
+    /// which `openssl errstr` can expand into details like
+    /// `error:1408F09C:SSL routines:ssl3_get_record:http request`.
+    unsigned long lib_error_no = SSL_ERROR_NONE;
+
+    using ErrorDetailEntry = Ssl::ErrorDetailEntry;
+    mutable ErrorDetailEntry detailEntry;
+#else
+    // other TLS libraries do not use custom ErrorDetail members
+#endif
+
+    String errReason; ///< a custom reason for the error
 };
 
-typedef RefCount<ErrorDetail> ErrorDetailPointer;
+/// \returns ErrorCode with a given name (or zero)
+ErrorCode ErrorCodeFromName(const char *name);
 
-#else
-
-typedef RefCount<void> ErrorDetailPointer;
-
-#endif
+/// \returns string representation of ErrorCode, including raw X.509 error codes
+/// \param prefixRawCode whether to prefix raw codes with "SSL_ERR="
+const char *ErrorNameFromCode(ErrorCode err, bool prefixRawCode = false);
 
 }
 

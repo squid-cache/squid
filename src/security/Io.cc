@@ -84,8 +84,8 @@ Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun i
     }
 
     // now we know that we are dealing with a real problem; detail it
-    const Ssl::ErrorDetail::Pointer errorDetail =
-        new Ssl::ErrorDetail(topError, ioError, xerrno);
+    const ErrorDetail::Pointer errorDetail =
+        new ErrorDetail(topError, ioError, xerrno);
 
     IoResult ioResult(errorDetail);
 
@@ -142,8 +142,8 @@ Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun i
     }
 
     // now we know that we are dealing with a real problem; detail it
-    const Security::ErrorDetail::Pointer errorDetail =
-        new Security::ErrorDetail(topError, callResult);
+    const ErrorDetail::Pointer errorDetail =
+        new ErrorDetail(topError, callResult, xerrno);
 
     IoResult ioResult(errorDetail);
     ioResult.errorDescription = "failure";

@@ -15,6 +15,7 @@
 #include "fde.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
+#include "security/ErrorDetail.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
 #include "ssl/bio.h"
@@ -222,7 +223,7 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
     if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
         if (!serverBump->serverCert.get()) {
             // remember the server certificate from the ErrorDetail object
-            const auto errDetail = dynamic_cast<Ssl::ErrorDetail *>(error ? error->detail.getRaw() : nullptr);
+            const auto errDetail = dynamic_cast<Security::ErrorDetail *>(error ? error->detail.getRaw() : nullptr);
             if (errDetail && errDetail->peerCert())
                 serverBump->serverCert.resetAndLock(errDetail->peerCert());
             else {

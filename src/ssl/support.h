@@ -66,7 +66,6 @@ int AskPasswordCb(char *buf, int size, int rwflag, void *userdata);
 /// call before generating any SSL context
 void Initialize();
 
-class ErrorDetail;
 class CertValidationResponse;
 typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 

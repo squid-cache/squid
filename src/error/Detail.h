@@ -11,6 +11,7 @@
 
 #include "base/Here.h"
 #include "base/RefCount.h"
+#include "error/forward.h"
 #include "http/forward.h"
 #include "mem/forward.h"
 #include "sbuf/forward.h"
@@ -19,7 +20,7 @@
 class ErrorDetail: public RefCountable
 {
 public:
-    typedef RefCount<ErrorDetail> Pointer;
+    using Pointer = ErrorDetailPointer;
 
     virtual ~ErrorDetail() {}
 

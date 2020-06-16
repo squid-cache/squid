@@ -14,15 +14,6 @@
 #define STUB_API "security/libsecurity.la"
 #include "tests/STUB.h"
 
-#if USE_OPENSSL
-namespace Ssl
-{
-// XXX: Move out
-class ErrorDetail;
-typedef RefCount<ErrorDetail> ErrorDetailPointer;
-}
-#endif
-
 #include "security/BlindPeerConnector.h"
 CBDATA_NAMESPACED_CLASS_INIT(Security, BlindPeerConnector);
 namespace Security
@@ -50,6 +41,15 @@ namespace Security
 {
 void KeyData::loadFromFiles(const AnyP::PortCfg &, const char *) STUB
 }
+
+#include "security/ErrorDetail.h"
+Security::ErrorDetail::ErrorDetail(ErrorCode, Certificate *, Certificate *, const char *) STUB
+Security::ErrorDetail::ErrorDetail(ErrorCode, int, int) STUB
+void Security::ErrorDetail::absorbPeerCertificate(Certificate *) STUB
+SBuf Security::ErrorDetail::verbose(const HttpRequestPointer &) const STUB_RETVAL(SBuf())
+SBuf Security::ErrorDetail::brief() const STUB_RETVAL(SBuf())
+Security::ErrorCode Security::ErrorCodeFromName(const char *) STUB_RETVAL(0)
+const char *Security::ErrorNameFromCode(ErrorCode, bool) STUB_RETVAL("")
 
 #include "security/NegotiationHistory.h"
 Security::NegotiationHistory::NegotiationHistory() STUB

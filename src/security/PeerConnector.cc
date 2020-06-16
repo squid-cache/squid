@@ -329,7 +329,7 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
                 X509 *brokenCert = i->cert.get();
                 Security::CertPointer peerCert(SSL_get_peer_certificate(session.get()));
                 const char *aReason = i->error_reason.empty() ? NULL : i->error_reason.c_str();
-                errDetails = new Ssl::ErrorDetail(i->error_no, peerCert.get(), brokenCert, aReason);
+                errDetails = new ErrorDetail(i->error_no, peerCert.get(), brokenCert, aReason);
             }
             if (check) {
                 delete check->sslErrors;
@@ -423,7 +423,7 @@ Security::PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer
 
     // find the highest priority detail
     if (const auto storedDetailRaw = SSL_get_ex_data(tlsConnection, ssl_ex_index_ssl_error_detail)) {
-        const auto &storedDetail = *static_cast<Ssl::ErrorDetail::Pointer*>(storedDetailRaw);
+        const auto &storedDetail = *static_cast<ErrorDetail::Pointer*>(storedDetailRaw);
         if (storedDetail->takesPriorityOver(*primaryDetail))
             primaryDetail = storedDetail;
     }
@@ -435,9 +435,7 @@ Security::PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer
 #endif
 
     const auto anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request, al);
-#if USE_OPENSSL
     anErr->xerrno = primaryDetail->sysError();
-#endif
     anErr->detailError(primaryDetail);
     noteNegotiationDone(anErr);
     bail(anErr);

@@ -10,6 +10,7 @@
 #define SQUID_SRC_SECURITY_FORWARD_H
 
 #include "base/CbDataList.h"
+#include "base/forward.h"
 #include "security/Context.h"
 #include "security/Session.h"
 
@@ -59,6 +60,14 @@ class CertError;
 typedef CbDataList<Security::CertError> CertErrors;
 
 #if USE_OPENSSL
+typedef X509 Certificate;
+#elif USE_GNUTLS
+typedef struct gnutls_x509_crt_int Certificate;
+#else
+typedef class {} Certificate;
+#endif
+
+#if USE_OPENSSL
 CtoCpp1(X509_free, X509 *);
 typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref> > CertPointer;
 #elif USE_GNUTLS
@@ -90,9 +99,10 @@ typedef void *DhePointer;
 
 class EncryptorAnswer;
 
-/// Squid defined error code (<0), an error code returned by X.509 API, or SSL_ERROR_NONE
+/// Squid-defined error code (<0), an error code returned by X.509 API, or zero
 typedef int ErrorCode;
 
+// TODO: Reconcile with ErrorNameFromCode(). XXX: Callers use non-ErrorCodes!
 inline const char *ErrorString(const ErrorCode code) {
 #if USE_OPENSSL
     return ERR_error_string(code, nullptr);
@@ -153,7 +163,29 @@ typedef std::shared_ptr<void> PrivateKeyPointer;
 
 class ServerOptions;
 
+class ErrorDetail;
+typedef RefCount<ErrorDetail> ErrorDetailPointer;
+
 } // namespace Security
+
+/// Squid-specific TLS handling errors (a subset of ErrorCode)
+/// These errors either distinguish high-level library calls/contexts or
+/// supplement official certificate validation errors to cover special cases.
+/// We use negative values, assuming that those official errors are positive.
+enum {
+    SQUID_TLS_ERR_OFFSET = INT_MIN,
+
+    /* TLS library calls/contexts other than validation (e.g., I/O) */
+    SQUID_TLS_ERR_ACCEPT, ///< failure to accept a connection from a TLS client
+    SQUID_TLS_ERR_CONNECT, ///< failure to establish a connection with a TLS server
+
+    /* certificate validation problems not covered by official errors */
+    SQUID_X509_V_ERR_CERT_CHANGE,
+    SQUID_X509_V_ERR_DOMAIN_MISMATCH,
+    SQUID_X509_V_ERR_INFINITE_VALIDATION,
+
+    SQUID_TLS_ERR_END
+};
 
 #endif /* SQUID_SRC_SECURITY_FORWARD_H */
 

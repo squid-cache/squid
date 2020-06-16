@@ -41,14 +41,6 @@ class HappyConnOpener;
 typedef CbcPointer<HappyConnOpener> HappyConnOpenerPointer;
 class HappyConnOpenerAnswer;
 
-#if USE_OPENSSL
-namespace Ssl
-{
-class ErrorDetail;
-class CertValidationResponse;
-};
-#endif
-
 /// Sets initial TOS value and Netfilter for the future outgoing connection.
 /// Updates the given Connection object, not the future transport connection.
 void GetMarkingsToServer(HttpRequest * request, Comm::Connection &conn);

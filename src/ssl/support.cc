@@ -30,6 +30,7 @@
 #include "SquidTime.h"
 #include "ssl/bio.h"
 #include "ssl/Config.h"
+#include "ssl/ErrorDetail.h"
 #include "ssl/gadgets.h"
 #include "ssl/support.h"
 
@@ -379,11 +380,12 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 broken_cert.resetAndLock(last_used_cert);
         }
 
-        auto *errDetail = new ErrorDetail::Pointer(new Ssl::ErrorDetail(error_no, peer_cert.get(), broken_cert.get()));
-        if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail, errDetail)) {
-            debugs(83, 2, "Failed to set Ssl::ErrorDetail in ssl_verify_cb: Certificate " << buffer);
-            delete errDetail;
-        }
+        std::unique_ptr<Security::ErrorDetail::Pointer> edp(new Security::ErrorDetail::Pointer(
+            new Security::ErrorDetail(error_no, peer_cert.get(), broken_cert.get())));
+        if (SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail, edp.get()))
+            edp.reset();
+        else
+            debugs(83, 2, "failed to store a " << buffer << " error detail: " << *edp);
     }
 
     return ok;
@@ -425,7 +427,7 @@ static void
 ssl_free_ErrorDetail(void *, void *ptr, CRYPTO_EX_DATA *,
                      int, long, void *)
 {
-    auto *errDetail = static_cast<ErrorDetail::Pointer*>(ptr);
+    const auto errDetail = static_cast<Security::ErrorDetail::Pointer*>(ptr);
     delete errDetail;
 }
 
