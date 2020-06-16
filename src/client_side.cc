@@ -2969,7 +2969,9 @@ ConnStateData::parseTlsHandshake()
     receivedFirstByte();
     fd_note(clientConnection->fd, "Parsing TLS handshake");
 
+    // stops being nil if we fail to parse the handshake
     ErrorDetail::Pointer parseErrorDetails;
+
     try {
         if (!tlsParser.parseHello(inBuf)) {
             // need more data to finish parsing
