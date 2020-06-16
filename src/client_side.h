@@ -297,7 +297,6 @@ public:
 #else
     bool switchedToHttps() const { return false; }
 #endif
-
     char *prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp);
 
     /// handle a control message received by context from a peer and call back
