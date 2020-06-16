@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -206,7 +206,7 @@ bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, 
     i = map.find(Ssl::CrtdMessage::param_Sign);
     if (i != map.end()) {
         if ((certProperties.signAlgorithm = Ssl::certSignAlgorithmId(i->second.c_str())) == Ssl::algSignEnd) {
-            error = "Wrong signing algoritm: ";
+            error = "Wrong signing algorithm: ";
             error += i->second;
             return false;
         }

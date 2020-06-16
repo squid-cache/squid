@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -32,6 +32,7 @@
 #include "pconn.h"
 #include "profiler/Profiler.h"
 #include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "StoreIOBuffer.h"
@@ -471,6 +472,20 @@ comm_apply_flags(int new_socket,
         if ( addr.isNoAddr() )
             debugs(5,0,"CRITICAL: Squid is attempting to bind() port " << addr << "!!");
 
+#if defined(SO_REUSEPORT)
+        if (flags & COMM_REUSEPORT) {
+            int on = 1;
+            if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEPORT, reinterpret_cast<char*>(&on), sizeof(on)) < 0) {
+                const auto savedErrno = errno;
+                const auto errorMessage = ToSBuf("cannot enable SO_REUSEPORT socket option when binding to ",
+                                                 addr, ": ", xstrerr(savedErrno));
+                if (reconfiguring)
+                    debugs(5, DBG_IMPORTANT, "ERROR: " << errorMessage);
+                else
+                    throw TexcHere(errorMessage);
+            }
+        }
+#endif
         if (commBind(new_socket, *AI) != Comm::OK) {
             comm_close(new_socket);
             return -1;
@@ -616,7 +631,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
      * This case is presently handled here as it's both a known case and it's
      * uncertain what error will be returned by the IPv6 stack in such case. It's
      * possible this will also be handled by the errno checks below after connect()
-     * but needs carefull cross-platform verification, and verifying the address
+     * but needs careful cross-platform verification, and verifying the address
      * condition here is simple.
      */
     if (!F->local_addr.isIPv4() && address.isIPv4()) {
@@ -733,6 +748,7 @@ commCallCloseHandlers(int fd)
     }
 }
 
+// XXX: This code has been broken, unused, and untested since 933dd09. Remove.
 #if LINGERING_CLOSE
 static void
 commLingerClose(int fd, void *unused)
@@ -835,6 +851,7 @@ comm_close_complete(const FdeCbParams &params)
     ++ statCounter.syscalls.sock.closes;
 
     /* When one connection closes, give accept() a chance, if need be */
+    CodeContext::Reset(); // exit FD-specific context
     Comm::AcceptLimiter::Instance().kick();
 }
 
@@ -876,6 +893,11 @@ _comm_close(int fd, char const *file, int line)
     PROF_start(comm_close);
 
     F->flags.close_request = true;
+
+    // We have caller's context and fde::codeContext. In the unlikely event they
+    // differ, it is not clear which context is more applicable to this closure.
+    // For simplicity sake, we remain in the caller's context while still
+    // allowing individual advanced callbacks to overwrite it.
 
     if (F->ssl) {
         AsyncCall::Pointer startCall=commCbCall(5,4, "commStartTlsClose",
@@ -1210,7 +1232,7 @@ commSetTcpKeepalive(int fd, int idle, int interval, int timeout)
 void
 comm_init(void)
 {
-    fd_table =(fde *) xcalloc(Squid_MaxFD, sizeof(fde));
+    assert(fd_table);
 
     /* make sure the accept() socket FIFO delay queue exists */
     Comm::AcceptLimiter::Instance();
@@ -1236,7 +1258,6 @@ comm_exit(void)
     delete TheHalfClosed;
     TheHalfClosed = NULL;
 
-    safe_free(fd_table);
     Comm::CallbackTableDestruct();
 }
 
@@ -1254,30 +1275,38 @@ commHandleWriteHelper(void * data)
     assert(clientInfo);
     assert(clientInfo->hasQueue());
     assert(clientInfo->hasQueue(queue));
-    assert(!clientInfo->selectWaiting);
     assert(clientInfo->eventWaiting);
     clientInfo->eventWaiting = false;
 
     do {
-        // check that the head descriptor is still relevant
-        const int head = clientInfo->quotaPeekFd();
-        Comm::IoCallback *ccb = COMMIO_FD_WRITECB(head);
+        clientInfo->writeOrDequeue();
+        if (clientInfo->selectWaiting)
+            return;
+    } while (clientInfo->hasQueue());
 
-        if (fd_table[head].clientInfo == clientInfo &&
-                clientInfo->quotaPeekReserv() == ccb->quotaQueueReserv &&
-                !fd_table[head].closing()) {
+    debugs(77, 3, "emptied queue");
+}
+
+void
+ClientInfo::writeOrDequeue()
+{
+    assert(!selectWaiting);
+    const auto head = quotaPeekFd();
+    const auto &headFde = fd_table[head];
+    CallBack(headFde.codeContext, [&] {
+        const auto ccb = COMMIO_FD_WRITECB(head);
+        // check that the head descriptor is still relevant
+        if (headFde.clientInfo == this &&
+                quotaPeekReserv() == ccb->quotaQueueReserv &&
+                !headFde.closing()) {
 
             // wait for the head descriptor to become ready for writing
             Comm::SetSelect(head, COMM_SELECT_WRITE, Comm::HandleWrite, ccb, 0);
-            clientInfo->selectWaiting = true;
-            return;
+            selectWaiting = true;
+        } else {
+            quotaDequeue(); // remove the no longer relevant descriptor
         }
-
-        clientInfo->quotaDequeue(); // remove the no longer relevant descriptor
-        // and continue looking for a relevant one
-    } while (clientInfo->hasQueue());
-
-    debugs(77,3, HERE << "emptied queue");
+    });
 }
 
 bool
@@ -1453,6 +1482,7 @@ CommQuotaQueue::enqueue(int fd)
     debugs(77,5, "clt" << (const char*)clientInfo->key <<
            ": FD " << fd << " with qqid" << (ins+1) << ' ' << fds.size());
     fds.push_back(fd);
+    fd_table[fd].codeContext = CodeContext::Current();
     return ++ins;
 }
 
@@ -1572,14 +1602,19 @@ checkTimeouts(void)
 
         if (writeTimedOut(fd)) {
             // We have an active write callback and we are timed out
+            CodeContext::Reset(F->codeContext);
             debugs(5, 5, "checkTimeouts: FD " << fd << " auto write timeout");
             Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
             COMMIO_FD_WRITECB(fd)->finish(Comm::COMM_ERROR, ETIMEDOUT);
+            CodeContext::Reset();
 #if USE_DELAY_POOLS
         } else if (F->writeQuotaHandler != nullptr && COMMIO_FD_WRITECB(fd)->conn != nullptr) {
+            // TODO: Move and extract quota() call to place it inside F->codeContext.
             if (!F->writeQuotaHandler->selectWaiting && F->writeQuotaHandler->quota() && !F->closing()) {
+                CodeContext::Reset(F->codeContext);
                 F->writeQuotaHandler->selectWaiting = true;
                 Comm::SetSelect(fd, COMM_SELECT_WRITE, Comm::HandleWrite, COMMIO_FD_WRITECB(fd), 0);
+                CodeContext::Reset();
             }
             continue;
 #endif
@@ -1587,6 +1622,7 @@ checkTimeouts(void)
         else if (AlreadyTimedOut(F))
             continue;
 
+        CodeContext::Reset(F->codeContext);
         debugs(5, 5, "checkTimeouts: FD " << fd << " Expired");
 
         if (F->timeoutHandler != NULL) {
@@ -1598,6 +1634,8 @@ checkTimeouts(void)
             debugs(5, 5, "checkTimeouts: FD " << fd << ": Forcing comm_close()");
             comm_close(fd);
         }
+
+        CodeContext::Reset();
     }
 }
 
@@ -1610,6 +1648,7 @@ commStartHalfClosedMonitor(int fd)
     debugs(5, 5, HERE << "adding FD " << fd << " to " << *TheHalfClosed);
     assert(isOpen(fd) && !commHasHalfClosedMonitor(fd));
     (void)TheHalfClosed->add(fd); // could also assert the result
+    fd_table[fd].codeContext = CodeContext::Current();
     commPlanHalfClosedCheck(); // may schedule check if we added the first FD
 }
 
@@ -1637,10 +1676,12 @@ commHalfClosedCheck(void *)
         Comm::ConnectionPointer c = new Comm::Connection; // XXX: temporary. make HalfClosed a list of these.
         c->fd = *i;
         if (!fd_table[c->fd].halfClosedReader) { // not reading already
-            AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
-                                                 CommIoCbPtrFun(&commHalfClosedReader, NULL));
-            Comm::Read(c, call);
-            fd_table[c->fd].halfClosedReader = call;
+            CallBack(fd_table[c->fd].codeContext, [&c] {
+                AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
+                                                     CommIoCbPtrFun(&commHalfClosedReader, nullptr));
+                Comm::Read(c, call);
+                fd_table[c->fd].halfClosedReader = call;
+            });
         } else
             c->fd = -1; // XXX: temporary. prevent c replacement erase closing listed FD
     }
@@ -1733,7 +1774,7 @@ DeferredReadManager::delayRead(DeferredRead const &aRead)
                                            "DeferredReadManager::CloseHandler",
                                            CommCloseCbPtrFun(&CloseHandler, temp));
     comm_add_close_handler(aRead.theRead.conn->fd, closer);
-    temp->element.closer = closer; // remeber so that we can cancel
+    temp->element.closer = closer; // remember so that we can cancel
 }
 
 void

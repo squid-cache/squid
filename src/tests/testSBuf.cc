@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -997,7 +997,7 @@ testSBuf::testSBufHash()
     CPPUNIT_ASSERT_EQUAL(hasher(literal),hasher(SBuf(fox)));
     CPPUNIT_ASSERT_EQUAL(hasher(SBuf(fox)),hasher(SBuf(fox)));
 
-    //differen content should have different hash
+    //different content should have different hash
     CPPUNIT_ASSERT(hasher(SBuf(fox)) != hasher(SBuf(fox1)));
 
     {

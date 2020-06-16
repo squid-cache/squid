@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "base/CodeContext.h"
 #include "CachePeer.h"
 #include "errorpage.h"
 #include "FwdState.h"
@@ -152,6 +153,7 @@ HappyOrderEnforcer::enqueue(HappyConnOpener &job)
     Must(!job.spareWaiting.callback);
     jobs_.emplace_back(&job);
     job.spareWaiting.position = std::prev(jobs_.end());
+    job.spareWaiting.codeContext = CodeContext::Current();
 }
 
 void
@@ -172,10 +174,11 @@ HappyOrderEnforcer::checkpoint()
     while (!jobs_.empty()) {
         if (const auto jobPtr = jobs_.front().valid()) {
             auto &job = *jobPtr;
-            if (readyNow(job))
-                job.spareWaiting.callback = notify(jobPtr); // and fall through to the next job
-            else
+            if (!readyNow(job))
                 break; // the next job cannot be ready earlier (FIFO)
+            CallBack(job.spareWaiting.codeContext, [&] {
+                job.spareWaiting.callback = notify(jobPtr); // and fall through to the next job
+            });
         }
         jobs_.pop_front();
     }
@@ -394,15 +397,11 @@ HappyConnOpener::swanSong()
     // TODO: Find an automated, faster way to kill no-longer-needed jobs.
 
     if (prime) {
-        if (prime.connector)
-            prime.connector->cancel("HappyConnOpener object destructed");
-        prime.clear();
+        cancelAttempt(prime, "job finished during a prime attempt");
     }
 
     if (spare) {
-        if (spare.connector)
-            spare.connector->cancel("HappyConnOpener object destructed");
-        spare.clear();
+        cancelAttempt(spare, "job finished during a spare attempt");
         if (gotSpareAllowance) {
             TheSpareAllowanceGiver.jobDroppedAllowance();
             gotSpareAllowance = false;
@@ -479,6 +478,15 @@ HappyConnOpener::sendSuccess(const Comm::ConnectionPointer &conn, bool reused, c
         ScheduleCallHere(callback_);
     }
     callback_ = nullptr;
+}
+
+/// cancels the in-progress attempt, making its path a future candidate
+void
+HappyConnOpener::cancelAttempt(Attempt &attempt, const char *reason)
+{
+    Must(attempt);
+    destinations->retryPath(attempt.path); // before attempt.cancel() clears path
+    attempt.cancel(reason);
 }
 
 /// inform the initiator about our failure to connect (if needed)
@@ -560,6 +568,7 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, Comm::ConnectionPointer &
 
     attempt.path = dest;
     attempt.connector = callConnect;
+    attempt.opener = cs;
 
     AsyncJob::Start(cs);
 }
@@ -575,9 +584,9 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     Must(itWasPrime != itWasSpare);
 
     if (itWasPrime) {
-        prime.clear();
+        prime.finish();
     } else {
-        spare.clear();
+        spare.finish();
         if (gotSpareAllowance) {
             TheSpareAllowanceGiver.jobUsedAllowance();
             gotSpareAllowance = false;
@@ -864,5 +873,15 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
     }
 
     return false;
+}
+
+void
+HappyConnOpener::Attempt::cancel(const char *reason)
+{
+    if (connector) {
+        connector->cancel(reason);
+        CallJobHere(17, 3, opener, Comm::ConnOpener, noteAbort);
+    }
+    clear();
 }
 

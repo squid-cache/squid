@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -110,7 +110,7 @@ main(int argc, char *argv[])
     }
     setbuf(stdout, NULL);
     /* XXX stderr should not be closed, but in order to support squid must be
-     * able to collect and manage modules's stderr first.
+     * able to collect and manage modules' stderr first.
      */
     close(2);
     t = open(_PATH_DEVNULL, O_RDWR);

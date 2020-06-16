@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -469,7 +469,7 @@ Fs::Ufs::UFSSwapDir::maintain()
 
     // f is percentage of 'gap' filled between low- and high-water.
     // Used to reduced purge rate when between water markers, and
-    // to multiply it more agressively the further above high-water
+    // to multiply it more aggressively the further above high-water
     // it reaches. But in a graceful linear growth curve.
     double f = 1.0;
     if (highWaterSz > lowWaterSz) {
@@ -728,6 +728,9 @@ Fs::Ufs::UFSSwapDir::logFile(char const *ext) const
 void
 Fs::Ufs::UFSSwapDir::openLog()
 {
+    if (!IamWorkerProcess())
+        return;
+
     assert(NumberOfUFSDirs || !UFSDirToGlobalDirMapping);
     ++NumberOfUFSDirs;
     assert(NumberOfUFSDirs <= Config.cacheSwap.n_configured);

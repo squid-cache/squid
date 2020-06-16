@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -8,7 +8,7 @@
 # This file is supposed to run all the tests required to identify which
 # configured modules are able to be built in this environment
 
-# FIXME: de-duplicate $enable_auth_ntlm list containing double entries.
+# TODO: de-duplicate $enable_auth_ntlm list containing double entries.
 
 #not specified. Inherit global
 if test "x$enable_auth_ntlm" = "x"; then

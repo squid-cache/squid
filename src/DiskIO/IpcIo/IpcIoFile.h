@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -165,6 +165,8 @@ public:
     const IpcIoFile::Pointer file; ///< the file object waiting for the response
     ReadRequest *readRequest; ///< set if this is a read requests
     WriteRequest *writeRequest; ///< set if this is a write request
+
+    CodeContext::Pointer codeContext; ///< requestor's context
 
 private:
     IpcIoPendingRequest(const IpcIoPendingRequest &d); // not implemented

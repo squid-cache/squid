@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
 #include "globals.h"
 #include "Store.h"
 #include "StoreClient.h"
-/* FIXME: Abstract the use of this more */
+// TODO: Abstract the use of this more
 #include "mem_node.h"
 #include "MemObject.h"
 #include "SquidConfig.h"
@@ -57,7 +57,7 @@ storeSwapOutStart(StoreEntry * e)
      */
 
     // Create metadata now, possibly in vain: storeCreate needs swap_hdr_sz.
-    const char *buf = e->getSerialisedMetaData ();
+    const auto buf = e->getSerialisedMetaData(mem->swap_hdr_sz);
     assert(buf);
 
     /* Create the swap file */
@@ -287,7 +287,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
                e->swap_filen << ", errflag=" << errflag);
 
         if (errflag == DISK_NO_SPACE_LEFT) {
-            /* FIXME: this should be handle by the link from store IO to
+            /* TODO: this should be handle by the link from store IO to
              * Store, rather than being a top level API call.
              */
             e->disk().diskFull();

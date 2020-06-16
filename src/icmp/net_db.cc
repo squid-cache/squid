@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -696,7 +696,6 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
     double hops;
     char *p;
     int j;
-    HttpReply const *rep;
     size_t hdr_sz;
     int nused = 0;
     int size;
@@ -738,11 +737,11 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
         if ((hdr_sz = headersEnd(p, ex->buf_ofs))) {
             debugs(38, 5, "netdbExchangeHandleReply: hdr_sz = " << hdr_sz);
-            rep = ex->e->getReply();
-            assert(rep->sline.status() != Http::scNone);
-            debugs(38, 3, "netdbExchangeHandleReply: reply status " << rep->sline.status());
+            const auto scode = ex->e->mem().baseReply().sline.status();
+            assert(scode != Http::scNone);
+            debugs(38, 3, "netdbExchangeHandleReply: reply status " << scode);
 
-            if (rep->sline.status() != Http::scOkay) {
+            if (scode != Http::scOkay) {
                 delete ex;
                 return;
             }
@@ -787,7 +786,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
             case NETDB_EX_NETWORK:
                 ++o;
-                /* FIXME INET6 : NetDB can still ony send IPv4 */
+                // XXX: NetDB can still only send IPv4
                 memcpy(&line_addr, p + o, sizeof(struct in_addr));
                 addr = line_addr;
                 o += sizeof(struct in_addr);
@@ -1212,7 +1211,7 @@ netdbBinaryExchange(StoreEntry * s)
         if (! (addr = n->network) )
             continue;
 
-        /* FIXME INET6 : NetDB cannot yet handle IPv6 addresses. Ensure only IPv4 get sent. */
+        // XXX: NetDB cannot yet handle IPv6 addresses
         if ( !addr.isIPv4() )
             continue;
 

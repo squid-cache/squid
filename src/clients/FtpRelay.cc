@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -261,7 +261,7 @@ Ftp::Relay::serverState(const Ftp::ServerState newState)
  * (but we may still be waiting for 226 from the FTP server) and
  * also when we get that 226 from the server (and adaptation is done).
  *
- \todo Rewrite FwdState to ignore double completion?
+ * TODO: Rewrite FwdState to ignore double completion?
  */
 void
 Ftp::Relay::completeForwarding()

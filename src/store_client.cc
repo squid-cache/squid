@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/CodeContext.h"
 #include "event.h"
 #include "globals.h"
 #include "HttpReply.h"
@@ -31,7 +32,7 @@
 
 /*
  * NOTE: 'Header' refers to the swapfile metadata header.
- *   'OBJHeader' refers to the object header, with cannonical
+ *   'OBJHeader' refers to the object header, with canonical
  *   processed object headers (which may derive from FTP/HTTP etc
  *   upstream protocols
  *       'Body' refers to the swapfile body, which is the full
@@ -509,18 +510,16 @@ store_client::readBody(const char *, ssize_t len)
     if (len < 0)
         return fail();
 
-    if (copyInto.offset == 0 && len > 0 && entry->getReply()->sline.status() == Http::scNone) {
+    const auto rep = entry->mem_obj ? &entry->mem().baseReply() : nullptr;
+    if (copyInto.offset == 0 && len > 0 && rep && rep->sline.status() == Http::scNone) {
         /* Our structure ! */
-        HttpReply *rep = (HttpReply *) entry->getReply(); // bypass const
-
-        if (!rep->parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
+        if (!entry->mem_obj->adjustableBaseReply().parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
             debugs(90, DBG_CRITICAL, "Could not parse headers from on disk object");
         } else {
             parsed_header = 1;
         }
     }
 
-    const HttpReply *rep = entry->getReply();
     if (len > 0 && rep && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
         storeGetMemSpace(len);
         // The above may start to free our object so we need to check again
@@ -774,13 +773,13 @@ StoreEntry::invokeHandlers()
 
     PROF_start(InvokeHandlers);
 
-    debugs(90, 3, "InvokeHandlers: " << getMD5Text()  );
+    debugs(90, 3, mem_obj->nclients << " clients; " << *this << ' ' << getMD5Text());
     /* walk the entire list looking for valid callbacks */
 
+    const auto savedContext = CodeContext::Current();
     for (node = mem_obj->clients.head; node; node = nx) {
         sc = (store_client *)node->data;
         nx = node->next;
-        debugs(90, 3, "StoreEntry::InvokeHandlers: checking client #" << i  );
         ++i;
 
         if (!sc->_callback.pending())
@@ -789,8 +788,11 @@ StoreEntry::invokeHandlers()
         if (sc->flags.disk_io_pending)
             continue;
 
+        CodeContext::Reset(sc->_callback.codeContext);
+        debugs(90, 3, "checking client #" << i);
         storeClientCopy2(this, sc);
     }
+    CodeContext::Reset(savedContext);
     PROF_stop(InvokeHandlers);
 }
 
@@ -845,15 +847,13 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
         return true;
     }
 
-    int64_t expectlen = entry->getReply()->content_length + entry->getReply()->hdr_sz;
+    const auto &reply = mem->baseReply();
 
-    if (expectlen < 0) {
-        /* expectlen is < 0 if *no* information about the object has been received */
+    if (reply.hdr_sz <= 0) {
+        // TODO: Check whether this condition works for HTTP/0 responses.
         debugs(90, 3, "quick-abort? YES no object data received yet");
         return true;
     }
-
-    int64_t curlen =  mem->endOffset();
 
     if (Config.quickAbort.min < 0) {
         debugs(90, 3, "quick-abort? NO disabled");
@@ -861,10 +861,20 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
     }
 
     if (mem->request && mem->request->range && mem->request->getRangeOffsetLimit() < 0) {
-        /* Don't abort if the admin has configured range_ofset -1 to download fully for caching. */
+        // the admin has configured "range_offset_limit none"
         debugs(90, 3, "quick-abort? NO admin configured range replies to full-download");
         return false;
     }
+
+    if (reply.content_length < 0) {
+        // XXX: cf.data.pre does not document what should happen in this case
+        // We know that quick_abort is enabled, but no limit can be applied.
+        debugs(90, 3, "quick-abort? YES unknown content length");
+        return true;
+    }
+    const auto expectlen = reply.hdr_sz + reply.content_length;
+
+    int64_t curlen =  mem->endOffset();
 
     if (curlen > expectlen) {
         debugs(90, 3, "quick-abort? YES bad content length (" << curlen << " of " << expectlen << " bytes received)");
@@ -881,6 +891,7 @@ CheckQuickAbortIsReasonable(StoreEntry * entry)
         return true;
     }
 
+    // XXX: This is absurd! TODO: For positives, "a/(b/c) > d" is "a*c > b*d".
     if (expectlen < 100) {
         debugs(90, 3, "quick-abort? NO avoid FPE");
         return false;
@@ -924,7 +935,12 @@ store_client::Callback::pending() const
     return callback_handler && callback_data;
 }
 
-store_client::Callback::Callback(STCB *function, void *data) : callback_handler(function), callback_data (data) {}
+store_client::Callback::Callback(STCB *function, void *data):
+    callback_handler(function),
+    callback_data(data),
+    codeContext(CodeContext::Current())
+{
+}
 
 #if USE_DELAY_POOLS
 void

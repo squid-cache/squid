@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 /* DEBUG: section 78    DNS lookups; interacts with dns/rfc1035.cc */
 
 #include "squid.h"
+#include "base/CodeContext.h"
 #include "base/InstanceId.h"
 #include "base/RunnersRegistry.h"
 #include "comm.h"
@@ -103,7 +104,9 @@ class idns_query
     CBDATA_CLASS(idns_query);
 
 public:
-    idns_query() {
+    idns_query():
+        codeContext(CodeContext::Current())
+    {
         callback = nullptr;
         memset(&query, 0, sizeof(query));
         *buf = 0;
@@ -141,8 +144,11 @@ public:
     struct timeval sent_t;
     struct timeval queue_t;
     dlink_node lru;
+
     IDNSCB *callback;
     void *callback_data = nullptr;
+    CodeContext::Pointer codeContext; ///< requestor's context
+
     int attempt = 0;
     int rcode = 0;
     idns_query *queue = nullptr;
@@ -1104,6 +1110,7 @@ idnsCallbackNewCallerWithOldAnswers(IDNSCB *callback, void *cbdata, const idns_q
     for (auto query = master; query; query = query->slave) {
         if (query->pending)
             continue; // no answer yet
+        // no CallBack(CodeContext...) -- we always run in requestor's context
         if (!idnsCallbackOneWithAnswer(callback, cbdata, *query, lastAnswer))
             break; // the caller disappeared
     }
@@ -1116,8 +1123,10 @@ idnsCallbackAllCallersWithNewAnswer(const idns_query * const answered, const boo
     const auto master = answered->master ? answered->master : answered;
     // iterate all queued lookup callers
     for (auto looker = master; looker; looker = looker->queue) {
-        (void)idnsCallbackOneWithAnswer(looker->callback, looker->callback_data,
-                                        *answered, lastAnswer);
+        CallBack(looker->codeContext, [&] {
+            (void)idnsCallbackOneWithAnswer(looker->callback, looker->callback_data,
+            *answered, lastAnswer);
+        });
     }
 }
 
@@ -1187,7 +1196,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
                 max_shared_edns = min(max_shared_edns, server.last_seen_edns);
         } else {
             nameservers[from_ns].last_seen_edns = q->edns_seen;
-            // maybe reduce the global limit downwards to accomodate this NS
+            // maybe reduce the global limit downwards to accommodate this NS
             max_shared_edns = min(max_shared_edns, q->edns_seen);
         }
         if (max_shared_edns < RFC1035_DEFAULT_PACKET_SZ)
@@ -1235,7 +1244,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
         }
 
         // Do searchpath processing on the master A query only to keep
-        // things simple. NXDOMAIN is authorative for the label, not
+        // things simple. NXDOMAIN is authoritative for the label, not
         // the record type.
         if (q->rcode == 3 && !q->master && q->do_searchpath && q->attempt < MAX_ATTEMPT) {
             assert(NULL == message->answer);

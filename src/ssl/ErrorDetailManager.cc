@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -198,11 +198,11 @@ Ssl::ErrorDetailFile::parse()
         auto *s = buf.c_str();
         const auto e = s + size;
 
-        //ignore spaces, new lines and comment lines (starting with #) at the beggining
+        //ignore spaces, new lines and comment lines (starting with #) at the beginning
         for (; (*s == '\n' || *s == ' '  || *s == '\t' || *s == '#')  && s < e; ++s) {
             if (*s == '#')
                 while (s<e &&  *s != '\n')
-                    ++s; // skip untill the end of line
+                    ++s; // skip until the end of line
         }
 
         if ( s != e) {

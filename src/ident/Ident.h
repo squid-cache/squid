@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -22,7 +22,7 @@ namespace Ident
 
 /**
  * Open a connection and request IDENT information from a peer machine.
- * Callack will be called whan the lookup is completed.
+ * Callback will be called whan the lookup is completed.
  * Self-registers with a global ident lookup manager,
  * will call Ident::Init() itself if the manager has not been initialized already.
  */

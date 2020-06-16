@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -48,7 +48,7 @@ Acl::InnerNode::lineParse()
     if (!cfgline)
         cfgline = xstrdup(config_input_line);
 
-    // expect a list of ACL names, each possibly preceeded by '!' for negation
+    // expect a list of ACL names, each possibly preceded by '!' for negation
 
     while (const char *t = ConfigParser::strtokFile()) {
         const bool negated = (*t == '!');

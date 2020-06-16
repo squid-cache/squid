@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -55,7 +55,7 @@
  *              Added support for running on a Domain Controller.
  * Version 1.10
  * 01-05-2003 Guido Serassio
- *              Added option for case insensitive group name comparation.
+ *              Added option for case insensitive group name comparison.
  *              More debug info.
  *              Updated documentation.
  *              Segfault bug fix (Bugzilla #574)
@@ -184,7 +184,7 @@ GetDomainName(void)
                 debug("LsaQueryInformationPolicy Error: %ld\n", status);
             } else {
 
-                /* Get name in useable format */
+                /* Get name in usable format */
                 DomainName = AllocStrFromLSAStr(ppdiDomainInfo->Name);
 
                 /*
@@ -343,10 +343,10 @@ Valid_Global_Groups(char *UserName, const char **Groups)
             break;
     }
     if (domain_qualify == NULL) {
-        strcpy(User, NTDomain);
-        strcpy(NTDomain, DefaultDomain);
+        xstrncpy(User, NTDomain, sizeof(User));
+        xstrncpy(NTDomain, DefaultDomain, sizeof(NTDomain));
     } else {
-        strcpy(User, domain_qualify + 1);
+        xstrncpy(User, domain_qualify + 1, sizeof(User));
         domain_qualify[0] = '\0';
         strlwr(NTDomain);
     }

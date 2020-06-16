@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -282,7 +282,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     if (check_time > entry->timestamp)
         age = check_time - entry->timestamp;
 
-    // FIXME: what to do when age < 0 or counter overflow?
+    // XXX: what to do when age < 0 or counter overflow?
     assert(age >= 0);
 
     /* We need a refresh rule. In order of preference:
@@ -326,7 +326,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     debugs(22, 3, "Staleness = " << staleness);
 
-    const HttpReplyPointer reply(entry->mem_obj && entry->mem_obj->getReply() ? entry->mem_obj->getReply() : nullptr);
+    const auto reply = entry->hasFreshestReply(); // may be nil
 
     // stale-if-error requires any failure be passed thru when its period is over.
     int staleIfError = -1;
@@ -370,7 +370,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
 #if USE_HTTP_VIOLATIONS
         /* Normally a client reload request ("Cache-Control: no-cache" or "Pragma: no-cache")
-         * means we must treat this reponse as STALE and fetch a new one.
+         * means we must treat this response as STALE and fetch a new one.
          *
          * However, some options exist to override this behaviour. For example, we might just
          * revalidate our existing response, or even just serve it up without revalidating it.
@@ -550,11 +550,7 @@ refreshIsCachable(const StoreEntry * entry)
         /* no mem_obj? */
         return true;
 
-    if (entry->getReply() == NULL)
-        /* no reply? */
-        return true;
-
-    if (entry->getReply()->content_length == 0)
+    if (entry->mem_obj->baseReply().content_length == 0)
         /* No use refreshing (caching?) 0 byte objects */
         return false;
 

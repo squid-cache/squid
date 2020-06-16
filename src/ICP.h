@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -57,10 +57,7 @@ public:
     static icp_common_t *CreateMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad);
 };
 
-/**
- \ingroup ServerProtocolICPAPI
- \todo mempool this
- */
+// TODO: mempool this
 class ICPState: public StoreClient
 {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,7 +40,7 @@ public:
     bool parse(const String *str);
     void packInto(Packable * p) const;
     void updateStats(StatHist *) const;
-    HttpHdrScTarget * getMergedTarget (const char *ourtarget); //todo: make const?
+    HttpHdrScTarget * getMergedTarget(const char *ourtarget); // TODO: make const?
     void setMaxAge(char const *target, int max_age);
     void addTarget(HttpHdrScTarget *t);
     void addTargetAtTail(HttpHdrScTarget *t);

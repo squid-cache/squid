@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -86,7 +86,7 @@ Helper::Reply::finalize()
             }
 
         } else if (!strncmp(p,"AF ",3)) {
-            // NTLM/Negotate OK response
+            // NTLM/Negotiate OK response
             result = Helper::Okay;
             p+=3;
             // followed by:

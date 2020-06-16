@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -143,7 +143,7 @@ static char *rn_zeros, *rn_ones;
  * node as high in the tree as we can go.
  *
  * The present version of the code makes use of normal routes in short-
- * circuiting an explict mask and compare operation when testing whether
+ * circuiting an explicit mask and compare operation when testing whether
  * a key satisfies a normal route, and also in remembering the unique leaf
  * that governs a subtree.
  */

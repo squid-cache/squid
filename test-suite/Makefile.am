@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -18,7 +18,7 @@ LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
-EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2
+EXTRA_PROGRAMS = mem_node_test splay tcp-banger2
 
 EXTRA_DIST = \
 	$(srcdir)/squidconf/* \
@@ -119,26 +119,6 @@ splay_SOURCES = splay.cc stub_libmem.cc $(DEBUG_SOURCE)
 syntheticoperators_SOURCES = syntheticoperators.cc stub_libmem.cc $(DEBUG_SOURCE)
 
 VirtualDeleteOperator_SOURCES = VirtualDeleteOperator.cc stub_libmem.cc $(DEBUG_SOURCE)
-
-## membanger won't link today. Bitrot..
-##CC	= gcc
-##CFLAGS	= -g -Wall -I../include -I../src
-##OBJS	= membanger.o hash.o SizeToPool.o
-##LIB	= -L. -lMem
-##TARGLIB = libMem.a
-##LIBOBJS = Mem.o \
-##          Stack.o
-##AR_R      = /usr/bin/ar r
-##RM      = rm
-##XTRA_LIBS = -lm  -lmalloc
-##
-##all:  membanger
-##
-##membanger: $(OBJS) $(TARGLIB)
-##	$(CC) -o membanger $(OBJS) $(LIB)
-##
-##$(TARGLIB): $(LIBOBJS)
-##	$(AR_R) $(TARGLIB) $(LIBOBJS)
 
 squid-conf-tests: $(top_builddir)/src/squid.conf.default $(srcdir)/squidconf/*
 	@failed=0; cfglist="$?"; rm -f $@ || $(TRUE); \

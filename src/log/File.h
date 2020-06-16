@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -66,7 +66,7 @@ public:
 Logfile *logfileOpen(const char *path, size_t bufsz, int);
 void logfileClose(Logfile * lf);
 void logfileRotate(Logfile * lf, int16_t rotateCount);
-void logfileWrite(Logfile * lf, char *buf, size_t len);
+void logfileWrite(Logfile * lf, const char *buf, size_t len);
 void logfileFlush(Logfile * lf);
 void logfilePrintf(Logfile * lf, const char *fmt,...) PRINTF_FORMAT_ARG2;
 void logfileLineStart(Logfile * lf);

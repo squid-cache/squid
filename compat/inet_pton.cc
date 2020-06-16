@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -14,7 +14,7 @@
  * Update/Maintenance History:
  *
  *    24-Sep-2007 : Copied from bind 9.3.3
- *                      - Added protection around libray headers
+ *                      - Added protection around library headers
  *                      - Altered configure checks to import
  *
  *    06-Oct-2007 : Various fixes to allow the build on MinGW

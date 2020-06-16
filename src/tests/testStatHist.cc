@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -79,7 +79,7 @@ testStatHist::testStatHistLog()
     CPPUNIT_ASSERT(test.counter(max)==1);
     test=raw;
     test.count(max);
-    //CPPUNIT_ASSERT(test.val(capacity-1)==1); //FIXME: val() returns a density
+    //CPPUNIT_ASSERT(test.val(capacity-1)==1); // XXX: val() returns a density
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "fd.h"
 #include "ipc/Kids.h"
 #include "SquidTime.h"
 #include "util.h"
@@ -96,9 +97,14 @@ DebugFile::reset(FILE *newFile, const char *newName)
     // callers must use nullptr instead of the used-as-the-last-resort stderr
     assert(newFile != stderr || !stderr);
 
-    if (file_)
+    if (file_) {
+        fd_close(fileno(file_));
         fclose(file_);
+    }
     file_ = newFile; // may be nil
+
+    if (file_)
+        fd_open(fileno(file_), FD_LOG, Debug::cache_log);
 
     xfree(name);
     name = newName ? xstrdup(newName) : nullptr;
@@ -843,6 +849,11 @@ Debug::Start(const int section, const int level)
 void
 Debug::Finish()
 {
+    // TODO: #include "base/CodeContext.h" instead if doing so works well.
+    extern std::ostream &CurrentCodeContextDetail(std::ostream &os);
+    if (Current->level <= DBG_IMPORTANT)
+        Current->buf << CurrentCodeContextDetail;
+
     // TODO: Optimize to remove at least one extra copy.
     _db_print(Current->forceAlert, "%s\n", Current->buf.str().c_str());
     Current->forceAlert = false;

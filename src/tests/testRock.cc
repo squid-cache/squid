@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "ConfigParser.h"
 #include "DiskIO/DiskIOModule.h"
+#include "fde.h"
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
 #include "HttpHeader.h"
@@ -142,6 +143,8 @@ testRock::commonInit()
 
     Mem::Init();
 
+    fde::Init();
+
     comm_init();
 
     httpHeaderInitModule(); /* must go before any header processing (e.g. the one in errorInitialize) */
@@ -189,8 +192,8 @@ testRock::createEntry(const int i)
     flags.cachable = true;
     StoreEntry *const pe =
         storeCreateEntry(storeId(i), "dummy log url", flags, Http::METHOD_GET);
-    HttpReply *const rep = const_cast<HttpReply *>(pe->getReply());
-    rep->setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
+    auto &rep = pe->mem().adjustableBaseReply();
+    rep.setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
 
     pe->setPublicKey();
 
@@ -203,7 +206,7 @@ testRock::addEntry(const int i)
     StoreEntry *const pe = createEntry(i);
 
     pe->buffer();
-    pe->getReply()->packHeadersUsingSlowPacker(*pe);
+    pe->mem().freshestReply().packHeadersUsingSlowPacker(*pe);
     pe->flush();
     pe->timestampsSet();
     pe->complete();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -310,7 +310,7 @@ SBufFindTest::placementKey() const
         return std::string();
 
     if (theBareNeedlePos == 0)
-        return "@B"; // at the beggining of the hay string
+        return "@B"; // at the beginning of the hay string
     if (theBareNeedlePos == theStringHay.length()-theStringNeedle.length())
         return "@E"; // at the end of the hay string
     return "@M"; // in the "middle" of the hay string

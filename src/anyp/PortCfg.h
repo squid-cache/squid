@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,6 +12,7 @@
 #include "anyp/forward.h"
 #include "anyp/ProtocolVersion.h"
 #include "anyp/TrafficMode.h"
+#include "base/CodeContext.h"
 #include "comm/Connection.h"
 #include "sbuf/SBuf.h"
 #include "security/ServerOptions.h"
@@ -19,12 +20,16 @@
 namespace AnyP
 {
 
-class PortCfg : public RefCountable
+class PortCfg : public CodeContext
 {
 public:
     PortCfg();
     ~PortCfg();
     AnyP::PortCfgPointer clone() const;
+
+    /* CodeContext API */
+    virtual ScopedId codeContextGist() const override;
+    virtual std::ostream &detailCodeContext(std::ostream &os) const override;
 
     PortCfgPointer next;
 
@@ -46,6 +51,7 @@ public:
 
     int vport;               ///< virtual port support. -1 if dynamic, >0 static
     int disable_pmtu_discovery;
+    bool workerQueues; ///< whether listening queues should be worker-specific
 
     struct {
         unsigned int idle;

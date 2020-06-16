@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,5 +16,5 @@ class ClientHttpRequest;
 
 void tunnelStart(ClientHttpRequest *) STUB
 
-void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer &clientConn, Comm::ConnectionPointer &srvConn) STUB
+void switchToTunnel(HttpRequest *, const Comm::ConnectionPointer &, const Comm::ConnectionPointer &, const SBuf &) STUB
 

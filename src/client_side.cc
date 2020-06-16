@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -139,6 +139,10 @@
 #include <cmath>
 #include <limits>
 
+#if HAVE_SYSTEMD_SD_DAEMON_H
+#include <systemd/sd-daemon.h>
+#endif
+
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
 #endif
@@ -165,7 +169,7 @@ public:
 private:
     AnyP::PortCfgPointer portCfg;   ///< from HttpPortList
     Ipc::FdNoteId portTypeNote;    ///< Type of IPC socket being opened
-    Subscription::Pointer sub; ///< The handler to be subscribed for this connetion listener
+    Subscription::Pointer sub; ///< The handler to be subscribed for this connection listener
 };
 
 static void clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
@@ -383,12 +387,16 @@ ClientHttpRequest::logRequest()
     al->url = log_uri;
     debugs(33, 9, "clientLogRequest: al.url='" << al->url << "'");
 
-    if (al->reply) {
-        al->http.code = al->reply->sline.status();
-        al->http.content_type = al->reply->content_type.termedBuf();
-    } else if (loggingEntry() && loggingEntry()->mem_obj) {
-        al->http.code = loggingEntry()->mem_obj->getReply()->sline.status();
-        al->http.content_type = loggingEntry()->mem_obj->getReply()->content_type.termedBuf();
+    const auto findReply = [this]() -> const HttpReply * {
+        if (al->reply)
+            return al->reply.getRaw();
+        if (const auto le = loggingEntry())
+            return le->hasFreshestReply();
+        return nullptr;
+    };
+    if (const auto reply = findReply()) {
+        al->http.code = reply->sline.status();
+        al->http.content_type = reply->content_type.termedBuf();
     }
 
     debugs(33, 9, "clientLogRequest: http.code='" << al->http.code << "'");
@@ -741,7 +749,7 @@ ClientHttpRequest::mRangeCLen()
     while (pos != request->range->end()) {
         /* account for headers for this range */
         mb.reset();
-        clientPackRangeHdr(memObject()->getReply(),
+        clientPackRangeHdr(&storeEntry()->mem().freshestReply(),
                            *pos, range_iter.boundary, &mb);
         clen += mb.size;
 
@@ -1144,26 +1152,22 @@ prepareAcceleratedURL(ConnStateData * conn, const Http1::RequestParserPointer &h
     if (vport < 0)
         vport = conn->clientConnection->local.port();
 
-    char *host = NULL;
-    if (vhost && (host = hp->getHostHeaderField())) {
+    char *receivedHost = nullptr;
+    if (vhost && (receivedHost = hp->getHostHeaderField())) {
+        SBuf host(receivedHost);
         debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
-        char thost[256];
         if (vport > 0) {
-            thost[0] = '\0';
-            char *t = NULL;
-            if (host[strlen(host) - 1] != ']' && (t = strrchr(host,':')) != nullptr) {
-                strncpy(thost, host, (t-host));
-                snprintf(thost+(t-host), sizeof(thost)-(t-host), ":%d", vport);
-                host = thost;
-            } else if (!t) {
-                snprintf(thost, sizeof(thost), "%s:%d",host, vport);
-                host = thost;
+            // remove existing :port (if any), cope with IPv6+ without port
+            const auto lastColonPos = host.rfind(':');
+            if (lastColonPos != SBuf::npos && *host.rbegin() != ']') {
+                host.chop(0, lastColonPos); // truncate until the last colon
             }
+            host.appendf(":%d", vport);
         } // else nothing to alter port-wise.
         const SBuf &scheme = AnyP::UriScheme(conn->transferProtocol.protocol).image();
-        const int url_sz = scheme.length() + strlen(host) + url.length() + 32;
+        const auto url_sz = scheme.length() + host.length() + url.length() + 32;
         char *uri = static_cast<char *>(xcalloc(url_sz, 1));
-        snprintf(uri, url_sz, SQUIDSBUFPH "://%s" SQUIDSBUFPH, SQUIDSBUFPRINT(scheme), host, SQUIDSBUFPRINT(url));
+        snprintf(uri, url_sz, SQUIDSBUFPH "://" SQUIDSBUFPH SQUIDSBUFPH, SQUIDSBUFPRINT(scheme), SQUIDSBUFPRINT(host), SQUIDSBUFPRINT(url));
         debugs(33, 5, "ACCEL VHOST REWRITE: " << uri);
         return uri;
     } else if (conn->port->defaultsite /* && !vhost */) {
@@ -1786,7 +1790,7 @@ ConnStateData::concurrentRequestQueueFilled() const
 #endif
     const int concurrentRequestLimit = pipelinePrefetchMax() + 1 + internalRequest;
 
-    // when queue filled already we cant add more.
+    // when queue filled already we can't add more.
     if (existingRequestCount >= concurrentRequestLimit) {
         debugs(33, 3, clientConnection << " max concurrent requests reached (" << concurrentRequestLimit << ")");
         debugs(33, 5, clientConnection << " deferring new request until one is done");
@@ -1829,7 +1833,7 @@ ConnStateData::proxyProtocolError(const char *msg)
     if (msg) {
         // This is important to know, but maybe not so much that flooding the log is okay.
 #if QUIET_PROXY_PROTOCOL
-        // display the first of every 32 occurances at level 1, the others at level 2.
+        // display the first of every 32 occurrences at level 1, the others at level 2.
         static uint8_t hide = 0;
         debugs(33, (hide++ % 32 == 0 ? DBG_IMPORTANT : 2), msg << " from " << clientConnection);
 #else
@@ -2183,6 +2187,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     bodyParser(nullptr),
 #if USE_OPENSSL
     sslBumpMode(Ssl::bumpEnd),
+    tlsParser(Security::HandshakeParser::fromClient),
 #endif
     needProxyProtocolHeader_(false),
 #if USE_OPENSSL
@@ -2283,7 +2288,7 @@ ConnStateData::whenClientIpKnown()
     if (pools.size()) {
         ACLFilledChecklist ch(NULL, NULL, NULL);
 
-        // TODO: we check early to limit error response bandwith but we
+        // TODO: we check early to limit error response bandwidth but we
         // should recheck when we can honor delay_pool_uses_indirect
         // TODO: we should also pass the port details for myportname here.
         ch.src_addr = clientConnection->remote;
@@ -2623,20 +2628,25 @@ ConnStateData::postHttpsAccept()
 
         MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);
         mx->tcpClient = clientConnection;
-        // Create a fake HTTP request for ssl_bump ACL check,
+        // Create a fake HTTP request and ALE for the ssl_bump ACL check,
         // using tproxy/intercept provided destination IP and port.
+        // XXX: Merge with subsequent fakeAConnectRequest(), buildFakeRequest().
+        // XXX: Do this earlier (e.g., in Http[s]::One::Server constructor).
         HttpRequest *request = new HttpRequest(mx);
         static char ip[MAX_IPSTRLEN];
         assert(clientConnection->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
         request->url.host(clientConnection->local.toStr(ip, sizeof(ip)));
         request->url.port(clientConnection->local.port());
         request->myportname = port->name;
+        const AccessLogEntry::Pointer connectAle = new AccessLogEntry;
+        CodeContext::Reset(connectAle);
+        // TODO: Use these request/ALE when waiting for new bumped transactions.
 
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);
         acl_checklist->src_addr = clientConnection->remote;
         acl_checklist->my_addr = port->s;
         // Build a local AccessLogEntry to allow requiresAle() acls work
-        acl_checklist->al = new AccessLogEntry;
+        acl_checklist->al = connectAle;
         acl_checklist->al->cache.start_time = current_time;
         acl_checklist->al->tcpClient = clientConnection;
         acl_checklist->al->cache.port = port;
@@ -2687,7 +2697,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
             if (reply.result != Helper::Okay) {
                 debugs(33, 5, "Certificate for " << tlsConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
-                debugs(33, 5, "Certificate for " << tlsConnectHostOrIp << " was successfully recieved from ssl_crtd");
+                debugs(33, 5, "Certificate for " << tlsConnectHostOrIp << " was successfully received from ssl_crtd");
                 if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
                     doPeekAndSpliceStep();
                     auto ssl = fd_table[clientConnection->fd].ssl.get();
@@ -3178,7 +3188,7 @@ ConnStateData::doPeekAndSpliceStep()
     assert(b);
     Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(BIO_get_data(b));
 
-    debugs(33, 5, "PeekAndSplice mode, proceed with client negotiation. Currrent state:" << SSL_state_string_long(ssl));
+    debugs(33, 5, "PeekAndSplice mode, proceed with client negotiation. Current state:" << SSL_state_string_long(ssl));
     bio->hold(false);
 
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_WRITE, clientNegotiateSSL, this, 0);
@@ -3362,8 +3372,8 @@ clientHttpConnectionsOpen(void)
         const SBuf &scheme = AnyP::UriScheme(s->transport.protocol).image();
 
         if (MAXTCPLISTENPORTS == NHttpSockets) {
-            debugs(1, DBG_IMPORTANT, "WARNING: You have too many '" << scheme << "_port' lines.");
-            debugs(1, DBG_IMPORTANT, "         The limit is " << MAXTCPLISTENPORTS << " HTTP ports.");
+            debugs(1, DBG_IMPORTANT, "WARNING: You have too many '" << scheme << "_port' lines." <<
+                   Debug::Extra << "The limit is " << MAXTCPLISTENPORTS << " HTTP ports.");
             continue;
         }
 
@@ -3397,7 +3407,8 @@ clientHttpConnectionsOpen(void)
         s->listenConn->local = s->s;
 
         s->listenConn->flags = COMM_NONBLOCKING | (s->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
-                               (s->flags.natIntercept ? COMM_INTERCEPTION : 0);
+                               (s->flags.natIntercept ? COMM_INTERCEPTION : 0) |
+                               (s->workerQueues ? COMM_REUSEPORT : 0);
 
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
         if (s->transport.protocol == AnyP::PROTO_HTTP) {
@@ -3473,6 +3484,20 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
            << s->listenConn);
 
     Must(AddOpenedHttpSocket(s->listenConn)); // otherwise, we have received a fd we did not ask for
+
+#if USE_SYSTEMD
+    // When the very first port opens, tell systemd we are able to serve connections.
+    // Subsequent sd_notify() calls, including calls during reconfiguration,
+    // do nothing because the first call parameter is 1.
+    // XXX: Send the notification only after opening all configured ports.
+    if (opt_foreground || opt_no_daemon) {
+        const auto result = sd_notify(1, "READY=1");
+        if (result < 0) {
+            debugs(1, DBG_IMPORTANT, "WARNING: failed to send start-up notification to systemd" <<
+                   Debug::Extra << "sd_notify() error: " << xstrerr(-result));
+        }
+    }
+#endif
 }
 
 void
@@ -3510,11 +3535,12 @@ int
 varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
 {
     SBuf vary(request->vary_headers);
-    int has_vary = entry->getReply()->header.has(Http::HdrType::VARY);
+    const auto &reply = entry->mem().freshestReply();
+    auto has_vary = reply.header.has(Http::HdrType::VARY);
 #if X_ACCELERATOR_VARY
 
     has_vary |=
-        entry->getReply()->header.has(Http::HdrType::HDR_X_ACCELERATOR_VARY);
+        reply.header.has(Http::HdrType::HDR_X_ACCELERATOR_VARY);
 #endif
 
     if (!has_vary || entry->mem_obj->vary_headers.isEmpty()) {
@@ -3534,7 +3560,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
         /* virtual "vary" object found. Calculate the vary key and
          * continue the search
          */
-        vary = httpMakeVaryMark(request, entry->getReply());
+        vary = httpMakeVaryMark(request, &reply);
 
         if (!vary.isEmpty()) {
             request->vary_headers = vary;
@@ -3546,7 +3572,7 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
         }
     } else {
         if (vary.isEmpty()) {
-            vary = httpMakeVaryMark(request, entry->getReply());
+            vary = httpMakeVaryMark(request, &reply);
 
             if (!vary.isEmpty())
                 request->vary_headers = vary;
@@ -4061,5 +4087,11 @@ std::ostream &
 operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic)
 {
     return os << pic.connection << ", request=" << pic.request;
+}
+
+std::ostream &
+operator <<(std::ostream &os, const ConnStateData::ServerConnectionContext &scc)
+{
+    return os << scc.conn_ << ", srv_bytes=" << scc.preReadServerBytes.length();
 }
 

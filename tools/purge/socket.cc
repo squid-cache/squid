@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -127,7 +127,7 @@ commonCode( int& sockfd, bool nodelay, int sendBufferSize, int recvBufferSize )
 //          nodelay (IN): true=set TCP_NODELAY option.
 //          sendBufferSize (IN): don't set (use sys defaults) if < 0
 //          recvBufferSize (IN): don't set (use sys defaults) if < 0
-// returns: 0 == if everthing went ok, -1 otherwise
+// returns: 0 == if everything went ok, -1 otherwise
 // warning: sockfd will be closed, if -1 is returned!
 {
     // set TCP_NODELAY option, if that is wanted.

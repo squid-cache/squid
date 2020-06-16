@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -58,7 +58,7 @@ ACLARP::empty () const
  * Working on setting up a proper firewall for a network containing some
  * Win'95 computers at our Univ, I've discovered that some smart students
  * avoid the restrictions easily just changing their IP addresses in Win'95
- * Contol Panel... It has been getting boring, so I took Squid-1.1.18
+ * Control Panel... It has been getting boring, so I took Squid-1.1.18
  * sources and added a new acl type for hard-wired access control:
  *
  * acl <name> arp <Ethernet address> ...

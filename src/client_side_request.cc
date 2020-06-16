@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -168,6 +168,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 {
     setConn(aConn);
     al = new AccessLogEntry;
+    CodeContext::Reset(al);
     al->cache.start_time = current_time;
     if (aConn) {
         al->tcpClient = clientConnection = aConn->clientConnection;
@@ -315,7 +316,7 @@ ClientHttpRequest::~ClientHttpRequest()
  * \retval 0     success
  * \retval -1    failure
  *
- * TODO: Pass in the buffers to be used in the inital Read request, as they are
+ * TODO: Pass in the buffers to be used in the initial Read request, as they are
  * determined by the user
  */
 int
@@ -371,10 +372,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     /* this is an internally created
      * request, not subject to acceleration
      * target overrides */
-    /*
-     * FIXME? Do we want to detect and handle internal requests of internal
-     * objects ?
-     */
+    // TODO: detect and handle internal requests of internal objects?
 
     /* Internally created requests cannot have bodies today */
     request->content_length = 0;
@@ -908,7 +906,7 @@ clientStoreIdAccessCheckDone(Acl::Answer answer, void *data)
 }
 
 /**
- * Start locating an alternative storeage ID string (if any) from admin
+ * Start locating an alternative storage ID string (if any) from admin
  * configured helper program. This is an asynchronous operation terminating in
  * ClientRequestContext::clientStoreIdDone() when completed.
  */
@@ -1297,7 +1295,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
     break;
     }
 
-    /* FIXME PIPELINE: This is innacurate during pipelining */
+    /* XXX PIPELINE: This is inaccurate during pipelining */
 
     if (http->getConn() != NULL && Comm::IsConnOpen(http->getConn()->clientConnection))
         fd_note(http->getConn()->clientConnection->fd, http->uri);
@@ -1627,9 +1625,9 @@ ClientHttpRequest::sslBumpStart()
 bool
 ClientHttpRequest::gotEnough() const
 {
-    /** TODO: should be querying the stream. */
+    // TODO: See also (and unify with) clientReplyContext::storeNotOKTransferDone()
     int64_t contentLength =
-        memObject()->getReply()->bodySize(request->method);
+        memObject()->baseReply().bodySize(request->method);
     assert(contentLength >= 0);
 
     if (out.offset < contentLength)

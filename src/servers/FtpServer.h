@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -120,7 +120,7 @@ protected:
     bool createDataConnection(Ip::Address cltAddr);
     void closeDataConnection();
 
-    /// Called after data trasfer on client-to-squid data connection is
+    /// Called after data transfer on client-to-squid data connection is
     /// finished.
     void userDataCompletionCheckpoint(int finalStatusCode);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -302,7 +302,7 @@ ESIVariableUserAgent::ESIVariableUserAgent(ESIVarState &state)
      * Product - Mozilla version 4.0
      * in comments - compatible; .... 3705
      *
-     * Useing the RFC a more appropriate header would be
+     * Using the RFC a more appropriate header would be
      *    User-Agent: MSIE/6.0 Mozilla/4.0 Windows-NT/5.1 .NET-CLR/1.0.3705
      *    or something similar.
      *
@@ -805,7 +805,7 @@ ESIVariableProcessor::~ESIVariableProcessor()
     delete currentFunction;
 }
 
-/* XXX FIXME: this should be comma delimited, no? */
+/* XXX: this should be comma delimited, no? */
 void
 ESIVarState::buildVary (HttpReply *rep)
 {

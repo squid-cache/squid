@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -119,7 +119,7 @@ struct _htcpAuthHeader {
     Countstr signature;
 };
 
-class htcpSpecifier : public RefCountable, public StoreClient
+class htcpSpecifier: public CodeContext, public StoreClient
 {
     MEMPROXY_CLASS(htcpSpecifier);
 
@@ -134,6 +134,10 @@ public:
         dhdr = aDataHeader;
     }
 
+    /* CodeContext API */
+    virtual ScopedId codeContextGist() const; // override
+    virtual std::ostream &detailCodeContext(std::ostream &os) const; // override
+
     /* StoreClient API */
     void created(StoreEntry *);
     virtual LogTags *loggingTags();
@@ -141,7 +145,7 @@ public:
 
 public:
     const char *method = nullptr;
-    char *uri = nullptr;
+    const char *uri = nullptr;
     char *version = nullptr;
     char *req_hdrs = nullptr;
     size_t reqHdrsSz = 0; ///< size of the req_hdrs content
@@ -812,6 +816,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
 
     if (spec) {
         stuff.S.method = spec->method;
+        stuff.S.request = spec->request;
         stuff.S.uri = spec->uri;
         stuff.S.version = spec->version;
         stuff.S.req_hdrs = spec->req_hdrs;
@@ -846,15 +851,15 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, Ip::Ad
         hdr.clean();
 
 #if USE_ICMP
-        if (char *host = urlHostname(spec->uri)) {
+        if (const char *host = spec->request->url.host()) {
             int rtt = 0;
             int hops = 0;
             int samp = 0;
             netdbHostData(host, &samp, &rtt, &hops);
 
             if (rtt || hops) {
-                char cto_buf[128];
-                snprintf(cto_buf, 128, "%s %d %f %d",
+                char cto_buf[SQUIDHOSTNAMELEN+128];
+                snprintf(cto_buf, sizeof(cto_buf), "%s %d %f %d",
                          host, samp, 0.001 * rtt, hops);
                 hdr.putExt("Cache-to-Origin", cto_buf);
             }
@@ -912,6 +917,38 @@ htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, Ip::Address &from)
     }
 
     htcpSend(pkt, (int) pktlen, from);
+}
+
+ScopedId
+htcpSpecifier::codeContextGist() const
+{
+    if (al) {
+        const auto gist = al->codeContextGist();
+        if (gist.value)
+            return gist;
+    }
+
+    if (request) {
+        if (const auto &mx = request->masterXaction)
+            return mx->id.detach();
+    }
+
+    return ScopedId("HTCP w/o master");
+}
+
+std::ostream &
+htcpSpecifier::detailCodeContext(std::ostream &os) const
+{
+    if (al)
+        return al->detailCodeContext(os);
+
+    if (request) {
+        if (const auto &mx = request->masterXaction)
+            return os << Debug::Extra << "current master transaction: " << mx->id;
+    }
+
+    // TODO: Report method, uri, and version if they have been set
+    return os;
 }
 
 void
@@ -1261,6 +1298,8 @@ htcpForwardClr(char *buf, int sz)
 static void
 htcpHandleMsg(char *buf, int sz, Ip::Address &from)
 {
+    // TODO: function-scoped CodeContext::Reset(...("HTCP message from", from))
+
     htcpHeader htcpHdr;
     htcpDataHeader hdr;
     char *hbuf;
@@ -1525,7 +1564,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p)
  * Send an HTCP CLR message for a specified item to a given CachePeer.
  */
 void
-htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &, CachePeer * p, htcp_clr_reason reason)
+htcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &, CachePeer * p, htcp_clr_reason reason)
 {
     static char pkt[8192];
     ssize_t pktlen;
@@ -1547,14 +1586,9 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
 
     SBuf sb = req->method.image();
     stuff.S.method = sb.c_str();
-    if (e == NULL || e->mem_obj == NULL) {
-        if (uri == NULL) {
-            return;
-        }
-        stuff.S.uri = xstrdup(uri);
-    } else {
-        stuff.S.uri = (char *) e->url();
-    }
+    stuff.S.request = req;
+    SBuf uri = req->effectiveRequestUri();
+    stuff.S.uri = uri.c_str();
     stuff.S.version = vbuf;
     if (reason != HTCP_CLR_INVALIDATION) {
         HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
@@ -1568,9 +1602,6 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
     if (reason != HTCP_CLR_INVALIDATION) {
         mb.clean();
-    }
-    if (e == NULL) {
-        xfree(stuff.S.uri);
     }
     if (!pktlen) {
         debugs(31, 3, "htcpClear: htcpBuildPacket() failed");
@@ -1606,7 +1637,7 @@ htcpSocketShutdown(void)
      * disable reading on the outgoing socket.
      */
     /* XXX Don't we need this handler to read replies while shutting down?
-     * I think there should be a separate hander for reading replies..
+     * I think there should be a separate handler for reading replies..
      */
     assert(Comm::IsConnOpen(htcpOutgoingConn));
 

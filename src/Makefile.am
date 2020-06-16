@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -132,12 +132,6 @@ endif
 
 if ENABLE_HTCP
 HTCPSOURCE = htcp.cc htcp.h
-endif
-
-if ENABLE_LEAKFINDER
-LEAKFINDERSOURCE =  LeakFinder.cc
-else
-LEAKFINDERSOURCE =
 endif
 
 if ENABLE_UNLINKD
@@ -319,6 +313,8 @@ squid_SOURCES = \
 	hier_code.h \
 	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
+	HttpUpgradeProtocolAccess.cc \
+	HttpUpgradeProtocolAccess.h \
 	http.cc \
 	http.h \
 	HttpHeaderFieldStat.h \
@@ -362,7 +358,6 @@ squid_SOURCES = \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	ipcache.h \
-	$(LEAKFINDERSOURCE) \
 	LogTags.cc \
 	LogTags.h \
 	lookup_t.h \
@@ -503,8 +498,6 @@ EXTRA_squid_SOURCES = \
 	ipc.cc \
 	ipc_win32.cc \
 	ProfStats.cc \
-	LeakFinder.cc \
-	LeakFinder.h \
 	$(SNMP_ALL_SOURCE) \
 	$(UNLINKDSOURCE) \
 	$(WIN32_ALL_SOURCE) \
@@ -576,11 +569,11 @@ squid_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(ATOMICLIB) \
 	$(SSLLIB) \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
 	$(KRB5LIBS) \
+	$(SYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
@@ -758,9 +751,6 @@ swap_log_op.cc: swap_log_op.h mk-string-arrays.awk
 
 ## other generated files...
 
-cache_diff: cache_diff.o debug.o globals.o store_key_md5.o
-	$(CC) -o $@ $(LDFLAGS) $@.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
-
 test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key_md5.o
 	$(CC) -o $@ $(LDFLAGS) $@.o CacheDigest.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
 
@@ -784,7 +774,7 @@ cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre $(top_builddi
 	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
 
 
-## FIXME: generate a sed command file from configure. Then this doesn't
+## TODO: generate a sed command file from configure. Then this doesn't
 ## depend on the Makefile.
 cf.data: cf.data.pre Makefile
 	sed \
@@ -1862,7 +1852,6 @@ tests_test_http_range_SOURCES = \
 	cache_cf.h \
 	AuthReg.h \
 	RefreshPattern.h \
-	cache_cf.cc \
 	CachePeer.cc \
 	CachePeer.h \
 	cache_manager.cc \
@@ -2020,7 +2009,9 @@ tests_test_http_range_SOURCES = \
 	tests/stub_libstore.cc \
 	Transients.cc \
 	tests/test_http_range.cc \
+	tests/stub_cache_cf.cc \
 	tests/stub_external_acl.cc \
+	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_libdiskio.cc \
 	tests/stub_libeui.cc \
@@ -2265,7 +2256,6 @@ tests_testHttpRequest_SOURCES = \
 	cache_cf.h \
 	AuthReg.h \
 	RefreshPattern.h \
-	cache_cf.cc \
 	debug.cc \
 	CacheDigest.h \
 	tests/stub_CacheDigest.cc \
@@ -2417,6 +2407,8 @@ tests_testHttpRequest_SOURCES = \
 	tools.h \
 	tools.cc \
 	Transients.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_tunnel.cc \
 	tests/stub_libstore.cc \
 	MemStore.cc \
@@ -2563,7 +2555,6 @@ tests_testCacheManager_SOURCES = \
 	cache_cf.h \
 	AuthReg.h \
 	RefreshPattern.h \
-	cache_cf.cc \
 	CachePeer.cc \
 	CachePeer.h \
 	CacheDigest.h \
@@ -2717,6 +2708,8 @@ tests_testCacheManager_SOURCES = \
 	tools.h \
 	tools.cc \
 	Transients.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_tunnel.cc \
 	tests/stub_libstore.cc \
 	MemStore.cc \
@@ -2869,7 +2862,6 @@ tests_testEvent_SOURCES = \
 	cache_cf.h \
 	AuthReg.h \
 	RefreshPattern.h \
-	cache_cf.cc \
 	CachePeer.cc \
 	CachePeer.h \
 	cache_manager.cc \
@@ -3026,6 +3018,8 @@ tests_testEvent_SOURCES = \
 	StoreMetaUnpacker.cc \
 	StoreSwapLogData.cc \
 	String.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_libstore.cc \
 	tests/CapturingStoreEntry.h \
 	tests/testEvent.cc \
@@ -3108,7 +3102,6 @@ tests_testEventLoop_SOURCES = \
 	cache_cf.h \
 	AuthReg.h \
 	RefreshPattern.h \
-	cache_cf.cc \
 	CachePeer.cc \
 	CachePeer.h \
 	carp.h \
@@ -3263,6 +3256,8 @@ tests_testEventLoop_SOURCES = \
 	String.cc \
 	StrList.h \
 	StrList.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_libstore.cc \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \

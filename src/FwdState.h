@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -102,6 +102,9 @@ public:
 
     void dontRetry(bool val) { flags.dont_retry = val; }
 
+    /// get rid of a to-server connection that failed to become serverConn
+    void closePendingConnection(const Comm::ConnectionPointer &conn, const char *reason);
+
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
@@ -131,14 +134,18 @@ private:
     /// (in order to retry or reforward a failed request)
     bool pinnedCanRetry() const;
 
+    template <typename StepStart>
+    void advanceDestination(const char *stepDescription, const Comm::ConnectionPointer &conn, const StepStart &startStep);
+
     ErrorState *makeConnectingError(const err_type type) const;
     void connectedToPeer(Security::EncryptorAnswer &answer);
     static void RegisterWithCacheManager(void);
 
-    void establishTunnelThruProxy();
+    void establishTunnelThruProxy(const Comm::ConnectionPointer &);
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
-    void secureConnectionToPeerIfNeeded();
-    void successfullyConnectedToPeer();
+    void secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &);
+    void secureConnectionToPeer(const Comm::ConnectionPointer &);
+    void successfullyConnectedToPeer(const Comm::ConnectionPointer &);
 
     /// stops monitoring server connection for closure and updates pconn stats
     void closeServerConnection(const char *reason);
@@ -197,7 +204,7 @@ private:
     PconnRace pconnRace; ///< current pconn race state
 };
 
-void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
+void getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn);
 
 /// a collection of previously used persistent Squid-to-peer HTTP(S) connections
 extern PconnPool *fwdPconnPool;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -293,7 +293,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     }
 
     s = buf + k;
-    assert(urlres_e->getReply());
+    // TODO: Check whether we should parse urlres_e reply, as before 528b2c61.
     rep = new HttpReply;
     rep->parseCharBuf(buf, k);
     debugs(52, 3, "reply exists, code=" << rep->sline.status() << ".");
@@ -387,7 +387,6 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
 {
     char *buf = xstrdup(inbuf);
     char *token;
-    char *host;
     url_entry *list;
     url_entry *old;
     int n = 32;
@@ -406,24 +405,23 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
             safe_free(old);
         }
 
-        host = urlHostname(token);
-
-        if (NULL == host)
+        AnyP::Uri uri;
+        if (!uri.parse(m, SBuf(token)) || !*uri.host())
             continue;
 
 #if USE_ICMP
-        list[i].rtt = netdbHostRtt(host);
+        list[i].rtt = netdbHostRtt(uri.host());
 
         if (0 == list[i].rtt) {
-            debugs(52, 3, "urnParseReply: Pinging " << host);
-            netdbPingSite(host);
+            debugs(52, 3, "Pinging " << uri.host());
+            netdbPingSite(uri.host());
         }
 #else
         list[i].rtt = 0;
 #endif
 
-        list[i].url = xstrdup(token);
-        list[i].host = xstrdup(host);
+        list[i].url = xstrdup(uri.absolute().c_str());
+        list[i].host = xstrdup(uri.host());
         // TODO: Use storeHas() or lock/unlock entry to avoid creating unlocked
         // ones.
         list[i].flags.cached = storeGetPublic(list[i].url, m) ? 1 : 0;

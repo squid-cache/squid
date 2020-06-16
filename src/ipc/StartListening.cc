@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,7 +39,10 @@ Ipc::StartListening(int sock_type, int proto, const Comm::ConnectionPointer &lis
     Must(cbd);
     cbd->conn = listenConn;
 
-    if (UsingSmp()) { // if SMP is on, share
+    const auto giveEachWorkerItsOwnQueue = listenConn->flags & COMM_REUSEPORT;
+    if (!giveEachWorkerItsOwnQueue && UsingSmp()) {
+        // Ask Coordinator for a listening socket.
+        // All askers share one listening queue.
         OpenListenerParams p;
         p.sock_type = sock_type;
         p.proto = proto;

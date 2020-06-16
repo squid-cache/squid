@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -335,7 +335,7 @@ ESIInclude::ESIInclude(esiTreeParentPtr aParent, int attrcount, char const **att
              */
             debugs(86, 5, "ESIIncludeNew: Requesting alternate '" << attr[i+1] << "'");
 
-            assert (alt.getRaw() == NULL); /* TODO: FIXME */
+            assert (alt.getRaw() == NULL); /* TODO: fix? */
             alt = ESIStreamContextNew (this);
             assert (alt.getRaw() != NULL);
             alturl = xstrdup(attr[i+1]);

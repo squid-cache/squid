@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -39,6 +39,7 @@ AnyP::PortCfg::PortCfg() :
     ftp_track_dirs(false),
     vport(0),
     disable_pmtu_discovery(0),
+    workerQueues(false),
     listenConn()
 {
     memset(&tcp_keepalive, 0, sizeof(tcp_keepalive));
@@ -71,11 +72,32 @@ AnyP::PortCfg::clone() const
     b->vhost = vhost;
     b->vport = vport;
     b->connection_auth_disabled = connection_auth_disabled;
+    b->workerQueues = workerQueues;
     b->ftp_track_dirs = ftp_track_dirs;
     b->disable_pmtu_discovery = disable_pmtu_discovery;
     b->tcp_keepalive = tcp_keepalive;
     b->secure = secure;
 
     return b;
+}
+
+ScopedId
+AnyP::PortCfg::codeContextGist() const
+{
+    // Unfortunately, .name lifetime is too short in FTP use cases.
+    // TODO: Consider adding InstanceId<uint32_t> to all RefCountable classes.
+    return ScopedId("port");
+}
+
+std::ostream &
+AnyP::PortCfg::detailCodeContext(std::ostream &os) const
+{
+    // parsePortSpecification() defaults optional port name to the required
+    // listening address so we cannot easily distinguish one from the other.
+    if (name)
+        os << Debug::Extra << "listening port: " << name;
+    else if (s.port())
+        os << Debug::Extra << "listening port address: " << s;
+    return os;
 }
 

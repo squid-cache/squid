@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -442,8 +442,6 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     /* update size of the request */
     reqsize = result.length + reqofs;
 
-    const Http::StatusCode status = http->storeEntry()->getReply()->sline.status();
-
     // request to origin was aborted
     if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
         debugs(88, 3, "request to origin aborted '" << http->storeEntry()->url() << "', sending old entry to client");
@@ -451,14 +449,17 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         sendClientOldEntry();
     }
 
-    const HttpReply *old_rep = old_entry->getReply();
+    const auto oldStatus = old_entry->mem().freshestReply().sline.status();
+    const auto &new_rep = http->storeEntry()->mem().freshestReply();
+    const auto status = new_rep.sline.status();
 
     // origin replied 304
     if (status == Http::scNotModified) {
         http->logType.update(LOG_TCP_REFRESH_UNMODIFIED);
         http->request->flags.staleIfHit = false; // old_entry is no longer stale
 
-        // update headers on existing entry
+        // TODO: The update may not be instantaneous. Should we wait for its
+        // completion to avoid spawning too much client-disassociated work?
         Store::Root().updateOnNotModified(old_entry, *http->storeEntry());
 
         // if client sent IMS
@@ -470,21 +471,20 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         } else {
             // send existing entry, it's still valid
             debugs(88, 3, "origin replied 304, revalidating existing entry and sending " <<
-                   old_rep->sline.status() << " to client");
+                   oldStatus << " to client");
             sendClientOldEntry();
         }
     }
 
     // origin replied with a non-error code
     else if (status > Http::scNone && status < Http::scInternalServerError) {
-        const HttpReply *new_rep = http->storeEntry()->getReply();
         // RFC 7234 section 4: a cache MUST use the most recent response
         // (as determined by the Date header field)
-        if (new_rep->olderThan(old_rep)) {
+        if (new_rep.olderThan(&old_entry->mem().freshestReply())) {
             http->logType.err.ignored = true;
             debugs(88, 3, "origin replied " << status <<
                    " but with an older date header, sending old entry (" <<
-                   old_rep->sline.status() << ") to client");
+                   oldStatus << ") to client");
             sendClientOldEntry();
         } else {
             http->logType.update(LOG_TCP_REFRESH_MODIFIED);
@@ -508,7 +508,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         // ignore and let client have old entry
         http->logType.update(LOG_TCP_REFRESH_FAIL_OLD);
         debugs(88, 3, "origin replied with error " <<
-               status << ", sending old entry (" << old_rep->sline.status() << ") to client");
+               status << ", sending old entry (" << oldStatus << ") to client");
         sendClientOldEntry();
     }
 }
@@ -560,11 +560,11 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
         return;
     }
 
-    // The previously identified hit suddenly became unsharable!
+    // The previously identified hit suddenly became unshareable!
     // This is common for collapsed forwarding slaves but might also
     // happen to regular hits because we are called asynchronously.
     if (!e->mayStartHitting()) {
-        debugs(88, 3, "unsharable " << *e << ". MISS");
+        debugs(88, 3, "unshareable " << *e << ". MISS");
         http->logType.update(LOG_TCP_MISS);
         processMiss();
         return;
@@ -778,7 +778,7 @@ clientReplyContext::processMiss()
         triggerInitialStoreRead();
 
         if (http->redirect.status) {
-            HttpReply *rep = new HttpReply;
+            const HttpReplyPointer rep(new HttpReply);
             http->logType.update(LOG_TCP_REDIRECT);
             http->storeEntry()->releaseRequest();
             rep->redirect(http->redirect.status, http->redirect.location);
@@ -820,8 +820,9 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
 {
     StoreEntry *const e = http->storeEntry();
 
-    if (e->getReply()->sline.status() != Http::scOkay) {
-        debugs(88, 4, "Reply code " << e->getReply()->sline.status() << " != 200");
+    const auto replyStatusCode = e->mem().baseReply().sline.status();
+    if (replyStatusCode != Http::scOkay) {
+        debugs(88, 4, "miss because " << replyStatusCode << " != 200");
         http->logType.update(LOG_TCP_MISS);
         processMiss();
         return true;
@@ -877,18 +878,13 @@ clientReplyContext::blockedHit() const
     if (http->flags.internal)
         return false; // internal content "hits" cannot be blocked
 
-    if (const HttpReply *rep = http->storeEntry()->getReply()) {
+    const auto &rep = http->storeEntry()->mem().freshestReply();
+    {
         std::unique_ptr<ACLFilledChecklist> chl(clientAclChecklistCreate(Config.accessList.sendHit, http));
-        chl->reply = const_cast<HttpReply*>(rep); // ACLChecklist API bug
+        chl->reply = const_cast<HttpReply*>(&rep); // ACLChecklist API bug
         HTTPMSGLOCK(chl->reply);
         return !chl->fastCheck().allowed(); // when in doubt, block
     }
-
-    // This does not happen, I hope, because we are called from CacheHit, which
-    // is called via a storeClientCopy() callback, and store should initialize
-    // the reply before calling that callback.
-    debugs(88, 3, "Missing reply!");
-    return false;
 }
 
 void
@@ -917,7 +913,7 @@ purgeEntriesByUrl(HttpRequest * req, const char *url)
             const cache_key *key = storeKeyPublic(url, m);
             debugs(88, 5, m << ' ' << url << ' ' << storeKeyText(key));
 #if USE_HTCP
-            neighborsHtcpClear(nullptr, url, req, m, HTCP_CLR_INVALIDATION);
+            neighborsHtcpClear(nullptr, req, m, HTCP_CLR_INVALIDATION);
 #endif
             Store::Root().evictIfFound(key);
         }
@@ -1052,12 +1048,10 @@ void
 clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 {
     if (newEntry) {
-        /* Move to new() when that is created */
-        purgeStatus = Http::scNotFound;
         /* Release the cached URI */
         debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
 #if USE_HTCP
-        neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
+        neighborsHtcpClear(newEntry, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
         newEntry->release(true);
         purgeStatus = Http::scOkay;
@@ -1073,7 +1067,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
     if (newEntry) {
         debugs(88, 4, "HEAD " << newEntry->url());
 #if USE_HTCP
-        neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
+        neighborsHtcpClear(newEntry, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
         newEntry->release(true);
         purgeStatus = Http::scOkay;
@@ -1089,7 +1083,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
         if (entry) {
             debugs(88, 4, "Vary GET " << entry->url());
 #if USE_HTCP
-            neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
+            neighborsHtcpClear(entry, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
 #endif
             entry->release(true);
             purgeStatus = Http::scOkay;
@@ -1100,25 +1094,28 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
         if (entry) {
             debugs(88, 4, "Vary HEAD " << entry->url());
 #if USE_HTCP
-            neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
+            neighborsHtcpClear(entry, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
 #endif
             entry->release(true);
             purgeStatus = Http::scOkay;
         }
     }
 
+    if (purgeStatus == Http::scNone)
+        purgeStatus = Http::scNotFound;
+
     /*
      * Make a new entry to hold the reply to be written
      * to the client.
      */
-    /* FIXME: This doesn't need to go through the store. Simply
+    /* TODO: This doesn't need to go through the store. Simply
      * push down the client chain
      */
     createStoreEntry(http->request->method, RequestFlags());
 
     triggerInitialStoreRead();
 
-    HttpReply *rep = new HttpReply;
+    const HttpReplyPointer rep(new HttpReply);
     rep->setHeaders(purgeStatus, NULL, NULL, 0, 0, -1);
     http->storeEntry()->replaceHttpReply(rep);
     http->storeEntry()->complete();
@@ -1137,7 +1134,7 @@ clientReplyContext::traceReply(clientStreamNode * node)
                     localTempBuffer, SendMoreData, this);
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
-    HttpReply *rep = new HttpReply;
+    const HttpReplyPointer rep(new HttpReply);
     rep->setHeaders(Http::scOkay, NULL, "text/plain", http->request->prefixLen(), 0, squid_curtime);
     http->storeEntry()->replaceHttpReply(rep);
     http->request->swapOut(http->storeEntry());
@@ -1210,17 +1207,24 @@ clientReplyContext::storeNotOKTransferDone() const
         /* haven't found end of headers yet */
         return 0;
 
-    const HttpReplyPointer curReply(mem->getReply());
+    // TODO: Use MemObject::expectedReplySize(method) after resolving XXX below.
+    const auto expectedBodySize = mem->baseReply().content_length;
+
+    // XXX: The code below talks about sending data, and checks stats about
+    // bytes written to the client connection, but this method must determine
+    // whether we are done _receiving_ data from Store. This code should work OK
+    // when expectedBodySize is unknown or matches written data, but it may
+    // malfunction when we are writing ranges while receiving a full response.
 
     /*
      * Figure out how much data we are supposed to send.
      * If we are sending a body and we don't have a content-length,
      * then we must wait for the object to become STORE_OK.
      */
-    if (curReply->content_length < 0)
+    if (expectedBodySize < 0)
         return 0;
 
-    uint64_t expectedLength = curReply->content_length + http->out.headers_sz;
+    const uint64_t expectedLength = expectedBodySize + http->out.headers_sz;
 
     if (http->out.size < expectedLength)
         return 0;
@@ -1316,8 +1320,9 @@ clientReplyContext::replyStatus()
             return STREAM_FAILED;
         }
 
+        // TODO: See also (and unify with) storeNotOKTransferDone() checks.
         const int64_t expectedBodySize =
-            http->storeEntry()->getReply()->bodySize(http->request->method);
+            http->storeEntry()->mem().baseReply().bodySize(http->request->method);
         if (expectedBodySize >= 0 && !http->gotEnough()) {
             debugs(88, 5, "clientReplyStatus: client didn't get all it expected");
             return STREAM_UNPLANNED_COMPLETE;
@@ -1341,7 +1346,7 @@ clientReplyContext::replyStatus()
 /* Responses with no body will not have a content-type header,
  * which breaks the rep_mime_type acl, which
  * coincidentally, is the most common acl for reply access lists.
- * A better long term fix for this is to allow acl matchs on the various
+ * A better long term fix for this is to allow acl matches on the various
  * status codes, and then supply a default ruleset that puts these
  * codes before any user defines access entries. That way the user
  * can choose to block these responses where appropriate, but won't get
@@ -1457,7 +1462,7 @@ clientReplyContext::buildReplyHeader()
             /* Signal old objects.  NB: rfc 2616 is not clear,
              * by implication, on whether we should do this to all
              * responses, or only cache hits.
-             * 14.46 states it ONLY applys for heuristically caclulated
+             * 14.46 states it ONLY applies for heuristically calculated
              * freshness values, 13.2.4 doesn't specify the same limitation.
              * We interpret RFC 2616 under the combination.
              */
@@ -1544,7 +1549,7 @@ clientReplyContext::buildReplyHeader()
               reply->sline.status() == Http::scUnauthorized)
        ) {
         /* Add authentication header */
-        /*! \todo alter errorstate to be accel on|off aware. The 0 on the next line
+        /* TODO: alter errorstate to be accel on|off aware. The 0 on the next line
          * depends on authenticate behaviour: all schemes to date send no extra
          * data on 407/401 responses, and do not check the accel state on 401/407
          * responses
@@ -1646,7 +1651,7 @@ clientReplyContext::cloneReply()
 {
     assert(reply == NULL);
 
-    reply = http->storeEntry()->getReply()->clone();
+    reply = http->storeEntry()->mem().freshestReply().clone();
     HTTPMSGLOCK(reply);
 
     http->al->reply = reply;
@@ -1900,7 +1905,7 @@ clientReplyContext::SendMoreData(void *data, StoreIOBuffer result)
 void
 clientReplyContext::makeThisHead()
 {
-    /* At least, I think thats what this does */
+    /* At least, I think that's what this does */
     dlinkDelete(&http->active, &ClientActiveRequests);
     dlinkAdd(http, &http->active, &ClientActiveRequests);
 }
@@ -1995,7 +2000,7 @@ clientReplyContext::sendNotModified()
 {
     StoreEntry *e = http->storeEntry();
     const time_t timestamp = e->timestamp;
-    HttpReply *const temprep = e->getReply()->make304();
+    const auto temprep = e->mem().freshestReply().make304();
     // log as TCP_INM_HIT if code 304 generated for
     // If-None-Match request
     if (!http->request->flags.ims)
@@ -2286,7 +2291,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
 
     StoreEntry *e = storeCreateEntry(storeId(), http->log_uri, reqFlags, m);
 
-    // Make entry collapsable ASAP, to increase collapsing chances for others,
+    // Make entry collapsible ASAP, to increase collapsing chances for others,
     // TODO: every must-revalidate and similar request MUST reach the origin,
     // but do we have to prohibit others from collapsing on that request?
     if (reqFlags.cachable &&
@@ -2318,7 +2323,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
     /* So, we mark the store logic as complete */
     flags.storelogiccomplete = 1;
 
-    /* and get the caller to request a read, from whereever they are */
+    /* and get the caller to request a read, from wherever they are */
     /* NOTE: after ANY data flows down the pipe, even one step,
      * this function CAN NOT be used to manage errors
      */

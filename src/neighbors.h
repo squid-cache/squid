@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -40,7 +40,7 @@ void neighborsUdpAck(const cache_key *, icp_common_t *, const Ip::Address &);
 void neighborAdd(const char *, const char *, int, int, int, int, int);
 void neighbors_init(void);
 #if USE_HTCP
-void neighborsHtcpClear(StoreEntry *, const char *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
+void neighborsHtcpClear(StoreEntry *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
 #endif
 CachePeer *peerFindByName(const char *);
 CachePeer *peerFindByNameAndPort(const char *, unsigned short);

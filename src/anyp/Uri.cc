@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -29,6 +29,56 @@ static const char valid_hostname_chars[] =
     "0123456789-."
     "[:]"
     ;
+
+/// Characters which are valid within a URI userinfo section
+static const CharacterSet &
+UserInfoChars()
+{
+    /*
+     * RFC 3986 section 3.2.1
+     *
+     *  userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
+     *  unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
+     *  pct-encoded   = "%" HEXDIG HEXDIG
+     *  sub-delims    = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+     */
+    static const auto userInfoValid = CharacterSet("userinfo", ":-._~%!$&'()*+,;=") +
+                                      CharacterSet::ALPHA +
+                                      CharacterSet::DIGIT;
+    return userInfoValid;
+}
+
+/**
+ * Governed by RFC 3986 section 2.1
+ */
+SBuf
+AnyP::Uri::Encode(const SBuf &buf, const CharacterSet &ignore)
+{
+    if (buf.isEmpty())
+        return buf;
+
+    Parser::Tokenizer tk(buf);
+    SBuf goodSection;
+    // optimization for the arguably common "no encoding necessary" case
+    if (tk.prefix(goodSection, ignore) && tk.atEnd())
+        return buf;
+
+    SBuf output;
+    output.reserveSpace(buf.length() * 3); // worst case: encode all chars
+    output.append(goodSection); // may be empty
+
+    while (!tk.atEnd()) {
+        // TODO: Add Tokenizer::parseOne(void).
+        const auto ch = tk.remaining()[0];
+        output.appendf("%%%02X", static_cast<unsigned int>(ch)); // TODO: Optimize using a table
+        (void)tk.skip(ch);
+
+        if (tk.prefix(goodSection, ignore))
+            output.append(goodSection);
+    }
+
+    return output;
+}
 
 const SBuf &
 AnyP::Uri::Asterisk()
@@ -204,269 +254,269 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
 {
     try {
 
-    LOCAL_ARRAY(char, login, MAX_URL);
-    LOCAL_ARRAY(char, foundHost, MAX_URL);
-    LOCAL_ARRAY(char, urlpath, MAX_URL);
-    char *t = NULL;
-    char *q = NULL;
-    int foundPort;
-    int l;
-    int i;
-    const char *src;
-    char *dst;
-    foundHost[0] = urlpath[0] = login[0] = '\0';
+        LOCAL_ARRAY(char, login, MAX_URL);
+        LOCAL_ARRAY(char, foundHost, MAX_URL);
+        LOCAL_ARRAY(char, urlpath, MAX_URL);
+        char *t = NULL;
+        char *q = NULL;
+        int foundPort;
+        int l;
+        int i;
+        const char *src;
+        char *dst;
+        foundHost[0] = urlpath[0] = login[0] = '\0';
 
-    if ((l = rawUrl.length()) + Config.appendDomainLen > (MAX_URL - 1)) {
-        debugs(23, DBG_IMPORTANT, MYNAME << "URL too large (" << l << " bytes)");
-        return false;
-    }
+        if ((l = rawUrl.length()) + Config.appendDomainLen > (MAX_URL - 1)) {
+            debugs(23, DBG_IMPORTANT, MYNAME << "URL too large (" << l << " bytes)");
+            return false;
+        }
 
-    if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
-               Asterisk().cmp(rawUrl) == 0) {
-        // XXX: these methods might also occur in HTTPS traffic. Handle this better.
-        setScheme(AnyP::PROTO_HTTP, nullptr);
-        port(getScheme().defaultPort());
-        path(Asterisk());
-        return true;
-    }
-
-    Parser::Tokenizer tok(rawUrl);
-    AnyP::UriScheme scheme;
-
-    if (method == Http::METHOD_CONNECT) {
-        /*
-         * RFC 7230 section 5.3.3:  authority-form = authority
-         *  "excluding any userinfo and its "@" delimiter"
-         *
-         * RFC 3986 section 3.2:    authority = [ userinfo "@" ] host [ ":" port ]
-         *
-         * As an HTTP(S) proxy we assume HTTPS (443) if no port provided.
-         */
-        foundPort = 443;
-
-        // XXX: use tokenizer
-        auto B = tok.buf();
-        const char *url = B.c_str();
-
-        if (sscanf(url, "[%[^]]]:%d", foundHost, &foundPort) < 1)
-            if (sscanf(url, "%[^:]:%d", foundHost, &foundPort) < 1)
-                return false;
-
-    } else {
-
-        scheme = uriParseScheme(tok);
-
-        if (scheme == AnyP::PROTO_NONE)
-            return false; // invalid scheme
-
-        if (scheme == AnyP::PROTO_URN) {
-            parseUrn(tok); // throws on any error
+        if ((method == Http::METHOD_OPTIONS || method == Http::METHOD_TRACE) &&
+                Asterisk().cmp(rawUrl) == 0) {
+            // XXX: these methods might also occur in HTTPS traffic. Handle this better.
+            setScheme(AnyP::PROTO_HTTP, nullptr);
+            port(getScheme().defaultPort());
+            path(Asterisk());
             return true;
         }
 
-        // URLs then have "//"
-        static const SBuf doubleSlash("//");
-        if (!tok.skip(doubleSlash))
-            return false;
+        Parser::Tokenizer tok(rawUrl);
+        AnyP::UriScheme scheme;
 
-        auto B = tok.remaining();
-        const char *url = B.c_str();
+        if (method == Http::METHOD_CONNECT) {
+            /*
+             * RFC 7230 section 5.3.3:  authority-form = authority
+             *  "excluding any userinfo and its "@" delimiter"
+             *
+             * RFC 3986 section 3.2:    authority = [ userinfo "@" ] host [ ":" port ]
+             *
+             * As an HTTP(S) proxy we assume HTTPS (443) if no port provided.
+             */
+            foundPort = 443;
 
-        /* Parse the URL: */
-        src = url;
-        i = 0;
+            // XXX: use tokenizer
+            auto B = tok.buf();
+            const char *url = B.c_str();
 
-        /* Then everything until first /; thats host (and port; which we'll look for here later) */
-        // bug 1881: If we don't get a "/" then we imply it was there
-        // bug 3074: We could just be given a "?" or "#". These also imply "/"
-        // bug 3233: whitespace is also a hostname delimiter.
-        for (dst = foundHost; i < l && *src != '/' && *src != '?' && *src != '#' && *src != '\0' && !xisspace(*src); ++i, ++src, ++dst) {
-            *dst = *src;
-        }
+            if (sscanf(url, "[%[^]]]:%d", foundHost, &foundPort) < 1)
+                if (sscanf(url, "%[^:]:%d", foundHost, &foundPort) < 1)
+                    return false;
 
-        /*
-         * We can't check for "i >= l" here because we could be at the end of the line
-         * and have a perfectly valid URL w/ no trailing '/'. In this case we assume we've
-         * been -given- a valid URL and the path is just '/'.
-         */
-        if (i > l)
-            return false;
-        *dst = '\0';
-
-        // bug 3074: received 'path' starting with '?', '#', or '\0' implies '/'
-        if (*src == '?' || *src == '#' || *src == '\0') {
-            urlpath[0] = '/';
-            dst = &urlpath[1];
         } else {
-            dst = urlpath;
-        }
-        /* Then everything from / (inclusive) until \r\n or \0 - thats urlpath */
-        for (; i < l && *src != '\r' && *src != '\n' && *src != '\0'; ++i, ++src, ++dst) {
-            *dst = *src;
-        }
 
-        /* We -could- be at the end of the buffer here */
-        if (i > l)
-            return false;
-        /* If the URL path is empty we set it to be "/" */
-        if (dst == urlpath) {
-            *dst = '/';
-            ++dst;
-        }
-        *dst = '\0';
+            scheme = uriParseScheme(tok);
 
-        foundPort = scheme.defaultPort(); // may be reset later
+            if (scheme == AnyP::PROTO_NONE)
+                return false; // invalid scheme
 
-        /* Is there any login information? (we should eventually parse it above) */
-        t = strrchr(foundHost, '@');
-        if (t != NULL) {
-            strncpy((char *) login, (char *) foundHost, sizeof(login)-1);
-            login[sizeof(login)-1] = '\0';
-            t = strrchr(login, '@');
-            *t = 0;
-            strncpy((char *) foundHost, t + 1, sizeof(foundHost)-1);
-            foundHost[sizeof(foundHost)-1] = '\0';
-            // Bug 4498: URL-unescape the login info after extraction
-            rfc1738_unescape(login);
-        }
+            if (scheme == AnyP::PROTO_URN) {
+                parseUrn(tok); // throws on any error
+                return true;
+            }
 
-        /* Is there any host information? (we should eventually parse it above) */
-        if (*foundHost == '[') {
-            /* strip any IPA brackets. valid under IPv6. */
-            dst = foundHost;
-            /* only for IPv6 sadly, pre-IPv6/URL code can't handle the clean result properly anyway. */
-            src = foundHost;
-            ++src;
-            l = strlen(foundHost);
-            i = 1;
-            for (; i < l && *src != ']' && *src != '\0'; ++i, ++src, ++dst) {
+            // URLs then have "//"
+            static const SBuf doubleSlash("//");
+            if (!tok.skip(doubleSlash))
+                return false;
+
+            auto B = tok.remaining();
+            const char *url = B.c_str();
+
+            /* Parse the URL: */
+            src = url;
+            i = 0;
+
+            /* Then everything until first /; that's host (and port; which we'll look for here later) */
+            // bug 1881: If we don't get a "/" then we imply it was there
+            // bug 3074: We could just be given a "?" or "#". These also imply "/"
+            // bug 3233: whitespace is also a hostname delimiter.
+            for (dst = foundHost; i < l && *src != '/' && *src != '?' && *src != '#' && *src != '\0' && !xisspace(*src); ++i, ++src, ++dst) {
                 *dst = *src;
             }
 
-            /* we moved in-place, so truncate the actual hostname found */
+            /*
+             * We can't check for "i >= l" here because we could be at the end of the line
+             * and have a perfectly valid URL w/ no trailing '/'. In this case we assume we've
+             * been -given- a valid URL and the path is just '/'.
+             */
+            if (i > l)
+                return false;
             *dst = '\0';
-            ++dst;
 
-            /* skip ahead to either start of port, or original EOS */
-            while (*dst != '\0' && *dst != ':')
+            // bug 3074: received 'path' starting with '?', '#', or '\0' implies '/'
+            if (*src == '?' || *src == '#' || *src == '\0') {
+                urlpath[0] = '/';
+                dst = &urlpath[1];
+            } else {
+                dst = urlpath;
+            }
+            /* Then everything from / (inclusive) until \r\n or \0 - that's urlpath */
+            for (; i < l && *src != '\r' && *src != '\n' && *src != '\0'; ++i, ++src, ++dst) {
+                *dst = *src;
+            }
+
+            /* We -could- be at the end of the buffer here */
+            if (i > l)
+                return false;
+            /* If the URL path is empty we set it to be "/" */
+            if (dst == urlpath) {
+                *dst = '/';
                 ++dst;
-            t = dst;
-        } else {
-            t = strrchr(foundHost, ':');
+            }
+            *dst = '\0';
 
-            if (t != strchr(foundHost,':') ) {
-                /* RFC 2732 states IPv6 "SHOULD" be bracketed. allowing for times when its not. */
-                /* RFC 3986 'update' simply modifies this to an "is" with no emphasis at all! */
-                /* therefore we MUST accept the case where they are not bracketed at all. */
-                t = NULL;
+            foundPort = scheme.defaultPort(); // may be reset later
+
+            /* Is there any login information? (we should eventually parse it above) */
+            t = strrchr(foundHost, '@');
+            if (t != NULL) {
+                strncpy((char *) login, (char *) foundHost, sizeof(login)-1);
+                login[sizeof(login)-1] = '\0';
+                t = strrchr(login, '@');
+                *t = 0;
+                strncpy((char *) foundHost, t + 1, sizeof(foundHost)-1);
+                foundHost[sizeof(foundHost)-1] = '\0';
+                // Bug 4498: URL-unescape the login info after extraction
+                rfc1738_unescape(login);
+            }
+
+            /* Is there any host information? (we should eventually parse it above) */
+            if (*foundHost == '[') {
+                /* strip any IPA brackets. valid under IPv6. */
+                dst = foundHost;
+                /* only for IPv6 sadly, pre-IPv6/URL code can't handle the clean result properly anyway. */
+                src = foundHost;
+                ++src;
+                l = strlen(foundHost);
+                i = 1;
+                for (; i < l && *src != ']' && *src != '\0'; ++i, ++src, ++dst) {
+                    *dst = *src;
+                }
+
+                /* we moved in-place, so truncate the actual hostname found */
+                *dst = '\0';
+                ++dst;
+
+                /* skip ahead to either start of port, or original EOS */
+                while (*dst != '\0' && *dst != ':')
+                    ++dst;
+                t = dst;
+            } else {
+                t = strrchr(foundHost, ':');
+
+                if (t != strchr(foundHost,':') ) {
+                    /* RFC 2732 states IPv6 "SHOULD" be bracketed. allowing for times when its not. */
+                    /* RFC 3986 'update' simply modifies this to an "is" with no emphasis at all! */
+                    /* therefore we MUST accept the case where they are not bracketed at all. */
+                    t = NULL;
+                }
+            }
+
+            // Bug 3183 sanity check: If scheme is present, host must be too.
+            if (scheme != AnyP::PROTO_NONE && foundHost[0] == '\0') {
+                debugs(23, DBG_IMPORTANT, "SECURITY ALERT: Missing hostname in URL '" << url << "'. see access.log for details.");
+                return false;
+            }
+
+            if (t && *t == ':') {
+                *t = '\0';
+                ++t;
+                foundPort = atoi(t);
             }
         }
 
-        // Bug 3183 sanity check: If scheme is present, host must be too.
-        if (scheme != AnyP::PROTO_NONE && foundHost[0] == '\0') {
-            debugs(23, DBG_IMPORTANT, "SECURITY ALERT: Missing hostname in URL '" << url << "'. see access.log for details.");
+        for (t = foundHost; *t; ++t)
+            *t = xtolower(*t);
+
+        if (stringHasWhitespace(foundHost)) {
+            if (URI_WHITESPACE_STRIP == Config.uri_whitespace) {
+                t = q = foundHost;
+                while (*t) {
+                    if (!xisspace(*t)) {
+                        *q = *t;
+                        ++q;
+                    }
+                    ++t;
+                }
+                *q = '\0';
+            }
+        }
+
+        debugs(23, 3, "Split URL '" << rawUrl << "' into proto='" << scheme.image() << "', host='" << foundHost << "', port='" << foundPort << "', path='" << urlpath << "'");
+
+        if (Config.onoff.check_hostnames &&
+                strspn(foundHost, Config.onoff.allow_underscore ? valid_hostname_chars_u : valid_hostname_chars) != strlen(foundHost)) {
+            debugs(23, DBG_IMPORTANT, MYNAME << "Illegal character in hostname '" << foundHost << "'");
             return false;
         }
 
-        if (t && *t == ':') {
-            *t = '\0';
-            ++t;
-            foundPort = atoi(t);
+        if (!urlAppendDomain(foundHost))
+            return false;
+
+        /* remove trailing dots from hostnames */
+        while ((l = strlen(foundHost)) > 0 && foundHost[--l] == '.')
+            foundHost[l] = '\0';
+
+        /* reject duplicate or leading dots */
+        if (strstr(foundHost, "..") || *foundHost == '.') {
+            debugs(23, DBG_IMPORTANT, MYNAME << "Illegal hostname '" << foundHost << "'");
+            return false;
         }
-    }
 
-    for (t = foundHost; *t; ++t)
-        *t = xtolower(*t);
-
-    if (stringHasWhitespace(foundHost)) {
-        if (URI_WHITESPACE_STRIP == Config.uri_whitespace) {
-            t = q = foundHost;
-            while (*t) {
-                if (!xisspace(*t)) {
-                    *q = *t;
-                    ++q;
-                }
-                ++t;
-            }
-            *q = '\0';
+        if (foundPort < 1 || foundPort > 65535) {
+            debugs(23, 3, "Invalid port '" << foundPort << "'");
+            return false;
         }
-    }
-
-    debugs(23, 3, "Split URL '" << rawUrl << "' into proto='" << scheme.image() << "', host='" << foundHost << "', port='" << foundPort << "', path='" << urlpath << "'");
-
-    if (Config.onoff.check_hostnames &&
-            strspn(foundHost, Config.onoff.allow_underscore ? valid_hostname_chars_u : valid_hostname_chars) != strlen(foundHost)) {
-        debugs(23, DBG_IMPORTANT, MYNAME << "Illegal character in hostname '" << foundHost << "'");
-        return false;
-    }
-
-    if (!urlAppendDomain(foundHost))
-        return false;
-
-    /* remove trailing dots from hostnames */
-    while ((l = strlen(foundHost)) > 0 && foundHost[--l] == '.')
-        foundHost[l] = '\0';
-
-    /* reject duplicate or leading dots */
-    if (strstr(foundHost, "..") || *foundHost == '.') {
-        debugs(23, DBG_IMPORTANT, MYNAME << "Illegal hostname '" << foundHost << "'");
-        return false;
-    }
-
-    if (foundPort < 1 || foundPort > 65535) {
-        debugs(23, 3, "Invalid port '" << foundPort << "'");
-        return false;
-    }
 
 #if HARDCODE_DENY_PORTS
-    /* These ports are filtered in the default squid.conf, but
-     * maybe someone wants them hardcoded... */
-    if (foundPort == 7 || foundPort == 9 || foundPort == 19) {
-        debugs(23, DBG_CRITICAL, MYNAME << "Deny access to port " << foundPort);
-        return false;
-    }
+        /* These ports are filtered in the default squid.conf, but
+         * maybe someone wants them hardcoded... */
+        if (foundPort == 7 || foundPort == 9 || foundPort == 19) {
+            debugs(23, DBG_CRITICAL, MYNAME << "Deny access to port " << foundPort);
+            return false;
+        }
 #endif
 
-    if (stringHasWhitespace(urlpath)) {
-        debugs(23, 2, "URI has whitespace: {" << rawUrl << "}");
+        if (stringHasWhitespace(urlpath)) {
+            debugs(23, 2, "URI has whitespace: {" << rawUrl << "}");
 
-        switch (Config.uri_whitespace) {
+            switch (Config.uri_whitespace) {
 
-        case URI_WHITESPACE_DENY:
-            return false;
+            case URI_WHITESPACE_DENY:
+                return false;
 
-        case URI_WHITESPACE_ALLOW:
-            break;
+            case URI_WHITESPACE_ALLOW:
+                break;
 
-        case URI_WHITESPACE_ENCODE:
-            t = rfc1738_escape_unescaped(urlpath);
-            xstrncpy(urlpath, t, MAX_URL);
-            break;
+            case URI_WHITESPACE_ENCODE:
+                t = rfc1738_escape_unescaped(urlpath);
+                xstrncpy(urlpath, t, MAX_URL);
+                break;
 
-        case URI_WHITESPACE_CHOP:
-            *(urlpath + strcspn(urlpath, w_space)) = '\0';
-            break;
+            case URI_WHITESPACE_CHOP:
+                *(urlpath + strcspn(urlpath, w_space)) = '\0';
+                break;
 
-        case URI_WHITESPACE_STRIP:
-        default:
-            t = q = urlpath;
-            while (*t) {
-                if (!xisspace(*t)) {
-                    *q = *t;
-                    ++q;
+            case URI_WHITESPACE_STRIP:
+            default:
+                t = q = urlpath;
+                while (*t) {
+                    if (!xisspace(*t)) {
+                        *q = *t;
+                        ++q;
+                    }
+                    ++t;
                 }
-                ++t;
+                *q = '\0';
             }
-            *q = '\0';
         }
-    }
 
-    setScheme(scheme);
-    path(urlpath);
-    host(foundHost);
-    userInfo(SBuf(login));
-    port(foundPort);
-    return true;
+        setScheme(scheme);
+        path(urlpath);
+        host(foundHost);
+        userInfo(SBuf(login));
+        port(foundPort);
+        return true;
 
     } catch (...) {
         debugs(23, 2, "error: " << CurrentException << " " << Raw("rawUrl", rawUrl.rawContent(), rawUrl.length()));
@@ -557,7 +607,10 @@ AnyP::Uri::absolute() const
                                        getScheme() == AnyP::PROTO_UNKNOWN;
 
             if (allowUserInfo && !userInfo().isEmpty()) {
-                absolute_.append(userInfo());
+                static const CharacterSet uiChars = CharacterSet(UserInfoChars())
+                                                    .remove('%')
+                                                    .rename("userinfo-reserved");
+                absolute_.append(Encode(userInfo(), uiChars));
                 absolute_.append("@", 1);
             }
             absolute_.append(authority());
@@ -565,13 +618,13 @@ AnyP::Uri::absolute() const
             absolute_.append(host());
             absolute_.append(":", 1);
         }
-        absolute_.append(path());
+        absolute_.append(path()); // TODO: Encode each URI subcomponent in path_ as needed.
     }
 
     return absolute_;
 }
 
-/** \todo AYJ: Performance: This is an *almost* duplicate of HttpRequest::effectiveRequestUri(). But elides the query-string.
+/* XXX: Performance: This is an *almost* duplicate of HttpRequest::effectiveRequestUri(). But elides the query-string.
  *        After copying it on in the first place! Would be less code to merge the two with a flag parameter.
  *        and never copy the query-string part in the first place
  */
@@ -619,106 +672,80 @@ urlCanonicalFakeHttps(const HttpRequest * request)
     return request->canonicalCleanUrl();
 }
 
-/*
- * Test if a URL is relative.
+/**
+ * Test if a URL is a relative reference.
  *
- * RFC 2396, Section 5 (Page 17) implies that in a relative URL, a '/' will
- * appear before a ':'.
+ * Governed by RFC 3986 section 4.2
+ *
+ *  relative-ref  = relative-part [ "?" query ] [ "#" fragment ]
+ *
+ *  relative-part = "//" authority path-abempty
+ *                / path-absolute
+ *                / path-noscheme
+ *                / path-empty
  */
 bool
 urlIsRelative(const char *url)
 {
-    const char *p;
+    if (!url)
+        return false; // no URL
 
-    if (url == NULL) {
-        return (false);
-    }
-    if (*url == '\0') {
-        return (false);
+    /*
+     * RFC 3986 section 5.2.3
+     *
+     * path          = path-abempty    ; begins with "/" or is empty
+     *               / path-absolute   ; begins with "/" but not "//"
+     *               / path-noscheme   ; begins with a non-colon segment
+     *               / path-rootless   ; begins with a segment
+     *               / path-empty      ; zero characters
+     */
+
+    if (*url == '\0')
+        return true; // path-empty
+
+    if (*url == '/') {
+        // RFC 3986 section 5.2.3
+        // path-absolute   ; begins with "/" but not "//"
+        if (url[1] == '/')
+            return true; // network-path reference, aka. 'scheme-relative URI'
+        else
+            return true; // path-absolute, aka 'absolute-path reference'
     }
 
-    for (p = url; *p != '\0' && *p != ':' && *p != '/'; ++p);
-
-    if (*p == ':') {
-        return (false);
+    for (const auto *p = url; *p != '\0' && *p != '/' && *p != '?' && *p != '#'; ++p) {
+        if (*p == ':')
+            return false; // colon is forbidden in first segment
     }
-    return (true);
+
+    return true; // path-noscheme, path-abempty, path-rootless
 }
 
-/*
- * Convert a relative URL to an absolute URL using the context of a given
- * request.
- *
- * It is assumed that you have already ensured that the URL is relative.
- *
- * If NULL is returned it is an indication that the method in use in the
- * request does not distinguish between relative and absolute and you should
- * use the url unchanged.
- *
- * If non-NULL is returned, it is up to the caller to free the resulting
- * memory using safe_free().
- */
-char *
-urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
+void
+AnyP::Uri::addRelativePath(const char *relUrl)
 {
+    // URN cannot be merged
+    if (getScheme() == AnyP::PROTO_URN)
+        return;
 
-    if (req->method.id() == Http::METHOD_CONNECT) {
-        return (NULL);
-    }
+    // TODO: Handle . and .. segment normalization
 
-    char *urlbuf = (char *)xmalloc(MAX_URL * sizeof(char));
-
-    if (req->url.getScheme() == AnyP::PROTO_URN) {
-        // XXX: this is what the original code did, but it seems to break the
-        // intended behaviour of this function. It returns the stored URN path,
-        // not converting the given one into a URN...
-        snprintf(urlbuf, MAX_URL, SQUIDSBUFPH, SQUIDSBUFPRINT(req->url.absolute()));
-        return (urlbuf);
-    }
-
-    SBuf authorityForm = req->url.authority(); // host[:port]
-    const SBuf &scheme = req->url.getScheme().image();
-    size_t urllen = snprintf(urlbuf, MAX_URL, SQUIDSBUFPH "://" SQUIDSBUFPH "%s" SQUIDSBUFPH,
-                             SQUIDSBUFPRINT(scheme),
-                             SQUIDSBUFPRINT(req->url.userInfo()),
-                             !req->url.userInfo().isEmpty() ? "@" : "",
-                             SQUIDSBUFPRINT(authorityForm));
-
-    // if the first char is '/' assume its a relative path
-    // XXX: this breaks on scheme-relative URLs,
-    // but we should not see those outside ESI, and rarely there.
-    // XXX: also breaks on any URL containing a '/' in the query-string portion
-    if (relUrl[0] == '/') {
-        xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
+    const auto lastSlashPos = path_.rfind('/');
+    // TODO: To optimize and simplify, add and use SBuf::replace().
+    const auto relUrlLength = strlen(relUrl);
+    if (lastSlashPos == SBuf::npos) {
+        // start replacing the whole path
+        path_.reserveCapacity(1 + relUrlLength);
+        path_.assign("/", 1);
     } else {
-        SBuf path = req->url.path();
-        SBuf::size_type lastSlashPos = path.rfind('/');
-
-        if (lastSlashPos == SBuf::npos) {
-            // replace the whole path with the given bit(s)
-            urlbuf[urllen] = '/';
-            ++urllen;
-            xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
-        } else {
-            // replace only the last (file?) segment with the given bit(s)
-            ++lastSlashPos;
-            if (lastSlashPos > MAX_URL - urllen - 1) {
-                // XXX: crops bits in the middle of the combined URL.
-                lastSlashPos = MAX_URL - urllen - 1;
-            }
-            SBufToCstring(&urlbuf[urllen], path.substr(0,lastSlashPos));
-            urllen += lastSlashPos;
-            if (urllen + 1 < MAX_URL) {
-                xstrncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
-            }
-        }
+        // start replacing just the last segment
+        path_.reserveCapacity(lastSlashPos + 1 + relUrlLength);
+        path_.chop(0, lastSlashPos+1);
     }
-
-    return (urlbuf);
+    path_.append(relUrl, relUrlLength);
 }
 
 int
-matchDomainName(const char *h, const char *d, uint8_t flags)
+matchDomainName(const char *h, const char *d, MatchDomainNameFlags flags)
 {
     int dl;
     int hl;
@@ -821,7 +848,7 @@ urlCheckRequest(const HttpRequest * r)
     /* protocol "independent" methods
      *
      * actually these methods are specific to HTTP:
-     * they are methods we recieve on our HTTP port,
+     * they are methods we receive on our HTTP port,
      * and if we had a FTP listener would not be relevant
      * there.
      *
@@ -888,105 +915,6 @@ urlCheckRequest(const HttpRequest * r)
     }
 
     return rc;
-}
-
-/*
- * Quick-n-dirty host extraction from a URL.  Steps:
- *      Look for a colon
- *      Skip any '/' after the colon
- *      Copy the next SQUID_MAXHOSTNAMELEN bytes to host[]
- *      Look for an ending '/' or ':' and terminate
- *      Look for login info preceeded by '@'
- */
-
-class URLHostName
-{
-
-public:
-    char * extract(char const *url);
-
-private:
-    static char Host [SQUIDHOSTNAMELEN];
-    void init(char const *);
-    void findHostStart();
-    void trimTrailingChars();
-    void trimAuth();
-    char const *hostStart;
-    char const *url;
-};
-
-char *
-urlHostname(const char *url)
-{
-    return URLHostName().extract(url);
-}
-
-char URLHostName::Host[SQUIDHOSTNAMELEN];
-
-void
-URLHostName::init(char const *aUrl)
-{
-    Host[0] = '\0';
-    url = aUrl;
-}
-
-void
-URLHostName::findHostStart()
-{
-    if (NULL == (hostStart = strchr(url, ':')))
-        return;
-
-    ++hostStart;
-
-    while (*hostStart != '\0' && *hostStart == '/')
-        ++hostStart;
-
-    if (*hostStart == ']')
-        ++hostStart;
-}
-
-void
-URLHostName::trimTrailingChars()
-{
-    char *t;
-
-    if ((t = strchr(Host, '/')))
-        *t = '\0';
-
-    if ((t = strrchr(Host, ':')))
-        *t = '\0';
-
-    if ((t = strchr(Host, ']')))
-        *t = '\0';
-}
-
-void
-URLHostName::trimAuth()
-{
-    char *t;
-
-    if ((t = strrchr(Host, '@'))) {
-        ++t;
-        memmove(Host, t, strlen(t) + 1);
-    }
-}
-
-char *
-URLHostName::extract(char const *aUrl)
-{
-    init(aUrl);
-    findHostStart();
-
-    if (hostStart == NULL)
-        return NULL;
-
-    xstrncpy(Host, hostStart, SQUIDHOSTNAMELEN);
-
-    trimTrailingChars();
-
-    trimAuth();
-
-    return Host;
 }
 
 AnyP::Uri::Uri(AnyP::UriScheme const &aScheme) :

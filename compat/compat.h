@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -12,7 +12,7 @@
 /*
  * From discussions it was chosen to push compat code as far down as possible.
  * That means we can have a separate compat for most
- *  compatability and portability hacks and resolutions.
+ *  compatibility and portability hacks and resolutions.
  *
  * This file is meant to collate all those hacks files together and
  * provide a simple include for them in the core squid headers
@@ -113,9 +113,6 @@
  * may be used instead with explicit configuration.
  */
 #include "compat/GnuRegex.h"
-
-/* cppunit is not quite C++0x compatible yet */
-#include "compat/cppunit.h"
 
 #endif /* _SQUID_COMPAT_H */
 

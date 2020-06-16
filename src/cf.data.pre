@@ -1,4 +1,4 @@
-## Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+## Copyright (C) 1996-2020 The Squid Software Foundation and contributors
 ##
 ## Squid software is distributed under GPLv2+ license and includes
 ## contributions from numerous individuals and organizations.
@@ -54,6 +54,24 @@ COMMENT_START
 		KB - Kilobyte (1024 bytes)
 		MB - Megabyte
 		GB - Gigabyte
+
+  Values with time units
+
+	Time-related directives marked with either "time-units" or
+	"time-units-small" accept a time unit. The supported time units are:
+
+		nanosecond (time-units-small only)
+		microsecond (time-units-small only)
+		millisecond
+		second
+		minute
+		hour
+		day
+		week
+		fortnight
+		month - 30 days
+		year - 31557790080 milliseconds (just over 365 days)
+		decade
 
   Values with spaces, quotes, and other special characters
 
@@ -571,7 +589,7 @@ DOC_START
 
 		The expanded key_extras value is added to the Squid credentials
 		cache and, hence, will affect authentication. It can be used to
-		autenticate different users with identical user names (e.g.,
+		authenticate different users with identical user names (e.g.,
 		when user authentication depends on http_port).
 
 		Avoid adding frequently changing information to key_extras. For
@@ -673,12 +691,22 @@ DOC_START
 		For Basic and Digest this parameter is ignored.
 
 	"utf8" on|off
-		HTTP uses iso-latin-1 as character set, while some
-		authentication backends such as LDAP expects UTF-8. If this is
-		set to on Squid will translate the HTTP iso-latin-1 charset to
-		UTF-8 before sending the username and password to the helper.
+		Useful for sending credentials to authentication backends that
+		expect UTF-8 encoding (e.g., LDAP).
 
-		For NTLM and Negotiate this parameter is ignored.
+		When this option is enabled, Squid uses HTTP Accept-Language
+		request header to guess the received credentials encoding
+		(ISO-Latin-1, CP1251, or UTF-8) and then converts the first
+		two encodings into UTF-8.
+
+		When this option is disabled and by default, Squid sends
+		credentials in their original (i.e. received) encoding.
+
+		This parameter is only honored for Basic and Digest schemes.
+		For Basic, the entire username:password credentials are
+		checked and, if necessary, re-encoded. For Digest -- just the
+		username component. For NTLM and Negotiate schemes, this
+		parameter is ignored.
 
 IF HAVE_AUTH_MODULE_BASIC
 	=== Basic authentication parameters ===
@@ -895,7 +923,7 @@ DOC_START
 			(e.g., with %#DATA, spaces between arguments become
 			%20).
 
-	If SSL is enabled, the following formating codes become available:
+	If SSL is enabled, the following formatting codes become available:
 
 	  %USER_CERT		SSL User certificate in PEM format
 	  %USER_CERTCHAIN	SSL User certificate chain in PEM format
@@ -1152,7 +1180,7 @@ endif
 	  # regex matching on URL path [fast]
 
 	acl aclname port 80 70 21 0-1024...   # destination TCP port [fast]
-	                                      # ranges are alloed
+	                                      # ranges are allowed
 	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
 	                                      # NP: for interception mode this is usually '80'
 
@@ -1186,7 +1214,7 @@ endif
 	  # use REQUIRED to accept any valid username.
 	  #
 	  # Will use proxy authentication in forward-proxy scenarios, and plain
-	  # http authenticaiton in reverse-proxy scenarios
+	  # http authentication in reverse-proxy scenarios
 	  #
 	  # NOTE: when a Proxy-Authentication header is sent but it is not
 	  # needed during ACL checking the username is NOT logged
@@ -1570,7 +1598,7 @@ ENDIF
 		acl fileupload req_mime_type -i ^multipart/form-data$
 		acl javascript rep_mime_type -i ^application/x-javascript$
 
-NOCOMMENT_START
+CONFIG_START
 #
 # Recommended minimum configuration:
 #
@@ -1598,7 +1626,7 @@ acl Safe_ports port 280		# http-mgmt
 acl Safe_ports port 488		# gss-http
 acl Safe_ports port 591		# filemaker
 acl Safe_ports port 777		# multiling http
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: proxy_protocol_access
@@ -1806,7 +1834,7 @@ DOC_START
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
-NOCOMMENT_START
+CONFIG_START
 
 #
 # Recommended minimum Access Permission configuration:
@@ -1838,7 +1866,7 @@ http_access allow localhost
 
 # And finally deny all other access to this proxy
 http_access deny all
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: adapted_http_access http_access2
@@ -2418,16 +2446,26 @@ DOC_START
 			The proxy_protocol_access is required to whitelist
 			downstream proxies which can be trusted.
 
+	   worker-queues
+			Ask TCP stack to maintain a dedicated listening queue
+			for each worker accepting requests at this port.
+			Requires TCP stack that supports the SO_REUSEPORT socket
+			option.
+
+			SECURITY WARNING: Enabling worker-specific queues
+			allows any process running as Squid's effective user to
+			easily accept requests destined to this port.
+
 	If you run Squid on a dual-homed machine with an internal
 	and an external interface we recommend you to specify the
 	internal address:port in http_port. This way Squid will only be
 	visible on the internal address.
 
-NOCOMMENT_START
+CONFIG_START
 
 # Squid normally listens to port 3128
 http_port @DEFAULT_HTTP_PORT@
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: https_port
@@ -3404,7 +3442,7 @@ DOC_START
 		concurrency=
 	
 	The number of requests each certificate validator helper can handle in
-	parallel. A value of 0 indicates the certficate validator does not
+	parallel. A value of 0 indicates the certificate validator does not
 	support concurrency. Defaults to 1.
 	
 	When this directive is set to a value >= 1 then the protocol
@@ -4154,7 +4192,7 @@ DOC_END
 NAME: cache_dir
 TYPE: cachedir
 DEFAULT: none
-DEFAULT_DOC: No disk cache. Store cache ojects only in memory.
+DEFAULT_DOC: No disk cache. Store cache objects only in memory.
 LOC: Config.cacheSwap
 DOC_START
 	Format:
@@ -4307,11 +4345,11 @@ DOC_START
 	Note: To make optimal use of the max-size limits you should order
 	the cache_dir lines with the smallest max-size value first.
 
-NOCOMMENT_START
+CONFIG_START
 
 # Uncomment and adjust the following to add a disk cache directory.
 #cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: store_dir_select_algorithm
@@ -4375,6 +4413,45 @@ DOC_START
 		cache_dir rock /ssd3 ... max-size=99999
 DOC_END
 
+NAME: paranoid_hit_validation
+COMMENT: time-units-small
+TYPE: time_nanoseconds
+DEFAULT: 0
+DEFAULT_DOC: validation disabled
+LOC: Config.paranoid_hit_validation
+DOC_START
+	Controls whether Squid should perform paranoid validation of cache entry
+	metadata integrity every time a cache entry is hit. This low-level
+	validation should always succeed. Each failed validation results in a
+	cache miss, a BUG line reported to cache.log, and the invalid entry
+	marked as unusable (and eventually purged from the cache).
+
+	Squid can only validate shared cache memory and rock cache_dir entries.
+
+	* Zero (default) value means that the validation is disabled.
+
+	* Positive values enable validation:
+	  - values less than 1 day approximate the maximum time that Squid is allowed
+	    to spend validating a single cache hit.
+	  - values greater or equal to 1 day are considered as no limitation:
+	    in this case all checks will be performed, regardless of how much time
+	    they take.
+
+	Hits are usually stored using 16KB slots (for rock, the size is
+	configurable via cache_dir slot-size). Larger hits require scanning more
+	slots and, hence, take more time. When validation is enabled, at least one
+	slot is always validated, regardless of the configured time limit.
+
+	A worker process validating an entry cannot do anything else (i.e. the
+	validation is blocking). The validation overhead is environment dependent,
+	but developers have observed Squid spending 3-10 microseconds to check each
+	slot of a Rock or shared memory hit entry. If Squid cuts validation short
+	because it runs out of configured time, it treats the entry as valid.
+
+	When hit validation is enabled, its statistics is included in Cache
+	Manager mgr:counters, mgr:5min, and mgr:60min reports.
+DOC_END
+
 NAME: max_open_disk_fds
 TYPE: int
 LOC: Config.max_open_disk_fds
@@ -4402,11 +4479,11 @@ DOC_START
 	near the low-water mark.
 
 	As swap utilization increases towards the high-water mark set
-	by cache_swap_high object eviction becomes more agressive.
+	by cache_swap_high object eviction becomes more aggressive.
 
 	The value difference in percentages between low- and high-water
 	marks represent an eviction rate of 300 objects per second and
-	the rate continues to scale in agressiveness by multiples of
+	the rate continues to scale in aggressiveness by multiples of
 	this above the high-water mark.
 
 	Defaults are 90% and 95%. If you have a large cache, 5% could be
@@ -4430,11 +4507,11 @@ DOC_START
 	maintain utilization near the low-water mark.
 
 	As swap utilization increases towards this high-water mark object
-	eviction becomes more agressive.
+	eviction becomes more aggressive.
 
 	The value difference in percentages between low- and high-water
 	marks represent an eviction rate of 300 objects per second and
-	the rate continues to scale in agressiveness by multiples of
+	the rate continues to scale in aggressiveness by multiples of
 	this above the high-water mark.
 
 	Defaults are 90% and 95%. If you have a large cache, 5% could be
@@ -4552,6 +4629,19 @@ DOC_START
 		>lp	Local port number the client connected to
 		>qos    Client connection TOS/DSCP value set by Squid
 		>nfmark Client connection netfilter packet MARK set by Squid
+
+		transport::>connection_id Identifies a transport connection
+			accepted by Squid (e.g., a connection carrying the
+			logged HTTP request). Currently, Squid only supports
+			TCP transport connections.
+
+			The logged identifier is an unsigned integer. These
+			IDs are guaranteed to monotonically increase within a
+			single worker process lifetime, with higher values
+			corresponding to connections that were accepted later.
+			Many IDs are skipped (i.e. never logged). Concurrent
+			workers and restarted workers use similar, partially
+			overlapping sequences of IDs.
 
 		la	Local listening IP address the client connection was connected to.
 		lp	Local listening port number the client connection was connected to.
@@ -5390,11 +5480,11 @@ DOC_START
 	that exists, Squid will chdir() to that directory at startup
 	and coredump files will be left there.
 
-NOCOMMENT_START
+CONFIG_START
 
 # Leave coredumps in the first cache dir
 coredump_dir @DEFAULT_SWAP_DIR@
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 
@@ -5494,7 +5584,7 @@ DOC_START
 	straight to using PORT for IPv4 servers.
 
 	Some devices are known to not handle this extension correctly and
-	may result in crashes. Devices which suport EPRT enough to fail
+	may result in crashes. Devices which support EPRT enough to fail
 	cleanly will result in Squid attempting PORT anyway. This directive
 	should only be disabled when EPRT results in device failures.
 
@@ -5646,7 +5736,7 @@ DOC_START
 
 	Re-write creates a difference in the state held by the client
 	and server. Possibly causing confusion when the server response
-	contains snippets of its view state. Embeded URLs, response
+	contains snippets of its view state. Embedded URLs, response
 	and content Location headers, etc. are not re-written by this
 	interface.
 
@@ -6093,7 +6183,7 @@ DEFAULT: 1 week
 DOC_START
 	This option puts an upper limit on how stale content Squid
 	will serve from the cache if cache validation fails.
-	Can be overriden by the refresh_pattern max-stale option.
+	Can be overridden by the refresh_pattern max-stale option.
 DOC_END
 
 NAME: refresh_pattern
@@ -6198,7 +6288,7 @@ DOC_START
 	to change one. The default setting is only active if none is
 	used.
 
-NOCOMMENT_START
+CONFIG_START
 
 #
 # Add any of your own refresh_pattern entries above these.
@@ -6207,7 +6297,7 @@ refresh_pattern ^ftp:		1440	20%	10080
 refresh_pattern ^gopher:	1440	0%	1440
 refresh_pattern -i (/cgi-bin/|\?) 0	0%	0
 refresh_pattern .		0	20%	4320
-NOCOMMENT_END
+CONFIG_END
 DOC_END
 
 NAME: quick_abort_min
@@ -7933,7 +8023,7 @@ DEFAULT: 0.0.0.0
 DEFAULT_DOC: Address selected by the operating system.
 IFDEF: USE_WCCP
 DOC_START
-	Use this option if you require WCCPv2 to use a specific
+	Use this option if you require WCCP(v1) to use a specific
 	interface address.
 
 	The default behavior is to not bind to any specific address.
@@ -7946,7 +8036,7 @@ DEFAULT: 0.0.0.0
 DEFAULT_DOC: Address selected by the operating system.
 IFDEF: USE_WCCPv2
 DOC_START
-	Use this option if you require WCCP to use a specific
+	Use this option if you require WCCPv2 to use a specific
 	interface address.
 
 	The default behavior is to not bind to any specific address.
@@ -8664,7 +8754,7 @@ DOC_START
 	    you may also specify them by your custom file name:
 	    Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
-	By defaut Squid will send "403 Forbidden". A different 4xx or 5xx
+	By default Squid will send "403 Forbidden". A different 4xx or 5xx
 	may be specified by prefixing the file name with the code and a colon.
 	e.g. 404:ERR_CUSTOM_ACCESS_DENIED
 
@@ -8964,7 +9054,7 @@ DOC_START
 
 	Requires client_db to be enabled (the default).
 
-	WARNING: This may noticably slow down traffic received via external proxies
+	WARNING: This may noticeably slow down traffic received via external proxies
 	or NAT devices and cause them to rebound error messages back to their clients.
 DOC_END
 
@@ -9121,7 +9211,7 @@ DOC_START
 
 	Activation of the Partial Content extension is negotiated with each
 	ICAP service during OPTIONS exchange. Most ICAP servers should handle
-	negotation correctly even if they do not support the extension, but
+	negotiation correctly even if they do not support the extension, but
 	some might fail. To disable Partial Content support for all ICAP
 	services and to avoid any negotiation, set this option to "off".
 
@@ -10392,13 +10482,14 @@ DOC_END
 NAME: max_filedescriptors max_filedesc
 TYPE: int
 DEFAULT: 0
-DEFAULT_DOC: Use operating system limits set by ulimit.
+DEFAULT_DOC: Use operating system soft limit set by ulimit.
 LOC: Config.max_filedescriptors
 DOC_START
-	Reduce the maximum number of filedescriptors supported below
-	the usual operating system defaults.
+	Set the maximum number of filedescriptors, either below the
+	operating system default or up to the hard limit.
 
-	Remove from squid.conf to inherit the current ulimit setting.
+	Remove from squid.conf to inherit the current ulimit soft
+	limit setting.
 
 	Note: Changing this requires a restart of Squid. Also
 	not all I/O types supports large values (eg on Windows).
@@ -10431,6 +10522,103 @@ DOC_START
 	the request sender to proceed with sending the body. A deny match tells
 	Squid to delay that control response until the origin server confirms
 	that the request body is needed. Delaying is the default behavior.
+DOC_END
+
+NAME: http_upgrade_request_protocols
+TYPE: http_upgrade_request_protocols
+LOC: Config.http_upgrade_request_protocols
+DEFAULT: none
+DEFAULT_DOC: Upgrade header dropped, effectively blocking an upgrade attempt.
+DOC_START
+	Controls client-initiated and server-confirmed switching from HTTP to
+	another protocol (or to several protocols) using HTTP Upgrade mechanism
+	defined in RFC 7230 Section 6.7. Squid itself does not understand the
+	protocols being upgraded to and participates in the upgraded
+	communication only as a dumb TCP proxy. Admins should not allow
+	upgrading to protocols that require a more meaningful proxy
+	participation.
+
+	Usage: http_upgrade_request_protocols <protocol> allow|deny [!]acl ...
+
+	The required "protocol" parameter is either an all-caps word OTHER or an
+	explicit protocol name (e.g. "WebSocket") optionally followed by a slash
+	and a version token (e.g. "HTTP/3"). Explicit protocol names and
+	versions are case sensitive.
+
+	When an HTTP client sends an Upgrade request header, Squid iterates over
+	the client-offered protocols and, for each protocol P (with an optional
+	version V), evaluates the first non-empty set of
+	http_upgrade_request_protocols rules (if any) from the following list:
+
+		* All rules with an explicit protocol name equal to P.
+		* All rules that use OTHER instead of a protocol name.
+
+	In other words, rules using OTHER are considered for protocol P if and
+	only if there are no rules mentioning P by name.
+
+	If both of the above sets are empty, then Squid removes protocol P from
+	the Upgrade offer.
+
+	If the client sent a versioned protocol offer P/X, then explicit rules
+	referring to the same-name but different-version protocol P/Y are
+	declared inapplicable. Inapplicable rules are not evaluated (i.e. are
+	ignored). However, inapplicable rules still belong to the first set of
+	rules for P.
+
+	Within the applicable rule subset, individual rules are evaluated in
+	their configuration order. If all ACLs of an applicable "allow" rule
+	match, then the protocol offered by the client is forwarded to the next
+	hop as is. If all ACLs of an applicable "deny" rule match, then the
+	offer is dropped. If no applicable rules have matching ACLs, then the
+	offer is also dropped. The first matching rule also ends rules
+	evaluation for the offered protocol.
+
+	If all client-offered protocols are removed, then Squid forwards the
+	client request without the Upgrade header. Squid never sends an empty
+	Upgrade request header.
+
+	An Upgrade request header with a value violating HTTP syntax is dropped
+	and ignored without an attempt to use extractable individual protocol
+	offers.
+
+	Upon receiving an HTTP 101 (Switching Protocols) control message, Squid
+	checks that the server listed at least one protocol name and sent a
+	Connection:upgrade response header. Squid does not understand individual
+	protocol naming and versioning concepts enough to implement stricter
+	checks, but an admin can restrict HTTP 101 (Switching Protocols)
+	responses further using http_reply_access. Responses denied by
+	http_reply_access rules and responses flagged by the internal Upgrade
+	checks result in HTTP 502 (Bad Gateway) ERR_INVALID_RESP errors and
+	Squid-to-server connection closures.
+
+	If Squid sends an Upgrade request header, and the next hop (e.g., the
+	origin server) responds with an acceptable HTTP 101 (Switching
+	Protocols), then Squid forwards that message to the client and becomes
+	a TCP tunnel.
+
+	The presence of an Upgrade request header alone does not preclude cache
+	lookups. In other words, an Upgrade request might be satisfied from the
+	cache, using regular HTTP caching rules.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+
+	Each of the following groups of configuration lines represents a
+	separate configuration example:
+
+	# never upgrade to protocol Foo; all others are OK
+	http_upgrade_request_protocols Foo deny all
+	http_upgrade_request_protocols OTHER allow all
+
+	# only allow upgrades to protocol Bar (except for its first version)
+	http_upgrade_request_protocols Bar/1 deny all
+	http_upgrade_request_protocols Bar allow all
+	http_upgrade_request_protocols OTHER deny all # this rule is optional
+
+	# only allow upgrades to protocol Baz, and only if Baz is the only offer
+	acl UpgradeHeaderHasMultipleOffers ...
+	http_upgrade_request_protocols Baz deny UpgradeHeaderHasMultipleOffers
+	http_upgrade_request_protocols Baz allow all
 DOC_END
 
 NAME: server_pconn_for_nonretriable

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -86,7 +86,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
     char *s, line[1024];
     CacheDir cd;
     while ( cfgin.getline( line, sizeof(line)) ) {
-        // FIXME: overly long lines
+        // TODO: overly long lines
 
         // terminate line at start of comment
         if ( (s = (char*) memchr( line, '#', sizeof(line) )) ) *s = '\0';

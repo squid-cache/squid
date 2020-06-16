@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,7 +41,7 @@ void Controller::updateLimits() STUB
 void Controller::handleIdleEntry(StoreEntry &) STUB
 void Controller::freeMemorySpace(const int) STUB
 void Controller::memoryOut(StoreEntry &, const bool) STUB
-void Controller::updateOnNotModified(StoreEntry *, const StoreEntry &) STUB
+void Controller::updateOnNotModified(StoreEntry *, StoreEntry &) STUB
 bool Controller::allowCollapsing(StoreEntry *, const RequestFlags &, const HttpRequestMethod &) STUB_RETVAL(false)
 void Controller::addReading(StoreEntry *, const cache_key *) STUB
 void Controller::addWriting(StoreEntry *, const cache_key *) STUB

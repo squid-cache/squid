@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -470,7 +470,7 @@ Store::Disks::maintain()
     /* walk each fs */
 
     for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        /* XXX FixMe: This should be done "in parallell" on the different
+        /* XXX FixMe: This should be done "in parallel" on the different
          * cache_dirs, not one at a time.
          */
         /* call the maintain function .. */

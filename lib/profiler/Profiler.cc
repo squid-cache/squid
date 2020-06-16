@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -80,7 +80,7 @@
  *  constant. Best metric to watch is "average time" and total cumulated
  *  time in given timeframe, which really show percentage of time spent
  *  in given section of code, and its average completion time. This data
- *  could be used to detect bottlenecks withing squid and optimise them.
+ *  could be used to detect bottlenecks within squid and optimise them.
  *
  * \par
  *  TOTALS are quite off reality. Its there just to summarise cumulative

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -145,7 +145,7 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
 }
 
 /**
- * Adds something to the payload. The caller must guarrantee that
+ * Adds something to the payload. The caller must guarantee that
  * there is enough space in the payload string to accommodate the
  * added value.
  * payload_length and hdr will be modified as a side-effect.

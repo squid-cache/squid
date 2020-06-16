@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -71,7 +71,7 @@ public:
     MEMPROXY_CLASS(cbdata);
 #endif
 
-    /** \todo examine making cbdata templated on this - so we get type
+    /* TODO: examine making cbdata templated on this - so we get type
      * safe access to data - RBC 20030902 */
 public:
 #if USE_CBDATA_DEBUG

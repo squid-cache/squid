@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "DiskIO/DiskIOModule.h"
+#include "fde.h"
 #include "fs/ufs/UFSSwapDir.h"
 #include "globals.h"
 #include "HttpHeader.h"
@@ -37,8 +38,6 @@ addSwapDir(MySwapDirPointer aStore)
     Config.cacheSwap.swapDirs[Config.cacheSwap.n_configured] = aStore.getRaw();
     ++Config.cacheSwap.n_configured;
 }
-
-/* TODO make this a cbdata class */
 
 static bool cbcalled;
 
@@ -71,6 +70,8 @@ testUfs::commonInit()
     storeReplAdd("lru", createRemovalPolicy_lru);
 
     Mem::Init();
+
+    fde::Init();
 
     comm_init();
 
@@ -146,13 +147,13 @@ testUfs::testUfsSearch()
         RequestFlags flags;
         flags.cachable = true;
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, Http::METHOD_GET);
-        HttpReply *rep = (HttpReply *) pe->getReply();  // bypass const
-        rep->setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
+        auto &reply = pe->mem().adjustableBaseReply();
+        reply.setHeaders(Http::scOkay, "dummy test object", "x-squid-internal/test", 0, -1, squid_curtime + 100000);
 
         pe->setPublicKey();
 
         pe->buffer();
-        pe->getReply()->packHeadersUsingSlowPacker(*pe);
+        pe->mem().freshestReply().packHeadersUsingSlowPacker(*pe);
         pe->flush();
         pe->timestampsSet();
         pe->complete();
@@ -205,7 +206,7 @@ testUfs::testUfsSearch()
 
     free_cachedir(&Config.cacheSwap);
 
-    /* todo: here we should test a dirty rebuild */
+    // TODO: here we should test a dirty rebuild
 
     safe_free(Config.replPolicy->type);
     delete Config.replPolicy;

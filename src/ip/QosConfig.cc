@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -450,7 +450,7 @@ Ip::Qos::Config::parseConfigLine()
 /**
  * NOTE: Due to the low-level nature of the library these
  * objects are part of the dump function must be self-contained.
- * which means no StoreEntry refrences. Just a basic char* buffer.
+ * which means no StoreEntry references. Just a basic char* buffer.
 */
 void
 Ip::Qos::Config::dumpConfigLine(char *entry, const char *name) const

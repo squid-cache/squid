@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -9,6 +9,8 @@
 #ifndef SQUID_FDE_H
 #define SQUID_FDE_H
 
+#include "base/CodeContext.h" /* XXX: Remove by de-inlining ctor and clear() */
+#include "base/forward.h"
 #include "comm.h"
 #include "defines.h"
 #include "ip/Address.h"
@@ -50,6 +52,13 @@ class fde
 {
 
 public:
+
+    // TODO: Merge with comm_init() to reduce initialization order dependencies.
+    /// Configures fd_table (a.k.a. fde::Table).
+    /// Call once, after learning the number of supported descriptors (i.e.
+    /// setMaxFD()) and before dereferencing fd_table (e.g., before Comm I/O).
+    static void Init();
+
     fde() {
         *ipaddr = 0;
         *desc = 0;
@@ -164,6 +173,12 @@ public:
                                                 nfmarkToServer in that this is the value we *receive* from the,
                                                 connection, whereas nfmarkToServer is the value to set on packets
                                                 *leaving* Squid.   */
+
+    // TODO: Remove: Auto-convert legacy SetSelect() callers to AsyncCalls like
+    // comm_add_close_handler(CLCB) does, making readMethod_/writeMethod_
+    // AsyncCalls and giving each read/write a dedicated context instead.
+    /// What the I/O handlers are supposed to work on.
+    CodeContextPointer codeContext;
 
 private:
     // I/O methods connect Squid to the device/stack/library fde represents

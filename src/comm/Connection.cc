@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -18,6 +18,8 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include <ostream>
+
+InstanceIdDefinitions(Comm::Connection, "conn", uint64_t);
 
 class CachePeer;
 bool
@@ -39,12 +41,16 @@ Comm::Connection::Connection() :
     *rfc931 = 0; // quick init the head. the rest does not matter.
 }
 
-static int64_t lost_conn = 0;
 Comm::Connection::~Connection()
 {
     if (fd >= 0) {
-        debugs(5, 4, "BUG #3329: Orphan Comm::Connection: " << *this);
-        debugs(5, 4, "NOTE: " << ++lost_conn << " Orphans since last started.");
+        if (flags & COMM_ORPHANED) {
+            debugs(5, 5, "closing orphan: " << *this);
+        } else {
+            static uint64_t losses = 0;
+            ++losses;
+            debugs(5, 4, "BUG #3329: Lost orphan #" << losses << ": " << *this);
+        }
         close();
     }
 
@@ -154,10 +160,25 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
     return min(ctimeout, ftimeout);
 }
 
+ScopedId
+Comm::Connection::codeContextGist() const {
+    return id.detach();
+}
+
+std::ostream &
+Comm::Connection::detailCodeContext(std::ostream &os) const
+{
+    return os << Debug::Extra << "connection: " << *this;
+}
+
 std::ostream &
 operator << (std::ostream &os, const Comm::Connection &conn)
 {
-    os << "local=" << conn.local << " remote=" << conn.remote;
+    os << conn.id;
+    if (!conn.local.isNoAddr() || conn.local.port())
+        os << " local=" << conn.local;
+    if (!conn.remote.isNoAddr() || conn.remote.port())
+        os << " remote=" << conn.remote;
     if (conn.peerType)
         os << ' ' << hier_code_str[conn.peerType];
     if (conn.fd >= 0)

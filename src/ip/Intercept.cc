@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -204,7 +204,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
     memset(&natLookup, 0, sizeof(natLookup));
     // for NAT lookup set local and remote IP:port's
     if (newConn->remote.isIPv6()) {
-#if HAVE_NATLOOKUP_NL_INIPADDR_IN6
+#if HAVE_STRUCT_NATLOOKUP_NL_INIPADDR_IN6
         natLookup.nl_v = 6;
         newConn->local.getInAddr(natLookup.nl_inipaddr.in6);
         newConn->remote.getInAddr(natLookup.nl_outipaddr.in6);
@@ -292,7 +292,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
         debugs(89, 9, HERE << "address: " << newConn);
         return false;
     } else {
-#if HAVE_NATLOOKUP_NL_REALIPADDR_IN6
+#if HAVE_STRUCT_NATLOOKUP_NL_REALIPADDR_IN6
         if (newConn->remote.isIPv6())
             newConn->local = natLookup.nl_realipaddr.in6;
         else

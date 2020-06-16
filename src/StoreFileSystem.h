@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -42,8 +42,8 @@
  * configure.ac must be updated to autogenerate a Makefile in
  * \em src/fs/foo/ from a Makefile.in file.
  *
- \todo DOCS: add template addition to configure.ac for storage module addition.
- \todo DOCS: add template Makefile.am for storage module addition.
+ * TODO: DOCS: add template addition to configure.ac for storage module addition.
+ * TODO: DOCS: add template Makefile.am for storage module addition.
  *
  \par
  * configure will take a list of storage types through the

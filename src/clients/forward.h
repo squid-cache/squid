@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -41,7 +41,7 @@ AsyncJobPointer StartRelay(FwdState *const fwdState);
  *  We use standard URI-encoding on the second / making it
  *  ftp:host:port/%2froot/path  AKA 'the FTP %2f hack'.
  *
- * \todo Should be a URL class API call.
+ * TODO: Should be an AnyP::Uri member
  */
 const SBuf &UrlWith2f(HttpRequest *);
 

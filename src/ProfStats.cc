@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -250,10 +250,9 @@ xprofRegisterWithCacheManager(void)
     Mgr::RegisterAction("cpu_profile", "CPU Profiling Stats", xprof_summary, 0, 1);
 }
 
-// FIXME:
-// this gets colled once per event. This doesn't seem to make much sense,
-// does it?
 static hrtime_t now;
+
+// TODO: this gets called once per event. Make it only happen when enabling xprof.
 static void
 xprof_Init(void)
 {

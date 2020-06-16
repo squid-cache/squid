@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -754,7 +754,7 @@ void
 Rock::SwapDir::noteFreeMapSlice(const Ipc::StoreMapSliceId sliceId)
 {
     Ipc::Mem::PageId pageId;
-    pageId.pool = index+1;
+    pageId.pool = Ipc::Mem::PageStack::IdForSwapDirSpace(index);
     pageId.number = sliceId+1;
     if (waitingForPage) {
         *waitingForPage = pageId;
@@ -791,7 +791,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
     // locked entry is safe, but no support for reading the entry we swap out.
     const Ipc::StoreMapAnchor *slot = map->peekAtReader(e.swap_filen);
     if (!slot)
-        return NULL; // we were writing afterall
+        return NULL; // we were writing after all
 
     Rock::SwapDir::Pointer self(this);
     IoState *sio = new IoState(self, &e, cbFile, cbIo, data);
@@ -1136,17 +1136,14 @@ void Rock::SwapDirRr::create()
             mapOwners.push_back(mapOwner);
 
             // TODO: somehow remove pool id and counters from PageStack?
+            Ipc::Mem::PageStack::Config config;
+            config.poolId = Ipc::Mem::PageStack::IdForSwapDirSpace(i);
+            config.pageSize = 0; // this is an index of slots on _disk_
+            config.capacity = capacity;
+            config.createFull = false; // Rebuild finds and pushes free slots
             Ipc::Mem::Owner<Ipc::Mem::PageStack> *const freeSlotsOwner =
-                shm_new(Ipc::Mem::PageStack)(sd->freeSlotsPath(),
-                                             i+1, capacity, 0);
+                shm_new(Ipc::Mem::PageStack)(sd->freeSlotsPath(), config);
             freeSlotsOwners.push_back(freeSlotsOwner);
-
-            // TODO: add method to initialize PageStack with no free pages
-            while (true) {
-                Ipc::Mem::PageId pageId;
-                if (!freeSlotsOwner->object()->pop(pageId))
-                    break;
-            }
         }
     }
 }

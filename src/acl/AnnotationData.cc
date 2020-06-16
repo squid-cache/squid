@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1996-2019 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
@@ -16,23 +16,8 @@
 #include "format/Format.h"
 #include "sbuf/Algorithms.h"
 
-const char *AnnotationBlackList[] = {
-    "user",
-    "group",
-    "password",
-    "status",
-    "message",
-    "log",
-    "tag",
-    "ttl",
-    "ha1",
-    "rewrite-url",
-    "url",
-    nullptr
-};
-
 ACLAnnotationData::ACLAnnotationData()
-    : notes(new Notes("annotation_data", AnnotationBlackList)) {}
+    : notes(new Notes("annotation_data")) {}
 
 SBufList
 ACLAnnotationData::dump() const
