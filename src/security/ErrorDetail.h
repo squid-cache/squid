@@ -13,6 +13,7 @@
 #include "err_detail_type.h"
 #include "http/forward.h"
 #include "security/forward.h"
+#include "SquidString.h"
 
 #if USE_OPENSSL
 #include "ssl/ErrorDetailManager.h"

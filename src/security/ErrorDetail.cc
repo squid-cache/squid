@@ -658,9 +658,11 @@ Security::ErrorDetail::notafter() const
 const char *
 Security::ErrorDetail::err_code() const
 {
+#if USE_OPENSSL
     // try detailEntry first because it is faster
     if (const char *err = detailEntry.name.termedBuf())
         return err;
+#endif
 
     return ErrorNameFromCode(error_no);
 }
@@ -671,8 +673,10 @@ Security::ErrorDetail::err_descr() const
 {
     if (!error_no)
         return "[No Error]";
+#if USE_OPENSSL
     if (const char *err = detailEntry.descr.termedBuf())
         return err;
+#endif
     return "[Not available]";
 }
 
