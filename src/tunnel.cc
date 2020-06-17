@@ -420,7 +420,7 @@ TunnelStateData::retryOrBail(const char *context)
 {
     // Since no TCP payload has been passed to client or server, we may
     // TCP-connect to other destinations (including alternate IPs).
- 
+
     assert(!server.conn);
 
     const auto *bailDescription = checkRetry();
