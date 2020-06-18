@@ -312,11 +312,13 @@ echo "#define _PROFILER_XPROF_TYPE_H_"
 echo "/* AUTO-GENERATED FILE */"
 echo "#if USE_XPROF_STATS"
 echo "typedef enum {"
-echo "  XPROF_PROF_UNACCOUNTED,"
-grep -R -h "PROF_start.*" ./* | grep -v probename | sed -e 's/ //g; s/PROF_start(/XPROF_/; s/);/,/' | sort -u
-echo "  XPROF_LAST } xprof_type;"
+echo "    XPROF_PROF_UNACCOUNTED,"
+grep -R -h "PROF_start.*" ./* | grep -v probename | sed -e 's/ //g; s/PROF_start(/XPROF_/; s/);/,/; s/XPROF_/    XPROF_/' | sort -u
+echo "    XPROF_LAST"
+echo "} xprof_type;"
 echo "#endif"
 echo "#endif"
+echo ""
 ) >lib/profiler/list
 mv lib/profiler/list lib/profiler/xprof_type.h
 
