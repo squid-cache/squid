@@ -74,6 +74,8 @@ while($out){
         next;
     }
 
+    die("Cannot format a non-existent file: $out\n") unless -e $out;
+
     my $in= "$out.astylebak";
     my($new_in) = $in;
     my($i) = 0;
