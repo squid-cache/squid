@@ -380,7 +380,7 @@ do
 	echo -n "	${f}"
 done
 echo " "
-)| sed s%src/%%g >src/tests/Stub.am
+) | sed s%src/%%g > src/tests/Stub.am
 
 # Build the GPERF generated content
 make -C src/http gperf-files
