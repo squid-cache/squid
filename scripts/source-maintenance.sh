@@ -322,17 +322,22 @@ echo ""
 ) >lib/profiler/list
 mv lib/profiler/list lib/profiler/xprof_type.h
 
+amFileBoilerplate ()
+{
+    sed -e 's%\ \*%##%; s%/\*%##%; s%##/%##%' < scripts/boilerplate.h
+}
+
 # Build icons install include from current icons available
 (
-sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
-echo -n "ICONS="
+amFileBoilerplate
+echo -n "ICONS ="
 for f in `ls -1 icons/silk/* | sort -u`
 do
 	echo " \\"
 	echo -n "    ${f}"
 done
-echo " "
-)| sed s%icons/%%g >icons/icon.list
+echo ""
+) | sed -e 's%icons/%%g' > icons/icon.am
 
 # Build templates install include from current templates available
 (
