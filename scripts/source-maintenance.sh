@@ -271,14 +271,13 @@ for FILENAME in `git ls-files`; do
 		applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
 	;;
 
-    ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.list|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
+    ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
         # we do not enforce copyright blurbs in:
         #
         #  Squid Project contributor attribution file
         #  third-party copyright attribution file
         #  images,
         #  translation PO/POT
-        #  auto-generated .list files,
         #  license documentation files
         #  (imported) plain-text documentation files and ChangeLogs
         #  VCS internal files
