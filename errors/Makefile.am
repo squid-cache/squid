@@ -14,13 +14,13 @@ DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
 ## List of automated translations possible:
 include $(srcdir)/template.am
-include $(srcdir)/language.list
+include $(srcdir)/language.am
 
 CLEANFILES = $(TRANSLATE_LANGUAGES) translate-warn
 EXTRA_DIST = \
 	$(ERROR_TEMPLATES) \
 	templates/error-details.txt \
-	language.list \
+	language.am \
 	template.am \
 	aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS COPYRIGHT
 

@@ -353,15 +353,15 @@ echo " "
 
 # Build errors translation install include from current .PO available
 (
-sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
-echo -n "TRANSLATE_LANGUAGES="
+amFileBoilerplate
+echo -n "TRANSLATE_LANGUAGES ="
 for f in `ls -1 errors/*.po | sort -u`
 do
 	echo " \\"
 	echo -n "    ${f}"
 done
 echo " "
-)| sed s%errors/%%g | sed s%\.po%\.lang%g >errors/language.list
+) | sed 's%errors/%%g; s%\.po%\.lang%g' > errors/language.am
 
 # Build manuals translation install include from current .PO available
 (
