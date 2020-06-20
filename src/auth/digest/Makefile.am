@@ -14,7 +14,7 @@ EXTRA_DIST= helpers.m4
 
 noinst_LTLIBRARIES= libdigest.la
 
-libdigest_la_SOURCES= \
+libdigest_la_SOURCES = \
 	Config.cc \
 	Config.h \
 	Scheme.cc \

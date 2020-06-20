@@ -15,7 +15,6 @@ libsbuf_la_SOURCES = \
 	Algorithms.h \
 	DetailedStats.cc \
 	DetailedStats.h \
-	forward.h \
 	List.cc \
 	List.h \
 	MemBlob.cc \
@@ -24,4 +23,5 @@ libsbuf_la_SOURCES = \
 	SBuf.h \
 	Stats.cc \
 	Stats.h \
-	Stream.h
+	Stream.h \
+	forward.h

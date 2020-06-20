@@ -13,7 +13,8 @@ endif
 
 basic_sspi_auth_SOURCES = \
 	basic_sspi_auth.cc \
-	valid.cc valid.h
+	valid.cc \
+	valid.h
 basic_sspi_auth_CXXFLAGS = -Wl,--enable-auto-import
 basic_sspi_auth_LDADD = \
 	$(top_builddir)/lib/libsspwin32.la \
