@@ -321,70 +321,31 @@ echo ""
 ) >lib/profiler/list
 mv lib/profiler/list lib/profiler/xprof_type.h
 
-amFileBoilerplate ()
+amFileGenerate ()
 {
     sed -e 's%\ \*%##%; s%/\*%##%; s%##/%##%' < scripts/boilerplate.h
+    echo -n "$1 ="
+    git ls-files $2$3 | sed -e s%$2%%g | sort -u | while read f; do
+        echo " \\"
+        echo -n "    ${f}"
+    done
+    echo ""
 }
 
 # Build icons install include from current icons available
-(
-amFileBoilerplate
-echo -n "ICONS ="
-for f in `ls -1 icons/silk/* | sort -u`
-do
-	echo " \\"
-	echo -n "    ${f}"
-done
-echo ""
-) | sed -e 's%icons/%%g' > icons/icon.am
+amFileGenerate "ICONS" "icons/" "silk/*" > icons/icon.am
 
 # Build templates install include from current templates available
-(
-amFileBoilerplate
-echo -n "ERROR_TEMPLATES ="
-for f in `ls -1 errors/templates/ERR_* | sort -u`
-do
-	echo " \\"
-	echo -n "    ${f}"
-done
-echo " "
-) | sed 's%errors/%%g' > errors/template.am
+amFileGenerate "ERROR_TEMPLATES" "errors/" "templates/ERR_*" > errors/template.am
 
 # Build errors translation install include from current .PO available
-(
-amFileBoilerplate
-echo -n "TRANSLATE_LANGUAGES ="
-for f in `ls -1 errors/*.po | sort -u`
-do
-	echo " \\"
-	echo -n "    ${f}"
-done
-echo " "
-) | sed 's%errors/%%g; s%\.po%\.lang%g' > errors/language.am
+amFileGenerate "TRANSLATE_LANGUAGES" "errors/" "*.po" | sed 's%\.po%\.lang%g' > errors/language.am
 
 # Build manuals translation install include from current .PO available
-(
-amFileBoilerplate
-echo -n "TRANSLATE_LANGUAGES ="
-for f in `ls -1 doc/manuals/*.po | sort -u`
-do
-	echo " \\"
-	echo -n "    ${f}"
-done
-echo " "
-) | sed 's%doc/manuals/%%g; s%\.po%\.lang%g' > doc/manuals/language.am
+amFileGenerate "TRANSLATE_LANGUAGES" "doc/manuals/" "*.po" | sed 's%\.po%\.lang%g' > doc/manuals/language.am
 
 # Build STUB framework include from current stub_* available
-(
-sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
-echo -n "STUB_SOURCE= tests/STUB.h"
-for f in `ls -1 src/tests/stub_*.cc | sort -u`
-do
-	echo " \\"
-	echo -n "	${f}"
-done
-echo " "
-) | sed s%src/%%g > src/tests/Stub.am
+amFileGenerate "STUB_SOURCE" "src/" "tests/stub_*.cc" > src/tests/Stub.am
 
 # Build the GPERF generated content
 make -C src/http gperf-files
