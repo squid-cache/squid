@@ -365,15 +365,15 @@ echo " "
 
 # Build manuals translation install include from current .PO available
 (
-sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
-echo -n "TRANSLATE_LANGUAGES="
+amFileBoilerplate
+echo -n "TRANSLATE_LANGUAGES ="
 for f in `ls -1 doc/manuals/*.po | sort -u`
 do
 	echo " \\"
 	echo -n "    ${f}"
 done
 echo " "
-)| sed s%doc/manuals/%%g | sed s%\.po%\.lang%g >doc/manuals/language.list
+) | sed 's%doc/manuals/%%g; s%\.po%\.lang%g' > doc/manuals/language.am
 
 # Build STUB framework include from current stub_* available
 (
