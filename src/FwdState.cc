@@ -105,9 +105,8 @@ private:
 };
 
 void
-FwdState::abort(void* d)
+FwdState::HandleStoreAbort(FwdState *fwd)
 {
-    FwdState* fwd = (FwdState*)d;
     Pointer tmp = fwd; // Grab a temporary pointer to keep the object alive during our scope.
 
     if (Comm::IsConnOpen(fwd->serverConnection())) {
@@ -177,8 +176,10 @@ void FwdState::start(Pointer aSelf)
 
     // Ftp::Relay needs to preserve control connection on data aborts
     // so it registers its own abort handler that calls ours when needed.
-    if (!request->flags.ftpNative)
-        entry->registerAbort(FwdState::abort, this);
+    if (!request->flags.ftpNative) {
+        AsyncCall::Pointer call = asyncCall(17, 4, "FwdState::Abort", cbdataDialer(&FwdState::HandleStoreAbort, this));
+        entry->registerAbortCallback(call);
+    }
 
     // just in case; should already be initialized to false
     request->flags.pinned = false;
@@ -317,7 +318,7 @@ FwdState::~FwdState()
 
     delete err;
 
-    entry->unregisterAbort();
+    entry->unregisterAbortCallback("FwdState object destructed");
 
     entry->unlock("FwdState");
 
