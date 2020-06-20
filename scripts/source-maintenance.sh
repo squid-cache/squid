@@ -341,15 +341,15 @@ echo ""
 
 # Build templates install include from current templates available
 (
-sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
-echo -n "ERROR_TEMPLATES="
+amFileBoilerplate
+echo -n "ERROR_TEMPLATES ="
 for f in `ls -1 errors/templates/ERR_* | sort -u`
 do
 	echo " \\"
 	echo -n "    ${f}"
 done
 echo " "
-)| sed s%errors/%%g >errors/template.list
+) | sed 's%errors/%%g' > errors/template.am
 
 # Build errors translation install include from current .PO available
 (
