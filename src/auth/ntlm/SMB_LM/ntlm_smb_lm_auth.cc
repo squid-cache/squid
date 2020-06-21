@@ -93,7 +93,7 @@ static unsigned char challenge[NTLM_NONCE_LEN];
 static unsigned char lmencoded_empty_pass[ENCODED_PASS_LEN],
        ntencoded_empty_pass[ENCODED_PASS_LEN];
 SMB_Handle_Type handle = NULL;
-int ntlm_errno;
+NtlmError ntlm_errno;
 static char credentials[MAX_USERNAME_LEN+MAX_DOMAIN_LEN+2]; /* we can afford to waste */
 static char my_domain[100], my_domain_controller[100];
 static char errstr[1001];
@@ -234,12 +234,12 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     tmp = ntlm_fetch_string(&(auth->hdr), auth_length, &auth->domain, auth->flags);
     if (tmp.str == NULL || tmp.l == 0) {
         debug("No domain supplied. Returning no-auth\n");
-        ntlm_errno = NTLM_ERR_LOGON;
+        ntlm_errno = NtlmError::LoginEror;
         return NULL;
     }
     if (tmp.l > MAX_DOMAIN_LEN) {
         debug("Domain string exceeds %d bytes, rejecting\n", MAX_DOMAIN_LEN);
-        ntlm_errno = NTLM_ERR_LOGON;
+        ntlm_errno = NtlmError::LoginEror;
         return NULL;
     }
     memcpy(domain, tmp.str, tmp.l);
@@ -251,12 +251,12 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     tmp = ntlm_fetch_string(&(auth->hdr), auth_length, &auth->user, auth->flags);
     if (tmp.str == NULL || tmp.l == 0) {
         debug("No username supplied. Returning no-auth\n");
-        ntlm_errno = NTLM_ERR_LOGON;
+        ntlm_errno = NtlmError::LoginEror;
         return NULL;
     }
     if (tmp.l > MAX_USERNAME_LEN) {
         debug("Username string exceeds %d bytes, rejecting\n", MAX_USERNAME_LEN);
-        ntlm_errno = NTLM_ERR_LOGON;
+        ntlm_errno = NtlmError::LoginEror;
         return NULL;
     }
     memcpy(user, tmp.str, tmp.l);
@@ -272,7 +272,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 
         if (len != ENCODED_PASS_LEN || offset + len > auth_length || offset == 0) {
             debug("LM response: insane data (pkt-sz: %d, fetch len: %d, offset: %d)\n", auth_length, len, offset);
-            ntlm_errno = NTLM_ERR_LOGON;
+            ntlm_errno = NtlmError::LoginEror;
             return NULL;
         }
         tmp.str = (char *)packet + offset;
@@ -280,7 +280,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     }
     if (tmp.l > MAX_PASSWD_LEN) {
         debug("Password string exceeds %d bytes, rejecting\n", MAX_PASSWD_LEN);
-        ntlm_errno = NTLM_ERR_LOGON;
+        ntlm_errno = NtlmError::LoginEror;
         return NULL;
     }
 
@@ -293,7 +293,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
         fprintf(stderr,"Empty LM password supplied for user %s\\%s. "
                 "No-auth\n",domain,user);
-        ntlm_errno=NTLM_ERR_LOGON;
+        ntlm_errno=NtlmError::LoginEror;
         return NULL;
     }
 
@@ -307,7 +307,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 
             if (len != ENCODED_PASS_LEN || offset + len > auth_length || offset == 0) {
                 debug("NT response: insane data (pkt-sz: %d, fetch len: %d, offset: %d)\n", auth_length, len, offset);
-                ntlm_errno = NTLM_ERR_LOGON;
+                ntlm_errno = NtlmError::LoginEror;
                 return NULL;
             }
             tmp.str = (char *)packet + offset;
@@ -317,7 +317,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
                   user,ntencoded_empty_pass,tmp.str,tmp.l);
             if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
                 fprintf(stderr,"ERROR: Empty NT password supplied for user %s\\%s. No-auth\n", domain, user);
-                ntlm_errno = NTLM_ERR_LOGON;
+                ntlm_errno = NtlmError::LoginEror;
                 return NULL;
             }
         }
@@ -328,7 +328,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     rv = SMB_Logon_Server(handle, user, pass, domain, 1);
     debug("Login attempt had result %d\n", rv);
 
-    if (rv != NTLM_ERR_NONE) {  /* failed */
+    if (rv != NtlmError::None) {  /* failed */
         ntlm_errno = rv;
         return NULL;
     }
@@ -561,7 +561,7 @@ manage_request()
             }
             if (cred == NULL) {
                 int smblib_err, smb_errorclass, smb_errorcode, nb_error;
-                if (ntlm_errno == NTLM_ERR_LOGON) { /* hackish */
+                if (ntlm_errno == NtlmError::LoginEror) { /* hackish */
                     SEND("NA Logon Failure");
                     return;
                 }

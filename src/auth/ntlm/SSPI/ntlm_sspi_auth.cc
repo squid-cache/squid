@@ -298,7 +298,7 @@ ntlm_check_auth(ntlm_authenticate * auth, char *user, char *domain, int auth_len
         domain[0] = '\0';
         x = ntlm_unpack_auth(auth, user, domain, auth_length);
 
-        if (x != NTLM_ERR_NONE)
+        if (x != NtlmError::None)
             return x;
 
         if (domain[0] == '\0') {
@@ -327,18 +327,18 @@ ntlm_check_auth(ntlm_authenticate * auth, char *user, char *domain, int auth_len
     if (UseAllowedGroup) {
         if (!Valid_Group(credentials, NTAllowedGroup)) {
             debug("User %s not in allowed Group %s\n", credentials, NTAllowedGroup);
-            return NTLM_BAD_NTGROUP;
+            return NtlmError::BadNtGroup;
         }
     }
     if (UseDisallowedGroup) {
         if (Valid_Group(credentials, NTDisAllowedGroup)) {
             debug("User %s is in denied Group %s\n", credentials, NTDisAllowedGroup);
-            return NTLM_BAD_NTGROUP;
+            return NtlmError::BadNtGroup;
         }
     }
 
     debug("credentials: %s\n", credentials);
-    return NTLM_ERR_NONE;
+    return NtlmError::None;
 }
 
 void
@@ -498,7 +498,7 @@ manage_request()
         fast_header = (struct _ntlmhdr *) decoded;
 
         /* sanity-check: it IS a NTLMSSP packet, isn't it? */
-        if (ntlm_validate_packet(fast_header, NTLM_ANY) != NTLM_ERR_NONE) {
+        if (ntlm_validate_packet(fast_header, NTLM_ANY) != NtlmError::None) {
             SEND_ERR("message=\"Broken authentication packet\"");
             return 1;
         }
@@ -556,7 +556,7 @@ manage_request()
         fast_header = (struct _ntlmhdr *) decoded;
 
         /* sanity-check: it IS a NTLMSSP packet, isn't it? */
-        if (ntlm_validate_packet(fast_header, NTLM_ANY) != NTLM_ERR_NONE) {
+        if (ntlm_validate_packet(fast_header, NTLM_ANY) != NtlmError::None) {
             SEND_ERR("message=\"Broken authentication packet\"");
             return 1;
         }
@@ -573,20 +573,20 @@ manage_request()
             /* check against SSPI */
             int err = ntlm_check_auth((ntlm_authenticate *) decoded, user, domain, decodedLen);
             have_challenge = 0;
-            if (err != NTLM_ERR_NONE) {
+            if (err != NtlmError::None) {
 #if FAIL_DEBUG
                 fail_debug_enabled =1;
 #endif
                 switch (err) {
-                case NTLM_ERR_NONE:
+                case NtlmError::None:
                     break;
-                case NTLM_BAD_NTGROUP:
+                case NtlmError::BadNtGroup:
                     SEND_ERR("message=\"Incorrect Group Membership\"");
                     return 1;
-                case NTLM_BAD_REQUEST:
+                case NtlmError::BadRequest:
                     SEND_ERR("message=\"Incorrect Request Format\"");
                     return 1;
-                case NTLM_SSPI_ERROR:
+                case NtlmError::SspiError:
                     FormatMessage(
                         FORMAT_MESSAGE_ALLOCATE_BUFFER |
                         FORMAT_MESSAGE_FROM_SYSTEM |

@@ -32,24 +32,25 @@ extern "C" {
 #define NTLM_REQUEST_NON_NT_SESSION_KEY     0x400000
 
 /* NTLM error codes */
-#define NTLM_ERR_INTERNAL         -3
-#define NTLM_ERR_BLOB             -2
-#define NTLM_ERR_BAD_PROTOCOL     -1
-#define NTLM_ERR_NONE              0    /* aka. SMBLM_ERR_NONE */
-/* codes used by smb_lm helper */
-#define NTLM_ERR_SERVER            1    /* aka. SMBLM_ERR_SERVER   */
-#define NTLM_ERR_PROTOCOL          2    /* aka. SMBLM_ERR_PROTOCOL */
-#define NTLM_ERR_LOGON             3    /* aka. SMBLM_ERR_LOGON    */
-#define NTLM_ERR_UNTRUSTED_DOMAIN  4
-#define NTLM_ERR_NOT_CONNECTED     10
-/* codes used by mswin_ntlmsspi helper */
-#define NTLM_SSPI_ERROR         1
-#define NTLM_BAD_NTGROUP        2
-#define NTLM_BAD_REQUEST        3
-/* TODO: reduce the above codes down to one set non-overlapping. */
+enum class NtlmError : unsigned char
+{
+    None = 0,
+    ServerError = 1,
+    ProtocolError = 2,
+    LoginEror = 3,
+    UntrustedDomain = 4,
+    NtlmNotConnected = 5,
+    SspiError = 6,
+    BadNtGroup = 7,
+    BadRequest = 8,
+    InternalError = 128,
+    BlobError = 129,
+    BadProtocol = 130
+};
 
 /** String header. String data resides at the end of the request */
-typedef struct _strhdr {
+typedef struct _strhdr
+{
     int16_t len;        /**< Length in bytes */
     int16_t maxlen;     /**< Allocated space in bytes */
     int32_t offset;     /**< Offset from start of request */
@@ -83,7 +84,7 @@ typedef struct _ntlmhdr {
 } ntlmhdr;
 
 /** Validate the packet type matches one we want. */
-int ntlm_validate_packet(const ntlmhdr *packet, const int32_t type);
+NtlmError ntlm_validate_packet(const ntlmhdr *packet, const int32_t type);
 
 /** Retrieve a string from the NTLM packet payload. */
 lstring ntlm_fetch_string(const ntlmhdr *packet,
@@ -183,7 +184,7 @@ typedef struct _ntlm_authenticate {
 } ntlm_authenticate;
 
 /** Unpack username and domain out of a packet payload. */
-int ntlm_unpack_auth(const ntlm_authenticate *auth,
+NtlmError ntlm_unpack_auth(const ntlm_authenticate *auth,
                      char *user,
                      char *domain,
                      const int32_t size);
