@@ -380,6 +380,8 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
     addReading(&entry, key);
 
     if (entry.hasTransients()) {
+        // store hadWriter before computing `found`; \see Transients::get()
+        const auto hadWriter = transients->hasWriter(entry);
         bool inSync = false;
         const bool found = anchorToCache(entry, inSync);
         if (found && !inSync)
@@ -391,7 +393,7 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
                 throw TextException("transients entry missing ENTRY_REQUIRES_COLLAPSING", Here());
             }
 
-            if (!transients->hasWriter(entry)) {
+            if (!hadWriter) {
                 // prevent others from falling into the same trap
                 throw TextException("unattached transients entry missing writer", Here());
             }
