@@ -321,7 +321,7 @@ echo ""
 ) >lib/profiler/list
 mv lib/profiler/list lib/profiler/xprof_type.h
 
-amFileGenerate ()
+printAmFile ()
 {
     sed -e 's%\ \*%##%; s%/\*%##%; s%##/%##%' < scripts/boilerplate.h
     echo -n "$1 ="
@@ -333,19 +333,19 @@ amFileGenerate ()
 }
 
 # Build icons install include from current icons available
-amFileGenerate "ICONS" "icons/" "silk/*" > icons/icon.am
+printAmFile "ICONS" "icons/" "silk/*" > icons/icon.am
 
 # Build templates install include from current templates available
-amFileGenerate "ERROR_TEMPLATES" "errors/" "templates/ERR_*" > errors/template.am
+printAmFile "ERROR_TEMPLATES" "errors/" "templates/ERR_*" > errors/template.am
 
 # Build errors translation install include from current .PO available
-amFileGenerate "TRANSLATE_LANGUAGES" "errors/" "*.po" | sed 's%\.po%\.lang%g' > errors/language.am
+printAmFile "TRANSLATE_LANGUAGES" "errors/" "*.po" | sed 's%\.po%\.lang%g' > errors/language.am
 
 # Build manuals translation install include from current .PO available
-amFileGenerate "TRANSLATE_LANGUAGES" "doc/manuals/" "*.po" | sed 's%\.po%\.lang%g' > doc/manuals/language.am
+printAmFile "TRANSLATE_LANGUAGES" "doc/manuals/" "*.po" | sed 's%\.po%\.lang%g' > doc/manuals/language.am
 
 # Build STUB framework include from current stub_* available
-amFileGenerate "STUB_SOURCE" "src/" "tests/stub_*.cc" > src/tests/Stub.am
+printAmFile "STUB_SOURCE" "src/" "tests/stub_*.cc" > src/tests/Stub.am
 
 # Build the GPERF generated content
 make -C src/http gperf-files
