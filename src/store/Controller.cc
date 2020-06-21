@@ -296,6 +296,14 @@ Store::Controller::dereferenceIdle(StoreEntry &e, bool wantsLocalMemory)
             keepInStoreTable = wantsLocalMemory || keepInStoreTable;
     }
 
+    if (e.hittingRequiresCollapsing()) {
+        // If we were writing this now-locally-idle entry, then we did not
+        // finish and should now destroy an incomplete entry. Otherwise, do not
+        // leave this idle StoreEntry behind because handleIMSReply() lacks
+        // freshness checks when hitting a collapsed revalidation entry.
+        keepInStoreTable = false; // may overrule fs decisions made above
+    }
+
     return keepInStoreTable;
 }
 
