@@ -37,12 +37,12 @@ DescriptorSet::~DescriptorSet()
 bool
 DescriptorSet::add(int fd)
 {
-    assert(0 <= fd && fd < capacity_); // TODO: replace with Must()
+    Must(0 <= fd && fd < capacity_);
 
     if (has(fd))
         return false; // already have it
 
-    assert(size_ < capacity_); // TODO: replace with Must()
+    Must(size_ < capacity_);
     const int pos = size_;
     ++size_;
     index_[fd] = pos;
@@ -54,20 +54,20 @@ DescriptorSet::add(int fd)
 bool
 DescriptorSet::del(int fd)
 {
-    assert(0 <= fd && fd < capacity_); // TODO: here and below, use Must()
+    Must(0 <= fd && fd < capacity_);
 
     if (!has(fd))
         return false; // we do not have it
 
-    assert(!empty());
+    Must(!empty());
     const int delPos = index_[fd];
-    assert(0 <= delPos && delPos < capacity_);
+    Must(0 <= delPos && delPos < capacity_);
 
     // move the last descriptor to the deleted fd position
     // to avoid skipping deleted descriptors in pop()
     const int lastPos = size_-1;
     const int lastFd = descriptors_[lastPos];
-    assert(delPos <= lastPos); // may be the same
+    Must(delPos <= lastPos); // may be the same
     descriptors_[delPos] = lastFd;
     index_[lastFd] = delPos;
 
@@ -82,10 +82,10 @@ DescriptorSet::del(int fd)
 int
 DescriptorSet::pop()
 {
-    assert(!empty());
+    Must(!empty());
     const int lastPos =--size_;
     const int lastFd = descriptors_[lastPos];
-    assert(0 <= lastFd && lastFd < capacity_);
+    Must(0 <= lastFd && lastFd < capacity_);
 
     // cleanup
     descriptors_[lastPos] = -1;
