@@ -57,7 +57,6 @@ squidclient_SOURCES = \
 	Parameters.h \
 	Ping.cc \
 	Ping.h \
-	STUB.h \
 	Transport.cc \
 	Transport.h \
 	gssapi_support.cc \
