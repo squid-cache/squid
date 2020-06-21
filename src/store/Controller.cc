@@ -329,6 +329,26 @@ Store::Controller::hasReadableDiskEntry(const StoreEntry &e) const
     return swapDir->hasReadableEntry(e);
 }
 
+/// flags problematic ephemeral peek() results before we share them
+void
+Store::Controller::checkPeeked(const StoreEntry &entry) const
+{
+    // The "hittingRequiresCollapsing() has an active writer" checks below
+    // protect callers from getting stuck and/or from using a stale revalidation
+    // reply. However, these protections are not reliable because the writer may
+    // disappear at any time and/or without a trace. Collapsing adds risks...
+    if (entry.hittingRequiresCollapsing()) {
+        if (entry.hasTransients()) {
+            // Too late to check here because the writer may be gone by now, but
+            // Transients do check when they setCollapsingRequirement().
+        } else {
+            // a local writer must hold a lock on its writable entry
+            if (!(entry.locked() && entry.isAccepting()))
+                throw TextException("no local writer", Here());
+        }
+    }
+}
+
 StoreEntry *
 Store::Controller::find(const cache_key *key)
 {
@@ -337,6 +357,7 @@ Store::Controller::find(const cache_key *key)
             if (!entry->key)
                 allowSharing(*entry, key);
             checkTransients(*entry);
+            checkPeeked(*entry);
             entry->touch();
             referenceBusy(*entry);
             return entry;

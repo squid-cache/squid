@@ -152,6 +152,7 @@ private:
     bool keepForLocalMemoryCache(StoreEntry &e) const;
     bool anchorToCache(StoreEntry &e, bool &inSync);
     void checkTransients(const StoreEntry &) const;
+    void checkPeeked(const StoreEntry &) const;
 
     Disks *swapDir; ///< summary view of all disk caches
     Memory *sharedMemStore; ///< memory cache that multiple workers can use
