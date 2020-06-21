@@ -10,7 +10,7 @@
 #include "SquidTime.h"
 
 #define STUB_API "time.cc"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 struct timeval current_time;
 double current_dtime;

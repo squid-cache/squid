@@ -10,7 +10,7 @@
 #include "ConfigParser.h"
 
 #define STUB_API "HttpUpgradeProtocolAccess.cc"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 #include "HttpUpgradeProtocolAccess.h"
 ProtocolView::ProtocolView(const char * const, const size_t) STUB
