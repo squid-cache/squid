@@ -457,6 +457,9 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     const auto &new_rep = http->storeEntry()->mem().freshestReply();
     const auto status = new_rep.sline.status();
 
+    // XXX: Disregard stale incomplete (i.e. still being written) borrowed (i.e.
+    // not caused by our request) IMS responses. That new_rep may be very old!
+
     // origin replied 304
     if (status == Http::scNotModified) {
         http->logType.update(LOG_TCP_REFRESH_UNMODIFIED);
