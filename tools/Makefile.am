@@ -83,7 +83,7 @@ nodist_cachemgr__CGIEXT__SOURCES = \
 	tests/STUB.h \
 	tests/stub_cbdata.cc \
 	tests/stub_debug.cc \
-	tests/stub_libmem.cc \
+	tests/stub_libmem.cc
 
 cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
 
