@@ -278,7 +278,8 @@ Store::Controller::dereferenceIdle(StoreEntry &e, bool wantsLocalMemory)
 
     bool keepInStoreTable = false; // keep only if somebody needs it there
 
-    /* Notify the fs that we're not referencing this object any more */
+    // Notify the fs that we are not referencing this object any more. This
+    // should be done even if we overwrite keepInStoreTable afterwards.
 
     if (e.hasDisk())
         keepInStoreTable = swapDir->dereference(e) || keepInStoreTable;
