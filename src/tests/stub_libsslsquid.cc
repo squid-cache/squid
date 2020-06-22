@@ -52,7 +52,7 @@ namespace Ssl
 {
 bool ParseErrorString(const char *, Security::Errors &) STUB_RETVAL(false)
 Security::ErrorCode GetErrorCode(const char *) STUB_RETVAL(0)
-const char *GetErrorName(Security::ErrorCode) STUB_RETVAL(nullptr)
+const char *GetErrorName(Security::ErrorCode, const bool) STUB_RETVAL(nullptr)
 const char *GetErrorDescr(Security::ErrorCode) STUB_RETVAL(nullptr)
 bool ErrorIsOptional(const char *) STUB_RETVAL(false)
 //const char *getErrorName(Security::ErrorCode value) STUB_RETVAL(nullptr)
