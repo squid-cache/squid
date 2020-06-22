@@ -9,7 +9,7 @@
 #include "squid.h"
 
 #define STUB_API "HttpControlMsg.cc"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 #include "HttpControlMsg.h"
 void HttpControlMsgSink::wroteControlMsg(CommIoCbParams const&) STUB

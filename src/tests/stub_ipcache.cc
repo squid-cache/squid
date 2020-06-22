@@ -10,7 +10,7 @@
 #include "ipcache.h"
 
 #define STUB_API "ipcache.cc"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 void ipcache_purgelru(void *) STUB
 void ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData) STUB

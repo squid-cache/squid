@@ -8,7 +8,7 @@
 
 #include "squid.h"
 #define STUB_API "icmp/libicmp.la"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 #include "icmp/IcmpSquid.h"
 //IcmpSquid::IcmpSquid() STUB
