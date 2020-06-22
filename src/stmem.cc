@@ -215,7 +215,7 @@ mem_hdr::debugDump() const
     debugs (19, 0, "mem_hdr::debugDump: Current available data is: " << result.str() << ".");
 }
 
-/* FIXME: how do we deal with sparse results -
+/* XXX: how do we deal with sparse results -
  * where we have (say)
  * 0-500 and 1000-1500, but are asked for
  * 0-2000
@@ -256,7 +256,7 @@ mem_hdr::copy(StoreIOBuffer const &target) const
     char *ptr_to_buf = target.data;
     int64_t location = target.offset;
 
-    /* Start copying begining with this block until
+    /* Start copying beginning with this block until
      * we're satiated */
 
     while (p && bytes_to_go > 0) {
@@ -292,7 +292,7 @@ mem_hdr::hasContigousContentRange(Range<int64_t> const & range) const
             return true;
     }
 
-    return !range.size(); // empty range is contigous
+    return !range.size(); // empty range is contiguous
 }
 
 bool

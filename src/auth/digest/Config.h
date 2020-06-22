@@ -32,8 +32,6 @@ typedef struct _digest_nonce_h digest_nonce_h;
 /* data to be encoded into the nonce's hex representation */
 struct _digest_nonce_data {
     time_t creationtime;
-    /* in memory address of the nonce struct (similar purpose to an ETag) */
-    digest_nonce_h *self;
     uint32_t randomdata;
 };
 
@@ -44,7 +42,7 @@ struct _digest_nonce_h : public hash_link {
     /* number of uses we've seen of this nonce */
     unsigned long nc;
     /* reference count */
-    short references;
+    uint64_t references;
     /* the auth_user this nonce has been tied to */
     Auth::Digest::User *user;
     /* has this nonce been invalidated ? */

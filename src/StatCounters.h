@@ -21,7 +21,7 @@ public:
     int falseHits = 0;
     int trueMisses = 0;
     int falseMisses = 0;
-    int closeHits = 0;     /// \todo: temporary remove it later
+    int closeHits = 0;     // TODO: temporary. remove it later
 };
 #endif
 
@@ -156,6 +156,15 @@ public:
         int outs = 0;
         int ins = 0;
     } swap;
+
+    struct {
+        uint64_t attempts = 0;
+        uint64_t refusalsDueToLocking = 0;
+        uint64_t refusalsDueToZeroSize = 0;
+        uint64_t refusalsDueToTimeLimit = 0;
+        uint64_t failures = 0;
+    } hitValidation;
+
 };
 
 extern StatCounters statCounter;

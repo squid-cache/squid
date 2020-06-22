@@ -329,7 +329,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     /* child */
     TheProcessKind = pkHelper;
-    no_suid();          /* give up extra priviliges */
+    no_suid();          /* give up extra privileges */
 
     /* close shared socket with parent */
     close(prfd);

@@ -9,7 +9,7 @@ include $(top_srcdir)/src/Common.am
 
 libexec_PROGRAMS= digest_ldap_auth
 
-digest_ldap_auth_SOURCES= \
+digest_ldap_auth_SOURCES = \
 	digest_common.h \
 	digest_pw_auth.cc \
 	ldap_backend.cc \

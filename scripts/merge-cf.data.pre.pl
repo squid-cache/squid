@@ -22,22 +22,22 @@ if (defined $ARGV[0]) {
 
 sub filename($)
 {
-	my ($name) = @_;
-	return $path . "/" . $name . ".txt";
+    my ($name) = @_;
+    return $path . "/" . $name . ".txt";
 }
 
 my ($in) = new IO::File;
 while(<>) {
     if (/^NAME: (.*)/) {
-	my (@aliases) = split(/ /, $1);
-	my ($name) = shift @aliases;
-	$in->open(filename($name), "r") || die "Couldn't open ".filename($name).":$!\n";
-	while(<$in>) {
-	    print $_;
-	}
-	$in->close();
+        my (@aliases) = split(/ /, $1);
+        my ($name) = shift @aliases;
+        $in->open(filename($name), "r") || die "Couldn't open ".filename($name).":$!\n";
+        while(<$in>) {
+            print $_;
+        }
+        $in->close();
     } else {
-	print $_;
+        print $_;
     }
 }
 undef $in;

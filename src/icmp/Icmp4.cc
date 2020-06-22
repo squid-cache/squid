@@ -17,7 +17,6 @@
 #include "Debug.h"
 #include "Icmp4.h"
 #include "IcmpPinger.h"
-#include "leakcheck.h"
 #include "SquidTime.h"
 
 static const char *

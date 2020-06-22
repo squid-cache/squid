@@ -139,6 +139,10 @@
 #include <cmath>
 #include <limits>
 
+#if HAVE_SYSTEMD_SD_DAEMON_H
+#include <systemd/sd-daemon.h>
+#endif
+
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
 #endif
@@ -165,7 +169,7 @@ public:
 private:
     AnyP::PortCfgPointer portCfg;   ///< from HttpPortList
     Ipc::FdNoteId portTypeNote;    ///< Type of IPC socket being opened
-    Subscription::Pointer sub; ///< The handler to be subscribed for this connetion listener
+    Subscription::Pointer sub; ///< The handler to be subscribed for this connection listener
 };
 
 static void clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
@@ -1788,7 +1792,7 @@ ConnStateData::concurrentRequestQueueFilled() const
 #endif
     const int concurrentRequestLimit = pipelinePrefetchMax() + 1 + internalRequest;
 
-    // when queue filled already we cant add more.
+    // when queue filled already we can't add more.
     if (existingRequestCount >= concurrentRequestLimit) {
         debugs(33, 3, clientConnection << " max concurrent requests reached (" << concurrentRequestLimit << ")");
         debugs(33, 5, clientConnection << " deferring new request until one is done");
@@ -1831,7 +1835,7 @@ ConnStateData::proxyProtocolError(const char *msg)
     if (msg) {
         // This is important to know, but maybe not so much that flooding the log is okay.
 #if QUIET_PROXY_PROTOCOL
-        // display the first of every 32 occurances at level 1, the others at level 2.
+        // display the first of every 32 occurrences at level 1, the others at level 2.
         static uint8_t hide = 0;
         debugs(33, (hide++ % 32 == 0 ? DBG_IMPORTANT : 2), msg << " from " << clientConnection);
 #else
@@ -2187,6 +2191,7 @@ ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     bodyParser(nullptr),
 #if USE_OPENSSL
     sslBumpMode(Ssl::bumpEnd),
+    tlsParser(Security::HandshakeParser::fromClient),
 #endif
     needProxyProtocolHeader_(false),
 #if USE_OPENSSL
@@ -2287,7 +2292,7 @@ ConnStateData::whenClientIpKnown()
     if (pools.size()) {
         ACLFilledChecklist ch(NULL, NULL, NULL);
 
-        // TODO: we check early to limit error response bandwith but we
+        // TODO: we check early to limit error response bandwidth but we
         // should recheck when we can honor delay_pool_uses_indirect
         // TODO: we should also pass the port details for myportname here.
         ch.src_addr = clientConnection->remote;
@@ -2699,7 +2704,7 @@ ConnStateData::sslCrtdHandleReply(const Helper::Reply &reply)
             if (reply.result != Helper::Okay) {
                 debugs(33, 5, "Certificate for " << tlsConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
-                debugs(33, 5, "Certificate for " << tlsConnectHostOrIp << " was successfully recieved from ssl_crtd");
+                debugs(33, 5, "Certificate for " << tlsConnectHostOrIp << " was successfully received from ssl_crtd");
                 if (sslServerBump && (sslServerBump->act.step1 == Ssl::bumpPeek || sslServerBump->act.step1 == Ssl::bumpStare)) {
                     doPeekAndSpliceStep();
                     auto ssl = fd_table[clientConnection->fd].ssl.get();
@@ -3191,7 +3196,7 @@ ConnStateData::doPeekAndSpliceStep()
     assert(b);
     Ssl::ClientBio *bio = static_cast<Ssl::ClientBio *>(BIO_get_data(b));
 
-    debugs(33, 5, "PeekAndSplice mode, proceed with client negotiation. Currrent state:" << SSL_state_string_long(ssl));
+    debugs(33, 5, "PeekAndSplice mode, proceed with client negotiation. Current state:" << SSL_state_string_long(ssl));
     bio->hold(false);
 
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_WRITE, clientNegotiateSSL, this, 0);
@@ -3410,7 +3415,8 @@ clientHttpConnectionsOpen(void)
         s->listenConn->local = s->s;
 
         s->listenConn->flags = COMM_NONBLOCKING | (s->flags.tproxyIntercept ? COMM_TRANSPARENT : 0) |
-                               (s->flags.natIntercept ? COMM_INTERCEPTION : 0);
+                               (s->flags.natIntercept ? COMM_INTERCEPTION : 0) |
+                               (s->workerQueues ? COMM_REUSEPORT : 0);
 
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
         if (s->transport.protocol == AnyP::PROTO_HTTP) {
@@ -3487,6 +3493,20 @@ clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId port
            << s->listenConn);
 
     Must(AddOpenedHttpSocket(s->listenConn)); // otherwise, we have received a fd we did not ask for
+
+#if USE_SYSTEMD
+    // When the very first port opens, tell systemd we are able to serve connections.
+    // Subsequent sd_notify() calls, including calls during reconfiguration,
+    // do nothing because the first call parameter is 1.
+    // XXX: Send the notification only after opening all configured ports.
+    if (opt_foreground || opt_no_daemon) {
+        const auto result = sd_notify(1, "READY=1");
+        if (result < 0) {
+            debugs(1, DBG_IMPORTANT, "WARNING: failed to send start-up notification to systemd" <<
+                   Debug::Extra << "sd_notify() error: " << xstrerr(-result));
+        }
+    }
+#endif
 }
 
 void
@@ -4077,5 +4097,11 @@ std::ostream &
 operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic)
 {
     return os << pic.connection << ", request=" << pic.request;
+}
+
+std::ostream &
+operator <<(std::ostream &os, const ConnStateData::ServerConnectionContext &scc)
+{
+    return os << scc.conn_ << ", srv_bytes=" << scc.preReadServerBytes.length();
 }
 

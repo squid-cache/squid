@@ -13,13 +13,13 @@ noinst_LTLIBRARIES = libmem.la
 libmem_la_SOURCES = \
 	AllocatorProxy.cc \
 	AllocatorProxy.h \
-	forward.h \
 	Meter.h \
-	old_api.cc \
 	Pool.cc \
 	Pool.h \
 	PoolChunked.cc \
 	PoolChunked.h \
-	PoolingAllocator.h \
 	PoolMalloc.cc \
-	PoolMalloc.h
+	PoolMalloc.h \
+	PoolingAllocator.h \
+	forward.h \
+	old_api.cc

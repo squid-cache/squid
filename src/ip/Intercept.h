@@ -97,7 +97,7 @@ private:
      *
      * \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
      * \param newConn  Details known, to be updated where relevant.
-     * \return         Whether successfuly located the new address.
+     * \return         Whether successfully located the new address.
      */
     bool TproxyTransparent(const Comm::ConnectionPointer &newConn, int silent);
 
@@ -106,7 +106,7 @@ private:
      *
      * \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
      * \param newConn  Details known, to be updated where relevant.
-     * \return         Whether successfuly located the new address.
+     * \return         Whether successfully located the new address.
      */
     bool NetfilterInterception(const Comm::ConnectionPointer &newConn, int silent);
 
@@ -115,7 +115,7 @@ private:
      *
      * \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
      * \param newConn  Details known, to be updated where relevant.
-     * \return         Whether successfuly located the new address.
+     * \return         Whether successfully located the new address.
      */
     bool IpfwInterception(const Comm::ConnectionPointer &newConn, int silent);
 
@@ -124,7 +124,7 @@ private:
      *
      * \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
      * \param newConn  Details known, to be updated where relevant.
-     * \return         Whether successfuly located the new address.
+     * \return         Whether successfully located the new address.
      */
     bool IpfInterception(const Comm::ConnectionPointer &newConn, int silent);
 
@@ -133,7 +133,7 @@ private:
      *
      * \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
      * \param newConn  Details known, to be updated where relevant.
-     * \return         Whether successfuly located the new address.
+     * \return         Whether successfully located the new address.
      */
     bool PfInterception(const Comm::ConnectionPointer &newConn, int silent);
 

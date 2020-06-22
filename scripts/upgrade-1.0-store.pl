@@ -22,7 +22,7 @@ $OLD_SWAP_DIRECTORIES = 100;
 $NEW_SWAP_DIRECTORIES_L1 = 16;
 $NEW_SWAP_DIRECTORIES_L2 = 256;
 
-$EEXIST = 17; 		# check your /usr/include/errno.h
+$EEXIST = 17;         # check your /usr/include/errno.h
 
 print <<EOF;
 This script converts Squid 1.0 cache directories to the Squid 1.1
@@ -43,47 +43,47 @@ exit(1) unless ($ans =~ /^y$/ || $ans =~ /^yes$/);
 
 # make new directories
 foreach $c (@cachedirs) {
-	$cn = "$c.new";
-	&my_mkdir ($cn);
-	foreach $d1 (0..($NEW_SWAP_DIRECTORIES_L1-1)) {
-		$p1 = sprintf ("$cn/%02X", $d1);
-		&my_mkdir ($p1);
-		foreach $d2 (0..($NEW_SWAP_DIRECTORIES_L2-1)) {
-			$p2 = sprintf ("$p1/%02X", $d2);
-			&my_mkdir ($p2);
-		}
-	}
+    $cn = "$c.new";
+    &my_mkdir ($cn);
+    foreach $d1 (0..($NEW_SWAP_DIRECTORIES_L1-1)) {
+        $p1 = sprintf ("$cn/%02X", $d1);
+        &my_mkdir ($p1);
+        foreach $d2 (0..($NEW_SWAP_DIRECTORIES_L2-1)) {
+            $p2 = sprintf ("$p1/%02X", $d2);
+            &my_mkdir ($p2);
+        }
+    }
 }
 
 $newlog = "$swaplog.1.1";
 open (newlog, ">$newlog") || die "$newlog: $!\n";
 select(newlog); $|=1; select(STDOUT);
-open (swaplog)	|| die "$swaplog: $!\n";
+open (swaplog)    || die "$swaplog: $!\n";
 $count = 0;
 while (<swaplog>) {
-	chop;
-	($file,$url,$expires,$timestamp,$size) = split;
-	@F = split('/', $file);
-	$oldfileno = pop @F;
-	$oldpath = &old_fileno_to_path($oldfileno);
-	unless (@S = stat($oldpath)) {
-		print "$oldpath: $!\n";
-		next;
-	}
-	unless ($S[7] == $size) {
-		print "$oldpath: Wrong Size.\n";
-		next;
-	}
-	$newpath = &new_fileno_to_path($oldfileno);
-	next unless &my_link($oldpath,$newpath);
-	printf newlog "%08x %08x %08x %08x %9d %s\n",
-		$oldfileno,
-		$timestamp,
-		$expires,
-		$timestamp,	# lastmod
-		$size,
-		$url;
-	$count++;
+    chop;
+    ($file,$url,$expires,$timestamp,$size) = split;
+    @F = split('/', $file);
+    $oldfileno = pop @F;
+    $oldpath = &old_fileno_to_path($oldfileno);
+    unless (@S = stat($oldpath)) {
+        print "$oldpath: $!\n";
+        next;
+    }
+    unless ($S[7] == $size) {
+        print "$oldpath: Wrong Size.\n";
+        next;
+    }
+    $newpath = &new_fileno_to_path($oldfileno);
+    next unless &my_link($oldpath,$newpath);
+    printf newlog "%08x %08x %08x %08x %9d %s\n",
+        $oldfileno,
+        $timestamp,
+        $expires,
+        $timestamp,    # lastmod
+        $size,
+        $url;
+    $count++;
 }
 
 
@@ -111,38 +111,38 @@ exit(0);
 
 
 sub old_fileno_to_path {
-	local($fn) = @_;
-	sprintf ("%s/%02d/%d",
-		$cachedirs[$fn % $ncache_dirs],
-		($fn / $ncache_dirs) % $OLD_SWAP_DIRECTORIES,
-		$fn);
+    local($fn) = @_;
+    sprintf ("%s/%02d/%d",
+        $cachedirs[$fn % $ncache_dirs],
+        ($fn / $ncache_dirs) % $OLD_SWAP_DIRECTORIES,
+        $fn);
 }
 
 sub new_fileno_to_path {
-	local($fn) = @_;
-	sprintf ("%s.new/%02X/%02X/%08X",
-		$cachedirs[$fn % $ncache_dirs],
-		($fn / $ncache_dirs) % $NEW_SWAP_DIRECTORIES_L1,
-		($fn / $ncache_dirs) / $NEW_SWAP_DIRECTORIES_L1 % $NEW_SWAP_DIRECTORIES_L2,
-		$fn);
+    local($fn) = @_;
+    sprintf ("%s.new/%02X/%02X/%08X",
+        $cachedirs[$fn % $ncache_dirs],
+        ($fn / $ncache_dirs) % $NEW_SWAP_DIRECTORIES_L1,
+        ($fn / $ncache_dirs) / $NEW_SWAP_DIRECTORIES_L1 % $NEW_SWAP_DIRECTORIES_L2,
+        $fn);
 }
 
 sub my_mkdir {
-	local($p) = @_;
-	print "Making $p...\n";
-	return if ($dry_run);
-	unless (mkdir ($p, 0755)) {
-		return 1 if ($! == $EEXIST);
-		die "$p: $!\n";
-	}
+    local($p) = @_;
+    print "Making $p...\n";
+    return if ($dry_run);
+    unless (mkdir ($p, 0755)) {
+        return 1 if ($! == $EEXIST);
+        die "$p: $!\n";
+    }
 }
 
 sub my_link {
-	local($f,$t) = @_;
-	print "$f --> $t\n";
-	return 1 if ($dry_run);
-	unlink($t);
-	$rc = link ($f,$t);
-	warn "$t: $!\n" unless ($rc);
-	$rc;
+    local($f,$t) = @_;
+    print "$f --> $t\n";
+    return 1 if ($dry_run);
+    unlink($t);
+    $rc = link ($f,$t);
+    warn "$t: $!\n" unless ($rc);
+    $rc;
 }

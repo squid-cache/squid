@@ -353,7 +353,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 filledCheck->serverCert.reset();
             }
             // If the certificate validator is used then we need to allow all errors and
-            // pass them to certficate validator for more processing
+            // pass them to certificate validator for more processing
             else if (Ssl::TheConfig.ssl_crt_validator) {
                 ok = 1;
             }
@@ -1101,7 +1101,7 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
     for (i = 0; current && (i < depth); ++i) {
         if (X509_check_issued(current, current) == X509_V_OK) {
             // either ctx->cert is itself self-signed or untrustedCerts
-            // aready contain the self-signed current certificate
+            // already contain the self-signed current certificate
             break;
         }
 

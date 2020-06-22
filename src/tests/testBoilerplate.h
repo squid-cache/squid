@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TEST_BOILDERPLATE_H
 #define SQUID_SRC_TEST_BOILDERPLATE_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 /*
  * demonstration test file, as new idioms are made they will

@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TESTS_TESTURISCHEME_H
 #define SQUID_SRC_TESTS_TESTURISCHEME_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 /*
  * test UriScheme
@@ -35,6 +35,7 @@ class testUriScheme : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE_END();
 
 public:
+    void setUp();
 
 protected:
     void testAssignFromprotocol_t();

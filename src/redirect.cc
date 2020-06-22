@@ -35,7 +35,7 @@
 #include "ssl/support.h"
 #endif
 
-/// url maximum length + extra informations passed to redirector
+/// url maximum length + extra information passed to redirector
 #define MAX_REDIRECTOR_REQUEST_STRLEN (MAX_URL + 1024)
 
 class RedirectStateData
@@ -408,7 +408,7 @@ redirectInit(void)
 void
 redirectShutdown(void)
 {
-    /** FIXME: Temporary unified helpers Shutdown
+    /** TODO: Temporary unified helpers Shutdown
      * When and if needed for more helpers a separated shutdown
      * method will be added for each of them.
      */

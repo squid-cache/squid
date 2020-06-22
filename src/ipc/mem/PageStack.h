@@ -23,39 +23,83 @@ namespace Mem
 
 class PageId;
 
-/// reflects the dual nature of PageStack storage:
-/// - for free pages, this is a pointer to the next free page
-/// - for used pages, this is a "used page" marker
-class PageStackStorageSlot
+class IdSetPosition;
+typedef enum { dirNone, dirLeft, dirRight, dirEnd } IdSetNavigationDirection;
+
+/// basic IdSet storage parameters, extracted here to keep them constant
+class IdSetMeasurements
 {
 public:
-    // We are using uint32_t for Pointer because PageId::number is uint32_t.
-    // PageId::number should probably be uint64_t to accommodate caches with
-    // page numbers exceeding UINT32_MAX.
-    typedef uint32_t PointerOrMarker;
-    typedef PointerOrMarker Pointer;
-    typedef PointerOrMarker Marker;
+    /// we need to fit two size_type counters into one 64-bit lockless atomic
+    typedef uint32_t size_type;
 
-    /// represents a nil next slot pointer
-    static const Pointer NilPtr = std::numeric_limits<PointerOrMarker>::max();
-    /// marks a slot of a used (i.e. take()n) page
-    static const Marker TakenPage = std::numeric_limits<PointerOrMarker>::max() - 1;
-    static_assert(TakenPage != NilPtr, "magic PointerOrMarker values do not clash");
+    explicit IdSetMeasurements(size_type capacity);
 
-    explicit PageStackStorageSlot(const Pointer nxt = NilPtr): nextOrMarker(nxt) {}
+    /// the maximum number of pages our tree is allowed to store
+    size_type capacity = 0;
 
-    /// returns a (possibly nil) pointer to the next free page
-    Pointer next() const { return nextOrMarker.load(); }
+    /// the number of leaf nodes that satisfy capacity requirements
+    size_type requestedLeafNodeCount = 0;
 
-    /// marks our page as used
-    void take();
+    size_type treeHeight = 0; ///< total number of levels, including the leaf level
+    size_type leafNodeCount = 0; ///< the number of nodes at the leaf level
+    size_type innerLevelCount = 0; ///< all levels except the leaf level
 
-    /// marks our page as free, to be used before the given `nxt` page;
-    /// also checks that the slot state matches the caller expectations
-    void put(const PointerOrMarker expected, const Pointer nxt);
+    /// the total number of nodes at all levels
+    size_type nodeCount() const { return leafNodeCount ? leafNodeCount*2 -1 : 0; }
+};
+
+/// a shareable set of positive uint32_t IDs with O(1) insertion/removal ops
+class IdSet
+{
+public:
+    using size_type = IdSetMeasurements::size_type;
+    using Position = IdSetPosition;
+    using NavigationDirection = IdSetNavigationDirection;
+
+    /// memory size required to store a tree with the given capacity
+    static size_t MemorySize(size_type capacity);
+
+    explicit IdSet(size_type capacity);
+
+    /// populates the allocated tree with the requested capacity IDs
+    /// optimized to run without atomic protection
+    void makeFullBeforeSharing();
+
+    /// finds/extracts (into the given `id`) an ID value and returns true
+    /// \retval false no IDs are left
+    bool pop(size_type &id);
+
+    /// makes `id` value available to future pop() callers
+    void push(size_type id);
+
+    const IdSetMeasurements measurements;
 
 private:
-    std::atomic<PointerOrMarker> nextOrMarker;
+    typedef uint64_t Node; ///< either leaf or intermediate node
+    typedef std::atomic<Node> StoredNode; ///< a Node stored in shared memory
+
+    /* optimization: these initialization methods bypass atomic protections */
+    void fillAllNodes();
+    void truncateExtras();
+    Node *valueAddress(Position);
+    size_type innerTruncate(Position pos, NavigationDirection dir, size_type toSubtract);
+    void leafTruncate(Position pos, size_type idsToKeep);
+
+    void innerPush(Position, NavigationDirection);
+    NavigationDirection innerPop(Position);
+
+    void leafPush(Position, size_type id);
+    size_type leafPop(Position);
+
+    Position ascend(Position);
+    Position descend(Position, NavigationDirection);
+
+    StoredNode &nodeAt(Position);
+
+    /// the entire binary tree flattened into an array
+    FlexibleArray<StoredNode> nodes_;
+    // No more data members should follow! See FlexibleArray<> for details.
 };
 
 /// Atomic container of "free" PageIds. Detects (some) double-free bugs.
@@ -72,10 +116,24 @@ public:
     /// the number of (free and/or used) pages in a stack
     typedef unsigned int PageCount;
 
-    PageStack(const PoolId aPoolId, const PageCount aCapacity, const size_t aPageSize);
+    // XXX: poolId, pageSize look misplaced due to messy separation of PagePool
+    // (which should support multiple Segments but does not) and PageStack
+    // (which should not calculate the Segment size but does) duties.
+    /// PageStack construction and SharedMemorySize calculation parameters
+    class Config {
+    public:
+        uint32_t poolId = 0; ///< pool ID
+        size_t pageSize = 0; ///< page size, used to calculate shared memory size
+        PageCount capacity = 0; ///< the maximum number of pages
 
-    PageCount capacity() const { return capacity_; }
-    size_t pageSize() const { return thePageSize; }
+        /// whether a newly created PageStack should be prefilled with PageIds
+        bool createFull = false;
+    };
+
+    explicit PageStack(const Config &);
+
+    PageCount capacity() const { return config_.capacity; }
+    size_t pageSize() const { return config_.pageSize; }
     /// an approximate number of free pages
     PageCount size() const { return size_.load(); }
 
@@ -87,7 +145,7 @@ public:
     bool pageIdIsValid(const PageId &page) const;
 
     /// total shared memory size required to share
-    static size_t SharedMemorySize(const PoolId aPoolId, const PageCount capacity, const size_t pageSize);
+    static size_t SharedMemorySize(const Config &);
     size_t sharedMemorySize() const;
 
     /// shared memory size required only by PageStack, excluding
@@ -97,7 +155,7 @@ public:
 
     /// \returns the number of padding bytes to align PagePool::theLevels array
     static size_t LevelsPaddingSize(const PageCount capacity);
-    size_t levelsPaddingSize() const { return LevelsPaddingSize(capacity_); }
+    size_t levelsPaddingSize() const { return LevelsPaddingSize(config_.capacity); }
 
     /**
      * The following functions return PageStack IDs for the corresponding
@@ -113,23 +171,12 @@ public:
     static PoolId IdForSwapDirSpace(const int dirIdx) { return 900 + dirIdx + 1; }
 
 private:
-    using Slot = PageStackStorageSlot;
-
-    // XXX: theFoo members look misplaced due to messy separation of PagePool
-    // (which should support multiple Segments but does not) and PageStack
-    // (which should not calculate the Segment size but does) duties.
-    const PoolId thePoolId; ///< pool ID
-    const PageCount capacity_; ///< the maximum number of pages
-    const size_t thePageSize; ///< page size, used to calculate shared memory size
+    const Config config_;
     /// a lower bound for the number of free pages (for debugging purposes)
     std::atomic<PageCount> size_;
 
-    /// the index of the first free stack element or nil
-    std::atomic<Slot::Pointer> head_;
-
-    /// slots indexed using their page number
-    Ipc::Mem::FlexibleArray<Slot> slots_;
-    // No more data members should follow! See Ipc::Mem::FlexibleArray<> for details.
+    IdSet ids_; ///< free pages (valid with positive capacity_)
+    // No more data members should follow! See IdSet for details.
 };
 
 } // namespace Mem

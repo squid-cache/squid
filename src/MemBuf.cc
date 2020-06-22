@@ -39,8 +39,8 @@
  * ----------
  *
  * MemBuffer is a memory-resident buffer with printf()-like interface. It
- * hides all offest handling and overflow checking. Moreover, it has a
- * build-in control that no partial data has been written.
+ * hides all offset handling and overflow checking. Moreover, it has a
+ * built-in control that no partial data has been written.
  *
  * MemBuffer is designed to handle relatively small data. It starts with a
  * small buffer of configurable size to avoid allocating huge buffers all the
@@ -271,7 +271,7 @@ MemBuf::vappendf(const char *fmt, va_list vargs)
 
         /* Fix of bug 753r. The value of vargs is undefined
          * after vsnprintf() returns. Make a copy of vargs
-         * incase we loop around and call vsnprintf() again.
+         * in case we loop around and call vsnprintf() again.
          */
         va_list ap;
         va_copy(ap,vargs);

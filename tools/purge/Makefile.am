@@ -13,19 +13,19 @@ man_MANS = purge.1
 endif
 
 purge_SOURCES = \
-	convert.cc \
-	convert.hh \
-	socket.cc \
-	socket.hh \
-	signal.cc \
-	signal.hh \
-	squid-tlv.cc \
-	squid-tlv.hh \
-	copyout.cc \
-	copyout.hh \
 	conffile.cc \
 	conffile.hh \
-	purge.cc
+	convert.cc \
+	convert.hh \
+	copyout.cc \
+	copyout.hh \
+	purge.cc \
+	signal.cc \
+	signal.hh \
+	socket.cc \
+	socket.hh \
+	squid-tlv.cc \
+	squid-tlv.hh
 
 purge_LDADD = \
 	$(COMPAT_LIB) \

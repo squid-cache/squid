@@ -157,7 +157,7 @@ init_challenge(char *domain, char *domain_controller)
         handle = NULL;
         return 2;
     }
-    if (handle->Security == 0) {    /* share-level security, unuseable */
+    if (handle->Security == 0) {    /* share-level security, unusable */
         debug("SMB Server uses share-level security .. we need user security.\n");
         SMB_Discon(handle, 0);
         handle = NULL;
@@ -172,7 +172,7 @@ init_challenge(char *domain, char *domain_controller)
 const char *
 make_challenge(char *domain, char *domain_controller)
 {
-    /* trying to circumvent some strange problem wih pointers in SMBLib */
+    /* trying to circumvent some strange problem with pointers in SMBLib */
     /* Ugly as hell, but the lib is going to be dropped... */
     strncpy(my_domain, domain, sizeof(my_domain)-1);
     my_domain[sizeof(my_domain)-1] = '\0';
@@ -567,7 +567,7 @@ manage_request()
                 }
                 /* there was an error. We have two errno's to look at.
                  * libntlmssp's erno is insufficient, we'll have to look at
-                 * the actual SMB library error codes, to acually figure
+                 * the actual SMB library error codes, to actually figure
                  * out what's happening. The thing has braindamaged interfacess..*/
                 smblib_err = SMB_Get_Last_Error();
                 smb_errorclass = SMBlib_Error_Class(SMB_Get_Last_SMB_Err());

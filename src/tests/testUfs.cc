@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "DiskIO/DiskIOModule.h"
+#include "fde.h"
 #include "fs/ufs/UFSSwapDir.h"
 #include "globals.h"
 #include "HttpHeader.h"
@@ -37,8 +38,6 @@ addSwapDir(MySwapDirPointer aStore)
     Config.cacheSwap.swapDirs[Config.cacheSwap.n_configured] = aStore.getRaw();
     ++Config.cacheSwap.n_configured;
 }
-
-/* TODO make this a cbdata class */
 
 static bool cbcalled;
 
@@ -71,6 +70,8 @@ testUfs::commonInit()
     storeReplAdd("lru", createRemovalPolicy_lru);
 
     Mem::Init();
+
+    fde::Init();
 
     comm_init();
 
@@ -205,7 +206,7 @@ testUfs::testUfsSearch()
 
     free_cachedir(&Config.cacheSwap);
 
-    /* todo: here we should test a dirty rebuild */
+    // TODO: here we should test a dirty rebuild
 
     safe_free(Config.replPolicy->type);
     delete Config.replPolicy;

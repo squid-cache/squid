@@ -183,6 +183,10 @@ static TokenTableEntry TokenTableProxyProtocol[] = {
     TokenTableEntry(">h", LFT_PROXY_PROTOCOL_RECEIVED_HEADER),
 };
 
+static TokenTableEntry TokenTableTransport[] = {
+    TokenTableEntry(">connection_id", LFT_TRANSPORT_CLIENT_CONNECTION_ID),
+};
+
 #if USE_ADAPTATION
 static TokenTableEntry TokenTableAdapt[] = {
     TokenTableEntry("all_trs", LFT_ADAPTATION_ALL_XACT_TIMES),
@@ -259,6 +263,7 @@ Format::Token::Init()
     TheConfig.registerTokens(SBuf("ssl"),::Format::TokenTableSsl);
 #endif
     TheConfig.registerTokens(SBuf("proxy_protocol"), ::Format::TokenTableProxyProtocol);
+    TheConfig.registerTokens(SBuf("transport"), ::Format::TokenTableTransport);
 }
 
 /// Scans a token table to see if the next token exists there

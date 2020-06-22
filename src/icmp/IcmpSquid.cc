@@ -71,10 +71,8 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     else if (payload && len == 0)
         len = strlen(payload);
 
-    /** \li
-     \bug If length specified or auto-detected is greater than the possible payload squid will die with an assert.
-     \todo This should perhapse be reduced to a truncated payload? or no payload. A WARNING is due anyway.
-     */
+    // XXX: If length specified or auto-detected is greater than the possible payload squid will die with an assert.
+    // TODO: This should perhapse be reduced to a truncated payload? or no payload. A WARNING is due anyway.
     assert(len <= PINGER_PAYLOAD_SZ);
 
     pecho.to = to;
@@ -97,7 +95,7 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
         debugs(37, DBG_IMPORTANT, MYNAME << "send: " << xstrerr(xerrno));
 
         /** \li  If the send results in ECONNREFUSED or EPIPE errors from helper, will cleanly shutdown the module. */
-        /** \todo This should try restarting the helper a few times?? before giving up? */
+        // TODO: try restarting the helper a few times before giving up?
         if (xerrno == ECONNREFUSED || xerrno == EPIPE) {
             Close();
             return;

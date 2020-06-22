@@ -25,7 +25,7 @@
 
 /* this table is used for parsing surrogate control header */
 /* order must match that of enum http_hdr_sc_type. The constraint is verified at initialization time */
-//todo: implement constraint
+// TODO: implement constraint
 static const LookupTable<http_hdr_sc_type>::Record ScAttrs[] {
     {"no-store", SC_NO_STORE},
     {"no-store-remote", SC_NO_STORE_REMOTE},
@@ -98,7 +98,7 @@ HttpHdrSc::parse(const String * str)
             ++p;
         }
 
-        /* decrease ilen to still match the token for ';' qualified non '=' statments */
+        /* decrease ilen to still match the token for ';' qualified non '=' statements */
         else if ((p = strchr(item, ';')) && (p - item < ilen)) {
             ilen = p - item;
             ++p;
@@ -113,7 +113,7 @@ HttpHdrSc::parse(const String * str)
         }
 
         /* Is this a targeted directive? */
-        /* TODO: remove the temporary useage and use memrchr and the information we have instead */
+        /* TODO: remove the temporary usage and use memrchr and the information we have instead */
         temp = xstrndup (item, initiallen + 1);
 
         if (!((target = strrchr (temp, ';')) && !strchr (target, '"') && *(target + 1) != '\0'))

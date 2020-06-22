@@ -45,7 +45,7 @@ protected:
     void noteStoreCopied(StoreIOBuffer ioBuf);
     static void NoteStoreCopied(void* data, StoreIOBuffer ioBuf);
     /// called by Store if the entry is no longer usable
-    static void Abort(void* param);
+    static void HandleStoreAbort(StoreToCommWriter *param);
 
     /// tell Comm to write action results
     void scheduleCommWrite(const StoreIOBuffer& ioBuf);

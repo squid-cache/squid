@@ -84,7 +84,7 @@ public:
 
     /// Walks through the  possible values list of the note, selects
     /// the first value, matching the given HttpRequest and HttpReply
-    /// and assignes the given 'matched' to it.
+    /// and assigns the given 'matched' to it.
     /// \return true if matched, false otherwise
     bool match(HttpRequest *request, HttpReply *reply, const AccessLogEntryPointer &al, SBuf &matched);
     const SBuf &key() const { return theKey; }
@@ -109,12 +109,13 @@ class Notes : public RefCountable
 {
 public:
     typedef RefCount<Notes> Pointer;
+    typedef std::vector<SBuf> Keys; ///< unordered annotation names
     typedef std::vector<Note::Pointer> NotesList;
     typedef NotesList::iterator iterator; ///< iterates over the notes list
     typedef NotesList::const_iterator const_iterator; ///< iterates over the notes list
 
-    Notes(const char *aDescr, const char **metasBlacklist, bool allowFormatted = true): descr(aDescr), blacklisted(metasBlacklist), formattedValues(allowFormatted) {}
-    Notes(): descr(nullptr), blacklisted(nullptr), formattedValues(false) {}
+    explicit Notes(const char *aDescr, const Keys *extraBlacklist = nullptr, bool allowFormatted = true);
+    Notes() = default;
     ~Notes() { notes.clear(); }
     Notes(const Notes&) = delete;
     Notes &operator=(const Notes&) = delete;
@@ -142,10 +143,11 @@ public:
     void updateNotePairs(NotePairsPointer pairs, const CharacterSet *delimiters,
                          const AccessLogEntryPointer &al);
 private:
+    /// Makes sure the given key is not on the given list of banned names.
+    void banReservedKey(const SBuf &key, const Keys &banned) const;
 
     /// Verifies that the key is not blacklisted (fatal error) and
     /// does not contain special characters (non-fatal error).
-    /// If keyLen is not provided, the key is assumed null-terminated.
     void validateKey(const SBuf &key) const;
 
     /// Adds a note to the notes list and returns a pointer to the
@@ -156,9 +158,12 @@ private:
     Note::Pointer find(const SBuf &noteKey);
 
     NotesList notes; ///< The Note::Pointer objects array list
-    const char *descr; ///< A short description for notes list
-    const char **blacklisted; ///< Null terminated list of blacklisted note keys
-    bool formattedValues; ///< Whether the formatted values are supported
+    const char *descr = nullptr; ///< identifies note source in error messages
+
+    Keys blacklist; ///< a list of additional prohibited key names
+    bool formattedValues = false; ///< whether to expand quoted logformat %codes
+
+    static const Notes::Keys &BlackList(); ///< always prohibited key names
 };
 
 /**

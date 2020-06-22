@@ -101,7 +101,7 @@ memCompObjChunks(void *const &obj, MemChunk * const &chunk)
 MemChunk::MemChunk(MemPoolChunked *aPool)
 {
     /* should have a pool for this too -
-     * note that this requres:
+     * note that this requires:
      * allocate one chunk for the pool of chunks's first chunk
      * allocate a chunk from that pool
      * move the contents of one chunk into the other

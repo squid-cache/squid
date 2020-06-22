@@ -259,7 +259,7 @@ Comm::ConnOpener::createFd()
 {
     Must(temporaryFd_ < 0);
 
-    // our initators signal abort by cancelling their callbacks
+    // our initiators signal abort by cancelling their callbacks
     if (callback_ == NULL || callback_->canceled())
         return false;
 

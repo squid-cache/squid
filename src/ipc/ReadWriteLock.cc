@@ -91,6 +91,26 @@ Ipc::ReadWriteLock::switchExclusiveToShared()
     unlockExclusive();
 }
 
+bool
+Ipc::ReadWriteLock::unlockSharedAndSwitchToExclusive()
+{
+    assert(readers > 0);
+    if (!writeLevel++) { // we are the first writer + lock "new" readers out
+        assert(!appending);
+        unlockShared();
+        if (!readers) {
+            writing = true;
+            return true;
+        }
+        // somebody is still reading: fall through
+    } else {
+        // somebody is still writing: just stop reading
+        unlockShared();
+    }
+    --writeLevel;
+    return false;
+}
+
 void
 Ipc::ReadWriteLock::startAppending()
 {
@@ -145,5 +165,14 @@ Ipc::ReadWriteLockStats::dump(StoreEntry &e) const
                           writers, (100.0 * writers / locked),
                           appenders, appPerc);
     }
+}
+
+std::ostream &
+Ipc::operator <<(std::ostream &os, const Ipc::ReadWriteLock &lock)
+{
+    return os << lock.readers << 'R' <<
+           (lock.writing ? "W" : "") <<
+           (lock.appending ? "A" : "");
+    // impossible to report lock.updating without setting/clearing that flag
 }
 

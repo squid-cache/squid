@@ -995,6 +995,12 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
     stats.swap_files_cleaned = XAVG(swap.files_cleaned);
     stats.aborted_requests = XAVG(aborted_requests);
 
+    stats.hitValidationAttempts = XAVG(hitValidation.attempts);
+    stats.hitValidationRefusalsDueToLocking = XAVG(hitValidation.refusalsDueToLocking);
+    stats.hitValidationRefusalsDueToZeroSize = XAVG(hitValidation.refusalsDueToZeroSize);
+    stats.hitValidationRefusalsDueToTimeLimit = XAVG(hitValidation.refusalsDueToTimeLimit);
+    stats.hitValidationFailures = XAVG(hitValidation.failures);
+
     stats.syscalls_disk_opens = XAVG(syscalls.disk.opens);
     stats.syscalls_disk_closes = XAVG(syscalls.disk.closes);
     stats.syscalls_disk_reads = XAVG(syscalls.disk.reads);
@@ -1141,6 +1147,17 @@ DumpAvgStat(Mgr::IntervalActionData& stats, StoreEntry* sentry)
                       stats.swap_files_cleaned);
     storeAppendPrintf(sentry, "aborted_requests = %f/sec\n",
                       stats.aborted_requests);
+
+    storeAppendPrintf(sentry, "hit_validation.attempts = %f/sec\n",
+                      stats.hitValidationAttempts);
+    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_locking = %f/sec\n",
+                      stats.hitValidationRefusalsDueToLocking);
+    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_zeroSize = %f/sec\n",
+                      stats.hitValidationRefusalsDueToZeroSize);
+    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_timeLimit = %f/sec\n",
+                      stats.hitValidationRefusalsDueToTimeLimit);
+    storeAppendPrintf(sentry, "hit_validation.failures = %f/sec\n",
+                      stats.hitValidationFailures);
 
 #if USE_POLL
     storeAppendPrintf(sentry, "syscalls.polls = %f/sec\n", stats.syscalls_selects);
@@ -1436,6 +1453,12 @@ GetCountersStats(Mgr::CountersActionData& stats)
     stats.swap_ins = f->swap.ins;
     stats.swap_files_cleaned = f->swap.files_cleaned;
     stats.aborted_requests = f->aborted_requests;
+
+    stats.hitValidationAttempts = f->hitValidation.attempts;
+    stats.hitValidationRefusalsDueToLocking = f->hitValidation.refusalsDueToLocking;
+    stats.hitValidationRefusalsDueToZeroSize = f->hitValidation.refusalsDueToZeroSize;
+    stats.hitValidationRefusalsDueToTimeLimit = f->hitValidation.refusalsDueToTimeLimit;
+    stats.hitValidationFailures = f->hitValidation.failures;
 }
 
 void
@@ -1561,6 +1584,17 @@ DumpCountersStats(Mgr::CountersActionData& stats, StoreEntry* sentry)
                       stats.swap_files_cleaned);
     storeAppendPrintf(sentry, "aborted_requests = %.0f\n",
                       stats.aborted_requests);
+
+    storeAppendPrintf(sentry, "hit_validation.attempts = %.0f\n",
+                      stats.hitValidationAttempts);
+    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_locking = %.0f\n",
+                      stats.hitValidationRefusalsDueToLocking);
+    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_zeroSize = %.0f\n",
+                      stats.hitValidationRefusalsDueToZeroSize);
+    storeAppendPrintf(sentry, "hit_validation.refusals.due_to_timeLimit = %.0f\n",
+                      stats.hitValidationRefusalsDueToTimeLimit);
+    storeAppendPrintf(sentry, "hit_validation.failures = %.0f\n",
+                      stats.hitValidationFailures);
 }
 
 void
@@ -1885,7 +1919,7 @@ statGraphDump(StoreEntry * e)
     GENGRAPH(client_http.kbytes_in.kb, "client_http.kbytes_in", "Client HTTP kbytes_in/sec");
     GENGRAPH(client_http.kbytes_out.kb, "client_http.kbytes_out", "Client HTTP kbytes_out/sec");
 
-    /* XXX todo: http median service times */
+    // TODO: http median service times
 
     GENGRAPH(server.all.requests, "server.all.requests", "Server requests/sec");
     GENGRAPH(server.all.errors, "server.all.errors", "Server errors/sec");
@@ -1912,8 +1946,8 @@ statGraphDump(StoreEntry * e)
     GENGRAPH(icp.kbytes_sent.kb, "icp.kbytes_sent", "ICP kbytes_sent/sec");
     GENGRAPH(icp.kbytes_recv.kb, "icp.kbytes_recv", "ICP kbytes_received/sec");
 
-    /* XXX todo: icp median service times */
-    /* XXX todo: dns median service times */
+    // TODO: icp median service times
+    // TODO: dns median service times
 
     GENGRAPH(unlink.requests, "unlink.requests", "Cache File unlink requests/sec");
     GENGRAPH(page_faults, "page_faults", "System Page Faults/sec");

@@ -57,7 +57,7 @@ echo "STARTDIR: ${startdir}"
 echo "TMPDIR: ${tmpdir}"
 
 ## Ignore extra build layers. General features building is sufficient for snapshot release.
-./test-builds.sh --cleanup layer-00-bootstrap layer-00-default layer-01-minimal layer-02-maximus || exit 1
+./test-builds.sh --cleanup layer-00-default layer-01-minimal layer-02-maximus || exit 1
 ./configure --silent --enable-build-info="DATE: ${date} REVISION: ${revision}" --enable-translation
 make -s dist-all
 

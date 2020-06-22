@@ -29,7 +29,11 @@ public:
     std::ostream & print(std::ostream &os) const;
 
     AnyP::ProtocolVersion tlsVersion; ///< The TLS hello message version
-    AnyP::ProtocolVersion tlsSupportedVersion; ///< The requested/used TLS version
+
+    /// For most compliant TLS v1.3+ agents, this is supported_versions maximum.
+    /// For others agents, this is the legacy_version field.
+    AnyP::ProtocolVersion tlsSupportedVersion;
+
     bool compressionSupported; ///< The requested/used compressed  method
     SBuf serverName; ///< The SNI hostname, if any
     bool doHeartBeats;
@@ -59,7 +63,10 @@ public:
     /// The parsing states
     typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived, atCertificatesReceived, atHelloDoneReceived, atNstReceived, atCcsReceived, atFinishReceived} ParserState;
 
-    HandshakeParser();
+    /// the originator of the TLS handshake being parsed
+    typedef enum { fromClient = 0, fromServer } MessageSource;
+
+    explicit HandshakeParser(MessageSource);
 
     /// Parses the initial sequence of raw bytes sent by the TLS/SSL agent.
     /// Returns true upon successful completion (e.g., got HelloDone).
@@ -67,13 +74,16 @@ public:
     /// Throws on errors.
     bool parseHello(const SBuf &data);
 
-    TlsDetails::Pointer details; ///< TLS handshake meta info or nil.
+    TlsDetails::Pointer details; ///< TLS handshake meta info. Never nil.
 
     Security::CertList serverCertificates; ///< parsed certificates chain
 
     ParserState state; ///< current parsing state.
 
     bool resumingSession; ///< True if this is a resuming session
+
+    /// whether we are parsing Server or Client TLS handshake messages
+    MessageSource messageSource;
 
 private:
     bool isSslv2Record(const SBuf &raw) const;
@@ -96,6 +106,7 @@ private:
     bool parseCompressionMethods(const SBuf &raw);
     void parseExtensions(const SBuf &raw);
     SBuf parseSniExtension(const SBuf &extensionData) const;
+    void parseSupportedVersionsExtension(const SBuf &extensionData) const;
 
     void parseCiphers(const SBuf &raw);
     void parseV23Ciphers(const SBuf &raw);
@@ -119,6 +130,40 @@ private:
     /// Whether to use TLS parser or a V2 compatible parser
     YesNoNone expectingModernRecords;
 };
+
+/// whether the given protocol belongs to the TLS/SSL group of protocols
+inline bool
+TlsFamilyProtocol(const AnyP::ProtocolVersion &version)
+{
+    return (version.protocol == AnyP::PROTO_TLS || version.protocol == AnyP::PROTO_SSL);
+}
+
+/// whether TLS/SSL protocol `a` precedes TLS/SSL protocol `b`
+inline bool
+TlsVersionEarlierThan(const AnyP::ProtocolVersion &a, const AnyP::ProtocolVersion &b)
+{
+    Must(TlsFamilyProtocol(a));
+    Must(TlsFamilyProtocol(b));
+
+    if (a.protocol == b.protocol)
+        return a < b;
+
+    return a.protocol == AnyP::PROTO_SSL; // implies that b is TLS
+}
+
+/// whether the given TLS/SSL protocol is TLS v1.2 or earlier, including SSL
+inline bool
+Tls1p2orEarlier(const AnyP::ProtocolVersion &p)
+{
+    return TlsVersionEarlierThan(p, AnyP::ProtocolVersion(AnyP::PROTO_TLS, 1, 3));
+}
+
+/// whether the given TLS/SSL protocol is TLS v1.3 or later
+inline bool
+Tls1p3orLater(const AnyP::ProtocolVersion &p)
+{
+    return !Tls1p2orEarlier(p);
+}
 
 }
 

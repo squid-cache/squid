@@ -79,8 +79,8 @@ public:
     // are stored in hier.tcpServer
 
     /** \brief This subclass holds log info for HTTP protocol
-     * \todo Inner class declarations should be moved outside
-     * \todo details of HTTP held in the parent class need moving into here.
+     * TODO: Inner class declarations should be moved outside
+     * TODO: details of HTTP held in the parent class need moving into here.
      */
     class HttpDetails
     {
@@ -104,7 +104,7 @@ public:
     } http;
 
     /** \brief This subclass holds log info for ICP protocol
-     * \todo Inner class declarations should be moved outside
+     * TODO: Inner class declarations should be moved outside
      */
     class IcpDetails
     {
@@ -113,7 +113,7 @@ public:
     } icp;
 
     /** \brief This subclass holds log info for HTCP protocol
-     * \todo Inner class declarations should be moved outside
+     * TODO: Inner class declarations should be moved outside
      */
     class HtcpDetails
     {
@@ -132,9 +132,9 @@ public:
 #endif
 
     /** \brief This subclass holds log info for Squid internal stats
-     * \todo Inner class declarations should be moved outside
-     * \todo some details relevant to particular protocols need shuffling to other sub-classes
-     * \todo this object field need renaming to 'squid' or something.
+     * TODO: Inner class declarations should be moved outside
+     * TODO: some details relevant to particular protocols need shuffling to other sub-classes
+     * TODO: this object field need renaming to 'squid' or something.
      */
     class CacheDetails
     {
@@ -161,7 +161,7 @@ public:
     } cache;
 
     /** \brief This subclass holds log info for various headers in raw format
-     * \todo shuffle this to the relevant protocol section.
+     * TODO: shuffle this to the relevant protocol section.
      */
     class Headers
     {
@@ -172,7 +172,7 @@ public:
 
 #if USE_ADAPTATION
     /** \brief This subclass holds general adaptation log info.
-     * \todo Inner class declarations should be moved outside.
+     * TODO: Inner class declarations should be moved outside.
      */
     class AdaptationDetails
     {
@@ -199,7 +199,7 @@ public:
 
 #if ICAP_CLIENT
     /** \brief This subclass holds log info for ICAP part of request
-     *  \todo Inner class declarations should be moved outside
+     *  TODO: Inner class declarations should be moved outside
      */
     class IcapLogEntry
     {

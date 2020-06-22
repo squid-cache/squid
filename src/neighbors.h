@@ -40,7 +40,7 @@ void neighborsUdpAck(const cache_key *, icp_common_t *, const Ip::Address &);
 void neighborAdd(const char *, const char *, int, int, int, int, int);
 void neighbors_init(void);
 #if USE_HTCP
-void neighborsHtcpClear(StoreEntry *, const char *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
+void neighborsHtcpClear(StoreEntry *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
 #endif
 CachePeer *peerFindByName(const char *);
 CachePeer *peerFindByNameAndPort(const char *, unsigned short);
@@ -60,10 +60,6 @@ void peerConnectFailed(CachePeer *);
 void peerConnectSucceded(CachePeer *);
 void dump_peer_options(StoreEntry *, CachePeer *);
 int peerHTTPOkay(const CachePeer *, PeerSelector *);
-
-// TODO: Consider moving this method to CachePeer class.
-/// \returns the effective connect timeout for the given peer
-time_t peerConnectTimeout(const CachePeer *peer);
 
 /// \returns max(1, timeout)
 time_t positiveTimeout(const time_t timeout);
