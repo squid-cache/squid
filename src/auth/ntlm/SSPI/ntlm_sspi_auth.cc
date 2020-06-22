@@ -285,43 +285,42 @@ char * GetDomainName(void)
  * In case of problem returns one of the
  * codes defined in libntlmauth/ntlmauth.h
  */
-int
+NtlmError
 ntlm_check_auth(ntlm_authenticate * auth, char *user, char *domain, int auth_length)
 {
-    int x;
-    int rv;
     char credentials[DNLEN+UNLEN+2];    /* we can afford to waste */
 
     if (!NTLM_LocalCall) {
 
         user[0] = '\0';
         domain[0] = '\0';
-        x = ntlm_unpack_auth(auth, user, domain, auth_length);
+        const auto x = ntlm_unpack_auth(auth, user, domain, auth_length);
 
         if (x != NtlmError::None)
             return x;
 
         if (domain[0] == '\0') {
             debug("No domain supplied. Returning no-auth\n");
-            return NTLM_BAD_REQUEST;
+            return NtlmError::BadRequest;
         }
         if (user[0] == '\0') {
             debug("No username supplied. Returning no-auth\n");
-            return NTLM_BAD_REQUEST;
+            return NtlmError::BadRequest;
         }
         debug("checking domain: '%s', user: '%s'\n", domain, user);
 
-    } else
+    } else {
         debug("checking local user\n");
+    }
 
     snprintf(credentials, DNLEN+UNLEN+2, "%s\\%s", domain, user);
 
-    rv = SSP_ValidateNTLMCredentials(auth, auth_length, credentials);
+    const auto rv = SSP_ValidateNTLMCredentials(auth, auth_length, credentials);
 
     debug("Login attempt had result %d\n", rv);
 
     if (!rv) {          /* failed */
-        return NTLM_SSPI_ERROR;
+        return NtlmError::SspiError;
     }
 
     if (UseAllowedGroup) {
