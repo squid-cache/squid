@@ -56,7 +56,10 @@ public:
     // XXX payload encoding overheads not calculated at all yet.
     MessageSizes clientReplySz;
 
-    
+    ~AccessLogEntryHttpDetails() {
+        safe_free(rawRequestHeaders);
+        safe_free(adaptedRequestHeaders);
+    }
 };
 
 /// \brief Log info details for ICP protocol
@@ -82,29 +85,29 @@ public:
     int bumpMode = ::Ssl::bumpEnd; ///< whether and how the request was SslBumped
     Security::CertPointer sslClientCert; ///< cert received from the client
     SBuf ssluser;
-#else
-    // empty
 #endif
 };
 
-/** \brief Log info details for the ICAP part of request
- *  TODO: Rename class to something more sensible
- */
+/// \brief Log info details for the ICAP part of request
+/// TODO: Rename class to something more sensible
 class AccessLogEntryIcapDetails
 {
 #if ICAP_CLIENT
 public:
-
-    Ip::Address hostAddr;                                              ///< ICAP server IP address
-    String serviceName;                                                ///< ICAP service name
-    String reqUri;                                                     ///< ICAP Request-URI
+    ~AccessLogEntryIcapDetails() {
+        HTTPMSGUNLOCK(reply);
+        HTTPMSGUNLOCK(request);
+    }
+    Ip::Address hostAddr;  ///< ICAP server IP address
+    String serviceName;   ///< ICAP service name
+    String reqUri;   ///< ICAP Request-URI
     Adaptation::Icap::ICAP::Method reqMethod = Adaptation::methodNone; ///< ICAP request method
-    int64_t bytesSent = 0;                                             ///< number of bytes sent to ICAP server so far
-    int64_t bytesRead = 0;                                             ///< number of bytes read from ICAP server so far
+    int64_t bytesSent = 0;   ///< number of bytes sent to ICAP server so far
+    int64_t bytesRead = 0;   ///< number of bytes read from ICAP server so far
     /**
-         * number of ICAP body bytes read from ICAP server or -1 for no encapsulated
-         * message data in ICAP reply (eg 204 responses)
-         */
+     * number of ICAP body bytes read from ICAP server or -1 for no encapsulated
+     * message data in ICAP reply (eg 204 responses)
+     */
     int64_t bodyBytesRead = -1;
     HttpRequest *request = nullptr; ///< ICAP request
     HttpReply *reply = nullptr;     ///< ICAP reply
@@ -112,7 +115,7 @@ public:
     Adaptation::Icap::XactOutcome outcome = Adaptation::Icap::xoUnknown; ///< final transaction status
     /** \brief Transaction response time.
      * The timer starts when the ICAP transaction
-     *  is created and stops when the result of the transaction is logged
+     * is created and stops when the result of the transaction is logged
      */
     struct timeval trTime = {};
     /** \brief Transaction I/O time.
@@ -133,12 +136,14 @@ class AccessLogEntryAdaptationDetails
 public:
     /// image of the last ICAP response header or eCAP meta received
     char *last_meta = nullptr;
+    ~AccessLogEntryAdaptationDetails() {
+        safe_free(last_meta);
+    }
 #endif
 };
 
-/** \brief This subclass holds log info for Squid internal stats
-     * TODO: some details relevant to particular protocols need shuffling to other sub-classes
-     */
+/// \brief This subclass holds log info for Squid internal stats
+/// TODO: some details relevant to particular protocols need shuffling to other sub-classes
 class AccessLogEntrySquidDetails
 {
 public:
@@ -251,7 +256,6 @@ private:
 };
 
 class ACLChecklist;
-class StoreEntry;
 
 /* Should be in 'AccessLog.h' as the driver */
 void accessLogLogTo(CustomLog* log, AccessLogEntry::Pointer &al, ACLChecklist* checklist = NULL);

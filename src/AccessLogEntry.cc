@@ -102,22 +102,11 @@ AccessLogEntry::AccessLogEntry() {}
 
 AccessLogEntry::~AccessLogEntry()
 {
-    safe_free(http.rawRequestHeaders);
-
-#if USE_ADAPTATION
-    safe_free(adapt.last_meta);
-#endif
-
-    safe_free(http.adaptedRequestHeaders);
     HTTPMSGUNLOCK(adapted_request);
 
     safe_free(lastAclName);
 
     HTTPMSGUNLOCK(request);
-#if ICAP_CLIENT
-    HTTPMSGUNLOCK(icap.reply);
-    HTTPMSGUNLOCK(icap.request);
-#endif
 }
 
 ScopedId
