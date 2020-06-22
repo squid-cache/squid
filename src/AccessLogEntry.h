@@ -94,11 +94,8 @@ class AccessLogEntryIcapDetails
 {
 #if ICAP_CLIENT
 public:
-    ~AccessLogEntryIcapDetails() {
-        HTTPMSGUNLOCK(reply);
-        HTTPMSGUNLOCK(request);
-    }
-    Ip::Address hostAddr;  ///< ICAP server IP address
+    ~AccessLogEntryIcapDetails();
+    Ip::Address hostAddr; ///< ICAP server IP address
     String serviceName;   ///< ICAP service name
     String reqUri;   ///< ICAP Request-URI
     Adaptation::Icap::ICAP::Method reqMethod = Adaptation::methodNone; ///< ICAP request method

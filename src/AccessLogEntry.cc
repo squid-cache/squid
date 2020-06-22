@@ -171,3 +171,9 @@ AccessLogEntry::packReplyHeaders(MemBuf &mb) const
         reply->packHeadersUsingFastPacker(mb);
 }
 
+#if ICAP_CLIENT
+AccessLogEntryIcapDetails::~AccessLogEntryIcapDetails() {
+    HTTPMSGUNLOCK(reply);
+    HTTPMSGUNLOCK(request);
+}
+#endif
