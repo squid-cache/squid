@@ -719,7 +719,7 @@ LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
-include $(srcdir)/tests/Stub.list
+include $(srcdir)/tests/Stub.am
 
 EXTRA_DIST = \
 	cf_gen_defines \
