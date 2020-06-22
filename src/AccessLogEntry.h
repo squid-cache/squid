@@ -89,7 +89,6 @@ public:
 };
 
 /// \brief Log info details for the ICAP part of request
-/// TODO: Rename class to something more sensible
 class AccessLogEntryIcapDetails
 {
 #if ICAP_CLIENT
