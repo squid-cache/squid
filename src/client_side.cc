@@ -335,7 +335,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
         mb.init();
         request->header.packInto(&mb);
         //This is the request after adaptation or redirection
-        aLogEntry->headers.adapted_request = xstrdup(mb.buf);
+        aLogEntry->http.adaptedRequestHeaders = xstrdup(mb.buf);
 
         // the virgin request is saved to aLogEntry->request
         if (aLogEntry->request) {

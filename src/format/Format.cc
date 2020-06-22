@@ -902,7 +902,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_ADAPTED_REQUEST_ALL_HEADERS:
             // just headers without start-line and CRLF
             // XXX: reconcile with '<h'
-            out = al->headers.adapted_request;
+            out = al->http.adaptedRequestHeaders;
             quote = 1;
             break;
 
@@ -916,7 +916,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             out = sb.c_str();
 #if ICAP_CLIENT
             if (!out && al->icap.reqMethod == Adaptation::methodReqmod)
-                out = al->headers.adapted_request;
+                out = al->http.adaptedRequestHeaders;
 #endif
             quote = 1;
         }

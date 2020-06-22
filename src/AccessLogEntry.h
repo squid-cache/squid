@@ -43,6 +43,7 @@ public:
     int code = 0;
     const char *content_type = nullptr;
     char *rawRequestHeaders = nullptr; //< virgin HTTP request headers
+    char *adaptedRequestHeaders = nullptr; //< HTTP request headers after adaptation and redirection
     AnyP::ProtocolVersion version;
 
     /// counters for the original request received from client
@@ -160,15 +161,6 @@ public:
 
     // TODO: this object field need renaming to 'squid' or something.
     AccessLogCacheDetails cache;
-
-    /** \brief This subclass holds log info for various headers in raw format
-     * TODO: shuffle this to the relevant protocol section.
-     */
-    class Headers
-    {
-    public:
-        char *adapted_request = nullptr; //< HTTP request headers after adaptation and redirection
-    } headers;
 
 #if USE_ADAPTATION
     /** \brief This subclass holds general adaptation log info.

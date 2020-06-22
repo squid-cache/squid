@@ -108,7 +108,7 @@ AccessLogEntry::~AccessLogEntry()
     safe_free(adapt.last_meta);
 #endif
 
-    safe_free(headers.adapted_request);
+    safe_free(http.adaptedRequestHeaders);
     HTTPMSGUNLOCK(adapted_request);
 
     safe_free(lastAclName);
