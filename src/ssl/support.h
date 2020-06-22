@@ -260,7 +260,7 @@ void configureUnconfiguredSslContext(Security::ContextPointer &, Security::CertS
 
 /**
   \ingroup ServerProtocolSSLAPI
-  * Generates a certificate and a private key using provided properies and set it
+  * Generates a certificate and a private key using provided properties and set it
   * to SSL object.
  */
 bool configureSSL(SSL *, Security::CertificateProperties const &, AnyP::PortCfg &);

@@ -90,7 +90,7 @@ esiSequence::render(ESISegment::Pointer output)
     for (size_t i = 0; i < processedcount; ++i) {
         elements[i]->render(output);
         FinishAnElement(elements[i], i);
-        /* FIXME: pass a ESISegment ** ? */
+        // TODO: pass an "ESISegment **" ?
         output = output->tail();
     }
 
@@ -245,7 +245,7 @@ esiSequence::process (int inheritedVarsFlag)
     }
 
     /* process as much of the list as we can, stopping only on
-     * faliures
+     * failures
      */
     if (!processing || processedcount == 0)
         processingResult = ESI_PROCESS_COMPLETE;

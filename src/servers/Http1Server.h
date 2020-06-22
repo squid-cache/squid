@@ -33,7 +33,9 @@ protected:
     virtual void processParsedRequest(Http::StreamPointer &context);
     virtual void handleReply(HttpReply *rep, StoreIOBuffer receivedData);
     virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call);
+    virtual int pipelinePrefetchMax() const;
     virtual time_t idleTimeout() const;
+    virtual void noteTakeServerConnectionControl(ServerConnectionContext);
 
     /* BodyPipe API */
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);

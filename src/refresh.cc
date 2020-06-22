@@ -282,7 +282,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     if (check_time > entry->timestamp)
         age = check_time - entry->timestamp;
 
-    // FIXME: what to do when age < 0 or counter overflow?
+    // XXX: what to do when age < 0 or counter overflow?
     assert(age >= 0);
 
     /* We need a refresh rule. In order of preference:
@@ -370,7 +370,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
 #if USE_HTTP_VIOLATIONS
         /* Normally a client reload request ("Cache-Control: no-cache" or "Pragma: no-cache")
-         * means we must treat this reponse as STALE and fetch a new one.
+         * means we must treat this response as STALE and fetch a new one.
          *
          * However, some options exist to override this behaviour. For example, we might just
          * revalidate our existing response, or even just serve it up without revalidating it.

@@ -26,8 +26,9 @@ bool ParseErrorString(const char *name, Security::Errors &);
 /// The Security::ErrorCode code of the error described by  "name".
 Security::ErrorCode GetErrorCode(const char *name);
 
-/// The string representation of the TLS error "value"
-const char *GetErrorName(Security::ErrorCode value);
+/// \return string representation of a known TLS error (or a raw error code)
+/// \param prefixRawCode whether to prefix raw codes with "SSL_ERR="
+const char *GetErrorName(Security::ErrorCode value, const bool prefixRawCode = false);
 
 /// A short description of the TLS error "value"
 const char *GetErrorDescr(Security::ErrorCode value);
@@ -60,15 +61,15 @@ public:
 private:
     typedef const char * (ErrorDetail::*fmt_action_t)() const;
     /**
-     * Holds a formating code and its conversion method
+     * Holds a formatting code and its conversion method
      */
     class err_frm_code
     {
     public:
-        const char *code;             ///< The formating code
+        const char *code;             ///< The formatting code
         fmt_action_t fmt_action; ///< A pointer to the conversion method
     };
-    static err_frm_code  ErrorFormatingCodes[]; ///< The supported formating codes
+    static err_frm_code  ErrorFormatingCodes[]; ///< The supported formatting codes
 
     const char *subject() const;
     const char *ca_name() const;

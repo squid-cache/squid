@@ -25,6 +25,7 @@ void parse_wordlist(wordlist ** list) STUB
 void requirePathnameExists(const char *name, const char *path) STUB_NOP
 void parse_time_t(time_t * var) STUB
 void ConfigParser::ParseUShort(unsigned short *var) STUB
+void ConfigParser::ParseWordList(wordlist **) STUB
 void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head) STUB
 void dump_acl_list(StoreEntry*, ACLList*) STUB
 

@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TEST_IPADDRESS_H
 #define SQUID_SRC_TEST_IPADDRESS_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 /*
  * test the IP storage type

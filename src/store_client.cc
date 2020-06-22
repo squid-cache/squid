@@ -32,7 +32,7 @@
 
 /*
  * NOTE: 'Header' refers to the swapfile metadata header.
- *   'OBJHeader' refers to the object header, with cannonical
+ *   'OBJHeader' refers to the object header, with canonical
  *   processed object headers (which may derive from FTP/HTTP etc
  *   upstream protocols
  *       'Body' refers to the swapfile body, which is the full

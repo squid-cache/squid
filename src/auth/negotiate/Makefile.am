@@ -15,10 +15,10 @@ EXTRA_DIST= helpers.m4
 noinst_LTLIBRARIES = libnegotiate.la
 
 libnegotiate_la_SOURCES = \
-	Scheme.cc \
-	Scheme.h \
 	Config.cc \
 	Config.h \
+	Scheme.cc \
+	Scheme.h \
 	User.cc \
 	User.h \
 	UserRequest.cc \

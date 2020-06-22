@@ -40,7 +40,7 @@
 
 /**
  * Class partially implementing RFC 4443 - ICMPv6 for IP version 6.
- * Provides ECHO-REQUEST, ECHO-REPLY (secion 4)
+ * Provides ECHO-REQUEST, ECHO-REPLY (section 4)
  */
 class Icmp6 : public Icmp
 {

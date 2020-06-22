@@ -120,7 +120,7 @@ protected:
     bool createDataConnection(Ip::Address cltAddr);
     void closeDataConnection();
 
-    /// Called after data trasfer on client-to-squid data connection is
+    /// Called after data transfer on client-to-squid data connection is
     /// finished.
     void userDataCompletionCheckpoint(int finalStatusCode);
 

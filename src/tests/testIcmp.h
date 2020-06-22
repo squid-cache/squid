@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TESTS_TESTICMP_H
 #define SQUID_SRC_TESTS_TESTICMP_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 #if USE_ICMP
 

@@ -23,7 +23,7 @@ class TokenTableEntry;
 
 /// A namespace or 'set' of tokens
 /// components register their namespace prefix and an array of tokens
-/// which can then be embeded in any format.
+/// which can then be embedded in any format.
 class TokenNamespace
 {
 public:

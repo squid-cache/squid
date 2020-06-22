@@ -251,7 +251,7 @@ Fs::Ufs::UFSStoreState::readCompleted(const char *buf, int len, int, RefCount<Re
      * occur strictly after reads and writes.
      * ufs doesn't queue, it simply completes, so close callbacks occur
      * strictly after reads and writes.
-     * aufs performs closes syncronously, so close events must be managed
+     * aufs performs closes synchronously, so close events must be managed
      * to force strict ordering.
      * The below does this:
      * closing is set when theFile->close() has been called, and close only triggers

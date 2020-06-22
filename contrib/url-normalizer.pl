@@ -33,8 +33,8 @@ while (<>) {
     $epath =~ s/%7e/~/ig;               # unescape ~
     $epath =~ s/(%[\da-f]{2})/\U$1/ig;  # capitalize escape digits
     if ($url->scheme =~ /^(http|ftp)$/) {
-	$epath =~ s:/\./:/:g;           # safe?
-	$epath =~ s://:/:g;             # safe?
+        $epath =~ s:/\./:/:g;           # safe?
+        $epath =~ s://:/:g;             # safe?
     }
     $url->epath($epath);
 
@@ -49,10 +49,10 @@ while (<>) {
 
 BEGIN {
     unless (URI::URL::implementor('cache_object')) {
-	package cache_object;
-	@cache_object::ISA = (URI::URL::implementor());
-	URI::URL::implementor('cache_object', 'cache_object');
+        package cache_object;
+        @cache_object::ISA = (URI::URL::implementor());
+        URI::URL::implementor('cache_object', 'cache_object');
 
-	sub default_port { 3128 }
+        sub default_port { 3128 }
     }
 }

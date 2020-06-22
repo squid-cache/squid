@@ -219,7 +219,7 @@ public:
 
     /** print SBuf contents and debug information about the SBuf to an ostream
      *
-     * Debug function, dumps to a stream informations on the current SBuf,
+     * Debug function, dumps to a stream information on the current SBuf,
      * including low-level details and statistics.
      */
     std::ostream& dump(std::ostream &os) const;
@@ -323,7 +323,7 @@ public:
      */
     SBuf consume(size_type n = npos);
 
-    /// gets global statistic informations
+    /// gets global statistic information
     static const SBufStats& GetStats();
 
     /** Copy SBuf contents into user-supplied C buffer.
@@ -642,7 +642,7 @@ private:
 
     /**
      * Try to guesstimate how big a MemBlob to allocate.
-     * The result is guarranteed to be to be at least the desired size.
+     * The result is guaranteed to be to be at least the desired size.
      */
     size_type estimateCapacity(size_type desired) const {return (2*desired);}
 

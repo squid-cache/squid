@@ -116,7 +116,7 @@ public:
     /// for eventual removal from the Store.
     void releaseRequest(const bool shareable = false);
     void negativeCache();
-    bool cacheNegatively();     /** \todo argh, why both? */
+    bool cacheNegatively();     // TODO: why both negativeCache() and cacheNegatively() ?
     void invokeHandlers();
     void cacheInMemory(); ///< start or continue storing in memory cache
     void swapOut();
@@ -150,11 +150,15 @@ public:
     void dump(int debug_lvl) const;
     void hashDelete();
     void hashInsert(const cache_key *);
-    void registerAbort(STABH * cb, void *);
+    /// notify the StoreEntry writer of a 3rd-party initiated StoreEntry abort
+    void registerAbortCallback(const AsyncCall::Pointer &);
     void reset();
     void setMemStatus(mem_status_t);
     bool timestampsSet();
-    void unregisterAbort();
+    /// Avoid notifying anybody about a 3rd-party initiated StoreEntry abort.
+    /// Calling this method does not cancel the already queued notification.
+    /// TODO: Refactor to represent the end of (shared) ownership by our writer.
+    void unregisterAbortCallback(const char *reason);
     void destroyMemObject();
     int checkTooSmall();
 
@@ -253,7 +257,7 @@ public:
     void lock(const char *context);
 
     /// disclaim shared ownership; may remove entry from store and delete it
-    /// returns remaning lock level (zero for unlocked and possibly gone entry)
+    /// returns remaining lock level (zero for unlocked and possibly gone entry)
     int unlock(const char *context);
 
     /// returns a local concurrent use counter, for debugging

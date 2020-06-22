@@ -33,23 +33,33 @@ while [ $# -ge 1 ]; do
 	verbose="yes"
 	shift
 	;;
+    --progress)
+    verbose="progress"
+    shift
+    ;;
     --keep-going)
 	keepGoing="yes"
 	shift
 	;;
     --use-config-cache)
         #environment variable will be picked up by buildtest.sh
-        cache_file=/tmp/config.cache.$$
+        cache_file=${cache_file:-/tmp/config.cache.$$}
         export cache_file
         shift
         ;;
     --aggressively-use-config-cache)
         #environment variable will be picked up by buildtest.sh
         #note: use ONLY if you know what you're doing
-        cache_file=/tmp/config.cache
+        cache_file=${cache_file:-/tmp/config.cache}
         remove_cache_file="false"
         export cache_file
         shift
+        ;;
+    --config-cache-file)
+        cache_file="$2"
+        remove_cache_file="false"
+        export cache_file
+        shift 2
         ;;
     *)
     	break
@@ -58,11 +68,16 @@ while [ $# -ge 1 ]; do
 done
 
 logtee() {
-    if [ $verbose = yes ]; then
-	tee $1
-    else
-	cat >$1
-    fi
+    case $verbose in
+    yes)
+        tee $1
+        ;;
+    progress)
+        tee $1 | awk '{printf "."; n++; if (!(n % 80)) print "" } END {print ""}'
+        ;;
+    *)
+        cat >$1
+    esac
 }
 
 buildtest() {
@@ -124,8 +139,10 @@ buildtest() {
 	fi
     else
         if test "${verbose}" != "yes" ; then
-            echo "Build Failed. Last log lines are:"
-            tail -20 ${log}
+            echo "Build Failed."
+            echo "Log start: ${log}"
+            cat ${log}
+            echo "Log end: ${log}"
         else
             echo "Build FAILED."
         fi

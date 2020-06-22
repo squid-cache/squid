@@ -9,6 +9,7 @@
 /* DEBUG: section 20    Storage Manager */
 
 #include "squid.h"
+#include "base/AsyncCbdataCalls.h"
 #include "base/TextException.h"
 #include "CacheDigest.h"
 #include "CacheManager.h"
@@ -63,7 +64,7 @@
 
 #define STORE_IN_MEM_BUCKETS            (229)
 
-/** \todo Convert these string constants to enum string-arrays generated */
+// TODO: Convert these string constants to enum string-arrays generated
 
 const char *memStatusStr[] = {
     "NOT_IN_MEMORY",
@@ -853,7 +854,7 @@ StoreEntry::vappendf(const char *fmt, va_list vargs)
     va_list ap;
     /* Fix of bug 753r. The value of vargs is undefined
      * after vsnprintf() returns. Make a copy of vargs
-     * incase we loop around and call vsnprintf() again.
+     * in case we loop around and call vsnprintf() again.
      */
     va_copy(ap,vargs);
     errno = 0;
@@ -1124,19 +1125,9 @@ StoreEntry::abort()
 
     /* Notify the server side */
 
-    /*
-     * DPW 2007-05-07
-     * Should we check abort.data for validity?
-     */
-    if (mem_obj->abort.callback) {
-        if (!cbdataReferenceValid(mem_obj->abort.data))
-            debugs(20, DBG_IMPORTANT,HERE << "queueing event when abort.data is not valid");
-        eventAdd("mem_obj->abort.callback",
-                 mem_obj->abort.callback,
-                 mem_obj->abort.data,
-                 0.0,
-                 true);
-        unregisterAbort();
+    if (mem_obj->abortCallback) {
+        ScheduleCallHere(mem_obj->abortCallback);
+        mem_obj->abortCallback = nullptr;
     }
 
     /* XXX Should we reverse these two, so that there is no
@@ -1523,21 +1514,20 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
 }
 
 void
-StoreEntry::registerAbort(STABH * cb, void *data)
+StoreEntry::registerAbortCallback(const AsyncCall::Pointer &handler)
 {
     assert(mem_obj);
-    assert(mem_obj->abort.callback == NULL);
-    mem_obj->abort.callback = cb;
-    mem_obj->abort.data = cbdataReference(data);
+    assert(!mem_obj->abortCallback);
+    mem_obj->abortCallback = handler;
 }
 
 void
-StoreEntry::unregisterAbort()
+StoreEntry::unregisterAbortCallback(const char *reason)
 {
     assert(mem_obj);
-    if (mem_obj->abort.callback) {
-        mem_obj->abort.callback = NULL;
-        cbdataReferenceDone(mem_obj->abort.data);
+    if (mem_obj->abortCallback) {
+        mem_obj->abortCallback->cancel(reason);
+        mem_obj->abortCallback = nullptr;
     }
 }
 

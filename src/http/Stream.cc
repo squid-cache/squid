@@ -173,7 +173,7 @@ Http::Stream::getNextRangeOffset() const
 
     } else if (reply && reply->contentRange()) {
         /* request does not have ranges, but reply does */
-        /** \todo FIXME: should use range_iter_pos on reply, as soon as reply->content_range
+        /* TODO: should use range_iter_pos on reply, as soon as reply->content_range
          *        becomes HttpHdrRange rather than HttpHdrRangeSpec.
          */
         return http->out.offset + reply->contentRange()->spec.offset;
@@ -384,7 +384,7 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
 {
     const TimeOrTag spec = http->request->header.getTimeOrTag(Http::HdrType::IF_RANGE);
 
-    /* check for parsing falure */
+    /* check for parsing failure */
     if (!spec.valid)
         return false;
 

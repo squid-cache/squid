@@ -459,7 +459,7 @@ static struct wccp2_service_list_t *wccp2_service_list_head = NULL;
 
 int empty_portlist[WCCP2_NUMPORTS] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-/* END WCCP V2 PROTOCL TYPES DEFINITION */
+/* END WCCP V2 PROTOCOL TYPES DEFINITION */
 
 void wccp2_add_service_list(int service, int service_id, int service_priority,
                             int service_proto, int service_flags, int ports[], int security_type, char *password);
@@ -1155,7 +1155,7 @@ wccp2HandleUdp(int sock, void *)
 
     Comm::SetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
-    /* FIXME INET6 : drop conversion boundary */
+    // TODO: drop conversion boundary
     Ip::Address from_tmp;
     from_tmp.setIPv4();
 
@@ -1174,7 +1174,7 @@ wccp2HandleUdp(int sock, void *)
     if (ntohl(wccp2_i_see_you.type) != WCCP2_I_SEE_YOU)
         return;
 
-    /* FIXME INET6 : drop conversion boundary */
+    // XXX: drop conversion boundary
     from_tmp.getSockAddr(from);
 
     debugs(80, 3, "Incoming WCCPv2 I_SEE_YOU length " << ntohs(wccp2_i_see_you.length) << ".");
@@ -1635,7 +1635,7 @@ wccp2AssignBuckets(void *)
     /* number of caches */
 
     struct in_addr *cache_address;
-    /* Alternative assignement mask/values */
+    /* Alternative assignment mask/values */
     int num_maskval;
 
     struct wccp2_mask_element_t *mask_element;
@@ -1964,7 +1964,7 @@ wccp2AssignBuckets(void *)
             if (ntohl(router_list_ptr->num_caches)) {
                 /* send packet */
 
-                /* FIXME INET6 : drop temp conversion */
+                // XXX: drop temp conversion
                 Ip::Address tmp_rtr(router);
 
                 if (wccp2_numrouters > 1) {
@@ -1993,7 +1993,7 @@ wccp2AssignBuckets(void *)
 /**
  * Parse wccp2_return_method and wccp2_forwarding_method options
  * they can be '1' aka 'gre' or  '2' aka 'l2'
- * repesenting the integer numeric of the same.
+ * representing the integer numeric of the same.
  */
 void
 parse_wccp2_method(int *method)
@@ -2041,7 +2041,7 @@ free_wccp2_method(int *)
 /**
  * Parse wccp2_assignment_method option
  * they can be '1' aka 'hash' or  '2' aka 'mask'
- * repesenting the integer numeric of the same.
+ * representing the integer numeric of the same.
  */
 void
 parse_wccp2_amethod(int *method)

@@ -17,6 +17,7 @@
 
 class FwdState;
 class HttpHeader;
+class String;
 
 class HttpStateData : public Client
 {
@@ -69,12 +70,16 @@ public:
     bool ignoreCacheControl;
     bool surrogateNoStore;
 
+    /// Upgrade header value sent to the origin server or cache peer.
+    String *upgradeHeaderOut = nullptr;
+
     void processSurrogateControl(HttpReply *);
 
 protected:
     void processReply();
     void proceedAfter1xx();
     void handle1xx(HttpReply *msg);
+    void drop1xx(const char *reason);
 
 private:
     /**
@@ -135,8 +140,10 @@ private:
     void httpTimeout(const CommTimeoutCbParams &params);
 
     mb_size_t buildRequestPrefix(MemBuf * mb);
+    void forwardUpgrade(HttpHeader&);
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
     bool peerSupportsConnectionPinning() const;
+    const char *blockSwitchingProtocols(const HttpReply&) const;
 
     /// Parser being used at present to parse the HTTP/ICY server response.
     Http1::ResponseParserPointer hp;

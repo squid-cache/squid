@@ -68,7 +68,7 @@ public:
     bool space;
     bool zero;
     int divisor;    // class invariant: MUST NOT be zero.
-    Token *next;    /* todo: move from linked list to array */
+    Token *next;    // TODO: move from linked list to array
 
 private:
     const char *scanForToken(TokenTableEntry const table[], const char *cur);

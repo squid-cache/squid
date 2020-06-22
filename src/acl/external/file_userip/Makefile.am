@@ -10,7 +10,7 @@ include $(top_srcdir)/src/Common.am
 libexec_PROGRAMS = ext_file_userip_acl
 man_MANS = ext_file_userip_acl.8
 
-ext_file_userip_acl_SOURCES= \
+ext_file_userip_acl_SOURCES = \
 	ext_file_userip_acl.cc
 ext_file_userip_acl_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \

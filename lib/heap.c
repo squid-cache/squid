@@ -449,7 +449,7 @@ heap_print_inorder(heap * hp, int id)
 }
 
 /*
- * Returns 1 if HP maintians the heap property and 0 otherwise.
+ * Returns 1 if HP maintains the heap property and 0 otherwise.
  */
 int
 verify_heap_property(heap * hp)

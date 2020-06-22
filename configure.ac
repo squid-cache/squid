@@ -435,16 +435,41 @@ if test "x$squid_opt_aufs_threads" != "x"; then
                  [Defines how many threads aufs uses for I/O])
 fi
 
-AC_ARG_WITH(dl, AS_HELP_STRING([--with-dl],[Use dynamic linking]))
-if test "x$with_dl" = "xyes"; then
-  AC_MSG_NOTICE([With dl])
+## TODO check if this is necessary, LT_INIT does these checks
+SQUID_AUTO_LIB(dl,[dynamic linking],[LIBDL])
+if test "x$with_dl" != "xno"; then
+  CXXFLAGS="$LIBDL_CFLAGS $CXXFLAGS"
+  LDFLAGS="$LIBDL_PATH $LDFLAGS"
+  AC_CHECK_LIB(dl, dlopen)
 fi
 
+AC_DEFUN([LIBATOMIC_CHECKER],[
+  AC_MSG_CHECKING(whether linking $1 -latomic works)
+  AC_LINK_IFELSE([
+    AC_LANG_SOURCE([[
+#include <atomic>
+#include <cstdint>
+      int
+      main(int, char **) {
+          return std::atomic<uint64_t>{}.is_lock_free() ? 0 : 1;
+      }
+  ]])],[
+    AC_MSG_RESULT(yes)
+    libatomic_checker_result="yes"],[
+    AC_MSG_RESULT(no)
+    libatomic_checker_result="no"
+])])
+
 ## check for atomics library before anything that might need it
-# AC_SEARCH_LIBS pollutes LIBS
 SQUID_STATE_SAVE(LIBATOMIC)
-AC_SEARCH_LIBS([__atomic_load_8],[atomic],[
-  test "$ac_res" = "none required" || ATOMICLIB=$ac_res],[])
+LIBATOMIC_CHECKER(without)
+AS_IF([test "x$libatomic_checker_result" = "xno"],[
+  LIBS="$LIBS -latomic"
+  LIBATOMIC_CHECKER(with)
+  AS_IF([test "x$libatomic_checker_result" = "xyes"],[
+    ATOMICLIB="-latomic"],[
+    AC_MSG_ERROR([Required library libatomic not found.])
+])])
 SQUID_STATE_ROLLBACK(LIBATOMIC)
 AC_SUBST(ATOMICLIB)
 
@@ -882,7 +907,7 @@ HAVE_LIBXML2=0
 XMLLIB=
 
 # ESI support libraries: expat
-AC_ARG_WITH(expat, AS_HELP_STRING([--without-expat],[Do not use expat for ESI. Default: auto-detect]))
+SQUID_AUTO_LIB(expat,[ESI expat],[LIBEXPAT])
 if test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno" ; then
   AC_CHECK_LIB([expat], [main], [EXPATLIB="-lexpat"; HAVE_LIBEXPAT=1])
   AC_CHECK_HEADERS([expat.h])
@@ -898,7 +923,8 @@ if test "x$squid_opt_use_esi" != "xno" -a "x$with_expat" != "xno" ; then
   ])
 fi
 
-AC_ARG_WITH(libxml2, AS_HELP_STRING([--without-libxml2],[Do not use libxml2 for ESI. Default: auto-detect]))
+# TODO: remove this 'lib' prefix to match coding standard
+SQUID_AUTO_LIB(libxml2,[ESI libxml2],[LIBXML2])
 if test "x$squid_opt_use_esi" != "xno" -a "x$with_libxml2" != "xno" ; then
   SQUID_STATE_SAVE([squid_libxml2_save])
   PKG_CHECK_MODULES([LIBXML2],[libxml-2.0],[],[
@@ -1172,24 +1198,11 @@ AM_CONDITIONAL(ENABLE_HTCP, [test "x$enable_htcp" = "xyes"])
 AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 
 # Cryptograhic libraries
-AC_ARG_WITH(nettle,
-  AS_HELP_STRING([--without-nettle],[Compile without the Nettle crypto library.]),[
-case "$with_nettle" in
-  yes|no)
-    : # Nothing special to do here
-    ;;
-  *)
-    if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--with-nettle path does not point to a directory])
-    fi
-    NETTLELIBDIR="-L$with_nettle/lib"
-    CPPFLAGS="-I$with_nettle/include $CPPFLAGS"
-    with_nettle=yes
-  esac
-])
+SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
 if test "x$with_nettle" != "xno" ; then
+  CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
   AC_CHECK_LIB(nettle, nettle_md5_init,[
-    NETTLELIB="$NETTLELIBDIR -lnettle"
+    NETTLELIB="$LIBNETTLE_PATH -lnettle"
     AC_CHECK_HEADERS(nettle/md5.h)
   ],[with_nettle=no])
   if test "x$with_nettle" != "xno" ; then
@@ -1231,27 +1244,13 @@ AC_SUBST(CRYPTLIB)
 
 SSLLIB=""
 
-dnl User may want to disable GnuTLS
-AC_ARG_WITH(gnutls,
-  AS_HELP_STRING([--without-gnutls],
-                 [Do not use GnuTLS for SSL. Default: auto-detect]), [ 
-case "$with_gnutls" in
-  yes|no)
-    : # Nothing special to do here
-    ;;
-  *)
-    if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--with-gnutls path does not point to a directory])
-    fi
-    LIBGNUTLS_PATH="-L$with_gnutls/lib"
-    CPPFLAGS="-I$with_gnutls/include $CPPFLAGS"
-  esac
-])
+SQUID_AUTO_LIB(gnutls,[GnuTLS crypto],[LIBGNUTLS])
 AH_TEMPLATE(USE_GNUTLS,[GnuTLS support is available])
 if test "x$with_gnutls" != "xno"; then
   SQUID_STATE_SAVE(squid_gnutls_state)
 
   # User may have provided a custom location for GnuTLS. Otherwise...
+  CPPFLAGS="$LIBGNUTLS_CFLAGS $CPPFLAGS"
   LIBS="$LIBS $LIBGNUTLS_PATH"
 
   # auto-detect using pkg-config
@@ -1281,28 +1280,11 @@ fi
 AC_MSG_NOTICE([GnuTLS library support: ${with_gnutls:=auto} ${LIBGNUTLS_PATH} ${LIBGNUTLS_LIBS}])
 
 dnl User may specify OpenSSL is needed from a non-standard location
-AC_ARG_WITH(openssl,
-  AS_HELP_STRING([--with-openssl=PATH],
-                 [Compile with the OpenSSL libraries. The path to
-                  the OpenSSL development libraries and headers
-                  installation can be specified if outside of the
-                  system standard directories]), [ 
-case "$with_openssl" in
-  yes|no)
-    : # Nothing special to do here
-    ;;
-  *)
-    if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--with-openssl path does not point to a directory])
-    fi
-    LIBOPENSSL_PATH="-L$with_openssl/lib"
-    CPPFLAGS="-I$with_openssl/include $CPPFLAGS"
-    with_openssl=yes
-  esac
-])
+SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[LIBOPENSSL])
 AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
 ## OpenSSL is default disable due to licensing issues on some OS
 if test "x$with_openssl" = "xyes"; then
+  CPPFLAGS="$LIBOPENSSL_CFLAGS $CPPFLAGS"
   AC_CHECK_HEADERS( \
     openssl/asn1.h \
     openssl/bio.h \
@@ -1391,33 +1373,15 @@ AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
 AC_SUBST(SSLLIB)
 
 dnl User may specify MIT Kerberos is needed from a non-standard location
-AC_ARG_WITH(mit-krb5,
-  AS_HELP_STRING([--without-mit-krb5],
-		 [Compile without MIT Kerberos support.]), [
-case "$with_mit_krb5" in
-  yes|no)
-    : # Nothing special to do here
-    ;;
-  *)
-    if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--with-mit-krb5 path does not point to a directory])
-    fi
-    if test -d "$with_mit_krb5/lib64" ; then
-      LIB_KRB5_PATH="-L$with_mit_krb5/lib64 -L$with_mit_krb5/lib"
-    else
-      LIB_KRB5_PATH="-L$with_mit_krb5/lib"
-    fi
-    CXXFLAGS="-I$with_mit_krb5/include $CXXFLAGS"
-    krb5confpath="$with_mit_krb5/bin"
-    with_mit_krb5=yes
-esac
-])
+SQUID_AUTO_LIB(mit-krb5,[MIT Kerberos],[LIB_KRB5])
 AH_TEMPLATE(USE_APPLE_KRB5,[Apple Kerberos support is available])
 AH_TEMPLATE(USE_MIT_KRB5,[MIT Kerberos support is available])
 AH_TEMPLATE(USE_SOLARIS_KRB5,[Solaris Kerberos support is available])
 
 ## find out if pkg-config or krb5-config will work
 if test "x$with_mit_krb5" != "xno"; then
+  CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
+  krb5confpath="$with_mit_krb5/bin"
   # find installed libs via pkg-config or krb5-config
   squid_pc_krb5_name=
   PKG_CHECK_EXISTS(mit-krb5-gssapi mit-krb5, [squid_pc_krb5_name="mit-krb5-gssapi mit-krb5"],[
@@ -1628,29 +1592,11 @@ if test "x$with_solaris_krb5" = "xyes" -a "x$KRB5LIBS" = "x"; then
 fi
 
 dnl User may specify Heimdal Kerberos is needed from a non-standard location
-AC_ARG_WITH(heimdal-krb5,
-  AS_HELP_STRING([--without-heimdal-krb5],
-		 [Compile without Heimdal Kerberos support.]), [
-case "$with_heimdal_krb5" in
-  yes|no)
-    : # Nothing special to do here
-    ;;
-  *)
-    if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--with-heimdal-krb5 path does not point to a directory])
-    fi
-    if test -d "$with_heimdal_krb5/lib64" ; then
-      LIB_KRB5_PATH="-L$with_heimdal_krb5/lib64 -L$with_heimdal_krb5/lib"
-    else 
-      LIB_KRB5_PATH="-L$with_heimdal_krb5/lib"
-    fi
-    CXXFLAGS="-I$with_heimdal_krb5/include $CXXFLAGS"
-    krb5confpath="$with_heimdal_krb5/bin"
-    with_heimdal_krb5=yes
-esac
-])
+SQUID_AUTO_LIB(heimdal-krb5,[Heimdal Kerberos],[LIB_KRB5])
 AH_TEMPLATE(USE_HEIMDAL_KRB5,[Heimdal Kerberos support is available])
 if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
+  CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
+  krb5confpath="$with_heimdal_krb5/bin"
   # find installed libs via pkg-config or krb5-config
   PKG_CHECK_EXISTS(heimdal-krb5, [squid_pc_krb5_name="heimdal-krb5"])
   if test "x$squid_pc_krb5_name" = "x"; then
@@ -1797,29 +1743,11 @@ if test "x$with_heimdal_krb5" != "xno" -a "x$KRB5LIBS" = "x"; then
 fi
 
 dnl User may specify GNU gss is needed from a non-standard location
-AC_ARG_WITH(gnugss,
-  AS_HELP_STRING([--without-gnugss],
-		 [Compile without the GNU gss libraries.]), [
-case "$with_gnugss" in
-  yes|no)
-    : # Nothing special to do here
-    ;;
-  *)
-    if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--with-gnugss path does not point to a directory])
-    fi
-    if test ! -d "$with_gnugss/lib64" ; then
-      LIB_KRB5_PATH="-L$with_gnugss/lib64 -L$with_gnugss/lib"
-    else
-      LIB_KRB5_PATH="-L$with_gnugss/lib"
-    fi
-    CXXFLAGS="-I$with_gnugss/include $CXXFLAGS"
-    krb5confpath=
-    with_gnugss=yes
-esac
-])
+SQUID_AUTO_LIB(gnugss,[GNU gss],[LIB_KRB5])
 AH_TEMPLATE(USE_GNUGSS,[GNU gss support is available])
 if test "x$with_gnugss" != "xno" -a "x$KRB5LIBS" = "x"; then
+  CXXFLAGS="$LIB_KRB5_CFLAGS $CXXFLAGS"
+  krb5confpath=
   SQUID_STATE_SAVE([squid_krb5_save])
   LIBS="$LIBS $LIB_KRB5_PATH"
 
@@ -2102,22 +2030,7 @@ esac
 AC_SUBST(LDAPLIB)
 AC_SUBST(LBERLIB)
 
-AC_ARG_WITH(systemd,
-  AS_HELP_STRING([--without-systemd],
-                 [Do not use systemd API to send start-up completion
-                  notification. Default: auto-detect]), [
-case "$with_systemd" in
-  yes|no)
-    : # Nothing special to do here
-    ;;
-  *)
-    if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--with-systemd path does not point to a directory])
-    fi
-    SYSTEMD_PATH="-L$with_systemd/lib"
-    CPPFLAGS="-I$with_systemd/include $CPPFLAGS"
-  esac
-])
+SQUID_AUTO_LIB(systemd,[systemd API for start-up notification],[SYSTEMD])
 AH_TEMPLATE(USE_SYSTEMD,[systemd support is available])
 if test "x$with_systemd" != "xno" -a "x$squid_host_os" = "xlinux"; then
   SQUID_STATE_SAVE(squid_systemd_state)
@@ -2140,6 +2053,7 @@ if test "x$with_systemd" != "xno" -a "x$squid_host_os" = "xlinux"; then
   fi
   if test "x$SYSTEMD_LIBS" != "x" ; then
     CXXFLAGS="$SYSTEMD_CFLAGS $CXXFLAGS"
+    LDFLAGS="$SYSTEMD_PATH $SYSTEMD_LIBS $LDFLAGS"
     AC_DEFINE(USE_SYSTEMD,1,[systemd support is available])
   else
     with_systemd=no
@@ -2360,29 +2274,11 @@ AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto
 
 
 dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
-dnl squid_opt_netfilterconntrack is set only when option is explicity specified
-AC_ARG_WITH(netfilter-conntrack,
-  AS_HELP_STRING([--without-netfilter-conntrack],
-                 [Do not use Netfilter conntrack libraries for packet marking.
-                  A path to alternative library location may be specified by
-                  using --with-netfilter-conntrack=PATH. Default: auto-detect.]), [
-case "$with_netfilter_conntrack" in
-  yes|no)
-    squid_opt_netfilterconntrack=$with_netfilter_conntrack
-    ;;
-  *)
-    if test ! -d "$withval" ; then
-      AC_MSG_ERROR([--with-netfilter-conntrack path does not point to a directory])
-    fi
-    squid_opt_netfilterconntrackpath=$withval
-    LDFLAGS="-L$squid_opt_netfilterconntrackpath/lib $LDFLAGS"
-    CPPFLAGS="-I$squid_opt_netfilterconntrackpath/include $CPPFLAGS"
-    with_netfilter_conntrack=yes
-    squid_opt_netfilterconntrack=yes
-  esac
-])
+SQUID_AUTO_LIB(netfilter-conntrack,[Netfilter conntrack],[LIBNETFILTER_CONNTRACK])
 AC_MSG_NOTICE([Linux Netfilter Conntrack support requested: ${with_netfilter_conntrack:=auto}])
 if test "x$with_netfilter_conntrack" != "xno"; then
+    LDFLAGS="$LIBNETFILTER_CONNTRACK_PATH $LDFLAGS"
+    CPPFLAGS="$LIBNETFILTER_CONNTRACK_CFLAGS $CPPFLAGS"
     AC_SEARCH_LIBS([nfct_query], [netfilter_conntrack],,[
         if test x"$with_netfilter_conntrack" = "xyes"; then
             AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack library not found])
@@ -2489,21 +2385,6 @@ else
     CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-Usun//'`"
   fi
 fi
-
-dnl Enable Leak Finding Functions
-AC_ARG_ENABLE(leakfinder,
-  AS_HELP_STRING([--enable-leakfinder],
-    [Enable Leak Finding code. Enabling this alone does nothing;
-     you also have to modify the source code to use the leak
-     finding functions. Probably Useful for hackers only.]), [ 
-  SQUID_YESNO([$enableval],
-     [unrecognized argument to --enable-leakfinder: $enableval])
-])
-AC_MSG_NOTICE([Leak Finder enabled: ${enable_leakfinder:=no}])
-SQUID_DEFINE_BOOL(USE_LEAKFINDER,$enable_leakfinder,
-  [Enable code for assisting in finding memory leaks. Not for the faint of heart])
-AM_CONDITIONAL(ENABLE_LEAKFINDER, [test "x$enable_leakfinder" = "xyes"])
-
 
 AC_ARG_ENABLE(follow-x-forwarded-for,
   AS_HELP_STRING([--enable-follow-x-forwarded-for],
@@ -2783,15 +2664,9 @@ SQUID_DEFINE_BOOL(X_ACCELERATOR_VARY,${enable_x_accelerator_vary:=no},
                       [Enable support for the X-Accelerator-Vary HTTP header])
 AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
-AC_ARG_WITH([cppunit], AS_HELP_STRING([--without-cppunit],[Do not use cppunit test framework]),[
-  AS_CASE($with_cppunit, [yes|no],[],
-   [
-    AS_IF([test ! -d "$withval"],AC_MSG_ERROR([--with-cppunit PATH does not point to a directory]))
-    LIBCPPUNIT_CFLAGS="-I$with_cppunit/include"
-    LIBCPPUNIT_LIBS="-L$with_cppunit/lib -lcppunit"
-  ])
-])
+SQUID_AUTO_LIB(cppunit,[cppunit test framework],[LIBCPPUNIT])
 AS_IF([test "x$with_cppunit" != "xno"],[
+  LIBCPPUNIT_LIBS="$LIBCPPUNIT_PATH -lcppunit"
   PKG_CHECK_MODULES([LIBCPPUNIT],[cppunit],[
     squid_cv_cppunit_version="`pkg-config cppunit --version`"
     AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
@@ -3073,13 +2948,11 @@ dnl Check for special functions
 AC_FUNC_ALLOCA
 
 
-dnl Check for libcap header (assume its not broken unless 
-AC_ARG_WITH(libcap, AS_HELP_STRING([--without-libcap],
-       [disable usage of Linux capabilities library to control privileges]), [
-SQUID_YESNO([$withval],[unrecognized argument to --without-libcap: $withval])
-],[with_libcap=auto])
-
+# TODO: remove this 'lib' prefix to match coding standard
+SQUID_AUTO_LIB(libcap,[Linux capabilities],[LIBCAP])
 if test "x$with_libcap" != "xno"; then
+  CXXFLAGS="$LIBCAP_CFLAGS $CXXFLAGS"
+  LDFLAGS="$LIBCAP_PATH $LDFLAGS"
   # cap_clear_flag is the most recent libcap function we require
   AC_CHECK_HEADERS(sys/capability.h)
   AC_CHECK_LIB(cap, cap_clear_flag)
@@ -3155,7 +3028,7 @@ else
       AC_MSG_NOTICE([skipping libmalloc check for $host])
       ;;
     *)
-      #used later. FIXME
+      # XXX: used later
       AC_CHECK_LIB(malloc, main)
       ;;
   esac
@@ -3223,11 +3096,6 @@ fi
 SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE
 SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
 
-
-dnl Check for libdl, used by auth_modules/PAM
-if test "x$with_dl" = "xyes"; then
-    AC_CHECK_LIB(dl, dlopen)
-fi
 
 dnl -lintl is needed on SCO version 3.2v4.2 for strftime()
 dnl Robert Side <rside@aiinc.bc.ca>
@@ -3629,16 +3497,12 @@ if test "x$enable_linux_netfilter" = "xyes" -a "x$with_libcap" != "xyes" ; then
     AC_MSG_WARN([Reduced support to NAT Interception Proxy])
     # AC_DEFINEd later
 fi
-
-if test "x$squid_opt_netfilterconntrack" = "xyes" -a "x$with_libcap" != "xyes" ; then
-    AC_MSG_ERROR([Linux netfilter conntrack requires libcap support (libcap 2.09+)])
-fi
 if test "x$with_netfilter_conntrack" = "xyes" -a "x$with_libcap" != "xyes" ; then
     AC_MSG_WARN([Missing needed capabilities (libcap 2.09+) for netfilter mark support])
     AC_MSG_WARN([Linux netfilter marking support WILL NOT be enabled])
     with_netfilter_conntrack=no
 fi
-AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_conntrack} ${squid_opt_netfilterconntrackpath}])
+AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_conntrack}])
 
 
 AC_ARG_ENABLE(zph-qos,

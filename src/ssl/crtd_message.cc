@@ -208,7 +208,7 @@ bool Ssl::CrtdMessage::parseRequest(Security::CertificateProperties &certPropert
     i = map.find(Ssl::CrtdMessage::param_Sign);
     if (i != map.end()) {
         if ((certProperties.signAlgorithm = Security::certSignAlgorithmId(i->second.c_str())) == Security::algSignEnd) {
-            error = "Wrong signing algoritm: ";
+            error = "Wrong signing algorithm: ";
             error += i->second;
             return false;
         }

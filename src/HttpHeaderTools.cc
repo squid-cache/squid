@@ -115,7 +115,7 @@ getStringPrefix(const char *str, size_t sz)
 }
 
 /**
- * parses an int field, complains if soemthing went wrong, returns true on
+ * parses an int field, complains if something went wrong, returns true on
  * success
  */
 int
@@ -295,6 +295,10 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, c
         HTTPMSGLOCK(checklist.reply);
     }
 
+    // XXX: The two "It was denied" clauses below mishandle cases with no
+    // matching rules, violating the "If no rules within the set have matching
+    // ACLs, the header field is left as is" promise in squid.conf.
+    // TODO: Use Acl::Answer::implicit. See HttpStateData::forwardUpgrade().
     if (checklist.fastCheck().allowed()) {
         /* aclCheckFast returns true for allow. */
         debugs(66, 7, "checklist for mangler is positive. Mangle");
@@ -302,6 +306,7 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, c
     } else if (NULL == hm->replacement) {
         /* It was denied, and we don't have any replacement */
         debugs(66, 7, "checklist denied, we have no replacement. Pass");
+        // XXX: We said "Pass", but the caller will delete on zero retval.
         retval = 0;
     } else {
         /* It was denied, but we have a replacement. Replace the

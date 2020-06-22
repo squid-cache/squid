@@ -71,7 +71,7 @@ public:
     clientStreamNode *thisNode; /* our stream node */
     /* the request we are processing. HMM: cbdataReferencing this will result
      * in a circular reference, so we don't. Note: we are automatically freed
-     * when it is, so thats ok. */
+     * when it is, so that's ok. */
     ClientHttpRequest *http;
 
     struct {
@@ -128,8 +128,8 @@ public:
     private:
         bool inited_;
     }
+    parserState; // TODO: refactor this to somewhere else
 
-    parserState; /* todo factor this off somewhere else; */
     ESIVarState *varState;
     ESIElement::Pointer tree;
 

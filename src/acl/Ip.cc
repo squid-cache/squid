@@ -180,7 +180,7 @@ acl_ip_data::DecodeMask(const char *asc, Ip::Address &mask, int ctype)
         if (mask.isIPv4()) {
             /* locate what CIDR mask was _probably_ meant to be in its native protocol format. */
             /* this will completely crap out with a security fail-open if the admin is playing mask tricks */
-            /* however, thats their fault, and we do warn. see bug 2601 for the effects if we don't do this. */
+            /* however, that's their fault, and we do warn. see bug 2601 for the effects if we don't do this. */
             unsigned int m = mask.cidr();
             debugs(28, DBG_CRITICAL, "WARNING: IPv4 netmasks are particularly nasty when used to compare IPv6 to IPv4 ranges.");
             debugs(28, DBG_CRITICAL, "WARNING: For now we will assume you meant to write /" << m);

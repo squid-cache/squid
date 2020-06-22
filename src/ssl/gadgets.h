@@ -110,7 +110,7 @@ void ReadPrivateKeyFromFile(char const * keyFilename, Security::PrivateKeyPointe
 
 /**
  \ingroup SslCrtdSslAPI
- * Initialize the bio with the file 'filename' openned for reading
+ * Initialize the bio with the file 'filename' opened for reading
  */
 bool OpenCertsFileForReading(BIO_Pointer &bio, const char *filename);
 
@@ -128,7 +128,7 @@ bool ReadPrivateKey(BIO_Pointer &bio, Security::PrivateKeyPointer &pkey, pem_pas
 
 /**
  \ingroup SslCrtdSslAPI
- * Initialize the bio with the file 'filename' openned for writting
+ * Initialize the bio with the file 'filename' opened for writing
  */
 
 bool OpenCertsFileForWriting(BIO_Pointer &bio, const char *filename);
