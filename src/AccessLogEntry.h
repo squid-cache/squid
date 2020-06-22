@@ -56,6 +56,7 @@ public:
     // XXX payload encoding overheads not calculated at all yet.
     MessageSizes clientReplySz;
 
+    
 };
 
 /// \brief Log info details for ICP protocol
@@ -122,6 +123,16 @@ public:
     struct timeval ioTime = {};
     Http::StatusCode resStatus = Http::scNone; ///< ICAP response status code
     struct timeval processingTime = {};        ///< total ICAP processing time
+#endif
+};
+
+/// \brief This subclass holds general adaptation log info.
+class AccessLogEntryAdaptationDetails
+{
+#if USE_ADAPTATION
+public:
+    /// image of the last ICAP response header or eCAP meta received
+    char *last_meta = nullptr;
 #endif
 };
 
@@ -201,17 +212,7 @@ public:
     // TODO: this object field need renaming to 'squid' or something.
     AccessLogEntrySquidDetails cache;
 
-#if USE_ADAPTATION
-    /** \brief This subclass holds general adaptation log info.
-     * TODO: Inner class declarations should be moved outside.
-     */
-    class AdaptationDetails
-    {
-    public:
-        /// image of the last ICAP response header or eCAP meta received
-        char *last_meta = nullptr;
-    } adapt;
-#endif
+    AccessLogEntryAdaptationDetails adapt;
 
     const char *lastAclName = nullptr; ///< string for external_acl_type %ACL format code
     SBuf lastAclData; ///< string for external_acl_type %DATA format code
