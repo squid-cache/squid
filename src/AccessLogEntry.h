@@ -37,7 +37,7 @@ class HttpRequest;
 class CustomLog;
 
 /// \brief Log info details for HTTP protocol
-class AccessLogHttpDetails {
+class AccessLogEntryHttpDetails {
 public:
     HttpRequestMethod method;
     int code = 0;
@@ -59,21 +59,21 @@ public:
 };
 
 /// \brief Log info details for ICP protocol
-class AccessLogIcpDetails
+class AccessLogEntryIcpDetails
 {
 public:
     icp_opcode opcode = ICP_INVALID;
 };
 
 /// \brief Log info details for HTCP protocol
-class AccessLogHtcpDetails
+class AccessLogEntryHtcpDetails
 {
 public:
     const char *opcode = nullptr;
 };
 
 /// \brief Log info details for the SSL protocol
-class AccessLogInfoSslDetails
+class AccessLogEntrySslDetails
 {
 public:
 #if USE_OPENSSL
@@ -86,13 +86,52 @@ public:
 #endif
 };
 
+/** \brief Log info details for the ICAP part of request
+ *  TODO: Rename class to something more sensible
+ */
+class AccessLogEntryIcapDetails
+{
+#if ICAP_CLIENT
+public:
+
+    Ip::Address hostAddr;                                              ///< ICAP server IP address
+    String serviceName;                                                ///< ICAP service name
+    String reqUri;                                                     ///< ICAP Request-URI
+    Adaptation::Icap::ICAP::Method reqMethod = Adaptation::methodNone; ///< ICAP request method
+    int64_t bytesSent = 0;                                             ///< number of bytes sent to ICAP server so far
+    int64_t bytesRead = 0;                                             ///< number of bytes read from ICAP server so far
+    /**
+         * number of ICAP body bytes read from ICAP server or -1 for no encapsulated
+         * message data in ICAP reply (eg 204 responses)
+         */
+    int64_t bodyBytesRead = -1;
+    HttpRequest *request = nullptr; ///< ICAP request
+    HttpReply *reply = nullptr;     ///< ICAP reply
+
+    Adaptation::Icap::XactOutcome outcome = Adaptation::Icap::xoUnknown; ///< final transaction status
+    /** \brief Transaction response time.
+     * The timer starts when the ICAP transaction
+     *  is created and stops when the result of the transaction is logged
+     */
+    struct timeval trTime = {};
+    /** \brief Transaction I/O time.
+     * The timer starts when the first ICAP request
+     * byte is scheduled for sending and stops when the lastbyte of the
+     * ICAP response is received.
+     */
+    struct timeval ioTime = {};
+    Http::StatusCode resStatus = Http::scNone; ///< ICAP response status code
+    struct timeval processingTime = {};        ///< total ICAP processing time
+#endif
+};
+
 /** \brief This subclass holds log info for Squid internal stats
      * TODO: some details relevant to particular protocols need shuffling to other sub-classes
      */
-class AccessLogCacheDetails
+class AccessLogEntrySquidDetails
 {
 public:
-    AccessLogCacheDetails()
+    AccessLogEntrySquidDetails()
     {
         caddr.setNoAddr();
     }
@@ -151,16 +190,16 @@ public:
     // are stored in hier.tcpServer
 
     // TODO: details of HTTP held in the parent class need moving into here.
-    AccessLogHttpDetails http;
+    AccessLogEntryHttpDetails http;
 
-    AccessLogIcpDetails icp;
+    AccessLogEntryIcpDetails icp;
 
-    AccessLogHtcpDetails htcp;
+    AccessLogEntryHtcpDetails htcp;
 
-    AccessLogInfoSslDetails ssl;
+    AccessLogEntrySslDetails ssl;
 
     // TODO: this object field need renaming to 'squid' or something.
-    AccessLogCacheDetails cache;
+    AccessLogEntrySquidDetails cache;
 
 #if USE_ADAPTATION
     /** \brief This subclass holds general adaptation log info.
@@ -189,50 +228,7 @@ public:
     /// see ConnStateData::proxyProtocolHeader_
     ProxyProtocol::HeaderPointer proxyProtocolHeader;
 
-#if ICAP_CLIENT
-    /** \brief This subclass holds log info for ICAP part of request
-     *  TODO: Inner class declarations should be moved outside
-     */
-    class IcapLogEntry
-    {
-    public:
-        IcapLogEntry() {
-            memset(&trTime, 0, sizeof(trTime));
-            memset(&ioTime, 0, sizeof(ioTime));
-            memset(&processingTime, 0, sizeof(processingTime));
-        }
-
-        Ip::Address hostAddr; ///< ICAP server IP address
-        String serviceName;        ///< ICAP service name
-        String reqUri;             ///< ICAP Request-URI
-        Adaptation::Icap::ICAP::Method reqMethod = Adaptation::methodNone; ///< ICAP request method
-        int64_t bytesSent = 0;       ///< number of bytes sent to ICAP server so far
-        int64_t bytesRead = 0;       ///< number of bytes read from ICAP server so far
-        /**
-         * number of ICAP body bytes read from ICAP server or -1 for no encapsulated
-         * message data in ICAP reply (eg 204 responses)
-         */
-        int64_t bodyBytesRead = -1;
-        HttpRequest* request = nullptr;    ///< ICAP request
-        HttpReply* reply = nullptr;        ///< ICAP reply
-
-        Adaptation::Icap::XactOutcome outcome = Adaptation::Icap::xoUnknown; ///< final transaction status
-        /** \brief Transaction response time.
-         * The timer starts when the ICAP transaction
-         *  is created and stops when the result of the transaction is logged
-         */
-        struct timeval trTime;
-        /** \brief Transaction I/O time.
-         * The timer starts when the first ICAP request
-         * byte is scheduled for sending and stops when the lastbyte of the
-         * ICAP response is received.
-         */
-        struct timeval ioTime;
-        Http::StatusCode resStatus = Http::scNone;   ///< ICAP response status code
-        struct timeval processingTime;      ///< total ICAP processing time
-    }
-    icap;
-#endif
+    AccessLogEntryIcapDetails icap;
 
     /// Effective URI of the received client (or equivalent) HTTP request or,
     /// in rare cases where that information was not collected, a nil pointer.
