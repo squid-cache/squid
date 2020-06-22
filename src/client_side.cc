@@ -427,7 +427,7 @@ ClientHttpRequest::logRequest()
      * to snarf the ssl details some place earlier..
      */
     if (getConn() != NULL)
-        al->cache.ssluser = sslGetUserEmail(fd_table[getConn()->fd].ssl);
+        al->ssl.ssluser = SBuf(sslGetUserEmail(fd_table[getConn()->fd].ssl));
 
 #endif
 

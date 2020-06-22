@@ -152,10 +152,12 @@ public:
 
     /// Set object to contain the specific IP case ANY_ADDR (format-neutral).
     /// see isAnyAddr() for more detail.
+    // TODO: define a AnyAddr static const instead?
     void setAnyAddr();
 
     /// Set object to contain the specific IP case NO_ADDR (format-neutral).
     /// see isNoAddr() for more detail.
+    // TODO: define a NoAddr static const instead?
     void setNoAddr();
 
     /// Set object to contain the specific IP case LOCALHOST (format-neutral).

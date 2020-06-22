@@ -36,7 +36,77 @@ class HttpReply;
 class HttpRequest;
 class CustomLog;
 
-class AccessLogEntry: public CodeContext
+/// \brief Log info details for HTTP protocol
+class AccessLogHttpDetails {
+public:
+    HttpRequestMethod method;
+    int code = 0;
+    const char *content_type = nullptr;
+    AnyP::ProtocolVersion version;
+
+    /// counters for the original request received from client
+    // TODO calculate header and payload better (by parser)
+    // XXX payload encoding overheads not calculated at all yet.
+    MessageSizes clientRequestSz;
+
+    /// counters for the response sent to client
+    // TODO calculate header and payload better (by parser)
+    // XXX payload encoding overheads not calculated at all yet.
+    MessageSizes clientReplySz;
+
+};
+
+/// \brief Log info details for ICP protocol
+class AccessLogIcpDetails
+{
+public:
+    icp_opcode opcode = ICP_INVALID;
+};
+
+/// \brief Log info details for HTCP protocol
+class AccessLogHtcpDetails
+{
+public:
+    const char *opcode = nullptr;
+};
+
+/// \brief Log info details for the SSL protocol
+class AccessLogInfoSslDetails
+{
+public:
+#if USE_OPENSSL
+    // const char *user = nullptr;    ///< emailAddress from the SSL client certificate
+    int bumpMode = ::Ssl::bumpEnd; ///< whether and how the request was SslBumped
+    Security::CertPointer sslClientCert; ///< cert received from the client
+    SBuf ssluser;
+#else
+    // empty
+#endif
+};
+
+/** \brief This subclass holds log info for Squid internal stats
+     * TODO: some details relevant to particular protocols need shuffling to other sub-classes
+     */
+class AccessLogCacheDetails
+{
+public:
+    AccessLogCacheDetails()
+    {
+        caddr.setNoAddr();
+    }
+
+    Ip::Address caddr;
+    int64_t highOffset = 0;
+    int64_t objectSize = 0;
+    LogTags code;
+    struct timeval start_time = {}; ///< The time the master transaction started
+    struct timeval trTime = {};     ///< The response time
+    const char *rfc931 = nullptr;
+    const char *extuser = nullptr;
+    AnyP::PortCfgPointer port;
+};
+
+class AccessLogEntry : public CodeContext
 {
 
 public:
@@ -78,87 +148,17 @@ public:
     // TCP/IP level details about the server or peer connection
     // are stored in hier.tcpServer
 
-    /** \brief This subclass holds log info for HTTP protocol
-     * TODO: Inner class declarations should be moved outside
-     * TODO: details of HTTP held in the parent class need moving into here.
-     */
-    class HttpDetails
-    {
+    // TODO: details of HTTP held in the parent class need moving into here.
+    AccessLogHttpDetails http;
 
-    public:
-        HttpRequestMethod method;
-        int code = 0;
-        const char *content_type = nullptr;
-        AnyP::ProtocolVersion version;
+    AccessLogIcpDetails icp;
 
-        /// counters for the original request received from client
-        // TODO calculate header and payload better (by parser)
-        // XXX payload encoding overheads not calculated at all yet.
-        MessageSizes clientRequestSz;
+    AccessLogHtcpDetails htcp;
 
-        /// counters for the response sent to client
-        // TODO calculate header and payload better (by parser)
-        // XXX payload encoding overheads not calculated at all yet.
-        MessageSizes clientReplySz;
+    AccessLogInfoSslDetails ssl;
 
-    } http;
-
-    /** \brief This subclass holds log info for ICP protocol
-     * TODO: Inner class declarations should be moved outside
-     */
-    class IcpDetails
-    {
-    public:
-        icp_opcode opcode = ICP_INVALID;
-    } icp;
-
-    /** \brief This subclass holds log info for HTCP protocol
-     * TODO: Inner class declarations should be moved outside
-     */
-    class HtcpDetails
-    {
-    public:
-        const char *opcode = nullptr;
-    } htcp;
-
-#if USE_OPENSSL
-    /// logging information specific to the SSL protocol
-    class SslDetails
-    {
-    public:
-        const char *user = nullptr; ///< emailAddress from the SSL client certificate
-        int bumpMode = ::Ssl::bumpEnd; ///< whether and how the request was SslBumped
-    } ssl;
-#endif
-
-    /** \brief This subclass holds log info for Squid internal stats
-     * TODO: Inner class declarations should be moved outside
-     * TODO: some details relevant to particular protocols need shuffling to other sub-classes
-     * TODO: this object field need renaming to 'squid' or something.
-     */
-    class CacheDetails
-    {
-    public:
-        CacheDetails() {
-            caddr.setNoAddr();
-            memset(&start_time, 0, sizeof(start_time));
-            memset(&trTime, 0, sizeof(start_time));
-        }
-
-        Ip::Address caddr;
-        int64_t highOffset = 0;
-        int64_t objectSize = 0;
-        LogTags code;
-        struct timeval start_time; ///< The time the master transaction started
-        struct timeval trTime; ///< The response time
-        const char *rfc931 = nullptr;
-        const char *extuser = nullptr;
-#if USE_OPENSSL
-        const char *ssluser = nullptr;
-        Security::CertPointer sslClientCert; ///< cert received from the client
-#endif
-        AnyP::PortCfgPointer port;
-    } cache;
+    // TODO: this object field need renaming to 'squid' or something.
+    AccessLogCacheDetails cache;
 
     /** \brief This subclass holds log info for various headers in raw format
      * TODO: shuffle this to the relevant protocol section.

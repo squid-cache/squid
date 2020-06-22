@@ -935,7 +935,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 out = strOrNull(al->getExtUser());
 #if USE_OPENSSL
             if (!out)
-                out = strOrNull(al->cache.ssluser);
+                out = al->ssl.ssluser.length() ? al->ssl.ssluser.termedBuf() : nullptr;
 #endif
             if (!out)
                 out = strOrNull(al->getClientIdent());
@@ -1273,7 +1273,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SSL_USER_CERT_SUBJECT:
-            if (X509 *cert = al->cache.sslClientCert.get()) {
+            if (X509 *cert = al->ssl.sslClientCert.get()) {
                 if (X509_NAME *subject = X509_get_subject_name(cert)) {
                     X509_NAME_oneline(subject, tmp, sizeof(tmp));
                     out = tmp;
@@ -1282,7 +1282,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
         case LFT_SSL_USER_CERT_ISSUER:
-            if (X509 *cert = al->cache.sslClientCert.get()) {
+            if (X509 *cert = al->ssl.sslClientCert.get()) {
                 if (X509_NAME *issuer = X509_get_issuer_name(cert)) {
                     X509_NAME_oneline(issuer, tmp, sizeof(tmp));
                     out = tmp;

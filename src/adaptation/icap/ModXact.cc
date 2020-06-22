@@ -1346,7 +1346,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
 
 #if USE_OPENSSL
     if (h->ssluser.size())
-        al.cache.ssluser = h->ssluser.termedBuf();
+        al.ssl.ssluser = h->ssluser;
 #endif
     al.cache.code = h->logType;
 

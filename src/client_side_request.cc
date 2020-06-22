@@ -179,7 +179,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 #if USE_OPENSSL
         if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
             if (auto ssl = fd_table[aConn->clientConnection->fd].ssl.get())
-                al->cache.sslClientCert.resetWithoutLocking(SSL_get_peer_certificate(ssl));
+                al->ssl.sslClientCert.resetWithoutLocking(SSL_get_peer_certificate(ssl));
         }
 #endif
     }
