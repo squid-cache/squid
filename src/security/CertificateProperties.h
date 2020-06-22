@@ -41,6 +41,8 @@ public:
 private:
     CertificateProperties(CertificateProperties const &) = delete;
     CertificateProperties &operator =(CertificateProperties const &) = delete;
+    CertificateProperties(CertificateProperties &&) = delete;
+    CertificateProperties &operator =(CertificateProperties &&) = delete;
 };
 
 } // namespace Security
