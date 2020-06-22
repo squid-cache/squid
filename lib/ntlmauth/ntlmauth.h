@@ -32,7 +32,7 @@ extern "C" {
 #define NTLM_REQUEST_NON_NT_SESSION_KEY     0x400000
 
 /* NTLM error codes */
-enum class NtlmError : unsigned char
+enum class NtlmError : int
 {
     None = 0,
     ServerError = 1,
