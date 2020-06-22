@@ -9,7 +9,7 @@
 #include "squid.h"
 
 #define STUB_API "mem/libmem.la"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 #include "mem/AllocatorProxy.h"
 void *Mem::AllocatorProxy::alloc() {return xmalloc(64*1024);}

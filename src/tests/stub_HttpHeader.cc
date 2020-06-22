@@ -11,7 +11,7 @@
 #include "TimeOrTag.h"
 
 #define STUB_API "HttpHeader.cc"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 #include "HttpHeader.h"
 HttpHeaderEntry::HttpHeaderEntry(Http::HdrType, const SBuf &, const char *) {STUB}
