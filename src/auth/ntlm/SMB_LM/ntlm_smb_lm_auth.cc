@@ -218,7 +218,6 @@ make_challenge(char *domain, char *domain_controller)
 char *
 ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 {
-    int rv;
     char pass[MAX_PASSWD_LEN+1];
     char *domain = credentials;
     char *user;
@@ -325,25 +324,50 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 
     debug("checking domain: '%s', user: '%s', pass='%s'\n", domain, user, pass);
 
-    rv = SMB_Logon_Server(handle, user, pass, domain, 1);
+    const auto rv = SMB_Logon_Server(handle, user, pass, domain, 1);
     debug("Login attempt had result %d\n", rv);
 
-    if (rv != NtlmError::None) {  /* failed */
-        ntlm_errno = rv;
-        return NULL;
+    switch (rv) {
+    case SMBlibE_Success:
+        ntlm_errno = NtlmError::None;
+        break;
+    case SMBlibE_BAD:
+        ntlm_errno = NtlmError::BlobError;
+        return nullptr;
+    case SMBlibE_ProtLow:
+    case SMBlibE_NoSpace:
+    case SMBlibE_BadParam:
+    case SMBlibE_NegNoProt:
+    case SMBlibE_LowerLayer:
+    case SMBlibE_SendFailed:
+    case SMBlibE_RecvFailed:
+    case SMBlibE_ProtUnknown:
+    case SMBlibE_NoSuchMsg:
+        ntlm_errno = NtlmError::ProtocolError;
+        return nullptr;
+    case SMBlibE_NotImpl:
+    case SMBlibE_CallFailed:
+    case SMBlibE_Remote:
+        ntlm_errno = NtlmError::ServerError;
+        return nullptr;
+    case SMBlibE_GuestOnly:
+        ntlm_errno = NtlmError::LoginEror;
+        return nullptr;
+    default:
+        ntlm_errno = NtlmError::ServerError;
+        return nullptr;
     }
+
     *(user - 1) = '\\';     /* hack. Performing, but ugly. */
 
     debug("credentials: %s\n", credentials);
     return credentials;
 }
 
-extern "C" void timeout_during_auth(int signum);
-
 static char got_timeout = 0;
 /** signal handler to be invoked when the authentication operation
  * times out */
-void
+extern "C" void
 timeout_during_auth(int)
 {
     dc_disconnect();
