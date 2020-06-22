@@ -102,7 +102,7 @@ AccessLogEntry::AccessLogEntry() {}
 
 AccessLogEntry::~AccessLogEntry()
 {
-    safe_free(headers.request);
+    safe_free(http.rawRequestHeaders);
 
 #if USE_ADAPTATION
     safe_free(adapt.last_meta);

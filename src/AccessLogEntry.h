@@ -42,6 +42,7 @@ public:
     HttpRequestMethod method;
     int code = 0;
     const char *content_type = nullptr;
+    char *rawRequestHeaders = nullptr; //< virgin HTTP request headers
     AnyP::ProtocolVersion version;
 
     /// counters for the original request received from client
@@ -166,7 +167,6 @@ public:
     class Headers
     {
     public:
-        char *request = nullptr; //< virgin HTTP request headers
         char *adapted_request = nullptr; //< HTTP request headers after adaptation and redirection
     } headers;
 

@@ -894,7 +894,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             {
                 // just headers without start-line and CRLF
                 // XXX: reconcile with '<h'
-                out = al->headers.request;
+                out = al->http.rawRequestHeaders;
                 quote = 1;
             }
             break;

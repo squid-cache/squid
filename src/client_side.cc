@@ -341,7 +341,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLo
         if (aLogEntry->request) {
             mb.reset();
             aLogEntry->request->header.packInto(&mb);
-            aLogEntry->headers.request = xstrdup(mb.buf);
+            aLogEntry->http.rawRequestHeaders = xstrdup(mb.buf);
         }
 
 #if USE_ADAPTATION

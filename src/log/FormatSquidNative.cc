@@ -70,7 +70,7 @@ Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
     safe_free(user);
 
     if (Config.onoff.log_mime_hdrs) {
-        char *ereq = ::Format::QuoteMimeBlob(al->headers.request);
+        char *ereq = ::Format::QuoteMimeBlob(al->http.rawRequestHeaders);
         MemBuf mb;
         mb.init();
         al->packReplyHeaders(mb);
