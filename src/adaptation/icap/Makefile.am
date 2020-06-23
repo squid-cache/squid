@@ -28,9 +28,12 @@ libicap_la_SOURCES = \
 	OptXact.h \
 	Options.cc \
 	Options.h \
+	ResponseParser.cc \
+	ResponseParser.h \
 	ServiceRep.cc \
 	ServiceRep.h \
 	Xaction.cc \
 	Xaction.h \
+	forward.h \
 	icap_log.cc \
 	icap_log.h

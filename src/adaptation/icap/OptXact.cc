@@ -13,6 +13,7 @@
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/Options.h"
 #include "adaptation/icap/OptXact.h"
+#include "adaptation/icap/ResponseParser.h"
 #include "base/TextException.h"
 #include "comm.h"
 #include "HttpHeaderTools.h"
@@ -105,17 +106,35 @@ bool Adaptation::Icap::OptXact::parseResponse()
     debugs(93, 5, "have " << readBuf.length() << " bytes to parse" << status());
     debugs(93, DBG_DATA, "\n" << readBuf);
 
+    if (!replyParser)
+        replyParser = new ResponseParser();
+
+    Must(replyParser->parse(readBuf)); // throws on parse failure OR incomplete data
+    readBuf = replyParser->remaining(); // leave any unparsed bytes in the I/O buffer
+
+    /* We know the whole response is in parser now */
+    debugs(93, 2, "ICAP Server " << connection);
+    debugs(93, 2, "ICAP Server RESPONSE:\n---------\n" <<
+           replyParser->messageProtocol() << " " << replyParser->messageStatus() << " " << replyParser->reasonPhrase() << "\n" <<
+           replyParser->mimeHeader() <<
+           "----------");
+
     HttpReply::Pointer r(new HttpReply);
     r->protoPrefix = "ICAP/"; // TODO: make an IcapReply class?
+    r->sline.set(replyParser->messageProtocol(), replyParser->messageStatus());
 
-    if (!parseHttpMsg(r.getRaw())) // throws on errors
-        return false;
+    // parse headers
+    if (!r->parseHeader(*replyParser)) {
+        r->sline.set(replyParser->messageProtocol(), Http::scInvalidHeader);
+        debugs(93, 2, "error parsing response headers mime block");
+    }
 
     static SBuf close("close", 5);
     if (httpHeaderHasConnDir(&r->header, close))
         reuseConnection = false;
 
     icapReply = r;
+    replyParser = nullptr; // refcounted
     return true;
 }
 
