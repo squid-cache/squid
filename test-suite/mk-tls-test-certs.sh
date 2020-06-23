@@ -140,7 +140,7 @@ elif test "x$CERTTOOL" != "x" -a -x $CERTTOOL; then
 		" > example.org-ca
 
 	$CERTTOOL -v
-	
+
 	$CERTTOOL --generate-privkey --rsa --outfile ca-root-rsa.pkey
 
 	$CERTTOOL --generate-self-signed --template example.org-ca \
