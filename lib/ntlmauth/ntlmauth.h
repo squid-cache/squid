@@ -35,17 +35,17 @@ extern "C" {
 enum class NtlmError : int
 {
     None = 0,
-    ServerError = 1,
-    ProtocolError = 2,
-    LoginEror = 3,
-    UntrustedDomain = 4,
-    NtlmNotConnected = 5,
-    SspiError = 6,
-    BadNtGroup = 7,
-    BadRequest = 8,
-    InternalError = 128,
-    BlobError = 129,
-    BadProtocol = 130
+    ServerError,
+    ProtocolError,
+    LoginEror,
+    UntrustedDomain,
+    NtlmNotConnected,
+    SspiError,
+    BadNtGroup,
+    BadRequest,
+    InternalError,
+    BlobError,
+    BadProtocol
 };
 
 /** String header. String data resides at the end of the request */
