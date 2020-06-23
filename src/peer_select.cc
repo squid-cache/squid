@@ -1083,6 +1083,8 @@ PeerSelector::addSelection(CachePeer *peer, const hier_code code)
         // There can be at most one PINNED destination.
         // Non-PINNED destinations are uniquely identified by their CachePeer
         // (even though a DIRECT destination might match a cache_peer address).
+        // XXX: We may still add duplicates because the same peer could have
+        // been removed from `servers` already (and given to the requestor).
         const bool duplicate = (server->code == PINNED) ?
                                (code == PINNED) : (server->_peer == peer);
         if (duplicate) {

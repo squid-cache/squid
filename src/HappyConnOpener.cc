@@ -18,7 +18,6 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
-#include "ResolvedPeers.h"
 #include "SquidConfig.h"
 
 CBDATA_CLASS_INIT(HappyConnOpener);
@@ -455,7 +454,7 @@ HappyConnOpener::makeError(const err_type type) const
 
 /// \returns pre-filled Answer if the initiator needs an answer (or nil)
 HappyConnOpener::Answer *
-HappyConnOpener::futureAnswer(const Comm::ConnectionPointer &conn)
+HappyConnOpener::futureAnswer(const PeerConnectionPointer &conn)
 {
     if (callback_ && !callback_->canceled()) {
         const auto answer = dynamic_cast<Answer *>(callback_->getDialer());
@@ -469,7 +468,7 @@ HappyConnOpener::futureAnswer(const Comm::ConnectionPointer &conn)
 
 /// send a successful result to the initiator (if it still needs an answer)
 void
-HappyConnOpener::sendSuccess(const Comm::ConnectionPointer &conn, bool reused, const char *connKind)
+HappyConnOpener::sendSuccess(const PeerConnectionPointer &conn, const bool reused, const char *connKind)
 {
     debugs(17, 4, connKind << ": " << conn);
     if (auto *answer = futureAnswer(conn)) {
@@ -485,7 +484,7 @@ void
 HappyConnOpener::cancelAttempt(Attempt &attempt, const char *reason)
 {
     Must(attempt);
-    destinations->retryPath(attempt.path); // before attempt.cancel() clears path
+    destinations->returnPath(attempt.path); // before attempt.cancel() clears path
     attempt.cancel(reason);
 }
 
@@ -514,7 +513,7 @@ HappyConnOpener::noteCandidatesChange()
 
 /// starts opening (or reusing) a connection to the given destination
 void
-HappyConnOpener::startConnecting(Attempt &attempt, Comm::ConnectionPointer &dest)
+HappyConnOpener::startConnecting(Attempt &attempt, PeerConnectionPointer &dest)
 {
     Must(!attempt.path);
     Must(!attempt.connector);
@@ -530,13 +529,14 @@ HappyConnOpener::startConnecting(Attempt &attempt, Comm::ConnectionPointer &dest
 /// \returns true if and only if reuse was possible
 /// must be called via startConnecting()
 bool
-HappyConnOpener::reuseOldConnection(const Comm::ConnectionPointer &dest)
+HappyConnOpener::reuseOldConnection(PeerConnectionPointer &dest)
 {
     assert(allowPconn_);
 
     if (const auto pconn = fwdPconnPool->pop(dest, host_, retriable_)) {
         ++n_tries;
-        sendSuccess(pconn, true, "reused connection");
+        dest.finalize(pconn);
+        sendSuccess(dest, true, "reused connection");
         return true;
     }
 
@@ -546,7 +546,7 @@ HappyConnOpener::reuseOldConnection(const Comm::ConnectionPointer &dest)
 /// opens a fresh connection to the given destination
 /// must be called via startConnecting()
 void
-HappyConnOpener::openFreshConnection(Attempt &attempt, Comm::ConnectionPointer &dest)
+HappyConnOpener::openFreshConnection(Attempt &attempt, PeerConnectionPointer &dest)
 {
 #if URL_CHECKSUM_DEBUG
     entry->mem_obj->checkUrlChecksum();
@@ -583,9 +583,12 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     const bool itWasSpare = (params.conn == spare.path);
     Must(itWasPrime != itWasSpare);
 
+    PeerConnectionPointer handledPath;
     if (itWasPrime) {
+        handledPath = prime.path;
         prime.finish();
     } else {
+        handledPath = spare.path;
         spare.finish();
         if (gotSpareAllowance) {
             TheSpareAllowanceGiver.jobUsedAllowance();
@@ -595,7 +598,7 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
 
     const char *what = itWasPrime ? "new prime connection" : "new spare connection";
     if (params.flag == Comm::OK) {
-        sendSuccess(params.conn, false, what);
+        sendSuccess(handledPath, false, what);
         return;
     }
 
@@ -605,7 +608,7 @@ HappyConnOpener::connectDone(const CommConnectCbParams &params)
     params.conn->close(); // TODO: Comm::ConnOpener should do this instead.
 
     // remember the last failure (we forward it if we cannot connect anywhere)
-    lastFailedConnection = params.conn;
+    lastFailedConnection = handledPath;
     delete lastError;
     lastError = nullptr; // in case makeError() throws
     lastError = makeError(ERR_CONNECT_FAIL);
@@ -717,11 +720,14 @@ HappyConnOpener::checkForNewConnection()
     // open a new prime and/or a new spare connection if needed
     if (!destinations->empty()) {
         if (!currentPeer) {
-            currentPeer = destinations->extractFront();
+            auto newPrime = destinations->extractFront();
+            currentPeer = newPrime;
             Must(currentPeer);
             debugs(17, 7, "new peer " << *currentPeer);
             primeStart = current_dtime;
-            startConnecting(prime, currentPeer);
+            startConnecting(prime, newPrime);
+            // XXX: if reuseOldConnection() in startConnecting() above succeeds,
+            // then we should not get here, and Must(prime) below will fail.
             maybeGivePrimeItsChance();
             Must(prime); // entering state #1.1
         } else {

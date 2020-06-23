@@ -77,10 +77,13 @@ public:
     /** Clear the connection properties and close any open socket. */
     virtual ~Connection();
 
-    /** Copy an existing connections IP and properties.
-     * This excludes the FD. The new copy will be a closed connection.
-     */
-    ConnectionPointer copyDetails() const;
+    /// Create a new (closed) IDENT Connection object based on our from-Squid
+    /// connection properties.
+    ConnectionPointer cloneIdentDetails() const;
+
+    /// Create a new (closed) Connection object pointing to the same destination
+    /// as this from-Squid connection.
+    ConnectionPointer cloneDestinationDetails() const;
 
     /// close the still-open connection when its last reference is gone
     void enterOrphanage() { flags |= COMM_ORPHANED; }
@@ -137,12 +140,9 @@ public:
     virtual ScopedId codeContextGist() const override;
     virtual std::ostream &detailCodeContext(std::ostream &os) const override;
 
-private:
-    /** These objects may not be exactly duplicated. Use copyDetails() instead. */
-    Connection(const Connection &c);
-
-    /** These objects may not be exactly duplicated. Use copyDetails() instead. */
-    Connection & operator =(const Connection &c);
+    // TODO: Declare and use (here and elsewhere) NonCopyable, NonMovable, etc.
+    /// no C++ copying/moving; see clone*() methods for custom/partial copies
+    Connection &operator =(Connection &&) = delete;
 
 public:
     /** Address/Port for the Squid end of a TCP link. */
