@@ -50,10 +50,11 @@ public:
     /// \throws InsuffientInput and other exceptions on syntax and validation errors
     static void ParseResponseStatus(Tokenizer &, StatusCode &code);
 
-private:
-    int parseResponseFirstLine();
+protected:
+    virtual int parseResponseFirstLine();
     int parseResponseStatusAndReason(Tokenizer &);
 
+private:
     /// magic prefix for identifying ICY response messages
     static const SBuf IcyMagic;
 
