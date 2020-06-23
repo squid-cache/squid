@@ -330,10 +330,12 @@ Store::Controller::hasReadableDiskEntry(const StoreEntry &e) const
     return swapDir->hasReadableEntry(e);
 }
 
-/// flags problematic ephemeral peek() results before we share them
+/// flags problematic entries before find() commits to finalizing/returning them
 void
-Store::Controller::checkPeeked(const StoreEntry &entry) const
+Store::Controller::checkFoundCandidate(const StoreEntry &entry) const
 {
+    checkTransients(entry);
+
     // The "hittingRequiresCollapsing() has an active writer" checks below
     // protect callers from getting stuck and/or from using a stale revalidation
     // reply. However, these protections are not reliable because the writer may
@@ -357,8 +359,7 @@ Store::Controller::find(const cache_key *key)
         try {
             if (!entry->key)
                 allowSharing(*entry, key);
-            checkTransients(*entry);
-            checkPeeked(*entry);
+            checkFoundCandidate(*entry);
             entry->touch();
             referenceBusy(*entry);
             return entry;
