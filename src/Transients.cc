@@ -173,14 +173,8 @@ Transients::get(const cache_key *key)
 
     StoreEntry *e = new StoreEntry();
     e->createMemObject();
-    e->mem_obj->xitTable.index = index;
-    e->mem_obj->xitTable.io = Store::ioReading;
-    anchor->exportInto(*e);
-
-    if (EBIT_TEST(anchor->basics.flags, ENTRY_REQUIRES_COLLAPSING)) {
-        assert(hadWriter);
-        e->setCollapsingRequirement(true);
-    }
+    e->mem_obj->xitTable = { index, Store::ioReading };
+    copyFromShm(*anchor, *e);
 
     // keep read lock to receive updates from others
     return e;
@@ -244,25 +238,59 @@ Transients::addEntry(StoreEntry *e, const cache_key *key, const Store::IoStatus 
 
     Must(map); // configured to track transients
 
+    if (direction == Store::ioWriting)
+        return addWriterEntry(*e, key);
+
+    assert(direction == Store::ioReading);
+    addReaderEntry(*e, key);
+}
+
+/// addEntry() helper used for cache entry creators/writers
+void
+Transients::addWriterEntry(StoreEntry &e, const cache_key *key)
+{
     sfileno index = 0;
-    Ipc::StoreMapAnchor *slot = map->openForWriting(key, index);
-    Must(slot); // no writer collisions
+    const auto anchor = map->openForWriting(key, index);
+    if (!anchor)
+        throw TextException("writer collision", Here());
 
     // set ASAP in hope to unlock the slot if something throws
-    e->mem_obj->xitTable.index = index;
-    e->mem_obj->xitTable.io = Store::ioWriting;
+    // and to provide index to such methods as hasWriter()
+    e.mem_obj->xitTable = { index, Store::ioWriting };
 
-    slot->set(*e, key);
-    if (direction == Store::ioWriting) {
-        // allow reading and receive remote DELETE events, but do not switch to
-        // the reading lock because transientReaders() callers want true readers
-        map->startAppending(index);
-    } else {
-        assert(direction == Store::ioReading);
-        // keep the entry locked (for reading) to receive remote DELETE events
-        map->switchWritingToReading(index);
-        e->mem_obj->xitTable.io = Store::ioReading;
-    }
+    anchor->set(e, key);
+    // allow reading and receive remote DELETE events, but do not switch to
+    // the reading lock because transientReaders() callers want true readers
+    map->startAppending(index);
+}
+
+/// addEntry() helper used for cache readers
+/// readers do not modify the cache, but they must create a Transients entry
+void
+Transients::addReaderEntry(StoreEntry &e, const cache_key *key)
+{
+    sfileno index = 0;
+    const auto anchor = map->openOrCreateForReading(key, index, e);
+    if (!anchor)
+        throw TextException("reader collision", Here());
+
+    // set ASAP in hope to unlock the slot if something throws
+    // and to provide index to such methods as hasWriter()
+    e.mem_obj->xitTable = { index, Store::ioReading };
+
+    copyFromShm(*anchor, e);
+    // keep the entry locked (for reading) to receive remote DELETE events
+}
+
+/// fills (recently created) StoreEntry with information currently in Transients
+void
+Transients::copyFromShm(const Ipc::StoreMapAnchor &anchor, StoreEntry &e)
+{
+    const auto hadWriter = hasWriter(e); // before computing collapsingRequired
+    anchor.exportInto(e);
+    const bool collapsingRequired = EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
+    assert(!collapsingRequired || hadWriter);
+    e.setCollapsingRequirement(collapsingRequired);
 }
 
 bool
