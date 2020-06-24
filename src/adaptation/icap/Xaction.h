@@ -91,7 +91,6 @@ protected:
 
     void cancelRead();
 
-    bool parseHttpMsg(Http::Message *msg); // true=success; false=needMore; throw=err
     bool mayReadMore() const;
 
     virtual bool doneReading() const;
