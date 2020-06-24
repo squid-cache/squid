@@ -570,7 +570,7 @@ manage_request()
         /* notreached */
         case NTLM_AUTHENTICATE: {
             /* check against SSPI */
-            int err = ntlm_check_auth((ntlm_authenticate *) decoded, user, domain, decodedLen);
+            const auto err = ntlm_check_auth((ntlm_authenticate *) decoded, user, domain, decodedLen);
             have_challenge = 0;
             if (err != NtlmError::None) {
 #if FAIL_DEBUG
