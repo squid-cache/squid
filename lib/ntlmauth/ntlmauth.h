@@ -32,7 +32,7 @@ extern "C" {
 #define NTLM_REQUEST_NON_NT_SESSION_KEY     0x400000
 
 /* NTLM error codes */
-enum class NtlmError : int
+enum class NtlmError
 {
     None = 0,
     ServerError,
@@ -49,8 +49,7 @@ enum class NtlmError : int
 };
 
 /** String header. String data resides at the end of the request */
-typedef struct _strhdr
-{
+typedef struct _strhdr {
     int16_t len;        /**< Length in bytes */
     int16_t maxlen;     /**< Allocated space in bytes */
     int32_t offset;     /**< Offset from start of request */
