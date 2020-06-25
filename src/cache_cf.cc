@@ -5127,7 +5127,9 @@ parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuardsPtr)
 static void
 dump_http_upgrade_request_protocols(StoreEntry *entry, const char *rawName, HttpUpgradeProtocolAccess *protoGuards)
 {
-    assert(protoGuards);
+    if (!protoGuards)
+        return;
+
     const SBuf name(rawName);
     protoGuards->forEach([entry,&name](const SBuf &proto, const acl_access *acls) {
         SBufList line;
