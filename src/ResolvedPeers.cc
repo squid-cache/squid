@@ -13,8 +13,6 @@
 #include "ResolvedPeers.h"
 #include "SquidConfig.h"
 
-/* ResolvedPeers */
-
 ResolvedPeers::ResolvedPeers()
 {
     if (Config.forward_max_tries > 0)
