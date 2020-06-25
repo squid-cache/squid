@@ -133,6 +133,7 @@ void
 FwdState::closeServerConnection(const char *reason)
 {
     debugs(17, 3, "because " << reason << "; " << serverConn);
+    assert(Comm::IsConnOpen(serverConn));
     comm_remove_close_handler(serverConn->fd, closeHandler);
     closeHandler = NULL;
     fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
@@ -848,15 +849,16 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
                                             "FwdState::tunnelEstablishmentDone",
                                             Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
     HttpRequest::Pointer requestPointer = request;
-    const auto tunneler = new Http::Tunneler(conn, requestPointer, callback, connectingTimeout(serverConnection()), al);
+    const auto tunneler = new Http::Tunneler(conn, requestPointer, callback, connectingTimeout(conn), al);
 
     // TODO: Replace this hack with proper Comm::Connection-Pool association
     // that is not tied to fwdPconnPool and can handle disappearing pools.
     tunneler->noteFwdPconnUse = true;
 
 #if USE_DELAY_POOLS
-    Must(serverConnection()->getPeer());
-    if (!serverConnection()->getPeer()->options.no_delay)
+    Must(conn);
+    Must(conn->getPeer());
+    if (!conn->getPeer()->options.no_delay)
         tunneler->setDelayId(entry->mem_obj->mostBytesAllowed());
 #endif
     AsyncJob::Start(tunneler);
