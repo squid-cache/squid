@@ -22,7 +22,7 @@ ResolvedPeers::ResolvedPeers()
 }
 
 void
-ResolvedPeers::returnPath(const PeerConnectionPointer &path)
+ResolvedPeers::reinstatePath(const PeerConnectionPointer &path)
 {
     debugs(17, 4, path);
     assert(path);

@@ -484,7 +484,7 @@ FwdState::fail(ErrorState * errorState)
         debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
         if (destinationReceipt) {
-            destinations->returnPath(destinationReceipt);
+            destinations->reinstatePath(destinationReceipt);
             destinationReceipt = nullptr;
         }
     }

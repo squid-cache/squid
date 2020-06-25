@@ -49,7 +49,7 @@ public:
 
     /// makes the previously extracted path available for extraction at its
     /// original position
-    void returnPath(const PeerConnectionPointer &);
+    void reinstatePath(const PeerConnectionPointer &);
 
     /// extracts and returns the first queued address
     PeerConnectionPointer extractFront();
@@ -115,7 +115,7 @@ private:
 };
 
 /// An invasive reference-counting Comm::Connection pointer that also keeps an
-/// (optional) ResolvedPeers position for the ResolvedPeers::returnPath() usage.
+/// (optional) ResolvedPeers position for the ResolvedPeers::reinstatePath() usage.
 /// Reference counting mechanism is compatible with Comm::ConnectionPointer.
 class PeerConnectionPointer
 {
