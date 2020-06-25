@@ -140,9 +140,16 @@ public:
     virtual ScopedId codeContextGist() const override;
     virtual std::ostream &detailCodeContext(std::ostream &os) const override;
 
-    // TODO: Declare and use (here and elsewhere) NonCopyable, NonMovable, etc.
-    /// no C++ copying/moving; see clone*() methods for custom/partial copies
-    Connection &operator =(Connection &&) = delete;
+private:
+    /** These objects may not be exactly duplicated. Use cloneIdentDetails() or
+     * cloneDestinationDetails() instead.
+     */
+    Connection(const Connection &c);
+
+    /** These objects may not be exactly duplicated. Use cloneIdentDetails() or
+     * cloneDestinationDetails() instead.
+     */
+    Connection & operator =(const Connection &c);
 
 public:
     /** Address/Port for the Squid end of a TCP link. */
