@@ -83,18 +83,21 @@ class XactAbortInfo
 {
 public:
     XactAbortInfo(HttpRequest *anIcapRequest, HttpReply *anIcapReply,
-                  bool beRetriable, bool beRepeatable);
-    XactAbortInfo(const XactAbortInfo &);
-    ~XactAbortInfo();
+                  bool beRetriable, bool beRepeatable) :
+        icapRequest(anIcapRequest),
+        icapReply(anIcapReply),
+        isRetriable(beRetriable),
+        isRepeatable(beRepeatable)
+    {}
 
     std::ostream &print(std::ostream &os) const {
         return os << isRetriable << ',' << isRepeatable;
     }
 
-    HttpRequest *icapRequest;
-    HttpReply *icapReply;
-    bool isRetriable;
-    bool isRepeatable;
+    HttpRequestPointer icapRequest;
+    HttpReplyPointer icapReply;
+    bool isRetriable = false;
+    bool isRepeatable = false;
 
 private:
     XactAbortInfo &operator =(const XactAbortInfo &); // undefined

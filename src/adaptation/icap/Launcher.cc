@@ -140,46 +140,10 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
     if (info.icapReply->sline.status() == Http::scNone) // failed to parse the reply; I/O err
         return true;
 
-    ACLFilledChecklist *cl =
-        new ACLFilledChecklist(TheConfig.repeat, info.icapRequest, dash_str);
-    cl->reply = info.icapReply;
-    HTTPMSGLOCK(cl->reply);
+    ACLFilledChecklist cl(TheConfig.repeat, info.icapRequest.getRaw());
+    cl.reply = info.icapReply.getRaw();
+    HTTPMSGLOCK(cl.reply);
 
-    bool result = cl->fastCheck().allowed();
-    delete cl;
-    return result;
-}
-
-/* ICAPXactAbortInfo */
-
-Adaptation::Icap::XactAbortInfo::XactAbortInfo(HttpRequest *anIcapRequest,
-        HttpReply *anIcapReply, bool beRetriable, bool beRepeatable):
-    icapRequest(anIcapRequest),
-    icapReply(anIcapReply),
-    isRetriable(beRetriable),
-    isRepeatable(beRepeatable)
-{
-    if (icapRequest)
-        HTTPMSGLOCK(icapRequest);
-    if (icapReply)
-        HTTPMSGLOCK(icapReply);
-}
-
-Adaptation::Icap::XactAbortInfo::XactAbortInfo(const Adaptation::Icap::XactAbortInfo &i):
-    icapRequest(i.icapRequest),
-    icapReply(i.icapReply),
-    isRetriable(i.isRetriable),
-    isRepeatable(i.isRepeatable)
-{
-    if (icapRequest)
-        HTTPMSGLOCK(icapRequest);
-    if (icapReply)
-        HTTPMSGLOCK(icapReply);
-}
-
-Adaptation::Icap::XactAbortInfo::~XactAbortInfo()
-{
-    HTTPMSGUNLOCK(icapRequest);
-    HTTPMSGUNLOCK(icapReply);
+    return cl.fastCheck().allowed();
 }
 
