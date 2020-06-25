@@ -726,7 +726,7 @@ HappyConnOpener::checkForNewConnection()
             debugs(17, 7, "new peer " << *currentPeer);
             primeStart = current_dtime;
             startConnecting(prime, newPrime);
-            // XXX: if reuseOldConnection() in startConnecting() above succeeds,
+            // TODO: if reuseOldConnection() in startConnecting() above succeeds,
             // then we should not get here, and Must(prime) below will fail.
             maybeGivePrimeItsChance();
             Must(prime); // entering state #1.1
