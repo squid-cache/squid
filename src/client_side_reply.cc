@@ -367,6 +367,10 @@ clientReplyContext::sendClientUpstreamResponse()
 {
     StoreIOBuffer tempresult;
     removeStoreReference(&old_sc, &old_entry);
+
+    if (collapsedRevalidation)
+        http->storeEntry()->clearPublicKeyScope();
+
     /* here the data to send is the data we just received */
     tempBuffer.offset = 0;
     old_reqsize = 0;
@@ -480,10 +484,6 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
             http->logType = LOG_TCP_REFRESH_MODIFIED;
             debugs(88, 3, "origin replied " << status <<
                    ", replacing existing entry and forwarding to client");
-
-            if (collapsedRevalidation)
-                http->storeEntry()->clearPublicKeyScope();
-
             sendClientUpstreamResponse();
         }
     }
