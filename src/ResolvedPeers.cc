@@ -20,25 +20,20 @@ ResolvedPeers::ResolvedPeers()
 }
 
 void
-ResolvedPeers::retryPath(const Comm::ConnectionPointer &path)
+ResolvedPeers::reinstatePath(const PeerConnectionPointer &path)
 {
     debugs(17, 4, path);
     assert(path);
-    // Cannot use pathsToSkip for a faster (reverse) search because there
-    // may be unavailable paths past pathsToSkip. We could remember
-    // the last extraction index, but, to completely avoid a linear search,
-    // extract*() methods should return the path index.
-    const auto found = std::find_if(paths_.begin(), paths_.end(),
-    [path](const ResolvedPeerPath &candidate) {
-        return candidate.connection == path; // (refcounted) pointer comparison
-    });
-    assert(found != paths_.end());
-    assert(!found->available);
-    found->available = true;
+
+    const auto pos = path.position_;
+    assert(pos < paths_.size());
+
+    assert(!paths_[pos].available);
+    paths_[pos].available = true;
     increaseAvailability();
 
     // if we restored availability of a path that we used to skip, update
-    const auto pathsToTheLeft = static_cast<size_type>(found - paths_.begin());
+    const auto pathsToTheLeft = pos;
     if (pathsToTheLeft < pathsToSkip) {
         pathsToSkip = pathsToTheLeft;
     } else {
@@ -112,14 +107,14 @@ ResolvedPeers::findPeer(const Comm::Connection &currentPeer)
     return makeFinding(path, foundNext);
 }
 
-Comm::ConnectionPointer
+PeerConnectionPointer
 ResolvedPeers::extractFront()
 {
     Must(!empty());
     return extractFound("first: ", start());
 }
 
-Comm::ConnectionPointer
+PeerConnectionPointer
 ResolvedPeers::extractPrime(const Comm::Connection &currentPeer)
 {
     const auto found = findPrime(currentPeer).first;
@@ -130,7 +125,7 @@ ResolvedPeers::extractPrime(const Comm::Connection &currentPeer)
     return nullptr;
 }
 
-Comm::ConnectionPointer
+PeerConnectionPointer
 ResolvedPeers::extractSpare(const Comm::Connection &currentPeer)
 {
     const auto found = findSpare(currentPeer).first;
@@ -142,7 +137,7 @@ ResolvedPeers::extractSpare(const Comm::Connection &currentPeer)
 }
 
 /// convenience method to finish a successful extract*() call
-Comm::ConnectionPointer
+PeerConnectionPointer
 ResolvedPeers::extractFound(const char *description, const Paths::iterator &found)
 {
     auto &path = *found;
@@ -156,7 +151,8 @@ ResolvedPeers::extractFound(const char *description, const Paths::iterator &foun
         while (++pathsToSkip < paths_.size() && !paths_[pathsToSkip].available) {}
     }
 
-    return path.connection;
+    const auto cleanPath = path.connection->cloneDestinationDetails();
+    return PeerConnectionPointer(cleanPath, found - paths_.begin());
 }
 
 bool
@@ -225,5 +221,22 @@ operator <<(std::ostream &os, const ResolvedPeers &peers)
     if (peers.empty())
         return os << "[no paths]";
     return os << peers.size() << (peers.destinationsFinalized ? "" : "+") << " paths";
+}
+
+/* PeerConnectionPointer */
+
+void
+PeerConnectionPointer::print(std::ostream &os) const
+{
+    // We should see no combinations of a nil connection and a set position
+    // because assigning nullptr (to our smart pointer) naturally erases both
+    // fields. We report such unexpected combinations for debugging sake, but do
+    // not complicate this code to report them beautifully.
+
+    if (connection_)
+        os << connection_;
+
+    if (position_ != npos)
+        os << " @" << position_;
 }
 
