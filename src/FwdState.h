@@ -21,6 +21,7 @@
 #include "http/StatusCode.h"
 #include "ip/Address.h"
 #include "PeerSelectState.h"
+#include "ResolvedPeers.h"
 #include "security/forward.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -197,6 +198,7 @@ private:
     HappyConnOpenerPointer connOpener; ///< current connection opening job
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
+    PeerConnectionPointer destinationReceipt; ///< peer selection result (or nil)
 
     AsyncCall::Pointer closeHandler; ///< The serverConn close handler
 
