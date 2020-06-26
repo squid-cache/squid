@@ -123,7 +123,7 @@ public:
     using size_type = ResolvedPeers::size_type;
 
     PeerConnectionPointer() = default;
-    PeerConnectionPointer(nullptr_t): PeerConnectionPointer() {} ///< implicit nullptr conversion
+    PeerConnectionPointer(std::nullptr_t): PeerConnectionPointer() {} ///< implicit nullptr conversion
     PeerConnectionPointer(const Comm::ConnectionPointer &conn, const size_type pos): connection_(conn), position_(pos) {}
 
     /* read-only pointer API; for Connection assignment, see finalize() */
