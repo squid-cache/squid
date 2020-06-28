@@ -7,31 +7,16 @@
  */
 
 #include "squid.h"
+#include "AsyncEngine.h"
+#include "EventLoop.h"
+#include "SquidTime.h"
+#include "tests/testEventLoop.h"
+#include "unitTestMain.h"
 
 #include <cppunit/TestAssert.h>
 
-#include "AsyncEngine.h"
-#include "EventLoop.h"
-#include "mem/forward.h"
-#include "SquidTime.h"
-#include "stat.h"
-#include "testEventLoop.h"
-#include "unitTestMain.h"
-
 CPPUNIT_TEST_SUITE_REGISTRATION( testEventLoop );
 
-/* init legacy static-initialized modules */
-
-void
-testEventLoop::setUp()
-{
-    Mem::Init();
-    statInit();
-}
-
-/*
- * Test creating a EventLoop
- */
 void
 testEventLoop::testCreate()
 {
