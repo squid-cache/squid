@@ -173,8 +173,7 @@ Transients::get(const cache_key *key)
 
     StoreEntry *e = new StoreEntry();
     e->createMemObject();
-    e->mem_obj->xitTable = { index, Store::ioReading };
-    copyFromShm(*anchor, *e);
+    anchorEntry(*e, index, *anchor);
 
     // keep read lock to receive updates from others
     return e;
@@ -274,18 +273,18 @@ Transients::addReaderEntry(StoreEntry &e, const cache_key *key)
     if (!anchor)
         throw TextException("reader collision", Here());
 
-    // set ASAP in hope to unlock the slot if something throws
-    // and to provide index to such methods as hasWriter()
-    e.mem_obj->xitTable = { index, Store::ioReading };
-
-    copyFromShm(*anchor, e);
+    anchorEntry(e, index, *anchor);
     // keep the entry locked (for reading) to receive remote DELETE events
 }
 
 /// fills (recently created) StoreEntry with information currently in Transients
 void
-Transients::copyFromShm(const Ipc::StoreMapAnchor &anchor, StoreEntry &e)
+Transients::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapAnchor &anchor)
 {
+    // set ASAP in hope to unlock the slot if something throws
+    // and to provide index to such methods as hasWriter()
+    e.mem_obj->xitTable = { index, Store::ioReading };
+
     const auto hadWriter = hasWriter(e); // before computing collapsingRequired
     anchor.exportInto(e);
     const bool collapsingRequired = EBIT_TEST(anchor.basics.flags, ENTRY_REQUIRES_COLLAPSING);
