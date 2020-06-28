@@ -23,33 +23,6 @@ testEventLoop::testCreate()
     EventLoop();
 }
 
-#if POLISHED_MAIN_LOOP
-
-/*
- * Running the loop once is useful for integration with other loops, such as
- * migrating to it in incrementally.
- *
- * This test works by having a custom dispatcher and engine which record how
- * many times they are called.
- */
-
-class RecordDispatcher : public CompletionDispatcher
-{
-
-public:
-    int calls;
-    RecordDispatcher(): calls(0) {}
-
-    bool dispatch() {
-        ++calls;
-        /* claim we dispatched calls to be useful for the testStopOnIdle test.
-         */
-        return true;
-    }
-};
-
-#endif /* POLISHED_MAIN_LOOP */
-
 class RecordingEngine : public AsyncEngine
 {
 
@@ -72,53 +45,10 @@ void
 testEventLoop::testRunOnce()
 {
     EventLoop theLoop;
-    RecordDispatcher dispatcher;
-    theLoop.registerDispatcher(&dispatcher);
     RecordingEngine engine;
     theLoop.registerEngine(&engine);
     theLoop.runOnce();
-    CPPUNIT_ASSERT_EQUAL(1, dispatcher.calls);
     CPPUNIT_ASSERT_EQUAL(1, engine.calls);
-}
-
-/*
- * completion dispatchers registered with the event loop are invoked by the
- * event loop.
- *
- * This test works by having a customer dispatcher which shuts the loop down
- * once its been invoked twice.
- *
- * It also tests that loop.run() and loop.stop() work, because if they do not
- * work, this test will either hang, or fail.
- */
-
-class ShutdownDispatcher : public CompletionDispatcher
-{
-
-public:
-    EventLoop &theLoop;
-    int calls;
-    ShutdownDispatcher(EventLoop & theLoop):theLoop(theLoop), calls(0) {}
-
-    bool dispatch() {
-        if (++calls == 2)
-            theLoop.stop();
-
-        return true;
-    }
-};
-
-void
-testEventLoop::testRegisterDispatcher()
-{
-    EventLoop theLoop;
-    ShutdownDispatcher testDispatcher(theLoop);
-    theLoop.registerDispatcher(&testDispatcher);
-    theLoop.run();
-    /* we should get two calls because the test dispatched returns true from
-     * dispatch(), and calls stop on the second call.
-     */
-    CPPUNIT_ASSERT_EQUAL(2, testDispatcher.calls);
 }
 
 /* test that a registered async engine is invoked on each loop run
@@ -128,8 +58,6 @@ void
 testEventLoop::testRegisterEngine()
 {
     EventLoop theLoop;
-    ShutdownDispatcher testDispatcher(theLoop);
-    theLoop.registerDispatcher(&testDispatcher);
     RecordingEngine testEngine;
     theLoop.registerEngine(&testEngine);
     theLoop.run();
@@ -167,14 +95,7 @@ void
 testEventLoop::testStopOnIdle()
 {
     EventLoop theLoop;
-    /* trivial case - no dispatchers or engines, should quit immediately */
-    CPPUNIT_ASSERT_EQUAL(true, theLoop.runOnce());
-    theLoop.run();
-    /* add a dispatcher with nothing to dispatch - use an EventDispatcher as its
-     * sufficient and handy
-     */
-    EventDispatcher dispatcher;
-    theLoop.registerDispatcher(&dispatcher);
+    /* trivial case - no engine, should quit immediately */
     CPPUNIT_ASSERT_EQUAL(true, theLoop.runOnce());
     theLoop.run();
     /* add an engine which is idle.

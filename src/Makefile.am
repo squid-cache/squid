@@ -241,8 +241,6 @@ squid_SOURCES = \
 	CommRead.h \
 	CommandLine.cc \
 	CommandLine.h \
-	CompletionDispatcher.cc \
-	CompletionDispatcher.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ConfigParser.h \

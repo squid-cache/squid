@@ -22,7 +22,6 @@ class testEventLoop : public CPPUNIT_NS::TestFixture
 
 #if POLISHED_MAIN_LOOP
     CPPUNIT_TEST( testRunOnce );
-    CPPUNIT_TEST( testRegisterDispatcher );
     CPPUNIT_TEST( testRegisterEngine );
     CPPUNIT_TEST( testEngineTimeout );
     CPPUNIT_TEST( testStopOnIdle );
@@ -38,7 +37,6 @@ protected:
 #if POLISHED_MAIN_LOOP
     void testEngineTimeout();
     void testRunOnce();
-    void testRegisterDispatcher();
     void testRegisterEngine();
     void testStopOnIdle();
 #endif
