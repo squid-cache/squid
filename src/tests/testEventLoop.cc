@@ -25,22 +25,23 @@ testEventLoop::testCreate()
 
 class RecordingEngine : public AsyncEngine
 {
-
 public:
-    int calls;
-    int lasttimeout;
-    int return_timeout;
-    RecordingEngine(int aTimeout=0): calls(0), lasttimeout(0), return_timeout(aTimeout) {}
+    RecordingEngine(int aTimeout = 0) : return_timeout(aTimeout) {}
 
     virtual int checkEvents(int timeout) {
         ++calls;
         lasttimeout = timeout;
         return return_timeout;
     }
+
+    int calls = 0;
+    int lasttimeout = 0;
+    int return_timeout = 0;
 };
 
-#if POLISHED_MAIN_LOOP
-
+/* test that a registered async engine is invoked on each loop run
+ * we do this with an instrumented async engine.
+ */
 void
 testEventLoop::testRunOnce()
 {
@@ -51,18 +52,7 @@ testEventLoop::testRunOnce()
     CPPUNIT_ASSERT_EQUAL(1, engine.calls);
 }
 
-/* test that a registered async engine is invoked on each loop run
- * we do this with an intstrumented async engine.
- */
-void
-testEventLoop::testRegisterEngine()
-{
-    EventLoop theLoop;
-    RecordingEngine testEngine;
-    theLoop.registerEngine(&testEngine);
-    theLoop.run();
-    CPPUNIT_ASSERT_EQUAL(2, testEngine.calls);
-}
+#if POLISHED_MAIN_LOOP
 
 /* each AsyncEngine needs to be given a timeout. We want one engine in each
  * loop to be given the timeout value - and the rest to have a timeout of 0.
