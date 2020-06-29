@@ -181,6 +181,13 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
+# Options removed in 5.x
+NAME: dns_v4_first
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid performs a 'Happy Eyeballs' algorithm, doing v4 first is no longer relevant.
+DOC_END
+
 # Options removed in 4.x
 NAME: cache_peer_domain cache_host_domain
 TYPE: obsolete
@@ -10025,12 +10032,6 @@ DOC_START
 	don't match, Squid ignores the response and writes a warning
 	message to cache.log.  You can allow responses from unknown
 	nameservers by setting this option to 'off'.
-DOC_END
-
-NAME: dns_v4_first
-TYPE: obsolete
-DOC_START
-	Remove this line. Squid performs a 'Happy Eyeballs' algorithm, doing v4 first is no longer relevant.
 DOC_END
 
 NAME: ipcache_size
