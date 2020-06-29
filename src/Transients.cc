@@ -255,7 +255,9 @@ Transients::addWriterEntry(StoreEntry &e, const cache_key *key)
 
     // set ASAP in hope to unlock the slot if something throws
     // and to provide index to such methods as hasWriter()
-    e.mem_obj->xitTable = { index, Store::ioWriting };
+    auto &xitTable = e.mem_obj->xitTable;
+    xitTable.index = index;
+    xitTable.io = Store::ioWriting;
 
     anchor->set(e, key);
     // allow reading and receive remote DELETE events, but do not switch to
@@ -283,7 +285,9 @@ Transients::anchorEntry(StoreEntry &e, const sfileno index, const Ipc::StoreMapA
 {
     // set ASAP in hope to unlock the slot if something throws
     // and to provide index to such methods as hasWriter()
-    e.mem_obj->xitTable = { index, Store::ioReading };
+    auto &xitTable = e.mem_obj->xitTable;
+    xitTable.index = index;
+    xitTable.io = Store::ioReading;
 
     const auto hadWriter = hasWriter(e); // before computing collapsingRequired
     anchor.exportInto(e);
