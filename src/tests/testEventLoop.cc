@@ -52,8 +52,6 @@ testEventLoop::testRunOnce()
     CPPUNIT_ASSERT_EQUAL(1, engine.calls);
 }
 
-#if POLISHED_MAIN_LOOP
-
 /* each AsyncEngine needs to be given a timeout. We want one engine in each
  * loop to be given the timeout value - and the rest to have a timeout of 0.
  * The last registered engine should be given this timeout, which will mean
@@ -73,9 +71,13 @@ testEventLoop::testEngineTimeout()
     theLoop.registerEngine(&engineOne);
     theLoop.registerEngine(&engineTwo);
     theLoop.runOnce();
+    CPPUNIT_ASSERT_EQUAL(1, engineOne.calls);
     CPPUNIT_ASSERT_EQUAL(0, engineOne.lasttimeout);
+    CPPUNIT_ASSERT_EQUAL(1, engineTwo.calls);
     CPPUNIT_ASSERT_EQUAL(5, engineTwo.lasttimeout);
 }
+
+#if POLISHED_MAIN_LOOP
 
 /* An event loop with all idle engines, and nothing dispatched in a run should
  * automatically quit. The runOnce call should return True when the loop is
