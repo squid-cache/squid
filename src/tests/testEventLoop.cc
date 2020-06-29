@@ -45,11 +45,37 @@ public:
 void
 testEventLoop::testRunOnce()
 {
-    EventLoop theLoop;
-    RecordingEngine engine;
-    theLoop.registerEngine(&engine);
-    theLoop.runOnce();
-    CPPUNIT_ASSERT_EQUAL(1, engine.calls);
+    {
+        /* trivial case - no engine, should quit immediately */
+        EventLoop theLoop;
+        CPPUNIT_ASSERT_EQUAL(true, theLoop.runOnce());
+    }
+
+    {
+        /* An event loop with all idle engines, and nothing dispatched in a run should
+         * automatically quit. The runOnce call should return True when the loop is
+         * entirely idle to make it easy for people running the loop by hand.
+         */
+        EventLoop theLoop;
+        RecordingEngine engine(AsyncEngine::EVENT_IDLE);
+        theLoop.registerEngine(&engine);
+        CPPUNIT_ASSERT_EQUAL(true, theLoop.runOnce());
+        CPPUNIT_ASSERT_EQUAL(1, engine.calls);
+        theLoop.run();
+        CPPUNIT_ASSERT_EQUAL(2, engine.calls);
+    }
+
+    {
+        /* an engine that asks for a timeout should not be detected as idle:
+         * use runOnce which should return false
+         */
+        EventLoop theLoop;
+        RecordingEngine engine;
+        theLoop.registerEngine(&engine);
+        CPPUNIT_ASSERT_EQUAL(false, theLoop.runOnce());
+        CPPUNIT_ASSERT_EQUAL(1, engine.calls);
+        CPPUNIT_ASSERT_EQUAL(EVENT_LOOP_TIMEOUT, engine.lasttimeout);
+    }
 }
 
 /* each AsyncEngine needs to be given a timeout. We want one engine in each
@@ -77,48 +103,24 @@ testEventLoop::testEngineTimeout()
     CPPUNIT_ASSERT_EQUAL(5, engineTwo.lasttimeout);
 }
 
-#if POLISHED_MAIN_LOOP
-
-/* An event loop with all idle engines, and nothing dispatched in a run should
- * automatically quit. The runOnce call should return True when the loop is
- * entirely idle to make it easy for people running the loop by hand.
+/* An engine which is suffering errors. This should result in 10
+ * loops until the loop stops - because that's the error retry amount
+ * hard-coded into EventLoop::runOnce()
  */
 void
-testEventLoop::testStopOnIdle()
+testEventLoop::testEngineErrors()
 {
     EventLoop theLoop;
-    /* trivial case - no engine, should quit immediately */
-    CPPUNIT_ASSERT_EQUAL(true, theLoop.runOnce());
-    theLoop.run();
-    /* add an engine which is idle.
-     */
-    RecordingEngine engine(AsyncEngine::EVENT_IDLE);
-    theLoop.registerEngine(&engine);
-    CPPUNIT_ASSERT_EQUAL(true, theLoop.runOnce());
-    CPPUNIT_ASSERT_EQUAL(1, engine.calls);
-    theLoop.run();
-    CPPUNIT_ASSERT_EQUAL(2, engine.calls);
-    /* add an engine which is suffering errors. This should result in 10
-     * loops until the loop stops - because that's the error retry amount
-     */
     RecordingEngine failing_engine(AsyncEngine::EVENT_ERROR);
     theLoop.registerEngine(&failing_engine);
     CPPUNIT_ASSERT_EQUAL(false, theLoop.runOnce());
     CPPUNIT_ASSERT_EQUAL(1, failing_engine.calls);
+    CPPUNIT_ASSERT_EQUAL(1, theLoop.errcount);
     theLoop.run();
     /* run resets the error count ... */
+    CPPUNIT_ASSERT_EQUAL(10, theLoop.errcount);
     CPPUNIT_ASSERT_EQUAL(11, failing_engine.calls);
-
-    /* an engine that asks for a timeout should not be detected as idle:
-     * use runOnce which should return false
-     */
-    theLoop = EventLoop();
-    RecordingEngine non_idle_engine(1000);
-    theLoop.registerEngine(&non_idle_engine);
-    CPPUNIT_ASSERT_EQUAL(false, theLoop.runOnce());
 }
-
-#endif /* POLISHED_MAIN_LOOP */
 
 /* An event loop has a time service which is like an async engine but never
  * generates events and there can only be one such service.

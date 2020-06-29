@@ -21,11 +21,7 @@ class testEventLoop : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testCreate );
     CPPUNIT_TEST( testRunOnce );
     CPPUNIT_TEST( testEngineTimeout );
-
-#if POLISHED_MAIN_LOOP
-    CPPUNIT_TEST( testStopOnIdle );
-#endif
-
+    CPPUNIT_TEST( testEngineErrors );
     CPPUNIT_TEST( testSetTimeService );
     CPPUNIT_TEST( testSetPrimaryEngine );
     CPPUNIT_TEST_SUITE_END();
@@ -34,11 +30,7 @@ protected:
     void testCreate();
     void testRunOnce();
     void testEngineTimeout();
-
-#if POLISHED_MAIN_LOOP
-    void testStopOnIdle();
-#endif
-
+    void testEngineErrors();
     void testSetTimeService();
     void testSetPrimaryEngine();
     /* TODO:
