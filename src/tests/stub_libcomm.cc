@@ -22,7 +22,8 @@ void Comm::AcceptLimiter::kick() STUB
 #include "comm/Connection.h"
 Comm::Connection::Connection() STUB
 Comm::Connection::~Connection() STUB
-Comm::ConnectionPointer Comm::Connection::copyDetails() const STUB_RETVAL(NULL)
+Comm::ConnectionPointer Comm::Connection::cloneIdentDetails() const STUB_RETVAL(nullptr)
+Comm::ConnectionPointer Comm::Connection::cloneDestinationDetails() const STUB_RETVAL(nullptr)
 void Comm::Connection::close() STUB
 CachePeer * Comm::Connection::getPeer() const STUB_RETVAL(NULL)
 void Comm::Connection::setPeer(CachePeer * p) STUB
@@ -35,7 +36,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 bool Comm::ConnOpener::doneAll() const STUB_RETVAL(false)
 void Comm::ConnOpener::start() STUB
 void Comm::ConnOpener::swanSong() STUB
-Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &, const AsyncCall::Pointer &, time_t) : AsyncJob("STUB Comm::ConnOpener") STUB
+Comm::ConnOpener::ConnOpener(const Comm::ConnectionPointer &, const AsyncCall::Pointer &, time_t) : AsyncJob("STUB Comm::ConnOpener") STUB
     Comm::ConnOpener::~ConnOpener() STUB
     void Comm::ConnOpener::setHost(const char *) STUB
     const char * Comm::ConnOpener::getHost() const STUB_RETVAL(NULL)

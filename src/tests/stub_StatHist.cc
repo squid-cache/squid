@@ -10,7 +10,7 @@
 #include "StatHist.h"
 
 #define STUB_API "StatHist.cc"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 class StoreEntry;
 

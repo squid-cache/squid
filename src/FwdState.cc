@@ -105,9 +105,8 @@ private:
 };
 
 void
-FwdState::abort(void* d)
+FwdState::HandleStoreAbort(FwdState *fwd)
 {
-    FwdState* fwd = (FwdState*)d;
     Pointer tmp = fwd; // Grab a temporary pointer to keep the object alive during our scope.
 
     if (Comm::IsConnOpen(fwd->serverConnection())) {
@@ -134,6 +133,7 @@ void
 FwdState::closeServerConnection(const char *reason)
 {
     debugs(17, 3, "because " << reason << "; " << serverConn);
+    assert(Comm::IsConnOpen(serverConn));
     comm_remove_close_handler(serverConn->fd, closeHandler);
     closeHandler = NULL;
     fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
@@ -177,8 +177,10 @@ void FwdState::start(Pointer aSelf)
 
     // Ftp::Relay needs to preserve control connection on data aborts
     // so it registers its own abort handler that calls ours when needed.
-    if (!request->flags.ftpNative)
-        entry->registerAbort(FwdState::abort, this);
+    if (!request->flags.ftpNative) {
+        AsyncCall::Pointer call = asyncCall(17, 4, "FwdState::Abort", cbdataDialer(&FwdState::HandleStoreAbort, this));
+        entry->registerAbortCallback(call);
+    }
 
     // just in case; should already be initialized to false
     request->flags.pinned = false;
@@ -317,7 +319,7 @@ FwdState::~FwdState()
 
     delete err;
 
-    entry->unregisterAbort();
+    entry->unregisterAbortCallback("FwdState object destructed");
 
     entry->unlock("FwdState");
 
@@ -482,7 +484,10 @@ FwdState::fail(ErrorState * errorState)
     if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
-        destinations->retryPath(serverConn);
+        if (destinationReceipt) {
+            destinations->reinstatePath(destinationReceipt);
+            destinationReceipt = nullptr;
+        }
     }
 
     if (ConnStateData *pinned_connection = request->pinnedConnection()) {
@@ -503,6 +508,7 @@ FwdState::unregister(Comm::ConnectionPointer &conn)
     comm_remove_close_handler(conn->fd, closeHandler);
     closeHandler = NULL;
     serverConn = NULL;
+    destinationReceipt = nullptr;
 }
 
 // \deprecated use unregister(Comm::ConnectionPointer &conn) instead
@@ -788,6 +794,8 @@ FwdState::advanceDestination(const char *stepDescription, const Comm::Connection
 void
 FwdState::noteConnection(HappyConnOpener::Answer &answer)
 {
+    assert(!destinationReceipt);
+
     calls.connector = nullptr;
     connOpener.clear();
 
@@ -801,14 +809,25 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
         Must(!Comm::IsConnOpen(answer.conn));
         answer.error.clear(); // preserve error for errorSendComplete()
     } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
+        // We do not know exactly why the connection got closed, so we play it
+        // safe, allowing retries only for persistent (reused) connections
+        if (answer.reused) {
+            destinationReceipt = answer.conn;
+            assert(destinationReceipt);
+        }
         syncHierNote(answer.conn, request->url.host());
         closePendingConnection(answer.conn, "conn was closed while waiting for noteConnection");
         error = new ErrorState(ERR_CANNOT_FORWARD, Http::scServiceUnavailable, request, al);
+    } else {
+        assert(!error);
+        destinationReceipt = answer.conn;
+        assert(destinationReceipt);
+        // serverConn remains nil until syncWithServerConn()
     }
 
     if (error) {
         fail(error);
-        retryOrBail(); // will notice flags.dont_retry and bail
+        retryOrBail();
         return;
     }
 
@@ -847,15 +866,16 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
                                             "FwdState::tunnelEstablishmentDone",
                                             Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
     HttpRequest::Pointer requestPointer = request;
-    const auto tunneler = new Http::Tunneler(conn, requestPointer, callback, connectingTimeout(serverConnection()), al);
+    const auto tunneler = new Http::Tunneler(conn, requestPointer, callback, connectingTimeout(conn), al);
 
     // TODO: Replace this hack with proper Comm::Connection-Pool association
     // that is not tied to fwdPconnPool and can handle disappearing pools.
     tunneler->noteFwdPconnUse = true;
 
 #if USE_DELAY_POOLS
-    Must(serverConnection()->getPeer());
-    if (!serverConnection()->getPeer()->options.no_delay)
+    Must(conn);
+    Must(conn->getPeer());
+    if (!conn->getPeer()->options.no_delay)
         tunneler->setDelayId(entry->mem_obj->mostBytesAllowed());
 #endif
     AsyncJob::Start(tunneler);
@@ -998,6 +1018,7 @@ FwdState::syncWithServerConn(const Comm::ConnectionPointer &conn, const char *ho
 {
     Must(IsConnOpen(conn));
     serverConn = conn;
+    // no effect on destinationReceipt (which may even be nil here)
 
     closeHandler = comm_add_close_handler(serverConn->fd,  fwdServerClosedWrapper, this);
 
@@ -1042,6 +1063,7 @@ FwdState::connectStart()
     err = nullptr;
     request->clearError();
     serverConn = nullptr;
+    destinationReceipt = nullptr;
 
     request->hier.startPeerClock();
 
@@ -1072,6 +1094,8 @@ FwdState::usePinned()
     debugs(17, 7, "connection manager: " << connManager);
 
     try {
+        // TODO: Refactor syncWithServerConn() and callers to always set
+        // serverConn inside that method.
         serverConn = ConnStateData::BorrowPinnedConnection(request, al);
         debugs(17, 5, "connection: " << serverConn);
     } catch (ErrorState * const anErr) {
