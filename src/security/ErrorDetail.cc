@@ -398,12 +398,6 @@ static const ErrorCodeNames TheErrorCodeNames = {
         "SSL_ERROR_NONE"
     },
 #endif // USE_OPENSSL
-
-    // redirector to support legacy error translations
-    {
-        SQUID_TLS_ERR_CONNECT,
-        "SQUID_ERR_SSL_HANDSHAKE"
-    },
 };
 
 } // namespace Security
@@ -411,11 +405,20 @@ static const ErrorCodeNames TheErrorCodeNames = {
 Security::ErrorCode
 Security::ErrorCodeFromName(const char *name)
 {
-    // TODO: Optimize search using a reverse map/index?
-    for (const auto &i: TheErrorCodeNames) {
-        if (strcmp(name, i.second) == 0)
-            return i.first;
+    static auto TheCmp = [](const char *a, const char *b){return strcmp(a, b) < 0;};
+    static std::map<const char *, Security::ErrorCode, decltype(TheCmp)> TheErrorCodeByNameIndx(TheCmp);
+    if (TheErrorCodeByNameIndx.empty()) {
+        for (const auto &i: TheErrorCodeNames)
+            TheErrorCodeByNameIndx.insert(std::make_pair(i.second, i.first));
+
+        // redirector to support legacy error translations
+        TheErrorCodeByNameIndx.insert(std::make_pair("SQUID_ERR_SSL_HANDSHAKE", SQUID_TLS_ERR_CONNECT));
     }
+
+    const auto it = TheErrorCodeByNameIndx.find(name);
+    if (it != TheErrorCodeByNameIndx.end())
+        return it->second;
+
     return 0;
 }
 
