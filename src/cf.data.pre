@@ -185,7 +185,7 @@ DOC_END
 NAME: dns_v4_first
 TYPE: obsolete
 DOC_START
-	Remove this line. Squid performs a 'Happy Eyeballs' algorithm, doing v4 first is no longer relevant.
+	Remove this line. Squid no longer supports preferential treatment of DNS A records.
 DOC_END
 
 # Options removed in 4.x
