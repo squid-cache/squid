@@ -100,7 +100,7 @@ private:
     KeyMapping index;
 
     /// TTL to use if none provided to add().
-    int defaultTtl = std::numeric_limits<int>::max;
+    int defaultTtl = std::numeric_limits<int>::max();
     size_t memLimit_ = 0; ///< The maximum memory to use
     size_t memUsed_ = 0;  ///< The amount of memory currently used
 };
