@@ -89,7 +89,7 @@ private:
     bool expired(const Entry &e) const;
     void trim(size_t wantSpace);
     void erase(const KeyMapIterator &);
-    const KeyMapIterator find(const Key &);
+    KeyMapIterator find(const Key &);
     size_t memoryCountedFor(const Key &, const EntryValue *);
 
     /// The {key, value, ttl} tuples.
@@ -116,7 +116,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(size_t aSize)
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-const typename ClpMap<Key, EntryValue, MemoryUsedByEV>::KeyMapIterator
+typename ClpMap<Key, EntryValue, MemoryUsedByEV>::KeyMapIterator
 ClpMap<Key, EntryValue, MemoryUsedByEV>::find(const Key &key)
 {
     const auto i = index.find(key);
