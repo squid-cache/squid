@@ -220,6 +220,7 @@ template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)
 void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::trim(size_t wantSpace)
 {
+    assert(wantSpace <= memLimit()); // no infinite loops and in-vain trimming
     while (freeMem() < wantSpace) {
         assert(!data.empty());
         del(data.rbegin()->key);
