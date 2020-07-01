@@ -24,12 +24,10 @@ DefaultMemoryUsage(const EntryValue *e)
     return sizeof(*e);
 }
 
-/**
- * A Map for caching data by Capacity, Lifetime, and Priority (CLP)
- * Unlike other Map containers data is;
- * - added only if it fits within a predetermined memory limit (Capacity),
- * - gets expired based on TTL (Lifetime), and a fading Priority Queue.
- */
+/// An in-memory cache enforcing three primary policies:
+/// Capacity: The memory used by cached entries has a configurable limit;
+/// Lifetime: Entries are hidden (and may be deleted) after their TTL expires;
+/// Priority: Capacity victims are purged in LRU order.
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *) = DefaultMemoryUsage>
 class ClpMap
 {
