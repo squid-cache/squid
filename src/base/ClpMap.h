@@ -73,7 +73,7 @@ public:
     /// Delete an entry from the map
     void del(const Key &key);
     /// (re-)set the memory capacity for this map
-    void setMemLimit(size_t aSize);
+    void setMemLimit(size_t newLimit);
     /// The memory capacity for the map
     size_t memLimit() const {return memLimit_;}
     /// The free space of the map
@@ -105,12 +105,12 @@ private:
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 void
-ClpMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(size_t aSize)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(const size_t newLimit)
 {
-    assert(aSize >= 0);
-    if (memUsed_ > aSize)
-        trim(memLimit_ - aSize);
-    memLimit_ = aSize;
+    assert(newLimit >= 0);
+    if (memUsed_ > newLimit)
+        trim(memLimit_ - newLimit);
+    memLimit_ = newLimit;
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
