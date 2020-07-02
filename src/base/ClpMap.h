@@ -164,13 +164,13 @@ template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)
 bool
 ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, int ttl)
 {
-    if (ttl < 0)
-        return false;
-
     if (memLimit() == 0)
         return false;
 
     del(key);
+
+    if (ttl < 0)
+        return false;
 
     const auto wantSpace = memoryCountedFor(key, t);
     if (wantSpace > memLimit())
