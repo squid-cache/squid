@@ -199,10 +199,10 @@ void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::erase(const KeyMapIterator &i)
 {
     assert(i != index.end());
-    auto &e = i->second;
-    const auto sz = e->memCounted;
-    data.erase(e);
-    index.erase(i);
+    const auto dataPosition = i->second;
+    const auto sz = dataPosition->memCounted;
+    index.erase(i); // destroys a pointer to our Entry
+    data.erase(dataPosition); // destroys our Entry
     memUsed_ -= sz;
 }
 
