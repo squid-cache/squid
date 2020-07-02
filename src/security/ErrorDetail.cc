@@ -498,11 +498,15 @@ Security::ErrorDetail::brief() const
         buf.append(ToSBuf("+SSL_ERR=", lib_error_no));
 #endif
 
-    // TODO: Consider logging long but human-friendly names (e.g.,
-    // SSL_ERROR_SYSCALL and GNUTLS_E_WARNING_ALERT_RECEIVED). See
-    // gnutls_strerror_name().
-    if (ioErrorNo)
+    if (ioErrorNo) {
+#if USE_OPENSSL
+        // TODO: Consider logging long but human-friendly names (e.g.,
+        // SSL_ERROR_SYSCALL).
         buf.append(ToSBuf("+TLS_IO_ERR=", ioErrorNo));
+#elif USE_GNUTLS
+        buf.append(ToSBuf("+", gnutls_strerror_name(ioErrorNo)));
+#endif
+    }
 
     if (sysErrorNo) {
         buf.append('+');
