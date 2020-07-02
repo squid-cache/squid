@@ -57,7 +57,13 @@ public:
     typedef std::unordered_map<Key, StorageIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapItem> > KeyMapping;
     typedef typename KeyMapping::iterator KeyMapIterator;
 
-    ClpMap(int aTtl, size_t aSize) : defaultTtl(aTtl) { assert(aTtl >= 0); setMemLimit(aSize); }
+    ClpMap(size_t aCapacity, int aDefaultTtl) :
+        defaultTtl(aDefaultTtl)
+    {
+        assert(aDefaultTtl >= 0);
+        setMemLimit(aCapacity);
+    }
+    explicit ClpMap(size_t aCapacity) { setMemLimit(aCapacity); }
     ~ClpMap() = default;
     ClpMap(ClpMap const &) = delete;
     ClpMap & operator = (ClpMap const &) = delete;

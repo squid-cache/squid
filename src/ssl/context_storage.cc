@@ -114,7 +114,7 @@ void Ssl::GlobalContextStorage::reconfigureFinish()
         // add new local storages.
         for (std::map<Ip::Address, size_t>::iterator conf_i = configureStorage.begin(); conf_i != configureStorage.end(); ++conf_i ) {
             if (storage.find(conf_i->first) == storage.end() && conf_i->second > 0) {
-                storage.insert(std::pair<Ip::Address, LocalContextStorage *>(conf_i->first, new LocalContextStorage(-1, conf_i->second)));
+                storage.insert(std::pair<Ip::Address, LocalContextStorage *>(conf_i->first, new LocalContextStorage(conf_i->second)));
             }
         }
     }

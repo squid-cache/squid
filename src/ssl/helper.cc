@@ -217,7 +217,7 @@ void Ssl::CertValidationHelper::Init()
 
     //WARNING: initializing static member in an object initialization method
     assert(HelperCache == NULL);
-    HelperCache = new CacheType(ttl, cache);
+    HelperCache = new CacheType(cache, ttl);
 }
 
 void Ssl::CertValidationHelper::Shutdown()
