@@ -495,7 +495,7 @@ Security::ErrorDetail::brief() const
     // HEX lib_error_no value can be fed to `openssl errstr` for more info.
     // TODO: Convert this and sslErrorName() in Format.cc to TLS_ERR=<HEX>.
     if (lib_error_no != SSL_ERROR_NONE)
-        buf.append(ToSBuf("+SSL_ERR=", lib_error_no));
+        buf.append(ToSBuf("+SSL_ERR=", std::hex, std::uppercase, lib_error_no));
 #endif
 
     if (ioErrorNo) {
