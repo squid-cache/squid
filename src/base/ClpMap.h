@@ -72,7 +72,7 @@ public:
     bool add(const Key &key, EntryValue *t, int ttl);
     /// Delete an entry from the map
     void del(const Key &key);
-    /// (re-)set the memory capacity for this map
+    /// Reset the memory capacity for this map, purging if needed
     void setMemLimit(size_t newLimit);
     /// The memory capacity for the map
     size_t memLimit() const {return memLimit_;}
