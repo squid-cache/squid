@@ -44,9 +44,11 @@ void Ssl::CertificateStorageAction::dump (StoreEntry *sentry)
     for (std::map<Ip::Address, LocalContextStorage *>::iterator i = TheGlobalContextStorage.storage.begin(); i != TheGlobalContextStorage.storage.end(); ++i) {
         stream << i->first << delimiter;
         LocalContextStorage & ssl_store_policy(*(i->second));
+        const auto memoryPerEntry = ssl_store_policy.entries() ?
+            ssl_store_policy.memoryUsed() / ssl_store_policy.entries() : 0;
         stream << ssl_store_policy.memLimit() / 1024 << delimiter;
         stream << ssl_store_policy.entries() << delimiter;
-        stream << MemoryUsedByContext(nullptr) / 1024 << delimiter; // XXX: complicated way to print "1"
+        stream << memoryPerEntry / 1024 << delimiter;
         stream << ssl_store_policy.memoryUsed() / 1024 << delimiter;
         stream << ssl_store_policy.freeMem() / 1024 << endString;
     }
