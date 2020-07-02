@@ -39,8 +39,6 @@ public:
         ~Entry() {delete value;}
         Entry(const Entry &) = delete;
         Entry & operator = (const Entry &) = delete;
-        Entry(Entry &&) = default;
-        Entry & operator = (Entry &&) = default;
 
     public:
         Key key; ///< the key of entry
