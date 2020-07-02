@@ -45,7 +45,7 @@ public:
     public:
         Key key; ///< the key of entry
         EntryValue *value = nullptr; ///< A pointer to the stored value
-        time_t expires = 0; ///< When the entry is to be removed
+        time_t expires = 0; ///< get() stops returning the entry after this time
         size_t memCounted = 0; ///< memory accounted for this entry in parent ClpMap
     };
 
@@ -221,6 +221,8 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::trim(size_t wantSpace)
     assert(wantSpace <= memLimit()); // no infinite loops and in-vain trimming
     while (freeMem() < wantSpace) {
         assert(!data.empty());
+        // TODO: Purge expired entries first. They are useless, but their
+        // presence may lead to purging potentially useful fresh entries here.
         del(data.rbegin()->key);
     }
 }
