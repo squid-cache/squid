@@ -199,7 +199,7 @@ void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::erase(const KeyMapIterator &i)
 {
     assert(i != index.end());
-    auto &e = (*i).second;
+    auto &e = i->second;
     const auto sz = e->memCounted;
     data.erase(e);
     index.erase(i);
