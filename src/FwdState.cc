@@ -579,7 +579,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 
     destinations->addPath(path);
 
-    if (Comm::IsConnOpen(serverConn)) {
+    if (destinationReceipt) {
         // We are already using a previously opened connection, so we cannot be
         // waiting for connOpener. We still receive destinations for backup.
         Must(!opening());
@@ -619,7 +619,7 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     // if all of them fail, forwarding as whole will fail
     Must(!selectionError); // finding at least one path means selection succeeded
 
-    if (Comm::IsConnOpen(serverConn)) {
+    if (destinationReceipt) {
         // We are already using a previously opened connection, so we cannot be
         // waiting for connOpener. We were receiving destinations for backup.
         Must(!opening());
