@@ -475,6 +475,9 @@ FwdState::fail(ErrorState * errorState)
     delete err;
     err = errorState;
 
+    const auto oldDestinationReceipt = destinationReceipt;
+    destinationReceipt = nullptr;
+
     if (!errorState->request)
         errorState->request = request;
 
@@ -484,10 +487,8 @@ FwdState::fail(ErrorState * errorState)
     if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
-        if (destinationReceipt) {
-            destinations->reinstatePath(destinationReceipt);
-            destinationReceipt = nullptr;
-        }
+        if (oldDestinationReceipt)
+            destinations->reinstatePath(oldDestinationReceipt);
     }
 
     if (ConnStateData *pinned_connection = request->pinnedConnection()) {
@@ -543,6 +544,7 @@ FwdState::complete()
 
         if (Comm::IsConnOpen(serverConn))
             unregister(serverConn);
+        destinationReceipt = nullptr;
 
         entry->reset();
 
@@ -562,6 +564,12 @@ FwdState::complete()
     }
 }
 
+bool
+FwdState::usingDestination() const
+{
+    return destinationReceipt || Comm::IsConnOpen(serverConn);
+}
+
 void
 FwdState::noteDestination(Comm::ConnectionPointer path)
 {
@@ -579,7 +587,7 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 
     destinations->addPath(path);
 
-    if (destinationReceipt) {
+    if (usingDestination()) {
         // We are already using a previously opened connection, so we cannot be
         // waiting for connOpener. We still receive destinations for backup.
         Must(!opening());
@@ -619,7 +627,7 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     // if all of them fail, forwarding as whole will fail
     Must(!selectionError); // finding at least one path means selection succeeded
 
-    if (destinationReceipt) {
+    if (usingDestination()) {
         // We are already using a previously opened connection, so we cannot be
         // waiting for connOpener. We were receiving destinations for backup.
         Must(!opening());
@@ -727,12 +735,16 @@ FwdState::serverClosed(int fd)
            (fd >= 0 ? fd_table[fd].pconn.uses : -1) << " requests");
     if (fd >= 0 && serverConnection()->fd == fd)
         fwdPconnPool->noteUses(fd_table[fd].pconn.uses);
+    serverConn = nullptr;
+    destinationReceipt = nullptr;
     retryOrBail();
 }
 
 void
 FwdState::retryOrBail()
 {
+    assert(!serverConn);
+
     if (checkRetry()) {
         debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
         useDestinations();
@@ -768,6 +780,8 @@ FwdState::handleUnregisteredServerEnd()
 {
     debugs(17, 2, HERE << "self=" << self << " err=" << err << ' ' << entry->url());
     assert(!Comm::IsConnOpen(serverConn));
+    assert(!serverConn);
+    destinationReceipt = nullptr;
     retryOrBail();
 }
 
@@ -785,6 +799,8 @@ FwdState::advanceDestination(const char *stepDescription, const Comm::Connection
     } catch (...) {
         debugs (17, 2, "exception while trying to " << stepDescription << ": " << CurrentException);
         closePendingConnection(conn, "connection preparation exception");
+        auto error = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request, al);
+        fail(error);
         retryOrBail();
     }
 }
@@ -1062,8 +1078,7 @@ FwdState::connectStart()
     delete err;
     err = nullptr;
     request->clearError();
-    serverConn = nullptr;
-    destinationReceipt = nullptr;
+    assert(!usingDestination());
 
     request->hier.startPeerClock();
 
