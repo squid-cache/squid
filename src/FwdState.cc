@@ -544,6 +544,7 @@ FwdState::complete()
 
         if (Comm::IsConnOpen(serverConn))
             unregister(serverConn);
+        serverConn = nullptr;
         destinationReceipt = nullptr;
 
         entry->reset();
