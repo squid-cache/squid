@@ -31,7 +31,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS = \
+SRC_DIRS = \
 	mem \
 	base \
 	anyp \
@@ -53,7 +53,8 @@ SUBDIRS = \
 	DiskIO \
 	proxyp
 
-DIST_SUBDIRS = $(SUBDIRS)
+SUBDIRS = $(SRC_DIRS)
+DIST_SUBDIRS = $(SRC_DIRS)
 
 if ENABLE_AUTH
 SUBDIRS += auth
