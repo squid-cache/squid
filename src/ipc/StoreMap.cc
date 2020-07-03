@@ -99,6 +99,43 @@ Ipc::StoreMap::forgetWritingEntry(sfileno fileno)
     debugs(54, 8, "closed entry " << fileno << " for writing " << path);
 }
 
+const Ipc::StoreMap::Anchor *
+Ipc::StoreMap::openOrCreateForReading(const cache_key *const key, sfileno &fileno, const StoreEntry &entry)
+{
+    debugs(54, 5, "opening/creating entry with key " << storeKeyText(key)
+           << " for reading " << path);
+
+    // start with reading so that we do not overwrite an existing unlocked entry
+    auto idx = fileNoByKey(key);
+    if (const auto anchor = openForReadingAt(idx, key)) {
+        fileno = idx;
+        return anchor;
+    }
+
+    // the competing openOrCreateForReading() workers race to create a new entry
+    idx = fileNoByKey(key);
+    if (auto anchor = openForWritingAt(idx)) {
+        anchor->set(entry, key);
+        anchor->lock.switchExclusiveToShared();
+        // race ended
+        assert(anchor->complete());
+        fileno = idx;
+        debugs(54, 5, "switched entry " << fileno << " from writing to reading " << path);
+        return anchor;
+    }
+
+    // we lost the above race; see if the winner-created entry is now readable
+    // TODO: Do some useful housekeeping work here to give the winner more time.
+    idx = fileNoByKey(key);
+    if (const auto anchor = openForReadingAt(idx, key)) {
+        fileno = idx;
+        return anchor;
+    }
+
+    // slow entry creator or some other problem
+    return nullptr;
+}
+
 Ipc::StoreMap::Anchor *
 Ipc::StoreMap::openForWriting(const cache_key *const key, sfileno &fileno)
 {
