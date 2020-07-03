@@ -294,6 +294,9 @@ public:
     /// same as closeForReading() but also frees the entry if it is unlocked
     void closeForReadingAndFreeIdle(const sfileno fileno);
 
+    /// openForReading() but creates a new entry if there is no old one
+    const Anchor *openOrCreateForReading(const cache_key *, sfileno &, const StoreEntry &);
+
     /// writeable slice within an entry chain created by openForWriting()
     Slice &writeableSlice(const AnchorId anchorId, const SliceId sliceId);
     /// readable slice within an entry chain opened by openForReading()
