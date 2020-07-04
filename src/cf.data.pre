@@ -181,6 +181,13 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
+# Options removed in 5.x
+NAME: dns_v4_first
+TYPE: obsolete
+DOC_START
+	Remove this line. Squid no longer supports preferential treatment of DNS A records.
+DOC_END
+
 # Options removed in 4.x
 NAME: cache_peer_domain cache_host_domain
 TYPE: obsolete
@@ -9973,24 +9980,6 @@ DOC_START
 	don't match, Squid ignores the response and writes a warning
 	message to cache.log.  You can allow responses from unknown
 	nameservers by setting this option to 'off'.
-DOC_END
-
-NAME: dns_v4_first
-TYPE: onoff
-DEFAULT: off
-LOC: Config.dns.v4_first
-DOC_START
-	With the IPv6 Internet being as fast or faster than IPv4 Internet
-	for most networks Squid prefers to contact websites over IPv6.
-
-	This option reverses the order of preference to make Squid contact
-	dual-stack websites over IPv4 first. Squid will still perform both
-	IPv6 and IPv4 DNS lookups before connecting.
-
-	WARNING:
-	  This option will restrict the situations under which IPv6
-	  connectivity is used (and tested). Hiding network problems
-	  which would otherwise be detected and warned about.
 DOC_END
 
 NAME: ipcache_size
