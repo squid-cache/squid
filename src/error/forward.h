@@ -77,7 +77,6 @@ typedef enum {
     TCP_RESET,                  // Send TCP RST packet instead of error page
 
     ERR_SECURE_ACCEPT_FAIL, // Rejects the SSL connection intead of error page
-    ERR_SSL_BUMP_FAILURE, // closes the connection
     ERR_REQUEST_START_TIMEOUT, // Aborts the connection instead of error page
     ERR_REQUEST_PARSE_TIMEOUT, // Aborts the connection instead of error page
     ERR_RELAY_REMOTE, // Sends server reply instead of error page
