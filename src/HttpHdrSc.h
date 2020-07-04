@@ -11,7 +11,7 @@
 
 #include "http/forward.h"
 #include "HttpHdrScTarget.h"
-#include "mem/forward.h"
+#include "mem/PoolingAllocator.h"
 #include "SquidString.h"
 
 #include <list>
@@ -35,7 +35,7 @@ public:
 private:
     HttpHdrScTarget * findTarget (const char *target);
 
-    std::list<HttpHdrScTarget> targets;
+    std::list<HttpHdrScTarget, PoolingAllocator<HttpHdrScTarget>> targets;
 };
 
 /* Http Surrogate Control Header Field */
