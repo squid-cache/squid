@@ -37,7 +37,7 @@ public:
     virtual void swanSong();
 
     /// ??
-    virtual bool connFinishedWithConn(int size) = 0;
+    virtual bool connFinishedWithConn(int xerrno) = 0;
 
     /// maybe grow the inBuf and schedule Comm::Read()
     void readSomeData();

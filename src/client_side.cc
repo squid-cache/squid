@@ -1442,19 +1442,39 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
 }
 
 bool
-ConnStateData::connFinishedWithConn(int size)
+ConnStateData::connFinishedWithConn(int xerrno)
 {
-    if (size == 0) {
-        if (pipeline.empty() && inBuf.isEmpty()) {
-            /* no current or pending requests */
-            debugs(33, 4, HERE << clientConnection << " closed");
-            return true;
-        } else if (!Config.onoff.half_closed_clients) {
-            /* admin doesn't want to support half-closed client sockets */
-            debugs(33, 3, HERE << clientConnection << " aborted (half_closed_clients disabled)");
-            pipeline.terminateAll(0);
-            return true;
-        }
+    if (pipeline.empty() && inBuf.isEmpty()) {
+        /* no current or pending requests */
+        debugs(33, 4, HERE << clientConnection << " closed");
+        return true;
+    }
+
+    auto errType = ERR_NONE;
+    ErrorDetail::Pointer detail;
+    if (xerrno) {
+        detail = SysErrorDetail::NewIfAny(xerrno);
+        errType = ERR_READ_ERROR;
+    }
+#if USE_OPENSSL
+    else if (parsingTlsHandshake) {
+        errType = ERR_SECURE_ACCEPT_FAIL;
+        if (receivedFirstByte_)
+            detail = MakeNamedErrorDetail("TLS_ACCEPT_CLIENT_ABORTED");
+        else
+            detail = MakeNamedErrorDetail("TLS_ACCEPT_NO_DATA");
+        inBuf.clear(); //To avoid log extra line for those bytes.
+    }
+#endif
+
+    if (errType != ERR_NONE)
+        updateError(errType, detail);
+
+    if (xerrno || !Config.onoff.half_closed_clients) {
+        /* admin doesn't want to support half-closed client sockets */
+        debugs(33, 3, HERE << clientConnection << " aborted " << (xerrno == 0 ? "(half_closed_clients disabled)" : ""));
+        pipeline.terminateAll(xerrno);
+        return true;
     }
 
     return false;

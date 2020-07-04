@@ -410,7 +410,7 @@ protected:
 
 private:
     /* ::Server API */
-    virtual bool connFinishedWithConn(int size);
+    virtual bool connFinishedWithConn(int xerrno);
     virtual void checkLogging();
 
     void clientAfterReadingRequests();
