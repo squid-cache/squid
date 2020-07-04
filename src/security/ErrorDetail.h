@@ -43,10 +43,17 @@ public:
     /// If `broken` is nil, then the broken certificate is the peer certificate.
     ErrorDetail(ErrorCode err_no, const CertPointer &peer, const CertPointer &broken, const char *aReason = NULL);
 
+#if USE_OPENSSL
     /// Details (or starts detailing) a non-validation failure.
     /// \param anIoErrorNo TLS I/O function outcome; \see ErrorDetail::ioErrorNo
     /// \param aSysErrorNo saved errno(3); \see ErrorDetail::sysErrorNo
     ErrorDetail(ErrorCode anErrorCode, int anIoErrorNo, int aSysErrorNo);
+#elif USE_GNUTLS
+    /// Details (or starts detailing) a non-validation failure.
+    /// \param anLibErrorNo TLS function outcome; \see ErrorDetail::lib_error_no
+    /// \param aSysErrorNo saved errno(3); \see ErrorDetail::sysErrorNo
+    ErrorDetail(ErrorCode anErrorCode, LibErrorCode aLibErrorNo, int aSysErrorNo);
+#endif
 
     /// \returns whether we (rather than `them`) should detail ErrorState
     bool takesPriorityOver(const ErrorDetail &them) const {
@@ -99,21 +106,23 @@ private:
     /// error category; \see ErrorCode
     ErrorCode error_no = 0;
 
+#if USE_OPENSSL
     /// TLS I/O operation result or zero
     /// For OpenSSL, a SSL_get_error(3SSL) result (e.g., SSL_ERROR_SYSCALL).
-    /// For GnuTLS, a result of an I/O function like gnutls_handshake() (e.g., GNUTLS_E_WARNING_ALERT_RECEIVED)
     int ioErrorNo = 0;
+#endif
 
     /// errno(3); system call failure code or zero
     int sysErrorNo = 0;
 
-#if USE_OPENSSL
     /// Non-validation error reported by the TLS library or zero.
     /// For OpenSSL, this is the result of the first ERR_get_error(3SSL) call,
     /// which `openssl errstr` can expand into details like
     /// `error:1408F09C:SSL routines:ssl3_get_record:http request`.
-    unsigned long lib_error_no = SSL_ERROR_NONE;
+    /// For GnuTLS, a result of an API function like gnutls_handshake() (e.g., GNUTLS_E_WARNING_ALERT_RECEIVED)
+    LibErrorCode lib_error_no = 0;
 
+#if USE_OPENSSL
     using ErrorDetailEntry = Ssl::ErrorDetailEntry;
     mutable ErrorDetailEntry detailEntry;
 #else

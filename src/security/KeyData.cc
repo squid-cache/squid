@@ -39,7 +39,7 @@ Security::KeyData::loadX509CertFromFile()
 #elif USE_GNUTLS
     const char *certFilename = certFile.c_str();
     gnutls_datum_t data;
-    Security::ErrorCode x = gnutls_load_file(certFilename, &data);
+    Security::LibErrorCode x = gnutls_load_file(certFilename, &data);
     if (x != GNUTLS_E_SUCCESS) {
         debugs(83, DBG_IMPORTANT, "ERROR: unable to load certificate file '" << certFile << "': " << ErrorString(x));
         return false;

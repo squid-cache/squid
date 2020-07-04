@@ -102,8 +102,16 @@ class EncryptorAnswer;
 /// Squid-defined error code (<0), an error code returned by X.509 API, or zero
 typedef int ErrorCode;
 
+#if USE_OPENSSL
+typedef unsigned long LibErrorCode;
+#elif USE_GNUTLS
+typedef int LibErrorCode;
+#else
+typedef int LibErrorCode;
+#endif
+
 // TODO: Reconcile with ErrorNameFromCode(). XXX: Callers use non-ErrorCodes!
-inline const char *ErrorString(const ErrorCode code) {
+inline const char *ErrorString(const LibErrorCode code) {
 #if USE_OPENSSL
     return ERR_error_string(code, nullptr);
 #elif USE_GNUTLS

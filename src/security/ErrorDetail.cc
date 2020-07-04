@@ -464,6 +464,7 @@ Security::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, const CertPointer
     broken_cert = broken ? broken : cert;
 }
 
+#if USE_OPENSSL
 Security::ErrorDetail::ErrorDetail(const Security::ErrorCode anErrorCode, const int anIoErrorNo, const int aSysErrorNo):
     ErrorDetail(anErrorCode)
 {
@@ -475,6 +476,15 @@ Security::ErrorDetail::ErrorDetail(const Security::ErrorCode anErrorCode, const 
     // errno or a zero errno. Callers must call PrepForIo() to reset errno.
     sysErrorNo = aSysErrorNo;
 }
+
+#elif USE_GNUTLS
+Security::ErrorDetail::ErrorDetail(const Security::ErrorCode anErrorCode, const LibErrorCode aLibErrorNo, const int aSysErrorNo):
+    ErrorDetail(anErrorCode)
+{
+    lib_error_no = aLibErrorNo;
+    sysErrorNo = aSysErrorNo;
+}
+#endif
 
 void
 Security::ErrorDetail::setPeerCertificate(const CertPointer &cert)
@@ -491,22 +501,22 @@ Security::ErrorDetail::brief() const
 {
     SBuf buf(err_code()); // TODO: Upgrade err_code()/etc. to return SBuf.
 
+    if (lib_error_no) {
 #if USE_OPENSSL
-    // HEX lib_error_no value can be fed to `openssl errstr` for more info.
-    // TODO: Review `TLS_LIB_ERR=` prefix
-    if (lib_error_no)
+        // HEX lib_error_no value can be fed to `openssl errstr` for more info.
+        // TODO: Review `TLS_LIB_ERR=` prefix
         buf.append(ToSBuf("+TLS_LIB_ERR=", std::hex, std::uppercase, lib_error_no));
-#endif
-
-    if (ioErrorNo) {
-#if USE_OPENSSL
-        // TODO: Consider logging long but human-friendly names (e.g.,
-        // SSL_ERROR_SYSCALL).
-        buf.append(ToSBuf("+TLS_IO_ERR=", ioErrorNo));
 #elif USE_GNUTLS
-        buf.append(ToSBuf("+", gnutls_strerror_name(ioErrorNo)));
+        buf.append(ToSBuf("+", gnutls_strerror_name(lib_error_no)));
 #endif
     }
+
+#if USE_OPENSSL
+    // TODO: Consider logging long but human-friendly names (e.g.,
+    // SSL_ERROR_SYSCALL).
+    if (ioErrorNo)
+        buf.append(ToSBuf("+TLS_IO_ERR=", ioErrorNo));
+#endif
 
     if (sysErrorNo) {
         buf.append('+');
@@ -681,12 +691,10 @@ Security::ErrorDetail::err_lib_error() const
 {
     if (errReason.size() > 0)
         return errReason.termedBuf();
-#if USE_OPENSSL
     else if (lib_error_no)
         return Security::ErrorString(lib_error_no);
     else
         return "[No Error]";
-#endif
     return "[Not available]";
 }
 
