@@ -16,7 +16,7 @@ indent_style = tab
 [*.am]
 indent_style = tab
 
-[configure.ac]
+[*.{ac,m4}]
 indent_style = space
 indent_size = 2
 
@@ -25,10 +25,6 @@ indent_style = space
 indent_size = 4
 
 [*.{pl,pl.in,pm}]
-indent_style = space
-indent_size = 4
-
-[*.m4]
 indent_style = space
 indent_size = 4
 
