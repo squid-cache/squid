@@ -200,4 +200,8 @@ elif test "x$CERTTOOL" != "x" -a -x $CERTTOOL; then
 
 else
 	echo "WARNING: cannot find a tool to generate certificates"
+	echo "Usage: $0 <openssl> <certtool>"
+	echo "At least one of the two parameters must be given."
+	echo "Use an empty string to skip the first parameter."
+	exit 1;
 fi
