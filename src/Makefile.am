@@ -1525,6 +1525,7 @@ tests_testStore_SOURCES = \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
+	tests/stub_IpcIoFile.cc \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
 	cbdata.cc \
@@ -1954,6 +1955,7 @@ tests_test_http_range_SOURCES = \
 	event.cc \
 	tests/stub_external_acl.cc \
 	tests/stub_fatal.cc \
+	tests/stub_IpcIoFile.cc \
 	fatal.h \
 	fd.cc \
 	fd.h \
@@ -2371,6 +2373,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_IpcIoFile.cc \
 	mem_node.cc \
 	mime.cc \
 	mime.h \
@@ -2673,6 +2676,7 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_IpcIoFile.cc \
 	mem_node.cc \
 	mime.cc \
 	mime.h \
@@ -2995,6 +2999,7 @@ tests_testEvent_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_IpcIoFile.cc \
 	mem_node.cc \
 	mime.cc \
 	mime.h \
@@ -3234,6 +3239,7 @@ tests_testEventLoop_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_IpcIoFile.cc \
 	mem_node.cc \
 	mime.cc \
 	mime.h \
