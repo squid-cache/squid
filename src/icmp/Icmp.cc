@@ -87,9 +87,7 @@ Icmp::ipHops(int ttl)
 void
 Icmp::Log(const Ip::Address &addr, const uint8_t type, const char* pkt_str, const int rtt, const int hops)
 {
-    debugs(42, 2, "pingerLog: " << std::setw(9) << current_time.tv_sec  <<
-           "." << std::setfill('0') << std::setw(6) <<
-           current_time.tv_usec  << " " << std::left << std::setfill(' ') <<
+    debugs(42, 2, "pingerLog: " << current_time << " " << std::left <<
            std::setw(45) << addr  << " " << type  <<
            " " << std::setw(15) << pkt_str << " " << rtt  <<
            "ms " << hops  << " hops");

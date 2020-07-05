@@ -67,8 +67,29 @@ std::ostream &
 operator <<(std::ostream &os, const SipcIo &sio)
 {
     return os << "ipcIo" << sio.worker << '.' << sio.msg.requestId <<
-           (sio.msg.command == IpcIo::cmdRead ? 'r' : 'w') << sio.disker;
+           sio.msg.command << sio.disker;
 }
+
+/* IpcIo::Command */
+
+std::ostream &
+operator <<(std::ostream &os, const IpcIo::Command command)
+{
+    switch (command) {
+    case IpcIo::cmdNone:
+        return os << '-';
+    case IpcIo::cmdOpen:
+        return os << 'o';
+    case IpcIo::cmdRead:
+        return os << 'r';
+    case IpcIo::cmdWrite:
+        return os << 'w';
+    }
+    // unreachable code
+    return os << static_cast<int>(command);
+}
+
+/* IpcIoFile */
 
 IpcIoFile::IpcIoFile(char const *aDb):
     dbName(aDb), diskId(-1), error_(false), lastRequestId(0),
@@ -501,6 +522,15 @@ IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
         HandleResponses("after notification");
 }
 
+void
+IpcIoFile::StatQueue(std::ostream &os)
+{
+    if (queue.get()) {
+        os << "SMP disk I/O queues:\n";
+        queue->stat<IpcIoMsg>(os);
+    }
+}
+
 /// handles open request timeout
 void
 IpcIoFile::OpenTimeout(void *const param)
@@ -630,6 +660,21 @@ IpcIoMsg::IpcIoMsg():
 {
     start.tv_sec = 0;
     start.tv_usec = 0;
+}
+
+void
+IpcIoMsg::stat(std::ostream &os)
+{
+    timeval elapsedTime;
+    tvSub(elapsedTime, start, current_time);
+    os << "id: " << requestId <<
+        ", offset: " << offset <<
+        ", size: " << len <<
+        ", page: " << page <<
+        ", command: " << command <<
+        ", start: " << start <<
+        ", elapsed: " << elapsedTime <<
+        ", errno: " << xerrno;
 }
 
 /* IpcIoPendingRequest */

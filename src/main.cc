@@ -56,6 +56,13 @@
 #include "ipc/Kids.h"
 #include "ipc/Strand.h"
 #include "ipcache.h"
+
+/* for StatQueues */
+#include "mgr/Registration.h"
+#include "base/PackableStream.h"
+#include "CollapsedForwarding.h"
+#include "DiskIO/IpcIo/IpcIoFile.h"
+
 #include "mime.h"
 #include "neighbors.h"
 #include "parser/Tokenizer.h"
@@ -1129,6 +1136,18 @@ mainSetCwd(void)
     }
 }
 
+/// reports the current state of Store-related queues
+static void
+StatQueues(StoreEntry *e)
+{
+    assert(e);
+    PackableStream stream(*e);
+    CollapsedForwarding::StatQueue(stream);
+    stream << "\n";
+    IpcIoFile::StatQueue(stream);
+    stream.flush();
+}
+
 static void
 mainInitialize(void)
 {
@@ -1229,6 +1248,7 @@ mainInitialize(void)
     urlInitialize();
     statInit();
     storeInit();
+    Mgr::RegisterAction("store_queues", "SMP Transients and Caching Queues", StatQueues, 0, 1);
     mainSetCwd();
     mimeInit(Config.mimeTablePathname);
     refreshInit();
