@@ -241,8 +241,6 @@ squid_SOURCES = \
 	CommRead.h \
 	CommandLine.cc \
 	CommandLine.h \
-	CompletionDispatcher.cc \
-	CompletionDispatcher.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ConfigParser.h \
@@ -1002,7 +1000,6 @@ nodist_tests_testURL_SOURCES = \
 	tests/stub_libmem.cc
 tests_testURL_LDADD = \
 	libsquid.la \
-	proxyp/libproxyp.la \
 	anyp/libanyp.la \
 	parser/libparser.la \
 	base/libbase.la \
@@ -3102,31 +3099,8 @@ tests_testEvent_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testEventLoop
 tests_testEventLoop_SOURCES = \
-	$(DELAY_POOL_SOURCE) \
-	$(DNSSOURCE) \
-	$(HTCPSOURCE) \
-	$(IPC_SOURCE) \
-	$(SNMP_SOURCE) \
-	$(UNLINKDSOURCE) \
-	$(WIN32_SOURCE) \
-	AccessLogEntry.cc \
-	AuthReg.h \
-	BodyPipe.cc \
-	tests/stub_CacheDigest.cc \
-	CacheDigest.h \
-	CachePeer.cc \
-	CachePeer.h \
-	ClientInfo.h \
-	tests/stub_CollapsedForwarding.cc \
-	ConfigOption.cc \
-	ConfigParser.cc \
-	CpuAffinityMap.cc \
-	CpuAffinityMap.h \
-	CpuAffinitySet.cc \
-	CpuAffinitySet.h \
-	tests/stub_ETag.cc \
-	EventLoop.cc \
 	tests/testEventLoop.cc \
+<<<<<<< HEAD
 	EventLoop.h \
 	tests/testEventLoop.h \
 	ExternalACLEntry.cc \
@@ -3294,46 +3268,14 @@ tests_testEventLoop_SOURCES = \
 	whois.h \
 	wordlist.cc \
 	wordlist.h
+	tests/testEventLoop.h
 nodist_tests_testEventLoop_SOURCES = \
-	$(BUILT_SOURCES)
+	EventLoop.cc \
+	tests/stub_debug.cc \
+	tests/stub_fatal.cc \
+	tests/stub_time.cc
 tests_testEventLoop_LDADD = \
-	libsquid.la \
-	clients/libclients.la \
-	servers/libservers.la \
-	ftp/libftp.la \
-	helper/libhelper.la \
-	http/libhttp.la \
-	proxyp/libproxyp.la \
-	parser/libparser.la \
-	ident/libident.la \
-	acl/libacls.la \
-	acl/libstate.la \
-	acl/libapi.la \
-	dns/libdns.la \
 	base/libbase.la \
-	ip/libip.la \
-	fs/libfs.la \
-	anyp/libanyp.la \
-	icmp/libicmp.la \
-	comm/libcomm.la \
-	log/liblog.la \
-	format/libformat.la \
-	$(REPL_OBJS) \
-	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
-	$(SSL_LIBS) \
-	$(top_builddir)/lib/libmisccontainers.la \
-	$(top_builddir)/lib/libmiscencoding.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	sbuf/libsbuf.la \
-	store/libstore.la \
-	$(SNMP_LIBS) \
-	$(NETTLELIB) \
-	$(REGEXLIB) \
-	$(SSLLIB) \
-	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
