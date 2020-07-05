@@ -503,8 +503,8 @@ Security::ErrorDetail::brief() const
 
     if (lib_error_no) {
 #if USE_OPENSSL
-        // HEX lib_error_no value can be fed to `openssl errstr` for more info.
-        // TODO: Review `TLS_LIB_ERR=` prefix
+        // TODO: Log ERR_error_string_n() instead, despite length, whitespace?
+        // Example: `error:1408F09C:SSL routines:ssl3_get_record:http request`.
         buf.append(ToSBuf("+TLS_LIB_ERR=", std::hex, std::uppercase, lib_error_no));
 #elif USE_GNUTLS
         buf.append(ToSBuf("+", gnutls_strerror_name(lib_error_no)));
