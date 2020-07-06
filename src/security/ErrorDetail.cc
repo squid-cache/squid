@@ -27,7 +27,7 @@
 namespace Security {
 
 // we use std::map to optimize search; TODO: Use std::unordered_map instead?
-typedef std::map<Security::ErrorCode, const char *> ErrorCodeNames;
+typedef std::map<ErrorCode, const char *> ErrorCodeNames;
 static const ErrorCodeNames TheErrorCodeNames = {
     {   SQUID_TLS_ERR_ACCEPT,
         "SQUID_TLS_ERR_ACCEPT"
@@ -406,7 +406,7 @@ Security::ErrorCode
 Security::ErrorCodeFromName(const char *name)
 {
     static auto TheCmp = [](const char *a, const char *b){return strcmp(a, b) < 0;};
-    static std::map<const char *, Security::ErrorCode, decltype(TheCmp)> TheErrorCodeByNameIndx(TheCmp);
+    static std::map<const char *, ErrorCode, decltype(TheCmp)> TheErrorCodeByNameIndx(TheCmp);
     if (TheErrorCodeByNameIndx.empty()) {
         for (const auto &i: TheErrorCodeNames)
             TheErrorCodeByNameIndx.insert(std::make_pair(i.second, i.first));
@@ -440,7 +440,7 @@ Security::ErrorNameFromCode(const ErrorCode err, const bool prefixRawCode)
 uint64_t Security::ErrorDetail::Generations = 0;
 
 /// helper constructor implementing the logic shared by the two public ones
-Security::ErrorDetail::ErrorDetail(const Security::ErrorCode err, const int aSysErrorNo):
+Security::ErrorDetail::ErrorDetail(const ErrorCode err, const int aSysErrorNo):
     generation(++Generations),
     error_no(err),
     // We could restrict errno(3) collection to cases where the TLS library
@@ -455,15 +455,15 @@ Security::ErrorDetail::ErrorDetail(const Security::ErrorCode err, const int aSys
         debugs(83, 7, "got " << asHex(lib_error_no));
         // more errors may be stacked
         // TODO: Save/detail all stacked errors by always flushing stale ones.
-        Security::ForgetErrors();
+        ForgetErrors();
     }
 #else
     // other libraries return errors explicitly instead of auto-storing them
 #endif
 }
 
-Security::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, const CertPointer &cert, const CertPointer &broken, const char *aReason):
-    ErrorDetail(err_no, 0)
+Security::ErrorDetail::ErrorDetail(const ErrorCode anErrorCode, const CertPointer &cert, const CertPointer &broken, const char *aReason):
+    ErrorDetail(anErrorCode, 0)
 {
     errReason = aReason;
     peer_cert = cert;
@@ -471,14 +471,14 @@ Security::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, const CertPointer
 }
 
 #if USE_OPENSSL
-Security::ErrorDetail::ErrorDetail(const Security::ErrorCode anErrorCode, const int anIoErrorNo, const int aSysErrorNo):
+Security::ErrorDetail::ErrorDetail(const ErrorCode anErrorCode, const int anIoErrorNo, const int aSysErrorNo):
     ErrorDetail(anErrorCode, aSysErrorNo)
 {
     ioErrorNo = anIoErrorNo;
 }
 
 #elif USE_GNUTLS
-Security::ErrorDetail::ErrorDetail(const Security::ErrorCode anErrorCode, const LibErrorCode aLibErrorNo, const int aSysErrorNo):
+Security::ErrorDetail::ErrorDetail(const ErrorCode anErrorCode, const LibErrorCode aLibErrorNo, const int aSysErrorNo):
     ErrorDetail(anErrorCode, aSysErrorNo)
 {
     lib_error_no = aLibErrorNo;
@@ -691,7 +691,7 @@ Security::ErrorDetail::err_lib_error() const
     if (errReason.size() > 0)
         return errReason.termedBuf();
     else if (lib_error_no)
-        return Security::ErrorString(lib_error_no);
+        return ErrorString(lib_error_no);
     else
         return "[No Error]";
     return "[Not available]";
@@ -703,7 +703,7 @@ Security::ErrorDetail::err_lib_error() const
  * Error meta information:
  * %err_name: The name of a high-level SSL error (e.g., X509_V_ERR_*)
  * %ssl_error_descr: A short description of the SSL error
- * %ssl_lib_error: human-readable low-level error string by Security::ErrorString()
+ * %ssl_lib_error: human-readable low-level error string by ErrorString()
  *
  * Certificate information extracted from broken (not necessarily peer!) cert
  * %ssl_cn: The comma-separated list of common and alternate names
