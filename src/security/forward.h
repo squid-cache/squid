@@ -102,15 +102,22 @@ class EncryptorAnswer;
 /// Squid-defined error code (<0), an error code returned by X.509 API, or zero
 typedef int ErrorCode;
 
+/// TLS library-reported non-validation error
 #if USE_OPENSSL
+/// the result of the first ERR_get_error(3SSL) call after a library call;
+/// `openssl errstr` expands these numbers into human-friendlier strings like
+/// `error:1408F09C:SSL routines:ssl3_get_record:http request`
 typedef unsigned long LibErrorCode;
 #elif USE_GNUTLS
+/// the result of an API function like gnutls_handshake() (e.g.,
+/// GNUTLS_E_WARNING_ALERT_RECEIVED)
 typedef int LibErrorCode;
 #else
+/// should always be zero and virtually unused
 typedef int LibErrorCode;
 #endif
 
-// TODO: Reconcile with ErrorNameFromCode(). XXX: Callers use non-ErrorCodes!
+/// converts numeric LibErrorCode into a human-friendlier string
 inline const char *ErrorString(const LibErrorCode code) {
 #if USE_OPENSSL
     return ERR_error_string(code, nullptr);

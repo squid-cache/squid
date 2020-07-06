@@ -103,26 +103,22 @@ private:
     CertPointer peer_cert; ///< A pointer to the peer certificate
     CertPointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
 
-    /// error category; \see ErrorCode
+    /// Squid-discovered error, validation error, or zero; \see ErrorCode
     ErrorCode error_no = 0;
 
-#if USE_OPENSSL
-    /// TLS I/O operation result or zero
-    /// For OpenSSL, a SSL_get_error(3SSL) result (e.g., SSL_ERROR_SYSCALL).
-    int ioErrorNo = 0;
-#endif
+    /// TLS library-reported non-validation error or zero; \see LibErrorCode
+    LibErrorCode lib_error_no = 0;
 
     /// errno(3); system call failure code or zero
     int sysErrorNo = 0;
 
-    /// Non-validation error reported by the TLS library or zero.
-    /// For OpenSSL, this is the result of the first ERR_get_error(3SSL) call,
-    /// which `openssl errstr` can expand into details like
-    /// `error:1408F09C:SSL routines:ssl3_get_record:http request`.
-    /// For GnuTLS, a result of an API function like gnutls_handshake() (e.g., GNUTLS_E_WARNING_ALERT_RECEIVED)
-    LibErrorCode lib_error_no = 0;
-
 #if USE_OPENSSL
+    /// OpenSSL-specific (first-level or intermediate) TLS I/O operation result
+    /// reported by SSL_get_error(3SSL) (e.g., SSL_ERROR_SYSCALL) or zero.
+    /// Unlike lib_error_no, this error is mostly meant for I/O control and has
+    /// no OpenSSL-provided human-friendly text representation.
+    int ioErrorNo = 0;
+
     using ErrorDetailEntry = Ssl::ErrorDetailEntry;
     mutable ErrorDetailEntry detailEntry;
 #else
