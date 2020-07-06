@@ -1445,8 +1445,7 @@ bool
 ConnStateData::connFinishedWithConn(int xerrno)
 {
     if (pipeline.empty() && inBuf.isEmpty()) {
-        /* no current or pending requests */
-        debugs(33, 4, HERE << clientConnection << " closed");
+        debugs(33, 4, "yes, no active requests or unparsed input: " << clientConnection);
         return true;
     }
 
@@ -1455,6 +1454,7 @@ ConnStateData::connFinishedWithConn(int xerrno)
     if (xerrno) {
         detail = SysErrorDetail::NewIfAny(xerrno);
         errType = ERR_READ_ERROR;
+        // fall through to error handling, returning true
     }
 #if USE_OPENSSL
     else if (parsingTlsHandshake) {
@@ -1464,20 +1464,26 @@ ConnStateData::connFinishedWithConn(int xerrno)
         else
             detail = MakeNamedErrorDetail("TLS_ACCEPT_NO_DATA");
         inBuf.clear(); //To avoid log extra line for those bytes.
+        // fall through to error handling, returning true
     }
 #endif
 
-    if (errType != ERR_NONE)
-        updateError(errType, detail);
-
-    if (xerrno || !Config.onoff.half_closed_clients) {
-        /* admin doesn't want to support half-closed client sockets */
-        debugs(33, 3, HERE << clientConnection << " aborted " << (xerrno == 0 ? "(half_closed_clients disabled)" : ""));
-        pipeline.terminateAll(xerrno);
-        return true;
+    if (errType == ERR_NONE && Config.onoff.half_closed_clients) {
+        debugs(33, 3, "no, EOF but honoring half_closed_clients: " << clientConnection);
+        return false;
     }
 
-    return false;
+    if (errType == ERR_NONE) {
+        assert(!Config.onoff.half_closed_clients);
+        debugs(33, 3, "yes, EOF without half_closed_clients: " << clientConnection);
+    } else {
+        updateError(errType, detail);
+        debugs(33, 3, "yes, error " << detail << ": " << clientConnection);
+    }
+
+    // Zero xerrno is OK here; xerrno will be ETIMEDOUT if we timed out.
+    pipeline.terminateAll(xerrno);
+    return true;
 }
 
 void
@@ -2029,14 +2035,9 @@ ConnStateData::afterClientRead()
     if (!clientParseRequests()) {
         if (!isOpen())
             return;
-        /*
-         * If the client here is half closed and we failed
-         * to parse a request, close the connection.
-         * The above check with connFinishedWithConn() only
-         * succeeds _if_ the buffer is empty which it won't
-         * be if we have an incomplete request.
-         * XXX: This duplicates ConnStateData::kick
-         */
+         // We may get here if the client half-closed after sending a partial
+         // request. See doClientRead() and connFinishedWithConn().
+         // XXX: This partially duplicates ConnStateData::kick().
         if (pipeline.empty() && commIsHalfClosed(clientConnection->fd)) {
             debugs(33, 5, clientConnection << ": half-closed connection, no completed request parsed, connection closing.");
             clientConnection->close();
