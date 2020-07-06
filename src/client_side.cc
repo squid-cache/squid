@@ -4211,8 +4211,8 @@ ConnStateData::shouldPreserveClientData() const
         return true;
 #endif
 
-    // the 1st HTTP request on a connection to a plain intercepting port
-    if (!pipeline.nrequests && !port->secure.encryptTransport && transparent())
+    // the 1st HTTP(S) request on a connection to an intercepting port
+    if (!pipeline.nrequests && transparent())
         return true;
 
     return false;
