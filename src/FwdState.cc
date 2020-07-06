@@ -744,8 +744,6 @@ FwdState::serverClosed(int fd)
 void
 FwdState::retryOrBail()
 {
-    assert(!serverConn);
-
     if (checkRetry()) {
         debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
         useDestinations();
@@ -781,7 +779,7 @@ FwdState::handleUnregisteredServerEnd()
 {
     debugs(17, 2, HERE << "self=" << self << " err=" << err << ' ' << entry->url());
     assert(!Comm::IsConnOpen(serverConn));
-    assert(!serverConn);
+    serverConn = nullptr;
     destinationReceipt = nullptr;
     retryOrBail();
 }
@@ -801,7 +799,7 @@ FwdState::advanceDestination(const char *stepDescription, const Comm::Connection
         debugs (17, 2, "exception while trying to " << stepDescription << ": " << CurrentException);
         closePendingConnection(conn, "connection preparation exception");
         if (!err) {
-            auto error = new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request, al);
+            auto error = new ErrorState(ERR_CONNECT_FAIL, Http::scInternalServerError, request, al);
             fail(error);
         }
         retryOrBail();
@@ -1075,13 +1073,13 @@ FwdState::connectStart()
 
     assert(!destinations->empty());
     assert(!opening());
+    assert(!usingDestination());
 
     // Ditch error page if it was created before.
     // A new one will be created if there's another problem
     delete err;
     err = nullptr;
     request->clearError();
-    assert(!usingDestination());
 
     request->hier.startPeerClock();
 
