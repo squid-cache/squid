@@ -1210,7 +1210,6 @@ tests_testRock_SOURCES = \
 	tests/stub_stat.cc \
 	stmem.cc \
 	store.cc \
-	tests/stub_IpcIoFile.cc \
 	tests/stub_store_client.cc \
 	store_io.cc \
 	store_key_md5.cc \
@@ -1388,7 +1387,6 @@ tests_testUfs_SOURCES = \
 	tests/stub_stat.cc \
 	stmem.cc \
 	store.cc \
-	tests/stub_IpcIoFile.cc \
 	tests/stub_store_client.cc \
 	store_io.cc \
 	store_key_md5.cc \
@@ -1524,7 +1522,6 @@ tests_testStore_SOURCES = \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
-	tests/stub_IpcIoFile.cc \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
 	cbdata.cc \
@@ -1598,12 +1595,12 @@ tests_testStore_LDADD= \
 	ip/libip.la \
 	fs/libfs.la \
 	mgr/libmgr.la \
-	ipc/libipc.la \
 	anyp/libanyp.la \
 	mem/libmem.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
 	DiskIO/libdiskio.la \
+	ipc/libipc.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
