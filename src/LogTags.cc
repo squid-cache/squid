@@ -10,6 +10,16 @@
 #include "Debug.h"
 #include "LogTags.h"
 
+void
+LogTagsErrors::update(const LogTagsErrors &other)
+{
+    ignored = ignored || other.ignored;
+    timedout = timedout || other.timedout;
+    aborted = aborted || other.aborted;
+}
+
+/* LogTags */
+
 // old deprecated tag strings
 const char * LogTags::Str_[] = {
     "TAG_NONE",

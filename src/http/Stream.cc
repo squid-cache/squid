@@ -560,12 +560,12 @@ Http::Stream::getConn() const
 
 /// remembers the abnormal connection termination for logging purposes
 void
-Http::Stream::noteIoError(const int xerrno)
+Http::Stream::noteIoError(const Error &error, const LogTagsErrors &lte)
 {
     if (http) {
-        http->logType.err.timedout = (xerrno == ETIMEDOUT);
-        // aborted even if xerrno is zero (which means read abort/eof)
-        http->logType.err.aborted = (xerrno != ETIMEDOUT);
+        // XXX: (Poorly) duplicates ConnStateData::updateError() logic
+        http->al->updateError(error);
+        http->logType.err.update(lte);
     }
 }
 

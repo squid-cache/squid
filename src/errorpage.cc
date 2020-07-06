@@ -169,6 +169,10 @@ error_hard_text[] = {
         "reset"
     },
     {
+        ERR_CLIENT_GONE,
+        "unexpected client disconnect"
+    },
+    {
         ERR_SECURE_ACCEPT_FAIL,
         "secure accept fail"
     },

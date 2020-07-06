@@ -11,6 +11,7 @@
 
 #include "base/RefCount.h"
 #include "http/forward.h"
+#include "log/forward.h"
 
 #include <list>
 
@@ -56,7 +57,7 @@ public:
     bool empty() const {return requests.empty();}
 
     /// tell everybody about the err, and abort all waiting requests
-    void terminateAll(const int xerrno);
+    void terminateAll(const Error &, const LogTagsErrors &);
 
     /// deregister the front request from the pipeline
     void popMe(const Http::StreamPointer &);

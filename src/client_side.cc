@@ -596,7 +596,7 @@ ConnStateData::swanSong()
 
     flags.readMore = false;
     clientdbEstablished(clientConnection->remote, -1);  /* decrement */
-    pipeline.terminateAll(0);
+    pipeline.terminateAll(ERR_NONE, LogTagsErrors());
 
     // XXX: Closing pinned conn is too harsh: The Client may want to continue!
     unpinConnection(true);

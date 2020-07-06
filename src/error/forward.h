@@ -76,7 +76,8 @@ typedef enum {
     //       a log warning if the files are missing
     TCP_RESET,                  // Send TCP RST packet instead of error page
 
-    ERR_SECURE_ACCEPT_FAIL, // Rejects the SSL connection intead of error page
+    ERR_CLIENT_GONE, // No client to send the error page to
+    ERR_SECURE_ACCEPT_FAIL, // Rejects the SSL connection instead of error page
     ERR_REQUEST_START_TIMEOUT, // Aborts the connection instead of error page
     ERR_REQUEST_PARSE_TIMEOUT, // Aborts the connection instead of error page
     ERR_RELAY_REMOTE, // Sends server reply instead of error page
