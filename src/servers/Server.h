@@ -36,8 +36,8 @@ public:
     virtual bool doneAll() const;
     virtual void swanSong();
 
-    /// whether to stop serving our client after an EOF or erroneous read
-    virtual bool finishedWithClient(int xerrno) = 0;
+    /// whether to stop serving our client after reading EOF on its connection
+    virtual bool closeOnEof() const = 0;
 
     /// maybe grow the inBuf and schedule Comm::Read()
     void readSomeData();

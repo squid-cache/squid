@@ -410,7 +410,7 @@ protected:
 
 private:
     /* ::Server API */
-    virtual bool finishedWithClient(int xerrno);
+    virtual bool closeOnEof() const;
     virtual void checkLogging();
 
     void clientAfterReadingRequests();

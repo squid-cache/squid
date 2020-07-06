@@ -1442,48 +1442,23 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
 }
 
 bool
-ConnStateData::finishedWithClient(const int xerrno)
+ConnStateData::closeOnEof() const
 {
     if (pipeline.empty() && inBuf.isEmpty()) {
-        debugs(33, 4, "yes, no active requests or unparsed input: " << clientConnection);
+        debugs(33, 4, "yes, without active requests and unparsed input: " << clientConnection);
         return true;
     }
 
-    auto errType = ERR_NONE;
-    ErrorDetail::Pointer detail;
-    if (xerrno) {
-        detail = SysErrorDetail::NewIfAny(xerrno);
-        errType = ERR_READ_ERROR;
-        // fall through to error handling, returning true
-    }
-#if USE_OPENSSL
-    else if (parsingTlsHandshake) {
-        errType = ERR_SECURE_ACCEPT_FAIL;
-        if (receivedFirstByte_)
-            detail = MakeNamedErrorDetail("TLS_ACCEPT_CLIENT_ABORTED");
-        else
-            detail = MakeNamedErrorDetail("TLS_ACCEPT_NO_DATA");
-        inBuf.clear(); //To avoid log extra line for those bytes.
-        // fall through to error handling, returning true
-    }
-#endif
-
-    if (errType == ERR_NONE && Config.onoff.half_closed_clients) {
-        debugs(33, 3, "no, EOF but honoring half_closed_clients: " << clientConnection);
-        return false;
+    if (!Config.onoff.half_closed_clients) {
+        debugs(33, 3, "yes, without half_closed_clients: " << clientConnection);
+        return true;
     }
 
-    if (errType == ERR_NONE) {
-        assert(!Config.onoff.half_closed_clients);
-        debugs(33, 3, "yes, EOF without half_closed_clients: " << clientConnection);
-    } else {
-        updateError(errType, detail);
-        debugs(33, 3, "yes, error " << detail << ": " << clientConnection);
-    }
-
-    // Zero xerrno is OK here; xerrno will be ETIMEDOUT if we timed out.
-    pipeline.terminateAll(xerrno);
-    return true;
+    // Squid currently tries to parse (possibly again) a partially received
+    // request after an EOF with half_closed_clients. To give that last parse in
+    // afterClientRead() a chance, we ignore partially parsed requests here.
+    debugs(33, 3, "no, honoring half_closed_clients: " << clientConnection);
+    return false;
 }
 
 void
@@ -2036,7 +2011,7 @@ ConnStateData::afterClientRead()
         if (!isOpen())
             return;
          // We may get here if the client half-closed after sending a partial
-         // request. See doClientRead() and finishedWithClient().
+         // request. See doClientRead() and closeOnEof().
          // XXX: This partially duplicates ConnStateData::kick().
         if (pipeline.empty() && commIsHalfClosed(clientConnection->fd)) {
             debugs(33, 5, clientConnection << ": half-closed connection, no completed request parsed, connection closing.");
