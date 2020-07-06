@@ -1210,6 +1210,7 @@ tests_testRock_SOURCES = \
 	tests/stub_stat.cc \
 	stmem.cc \
 	store.cc \
+	tests/stub_IpcIoFile.cc \
 	tests/stub_store_client.cc \
 	store_io.cc \
 	store_key_md5.cc \
@@ -1387,6 +1388,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_stat.cc \
 	stmem.cc \
 	store.cc \
+	tests/stub_IpcIoFile.cc \
 	tests/stub_store_client.cc \
 	store_io.cc \
 	store_key_md5.cc \
