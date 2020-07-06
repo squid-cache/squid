@@ -146,7 +146,7 @@ Server::doClientRead(const CommIoCbParams &io)
     case Comm::ENDFILE: // close detected by 0-byte read
         debugs(33, 5, io.conn << " closed?");
 
-        if (connFinishedWithConn(0)) {
+        if (finishedWithClient(0)) {
             clientConnection->close();
             return;
         }
@@ -167,7 +167,7 @@ Server::doClientRead(const CommIoCbParams &io)
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
-        (void)connFinishedWithConn(rd.xerrno);
+        (void)finishedWithClient(rd.xerrno);
         io.conn->close();
         return;
     }

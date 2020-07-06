@@ -1442,7 +1442,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
 }
 
 bool
-ConnStateData::connFinishedWithConn(int xerrno)
+ConnStateData::finishedWithClient(const int xerrno)
 {
     if (pipeline.empty() && inBuf.isEmpty()) {
         debugs(33, 4, "yes, no active requests or unparsed input: " << clientConnection);
@@ -2036,7 +2036,7 @@ ConnStateData::afterClientRead()
         if (!isOpen())
             return;
          // We may get here if the client half-closed after sending a partial
-         // request. See doClientRead() and connFinishedWithConn().
+         // request. See doClientRead() and finishedWithClient().
          // XXX: This partially duplicates ConnStateData::kick().
         if (pipeline.empty() && commIsHalfClosed(clientConnection->fd)) {
             debugs(33, 5, clientConnection << ": half-closed connection, no completed request parsed, connection closing.");
