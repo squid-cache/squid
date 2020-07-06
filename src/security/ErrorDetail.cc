@@ -439,9 +439,15 @@ Security::ErrorNameFromCode(const ErrorCode err, const bool prefixRawCode)
 
 uint64_t Security::ErrorDetail::Generations = 0;
 
-Security::ErrorDetail::ErrorDetail(const Security::ErrorCode err):
+/// helper constructor implementing the logic shared by the two public ones
+Security::ErrorDetail::ErrorDetail(const Security::ErrorCode err, const int aSysErrorNo):
     generation(++Generations),
-    error_no(err)
+    error_no(err),
+    // We could restrict errno(3) collection to cases where the TLS library
+    // explicitly talks about the errno being set, but correctly detecting those
+    // cases is difficult. We simplify in hope that all other cases will either
+    // have a useful errno or a zero errno.
+    sysErrorNo(aSysErrorNo)
 {
 #if USE_OPENSSL
     /// Extract and remember errors stored internally by the TLS library.
@@ -452,12 +458,12 @@ Security::ErrorDetail::ErrorDetail(const Security::ErrorCode err):
         Security::ForgetErrors();
     }
 #else
-    // other libraries do not stack errors
+    // other libraries return errors explicitly instead of auto-storing them
 #endif
 }
 
 Security::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, const CertPointer &cert, const CertPointer &broken, const char *aReason):
-    ErrorDetail(err_no)
+    ErrorDetail(err_no, 0)
 {
     errReason = aReason;
     peer_cert = cert;
@@ -466,23 +472,16 @@ Security::ErrorDetail::ErrorDetail(Security::ErrorCode err_no, const CertPointer
 
 #if USE_OPENSSL
 Security::ErrorDetail::ErrorDetail(const Security::ErrorCode anErrorCode, const int anIoErrorNo, const int aSysErrorNo):
-    ErrorDetail(anErrorCode)
+    ErrorDetail(anErrorCode, aSysErrorNo)
 {
     ioErrorNo = anIoErrorNo;
-
-    // OpenSSL: We could restrict errno(3) collection to cases where ioError is
-    // SSL_ERROR_SYSCALL, ERR_get_error() is 0, and callResult is negative, but
-    // we do not do that in hope that all other cases will either have a useful
-    // errno or a zero errno. Callers must call PrepForIo() to reset errno.
-    sysErrorNo = aSysErrorNo;
 }
 
 #elif USE_GNUTLS
 Security::ErrorDetail::ErrorDetail(const Security::ErrorCode anErrorCode, const LibErrorCode aLibErrorNo, const int aSysErrorNo):
-    ErrorDetail(anErrorCode)
+    ErrorDetail(anErrorCode, aSysErrorNo)
 {
     lib_error_no = aLibErrorNo;
-    sysErrorNo = aSysErrorNo;
 }
 #endif
 

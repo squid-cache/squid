@@ -84,7 +84,7 @@ public:
     void setPeerCertificate(const CertPointer &);
 
 private:
-    explicit ErrorDetail(Security::ErrorCode);
+    ErrorDetail(Security::ErrorCode err, int aSysErrorNo);
 
     /* methods for formatting error details using admin-configurable %codes */
     const char *subject() const;
