@@ -2022,9 +2022,9 @@ ConnStateData::afterClientRead()
     if (!clientParseRequests()) {
         if (!isOpen())
             return;
-         // We may get here if the client half-closed after sending a partial
-         // request. See doClientRead() and closeOnEof().
-         // XXX: This partially duplicates ConnStateData::kick().
+        // We may get here if the client half-closed after sending a partial
+        // request. See doClientRead() and closeOnEof().
+        // XXX: This partially duplicates ConnStateData::kick().
         if (pipeline.empty() && commIsHalfClosed(clientConnection->fd)) {
             debugs(33, 5, clientConnection << ": half-closed connection, no completed request parsed, connection closing.");
             clientConnection->close();
