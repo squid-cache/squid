@@ -181,9 +181,9 @@ AccessLogEntry::error() const
     // the order ensures that the first-imported error is returned
     if (error_) // updateError() was called before importing the request
         return &error_;
-    if (request) // the request was imported before calling updateError()
+    if (request && request->error) // request was imported before updateError()
         return &request->error;
-    return nullptr; // we imported no errors and no request
+    return nullptr; // we imported no errors and no requests
 }
 
 void
