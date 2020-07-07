@@ -1443,19 +1443,19 @@ bool
 ConnStateData::closeOnEof() const
 {
     if (pipeline.empty() && inBuf.isEmpty()) {
-        debugs(33, 4, "yes, without active requests and unparsed input: " << clientConnection);
+        debugs(33, 4, "yes, without active requests and unparsed input");
         return true;
     }
 
     if (!Config.onoff.half_closed_clients) {
-        debugs(33, 3, "yes, without half_closed_clients: " << clientConnection);
+        debugs(33, 3, "yes, without half_closed_clients");
         return true;
     }
 
     // Squid currently tries to parse (possibly again) a partially received
     // request after an EOF with half_closed_clients. To give that last parse in
     // afterClientRead() a chance, we ignore partially parsed requests here.
-    debugs(33, 3, "no, honoring half_closed_clients: " << clientConnection);
+    debugs(33, 3, "no, honoring half_closed_clients");
     return false;
 }
 
