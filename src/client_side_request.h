@@ -163,6 +163,9 @@ public:
     /// Build an error reply. For use with the callouts.
     void calloutsError(const err_type error, const ErrorDetail::Pointer &errDetail);
 
+    /// if necessary, stores new error information (if any)
+    void updateError(const Error &error);
+
 #if USE_ADAPTATION
     // AsyncJob virtual methods
     virtual bool doneAll() const {

@@ -563,8 +563,7 @@ void
 Http::Stream::noteIoError(const Error &error, const LogTagsErrors &lte)
 {
     if (http) {
-        // XXX: (Poorly) duplicates ConnStateData::updateError() logic
-        http->al->updateError(error);
+        http->updateError(error);
         http->logType.err.update(lte);
     }
 }

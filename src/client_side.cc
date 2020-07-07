@@ -630,10 +630,7 @@ ConnStateData::updateError(const Error &error)
     if (const auto context = pipeline.front()) {
         const auto http = context->http;
         assert(http);
-        if (const auto request = http->request)
-            request->error.update(error);
-        else
-            http->al->updateError(error);
+        http->updateError(error);
     } else {
         bareError.update(error);
     }

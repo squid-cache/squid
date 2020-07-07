@@ -1623,6 +1623,15 @@ ClientHttpRequest::sslBumpStart()
 
 #endif
 
+void
+ClientHttpRequest::updateError(const Error &error)
+{
+    if (request)
+        request->error.update(error);
+    else
+        al->updateError(error);
+}
+
 bool
 ClientHttpRequest::gotEnough() const
 {
