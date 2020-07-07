@@ -7,6 +7,8 @@
  */
 
 #include "squid.h"
+
+#if USE_DISKIO
 #include "DiskIO/IpcIo/IpcIoFile.h"
 
 #define STUB_API "DiskIO/IocIo/IpcIoFile.cc"
@@ -14,4 +16,6 @@
 #include "tests/STUB.h"
 
 void IpcIoFile::StatQueue(std::ostream &) STUB
+
+#endif /* USE_DISKIO */
 
