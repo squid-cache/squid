@@ -49,18 +49,6 @@ Pipeline::back() const
 }
 
 void
-Pipeline::terminateAll(const Error &error, const LogTagsErrors &lte)
-{
-    while (!requests.empty()) {
-        Http::StreamPointer context = requests.front();
-        debugs(33, 3, (void*)this << " terminates " << context << " with " << error);
-        context->noteIoError(error, lte);
-        context->finished();  // cleanup and self-deregister
-        assert(context != requests.front());
-    }
-}
-
-void
 Pipeline::popMe(const Http::StreamPointer &which)
 {
     if (requests.empty())

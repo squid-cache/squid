@@ -299,6 +299,9 @@ public:
 #endif
     char *prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp);
 
+    /// registers a newly created stream
+    void add(const Http::StreamPointer &context);
+
     /// handle a control message received by context from a peer and call back
     virtual bool writeControlMsgAndCall(HttpReply *rep, AsyncCall::Pointer &call) = 0;
 
@@ -410,8 +413,10 @@ protected:
 
 private:
     /* ::Server API */
+    virtual void terminateAll(const Error &, const LogTagsErrors &);
     virtual bool closeOnEof() const;
-    virtual void checkLogging();
+
+    void checkLogging();
 
     void clientAfterReadingRequests();
     bool concurrentRequestQueueFilled() const;

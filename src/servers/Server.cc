@@ -147,11 +147,9 @@ Server::doClientRead(const CommIoCbParams &io)
         debugs(33, 5, io.conn << " closed?");
 
         if (closeOnEof()) {
-            // XXX: Duplication of code and its problems with COMM_ERROR below.
             LogTagsErrors lte;
             lte.aborted = true;
-            pipeline.terminateAll(ERR_CLIENT_GONE, lte);
-            clientConnection->close();
+            terminateAll(ERR_CLIENT_GONE, lte);
             return;
         }
 
@@ -171,14 +169,10 @@ Server::doClientRead(const CommIoCbParams &io)
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
-        // XXX: Prevent double logging by repeated checkLogging() calls.
-        // TODO: If pipeline is empty, we should supply error details to checkLogging().
-        checkLogging();
         LogTagsErrors lte;
         lte.timedout = rd.xerrno == ETIMEDOUT;
         lte.aborted = !lte.timedout; // intentionally true for zero rd.xerrno
-        pipeline.terminateAll(Error(ERR_CLIENT_GONE, SysErrorDetail::NewIfAny(rd.xerrno)), lte);
-        io.conn->close();
+        terminateAll(Error(ERR_CLIENT_GONE, SysErrorDetail::NewIfAny(rd.xerrno)), lte);
         return;
     }
 

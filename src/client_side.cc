@@ -592,16 +592,17 @@ void
 ConnStateData::swanSong()
 {
     debugs(33, 2, HERE << clientConnection);
-    checkLogging();
 
     flags.readMore = false;
     clientdbEstablished(clientConnection->remote, -1);  /* decrement */
-    pipeline.terminateAll(ERR_NONE, LogTagsErrors());
+
+    terminateAll(ERR_NONE, LogTagsErrors());
+    checkLogging();
 
     // XXX: Closing pinned conn is too harsh: The Client may want to continue!
     unpinConnection(true);
 
-    Server::swanSong(); // closes the client connection
+    Server::swanSong();
 
 #if USE_AUTH
     // NP: do this bit after closing the connections to avoid side effects from unwanted TCP RST
@@ -1787,6 +1788,20 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     http->doCallouts();
 
     clientProcessRequestFinished(conn, request);
+}
+
+void
+ConnStateData::add(const Http::StreamPointer &context)
+{
+    debugs(33, 3, context << " to " << pipeline.count() << '/' << pipeline.nrequests);
+    if (bareError) {
+        debugs(33, 5, "assigning " << bareError);
+        assert(context);
+        assert(context->http);
+        context->http->updateError(bareError);
+        bareError.clear();
+    }
+    pipeline.add(context);
 }
 
 int
@@ -4025,21 +4040,43 @@ ConnStateData::unpinConnection(const bool andClose)
 }
 
 void
+ConnStateData::terminateAll(const Error &error, const LogTagsErrors &lte)
+{
+    debugs(33, 3, pipeline.count() << '/' << pipeline.nrequests << " after " << error);
+
+    if (pipeline.empty()) {
+        bareError.update(error); // XXX: bareLogTagsErrors
+    } else {
+        // We terminate the current CONNECT/PUT/etc. context below, logging any
+        // error details, but that context may leave unparsed bytes behind.
+        // Consume them to stop checkLogging() from logging them again later.
+        const auto intputToConsume =
+            parsingTlsHandshake ? "TLS handshake" : // more specific than CONNECT
+            bodyPipe ? "HTTP request body" :
+            pipeline.back()->mayUseConnection() ? "HTTP CONNECT" :
+            nullptr;
+
+        while (const auto context = pipeline.front()) {
+            context->noteIoError(error, lte);
+            context->finished(); // cleanup and self-deregister
+            assert(context != pipeline.front());
+        }
+
+        if (intputToConsume && !inBuf.isEmpty()) {
+            debugs(83, 5, "forgetting client " << intputToConsume << " bytes: " << inBuf.length());
+            inBuf.clear();
+        }
+    }
+
+    clientConnection->close();
+}
+
+/// log the last (attempt at) transaction if nobody else did
+void
 ConnStateData::checkLogging()
 {
-    // if we are parsing request body, its request is responsible for logging
-    if (bodyPipe)
-        return;
-
-    // a request currently using this connection is responsible for logging
-    if (!pipeline.empty() && pipeline.back()->mayUseConnection())
-        return;
-
-    /* Either we are waiting for the very first transaction, or
-     * we are done with the Nth transaction and are waiting for N+1st.
-     * XXX: We assume that if anything was added to inBuf, then it could
-     * only be consumed by actions already covered by the above checks.
-     */
+    // to simplify our logic, we assume that terminateAll() has been called
+    assert(pipeline.empty());
 
     // do not log connections that closed after a transaction (it is normal)
     // TODO: access_log needs ACLs to match received-no-bytes connections
@@ -4051,6 +4088,7 @@ ConnStateData::checkLogging()
     http.req_sz = inBuf.length();
     // XXX: Or we died while waiting for the pinned connection to become idle.
     http.setErrorUri("error:transaction-end-before-headers");
+    http.updateError(bareError);
 }
 
 bool
