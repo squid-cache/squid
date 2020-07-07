@@ -17,7 +17,7 @@
 #include "CollapsedForwarding.h"
 #include "comm/Connection.h"
 #include "comm/Read.h"
-#if USE_DISKIO
+#if HAVE_DISKIO_MODULE_IPCIO
 #include "DiskIO/IpcIo/IpcIoFile.h"
 #endif
 #include "ETag.h"
@@ -134,7 +134,7 @@ StatQueues(StoreEntry *e)
     assert(e);
     PackableStream stream(*e);
     CollapsedForwarding::StatQueue(stream);
- #if USE_DISKIO
+ #if HAVE_DISKIO_MODULE_IPCIO
     stream << "\n";
     IpcIoFile::StatQueue(stream);
  #endif
