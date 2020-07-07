@@ -17,7 +17,9 @@ Error::update(const Error &recent)
 {
     if (*this)
         debugs(4, 5, "old: " << *this);
-    debugs(4, 3, "current: " << recent);
+    if (!recent)
+        return; // no changes
+    debugs(4, 3, "recent: " << recent);
     // checking category and detail separately may cause inconsistency, but
     // may result in more details available if they only become available later
     if (category == ERR_NONE)
