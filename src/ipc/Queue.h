@@ -121,10 +121,10 @@ public:
     template<class Value> void statOut(std::ostream &, int localProcessId, int remoteProcessId) const;
 
 private:
-    void statOpen(std::ostream &, const char *inLabel, const char *outLabel, const uint32_t count) const;
+    void statOpen(std::ostream &, const char *inLabel, const char *outLabel, uint32_t count) const;
     void statClose(std::ostream &) const;
-    template<class Value> void statSamples(std::ostream &, const unsigned int start, const uint32_t size) const;
-    template<class Value> void statRange(std::ostream &, const unsigned int start, const uint32_t n) const;
+    template<class Value> void statSamples(std::ostream &, unsigned int start, uint32_t size) const;
+    template<class Value> void statRange(std::ostream &, unsigned int start, uint32_t n) const;
 
     // optimization: these non-std::atomic data members are in shared memory,
     // but each is used only by one process (aside from obscured reporting)
