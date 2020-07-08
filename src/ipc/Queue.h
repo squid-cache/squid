@@ -123,8 +123,8 @@ public:
 private:
     void statOpen(std::ostream &, const char *inLabel, const char *outLabel, const uint32_t count) const;
     void statClose(std::ostream &) const;
-    template<class Value> void statSamples(std::ostream &, unsigned int start, uint32_t size) const;
-    template<class Value> void statRange(std::ostream &, unsigned int start, uint32_t skippedCount, uint32_t n) const;
+    template<class Value> void statSamples(std::ostream &, const unsigned int start, const uint32_t size) const;
+    template<class Value> void statRange(std::ostream &, const unsigned int start, const uint32_t n) const;
 
     // optimization: these non-std::atomic data members are in shared memory,
     // but each is used only by one process (aside from obscured reporting)
@@ -469,7 +469,7 @@ OneToOneUniQueue::statSamples(std::ostream &os, const unsigned int start, const 
     os << ", items: [\n";
     // report a few leading and trailing items, without repetitions
     const auto sampleSize = std::min(3U, count); // leading (and max) sample
-    statRange<Value>(os, start, 0, sampleSize);
+    statRange<Value>(os, start, sampleSize);
     if (sampleSize < count) { // the first sample did not show some items
         // The `start` offset aside, the first sample reported all items
         // below the sampleSize offset. The second sample needs to report
@@ -482,22 +482,22 @@ OneToOneUniQueue::statSamples(std::ostream &os, const unsigned int start, const 
         // between the samples or the separator hides the only unsampled item
         const auto bothSamples = sampleSize + secondSampleSize;
         if (bothSamples + 1U == count)
-            statRange<Value>(os, start, sampleSize, 1);
+            statRange<Value>(os, start + sampleSize, 1);
         else if (count > bothSamples)
             os << "    # ... " << (count - bothSamples) << " items not shown ...\n";
 
-        statRange<Value>(os, start, secondSampleOffset, secondSampleSize);
+        statRange<Value>(os, start + secondSampleOffset, secondSampleSize);
     }
     os << "  ]";
 }
 
-/// statSamples() helper that reports n items starting from (start+skippedCount)
+/// statSamples() helper that reports n items from start
 template <class Value>
 void
-OneToOneUniQueue::statRange(std::ostream &os, const unsigned int start, const uint32_t skippedCount, const uint32_t n) const
+OneToOneUniQueue::statRange(std::ostream &os, const unsigned int start, const uint32_t n) const
 {
     assert(sizeof(Value) <= theMaxItemSize);
-    auto offset = start + skippedCount;
+    auto offset = start;
     for (uint32_t i = 0; i < n; ++i) {
         // XXX: Throughout this C++ header, these overflow wrapping tricks work
         // only because theCapacity currently happens to be a power of 2 (e.g.,
@@ -507,7 +507,7 @@ OneToOneUniQueue::statRange(std::ostream &os, const unsigned int start, const ui
         memcpy(&value, theBuffer + pos, sizeof(value));
         os << "    { ";
         value.stat(os);
-        os << " }, # [" << skippedCount + i << "]\n"; // item's queue position
+        os << " },\n";
     }
 }
 
