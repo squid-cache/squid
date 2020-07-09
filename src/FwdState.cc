@@ -799,7 +799,7 @@ FwdState::advanceDestination(const char *stepDescription, const Comm::Connection
         debugs (17, 2, "exception while trying to " << stepDescription << ": " << CurrentException);
         closePendingConnection(conn, "connection preparation exception");
         if (!err) {
-            auto error = new ErrorState(ERR_CONNECT_FAIL, Http::scInternalServerError, request, al);
+            auto error = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request, al);
             fail(error);
         }
         retryOrBail();
