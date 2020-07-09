@@ -32,10 +32,13 @@ template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)
 class ClpMap
 {
 public:
+    /// maximum desired entry caching duration (a.k.a. TTL), in seconds
+    using Ttl = int;
+
     class Entry
     {
     public:
-        Entry(const Key &aKey, EntryValue *t, int ttl): key(aKey), value(t), expires(squid_curtime+ttl) {}
+        Entry(const Key &aKey, EntryValue *t, Ttl ttl): key(aKey), value(t), expires(squid_curtime+ttl) {}
         ~Entry() {delete value;}
         Entry(const Entry &) = delete;
         Entry & operator = (const Entry &) = delete;
@@ -57,7 +60,7 @@ public:
     typedef std::unordered_map<Key, StorageIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapItem> > KeyMapping;
     typedef typename KeyMapping::iterator KeyMapIterator;
 
-    ClpMap(size_t aCapacity, int aDefaultTtl) :
+    ClpMap(size_t aCapacity, Ttl aDefaultTtl) :
         defaultTtl(aDefaultTtl)
     {
         assert(aDefaultTtl >= 0);
@@ -70,10 +73,10 @@ public:
 
     /// Search for an entry, and return a pointer
     EntryValue *get(const Key &key);
-    /// Add an entry to the map
+    /// Add an entry to the map (with defaultTtl)
     bool add(const Key &key, EntryValue *t);
-    /// Add an entry to the map with specific TTL
-    bool add(const Key &key, EntryValue *t, int ttl);
+    /// Add an entry to the map (with the given seconds-based TTL)
+    bool add(const Key &key, EntryValue *t, Ttl ttl);
     /// Delete an entry from the map
     void del(const Key &key);
     /// Reset the memory capacity for this map, purging if needed
@@ -101,8 +104,8 @@ private:
     /// index of stored data by key
     KeyMapping index;
 
-    /// TTL to use if none provided to add().
-    int defaultTtl = std::numeric_limits<int>::max();
+    /// seconds-based entry TTL to use if none provided to add()
+    Ttl defaultTtl = std::numeric_limits<Ttl>::max();
     size_t memLimit_ = 0; ///< The maximum memory to use
     size_t memUsed_ = 0;  ///< The amount of memory currently used
 };
@@ -168,7 +171,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t)
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 bool
-ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, int ttl)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, Ttl ttl)
 {
     if (memLimit() == 0)
         return false;
