@@ -43,6 +43,8 @@ public:
         Entry(const Entry &) = delete;
         Entry & operator = (const Entry &) = delete;
 
+        bool expired() const { return expires < squid_curtime; }
+
     public:
         Key key; ///< the key of entry
         EntryValue *value = nullptr; ///< A pointer to the stored value
@@ -91,7 +93,6 @@ public:
     size_t entries() const { return data.size(); }
 
 private:
-    bool expired(const Entry &e) const;
     void trim(size_t wantSpace);
     void erase(const KeyMapIterator &);
     KeyMapIterator find(const Key &);
@@ -130,7 +131,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::find(const Key &key)
     }
 
     const auto e = i->second;
-    if (!expired(*e)) {
+    if (!e->expired()) {
         if (e != data.begin())
             data.splice(data.begin(), data, e);
         return i;
@@ -192,13 +193,6 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, Ttl 
     data.begin()->memCounted = wantSpace;
     memUsed_ += wantSpace;
     return true;
-}
-
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-bool
-ClpMap<Key, EntryValue, MemoryUsedByEV>::expired(const ClpMap::Entry &entry) const
-{
-    return entry.expires < squid_curtime;
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
