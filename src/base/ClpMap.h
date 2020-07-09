@@ -35,33 +35,6 @@ public:
     /// maximum desired entry caching duration (a.k.a. TTL), in seconds
     using Ttl = int;
 
-    class Entry
-    {
-    public:
-        Entry(const Key &aKey, EntryValue *t, Ttl ttl): key(aKey), value(t), expires(squid_curtime+ttl) {}
-        ~Entry() {delete value;}
-        Entry(const Entry &) = delete;
-        Entry & operator = (const Entry &) = delete;
-
-        bool expired() const { return expires < squid_curtime; }
-
-    public:
-        Key key; ///< the key of entry
-        EntryValue *value = nullptr; ///< A pointer to the stored value
-        time_t expires = 0; ///< get() stops returning the entry after this time
-        size_t memCounted = 0; ///< memory accounted for this entry in parent ClpMap
-    };
-
-    /// container for stored data
-    typedef std::list<Entry, PoolingAllocator<Entry> > Storage;
-    typedef typename Storage::iterator StorageIterator;
-
-    /// Key:Entry* mapping for fast lookups by key
-    typedef std::pair<Key, StorageIterator> MapItem;
-    /// key:queue_item mapping for fast lookups by key
-    typedef std::unordered_map<Key, StorageIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapItem> > KeyMapping;
-    typedef typename KeyMapping::iterator KeyMapIterator;
-
     ClpMap(size_t aCapacity, Ttl aDefaultTtl) :
         defaultTtl(aDefaultTtl)
     {
@@ -93,6 +66,34 @@ public:
     size_t entries() const { return data.size(); }
 
 private:
+    /// cache entry Key, EntryValue, and caching-related entry metadata keeper
+    class Entry
+    {
+    public:
+        Entry(const Key &aKey, EntryValue *t, Ttl ttl): key(aKey), value(t), expires(squid_curtime+ttl) {}
+        ~Entry() { delete value; }
+        Entry(const Entry &) = delete;
+        Entry & operator = (const Entry &) = delete;
+
+        bool expired() const { return expires < squid_curtime; }
+
+    public:
+        Key key; ///< the key of entry
+        EntryValue *value = nullptr; ///< A pointer to the stored value
+        time_t expires = 0; ///< get() stops returning the entry after this time
+        size_t memCounted = 0; ///< memory accounted for this entry in parent ClpMap
+    };
+
+    /// container for stored data
+    typedef std::list<Entry, PoolingAllocator<Entry> > Storage;
+    typedef typename Storage::iterator StorageIterator;
+
+    /// Key:Entry* mapping for fast lookups by key
+    typedef std::pair<Key, StorageIterator> MapItem;
+    /// key:queue_item mapping for fast lookups by key
+    typedef std::unordered_map<Key, StorageIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapItem> > KeyMapping;
+    typedef typename KeyMapping::iterator KeyMapIterator;
+
     static size_t MemoryCountedFor(const Key &, const EntryValue *);
 
     void trim(size_t wantSpace);
