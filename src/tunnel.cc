@@ -180,6 +180,8 @@ public:
     SBuf preReadClientData;
     SBuf preReadServerData;
     time_t startTime; ///< object creation time, before any peer selection/connection attempts
+    /// whether we are waiting for the secure peer connection establishment answer
+    bool securingConnectionToPeer;
     /// Whether we are waiting for the CONNECT request/response exchange with the peer.
     bool waitingForConnectExchange;
     HappyConnOpenerPointer connOpener; ///< current connection opening job
@@ -266,6 +268,9 @@ private:
 
     /// \returns whether the request should be retried (nil) or the description why it should not
     const char *checkRetry();
+    /// whether the successfully selected path destination or the established
+    /// server connection is still in use
+    bool usingDestination() const;
 
     /// details of the "last tunneling attempt" failure (if it failed)
     ErrorState *savedError = nullptr;
@@ -355,6 +360,7 @@ TunnelStateData::deleteThis()
 
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     startTime(squid_curtime),
+    securingConnectionToPeer(false),
     waitingForConnectExchange(false),
     destinations(new ResolvedPeers()),
     destinationsFound(false),
@@ -1165,10 +1171,12 @@ TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
+    assert(!securingConnectionToPeer);
     AsyncCall::Pointer callback = asyncCall(5,4, "TunnelStateData::noteSecurityPeerConnectorAnswer",
                                             MyAnswerDialer(&TunnelStateData::noteSecurityPeerConnectorAnswer, this));
     const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
     AsyncJob::Start(connector); // will call our callback
+    securingConnectionToPeer = true;
 }
 
 /// starts a preparation step for an established connection; retries on failures
@@ -1195,6 +1203,8 @@ TunnelStateData::advanceDestination(const char *stepDescription, const Comm::Con
 void
 TunnelStateData::noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answer)
 {
+    securingConnectionToPeer = false;
+
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
         Must(!Comm::IsConnOpen(answer.conn));
@@ -1253,7 +1263,7 @@ TunnelStateData::noteDestination(Comm::ConnectionPointer path)
 
     destinations->addPath(path);
 
-    if (Comm::IsConnOpen(server.conn)) {
+    if (usingDestination()) {
         // We are already using a previously opened connection but also
         // receiving destinations in case we need to re-forward.
         Must(!opening());
@@ -1290,7 +1300,7 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
     // if all of them fail, tunneling as whole will fail
     Must(!selectionError); // finding at least one path means selection succeeded
 
-    if (Comm::IsConnOpen(server.conn)) {
+    if (usingDestination()) {
         // We are already using a previously opened connection but also
         // receiving destinations in case we need to re-forward.
         Must(!opening());
@@ -1299,6 +1309,12 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
 
     Must(opening()); // or we would be stuck with nothing to do or wait for
     notifyConnOpener();
+}
+
+bool
+TunnelStateData::usingDestination() const
+{
+    return securingConnectionToPeer || waitingForConnectExchange || Comm::IsConnOpen(server.conn);
 }
 
 /// remembers an error to be used if there will be no more connection attempts
@@ -1362,6 +1378,7 @@ TunnelStateData::startConnecting()
 
     assert(!destinations->empty());
     assert(!opening());
+    assert(!usingDestination());
     calls.connector = asyncCall(17, 5, "TunnelStateData::noteConnection", HappyConnOpener::CbDialer<TunnelStateData>(&TunnelStateData::noteConnection, this));
     const auto cs = new HappyConnOpener(destinations, calls.connector, request, startTime, 0, al);
     cs->setHost(request->url.host());
