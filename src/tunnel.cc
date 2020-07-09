@@ -272,6 +272,8 @@ private:
     /// server connection is still in use
     bool usingDestination() const;
 
+    void resetStepFlags();
+
     /// details of the "last tunneling attempt" failure (if it failed)
     ErrorState *savedError = nullptr;
 
@@ -1195,6 +1197,7 @@ TunnelStateData::advanceDestination(const char *stepDescription, const Comm::Con
         closePendingConnection(conn, "connection preparation exception");
         if (!savedError)
             saveError(new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request.getRaw(), al));
+        resetStepFlags();
         retryOrBail(stepDescription);
     }
 }
@@ -1315,6 +1318,14 @@ bool
 TunnelStateData::usingDestination() const
 {
     return securingConnectionToPeer || waitingForConnectExchange || Comm::IsConnOpen(server.conn);
+}
+
+void
+TunnelStateData::resetStepFlags()
+{
+    assert(!Comm::IsConnOpen(server.conn));
+    securingConnectionToPeer = false;
+    waitingForConnectExchange = false;
 }
 
 /// remembers an error to be used if there will be no more connection attempts
