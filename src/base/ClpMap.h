@@ -75,10 +75,10 @@ public:
 
     /// Search for an entry, and return a pointer
     EntryValue *get(const Key &key);
-    /// Add an entry to the map (with defaultTtl)
-    bool add(const Key &key, EntryValue *t);
     /// Add an entry to the map (with the given seconds-based TTL)
     bool add(const Key &key, EntryValue *t, Ttl ttl);
+    /// Add an entry to the map (with the default TTL)
+    bool add(const Key &key, EntryValue *t) { return add(key, t, defaultTtl); }
     /// Delete an entry from the map
     void del(const Key &key);
     /// Reset the memory capacity for this map, purging if needed
@@ -161,13 +161,6 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::memoryCountedFor(const Key &k, const En
     // TODO: handle Entry which change size while stored
     size_t entrySz = sizeof(Entry) + MemoryUsedByEV(v) + k.length();
     return sizeof(MapItem) + k.length() + entrySz;
-}
-
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-bool
-ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t)
-{
-    return add(key, t, defaultTtl);
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
