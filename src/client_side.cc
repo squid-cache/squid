@@ -4051,7 +4051,9 @@ ConnStateData::terminateAll(const Error &error, const LogTagsErrors &lte)
         // error details, but that context may leave unparsed bytes behind.
         // Consume them to stop checkLogging() from logging them again later.
         const auto intputToConsume =
+#if USE_OPENSSL
             parsingTlsHandshake ? "TLS handshake" : // more specific than CONNECT
+#endif
             bodyPipe ? "HTTP request body" :
             pipeline.back()->mayUseConnection() ? "HTTP CONNECT" :
             nullptr;
