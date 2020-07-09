@@ -93,10 +93,11 @@ public:
     size_t entries() const { return data.size(); }
 
 private:
+    static size_t MemoryCountedFor(const Key &, const EntryValue *);
+
     void trim(size_t wantSpace);
     void erase(const KeyMapIterator &);
     KeyMapIterator find(const Key &);
-    size_t memoryCountedFor(const Key &, const EntryValue *);
 
     /// The {key, value, ttl} tuples.
     /// Currently stored and maintained in LRU sequence.
@@ -156,11 +157,12 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::get(const Key &key)
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 size_t
-ClpMap<Key, EntryValue, MemoryUsedByEV>::memoryCountedFor(const Key &k, const EntryValue *v)
+ClpMap<Key, EntryValue, MemoryUsedByEV>::MemoryCountedFor(const Key &k, const EntryValue *v)
 {
-    // TODO: handle Entry which change size while stored
-    size_t entrySz = sizeof(Entry) + MemoryUsedByEV(v) + k.length();
-    return sizeof(MapItem) + k.length() + entrySz;
+    // approximate calculation (e.g., containers store wrappers not value_types)
+    const auto storageSz = sizeof(typename Storage::value_type) + k.length() + MemoryUsedByEV(v);
+    const auto indexSz = sizeof(typename KeyMapping::value_type) + k.length();
+    return storageSz + indexSz;
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
@@ -175,7 +177,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, Ttl 
     if (ttl < 0)
         return false;
 
-    const auto wantSpace = memoryCountedFor(key, t);
+    const auto wantSpace = MemoryCountedFor(key, t);
     if (wantSpace > memLimit())
         return false;
     trim(wantSpace);
