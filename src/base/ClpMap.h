@@ -41,7 +41,7 @@ public:
     /// maximum desired entry caching duration (a.k.a. TTL), in seconds
     using Ttl = int;
 
-    explicit ClpMap(size_t aCapacity) { setMemLimit(aCapacity); }
+    explicit ClpMap(const size_t aCapacity) { setMemLimit(aCapacity); }
     ClpMap(size_t aCapacity, Ttl aDefaultTtl);
     ~ClpMap() = default;
     ClpMap(ClpMap const &) = delete;
@@ -83,7 +83,7 @@ private:
     class Entry
     {
     public:
-        Entry(const Key &aKey, const Value &t, Ttl ttl): key(aKey), value(t), expires(squid_curtime+ttl) {}
+        Entry(const Key &aKey, const Value &t, const Ttl ttl): key(aKey), value(t), expires(squid_curtime+ttl) {}
 
         bool expired() const { return expires < squid_curtime; }
 
@@ -169,7 +169,7 @@ ClpMap<Key, Value, MemoryUsedBy>::get(const Key &key)
 {
     const auto i = find(key);
     if (i != index.end()) {
-        const Entry &e = *(i->second);
+        const auto &e = *(i->second);
         return &e.value;
     }
     return nullptr;
@@ -187,7 +187,7 @@ ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
 
 template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
 bool
-ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &t, Ttl ttl)
+ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &t, const Ttl ttl)
 {
     // optimization: avoid del() search, MemoryCountedFor() in always-empty maps
     if (memLimit() == 0)
@@ -235,7 +235,7 @@ ClpMap<Key, Value, MemoryUsedBy>::del(const Key &key)
 /// purges entries to make free memory large enough to fit wantSpace bytes
 template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
 void
-ClpMap<Key, Value, MemoryUsedBy>::trim(size_t wantSpace)
+ClpMap<Key, Value, MemoryUsedBy>::trim(const size_t wantSpace)
 {
     assert(wantSpace <= memLimit()); // no infinite loops and in-vain trimming
     while (freeMem() < wantSpace) {
