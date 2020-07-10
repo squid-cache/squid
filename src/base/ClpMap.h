@@ -44,8 +44,11 @@ public:
     explicit ClpMap(const size_t aCapacity) { setMemLimit(aCapacity); }
     ClpMap(size_t aCapacity, Ttl aDefaultTtl);
     ~ClpMap() = default;
-    ClpMap(ClpMap const &) = delete;
-    ClpMap & operator = (ClpMap const &) = delete;
+
+    // copying disabled because it may be expensive for large maps
+    // moving (implicitly) disabled for simplicity sake
+    ClpMap(const ClpMap &) = delete;
+    ClpMap &operator =(const ClpMap &) = delete;
 
     /// \return a pointer to a fresh cached value (or nil)
     /// The underlying value is owned by the map, so the pointer may be
