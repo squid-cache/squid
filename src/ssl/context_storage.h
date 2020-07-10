@@ -47,7 +47,7 @@ public:
 };
 
 inline size_t MemoryUsedByContext(const Security::ContextPointer &) {
-    return 1024; // TODO: Replace on real size.
+    return 1024; // TODO: Calculate approximate memory usage by the context.
 }
 using LocalContextStorage = ClpMap<SBuf, Security::ContextPointer, MemoryUsedByContext>;
 
