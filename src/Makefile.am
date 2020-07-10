@@ -1595,12 +1595,12 @@ tests_testStore_LDADD= \
 	ip/libip.la \
 	fs/libfs.la \
 	mgr/libmgr.la \
-	ipc/libipc.la \
 	anyp/libanyp.la \
 	mem/libmem.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
 	DiskIO/libdiskio.la \
+	ipc/libipc.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1951,6 +1951,7 @@ tests_test_http_range_SOURCES = \
 	event.cc \
 	tests/stub_external_acl.cc \
 	tests/stub_fatal.cc \
+	tests/stub_IpcIoFile.cc \
 	fatal.h \
 	fd.cc \
 	fd.h \
@@ -2368,6 +2369,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_IpcIoFile.cc \
 	mem_node.cc \
 	mime.cc \
 	mime.h \
@@ -2670,6 +2672,7 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_IpcIoFile.cc \
 	mem_node.cc \
 	mime.cc \
 	mime.h \
@@ -2992,6 +2995,7 @@ tests_testEvent_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_IpcIoFile.cc \
 	mem_node.cc \
 	mime.cc \
 	mime.h \

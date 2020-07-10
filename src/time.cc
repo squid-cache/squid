@@ -11,6 +11,9 @@
 #include "squid.h"
 #include "SquidTime.h"
 
+#include <iomanip>
+#include <ostream>
+
 struct timeval current_time;
 double current_dtime;
 time_t squid_curtime = 0;
@@ -76,6 +79,16 @@ void
 TimeEngine::tick()
 {
     getCurrentTime();
+}
+
+std::ostream &
+operator <<(std::ostream &os, const timeval &t)
+{
+    os << t.tv_sec << ".";
+    const auto savedFill = os.fill('0');
+    os << std::setw(6) << t.tv_usec;
+    os.fill(savedFill);
+    return os;
 }
 
 const char *

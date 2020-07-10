@@ -35,12 +35,21 @@ class CollapsedForwardingMsg
 public:
     CollapsedForwardingMsg(): sender(-1), xitIndex(-1) {}
 
+    /// prints message parameters; suitable for cache manager reports
+    void stat(std::ostream &);
+
 public:
     int sender; ///< kid ID of sending process
 
     /// transients index, so that workers can find [private] entries to sync
     sfileno xitIndex;
 };
+
+void
+CollapsedForwardingMsg::stat(std::ostream &os)
+{
+    os << "sender: " << sender << ", xitIndex: " << xitIndex;
+}
 
 // CollapsedForwarding
 
@@ -135,6 +144,15 @@ CollapsedForwarding::HandleNotification(const Ipc::TypedMsgHdr &msg)
     assert(queue.get());
     queue->clearReaderSignal(from);
     HandleNewData("after notification");
+}
+
+void
+CollapsedForwarding::StatQueue(std::ostream &os)
+{
+    if (queue.get()) {
+        os << "Transients queues:\n";
+        queue->stat<CollapsedForwardingMsg>(os);
+    }
 }
 
 /// initializes shared queue used by CollapsedForwarding

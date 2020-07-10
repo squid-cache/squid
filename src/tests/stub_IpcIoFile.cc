@@ -7,12 +7,15 @@
  */
 
 #include "squid.h"
-#include "CollapsedForwarding.h"
 
-#define STUB_API "CollapsedForwarding.cc"
+#if HAVE_DISKIO_MODULE_IPCIO
+#include "DiskIO/IpcIo/IpcIoFile.h"
+
+#define STUB_API "DiskIO/IocIo/IpcIoFile.cc"
+
 #include "tests/STUB.h"
 
-void CollapsedForwarding::Broadcast(StoreEntry const&, const bool) STUB
-void CollapsedForwarding::Broadcast(const sfileno, const bool) STUB
-void CollapsedForwarding::StatQueue(std::ostream &) STUB
+void IpcIoFile::StatQueue(std::ostream &) STUB
+
+#endif /* HAVE_DISKIO_MODULE_IPCIO */
 
