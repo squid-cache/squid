@@ -11,6 +11,7 @@
 #if USE_OPENSSL
 
 #include "fatal.h"
+#include "sbuf/Algorithms.h"
 #include "sbuf/SBuf.h"
 
 /* Stub File for the ssl/libsslsquid.la convenience library */

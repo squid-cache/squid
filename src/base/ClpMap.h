@@ -10,7 +10,6 @@
 #define SQUID__SRC_BASE_CLPMAP_H
 
 #include "mem/PoolingAllocator.h"
-#include "sbuf/Algorithms.h"
 #include "SquidTime.h"
 
 #include <functional>
