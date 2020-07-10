@@ -53,6 +53,7 @@ public:
     /// \return a pointer to a fresh cached value (or nil)
     /// The underlying value is owned by the map, so the pointer may be
     /// invalidated by any non-constant method call, including another get().
+    /// Also moves the found entry to the end of the purging queue.
     const Value *get(const Key &);
 
     /// Copy the given value into the map (with the given key and TTL)
@@ -88,6 +89,7 @@ private:
     public:
         Entry(const Key &aKey, const Value &t, const Ttl ttl): key(aKey), value(t), expires(squid_curtime+ttl) {}
 
+        /// whether the entry is stale
         bool expired() const { return expires < squid_curtime; }
 
     public:
