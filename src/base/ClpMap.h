@@ -156,10 +156,10 @@ ClpMap<Key, Value, MemoryUsedBy>::find(const Key &key)
     if (i == index_.end())
         return i;
 
-    const auto e = i->second;
-    if (!e->expired()) {
-        if (e != entries_.begin())
-            entries_.splice(entries_.begin(), entries_, e);
+    const auto entryPosition = i->second;
+    if (!entryPosition->expired()) {
+        if (entryPosition != entries_.begin())
+            entries_.splice(entries_.begin(), entries_, entryPosition);
         return i;
     }
     // else fall through to cleanup
@@ -174,8 +174,8 @@ ClpMap<Key, Value, MemoryUsedBy>::get(const Key &key)
 {
     const auto i = find(key);
     if (i != index_.end()) {
-        const auto &e = *(i->second);
-        return &e.value;
+        const auto &entry = *(i->second);
+        return &entry.value;
     }
     return nullptr;
 }
