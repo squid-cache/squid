@@ -61,7 +61,7 @@ public:
     bool add(const Key &, const Value &, Ttl);
 
     /// Copy the given value into the map (with the given key and default TTL)
-    bool add(const Key &key, const Value &t) { return add(key, t, defaultTtl_); }
+    bool add(const Key &key, const Value &v) { return add(key, v, defaultTtl_); }
 
     /// Remove the corresponding entry (if any)
     void del(const Key &);
@@ -86,7 +86,7 @@ private:
     class Entry
     {
     public:
-        Entry(const Key &aKey, const Value &t, const Ttl ttl): key(aKey), value(t), expires(squid_curtime+ttl) {}
+        Entry(const Key &aKey, const Value &v, const Ttl ttl): key(aKey), value(v), expires(squid_curtime+ttl) {}
 
         /// whether the entry is stale
         bool expired() const { return expires < squid_curtime; }
@@ -188,7 +188,7 @@ ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
 
 template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
 bool
-ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &t, const Ttl ttl)
+ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &v, const Ttl ttl)
 {
     // optimization: avoid del() search, MemoryCountedFor() in always-empty maps
     if (memLimit() == 0)
@@ -199,12 +199,12 @@ ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &t, const Ttl 
     if (ttl < 0)
         return false; // already expired; will never be returned by get()
 
-    const auto wantSpace = MemoryCountedFor(key, t);
+    const auto wantSpace = MemoryCountedFor(key, v);
     if (wantSpace > memLimit())
         return false; // will never fit
     trim(wantSpace);
 
-    entries_.emplace_front(key, t, ttl); // TODO: After C++17 migration, use the return value
+    entries_.emplace_front(key, v, ttl); // TODO: After C++17 migration, use the return value
     index_.emplace(key, entries_.begin());
 
     entries_.begin()->memCounted = wantSpace;
