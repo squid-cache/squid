@@ -17,18 +17,24 @@
 #include <list>
 #include <unordered_map>
 
-template<class EntryValue>
+template<class Value>
 size_t
-DefaultMemoryUsage(const EntryValue *e)
+DefaultMemoryUsage(const Value &e)
 {
-    return sizeof(*e);
+    return sizeof(e);
 }
 
-/// An in-memory cache enforcing three primary policies:
-/// Capacity: The memory used by cached entries has a configurable limit;
-/// Lifetime: Entries are hidden (and may be deleted) after their TTL expires;
-/// Priority: Capacity victims are purged in LRU order.
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *) = DefaultMemoryUsage>
+/// An in-RAM associative container enforcing three primary caching policies:
+/// * Capacity: The memory used by cached entries has a configurable limit;
+/// * Lifetime: Entries are hidden (and may be deleted) after their TTL expires;
+/// * Priority: Capacity victims are purged in LRU order.
+/// Individual cache entry operations have average constant-time complexity.
+///
+/// Value must meet STL requirements of Erasable and EmplaceConstructible.
+/// Key must come with std::hash<Key> and std::equal_to<Key> instantiations.
+/// Key::length() must return the number of RAM bytes in use by the key.
+/// MemoryUsedBy() must return the number of RAM bytes in use by the value.
+template <class Key, class Value, size_t MemoryUsedBy(const Value &) = DefaultMemoryUsage>
 class ClpMap
 {
 public:
@@ -41,18 +47,18 @@ public:
     ClpMap(ClpMap const &) = delete;
     ClpMap & operator = (ClpMap const &) = delete;
 
-    /// \return a fresh cached entry (or nil)
-    /// The returned entry is still owned by the map and may be deleted during
-    /// any non-constant method call (including another get()).
-    EntryValue *get(const Key &);
+    /// \return a pointer to a fresh cached value (or nil)
+    /// The underlying value is owned by the map, so the pointer may be
+    /// invalidated by any non-constant method call, including another get().
+    const Value *get(const Key &);
 
-    /// Absorb a cachable entry into the map (with the given TTL)
-    /// \retval true the supplied entry was absorbed and is now owned by the map
-    /// \retval false the supplied entry was rejected; the caller still owns it
-    bool add(const Key &, EntryValue *, Ttl);
+    /// Copy the given value into the map (with the given key and TTL)
+    /// \retval true the value was successfully copied into the map
+    /// \retval false caching was rejected (the map remains unchanged)
+    bool add(const Key &, const Value &, Ttl);
 
-    /// Absorb a cachable entry into the map (with the default TTL)
-    bool add(const Key &key, EntryValue *t) { return add(key, t, defaultTtl); }
+    /// Copy the given value into the map (with the given key and default TTL)
+    bool add(const Key &key, const Value &t) { return add(key, t, defaultTtl); }
 
     /// Remove the corresponding entry (if any)
     void del(const Key &);
@@ -73,20 +79,17 @@ public:
     size_t entries() const { return data.size(); }
 
 private:
-    /// cache entry Key, EntryValue, and caching-related entry metadata keeper
+    /// the keeper of cache entry Key, Value, and caching-related entry metadata
     class Entry
     {
     public:
-        Entry(const Key &aKey, EntryValue *t, Ttl ttl): key(aKey), value(t), expires(squid_curtime+ttl) {}
-        ~Entry() { delete value; }
-        Entry(const Entry &) = delete;
-        Entry & operator = (const Entry &) = delete;
+        Entry(const Key &aKey, const Value &t, Ttl ttl): key(aKey), value(t), expires(squid_curtime+ttl) {}
 
         bool expired() const { return expires < squid_curtime; }
 
     public:
         Key key; ///< the entry search key; see ClpMap::get()
-        EntryValue *value = nullptr; ///< cached value provided by the map user
+        Value value; ///< cached value provided by the map user
         time_t expires = 0; ///< get() stops returning the entry after this time
         size_t memCounted = 0; ///< memory accounted for this entry in our ClpMap
     };
@@ -101,7 +104,7 @@ private:
     typedef std::unordered_map<Key, StorageIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapItem> > KeyMapping;
     typedef typename KeyMapping::iterator KeyMapIterator;
 
-    static size_t MemoryCountedFor(const Key &, const EntryValue *);
+    static size_t MemoryCountedFor(const Key &, const Value &);
 
     void trim(size_t wantSpace);
     void erase(const KeyMapIterator &);
@@ -120,17 +123,17 @@ private:
     size_t memUsed_ = 0;  ///< The amount of memory currently used
 };
 
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-ClpMap<Key, EntryValue, MemoryUsedByEV>::ClpMap(const size_t aCapacity, const Ttl aDefaultTtl):
+template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
+ClpMap<Key, Value, MemoryUsedBy>::ClpMap(const size_t aCapacity, const Ttl aDefaultTtl):
     defaultTtl(aDefaultTtl)
 {
     assert(aDefaultTtl >= 0);
     setMemLimit(aCapacity);
 }
 
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
+template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
 void
-ClpMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(const size_t newLimit)
+ClpMap<Key, Value, MemoryUsedBy>::setMemLimit(const size_t newLimit)
 {
     assert(newLimit >= 0);
     if (memUsed_ > newLimit)
@@ -139,9 +142,9 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(const size_t newLimit)
 }
 
 /// \returns the index position of an entry identified by its key (or end())
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-typename ClpMap<Key, EntryValue, MemoryUsedByEV>::KeyMapIterator
-ClpMap<Key, EntryValue, MemoryUsedByEV>::find(const Key &key)
+template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
+typename ClpMap<Key, Value, MemoryUsedBy>::KeyMapIterator
+ClpMap<Key, Value, MemoryUsedBy>::find(const Key &key)
 {
     const auto i = index.find(key);
     if (i == index.end()) {
@@ -160,31 +163,31 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::find(const Key &key)
     return index.end();
 }
 
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
-EntryValue *
-ClpMap<Key, EntryValue, MemoryUsedByEV>::get(const Key &key)
+template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
+const Value *
+ClpMap<Key, Value, MemoryUsedBy>::get(const Key &key)
 {
     const auto i = find(key);
     if (i != index.end()) {
         const Entry &e = *(i->second);
-        return e.value;
+        return &e.value;
     }
     return nullptr;
 }
 
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
+template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
 size_t
-ClpMap<Key, EntryValue, MemoryUsedByEV>::MemoryCountedFor(const Key &k, const EntryValue *v)
+ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
 {
     // approximate calculation (e.g., containers store wrappers not value_types)
-    const auto storageSz = sizeof(typename Storage::value_type) + k.length() + MemoryUsedByEV(v);
+    const auto storageSz = sizeof(typename Storage::value_type) + k.length() + MemoryUsedBy(v);
     const auto indexSz = sizeof(typename KeyMapping::value_type) + k.length();
     return storageSz + indexSz;
 }
 
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
+template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
 bool
-ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, Ttl ttl)
+ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &t, Ttl ttl)
 {
     // optimization: avoid del() search, MemoryCountedFor() in always-empty maps
     if (memLimit() == 0)
@@ -209,9 +212,9 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, Ttl 
 }
 
 /// removes the cached entry (identified by its index) from the map
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
+template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
 void
-ClpMap<Key, EntryValue, MemoryUsedByEV>::erase(const KeyMapIterator &i)
+ClpMap<Key, Value, MemoryUsedBy>::erase(const KeyMapIterator &i)
 {
     assert(i != index.end());
     const auto dataPosition = i->second;
@@ -221,18 +224,18 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::erase(const KeyMapIterator &i)
     memUsed_ -= sz;
 }
 
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
+template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
 void
-ClpMap<Key, EntryValue, MemoryUsedByEV>::del(const Key &key)
+ClpMap<Key, Value, MemoryUsedBy>::del(const Key &key)
 {
     const auto i = find(key);
     erase(i);
 }
 
 /// purges entries to make free memory large enough to fit wantSpace bytes
-template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
+template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
 void
-ClpMap<Key, EntryValue, MemoryUsedByEV>::trim(size_t wantSpace)
+ClpMap<Key, Value, MemoryUsedBy>::trim(size_t wantSpace)
 {
     assert(wantSpace <= memLimit()); // no infinite loops and in-vain trimming
     while (freeMem() < wantSpace) {

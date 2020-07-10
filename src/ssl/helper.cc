@@ -284,9 +284,7 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
 
     if (Ssl::CertValidationHelper::HelperCache &&
             (validationResponse->resultCode == ::Helper::Okay || validationResponse->resultCode == ::Helper::Error)) {
-        Ssl::CertValidationResponse::Pointer *item = new Ssl::CertValidationResponse::Pointer(validationResponse);
-        if (!Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query, item))
-            delete item;
+        (void)Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query, validationResponse);
     }
 
     delete crtdvdData;

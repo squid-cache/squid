@@ -46,7 +46,7 @@ public:
     virtual bool aggregatable() const { return false; }
 };
 
-inline size_t MemoryUsedByContext(const Security::ContextPointer *) {
+inline size_t MemoryUsedByContext(const Security::ContextPointer &) {
     return 1024; // TODO: Replace on real size.
 }
 typedef ClpMap<SBuf, Security::ContextPointer, MemoryUsedByContext> LocalContextStorage;
