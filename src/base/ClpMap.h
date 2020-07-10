@@ -42,13 +42,13 @@ public:
     ClpMap & operator = (ClpMap const &) = delete;
 
     /// Search for an entry, and return a pointer
-    EntryValue *get(const Key &key);
+    EntryValue *get(const Key &);
     /// Add an entry to the map (with the given seconds-based TTL)
-    bool add(const Key &key, EntryValue *t, Ttl ttl);
+    bool add(const Key &, EntryValue *, Ttl);
     /// Add an entry to the map (with the default TTL)
     bool add(const Key &key, EntryValue *t) { return add(key, t, defaultTtl); }
     /// Delete an entry from the map
-    void del(const Key &key);
+    void del(const Key &);
     /// Reset the memory capacity for this map, purging if needed
     void setMemLimit(size_t newLimit);
     /// The memory capacity for the map
@@ -156,7 +156,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::get(const Key &key)
         const Entry &e = *(i->second);
         return e.value;
     }
-    return NULL;
+    return nullptr;
 }
 
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
