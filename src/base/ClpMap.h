@@ -119,7 +119,7 @@ private:
     /// entries_ positions indexed by the entry key
     Index index_;
 
-    /// seconds-based entry TTL to use if none provided to add()
+    /// entry TTL to use if none provided to add()
     Ttl defaultTtl_ = std::numeric_limits<Ttl>::max();
     size_t memLimit_ = 0; ///< The maximum memory to use
     size_t memUsed_ = 0;  ///< The amount of memory currently used
