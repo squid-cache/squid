@@ -237,7 +237,8 @@ void
 ClpMap<Key, Value, MemoryUsedBy>::del(const Key &key)
 {
     const auto i = find(key);
-    erase(i);
+    if (i != index_.end())
+        erase(i);
 }
 
 /// purges entries to make free memory large enough to fit wantSpace bytes
