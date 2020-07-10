@@ -61,7 +61,7 @@ public:
     bool add(const Key &, const Value &, Ttl);
 
     /// Copy the given value into the map (with the given key and default TTL)
-    bool add(const Key &key, const Value &t) { return add(key, t, defaultTtl); }
+    bool add(const Key &key, const Value &t) { return add(key, t, defaultTtl_); }
 
     /// Remove the corresponding entry (if any)
     void del(const Key &);
@@ -79,7 +79,7 @@ public:
     size_t memoryUsed() const { return memUsed_; }
 
     /// The number of currently stored entries, including expired ones
-    size_t entries() const { return data.size(); }
+    size_t entries() const { return entries_.size(); }
 
 private:
     /// the keeper of cache entry Key, Value, and caching-related entry metadata
@@ -98,38 +98,36 @@ private:
         size_t memCounted = 0; ///< memory accounted for this entry in our ClpMap
     };
 
-    /// container for stored data
-    typedef std::list<Entry, PoolingAllocator<Entry> > Storage;
-    typedef typename Storage::iterator StorageIterator;
+    /// Entries in LRU order
+    typedef std::list<Entry, PoolingAllocator<Entry> > Entries;
+    typedef typename Entries::iterator EntriesIterator;
 
-    /// Key:Entry* mapping for fast lookups by key
-    typedef std::pair<Key, StorageIterator> MapItem;
-    /// key:queue_item mapping for fast lookups by key
-    typedef std::unordered_map<Key, StorageIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<MapItem> > KeyMapping;
-    typedef typename KeyMapping::iterator KeyMapIterator;
+    typedef std::pair<Key, EntriesIterator> IndexItem;
+    /// key:entry_position mapping for fast entry lookups by key
+    typedef std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem> > Index;
+    typedef typename Index::iterator IndexIterator;
 
     static size_t MemoryCountedFor(const Key &, const Value &);
 
     void trim(size_t wantSpace);
-    void erase(const KeyMapIterator &);
-    KeyMapIterator find(const Key &);
+    void erase(const IndexIterator &);
+    IndexIterator find(const Key &);
 
-    /// The {key, value, ttl} tuples.
-    /// Currently stored and maintained in LRU sequence.
-    Storage data;
+    /// cached entries, including expired ones, in LRU order
+    Entries entries_;
 
-    /// index of stored data by key
-    KeyMapping index;
+    /// entries_ positions indexed by the entry key
+    Index index_;
 
     /// seconds-based entry TTL to use if none provided to add()
-    Ttl defaultTtl = std::numeric_limits<Ttl>::max();
+    Ttl defaultTtl_ = std::numeric_limits<Ttl>::max();
     size_t memLimit_ = 0; ///< The maximum memory to use
     size_t memUsed_ = 0;  ///< The amount of memory currently used
 };
 
 template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
 ClpMap<Key, Value, MemoryUsedBy>::ClpMap(const size_t aCapacity, const Ttl aDefaultTtl):
-    defaultTtl(aDefaultTtl)
+    defaultTtl_(aDefaultTtl)
 {
     assert(aDefaultTtl >= 0);
     setMemLimit(aCapacity);
@@ -147,24 +145,24 @@ ClpMap<Key, Value, MemoryUsedBy>::setMemLimit(const size_t newLimit)
 
 /// \returns the index position of an entry identified by its key (or end())
 template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
-typename ClpMap<Key, Value, MemoryUsedBy>::KeyMapIterator
+typename ClpMap<Key, Value, MemoryUsedBy>::IndexIterator
 ClpMap<Key, Value, MemoryUsedBy>::find(const Key &key)
 {
-    const auto i = index.find(key);
-    if (i == index.end()) {
+    const auto i = index_.find(key);
+    if (i == index_.end()) {
         return i;
     }
 
     const auto e = i->second;
     if (!e->expired()) {
-        if (e != data.begin())
-            data.splice(data.begin(), data, e);
+        if (e != entries_.begin())
+            entries_.splice(entries_.begin(), entries_, e);
         return i;
     }
     // else fall through to cleanup
 
     erase(i);
-    return index.end();
+    return index_.end();
 }
 
 template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
@@ -172,7 +170,7 @@ const Value *
 ClpMap<Key, Value, MemoryUsedBy>::get(const Key &key)
 {
     const auto i = find(key);
-    if (i != index.end()) {
+    if (i != index_.end()) {
         const auto &e = *(i->second);
         return &e.value;
     }
@@ -184,8 +182,8 @@ size_t
 ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
 {
     // approximate calculation (e.g., containers store wrappers not value_types)
-    const auto storageSz = sizeof(typename Storage::value_type) + k.length() + MemoryUsedBy(v);
-    const auto indexSz = sizeof(typename KeyMapping::value_type) + k.length();
+    const auto storageSz = sizeof(typename Entries::value_type) + k.length() + MemoryUsedBy(v);
+    const auto indexSz = sizeof(typename Index::value_type) + k.length();
     return storageSz + indexSz;
 }
 
@@ -207,10 +205,10 @@ ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &t, const Ttl 
         return false; // will never fit
     trim(wantSpace);
 
-    data.emplace_front(key, t, ttl);
-    index.emplace(key, data.begin());
+    entries_.emplace_front(key, t, ttl); // TODO: After C++17 migration, use the return value
+    index_.emplace(key, entries_.begin());
 
-    data.begin()->memCounted = wantSpace;
+    entries_.begin()->memCounted = wantSpace;
     memUsed_ += wantSpace;
     return true;
 }
@@ -218,13 +216,13 @@ ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &t, const Ttl 
 /// removes the cached entry (identified by its index) from the map
 template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
 void
-ClpMap<Key, Value, MemoryUsedBy>::erase(const KeyMapIterator &i)
+ClpMap<Key, Value, MemoryUsedBy>::erase(const IndexIterator &i)
 {
-    assert(i != index.end());
-    const auto dataPosition = i->second;
-    const auto sz = dataPosition->memCounted;
-    index.erase(i); // destroys a pointer to our Entry
-    data.erase(dataPosition); // destroys our Entry
+    assert(i != index_.end());
+    const auto entryPosition = i->second;
+    const auto sz = entryPosition->memCounted;
+    index_.erase(i); // destroys a "pointer" to our Entry
+    entries_.erase(entryPosition); // destroys our Entry
     memUsed_ -= sz;
 }
 
@@ -243,10 +241,10 @@ ClpMap<Key, Value, MemoryUsedBy>::trim(const size_t wantSpace)
 {
     assert(wantSpace <= memLimit()); // no infinite loops and in-vain trimming
     while (freeMem() < wantSpace) {
-        assert(!data.empty());
+        assert(!entries_.empty());
         // TODO: Purge expired entries first. They are useless, but their
         // presence may lead to purging potentially useful fresh entries here.
-        del(data.rbegin()->key);
+        del(entries_.rbegin()->key);
     }
 }
 
