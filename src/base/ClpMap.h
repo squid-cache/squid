@@ -223,10 +223,13 @@ ClpMap<Key, Value, MemoryUsedBy>::erase(const IndexIterator &i)
 {
     assert(i != index_.end());
     const auto entryPosition = i->second;
+
     const auto sz = entryPosition->memCounted;
+    assert(memUsed_ >= sz);
+    memUsed_ -= sz;
+
     index_.erase(i); // destroys a "pointer" to our Entry
     entries_.erase(entryPosition); // destroys our Entry
-    memUsed_ -= sz;
 }
 
 template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
