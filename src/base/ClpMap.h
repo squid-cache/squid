@@ -40,8 +40,8 @@ public:
     /// maximum desired entry caching duration (a.k.a. TTL), in seconds
     using Ttl = int;
 
-    explicit ClpMap(const size_t aCapacity) { setMemLimit(aCapacity); }
-    ClpMap(size_t aCapacity, Ttl aDefaultTtl);
+    explicit ClpMap(const size_t capacity) { setMemLimit(capacity); }
+    ClpMap(size_t capacity, Ttl defaultTtl);
     ~ClpMap() = default;
 
     // copying disabled because it may be expensive for large maps
@@ -126,11 +126,11 @@ private:
 };
 
 template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
-ClpMap<Key, Value, MemoryUsedBy>::ClpMap(const size_t aCapacity, const Ttl aDefaultTtl):
-    defaultTtl_(aDefaultTtl)
+ClpMap<Key, Value, MemoryUsedBy>::ClpMap(const size_t capacity, const Ttl defaultTtl):
+    defaultTtl_(defaultTtl)
 {
-    assert(aDefaultTtl >= 0);
-    setMemLimit(aCapacity);
+    assert(defaultTtl >= 0);
+    setMemLimit(capacity);
 }
 
 template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
