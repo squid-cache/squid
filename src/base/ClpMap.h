@@ -41,23 +41,35 @@ public:
     ClpMap(ClpMap const &) = delete;
     ClpMap & operator = (ClpMap const &) = delete;
 
-    /// Search for an entry, and return a pointer
+    /// \return a fresh cached entry (or nil)
+    /// The returned entry is still owned by the map and may be deleted during
+    /// any non-constant method call (including another get()).
     EntryValue *get(const Key &);
-    /// Add an entry to the map (with the given seconds-based TTL)
+
+    /// Absorb a cachable entry into the map (with the given TTL)
+    /// \retval true the supplied entry was absorbed and is now owned by the map
+    /// \retval false the supplied entry was rejected; the caller still owns it
     bool add(const Key &, EntryValue *, Ttl);
-    /// Add an entry to the map (with the default TTL)
+
+    /// Absorb a cachable entry into the map (with the default TTL)
     bool add(const Key &key, EntryValue *t) { return add(key, t, defaultTtl); }
-    /// Delete an entry from the map
+
+    /// Remove the corresponding entry (if any)
     void del(const Key &);
+
     /// Reset the memory capacity for this map, purging if needed
     void setMemLimit(size_t newLimit);
+
     /// The memory capacity for the map
-    size_t memLimit() const {return memLimit_;}
+    size_t memLimit() const { return memLimit_; }
+
     /// The free space of the map
     size_t freeMem() const { return memLimit() - memoryUsed(); }
-    /// The current memory usage of the map
-    size_t memoryUsed() const {return memUsed_;}
-    /// The number of stored entries
+
+    /// The current (approximate) memory usage of the map
+    size_t memoryUsed() const { return memUsed_; }
+
+    /// The number of currently stored entries, including expired ones
     size_t entries() const { return data.size(); }
 
 private:
@@ -73,10 +85,10 @@ private:
         bool expired() const { return expires < squid_curtime; }
 
     public:
-        Key key; ///< the key of entry
-        EntryValue *value = nullptr; ///< A pointer to the stored value
+        Key key; ///< the entry search key; see ClpMap::get()
+        EntryValue *value = nullptr; ///< cached value provided by the map user
         time_t expires = 0; ///< get() stops returning the entry after this time
-        size_t memCounted = 0; ///< memory accounted for this entry in parent ClpMap
+        size_t memCounted = 0; ///< memory accounted for this entry in our ClpMap
     };
 
     /// container for stored data
@@ -126,6 +138,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::setMemLimit(const size_t newLimit)
     memLimit_ = newLimit;
 }
 
+/// \returns the index position of an entry identified by its key (or end())
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 typename ClpMap<Key, EntryValue, MemoryUsedByEV>::KeyMapIterator
 ClpMap<Key, EntryValue, MemoryUsedByEV>::find(const Key &key)
@@ -173,17 +186,18 @@ template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)
 bool
 ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, Ttl ttl)
 {
+    // optimization: avoid del() search, MemoryCountedFor() in always-empty maps
     if (memLimit() == 0)
         return false;
 
     del(key);
 
     if (ttl < 0)
-        return false;
+        return false; // already expired; will never be returned by get()
 
     const auto wantSpace = MemoryCountedFor(key, t);
     if (wantSpace > memLimit())
-        return false;
+        return false; // will never fit
     trim(wantSpace);
 
     data.emplace_front(key, t, ttl);
@@ -194,6 +208,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::add(const Key &key, EntryValue *t, Ttl 
     return true;
 }
 
+/// removes the cached entry (identified by its index) from the map
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::erase(const KeyMapIterator &i)
@@ -214,6 +229,7 @@ ClpMap<Key, EntryValue, MemoryUsedByEV>::del(const Key &key)
     erase(i);
 }
 
+/// purges entries to make free memory large enough to fit wantSpace bytes
 template <class Key, class EntryValue, size_t MemoryUsedByEV(const EntryValue *)>
 void
 ClpMap<Key, EntryValue, MemoryUsedByEV>::trim(size_t wantSpace)
