@@ -99,13 +99,13 @@ private:
     };
 
     /// Entries in LRU order
-    typedef std::list<Entry, PoolingAllocator<Entry> > Entries;
-    typedef typename Entries::iterator EntriesIterator;
+    using Entries = std::list<Entry, PoolingAllocator<Entry> >;
+    using EntriesIterator = typename Entries::iterator;
 
-    typedef std::pair<Key, EntriesIterator> IndexItem;
+    using IndexItem = std::pair<Key, EntriesIterator>;
     /// key:entry_position mapping for fast entry lookups by key
-    typedef std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem> > Index;
-    typedef typename Index::iterator IndexIterator;
+    using Index = std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem> >;
+    using IndexIterator = typename Index::iterator;
 
     static size_t MemoryCountedFor(const Key &, const Value &);
 

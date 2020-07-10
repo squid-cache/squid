@@ -49,7 +49,7 @@ public:
 inline size_t MemoryUsedByContext(const Security::ContextPointer &) {
     return 1024; // TODO: Replace on real size.
 }
-typedef ClpMap<SBuf, Security::ContextPointer, MemoryUsedByContext> LocalContextStorage;
+using LocalContextStorage = ClpMap<SBuf, Security::ContextPointer, MemoryUsedByContext>;
 
 /// Class for storing/manipulating LocalContextStorage per local listening address/port.
 class GlobalContextStorage
