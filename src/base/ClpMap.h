@@ -121,8 +121,12 @@ private:
 
     /// entry TTL to use if none provided to add()
     Ttl defaultTtl_ = std::numeric_limits<Ttl>::max();
-    size_t memLimit_ = 0; ///< The maximum memory to use
-    size_t memUsed_ = 0;  ///< The amount of memory currently used
+
+    /// the maximum memory we are allowed to use for all cached entries
+    size_t memLimit_ = 0;
+
+    /// the total amount of memory we currently use for all cached entries
+    size_t memUsed_ = 0;
 };
 
 template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
