@@ -15,6 +15,7 @@
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"
+#include "sbuf/Stream.h"
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
@@ -199,8 +200,9 @@ void Ssl::CertValidationHelper::Init()
                 if (strncmp(token, "ttl=", 4) == 0) {
                     ttl = atoi(token + 4);
                     if (ttl < 0) {
-                        debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "FATAL: TTL must have a value of 0 or more.");
-                        self_destruct();
+                        throw TextException(ToSBuf("Negative TTL in sslcrtvalidator_program ", Ssl::TheConfig.ssl_crt_validator,
+                            Debug::Extra, "For unlimited TTL, use ttl=", std::numeric_limits<CacheType::Ttl>::max()),
+                            Here());
                     }
                     continue;
                 } else if (strncmp(token, "cache=", 6) == 0) {
