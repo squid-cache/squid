@@ -149,9 +149,8 @@ typename ClpMap<Key, Value, MemoryUsedBy>::IndexIterator
 ClpMap<Key, Value, MemoryUsedBy>::find(const Key &key)
 {
     const auto i = index_.find(key);
-    if (i == index_.end()) {
+    if (i == index_.end())
         return i;
-    }
 
     const auto e = i->second;
     if (!e->expired()) {
