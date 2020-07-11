@@ -24,7 +24,7 @@ DefaultMemoryUsage(const Value &e)
     return sizeof(e);
 }
 
-/// An in-RAM associative container enforcing three primary caching policies:
+/// An in-memory associative container enforcing three primary caching policies:
 /// * Capacity: The memory used by cached entries has a configurable limit;
 /// * Lifetime: Entries are hidden (and may be deleted) after their TTL expires;
 /// * Priority: Capacity victims are purged in LRU order.
@@ -32,8 +32,8 @@ DefaultMemoryUsage(const Value &e)
 ///
 /// Value must meet STL requirements of Erasable and EmplaceConstructible.
 /// Key must come with std::hash<Key> and std::equal_to<Key> instantiations.
-/// Key::length() must return the number of RAM bytes in use by the key.
-/// MemoryUsedBy() must return the number of RAM bytes in use by the value.
+/// Key::length() must return the number of memory bytes in use by the key.
+/// MemoryUsedBy() must return the number of memory bytes in use by the value.
 template <class Key, class Value, size_t MemoryUsedBy(const Value &) = DefaultMemoryUsage>
 class ClpMap
 {
