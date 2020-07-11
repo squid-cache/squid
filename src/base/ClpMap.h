@@ -13,6 +13,7 @@
 #include "SquidTime.h"
 
 #include <functional>
+#include <limits>
 #include <list>
 #include <unordered_map>
 
