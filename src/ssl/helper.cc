@@ -191,6 +191,7 @@ void Ssl::CertValidationHelper::Init()
     int ttl = 60;
     size_t cache = 2048;
     {
+        // TODO: Do this during parseConfigFile() for proper parsing, error handling
         char *tmp = xstrdup(Ssl::TheConfig.ssl_crt_validator);
         char *tmp_begin = tmp;
         char * token = NULL;
