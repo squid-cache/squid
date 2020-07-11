@@ -225,6 +225,7 @@ ClpMap<Key, Value, MemoryUsedBy>::erase(const IndexIterator &i)
     assert(i != index_.end());
     const auto entryPosition = i->second;
 
+    assert(entryPosition != entries_.end());
     const auto sz = entryPosition->memCounted;
     assert(memUsed_ >= sz);
     memUsed_ -= sz;
