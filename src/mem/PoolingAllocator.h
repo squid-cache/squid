@@ -39,6 +39,9 @@ public:
     };
 
     template<typename OtherValue> void destroy(OtherValue *p) { p->~OtherValue(); }
+#if __cplusplus <= 201103L
+    template<class U, class ... Args> void construct(U *p, Args && ... args) { new((void *)p) U(std::forward<Args>(args)...); }
+#endif
 };
 
 template <class L, class R>
