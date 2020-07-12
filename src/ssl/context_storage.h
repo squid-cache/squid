@@ -46,7 +46,7 @@ public:
     virtual bool aggregatable() const { return false; }
 };
 
-inline size_t MemoryUsedByContext(const Security::ContextPointer &) {
+inline uint64_t MemoryUsedByContext(const Security::ContextPointer &) {
     return 1024; // TODO: Calculate approximate memory usage by the context.
 }
 using LocalContextStorage = ClpMap<SBuf, Security::ContextPointer, MemoryUsedByContext>;

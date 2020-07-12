@@ -18,7 +18,7 @@
 #include <unordered_map>
 
 template<class Value>
-size_t
+uint64_t
 DefaultMemoryUsage(const Value &e)
 {
     return sizeof(e);
@@ -34,15 +34,15 @@ DefaultMemoryUsage(const Value &e)
 /// Key must come with std::hash<Key> and std::equal_to<Key> instantiations.
 /// Key::length() must return the number of memory bytes in use by the key.
 /// MemoryUsedBy() must return the number of memory bytes in use by the value.
-template <class Key, class Value, size_t MemoryUsedBy(const Value &) = DefaultMemoryUsage>
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &) = DefaultMemoryUsage>
 class ClpMap
 {
 public:
     /// maximum desired entry caching duration (a.k.a. TTL), in seconds
     using Ttl = int;
 
-    explicit ClpMap(const size_t capacity) { setMemLimit(capacity); }
-    ClpMap(size_t capacity, Ttl defaultTtl);
+    explicit ClpMap(const uint64_t capacity) { setMemLimit(capacity); }
+    ClpMap(uint64_t capacity, Ttl defaultTtl);
     ~ClpMap() = default;
 
     // copying disabled because it may be expensive for large maps
@@ -68,16 +68,16 @@ public:
     void del(const Key &);
 
     /// Reset the memory capacity for this map, purging if needed
-    void setMemLimit(size_t newLimit);
+    void setMemLimit(uint64_t newLimit);
 
     /// The memory capacity for the map
-    size_t memLimit() const { return memLimit_; }
+    uint64_t memLimit() const { return memLimit_; }
 
     /// The free space of the map
-    size_t freeMem() const { return memLimit() - memoryUsed(); }
+    uint64_t freeMem() const { return memLimit() - memoryUsed(); }
 
     /// The current (approximate) memory usage of the map
-    size_t memoryUsed() const { return memUsed_; }
+    uint64_t memoryUsed() const { return memUsed_; }
 
     /// The number of currently stored entries, including expired ones
     size_t entries() const { return entries_.size(); }
@@ -96,7 +96,7 @@ private:
         Key key; ///< the entry search key; see ClpMap::get()
         Value value; ///< cached value provided by the map user
         time_t expires = 0; ///< get() stops returning the entry after this time
-        size_t memCounted = 0; ///< memory accounted for this entry in our ClpMap
+        uint64_t memCounted = 0; ///< memory accounted for this entry in our ClpMap
     };
 
     /// Entries in LRU order
@@ -108,9 +108,9 @@ private:
     using Index = std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem> >;
     using IndexIterator = typename Index::iterator;
 
-    static size_t MemoryCountedFor(const Key &, const Value &);
+    static uint64_t MemoryCountedFor(const Key &, const Value &);
 
-    void trim(size_t wantSpace);
+    void trim(uint64_t wantSpace);
     void erase(const IndexIterator &);
     IndexIterator find(const Key &);
 
@@ -124,23 +124,23 @@ private:
     Ttl defaultTtl_ = std::numeric_limits<Ttl>::max();
 
     /// the maximum memory we are allowed to use for all cached entries
-    size_t memLimit_ = 0;
+    uint64_t memLimit_ = 0;
 
     /// the total amount of memory we currently use for all cached entries
-    size_t memUsed_ = 0;
+    uint64_t memUsed_ = 0;
 };
 
-template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
-ClpMap<Key, Value, MemoryUsedBy>::ClpMap(const size_t capacity, const Ttl defaultTtl):
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
+ClpMap<Key, Value, MemoryUsedBy>::ClpMap(const uint64_t capacity, const Ttl defaultTtl):
     defaultTtl_(defaultTtl)
 {
     assert(defaultTtl >= 0);
     setMemLimit(capacity);
 }
 
-template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
 void
-ClpMap<Key, Value, MemoryUsedBy>::setMemLimit(const size_t newLimit)
+ClpMap<Key, Value, MemoryUsedBy>::setMemLimit(const uint64_t newLimit)
 {
     assert(newLimit >= 0);
     if (memUsed_ > newLimit)
@@ -149,7 +149,7 @@ ClpMap<Key, Value, MemoryUsedBy>::setMemLimit(const size_t newLimit)
 }
 
 /// \returns the index position of an entry identified by its key (or end())
-template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
 typename ClpMap<Key, Value, MemoryUsedBy>::IndexIterator
 ClpMap<Key, Value, MemoryUsedBy>::find(const Key &key)
 {
@@ -169,7 +169,7 @@ ClpMap<Key, Value, MemoryUsedBy>::find(const Key &key)
     return index_.end();
 }
 
-template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
 const Value *
 ClpMap<Key, Value, MemoryUsedBy>::get(const Key &key)
 {
@@ -181,8 +181,8 @@ ClpMap<Key, Value, MemoryUsedBy>::get(const Key &key)
     return nullptr;
 }
 
-template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
-size_t
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
+uint64_t
 ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
 {
     // approximate calculation (e.g., containers store wrappers not value_types)
@@ -191,7 +191,7 @@ ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
     return storageSz + indexSz;
 }
 
-template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
 bool
 ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &v, const Ttl ttl)
 {
@@ -218,7 +218,7 @@ ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &v, const Ttl 
 }
 
 /// removes the cached entry (identified by its index) from the map
-template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
 void
 ClpMap<Key, Value, MemoryUsedBy>::erase(const IndexIterator &i)
 {
@@ -234,7 +234,7 @@ ClpMap<Key, Value, MemoryUsedBy>::erase(const IndexIterator &i)
     entries_.erase(entryPosition); // destroys our Entry
 }
 
-template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
 void
 ClpMap<Key, Value, MemoryUsedBy>::del(const Key &key)
 {
@@ -244,9 +244,9 @@ ClpMap<Key, Value, MemoryUsedBy>::del(const Key &key)
 }
 
 /// purges entries to make free memory large enough to fit wantSpace bytes
-template <class Key, class Value, size_t MemoryUsedBy(const Value &)>
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
 void
-ClpMap<Key, Value, MemoryUsedBy>::trim(const size_t wantSpace)
+ClpMap<Key, Value, MemoryUsedBy>::trim(const uint64_t wantSpace)
 {
     assert(wantSpace <= memLimit()); // no infinite loops and in-vain trimming
     while (freeMem() < wantSpace) {
