@@ -54,7 +54,7 @@ public:
 private:
     static helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
 public:
-    typedef ClpMap<SBuf, Ssl::CertValidationResponse::Pointer, Ssl::CertValidationResponse::MemoryUsedByResponse> CacheType;
+    typedef ClpMap<SBuf, CertValidationResponse::Pointer, CertValidationResponse::MemoryUsedByResponse> CacheType;
     static CacheType *HelperCache; ///< cache for cert validation helper
 };
 
