@@ -185,10 +185,16 @@ template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
 uint64_t
 ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
 {
+    // Both storage and index store keys, but we count keySz once, assuming that
+    // copying a Key does not consume more memory. This assumption holds for
+    // Key=SBuf, but, ideally, we should be outsourcing this decision to another
+    // configurable function, storing each key once, or hard-coding Key=SBuf.
+    const auto keySz = k.length();
+
     // approximate calculation (e.g., containers store wrappers not value_types)
-    const auto storageSz = sizeof(typename Entries::value_type) + k.length() + MemoryUsedBy(v);
-    const auto indexSz = sizeof(typename Index::value_type) + k.length();
-    return storageSz + indexSz;
+    const auto storageSz = sizeof(typename Entries::value_type) + MemoryUsedBy(v);
+    const auto indexSz = sizeof(typename Index::value_type);
+    return keySz + storageSz + indexSz;
 }
 
 template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
