@@ -466,29 +466,38 @@ FwdState::useDestinations()
         stopAndDestroy("tried all destinations");
     }
 }
-
 void
 FwdState::fail(ErrorState * errorState)
+{
+    cleanup();
+    doFail(errorState);
+}
+
+void
+FwdState::doFail(ErrorState * errorState)
 {
     debugs(17, 3, err_type_str[errorState->type] << " \"" << Http::StatusCodeString(errorState->httpStatus) << "\"\n\t" << entry->url());
 
     delete err;
     err = errorState;
 
-    const auto oldDestinationReceipt = destinationReceipt;
     destinationReceipt = nullptr;
 
     if (!errorState->request)
         errorState->request = request;
+}
 
+void
+FwdState::cleanup()
+{
     if (err->type != ERR_ZERO_SIZE_OBJECT)
         return;
 
     if (pconnRace == racePossible) {
         debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
-        if (oldDestinationReceipt)
-            destinations->reinstatePath(oldDestinationReceipt);
+        if (destinationReceipt)
+            destinations->reinstatePath(destinationReceipt);
     }
 
     if (ConnStateData *pinned_connection = request->pinnedConnection()) {
@@ -798,9 +807,10 @@ FwdState::advanceDestination(const char *stepDescription, const Comm::Connection
     } catch (...) {
         debugs (17, 2, "exception while trying to " << stepDescription << ": " << CurrentException);
         closePendingConnection(conn, "connection preparation exception");
+        cleanup();
         if (!err) {
             auto error = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request, al);
-            fail(error);
+            doFail(error);
         }
         retryOrBail();
     }

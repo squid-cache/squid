@@ -171,6 +171,9 @@ private:
 
     void notifyConnOpener();
 
+    void doFail(ErrorState *err);
+    void cleanup();
+
 public:
     StoreEntry *entry;
     HttpRequest *request;
