@@ -25,7 +25,8 @@ public:
 
     // The following declarations are only necessary for compilers that do not
     // fully support C++11 Allocator-related APIs, such as GCC v4.8.
-    // TODO: Remove after dropping support for such compilers.
+    // The corresponding std::allocator declarations are deprecated in C++17.
+    // TODO: Remove after dropping support for deficient compilers.
 
     using size_type = size_t;
     using pointer = Value*;
