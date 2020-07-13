@@ -188,8 +188,9 @@ void Ssl::CertValidationHelper::Init()
     ssl_crt_validator->eom = '\1';
     assert(ssl_crt_validator->cmdline == NULL);
 
-    int ttl = 60;
-    size_t cache = 2048;
+    /* defaults */
+    int ttl = 3600; // 1 hour
+    size_t cache = 64*1024*1024; // 64 MB
     {
         // TODO: Do this during parseConfigFile() for proper parsing, error handling
         char *tmp = xstrdup(Ssl::TheConfig.ssl_crt_validator);

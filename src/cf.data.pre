@@ -3403,16 +3403,17 @@ DOC_START
 
 	Options:
 
-	cache=bytes Limits how much memory Squid can use for caching validator
-		responses. The default is 2048 bytes. To disable caching, use
-		0. Currently, cache entry sizes are seriously underestimated.
-		Even with that bug, a typical estimate for a single cache
-		entry size would be at least a few kilobytes (the size of the
-		PEM certificates sent to the validator), exceeding the default
-		cache size.
+	cache=bytes
+		Limits how much memory Squid can use for caching validator
+		responses. The default is 67108864 (i.e. 64 MB). To disable
+		caching, use 0. Currently, cache entry sizes are seriously
+		underestimated. Even with that bug, a typical estimate for a
+		single cache entry size would be at least a few kilobytes (the
+		size of the PEM certificates sent to the validator).
 
-	ttl=seconds Approximately how long Squid may reuse the validator
-		results for. The default is 60 seconds. To disable caching,
+	ttl=seconds
+		Approximately how long Squid may reuse the validator results
+		for. The default is 3600 (i.e. 1 hour). To disable caching,
 		use zero cache size, not zero TTL -- zero TTL allows reuse for
 		the remainder of the second when the result was cached.
 DOC_END
