@@ -180,10 +180,6 @@ public:
     SBuf preReadClientData;
     SBuf preReadServerData;
     time_t startTime; ///< object creation time, before any peer selection/connection attempts
-    /// whether we are waiting for the secure peer connection establishment answer
-    bool securingConnectionToPeer;
-    /// Whether we are waiting for the CONNECT request/response exchange with the peer.
-    bool waitingForConnectExchange;
     HappyConnOpenerPointer connOpener; ///< current connection opening job
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     bool destinationsFound; ///< At least one candidate path found
@@ -196,6 +192,8 @@ public:
     // AsyncCalls which we set and may need cancelling.
     struct {
         AsyncCall::Pointer connector;  ///< a call linking us to the ConnOpener producing serverConn.
+        AsyncCall::Pointer securityConnector; ///< securityConnector callback
+        AsyncCall::Pointer tunnelEstablisher; ///< tunnelEstablisher callback
     } calls;
 
     void copyRead(Connection &from, IOCB *completion);
@@ -217,8 +215,10 @@ public:
     /// whether we are waiting for HappyConnOpener
     /// same as calls.connector but may differ from connOpener.valid()
     bool opening() const { return connOpener.set(); }
-
-    void cancelOpening(const char *reason);
+    /// whether we are waiting for the secure peer connection establishment answer
+    bool securing() const { return bool(calls.securityConnector); }
+    /// Whether we are waiting for the CONNECT request/response exchange with the peer.
+    bool tunnelEstablishing() const { return bool(calls.tunnelEstablisher); }
 
     /// Start using an established connection
     void connectDone(const Comm::ConnectionPointer &conn, const char *origin, const bool reused);
@@ -272,8 +272,6 @@ private:
     /// server connection is still in use
     bool usingDestination() const;
 
-    void resetStepFlags();
-
     /// details of the "last tunneling attempt" failure (if it failed)
     ErrorState *savedError = nullptr;
 
@@ -281,6 +279,14 @@ private:
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
 
     void deleteThis();
+
+    void cancelOpening(const char *reason);
+
+    void cancelSecuring(const char *reason);
+
+    void cancelTunnelEstablishing(const char *reason);
+
+    void cancelStep(const char *reason);
 
 public:
     bool keepGoingAfterRead(size_t len, Comm::Flag errcode, int xerrno, Connection &from, Connection &to);
@@ -362,8 +368,6 @@ TunnelStateData::deleteThis()
 
 TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     startTime(squid_curtime),
-    securingConnectionToPeer(false),
-    waitingForConnectExchange(false),
     destinations(new ResolvedPeers()),
     destinationsFound(false),
     retriable(true),
@@ -913,7 +917,7 @@ TunnelStateData::copyServerBytes()
 static void
 tunnelStartShoveling(TunnelStateData *tunnelState)
 {
-    assert(!tunnelState->waitingForConnectExchange);
+    assert(!tunnelState->tunnelEstablishing());
     assert(tunnelState->server.conn);
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
@@ -971,6 +975,7 @@ tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *, size_t len
 void
 TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
+    calls.tunnelEstablisher = nullptr;
     server.len = 0;
 
     if (logTag_ptr)
@@ -978,8 +983,6 @@ TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 
     if (answer.peerResponseStatus != Http::scNone)
         *status_ptr = answer.peerResponseStatus;
-
-    waitingForConnectExchange = false;
 
     auto sawProblem = false;
 
@@ -1173,12 +1176,11 @@ TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
-    assert(!securingConnectionToPeer);
-    AsyncCall::Pointer callback = asyncCall(5,4, "TunnelStateData::noteSecurityPeerConnectorAnswer",
-                                            MyAnswerDialer(&TunnelStateData::noteSecurityPeerConnectorAnswer, this));
-    const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
+    assert(!securing());
+    calls.securityConnector = asyncCall(5,4, "TunnelStateData::noteSecurityPeerConnectorAnswer",
+                              MyAnswerDialer(&TunnelStateData::noteSecurityPeerConnectorAnswer, this));
+    const auto connector = new Security::BlindPeerConnector(request, conn, calls.securityConnector, al);
     AsyncJob::Start(connector); // will call our callback
-    securingConnectionToPeer = true;
 }
 
 /// starts a preparation step for an established connection; retries on failures
@@ -1194,19 +1196,31 @@ TunnelStateData::advanceDestination(const char *stepDescription, const Comm::Con
         // now wait for the step callback
     } catch (...) {
         debugs (26, 2, "exception while trying to " << stepDescription << ": " << CurrentException);
-        closePendingConnection(conn, "connection preparation exception");
+        const char *reason = "connection preparation exception";
+        cancelStep(reason);
+        closePendingConnection(conn, reason);
         if (!savedError)
             saveError(new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request.getRaw(), al));
-        resetStepFlags();
         retryOrBail(stepDescription);
     }
+}
+
+void
+TunnelStateData::cancelStep(const char *reason)
+{
+    if (opening())
+        cancelOpening(reason);
+    else if (securing())
+        cancelSecuring(reason);
+    else if (tunnelEstablishing())
+        cancelTunnelEstablishing(reason);
 }
 
 /// callback handler for the connection encryptor
 void
 TunnelStateData::noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answer)
 {
-    securingConnectionToPeer = false;
+    calls.securityConnector = nullptr;
 
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
@@ -1237,17 +1251,16 @@ TunnelStateData::connectedToPeer(const Comm::ConnectionPointer &conn)
 void
 TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    assert(!waitingForConnectExchange);
+    assert(!tunnelEstablishing());
 
-    AsyncCall::Pointer callback = asyncCall(5,4,
-                                            "TunnelStateData::tunnelEstablishmentDone",
-                                            Http::Tunneler::CbDialer<TunnelStateData>(&TunnelStateData::tunnelEstablishmentDone, this));
-    const auto tunneler = new Http::Tunneler(conn, request, callback, Config.Timeout.lifetime, al);
+    calls.tunnelEstablisher = asyncCall(5,4,
+                              "TunnelStateData::tunnelEstablishmentDone",
+                              Http::Tunneler::CbDialer<TunnelStateData>(&TunnelStateData::tunnelEstablishmentDone, this));
+    const auto tunneler = new Http::Tunneler(conn, request, calls.tunnelEstablisher, Config.Timeout.lifetime, al);
 #if USE_DELAY_POOLS
     tunneler->setDelayId(server.delayId);
 #endif
     AsyncJob::Start(tunneler);
-    waitingForConnectExchange = true;
     // and wait for the tunnelEstablishmentDone() call
 }
 
@@ -1317,15 +1330,7 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
 bool
 TunnelStateData::usingDestination() const
 {
-    return securingConnectionToPeer || waitingForConnectExchange || Comm::IsConnOpen(server.conn);
-}
-
-void
-TunnelStateData::resetStepFlags()
-{
-    assert(!Comm::IsConnOpen(server.conn));
-    securingConnectionToPeer = false;
-    waitingForConnectExchange = false;
+    return securing() || tunnelEstablishing() || Comm::IsConnOpen(server.conn);
 }
 
 /// remembers an error to be used if there will be no more connection attempts
@@ -1348,8 +1353,7 @@ TunnelStateData::sendError(ErrorState *finalError, const char *reason)
     if (request)
         request->hier.stopPeerClock(false);
 
-    if (opening())
-        cancelOpening(reason);
+    cancelStep(reason);
 
     assert(finalError);
 
@@ -1379,6 +1383,22 @@ TunnelStateData::cancelOpening(const char *reason)
     calls.connector = nullptr;
     notifyConnOpener();
     connOpener.clear();
+}
+
+void
+TunnelStateData::cancelSecuring(const char *reason)
+{
+    assert(calls.securityConnector);
+    calls.securityConnector->cancel(reason);
+    calls.securityConnector = nullptr;
+}
+
+void
+TunnelStateData::cancelTunnelEstablishing(const char *reason)
+{
+    assert(calls.tunnelEstablisher);
+    calls.tunnelEstablisher->cancel(reason);
+    calls.tunnelEstablisher = nullptr;
 }
 
 void
