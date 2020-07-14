@@ -3412,9 +3412,9 @@ DOC_START
 		single cache entry size would be at least a few kilobytes (the
 		size of the PEM certificates sent to the validator).
 
-	ttl=<seconds|"none">
+	ttl=<seconds|"infinity">
 		Approximately how long Squid may reuse the validator results
-		for. The default is 3600 (i.e. 1 hour). Using ttl=none
+		for. The default is 3600 (i.e. 1 hour). Using ttl=infinity
 		disables TTL checks. Reconfiguration does not affect TTLs of
 		the already cached entries. To disable caching, use zero cache
 		size, not zero TTL -- zero TTL allows reuse for the remainder

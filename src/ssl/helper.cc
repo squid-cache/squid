@@ -200,14 +200,14 @@ void Ssl::CertValidationHelper::Init()
         bool parseParams = true;
         while ((token = strwordtok(NULL, &tmp))) {
             if (parseParams) {
-                if (strcmp(token, "ttl=none") == 0) {
+                if (strcmp(token, "ttl=infinity") == 0) {
                     ttl = std::numeric_limits<CacheType::Ttl>::max();
                     continue;
                 } else if (strncmp(token, "ttl=", 4) == 0) {
                     ttl = xatoi(token + 4);
                     if (ttl < 0) {
                         throw TextException(ToSBuf("Negative TTL in sslcrtvalidator_program ", Ssl::TheConfig.ssl_crt_validator,
-                            Debug::Extra, "For unlimited TTL, use ttl=none"),
+                            Debug::Extra, "For unlimited TTL, use ttl=infinity"),
                             Here());
                     }
                     continue;
