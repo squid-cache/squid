@@ -171,8 +171,9 @@ private:
 
     void notifyConnOpener();
 
-    void doFail(ErrorState *err);
-    void cleanup();
+    void saveError(ErrorState *err);
+
+    void cleanupOnFail(err_type);
 
 public:
     StoreEntry *entry;
