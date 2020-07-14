@@ -3399,24 +3399,26 @@ DOC_START
 	Specify the location and options of the executable for ssl_crt_validator
 	process.
 
-	Usage:  sslcrtvalidator_program [ttl=n] [cache=n] path ...
+	Usage:  sslcrtvalidator_program [ttl=...] [cache=n] path ...
 
 	Options:
 
 	cache=bytes
 		Limits how much memory Squid can use for caching validator
-		responses. The default is 67108864 (i.e. 64 MB). To disable
-		caching, use 0. Currently, cache entry sizes are seriously
+		responses. The default is 67108864 (i.e. 64 MB).
+		Reconfiguration purges any excess entries. To disable caching,
+		use cache=0. Currently, cache entry sizes are seriously
 		underestimated. Even with that bug, a typical estimate for a
 		single cache entry size would be at least a few kilobytes (the
 		size of the PEM certificates sent to the validator).
 
-	ttl=seconds
+	ttl=<seconds|"none">
 		Approximately how long Squid may reuse the validator results
-		for. The default is 3600 (i.e. 1 hour). To disable caching,
-		use zero cache size, not zero TTL -- zero TTL allows reuse for
-		the remainder of the second when the result was cached.
-		The value "none" can be used for unlimited TTL.
+		for. The default is 3600 (i.e. 1 hour). Using ttl=none
+		disables TTL checks. Reconfiguration does not affect TTLs of
+		the already cached entries. To disable caching, use zero cache
+		size, not zero TTL -- zero TTL allows reuse for the remainder
+		of the second when the result was cached.
 DOC_END
 
 NAME: sslcrtvalidator_children
