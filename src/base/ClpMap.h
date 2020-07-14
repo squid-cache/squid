@@ -9,6 +9,8 @@
 #ifndef SQUID__SRC_BASE_CLPMAP_H
 #define SQUID__SRC_BASE_CLPMAP_H
 
+#include "base/Math.h"
+#include "base/Optional.h"
 #include "mem/PoolingAllocator.h"
 #include "SquidTime.h"
 
@@ -108,7 +110,7 @@ private:
     using Index = std::unordered_map<Key, EntriesIterator, std::hash<Key>, std::equal_to<Key>, PoolingAllocator<IndexItem> >;
     using IndexIterator = typename Index::iterator;
 
-    static uint64_t MemoryCountedFor(const Key &, const Value &);
+    static Optional<uint64_t> MemoryCountedFor(const Key &, const Value &);
 
     void trim(uint64_t wantSpace);
     void erase(const IndexIterator &);
@@ -182,29 +184,23 @@ ClpMap<Key, Value, MemoryUsedBy>::get(const Key &key)
 }
 
 template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
-uint64_t
+Optional<uint64_t>
 ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
 {
     // Both storage and index store keys, but we count keySz once, assuming that
     // copying a Key does not consume more memory. This assumption holds for
     // Key=SBuf, but, ideally, we should be outsourcing this decision to another
     // configurable function, storing each key once, or hard-coding Key=SBuf.
-    const uint64_t keySz = k.length();
+    const auto keySz = k.length();
 
     // approximate calculation (e.g., containers store wrappers not value_types)
-    const uint64_t storageSz = sizeof(typename Entries::value_type) + MemoryUsedBy(v);
-    if (storageSz < sizeof(typename Entries::value_type)) // overflow
-        return 0;
-
-    const uint64_t indexSz = sizeof(typename Index::value_type) + keySz;
-    if (indexSz < sizeof(typename Index::value_type)) // overflow
-        return 0;
-
-    const uint64_t resultSz = storageSz + indexSz;
-    if (resultSz < indexSz) // overflow
-        return 0;
-
-    return resultSz;
+    return SafeSum<uint64_t>(
+        keySz,
+        // storage
+        sizeof(typename Entries::value_type),
+        MemoryUsedBy(v),
+        // index
+        sizeof(typename Index::value_type));
 }
 
 template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
@@ -220,7 +216,11 @@ ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &v, const Ttl 
     if (ttl < 0)
         return false; // already expired; will never be returned by get()
 
-    const auto wantSpace = MemoryCountedFor(key, v);
+    const auto memoryRequirements = MemoryCountedFor(key, v);
+    if (!memoryRequirements)
+        return false; // cannot even compute memory requirements
+
+    const auto wantSpace = memoryRequirements.value();
     if (wantSpace > memLimit() || wantSpace == 0) // 0 is 64-bit integer overflow
         return false; // will never fit
     trim(wantSpace);

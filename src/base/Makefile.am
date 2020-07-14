@@ -37,6 +37,8 @@ libbase_la_SOURCES = \
 	InstanceId.h \
 	Lock.h \
 	LookupTable.h \
+	Math.h \
+	Optional.h \
 	Packable.h \
 	PackableStream.h \
 	Range.h \
