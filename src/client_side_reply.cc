@@ -377,6 +377,10 @@ clientReplyContext::sendClientUpstreamResponse()
 {
     StoreIOBuffer tempresult;
     removeStoreReference(&old_sc, &old_entry);
+
+    if (collapsedRevalidation)
+        http->storeEntry()->clearPublicKeyScope();
+
     /* here the data to send is the data we just received */
     tempBuffer.offset = 0;
     old_reqsize = 0;
@@ -453,6 +457,9 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     const auto &new_rep = http->storeEntry()->mem().freshestReply();
     const auto status = new_rep.sline.status();
 
+    // XXX: Disregard stale incomplete (i.e. still being written) borrowed (i.e.
+    // not caused by our request) IMS responses. That new_rep may be very old!
+
     // origin replied 304
     if (status == Http::scNotModified) {
         http->logType.update(LOG_TCP_REFRESH_UNMODIFIED);
@@ -490,10 +497,6 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
             http->logType.update(LOG_TCP_REFRESH_MODIFIED);
             debugs(88, 3, "origin replied " << status <<
                    ", replacing existing entry and forwarding to client");
-
-            if (collapsedRevalidation)
-                http->storeEntry()->clearPublicKeyScope();
-
             sendClientUpstreamResponse();
         }
     }
@@ -1108,7 +1111,7 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
      * Make a new entry to hold the reply to be written
      * to the client.
      */
-    /* FIXME: This doesn't need to go through the store. Simply
+    /* TODO: This doesn't need to go through the store. Simply
      * push down the client chain
      */
     createStoreEntry(http->request->method, RequestFlags());
@@ -1549,7 +1552,7 @@ clientReplyContext::buildReplyHeader()
               reply->sline.status() == Http::scUnauthorized)
        ) {
         /* Add authentication header */
-        /*! \todo alter errorstate to be accel on|off aware. The 0 on the next line
+        /* TODO: alter errorstate to be accel on|off aware. The 0 on the next line
          * depends on authenticate behaviour: all schemes to date send no extra
          * data on 407/401 responses, and do not check the accel state on 401/407
          * responses

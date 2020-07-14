@@ -12,7 +12,7 @@ SUBDIRS= id_rewriters
 
 noinst_LTLIBRARIES = libstore.la
 
-libstore_la_SOURCES= \
+libstore_la_SOURCES = \
 	Controlled.h \
 	Controller.cc \
 	Controller.h \
@@ -20,7 +20,7 @@ libstore_la_SOURCES= \
 	Disk.h \
 	Disks.cc \
 	Disks.h \
-	forward.h \
 	LocalSearch.cc \
 	LocalSearch.h \
-	Storage.h
+	Storage.h \
+	forward.h

@@ -9,11 +9,17 @@
 /* DEBUG: section 20    Storage Manager */
 
 #include "squid.h"
+#include "base/AsyncCbdataCalls.h"
+#include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "CacheDigest.h"
 #include "CacheManager.h"
+#include "CollapsedForwarding.h"
 #include "comm/Connection.h"
 #include "comm/Read.h"
+#if HAVE_DISKIO_MODULE_IPCIO
+#include "DiskIO/IpcIo/IpcIoFile.h"
+#endif
 #include "ETag.h"
 #include "event.h"
 #include "fde.h"
@@ -63,7 +69,7 @@
 
 #define STORE_IN_MEM_BUCKETS            (229)
 
-/** \todo Convert these string constants to enum string-arrays generated */
+// TODO: Convert these string constants to enum string-arrays generated
 
 const char *memStatusStr[] = {
     "NOT_IN_MEMORY",
@@ -119,6 +125,20 @@ Store::Stats(StoreEntry * output)
 {
     assert(output);
     Root().stat(*output);
+}
+
+/// reports the current state of Store-related queues
+static void
+StatQueues(StoreEntry *e)
+{
+    assert(e);
+    PackableStream stream(*e);
+    CollapsedForwarding::StatQueue(stream);
+ #if HAVE_DISKIO_MODULE_IPCIO
+    stream << "\n";
+    IpcIoFile::StatQueue(stream);
+ #endif
+    stream.flush();
 }
 
 // XXX: new/delete operators need to be replaced with MEMPROXY_CLASS
@@ -1124,19 +1144,9 @@ StoreEntry::abort()
 
     /* Notify the server side */
 
-    /*
-     * DPW 2007-05-07
-     * Should we check abort.data for validity?
-     */
-    if (mem_obj->abort.callback) {
-        if (!cbdataReferenceValid(mem_obj->abort.data))
-            debugs(20, DBG_IMPORTANT,HERE << "queueing event when abort.data is not valid");
-        eventAdd("mem_obj->abort.callback",
-                 mem_obj->abort.callback,
-                 mem_obj->abort.data,
-                 0.0,
-                 true);
-        unregisterAbort();
+    if (mem_obj->abortCallback) {
+        ScheduleCallHere(mem_obj->abortCallback);
+        mem_obj->abortCallback = nullptr;
     }
 
     /* XXX Should we reverse these two, so that there is no
@@ -1294,6 +1304,7 @@ storeRegisterWithCacheManager(void)
     Mgr::RegisterAction("store_io", "Store IO Interface Stats", &Mgr::StoreIoAction::Create, 0, 1);
     Mgr::RegisterAction("store_check_cachable_stats", "storeCheckCachable() Stats",
                         storeCheckCachableStats, 0, 1);
+    Mgr::RegisterAction("store_queues", "SMP Transients and Caching Queues", StatQueues, 0, 1);
 }
 
 void
@@ -1523,21 +1534,20 @@ StoreEntry::updateOnNotModified(const StoreEntry &e304)
 }
 
 void
-StoreEntry::registerAbort(STABH * cb, void *data)
+StoreEntry::registerAbortCallback(const AsyncCall::Pointer &handler)
 {
     assert(mem_obj);
-    assert(mem_obj->abort.callback == NULL);
-    mem_obj->abort.callback = cb;
-    mem_obj->abort.data = cbdataReference(data);
+    assert(!mem_obj->abortCallback);
+    mem_obj->abortCallback = handler;
 }
 
 void
-StoreEntry::unregisterAbort()
+StoreEntry::unregisterAbortCallback(const char *reason)
 {
     assert(mem_obj);
-    if (mem_obj->abort.callback) {
-        mem_obj->abort.callback = NULL;
-        cbdataReferenceDone(mem_obj->abort.data);
+    if (mem_obj->abortCallback) {
+        mem_obj->abortCallback->cancel(reason);
+        mem_obj->abortCallback = nullptr;
     }
 }
 

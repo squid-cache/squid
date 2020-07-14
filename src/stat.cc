@@ -1919,7 +1919,7 @@ statGraphDump(StoreEntry * e)
     GENGRAPH(client_http.kbytes_in.kb, "client_http.kbytes_in", "Client HTTP kbytes_in/sec");
     GENGRAPH(client_http.kbytes_out.kb, "client_http.kbytes_out", "Client HTTP kbytes_out/sec");
 
-    /* XXX todo: http median service times */
+    // TODO: http median service times
 
     GENGRAPH(server.all.requests, "server.all.requests", "Server requests/sec");
     GENGRAPH(server.all.errors, "server.all.errors", "Server errors/sec");
@@ -1946,8 +1946,8 @@ statGraphDump(StoreEntry * e)
     GENGRAPH(icp.kbytes_sent.kb, "icp.kbytes_sent", "ICP kbytes_sent/sec");
     GENGRAPH(icp.kbytes_recv.kb, "icp.kbytes_recv", "ICP kbytes_received/sec");
 
-    /* XXX todo: icp median service times */
-    /* XXX todo: dns median service times */
+    // TODO: icp median service times
+    // TODO: dns median service times
 
     GENGRAPH(unlink.requests, "unlink.requests", "Cache File unlink requests/sec");
     GENGRAPH(page_faults, "page_faults", "System Page Faults/sec");

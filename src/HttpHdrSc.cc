@@ -25,7 +25,7 @@
 
 /* this table is used for parsing surrogate control header */
 /* order must match that of enum http_hdr_sc_type. The constraint is verified at initialization time */
-//todo: implement constraint
+// TODO: implement constraint
 static const LookupTable<http_hdr_sc_type>::Record ScAttrs[] {
     {"no-store", SC_NO_STORE},
     {"no-store-remote", SC_NO_STORE_REMOTE},

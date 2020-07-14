@@ -34,11 +34,16 @@ typedef enum { cmdNone, cmdOpen, cmdRead, cmdWrite } Command;
 
 } // namespace IpcIo
 
+std::ostream &operator <<(std::ostream &, IpcIo::Command);
+
 /// converts DiskIO requests to IPC queue messages
 class IpcIoMsg
 {
 public:
     IpcIoMsg();
+
+    /// prints message parameters; suitable for cache manager reports
+    void stat(std::ostream &);
 
 public:
     unsigned int requestId; ///< unique for requestor; matches request w/ response
@@ -85,6 +90,9 @@ public:
 
     /// handle queue push notifications from worker or disker
     static void HandleNotification(const Ipc::TypedMsgHdr &msg);
+
+    /// prints IPC message queue state; suitable for cache manager reports
+    static void StatQueue(std::ostream &);
 
     DiskFile::Config config; ///< supported configuration options
 

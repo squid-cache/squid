@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TEST_RFC1035_H
 #define SQUID_SRC_TEST_RFC1035_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 /*
  * test the DNS resolver RFC 1035 Engine

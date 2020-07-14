@@ -26,6 +26,15 @@
 KeepGoing="no"
 # the actual name of the directive that enabled keep-going mode
 KeepGoingDirective=""
+#
+# The script checks that the version of astyle is TargetAstyleVersion.
+# if it isn't, the default behaviour is to not perform the formatting stage
+# in order to avoid unexpected massive changes if the behaviour of astyle
+# has changed in different releases.
+# if --with-astyle /path/to/astyle is used, the check is still performed
+# and a warning is printed, but the sources are reformatted
+TargetAstyleVersion="2.04"
+ASTYLE='astyle'
 
 # command-line options
 while [ $# -ge 1 ]; do
@@ -34,6 +43,11 @@ while [ $# -ge 1 ]; do
         KeepGoing=yes
         KeepGoingDirective=$1
         shift
+        ;;
+    --with-astyle)
+        ASTYLE=$2
+        export ASTYLE
+        shift 2
         ;;
     *)
         echo "Usage: $0 [--keep-going|-k]"
@@ -61,10 +75,22 @@ else
 	MD5="md5sum"
 fi
 
-ASVER=`astyle --version 2>&1 | grep -o -E "[0-9.]+"`
-if test "${ASVER}" != "2.04" ; then
-	echo "Astyle version problem. You have ${ASVER} instead of 2.04"
-	ASVER=""
+${ASTYLE} --version >/dev/null 2>/dev/null
+result=$?
+if test $result -gt 0 ; then
+	echo "ERROR: cannot run ${ASTYLE}"
+	exit 1
+fi
+ASVER=`${ASTYLE} --version 2>&1 | grep -o -E "[0-9.]+"`
+if test "${ASVER}" != "${TargetAstyleVersion}" ; then
+	if test "${ASTYLE}" = "astyle" ; then
+		echo "Astyle version problem. You have ${ASVER} instead of ${TargetAstyleVersion}"
+		echo "Formatting step skipped due to version mismatch"
+		ASVER=""
+	else
+		echo "WARNING: ${ASTYLE} is version ${ASVER} instead of ${TargetAstyleVersion}"
+		echo "Formatting anyway, please double check output before submitting"
+	fi
 else
 	echo "Found astyle ${ASVER}. Formatting..."
 fi
@@ -113,6 +139,17 @@ applyPlugin ()
                 updateIfChanged "$source" "$new" "by $script"
 }
 
+# updates the given source file using the given script(s)
+applyPluginsTo ()
+{
+        source="$1"
+        shift
+
+        for script in `git ls-files "$@"`; do
+                run_ applyPlugin $script $source || return
+        done
+}
+
 srcFormat ()
 {
 #
@@ -139,9 +176,7 @@ for FILENAME in `git ls-files`; do
 	#
 	# Code Style formatting maintenance
 	#
-	for SCRIPT in `git ls-files scripts/maintenance/`; do
-		run_ applyPlugin ${SCRIPT} "${FILENAME}" || return
-	done
+	applyPluginsTo ${FILENAME} scripts/maintenance/ || return
 	if test "${ASVER}"; then
 		./scripts/formater.pl ${FILENAME}
 		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
@@ -232,20 +267,17 @@ for FILENAME in `git ls-files`; do
 	chmod 755 ${FILENAME}
 	;;
 
-    Makefile.am)
-
-    	perl -p -e 's/@([A-Z0-9_]+)@/\$($1)/g' <${FILENAME} >${FILENAME}.styled
-	mv ${FILENAME}.styled ${FILENAME}
+    *.am)
+		applyPluginsTo ${FILENAME} scripts/format-makefile-am.pl || return
 	;;
 
-    ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.list|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
+    ChangeLog|CREDITS|CONTRIBUTORS|COPYING|*.png|*.po|*.pot|rfcs/|*.txt|test-suite/squidconf/empty|.bzrignore)
         # we do not enforce copyright blurbs in:
         #
         #  Squid Project contributor attribution file
         #  third-party copyright attribution file
         #  images,
         #  translation PO/POT
-        #  auto-generated .list files,
         #  license documentation files
         #  (imported) plain-text documentation files and ChangeLogs
         #  VCS internal files
@@ -279,73 +311,41 @@ echo "#define _PROFILER_XPROF_TYPE_H_"
 echo "/* AUTO-GENERATED FILE */"
 echo "#if USE_XPROF_STATS"
 echo "typedef enum {"
-echo "  XPROF_PROF_UNACCOUNTED,"
-grep -R -h "PROF_start.*" ./* | grep -v probename | sed -e 's/ //g; s/PROF_start(/XPROF_/; s/);/,/' | sort -u
-echo "  XPROF_LAST } xprof_type;"
+echo "    XPROF_PROF_UNACCOUNTED,"
+grep -R -h "PROF_start.*" ./* | grep -v probename | sed -e 's/ //g; s/PROF_start(/    XPROF_/; s/);/,/;' | sort -u
+echo "    XPROF_LAST"
+echo "} xprof_type;"
 echo "#endif"
 echo "#endif"
+echo ""
 ) >lib/profiler/list
 mv lib/profiler/list lib/profiler/xprof_type.h
 
+printAmFile ()
+{
+    sed -e 's%\ \*%##%; s%/\*%##%; s%##/%##%' < scripts/boilerplate.h
+    echo -n "$1 ="
+    git ls-files $2$3 | sed -e s%$2%%g | sort -u | while read f; do
+        echo " \\"
+        echo -n "    ${f}"
+    done
+    echo ""
+}
+
 # Build icons install include from current icons available
-(
-sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
-echo -n "ICONS="
-for f in `ls -1 icons/silk/* | sort -u`
-do
-	echo " \\"
-	echo -n "    ${f}"
-done
-echo " "
-)| sed s%icons/%%g >icons/icon.list
+printAmFile ICONS "icons/" "silk/*" > icons/icon.am
 
 # Build templates install include from current templates available
-(
-sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
-echo -n "ERROR_TEMPLATES="
-for f in `ls -1 errors/templates/ERR_* | sort -u`
-do
-	echo " \\"
-	echo -n "    ${f}"
-done
-echo " "
-)| sed s%errors/%%g >errors/template.list
+printAmFile ERROR_TEMPLATES "errors/" "templates/ERR_*" > errors/template.am
 
 # Build errors translation install include from current .PO available
-(
-sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
-echo -n "TRANSLATE_LANGUAGES="
-for f in `ls -1 errors/*.po | sort -u`
-do
-	echo " \\"
-	echo -n "    ${f}"
-done
-echo " "
-)| sed s%errors/%%g | sed s%\.po%\.lang%g >errors/language.list
+printAmFile TRANSLATE_LANGUAGES "errors/" "*.po" | sed 's%\.po%\.lang%g' > errors/language.am
 
 # Build manuals translation install include from current .PO available
-(
-sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
-echo -n "TRANSLATE_LANGUAGES="
-for f in `ls -1 doc/manuals/*.po | sort -u`
-do
-	echo " \\"
-	echo -n "    ${f}"
-done
-echo " "
-)| sed s%doc/manuals/%%g | sed s%\.po%\.lang%g >doc/manuals/language.list
+printAmFile TRANSLATE_LANGUAGES "doc/manuals/" "*.po" | sed 's%\.po%\.lang%g' > doc/manuals/language.am
 
 # Build STUB framework include from current stub_* available
-(
-sed -e 's%\ \*%##%' -e 's%/\*%##%' -e 's%##/%##%' <scripts/boilerplate.h
-echo -n "STUB_SOURCE= tests/STUB.h"
-for f in `ls -1 src/tests/stub_*.cc | sort -u`
-do
-	echo " \\"
-	echo -n "	${f}"
-done
-echo " "
-)| sed s%src/%%g >src/tests/Stub.list
+printAmFile STUB_SOURCE "src/" "tests/stub_*.cc" > src/tests/Stub.am
 
 # Build the GPERF generated content
 make -C src/http gperf-files

@@ -57,10 +57,7 @@ public:
     static icp_common_t *CreateMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad);
 };
 
-/**
- \ingroup ServerProtocolICPAPI
- \todo mempool this
- */
+// TODO: mempool this
 class ICPState: public StoreClient
 {
 

@@ -199,6 +199,25 @@ public:
     // pining related comm callbacks
     virtual void clientPinnedConnectionClosed(const CommCloseCbParams &io);
 
+    /// noteTakeServerConnectionControl() callback parameter
+    class ServerConnectionContext {
+    public:
+        ServerConnectionContext(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req, const SBuf &post101Bytes): preReadServerBytes(post101Bytes), conn_(conn) { conn_->enterOrphanage(); }
+
+        /// gives to-server connection to the new owner
+        Comm::ConnectionPointer connection() { conn_->leaveOrphanage(); return conn_; }
+
+        SBuf preReadServerBytes; ///< post-101 bytes received from the server
+
+    private:
+        friend std::ostream &operator <<(std::ostream &, const ServerConnectionContext &);
+        Comm::ConnectionPointer conn_; ///< to-server connection
+    };
+
+    /// Gives us the control of the Squid-to-server connection.
+    /// Used, for example, to initiate a TCP tunnel after protocol switching.
+    virtual void noteTakeServerConnectionControl(ServerConnectionContext) {}
+
     // comm callbacks
     void clientReadFtpData(const CommIoCbParams &io);
     void connStateClosed(const CommCloseCbParams &io);
@@ -470,6 +489,7 @@ void clientProcessRequest(ConnStateData *, const Http1::RequestParserPointer &, 
 void clientPostHttpsAccept(ConnStateData *);
 
 std::ostream &operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic);
+std::ostream &operator <<(std::ostream &, const ConnStateData::ServerConnectionContext &);
 
 #endif /* SQUID_CLIENTSIDE_H */
 

@@ -32,7 +32,7 @@ public:
 
     Ip::Address addr2;
 
-    Ip::Address mask; /**< \todo This should perhapse be stored as a CIDR range now instead of a full IP mask. */
+    Ip::Address mask; // TODO: should use a CIDR range
 
     acl_ip_data *next;      /**< used for parsing, not for storing */
 

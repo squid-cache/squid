@@ -372,10 +372,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     /* this is an internally created
      * request, not subject to acceleration
      * target overrides */
-    /*
-     * FIXME? Do we want to detect and handle internal requests of internal
-     * objects ?
-     */
+    // TODO: detect and handle internal requests of internal objects?
 
     /* Internally created requests cannot have bodies today */
     request->content_length = 0;
@@ -1298,7 +1295,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
     break;
     }
 
-    /* FIXME PIPELINE: This is inaccurate during pipelining */
+    /* XXX PIPELINE: This is inaccurate during pipelining */
 
     if (http->getConn() != NULL && Comm::IsConnOpen(http->getConn()->clientConnection))
         fd_note(http->getConn()->clientConnection->fd, http->uri);

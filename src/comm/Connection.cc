@@ -41,12 +41,16 @@ Comm::Connection::Connection() :
     *rfc931 = 0; // quick init the head. the rest does not matter.
 }
 
-static int64_t lost_conn = 0;
 Comm::Connection::~Connection()
 {
     if (fd >= 0) {
-        debugs(5, 4, "BUG #3329: Orphan Comm::Connection: " << *this);
-        debugs(5, 4, "NOTE: " << ++lost_conn << " Orphans since last started.");
+        if (flags & COMM_ORPHANED) {
+            debugs(5, 5, "closing orphan: " << *this);
+        } else {
+            static uint64_t losses = 0;
+            ++losses;
+            debugs(5, 4, "BUG #3329: Lost orphan #" << losses << ": " << *this);
+        }
         close();
     }
 
@@ -56,24 +60,25 @@ Comm::Connection::~Connection()
 }
 
 Comm::ConnectionPointer
-Comm::Connection::copyDetails() const
+Comm::Connection::cloneDestinationDetails() const
 {
-    ConnectionPointer c = new Comm::Connection;
-
+    const ConnectionPointer c = new Comm::Connection;
     c->setAddrs(local, remote);
     c->peerType = peerType;
+    c->flags = flags;
+    c->peer_ = cbdataReference(getPeer());
+    assert(!c->isOpen());
+    return c;
+}
+
+Comm::ConnectionPointer
+Comm::Connection::cloneIdentDetails() const
+{
+    auto c = cloneDestinationDetails();
     c->tos = tos;
     c->nfmark = nfmark;
     c->nfConnmark = nfConnmark;
-    c->flags = flags;
     c->startTime_ = startTime_;
-
-    // ensure FD is not open in the new copy.
-    c->fd = -1;
-
-    // ensure we have a cbdata reference to peer_ not a straight ptr copy.
-    c->peer_ = cbdataReference(getPeer());
-
     return c;
 }
 
@@ -141,7 +146,7 @@ Comm::Connection::connectTimeout(const time_t fwdStart) const
 {
     // a connection opening timeout (ignoring forwarding time limits for now)
     const CachePeer *peer = getPeer();
-    const time_t ctimeout = peer ? peerConnectTimeout(peer) : Config.Timeout.connect;
+    const auto ctimeout = peer ? peer->connectTimeout() : Config.Timeout.connect;
 
     // time we have left to finish the whole forwarding process
     const time_t fwdTimeLeft = FwdState::ForwardTimeout(fwdStart);

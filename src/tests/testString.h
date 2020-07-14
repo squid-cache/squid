@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TEST_STRING_H
 #define SQUID_SRC_TEST_STRING_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 /*
  * test the store framework

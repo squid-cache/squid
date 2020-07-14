@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TEST_HTTP_REQUEST_METHOD_H
 #define SQUID_SRC_TEST_HTTP_REQUEST_METHOD_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 /*
  * test HttpRequestMethod

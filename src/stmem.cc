@@ -215,7 +215,7 @@ mem_hdr::debugDump() const
     debugs (19, 0, "mem_hdr::debugDump: Current available data is: " << result.str() << ".");
 }
 
-/* FIXME: how do we deal with sparse results -
+/* XXX: how do we deal with sparse results -
  * where we have (say)
  * 0-500 and 1000-1500, but are asked for
  * 0-2000

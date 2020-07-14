@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TEST_TESTSBUF_H
 #define SQUID_SRC_TEST_TESTSBUF_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 class testSBufList : public CPPUNIT_NS::TestFixture
 {

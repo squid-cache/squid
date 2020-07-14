@@ -4068,8 +4068,8 @@ ConnStateData::shouldPreserveClientData() const
         return true;
 #endif
 
-    // the 1st HTTP request on a connection to a plain intercepting port
-    if (!pipeline.nrequests && !port->secure.encryptTransport && transparent())
+    // the 1st HTTP(S) request on a connection to an intercepting port
+    if (!pipeline.nrequests && transparent())
         return true;
 
     return false;
@@ -4087,5 +4087,11 @@ std::ostream &
 operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic)
 {
     return os << pic.connection << ", request=" << pic.request;
+}
+
+std::ostream &
+operator <<(std::ostream &os, const ConnStateData::ServerConnectionContext &scc)
+{
+    return os << scc.conn_ << ", srv_bytes=" << scc.preReadServerBytes.length();
 }
 

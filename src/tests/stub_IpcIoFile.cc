@@ -7,5 +7,15 @@
  */
 
 #include "squid.h"
-#include "CompletionDispatcher.h"
+
+#if HAVE_DISKIO_MODULE_IPCIO
+#include "DiskIO/IpcIo/IpcIoFile.h"
+
+#define STUB_API "DiskIO/IocIo/IpcIoFile.cc"
+
+#include "tests/STUB.h"
+
+void IpcIoFile::StatQueue(std::ostream &) STUB
+
+#endif /* HAVE_DISKIO_MODULE_IPCIO */
 

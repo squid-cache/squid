@@ -10,7 +10,7 @@ include $(top_srcdir)/src/Common.am
 man_MANS= ntlm_sspi_auth.8
 libexec_PROGRAMS= ntlm_sspi_auth
 
-ntlm_sspi_auth_SOURCES= ntlm_sspi_auth.cc
+ntlm_sspi_auth_SOURCES = ntlm_sspi_auth.cc
 ntlm_sspi_auth_LDADD= \
 	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
 	$(top_builddir)/lib/libsspwin32.la \

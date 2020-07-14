@@ -410,8 +410,9 @@ getWeightedRoundRobinParent(PeerSelector *ps)
  * period. The larger the number of requests between cycled resets the
  * more balanced the operations.
  *
- \param data    unused.
- \todo Make the reset timing a selectable parameter in squid.conf
+ * \param data    unused
+ *
+ * TODO: Make the reset timing a selectable parameter in squid.conf
  */
 static void
 peerClearRRLoop(void *data)
@@ -1182,14 +1183,6 @@ neighborUp(const CachePeer * p)
     return 1;
 }
 
-/// \returns the effective connect timeout for this peer
-time_t
-peerConnectTimeout(const CachePeer *peer)
-{
-    return peer->connect_timeout_raw > 0 ?
-           peer->connect_timeout_raw : Config.Timeout.peer_connect;
-}
-
 time_t
 positiveTimeout(const time_t timeout)
 {
@@ -1339,7 +1332,7 @@ peerProbeConnect(CachePeer *p, const bool reprobeIfBusy)
     }
     p->reprobe = false;
 
-    const time_t ctimeout = peerConnectTimeout(p);
+    const auto ctimeout = p->connectTimeout();
     /* for each IP address of this CachePeer. find one that we can connect to and probe it. */
     for (int i = 0; i < p->n_addresses; ++i) {
         Comm::ConnectionPointer conn = new Comm::Connection;
@@ -1441,7 +1434,7 @@ peerCountMcastPeersCreateAndSend(CachePeer * const p)
     reqnum = icpSetCacheKey((const cache_key *)fake->key);
     icpCreateAndSend(ICP_QUERY, 0, url, reqnum, 0,
                      icpOutgoingConn->fd, p->in_addr, psstate->al);
-    fake->ping_status = PING_WAITING;
+    fake->ping_status = PING_WAITING; // TODO: refactor to use PeerSelector::startPingWaiting()
     eventAdd("peerCountMcastPeersDone",
              peerCountMcastPeersDone,
              psstate,

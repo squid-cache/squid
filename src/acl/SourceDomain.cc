@@ -49,7 +49,7 @@ ACLSourceDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *
     if (fqdn) {
         return data->match(fqdn);
     } else if (!checklist->sourceDomainChecked()) {
-        /* FIXME: Using AclMatchedName here is not OO correct. Should find a way to the current acl */
+        // TODO: Using AclMatchedName here is not OO correct. Should find a way to the current acl
         debugs(28, 3, "aclMatchAcl: Can't yet compare '" << AclMatchedName << "' ACL for '" << checklist->src_addr << "'");
         if (checklist->goAsync(SourceDomainLookup::Instance()))
             return -1;

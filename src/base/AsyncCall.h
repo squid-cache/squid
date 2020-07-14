@@ -37,11 +37,6 @@
 class CallDialer;
 class AsyncCallQueue;
 
-/**
- \todo add unique call IDs
- \todo CBDATA_CLASS kids
- \ingroup AsyncCallsAPI
- */
 class AsyncCall: public RefCountable
 {
 public:
