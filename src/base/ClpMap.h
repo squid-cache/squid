@@ -189,12 +189,22 @@ ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
     // copying a Key does not consume more memory. This assumption holds for
     // Key=SBuf, but, ideally, we should be outsourcing this decision to another
     // configurable function, storing each key once, or hard-coding Key=SBuf.
-    const auto keySz = k.length();
+    const uint64_t keySz = k.length();
 
     // approximate calculation (e.g., containers store wrappers not value_types)
-    const auto storageSz = sizeof(typename Entries::value_type) + MemoryUsedBy(v);
-    const auto indexSz = sizeof(typename Index::value_type);
-    return keySz + storageSz + indexSz;
+    const uint64_t storageSz = sizeof(typename Entries::value_type) + MemoryUsedBy(v);
+    if (storageSz < sizeof(typename Entries::value_type)) // overflow
+        return 0;
+
+    const uint64_t indexSz = sizeof(typename Index::value_type) + keySz;
+    if (indexSz < sizeof(typename Index::value_type)) // overflow
+        return 0;
+
+    const uint64_t resultSz = storageSz + indexSz;
+    if (resultSz < indexSz) // overflow
+        return 0;
+
+    return resultSz;
 }
 
 template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
@@ -211,7 +221,7 @@ ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &v, const Ttl 
         return false; // already expired; will never be returned by get()
 
     const auto wantSpace = MemoryCountedFor(key, v);
-    if (wantSpace > memLimit())
+    if (wantSpace > memLimit() || wantSpace == 0) // 0 is 64-bit integer overflow
         return false; // will never fit
     trim(wantSpace);
 
