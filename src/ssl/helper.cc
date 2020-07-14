@@ -202,6 +202,7 @@ void Ssl::CertValidationHelper::Init()
             if (parseParams) {
                 if (strcmp(token, "ttl=none") == 0) {
                     ttl = std::numeric_limits<CacheType::Ttl>::max();
+                    continue;
                 } else if (strncmp(token, "ttl=", 4) == 0) {
                     ttl = xatoi(token + 4);
                     if (ttl < 0) {
