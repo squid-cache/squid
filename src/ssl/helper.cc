@@ -12,6 +12,7 @@
 #include "cache_cf.h"
 #include "fs_io.h"
 #include "helper/Reply.h"
+#include "Parsing.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"
@@ -199,16 +200,18 @@ void Ssl::CertValidationHelper::Init()
         bool parseParams = true;
         while ((token = strwordtok(NULL, &tmp))) {
             if (parseParams) {
-                if (strncmp(token, "ttl=", 4) == 0) {
-                    ttl = atoi(token + 4);
+                if (strcmp(token, "ttl=none") == 0) {
+                    ttl = std::numeric_limits<CacheType::Ttl>::max();
+                } else if (strncmp(token, "ttl=", 4) == 0) {
+                    ttl = xatoi(token + 4);
                     if (ttl < 0) {
                         throw TextException(ToSBuf("Negative TTL in sslcrtvalidator_program ", Ssl::TheConfig.ssl_crt_validator,
-                            Debug::Extra, "For unlimited TTL, use ttl=", std::numeric_limits<CacheType::Ttl>::max()),
+                            Debug::Extra, "For unlimited TTL, use ttl=none"),
                             Here());
                     }
                     continue;
                 } else if (strncmp(token, "cache=", 6) == 0) {
-                    cache = atoi(token + 6);
+                    cache = xatoi(token + 6);
                     continue;
                 } else
                     parseParams = false;

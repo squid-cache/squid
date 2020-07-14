@@ -3416,6 +3416,7 @@ DOC_START
 		for. The default is 3600 (i.e. 1 hour). To disable caching,
 		use zero cache size, not zero TTL -- zero TTL allows reuse for
 		the remainder of the second when the result was cached.
+		The value "none" can be used for unlimited TTL.
 DOC_END
 
 NAME: sslcrtvalidator_children
