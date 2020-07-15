@@ -182,5 +182,54 @@ JobDialer<Job>::dial(AsyncCall &call)
     job->callEnd(); // may delete job
 }
 
+/// A job pointer and the AsyncCall passed to the job as a callback argument.
+/// A job caller may need this for callback cancelling and job notification.
+template <class Job>
+class JobCallbackPointer
+{
+public:
+    bool pending() const { return bool(callback_); }
+
+    void reset();
+
+    void reset(const AsyncCall::Pointer, const typename Job::Pointer);
+
+    void cancel(const char *reason);
+
+    Job *job() const { return job_.get(); }
+
+private:
+    AsyncCall::Pointer callback_;
+    typename Job::Pointer job_;
+};
+
+template<class Job>
+void
+JobCallbackPointer<Job>::reset()
+{
+    callback_ = nullptr;
+    job_.clear();
+}
+
+template<class Job>
+void
+JobCallbackPointer<Job>::reset(const AsyncCall::Pointer aCall, const typename Job::Pointer aJob)
+{
+    assert(aCall);
+    assert(aJob.valid());
+
+    callback_ = aCall;
+    job_ = aJob;
+}
+
+template<class Job>
+void
+JobCallbackPointer<Job>::cancel(const char *reason)
+{
+    assert(pending());
+    callback_->cancel(reason);
+    reset();
+}
+
 #endif /* SQUID_ASYNCJOBCALLS_H */
 
