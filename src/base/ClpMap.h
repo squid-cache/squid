@@ -89,7 +89,7 @@ private:
     class Entry
     {
     public:
-        Entry(const Key &aKey, const Value &v, const Ttl ttl): key(aKey), value(v), expires(squid_curtime+ttl) {}
+        Entry(const Key &, const Value &, const Ttl);
 
         /// whether the entry is stale
         bool expired() const { return expires < squid_curtime; }
@@ -271,6 +271,17 @@ ClpMap<Key, Value, MemoryUsedBy>::trim(const uint64_t wantSpace)
         // presence may lead to purging potentially useful fresh entries here.
         del(entries_.rbegin()->key);
     }
+}
+
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
+ClpMap<Key, Value, MemoryUsedBy>::Entry::Entry(const Key &aKey, const Value &v, const Ttl ttl) :
+        key(aKey),
+        value(v)
+{
+    if (ttl < (std::numeric_limits<Ttl>::max() - squid_curtime))
+        expires = squid_curtime+ttl;
+    else
+        expires = std::numeric_limits<Ttl>::max();
 }
 
 #endif /* SQUID__SRC_BASE_CLPMAP_H */
