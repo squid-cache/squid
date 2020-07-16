@@ -163,7 +163,7 @@ Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun i
 Security::IoResult
 Security::Accept(Comm::Connection &transport)
 {
-    return Handshake(transport, SQUID_TLS_ERR_ACCEPT, [] (ConnectionPointer tlsConn) -> auto {
+    return Handshake(transport, SQUID_TLS_ERR_ACCEPT, [] (ConnectionPointer tlsConn) {
 #if USE_OPENSSL
         return SSL_accept(tlsConn);
 #elif USE_GNUTLS
@@ -178,7 +178,7 @@ Security::Accept(Comm::Connection &transport)
 Security::IoResult
 Security::Connect(Comm::Connection &transport)
 {
-    return Handshake(transport, SQUID_TLS_ERR_CONNECT, [] (ConnectionPointer tlsConn) -> auto {
+    return Handshake(transport, SQUID_TLS_ERR_CONNECT, [] (ConnectionPointer tlsConn) {
 #if USE_OPENSSL
         return SSL_connect(tlsConn);
 #elif USE_GNUTLS
