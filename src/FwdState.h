@@ -13,15 +13,20 @@
 #include "base/forward.h"
 #include "base/RefCount.h"
 #include "clients/forward.h"
+#include "clients/HttpTunneler.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "err_type.h"
 #include "fde.h"
+#include "HappyConnOpener.h"
+#include "HttpRequest.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
 #include "PeerSelectState.h"
 #include "ResolvedPeers.h"
+#include "security/BlindPeerConnector.h"
+#include "ssl/PeekingPeerConnector.h"
 #include "security/forward.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -37,7 +42,6 @@ class PconnPool;
 class ResolvedPeers;
 typedef RefCount<ResolvedPeers> ResolvedPeersPointer;
 
-class HappyConnOpener;
 typedef CbcPointer<HappyConnOpener> HappyConnOpenerPointer;
 class HappyConnOpenerAnswer;
 
@@ -163,17 +167,13 @@ private:
     /// \returns the time left for this connection to become connected or 1 second if it is less than one second left
     time_t connectingTimeout(const Comm::ConnectionPointer &conn) const;
 
-    /// whether we are waiting for HappyConnOpener
-    /// same as calls.connector but may differ from connOpener.valid()
-    bool opening() const { return connOpener.set(); }
-
-    void cancelOpening(const char *reason);
-
     void notifyConnOpener();
 
     void saveError(ErrorState *err);
 
     void cleanupOnFail(err_type);
+
+    void cancelStep(const char *reason);
 
 public:
     StoreEntry *entry;
@@ -202,7 +202,9 @@ private:
         bool destinationsFound; ///< at least one candidate path found
     } flags;
 
-    HappyConnOpenerPointer connOpener; ///< current connection opening job
+    JobCallbackPointer<HappyConnOpener> connOpener; ///< current connection opening job
+    JobCallbackPointer<Security::PeerConnector> securityConnector; ///< TCP connection encryption to peer job
+    JobCallbackPointer<Http::Tunneler> tunnelEstablisher; ///< HTTP CONNECT tunneler job
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
     PeerConnectionPointer destinationReceipt; ///< peer selection result (or nil)

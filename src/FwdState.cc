@@ -207,26 +207,11 @@ FwdState::stopAndDestroy(const char *reason)
 {
     debugs(17, 3, "for " << reason);
 
-    if (opening())
-        cancelOpening(reason);
+    cancelStep(reason);
 
     PeerSelectionInitiator::subscribed = false; // may already be false
     self = nullptr; // we hope refcounting destroys us soon; may already be nil
     /* do not place any code here as this object may be gone by now */
-}
-
-/// Notify connOpener that we no longer need connections. We do not have to do
-/// this -- connOpener would eventually notice on its own, but notifying reduces
-/// waste and speeds up spare connection opening for other transactions (that
-/// could otherwise wait for this transaction to use its spare allowance).
-void
-FwdState::cancelOpening(const char *reason)
-{
-    assert(calls.connector);
-    calls.connector->cancel(reason);
-    calls.connector = nullptr;
-    notifyConnOpener();
-    connOpener.clear();
 }
 
 #if STRICT_ORIGINAL_DST
@@ -325,13 +310,23 @@ FwdState::~FwdState()
 
     entry = NULL;
 
-    if (opening())
-        cancelOpening("~FwdState");
+    cancelStep("~FwdState");
 
     if (Comm::IsConnOpen(serverConn))
         closeServerConnection("~FwdState");
 
     debugs(17, 3, "FwdState destructed, this=" << this);
+}
+
+void
+FwdState::cancelStep(const char *reason)
+{
+    if (connOpener.pending())
+        connOpener.cancel(reason);
+    else if (securityConnector.pending())
+        securityConnector.cancel(reason);
+    else if (tunnelEstablisher.pending())
+        tunnelEstablisher.cancel(reason);
 }
 
 /**
@@ -579,7 +574,7 @@ FwdState::complete()
 bool
 FwdState::usingDestination() const
 {
-    return destinationReceipt || Comm::IsConnOpen(serverConn);
+    return securityConnector.pending() || tunnelEstablisher.pending() || Comm::IsConnOpen(serverConn);
 }
 
 void
@@ -602,11 +597,11 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     if (usingDestination()) {
         // We are already using a previously opened connection, so we cannot be
         // waiting for connOpener. We still receive destinations for backup.
-        Must(!opening());
+        Must(!connOpener.pending());
         return;
     }
 
-    if (opening()) {
+    if (connOpener.pending()) {
         notifyConnOpener();
         return; // and continue to wait for FwdState::noteConnection() callback
     }
@@ -642,11 +637,11 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     if (usingDestination()) {
         // We are already using a previously opened connection, so we cannot be
         // waiting for connOpener. We were receiving destinations for backup.
-        Must(!opening());
+        Must(!connOpener.pending());
         return;
     }
 
-    Must(opening()); // or we would be stuck with nothing to do or wait for
+    Must(connOpener.pending()); // or we would be stuck with nothing to do or wait for
     notifyConnOpener();
     // and continue to wait for FwdState::noteConnection() callback
 }
@@ -660,7 +655,7 @@ FwdState::notifyConnOpener()
     } else {
         debugs(17, 7, "notifying about " << *destinations);
         destinations->notificationPending = true;
-        CallJobHere(17, 5, connOpener, HappyConnOpener, noteCandidatesChange);
+        CallJobHere(17, 5, connOpener.job(), HappyConnOpener, noteCandidatesChange);
     }
 }
 
@@ -808,7 +803,9 @@ FwdState::advanceDestination(const char *stepDescription, const Comm::Connection
         // now wait for the step callback
     } catch (...) {
         debugs (17, 2, "exception while trying to " << stepDescription << ": " << CurrentException);
-        closePendingConnection(conn, "connection preparation exception");
+        static const char *reason = "connection preparation exception";
+        cancelStep(reason);
+        closePendingConnection(conn, reason);
         if (!err) {
             const auto error = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request, al);
             saveError(error);
@@ -824,8 +821,7 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 {
     assert(!destinationReceipt);
 
-    calls.connector = nullptr;
-    connOpener.clear();
+    connOpener.reset();
 
     Must(n_tries <= answer.n_tries); // n_tries cannot decrease
     n_tries = answer.n_tries;
@@ -890,6 +886,8 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 void
 FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
+    assert(!tunnelEstablisher.pending());
+
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::tunnelEstablishmentDone",
                                             Http::Tunneler::CbDialer<FwdState>(&FwdState::tunnelEstablishmentDone, this));
@@ -906,6 +904,7 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
     if (!conn->getPeer()->options.no_delay)
         tunneler->setDelayId(entry->mem_obj->mostBytesAllowed());
 #endif
+    tunnelEstablisher.reset(callback, tunneler);
     AsyncJob::Start(tunneler);
     // and wait for the tunnelEstablishmentDone() call
 }
@@ -914,6 +913,8 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 void
 FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
+    tunnelEstablisher.reset();
+
     ErrorState *error = nullptr;
     if (!answer.positive()) {
         Must(!Comm::IsConnOpen(answer.conn));
@@ -979,6 +980,7 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
 void
 FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
+    assert(!securityConnector.pending());
     HttpRequest::Pointer requestPointer = request;
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::ConnectedToPeer",
@@ -992,6 +994,7 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 #endif
         connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
     connector->noteFwdPconnUse = true;
+    securityConnector.reset(callback, connector);
     AsyncJob::Start(connector); // will call our callback
 }
 
@@ -999,6 +1002,8 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 void
 FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
 {
+    securityConnector.reset();
+
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
         Must(!Comm::IsConnOpen(answer.conn));
@@ -1083,7 +1088,7 @@ FwdState::connectStart()
     Must(!request->pinnedConnection());
 
     assert(!destinations->empty());
-    assert(!opening());
+    assert(!connOpener.pending());
     assert(!usingDestination());
 
     // Ditch error page if it was created before.
@@ -1094,10 +1099,10 @@ FwdState::connectStart()
 
     request->hier.startPeerClock();
 
-    calls.connector = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer<FwdState>(&FwdState::noteConnection, this));
+    AsyncCall::Pointer callback = asyncCall(17, 5, "FwdState::noteConnection", HappyConnOpener::CbDialer<FwdState>(&FwdState::noteConnection, this));
 
     HttpRequest::Pointer cause = request;
-    const auto cs = new HappyConnOpener(destinations, calls.connector, cause, start_t, n_tries, al);
+    const auto cs = new HappyConnOpener(destinations, callback, cause, start_t, n_tries, al);
     cs->setHost(request->url.host());
     bool retriable = checkRetriable();
     if (!retriable && Config.accessList.serverPconnForNonretriable) {
@@ -1109,7 +1114,7 @@ FwdState::connectStart()
     cs->setRetriable(retriable);
     cs->allowPersistent(pconnRace != raceHappened);
     destinations->notificationPending = true; // start() is async
-    connOpener = cs;
+    connOpener.reset(callback, cs);
     AsyncJob::Start(cs);
 }
 
