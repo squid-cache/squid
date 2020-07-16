@@ -1440,7 +1440,7 @@ ConnStateData::parseHttpRequest(const Http1::RequestParserPointer &hp)
 }
 
 bool
-ConnStateData::closeOnEof() const
+ConnStateData::shouldCloseOnEof() const
 {
     if (pipeline.empty() && inBuf.isEmpty()) {
         debugs(33, 4, "yes, without active requests and unparsed input");
@@ -2023,7 +2023,7 @@ ConnStateData::afterClientRead()
         if (!isOpen())
             return;
         // We may get here if the client half-closed after sending a partial
-        // request. See doClientRead() and closeOnEof().
+        // request. See doClientRead() and shouldCloseOnEof().
         // XXX: This partially duplicates ConnStateData::kick().
         if (pipeline.empty() && commIsHalfClosed(clientConnection->fd)) {
             debugs(33, 5, clientConnection << ": half-closed connection, no completed request parsed, connection closing.");

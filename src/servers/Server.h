@@ -38,7 +38,7 @@ public:
     virtual void swanSong();
 
     /// whether to stop serving our client after reading EOF on its connection
-    virtual bool closeOnEof() const = 0;
+    virtual bool shouldCloseOnEof() const = 0;
 
     /// maybe grow the inBuf and schedule Comm::Read()
     void readSomeData();

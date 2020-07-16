@@ -414,7 +414,7 @@ protected:
 private:
     /* ::Server API */
     virtual void terminateAll(const Error &, const LogTagsErrors &);
-    virtual bool closeOnEof() const;
+    virtual bool shouldCloseOnEof() const;
 
     void checkLogging();
 

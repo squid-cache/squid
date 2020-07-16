@@ -146,7 +146,7 @@ Server::doClientRead(const CommIoCbParams &io)
     case Comm::ENDFILE: // close detected by 0-byte read
         debugs(33, 5, io.conn << " closed?");
 
-        if (closeOnEof()) {
+        if (shouldCloseOnEof()) {
             LogTagsErrors lte;
             lte.aborted = true;
             terminateAll(ERR_CLIENT_GONE, lte);
