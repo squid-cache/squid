@@ -422,14 +422,14 @@ HappyConnOpener::status() const
     if (prime) {
         if (prime.path && prime.path->isOpen())
             buf.appendf(" prime FD %d", prime.path->fd);
-        else if (prime.connector)
-            buf.appendf(" prime call%ud", prime.connector->id.value);
+        else if (prime.opener.pending())
+            buf.appendf(" prime call%ud", prime.opener.callbackId());
     }
     if (spare) {
         if (spare.path && spare.path->isOpen())
             buf.appendf(" spare FD %d", spare.path->fd);
-        else if (spare.connector)
-            buf.appendf(" spare call%ud", spare.connector->id.value);
+        else if (spare.opener.pending())
+            buf.appendf(" spare call%ud", spare.opener.callbackId());
     }
     if (n_tries)
         buf.appendf(" tries %d", n_tries);
@@ -516,7 +516,7 @@ void
 HappyConnOpener::startConnecting(Attempt &attempt, PeerConnectionPointer &dest)
 {
     Must(!attempt.path);
-    Must(!attempt.connector);
+    Must(!attempt.opener.pending());
     Must(dest);
 
     const auto bumpThroughPeer = cause->flags.sslBumped && dest->getPeer();
@@ -567,8 +567,9 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, PeerConnectionPointer &de
         cs->setHost(host_);
 
     attempt.path = dest;
-    attempt.connector = callConnect;
-    attempt.opener = cs;
+    attempt.opener.reset(callConnect, cs);
+    //attempt.connector = callConnect;
+    //attempt.opener = cs;
 
     AsyncJob::Start(cs);
 }
@@ -884,10 +885,8 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
 void
 HappyConnOpener::Attempt::cancel(const char *reason)
 {
-    if (connector) {
-        connector->cancel(reason);
-        CallJobHere(17, 3, opener, Comm::ConnOpener, noteAbort);
-    }
+    if (opener.pending())
+        opener.cancel(reason);
     clear();
 }
 

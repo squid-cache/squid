@@ -166,12 +166,12 @@ private:
         void cancel(const char *reason);
 
         PeerConnectionPointer path; ///< the destination we are connecting to
-        AsyncCall::Pointer connector; ///< our opener callback
-        Comm::ConnOpener::Pointer opener; ///< connects to path and calls us
+        // connects to path
+        JobCallbackPointer<Comm::ConnOpener> opener;
 
     private:
         /// cleans up after the attempt ends (successfully or otherwise)
-        void clear() { path = nullptr; connector = nullptr; opener = nullptr; }
+        void clear() { path = nullptr; opener.reset(); }
     };
 
     /* AsyncJob API */

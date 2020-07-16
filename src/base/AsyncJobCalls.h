@@ -198,6 +198,8 @@ public:
 
     Job *job() const { return job_.get(); }
 
+    InstanceId<AsyncCall>::Value callbackId() const { return callback_->id.value; }
+
 private:
     AsyncCall::Pointer callback_;
     typename Job::Pointer job_;
