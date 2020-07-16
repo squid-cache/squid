@@ -104,6 +104,8 @@ protected:
     TunnelerAnswer &answer();
 
 private:
+    void closeQuietly();
+
     AsyncCall::Pointer writer; ///< called when the request has been written
     AsyncCall::Pointer reader; ///< called when the response should be read
     AsyncCall::Pointer closer; ///< called when the connection is being closed

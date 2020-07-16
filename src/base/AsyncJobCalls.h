@@ -228,6 +228,7 @@ JobCallbackPointer<Job>::cancel(const char *reason)
 {
     assert(pending());
     callback_->cancel(reason);
+    CallJobHere(93, 3, job_, AsyncJob, noteAbort);
     reset();
 }
 

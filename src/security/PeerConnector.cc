@@ -549,8 +549,14 @@ Security::PeerConnector::bail(ErrorState *error)
         peerConnectFailed(p);
 
     callBack();
-    disconnect();
 
+    closeQuietly();
+}
+
+void
+Security::PeerConnector::closeQuietly()
+{
+    disconnect();
     if (noteFwdPconnUse)
         fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
     serverConn->close();
@@ -595,12 +601,16 @@ Security::PeerConnector::swanSong()
 {
     // XXX: unregister fd-closure monitoring and CommSetSelect interest, if any
     AsyncJob::swanSong();
-    if (callback != NULL) { // paranoid: we have left the caller waiting
-        debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while connecting to a cache_peer or origin server");
-        const auto anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al);
-        bail(anErr);
-        assert(!callback);
-        return;
+    if (callback) { // paranoid: we have left the caller waiting
+        if (callback->canceled()) {
+            debugs(83, 3, "cancelled by the caller");
+            closeQuietly();
+        } else {
+            debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while connecting to a cache_peer or origin server");
+            const auto anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al);
+            bail(anErr);
+            assert(!callback);
+        }
     }
 }
 

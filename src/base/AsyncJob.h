@@ -61,6 +61,7 @@ public:
     virtual void callEnd(); ///< called right after the called job method
     /// called when the job throws during an async call
     virtual void callException(const std::exception &e);
+    void noteAbort() { mustStop("externally aborted"); }
 
 protected:
     // external destruction prohibited to ensure swanSong() is called

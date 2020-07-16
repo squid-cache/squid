@@ -174,6 +174,8 @@ private:
     static void NegotiateSsl(int fd, void *data);
     void negotiateSsl();
 
+    void closeQuietly();
+
     /// The maximum allowed missing certificates downloads.
     static const unsigned int MaxCertsDownloads = 10;
     /// The maximum allowed nested certificates downloads.
