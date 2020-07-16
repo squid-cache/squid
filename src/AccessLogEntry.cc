@@ -187,13 +187,13 @@ AccessLogEntry::error() const
 }
 
 void
-AccessLogEntry::updateError(const Error &error)
+AccessLogEntry::updateError(const Error &err)
 {
     // the order ensures that error() returns the first-imported error
     if (request)
-        request->error.update(error);
+        request->error.update(err);
     else
-        error_.update(error);
+        error_.update(err);
 }
 
 void
