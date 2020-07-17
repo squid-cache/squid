@@ -568,8 +568,6 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, PeerConnectionPointer &de
 
     attempt.path = dest;
     attempt.opener.reset(callConnect, cs);
-    //attempt.connector = callConnect;
-    //attempt.opener = cs;
 
     AsyncJob::Start(cs);
 }
