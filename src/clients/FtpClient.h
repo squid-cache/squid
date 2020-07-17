@@ -45,7 +45,6 @@ public:
      */
     Comm::ConnectionPointer listenConn;
 
-    AsyncCall::Pointer opener; ///< Comm opener handler callback.
 private:
     AsyncCall::Pointer closer; ///< Comm close handler callback
 };
@@ -185,6 +184,8 @@ protected:
     // sending of the request body to the server
     virtual void sentRequestBody(const CommIoCbParams &io);
     virtual void doneSendingRequestBody();
+
+    JobCallbackPointer<Comm::ConnOpener> opener; // the connection opener job
 
 private:
     bool parseControlReply(size_t &bytesUsed);
