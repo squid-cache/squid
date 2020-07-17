@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncJobCalls.h"
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
@@ -93,7 +94,8 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
     closer(NULL),
     alep(new AccessLogEntry),
     al(*alep),
-    cs(NULL)
+    cs(nullptr),
+    securer(nullptr)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
@@ -109,6 +111,7 @@ Adaptation::Icap::Xaction::~Xaction()
 {
     debugs(93,3, typeName << " destructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
+    delete securer;
     HTTPMSGUNLOCK(icapRequest);
 }
 
@@ -305,10 +308,15 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
     const auto &ssl = fd_table[io.conn->fd].ssl;
     if (!ssl && service().cfg().secure.encryptTransport) {
         CbcPointer<Adaptation::Icap::Xaction> me(this);
-        securer = asyncCall(93, 4, "Adaptation::Icap::Xaction::handleSecuredPeer",
-                            MyIcapAnswerDialer(me, &Adaptation::Icap::Xaction::handleSecuredPeer));
+        AsyncCall::Pointer callback = asyncCall(93, 4, "Adaptation::Icap::Xaction::handleSecuredPeer",
+                                                MyIcapAnswerDialer(me, &Adaptation::Icap::Xaction::handleSecuredPeer));
 
-        auto *sslConnector = new Ssl::IcapPeerConnector(theService, io.conn, securer, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
+        Ssl::IcapPeerConnector *sslConnector = new Ssl::IcapPeerConnector(theService, io.conn, callback, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
+
+        if (!securer)
+            securer = new JobCallbackPointer<Ssl::IcapPeerConnector>();
+
+        securer->reset(callback, sslConnector);
         AsyncJob::Start(sslConnector); // will call our callback
         return;
     }
@@ -384,10 +392,8 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
 // unexpected connection close while talking to the ICAP service
 void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
 {
-    if (securer != NULL) {
+    if (securerPending())
         securer->cancel("Connection closed before SSL negotiation finished");
-        securer = NULL;
-    }
     closer = NULL;
     handleCommClosed();
 }
@@ -416,7 +422,7 @@ void Adaptation::Icap::Xaction::callEnd()
 
 bool Adaptation::Icap::Xaction::doneAll() const
 {
-    return !connector && !securer && !reader && !writer && Adaptation::Initiate::doneAll();
+    return !connector && !securerPending() && !reader && !writer && Adaptation::Initiate::doneAll();
 }
 
 void Adaptation::Icap::Xaction::updateTimeout()
@@ -737,8 +743,8 @@ Ssl::IcapPeerConnector::noteNegotiationDone(ErrorState *error)
 void
 Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
-    Must(securer != NULL);
-    securer = NULL;
+    Must(securerPending());
+    securer->reset();
 
     if (closer != NULL) {
         if (Comm::IsConnOpen(answer.conn))
@@ -765,3 +771,8 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
     handleCommConnected();
 }
 
+bool
+Adaptation::Icap::Xaction::securerPending() const
+{
+    return securer && securer->pending();
+}

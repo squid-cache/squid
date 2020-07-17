@@ -19,6 +19,12 @@
 
 class MemBuf;
 
+namespace Ssl {
+  class IcapPeerConnector;
+}
+
+template<class Job> class JobCallbackPointer;
+
 namespace Adaptation
 {
 namespace Icap
@@ -33,6 +39,7 @@ namespace Icap
  */
 
 // Note: Xaction must be the first parent for object-unaware cbdata to work
+
 
 class Xaction: public Adaptation::Initiate
 {
@@ -153,8 +160,10 @@ protected:
     timeval icap_tio_finish;   /*time when the last byte of the ICAP responsewas received*/
 
 private:
+    bool securerPending() const;
+
     Comm::ConnOpener::Pointer cs;
-    AsyncCall::Pointer securer; ///< whether we are securing a connection
+    JobCallbackPointer<Ssl::IcapPeerConnector> *securer; ///< the connection securing job
 };
 
 } // namespace Icap
