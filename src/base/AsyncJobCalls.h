@@ -188,6 +188,8 @@ template <class Job>
 class JobCallbackPointer
 {
 public:
+    ~JobCallbackPointer();
+
     bool pending() const { return bool(callback_); }
 
     void reset();
@@ -204,6 +206,13 @@ private:
     AsyncCall::Pointer callback_;
     typename Job::Pointer job_;
 };
+
+template<class Job>
+JobCallbackPointer<Job>::~JobCallbackPointer()
+{
+    if (pending())
+        cancel("~JobCallbackPointer");
+}
 
 template<class Job>
 void
