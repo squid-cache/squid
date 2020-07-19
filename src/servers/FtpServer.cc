@@ -16,7 +16,6 @@
 #include "client_side_reply.h"
 #include "client_side_request.h"
 #include "clientStream.h"
-#include "comm/ConnOpener.h"
 #include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
@@ -61,7 +60,6 @@ Ftp::Server::Server(const MasterXaction::Pointer &xact):
     dataConn(),
     uploadAvailSize(0),
     listener(),
-    connector(),
     reader(),
     waitingForOrigin(false),
     originDataDownloadAbortedOnError(false)
@@ -1678,9 +1676,10 @@ Ftp::Server::checkDataConnPre()
 
     // active transfer: open a data connection from Squid to client
     typedef CommCbMemFunT<Server, CommConnectCbParams> Dialer;
-    connector = JobCallback(17, 3, Dialer, this, Ftp::Server::connectedForData);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(dataConn, connector,
+    AsyncCall::Pointer callback = JobCallback(17, 3, Dialer, this, Ftp::Server::connectedForData);
+    Comm::ConnOpener *cs = new Comm::ConnOpener(dataConn, callback,
             Config.Timeout.connect);
+    connector.reset(callback, cs);
     AsyncJob::Start(cs);
     return false; // ConnStateData::processFtpRequest waits handleConnectDone
 }
@@ -1700,7 +1699,8 @@ Ftp::Server::checkDataConnPost() const
 void
 Ftp::Server::connectedForData(const CommConnectCbParams &params)
 {
-    connector = NULL;
+    assert(connector.pending());
+    connector.reset();
 
     if (params.flag != Comm::OK) {
         /* it might have been a timeout with a partially open link */
