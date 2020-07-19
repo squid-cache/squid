@@ -12,7 +12,6 @@
 #include "acl/FilledChecklist.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"
-#include "Downloader.h"
 #include "errorpage.h"
 #include "fde.h"
 #include "FwdState.h"
@@ -662,12 +661,17 @@ Security::PeerConnector::startCertDownloading(SBuf &url)
 
     const Downloader *csd = (request ? dynamic_cast<const Downloader*>(request->downloader.valid()) : nullptr);
     Downloader *dl = new Downloader(url, certCallback, XactionInitiator::initCertFetcher, csd ? csd->nestedLevel() + 1 : 1);
+    assert(!downloader.pending());
+    downloader.reset(certCallback, dl);
     AsyncJob::Start(dl);
 }
 
 void
 Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 {
+    assert(downloader.pending());
+    downloader.reset();
+
     ++certsDownloads;
     debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
 

@@ -251,13 +251,16 @@ Downloader::downloadFinished()
 void
 Downloader::callBack(Http::StatusCode const statusCode)
 {
-    CbDialer *dialer = dynamic_cast<CbDialer*>(callback_->getDialer());
-    Must(dialer);
-    dialer->status = statusCode;
-    if (statusCode == Http::scOkay)
-        dialer->object = object_;
-    ScheduleCallHere(callback_);
-    callback_ = nullptr;
+    assert(callback_);
+    if (!callback_->canceled()) {
+        CbDialer *dialer = dynamic_cast<CbDialer*>(callback_->getDialer());
+        Must(dialer);
+        dialer->status = statusCode;
+        if (statusCode == Http::scOkay)
+            dialer->object = object_;
+        ScheduleCallHere(callback_);
+        callback_ = nullptr;
+    }
 
     // We cannot deleteThis() because we may be called synchronously from
     // doCallouts() via handleReply() (XXX), and doCallouts() may crash if we

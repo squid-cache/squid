@@ -12,7 +12,9 @@
 #include "acl/Acl.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
+#include "base/AsyncJobCalls.h"
 #include "CommCalls.h"
+#include "Downloader.h"
 #include "http/forward.h"
 #include "security/EncryptorAnswer.h"
 #include "security/forward.h"
@@ -188,6 +190,7 @@ private:
     /// The list of URLs where missing certificates should be downloaded.
     std::queue<SBuf> urlsOfMissingCerts;
     unsigned int certsDownloads; ///< the number of downloaded missing certificates
+    JobCallbackPointer<Downloader> downloader; ///< cert downloader job
 };
 
 } // namespace Security
