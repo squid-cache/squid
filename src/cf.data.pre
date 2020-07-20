@@ -5685,6 +5685,7 @@ DEFAULT: none
 DOC_START
 	Specify the location of the executable URL rewriter to use.
 	Since they can perform almost any function there isn't one included.
+	URL rewrites occur after acl evaluations.
 
 	For each requested URL, the rewriter will receive on line with the format
 
@@ -5730,7 +5731,7 @@ DOC_START
 		The TAG is treated as a regular annotation but persists across
 		future requests on the client connection rather than just the
 		current request. A helper may update the TAG during subsequent
-		requests be returning a new kv-pair.
+		requests by returning a new kv-pair.
 
 	When using the concurrency= option the protocol is changed by
 	introducing a query channel tag in front of the request/response.
