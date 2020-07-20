@@ -600,17 +600,20 @@ Security::PeerConnector::swanSong()
 {
     // XXX: unregister fd-closure monitoring and CommSetSelect interest, if any
     AsyncJob::swanSong();
-    if (callback) { // paranoid: we have left the caller waiting
-        if (callback->canceled()) {
-            debugs(83, 3, "cancelled by the caller");
-            closeQuietly();
-        } else {
-            debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while connecting to a cache_peer or origin server");
-            const auto anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al);
-            bail(anErr);
-            assert(!callback);
-        }
+
+    if (!callback)
+        return;
+
+    if (callback->canceled()) {
+        debugs(83, 3, "cancelled by the caller");
+        closeQuietly();
+        return;
     }
+    // paranoid: we have left the caller waiting
+    debugs(83, DBG_IMPORTANT, "BUG: Unexpected state while connecting to a cache_peer or origin server");
+    const auto anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al);
+    bail(anErr);
+    assert(!callback);
 }
 
 const char *
