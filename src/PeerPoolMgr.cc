@@ -12,7 +12,6 @@
 #include "base/RunnersRegistry.h"
 #include "CachePeer.h"
 #include "comm/Connection.h"
-#include "comm/ConnOpener.h"
 #include "Debug.h"
 #include "fd.h"
 #include "FwdState.h"
@@ -22,7 +21,6 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
-#include "security/BlindPeerConnector.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 
@@ -43,8 +41,6 @@ public:
 PeerPoolMgr::PeerPoolMgr(CachePeer *aPeer): AsyncJob("PeerPoolMgr"),
     peer(cbdataReference(aPeer)),
     request(),
-    opener(),
-    securer(),
     closer(),
     addrUsed(0)
 {
@@ -90,7 +86,8 @@ PeerPoolMgr::doneAll() const
 void
 PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
 {
-    opener = NULL;
+    assert(opener.pending());
+    opener.reset();
 
     if (!validPeer()) {
         debugs(48, 3, "peer gone");
@@ -117,14 +114,15 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
                              PeerPoolMgr::handleSecureClosure);
         comm_add_close_handler(params.conn->fd, closer);
 
-        securer = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
-                            MyAnswerDialer(this, &PeerPoolMgr::handleSecuredPeer));
+        AsyncCall::Pointer callback = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
+                                                MyAnswerDialer(this, &PeerPoolMgr::handleSecuredPeer));
 
         const auto peerTimeout = peer->connectTimeout();
         const int timeUsed = squid_curtime - params.conn->startTime();
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = positiveTimeout(peerTimeout - timeUsed);
-        auto *connector = new Security::BlindPeerConnector(request, params.conn, securer, nullptr, timeLeft);
+        auto *connector = new Security::BlindPeerConnector(request, params.conn, callback, nullptr, timeLeft);
+        securer.reset(callback, connector);
         AsyncJob::Start(connector); // will call our callback
         return;
     }
@@ -144,8 +142,8 @@ PeerPoolMgr::pushNewConnection(const Comm::ConnectionPointer &conn)
 void
 PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
-    Must(securer != NULL);
-    securer = NULL;
+    assert(securer.pending());
+    securer.reset();
 
     if (closer != NULL) {
         if (answer.conn != NULL)
@@ -177,9 +175,8 @@ void
 PeerPoolMgr::handleSecureClosure(const CommCloseCbParams &params)
 {
     Must(closer != NULL);
-    Must(securer != NULL);
-    securer->cancel("conn closed by a 3rd party");
-    securer = NULL;
+    Must(securer.pending());
+    securer.cancel("conn closed by a 3rd party");
     closer = NULL;
     // allow the closing connection to fully close before we check again
     Checkpoint(this, "conn closure while securing");
@@ -189,7 +186,7 @@ void
 PeerPoolMgr::openNewConnection()
 {
     // KISS: Do nothing else when we are already doing something.
-    if (opener != NULL || securer != NULL || shutting_down) {
+    if (opener.pending() || securer.pending() || shutting_down) {
         debugs(48, 7, "busy: " << opener << '|' << securer << '|' << shutting_down);
         return; // there will be another checkpoint when we are done opening/securing
     }
@@ -227,8 +224,9 @@ PeerPoolMgr::openNewConnection()
 
     const auto ctimeout = peer->connectTimeout();
     typedef CommCbMemFunT<PeerPoolMgr, CommConnectCbParams> Dialer;
-    opener = JobCallback(48, 5, Dialer, this, PeerPoolMgr::handleOpenedConnection);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, opener, ctimeout);
+    AsyncCall::Pointer callback = JobCallback(48, 5, Dialer, this, PeerPoolMgr::handleOpenedConnection);
+    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, callback, ctimeout);
+    opener.reset(callback, cs);
     AsyncJob::Start(cs);
 }
 

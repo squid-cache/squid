@@ -202,6 +202,8 @@ public:
 
     InstanceId<AsyncCall>::Value callbackId() const { return callback_->id.value; }
 
+    std::ostream &print(std::ostream &) const;
+
 private:
     AsyncCall::Pointer callback_;
     typename Job::Pointer job_;
@@ -241,6 +243,20 @@ JobCallbackPointer<Job>::cancel(const char *reason)
     callback_->cancel(reason);
     CallJobHere(93, 3, job_, AsyncJob, noteAbort);
     reset();
+}
+
+template<class Job>
+std::ostream &
+JobCallbackPointer<Job>::print(std::ostream &os) const
+{
+    return os << callback_;
+}
+
+template <class Job>
+inline
+std::ostream &operator <<(std::ostream &os, const JobCallbackPointer<Job> &cbPointer)
+{
+    return cbPointer.print(os);
 }
 
 #endif /* SQUID_ASYNCJOBCALLS_H */

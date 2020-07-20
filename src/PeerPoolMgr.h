@@ -10,8 +10,10 @@
 #define SQUID_PEERPOOLMGR_H
 
 #include "base/AsyncJob.h"
+#include "base/AsyncJobCalls.h"
+#include "comm/ConnOpener.h"
 #include "comm/forward.h"
-#include "security/forward.h"
+#include "security/BlindPeerConnector.h"
 
 class HttpRequest;
 class CachePeer;
@@ -63,8 +65,8 @@ protected:
 private:
     CachePeer *peer; ///< the owner of the pool we manage
     RefCount<HttpRequest> request; ///< fake HTTP request for conn opening code
-    AsyncCall::Pointer opener; ///< whether we are opening a connection
-    AsyncCall::Pointer securer; ///< whether we are securing a connection
+    JobCallbackPointer<Comm::ConnOpener> opener; ///< whether we are opening a connection
+    JobCallbackPointer<Security::BlindPeerConnector> securer; ///< whether we are securing a connection
     AsyncCall::Pointer closer; ///< monitors conn while we are securing it
     unsigned int addrUsed; ///< counter for cycling through peer addresses
 };
