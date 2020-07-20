@@ -195,8 +195,8 @@ public:
     void copyRead(Connection &from, IOCB *completion);
 
     /// continue to set up connection to a peer, going async for SSL peers
-    void connectToPeer(const Comm::ConnectionPointer &);
-    void secureConnectionToPeer(const Comm::ConnectionPointer &);
+    void connectToPeer(Comm::ConnectionPointer &);
+    void secureConnectionToPeer(Comm::ConnectionPointer &);
 
     /* PeerSelectionInitiator API */
     virtual void noteDestination(Comm::ConnectionPointer conn) override;
@@ -209,7 +209,7 @@ public:
     void noteConnection(HappyConnOpenerAnswer &);
 
     /// Start using an established connection
-    void connectDone(const Comm::ConnectionPointer &conn, const char *origin, const bool reused);
+    void connectDone(Comm::ConnectionPointer &conn, const char *origin, const bool reused);
 
     void notifyConnOpener();
 
@@ -248,11 +248,11 @@ private:
     void noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &);
 
     /// called after connection setup (including any encryption)
-    void connectedToPeer(const Comm::ConnectionPointer &);
-    void establishTunnelThruProxy(const Comm::ConnectionPointer &);
+    void connectedToPeer(Comm::ConnectionPointer &);
+    void establishTunnelThruProxy(Comm::ConnectionPointer &);
 
     template <typename StepStart>
-    void advanceDestination(const char *stepDescription, const Comm::ConnectionPointer &conn, const StepStart &startStep);
+    void advanceDestination(const char *stepDescription, Comm::ConnectionPointer &conn, const StepStart &startStep);
 
     /// \returns whether the request should be retried (nil) or the description why it should not
     const char *checkRetry();
@@ -1057,7 +1057,7 @@ TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
 }
 
 void
-TunnelStateData::connectDone(const Comm::ConnectionPointer &conn, const char *origin, const bool reused)
+TunnelStateData::connectDone(Comm::ConnectionPointer &conn, const char *origin, const bool reused)
 {
     Must(Comm::IsConnOpen(conn));
 
@@ -1140,7 +1140,7 @@ tunnelStart(ClientHttpRequest * http)
 }
 
 void
-TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
+TunnelStateData::connectToPeer(Comm::ConnectionPointer &conn)
 {
     if (const auto p = conn->getPeer()) {
         if (p->secure.encryptTransport)
@@ -1154,7 +1154,7 @@ TunnelStateData::connectToPeer(const Comm::ConnectionPointer &conn)
 
 /// encrypts an established TCP connection to peer
 void
-TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
+TunnelStateData::secureConnectionToPeer(Comm::ConnectionPointer &conn)
 {
     assert(!securityConnector.pending());
     AsyncCall::Pointer callback = asyncCall(5,4, "TunnelStateData::noteSecurityPeerConnectorAnswer",
@@ -1162,12 +1162,13 @@ TunnelStateData::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
     const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
     securityConnector.reset(callback, connector);
     AsyncJob::Start(connector); // will call our callback
+    conn = nullptr;
 }
 
 /// starts a preparation step for an established connection; retries on failures
 template <typename StepStart>
 void
-TunnelStateData::advanceDestination(const char *stepDescription, const Comm::ConnectionPointer &conn, const StepStart &startStep)
+TunnelStateData::advanceDestination(const char *stepDescription, Comm::ConnectionPointer &conn, const StepStart &startStep)
 {
     // TODO: Extract destination-specific handling from TunnelStateData so that
     // all the awkward, limited-scope advanceDestination() calls can be replaced
@@ -1178,8 +1179,10 @@ TunnelStateData::advanceDestination(const char *stepDescription, const Comm::Con
     } catch (...) {
         debugs (26, 2, "exception while trying to " << stepDescription << ": " << CurrentException);
         static const char *reason = "connection preparation exception";
-        cancelStep(reason);
-        closePendingConnection(conn, reason);
+        if (conn) // we still own the connection
+            closePendingConnection(conn, reason);
+        else
+            cancelStep(reason); // the connection ownership has been passed to another job
         if (!savedError)
             saveError(new ErrorState(ERR_CANNOT_FORWARD, Http::scInternalServerError, request.getRaw(), al));
         retryOrBail(stepDescription);
@@ -1222,7 +1225,7 @@ TunnelStateData::noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answ
 }
 
 void
-TunnelStateData::connectedToPeer(const Comm::ConnectionPointer &conn)
+TunnelStateData::connectedToPeer(Comm::ConnectionPointer &conn)
 {
     advanceDestination("establish tunnel through proxy", conn, [this,&conn] {
         establishTunnelThruProxy(conn);
@@ -1230,7 +1233,7 @@ TunnelStateData::connectedToPeer(const Comm::ConnectionPointer &conn)
 }
 
 void
-TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
+TunnelStateData::establishTunnelThruProxy(Comm::ConnectionPointer &conn)
 {
     assert(!tunnelEstablisher.pending());
 
@@ -1243,6 +1246,7 @@ TunnelStateData::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 #endif
     tunnelEstablisher.reset(callback, tunneler);
     AsyncJob::Start(tunneler);
+    conn = nullptr;
     // and wait for the tunnelEstablishmentDone() call
 }
 
@@ -1379,7 +1383,7 @@ TunnelStateData::usePinned()
     Must(request);
     const auto connManager = request->pinnedConnection();
     try {
-        const auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
+        auto serverConn = ConnStateData::BorrowPinnedConnection(request.getRaw(), al);
         debugs(26, 7, "pinned peer connection: " << serverConn);
 
         // Set HttpRequest pinned related flags for consistency even if
