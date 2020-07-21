@@ -732,8 +732,8 @@ void
 Ftp::Relay::dataChannelConnected(const CommConnectCbParams &io)
 {
     debugs(9, 3, status());
-    assert(opener.pending());
-    opener.reset();
+    assert(dataOpener.pending());
+    dataOpener.reset();
 
     if (io.flag != Comm::OK) {
         debugs(9, 2, "failed to connect FTP server data channel");

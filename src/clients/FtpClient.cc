@@ -184,8 +184,8 @@ Ftp::Client::Client(FwdState *fwdState):
 
 Ftp::Client::~Client()
 {
-    if (opener.pending())
-        opener.cancel("Ftp::Client destructed");
+    if (dataOpener.pending())
+        dataOpener.cancel("Ftp::Client destructed");
 
     data.close();
 
@@ -771,7 +771,7 @@ Ftp::Client::connectDataChannel()
     AsyncCall::Pointer callback = JobCallback(9, 3, Dialer, this, Ftp::Client::dataChannelConnected);
     Comm::ConnOpener *cs = new Comm::ConnOpener(conn, callback, Config.Timeout.connect);
     cs->setHost(data.host);
-    opener.reset(callback, cs);
+    dataOpener.reset(callback, cs);
     AsyncJob::Start(cs);
 }
 
