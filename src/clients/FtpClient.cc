@@ -169,6 +169,7 @@ Ftp::Client::Client(FwdState *fwdState):
      state(BEGIN),
      old_request(NULL),
      old_reply(NULL),
+     dataOpener(9),
      shortenReadTimeout(false)
 {
     ++statCounter.server.all.requests;

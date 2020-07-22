@@ -353,7 +353,10 @@ TunnelStateData::TunnelStateData(ClientHttpRequest *clientRequest) :
     destinations(new ResolvedPeers()),
     destinationsFound(false),
     retriable(true),
-    codeContext(CodeContext::Current())
+    codeContext(CodeContext::Current()),
+    connOpener(26),
+    securityConnector(26),
+    tunnelEstablisher(26)
 {
     debugs(26, 3, "TunnelStateData constructed this=" << this);
     client.readPendingFunc = &tunnelDelayedClientRead;

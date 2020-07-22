@@ -157,6 +157,7 @@ private:
     /// a connection opening attempt in progress (or falsy)
     class Attempt {
     public:
+        Attempt() : opener(17) {}
         explicit operator bool() const { return static_cast<bool>(path); }
 
         /// reacts to a natural attempt completion (successful or otherwise)

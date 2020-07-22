@@ -188,6 +188,9 @@ template <class Job>
 class JobCallbackPointer
 {
 public:
+    explicit JobCallbackPointer(int aDebugSection, int aDebugLevel = 5):
+        debugSection(aDebugSection), debugLevel(aDebugLevel) {}
+
     ~JobCallbackPointer();
 
     explicit operator bool() const { return bool(callback_); }
@@ -205,6 +208,8 @@ public:
     std::ostream &print(std::ostream &) const;
 
 private:
+    const int debugSection;
+    const int debugLevel;
     AsyncCall::Pointer callback_;
     typename Job::Pointer job_;
 };
@@ -241,7 +246,7 @@ JobCallbackPointer<Job>::cancel(const char *reason)
 {
     assert(callback_);
     callback_->cancel(reason);
-    CallJobHere(93, 3, job_, AsyncJob, noteAbort);
+    CallJobHere(debugSection, debugLevel, job_, AsyncJob, noteAbort);
     reset();
 }
 

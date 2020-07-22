@@ -40,7 +40,8 @@ Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerCon
     negotiationTimeout(timeout),
     startTime(squid_curtime),
     useCertValidator_(true),
-    certsDownloads(0)
+    certsDownloads(0),
+    downloader(83)
 {
     debugs(83, 5, serverConn);
 
