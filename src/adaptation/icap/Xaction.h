@@ -146,8 +146,6 @@ protected:
 
     const char *stopReason;
 
-    // active (pending) comm callbacks for the ICAP server connection
-    AsyncCall::Pointer connector;
     AsyncCall::Pointer reader;
     AsyncCall::Pointer writer;
     AsyncCall::Pointer closer;
@@ -162,7 +160,7 @@ protected:
 private:
     bool securerPending() const;
 
-    Comm::ConnOpener::Pointer cs;
+    JobCallbackPointer<Comm::ConnOpener> connector; ///< the connection opener job (to the ICAP server)
     JobCallbackPointer<Ssl::IcapPeerConnector> *securer; ///< the connection securing job
 };
 

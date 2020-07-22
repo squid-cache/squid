@@ -88,13 +88,11 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
     isRepeatable(true),
     ignoreLastWrite(false),
     stopReason(NULL),
-    connector(NULL),
     reader(NULL),
     writer(NULL),
     closer(NULL),
     alep(new AccessLogEntry),
     al(*alep),
-    cs(nullptr),
     securer(nullptr)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
@@ -179,8 +177,9 @@ Adaptation::Icap::Xaction::openConnection()
         dialer.params.conn = connection;
         dialer.params.flag = Comm::OK;
         // fake other parameters by copying from the existing connection
-        connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
-        ScheduleCallHere(connector);
+        AsyncCall::Pointer callback = asyncCall(93, 3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
+        connector.reset(callback, nullptr);
+        ScheduleCallHere(callback);
         return;
     }
 
@@ -211,8 +210,9 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
         dialer.params.conn = connection;
         dialer.params.flag = Comm::COMM_ERROR;
         // fake other parameters by copying from the existing connection
-        connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
-        ScheduleCallHere(connector);
+        AsyncCall::Pointer callback = asyncCall(93, 3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
+        connector.reset(callback, nullptr);
+        ScheduleCallHere(callback);
 #endif
         return;
     }
@@ -224,10 +224,11 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
 
     // TODO: service bypass status may differ from that of a transaction
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> ConnectDialer;
-    connector = JobCallback(93,3, ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
-    cs = new Comm::ConnOpener(connection, connector, TheConfig.connect_timeout(service().cfg().bypass));
+    AsyncCall::Pointer callback = JobCallback(93, 3, ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
+    auto *cs = new Comm::ConnOpener(connection, callback, TheConfig.connect_timeout(service().cfg().bypass));
     cs->setHost(s.cfg().host.termedBuf());
-    AsyncJob::Start(cs.get());
+    connector.reset(callback, cs);
+    AsyncJob::Start(cs);
 }
 
 /*
@@ -272,7 +273,6 @@ void Adaptation::Icap::Xaction::closeConnection()
 
         writer = NULL;
         reader = NULL;
-        connector = NULL;
         connection = NULL;
     }
 }
@@ -280,15 +280,13 @@ void Adaptation::Icap::Xaction::closeConnection()
 // connection with the ICAP service established
 void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 {
-    cs = NULL;
+    assert(connector.pending());
+    connector.reset();
 
     if (io.flag == Comm::TIMEOUT) {
         handleCommTimedout();
         return;
     }
-
-    Must(connector != NULL);
-    connector = NULL;
 
     if (io.flag != Comm::OK)
         dieOnConnectionFailure(); // throws
@@ -378,13 +376,12 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
            theService->cfg().methodStr() << " " <<
            theService->cfg().uri << status());
     reuseConnection = false;
-    const bool whileConnecting = connector != NULL;
-    if (whileConnecting) {
+    if (connector.pending()) {
         assert(!haveConnection());
         theService->noteConnectionFailed("timedout");
     } else
         closeConnection(); // so that late Comm callbacks do not disturb bypass
-    throw TexcHere(whileConnecting ?
+    throw TexcHere(connector.pending() ?
                    "timed out while connecting to the ICAP service" :
                    "timed out while talking to the ICAP service");
 }
@@ -422,7 +419,7 @@ void Adaptation::Icap::Xaction::callEnd()
 
 bool Adaptation::Icap::Xaction::doneAll() const
 {
-    return !connector && !securerPending() && !reader && !writer && Adaptation::Initiate::doneAll();
+    return !connector.pending() && !securerPending() && !reader && !writer && Adaptation::Initiate::doneAll();
 }
 
 void Adaptation::Icap::Xaction::updateTimeout()
@@ -565,7 +562,7 @@ bool Adaptation::Icap::Xaction::doneWriting() const
 bool Adaptation::Icap::Xaction::doneWithIo() const
 {
     return haveConnection() &&
-           !connector && !reader && !writer && // fast checks, some redundant
+           !connector.pending() && !reader && !writer && // fast checks, some redundant
            doneReading() && doneWriting();
 }
 
@@ -604,10 +601,8 @@ void Adaptation::Icap::Xaction::setOutcome(const Adaptation::Icap::XactOutcome &
 void Adaptation::Icap::Xaction::swanSong()
 {
     // kids should sing first and then call the parent method.
-    if (cs.valid()) {
-        debugs(93,6, HERE << id << " about to notify ConnOpener!");
-        CallJobHere(93, 3, cs, Comm::ConnOpener, noteAbort);
-        cs = NULL;
+    if (connector.pending()) {
+        connector.cancel("Icap::Xaction::swanSong");
         service().noteConnectionFailed("abort");
     }
 
