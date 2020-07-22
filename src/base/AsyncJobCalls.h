@@ -249,7 +249,12 @@ template<class Job>
 std::ostream &
 JobCallbackPointer<Job>::print(std::ostream &os) const
 {
-    return os << callback_;
+    os << callback_ << ", job: ";
+    if (job_.valid())
+        os << *job_;
+    else
+        os << '-';
+    return os;
 }
 
 template <class Job>

@@ -62,6 +62,8 @@ public:
     /// called when the job throws during an async call
     virtual void callException(const std::exception &e);
     void noteAbort() { mustStop("externally aborted"); }
+    /// writes the job text representation
+    std::ostream &print(std::ostream &os) const { return os << id; }
 
 protected:
     // external destruction prohibited to ensure swanSong() is called
@@ -72,6 +74,12 @@ protected:
     AsyncCall::Pointer inCall; ///< the asynchronous call being handled, if any
     const InstanceId<AsyncJob> id; ///< job identifier
 };
+
+inline
+std::ostream &operator <<(std::ostream &os, const AsyncJob &job)
+{
+    return job.print(os);
+}
 
 #endif /* SQUID_ASYNC_JOB_H */
 
