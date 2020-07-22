@@ -86,7 +86,7 @@ PeerPoolMgr::doneAll() const
 void
 PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
 {
-    assert(opener.pending());
+    assert(opener);
     opener.reset();
 
     if (!validPeer()) {
@@ -142,7 +142,7 @@ PeerPoolMgr::pushNewConnection(const Comm::ConnectionPointer &conn)
 void
 PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
-    assert(securer.pending());
+    assert(securer);
     securer.reset();
 
     if (closer != NULL) {
@@ -175,7 +175,7 @@ void
 PeerPoolMgr::handleSecureClosure(const CommCloseCbParams &params)
 {
     Must(closer != NULL);
-    Must(securer.pending());
+    Must(securer);
     securer.cancel("conn closed by a 3rd party");
     closer = NULL;
     // allow the closing connection to fully close before we check again
@@ -186,7 +186,7 @@ void
 PeerPoolMgr::openNewConnection()
 {
     // KISS: Do nothing else when we are already doing something.
-    if (opener.pending() || securer.pending() || shutting_down) {
+    if (opener || securer || shutting_down) {
         debugs(48, 7, "busy: " << opener << '|' << securer << '|' << shutting_down);
         return; // there will be another checkpoint when we are done opening/securing
     }

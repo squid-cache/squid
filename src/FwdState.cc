@@ -321,11 +321,11 @@ FwdState::~FwdState()
 void
 FwdState::cancelStep(const char *reason)
 {
-    if (connOpener.pending())
+    if (connOpener)
         connOpener.cancel(reason);
-    else if (securityConnector.pending())
+    else if (securityConnector)
         securityConnector.cancel(reason);
-    else if (tunnelEstablisher.pending())
+    else if (tunnelEstablisher)
         tunnelEstablisher.cancel(reason);
 }
 
@@ -574,7 +574,7 @@ FwdState::complete()
 bool
 FwdState::usingDestination() const
 {
-    return securityConnector.pending() || tunnelEstablisher.pending() || Comm::IsConnOpen(serverConn);
+    return securityConnector || tunnelEstablisher || Comm::IsConnOpen(serverConn);
 }
 
 void
@@ -597,11 +597,11 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
     if (usingDestination()) {
         // We are already using a previously opened connection, so we cannot be
         // waiting for connOpener. We still receive destinations for backup.
-        Must(!connOpener.pending());
+        Must(!connOpener);
         return;
     }
 
-    if (connOpener.pending()) {
+    if (connOpener) {
         notifyConnOpener();
         return; // and continue to wait for FwdState::noteConnection() callback
     }
@@ -637,11 +637,11 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
     if (usingDestination()) {
         // We are already using a previously opened connection, so we cannot be
         // waiting for connOpener. We were receiving destinations for backup.
-        Must(!connOpener.pending());
+        Must(!connOpener);
         return;
     }
 
-    Must(connOpener.pending()); // or we would be stuck with nothing to do or wait for
+    Must(connOpener); // or we would be stuck with nothing to do or wait for
     notifyConnOpener();
     // and continue to wait for FwdState::noteConnection() callback
 }
@@ -886,7 +886,7 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 void
 FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    assert(!tunnelEstablisher.pending());
+    assert(!tunnelEstablisher);
 
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::tunnelEstablishmentDone",
@@ -980,7 +980,7 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
 void
 FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
-    assert(!securityConnector.pending());
+    assert(!securityConnector);
     HttpRequest::Pointer requestPointer = request;
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::ConnectedToPeer",
@@ -1088,7 +1088,7 @@ FwdState::connectStart()
     Must(!request->pinnedConnection());
 
     assert(!destinations->empty());
-    assert(!connOpener.pending());
+    assert(!connOpener);
     assert(!usingDestination());
 
     // Ditch error page if it was created before.

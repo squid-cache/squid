@@ -184,7 +184,7 @@ Ftp::Client::Client(FwdState *fwdState):
 
 Ftp::Client::~Client()
 {
-    if (dataOpener.pending())
+    if (dataOpener)
         dataOpener.cancel("Ftp::Client destructed");
 
     data.close();

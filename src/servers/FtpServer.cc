@@ -1699,7 +1699,7 @@ Ftp::Server::checkDataConnPost() const
 void
 Ftp::Server::connectedForData(const CommConnectCbParams &params)
 {
-    assert(connector.pending());
+    assert(connector);
     connector.reset();
 
     if (params.flag != Comm::OK) {

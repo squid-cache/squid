@@ -422,13 +422,13 @@ HappyConnOpener::status() const
     if (prime) {
         if (prime.path && prime.path->isOpen())
             buf.appendf(" prime FD %d", prime.path->fd);
-        else if (prime.opener.pending())
+        else if (prime.opener)
             buf.appendf(" prime call%ud", prime.opener.callbackId());
     }
     if (spare) {
         if (spare.path && spare.path->isOpen())
             buf.appendf(" spare FD %d", spare.path->fd);
-        else if (spare.opener.pending())
+        else if (spare.opener)
             buf.appendf(" spare call%ud", spare.opener.callbackId());
     }
     if (n_tries)
@@ -516,7 +516,7 @@ void
 HappyConnOpener::startConnecting(Attempt &attempt, PeerConnectionPointer &dest)
 {
     Must(!attempt.path);
-    Must(!attempt.opener.pending());
+    Must(!attempt.opener);
     Must(dest);
 
     const auto bumpThroughPeer = cause->flags.sslBumped && dest->getPeer();
@@ -883,7 +883,7 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
 void
 HappyConnOpener::Attempt::cancel(const char *reason)
 {
-    if (opener.pending())
+    if (opener)
         opener.cancel(reason);
     clear();
 }

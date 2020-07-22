@@ -190,7 +190,7 @@ class JobCallbackPointer
 public:
     ~JobCallbackPointer();
 
-    bool pending() const { return bool(callback_); }
+    explicit operator bool() const { return bool(callback_); }
 
     void reset();
 
@@ -212,7 +212,7 @@ private:
 template<class Job>
 JobCallbackPointer<Job>::~JobCallbackPointer()
 {
-    if (pending())
+    if (callback_)
         cancel("~JobCallbackPointer");
 }
 
@@ -239,7 +239,7 @@ template<class Job>
 void
 JobCallbackPointer<Job>::cancel(const char *reason)
 {
-    assert(pending());
+    assert(callback_);
     callback_->cancel(reason);
     CallJobHere(93, 3, job_, AsyncJob, noteAbort);
     reset();

@@ -280,7 +280,7 @@ void Adaptation::Icap::Xaction::closeConnection()
 // connection with the ICAP service established
 void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 {
-    assert(connector.pending());
+    assert(connector);
     connector.reset();
 
     if (io.flag == Comm::TIMEOUT) {
@@ -376,12 +376,12 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
            theService->cfg().methodStr() << " " <<
            theService->cfg().uri << status());
     reuseConnection = false;
-    if (connector.pending()) {
+    if (connector) {
         assert(!haveConnection());
         theService->noteConnectionFailed("timedout");
     } else
         closeConnection(); // so that late Comm callbacks do not disturb bypass
-    throw TexcHere(connector.pending() ?
+    throw TexcHere(connector ?
                    "timed out while connecting to the ICAP service" :
                    "timed out while talking to the ICAP service");
 }
@@ -419,7 +419,7 @@ void Adaptation::Icap::Xaction::callEnd()
 
 bool Adaptation::Icap::Xaction::doneAll() const
 {
-    return !connector.pending() && !securerPending() && !reader && !writer && Adaptation::Initiate::doneAll();
+    return !connector && !securerPending() && !reader && !writer && Adaptation::Initiate::doneAll();
 }
 
 void Adaptation::Icap::Xaction::updateTimeout()
@@ -562,7 +562,7 @@ bool Adaptation::Icap::Xaction::doneWriting() const
 bool Adaptation::Icap::Xaction::doneWithIo() const
 {
     return haveConnection() &&
-           !connector.pending() && !reader && !writer && // fast checks, some redundant
+           !connector && !reader && !writer && // fast checks, some redundant
            doneReading() && doneWriting();
 }
 
@@ -601,7 +601,7 @@ void Adaptation::Icap::Xaction::setOutcome(const Adaptation::Icap::XactOutcome &
 void Adaptation::Icap::Xaction::swanSong()
 {
     // kids should sing first and then call the parent method.
-    if (connector.pending()) {
+    if (connector) {
         connector.cancel("Icap::Xaction::swanSong");
         service().noteConnectionFailed("abort");
     }
@@ -769,5 +769,5 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
 bool
 Adaptation::Icap::Xaction::securerPending() const
 {
-    return securer && securer->pending();
+    return securer && *securer;
 }
