@@ -324,12 +324,9 @@ FwdState::~FwdState()
 void
 FwdState::cancelStep(const char *reason)
 {
-    if (connOpener)
-        connOpener.cancel(reason);
-    else if (securityConnector)
-        securityConnector.cancel(reason);
-    else if (tunnelEstablisher)
-        tunnelEstablisher.cancel(reason);
+    connOpener.cancel(reason);
+    securityConnector.cancel(reason);
+    tunnelEstablisher.cancel(reason);
 }
 
 /**

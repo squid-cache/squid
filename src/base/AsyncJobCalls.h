@@ -250,10 +250,11 @@ template<class Job>
 void
 JobCallbackPointer<Job>::cancel(const char *reason)
 {
-    assert(callback_);
-    callback_->cancel(reason);
-    CallJobHere(debugSection, debugLevel, job_, AsyncJob, noteAbort);
-    reset();
+    if (callback_) {
+        callback_->cancel(reason);
+        CallJobHere(debugSection, debugLevel, job_, AsyncJob, noteAbort);
+        reset();
+    }
 }
 
 template<class Job>

@@ -390,7 +390,7 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
 // unexpected connection close while talking to the ICAP service
 void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
 {
-    if (securerPending())
+    if (securer)
         securer->cancel("Connection closed before SSL negotiation finished");
     closer = NULL;
     handleCommClosed();

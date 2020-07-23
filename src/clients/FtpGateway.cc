@@ -486,9 +486,8 @@ Ftp::Gateway::timeout(const CommTimeoutCbParams &io)
         flags.pasv_supported = false;
         debugs(9, DBG_IMPORTANT, "FTP Gateway timeout in SENT_PASV state");
 
-        // cancel the data connection setup.
-        if (dataOpener)
-            dataOpener.cancel("timeout");
+        // cancel the data connection setup, if any
+        dataOpener.cancel("timeout");
 
         data.close();
     }

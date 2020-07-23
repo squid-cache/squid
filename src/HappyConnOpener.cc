@@ -883,8 +883,7 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
 void
 HappyConnOpener::Attempt::cancel(const char *reason)
 {
-    if (opener)
-        opener.cancel(reason);
+    opener.cancel(reason);
     clear();
 }
 
