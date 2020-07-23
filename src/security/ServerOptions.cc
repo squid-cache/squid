@@ -364,6 +364,10 @@ Security::ServerOptions::loadDhParams()
         return;
     }
 
+#if OPENSSL_VERSION_MAJOR < 3
+    // DH_check() removed in OpenSSL 3.0.
+    // TODO: use the EVP API instead, which also works in OpenSSL 1.1.
+    // But it is not yet clear exactly how that API works for DH.
     int codes;
     if (DH_check(dhp, &codes) == 0) {
         if (codes) {
@@ -372,6 +376,7 @@ Security::ServerOptions::loadDhParams()
             dhp = nullptr;
         }
     }
+#endif
 
     parsedDhParams.resetWithoutLocking(dhp);
 #endif
