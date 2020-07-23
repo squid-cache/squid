@@ -1376,6 +1376,7 @@ TunnelStateData::startConnecting()
     cs->allowPersistent(false);
     destinations->notificationPending = true; // start() is async
     connOpener.reset(callback, cs);
+    connOpener.registerNotifier("HappyConnOpener::noteCandidatesChange", &HappyConnOpener::noteCandidatesChange);
     AsyncJob::Start(cs);
 }
 
@@ -1433,7 +1434,7 @@ TunnelStateData::notifyConnOpener()
         debugs(17, 7, "reusing pending notification");
     } else {
         destinations->notificationPending = true;
-        CallJobHere(17, 5, connOpener.job(), HappyConnOpener, noteCandidatesChange);
+        connOpener.notify();
     }
 }
 

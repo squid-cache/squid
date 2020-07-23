@@ -658,7 +658,7 @@ FwdState::notifyConnOpener()
     } else {
         debugs(17, 7, "notifying about " << *destinations);
         destinations->notificationPending = true;
-        CallJobHere(17, 5, connOpener.job(), HappyConnOpener, noteCandidatesChange);
+        connOpener.notify();
     }
 }
 
@@ -1118,6 +1118,7 @@ FwdState::connectStart()
     cs->allowPersistent(pconnRace != raceHappened);
     destinations->notificationPending = true; // start() is async
     connOpener.reset(callback, cs);
+    connOpener.registerNotifier("HappyConnOpener::noteCandidatesChange", &HappyConnOpener::noteCandidatesChange);
     AsyncJob::Start(cs);
 }
 

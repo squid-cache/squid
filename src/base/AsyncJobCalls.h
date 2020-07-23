@@ -188,8 +188,10 @@ template <class Job>
 class JobCallbackPointer
 {
 public:
+    typedef NullaryMemFunT<Job> Notifier;
+
     explicit JobCallbackPointer(int aDebugSection, int aDebugLevel = 5):
-        debugSection(aDebugSection), debugLevel(aDebugLevel) {}
+        debugSection(aDebugSection), debugLevel(aDebugLevel), notifierName_(nullptr) {}
 
     ~JobCallbackPointer();
 
@@ -199,9 +201,11 @@ public:
 
     void reset(const AsyncCall::Pointer, const typename Job::Pointer);
 
-    void cancel(const char *reason);
+    void registerNotifier(const char *name, const typename Notifier::Method method);
 
-    Job *job() const { return job_.get(); }
+    void notify();
+
+    void cancel(const char *reason);
 
     InstanceId<AsyncCall>::Value callbackId() const { return callback_->id.value; }
 
@@ -212,6 +216,8 @@ private:
     const int debugLevel;
     AsyncCall::Pointer callback_;
     typename Job::Pointer job_;
+    const char *notifierName_;
+    typename Notifier::Method notifierMethod_;
 };
 
 template<class Job>
@@ -260,6 +266,23 @@ JobCallbackPointer<Job>::print(std::ostream &os) const
     else
         os << '-';
     return os;
+}
+
+template<class Job>
+void
+JobCallbackPointer<Job>::registerNotifier(const char *name, const typename Notifier::Method method)
+{
+    assert(!notifierName_);
+    notifierName_ = name;
+    notifierMethod_ = method;
+}
+
+template<class Job>
+void
+JobCallbackPointer<Job>::notify()
+{
+    assert(notifierName_);
+    CallJob(debugSection, debugLevel, __FILE__, __LINE__, notifierName_, Notifier(job_, notifierMethod_));
 }
 
 template <class Job>
