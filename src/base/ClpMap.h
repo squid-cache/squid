@@ -276,12 +276,9 @@ ClpMap<Key, Value, MemoryUsedBy>::trim(const uint64_t wantSpace)
 template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
 ClpMap<Key, Value, MemoryUsedBy>::Entry::Entry(const Key &aKey, const Value &v, const Ttl ttl) :
         key(aKey),
-        value(v)
+        value(v),
+        expires(SafeSum(squid_curtime, ttl).value_or(std::numeric_limits<time_t>::max()))
 {
-    if (ttl < (std::numeric_limits<Ttl>::max() - squid_curtime))
-        expires = squid_curtime+ttl;
-    else
-        expires = std::numeric_limits<Ttl>::max();
 }
 
 #endif /* SQUID__SRC_BASE_CLPMAP_H */

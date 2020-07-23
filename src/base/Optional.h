@@ -37,7 +37,18 @@ public:
     constexpr explicit operator bool() const noexcept { return hasValue_; }
     constexpr bool has_value() const noexcept { return hasValue_; }
 
-    const Value &value() const { if (!hasValue_) throw BadOptionalAccess(); return value_; }
+    const Value &value() const &
+    {
+        if (!hasValue_)
+            throw BadOptionalAccess();
+        return value_;
+    }
+
+    template <class Other>
+    constexpr Value value_or(Other &&defaultValue) const &
+    {
+        return hasValue_ ? value_ : static_cast<Value>(std::forward<Other>(defaultValue));
+    }
 
 private:
     Value value_; // stored value; inaccessible/uninitialized unless hasValue_
