@@ -566,29 +566,22 @@ Rock::Rebuild::swanSong()
 void
 Rock::Rebuild::callException(const std::exception& e)
 {
-    debugs(47, 5, sd->index << " slot " << loadingPos << " at " <<  dbOffset <<
-           " <= " << dbSize << " " << std::setw(4) << std::setprecision(2) <<
-           100.0*loadingPos/dbSlotLimit << "% complete");
-
-    abort("rock rebuilding exception");
+    failure("rock rebuilding exception");
 }
 
 void
 Rock::Rebuild::failure(const char *msg, int errNo)
 {
     debugs(47,5, sd->index << " slot " << loadingPos << " at " <<
-           dbOffset << " <= " << dbSize);
+           dbOffset << " <= " << dbSize << " " << std::setw(4) << std::setprecision(2) <<
+           100.0*loadingPos/dbSlotLimit << "% complete");
 
-    if (errNo)
+    if (errNo) {
         debugs(47, DBG_CRITICAL, "ERROR: Rock cache_dir rebuild failure: " << xstrerr(errNo));
-    debugs(47, DBG_CRITICAL, "Do you need to run 'squid -z' to initialize storage?");
+        if (errNo == ENOENT)
+            debugs(47, DBG_CRITICAL, "Do you need to run 'squid -z' to initialize storage?");
+    }
 
-    abort(msg);
-}
-
-void
-Rock::Rebuild::abort(const char *msg)
-{
     assert(sd);
     fatalf("Rock cache_dir[%d] rebuild of %s failed: %s.",
            sd->index, sd->filePath, msg);
