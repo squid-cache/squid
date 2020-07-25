@@ -28,16 +28,16 @@ double doubleAverage(const double, const double, int, const int);
 
 } // namespace Math
 
-// If SafeSum() performance becomes important, consider using GCC and clang
+// If Sum() performance becomes important, consider using GCC and clang
 // built-ins like __builtin_add_overflow() instead of manual overflow checks.
 
 /// std::enable_if_t replacement until C++14
-/// simplifies SafeSum() declarations below
+/// simplifies Sum() declarations below
 template <bool B, class T = void>
 using EnableIfType = typename std::enable_if<B,T>::type;
 
 /// detects a pair of unsigned types
-/// reduces code duplication in SafeSum() declarations below
+/// reduces code duplication in Sum() declarations below
 template <typename T, typename U>
 using AllUnsigned = typename std::conditional<
     std::is_unsigned<T>::value && std::is_unsigned<U>::value,
@@ -48,15 +48,15 @@ using AllUnsigned = typename std::conditional<
 /// \returns a non-overflowing sum of the two unsigned arguments (or nothing)
 template <typename T, typename U, EnableIfType<AllUnsigned<T,U>::value, int> = 0>
 Optional<T>
-SafeSum(const T a, const U b) {
+Sum(const T a, const U b) {
     // Instead of computing the largest type dynamically, we simply go by T and
-    // reject cases like SafeSum(0, ULLONG_MAX) that would overflow on return.
+    // reject cases like Sum(0, ULLONG_MAX) that would overflow on return.
     // TODO: Consider using std::common_type<T, U> in the return type instead.
-    static_assert(sizeof(T) >= sizeof(U), "SafeSum() return type can fit its (unsigned) result");
+    static_assert(sizeof(T) >= sizeof(U), "Sum() return type can fit its (unsigned) result");
 
     // this optimized implementation relies on unsigned overflows
-    static_assert(std::is_unsigned<T>::value, "the first SafeSum(a,b) argument is unsigned");
-    static_assert(std::is_unsigned<U>::value, "the second SafeSum(a,b) argument is unsigned");
+    static_assert(std::is_unsigned<T>::value, "the first Sum(a,b) argument is unsigned");
+    static_assert(std::is_unsigned<U>::value, "the second Sum(a,b) argument is unsigned");
     const auto sum = a + b;
     // when a+b overflows, the result becomes smaller than any operand
     return (sum < a) ? Optional<T>() : Optional<T>(sum);
@@ -65,10 +65,10 @@ SafeSum(const T a, const U b) {
 /// \returns a non-overflowing sum of the two signed arguments (or nothing)
 template <typename T, typename U, EnableIfType<!AllUnsigned<T,U>::value, int> = 0>
 Optional<T> constexpr
-SafeSum(const T a, const U b) {
+Sum(const T a, const U b) {
     // Instead of computing the largest type dynamically, we simply go by T and
-    // reject cases like SafeSum(0, LLONG_MAX) that would overflow on return.
-    static_assert(sizeof(T) >= sizeof(U), "SafeSum() return type can fit its (signed) result");
+    // reject cases like Sum(0, LLONG_MAX) that would overflow on return.
+    static_assert(sizeof(T) >= sizeof(U), "Sum() return type can fit its (signed) result");
 
     // tests below avoid undefined behavior of signed under/overflows
     return b >= 0 ?
@@ -79,9 +79,9 @@ SafeSum(const T a, const U b) {
 /// \returns a non-overflowing sum of the arguments (or nothing)
 template <typename T, typename... Args>
 Optional<T>
-SafeSum(const T first, Args... args) {
-    if (const auto others = SafeSum(args...)) {
-        return SafeSum(first, others.value());
+Sum(const T first, Args... args) {
+    if (const auto others = Sum(args...)) {
+        return Sum(first, others.value());
     } else {
         return Optional<T>();
     }
