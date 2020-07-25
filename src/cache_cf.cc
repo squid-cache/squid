@@ -515,7 +515,8 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
         const char* append = tmp_line_len ? skip_ws(config_input_line) : config_input_line;
 
         size_t append_len = strlen(append);
-
+        if(tmp_line_len+append_len >= std::numeric_limits<int>::max())
+            fatalf("Long line in config file");
         tmp_line = (char*)xrealloc(tmp_line, tmp_line_len + append_len + 1);
 
         strcpy(tmp_line + tmp_line_len, append);
