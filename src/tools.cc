@@ -972,11 +972,11 @@ parseEtcHosts(void)
             debugs(1, 5, "etc_hosts: got hostname '" << lt << "'");
 
             /* For IPV6 addresses also check for a colon */
-            if (Config.appendDomain && !strchr(lt, '.') && !strchr(lt, ':')) {
+            if (Config.appendDomain && strlen(Config.appendDomain)<sizeof(buf2)-2 && !strchr(lt, '.') && !strchr(lt, ':')) {
                 /* I know it's ugly, but it's only at reconfig */
-                strncpy(buf2, lt, sizeof(buf2)-1);
-                strncat(buf2, Config.appendDomain, sizeof(buf2) - strlen(lt) - 1);
-                buf2[sizeof(buf2)-1] = '\0';
+                memset(buf2,0,sizeof(buf2));
+                strncpy(buf2, lt, sizeof(buf2)-strlen(Config.appendDomain)-2);
+                strncat(buf2, Config.appendDomain,  sizeof(buf2) - strlen(buf2) );
                 host = buf2;
             } else {
                 host = lt;
