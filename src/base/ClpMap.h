@@ -9,9 +9,9 @@
 #ifndef SQUID__SRC_BASE_CLPMAP_H
 #define SQUID__SRC_BASE_CLPMAP_H
 
-#include "base/Math.h"
 #include "base/Optional.h"
 #include "mem/PoolingAllocator.h"
+#include "SquidMath.h"
 #include "SquidTime.h"
 
 #include <functional>
