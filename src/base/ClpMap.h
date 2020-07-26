@@ -230,6 +230,7 @@ ClpMap<Key, Value, MemoryUsedBy>::add(const Key &key, const Value &v, const Ttl 
 
     entries_.begin()->memCounted = wantSpace;
     memUsed_ += wantSpace;
+    assert(memUsed_ >= wantSpace); // no overflows
     return true;
 }
 
