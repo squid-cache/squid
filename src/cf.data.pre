@@ -5685,7 +5685,9 @@ DEFAULT: none
 DOC_START
 	Specify the location of the executable URL rewriter to use.
 	Since they can perform almost any function there isn't one included.
-	URL rewrites occur after acl evaluations.
+	URL rewrites occur after http_access acl evaluation.  Please see 
+	https://wiki.squid-cache.org/ProgrammingGuide/Architecture#Transaction_Processing 
+	for further reference.
 
 	For each requested URL, the rewriter will receive on line with the format
 
