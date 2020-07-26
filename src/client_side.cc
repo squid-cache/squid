@@ -2802,7 +2802,7 @@ ConnStateData::getTlsContextFromCache(const SBuf &cacheKey, const Ssl::Certifica
 {
     debugs(33, 5, "Finding SSL certificate for " << cacheKey << " in cache");
     Ssl::LocalContextStorage * ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
-    if (Security::ContextPointer *ctx = ssl_ctx_cache ? ssl_ctx_cache->get(cacheKey) : nullptr) {
+    if (const auto ctx = ssl_ctx_cache ? ssl_ctx_cache->get(cacheKey) : nullptr) {
         if (Ssl::verifySslCertificate(*ctx, certProperties)) {
             debugs(33, 5, "Cached SSL certificate for " << certProperties.commonName << " is valid");
             return *ctx;
@@ -2819,7 +2819,7 @@ void
 ConnStateData::storeTlsContextToCache(const SBuf &cacheKey, Security::ContextPointer &ctx)
 {
     Ssl::LocalContextStorage *ssl_ctx_cache = Ssl::TheGlobalContextStorage.getLocalStorage(port->s);
-    if (!ssl_ctx_cache || !ssl_ctx_cache->add(cacheKey, new Security::ContextPointer(ctx))) {
+    if (!ssl_ctx_cache || !ssl_ctx_cache->add(cacheKey, ctx)) {
         // If it is not in storage delete after using. Else storage deleted it.
         fd_table[clientConnection->fd].dynamicTlsContext = ctx;
     }

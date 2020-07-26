@@ -869,7 +869,7 @@ Ssl::configureSSLUsingPkeyAndCertFromMemory(SSL *ssl, const char *data, AnyP::Po
 }
 
 bool
-Ssl::verifySslCertificate(Security::ContextPointer &ctx, CertificateProperties const &properties)
+Ssl::verifySslCertificate(const Security::ContextPointer &ctx, CertificateProperties const &properties)
 {
 #if HAVE_SSL_CTX_GET0_CERTIFICATE
     X509 * cert = SSL_CTX_get0_certificate(ctx.get());
