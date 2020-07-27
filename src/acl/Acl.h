@@ -73,7 +73,6 @@ public:
     virtual bool empty() const = 0;
     virtual bool valid() const;
 
-    int cacheMatchAcl(dlink_list * cache, ACLChecklist *);
     virtual int matchForCache(ACLChecklist *checklist);
 
     virtual void prepareForUse() {}
