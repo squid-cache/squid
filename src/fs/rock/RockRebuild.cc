@@ -17,6 +17,8 @@
 #include "globals.h"
 #include "ipc/StoreMap.h"
 #include "md5.h"
+#include "sbuf/Stream.h"
+#include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "store_rebuild.h"
@@ -575,19 +577,21 @@ Rock::Rebuild::callException(const std::exception &e)
 void
 Rock::Rebuild::failure(const char *msg, int errNo)
 {
+    assert(sd);
     debugs(47,5, sd->index << " slot " << loadingPos << " at " <<
-           dbOffset << " <= " << dbSize << " " << std::setw(4) << std::setprecision(2) <<
-           100.0*loadingPos/dbSlotLimit << "% complete");
+           dbOffset << " <= " << dbSize);
+
+    auto error = ToSBuf("Cannot rebuild rock cache_dir index for ", sd->filePath,
+        Debug::Extra, "problem: ", msg,
+        Debug::Extra, "scan progress: ", Math::int64Percent(loadingPos, dbSlotLimit), '%');
 
     if (errNo) {
-        debugs(47, DBG_CRITICAL, "ERROR: Rock cache_dir rebuild failure: " << xstrerr(errNo));
+        error.append(ToSBuf(Debug::Extra, "I/O error: ", xstrerr(errNo)));
         if (errNo == ENOENT)
-            debugs(47, DBG_CRITICAL, "Do you need to run 'squid -z' to initialize storage?");
+            error.append(ToSBuf(Debug::Extra, "hint: Do you need to run 'squid -z' to initialize cache_dir(s)?"));
     }
 
-    assert(sd);
-    fatalf("Rock cache_dir[%d] rebuild of %s failed: %s.",
-           sd->index, sd->filePath, msg);
+    fatal(error.c_str());
 }
 
 /// adds slot to the free slot index
