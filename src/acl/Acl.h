@@ -73,8 +73,6 @@ public:
     virtual bool empty() const = 0;
     virtual bool valid() const;
 
-    virtual int matchForCache(ACLChecklist *checklist);
-
     virtual void prepareForUse() {}
 
     SBufList dumpOptions(); ///< \returns approximate options configuration
