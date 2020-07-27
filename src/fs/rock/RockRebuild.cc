@@ -563,10 +563,13 @@ Rock::Rebuild::swanSong()
     storeRebuildComplete(&counts);
 }
 
+// TODO: After PR #691, revise callException() and failure() to supply errno
+// detail via SysErrorDetail and exception detail via ExceptionErrorDetail.
 void
-Rock::Rebuild::callException(const std::exception& e)
+Rock::Rebuild::callException(const std::exception &e)
 {
-    failure("rock rebuilding exception");
+    failure(e.what()); // XXX: This does not detail the exception enough
+    // fatal failure() substitutes default AsyncJob::callException(e) handling
 }
 
 void
