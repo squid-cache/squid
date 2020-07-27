@@ -31,8 +31,9 @@ class Rebuild: public AsyncJob
 public:
     Rebuild(SwapDir *dir);
     virtual ~Rebuild() override;
+
     /* AsyncJob API */
-    virtual void callException(const std::exception &e) override;
+    virtual void callException(const std::exception &) override;
 
 protected:
     /* AsyncJob API */
