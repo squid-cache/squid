@@ -483,6 +483,15 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
 
     } while (cbdataReferenceValid(fetch) && prevstate != fetch->state && fetch->bufofs > 0);
 
+    // Check for EOF here, thus giving the parser one extra run. We could avoid this overhead by
+    // checking at the beginning of this function. However, in this case, we would have to require
+    // that the parser does not regard EOF as a special condition (it is true now but may change
+    // in the future).
+    if (!receivedData.length) { // EOF
+        peerDigestFetchAbort(fetch, fetch->buf, "premature end of digest reply");
+        return;
+    }
+
     /* Update the copy offset */
     fetch->offset += receivedData.length;
 
