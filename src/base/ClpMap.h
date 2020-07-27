@@ -69,6 +69,9 @@ public:
     /// Remove the corresponding entry (if any)
     void del(const Key &);
 
+    /// Remove all entries in this cache
+    void clear() noexcept;
+
     /// Reset the memory capacity for this map, purging if needed
     void setMemLimit(uint64_t newLimit);
 
@@ -258,6 +261,15 @@ ClpMap<Key, Value, MemoryUsedBy>::del(const Key &key)
     const auto i = find(key);
     if (i != index_.end())
         erase(i);
+}
+
+template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
+void
+ClpMap<Key, Value, MemoryUsedBy>::clear() noexcept
+{
+    index_.clear();
+    entries_.clear();
+    memUsed_ = 0;
 }
 
 /// purges entries to make free memory large enough to fit wantSpace bytes
