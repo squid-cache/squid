@@ -587,6 +587,8 @@ Rock::Rebuild::failure(const char *msg, int errNo)
 
     if (errNo) {
         error.append(ToSBuf(Debug::Extra, "I/O error: ", xstrerr(errNo)));
+        // XXX: squid -z is only useful for ENOENT, but ENOENT is detected in
+        // SwapDir and prevents our Rebuild job from starting.
         if (errNo == ENOENT)
             error.append(ToSBuf(Debug::Extra, "hint: Do you need to run 'squid -z' to initialize cache_dir(s)?"));
     }
