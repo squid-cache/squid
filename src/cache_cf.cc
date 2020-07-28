@@ -431,7 +431,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     const int orig_config_lineno = config_lineno;
     char *token = NULL;
     char *tmp_line = NULL;
-    int tmp_line_len = 0;
+    size_t tmp_line_len = 0;
     int err_count = 0;
     int is_pipe = 0;
 
@@ -515,10 +515,10 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
         const char* append = tmp_line_len ? skip_ws(config_input_line) : config_input_line;
 
         size_t append_len = strlen(append);
-        if(tmp_line_len+append_len >= std::numeric_limits<int>::max())
-            fatalf("Long line in config file");
-        tmp_line = (char*)xrealloc(tmp_line, tmp_line_len + append_len + 1);
-
+        if (const auto combinedSize = Sum(tmp_line_len, append_len, 1U))
+            tmp_line = static_cast<char*>(xrealloc(tmp_line, combinedSize.value()));
+        else
+            throw TextException("Exceedingly long line continuation", Here());
         strcpy(tmp_line + tmp_line_len, append);
 
         tmp_line_len += append_len;
