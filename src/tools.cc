@@ -970,8 +970,8 @@ parseEtcHosts(void)
             *nt = '\0';
             debugs(1, 5, "etc_hosts: got hostname '" << lt << "'");
 
-            (void)urlAppendDomain(lt);
-            host = lt;
+            if(urlAppendDomain(lt))
+                host = lt;
             if (ipcacheAddEntryFromHosts(host, addr) != 0) {
                 /* invalid address, continuing is useless */
                 hosts.clear();
