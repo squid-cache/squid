@@ -1464,6 +1464,20 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
         }
     }
 
+    /* RFC 7230 section 3.2:
+     *
+     *  header-field   = field-name ":" OWS field-value OWS
+     *  field-name     = token
+     *  token          = 1*TCHAR
+     */
+    for (const char *pos = field_start; pos < name_end; ++pos) {
+        if (!CharacterSet::TCHAR[*pos]) {
+            debugs(55, 2, "ignoring header with invalid characters found in field-name (" <<
+                   Raw("field-name", field_start, min(name_len,100)) << "...)");
+            return nullptr;
+        }
+    }
+
     /* now we know we can parse it */
 
     debugs(55, 9, "parsing HttpHeaderEntry: near '" <<  getStringPrefix(field_start, field_end-field_start) << "'");
