@@ -1456,8 +1456,8 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
      */
     for (const char *pos = field_start; pos < name_end; ++pos) {
         if (!CharacterSet::TCHAR[*pos]) {
-            debugs(55, 2, "ignoring header with invalid characters found in field-name (" <<
-                   Raw("field-name", field_start, min(name_len,100)) << "...)");
+            debugs(55, 2, "ignoring header with invalid characters found in " <<
+                   Raw("field-name", field_start, min(name_len,100)) << "...");
             return nullptr;
         }
     }
@@ -1755,4 +1755,3 @@ HttpHeader::removeConnectionHeaderEntries()
             refreshMask();
     }
 }
-
