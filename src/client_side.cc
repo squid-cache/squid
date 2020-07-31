@@ -1664,8 +1664,8 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         request->http_ver.minor = http_ver.minor;
     }
 
-    bool chunked = request->header.chunked();
-    bool unsupportedTe = request->header.unsupportedTe();
+    const auto chunked = request->header.chunked();
+    const auto unsupportedTe = request->header.unsupportedTe();
 
     mustReplyToOptions = (request->method == Http::METHOD_OPTIONS) &&
                          (request->header.getInt64(Http::HdrType::MAX_FORWARDS) == 0);
@@ -4087,4 +4087,3 @@ operator <<(std::ostream &os, const ConnStateData::ServerConnectionContext &scc)
 {
     return os << scc.conn_ << ", srv_bytes=" << scc.preReadServerBytes.length();
 }
-
