@@ -1454,9 +1454,9 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
      *  field-name     = token
      *  token          = 1*TCHAR
      */
-    for (const char *pos = field_start; pos < name_end; ++pos) {
+    for (const char *pos = field_start; pos < (field_start+name_len); ++pos) {
         if (!CharacterSet::TCHAR[*pos]) {
-            debugs(55, 2, "ignoring header with invalid characters found in " <<
+            debugs(55, 2, "found header with invalid characters in " <<
                    Raw("field-name", field_start, min(name_len,100)) << "...");
             return nullptr;
         }
