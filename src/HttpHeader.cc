@@ -497,22 +497,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             return 0;
         }
 
-        /* AYJ 2017-05-23: I suspect we need to change this whitespace check to conform to the
-           updated WSP character set in RFC 7230/7231. For now I left it as the
-           characters in w_space which the previous code was using. */
-        static CharacterSet wsp = (CharacterSet::WSP + CharacterSet::CR + CharacterSet::LF);
-        if (e->id == Http::HdrType::OTHER && e->name.findFirstOf(wsp) != SBuf::npos) {
-            debugs(55, warnOnError, "WARNING: found whitespace in HTTP header name {" <<
-                   getStringPrefix(field_start, field_end-field_start) << "}");
-
-            if (!Config.onoff.relaxed_header_parser) {
-                delete e;
-                PROF_stop(HttpHeaderParse);
-                clean();
-                return 0;
-            }
-        }
-
         addEntry(e);
     }
 
