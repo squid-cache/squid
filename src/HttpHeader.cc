@@ -390,6 +390,71 @@ HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, H
 }
 
 /**
+ * Detect and validate an HTTP header field-name.
+ *
+ * Governed by RFC 7230 section 3.2 definition of valid field-name
+ *
+ * \returns a valid field-name found in the provided field buffer, or empty SBuf.
+ */
+SBuf
+HttpHeader::parseFieldName(Parser::Tokenizer &tok, const http_hdr_owner_type msgType)
+{
+    /* RFC 7230 section 3.2:
+     *
+     *  header-field   = field-name ":" OWS field-value OWS
+     *  field-name     = token
+     *  token          = 1*TCHAR
+     */
+    SBuf fieldName;
+    if (tok.prefix(fieldName, CharacterSet::TCHAR) && tok.skip(':')) {
+        debugs(55, 3, "quickly found " << fieldName);
+        return fieldName;
+    }
+
+    static const SBuf nil;
+    /*
+     * RFC 7230 section 3.2.4:
+     * "No whitespace is allowed between the header field-name and colon.
+     * ...
+     *  A server MUST reject any received request message that contains
+     *  whitespace between a header field-name and colon with a response code
+     *  of 400 (Bad Request).  A proxy MUST remove any such whitespace from a
+     *  response message before forwarding the message downstream."
+     */
+    if (msgType == hoRequest) {
+        debugs(55, 2, "invalid characters found in request header field-name");
+        return nil;
+    }
+
+    /*
+     * RFC 7230 section 3.2.4:
+     * "No whitespace is allowed between the header field-name and colon.
+     * ...
+     *  A proxy MUST remove any such whitespace from a response message
+     * before forwarding the message downstream."
+     */
+    // for now, also let relaxed parser remove this BWS from any non-HTTP messages
+    const bool stripWhitespace = (msgType == hoReply) ||
+                                 Config.onoff.relaxed_header_parser;
+    if (!stripWhitespace) {
+        debugs(55, 2, "invalid characters found in response header field-name");
+        return nil; // reject if we cannot strip
+    }
+
+    debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
+               "NOTICE: Whitespace after header field-name in '" << fieldName << tok.remaining() << "'");
+
+    if (tok.skipAll(Http1::Parser::WhitespaceCharacters()) && tok.skip(':')) {
+        if (fieldName.isEmpty())
+            debugs(55, 2, "found header with only whitespace for name");
+        return fieldName; // field-name is okay after stripping BWS suffix
+    }
+
+    debugs(55, 2, "invalid characters found in header field-name");
+    return nil;
+}
+
+/**
  * Locate any obs-fold in buf and replace with SP
  */
 static SBuf &
@@ -489,7 +554,7 @@ HttpHeader::parse(const SBuf &buf, Http::ContentLengthInterpreter &clen)
      */
 
     do {
-        auto fieldName = Http1::Parser::ParseFieldName(tok, owner);
+        auto fieldName = parseFieldName(tok, owner);
         if (fieldName.isEmpty()) {
             PROF_stop(HttpHeaderParse);
             clean();
@@ -549,7 +614,7 @@ HttpHeader::parse(const SBuf &buf, Http::ContentLengthInterpreter &clen)
 
         ++ HeaderEntryParsedCount;
 
-        debugs(55, 9, "parsed Http::HeaderField: '" << fieldName << ": " << fieldValue << "'");
+        debugs(55, 9, "parsed HttpHeaderEntry: '" << fieldName << ": " << fieldValue << "'");
 
         // XXX: performance nasty: c_str() reallocates, this ctor double-copies
         const auto e = new Http::HeaderField(id, fieldName, fieldValue.c_str());
