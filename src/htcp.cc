@@ -1075,7 +1075,7 @@ HtcpReplyData::parseHeader(const char *buffer, const size_t size)
 {
     Http::ContentLengthInterpreter interpreter;
     // no applyStatusCodeRules() -- HTCP replies lack cached HTTP status code
-    return hdr.parse(buffer, size, interpreter);
+    return hdr.parse(SBuf(buffer, size), interpreter);
 }
 
 static void

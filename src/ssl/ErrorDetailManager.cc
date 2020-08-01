@@ -197,7 +197,7 @@ Ssl::ErrorDetailFile::parse()
     buf.append("\n\n"); // ensure detailEntryEnd() finds the last entry
 
     while (const auto size = detailEntryEnd(buf.rawContent(), buf.length())) {
-        auto *s = buf.c_str();
+        auto *s = buf.c_str(); // XXX: use Tokenizer now instead of char*
         const auto e = s + size;
 
         //ignore spaces, new lines and comment lines (starting with #) at the beginning
@@ -211,7 +211,7 @@ Ssl::ErrorDetailFile::parse()
             DetailEntryParser parser;
             Http::ContentLengthInterpreter interpreter;
             // no applyStatusCodeRules() -- error templates lack HTTP status code
-            if (!parser.parse(s, e - s, interpreter)) {
+            if (!parser.parse(SBuf(s, e-s), interpreter)) {
                 debugs(83, DBG_IMPORTANT, HERE <<
                        "WARNING! parse error on:" << s);
                 return false;

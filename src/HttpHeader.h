@@ -54,7 +54,6 @@ class HttpHeaderEntry
 public:
     HttpHeaderEntry(Http::HdrType id, const SBuf &name, const char *value);
     ~HttpHeaderEntry();
-    static HttpHeaderEntry *parse(const char *field_start, const char *field_end, const http_hdr_owner_type msgType);
     HttpHeaderEntry *clone() const;
     void packInto(Packable *p) const;
     int getInt() const;
@@ -89,12 +88,13 @@ public:
     /// \returns whether calling update(fresh) would change our set of fields
     bool needUpdate(const HttpHeader *fresh) const;
     void compact();
-    int parse(const char *header_start, size_t len, Http::ContentLengthInterpreter &interpreter);
-    /// Parses headers stored in a buffer.
-    /// \returns 1 and sets hdr_sz on success
-    /// \returns 0 when needs more data
-    /// \returns -1 on error
+
+    /// Parse a series of 0-N HTTP header lines.
+    /// The buffer provided must contain only the expected headers.
+    int parse(const SBuf &, Http::ContentLengthInterpreter &);
+    /// \deprecated use SBuf method instead.
     int parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, Http::ContentLengthInterpreter &interpreter);
+
     void packInto(Packable * p, bool mask_sensitive_info=false) const;
     HttpHeaderEntry *getEntry(HttpHeaderPos * pos) const;
     HttpHeaderEntry *findEntry(Http::HdrType id) const;
@@ -187,6 +187,8 @@ protected:
     void updateWarnings();
 
 private:
+    SBuf parseFieldName(Parser::Tokenizer &, const http_hdr_owner_type);
+    SBuf isolateFieldValue(Parser::Tokenizer &);
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;
     bool conflictingContentLength_; ///< found different Content-Length fields
     /// unsupported encoding, unnecessary syntax characters, and/or

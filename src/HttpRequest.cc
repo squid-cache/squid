@@ -726,7 +726,7 @@ bool
 HttpRequest::parseHeader(const char *buffer, const size_t size)
 {
     Http::ContentLengthInterpreter clen;
-    return header.parse(buffer, size, clen);
+    return header.parse(SBuf(buffer, size), clen);
 }
 
 ConnStateData *

@@ -14,6 +14,7 @@
 #include "base64.h"
 #include "globals.h"
 #include "http/ContentLengthInterpreter.h"
+#include "http/one/Parser.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrScTarget.h" // also includes HttpHdrSc.h
@@ -24,6 +25,7 @@
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "mime_header.h"
+#include "parser/Tokenizer.h"
 #include "profiler/Profiler.h"
 #include "rfc1123.h"
 #include "sbuf/StringConvert.h"
@@ -351,6 +353,10 @@ HttpHeader::Isolate(const char **parse_start, size_t l, const char **blk_start, 
     return end;
 }
 
+/// Locates and Parses headers stored in a buffer.
+/// \retval 1   and sets hdr_sz on success
+/// \retval 0   when needs more data, sets hdr_sz to 0
+/// \retval -1  on error, sets hdr_sz to 0
 int
 HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, Http::ContentLengthInterpreter &clen)
 {
@@ -367,139 +373,253 @@ HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, H
         blk_end = blk_start + strlen(blk_start);
     }
 
-    if (parse(blk_start, blk_end - blk_start, clen)) {
+    if (parse(SBuf(blk_start, blk_end - blk_start), clen)) {
         hdr_sz = parse_start - buf;
         return 1;
     }
-    return -1;
+    return -1; // XXX: throw instead?
+}
+
+/**
+ * Detect and validate an HTTP header field-name.
+ *
+ * Governed by RFC 7230 section 3.2 definition of valid field-name
+ *
+ * \returns a valid field-name found in the provided field buffer, or empty SBuf.
+ */
+SBuf
+HttpHeader::parseFieldName(Parser::Tokenizer &tok, const http_hdr_owner_type msgType)
+{
+    /* RFC 7230 section 3.2:
+     *
+     *  header-field   = field-name ":" OWS field-value OWS
+     *  field-name     = token
+     *  token          = 1*TCHAR
+     */
+    SBuf fieldName;
+    if (tok.prefix(fieldName, CharacterSet::TCHAR) && tok.skip(':')) {
+        debugs(55, 3, "quickly found " << fieldName);
+        return fieldName;
+    }
+
+    static const SBuf nil;
+    /*
+     * RFC 7230 section 3.2.4:
+     * "No whitespace is allowed between the header field-name and colon.
+     * ...
+     *  A server MUST reject any received request message that contains
+     *  whitespace between a header field-name and colon with a response code
+     *  of 400 (Bad Request).  A proxy MUST remove any such whitespace from a
+     *  response message before forwarding the message downstream."
+     */
+    if (msgType == hoRequest) {
+        debugs(55, 2, "invalid characters found in request header field-name");
+        return nil;
+    }
+
+    /*
+     * RFC 7230 section 3.2.4:
+     * "No whitespace is allowed between the header field-name and colon.
+     * ...
+     *  A proxy MUST remove any such whitespace from a response message
+     * before forwarding the message downstream."
+     */
+    // for now, also let relaxed parser remove this BWS from any non-HTTP messages
+    const bool stripWhitespace = (msgType == hoReply) ||
+                                 Config.onoff.relaxed_header_parser;
+    if (!stripWhitespace) {
+        debugs(55, 2, "invalid characters found in response header field-name");
+        return nil; // reject if we cannot strip
+    }
+
+    debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
+               "NOTICE: Whitespace after header field-name in '" << fieldName << tok.remaining() << "'");
+
+    if (tok.skipAll(Http1::Parser::WhitespaceCharacters()) && tok.skip(':')) {
+        if (fieldName.isEmpty())
+            debugs(55, 2, "found header with only whitespace for name");
+        return fieldName; // field-name is okay after stripping BWS suffix
+    }
+
+    debugs(55, 2, "invalid characters found in header field-name");
+    return nil;
+}
+
+/**
+ * Locate any obs-fold in buf and replace with SP
+ */
+static SBuf &
+ReplaceObsFold(SBuf &buf)
+{
+    SBuf::size_type pos = 0;
+    while (pos != SBuf::npos) {
+        pos = buf.find('\n', pos);
+
+        if (pos >= buf.length())
+            break; // reached end of buf
+
+        if (buf.at(pos+1) != ' ' && buf.at(pos+1) != '\t')
+            break; // reached end of field-value
+
+        // else, found obs-fold
+        // replace the CR*LF sequence with SP*SP
+        do {
+            buf.setAt(pos, ' ');
+            --pos;
+        } while (buf.at(pos) == '\r');
+    }
+    return buf.chop(pos);
+}
+
+SBuf
+HttpHeader::isolateFieldValue(Parser::Tokenizer &tok)
+{
+    SBuf buf = tok.remaining();
+
+    /*
+     * RFC 7230 section 3.2.4 paragraph 5 & 6:
+     * "
+     *  A server that receives an obs-fold in a request message that is not
+     *  within a message/http container MUST either ..., or replace
+     *  each received obs-fold with one or more SP octets prior to
+     *  interpreting the field value
+     *
+     *  A proxy or gateway that receives an obs-fold in a response message
+     *  that is not within a message/http container MUST either ... ,
+     *  or replace each received obs-fold with one or more SP
+     *  octets prior to interpreting the field value
+     * "
+     */
+    const auto fieldValue = ReplaceObsFold(buf);
+    tok.reset(buf);
+
+    Parser::Tokenizer fvCleaner(fieldValue);
+
+    // strip prefix OWS before field-value
+    (void)tok.skipAll(Http1::Parser::WhitespaceCharacters());
+
+    // strip suffix CR*LF sequence (if any)
+    (void)fvCleaner.skipOneTrailing(CharacterSet::LF);
+    (void)fvCleaner.skipAllTrailing(CharacterSet::CR);
+
+    // strip suffix OWS after field-value
+    (void)fvCleaner.skipAllTrailing(Http1::Parser::WhitespaceCharacters());
+
+    return fvCleaner.remaining();
 }
 
 // XXX: callers treat this return as boolean.
 // XXX: A better mechanism is needed to signal different types of error.
 //      lexicon, syntax, semantics, validation, access policy - are all (ab)using 'return 0'
 int
-HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthInterpreter &clen)
+HttpHeader::parse(const SBuf &buf, Http::ContentLengthInterpreter &clen)
 {
-    const char *field_ptr = header_start;
-    const char *header_end = header_start + hdrLen; // XXX: remove
+    Parser::Tokenizer tok(buf);
     int warnOnError = (Config.onoff.relaxed_header_parser <= 0 ? DBG_IMPORTANT : 2);
 
     PROF_start(HttpHeaderParse);
 
-    assert(header_start && header_end);
-    debugs(55, 7, "parsing hdr: (" << this << ")" << std::endl << getStringPrefix(header_start, hdrLen));
+    debugs(55, 7, "parsing hdr: (" << this << ")");
+    debugs(55, DBG_DATA, buf);
     ++ HttpHeaderStats[owner].parsedCount;
 
-    char *nulpos;
-    if ((nulpos = (char*)memchr(header_start, '\0', hdrLen))) {
+    // TODO: is this still needed?
+    auto nulpos = buf.find('\0');
+    if (nulpos != SBuf::npos) {
         debugs(55, DBG_IMPORTANT, "WARNING: HTTP header contains NULL characters {" <<
-               getStringPrefix(header_start, nulpos-header_start) << "}\nNULL\n{" << getStringPrefix(nulpos+1, hdrLen-(nulpos-header_start)-1));
+               buf.substr(0, nulpos) << "}\nNULL\n{" << buf.substr(nulpos+1));
         PROF_stop(HttpHeaderParse);
         clean();
         return 0;
     }
 
-    /* common format headers are "<name>:[ws]<value>" lines delimited by <CRLF>.
-     * continuation lines start with a (single) space or tab */
-    while (field_ptr < header_end) {
-        const char *field_start = field_ptr;
-        const char *field_end;
+    /**
+     * RFC 7230 section 3.2:
+     *
+     *  header-field   = field-name ":" OWS field-value OWS
+     *
+     *  field-value    = *( field-content / obs-fold )
+     *  field-content  = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+     *  field-vchar    = VCHAR / obs-text
+     *  obs-fold       = CRLF 1*( SP / HTAB )
+     */
 
-        const char *hasBareCr = nullptr;
-        size_t lines = 0;
-        do {
-            const char *this_line = field_ptr;
-            field_ptr = (const char *)memchr(field_ptr, '\n', header_end - field_ptr);
-            ++lines;
-
-            if (!field_ptr) {
-                // missing <LF>
-                PROF_stop(HttpHeaderParse);
-                clean();
-                return 0;
-            }
-
-            field_end = field_ptr;
-
-            ++field_ptr;    /* Move to next line */
-
-            if (field_end > this_line && field_end[-1] == '\r') {
-                --field_end;    /* Ignore CR LF */
-
-                if (owner == hoRequest && field_end > this_line) {
-                    bool cr_only = true;
-                    for (const char *p = this_line; p < field_end && cr_only; ++p) {
-                        if (*p != '\r')
-                            cr_only = false;
-                    }
-                    if (cr_only) {
-                        debugs(55, DBG_IMPORTANT, "SECURITY WARNING: Rejecting HTTP request with a CR+ "
-                               "header field to prevent request smuggling attacks: {" <<
-                               getStringPrefix(header_start, hdrLen) << "}");
-                        PROF_stop(HttpHeaderParse);
-                        clean();
-                        return 0;
-                    }
-                }
-            }
-
-            /* Barf on stray CR characters */
-            if (memchr(this_line, '\r', field_end - this_line)) {
-                hasBareCr = "bare CR";
-                debugs(55, warnOnError, "WARNING: suspicious CR characters in HTTP header {" <<
-                       getStringPrefix(field_start, field_end-field_start) << "}");
-
-                if (Config.onoff.relaxed_header_parser) {
-                    char *p = (char *) this_line;   /* XXX Warning! This destroys original header content and violates specifications somewhat */
-
-                    while ((p = (char *)memchr(p, '\r', field_end - p)) != NULL) {
-                        *p = ' ';
-                        ++p;
-                    }
-                } else {
-                    PROF_stop(HttpHeaderParse);
-                    clean();
-                    return 0;
-                }
-            }
-
-            if (this_line + 1 == field_end && this_line > field_start) {
-                debugs(55, warnOnError, "WARNING: Blank continuation line in HTTP header {" <<
-                       getStringPrefix(header_start, hdrLen) << "}");
-                PROF_stop(HttpHeaderParse);
-                clean();
-                return 0;
-            }
-        } while (field_ptr < header_end && (*field_ptr == ' ' || *field_ptr == '\t'));
-
-        if (field_start == field_end) {
-            if (field_ptr < header_end) {
-                debugs(55, warnOnError, "WARNING: unparsable HTTP header field near {" <<
-                       getStringPrefix(field_start, hdrLen-(field_start-header_start)) << "}");
-                PROF_stop(HttpHeaderParse);
-                clean();
-                return 0;
-            }
-
-            break;      /* terminating blank line */
-        }
-
-        const auto e = HttpHeaderEntry::parse(field_start, field_end, owner);
-        if (!e) {
-            debugs(55, warnOnError, "WARNING: unparsable HTTP header field {" <<
-                   getStringPrefix(field_start, field_end-field_start) << "}");
-            debugs(55, warnOnError, " in {" << getStringPrefix(header_start, hdrLen) << "}");
-
+    do {
+        auto fieldName = parseFieldName(tok, owner);
+        if (fieldName.isEmpty()) {
             PROF_stop(HttpHeaderParse);
             clean();
             return 0;
         }
 
-        if (lines > 1 || hasBareCr) {
+        if (fieldName.length() > 65534) {
+            /* String must be LESS THAN 64K and it adds a terminating NULL */
+            debugs(55, 2, "huge header field (" << Raw("field-name", fieldName.rawContent(), 100) << "... " << fieldName.length()-100 << " bytes elided)");
+            PROF_stop(HttpHeaderParse);
+            clean();
+            return 0;
+        }
+
+        /* is it a "known" field? */
+        auto id = Http::HeaderLookupTable.lookup(fieldName.rawContent(), fieldName.length()).id;
+        debugs(55, 9, "got hdr-id=" << id);
+        if (id == Http::HdrType::BAD_HDR)
+            id = Http::HdrType::OTHER;
+        else
+            ++ headerStatsTable[id].seenCount;
+
+        if (id != Http::HdrType::OTHER)
+            fieldName = Http::HeaderLookupTable.lookup(id).name;
+
+        // locate the field-value octets
+        auto fieldValue = isolateFieldValue(tok);
+
+        // XXX: RFC 7230 does explicitly permit bare-CR as whitespace
+        /* Barf or replace stray CR characters */
+        const char *hasBareCr = nullptr;
+        if (fieldValue.find('\r') != SBuf::npos) {
+            hasBareCr = "bare CR";
+            debugs(55, warnOnError, "WARNING: suspicious CR characters in HTTP header " << fieldName);
+            if (Config.onoff.relaxed_header_parser) {
+                // XXX Warning! This destroys original header content
+                SBuf::size_type pos;
+                do {
+                    pos = fieldValue.find('\r');
+                    fieldValue.setAt(pos, ' ');
+                } while(pos != SBuf::npos);
+            } else {
+                PROF_stop(HttpHeaderParse);
+                clean();
+                return 0;
+            }
+        }
+
+        // XXX: HttpHeaderEntry is still limited by String type for field-value
+        if (fieldValue.length() > 65534) {
+            /* String must be LESS THAN 64K and it adds a terminating NULL */
+            debugs(55, 2, "WARNING: found '" << fieldName << "' header of " << fieldValue.length() << " bytes");
+            PROF_stop(HttpHeaderParse);
+            clean();
+            return 0;
+        }
+
+        ++ HeaderEntryParsedCount;
+
+        debugs(55, 9, "parsed HttpHeaderEntry: '" << fieldName << ": " << fieldValue << "'");
+
+        // XXX: performance nasty: c_str() reallocates, this ctor double-copies
+        const auto e = new HttpHeaderEntry(id, fieldName, fieldValue.c_str());
+        if (!e) {
+            debugs(55, warnOnError, "WARNING: unparsable HTTP header field-value " << fieldName);
+            PROF_stop(HttpHeaderParse);
+            clean();
+            return 0;
+        }
+
+        // XXX: do we still need this check?
+        if (hasBareCr) {
             const auto framingHeader = (e->id == Http::HdrType::CONTENT_LENGTH || e->id == Http::HdrType::TRANSFER_ENCODING);
             if (framingHeader) {
-                if (!hasBareCr) // already warned about bare CRs
-                    debugs(55, warnOnError, "WARNING: obs-fold in framing-sensitive " << e->name << ": " << e->value);
                 delete e;
                 PROF_stop(HttpHeaderParse);
                 clean();
@@ -519,12 +639,13 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
         }
 
         addEntry(e);
-    }
+
+    } while (!tok.atEnd());
 
     if (clen.headerWideProblem) {
         debugs(55, warnOnError, "WARNING: " << clen.headerWideProblem <<
                " Content-Length field values in" <<
-               Raw("header", header_start, hdrLen));
+               Raw("header", buf.rawContent(), buf.length()));
     }
 
     String rawTe;
@@ -1432,121 +1553,6 @@ HttpHeaderEntry::~HttpHeaderEntry()
         id = Http::HdrType::BAD_HDR; // it already is BAD_HDR, no sense in resetting it
     }
 
-}
-
-/* parses and inits header entry, returns true/false */
-HttpHeaderEntry *
-HttpHeaderEntry::parse(const char *field_start, const char *field_end, const http_hdr_owner_type msgType)
-{
-    /* note: name_start == field_start */
-    const char *name_end = (const char *)memchr(field_start, ':', field_end - field_start);
-    int name_len = name_end ? name_end - field_start :0;
-    const char *value_start = field_start + name_len + 1;   /* skip ':' */
-    /* note: value_end == field_end */
-
-    ++ HeaderEntryParsedCount;
-
-    /* do we have a valid field name within this field? */
-
-    if (!name_len || name_end > field_end)
-        return NULL;
-
-    if (name_len > 65534) {
-        /* String must be LESS THAN 64K and it adds a terminating NULL */
-        // TODO: update this to show proper name_len in Raw markup, but not print all that
-        debugs(55, 2, "ignoring huge header field (" << Raw("field_start", field_start, 100) << "...)");
-        return NULL;
-    }
-
-    /*
-     * RFC 7230 section 3.2.4:
-     * "No whitespace is allowed between the header field-name and colon.
-     * ...
-     *  A server MUST reject any received request message that contains
-     *  whitespace between a header field-name and colon with a response code
-     *  of 400 (Bad Request).  A proxy MUST remove any such whitespace from a
-     *  response message before forwarding the message downstream."
-     */
-    if (xisspace(field_start[name_len - 1])) {
-
-        if (msgType == hoRequest)
-            return nullptr;
-
-        // for now, also let relaxed parser remove this BWS from any non-HTTP messages
-        const bool stripWhitespace = (msgType == hoReply) ||
-                                     Config.onoff.relaxed_header_parser;
-        if (!stripWhitespace)
-            return nullptr; // reject if we cannot strip
-
-        debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
-               "NOTICE: Whitespace after header name in '" << getStringPrefix(field_start, field_end-field_start) << "'");
-
-        while (name_len > 0 && xisspace(field_start[name_len - 1]))
-            --name_len;
-
-        if (!name_len) {
-            debugs(55, 2, "found header with only whitespace for name");
-            return NULL;
-        }
-    }
-
-    /* RFC 7230 section 3.2:
-     *
-     *  header-field   = field-name ":" OWS field-value OWS
-     *  field-name     = token
-     *  token          = 1*TCHAR
-     */
-    for (const char *pos = field_start; pos < (field_start+name_len); ++pos) {
-        if (!CharacterSet::TCHAR[*pos]) {
-            debugs(55, 2, "found header with invalid characters in " <<
-                   Raw("field-name", field_start, min(name_len,100)) << "...");
-            return nullptr;
-        }
-    }
-
-    /* now we know we can parse it */
-
-    debugs(55, 9, "parsing HttpHeaderEntry: near '" <<  getStringPrefix(field_start, field_end-field_start) << "'");
-
-    /* is it a "known" field? */
-    Http::HdrType id = Http::HeaderLookupTable.lookup(field_start,name_len).id;
-    debugs(55, 9, "got hdr-id=" << id);
-
-    SBuf theName;
-
-    String value;
-
-    if (id == Http::HdrType::BAD_HDR)
-        id = Http::HdrType::OTHER;
-
-    /* set field name */
-    if (id == Http::HdrType::OTHER)
-        theName.append(field_start, name_len);
-    else
-        theName = Http::HeaderLookupTable.lookup(id).name;
-
-    /* trim field value */
-    while (value_start < field_end && xisspace(*value_start))
-        ++value_start;
-
-    while (value_start < field_end && xisspace(field_end[-1]))
-        --field_end;
-
-    if (field_end - value_start > 65534) {
-        /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, 2, "WARNING: found '" << theName << "' header of " << (field_end - value_start) << " bytes");
-        return NULL;
-    }
-
-    /* set field value */
-    value.assign(value_start, field_end - value_start);
-
-    if (id != Http::HdrType::BAD_HDR)
-        ++ headerStatsTable[id].seenCount;
-
-    debugs(55, 9, "parsed HttpHeaderEntry: '" << theName << ": " << value << "'");
-
-    return new HttpHeaderEntry(id, theName, value.termedBuf());
 }
 
 HttpHeaderEntry *
