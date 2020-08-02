@@ -488,13 +488,15 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             return 0;
         }
 
-        const auto framingHeader = (e->id == Http::HdrType::CONTENT_LENGTH || e->id == Http::HdrType::TRANSFER_ENCODING);
-        if (lines > 1 && framingHeader) {
-            debugs(55, warnOnError, "WARNING: obs-fold seen in " << e->name << ": " << e->value);
-            delete e;
-            PROF_stop(HttpHeaderParse);
-            clean();
-            return 0;
+        if (lines > 1) {
+            const auto framingHeader = (e->id == Http::HdrType::CONTENT_LENGTH || e->id == Http::HdrType::TRANSFER_ENCODING);
+            if (framingHeader) {
+                debugs(55, warnOnError, "WARNING: obs-fold seen in " << e->name << ": " << e->value);
+                delete e;
+                PROF_stop(HttpHeaderParse);
+                clean();
+                return 0;
+            }
         }
 
         if (e->id == Http::HdrType::CONTENT_LENGTH && !clen.checkField(e->value)) {
