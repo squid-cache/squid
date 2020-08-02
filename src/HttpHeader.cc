@@ -400,11 +400,11 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
         const char *field_start = field_ptr;
         const char *field_end;
 
-        int seenLines = 0;
+        size_t lines = 0;
         do {
             const char *this_line = field_ptr;
             field_ptr = (const char *)memchr(field_ptr, '\n', header_end - field_ptr);
-            ++seenLines;
+            ++lines;
 
             if (!field_ptr) {
                 // missing <LF>
@@ -488,8 +488,8 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             return 0;
         }
 
-        const bool frameHeader = (e->id == Http::HdrType::CONTENT_LENGTH || e->id == Http::HdrType::TRANSFER_ENCODING);
-        if (seenLines > 1 && frameHeader) {
+        const auto framingHeader = (e->id == Http::HdrType::CONTENT_LENGTH || e->id == Http::HdrType::TRANSFER_ENCODING);
+        if (lines > 1 && framingHeader) {
             debugs(55, warnOnError, "WARNING: obs-fold seen in " << e->name << ": " << e->value);
             delete e;
             PROF_stop(HttpHeaderParse);
