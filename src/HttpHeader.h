@@ -159,8 +159,9 @@ public:
     int hasListMember(Http::HdrType id, const char *member, const char separator) const;
     int hasByNameListMember(const char *name, const char *member, const char separator) const;
     void removeHopByHopEntries();
-    bool chunked() const { return teChunked_; };             ///< whether message uses chunked Transfer-Encoding
-    bool unsupportedTe() const { return teUnsupported_; }; ///< whether message uses unsupported Transfer-Encoding
+    inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
+    /// whether message used an unsupported (or invalid) Transfer-Encoding
+    bool unsupportedTe() const { return teUnsupported_; }
 
     /* protected, do not use these, use interface functions instead */
     std::vector<HttpHeaderEntry*, PoolingAllocator<HttpHeaderEntry*> > entries; /**< parsed fields in raw format */
@@ -184,7 +185,6 @@ protected:
 private:
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;
     bool conflictingContentLength_; ///< found different Content-Length fields
-    bool teChunked_ = false;        ///< found Transfer-Encoding:chunked
     bool teUnsupported_ = false;    ///< found unsupported Transfer-Encoding value(s)
 };
 
@@ -194,6 +194,14 @@ int httpHeaderParseQuotedString(const char *start, const int len, String *val);
 SBuf httpHeaderQuoteString(const char *raw);
 
 void httpHeaderCalcMask(HttpHeaderMask * mask, Http::HdrType http_hdr_type_enums[], size_t count);
+
+inline bool
+HttpHeader::chunked() const
+{
+    return has(Http::HdrType::TRANSFER_ENCODING) &&
+           hasListMember(Http::HdrType::TRANSFER_ENCODING, "chunked", ',');
+}
+
 void httpHeaderInitModule(void);
 
 #endif /* SQUID_HTTPHEADER_H */

@@ -531,7 +531,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
         // and clen state becomes irrelevant
 
         if (rawTe == "chunked") {
-            teChunked_ = true;
+            ; // NP: leave header present for chunked() method
         } else if (rawTe == "identity") { // deprecated. no coding
             delById(Http::HdrType::TRANSFER_ENCODING);
         } else {
@@ -1777,3 +1777,4 @@ HttpHeader::removeConnectionHeaderEntries()
             refreshMask();
     }
 }
+
