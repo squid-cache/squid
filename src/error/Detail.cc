@@ -69,7 +69,7 @@ SysErrorDetail::Brief(const int errorNo)
 SBuf
 SysErrorDetail::brief() const
 {
-    return ToSBuf("SYSERR=", errorNo); // TODO: Use errno=... instead?
+    return ToSBuf("errno=", errorNo);
 }
 
 SBuf
