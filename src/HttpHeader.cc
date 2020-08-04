@@ -443,18 +443,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
             return 0;
         }
 
-        if (e->id == Http::HdrType::OTHER && stringHasWhitespace(e->name.termedBuf())) {
-            debugs(55, warnOnError, "WARNING: found whitespace in HTTP header name {" <<
-                   getStringPrefix(field_start, field_end-field_start) << "}");
-
-            if (!Config.onoff.relaxed_header_parser) {
-                delete e;
-                PROF_stop(HttpHeaderParse);
-                clean();
-                return 0;
-            }
-        }
-
         addEntry(e);
     }
 
@@ -1434,6 +1422,20 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
         if (!name_len) {
             debugs(55, 2, "found header with only whitespace for name");
             return NULL;
+        }
+    }
+
+    /* RFC 7230 section 3.2:
+     *
+     *  header-field   = field-name ":" OWS field-value OWS
+     *  field-name     = token
+     *  token          = 1*TCHAR
+     */
+    for (const char *pos = field_start; pos < (field_start+name_len); ++pos) {
+        if (!CharacterSet::TCHAR[*pos]) {
+            debugs(55, 2, "found header with invalid characters in " <<
+                   Raw("field-name", field_start, min(name_len,100)) << "...");
+            return nullptr;
         }
     }
 
