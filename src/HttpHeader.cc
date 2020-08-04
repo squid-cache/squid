@@ -372,6 +372,9 @@ HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, H
     return -1;
 }
 
+// XXX: callers treat this return as boolean.
+// XXX: A better mechanism is needed to signal different types of error.
+//      lexicon, syntax, semantics, validation, access policy - are all (ab)using 'return 0'
 int
 HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthInterpreter &clen)
 {
