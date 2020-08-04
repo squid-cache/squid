@@ -400,6 +400,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
         const char *field_start = field_ptr;
         const char *field_end;
 
+        const char *hasBareCr = nullptr;
         size_t lines = 0;
         do {
             const char *this_line = field_ptr;
@@ -425,6 +426,8 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
                     for (const char *p = this_line; p < field_end && cr_only; ++p) {
                         if (*p != '\r')
                             cr_only = false;
+                        else
+                            hasBareCr = "bare-CR";
                     }
                     if (cr_only) {
                         debugs(55, DBG_IMPORTANT, "SECURITY WARNING: Rejecting HTTP request with a CR+ "
@@ -446,6 +449,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
                     char *p = (char *) this_line;   /* XXX Warning! This destroys original header content and violates specifications somewhat */
 
                     while ((p = (char *)memchr(p, '\r', field_end - p)) != NULL) {
+                        hasBareCr = "bare-CR";
                         *p = ' ';
                         ++p;
                     }
@@ -488,10 +492,10 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             return 0;
         }
 
-        if (lines > 1) {
+        if (lines > 1 || hasBareCr) {
             const auto framingHeader = (e->id == Http::HdrType::CONTENT_LENGTH || e->id == Http::HdrType::TRANSFER_ENCODING);
             if (framingHeader) {
-                debugs(55, warnOnError, "WARNING: obs-fold seen in " << e->name << ": " << e->value);
+                debugs(55, warnOnError, "WARNING: " << (lines > 1 ? "obs-fold" : hasBareCr) << " seen in " << e->name << ": " << e->value);
                 delete e;
                 PROF_stop(HttpHeaderParse);
                 clean();
