@@ -83,7 +83,7 @@ SysErrorDetail::verbose(const HttpRequest::Pointer &) const
 SBuf
 ExceptionErrorDetail::brief() const
 {
-    return ToSBuf("EXCEPTION=", std::hex, exceptionId); // TODO: Use exception=... instead?
+    return ToSBuf("exception=", std::hex, exceptionId);
 }
 
 SBuf
