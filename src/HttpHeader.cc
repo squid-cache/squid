@@ -181,6 +181,7 @@ HttpHeader::operator =(const HttpHeader &other)
         update(&other); // will update the mask as well
         len = other.len;
         conflictingContentLength_ = other.conflictingContentLength_;
+        teUnsupported_ = other.teUnsupported_;
     }
     return *this;
 }
@@ -229,6 +230,7 @@ HttpHeader::clean()
     httpHeaderMaskInit(&mask, 0);
     len = 0;
     conflictingContentLength_ = false;
+    teUnsupported_ = false;
     PROF_stop(HttpHeaderClean);
 }
 

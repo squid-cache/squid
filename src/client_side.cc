@@ -1664,7 +1664,6 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         request->http_ver.minor = http_ver.minor;
     }
 
-    const auto chunked = request->header.chunked();
     const auto unsupportedTe = request->header.unsupportedTe();
 
     mustReplyToOptions = (request->method == Http::METHOD_OPTIONS) &&
@@ -1682,6 +1681,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         return;
     }
 
+    const auto chunked = request->header.chunked();
     if (!chunked && !clientIsContentLengthValid(request.getRaw())) {
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());

@@ -160,7 +160,7 @@ public:
     int hasByNameListMember(const char *name, const char *member, const char separator) const;
     void removeHopByHopEntries();
     inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
-    /// whether message used an unsupported (or invalid) Transfer-Encoding
+    /// whether message used an unsupported and/or invalid Transfer-Encoding
     bool unsupportedTe() const { return teUnsupported_; }
 
     /* protected, do not use these, use interface functions instead */
@@ -185,7 +185,9 @@ protected:
 private:
     HttpHeaderEntry *findLastEntry(Http::HdrType id) const;
     bool conflictingContentLength_; ///< found different Content-Length fields
-    bool teUnsupported_ = false;    ///< found unsupported Transfer-Encoding value(s)
+    /// unsupported encoding, unnecessary syntax characters, and/or
+    /// invalid field-value found in Transfer-Encoding header
+    bool teUnsupported_ = false;
 };
 
 int httpHeaderParseQuotedString(const char *start, const int len, String *val);
