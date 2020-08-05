@@ -1562,9 +1562,12 @@ clientReplyContext::buildReplyHeader()
         Auth::UserRequest::AddReplyAuthHeader(reply, request->auth_user_request, request, http->flags.accel, 0);
 #endif
 
-    /* Append X-Cache */
-    httpHeaderPutStrf(hdr, Http::HdrType::X_CACHE, "%s from %s",
-                      is_hit ? "HIT" : "MISS", getMyHostname());
+    /* Append Cache-Status */
+    httpHeaderPutStrf(hdr, Http::HdrType::CACHE_STATUS, "%s;%s%s",
+                     uniqueHostname(),
+                     (is_hit ? "hit" : "fwd=miss"),
+                     (collapsedRevalidation != crNone ? ";collapsed" : "")
+                     );
 
 #if USE_CACHE_DIGESTS
     /* Append X-Cache-Lookup: -- temporary hack, to be removed @?@ @?@ */

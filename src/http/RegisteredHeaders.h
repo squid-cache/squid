@@ -105,7 +105,6 @@ enum HdrType {
     VIA,                            /**< RFC 7230 */
     WARNING,                        /**< RFC 7234 */
     WWW_AUTHENTICATE,               /**< RFC 7235, 4559 */
-    X_CACHE,                        /**< obsolete Squid custom header draft-ietf-httpbis-cache-header */
     X_CACHE_LOOKUP,                 /**< obsolete Squid custom header, draft-ietf-httpbis-cache-header */
     X_FORWARDED_FOR,                /**< obsolete Squid custom header, RFC 7239 */
     X_REQUEST_URI,                  /**< Squid custom header appended if ADD_X_REQUEST_URI is defined */
