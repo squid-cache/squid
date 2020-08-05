@@ -76,8 +76,8 @@ ResolvedPeers::findPrime(const Comm::Connection &currentPeer)
 {
     const auto path = start();
     const auto foundNextOrSpare = path != paths_.end() &&
-        (currentPeer.getPeer() != path->connection->getPeer() || // next peer
-            ConnectionFamily(currentPeer) != ConnectionFamily(*path->connection));
+                                  (currentPeer.getPeer() != path->connection->getPeer() || // next peer
+                                   ConnectionFamily(currentPeer) != ConnectionFamily(*path->connection));
     return makeFinding(path, foundNextOrSpare);
 }
 
@@ -98,7 +98,7 @@ ResolvedPeers::findSpare(const Comm::Connection &currentPeer)
         return false;
     });
     const auto foundNext = path != paths_.end() &&
-        primePeer != path->connection->getPeer();
+                           primePeer != path->connection->getPeer();
     return makeFinding(path, foundNext);
 }
 
@@ -108,7 +108,7 @@ ResolvedPeers::findPeer(const Comm::Connection &currentPeer)
 {
     const auto path = start();
     const auto foundNext = path != paths_.end() &&
-        currentPeer.getPeer() != path->connection->getPeer();
+                           currentPeer.getPeer() != path->connection->getPeer();
     return makeFinding(path, foundNext);
 }
 

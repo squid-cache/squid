@@ -35,7 +35,7 @@ public:
 
     template <class OtherValue>
     struct rebind {
-      typedef PoolingAllocator<OtherValue> other;
+        typedef PoolingAllocator<OtherValue> other;
     };
 
     template<typename OtherValue> void destroy(OtherValue *p) { p->~OtherValue(); }

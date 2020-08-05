@@ -171,7 +171,7 @@ PeerSelectorPingMonitor::noteWaitOver()
         CallBack(selector->al, [selector,this] {
             selector->ping.monitorRegistration = npos();
             AsyncCall::Pointer callback = asyncCall(44, 4, "PeerSelector::HandlePingTimeout",
-                cbdataDialer(PeerSelector::HandlePingTimeout, selector));
+            cbdataDialer(PeerSelector::HandlePingTimeout, selector));
             ScheduleCallHere(callback);
         });
         selectors.erase(selectors.begin());
