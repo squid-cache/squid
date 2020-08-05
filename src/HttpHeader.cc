@@ -429,8 +429,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
                     for (const char *p = this_line; p < field_end && cr_only; ++p) {
                         if (*p != '\r')
                             cr_only = false;
-                        else
-                            hasBareCr = "bare-CR";
                     }
                     if (cr_only) {
                         debugs(55, DBG_IMPORTANT, "SECURITY WARNING: Rejecting HTTP request with a CR+ "
@@ -445,6 +443,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
 
             /* Barf on stray CR characters */
             if (memchr(this_line, '\r', field_end - this_line)) {
+                hasBareCr = "bare-CR";
                 debugs(55, warnOnError, "WARNING: suspicious CR characters in HTTP header {" <<
                        getStringPrefix(field_start, field_end-field_start) << "}");
 
@@ -452,7 +451,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
                     char *p = (char *) this_line;   /* XXX Warning! This destroys original header content and violates specifications somewhat */
 
                     while ((p = (char *)memchr(p, '\r', field_end - p)) != NULL) {
-                        hasBareCr = "bare-CR";
                         *p = ' ';
                         ++p;
                     }
