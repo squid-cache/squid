@@ -1011,7 +1011,7 @@ MemStoreRr::create()
 
     Ipc::Mem::PageStack::Config spaceConfig;
     spaceConfig.poolId = Ipc::Mem::PageStack::IdForMemStoreSpace(),
-    spaceConfig.pageSize = 0; // the pages are stored in Ipc::Mem::Pages
+                spaceConfig.pageSize = 0; // the pages are stored in Ipc::Mem::Pages
     spaceConfig.capacity = entryLimit;
     spaceConfig.createFull = true; // all pages are initially available
     Must(!spaceOwner);

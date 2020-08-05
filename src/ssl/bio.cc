@@ -559,7 +559,7 @@ bool
 Ssl::ServerBio::encryptedCertificates() const
 {
     return parser_.details->tlsSupportedVersion &&
-        Security::Tls1p3orLater(parser_.details->tlsSupportedVersion);
+           Security::Tls1p3orLater(parser_.details->tlsSupportedVersion);
 }
 
 /// initializes BIO table after allocation
