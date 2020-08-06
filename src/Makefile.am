@@ -730,6 +730,7 @@ EXTRA_DIST = \
 	mk-string-arrays.awk \
 	repl_modules.sh \
 	$(STUB_SOURCE) \
+	tests/STUB.h \
 	mib.txt \
 	mime.conf.default
 
