@@ -234,6 +234,8 @@ Ipc::FewToFewBiQueue::FewToFewBiQueue(const String &id, const Group aLocalGroup,
     Must(readers->theCapacity == metadata->theGroupASize + metadata->theGroupBSize);
 
     debugs(54, 7, "queue " << id << " reader: " << localReader().id);
+
+    BaseMultiQueue::localReader().reset();
 }
 
 int
@@ -373,6 +375,8 @@ Ipc::MultiQueue::MultiQueue(const String &id, const int localProcessId):
     Must(readers->theCapacity == metadata->theProcessCount);
 
     debugs(54, 7, "queue " << id << " reader: " << localReader().id);
+
+    BaseMultiQueue::localReader().reset();
 }
 
 bool
