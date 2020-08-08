@@ -27,20 +27,6 @@ class HttpHdrRange;
 class HttpHdrSc;
 class Packable;
 
-/** Possible owners of http header */
-typedef enum {
-    hoNone =0,
-#if USE_HTCP
-    hoHtcpReply,
-#endif
-    hoRequest,
-    hoReply,
-#if USE_OPENSSL
-    hoErrorDetail,
-#endif
-    hoEnd
-} http_hdr_owner_type;
-
 /** Iteration for headers; use HttpHeaderPos as opaque type, do not interpret */
 typedef ssize_t HttpHeaderPos;
 

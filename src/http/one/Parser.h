@@ -119,6 +119,14 @@ public:
     /// XXX: Misnamed and overused.
     static const CharacterSet &DelimiterCharacters();
 
+    /**
+     * Detect and validate an HTTP header field-name.
+     * Governed by RFC 7230 section 3.2 definition of valid field-name
+     *
+     * \returns a valid field-name found in the provided field buffer, or empty SBuf.
+     */
+    static SBuf ParseFieldName(Parser::Tokenizer &, const http_hdr_owner_type);
+
 protected:
     /**
      * detect and skip the CRLF or (if tolerant) LF line terminator
