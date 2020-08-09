@@ -273,7 +273,7 @@ httpHeaderQuoteString(const char *raw)
  * \retval 1    Header has no access controls to test
  */
 static int
-httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, const AccessLogEntryPointer &al)
+httpHdrMangle(Http::HeaderField *e, HttpRequest *request, HeaderManglers *hms, const AccessLogEntryPointer &al)
 {
     int retval;
 
@@ -325,7 +325,6 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, HeaderManglers *hms, c
 void
 httpHdrMangleList(HttpHeader *l, HttpRequest *request, const AccessLogEntryPointer &al, req_or_rep_t req_or_rep)
 {
-    HttpHeaderEntry *e;
     HttpHeaderPos p = HttpHeaderInitPos;
 
     /* check with anonymizer tables */
@@ -345,7 +344,7 @@ httpHdrMangleList(HttpHeader *l, HttpRequest *request, const AccessLogEntryPoint
 
     if (hms) {
         int headers_deleted = 0;
-        while ((e = l->getEntry(&p))) {
+        while (auto *e = l->getEntry(&p)) {
             if (httpHdrMangle(e, request, hms, al) == 0)
                 l->delAt(p, headers_deleted);
         }
@@ -456,7 +455,7 @@ HeaderManglers::setReplacement(const char *name, const char *value)
 }
 
 const headerMangler *
-HeaderManglers::find(const HttpHeaderEntry &e) const
+HeaderManglers::find(const Http::HeaderField &e) const
 {
     // a known header with a configured ACL list
     if (e.id != Http::HdrType::OTHER && Http::any_HdrType_enum_value(e.id) &&
@@ -512,7 +511,7 @@ httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer 
             if (!fieldValue || fieldValue[0] == '\0')
                 fieldValue = "-";
 
-            HttpHeaderEntry *e = new HttpHeaderEntry(hwa->fieldId, SBuf(hwa->fieldName), fieldValue);
+            auto *e = new Http::HeaderField(hwa->fieldId, SBuf(hwa->fieldName), fieldValue);
             heads->addEntry(e);
         }
     }

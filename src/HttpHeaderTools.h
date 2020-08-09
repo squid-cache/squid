@@ -51,7 +51,7 @@ public:
     ~HeaderManglers();
 
     /// returns a header mangler for field e or nil if none was specified
-    const headerMangler *find(const HttpHeaderEntry &e) const;
+    const headerMangler *find(const Http::HeaderField &e) const;
 
     /// returns a mangler for the named header (known or custom)
     headerMangler *track(const char *name);

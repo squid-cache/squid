@@ -1607,7 +1607,7 @@ Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *section,
     headClone->inheritProperties(head);
 
     HttpHeaderPos pos = HttpHeaderInitPos;
-    while (HttpHeaderEntry* p_head_entry = head->header.getEntry(&pos))
+    while (const auto *p_head_entry = head->header.getEntry(&pos))
         headClone->header.addEntry(p_head_entry->clone());
 
     // end cloning

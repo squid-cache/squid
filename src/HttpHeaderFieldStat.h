@@ -22,5 +22,7 @@ public:
     int repCount;       /* number of repetitons */
 };
 
+extern std::vector<HttpHeaderFieldStat> headerStatsTable;
+
 #endif /* SQUID_HTTPHEADERFIELDSTAT_H_ */
 

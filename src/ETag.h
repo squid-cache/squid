@@ -11,7 +11,8 @@
 
 /**
  * ETag support is rudimantal; this struct is likely to change
- * Note: "str" points to memory in HttpHeaderEntry (for now)
+ *
+ * \note "str" points to memory in Http::HeaderField (for now)
  *       so ETags should be used as tmp variables only (for now)
  */
 class ETag

@@ -14,12 +14,6 @@
 #include "tests/STUB.h"
 
 #include "HttpHeader.h"
-HttpHeaderEntry::HttpHeaderEntry(Http::HdrType, const SBuf &, const char *) {STUB}
-HttpHeaderEntry::~HttpHeaderEntry() {STUB}
-HttpHeaderEntry *HttpHeaderEntry::clone() const STUB_RETVAL(nullptr)
-void HttpHeaderEntry::packInto(Packable *) const STUB
-int HttpHeaderEntry::getInt() const STUB_RETVAL(0)
-int64_t HttpHeaderEntry::getInt64() const STUB_RETVAL(0)
 HttpHeader::HttpHeader() {STUB}
 HttpHeader::HttpHeader(const http_hdr_owner_type) {STUB}
 HttpHeader::HttpHeader(const HttpHeader &) {STUB}
@@ -32,14 +26,14 @@ void HttpHeader::compact() STUB
 int HttpHeader::parse(const SBuf &, Http::ContentLengthInterpreter &) STUB_RETVAL(-1)
 int HttpHeader::parse(const char *, size_t, bool, size_t &, Http::ContentLengthInterpreter &) STUB_RETVAL(-1)
 void HttpHeader::packInto(Packable *, bool) const STUB
-HttpHeaderEntry *HttpHeader::getEntry(HttpHeaderPos *) const STUB_RETVAL(nullptr)
-HttpHeaderEntry *HttpHeader::findEntry(Http::HdrType) const STUB_RETVAL(nullptr)
+Http::HeaderField *HttpHeader::getEntry(HttpHeaderPos *) const STUB_RETVAL(nullptr)
+Http::HeaderField *HttpHeader::findEntry(Http::HdrType) const STUB_RETVAL(nullptr)
 int HttpHeader::delByName(const SBuf &) STUB_RETVAL(0)
 int HttpHeader::delById(Http::HdrType) STUB_RETVAL(0)
 void HttpHeader::delAt(HttpHeaderPos, int &) STUB
 void HttpHeader::refreshMask() STUB
-void HttpHeader::addEntry(HttpHeaderEntry *) STUB
-void HttpHeader::insertEntry(HttpHeaderEntry *) STUB
+void HttpHeader::addEntry(Http::HeaderField *) STUB
+void HttpHeader::insertEntry(Http::HeaderField *) STUB
 String HttpHeader::getList(Http::HdrType) const STUB_RETVAL(String())
 bool HttpHeader::getList(Http::HdrType, String *) const STUB_RETVAL(false)
 String HttpHeader::getStrOrList(Http::HdrType) const STUB_RETVAL(String())

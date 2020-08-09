@@ -819,7 +819,7 @@ Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer)
     featReply->header.putStr(Http::HdrType::FTP_PRE, "\"211-Features:\"");
     const int scode = serverReplyHeader.getInt(Http::HdrType::FTP_STATUS);
     if (scode == 211) {
-        while (const HttpHeaderEntry *e = serverReplyHeader.getEntry(&pos)) {
+        while (const auto *e = serverReplyHeader.getEntry(&pos)) {
             if (e->id == Http::HdrType::FTP_PRE) {
                 // assume RFC 2389 FEAT response format, quoted by Squid:
                 // <"> SP NAME [SP PARAMS] <">
@@ -1206,7 +1206,7 @@ Ftp::PrintReply(MemBuf &mb, const HttpReply *reply, const char *const)
     const HttpHeader &header = reply->header;
 
     HttpHeaderPos pos = HttpHeaderInitPos;
-    while (const HttpHeaderEntry *e = header.getEntry(&pos)) {
+    while (const auto *e = header.getEntry(&pos)) {
         if (e->id == Http::HdrType::FTP_PRE) {
             String raw;
             if (httpHeaderParseQuotedString(e->value.rawBuf(), e->value.size(), &raw))

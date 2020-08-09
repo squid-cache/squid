@@ -995,9 +995,8 @@ clientCheckPinning(ClientHttpRequest * http)
     if (!request->flags.connectionAuth) {
         if (req_hdr->has(Http::HdrType::AUTHORIZATION) || req_hdr->has(Http::HdrType::PROXY_AUTHORIZATION)) {
             HttpHeaderPos pos = HttpHeaderInitPos;
-            HttpHeaderEntry *e;
             int may_pin = 0;
-            while ((e = req_hdr->getEntry(&pos))) {
+            while (const auto *e = req_hdr->getEntry(&pos)) {
                 if (e->id == Http::HdrType::AUTHORIZATION || e->id == Http::HdrType::PROXY_AUTHORIZATION) {
                     const char *value = e->value.rawBuf();
                     if (strncasecmp(value, "NTLM ", 5) == 0

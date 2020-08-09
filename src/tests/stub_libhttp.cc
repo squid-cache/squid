@@ -34,6 +34,15 @@ bool ContentLengthInterpreter::checkValue(const char *, const int) STUB_RETVAL(f
 bool ContentLengthInterpreter::checkList(const String &) STUB_RETVAL(false)
 }
 
+#include "http/HeaderField.h"
+namespace Http
+{
+HeaderField::HeaderField(Http::HdrType, const SBuf &, const char *) {STUB}
+HeaderField::~HeaderField() {STUB}
+HeaderField *HeaderField::clone() const STUB_RETVAL(nullptr)
+void HeaderField::packInto(Packable *) const STUB
+}
+
 #include "http/Message.h"
 namespace Http
 {
