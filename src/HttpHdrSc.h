@@ -11,7 +11,6 @@
 
 #include "http/forward.h"
 #include "HttpHdrScTarget.h"
-#include "mem/PoolingAllocator.h"
 #include "SquidString.h"
 
 #include <list>
