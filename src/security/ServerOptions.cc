@@ -430,20 +430,13 @@ Security::ServerOptions::updateContextClientCa(Security::ContextPointer &ctx)
             return;
         }
 
-        if (parsedFlags & SSL_FLAG_DELAYED_AUTH) {
-            debugs(83, 9, "Not requesting client certificates until acl processing requires one");
-            SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_NONE, nullptr);
-        } else {
-            debugs(83, 9, "Requiring client certificates.");
-            Ssl::SetupVerifyCallback(ctx);
-        }
+        Ssl::ConfigurePeerVerification(ctx, parsedFlags);
 
         updateContextCrl(ctx);
         updateContextTrust(ctx);
 
     } else {
-        debugs(83, 9, "Not requiring any client certificates");
-        SSL_CTX_set_verify(ctx.get(), SSL_VERIFY_NONE, NULL);
+        Ssl::DisablePeerVerification(ctx);
     }
 #endif
 }
