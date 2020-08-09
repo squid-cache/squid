@@ -2399,6 +2399,11 @@ DOC_START
 				Don't request client certificates
 				immediately, but wait until acl processing
 				requires a certificate (not yet implemented).
+			    CONDITIONAL_AUTH
+				Request a client certificate during the TLS
+				handshake, but ignore certificate absence in
+				the TLS client Hello. If the client does
+				supply a certificate, it is validated.
 			    NO_SESSION_REUSE
 				Don't allow for session reuse. Each connection
 				will result in a new SSL session.
