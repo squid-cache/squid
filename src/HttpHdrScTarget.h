@@ -23,8 +23,6 @@ class StoreEntry;
  */
 class HttpHdrScTarget
 {
-    MEMPROXY_CLASS(HttpHdrScTarget);
-
     // parsing is done in HttpHdrSc, need to grant them access.
     friend class HttpHdrSc;
 public:
@@ -33,6 +31,8 @@ public:
 
     explicit HttpHdrScTarget(const char *target_) : target(target_) {}
     explicit HttpHdrScTarget(const String &target_) : target(target_) {}
+    explicit HttpHdrScTarget(const HttpHdrScTarget &) = delete; // avoid accidental string copies
+    HttpHdrScTarget &operator =(const HttpHdrScTarget &) = delete; // avoid accidental string copies
 
     bool hasNoStore() const {return isSet(SC_NO_STORE); }
     void noStore(bool v) { setMask(SC_NO_STORE,v); }
