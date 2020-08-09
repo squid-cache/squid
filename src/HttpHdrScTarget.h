@@ -13,7 +13,6 @@
 #include "http/forward.h"
 #include "SquidString.h"
 
-class HttpHdrSc;
 class Packable;
 class StatHist;
 class StoreEntry;

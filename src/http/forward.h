@@ -35,6 +35,8 @@ typedef enum {
     SC_ENUM_END /* also used to mean "invalid" */
 } http_hdr_sc_type;
 
+class HttpHdrSc;
+
 class HttpRequestMethod;
 typedef RefCount<HttpRequestMethod> HttpRequestMethodPointer;
 
