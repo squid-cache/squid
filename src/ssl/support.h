@@ -83,10 +83,11 @@ typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &);
 
 /// initialize a TLS client context with OpenSSL specific settings
-bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long flags);
+bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, Security::ParsedPortFlags);
 
 /// set the certificate verify callback for a context
-void SetupVerifyCallback(Security::ContextPointer &);
+void ConfigurePeerVerification(Security::ContextPointer &, const Security::ParsedPortFlags);
+void DisablePeerVerification(Security::ContextPointer &);
 
 /// if required, setup callback for generating ephemeral RSA keys
 void MaybeSetupRsaCallback(Security::ContextPointer &);
