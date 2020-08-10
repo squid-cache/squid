@@ -16,13 +16,15 @@
 /// Unlike LOG_* categories, these flags may not be mutually exclusive.
 class LogTagsErrors {
 public:
-    LogTagsErrors(): ignored(false), timedout(false), aborted(false) {}
+    LogTagsErrors() = default;
 
+    /// Update each of this object flags to "set" if the corresponding
+    /// flag of the given object is set
     void update(const LogTagsErrors &other);
 
-    bool ignored; ///< _IGNORED: the response was not used for anything
-    bool timedout; ///< _TIMEDOUT: terminated due to a lifetime or I/O timeout
-    bool aborted;  ///< _ABORTED: other abnormal termination (e.g., I/O error)
+    bool ignored = false; ///< _IGNORED: the response was not used for anything
+    bool timedout = false; ///< _TIMEDOUT: terminated due to a lifetime or I/O timeout
+    bool aborted = false;  ///< _ABORTED: other abnormal termination (e.g., I/O error)
 };
 
 /** Squid transaction result code/tag set.
