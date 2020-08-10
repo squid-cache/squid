@@ -14,7 +14,8 @@
 /// Things that may happen to a transaction while it is being
 /// processed according to its LOG_* category. Logged as _SUFFIX(es).
 /// Unlike LOG_* categories, these flags may not be mutually exclusive.
-class LogTagsErrors {
+class LogTagsErrors
+{
 public:
     LogTagsErrors() = default;
 
