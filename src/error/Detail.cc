@@ -13,7 +13,8 @@
 #include "sbuf/Stream.h"
 
 /// details an error by tying it to a uniquely named circumstance
-class NamedErrorDetail: public ErrorDetail {
+class NamedErrorDetail: public ErrorDetail
+{
 public:
     /// briefly describes the error circumstances
     /// must not contain characters that require quoting in access logs or HTML
