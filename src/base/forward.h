@@ -15,8 +15,6 @@ class CallDialer;
 class CodeContext;
 class ScopedId;
 
-template<class C> class RefCount;
-
 template<class Cbc> class CbcPointer;
 template<class RefCountableKid> class RefCount;
 
