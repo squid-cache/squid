@@ -481,6 +481,15 @@ IpcIoFile::HandleResponses(const char *const when)
 }
 
 void
+IpcIoFile::DropOldResponses()
+{
+    IpcIoMsg ipcIo;
+    int diskId;
+    // remove all responses (if any) from the previous process reincarnation
+    while (queue->pop(diskId, ipcIo));
+}
+
+void
 IpcIoFile::handleResponse(IpcIoMsg &ipcIo)
 {
     const int requestId = ipcIo.requestId;
@@ -508,6 +517,20 @@ IpcIoFile::Notify(const int peerId)
     msg.putInt(KidIdentifier);
     const String addr = Ipc::Port::MakeAddr(Ipc::strandAddrLabel, peerId);
     Ipc::SendMessage(addr, msg);
+}
+
+void
+IpcIoFile::HandleRegistration(const Ipc::TypedMsgHdr &msg)
+{
+    // There is no 'from' process ID at this point, pass a stub '0':
+    // we can do this because the parameter is unused.
+    // TODO: add another BaseMultiQueue method for this purpose.
+    queue->clearReaderSignal(0);
+
+    if (IamDiskProcess())
+        DiskerHandleRequests();
+    else
+        DropOldResponses();
 }
 
 void
