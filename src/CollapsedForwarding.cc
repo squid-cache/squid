@@ -59,6 +59,11 @@ CollapsedForwarding::Init()
     Must(!queue.get());
     if (UsingSmp() && IamWorkerProcess())
         queue.reset(new Queue(ShmLabel, KidIdentifier));
+
+    // drop all notifications (if any) from the previous process reincarnation
+    int workerId;
+    CollapsedForwardingMsg msg;
+    while (queue->pop(workerId, msg));
 }
 
 void
