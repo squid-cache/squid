@@ -178,9 +178,7 @@ ACLProxyAuth::matchProxyAuth(ACLChecklist *cl)
     /* check to see if we have matched the user-acl before */
     auto &cache = checklist->auth_user_request->user()->proxyAuthAclCache;
 
-    SBuf key;
-    key.appendf("ACL %s(%" PRIX64 ")", name, this);
-
+    SBuf key(name);
     if (const auto *v = cache.get(key)) {
         debugs(28, 4, "cache hit on acl " << key << "=" << *v);
         checklist->auth_user_request = nullptr;
