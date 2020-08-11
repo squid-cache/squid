@@ -31,30 +31,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SRC_DIRS = \
-	mem \
-	base \
-	anyp \
-	helper \
-	dns \
-	ftp \
-	parser \
-	comm \
-	error \
-	eui \
-	acl \
-	format \
-	clients \
-	sbuf \
-	servers \
-	fs \
-	repl \
-	store \
-	DiskIO \
-	proxyp
-
-SUBDIRS = $(SRC_DIRS)
-DIST_SUBDIRS = $(SRC_DIRS)
+SUBDIRS = mem base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+DIST_SUBDIRS = mem base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
