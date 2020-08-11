@@ -965,7 +965,7 @@ ErrorState::compileLegacyCode(Build &build)
             p = "%D";  // if recursion is not allowed, do not convert
         else if (detail) {
             auto rawDetail = detail->verbose(request);
-            // TODO: Support compilation of unterminated/SBuf bodies.
+            // XXX: Performance regression. c_str() reallocates
             const auto compiledDetail = compileBody(rawDetail.c_str(), false);
             mb.append(compiledDetail.rawContent(), compiledDetail.length());
             do_quote = 0;
