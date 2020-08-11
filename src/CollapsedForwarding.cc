@@ -57,13 +57,11 @@ void
 CollapsedForwarding::Init()
 {
     Must(!queue.get());
-    if (UsingSmp() && IamWorkerProcess())
+    if (UsingSmp() && IamWorkerProcess()) {
         queue.reset(new Queue(ShmLabel, KidIdentifier));
-
-    // drop all notifications (if any) from the previous process reincarnation
-    int workerId;
-    CollapsedForwardingMsg msg;
-    while (queue->pop(workerId, msg));
+        eventAdd("CollapsedForwarding::HandleStartupMessages", &CollapsedForwarding::HandleStartupMessages,
+                 nullptr, 0.0, 0, false);
+    }
 }
 
 void
@@ -149,6 +147,14 @@ CollapsedForwarding::HandleNotification(const Ipc::TypedMsgHdr &msg)
     assert(queue.get());
     queue->clearReaderSignal(from);
     HandleNewData("after notification");
+}
+
+void
+CollapsedForwarding::HandleStartupMessages(void *)
+{
+    // the notification sender kid ID is unknown on startup
+    queue->clearReaderSignal(-1);
+    HandleNewData("init completed");
 }
 
 void

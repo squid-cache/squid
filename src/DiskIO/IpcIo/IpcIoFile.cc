@@ -9,6 +9,7 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
+#include "base/AsyncCbdataCalls.h"
 #include "base/CodeContext.h"
 #include "base/RunnersRegistry.h"
 #include "base/TextException.h"
@@ -144,6 +145,9 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         ann.pack(message);
         SendMessage(Ipc::Port::CoordinatorAddr(), message);
 
+        eventAdd("IpcIoFile::DiskerHandleStartupRequests", &IpcIoFile::DiskerHandleStartupRequests,
+                 nullptr, 0.0, 0, false);
+
         ioRequestor->ioCompletedNotification();
         return;
     }
@@ -177,6 +181,7 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
             const bool inserted =
                 IpcIoFiles.insert(std::make_pair(diskId, this)).second;
             Must(inserted);
+            HandleIncomingMessages(diskId, "open completed");
         } else {
             error_ = true;
             debugs(79, DBG_IMPORTANT, "ERROR: no disker claimed " <<
@@ -520,29 +525,29 @@ IpcIoFile::Notify(const int peerId)
 }
 
 void
-IpcIoFile::HandleRegistration(const Ipc::TypedMsgHdr &msg)
+IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
 {
-    // There is no 'from' process ID at this point, pass a stub '0':
-    // we can do this because the parameter is unused.
-    // TODO: add another BaseMultiQueue method for this purpose.
-    queue->clearReaderSignal(0);
-
-    if (IamDiskProcess())
-        DiskerHandleRequests();
-    else
-        DropOldResponses();
+    HandleIncomingMessages(msg.getInt(), "after notification");
 }
 
 void
-IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
+IpcIoFile::HandleIncomingMessages(const int fromKidId, const char *context)
 {
-    const int from = msg.getInt();
-    debugs(47, 7, HERE << "from " << from);
-    queue->clearReaderSignal(from);
+    debugs(47, 7, "from " << fromKidId);
+    queue->clearReaderSignal(fromKidId);
     if (IamDiskProcess())
         DiskerHandleRequests();
     else
-        HandleResponses("after notification");
+        HandleResponses(context);
+}
+
+void
+IpcIoFile::DiskerHandleStartupRequests(void *)
+{
+    assert(IamDiskProcess());
+    // the notification sender kid ID is unknown on startup
+    queue->clearReaderSignal(-1);
+    DiskerHandleRequests();
 }
 
 void

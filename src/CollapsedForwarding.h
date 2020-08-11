@@ -42,6 +42,9 @@ public:
     /// handle queue push notifications from worker or disker
     static void HandleNotification(const Ipc::TypedMsgHdr &msg);
 
+    /// handle all available messages on startup, including 'previous generation' messages
+    static void HandleStartupMessages(void *);
+
     /// prints IPC message queue state; suitable for cache manager reports
     static void StatQueue(std::ostream &);
 

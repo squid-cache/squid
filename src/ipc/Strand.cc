@@ -67,7 +67,6 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 
     case mtRegistration:
         handleRegistrationResponse(HereIamMessage(message));
-        IpcIoFile::HandleRegistration(message);
         break;
 
     case mtSharedListenResponse:

@@ -91,7 +91,8 @@ public:
     /// handle queue push notifications from worker or disker
     static void HandleNotification(const Ipc::TypedMsgHdr &msg);
 
-    static void HandleRegistration(const Ipc::TypedMsgHdr &msg);
+    /// handle all available disker requests on startup, including 'previous generation' requests
+    static void DiskerHandleStartupRequests(void *);
 
     /// prints IPC message queue state; suitable for cache manager reports
     static void StatQueue(std::ostream &);
@@ -124,6 +125,7 @@ private:
     static void HandleResponses(const char *const when);
     void handleResponse(IpcIoMsg &ipcIo);
     static void DropOldResponses();
+    static void HandleIncomingMessages(const int fromKidId, const char *context);
 
     static void DiskerHandleMoreRequests(void*);
     static void DiskerHandleRequests();
