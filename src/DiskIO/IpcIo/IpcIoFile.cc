@@ -9,7 +9,6 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
-#include "base/AsyncCbdataCalls.h"
 #include "base/CodeContext.h"
 #include "base/RunnersRegistry.h"
 #include "base/TextException.h"
@@ -483,15 +482,6 @@ IpcIoFile::HandleResponses(const char *const when)
         Must(i != IpcIoFiles.end()); // TODO: warn but continue
         i->second->handleResponse(ipcIo);
     }
-}
-
-void
-IpcIoFile::DropOldResponses()
-{
-    IpcIoMsg ipcIo;
-    int diskId;
-    // remove all responses (if any) from the previous process reincarnation
-    while (queue->pop(diskId, ipcIo));
 }
 
 void

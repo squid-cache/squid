@@ -124,7 +124,6 @@ private:
 
     static void HandleResponses(const char *const when);
     void handleResponse(IpcIoMsg &ipcIo);
-    static void DropOldResponses();
     static void HandleIncomingMessages(const int fromKidId, const char *context);
 
     static void DiskerHandleMoreRequests(void*);
