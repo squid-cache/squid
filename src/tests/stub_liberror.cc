@@ -1,0 +1,20 @@
+#include "squid.h"
+#include "error/Error.h"
+#include "sbuf/SBuf.h"
+
+#define STUB_API "error/liberror.la"
+#include "tests/STUB.h"
+
+const char * err_type_str[ERR_MAX] = {};
+
+void Error::update(const Error &) STUB_NOP
+
+std::ostream &operator <<(std::ostream &os, const Error &) STUB_RETVAL(os)
+
+SBuf ExceptionErrorDetail::brief() const STUB_RETVAL(SBuf())
+SBuf ExceptionErrorDetail::verbose(const HttpRequestPointer &) const STUB_RETVAL(SBuf())
+
+SBuf SysErrorDetail::brief() const STUB_RETVAL(SBuf())
+SBuf SysErrorDetail::verbose(const HttpRequestPointer &) const STUB_RETVAL(SBuf())
+
+ErrorDetail::Pointer MakeNamedErrorDetail(const char *name) STUB_RETVAL(ErrorDetail::Pointer())

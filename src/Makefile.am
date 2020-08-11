@@ -1209,6 +1209,7 @@ tests_testRock_SOURCES = \
 	tests/stub_ipcache.cc \
 	tests/stub_libanyp.cc \
 	tests/stub_libauth.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
@@ -1259,7 +1260,6 @@ tests_testRock_LDADD = \
 	acl/libapi.la \
 	acl/libstate.la \
 	anyp/libanyp.la \
-	error/liberror.la \
 	eui/libeui.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
@@ -1386,6 +1386,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_ipcache.cc \
 	tests/stub_libanyp.cc \
 	tests/stub_libauth.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
@@ -1440,7 +1441,6 @@ tests_testUfs_LDADD = \
 	DiskIO/libdiskio.la \
 	acl/libapi.la \
 	anyp/libanyp.la \
-	error/liberror.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
 	comm/libcomm.la \
@@ -1563,6 +1563,7 @@ tests_testStore_SOURCES = \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libsecurity.cc \
@@ -1613,7 +1614,6 @@ tests_testStore_LDADD= \
 	fs/libfs.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
-	error/liberror.la \
 	mem/libmem.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
@@ -1736,6 +1736,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_libanyp.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libauth_acls.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
@@ -1792,7 +1793,6 @@ tests_testDiskIO_LDADD = \
 	DiskIO/libdiskio.la \
 	acl/libapi.la \
 	anyp/libanyp.la \
-	error/liberror.la \
 	mgr/libmgr.la \
 	$(SSL_LIBS) \
 	ipc/libipc.la \
@@ -1995,6 +1995,7 @@ tests_test_http_range_SOURCES = \
 	ipcache.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
@@ -2073,7 +2074,6 @@ tests_test_http_range_LDADD = \
 	ip/libip.la \
 	fs/libfs.la \
 	anyp/libanyp.la \
-	error/liberror.la \
 	icmp/libicmp.la \
 	comm/libcomm.la \
 	log/liblog.la \
@@ -2211,6 +2211,7 @@ tests_testHttpReply_SOURCES = \
 	tests/stub_libanyp.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
@@ -2237,7 +2238,6 @@ tests_testHttpReply_LDADD=\
 	acl/libapi.la \
 	acl/libstate.la \
 	anyp/libanyp.la \
-	error/liberror.la \
 	ip/libip.la \
 	base/libbase.la \
 	ipc/libipc.la \
@@ -2385,6 +2385,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_libauth.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
@@ -2469,7 +2470,6 @@ tests_testHttpRequest_LDADD = \
 	base/libbase.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
-	error/liberror.la \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la \
 	comm/libcomm.la \
@@ -2691,6 +2691,7 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_libauth.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
@@ -2779,7 +2780,6 @@ tests_testCacheManager_LDADD = \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	anyp/libanyp.la \
-	error/liberror.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(SNMP_LIBS) \
@@ -3013,6 +3013,7 @@ tests_testEvent_SOURCES = \
 	tests/stub_libauth.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
@@ -3094,7 +3095,6 @@ tests_testEvent_LDADD = \
 	ip/libip.la \
 	fs/libfs.la \
 	anyp/libanyp.la \
-	error/liberror.la \
 	icmp/libicmp.la \
 	comm/libcomm.la \
 	log/liblog.la \
