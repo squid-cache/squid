@@ -21,12 +21,11 @@ liberror_la_SOURCES = \
 	Error.cc \
 	Error.h \
 	Detail.cc \
-	Detail.h \
-	\
+	Detail.h
+
+nodist_liberror_la_SOURCES = \
 	$(BUILT_SOURCES)
 
 CLEANFILES += \
 	$(BUILT_SOURCES)
 
-nodist_liberror_la_SOURCES = \
-	$(BUILT_SOURCES)
