@@ -17,8 +17,6 @@
 class LogTagsErrors
 {
 public:
-    LogTagsErrors() = default;
-
     /// Update each of this object flags to "set" if the corresponding
     /// flag of the given object is set
     void update(const LogTagsErrors &other);
