@@ -38,7 +38,8 @@ public:
 ErrorDetail::Pointer MakeNamedErrorDetail(const char *name);
 
 /// system call failure detail based on standard errno(3)/strerror(3) APIs
-class SysErrorDetail: public ErrorDetail {
+class SysErrorDetail: public ErrorDetail
+{
     MEMPROXY_CLASS(SysErrorDetail);
 
 public:
@@ -67,7 +68,8 @@ private:
 
 /// Details a failure reported via a C++ exception. Stores exception ID which
 /// scripts/calc-must-ids.sh can map to a relevant source code location.
-class ExceptionErrorDetail: public ErrorDetail {
+class ExceptionErrorDetail: public ErrorDetail
+{
     MEMPROXY_CLASS(ExceptionErrorDetail);
 
 public:
