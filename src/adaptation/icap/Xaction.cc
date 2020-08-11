@@ -20,7 +20,7 @@
 #include "comm/Read.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "fde.h"
 #include "FwdState.h"
 #include "globals.h"

@@ -17,7 +17,7 @@
 #include "client_side_request.h"
 #include "dns/LookupDetails.h"
 #include "Downloader.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "globals.h"
 #include "gopher.h"
 #include "http.h"

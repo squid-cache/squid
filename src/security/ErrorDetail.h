@@ -10,7 +10,7 @@
 #define SQUID_SRC_SECURITY_DETAIL_H
 
 #include "base/RefCount.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "http/forward.h"
 #include "security/forward.h"
 #include "SquidString.h"

@@ -13,8 +13,8 @@
 
 #include "cbdata.h"
 #include "comm/forward.h"
-#include "err_detail_type.h"
-#include "err_type.h"
+#include "error/Detail.h"
+#include "error/forward.h"
 #include "http/forward.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"

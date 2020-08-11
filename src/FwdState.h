@@ -16,7 +16,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
-#include "err_type.h"
+#include "error/forward.h"
 #include "fde.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"

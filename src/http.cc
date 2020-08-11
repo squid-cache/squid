@@ -24,7 +24,7 @@
 #include "comm/Read.h"
 #include "comm/Write.h"
 #include "CommRead.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
 #include "fde.h"

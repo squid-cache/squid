@@ -24,7 +24,7 @@
 #include "base64.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "http/ContentLengthInterpreter.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"

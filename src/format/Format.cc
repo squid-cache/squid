@@ -11,7 +11,7 @@
 #include "base64.h"
 #include "client_side.h"
 #include "comm/Connection.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "errorpage.h"
 #include "fde.h"
 #include "format/Format.h"
