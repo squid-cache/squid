@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "error/SysErrorDetail.h"
 #include "html_quote.h"
 #include "sbuf/SBuf.h"
 #include "sbuf/Stream.h"

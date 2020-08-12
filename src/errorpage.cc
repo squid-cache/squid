@@ -15,6 +15,7 @@
 #include "comm/Connection.h"
 #include "comm/Write.h"
 #include "error/Detail.h"
+#include "error/SysErrorDetail.h"
 #include "errorpage.h"
 #include "fde.h"
 #include "format/Format.h"

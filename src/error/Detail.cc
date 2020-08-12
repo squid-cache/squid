@@ -59,37 +59,3 @@ MakeNamedErrorDetail(const char *name)
     return new NamedErrorDetail(name);
 }
 
-/* SysErrorDetail */
-
-SBuf
-SysErrorDetail::Brief(const int errorNo)
-{
-    return SysErrorDetail(errorNo).brief();
-}
-
-SBuf
-SysErrorDetail::brief() const
-{
-    return ToSBuf("errno=", errorNo);
-}
-
-SBuf
-SysErrorDetail::verbose(const HttpRequest::Pointer &) const
-{
-    return SBuf(strerror(errorNo));
-}
-
-/* ExceptionErrorDetail */
-
-SBuf
-ExceptionErrorDetail::brief() const
-{
-    return ToSBuf("exception=", std::hex, exceptionId);
-}
-
-SBuf
-ExceptionErrorDetail::verbose(const HttpRequest::Pointer &) const
-{
-    return ToSBuf("Exception (ID=", std::hex, exceptionId, ')');
-}
-

@@ -25,6 +25,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "error/Detail.h"
+#include "error/ExceptionErrorDetail.h"
 #include "http/ContentLengthInterpreter.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"

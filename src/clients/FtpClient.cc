@@ -17,6 +17,7 @@
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "errorpage.h"
+#include "error/SysErrorDetail.h"
 #include "fd.h"
 #include "ftp/Parsing.h"
 #include "http/Stream.h"

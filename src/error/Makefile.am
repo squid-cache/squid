@@ -21,7 +21,9 @@ liberror_la_SOURCES = \
 	Error.cc \
 	Error.h \
 	Detail.cc \
-	Detail.h
+	Detail.h \
+	SysErrorDetail.h \
+	ExceptionErrorDetail.h
 
 nodist_liberror_la_SOURCES = \
 	$(BUILT_SOURCES)

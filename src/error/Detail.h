@@ -37,52 +37,6 @@ public:
 /// \see NamedErrorDetail::Name for naming restrictions
 ErrorDetail::Pointer MakeNamedErrorDetail(const char *name);
 
-/// system call failure detail based on standard errno(3)/strerror(3) APIs
-class SysErrorDetail: public ErrorDetail
-{
-    MEMPROXY_CLASS(SysErrorDetail);
-
-public:
-    /// \returns a pointer to a SysErrorDetail instance (or nil for lost errnos)
-    static ErrorDetail::Pointer NewIfAny(const int errorNo)
-    {
-        // we could optimize by caching results for (frequently used?) errnos
-        return errorNo ? new SysErrorDetail(errorNo) : nullptr;
-    }
-
-    static SBuf Brief(int errorNo);
-
-    /* ErrorDetail API */
-    virtual SBuf brief() const override;
-    virtual SBuf verbose(const HttpRequestPointer &) const override;
-
-private:
-    // hidden by NewIfAny() to avoid creating SysErrorDetail from zero errno
-    explicit SysErrorDetail(const int anErrorNo): errorNo(anErrorNo) {}
-
-    int errorNo; ///< errno(3) set by the last failed system call or equivalent
-};
-
-/// offset for exception ID details, for backward compatibility
-#define SQUID_EXCEPTION_START_BASE 110000
-
-/// Details a failure reported via a C++ exception. Stores exception ID which
-/// scripts/calc-must-ids.sh can map to a relevant source code location.
-class ExceptionErrorDetail: public ErrorDetail
-{
-    MEMPROXY_CLASS(ExceptionErrorDetail);
-
-public:
-    explicit ExceptionErrorDetail(const SourceLocationId id): exceptionId(SQUID_EXCEPTION_START_BASE + id) {}
-
-    /* ErrorDetail API */
-    virtual SBuf brief() const override;
-    virtual SBuf verbose(const HttpRequestPointer &) const override;
-
-private:
-    SourceLocationId exceptionId; ///< identifies the thrower or catcher
-};
-
 /// dump the given ErrorDetail (for debugging)
 std::ostream &operator <<(std::ostream &os, const ErrorDetail &);
 
