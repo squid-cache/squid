@@ -29,8 +29,8 @@ public:
     static const int MAX_AGE_UNSET=-1; //max-age is unset
     static const int MAX_STALE_UNSET=0; //max-stale is unset
 
-    explicit HttpHdrScTarget(const char *target_) : target(target_) {}
-    explicit HttpHdrScTarget(const String &target_) : target(target_) {}
+    explicit HttpHdrScTarget(const char *aTarget): target(aTarget) {}
+    explicit HttpHdrScTarget(const String &aTarget): target(aTarget) {}
     explicit HttpHdrScTarget(const HttpHdrScTarget &) = delete; // avoid accidental string copies
     HttpHdrScTarget &operator =(const HttpHdrScTarget &) = delete; // avoid accidental string copies
 
