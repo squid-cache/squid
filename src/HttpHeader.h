@@ -200,8 +200,7 @@ void httpHeaderCalcMask(HttpHeaderMask * mask, Http::HdrType http_hdr_type_enums
 inline bool
 HttpHeader::chunked() const
 {
-    return has(Http::HdrType::TRANSFER_ENCODING) &&
-           hasListMember(Http::HdrType::TRANSFER_ENCODING, "chunked", ',');
+    return has(Http::HdrType::TRANSFER_ENCODING);
 }
 
 void httpHeaderInitModule(void);
