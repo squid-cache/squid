@@ -497,7 +497,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             const auto framingHeader = (e->id == Http::HdrType::CONTENT_LENGTH || e->id == Http::HdrType::TRANSFER_ENCODING);
             if (framingHeader) {
                 if (!hasBareCr) // already warned about bare CRs
-                    debugs(55, warnOnError, "WARNING: " << "obs-fold in framing-sensitive " << e->name << ": " << e->value);
+                    debugs(55, warnOnError, "WARNING: obs-fold in framing-sensitive " << e->name << ": " << e->value);
                 delete e;
                 PROF_stop(HttpHeaderParse);
                 clean();
