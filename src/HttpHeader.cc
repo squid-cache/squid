@@ -510,8 +510,8 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
 
     String rawTe;
     if (clen.prohibitedAndIgnored()) {
-        // NOTE: prohibitedAndIgnored() includes trailer header blocks
-        //       being parsed as a case to forbid/ignore these headers.
+        // prohibitedAndIgnored() includes trailer header blocks
+        // being parsed as a case to forbid/ignore these headers.
 
         // RFC 7230 section 3.3.2: A server MUST NOT send a Content-Length
         // header field in any response with a status code of 1xx (Informational)
