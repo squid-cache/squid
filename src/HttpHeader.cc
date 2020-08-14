@@ -317,6 +317,9 @@ HttpHeader::update(HttpHeader const *fresh)
     return true;
 }
 
+// XXX: callers treat this return as boolean.
+// XXX: A better mechanism is needed to signal different types of error.
+//      lexicon, syntax, semantics, validation, access policy - are all (ab)using 'return 0'
 int
 HttpHeader::parse(const char *header_start, size_t hdrLen)
 {
@@ -346,9 +349,12 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
         const char *field_start = field_ptr;
         const char *field_end;
 
+        const char *hasBareCr = nullptr;
+        size_t lines = 0;
         do {
             const char *this_line = field_ptr;
             field_ptr = (const char *)memchr(field_ptr, '\n', header_end - field_ptr);
+            ++lines;
 
             if (!field_ptr) {
                 // missing <LF>
@@ -383,6 +389,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
 
             /* Barf on stray CR characters */
             if (memchr(this_line, '\r', field_end - this_line)) {
+                hasBareCr = "bare CR";
                 debugs(55, warnOnError, "WARNING: suspicious CR characters in HTTP header {" <<
                        getStringPrefix(field_start, field_end-field_start) << "}");
 
@@ -430,6 +437,18 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
             PROF_stop(HttpHeaderParse);
             clean();
             return 0;
+        }
+
+        if (lines > 1 || hasBareCr) {
+            const auto framingHeader = (e->id == Http::HdrType::CONTENT_LENGTH || e->id == Http::HdrType::TRANSFER_ENCODING);
+            if (framingHeader) {
+                if (!hasBareCr) // already warned about bare CRs
+                    debugs(55, warnOnError, "WARNING: obs-fold in framing-sensitive " << e->name << ": " << e->value);
+                delete e;
+                PROF_stop(HttpHeaderParse);
+                clean();
+                return 0;
+            }
         }
 
         if (e->id == Http::HdrType::CONTENT_LENGTH && !clen.checkField(e->value)) {
