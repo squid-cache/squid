@@ -30,9 +30,6 @@ class QueueReader
 public:
     QueueReader(); // the initial state is "blocked without a signal"
 
-    /// reset flags to the initial state "blocked without a signal"
-    void reset() { popBlocked.store(true); popSignal.store(false); }
-
     /// whether the reader is waiting for a notification signal
     bool blocked() const { return popBlocked.load(); }
 
