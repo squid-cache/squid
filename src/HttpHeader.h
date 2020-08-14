@@ -159,7 +159,11 @@ public:
     int hasListMember(Http::HdrType id, const char *member, const char separator) const;
     int hasByNameListMember(const char *name, const char *member, const char separator) const;
     void removeHopByHopEntries();
-    inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
+
+    /// whether the message uses chunked Transfer-Encoding
+    /// optimized implementation relies on us rejecting/removing other codings
+    bool chunked() const { return has(Http::HdrType::TRANSFER_ENCODING); }
+
     /// whether message used an unsupported and/or invalid Transfer-Encoding
     bool unsupportedTe() const { return teUnsupported_; }
 
@@ -196,12 +200,6 @@ int httpHeaderParseQuotedString(const char *start, const int len, String *val);
 SBuf httpHeaderQuoteString(const char *raw);
 
 void httpHeaderCalcMask(HttpHeaderMask * mask, Http::HdrType http_hdr_type_enums[], size_t count);
-
-inline bool
-HttpHeader::chunked() const
-{
-    return has(Http::HdrType::TRANSFER_ENCODING);
-}
 
 void httpHeaderInitModule(void);
 
