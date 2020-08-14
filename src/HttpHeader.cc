@@ -1774,3 +1774,4 @@ HttpHeader::removeConnectionHeaderEntries()
             refreshMask();
     }
 }
+
