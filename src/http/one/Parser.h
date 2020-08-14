@@ -26,6 +26,7 @@ enum ParseState {
     HTTP_PARSE_CHUNK_EXT, ///< HTTP/1.1 chunked encoding chunk-ext
     HTTP_PARSE_CHUNK,     ///< HTTP/1.1 chunked encoding chunk-data
     HTTP_PARSE_MIME,      ///< HTTP/1 mime-header block
+    HTTP_PARSE_MIME_FIELDS, ///< mime-header field-line(s)
     HTTP_PARSE_DONE       ///< parsed a message header, or reached a terminal syntax error
 };
 
