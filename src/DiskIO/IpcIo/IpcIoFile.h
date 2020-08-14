@@ -92,7 +92,7 @@ public:
     static void HandleNotification(const Ipc::TypedMsgHdr &msg);
 
     /// handle all available disker requests on startup, including 'previous generation' requests
-    static void DiskerHandleStartupRequests(void *);
+    static void DiskerHandleStartupRequests();
 
     /// prints IPC message queue state; suitable for cache manager reports
     static void StatQueue(std::ostream &);

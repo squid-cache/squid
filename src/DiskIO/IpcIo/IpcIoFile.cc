@@ -9,6 +9,7 @@
 /* DEBUG: section 47    Store Directory Routines */
 
 #include "squid.h"
+#include "base/AsyncCbdataCalls.h"
 #include "base/CodeContext.h"
 #include "base/RunnersRegistry.h"
 #include "base/TextException.h"
@@ -144,8 +145,9 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         ann.pack(message);
         SendMessage(Ipc::Port::CoordinatorAddr(), message);
 
-        eventAdd("IpcIoFile::DiskerHandleStartupRequests", &IpcIoFile::DiskerHandleStartupRequests,
-                 nullptr, 0.0, 0, false);
+        AsyncCall::Pointer call = asyncCall(79, 4, "IpcIoFile::DiskerHandleStartupRequests",
+                cbdataDialer<nullptr_t>(&IpcIoFile::DiskerHandleStartupRequests, nullptr));
+        ScheduleCallHere(call);
 
         ioRequestor->ioCompletedNotification();
         return;
@@ -532,7 +534,7 @@ IpcIoFile::HandleIncomingMessages(const int fromKidId, const char *context)
 }
 
 void
-IpcIoFile::DiskerHandleStartupRequests(void *)
+IpcIoFile::DiskerHandleStartupRequests()
 {
     assert(IamDiskProcess());
     queue->clearAllReaderSignals();
