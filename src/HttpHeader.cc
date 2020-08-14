@@ -443,7 +443,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
 
             /* Barf on stray CR characters */
             if (memchr(this_line, '\r', field_end - this_line)) {
-                hasBareCr = "bare-CR";
+                hasBareCr = "bare CR";
                 debugs(55, warnOnError, "WARNING: suspicious CR characters in HTTP header {" <<
                        getStringPrefix(field_start, field_end-field_start) << "}");
 
@@ -1773,4 +1773,3 @@ HttpHeader::removeConnectionHeaderEntries()
             refreshMask();
     }
 }
-
