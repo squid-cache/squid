@@ -174,8 +174,10 @@ public:
     virtual ~BaseMultiQueue() {}
 
     /// clears the reader notification received by the local process from the remote process
-    /// \param remoteProcessId either the remote kid ID or -1
     void clearReaderSignal(const int remoteProcessId);
+
+    /// clears the reader notification (probably lost), sent from some remote process some time ago
+    void clearAllReaderSignals();
 
     /// picks a process and calls OneToOneUniQueue::pop() using its queue
     template <class Value> bool pop(int &remoteProcessId, Value &value);

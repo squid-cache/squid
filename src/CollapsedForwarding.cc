@@ -152,8 +152,7 @@ CollapsedForwarding::HandleNotification(const Ipc::TypedMsgHdr &msg)
 void
 CollapsedForwarding::HandleStartupMessages(void *)
 {
-    // the notification sender kid ID is unknown on startup
-    queue->clearReaderSignal(-1);
+    queue->clearAllReaderSignals();
     HandleNewData("init completed");
 }
 
