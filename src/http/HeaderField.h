@@ -10,6 +10,7 @@
 #define _SQUID__SRC_HTTP_HEADERFIELD_H
 
 #include "base/Packable.h"
+#include "base/RefCount.h"
 #include "http/RegisteredHeaders.h"
 #include "sbuf/SBuf.h"
 #include "SquidString.h"
@@ -19,7 +20,7 @@ namespace Http
 
 /// Internal representation of an HTTP header field.
 /// see RFC 7230 section 3.2
-class HeaderField
+class HeaderField : public RefCountable
 {
     MEMPROXY_CLASS(HeaderField);
 

@@ -18,6 +18,9 @@ namespace Http
 
 class ContentLengthInterpreter;
 
+class HeaderField;
+using HeaderFieldPointer = RefCount<Http::HeaderField>;
+
 class Message;
 typedef RefCount<Http::Message> MessagePointer;
 
