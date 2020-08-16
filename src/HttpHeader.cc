@@ -174,6 +174,7 @@ HttpHeader::operator =(const HttpHeader &other)
         update(&other); // will update the mask as well
         len = other.len;
         conflictingContentLength_ = other.conflictingContentLength_;
+        teUnsupported_ = other.teUnsupported_;
     }
     return *this;
 }
@@ -222,6 +223,7 @@ HttpHeader::clean()
     httpHeaderMaskInit(&mask, 0);
     len = 0;
     conflictingContentLength_ = false;
+    teUnsupported_ = false;
     PROF_stop(HttpHeaderClean);
 }
 
@@ -471,11 +473,23 @@ HttpHeader::parse(const char *header_start, size_t hdrLen)
                Raw("header", header_start, hdrLen));
     }
 
-    if (chunked()) {
+    String rawTe;
+    if (getByIdIfPresent(Http::HdrType::TRANSFER_ENCODING, &rawTe)) {
         // RFC 2616 section 4.4: ignore Content-Length with Transfer-Encoding
         // RFC 7230 section 3.3.3 #3: Transfer-Encoding overwrites Content-Length
         delById(Http::HdrType::CONTENT_LENGTH);
         // and clen state becomes irrelevant
+
+        if (rawTe == "chunked") {
+            ; // leave header present for chunked() method
+        } else if (rawTe == "identity") { // deprecated. no coding
+            delById(Http::HdrType::TRANSFER_ENCODING);
+        } else {
+            // This also rejects multiple encodings until we support them properly.
+            debugs(55, warnOnError, "WARNING: unsupported Transfer-Encoding used by client: " << rawTe);
+            teUnsupported_ = true;
+        }
+
     } else if (clen.sawBad) {
         // ensure our callers do not accidentally see bad Content-Length values
         delById(Http::HdrType::CONTENT_LENGTH);

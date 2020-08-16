@@ -1600,9 +1600,7 @@ void
 clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp, Http::Stream *context)
 {
     ClientHttpRequest *http = context->http;
-    bool chunked = false;
     bool mustReplyToOptions = false;
-    bool unsupportedTe = false;
     bool expectBody = false;
 
     // We already have the request parsed and checked, so we
@@ -1659,13 +1657,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         request->http_ver.minor = http_ver.minor;
     }
 
-    if (request->header.chunked()) {
-        chunked = true;
-    } else if (request->header.has(Http::HdrType::TRANSFER_ENCODING)) {
-        const String te = request->header.getList(Http::HdrType::TRANSFER_ENCODING);
-        // HTTP/1.1 requires chunking to be the last encoding if there is one
-        unsupportedTe = te.size() && te != "identity";
-    } // else implied identity coding
+    const auto unsupportedTe = request->header.unsupportedTe();
 
     mustReplyToOptions = (request->method == Http::METHOD_OPTIONS) &&
                          (request->header.getInt64(Http::HdrType::MAX_FORWARDS) == 0);
@@ -1682,6 +1674,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         return;
     }
 
+    const auto chunked = request->header.chunked();
     if (!chunked && !clientIsContentLengthValid(request.getRaw())) {
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
