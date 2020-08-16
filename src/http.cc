@@ -1292,6 +1292,9 @@ HttpStateData::continueAfterParsingHeader()
             } else if (vrep->header.conflictingContentLength()) {
                 fwd->dontRetry(true);
                 error = ERR_INVALID_RESP;
+            } else if (vrep->header.unsupportedTe()) {
+                fwd->dontRetry(true);
+                error = ERR_INVALID_RESP;
             } else {
                 return true; // done parsing, got reply, and no error
             }
