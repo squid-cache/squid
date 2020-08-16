@@ -181,6 +181,7 @@ HttpHeader::operator =(const HttpHeader &other)
         update(&other); // will update the mask as well
         len = other.len;
         conflictingContentLength_ = other.conflictingContentLength_;
+        teUnsupported_ = other.teUnsupported_;
     }
     return *this;
 }
@@ -229,6 +230,7 @@ HttpHeader::clean()
     httpHeaderMaskInit(&mask, 0);
     len = 0;
     conflictingContentLength_ = false;
+    teUnsupported_ = false;
     PROF_stop(HttpHeaderClean);
 }
 
@@ -525,18 +527,40 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
                Raw("header", header_start, hdrLen));
     }
 
+    String rawTe;
     if (clen.prohibitedAndIgnored()) {
+        // prohibitedAndIgnored() includes trailer header blocks
+        // being parsed as a case to forbid/ignore these headers.
+
         // RFC 7230 section 3.3.2: A server MUST NOT send a Content-Length
         // header field in any response with a status code of 1xx (Informational)
         // or 204 (No Content). And RFC 7230 3.3.3#1 tells recipients to ignore
         // such Content-Lengths.
         if (delById(Http::HdrType::CONTENT_LENGTH))
             debugs(55, 3, "Content-Length is " << clen.prohibitedAndIgnored());
-    } else if (chunked()) {
+
+        // RFC 7230 section 3.3.1 has the same criteria forbid Transfer-Encoding
+        if (delById(Http::HdrType::TRANSFER_ENCODING)) {
+            debugs(55, 3, "Transfer-Encoding is " << clen.prohibitedAndIgnored());
+            teUnsupported_ = true;
+        }
+
+    } else if (getByIdIfPresent(Http::HdrType::TRANSFER_ENCODING, &rawTe)) {
         // RFC 2616 section 4.4: ignore Content-Length with Transfer-Encoding
         // RFC 7230 section 3.3.3 #3: Transfer-Encoding overwrites Content-Length
         delById(Http::HdrType::CONTENT_LENGTH);
         // and clen state becomes irrelevant
+
+        if (rawTe == "chunked") {
+            ; // leave header present for chunked() method
+        } else if (rawTe == "identity") { // deprecated. no coding
+            delById(Http::HdrType::TRANSFER_ENCODING);
+        } else {
+            // This also rejects multiple encodings until we support them properly.
+            debugs(55, warnOnError, "WARNING: unsupported Transfer-Encoding used by client: " << rawTe);
+            teUnsupported_ = true;
+        }
+
     } else if (clen.sawBad) {
         // ensure our callers do not accidentally see bad Content-Length values
         delById(Http::HdrType::CONTENT_LENGTH);
