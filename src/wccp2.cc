@@ -49,7 +49,7 @@ static EVH wccp2AssignBuckets;
 
 /* Useful defines */
 #define WCCP2_NUMPORTS  8
-#define WCCP2_PASSWORD_LEN  8
+#define WCCP2_PASSWORD_LEN  8 + 1 /* + 1 for C-string NUL terminator */
 
 /* WCCPv2 Pakcet format structures */
 /* Defined in draft-wilson-wccp-v2-12-oct-2001.txt */
@@ -451,7 +451,7 @@ struct wccp2_service_list_t {
     size_t wccp_packet_size;
 
     struct wccp2_service_list_t *next;
-    char wccp_password[WCCP2_PASSWORD_LEN + 1];     /* hold the trailing C-string NUL */
+    char wccp_password[WCCP2_PASSWORD_LEN];     /* hold the trailing C-string NUL */
     uint32_t wccp2_security_type;
 };
 
@@ -519,8 +519,8 @@ wccp2_add_service_list(int service, int service_id, int service_priority,
     wccp2_update_service(wccp2_service_list_ptr, service, service_id,
                          service_priority, service_proto, service_flags, ports);
     wccp2_service_list_ptr->wccp2_security_type = security_type;
-    memset(wccp2_service_list_ptr->wccp_password, 0, WCCP2_PASSWORD_LEN + 1);
-    strncpy(wccp2_service_list_ptr->wccp_password, password, WCCP2_PASSWORD_LEN);
+    memset(wccp2_service_list_ptr->wccp_password, 0, WCCP2_PASSWORD_LEN);
+    xstrncpy(wccp2_service_list_ptr->wccp_password, password, WCCP2_PASSWORD_LEN);
     /* add to linked list - XXX this should use the Squid dlink* routines! */
     wccp2_service_list_ptr->next = wccp2_service_list_head;
     wccp2_service_list_head = wccp2_service_list_ptr;
@@ -562,8 +562,7 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
 
     /* The password field, for the MD5 hash, needs to be 8 bytes and NUL padded. */
     memset(pwd, 0, sizeof(pwd));
-    strncpy(pwd, password, sizeof(pwd));
-    pwd[sizeof(pwd) - 1] = '\0';
+    xstrncpy(pwd, password, sizeof(pwd));
 
     ws = (struct wccp2_security_md5_t *) ptr;
     assert(ntohs(ws->security_type) == WCCP2_SECURITY_INFO);
@@ -630,8 +629,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     /* The password field, for the MD5 hash, needs to be 8 bytes and NUL padded. */
     memset(pwd, 0, sizeof(pwd));
-    strncpy(pwd, srv->wccp_password, sizeof(pwd));
-    pwd[sizeof(pwd) - 1] = '\0';
+    xstrncpy(pwd, srv->wccp_password, sizeof(pwd));
 
     /* Take a copy of the challenge: we need to NUL it before comparing */
     memcpy(md5_challenge, ws->security_implementation, sizeof(md5_challenge));
@@ -2096,7 +2094,7 @@ parse_wccp2_service(void *)
     int service = 0;
     int service_id = 0;
     int security_type = WCCP2_NO_SECURITY;
-    char wccp_password[WCCP2_PASSWORD_LEN + 1];
+    char wccp_password[WCCP2_PASSWORD_LEN];
 
     if (wccp2_connected == 1) {
         debugs(80, DBG_IMPORTANT, "WCCPv2: Somehow reparsing the configuration without having shut down WCCP! Try reloading squid again.");
@@ -2132,7 +2130,7 @@ parse_wccp2_service(void *)
     if ((t = ConfigParser::NextToken()) != NULL) {
         if (strncmp(t, "password=", 9) == 0) {
             security_type = WCCP2_MD5_SECURITY;
-            strncpy(wccp_password, t + 9, WCCP2_PASSWORD_LEN);
+            xstrncpy(wccp_password, t + 9, sizeof(wccp_password));
         }
     }
 
