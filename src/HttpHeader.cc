@@ -372,6 +372,9 @@ HttpHeader::parse(const char *buf, size_t buf_len, bool atEnd, size_t &hdr_sz, H
     return -1;
 }
 
+// XXX: callers treat this return as boolean.
+// XXX: A better mechanism is needed to signal different types of error.
+//      lexicon, syntax, semantics, validation, access policy - are all (ab)using 'return 0'
 int
 HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthInterpreter &clen)
 {
@@ -400,9 +403,12 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
         const char *field_start = field_ptr;
         const char *field_end;
 
+        const char *hasBareCr = nullptr;
+        size_t lines = 0;
         do {
             const char *this_line = field_ptr;
             field_ptr = (const char *)memchr(field_ptr, '\n', header_end - field_ptr);
+            ++lines;
 
             if (!field_ptr) {
                 // missing <LF>
@@ -437,6 +443,7 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
 
             /* Barf on stray CR characters */
             if (memchr(this_line, '\r', field_end - this_line)) {
+                hasBareCr = "bare CR";
                 debugs(55, warnOnError, "WARNING: suspicious CR characters in HTTP header {" <<
                        getStringPrefix(field_start, field_end-field_start) << "}");
 
@@ -486,6 +493,18 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             return 0;
         }
 
+        if (lines > 1 || hasBareCr) {
+            const auto framingHeader = (e->id == Http::HdrType::CONTENT_LENGTH || e->id == Http::HdrType::TRANSFER_ENCODING);
+            if (framingHeader) {
+                if (!hasBareCr) // already warned about bare CRs
+                    debugs(55, warnOnError, "WARNING: obs-fold in framing-sensitive " << e->name << ": " << e->value);
+                delete e;
+                PROF_stop(HttpHeaderParse);
+                clean();
+                return 0;
+            }
+        }
+
         if (e->id == Http::HdrType::CONTENT_LENGTH && !clen.checkField(e->value)) {
             delete e;
 
@@ -495,22 +514,6 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
             PROF_stop(HttpHeaderParse);
             clean();
             return 0;
-        }
-
-        /* AYJ 2017-05-23: I suspect we need to change this whitespace check to conform to the
-           updated WSP character set in RFC 7230/7231. For now I left it as the
-           characters in w_space which the previous code was using. */
-        static CharacterSet wsp = (CharacterSet::WSP + CharacterSet::CR + CharacterSet::LF);
-        if (e->id == Http::HdrType::OTHER && e->name.findFirstOf(wsp) != SBuf::npos) {
-            debugs(55, warnOnError, "WARNING: found whitespace in HTTP header name {" <<
-                   getStringPrefix(field_start, field_end-field_start) << "}");
-
-            if (!Config.onoff.relaxed_header_parser) {
-                delete e;
-                PROF_stop(HttpHeaderParse);
-                clean();
-                return 0;
-            }
         }
 
         addEntry(e);
@@ -1461,6 +1464,20 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end, const htt
         if (!name_len) {
             debugs(55, 2, "found header with only whitespace for name");
             return NULL;
+        }
+    }
+
+    /* RFC 7230 section 3.2:
+     *
+     *  header-field   = field-name ":" OWS field-value OWS
+     *  field-name     = token
+     *  token          = 1*TCHAR
+     */
+    for (const char *pos = field_start; pos < (field_start+name_len); ++pos) {
+        if (!CharacterSet::TCHAR[*pos]) {
+            debugs(55, 2, "found header with invalid characters in " <<
+                   Raw("field-name", field_start, min(name_len,100)) << "...");
+            return nullptr;
         }
     }
 

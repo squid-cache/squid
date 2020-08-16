@@ -51,6 +51,7 @@ public:
     off_t offset;
     size_t len;
     Ipc::Mem::PageId page;
+    pid_t workerPid; ///< the process ID of the I/O requestor
 
     IpcIo::Command command; ///< what disker is supposed to do or did
     struct timeval start; ///< when the I/O request was converted to IpcIoMsg
@@ -129,7 +130,8 @@ private:
 
 private:
     const String dbName; ///< the name of the file we are managing
-    int diskId; ///< the process ID of the disker we talk to
+    const pid_t myPid; ///< optimization: cached process ID of our process
+    int diskId; ///< the kid ID of the disker we talk to
     RefCount<IORequestor> ioRequestor;
 
     bool error_; ///< whether we have seen at least one I/O error (XXX)

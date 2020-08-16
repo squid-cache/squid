@@ -2399,6 +2399,11 @@ DOC_START
 				Don't request client certificates
 				immediately, but wait until acl processing
 				requires a certificate (not yet implemented).
+			    CONDITIONAL_AUTH
+				Request a client certificate during the TLS
+				handshake, but ignore certificate absence in
+				the TLS client Hello. If the client does
+				supply a certificate, it is validated.
 			    NO_SESSION_REUSE
 				Don't allow for session reuse. Each connection
 				will result in a new SSL session.
@@ -3406,11 +3411,26 @@ DOC_START
 	Specify the location and options of the executable for ssl_crt_validator
 	process.
 
-	Usage:  sslcrtvalidator_program [ttl=n] [cache=n] path ...
+	Usage:  sslcrtvalidator_program [ttl=...] [cache=n] path ...
 
 	Options:
-	  ttl=n         TTL in seconds for cached results. The default is 60 secs
-	  cache=n       limit the result cache size. The default value is 2048
+
+	cache=bytes
+		Limits how much memory Squid can use for caching validator
+		responses. The default is 67108864 (i.e. 64 MB).
+		Reconfiguration purges any excess entries. To disable caching,
+		use cache=0. Currently, cache entry sizes are seriously
+		underestimated. Even with that bug, a typical estimate for a
+		single cache entry size would be at least a few kilobytes (the
+		size of the PEM certificates sent to the validator).
+
+	ttl=<seconds|"infinity">
+		Approximately how long Squid may reuse the validator results
+		for. The default is 3600 (i.e. 1 hour). Using ttl=infinity
+		disables TTL checks. Reconfiguration does not affect TTLs of
+		the already cached entries. To disable caching, use zero cache
+		size, not zero TTL -- zero TTL allows reuse for the remainder
+		of the second when the result was cached.
 DOC_END
 
 NAME: sslcrtvalidator_children
