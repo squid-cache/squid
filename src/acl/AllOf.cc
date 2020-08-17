@@ -11,7 +11,6 @@
 #include "acl/BoolOps.h"
 #include "acl/Checklist.h"
 #include "globals.h"
-#include "MemBuf.h"
 
 char const *
 Acl::AllOf::typeString() const
@@ -60,13 +59,11 @@ Acl::AllOf::parse()
     } else if (oldNode) {
         // this acl saw a single line before; create a new OR inner node
 
-        MemBuf wholeCtx;
-        wholeCtx.init();
-        wholeCtx.appendf("(%s lines)", name);
-        wholeCtx.terminate();
+        SBuf wholeCtx;
+        wholeCtx.appendf("(" SQUIDSBUFPH " lines)", SQUIDSBUFPRINT(name));
 
         Acl::OrNode *newWhole = new Acl::OrNode;
-        newWhole->context(wholeCtx.content(), oldNode->cfgline);
+        newWhole->context(wholeCtx, oldNode->cfgline);
         newWhole->add(oldNode); // old (i.e. first) line
         nodes.front() = whole = newWhole;
     } else {
@@ -77,13 +74,11 @@ Acl::AllOf::parse()
     assert(whole);
     const int lineId = whole->childrenCount() + 1;
 
-    MemBuf lineCtx;
-    lineCtx.init();
-    lineCtx.appendf("(%s line #%d)", name, lineId);
-    lineCtx.terminate();
+    SBuf lineCtx;
+    lineCtx.appendf("(" SQUIDSBUFPH " line #%d)", SQUIDSBUFPRINT(name), lineId);
 
     Acl::AndNode *line = new AndNode;
-    line->context(lineCtx.content(), config_input_line);
+    line->context(lineCtx, config_input_line);
     line->lineParse();
 
     whole->add(line);

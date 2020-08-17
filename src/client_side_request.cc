@@ -742,9 +742,10 @@ ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
     acl_checklist = NULL;
     err_type page_id;
     Http::StatusCode status;
+    static const SBuf none("[none]");
     debugs(85, 2, "The request " << http->request->method << ' ' <<
            http->uri << " is " << answer <<
-           "; last ACL checked: " << (AclMatchedName ? AclMatchedName : "[none]"));
+           "; last ACL checked: " << (AclMatchedName.isEmpty() ? none : AclMatchedName));
 
 #if USE_AUTH
     char const *proxy_auth_msg = "<null>";
@@ -761,7 +762,7 @@ ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
         // XXX: do we still need aclIsProxyAuth() ?
         bool auth_challenge = (answer == ACCESS_AUTH_REQUIRED || aclIsProxyAuth(AclMatchedName));
         debugs(85, 5, "Access Denied: " << http->uri);
-        debugs(85, 5, "AclMatchedName = " << (AclMatchedName ? AclMatchedName : "<null>"));
+        debugs(85, 5, "AclMatchedName = " << (AclMatchedName.isEmpty() ? none : AclMatchedName));
 #if USE_AUTH
         if (auth_challenge)
             debugs(33, 5, "Proxy Auth Message = " << (proxy_auth_msg ? proxy_auth_msg : "<null>"));

@@ -20,6 +20,7 @@
 #include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -900,8 +901,7 @@ Client::handleAdaptationBlocked(const Adaptation::Answer &answer)
 
     debugs(11,7, HERE << "creating adaptation block response");
 
-    err_type page_id =
-        aclGetDenyInfoPage(&Config.denyInfoList, answer.ruleId.termedBuf(), 1);
+    auto page_id = aclGetDenyInfoPage(&Config.denyInfoList, StringToSBuf(answer.ruleId), 1);
     if (page_id == ERR_NONE)
         page_id = ERR_ACCESS_DENIED;
 

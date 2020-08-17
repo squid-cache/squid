@@ -14,7 +14,7 @@
 #include "cbdata.h"
 #include "defines.h"
 #include "dlink.h"
-#include "sbuf/forward.h"
+#include "sbuf/SBuf.h"
 
 #include <algorithm>
 #include <ostream>
@@ -45,13 +45,12 @@ public:
 
     static void ParseAclLine(ConfigParser &parser, ACL ** head);
     static void Initialize();
-    static ACL *FindByName(const char *name);
+    static ACL *FindByName(const SBuf &name);
 
-    ACL();
     virtual ~ACL();
 
     /// sets user-specified ACL name and squid.conf context
-    void context(const char *name, const char *configuration);
+    void context(const SBuf &name, const char *configuration);
 
     /// Orchestrates matching checklist against the ACL using match(),
     /// after checking preconditions and while providing debugging.
@@ -77,10 +76,10 @@ public:
 
     SBufList dumpOptions(); ///< \returns approximate options configuration
 
-    char name[ACL_NAME_SZ];
-    char *cfgline;
-    ACL *next; // XXX: remove or at least use refcounting
-    bool registered; ///< added to the global list of ACLs via aclRegister()
+    SBuf name;
+    char *cfgline = nullptr;
+    ACL *next = nullptr; // XXX: remove or at least use refcounting
+    bool registered = false; ///< added to the global list of ACLs via aclRegister()
 
 private:
     /// Matches the actual data in checklist against this ACL.
@@ -197,7 +196,7 @@ public:
 
 /// \ingroup ACLAPI
 /// XXX: find a way to remove or at least use a refcounted ACL pointer
-extern const char *AclMatchedName;  /* NULL */
+extern SBuf AclMatchedName;
 
 #endif /* SQUID_ACL_H */
 
