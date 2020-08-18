@@ -34,40 +34,13 @@ public:
     Handler *handler;
 };
 
-// dialer to run a callback function with no arguments
-template<>
-class UnaryCbdataDialer<nullptr_t> : public CallDialer
-{
-public:
-    typedef void Handler();
-
-    UnaryCbdataDialer(Handler *aHandler) :
-        handler(aHandler)
-    {}
-
-    virtual bool canDial(AsyncCall &) { return true; }
-    void dial(AsyncCall &) { handler(); }
-    virtual void print(std::ostream &os) const {  os << "(nullptr)"; }
-
-public:
-    Handler *handler;
-};
-
-// helper functions to simplify Dialer creation.
+// helper function to simplify Dialer creation.
 
 template <class Argument1>
 UnaryCbdataDialer<Argument1>
 cbdataDialer(typename UnaryCbdataDialer<Argument1>::Handler *handler, Argument1 *arg1)
 {
     return UnaryCbdataDialer<Argument1>(handler, arg1);
-}
-
-template <>
-inline
-UnaryCbdataDialer<nullptr_t>
-cbdataDialer(typename UnaryCbdataDialer<nullptr_t>::Handler *handler, nullptr_t *arg1)
-{
-    return UnaryCbdataDialer<nullptr_t>(handler);
 }
 
 #endif

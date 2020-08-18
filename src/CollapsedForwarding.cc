@@ -9,7 +9,7 @@
 /* DEBUG: section 17    Request Forwarding */
 
 #include "squid.h"
-#include "base/AsyncCbdataCalls.h"
+#include "base/AsyncFunCalls.h"
 #include "CollapsedForwarding.h"
 #include "globals.h"
 #include "ipc/mem/Segment.h"
@@ -61,7 +61,7 @@ CollapsedForwarding::Init()
     if (UsingSmp() && IamWorkerProcess()) {
         queue.reset(new Queue(ShmLabel, KidIdentifier));
         AsyncCall::Pointer callback = asyncCall(17, 4, "CollapsedForwarding::HandleStartupMessages",
-                cbdataDialer<nullptr_t>(&CollapsedForwarding::HandleStartupMessages, nullptr));
+                funDialer(&CollapsedForwarding::HandleStartupMessages));
         ScheduleCallHere(callback);
     }
 }
