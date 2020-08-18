@@ -20,11 +20,12 @@ public:
     NullaryFunDialer(Handler *aHandler) :
         handler(aHandler) {}
 
-    virtual bool canDial(AsyncCall &) { return true; }
+    /* CallDialer API */
+    bool canDial(AsyncCall &) { return bool(handler); }
     void dial(AsyncCall &) { handler(); }
-    virtual void print(std::ostream &os) const {  os << '(' << handler << ')'; }
+    virtual void print(std::ostream &os) const override {  os << '(' << handler << ')'; }
 
-public:
+private:
     Handler *handler;
 };
 

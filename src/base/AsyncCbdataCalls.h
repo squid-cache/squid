@@ -35,7 +35,6 @@ public:
 };
 
 // helper function to simplify Dialer creation.
-
 template <class Argument1>
 UnaryCbdataDialer<Argument1>
 cbdataDialer(typename UnaryCbdataDialer<Argument1>::Handler *handler, Argument1 *arg1)
