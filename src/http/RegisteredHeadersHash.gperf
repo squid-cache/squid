@@ -96,7 +96,6 @@ Vary, Http::HdrType::VARY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKin
 Via, Http::HdrType::VIA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 Warning, Http::HdrType::WARNING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 WWW-Authenticate, Http::HdrType::WWW_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
-X-Cache-Lookup, Http::HdrType::X_CACHE_LOOKUP, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 X-Forwarded-For, Http::HdrType::X_FORWARDED_FOR, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 X-Request-URI, Http::HdrType::X_REQUEST_URI, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 X-Squid-Error, Http::HdrType::X_SQUID_ERROR, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader

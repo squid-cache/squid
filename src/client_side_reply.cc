@@ -81,9 +81,6 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     old_reqsize(0),
     reqsize(0),
     reqofs(0),
-#if USE_CACHE_DIGESTS
-    lookup_type(NULL),
-#endif
     ourNode(NULL),
     reply(NULL),
     old_entry(NULL),
@@ -1567,14 +1564,6 @@ clientReplyContext::buildReplyHeader()
                      (is_hit ? "hit" : "fwd=miss")
                      );
 
-#if USE_CACHE_DIGESTS
-    /* Append X-Cache-Lookup: -- temporary hack, to be removed @?@ @?@ */
-    httpHeaderPutStrf(hdr, Http::HdrType::X_CACHE_LOOKUP, "%s from %s:%d",
-                      lookup_type ? lookup_type : "NONE",
-                      getMyHostname(), getMyPort());
-
-#endif
-
     const bool maySendChunkedReply = !request->multipartRangeRequest() &&
                                      reply->sline.protocol == AnyP::PROTO_HTTP && // response is HTTP
                                      (request->http_ver >= Http::ProtocolVersion(1,1));
@@ -1718,10 +1707,6 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
       */
     if (r->flags.noCache || r->flags.noCacheHack())
         ipcacheInvalidateNegative(r->url.host());
-
-#if USE_CACHE_DIGESTS
-    lookup_type = e ? "HIT" : "MISS";
-#endif
 
     if (!e) {
         /** \li If no StoreEntry object is current assume this object isn't in the cache set MISS*/

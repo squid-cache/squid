@@ -90,10 +90,6 @@ public:
     size_t reqsize;
     size_t reqofs;
     char tempbuf[HTTP_REQBUF_SZ];   ///< a temporary buffer if we need working storage
-#if USE_CACHE_DIGESTS
-
-    const char *lookup_type;    /* temporary hack: storeGet() result: HIT/MISS/NONE */
-#endif
 
     struct Flags {
         Flags() : storelogiccomplete(0), complete(0), headersSent(false) {}
