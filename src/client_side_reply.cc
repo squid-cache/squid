@@ -1562,10 +1562,9 @@ clientReplyContext::buildReplyHeader()
         Auth::UserRequest::AddReplyAuthHeader(reply, request->auth_user_request, request, http->flags.accel, 0);
 #endif
 
-    httpHeaderPutStrf(hdr, Http::HdrType::CACHE_STATUS, "%s;%s%s",
+    httpHeaderPutStrf(hdr, Http::HdrType::CACHE_STATUS, "%s;%s",
                      uniqueHostname(),
-                     (is_hit ? "hit" : "fwd=miss"),
-                     (collapsedRevalidation != crNone ? ";collapsed" : "")
+                     (is_hit ? "hit" : "fwd=miss")
                      );
 
 #if USE_CACHE_DIGESTS
