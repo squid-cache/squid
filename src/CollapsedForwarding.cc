@@ -60,8 +60,8 @@ CollapsedForwarding::Init()
     Must(!queue.get());
     if (UsingSmp() && IamWorkerProcess()) {
         queue.reset(new Queue(ShmLabel, KidIdentifier));
-        AsyncCall::Pointer callback = asyncCall(17, 4, "CollapsedForwarding::HandleStartupMessages",
-                funDialer(&CollapsedForwarding::HandleStartupMessages));
+        AsyncCall::Pointer callback = asyncCall(17, 4, "CollapsedForwarding::HandleNewDataAtStart",
+                funDialer(&CollapsedForwarding::HandleNewDataAtStart));
         ScheduleCallHere(callback);
     }
 }
@@ -152,10 +152,10 @@ CollapsedForwarding::HandleNotification(const Ipc::TypedMsgHdr &msg)
 }
 
 void
-CollapsedForwarding::HandleStartupMessages()
+CollapsedForwarding::HandleNewDataAtStart()
 {
     queue->clearAllReaderSignals();
-    HandleNewData("init completed");
+    HandleNewData("after start");
 }
 
 void

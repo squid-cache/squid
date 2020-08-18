@@ -145,8 +145,8 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         ann.pack(message);
         SendMessage(Ipc::Port::CoordinatorAddr(), message);
 
-        AsyncCall::Pointer call = asyncCall(79, 4, "IpcIoFile::DiskerHandleStartupRequests",
-                funDialer(&IpcIoFile::DiskerHandleStartupRequests));
+        AsyncCall::Pointer call = asyncCall(79, 4, "IpcIoFile::DiskerHandleRequestsAtStart",
+                funDialer(&IpcIoFile::DiskerHandleRequestsAtStart));
         ScheduleCallHere(call);
 
         ioRequestor->ioCompletedNotification();
@@ -534,7 +534,7 @@ IpcIoFile::HandleIncomingMessages(const int fromKidId, const char *context)
 }
 
 void
-IpcIoFile::DiskerHandleStartupRequests()
+IpcIoFile::DiskerHandleRequestsAtStart()
 {
     assert(IamDiskProcess());
     queue->clearAllReaderSignals();
