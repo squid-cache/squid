@@ -1562,7 +1562,6 @@ clientReplyContext::buildReplyHeader()
         Auth::UserRequest::AddReplyAuthHeader(reply, request->auth_user_request, request, http->flags.accel, 0);
 #endif
 
-    /* Append Cache-Status */
     httpHeaderPutStrf(hdr, Http::HdrType::CACHE_STATUS, "%s;%s%s",
                      uniqueHostname(),
                      (is_hit ? "hit" : "fwd=miss"),
@@ -2348,4 +2347,3 @@ clientBuildError(err_type page_id, Http::StatusCode status, char const *url,
 
     return err;
 }
-
