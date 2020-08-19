@@ -124,8 +124,10 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
     ioRequestor = callback;
     Must(diskId < 0); // we do not know our disker yet
 
-    if (!queue.get())
+    if (!queue.get()) {
         queue.reset(new Queue(ShmLabel, IamWorkerProcess() ? Queue::groupA : Queue::groupB, KidIdentifier));
+        ScheduleMessageHandlingAtStart();
+    }
 
     if (IamDiskProcess()) {
         error_ = !DiskerOpen(SBuf(dbName.termedBuf()), flags, mode);
@@ -144,10 +146,6 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         Ipc::TypedMsgHdr message;
         ann.pack(message);
         SendMessage(Ipc::Port::CoordinatorAddr(), message);
-
-        AsyncCall::Pointer call = asyncCall(79, 4, "IpcIoFile::DiskerHandleRequestsAtStart",
-                funDialer(&IpcIoFile::DiskerHandleRequestsAtStart));
-        ScheduleCallHere(call);
 
         ioRequestor->ioCompletedNotification();
         return;
@@ -182,7 +180,6 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
             const bool inserted =
                 IpcIoFiles.insert(std::make_pair(diskId, this)).second;
             Must(inserted);
-            HandleIncomingMessages(diskId, "open completed");
         } else {
             error_ = true;
             debugs(79, DBG_IMPORTANT, "ERROR: no disker claimed " <<
@@ -481,7 +478,10 @@ IpcIoFile::HandleResponses(const char *const when)
     int diskId;
     while (queue->pop(diskId, ipcIo)) {
         const IpcIoFilesMap::const_iterator i = IpcIoFiles.find(diskId);
-        Must(i != IpcIoFiles.end()); // TODO: warn but continue
+        if (i == IpcIoFiles.end()) {
+            debugs(47, 5, "ignoring disk response " << SipcIo(KidIdentifier, ipcIo, diskId) << ": the file is not open");
+            continue;
+        }
         i->second->handleResponse(ipcIo);
     }
 }
@@ -519,18 +519,22 @@ IpcIoFile::Notify(const int peerId)
 void
 IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
 {
-    HandleIncomingMessages(msg.getInt(), "after notification");
-}
-
-void
-IpcIoFile::HandleIncomingMessages(const int fromKidId, const char *context)
-{
-    debugs(47, 7, "from " << fromKidId);
-    queue->clearReaderSignal(fromKidId);
+    const int from = msg.getInt();
+    debugs(47, 7, HERE << "from " << from);
+    queue->clearReaderSignal(from);
     if (IamDiskProcess())
         DiskerHandleRequests();
     else
-        HandleResponses(context);
+        HandleResponses("after notification");
+}
+
+void
+IpcIoFile::ScheduleMessageHandlingAtStart()
+{
+    AsyncCall::Pointer call = IamDiskProcess() ?
+        asyncCall(79, 4, "IpcIoFile::DiskerHandleRequestsAtStart", funDialer(&IpcIoFile::DiskerHandleRequestsAtStart)) :
+        asyncCall(79, 4, "IpcIoFile::WorkerHandleResponsesAtStart", funDialer(&IpcIoFile::WorkerHandleResponsesAtStart));
+    ScheduleCallHere(call);
 }
 
 void
@@ -539,6 +543,14 @@ IpcIoFile::DiskerHandleRequestsAtStart()
     assert(IamDiskProcess());
     queue->clearAllReaderSignals();
     DiskerHandleRequests();
+}
+
+void
+IpcIoFile::WorkerHandleResponsesAtStart()
+{
+    assert(IamWorkerProcess());
+    queue->clearAllReaderSignals();
+    HandleResponses("at start");
 }
 
 void
