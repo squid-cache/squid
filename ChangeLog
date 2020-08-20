@@ -1,3 +1,15 @@
+Changes to squid-4.13 (23 Aug 2020):
+
+	- Regression Fix: Support parsing GREASEd (and future) TLS handshakes
+	- Bug 5051: Some collapsed revalidation responses never expire
+	- HTTP: Enforce token characters for field-name
+	- HTTP: Forbid obs-fold and bare CR whitespace in framing header fields
+	- HTTP: Improve Transfer-Encoding handling
+	- WCCP: Fix GCC-10 -Wstringop-truncation failures
+	- Honor on_unsupported_protocol for intercepted https_port
+	- Fix livelocking in peerDigestHandleReply
+	- Do not stall while debugging a scan of an empty store_table
+
 Changes to squid-4.12 (05 Jun 2020):
 
 	- Regression Fix: Revert to slow search for new SMP shm pages
