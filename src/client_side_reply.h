@@ -129,11 +129,17 @@ private:
     void purgeAllCached();
     void forgetHit();
     bool blockedHit() const;
+    void detailStoreLookup(const char *detail);
 
     void sendBodyTooLargeError();
     void sendPreconditionFailedError();
     void sendNotModified();
     void sendNotModifiedOrPreconditionFailedError();
+
+    /// Classification of the initial Store lookup.
+    /// This very first lookup happens without the Vary-driven key augmentation.
+    /// TODO: Exclude internal Store match bans from the "mismatch" category.
+    const char *firstStoreLookup_ = nullptr;
 
     StoreEntry *old_entry;
     /* ... for entry to be validated */

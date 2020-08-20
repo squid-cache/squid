@@ -931,6 +931,8 @@ clientReplyContext::purgeAllCached()
 void
 clientReplyContext::created(StoreEntry *newEntry)
 {
+    detailStoreLookup(newEntry ? "match" : "mismatch");
+
     if (lookingforstore == 1)
         purgeFoundGet(newEntry);
     else if (lookingforstore == 2)
@@ -1559,10 +1561,14 @@ clientReplyContext::buildReplyHeader()
         Auth::UserRequest::AddReplyAuthHeader(reply, request->auth_user_request, request, http->flags.accel, 0);
 #endif
 
-    httpHeaderPutStrf(hdr, Http::HdrType::CACHE_STATUS, "%s;%s",
-                     uniqueHostname(),
-                     (is_hit ? "hit" : "fwd=miss")
-                     );
+    SBuf cacheStatus(uniqueHostname());
+    cacheStatus.append(is_hit ? ";hit" : ";fwd=miss");
+    if (firstStoreLookup_) {
+        cacheStatus.append(";detail=");
+        cacheStatus.append(firstStoreLookup_);
+    }
+    // TODO: Remove c_str() after converting HttpHeaderEntry::value to SBuf
+    hdr->putStr(Http::HdrType::CACHE_STATUS, cacheStatus.c_str());
 
     const bool maySendChunkedReply = !request->multipartRangeRequest() &&
                                      reply->sline.protocol == AnyP::PROTO_HTTP && // response is HTTP
@@ -1686,6 +1692,8 @@ clientReplyContext::identifyStoreObject()
         lookingforstore = 5;
         StoreEntry::getPublicByRequest (this, r);
     } else {
+        // "external" no-cache requests skip Store lookups
+        detailStoreLookup("no-cache");
         identifyFoundObject(nullptr);
     }
 }
@@ -1768,6 +1776,18 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     debugs(85, 3, "default HIT " << *e);
     http->logType.update(LOG_TCP_HIT);
     doGetMoreData();
+}
+
+/// remembers the very first Store lookup classification, ignoring the rest
+void
+clientReplyContext::detailStoreLookup(const char *detail)
+{
+    if (!firstStoreLookup_) {
+        debugs(85, 7, detail);
+        firstStoreLookup_ = detail;
+    } else {
+        debugs(85, 7, "ignores " << detail << " after " << firstStoreLookup_);
+    }
 }
 
 /**
