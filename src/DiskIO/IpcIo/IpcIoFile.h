@@ -130,12 +130,6 @@ private:
     /// handle all available disker or worker mesages at start, including 'previous generation' requests
     static void HandleMessagesAtStart();
 
-    /// handle all available disker requests at start, including 'previous generation' requests
-    static void DiskerHandleRequestsAtStart();
-
-    /// handle all available worker responses at start, including 'previous generation' responses
-    static void WorkerHandleResponsesAtStart();
-
 private:
     const String dbName; ///< the name of the file we are managing
     int diskId; ///< the process ID of the disker we talk to

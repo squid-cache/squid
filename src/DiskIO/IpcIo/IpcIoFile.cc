@@ -532,26 +532,11 @@ IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
 void
 IpcIoFile::HandleMessagesAtStart()
 {
+    queue->clearAllReaderSignals();
     if (IamDiskProcess())
-        DiskerHandleRequestsAtStart();
+        DiskerHandleRequests();
     else
-        WorkerHandleResponsesAtStart();
-}
-
-void
-IpcIoFile::DiskerHandleRequestsAtStart()
-{
-    assert(IamDiskProcess());
-    queue->clearAllReaderSignals();
-    DiskerHandleRequests();
-}
-
-void
-IpcIoFile::WorkerHandleResponsesAtStart()
-{
-    assert(IamWorkerProcess());
-    queue->clearAllReaderSignals();
-    HandleResponses("at start");
+        HandleResponses("at start");
 }
 
 void
