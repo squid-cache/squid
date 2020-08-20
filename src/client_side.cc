@@ -1859,6 +1859,8 @@ ConnStateData::parseProxyProtocolHeader()
         inBuf.consume(parsed.size);
         needProxyProtocolHeader_ = false;
         if (proxyProtocolHeader_->hasForwardedAddresses()) {
+            // XXX: update state in xaction member instead,
+            //      to preserve original data as xaction->txParent->tcpClient
             clientConnection->local = proxyProtocolHeader_->destinationAddress;
             clientConnection->remote = proxyProtocolHeader_->sourceAddress;
             if ((clientConnection->flags & COMM_TRANSPARENT))
@@ -1915,6 +1917,9 @@ ConnStateData::clientParseRequests()
         if (needProxyProtocolHeader_) {
             if (!parseProxyProtocolHeader())
                 break;
+
+            // switch from TCP to PROXY details
+            xaction = xaction.spawnChildLayer("PROXY");
 
             // we have been waiting for PROXY to provide client-IP
             // for some lookups, ie rDNS and IDENT.
