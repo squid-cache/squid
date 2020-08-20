@@ -128,7 +128,7 @@ private:
     static bool WaitBeforePop();
 
     /// handle all available disker or worker mesages at start, including 'previous generation' requests
-    static void ScheduleMessageHandlingAtStart();
+    static void HandleMessagesAtStart();
 
     /// handle all available disker requests at start, including 'previous generation' requests
     static void DiskerHandleRequestsAtStart();

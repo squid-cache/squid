@@ -126,7 +126,8 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 
     if (!queue.get()) {
         queue.reset(new Queue(ShmLabel, IamWorkerProcess() ? Queue::groupA : Queue::groupB, KidIdentifier));
-        ScheduleMessageHandlingAtStart();
+        AsyncCall::Pointer call = asyncCall(79, 4, "IpcIoFile::HandleMessagesAtStart", funDialer(&IpcIoFile::HandleMessagesAtStart));
+        ScheduleCallHere(call);
     }
 
     if (IamDiskProcess()) {
@@ -529,12 +530,12 @@ IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
 }
 
 void
-IpcIoFile::ScheduleMessageHandlingAtStart()
+IpcIoFile::HandleMessagesAtStart()
 {
-    AsyncCall::Pointer call = IamDiskProcess() ?
-        asyncCall(79, 4, "IpcIoFile::DiskerHandleRequestsAtStart", funDialer(&IpcIoFile::DiskerHandleRequestsAtStart)) :
-        asyncCall(79, 4, "IpcIoFile::WorkerHandleResponsesAtStart", funDialer(&IpcIoFile::WorkerHandleResponsesAtStart));
-    ScheduleCallHere(call);
+    if (IamDiskProcess())
+        DiskerHandleRequestsAtStart();
+    else
+        WorkerHandleResponsesAtStart();
 }
 
 void
