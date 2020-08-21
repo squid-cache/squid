@@ -42,13 +42,13 @@ public:
     /// handle queue push notifications from worker or disker
     static void HandleNotification(const Ipc::TypedMsgHdr &msg);
 
-    /// handle all available messages at start, including 'previous generation' messages
-    static void HandleNewDataAtStart();
-
     /// prints IPC message queue state; suitable for cache manager reports
     static void StatQueue(std::ostream &);
 
 private:
+    /// handle all available messages at start, including 'previous generation' messages
+    static void HandleNewDataAtStart();
+
     typedef Ipc::MultiQueue Queue;
     static std::unique_ptr<Queue> queue; ///< IPC queue
 };
