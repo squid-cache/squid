@@ -155,6 +155,7 @@ helper_server::helper_server(helper *hlp, int aPid, void *aIpc, int rfd, int wfd
     HelperServerBase(hlp->cmdline->key, hlp->addr, aPid, aIpc, rfd, wfd),
     parent(cbdataReference(hlp))
 {
+    wqueue = new MemBuf;
 }
 
 helper_server::~helper_server()
