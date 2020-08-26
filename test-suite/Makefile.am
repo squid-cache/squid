@@ -140,9 +140,6 @@ VirtualDeleteOperator_SOURCES = \
 	VirtualDeleteOperator.cc \
 	stub_libmem.cc
 
-generate-test-certificates:
-	$(srcdir)/mk-tls-test-certs.sh "$(OPENSSL_BIN)" "$(CERTTOOL_BIN)"
-
 CLEANFILES += \
 	ca-chain-rsa.pem \
 	ca-mid-rsa.crt \
@@ -170,6 +167,10 @@ CFG_TEST_FILES= \
 
 if ENABLE_CERT_TESTS
 CFG_TEST_FILES += $(srcdir)/squidconf/tls-certs
+generate-test-certificates:
+	$(srcdir)/mk-tls-test-certs.sh "$(OPENSSL_BIN)" "$(CERTTOOL_BIN)"
+else
+generate-test-certificates:
 endif
 
 squid-conf-tests: generate-test-certificates $(top_builddir)/src/squid.conf.default
