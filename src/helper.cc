@@ -60,16 +60,6 @@ CBDATA_CLASS_INIT(helper_stateful_server);
 InstanceIdDefinitions(HelperServerBase, "Hlpr");
 
 void
-HelperServerBase::initStats()
-{
-    stats.uses=0;
-    stats.replies=0;
-    stats.pending=0;
-    stats.releases=0;
-    stats.timedout = 0;
-}
-
-void
 HelperServerBase::closePipesSafely(const char *id_name)
 {
 #if _SQUID_WINDOWS_
@@ -268,7 +258,6 @@ helperOpenServers(helper * hlp)
         srv = new helper_server;
         srv->hIpc = hIpc;
         srv->pid = pid;
-        srv->initStats();
         srv->addr = hlp->addr;
         srv->readPipe = new Comm::Connection;
         srv->readPipe->fd = rfd;
@@ -395,7 +384,6 @@ helperStatefulOpenServers(statefulhelper * hlp)
         helper_stateful_server *srv = new helper_stateful_server;
         srv->hIpc = hIpc;
         srv->pid = pid;
-        srv->initStats();
         srv->addr = hlp->addr;
         srv->readPipe = new Comm::Connection;
         srv->readPipe->fd = rfd;
