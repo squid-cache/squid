@@ -7,7 +7,7 @@
 OPENSSL="$1"
 CERTTOOL="$2"
 
-if test "x$OPENSSL" != "x" -a -x $OPENSSL; then
+if test -n "$OPENSSL"; then
 
 	#
 	# self-signed root CA
@@ -124,7 +124,7 @@ if test "x$OPENSSL" != "x" -a -x $OPENSSL; then
 	cat leaf-rsa.pkey leaf-rsa.crt > leaf-key-rsa.pem
 	cat leaf-rsa.crt ca-root-rsa.crt > leaf-chain-nokey-rsa.pem
 
-elif test "x$CERTTOOL" != "x" -a -x $CERTTOOL; then
+elif test -n "$CERTTOOL"; then
 
 	#
 	# self-signed root CA
