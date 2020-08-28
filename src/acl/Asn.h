@@ -10,7 +10,6 @@
 #define SQUID_ACLASN_H
 
 #include "acl/Data.h"
-#include "base/CbDataList.h"
 #include "ip/Address.h"
 
 #include <list>

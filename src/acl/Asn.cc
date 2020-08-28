@@ -51,10 +51,6 @@ struct squid_radix_node_head *AS_tree_head;
 
 /* explicit instantiation required for some systems */
 
-/// \cond AUTODOCS_IGNORE
-template cbdata_type CbDataList<int>::CBDATA_CbDataList;
-/// \endcond
-
 /**
  * Structure for as number information. it could be simply
  * a list but it's coded as a structure for future
