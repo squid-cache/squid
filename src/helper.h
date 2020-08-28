@@ -158,7 +158,9 @@ private:
 class HelperServerBase: public CbdataParent
 {
 public:
+    HelperServerBase(Ip::Address &, int aPid, void *aIpc, int rfd, int wfd);
     virtual ~HelperServerBase();
+
     /** Closes pipes to the helper safely.
      * Handles the case where the read and write pipes are the same FD.
      *
@@ -231,6 +233,9 @@ class helper_server : public HelperServerBase
     CBDATA_CHILD(helper_server);
 
 public:
+    helper_server(helper *hlp, int pid, void *hIpc, int rfd, int wfd);
+    virtual ~helper_server();
+
     uint64_t nextRequestId = 0;
 
     MemBuf *wqueue = nullptr;
@@ -251,7 +256,6 @@ public:
     typedef std::map<uint64_t, Requests::iterator> RequestIndex;
     RequestIndex requestsIndex; ///< maps request IDs to requests
 
-    virtual ~helper_server();
     /// Search in queue for the request with requestId, return the related
     /// Xaction object and remove it from queue.
     /// If concurrency is disabled then the requestId is ignored and the
@@ -281,7 +285,9 @@ class helper_stateful_server : public HelperServerBase
     CBDATA_CHILD(helper_stateful_server);
 
 public:
+    helper_stateful_server(statefulhelper *hlp, int pid, void *hIpc, int rfd, int wfd);
     virtual ~helper_stateful_server();
+
     void reserve();
     void clearReservation();
 
