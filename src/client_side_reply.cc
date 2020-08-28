@@ -1562,8 +1562,8 @@ clientReplyContext::buildReplyHeader()
 #endif
 
     SBuf cacheStatus(uniqueHostname());
-    if (is_hit)
-        cacheStatus.append(";hit");
+    if (const auto hitOrFwd = http->logType.cacheStatusSource())
+        cacheStatus.append(hitOrFwd);
     if (firstStoreLookup_) {
         cacheStatus.append(";detail=");
         cacheStatus.append(firstStoreLookup_);
