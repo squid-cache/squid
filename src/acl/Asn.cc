@@ -24,6 +24,7 @@
 #include "mgr/Registration.h"
 #include "radix.h"
 #include "RequestFlags.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -127,12 +128,11 @@ static OBJH asnStats;
 /* PUBLIC */
 
 int
-asnMatchIp(CbDataList<int> *data, Ip::Address &addr)
+asnMatchIp(const std::list<int> &data, Ip::Address &addr)
 {
     struct squid_radix_node *rn;
     as_info *e;
     m_ADDR m_addr;
-    CbDataList<int> *a = NULL;
     CbDataList<int> *b = NULL;
 
     debugs(53, 3, "asnMatchIp: Called for " << addr );
@@ -159,12 +159,13 @@ asnMatchIp(CbDataList<int> *data, Ip::Address &addr)
     e = ((rtentry_t *) rn)->e_info;
     assert(e);
 
-    for (a = data; a; a = a->next)
+    for (const auto a : data) {
         for (b = e->as_number; b; b = b->next)
-            if (a->element == b->element) {
+            if (a == b->element) {
                 debugs(53, 5, "asnMatchIp: Found a match!");
                 return 1;
             }
+    }
 
     debugs(53, 5, "asnMatchIp: AS not in as db.");
     return 0;
@@ -173,9 +174,8 @@ asnMatchIp(CbDataList<int> *data, Ip::Address &addr)
 void
 ACLASN::prepareForUse()
 {
-    for (CbDataList<int> *i = data; i; i = i->
-                                           next)
-        asnCacheStart(i->element);
+    for (const auto i : data)
+        asnCacheStart(i);
 }
 
 static void
@@ -516,14 +516,7 @@ printRadixNode(struct squid_radix_node *rn, void *_sentry)
     return 0;
 }
 
-ACLASN::~ACLASN()
-{
-    if (data)
-        delete data;
-}
-
 bool
-
 ACLASN::match(Ip::Address toMatch)
 {
     return asnMatchIp(data, toMatch);
@@ -534,13 +527,8 @@ ACLASN::dump() const
 {
     SBufList sl;
 
-    CbDataList<int> *ldata = data;
-
-    while (ldata != NULL) {
-        SBuf s;
-        s.Printf("%d", ldata->element);
-        sl.push_back(s);
-        ldata = ldata->next;
+    for (const auto &element : data) {
+        sl.push_back(ToSBuf(element));
     }
 
     return sl;
@@ -549,29 +537,20 @@ ACLASN::dump() const
 bool
 ACLASN::empty () const
 {
-    return data == NULL;
+    return data.empty();
 }
 
 void
 ACLASN::parse()
 {
-    CbDataList<int> **curlist = &data;
-    CbDataList<int> **Tail;
-    CbDataList<int> *q = NULL;
-    char *t = NULL;
-
-    for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
-    while ((t = ConfigParser::strtokFile())) {
-        q = new CbDataList<int> (atoi(t));
-        *(Tail) = q;
-        Tail = &q->next;
-    }
+    while (auto *t = ConfigParser::strtokFile())
+        data.emplace_back(atoi(t));
 }
 
 ACLData<Ip::Address> *
 ACLASN::clone() const
 {
-    if (data)
+    if (!data.empty())
         fatal ("cloning of ACLASN not implemented");
 
     return new ACLASN(*this);

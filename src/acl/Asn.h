@@ -13,7 +13,9 @@
 #include "base/CbDataList.h"
 #include "ip/Address.h"
 
-int asnMatchIp(CbDataList<int> *, Ip::Address &);
+#include <list>
+
+int asnMatchIp(const std::list<int> &, Ip::Address &);
 
 /// \ingroup ACLAPI
 void asnInit(void);
@@ -27,9 +29,6 @@ class ACLASN : public ACLData<Ip::Address>
     MEMPROXY_CLASS(ACLASN);
 
 public:
-    ACLASN() : data(nullptr) {}
-    virtual ~ACLASN();
-
     virtual bool match(Ip::Address);
     virtual SBufList dump() const;
     virtual void parse();
@@ -38,7 +37,7 @@ public:
     virtual void prepareForUse();
 
 private:
-    CbDataList<int> *data;
+    std::list<int> data;
 };
 
 #endif /* SQUID_ACLASN_H */
