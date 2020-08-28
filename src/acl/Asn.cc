@@ -38,10 +38,8 @@
 class m_ADDR
 {
 public:
-    uint8_t len;
+    uint8_t len = sizeof(Ip::Address);
     Ip::Address addr;
-
-    m_ADDR() : len(sizeof(Ip::Address)) {};
 };
 
 /* END of definitions for radix tree entries */
@@ -62,8 +60,8 @@ template cbdata_type CbDataList<int>::CBDATA_CbDataList;
  * enhancements (e.g. expires)
  */
 struct as_info {
-    CbDataList<int> *as_number;
-    time_t expires;     /* NOTUSED */
+    CbDataList<int> *as_number = nullptr;
+    time_t expires = 0;     /* NOTUSED */
 };
 
 class ASState
@@ -98,7 +96,7 @@ CBDATA_CLASS_INIT(ASState);
 /** entry into the radix tree */
 struct rtentry_t {
     struct squid_radix_node e_nodes[2];
-    as_info *e_info;
+    as_info *e_info = nullptr;
     m_ADDR e_addr;
     m_ADDR e_mask;
 };
