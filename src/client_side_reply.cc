@@ -81,9 +81,6 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     old_reqsize(0),
     reqsize(0),
     reqofs(0),
-#if USE_CACHE_DIGESTS
-    lookup_type(NULL),
-#endif
     ourNode(NULL),
     reply(NULL),
     old_entry(NULL),
@@ -934,6 +931,8 @@ clientReplyContext::purgeAllCached()
 void
 clientReplyContext::created(StoreEntry *newEntry)
 {
+    detailStoreLookup(newEntry ? "match" : "mismatch");
+
     if (lookingforstore == 1)
         purgeFoundGet(newEntry);
     else if (lookingforstore == 2)
@@ -1562,17 +1561,15 @@ clientReplyContext::buildReplyHeader()
         Auth::UserRequest::AddReplyAuthHeader(reply, request->auth_user_request, request, http->flags.accel, 0);
 #endif
 
-    /* Append X-Cache */
-    httpHeaderPutStrf(hdr, Http::HdrType::X_CACHE, "%s from %s",
-                      is_hit ? "HIT" : "MISS", getMyHostname());
-
-#if USE_CACHE_DIGESTS
-    /* Append X-Cache-Lookup: -- temporary hack, to be removed @?@ @?@ */
-    httpHeaderPutStrf(hdr, Http::HdrType::X_CACHE_LOOKUP, "%s from %s:%d",
-                      lookup_type ? lookup_type : "NONE",
-                      getMyHostname(), getMyPort());
-
-#endif
+    SBuf cacheStatus(uniqueHostname());
+    if (const auto hitOrFwd = http->logType.cacheStatusSource())
+        cacheStatus.append(hitOrFwd);
+    if (firstStoreLookup_) {
+        cacheStatus.append(";detail=");
+        cacheStatus.append(firstStoreLookup_);
+    }
+    // TODO: Remove c_str() after converting HttpHeaderEntry::value to SBuf
+    hdr->putStr(Http::HdrType::CACHE_STATUS, cacheStatus.c_str());
 
     const bool maySendChunkedReply = !request->multipartRangeRequest() &&
                                      reply->sline.protocol == AnyP::PROTO_HTTP && // response is HTTP
@@ -1696,6 +1693,8 @@ clientReplyContext::identifyStoreObject()
         lookingforstore = 5;
         StoreEntry::getPublicByRequest (this, r);
     } else {
+        // "external" no-cache requests skip Store lookups
+        detailStoreLookup("no-cache");
         identifyFoundObject(nullptr);
     }
 }
@@ -1717,10 +1716,6 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
       */
     if (r->flags.noCache || r->flags.noCacheHack())
         ipcacheInvalidateNegative(r->url.host());
-
-#if USE_CACHE_DIGESTS
-    lookup_type = e ? "HIT" : "MISS";
-#endif
 
     if (!e) {
         /** \li If no StoreEntry object is current assume this object isn't in the cache set MISS*/
@@ -1782,6 +1777,18 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     debugs(85, 3, "default HIT " << *e);
     http->logType.update(LOG_TCP_HIT);
     doGetMoreData();
+}
+
+/// remembers the very first Store lookup classification, ignoring the rest
+void
+clientReplyContext::detailStoreLookup(const char *detail)
+{
+    if (!firstStoreLookup_) {
+        debugs(85, 7, detail);
+        firstStoreLookup_ = detail;
+    } else {
+        debugs(85, 7, "ignores " << detail << " after " << firstStoreLookup_);
+    }
 }
 
 /**

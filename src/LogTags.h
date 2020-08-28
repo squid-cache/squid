@@ -62,6 +62,9 @@ public:
     /// determine if the log tag code indicates a cache HIT
     bool isTcpHit() const;
 
+    /// \returns Cache-Status "hit" or "fwd=..." parameter (or nil)
+    const char *cacheStatusSource() const;
+
     /// Things that may happen to a transaction while it is being
     /// processed according to its LOG_* category. Logged as _SUFFIX(es).
     /// Unlike LOG_* categories, these flags may not be mutually exclusive.

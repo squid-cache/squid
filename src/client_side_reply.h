@@ -90,10 +90,6 @@ public:
     size_t reqsize;
     size_t reqofs;
     char tempbuf[HTTP_REQBUF_SZ];   ///< a temporary buffer if we need working storage
-#if USE_CACHE_DIGESTS
-
-    const char *lookup_type;    /* temporary hack: storeGet() result: HIT/MISS/NONE */
-#endif
 
     struct Flags {
         Flags() : storelogiccomplete(0), complete(0), headersSent(false) {}
@@ -133,11 +129,17 @@ private:
     void purgeAllCached();
     void forgetHit();
     bool blockedHit() const;
+    void detailStoreLookup(const char *detail);
 
     void sendBodyTooLargeError();
     void sendPreconditionFailedError();
     void sendNotModified();
     void sendNotModifiedOrPreconditionFailedError();
+
+    /// Classification of the initial Store lookup.
+    /// This very first lookup happens without the Vary-driven key augmentation.
+    /// TODO: Exclude internal Store match bans from the "mismatch" category.
+    const char *firstStoreLookup_ = nullptr;
 
     StoreEntry *old_entry;
     /* ... for entry to be validated */
