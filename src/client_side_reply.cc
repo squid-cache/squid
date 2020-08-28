@@ -1562,7 +1562,8 @@ clientReplyContext::buildReplyHeader()
 #endif
 
     SBuf cacheStatus(uniqueHostname());
-    cacheStatus.append(is_hit ? ";hit" : ";fwd=miss");
+    if (is_hit)
+        cacheStatus.append(";hit");
     if (firstStoreLookup_) {
         cacheStatus.append(";detail=");
         cacheStatus.append(firstStoreLookup_);
