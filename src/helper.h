@@ -132,7 +132,7 @@ public:
     typedef std::unordered_map<Helper::ReservationId, helper_stateful_server *> Reservations;
 
     explicit statefulhelper(const char *name) : helper(name) {}
-    virtual ~statefulhelper() {}
+    virtual ~statefulhelper() = default;
 
 public:
     /// reserve the given server
@@ -305,7 +305,7 @@ public:
     // reservation expires, and the server is reserved for another client, then
     // the reservation ID presented by the late client will not match ours.
     Helper::ReservationId reservationId; ///< "confirmation ID" of the last
-    time_t reservationStart = 0;         ///< when the last "reservation" was made
+    time_t reservationStart = 0; ///< when the last reservation was made
 };
 
 /* helper.c */
@@ -317,4 +317,3 @@ void helperShutdown(helper * hlp);
 void helperStatefulShutdown(statefulhelper * hlp);
 
 #endif /* SQUID_HELPER_H */
-
