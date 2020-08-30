@@ -90,7 +90,12 @@ public:
 CBDATA_CLASS_INIT(ASState);
 
 /** entry into the radix tree */
-struct rtentry_t {
+class rtentry_t
+{
+    MEMPROXY_CLASS(rtentry_t);
+public:
+    rtentry_t() { memset(&e_nodes, 0, sizeof(e_nodes)); }
+
     struct squid_radix_node e_nodes[2];
     as_info *e_info = nullptr;
     m_ADDR e_addr;
@@ -396,10 +401,8 @@ asnAddNet(char *as_string, int as_number)
 
     debugs(53, 3, "asnAddNet: called for " << addr << "/" << mask );
 
-    rtentry_t *e = (rtentry_t *)xcalloc(1, sizeof(rtentry_t));
-
+    auto *e = new rtentry_t;
     e->e_addr.addr = addr;
-
     e->e_mask.addr = mask;
 
     rn = squid_rn_lookup(&e->e_addr, &e->e_mask, AS_tree_head);
@@ -413,7 +416,8 @@ asnAddNet(char *as_string, int as_number)
             debugs(53, 3, "asnAddNet: Warning: Found a network with multiple AS numbers!");
             asinfo->as_number.emplace_back(as_number);
         }
-        xfree(e);
+        delete e;
+
     } else {
         auto *asinfo = new as_info;
         asinfo->as_number.emplace_back(as_number);
@@ -422,8 +426,8 @@ asnAddNet(char *as_string, int as_number)
             e->e_info = asinfo;
         } else {
             delete asinfo;
-            xfree(e);
-            debugs(53, 3, "asnAddNet: Could not add entry.");
+            delete e;
+            debugs(53, 3, "could not add entry");
             return 0;
         }
     }
@@ -445,7 +449,7 @@ destroyRadixNode(struct squid_radix_node *rn, void *w)
             debugs(53, 3, "destroyRadixNode: internal screwup");
 
         delete e->e_info;
-        xfree(rn);
+        delete rn;
     }
 
     return 1;
@@ -490,9 +494,8 @@ ACLASN::dump() const
 {
     SBufList sl;
 
-    for (const auto &element : data) {
+    for (const auto &element : data)
         sl.push_back(ToSBuf(element));
-    }
 
     return sl;
 }
