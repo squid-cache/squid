@@ -51,15 +51,6 @@ struct squid_radix_node_head *AS_tree_head;
 
 /* explicit instantiation required for some systems */
 
-/**
- * Structure for as number information. it could be simply
- * a list but it's coded as a structure for future
- * enhancements (e.g. expires)
- */
-struct as_info {
-    std::list<int> as_number;
-};
-
 class ASState
 {
     CBDATA_CLASS(ASState);
@@ -97,7 +88,7 @@ public:
     rtentry_t() { memset(&e_nodes, 0, sizeof(e_nodes)); }
 
     struct squid_radix_node e_nodes[2];
-    as_info *e_info = nullptr;
+    std::list<int> e_info;
     m_ADDR e_addr;
     m_ADDR e_mask;
 };
@@ -129,7 +120,6 @@ int
 asnMatchIp(const std::list<int> &data, Ip::Address &addr)
 {
     struct squid_radix_node *rn;
-    as_info *e;
     m_ADDR m_addr;
 
     debugs(53, 3, "asnMatchIp: Called for " << addr );
@@ -153,11 +143,10 @@ asnMatchIp(const std::list<int> &data, Ip::Address &addr)
     }
 
     debugs(53, 3, "asnMatchIp: Found in db!");
-    e = ((rtentry_t *) rn)->e_info;
-    assert(e);
+    auto &e = reinterpret_cast<rtentry_t *>(rn)->e_info;
 
     for (const auto a : data) {
-        for (const auto &b : e->as_number)
+        for (const auto &b : e)
             if (a == b) {
                 debugs(53, 5, "asnMatchIp: Found a match!");
                 return 1;
@@ -408,24 +397,21 @@ asnAddNet(char *as_string, int as_number)
     rn = squid_rn_lookup(&e->e_addr, &e->e_mask, AS_tree_head);
 
     if (rn != NULL) {
-        auto *asinfo = ((rtentry_t *) rn)->e_info;
+        auto &asinfo = reinterpret_cast<rtentry_t *>(rn)->e_info;
 
-        if (std::find(asinfo->as_number.begin(), asinfo->as_number.end(), as_number) != asinfo->as_number.end()) {
+        if (std::find(asinfo.begin(), asinfo.end(), as_number) != asinfo.end()) {
             debugs(53, 3, "asnAddNet: Ignoring repeated network '" << addr << "/" << bitl << "' for AS " << as_number);
         } else {
             debugs(53, 3, "asnAddNet: Warning: Found a network with multiple AS numbers!");
-            asinfo->as_number.emplace_back(as_number);
+            asinfo.emplace_back(as_number);
         }
         delete e;
 
     } else {
-        auto *asinfo = new as_info;
-        asinfo->as_number.emplace_back(as_number);
         squid_rn_addroute(&e->e_addr, &e->e_mask, AS_tree_head, e->e_nodes);
         if ((rn = squid_rn_match(&e->e_addr, AS_tree_head))) {
-            e->e_info = asinfo;
+            e->e_info.emplace_back(as_number);
         } else {
-            delete asinfo;
             delete e;
             debugs(53, 3, "could not add entry");
             return 0;
@@ -442,13 +428,11 @@ destroyRadixNode(struct squid_radix_node *rn, void *w)
     struct squid_radix_node_head *rnh = (struct squid_radix_node_head *) w;
 
     if (rn && !(rn->rn_flags & RNF_ROOT)) {
-        rtentry_t *e = (rtentry_t *) rn;
         rn = squid_rn_delete(rn->rn_key, rn->rn_mask, rnh);
 
         if (rn == 0)
             debugs(53, 3, "destroyRadixNode: internal screwup");
 
-        delete e->e_info;
         delete rn;
     }
 
@@ -460,22 +444,18 @@ printRadixNode(struct squid_radix_node *rn, void *_sentry)
 {
     StoreEntry *sentry = (StoreEntry *)_sentry;
     rtentry_t *e = (rtentry_t *) rn;
-    as_info *asinfo;
     char buf[MAX_IPSTRLEN];
     Ip::Address addr;
     Ip::Address mask;
 
     assert(e);
-    assert(e->e_info);
     addr = e->e_addr.addr;
     mask = e->e_mask.addr;
     storeAppendPrintf(sentry, "%s/%d\t",
                       addr.toStr(buf, MAX_IPSTRLEN),
                       mask.cidr() );
-    asinfo = e->e_info;
-    assert(!asinfo->as_number.empty());
 
-    for (const auto &q : asinfo->as_number)
+    for (const auto &q : e->e_info)
         storeAppendPrintf(sentry, " %d", q);
 
     storeAppendPrintf(sentry, "\n");
