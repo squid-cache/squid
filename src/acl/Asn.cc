@@ -146,7 +146,7 @@ asnMatchIp(const std::list<int> &data, Ip::Address &addr)
     auto &e = reinterpret_cast<rtentry_t *>(rn)->e_info;
 
     for (const auto a : data) {
-        for (const auto &b : e)
+        for (const auto b : e)
             if (a == b) {
                 debugs(53, 5, "asnMatchIp: Found a match!");
                 return 1;
@@ -536,4 +536,3 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
     noaddr.setNoAddr();
     return data->match(noaddr);
 }
-
