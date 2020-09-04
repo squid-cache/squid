@@ -86,7 +86,7 @@ class rtentry_t
     MEMPROXY_CLASS(rtentry_t);
 public:
     struct squid_radix_node e_nodes[2] = {};
-    std::list<int> e_info;
+    AsnList e_info;
     m_ADDR e_addr;
     m_ADDR e_mask;
 };
@@ -115,7 +115,7 @@ static OBJH asnStats;
 /* PUBLIC */
 
 static int
-asnMatchIp(const ACLASN::DataType &data, Ip::Address &addr)
+asnMatchIp(const AsnList &data, Ip::Address &addr)
 {
     struct squid_radix_node *rn;
     m_ADDR m_addr;

@@ -21,14 +21,14 @@ void asnInit(void);
 /// \ingroup ACLAPI
 void asnFreeMemory(void);
 
+using AsnList = std::list<int, PoolingAllocator<int>>;
+
 /// \ingroup ACLAPI
 class ACLASN : public ACLData<Ip::Address>
 {
     MEMPROXY_CLASS(ACLASN);
 
 public:
-    using DataType = std::list<int, PoolingAllocator<int>>;
-
     virtual bool match(Ip::Address);
     virtual SBufList dump() const;
     virtual void parse();
@@ -37,7 +37,7 @@ public:
     virtual void prepareForUse();
 
 private:
-    DataType data;
+    AsnList data;
 };
 
 #endif /* SQUID_ACLASN_H */
