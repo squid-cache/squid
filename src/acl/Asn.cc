@@ -85,9 +85,7 @@ class rtentry_t
 {
     MEMPROXY_CLASS(rtentry_t);
 public:
-    rtentry_t() { memset(&e_nodes, 0, sizeof(e_nodes)); }
-
-    struct squid_radix_node e_nodes[2];
+    struct squid_radix_node e_nodes[2] = {};
     std::list<int> e_info;
     m_ADDR e_addr;
     m_ADDR e_mask;
