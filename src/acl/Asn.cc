@@ -116,8 +116,8 @@ static OBJH asnStats;
 
 /* PUBLIC */
 
-int
-asnMatchIp(const std::list<int> &data, Ip::Address &addr)
+static int
+asnMatchIp(const ACLASN::DataType &data, Ip::Address &addr)
 {
     struct squid_radix_node *rn;
     m_ADDR m_addr;

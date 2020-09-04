@@ -11,10 +11,9 @@
 
 #include "acl/Data.h"
 #include "ip/Address.h"
+#include "mem/PoolingAllocator.h"
 
 #include <list>
-
-int asnMatchIp(const std::list<int> &, Ip::Address &);
 
 /// \ingroup ACLAPI
 void asnInit(void);
@@ -28,6 +27,8 @@ class ACLASN : public ACLData<Ip::Address>
     MEMPROXY_CLASS(ACLASN);
 
 public:
+    using DataType = std::list<int, PoolingAllocator<int>>;
+
     virtual bool match(Ip::Address);
     virtual SBufList dump() const;
     virtual void parse();
@@ -36,7 +37,7 @@ public:
     virtual void prepareForUse();
 
 private:
-    std::list<int> data;
+    DataType data;
 };
 
 #endif /* SQUID_ACLASN_H */
