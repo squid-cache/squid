@@ -448,6 +448,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         debugs(88, 3, "request to origin aborted '" << http->storeEntry()->url() << "', sending old entry to client");
         http->logType.update(LOG_TCP_REFRESH_FAIL_OLD);
         sendClientOldEntry();
+        return;
     }
 
     const auto oldStatus = old_entry->mem().freshestReply().sline.status();
@@ -472,11 +473,13 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
             // forward the 304 from origin
             debugs(88, 3, "origin replied 304, revalidating existing entry and forwarding 304 to client");
             sendClientUpstreamResponse();
+            return;
         } else {
             // send existing entry, it's still valid
             debugs(88, 3, "origin replied 304, revalidating existing entry and sending " <<
                    oldStatus << " to client");
             sendClientOldEntry();
+            return;
         }
     }
 
@@ -490,11 +493,13 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
                    " but with an older date header, sending old entry (" <<
                    oldStatus << ") to client");
             sendClientOldEntry();
+            return;
         } else {
             http->logType.update(LOG_TCP_REFRESH_MODIFIED);
             debugs(88, 3, "origin replied " << status <<
                    ", replacing existing entry and forwarding to client");
             sendClientUpstreamResponse();
+            return;
         }
     }
 
@@ -504,13 +509,17 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         debugs(88, 3, "origin replied with error " << status <<
                ", forwarding to client due to fail_on_validation_err");
         sendClientUpstreamResponse();
+        return;
     } else {
         // ignore and let client have old entry
         http->logType.update(LOG_TCP_REFRESH_FAIL_OLD);
         debugs(88, 3, "origin replied with error " <<
                status << ", sending old entry (" << oldStatus << ") to client");
         sendClientOldEntry();
+        return;
     }
+
+    // XXX: unreachable? or sending what to client?
 }
 
 SQUIDCEXTERN CSR clientGetMoreData;
