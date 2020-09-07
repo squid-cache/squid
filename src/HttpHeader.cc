@@ -551,9 +551,9 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
         delById(Http::HdrType::CONTENT_LENGTH);
         // and clen state becomes irrelevant
 
-        if (rawTe == "chunked") {
+        if (rawTe.caseCmp("chunked")) {
             ; // leave header present for chunked() method
-        } else if (rawTe == "identity") { // deprecated. no coding
+        } else if (rawTe.caseCmp("identity")) { // deprecated. no coding
             delById(Http::HdrType::TRANSFER_ENCODING);
         } else {
             // This also rejects multiple encodings until we support them properly.
