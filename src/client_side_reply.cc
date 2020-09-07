@@ -448,6 +448,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         debugs(88, 3, "request to origin aborted '" << http->storeEntry()->url() << "', sending old entry to client");
         http->logType.update(LOG_TCP_REFRESH_FAIL_OLD);
         sendClientOldEntry();
+        return;
     }
 
     const auto oldStatus = old_entry->mem().freshestReply().sline.status();
@@ -467,50 +468,48 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         Store::Root().updateOnNotModified(old_entry, *http->storeEntry());
 
         // if client sent IMS
-
         if (http->request->flags.ims && !old_entry->modifiedSince(http->request->ims, http->request->imslen)) {
             // forward the 304 from origin
-            debugs(88, 3, "origin replied 304, revalidating existing entry and forwarding 304 to client");
+            debugs(88, 3, "origin replied 304, revalidated existing entry and forwarding 304 to client");
             sendClientUpstreamResponse();
-        } else {
-            // send existing entry, it's still valid
-            debugs(88, 3, "origin replied 304, revalidating existing entry and sending " <<
-                   oldStatus << " to client");
-            sendClientOldEntry();
+            return;
         }
+
+        // send existing entry, it's still valid
+        debugs(88, 3, "origin replied 304, revalidated existing entry and sending " << oldStatus << " to client");
+        sendClientOldEntry();
+        return;
     }
 
     // origin replied with a non-error code
-    else if (status > Http::scNone && status < Http::scInternalServerError) {
+    if (status > Http::scNone && status < Http::scInternalServerError) {
         // RFC 7234 section 4: a cache MUST use the most recent response
         // (as determined by the Date header field)
         if (new_rep.olderThan(&old_entry->mem().freshestReply())) {
             http->logType.err.ignored = true;
-            debugs(88, 3, "origin replied " << status <<
-                   " but with an older date header, sending old entry (" <<
-                   oldStatus << ") to client");
+            debugs(88, 3, "origin replied " << status << " but with an older date header, sending old entry (" << oldStatus << ") to client");
             sendClientOldEntry();
-        } else {
-            http->logType.update(LOG_TCP_REFRESH_MODIFIED);
-            debugs(88, 3, "origin replied " << status <<
-                   ", replacing existing entry and forwarding to client");
-            sendClientUpstreamResponse();
+            return;
         }
+
+        http->logType.update(LOG_TCP_REFRESH_MODIFIED);
+        debugs(88, 3, "origin replied " << status << ", forwarding to client");
+        sendClientUpstreamResponse();
+        return;
     }
 
     // origin replied with an error
-    else if (http->request->flags.failOnValidationError) {
+    if (http->request->flags.failOnValidationError) {
         http->logType.update(LOG_TCP_REFRESH_FAIL_ERR);
-        debugs(88, 3, "origin replied with error " << status <<
-               ", forwarding to client due to fail_on_validation_err");
+        debugs(88, 3, "origin replied with error " << status << ", forwarding to client due to fail_on_validation_err");
         sendClientUpstreamResponse();
-    } else {
-        // ignore and let client have old entry
-        http->logType.update(LOG_TCP_REFRESH_FAIL_OLD);
-        debugs(88, 3, "origin replied with error " <<
-               status << ", sending old entry (" << oldStatus << ") to client");
-        sendClientOldEntry();
+        return;
     }
+
+    // ignore and let client have old entry
+    http->logType.update(LOG_TCP_REFRESH_FAIL_OLD);
+    debugs(88, 3, "origin replied with error " << status << ", sending old entry (" << oldStatus << ") to client");
+    sendClientOldEntry();
 }
 
 SQUIDCEXTERN CSR clientGetMoreData;
