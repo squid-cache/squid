@@ -1,0 +1,1474 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: squid\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-09-16 17:53+1300\n"
+"PO-Revision-Date: 2010-08-17 06:57+0200\n"
+"Last-Translator: Javier <javier@aex.mx>\n"
+"Language-Team: Spanish (Mexico) <es-mx@li.org>\n"
+"Language: es-mx\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Pootle 2.1.6\n"
+
+
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.p:31-1
+msgid "%D"
+msgstr ""
+
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.blockquote.pre:30-1
+msgid "%E (TLS code: %x)"
+msgstr ""
+
+#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:30-1
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:30-1
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:30-1
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:30-1
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:31-1
+msgid "%F"
+msgstr ""
+
+#: templates/ERR_INVALID_REQ+html.body.div.blockquote.pre:24-1
+#: templates/ERR_INVALID_RESP+html.body.div.blockquote.pre:24-1
+msgid "%R"
+msgstr ""
+
+#: templates/ERR_ESI+html.body.div.blockquote.pre:29-1
+msgid "%Z"
+msgstr ""
+
+#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:25-1
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:25-1
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:25-1
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:25-1
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:26-1
+msgid "%f"
+msgstr ""
+
+#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:31-1
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:31-1
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:31-1
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:32-1
+msgid "%g"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:73
+msgid "%ssl_error_descr"
+msgstr "%ssl_error_descr"
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:101
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:121
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:129
+msgid "%ssl_error_descr: %ssl_ca_name"
+msgstr "%ssl_error_descr: %ssl_ca_name"
+
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:5
+#, fuzzy
+msgid "%ssl_error_descr: %ssl_lib_error"
+msgstr "%ssl_error_descr: %ssl_ca_name"
+
+#: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.detail:1
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:21
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:25
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:33
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:37
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:49
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:65
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:69
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:89
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:93
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:97
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:105
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:109
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:113
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:117
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:125
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:133
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER.detail:137
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION.detail:141
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CRL_SIGN.detail:145
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION.detail:149
+#: templates/error-details.txt+X509_V_ERR_INVALID_NON_CA.detail:153
+#: templates/error-details.txt+X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED.detail:157
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE.detail:161
+#: templates/error-details.txt+X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED.detail:165
+#: templates/error-details.txt+X509_V_ERR_INVALID_EXTENSION.detail:169
+#: templates/error-details.txt+X509_V_ERR_INVALID_POLICY_EXTENSION.detail:173
+#: templates/error-details.txt+X509_V_ERR_NO_EXPLICIT_POLICY.detail:177
+#: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.detail:181
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE.detail:185
+#: templates/error-details.txt+X509_V_ERR_UNNESTED_RESOURCE.detail:189
+#: templates/error-details.txt+X509_V_ERR_PERMITTED_VIOLATION.detail:193
+#: templates/error-details.txt+X509_V_ERR_EXCLUDED_VIOLATION.detail:197
+#: templates/error-details.txt+X509_V_ERR_SUBTREE_MINMAX.detail:201
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE.detail:205
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX.detail:209
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_NAME_SYNTAX.detail:213
+#: templates/error-details.txt+X509_V_ERR_CRL_PATH_VALIDATION_ERROR.detail:217
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:221
+msgid "%ssl_error_descr: %ssl_subject"
+msgstr "%ssl_error_descr: %ssl_subject"
+
+#: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:23-1
+#: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:29-1
+msgid "%z"
+msgstr ""
+
+#: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:29-1
+msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
+msgstr ""
+"<a href=\"../\">Directorio superior</a> (<a href=\"/\">Directorio Raíz</a>)"
+
+#: templates/ERR_INVALID_REQ+html.body.div.p:21-1
+msgid ""
+"<b>Invalid Request</b> error was encountered while trying to process the "
+"request:"
+msgstr ""
+"<b>Petición No Válida</b> se ha encontrado un error mientras se intentaba "
+"procesar la petición:"
+
+#: templates/ERR_INVALID_RESP+html.body.div.p:21-1
+msgid ""
+"<b>Invalid Response</b> error was encountered while trying to process the "
+"request:"
+msgstr ""
+"<b>Respuesta No Válida</b> se ha encontrado un error mientras se intentaba "
+"procesar la petición:"
+
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:29-1
+msgid ""
+"A Timeout occurred while waiting to read data from the network. The network "
+"or server may be down or congested. Please retry your request."
+msgstr ""
+"El tiempo de espera expiró mientras se esperaba una respuesta de la red. La "
+"red o el servidor puede estar fuera de servicio o congestionados."
+"Por favor, inténtelo de nuevo."
+
+#: templates/ERR_URN_RESOLVE+html.body.div.h2:16-1
+msgid "A URL for the requested URN could not be retrieved"
+msgstr "No se ha podido obtener una URL para el URN solicitado"
+
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:27-1
+msgid ""
+"A non-recoverable internal failure or configuration problem prevents this "
+"request from being completed."
+msgstr ""
+"Una falla interna no recuperable o un problema de configuración impide "
+"que se complete esta solicitud."
+
+#: templates/ERR_ACCESS_DENIED+html.body.div.blockquote.p:24-1
+msgid "Access Denied."
+msgstr "Acceso Denegado"
+
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:27-1
+msgid ""
+"Access control configuration prevents your request from being allowed at "
+"this time. Please contact your service provider if you feel this is "
+"incorrect."
+msgstr ""
+"La configuración de control de acceso evita que su solicitud sea procesada "
+"en este momento. Por favor, comuníquese con su proveedor de servicios si "
+"cree que esto es incorrecto."
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:32-1
+msgid "All configured parent caches may be currently unreachable."
+msgstr ""
+"Los servidores de cache principales configurados no estan disponibles en "
+"este momento."
+
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:21-1
+msgid ""
+"An FTP authentication failure occurred while trying to retrieve the URL: <a "
+"href=\"%U\">%U</a>"
+msgstr ""
+"Ha ocurrido una falla de autenticación mientras se trataba de acceder al "
+"URL: <a href=\"%U\">%U</a>"
+
+#: templates/ERR_FTP_FAILURE+html.body.div.p:21-1
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:21-1
+msgid ""
+"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
+"\">%U</a>"
+msgstr ""
+"Ha ocurrido un error de protocolo FTP al intentar acceder a la URL: "
+"<a href=\"%U\">%U</a>"
+
+#: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:34-5
+msgid "An Illegal response was received from the ICAP server."
+msgstr "El servidor ICAP ha enviado una respuesta ilegal."
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31-1
+msgid ""
+"An Internet connection needed to access this domains origin servers may be "
+"down."
+msgstr ""
+"Se requiere de una conexión a internet o los servidores de origen de este "
+"dominio pueden estar fuera de servicio"
+
+#: templates/ERR_READ_ERROR+html.body.div.p:29-1
+msgid ""
+"An error condition occurred while reading data from the network. Please "
+"retry your request."
+msgstr ""
+"Se ha presentado un error al leer datos de la red. Por favor, inténtelo de "
+"nuevo."
+
+#: templates/ERR_WRITE_ERROR+html.body.div.p:29-1
+msgid ""
+"An error condition occurred while writing to the network. Please retry your "
+"request."
+msgstr ""
+"Se ha presentado un error al escribir datos a la red. Por favor, inténtelo "
+"de nuevo."
+
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:221
+msgid "Application verification failure"
+msgstr "Error de verificación de la aplicación"
+
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:29-5
+msgid ""
+"At least one precondition specified by the HTTP client in the request header "
+"has failed."
+msgstr ""
+"Al menos una codición definida en la cabecera de la solicitud HTTP del cliente "
+"ha fallado."
+
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:129
+msgid "Authority and issuer serial number mismatch"
+msgstr "La autoridad y el número de serie del emisor no coinciden"
+
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:125
+msgid "Authority and subject key identifier mismatch"
+msgstr "La autoridad y la llave de identificación del asunto no coinciden""
+
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:53
+msgid "CRL has expired"
+msgstr "CRL ha expirado"
+
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:49
+msgid "CRL is not yet valid"
+msgstr "CRL aún no ha sido validado"
+
+#: templates/error-details.txt+X509_V_ERR_CRL_PATH_VALIDATION_ERROR.descr:217
+msgid "CRL path validation error"
+msgstr "La ruta CRL no es válida"
+
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:37
+msgid "CRL signature failure"
+msgstr "Fallo en la firma CRL"
+
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:16-1
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:24-1
+msgid "Cache Access Denied."
+msgstr "Acceso a Caché denegado"
+
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h2:16-1
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.blockquote.p:24-1
+msgid "Cache Manager Access Denied."
+msgstr "Acceso Denegado al Administrador del Caché."
+
+#: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:24-1
+msgid "Cannot Resolve URN"
+msgstr "No se puede resolver el URN"
+
+#: templates/error-details.txt+SQUID_X509_V_ERR_INFINITE_VALIDATION.descr:1
+msgid "Cert validation infinite loop detected"
+msgstr "Ciclo infinito detectado en la validación del certificado"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:93
+msgid "Certificate chain too long"
+msgstr "Cadena del certificado demasiado larga"
+
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:9
+#, fuzzy
+msgid "Certificate does not match domainname"
+msgstr "El certificado no coincide con el nombre de dominio"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:45
+msgid "Certificate has expired"
+msgstr "El certificado ha expirado"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:41
+msgid "Certificate is not yet valid"
+msgstr "El certificado aún no es valido"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:113
+msgid "Certificate not trusted"
+msgstr "El certtificado no confiable"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:117
+msgid "Certificate rejected"
+msgstr "El certificado ha sido rechazado"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:97
+msgid "Certificate revoked"
+msgstr "El certificado ha sido revocado"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:33
+msgid "Certificate signature failure"
+msgstr "Error en la firma del certificado"
+
+#: templates/ERR_LIFETIME_EXP+html.body.div.blockquote.p:24-1
+msgid "Connection Lifetime Expired"
+msgstr "Ha expirado el tiempo de vida de la conexión"
+
+#: templates/ERR_CONNECT_FAIL+html.body.div.blockquote.p:24-1
+msgid "Connection to %I failed."
+msgstr "La Conexión a %I ha fallado."
+
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:33-5
+msgid "Content-Length missing for POST or PUT requests."
+msgstr "Falta Content-Length en las solicitudes POST o PUT"
+
+#: templates/ERR_ACCESS_DENIED+html.head.meta:-1--1
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.meta:-1--1
+#: templates/ERR_AGENT_CONFIGURE+html.head.meta:-1--1
+#: templates/ERR_AGENT_WPAD+html.head.meta:-1--1
+#: templates/ERR_CACHE_ACCESS_DENIED+html.head.meta:-1--1
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.head.meta:-1--1
+#: templates/ERR_CANNOT_FORWARD+html.head.meta:-1--1
+#: templates/ERR_CONFLICT_HOST+html.head.meta:-1--1
+#: templates/ERR_CONNECT_FAIL+html.head.meta:-1--1
+#: templates/ERR_DIR_LISTING+html.head.meta:-1--1
+#: templates/ERR_DNS_FAIL+html.head.meta:-1--1
+#: templates/ERR_ESI+html.head.meta:-1--1
+#: templates/ERR_FORWARDING_DENIED+html.head.meta:-1--1
+#: templates/ERR_FTP_DISABLED+html.head.meta:-1--1
+#: templates/ERR_FTP_FAILURE+html.head.meta:-1--1
+#: templates/ERR_FTP_FORBIDDEN+html.head.meta:-1--1
+#: templates/ERR_FTP_NOT_FOUND+html.head.meta:-1--1
+#: templates/ERR_FTP_PUT_CREATED+html.head.meta:-1--1
+#: templates/ERR_FTP_PUT_ERROR+html.head.meta:-1--1
+#: templates/ERR_FTP_PUT_MODIFIED+html.head.meta:-1--1
+#: templates/ERR_FTP_UNAVAILABLE+html.head.meta:-1--1
+#: templates/ERR_GATEWAY_FAILURE+html.head.meta:-1--1
+#: templates/ERR_ICAP_FAILURE+html.head.meta:-1--1
+#: templates/ERR_INVALID_REQ+html.head.meta:-1--1
+#: templates/ERR_INVALID_RESP+html.head.meta:-1--1
+#: templates/ERR_INVALID_URL+html.head.meta:-1--1
+#: templates/ERR_LIFETIME_EXP+html.head.meta:-1--1
+#: templates/ERR_NO_RELAY+html.head.meta:-1--1
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.head.meta:-1--1
+#: templates/ERR_PRECONDITION_FAILED+html.head.meta:-1--1
+#: templates/ERR_PROTOCOL_UNKNOWN+html.head.meta:-1--1
+#: templates/ERR_READ_ERROR+html.head.meta:-1--1
+#: templates/ERR_READ_TIMEOUT+html.head.meta:-1--1
+#: templates/ERR_SECURE_CONNECT_FAIL+html.head.meta:-1--1
+#: templates/ERR_SHUTTING_DOWN+html.head.meta:-1--1
+#: templates/ERR_SOCKET_FAILURE+html.head.meta:-1--1
+#: templates/ERR_TOO_BIG+html.head.meta:-1--1
+#: templates/ERR_UNSUP_HTTPVERSION+html.head.meta:-1--1
+#: templates/ERR_UNSUP_REQ+html.head.meta:-1--1
+#: templates/ERR_URN_RESOLVE+html.head.meta:-1--1
+#: templates/ERR_WRITE_ERROR+html.head.meta:-1--1
+#: templates/ERR_ZERO_SIZE_OBJECT+html.head.meta:-1--1
+msgid "Copyright (C) 1996-2017 The Squid Software Foundation and contributors"
+msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.descr:181
+msgid "Different CRL scope"
+msgstr ""
+
+#: templates/ERR_DIR_LISTING+html.body.div.h4:20-1
+msgid "Directory Content:"
+msgstr "Contenido del Directorio:"
+
+#: templates/ERR_DIR_LISTING+html.body.div.table:-1--1
+msgid "Directory Listing"
+msgstr "Listado del directorio"
+
+#: templates/ERR_DIR_LISTING+html.head.title:5-1
+msgid "Directory: %U"
+msgstr "Directorio: %U"
+
+#: templates/ERR_DIR_LISTING+html.body.div.h2:15-1
+msgid "Directory: <a href=\"%U\">%U</a>/"
+msgstr "Directorio: <a href=\"%U\">%U</a>/"
+
+#: templates/ERR_ACCESS_DENIED+html.body.div.h1:15-1
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h1:15-1
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.h1:15-1
+#: templates/ERR_AGENT_WPAD+html.body.div.h1:15-1
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:15-1
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h1:15-1
+#: templates/ERR_CANNOT_FORWARD+html.body.div.h1:15-1
+#: templates/ERR_CONFLICT_HOST+html.body.div.h1:15-1
+#: templates/ERR_CONNECT_FAIL+html.body.div.h1:15-1
+#: templates/ERR_DNS_FAIL+html.body.div.h1:15-1
+#: templates/ERR_ESI+html.body.div.h1:15-1
+#: templates/ERR_FORWARDING_DENIED+html.body.div.h1:15-1
+#: templates/ERR_FTP_DISABLED+html.body.div.h1:15-1
+#: templates/ERR_FTP_FAILURE+html.body.div.h1:15-1
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.h1:15-1
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.h1:15-1
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.h1:15-1
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.h1:15-1
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.h1:15-1
+#: templates/ERR_ICAP_FAILURE+html.body.div.h1:15-1
+#: templates/ERR_INVALID_REQ+html.body.div.h1:15-1
+#: templates/ERR_INVALID_RESP+html.body.div.h1:15-1
+#: templates/ERR_INVALID_URL+html.body.div.h1:15-1
+#: templates/ERR_LIFETIME_EXP+html.body.div.h1:15-1
+#: templates/ERR_NO_RELAY+html.body.div.h1:15-1
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.h1:15-1
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.h1:15-1
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.h1:15-1
+#: templates/ERR_READ_ERROR+html.body.div.h1:15-1
+#: templates/ERR_READ_TIMEOUT+html.body.div.h1:15-1
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.h1:15-1
+#: templates/ERR_SHUTTING_DOWN+html.body.div.h1:15-1
+#: templates/ERR_SOCKET_FAILURE+html.body.div.h1:15-1
+#: templates/ERR_TOO_BIG+html.body.div.h1:15-1
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h1:15-1
+#: templates/ERR_UNSUP_REQ+html.body.div.h1:15-1
+#: templates/ERR_URN_RESOLVE+html.body.div.h1:15-1
+#: templates/ERR_WRITE_ERROR+html.body.div.h1:15-1
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h1:15-1
+msgid "ERROR"
+msgstr "ERROR"
+
+#: templates/ERR_CACHE_ACCESS_DENIED+html.head.title:5-1
+msgid "ERROR: Cache Access Denied"
+msgstr "ERROR: Acceso Denegado al Caché"
+
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.head.title:5-1
+msgid "ERROR: Cache Manager Access Denied"
+msgstr "ERROR: Acceso Denegado al Administrador del Caché"
+
+#: templates/ERR_FTP_PUT_ERROR+html.head.title:5-1
+msgid "ERROR: FTP upload failed"
+msgstr "ERROR: fallo al cargar FTP"
+
+#: templates/ERR_ACCESS_DENIED+html.head.title:5-1
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:5-1
+#: templates/ERR_CANNOT_FORWARD+html.head.title:5-1
+#: templates/ERR_CONFLICT_HOST+html.head.title:5-1
+#: templates/ERR_CONNECT_FAIL+html.head.title:5-1
+#: templates/ERR_DNS_FAIL+html.head.title:5-1
+#: templates/ERR_ESI+html.head.title:5-1
+#: templates/ERR_FORWARDING_DENIED+html.head.title:5-1
+#: templates/ERR_FTP_DISABLED+html.head.title:5-1
+#: templates/ERR_FTP_FAILURE+html.head.title:5-1
+#: templates/ERR_FTP_FORBIDDEN+html.head.title:5-1
+#: templates/ERR_FTP_NOT_FOUND+html.head.title:5-1
+#: templates/ERR_FTP_UNAVAILABLE+html.head.title:5-1
+#: templates/ERR_GATEWAY_FAILURE+html.head.title:5-1
+#: templates/ERR_ICAP_FAILURE+html.head.title:5-1
+#: templates/ERR_INVALID_REQ+html.head.title:5-1
+#: templates/ERR_INVALID_RESP+html.head.title:5-1
+#: templates/ERR_INVALID_URL+html.head.title:5-1
+#: templates/ERR_LIFETIME_EXP+html.head.title:5-1
+#: templates/ERR_NO_RELAY+html.head.title:5-1
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.head.title:5-1
+#: templates/ERR_PRECONDITION_FAILED+html.head.title:5-1
+#: templates/ERR_PROTOCOL_UNKNOWN+html.head.title:5-1
+#: templates/ERR_READ_ERROR+html.head.title:5-1
+#: templates/ERR_READ_TIMEOUT+html.head.title:5-1
+#: templates/ERR_SECURE_CONNECT_FAIL+html.head.title:5-1
+#: templates/ERR_SHUTTING_DOWN+html.head.title:5-1
+#: templates/ERR_SOCKET_FAILURE+html.head.title:5-1
+#: templates/ERR_TOO_BIG+html.head.title:5-1
+#: templates/ERR_UNSUP_HTTPVERSION+html.head.title:5-1
+#: templates/ERR_UNSUP_REQ+html.head.title:5-1
+#: templates/ERR_WRITE_ERROR+html.head.title:5-1
+#: templates/ERR_ZERO_SIZE_OBJECT+html.head.title:5-1
+msgid "ERROR: The requested URL could not be retrieved"
+msgstr "ERROR: El URL solicitado no se ha podido obetener"
+
+#: templates/ERR_URN_RESOLVE+html.head.title:5-1
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "ERROR: La URN requerida no pudo ser obtenida."
+
+#: templates/ERR_ESI+html.body.div.blockquote.p:24-1
+msgid "ESI Processing failed."
+msgstr "Error en el procesamiendo ESI"
+
+#: templates/ERR_FTP_PUT_CREATED+html.head.title:5-1
+#: templates/ERR_FTP_PUT_MODIFIED+html.head.title:5-1
+msgid "FTP PUT Successful."
+msgstr "FTP PUT realizado con éxito"
+
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.h2:16-1
+msgid "FTP PUT upload failed"
+msgstr "Fallo al ejecutar FTP PUT"
+
+#: templates/ERR_FTP_DISABLED+html.body.div.blockquote.p:24-1
+msgid "FTP is Disabled"
+msgstr "FTP deshabilitado"
+
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.blockquote.p:24-1
+msgid "Failed to establish a secure connection to %I"
+msgstr "No se ha podido establecer una conexión segura con %I"
+
+#: templates/ERR_FTP_PUT_CREATED+html.body.div.h2:16-1
+msgid "File created"
+msgstr "Archivo creado"
+
+#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.h2:16-1
+msgid "File updated"
+msgstr "Archivo actualizado"
+
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:27-1
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:27-1
+msgid "For Firefox browsers go to: <ul>"
+msgstr "Para navegadores Firefox ir a:"
+
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:35-1
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:35-1
+msgid "For Internet Explorer browsers go to: <ul>"
+msgstr "Para navegadores Internet Explorer ir a:"
+
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:43-1
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:43-1
+msgid "For Opera browsers go to: <ul>"
+msgstr "Para navegadores Opera ir a:"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:65
+msgid "Format error in CRL's lastUpdate field"
+msgstr "Error de formato en el campo lastUpdate de CRL"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:69
+msgid "Format error in CRL's nextUpdate field"
+msgstr "Error en el campo nextUpdate de CRL"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:61
+msgid "Format error in certificate's notAfter field"
+msgstr "Error de formato en el campo notAfter del certificado"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:57
+msgid "Format error in certificate's notBefore field"
+msgstr "Error de formato en el campo notBefore del certificado"
+
+#: templates/ERR_FORWARDING_DENIED+html.body.div.blockquote.p:24-1
+msgid "Forwarding Denied."
+msgstr "Reenvío denegado."
+
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.blockquote.p:24-1
+msgid "Gateway Proxy Failure"
+msgstr "Error en puerta de enlace del proxy"
+
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:35-1
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:36-1
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:57-1
+#: templates/ERR_AGENT_WPAD+html.body.div.p:57-1
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:36-1
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:36-1
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:43-1
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:41-1
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:38-1
+#: templates/ERR_DIR_LISTING+html.body.div.p:39-1
+#: templates/ERR_DNS_FAIL+html.body.div.p:40-1
+#: templates/ERR_ESI+html.body.div.p:40-1
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:36-1
+#: templates/ERR_FTP_DISABLED+html.body.div.p:36-1
+#: templates/ERR_FTP_FAILURE+html.body.div.p:40-1
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:40-1
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:42-1
+#: templates/ERR_FTP_PUT_CREATED+html.body.div.p:24-1
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:41-1
+#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.p:24-1
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:41-1
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:37-1
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:42-1
+#: templates/ERR_INVALID_REQ+html.body.div.p:50-1
+#: templates/ERR_INVALID_RESP+html.body.div.p:37-1
+#: templates/ERR_INVALID_URL+html.body.div.p:43-1
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:35-1
+#: templates/ERR_NO_RELAY+html.body.div.p:35-1
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:35-1
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:37-1
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:35-1
+#: templates/ERR_READ_ERROR+html.body.div.p:37-1
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:37-1
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:43-1
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:31-1
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:37-1
+#: templates/ERR_TOO_BIG+html.body.div.p:37-1
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:35-1
+#: templates/ERR_UNSUP_REQ+html.body.div.p:35-1
+#: templates/ERR_URN_RESOLVE+html.body.div.p:35-1
+#: templates/ERR_WRITE_ERROR+html.body.div.p:37-1
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:35-1
+msgid "Generated %T by %h (%s)"
+msgstr "Generado %T por %h (%s)"
+
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:35-5
+msgid ""
+"HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
+msgstr ""
+"HTTP/1.1 <q>Esperado:</q> la característica ha sido requerida desde un "
+"software HTTP/1.0."
+
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:5
+msgid "Handshake with SSL server failed"
+msgstr "Fallo en el protocolo de enlace con el servidor SSL"
+
+#: templates/ERR_URN_RESOLVE+html.body.div.p:27-1
+msgid "Hey, don't expect too much from URNs on %T :)"
+msgstr "Oye, no esperes mucho de las URNs en %T :)"
+
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:25-1
+#: templates/ERR_AGENT_WPAD+html.body.div.p:25-1
+msgid "How to find these settings in your browser:"
+msgstr "Como encontrar estas configuraciones en tu navegador:"
+
+#: templates/ERR_ICAP_FAILURE+html.body.div.blockquote.p:24-1
+msgid "ICAP protocol error."
+msgstr "Error de protocolo ICAP."
+
+#: templates/ERR_TOO_BIG+html.body.div.p:28-1
+msgid ""
+"If you are making a GET request, then the item you are trying to download is "
+"too large."
+msgstr ""
+"Si estas haciendo una petición GET, entonces el elemento que estas intentando "
+"descargar es demasiado grande."
+
+#: templates/ERR_TOO_BIG+html.body.div.p:27-1
+msgid ""
+"If you are making a POST or PUT request, then the item you are trying to "
+"upload is too large."
+msgstr ""
+"Si estas haciendo una petición POST o PUT, entonces el elemento que estas intentando "
+"cargar es demasiado grande."
+
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:34-5
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:34-5
+msgid "Illegal character in hostname; underscores are not allowed."
+msgstr ""
+"Caracter no valido en el nombre del host; los guiones bajos (_) "
+"no están permitidos."
+
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:33-5
+msgid "Illegal double-escape in the URL-Path"
+msgstr "Doble caracter de escape ilegal en la ruta del URL"
+
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:31-1
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:39-1
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:47-1
+#, fuzzy
+msgid "In the HTTP proxy box type the proxy name %h and port %b."
+msgstr ""
+"En el campo de entrada de HTTP proxy escribe el nombre del proxy %h y el "
+"número del puerto 3128"
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:101
+msgid "Invalid CA certificate"
+msgstr "Certificado CA no válido"
+
+#: templates/ERR_INVALID_URL+html.body.div.blockquote.p:24-1
+msgid "Invalid URL"
+msgstr "URL no válido"
+
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:133
+msgid "Key usage does not include certificate signing"
+msgstr "La llave en uso no incluye la firma del certificado"
+
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:31-27
+msgid "Missing HTTP Identifier (HTTP/1.0)."
+msgstr "Falta el identificador HTTP (HTTP/1.0)"
+
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:30-22
+msgid "Missing URL."
+msgstr "URL no encontrado."
+
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:32-5
+msgid "Missing hostname"
+msgstr "Falta el nombre del host"
+
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:31-5
+msgid ""
+"Missing or incorrect access protocol (should be <q>http://</q> or similar)"
+msgstr ""
+"El protocolo de acceso no es correcto o no ha sido definido (debe ser "
+"<q>http://</q> o similar)"
+
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:29-25
+msgid "Missing or unknown request method."
+msgstr "El método de solicitud (request) no ha sido definido o no es válido."
+
+#: templates/ERR_NO_RELAY+html.body.div.blockquote.p:24-1
+msgid "No Wais Relay"
+msgstr "No hay relay para Wais."
+
+#: templates/ERR_FTP_PUT_CREATED+html.body.div.h1:15-1
+#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.h1:15-1
+msgid "Operation successful"
+msgstr "Operación exitosa"
+
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:73
+msgid "Out of memory"
+msgstr "Sin memoria"
+
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:105
+msgid "Path length constraint exceeded"
+msgstr "Se excedío el límite en la longitud de la ruta"
+
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:29-1
+msgid ""
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself or, if you <em>are</em> the "
+"administrator, read Squid documentation on cache manager interface and check "
+"cache log for more detailed error messages."
+msgstr ""
+"Por favor contacte al <a href=\"mailto:%w%W\">administrador del caché</a> si "
+"tiene dificultad para autenticarse, o si usted <em>es</em> el administrador, "
+"lea la documentación de Squid sobre interfaz del cache manager y revise en el "
+"log de caché por mensajes de error más detallados."
+
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:29-1
+#, fuzzy
+msgid ""
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself."
+msgstr ""
+"Por favor contacte al <a href=\"mailto:%w%W\">administrador del caché</a> "
+"si tiene problemas para autenticarse."
+
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:24-1
+msgid "Precondition Failed."
+msgstr "Falla en condición previa."
+
+#: templates/error-details.txt+X509_V_ERR_UNNESTED_RESOURCE.descr:189
+msgid "RFC 3779 resource not subset of parent's resources"
+msgstr "Recursos RFC 3779 no son parte de los recursos padre"
+
+#: templates/ERR_READ_ERROR+html.body.div.blockquote.p:24-1
+msgid "Read Error"
+msgstr "Error de Lectura"
+
+#: templates/ERR_READ_TIMEOUT+html.body.div.blockquote.p:24-1
+msgid "Read Timeout"
+msgstr "Expiro el Tiempo de Lectura"
+"Se acab&oacute; el tiempo m&aacute;ximo para lectura de datos de la red."
+
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:32-5
+msgid "Request is too large."
+msgstr "La solicitud es demasiado grande."
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:13
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:85
+msgid "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+msgstr "Error de certificado SSL: el emisor del certificado (CA) desconocido: %ssl_ca_name"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:41
+msgid "SSL Certficate is not valid before: %ssl_notbefore"
+msgstr "Certificado SSL no es válido antes de: %ssl_notbefore"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:45
+msgid "SSL Certificate expired on: %ssl_notafter"
+msgstr "Certificado SSL expiro en: %ssl_notafter"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:61
+msgid ""
+"SSL Certificate has invalid expiration date (the 'not after' field): "
+"%ssl_subject"
+msgstr ""
+"El Certificado SSL tiene una fecha de expiración no válida (campo 'not after'): "
+"%ssl_subject"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:57
+msgid ""
+"SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
+msgstr ""
+"El Certificado SSL tiene una fecha de inicio no válida (campo 'not before'): %ssl_subject"
+
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:31-1
+#, fuzzy
+msgid "Select Auto-detect proxy settings for this network"
+msgstr "Seleccione Detectar preferencias automáticamente"
+
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:39-1
+msgid "Select Automatically detect settings"
+msgstr "Selecciona la opción Detección Automática de Proxy"
+
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:47-1
+msgid "Select Use Automatic proxy configuration"
+msgstr "Selecciona la opción Usar Configuración automática de Proxy"
+
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:77
+msgid "Self signed certificate"
+msgstr "Certificado SSL autofirmado"
+
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:81
+msgid "Self signed certificate in certificate chain"
+msgstr "Certificado SSL autofirmado en cadena de certificado"
+
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:81
+msgid "Self-signed SSL Certificate in chain: %ssl_subject"
+msgstr "Certificado SSL autofirmado en cadena: %ssl_subject"
+
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:77
+msgid "Self-signed SSL Certificate: %ssl_subject"
+msgstr "Certificado SSL autofirmado: %ssl_subject"
+
+#: templates/ERR_SOCKET_FAILURE+html.body.div.blockquote.p:24-1
+msgid "Socket Failure"
+msgstr "Fallo en Socket"
+
+#: templates/ERR_INVALID_URL+html.body.div.p:27-1
+msgid "Some aspect of the requested URL is incorrect."
+msgstr "Algún aspecto de la URL solicitado es incorrecto."
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:29-1
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:29-1
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:31-1
+#: templates/ERR_INVALID_REQ+html.body.div.p:27-1
+#: templates/ERR_INVALID_URL+html.body.div.p:29-1
+msgid "Some possible problems are:"
+msgstr "Algunos problemas posibles son:"
+
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:27-1
+msgid ""
+"Sorry, you are not currently allowed to request %U from this cache manager "
+"until you have authenticated yourself."
+msgstr ""
+"Lo siento, no puedes a solicitar %U de este Administrador de Caché hasta "
+"que te hayas autenticado."
+
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:27-1
+msgid ""
+"Sorry, you are not currently allowed to request %U from this cache until you "
+"have authenticated yourself."
+msgstr ""
+"Lo siento, no puedes a solicitar %U de este Administrador de Caché hasta "
+"que te hayas autenticado."
+
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:27-1
+msgid "Squid did not receive any data for this request."
+msgstr "Squid no recibió información a esta solicitud."
+
+#: templates/ERR_UNSUP_REQ+html.body.div.p:27-1
+msgid ""
+"Squid does not support all request methods for all access protocols. For "
+"example, you can not POST a Gopher request."
+msgstr ""
+"Squid no soporta todos los métodos de solicitud para algunos protocolos de "
+"acceso. Por ejemplo, no es posible hacer una solcitud POST a un servidor   "
+"Gopher."
+
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:27-1
+#, fuzzy
+msgid ""
+"Squid does not support some access protocols. For example, the SSH protocol "
+"is currently not supported."
+msgstr ""
+"Squid no soporta todos los métodos de solicitud para algunos protocolos de "
+"acceso. Por ejemplo, el protocolo SSH no es soportado actualmente."
+
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:27-1
+msgid ""
+"Squid has terminated the request because it has exceeded the maximum "
+"connection lifetime."
+msgstr ""
+"Squid ha terminado la solicitud porque se ha excedido la vida útil de la "
+"conexión."
+
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:29-1
+msgid ""
+"Squid is unable to create a TCP socket, presumably due to excessive load. "
+"Please retry your request."
+msgstr ""
+"Squid no puede crear un socket TCP, probablemente debido a una carga excesiva. "
+"Por favor reintenta tu solicitud."
+
+#: templates/ERR_FTP_FAILURE+html.body.div.p:23-1
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:23-1
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:23-1
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:23-1
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:23-1
+msgid "Squid sent the following FTP command:"
+msgstr "Squid ha enviado el siguiente comando FTP:"
+
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:121
+msgid "Subject issuer mismatch"
+msgstr "Discrepancia en el emisor"
+
+#: templates/ERR_DNS_FAIL+html.body.div.p:27-1
+msgid "The DNS server returned:"
+msgstr "El servidor DNS devolvió:"
+
+#: templates/ERR_ESI+html.body.div.p:27-1
+msgid "The ESI processor returned:"
+msgstr "El procesador ESI devolvió:"
+
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:21-1
+msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
+msgstr ""
+"El servidor FTP estaba demasiado ocupado para recuperar la URL: <a href=\"%U"
+"\">%U</a>"
+
+#: templates/ERR_INVALID_RESP+html.body.div.p:27-1
+msgid ""
+"The HTTP Response message received from the contacted server could not be "
+"understood or was otherwise malformed. Please contact the site operator."
+msgstr ""
+"El mensaje de Respuesta HTTP recibido del servidor contactado no pudo ser "
+"entendido o estaba malformado. Por favor contacte al Operador del Sitio."
+
+#: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33-5
+msgid "The ICAP server is not reachable."
+msgstr "No es posible contactar al servidor ICAP."
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:33-1
+msgid ""
+"The administrator may not allow this cache to make direct connections to "
+"origin servers."
+msgstr ""
+"Es posible que el administrador no permita que este caché realice conexiones "
+"directas a los servidores de origen."
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:31-1
+msgid ""
+"The domain may have moved very recently. Trying again will resolve that."
+msgstr ""
+"Es posible que el dominio se haya movido recientemente. Intentar de nuevo "
+"lo resolverá."
+
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:21-1
+msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
+msgstr "El siguiente URL no pudo ser obtenido: <a href=\"%U\">%U</a>"
+
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:21-1
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:21-1
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:21-1
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:21-1
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:21-1
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:21-1
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:21-1
+#: templates/ERR_DNS_FAIL+html.body.div.p:21-1
+#: templates/ERR_ESI+html.body.div.p:21-1
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:21-1
+#: templates/ERR_FTP_DISABLED+html.body.div.p:21-1
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:21-1
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:21-1
+#: templates/ERR_INVALID_URL+html.body.div.p:21-1
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:21-1
+#: templates/ERR_NO_RELAY+html.body.div.p:21-1
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:21-1
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:21-1
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:21-1
+#: templates/ERR_READ_ERROR+html.body.div.p:21-1
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:21-1
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:21-1
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:21-1
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:21-1
+#: templates/ERR_TOO_BIG+html.body.div.p:21-1
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:21-1
+#: templates/ERR_UNSUP_REQ+html.body.div.p:21-1
+#: templates/ERR_WRITE_ERROR+html.body.div.p:21-1
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:21-1
+msgid ""
+"The following error was encountered while trying to retrieve the URL: <a "
+"href=\"%U\">%U</a>"
+msgstr ""
+"Se encontró el siguiente error al intentar recuperar la dirección URL: <a "
+"href=\"%U\">%U</a>"
+
+#: templates/ERR_URN_RESOLVE+html.body.div.p:21-1
+msgid ""
+"The following error was encountered while trying to retrieve the URN: <a "
+"href=\"%U\">%U</a>"
+msgstr ""
+"Se encontró el siguiente error al intentar recuperar la dirección URN: <a "
+"href=\"%U\">%U</a>"
+
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:29-1
+msgid "The remote host or network may be down. Please try the request again."
+msgstr ""
+"El host remoto o la red estan inactivos. Por favor, intente de nuevo la "
+"solicitud."
+
+#: templates/ERR_TOO_BIG+html.body.div.blockquote.p:24-1
+msgid "The request or reply is too large."
+msgstr "La petición o respuesta es demasiado larga."
+
+#: templates/ERR_ACCESS_DENIED+html.body.div.h2:16-1
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:16-1
+#: templates/ERR_CANNOT_FORWARD+html.body.div.h2:16-1
+#: templates/ERR_CONFLICT_HOST+html.body.div.h2:16-1
+#: templates/ERR_CONNECT_FAIL+html.body.div.h2:16-1
+#: templates/ERR_DNS_FAIL+html.body.div.h2:16-1
+#: templates/ERR_ESI+html.body.div.h2:16-1
+#: templates/ERR_FORWARDING_DENIED+html.body.div.h2:16-1
+#: templates/ERR_FTP_DISABLED+html.body.div.h2:16-1
+#: templates/ERR_FTP_FAILURE+html.body.div.h2:16-1
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.h2:16-1
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.h2:16-1
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.h2:16-1
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.h2:16-1
+#: templates/ERR_ICAP_FAILURE+html.body.div.h2:16-1
+#: templates/ERR_INVALID_REQ+html.body.div.h2:16-1
+#: templates/ERR_INVALID_RESP+html.body.div.h2:16-1
+#: templates/ERR_INVALID_URL+html.body.div.h2:16-1
+#: templates/ERR_LIFETIME_EXP+html.body.div.h2:16-1
+#: templates/ERR_NO_RELAY+html.body.div.h2:16-1
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.h2:16-1
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.h2:16-1
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.h2:16-1
+#: templates/ERR_READ_ERROR+html.body.div.h2:16-1
+#: templates/ERR_READ_TIMEOUT+html.body.div.h2:16-1
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.h2:16-1
+#: templates/ERR_SHUTTING_DOWN+html.body.div.h2:16-1
+#: templates/ERR_SOCKET_FAILURE+html.body.div.h2:16-1
+#: templates/ERR_TOO_BIG+html.body.div.h2:16-1
+#: templates/ERR_UNSUP_REQ+html.body.div.h2:16-1
+#: templates/ERR_WRITE_ERROR+html.body.div.h2:16-1
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h2:16-1
+msgid "The requested URL could not be retrieved"
+msgstr "El URL solicitado no se ha podido recuperar"
+
+#: templates/ERR_FTP_FAILURE+html.body.div.p:28-1
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:28-1
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:28-1
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:28-1
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:29-1
+msgid "The server responded with:"
+msgstr "El servidor ha respondido con:"
+
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.div.p:28-1
+#, fuzzy
+msgid "The system returned: <i>%E</i>"
+msgstr "El sistema ha devuelto: <i>%E</i>"
+
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:27-1
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:27-1
+#: templates/ERR_READ_ERROR+html.body.div.p:27-1
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:27-1
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:27-1
+#: templates/ERR_WRITE_ERROR+html.body.div.p:27-1
+msgid "The system returned: <i>%E</i>"
+msgstr "El sistema ha devuelto: <i>%E</i>"
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:32-1
+msgid ""
+"The website may require you to use a local country-based version. Using your "
+"ISP provided DNS server(s) should resolve that."
+msgstr ""
+"El sitio web puede requerir una versión local basada en el país. Usar los "
+"servidores de DNS de tu ISP pueden resolver esto. "
+
+#: templates/ERR_NO_RELAY+html.body.div.p:27-1
+msgid ""
+"There is no WAIS Relay host defined for this Cache! Yell at the "
+"administrator."
+msgstr ""
+"No esta definido el host wais relay para este cache! Grítale al "
+"administrador."
+
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:28-1
+#: templates/ERR_TOO_BIG+html.body.div.p:29-1
+msgid ""
+"These limits have been established by the Internet Service Provider who "
+"operates this cache. Please contact them directly if you feel this is an "
+"error."
+msgstr ""
+"Estos límites han sido establecidos por el proveedor de servicios de Internet "
+"que opera este caché. Por favor, comunícate con ellos directamente si crees   "
+"que esto es un error"
+
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:27-1
+msgid "This Squid does not accept the HTTP version you are attempting to use."
+msgstr "Este Squid no acepta la version HTTP que tu estas intentando usar."
+
+#: templates/ERR_FTP_DISABLED+html.body.div.p:27-1
+msgid "This cache does not support FTP."
+msgstr "Esta caché no soporta FTP."
+
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:23-1
+msgid ""
+"This cache is in the process of shutting down and can not service your "
+"request at this time. Please retry your request again soon."
+msgstr ""
+"Este caché está en el proceso de apagado y no puede atender tu solicitud en "
+"este momento. Por favor, inténtalo de nuevo."
+
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:27-1
+msgid ""
+"This cache will not forward your request because it is trying to enforce a "
+"sibling relationship. Perhaps the client at %i is a cache which has been "
+"misconfigured."
+msgstr ""
+"Este caché no transmitirá tu solicitud, ya que intenta aplicar una relación "
+"de conexión. Quizás el cliente en %i es un caché que no esta configurado "
+"adecuadamente."
+
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:29-1
+#, fuzzy
+msgid ""
+"This may be due to limits established by the Internet Service Provider who "
+"operates this cache. Please contact them directly for more information."
+msgstr ""
+"Esto piede ser ocasionado por lo límites por el proveedor de servicios de   "
+"Internet que opera este caché. Por favor, comunícate con ellos directamente "
+"si crees que esto es un error"
+
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:29-1
+msgid "This means that some aspect of the ICAP communication failed."
+msgstr "Esto significa que algún aspecto de la comunicación ICAP ha fallado."
+
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:33-1
+msgid ""
+"This means that the FTP server may not have permission or space to store the "
+"file. Check the path, permissions, diskspace and try again."
+msgstr ""
+"Esto significa que el servidor FTP puede que no tenga permiso o espacio para "
+"almacenar el archivo. Compruebe la ruta, permisos, espacio en disco y vuelva "
+"a intentarlo."
+
+#: templates/ERR_DNS_FAIL+html.body.div.p:32-1
+msgid ""
+"This means that the cache was not able to resolve the hostname presented in "
+"the URL. Check if the address is correct."
+msgstr ""
+"Esto significa que el caché no ha sido capaz de resolver el nombre de host "
+"presente en la URL. Compruebe que la dirección sea correcta."
+
+#: templates/ERR_ESI+html.body.div.p:32-1
+msgid ""
+"This means that the surrogate was not able to process the ESI template. "
+"Please report this error to the webmaster."
+msgstr ""
+"Esto significa que el sustituto no pudo procesar la plantilla ESI. "
+"Por favor, informe de este error al webmaster."
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:27-1
+msgid ""
+"This means the domain name you are trying to access apparently no longer "
+"exists on the machine you are requesting it from."
+msgstr ""
+"Esto significa que el nombre de dominio al que intenta acceder aparentemente "
+"ya no existe en el equipo desde el que se inicio la solicitud".
+
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:27-1
+msgid "This means:"
+msgstr "Esto significa:"
+
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:34-1
+msgid ""
+"This might be caused by an FTP URL with an absolute path (which does not "
+"comply with RFC 1738). If this is the cause, then the file can be found at "
+"<a href=\"%B\">%B</a>."
+msgstr ""
+"Esto podria ser causado por una URL del FTP con ruta absoluta (que no cumple "
+"con RFC 1738). Si esta es la causa, entonces el archivo puede ser encontrado "
+"en <a href=\"%B\">%B</a>."
+
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:35-1
+msgid ""
+"This proxy and the remote host failed to negotiate a mutually acceptable "
+"security settings for handling your request. It is possible that the remote "
+"host does not support secure connections, or the proxy is not satisfied with "
+"the host security credentials."
+msgstr ""
+"Este proxy y el host remoto no han podido negociar una confguración de seguridad "
+"mutuamente aceptable para manejar su solicitud. Es posible que el host remoto sea "
+"incompatible con conexiones seguras o el proxy no esté satisfecho con las "
+"credenciales de seguridad del host."
+
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:27-1
+msgid ""
+"This proxy limits your time online with a quota. Your time budget is now "
+"empty but will be refilled when the configured time period starts again."
+msgstr ""
+"Este proxy limita el tiempo en línea mediante cuotas. El tiempo asingnado "
+"se ha agotado pero se reiniciara cuando el periodo configurado inicie "
+"nuevamente."
+
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:27-1
+msgid ""
+"This request could not be forwarded to the origin server or to any parent "
+"caches."
+msgstr ""
+"Esta solicitud no se pudo reenviar al servidor de origen ni a ningún caché "
+"principal."
+
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:24-1
+msgid "Time Quota Exceeded."
+msgstr "Cuota de tiempo excedida."
+
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:38-1
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:38-1
+msgid ""
+"Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
+msgstr ""
+"Herramientas -&gt; Opciones de Internet  -&gt; Conexión -&gt; Preferencias "
+"de RED -&gt;Proxy"
+
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:30-1
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:30-1
+msgid ""
+"Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
+msgstr ""
+"Herramientas -&gt; Opciones -&gt; Avanzado -&gt; Red -&gt; Ajustes de "
+"conexión"
+
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:46-1
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:46-1
+msgid ""
+"Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
+msgstr ""
+"Herramientas -&gt; Opciones -&gt; Avanzado -&gt; Red -&gt; Servidores Proxy"
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.blockquote.pre:24-1
+msgid "URI Host Conflict"
+msgstr "Conflicto en el host URI"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:29
+msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
+msgstr "No se puede decodificar la clave pública (CA) del emisor: %ssl_ca_name"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:29
+msgid "Unable to decode issuer public key"
+msgstr "No se puede decodificar la llave pública del emisor"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:25
+msgid "Unable to decrypt CRL's signature"
+msgstr "No se puede descifrar la firma CRL"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:21
+msgid "Unable to decrypt certificate's signature"
+msgstr "No se puede descifrar la firma del certificado"
+
+#: templates/ERR_DNS_FAIL+html.body.div.blockquote.p:24-1
+msgid "Unable to determine IP address from host name <q>%H</q>"
+msgstr ""
+"No se puede determinar la dirección IP a partir del nombre del host <q>%H</q>"
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.blockquote.p:24-1
+msgid "Unable to forward this request at this time."
+msgstr "No se puede reenviar la solicitud en este momento."
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:17
+msgid "Unable to get certificate CRL"
+msgstr "No se puede obtener el certificado CRL"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:13
+msgid "Unable to get issuer certificate"
+msgstr "No se puede obtener el emisor del certificado"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:85
+msgid "Unable to get local issuer certificate"
+msgstr "No se puede obtener el emisor del certificado local"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:89
+msgid "Unable to verify the first certificate"
+msgstr "No se puede verificar el primer certificado"
+
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h2:16-1
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.blockquote.p:24-1
+msgid "Unsupported HTTP version"
+msgstr "Version HTTP no soportada"
+
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.blockquote.p:24-1
+#, fuzzy
+msgid "Unsupported Protocol"
+msgstr "Protocolo no soportado"
+
+#: templates/ERR_UNSUP_REQ+html.body.div.blockquote.p:24-1
+msgid "Unsupported Request Method and Protocol"
+msgstr "Método de la petición y protocolo no soportados."
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:109
+msgid "Unsupported certificate purpose"
+msgstr "Proposito del certificado no soportado"
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_EXTENSION_FEATURE.descr:185
+#, fuzzy
+msgid "Unsupported extension feature"
+msgstr "Función de la extensión no soportada"
+
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.blockquote.p:24-1
+msgid ""
+"Valid document was not found in the cache and <q>only-if-cached</q> "
+"directive was specified."
+msgstr ""
+"No se encontró un documento válido en el caché y se especificó la "
+"directiva <q>only-if-cached</q>."
+
+#: templates/ERR_AGENT_CONFIGURE+html.head.title:5-1
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.h2:16-1
+#: templates/ERR_AGENT_WPAD+html.head.title:5-1
+#: templates/ERR_AGENT_WPAD+html.body.div.h2:16-1
+msgid "Web Browser Configuration"
+msgstr "Configuración del Navegador de Internet"
+
+#: templates/ERR_WRITE_ERROR+html.body.div.blockquote.p:24-1
+msgid "Write Error"
+msgstr "Error de Escritura"
+
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:27-1
+msgid ""
+"You have issued a request with a <q>only-if-cached</q> cache control "
+"directive. The document was not found in the cache, <em>or</em> it required "
+"revalidation prohibited by the <q>only-if-cached</q> directive."
+msgstr ""
+"Has emitido una solicitud con la directiva de control del caché <q>only-if-cached</q>. "
+"El documento no fue encontrado en el cach&eacute;, <em>o</em> requiere revalidación no "
+"aceptada por la directiva <q>only-if-cached</q>"
+
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.blockquote.p:22-1
+#: templates/ERR_AGENT_WPAD+html.body.div.blockquote.p:22-1
+msgid ""
+"Your Web Browser configuration needs to be corrected to use this network."
+msgstr ""
+"La configuración del Navegador de Internet necesita ser corregida para usar "
+"esta red."
+
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:29-1
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:30-1
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:51-1
+#: templates/ERR_AGENT_WPAD+html.body.div.p:51-1
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:36-1
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:35-1
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:31-1
+#: templates/ERR_DNS_FAIL+html.body.div.p:34-1
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:29-1
+#: templates/ERR_FTP_DISABLED+html.body.div.p:29-1
+#: templates/ERR_FTP_FAILURE+html.body.div.p:34-1
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:34-1
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:36-1
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:35-1
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:35-1
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:31-1
+#: templates/ERR_INVALID_REQ+html.body.div.p:38-1
+#: templates/ERR_INVALID_RESP+html.body.div.p:31-1
+#: templates/ERR_INVALID_URL+html.body.div.p:37-1
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:29-1
+#: templates/ERR_NO_RELAY+html.body.div.p:29-1
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:29-1
+#: templates/ERR_PROTOCOL_UNKNOWN+html.body.div.p:29-1
+#: templates/ERR_READ_ERROR+html.body.div.p:31-1
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:31-1
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:37-1
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:25-1
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:31-1
+#: templates/ERR_TOO_BIG+html.body.div.p:31-1
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:29-1
+#: templates/ERR_UNSUP_REQ+html.body.div.p:29-1
+#: templates/ERR_URN_RESOLVE+html.body.div.p:29-1
+#: templates/ERR_WRITE_ERROR+html.body.div.p:31-1
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:29-1
+msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
+msgstr "El administrador del cach&eacute; es <a href=\"mailto:%w%W\">%w</a>."
+
+#: templates/ERR_INVALID_RESP+html.body.div.p:29-1
+msgid ""
+"Your cache administrator may be able to provide you with more details about "
+"the exact nature of the problem if needed."
+msgstr ""
+"El Administrador del caché puede darte mas detalles acerca de la naturaleza "
+"exacta del problema en caso de ser necesario."
+
+#: templates/ERR_ESI+html.body.div.p:34-1
+msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
+msgstr "Su administrador web es <a href=\"mailto:%w\">%w</a>."
+
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.blockquote.p:24-1
+msgid "Zero Sized Reply"
+msgstr "Respuesta tamaño cero"
+
+#: templates/error-details.txt+X509_V_ERR_EXCLUDED_VIOLATION.descr:197
+msgid "excluded subtree violation"
+msgstr "violación de subárbol excluido"
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_NON_CA.descr:153
+#, fuzzy
+msgid "invalid non-CA certificate (has CA markings)"
+msgstr "certificado no-CA invalido (tiene indicios de CA)"
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_EXTENSION.descr:169
+msgid "invalid or inconsistent certificate extension"
+msgstr "extensión del certificado no válda o inconsistente"
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_POLICY_EXTENSION.descr:173
+msgid "invalid or inconsistent certificate policy extension"
+msgstr "extensión de política del certificado no válido o inconsistente"
+
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CRL_SIGN.descr:145
+#, fuzzy
+msgid "key usage does not include CRL signing"
+msgstr "el uso de llaves no incluye la firma CRL"
+
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_DIGITAL_SIGNATURE.descr:161
+#, fuzzy
+msgid "key usage does not include digital signature"
+msgstr "el uso de llaves no incluye la firma digital"
+
+#: templates/error-details.txt+X509_V_ERR_SUBTREE_MINMAX.descr:201
+msgid "name constraints minimum and maximum not supported"
+msgstr "restricciones de mínimas y máximas de nombre no soportadas"
+
+#: templates/error-details.txt+X509_V_ERR_NO_EXPLICIT_POLICY.descr:177
+msgid "no explicit policy"
+msgstr "política no definida"
+
+#: templates/error-details.txt+X509_V_ERR_PERMITTED_VIOLATION.descr:193
+msgid "permitted subtree violation"
+msgstr "violación de subárbol permitida"
+
+#: templates/error-details.txt+X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED.descr:165
+msgid "proxy certificates not allowed, please set the appropriate flag"
+msgstr "certificados de proxy no permitidos, establezca la configuración adecuada"
+
+#: templates/error-details.txt+X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED.descr:157
+#, fuzzy
+msgid "proxy path length constraint exceeded"
+msgstr "se superó la restricción de longitud de la ruta del proxy"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER.descr:137
+#, fuzzy
+msgid "unable to get CRL issuer certificate"
+msgstr "no se puedo obtener el certificado del emisor"
+
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION.descr:149
+msgid "unhandled critical CRL extension"
+msgstr "extensión de CRL crítica no controlada"
+
+#: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION.descr:141
+msgid "unhandled critical extension"
+msgstr "extensión crítica no soportada"
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE.descr:205
+msgid "unsupported name constraint type"
+msgstr "tipo de restricción de nombre no admitido"
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX.descr:209
+msgid "unsupported or invalid name constraint syntax"
+msgstr "sintaxis de restricción de nombre no admitida o no válida"
+
+#: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_NAME_SYNTAX.descr:213
+msgid "unsupported or invalid name syntax"
+msgstr "sintaxis de nombre no admitida o no válida"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "ERROR: El URN solicitado no se ha podido recuperar"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT Exitoso: Archivo Actualizado"
+
+#~ msgid "Parent Directory"
+#~ msgstr "Directorio Superior"
+
+#~ msgid ""
+#~ "This request could not be forwarded to the origin server or to any parent "
+#~ "caches. The most likely cause for this error is that the cache "
+#~ "administrator does not allow this cache to make direct connections to "
+#~ "origin servers, and all configured parent caches are currently "
+#~ "unreachable."
+#~ msgstr ""
+#~ "Esta solicitud no se ha enviado al servidor de origen o alguno de los servidores "
+#~ "de caché padres. La causa más probable de este error es que el administrador de  "
+#~ "caché no permite que este caché realice conexiones directas a los servidores de  "
+#~ "origen, y todos los cachés configurados como padres no estan disponibles en este "
+#~ "momento."
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr ""
+#~ "Mientras se intentaba hacer PUT al siguiente URL: <a href=\"%U\">%U</a>"
