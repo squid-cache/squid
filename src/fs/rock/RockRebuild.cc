@@ -16,6 +16,9 @@
 #include "fs_io.h"
 #include "globals.h"
 #include "ipc/StoreMap.h"
+#include "ipc/StrandCoord.h"
+#include "ipc/Port.h"
+#include "ipc/UdsOp.h"
 #include "md5.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -259,6 +262,8 @@ Rock::Rebuild::start()
     parts = new LoadingParts(dbEntryLimit, dbSlotLimit);
 
     checkpoint();
+
+    eventAdd("Rock::Rebuild::NotifyCoordinator", Rock::Rebuild::NotifyCoordinator, new Pointer(this), 1, 0, false);
 }
 
 /// continues after a pause if not done
@@ -287,6 +292,21 @@ bool
 Rock::Rebuild::doneAll() const
 {
     return doneLoading() && doneValidating() && AsyncJob::doneAll();
+}
+
+void
+Rock::Rebuild::NotifyCoordinator(void *data)
+{
+    auto rebuild = static_cast<Rebuild*>(data);
+
+    Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
+    ann.strand.tag = rebuild->sd->filePath;
+    Ipc::TypedMsgHdr message;
+    ann.pack(message);
+    SendMessage(Ipc::Port::CoordinatorAddr(), message);
+
+    eventAdd("Rock::Rebuild::NotifyCoordinator",
+             Rock::Rebuild::NotifyCoordinator, new Pointer(rebuild), 1, 0, false);
 }
 
 void
@@ -561,6 +581,12 @@ Rock::Rebuild::swanSong()
            StoreController::store_dirs_rebuilding);
     --StoreController::store_dirs_rebuilding;
     storeRebuildComplete(&counts);
+
+    Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
+    ann.strand.tag = sd->filePath;
+    Ipc::TypedMsgHdr message;
+    ann.pack(message);
+    SendMessage(Ipc::Port::CoordinatorAddr(), message);
 }
 
 void

@@ -88,6 +88,7 @@ public:
 
     /// handle open response from coordinator
     static void HandleOpenResponse(const Ipc::StrandSearchResponse &response);
+    static void HandleOpenPauseResponse();
 
     /// handle queue push notifications from worker or disker
     static void HandleNotification(const Ipc::TypedMsgHdr &msg);

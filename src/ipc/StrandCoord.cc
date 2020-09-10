@@ -13,6 +13,7 @@
 #include "ipc/Messages.h"
 #include "ipc/StrandCoord.h"
 #include "ipc/TypedMsgHdr.h"
+#include "tools.h"
 
 Ipc::StrandCoord::StrandCoord(): kidId(-1), pid(0)
 {
@@ -51,6 +52,24 @@ Ipc::HereIamMessage::HereIamMessage(const TypedMsgHdr &hdrMsg)
 void Ipc::HereIamMessage::pack(TypedMsgHdr &hdrMsg) const
 {
     hdrMsg.setType(mtRegistration);
+    strand.pack(hdrMsg);
+}
+
+Ipc::IamAliveMessage::IamAliveMessage(const StrandCoord &aStrand):
+    strand(aStrand)
+{
+}
+
+Ipc::IamAliveMessage::IamAliveMessage(const TypedMsgHdr &hdrMsg)
+{
+    hdrMsg.checkType(mtIamAlive);
+    strand.unpack(hdrMsg);
+}
+
+void
+Ipc::IamAliveMessage::pack(TypedMsgHdr &hdrMsg) const
+{
+    hdrMsg.setType(mtIamAlive);
     strand.pack(hdrMsg);
 }
 

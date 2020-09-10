@@ -473,6 +473,15 @@ IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
 }
 
 void
+IpcIoFile::HandleOpenPauseResponse()
+{
+    for (auto i = WaitingForOpen.begin(); i != WaitingForOpen.end(); ++i) {
+        eventDelete(&IpcIoFile::OpenTimeout, i->getRaw());
+        eventAdd("IpcIoFile::OpenTimeout", &IpcIoFile::OpenTimeout, i->getRaw(), Timeout, 0, false);
+    }
+}
+
+void
 IpcIoFile::HandleResponses(const char *const when)
 {
     debugs(47, 4, HERE << "popping all " << when);

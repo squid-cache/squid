@@ -78,6 +78,9 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         IpcIoFile::HandleOpenResponse(StrandSearchResponse(message));
         break;
 
+    case mtStrandSearchPause:
+        IpcIoFile::HandleOpenPauseResponse();
+
     case mtIpcIoNotification:
         IpcIoFile::HandleNotification(message);
         break;

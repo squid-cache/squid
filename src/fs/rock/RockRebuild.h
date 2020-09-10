@@ -89,6 +89,7 @@ private:
     StoreRebuildData counts;
 
     static void Steps(void *data);
+    static void NotifyCoordinator(void *);
 };
 
 } // namespace Rock

@@ -84,6 +84,11 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
         handleRegistrationRequest(HereIamMessage(message));
         break;
 
+    case mtIamAlive:
+        debugs(54, 6, "I am alive request");
+        handleIamAliveRequest(IamAliveMessage(message));
+        break;
+
     case mtStrandSearchRequest: {
         const StrandSearchRequest sr(message);
         debugs(54, 6, HERE << "Strand search request: " << sr.requestorId <<
@@ -141,6 +146,18 @@ void Ipc::Coordinator::handleRegistrationRequest(const HereIamMessage& msg)
     TypedMsgHdr message;
     msg.pack(message);
     SendMessage(MakeAddr(strandAddrLabel, msg.strand.kidId), message);
+}
+
+void
+Ipc::Coordinator::handleIamAliveRequest(const IamAliveMessage& msg)
+{
+    // notify searchers waiting for this new strand, if any
+    typedef Searchers::iterator SRI;
+    for (SRI i = searchers.begin(); i != searchers.end(); ++i) {
+        Ipc::TypedMsgHdr message;
+        message.setType(Ipc::mtStrandSearchPause);
+        SendMessage(MakeAddr(strandAddrLabel, i->requestorId), message);
+    }
 }
 
 void

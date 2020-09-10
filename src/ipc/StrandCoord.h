@@ -44,6 +44,17 @@ public:
     StrandCoord strand; ///< registrant coordinates and related details
 };
 
+class IamAliveMessage
+{
+public:
+    explicit IamAliveMessage(const StrandCoord &strand);
+    explicit IamAliveMessage(const TypedMsgHdr &hdrMsg);
+    void pack(TypedMsgHdr &hdrMsg) const;
+
+public:
+    StrandCoord strand;
+};
+
 } // namespace Ipc;
 
 #endif /* SQUID_IPC_STRAND_COORD_H */
