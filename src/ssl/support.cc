@@ -423,6 +423,61 @@ Ssl::DisablePeerVerification(Security::ContextPointer &ctx)
     SSL_CTX_set_verify(ctx.get(),SSL_VERIFY_NONE,nullptr);
 }
 
+bool
+Ssl::PeerCertificatesVerify(Security::SessionPointer &s)
+{
+    STACK_OF(X509) *peerCertificatesChain = SSL_get_peer_cert_chain(s.get());
+
+    if (!peerCertificatesChain || sk_X509_num(peerCertificatesChain) == 0) {
+        debugs(83, 2, "no server certificates?");
+        return false;
+    }
+
+    X509_STORE *verificationStore = SSL_CTX_get_cert_store(SSL_get_SSL_CTX(s.get()));
+    X509_STORE_CTX_Pointer storeCtx(X509_STORE_CTX_new());
+    X509 *peerCert = sk_X509_value(peerCertificatesChain, 0);
+    if (!X509_STORE_CTX_init(storeCtx.get(), verificationStore, peerCert, peerCertificatesChain)) {
+        debugs(83, DBG_IMPORTANT, "error initializing X509_STORE");
+        return false;
+    }
+
+    // Retrieve certificate flags:
+    long certFlags = SSL_set_cert_flags(s.get(), 0);
+    if (certFlags & SSL_CERT_FLAG_SUITEB_128_LOS) {
+        auto SSL_CERT_FLAG_to_X509_V_FLAG = [](long flag) {return flag;};
+        long x509Flags = SSL_CERT_FLAG_to_X509_V_FLAG(certFlags);
+        X509_STORE_CTX_set_flags(storeCtx.get(), x509Flags & X509_V_FLAG_SUITEB_128_LOS);
+    }
+
+    if (!X509_STORE_CTX_set_ex_data(storeCtx.get(), SSL_get_ex_data_X509_STORE_CTX_idx(), s.get())) {
+        debugs(83, DBG_IMPORTANT, "error attaching session object to X509_STORE");
+        return false;
+    }
+
+    // The X509_verify_cert will only use dane if it is enabled.
+    X509_STORE_CTX_set0_dane(storeCtx.get(), SSL_get0_dane(s.get()));
+
+    // We are verifying a server certificate
+    X509_STORE_CTX_set_default(storeCtx.get(), "ssl_server");
+
+    X509_VERIFY_PARAM *param = X509_STORE_CTX_get0_param(storeCtx.get());
+    assert(param);
+    X509_VERIFY_PARAM_set_auth_level(param, SSL_get_security_level(s.get()));
+    X509_VERIFY_PARAM_set1(param, SSL_get0_param(s.get()));
+
+    if (auto cb = SSL_get_verify_callback(s.get()))
+        X509_STORE_CTX_set_verify_cb(storeCtx.get(), cb);
+
+    bool verified = (X509_verify_cert(storeCtx.get()) > 0);
+
+    if (!verified) {
+        // Our call back will record errors list
+        int verifyResult = X509_STORE_CTX_get_error(storeCtx.get());
+        debugs(83, 5, "verify result " << verifyResult << " : " << X509_verify_cert_error_string(verifyResult));
+    }
+    return verified;
+}
+
 // "dup" function for SSL_get_ex_new_index("cert_err_check")
 #if SQUID_USE_CONST_CRYPTO_EX_DATA_DUP
 static int
