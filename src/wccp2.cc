@@ -584,7 +584,7 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
 
     SquidMD5Init(&M);
 
-    SquidMD5Update(&M, pwd, sizeof(pwd));
+    SquidMD5Update(&M, pwd, sizeof(pwd) - 1);  // Remove the trailing nul
 
     SquidMD5Update(&M, packet, len);
 
@@ -638,7 +638,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     SquidMD5Init(&M);
 
-    SquidMD5Update(&M, pwd, sizeof(pwd));
+    SquidMD5Update(&M, pwd, sizeof(pwd) - 1);  // Remove the trailing nul
 
     SquidMD5Update(&M, packet, len);
 
