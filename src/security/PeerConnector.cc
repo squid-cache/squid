@@ -145,6 +145,8 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     }
 #endif
 
+    SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_ignore_issuer, (void *)0x1);
+
     return true;
 }
 
@@ -214,10 +216,27 @@ bool
 Security::PeerConnector::sslFinalized()
 {
 #if USE_OPENSSL
-    if (Ssl::TheConfig.ssl_crt_validator && useCertValidator_) {
-        const int fd = serverConnection()->fd;
-        Security::SessionPointer session(fd_table[fd].ssl);
+    const int fd = serverConnection()->fd;
+    Security::SessionPointer session(fd_table[fd].ssl);
 
+    auto issuerError =  SSL_get_ex_data(session.get(), ssl_ex_index_cert_ignore_issuer);
+    if (issuerError && issuerError == (void *)0x2) {
+        // Issuer certificate is missing. We need to download issuer certificate
+        // and re-validate
+        SSL_set_ex_data(session.get(), ssl_ex_index_cert_ignore_issuer, (void *)0x03);
+        if (checkForMissingCertificates2())
+            return false;
+    }
+
+    if (issuerError && issuerError == (void *)0x3) {
+        SSL_set_ex_data(session.get(), ssl_ex_index_cert_ignore_issuer, static_cast<void *>(0x0));
+        if (!Ssl::PeerCertificatesVerify(session)) {
+            noteNegotiationError(SSL_ERROR_SSL, 0, 0);
+            return false;
+        }
+    }
+
+    if (Ssl::TheConfig.ssl_crt_validator && useCertValidator_) {
         Ssl::CertValidationRequest validationRequest;
         // WARNING: Currently we do not use any locking for 'errors' member
         // of the Ssl::CertValidationRequest class. In this code the
@@ -453,8 +472,10 @@ Security::PeerConnector::noteWantRead()
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
     if (srvBio->holdRead()) {
         if (srvBio->gotHello()) {
+#if SSL_OLD_MISSING_ISSUERS
             if (checkForMissingCertificates())
                 return; // Wait to download certificates before proceed.
+#endif
 
             srvBio->holdRead(false);
             // schedule a negotiateSSl to allow openSSL parse received data
@@ -713,7 +734,8 @@ Security::PeerConnector::checkForMissingCertificates()
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
-    const Security::CertList &certs = srvBio->serverCertificatesIfAny();
+    const Security::CertList &certs
+        = srvBio->serverCertificatesIfAny();
 
     if (certs.size()) {
         debugs(83, 5, "SSL server sent " << certs.size() << " certificates");
@@ -721,6 +743,98 @@ Security::PeerConnector::checkForMissingCertificates()
         Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx);
         if (urlsOfMissingCerts.size()) {
             startCertDownloading(urlsOfMissingCerts.front());
+            urlsOfMissingCerts.pop();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+void
+Security::PeerConnector::startCertDownloading2(SBuf &url)
+{
+    AsyncCall::Pointer certCallback = asyncCall(81, 4,
+                                      "Security::PeerConnector::certDownloadingDone2",
+                                      PeerConnectorCertDownloaderDialer(&Security::PeerConnector::certDownloadingDone2, this));
+
+    const Downloader *csd = (request ? dynamic_cast<const Downloader*>(request->downloader.valid()) : nullptr);
+    Downloader *dl = new Downloader(url, certCallback, XactionInitiator::initCertFetcher, csd ? csd->nestedLevel() + 1 : 1);
+    AsyncJob::Start(dl);
+}
+
+static void GetCertsList(Security::SessionPointer &session, Security::CertList &certs)
+{
+    STACK_OF(X509) *peerCertificatesChain = SSL_get_peer_cert_chain(session.get());
+    for (int i = 0; i < sk_X509_num(peerCertificatesChain); ++i) {
+        Security::CertPointer cert;
+        cert.resetAndLock(sk_X509_value(peerCertificatesChain, i));
+        certs.push_back(cert);
+    }
+}
+
+void
+Security::PeerConnector::certDownloadingDone2(SBuf &obj, int downloadStatus)
+{
+    ++certsDownloads;
+    debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
+
+    // Parse Certificate. Assume that it is in DER format.
+    // According to RFC 4325:
+    //  The server must provide a DER encoded certificate or a collection
+    // collection of certificates in a "certs-only" CMS message.
+    //  The applications MUST accept DER encoded certificates and SHOULD
+    // be able to accept collection of certificates.
+    // TODO: support collection of certificates
+    const unsigned char *raw = (const unsigned char*)obj.rawContent();
+    if (X509 *cert = d2i_X509(NULL, &raw, obj.length())) {
+        char buffer[1024];
+        debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
+        ContextPointer ctx(getTlsContext());
+        Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
+        Security::CertList certsList;
+        GetCertsList(session, certsList);
+        if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert, certsList, ctx)) {
+            urlsOfMissingCerts.push(SBuf(issuerUri));
+        }
+        Ssl::SSL_add_untrusted_cert(session.get(), cert);
+    }
+
+    // Check if there are URIs to download from and if yes start downloading
+    // the first in queue.
+    if (urlsOfMissingCerts.size() && certsDownloads <= MaxCertsDownloads) {
+        startCertDownloading(urlsOfMissingCerts.front());
+        urlsOfMissingCerts.pop();
+        return;
+    }
+
+    if (sslFinalized())
+        sendSuccess();
+}
+
+bool
+Security::PeerConnector::checkForMissingCertificates2()
+{
+    // Check for nested SSL certificates downloads. For example when the
+    // certificate located in an SSL site which requires to download a
+    // a missing certificate (... from an SSL site which requires to ...).
+
+    const Downloader *csd = (request ? request->downloader.get() : nullptr);
+    if (csd && csd->nestedLevel() >= MaxNestedDownloads)
+        return false;
+
+    const int fd = serverConnection()->fd;
+    Security::SessionPointer session(fd_table[fd].ssl);
+    Security::CertList certs;
+    GetCertsList(session, certs);
+
+    if (certs.size()) {
+        debugs(83, 5, "SSL server sent " << certs.size() << " certificates");
+        ContextPointer ctx(getTlsContext());
+        Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx);
+        if (urlsOfMissingCerts.size()) {
+            startCertDownloading2(urlsOfMissingCerts.front());
             urlsOfMissingCerts.pop();
             return true;
         }

@@ -253,6 +253,7 @@ bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
     return matchX509CommonNames(cert, (void *)server, check_domain);
 }
 
+static const char *hasAuthorityInfoAccessCaIssuers(X509 *cert);
 /// \ingroup ServerProtocolSSLInternal
 static int
 ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
@@ -267,6 +268,8 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
     X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
+    void *ignoreIssuer = SSL_get_ex_data(ssl, ssl_ex_index_cert_ignore_issuer);
+
     Security::CertPointer peer_cert;
     peer_cert.resetAndLock(X509_STORE_CTX_get0_cert(ctx));
 
@@ -308,6 +311,17 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             debugs(83, 2, "SQUID_X509_V_ERR_CERT_CHANGE: Certificate " << buffer << " does not match peeked certificate");
             ok = 0;
             error_no =  SQUID_X509_V_ERR_CERT_CHANGE;
+        }
+    }
+
+    if (!ok && error_no == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY && ignoreIssuer) {
+        if (X509 *currentCert = X509_STORE_CTX_get_current_cert(ctx)) {
+            if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(currentCert)) {
+                /*Store somewhere the missing issuerUri?*/
+                debugs(83, 5, "There is issuerURI for missing issuer: " << issuerUri);
+                ok = 1;
+                SSL_set_ex_data(ssl, ssl_ex_index_cert_ignore_issuer, (void *)0x02);
+            }
         }
     }
 
@@ -423,6 +437,7 @@ Ssl::DisablePeerVerification(Security::ContextPointer &ctx)
     SSL_CTX_set_verify(ctx.get(),SSL_VERIFY_NONE,nullptr);
 }
 
+static int untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data);
 bool
 Ssl::PeerCertificatesVerify(Security::SessionPointer &s)
 {
@@ -468,7 +483,11 @@ Ssl::PeerCertificatesVerify(Security::SessionPointer &s)
     if (auto cb = SSL_get_verify_callback(s.get()))
         X509_STORE_CTX_set_verify_cb(storeCtx.get(), cb);
 
-    bool verified = (X509_verify_cert(storeCtx.get()) > 0);
+    // Squid implements its own verify function to use instead of
+    // using X509_verify_cert, which also adds missing certificates
+    // to storeCtx before checks.
+    // bool verified = (X509_verify_cert(storeCtx.get()) > 0);
+    bool verified = (untrustedToStoreCtx_cb(storeCtx.get(), nullptr) > 0);
 
     if (!verified) {
         // Our call back will record errors list
@@ -599,6 +618,7 @@ Ssl::Initialize(void)
     ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", NULL, NULL, &ssl_free_CertChain);
     ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
     ssl_ex_index_ssl_untrusted_chain = SSL_get_ex_new_index(0, (void *) "ssl_untrusted_chain", NULL, NULL, &ssl_free_CertChain);
+    ssl_ex_index_cert_ignore_issuer = SSL_get_ex_new_index(0, (void *) "cert_ignore_issuer", NULL, NULL,  NULL);
 }
 
 bool

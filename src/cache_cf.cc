@@ -913,7 +913,7 @@ configDoConfigure(void)
             debugs(3, DBG_IMPORTANT, "ERROR: proxying https:// currently still requires --with-openssl");
 #endif
         }
-#if USE_OPENSSL
+#if 0 && USE_OPENSSL
         Ssl::useSquidUntrusted(Config.ssl_client.sslContext.get());
 #endif
     }

@@ -334,6 +334,7 @@ BIO *BIO_new_SBuf(SBuf *buf);
   \ingroup ServerProtocolSSLAPI
 */
 bool PeerCertificatesVerify(Security::SessionPointer &s);
+
 } //namespace Ssl
 
 #if _SQUID_WINDOWS_
