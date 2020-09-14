@@ -262,8 +262,6 @@ Rock::Rebuild::start()
     parts = new LoadingParts(dbEntryLimit, dbSlotLimit);
 
     checkpoint();
-
-    eventAdd("Rock::Rebuild::NotifyCoordinator", Rock::Rebuild::NotifyCoordinator, new Pointer(this), 1, 0, false);
 }
 
 /// continues after a pause if not done
@@ -295,18 +293,14 @@ Rock::Rebuild::doneAll() const
 }
 
 void
-Rock::Rebuild::NotifyCoordinator(void *data)
+Rock::Rebuild::notifyCoordinator()
 {
-    auto rebuild = static_cast<Rebuild*>(data);
-
-    Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
-    ann.strand.tag = rebuild->sd->filePath;
+    assert(opt_foreground_rebuild);
+    Ipc::ForegroundRebuildMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
+    ann.strand.tag = sd->filePath;
     Ipc::TypedMsgHdr message;
     ann.pack(message);
     SendMessage(Ipc::Port::CoordinatorAddr(), message);
-
-    eventAdd("Rock::Rebuild::NotifyCoordinator",
-             Rock::Rebuild::NotifyCoordinator, new Pointer(rebuild), 1, 0, false);
 }
 
 void
@@ -333,10 +327,6 @@ Rock::Rebuild::loadingSteps()
     debugs(47,5, sd->index << " slot " << loadingPos << " at " <<
            dbOffset << " <= " << dbSize);
 
-    // Balance our desire to maximize the number of entries processed at once
-    // (and, hence, minimize overheads and total rebuild time) with a
-    // requirement to also process Coordinator events, disk I/Os, etc.
-    const int maxSpentMsec = 50; // keep small: most RAM I/Os are under 1ms
     const timeval loopStart = current_time;
 
     int loaded = 0;
@@ -349,12 +339,17 @@ Rock::Rebuild::loadingSteps()
         if (counts.scancount % 1000 == 0)
             storeRebuildProgress(sd->index, dbSlotLimit, counts.scancount);
 
-        if (opt_foreground_rebuild)
-            continue; // skip "few entries at a time" check below
-
         getCurrentTime();
         const double elapsedMsec = tvSubMsec(loopStart, current_time);
-        if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
+
+        if (opt_foreground_rebuild) {
+            if (elapsedMsec <= ForegroundNotificationMsec)
+                continue; // skip "few entries at a time" check below
+            notifyCoordinator();
+            break;
+        }
+
+        if (elapsedMsec > MaxSpentMsec || elapsedMsec < 0) {
             debugs(47, 5, HERE << "pausing after " << loaded << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/loaded) << "ms per entry");
             break;
@@ -451,8 +446,6 @@ Rock::Rebuild::validationSteps()
 {
     debugs(47, 5, sd->index << " validating from " << validationPos);
 
-    // see loadingSteps() for the rationale; TODO: avoid duplication
-    const int maxSpentMsec = 50; // keep small: validation does not do I/O
     const timeval loopStart = current_time;
 
     int validated = 0;
@@ -467,12 +460,17 @@ Rock::Rebuild::validationSteps()
         if (validationPos % 1000 == 0)
             debugs(20, 2, "validated: " << validationPos);
 
-        if (opt_foreground_rebuild)
-            continue; // skip "few entries at a time" check below
-
         getCurrentTime();
         const double elapsedMsec = tvSubMsec(loopStart, current_time);
-        if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
+
+        if (opt_foreground_rebuild) {
+            if (elapsedMsec <= ForegroundNotificationMsec)
+                continue; // skip "few entries at a time" check below
+            notifyCoordinator();
+            break;
+        }
+
+        if (elapsedMsec > MaxSpentMsec || elapsedMsec < 0) {
             debugs(47, 5, "pausing after " << validated << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/validated) << "ms per entry");
             break;
@@ -582,11 +580,13 @@ Rock::Rebuild::swanSong()
     --StoreController::store_dirs_rebuilding;
     storeRebuildComplete(&counts);
 
-    Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
-    ann.strand.tag = sd->filePath;
-    Ipc::TypedMsgHdr message;
-    ann.pack(message);
-    SendMessage(Ipc::Port::CoordinatorAddr(), message);
+    if (opt_foreground_rebuild) {
+        Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
+        ann.strand.tag = sd->filePath;
+        Ipc::TypedMsgHdr message;
+        ann.pack(message);
+        SendMessage(Ipc::Port::CoordinatorAddr(), message);
+    }
 }
 
 void

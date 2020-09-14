@@ -143,11 +143,13 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 
         queue->localRateLimit().store(config.ioRate);
 
-        Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, myPid));
-        ann.strand.tag = dbName;
-        Ipc::TypedMsgHdr message;
-        ann.pack(message);
-        SendMessage(Ipc::Port::CoordinatorAddr(), message);
+        if (!opt_foreground_rebuild) {
+            Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, myPid));
+            ann.strand.tag = dbName;
+            Ipc::TypedMsgHdr message;
+            ann.pack(message);
+            SendMessage(Ipc::Port::CoordinatorAddr(), message);
+        }
 
         ioRequestor->ioCompletedNotification();
         return;
@@ -475,6 +477,8 @@ IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
 void
 IpcIoFile::HandleOpenPauseResponse()
 {
+    assert(opt_foreground_rebuild);
+    debugs(47, 7, "disker(s) foreground rebuild is still in progress, re-scheduling open timeout(s)");
     for (auto i = WaitingForOpen.begin(); i != WaitingForOpen.end(); ++i) {
         eventDelete(&IpcIoFile::OpenTimeout, i->getRaw());
         eventAdd("IpcIoFile::OpenTimeout", &IpcIoFile::OpenTimeout, i->getRaw(), Timeout, 0, false);

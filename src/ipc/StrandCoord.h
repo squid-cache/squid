@@ -44,11 +44,11 @@ public:
     StrandCoord strand; ///< registrant coordinates and related details
 };
 
-class IamAliveMessage
+class ForegroundRebuildMessage
 {
 public:
-    explicit IamAliveMessage(const StrandCoord &strand);
-    explicit IamAliveMessage(const TypedMsgHdr &hdrMsg);
+    explicit ForegroundRebuildMessage(const StrandCoord &strand);
+    explicit ForegroundRebuildMessage(const TypedMsgHdr &hdrMsg);
     void pack(TypedMsgHdr &hdrMsg) const;
 
 public:

@@ -55,21 +55,21 @@ void Ipc::HereIamMessage::pack(TypedMsgHdr &hdrMsg) const
     strand.pack(hdrMsg);
 }
 
-Ipc::IamAliveMessage::IamAliveMessage(const StrandCoord &aStrand):
+Ipc::ForegroundRebuildMessage::ForegroundRebuildMessage(const StrandCoord &aStrand):
     strand(aStrand)
 {
 }
 
-Ipc::IamAliveMessage::IamAliveMessage(const TypedMsgHdr &hdrMsg)
+Ipc::ForegroundRebuildMessage::ForegroundRebuildMessage(const TypedMsgHdr &hdrMsg)
 {
-    hdrMsg.checkType(mtIamAlive);
+    hdrMsg.checkType(mtForegroundRebuild);
     strand.unpack(hdrMsg);
 }
 
 void
-Ipc::IamAliveMessage::pack(TypedMsgHdr &hdrMsg) const
+Ipc::ForegroundRebuildMessage::pack(TypedMsgHdr &hdrMsg) const
 {
-    hdrMsg.setType(mtIamAlive);
+    hdrMsg.setType(mtForegroundRebuild);
     strand.pack(hdrMsg);
 }
 

@@ -84,9 +84,9 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
         handleRegistrationRequest(HereIamMessage(message));
         break;
 
-    case mtIamAlive:
-        debugs(54, 6, "I am alive request");
-        handleIamAliveRequest(IamAliveMessage(message));
+    case mtForegroundRebuild:
+        debugs(54, 6, "Foreground rebuild message");
+        handleForegroundRebuildMessage(ForegroundRebuildMessage(message));
         break;
 
     case mtStrandSearchRequest: {
@@ -149,11 +149,14 @@ void Ipc::Coordinator::handleRegistrationRequest(const HereIamMessage& msg)
 }
 
 void
-Ipc::Coordinator::handleIamAliveRequest(const IamAliveMessage& msg)
+Ipc::Coordinator::handleForegroundRebuildMessage(const ForegroundRebuildMessage& msg)
 {
     // notify searchers waiting for this new strand, if any
     typedef Searchers::iterator SRI;
     for (SRI i = searchers.begin(); i != searchers.end(); ++i) {
+        if (i->tag != msg.strand.tag)
+            continue;
+
         Ipc::TypedMsgHdr message;
         message.setType(Ipc::mtStrandSearchPause);
         SendMessage(MakeAddr(strandAddrLabel, i->requestorId), message);

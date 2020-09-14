@@ -17,7 +17,7 @@ namespace Ipc
 {
 
 /// message class identifier
-typedef enum { mtNone = 0, mtRegistration, mtIamAlive, mtStrandSearchPause,
+typedef enum { mtNone = 0, mtRegistration, mtForegroundRebuild, mtStrandSearchPause,
                mtStrandSearchRequest, mtStrandSearchResponse,
                mtSharedListenRequest, mtSharedListenResponse,
                mtIpcIoNotification,

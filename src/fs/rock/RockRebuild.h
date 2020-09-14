@@ -86,10 +86,18 @@ private:
     sfileno validationPos; ///< index of the loaded db slot being validated now
     MemBuf buf; ///< space to load current db slot (and entry metadata) into
 
+    // Balance our desire to maximize the number of entries processed at once
+    // (and, hence, minimize overheads and total rebuild time) with a
+    // requirement to also process Coordinator events, disk I/Os, etc.
+    static const int MaxSpentMsec = 50; // keep small: most RAM I/Os are under 1ms
+    static const int ForegroundNotificationMsec = 1000;
+
     StoreRebuildData counts;
 
     static void Steps(void *data);
-    static void NotifyCoordinator(void *);
+    /// sends a notification to Coordinator that the foreground rebuild
+    /// is still in progress
+    void notifyCoordinator();
 };
 
 } // namespace Rock
