@@ -19,6 +19,7 @@
 #include "ipc/SharedListen.h"
 #include "ipc/StartListening.h"
 #include "ipc/TypedMsgHdr.h"
+#include "store/Controller.h"
 #include "tools.h"
 
 #include <list>
@@ -135,6 +136,17 @@ kickDelayedRequest()
     TheDelayedRequests.pop_front();
 }
 
+static void
+DelayRequest(void *)
+{
+    assert(opt_foreground_rebuild);
+    debugs(54, 3, "waiting for disker foreground rebuild completion");
+    if (!Store::Controller::store_dirs_rebuilding)
+        kickDelayedRequest();
+    else
+        eventAdd("DelayRequest", &DelayRequest, nullptr, 1, 0, false);
+}
+
 void
 Ipc::JoinSharedListen(const OpenListenerParams &params, AsyncCall::Pointer &cb)
 {
@@ -143,7 +155,10 @@ Ipc::JoinSharedListen(const OpenListenerParams &params, AsyncCall::Pointer &cb)
     por.callback = cb;
 
     const DelayedSharedListenRequests::size_type concurrencyLimit = 1;
-    if (TheSharedListenRequestMap.size() >= concurrencyLimit) {
+    if (opt_foreground_rebuild && Store::Controller::store_dirs_rebuilding) {
+        TheDelayedRequests.push_back(por);
+        DelayRequest(nullptr);
+    } else if (TheSharedListenRequestMap.size() >= concurrencyLimit) {
         debugs(54, 3, "waiting for " << TheSharedListenRequestMap.size() <<
                " active + " << TheDelayedRequests.size() << " delayed requests");
         TheDelayedRequests.push_back(por);
