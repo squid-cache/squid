@@ -5636,71 +5636,81 @@ TYPE: wordlist
 LOC: Config.Program.redirect
 DEFAULT: none
 DOC_START
-	Specify the location of the executable URL rewriter to use.
-	Since they can perform almost any function there isn't one included.
+	The name and command line parameters of an admin-provided executable
+	for redirecting clients or adjusting/replacing client request URLs.
 
-	For each requested URL, the rewriter will receive on line with the format
+	This helper is consulted after the received request is cleared by
+	http_access and adapted using eICAP/ICAP services (if any). If the
+	helper does not redirect the client, Squid checks adapted_http_access
+	and may consult the cache or forward the request to the next hop.
 
-	  [channel-ID <SP>] URL [<SP> extras]<NL>
 
-	See url_rewrite_extras on how to send "extras" with optional values to
-	the helper.
-	After processing the request the helper must reply using the following format:
+	For each request, the helper gets one line in the following format:
 
-	  [channel-ID <SP>] result [<SP> kv-pairs]
+	  [channel-ID <SP>] request-URL [<SP> extras] <NL>
 
-	The result code can be:
+	Use url_rewrite_extras to configure what Squid sends as 'extras'.
 
-	  OK status=30N url="..."
-		Redirect the URL to the one supplied in 'url='.
-		'status=' is optional and contains the status code to send
-		the client in Squids HTTP response. It must be one of the
-		HTTP redirect status codes: 301, 302, 303, 307, 308.
-		When no status is given Squid will use 302.
+
+	The helper must reply to each query using a single line:
+
+	  [channel-ID <SP>] result [<SP> kv-pairs] <NL>
+
+	The result section must match exactly one of the following outcomes:
+
+	  OK [status=30N] url="..."
+
+		Redirect the client to a URL supplied in the 'url' parameter.
+		Optional 'status' specifies the status code to send to the
+		client in Squid's HTTP redirect response. It must be one of
+		the standard HTTP redirect status codes: 301, 302, 303, 307,
+		or 308. When no specific status is requested, Squid uses 302.
 
 	  OK rewrite-url="..."
-		Rewrite the URL to the one supplied in 'rewrite-url='.
-		The new URL is fetched directly by Squid and returned to
-		the client as the response to its request.
+
+		Replace the current request URL with the one supplied in the
+		'rewrite-url' parameter. Squid fetches the resource specified
+		by the new URL and forwards the received response (or its
+		cached copy) to the client.
+
+		WARNING: Avoid rewriting URLs! When possible, redirect the
+		client using an "OK url=..." helper response instead.
+		Rewriting URLs may create inconsistent requests and/or break
+		synchronization between internal client and origin server
+		states, especially when URLs or other message parts contain
+		snippets of that state. For example, Squid does not adjust
+		Location headers and embedded URLs after the helper rewrites
+		the request URL.
 
 	  OK
-		When neither of url= and rewrite-url= are sent Squid does
-		not change the URL.
+		Keep the client request intact.
 
 	  ERR
-		Do not change the URL.
+		Keep the client request intact.
 
-	  BH
-		An internal error occurred in the helper, preventing
-		a result being identified. The 'message=' key name is
-		reserved for delivering a log message.
+	  BH [message="..."]
+		A helper problem that should be reported to the Squid admin
+		via a level-1 cache.log message. The 'message' parameter is
+		reserved for specifying the log message.
 
+	In addition to the kv-pairs mentioned above, Squid also understands
+	the following optional kv-pairs in URL rewriter responses:
 
-	In addition to the above kv-pairs Squid also understands the following
-	optional kv-pairs received from URL rewriters:
 	  clt_conn_tag=TAG
 		Associates a TAG with the client TCP connection.
-		The TAG is treated as a regular annotation but persists across
-		future requests on the client connection rather than just the
-		current request. A helper may update the TAG during subsequent
-		requests be returning a new kv-pair.
 
-	When using the concurrency= option the protocol is changed by
-	introducing a query channel tag in front of the request/response.
-	The query channel tag is a number between 0 and concurrency-1.
-	This value must be echoed back unchanged to Squid as the first part
-	of the response relating to its request.
+		The clt_conn_tag=TAG pair is treated as a regular transaction
+		annotation for the current request and also annotates future
+		requests on the same client connection. A helper may update
+		the TAG during subsequent requests by returning a new kv-pair.
 
-	WARNING: URL re-writing ability should be avoided whenever possible.
-		 Use the URL redirect form of response instead.
 
-	Re-write creates a difference in the state held by the client
-	and server. Possibly causing confusion when the server response
-	contains snippets of its view state. Embeded URLs, response
-	and content Location headers, etc. are not re-written by this
-	interface.
+	Helper messages contain the channel-ID part if and only if the
+	url_rewrite_children directive specifies positive concurrency. As a
+	channel-ID value, Squid sends a number between 0 and concurrency-1.
+	The helper must echo back the received channel-ID in its response.
 
-	By default, a URL rewriter is not used.
+	By default, Squid does not use a URL rewriter.
 DOC_END
 
 NAME: url_rewrite_children redirect_children
