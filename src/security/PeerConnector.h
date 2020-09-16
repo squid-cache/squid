@@ -112,10 +112,6 @@ protected:
 
     /// Called by Downloader after a certificate object downloaded.
     void certDownloadingDone(SBuf &object, int status);
-
-    bool checkForMissingCertificates2();
-    void startCertDownloading2(SBuf &url);
-    void certDownloadingDone2(SBuf &object, int status);
 #endif
 
     /// Called when the openSSL SSL_connect function needs to write data to
