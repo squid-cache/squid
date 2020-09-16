@@ -1079,15 +1079,20 @@ findCertIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
     return NULL;
 }
 
-/// slowly find the issuer certificate of a given cert using linear search
-static bool
-findCertIssuer(Security::CertList const &list, X509 *cert)
+/// Search for the issuer certificate of cert in sk list.
+static X509 *
+sk_x509_findIssuer(const STACK_OF(X509) *sk, X509 *cert)
 {
-    for (Security::CertList::const_iterator it = list.begin(); it != list.end(); ++it) {
-        if (X509_check_issued(it->get(), cert) == X509_V_OK)
-            return true;
+    if (!sk)
+        return NULL;
+
+    const int skItemsNum = sk_X509_num(sk);
+    for (int i = 0; i < skItemsNum; ++i) {
+        X509 *issuer = sk_X509_value(sk, i);
+        if (X509_check_issued(issuer, cert) == X509_V_OK)
+            return issuer;
     }
-    return false;
+    return NULL;
 }
 
 /// \return true if the cert issuer exist in the certificates stored in connContext
@@ -1120,12 +1125,12 @@ issuerExistInCaDb(X509 *cert, const Security::ContextPointer &connContext)
 }
 
 const char *
-Ssl::uriOfIssuerIfMissing(X509 *cert, Security::CertList const &serverCertificates, const Security::ContextPointer &context)
+Ssl::uriOfIssuerIfMissing(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context)
 {
-    if (!cert || !serverCertificates.size())
+    if (!cert || !serverCertificates)
         return nullptr;
 
-    if (!findCertIssuer(serverCertificates, cert)) {
+    if (!sk_x509_findIssuer(serverCertificates, cert)) {
         //if issuer is missing
         if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(cert)) {
             // There is a URI where we can download a certificate.
@@ -1141,31 +1146,16 @@ Ssl::uriOfIssuerIfMissing(X509 *cert, Security::CertList const &serverCertificat
 }
 
 void
-Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, Security::CertList const &serverCertificates, const Security::ContextPointer &context)
+Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context)
 {
-    if (!serverCertificates.size())
+    if (!serverCertificates)
         return;
 
-    for (const auto &i : serverCertificates) {
-        if (const char *issuerUri = uriOfIssuerIfMissing(i.get(), serverCertificates, context))
+    for (int i = 0; i < sk_X509_num(serverCertificates); ++i) {
+        X509 *cert = sk_X509_value(serverCertificates, i);
+        if (const char *issuerUri = uriOfIssuerIfMissing(cert, serverCertificates, context))
             URIs.push(SBuf(issuerUri));
     }
-}
-
-/// Search for the issuer certificate of cert in sk list.
-static X509 *
-sk_x509_findIssuer(STACK_OF(X509) *sk, X509 *cert)
-{
-    if (!sk)
-        return NULL;
-
-    const int skItemsNum = sk_X509_num(sk);
-    for (int i = 0; i < skItemsNum; ++i) {
-        X509 *issuer = sk_X509_value(sk, i);
-        if (X509_check_issued(issuer, cert) == X509_V_OK)
-            return issuer;
-    }
-    return NULL;
 }
 
 /// add missing issuer certificates to untrustedCerts

@@ -671,16 +671,6 @@ Security::PeerConnector::startCertDownloading(SBuf &url)
     AsyncJob::Start(dl);
 }
 
-static void GetCertsList(Security::SessionPointer &session, Security::CertList &certs)
-{
-    STACK_OF(X509) *peerCertificatesChain = SSL_get_peer_cert_chain(session.get());
-    for (int i = 0; i < sk_X509_num(peerCertificatesChain); ++i) {
-        Security::CertPointer cert;
-        cert.resetAndLock(sk_X509_value(peerCertificatesChain, i));
-        certs.push_back(cert);
-    }
-}
-
 void
 Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 {
@@ -700,8 +690,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
         ContextPointer ctx(getTlsContext());
         Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
-        Security::CertList certsList;
-        GetCertsList(session, certsList);
+        const STACK_OF(X509) *certsList = SSL_get_peer_cert_chain(session.get());
         if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert, certsList, ctx)) {
             urlsOfMissingCerts.push(SBuf(issuerUri));
         }
@@ -736,11 +725,8 @@ Security::PeerConnector::checkForMissingCertificates()
 
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
-    Security::CertList certs;
-    GetCertsList(session, certs);
-
-    if (certs.size()) {
-        debugs(83, 5, "SSL server sent " << certs.size() << " certificates");
+    if (const STACK_OF(X509) *certs = SSL_get_peer_cert_chain(session.get())) {
+        debugs(83, 5, "SSL server sent " << sk_X509_num(certs) << " certificates");
         ContextPointer ctx(getTlsContext());
         Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx);
         if (urlsOfMissingCerts.size()) {

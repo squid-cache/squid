@@ -182,13 +182,13 @@ void SSL_add_untrusted_cert(SSL *ssl, X509 *cert);
  * Searches in serverCertificates list for the cert issuer and if not found
  * and Authority Info Access of cert provides a URI return it.
  */
-const char *uriOfIssuerIfMissing(X509 *cert,  Security::CertList const &serverCertificates, const Security::ContextPointer &context);
+const char *uriOfIssuerIfMissing(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
 
 /**
  * Fill URIs queue with the uris of missing certificates from serverCertificate chain
  * if this information provided by Authority Info Access.
  */
-void missingChainCertificatesUrls(std::queue<SBuf> &URIs, Security::CertList const &serverCertificates, const Security::ContextPointer &context);
+void missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
 
 /**
   \ingroup ServerProtocolSSLAPI
