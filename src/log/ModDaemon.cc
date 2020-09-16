@@ -17,11 +17,13 @@
 #include "log/Config.h"
 #include "log/File.h"
 #include "log/ModDaemon.h"
+#include "mem/PoolingAllocator.h"
 #include "SquidConfig.h"
 #include "SquidIpc.h"
 #include "SquidTime.h"
 
 #include <cerrno>
+#include <list>
 
 /* How many buffers to keep before we say we've buffered too much */
 #define LOGFILE_MAXBUFS     128
@@ -49,8 +51,7 @@ struct _l_daemon {
     char eol;
     pid_t pid;
     int flush_pending;
-    dlink_list bufs;
-    int nbufs;
+    std::list<logfile_buffer_t *, PoolingAllocator<logfile_buffer_t*>> bufs;
     int last_warned;
 };
 
@@ -72,8 +73,7 @@ logfileNewBuffer(Logfile * lf)
     b->size = LOGFILE_BUFSZ;
     b->written_len = 0;
     b->len = 0;
-    dlinkAddTail(b, &b->node, &ll->bufs);
-    ++ ll->nbufs;
+    ll->bufs.emplace_back(b);
 }
 
 static void
@@ -81,9 +81,8 @@ logfileFreeBuffer(Logfile * lf, logfile_buffer_t * b)
 {
     l_daemon_t *ll = (l_daemon_t *) lf->data;
     assert(b != NULL);
-    dlinkDelete(&b->node, &ll->bufs);
-    -- ll->nbufs;
     xfree(b->buf);
+    ll->bufs.pop_front(); // remove pointer to b
     xfree(b);
 }
 
@@ -98,11 +97,11 @@ logfileHandleWrite(int, void *data)
      * get a partial write then we'll re-schedule until its completed.
      * Its naive but it'll do for now.
      */
-    if (!ll->bufs.head) // abort if there is nothing pending right now.
+    if (ll->bufs.empty()) // abort if there is nothing pending right now.
         return;
 
-    logfile_buffer_t *b = static_cast<logfile_buffer_t*>(ll->bufs.head->data);
-    assert(b != NULL);
+    auto *b = ll->bufs.front();
+    assert(b);
     ll->flush_pending = 0;
 
     int ret = FD_WRITE_METHOD(ll->wfd, b->buf + b->written_len, b->len - b->written_len);
@@ -134,7 +133,7 @@ logfileHandleWrite(int, void *data)
         b = NULL;
     }
     /* Is there more to write? */
-    if (!ll->bufs.head)
+    if (ll->bufs.empty())
         return;
     /* there is, so schedule more */
 
@@ -147,12 +146,12 @@ static void
 logfileQueueWrite(Logfile * lf)
 {
     l_daemon_t *ll = (l_daemon_t *) lf->data;
-    if (ll->flush_pending || ll->bufs.head == NULL) {
+    if (ll->flush_pending || ll->bufs.empty()) {
         return;
     }
     ll->flush_pending = 1;
-    if (ll->bufs.head) {
-        logfile_buffer_t *b = static_cast<logfile_buffer_t*>(ll->bufs.head->data);
+    if (!ll->bufs.empty()) {
+        const auto *b = ll->bufs.front();
         if (b->len + 2 <= b->size)
             logfile_mod_daemon_append(lf, "F\n", 2);
     }
@@ -164,19 +163,17 @@ static void
 logfile_mod_daemon_append(Logfile * lf, const char *buf, int len)
 {
     l_daemon_t *ll = (l_daemon_t *) lf->data;
-    logfile_buffer_t *b;
-    int s;
 
     /* Is there a buffer? If not, create one */
-    if (ll->bufs.head == NULL) {
+    if (ll->bufs.empty()) {
         logfileNewBuffer(lf);
     }
     debugs(50, 3, "logfile_mod_daemon_append: " << lf->path << ": appending " << len << " bytes");
     /* Copy what can be copied */
     while (len > 0) {
-        b = static_cast<logfile_buffer_t*>(ll->bufs.tail->data);
+        auto *b = ll->bufs.back();
         debugs(50, 3, "logfile_mod_daemon_append: current buffer has " << b->len << " of " << b->size << " bytes before append");
-        s = min(len, (b->size - b->len));
+        auto s = min(len, (b->size - b->len));
         memcpy(b->buf + b->len, buf, s);
         len = len - s;
         buf = buf + s;
@@ -236,7 +233,6 @@ logfile_mod_daemon_open(Logfile * lf, const char *path, size_t, int)
         if (ll->pid < 0)
             fatal("Couldn't start logfile helper");
     }
-    ll->nbufs = 0;
 
     /* Queue the initial control data */
     tmpbuf = static_cast<char*>(xmalloc(BUFSIZ));
@@ -291,7 +287,7 @@ logfile_mod_daemon_writeline(Logfile * lf, const char *buf, size_t len)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
     /* Make sure the logfile buffer isn't too large */
-    if (ll->nbufs > LOGFILE_MAXBUFS) {
+    if (ll->bufs.size() > LOGFILE_MAXBUFS) {
         if (ll->last_warned < squid_curtime - LOGFILE_WARN_TIME) {
             ll->last_warned = squid_curtime;
             debugs(50, DBG_IMPORTANT, "Logfile: " << lf->path << ": queue is too large; some log messages have been lost.");
@@ -321,14 +317,12 @@ static void
 logfile_mod_daemon_lineend(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
-    logfile_buffer_t *b;
     if (ll->eol == 1) // logfile_mod_daemon_writeline() wrote nothing
         return;
     ll->eol = 1;
     /* Kick a write off if the head buffer is -full- */
-    if (ll->bufs.head != NULL) {
-        b = static_cast<logfile_buffer_t*>(ll->bufs.head->data);
-        if (b->node.next != NULL || !Config.onoff.buffered_logs)
+    if (!ll->bufs.empty()) {
+        if (ll->bufs.size() > 1 || !Config.onoff.buffered_logs)
             logfileQueueWrite(lf);
     }
 }
@@ -341,7 +335,7 @@ logfile_mod_daemon_flush(Logfile * lf)
         debugs(50, DBG_IMPORTANT, "Logfile Daemon: Couldn't set the pipe blocking for flush! You're now missing some log entries.");
         return;
     }
-    while (ll->bufs.head != NULL) {
+    while (!ll->bufs.empty()) {
         logfileHandleWrite(ll->wfd, lf);
     }
     if (commSetNonBlocking(ll->wfd)) {
