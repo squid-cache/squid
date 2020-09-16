@@ -333,7 +333,7 @@ BIO *BIO_new_SBuf(SBuf *buf);
 /**
   \ingroup ServerProtocolSSLAPI
 */
-bool PeerCertificatesVerify(Security::SessionPointer &s);
+bool PeerCertificatesVerify(Security::SessionPointer &s,  const Ssl::X509_STACK_Pointer &extraCerts);
 
 } //namespace Ssl
 

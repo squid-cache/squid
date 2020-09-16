@@ -230,7 +230,7 @@ Security::PeerConnector::sslFinalized()
 
     if (issuerError && issuerError == (void *)0x3) {
         SSL_set_ex_data(session.get(), ssl_ex_index_cert_ignore_issuer, static_cast<void *>(0x0));
-        if (!Ssl::PeerCertificatesVerify(session)) {
+        if (!Ssl::PeerCertificatesVerify(session, downloadedCerts)) {
             noteNegotiationError(SSL_ERROR_SSL, 0, 0);
             return false;
         }
@@ -705,7 +705,10 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert, certsList, ctx)) {
             urlsOfMissingCerts.push(SBuf(issuerUri));
         }
-        Ssl::SSL_add_untrusted_cert(session.get(), cert);
+
+        if (!downloadedCerts.get())
+            downloadedCerts.reset(sk_X509_new_null());
+        sk_X509_push(downloadedCerts.get(), cert);
     }
 
     // Check if there are URIs to download from and if yes start downloading

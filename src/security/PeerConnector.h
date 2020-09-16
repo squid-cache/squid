@@ -186,6 +186,7 @@ private:
     /// The list of URLs where missing certificates should be downloaded.
     std::queue<SBuf> urlsOfMissingCerts;
     unsigned int certsDownloads; ///< the number of downloaded missing certificates
+    Ssl::X509_STACK_Pointer downloadedCerts;
 };
 
 } // namespace Security

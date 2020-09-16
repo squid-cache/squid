@@ -35,9 +35,6 @@
 
 #include <cerrno>
 
-// TODO: Move ssl_ex_index_* global variables from global.cc here.
-int ssl_ex_index_ssl_untrusted_chain = -1;
-
 static Ssl::CertsIndexedList SquidUntrustedCerts;
 
 const EVP_MD *Ssl::DefaultSignHash = NULL;
@@ -437,9 +434,10 @@ Ssl::DisablePeerVerification(Security::ContextPointer &ctx)
     SSL_CTX_set_verify(ctx.get(),SSL_VERIFY_NONE,nullptr);
 }
 
-static int untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data);
+static int squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts);
+
 bool
-Ssl::PeerCertificatesVerify(Security::SessionPointer &s)
+Ssl::PeerCertificatesVerify(Security::SessionPointer &s, const Ssl::X509_STACK_Pointer &extraCerts)
 {
     STACK_OF(X509) *peerCertificatesChain = SSL_get_peer_cert_chain(s.get());
 
@@ -487,7 +485,7 @@ Ssl::PeerCertificatesVerify(Security::SessionPointer &s)
     // using X509_verify_cert, which also adds missing certificates
     // to storeCtx before checks.
     // bool verified = (X509_verify_cert(storeCtx.get()) > 0);
-    bool verified = (untrustedToStoreCtx_cb(storeCtx.get(), nullptr) > 0);
+    bool verified = (squidX509VerifyCert(storeCtx.get(), extraCerts.get()) > 0);
 
     if (!verified) {
         // Our call back will record errors list
@@ -617,7 +615,6 @@ Ssl::Initialize(void)
     ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
     ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", NULL, NULL, &ssl_free_CertChain);
     ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
-    ssl_ex_index_ssl_untrusted_chain = SSL_get_ex_new_index(0, (void *) "ssl_untrusted_chain", NULL, NULL, &ssl_free_CertChain);
     ssl_ex_index_cert_ignore_issuer = SSL_get_ex_new_index(0, (void *) "cert_ignore_issuer", NULL, NULL,  NULL);
 }
 
@@ -1155,20 +1152,6 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, Security::CertList con
     }
 }
 
-void
-Ssl::SSL_add_untrusted_cert(SSL *ssl, X509 *cert)
-{
-    STACK_OF(X509) *untrustedStack = static_cast <STACK_OF(X509) *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_untrusted_chain));
-    if (!untrustedStack) {
-        untrustedStack = sk_X509_new_null();
-        if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_untrusted_chain, untrustedStack)) {
-            sk_X509_pop_free(untrustedStack, X509_free);
-            throw TextException("Failed to attach untrusted certificates chain", Here());
-        }
-    }
-    sk_X509_push(untrustedStack, cert);
-}
-
 /// Search for the issuer certificate of cert in sk list.
 static X509 *
 sk_x509_findIssuer(STACK_OF(X509) *sk, X509 *cert)
@@ -1215,36 +1198,39 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
         debugs(83, 2,  "exceeded the maximum certificate chain length: " << depth);
 }
 
-/// OpenSSL certificate validation callback.
 static int
-untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
+squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
 {
-    debugs(83, 4,  "Try to use pre-downloaded intermediate certificates");
-
-    SSL *ssl = static_cast<SSL *>(X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
-    STACK_OF(X509) *sslUntrustedStack = static_cast <STACK_OF(X509) *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_untrusted_chain));
-
     // OpenSSL already maintains ctx->untrusted but we cannot modify
     // internal OpenSSL list directly. We have to give OpenSSL our own
     // list, but it must include certificates on the OpenSSL ctx->untrusted
     STACK_OF(X509) *oldUntrusted = X509_STORE_CTX_get0_untrusted(ctx);
-    STACK_OF(X509) *sk = sk_X509_dup(oldUntrusted); // oldUntrusted is always not NULL
+    Ssl::X509_STACK_Pointer untrustedCerts(sk_X509_dup(oldUntrusted)); // oldUntrusted is always not NULL
 
-    for (int i = 0; i < sk_X509_num(sslUntrustedStack); ++i) {
-        X509 *cert = sk_X509_value(sslUntrustedStack, i);
-        sk_X509_push(sk, cert);
+    if (extraCerts) {
+        for (int i = 0; i < sk_X509_num(extraCerts); ++i) {
+            X509 *cert = sk_X509_value(extraCerts, i);
+            sk_X509_push(untrustedCerts.get(), cert);
+        }
     }
 
     // If the local untrusted certificates internal database is used
     // run completeIssuers to add missing certificates if possible.
     if (SquidUntrustedCerts.size() > 0)
-        completeIssuers(ctx, sk);
+        completeIssuers(ctx, untrustedCerts.get());
 
-    X509_STORE_CTX_set0_untrusted(ctx, sk); // No locking/unlocking, just sets ctx->untrusted
+    X509_STORE_CTX_set0_untrusted(ctx, untrustedCerts.get()); // No locking/unlocking, just sets ctx->untrusted
     int ret = X509_verify_cert(ctx);
     X509_STORE_CTX_set0_untrusted(ctx, oldUntrusted); // Set back the old untrusted list
-    sk_X509_free(sk); // Release sk list
     return ret;
+}
+
+/// OpenSSL certificate validation callback.
+static int
+untrustedToStoreCtx_cb(X509_STORE_CTX *ctx, void *)
+{
+    debugs(83, 4,  "Try to use pre-downloaded intermediate certificates");
+    return squidX509VerifyCert(ctx, nullptr);
 }
 
 void
