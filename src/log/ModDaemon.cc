@@ -46,16 +46,17 @@ static LOGCLOSE logfile_mod_daemon_close;
 
 static void logfile_mod_daemon_append(Logfile * lf, const char *buf, int len);
 
-struct _l_daemon {
-    int rfd, wfd;
-    char eol;
-    pid_t pid;
-    int flush_pending;
+class l_daemon_t
+{
+public:
+    int rfd = 0;
+    int wfd = 0;
+    char eol = 1; // XXX: used as a bool
+    pid_t pid = -1;
+    int flush_pending = 0; // XXX: used as bool
     std::list<logfile_buffer_t *, PoolingAllocator<logfile_buffer_t*>> bufs;
-    int last_warned;
+    int last_warned = 0;
 };
-
-typedef struct _l_daemon l_daemon_t;
 
 /* Internal code */
 static void
@@ -220,9 +221,8 @@ logfile_mod_daemon_open(Logfile * lf, const char *path, size_t, int)
 
     cbdataInternalLock(lf); // WTF?
     debugs(50, DBG_IMPORTANT, "Logfile Daemon: opening log " << path);
-    ll = static_cast<l_daemon_t*>(xcalloc(1, sizeof(*ll)));
+    ll = new l_daemon_t;
     lf->data = ll;
-    ll->eol = 1;
     {
         Ip::Address localhost;
         args[0] = "(logfile-daemon)";
@@ -260,7 +260,7 @@ logfile_mod_daemon_close(Logfile * lf)
     }
     kill(ll->pid, SIGTERM);
     eventDelete(logfileFlushEvent, lf);
-    xfree(ll);
+    delete ll;
     lf->data = NULL;
     cbdataInternalUnlock(lf); // WTF??
 }
