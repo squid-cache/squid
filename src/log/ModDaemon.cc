@@ -54,38 +54,9 @@ public:
     char eol = 1; // XXX: used as a bool
     pid_t pid = -1;
     int flush_pending = 0; // XXX: used as bool
-    std::list<logfile_buffer_t *, PoolingAllocator<logfile_buffer_t*>> bufs;
+    std::list<logfile_buffer_t, PoolingAllocator<logfile_buffer_t>> bufs;
     int last_warned = 0;
 };
-
-/* Internal code */
-static void
-logfileNewBuffer(Logfile * lf)
-{
-    l_daemon_t *ll = (l_daemon_t *) lf->data;
-    logfile_buffer_t *b;
-
-    debugs(50, 5, "logfileNewBuffer: " << lf->path << ": new buffer");
-
-    b = static_cast<logfile_buffer_t*>(xcalloc(1, sizeof(logfile_buffer_t)));
-    assert(b != NULL);
-    b->buf = static_cast<char*>(xcalloc(1, LOGFILE_BUFSZ));
-    assert(b->buf != NULL);
-    b->size = LOGFILE_BUFSZ;
-    b->written_len = 0;
-    b->len = 0;
-    ll->bufs.emplace_back(b);
-}
-
-static void
-logfileFreeBuffer(Logfile * lf, logfile_buffer_t * b)
-{
-    l_daemon_t *ll = (l_daemon_t *) lf->data;
-    assert(b != NULL);
-    xfree(b->buf);
-    ll->bufs.pop_front(); // remove pointer to b
-    xfree(b);
-}
 
 static void
 logfileHandleWrite(int, void *data)
@@ -101,11 +72,10 @@ logfileHandleWrite(int, void *data)
     if (ll->bufs.empty()) // abort if there is nothing pending right now.
         return;
 
-    auto *b = ll->bufs.front();
-    assert(b);
+    auto &b = ll->bufs.front();
     ll->flush_pending = 0;
 
-    int ret = FD_WRITE_METHOD(ll->wfd, b->buf + b->written_len, b->len - b->written_len);
+    int ret = FD_WRITE_METHOD(ll->wfd, b.buf + b.written_len, b.len - b.written_len);
     int xerrno = errno;
     debugs(50, 3, lf->path << ": write returned " << ret);
     if (ret < 0) {
@@ -126,13 +96,10 @@ logfileHandleWrite(int, void *data)
         fatal("I don't handle this error well!");
     }
     /* ret > 0, so something was written */
-    b->written_len += ret;
-    assert(b->written_len <= b->len);
-    if (b->written_len == b->len) {
-        /* written the whole buffer! */
-        logfileFreeBuffer(lf, b);
-        b = NULL;
-    }
+    b.written_len += ret;
+    assert(b.written_len <= b.len);
+    if (b.written_len == b.len)
+        ll->bufs.pop_front();
     /* Is there more to write? */
     if (ll->bufs.empty())
         return;
@@ -152,8 +119,8 @@ logfileQueueWrite(Logfile * lf)
     }
     ll->flush_pending = 1;
     if (!ll->bufs.empty()) {
-        const auto *b = ll->bufs.front();
-        if (b->len + 2 <= b->size)
+        const auto &b = ll->bufs.front();
+        if (b.len + 2 <= b.size)
             logfile_mod_daemon_append(lf, "F\n", 2);
     }
     /* Ok, schedule a write-event */
@@ -167,22 +134,24 @@ logfile_mod_daemon_append(Logfile * lf, const char *buf, int len)
 
     /* Is there a buffer? If not, create one */
     if (ll->bufs.empty()) {
-        logfileNewBuffer(lf);
+        debugs(50, 5, lf->path << ": new buffer");
+        ll->bufs.emplace_back(LOGFILE_BUFSZ);
     }
     debugs(50, 3, "logfile_mod_daemon_append: " << lf->path << ": appending " << len << " bytes");
     /* Copy what can be copied */
     while (len > 0) {
-        auto *b = ll->bufs.back();
-        debugs(50, 3, "logfile_mod_daemon_append: current buffer has " << b->len << " of " << b->size << " bytes before append");
-        auto s = min(len, (b->size - b->len));
-        memcpy(b->buf + b->len, buf, s);
+        auto &b = ll->bufs.back();
+        debugs(50, 3, "logfile_mod_daemon_append: current buffer has " << b.len << " of " << b.size << " bytes before append");
+        auto s = min(len, (b.size - b.len));
+        memcpy(b.buf + b.len, buf, s);
         len = len - s;
         buf = buf + s;
-        b->len = b->len + s;
-        assert(b->len <= LOGFILE_BUFSZ);
+        b.len = b.len + s;
+        assert(b.len <= LOGFILE_BUFSZ);
         assert(len >= 0);
         if (len > 0) {
-            logfileNewBuffer(lf);
+            debugs(50, 5, lf->path << ": new buffer");
+            ll->bufs.emplace_back(LOGFILE_BUFSZ);
         }
     }
 }

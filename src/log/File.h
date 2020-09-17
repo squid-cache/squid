@@ -10,7 +10,6 @@
 #define SQUID_SRC_LOG_FILE_H
 
 #include "cbdata.h"
-#include "dlink.h"
 
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
@@ -19,11 +18,17 @@
 class logfile_buffer_t
 {
 public:
-    char *buf;
-    int size;
-    int len;
-    int written_len;
-    dlink_node node;
+    logfile_buffer_t(int bufSz) :
+        buf(static_cast<char*>(xcalloc(1, bufSz))),
+        size(bufSz)
+    {}
+    ~logfile_buffer_t() { xfree(buf); }
+
+public:
+    char *buf = nullptr;
+    int size = 0;
+    int len = 0;
+    int written_len = 0;
 };
 
 class Logfile;
