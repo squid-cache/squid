@@ -125,11 +125,16 @@ Fs::Ufs::RebuildState::rebuildStep()
         if (totalEntries > 0 && (n_read % 4000 == 0))
             storeRebuildProgress(sd->index, totalEntries, n_read);
 
-        if (opt_foreground_rebuild)
-            continue; // skip "few entries at a time" check below
-
         getCurrentTime();
         const double elapsedMsec = tvSubMsec(loopStart, current_time);
+
+        if (opt_foreground_rebuild) {
+            static const int ForegroundMsec = 1000; // will react to signals within this interval
+            if (elapsedMsec <= ForegroundMsec)
+                continue; // skip "few entries at a time" check below
+            break;
+        }
+
         if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
             debugs(47, 5, HERE << "pausing after " << n_read << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/n_read) << "ms per entry");
