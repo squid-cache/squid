@@ -151,10 +151,6 @@ public:
     bool holdWrite() const {return holdWrite_;}
     /// Enables or disables the write hold state
     void holdWrite(bool h) {holdWrite_ = h;}
-    /// The read hold state
-    bool holdRead() const {return holdRead_;}
-    /// Enables or disables the read hold state
-    void holdRead(bool h) {holdRead_ = h;}
     /// Enables or disables the input data recording, for internal analysis.
     void recordInput(bool r) {record_ = r;}
     /// Whether we can splice or not the SSL stream
@@ -190,7 +186,6 @@ private:
     bool allowSplice; ///< True if the SSL stream can be spliced
     bool allowBump;  ///< True if the SSL stream can be bumped
     bool holdWrite_;  ///< The write hold state of the bio.
-    bool holdRead_;  ///< The read hold state of the bio.
     bool record_; ///< If true the input data recorded to rbuf for internal use
     bool parsedHandshake; ///< whether we are done parsing TLS Hello
     bool parseError; ///< error while parsing server hello message

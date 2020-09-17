@@ -466,25 +466,6 @@ Security::PeerConnector::noteWantRead()
 {
     const int fd = serverConnection()->fd;
     debugs(83, 5, serverConnection());
-#if USE_OPENSSL
-    Security::SessionPointer session(fd_table[fd].ssl);
-    BIO *b = SSL_get_rbio(session.get());
-    Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
-    if (srvBio->holdRead()) {
-        if (srvBio->gotHello()) {
-            srvBio->holdRead(false);
-            // schedule a negotiateSSl to allow openSSL parse received data
-            negotiateSsl();
-            return;
-        } else if (srvBio->gotHelloFailed()) {
-            srvBio->holdRead(false);
-            debugs(83, DBG_IMPORTANT, "Error parsing SSL Server Hello Message on FD " << fd);
-            // schedule a negotiateSSl to allow openSSL parse received data
-            negotiateSsl();
-            return;
-        }
-    }
-#endif
 
     // read timeout to avoid getting stuck while reading from a silent server
     typedef CommCbMemFunT<Security::PeerConnector, CommTimeoutCbParams> TimeoutDialer;
