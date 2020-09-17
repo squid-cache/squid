@@ -76,7 +76,9 @@ public:
 
     TlsDetails::Pointer details; ///< TLS handshake meta info. Never nil.
 
+#if PARSE_CERTIFICATES
     Security::CertList serverCertificates; ///< parsed certificates chain
+#endif
 
     ParserState state; ///< current parsing state.
 
@@ -112,7 +114,9 @@ private:
     void parseV23Ciphers(const SBuf &raw);
 
     void parseServerCertificates(const SBuf &raw);
+#if PARSE_CERTIFICATES
     static CertPointer ParseCertificate(const SBuf &raw);
+#endif
 
     unsigned int currentContentType; ///< The current TLS/SSL record content type
 

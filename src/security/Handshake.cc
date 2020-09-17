@@ -664,6 +664,7 @@ Security::HandshakeParser::parseHello(const SBuf &data)
     return false; // unreached
 }
 
+#if PARSE_CERTIFICATES
 /// Creates and returns a certificate by parsing a DER-encoded X509 structure.
 /// Throws on failures.
 Security::CertPointer
@@ -685,6 +686,7 @@ Security::HandshakeParser::ParseCertificate(const SBuf &raw)
     assert(pCert);
     return pCert;
 }
+#endif // PARSE_CERTIFICATES
 
 void
 Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
@@ -694,6 +696,7 @@ Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
     const SBuf clist = tkList.pstring24("CertificateList");
     Must(tkList.atEnd()); // no leftovers after all certificates
 
+#if PARSE_CERTIFICATES
     Parser::BinaryTokenizer tkItems(clist);
     while (!tkItems.atEnd()) {
         if (Security::CertPointer cert = ParseCertificate(tkItems.pstring24("Certificate")))
@@ -703,6 +706,7 @@ Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
 #else
     debugs(83, 7, "no support for CertificateList parsing; ignoring " << raw.length() << " bytes");
 #endif
+#endif // PARSE_CERTIFICATES
 }
 
 /// A helper function to create a set of all supported TLS extensions

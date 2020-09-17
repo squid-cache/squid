@@ -171,9 +171,6 @@ public:
     /// Return true if the Server Hello parsing failed
     bool gotHelloFailed() const { return (parsedHandshake && parseError); }
 
-    /// \return the server certificates list if received and parsed correctly
-    const Security::CertList &serverCertificatesIfAny() { return parser_.serverCertificates; }
-
     /// \return the TLS Details advertised by TLS server.
     const Security::TlsDetails::Pointer &receivedHelloDetails() const {return parser_.details;}
 
