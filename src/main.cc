@@ -827,8 +827,12 @@ sig_child(int sig)
 static void
 serverConnectionsOpen(void)
 {
-    if (!opt_foreground_rebuild || !Store::Controller::store_dirs_rebuilding)
+    if (opt_foreground_rebuild && Store::Controller::store_dirs_rebuilding) {
+        if (IamWorkerProcess())
+            debugs(1, DBG_IMPORTANT, "Will wait for Store indexing completion before opening listening sockets");
+    } else {
         listeningPortsOpen();
+    }
 
     // start various proxying services if we are responsible for them
     if (IamWorkerProcess()) {
