@@ -296,6 +296,7 @@ void
 Rock::Rebuild::notifyCoordinator()
 {
     assert(opt_foreground_rebuild);
+    assert(UsingSmp());
     Ipc::ForegroundRebuildMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
     ann.strand.tag = sd->filePath;
     Ipc::TypedMsgHdr message;
@@ -345,7 +346,8 @@ Rock::Rebuild::loadingSteps()
         if (opt_foreground_rebuild) {
             if (elapsedMsec <= ForegroundNotificationMsec)
                 continue; // skip "few entries at a time" check below
-            notifyCoordinator();
+            if (UsingSmp())
+                notifyCoordinator();
             break;
         }
 
@@ -466,7 +468,8 @@ Rock::Rebuild::validationSteps()
         if (opt_foreground_rebuild) {
             if (elapsedMsec <= ForegroundNotificationMsec)
                 continue; // skip "few entries at a time" check below
-            notifyCoordinator();
+            if (UsingSmp())
+                notifyCoordinator();
             break;
         }
 
@@ -580,7 +583,7 @@ Rock::Rebuild::swanSong()
     --StoreController::store_dirs_rebuilding;
     storeRebuildComplete(&counts);
 
-    if (opt_foreground_rebuild) {
+    if (opt_foreground_rebuild && UsingSmp()) {
         Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
         ann.strand.tag = sd->filePath;
         Ipc::TypedMsgHdr message;
