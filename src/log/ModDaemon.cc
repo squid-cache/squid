@@ -51,9 +51,9 @@ class l_daemon_t
 public:
     int rfd = 0;
     int wfd = 0;
-    char eol = 1; // XXX: used as a bool
     pid_t pid = -1;
-    int flush_pending = 0; // XXX: used as bool
+    bool eol = true; ///< currently assembling a log line in last buffer
+    bool flush_pending = false; ///< waiting for a I/O write to complete
     std::list<logfile_buffer_t, PoolingAllocator<logfile_buffer_t>> bufs;
     int last_warned = 0;
 };
@@ -73,7 +73,7 @@ logfileHandleWrite(int, void *data)
         return;
 
     auto &b = ll->bufs.front();
-    ll->flush_pending = 0;
+    ll->flush_pending = false;
 
     int ret = FD_WRITE_METHOD(ll->wfd, b.buf + b.written_len, b.len - b.written_len);
     int xerrno = errno;
@@ -82,7 +82,7 @@ logfileHandleWrite(int, void *data)
         if (ignoreErrno(xerrno)) {
             /* something temporary */
             Comm::SetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
-            ll->flush_pending = 1;
+            ll->flush_pending = true;
             return;
         }
         debugs(50, DBG_IMPORTANT,"logfileHandleWrite: " << lf->path << ": error writing (" << xstrerr(xerrno) << ")");
@@ -106,7 +106,7 @@ logfileHandleWrite(int, void *data)
     /* there is, so schedule more */
 
     Comm::SetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
-    ll->flush_pending = 1;
+    ll->flush_pending = true;
     return;
 }
 
@@ -117,7 +117,6 @@ logfileQueueWrite(Logfile * lf)
     if (ll->flush_pending || ll->bufs.empty()) {
         return;
     }
-    ll->flush_pending = 1;
     if (!ll->bufs.empty()) {
         const auto &b = ll->bufs.front();
         if (b.len + 2 <= b.size)
@@ -125,6 +124,7 @@ logfileQueueWrite(Logfile * lf)
     }
     /* Ok, schedule a write-event */
     Comm::SetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
+    ll->flush_pending = true;
 }
 
 static void
@@ -265,9 +265,9 @@ logfile_mod_daemon_writeline(Logfile * lf, const char *buf, size_t len)
     }
 
     /* Are we eol? If so, prefix with our logfile command byte */
-    if (ll->eol == 1) {
+    if (ll->eol) {
 	logfile_mod_daemon_append(lf, "L", 1);
-	ll->eol = 0;
+	ll->eol = false;
     }
 
     /* Append this data to the end buffer; create a new one if needed */
@@ -278,7 +278,7 @@ static void
 logfile_mod_daemon_linestart(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
-    assert(ll->eol == 1);
+    assert(ll->eol);
     // logfile_mod_daemon_writeline() sends the starting command
 }
 
@@ -286,9 +286,9 @@ static void
 logfile_mod_daemon_lineend(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
-    if (ll->eol == 1) // logfile_mod_daemon_writeline() wrote nothing
+    if (ll->eol) // logfile_mod_daemon_writeline() wrote nothing
         return;
-    ll->eol = 1;
+    ll->eol = true;
     /* Kick a write off if the head buffer is -full- */
     if (!ll->bufs.empty()) {
         if (ll->bufs.size() > 1 || !Config.onoff.buffered_logs)
