@@ -9,6 +9,7 @@
 /* DEBUG: section 20    Store Rebuild Routines */
 
 #include "squid.h"
+#include "base/RunnersRegistry.h"
 #include "event.h"
 #include "globals.h"
 #include "md5.h"
@@ -162,6 +163,8 @@ storeRebuildComplete(StoreRebuildData *dc)
     xfree(RebuildProgress);
 
     RebuildProgress = NULL;
+
+    RunRegisteredHere(RegisteredRunner::endingStoreRebuild);
 }
 
 /*

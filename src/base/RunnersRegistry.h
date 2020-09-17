@@ -55,6 +55,11 @@ public:
     /// configuration with known memory requirements.
     virtual void useConfig() {}
 
+    /// Called after storeRebuildComplete().
+    /// Meant for for modules that need to perform actions when
+    /// disk indexing completes.
+    virtual void endingStoreRebuild() {}
+
     /* Reconfiguration events */
 
     /// Called after receiving a reconfigure request and before parsing squid.conf.

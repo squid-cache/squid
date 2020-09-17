@@ -172,6 +172,7 @@ static void mainHandleCommandLineOption(const int optId, const char *optValue);
 static void sendSignal(void);
 static void serverConnectionsOpen(void);
 static void serverConnectionsClose(void);
+static void listeningPortsOpen();
 static void watch_child(const CommandLine &);
 static void setEffectiveUser(void);
 static void SquidShutdown(void);
@@ -184,6 +185,22 @@ static const char *squid_start_script = "squid_start";
 #if TEST_ACCESS
 #include "test_access.c"
 #endif
+
+class OpenListeningPortsRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    virtual void endingStoreRebuild();
+};
+
+RunnerRegistrationEntry(OpenListeningPortsRr);
+
+void
+OpenListeningPortsRr::endingStoreRebuild()
+{
+    if (opt_foreground_rebuild)
+        listeningPortsOpen();
+}
 
 /** temporary thunk across to the unrefactored store interface */
 
@@ -810,6 +827,28 @@ sig_child(int sig)
 static void
 serverConnectionsOpen(void)
 {
+    if (!opt_foreground_rebuild || !Store::Controller::store_dirs_rebuilding)
+        listeningPortsOpen();
+
+    // start various proxying services if we are responsible for them
+    if (IamWorkerProcess()) {
+        icmpEngine.Open();
+        netdbInit();
+        asnInit();
+        ACL::Initialize();
+        peerSelectInit();
+
+        carpInit();
+#if USE_AUTH
+        peerUserHashInit();
+#endif
+        peerSourceHashInit();
+    }
+}
+
+static void
+listeningPortsOpen()
+{
     if (IamPrimaryProcess()) {
 #if USE_WCCP
         wccpConnectionOpen();
@@ -830,18 +869,6 @@ serverConnectionsOpen(void)
 #if SQUID_SNMP
         snmpOpenPorts();
 #endif
-
-        icmpEngine.Open();
-        netdbInit();
-        asnInit();
-        ACL::Initialize();
-        peerSelectInit();
-
-        carpInit();
-#if USE_AUTH
-        peerUserHashInit();
-#endif
-        peerSourceHashInit();
     }
 }
 
