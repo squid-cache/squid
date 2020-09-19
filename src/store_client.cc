@@ -101,14 +101,9 @@ store_client::getType() const
 static store_client *
 storeClientListSearch(const MemObject * mem, void *data)
 {
-    dlink_node *node;
-    store_client *sc = NULL;
-
-    for (node = mem->clients.head; node; node = node->next) {
-        sc = node->data;
-
-        if (sc->owner == data)
-            return sc;
+    for (auto &sc : clients) {
+        if (storeClientIsThisAClient(sc.get(), data))
+            return sc.get();
     }
 
     return NULL;
@@ -128,7 +123,6 @@ store_client *
 storeClientListAdd(StoreEntry * e, void *data)
 {
     MemObject *mem = e->mem_obj;
-    store_client *sc;
     assert(mem);
 #if STORE_CLIENT_LIST_DEBUG
 
@@ -139,10 +133,8 @@ storeClientListAdd(StoreEntry * e, void *data)
     (void)data;
 #endif
 
-    sc = new store_client (e);
-
-    mem->addClient(sc);
-
+    auto *sc = new store_client(e);
+    mem->clients.emplace_front(sc);
     return sc;
 }
 
@@ -687,13 +679,12 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
         return 0;
     }
 
-    if (mem->clientCount() == 0) {
+    if (mem->clients.size() == 0) {
         debugs(90, 3, "storeUnregister: Consistency failure - store client being unregistered is not in the mem object's list for '" << e->getMD5Text() << "'");
         return 0;
     }
 
-    dlinkDelete(&sc->node, &mem->clients);
-    -- mem->nclients;
+    mem->clients.remove(sc);
 
     const auto swapoutFinished = e->swappedOut() || e->swapoutFailed();
     if (e->store_status == STORE_OK && !swapoutFinished)
@@ -751,19 +742,17 @@ StoreEntry::invokeHandlers()
 
     /* Commit what we can to disk, if appropriate */
     swapOut();
-    int i = 0;
-    store_client *sc;
-    dlink_node *nx = NULL;
-    dlink_node *node;
 
-    debugs(90, 3, mem_obj->nclients << " clients; " << *this << ' ' << getMD5Text());
+    debugs(90, 3, mem_obj->clients.size() << " clients; " << *this << ' ' << getMD5Text());
     /* walk the entire list looking for valid callbacks */
 
     const auto savedContext = CodeContext::Current();
-    for (node = mem_obj->clients.head; node; node = nx) {
-        sc = (store_client *)node->data;
-        nx = node->next;
+    int i = 0;
+    for (auto &sc : mem_obj->clients) {
         ++i;
+
+        if (!sc)
+            continue;
 
         if (!sc->_callback.pending())
             continue;
@@ -773,8 +762,13 @@ StoreEntry::invokeHandlers()
 
         CodeContext::Reset(sc->_callback.codeContext);
         debugs(90, 3, "checking client #" << i);
-        storeClientCopy2(this, sc);
+        storeClientCopy2(this, sc.get()); // may invalidate sc CbcPointer
     }
+
+    // remove any entries whose CbcPointer has been invalidated
+    // which may happen if the client aborted, or was terminated
+    mem_obj->clients.remove_if([](const auto &x) -> bool { return !x; });
+
     CodeContext::Reset(savedContext);
 }
 
@@ -782,10 +776,9 @@ StoreEntry::invokeHandlers()
 int
 storePendingNClients(const StoreEntry * e)
 {
-    MemObject *mem = e->mem_obj;
-    int npend = NULL == mem ? 0 : mem->nclients;
-    debugs(90, 3, "storePendingNClients: returning " << npend);
-    return npend;
+    if (!e->mem_obj)
+        return 0;
+    return e->mem_obj->clients.size();
 }
 
 /* return true if the request should be aborted */

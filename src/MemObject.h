@@ -10,7 +10,6 @@
 #define SQUID_MEMOBJECT_H
 
 #include "CommRead.h"
-#include "dlink.h"
 #include "http/RequestMethod.h"
 #include "RemovalPolicy.h"
 #include "SquidString.h"
@@ -23,6 +22,8 @@
 #if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
+
+#include <list>
 
 typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
 
@@ -101,7 +102,6 @@ public:
     void reset();
     int64_t lowestMemReaderOffset() const;
     bool readAheadPolicyCanRead() const;
-    void addClient(store_client *);
     /* XXX belongs in MemObject::swapout, once swaphdrsz is managed
      * better
      */
@@ -137,13 +137,7 @@ public:
     HttpRequestMethod method;
     mem_hdr data_hdr;
     int64_t inmem_lo = 0;
-    dlink_list clients;
-
-    size_t clientCount() const {return nclients;}
-
-    bool clientIsFirst(void *sc) const {return (clients.head && sc == clients.head->data);}
-
-    int nclients = 0;
+    std::list<CbcPointer<store_client>> clients;
 
     class SwapOut
     {

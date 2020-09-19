@@ -9,6 +9,7 @@
 /* DEBUG: none          LRU Removal Policy */
 
 #include "squid.h"
+#include "dlink.h"
 #include "MemObject.h"
 #include "SquidTime.h"
 #include "Store.h"
