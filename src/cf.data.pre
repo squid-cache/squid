@@ -5473,7 +5473,9 @@ DOC_START
 
 	This is where general information about Squid behavior goes. You can
 	increase the amount of data logged to this file and how often it is
-	rotated with "debug_options"
+	rotated with "debug_options".
+	Caching the general information would introduce extra I/O and may cause performance issue 
+	when the workload is heavy. The cache_log can be disabled by setting the configuration to cache_log /dev/null 
 DOC_END
 
 NAME: debug_options
