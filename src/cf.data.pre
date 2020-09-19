@@ -10070,7 +10070,7 @@ TYPE: int
 DEFAULT: 1024
 LOC: Config.ipcache.size
 DOC_START
-	Maximum number of DNS IP cache entries.
+	Maximum number of DNS IP cache entries. A large ipcache size may improve performance because it avoid more address lookups but excessively large values would waste memory. Since the entry only takes very small amounts of memory and the default value is relatively small, the developer may need to set a large size in production.
 DOC_END
 
 NAME: ipcache_low
