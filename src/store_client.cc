@@ -767,7 +767,7 @@ StoreEntry::invokeHandlers()
 
     // remove any entries whose CbcPointer has been invalidated
     // which may happen if the client aborted, or was terminated
-    mem_obj->clients.remove_if([](const auto &x) -> bool { return !x; });
+    mem_obj->clients.remove_if([](const CbcPointer<store_client> &x)->bool { return !x; });
 
     CodeContext::Reset(savedContext);
 }
