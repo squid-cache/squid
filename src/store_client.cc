@@ -102,19 +102,12 @@ static store_client *
 storeClientListSearch(const MemObject * mem, void *data)
 {
     for (auto &sc : clients) {
-        if (storeClientIsThisAClient(sc.get(), data))
+        if (sc.valid() && sc->owner == data)
             return sc.get();
     }
 
     return NULL;
 }
-
-int
-storeClientIsThisAClient(store_client * sc, void *someClient)
-{
-    return sc->owner == someClient;
-}
-
 #endif
 #include "HttpRequest.h"
 
@@ -333,7 +326,7 @@ storeClientCopy2(StoreEntry * e, store_client * sc)
      * XXX: Locking does not prevent calling sc destructor (it only prevents
      * freeing sc memory) so sc may become invalid from C++ p.o.v.
      */
-    CbcPointer<store_client> tmpLock = sc;
+    store_clientPointer tmpLock = sc;
     assert (!sc->flags.store_copying);
     sc->doCopy(e);
     assert(!sc->flags.store_copying);
@@ -767,7 +760,7 @@ StoreEntry::invokeHandlers()
 
     // remove any entries whose CbcPointer has been invalidated
     // which may happen if the client aborted, or was terminated
-    mem_obj->clients.remove_if([](const CbcPointer<store_client> &x)->bool { return !x; });
+    mem_obj->clients.remove_if([](const store_clientPointer &x)->bool { return !x; });
 
     CodeContext::Reset(savedContext);
 }

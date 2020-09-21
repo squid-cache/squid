@@ -71,7 +71,6 @@ public:
 
     int64_t cmp_offset;
 #if STORE_CLIENT_LIST_DEBUG
-
     void *owner;
 #endif
 
@@ -126,7 +125,6 @@ store_client* storeClientListAdd(StoreEntry * e, void *data);
 int storeClientCopyPending(store_client *, StoreEntry * e, void *data);
 int storeUnregister(store_client * sc, StoreEntry * e, void *data);
 int storePendingNClients(const StoreEntry * e);
-int storeClientIsThisAClient(store_client * sc, void *someClient);
 
 #endif /* SQUID_STORECLIENT_H */
 

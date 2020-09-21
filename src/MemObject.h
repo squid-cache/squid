@@ -11,6 +11,7 @@
 
 #include "CommRead.h"
 #include "http/RequestMethod.h"
+#include "mem/PoolingAllocator.h"
 #include "RemovalPolicy.h"
 #include "SquidString.h"
 #include "stmem.h"
@@ -137,7 +138,7 @@ public:
     HttpRequestMethod method;
     mem_hdr data_hdr;
     int64_t inmem_lo = 0;
-    std::list<CbcPointer<store_client>> clients;
+    std::list<store_clientPointer, PoolingAllocator<store_clientPointer>> clients;
 
     class SwapOut
     {

@@ -9,6 +9,8 @@
 #ifndef SQUID_STORE_FORWARD_H
 #define SQUID_STORE_FORWARD_H
 
+#include "base/CbcPointer.h"
+
 // bug 4610 see comments 22-38
 // Nasty hack, but it turns out C++ allows int32_t to be
 // unsigned when used as a bitmask (as sfile* are later)
@@ -30,6 +32,8 @@ typedef unsigned char cache_key;
 
 class StoreSearch;
 class StoreClient;
+class store_client;
+typedef CbcPointer<store_client> store_clientPointer;
 class StoreEntry;
 class MemStore;
 class Transients;

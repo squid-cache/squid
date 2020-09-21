@@ -286,7 +286,8 @@ clientReplyContext::processExpired()
 #if STORE_CLIENT_LIST_DEBUG
     /* Prevent a race with the store client memory free routines
      */
-    assert(storeClientIsThisAClient(sc, this));
+    assert(sc.valid());
+    assert(sc->owner == this);
 #endif
     /* Prepare to make a new temporary request */
     saveState();
