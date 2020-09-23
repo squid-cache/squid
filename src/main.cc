@@ -190,17 +190,8 @@ class OpenListeningPortsRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void endingStoreRebuild();
+    virtual void endingStoreRebuild() { assert(opt_foreground_rebuild); listeningPortsOpen(); }
 };
-
-RunnerRegistrationEntry(OpenListeningPortsRr);
-
-void
-OpenListeningPortsRr::endingStoreRebuild()
-{
-    if (opt_foreground_rebuild)
-        listeningPortsOpen();
-}
 
 /** temporary thunk across to the unrefactored store interface */
 
@@ -474,6 +465,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
         /** \par F
          * Set global option for foreground rebuild. opt_foreground_rebuild */
         opt_foreground_rebuild = 1;
+        RunnerRegistrationEntry(OpenListeningPortsRr);
         break;
 
     case 'N':
