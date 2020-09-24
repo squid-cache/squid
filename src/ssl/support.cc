@@ -265,7 +265,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
     X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
-    void *ignoreIssuer = SSL_get_ex_data(ssl, ssl_ex_index_cert_ignore_issuer);
+    Ssl::SquidVerifyData *verifyData = (Ssl::SquidVerifyData *)SSL_get_ex_data(ssl, ssl_ex_index_squid_verify);
 
     Security::CertPointer peer_cert;
     peer_cert.resetAndLock(X509_STORE_CTX_get0_cert(ctx));
@@ -311,13 +311,14 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
     }
 
+    const bool ignoreIssuer = (verifyData && verifyData->isSet(Ssl::SquidVerifyData::fIgnoreIssuer));
     if (!ok && error_no == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY && ignoreIssuer) {
         if (X509 *currentCert = X509_STORE_CTX_get_current_cert(ctx)) {
             if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(currentCert)) {
                 /*Store somewhere the missing issuerUri?*/
                 debugs(83, 5, "There is issuerURI for missing issuer: " << issuerUri);
                 ok = 1;
-                SSL_set_ex_data(ssl, ssl_ex_index_cert_ignore_issuer, (void *)0x02);
+                verifyData->set(Ssl::SquidVerifyData::fMissingIssuer);
             }
         }
     }
@@ -495,6 +496,16 @@ Ssl::PeerCertificatesVerify(Security::SessionPointer &s, const Ssl::X509_STACK_P
     return verified;
 }
 
+void Ssl::SquidVerifyData::SetSessionFlag(Security::SessionPointer &session, uint64_t flg)
+{
+    auto data = SessionData(session);
+    if (!data) {
+        data =  new Ssl::SquidVerifyData();
+        SSL_set_ex_data(session.get(), ssl_ex_index_squid_verify, data);
+    }
+    data->set(Ssl::SquidVerifyData::fIgnoreIssuer);
+}
+
 // "dup" function for SSL_get_ex_new_index("cert_err_check")
 #if SQUID_USE_CONST_CRYPTO_EX_DATA_DUP
 static int
@@ -575,6 +586,14 @@ ssl_free_SBuf(void *, void *ptr, CRYPTO_EX_DATA *,
     delete buf;
 }
 
+static void
+ssl_free_squid_verify(void *, void *ptr, CRYPTO_EX_DATA *,
+                      int, long, void *)
+{
+    Ssl::SquidVerifyData  *data = static_cast <Ssl::SquidVerifyData *>(ptr);
+    delete data;
+}
+
 void
 Ssl::Initialize(void)
 {
@@ -615,7 +634,7 @@ Ssl::Initialize(void)
     ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
     ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", NULL, NULL, &ssl_free_CertChain);
     ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
-    ssl_ex_index_cert_ignore_issuer = SSL_get_ex_new_index(0, (void *) "cert_ignore_issuer", NULL, NULL,  NULL);
+    ssl_ex_index_squid_verify = SSL_get_ex_new_index(0, (void *) "squid_verify", NULL, NULL,  &ssl_free_squid_verify);
 }
 
 bool

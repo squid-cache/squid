@@ -105,7 +105,7 @@ extern int ssl_ex_index_ssl_peeked_cert;      /* -1 */
 extern int ssl_ex_index_ssl_errors;   /* -1 */
 extern int ssl_ex_index_ssl_cert_chain;  /* -1 */
 extern int ssl_ex_index_ssl_validation_counter;  /* -1 */
-extern int ssl_ex_index_cert_ignore_issuer;  /* -1 */
+extern int ssl_ex_index_squid_verify;  /* -1 */
 
 extern const char *external_acl_message;      /* NULL */
 extern int opt_send_signal; /* -1 */

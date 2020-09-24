@@ -335,6 +335,34 @@ BIO *BIO_new_SBuf(SBuf *buf);
 */
 bool PeerCertificatesVerify(Security::SessionPointer &s,  const Ssl::X509_STACK_Pointer &extraCerts);
 
+/// Holds parameters and flags required for server certificates verify
+/// procedure.
+/// TODO: Add more parameters used by squid to verify certificates which are
+/// currently passed using the SSL_set_ex_data and ssl_ex_index_* parameters.
+///  \ingroup ServerProtocolSSLAPI
+class SquidVerifyData {
+public:
+    enum VerifyFlags{
+        fMissingIssuer = 1 << 0, ///< An issuer certificate is missing, set by squid validation procedure
+        fIgnoreIssuer = 1 << 1 ///< Do not report missing issuer certificates as validation errors
+    };
+
+    /// \returns The SquidVerifyData object attached to session
+    static SquidVerifyData *SessionData(const Security::SessionPointer &session) {
+        return (SquidVerifyData *)SSL_get_ex_data(session.get(), ssl_ex_index_squid_verify);
+    }
+
+    /// Sets the given SquidVerifyData::VerifyFlags flag to session object
+    static void SetSessionFlag(Security::SessionPointer &session, uint64_t flg);
+
+    void set(uint64_t flgs) {flags_ |= flgs;}
+    void clear(uint64_t flgs) {flags_ &= ~flgs;}
+    bool isSet(uint64_t flg) {return (flags_ & flg) != 0;}
+private:
+    // TODO: maybe split to inFlags_ and outFlags_
+    uint64_t flags_ = 0x00; ///< VerifyFlags set for this object
+};
+
 } //namespace Ssl
 
 #if _SQUID_WINDOWS_

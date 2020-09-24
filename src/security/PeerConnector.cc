@@ -143,9 +143,9 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
             SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_error_check, check);
         }
     }
-#endif
 
-    SSL_set_ex_data(serverSession.get(), ssl_ex_index_cert_ignore_issuer, (void *)0x1);
+    Ssl::SquidVerifyData::SetSessionFlag(serverSession, Ssl::SquidVerifyData::fIgnoreIssuer);
+#endif
 
     return true;
 }
@@ -680,6 +680,12 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         return;
     }
 
+    // We should have the full certificates chain now, so clear the
+    // fMissingIssuer flag to report any missing issuer certificates.
+    auto verifyData = Ssl::SquidVerifyData::SessionData(session);
+    assert(verifyData);
+    verifyData->clear(Ssl::SquidVerifyData::fMissingIssuer);
+
     if (!Ssl::PeerCertificatesVerify(session, downloadedCerts)) {
         noteNegotiationError(SSL_ERROR_SSL, 0, 0);
         return;
@@ -694,13 +700,10 @@ Security::PeerConnector::checkForMissingCertificates()
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
 
-    auto issuerError =  SSL_get_ex_data(session.get(), ssl_ex_index_cert_ignore_issuer);
-    if (!issuerError || issuerError != (void *)0x2)
+    auto verifyData = Ssl::SquidVerifyData::SessionData(session);
+    assert(verifyData);
+    if (!verifyData->isSet(Ssl::SquidVerifyData::fMissingIssuer))
         return false;
-
-    // Issuer certificate is missing. We need to download issuer certificate
-    // and re-validate
-    SSL_set_ex_data(session.get(), ssl_ex_index_cert_ignore_issuer, (void *)0x00);
 
     // Check for nested SSL certificates downloads. For example when the
     // certificate located in an SSL site which requires to download a
