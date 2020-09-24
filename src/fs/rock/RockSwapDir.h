@@ -17,6 +17,7 @@
 #include "ipc/mem/PageStack.h"
 #include "ipc/StoreMap.h"
 #include "store/Disk.h"
+#include "store_rebuild.h"
 #include <vector>
 
 class DiskIOStrategy;
@@ -116,8 +117,6 @@ protected:
     bool parseSizeOption(char const *option, const char *value, int reconfiguring);
     void dumpSizeOption(StoreEntry * e) const;
 
-    void rebuild(); ///< starts loading and validating stored entry metadata
-
     bool full() const; ///< no more entries can be stored without purging
     void trackReferences(StoreEntry &e); ///< add to replacement policy scope
     void ignoreReferences(StoreEntry &e); ///< delete from repl policy scope
@@ -150,22 +149,6 @@ private:
     DiskFile::Config fileConfig; ///< file-level configuration options
 
     static const int64_t HeaderSize; ///< on-disk db header size
-};
-
-/// initializes shared memory segments used by Rock::SwapDir
-class SwapDirRr: public Ipc::Mem::RegisteredRunner
-{
-public:
-    /* ::RegisteredRunner API */
-    virtual ~SwapDirRr();
-
-protected:
-    /* Ipc::Mem::RegisteredRunner API */
-    virtual void create();
-
-private:
-    std::vector<SwapDir::DirMap::Owner *> mapOwners;
-    std::vector< Ipc::Mem::Owner<Ipc::Mem::PageStack> *> freeSlotsOwners;
 };
 
 } // namespace Rock

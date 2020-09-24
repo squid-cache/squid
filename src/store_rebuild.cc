@@ -28,9 +28,10 @@
 
 static StoreRebuildData counts;
 
-static struct timeval rebuild_start;
 static void storeCleanup(void *);
 
+// TODO: Either convert to Progress or replace with StoreRebuildData.
+// TODO: Handle unknown totals (UFS cache_dir that lost swap.state) correctly.
 typedef struct {
     /* total number of "swap.state" entries that will be read */
     int total;
@@ -133,16 +134,18 @@ storeRebuildComplete(StoreRebuildData *dc)
     counts.badflags += dc->badflags;
     counts.bad_log_op += dc->bad_log_op;
     counts.zero_object_sz += dc->zero_object_sz;
+    counts.validations += dc->validations;
+    counts.updateStartTime(dc->startTime);
     /*
      * When store_dirs_rebuilding == 1, it means we are done reading
      * or scanning all cache_dirs.  Now report the stats and start
      * the validation (storeCleanup()) thread.
      */
 
-    if (StoreController::store_dirs_rebuilding > 1)
+    if (!storeRebuildUnregister())
         return;
 
-    dt = tvSubDsec(rebuild_start, current_time);
+    dt = tvSubDsec(counts.startTime, current_time);
 
     debugs(20, DBG_IMPORTANT, "Finished rebuilding storage from disk.");
     debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.scancount  << " Entries scanned");
@@ -157,11 +160,27 @@ storeRebuildComplete(StoreRebuildData *dc)
            ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
     debugs(20, DBG_IMPORTANT, "Beginning Validation Procedure");
 
-    eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
-
     xfree(RebuildProgress);
 
     RebuildProgress = NULL;
+}
+
+void
+storeRebuildRegister()
+{
+    // TODO: move store_dirs_rebuilding hack to store modules that need it.
+    ++StoreController::store_dirs_rebuilding;
+}
+
+bool
+storeRebuildUnregister()
+{
+    --StoreController::store_dirs_rebuilding;
+    assert(StoreController::store_dirs_rebuilding > 0);
+    if (StoreController::store_dirs_rebuilding > 1)
+        return false;
+    eventAdd("storeCleanup", storeCleanup, nullptr, 0.0, 1);
+    return true;
 }
 
 /*
@@ -173,7 +192,6 @@ void
 storeRebuildStart(void)
 {
     counts = StoreRebuildData(); // reset counters
-    rebuild_start = current_time;
     /*
      * Note: store_dirs_rebuilding is initialized to 1.
      *
@@ -197,6 +215,7 @@ void
 storeRebuildProgress(int sd_index, int total, int sofar)
 {
     static time_t last_report = 0;
+    // TODO: Switch to int64_t and fix handling of unknown totals.
     double n = 0.0;
     double d = 0.0;
 
@@ -221,8 +240,23 @@ storeRebuildProgress(int sd_index, int total, int sofar)
         d += (double) RebuildProgress[sd_index].total;
     }
 
-    debugs(20, DBG_IMPORTANT, "Store rebuilding is "<< std::setw(4)<< std::setprecision(2) << 100.0 * n / d << "% complete");
+    debugs(20, DBG_IMPORTANT, "Indexing cache entries: " << Progress(n, d));
     last_report = squid_curtime;
+}
+
+void
+Progress::print(std::ostream &os) const
+{
+    if (goal > 0) {
+        const auto percent = 100.0 * completed / goal;
+        os << std::setprecision(2) << percent << "% (" <<
+            completed << " out of " << goal << ")";
+    } else if (!completed && !goal) {
+        os << "nothing to do";
+    } else {
+        // unknown (i.e. negative) or buggy (i.e. zero when completed != 0) goal
+        os << completed;
+    }
 }
 
 #include "fde.h"

@@ -304,14 +304,17 @@ Rock::SwapDir::init()
         fatal("Rock Store missing a required DiskIO module");
     }
 
+    // We may decide not to rebuild, but we cannot delay storeRebuildRegister():
+    // 1. Do not register below open() to make sure this registration precedes
+    //    de-registration inside the (possibly synchronous) open() callback.
+    // 2. Do not register inside a (possibly asynchronous) callback so that when
+    //    another SwapDir finishes its rebuild while we wait,
+    //    storeRebuildComplete() does not think the rebuild is globally over!
+    storeRebuildRegister();
+
     theFile = io->newFile(filePath);
     theFile->configure(fileConfig);
     theFile->open(O_RDWR, 0644, this);
-
-    // Increment early. Otherwise, if one SwapDir finishes rebuild before
-    // others start, storeRebuildComplete() will think the rebuild is over!
-    // TODO: move store_dirs_rebuilding hack to store modules that need it.
-    ++StoreController::store_dirs_rebuilding;
 }
 
 bool
@@ -586,13 +589,6 @@ Rock::SwapDir::validateOptions()
     }
 }
 
-void
-Rock::SwapDir::rebuild()
-{
-    //++StoreController::store_dirs_rebuilding; // see Rock::SwapDir::init()
-    AsyncJob::Start(new Rebuild(this));
-}
-
 bool
 Rock::SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
 {
@@ -830,7 +826,8 @@ Rock::SwapDir::ioCompletedNotification()
            std::setw(7) << map->entryLimit() << " entries, and " <<
            std::setw(7) << map->sliceLimit() << " slots");
 
-    rebuild();
+    if (!Rebuild::Start(*this))
+        storeRebuildUnregister();
 }
 
 void
@@ -1121,6 +1118,23 @@ Rock::SwapDir::hasReadableEntry(const StoreEntry &e) const
 
 namespace Rock
 {
+/// initializes shared memory segments used by Rock::SwapDir
+class SwapDirRr: public Ipc::Mem::RegisteredRunner
+{
+public:
+    /* ::RegisteredRunner API */
+    virtual ~SwapDirRr();
+
+protected:
+    /* Ipc::Mem::RegisteredRunner API */
+    virtual void create();
+
+private:
+    std::vector<Ipc::Mem::Owner<Rebuild::Stats> *> rebuildStatsOwners;
+    std::vector<SwapDir::DirMap::Owner *> mapOwners;
+    std::vector< Ipc::Mem::Owner<Ipc::Mem::PageStack> *> freeSlotsOwners;
+};
+
 RunnerRegistrationEntry(SwapDirRr);
 }
 
@@ -1129,6 +1143,8 @@ void Rock::SwapDirRr::create()
     Must(mapOwners.empty() && freeSlotsOwners.empty());
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
+            rebuildStatsOwners.push_back(Rebuild::Stats::Init(*sd));
+
             const int64_t capacity = sd->slotLimitActual();
 
             SwapDir::DirMap::Owner *const mapOwner =
@@ -1151,6 +1167,7 @@ void Rock::SwapDirRr::create()
 Rock::SwapDirRr::~SwapDirRr()
 {
     for (size_t i = 0; i < mapOwners.size(); ++i) {
+        delete rebuildStatsOwners[i];
         delete mapOwners[i];
         delete freeSlotsOwners[i];
     }
