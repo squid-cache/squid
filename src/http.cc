@@ -1124,10 +1124,16 @@ HttpStateData::statusIfComplete() const
         return COMPLETE_NONPERSISTENT_MSG;
 
     /** \par
-     * If we didn't send a keep-alive request header, then this
+     * If we sent a Connection:close request header, then this
      * can not be a persistent connection.
      */
     if (!flags.keepalive)
+        return COMPLETE_NONPERSISTENT_MSG;
+
+    /** \par
+     * If we banned reuse, then this cannot be a persistent connection.
+     */
+    if (flags.forceClose)
         return COMPLETE_NONPERSISTENT_MSG;
 
     /** \par
@@ -2093,6 +2099,18 @@ HttpStateData::forwardUpgrade(HttpHeader &hdrOut)
          * regardless of the security implications.
          */
         hdrOut.putStr(Http::HdrType::CONNECTION, "upgrade");
+
+        // Connection:close and Connection:keepalive confuse some Upgrade
+        // recipients, so we do not send those headers. Our Upgrade request
+        // implicitly offers connection persistency per HTTP/1.1 defaults.
+        // Update the keepalive flag to reflect that offer.
+        // * If the server upgrades, then we would not be talking HTTP past the
+        //   HTTP 101 control message, and HTTP persistence would be irrelevant.
+        // * Otherwise, our request will contradict onoff.server_pconns=off or
+        //   other no-keepalive conditions (if any). We compensate by copying
+        //   the original no-keepalive decision now and honoring it later.
+        flags.forceClose = !flags.keepalive;
+        flags.keepalive = true; // should already be true in most cases
     }
 }
 
