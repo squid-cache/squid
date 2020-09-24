@@ -677,7 +677,12 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
         return 0;
     }
 
-    mem->clients.remove(sc);
+    const auto found = std::find_if(mem->clients.begin(), mem->clients.end(), [](const store_clientPointer &x)->bool { return !x; });
+    if (found == mem->clients.end()) {
+        debugs(90, 3, "storeUnregister: Consistency failure - store client being unregistered is not in the mem object's list for '" << e->getMD5Text() << "'");
+        return 0;
+    }
+    mem->clients.erase(found);
 
     const auto swapoutFinished = e->swappedOut() || e->swapoutFailed();
     if (e->store_status == STORE_OK && !swapoutFinished)
