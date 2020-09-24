@@ -2012,10 +2012,11 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         delete cc;
     }
 
-    // Always send Connection because HTTP/1.0 servers need explicit "keep-alive"
-    // while HTTP/1.1 servers need explicit "close", and we do not always know
-    // the server expectations.
-    hdr_out->putStr(Http::HdrType::CONNECTION, flags.keepalive ? "keep-alive" : "close");
+    // Always send Connection because HTTP/1.0 servers need explicit
+    // "keep-alive", HTTP/1.1 servers need explicit "close", Upgrade recipients
+    // need bare "upgrade", and we do not always know the server expectations.
+    if (!hdr_out->has(Http::HdrType::CONNECTION)) // forwardUpgrade() may add it
+        hdr_out->putStr(Http::HdrType::CONNECTION, flags.keepalive ? "keep-alive" : "close");
 
     /* append Front-End-Https */
     if (flags.front_end_https) {
@@ -2327,7 +2328,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     /* build and pack headers */
     {
         HttpHeader hdr(hoRequest);
-        forwardUpgrade(hdr);
+        forwardUpgrade(hdr); // before httpBuildRequestHeader() for CONNECTION
         httpBuildRequestHeader(request.getRaw(), entry, fwd->al, &hdr, flags);
 
         if (request->flags.pinned && request->flags.connectionAuth)
