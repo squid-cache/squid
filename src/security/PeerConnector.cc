@@ -216,27 +216,9 @@ bool
 Security::PeerConnector::sslFinalized()
 {
 #if USE_OPENSSL
-    const int fd = serverConnection()->fd;
-    Security::SessionPointer session(fd_table[fd].ssl);
-
-    auto issuerError =  SSL_get_ex_data(session.get(), ssl_ex_index_cert_ignore_issuer);
-    if (issuerError && issuerError == (void *)0x2) {
-        // Issuer certificate is missing. We need to download issuer certificate
-        // and re-validate
-        SSL_set_ex_data(session.get(), ssl_ex_index_cert_ignore_issuer, (void *)0x03);
-        if (checkForMissingCertificates())
-            return false;
-    }
-
-    if (issuerError && issuerError == (void *)0x3) {
-        SSL_set_ex_data(session.get(), ssl_ex_index_cert_ignore_issuer, static_cast<void *>(0x0));
-        if (!Ssl::PeerCertificatesVerify(session, downloadedCerts)) {
-            noteNegotiationError(SSL_ERROR_SSL, 0, 0);
-            return false;
-        }
-    }
-
     if (Ssl::TheConfig.ssl_crt_validator && useCertValidator_) {
+        const int fd = serverConnection()->fd;
+        Security::SessionPointer session(fd_table[fd].ssl);
         Ssl::CertValidationRequest validationRequest;
         // WARNING: Currently we do not use any locking for 'errors' member
         // of the Ssl::CertValidationRequest class. In this code the
@@ -413,6 +395,14 @@ Security::PeerConnector::handleNegotiateError(const int ret)
         return;
 
     case SSL_ERROR_WANT_WRITE:
+        if (needsValidationCallouts()) {
+            typedef NullaryMemFunT<Security::PeerConnector> cbDialer;
+            AsyncCall::Pointer resumeCall = JobCallback(83, 5,
+                                            cbDialer, this,
+                                            Security::PeerConnector::noteWantWrite);
+            suspendNegotiation(resumeCall);
+        }
+
         noteWantWrite();
         return;
 
@@ -658,6 +648,8 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     ++certsDownloads;
     debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
 
+    Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
+
     // Parse Certificate. Assume that it is in DER format.
     // According to RFC 4325:
     //  The server must provide a DER encoded certificate or a collection
@@ -670,7 +662,6 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         char buffer[1024];
         debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
         ContextPointer ctx(getTlsContext());
-        Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
         const STACK_OF(X509) *certsList = SSL_get_peer_cert_chain(session.get());
         if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert, certsList, ctx)) {
             urlsOfMissingCerts.push(SBuf(issuerUri));
@@ -689,13 +680,28 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         return;
     }
 
-    if (sslFinalized())
-        sendSuccess();
+    if (!Ssl::PeerCertificatesVerify(session, downloadedCerts)) {
+        noteNegotiationError(SSL_ERROR_SSL, 0, 0);
+        return;
+    }
+
+    resumeNegotiation();
 }
 
 bool
 Security::PeerConnector::checkForMissingCertificates()
 {
+    const int fd = serverConnection()->fd;
+    Security::SessionPointer session(fd_table[fd].ssl);
+
+    auto issuerError =  SSL_get_ex_data(session.get(), ssl_ex_index_cert_ignore_issuer);
+    if (!issuerError || issuerError != (void *)0x2)
+        return false;
+
+    // Issuer certificate is missing. We need to download issuer certificate
+    // and re-validate
+    SSL_set_ex_data(session.get(), ssl_ex_index_cert_ignore_issuer, (void *)0x00);
+
     // Check for nested SSL certificates downloads. For example when the
     // certificate located in an SSL site which requires to download a
     // a missing certificate (... from an SSL site which requires to ...).
@@ -704,8 +710,6 @@ Security::PeerConnector::checkForMissingCertificates()
     if (csd && csd->nestedLevel() >= MaxNestedDownloads)
         return false;
 
-    const int fd = serverConnection()->fd;
-    Security::SessionPointer session(fd_table[fd].ssl);
     if (const STACK_OF(X509) *certs = SSL_get_peer_cert_chain(session.get())) {
         debugs(83, 5, "SSL server sent " << sk_X509_num(certs) << " certificates");
         ContextPointer ctx(getTlsContext());
@@ -719,5 +723,33 @@ Security::PeerConnector::checkForMissingCertificates()
 
     return false;
 }
+
+bool
+Security::PeerConnector::needsValidationCallouts()
+{
+    if (checkForMissingCertificates())
+        return true;
+
+    // TODO: Move here the certificate validator code from sslFinalized()
+
+    return false;
+}
+
+void
+Security::PeerConnector::suspendNegotiation(const AsyncCall::Pointer &resumeCallback)
+{
+    resumeNegotiationCall = resumeCallback;
+}
+
+void
+Security::PeerConnector::resumeNegotiation()
+{
+    if (resumeNegotiationCall) {
+        //resumeNegotiationCall.make()
+        ScheduleCallHere(resumeNegotiationCall);
+        resumeNegotiationCall = nullptr;
+    }
+}
+
 #endif //USE_OPENSSL
 

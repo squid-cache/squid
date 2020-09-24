@@ -20,6 +20,17 @@ namespace Ssl
 class PeekingPeerConnector: public Security::PeerConnector {
     CBDATA_CLASS(PeekingPeerConnector);
 public:
+
+    /// Used to hold parameters for suspending and calling later the
+    /// Ssl::PeekingPeerConnector::noteNegotiationError call.
+    class NegotiationErrorDetails {
+    public:
+        NegotiationErrorDetails(int ioret, int an_ssl_error, int an_ssl_lib_error): sslIoResult(ioret), ssl_error(an_ssl_error), ssl_lib_error(an_ssl_lib_error) {}
+        int sslIoResult; ///< return value from an OpenSSL IO function (eg SSL_connect)
+        int ssl_error; ///< an error retrieved from SSL_get_error
+        int ssl_lib_error; ///< OpenSSL library error
+    };
+
     PeekingPeerConnector(HttpRequestPointer &aRequest,
                          const Comm::ConnectionPointer &aServerConn,
                          const Comm::ConnectionPointer &aClientConn,
@@ -71,6 +82,9 @@ public:
 
 private:
 
+    /// Resumes the noteNegotiationError call after a suspend
+    void resumeNegotiationError(NegotiationErrorDetails params);
+
     /// Inform caller class that the SSL negotiation aborted
     void tunnelInsteadOfNegotiating();
 
@@ -79,6 +93,11 @@ private:
     bool splice; ///< whether we are going to splice or not
     bool serverCertificateHandled; ///< whether handleServerCertificate() succeeded
 };
+
+inline std::ostream &operator <<(std::ostream &os, const Ssl::PeekingPeerConnector::NegotiationErrorDetails &holder)
+{
+    return os << "[" << holder.sslIoResult << ", " << holder.ssl_error << ", " << holder.ssl_lib_error << "]";
+}
 
 } // namespace Ssl
 

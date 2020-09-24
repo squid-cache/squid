@@ -101,6 +101,15 @@ protected:
     void noteWantRead();
 
 #if USE_OPENSSL
+    /// Suspends TLS negotiation to execute various required jobs,
+    /// eg download missing certificates (XXX: or call certificate
+    /// validator helper)
+    /// \param resumeCallback callback to resume negotiation if no error
+    void suspendNegotiation(const AsyncCall::Pointer &resumeCallback);
+
+    /// Resumes TLS negotiation
+    void resumeNegotiation();
+
     /// Run the certificates list sent by the SSL server and check if there
     /// are missing certificates. Adds to the urlOfMissingCerts list the
     /// URLS of missing certificates if this information provided by the
@@ -112,6 +121,13 @@ protected:
 
     /// Called by Downloader after a certificate object downloaded.
     void certDownloadingDone(SBuf &object, int status);
+
+    /// Called while TLS negotiated before the squid-client sends
+    /// the final TLS negotiation messages to the server (eg keys
+    /// and client finished messages) to initiate required callouts
+    /// to external resources (eg downloads missing certificates)
+    /// \return true if required callouts to external resources
+    bool needsValidationCallouts();
 #endif
 
     /// Called when the openSSL SSL_connect function needs to write data to
@@ -186,7 +202,13 @@ private:
     /// The list of URLs where missing certificates should be downloaded.
     std::queue<SBuf> urlsOfMissingCerts;
     unsigned int certsDownloads; ///< the number of downloaded missing certificates
+
+#if USE_OPENSSL
     Ssl::X509_STACK_Pointer downloadedCerts;
+
+    /// AsyncCall to resume negotiation after a suspendNegotiation call.
+    AsyncCall::Pointer resumeNegotiationCall;
+#endif
 };
 
 } // namespace Security
