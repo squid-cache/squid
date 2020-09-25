@@ -565,6 +565,7 @@ neighbors_init(void)
         for (thisPeer = Config.peers; thisPeer; thisPeer = next) {
             next = thisPeer->next;
 
+            // XXX: use strcasecmp() instead
             if (0 != strcmp(thisPeer->host, me))
                 continue;
 
