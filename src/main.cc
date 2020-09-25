@@ -173,6 +173,7 @@ static void sendSignal(void);
 static void serverConnectionsOpen(void);
 static void serverConnectionsClose(void);
 static void listeningPortsOpen();
+static void startWorkerServices();
 static void watch_child(const CommandLine &);
 static void setEffectiveUser(void);
 static void SquidShutdown(void);
@@ -820,26 +821,29 @@ static void
 serverConnectionsOpen(void)
 {
     if (opt_foreground_rebuild && Store::Controller::store_dirs_rebuilding) {
-        if (IamWorkerProcess())
+        if (IamPrimaryProcess() || IamWorkerProcess())
             debugs(1, DBG_IMPORTANT, "Will wait for Store indexing completion before opening listening sockets");
-    } else {
-        listeningPortsOpen();
+        return;
     }
 
-    // start various proxying services if we are responsible for them
-    if (IamWorkerProcess()) {
-        icmpEngine.Open();
-        netdbInit();
-        asnInit();
-        ACL::Initialize();
-        peerSelectInit();
+    listeningPortsOpen();
+}
 
-        carpInit();
+static void
+startWorkerServices()
+{
+    assert(IamWorkerProcess());
+
+    icmpEngine.Open();
+    netdbInit();
+    asnInit();
+    ACL::Initialize();
+    peerSelectInit();
+    carpInit();
 #if USE_AUTH
-        peerUserHashInit();
+    peerUserHashInit();
 #endif
-        peerSourceHashInit();
-    }
+    peerSourceHashInit();
 }
 
 static void
@@ -866,6 +870,8 @@ listeningPortsOpen()
         snmpOpenPorts();
 #endif
     }
+
+    neighbors_init();
 }
 
 static void
@@ -1029,9 +1035,10 @@ mainReconfigureFinish(void *)
 #endif
     }
 
-    serverConnectionsOpen();
+    if (IamWorkerProcess())
+        startWorkerServices();
 
-    neighbors_init();
+    serverConnectionsOpen();
 
     storeDirOpenSwapLogs();
 
@@ -1287,9 +1294,10 @@ mainInitialize(void)
 #endif
     }
 
-    serverConnectionsOpen();
+    if (IamWorkerProcess())
+        startWorkerServices();
 
-    neighbors_init();
+    serverConnectionsOpen();
 
     // neighborsRegisterWithCacheManager(); //moved to neighbors_init()
 
