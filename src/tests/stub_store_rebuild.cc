@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "MemBuf.h"
+#include "SquidTime.h"
 #include "store/Controller.h"
 #include "store_rebuild.h"
 
@@ -21,8 +22,20 @@
 void storeRebuildProgress(int sd_index, int total, int sofar) STUB
 bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, StoreRebuildData &, uint64_t) STUB_RETVAL(false)
 
+void storeRebuildRegister()
+{
+    ++StoreController::store_dirs_rebuilding;
+}
+
+bool storeRebuildUnregister()
+{
+    --StoreController::store_dirs_rebuilding;
+    return true;
+}
+
 void storeRebuildComplete(StoreRebuildData *)
 {
+    storeRebuildUnregister();
     --StoreController::store_dirs_rebuilding;
 }
 
@@ -38,4 +51,6 @@ storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData &)
     buf.appended(buf.spaceSize());
     return true;
 }
+
+void Progress::print(std::ostream &) const STUB
 

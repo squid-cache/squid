@@ -19,7 +19,6 @@
 #include "fs/rock/RockHeaderUpdater.h"
 #include "fs/rock/RockIoRequests.h"
 #include "fs/rock/RockIoState.h"
-#include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
 #include "ipc/mem/Pages.h"
@@ -1118,22 +1117,6 @@ Rock::SwapDir::hasReadableEntry(const StoreEntry &e) const
 
 namespace Rock
 {
-/// initializes shared memory segments used by Rock::SwapDir
-class SwapDirRr: public Ipc::Mem::RegisteredRunner
-{
-public:
-    /* ::RegisteredRunner API */
-    virtual ~SwapDirRr();
-
-protected:
-    /* Ipc::Mem::RegisteredRunner API */
-    virtual void create();
-
-private:
-    std::vector<Ipc::Mem::Owner<Rebuild::Stats> *> rebuildStatsOwners;
-    std::vector<SwapDir::DirMap::Owner *> mapOwners;
-    std::vector< Ipc::Mem::Owner<Ipc::Mem::PageStack> *> freeSlotsOwners;
-};
 
 RunnerRegistrationEntry(SwapDirRr);
 }

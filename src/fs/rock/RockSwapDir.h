@@ -13,6 +13,7 @@
 #include "DiskIO/IORequestor.h"
 #include "fs/rock/forward.h"
 #include "fs/rock/RockDbCell.h"
+#include "fs/rock/RockRebuild.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
 #include "ipc/StoreMap.h"
@@ -149,6 +150,23 @@ private:
     DiskFile::Config fileConfig; ///< file-level configuration options
 
     static const int64_t HeaderSize; ///< on-disk db header size
+};
+
+/// initializes shared memory segments used by Rock::SwapDir
+class SwapDirRr: public Ipc::Mem::RegisteredRunner
+{
+public:
+    /* ::RegisteredRunner API */
+    virtual ~SwapDirRr();
+
+protected:
+    /* Ipc::Mem::RegisteredRunner API */
+    virtual void create();
+
+private:
+    std::vector<Ipc::Mem::Owner<Rebuild::Stats> *> rebuildStatsOwners;
+    std::vector<SwapDir::DirMap::Owner *> mapOwners;
+    std::vector< Ipc::Mem::Owner<Ipc::Mem::PageStack> *> freeSlotsOwners;
 };
 
 } // namespace Rock
