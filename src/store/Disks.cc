@@ -270,7 +270,7 @@ Store::Disks::init()
                               store_hash_buckets, storeKeyHashHash);
 
     // Increment _before_ any possible storeRebuildComplete() calls so that
-    // storeRebuildComplete() can reliably detect when everybody is done. The
+    // storeRebuildComplete() can reliably detect when all disks are done. The
     // level is decremented in each corresponding storeRebuildComplete() call.
     StoreController::store_dirs_rebuilding += Config.cacheSwap.n_configured;
 

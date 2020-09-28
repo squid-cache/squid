@@ -25,8 +25,8 @@ public:
     /// whether we have worked on indexing this(these) cache_dir(s) before
     bool started() const { return startTime.tv_sec > 0; }
 
-    // when adding members, keep the class remains compatible with placement new
-    // onto a zeroed shared memory segment (see Rock::Rebuild::Stats usage)
+    // when adding members, keep the class compatible with placement new onto a
+    // zeroed shared memory segment (see Rock::Rebuild::Stats usage)
 
     int objcount = 0;       /* # objects successfully reloaded */
     int expcount = 0;       /* # objects expired */
@@ -39,7 +39,7 @@ public:
     int bad_log_op = 0;
     int zero_object_sz = 0;
     int64_t validations = 0; ///< the number of validated cache entries, slots
-    timeval startTime = {}; ///< when the rebuild has started
+    timeval startTime = {}; ///< absolute time when the rebuild was initiated
 };
 
 /// advancement of work that consists of (usually known number) of similar steps
