@@ -41,6 +41,12 @@ typedef struct {
 
 static store_rebuild_progress *RebuildProgress = NULL;
 
+void
+StoreRebuildData::updateStartTime(const timeval &dirStartTime)
+{
+    startTime = started() ? std::min(startTime, dirStartTime) : dirStartTime;
+}
+
 static int
 storeCleanupDoubleCheck(StoreEntry * e)
 {

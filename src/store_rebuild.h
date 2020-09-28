@@ -15,12 +15,14 @@
 
 class MemBuf;
 
-/// a single cache_dir indexing statistics
+/// cache_dir(s) indexing statistics
 class StoreRebuildData
 {
 public:
-    void updateStartTime(const timeval &newTime) { startTime = started() ? std::min(startTime, newTime) : newTime; }
+    /// maintain earliest initiation time across multiple indexing cache_dirs
+    void updateStartTime(const timeval &dirStartTime);
 
+    /// whether we have worked on indexing this(these) cache_dir(s) before
     bool started() const { return startTime.tv_sec > 0; }
 
     // when adding members, keep the class remains compatible with placement new

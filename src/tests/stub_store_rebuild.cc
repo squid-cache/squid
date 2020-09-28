@@ -22,6 +22,11 @@
 void storeRebuildProgress(int sd_index, int total, int sofar) STUB
 bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, StoreRebuildData &, uint64_t) STUB_RETVAL(false)
 
+void StoreRebuildData::updateStartTime(const timeval &dirStartTime)
+{
+    startTime = started() ? std::min(startTime, dirStartTime) : dirStartTime;
+}
+
 void storeRebuildComplete(StoreRebuildData *)
 {
     --StoreController::store_dirs_rebuilding;
