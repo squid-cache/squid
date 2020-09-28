@@ -63,10 +63,6 @@ operator <<(std::ostream &os, const Progress &p)
 
 void storeRebuildStart(void);
 void storeRebuildComplete(StoreRebuildData *);
-/// starts a directory tracking as being built
-void storeRebuildRegister();
-/// stops a directory tracking as being built
-bool storeRebuildUnregister();
 void storeRebuildProgress(int sd_index, int total, int sofar);
 
 /// loads entry from disk; fills supplied memory buffer on success

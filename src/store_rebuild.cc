@@ -123,29 +123,35 @@ void
 
 storeRebuildComplete(StoreRebuildData *dc)
 {
-    double dt;
-    counts.objcount += dc->objcount;
-    counts.expcount += dc->expcount;
-    counts.scancount += dc->scancount;
-    counts.clashcount += dc->clashcount;
-    counts.dupcount += dc->dupcount;
-    counts.cancelcount += dc->cancelcount;
-    counts.invalid += dc->invalid;
-    counts.badflags += dc->badflags;
-    counts.bad_log_op += dc->bad_log_op;
-    counts.zero_object_sz += dc->zero_object_sz;
-    counts.validations += dc->validations;
-    counts.updateStartTime(dc->startTime);
+    if (dc) {
+        counts.objcount += dc->objcount;
+        counts.expcount += dc->expcount;
+        counts.scancount += dc->scancount;
+        counts.clashcount += dc->clashcount;
+        counts.dupcount += dc->dupcount;
+        counts.cancelcount += dc->cancelcount;
+        counts.invalid += dc->invalid;
+        counts.badflags += dc->badflags;
+        counts.bad_log_op += dc->bad_log_op;
+        counts.zero_object_sz += dc->zero_object_sz;
+        counts.validations += dc->validations;
+        counts.updateStartTime(dc->startTime);
+    }
+    // else the caller was not responsible for indexing its cache_dir
+
+    assert(StoreController::store_dirs_rebuilding > 1);
+    --StoreController::store_dirs_rebuilding;
+
     /*
      * When store_dirs_rebuilding == 1, it means we are done reading
      * or scanning all cache_dirs.  Now report the stats and start
      * the validation (storeCleanup()) thread.
      */
 
-    if (!storeRebuildUnregister())
+    if (StoreController::store_dirs_rebuilding > 1)
         return;
 
-    dt = tvSubDsec(counts.startTime, current_time);
+    const auto dt = tvSubDsec(counts.startTime, current_time);
 
     debugs(20, DBG_IMPORTANT, "Finished rebuilding storage from disk.");
     debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.scancount  << " Entries scanned");
@@ -160,27 +166,11 @@ storeRebuildComplete(StoreRebuildData *dc)
            ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
     debugs(20, DBG_IMPORTANT, "Beginning Validation Procedure");
 
+    eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
+
     xfree(RebuildProgress);
 
     RebuildProgress = NULL;
-}
-
-void
-storeRebuildRegister()
-{
-    // TODO: move store_dirs_rebuilding hack to store modules that need it.
-    ++StoreController::store_dirs_rebuilding;
-}
-
-bool
-storeRebuildUnregister()
-{
-    --StoreController::store_dirs_rebuilding;
-    assert(StoreController::store_dirs_rebuilding > 0);
-    if (StoreController::store_dirs_rebuilding > 1)
-        return false;
-    eventAdd("storeCleanup", storeCleanup, nullptr, 0.0, 1);
-    return true;
 }
 
 /*

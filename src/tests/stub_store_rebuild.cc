@@ -22,21 +22,11 @@
 void storeRebuildProgress(int sd_index, int total, int sofar) STUB
 bool storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, StoreRebuildData &, uint64_t) STUB_RETVAL(false)
 
-void storeRebuildRegister()
-{
-    ++StoreController::store_dirs_rebuilding;
-}
-
-bool storeRebuildUnregister()
-{
-    --StoreController::store_dirs_rebuilding;
-    return true;
-}
-
 void storeRebuildComplete(StoreRebuildData *)
 {
-    storeRebuildUnregister();
     --StoreController::store_dirs_rebuilding;
+    if (StoreController::store_dirs_rebuilding == 1)
+        --StoreController::store_dirs_rebuilding; // normally in storeCleanup()
 }
 
 bool

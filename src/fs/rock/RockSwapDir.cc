@@ -303,14 +303,6 @@ Rock::SwapDir::init()
         fatal("Rock Store missing a required DiskIO module");
     }
 
-    // We may decide not to rebuild, but we cannot delay storeRebuildRegister():
-    // 1. Do not register below open() to make sure this registration precedes
-    //    de-registration inside the (possibly synchronous) open() callback.
-    // 2. Do not register inside a (possibly asynchronous) callback so that when
-    //    another SwapDir finishes its rebuild while we wait,
-    //    storeRebuildComplete() does not think the rebuild is globally over!
-    storeRebuildRegister();
-
     theFile = io->newFile(filePath);
     theFile->configure(fileConfig);
     theFile->open(O_RDWR, 0644, this);
@@ -826,7 +818,7 @@ Rock::SwapDir::ioCompletedNotification()
            std::setw(7) << map->sliceLimit() << " slots");
 
     if (!Rebuild::Start(*this))
-        storeRebuildUnregister();
+        storeRebuildComplete(nullptr);
 }
 
 void

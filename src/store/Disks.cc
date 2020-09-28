@@ -16,6 +16,7 @@
 #include "Store.h"
 #include "store/Disk.h"
 #include "store/Disks.h"
+#include "store_rebuild.h"
 #include "swap_log_op.h"
 #include "util.h" // for tvSubDsec() which should be in SquidTime.h
 
@@ -268,6 +269,11 @@ Store::Disks::init()
     store_table = hash_create(storeKeyHashCmp,
                               store_hash_buckets, storeKeyHashHash);
 
+    // Increment _before_ any possible storeRebuildComplete() calls so that
+    // storeRebuildComplete() can reliably detect when everybody is done. The
+    // level is decremented in each corresponding storeRebuildComplete() call.
+    StoreController::store_dirs_rebuilding += Config.cacheSwap.n_configured;
+
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         /* this starts a search of the store dirs, loading their
          * index. under the new Store api this should be
@@ -285,6 +291,8 @@ Store::Disks::init()
          */
         if (Dir(i).active())
             store(i)->init();
+        else
+            storeRebuildComplete(nullptr);
     }
 
     if (strcasecmp(Config.store_dir_select_algorithm, "round-robin") == 0) {
