@@ -111,6 +111,8 @@ Fs::Ufs::RebuildState::rebuildStep()
     // (and, hence, minimize overheads and total rebuild time) with a
     // requirement to also process Coordinator events, disk I/Os, etc.
     const int maxSpentMsec = 50; // keep small: most RAM I/Os are under 1ms
+    const int ForegroundMsec = 1000; // will react to signals within this interval
+    const int pausingMsec = opt_foreground_rebuild ? ForegroundMsec : maxSpentMsec;
     const timeval loopStart = current_time;
 
     const int totalEntries = LogParser ? LogParser->SwapLogEntries() : -1;
@@ -128,14 +130,7 @@ Fs::Ufs::RebuildState::rebuildStep()
         getCurrentTime();
         const double elapsedMsec = tvSubMsec(loopStart, current_time);
 
-        if (opt_foreground_rebuild) {
-            static const int ForegroundMsec = 1000; // will react to signals within this interval
-            if (elapsedMsec <= ForegroundMsec)
-                continue; // skip "few entries at a time" check below
-            break;
-        }
-
-        if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
+        if (elapsedMsec > pausingMsec || elapsedMsec < 0) {
             debugs(47, 5, HERE << "pausing after " << n_read << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/n_read) << "ms per entry");
             break;

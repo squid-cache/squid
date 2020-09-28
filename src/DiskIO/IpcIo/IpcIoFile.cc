@@ -150,6 +150,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
             ann.pack(message);
             SendMessage(Ipc::Port::CoordinatorAddr(), message);
         }
+        // else see Rock::Rebuild::swanSong()
 
         ioRequestor->ioCompletedNotification();
         return;

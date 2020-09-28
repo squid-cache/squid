@@ -330,6 +330,8 @@ Rock::Rebuild::loadingSteps()
 
     const timeval loopStart = current_time;
 
+    const auto pausingMsec = opt_foreground_rebuild ? ForegroundNotificationMsec : MaxSpentMsec;
+
     int loaded = 0;
     while (!doneLoading()) {
         loadOneSlot();
@@ -343,17 +345,11 @@ Rock::Rebuild::loadingSteps()
         getCurrentTime();
         const double elapsedMsec = tvSubMsec(loopStart, current_time);
 
-        if (opt_foreground_rebuild) {
-            if (elapsedMsec <= ForegroundNotificationMsec)
-                continue; // skip "few entries at a time" check below
-            if (UsingSmp())
-                notifyCoordinator();
-            break;
-        }
-
-        if (elapsedMsec > MaxSpentMsec || elapsedMsec < 0) {
+        if (elapsedMsec > pausingMsec || elapsedMsec < 0) {
             debugs(47, 5, HERE << "pausing after " << loaded << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/loaded) << "ms per entry");
+            if (opt_foreground_rebuild && UsingSmp())
+                notifyCoordinator();
             break;
         }
     }
