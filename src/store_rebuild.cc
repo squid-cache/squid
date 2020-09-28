@@ -113,6 +113,8 @@ storeCleanup(void *)
         if (store_digest)
             storeDigestNoteStoreReady();
 
+        RunRegisteredHere(RegisteredRunner::endingStoreRebuild);
+
         currentSearch = NULL;
     } else
         eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
@@ -163,8 +165,6 @@ storeRebuildComplete(StoreRebuildData *dc)
     xfree(RebuildProgress);
 
     RebuildProgress = NULL;
-
-    RunRegisteredHere(RegisteredRunner::endingStoreRebuild);
 }
 
 /*

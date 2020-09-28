@@ -25,6 +25,7 @@
 #include "security/BlindPeerConnector.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
+#include "store/Controller.h"
 
 CBDATA_CLASS_INIT(PeerPoolMgr);
 
@@ -268,15 +269,22 @@ class PeerPoolMgrsRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useConfig() { syncConfig(); }
-    virtual void syncConfig();
+    virtual void useConfig() { configure(); }
+    virtual void syncConfig() { configure(); }
+    virtual void endingStoreRebuild() { if (opt_foreground_rebuild) configure(); }
+
+private:
+    void configure();
 };
 
 RunnerRegistrationEntry(PeerPoolMgrsRr);
 
 void
-PeerPoolMgrsRr::syncConfig()
+PeerPoolMgrsRr::configure()
 {
+    if (Store::Controller::StoreForegroundRebuilding())
+        return; // postpone until endingStoreRebuild()
+
     for (CachePeer *p = Config.peers; p; p = p->next) {
         // On reconfigure, Squid deletes the old config (and old peers in it),
         // so should always be dealing with a brand new configuration.

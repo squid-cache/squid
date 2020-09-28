@@ -820,7 +820,7 @@ sig_child(int sig)
 static void
 serverConnectionsOpen(void)
 {
-    if (opt_foreground_rebuild && Store::Controller::store_dirs_rebuilding) {
+    if (Store::Controller::StoreForegroundRebuilding()) {
         if (IamPrimaryProcess() || IamWorkerProcess())
             debugs(1, DBG_IMPORTANT, "Will wait for Store indexing completion before opening listening sockets");
         return;
