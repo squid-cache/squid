@@ -6354,8 +6354,40 @@ TYPE: b_int64_t
 LOC: Config.readAheadGap
 DEFAULT: 16 KB
 DOC_START
-	The amount of data the cache will buffer ahead of what has been
-	sent to the client when retrieving an object from another server.
+	In many cases, Squid may read more response body data from the server
+	than the existing clients are ready to receive. This directive limits
+	the number of not-yet-sent-to-clients response body bytes "preloaded"
+	by Squid. The details depend on the transaction circumstances:
+
+	* If the response is being cached in a non-shared memory cache, then
+	  this directive only limits how aggressively Squid fills that memory
+	  cache storage ahead of the memory-reading clients. The directive
+	  does not limit how much data gets cached at the end: The cache entry
+	  grows and the whole response should be eventually stored in memory.
+
+	* Otherwise, the response body bytes are kept in a temporary buffer.
+	  As client(s) receive the bytes they need, Squid should be removing
+	  content from that buffer (possibly moving it to a disk or shared
+	  memory cache). This directive limits the maximum number of the
+	  response body bytes kept in that temporary buffer.
+
+	In either case, Squid counts the current "read ahead" gap as the
+	distance between the smallest-offset byte to be sent to memory-reading
+	clients and the last byte received from the server. Squid suspends
+	reading from the server when the current gap reaches the configured
+	value. This gap size calculation has several known side effects:
+
+	* A single slow (or late-to-arrive) memory-reading client may create a
+	  gap that matches or exceeds the configured limit, blocking network
+	  reads and stalling concurrent cache hits that use the same buffer
+	  (until that client catches up with the others).
+
+	* Without any memory-reading clients, the gap size is considered to be
+	  zero, and the directive just limits individual network read sizes.
+	  If the response is still being received for disk-caching purposes, a
+	  combination of a fast server and slow disk may eat a lot of memory.
+
+	Squid ignores this directive when reading response headers.
 DOC_END
 
 NAME: negative_ttl
