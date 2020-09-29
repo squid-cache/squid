@@ -467,10 +467,10 @@ IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
 }
 
 void
-IpcIoFile::HandleOpenPauseResponse()
+IpcIoFile::HandleOpenPauseResponse(const Ipc::TypedMsgHdr &msg)
 {
     assert(opt_foreground_rebuild);
-    debugs(47, 7, "disker(s) foreground rebuild is still in progress, re-scheduling open timeout(s)");
+    debugs(47, 7, "disker" << msg.getInt() << " foreground rebuild is still in progress");
     for (auto i = WaitingForOpen.begin(); i != WaitingForOpen.end(); ++i) {
         eventDelete(&IpcIoFile::OpenTimeout, i->getRaw());
         eventAdd("IpcIoFile::OpenTimeout", &IpcIoFile::OpenTimeout, i->getRaw(), Timeout, 0, false);

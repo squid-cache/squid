@@ -159,6 +159,7 @@ Ipc::Coordinator::handleForegroundRebuildMessage(const ForegroundRebuildMessage&
 
         Ipc::TypedMsgHdr message;
         message.setType(Ipc::mtStrandSearchPause);
+        message.putInt(msg.strand.kidId);
         SendMessage(MakeAddr(strandAddrLabel, i->requestorId), message);
     }
 }
