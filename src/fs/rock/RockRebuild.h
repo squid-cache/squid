@@ -90,7 +90,7 @@ private:
     // (and, hence, minimize overheads and total rebuild time) with a
     // requirement to also process Coordinator events, disk I/Os, etc.
     static const int MaxSpentMsec = 50; // keep small: most RAM I/Os are under 1ms
-    static const int ForegroundNotificationMsec = 1000;
+    static const int ForegroundNotificationMsec = 1000; ///< time interval to react to signals if opt_foreground_rebuild
 
     StoreRebuildData counts;
 

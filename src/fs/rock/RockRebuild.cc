@@ -447,6 +447,8 @@ Rock::Rebuild::validationSteps()
 
     const timeval loopStart = current_time;
 
+    const auto pausingMsec = opt_foreground_rebuild ? ForegroundNotificationMsec : MaxSpentMsec;
+
     int validated = 0;
     while (!doneValidating()) {
         if (validationPos < dbEntryLimit)
@@ -462,17 +464,11 @@ Rock::Rebuild::validationSteps()
         getCurrentTime();
         const double elapsedMsec = tvSubMsec(loopStart, current_time);
 
-        if (opt_foreground_rebuild) {
-            if (elapsedMsec <= ForegroundNotificationMsec)
-                continue; // skip "few entries at a time" check below
-            if (UsingSmp())
-                notifyCoordinator();
-            break;
-        }
-
-        if (elapsedMsec > MaxSpentMsec || elapsedMsec < 0) {
+        if (elapsedMsec > pausingMsec || elapsedMsec < 0) {
             debugs(47, 5, "pausing after " << validated << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/validated) << "ms per entry");
+            if (opt_foreground_rebuild && UsingSmp())
+                 notifyCoordinator();
             break;
         }
     }
