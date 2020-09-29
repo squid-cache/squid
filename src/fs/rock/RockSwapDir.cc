@@ -23,6 +23,9 @@
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
 #include "ipc/mem/Pages.h"
+#include "ipc/Port.h"
+#include "ipc/StrandCoord.h"
+#include "ipc/UdsOp.h"
 #include "MemObject.h"
 #include "Parsing.h"
 #include "SquidConfig.h"
@@ -830,7 +833,26 @@ Rock::SwapDir::ioCompletedNotification()
            std::setw(7) << map->entryLimit() << " entries, and " <<
            std::setw(7) << map->sliceLimit() << " slots");
 
+    if (!opt_foreground_rebuild && UsingSmp() && IamDiskProcess())
+        diskerReady();
+    // else postpone until Rock::Rebuild::swanSong()
+
     rebuild();
+}
+
+void
+Rock::SwapDir::diskerReady()
+{
+    debugs(47, 7, filePath);
+    assert(IamDiskProcess());
+    assert(UsingSmp());
+
+    static const auto pid = getpid();
+    Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, pid));
+    ann.strand.tag = filePath;
+    Ipc::TypedMsgHdr message;
+    ann.pack(message);
+    SendMessage(Ipc::Port::CoordinatorAddr(), message);
 }
 
 void

@@ -74,6 +74,8 @@ public:
     int64_t diskOffset(Ipc::Mem::PageId &pageId) const;
     int64_t diskOffset(int filen) const;
     void writeError(StoreIOState &sio);
+    /// called when the disker becomes ready for worker requests
+    void diskerReady();
 
     /* StoreMapCleaner API */
     virtual void noteFreeMapSlice(const Ipc::StoreMapSliceId fileno);

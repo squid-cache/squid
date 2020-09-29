@@ -112,7 +112,7 @@ Fs::Ufs::RebuildState::rebuildStep()
     // requirement to also process Coordinator events, disk I/Os, etc.
     const int maxSpentMsec = 50; // keep small: most RAM I/Os are under 1ms
     const int foregroundMsec = 1000; // will react to signals within this interval
-    const int pausingMsec = opt_foreground_rebuild ? ForegroundMsec : maxSpentMsec;
+    const auto pausingMsec = opt_foreground_rebuild ? foregroundMsec : maxSpentMsec;
     const timeval loopStart = current_time;
 
     const int totalEntries = LogParser ? LogParser->SwapLogEntries() : -1;

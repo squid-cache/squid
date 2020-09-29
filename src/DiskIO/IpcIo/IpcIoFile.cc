@@ -143,15 +143,6 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 
         queue->localRateLimit().store(config.ioRate);
 
-        if (!opt_foreground_rebuild) {
-            Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, myPid));
-            ann.strand.tag = dbName;
-            Ipc::TypedMsgHdr message;
-            ann.pack(message);
-            SendMessage(Ipc::Port::CoordinatorAddr(), message);
-        }
-        // else see Rock::Rebuild::swanSong()
-
         ioRequestor->ioCompletedNotification();
         return;
     }

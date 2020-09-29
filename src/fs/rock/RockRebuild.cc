@@ -295,6 +295,7 @@ Rock::Rebuild::doneAll() const
 void
 Rock::Rebuild::notifyCoordinator()
 {
+    debugs(47, 7, "cache_dir #" << sd->index);
     assert(opt_foreground_rebuild);
     assert(UsingSmp());
     Ipc::ForegroundRebuildMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
@@ -579,13 +580,8 @@ Rock::Rebuild::swanSong()
     --StoreController::store_dirs_rebuilding;
     storeRebuildComplete(&counts);
 
-    if (opt_foreground_rebuild && UsingSmp()) {
-        Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
-        ann.strand.tag = sd->filePath;
-        Ipc::TypedMsgHdr message;
-        ann.pack(message);
-        SendMessage(Ipc::Port::CoordinatorAddr(), message);
-    }
+    if (opt_foreground_rebuild && UsingSmp() && IamDiskProcess())
+        sd->diskerReady();
 }
 
 void
