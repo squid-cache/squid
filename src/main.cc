@@ -172,7 +172,6 @@ static void mainHandleCommandLineOption(const int optId, const char *optValue);
 static void sendSignal(void);
 static void serverConnectionsOpen(void);
 static void serverConnectionsClose(void);
-static void listeningPortsOpen();
 static void startWorkerServices();
 static void watch_child(const CommandLine &);
 static void setEffectiveUser(void);
@@ -191,7 +190,7 @@ class OpenListeningPortsRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void endingStoreRebuild() { assert(opt_foreground_rebuild); listeningPortsOpen(); }
+    virtual void endingStoreRebuild() { assert(opt_foreground_rebuild); serverConnectionsOpen(); }
 };
 
 /** temporary thunk across to the unrefactored store interface */
@@ -826,29 +825,6 @@ serverConnectionsOpen(void)
         return;
     }
 
-    listeningPortsOpen();
-}
-
-static void
-startWorkerServices()
-{
-    assert(IamWorkerProcess());
-
-    icmpEngine.Open();
-    netdbInit();
-    asnInit();
-    ACL::Initialize();
-    peerSelectInit();
-    carpInit();
-#if USE_AUTH
-    peerUserHashInit();
-#endif
-    peerSourceHashInit();
-}
-
-static void
-listeningPortsOpen()
-{
     if (IamPrimaryProcess()) {
 #if USE_WCCP
         wccpConnectionOpen();
@@ -872,6 +848,23 @@ listeningPortsOpen()
     }
 
     neighbors_init();
+}
+
+static void
+startWorkerServices()
+{
+    assert(IamWorkerProcess());
+
+    icmpEngine.Open();
+    netdbInit();
+    asnInit();
+    ACL::Initialize();
+    peerSelectInit();
+    carpInit();
+#if USE_AUTH
+    peerUserHashInit();
+#endif
+    peerSourceHashInit();
 }
 
 static void
