@@ -434,19 +434,25 @@ MemObject::isContiguous() const
 int
 MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const
 {
-    int64_t aHeadCanRead = readAheadAllowance();
-    if (!aHeadCanRead)
+    const auto bufferingAllowanceRaw = readAheadAllowance();
+    if (!bufferingAllowanceRaw)
         return 0;
 
+    // downcast: the allowance may be huge, but the caller can only handle `int`
+    const auto bufferingAllowance = static_cast<int>(std::min<int64_t>(
+        bufferingAllowanceRaw, std::numeric_limits<int>::max()));
+    assert(bufferingAllowance > 0);
+
+    auto poolingAllowance = max; // may be adjusted below
 #if USE_DELAY_POOLS
     if (!ignoreDelayPools) {
         /* identify delay id with largest allowance */
         DelayId largestAllowance = mostBytesAllowed ();
-        return largestAllowance.bytesWanted(0, max);
+        poolingAllowance = largestAllowance.bytesWanted(0, max);
     }
 #endif
 
-    return std::min(static_cast<int>(aHeadCanRead), max);
+    return std::min({bufferingAllowance, poolingAllowance, max});
 }
 
 void
