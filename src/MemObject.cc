@@ -306,19 +306,23 @@ MemObject::lowestMemReaderOffset() const
 
 /* XXX: This is wrong. It breaks *badly* on range combining */
 int64_t
-MemObject::readAheadPolicyCanRead() const
+MemObject::readAheadAllowance() const
 {
+    // XXX: Do not subtract savedHttpHeaders at all or subtract them from any
+    // non-zero offset. Just like endOffset() includes headers (after they have
+    // been stored), lowestMemReaderOffset() includes headers (after they have
+    // been received by that reader).
     const auto savedHttpHeaders = baseReply().hdr_sz;
-    const int64_t alreadyRead = endOffset() - savedHttpHeaders;
-    const int64_t maximumAllowed = lowestMemReaderOffset() + Config.readAheadGap;
-    const int64_t canRead = alreadyRead < maximumAllowed ? maximumAllowed - alreadyRead : 0;
 
-    if (!canRead) {
-        debugs(19, 5, "no: " << endOffset() << '-' << savedHttpHeaders <<
-               " < " << lowestMemReaderOffset() << '+' << Config.readAheadGap);
-    }
+    // XXX: Limit read-ahead when there is no LowestMemReader at all.
+    const auto lowestOffset = lowestMemReaderOffset();
+    const auto highestOffset = endOffset();
+    const auto currentGap = (highestOffset - savedHttpHeaders) - lowestOffset;
+    const auto allowance = Config.readAheadGap - currentGap;
 
-    return canRead;
+    debugs(19, 5, allowance << '=' << Config.readAheadGap << '-' << currentGap <<
+           "; gap=" << highestOffset << '-' << savedHttpHeaders << '-' << lowestOffset);
+    return std::max<int64_t>(0, allowance); // avoid negative results
 }
 
 void
@@ -430,7 +434,7 @@ MemObject::isContiguous() const
 int
 MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const
 {
-    int64_t aHeadCanRead = readAheadPolicyCanRead();
+    int64_t aHeadCanRead = readAheadAllowance();
     if (!aHeadCanRead)
         return 0;
 

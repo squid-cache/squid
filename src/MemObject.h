@@ -101,7 +101,15 @@ public:
     int64_t size() const;
     void reset();
     int64_t lowestMemReaderOffset() const;
-    int64_t readAheadPolicyCanRead() const;
+
+    /// weather read_ahead_gap allows reading at least one more response byte
+    bool readAheadPolicyCanRead() const { return readAheadAllowance() > 0; }
+
+    /// the maximum number of additional message body bytes the entry may buffer
+    /// while still obeying the current read_ahead_gap configuration
+    /// \returns a positive number of body bytes or zero
+    int64_t readAheadAllowance() const;
+
     void addClient(store_client *);
     /* XXX belongs in MemObject::swapout, once swaphdrsz is managed
      * better
