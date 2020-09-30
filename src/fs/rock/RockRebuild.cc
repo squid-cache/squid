@@ -391,7 +391,7 @@ Rock::Rebuild::doneValidating() const
 bool
 Rock::Rebuild::doneAll() const
 {
-    return loadedAndValidated() && AsyncJob::doneAll();
+    return doneLoading() && doneValidating() && AsyncJob::doneAll();
 }
 
 void

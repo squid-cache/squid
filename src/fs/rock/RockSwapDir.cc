@@ -1109,7 +1109,6 @@ Rock::SwapDir::hasReadableEntry(const StoreEntry &e) const
 
 namespace Rock
 {
-
 RunnerRegistrationEntry(SwapDirRr);
 }
 
