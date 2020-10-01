@@ -1554,6 +1554,7 @@ size_t
 HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
 {
     // how much we are allowed to buffer
+    // XXX: Config.readAheadGap or Config.maxReplyHeaderSize may overflow `int`
     const int limitBuffer = (flags.headers_parsed ? Config.readAheadGap : Config.maxReplyHeaderSize);
 
     if (limitBuffer >= 0 && inBuf.length() >= (SBuf::size_type)limitBuffer) {
