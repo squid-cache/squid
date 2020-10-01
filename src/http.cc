@@ -1556,7 +1556,7 @@ HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
     // how much we are allowed to buffer
     const int limitBuffer = (flags.headers_parsed ? Config.readAheadGap : Config.maxReplyHeaderSize);
 
-    if (limitBuffer < 0 || inBuf.length() >= (SBuf::size_type)limitBuffer) {
+    if (limitBuffer >= 0 && inBuf.length() >= (SBuf::size_type)limitBuffer) {
         // when buffer is at or over limit already
         debugs(11, 7, "will not read up to " << limitBuffer << ". buffer has (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
         debugs(11, DBG_DATA, "buffer has {" << inBuf << "}");
