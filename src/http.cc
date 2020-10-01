@@ -1169,17 +1169,16 @@ HttpStateData::readReply(const CommIoCbParams &io)
      */
 
     const auto readSize = maybeMakeSpaceAvailable();
-    CommIoCbParams rd(this); // will be expanded with ReadNow results
-    rd.conn = io.conn;
-    rd.size = readSize;
-
-    if (rd.size <= 0) {
+    if (readSize <= 0) {
         assert(entry->mem_obj);
         AsyncCall::Pointer nilCall;
         entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(io.conn, NULL, 0, nilCall)));
         return;
     }
 
+    CommIoCbParams rd(this); // will be expanded with ReadNow results
+    rd.conn = io.conn;
+    rd.size = readSize;
     switch (Comm::ReadNow(rd, inBuf)) {
     case Comm::INPROGRESS:
         if (inBuf.isEmpty())
