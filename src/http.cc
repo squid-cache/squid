@@ -1573,8 +1573,7 @@ HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
         return false;
     }
 
-    // just report whether we could grow or not, do not actually do it
-    if (doGrow)
+    if (!doGrow)
         return (read_size >= 2);
 
     // we may need to grow the buffer
