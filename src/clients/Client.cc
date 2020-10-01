@@ -1034,7 +1034,11 @@ Client::calcBufferSpaceToReserve(size_t space, const size_t wantSpace) const
             space = adaptor_space;
     } else
 #endif
+    {
+        // XXX: If Config.readAheadGap is smaller than Config.maxReplyHeaderSize
+        // then this may prevent the caller from accumulating the entire header.
         space = entry->bytesWanted(Range<size_t>(0, space), false);
+    }
 
     return space;
 }
