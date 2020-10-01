@@ -1168,8 +1168,9 @@ HttpStateData::readReply(const CommIoCbParams &io)
      * Plus, it breaks our lame *HalfClosed() detection
      */
 
-    const auto readSize = maybeMakeSpaceAvailable();
+    const auto readSize = maybeMakeSpaceAvailable(true);
     if (readSize <= 0) {
+        // XXX: deferring may not free any space if the header "became" too big
         assert(entry->mem_obj);
         AsyncCall::Pointer nilCall;
         entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(io.conn, NULL, 0, nilCall)));
@@ -1530,6 +1531,9 @@ HttpStateData::maybeReadVirginBody()
     if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing())
         return;
 
+    if (!maybeMakeSpaceAvailable(false))
+        return;
+
     // XXX: get rid of the do_next_read flag
     // check for the proper reasons preventing read(2)
     if (!flags.do_next_read)
@@ -1547,42 +1551,39 @@ HttpStateData::maybeReadVirginBody()
 }
 
 size_t
-HttpStateData::maybeMakeSpaceAvailable()
+HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
 {
-    const auto readBufferSize = std::max(SQUID_TCP_SO_RCVBUF, static_cast<int>(Config.maxReplyHeaderSize));
+    // how much we are allowed to buffer
+    const int limitBuffer = (flags.headers_parsed ? Config.readAheadGap : Config.maxReplyHeaderSize);
 
-    // While reading headers we are accumulating data to inBuf.
-    // While parsing body data  a small amount of data may remains in inBuf
-    // in the case of chunked responses.
-    size_t readSize = readBufferSize - inBuf.length();
-
-    // We should not be here if buffer is full:
-    //  - While we are receiving headers full buffer should result to "too big headers" error
-    //  - While we are receiving body data, the data are not flushed, so this is means we did not
-    //    correctly compute the buffer space (calcBufferSpaceToReserve method) in the previous
-    //    call of this method
-    Must(readSize);
-
-    if (flags.headers_parsed) {
-        // What we can accept in read buffer based on Config.readAheadGap value:
-        const int totalBytesCanAccept = calcBufferSpaceToReserve(inBuf.spaceSize(), readSize);
-
-        // adjust readSize on what we can accept:
-        readSize = inBuf.length() < (SBuf::size_type)totalBytesCanAccept ? totalBytesCanAccept - inBuf.length() : 0;
+    if (limitBuffer < 0 || inBuf.length() >= (SBuf::size_type)limitBuffer) {
+        // when buffer is at or over limit already
+        debugs(11, 7, "will not read up to " << limitBuffer << ". buffer has (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+        debugs(11, DBG_DATA, "buffer has {" << inBuf << "}");
+        // Process next response from buffer
+        processReply();
+        return false; // XXX: return size
     }
 
-    if (!readSize) {
-        debugs(11, 7, "will not read up to " << readSize << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
-        return 0;
+    // how much we want to read
+    const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), (limitBuffer - inBuf.length()));
+
+    if (!read_size) {
+        debugs(11, 7, "will not read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
+        return false;
     }
 
-    // May re-allocate or move existing buffer data
-    inBuf.reserveSpace(readSize);
+    // just report whether we could grow or not, do not actually do it
+    if (doGrow)
+        return (read_size >= 2);
+
+    // we may need to grow the buffer
+    inBuf.reserveSpace(read_size);
     debugs(11, 8, (!flags.do_next_read ? "will not" : "may") <<
-           " read up to " << readSize << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() <<
+           " read up to " << read_size << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() <<
            ") from " << serverConnection);
 
-    return readSize;
+    return (inBuf.spaceSize() >= 2); // only read if there is 1+ bytes of space available
 }
 
 /// called after writing the very last request byte (body, last-chunk, etc)
