@@ -6373,9 +6373,10 @@ DOC_START
 
 	In either case, Squid counts the current "read ahead" gap as the
 	distance between the smallest-offset byte to be sent to memory-reading
-	clients and the last byte received from the server. Squid suspends
-	reading from the server when the current gap reaches the configured
-	value. This gap size calculation has several known side effects:
+	clients and the last stored response byte (coming from a server or an
+	adaptation service). Squid suspends reading from the server when the
+	current gap reaches the configured value. This gap size calculation
+	has several known side effects:
 
 	* A single slow (or late-to-arrive) memory-reading client may create a
 	  gap that matches or exceeds the configured limit, blocking network
@@ -6387,7 +6388,20 @@ DOC_START
 	  If the response is still being received for disk-caching purposes, a
 	  combination of a fast server and slow disk may eat a lot of memory.
 
+	* For transactions participating in RESPMOD adaptation, Squid stores
+	  post-adaptation bytes rather than received-from-server bytes. Hence,
+	  the read-ahead gap size remains zero until the adaptation service
+	  responds, and Squid starts receiving adapted (or echoing virgin)
+	  response bytes. Until then, an internal adaptation pipeline buffer
+	  (with a hard-coded capacity limit of 64KB) serves as a read-ahead
+	  limit.
+
 	Squid ignores this directive when reading response headers.
+
+	Many other factors may reduce Squid's read-ahead aggressiveness,
+	including server bandwidth, Squid delay pools, Squid adaptation
+	pipeline buffers, adaptation service performance, and various Squid
+	internal limits.
 DOC_END
 
 NAME: negative_ttl

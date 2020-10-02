@@ -1032,7 +1032,7 @@ Client::calcBufferSpaceToReserve(size_t space, const size_t wantSpace) const
 
         if (adaptor_space < space)
             space = adaptor_space;
-    } else
+    } else // XXX: We should apply delay pool limits to for-ICAP traffic as well
 #endif
     {
         // XXX: If Config.readAheadGap is smaller than Config.maxReplyHeaderSize
