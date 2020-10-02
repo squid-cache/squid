@@ -1048,16 +1048,7 @@ clientReplyContext::purgeDoMissPurge()
 void
 clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 {
-    if (newEntry) {
-        /* Release the cached URI */
-        debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
-#if USE_HTCP
-        neighborsHtcpClear(newEntry, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
-#endif
-        newEntry->release(true);
-        purgeStatus = Http::scOkay;
-    }
-
+    purgeEntry(newEntry, Http::METHOD_GET);
     lookingforstore = 4;
     StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
 }
@@ -1065,45 +1056,20 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
 void
 clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 {
-    if (newEntry) {
-        debugs(88, 4, "HEAD " << newEntry->url());
-#if USE_HTCP
-        neighborsHtcpClear(newEntry, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
-#endif
-        newEntry->release(true);
-        purgeStatus = Http::scOkay;
-    }
+    purgeEntry(newEntry, Http::METHOD_HEAD);
 
     /* And for Vary, release the base URI if none of the headers was included in the request */
     if (!http->request->vary_headers.isEmpty()
             && http->request->vary_headers.find('=') != SBuf::npos) {
         // XXX: performance regression, c_str() reallocates
         SBuf tmp(http->request->effectiveRequestUri());
-        StoreEntry *entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET);
 
-        if (entry) {
-            debugs(88, 4, "Vary GET " << entry->url());
-#if USE_HTCP
-            neighborsHtcpClear(entry, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
-#endif
-            entry->release(true);
-            purgeStatus = Http::scOkay;
-        }
+        auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET);
+        purgeEntry(entry, Http::METHOD_GET, "Vary ");
 
         entry = storeGetPublic(tmp.c_str(), Http::METHOD_HEAD);
-
-        if (entry) {
-            debugs(88, 4, "Vary HEAD " << entry->url());
-#if USE_HTCP
-            neighborsHtcpClear(entry, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
-#endif
-            entry->release(true);
-            purgeStatus = Http::scOkay;
-        }
+        purgeEntry(entry, Http::METHOD_HEAD, "Vary ");
     }
-
-    if (purgeStatus == Http::scNone)
-        purgeStatus = Http::scNotFound;
 
     /*
      * Make a new entry to hold the reply to be written
@@ -1120,6 +1086,22 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
     rep->setHeaders(purgeStatus, NULL, NULL, 0, 0, -1);
     http->storeEntry()->replaceHttpReply(rep);
     http->storeEntry()->complete();
+}
+
+void
+clientReplyContext::purgeEntry(StoreEntry *entry, const Http::MethodType &methodType, const char *descriptionPrefix)
+{
+    if (!entry) {
+        if (purgeStatus == Http::scNone)
+            purgeStatus = Http::scNotFound;
+        return;
+    }
+    debugs(88, 4, descriptionPrefix << Http::MethodStr(methodType) << " '" << entry->url() << "'" );
+#if USE_HTCP
+    neighborsHtcpClear(entry, http->request, HttpRequestMethod(methodType), HTCP_CLR_PURGE);
+#endif
+    entry->release(true);
+    purgeStatus = Http::scOkay;
 }
 
 void
