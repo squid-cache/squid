@@ -40,8 +40,6 @@ public:
     void purgeFoundHead(StoreEntry *newEntry);
     void purgeFoundObject(StoreEntry *entry);
     void sendClientUpstreamResponse();
-    void purgeDoPurgeGet(StoreEntry *entry);
-    void purgeDoPurgeHead(StoreEntry *entry);
     void doGetMoreData();
     void identifyStoreObject();
     void identifyFoundObject(StoreEntry *entry);
@@ -129,6 +127,8 @@ private:
     void purgeAllCached();
     /// releases the cached entry
     void purgeEntry(StoreEntry *, const Http::MethodType &, const char *descriptionPrefix = "");
+    /// releases both cached GET and HEAD entries
+    void purgeDoPurge(StoreEntry *);
     void forgetHit();
     bool blockedHit() const;
     void detailStoreLookup(const char *detail);

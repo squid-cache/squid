@@ -937,9 +937,7 @@ clientReplyContext::created(StoreEntry *newEntry)
     else if (lookingforstore == 2)
         purgeFoundHead(newEntry);
     else if (lookingforstore == 3)
-        purgeDoPurgeGet(newEntry);
-    else if (lookingforstore == 4)
-        purgeDoPurgeHead(newEntry);
+        purgeDoPurge(newEntry);
     else if (lookingforstore == 5)
         identifyFoundObject(newEntry);
 }
@@ -1046,17 +1044,12 @@ clientReplyContext::purgeDoMissPurge()
 }
 
 void
-clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
+clientReplyContext::purgeDoPurge(StoreEntry *getEntry)
 {
-    purgeEntry(newEntry, Http::METHOD_GET);
-    lookingforstore = 4;
-    StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
-}
+    purgeEntry(getEntry, Http::METHOD_GET);
 
-void
-clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
-{
-    purgeEntry(newEntry, Http::METHOD_HEAD);
+    auto headEntry = storeGetPublicByRequestMethod(http->request, Http::METHOD_HEAD);
+    purgeEntry(headEntry, Http::METHOD_HEAD);
 
     /* And for Vary, release the base URI if none of the headers was included in the request */
     if (!http->request->vary_headers.isEmpty()
