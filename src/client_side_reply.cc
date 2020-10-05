@@ -1046,10 +1046,11 @@ clientReplyContext::purgeDoMissPurge()
 void
 clientReplyContext::purgeDoPurge(StoreEntry *getEntry)
 {
-    purgeEntry(getEntry, Http::METHOD_GET);
+    if (getEntry)
+        purgeEntry(getEntry, Http::METHOD_GET);
 
-    auto headEntry = storeGetPublicByRequestMethod(http->request, Http::METHOD_HEAD);
-    purgeEntry(headEntry, Http::METHOD_HEAD);
+    if (auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_HEAD))
+        purgeEntry(entry, Http::METHOD_HEAD);
 
     /* And for Vary, release the base URI if none of the headers was included in the request */
     if (!http->request->vary_headers.isEmpty()
@@ -1057,12 +1058,15 @@ clientReplyContext::purgeDoPurge(StoreEntry *getEntry)
         // XXX: performance regression, c_str() reallocates
         SBuf tmp(http->request->effectiveRequestUri());
 
-        auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET);
-        purgeEntry(entry, Http::METHOD_GET, "Vary ");
+        if (auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET))
+            purgeEntry(entry, Http::METHOD_GET, "Vary ");
 
-        entry = storeGetPublic(tmp.c_str(), Http::METHOD_HEAD);
-        purgeEntry(entry, Http::METHOD_HEAD, "Vary ");
+        if (auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_HEAD))
+            purgeEntry(entry, Http::METHOD_HEAD, "Vary ");
     }
+
+    if (purgeStatus == Http::scNone)
+        purgeStatus = Http::scNotFound;
 
     /*
      * Make a new entry to hold the reply to be written
@@ -1084,11 +1088,7 @@ clientReplyContext::purgeDoPurge(StoreEntry *getEntry)
 void
 clientReplyContext::purgeEntry(StoreEntry *entry, const Http::MethodType &methodType, const char *descriptionPrefix)
 {
-    if (!entry) {
-        if (purgeStatus == Http::scNone)
-            purgeStatus = Http::scNotFound;
-        return;
-    }
+    assert(entry);
     debugs(88, 4, descriptionPrefix << Http::MethodStr(methodType) << " '" << entry->url() << "'" );
 #if USE_HTCP
     neighborsHtcpClear(entry, http->request, HttpRequestMethod(methodType), HTCP_CLR_PURGE);
