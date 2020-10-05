@@ -1532,7 +1532,7 @@ HttpStateData::maybeReadVirginBody()
         return;
 
     if (!maybeMakeSpaceAvailable(false))
-        return;
+        return; // XXX: Missing delayRead() stalls some transactions.
 
     // XXX: get rid of the do_next_read flag
     // check for the proper reasons preventing read(2)
@@ -1579,6 +1579,8 @@ HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
 
     // we may need to grow the buffer
     inBuf.reserveSpace(read_size);
+    // XXX: It is confusing, but flags.do_next_read is always false here despite
+    // the fact that the caller will read attempt to read if it gets that far.
     debugs(11, 8, (!flags.do_next_read ? "will not" : "may") <<
            " read up to " << read_size << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() <<
            ") from " << serverConnection);
