@@ -107,6 +107,9 @@ private:
 
     void abortTransaction(const char *reason) { abortAll(reason); } // abnormal termination
 
+    // XXX: Describe or remove.
+    size_t calcBufferCapacityLimit() const;
+
     /**
      * determine if read buffer can have space made available
      * for a read.

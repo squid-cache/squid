@@ -810,6 +810,7 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_ERROR_DIR[@]%$(DEFAULT_ERROR_DIR)%g" \
 	-e "s%[@]DEFAULT_PREFIX[@]%$(DEFAULT_PREFIX)%g" \
 	-e "s%[@]DEFAULT_HOSTS[@]%$(DEFAULT_HOSTS)%g" \
+	-e "s%[@]SQUID_TCP_SO_RCVBUF[@]%$(SQUID_TCP_SO_RCVBUF)%g" \
 	-e "s%[@]SQUID[@]%SQUID\ $(VERSION)%g" \
 	-f $(srcdir)/cf.data.sed \
 	< $(srcdir)/cf.data.pre >$@

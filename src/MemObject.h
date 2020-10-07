@@ -107,8 +107,7 @@ public:
 
     /// the maximum number of additional message body bytes the entry may buffer
     /// while still obeying the current read_ahead_gap configuration
-    /// \returns a positive number of body bytes or zero
-    int64_t readAheadAllowance() const;
+    uint64_t readAheadAllowance() const;
 
     void addClient(store_client *);
     /* XXX belongs in MemObject::swapout, once swaphdrsz is managed
@@ -120,7 +119,7 @@ public:
     void trimSwappable();
     void trimUnSwappable();
     bool isContiguous() const;
-    int mostBytesWanted(int max, bool ignoreDelayPools) const;
+    size_t mostBytesWanted(size_t max, bool ignoreDelayPools) const;
     void setNoDelay(bool const newValue);
 #if USE_DELAY_POOLS
     DelayId mostBytesAllowed() const;

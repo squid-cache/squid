@@ -9108,12 +9108,25 @@ NAME: tcp_recv_bufsize
 COMMENT: (bytes)
 TYPE: b_size_t
 DEFAULT: 0 bytes
-DEFAULT_DOC: Use operating system TCP defaults.
+DEFAULT_DOC: Kernel uses its own settings. Squid uses @SQUID_TCP_SO_RCVBUF@ bytes.
 LOC: Config.tcpRcvBufsz
 DOC_START
-	Size of receive buffer to set for TCP sockets.  Probably just
-	as easy to change your kernel's default.
-	Omit from squid.conf to use the default buffer size.
+	Specifies the size of receive buffers for individual TCP sockets. Used
+	by two related sets of I/O buffers:
+
+	* Kernel buffers that accumulate incoming TCP payload (until Squid
+	  copies it from the kernel). See SO_RCVBUF in tcp(7) for details.
+	* Squid buffers that accumulate raw HTTP response bytes (copied from
+	  the kernel buffers) until Squid parses those bytes.
+
+	The configured value can be roughly interpreted as the maximum buffer
+	size, but the kernel and Squid may use larger buffers (e.g., Squid
+	buffers also reflect the reply_header_max_size limit).
+
+	Relying on defaults eliminates one setsockopt(2) system call per TCP
+	socket, but a mismatch between kernel default buffer size and Squid
+	default HTTP buffer size may increase the number of read(2) system
+	calls or waste memory.
 DOC_END
 
 COMMENT_START

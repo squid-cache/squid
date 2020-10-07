@@ -1531,8 +1531,16 @@ HttpStateData::maybeReadVirginBody()
     if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing())
         return;
 
-    if (!maybeMakeSpaceAvailable(false))
-        return; // XXX: Missing delayRead() stalls some transactions.
+    if (!maybeMakeSpaceAvailable(false)) {
+        // TODO: Remove code duplication with readReply().
+        // XXX: accessing entry->mem_obj needs more protections. See readReply()
+        // XXX: deferring may not free any space if the header "became" too big.
+        // XXX: Do not defer if maybeMakeSpaceAvailable() called processReply()?
+        assert(entry->mem_obj);
+        AsyncCall::Pointer nilCall;
+        entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(serverConnection, nullptr, 0, nilCall)));
+        return;
+    }
 
     // XXX: get rid of the do_next_read flag
     // check for the proper reasons preventing read(2)
@@ -1551,41 +1559,71 @@ HttpStateData::maybeReadVirginBody()
 }
 
 size_t
+HttpStateData::calcBufferCapacityLimit() const
+{
+    // XXX: Move to SBuf.h. This is a universally useful principle.
+    static_assert(SBuf::maxSize <= std::numeric_limits<size_t>::max(),
+        "SBuf::maxSize does not overflow size_t");
+
+    // our non-incremental parser must see the entire header to parse it
+    if (!flags.headers_parsed) {
+        // TODO: Warn about and limit Config.maxReplyHeaderSize > SBuf::maxSize.
+        return std::min<size_t>(Config.maxReplyHeaderSize, SBuf::maxSize);
+    }
+
+    const auto socketReadBufferSize =
+        Config.tcpRcvBufsz ? Config.tcpRcvBufsz : SQUID_TCP_SO_RCVBUF;
+    return std::min<size_t>(socketReadBufferSize, SBuf::maxSize);
+}
+
+size_t
 HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
 {
-    // how much we are allowed to buffer
-    // XXX: Config.readAheadGap or Config.maxReplyHeaderSize may overflow `int`
-    const int limitBuffer = (flags.headers_parsed ? Config.readAheadGap : Config.maxReplyHeaderSize);
+    // maximize space for the next read while obeying I/O buffer capacity limits
+    const auto bufferCapacityLimit = calcBufferCapacityLimit();
+    if (inBuf.length() >= bufferCapacityLimit) {
+        debugs(11, 5, "buffer full: " << inBuf.length() << " >= " << bufferCapacityLimit);
+        // The buffer might "become" full here because configurable limits have
+        // changed while we were waiting for delay pools or 1xx processing after
+        // reading some data. TODO: Find a better place to handle a full buffer.
 
-    if (limitBuffer >= 0 && inBuf.length() >= (SBuf::size_type)limitBuffer) {
-        // when buffer is at or over limit already
-        debugs(11, 7, "will not read up to " << limitBuffer << ". buffer has (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
-        debugs(11, DBG_DATA, "buffer has {" << inBuf << "}");
+        // XXX: The old comment below is a bit misleading: Squid sends no
+        // pipelined requests and, hence, expects no pipelined responses. The
+        // buffer may have pieces of (1xx commands and/or the final response).
         // Process next response from buffer
         processReply();
-        return false; // XXX: return size
+        return 0;
+    }
+    const auto bufferSpaceLimit = bufferCapacityLimit - inBuf.length();
+    debugs(11, 7, "bufferSpaceLimit: " << bufferSpaceLimit << '=' << bufferCapacityLimit << '-' << inBuf.length());
+
+    // limit incremental (i.e. from multiple reads) data accumulation in Store
+    // and ICAP pipelines while also obeying delay pools rate limits
+    const auto accumulationAllowance = calcAccumulationAllowance();
+    if (!accumulationAllowance) {
+        debugs(11, 5, "accumulated too much; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
+        return 0;
     }
 
-    // how much we want to read
-    const size_t read_size = calcBufferSpaceToReserve(inBuf.spaceSize(), (limitBuffer - inBuf.length()));
+    const auto readSize = std::min<uint64_t>(bufferSpaceLimit, accumulationAllowance);
+    assert(readSize > 0);
+    assert(readSize <= SBuf::maxSize);
 
-    if (!read_size) {
-        debugs(11, 7, "will not read up to " << read_size << " into buffer (" << inBuf.length() << "/" << inBuf.spaceSize() << ") from " << serverConnection);
-        return false;
+    // work around some delay pool implementation limitations
+    if (readSize <= 2) {
+        debugs(11, 5, "insufficient gain; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
+        return 0;
     }
 
-    if (!doGrow)
-        return (read_size >= 2);
+    if (!doGrow) {
+        debugs(11, 7, "future readSize=" << readSize << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
+        return readSize;
+    }
 
-    // we may need to grow the buffer
-    inBuf.reserveSpace(read_size);
-    // XXX: It is confusing, but flags.do_next_read is always false here despite
-    // the fact that the caller will read attempt to read if it gets that far.
-    debugs(11, 8, (!flags.do_next_read ? "will not" : "may") <<
-           " read up to " << read_size << " bytes info buf(" << inBuf.length() << "/" << inBuf.spaceSize() <<
-           ") from " << serverConnection);
-
-    return (inBuf.spaceSize() >= 2); // only read if there is 1+ bytes of space available
+    debugs(11, 5, "readSize=" << readSize << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
+    // TODO: Move to readReply(), eliminating doGrow
+    inBuf.reserveSpace(readSize);
+    return readSize;
 }
 
 /// called after writing the very last request byte (body, last-chunk, etc)

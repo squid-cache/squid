@@ -305,7 +305,7 @@ MemObject::lowestMemReaderOffset() const
 }
 
 /* XXX: This is wrong. It breaks *badly* on range combining */
-int64_t
+uint64_t
 MemObject::readAheadAllowance() const
 {
     // XXX: Do not subtract savedHttpHeaders at all or subtract them from any
@@ -431,24 +431,25 @@ MemObject::isContiguous() const
     return result;
 }
 
-int
-MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const
+size_t
+MemObject::mostBytesWanted(const size_t max, const bool ignoreDelayPools) const
 {
-    const auto bufferingAllowanceRaw = readAheadAllowance();
-    if (!bufferingAllowanceRaw)
+    const auto bufferingAllowance = readAheadAllowance();
+    if (!bufferingAllowance)
         return 0;
-
-    // downcast: the allowance may be huge, but the caller can only handle `int`
-    const auto bufferingAllowance = static_cast<int>(std::min<int64_t>(
-        bufferingAllowanceRaw, std::numeric_limits<int>::max()));
-    assert(bufferingAllowance > 0);
 
     auto poolingAllowance = max; // may be adjusted below
 #if USE_DELAY_POOLS
     if (!ignoreDelayPools) {
         /* identify delay id with largest allowance */
         DelayId largestAllowance = mostBytesAllowed ();
-        poolingAllowance = largestAllowance.bytesWanted(0, max);
+        // TODO: Fix DelayId::bytesWanted()/etc. API to use unsigned sizes.
+        const auto intMax = std::numeric_limits<int>::max();
+        const auto bytesWantedMax = max > static_cast<size_t>(intMax) ? intMax : static_cast<int>(max);
+        const auto poolingAllowanceRaw = largestAllowance.bytesWanted(0, bytesWantedMax);
+        if (poolingAllowanceRaw < 0)
+            return 0;
+        poolingAllowance = static_cast<size_t>(poolingAllowanceRaw);
     }
 #endif
 
