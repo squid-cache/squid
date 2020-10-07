@@ -34,9 +34,9 @@ MemObject::endOffset() const
 /* end of stubs */
 
 // test string
-static char fox[]="The quick brown fox jumped over the lazy dog";
-static char fox1[]="The quick brown fox ";
-static char fox2[]="jumped over the lazy dog";
+static const char fox[]="The quick brown fox jumped over the lazy dog";
+static const char fox1[]="The quick brown fox ";
+static const char fox2[]="jumped over the lazy dog";
 
 // TEST: globals variables (default/empty and with contents) are
 //  created outside and before any unit tests and memory subsystem
@@ -851,46 +851,89 @@ testSBuf::testReserve()
         CPPUNIT_ASSERT(buffer.spaceSize() >= requirements.minSpace);
     }
 
-    { // MemBlob shiftLeft operation after chop
-        SBuf b(fox);
-        const char * const bBlobStartBefore = b.rawContent();
-        const uint64_t allocations = b.GetStats().cowSlow;
-        b.chop(5);
-        b.reserveSpace(5);
-        CPPUNIT_ASSERT_EQUAL(allocations, b.GetStats().cowSlow); // assure no reallocation
-        const char * const bBlobStartAfter = b.rawContent();
-        CPPUNIT_ASSERT_EQUAL(bBlobStartBefore, bBlobStartAfter); // check no reallocation, but shiftLeft
-        CPPUNIT_ASSERT(b.spaceSize() == 5); // moved left by 5, so released space of size 5
-        SBuf ref(fox + 5);
-        CPPUNIT_ASSERT_EQUAL(ref,b);
+    // TODO: Decide whether to encapsulate the (nearly identical) code of the
+    // gap-related test cases below into a function, obscuring each case logic a
+    // little, but facilitating new test cases (and removing code duplication).
+
+    { // reserveSpace() uses the trailing space before the front gap
+        SBuf buffer(fox);
+
+        // assure there is some trailing space
+        buffer.reserveSpace(1);
+        CPPUNIT_ASSERT(buffer.spaceSize() > 0);
+
+        // create a leading gap and (weak-)check that it was created
+        const auto gap = 1U; // the smallest gap may be the most challenging
+        CPPUNIT_ASSERT(gap < buffer.length());
+        const void *gapEnd = buffer.rawContent() + gap;
+        buffer.consume(gap);
+        CPPUNIT_ASSERT_EQUAL(gapEnd, static_cast<const void*>(buffer.rawContent()));
+
+        const auto before = SBuf::GetStats();
+        const auto beforeSpaceSize = buffer.spaceSize();
+        const void * const beforePosition = buffer.rawContent();
+        buffer.reserveSpace(beforeSpaceSize);
+        const auto after = SBuf::GetStats();
+        const void * const afterPosition = buffer.rawContent();
+        CPPUNIT_ASSERT_EQUAL(before.cowSlow, after.cowSlow);
+        CPPUNIT_ASSERT_EQUAL(before.cowFast + 1, after.cowFast);
+        CPPUNIT_ASSERT_EQUAL(beforeSpaceSize, buffer.spaceSize());
+        CPPUNIT_ASSERT_EQUAL(beforePosition, afterPosition);
+        CPPUNIT_ASSERT(strcmp(fox + gap, buffer.c_str()) == 0);
     }
 
-    { // MemBlob crop operations after chop
-        SBuf b(fox);
-        b.chop(4, 10);
-        const auto space = SBuf(fox).length() - static_cast<SBuf::size_type>(14);
-        const char * const bMemBefore = b.rawContent();
-        const uint64_t allocations = b.GetStats().cowSlow;
-        b.reserveSpace(space);
-        CPPUNIT_ASSERT_EQUAL(allocations, b.GetStats().cowSlow); // assure no reallocation
-        const char * const bMemAfter = b.rawContent();
-        CPPUNIT_ASSERT_EQUAL(bMemBefore, bMemAfter); // check no reallocation, or shift
-        CPPUNIT_ASSERT(b.spaceSize() == space);
+    { // reserveSpace() uses the front gap when the trailing space is not enough
+        SBuf buffer(fox);
+
+        // assure there is some trailing space to keep the test case challenging
+        buffer.reserveSpace(1);
+        CPPUNIT_ASSERT(buffer.spaceSize() > 0);
+        const void * const initialStorage = buffer.rawContent();
+
+        // create a leading gap and (weak-)check that it was created
+        const auto gap = 1U; // the smallest gap may be the most challenging
+        CPPUNIT_ASSERT(gap < buffer.length());
+        const void *gapEnd = buffer.rawContent() + gap;
+        buffer.consume(gap);
+        CPPUNIT_ASSERT_EQUAL(gapEnd, static_cast<const void*>(buffer.rawContent()));
+
+        const auto before = SBuf::GetStats();
+        const auto beforeSpaceSize = buffer.spaceSize();
+        buffer.reserveSpace(beforeSpaceSize + gap); // force (entire) gap use
+        const auto after = SBuf::GetStats();
+        const void * const afterStorage = buffer.rawContent();
+        CPPUNIT_ASSERT_EQUAL(before.cowSlow, after.cowSlow);
+        CPPUNIT_ASSERT_EQUAL(before.cowFast + 1, after.cowFast);
+        CPPUNIT_ASSERT_EQUAL(initialStorage, afterStorage);
+        CPPUNIT_ASSERT(beforeSpaceSize + gap <= buffer.spaceSize());
+        CPPUNIT_ASSERT(strcmp(fox + gap, buffer.c_str()) == 0);
     }
 
-    { // MemBlob crop and shiftLeft operations after chop
-        SBuf b(fox);
-        const char * const bBlobStartBefore = b.rawContent();
-        b.chop(b.length() - 5, 2);
-        const auto space = SBuf(fox).length() - static_cast<SBuf::size_type>(2);
-        const uint64_t allocations = b.GetStats().cowSlow;
-        b.reserveSpace(space);
-        CPPUNIT_ASSERT_EQUAL(allocations, b.GetStats().cowSlow); // assure no reallocation
-        const char * const bBlobStartAfter = b.rawContent();
-        CPPUNIT_ASSERT_EQUAL(bBlobStartBefore, bBlobStartAfter); // check no reallocation, but shiftLeft
-        CPPUNIT_ASSERT(b.spaceSize() == space);
-        SBuf ref(fox + (strlen(fox) - 5), 2);
-        CPPUNIT_ASSERT_EQUAL(ref,b);
+    { // reserveSpace() uses the entire front gap when using the front gap
+        SBuf buffer(fox);
+
+        // assure there is some trailing space to keep the test case challenging
+        buffer.reserveSpace(1);
+        CPPUNIT_ASSERT(buffer.spaceSize() > 0);
+        const void * const initialStorage = buffer.rawContent();
+
+        // create a leading gap and (weak-)check that it was created
+        const auto gap = 2U; // the smallest extra gap may be the most challenging
+        CPPUNIT_ASSERT(gap < buffer.length());
+        const void *gapEnd = buffer.rawContent() + gap;
+        buffer.consume(gap);
+        CPPUNIT_ASSERT_EQUAL(gapEnd, static_cast<const void*>(buffer.rawContent()));
+
+        const auto before = SBuf::GetStats();
+        const auto beforeSpaceSize = buffer.spaceSize();
+        buffer.reserveSpace(beforeSpaceSize + 1); // force (minimal) gap use
+        const auto after = SBuf::GetStats();
+        const void * const afterStorage = buffer.rawContent();
+        CPPUNIT_ASSERT_EQUAL(before.cowSlow, after.cowSlow);
+        CPPUNIT_ASSERT_EQUAL(before.cowFast + 1, after.cowFast);
+        CPPUNIT_ASSERT_EQUAL(initialStorage, afterStorage);
+        CPPUNIT_ASSERT(beforeSpaceSize + gap <= buffer.spaceSize());
+        CPPUNIT_ASSERT(strcmp(fox + gap, buffer.c_str()) == 0);
     }
 }
 
