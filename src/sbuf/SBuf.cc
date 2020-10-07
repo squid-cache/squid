@@ -885,19 +885,24 @@ SBuf::cow(SBuf::size_type newsize)
         newsize = length();
 
     if (store_->LockCount() == 1) {
-        // If we are the only owners keep only our data on blob:
+        // MemBlob::size reflects past owners. Refresh to maximize spaceSize().
         store_->crop(off_ + length());
-        const auto needSpace = newsize - length();
-        if (needSpace <= store_->spaceSize()) {
-            debugs(24, 8, id << " no cow needed");
+
+        const auto availableSpace = spaceSize();
+        const auto neededSpace = newsize - length();
+        if (neededSpace <= availableSpace) {
+            debugs(24, 8, id << " no cow needed; have " << availableSpace);
             ++stats.cowFast;
             return;
         }
-        if (needSpace <= off_ + store_->spaceSize()) {
+        // shift left if adding idle leading space helps avoid reallocation
+        // this case is typical for fill-consume-fill-consume-... I/O buffers
+        if (neededSpace <= availableSpace + off_) {
+            debugs(24, 8, id << " no cow after left-shifting " << off_ << " to get " << (availableSpace + off_));
             store_->shiftLeft(off_);
             off_ = 0;
-            debugs(24, 8, id << " no cow after move-to-start needed");
-            ++stats.cowFast;
+            ++stats.cowFast; // TODO: .cowMove
+            assert(neededSpace <= spaceSize());
             return;
         }
     }
