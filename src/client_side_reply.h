@@ -34,8 +34,6 @@ public:
     void saveState();
     void restoreState();
     void purgeRequest ();
-    void purgeRequestFindObjectToPurge();
-    void purgeDoMissPurge();
     void purgeFoundGet(StoreEntry *newEntry);
     void purgeFoundHead(StoreEntry *newEntry);
     void purgeFoundObject(StoreEntry *entry);
@@ -69,9 +67,6 @@ public:
     const char *storeId() const { return (http->store_id.size() > 0 ? http->store_id.termedBuf() : http->uri); }
 
     Http::StatusCode purgeStatus;
-
-    /* state variable - replace with class to handle storeentries at some point */
-    int lookingforstore;
 
     /* StoreClient API */
     virtual void created (StoreEntry *newEntry);
@@ -128,7 +123,7 @@ private:
     /// releases the cached entry
     void purgeEntry(StoreEntry *, const Http::MethodType &, const char *descriptionPrefix = "");
     /// releases both cached GET and HEAD entries
-    void purgeDoPurge(StoreEntry *);
+    void purgeDoPurge();
     void forgetHit();
     bool blockedHit() const;
     void detailStoreLookup(const char *detail);

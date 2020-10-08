@@ -74,7 +74,6 @@ clientReplyContext::~clientReplyContext()
 
 clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     purgeStatus(Http::scNone),
-    lookingforstore(0),
     http(cbdataReference(clientContext)),
     headers_sz(0),
     sc(NULL),
@@ -886,18 +885,6 @@ clientReplyContext::blockedHit() const
     }
 }
 
-void
-clientReplyContext::purgeRequestFindObjectToPurge()
-{
-    /* Try to find a base entry */
-    http->flags.purging = true;
-    lookingforstore = 1;
-
-    // TODO: can we use purgeAllCached() here instead of doing the
-    // getPublicByRequestMethod() dance?
-    StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_GET);
-}
-
 // Purges all entries with a given url
 // TODO: move to SideAgent parent, when we have one
 /*
@@ -931,15 +918,6 @@ void
 clientReplyContext::created(StoreEntry *newEntry)
 {
     detailStoreLookup(newEntry ? "match" : "mismatch");
-
-    if (lookingforstore == 1)
-        purgeFoundGet(newEntry);
-    else if (lookingforstore == 2)
-        purgeFoundHead(newEntry);
-    else if (lookingforstore == 3)
-        purgeDoPurge(newEntry);
-    else if (lookingforstore == 5)
-        identifyFoundObject(newEntry);
 }
 
 LogTags *
@@ -949,25 +927,6 @@ clientReplyContext::loggingTags()
     // TODO: Either add cbdataReferenceValid(http) checks in all the relevant
     // places, like this one, or remove cbdata protection of the http member.
     return &http->logType;
-}
-
-void
-clientReplyContext::purgeFoundGet(StoreEntry *newEntry)
-{
-    if (!newEntry) {
-        lookingforstore = 2;
-        StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
-    } else
-        purgeFoundObject (newEntry);
-}
-
-void
-clientReplyContext::purgeFoundHead(StoreEntry *newEntry)
-{
-    if (!newEntry)
-        purgeDoMissPurge();
-    else
-        purgeFoundObject (newEntry);
 }
 
 void
@@ -1029,25 +988,15 @@ clientReplyContext::purgeRequest()
     /* Release both IP cache */
     ipcacheInvalidate(http->request->url.host());
 
-    if (!http->flags.purging)
-        purgeRequestFindObjectToPurge();
-    else
-        purgeDoMissPurge();
+    // TODO: can we use purgeAllCached() here instead?
+    purgeDoPurge();
 }
 
 void
-clientReplyContext::purgeDoMissPurge()
+clientReplyContext::purgeDoPurge()
 {
-    http->logType.update(LOG_TCP_MISS);
-    lookingforstore = 3;
-    StoreEntry::getPublicByRequestMethod(this,http->request, Http::METHOD_GET);
-}
-
-void
-clientReplyContext::purgeDoPurge(StoreEntry *getEntry)
-{
-    if (getEntry)
-        purgeEntry(getEntry, Http::METHOD_GET);
+    if (auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_GET))
+        purgeEntry(entry, Http::METHOD_GET);
 
     if (auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_HEAD))
         purgeEntry(entry, Http::METHOD_HEAD);
@@ -1664,8 +1613,7 @@ clientReplyContext::identifyStoreObject()
     // client sent CC:no-cache or some other condition has been
     // encountered which prevents delivering a public/cached object.
     if (!r->flags.noCache || r->flags.internal) {
-        lookingforstore = 5;
-        StoreEntry::getPublicByRequest (this, r);
+        identifyFoundObject(storeGetPublicByRequest(r));
     } else {
         // "external" no-cache requests skip Store lookups
         detailStoreLookup("no-cache");
