@@ -107,8 +107,11 @@ private:
 
     void abortTransaction(const char *reason) { abortAll(reason); } // abnormal termination
 
+    size_t prepReading();
     size_t calcReadBufferCapacityLimit() const;
-    size_t calcReadGoal();
+    size_t calcReadBufferSpaceLimit() const;
+    size_t calcReadGoal(const size_t bufferSpaceLimit) const;
+    bool fullReadBuffer() const { return calcReadBufferSpaceLimit() == 0; }
 
     // consuming request body
     virtual void handleMoreRequestBodyAvailable();
