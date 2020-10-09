@@ -51,6 +51,12 @@ public:
 class TeChunkedParser : public Http1::Parser
 {
 public:
+    /// Shorter input prefixes may fail to parse() despite being valid.
+    /// The current implementation usually looks ahead before consuming input.
+    /// HTTP does not limit most protocol element lengths, but legitimate chunk
+    /// metadata should not need more than this hard-coded look-ahead distance.
+    static size_t LookAheadDistance() { return 1024; }
+
     TeChunkedParser();
     virtual ~TeChunkedParser() { theOut=nullptr; /* we do not own this object */ }
 

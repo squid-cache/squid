@@ -1558,8 +1558,9 @@ HttpStateData::maybeReadVirginBody()
     Comm::Read(serverConnection, call);
 }
 
+/// maximum input buffer capacity that complies with various capacity limits
 size_t
-HttpStateData::calcBufferCapacityLimit() const
+HttpStateData::calcReadBufferCapacityLimit() const
 {
     // XXX: Move to SBuf.h. This is a universally useful principle.
     static_assert(SBuf::maxSize <= std::numeric_limits<size_t>::max(),
@@ -1571,16 +1572,19 @@ HttpStateData::calcBufferCapacityLimit() const
         return std::min<size_t>(Config.maxReplyHeaderSize, SBuf::maxSize);
     }
 
-    const auto socketReadBufferSize =
+    const auto readBufferSizeCfg =
         Config.tcpRcvBufsz ? Config.tcpRcvBufsz : SQUID_TCP_SO_RCVBUF;
-    return std::min<size_t>(socketReadBufferSize, SBuf::maxSize);
+    const auto readBufferSizeMin =
+        flags.chunked ? Http::One::TeChunkedParser::LookAheadDistance() : 1U;
+    const auto readBufferSize = std::max(readBufferSizeMin, readBufferSizeCfg);
+    return std::min<size_t>(readBufferSize, SBuf::maxSize);
 }
 
 size_t
 HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
 {
     // maximize space for the next read while obeying I/O buffer capacity limits
-    const auto bufferCapacityLimit = calcBufferCapacityLimit();
+    const auto bufferCapacityLimit = calcReadBufferCapacityLimit();
     if (inBuf.length() >= bufferCapacityLimit) {
         debugs(11, 5, "buffer full: " << inBuf.length() << " >= " << bufferCapacityLimit);
         // The buffer might "become" full here because configurable limits have
