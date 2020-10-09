@@ -108,16 +108,7 @@ private:
     void abortTransaction(const char *reason) { abortAll(reason); } // abnormal termination
 
     size_t calcReadBufferCapacityLimit() const;
-
-    /**
-     * determine if read buffer can have space made available
-     * for a read.
-     *
-     * \param grow  whether to actually expand the buffer
-     *
-     * \return the number of bytes the read buffer can accept
-     */
-    size_t maybeMakeSpaceAvailable(bool grow);
+    size_t calcReadGoal();
 
     // consuming request body
     virtual void handleMoreRequestBodyAvailable();

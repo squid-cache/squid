@@ -1168,7 +1168,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
      * Plus, it breaks our lame *HalfClosed() detection
      */
 
-    const auto readSize = maybeMakeSpaceAvailable(true);
+    const auto readSize = calcReadGoal();
     if (readSize <= 0) {
         // XXX: deferring may not free any space if the header "became" too big
         assert(entry->mem_obj);
@@ -1176,6 +1176,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
         entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(io.conn, NULL, 0, nilCall)));
         return;
     }
+    inBuf.reserveSpace(readSize);
 
     CommIoCbParams rd(this); // will be expanded with ReadNow results
     rd.conn = io.conn;
@@ -1531,11 +1532,11 @@ HttpStateData::maybeReadVirginBody()
     if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing())
         return;
 
-    if (!maybeMakeSpaceAvailable(false)) {
+    if (!calcReadGoal()) {
         // TODO: Remove code duplication with readReply().
         // XXX: accessing entry->mem_obj needs more protections. See readReply()
         // XXX: deferring may not free any space if the header "became" too big.
-        // XXX: Do not defer if maybeMakeSpaceAvailable() called processReply()?
+        // XXX: Do not defer if calcReadGoal() called processReply()?
         assert(entry->mem_obj);
         AsyncCall::Pointer nilCall;
         entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(serverConnection, nullptr, 0, nilCall)));
@@ -1580,8 +1581,9 @@ HttpStateData::calcReadBufferCapacityLimit() const
     return std::min<size_t>(readBufferSize, SBuf::maxSize);
 }
 
+/// maximum number of bytes to read(2) from the next hop
 size_t
-HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
+HttpStateData::calcReadGoal()
 {
     // maximize space for the next read while obeying I/O buffer capacity limits
     const auto bufferCapacityLimit = calcReadBufferCapacityLimit();
@@ -1599,7 +1601,7 @@ HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
         return 0;
     }
     const auto bufferSpaceLimit = bufferCapacityLimit - inBuf.length();
-    debugs(11, 7, "bufferSpaceLimit: " << bufferSpaceLimit << '=' << bufferCapacityLimit << '-' << inBuf.length());
+    debugs(11, 7, "space limit: " << bufferSpaceLimit << '=' << bufferCapacityLimit << '-' << inBuf.length());
 
     // limit incremental (i.e. from multiple reads) data accumulation in Store
     // and ICAP pipelines while also obeying delay pools rate limits
@@ -1619,14 +1621,7 @@ HttpStateData::maybeMakeSpaceAvailable(bool doGrow)
         return 0;
     }
 
-    if (!doGrow) {
-        debugs(11, 7, "future readSize=" << readSize << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
-        return readSize;
-    }
-
     debugs(11, 5, "readSize=" << readSize << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
-    // TODO: Move to readReply(), eliminating doGrow
-    inBuf.reserveSpace(readSize);
     return readSize;
 }
 
