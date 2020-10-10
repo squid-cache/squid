@@ -144,7 +144,6 @@ template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
 void
 ClpMap<Key, Value, MemoryUsedBy>::setMemLimit(const uint64_t newLimit)
 {
-    assert(newLimit >= 0);
     if (memUsed_ > newLimit)
         trim(memLimit_ - newLimit);
     memLimit_ = newLimit;
