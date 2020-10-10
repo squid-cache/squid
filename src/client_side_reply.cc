@@ -990,10 +990,10 @@ void
 clientReplyContext::purgeDoPurge()
 {
     if (auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_GET))
-        purgeEntry(entry, Http::METHOD_GET);
+        purgeEntry(*entry, Http::METHOD_GET);
 
     if (auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_HEAD))
-        purgeEntry(entry, Http::METHOD_HEAD);
+        purgeEntry(*entry, Http::METHOD_HEAD);
 
     /* And for Vary, release the base URI if none of the headers was included in the request */
     if (!http->request->vary_headers.isEmpty()
@@ -1002,10 +1002,10 @@ clientReplyContext::purgeDoPurge()
         SBuf tmp(http->request->effectiveRequestUri());
 
         if (auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET))
-            purgeEntry(entry, Http::METHOD_GET, "Vary ");
+            purgeEntry(*entry, Http::METHOD_GET, "Vary ");
 
         if (auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_HEAD))
-            purgeEntry(entry, Http::METHOD_HEAD, "Vary ");
+            purgeEntry(*entry, Http::METHOD_HEAD, "Vary ");
     }
 
     if (purgeStatus == Http::scNone)
@@ -1029,14 +1029,13 @@ clientReplyContext::purgeDoPurge()
 }
 
 void
-clientReplyContext::purgeEntry(StoreEntry *entry, const Http::MethodType &methodType, const char *descriptionPrefix)
+clientReplyContext::purgeEntry(StoreEntry &entry, const Http::MethodType &methodType, const char *descriptionPrefix)
 {
-    assert(entry);
-    debugs(88, 4, descriptionPrefix << Http::MethodStr(methodType) << " '" << entry->url() << "'" );
+    debugs(88, 4, descriptionPrefix << Http::MethodStr(methodType) << " '" << entry.url() << "'" );
 #if USE_HTCP
-    neighborsHtcpClear(entry, http->request, HttpRequestMethod(methodType), HTCP_CLR_PURGE);
+    neighborsHtcpClear(&entry, http->request, HttpRequestMethod(methodType), HTCP_CLR_PURGE);
 #endif
-    entry->release(true);
+    entry.release(true);
     purgeStatus = Http::scOkay;
 }
 
