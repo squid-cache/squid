@@ -120,7 +120,7 @@ private:
     void sendClientOldEntry();
     void purgeAllCached();
     /// releases the cached entry
-    void purgeEntry(StoreEntry &, const Http::MethodType &, const char *descriptionPrefix = "");
+    void purgeEntry(StoreEntry &, const Http::MethodType, const char *descriptionPrefix = "");
     /// releases both cached GET and HEAD entries
     void purgeDoPurge();
     void forgetHit();

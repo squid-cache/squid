@@ -1029,7 +1029,7 @@ clientReplyContext::purgeDoPurge()
 }
 
 void
-clientReplyContext::purgeEntry(StoreEntry &entry, const Http::MethodType &methodType, const char *descriptionPrefix)
+clientReplyContext::purgeEntry(StoreEntry &entry, const Http::MethodType methodType, const char *descriptionPrefix)
 {
     debugs(88, 4, descriptionPrefix << Http::MethodStr(methodType) << " '" << entry.url() << "'" );
 #if USE_HTCP
