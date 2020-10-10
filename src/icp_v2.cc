@@ -518,9 +518,9 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
         codeToSend = ICP_HIT;
     } else {
 #if USE_ICMP
-        if (Config.onoff.test_reachability && rtt == 0) {
-            if ((rtt = netdbHostRtt(request->url.host())) == 0)
-                netdbPingSite(request->url.host());
+        if (Config.onoff.test_reachability && state.rtt == 0) {
+            if ((state.rtt = netdbHostRtt(state.request->url.host())) == 0)
+                netdbPingSite(state.request->url.host());
         }
 #endif /* USE_ICMP */
 
