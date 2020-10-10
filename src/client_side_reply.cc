@@ -989,8 +989,13 @@ clientReplyContext::purgeRequest()
 void
 clientReplyContext::purgeDoPurge()
 {
-    if (auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_GET))
+    bool firstFound = false;
+    if (auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_GET)) {
+        firstFound = true;
         purgeEntry(*entry, Http::METHOD_GET);
+    }
+
+    detailStoreLookup(storeLookupString(firstFound));
 
     if (auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_HEAD))
         purgeEntry(*entry, Http::METHOD_HEAD);
@@ -1606,11 +1611,11 @@ clientReplyContext::identifyStoreObject()
     // client sent CC:no-cache or some other condition has been
     // encountered which prevents delivering a public/cached object.
     if (!r->flags.noCache || r->flags.internal) {
-        identifyFoundObject(storeGetPublicByRequest(r));
+        auto e = storeGetPublicByRequest(r);
+        identifyFoundObject(e, storeLookupString(e));
     } else {
         // "external" no-cache requests skip Store lookups
-        detailStoreLookup("no-cache");
-        identifyFoundObject(nullptr);
+        identifyFoundObject(nullptr, "no-cache");
     }
 }
 
@@ -1619,8 +1624,10 @@ clientReplyContext::identifyStoreObject()
  * to see if we can determine the final status of the request.
  */
 void
-clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
+clientReplyContext::identifyFoundObject(StoreEntry *newEntry, const char *detail)
 {
+    detailStoreLookup(detail);
+
     HttpRequest *r = http->request;
     http->storeEntry(newEntry);
     const auto e = http->storeEntry();

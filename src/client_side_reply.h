@@ -40,7 +40,7 @@ public:
     void sendClientUpstreamResponse();
     void doGetMoreData();
     void identifyStoreObject();
-    void identifyFoundObject(StoreEntry *entry);
+    void identifyFoundObject(StoreEntry *entry, const char *detail);
     int storeOKTransferDone() const;
     int storeNotOKTransferDone() const;
     /// replaces current response store entry with the given one
@@ -125,6 +125,7 @@ private:
     void purgeDoPurge();
     void forgetHit();
     bool blockedHit() const;
+    const char *storeLookupString(bool found) const { return found ? "match" : "mismatch"; }
     void detailStoreLookup(const char *detail);
 
     void sendBodyTooLargeError();
