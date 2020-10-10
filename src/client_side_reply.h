@@ -69,7 +69,6 @@ public:
     Http::StatusCode purgeStatus;
 
     /* StoreClient API */
-    virtual void created (StoreEntry *newEntry);
     virtual LogTags *loggingTags();
 
     ClientHttpRequest *http;

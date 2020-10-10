@@ -65,22 +65,21 @@ public:
     ICPState(icp_common_t &aHeader, HttpRequest *aRequest);
     virtual ~ICPState();
 
+    /// either confirms and starts processing a cache hit or returns false
+    bool confirmAndPrepHit(const StoreEntry &);
+
     icp_common_t header;
     HttpRequest *request;
     int fd;
 
     Ip::Address from;
     char *url;
+    mutable AccessLogEntryPointer al;
 
 protected:
     /* StoreClient API */
     virtual LogTags *loggingTags() override;
     virtual void fillChecklist(ACLFilledChecklist &) const override;
-
-    /// either confirms and starts processing a cache hit or returns false
-    bool confirmAndPrepHit(const StoreEntry &);
-
-    mutable AccessLogEntryPointer al;
 };
 
 extern Comm::ConnectionPointer icpIncomingConn;

@@ -20,18 +20,12 @@ class StoreEntry;
 class ACLFilledChecklist;
 class LogTags;
 
-/// A StoreEntry::getPublic*() caller.
+/// TODO: rename
 class StoreClient
 {
 
 public:
     virtual ~StoreClient () {}
-
-    // TODO: Remove? Probably added to make lookups asynchronous, but they are
-    // still blocking. A lot more is needed to support async callbacks.
-    /// Handle a StoreEntry::getPublic*() result.
-    /// A nil entry indicates a cache miss.
-    virtual void created(StoreEntry *) = 0;
 
     /// \return LogTags (if the class logs transactions) or nil (otherwise)
     virtual LogTags *loggingTags() = 0;

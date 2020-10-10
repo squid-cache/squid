@@ -914,12 +914,6 @@ clientReplyContext::purgeAllCached()
     purgeEntriesByUrl(http->request, url.c_str());
 }
 
-void
-clientReplyContext::created(StoreEntry *newEntry)
-{
-    detailStoreLookup(newEntry ? "match" : "mismatch");
-}
-
 LogTags *
 clientReplyContext::loggingTags()
 {

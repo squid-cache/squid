@@ -517,27 +517,6 @@ StoreEntry::doAbandon(const char *context)
     Store::Root().handleIdleEntry(*this); // may delete us
 }
 
-void
-StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * request, const HttpRequestMethod& method)
-{
-    assert (aClient);
-    aClient->created(storeGetPublicByRequestMethod(request, method));
-}
-
-void
-StoreEntry::getPublicByRequest (StoreClient *aClient, HttpRequest * request)
-{
-    assert (aClient);
-    aClient->created(storeGetPublicByRequest(request));
-}
-
-void
-StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestMethod& method)
-{
-    assert (aClient);
-    aClient->created(storeGetPublic(uri, method));
-}
-
 StoreEntry *
 storeGetPublic(const char *uri, const HttpRequestMethod& method)
 {
