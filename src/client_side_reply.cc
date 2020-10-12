@@ -924,46 +924,6 @@ clientReplyContext::loggingTags()
 }
 
 void
-clientReplyContext::purgeFoundObject(StoreEntry *entry)
-{
-    assert (entry);
-
-    if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
-        http->logType.update(LOG_TCP_DENIED);
-        Ip::Address tmp_noaddr;
-        tmp_noaddr.setNoAddr(); // TODO: make a global const
-        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL,
-                                           http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr,
-                                           http->request, http->al);
-        startError(err);
-        return; // XXX: leaking unused entry if some store does not keep it
-    }
-
-    StoreIOBuffer localTempBuffer;
-    /* Swap in the metadata */
-    http->storeEntry(entry);
-
-    http->storeEntry()->lock("clientReplyContext::purgeFoundObject");
-    http->storeEntry()->ensureMemObject(storeId(), http->log_uri,
-                                        http->request->method);
-
-    sc = storeClientListAdd(http->storeEntry(), this);
-
-    http->logType.update(LOG_TCP_HIT);
-
-    reqofs = 0;
-
-    localTempBuffer.offset = http->out.offset;
-
-    localTempBuffer.length = next()->readBuffer.length;
-
-    localTempBuffer.data = next()->readBuffer.data;
-
-    storeClientCopy(sc, http->storeEntry(),
-                    localTempBuffer, CacheHit, this);
-}
-
-void
 clientReplyContext::purgeRequest()
 {
     debugs(88, 3, "Config2.onoff.enable_purge = " <<
@@ -992,13 +952,16 @@ clientReplyContext::purgeDoPurge()
     auto firstFound = false;
     if (const auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_GET)) {
         firstFound = true;
-        purgeEntry(*entry, Http::METHOD_GET);
+        if (!purgeEntry(*entry, Http::METHOD_GET))
+            return;
     }
 
     detailStoreLookup(storeLookupString(firstFound));
 
-    if (const auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_HEAD))
-        purgeEntry(*entry, Http::METHOD_HEAD);
+    if (const auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_HEAD)) {
+        if (!purgeEntry(*entry, Http::METHOD_HEAD))
+            return;
+    }
 
     /* And for Vary, release the base URI if none of the headers was included in the request */
     if (!http->request->vary_headers.isEmpty()
@@ -1006,11 +969,15 @@ clientReplyContext::purgeDoPurge()
         // XXX: performance regression, c_str() reallocates
         SBuf tmp(http->request->effectiveRequestUri());
 
-        if (const auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET))
-            purgeEntry(*entry, Http::METHOD_GET, "Vary ");
+        if (const auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET)) {
+            if (!purgeEntry(*entry, Http::METHOD_GET, "Vary "))
+                return;
+        }
 
-        if (const auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_HEAD))
-            purgeEntry(*entry, Http::METHOD_HEAD, "Vary ");
+        if (const auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_HEAD)) {
+            if (!purgeEntry(*entry, Http::METHOD_HEAD, "Vary "))
+                return;
+        }
     }
 
     if (purgeStatus == Http::scNone)
@@ -1033,15 +1000,29 @@ clientReplyContext::purgeDoPurge()
     http->storeEntry()->complete();
 }
 
-void
+bool
 clientReplyContext::purgeEntry(StoreEntry &entry, const Http::MethodType methodType, const char *descriptionPrefix)
 {
     debugs(88, 4, descriptionPrefix << Http::MethodStr(methodType) << " '" << entry.url() << "'" );
+
+    if (EBIT_TEST(entry.flags, ENTRY_SPECIAL)) {
+        http->logType.update(LOG_TCP_DENIED);
+        Ip::Address tmp_noaddr;
+        tmp_noaddr.setNoAddr(); // TODO: make a global const
+        auto err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr,
+                                    http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr,
+                                    http->request, http->al);
+        startError(err);
+        entry.abandon(__FUNCTION__);
+        return false;
+    }
+
 #if USE_HTCP
     neighborsHtcpClear(&entry, http->request, HttpRequestMethod(methodType), HTCP_CLR_PURGE);
 #endif
     entry.release(true);
     purgeStatus = Http::scOkay;
+    return true;
 }
 
 void

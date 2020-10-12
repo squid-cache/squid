@@ -34,7 +34,6 @@ public:
     void saveState();
     void restoreState();
     void purgeRequest ();
-    void purgeFoundObject(StoreEntry *entry);
     void sendClientUpstreamResponse();
     void doGetMoreData();
     void identifyStoreObject();
@@ -117,8 +116,9 @@ private:
     void triggerInitialStoreRead();
     void sendClientOldEntry();
     void purgeAllCached();
-    /// releases the cached entry
-    void purgeEntry(StoreEntry &, const Http::MethodType, const char *descriptionPrefix = "");
+    /// attempts to release the cached entry
+    /// \returns whether the entry was released
+    bool purgeEntry(StoreEntry &, const Http::MethodType, const char *descriptionPrefix = "");
     /// releases both cached GET and HEAD entries
     void purgeDoPurge();
     void forgetHit();
