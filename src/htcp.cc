@@ -970,6 +970,7 @@ htcpSpecifier::checkHit()
 
     const auto e = storeGetPublicByRequest(checkHitRequest.getRaw());
     StoreEntry *hit = nullptr;
+
     if (!e) {
         debugs(31, 3, "NO; public object not found");
     } else if (!e->validToSend()) {
@@ -977,7 +978,7 @@ htcpSpecifier::checkHit()
     } else if (refreshCheckHTCP(e, checkHitRequest.getRaw())) {
         debugs(31, 3, "NO; cached response is stale");
     } else if (e->hittingRequiresCollapsing() && !startCollapsingOn(*e, false)) {
-        debugs(31, 3, " NO; prohibited CF hit: " << *e);
+        debugs(31, 3, "NO; prohibited CF hit: " << *e);
     } else {
         debugs(31, 3, "YES!?");
         hit = e;
