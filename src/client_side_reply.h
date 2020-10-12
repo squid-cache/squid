@@ -34,8 +34,6 @@ public:
     void saveState();
     void restoreState();
     void purgeRequest ();
-    void purgeFoundGet(StoreEntry *newEntry);
-    void purgeFoundHead(StoreEntry *newEntry);
     void purgeFoundObject(StoreEntry *entry);
     void sendClientUpstreamResponse();
     void doGetMoreData();

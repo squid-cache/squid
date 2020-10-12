@@ -989,15 +989,15 @@ clientReplyContext::purgeRequest()
 void
 clientReplyContext::purgeDoPurge()
 {
-    bool firstFound = false;
-    if (auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_GET)) {
+    auto firstFound = false;
+    if (const auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_GET)) {
         firstFound = true;
         purgeEntry(*entry, Http::METHOD_GET);
     }
 
     detailStoreLookup(storeLookupString(firstFound));
 
-    if (auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_HEAD))
+    if (const auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_HEAD))
         purgeEntry(*entry, Http::METHOD_HEAD);
 
     /* And for Vary, release the base URI if none of the headers was included in the request */
@@ -1006,10 +1006,10 @@ clientReplyContext::purgeDoPurge()
         // XXX: performance regression, c_str() reallocates
         SBuf tmp(http->request->effectiveRequestUri());
 
-        if (auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET))
+        if (const auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET))
             purgeEntry(*entry, Http::METHOD_GET, "Vary ");
 
-        if (auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_HEAD))
+        if (const auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_HEAD))
             purgeEntry(*entry, Http::METHOD_HEAD, "Vary ");
     }
 
@@ -1612,7 +1612,7 @@ clientReplyContext::identifyStoreObject()
     // encountered which prevents delivering a public/cached object.
     if (!r->flags.noCache || r->flags.internal) {
         auto e = storeGetPublicByRequest(r);
-        identifyFoundObject(e, storeLookupString(e));
+        identifyFoundObject(e, storeLookupString(bool(e)));
     } else {
         // "external" no-cache requests skip Store lookups
         identifyFoundObject(nullptr, "no-cache");
