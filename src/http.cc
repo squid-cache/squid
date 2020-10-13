@@ -1550,7 +1550,10 @@ HttpStateData::prepReading()
     }
 
     const auto readGoal = calcReadGoal(readBufferSpaceLimit);
-    if (readGoal <= 0) {
+    // delay reading 1-2 bytes to work around delay pool implementation problems
+    // XXX: The transaction stalls if we have nothing to send to the client(s);
+    // sending is what usually kicks our delayed read, resuming this transaction
+    if (readGoal <= 2) {
         assert(entry->mem_obj);
         AsyncCall::Pointer nilCall;
         entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(serverConnection, nullptr, 0, nilCall)));
@@ -1620,10 +1623,11 @@ HttpStateData::calcReadBufferSpaceLimit() const
 }
 
 /// maximum number of bytes to read(2) from the next hop
-/// \retval 0 delay next read
 size_t
 HttpStateData::calcReadGoal(const size_t bufferSpaceLimit) const
 {
+    assert(bufferSpaceLimit > 0); // or we should not be here
+
     // limit incremental (i.e. from multiple reads) data accumulation in Store
     // and ICAP pipelines while also obeying delay pools rate limits
     const auto accumulationAllowance = calcAccumulationAllowance();
@@ -1633,17 +1637,10 @@ HttpStateData::calcReadGoal(const size_t bufferSpaceLimit) const
     }
 
     const auto readSize = std::min<uint64_t>(bufferSpaceLimit, accumulationAllowance);
+    debugs(11, 5, "readSize=" << readSize << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
     assert(readSize > 0);
     assert(readSize <= SBuf::maxSize);
-
-    // work around some delay pool implementation limitations
-    if (readSize <= 2) {
-        debugs(11, 5, "insufficient gain; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
-        return 0;
-    }
-
-    debugs(11, 5, "readSize=" << readSize << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
-    return readSize;
+    return readSize; // unsigned downcast OK
 }
 
 /// called after writing the very last request byte (body, last-chunk, etc)
