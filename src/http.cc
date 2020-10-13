@@ -1560,6 +1560,8 @@ HttpStateData::prepReading()
         return 0;
     }
 
+    assert(readGoal > 0);
+    assert(readGoal <= SBuf::maxSize);
     return readGoal;
 }
 
@@ -1619,6 +1621,7 @@ HttpStateData::calcReadBufferSpaceLimit() const
 
     const auto bufferSpaceLimit = bufferCapacityLimit - inBuf.length();
     debugs(11, 7, "space limit: " << bufferSpaceLimit << '=' << bufferCapacityLimit << '-' << inBuf.length());
+    assert(bufferSpaceLimit > 0); // paranoid
     return bufferSpaceLimit;
 }
 
@@ -1626,8 +1629,6 @@ HttpStateData::calcReadBufferSpaceLimit() const
 size_t
 HttpStateData::calcReadGoal(const size_t bufferSpaceLimit) const
 {
-    assert(bufferSpaceLimit > 0); // or we should not be here
-
     // limit incremental (i.e. from multiple reads) data accumulation in Store
     // and ICAP pipelines while also obeying delay pools rate limits
     const auto accumulationAllowance = calcAccumulationAllowance();
@@ -1636,10 +1637,10 @@ HttpStateData::calcReadGoal(const size_t bufferSpaceLimit) const
         return 0;
     }
 
+    assert(bufferSpaceLimit > 0); // or we would not be here
     const auto readSize = std::min<uint64_t>(bufferSpaceLimit, accumulationAllowance);
     debugs(11, 5, "readSize=" << readSize << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
-    assert(readSize > 0);
-    assert(readSize <= SBuf::maxSize);
+    assert(readSize > 0); // paranoid
     return readSize; // unsigned downcast OK
 }
 
