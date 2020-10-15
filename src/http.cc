@@ -1641,7 +1641,8 @@ HttpStateData::calcReadGoal(const size_t bufferSpaceLimit) const
     const auto readSize = std::min<uint64_t>(bufferSpaceLimit, accumulationAllowance);
     debugs(11, 5, "readSize=" << readSize << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
     assert(readSize > 0); // paranoid
-    return readSize; // unsigned downcast OK
+    assert(readSize <= std::numeric_limits<size_t>::max()); // min() <= bufferSpaceLimit
+    return readSize; // the assertion above makes downcast from uint64_t safe
 }
 
 /// called after writing the very last request byte (body, last-chunk, etc)
