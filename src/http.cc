@@ -1591,10 +1591,6 @@ HttpStateData::maybeReadVirginBody()
 size_t
 HttpStateData::calcReadBufferCapacityLimit() const
 {
-    // XXX: Move to SBuf.h. This is a universally useful principle.
-    static_assert(SBuf::maxSize <= std::numeric_limits<size_t>::max(),
-        "SBuf::maxSize does not overflow size_t");
-
     // our non-incremental parser must see the entire header to parse it
     if (!flags.headers_parsed) {
         // TODO: Warn about and limit Config.maxReplyHeaderSize > SBuf::maxSize.

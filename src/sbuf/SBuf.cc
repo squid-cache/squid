@@ -17,6 +17,7 @@
 #include <cstring>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 InstanceIdDefinitions(SBuf, "SBuf");
@@ -24,6 +25,11 @@ InstanceIdDefinitions(SBuf, "SBuf");
 SBufStats SBuf::stats;
 const SBuf::size_type SBuf::npos;
 const SBuf::size_type SBuf::maxSize;
+
+// user code often uses size_t when calculating buffer sizes, implicitly
+// assuming that SBuf::maxSize would not be truncated in those calculations
+static_assert(SBuf::maxSize <= std::numeric_limits<size_t>::max(),
+              "SBuf::maxSize does not overflow size_t");
 
 SBuf::SBuf() : store_(GetStorePrototype())
 {
