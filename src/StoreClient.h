@@ -20,7 +20,7 @@ class StoreEntry;
 class ACLFilledChecklist;
 class LogTags;
 
-/// TODO: rename
+/// a storeGetPublic*() caller
 class StoreClient
 {
 
