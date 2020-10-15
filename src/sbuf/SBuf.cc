@@ -860,11 +860,14 @@ SBuf::reAlloc(size_type newsize)
     debugs(24, 8, id << " new size: " << newsize);
     Must(newsize <= maxSize);
     MemBlob::Pointer newbuf = new MemBlob(newsize);
-    if (length() > 0)
+    if (length() > 0) {
         newbuf->append(buf(), length());
+        ++stats.cowAllocCopy;
+    } else {
+        ++stats.cowJustAlloc;
+    }
     store_ = newbuf;
     off_ = 0;
-    ++stats.cowSlow;
     debugs(24, 7, id << " new store capacity: " << store_->capacity);
 }
 
@@ -898,7 +901,7 @@ SBuf::cow(SBuf::size_type newsize)
         const auto neededSpace = newsize - length();
         if (neededSpace <= availableSpace) {
             debugs(24, 8, id << " no cow needed; have " << availableSpace);
-            ++stats.cowFast;
+            ++stats.cowAvoided;
             return;
         }
         // shift left if adding idle leading space helps avoid reallocation
@@ -907,7 +910,7 @@ SBuf::cow(SBuf::size_type newsize)
             debugs(24, 8, id << " no cow after left-shifting " << off_ << " to get " << (availableSpace + off_));
             store_->shiftLeft(off_);
             off_ = 0;
-            ++stats.cowFast; // TODO: .cowMove
+            ++stats.cowShift;
             assert(neededSpace <= spaceSize());
             return;
         }

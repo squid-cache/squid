@@ -875,8 +875,10 @@ testSBuf::testReserve()
         buffer.reserveSpace(beforeSpaceSize);
         const auto after = SBuf::GetStats();
         const void * const afterPosition = buffer.rawContent();
-        CPPUNIT_ASSERT_EQUAL(before.cowSlow, after.cowSlow);
-        CPPUNIT_ASSERT_EQUAL(before.cowFast + 1, after.cowFast);
+        CPPUNIT_ASSERT_EQUAL(before.cowAvoided + 1, after.cowAvoided);
+        CPPUNIT_ASSERT_EQUAL(before.cowShift, after.cowShift);
+        CPPUNIT_ASSERT_EQUAL(before.cowJustAlloc, after.cowJustAlloc);
+        CPPUNIT_ASSERT_EQUAL(before.cowAllocCopy, after.cowAllocCopy);
         CPPUNIT_ASSERT_EQUAL(beforeSpaceSize, buffer.spaceSize());
         CPPUNIT_ASSERT_EQUAL(beforePosition, afterPosition);
         CPPUNIT_ASSERT(strcmp(fox + gap, buffer.c_str()) == 0);
@@ -902,8 +904,10 @@ testSBuf::testReserve()
         buffer.reserveSpace(beforeSpaceSize + gap); // force (entire) gap use
         const auto after = SBuf::GetStats();
         const void * const afterStorage = buffer.rawContent();
-        CPPUNIT_ASSERT_EQUAL(before.cowSlow, after.cowSlow);
-        CPPUNIT_ASSERT_EQUAL(before.cowFast + 1, after.cowFast);
+        CPPUNIT_ASSERT_EQUAL(before.cowAvoided, after.cowAvoided);
+        CPPUNIT_ASSERT_EQUAL(before.cowShift + 1, after.cowShift);
+        CPPUNIT_ASSERT_EQUAL(before.cowJustAlloc, after.cowJustAlloc);
+        CPPUNIT_ASSERT_EQUAL(before.cowAllocCopy, after.cowAllocCopy);
         CPPUNIT_ASSERT_EQUAL(initialStorage, afterStorage);
         CPPUNIT_ASSERT(beforeSpaceSize + gap <= buffer.spaceSize());
         CPPUNIT_ASSERT(strcmp(fox + gap, buffer.c_str()) == 0);
@@ -929,8 +933,10 @@ testSBuf::testReserve()
         buffer.reserveSpace(beforeSpaceSize + 1); // force (minimal) gap use
         const auto after = SBuf::GetStats();
         const void * const afterStorage = buffer.rawContent();
-        CPPUNIT_ASSERT_EQUAL(before.cowSlow, after.cowSlow);
-        CPPUNIT_ASSERT_EQUAL(before.cowFast + 1, after.cowFast);
+        CPPUNIT_ASSERT_EQUAL(before.cowAvoided, after.cowAvoided);
+        CPPUNIT_ASSERT_EQUAL(before.cowShift + 1, after.cowShift);
+        CPPUNIT_ASSERT_EQUAL(before.cowJustAlloc, after.cowJustAlloc);
+        CPPUNIT_ASSERT_EQUAL(before.cowAllocCopy, after.cowAllocCopy);
         CPPUNIT_ASSERT_EQUAL(initialStorage, afterStorage);
         CPPUNIT_ASSERT(beforeSpaceSize + gap <= buffer.spaceSize());
         CPPUNIT_ASSERT(strcmp(fox + gap, buffer.c_str()) == 0);
