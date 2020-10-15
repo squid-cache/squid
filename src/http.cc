@@ -79,6 +79,11 @@ CBDATA_CLASS_INIT(HttpStateData);
 
 static const char *const crlf = "\r\n";
 
+// When other limits allow us to read just 1 or 2 bytes from the socket, we
+// delay the read to work around delay pool implementation problems.
+// TODO: Confirm those problems and set to zero when delay pools are disabled.
+const size_t MinReadSize = 3;
+
 static void httpMaybeRemovePublic(StoreEntry *, Http::StatusCode);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
         HttpHeader * hdr_out, const int we_do_ranges, const Http::StateFlags &);
@@ -1550,10 +1555,9 @@ HttpStateData::prepReading()
     }
 
     const auto readGoal = calcReadGoal(readBufferSpaceLimit);
-    // delay reading 1-2 bytes to work around delay pool implementation problems
     // XXX: The transaction stalls if we have nothing to send to the client(s);
     // sending is what usually kicks our delayed read, resuming this transaction
-    if (readGoal <= 2) {
+    if (readGoal < MinReadSize) {
         assert(entry->mem_obj);
         AsyncCall::Pointer nilCall;
         entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(serverConnection, nullptr, 0, nilCall)));
@@ -1587,7 +1591,7 @@ HttpStateData::maybeReadVirginBody()
     Comm::Read(serverConnection, call);
 }
 
-/// maximum input buffer capacity that complies with various capacity limits
+/// input buffer capacity complying with various capacity preferences/limits
 size_t
 HttpStateData::calcReadBufferCapacityLimit() const
 {
@@ -1597,12 +1601,12 @@ HttpStateData::calcReadBufferCapacityLimit() const
         return Config.maxReplyHeaderSize;
     }
 
-    const auto readBufferSizeCfg =
+    const auto configurationPreferences =
         Config.tcpRcvBufsz ? Config.tcpRcvBufsz : SQUID_TCP_SO_RCVBUF;
-    const auto readBufferSizeMin =
+    const auto parserMinimums =
         flags.chunked ? Http::One::TeChunkedParser::LookAheadDistance() : 1U;
-    const auto readBufferSize = std::max(readBufferSizeMin, readBufferSizeCfg);
-    return std::min<size_t>(readBufferSize, SBuf::maxSize);
+    const auto combinedMaximum = std::max({parserMinimums, configurationPreferences, MinReadSize});
+    return std::min<size_t>(combinedMaximum, SBuf::maxSize);
 }
 
 /// maximum inBuf.spaceSize() according to calcReadBufferCapacityLimit()
