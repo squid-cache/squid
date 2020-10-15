@@ -729,6 +729,12 @@ configDoConfigure(void)
     if (!Config.udpMaxHitObjsz || Config.udpMaxHitObjsz > SQUID_UDP_SO_SNDBUF)
         Config.udpMaxHitObjsz = SQUID_UDP_SO_SNDBUF;
 
+    if (Config.maxReplyHeaderSize > SBuf::maxSize) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: lowering reply_header_max_size from " <<
+               Config.maxReplyHeaderSize << " to the maximum supported value of " << SBuf::maxSize << " bytes");
+        Config.maxReplyHeaderSize = SBuf::maxSize;
+    }
+
     if (Config.appendDomain)
         Config.appendDomainLen = strlen(Config.appendDomain);
     else

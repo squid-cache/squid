@@ -1593,8 +1593,8 @@ HttpStateData::calcReadBufferCapacityLimit() const
 {
     // our non-incremental parser must see the entire header to parse it
     if (!flags.headers_parsed) {
-        // TODO: Warn about and limit Config.maxReplyHeaderSize > SBuf::maxSize.
-        return std::min<size_t>(Config.maxReplyHeaderSize, SBuf::maxSize);
+        assert(Config.maxReplyHeaderSize <= SBuf::maxSize);
+        return Config.maxReplyHeaderSize;
     }
 
     const auto readBufferSizeCfg =
