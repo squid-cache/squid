@@ -8,16 +8,32 @@
 
 #include "squid.h"
 #include "MasterXaction.h"
+#include "sbuf/Stream.h"
 
-InstanceIdDefinitions(MasterXaction, "master", uint64_t);
+InstanceIdDefinitions(MxId, "mx", uint64_t);
+const MxId::Pointer MxId::Nil;
+InstanceIdDefinitions(MasterXaction, "tx", uint64_t);
+
+const SBuf
+MasterXaction::printId() const
+{
+    SBufStream out;
+    if (txParent)
+        out << txParent << "::";
+    else
+        out << xid << "::";
+    out << pxid;
+    return out.buf();
+}
 
 MasterXaction::Pointer
 MasterXaction::spawnChildLayer(const char *name) const
 {
     // we are producing essentially a copy - but there are state differences
-    txChild = new MasterXaction(initiator, name);
+    txChild = new MasterXaction(initiator, name, xid);
 
-    // txChild->id - use newly generated on
+    // txChild->xid - leave as constructed
+    // txChild->pxid - leave as constructed
     txChild->txParent = this;
     // txChild->xtChild - leave as nullptr
     txChild->squidPort = squidPort;

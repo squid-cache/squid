@@ -1434,7 +1434,7 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_MASTER_XACTION:
             if (al->request) {
                 doUint64 = true;
-                outUint64 = static_cast<uint64_t>(al->request->masterXaction->id.value);
+                outUint64 = al->request->masterXaction->id().value;
                 break;
             }
         }

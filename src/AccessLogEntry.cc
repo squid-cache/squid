@@ -125,7 +125,7 @@ AccessLogEntry::codeContextGist() const
 {
     if (request) {
         if (const auto &mx = request->masterXaction)
-            return mx->id.detach();
+            return mx->id().detach();
     }
     // TODO: Carefully merge ALE and MasterXaction.
     return ScopedId("ALE w/o master");
@@ -138,7 +138,7 @@ AccessLogEntry::detailCodeContext(std::ostream &os) const
 
     if (request) {
         if (const auto &mx = request->masterXaction)
-            return os << Debug::Extra << "current master transaction: " << mx->id;
+            return os << Debug::Extra << "current master transaction: " << mx->id();
     }
 
     // provide helpful details since we cannot identify the transaction exactly

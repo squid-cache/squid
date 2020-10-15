@@ -61,8 +61,8 @@ CommAcceptCbParams::print(std::ostream &os) const
 {
     CommCommonCbParams::print(os);
 
-    if (xaction != NULL)
-        os << ", " << xaction->id;
+    if (xaction)
+        os << ", " << xaction->id();
 }
 
 /* CommConnectCbParams */

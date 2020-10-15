@@ -12,10 +12,18 @@
 #include "anyp/forward.h"
 #include "anyp/PortCfg.h"
 #include "base/InstanceId.h"
-#include "base/Lock.h"
-#include "base/RefCount.h"
 #include "comm/forward.h"
 #include "XactionInitiator.h"
+
+class MasterXaction;
+
+class MxId : public RefCountable, public InstanceId<MasterXaction, uint64_t>
+{
+public:
+    typedef RefCount<MxId> Pointer;
+
+    static const Pointer Nil;
+};
 
 /** Master transaction details.
  *
@@ -38,10 +46,19 @@
  */
 class MasterXaction : public RefCountable
 {
+    /// Master Transaction ID.
+    /// The one master transaction may contain historic snapshots of state
+    /// for different protocols referenced by txParent and txChild.
+    /// As such we need to share the ID value without permitting changes
+    /// after construction.
+    const MxId::Pointer xid;
+
 public:
     typedef RefCount<MasterXaction> Pointer;
 
-    explicit MasterXaction(const XactionInitiator anInitiator, const char *name = nullptr) : layerName(name), initiator(anInitiator) {}
+    explicit MasterXaction(const XactionInitiator anInitiator, const char *name = nullptr, const MxId::Pointer &anId = MxId::Nil) :
+        xid(anId), layerName(name), initiator(anInitiator)
+    {}
 
     /// Create a new transaction context/sandbox for a nested
     /// sub-protocol which inherits all state information of
@@ -50,8 +67,14 @@ public:
 
 public: // Squid internal Metadata - not from any particular protocol.
 
-    /// transaction ID.
-    InstanceId<MasterXaction, uint64_t> id;
+    /// display unique transaction ID string
+    const SBuf printId() const;
+
+    /// the master transaction ID.
+    const MxId &id() const { return *xid; }
+
+    /// protocol transaction ID
+    InstanceId<MasterXaction, uint64_t> pxid;
 
     /// label to represent this transaction layer when displaying
     /// nested layers of protocol transactions
