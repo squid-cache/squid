@@ -951,6 +951,18 @@ clientReplyContext::purgeDoPurge()
 {
     auto firstFound = false;
     if (const auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_GET)) {
+        // special entries are only METHOD_GET entries without variance
+        if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
+            http->logType.update(LOG_TCP_DENIED);
+            Ip::Address tmp_noaddr;
+            tmp_noaddr.setNoAddr(); // TODO: make a global const
+            auto err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr,
+                                        http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr,
+                                        http->request, http->al);
+            startError(err);
+            entry->abandon(__FUNCTION__);
+            return;
+        }
         firstFound = true;
         if (!purgeEntry(*entry, Http::METHOD_GET))
             return;
@@ -1004,19 +1016,6 @@ bool
 clientReplyContext::purgeEntry(StoreEntry &entry, const Http::MethodType methodType, const char *descriptionPrefix)
 {
     debugs(88, 4, descriptionPrefix << Http::MethodStr(methodType) << " '" << entry.url() << "'" );
-
-    if (EBIT_TEST(entry.flags, ENTRY_SPECIAL)) {
-        http->logType.update(LOG_TCP_DENIED);
-        Ip::Address tmp_noaddr;
-        tmp_noaddr.setNoAddr(); // TODO: make a global const
-        auto err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr,
-                                    http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr,
-                                    http->request, http->al);
-        startError(err);
-        entry.abandon(__FUNCTION__);
-        return false;
-    }
-
 #if USE_HTCP
     neighborsHtcpClear(&entry, http->request, HttpRequestMethod(methodType), HTCP_CLR_PURGE);
 #endif
