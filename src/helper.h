@@ -29,6 +29,9 @@
 #include <queue>
 #include <unordered_map>
 
+class CommTimeoutCbParams;
+class HelperServerBase;
+class MemBuf;
 class Packable;
 class wordlist;
 
@@ -44,7 +47,6 @@ public:
 };
 }
 
-class HelperServerBase;
 /**
  * Managers a set of individual helper processes with a common queue of requests.
  *
@@ -94,18 +96,18 @@ public:
     dlink_list servers;
     std::queue<Helper::Xaction *> queue;
     const char *id_name = nullptr;
-    Helper::ChildConfig childs;          ///< configuration settings for number running
+    Helper::ChildConfig childs; ///< configuration settings for number running
     int ipc_type = 0;
     Ip::Address addr;
-    unsigned int droppedRequests = 0;    ///< requests not sent during helper overload
-    time_t overloadStart = 0;            ///< when the helper became overloaded (zero if it is not)
+    unsigned int droppedRequests = 0; ///< requests not sent during helper overload
+    time_t overloadStart = 0; ///< when the helper became overloaded (zero if it is not)
     time_t last_queue_warn = 0;
     time_t last_restart = 0;
-    time_t timeout = 0;                  ///< requests timeout
-    bool retryTimedOut = false;          ///< whether the timed-out requests must retried
-    bool retryBrokenHelper = false;      ///< whether the requests must retried on BH replies
-    SBuf onTimedOutResponse;             ///< the response to use when helper response timedout
-    char eom = '\n';                     ///< the char which marks the end of (response) message
+    time_t timeout = 0; ///< requests timeout
+    bool retryTimedOut = false; ///< whether the timed-out requests must retried
+    bool retryBrokenHelper = false; ///< whether the requests must retried on BH replies
+    SBuf onTimedOutResponse; ///< the response to use when helper response timedout
+    char eom = '\n'; ///< the char which marks the end of (response) message
 
     struct _stats {
         int requests = 0;
@@ -150,7 +152,7 @@ private:
     void submit(const char *buf, HLPCB * callback, void *data, const Helper::ReservationId & reservation);
     bool trySubmit(const char *buf, HLPCB * callback, void *data, const Helper::ReservationId & reservation);
 
-    ///< reserved servers indexed by reservation IDs
+    /// reserved servers indexed by reservation IDs
     Reservations reservations;
 };
 
@@ -215,16 +217,13 @@ public:
     Requests requests; ///< requests in order of submission/expiration
 
     struct {
-        uint64_t uses = 0;     ///< requests sent to this helper
-        uint64_t replies = 0;  ///< replies received from this helper
-        uint64_t pending = 0;  ///< queued lookups waiting to be sent to this helper
+        uint64_t uses = 0; ///< requests sent to this helper
+        uint64_t replies = 0; ///< replies received from this helper
+        uint64_t pending = 0; ///< queued lookups waiting to be sent to this helper
         uint64_t releases = 0; ///< times release() has been called on this helper (if stateful)
         uint64_t timedout = 0; ///< requests which timed-out
     } stats;
 };
-
-class MemBuf;
-class CommTimeoutCbParams;
 
 // TODO: Rename to StatelessHelperServer and rename HelperServerBase to HelperServer.
 /// represents a single "stateless helper" process
