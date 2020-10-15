@@ -6396,7 +6396,10 @@ DOC_START
 	  (with a hard-coded capacity limit of 64KB) serves as a read-ahead
 	  limit.
 
-	Squid ignores this directive when reading response headers.
+	Squid may ignore this directive when expecting response headers. Since
+	the size of the actual response header is unknown a priori, Squid may
+	end up reading more body bytes than is allowed by this directive if
+	reply_header_max_size exceeds read_ahead_gap.
 
 	Many other factors may reduce Squid's read-ahead aggressiveness,
 	including server bandwidth, Squid delay pools, Squid adaptation

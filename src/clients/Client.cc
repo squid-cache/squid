@@ -1024,11 +1024,9 @@ Client::calcAccumulationAllowance() const
          */
         space = virginBodyDestination->buf().potentialSpaceSize();
         assert(space >= 0);
-    } else // XXX: We should apply delay pool limits to for-ICAP traffic as well
+    } else // XXX: We should apply delay pool limits (but not read_ahead_gap limits!) to for-adaptation traffic as well
 #endif
     {
-        // XXX: If Config.readAheadGap is smaller than Config.maxReplyHeaderSize
-        // then this may prevent the caller from accumulating the entire header.
         const auto limit = std::numeric_limits<size_t>::max();
         space = entry->bytesWanted(Range<size_t>(0, limit), false);
     }

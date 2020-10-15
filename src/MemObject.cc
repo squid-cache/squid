@@ -308,11 +308,20 @@ MemObject::lowestMemReaderOffset() const
 uint64_t
 MemObject::readAheadAllowance() const
 {
+    // When Config.readAheadGap is smaller than Config.maxReplyHeaderSize, allow
+    // the reader to accumulate/parse the entire response header.
+    const auto savedHttpHeaders = baseReply().hdr_sz;
+    if (savedHttpHeaders <= 0) { // still receiving/parsing response headers
+        const auto allowance = std::max<uint64_t>(Config.maxReplyHeaderSize, Config.readAheadGap);
+        debugs(19, 5, allowance << " until headers are stored");
+        assert(allowance > 0); // because each limit is positive
+        return allowance;
+    }
+
     // XXX: Do not subtract savedHttpHeaders at all or subtract them from any
     // non-zero offset. Just like endOffset() includes headers (after they have
     // been stored), lowestMemReaderOffset() includes headers (after they have
     // been received by that reader).
-    const auto savedHttpHeaders = baseReply().hdr_sz;
 
     // XXX: Limit read-ahead when there is no LowestMemReader at all.
     const auto lowestOffset = lowestMemReaderOffset();

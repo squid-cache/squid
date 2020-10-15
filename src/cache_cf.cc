@@ -32,6 +32,7 @@
 #include "format/Format.h"
 #include "ftp/Elements.h"
 #include "globals.h"
+#include "http/one/ResponseParser.h"
 #include "HttpHeaderTools.h"
 #include "icmp/IcmpConfig.h"
 #include "ident/Config.h"
@@ -729,10 +730,22 @@ configDoConfigure(void)
     if (!Config.udpMaxHitObjsz || Config.udpMaxHitObjsz > SQUID_UDP_SO_SNDBUF)
         Config.udpMaxHitObjsz = SQUID_UDP_SO_SNDBUF;
 
-    if (Config.maxReplyHeaderSize > SBuf::maxSize) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: lowering reply_header_max_size from " <<
-               Config.maxReplyHeaderSize << " to the maximum supported value of " << SBuf::maxSize << " bytes");
-        Config.maxReplyHeaderSize = SBuf::maxSize;
+    {
+        constexpr auto minimum = Http::One::ResponseParser::ResponseSizeMin();
+        if (Config.maxReplyHeaderSize < minimum) {
+            debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: increasing reply_header_max_size from " <<
+                   Config.maxReplyHeaderSize << " to the minimum supported value of " << minimum << " bytes");
+            Config.maxReplyHeaderSize = minimum;
+        }
+
+        constexpr auto maximum = SBuf::maxSize;
+        if (Config.maxReplyHeaderSize > maximum) {
+            debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: lowering reply_header_max_size from " <<
+                   Config.maxReplyHeaderSize << " to the maximum supported value of " << maximum << " bytes");
+            Config.maxReplyHeaderSize = maximum;
+        }
+
+        static_assert(minimum <= maximum, "response parser limits are reasonable");
     }
 
     if (Config.appendDomain)

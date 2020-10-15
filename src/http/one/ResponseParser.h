@@ -29,6 +29,9 @@ namespace One {
 class ResponseParser : public Http1::Parser
 {
 public:
+    /// (very) approximate minimum size of a valid HTTP/1 response
+    static constexpr size_t ResponseSizeMin() { return 16; }
+
     ResponseParser() = default;
     ResponseParser(const ResponseParser &) = default;
     ResponseParser &operator =(const ResponseParser &) = default;
