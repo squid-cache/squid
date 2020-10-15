@@ -748,6 +748,9 @@ configDoConfigure(void)
         static_assert(minimum <= maximum, "response parser limits are reasonable");
     }
 
+    if (!Config.readAheadGap)
+        throw TextException("zero read_ahead_gap is invalid because it prohibits network reads", Here());
+
     if (Config.appendDomain)
         Config.appendDomainLen = strlen(Config.appendDomain);
     else
