@@ -333,7 +333,9 @@ MemObject::readAheadAllowance() const
     const auto lowestOffset = lowestMemReaderOffset();
     const auto highestOffset = endOffset();
     const auto currentGap = (highestOffset - savedHttpHeaders) - lowestOffset;
-    const auto allowance = Config.readAheadGap - currentGap;
+    const auto allowance = Config.readAheadGap - currentGap; // negative if buffered too much
+    static_assert(std::is_signed<decltype(allowance)>::value,
+                  "allowance supports 'buffered too much' state");
 
     debugs(19, 5, allowance << '=' << Config.readAheadGap << '-' << currentGap <<
            "; gap=" << highestOffset << '-' << savedHttpHeaders << '-' << lowestOffset);
