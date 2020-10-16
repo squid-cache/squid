@@ -956,7 +956,7 @@ clientReplyContext::purgeDoPurge()
             http->logType.update(LOG_TCP_DENIED);
             Ip::Address tmp_noaddr;
             tmp_noaddr.setNoAddr(); // TODO: make a global const
-            auto err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr,
+            const auto err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr,
                                         http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr,
                                         http->request, http->al);
             startError(err);
@@ -1591,7 +1591,7 @@ clientReplyContext::identifyStoreObject()
     // client sent CC:no-cache or some other condition has been
     // encountered which prevents delivering a public/cached object.
     if (!r->flags.noCache || r->flags.internal) {
-        auto e = storeGetPublicByRequest(r);
+        const auto e = storeGetPublicByRequest(r);
         identifyFoundObject(e, storeLookupString(bool(e)));
     } else {
         // "external" no-cache requests skip Store lookups
