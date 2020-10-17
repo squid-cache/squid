@@ -160,7 +160,7 @@ private:
 class HelperServerBase: public CbdataParent
 {
 public:
-    HelperServerBase(Ip::Address &, int aPid, void *aIpc, int rfd, int wfd);
+    HelperServerBase(const char *desc, Ip::Address &, int aPid, void *aIpc, int rfd, int wfd);
     virtual ~HelperServerBase();
 
     /** Closes pipes to the helper safely.

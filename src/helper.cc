@@ -126,7 +126,7 @@ HelperServerBase::dropQueued()
     }
 }
 
-HelperServerBase::HelperServerBase(Ip::Address &ip, int aPid, void *aIpc, int rfd, int wfd) :
+HelperServerBase::HelperServerBase(const char *desc, Ip::Address &ip, int aPid, void *aIpc, int rfd, int wfd) :
     pid(aPid),
     addr(ip),
     readPipe(new Comm::Connection),
@@ -136,9 +136,11 @@ HelperServerBase::HelperServerBase(Ip::Address &ip, int aPid, void *aIpc, int rf
 {
     readPipe->fd = rfd;
     readPipe->noteStart();
+    fd_note(readPipe->fd, desc);
 
     writePipe->fd = wfd;
     writePipe->noteStart();
+    fd_note(writePipe->fd, desc);
 }
 
 HelperServerBase::~HelperServerBase()
@@ -150,7 +152,7 @@ HelperServerBase::~HelperServerBase()
 }
 
 helper_server::helper_server(helper *hlp, int aPid, void *aIpc, int rfd, int wfd) :
-    HelperServerBase(hlp->addr, aPid, aIpc, rfd, wfd),
+    HelperServerBase(hlp->cmdline->key, hlp->addr, aPid, aIpc, rfd, wfd),
     parent(cbdataReference(hlp))
 {
 }
@@ -186,7 +188,7 @@ helper_server::dropQueued()
 }
 
 helper_stateful_server::helper_stateful_server(statefulhelper *hlp, int aPid, void *aIpc, int rfd, int wfd) :
-    HelperServerBase(hlp->addr, aPid, aIpc, rfd, wfd),
+    HelperServerBase(hlp->cmdline->key, hlp->addr, aPid, aIpc, rfd, wfd),
     parent(cbdataReference(hlp))
 {
 }
