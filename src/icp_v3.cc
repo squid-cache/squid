@@ -27,7 +27,7 @@ public:
     ICP3State(icp_common_t &aHeader, HttpRequest *aRequest) :
         ICPState(aHeader, aRequest) {}
 
-    ~ICP3State();
+    ~ICP3State() = default;
 };
 
 /// \ingroup ServerProtocolICPInternal3
@@ -70,9 +70,6 @@ doV3Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
         e->abandon(__FUNCTION__);
 
 }
-
-ICP3State::~ICP3State()
-{}
 
 /// \ingroup ServerProtocolICPInternal3
 /* Currently Harvest cached-2.x uses ICP_VERSION_3 */
