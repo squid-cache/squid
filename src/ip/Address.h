@@ -298,6 +298,8 @@ public:
      */
     bool GetHostByName(const char *s);
 
+    static const struct in6_addr v6_noaddr;
+
 public:
     /* XXX: When C => C++ conversion is done will be fully private.
      * Legacy Transition Methods.
@@ -345,7 +347,6 @@ private:
     static const struct in6_addr v4_localhost;
     static const struct in6_addr v4_anyaddr;
     static const struct in6_addr v4_noaddr;
-    static const struct in6_addr v6_noaddr;
 };
 
 inline std::ostream &
