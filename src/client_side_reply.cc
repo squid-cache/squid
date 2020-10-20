@@ -948,7 +948,7 @@ clientReplyContext::purgeDoPurge()
         if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
             http->logType.update(LOG_TCP_DENIED);
             const auto err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr,
-                                        http->getConn(), http->request, http->al);
+                                              http->getConn(), http->request, http->al);
             startError(err);
             entry->abandon(__FUNCTION__);
             return;
