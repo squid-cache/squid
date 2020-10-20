@@ -53,7 +53,7 @@ CBDATA_CLASS_INIT(clientReplyContext);
 
 /* Local functions */
 extern "C" CSS clientReplyStatus;
-ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const Comm::ConnectionPointer &, HttpRequest *, const AccessLogEntry::Pointer &);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const AccessLogEntry::Pointer &);
 
 /* privates */
 
@@ -99,7 +99,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
 void
 clientReplyContext::setReplyToError(
     err_type err, Http::StatusCode status, const HttpRequestMethod& method, char const *uri,
-    const Comm::ConnectionPointer &srcConn, HttpRequest *failedrequest, const char *unparsedrequest,
+    const ConnStateData *conn, HttpRequest *failedrequest, const char *unparsedrequest,
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request
 #else
@@ -107,7 +107,7 @@ clientReplyContext::setReplyToError(
 #endif
 )
 {
-    auto errstate = clientBuildError(err, status, uri, srcConn, failedrequest, http->al);
+    auto errstate = clientBuildError(err, status, uri, conn, failedrequest, http->al);
 
     if (unparsedrequest)
         errstate->request_hdrs = xstrdup(unparsedrequest);
@@ -759,11 +759,10 @@ clientReplyContext::processMiss()
         return;
     }
 
-    Comm::ConnectionPointer conn = http->getConn() != nullptr ? http->getConn()->clientConnection : nullptr;
     /// Deny loops
     if (r->flags.loopDetected) {
         http->al->http.code = Http::scForbidden;
-        err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr, conn, http->request, http->al);
+        err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr, http->getConn(), http->request, http->al);
         createStoreEntry(r->method, RequestFlags());
         errorAppendEntry(http->storeEntry(), err);
         triggerInitialStoreRead();
@@ -785,6 +784,7 @@ clientReplyContext::processMiss()
 
         assert(r->clientConnectionManager == http->getConn());
 
+        Comm::ConnectionPointer conn = http->getConn() != nullptr ? http->getConn()->clientConnection : nullptr;
         /** Start forwarding to get the new object from network */
         FwdState::Start(conn, http->storeEntry(), r, http->al);
     }
@@ -802,7 +802,7 @@ clientReplyContext::processOnlyIfCachedMiss()
     debugs(88, 4, http->request->method << ' ' << http->uri);
     http->al->http.code = Http::scGatewayTimeout;
     ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, Http::scGatewayTimeout, NULL,
-                                       http->getConn() ? http->getConn()->clientConnection : nullptr,
+                                       http->getConn() ? http->getConn() : nullptr,
                                        http->request, http->al);
     removeClientStoreReference(&sc, http);
     startError(err);
@@ -928,7 +928,7 @@ clientReplyContext::purgeRequest()
     if (!Config2.onoff.enable_purge) {
         http->logType.update(LOG_TCP_DENIED);
         ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL,
-                                           http->getConn() ? http->getConn()->clientConnection : nullptr, http->request, http->al);
+                                           http->getConn(), http->request, http->al);
         startError(err);
         return;
     }
@@ -949,8 +949,7 @@ clientReplyContext::purgeDoPurge()
         if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
             http->logType.update(LOG_TCP_DENIED);
             const auto err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr,
-                                        http->getConn() ? http->getConn()->clientConnection : nullptr,
-                                        http->request, http->al);
+                                        http->getConn(), http->request, http->al);
             startError(err);
             entry->abandon(__FUNCTION__);
             return;
@@ -1873,8 +1872,7 @@ clientReplyContext::sendBodyTooLargeError()
 {
     http->logType.update(LOG_TCP_DENIED_REPLY);
     ErrorState *err = clientBuildError(ERR_TOO_BIG, Http::scForbidden, NULL,
-                                       http->getConn() ? http->getConn()->clientConnection : nullptr,
-                                       http->request, http->al);
+                                       http->getConn(), http->request, http->al);
     removeClientStoreReference(&(sc), http);
     HTTPMSGUNLOCK(reply);
     startError(err);
@@ -1888,7 +1886,7 @@ clientReplyContext::sendPreconditionFailedError()
     http->logType.update(LOG_TCP_HIT);
     ErrorState *const err =
         clientBuildError(ERR_PRECONDITION_FAILED, Http::scPreconditionFailed,
-                         nullptr, http->getConn() ? http->getConn()->clientConnection : nullptr, http->request, http->al);
+                         nullptr, http->getConn(), http->request, http->al);
     removeClientStoreReference(&sc, http);
     HTTPMSGUNLOCK(reply);
     startError(err);
@@ -1998,8 +1996,7 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
             page_id = ERR_ACCESS_DENIED;
 
         err = clientBuildError(page_id, Http::scForbidden, NULL,
-                               http->getConn() ? http->getConn()->clientConnection : nullptr,
-                               http->request, http->al);
+                               http->getConn(), http->request, http->al);
 
         removeClientStoreReference(&sc, http);
 
@@ -2230,10 +2227,10 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
 
 ErrorState *
 clientBuildError(err_type page_id, Http::StatusCode status, char const *url,
-                 const Comm::ConnectionPointer &srcConn, HttpRequest *request, const AccessLogEntry::Pointer &al)
+                 const ConnStateData *conn, HttpRequest *request, const AccessLogEntry::Pointer &al)
 {
     const auto err = new ErrorState(page_id, status, request, al);
-    err->src_addr = srcConn ? srcConn->remote : Ip::Address::v6_noaddr;
+    err->src_addr = conn && conn->clientConnection ? conn->clientConnection->remote : Ip::Address::v6_noaddr;
 
     if (url)
         err->url = xstrdup(url);

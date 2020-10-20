@@ -260,7 +260,7 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
         assert (repContext);
         repContext->setReplyToError(ERR_GATEWAY_FAILURE, status,
                                     http->request->method, NULL,
-                                    http->getConn() ? http->getConn()->clientConnection : nullptr,
+                                    http->getConn(),
                                     http->request,
                                     NULL,
 #if USE_AUTH

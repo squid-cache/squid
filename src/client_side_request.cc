@@ -84,7 +84,7 @@ static const char *const crlf = "\r\n";
 static void clientFollowXForwardedForCheck(Acl::Answer answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, const Comm::ConnectionPointer &, HttpRequest *, const AccessLogEntry::Pointer &);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *url, const ConnStateData *, HttpRequest *, const AccessLogEntry::Pointer &);
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
@@ -569,7 +569,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
     assert (repContext);
     repContext->setReplyToError(ERR_CONFLICT_HOST, Http::scConflict,
                                 http->request->method, NULL,
-                                http->getConn()->clientConnection,
+                                http->getConn(),
                                 http->request,
                                 NULL,
 #if USE_AUTH
@@ -802,11 +802,7 @@ ClientRequestContext::clientAccessCheckDone(const Acl::Answer &answer)
                 page_id = ERR_ACCESS_DENIED;
         }
 
-        error = clientBuildError(page_id, status,
-                                 NULL,
-                                 http->getConn() ? http->getConn()->clientConnection : nullptr,
-                                 http->request, http->al
-                                );
+        error = clientBuildError(page_id, status, nullptr, http->getConn(), http->request, http->al);
 
 #if USE_AUTH
         error->auth_user_request =
@@ -2176,11 +2172,7 @@ ClientHttpRequest::calloutsError(const err_type error, const int errDetail)
     if (calloutContext) {
         ConnStateData * c = getConn();
         calloutContext->error = clientBuildError(error, Http::scInternalServerError,
-                                NULL,
-                                c ? c->clientConnection : nullptr,
-                                request,
-                                al
-                                                );
+                                nullptr, c, request, al);
 #if USE_AUTH
         calloutContext->error->auth_user_request =
             c != NULL && c->getAuth() != NULL ? c->getAuth() : request->auth_user_request;
