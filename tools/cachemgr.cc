@@ -1086,7 +1086,6 @@ static void
 make_pub_auth(cachemgr_request * req)
 {
     static char buf[1024];
-
     safe_free(req->pub_auth);
     debug("cmgr: encoding for pub...\n");
 
