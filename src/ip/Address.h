@@ -298,7 +298,9 @@ public:
      */
     bool GetHostByName(const char *s);
 
-    static const struct in6_addr v6_noaddr;
+    /// \returns an object containing the specific IP case NO_ADDR (format-neutral).
+    /// see isNoAddr() for more detail.
+    static const Address &NoAddr() { static const Address noAddr(v6_noaddr); return noAddr; }
 
 public:
     /* XXX: When C => C++ conversion is done will be fully private.
@@ -347,6 +349,7 @@ private:
     static const struct in6_addr v4_localhost;
     static const struct in6_addr v4_anyaddr;
     static const struct in6_addr v4_noaddr;
+    static const struct in6_addr v6_noaddr;
 };
 
 inline std::ostream &
