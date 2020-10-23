@@ -195,9 +195,11 @@ Store::Controller::maxObjectSize() const
 }
 
 void
-Store::Controller::updateLimits()
+Store::Controller::configure()
 {
-    swapDir->updateLimits();
+    swapDir->configure();
+
+    // update limits
 
     store_swap_high = (long) (((float) maxSize() *
                                (float) Config.Swap.highWaterMark) / (float) 100);

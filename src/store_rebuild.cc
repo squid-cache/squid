@@ -50,8 +50,7 @@ StoreRebuildData::updateStartTime(const timeval &dirStartTime)
 static int
 storeCleanupDoubleCheck(StoreEntry * e)
 {
-    SwapDir *SD = dynamic_cast<SwapDir *>(INDEXSD(e->swap_dirn));
-    return (SD->doubleCheck(*e));
+    return e->disk().doubleCheck(*e);
 }
 
 static void
