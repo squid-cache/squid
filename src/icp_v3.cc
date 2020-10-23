@@ -53,11 +53,9 @@ doV3Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     state.from = from;
     state.url = xstrdup(url);
 
-    const auto e = storeGetPublic(url, Http::METHOD_GET);
-
     icp_opcode codeToSend;
 
-    if (e && state.confirmAndPrepHit(*e)) {
+    if (state.isHit()) {
         codeToSend = ICP_HIT;
     } else if (icpGetCommonOpcode() == ICP_ERR)
         codeToSend = ICP_MISS;
@@ -65,10 +63,6 @@ doV3Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
         codeToSend = icpGetCommonOpcode();
 
     icpCreateAndSend(codeToSend, 0, url, header.reqnum, 0, fd, from, state.al);
-
-    if (e)
-        e->abandon(__FUNCTION__);
-
 }
 
 /// \ingroup ServerProtocolICPInternal3

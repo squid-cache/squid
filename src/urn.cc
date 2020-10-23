@@ -174,14 +174,16 @@ UrnState::start(HttpRequest * r, StoreEntry * e)
     if (urlres_r == NULL)
         return;
 
-    const auto urlEntry = storeGetPublic(urlres, Http::METHOD_GET);
+    auto urlEntry = storeGetPublic(urlres, Http::METHOD_GET);
 
     if (!urlEntry || (urlEntry->hittingRequiresCollapsing() && !startCollapsingOn(*urlEntry, false))) {
         urlres_e = storeCreateEntry(urlres, urlres, RequestFlags(), Http::METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);
         FwdState::Start(Comm::ConnectionPointer(), urlres_e, urlres_r.getRaw(), ale);
-        if (urlEntry)
+        if (urlEntry) {
             urlEntry->abandon(__FUNCTION__);
+            urlEntry = nullptr;
+        }
     } else {
         urlres_e = urlEntry;
         urlres_e->lock("UrnState::start");

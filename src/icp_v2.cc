@@ -155,6 +155,19 @@ ICPState::~ICPState()
 }
 
 bool
+ICPState::isHit()
+{
+    const auto e = storeGetPublic(url, Http::METHOD_GET);
+
+    const auto hit = e && confirmAndPrepHit(*e);
+
+    if (e)
+        e->abandon(__FUNCTION__);
+
+    return hit;
+}
+
+bool
 ICPState::confirmAndPrepHit(const StoreEntry &e)
 {
     if (!e.validToSend())
@@ -510,11 +523,9 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     state.rtt = rtt;
     state.src_rtt = src_rtt;
 
-    const auto e = storeGetPublic(url, Http::METHOD_GET);
-
     icp_opcode codeToSend;
 
-    if (e && state.confirmAndPrepHit(*e)) {
+    if (state.isHit()) {
         codeToSend = ICP_HIT;
     } else {
 #if USE_ICMP
@@ -533,9 +544,6 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
     }
 
     icpCreateAndSend(codeToSend, flags, url, header.reqnum, src_rtt, fd, from, state.al);
-
-    if (e)
-        e->abandon(__FUNCTION__);
 
     HTTPMSGUNLOCK(icp_request);
 }

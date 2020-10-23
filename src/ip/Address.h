@@ -298,8 +298,8 @@ public:
      */
     bool GetHostByName(const char *s);
 
-    /// \returns an object containing the specific IP case NO_ADDR (format-neutral).
-    /// see isNoAddr() for more detail.
+    /// \returns an Address with true isNoAddr()
+    /// \see isNoAddr() for more details
     static const Address &NoAddr() { static const Address noAddr(v6_noaddr); return noAddr; }
 
 public:

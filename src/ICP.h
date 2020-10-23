@@ -65,8 +65,8 @@ public:
     ICPState(icp_common_t &aHeader, HttpRequest *aRequest);
     virtual ~ICPState();
 
-    /// either confirms and starts processing a cache hit or returns false
-    bool confirmAndPrepHit(const StoreEntry &);
+    /// whether the cache contains the requested entry
+    bool isHit();
 
     icp_common_t header;
     HttpRequest *request;
@@ -80,6 +80,9 @@ protected:
     /* StoreClient API */
     virtual LogTags *loggingTags() override;
     virtual void fillChecklist(ACLFilledChecklist &) const override;
+
+    /// either confirms and starts processing a cache hit or returns false
+    bool confirmAndPrepHit(const StoreEntry &);
 };
 
 extern Comm::ConnectionPointer icpIncomingConn;
