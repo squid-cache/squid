@@ -56,6 +56,8 @@ objectSizeForDirSelection(const StoreEntry &entry)
 static SwapDir &
 SwapDirByIndex(const int i)
 {
+    assert(i >= 0);
+    assert(i < Config.cacheSwap.n_allocated);
     const auto sd = INDEXSD(i);
     assert(sd);
     return *sd;
@@ -173,7 +175,7 @@ Store::Disks::Disks():
 SwapDir *
 Store::Disks::store(int const x) const
 {
-    return INDEXSD(x);
+    return &SwapDirByIndex(x);
 }
 
 SwapDir &
@@ -384,17 +386,18 @@ Store::Disks::configure()
     largestMaximumObjectSize = -1;
     secondLargestMaximumObjectSize = -1;
 
+    Config.cacheSwap.n_strands = 0;
+
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         auto &disk = Dir(i);
         if (disk.needsDiskStrand()) {
             assert(InDaemonMode());
+            // XXX: Do not pretend to support disk.disker changes during reconfiguration
             disk.disker = Config.workers + (++Config.cacheSwap.n_strands);
         }
 
         if (!disk.active())
             continue;
-
-        // update limits
 
         if (disk.minObjectSize() > largestMinimumObjectSize)
             largestMinimumObjectSize = disk.minObjectSize();
@@ -409,7 +412,7 @@ Store::Disks::configure()
 }
 
 void
-Store::Disks::Parse(Store::DiskConfig &swap)
+Store::Disks::Parse(DiskConfig &swap)
 {
     const auto typeStr = ConfigParser::NextToken();
     if (!typeStr)
@@ -428,6 +431,7 @@ Store::Disks::Parse(Store::DiskConfig &swap)
     const auto fsType = fs->type();
 
     // check for the existing cache_dir
+    // XXX: This code mistreats duplicated cache_dir entries (that should be fatal).
     for (int i = 0; i < swap.n_configured; ++i) {
         auto &disk = Dir(i);
         if ((strcasecmp(pathStr, disk.path)) == 0) {
@@ -462,10 +466,10 @@ Store::Disks::Parse(Store::DiskConfig &swap)
 }
 
 void
-Store::Disks::Dump(const Store::DiskConfig &swap, StoreEntry &entry, const char *name)
+Store::Disks::Dump(const DiskConfig &swap, StoreEntry &entry, const char *name)
 {
    for (int i = 0; i < swap.n_configured; ++i) {
-       const auto &disk = SwapDirByIndex(i);
+       const auto &disk = Dir(i);
        storeAppendPrintf(&entry, "%s %s %s", name, disk.type(), disk.path);
        disk.dump(entry);
        storeAppendPrintf(&entry, "\n");
@@ -635,7 +639,7 @@ bool
 Store::Disks::updateAnchored(StoreEntry &entry)
 {
     return entry.hasDisk() &&
-           Dir(entry.swap_dirn).updateAnchored(entry);
+           entry.disk().updateAnchored(entry);
 }
 
 bool
@@ -670,14 +674,14 @@ void
 storeDirOpenSwapLogs()
 {
     for (int dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn)
-        INDEXSD(dirn)->openLog();
+        SwapDirByIndex(dirn).openLog();
 }
 
 void
 storeDirCloseSwapLogs()
 {
     for (int dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn)
-        INDEXSD(dirn)->closeLog();
+        SwapDirByIndex(dirn).closeLog();
 }
 
 /**
@@ -714,7 +718,7 @@ storeDirWriteCleanLogs(int reopen)
     start = current_time;
 
     for (dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn) {
-        auto &sd = *INDEXSD(dirn);
+        auto &sd = SwapDirByIndex(dirn);
 
         if (sd.writeCleanStart() < 0) {
             debugs(20, DBG_IMPORTANT, "log.clean.start() failed for dir #" << sd.index);
@@ -849,6 +853,6 @@ storeDirSwapLog(const StoreEntry * e, int op)
            e->swap_dirn << " " <<
            std::hex << std::uppercase << std::setfill('0') << std::setw(8) << e->swap_filen);
 
-    SwapDirByIndex(e->swap_dirn).logEntry(*e, op);
+    e->disk().logEntry(*e, op);
 }
 

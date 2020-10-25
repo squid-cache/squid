@@ -45,9 +45,9 @@ public:
     /// update configuration, including limits (re)calculation
     void configure();
     /// parses a single cache_dir configuration line
-    static void Parse(Store::DiskConfig &);
+    static void Parse(DiskConfig &);
     /// prints the configuration into the provided StoreEntry
-    static void Dump(const Store::DiskConfig &, StoreEntry &, const char *name);
+    static void Dump(const DiskConfig &, StoreEntry &, const char *name);
 
     /// Additional unknown-size entry bytes required by disks in order to
     /// reduce the risk of selecting the wrong disk cache for the growing entry.

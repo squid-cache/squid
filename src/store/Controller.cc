@@ -199,8 +199,6 @@ Store::Controller::configure()
 {
     swapDir->configure();
 
-    // update limits
-
     store_swap_high = (long) (((float) maxSize() *
                                (float) Config.Swap.highWaterMark) / (float) 100);
     store_swap_low = (long) (((float) maxSize() *
