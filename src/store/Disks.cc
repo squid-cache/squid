@@ -53,6 +53,7 @@ objectSizeForDirSelection(const StoreEntry &entry)
     return minSize;
 }
 
+/// TODO: Remove when cache_dir-iterating functions are converted to Disks methods
 static SwapDir &
 SwapDirByIndex(const int i)
 {
