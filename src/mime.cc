@@ -45,7 +45,7 @@ public:
     void load();
 
     /* StoreClient API */
-    virtual LogTags *loggingTags() { return nullptr; } // no access logging/ACLs
+    virtual LogTags *loggingTags() const { return nullptr; } // no access logging/ACLs
     virtual void fillChecklist(ACLFilledChecklist &) const;
 
 private:

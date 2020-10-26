@@ -139,7 +139,7 @@ public:
     virtual std::ostream &detailCodeContext(std::ostream &os) const; // override
 
     /* StoreClient API */
-    virtual LogTags *loggingTags();
+    virtual LogTags *loggingTags() const;
     virtual void fillChecklist(ACLFilledChecklist &) const;
 
 public:
@@ -992,7 +992,7 @@ htcpSpecifier::checkHit()
 }
 
 LogTags *
-htcpSpecifier::loggingTags()
+htcpSpecifier::loggingTags() const
 {
     // calling htcpSyncAle() here would not change cache.code
     if (!al)

@@ -54,7 +54,7 @@ public:
 
 private:
     /* StoreClient API */
-    virtual LogTags *loggingTags() { return ale ? &ale->cache.code : nullptr; }
+    virtual LogTags *loggingTags() const { return ale ? &ale->cache.code : nullptr; }
     virtual void fillChecklist(ACLFilledChecklist &) const;
 
     char *urlres = nullptr;

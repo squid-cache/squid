@@ -66,7 +66,7 @@ public:
     Http::StatusCode purgeStatus;
 
     /* StoreClient API */
-    virtual LogTags *loggingTags();
+    virtual LogTags *loggingTags() const;
 
     ClientHttpRequest *http;
     /// Base reply header bytes received from Store.

@@ -28,7 +28,7 @@ public:
     virtual ~StoreClient () {}
 
     /// \return LogTags (if the class logs transactions) or nil (otherwise)
-    virtual LogTags *loggingTags() = 0;
+    virtual LogTags *loggingTags() const = 0;
 
 protected:
     /// configure the ACL checklist with the current transaction state
@@ -37,7 +37,7 @@ protected:
     /// \returns whether the caller must collapse on the given entry
     /// Before returning true, updates common collapsing-related stats.
     /// See also: StoreEntry::hittingRequiresCollapsing().
-    bool startCollapsingOn(const StoreEntry &, const bool doingRevalidation);
+    bool startCollapsingOn(const StoreEntry &, const bool doingRevalidation) const;
 
     // These methods only interpret Squid configuration. Their allowances are
     // provisional -- other factors may prevent collapsed forwarding. The first

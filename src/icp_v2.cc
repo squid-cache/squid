@@ -155,7 +155,7 @@ ICPState::~ICPState()
 }
 
 bool
-ICPState::isHit()
+ICPState::isHit() const
 {
     const auto e = storeGetPublic(url, Http::METHOD_GET);
 
@@ -168,7 +168,7 @@ ICPState::isHit()
 }
 
 bool
-ICPState::confirmAndPrepHit(const StoreEntry &e)
+ICPState::confirmAndPrepHit(const StoreEntry &e) const
 {
     if (!e.validToSend())
         return false;
@@ -183,7 +183,7 @@ ICPState::confirmAndPrepHit(const StoreEntry &e)
 }
 
 LogTags *
-ICPState::loggingTags()
+ICPState::loggingTags() const
 {
     // calling icpSyncAle(LOG_TAG_NONE) here would not change cache.code
     if (!al)

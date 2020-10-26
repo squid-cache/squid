@@ -910,7 +910,7 @@ clientReplyContext::purgeAllCached()
 }
 
 LogTags *
-clientReplyContext::loggingTags()
+clientReplyContext::loggingTags() const
 {
     // XXX: clientReplyContext code assumes that http cbdata is always valid.
     // TODO: Either add cbdataReferenceValid(http) checks in all the relevant
