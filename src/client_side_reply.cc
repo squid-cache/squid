@@ -53,7 +53,7 @@ CBDATA_CLASS_INIT(clientReplyContext);
 
 /* Local functions */
 extern "C" CSS clientReplyStatus;
-ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, Ip::Address &, HttpRequest *, const AccessLogEntry::Pointer &);
+ErrorState *clientBuildError(err_type, Http::StatusCode, char const *, const ConnStateData *, HttpRequest *, const AccessLogEntry::Pointer &);
 
 /* privates */
 
@@ -74,7 +74,6 @@ clientReplyContext::~clientReplyContext()
 
 clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
     purgeStatus(Http::scNone),
-    lookingforstore(0),
     http(cbdataReference(clientContext)),
     headers_sz(0),
     sc(NULL),
@@ -100,7 +99,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) :
 void
 clientReplyContext::setReplyToError(
     err_type err, Http::StatusCode status, const HttpRequestMethod& method, char const *uri,
-    Ip::Address &addr, HttpRequest * failedrequest, const char *unparsedrequest,
+    const ConnStateData *conn, HttpRequest *failedrequest, const char *unparsedrequest,
 #if USE_AUTH
     Auth::UserRequest::Pointer auth_user_request
 #else
@@ -108,7 +107,7 @@ clientReplyContext::setReplyToError(
 #endif
 )
 {
-    auto errstate = clientBuildError(err, status, uri, addr, failedrequest, http->al);
+    auto errstate = clientBuildError(err, status, uri, conn, failedrequest, http->al);
 
     if (unparsedrequest)
         errstate->request_hdrs = xstrdup(unparsedrequest);
@@ -760,13 +759,10 @@ clientReplyContext::processMiss()
         return;
     }
 
-    Comm::ConnectionPointer conn = http->getConn() != nullptr ? http->getConn()->clientConnection : nullptr;
     /// Deny loops
     if (r->flags.loopDetected) {
         http->al->http.code = Http::scForbidden;
-        Ip::Address tmp_noaddr;
-        tmp_noaddr.setNoAddr();
-        err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr, conn ? conn->remote : tmp_noaddr, http->request, http->al);
+        err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr, http->getConn(), http->request, http->al);
         createStoreEntry(r->method, RequestFlags());
         errorAppendEntry(http->storeEntry(), err);
         triggerInitialStoreRead();
@@ -788,6 +784,7 @@ clientReplyContext::processMiss()
 
         assert(r->clientConnectionManager == http->getConn());
 
+        Comm::ConnectionPointer conn = http->getConn() != nullptr ? http->getConn()->clientConnection : nullptr;
         /** Start forwarding to get the new object from network */
         FwdState::Start(conn, http->storeEntry(), r, http->al);
     }
@@ -804,11 +801,8 @@ clientReplyContext::processOnlyIfCachedMiss()
 {
     debugs(88, 4, http->request->method << ' ' << http->uri);
     http->al->http.code = Http::scGatewayTimeout;
-    Ip::Address tmp_noaddr;
-    tmp_noaddr.setNoAddr();
     ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, Http::scGatewayTimeout, NULL,
-                                       http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr,
-                                       http->request, http->al);
+                                       http->getConn(), http->request, http->al);
     removeClientStoreReference(&sc, http);
     startError(err);
 }
@@ -886,18 +880,6 @@ clientReplyContext::blockedHit() const
     }
 }
 
-void
-clientReplyContext::purgeRequestFindObjectToPurge()
-{
-    /* Try to find a base entry */
-    http->flags.purging = true;
-    lookingforstore = 1;
-
-    // TODO: can we use purgeAllCached() here instead of doing the
-    // getPublicByRequestMethod() dance?
-    StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_GET);
-}
-
 // Purges all entries with a given url
 // TODO: move to SideAgent parent, when we have one
 /*
@@ -927,89 +909,13 @@ clientReplyContext::purgeAllCached()
     purgeEntriesByUrl(http->request, url.c_str());
 }
 
-void
-clientReplyContext::created(StoreEntry *newEntry)
-{
-    detailStoreLookup(newEntry ? "match" : "mismatch");
-
-    if (lookingforstore == 1)
-        purgeFoundGet(newEntry);
-    else if (lookingforstore == 2)
-        purgeFoundHead(newEntry);
-    else if (lookingforstore == 3)
-        purgeDoPurgeGet(newEntry);
-    else if (lookingforstore == 4)
-        purgeDoPurgeHead(newEntry);
-    else if (lookingforstore == 5)
-        identifyFoundObject(newEntry);
-}
-
 LogTags *
-clientReplyContext::loggingTags()
+clientReplyContext::loggingTags() const
 {
     // XXX: clientReplyContext code assumes that http cbdata is always valid.
     // TODO: Either add cbdataReferenceValid(http) checks in all the relevant
     // places, like this one, or remove cbdata protection of the http member.
     return &http->logType;
-}
-
-void
-clientReplyContext::purgeFoundGet(StoreEntry *newEntry)
-{
-    if (!newEntry) {
-        lookingforstore = 2;
-        StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
-    } else
-        purgeFoundObject (newEntry);
-}
-
-void
-clientReplyContext::purgeFoundHead(StoreEntry *newEntry)
-{
-    if (!newEntry)
-        purgeDoMissPurge();
-    else
-        purgeFoundObject (newEntry);
-}
-
-void
-clientReplyContext::purgeFoundObject(StoreEntry *entry)
-{
-    assert (entry);
-
-    if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
-        http->logType.update(LOG_TCP_DENIED);
-        Ip::Address tmp_noaddr;
-        tmp_noaddr.setNoAddr(); // TODO: make a global const
-        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL,
-                                           http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr,
-                                           http->request, http->al);
-        startError(err);
-        return; // XXX: leaking unused entry if some store does not keep it
-    }
-
-    StoreIOBuffer localTempBuffer;
-    /* Swap in the metadata */
-    http->storeEntry(entry);
-
-    http->storeEntry()->lock("clientReplyContext::purgeFoundObject");
-    http->storeEntry()->ensureMemObject(storeId(), http->log_uri,
-                                        http->request->method);
-
-    sc = storeClientListAdd(http->storeEntry(), this);
-
-    http->logType.update(LOG_TCP_HIT);
-
-    reqofs = 0;
-
-    localTempBuffer.offset = http->out.offset;
-
-    localTempBuffer.length = next()->readBuffer.length;
-
-    localTempBuffer.data = next()->readBuffer.data;
-
-    storeClientCopy(sc, http->storeEntry(),
-                    localTempBuffer, CacheHit, this);
 }
 
 void
@@ -1020,10 +926,8 @@ clientReplyContext::purgeRequest()
 
     if (!Config2.onoff.enable_purge) {
         http->logType.update(LOG_TCP_DENIED);
-        Ip::Address tmp_noaddr;
-        tmp_noaddr.setNoAddr();
         ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, NULL,
-                                           http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr, http->request, http->al);
+                                           http->getConn(), http->request, http->al);
         startError(err);
         return;
     }
@@ -1031,47 +935,34 @@ clientReplyContext::purgeRequest()
     /* Release both IP cache */
     ipcacheInvalidate(http->request->url.host());
 
-    if (!http->flags.purging)
-        purgeRequestFindObjectToPurge();
-    else
-        purgeDoMissPurge();
+    // TODO: can we use purgeAllCached() here instead?
+    purgeDoPurge();
 }
 
 void
-clientReplyContext::purgeDoMissPurge()
+clientReplyContext::purgeDoPurge()
 {
-    http->logType.update(LOG_TCP_MISS);
-    lookingforstore = 3;
-    StoreEntry::getPublicByRequestMethod(this,http->request, Http::METHOD_GET);
-}
-
-void
-clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
-{
-    if (newEntry) {
-        /* Release the cached URI */
-        debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
-#if USE_HTCP
-        neighborsHtcpClear(newEntry, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
-#endif
-        newEntry->release(true);
-        purgeStatus = Http::scOkay;
+    auto firstFound = false;
+    if (const auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_GET)) {
+        // special entries are only METHOD_GET entries without variance
+        if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
+            http->logType.update(LOG_TCP_DENIED);
+            const auto err = clientBuildError(ERR_ACCESS_DENIED, Http::scForbidden, nullptr,
+                                              http->getConn(), http->request, http->al);
+            startError(err);
+            entry->abandon(__FUNCTION__);
+            return;
+        }
+        firstFound = true;
+        if (!purgeEntry(*entry, Http::METHOD_GET))
+            return;
     }
 
-    lookingforstore = 4;
-    StoreEntry::getPublicByRequestMethod(this, http->request, Http::METHOD_HEAD);
-}
+    detailStoreLookup(storeLookupString(firstFound));
 
-void
-clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
-{
-    if (newEntry) {
-        debugs(88, 4, "HEAD " << newEntry->url());
-#if USE_HTCP
-        neighborsHtcpClear(newEntry, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
-#endif
-        newEntry->release(true);
-        purgeStatus = Http::scOkay;
+    if (const auto entry = storeGetPublicByRequestMethod(http->request, Http::METHOD_HEAD)) {
+        if (!purgeEntry(*entry, Http::METHOD_HEAD))
+            return;
     }
 
     /* And for Vary, release the base URI if none of the headers was included in the request */
@@ -1079,26 +970,15 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
             && http->request->vary_headers.find('=') != SBuf::npos) {
         // XXX: performance regression, c_str() reallocates
         SBuf tmp(http->request->effectiveRequestUri());
-        StoreEntry *entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET);
 
-        if (entry) {
-            debugs(88, 4, "Vary GET " << entry->url());
-#if USE_HTCP
-            neighborsHtcpClear(entry, http->request, HttpRequestMethod(Http::METHOD_GET), HTCP_CLR_PURGE);
-#endif
-            entry->release(true);
-            purgeStatus = Http::scOkay;
+        if (const auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_GET)) {
+            if (!purgeEntry(*entry, Http::METHOD_GET, "Vary "))
+                return;
         }
 
-        entry = storeGetPublic(tmp.c_str(), Http::METHOD_HEAD);
-
-        if (entry) {
-            debugs(88, 4, "Vary HEAD " << entry->url());
-#if USE_HTCP
-            neighborsHtcpClear(entry, http->request, HttpRequestMethod(Http::METHOD_HEAD), HTCP_CLR_PURGE);
-#endif
-            entry->release(true);
-            purgeStatus = Http::scOkay;
+        if (const auto entry = storeGetPublic(tmp.c_str(), Http::METHOD_HEAD)) {
+            if (!purgeEntry(*entry, Http::METHOD_HEAD, "Vary "))
+                return;
         }
     }
 
@@ -1120,6 +1000,18 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
     rep->setHeaders(purgeStatus, NULL, NULL, 0, 0, -1);
     http->storeEntry()->replaceHttpReply(rep);
     http->storeEntry()->complete();
+}
+
+bool
+clientReplyContext::purgeEntry(StoreEntry &entry, const Http::MethodType methodType, const char *descriptionPrefix)
+{
+    debugs(88, 4, descriptionPrefix << Http::MethodStr(methodType) << " '" << entry.url() << "'" );
+#if USE_HTCP
+    neighborsHtcpClear(&entry, http->request, HttpRequestMethod(methodType), HTCP_CLR_PURGE);
+#endif
+    entry.release(true);
+    purgeStatus = Http::scOkay;
+    return true;
 }
 
 void
@@ -1689,12 +1581,11 @@ clientReplyContext::identifyStoreObject()
     // client sent CC:no-cache or some other condition has been
     // encountered which prevents delivering a public/cached object.
     if (!r->flags.noCache || r->flags.internal) {
-        lookingforstore = 5;
-        StoreEntry::getPublicByRequest (this, r);
+        const auto e = storeGetPublicByRequest(r);
+        identifyFoundObject(e, storeLookupString(bool(e)));
     } else {
         // "external" no-cache requests skip Store lookups
-        detailStoreLookup("no-cache");
-        identifyFoundObject(nullptr);
+        identifyFoundObject(nullptr, "no-cache");
     }
 }
 
@@ -1703,8 +1594,10 @@ clientReplyContext::identifyStoreObject()
  * to see if we can determine the final status of the request.
  */
 void
-clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
+clientReplyContext::identifyFoundObject(StoreEntry *newEntry, const char *detail)
 {
+    detailStoreLookup(detail);
+
     HttpRequest *r = http->request;
     http->storeEntry(newEntry);
     const auto e = http->storeEntry();
@@ -1976,12 +1869,9 @@ clientReplyContext::next() const
 void
 clientReplyContext::sendBodyTooLargeError()
 {
-    Ip::Address tmp_noaddr;
-    tmp_noaddr.setNoAddr(); // TODO: make a global const
     http->logType.update(LOG_TCP_DENIED_REPLY);
     ErrorState *err = clientBuildError(ERR_TOO_BIG, Http::scForbidden, NULL,
-                                       http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
-                                       http->request, http->al);
+                                       http->getConn(), http->request, http->al);
     removeClientStoreReference(&(sc), http);
     HTTPMSGUNLOCK(reply);
     startError(err);
@@ -1993,11 +1883,9 @@ void
 clientReplyContext::sendPreconditionFailedError()
 {
     http->logType.update(LOG_TCP_HIT);
-    Ip::Address tmp_noaddr;
-    tmp_noaddr.setNoAddr();
     ErrorState *const err =
         clientBuildError(ERR_PRECONDITION_FAILED, Http::scPreconditionFailed,
-                         NULL, http->getConn() ? http->getConn()->clientConnection->remote : tmp_noaddr, http->request, http->al);
+                         nullptr, http->getConn(), http->request, http->al);
     removeClientStoreReference(&sc, http);
     HTTPMSGUNLOCK(reply);
     startError(err);
@@ -2106,11 +1994,8 @@ clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
         if (page_id == ERR_NONE)
             page_id = ERR_ACCESS_DENIED;
 
-        Ip::Address tmp_noaddr;
-        tmp_noaddr.setNoAddr();
         err = clientBuildError(page_id, Http::scForbidden, NULL,
-                               http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
-                               http->request, http->al);
+                               http->getConn(), http->request, http->al);
 
         removeClientStoreReference(&sc, http);
 
@@ -2341,10 +2226,10 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, RequestFlags re
 
 ErrorState *
 clientBuildError(err_type page_id, Http::StatusCode status, char const *url,
-                 Ip::Address &src_addr, HttpRequest * request, const AccessLogEntry::Pointer &al)
+                 const ConnStateData *conn, HttpRequest *request, const AccessLogEntry::Pointer &al)
 {
     const auto err = new ErrorState(page_id, status, request, al);
-    err->src_addr = src_addr;
+    err->src_addr = conn && conn->clientConnection ? conn->clientConnection->remote : Ip::Address::NoAddr();
 
     if (url)
         err->url = xstrdup(url);
