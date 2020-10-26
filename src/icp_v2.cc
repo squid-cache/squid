@@ -583,7 +583,7 @@ icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
         return;
     }
 
-    debugs(12, 5, "OPCODE " << icp_opcode_str[header.opcode]);
+    debugs(12, 5, "OPCODE " << icp_opcode_str[header.getOpCode()] << '=' << uint8_t(header.opcode));
 
     switch (header.opcode) {
 
