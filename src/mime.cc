@@ -356,7 +356,7 @@ MimeIcon::load()
         fatal("Unknown icon format while reading mime.conf\n");
 
     if (const auto e = storeGetPublic(url_, Http::METHOD_GET)) {
-        /* if the icon is already in the store, do nothing */
+        // do not overwrite an already stored icon
         e->abandon(__FUNCTION__);
         return;
     }
