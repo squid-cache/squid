@@ -12,6 +12,7 @@
 #define SQUID_IPC_FORWARDER_H
 
 #include "base/AsyncJob.h"
+#include "base/forward.h"
 #include "cbdata.h"
 #include "ipc/Request.h"
 #include "mgr/ActionParams.h"
@@ -38,6 +39,8 @@ public:
 
     /* has-to-be-public AsyncJob API */
     virtual void callException(const std::exception& e);
+
+    CodeContextPointer codeContext;
 
 protected:
     /* AsyncJob API */
