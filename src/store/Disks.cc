@@ -458,7 +458,6 @@ Store::Disks::Parse(DiskConfig &swap)
         throw TextException(ToSBuf("Squid cannot handle more than ", cacheDirCountLimit, " cache_dir directives"), Here());
 
     // create a new cache_dir
-
     allocate_new_swapdir(swap);
     swap.swapDirs[swap.n_configured] = fs->createSwapDir();
     auto &disk = Dir(swap.n_configured);
@@ -856,4 +855,3 @@ storeDirSwapLog(const StoreEntry * e, int op)
 
     e->disk().logEntry(*e, op);
 }
-
