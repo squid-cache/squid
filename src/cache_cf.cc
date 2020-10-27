@@ -1838,7 +1838,6 @@ parse_http_header_replace(HeaderManglers **pm)
 static void
 dump_cachedir(StoreEntry * entry, const char *name, const Store::DiskConfig &swap)
 {
-    assert(entry);
     Store::Disks::Dump(swap, *entry, name);
 }
 
