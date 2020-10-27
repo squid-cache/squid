@@ -42,14 +42,19 @@ public:
     virtual void evictIfFound(const cache_key *) override;
     virtual int callback() override;
 
-    /// slowly calculate (and cache) hi/lo watermarks and similar limits
-    void updateLimits();
+    /// update configuration, including limits (re)calculation
+    void configure();
+    /// parses a single cache_dir configuration line
+    static void Parse(DiskConfig &);
+    /// prints the configuration into the provided StoreEntry
+    static void Dump(const DiskConfig &, StoreEntry &, const char *name);
 
     /// Additional unknown-size entry bytes required by disks in order to
     /// reduce the risk of selecting the wrong disk cache for the growing entry.
     int64_t accumulateMore(const StoreEntry&) const;
     /// whether any disk cache is SMP-aware
     static bool SmpAware();
+    static SwapDir *SelectSwapDir(const StoreEntry *);
     /// whether any of disk caches has entry with e.key
     bool hasReadableEntry(const StoreEntry &) const;
 
@@ -71,12 +76,9 @@ int storeDirWriteCleanLogs(int reopen);
 void storeDirCloseSwapLogs(void);
 
 /* Globals that should be converted to static Store::Disks methods */
-void allocate_new_swapdir(Store::DiskConfig *swap);
+void allocate_new_swapdir(Store::DiskConfig &swap);
 void free_cachedir(Store::DiskConfig *swap);
 
-/* Globals that should be converted to Store::Disks private data members */
-typedef int STDIRSELECT(const StoreEntry *e);
-extern STDIRSELECT *storeDirSelectSwapDir;
 
 /* Globals that should be moved to some Store::UFS-specific logging module */
 void storeDirSwapLog(const StoreEntry *e, int op);

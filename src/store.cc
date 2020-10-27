@@ -1303,7 +1303,7 @@ storeInit(void)
 void
 storeConfigure(void)
 {
-    Store::Root().updateLimits();
+    Store::Root().configure();
 }
 
 bool
