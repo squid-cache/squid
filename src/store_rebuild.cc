@@ -244,9 +244,10 @@ void
 Progress::print(std::ostream &os) const
 {
     if (goal > 0) {
+        const auto savedPrecision = os.precision(2);
         const auto percent = 100.0 * completed / goal;
-        os << std::setprecision(2) << percent << "% (" <<
-            completed << " out of " << goal << ")";
+        os << percent << "% (" << completed << " out of " << goal << ")";
+       (void)os.precision(savedPrecision);
     } else if (!completed && !goal) {
         os << "nothing to do";
     } else {
