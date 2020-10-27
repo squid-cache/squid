@@ -1383,6 +1383,9 @@ HttpStateData::decodeAndWriteReplyBody()
     decodedData.init();
     httpChunkDecoder->setPayloadBuffer(&decodedData);
     const bool doneParsing = httpChunkDecoder->parse(inBuf);
+    // XXX: Both httpChunkDecoder and inBuf lock the same underlying MemBlob.
+    // LockCount() == 2 forces unnecessary cow() reallocs in reserveSpace().
+    // TODO: TeChunkedParser should not keep a copy of inBuf beyond parse().
     inBuf = httpChunkDecoder->remaining(); // sync buffers after parse
     len = decodedData.contentSize();
     data=decodedData.content();
