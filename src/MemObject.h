@@ -103,11 +103,11 @@ public:
     int64_t lowestMemReaderOffset() const;
 
     /// weather read_ahead_gap allows reading at least one more response byte
-    bool readAheadPolicyCanRead() const { return readAheadAllowance() > 0; }
+    bool readAheadPolicyCanRead() const;
 
     /// the maximum number of additional message body bytes the entry may buffer
     /// while still obeying the current read_ahead_gap configuration
-    uint64_t readAheadAllowance() const;
+    uint64_t readAheadAllowance(const Store::AccumulationConstraints &) const;
 
     void addClient(store_client *);
     /* XXX belongs in MemObject::swapout, once swaphdrsz is managed
@@ -119,7 +119,7 @@ public:
     void trimSwappable();
     void trimUnSwappable();
     bool isContiguous() const;
-    size_t mostBytesWanted(size_t max, bool ignoreDelayPools) const;
+    size_t mostBytesWanted(const Store::AccumulationConstraints &) const;
     void setNoDelay(bool const newValue);
 #if USE_DELAY_POOLS
     DelayId mostBytesAllowed() const;

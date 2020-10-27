@@ -55,6 +55,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "store/AccumulationConstraints.h"
 #include "StrList.h"
 #include "tools.h"
 #include "util.h"
@@ -1591,21 +1592,29 @@ HttpStateData::maybeReadVirginBody()
     Comm::Read(serverConnection, call);
 }
 
-/// input buffer capacity complying with various capacity preferences/limits
+/// minimum buffer capacity to keep our look-ahead header or body parser happy
+size_t
+HttpStateData::parserLookAheadDistance() const
+{
+    return
+        !flags.headers_parsed ? Config.maxReplyHeaderSize: // non-incremental header parser
+        flags.chunked ? Http::One::TeChunkedParser::LookAheadDistance(): // incremental chunked body parser
+        0U; // the default body parser does not look ahead at all
+}
+
+/// desired inBuf capacity based on various capacity preferences/limits
+/// a smaller buffer may not hold enough for look-ahead header/body parsers
+/// a smaller buffer may result in inefficient tiny network reads
+/// a bigger buffer may waste memory or even exceed SBuf storage capabilities
 size_t
 HttpStateData::calcReadBufferCapacityLimit() const
 {
-    // our non-incremental parser must see the entire header to parse it
-    if (!flags.headers_parsed) {
-        assert(Config.maxReplyHeaderSize <= SBuf::maxSize);
-        return Config.maxReplyHeaderSize;
-    }
-
     const auto configurationPreferences =
         Config.tcpRcvBufsz ? Config.tcpRcvBufsz : SQUID_TCP_SO_RCVBUF;
-    const auto parserMinimums =
-        flags.chunked ? Http::One::TeChunkedParser::LookAheadDistance() : 1U;
-    const auto combinedMaximum = std::max({parserMinimums, configurationPreferences, MinReadSize});
+    const auto lookAheadMinimum = parserLookAheadDistance();
+    // even if we do not need to look ahead, we have to receive data
+    const auto progressMinimum = size_t(1);
+    const auto combinedMaximum = std::max({progressMinimum, lookAheadMinimum, configurationPreferences, MinReadSize});
     return std::min<size_t>(combinedMaximum, SBuf::maxSize);
 }
 
@@ -1629,9 +1638,17 @@ HttpStateData::calcReadBufferSpaceLimit() const
 size_t
 HttpStateData::calcReadGoal(const size_t bufferSpaceLimit) const
 {
+    // read_ahead_gap avoids excessive reply accumulation when clients are slow
+    // to consume parsed data, but if we read less than parser's look-ahead
+    // distance, then clients will have nothing to read, and we will deadlock
+    Store::AccumulationConstraints ac;
+    const auto lookAheadMinimum = parserLookAheadDistance();
+    ac.parserMinimum = inBuf.length() < lookAheadMinimum ?
+        lookAheadMinimum - inBuf.length() : 0;
+
     // limit incremental (i.e. from multiple reads) data accumulation in Store
     // and ICAP pipelines while also obeying delay pools rate limits
-    const auto accumulationAllowance = calcAccumulationAllowance();
+    const auto accumulationAllowance = calcAccumulationAllowance(ac);
     if (!accumulationAllowance) {
         debugs(11, 5, "accumulated too much; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
         return 0;

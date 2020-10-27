@@ -2059,7 +2059,8 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
     assert(adaptedBodySource != NULL);
 
     if (size_t contentSize = adaptedBodySource->buf().contentSize()) {
-        const size_t spaceAvailable = storeEntry()->bytesWanted(Range<size_t>(0,contentSize));
+        // XXX: Ignore server-to-Squid delay pools in request satisfaction mode.
+        const auto spaceAvailable = storeEntry()->accumulationAllowance();
 
         if (spaceAvailable < contentSize ) {
             // No or partial body data consuming

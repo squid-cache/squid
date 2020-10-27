@@ -13,6 +13,8 @@ SUBDIRS= id_rewriters
 noinst_LTLIBRARIES = libstore.la
 
 libstore_la_SOURCES= \
+	AccumulationConstraints.cc \
+	AccumulationConstraints.h \
 	Controlled.h \
 	Controller.cc \
 	Controller.h \

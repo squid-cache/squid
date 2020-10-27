@@ -34,6 +34,7 @@
 #include "StatCounters.h"
 #include "stmem.h"
 #include "Store.h"
+#include "store/AccumulationConstraints.h"
 #include "store/Controller.h"
 #include "store/Disk.h"
 #include "store/Disks.h"
@@ -202,7 +203,9 @@ StoreEntry::DeferReader(void *theContext, CommRead const &aRead)
 void
 StoreEntry::delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer callback)
 {
-    size_t amountToRead = bytesWanted(Range<size_t>(0, len));
+    assert(len >= 0);
+    const auto allowance = accumulationAllowance();
+    const size_t amountToRead = std::min<uint64_t>(len, allowance);
     /* sketch: readdeferer* = getdeferer.
      * ->deferRead (fd, buf, len, callback, DelayAwareRead, this)
      */
@@ -225,11 +228,11 @@ StoreEntry::delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int l
     comm_read(conn, buf, amountToRead, callback);
 }
 
-size_t
-StoreEntry::bytesWanted (Range<size_t> const aRange, bool ignoreDelayPools) const
+uint64_t
+StoreEntry::accumulationAllowance(const Store::AccumulationConstraints &ac) const
 {
-    if (mem_obj == NULL)
-        return aRange.end;
+    if (!mem_obj)
+        return std::numeric_limits<uint64_t>::max();
 
 #if URL_CHECKSUM_DEBUG
 
@@ -237,13 +240,23 @@ StoreEntry::bytesWanted (Range<size_t> const aRange, bool ignoreDelayPools) cons
 
 #endif
 
-    return mem_obj->mostBytesWanted(aRange.end, ignoreDelayPools);
+    return mem_obj->mostBytesWanted(ac);
+}
+
+uint64_t
+StoreEntry::accumulationAllowance() const
+{
+    Store::AccumulationConstraints ac;
+    return accumulationAllowance(ac);
 }
 
 bool
 StoreEntry::checkDeferRead(int) const
 {
-    return (bytesWanted(Range<size_t>(0,INT_MAX)) == 0);
+    // TODO: Ignore delay_pools. All callers either do not read from servers at
+    // all or deal with the response that has satisfied delay_pools limits.
+    const Store::AccumulationConstraints ac;
+    return !accumulationAllowance(ac);
 }
 
 void

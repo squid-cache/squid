@@ -66,7 +66,14 @@ public:
      */
     bool isEmpty() const { return mem().endOffset() == 0; }
     bool isAccepting() const;
-    size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const;
+
+    /// how many more bytes can be written into the entry right now
+    /// while obeying read_ahead_gap, delay_pools, and caller constraints
+    uint64_t accumulationAllowance(const Store::AccumulationConstraints &) const;
+    /// how many more bytes can be written into the entry right now
+    /// while obeying read_ahead_gap and delay_pools constraints
+    uint64_t accumulationAllowance() const;
+
     /// flags [truncated or too big] entry with ENTRY_BAD_LENGTH and releases it
     void lengthWentBad(const char *reason);
     void complete();

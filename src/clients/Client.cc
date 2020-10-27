@@ -24,6 +24,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "store/AccumulationConstraints.h"
 #include "tools.h"
 
 #if USE_ADAPTATION
@@ -746,7 +747,9 @@ Client::handleMoreAdaptedBodyAvailable()
     if (!contentSize)
         return; // XXX: bytesWanted asserts on zero-size ranges
 
-    const size_t spaceAvailable = entry->bytesWanted(Range<size_t>(0, contentSize), true);
+    Store::AccumulationConstraints ac;
+    ac.ignoreDelayPools = true;
+    const size_t spaceAvailable = entry->accumulationAllowance(ac);
 
     if (spaceAvailable < contentSize ) {
         // No or partial body data consuming
@@ -1004,7 +1007,7 @@ Client::storeReplyBody(const char *data, ssize_t len)
 }
 
 uint64_t
-Client::calcAccumulationAllowance() const
+Client::calcAccumulationAllowance(const Store::AccumulationConstraints &constraints) const
 {
 #if USE_ADAPTATION
     if (responseBodyBuffer) {
@@ -1012,7 +1015,7 @@ Client::calcAccumulationAllowance() const
         return 0;   // Stop reading if already overflowed waiting for ICAP to catch up
     }
 
-    size_t space = 0; // to be determined below
+    uint64_t space = 0; // to be determined below
     if (virginBodyDestination != NULL) {
         /*
          * BodyPipe buffer has a finite size limit.  We
@@ -1027,8 +1030,7 @@ Client::calcAccumulationAllowance() const
     } else // XXX: We should apply delay pool limits (but not read_ahead_gap limits!) to for-adaptation traffic as well
 #endif
     {
-        const auto limit = std::numeric_limits<size_t>::max();
-        space = entry->bytesWanted(Range<size_t>(0, limit), false);
+        space = entry->accumulationAllowance(constraints);
     }
 
     debugs(11, 7, space);

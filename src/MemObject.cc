@@ -18,6 +18,7 @@
 #include "profiler/Profiler.h"
 #include "SquidConfig.h"
 #include "Store.h"
+#include "store/AccumulationConstraints.h"
 #include "StoreClient.h"
 
 #if USE_DELAY_POOLS
@@ -306,7 +307,7 @@ MemObject::lowestMemReaderOffset() const
 
 /* XXX: This is wrong. It breaks *badly* on range combining */
 uint64_t
-MemObject::readAheadAllowance() const
+MemObject::readAheadAllowance(const Store::AccumulationConstraints &ac) const
 {
     if (Config.readAheadGap < 0) {
         const auto allowance = std::numeric_limits<uint64_t>::max(); // unlimited
@@ -314,32 +315,37 @@ MemObject::readAheadAllowance() const
         return allowance;
     }
 
-    // When Config.readAheadGap is smaller than Config.maxReplyHeaderSize, allow
-    // the reader to accumulate/parse the entire response header.
-    const auto savedHttpHeaders = baseReply().hdr_sz;
-    if (savedHttpHeaders <= 0) { // still receiving/parsing response headers
-        const auto allowance = std::max<uint64_t>(Config.maxReplyHeaderSize, Config.readAheadGap);
-        debugs(19, 5, allowance << " until headers are stored");
-        assert(allowance > 0); // because each limit is positive
-        return allowance;
-    }
-
     // XXX: Do not subtract savedHttpHeaders at all or subtract them from any
     // non-zero offset. Just like endOffset() includes headers (after they have
     // been stored), lowestMemReaderOffset() includes headers (after they have
     // been received by that reader).
+    const auto savedHttpHeaders = baseReply().hdr_sz;
 
     // XXX: Limit read-ahead when there is no LowestMemReader at all.
     const auto lowestOffset = lowestMemReaderOffset();
     const auto highestOffset = endOffset();
     const auto currentGap = (highestOffset - savedHttpHeaders) - lowestOffset;
-    const auto allowance = Config.readAheadGap - currentGap; // negative if buffered too much
-    static_assert(std::is_signed<decltype(allowance)>::value,
-                  "allowance supports 'buffered too much' state");
+    const auto gapDiff = Config.readAheadGap - currentGap; // negative if buffered too much
+    static_assert(std::is_signed<decltype(gapDiff)>::value,
+                  "gapDiff supports 'buffered too much' state");
 
-    debugs(19, 5, allowance << '=' << Config.readAheadGap << '-' << currentGap <<
+    debugs(19, 7, "gapDiff=" << gapDiff << '=' << Config.readAheadGap << '-' << currentGap <<
            "; gap=" << highestOffset << '-' << savedHttpHeaders << '-' << lowestOffset);
-    return std::max<int64_t>(0, allowance); // avoid negative results
+
+    // avoid negative results and obey parser restrictions
+    const auto readAheadAllowanceMinimum = ac.parserMinimum;
+    if (gapDiff <= 0) {
+        debugs(19, 5, readAheadAllowanceMinimum << " because buffered too much");
+        return readAheadAllowanceMinimum;
+    }
+    const auto rawAllowance = static_cast<uint64_t>(gapDiff);
+    if (readAheadAllowanceMinimum > rawAllowance) {
+        debugs(19, 5, readAheadAllowanceMinimum << " because " << rawAllowance << " may stall parsing");
+        return readAheadAllowanceMinimum;
+    }
+    assert(rawAllowance > 0);
+    debugs(19, 5, rawAllowance << " >= " << readAheadAllowanceMinimum);
+    return rawAllowance;
 }
 
 void
@@ -448,29 +454,34 @@ MemObject::isContiguous() const
     return result;
 }
 
-size_t
-MemObject::mostBytesWanted(const size_t max, const bool ignoreDelayPools) const
+bool
+MemObject::readAheadPolicyCanRead() const
 {
-    const auto bufferingAllowance = readAheadAllowance();
+    return readAheadAllowance(Store::AccumulationConstraints()) > 0;
+}
+
+size_t
+MemObject::mostBytesWanted(const Store::AccumulationConstraints &ac) const
+{
+    const auto bufferingAllowance = readAheadAllowance(ac);
     if (!bufferingAllowance)
         return 0;
 
-    auto poolingAllowance = max; // may be adjusted below
+    auto poolingAllowance = std::numeric_limits<size_t>::max(); // may be adjusted below
 #if USE_DELAY_POOLS
-    if (!ignoreDelayPools) {
+    if (!ac.ignoreDelayPools) {
         /* identify delay id with largest allowance */
         DelayId largestAllowance = mostBytesAllowed ();
         // TODO: Fix DelayId::bytesWanted()/etc. API to use unsigned sizes.
         const auto intMax = std::numeric_limits<int>::max();
-        const auto bytesWantedMax = max > static_cast<size_t>(intMax) ? intMax : static_cast<int>(max);
-        const auto poolingAllowanceRaw = largestAllowance.bytesWanted(0, bytesWantedMax);
+        const auto poolingAllowanceRaw = largestAllowance.bytesWanted(0, intMax);
         if (poolingAllowanceRaw < 0)
             return 0;
         poolingAllowance = static_cast<size_t>(poolingAllowanceRaw);
     }
 #endif
 
-    return std::min({bufferingAllowance, poolingAllowance, max});
+    return std::min<uint64_t>(bufferingAllowance, poolingAllowance);
 }
 
 void
