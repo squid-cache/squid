@@ -855,3 +855,4 @@ storeDirSwapLog(const StoreEntry * e, int op)
 
     e->disk().logEntry(*e, op);
 }
+
