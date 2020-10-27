@@ -32,12 +32,12 @@ if test -n "$OPENSSL"; then
 
 	$OPENSSL version
 
-	$OPENSSL req --newkey rsa:2048 --x509 --nodes --set_serial 1 \
-		--config example.org-ca \
-		--keyout ca-root-rsa.pkey.tmp \
-		--out ca-root-rsa.crt
+	$OPENSSL req -newkey rsa:2048 -x509 -nodes -set_serial 1 \
+		-config example.org-ca \
+		-keyout ca-root-rsa.pkey.tmp \
+		-out ca-root-rsa.crt
 
-	$OPENSSL rsa --in ca-root-rsa.pkey.tmp --out ca-root-rsa.pkey
+	$OPENSSL rsa -in ca-root-rsa.pkey.tmp -out ca-root-rsa.pkey
 
 	rm -f ca-root-rsa.pkey.tmp example.org-ca
 
@@ -61,20 +61,20 @@ if test -n "$OPENSSL"; then
 		basicConstraints= CA:true
 	" > example.net-ca
 
-	$OPENSSL genrsa --out ca-mid-rsa.pkey.tmp 4096
+	$OPENSSL genrsa -out ca-mid-rsa.pkey.tmp 4096
 
-	$OPENSSL req --new --sha256 --set_serial 2 \
-		--config example.net-ca \
-		--key ca-mid-rsa.pkey.tmp \
-		--out ca-mid-rsa.csr
+	$OPENSSL req -new -sha256 -set_serial 2 \
+		-config example.net-ca \
+		-key ca-mid-rsa.pkey.tmp \
+		-out ca-mid-rsa.csr
 
-	$OPENSSL rsa --in ca-mid-rsa.pkey.tmp --out ca-mid-rsa.pkey
+	$OPENSSL rsa -in ca-mid-rsa.pkey.tmp -out ca-mid-rsa.pkey
 
 	# CA signs Intermediate
-	$OPENSSL x509 --req --days 365 \
-		--in ca-mid-rsa.csr \
-		--CA ca-root-rsa.crt --CAkey ca-root-rsa.pkey --set_serial 2 \
-		--out ca-mid-rsa.crt
+	$OPENSSL x509 -req -days 365 \
+		-in ca-mid-rsa.csr \
+		-CA ca-root-rsa.crt -CAkey ca-root-rsa.pkey -set_serial 2 \
+		-out ca-mid-rsa.crt
 
 	rm -f ca-mid-rsa.csr ca-mid-rsa.pkey.tmp example.net-ca
 
@@ -98,19 +98,19 @@ if test -n "$OPENSSL"; then
 		basicConstraints= CA:false
 	" >example.com-leaf
 
-	$OPENSSL genrsa --out leaf-rsa.pkey.tmp 4096
+	$OPENSSL genrsa -out leaf-rsa.pkey.tmp 4096
 
-	$OPENSSL req --new --sha256 --set_serial 3 \
-		--config example.com-leaf \
-		--key leaf-rsa.pkey.tmp \
-		--out leaf-rsa.csr
+	$OPENSSL req -new -sha256 -set_serial 3 \
+		-config example.com-leaf \
+		-key leaf-rsa.pkey.tmp \
+		-out leaf-rsa.csr
 
-	$OPENSSL rsa --in leaf-rsa.pkey.tmp --out leaf-rsa.pkey
+	$OPENSSL rsa -in leaf-rsa.pkey.tmp -out leaf-rsa.pkey
 
-	$OPENSSL x509 --req --days 365 \
-		--in leaf-rsa.csr \
-		--CA ca-root-rsa.crt --CAkey ca-root-rsa.pkey --set_serial 3 \
-		--out leaf-rsa.crt
+	$OPENSSL x509 -req -days 365 \
+		-in leaf-rsa.csr \
+		-CA ca-root-rsa.crt -CAkey ca-root-rsa.pkey -set_serial 3 \
+		-out leaf-rsa.crt
 
 	rm -f leaf-rsa.csr leaf-rsa.pkey.tmp example.com-leaf
 
