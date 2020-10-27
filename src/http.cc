@@ -1632,7 +1632,7 @@ HttpStateData::calcReadBufferSpaceLimit() const
     }
 
     const auto bufferSpaceLimit = bufferCapacityLimit - inBuf.length();
-    debugs(11, 7, "space limit: " << bufferSpaceLimit << '=' << bufferCapacityLimit << '-' << inBuf.length());
+    debugs(11, 7, bufferSpaceLimit << '=' << bufferCapacityLimit << '-' << inBuf.length());
     assert(bufferSpaceLimit > 0); // paranoid
     return bufferSpaceLimit;
 }
@@ -1659,7 +1659,7 @@ HttpStateData::calcReadGoal(const size_t bufferSpaceLimit) const
 
     assert(bufferSpaceLimit > 0); // or we would not be here
     const auto readSize = std::min<uint64_t>(bufferSpaceLimit, accumulationAllowance);
-    debugs(11, 5, "readSize=" << readSize << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
+    debugs(11, 5, readSize << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
     assert(readSize > 0); // paranoid
     assert(readSize <= std::numeric_limits<size_t>::max()); // min() <= bufferSpaceLimit
     return readSize; // the assertion above makes downcast from uint64_t safe
