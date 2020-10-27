@@ -6,18 +6,20 @@
 ##
 
 #
-# The following tests check the sparse matrix of (valid) configs:
+# The following port configurations check all 50 possible permutations of these
+# configs. Among those, the negative ones (unsupported and invalid) are
+# currently commented out. TODO: Check each negative test case in isolation.
 #
-#  A) tls-cert contents:
-#    1) cert only         tls-cert=./leaf-key-rsa.*
-#    2) full chain        tls-cert=./leaf-chain-rsa.*
-#    3) root CA           tls-cert=./ca-root-rsa.*
-#    4) incomplete chain  tls-cert=./ca-mid-rsa.*
-#    5) omitted
+#  A) certificate(s):
+#    1) leaf only         tls-cert=./leaf-rsa.*
+#    2) full chain        tls-cert=./leaf-mid-root-rsa.*
+#    3) root CA           tls-cert=./root-rsa.*
+#    4) incomplete chain  tls-cert=./mid-rsa.*
+#    5) omitted (no tls-cert for B1 or key-only tls-cert for B2)
 #
-#  B) tls-key parameter:
-#    1) separate          tls-cert=./*.crt tls-key=./*.pkey
-#    2) merged            tls-cert=./*.pem
+#  B) signing certificate key:
+#    1) in a dedicate file          tls-key=./*.pkey
+#    2) in a tls-cert file          tls-cert=./*.pem
 #
 #  C) tls-generate-host-certificates values:
 #    1) omitted
