@@ -305,6 +305,12 @@ MemObject::lowestMemReaderOffset() const
     return lowest.current;
 }
 
+bool
+MemObject::readAheadPolicyCanRead() const
+{
+    return readAheadAllowance(Store::AccumulationConstraints()) > 0;
+}
+
 /* XXX: This is wrong. It breaks *badly* on range combining */
 uint64_t
 MemObject::readAheadAllowance(const Store::AccumulationConstraints &ac) const
@@ -452,12 +458,6 @@ MemObject::isContiguous() const
     /* XXX : make this higher level */
     debugs (19, result ? 4 :3, "MemObject::isContiguous: Returning " << (result ? "true" : "false"));
     return result;
-}
-
-bool
-MemObject::readAheadPolicyCanRead() const
-{
-    return readAheadAllowance(Store::AccumulationConstraints()) > 0;
 }
 
 size_t

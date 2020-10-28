@@ -102,7 +102,7 @@ public:
     void reset();
     int64_t lowestMemReaderOffset() const;
 
-    /// weather read_ahead_gap allows reading at least one more response byte
+    /// whether read_ahead_gap allows reading at least one more response byte
     bool readAheadPolicyCanRead() const;
 
     /// the maximum number of additional message body bytes the entry may buffer

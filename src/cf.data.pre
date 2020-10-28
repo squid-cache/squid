@@ -6401,6 +6401,9 @@ DOC_START
 	end up reading more body bytes than is allowed by this directive if
 	reply_header_max_size exceeds read_ahead_gap.
 
+	Squid may also ignore this directive if it is set to a small value
+	preventing Squid from parsing protocol elements.
+
 	Many other factors may reduce Squid's read-ahead aggressiveness,
 	including server bandwidth, Squid delay pools, Squid adaptation
 	pipeline buffers, adaptation service performance, and various Squid
@@ -9124,7 +9127,7 @@ DOC_START
 
 	The configured value can be roughly interpreted as the maximum buffer
 	size, but the kernel and Squid may use larger buffers (e.g., Squid
-	buffers also reflect the reply_header_max_size limit).
+	buffers may also reflect the reply_header_max_size limit).
 
 	Relying on defaults eliminates one setsockopt(2) system call per TCP
 	socket, but a mismatch between kernel default buffer size and Squid
