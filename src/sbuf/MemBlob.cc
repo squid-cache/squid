@@ -125,11 +125,11 @@ MemBlob::append(const char *source, const size_type n)
 }
 
 void
-MemBlob::shiftLeft(const size_type n)
+MemBlob::consume(const size_type rawN)
 {
-    Must(n <= size);
-    if (n > 0) {
+    if (rawN && size) {
         Must(LockCount() <= 1);
+        const auto n = std::min(rawN, size);
         size -= n;
         if (size)
             memmove(mem, mem + n, size);

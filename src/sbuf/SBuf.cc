@@ -895,7 +895,7 @@ SBuf::cow(SBuf::size_type newsize)
 
     if (store_->LockCount() == 1) {
         // MemBlob::size reflects past owners. Refresh to maximize spaceSize().
-        store_->crop(off_ + length());
+        store_->syncSize(off_ + length());
 
         const auto availableSpace = spaceSize();
         const auto neededSpace = newsize - length();
@@ -904,11 +904,11 @@ SBuf::cow(SBuf::size_type newsize)
             ++stats.cowAvoided;
             return;
         }
-        // shift left if adding idle leading space helps avoid reallocation
+        // consume idle leading space if doing so avoids reallocation
         // this case is typical for fill-consume-fill-consume-... I/O buffers
         if (neededSpace <= availableSpace + off_) {
-            debugs(24, 8, id << " no cow after left-shifting " << off_ << " to get " << (availableSpace + off_));
-            store_->shiftLeft(off_);
+            debugs(24, 8, id << " no cow after shifting " << off_ << " to get " << (availableSpace + off_));
+            store_->consume(off_);
             off_ = 0;
             ++stats.cowShift;
             assert(neededSpace <= spaceSize());
