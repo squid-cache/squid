@@ -14,6 +14,7 @@
 namespace Store {
 
 /// whether (and how) to obey read_ahead_gap and delay_pools limits
+/// store accumulation is unrelated to client_delay_pools, response_delay_pool
 class AccumulationConstraints
 {
 public:
