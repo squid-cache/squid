@@ -748,7 +748,7 @@ Client::handleMoreAdaptedBodyAvailable()
         return; // XXX: bytesWanted asserts on zero-size ranges
 
     Store::AccumulationConstraints ac;
-    ac.ignoreDelayPools = true;
+    ac.ignoreDelayPools = true; // a brute-force bug 3462 workaround
     const size_t spaceAvailable = entry->accumulationAllowance(ac);
 
     if (spaceAvailable < contentSize ) {
