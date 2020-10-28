@@ -315,9 +315,9 @@ MemObject::readAheadPolicyCanRead() const
 uint64_t
 MemObject::readAheadAllowance(const Store::AccumulationConstraints &ac) const
 {
-    if (Config.readAheadGap < 0) {
+    if (Config.readAheadGap < 0 || ac.ignoreReadAheadGap) {
         const auto allowance = std::numeric_limits<uint64_t>::max(); // unlimited
-        debugs(19, 5, allowance << " i.e. unlimited");
+        debugs(19, 5, allowance << " i.e. unlimited; " << (Config.readAheadGap < 0) << ac.ignoreReadAheadGap);
         return allowance;
     }
 

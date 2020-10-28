@@ -1027,7 +1027,10 @@ Client::calcAccumulationAllowance(const Store::AccumulationConstraints &constrai
          */
         space = virginBodyDestination->buf().potentialSpaceSize();
         assert(space >= 0);
-    } else // XXX: We should apply delay pool limits (but not read_ahead_gap limits!) to for-adaptation traffic as well
+        // XXX: Apply delay_pools limits (but not read_ahead_gap limits!) after
+        // fixing delay pools to notice bytes not-yet-seen by store_clients.
+        // constraints.ignoreReadAheadGap = true; // and remove "else" below
+    } else
 #endif
     {
         space = entry->accumulationAllowance(constraints);
