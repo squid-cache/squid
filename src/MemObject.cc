@@ -475,13 +475,16 @@ MemObject::mostBytesWanted(const Store::AccumulationConstraints &ac) const
         // TODO: Fix DelayId::bytesWanted()/etc. API to use unsigned sizes.
         const auto intMax = std::numeric_limits<int>::max();
         const auto poolingAllowanceRaw = largestAllowance.bytesWanted(0, intMax);
-        if (poolingAllowanceRaw < 0)
+        if (poolingAllowanceRaw <= 0)
             return 0;
         poolingAllowance = static_cast<size_t>(poolingAllowanceRaw);
     }
 #endif
 
-    return std::min<uint64_t>(bufferingAllowance, poolingAllowance);
+    const auto rawAllowance = std::min<uint64_t>(bufferingAllowance, poolingAllowance);
+    assert(rawAllowance > 0); // paranoid
+    assert(rawAllowance <= std::numeric_limits<size_t>::max()); // min(x,y) <= y
+    return ac.applyHardMaximum(rawAllowance); // downcast (if any) is safe
 }
 
 void

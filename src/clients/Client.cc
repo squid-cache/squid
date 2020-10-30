@@ -1007,7 +1007,7 @@ Client::storeReplyBody(const char *data, ssize_t len)
 }
 
 uint64_t
-Client::calcAccumulationAllowance(const Store::AccumulationConstraints &constraints) const
+Client::calcAccumulationAllowance(Store::AccumulationConstraints &constraints) const
 {
 #if USE_ADAPTATION
     if (responseBodyBuffer) {
@@ -1015,7 +1015,6 @@ Client::calcAccumulationAllowance(const Store::AccumulationConstraints &constrai
         return 0;   // Stop reading if already overflowed waiting for ICAP to catch up
     }
 
-    uint64_t space = 0; // to be determined below
     if (virginBodyDestination != NULL) {
         /*
          * BodyPipe buffer has a finite size limit.  We
@@ -1025,17 +1024,18 @@ Client::calcAccumulationAllowance(const Store::AccumulationConstraints &constrai
          * There is no code to keep pumping data into the pipe once
          * response ends and serverComplete() is called.
          */
-        space = virginBodyDestination->buf().potentialSpaceSize();
-        assert(space >= 0);
-        // XXX: Apply delay_pools limits (but not read_ahead_gap limits!) after
-        // fixing delay pools to notice bytes not-yet-seen by store_clients.
-        // constraints.ignoreReadAheadGap = true; // and remove "else" below
-    } else
-#endif
-    {
-        space = entry->accumulationAllowance(constraints);
+        const auto pipeSpace = virginBodyDestination->buf().potentialSpaceSize();
+        assert(pipeSpace >= 0);
+        constraints.noteHardMaximum(pipeSpace, "adaptation BodyPipe");
+        // This data is piped into an adaptation service, not written to Store.
+        // Enforcing read_ahead_gap here can easily stall the transaction.
+        // See handleMoreAdaptedBodyAvailable() for the Store-writing case.
+        constraints.ignoreReadAheadGap = true;
+        // fall through
     }
+#endif
 
+    const auto space = entry->accumulationAllowance(constraints);
     debugs(11, 7, space);
     return space;
 }

@@ -152,7 +152,7 @@ protected:
     /// \deprecated use SBuf I/O API and calcAccumulationAllowance() instead
     size_t replyBodySpace(const MemBuf &readBuf, const size_t minSpace) const;
     /// determine how many more bytes (in total) we may receive/store right now
-    uint64_t calcAccumulationAllowance(const Store::AccumulationConstraints &) const;
+    uint64_t calcAccumulationAllowance(Store::AccumulationConstraints &) const;
 
     void adjustBodyBytesRead(const int64_t delta);
 
