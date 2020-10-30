@@ -11,8 +11,6 @@
 #include "SquidConfig.h"
 #include "store/AccumulationConstraints.h"
 
-#include <iostream>
-
 void
 Store::AccumulationConstraints::enforceHardMaximum(const uint64_t hardMax, const char * const reason)
 {
@@ -74,8 +72,3 @@ Store::AccumulationConstraints::enforceReadAheadLimit(const int64_t currentGap)
     return enforceHardMaximum(gapMaximum, "read_ahead_gap");
 }
 
-std::ostream &operator <<(std::ostream &os, const Store::AccumulationConstraints &)
-{
-    // XXX: implement
-    return os;
-}

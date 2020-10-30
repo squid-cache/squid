@@ -9,7 +9,6 @@
 #ifndef SQUID_STORE_ACCUMULATION_CONSTRAINTS_H
 #define SQUID_STORE_ACCUMULATION_CONSTRAINTS_H
 
-#include <iosfwd>
 #include <limits>
 
 namespace Store {
@@ -50,8 +49,6 @@ private:
     /// the current/cached allowance() value
     uint64_t allowance_ = std::numeric_limits<uint64_t>::max();
 };
-
-std::ostream &operator <<(std::ostream &, const AccumulationConstraints &);
 
 } // namespace Store
 
