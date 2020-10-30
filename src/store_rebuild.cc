@@ -47,13 +47,6 @@ StoreRebuildData::updateStartTime(const timeval &dirStartTime)
     startTime = started() ? std::min(startTime, dirStartTime) : dirStartTime;
 }
 
-static int
-storeCleanupDoubleCheck(StoreEntry * e)
-{
-    SwapDir *SD = dynamic_cast<SwapDir *>(INDEXSD(e->swap_dirn));
-    return (SD->doubleCheck(*e));
-}
-
 static void
 storeCleanup(void *)
 {
@@ -86,7 +79,7 @@ storeCleanup(void *)
             continue;
 
         if (opt_store_doublecheck)
-            if (storeCleanupDoubleCheck(e))
+            if (e->disk().doubleCheck(*e))
                 ++store_errors;
 
         EBIT_SET(e->flags, ENTRY_VALIDATED);
@@ -244,9 +237,10 @@ void
 Progress::print(std::ostream &os) const
 {
     if (goal > 0) {
+        const auto savedPrecision = os.precision(2);
         const auto percent = 100.0 * completed / goal;
-        os << std::setprecision(2) << percent << "% (" <<
-            completed << " out of " << goal << ")";
+        os << percent << "% (" << completed << " out of " << goal << ")";
+       (void)os.precision(savedPrecision);
     } else if (!completed && !goal) {
         os << "nothing to do";
     } else {
