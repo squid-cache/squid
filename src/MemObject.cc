@@ -308,17 +308,19 @@ MemObject::lowestMemReaderOffset() const
 bool
 MemObject::readAheadPolicyCanRead() const
 {
-    return readAheadAllowance(Store::AccumulationConstraints()) > 0;
+    Store::AccumulationConstraints ac;
+    enforceReadAheadLimit(ac);
+    return ac.allowance() > 0;
 }
 
 /* XXX: This is wrong. It breaks *badly* on range combining */
-uint64_t
-MemObject::readAheadAllowance(const Store::AccumulationConstraints &ac) const
+/// adjust the given constraints to honor the read_ahead_gap configuration
+void
+MemObject::enforceReadAheadLimit(Store::AccumulationConstraints &ac) const
 {
     if (Config.readAheadGap < 0 || ac.ignoreReadAheadGap) {
-        const auto allowance = std::numeric_limits<uint64_t>::max(); // unlimited
-        debugs(19, 5, allowance << " i.e. unlimited; " << (Config.readAheadGap < 0) << ac.ignoreReadAheadGap);
-        return allowance;
+        debugs(19, 5, "unlimited; " << Config.readAheadGap << " or " << ac.ignoreReadAheadGap);
+        return;
     }
 
     // XXX: Do not subtract savedHttpHeaders at all or subtract them from any
@@ -331,27 +333,8 @@ MemObject::readAheadAllowance(const Store::AccumulationConstraints &ac) const
     const auto lowestOffset = lowestMemReaderOffset();
     const auto highestOffset = endOffset();
     const auto currentGap = (highestOffset - savedHttpHeaders) - lowestOffset;
-    const auto gapDiff = Config.readAheadGap - currentGap; // negative if buffered too much
-    static_assert(std::is_signed<decltype(gapDiff)>::value,
-                  "gapDiff supports 'buffered too much' state");
-
-    debugs(19, 7, "gapDiff=" << gapDiff << '=' << Config.readAheadGap << '-' << currentGap <<
-           "; gap=" << highestOffset << '-' << savedHttpHeaders << '-' << lowestOffset);
-
-    // avoid negative results and obey parser restrictions
-    const auto readAheadAllowanceMinimum = ac.parserMinimum;
-    if (gapDiff <= 0) {
-        debugs(19, 5, readAheadAllowanceMinimum << " because buffered too much");
-        return readAheadAllowanceMinimum;
-    }
-    const auto rawAllowance = static_cast<uint64_t>(gapDiff);
-    if (readAheadAllowanceMinimum > rawAllowance) {
-        debugs(19, 5, readAheadAllowanceMinimum << " because " << rawAllowance << " may stall parsing");
-        return readAheadAllowanceMinimum;
-    }
-    assert(rawAllowance > 0);
-    debugs(19, 5, rawAllowance << " >= " << readAheadAllowanceMinimum);
-    return rawAllowance;
+    debugs(19, 7, "gap=" << currentGap << '=' << highestOffset << '-' << savedHttpHeaders << '-' << lowestOffset);
+    ac.enforceReadAheadLimit(currentGap);
 }
 
 void
@@ -460,14 +443,13 @@ MemObject::isContiguous() const
     return result;
 }
 
-size_t
-MemObject::mostBytesWanted(const Store::AccumulationConstraints &ac) const
+uint64_t
+MemObject::accumulationAllowance(Store::AccumulationConstraints &ac) const
 {
-    const auto bufferingAllowance = readAheadAllowance(ac);
-    if (!bufferingAllowance)
+    enforceReadAheadLimit(ac);
+    if (!ac.allowance())
         return 0;
 
-    auto poolingAllowance = std::numeric_limits<size_t>::max(); // may be adjusted below
 #if USE_DELAY_POOLS
     if (!ac.ignoreDelayPools) {
         /* identify delay id with largest allowance */
@@ -475,16 +457,12 @@ MemObject::mostBytesWanted(const Store::AccumulationConstraints &ac) const
         // TODO: Fix DelayId::bytesWanted()/etc. API to use unsigned sizes.
         const auto intMax = std::numeric_limits<int>::max();
         const auto poolingAllowanceRaw = largestAllowance.bytesWanted(0, intMax);
-        if (poolingAllowanceRaw <= 0)
-            return 0;
-        poolingAllowance = static_cast<size_t>(poolingAllowanceRaw);
+        const auto poolingAllowance = (poolingAllowanceRaw <= 0) ? 0 : static_cast<uint64_t>(poolingAllowanceRaw);
+        ac.enforceHardMaximum(poolingAllowance, "delay_pools");
     }
 #endif
 
-    const auto rawAllowance = std::min<uint64_t>(bufferingAllowance, poolingAllowance);
-    assert(rawAllowance > 0); // paranoid
-    assert(rawAllowance <= std::numeric_limits<size_t>::max()); // min(x,y) <= y
-    return ac.applyHardMaximum(rawAllowance); // downcast (if any) is safe
+    return ac.allowance();
 }
 
 void
@@ -504,6 +482,10 @@ void
 MemObject::delayRead(DeferredRead const &aRead)
 {
 #if USE_DELAY_POOLS
+    // XXX: The readAheadPolicyCanRead() condition was probably meant to detect
+    // cases where the caller delays read because of delay_pools, but that
+    // condition might also be true in other cases. Modern callers know better!
+    // XXX: The condition repeats caller's enforceReadAheadLimit() calculations.
     if (readAheadPolicyCanRead()) {
         if (DelayId mostAllowedId = mostBytesAllowed()) {
             mostAllowedId.delayRead(aRead);

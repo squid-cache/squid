@@ -1547,10 +1547,13 @@ HttpStateData::prepReading()
         return 0;
     }
 
-    // a previously not-empty inBuf might suddenly become full if configurable
+    Store::AccumulationConstraints ac;
+
+    // a previously not-empty inBuf might suddenly become "full" if configurable
     // limits have changed (while we waited for delay pools or 1xx processing)
-    const auto readBufferSpaceLimit = calcReadBufferSpaceLimit();
-    if (readBufferSpaceLimit <= 0) {
+    // so we must revisit this calculation every time
+    ac.enforceHardMaximum(calcReadBufferSpaceLimit(), "inBuf space");
+    if (!ac.allowance()) {
         // inBuf may have pieces of (1xx commands and/or the final response). We
         // will either parse the next piece and free some space or (hopefully)
         // terminate the transaction with a parsing error.
@@ -1558,7 +1561,16 @@ HttpStateData::prepReading()
         return 0;
     }
 
-    const auto readGoal = calcReadGoal(readBufferSpaceLimit);
+    // read_ahead_gap avoids excessive reply accumulation when clients are slow
+    // to consume parsed data, but if we read less than parser's look-ahead
+    // distance, then clients will have nothing to read, and we will deadlock
+    ac.enforceParserProgress(inBuf.length(), parserLookAheadDistance());
+
+    // limit incremental (i.e. from multiple reads) data accumulation in Store
+    // and ICAP pipelines while also obeying delay pools rate limits
+    const auto readGoal = calcAccumulationAllowance(ac); // may be zero
+    debugs(11, 5, readGoal << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
+
     // XXX: The transaction stalls if we have nothing to send to the client(s);
     // sending is what usually kicks our delayed read, resuming this transaction
     if (readGoal < MinReadSize) {
@@ -1570,7 +1582,7 @@ HttpStateData::prepReading()
 
     assert(readGoal > 0);
     assert(readGoal <= SBuf::maxSize);
-    return readGoal;
+    return readGoal; // the assertion above makes downcast from uint64_t safe
 }
 
 void
@@ -1599,6 +1611,7 @@ HttpStateData::maybeReadVirginBody()
 size_t
 HttpStateData::parserLookAheadDistance() const
 {
+    // XXX: Always-positive LookAheadDistance() leads to infinite accumulation!
     return
         !flags.headers_parsed ? Config.maxReplyHeaderSize: // non-incremental header parser
         flags.chunked ? Http::One::TeChunkedParser::LookAheadDistance(): // incremental chunked body parser
@@ -1608,7 +1621,8 @@ HttpStateData::parserLookAheadDistance() const
 /// desired inBuf capacity based on various capacity preferences/limits
 /// a smaller buffer may not hold enough for look-ahead header/body parsers
 /// a smaller buffer may result in inefficient tiny network reads
-/// a bigger buffer may waste memory or even exceed SBuf storage capabilities
+/// a bigger buffer may waste memory (admins tune configuration to reduce waste)
+/// a bigger buffer may exceed SBuf storage capabilities (SBuf::maxSize)
 size_t
 HttpStateData::calcReadBufferCapacityLimit() const
 {
@@ -1635,34 +1649,6 @@ HttpStateData::calcReadBufferSpaceLimit() const
     debugs(11, 7, bufferSpaceLimit << '=' << bufferCapacityLimit << '-' << inBuf.length());
     assert(bufferSpaceLimit > 0); // paranoid
     return bufferSpaceLimit;
-}
-
-/// maximum number of bytes to read(2) from the next hop
-size_t
-HttpStateData::calcReadGoal(const size_t bufferSpaceLimit) const
-{
-    // read_ahead_gap avoids excessive reply accumulation when clients are slow
-    // to consume parsed data, but if we read less than parser's look-ahead
-    // distance, then clients will have nothing to read, and we will deadlock
-    Store::AccumulationConstraints ac;
-    const auto lookAheadMinimum = parserLookAheadDistance();
-    ac.parserMinimum = inBuf.length() < lookAheadMinimum ?
-        lookAheadMinimum - inBuf.length() : 0;
-
-    // limit incremental (i.e. from multiple reads) data accumulation in Store
-    // and ICAP pipelines while also obeying delay pools rate limits
-    const auto accumulationAllowance = calcAccumulationAllowance(ac);
-    if (!accumulationAllowance) {
-        debugs(11, 5, "accumulated too much; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
-        return 0;
-    }
-
-    assert(bufferSpaceLimit > 0); // or we would not be here
-    const auto readSize = std::min<uint64_t>(bufferSpaceLimit, accumulationAllowance);
-    debugs(11, 5, readSize << "; buf=" << inBuf.length() << '+' << inBuf.spaceSize());
-    assert(readSize > 0); // paranoid
-    assert(readSize <= std::numeric_limits<size_t>::max()); // min() <= bufferSpaceLimit
-    return readSize; // the assertion above makes downcast from uint64_t safe
 }
 
 /// called after writing the very last request byte (body, last-chunk, etc)

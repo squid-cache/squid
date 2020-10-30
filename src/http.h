@@ -111,7 +111,6 @@ private:
     size_t parserLookAheadDistance() const;
     size_t calcReadBufferCapacityLimit() const;
     size_t calcReadBufferSpaceLimit() const;
-    size_t calcReadGoal(const size_t bufferSpaceLimit) const;
     bool fullReadBuffer() const { return calcReadBufferSpaceLimit() == 0; }
 
     // consuming request body

@@ -69,7 +69,7 @@ public:
 
     /// how many more bytes can be written into the entry right now
     /// while obeying read_ahead_gap, delay_pools, and caller constraints
-    uint64_t accumulationAllowance(const Store::AccumulationConstraints &) const;
+    uint64_t accumulationAllowance(Store::AccumulationConstraints &) const;
     /// how many more bytes can be written into the entry right now
     /// while obeying read_ahead_gap and delay_pools constraints
     uint64_t accumulationAllowance() const;

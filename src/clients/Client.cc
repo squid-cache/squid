@@ -1026,7 +1026,7 @@ Client::calcAccumulationAllowance(Store::AccumulationConstraints &constraints) c
          */
         const auto pipeSpace = virginBodyDestination->buf().potentialSpaceSize();
         assert(pipeSpace >= 0);
-        constraints.noteHardMaximum(pipeSpace, "adaptation BodyPipe");
+        constraints.enforceHardMaximum(pipeSpace, "RESPMOD BodyPipe");
         // This data is piped into an adaptation service, not written to Store.
         // Enforcing read_ahead_gap here can easily stall the transaction.
         // See handleMoreAdaptedBodyAvailable() for the Store-writing case.

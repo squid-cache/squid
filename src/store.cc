@@ -229,10 +229,10 @@ StoreEntry::delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int l
 }
 
 uint64_t
-StoreEntry::accumulationAllowance(const Store::AccumulationConstraints &ac) const
+StoreEntry::accumulationAllowance(Store::AccumulationConstraints &ac) const
 {
     if (!mem_obj)
-        return std::numeric_limits<uint64_t>::max();
+        return ac.allowance();
 
 #if URL_CHECKSUM_DEBUG
 
@@ -240,7 +240,7 @@ StoreEntry::accumulationAllowance(const Store::AccumulationConstraints &ac) cons
 
 #endif
 
-    return mem_obj->mostBytesWanted(ac);
+    return mem_obj->accumulationAllowance(ac);
 }
 
 uint64_t
@@ -253,9 +253,10 @@ StoreEntry::accumulationAllowance() const
 bool
 StoreEntry::checkDeferRead(int) const
 {
+    Store::AccumulationConstraints ac;
     // TODO: Ignore delay_pools. All callers either do not read from servers at
     // all or deal with the response that has satisfied delay_pools limits.
-    const Store::AccumulationConstraints ac;
+    // ac.ignoreDelayPools = true;
     return !accumulationAllowance(ac);
 }
 

@@ -42,8 +42,8 @@ void MemObject::delayRead(DeferredRead const &aRead) STUB
 bool MemObject::readAheadPolicyCanRead() const STUB_RETVAL(false)
 void MemObject::setNoDelay(bool const newValue) STUB
 MemObject::~MemObject() STUB
-uint64_t MemObject::readAheadAllowance(const Store::AccumulationConstraints &) const STUB_RETVAL(0)
-size_t MemObject::mostBytesWanted(const Store::AccumulationConstraints &ac) const STUB_RETVAL(0)
+void MemObject::enforceReadAheadLimit(Store::AccumulationConstraints &) const STUB
+uint64_t MemObject::accumulationAllowance(Store::AccumulationConstraints &ac) const STUB_RETVAL(0)
 #if USE_DELAY_POOLS
 DelayId MemObject::mostBytesAllowed() const STUB_RETVAL(DelayId())
 #endif

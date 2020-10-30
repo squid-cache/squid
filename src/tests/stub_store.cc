@@ -28,7 +28,7 @@ StoreEntry::StoreEntry() STUB
 StoreEntry::~StoreEntry() STUB
 void StoreEntry::write(StoreIOBuffer) STUB
 bool StoreEntry::isAccepting() const STUB_RETVAL(false)
-uint64_t StoreEntry::accumulationAllowance(const Store::AccumulationConstraints &) const STUB_RETVAL(0)
+uint64_t StoreEntry::accumulationAllowance(Store::AccumulationConstraints &) const STUB_RETVAL(0)
 uint64_t StoreEntry::accumulationAllowance() const STUB_RETVAL(0)
 void StoreEntry::complete() STUB
 store_client_t StoreEntry::storeClientType() const STUB_RETVAL(STORE_NON_CLIENT)

@@ -105,10 +105,6 @@ public:
     /// whether read_ahead_gap allows reading at least one more response byte
     bool readAheadPolicyCanRead() const;
 
-    /// the maximum number of additional message body bytes the entry may buffer
-    /// while still obeying the current read_ahead_gap configuration
-    uint64_t readAheadAllowance(const Store::AccumulationConstraints &) const;
-
     void addClient(store_client *);
     /* XXX belongs in MemObject::swapout, once swaphdrsz is managed
      * better
@@ -119,7 +115,9 @@ public:
     void trimSwappable();
     void trimUnSwappable();
     bool isContiguous() const;
-    size_t mostBytesWanted(const Store::AccumulationConstraints &) const;
+    /// how many more bytes can be written into this MemObject right now
+    /// while obeying read_ahead_gap, delay_pools, and caller constraints
+    uint64_t accumulationAllowance(Store::AccumulationConstraints &) const;
     void setNoDelay(bool const newValue);
 #if USE_DELAY_POOLS
     DelayId mostBytesAllowed() const;
@@ -218,6 +216,8 @@ public:
     void kickReads();
 
 private:
+    void enforceReadAheadLimit(Store::AccumulationConstraints &) const;
+
     HttpReplyPointer reply_; ///< \see baseReply()
     HttpReplyPointer updatedReply_; ///< \see updatedReply()
 

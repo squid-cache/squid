@@ -20,16 +20,20 @@ class AccumulationConstraints
 {
 public:
     /// no allowance may exceed the given maximum; may be called many times
-    void noteHardMaximum(uint64_t, const char *restrictionDescription);
+    /// \param reason why the given maximum should be enforced (for debugging)
+    void enforceHardMaximum(uint64_t maximum, const char *reason);
 
-    /// adjusts the given allowance using the configured hard maximum
-    uint64_t applyHardMaximum(uint64_t rawAllowance) const;
-
-    /* default values place no additional constraints */
+    /// honor read_ahead_gap configuration, given the current read-ahead gap
+    void enforceReadAheadLimit(int64_t currentGap);
 
     /// overwrites (more restrictive) read_ahead_gap-related checks
     /// (to make sure the current parser can give clients something to consume)
-    size_t parserMinimum = 0;
+    void enforceParserProgress(size_t bytesBuffered, size_t lookAheadMinimum);
+
+    /// the maximum number of new bytes that still meet accumulation constraints
+    uint64_t allowance() const { return allowance_; }
+
+    /* the default values place no constraints */
 
     /// whether to skip all read_ahead_gap-related checks
     /// (because the caller context is outside that directive scope)
@@ -40,17 +44,11 @@ public:
     bool ignoreDelayPools = false;
 
 private:
-    // When parserMinimum exceeds hardMaximum_, we ignore parserMinimum:
-    // Incoming data often passes through a serious of buffers. parserMinimum is
-    // based on the first (parsing) buffer, which may be empty. hardMaximum_
-    // often protects the last (BodyPipe) buffer, which may be full. We cannot
-    // overflow any buffer and lack code to split data between the two buffers
-    // (see commit 254f393), so we stall parsing (honoring hardMaximum_) and
-    // hope that, when a full buffer is drained, the caller will be notified and
-    // will resume reading (hence, eventually satisfying parserMinimum).
+    /// the minimum number of bytes required for the parser to make progress
+    size_t parserMinimum_ = 0;
 
-    /// no allowance may exceed this value
-    uint64_t hardMaximum_ = std::numeric_limits<uint64_t>::max();
+    /// the current/cached allowance() value
+    uint64_t allowance_ = std::numeric_limits<uint64_t>::max();
 };
 
 std::ostream &operator <<(std::ostream &, const AccumulationConstraints &);
