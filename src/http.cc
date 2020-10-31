@@ -1564,6 +1564,10 @@ HttpStateData::prepReading()
     // read_ahead_gap avoids excessive reply accumulation when clients are slow
     // to consume parsed data, but if we read less than parser's look-ahead
     // distance, then clients will have nothing to read, and we will deadlock
+    // XXX: This is too conservative and leads to excessive accumulation because
+    // there is really no deadlock if clients already have bytes to consume!
+    // Yes, those already-parsed/stored bytes do not help the parser, but happy
+    // clients leave us no excuse to violate read_ahead_gap to parse more input.
     ac.enforceParserProgress(inBuf.length(), parserLookAheadDistance());
 
     // limit incremental (i.e. from multiple reads) data accumulation in Store
@@ -1611,10 +1615,9 @@ HttpStateData::maybeReadVirginBody()
 size_t
 HttpStateData::parserLookAheadDistance() const
 {
-    // XXX: Always-positive LookAheadDistance() leads to infinite accumulation!
     return
         !flags.headers_parsed ? Config.maxReplyHeaderSize: // non-incremental header parser
-        flags.chunked ? Http::One::TeChunkedParser::LookAheadDistance(): // incremental chunked body parser
+        httpChunkDecoder ? httpChunkDecoder->lookAheadDistance(): // incremental chunked body parser
         0U; // the default body parser does not look ahead at all
 }
 

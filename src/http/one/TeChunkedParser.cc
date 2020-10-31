@@ -41,6 +41,38 @@ Http::One::TeChunkedParser::clear()
     // parent class and this unnecessary method with it.
 }
 
+size_t
+Http::One::TeChunkedParser::lookAheadDistance() const
+{
+    switch (parsingStage_) {
+    case HTTP_PARSE_NONE: // initial state
+    case HTTP_PARSE_CHUNK_SZ:
+    case HTTP_PARSE_CHUNK_EXT:
+        // We only consume an element after finding its end. HTTP does not limit
+        // most protocol element lengths, but legitimate chunk metadata should
+        // need less than this hard-coded look-ahead distance. For comparison:
+        // strlen("18446744073709551615; ...23-byte extension...\r\n") = 47
+        return 64;
+
+    case HTTP_PARSE_CHUNK:
+        return 0;
+
+    case HTTP_PARSE_MIME:
+        return TrailerSizeMax();
+
+    case HTTP_PARSE_DONE:
+        return 0;
+
+    case HTTP_PARSE_FIRST:
+        // TODO: Wean TeChunkedParser from header-specific Http::One::Parser
+        assert(false);
+    }
+
+    // unreachable
+    assert(false);
+    return 0;
+}
+
 bool
 Http::One::TeChunkedParser::parse(const SBuf &aBuf)
 {

@@ -51,13 +51,6 @@ public:
 class TeChunkedParser : public Http1::Parser
 {
 public:
-    /// Shorter input prefixes may fail to parse() despite being valid.
-    /// The current implementation usually looks ahead before consuming input.
-    /// HTTP does not limit most protocol element lengths, but legitimate chunk
-    /// metadata should not need more than this hard-coded look-ahead distance.
-    /// e.g., length("18446744073709551615; ...23-byte extension...\r\n") = 47
-    static size_t LookAheadDistance() { return 64; }
-
     TeChunkedParser();
     virtual ~TeChunkedParser() { theOut=nullptr; /* we do not own this object */ }
 
@@ -70,12 +63,19 @@ public:
 
     bool needsMoreSpace() const;
 
+    /// shorter input prefixes may fail to parse() despite being valid
+    size_t lookAheadDistance() const;
+
     /* Http1::Parser API */
     virtual void clear();
     virtual bool parse(const SBuf &);
     virtual Parser::size_type firstLineSize() const {return 0;} // has no meaning with multiple chunks
 
 private:
+    // TODO: std::max(Config.maxRequestHeaderSize, Config.maxReplyHeaderSize) or
+    // supply the message kind when creating the parser
+    static size_t TrailerSizeMax() { return 64*1024; }
+
     bool parseChunkSize(Tokenizer &tok);
     bool parseChunkMetadataSuffix(Tokenizer &);
     void parseChunkExtensions(Tokenizer &);
