@@ -55,7 +55,8 @@ public:
     /// The current implementation usually looks ahead before consuming input.
     /// HTTP does not limit most protocol element lengths, but legitimate chunk
     /// metadata should not need more than this hard-coded look-ahead distance.
-    static size_t LookAheadDistance() { return 1024; }
+    /// e.g., length("18446744073709551615; ...23-byte extension...\r\n") = 47
+    static size_t LookAheadDistance() { return 64; }
 
     TeChunkedParser();
     virtual ~TeChunkedParser() { theOut=nullptr; /* we do not own this object */ }
