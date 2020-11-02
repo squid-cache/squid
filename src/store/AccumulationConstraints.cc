@@ -59,16 +59,17 @@ Store::AccumulationConstraints::enforceReadAheadLimit(const int64_t currentGap)
     static_assert(std::is_signed<decltype(gapDiff)>::value,
                   "gapDiff supports a 'buffered too much' state");
 
-    // avoid negative results and obey parser restrictions
+    // We will deadlock if clients have nothing to read while the read_head_gap
+    // deprives a look-ahead parser from seeing enough bytes to parse the next
+    // element. However, there is no deadlock if clients have bytes to consume!
+    // Those parsed/stored bytes do not help our parser make progress, but happy
+    // clients remove the deadlock excuse for violating the read_ahead_gap.
+    const auto clientsHaveNothingToRead = currentGap <= 0;
+    const auto enforcedMinimum = clientsHaveNothingToRead ? parserMinimum_ : 0;
+
     if (gapDiff <= 0)
-        return enforceHardMaximum(parserMinimum_, "buffered too much");
+        return enforceHardMaximum(enforcedMinimum, "accumulated too much");
 
-    const auto gapMaximum = static_cast<uint64_t>(gapDiff);
-    if (gapMaximum < parserMinimum_)
-        return enforceHardMaximum(parserMinimum_, "anything smaller may stall parsing");
-
-    assert(gapMaximum > 0);
-    debugs(19, 5, gapMaximum << " >= " << parserMinimum_);
-    return enforceHardMaximum(gapMaximum, "read_ahead_gap");
+    const auto more = std::max(enforcedMinimum, static_cast<uint64_t>(gapDiff));
+    return enforceHardMaximum(more, "may accumulate more");
 }
-
