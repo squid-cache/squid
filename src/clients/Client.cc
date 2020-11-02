@@ -1027,6 +1027,8 @@ Client::calcAccumulationAllowance(Store::AccumulationConstraints &constraints) c
         const auto pipeSpace = virginBodyDestination->buf().potentialSpaceSize();
         assert(pipeSpace >= 0);
         constraints.enforceHardMaximum(pipeSpace, "RESPMOD BodyPipe");
+        // XXX: Do apply delays_pools to received bytes destined for RESPMOD!
+        constraints.ignoreDelayPools = true;
         // This data is piped into an adaptation service, not written to Store.
         // Enforcing read_ahead_gap here can easily stall the transaction.
         // See handleMoreAdaptedBodyAvailable() for the Store-writing case.
