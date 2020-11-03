@@ -620,7 +620,7 @@ STRICT_PROTO_MATCHING  = NO
 # list. This list is created by putting \todo commands in the documentation.
 # The default value is: YES.
 
-GENERATE_TODOLIST      = YES
+GENERATE_TODOLIST      = NO
 
 # The GENERATE_TESTLIST tag can be used to enable (YES) or disable (NO) the test
 # list. This list is created by putting \test commands in the documentation.
@@ -848,6 +848,7 @@ EXCLUDE_SYMLINKS       = NO
 # exclude all test directories for example use the pattern */test/*
 
 EXCLUDE_PATTERNS       = */CVS/* \
+                         */.git* \
                          */lib/libTrie/* \
                          */libltdl/* \
                          */Programming-Guide/html/* \
@@ -2092,7 +2093,6 @@ PREDEFINED             = __cplusplus \
                          USE_IDENT \
                          USE_IPV6 \
                          USE_KQUEUE \
-                         USE_LEAKFINDER \
                          USE_LIBCAP \
                          USE_LOADABLE_MODULES \
                          USE_MIT_KRB5 \

@@ -25,7 +25,6 @@
 #endif
 
 typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
-typedef void STABH(void *);
 
 class store_client;
 class PeerSelector;
@@ -197,11 +196,8 @@ public:
     IRCB *ping_reply_callback;
     PeerSelector *ircb_data = nullptr;
 
-    struct abort_ {
-        abort_() { callback = nullptr; }
-        STABH *callback;
-        void *data = nullptr;
-    } abort;
+    /// used for notifying StoreEntry writers about 3rd-party initiated aborts
+    AsyncCall::Pointer abortCallback;
     RemovalPolicyNode repl;
     int id = 0;
     int64_t object_sz = -1;

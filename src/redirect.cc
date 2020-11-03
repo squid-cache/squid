@@ -35,7 +35,7 @@
 #include "ssl/support.h"
 #endif
 
-/// url maximum length + extra informations passed to redirector
+/// url maximum length + extra information passed to redirector
 #define MAX_REDIRECTOR_REQUEST_STRLEN (MAX_URL + 1024)
 
 class RedirectStateData
@@ -258,12 +258,9 @@ constructHelperQuery(const char *name, helper *hlp, HLPCB *replyHandler, ClientH
         clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        Ip::Address tmpnoaddr;
-        tmpnoaddr.setNoAddr();
         repContext->setReplyToError(ERR_GATEWAY_FAILURE, status,
                                     http->request->method, NULL,
-                                    http->getConn() != NULL && http->getConn()->clientConnection != NULL ?
-                                    http->getConn()->clientConnection->remote : tmpnoaddr,
+                                    http->getConn(),
                                     http->request,
                                     NULL,
 #if USE_AUTH
@@ -408,7 +405,7 @@ redirectInit(void)
 void
 redirectShutdown(void)
 {
-    /** FIXME: Temporary unified helpers Shutdown
+    /** TODO: Temporary unified helpers Shutdown
      * When and if needed for more helpers a separated shutdown
      * method will be added for each of them.
      */

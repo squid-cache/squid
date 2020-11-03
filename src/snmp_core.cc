@@ -391,7 +391,7 @@ snmpDecodePacket(SnmpRequest * rq)
 
     debugs(49, 5, HERE << "Called.");
     PDU = snmp_pdu_create(0);
-    /* Allways answer on SNMPv1 */
+    /* Always answer on SNMPv1 */
     rq->session.Version = SNMP_VERSION_1;
     Community = snmp_parse(&rq->session, PDU, buf, len);
 
@@ -420,7 +420,7 @@ snmpDecodePacket(SnmpRequest * rq)
 }
 
 /*
- * Packet OK, ACL Check OK, Create reponse.
+ * Packet OK, ACL Check OK, Create response.
  */
 static void
 snmpConstructReponse(SnmpRequest * rq)
@@ -1072,7 +1072,7 @@ snmpSnmplibDebug(int lvl, char *buf)
 /*
    IPv4 address: 10.10.0.9  ==>
    oid == 10.10.0.9
-   IPv6 adress : 20:01:32:ef:a2:21:fb:32:00:00:00:00:00:00:00:00:OO:01 ==>
+   IPv6 address : 20:01:32:ef:a2:21:fb:32:00:00:00:00:00:00:00:00:OO:01 ==>
    oid == 32.1.50.239.162.33.251.20.50.0.0.0.0.0.0.0.0.0.1
 */
 void
@@ -1105,7 +1105,7 @@ addr2oid(Ip::Address &addr, oid * Dest)
    oid == 10.10.0.9 ==>
    IPv4 address: 10.10.0.9
    oid == 32.1.50.239.162.33.251.20.50.0.0.0.0.0.0.0.0.0.1 ==>
-   IPv6 adress : 20:01:32:ef:a2:21:fb:32:00:00:00:00:00:00:00:00:OO:01
+   IPv6 address : 20:01:32:ef:a2:21:fb:32:00:00:00:00:00:00:00:00:OO:01
 */
 void
 oid2addr(oid * id, Ip::Address &addr, u_int size)

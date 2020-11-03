@@ -208,7 +208,7 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
     }
 
     switch (Var->name[LEN_SQ_MESH + 2]) {
-    case MESH_PTBL_INDEX: { // FIXME INET6: Should be visible?
+    case MESH_PTBL_INDEX: { // XXX: Should be visible?
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       (snint)p->index, SMI_INTEGER);
     }

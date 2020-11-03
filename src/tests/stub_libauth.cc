@@ -9,7 +9,7 @@
 #include "squid.h"
 
 #define STUB_API "auth/libauth.la"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 #if USE_AUTH
 #include "auth/SchemeConfig.h"

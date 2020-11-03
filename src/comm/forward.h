@@ -26,8 +26,6 @@ class ConnOpener;
 
 typedef RefCount<Comm::Connection> ConnectionPointer;
 
-typedef std::vector<Comm::ConnectionPointer> ConnectionList;
-
 bool IsConnOpen(const Comm::ConnectionPointer &conn);
 
 // callback handler to process an FD which is available for writing.

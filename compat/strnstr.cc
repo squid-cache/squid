@@ -16,7 +16,7 @@
  * Update/Maintenance History:
  *
  *    26-Apr-2008 : Copied from FreeBSD via OpenGrok
- *          - added protection around libray headers
+ *          - added protection around library headers
  *          - added squid_ prefix for uniqueness
  *            so we can use it where OS copy is broken.
  *

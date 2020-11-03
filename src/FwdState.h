@@ -21,6 +21,7 @@
 #include "http/StatusCode.h"
 #include "ip/Address.h"
 #include "PeerSelectState.h"
+#include "ResolvedPeers.h"
 #include "security/forward.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -102,6 +103,9 @@ public:
 
     void dontRetry(bool val) { flags.dont_retry = val; }
 
+    /// get rid of a to-server connection that failed to become serverConn
+    void closePendingConnection(const Comm::ConnectionPointer &conn, const char *reason);
+
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
@@ -131,14 +135,18 @@ private:
     /// (in order to retry or reforward a failed request)
     bool pinnedCanRetry() const;
 
+    template <typename StepStart>
+    void advanceDestination(const char *stepDescription, const Comm::ConnectionPointer &conn, const StepStart &startStep);
+
     ErrorState *makeConnectingError(const err_type type) const;
     void connectedToPeer(Security::EncryptorAnswer &answer);
     static void RegisterWithCacheManager(void);
 
-    void establishTunnelThruProxy();
+    void establishTunnelThruProxy(const Comm::ConnectionPointer &);
     void tunnelEstablishmentDone(Http::TunnelerAnswer &answer);
-    void secureConnectionToPeerIfNeeded();
-    void successfullyConnectedToPeer();
+    void secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &);
+    void secureConnectionToPeer(const Comm::ConnectionPointer &);
+    void successfullyConnectedToPeer(const Comm::ConnectionPointer &);
 
     /// stops monitoring server connection for closure and updates pconn stats
     void closeServerConnection(const char *reason);
@@ -165,7 +173,8 @@ public:
     HttpRequest *request;
     AccessLogEntryPointer al; ///< info for the future access.log entry
 
-    static void abort(void*);
+    /// called by Store if the entry is no longer usable
+    static void HandleStoreAbort(FwdState *);
 
 private:
     Pointer self;
@@ -189,6 +198,7 @@ private:
     HappyConnOpenerPointer connOpener; ///< current connection opening job
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
+    PeerConnectionPointer destinationReceipt; ///< peer selection result (or nil)
 
     AsyncCall::Pointer closeHandler; ///< The serverConn close handler
 
@@ -197,7 +207,7 @@ private:
     PconnRace pconnRace; ///< current pconn race state
 };
 
-void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
+void getOutgoingAddress(HttpRequest * request, const Comm::ConnectionPointer &conn);
 
 /// a collection of previously used persistent Squid-to-peer HTTP(S) connections
 extern PconnPool *fwdPconnPool;

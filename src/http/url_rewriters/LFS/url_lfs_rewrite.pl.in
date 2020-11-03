@@ -132,12 +132,12 @@ my $redirect_host = "localhost";
 my $redirect_path = "";
 
 GetOptions(
-	'debug' => \$debug,
-	'local-dir=s' => \$access_local_dir,
-	'to-scheme=s' => \$redirect_scheme,
-	'to-host=s' => \$redirect_host,
-	'to-path=s' => \$redirect_path,
-);
+    'debug' => \$debug,
+    'local-dir=s' => \$access_local_dir,
+    'to-scheme=s' => \$redirect_scheme,
+    'to-host=s' => \$redirect_host,
+    'to-path=s' => \$redirect_path,
+    );
 
 # flush after every print
 $| = 1;
@@ -154,9 +154,9 @@ while ( <> ) {
 
     # do not process hosts with unqualified hostnames
     if ($host !~ /\./ ) {
-	$status = $cid . " ERR message=\"unqualified hostname\"";
-	print "found unqualified hostname.\n" if $debug;
-	next;
+        $status = $cid . " ERR message=\"unqualified hostname\"";
+        print "found unqualified hostname.\n" if $debug;
+        next;
     }
 
     # just the file, without any host or path parts
@@ -166,17 +166,17 @@ while ( <> ) {
 
     # look if in local dir, if yes redirect
     if ( $file && -r $access_local_dir . $file
-	&& $file ne '.' && $file ne '..' ) {
+        && $file ne '.' && $file ne '..' ) {
 
-	$url->scheme($redirect_scheme);
-	$url->host($redirect_host);
-	$url->path($redirect_path . $file);
+        $url->scheme($redirect_scheme);
+        $url->host($redirect_host);
+        $url->path($redirect_path . $file);
 
-	$status = $cid . " OK rewrite-url=\"" . $url . "\"";
-	print "file found: " . $file . "\n" if $debug;
+        $status = $cid . " OK rewrite-url=\"" . $url . "\"";
+        print "file found: " . $file . "\n" if $debug;
     } else {
-	$status = $cid . " ERR";
-	print "file not found: " . $file . "\n" if $debug;
+        $status = $cid . " ERR";
+        print "file not found: " . $file . "\n" if $debug;
     }
 
 } continue {

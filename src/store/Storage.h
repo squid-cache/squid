@@ -55,7 +55,7 @@ public:
 
     /**
      * Output stats to the provided store entry.
-     \todo make these calls asynchronous
+     * TODO: make these calls asynchronous
      */
     virtual void stat(StoreEntry &e) const = 0;
 

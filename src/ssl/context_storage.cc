@@ -44,10 +44,12 @@ void Ssl::CertificateStorageAction::dump (StoreEntry *sentry)
     for (std::map<Ip::Address, LocalContextStorage *>::iterator i = TheGlobalContextStorage.storage.begin(); i != TheGlobalContextStorage.storage.end(); ++i) {
         stream << i->first << delimiter;
         LocalContextStorage & ssl_store_policy(*(i->second));
+        const auto memoryPerEntry = ssl_store_policy.entries() ?
+            ssl_store_policy.memoryUsed() / ssl_store_policy.entries() : 0;
         stream << ssl_store_policy.memLimit() / 1024 << delimiter;
         stream << ssl_store_policy.entries() << delimiter;
-        stream << SSL_CTX_SIZE / 1024 << delimiter;
-        stream << ssl_store_policy.size() / 1024 << delimiter;
+        stream << memoryPerEntry / 1024 << delimiter;
+        stream << ssl_store_policy.memoryUsed() / 1024 << delimiter;
         stream << ssl_store_policy.freeMem() / 1024 << endString;
     }
     stream << endString;
@@ -112,7 +114,7 @@ void Ssl::GlobalContextStorage::reconfigureFinish()
         // add new local storages.
         for (std::map<Ip::Address, size_t>::iterator conf_i = configureStorage.begin(); conf_i != configureStorage.end(); ++conf_i ) {
             if (storage.find(conf_i->first) == storage.end() && conf_i->second > 0) {
-                storage.insert(std::pair<Ip::Address, LocalContextStorage *>(conf_i->first, new LocalContextStorage(-1, conf_i->second)));
+                storage.insert(std::pair<Ip::Address, LocalContextStorage *>(conf_i->first, new LocalContextStorage(conf_i->second)));
             }
         }
     }

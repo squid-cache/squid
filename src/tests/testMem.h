@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TESTS_TESTMEM_H
 #define SQUID_SRC_TESTS_TESTMEM_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 class testMem : public CPPUNIT_NS::TestFixture
 {

@@ -18,8 +18,6 @@
 /**
  \defgroup PConnAPI Persistent Connection API
  \ingroup Component
- *
- \todo CLEANUP: Break multiple classes out of the generic pconn.h header
  */
 
 class PconnPool;

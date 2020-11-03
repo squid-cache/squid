@@ -67,14 +67,40 @@ std::ostream &
 operator <<(std::ostream &os, const SipcIo &sio)
 {
     return os << "ipcIo" << sio.worker << '.' << sio.msg.requestId <<
-           (sio.msg.command == IpcIo::cmdRead ? 'r' : 'w') << sio.disker;
+           sio.msg.command << sio.disker;
 }
 
+/* IpcIo::Command */
+
+std::ostream &
+operator <<(std::ostream &os, const IpcIo::Command command)
+{
+    switch (command) {
+    case IpcIo::cmdNone:
+        return os << '-';
+    case IpcIo::cmdOpen:
+        return os << 'o';
+    case IpcIo::cmdRead:
+        return os << 'r';
+    case IpcIo::cmdWrite:
+        return os << 'w';
+    }
+    // unreachable code
+    return os << static_cast<int>(command);
+}
+
+/* IpcIoFile */
+
 IpcIoFile::IpcIoFile(char const *aDb):
-    dbName(aDb), diskId(-1), error_(false), lastRequestId(0),
+    dbName(aDb),
+    myPid(getpid()),
+    diskId(-1),
+    error_(false),
+    lastRequestId(0),
     olderRequests(&requestMap1), newerRequests(&requestMap2),
     timeoutCheckScheduled(false)
 {
+    assert(myPid >= 0);
 }
 
 IpcIoFile::~IpcIoFile()
@@ -117,7 +143,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 
         queue->localRateLimit().store(config.ioRate);
 
-        Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
+        Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, myPid));
         ann.strand.tag = dbName;
         Ipc::TypedMsgHdr message;
         ann.pack(message);
@@ -348,6 +374,7 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
             ++lastRequestId;
         ipcIo.requestId = lastRequestId;
         ipcIo.start = current_time;
+        ipcIo.workerPid = myPid;
         if (pending->readRequest) {
             ipcIo.command = IpcIo::cmdRead;
             ipcIo.offset = pending->readRequest->offset;
@@ -419,7 +446,7 @@ IpcIoFile::canWait() const
     const int expectedWait = max(oldestWait, rateWait);
     if (expectedWait < 0 ||
             static_cast<time_msec_t>(expectedWait) < config.ioTimeout)
-        return true; // expected wait time is acceptible
+        return true; // expected wait time is acceptable
 
     debugs(47,2, HERE << "cannot wait: " << expectedWait <<
            " oldest: " << SipcIo(KidIdentifier, oldestIo, diskId));
@@ -468,7 +495,10 @@ IpcIoFile::handleResponse(IpcIoMsg &ipcIo)
     if (IpcIoPendingRequest *const pending = dequeueRequest(requestId)) {
         CallBack(pending->codeContext, [&] {
             debugs(47, 7, "popped disker response to " << SipcIo(KidIdentifier, ipcIo, diskId));
-            pending->completeIo(&ipcIo);
+            if (myPid == ipcIo.workerPid)
+                pending->completeIo(&ipcIo);
+            else
+                debugs(47, 5, "ignoring response meant for our predecessor PID: " << ipcIo.workerPid);
             delete pending; // XXX: leaking if throwing
         });
     } else {
@@ -499,6 +529,15 @@ IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
         DiskerHandleRequests();
     else
         HandleResponses("after notification");
+}
+
+void
+IpcIoFile::StatQueue(std::ostream &os)
+{
+    if (queue.get()) {
+        os << "SMP disk I/O queues:\n";
+        queue->stat<IpcIoMsg>(os);
+    }
 }
 
 /// handles open request timeout
@@ -625,11 +664,28 @@ IpcIoMsg::IpcIoMsg():
     requestId(0),
     offset(0),
     len(0),
+    workerPid(-1), // Unix-like systems use process IDs starting from 0
     command(IpcIo::cmdNone),
     xerrno(0)
 {
     start.tv_sec = 0;
     start.tv_usec = 0;
+}
+
+void
+IpcIoMsg::stat(std::ostream &os)
+{
+    timeval elapsedTime;
+    tvSub(elapsedTime, start, current_time);
+    os << "id: " << requestId <<
+        ", offset: " << offset <<
+        ", size: " << len <<
+        ", workerPid: " << workerPid <<
+        ", page: " << page <<
+        ", command: " << command <<
+        ", start: " << start <<
+        ", elapsed: " << elapsedTime <<
+        ", errno: " << xerrno;
 }
 
 /* IpcIoPendingRequest */
@@ -773,9 +829,9 @@ IpcIoFile::WaitBeforePop()
         return false;
 
     // is there an I/O request we could potentially delay?
-    int processId;
+    int kidId;
     IpcIoMsg ipcIo;
-    if (!queue->peek(processId, ipcIo)) {
+    if (!queue->peek(kidId, ipcIo)) {
         // unlike pop(), peek() is not reliable and does not block reader
         // so we must proceed with pop() even if it is likely to fail
         return false;
@@ -881,10 +937,15 @@ IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
            ipcIo.len << " at " << ipcIo.offset <<
            " ipcIo" << workerId << '.' << ipcIo.requestId);
 
+    const auto workerPid = ipcIo.workerPid;
+    assert(workerPid >= 0);
+
     if (ipcIo.command == IpcIo::cmdRead)
         diskerRead(ipcIo);
     else // ipcIo.command == IpcIo::cmdWrite
         diskerWrite(ipcIo);
+
+    assert(ipcIo.workerPid == workerPid);
 
     debugs(47, 7, HERE << "pushing " << SipcIo(workerId, ipcIo, KidIdentifier));
 

@@ -144,7 +144,7 @@ int Win32SockInit(void)
     } else if (s_iInitCount < 0)
         return (s_iInitCount);
 
-    /* s_iInitCount == 0. Do the initailization */
+    /* s_iInitCount == 0. Do the initialization */
     iVersionRequested = MAKEWORD(2, 0);
 
     err = WSAStartup((WORD) iVersionRequested, &wsaData);
@@ -651,7 +651,7 @@ read_reply(int s, cachemgr_request * req)
 
             if (status == 401 || status == 407) {
                 reset_auth(req);
-                status = 403;   /* Forbiden, see comments in case isForward: */
+                status = 403;   /* Forbidden, see comments in case isForward: */
             }
 
             /* this is a way to pass HTTP status to the Web server */
@@ -1092,13 +1092,19 @@ make_pub_auth(cachemgr_request * req)
     if (!req->passwd || !strlen(req->passwd))
         return;
 
+    auto *rfc1738_username = xstrdup(rfc1738_escape(safe_str(req->user_name)));
+    auto *rfc1738_passwd = xstrdup(rfc1738_escape(req->passwd));
+
     /* host | time | user | passwd */
     const int bufLen = snprintf(buf, sizeof(buf), "%s|%d|%s|%s",
                                 req->hostname,
                                 (int) now,
-                                rfc1738_escape(safe_str(req->user_name)),
-                                rfc1738_escape(req->passwd));
+                                rfc1738_username,
+                                rfc1738_passwd);
     debug("cmgr: pre-encoded for pub: %s\n", buf);
+
+    safe_free(rfc1738_username);
+    safe_free(rfc1738_passwd);
 
     const int encodedLen = base64_encode_len(bufLen);
     req->pub_auth = (char *) xmalloc(encodedLen);

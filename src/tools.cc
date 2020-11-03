@@ -186,7 +186,7 @@ squid_getrusage(struct rusage *r)
     // Windows has an alternative method if there is no POSIX getrusage defined.
     if (WIN32_OS_version >= _WIN_OS_WINNT) {
         /* On Windows NT and later call PSAPI.DLL for process Memory */
-        /* informations -- Guido Serassio                       */
+        /* information -- Guido Serassio                       */
         HANDLE hProcess;
         PROCESS_MEMORY_COUNTERS pmc;
         hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
@@ -495,7 +495,7 @@ uniqueHostname(void)
     return Config.uniqueHostname ? Config.uniqueHostname : getMyHostname();
 }
 
-/** leave a priviliged section. (Give up any privilegies)
+/** leave a privileged section. (Give up any privilegies)
  * Routines that need privilegies can rap themselves in enter_suid()
  * and leave_suid()
  * To give upp all posibilites to gain privilegies use no_suid()
@@ -594,7 +594,7 @@ enter_suid(void)
 #endif
 }
 
-/* Give up the posibility to gain privilegies.
+/* Give up the possibility to gain privilegies.
  * this should be used before starting a sub process
  */
 void

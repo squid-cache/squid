@@ -30,7 +30,6 @@ public:
         Security::PeerConnector(aServerConn, aCallback, alp, timeout),
         clientConn(aClientConn),
         splice(false),
-        resumingSession(false),
         serverCertificateHandled(false)
     {
         request = aRequest;
@@ -64,6 +63,9 @@ public:
     /// connection manager members
     void serverCertificateVerified();
 
+    /// Abruptly stops TLS negotiation and starts tunneling.
+    void startTunneling();
+
     /// A wrapper function for checkForPeekAndSpliceDone for use with acl
     static void cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data);
 
@@ -75,7 +77,6 @@ private:
     Comm::ConnectionPointer clientConn; ///< TCP connection to the client
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
     bool splice; ///< whether we are going to splice or not
-    bool resumingSession; ///< whether it is an SSL resuming session connection
     bool serverCertificateHandled; ///< whether handleServerCertificate() succeeded
 };
 

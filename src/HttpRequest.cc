@@ -273,7 +273,7 @@ HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::S
     // content is long enough to possibly hold a reply
     // 2 being magic size of a 1-byte request method plus space delimiter
     if (hdr_len < 2) {
-        // this is ony a real error if the headers apparently complete.
+        // this is only a real error if the headers apparently complete.
         if (hdr_len > 0) {
             debugs(58, 3, HERE << "Too large request header (" << hdr_len << " bytes)");
             *error = Http::scInvalidHeader;
@@ -557,7 +557,7 @@ HttpRequest::maybeCacheable()
 {
     // Intercepted request with Host: header which cannot be trusted.
     // Because it failed verification, or someone bypassed the security tests
-    // we cannot cache the reponse for sharing between clients.
+    // we cannot cache the response for sharing between clients.
     // TODO: update cache to store for particular clients only (going to same Host: and destination IP)
     if (!flags.hostVerified && (flags.intercepted || flags.interceptTproxy))
         return false;

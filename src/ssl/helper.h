@@ -12,7 +12,7 @@
 #if USE_OPENSSL
 
 #include "base/AsyncJobCalls.h"
-#include "base/LruMap.h"
+#include "base/ClpMap.h"
 #include "helper/forward.h"
 #include "security/forward.h"
 #include "ssl/cert_validate_message.h"
@@ -54,8 +54,8 @@ public:
 private:
     static helper * ssl_crt_validator; ///< helper for management of ssl_crtd.
 public:
-    typedef LruMap<SBuf, Ssl::CertValidationResponse::Pointer, sizeof(Ssl::CertValidationResponse::Pointer) + sizeof(Ssl::CertValidationResponse)> LruCache;
-    static LruCache *HelperCache; ///< cache for cert validation helper
+    typedef ClpMap<SBuf, CertValidationResponse::Pointer, CertValidationResponse::MemoryUsedByResponse> CacheType;
+    static CacheType *HelperCache; ///< cache for cert validation helper
 };
 
 } //namespace Ssl

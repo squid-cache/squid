@@ -154,7 +154,7 @@ Adaptation::AccessCheck::AccessCheckCallbackWrapper(Acl::Answer answer, void *da
     debugs(93, 8, HERE << "callback answer=" << answer);
     AccessCheck *ac = (AccessCheck*)data;
 
-    /** \todo AYJ 2008-06-12: If answer == ACCESS_AUTH_REQUIRED
+    /* TODO: AYJ 2008-06-12: If answer == ACCESS_AUTH_REQUIRED
      * we should be kicking off an authentication before continuing
      * with this request. see bug 2400 for details.
      */

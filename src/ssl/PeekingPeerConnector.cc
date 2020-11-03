@@ -23,7 +23,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Ssl, PeekingPeerConnector);
 
-void switchToTunnel(HttpRequest *request, Comm::ConnectionPointer & clientConn, Comm::ConnectionPointer &srvConn);
+void switchToTunnel(HttpRequest *request, const Comm::ConnectionPointer &clientConn, const Comm::ConnectionPointer &srvConn, const SBuf &preReadServerData);
 
 void
 Ssl::PeekingPeerConnector::cbCheckForPeekAndSpliceDone(Acl::Answer answer, void *data)
@@ -92,8 +92,9 @@ Ssl::PeekingPeerConnector::checkForPeekAndSpliceMatched(const Ssl::BumpMode acti
     al->ssl.bumpMode = finalAction;
 
     if (finalAction == Ssl::bumpTerminate) {
-        serverConn->close();
+        bail(new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scForbidden, request.getRaw(), al));
         clientConn->close();
+        clientConn = nullptr;
     } else if (finalAction != Ssl::bumpSplice) {
         //Allow write, proceed with the connection
         srvBio->holdWrite(false);
@@ -140,11 +141,13 @@ Ssl::PeekingPeerConnector::initialize(Security::SessionPointer &serverSession)
     if (!Security::PeerConnector::initialize(serverSession))
         return false;
 
+    // client connection supplies TLS client details and is also used if we
+    // need to splice or terminate the client and server connections
+    if (!Comm::IsConnOpen(clientConn))
+        return false;
+
     if (ConnStateData *csd = request->clientConnectionManager.valid()) {
 
-        // client connection is required in the case we need to splice
-        // or terminate client and server connections
-        assert(clientConn != NULL);
         SBuf *hostName = NULL;
 
         //Enable Status_request TLS extension, required to bump some clients
@@ -245,10 +248,30 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
     if (!error) {
         serverCertificateVerified();
         if (splice) {
-            switchToTunnel(request.getRaw(), clientConn, serverConn);
-            tunnelInsteadOfNegotiating();
+            if (!Comm::IsConnOpen(clientConn)) {
+                bail(new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al));
+                throw TextException("from-client connection gone", Here());
+            }
+            startTunneling();
         }
     }
+}
+
+void
+Ssl::PeekingPeerConnector::startTunneling()
+{
+    // switchToTunnel() drains any already buffered from-server data (rBufData)
+    fd_table[serverConn->fd].useDefaultIo();
+    // tunnelStartShoveling() drains any buffered from-client data (inBuf)
+    fd_table[clientConn->fd].useDefaultIo();
+
+    // TODO: Encapsulate this frequently repeated logic into a method.
+    const auto session = fd_table[serverConn->fd].ssl;
+    auto b = SSL_get_rbio(session.get());
+    auto srvBio = static_cast<Ssl::ServerBio*>(BIO_get_data(b));
+
+    switchToTunnel(request.getRaw(), clientConn, serverConn, srvBio->rBufData());
+    tunnelInsteadOfNegotiating();
 }
 
 void
@@ -276,18 +299,32 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
     BIO *b = SSL_get_rbio(session.get());
     Ssl::ServerBio *srvBio = static_cast<Ssl::ServerBio *>(BIO_get_data(b));
 
-    // In Peek mode, the ClientHello message sent to the server. If the
-    // server resuming a previous (spliced) SSL session with the client,
-    // then probably we are here because local SSL object does not know
-    // anything about the session being resumed.
-    //
-    if (srvBio->bumpMode() == Ssl::bumpPeek && (resumingSession = srvBio->resumingSession())) {
-        // we currently splice all resumed sessions unconditionally
-        // if (const bool spliceResumed = true) {
-        bypassCertValidator();
-        checkForPeekAndSpliceMatched(Ssl::bumpSplice);
-        return;
-        // } // else fall through to find a matching ssl_bump action (with limited info)
+    if (srvBio->bumpMode() == Ssl::bumpPeek) {
+        auto bypassValidator = false;
+        if (srvBio->encryptedCertificates()) {
+            // it is pointless to peek at encrypted certificates
+            //
+            // we currently splice all sessions with encrypted certificates
+            // if (const auto spliceEncryptedCertificates = true) {
+            bypassValidator = true;
+            // } // else fall through to find a matching ssl_bump action (with limited info)
+        } else if (srvBio->resumingSession()) {
+            // In peek mode, the ClientHello message is forwarded to the server.
+            // If the server is resuming a previous (spliced) SSL session with
+            // the client, then probably we are here because our local SSL
+            // object does not know anything about the session being resumed.
+            //
+            // we currently splice all resumed sessions
+            // if (const auto spliceResumed = true) {
+            bypassValidator = true;
+            // } // else fall through to find a matching ssl_bump action (with limited info)
+        }
+
+        if (bypassValidator) {
+            bypassCertValidator();
+            checkForPeekAndSpliceMatched(Ssl::bumpSplice);
+            return;
+        }
     }
 
     // If we are in peek-and-splice mode and still we did not write to

@@ -9,7 +9,7 @@
 #ifndef SQUID_BASE_TESTCHARACTERSET_H
 #define SQUID_BASE_TESTCHARACTERSET_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 class testCharacterSet : public CPPUNIT_NS::TestFixture
 {

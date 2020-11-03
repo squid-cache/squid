@@ -34,12 +34,10 @@ extern REMOVALPOLICYCREATE createRemovalPolicy_lru; /* XXX fails with --enable-r
 static void
 addSwapDir(MySwapDirPointer aStore)
 {
-    allocate_new_swapdir(&Config.cacheSwap);
+    allocate_new_swapdir(Config.cacheSwap);
     Config.cacheSwap.swapDirs[Config.cacheSwap.n_configured] = aStore.getRaw();
     ++Config.cacheSwap.n_configured;
 }
-
-/* TODO make this a cbdata class */
 
 static bool cbcalled;
 
@@ -208,7 +206,7 @@ testUfs::testUfsSearch()
 
     free_cachedir(&Config.cacheSwap);
 
-    /* todo: here we should test a dirty rebuild */
+    // TODO: here we should test a dirty rebuild
 
     safe_free(Config.replPolicy->type);
     delete Config.replPolicy;

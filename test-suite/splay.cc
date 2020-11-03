@@ -16,6 +16,7 @@
 #include "util.h"
 
 #include <cstdlib>
+#include <functional>
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif

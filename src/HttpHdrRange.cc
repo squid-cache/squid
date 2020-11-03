@@ -156,7 +156,7 @@ HttpHdrRangeSpec::canonize(int64_t clen)
     return length > 0;
 }
 
-/* merges recepient with donor if possible; returns true on success
+/* merges recipient with donor if possible; returns true on success
  * both specs must be canonized prior to merger, of course */
 bool
 HttpHdrRangeSpec::mergeWith(const HttpHdrRangeSpec * donor)
@@ -188,7 +188,7 @@ HttpHdrRangeSpec::mergeWith(const HttpHdrRangeSpec * donor)
         assert(rhs > offset);
         length = rhs - offset;
     } else {
-        /* does recepient contain donor? */
+        /* does recipient contain donor? */
         merged =
             offset <= donor->offset && donor->offset < rhs;
     }
@@ -391,7 +391,7 @@ HttpHdrRange::canonize (int64_t newClen)
     merge (goods);
     debugs(64, 3, "HttpHdrRange::canonize: finished with " << specs.size() <<
            " specs");
-    return specs.size() > 0; // fixme, should return bool
+    return specs.size() > 0; // TODO: should return bool
 }
 
 /* hack: returns true if range specs are too "complex" for Squid to handle */

@@ -28,7 +28,7 @@
  * store_dirs_rebuilding is initialized to _1_ as a hack so that
  * storeDirWriteCleanLogs() doesn't try to do anything unless _all_
  * cache_dirs have been read.  For example, without this hack, Squid
- * will try to write clean log files if -kparse fails (becasue it
+ * will try to write clean log files if -kparse fails (because it
  * calls fatal()).
  */
 int Store::Controller::store_dirs_rebuilding = 1;
@@ -195,9 +195,9 @@ Store::Controller::maxObjectSize() const
 }
 
 void
-Store::Controller::updateLimits()
+Store::Controller::configure()
 {
-    swapDir->updateLimits();
+    swapDir->configure();
 
     store_swap_high = (long) (((float) maxSize() *
                                (float) Config.Swap.highWaterMark) / (float) 100);
@@ -227,12 +227,12 @@ Store::Controller::sync(void)
 }
 
 /*
- * handle callbacks all avaliable fs'es
+ * handle callbacks all available fs'es
  */
 int
 Store::Controller::callback()
 {
-    /* This will likely double count. Thats ok. */
+    /* This will likely double count. That's ok. */
     PROF_start(storeDirCallback);
 
     /* mem cache callbacks ? */
@@ -278,7 +278,8 @@ Store::Controller::dereferenceIdle(StoreEntry &e, bool wantsLocalMemory)
 
     bool keepInStoreTable = false; // keep only if somebody needs it there
 
-    /* Notify the fs that we're not referencing this object any more */
+    // Notify the fs that we are not referencing this object any more. This
+    // should be done even if we overwrite keepInStoreTable afterwards.
 
     if (e.hasDisk())
         keepInStoreTable = swapDir->dereference(e) || keepInStoreTable;
@@ -294,6 +295,14 @@ Store::Controller::dereferenceIdle(StoreEntry &e, bool wantsLocalMemory)
         // non-shared memory cache relies on store_table
         if (localMemStore)
             keepInStoreTable = wantsLocalMemory || keepInStoreTable;
+    }
+
+    if (e.hittingRequiresCollapsing()) {
+        // If we were writing this now-locally-idle entry, then we did not
+        // finish and should now destroy an incomplete entry. Otherwise, do not
+        // leave this idle StoreEntry behind because handleIMSReply() lacks
+        // freshness checks when hitting a collapsed revalidation entry.
+        keepInStoreTable = false; // may overrule fs decisions made above
     }
 
     return keepInStoreTable;
@@ -321,6 +330,28 @@ Store::Controller::hasReadableDiskEntry(const StoreEntry &e) const
     return swapDir->hasReadableEntry(e);
 }
 
+/// flags problematic entries before find() commits to finalizing/returning them
+void
+Store::Controller::checkFoundCandidate(const StoreEntry &entry) const
+{
+    checkTransients(entry);
+
+    // The "hittingRequiresCollapsing() has an active writer" checks below
+    // protect callers from getting stuck and/or from using a stale revalidation
+    // reply. However, these protections are not reliable because the writer may
+    // disappear at any time and/or without a trace. Collapsing adds risks...
+    if (entry.hittingRequiresCollapsing()) {
+        if (entry.hasTransients()) {
+            // Too late to check here because the writer may be gone by now, but
+            // Transients do check when they setCollapsingRequirement().
+        } else {
+            // a local writer must hold a lock on its writable entry
+            if (!(entry.locked() && entry.isAccepting()))
+                throw TextException("no local writer", Here());
+        }
+    }
+}
+
 StoreEntry *
 Store::Controller::find(const cache_key *key)
 {
@@ -328,7 +359,7 @@ Store::Controller::find(const cache_key *key)
         try {
             if (!entry->key)
                 allowSharing(*entry, key);
-            checkTransients(*entry);
+            checkFoundCandidate(*entry);
             entry->touch();
             referenceBusy(*entry);
             return entry;
@@ -351,6 +382,8 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
     addReading(&entry, key);
 
     if (entry.hasTransients()) {
+        // store hadWriter before computing `found`; \see Transients::get()
+        const auto hadWriter = transients->hasWriter(entry);
         bool inSync = false;
         const bool found = anchorToCache(entry, inSync);
         if (found && !inSync)
@@ -362,7 +395,7 @@ Store::Controller::allowSharing(StoreEntry &entry, const cache_key *key)
                 throw TextException("transients entry missing ENTRY_REQUIRES_COLLAPSING", Here());
             }
 
-            if (!transients->hasWriter(entry)) {
+            if (!hadWriter) {
                 // prevent others from falling into the same trap
                 throw TextException("unattached transients entry missing writer", Here());
             }

@@ -158,7 +158,7 @@ RFCNB_Print_Hex(FILE * fd, struct RFCNB_Pkt *pkt, int Offset, int Len)
 
     j = 0;
 
-    /* We only want to print as much as sepcified in Len */
+    /* We only want to print as much as specified in Len */
 
     while (pkt_ptr != NULL) {
 
@@ -478,7 +478,7 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
 
     switch (RFCNB_Pkt_Type(resp)) {
 
-    case RFCNB_SESSION_REJ:     /* Didnt like us ... too bad */
+    case RFCNB_SESSION_REJ:     /* Didn't like us ... too bad */
 
         /* Why did we get rejected ? */
 

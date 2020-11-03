@@ -25,7 +25,7 @@ public:
     StoreSearchUFS(RefCount<UFSSwapDir> sd);
     virtual ~StoreSearchUFS();
 
-    /** \todo Iterator API - garh, wrong place */
+    // TODO: misplaced Iterator API
     /**
      * callback the client when a new StoreEntry is available
      * or an error occurs

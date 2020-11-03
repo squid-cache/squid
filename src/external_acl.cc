@@ -69,8 +69,9 @@ static ExternalACLEntryPointer external_acl_cache_add(external_acl * def, const 
 
 class external_acl
 {
-    /* FIXME: These are not really cbdata, but it is an easy way
+    /* XXX: These are not really cbdata, but it is an easy way
      * to get them pooled, refcounted, accounted and freed properly...
+     * Use RefCountable MEMPROXY_CLASS instead
      */
     CBDATA_CLASS(external_acl);
 
@@ -607,7 +608,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             /* Ours, use it.. if the key matches */
             const char *key = makeExternalAclKey(ch, acl);
             if (!key)
-                return ACCESS_DUNNO; // insufficent data to continue
+                return ACCESS_DUNNO; // insufficient data to continue
             if (strcmp(key, (char*)entry->key) != 0) {
                 debugs(82, 9, "entry key='" << (char *)entry->key << "', our key='" << key << "' do not match. Discarded.");
                 // too bad. need a new lookup.

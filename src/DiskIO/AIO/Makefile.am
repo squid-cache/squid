@@ -11,13 +11,13 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libAIO.la
 
 libAIO_la_SOURCES = \
-	async_io.h \
 	AIODiskFile.cc \
 	AIODiskFile.h \
 	AIODiskIOModule.cc \
 	AIODiskIOModule.h \
 	AIODiskIOStrategy.cc \
-	AIODiskIOStrategy.h
+	AIODiskIOStrategy.h \
+	async_io.h
 
 if ENABLE_WIN32_AIO
 libAIO_la_SOURCES += \

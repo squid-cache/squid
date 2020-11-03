@@ -9,7 +9,7 @@
 #include "squid.h"
 
 #define STUB_API "auth/libacls.la"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 #if USE_AUTH
 #include "acl/Acl.h" /* for Acl::Answer */

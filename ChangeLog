@@ -1,3 +1,37 @@
+Changes in squid-5.0.4 (23 Aug 2020):
+
+	- Bug 5054: mark dns_v4_first as obsolete in cf.data.pre
+	- Bug 5048: ResolvedPeers.cc:35: "found != paths_.end()" assertion
+	- Reforward CONNECT after TLS handshake failure with peer
+	- Do not send keep-alive in 101 (Switching Protocols) responses
+	- Add http_port sslflags=CONDITIONAL_AUTH
+	- ... and several documentation changes
+	- ... and some compile fixes
+	- ... and all fixes from 4.13
+
+Changes in squid-5.0.3 (05 Jun 2020):
+
+	- Bug 5046: FreeBSD lacks open(2) O_DSYNC flag
+	- Happy Eyeballs: Do not discard viable reforwarding destinations
+	- Reduced startup time with large rock cache_dirs
+	- Fix the ABA problem with Ipc::Mem::PageStack::pop() in v5.0.1
+	- Fix sending of unknown validation errors to certificate validator
+	- ... and several debug improvements
+	- ... and all fixes from 4.12
+
+Changes in squid-5.0.2 (18 Apr 2020):
+
+	- Bug 5030: Negative responses are never cached
+	- Bug 4796: comm.cc !isOpen(conn->fd) assertion when rotating logs
+	- Support worker-dedicated listening queues (SO_REUSEPORT)
+	- High precision time units
+	- Ban reserved annotations in "note", "adaptation_meta" directives
+	- ESI: convert parse exceptions into 500 status response
+	- Fix PURGE error responses
+	- ... and several documentation changes
+	- ... and some compile fixes
+	- ... and all fixes from 4.11
+
 Changes in squid-5.0.1 (14 Jan 2020):
 
 	- Bug 4989: Leaking StoreEntry objects on Cache Digest rebuilds
@@ -44,6 +78,45 @@ Changes in squid-5.0.1 (14 Jan 2020):
 	- Centralized PagePool/PageStack ID generation
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
+	- ... and all fixes from 4.10
+
+Changes to squid-4.13 (23 Aug 2020):
+
+	- Regression Fix: Support parsing GREASEd (and future) TLS handshakes
+	- Bug 5051: Some collapsed revalidation responses never expire
+	- HTTP: Enforce token characters for field-name
+	- HTTP: Forbid obs-fold and bare CR whitespace in framing header fields
+	- HTTP: Improve Transfer-Encoding handling
+	- WCCP: Fix GCC-10 -Wstringop-truncation failures
+	- Honor on_unsupported_protocol for intercepted https_port
+	- Fix livelocking in peerDigestHandleReply
+	- Do not stall while debugging a scan of an empty store_table
+
+Changes to squid-4.12 (05 Jun 2020):
+
+	- Regression Fix: Revert to slow search for new SMP shm pages
+	- Bug 5045: ext_edirectory_userip_acl is missing include files
+	- Bug 5041: Missing Debug::Extra breaks build on hosts with systemd
+	- Bug 5030: Negative responses are never cached
+	- HTTP: validate Content-Length value prefix
+	- HTTP: add flexible RFC 3986 URI encoder
+	- SslBump: disable OpenSSL TLSv1.3 support for older TLS traffic
+	- Tests: Support passing a custom config.cache to test builds
+	- Fix IPFilter IPv6 detection, especially on NetBSD
+	- Fix stall if transaction overwrites a recently active cache entry
+	- ... and some compile fixes
+
+Changes to squid-4.11 (18 Apr 2020):
+
+	- Bug 5036: capital 'L's in logs when daemon queue overflows
+	- Bug 5022: Reconfigure kills Coordinator in SMP+ufs configurations
+	- Bug 5016: systemd thinks Squid is ready before Squid listens
+	- kerberos_ldap_group: fix encryption type for cross realm check
+	- HTTP: Ignore malformed Host header in intercept and reverse proxy mode
+	- Fix Digest authentication nonce handling
+	- Supply ALE to request_header_add/reply_header_add
+	- ... and some documentation updates
+	- ... and some compile fixes
 
 Changes to squid-4.10 (14 Jan 2020):
 

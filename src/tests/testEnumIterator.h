@@ -11,7 +11,7 @@
 
 #include "base/EnumIterator.h"
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 class testEnumIterator : public CPPUNIT_NS::TestFixture
 {

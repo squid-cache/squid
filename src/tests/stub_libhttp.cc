@@ -12,7 +12,7 @@
 #include "SquidConfig.h"
 
 #define STUB_API "http/libhttp.la"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 #include "http/ContentLengthInterpreter.h"
 namespace Http

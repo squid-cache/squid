@@ -43,7 +43,7 @@ testHttpRequest::setUp()
 void
 testHttpRequest::testCreateFromUrl()
 {
-    /* vanilla url, implict method */
+    /* vanilla url, implicit method */
     unsigned short expected_port;
     SBuf url("http://foo:90/bar");
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);

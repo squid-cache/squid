@@ -20,39 +20,32 @@ libapi_la_SOURCES = \
 	BoolOps.h \
 	Checklist.cc \
 	Checklist.h \
-	forward.h \
 	InnerNode.cc \
 	InnerNode.h \
-	Options.h \
 	Options.cc \
+	Options.h \
 	Tree.cc \
-	Tree.h
+	Tree.h \
+	forward.h
 
 ## Data-dependent Squid/transaction state used by specific ACLs.
 ## Does not refer to specific ACLs to avoid circular dependencies.
 libstate_la_SOURCES = \
+	Address.cc \
+	Address.h \
 	CharacterSetOption.h \
 	Data.h \
-	Strategy.h \
-	Strategised.cc \
-	Strategised.h \
 	FilledChecklist.cc \
 	FilledChecklist.h \
-	Address.h \
-	Address.cc
+	Strategised.cc \
+	Strategised.h \
+	Strategy.h
 
 ## data-specific ACLs
 libacls_la_SOURCES = \
-	IntRange.cc \
-	IntRange.h \
-	RegexData.cc \
-	RegexData.h \
-	StringData.cc \
-	StringData.h \
-	Time.cc \
-	Time.h \
-	TimeData.cc \
-	TimeData.h \
+	AclDenyInfoList.h \
+	AclSizeLimit.cc \
+	AclSizeLimit.h \
 	AllOf.cc \
 	AllOf.h \
 	AnnotateClient.cc \
@@ -69,10 +62,10 @@ libacls_la_SOURCES = \
 	AtStep.h \
 	AtStepData.cc \
 	AtStepData.h \
-	ConnectionsEncrypted.cc \
-	ConnectionsEncrypted.h \
 	ConnMark.cc \
 	ConnMark.h \
+	ConnectionsEncrypted.cc \
+	ConnectionsEncrypted.h \
 	DestinationAsn.h \
 	DestinationDomain.cc \
 	DestinationDomain.h \
@@ -82,14 +75,16 @@ libacls_la_SOURCES = \
 	DomainData.h \
 	ExtUser.cc \
 	ExtUser.h \
+	Gadgets.cc \
+	Gadgets.h \
 	HasComponent.cc \
 	HasComponent.h \
 	HasComponentData.cc \
 	HasComponentData.h \
-	HierCodeData.cc \
-	HierCodeData.h \
 	HierCode.cc \
 	HierCode.h \
+	HierCodeData.cc \
+	HierCodeData.h \
 	HttpHeaderData.cc \
 	HttpHeaderData.h \
 	HttpRepHeader.cc \
@@ -98,6 +93,8 @@ libacls_la_SOURCES = \
 	HttpReqHeader.h \
 	HttpStatus.cc \
 	HttpStatus.h \
+	IntRange.cc \
+	IntRange.h \
 	Ip.cc \
 	Ip.h \
 	LocalIp.cc \
@@ -107,23 +104,25 @@ libacls_la_SOURCES = \
 	MaxConnection.cc \
 	MaxConnection.h \
 	Method.cc \
+	Method.h \
 	MethodData.cc \
 	MethodData.h \
-	Method.h \
 	MyPortName.cc \
 	MyPortName.h \
-	Note.h \
 	Note.cc \
-	NoteData.h \
+	Note.h \
 	NoteData.cc \
+	NoteData.h \
 	PeerName.cc \
 	PeerName.h \
 	Protocol.cc \
+	Protocol.h \
 	ProtocolData.cc \
 	ProtocolData.h \
-	Protocol.h \
 	Random.cc \
 	Random.h \
+	RegexData.cc \
+	RegexData.h \
 	ReplyHeaderStrategy.h \
 	ReplyMimeType.h \
 	RequestHeaderStrategy.h \
@@ -133,12 +132,18 @@ libacls_la_SOURCES = \
 	SourceDomain.h \
 	SourceIp.cc \
 	SourceIp.h \
-	SquidError.h \
 	SquidError.cc \
+	SquidError.h \
 	SquidErrorData.cc \
 	SquidErrorData.h \
+	StringData.cc \
+	StringData.h \
 	Tag.cc \
 	Tag.h \
+	Time.cc \
+	Time.h \
+	TimeData.cc \
+	TimeData.h \
 	TransactionInitiator.cc \
 	TransactionInitiator.h \
 	Url.cc \
@@ -150,12 +155,7 @@ libacls_la_SOURCES = \
 	UrlPort.cc \
 	UrlPort.h \
 	UserData.cc \
-	UserData.h \
-	AclDenyInfoList.h \
-	Gadgets.cc \
-	Gadgets.h \
-	AclSizeLimit.cc \
-	AclSizeLimit.h
+	UserData.h
 
 ## Add conditional sources
 ## TODO: move these to their respective dirs when those dirs are created

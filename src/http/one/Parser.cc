@@ -233,7 +233,7 @@ Http::One::Parser::getHostHeaderField()
 
     while (tok.prefix(p, LineCharacters())) {
         if (!tok.skipOne(CharacterSet::LF)) // move tokenizer past the LF
-            break; // error. reached invalid octet or end of buffer insted of an LF ??
+            break; // error. reached invalid octet or end of buffer instead of an LF ??
 
         // header lines must start with the name (case insensitive)
         if (p.substr(0, namelen).caseCmp(name, namelen))

@@ -234,7 +234,7 @@ retrysrch:
 #endif
                     fprintf(stderr, PROGRAM_NAME " WARNING, LDAP search error, trying to recover'%s'\n", ldap_err2string(rc));
                     ldap_msgfree(res);
-                    /* try to connect to the LDAP server agin, maybe my persisten conexion failed. */
+                    /* try to connect to the LDAP server again, maybe my persistent conexion failed. */
                     if (!retry) {
                         ++retry;
                         ldap_unbind(ld);
@@ -288,7 +288,7 @@ retrydnattr:
             return password;
         } else {
             fprintf(stderr, PROGRAM_NAME " WARNING, LDAP error '%s'\n", ldap_err2string(rc));
-            /* try to connect to the LDAP server agin, maybe my persisten conexion failed. */
+            /* try to connect to the LDAP server again, maybe my persistent conexion failed. */
             if (!retry) {
                 ++retry;
                 ldap_unbind(ld);

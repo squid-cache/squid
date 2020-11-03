@@ -8,7 +8,7 @@
 # This file is supposed to run all the tests required to identify which
 # configured modules are able to be built in this environment
 
-# FIXME: de-duplicate $enable_security_cert_validators list containing double entries.
+# TODO: de-duplicate $enable_security_cert_validators list containing double entries.
 
 #define list of modules to build
 auto_security_certv_modules=no

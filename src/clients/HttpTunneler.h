@@ -26,15 +26,9 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 namespace Http
 {
 
-/// Establishes an HTTP CONNECT tunnel through a forward proxy.
-///
-/// The caller receives a call back with Http::TunnelerAnswer.
-///
-/// The caller must monitor the connection for closure because this job will not
-/// inform the caller about such events.
-///
-/// This job never closes the connection, even on errors. If a 3rd-party closes
-/// the connection, this job simply quits without informing the caller.
+/// Negotiates an HTTP CONNECT tunnel through a forward proxy using a given
+/// (open and, if needed, encrypted) TCP connection to that proxy. Owns the
+/// connection during these negotiations. The caller receives TunnelerAnswer.
 class Tunneler: virtual public AsyncJob
 {
     CBDATA_CLASS(Tunneler);
@@ -71,6 +65,9 @@ public:
     void setDelayId(DelayId delay_id) {delayId = delay_id;}
 #endif
 
+    /// hack: whether the connection requires fwdPconnPool->noteUses()
+    bool noteFwdPconnUse;
+
 protected:
     /* AsyncJob API */
     virtual ~Tunneler();
@@ -81,7 +78,7 @@ protected:
 
     void handleConnectionClosure(const CommCloseCbParams&);
     void watchForClosures();
-    void handleException(const std::exception&);
+    void handleTimeout(const CommTimeoutCbParams &);
     void startReadingResponse();
     void writeRequest();
     void handleWrittenRequest(const CommIoCbParams&);
@@ -89,8 +86,18 @@ protected:
     void readMore();
     void handleResponse(const bool eof);
     void bailOnResponseError(const char *error, HttpReply *);
+
+    /// sends the given error to the initiator
     void bailWith(ErrorState*);
+
+    /// sends the ready-to-use tunnel to the initiator
+    void sendSuccess();
+
+    /// a bailWith(), sendSuccess() helper: sends results to the initiator
     void callBack();
+
+    /// a bailWith(), sendSuccess() helper: stops monitoring the connection
+    void disconnect();
 
     TunnelerAnswer &answer();
 

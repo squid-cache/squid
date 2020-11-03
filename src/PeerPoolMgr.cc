@@ -120,7 +120,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         securer = asyncCall(48, 4, "PeerPoolMgr::handleSecuredPeer",
                             MyAnswerDialer(this, &PeerPoolMgr::handleSecuredPeer));
 
-        const int peerTimeout = peerConnectTimeout(peer);
+        const auto peerTimeout = peer->connectTimeout();
         const int timeUsed = squid_curtime - params.conn->startTime();
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = positiveTimeout(peerTimeout - timeUsed);
@@ -225,7 +225,7 @@ PeerPoolMgr::openNewConnection()
     getOutgoingAddress(request.getRaw(), conn);
     GetMarkingsToServer(request.getRaw(), *conn);
 
-    const int ctimeout = peerConnectTimeout(peer);
+    const auto ctimeout = peer->connectTimeout();
     typedef CommCbMemFunT<PeerPoolMgr, CommConnectCbParams> Dialer;
     opener = JobCallback(48, 5, Dialer, this, PeerPoolMgr::handleOpenedConnection);
     Comm::ConnOpener *cs = new Comm::ConnOpener(conn, opener, ctimeout);

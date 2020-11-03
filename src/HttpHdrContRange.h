@@ -25,7 +25,7 @@ public:
     int64_t elength;        /**< entity length, not content length */
 };
 
-/** \todo CLEANUP: Move httpHdrContRange* functions into the class methods */
+// TODO: move httpHdrContRange* functions into the class methods
 
 HttpHdrContRange *httpHdrContRangeCreate(void);
 HttpHdrContRange *httpHdrContRangeParseCreate(const char *crange_spec);

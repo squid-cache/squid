@@ -236,7 +236,7 @@ retrysrch:
 #endif
                     fprintf(stderr, PROGRAM_NAME " WARNING, LDAP search error, trying to recover'%s'\n", ldap_err2string(rc));
                     ldap_msgfree(res);
-                    /* try to connect to the LDAP server agin, maybe my persisten conexion failed. */
+                    /* try to connect to the LDAP server again, maybe my persistent conexion failed. */
                     if (!retry) {
                         ++retry;
                         ldap_unbind(ld);
@@ -314,7 +314,7 @@ retrydnattr:
             return password;
         } else {
             fprintf(stderr, PROGRAM_NAME " WARNING, LDAP error '%s'\n", ldap_err2string(rc));
-            /* try to connect to the LDAP server agin, maybe my persisten conexion failed. */
+            /* try to connect to the LDAP server again, maybe my persistent conexion failed. */
             if (!retry) {
                 ++retry;
                 ldap_unbind(ld);
@@ -607,7 +607,7 @@ LDAPArguments(int argc, char **argv)
     if (!userbasedn || !((passattr != NULL) || (edir_universal_passwd && usersearchfilter && version == LDAP_VERSION3 && use_tls))) {
         fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn -f filter [options] ldap_server_name\n\n");
         fprintf(stderr, "\t-A password attribute(REQUIRED)\t\tUser attribute that contains the password\n");
-        fprintf(stderr, "\t-l password realm delimiter(REQUIRED)\tCharater(s) that devides the password attribute\n\t\t\t\t\t\tin realm and password tokens, default ':' realm:password\n");
+        fprintf(stderr, "\t-l password realm delimiter(REQUIRED)\tCharater(s) that divides the password attribute\n\t\t\t\t\t\tin realm and password tokens, default ':' realm:password\n");
         fprintf(stderr, "\t-b basedn (REQUIRED)\t\t\tbase dn under where to search for users\n");
         fprintf(stderr, "\t-e Encrypted passwords(REQUIRED)\tPassword are stored encrypted using HHA1\n");
         fprintf(stderr, "\t-F filter\t\t\t\tuser search filter pattern. %%s = login\n");

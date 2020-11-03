@@ -129,7 +129,7 @@ Adaptation::ServicePointer Adaptation::ServiceGroup::at(const Pos pos) const
     return FindService(services[pos]);
 }
 
-/// \todo: optimize to cut search short instead of looking for the best svc
+// TODO: optimize to cut search short instead of looking for the best svc
 bool
 Adaptation::ServiceGroup::wants(const ServiceFilter &filter) const
 {

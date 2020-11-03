@@ -22,7 +22,7 @@
 	state information is stored in the clientSocketContext
 	structure. With HTTP/1.1 we may have multiple requests from
 	a single TCP connection.
-\todo DOCS: find out what has replaced clientSocketContext since it seems to not exist now.
+TODO: find out what has replaced clientSocketContext since it seems to not exist now.
 
 \section ClientSideRequest Client Side Request
 \par
@@ -31,7 +31,7 @@
 	and setup the initial client stream for internal requests.
 	Temporary state for this processing is held in a 
 	clientRequestContext.
-\todo DOCS: find out what has replaced clientRequestContext since it seems not to exist now.
+TODO: find out what has replaced clientRequestContext since it seems not to exist now.
 
 \section ClientSideReply Client Side Reply	
 \par
@@ -112,7 +112,7 @@
 	network sockets.  These routines do not support queuing
 	multiple blocks of data for writing.  Consequently, a
 	callback occurs for every write request.
-\todo DOCS: decide what to do for comm_poll() since its either obsolete or uses other names.
+TODO: decide what to do for comm_poll() since its either obsolete or uses other names.
 
 \section FileDiskIO File/Disk I/O
 \par
@@ -153,7 +153,7 @@
 	The cache manager provides essentially "read-only" access
 	to information.  It does not provide a method for configuring
 	Squid while it is running.
-\todo DOCS: get cachemgr.cgi documenting
+TODO: get cachemgr.cgi documenting
 
 \section NetworkMeasurementDB Network Measurement Database
 \par
@@ -195,12 +195,12 @@
 \par
 	The primary configuration file specification is in the file
 	cf.data.pre.  A simple utility program, cf_gen,
-	reads the cf.data.pre file and generates cf_parser.c
-	and squid.conf.  cf_parser.c is included directly
-	into cache_cf.c at compile time.
-\todo DOCS: get cf.data.pre documenting
-\todo DOCS: get squid.conf documenting
-\todo DOCS: get cf_gen documenting and linking.
+	reads the cf.data.pre file and generates cf_parser.cci
+	and squid.conf.  cf_parser.cci is included directly
+	into cache_cf.cc at compile time.
+TODO: get cf.data.pre documenting
+TODO: get squid.conf documenting
+TODO: get cf_gen documenting and linking.
 
 \section Callback Data Allocator
 \par
@@ -210,7 +210,7 @@
 	the callback function is executed.  The routines in cbdata.c
 	provide a uniform method for managing callback data memory,
 	canceling callbacks, and preventing erroneous memory accesses.
-\todo DOCS: get callback_data (object?) linking or replacement named.
+TODO: get callback_data (object?) linking or replacement named.
 
 \section RefCountDataAllocator Refcount Data Allocator
 \since Squid 3.0
@@ -220,7 +220,7 @@
 	allows us to create automatic reference counting pointers, that will
 	free objects when they are no longer needed. With some care these 
 	objects can be passed to functions needed Callback Data pointers.
-\todo DOCS: get cbdata documenting and linking.
+TODO: get cbdata documenting and linking.
 
 \section Debugging Debugging
 \par
@@ -237,7 +237,7 @@
 	level for that section, it will be shown.  This description
 	probably sounds more complicated than it really is.
 	File: debug.c.  Note that debugs() itself is a macro.
-\todo DOCS: get debugs() documenting as if it was a function.
+TODO: get debugs() documenting as if it was a function.
 
 \section ErrorGeneration Error Generation
 \par
@@ -290,7 +290,7 @@
 	ICP queries from Netcache/Netapp caches; they use
 	a different version number and a slightly different message
 	format.
-\todo DOCS: get RFCs linked from ietf
+TODO: get RFCs linked from ietf
 
 \section IdentLookups Ident Lookups
 \par

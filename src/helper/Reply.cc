@@ -86,7 +86,7 @@ Helper::Reply::finalize()
             }
 
         } else if (!strncmp(p,"AF ",3)) {
-            // NTLM/Negotate OK response
+            // NTLM/Negotiate OK response
             result = Helper::Okay;
             p+=3;
             // followed by:

@@ -73,7 +73,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-pf-transparent \
 	--disable-linux-netfilter \
 	--disable-linux-tproxy \
-	--disable-leakfinder \
 	--disable-follow-x-forwarded-for \
 	--disable-ident-lookups \
 	--disable-default-hostsfile \
@@ -107,6 +106,7 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--without-gnutls \
 	--without-openssl \
 	--without-po2html \
+	--without-systemd \
 	--without-tdb \
 	"
 

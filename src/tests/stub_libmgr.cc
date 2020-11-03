@@ -233,7 +233,7 @@ bool Mgr::StoreToCommWriter::doneAll() const STUB_RETVAL(false)
 void Mgr::StoreToCommWriter::scheduleStoreCopy() STUB
 void Mgr::StoreToCommWriter::noteStoreCopied(StoreIOBuffer ioBuf) STUB
 void Mgr::StoreToCommWriter::NoteStoreCopied(void* data, StoreIOBuffer ioBuf) STUB
-void Mgr::StoreToCommWriter::Abort(void* param) STUB
+void Mgr::StoreToCommWriter::HandleStoreAbort(StoreToCommWriter *) STUB
 void Mgr::StoreToCommWriter::scheduleCommWrite(const StoreIOBuffer& ioBuf) STUB
 void Mgr::StoreToCommWriter::noteCommWrote(const CommIoCbParams& params) STUB
 void Mgr::StoreToCommWriter::noteCommClosed(const CommCloseCbParams& params) STUB

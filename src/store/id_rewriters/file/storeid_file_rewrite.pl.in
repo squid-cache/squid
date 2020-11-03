@@ -24,7 +24,7 @@ It takes a text file with two tab separated columns.
 Column 1: Regular expression to match against the URL
 Column 2: Rewrite rule to generate a Store-ID
 Eg:
-^http:\/\/[^\.]+\.dl\.sourceforge\.net\/(.*)	http://dl.sourceforge.net.squid.internal/$1
+^http:\/\/[^\.]+\.dl\.sourceforge\.net\/(.*)    http://dl.sourceforge.net.squid.internal/$1
 
 Rewrite rules are matched in the same order as they appear in the rules file.
 So for best performance, sort it in order of frequency of occurrence.
@@ -99,37 +99,37 @@ die "Usage: $0 <rewrite-file>\n" unless $#ARGV == 0;
 # read config file
 open RULES, $ARGV[0] or die "Error opening $ARGV[0]: $!";
 while (<RULES>) {
-	chomp;
-	next if /^\s*#?$/;
-	if (/^\s*([^\t]+?)\s*\t+\s*([^\t]+?)\s*$/) {
-		push(@rules, [qr/$1/, $2]);
-	} else {
-		print STDERR "$0: Parse error in $ARGV[0] (line $.)\n";
-	}
+    chomp;
+    next if /^\s*#?$/;
+    if (/^\s*([^\t]+?)\s*\t+\s*([^\t]+?)\s*$/) {
+        push(@rules, [qr/$1/, $2]);
+    } else {
+        print STDERR "$0: Parse error in $ARGV[0] (line $.)\n";
+    }
 }
 close RULES;
 
 $|=1;
 # read urls from squid and do the replacement
 URL: while (<STDIN>) {
-	chomp;
-	last if $_ eq 'quit';
+    chomp;
+    last if $_ eq 'quit';
 
-  my $channel = "";
-  if (s/^(\d+\s+)//o) {
-    $channel = $1;
-  }
+    my $channel = "";
+    if (s/^(\d+\s+)//o) {
+        $channel = $1;
+    }
 
-	foreach my $rule (@rules) {
-		if (my @match = /$rule->[0]/) {
-			$_ = $rule->[1];
-			
-			for (my $i=1; $i<=scalar(@match); $i++) {
-				s/\$$i/$match[$i-1]/g;
-			}
-			print $channel, "OK store-id=$_\n";
-			next URL;
-		}
-	}
-	print $channel, "ERR\n";
+    foreach my $rule (@rules) {
+        if (my @match = /$rule->[0]/) {
+            $_ = $rule->[1];
+
+            for (my $i=1; $i<=scalar(@match); $i++) {
+                s/\$$i/$match[$i-1]/g;
+            }
+            print $channel, "OK store-id=$_\n";
+            next URL;
+        }
+    }
+    print $channel, "ERR\n";
 }

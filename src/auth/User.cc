@@ -238,7 +238,7 @@ Auth::User::BuildUserKey(const char *username, const char *realm)
 }
 
 /**
- * Dump the username cache statictics for viewing...
+ * Dump the username cache statistics for viewing...
  */
 void
 Auth::User::CredentialsCacheStats(StoreEntry *output)

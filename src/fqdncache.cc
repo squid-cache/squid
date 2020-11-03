@@ -271,7 +271,7 @@ fqdncacheAddEntry(fqdncache_entry * f)
     hash_link *e = (hash_link *)hash_lookup(fqdn_table, f->hash.key);
 
     if (NULL != e) {
-        /* avoid colission */
+        /* avoid collision */
         fqdncache_entry *q = (fqdncache_entry *) e;
         fqdncacheRelease(q);
     }

@@ -1196,7 +1196,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
                 max_shared_edns = min(max_shared_edns, server.last_seen_edns);
         } else {
             nameservers[from_ns].last_seen_edns = q->edns_seen;
-            // maybe reduce the global limit downwards to accomodate this NS
+            // maybe reduce the global limit downwards to accommodate this NS
             max_shared_edns = min(max_shared_edns, q->edns_seen);
         }
         if (max_shared_edns < RFC1035_DEFAULT_PACKET_SZ)
@@ -1244,7 +1244,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
         }
 
         // Do searchpath processing on the master A query only to keep
-        // things simple. NXDOMAIN is authorative for the label, not
+        // things simple. NXDOMAIN is authoritative for the label, not
         // the record type.
         if (q->rcode == 3 && !q->master && q->do_searchpath && q->attempt < MAX_ATTEMPT) {
             assert(NULL == message->answer);

@@ -63,7 +63,7 @@ public:
     std::ostream &print(std::ostream &os) const;
 
 private:
-    uint8_t raw[3]; // designed to follow "op" members, in pading space
+    uint8_t raw[3]; // designed to follow "op" members, in padding space
 };
 
 inline std::ostream &
@@ -134,7 +134,7 @@ public:
      * The value of the response's Expires: header, if any.
      * If the response does not have an Expires: header, this
      * is set to -1.
-     * If the response has an invalid (unparseable)
+     * If the response has an invalid (unparsable)
      * Expires: header, it is also set to -1.  There are some cases
      * where Squid sets expires to -2. This happens for the
      * internal "netdb" object and for FTP URL responses.
@@ -144,7 +144,7 @@ public:
     /**
      * The value of the response's Last-modified: header, if any.
      * This is set to -1 if there is no Last-modified: header,
-     * or if it is unparseable.
+     * or if it is unparsable.
      */
     SwappedTime lastmod = 0;
 

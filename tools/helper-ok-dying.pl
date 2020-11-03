@@ -9,6 +9,6 @@
 
 $|=1;
 while (<>) {
-	print "OK\n";
+    print "OK\n";
 }
 print STDERR "stdin closed, exit\n";

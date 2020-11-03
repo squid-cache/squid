@@ -20,17 +20,17 @@ noinst_LTLIBRARIES = libicmpcore.la libicmp.la
 
 # ICMP API definition ...
 libicmpcore_la_SOURCES = \
-	Icmp.h \
-	Icmp.cc
+	Icmp.cc \
+	Icmp.h
 
 # Squid Internal ICMP helper interface
 libicmp_la_SOURCES = \
 	IcmpConfig.cc \
 	IcmpConfig.h \
-	IcmpSquid.h \
 	IcmpSquid.cc \
-	net_db.h \
-	net_db.cc
+	IcmpSquid.h \
+	net_db.cc \
+	net_db.h
 
 libicmp_la_LIBADD= libicmpcore.la
 
@@ -40,22 +40,22 @@ COPIED_SOURCE= \
 	globals.cc \
 	SquidConfig.cc \
 	SquidNew.cc \
-	stub_fd.cc \
-	stub_HelperChildConfig.cc \
-	stub_libmem.cc \
-	stub_SBuf.cc \
-	STUB.h \
+	tests/stub_fd.cc \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_libmem.cc \
+	tests/stub_SBuf.cc \
+	tests/STUB.h \
 	time.cc
 
 # ICMP lookup helper
 pinger_SOURCES = \
 	Icmp.h \
-	IcmpPinger.h \
-	IcmpPinger.cc \
-	Icmp4.h \
 	Icmp4.cc \
-	Icmp6.h \
+	Icmp4.h \
 	Icmp6.cc \
+	Icmp6.h \
+	IcmpPinger.cc \
+	IcmpPinger.h \
 	pinger.cc
 nodist_pinger_SOURCES = $(COPIED_SOURCE)
 pinger_LDFLAGS = $(LIBADD_DL)
@@ -99,17 +99,17 @@ SquidConfig.cc: $(top_srcdir)/src/SquidConfig.cc
 SquidNew.cc: $(top_srcdir)/src/SquidNew.cc
 	cp $(top_srcdir)/src/SquidNew.cc $@
 
-stub_HelperChildConfig.cc: $(top_srcdir)/src/tests/stub_HelperChildConfig.cc
+tests/stub_HelperChildConfig.cc: $(top_srcdir)/src/tests/stub_HelperChildConfig.cc
 	cp $(top_srcdir)/src/tests/stub_HelperChildConfig.cc $@
 
-stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc STUB.h
+tests/stub_fd.cc: $(top_srcdir)/src/tests/stub_fd.cc
 	cp $(top_srcdir)/src/tests/stub_fd.cc $@
 
-stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc STUB.h
+tests/stub_libmem.cc: $(top_srcdir)/src/tests/stub_libmem.cc
 	cp $(top_srcdir)/src/tests/stub_libmem.cc $@
 
-stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc STUB.h
+tests/stub_SBuf.cc: $(top_srcdir)/src/tests/stub_SBuf.cc
 	cp $(top_srcdir)/src/tests/stub_SBuf.cc $@
 
-STUB.h: $(top_srcdir)/src/tests/STUB.h
+tests/STUB.h: $(top_srcdir)/src/tests/STUB.h
 	cp $(top_srcdir)/src/tests/STUB.h $@

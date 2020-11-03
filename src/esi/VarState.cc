@@ -150,7 +150,7 @@ ESIVariableUserAgent::getProductVersion (char const *s)
 {
     char const *t;
     int len;
-    t = index(s,'/');
+    t = strchr(s, '/');
 
     if (!t || !*(++t))
         return xstrdup("");
@@ -302,7 +302,7 @@ ESIVariableUserAgent::ESIVariableUserAgent(ESIVarState &state)
      * Product - Mozilla version 4.0
      * in comments - compatible; .... 3705
      *
-     * Useing the RFC a more appropriate header would be
+     * Using the RFC a more appropriate header would be
      *    User-Agent: MSIE/6.0 Mozilla/4.0 Windows-NT/5.1 .NET-CLR/1.0.3705
      *    or something similar.
      *
@@ -328,12 +328,12 @@ ESIVariableUserAgent::ESIVariableUserAgent(ESIVarState &state)
 
         if ((t = strstr (s, "MSIE"))) {
             browser = ESI_BROWSER_MSIE;
-            t = index (t, ' ');
+            t = strchr(t, ' ');
 
             if (!t)
                 browserversion = xstrdup("");
             else {
-                t1 = index(t, ';');
+                t1 = strchr(t, ';');
 
                 if (!t1)
                     browserversion = xstrdup(t + 1);
@@ -805,7 +805,7 @@ ESIVariableProcessor::~ESIVariableProcessor()
     delete currentFunction;
 }
 
-/* XXX FIXME: this should be comma delimited, no? */
+/* XXX: this should be comma delimited, no? */
 void
 ESIVarState::buildVary (HttpReply *rep)
 {

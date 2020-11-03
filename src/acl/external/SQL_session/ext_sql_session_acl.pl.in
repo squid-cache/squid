@@ -63,7 +63,7 @@ Condition, defaults to enabled=1. Specify 1 or "" for no condition
 
 =item B<--persist>
 
-Keep a persistent database connection open between queries. 
+Keep a persistent database connection open between queries.
 
 =item B<--debug>
 
@@ -131,17 +131,17 @@ my $persist = 0;
 my $debug = 0;
 
 GetOptions(
-	'dsn=s' => \$dsn,
-	'user=s' => \$db_user,
-	'password=s' => \$db_passwd,
-	'table=s' => \$db_table,
-	'uidcol=s' => \$db_uidcol,
-	'usercol=s' => \$db_usercol,
-	'tagcol=s' => \$db_tagcol,
-	'cond=s' => \$db_cond,
-	'persist' => \$persist,
-	'debug' => \$debug,
-	);
+    'dsn=s' => \$dsn,
+    'user=s' => \$db_user,
+    'password=s' => \$db_passwd,
+    'table=s' => \$db_table,
+    'uidcol=s' => \$db_uidcol,
+    'usercol=s' => \$db_usercol,
+    'tagcol=s' => \$db_tagcol,
+    'cond=s' => \$db_cond,
+    'persist' => \$persist,
+    'debug' => \$debug,
+    );
 
 my ($_dbh, $_sth);
 
@@ -158,14 +158,14 @@ sub open_db()
     return $_sth if defined $_sth;
     $_dbh = DBI->connect($dsn, $db_user, $db_passwd);
     if (!defined $_dbh) {
-    	warn ("Could not connect to $dsn\n");
-	return undef;
+        warn ("Could not connect to $dsn\n");
+        return undef;
     }
     $_sth = $_dbh->prepare("SELECT $db_usercol as 'user', $db_tagcol as 'tag' FROM $db_table WHERE ($db_uidcol = ?) " .
-                           ($db_cond ne "" ? " AND $db_cond" : "")) || die;
+            ($db_cond ne "" ? " AND $db_cond" : "")) || die;
 
     print(stderr "Query: SELECT $db_usercol as 'user', $db_tagcol as 'tag' FROM $db_table WHERE ($db_uidcol = ?) " .
-                           ($db_cond ne "" ? " AND $db_cond" : "")) if ($debug);
+            ($db_cond ne "" ? " AND $db_cond" : "")) if ($debug);
 
     return $_sth;
 }
@@ -175,9 +175,9 @@ sub query_db($) {
     my ($sth) = open_db() || return undef;
     print(stderr "UID queried: '".$uid."'\n") if ($debug);
     if (!$sth->execute($uid)) {
-	close_db();
-	open_db() || return undef;
-	$sth->execute($uid) || return undef;;
+        close_db();
+        open_db() || return undef;
+        $sth->execute($uid) || return undef;;
     }
     return $sth;
 }

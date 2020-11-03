@@ -32,7 +32,7 @@
 
 /*
  * NOTE: 'Header' refers to the swapfile metadata header.
- *   'OBJHeader' refers to the object header, with cannonical
+ *   'OBJHeader' refers to the object header, with canonical
  *   processed object headers (which may derive from FTP/HTTP etc
  *   upstream protocols
  *       'Body' refers to the swapfile body, which is the full
@@ -63,7 +63,7 @@ StoreClient::onCollapsingPath() const
 }
 
 bool
-StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation)
+StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation) const
 {
     if (!e.hittingRequiresCollapsing())
         return false; // collapsing is impossible due to the entry state

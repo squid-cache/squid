@@ -212,7 +212,7 @@ Log::TcpLogger::appendRecord(const char *record, const size_t len)
     }
 
     drops = 0;
-    // append without spliting buf, unless it exceeds IoBufSize
+    // append without splitting buf, unless it exceeds IoBufSize
     for (size_t off = 0; off < len; off += IoBufSize)
         appendChunk(record + off, min(len - off, IoBufSize));
 }
@@ -222,7 +222,7 @@ void
 Log::TcpLogger::appendChunk(const char *chunk, const size_t len)
 {
     Must(len <= IoBufSize);
-    // add a buffer if there is not one that can accomodate len bytes
+    // add a buffer if there is not one that can accommodate len bytes
     bool addBuffer = buffers.empty() ||
                      (buffers.back()->size+len > IoBufSize);
     // also add a buffer if there is only one and that one is being written

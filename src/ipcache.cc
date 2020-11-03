@@ -41,14 +41,12 @@
  *  mechanisms that allow non-blocking access to these mappings.
  *  The IP cache usually doesn't block on a request except for
  *  special cases where this is desired (see below).
- *
- \todo IP Cache should have its own API *.h header file.
  */
 
 /**
  \defgroup IPCacheInternal IP Cache Internals
  \ingroup IPCacheAPI
- \todo  when IP cache is provided as a class. These sub-groups will be obsolete
+ \note  when IP cache is provided as a class. These sub-groups will be obsolete
  *  for now they are used to separate the public and private functions.
  *  with the private ones all being in IPCachInternal and public in IPCacheAPI
  *
@@ -422,7 +420,7 @@ ipcacheAddEntry(ipcache_entry * i)
     hash_link *e = (hash_link *)hash_lookup(ip_table, i->hash.key);
 
     if (NULL != e) {
-        /* avoid colission */
+        /* avoid collision */
         ipcache_entry *q = (ipcache_entry *) e;
         ipcacheRelease(q);
     }
@@ -1052,7 +1050,7 @@ Dns::CachedIps::forgetMarking(const char *name, const Ip::Address &ip)
  * Does nothing if the domain name does not exist.
  *
  \param name    domain name to have an IP marked bad
- \param addr    specific addres to be marked bad
+ \param addr    specific address to be marked bad
  */
 void
 ipcacheMarkBadAddr(const char *name, const Ip::Address &addr)

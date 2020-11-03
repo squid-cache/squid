@@ -36,7 +36,7 @@
  */
 
 /*
- * util.c   Miscellanous generic functions.
+ * util.c   Miscellaneous generic functions.
  *
  */
 

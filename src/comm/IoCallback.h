@@ -51,7 +51,7 @@ public:
     /// Actively cancel the given callback
     void cancel(const char *reason);
 
-    /// finish the IO operation imediately and schedule the callback with the current state.
+    /// finish the IO operation immediately and schedule the callback with the current state.
     void finish(Comm::Flag code, int xerrn);
 
 private:

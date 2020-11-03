@@ -71,7 +71,7 @@ public:
     MEMPROXY_CLASS(cbdata);
 #endif
 
-    /** \todo examine making cbdata templated on this - so we get type
+    /* TODO: examine making cbdata templated on this - so we get type
      * safe access to data - RBC 20030902 */
 public:
 #if USE_CBDATA_DEBUG

@@ -11,11 +11,11 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libproxyp.la
 
 libproxyp_la_SOURCES = \
-	forward.h \
-	Elements.h \
 	Elements.cc \
+	Elements.h \
 	Header.cc \
 	Header.h \
 	Parser.cc \
-	Parser.h
+	Parser.h \
+	forward.h
 

@@ -16,7 +16,7 @@
  * Update/Maintenance History:
  *
  *    15-Aug-2007 : Copied from fetchmail 6.3.8
- *          - added protection around libray headers
+ *          - added protection around library headers
  *
  *    16-Aug-2007 : Altered configure checks
  *                  Un-hacked slightly to use system gethostbyname()

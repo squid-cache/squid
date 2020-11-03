@@ -13,7 +13,7 @@
 #ifndef TESTSTATHIST_H_
 #define TESTSTATHIST_H_
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 class testStatHist : public CPPUNIT_NS::TestFixture
 {

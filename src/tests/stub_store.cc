@@ -58,11 +58,11 @@ void StoreEntry::ensureMemObject(const char *, const char *, const HttpRequestMe
 void StoreEntry::dump(int debug_lvl) const STUB
 void StoreEntry::hashDelete() STUB
 void StoreEntry::hashInsert(const cache_key *) STUB
-void StoreEntry::registerAbort(STABH * cb, void *) STUB
+void StoreEntry::registerAbortCallback(const AsyncCall::Pointer &) STUB
 void StoreEntry::reset() STUB
 void StoreEntry::setMemStatus(mem_status_t) STUB
 bool StoreEntry::timestampsSet() STUB_RETVAL(false)
-void StoreEntry::unregisterAbort() STUB
+void StoreEntry::unregisterAbortCallback(const char *) STUB
 void StoreEntry::destroyMemObject() STUB
 int StoreEntry::checkTooSmall() STUB_RETVAL(0)
 void StoreEntry::delayAwareRead(const Comm::ConnectionPointer&, char *buf, int len, AsyncCall::Pointer callback) STUB
@@ -72,9 +72,6 @@ bool StoreEntry::hasIfMatchEtag(const HttpRequest &request) const STUB_RETVAL(fa
 bool StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const STUB_RETVAL(false)
 Store::Disk &StoreEntry::disk() const STUB_RETREF(Store::Disk)
 size_t StoreEntry::inUseCount() STUB_RETVAL(0)
-void StoreEntry::getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method) STUB
-void StoreEntry::getPublicByRequest(StoreClient * aClient, HttpRequest * request) STUB
-void StoreEntry::getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method) STUB
 void *StoreEntry::operator new(size_t byteCount)
 {
     STUB

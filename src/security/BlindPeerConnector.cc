@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "CachePeer.h"
 #include "comm/Connection.h"
 #include "errorpage.h"

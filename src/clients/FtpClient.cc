@@ -1009,7 +1009,7 @@ Ftp::Client::dataComplete()
     /* AYJ: 2011-01-13: Bug 2581.
      * 226 status is possibly waiting in the ctrl buffer.
      * The connection will hang if we DONT send buffered_ok.
-     * This happens on all transfers which can be completly sent by the
+     * This happens on all transfers which can be completely sent by the
      * server before the 150 started status message is read in by Squid.
      * ie all transfers of about one packet hang.
      */

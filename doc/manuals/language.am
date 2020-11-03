@@ -6,7 +6,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-TRANSLATE_LANGUAGES= \
+TRANSLATE_LANGUAGES = \
     ar.lang \
     cs.lang \
     de.lang \
@@ -18,4 +18,4 @@ TRANSLATE_LANGUAGES= \
     oc.lang \
     pt.lang \
     ro.lang \
-    ru.lang 
+    ru.lang

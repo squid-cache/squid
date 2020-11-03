@@ -24,7 +24,7 @@ E        405 Method Not Allowed *
          406 Not Acceptable *
 -        407 Proxy Authentication Required *
          408 Request Timeout *
-         409 Confict *
+         409 Conflict *
 C        410 Gone *
          411 Length Required *
          412 Precondition Failed *

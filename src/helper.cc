@@ -60,16 +60,6 @@ CBDATA_CLASS_INIT(helper_stateful_server);
 InstanceIdDefinitions(HelperServerBase, "Hlpr");
 
 void
-HelperServerBase::initStats()
-{
-    stats.uses=0;
-    stats.replies=0;
-    stats.pending=0;
-    stats.releases=0;
-    stats.timedout = 0;
-}
-
-void
 HelperServerBase::closePipesSafely(const char *id_name)
 {
 #if _SQUID_WINDOWS_
@@ -136,12 +126,35 @@ HelperServerBase::dropQueued()
     }
 }
 
+HelperServerBase::HelperServerBase(const char *desc, Ip::Address &ip, int aPid, void *aIpc, int rfd, int wfd) :
+    pid(aPid),
+    addr(ip),
+    readPipe(new Comm::Connection),
+    writePipe(new Comm::Connection),
+    hIpc(aIpc),
+    rbuf(static_cast<char *>(memAllocBuf(ReadBufSize, &rbuf_sz)))
+{
+    readPipe->fd = rfd;
+    readPipe->noteStart();
+    fd_note(readPipe->fd, desc);
+
+    writePipe->fd = wfd;
+    writePipe->noteStart();
+    fd_note(writePipe->fd, desc);
+}
+
 HelperServerBase::~HelperServerBase()
 {
     if (rbuf) {
         memFreeBuf(rbuf_sz, rbuf);
         rbuf = NULL;
     }
+}
+
+helper_server::helper_server(helper *hlp, int aPid, void *aIpc, int rfd, int wfd) :
+    HelperServerBase(hlp->cmdline->key, hlp->addr, aPid, aIpc, rfd, wfd),
+    parent(cbdataReference(hlp))
+{
 }
 
 helper_server::~helper_server()
@@ -174,6 +187,12 @@ helper_server::dropQueued()
     requestsIndex.clear();
 }
 
+helper_stateful_server::helper_stateful_server(statefulhelper *hlp, int aPid, void *aIpc, int rfd, int wfd) :
+    HelperServerBase(hlp->cmdline->key, hlp->addr, aPid, aIpc, rfd, wfd),
+    parent(cbdataReference(hlp))
+{
+}
+
 helper_stateful_server::~helper_stateful_server()
 {
     /* TODO: walk the local queue of requests and carry them all out */
@@ -201,7 +220,6 @@ helperOpenServers(helper * hlp)
     char *procname;
     const char *args[HELPER_MAX_ARGS+1]; // save space for a NULL terminator
     char fd_note_buf[FD_DESC_SZ];
-    helper_server *srv;
     int nargs = 0;
     int k;
     pid_t pid;
@@ -265,22 +283,7 @@ helperOpenServers(helper * hlp)
 
         ++ hlp->childs.n_running;
         ++ hlp->childs.n_active;
-        srv = new helper_server;
-        srv->hIpc = hIpc;
-        srv->pid = pid;
-        srv->initStats();
-        srv->addr = hlp->addr;
-        srv->readPipe = new Comm::Connection;
-        srv->readPipe->fd = rfd;
-        srv->writePipe = new Comm::Connection;
-        srv->writePipe->fd = wfd;
-        srv->rbuf = (char *)memAllocBuf(ReadBufSize, &srv->rbuf_sz);
-        srv->wqueue = new MemBuf;
-        srv->roffset = 0;
-        srv->nextRequestId = 0;
-        srv->replyXaction = NULL;
-        srv->ignoreToEom = false;
-        srv->parent = cbdataReference(hlp);
+        auto *srv = new helper_server(hlp, pid, hIpc, rfd, wfd);
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
         if (rfd == wfd) {
@@ -392,20 +395,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
         ++ hlp->childs.n_running;
         ++ hlp->childs.n_active;
-        helper_stateful_server *srv = new helper_stateful_server;
-        srv->hIpc = hIpc;
-        srv->pid = pid;
-        srv->initStats();
-        srv->addr = hlp->addr;
-        srv->readPipe = new Comm::Connection;
-        srv->readPipe->fd = rfd;
-        srv->writePipe = new Comm::Connection;
-        srv->writePipe->fd = wfd;
-        srv->rbuf = (char *)memAllocBuf(ReadBufSize, &srv->rbuf_sz);
-        srv->roffset = 0;
-        srv->parent = cbdataReference(hlp);
-        srv->reservationStart = 0;
-
+        auto *srv = new helper_stateful_server(hlp, pid, hIpc, rfd, wfd);
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
         if (rfd == wfd) {
@@ -890,7 +880,7 @@ helper_server::popRequest(int request_number)
     Helper::Xaction *r = nullptr;
     helper_server::RequestIndex::iterator it;
     if (parent->childs.concurrency) {
-        // If concurency supported retrieve request from ID
+        // If concurrency supported retrieve request from ID
         it = requestsIndex.find(request_number);
         if (it != requestsIndex.end()) {
             r = *(it->second);
@@ -1032,7 +1022,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
                 char *e = NULL;
                 i = strtol(msg, &e, 10);
                 // Do we need to check for e == msg? Means wrong response from helper.
-                // Will be droped as "unexpected reply on channel 0"
+                // Will be dropped as "unexpected reply on channel 0"
                 needsMore = !(xisspace(*e) || (eom && e == eom));
                 if (!needsMore) {
                     msg = e;

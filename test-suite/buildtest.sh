@@ -61,7 +61,7 @@ if test "${FILECOUNT}" != "0" ; then
 fi
 
 #
-# above command currently encounters dependancy problems on cleanup.
+# above command currently encounters dependency problems on cleanup.
 #
 # do not build any of the install's ...
 #

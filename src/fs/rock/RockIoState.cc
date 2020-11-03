@@ -317,7 +317,7 @@ Rock::IoState::writeToDisk()
 
     theBuf.clear();
 
-    // theFile->write may call writeCompleted immediatelly
+    // theFile->write may call writeCompleted immediately
     theFile->write(r);
 }
 

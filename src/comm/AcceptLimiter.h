@@ -49,7 +49,7 @@ private:
     std::deque<TcpAcceptor::Pointer> deferred_;
 };
 
-}; // namepace Comm
+}; // namespace Comm
 
 #endif /* _SQUID_SRC_COMM_ACCEPT_LIMITER_H */
 

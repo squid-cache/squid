@@ -11,9 +11,9 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libdns.la
 
 libdns_la_SOURCES = \
-	forward.h \
 	LookupDetails.cc \
 	LookupDetails.h \
+	forward.h \
 	rfc1035.cc \
 	rfc1035.h \
 	rfc2671.cc \

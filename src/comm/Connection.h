@@ -50,11 +50,13 @@ namespace Comm
 #define COMM_TRANSPARENT        0x10  // arrived via TPROXY
 #define COMM_INTERCEPTION       0x20  // arrived via NAT
 #define COMM_REUSEPORT          0x40 //< needs SO_REUSEPORT
+/// not registered with Comm and not owned by any connection-closing code
+#define COMM_ORPHANED           0x40
 
 /**
  * Store data about the physical and logical attributes of a connection.
  *
- * Some link state can be infered from the data, however this is not an
+ * Some link state can be inferred from the data, however this is not an
  * object for state data. But a semantic equivalent for FD with easily
  * accessible cached properties not requiring repeated complex lookups.
  *
@@ -75,10 +77,18 @@ public:
     /** Clear the connection properties and close any open socket. */
     virtual ~Connection();
 
-    /** Copy an existing connections IP and properties.
-     * This excludes the FD. The new copy will be a closed connection.
-     */
-    ConnectionPointer copyDetails() const;
+    /// Create a new (closed) IDENT Connection object based on our from-Squid
+    /// connection properties.
+    ConnectionPointer cloneIdentDetails() const;
+
+    /// Create a new (closed) Connection object pointing to the same destination
+    /// as this from-Squid connection.
+    ConnectionPointer cloneDestinationDetails() const;
+
+    /// close the still-open connection when its last reference is gone
+    void enterOrphanage() { flags |= COMM_ORPHANED; }
+    /// resume relying on owner(s) to initiate an explicit connection closure
+    void leaveOrphanage() { flags &= ~COMM_ORPHANED; }
 
     /** Close any open socket. */
     void close();
@@ -131,10 +141,14 @@ public:
     virtual std::ostream &detailCodeContext(std::ostream &os) const override;
 
 private:
-    /** These objects may not be exactly duplicated. Use copyDetails() instead. */
+    /** These objects may not be exactly duplicated. Use cloneIdentDetails() or
+     * cloneDestinationDetails() instead.
+     */
     Connection(const Connection &c);
 
-    /** These objects may not be exactly duplicated. Use copyDetails() instead. */
+    /** These objects may not be exactly duplicated. Use cloneIdentDetails() or
+     * cloneDestinationDetails() instead.
+     */
     Connection & operator =(const Connection &c);
 
 public:

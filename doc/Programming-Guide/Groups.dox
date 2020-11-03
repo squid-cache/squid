@@ -74,13 +74,13 @@
 
 /**
  \defgroup Timeouts		Timeouts
- \todo DOCS: document Timeouts.
+ * TODO: Write Documentation about Timeouts.
  */
 
 /**
  \defgroup ServerProtocolHTTP HTTP
  \ingroup ServerProtocol
- \todo Write Documentation about HTTP
+ * TODO: Write Documentation about HTTP.
  */
 
 /**
@@ -91,11 +91,11 @@
 /**
  \defgroup ServerProtocolWAIS WAIS
  \ingroup ServerProtocol
- \todo Write Documentation about Wais
+ * TODO: Write Documentation about Wais.
  */
 
 /**
  \defgroup ServerProtocolPassthru Passthru
  \ingroup ServerProtocol
- \todo Write Documentation about Passthru
+ * TODO: Write Documentation about Passthru.
  */

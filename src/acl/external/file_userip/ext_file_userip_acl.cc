@@ -116,7 +116,7 @@ load_dict(FILE * FH) {
                     current_entry->address =
                         (((inet_addr (tmpbuf))) & current_entry->netmask);
                 } else {
-                    /* when theres no slash, we figure the netmask is /32 */
+                    /* when there's no slash, we figure the netmask is /32 */
                     current_entry->address = (inet_addr(tmpbuf));
                     current_entry->netmask = (inet_addr("255.255.255.255"));
                 }

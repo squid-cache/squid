@@ -11,12 +11,10 @@
 
 #include <iosfwd>
 
-/** \ingroup Comm
-
-    \todo: Should we use std::set<int> with its flexibility? Our implementation
+/* TODO: Should we use std::set<int> with its flexibility? Our implementation
     has constant overhead, which is smaller than log(n) of std::set.
-
-an unordered collection of unique descriptors with O(1) add/del/has ops */
+*/
+/// An unordered collection of unique descriptors with O(1) add/del/has ops
 class DescriptorSet
 {
 public:

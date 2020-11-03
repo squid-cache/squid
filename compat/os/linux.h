@@ -34,7 +34,7 @@
  *
  * Netfilter have a history of defining their own versions of network protocol
  * primitives without sufficient protection against the POSIX defines which are
- * aways present in Linux.
+ * always present in Linux.
  *
  * netinet/in.h must be included before any other sys header in order to properly
  * activate include guards in <linux/libc-compat.h> the kernel maintainers added

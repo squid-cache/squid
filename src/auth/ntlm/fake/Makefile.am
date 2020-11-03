@@ -9,7 +9,7 @@ include $(top_srcdir)/src/Common.am
 
 libexec_PROGRAMS= ntlm_fake_auth
 
-ntlm_fake_auth_SOURCES= ntlm_fake_auth.cc
+ntlm_fake_auth_SOURCES = ntlm_fake_auth.cc
 ntlm_fake_auth_LDADD= \
 	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
 	$(top_builddir)/lib/libmiscencoding.la \

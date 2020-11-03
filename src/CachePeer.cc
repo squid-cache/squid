@@ -13,6 +13,7 @@
 #include "NeighborTypeDomainList.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
+#include "SquidConfig.h"
 
 CBDATA_CLASS_INIT(CachePeer);
 
@@ -44,5 +45,13 @@ CachePeer::~CachePeer()
     PeerPoolMgr::Checkpoint(standby.mgr, "peer gone");
 
     xfree(domain);
+}
+
+time_t
+CachePeer::connectTimeout() const
+{
+    if (connect_timeout_raw > 0)
+        return connect_timeout_raw;
+    return Config.Timeout.peer_connect;
 }
 

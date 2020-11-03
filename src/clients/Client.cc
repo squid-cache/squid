@@ -427,7 +427,7 @@ Client::getMoreRequestBody(MemBuf &buf)
 static bool
 sameUrlHosts(const char *url1, const char *url2)
 {
-    // XXX: Want urlHostname() here, but it uses static storage and copying
+    // XXX: Want AnyP::Uri::parse() here, but it uses static storage and copying
     const char *host1 = strchr(url1, ':');
     const char *host2 = strchr(url2, ':');
 
@@ -456,33 +456,40 @@ sameUrlHosts(const char *url1, const char *url2)
 static void
 purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, Http::Message *rep, Http::HdrType hdr)
 {
-    const char *hdrUrl, *absUrl;
-
-    absUrl = NULL;
-    hdrUrl = rep->header.getStr(hdr);
-    if (hdrUrl == NULL) {
+    const auto hdrUrl = rep->header.getStr(hdr);
+    if (!hdrUrl)
         return;
-    }
 
     /*
      * If the URL is relative, make it absolute so we can find it.
      * If it's absolute, make sure the host parts match to avoid DOS attacks
      * as per RFC 2616 13.10.
      */
+    SBuf absUrlMaker;
+    const char *absUrl = nullptr;
     if (urlIsRelative(hdrUrl)) {
-        absUrl = urlMakeAbsolute(req, hdrUrl);
-        if (absUrl != NULL) {
-            hdrUrl = absUrl;
+        if (req->method.id() == Http::METHOD_CONNECT)
+            absUrl = hdrUrl; // TODO: merge authority-uri and hdrUrl
+        else if (req->url.getScheme() == AnyP::PROTO_URN)
+            absUrl = req->url.absolute().c_str();
+        else {
+            AnyP::Uri tmpUrl = req->url;
+            if (*hdrUrl == '/') {
+                // RFC 3986 section 4.2: absolute-path reference
+                // for this logic replace the entire request-target URI path
+                tmpUrl.path(hdrUrl);
+            } else {
+                tmpUrl.addRelativePath(reqUrl);
+            }
+            absUrlMaker = tmpUrl.absolute();
+            absUrl = absUrlMaker.c_str();
         }
     } else if (!sameUrlHosts(reqUrl, hdrUrl)) {
         return;
-    }
+    } else
+        absUrl = hdrUrl;
 
-    purgeEntriesByUrl(req, hdrUrl);
-
-    if (absUrl != NULL) {
-        safe_free(absUrl);
-    }
+    purgeEntriesByUrl(req, absUrl);
 }
 
 // some HTTP methods should purge matching cache entries
@@ -977,7 +984,7 @@ Client::adjustBodyBytesRead(const int64_t delta)
 
     bodyBytesRead += delta; // supports negative and zero deltas
 
-    // check for overflows ("infinite" response?) and undeflows (a bug)
+    // check for overflows ("infinite" response?) and underflows (a bug)
     Must(bodyBytesRead >= 0);
 }
 

@@ -11,7 +11,7 @@
 
 #include <vector>
 
-/// Counts events, forgetting old ones. Usefull for "3 errors/minute" limits.
+/// Counts events, forgetting old ones. Useful for "3 errors/minute" limits.
 class FadingCounter
 {
 public:
@@ -29,7 +29,7 @@ public:
     double horizon;
 
 private:
-    const int precision; ///< #counting slots, controls measur. occuracy
+    const int precision; ///< #counting slots, controls measur. accuracy
     double delta; ///< sub-interval duration = horizon/precision
 
     double lastTime; ///< time of the last update

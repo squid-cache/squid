@@ -379,6 +379,7 @@ ACLChecklist::calcImplicitAnswer()
         implicitRuleAnswer = Acl::Answer(ACCESS_DENIED);
     // else we saw no rules and will respond with ACCESS_DUNNO
 
+    implicitRuleAnswer.implicit = true;
     debugs(28, 3, HERE << this << " NO match found, last action " <<
            lastAction << " so returning " << implicitRuleAnswer);
     markFinished(implicitRuleAnswer, "implicit rule won");

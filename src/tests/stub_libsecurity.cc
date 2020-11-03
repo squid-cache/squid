@@ -28,7 +28,7 @@ Security::EncryptorAnswer::~EncryptorAnswer() {}
 std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorAnswer &) STUB_RETVAL(os)
 
 #include "security/Handshake.h"
-Security::HandshakeParser::HandshakeParser() STUB
+Security::HandshakeParser::HandshakeParser(MessageSource) STUB
 bool Security::HandshakeParser::parseHello(const SBuf &) STUB_RETVAL(false)
 
 #include "security/KeyData.h"
@@ -50,14 +50,12 @@ namespace Security
 {
 PeerConnector::PeerConnector(const Comm::ConnectionPointer &, AsyncCall::Pointer &, const AccessLogEntryPointer &, const time_t) :
     AsyncJob("Security::PeerConnector") {STUB}
-PeerConnector::~PeerConnector() {STUB}
 void PeerConnector::start() STUB
 bool PeerConnector::doneAll() const STUB_RETVAL(true)
 void PeerConnector::swanSong() STUB
 const char *PeerConnector::status() const STUB_RETVAL("")
 void PeerConnector::commCloseHandler(const CommCloseCbParams &) STUB
-void PeerConnector::connectionClosed(const char *) STUB
-bool PeerConnector::prepareSocket() STUB_RETVAL(false)
+void PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &) STUB
 bool PeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
 void PeerConnector::negotiate() STUB
 bool PeerConnector::sslFinalized() STUB_RETVAL(false)
@@ -67,7 +65,9 @@ void PeerConnector::noteWantWrite() STUB
 void PeerConnector::noteNegotiationError(const int, const int, const int) STUB
 //    virtual Security::ContextPointer getTlsContext() = 0;
 void PeerConnector::bail(ErrorState *) STUB
+void PeerConnector::sendSuccess() STUB
 void PeerConnector::callBack() STUB
+void PeerConnector::disconnect() STUB
 void PeerConnector::recordNegotiationDetails() STUB
 }
 

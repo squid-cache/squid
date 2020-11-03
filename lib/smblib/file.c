@@ -527,7 +527,7 @@ int SMB_Write(SMB_File *File_Handle, char *data, int numbytes)
 
     max_write_data = (File_Handle -> tree -> mbs) - pkt_len;
 
-    /* the 3 is for the data block id and length that preceeds the data */
+    /* the 3 is for the data block id and length that precedes the data */
 
     while (bytes_left > 0) {
 
@@ -1211,7 +1211,7 @@ int SMB_Search(SMB_Tree_Handle tree,
     SSVAL(SMB_Hdr(pkt), SMB_hdr_mid_offset, tree -> con -> mid);
     SSVAL(SMB_Hdr(pkt), SMB_hdr_uid_offset, tree -> con -> uid);
 
-    /* Tell server we known about non-dos names and extended attibutes */
+    /* Tell server we known about non-dos names and extended attributes */
 
     SSVAL(SMB_Hdr(pkt), SMB_hdr_flg2_offset,
           (SMB_FLG2_NON_DOS | SMB_FLG2_EXT_ATR));

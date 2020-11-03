@@ -24,17 +24,17 @@ chop($me=`uname -a|cut -f2 -d' '`);
 $myip=(gethostbyname($me))[4];
 
 die "socket: $!\n" unless
-	socket (SOCK, &AF_INET, &SOCK_DGRAM, $proto);
+    socket (SOCK, &AF_INET, &SOCK_DGRAM, $proto);
 
 while (<>) {
-	chop;
-	$request_template = 'CCnx4x8x4a4a' . length;
-	$request = pack($request_template, 1, 1, 24 + length, $myip, $_);
-	die "send: $!\n" unless
-		send(SOCK, $request, 0, $them);
-	die "recv: $!\n" unless
-		recv(SOCK, $reply, 1024, 0);
-	($type,$ver,$len,$payload) = unpack('CCnx4x8x4A', $reply);
-	print $CODES[$type] . " $_\n";
+    chop;
+    $request_template = 'CCnx4x8x4a4a' . length;
+    $request = pack($request_template, 1, 1, 24 + length, $myip, $_);
+    die "send: $!\n" unless
+        send(SOCK, $request, 0, $them);
+    die "recv: $!\n" unless
+        recv(SOCK, $reply, 1024, 0);
+    ($type,$ver,$len,$payload) = unpack('CCnx4x8x4A', $reply);
+    print $CODES[$type] . " $_\n";
 }
 

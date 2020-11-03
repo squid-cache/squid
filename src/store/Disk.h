@@ -38,7 +38,7 @@ public:
 
     /**
      * Notify this disk that it is full.
-     \todo XXX move into a protected api call between store files and their stores, rather than a top level api call
+     * XXX move into a protected api call between store files and their stores, rather than a top level api call
      */
     virtual void diskFull();
 

@@ -11,7 +11,7 @@
 
 #if USE_AUTH
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 /*
  * demonstration test file, as new idioms are made they will

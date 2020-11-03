@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 5.0.1 release notes</title>
+<title>Squid 5.0.4 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-5.0.1 for testing.
+<p>The Squid Team are pleased to announce the release of Squid-5.0.4 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v5/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -141,9 +141,9 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>Peering support for SSL-Bump
 <p>Squid now supports forwarding of bumped, re-encrypted HTTPS requests through
-   a cache_peer using a standard HTTP CONNECT tunnel.
+   a <em>cache_peer</em> using a standard HTTP CONNECT tunnel.
 
-<p>No support for triggering client authentication when a cache_peer
+<p>No support for triggering client authentication when a <em>cache_peer</em>
    configuration instructs the bumping Squid to relay authentication info
    contained in client CONNECT request. The bumping Squid still responds
    with HTTP 200 (Connection Established) to the client CONNECT request (to
@@ -249,6 +249,14 @@ This section gives a thorough account of those changes in three categories:
 	<p>New code <em>%A</em> to display Squid listening IP address the client
 	   TCP connection was connected to.
 
+	<tag>http_port</tag>
+	<p>New <em>worker-queues</em> option to have TCP stack maintain dedicated
+	   listening queue for each worker in SMP.
+
+	<tag>https_port</tag>
+	<p>New <em>CONDITIONAL_AUTH</em> flag for <em>sslflags=</em> option to
+	   request client certificate(s) but not reject clients without any.
+
 	<tag>logformat</tag>
 	<p>New <em>ssl::&lt;cert</em> macro code to display received server X.509
 	   certificate in PEM format.
@@ -312,6 +320,10 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--disable-optimizations</tag>
 	<p>No longer implies <em>--disable-inline</em> option (which is removed).
+
+	<tag>--enable-external-acl-helpers</tag>
+	<p>New helper type <em>kerberos_sid_group</em> to match <em>group=</em>
+	   annotations AD Domain group SID.
 
 </descrip>
 </p>

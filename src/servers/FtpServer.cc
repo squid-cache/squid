@@ -318,7 +318,7 @@ Ftp::Server::clientPinnedConnectionClosed(const CommCloseCbParams &io)
         clientConnection->close();
 
     // TODO: If the server control connection is gone, reset state to login
-    // again. Reseting login alone is not enough: FtpRelay::sendCommand() will
+    // again. Resetting login alone is not enough: FtpRelay::sendCommand() will
     // not re-login because FtpRelay::serverState() is not going to be
     // fssConnected. Calling resetLogin() alone is also harmful because
     // it does not reset correctly the client-to-squid control connection (eg
@@ -838,7 +838,7 @@ Ftp::Server::handleFeatReply(const HttpReply *reply, StoreIOBuffer)
                 if (!tok.skip('"') || !tok.skip(' '))
                     continue;
 
-                // optional spaces; remember their number to accomodate MS servers
+                // optional spaces; remember their number to accommodate MS servers
                 prependSpaces = 1 + tok.skipAll(CharacterSet::SP);
 
                 SBuf cmd;

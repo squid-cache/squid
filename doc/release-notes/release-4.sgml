@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 4.10 release notes</title>
+<title>Squid 4.13 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -12,7 +12,7 @@ for Applied Network Research and members of the Web Caching community.
 <toc>
 
 <sect>Notice
-<p>The Squid Team are pleased to announce the release of Squid-4.10.
+<p>The Squid Team are pleased to announce the release of Squid-4.13.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v4/"> or the
  <url url="http://www.squid-cache.org/Download/http-mirrors.html" name="mirrors">.
@@ -59,7 +59,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Configurable helper queue size
-<p>The new queue-size=N option to helpers configuration, allows users 
+<p>The new <em>queue-size=N</em> option to helpers configuration, allows users
    to configure the maximum number of queued requests to busy helpers.
 
 <sect1>Helper concurrency channels changes
@@ -541,6 +541,10 @@ This section gives an account of those changes in three categories:
 	<tag>--without-cppunit</tag>
 	<p>The cppunit testing framework is auto-detected and used when available.
 	   This option can be used to disable it explicitly.
+
+	<tag>--without-systemd</tag>
+	<p>SystemD init environment features are auto-detected and used when available.
+	   This option can be used to disable systemd features explicitly.
 
 </descrip>
 

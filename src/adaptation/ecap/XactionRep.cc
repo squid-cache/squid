@@ -96,7 +96,7 @@ Adaptation::Ecap::XactionRep::option(const libecap::Name &name) const
 
     // TODO: metaServerIp, metaAuthenticatedUser, and metaAuthenticatedGroups
 
-    // If the name is unknown, metaValue returns an emtpy area
+    // If the name is unknown, metaValue returns an empty area
     return metaValue(name);
 }
 

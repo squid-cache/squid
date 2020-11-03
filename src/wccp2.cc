@@ -49,7 +49,7 @@ static EVH wccp2AssignBuckets;
 
 /* Useful defines */
 #define WCCP2_NUMPORTS  8
-#define WCCP2_PASSWORD_LEN  8
+#define WCCP2_PASSWORD_LEN  8 + 1 /* + 1 for C-string NUL terminator */
 
 /* WCCPv2 Pakcet format structures */
 /* Defined in draft-wilson-wccp-v2-12-oct-2001.txt */
@@ -451,7 +451,7 @@ struct wccp2_service_list_t {
     size_t wccp_packet_size;
 
     struct wccp2_service_list_t *next;
-    char wccp_password[WCCP2_PASSWORD_LEN + 1];     /* hold the trailing C-string NUL */
+    char wccp_password[WCCP2_PASSWORD_LEN];     /* hold the trailing C-string NUL */
     uint32_t wccp2_security_type;
 };
 
@@ -459,7 +459,7 @@ static struct wccp2_service_list_t *wccp2_service_list_head = NULL;
 
 int empty_portlist[WCCP2_NUMPORTS] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-/* END WCCP V2 PROTOCL TYPES DEFINITION */
+/* END WCCP V2 PROTOCOL TYPES DEFINITION */
 
 void wccp2_add_service_list(int service, int service_id, int service_priority,
                             int service_proto, int service_flags, int ports[], int security_type, char *password);
@@ -519,8 +519,8 @@ wccp2_add_service_list(int service, int service_id, int service_priority,
     wccp2_update_service(wccp2_service_list_ptr, service, service_id,
                          service_priority, service_proto, service_flags, ports);
     wccp2_service_list_ptr->wccp2_security_type = security_type;
-    memset(wccp2_service_list_ptr->wccp_password, 0, WCCP2_PASSWORD_LEN + 1);
-    strncpy(wccp2_service_list_ptr->wccp_password, password, WCCP2_PASSWORD_LEN);
+    memset(wccp2_service_list_ptr->wccp_password, 0, WCCP2_PASSWORD_LEN);
+    xstrncpy(wccp2_service_list_ptr->wccp_password, password, WCCP2_PASSWORD_LEN);
     /* add to linked list - XXX this should use the Squid dlink* routines! */
     wccp2_service_list_ptr->next = wccp2_service_list_head;
     wccp2_service_list_head = wccp2_service_list_ptr;
@@ -562,8 +562,7 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
 
     /* The password field, for the MD5 hash, needs to be 8 bytes and NUL padded. */
     memset(pwd, 0, sizeof(pwd));
-    strncpy(pwd, password, sizeof(pwd));
-    pwd[sizeof(pwd) - 1] = '\0';
+    xstrncpy(pwd, password, sizeof(pwd));
 
     ws = (struct wccp2_security_md5_t *) ptr;
     assert(ntohs(ws->security_type) == WCCP2_SECURITY_INFO);
@@ -585,7 +584,9 @@ wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
 
     SquidMD5Init(&M);
 
-    SquidMD5Update(&M, pwd, sizeof(pwd));
+    static_assert(sizeof(pwd) - 1 == 8, "WCCP2 password has exactly 8 (padded) octets, excluding storage-terminating NUL");
+
+    SquidMD5Update(&M, pwd, sizeof(pwd) - 1);
 
     SquidMD5Update(&M, packet, len);
 
@@ -630,8 +631,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     /* The password field, for the MD5 hash, needs to be 8 bytes and NUL padded. */
     memset(pwd, 0, sizeof(pwd));
-    strncpy(pwd, srv->wccp_password, sizeof(pwd));
-    pwd[sizeof(pwd) - 1] = '\0';
+    xstrncpy(pwd, srv->wccp_password, sizeof(pwd));
 
     /* Take a copy of the challenge: we need to NUL it before comparing */
     memcpy(md5_challenge, ws->security_implementation, sizeof(md5_challenge));
@@ -640,7 +640,9 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     SquidMD5Init(&M);
 
-    SquidMD5Update(&M, pwd, sizeof(pwd));
+    static_assert(sizeof(pwd) - 1 == 8, "WCCP2 password has exactly 8 (padded) octets, excluding storage-terminating NUL");
+
+    SquidMD5Update(&M, pwd, sizeof(pwd) - 1);
 
     SquidMD5Update(&M, packet, len);
 
@@ -1155,7 +1157,7 @@ wccp2HandleUdp(int sock, void *)
 
     Comm::SetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
-    /* FIXME INET6 : drop conversion boundary */
+    // TODO: drop conversion boundary
     Ip::Address from_tmp;
     from_tmp.setIPv4();
 
@@ -1174,7 +1176,7 @@ wccp2HandleUdp(int sock, void *)
     if (ntohl(wccp2_i_see_you.type) != WCCP2_I_SEE_YOU)
         return;
 
-    /* FIXME INET6 : drop conversion boundary */
+    // XXX: drop conversion boundary
     from_tmp.getSockAddr(from);
 
     debugs(80, 3, "Incoming WCCPv2 I_SEE_YOU length " << ntohs(wccp2_i_see_you.length) << ".");
@@ -1635,7 +1637,7 @@ wccp2AssignBuckets(void *)
     /* number of caches */
 
     struct in_addr *cache_address;
-    /* Alternative assignement mask/values */
+    /* Alternative assignment mask/values */
     int num_maskval;
 
     struct wccp2_mask_element_t *mask_element;
@@ -1964,7 +1966,7 @@ wccp2AssignBuckets(void *)
             if (ntohl(router_list_ptr->num_caches)) {
                 /* send packet */
 
-                /* FIXME INET6 : drop temp conversion */
+                // XXX: drop temp conversion
                 Ip::Address tmp_rtr(router);
 
                 if (wccp2_numrouters > 1) {
@@ -1993,7 +1995,7 @@ wccp2AssignBuckets(void *)
 /**
  * Parse wccp2_return_method and wccp2_forwarding_method options
  * they can be '1' aka 'gre' or  '2' aka 'l2'
- * repesenting the integer numeric of the same.
+ * representing the integer numeric of the same.
  */
 void
 parse_wccp2_method(int *method)
@@ -2041,7 +2043,7 @@ free_wccp2_method(int *)
 /**
  * Parse wccp2_assignment_method option
  * they can be '1' aka 'hash' or  '2' aka 'mask'
- * repesenting the integer numeric of the same.
+ * representing the integer numeric of the same.
  */
 void
 parse_wccp2_amethod(int *method)
@@ -2098,7 +2100,7 @@ parse_wccp2_service(void *)
     int service = 0;
     int service_id = 0;
     int security_type = WCCP2_NO_SECURITY;
-    char wccp_password[WCCP2_PASSWORD_LEN + 1];
+    char wccp_password[WCCP2_PASSWORD_LEN];
 
     if (wccp2_connected == 1) {
         debugs(80, DBG_IMPORTANT, "WCCPv2: Somehow reparsing the configuration without having shut down WCCP! Try reloading squid again.");
@@ -2137,7 +2139,7 @@ parse_wccp2_service(void *)
     if ((t = ConfigParser::NextToken()) != NULL) {
         if (strncmp(t, "password=", 9) == 0) {
             security_type = WCCP2_MD5_SECURITY;
-            strncpy(wccp_password, t + 9, WCCP2_PASSWORD_LEN);
+            xstrncpy(wccp_password, t + 9, sizeof(wccp_password));
         }
     }
 

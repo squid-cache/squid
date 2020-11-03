@@ -15,8 +15,11 @@
 #include "Downloader.h"
 #include "errorpage.h"
 #include "fde.h"
+#include "FwdState.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
+#include "neighbors.h"
+#include "pconn.h"
 #include "security/NegotiationHistory.h"
 #include "security/PeerConnector.h"
 #include "SquidConfig.h"
@@ -31,6 +34,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 
 Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const AccessLogEntryPointer &alp, const time_t timeout) :
     AsyncJob("Security::PeerConnector"),
+    noteFwdPconnUse(false),
     serverConn(aServerConn),
     al(alp),
     callback(aCallback),
@@ -39,14 +43,17 @@ Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerCon
     useCertValidator_(true),
     certsDownloads(0)
 {
-    debugs(83, 5, "Security::PeerConnector constructed, this=" << (void*)this);
+    debugs(83, 5, serverConn);
+
     // if this throws, the caller's cb dialer is not our CbDialer
     Must(dynamic_cast<CbDialer*>(callback->getDialer()));
-}
 
-Security::PeerConnector::~PeerConnector()
-{
-    debugs(83, 5, "Security::PeerConnector destructed, this=" << (void*)this);
+    // watch for external connection closures
+    Must(Comm::IsConnOpen(serverConn));
+    Must(!fd_table[serverConn->fd].closing());
+    typedef CommCbMemFunT<Security::PeerConnector, CommCloseCbParams> Dialer;
+    closeHandler = JobCallback(9, 5, Dialer, this, Security::PeerConnector::commCloseHandler);
+    comm_add_close_handler(serverConn->fd, closeHandler);
 }
 
 bool Security::PeerConnector::doneAll() const
@@ -61,8 +68,16 @@ Security::PeerConnector::start()
     AsyncJob::start();
     debugs(83, 5, "this=" << (void*)this);
 
+    // we own this Comm::Connection object and its fd exclusively, but must bail
+    // if others started closing the socket while we were waiting to start()
+    assert(Comm::IsConnOpen(serverConn));
+    if (fd_table[serverConn->fd].closing()) {
+        bail(new ErrorState(ERR_CONNECT_FAIL, Http::scBadGateway, request.getRaw(), al));
+        return;
+    }
+
     Security::SessionPointer tmp;
-    if (prepareSocket() && initialize(tmp))
+    if (initialize(tmp))
         negotiate();
     else
         mustStop("Security::PeerConnector TLS socket initialize failed");
@@ -71,34 +86,25 @@ Security::PeerConnector::start()
 void
 Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
 {
+    closeHandler = nullptr;
+
     debugs(83, 5, "FD " << params.fd << ", Security::PeerConnector=" << params.data);
-    connectionClosed("Security::PeerConnector::commCloseHandler");
+    const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
+#if USE_OPENSSL
+    err->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
+#endif
+    bail(err);
 }
 
 void
-Security::PeerConnector::connectionClosed(const char *reason)
+Security::PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &)
 {
-    debugs(83, 5, reason << " socket closed/closing. this=" << (void*)this);
-    mustStop(reason);
-    callback = NULL;
-}
-
-bool
-Security::PeerConnector::prepareSocket()
-{
-    debugs(83, 5, serverConnection() << ", this=" << (void*)this);
-    if (!Comm::IsConnOpen(serverConnection()) || fd_table[serverConnection()->fd].closing()) {
-        connectionClosed("Security::PeerConnector::prepareSocket");
-        return false;
-    }
-
-    debugs(83, 5, serverConnection());
-
-    // watch for external connection closures
-    typedef CommCbMemFunT<Security::PeerConnector, CommCloseCbParams> Dialer;
-    closeHandler = JobCallback(9, 5, Dialer, this, Security::PeerConnector::commCloseHandler);
-    comm_add_close_handler(serverConnection()->fd, closeHandler);
-    return true;
+    debugs(83, 5, serverConnection() << " timedout. this=" << (void*)this);
+    const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al);
+#if USE_OPENSSL
+    err->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
+#endif
+    bail(err);
 }
 
 bool
@@ -163,9 +169,6 @@ Security::PeerConnector::recordNegotiationDetails()
 void
 Security::PeerConnector::negotiate()
 {
-    if (!Comm::IsConnOpen(serverConnection()))
-        return;
-
     const int fd = serverConnection()->fd;
     if (fd_table[fd].closing())
         return;
@@ -204,7 +207,7 @@ Security::PeerConnector::negotiate()
     if (!sslFinalized())
         return;
 
-    callBack();
+    sendSuccess();
 }
 
 bool
@@ -241,7 +244,6 @@ Security::PeerConnector::sslFinalized()
 
             noteNegotiationDone(anErr);
             bail(anErr);
-            serverConn->close();
             return true;
         }
     }
@@ -259,9 +261,6 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 
     Ssl::ErrorDetail *errDetails = NULL;
     bool validatorFailed = false;
-    if (!Comm::IsConnOpen(serverConnection())) {
-        return;
-    }
 
     if (Debug::Enabled(83, 5)) {
         Security::SessionPointer ssl(fd_table[serverConnection()->fd].ssl);
@@ -281,7 +280,7 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 
     if (!errDetails && !validatorFailed) {
         noteNegotiationDone(NULL);
-        callBack();
+        sendSuccess();
         return;
     }
 
@@ -296,7 +295,6 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 
     noteNegotiationDone(anErr);
     bail(anErr);
-    serverConn->close();
     return;
 }
 #endif
@@ -473,9 +471,11 @@ Security::PeerConnector::noteWantRead()
 #endif
 
     // read timeout to avoid getting stuck while reading from a silent server
-    AsyncCall::Pointer nil;
+    typedef CommCbMemFunT<Security::PeerConnector, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall = JobCallback(83, 5,
+                                     TimeoutDialer, this, Security::PeerConnector::commTimeoutHandler);
     const auto timeout = Comm::MortalReadTimeout(startTime, negotiationTimeout);
-    commSetConnTimeout(serverConnection(), timeout, nil);
+    commSetConnTimeout(serverConnection(), timeout, timeoutCall);
 
     Comm::SetSelect(fd, COMM_SELECT_READ, &NegotiateSsl, new Pointer(this), 0);
 }
@@ -539,19 +539,40 @@ Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error
 void
 Security::PeerConnector::bail(ErrorState *error)
 {
-    Must(error); // or the recepient will not know there was a problem
+    Must(error); // or the recipient will not know there was a problem
     Must(callback != NULL);
     CbDialer *dialer = dynamic_cast<CbDialer*>(callback->getDialer());
     Must(dialer);
     dialer->answer().error = error;
 
+    if (const auto p = serverConnection()->getPeer())
+        peerConnectFailed(p);
+
     callBack();
-    // Our job is done. The callabck recepient will probably close the failed
-    // peer connection and try another peer or go direct (if possible). We
-    // can close the connection ourselves (our error notification would reach
-    // the recepient before the fd-closure notification), but we would rather
-    // minimize the number of fd-closure notifications and let the recepient
-    // manage the TCP state of the connection.
+    disconnect();
+
+    if (noteFwdPconnUse)
+        fwdPconnPool->noteUses(fd_table[serverConn->fd].pconn.uses);
+    serverConn->close();
+    serverConn = nullptr;
+}
+
+void
+Security::PeerConnector::sendSuccess()
+{
+    callBack();
+    disconnect();
+}
+
+void
+Security::PeerConnector::disconnect()
+{
+    if (closeHandler) {
+        comm_remove_close_handler(serverConnection()->fd, closeHandler);
+        closeHandler = nullptr;
+    }
+
+    commUnsetConnTimeout(serverConnection());
 }
 
 void
@@ -563,10 +584,6 @@ Security::PeerConnector::callBack()
     // Do this now so that if we throw below, swanSong() assert that we _tried_
     // to call back holds.
     callback = NULL; // this should make done() true
-
-    // remove close handler
-    comm_remove_close_handler(serverConnection()->fd, closeHandler);
-
     CbDialer *dialer = dynamic_cast<CbDialer*>(cb->getDialer());
     Must(dialer);
     dialer->answer().conn = serverConnection();

@@ -16,7 +16,7 @@ typedef class StoreMeta tlv;
 
 /**
  \ingroup SwapStoreAPI
- \todo AYJ: for critical lists like this we should use A=64,B=65 etc to enforce and reserve values.
+ * XXX: for critical lists like this we should use A=64,B=65 etc to enforce and reserve values.
  \note NOTE!  We must preserve the order of this list!
  *
  \section StoreSwapMeta Store "swap meta" Description
@@ -87,7 +87,7 @@ enum {
      */
     STORE_META_HITMETERING,
 
-    /// \todo DOCS: document.
+    // TODO: document this TLV type code
     STORE_META_VALID,
 
     /**
@@ -101,10 +101,11 @@ enum {
      */
     STORE_META_STD_LFS,
 
+    // TODO: document this TLV type code
     STORE_META_OBJSIZE,
 
-    STORE_META_STOREURL,    /* the store url, if different to the normal URL */
-    STORE_META_VARY_ID,     /* Unique ID linking variants */
+    STORE_META_STOREURL,    /**< the Store-ID url, if different to the normal URL */
+    STORE_META_VARY_ID,     /**< Unique ID linking variants */
     STORE_META_END
 };
 

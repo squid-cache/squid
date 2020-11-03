@@ -9,7 +9,7 @@
 #ifndef SQUID_TESTTOKENIZER_H_
 #define SQUID_TESTTOKENIZER_H_
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 class testTokenizer : public CPPUNIT_NS::TestFixture
 {

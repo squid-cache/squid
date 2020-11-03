@@ -232,7 +232,7 @@ Parser::Tokenizer::int64(int64_t & result, int base, bool allowSign, const SBuf:
 
     const SBuf range(buf_.substr(0,limit));
 
-    //fixme: account for buf_.size()
+    // XXX: account for buf_.size()
     bool neg = false;
     const char *s = range.rawContent();
     const char *end = range.rawContent() + range.length();

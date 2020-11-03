@@ -37,7 +37,7 @@ public:
     /**
      * Update an existing set of details with new start/max/idle/concurrent limits.
      * This is for parsing new child settings into an object incrementally then updating
-     * the running set without loosing any of the active state or causing races.
+     * the running set without losing any of the active state or causing races.
      */
     ChildConfig &updateLimits(const ChildConfig &rhs);
 

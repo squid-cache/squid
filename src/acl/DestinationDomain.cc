@@ -89,7 +89,7 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledCheckl
         checklist->dst_rdns = xstrdup(fqdn);
         return data->match(fqdn);
     } else if (!checklist->destinationDomainChecked()) {
-        /* FIXME: Using AclMatchedName here is not OO correct. Should find a way to the current acl */
+        // TODO: Using AclMatchedName here is not OO correct. Should find a way to the current acl
         debugs(28, 3, "Can't yet compare '" << AclMatchedName << "' ACL for " << checklist->request->url.host());
         if (checklist->goAsync(DestinationDomainLookup::Instance()))
             return -1;

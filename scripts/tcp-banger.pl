@@ -7,7 +7,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-# tcp-banger.pl	
+# tcp-banger.pl
 #
 # Duane Wessels, Dec 1995
 #
@@ -34,21 +34,21 @@ $thissock = pack($sockaddr, &AF_INET, 0, "\0\0\0\0");
 $that = pack($sockaddr, &AF_INET, $port, $thataddr);
 
 while (<>) {
-	chop ($url = $_);
+    chop ($url = $_);
 
-	die "socket: $!\n" unless
-        	socket (SOCK, &AF_INET, &SOCK_STREAM, $proto);
-	die "bind: $!\n" unless
-        	bind (SOCK, $thissock);
-        die "$host:$port: $!\n" unless
-		connect (SOCK, $that);
-        select (SOCK); $| = 1;
-        select (STDOUT);
+    die "socket: $!\n" unless
+        socket (SOCK, &AF_INET, &SOCK_STREAM, $proto);
+    die "bind: $!\n" unless
+        bind (SOCK, $thissock);
+    die "$host:$port: $!\n" unless
+        connect (SOCK, $that);
+    select (SOCK); $| = 1;
+    select (STDOUT);
 
-	print SOCK "GET $url HTTP/1.0\r\nAccept: */*\r\n\r\n";
-	$_ = <SOCK>;
-	($ver,$code,$junk) = split;
-	printf "%s %s\n", $code ? $code : 'FAIL', $url;
-	1 while (read(SOCK,$_,4096));
-	close SOCK;
+    print SOCK "GET $url HTTP/1.0\r\nAccept: */*\r\n\r\n";
+    $_ = <SOCK>;
+    ($ver,$code,$junk) = split;
+    printf "%s %s\n", $code ? $code : 'FAIL', $url;
+    1 while (read(SOCK,$_,4096));
+    close SOCK;
 }

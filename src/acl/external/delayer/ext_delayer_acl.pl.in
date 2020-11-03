@@ -132,22 +132,22 @@ my $delay = 500; #in milliseconds. Configurable with the -w option.
 # item will stall the queue until completed. Supporting generic delays
 # requires transforming @queue from a FIFO to a priority queue.
 sub calc_delay {
-  return $delay;
+    return $delay;
 }
 
 GetOptions("debug|d" => \$debug,
-           "wait|w=i" => \$delay,
-           "log|l=s" => \$logfilename)
-or die("Error in parsing command line arguments");
+    "wait|w=i" => \$delay,
+    "log|l=s" => \$logfilename)
+    or die("Error in parsing command line arguments");
 if (defined $opts{h}) {
-  HELP_MESSAGE();
-  exit 0;
+    HELP_MESSAGE();
+    exit 0;
 }
 $delay /= 1000.0; # transform msec into sec
 if ($logfilename) {
-  open ($logfile,">>", "$opts{l}");
-  $debug=1;
-} 
+    open ($logfile,">>", "$opts{l}");
+    $debug=1;
+}
 
 my @p=split(/[\\\/]/,$0);
 my $prg_basename=pop @p;
@@ -173,73 +173,73 @@ my $fh=select($logfile); $|=1; select($fh); undef($fh);
 # takes a result from a gettimeofday call and turns it into a
 # floating-point number suitable for approximate time calculations and select
 sub fract_time {
-  return $_[0]+$_[1]/1000000;
+    return $_[0]+$_[1]/1000000;
 }
 
 sub dispatch_request {
-  my $r = $_[0];
-  chomp $r;
-  &debug("got request: '$r'");
-  my %evt = ();
-  my @fields;
-  @fields = split (/\s+/, $r);
-  $evt{when} = &calc_delay($r)+fract_time(gettimeofday());
-  $evt{reqid}=$reqid++;
-  $evt{req} = $r;
-  $evt{chan} = $fields[0];
-  &debug("Dispatching: reqid $evt{reqid}, chan $evt{chan}, when $evt{when}, raw {$evt{req}}");
-  push @queue,\%evt;
+    my $r = $_[0];
+    chomp $r;
+    &debug("got request: '$r'");
+    my %evt = ();
+    my @fields;
+    @fields = split (/\s+/, $r);
+    $evt{when} = &calc_delay($r)+fract_time(gettimeofday());
+    $evt{reqid}=$reqid++;
+    $evt{req} = $r;
+    $evt{chan} = $fields[0];
+    &debug("Dispatching: reqid $evt{reqid}, chan $evt{chan}, when $evt{when}, raw {$evt{req}}");
+    push @queue,\%evt;
 }
 
 sub next_event {
-  my $now = fract_time(gettimeofday());
-  if (@queue) {
-    my $when = $queue[0]->{when} - $now;
-    &debug("Next event is in $when seconds");
-    return $when;
-  }
-  &debug("No events in queue");
-  return undef;
+    my $now = fract_time(gettimeofday());
+    if (@queue) {
+        my $when = $queue[0]->{when} - $now;
+        &debug("Next event is in $when seconds");
+        return $when;
+    }
+    &debug("No events in queue");
+    return undef;
 }
 
 sub handle_events {
-  my $now = fract_time(gettimeofday());
-  while ( @queue ) {
-    &debug("Queue length is $#queue");
-    last if ($queue[0]->{when} > $now);
-    my %evt = %{shift @queue};
-    &debug("Event: reqid $evt{reqid}, chan $evt{chan}, when $evt{when}, raw {$evt{req}}");
-    print $evt{chan} , " OK\n";
-  }
+    my $now = fract_time(gettimeofday());
+    while ( @queue ) {
+        &debug("Queue length is $#queue");
+        last if ($queue[0]->{when} > $now);
+        my %evt = %{shift @queue};
+        &debug("Event: reqid $evt{reqid}, chan $evt{chan}, when $evt{when}, raw {$evt{req}}");
+        print $evt{chan} , " OK\n";
+    }
 }
 
 # main loop
 while(1) {
-  &debug("selecting");
-  $nfound = select($rd = $rvec,undef,undef,&next_event());
-  &debug("found $nfound bits set");
-  if ($nfound == -1 ) {
-    next if ($!{ERESTART} || $!{EAGAIN} || $!{EINTR});
-    &debug("error in select: $!");
-    exit 1;
-  }
-  if (vec($rd,0,1)==1) { #got stuff from stdin
-    my $d; #data
-    $nread = sysread(STDIN,$d,40960); # read 40kb
-    # clear the signal-bit, stdin is special
-    vec($rd,0,1) = 0;
-    if ($nread==0) {
-      &debug("nothing read from stdin, exiting");
-      exit 0;
+    &debug("selecting");
+    $nfound = select($rd = $rvec,undef,undef,&next_event());
+    &debug("found $nfound bits set");
+    if ($nfound == -1 ) {
+        next if ($!{ERESTART} || $!{EAGAIN} || $!{EINTR});
+        &debug("error in select: $!");
+        exit 1;
     }
-    my $i;
-    while ($i = index($d,"\n")) { #BUG: assumption of no spill-over
-      last if ($i == -1);
-      &dispatch_request(substr($d,0,$i));
-      $d=substr($d,$i+1);
+    if (vec($rd,0,1)==1) { #got stuff from stdin
+        my $d; #data
+        $nread = sysread(STDIN,$d,40960); # read 40kb
+        # clear the signal-bit, stdin is special
+        vec($rd,0,1) = 0;
+        if ($nread==0) {
+            &debug("nothing read from stdin, exiting");
+            exit 0;
+        }
+        my $i;
+        while ($i = index($d,"\n")) { #BUG: assumption of no spill-over
+            last if ($i == -1);
+            &dispatch_request(substr($d,0,$i));
+            $d=substr($d,$i+1);
+        }
     }
-  }
-  &handle_events();
+    &handle_events();
 }
 
 my $doc = <<_EOF;
@@ -258,15 +258,15 @@ _EOF
 our $VERSION = "1.0";
 
 sub HELP_MESSAGE {
-  print STDERR $doc;
+    print STDERR $doc;
 }
 
 sub dump_state {
-  $SIG{HUP} = \&dump_state;
-  print STDERR "Queue:\n",Dumper(\@queue),"\n";
+    $SIG{HUP} = \&dump_state;
+    print STDERR "Queue:\n",Dumper(\@queue),"\n";
 }
 
 sub debug {
-  return unless ($debug);
-  print $logfile $prg_basename , ": ", @_, "\n";
+    return unless ($debug);
+    print $logfile $prg_basename , ": ", @_, "\n";
 }

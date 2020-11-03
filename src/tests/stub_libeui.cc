@@ -9,7 +9,7 @@
 #include "squid.h"
 
 #define STUB_API "eui/libeui.la"
-#include "STUB.h"
+#include "tests/STUB.h"
 
 #include "eui/Config.h"
 Eui::EuiConfig Eui::TheConfig;

@@ -69,7 +69,7 @@ AsyncCall::canFire()
     return !isCanceled;
 }
 
-/// \todo make this method const by providing a const getDialer()
+// TODO: make this method const by providing a const getDialer()
 void
 AsyncCall::print(std::ostream &os)
 {

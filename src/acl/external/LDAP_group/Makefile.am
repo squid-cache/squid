@@ -10,7 +10,7 @@ include $(top_srcdir)/src/Common.am
 libexec_PROGRAMS= ext_ldap_group_acl
 man_MANS= ext_ldap_group_acl.8
 
-ext_ldap_group_acl_SOURCES= \
+ext_ldap_group_acl_SOURCES = \
 	ext_ldap_group_acl.cc
 ext_ldap_group_acl_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \

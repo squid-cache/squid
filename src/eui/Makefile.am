@@ -11,11 +11,11 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libeui.la
 
 libeui_la_SOURCES = \
-	Config.h \
 	Config.cc \
-	Eui48.h \
+	Config.h \
 	Eui48.cc \
-	Eui64.h \
-	Eui64.cc
+	Eui48.h \
+	Eui64.cc \
+	Eui64.h
 
 libeui_la_LIBADD = $(EUILIB)

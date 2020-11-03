@@ -9,23 +9,15 @@
 #ifndef SQUID_HTTPHDRSURROGATECONTROL_H
 #define SQUID_HTTPHDRSURROGATECONTROL_H
 
-#include "dlink.h"
-#include "mem/forward.h"
+#include "http/forward.h"
+#include "HttpHdrScTarget.h"
 #include "SquidString.h"
 
-class HttpHdrScTarget;
+#include <list>
+
 class Packable;
 class StatHist;
 class StoreEntry;
-
-typedef enum {
-    SC_NO_STORE,
-    SC_NO_STORE_REMOTE,
-    SC_MAX_AGE,
-    SC_CONTENT,
-    SC_OTHER,
-    SC_ENUM_END /* also used to mean "invalid" */
-} http_hdr_sc_type;
 
 /* http surogate control header field */
 class HttpHdrSc
@@ -33,22 +25,16 @@ class HttpHdrSc
     MEMPROXY_CLASS(HttpHdrSc);
 
 public:
-    HttpHdrSc(const HttpHdrSc &);
-    HttpHdrSc() {}
-    ~HttpHdrSc();
-
     bool parse(const String *str);
     void packInto(Packable * p) const;
     void updateStats(StatHist *) const;
-    HttpHdrScTarget * getMergedTarget (const char *ourtarget); //todo: make const?
+    HttpHdrScTarget * getMergedTarget(const char *ourtarget); // TODO: make const?
     void setMaxAge(char const *target, int max_age);
-    void addTarget(HttpHdrScTarget *t);
-    void addTargetAtTail(HttpHdrScTarget *t);
 
-    dlink_list targets;
 private:
     HttpHdrScTarget * findTarget (const char *target);
 
+    std::list<HttpHdrScTarget, PoolingAllocator<HttpHdrScTarget>> targets;
 };
 
 /* Http Surrogate Control Header Field */

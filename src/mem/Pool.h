@@ -62,7 +62,7 @@ class MemImplementingAllocator;
 class MemPoolStats;
 
 /// \ingroup MemPoolsAPI
-/// \todo Kill this typedef for C++
+/// TODO: Kill this typedef for C++
 typedef struct _MemPoolGlobalStats MemPoolGlobalStats;
 
 /// \ingroup MemPoolsAPI
@@ -138,7 +138,7 @@ public:
     /**
      \par
      * Main cleanup handler. For MemPools to stay within upper idle limits,
-     * this function needs to be called periodically, preferrably at some
+     * this function needs to be called periodically, preferably at some
      * constant rate, eg. from Squid event. It looks through all pools and
      * chunks, cleans up internal states and checks for releasable chunks.
      *
@@ -156,7 +156,7 @@ public:
      * Suitable frequency for cleanup is in range of few tens of seconds to
      * few minutes, depending of memory activity.
      *
-     \todo DOCS: Re-write this shorter!
+     * TODO: DOCS: Re-write this shorter!
      *
      \param maxage   Release all totally idle chunks that
      *               have not been referenced for maxage seconds.
@@ -299,7 +299,7 @@ public:
 };
 
 /// \ingroup MemPoolsAPI
-/// \todo Classify and add constructor/destructor to initialize properly.
+/// TODO: Classify and add constructor/destructor to initialize properly.
 struct _MemPoolGlobalStats {
     MemPoolMeter *TheMeter;
 
@@ -346,7 +346,6 @@ extern void memPoolIterateDone(MemPoolIterator ** iter);
 
 /**
  \ingroup MemPoolsAPI
- \todo Stats API - not sured how to refactor yet
  *
  * Fills a MemPoolGlobalStats with statistical data about overall
  * usage for all pools.

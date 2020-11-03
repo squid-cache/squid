@@ -469,7 +469,7 @@ Fs::Ufs::UFSSwapDir::maintain()
 
     // f is percentage of 'gap' filled between low- and high-water.
     // Used to reduced purge rate when between water markers, and
-    // to multiply it more agressively the further above high-water
+    // to multiply it more aggressively the further above high-water
     // it reaches. But in a graceful linear growth curve.
     double f = 1.0;
     if (highWaterSz > lowWaterSz) {
@@ -826,7 +826,6 @@ Fs::Ufs::UFSSwapDir::addDiskRestore(const cache_key * key,
 void
 Fs::Ufs::UFSSwapDir::rebuild()
 {
-    ++StoreController::store_dirs_rebuilding;
     eventAdd("storeRebuild", Fs::Ufs::RebuildState::RebuildStep, new Fs::Ufs::RebuildState(this), 0.0, 1);
 }
 

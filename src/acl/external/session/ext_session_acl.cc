@@ -73,7 +73,7 @@ TDB_CONTEXT *db = nullptr;
 typedef TDB_DATA DB_ENTRY;
 
 #else
-#error "Either Berkley DB or Trivial DB must be available"
+#error "Either Berkeley DB or Trivial DB must be available"
 #endif
 
 static void
@@ -137,6 +137,10 @@ static void init_db(void)
         }
     }
 #elif USE_TRIVIALDB
+#if _SQUID_FREEBSD_ && !defined(O_DSYNC)
+    // FreeBSD lacks O_DSYNC, O_SYNC is closest to correct behaviour
+#define O_DSYNC O_SYNC
+#endif
     db = tdb_open(db_path, 0, TDB_CLEAR_IF_FIRST, O_CREAT|O_DSYNC, 0666);
 #endif
     if (!db) {
@@ -295,7 +299,7 @@ int main(int argc, char **argv)
         const char *channel_id = strtok(request, " ");
         char *detail = strtok(NULL, "\n");
         if (detail == NULL) {
-            // Only 1 paramater supplied. We are expecting at least 2 (including the channel ID)
+            // Only 1 parameter supplied. We are expecting at least 2 (including the channel ID)
             fprintf(stderr, "FATAL: %s is concurrent and requires the concurrency option to be specified.\n", program_name);
             shutdown_db();
             exit(EXIT_FAILURE);

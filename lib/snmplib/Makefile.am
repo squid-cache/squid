@@ -17,11 +17,18 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/include
 
 noinst_LTLIBRARIES = libsnmplib.la
-libsnmplib_la_SOURCES  = asn1.c parse.c snmp_vars.c \
-	coexistance.c snmp_api.c snmp_error.c  \
-	mib.c snmp_api_error.c   \
+libsnmplib_la_SOURCES = \
+	asn1.c \
+	coexistance.c \
+	mib.c \
+	parse.c \
+	snmp_api.c \
+	snmp_api_error.c \
+	snmp_error.c \
 	snmp_msg.c \
-	snmp_pdu.c  snmplib_debug.c
+	snmp_pdu.c \
+	snmp_vars.c \
+	snmplib_debug.c
 
 VERSION		= 3.4
 DEFS		= -DSQUID_SNMP=1

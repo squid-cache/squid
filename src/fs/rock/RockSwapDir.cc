@@ -19,7 +19,6 @@
 #include "fs/rock/RockHeaderUpdater.h"
 #include "fs/rock/RockIoRequests.h"
 #include "fs/rock/RockIoState.h"
-#include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
 #include "ipc/mem/Pages.h"
@@ -307,11 +306,6 @@ Rock::SwapDir::init()
     theFile = io->newFile(filePath);
     theFile->configure(fileConfig);
     theFile->open(O_RDWR, 0644, this);
-
-    // Increment early. Otherwise, if one SwapDir finishes rebuild before
-    // others start, storeRebuildComplete() will think the rebuild is over!
-    // TODO: move store_dirs_rebuilding hack to store modules that need it.
-    ++StoreController::store_dirs_rebuilding;
 }
 
 bool
@@ -586,13 +580,6 @@ Rock::SwapDir::validateOptions()
     }
 }
 
-void
-Rock::SwapDir::rebuild()
-{
-    //++StoreController::store_dirs_rebuilding; // see Rock::SwapDir::init()
-    AsyncJob::Start(new Rebuild(this));
-}
-
 bool
 Rock::SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
 {
@@ -791,7 +778,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
     // locked entry is safe, but no support for reading the entry we swap out.
     const Ipc::StoreMapAnchor *slot = map->peekAtReader(e.swap_filen);
     if (!slot)
-        return NULL; // we were writing afterall
+        return NULL; // we were writing after all
 
     Rock::SwapDir::Pointer self(this);
     IoState *sio = new IoState(self, &e, cbFile, cbIo, data);
@@ -830,7 +817,8 @@ Rock::SwapDir::ioCompletedNotification()
            std::setw(7) << map->entryLimit() << " entries, and " <<
            std::setw(7) << map->sliceLimit() << " slots");
 
-    rebuild();
+    if (!Rebuild::Start(*this))
+        storeRebuildComplete(nullptr);
 }
 
 void
@@ -1129,6 +1117,8 @@ void Rock::SwapDirRr::create()
     Must(mapOwners.empty() && freeSlotsOwners.empty());
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
+            rebuildStatsOwners.push_back(Rebuild::Stats::Init(*sd));
+
             const int64_t capacity = sd->slotLimitActual();
 
             SwapDir::DirMap::Owner *const mapOwner =
@@ -1136,19 +1126,14 @@ void Rock::SwapDirRr::create()
             mapOwners.push_back(mapOwner);
 
             // TODO: somehow remove pool id and counters from PageStack?
+            Ipc::Mem::PageStack::Config config;
+            config.poolId = Ipc::Mem::PageStack::IdForSwapDirSpace(i);
+            config.pageSize = 0; // this is an index of slots on _disk_
+            config.capacity = capacity;
+            config.createFull = false; // Rebuild finds and pushes free slots
             Ipc::Mem::Owner<Ipc::Mem::PageStack> *const freeSlotsOwner =
-                shm_new(Ipc::Mem::PageStack)(sd->freeSlotsPath(),
-                                             Ipc::Mem::PageStack::IdForSwapDirSpace(i),
-                                             capacity,
-                                             0);
+                shm_new(Ipc::Mem::PageStack)(sd->freeSlotsPath(), config);
             freeSlotsOwners.push_back(freeSlotsOwner);
-
-            // TODO: add method to initialize PageStack with no free pages
-            while (true) {
-                Ipc::Mem::PageId pageId;
-                if (!freeSlotsOwner->object()->pop(pageId))
-                    break;
-            }
         }
     }
 }
@@ -1156,6 +1141,7 @@ void Rock::SwapDirRr::create()
 Rock::SwapDirRr::~SwapDirRr()
 {
     for (size_t i = 0; i < mapOwners.size(); ++i) {
+        delete rebuildStatsOwners[i];
         delete mapOwners[i];
         delete freeSlotsOwners[i];
     }

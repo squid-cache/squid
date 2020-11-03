@@ -997,7 +997,7 @@ testSBuf::testSBufHash()
     CPPUNIT_ASSERT_EQUAL(hasher(literal),hasher(SBuf(fox)));
     CPPUNIT_ASSERT_EQUAL(hasher(SBuf(fox)),hasher(SBuf(fox)));
 
-    //differen content should have different hash
+    //different content should have different hash
     CPPUNIT_ASSERT(hasher(SBuf(fox)) != hasher(SBuf(fox1)));
 
     {

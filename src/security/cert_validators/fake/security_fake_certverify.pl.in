@@ -116,7 +116,7 @@ while (<>) {
         my @responseErrors = ();
 
         while($readlen < $bodylen) {
-	    my $t = <>;
+            my $t = <>;
             if (defined $t) {
                 $body  = $body . $t;
                 $readlen = length($body);
@@ -142,16 +142,16 @@ while (<>) {
             print(STDERR logPrefix()."\tFOUND cert ".$key.": ".$certs{$key}->subject() . "\n") if ($debug);
         }
 
-        #got the peer certificate ID. Assume that the peer certificate is the first one.
+#got the peer certificate ID. Assume that the peer certificate is the first one.
         my $peerCertId = (keys %certs)[0];
 
-        # Echo back the errors: fill the responseErrors array  with the errors we read.
+ # Echo back the errors: fill the responseErrors array  with the errors we read.
         foreach my $err (keys %errors) {
             $haserror = 1;
-            appendError (\@responseErrors, 
-                         $errors{$err}{"name"}, #The error name
-                         "Checked by Cert Validator", # An error reason
-                         $errors{$err}{"cert"} # The cert ID. We are always filling with the peer certificate.
+            appendError (\@responseErrors,
+                $errors{$err}{"name"}, #The error name
+                "Checked by Cert Validator", # An error reason
+                $errors{$err}{"cert"} # The cert ID. We are always filling with the peer certificate.
                 );
         }
 
@@ -250,5 +250,5 @@ sub parseRequest
 
 sub logPrefix
 {
-  return strftime("%Y/%m/%d %H:%M:%S.0", localtime)." ".$0." ".$$." | " ;
+    return strftime("%Y/%m/%d %H:%M:%S.0", localtime)." ".$0." ".$$." | " ;
 }

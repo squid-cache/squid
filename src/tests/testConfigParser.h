@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_TEST_CONFIG_PARSER_H
 #define SQUID_SRC_TEST_CONFIG_PARSER_H
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 /*
  * test the ConfigParser framework

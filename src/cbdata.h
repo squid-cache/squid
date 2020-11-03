@@ -37,17 +37,17 @@
 
  \subsection AsyncOpWithoutCBDATA Asynchronous operation without cbdata, showing why cbdata is needed
  \par
-   For a asyncronous operation with callback functions, the normal
+   For a asynchronous operation with callback functions, the normal
    sequence of events in programs NOT using cbdata is as follows:
 
  \code
     // initialization
     type_of_data our_data = new ...;
     ...
-    // Initiate a asyncronous operation, with our_data as callback_data
+    // Initiate a asynchronous operation, with our_data as callback_data
     fooOperationStart(bar, callback_func, our_data);
     ...
-    // The asyncronous operation completes and makes the callback
+    // The asynchronous operation completes and makes the callback
     callback_func(callback_data, ....);
     // Some time later we clean up our data
     delete our_data;
@@ -65,7 +65,7 @@
     // initialization
     type_of_data our_data = new ...;
     ...
-    // Initiate a asyncronous operation, with our_data as callback_data
+    // Initiate a asynchronous operation, with our_data as callback_data
     fooOperationStart(bar, callback_func, our_data);
     ...
     // ouch, something bad happened elsewhere.. try to cleanup
@@ -75,19 +75,19 @@
     // pending operations.
     delete our_data;
     ...
-    // The asyncronous operation completes and makes the callback
+    // The asynchronous operation completes and makes the callback
     callback_func(callback_data, ....);
     // CRASH, the memory pointer to by callback_data is no longer valid
     // at the time of the callback
  \endcode
 
- \subsection AsyncOpWithCBDATA Asyncronous operation with cbdata
+ \subsection AsyncOpWithCBDATA Asynchronous operation with cbdata
 
  \par
    The callback data allocator lets us do this in a uniform and
    safe manner.  The callback data allocator is used to allocate,
    track and free memory pool objects used during callback
-   operations.  Allocated memory is locked while the asyncronous
+   operations.  Allocated memory is locked while the asynchronous
    operation executes elsewhere, and is freed when the operation
    completes.  The normal sequence of events is:
 
@@ -95,13 +95,13 @@
     // initialization
     type_of_data our_data = new type_of_data;
     ...
-    // Initiate a asyncronous operation, with our_data as callback_data
+    // Initiate a asynchronous operation, with our_data as callback_data
     fooOperationStart(..., callback_func, our_data);
     ...
     // foo
     void *local_pointer = cbdataReference(callback_data);
     ....
-    // The asyncronous operation completes and makes the callback
+    // The asynchronous operation completes and makes the callback
     void *cbdata;
     if (cbdataReferenceValidDone(local_pointer, &amp;cbdata))
         callback_func(...., cbdata);
@@ -114,12 +114,12 @@
    With this scheme, nothing bad happens if delete gets called
    before fooOperantionComplete(...).
 
- \par   Initalization
+ \par   Initialization
  \code
     // initialization
     type_of_data our_data = new type_of_data;
     ...
-    // Initiate a asyncronous operation, with our_data as callback_data
+    // Initiate a asynchronous operation, with our_data as callback_data
     fooOperationStart(..., callback_func, our_data);
     ...
     // do some stuff with it
@@ -128,7 +128,7 @@
     // something bad happened elsewhere.. cleanup
     delete our_data;
     ....
-    // The asyncronous operation completes and makes the callback
+    // The asynchronous operation completes and makes the callback
     void *cbdata;
     if (cbdataReferenceValidDone(local_pointer, &amp;cbdata))
         // won't be called, as the data is no longer valid

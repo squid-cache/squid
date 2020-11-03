@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/AsyncCbdataCalls.h"
 #include "base/InstanceId.h"
 #include "CachePeer.h"
 #include "carp.h"
@@ -34,6 +35,7 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "util.h" // for tvSubDsec() which should be in SquidTime.h
 
 /**
  * A CachePeer which has been selected as a possible destination.
@@ -99,6 +101,132 @@ operator <<(std::ostream &os, const PeerSelectionDumper &fsd)
     return os;
 }
 
+/// An ICP ping timeout service.
+/// Protects event.cc (which is designed to handle a few unrelated timeouts)
+/// from exposure to thousands of ping-related timeouts on busy proxies.
+class PeerSelectorPingMonitor
+{
+public:
+    /// registers the given selector to be notified about the IPC ping timeout
+    void monitor(PeerSelector *);
+
+    /// removes a PeerSelector from the waiting list
+    void forget(PeerSelector *);
+
+    /// \returns a (nil) registration of a non-waiting peer selector
+    WaitingPeerSelectorPosition npos() { return selectors.end(); }
+
+private:
+    static void NoteWaitOver(void *monitor);
+
+    void startWaiting();
+    void abortWaiting();
+    void noteWaitOver();
+
+    WaitingPeerSelectors selectors; ///< \see WaitingPeerSelectors
+};
+
+/// monitors all PeerSelector ICP ping timeouts
+static PeerSelectorPingMonitor &
+PingMonitor()
+{
+    static const auto Instance = new PeerSelectorPingMonitor();
+    return *Instance;
+}
+
+/* PeerSelectorPingMonitor */
+
+/// PeerSelectorPingMonitor::noteWaitOver() wrapper
+void
+PeerSelectorPingMonitor::NoteWaitOver(void *raw)
+{
+    assert(raw);
+    static_cast<PeerSelectorPingMonitor*>(raw)->noteWaitOver();
+}
+
+/// schedules a single event to represent all waiting selectors
+void
+PeerSelectorPingMonitor::startWaiting()
+{
+    assert(!selectors.empty());
+    const auto interval = tvSubDsec(current_time, selectors.begin()->first);
+    eventAdd("PeerSelectorPingMonitor::NoteWaitOver", &PeerSelectorPingMonitor::NoteWaitOver, this, interval, 0, false);
+}
+
+/// undoes an earlier startWaiting() call
+void
+PeerSelectorPingMonitor::abortWaiting()
+{
+    // our event may be already in the AsyncCallQueue but that is OK:
+    // such queued calls cannot accumulate, and we ignore any stale ones
+    eventDelete(&PeerSelectorPingMonitor::NoteWaitOver, nullptr);
+}
+
+/// calls back all ready PeerSelectors and continues to wait for others
+void
+PeerSelectorPingMonitor::noteWaitOver()
+{
+    while (!selectors.empty() && current_time >= selectors.begin()->first) {
+        const auto selector = selectors.begin()->second;
+        CallBack(selector->al, [selector,this] {
+            selector->ping.monitorRegistration = npos();
+            AsyncCall::Pointer callback = asyncCall(44, 4, "PeerSelector::HandlePingTimeout",
+                cbdataDialer(PeerSelector::HandlePingTimeout, selector));
+            ScheduleCallHere(callback);
+        });
+        selectors.erase(selectors.begin());
+    }
+
+    if (!selectors.empty()) {
+        // Since abortWaiting() is unreliable, we may have been awakened by a
+        // stale event A after event B has been scheduled. Now we are going to
+        // schedule event C. Prevent event accumulation by deleting B (if any).
+        abortWaiting();
+
+        startWaiting();
+    }
+}
+
+void
+PeerSelectorPingMonitor::monitor(PeerSelector *selector)
+{
+    assert(selector);
+
+    const auto deadline = selector->ping.deadline();
+    const auto position = selectors.emplace(deadline, selector);
+    selector->ping.monitorRegistration = position;
+
+    if (position == selectors.begin()) {
+        if (selectors.size() > 1)
+            abortWaiting(); // remove the previously scheduled earlier event
+        startWaiting();
+    } // else the already scheduled event is still the earliest one
+}
+
+void
+PeerSelectorPingMonitor::forget(PeerSelector *selector)
+{
+    assert(selector);
+
+    if (selector->ping.monitorRegistration == npos())
+        return; // already forgotten
+
+    const auto wasFirst = selector->ping.monitorRegistration == selectors.begin();
+    selectors.erase(selector->ping.monitorRegistration);
+    selector->ping.monitorRegistration = npos();
+
+    if (wasFirst) {
+        // do not reschedule if there are still elements with the same deadline
+        if (!selectors.empty() && selectors.begin()->first == selector->ping.deadline())
+            return;
+        abortWaiting();
+        if (!selectors.empty())
+            startWaiting();
+    } // else do nothing since the old scheduled event is still the earliest one
+}
+
+/* PeerSelector */
+
 PeerSelector::~PeerSelector()
 {
     while (servers) {
@@ -107,12 +235,10 @@ PeerSelector::~PeerSelector()
         servers = next;
     }
 
+    cancelPingTimeoutMonitoring();
+
     if (entry) {
         debugs(44, 3, entry->url());
-
-        if (entry->ping_status == PING_WAITING)
-            eventDelete(HandlePingTimeout, this);
-
         entry->ping_status = PING_DONE;
     }
 
@@ -130,6 +256,21 @@ PeerSelector::~PeerSelector()
     }
 
     delete lastError;
+}
+
+void
+PeerSelector::startPingWaiting()
+{
+    assert(entry);
+    assert(entry->ping_status != PING_WAITING);
+    PingMonitor().monitor(this);
+    entry->ping_status = PING_WAITING;
+}
+
+void
+PeerSelector::cancelPingTimeoutMonitoring()
+{
+    PingMonitor().forget(this);
 }
 
 static int
@@ -520,6 +661,7 @@ PeerSelector::selectMore()
             return;
     } else if (entry->ping_status == PING_WAITING) {
         selectSomeNeighborReplies();
+        cancelPingTimeoutMonitoring();
         entry->ping_status = PING_DONE;
     }
 
@@ -614,6 +756,9 @@ PeerSelector::selectSomeNeighbor()
                                            this,
                                            &ping.n_replies_expected,
                                            &ping.timeout);
+            // TODO: Refactor neighborsUdpPing() to guarantee positive timeouts.
+            if (ping.timeout < 0)
+                ping.timeout = 0;
 
             if (ping.n_sent == 0)
                 debugs(44, DBG_CRITICAL, "WARNING: neighborsUdpPing returned 0");
@@ -622,12 +767,7 @@ PeerSelector::selectSomeNeighbor()
                    " msec");
 
             if (ping.n_replies_expected > 0) {
-                entry->ping_status = PING_WAITING;
-                eventAdd("PeerSelector::HandlePingTimeout",
-                         HandlePingTimeout,
-                         this,
-                         0.001 * ping.timeout,
-                         0);
+                startPingWaiting();
                 return;
             }
         }
@@ -754,8 +894,11 @@ PeerSelector::handlePingTimeout()
 {
     debugs(44, 3, url());
 
-    if (entry)
-        entry->ping_status = PING_DONE;
+    // do nothing if ping reply came while handlePingTimeout() was queued
+    if (!entry || entry->ping_status != PING_WAITING)
+        return;
+
+    entry->ping_status = PING_DONE;
 
     if (selectionAborted())
         return;
@@ -766,9 +909,9 @@ PeerSelector::handlePingTimeout()
 }
 
 void
-PeerSelector::HandlePingTimeout(void *data)
+PeerSelector::HandlePingTimeout(PeerSelector *selector)
 {
-    static_cast<PeerSelector*>(data)->handlePingTimeout();
+    selector->handlePingTimeout();
 }
 
 void
@@ -940,6 +1083,8 @@ PeerSelector::addSelection(CachePeer *peer, const hier_code code)
         // There can be at most one PINNED destination.
         // Non-PINNED destinations are uniquely identified by their CachePeer
         // (even though a DIRECT destination might match a cache_peer address).
+        // TODO: We may still add duplicates because the same peer could have
+        // been removed from `servers` already (and given to the requestor).
         const bool duplicate = (server->code == PINNED) ?
                                (code == PINNED) : (server->_peer == peer);
         if (duplicate) {
@@ -1046,11 +1191,24 @@ ping_data::ping_data() :
     timeout(0),
     timedout(0),
     w_rtt(0),
-    p_rtt(0)
+    p_rtt(0),
+    monitorRegistration(PingMonitor().npos())
 {
     start.tv_sec = 0;
     start.tv_usec = 0;
     stop.tv_sec = 0;
     stop.tv_usec = 0;
+}
+
+timeval
+ping_data::deadline() const
+{
+    timeval timeInterval;
+    timeInterval.tv_sec = timeout / 1000;
+    timeInterval.tv_usec = (timeout % 1000) * 1000;
+
+    timeval result;
+    tvAdd(result, start, timeInterval);
+    return result;
 }
 

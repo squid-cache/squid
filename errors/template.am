@@ -6,7 +6,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-ERROR_TEMPLATES= \
+ERROR_TEMPLATES = \
     templates/ERR_ACCESS_DENIED \
     templates/ERR_ACL_TIME_QUOTA_EXCEEDED \
     templates/ERR_AGENT_CONFIGURE \
@@ -48,4 +48,4 @@ ERROR_TEMPLATES= \
     templates/ERR_UNSUP_REQ \
     templates/ERR_URN_RESOLVE \
     templates/ERR_WRITE_ERROR \
-    templates/ERR_ZERO_SIZE_OBJECT 
+    templates/ERR_ZERO_SIZE_OBJECT

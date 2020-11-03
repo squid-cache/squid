@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "anyp/PortCfg.h"
+#include "base/AsyncCbdataCalls.h"
 #include "client_side.h"
 #include "clients/forward.h"
 #include "clients/FtpClient.h"
@@ -94,8 +95,8 @@ protected:
 
     /// Inform Ftp::Server that we are done if originWaitInProgress
     void stopOriginWait(int code);
-
-    static void abort(void *d); // TODO: Capitalize this and FwdState::abort().
+    /// called by Store if the entry is no longer usable
+    static void HandleStoreAbort(Relay *);
 
     bool forwardingCompleted; ///< completeForwarding() has been called
 
@@ -161,12 +162,17 @@ Ftp::Relay::Relay(FwdState *const fwdState):
     // Nothing we can do at request creation time can mark the response as
     // uncachable, unfortunately. This prevents "found KEY_PRIVATE" WARNINGs.
     entry->releaseRequest();
-    // TODO: Convert registerAbort() to use AsyncCall
-    entry->registerAbort(Ftp::Relay::abort, this);
+    AsyncCall::Pointer call = asyncCall(9, 4, "Ftp::Relay::Abort", cbdataDialer(&Relay::HandleStoreAbort, this));
+    entry->registerAbortCallback(call);
 }
 
 Ftp::Relay::~Relay()
 {
+    entry->unregisterAbortCallback("Ftp::Relay object destructed");
+    // Client, our parent, calls entry->unlock().
+    // Client does not currently un/registerAbortCallback() because
+    // FwdState does that for other Client kids; \see FwdState::start().
+
     closeServer(); // TODO: move to clients/Client.cc?
     if (savedReply.message)
         wordlistDestroy(&savedReply.message);
@@ -261,7 +267,7 @@ Ftp::Relay::serverState(const Ftp::ServerState newState)
  * (but we may still be waiting for 226 from the FTP server) and
  * also when we get that 226 from the server (and adaptation is done).
  *
- \todo Rewrite FwdState to ignore double completion?
+ * TODO: Rewrite FwdState to ignore double completion?
  */
 void
 Ftp::Relay::completeForwarding()
@@ -784,12 +790,9 @@ Ftp::Relay::stopOriginWait(int code)
 }
 
 void
-Ftp::Relay::abort(void *d)
+Ftp::Relay::HandleStoreAbort(Relay *ftpClient)
 {
-    Ftp::Relay *ftpClient = (Ftp::Relay *)d;
     debugs(9, 2, "Client Data connection closed!");
-    if (!cbdataReferenceValid(ftpClient))
-        return;
     if (Comm::IsConnOpen(ftpClient->data.conn))
         ftpClient->dataComplete();
 }

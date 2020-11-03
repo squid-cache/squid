@@ -6,7 +6,7 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-TRANSLATE_LANGUAGES= \
+TRANSLATE_LANGUAGES = \
     af.lang \
     ar.lang \
     az.lang \
@@ -17,6 +17,7 @@ TRANSLATE_LANGUAGES= \
     de.lang \
     el.lang \
     en.lang \
+    es-mx.lang \
     es.lang \
     et.lang \
     fa.lang \
@@ -51,4 +52,4 @@ TRANSLATE_LANGUAGES= \
     uz.lang \
     vi.lang \
     zh-hans.lang \
-    zh-hant.lang 
+    zh-hant.lang

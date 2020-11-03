@@ -6,12 +6,13 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
-STUB_SOURCE= tests/STUB.h \
+STUB_SOURCE= \
 	tests/stub_access_log.cc \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_CacheDigest.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_CachePeer.cc \
 	tests/stub_carp.cc \
 	tests/stub_cbdata.cc \
 	tests/stub_client_db.cc \
@@ -37,6 +38,7 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_HttpHeader.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_HttpUpgradeProtocolAccess.cc \
 	tests/stub_icp.cc \
 	tests/stub_internal.cc \
 	tests/stub_ipcache.cc \
@@ -81,7 +83,6 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_store_swapout.cc \
-	tests/stub_SwapDir.cc \
 	tests/stub_time.cc \
 	tests/stub_tools.cc \
 	tests/stub_tunnel.cc \

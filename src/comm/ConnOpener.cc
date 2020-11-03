@@ -30,7 +30,7 @@ class CachePeer;
 
 CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 
-Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &c, const AsyncCall::Pointer &handler, time_t ctimeout) :
+Comm::ConnOpener::ConnOpener(const Comm::ConnectionPointer &c, const AsyncCall::Pointer &handler, time_t ctimeout) :
     AsyncJob("Comm::ConnOpener"),
     host_(NULL),
     temporaryFd_(-1),
@@ -259,7 +259,7 @@ Comm::ConnOpener::createFd()
 {
     Must(temporaryFd_ < 0);
 
-    // our initators signal abort by cancelling their callbacks
+    // our initiators signal abort by cancelling their callbacks
     if (callback_ == NULL || callback_->canceled())
         return false;
 

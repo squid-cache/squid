@@ -189,7 +189,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
 void
 aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
 {
-    // accomodate callers unable to convert their ACL list context to string
+    // accommodate callers unable to convert their ACL list context to string
     if (!label)
         label = "...";
 

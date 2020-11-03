@@ -310,7 +310,7 @@ SBufFindTest::placementKey() const
         return std::string();
 
     if (theBareNeedlePos == 0)
-        return "@B"; // at the beggining of the hay string
+        return "@B"; // at the beginning of the hay string
     if (theBareNeedlePos == theStringHay.length()-theStringNeedle.length())
         return "@E"; // at the end of the hay string
     return "@M"; // in the "middle" of the hay string

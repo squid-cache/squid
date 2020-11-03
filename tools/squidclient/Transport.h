@@ -58,7 +58,7 @@ public:
     /// port on the server to contact
     uint16_t port;
 
-    /// whether to enable TLS on the server connnection
+    /// whether to enable TLS on the server connection
     bool tlsEnabled;
 
     /// whether to do anonymous TLS (non-authenticated)

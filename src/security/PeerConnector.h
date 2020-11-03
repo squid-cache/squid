@@ -31,34 +31,12 @@ namespace Security
 {
 
 /**
- * Initiates encryption on a connection to peers or servers.
- * Despite its name does not perform any connect(2) operations.
+ * Initiates encryption of a given open TCP connection to a peer or server.
+ * Despite its name does not perform any connect(2) operations. Owns the
+ * connection during TLS negotiations. The caller receives EncryptorAnswer.
  *
  * Contains common code and interfaces of various specialized PeerConnector's,
  * including peer certificate validation code.
- \par
- * The caller receives a call back with Security::EncryptorAnswer. If answer.error
- * is not nil, then there was an error and the encryption to the peer or server
- * was not fully established. The error object is suitable for error response
- * generation.
- \par
- * The caller must monitor the connection for closure because this
- * job will not inform the caller about such events.
- \par
- * PeerConnector class currently supports a form of TLS negotiation timeout,
- * which is accounted only when sets the read timeout from encrypted peers/servers.
- * For a complete solution, the caller must monitor the overall connection
- * establishment timeout and close the connection on timeouts. This is probably
- * better than having dedicated (or none at all!) timeouts for peer selection,
- * DNS lookup, TCP handshake, SSL handshake, etc. Some steps may have their
- * own timeout, but not all steps should be forced to have theirs.
- * XXX: tunnel.cc and probably other subsystems do not have an "overall
- * connection establishment" timeout. We need to change their code so that they
- * start monitoring earlier and close on timeouts. This change may need to be
- * discussed on squid-dev.
- \par
- * This job never closes the connection, even on errors. If a 3rd-party
- * closes the connection, this job simply quits without informing the caller.
  */
 class PeerConnector: virtual public AsyncJob
 {
@@ -81,7 +59,10 @@ public:
                   AsyncCall::Pointer &aCallback,
                   const AccessLogEntryPointer &alp,
                   const time_t timeout = 0);
-    virtual ~PeerConnector();
+    virtual ~PeerConnector() = default;
+
+    /// hack: whether the connection requires fwdPconnPool->noteUses()
+    bool noteFwdPconnUse;
 
 protected:
     // AsyncJob API
@@ -90,22 +71,17 @@ protected:
     virtual void swanSong();
     virtual const char *status() const;
 
+    /// The connection read timeout callback handler.
+    void commTimeoutHandler(const CommTimeoutCbParams &);
+
     /// The comm_close callback handler.
     void commCloseHandler(const CommCloseCbParams &params);
-
-    /// Inform us that the connection is closed. Does the required clean-up.
-    void connectionClosed(const char *reason);
-
-    /// Sets up TCP socket-related notification callbacks if things go wrong.
-    /// If socket already closed return false, else install the comm_close
-    /// handler to monitor the socket.
-    bool prepareSocket();
 
     /// \returns true on successful TLS session initialization
     virtual bool initialize(Security::SessionPointer &);
 
     /// Performs a single secure connection negotiation step.
-    /// It is called multiple times untill the negotiation finishes or aborts.
+    /// It is called multiple times until the negotiation finishes or aborts.
     void negotiate();
 
     /// Called after negotiation has finished. Cleans up TLS/SSL state.
@@ -160,11 +136,17 @@ protected:
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }
 
-    void bail(ErrorState *error); ///< Return an error to the PeerConnector caller
+    /// sends the given error to the initiator
+    void bail(ErrorState *error);
 
-    /// Callback the caller class, and pass the ready to communicate secure
-    /// connection or an error if PeerConnector failed.
+    /// sends the encrypted connection to the initiator
+    void sendSuccess();
+
+    /// a bail(), sendSuccess() helper: sends results to the initiator
     void callBack();
+
+    /// a bail(), sendSuccess() helper: stops monitoring the connection
+    void disconnect();
 
     /// If called the certificates validator will not used
     void bypassCertValidator() {useCertValidator_ = false;}

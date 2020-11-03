@@ -8,7 +8,7 @@
 # This file is supposed to run all the tests required to identify which
 # configured modules are able to be built in this environment
 
-# FIXME: de-duplicate $enable_storeid_rewrite_helpers list containing double entries.
+# TODO: de-duplicate $enable_storeid_rewrite_helpers list containing double entries.
 
 #define list of modules to build
 auto_storeid_modules=no

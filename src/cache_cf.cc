@@ -34,6 +34,7 @@
 #include "globals.h"
 #include "http/one/ResponseParser.h"
 #include "HttpHeaderTools.h"
+#include "HttpUpgradeProtocolAccess.h"
 #include "icmp/IcmpConfig.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
@@ -62,9 +63,7 @@
 #include "SquidString.h"
 #include "ssl/ProxyCerts.h"
 #include "Store.h"
-#include "store/Disk.h"
 #include "store/Disks.h"
-#include "StoreFileSystem.h"
 #include "tools.h"
 #include "util.h"
 #include "wordlist.h"
@@ -252,6 +251,9 @@ static void parse_on_unsupported_protocol(acl_access **access);
 static void dump_on_unsupported_protocol(StoreEntry *entry, const char *name, acl_access *access);
 static void free_on_unsupported_protocol(acl_access **access);
 static void ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *desc, ACL *acl = nullptr);
+static void parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
+static void dump_http_upgrade_request_protocols(StoreEntry *entry, const char *name, HttpUpgradeProtocolAccess *protoGuards);
+static void free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuards);
 
 /*
  * LegacyParser is a parser for legacy code that uses the global
@@ -640,19 +642,6 @@ configDoConfigure(void)
     memConfigure();
     /* Sanity checks */
 
-    Config.cacheSwap.n_strands = 0; // no diskers by default
-    if (Config.cacheSwap.swapDirs == NULL) {
-        /* Memory-only cache probably in effect. */
-        /* turn off the cache rebuild delays... */
-        StoreController::store_dirs_rebuilding = 0;
-    } else if (InDaemonMode()) { // no diskers in non-daemon mode
-        for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-            const RefCount<SwapDir> sd = Config.cacheSwap.swapDirs[i];
-            if (sd->needsDiskStrand())
-                sd->disker = Config.workers + (++Config.cacheSwap.n_strands);
-        }
-    }
-
     if (Debug::rotateNumber < 0) {
         Debug::rotateNumber = Config.Log.rotateNumber;
     }
@@ -961,7 +950,7 @@ configDoConfigure(void)
     }
 
     // prevent infinite fetch loops in the request parser
-    // due to buffer full but not enough data recived to finish parse
+    // due to buffer full but not enough data received to finish parse
     if (Config.maxRequestBufferSize <= Config.maxRequestHeaderSize) {
         fatalf("Client request buffer of %u bytes cannot hold a request with %u bytes of headers." \
                " Change client_request_buffer_max or request_header_max_size limits.",
@@ -1137,18 +1126,17 @@ parseTimeUnit(const char *unitName, std::chrono::nanoseconds &ns)
 }
 
 static std::chrono::nanoseconds
-CheckTimeValue(const double value, const std::chrono::nanoseconds &unit)
+ToNanoSeconds(const double value, const std::chrono::nanoseconds &unit)
 {
-    if (value < 0)
+    if (value < 0.0)
         throw TexcHere("time must have a positive value");
 
-    const auto maxNanoseconds = std::chrono::nanoseconds::max().count();
-    if (value > maxNanoseconds/static_cast<double>(unit.count())) {
-        const auto maxYears = maxNanoseconds/(HoursPerYear*3600*1000000000);
+    if (value > (static_cast<double>(std::chrono::nanoseconds::max().count()) / unit.count())) {
+        const auto maxYears = std::chrono::duration_cast<std::chrono::hours>(std::chrono::nanoseconds::max()).count()/HoursPerYear;
         throw TexcHere(ToSBuf("time values cannot exceed ", maxYears, " years"));
     }
 
-    return std::chrono::nanoseconds(static_cast<std::chrono::nanoseconds::rep>(unit.count() * value));
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(unit * value);
 }
 
 template <class TimeUnit>
@@ -1188,7 +1176,7 @@ parseTimeLine()
 
     (void)ConfigParser::NextToken();
 
-    const auto nanoseconds = CheckTimeValue(parsedValue, parsedUnitDuration);
+    const auto nanoseconds = ToNanoSeconds(parsedValue, parsedUnitDuration);
 
     // validate precisions (time-units-small only)
     if (TimeUnit(1) <= std::chrono::microseconds(1)) {
@@ -1872,17 +1860,7 @@ parse_http_header_replace(HeaderManglers **pm)
 static void
 dump_cachedir(StoreEntry * entry, const char *name, const Store::DiskConfig &swap)
 {
-    SwapDir *s;
-    int i;
-    assert (entry);
-
-    for (i = 0; i < swap.n_configured; ++i) {
-        s = dynamic_cast<SwapDir *>(swap.swapDirs[i].getRaw());
-        if (!s) continue;
-        storeAppendPrintf(entry, "%s %s %s", name, s->type(), s->path);
-        s->dump(*entry);
-        storeAppendPrintf(entry, "\n");
-    }
+    Store::Disks::Dump(swap, *entry, name);
 }
 
 static int
@@ -2000,84 +1978,11 @@ ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *d
     (*access)->add(rule, action);
 }
 
-/* TODO: just return the object, the # is irrelevant */
-static int
-find_fstype(char *type)
-{
-    for (size_t i = 0; i < StoreFileSystem::FileSystems().size(); ++i)
-        if (strcasecmp(type, StoreFileSystem::FileSystems().at(i)->type()) == 0)
-            return (int)i;
-
-    return (-1);
-}
-
 static void
 parse_cachedir(Store::DiskConfig *swap)
 {
-    char *type_str = ConfigParser::NextToken();
-    if (!type_str) {
-        self_destruct();
-        return;
-    }
-
-    char *path_str = ConfigParser::NextToken();
-    if (!path_str) {
-        self_destruct();
-        return;
-    }
-
-    int fs = find_fstype(type_str);
-    if (fs < 0) {
-        debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: This proxy does not support the '" << type_str << "' cache type. Ignoring.");
-        return;
-    }
-
-    /* reconfigure existing dir */
-
-    RefCount<SwapDir> sd;
-    for (int i = 0; i < swap->n_configured; ++i) {
-        assert (swap->swapDirs[i].getRaw());
-
-        if ((strcasecmp(path_str, dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw())->path)) == 0) {
-            /* this is specific to on-fs Stores. The right
-             * way to handle this is probably to have a mapping
-             * from paths to stores, and have on-fs stores
-             * register with that, and lookip in that in their
-             * own setup logic. RBC 20041225. TODO.
-             */
-
-            sd = dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw());
-
-            if (strcmp(sd->type(), StoreFileSystem::FileSystems().at(fs)->type()) != 0) {
-                debugs(3, DBG_CRITICAL, "ERROR: Can't change type of existing cache_dir " <<
-                       sd->type() << " " << sd->path << " to " << type_str << ". Restart required");
-                return;
-            }
-
-            sd->reconfigure();
-            return;
-        }
-    }
-
-    /* new cache_dir */
-    if (swap->n_configured > 63) {
-        /* 7 bits, signed */
-        debugs(3, DBG_CRITICAL, "WARNING: There is a fixed maximum of 63 cache_dir entries Squid can handle.");
-        debugs(3, DBG_CRITICAL, "WARNING: '" << path_str << "' is one to many.");
-        self_destruct();
-        return;
-    }
-
-    allocate_new_swapdir(swap);
-
-    swap->swapDirs[swap->n_configured] = StoreFileSystem::FileSystems().at(fs)->createSwapDir();
-
-    sd = dynamic_cast<SwapDir *>(swap->swapDirs[swap->n_configured].getRaw());
-
-    /* parse the FS parameters and options */
-    sd->parse(swap->n_configured, path_str);
-
-    ++swap->n_configured;
+    assert(swap);
+    Store::Disks::Parse(*swap);
 }
 
 static const char *
@@ -3094,7 +2999,8 @@ free_time_msec(time_msec_t * var)
 static void
 dump_time_nanoseconds(StoreEntry *entry, const char *name, const std::chrono::nanoseconds &var)
 {
-    storeAppendPrintf(entry, "%s %" PRId64 " nanoseconds\n", name, var.count());
+    // std::chrono::nanoseconds::rep is unknown a priori so we cast to (and print) the largest supported integer
+    storeAppendPrintf(entry, "%s %jd nanoseconds\n", name, static_cast<intmax_t>(var.count()));
 }
 
 static void
@@ -4731,7 +4637,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
         return;
     }
 
-    // if this is the first rule proccessed
+    // if this is the first rule processed
     if (*ssl_bump == NULL) {
         bumpCfgStyleLast = bcsNone;
         sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
@@ -4982,10 +4888,10 @@ ParseUrlRewriteTimeout()
         const auto defaultParsed = parseTimeUnit<Seconds>(T_SECOND_STR, parsedUnitDuration);
         assert(defaultParsed);
         debugs(3, DBG_PARSE_NOTE(DBG_IMPORTANT), ConfigParser::CurrentLocation() <<
-                ": WARNING: missing time unit, using deprecated default '" << T_SECOND_STR << "'");
+               ": WARNING: missing time unit, using deprecated default '" << T_SECOND_STR << "'");
     }
 
-    const auto nanoseconds = CheckTimeValue(parsedTimeValue, parsedUnitDuration);
+    const auto nanoseconds = ToNanoSeconds(parsedTimeValue, parsedUnitDuration);
 
     return FromNanoseconds<Seconds>(nanoseconds, parsedTimeValue);
 }
@@ -5130,5 +5036,41 @@ static void
 free_on_unsupported_protocol(acl_access **access)
 {
     free_acl_access(access);
+}
+
+static void
+parse_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuardsPtr)
+{
+    assert(protoGuardsPtr);
+    auto &protoGuards = *protoGuardsPtr;
+    if (!protoGuards)
+        protoGuards = new HttpUpgradeProtocolAccess();
+    protoGuards->configureGuard(LegacyParser);
+}
+
+static void
+dump_http_upgrade_request_protocols(StoreEntry *entry, const char *rawName, HttpUpgradeProtocolAccess *protoGuards)
+{
+    if (!protoGuards)
+        return;
+
+    const SBuf name(rawName);
+    protoGuards->forEach([entry,&name](const SBuf &proto, const acl_access *acls) {
+        SBufList line;
+        line.push_back(name);
+        line.push_back(proto);
+        const auto acld = acls->treeDump("", &Acl::AllowOrDeny);
+        line.insert(line.end(), acld.begin(), acld.end());
+        dump_SBufList(entry, line);
+    });
+}
+
+static void
+free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **protoGuardsPtr)
+{
+    assert(protoGuardsPtr);
+    auto &protoGuards = *protoGuardsPtr;
+    delete protoGuards;
+    protoGuards = nullptr;
 }
 

@@ -11,8 +11,8 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libident.la
 
 libident_la_SOURCES = \
-	AclIdent.h \
 	AclIdent.cc \
+	AclIdent.h \
 	Config.h \
 	Ident.cc \
 	Ident.h

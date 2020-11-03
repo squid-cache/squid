@@ -63,6 +63,8 @@ static CNCB peerProbeConnectDone;
 static void peerCountMcastPeersDone(void *data);
 static void peerCountMcastPeersStart(void *data);
 static void peerCountMcastPeersSchedule(CachePeer * p, time_t when);
+static void peerCountMcastPeersAbort(PeerSelector *);
+static void peerCountMcastPeersCreateAndSend(CachePeer *p);
 static IRCB peerCountHandleIcpReply;
 
 static void neighborIgnoreNonPeer(const Ip::Address &, icp_opcode);
@@ -408,8 +410,9 @@ getWeightedRoundRobinParent(PeerSelector *ps)
  * period. The larger the number of requests between cycled resets the
  * more balanced the operations.
  *
- \param data    unused.
- \todo Make the reset timing a selectable parameter in squid.conf
+ * \param data    unused
+ *
+ * TODO: Make the reset timing a selectable parameter in squid.conf
  */
 static void
 peerClearRRLoop(void *data)
@@ -1180,14 +1183,6 @@ neighborUp(const CachePeer * p)
     return 1;
 }
 
-/// \returns the effective connect timeout for this peer
-time_t
-peerConnectTimeout(const CachePeer *peer)
-{
-    return peer->connect_timeout_raw > 0 ?
-           peer->connect_timeout_raw : Config.Timeout.peer_connect;
-}
-
 time_t
 positiveTimeout(const time_t timeout)
 {
@@ -1337,7 +1332,7 @@ peerProbeConnect(CachePeer *p, const bool reprobeIfBusy)
     }
     p->reprobe = false;
 
-    const time_t ctimeout = peerConnectTimeout(p);
+    const auto ctimeout = p->connectTimeout();
     /* for each IP address of this CachePeer. find one that we can connect to and probe it. */
     for (int i = 0; i < p->n_addresses; ++i) {
         Comm::ConnectionPointer conn = new Comm::Connection;
@@ -1393,9 +1388,19 @@ peerCountMcastPeersSchedule(CachePeer * p, time_t when)
 static void
 peerCountMcastPeersStart(void *data)
 {
+    const auto peer = static_cast<CachePeer*>(data);
+    CallContextCreator([peer] {
+        peerCountMcastPeersCreateAndSend(peer);
+    });
+    peerCountMcastPeersSchedule(peer, MCAST_COUNT_RATE);
+}
+
+/// initiates an ICP transaction to a multicast peer
+static void
+peerCountMcastPeersCreateAndSend(CachePeer * const p)
+{
     // XXX: Do not create lots of complex fake objects (while abusing their
     // APIs) to pass around a few basic data points like start_ping and ping!
-    CachePeer *p = (CachePeer *)data;
     MemObject *mem;
     int reqnum;
     // TODO: use class AnyP::Uri instead of constructing and re-parsing a string
@@ -1408,6 +1413,9 @@ peerCountMcastPeersStart(void *data)
     const MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initPeerMcast);
     auto *req = HttpRequest::FromUrlXXX(url, mx);
     assert(req != nullptr);
+    const AccessLogEntry::Pointer ale = new AccessLogEntry;
+    ale->request = req;
+    CodeContext::Reset(ale);
     StoreEntry *fake = storeCreateEntry(url, url, RequestFlags(), Http::METHOD_GET);
     const auto psstate = new PeerSelector(nullptr);
     psstate->request = req;
@@ -1415,6 +1423,7 @@ peerCountMcastPeersStart(void *data)
     psstate->entry = fake;
     psstate->peerCountMcastPeerXXX = cbdataReference(p);
     psstate->ping.start = current_time;
+    psstate->al = ale;
     mem = fake->mem_obj;
     mem->request = psstate->request;
     mem->start_ping = current_time;
@@ -1425,19 +1434,29 @@ peerCountMcastPeersStart(void *data)
     reqnum = icpSetCacheKey((const cache_key *)fake->key);
     icpCreateAndSend(ICP_QUERY, 0, url, reqnum, 0,
                      icpOutgoingConn->fd, p->in_addr, psstate->al);
-    fake->ping_status = PING_WAITING;
+    fake->ping_status = PING_WAITING; // TODO: refactor to use PeerSelector::startPingWaiting()
     eventAdd("peerCountMcastPeersDone",
              peerCountMcastPeersDone,
              psstate,
              Config.Timeout.mcast_icp_query / 1000.0, 1);
     p->mcast.flags.counting = true;
-    peerCountMcastPeersSchedule(p, MCAST_COUNT_RATE);
 }
 
 static void
 peerCountMcastPeersDone(void *data)
 {
     const auto psstate = static_cast<PeerSelector*>(data);
+    CallBack(psstate->al, [psstate] {
+        peerCountMcastPeersAbort(psstate);
+        delete psstate;
+    });
+}
+
+/// ends counting of multicast ICP replies
+/// to the ICP query initiated by peerCountMcastPeersCreateAndSend()
+static void
+peerCountMcastPeersAbort(PeerSelector * const psstate)
+{
     StoreEntry *fake = psstate->entry;
 
     if (cbdataReferenceValid(psstate->peerCountMcastPeerXXX)) {
@@ -1452,10 +1471,9 @@ peerCountMcastPeersDone(void *data)
 
     cbdataReferenceDone(psstate->peerCountMcastPeerXXX);
 
-    fake->abort(); // sets ENTRY_ABORTED and initiates releated cleanup
+    fake->abort(); // sets ENTRY_ABORTED and initiates related cleanup
     fake->mem_obj->request = nullptr;
     fake->unlock("peerCountMcastPeersDone");
-    delete psstate;
 }
 
 static void
@@ -1786,7 +1804,7 @@ neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Addres
  * Send HTCP CLR messages to all peers configured to receive them.
  */
 void
-neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, htcp_clr_reason reason)
+neighborsHtcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &method, htcp_clr_reason reason)
 {
     CachePeer *p;
     char buf[128];
@@ -1802,7 +1820,7 @@ neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const Htt
             continue;
         }
         debugs(15, 3, "neighborsHtcpClear: sending CLR to " << p->in_addr.toUrl(buf, 128));
-        htcpClear(e, uri, req, method, p, reason);
+        htcpClear(e, req, method, p, reason);
     }
 }
 

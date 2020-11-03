@@ -73,11 +73,11 @@ Selects the correct salt to evaluate passwords
 
 =item B<--persist>
 
-Keep a persistent database connection open between queries. 
+Keep a persistent database connection open between queries.
 
 =item B<--joomla>
 
-Tells helper that user database is Joomla DB.  So their unusual salt 
+Tells helper that user database is Joomla DB.  So their unusual salt
 hashing is understood.
 
 =back
@@ -149,21 +149,21 @@ my $debug = 0;
 my $hashsalt = undef;
 
 GetOptions(
-	'dsn=s' => \$dsn,
-	'user=s' => \$db_user,
-	'password=s' => \$db_passwd,
-	'table=s' => \$db_table,
-	'usercol=s' => \$db_usercol,
-	'passwdcol=s' => \$db_passwdcol,
-	'cond=s' => \$db_cond,
-	'plaintext' => \$plaintext,
-	'md5' => \$md5,
-	'sha1' => \$sha1,
-	'persist' => \$persist,
-	'joomla' => \$isjoomla,
-	'debug' => \$debug,
-	'salt=s' => \$hashsalt,
-	);
+    'dsn=s' => \$dsn,
+    'user=s' => \$db_user,
+    'password=s' => \$db_passwd,
+    'table=s' => \$db_table,
+    'usercol=s' => \$db_usercol,
+    'passwdcol=s' => \$db_passwdcol,
+    'cond=s' => \$db_cond,
+    'plaintext' => \$plaintext,
+    'md5' => \$md5,
+    'sha1' => \$sha1,
+    'persist' => \$persist,
+    'joomla' => \$isjoomla,
+    'debug' => \$debug,
+    'salt=s' => \$hashsalt,
+    );
 
 my ($_dbh, $_sth);
 $db_cond = "block = 0" if $isjoomla;
@@ -181,14 +181,14 @@ sub open_db()
     return $_sth if defined $_sth;
     $_dbh = DBI->connect($dsn, $db_user, $db_passwd);
     if (!defined $_dbh) {
-	warn ("Could not connect to $dsn\n");
-	my @driver_names = DBI->available_drivers();
-	my $msg = "DSN drivers apparently installed, available:\n";
-	foreach my $dn (@driver_names) {
-		$msg .= "\t$dn";
-	}
-	warn($msg."\n");
-	return undef;
+        warn ("Could not connect to $dsn\n");
+        my @driver_names = DBI->available_drivers();
+        my $msg = "DSN drivers apparently installed, available:\n";
+        foreach my $dn (@driver_names) {
+            $msg .= "\t$dn";
+        }
+        warn($msg."\n");
+        return undef;
     }
     my $sql_query;
     $sql_query = "SELECT $db_passwdcol FROM $db_table WHERE $db_usercol = ?" . ($db_cond ne "" ? " AND $db_cond" : "");
@@ -221,9 +221,9 @@ sub query_db($) {
     my ($user) = @_;
     my ($sth) = open_db() || return undef;
     if (!$sth->execute($user)) {
-	close_db();
-	open_db() || return undef;
-	$sth->execute($user) || return undef;;
+        close_db();
+        open_db() || return undef;
+        $sth->execute($user) || return undef;;
     }
     return $sth;
 }

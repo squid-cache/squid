@@ -20,16 +20,16 @@ libbase_la_SOURCES = \
 	AsyncJob.h \
 	AsyncJobCalls.h \
 	ByteCounter.h \
-	CbcPointer.h \
 	CbDataList.h \
+	CbcPointer.h \
 	CharacterSet.cc \
 	CharacterSet.h \
+	ClpMap.h \
 	CodeContext.cc \
 	CodeContext.h \
 	EnumIterator.h \
 	File.cc \
 	File.h \
-	forward.h \
 	HardFun.h \
 	Here.cc \
 	Here.h \
@@ -37,7 +37,7 @@ libbase_la_SOURCES = \
 	InstanceId.h \
 	Lock.h \
 	LookupTable.h \
-	LruMap.h \
+	Optional.h \
 	Packable.h \
 	PackableStream.h \
 	Range.h \
@@ -49,4 +49,5 @@ libbase_la_SOURCES = \
 	Subscription.h \
 	TextException.cc \
 	TextException.h \
-	YesNoNone.h
+	YesNoNone.h \
+	forward.h

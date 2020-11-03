@@ -9,7 +9,7 @@
 #ifndef SQUID_TESTLOOKUPTABLE_H_
 #define SQUID_TESTLOOKUPTABLE_H_
 
-#include <cppunit/extensions/HelperMacros.h>
+#include "compat/cppunit.h"
 
 class testLookupTable : public CPPUNIT_NS::TestFixture
 {

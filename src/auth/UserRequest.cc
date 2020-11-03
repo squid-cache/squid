@@ -240,7 +240,7 @@ authTryGetUser(Auth::UserRequest::Pointer auth_user_request, ConnStateData * con
 
     // attach the credential notes from helper to the transaction
     if (request != NULL && res != NULL && res->user() != NULL) {
-        // XXX: we have no access to the transaction / AccessLogEntry so cant SyncNotes().
+        // XXX: we have no access to the transaction / AccessLogEntry so can't SyncNotes().
         // workaround by using anything already set in HttpRequest
         // OR use new and rely on a later Sync copying these to AccessLogEntry
 
@@ -283,7 +283,7 @@ Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, 
      * a note on proxy_auth logix here:
      * proxy_auth==NULL -> unauthenticated request || already
      * authenticated connection so we test for an authenticated
-     * connection when we recieve no authentication header.
+     * connection when we receive no authentication header.
      */
 
     /* a) can we find other credentials to use? and b) are they logged in already? */
