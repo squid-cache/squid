@@ -91,8 +91,17 @@ public:
      */
     void append(const char *source, const size_type n);
 
+    /* non-const methods below require exclusive object ownership */
+
     /// extends the available space to the entire allocated blob
     void clear() { size = 0; }
+
+    /// keep the first n bytes and forget the rest of data
+    void syncSize(const size_type n) { size = n; }
+
+    /// forget the first n bytes, moving the rest of data (if any) to the start
+    /// forgets all data (i.e. empties the buffer) if n exceeds size
+    void consume(const size_type n);
 
     /// dump debugging information
     std::ostream & dump(std::ostream &os) const;
