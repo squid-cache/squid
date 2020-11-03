@@ -73,3 +73,4 @@ Store::AccumulationConstraints::enforceReadAheadLimit(const int64_t currentGap)
     const auto more = std::max(enforcedMinimum, static_cast<uint64_t>(gapDiff));
     return enforceHardMaximum(more, "may accumulate more");
 }
+
