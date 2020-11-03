@@ -124,18 +124,6 @@ MemBlob::append(const char *source, const size_type n)
     ++Stats.append;
 }
 
-void
-MemBlob::consume(const size_type rawN)
-{
-    if (rawN && size) {
-        Must(LockCount() <= 1);
-        const auto n = std::min(rawN, size);
-        size -= n;
-        if (size)
-            memmove(mem, mem + n, size);
-    }
-}
-
 const MemBlobStats&
 MemBlob::GetStats()
 {
