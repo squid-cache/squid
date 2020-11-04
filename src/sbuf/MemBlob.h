@@ -97,7 +97,8 @@ public:
     void clear() { size = 0; }
 
     /// keep the first n bytes and forget the rest of data
-    void syncSize(const size_type n) { Must(LockCount() <= 1); size = n; }
+    /// cannot be used to increase our size; use append*() methods for that
+    void syncSize(const size_type n);
 
     /// forget the first n bytes, moving the rest of data (if any) to the start
     /// forgets all data (i.e. empties the buffer) if n exceeds size

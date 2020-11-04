@@ -125,6 +125,15 @@ MemBlob::append(const char *source, const size_type n)
 }
 
 void
+MemBlob::syncSize(const size_type n)
+{
+    debugs(MEMBLOB_DEBUGSECTION, 7, n << " was: " << size);
+    Must(LockCount() <= 1);
+    Must(n <= size);
+    size = n;
+}
+
+void
 MemBlob::consume(const size_type rawN)
 {
     if (rawN && size) {
