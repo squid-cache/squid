@@ -54,3 +54,4 @@ public:
 };
 
 #endif /* SQUID_SBUF_STATS_H */
+
