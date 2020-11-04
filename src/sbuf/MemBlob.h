@@ -130,3 +130,4 @@ private:
 };
 
 #endif /* SQUID_MEMBLOB_H_ */
+
