@@ -50,9 +50,7 @@ public:
     uint64_t cowShift = 0; ///< number of cow() calls requiring just a memmove(3) inside an old buffer
     uint64_t cowJustAlloc = 0; ///< number of cow() calls requiring just a new empty buffer
     uint64_t cowAllocCopy = 0; ///< number of cow() calls requiring copying into a new buffer
-
     uint64_t live = 0;  ///<number of currently-allocated SBuf
 };
 
 #endif /* SQUID_SBUF_STATS_H */
-
