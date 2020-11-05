@@ -18,7 +18,6 @@
 #include "StatCounters.h"
 #include "Store.h"
 #include "store/Disk.h"
-#include "store_digest.h"
 #include "store_key_md5.h"
 #include "store_rebuild.h"
 #include "StoreSearch.h"
@@ -110,12 +109,9 @@ storeCleanup(void *)
                    "cache index (at your own risk).\n", store_errors);
         }
 
-        if (store_digest)
-            storeDigestNoteStoreReady();
-
-        RunRegisteredHere(RegisteredRunner::endingStoreRebuild);
-
         currentSearch = NULL;
+
+        RunRegisteredHere(RegisteredRunner::builtStoreIndex);
     } else
         eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
 }

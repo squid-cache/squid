@@ -14,7 +14,6 @@
 class StoreEntry;
 
 void storeDigestInit(void);
-void storeDigestNoteStoreReady(void);
 void storeDigestDel(const StoreEntry * entry);
 void storeDigestReport(StoreEntry *);
 

@@ -32,22 +32,3 @@ void Ipc::StrandSearchRequest::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.putString(tag);
 }
 
-/* StrandSearchResponse */
-
-Ipc::StrandSearchResponse::StrandSearchResponse(const Ipc::StrandCoord &aStrand):
-    strand(aStrand)
-{
-}
-
-Ipc::StrandSearchResponse::StrandSearchResponse(const TypedMsgHdr &hdrMsg)
-{
-    hdrMsg.checkType(mtStrandSearchResponse);
-    strand.unpack(hdrMsg);
-}
-
-void Ipc::StrandSearchResponse::pack(TypedMsgHdr &hdrMsg) const
-{
-    hdrMsg.setType(mtStrandSearchResponse);
-    strand.pack(hdrMsg);
-}
-

@@ -135,8 +135,8 @@ public:
     /// whether there are any SMP-aware storages
     static bool SmpAware();
 
-    /// whether the foreground rebuilding is configured and is still executing
-    static bool StoreForegroundRebuilding() { return opt_foreground_rebuild && store_dirs_rebuilding; }
+    /// whether we are currently building the Store index in foreground mode
+    static bool WaitingForIndex() { return opt_foreground_rebuild && store_dirs_rebuilding; }
 
     /// the number of cache_dirs being rebuilt; TODO: move to Disks::Rebuilding
     static int store_dirs_rebuilding;

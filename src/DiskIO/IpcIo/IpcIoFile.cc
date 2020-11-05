@@ -162,7 +162,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 }
 
 void
-IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
+IpcIoFile::openCompleted(const Ipc::StrandMessage *const response)
 {
     Must(diskId < 0); // we do not know our disker yet
 
@@ -449,7 +449,7 @@ IpcIoFile::canWait() const
 
 /// called when coordinator responds to worker open request
 void
-IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
+IpcIoFile::HandleOpenResponse(const Ipc::StrandMessage &response)
 {
     debugs(47, 7, HERE << "coordinator response to open request");
     for (IpcIoFileList::iterator i = WaitingForOpen.begin();
@@ -472,7 +472,7 @@ IpcIoFile::HandleOpenPauseResponse(const Ipc::TypedMsgHdr &msg)
     assert(opt_foreground_rebuild);
     debugs(47, 7, "disker" << msg.getInt() << " foreground rebuild is still in progress");
     for (auto i = WaitingForOpen.begin(); i != WaitingForOpen.end(); ++i) {
-        eventDelete(&IpcIoFile::OpenTimeout, i->getRaw());
+        eventDelete(&IpcIoFile::OpenTimeout, nullptr);
         eventAdd("IpcIoFile::OpenTimeout", &IpcIoFile::OpenTimeout, i->getRaw(), Timeout, 0, false);
     }
 }

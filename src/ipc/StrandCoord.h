@@ -10,6 +10,7 @@
 #define SQUID_IPC_STRAND_COORD_H
 
 #include "ipc/forward.h"
+#include "ipc/Messages.h"
 #include "SquidString.h"
 
 namespace Ipc
@@ -32,27 +33,17 @@ public:
     String tag; ///< optional unique well-known key (e.g., cache_dir path)
 };
 
-/// strand registration with Coordinator (also used as an ACK)
-class HereIamMessage
+/// a general-purpose message
+class StrandMessage
 {
 public:
-    explicit HereIamMessage(const StrandCoord &strand); ///< from registrant
-    explicit HereIamMessage(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
-    void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
-
-public:
-    StrandCoord strand; ///< registrant coordinates and related details
-};
-
-class ForegroundRebuildMessage
-{
-public:
-    explicit ForegroundRebuildMessage(const StrandCoord &strand);
-    explicit ForegroundRebuildMessage(const TypedMsgHdr &hdrMsg);
+    StrandMessage(const StrandCoord &strand, const Ipc::MessageType msgType);
+    explicit StrandMessage(const TypedMsgHdr &hdrMsg);
     void pack(TypedMsgHdr &hdrMsg) const;
 
 public:
     StrandCoord strand;
+    Ipc::MessageType messageType;
 };
 
 } // namespace Ipc;

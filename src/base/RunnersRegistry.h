@@ -55,11 +55,6 @@ public:
     /// configuration with known memory requirements.
     virtual void useConfig() {}
 
-    /// Called after storeRebuildComplete().
-    /// Meant for for modules that need to perform actions when
-    /// disk indexing completes.
-    virtual void endingStoreRebuild() {}
-
     /* Reconfiguration events */
 
     /// Called after receiving a reconfigure request and before parsing squid.conf.
@@ -70,6 +65,14 @@ public:
     /// Called after parsing squid.conf during reconfiguration.
     /// Meant for adjusting the module state based on configuration changes.
     virtual void syncConfig() {}
+
+    /* Services events */
+
+    /// Called when we finish building in-memory Store index.
+    /// Called even if cache_mem is 0 and there are no cache_dir directives.
+    /// Meant for activating features that should not operate either without the index
+    /// or concurrently with an (often expensive) Store indexing activity
+    virtual void builtStoreIndex() {}
 
     /* Shutdown events */
 

@@ -17,15 +17,21 @@ namespace Ipc
 {
 
 /// message class identifier
-typedef enum { mtNone = 0, mtRegistration, mtForegroundRebuild, mtStrandSearchPause,
-               mtStrandSearchRequest, mtStrandSearchResponse,
-               mtSharedListenRequest, mtSharedListenResponse,
+typedef enum { mtNone = 0,
+               mtRegistration, ///< strand registration with Coordinator (also used as an ACK)
+               mtForegroundRebuild,
+               mtStrandSearchPause, ///< the disker exists but is still building its index
+               mtStrandSearchRequest,
+               mtStrandSearchResponse,
+               mtSharedListenRequest,
+               mtSharedListenResponse,
                mtIpcIoNotification,
                mtCollapsedForwardingNotification,
                mtCacheMgrRequest, mtCacheMgrResponse
 #if SQUID_SNMP
                ,
-               mtSnmpRequest, mtSnmpResponse
+               mtSnmpRequest,
+               mtSnmpResponse
 #endif
              } MessageType;
 

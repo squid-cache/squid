@@ -95,9 +95,9 @@ private:
     StoreRebuildData counts;
 
     static void Steps(void *data);
-    /// sends a notification to Coordinator that the foreground rebuild
-    /// is still in progress
-    void notifyCoordinator();
+
+    /// informs Coordinator that we are still foreground-rebuilding
+    void keepCoordinatorWaiting();
 };
 
 } // namespace Rock

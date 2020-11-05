@@ -53,7 +53,7 @@ void Ipc::Strand::registerSelf()
     debugs(54, 6, HERE);
     Must(!isRegistered);
 
-    HereIamMessage ann(StrandCoord(KidIdentifier, getpid()));
+    StrandMessage ann(StrandCoord(KidIdentifier, getpid()), Ipc::mtRegistration);
     TypedMsgHdr message;
     ann.pack(message);
     SendMessage(Port::CoordinatorAddr(), message);
@@ -66,7 +66,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
     switch (message.type()) {
 
     case mtRegistration:
-        handleRegistrationResponse(HereIamMessage(message));
+        handleRegistrationResponse(StrandMessage(message));
         break;
 
     case mtSharedListenResponse:
@@ -75,7 +75,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 
 #if HAVE_DISKIO_MODULE_IPCIO
     case mtStrandSearchResponse:
-        IpcIoFile::HandleOpenResponse(StrandSearchResponse(message));
+        IpcIoFile::HandleOpenResponse(StrandMessage(message));
         break;
 
     case mtStrandSearchPause:
@@ -123,7 +123,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
     }
 }
 
-void Ipc::Strand::handleRegistrationResponse(const HereIamMessage &msg)
+void Ipc::Strand::handleRegistrationResponse(const StrandMessage &msg)
 {
     // handle registration response from the coordinator; it could be stale
     if (msg.strand.kidId == KidIdentifier && msg.strand.pid == getpid()) {

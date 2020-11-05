@@ -10,10 +10,8 @@
 
 #include "squid.h"
 #include "Debug.h"
-#include "ipc/Messages.h"
 #include "ipc/StrandCoord.h"
 #include "ipc/TypedMsgHdr.h"
-#include "tools.h"
 
 Ipc::StrandCoord::StrandCoord(): kidId(-1), pid(0)
 {
@@ -38,38 +36,21 @@ void Ipc::StrandCoord::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.putString(tag);
 }
 
-Ipc::HereIamMessage::HereIamMessage(const StrandCoord &aStrand):
-    strand(aStrand)
+Ipc::StrandMessage::StrandMessage(const StrandCoord &aStrand, const Ipc::MessageType msgType):
+    strand(aStrand),
+    messageType(msgType)
 {
 }
 
-Ipc::HereIamMessage::HereIamMessage(const TypedMsgHdr &hdrMsg)
+Ipc::StrandMessage::StrandMessage(const TypedMsgHdr &hdrMsg)
 {
-    hdrMsg.checkType(mtRegistration);
-    strand.unpack(hdrMsg);
-}
-
-void Ipc::HereIamMessage::pack(TypedMsgHdr &hdrMsg) const
-{
-    hdrMsg.setType(mtRegistration);
-    strand.pack(hdrMsg);
-}
-
-Ipc::ForegroundRebuildMessage::ForegroundRebuildMessage(const StrandCoord &aStrand):
-    strand(aStrand)
-{
-}
-
-Ipc::ForegroundRebuildMessage::ForegroundRebuildMessage(const TypedMsgHdr &hdrMsg)
-{
-    hdrMsg.checkType(mtForegroundRebuild);
     strand.unpack(hdrMsg);
 }
 
 void
-Ipc::ForegroundRebuildMessage::pack(TypedMsgHdr &hdrMsg) const
+Ipc::StrandMessage::pack(TypedMsgHdr &hdrMsg) const
 {
-    hdrMsg.setType(mtForegroundRebuild);
+    hdrMsg.setType(messageType);
     strand.pack(hdrMsg);
 }
 

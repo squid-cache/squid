@@ -8,12 +8,6 @@
 
 /* DEBUG: section 71    Store Digest Manager */
 
-/*
- * TODO: We probably do not track all the cases when
- *       storeDigestNoteStoreReady() must be called; this may prevent
- *       storeDigestRebuild/write schedule to be activated
- */
-
 #include "squid.h"
 #include "Debug.h"
 #include "event.h"
@@ -145,20 +139,6 @@ storeDigestInit(void)
 #else
     store_digest = NULL;
     debugs(71, 3, "Local cache digest is 'off'");
-#endif
-}
-
-/* called when store_rebuild completes */
-void
-storeDigestNoteStoreReady(void)
-{
-#if USE_CACHE_DIGESTS
-
-    if (Config.onoff.digest_generation) {
-        storeDigestRebuildStart(NULL);
-        storeDigestRewriteStart(NULL);
-    }
-
 #endif
 }
 

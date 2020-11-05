@@ -87,7 +87,7 @@ public:
     virtual bool ioInProgress() const;
 
     /// handle open response from coordinator
-    static void HandleOpenResponse(const Ipc::StrandSearchResponse &response);
+    static void HandleOpenResponse(const Ipc::StrandMessage &);
     static void HandleOpenPauseResponse(const Ipc::TypedMsgHdr &);
 
     /// handle queue push notifications from worker or disker
@@ -100,7 +100,7 @@ public:
 
 protected:
     friend class IpcIoPendingRequest;
-    void openCompleted(const Ipc::StrandSearchResponse *const response);
+    void openCompleted(const Ipc::StrandMessage *const);
     void readCompleted(ReadRequest *readRequest, IpcIoMsg *const response);
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
     bool canWait() const;

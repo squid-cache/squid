@@ -75,6 +75,7 @@
 #include "stat.h"
 #include "StatCounters.h"
 #include "Store.h"
+#include "store_digest.h"
 #include "store/Disks.h"
 #include "store_log.h"
 #include "StoreFileSystem.h"
@@ -190,7 +191,21 @@ class OpenListeningPortsRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void endingStoreRebuild() { assert(opt_foreground_rebuild); serverConnectionsOpen(); }
+    virtual void builtStoreIndex() {
+        assert(opt_foreground_rebuild);
+        serverConnectionsOpen();
+#if USE_CACHE_DIGESTS
+        /*
+         * TODO: We probably do not track all the cases when
+         *       this must be called; this may prevent
+         *       storeDigestRebuild/write schedule to be activated
+         */
+        if (store_digest && Config.onoff.digest_generation) {
+            storeDigestRebuildStart(nullptr);
+            storeDigestRewriteStart(nullptr);
+        }
+#endif
+    }
 };
 
 /** temporary thunk across to the unrefactored store interface */
@@ -819,9 +834,9 @@ sig_child(int sig)
 static void
 serverConnectionsOpen(void)
 {
-    if (Store::Controller::StoreForegroundRebuilding()) {
+    if (Store::Controller::WaitingForIndex()) {
         if (IamPrimaryProcess() || IamWorkerProcess())
-            debugs(1, DBG_IMPORTANT, "Will wait for Store indexing completion before opening listening sockets");
+            debugs(1, DBG_IMPORTANT, "Waiting for Store indexing completion before opening listening sockets");
         return;
     }
 
@@ -850,6 +865,8 @@ serverConnectionsOpen(void)
     neighbors_init();
 }
 
+/// start providing services that are only provided by workers
+/// and that are unaffected by Store::Controller::WaitingForIndex()
 static void
 startWorkerServices()
 {
@@ -931,6 +948,24 @@ mainReconfigureStart(void)
 
     eventAdd("mainReconfigureFinish", &mainReconfigureFinish, NULL, 0, 1,
              false);
+}
+
+static void
+startServices()
+{
+    if (IamPrimaryProcess()) {
+#if USE_WCCP
+        wccpInit();
+#endif
+#if USE_WCCPv2
+        wccp2Init();
+#endif
+    }
+
+    if (IamWorkerProcess())
+        startWorkerServices();
+
+    serverConnectionsOpen();
 }
 
 static void
@@ -1017,21 +1052,7 @@ mainReconfigureFinish(void *)
 #endif
     externalAclInit();
 
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-
-        wccpInit();
-#endif
-#if USE_WCCPv2
-
-        wccp2Init();
-#endif
-    }
-
-    if (IamWorkerProcess())
-        startWorkerServices();
-
-    serverConnectionsOpen();
+    startServices();
 
     storeDirOpenSwapLogs();
 
@@ -1275,22 +1296,7 @@ mainInitialize(void)
     // PconnModule::GetInstance()->registerWithCacheManager();
     // moved to PconnModule::PconnModule()
 
-    if (IamPrimaryProcess()) {
-#if USE_WCCP
-        wccpInit();
-
-#endif
-#if USE_WCCPv2
-
-        wccp2Init();
-
-#endif
-    }
-
-    if (IamWorkerProcess())
-        startWorkerServices();
-
-    serverConnectionsOpen();
+    startServices();
 
     // neighborsRegisterWithCacheManager(); //moved to neighbors_init()
 

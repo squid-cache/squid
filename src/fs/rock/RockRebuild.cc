@@ -293,12 +293,12 @@ Rock::Rebuild::doneAll() const
 }
 
 void
-Rock::Rebuild::notifyCoordinator()
+Rock::Rebuild::keepCoordinatorWaiting()
 {
     debugs(47, 7, "cache_dir #" << sd->index);
     assert(opt_foreground_rebuild);
     assert(UsingSmp());
-    Ipc::ForegroundRebuildMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
+    Ipc::StrandMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()), Ipc::mtForegroundRebuild);
     ann.strand.tag = sd->filePath;
     Ipc::TypedMsgHdr message;
     ann.pack(message);
@@ -350,7 +350,7 @@ Rock::Rebuild::loadingSteps()
             debugs(47, 5, HERE << "pausing after " << loaded << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/loaded) << "ms per entry");
             if (opt_foreground_rebuild && UsingSmp())
-                notifyCoordinator();
+                keepCoordinatorWaiting();
             break;
         }
     }
@@ -447,7 +447,7 @@ Rock::Rebuild::validationSteps()
 
     const timeval loopStart = current_time;
 
-    const auto pausingMsec = opt_foreground_rebuild ? ForegroundNotificationMsec : MaxSpentMsec;
+    const auto maxSpentMsec = rebuildMaxSpentMsec();
 
     int validated = 0;
     while (!doneValidating()) {
@@ -464,11 +464,11 @@ Rock::Rebuild::validationSteps()
         getCurrentTime();
         const double elapsedMsec = tvSubMsec(loopStart, current_time);
 
-        if (elapsedMsec > pausingMsec || elapsedMsec < 0) {
+        if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
             debugs(47, 5, "pausing after " << validated << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/validated) << "ms per entry");
             if (opt_foreground_rebuild && UsingSmp())
-                 notifyCoordinator();
+                keepCoordinatorWaiting();
             break;
         }
     }
@@ -576,8 +576,8 @@ Rock::Rebuild::swanSong()
     --StoreController::store_dirs_rebuilding;
     storeRebuildComplete(&counts);
 
-    if (opt_foreground_rebuild && UsingSmp() && IamDiskProcess())
-        sd->diskerReady();
+    if (opt_foreground_rebuild)
+        sd->startAcceptingRequests();
 }
 
 void
