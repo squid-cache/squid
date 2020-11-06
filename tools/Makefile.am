@@ -75,7 +75,15 @@ cachemgr__CGIEXT__SOURCES = \
 	CharacterSet.cc \
 	Here.cc \
 	MemBuf.cc \
+<<<<<<< HEAD
 	cachemgr.cc \
+=======
+	STUB.h \
+	cachemgr.cc \
+	stub_cbdata.cc \
+	stub_debug.cc \
+	stub_libmem.cc \
+>>>>>>> Source Format Enforcement
 	test_tools.cc \
 	time.cc
 
