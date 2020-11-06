@@ -75,7 +75,6 @@
 #include "stat.h"
 #include "StatCounters.h"
 #include "Store.h"
-#include "store_digest.h"
 #include "store/Disks.h"
 #include "store_log.h"
 #include "StoreFileSystem.h"
@@ -194,17 +193,6 @@ public:
     virtual void builtStoreIndex() {
         assert(opt_foreground_rebuild);
         serverConnectionsOpen();
-#if USE_CACHE_DIGESTS
-        /*
-         * TODO: We probably do not track all the cases when
-         *       this must be called; this may prevent
-         *       storeDigestRebuild/write schedule to be activated
-         */
-        if (store_digest && Config.onoff.digest_generation) {
-            storeDigestRebuildStart(nullptr);
-            storeDigestRewriteStart(nullptr);
-        }
-#endif
     }
 };
 

@@ -16,6 +16,7 @@
 #include "store_digest.h"
 
 #if USE_CACHE_DIGESTS
+#include "base/RunnersRegistry.h"
 #include "CacheDigest.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -74,6 +75,20 @@ static void storeDigestRewriteFinish(StoreEntry * e);
 static EVH storeDigestSwapOutStep;
 static void storeDigestCBlockSwapOut(StoreEntry * e);
 static void storeDigestAdd(const StoreEntry *);
+
+class StoreDigestRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    virtual void builtStoreIndex() {
+        if (store_digest && Config.onoff.digest_generation) {
+            storeDigestRebuildStart(nullptr);
+            storeDigestRewriteStart(nullptr);
+        }
+    }
+};
+
+RunnerRegistrationEntry(StoreDigestRr);
 
 /// calculates digest capacity
 static uint64_t
