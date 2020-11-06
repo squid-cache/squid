@@ -102,9 +102,9 @@ void
 Ipc::OneToOneUniQueue::statOpen(std::ostream &os, const char *inLabel, const char *outLabel, const uint32_t count) const
 {
     os << "{ size: " << count <<
-        ", capacity: " << theCapacity <<
-        ", " << inLabel << ": " << theIn <<
-        ", " << outLabel << ": " << theOut;
+       ", capacity: " << theCapacity <<
+       ", " << inLabel << ": " << theIn <<
+       ", " << outLabel << ": " << theOut;
 }
 
 /// end state reporting started by statOpen()

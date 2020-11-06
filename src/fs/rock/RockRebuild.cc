@@ -261,7 +261,7 @@ bool
 Rock::Rebuild::Stats::completed(const SwapDir &sd) const
 {
     return DoneLoading(counts.scancount, sd.slotLimitActual()) &&
-        DoneValidating(counts.validations, sd.slotLimitActual(), sd.entryLimitActual());
+           DoneValidating(counts.validations, sd.slotLimitActual(), sd.entryLimitActual());
 }
 
 /* Rebuild */
@@ -343,7 +343,7 @@ Rock::Rebuild::start()
                " from " << sd->filePath);
     } else {
         debugs(47, DBG_IMPORTANT, "Resuming indexing cache_dir #" << sd->index <<
-            " from " << sd->filePath << ':' << progressDescription());
+               " from " << sd->filePath << ':' << progressDescription());
     }
 
     fd = file_open(sd->filePath, O_RDONLY | O_BINARY);

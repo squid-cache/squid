@@ -14,3 +14,4 @@
 #include "CachePeer.h"
 
 time_t CachePeer::connectTimeout() const STUB_RETVAL(0)
+

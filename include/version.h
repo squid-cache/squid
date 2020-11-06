@@ -26,3 +26,4 @@
 #endif
 
 #endif /* SQUID_VERSION_H */
+

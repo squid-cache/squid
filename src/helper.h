@@ -316,3 +316,4 @@ void helperShutdown(helper * hlp);
 void helperStatefulShutdown(statefulhelper * hlp);
 
 #endif /* SQUID_HELPER_H */
+

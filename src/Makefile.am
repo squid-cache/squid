@@ -1503,11 +1503,11 @@ tests_testStore_SOURCES = \
 	StatCounters.h \
 	StatHist.cc \
 	StatHist.h \
-	StoreFileSystem.cc \
 	tests/testStore.cc \
 	tests/testStore.h \
 	tests/testStoreController.cc \
 	tests/testStoreController.h \
+	StoreFileSystem.cc \
 	tests/testStoreHashIndex.cc \
 	tests/testStoreHashIndex.h \
 	StoreIOState.cc \
@@ -1897,6 +1897,7 @@ tests_test_http_range_SOURCES = \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	IoStats.h \
+	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -1952,7 +1953,6 @@ tests_test_http_range_SOURCES = \
 	event.cc \
 	tests/stub_external_acl.cc \
 	tests/stub_fatal.cc \
-	tests/stub_IpcIoFile.cc \
 	fatal.h \
 	fd.cc \
 	fd.h \
@@ -2287,6 +2287,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequestMethod.h \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	IoStats.h \
+	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -2370,7 +2371,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
-	tests/stub_IpcIoFile.cc \
 	mem_node.cc \
 	mime.cc \
 	mime.h \
@@ -2591,6 +2591,7 @@ tests_testCacheManager_SOURCES = \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	IoStats.h \
+	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -2673,7 +2674,6 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
-	tests/stub_IpcIoFile.cc \
 	mem_node.cc \
 	mime.cc \
 	mime.h \
@@ -2912,6 +2912,7 @@ tests_testEvent_SOURCES = \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	IoStats.h \
+	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -2996,7 +2997,6 @@ tests_testEvent_SOURCES = \
 	tests/stub_libsecurity.cc \
 	tests/stub_libstore.cc \
 	tests/stub_main_cc.cc \
-	tests/stub_IpcIoFile.cc \
 	mem_node.cc \
 	mime.cc \
 	mime.h \
