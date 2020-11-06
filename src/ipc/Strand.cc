@@ -53,10 +53,7 @@ void Ipc::Strand::registerSelf()
     debugs(54, 6, HERE);
     Must(!isRegistered);
 
-    StrandMessage ann(StrandCoord(KidIdentifier, getpid()), Ipc::mtRegistration);
-    TypedMsgHdr message;
-    ann.pack(message);
-    SendMessage(Port::CoordinatorAddr(), message);
+    Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRegistration, nullptr);
     setTimeout(6, "Ipc::Strand::timeoutHandler"); // TODO: make 6 configurable?
 }
 

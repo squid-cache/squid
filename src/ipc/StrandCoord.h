@@ -41,6 +41,9 @@ public:
     explicit StrandMessage(const TypedMsgHdr &hdrMsg);
     void pack(TypedMsgHdr &hdrMsg) const;
 
+    /// creates and sends StrandMessage to Coordinator
+    static void NotifyCoordinator(const Ipc::MessageType msgType, const char *tag);
+
 public:
     StrandCoord strand;
     Ipc::MessageType messageType;

@@ -844,14 +844,8 @@ void
 Rock::SwapDir::startAcceptingRequests()
 {
     debugs(47, 7, filePath);
-    if (UsingSmp() && IamDiskProcess()) {
-        static const auto pid = getpid();
-        Ipc::StrandMessage ann(Ipc::StrandCoord(KidIdentifier, pid), Ipc::mtRegistration);
-        ann.strand.tag = filePath;
-        Ipc::TypedMsgHdr message;
-        ann.pack(message);
-        SendMessage(Ipc::Port::CoordinatorAddr(), message);
-    }
+    if (UsingSmp() && IamDiskProcess())
+        Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRegistration, filePath);
 }
 
 void

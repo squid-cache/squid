@@ -298,11 +298,7 @@ Rock::Rebuild::keepCoordinatorWaiting()
     debugs(47, 7, "cache_dir #" << sd->index);
     assert(opt_foreground_rebuild);
     assert(UsingSmp());
-    Ipc::StrandMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()), Ipc::mtForegroundRebuild);
-    ann.strand.tag = sd->filePath;
-    Ipc::TypedMsgHdr message;
-    ann.pack(message);
-    SendMessage(Ipc::Port::CoordinatorAddr(), message);
+    Ipc::StrandMessage::NotifyCoordinator(Ipc::mtForegroundRebuild, sd->filePath);
 }
 
 void
