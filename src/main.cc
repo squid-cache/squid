@@ -853,8 +853,7 @@ serverConnectionsOpen(void)
     neighbors_init();
 }
 
-/// start providing services that are only provided by workers
-/// and that are unaffected by Store::Controller::WaitingForIndex()
+/// start providing worker-specific services
 static void
 startWorkerServices()
 {
@@ -938,6 +937,8 @@ mainReconfigureStart(void)
              false);
 }
 
+// TODO: move here the rest of the common startup/reconfiguration routines
+/// configures and starts services common for both startup and reconfiguration
 static void
 startServices()
 {
