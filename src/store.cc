@@ -134,10 +134,10 @@ StatQueues(StoreEntry *e)
     assert(e);
     PackableStream stream(*e);
     CollapsedForwarding::StatQueue(stream);
- #if HAVE_DISKIO_MODULE_IPCIO
+#if HAVE_DISKIO_MODULE_IPCIO
     stream << "\n";
     IpcIoFile::StatQueue(stream);
- #endif
+#endif
     stream.flush();
 }
 

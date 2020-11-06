@@ -19,8 +19,8 @@
 #include "Store.h"
 #include "store/Disk.h"
 #include "store/Disks.h"
-#include "StoreFileSystem.h"
 #include "store_rebuild.h"
+#include "StoreFileSystem.h"
 #include "swap_log_op.h"
 #include "tools.h"
 #include "util.h" // for tvSubDsec() which should be in SquidTime.h
@@ -468,12 +468,12 @@ Store::Disks::Parse(DiskConfig &swap)
 void
 Store::Disks::Dump(const DiskConfig &swap, StoreEntry &entry, const char *name)
 {
-   for (int i = 0; i < swap.n_configured; ++i) {
-       const auto &disk = Dir(i);
-       storeAppendPrintf(&entry, "%s %s %s", name, disk.type(), disk.path);
-       disk.dump(entry);
-       storeAppendPrintf(&entry, "\n");
-   }
+    for (int i = 0; i < swap.n_configured; ++i) {
+        const auto &disk = Dir(i);
+        storeAppendPrintf(&entry, "%s %s %s", name, disk.type(), disk.path);
+        disk.dump(entry);
+        storeAppendPrintf(&entry, "\n");
+    }
 }
 
 int64_t

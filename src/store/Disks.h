@@ -79,7 +79,6 @@ void storeDirCloseSwapLogs(void);
 void allocate_new_swapdir(Store::DiskConfig &swap);
 void free_cachedir(Store::DiskConfig *swap);
 
-
 /* Globals that should be moved to some Store::UFS-specific logging module */
 void storeDirSwapLog(const StoreEntry *e, int op);
 

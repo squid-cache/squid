@@ -1297,8 +1297,8 @@ ClientInfo::writeOrDequeue()
         const auto ccb = COMMIO_FD_WRITECB(head);
         // check that the head descriptor is still relevant
         if (headFde.clientInfo == this &&
-                quotaPeekReserv() == ccb->quotaQueueReserv &&
-                !headFde.closing()) {
+        quotaPeekReserv() == ccb->quotaQueueReserv &&
+        !headFde.closing()) {
 
             // wait for the head descriptor to become ready for writing
             Comm::SetSelect(head, COMM_SELECT_WRITE, Comm::HandleWrite, ccb, 0);
@@ -1678,7 +1678,7 @@ commHalfClosedCheck(void *)
         if (!fd_table[c->fd].halfClosedReader) { // not reading already
             CallBack(fd_table[c->fd].codeContext, [&c] {
                 AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
-                                                     CommIoCbPtrFun(&commHalfClosedReader, nullptr));
+                CommIoCbPtrFun(&commHalfClosedReader, nullptr));
                 Comm::Read(c, call);
                 fd_table[c->fd].halfClosedReader = call;
             });

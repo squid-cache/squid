@@ -194,12 +194,12 @@ ClpMap<Key, Value, MemoryUsedBy>::MemoryCountedFor(const Key &k, const Value &v)
 
     // approximate calculation (e.g., containers store wrappers not value_types)
     return Sum<uint64_t>(
-        keySz,
-        // storage
-        sizeof(typename Entries::value_type),
-        MemoryUsedBy(v),
-        // index
-        sizeof(typename Index::value_type));
+               keySz,
+               // storage
+               sizeof(typename Entries::value_type),
+               MemoryUsedBy(v),
+               // index
+               sizeof(typename Index::value_type));
 }
 
 template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
@@ -275,10 +275,11 @@ ClpMap<Key, Value, MemoryUsedBy>::trim(const uint64_t wantSpace)
 
 template <class Key, class Value, uint64_t MemoryUsedBy(const Value &)>
 ClpMap<Key, Value, MemoryUsedBy>::Entry::Entry(const Key &aKey, const Value &v, const Ttl ttl) :
-        key(aKey),
-        value(v),
-        expires(Sum(squid_curtime, ttl).value_or(std::numeric_limits<time_t>::max()))
+    key(aKey),
+    value(v),
+    expires(Sum(squid_curtime, ttl).value_or(std::numeric_limits<time_t>::max()))
 {
 }
 
 #endif /* SQUID__SRC_BASE_CLPMAP_H */
+

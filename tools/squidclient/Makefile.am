@@ -57,16 +57,11 @@ squidclient_SOURCES = \
 	Parameters.h \
 	Ping.cc \
 	Ping.h \
-<<<<<<< HEAD
-=======
-	STUB.h \
->>>>>>> Source Format Enforcement
 	Transport.cc \
 	Transport.h \
 	gssapi_support.cc \
 	gssapi_support.h \
 	squidclient.cc \
-<<<<<<< HEAD
 	test_tools.cc \
 	time.cc
 
@@ -74,9 +69,3 @@ nodist_squidclient_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_libmem.cc \
 	tests/STUB.h
-=======
-	stub_debug.cc \
-	stub_libmem.cc \
-	test_tools.cc \
-	time.cc
->>>>>>> Source Format Enforcement
