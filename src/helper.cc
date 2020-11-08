@@ -544,7 +544,7 @@ helper::submit(const char *buf, HLPCB * callback, void *data)
 {
     Helper::Xaction *r = new Helper::Xaction(callback, data, buf);
     submitRequest(r);
-    debugs(84, DBG_DATA, Raw("buf", buf, strlen(buf)));
+    debugs(84, DBG_DATA, "eom=" << int(eom) << ", " << Raw("buf", buf, strlen(buf)));
 }
 
 /// Submit request or callback the caller with a Helper::Error error.
@@ -654,7 +654,7 @@ statefulhelper::submit(const char *buf, HLPCB * callback, void *data, const Help
     }
 
     debugs(84, DBG_DATA, "placeholder: '" << r->request.placeholder <<
-           "', " << Raw("buf", buf, (!buf?0:strlen(buf))));
+           "', eom=" << int(eom) << ", " << Raw("buf", buf, (!buf?0:strlen(buf))));
 
     syncQueueStats();
 }
@@ -971,8 +971,8 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
     assert(cbdataReferenceValid(data));
 
     /* Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us */
-
     if (flag == Comm::ERR_CLOSING) {
+        debugs(84, 5, hlp->id_name << " #" << srv->index << " is ERR_CLOSING " << conn);
         return;
     }
 
@@ -1015,6 +1015,8 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::
                 --eom;
             }
             *eom = '\0';
+        } else {
+            debugs(84, 3, "no EOM terminator found after " << srv->roffset << " bytes");
         }
 
         if (!srv->ignoreToEom && !srv->replyXaction) {
@@ -1090,6 +1092,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
     /* Bail out early on Comm::ERR_CLOSING - close handlers will tidy up for us */
 
     if (flag == Comm::ERR_CLOSING) {
+        debugs(84, 5, hlp->id_name << " #" << srv->index << " is ERR_CLOSING " << conn);
         return;
     }
 
@@ -1127,6 +1130,8 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *, size_t len
         }
 
         *t = '\0';
+    } else {
+        debugs(84, 3, "no EOM terminator found after " << srv->roffset << " bytes");
     }
 
     if (r && !r->reply.accumulate(srv->rbuf, t ? (t - srv->rbuf) : srv->roffset)) {
