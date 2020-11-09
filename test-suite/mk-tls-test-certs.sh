@@ -79,7 +79,7 @@ if test -n "$OPENSSL"; then
 	rm -f ca-mid-rsa.csr ca-mid-rsa.pkey.tmp example.net-ca
 
 	#
-	# Standard leaf / non-CA certificate
+	# Standard leaf / server certificate
 	#
 	echo "
 		[ ca ]
@@ -119,8 +119,8 @@ if test -n "$OPENSSL"; then
 	#
 	cat ca-root-rsa.pkey ca-root-rsa.crt > ca-root-rsa.pem
 	cat ca-mid-rsa.pkey ca-mid-rsa.crt > ca-mid-rsa.pem
-	cat ca-mid-rsa.pkey ca-mid-rsa.crt ca-root-rsa.crt > ca-chain-rsa.pem
-	cat leaf-rsa.pkey leaf-rsa.crt ca-root-rsa.crt > leaf-chain-rsa.pem
+	cat ca-mid-rsa.pkey ca-mid-rsa.crt ca-root-rsa.crt > ca-mid-root-rsa.pem
+	cat leaf-rsa.pkey leaf-rsa.crt ca-root-rsa.crt > leaf-root-rsa.pem
 	cat leaf-rsa.pkey leaf-rsa.crt > leaf-key-rsa.pem
 	cat leaf-rsa.crt ca-root-rsa.crt > leaf-chain-nokey-rsa.pem
 
@@ -170,7 +170,7 @@ elif test -n "$CERTTOOL"; then
 	rm example.net-ca
 
 	#
-	# Standard leaf / non-CA certificate
+	# Standard leaf / server certificate
 	#
 	echo "
 	organization = \"Example.Com\"
@@ -193,8 +193,8 @@ elif test -n "$CERTTOOL"; then
 	#
 	cat ca-root-rsa.pkey ca-root-rsa.crt > ca-root-rsa.pem
 	cat ca-mid-rsa.pkey ca-mid-rsa.crt > ca-mid-rsa.pem
-	cat ca-mid-rsa.pkey ca-mid-rsa.crt ca-root-rsa.crt > ca-chain-rsa.pem
-	cat leaf-rsa.pkey leaf-rsa.crt ca-root-rsa.crt > leaf-chain-rsa.pem
+	cat ca-mid-rsa.pkey ca-mid-rsa.crt ca-root-rsa.crt > ca-mid-root-rsa.pem
+	cat leaf-rsa.pkey leaf-rsa.crt ca-root-rsa.crt > leaf-root-rsa.pem
 	cat leaf-rsa.pkey leaf-rsa.crt > leaf-key-rsa.pem
 	cat leaf-rsa.crt ca-root-rsa.crt > leaf-chain-nokey-rsa.pem
 

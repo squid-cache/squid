@@ -141,14 +141,14 @@ VirtualDeleteOperator_SOURCES = \
 	stub_libmem.cc
 
 CLEANFILES += \
-	ca-chain-rsa.pem \
+	ca-mid-root-rsa.pem \
 	ca-mid-rsa.crt \
 	ca-mid-rsa.pem \
 	ca-mid-rsa.pkey \
 	ca-root-rsa.crt \
 	ca-root-rsa.pem \
 	ca-root-rsa.pkey \
-	leaf-chain-rsa.pem \
+	leaf-root-rsa.pem \
 	leaf-chain-nokey-rsa.pem \
 	leaf-key-rsa.pem \
 	leaf-rsa.crt \

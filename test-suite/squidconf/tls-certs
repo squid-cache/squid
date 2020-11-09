@@ -12,9 +12,9 @@
 #
 #  A) certificate(s):
 #    1) leaf only         tls-cert=./leaf-rsa.*
-#    2) full chain        tls-cert=./leaf-mid-root-rsa.*
-#    3) root CA           tls-cert=./root-rsa.*
-#    4) incomplete chain  tls-cert=./mid-rsa.*
+#    2) full chain        tls-cert=./leaf-root-rsa.*
+#    3) root CA           tls-cert=./ca-root-rsa.*
+#    4) incomplete chain  tls-cert=./ca-mid-rsa.*
 #    5) omitted (no tls-cert for B1 or key-only tls-cert for B2)
 #
 #  B) signing certificate key:
@@ -26,7 +26,10 @@
 #    2) on                tls-generate-host-certificates=on
 #    3) off               tls-generate-host-certificates=off
 #    4) auto              tls-generate-host-certificates
-#    5) FILE              tls-generate-host-certificates=./ca-chain-rsa.pem
+#    5) FILE              tls-generate-host-certificates=./ca-mid-root-rsa.pem
+#
+# Test permutation can be identified by the IP address used.
+# Which has the form: 127.A.B.C
 #
 
 https_port 127.1.1.1:8443 \
@@ -48,11 +51,11 @@ https_port 127.1.1.4:8443 \
 	tls-key=./leaf-rsa.pkey \
 	tls-generate-host-certificates
 
-# ERROR: Unknown TLS option 'generate-host-certificates=./ca-chain-rsa.pem'
+# ERROR: Unknown TLS option 'generate-host-certificates=./ca-mid-root-rsa.pem'
 #https_port 127.1.1.5:8443 \
 #	tls-cert=./leaf-rsa.crt \
 #	tls-key=./leaf-rsa.pkey \
-#	tls-generate-host-certificates=./ca-chain-rsa.pem
+#	tls-generate-host-certificates=./ca-mid-root-rsa.pem
 
 https_port 127.1.2.1:8443 \
 	tls-cert=./leaf-key-rsa.pem
@@ -69,10 +72,10 @@ https_port 127.1.2.4:8443 \
 	tls-cert=./leaf-key-rsa.pem \
 	tls-generate-host-certificates
 
-# ERROR: Unknown TLS option 'generate-host-certificates=./ca-chain-rsa.pem'
+# ERROR: Unknown TLS option 'generate-host-certificates=./ca-mid-root-rsa.pem'
 #https_port 127.1.2.5:8443 \
 #	tls-cert=./leaf-key-rsa.pem \
-#	tls-generate-host-certificates=./ca-chain-rsa.pem
+#	tls-generate-host-certificates=./ca-mid-root-rsa.pem
 
 https_port 127.2.1.1:8443 \
 	tls-cert=./leaf-chain-nokey-rsa.pem \
@@ -93,31 +96,31 @@ https_port 127.2.1.4:8443 \
 	tls-key=./leaf-rsa.pkey \
 	tls-generate-host-certificates
 
-# ERROR: Unknown TLS option 'generate-host-certificates=./ca-chain-rsa.pem'
+# ERROR: Unknown TLS option 'generate-host-certificates=./ca-mid-root-rsa.pem'
 #https_port 127.2.1.5:8443 \
 #	tls-cert=./leaf-chain-nokey-rsa.pem \
 #	tls-key=./leaf-rsa.pkey \
-#	tls-generate-host-certificates=./ca-chain-rsa.pem
+#	tls-generate-host-certificates=./ca-mid-root-rsa.pem
 
 https_port 127.2.2.1:8443 \
-	tls-cert=./leaf-chain-rsa.pem
+	tls-cert=./leaf-root-rsa.pem
 
 https_port 127.2.2.2:8443 \
-	tls-cert=./leaf-chain-rsa.pem \
+	tls-cert=./leaf-root-rsa.pem \
 	tls-generate-host-certificates=on
 
 https_port 127.2.2.3:8443 \
-	tls-cert=./leaf-chain-rsa.pem \
+	tls-cert=./leaf-root-rsa.pem \
 	tls-generate-host-certificates=off
 
 https_port 127.2.2.4:8443 \
-	tls-cert=./leaf-chain-rsa.pem \
+	tls-cert=./leaf-root-rsa.pem \
 	tls-generate-host-certificates
 
-# ERROR: Unknown TLS option 'generate-host-certificates=./ca-chain-rsa.pem'
+# ERROR: Unknown TLS option 'generate-host-certificates=./ca-mid-root-rsa.pem'
 #https_port 127.2.2.5:8443 \
-#	tls-cert=./leaf-chain-rsa.pem \
-#	tls-generate-host-certificates=./ca-chain-rsa.pem
+#	tls-cert=./leaf-root-rsa.pem \
+#	tls-generate-host-certificates=./ca-mid-root-rsa.pem
 
 https_port 127.3.1.1:8443 \
 	tls-cert=./ca-root-rsa.crt \
@@ -138,11 +141,11 @@ https_port 127.3.1.4:8443 \
 	tls-key=./ca-root-rsa.pkey \
 	tls-generate-host-certificates
 
-# ERROR: Unknown TLS option 'generate-host-certificates=./ca-chain-rsa.pem'
+# ERROR: Unknown TLS option 'generate-host-certificates=./ca-mid-root-rsa.pem'
 #https_port 127.3.1.5:8443 \
 #	tls-cert=./ca-root-rsa.crt \
 #	tls-key=./ca-root-rsa.pkey \
-#	tls-generate-host-certificates=./ca-chain-rsa.pem
+#	tls-generate-host-certificates=./ca-mid-root-rsa.pem
 
 https_port 127.3.2.1:8443 \
 	tls-cert=./ca-root-rsa.pem
@@ -159,10 +162,10 @@ https_port 127.3.2.4:8443 \
 	tls-cert=./ca-root-rsa.pem \
 	tls-generate-host-certificates
 
-# ERROR: Unknown TLS option 'generate-host-certificates=./ca-chain-rsa.pem'
+# ERROR: Unknown TLS option 'generate-host-certificates=./ca-mid-root-rsa.pem'
 #https_port 127.3.2.5:8443 \
 #	tls-cert=./ca-root-rsa.pem \
-#	tls-generate-host-certificates=./ca-chain-rsa.pem
+#	tls-generate-host-certificates=./ca-mid-root-rsa.pem
 
 https_port 127.4.1.1:8443 \
 	tls-cert=./ca-mid-rsa.crt \
@@ -183,11 +186,11 @@ https_port 127.4.1.4:8443 \
 	tls-key=./ca-mid-rsa.pkey \
 	tls-generate-host-certificates
 
-# ERROR: Unknown TLS option 'generate-host-certificates=./ca-chain-rsa.pem'
+# ERROR: Unknown TLS option 'generate-host-certificates=./ca-mid-root-rsa.pem'
 #https_port 127.4.1.5:8443 \
 #	tls-cert=./ca-mid-rsa.crt \
 #	tls-key=./ca-mid-rsa.pkey \
-#	tls-generate-host-certificates=./ca-chain-rsa.pem
+#	tls-generate-host-certificates=./ca-mid-root-rsa.pem
 
 https_port 127.4.2.1:8443 \
 	tls-cert=./ca-mid-rsa.pem
@@ -204,10 +207,10 @@ https_port 127.4.2.4:8443 \
 	tls-cert=./ca-mid-rsa.pem \
 	tls-generate-host-certificates
 
-# ERROR: Unknown TLS option 'generate-host-certificates=./ca-chain-rsa.pem'
+# ERROR: Unknown TLS option 'generate-host-certificates=./ca-mid-root-rsa.pem'
 #https_port 127.4.2.5:8443 \
 #	tls-cert=./ca-mid-rsa.pem \
-#	tls-generate-host-certificates=./ca-chain-rsa.pem
+#	tls-generate-host-certificates=./ca-mid-root-rsa.pem
 
 # FATAL: cert= option must be set before key= is used.
 #https_port 127.5.1.1:8443 \
@@ -228,11 +231,11 @@ https_port 127.4.2.4:8443 \
 #	tls-key=./leaf-rsa.pkey \
 #	tls-generate-host-certificates
 
-# ERROR: Unknown TLS option 'generate-host-certificates=./ca-chain-rsa.pem'
+# ERROR: Unknown TLS option 'generate-host-certificates=./ca-mid-root-rsa.pem'
 # FATAL: cert= option must be set before key= is used.
 #https_port 127.5.1.5:8443 \
 #	tls-key=./leaf-rsa.pkey \
-#	tls-generate-host-certificates=./ca-chain-rsa.pem
+#	tls-generate-host-certificates=./ca-mid-root-rsa.pem
 
 # FATAL: https_port requires a cert= parameter
 #https_port 127.5.2.1:8443
@@ -245,10 +248,10 @@ https_port 127.4.2.4:8443 \
 #https_port 127.5.2.3:8443 \
 #	tls-generate-host-certificates=off
 
-# ERROR: Unknown TLS option 'generate-host-certificates=./ca-chain-rsa.pem'
+# ERROR: Unknown TLS option 'generate-host-certificates=./ca-mid-root-rsa.pem'
 # FATAL: https_port requires a cert= parameter
 #https_port 127.5.2.4:8443 \
-#	tls-generate-host-certificates=./ca-chain-rsa.pem
+#	tls-generate-host-certificates=./ca-mid-root-rsa.pem
 
 # FATAL: https_port requires a cert= parameter
 #https_port 127.5.2.5:8443
