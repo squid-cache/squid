@@ -29,9 +29,6 @@
 #include <queue>
 #include <unordered_map>
 
-class CommTimeoutCbParams;
-class HelperServerBase;
-class MemBuf;
 class Packable;
 class wordlist;
 
@@ -47,6 +44,7 @@ public:
 };
 }
 
+class HelperServerBase;
 /**
  * Managers a set of individual helper processes with a common queue of requests.
  *
@@ -67,8 +65,21 @@ class helper
     CBDATA_CLASS(helper);
 
 public:
-    explicit helper(const char *name) : id_name(name) {}
-    virtual ~helper();
+    inline helper(const char *name) :
+        cmdline(NULL),
+        id_name(name),
+        ipc_type(0),
+        droppedRequests(0),
+        overloadStart(0),
+        last_queue_warn(0),
+        last_restart(0),
+        timeout(0),
+        retryTimedOut(false),
+        retryBrokenHelper(false),
+        eom('\n') {
+        memset(&stats, 0, sizeof(stats));
+    }
+    ~helper();
 
     /// \returns next request in the queue, or nil.
     Helper::Xaction *nextRequest();
@@ -92,29 +103,29 @@ public:
     void handleKilledServer(HelperServerBase *srv, bool &needsNewServers);
 
 public:
-    wordlist *cmdline = nullptr;
+    wordlist *cmdline;
     dlink_list servers;
     std::queue<Helper::Xaction *> queue;
-    const char *id_name = nullptr;
-    Helper::ChildConfig childs; ///< configuration settings for number running
-    int ipc_type = 0;
+    const char *id_name;
+    Helper::ChildConfig childs;    ///< Configuration settings for number running.
+    int ipc_type;
     Ip::Address addr;
-    unsigned int droppedRequests = 0; ///< requests not sent during helper overload
-    time_t overloadStart = 0; ///< when the helper became overloaded (zero if it is not)
-    time_t last_queue_warn = 0;
-    time_t last_restart = 0;
-    time_t timeout = 0; ///< requests timeout
-    bool retryTimedOut = false; ///< whether the timed-out requests must retried
-    bool retryBrokenHelper = false; ///< whether the requests must retried on BH replies
-    SBuf onTimedOutResponse; ///< the response to use when helper response timedout
-    char eom = '\n'; ///< the char which marks the end of (response) message
+    unsigned int droppedRequests; ///< requests not sent during helper overload
+    time_t overloadStart; ///< when the helper became overloaded (zero if it is not)
+    time_t last_queue_warn;
+    time_t last_restart;
+    time_t timeout; ///< Requests timeout
+    bool retryTimedOut; ///< Whether the timed-out requests must retried
+    bool retryBrokenHelper; ///< Whether the requests must retried on BH replies
+    SBuf onTimedOutResponse; ///< The response to use when helper response timedout
+    char eom;   ///< The char which marks the end of (response) message, normally '\n'
 
     struct _stats {
-        int requests = 0;
-        int replies = 0;
-        int timedout = 0;
-        int queue_size = 0;
-        int avg_svc_time = 0;
+        int requests;
+        int replies;
+        int timedout;
+        int queue_size;
+        int avg_svc_time;
     } stats;
 
 protected:
@@ -133,8 +144,8 @@ class statefulhelper : public helper
 public:
     typedef std::unordered_map<Helper::ReservationId, helper_stateful_server *> Reservations;
 
-    explicit statefulhelper(const char *name) : helper(name) {}
-    virtual ~statefulhelper() = default;
+    inline statefulhelper(const char *name) : helper(name) {}
+    inline ~statefulhelper() {}
 
 public:
     /// reserve the given server
@@ -152,7 +163,7 @@ private:
     void submit(const char *buf, HLPCB * callback, void *data, const Helper::ReservationId & reservation);
     bool trySubmit(const char *buf, HLPCB * callback, void *data, const Helper::ReservationId & reservation);
 
-    /// reserved servers indexed by reservation IDs
+    ///< reserved servers indexed by reservation IDs
     Reservations reservations;
 };
 
@@ -160,9 +171,7 @@ private:
 class HelperServerBase: public CbdataParent
 {
 public:
-    HelperServerBase(const char *desc, Ip::Address &, int aPid, void *aIpc, int rfd, int wfd);
     virtual ~HelperServerBase();
-
     /** Closes pipes to the helper safely.
      * Handles the case where the read and write pipes are the same FD.
      *
@@ -192,15 +201,15 @@ public:
     /// Helper program identifier; does not change when contents do,
     ///   including during assignment
     const InstanceId<HelperServerBase> index;
-    int pid = 0;
+    int pid;
     Ip::Address addr;
     Comm::ConnectionPointer readPipe;
     Comm::ConnectionPointer writePipe;
-    void *hIpc = nullptr;
+    void *hIpc;
 
-    char *rbuf = nullptr;
-    size_t rbuf_sz = 0;
-    size_t roffset = 0;
+    char *rbuf;
+    size_t rbuf_sz;
+    size_t roffset;
 
     struct timeval dispatch_time;
     struct timeval answer_time;
@@ -208,22 +217,26 @@ public:
     dlink_node link;
 
     struct _helper_flags {
-        bool writing = false;
-        bool closing = false;
-        bool shutdown = false;
+        bool writing;
+        bool closing;
+        bool shutdown;
     } flags;
 
     typedef std::list<Helper::Xaction *> Requests;
     Requests requests; ///< requests in order of submission/expiration
 
     struct {
-        uint64_t uses = 0; ///< requests sent to this helper
-        uint64_t replies = 0; ///< replies received from this helper
-        uint64_t pending = 0; ///< queued lookups waiting to be sent to this helper
-        uint64_t releases = 0; ///< times release() has been called on this helper (if stateful)
-        uint64_t timedout = 0; ///< requests which timed-out
+        uint64_t uses;     //< requests sent to this helper
+        uint64_t replies;  //< replies received from this helper
+        uint64_t pending;  //< queued lookups waiting to be sent to this helper
+        uint64_t releases; //< times release() has been called on this helper (if stateful)
+        uint64_t timedout; //< requests which timed-out
     } stats;
+    void initStats();
 };
+
+class MemBuf;
+class CommTimeoutCbParams;
 
 // TODO: Rename to StatelessHelperServer and rename HelperServerBase to HelperServer.
 /// represents a single "stateless helper" process
@@ -232,29 +245,27 @@ class helper_server : public HelperServerBase
     CBDATA_CHILD(helper_server);
 
 public:
-    helper_server(helper *hlp, int pid, void *hIpc, int rfd, int wfd);
-    virtual ~helper_server();
+    uint64_t nextRequestId;
 
-    uint64_t nextRequestId = 0;
+    MemBuf *wqueue;
+    MemBuf *writebuf;
 
-    MemBuf *wqueue = nullptr;
-    MemBuf *writebuf = nullptr;
-
-    helper *parent = nullptr;
+    helper *parent;
 
     /// The helper request Xaction object for the current reply .
     /// A helper reply may be distributed to more than one of the retrieved
     /// packets from helper. This member stores the Xaction object as long as
     /// the end-of-message for current reply is not retrieved.
-    Helper::Xaction *replyXaction = nullptr;
+    Helper::Xaction *replyXaction;
 
     /// Whether to ignore current message, because it is timed-out or other reason
-    bool ignoreToEom = false;
+    bool ignoreToEom;
 
     // STL says storing std::list iterators is safe when changing the list
     typedef std::map<uint64_t, Requests::iterator> RequestIndex;
     RequestIndex requestsIndex; ///< maps request IDs to requests
 
+    virtual ~helper_server();
     /// Search in queue for the request with requestId, return the related
     /// Xaction object and remove it from queue.
     /// If concurrency is disabled then the requestId is ignored and the
@@ -284,9 +295,7 @@ class helper_stateful_server : public HelperServerBase
     CBDATA_CHILD(helper_stateful_server);
 
 public:
-    helper_stateful_server(statefulhelper *hlp, int pid, void *hIpc, int rfd, int wfd);
     virtual ~helper_stateful_server();
-
     void reserve();
     void clearReservation();
 
@@ -297,14 +306,14 @@ public:
     /// close handler to handle exited server processes
     static void HelperServerClosed(helper_stateful_server *srv);
 
-    statefulhelper *parent = nullptr;
+    statefulhelper *parent;
 
     // Reservations temporary lock the server for an exclusive "client" use. The
     // client keeps the reservation ID as a proof of her reservation. If a
     // reservation expires, and the server is reserved for another client, then
     // the reservation ID presented by the late client will not match ours.
     Helper::ReservationId reservationId; ///< "confirmation ID" of the last
-    time_t reservationStart = 0; ///< when the last reservation was made
+    time_t reservationStart; ///< when the last `reservation` was made
 };
 
 /* helper.c */
