@@ -131,9 +131,10 @@ HelperServerBase::HelperServerBase(const char *desc, Ip::Address &ip, int aPid, 
     addr(ip),
     readPipe(new Comm::Connection),
     writePipe(new Comm::Connection),
-    hIpc(aIpc),
-    rbuf(static_cast<char *>(memAllocBuf(ReadBufSize, &rbuf_sz)))
+    hIpc(aIpc)
 {
+    rbuf = static_cast<char *>(memAllocBuf(ReadBufSize, &rbuf_sz));
+
     readPipe->fd = rfd;
     readPipe->noteStart();
     fd_note(readPipe->fd, desc);
