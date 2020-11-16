@@ -1233,7 +1233,6 @@ void
 HttpStateData::readReply(const CommIoCbParams &io)
 {
     Must(!flags.do_next_read); // XXX: should have been set false by mayReadVirginBody()
-    flags.do_next_read = false;
 
     debugs(11, 5, io.conn);
 
@@ -1250,7 +1249,8 @@ HttpStateData::readReply(const CommIoCbParams &io)
      * Plus, it breaks our lame *HalfClosed() detection
      */
 
-    const auto readSize = prepReading();
+    const bool readWanted = true;
+    const auto readSize = prepReading(readWanted);
     if (readSize <= 0)
         return;
     inBuf.reserveSpace(readSize);
@@ -1620,7 +1620,7 @@ HttpStateData::mayReadVirginReplyBody() const
 /// \retval 0 the caller should (silently) quit
 /// \retval n>0 the caller may proceed to read up to n bytes
 size_t
-HttpStateData::prepReading()
+HttpStateData::prepReading(const bool readWanted)
 {
     if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing()) {
         debugs(11, 7, "already closing; waiting for closure handlers: " << serverConnection);
@@ -1629,6 +1629,11 @@ HttpStateData::prepReading()
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         abortTransaction("store entry aborted while reading reply");
+        return 0;
+    }
+
+    if (!readWanted) {
+        debugs(11, 5, "unwanted read");
         return 0;
     }
 
@@ -1658,6 +1663,7 @@ HttpStateData::prepReading()
     // sending is what usually kicks our delayed read, resuming this transaction
     if (readGoal < MinReadSize) {
         assert(entry->mem_obj);
+        flags.do_next_read = false; // one (active or delayed) read at a time
         AsyncCall::Pointer nilCall;
         entry->mem_obj->delayRead(DeferredRead(readDelayed, this, CommRead(serverConnection, nullptr, 0, nilCall)));
         return 0;
@@ -1671,15 +1677,12 @@ HttpStateData::prepReading()
 void
 HttpStateData::maybeReadVirginBody()
 {
-    if (!prepReading())
-        return;
-
     // XXX: get rid of the do_next_read flag
     // check for the proper reasons preventing read(2)
-    if (!flags.do_next_read)
+    if (!prepReading(flags.do_next_read))
         return;
 
-    flags.do_next_read = false;
+    flags.do_next_read = false; // one (active or delayed) read at a time
 
     // must not already be waiting for read(2) ...
     assert(!Comm::MonitorsRead(serverConnection->fd));

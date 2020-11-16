@@ -112,7 +112,7 @@ private:
 
     void abortTransaction(const char *reason) { abortAll(reason); } // abnormal termination
 
-    size_t prepReading();
+    size_t prepReading(bool readWanted);
     size_t parserLookAheadDistance() const;
     size_t calcReadBufferCapacityLimit() const;
     size_t calcReadBufferSpaceLimit() const;
