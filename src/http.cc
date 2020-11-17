@@ -1271,11 +1271,6 @@ HttpStateData::readReply(const CommIoCbParams &io)
     case Comm::OK:
     {
         payloadSeen += rd.size;
-#if USE_DELAY_POOLS
-        DelayId delayId = entry->mem_obj->mostBytesAllowed();
-        delayId.bytesIn(rd.size);
-#endif
-
         statCounter.server.all.kbytes_in += rd.size;
         statCounter.server.http.kbytes_in += rd.size;
         ++ IOStats.Http.reads;
@@ -1287,17 +1282,28 @@ HttpStateData::readReply(const CommIoCbParams &io)
         ++ IOStats.Http.read_hist[bin];
 
         request->hier.notePeerRead();
-    }
 
-        /* Continue to process previously read data */
-    break;
+#if USE_DELAY_POOLS
+        DelayId delayId = entry->mem_obj->mostBytesAllowed();
+        delayId.bytesIn(rd.size);
+        // We were lucky to get through prepReading() checks, and now our
+        // bytesIn() call above may have depleted a shared bucket. Give less
+        // fortunate jobs sharing that bucket with us a fair chance to defer
+        // their reads before ours, so that they will get through first next
+        // time, when bucket is refilled again. TODO: Refactor delay_pools to
+        // enforce/guarantee fairness instead of using such unreliable hacks.
+        CallJobHere(11, 3, this, HttpStateData, HttpStateData::processReply);
+#else
+        processReply(); // process data we just read
+#endif
+        return;
+    }
 
     case Comm::ENDFILE: // close detected by 0-byte read
         eof = 1;
         flags.do_next_read = false;
-
-        /* Continue to process previously read data */
-        break;
+        processReply(); // process previously read data, now with EOF knowledge
+        return;
 
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
@@ -1311,8 +1317,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
         return;
     }
 
-    /* Process next response from buffer */
-    processReply();
+    assert(false); // unreachable
 }
 
 /// processes the already read and buffered response data, possibly after
