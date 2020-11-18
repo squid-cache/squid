@@ -11,7 +11,12 @@
 #include "squid.h"
 #include "base/Packable.h"
 #include "Debug.h"
+#include "http/one/ResponseParser.h"
 #include "http/StatusLine.h"
+#include "parser/forward.h"
+#include "parser/Tokenizer.h"
+
+#include <algorithm>
 
 void
 Http::StatusLine::init()
@@ -53,7 +58,7 @@ Http::StatusLine::packInto(Packable * p) const
     if (packedStatus == Http::scNone) {
         static unsigned int reports = 0;
         if (++reports <= 100)
-            debugs(57, DBG_IMPORTANT, "BUG: Generated response lacks status code");
+            debugs(57, DBG_IMPORTANT, "BUG: the internalized response lacks status-code");
         packedStatus = Http::scInternalServerError;
         packedReason = Http::StatusCodeString(packedStatus); // ignore custom reason_ (if any)
     }
@@ -78,12 +83,8 @@ Http::StatusLine::packInto(Packable * p) const
     p->appendf(Http1StatusLineFormat, version.major, version.minor, packedStatus, packedReason);
 }
 
-/*
- * Parse character string.
- * XXX: Note 'end' currently unused, so NULL-termination assumed.
- */
 bool
-Http::StatusLine::parse(const String &protoPrefix, const char *start, const char * /*end*/)
+Http::StatusLine::parse(const String &protoPrefix, const char *start, const char *end)
 {
     status_ = Http::scInvalidHeader;    /* Squid header parsing error */
 
@@ -114,8 +115,25 @@ Http::StatusLine::parse(const String &protoPrefix, const char *start, const char
     if (!(start = strchr(start, ' ')))
         return false;
 
-    // XXX: should we be using xstrtoui() or xatoui() ?
-    status_ = static_cast<Http::StatusCode>(atoi(++start));
+    ++start; // skip SP between HTTP-version and status-code
+
+    assert(start <= end);
+    const auto stdStatusAreaLength = 4; // status-code length plus SP
+    const auto unparsedLength = end - start;
+    const auto statusAreaLength = std::min<size_t>(stdStatusAreaLength, unparsedLength);
+
+    static SBuf statusBuf;
+    statusBuf.assign(start, statusAreaLength);
+    Parser::Tokenizer tok(statusBuf);
+    try {
+        One::ResponseParser::ParseResponseStatus(tok, status_);
+    } catch (const Parser::InsufficientInput &) {
+        debugs(57, 7, "need more; have " << unparsedLength);
+        return false;
+    } catch (...) {
+        debugs(57, 3, "cannot parse status-code area: " << CurrentException);
+        return false;
+    }
 
     // XXX check if the given 'reason' is the default status string, if not save to reason_
 
