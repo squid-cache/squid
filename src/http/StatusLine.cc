@@ -115,7 +115,7 @@ Http::StatusLine::parse(const String &protoPrefix, const char *start, const char
     if (!(start = strchr(start, ' ')))
         return false;
 
-    start++; // skip SP between HTTP-version and status-code
+    ++start; // skip SP between HTTP-version and status-code
 
     assert(start <= end);
     const auto stdStatusAreaLength = 4; // status-code length plus SP
