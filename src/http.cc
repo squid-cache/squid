@@ -687,6 +687,9 @@ HttpStateData::processReplyHeader()
             hp = new Http1::ResponseParser;
 
         bool parsedOk = hp->parse(inBuf);
+        // remember the actual received status-code before returning on errors,
+        // overwriting any previously stored value from earlier forwarding attempts
+        request->hier.peer_reply_status = hp->messageStatus(); // may still be scNone
 
         // sync the buffers after parsing.
         inBuf = hp->remaining();
@@ -781,8 +784,6 @@ HttpStateData::processReplyHeader()
     checkDateSkew(vrep);
 
     processSurrogateControl (vrep);
-
-    request->hier.peer_reply_status = newrep->sline.status();
 
     ctx_exit(ctx);
 }
