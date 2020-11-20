@@ -1980,9 +1980,10 @@ clientReplyContext::ProcessReplyAccessResult(Acl::Answer rv, void *voidMe)
 void
 clientReplyContext::processReplyAccessResult(const Acl::Answer &accessAllowed)
 {
+    static const SBuf noAcls("NO ACL's");
     debugs(88, 2, "The reply for " << http->request->method
            << ' ' << http->uri << " is " << accessAllowed << ", because it matched "
-           << (AclMatchedName ? AclMatchedName : "NO ACL's"));
+           << (AclMatchedName.isEmpty() ? noAcls : AclMatchedName));
 
     if (!accessAllowed.allowed()) {
         ErrorState *err;

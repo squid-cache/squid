@@ -15,11 +15,12 @@
 #include "auth/forward.h"
 #include "auth/Type.h"
 #include "base/CbcPointer.h"
+#include "base/ClpMap.h"
 #include "base/RefCount.h"
 #include "dlink.h"
 #include "ip/Address.h"
 #include "Notes.h"
-#include "sbuf/SBuf.h"
+#include "sbuf/Algorithms.h"
 
 class StoreEntry;
 
@@ -48,7 +49,8 @@ public:
     Auth::Type auth_type;
     /** the config for this user */
     Auth::SchemeConfig *config;
-    dlink_list proxy_match_cache;
+    using CacheType = ClpMap<SBuf, int>;
+    CacheType proxyAuthAclCache;    ///< Cache of results from proxy_auth ACL tests for these credentials
     size_t ipcount;
     long expiretime;
 

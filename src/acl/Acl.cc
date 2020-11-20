@@ -27,7 +27,7 @@
 #include <algorithm>
 #include <map>
 
-const char *AclMatchedName = NULL;
+SBuf AclMatchedName;
 
 namespace Acl {
 
@@ -90,26 +90,17 @@ ACL::operator delete (void *)
 }
 
 ACL *
-ACL::FindByName(const char *name)
+ACL::FindByName(const SBuf &name)
 {
-    ACL *a;
     debugs(28, 9, "ACL::FindByName '" << name << "'");
 
-    for (a = Config.aclList; a; a = a->next)
-        if (!strcasecmp(a->name, name))
+    for (auto *a = Config.aclList; a; a = a->next)
+        if (a->name.caseCmp(name) == 0)
             return a;
 
     debugs(28, 9, "ACL::FindByName found no match");
 
     return NULL;
-}
-
-ACL::ACL() :
-    cfgline(nullptr),
-    next(nullptr),
-    registered(false)
-{
-    *name = 0;
 }
 
 bool ACL::valid () const
@@ -154,11 +145,9 @@ ACL::matches(ACLChecklist *checklist) const
 }
 
 void
-ACL::context(const char *aName, const char *aCfgLine)
+ACL::context(const SBuf &aName, const char *aCfgLine)
 {
-    name[0] = '\0';
-    if (aName)
-        xstrncpy(name, aName, ACL_NAME_SZ-1);
+    name = aName;
     safe_free(cfgline);
     if (aCfgLine)
         cfgline = xstrdup(aCfgLine);
@@ -170,7 +159,6 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
     /* we're already using strtok() to grok the line */
     char *t = NULL;
     ACL *A = NULL;
-    LOCAL_ARRAY(char, aclname, ACL_NAME_SZ);
     int new_acl = 0;
 
     /* snarf the ACL name */
@@ -188,7 +176,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         return;
     }
 
-    xstrncpy(aclname, t, ACL_NAME_SZ);
+    SBuf aclname(t);
     /* snarf the ACL type */
     const char *theType;
 
@@ -220,7 +208,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         }
         theType = "localport";
         debugs(28, DBG_IMPORTANT, "UPGRADE: ACL 'myport' type is has been renamed to 'localport' and matches the port the client connected to.");
-    } else if (strcmp(theType, "proto") == 0 && strcmp(aclname, "manager") == 0) {
+    } else if (strcmp(theType, "proto") == 0 && aclname.cmp("manager") == 0) {
         // ACL manager is now a built-in and has a different type.
         debugs(28, DBG_PARSE_NOTE(DBG_IMPORTANT), "UPGRADE: ACL 'manager' is now a built-in ACL. Remove it from your config file.");
         return; // ignore the line
@@ -312,68 +300,6 @@ ACL::dumpOptions()
     return result;
 }
 
-/* ACL result caching routines */
-
-int
-ACL::matchForCache(ACLChecklist *)
-{
-    /* This is a fatal to ensure that cacheMatchAcl calls are _only_
-     * made for supported acl types */
-    fatal("aclCacheMatchAcl: unknown or unexpected ACL type");
-    return 0;       /* NOTREACHED */
-}
-
-/*
- * we lookup an acl's cached results, and if we cannot find the acl being
- * checked we check it and cache the result. This function is a template
- * method to support caching of multiple acl types.
- * Note that caching of time based acl's is not
- * wise in long lived caches (i.e. the auth_user proxy match cache)
- * RBC
- * TODO: does a dlink_list perform well enough? Kinkie
- */
-int
-ACL::cacheMatchAcl(dlink_list * cache, ACLChecklist *checklist)
-{
-    acl_proxy_auth_match_cache *auth_match;
-    dlink_node *link;
-    link = cache->head;
-
-    while (link) {
-        auth_match = (acl_proxy_auth_match_cache *)link->data;
-
-        if (auth_match->acl_data == this) {
-            debugs(28, 4, "ACL::cacheMatchAcl: cache hit on acl '" << name << "' (" << this << ")");
-            return auth_match->matchrv;
-        }
-
-        link = link->next;
-    }
-
-    auth_match = new acl_proxy_auth_match_cache(matchForCache(checklist), this);
-    dlinkAddTail(auth_match, &auth_match->link, cache);
-    debugs(28, 4, "ACL::cacheMatchAcl: miss for '" << name << "'. Adding result " << auth_match->matchrv);
-    return auth_match->matchrv;
-}
-
-void
-aclCacheMatchFlush(dlink_list * cache)
-{
-    acl_proxy_auth_match_cache *auth_match;
-    dlink_node *link, *tmplink;
-    link = cache->head;
-
-    debugs(28, 8, "aclCacheMatchFlush called for cache " << cache);
-
-    while (link) {
-        auth_match = (acl_proxy_auth_match_cache *)link->data;
-        tmplink = link;
-        link = link->next;
-        dlinkDelete(tmplink, cache);
-        delete auth_match;
-    }
-}
-
 bool
 ACL::requiresAle() const
 {
@@ -400,7 +326,8 @@ ACL::~ACL()
 {
     debugs(28, 3, "freeing ACL " << name);
     safe_free(cfgline);
-    AclMatchedName = NULL; // in case it was pointing to our name
+    if (AclMatchedName == name)
+        AclMatchedName.clear();
 }
 
 void

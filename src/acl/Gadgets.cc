@@ -27,7 +27,7 @@
 #include "errorpage.h"
 #include "globals.h"
 #include "HttpRequest.h"
-#include "src/sbuf/Stream.h"
+#include "sbuf/Stream.h"
 
 #include <set>
 #include <algorithm>
@@ -38,9 +38,9 @@ static AclSet *RegisteredAcls; // TODO: Remove when ACLs are refcounted
 
 /* does name lookup, returns page_id */
 err_type
-aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allowed)
+aclGetDenyInfoPage(AclDenyInfoList ** head, const SBuf &name, int redirect_allowed)
 {
-    if (!name) {
+    if (name.isEmpty()) {
         debugs(28, 3, "ERR_NONE due to a NULL name");
         return ERR_NONE;
     }
@@ -69,18 +69,16 @@ aclGetDenyInfoPage(AclDenyInfoList ** head, const char *name, int redirect_allow
 
 /* does name lookup, returns if it is a proxy_auth acl */
 int
-aclIsProxyAuth(const char *name)
+aclIsProxyAuth(const SBuf &name)
 {
-    if (!name) {
+    if (name.isEmpty()) {
         debugs(28, 3, "false due to a NULL name");
         return false;
     }
 
     debugs(28, 5, "aclIsProxyAuth: called for " << name);
 
-    ACL *a;
-
-    if ((a = ACL::FindByName(name))) {
+    if (auto *a = ACL::FindByName(name)) {
         debugs(28, 5, "aclIsProxyAuth: returning " << a->isProxyAuth());
         return a->isProxyAuth();
     }
@@ -157,13 +155,11 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
     }
 
     const int ruleId = ((treep && *treep) ? (*treep)->childrenCount() : 0) + 1;
-    MemBuf ctxBuf;
-    ctxBuf.init();
+    SBuf ctxBuf;
     ctxBuf.appendf("%s#%d", directive, ruleId);
-    ctxBuf.terminate();
 
     Acl::AndNode *rule = new Acl::AndNode;
-    rule->context(ctxBuf.content(), config_input_line);
+    rule->context(ctxBuf, config_input_line);
     rule->lineParse();
     if (rule->empty()) {
         debugs(28, DBG_CRITICAL, "aclParseAccessLine: " << cfg_filename << " line " << config_lineno << ": " << config_input_line);
@@ -177,7 +173,7 @@ aclParseAccessLine(const char *directive, ConfigParser &, acl_access **treep)
     assert(treep);
     if (!*treep) {
         *treep = new Acl::Tree;
-        (*treep)->context(directive, config_input_line);
+        (*treep)->context(SBuf(directive), config_input_line);
     }
 
     (*treep)->add(rule, action);
@@ -193,24 +189,20 @@ aclParseAclList(ConfigParser &, Acl::Tree **treep, const char *label)
     if (!label)
         label = "...";
 
-    MemBuf ctxLine;
-    ctxLine.init();
+    SBuf ctxLine;
     ctxLine.appendf("(%s %s line)", cfg_directive, label);
-    ctxLine.terminate();
 
     Acl::AndNode *rule = new Acl::AndNode;
-    rule->context(ctxLine.content(), config_input_line);
+    rule->context(ctxLine, config_input_line);
     rule->lineParse();
 
-    MemBuf ctxTree;
-    ctxTree.init();
+    SBuf ctxTree;
     ctxTree.appendf("%s %s", cfg_directive, label);
-    ctxTree.terminate();
 
     // We want a cbdata-protected Tree (despite giving it only one child node).
     Acl::Tree *tree = new Acl::Tree;
     tree->add(rule);
-    tree->context(ctxTree.content(), config_input_line);
+    tree->context(ctxTree, config_input_line);
 
     assert(treep);
     assert(!*treep);

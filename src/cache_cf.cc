@@ -1407,10 +1407,7 @@ dump_acl(StoreEntry * entry, const char *name, ACL * ae)
 {
     while (ae != NULL) {
         debugs(3, 3, "dump_acl: " << name << " " << ae->name);
-        storeAppendPrintf(entry, "%s %s %s ",
-                          name,
-                          ae->name,
-                          ae->typeString());
+        entry->appendf("%s " SQUIDSBUFPH " %s ", name, SQUIDSBUFPRINT(ae->name), ae->typeString());
         SBufList tail;
         tail.splice(tail.end(), ae->dumpOptions());
         tail.splice(tail.end(), ae->dump()); // ACL parameters
@@ -1947,11 +1944,11 @@ ParseAclWithAction(acl_access **access, const Acl::Answer &action, const char *d
     if (!*access) {
         *access = new Acl::Tree;
         name.Printf("(%s rules)", desc);
-        (*access)->context(name.c_str(), config_input_line);
+        (*access)->context(name, config_input_line);
     }
     Acl::AndNode *rule = new Acl::AndNode;
     name.Printf("(%s rule)", desc);
-    rule->context(name.c_str(), config_input_line);
+    rule->context(name, config_input_line);
     acl ? rule->add(acl) : rule->lineParse();
     (*access)->add(rule, action);
 }
@@ -4816,7 +4813,8 @@ static void parse_ftp_epsv(acl_access **ftp_epsv)
         *ftp_epsv = nullptr;
 
         if (ftpEpsvDeprecatedAction == Acl::Answer(ACCESS_DENIED)) {
-            if (ACL *a = ACL::FindByName("all"))
+            static const SBuf all("all");
+            if (auto *a = ACL::FindByName(all))
                 ParseAclWithAction(ftp_epsv, ftpEpsvDeprecatedAction, "ftp_epsv", a);
             else {
                 self_destruct();
