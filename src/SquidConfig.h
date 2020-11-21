@@ -316,7 +316,6 @@ public:
 
         int vary_ignore_expire;
         int surrogate_is_remote;
-        int request_entities;
         int detect_broken_server_pconns;
         int relaxed_header_parser;
         int check_hostnames;

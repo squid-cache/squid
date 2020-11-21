@@ -181,6 +181,13 @@ DOC_START
 	This option is not yet supported by Squid-3.
 DOC_END
 
+# Options removed in 6.x
+NAME: request_entities
+TYPE: obsolete
+DOC_START
+	Remove this line. HTTP/1.1 defines per-message control over GET/HEAD message body using headers.
+DOC_END
+
 # Options removed in 5.x
 NAME: dns_v4_first
 TYPE: obsolete
@@ -6652,22 +6659,6 @@ DOC_START
 
 	WARNING: If turned on this may eventually cause some
 	varying objects not intended for caching to get cached.
-DOC_END
-
-NAME: request_entities
-TYPE: onoff
-LOC: Config.onoff.request_entities
-DEFAULT: off
-DOC_START
-	Squid defaults to deny GET and HEAD requests with request entities,
-	as the meaning of such requests are undefined in the HTTP standard
-	even if not explicitly forbidden.
-
-	Set this directive to on if you have clients which insists
-	on sending request entities in GET or HEAD requests. But be warned
-	that there is server software (both proxies and web servers) which
-	can fail to properly process this kind of request which may make you
-	vulnerable to cache pollution attacks if enabled.
 DOC_END
 
 NAME: request_header_access

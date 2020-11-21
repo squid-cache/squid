@@ -181,7 +181,6 @@ static IOACB httpAccept;
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
-static int clientIsContentLengthValid(HttpRequest * r);
 static int clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength);
 
 static void clientUpdateStatHistCounters(const LogTags &logType, int svc_time);
@@ -700,28 +699,26 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
 }
 
 /// checks body length of non-chunked requests
-static int
+static bool
 clientIsContentLengthValid(HttpRequest * r)
 {
     // No Content-Length means this request just has no body, but conflicting
     // Content-Lengths mean a message framing error (RFC 7230 Section 3.3.3 #4).
     if (r->header.conflictingContentLength())
-        return 0;
+        return false;
 
-    switch (r->method.id()) {
+    // RFC 7230 section 3.3 - Content-Length defines body exists regardless of method
+    if (r->content_length > 0)
+        return true;
 
-    case Http::METHOD_GET:
+    // We do not want a request entity on HTTP/1.0 GET/HEAD requests
+    // without a Content-Length header.
+    const auto m = r->method.id();
+    if (m == Http::METHOD_GET || m == Http::METHOD_HEAD)
+        return !(r->http_ver <= Http::ProtocolVersion(1,0));
 
-    case Http::METHOD_HEAD:
-        /* We do not want to see a request entity on GET/HEAD requests */
-        return (r->content_length <= 0 || Config.onoff.request_entities);
-
-    default:
-        /* For other types of requests we don't care */
-        return 1;
-    }
-
-    /* NOT REACHED */
+    // For other types of requests we don't care
+    return true;
 }
 
 int
