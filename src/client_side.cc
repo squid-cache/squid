@@ -700,7 +700,7 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
 
 /// checks body length of non-chunked requests
 static bool
-clientIsContentLengthValid(HttpRequest * r)
+clientIsContentLengthValid(const HttpRequestPointer &r)
 {
     // No Content-Length means this request just has no body, but conflicting
     // Content-Lengths mean a message framing error (RFC 7230 Section 3.3.3 #4).
@@ -1720,7 +1720,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     }
 
     const auto chunked = request->header.chunked();
-    if (!chunked && !clientIsContentLengthValid(request.getRaw())) {
+    if (!chunked && !clientIsContentLengthValid(request)) {
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
