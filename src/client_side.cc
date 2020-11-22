@@ -708,7 +708,7 @@ clientIsContentLengthValid(const HttpRequestPointer &r)
         return false;
 
     // RFC 7230 section 3.3 - Content-Length defines body exists regardless of method
-    if (r->content_length > 0)
+    if (r->content_length >= 0)
         return true;
 
     // We do not want a request entity on HTTP/1.0 GET/HEAD requests
