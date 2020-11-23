@@ -107,7 +107,7 @@ Fs::Ufs::RebuildState::RebuildStep(void *data)
 void
 Fs::Ufs::RebuildState::rebuildStep()
 {
-    const auto maxSpentMsec = rebuildMaxSpentMsec();
+    const auto maxSpentMsec = rebuildMaxBlockMsec();
     const timeval loopStart = current_time;
 
     const int totalEntries = LogParser ? LogParser->SwapLogEntries() : -1;

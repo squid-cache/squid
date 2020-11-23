@@ -13,8 +13,6 @@
 
 #include "store_key_md5.h"
 
-extern int opt_foreground_rebuild;
-
 class StoreRebuildData
 {
 public:
@@ -39,16 +37,8 @@ bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, StoreRebuildData 
 /// parses entry buffer and validates entry metadata; fills e on success
 bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, StoreRebuildData &counts, uint64_t expectedSize);
 
-inline unsigned int
-rebuildMaxSpentMsec()
-{
-    // Balance our desire to maximize the number of entries processed at once
-    // (and, hence, minimize overheads and total rebuild time) with a
-    // requirement to also process Coordinator events, disk I/Os, etc.
-    static const int backgroundMsec = 50; // keep small: most RAM I/Os are under 1ms
-    static const int foregroundMsec = 1000; // we do not need to react to signals faster
-    return opt_foreground_rebuild ? foregroundMsec : backgroundMsec;
-}
+/// approximate upper limit for blocking the main loop iteration while rebuilding the store index
+unsigned int rebuildMaxBlockMsec();
 
 #endif /* SQUID_STORE_REBUILD_H_ */
 

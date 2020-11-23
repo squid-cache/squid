@@ -71,12 +71,12 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         break;
 
 #if HAVE_DISKIO_MODULE_IPCIO
-    case mtStrandSearchResponse:
+    case mtStrandReady:
         IpcIoFile::HandleOpenResponse(StrandMessage(message));
         break;
 
-    case mtStrandSearchPause:
-        IpcIoFile::HandleOpenPauseResponse(message);
+    case mtStrandBusy:
+        IpcIoFile::HandleStrandBusyResponse(message);
         break;
 
     case mtIpcIoNotification:

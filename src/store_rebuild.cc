@@ -111,7 +111,7 @@ storeCleanup(void *)
 
         currentSearch = NULL;
 
-        RunRegisteredHere(RegisteredRunner::builtStoreIndex);
+        RunRegisteredHere(RegisteredRunner::useFullyIndexedStore);
     } else
         eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
 }
@@ -356,5 +356,16 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
     }
 
     return true;
+}
+
+unsigned int
+rebuildMaxBlockMsec()
+{
+    // Balance our desire to maximize the number of entries processed at once
+    // (and, hence, minimize overheads and total rebuild time) with a
+    // requirement to also process Coordinator events, disk I/Os, etc.
+    static const unsigned int backgroundMsec = 50; // keep small: most RAM I/Os are under 1ms
+    static const unsigned int foregroundMsec = 1000; // we do not need to react to signals faster
+    return opt_foreground_rebuild ? foregroundMsec : backgroundMsec;
 }
 

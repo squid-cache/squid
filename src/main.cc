@@ -190,7 +190,7 @@ class OpenListeningPortsRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void builtStoreIndex() {
+    virtual void useFullyIndexedStore() {
         assert(opt_foreground_rebuild);
         serverConnectionsOpen();
     }
@@ -823,8 +823,8 @@ static void
 serverConnectionsOpen(void)
 {
     if (Store::Controller::WaitingForIndex()) {
-        if (IamPrimaryProcess() || IamWorkerProcess())
-            debugs(1, DBG_IMPORTANT, "Waiting for Store indexing completion before opening listening sockets");
+        debugs(1, DBG_IMPORTANT, "Waiting for Store indexing completion before opening listening sockets "
+                "and/or contacting cache_peers");
         return;
     }
 
@@ -850,10 +850,13 @@ serverConnectionsOpen(void)
 #endif
     }
 
+    // TODO: Refactor:
+    // * Diskers do not need cache_peer services at all.
+    // * Check what neighbors_init() parts Coordinator needs.
     neighbors_init();
 }
 
-/// start providing worker-specific services
+/// startServices() part for services that are only provided by workers
 static void
 startWorkerServices()
 {
@@ -1286,8 +1289,6 @@ mainInitialize(void)
     // moved to PconnModule::PconnModule()
 
     startServices();
-
-    // neighborsRegisterWithCacheManager(); //moved to neighbors_init()
 
     if (Config.chroot_dir)
         no_suid();

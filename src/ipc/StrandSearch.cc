@@ -20,14 +20,14 @@ Ipc::StrandSearchRequest::StrandSearchRequest(): requestorId(-1)
 Ipc::StrandSearchRequest::StrandSearchRequest(const TypedMsgHdr &hdrMsg):
     requestorId(-1)
 {
-    hdrMsg.checkType(mtStrandSearchRequest);
+    hdrMsg.checkType(mtFindStrand);
     hdrMsg.getPod(requestorId);
     hdrMsg.getString(tag);
 }
 
 void Ipc::StrandSearchRequest::pack(TypedMsgHdr &hdrMsg) const
 {
-    hdrMsg.setType(mtStrandSearchRequest);
+    hdrMsg.setType(mtFindStrand);
     hdrMsg.putPod(requestorId);
     hdrMsg.putString(tag);
 }

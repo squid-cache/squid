@@ -89,7 +89,7 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
         handleForegroundRebuildMessage(StrandMessage(message));
         break;
 
-    case mtStrandSearchRequest: {
+    case mtFindStrand: {
         const StrandSearchRequest sr(message);
         debugs(54, 6, HERE << "Strand search request: " << sr.requestorId <<
                " tag: " << sr.tag);
@@ -152,15 +152,14 @@ void
 Ipc::Coordinator::handleForegroundRebuildMessage(const StrandMessage& msg)
 {
     // notify any searchers waiting for this strand
-    typedef Searchers::iterator SRI;
-    for (SRI i = searchers.begin(); i != searchers.end(); ++i) {
-        if (i->tag != msg.strand.tag)
+    for (const auto searchRequest: searchers) {
+        if (searchRequest.tag != msg.strand.tag)
             continue;
 
         Ipc::TypedMsgHdr message;
-        message.setType(Ipc::mtStrandSearchPause);
+        message.setType(Ipc::mtStrandBusy);
         message.putInt(msg.strand.kidId);
-        SendMessage(MakeAddr(strandAddrLabel, i->requestorId), message);
+        SendMessage(MakeAddr(strandAddrLabel, searchRequest.requestorId), message);
     }
 }
 
@@ -243,7 +242,7 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
 {
     debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
            request.tag << " is kid" << strand.kidId);
-    const StrandMessage response(strand, Ipc::mtStrandSearchResponse);
+    const StrandMessage response(Ipc::mtStrandReady, strand);
     TypedMsgHdr message;
     response.pack(message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);

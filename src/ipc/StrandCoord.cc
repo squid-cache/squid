@@ -10,11 +10,10 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "globals.h"
 #include "ipc/Port.h"
 #include "ipc/StrandCoord.h"
 #include "ipc/TypedMsgHdr.h"
-
-extern int KidIdentifier;
 
 Ipc::StrandCoord::StrandCoord(): kidId(-1), pid(0)
 {
@@ -39,13 +38,14 @@ void Ipc::StrandCoord::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.putString(tag);
 }
 
-Ipc::StrandMessage::StrandMessage(const StrandCoord &aStrand, const Ipc::MessageType msgType):
-    strand(aStrand),
-    messageType(msgType)
+Ipc::StrandMessage::StrandMessage(const Ipc::MessageType msgType, const StrandCoord &aStrand):
+    messageType(msgType),
+    strand(aStrand)
 {
 }
 
-Ipc::StrandMessage::StrandMessage(const TypedMsgHdr &hdrMsg)
+Ipc::StrandMessage::StrandMessage(const TypedMsgHdr &hdrMsg):
+    messageType(static_cast<Ipc::MessageType>(hdrMsg.type()))
 {
     strand.unpack(hdrMsg);
 }
@@ -61,7 +61,7 @@ void
 Ipc::StrandMessage::NotifyCoordinator(const Ipc::MessageType msgType, const char *tag)
 {
     static const auto pid = getpid();
-    Ipc::StrandMessage message(Ipc::StrandCoord(KidIdentifier, pid), msgType);
+    Ipc::StrandMessage message(msgType, Ipc::StrandCoord(KidIdentifier, pid));
     if (tag)
         message.strand.tag = tag;
     Ipc::TypedMsgHdr hdr;

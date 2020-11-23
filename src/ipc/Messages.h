@@ -19,15 +19,18 @@ namespace Ipc
 /// message class identifier
 typedef enum { mtNone = 0,
                mtRegistration, ///< strand registration with Coordinator (also used as an ACK)
-               mtForegroundRebuild,
-               mtStrandSearchPause, ///< the disker exists but is still building its index
-               mtStrandSearchRequest,
-               mtStrandSearchResponse,
+               mtForegroundRebuild, ///< the disker is building its index in foreground mode
+               mtFindStrand, ///< a worker requests a strand from Coordinator
+               /// a mtFindStrand answer: the strand exists but needs more time to become usable
+               /// the sender should send mtStrandReady (or more mtStrandBusy) late
+               mtStrandBusy,
+               mtStrandReady, ///< a mtFindStrand answer: the strand exists and should be usable
                mtSharedListenRequest,
                mtSharedListenResponse,
                mtIpcIoNotification,
                mtCollapsedForwardingNotification,
-               mtCacheMgrRequest, mtCacheMgrResponse
+               mtCacheMgrRequest,
+               mtCacheMgrResponse
 #if SQUID_SNMP
                ,
                mtSnmpRequest,

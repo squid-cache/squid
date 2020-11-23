@@ -443,7 +443,7 @@ Rock::Rebuild::validationSteps()
 
     const timeval loopStart = current_time;
 
-    const auto maxSpentMsec = rebuildMaxSpentMsec();
+    const auto maxSpentMsec = rebuildMaxBlockMsec();
 
     int validated = 0;
     while (!doneValidating()) {

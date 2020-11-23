@@ -269,30 +269,45 @@ class PeerPoolMgrsRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useConfig() { configure(); }
+    virtual void useConfig();
     virtual void syncConfig() { configure(); }
-    virtual void builtStoreIndex();
+    virtual void useFullyIndexedStore();
 
 private:
     void configure();
+    /// whether the Store index was being built in foreground
+    /// at the time of useConfig() call
+    bool waitingForStoreIndex = false;
 };
 
 RunnerRegistrationEntry(PeerPoolMgrsRr);
 
 void
-PeerPoolMgrsRr::builtStoreIndex()
+PeerPoolMgrsRr::useConfig()
+{
+    if (Store::Controller::WaitingForIndex()) {
+        waitingForStoreIndex = true;
+        return; // postpone until useFullyIndexedStore()
+    }
+    configure();
+}
+
+void
+PeerPoolMgrsRr::useFullyIndexedStore()
 {
     assert(!Store::Controller::WaitingForIndex());
-    if (opt_foreground_rebuild)
+    if (waitingForStoreIndex) {
+        waitingForStoreIndex = false;
         configure();
+    }
     // else configure() ran inside useConfig() already
 }
 
 void
 PeerPoolMgrsRr::configure()
 {
-    if (Store::Controller::WaitingForIndex())
-        return; // postpone until builtStoreIndex()
+    assert(!waitingForStoreIndex);
+    assert(!Store::Controller::WaitingForIndex());
 
     for (CachePeer *p = Config.peers; p; p = p->next) {
         // On reconfigure, Squid deletes the old config (and old peers in it),
