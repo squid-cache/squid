@@ -269,21 +269,20 @@ class PeerPoolMgrsRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useConfig();
-    virtual void syncConfig() { configure(); }
+    virtual void useConfig() { syncConfig(); }
+    virtual void syncConfig();
     virtual void useFullyIndexedStore();
 
 private:
     void configure();
-    /// whether the Store index was being built in foreground
-    /// at the time of useConfig() call
+    /// whether configure() is waiting for the Store index to be built
     bool waitingForStoreIndex = false;
 };
 
 RunnerRegistrationEntry(PeerPoolMgrsRr);
 
 void
-PeerPoolMgrsRr::useConfig()
+PeerPoolMgrsRr::syncConfig()
 {
     if (Store::Controller::WaitingForIndex()) {
         waitingForStoreIndex = true;

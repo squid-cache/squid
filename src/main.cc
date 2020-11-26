@@ -822,11 +822,7 @@ sig_child(int sig)
 static void
 serverConnectionsOpen(void)
 {
-    if (Store::Controller::WaitingForIndex()) {
-        debugs(1, DBG_IMPORTANT, "Waiting for Store indexing completion before opening listening sockets "
-                "and/or contacting cache_peers");
-        return;
-    }
+    assert(!Store::Controller::WaitingForIndex());
 
     if (IamPrimaryProcess()) {
 #if USE_WCCP
@@ -957,7 +953,12 @@ startServices()
     if (IamWorkerProcess())
         startWorkerServices();
 
-    serverConnectionsOpen();
+    if (Store::Controller::WaitingForIndex()) {
+        debugs(1, DBG_IMPORTANT, "Waiting for Store indexing completion before opening listening sockets "
+                "and/or contacting cache_peers");
+        return;
+    }
+    RunRegisteredHere(RegisteredRunner::useFullyIndexedStore);
 }
 
 static void
