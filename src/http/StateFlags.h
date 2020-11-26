@@ -16,7 +16,14 @@ class StateFlags
 {
 public:
     unsigned int front_end_https = 0; ///< send "Front-End-Https: On" header (off/on/auto=2)
-    bool keepalive = false; ///< whether to keep the connection persistent
+
+    /// whether the Squid-sent request offers to keep the connection persistent
+    bool keepalive = false;
+
+    /// whether Squid should not keep the connection persistent despite offering
+    /// to do so previously (and setting the keepalive flag)
+    bool forceClose = false;
+
     bool only_if_cached = false;
 
     /// Whether we are processing an HTTP 1xx control message.

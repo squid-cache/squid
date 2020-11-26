@@ -682,14 +682,14 @@ IpcIoMsg::stat(std::ostream &os)
     timeval elapsedTime;
     tvSub(elapsedTime, start, current_time);
     os << "id: " << requestId <<
-        ", offset: " << offset <<
-        ", size: " << len <<
-        ", workerPid: " << workerPid <<
-        ", page: " << page <<
-        ", command: " << command <<
-        ", start: " << start <<
-        ", elapsed: " << elapsedTime <<
-        ", errno: " << xerrno;
+       ", offset: " << offset <<
+       ", size: " << len <<
+       ", workerPid: " << workerPid <<
+       ", page: " << page <<
+       ", command: " << command <<
+       ", start: " << start <<
+       ", elapsed: " << elapsedTime <<
+       ", errno: " << xerrno;
 }
 
 /* IpcIoPendingRequest */

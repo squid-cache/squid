@@ -1674,7 +1674,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_UNSUP_REQ, Http::scNotImplemented, request->method, NULL,
-                                    conn->clientConnection->remote, request.getRaw(), NULL, NULL);
+                                    conn, request.getRaw(), nullptr, nullptr);
         assert(context->http->out.offset == 0);
         context->pullData();
         clientProcessRequestFinished(conn, request);
@@ -1689,7 +1689,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
         conn->quitAfterError(request.getRaw());
         repContext->setReplyToError(ERR_INVALID_REQ,
                                     Http::scLengthRequired, request->method, NULL,
-                                    conn->clientConnection->remote, request.getRaw(), NULL, NULL);
+                                    conn, request.getRaw(), nullptr, nullptr);
         assert(context->http->out.offset == 0);
         context->pullData();
         clientProcessRequestFinished(conn, request);
@@ -1725,7 +1725,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
             conn->quitAfterError(request.getRaw());
             repContext->setReplyToError(ERR_TOO_BIG,
                                         Http::scPayloadTooLarge, Http::METHOD_NONE, NULL,
-                                        conn->clientConnection->remote, http->request, NULL, NULL);
+                                        conn, http->request, nullptr, nullptr);
             assert(context->http->out.offset == 0);
             context->pullData();
             clientProcessRequestFinished(conn, request);
@@ -2169,42 +2169,19 @@ clientLifetimeTimeout(const CommTimeoutCbParams &io)
     ClientHttpRequest *http = static_cast<ClientHttpRequest *>(io.data);
     debugs(33, DBG_IMPORTANT, "WARNING: Closing client connection due to lifetime timeout");
     debugs(33, DBG_IMPORTANT, "\t" << http->uri);
-    http->logType.err.timedout = true;
+    if (const auto conn = http->getConn())
+        conn->pipeline.terminateAll(ETIMEDOUT);
     if (Comm::IsConnOpen(io.conn))
         io.conn->close();
 }
 
 ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
     AsyncJob("ConnStateData"), // kids overwrite
-    Server(xact),
-    bodyParser(nullptr),
+    Server(xact)
 #if USE_OPENSSL
-    sslBumpMode(Ssl::bumpEnd),
-    tlsParser(Security::HandshakeParser::fromClient),
+    , tlsParser(Security::HandshakeParser::fromClient)
 #endif
-    needProxyProtocolHeader_(false),
-#if USE_OPENSSL
-    switchedToHttps_(false),
-    parsingTlsHandshake(false),
-    parsedBumpedRequestCount(0),
-    tlsConnectPort(0),
-    sslServerBump(NULL),
-    signAlgorithm(Ssl::algSignTrusted),
-#endif
-    stoppedSending_(NULL),
-    stoppedReceiving_(NULL)
 {
-    flags.readMore = true; // kids may overwrite
-    flags.swanSang = false;
-
-    pinning.host = NULL;
-    pinning.port = -1;
-    pinning.pinned = false;
-    pinning.auth = false;
-    pinning.zeroReply = false;
-    pinning.peerAccessDenied = false;
-    pinning.peer = NULL;
-
     // store the details required for creating more MasterXaction objects as new requests come in
     log_addr = xact->tcpClient->remote;
     log_addr.applyClientMask(Config.Addrs.client_netmask);

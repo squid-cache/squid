@@ -21,8 +21,8 @@ icp_common_t *icp_common_t::CreateMessage(icp_opcode opcode, int flags, const ch
 icp_opcode icp_common_t::getOpCode() const STUB_RETVAL(ICP_INVALID)
 ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest) STUB
 ICPState::~ICPState() STUB
-bool ICPState::confirmAndPrepHit(const StoreEntry &) STUB_RETVAL(false)
-LogTags *ICPState::loggingTags() STUB_RETVAL(nullptr)
+bool ICPState::confirmAndPrepHit(const StoreEntry &) const STUB_RETVAL(false)
+LogTags *ICPState::loggingTags() const STUB_RETVAL(nullptr)
 void ICPState::fillChecklist(ACLFilledChecklist&) const STUB
 
 Comm::ConnectionPointer icpIncomingConn;

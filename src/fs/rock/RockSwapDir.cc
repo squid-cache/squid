@@ -19,7 +19,6 @@
 #include "fs/rock/RockHeaderUpdater.h"
 #include "fs/rock/RockIoRequests.h"
 #include "fs/rock/RockIoState.h"
-#include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
 #include "globals.h"
 #include "ipc/mem/Pages.h"
@@ -310,11 +309,6 @@ Rock::SwapDir::init()
     theFile = io->newFile(filePath);
     theFile->configure(fileConfig);
     theFile->open(O_RDWR, 0644, this);
-
-    // Increment early. Otherwise, if one SwapDir finishes rebuild before
-    // others start, storeRebuildComplete() will think the rebuild is over!
-    // TODO: move store_dirs_rebuilding hack to store modules that need it.
-    ++StoreController::store_dirs_rebuilding;
 }
 
 bool
@@ -589,13 +583,6 @@ Rock::SwapDir::validateOptions()
     }
 }
 
-void
-Rock::SwapDir::rebuild()
-{
-    //++StoreController::store_dirs_rebuilding; // see Rock::SwapDir::init()
-    AsyncJob::Start(new Rebuild(this));
-}
-
 bool
 Rock::SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
 {
@@ -837,7 +824,8 @@ Rock::SwapDir::ioCompletedNotification()
         startAcceptingRequests();
     // else postpone until Rock::Rebuild::swanSong()
 
-    rebuild();
+    if (!Rebuild::Start(*this))
+        storeRebuildComplete(nullptr);
 }
 
 void
@@ -1144,6 +1132,8 @@ void Rock::SwapDirRr::create()
     Must(mapOwners.empty() && freeSlotsOwners.empty());
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
+            rebuildStatsOwners.push_back(Rebuild::Stats::Init(*sd));
+
             const int64_t capacity = sd->slotLimitActual();
 
             SwapDir::DirMap::Owner *const mapOwner =
@@ -1166,6 +1156,7 @@ void Rock::SwapDirRr::create()
 Rock::SwapDirRr::~SwapDirRr()
 {
     for (size_t i = 0; i < mapOwners.size(); ++i) {
+        delete rebuildStatsOwners[i];
         delete mapOwners[i];
         delete freeSlotsOwners[i];
     }

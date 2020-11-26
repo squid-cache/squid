@@ -10,8 +10,11 @@
 #define SQUID_FS_ROCK_REBUILD_H
 
 #include "base/AsyncJob.h"
+#include "base/RunnersRegistry.h"
 #include "cbdata.h"
 #include "fs/rock/forward.h"
+#include "ipc/mem/Pointer.h"
+#include "ipc/StoreMap.h"
 #include "MemBuf.h"
 #include "store_rebuild.h"
 
@@ -24,15 +27,41 @@ class LoadingParts;
 
 /// \ingroup Rock
 /// manages store rebuild process: loading meta information from db on disk
-class Rebuild: public AsyncJob
+class Rebuild: public AsyncJob, private IndependentRunner
 {
     CBDATA_CHILD(Rebuild);
 
 public:
-    Rebuild(SwapDir *dir);
-    virtual ~Rebuild() override;
+    /// cache_dir indexing statistics shared across same-kid process restarts
+    class Stats
+    {
+    public:
+        static SBuf Path(const char *dirPath);
+        static Ipc::Mem::Owner<Stats> *Init(const SwapDir &);
+
+        static size_t SharedMemorySize() { return sizeof(Stats); }
+        size_t sharedMemorySize() const { return SharedMemorySize(); }
+
+        /// whether the rebuild is finished already
+        bool completed(const SwapDir &) const;
+
+        StoreRebuildData counts;
+    };
+
+    /// starts indexing the given cache_dir if that indexing is necessary
+    /// \returns whether the indexing was necessary (and, hence, started)
+    static bool Start(SwapDir &dir);
 
 protected:
+    /// whether the current kid is responsible for rebuilding this db file
+    static bool IsResponsible(const SwapDir &);
+
+    Rebuild(SwapDir *dir, const Ipc::Mem::Pointer<Stats> &);
+    virtual ~Rebuild() override;
+
+    /* Registered Runner API */
+    virtual void startShutdown() override;
+
     /* AsyncJob API */
     virtual void start() override;
     virtual bool doneAll() const override;
@@ -72,27 +101,29 @@ private:
 
     bool sameEntry(const sfileno fileno, const DbCellHeader &header) const;
 
+    SBuf progressDescription() const;
+
     SwapDir *sd;
     LoadingParts *parts; ///< parts of store entries being loaded from disk
 
+    Ipc::Mem::Pointer<Stats> stats; ///< indexing statistics in shared memory
+
     int64_t dbSize;
     int dbSlotSize; ///< the size of a db cell, including the cell header
-    int dbSlotLimit; ///< total number of db cells
-    int dbEntryLimit; ///< maximum number of entries that can be stored in db
+    int64_t dbSlotLimit; ///< total number of db cells
+    int64_t dbEntryLimit; ///< maximum number of entries that can be stored in db
 
     int fd; // store db file descriptor
-    int64_t dbOffset;
-    sfileno loadingPos; ///< index of the db slot being loaded from disk now
-    sfileno validationPos; ///< index of the loaded db slot being validated now
+    int64_t dbOffset; // TODO: calculate in a method, using loadingPos
+    int64_t loadingPos; ///< index of the db slot being loaded from disk now
+    int64_t validationPos; ///< index of the loaded db slot being validated now
     MemBuf buf; ///< space to load current db slot (and entry metadata) into
 
-    // Balance our desire to maximize the number of entries processed at once
-    // (and, hence, minimize overheads and total rebuild time) with a
-    // requirement to also process Coordinator events, disk I/Os, etc.
-    static const int MaxSpentMsec = 50; // keep small: most RAM I/Os are under 1ms
-    static const int ForegroundNotificationMsec = 1000; ///< time interval to react to signals if opt_foreground_rebuild
+    StoreRebuildData &counts; ///< a reference to the shared memory counters
 
-    StoreRebuildData counts;
+    /// whether we have started indexing this cache_dir before,
+    /// presumably in the previous process performing the same-kid role
+    const bool resuming;
 
     static void Steps(void *data);
 
