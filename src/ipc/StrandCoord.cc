@@ -45,7 +45,7 @@ Ipc::StrandMessage::StrandMessage(const Ipc::MessageType msgType, const StrandCo
 }
 
 Ipc::StrandMessage::StrandMessage(const TypedMsgHdr &hdrMsg):
-    messageType(static_cast<Ipc::MessageType>(hdrMsg.type()))
+    messageType(hdrMsg.type<Ipc::MessageType>())
 {
     strand.unpack(hdrMsg);
 }

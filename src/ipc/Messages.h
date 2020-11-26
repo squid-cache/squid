@@ -17,7 +17,7 @@ namespace Ipc
 {
 
 /// message class identifier
-typedef enum { mtNone = 0,
+typedef enum { enumBegin_ = 0,
                mtRegistration, ///< strand registration with Coordinator (also used as an ACK)
                mtForegroundRebuild, ///< the disker is building its index in foreground mode
                mtFindStrand, ///< a worker requests a strand from Coordinator
@@ -36,6 +36,8 @@ typedef enum { mtNone = 0,
                mtSnmpRequest,
                mtSnmpResponse
 #endif
+               ,
+               enumEnd_
              } MessageType;
 
 } // namespace Ipc;

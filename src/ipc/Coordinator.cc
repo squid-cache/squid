@@ -78,7 +78,8 @@ void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
 
 void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 {
-    switch (message.type()) {
+    const auto messageRawType = message.rawType();
+    switch (messageRawType) {
     case mtRegistration:
         debugs(54, 6, HERE << "Registration request");
         handleRegistrationRequest(StrandMessage(message));
@@ -133,7 +134,7 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 #endif
 
     default:
-        debugs(54, DBG_IMPORTANT, HERE << "Unhandled message type: " << message.type());
+        debugs(54, DBG_IMPORTANT, "Unhandled message type: " << messageRawType);
         break;
     }
 }
