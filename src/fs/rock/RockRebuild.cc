@@ -446,7 +446,6 @@ Rock::Rebuild::loadingSteps()
 
         getCurrentTime();
         const double elapsedMsec = tvSubMsec(loopStart, current_time);
-
         if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
             debugs(47, 5, HERE << "pausing after " << loaded << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/loaded) << "ms per entry");

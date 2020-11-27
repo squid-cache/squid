@@ -59,9 +59,7 @@ void Ipc::Strand::registerSelf()
 
 void Ipc::Strand::receive(const TypedMsgHdr &message)
 {
-    const auto messageRawType = message.rawType();
-    debugs(54, 6, messageRawType);
-    switch (messageRawType) {
+    switch (message.rawType()) {
 
     case mtRegistration:
         handleRegistrationResponse(StrandMessage(message));
@@ -116,7 +114,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 #endif
 
     default:
-        debugs(54, DBG_IMPORTANT, "Unhandled message type: " << messageRawType);
+        debugs(54, DBG_IMPORTANT, "Unhandled message type: " << message.rawType());
         break;
     }
 }
