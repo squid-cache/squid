@@ -91,9 +91,9 @@ Ipc::TypedMsgHdr::rawType() const
 Ipc::MessageType
 Ipc::TypedMsgHdr::type() const
 {
-    const auto raw = rawType();
-    Must(raw >= MessageType::enumBegin_ && raw <= MessageType::enumEnd_);
-    return static_cast<MessageType>(raw);
+    const auto uncheckedType = rawType();
+    Must(uncheckedType >= MessageType::enumBegin_ && uncheckedType <= MessageType::enumEnd_);
+    return static_cast<MessageType>(uncheckedType);
 }
 
 void
