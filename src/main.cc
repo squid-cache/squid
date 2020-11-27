@@ -953,7 +953,7 @@ startServices()
     if (IamWorkerProcess())
         startWorkerServices();
 
-    if (opt_foreground_rebuild && Store::Controller::WaitingForIndex()) {
+    if (Store::Controller::WaitingForIndex()) {
         debugs(1, DBG_IMPORTANT, "Waiting for Store indexing completion before opening listening sockets "
                "and/or contacting cache_peers");
         return;
