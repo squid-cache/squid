@@ -191,10 +191,11 @@ class OpenListeningPortsRr: public RegisteredRunner
 public:
     /* RegisteredRunner API */
     virtual void useFullyIndexedStore() {
-        assert(opt_foreground_rebuild);
         serverConnectionsOpen();
     }
 };
+
+RunnerRegistrationEntry(OpenListeningPortsRr);
 
 /** temporary thunk across to the unrefactored store interface */
 
@@ -468,7 +469,6 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
         /** \par F
          * Set global option for foreground rebuild. opt_foreground_rebuild */
         opt_foreground_rebuild = 1;
-        RunnerRegistrationEntry(OpenListeningPortsRr);
         break;
 
     case 'N':
@@ -953,7 +953,7 @@ startServices()
     if (IamWorkerProcess())
         startWorkerServices();
 
-    if (Store::Controller::WaitingForIndex()) {
+    if (opt_foreground_rebuild && Store::Controller::WaitingForIndex()) {
         debugs(1, DBG_IMPORTANT, "Waiting for Store indexing completion before opening listening sockets "
                 "and/or contacting cache_peers");
         return;
