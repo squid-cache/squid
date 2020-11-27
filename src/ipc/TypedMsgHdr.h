@@ -11,8 +11,8 @@
 #ifndef SQUID_IPC_TYPED_MSG_HDR_H
 #define SQUID_IPC_TYPED_MSG_HDR_H
 
-#include <Debug.h>
 #include "compat/cmsg.h"
+#include "ipc/Messages.h"
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -44,9 +44,7 @@ public:
     /* message type manipulation; these must be called before put/get*() */
     void setType(int aType); ///< sets message type; use MessageType enum
     void checkType(int aType) const; ///< throws if stored type is not aType
-    ///< converts rawType() to EnumType
-    template<typename EnumType>
-    EnumType type() const;
+    MessageType type() const; ///< converts rawType() to MessageType
     int rawType() const; ///< returns stored type or zero if none
 
     /* access for Plain Old Data (POD)-based message parts */
@@ -111,15 +109,6 @@ private:
     /// data offset for the next get/put*() to start with
     mutable unsigned int offset = 0;
 };
-
-template<typename EnumType>
-EnumType
-TypedMsgHdr::type() const
-{
-    const auto raw = rawType();
-    Must(raw >= EnumType::enumBegin_ && raw <= EnumType::enumEnd_);
-    return static_cast<EnumType>(raw);
-}
 
 } // namespace Ipc
 

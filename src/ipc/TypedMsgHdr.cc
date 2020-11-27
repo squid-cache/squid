@@ -88,6 +88,14 @@ Ipc::TypedMsgHdr::rawType() const
     return data.type_;
 }
 
+Ipc::MessageType
+Ipc::TypedMsgHdr::type() const
+{
+    const auto raw = rawType();
+    Must(raw >= MessageType::enumBegin_ && raw <= MessageType::enumEnd_);
+    return static_cast<MessageType>(raw);
+}
+
 void
 Ipc::TypedMsgHdr::address(const struct sockaddr_un& addr)
 {
