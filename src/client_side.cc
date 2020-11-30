@@ -698,29 +698,6 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
     request->flags.proxyKeepalive = request->persistent();
 }
 
-/// checks body length of non-chunked requests
-static bool
-clientIsContentLengthValid(const HttpRequestPointer &r)
-{
-    // No Content-Length means this request just has no body, but conflicting
-    // Content-Lengths mean a message framing error (RFC 7230 Section 3.3.3 #4).
-    if (r->header.conflictingContentLength())
-        return false;
-
-    // RFC 7230 section 3.3 - Content-Length defines body exists regardless of method
-    if (r->content_length >= 0)
-        return true;
-
-    // We do not want a request entity on HTTP/1.0 GET/HEAD requests
-    // without a Content-Length header.
-    const auto m = r->method.id();
-    if (m == Http::METHOD_GET || m == Http::METHOD_HEAD)
-        return !(r->http_ver <= Http::ProtocolVersion(1,0));
-
-    // For other types of requests we don't care
-    return true;
-}
-
 int
 clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength)
 {
@@ -1720,7 +1697,7 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     }
 
     const auto chunked = request->header.chunked();
-    if (!chunked && !clientIsContentLengthValid(request)) {
+    if (!chunked && !request->canUseContentLength()) {
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);

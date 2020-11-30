@@ -652,6 +652,47 @@ HttpRequest::canHandle1xx() const
 }
 
 bool
+HttpRequest::canUseContentLength() const
+{
+    // RFC 7230 Section 3.3.3 #4:
+    // conflicting Content-Length(s) mean a message framing error
+    if (header.conflictingContentLength())
+        return false;
+
+    // HTTP/1.0 requirements differ from HTTP/1.1
+    if (http_ver <= Http::ProtocolVersion(1,0)) {
+        const auto m = method.id();
+
+        // RFC 1945 section 8.3:
+        // "
+        //   A valid Content-Length is required on all HTTP/1.0 POST requests.
+        // "
+        if (m == Http::METHOD_POST)
+            return (content_length >= 0);
+
+        // RFC 1945 section 7.2:
+        // "
+        //   An entity body is included with a request message only when the
+        //   request method calls for one.
+        // "
+        // GET and HEAD do not define ('call for') an entity
+        if (m == Http::METHOD_GET || m == Http::METHOD_HEAD)
+            return (content_length < 0);
+
+        // other methods are not defined in RFC 1945
+    }
+
+    // RFC 7230 section 3.3
+    // "
+    //   The presence of a message body in a request is signaled by a
+    //   Content-Length or Transfer-Encoding header field.  Request message
+    //   framing is independent of method semantics, even if the method does
+    //   not define any use for a message body.
+    // "
+    return true;
+}
+
+bool
 HttpRequest::parseHeader(Http1::Parser &hp)
 {
     Http::ContentLengthInterpreter clen;
