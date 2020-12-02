@@ -454,6 +454,7 @@ IpcIoFile::HandleOpenResponse(const Ipc::StrandMessage &response)
     const auto it = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
             [&response](const WaitingIpcIoFile &pair) { return pair.second->dbName == response.strand.tag; });
     if (it != WaitingForOpen.end()) {
+        it->second->openCompleted(&response);
         WaitingForOpen.erase(it);
         return;
     }

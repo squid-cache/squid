@@ -152,11 +152,11 @@ void
 Ipc::Coordinator::handleForegroundRebuildMessage(const StrandMessage& msg)
 {
     // notify any searchers waiting for this strand
-    for (const auto searchRequest: searchers) {
+    for (const auto &searchRequest: searchers) {
         if (searchRequest.tag != msg.strand.tag)
             continue;
 
-        Ipc::StrandMessage response(Ipc::mtStrandBusy, msg.strand);
+        StrandMessage response(mtStrandBusy, msg.strand);
         TypedMsgHdr message;
         response.pack(message);
         SendMessage(MakeAddr(strandAddrLabel, searchRequest.requestorId), message);
@@ -242,7 +242,7 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
 {
     debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
            request.tag << " is kid" << strand.kidId);
-    const StrandMessage response(Ipc::mtStrandReady, strand);
+    const StrandMessage response(mtStrandReady, strand);
     TypedMsgHdr message;
     response.pack(message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);

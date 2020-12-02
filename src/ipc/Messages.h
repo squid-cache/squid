@@ -22,7 +22,7 @@ typedef enum { enumBegin_ = 0,
                mtForegroundRebuild, ///< the disker is building its index in foreground mode
                mtFindStrand, ///< a worker requests a strand from Coordinator
                /// a mtFindStrand answer: the strand exists but needs more time to become usable
-               /// the sender should send mtStrandReady (or more mtStrandBusy) late
+               /// the sender should send mtStrandReady (or more mtStrandBusy) later
                mtStrandBusy,
                mtStrandReady, ///< a mtFindStrand answer: the strand exists and should be usable
                mtSharedListenRequest,

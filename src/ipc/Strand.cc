@@ -53,7 +53,7 @@ void Ipc::Strand::registerSelf()
     debugs(54, 6, HERE);
     Must(!isRegistered);
 
-    Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRegistration, nullptr);
+    StrandMessage::NotifyCoordinator(mtRegistration, nullptr);
     setTimeout(6, "Ipc::Strand::timeoutHandler"); // TODO: make 6 configurable?
 }
 

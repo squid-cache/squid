@@ -37,15 +37,15 @@ public:
 class StrandMessage
 {
 public:
-    StrandMessage(const Ipc::MessageType, const StrandCoord &);
+    StrandMessage(MessageType, const StrandCoord &);
     explicit StrandMessage(const TypedMsgHdr &);
     void pack(TypedMsgHdr &) const;
 
     /// creates and sends StrandMessage to Coordinator
-    static void NotifyCoordinator(const Ipc::MessageType, const char *tag);
+    static void NotifyCoordinator(const MessageType, const char *tag);
 
 public:
-    Ipc::MessageType messageType; ///< overall message purpose or category
+    MessageType messageType; ///< overall message purpose or category
     StrandCoord strand; ///< messageType-specific coordinates (e.g., sender)
 };
 

@@ -958,7 +958,10 @@ startServices()
                "and/or contacting cache_peers");
         return;
     }
-    RunRegisteredHere(RegisteredRunner::useFullyIndexedStore);
+
+    if (!Store::Controller::store_dirs_rebuilding)
+        RunRegisteredHere(RegisteredRunner::useFullyIndexedStore);
+    // else storeCleanup() is responsible for this
 }
 
 static void
