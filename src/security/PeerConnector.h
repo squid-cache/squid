@@ -110,6 +110,9 @@ protected:
     /// Resumes TLS negotiation
     void resumeNegotiation();
 
+    /// True if the TLS negotiation is suspended
+    bool isSuspended() {return resumeNegotiationCall != nullptr; };
+
     /// Run the certificates list sent by the SSL server and check if there
     /// are missing certificates. Adds to the urlOfMissingCerts list the
     /// URLS of missing certificates if this information provided by the

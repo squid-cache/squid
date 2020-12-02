@@ -455,6 +455,7 @@ Security::PeerConnector::handleNegotiateError(const int ret)
 void
 Security::PeerConnector::noteWantRead()
 {
+    Must(!isSuspended());
     const int fd = serverConnection()->fd;
     debugs(83, 5, serverConnection());
 
@@ -471,6 +472,7 @@ Security::PeerConnector::noteWantRead()
 void
 Security::PeerConnector::noteWantWrite()
 {
+    Must(!isSuspended());
     const int fd = serverConnection()->fd;
     debugs(83, 5, serverConnection());
     Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, new Pointer(this), 0);
@@ -748,11 +750,11 @@ Security::PeerConnector::suspendNegotiation(const AsyncCall::Pointer &resumeCall
 void
 Security::PeerConnector::resumeNegotiation()
 {
-    if (resumeNegotiationCall) {
-        //resumeNegotiationCall.make()
-        ScheduleCallHere(resumeNegotiationCall);
-        resumeNegotiationCall = nullptr;
-    }
+    Must(isSuspended());
+
+    //resumeNegotiationCall.make()
+    ScheduleCallHere(resumeNegotiationCall);
+    resumeNegotiationCall = nullptr;
 }
 
 #endif //USE_OPENSSL
