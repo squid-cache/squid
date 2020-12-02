@@ -403,9 +403,8 @@ Security::PeerConnector::handleNegotiateError(const int ret)
                                             cbDialer, this,
                                             Security::PeerConnector::noteWantWrite);
             suspendNegotiation(resumeCall);
-        }
-
-        noteWantWrite();
+        } else
+            noteWantWrite();
         return;
 
     case SSL_ERROR_SSL:
