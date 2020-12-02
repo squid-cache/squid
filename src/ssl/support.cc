@@ -496,14 +496,15 @@ Ssl::PeerCertificatesVerify(Security::SessionPointer &s, const Ssl::X509_STACK_P
     return verified;
 }
 
-void Ssl::SquidVerifyData::SetSessionFlag(Security::SessionPointer &session, uint64_t flg)
+Ssl::SquidVerifyData *
+Ssl::SquidVerifyData::SessionData(const Security::SessionPointer &session)
 {
-    auto data = SessionData(session);
+    auto data = static_cast<SquidVerifyData *>(SSL_get_ex_data(session.get(), ssl_ex_index_squid_verify));
     if (!data) {
         data =  new Ssl::SquidVerifyData();
         SSL_set_ex_data(session.get(), ssl_ex_index_squid_verify, data);
     }
-    data->set(Ssl::SquidVerifyData::fIgnoreIssuer);
+    return data;
 }
 
 // "dup" function for SSL_get_ex_new_index("cert_err_check")

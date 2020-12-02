@@ -144,7 +144,9 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
         }
     }
 
-    Ssl::SquidVerifyData::SetSessionFlag(serverSession, Ssl::SquidVerifyData::fIgnoreIssuer);
+    auto sessData = Ssl::SquidVerifyData::SessionData(serverSession);
+    assert(sessData);
+    sessData->set(Ssl::SquidVerifyData::fIgnoreIssuer);
 #endif
 
     return true;

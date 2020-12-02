@@ -348,12 +348,7 @@ public:
     };
 
     /// \returns The SquidVerifyData object attached to session
-    static SquidVerifyData *SessionData(const Security::SessionPointer &session) {
-        return (SquidVerifyData *)SSL_get_ex_data(session.get(), ssl_ex_index_squid_verify);
-    }
-
-    /// Sets the given SquidVerifyData::VerifyFlags flag to session object
-    static void SetSessionFlag(Security::SessionPointer &session, uint64_t flg);
+    static SquidVerifyData *SessionData(const Security::SessionPointer &session);
 
     void set(uint64_t flgs) {flags_ |= flgs;}
     void clear(uint64_t flgs) {flags_ &= ~flgs;}
