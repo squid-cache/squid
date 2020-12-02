@@ -959,7 +959,7 @@ startServices()
         return;
     }
 
-    if (!Store::Controller::store_dirs_rebuilding)
+    if (!Config.cacheSwap.swapDirs)
         RunRegisteredHere(RegisteredRunner::useFullyIndexedStore);
     // else storeCleanup() is responsible for this
 }
