@@ -75,7 +75,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         break;
 
     case mtStrandBusy:
-        IpcIoFile::HandleStrandBusyResponse(message);
+        IpcIoFile::HandleStrandBusyResponse(StrandMessage(message));
         break;
 
     case mtIpcIoNotification:

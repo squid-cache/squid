@@ -15,6 +15,7 @@
 #include "DiskIO/IORequestor.h"
 #include "ipc/forward.h"
 #include "ipc/mem/Page.h"
+#include "mem/PoolingAllocator.h"
 #include "SquidString.h"
 #include <list>
 #include <map>
@@ -88,7 +89,7 @@ public:
 
     /// handle open response from coordinator
     static void HandleOpenResponse(const Ipc::StrandMessage &);
-    static void HandleStrandBusyResponse(const Ipc::TypedMsgHdr &);
+    static void HandleStrandBusyResponse(const Ipc::StrandMessage &);
 
     /// handle queue push notifications from worker or disker
     static void HandleNotification(const Ipc::TypedMsgHdr &msg);
@@ -149,8 +150,11 @@ private:
 
     static const double Timeout; ///< timeout value in seconds
 
-    typedef std::list<Pointer> IpcIoFileList;
-    static IpcIoFileList WaitingForOpen; ///< pending open requests
+    typedef std::pair<const timeval, Pointer> WaitingIpcIoFile;
+    typedef std::multimap<timeval, Pointer, std::less<timeval>, PoolingAllocator<WaitingIpcIoFile> > WaitingIpcIoFiles;
+    /// waiting for open IpcIoFile objects, ordered by their absolute deadlines
+    static WaitingIpcIoFiles WaitingForOpen;
+    static void StartWaiting(const Pointer &);
 
     ///< maps diskerId to IpcIoFile, cleared in destructor
     typedef std::map<int, IpcIoFile*> IpcIoFilesMap;

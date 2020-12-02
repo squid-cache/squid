@@ -30,6 +30,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "tools.h"
+#include "util.h" // for tvSubDsec() which should be in SquidTime.h
 
 #include <cerrno>
 
@@ -44,7 +45,8 @@ static const char *const ShmLabel = "io_file";
 static const int QueueCapacity = 1024;
 
 const double IpcIoFile::Timeout = 7; // seconds;  XXX: ALL,9 may require more
-IpcIoFile::IpcIoFileList IpcIoFile::WaitingForOpen;
+IpcIoFile::WaitingIpcIoFiles IpcIoFile::WaitingForOpen;
+
 IpcIoFile::IpcIoFilesMap IpcIoFile::IpcIoFiles;
 std::unique_ptr<IpcIoFile::Queue> IpcIoFile::queue;
 
@@ -155,10 +157,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
     request.pack(msg);
     Ipc::SendMessage(Ipc::Port::CoordinatorAddr(), msg);
 
-    WaitingForOpen.push_back(this);
-
-    eventAdd("IpcIoFile::OpenTimeout", &IpcIoFile::OpenTimeout,
-             this, Timeout, 0, false); // "this" pointer is used as id
+    StartWaiting(this);
 }
 
 void
@@ -452,13 +451,11 @@ void
 IpcIoFile::HandleOpenResponse(const Ipc::StrandMessage &response)
 {
     debugs(47, 7, HERE << "coordinator response to open request");
-    for (IpcIoFileList::iterator i = WaitingForOpen.begin();
-            i != WaitingForOpen.end(); ++i) {
-        if (response.strand.tag == (*i)->dbName) {
-            (*i)->openCompleted(&response);
-            WaitingForOpen.erase(i);
-            return;
-        }
+    const auto it = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
+            [&response](const WaitingIpcIoFile &pair) { return pair.second->dbName == response.strand.tag; });
+    if (it != WaitingForOpen.end()) {
+        WaitingForOpen.erase(it);
+        return;
     }
 
     debugs(47, 4, HERE << "LATE disker response to open for " <<
@@ -466,14 +463,36 @@ IpcIoFile::HandleOpenResponse(const Ipc::StrandMessage &response)
     // nothing we can do about it; completeIo() has been called already
 }
 
+/// reschedules IpcIoFile open request timeout for the head of the waiting queue
+/// \param file an IpcIoFile to be queued
 void
-IpcIoFile::HandleStrandBusyResponse(const Ipc::TypedMsgHdr &msg)
+IpcIoFile::StartWaiting(const Pointer &file)
+{
+    if (file) {
+        auto expireTime = current_time;
+        expireTime.tv_sec += Timeout;
+        WaitingForOpen.emplace(expireTime, file);
+    }
+
+    assert(!WaitingForOpen.empty());
+    eventDelete(&IpcIoFile::OpenTimeout, nullptr); // deletes all OpenTimeout handlers
+    const auto interval = tvSubDsec(current_time, WaitingForOpen.begin()->first);
+    eventAdd("IpcIoFile::OpenTimeout", &IpcIoFile::OpenTimeout, nullptr, interval, 0, false);
+}
+
+void
+IpcIoFile::HandleStrandBusyResponse(const Ipc::StrandMessage &response)
 {
     assert(opt_foreground_rebuild);
-    debugs(47, 7, "disker" << msg.getInt() << " foreground rebuild is still in progress");
-    eventDelete(&IpcIoFile::OpenTimeout, nullptr);
-    for (const auto ioFile: WaitingForOpen)
-        eventAdd("IpcIoFile::OpenTimeout", &IpcIoFile::OpenTimeout, ioFile.getRaw(), Timeout, 0, false);
+    debugs(47, 7, "disker" << response.strand.kidId << " foreground rebuild is still in progress");
+    const auto it = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
+            [&response](const WaitingIpcIoFile &pair) { return pair.second->dbName == response.strand.tag; });
+    if (it != WaitingForOpen.end()) {
+        // reschedule open timeout
+        auto file = it->second;
+        WaitingForOpen.erase(it);
+        StartWaiting(file);
+    }
 }
 
 void
@@ -548,18 +567,13 @@ IpcIoFile::StatQueue(std::ostream &os)
 void
 IpcIoFile::OpenTimeout(void *const param)
 {
-    Must(param);
-    // the pointer is used for comparison only and not dereferenced
-    const IpcIoFile *const ipcIoFile =
-        reinterpret_cast<const IpcIoFile *>(param);
-    for (IpcIoFileList::iterator i = WaitingForOpen.begin();
-            i != WaitingForOpen.end(); ++i) {
-        if (*i == ipcIoFile) {
-            (*i)->openCompleted(NULL);
-            WaitingForOpen.erase(i);
-            break;
-        }
+    while (!WaitingForOpen.empty() && current_time >= WaitingForOpen.begin()->first) {
+        const auto file = WaitingForOpen.begin()->second;
+        file->openCompleted(nullptr);
+        WaitingForOpen.erase(WaitingForOpen.begin());
     }
+    if (!WaitingForOpen.empty())
+        StartWaiting(nullptr);
 }
 
 /// IpcIoFile::checkTimeouts wrapper

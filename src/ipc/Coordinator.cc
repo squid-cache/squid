@@ -156,9 +156,9 @@ Ipc::Coordinator::handleForegroundRebuildMessage(const StrandMessage& msg)
         if (searchRequest.tag != msg.strand.tag)
             continue;
 
-        Ipc::TypedMsgHdr message;
-        message.setType(Ipc::mtStrandBusy);
-        message.putInt(msg.strand.kidId);
+        Ipc::StrandMessage response(Ipc::mtStrandBusy, msg.strand);
+        TypedMsgHdr message;
+        response.pack(message);
         SendMessage(MakeAddr(strandAddrLabel, searchRequest.requestorId), message);
     }
 }
