@@ -342,20 +342,15 @@ bool PeerCertificatesVerify(Security::SessionPointer &s,  const Ssl::X509_STACK_
 ///  \ingroup ServerProtocolSSLAPI
 class SquidVerifyData {
 public:
-    enum VerifyFlags{
-        fMissingIssuer = 1 << 0, ///< An issuer certificate is missing, set by squid validation procedure
-        fIgnoreIssuer = 1 << 1 ///< Do not report missing issuer certificates as validation errors
-    };
+    /// An issuer certificate is missing. It is set by squid validation
+    /// procedure.
+    bool missingIssuer = false;
+
+    /// Do not report missing issuer certificates as validation errors.
+    bool ignoreIssuer = false;
 
     /// \returns The SquidVerifyData object attached to session
     static SquidVerifyData *SessionData(const Security::SessionPointer &session);
-
-    void set(uint64_t flgs) {flags_ |= flgs;}
-    void clear(uint64_t flgs) {flags_ &= ~flgs;}
-    bool isSet(uint64_t flg) {return (flags_ & flg) != 0;}
-private:
-    // TODO: maybe split to inFlags_ and outFlags_
-    uint64_t flags_ = 0x00; ///< VerifyFlags set for this object
 };
 
 } //namespace Ssl

@@ -146,7 +146,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 
     auto sessData = Ssl::SquidVerifyData::SessionData(serverSession);
     assert(sessData);
-    sessData->set(Ssl::SquidVerifyData::fIgnoreIssuer);
+    sessData->ignoreIssuer = true;
 #endif
 
     return true;
@@ -684,10 +684,11 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     }
 
     // We should have the full certificates chain now, so clear the
-    // fMissingIssuer flag to report any missing issuer certificates.
+    // Ssl::SquidVerifyData::missingIssuer flag to report any missing
+    // issuer certificates.
     auto verifyData = Ssl::SquidVerifyData::SessionData(session);
     assert(verifyData);
-    verifyData->clear(Ssl::SquidVerifyData::fMissingIssuer);
+    verifyData->missingIssuer = false;
 
     if (!Ssl::PeerCertificatesVerify(session, downloadedCerts)) {
         noteNegotiationError(SSL_ERROR_SSL, 0, 0);
@@ -703,9 +704,9 @@ Security::PeerConnector::checkForMissingCertificates()
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
 
-    auto verifyData = Ssl::SquidVerifyData::SessionData(session);
+    const auto verifyData = Ssl::SquidVerifyData::SessionData(session);
     assert(verifyData);
-    if (!verifyData->isSet(Ssl::SquidVerifyData::fMissingIssuer))
+    if (!verifyData->missingIssuer)
         return false;
 
     // Check for nested SSL certificates downloads. For example when the

@@ -311,14 +311,14 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
     }
 
-    const bool ignoreIssuer = (verifyData && verifyData->isSet(Ssl::SquidVerifyData::fIgnoreIssuer));
+    const bool ignoreIssuer = (verifyData && verifyData->ignoreIssuer);
     if (!ok && error_no == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY && ignoreIssuer) {
         if (X509 *currentCert = X509_STORE_CTX_get_current_cert(ctx)) {
             if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(currentCert)) {
                 /*Store somewhere the missing issuerUri?*/
                 debugs(83, 5, "There is issuerURI for missing issuer: " << issuerUri);
                 ok = 1;
-                verifyData->set(Ssl::SquidVerifyData::fMissingIssuer);
+                verifyData->missingIssuer = true;
             }
         }
     }
