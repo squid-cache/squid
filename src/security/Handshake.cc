@@ -664,49 +664,12 @@ Security::HandshakeParser::parseHello(const SBuf &data)
     return false; // unreached
 }
 
-#if PARSE_CERTIFICATES
-/// Creates and returns a certificate by parsing a DER-encoded X509 structure.
-/// Throws on failures.
-Security::CertPointer
-Security::HandshakeParser::ParseCertificate(const SBuf &raw)
-{
-    Security::CertPointer pCert;
-#if USE_OPENSSL
-    auto x509Start = reinterpret_cast<const unsigned char *>(raw.rawContent());
-    auto x509Pos = x509Start;
-    X509 *x509 = d2i_X509(nullptr, &x509Pos, raw.length());
-    pCert.resetWithoutLocking(x509);
-    Must(x509); // successfully parsed
-    Must(x509Pos == x509Start + raw.length()); // no leftovers
-#else
-    assert(false);  // this code should never be reached
-    pCert = Security::CertPointer(nullptr); // avoid warnings about uninitialized pCert; XXX: Fix CertPoint declaration.
-    (void)raw; // avoid warnings about unused method parameter; TODO: Add a SimulateUse() macro.
-#endif
-    assert(pCert);
-    return pCert;
-}
-#endif // PARSE_CERTIFICATES
-
 void
 Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
 {
-#if USE_OPENSSL
     Parser::BinaryTokenizer tkList(raw);
     const SBuf clist = tkList.pstring24("CertificateList");
     Must(tkList.atEnd()); // no leftovers after all certificates
-
-#if PARSE_CERTIFICATES
-    Parser::BinaryTokenizer tkItems(clist);
-    while (!tkItems.atEnd()) {
-        if (Security::CertPointer cert = ParseCertificate(tkItems.pstring24("Certificate")))
-            serverCertificates.push_back(cert);
-        debugs(83, 7, "parsed " << serverCertificates.size() << " certificates so far");
-    }
-#else
-    debugs(83, 7, "no support for CertificateList parsing; ignoring " << raw.length() << " bytes");
-#endif
-#endif // PARSE_CERTIFICATES
 }
 
 /// A helper function to create a set of all supported TLS extensions
