@@ -718,15 +718,17 @@ Security::PeerConnector::checkForMissingCertificates()
         return false;
 
     if (const STACK_OF(X509) *certs = SSL_get_peer_cert_chain(session.get())) {
-        debugs(83, 5, "SSL server sent " << sk_X509_num(certs) << " certificates");
+        debugs(83, 5, "Server sent " << sk_X509_num(certs) << " certificates");
         ContextPointer ctx(getTlsContext());
         Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx);
         if (urlsOfMissingCerts.size()) {
+            debugs(83, 5, "Missing at least " << urlsOfMissingCerts.size() << " certificate(s), start downloading");
             startCertDownloading(urlsOfMissingCerts.front());
             urlsOfMissingCerts.pop();
             return true;
         }
-    }
+    } else
+        debugs(83, 5, "No certificates retrieved from server");
 
     return false;
 }
