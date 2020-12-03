@@ -635,7 +635,7 @@ Ssl::Initialize(void)
     ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
     ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", NULL, NULL, &ssl_free_CertChain);
     ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
-    ssl_ex_index_squid_verify = SSL_get_ex_new_index(0, (void *) "squid_verify", NULL, NULL,  &ssl_free_squid_verify);
+    ssl_ex_index_squid_verify = SSL_get_ex_new_index(0, (void *) "squid_verify", nullptr, nullptr,  &ssl_free_squid_verify);
 }
 
 bool
@@ -1104,7 +1104,7 @@ static X509 *
 sk_x509_findIssuer(const STACK_OF(X509) *sk, X509 *cert)
 {
     if (!sk)
-        return NULL;
+        return nullptr;
 
     const int skItemsNum = sk_X509_num(sk);
     for (int i = 0; i < skItemsNum; ++i) {
@@ -1112,7 +1112,7 @@ sk_x509_findIssuer(const STACK_OF(X509) *sk, X509 *cert)
         if (X509_check_issued(issuer, cert) == X509_V_OK)
             return issuer;
     }
-    return NULL;
+    return nullptr;
 }
 
 /// \return true if the cert issuer exist in the certificates stored in connContext
@@ -1215,7 +1215,7 @@ squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
     // internal OpenSSL list directly. We have to give OpenSSL our own
     // list, but it must include certificates on the OpenSSL ctx->untrusted
     STACK_OF(X509) *oldUntrusted = X509_STORE_CTX_get0_untrusted(ctx);
-    Ssl::X509_STACK_Pointer untrustedCerts(X509_chain_up_ref(oldUntrusted)); // oldUntrusted is always not NULL
+    Ssl::X509_STACK_Pointer untrustedCerts(X509_chain_up_ref(oldUntrusted)); // oldUntrusted is always not nil
 
     if (extraCerts) {
         for (int i = 0; i < sk_X509_num(extraCerts); ++i) {
