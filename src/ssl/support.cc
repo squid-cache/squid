@@ -1215,11 +1215,12 @@ squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
     // internal OpenSSL list directly. We have to give OpenSSL our own
     // list, but it must include certificates on the OpenSSL ctx->untrusted
     STACK_OF(X509) *oldUntrusted = X509_STORE_CTX_get0_untrusted(ctx);
-    Ssl::X509_STACK_Pointer untrustedCerts(sk_X509_dup(oldUntrusted)); // oldUntrusted is always not NULL
+    Ssl::X509_STACK_Pointer untrustedCerts(X509_chain_up_ref(oldUntrusted)); // oldUntrusted is always not NULL
 
     if (extraCerts) {
         for (int i = 0; i < sk_X509_num(extraCerts); ++i) {
             X509 *cert = sk_X509_value(extraCerts, i);
+            X509_up_ref(cert);
             sk_X509_push(untrustedCerts.get(), cert);
         }
     }
