@@ -174,6 +174,7 @@ private:
         /// cleans up after the attempt ends (successfully or otherwise)
         void clear() { path = nullptr; opener.reset(); }
     };
+    friend std::ostream &operator <<(std::ostream &, const Attempt &);
 
     /* AsyncJob API */
     virtual void start() override;

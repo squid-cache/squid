@@ -203,8 +203,6 @@ public:
 
     Job *job() const { return job_.get(); }
 
-    InstanceId<AsyncCall>::Value callbackId() const { return callback_->id.value; }
-
     std::ostream &print(std::ostream &) const;
 
 private:
@@ -255,11 +253,13 @@ template<class Job>
 std::ostream &
 JobCallbackPointer<Job>::print(std::ostream &os) const
 {
-    os << callback_ << ", job: ";
-    if (job_.valid())
-        os << *job_;
+    // use a backarrow to emphasize that this is a callback: call24<-job6
+    if (callback_)
+        os << callback_->id << "<-";
+    if (const auto job = job_.get())
+        os << *job; // TODO: make AsyncJob::id public
     else
-        os << '-';
+        os << job_; // raw pointer of a gone job may still be useful for triage
     return os;
 }
 

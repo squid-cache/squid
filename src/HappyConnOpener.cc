@@ -18,6 +18,7 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 
 CBDATA_CLASS_INIT(HappyConnOpener);
@@ -410,33 +411,43 @@ HappyConnOpener::swanSong()
     AsyncJob::swanSong();
 }
 
+/// HappyConnOpener::Attempt printer for debugging
+std::ostream &
+operator <<(std::ostream &os, const HappyConnOpener::Attempt &attempt)
+{
+    if (!attempt.path)
+        os << '-';
+    else if (attempt.path->isOpen())
+        os << "FD " << attempt.path->fd;
+    else if (attempt.opener)
+        os << attempt.opener;
+    else
+        os << attempt.path->id; // closed path without an opener
+    return os;
+}
+
 const char *
 HappyConnOpener::status() const
 {
-    static MemBuf buf;
-    buf.reset();
+    // TODO: In a redesigned status() API, the caller may mimic this approach.
+    static SBuf buf;
+    buf.clear();
 
-    buf.append(" [", 2);
+    SBufStream os(buf);
+
+    os.write(" [", 2);
     if (stopReason)
-        buf.appendf("Stopped, reason:%s", stopReason);
-    if (prime) {
-        if (prime.path && prime.path->isOpen())
-            buf.appendf(" prime FD %d", prime.path->fd);
-        else if (prime.opener)
-            buf.appendf(" prime call%ud", prime.opener.callbackId());
-    }
-    if (spare) {
-        if (spare.path && spare.path->isOpen())
-            buf.appendf(" spare FD %d", spare.path->fd);
-        else if (spare.opener)
-            buf.appendf(" spare call%ud", spare.opener.callbackId());
-    }
+        os << "Stopped:" << stopReason;
+    if (prime)
+        os << "prime:" << prime;
+    if (spare)
+        os << "spare:" << spare;
     if (n_tries)
-        buf.appendf(" tries %d", n_tries);
-    buf.appendf(" %s%u]", id.prefix(), id.value);
-    buf.terminate();
+        os << " tries:" << n_tries;
+    os << ' ' << id << ']';
 
-    return buf.content();
+    buf = os.buf();
+    return buf.c_str();
 }
 
 /// Create "503 Service Unavailable" or "504 Gateway Timeout" error depending
