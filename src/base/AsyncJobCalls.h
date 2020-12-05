@@ -212,7 +212,7 @@ public:
     void cancel(const char *reason);
 
     /// may be nil, even if waiting()
-    Job *job() const { return job_.get(); }
+    auto job() const { return job_; }
 
     /// summarizes what we are waiting for (for debugging)
     std::ostream &print(std::ostream &) const;
