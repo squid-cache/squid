@@ -188,7 +188,7 @@ class JobCallbackPointer
 {
 public:
     JobCallbackPointer() = default;
-    ~JobCallbackPointer();
+    ~JobCallbackPointer() { cancel("waiting code quit"); }
 
     /// no copying of any kind: each waiting context needs a dedicated AsyncCall
     JobCallbackPointer(JobCallbackPointer &&) = delete;
@@ -205,7 +205,7 @@ public:
     /// ends wait (if any) after receiving the call back
     /// forgets the job which is likely to be gone by now
     /// does nothing if were are not waiting (TODO: assert that we are waiting)
-    void reset();
+    void reset() { clear(); }
 
     /// aborts wait (if any) before receiving the call back
     /// does nothing if were are not waiting
@@ -218,26 +218,14 @@ public:
     std::ostream &print(std::ostream &) const;
 
 private:
+    /// the common part of reset() and cancel()
+    void clear() { callback_ = nullptr; job_.clear(); }
+
     /// the job that we are waiting to call us back (or nil)
     typename Job::Pointer job_;
     /// the call we are waiting for the job_ to make (or nil)
     AsyncCall::Pointer callback_;
 };
-
-template<class Job>
-JobCallbackPointer<Job>::~JobCallbackPointer()
-{
-    if (callback_)
-        cancel("~JobCallbackPointer");
-}
-
-template<class Job>
-void
-JobCallbackPointer<Job>::reset()
-{
-    callback_ = nullptr;
-    job_.clear();
-}
 
 template<class Job>
 void
@@ -257,7 +245,7 @@ JobCallbackPointer<Job>::cancel(const char *reason)
     if (callback_) {
         callback_->cancel(reason);
         CallJobHere(callback_->debugSection, callback_->debugLevel, job_, AsyncJob, noteAbort);
-        reset();
+        clear();
     }
 }
 
