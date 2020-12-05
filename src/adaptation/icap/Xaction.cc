@@ -93,7 +93,6 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
     closer(NULL),
     alep(new AccessLogEntry),
     al(*alep),
-    connector(93),
     securer(nullptr)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
@@ -313,7 +312,7 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
         Ssl::IcapPeerConnector *sslConnector = new Ssl::IcapPeerConnector(theService, io.conn, callback, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
 
         if (!securer)
-            securer = new JobCallbackPointer<Ssl::IcapPeerConnector>(93);
+            securer = new JobCallbackPointer<Ssl::IcapPeerConnector>();
 
         securer->reset(callback, sslConnector);
         AsyncJob::Start(sslConnector); // will call our callback

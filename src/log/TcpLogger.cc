@@ -45,7 +45,6 @@ Log::TcpLogger::TcpLogger(size_t bufCap, bool dieOnErr, Ip::Address them):
     writeScheduled(false),
     conn(NULL),
     remote(them),
-    opener(MY_DEBUG_SECTION),
     connectFailures(0),
     drops(0)
 {

@@ -41,8 +41,8 @@ public:
 PeerPoolMgr::PeerPoolMgr(CachePeer *aPeer): AsyncJob("PeerPoolMgr"),
     peer(cbdataReference(aPeer)),
     request(),
-    opener(48),
-    securer(48),
+    opener(),
+    securer(),
     closer(),
     addrUsed(0)
 {

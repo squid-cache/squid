@@ -182,15 +182,14 @@ JobDialer<Job>::dial(AsyncCall &call)
     job->callEnd(); // may delete job
 }
 
+// TODO: This is not a pointer but a handler/owner.
 /// A job pointer and the AsyncCall passed to the job as a callback argument.
 /// A job caller may need this for callback cancelling and job notification.
 template <class Job>
 class JobCallbackPointer
 {
 public:
-    explicit JobCallbackPointer(int aDebugSection, int aDebugLevel = 5):
-        debugSection(aDebugSection), debugLevel(aDebugLevel) {}
-
+    JobCallbackPointer() = default;
     ~JobCallbackPointer();
 
     explicit operator bool() const { return bool(callback_); }
@@ -206,8 +205,6 @@ public:
     std::ostream &print(std::ostream &) const;
 
 private:
-    const int debugSection;
-    const int debugLevel;
     AsyncCall::Pointer callback_;
     typename Job::Pointer job_;
 };
@@ -244,7 +241,7 @@ JobCallbackPointer<Job>::cancel(const char *reason)
 {
     if (callback_) {
         callback_->cancel(reason);
-        CallJobHere(debugSection, debugLevel, job_, AsyncJob, noteAbort);
+        CallJobHere(callback_->debugSection, callback_->debugLevel, job_, AsyncJob, noteAbort);
         reset();
     }
 }

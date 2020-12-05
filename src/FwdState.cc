@@ -150,9 +150,6 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     clientConn(client),
     start_t(squid_curtime),
     n_tries(0),
-    connOpener(17),
-    securityConnector(17),
-    tunnelEstablisher(17),
     destinations(new ResolvedPeers()),
     pconnRace(raceImpossible)
 {

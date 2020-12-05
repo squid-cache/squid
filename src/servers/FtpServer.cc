@@ -60,7 +60,7 @@ Ftp::Server::Server(const MasterXaction::Pointer &xact):
     dataConn(),
     uploadAvailSize(0),
     listener(),
-    connector(33),
+    connector(),
     reader(),
     waitingForOrigin(false),
     originDataDownloadAbortedOnError(false)
