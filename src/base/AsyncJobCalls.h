@@ -192,6 +192,9 @@ public:
     JobCallbackPointer() = default;
     ~JobCallbackPointer();
 
+    // no copying of any kind: each callback context needs a dedicated AsyncCall
+    JobCallbackPointer(JobCallbackPointer &&) = delete;
+
     explicit operator bool() const { return bool(callback_); }
 
     void reset();
