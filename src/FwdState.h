@@ -9,24 +9,17 @@
 #ifndef SQUID_FORWARD_H
 #define SQUID_FORWARD_H
 
-#include "base/CbcPointer.h"
 #include "base/forward.h"
 #include "base/RefCount.h"
 #include "clients/forward.h"
-#include "clients/HttpTunneler.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "comm/ConnOpener.h"
 #include "err_type.h"
 #include "fde.h"
-#include "HappyConnOpener.h"
-#include "HttpRequest.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
 #include "PeerSelectState.h"
 #include "ResolvedPeers.h"
-#include "security/BlindPeerConnector.h"
-#include "ssl/PeekingPeerConnector.h"
 #include "security/forward.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
@@ -42,7 +35,7 @@ class PconnPool;
 class ResolvedPeers;
 typedef RefCount<ResolvedPeers> ResolvedPeersPointer;
 
-typedef CbcPointer<HappyConnOpener> HappyConnOpenerPointer;
+class HappyConnOpener;
 class HappyConnOpenerAnswer;
 
 #if USE_OPENSSL

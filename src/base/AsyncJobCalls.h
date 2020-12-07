@@ -187,6 +187,8 @@ template <class Job>
 class JobCallbackPointer
 {
 public:
+    typedef CbcPointer<Job> JobPointer;
+
     JobCallbackPointer() = default;
     ~JobCallbackPointer() { cancel("waiting code quit"); }
 
@@ -200,7 +202,7 @@ public:
     bool waiting() const { return bool(callback_); }
 
     /// starts waiting for the given job to call the given callback
-    void reset(const AsyncCall::Pointer, const typename Job::Pointer);
+    void reset(const AsyncCall::Pointer, const JobPointer);
 
     /// ends wait (if any) after receiving the call back
     /// forgets the job which is likely to be gone by now
@@ -222,14 +224,14 @@ private:
     void clear() { callback_ = nullptr; job_.clear(); }
 
     /// the job that we are waiting to call us back (or nil)
-    typename Job::Pointer job_;
+    JobPointer job_;
     /// the call we are waiting for the job_ to make (or nil)
     AsyncCall::Pointer callback_;
 };
 
 template<class Job>
 void
-JobCallbackPointer<Job>::reset(const AsyncCall::Pointer aCall, const typename Job::Pointer aJob)
+JobCallbackPointer<Job>::reset(const AsyncCall::Pointer aCall, const JobPointer aJob)
 {
     assert(aCall);
     assert(aJob.valid());
@@ -244,6 +246,11 @@ JobCallbackPointer<Job>::cancel(const char *reason)
 {
     if (callback_) {
         callback_->cancel(reason);
+        // Instead of AsyncJob, the class parameter could be Job. That would
+        // avoid runtime child-to-parent CbcPointer conversion overheads, but
+        // complicate support for Jobs with virtual AsyncJob bases (GCC error:
+        // "pointer to member conversion via virtual base AsyncJob") and also
+        // cache-log "Job::noteAbort()" which uses a non-existent class name.
         CallJobHere(callback_->debugSection, callback_->debugLevel, job_, AsyncJob, noteAbort);
         clear();
     }

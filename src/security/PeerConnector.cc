@@ -12,6 +12,7 @@
 #include "acl/FilledChecklist.h"
 #include "comm/Loops.h"
 #include "comm/Read.h"
+#include "Downloader.h"
 #include "errorpage.h"
 #include "fde.h"
 #include "FwdState.h"
@@ -54,6 +55,8 @@ Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerCon
     closeHandler = JobCallback(9, 5, Dialer, this, Security::PeerConnector::commCloseHandler);
     comm_add_close_handler(serverConn->fd, closeHandler);
 }
+
+Security::PeerConnector::~PeerConnector() = default;
 
 bool Security::PeerConnector::doneAll() const
 {

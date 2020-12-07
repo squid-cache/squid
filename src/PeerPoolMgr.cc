@@ -12,6 +12,7 @@
 #include "base/RunnersRegistry.h"
 #include "CachePeer.h"
 #include "comm/Connection.h"
+#include "comm/ConnOpener.h"
 #include "Debug.h"
 #include "fd.h"
 #include "FwdState.h"
@@ -21,6 +22,7 @@
 #include "neighbors.h"
 #include "pconn.h"
 #include "PeerPoolMgr.h"
+#include "security/BlindPeerConnector.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
 

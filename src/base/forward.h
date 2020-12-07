@@ -17,6 +17,7 @@ class ScopedId;
 
 template<class Cbc> class CbcPointer;
 template<class RefCountableKid> class RefCount;
+template<class Job> class JobCallbackPointer;
 
 typedef CbcPointer<AsyncJob> AsyncJobPointer;
 typedef RefCount<CodeContext> CodeContextPointer;

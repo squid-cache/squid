@@ -10,10 +10,9 @@
 #define SQUID_PEERPOOLMGR_H
 
 #include "base/AsyncJob.h"
-#include "base/AsyncJobCalls.h"
-#include "comm/ConnOpener.h"
+#include "base/forward.h"
 #include "comm/forward.h"
-#include "security/BlindPeerConnector.h"
+#include "security/forward.h"
 
 class HttpRequest;
 class CachePeer;

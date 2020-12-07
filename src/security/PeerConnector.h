@@ -12,9 +12,8 @@
 #include "acl/Acl.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
-#include "base/AsyncJobCalls.h"
+#include "base/forward.h"
 #include "CommCalls.h"
-#include "Downloader.h"
 #include "http/forward.h"
 #include "security/EncryptorAnswer.h"
 #include "security/forward.h"
@@ -26,6 +25,7 @@
 #include <queue>
 
 class ErrorState;
+class Downloader;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
@@ -61,7 +61,7 @@ public:
                   AsyncCall::Pointer &aCallback,
                   const AccessLogEntryPointer &alp,
                   const time_t timeout = 0);
-    virtual ~PeerConnector() = default;
+    virtual ~PeerConnector();
 
     /// hack: whether the connection requires fwdPconnPool->noteUses()
     bool noteFwdPconnUse;

@@ -12,6 +12,7 @@
 #include "AccessLogEntry.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
+#include "base/forward.h"
 #include "comm/ConnOpener.h"
 #include "HttpReply.h"
 #include "ipcache.h"
@@ -22,8 +23,6 @@ class MemBuf;
 namespace Ssl {
   class IcapPeerConnector;
 }
-
-template<class Job> class JobCallbackPointer;
 
 namespace Adaptation
 {

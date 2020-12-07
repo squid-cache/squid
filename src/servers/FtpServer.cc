@@ -16,6 +16,7 @@
 #include "client_side_reply.h"
 #include "client_side_request.h"
 #include "clientStream.h"
+#include "comm/ConnOpener.h"
 #include "comm/Read.h"
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"

@@ -9,6 +9,7 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "comm/Connection.h"
+#include "Downloader.h"
 #include "HttpRequest.h"
 
 #define STUB_API "security/libsecurity.la"
@@ -50,6 +51,7 @@ namespace Security
 {
 PeerConnector::PeerConnector(const Comm::ConnectionPointer &, AsyncCall::Pointer &, const AccessLogEntryPointer &, const time_t) :
     AsyncJob("Security::PeerConnector") {STUB}
+PeerConnector::~PeerConnector() = default;
 void PeerConnector::start() STUB
 bool PeerConnector::doneAll() const STUB_RETVAL(true)
 void PeerConnector::swanSong() STUB
