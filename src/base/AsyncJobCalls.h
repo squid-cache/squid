@@ -213,8 +213,9 @@ public:
     /// does nothing if were are not waiting
     void cancel(const char *reason);
 
-    /// may be nil, even if waiting()
-    auto job() const { return job_; }
+    /// \returns a cbdata pointer to the job we are waiting for (or nil)
+    /// the returned CbcPointer may be falsy, even if we are still waiting()
+    const auto &job() const { return job_; }
 
     /// summarizes what we are waiting for (for debugging)
     std::ostream &print(std::ostream &) const;
