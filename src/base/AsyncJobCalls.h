@@ -206,11 +206,11 @@ public:
 
     /// ends wait (if any) after receiving the call back
     /// forgets the job which is likely to be gone by now
-    /// does nothing if were are not waiting (TODO: assert that we are waiting)
+    /// does nothing if we are not waiting (TODO: assert that we are waiting)
     void finish() { clear(); }
 
     /// aborts wait (if any) before receiving the call back
-    /// does nothing if were are not waiting
+    /// does nothing if we are not waiting
     void cancel(const char *reason);
 
     /// \returns a cbdata pointer to the job we are waiting for (or nil)
