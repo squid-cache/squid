@@ -183,11 +183,6 @@ private:
     time_t start_t;
     int n_tries; ///< the number of forwarding attempts so far
 
-    // AsyncCalls which we set and may need cancelling.
-    struct {
-        AsyncCall::Pointer connector;  ///< a call linking us to the ConnOpener producing serverConn.
-    } calls;
-
     struct {
         bool connected_okay; ///< TCP link ever opened properly. This affects retry of POST,PUT,CONNECT,etc
         bool dont_retry;
