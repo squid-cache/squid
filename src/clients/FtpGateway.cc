@@ -487,7 +487,7 @@ Ftp::Gateway::timeout(const CommTimeoutCbParams &io)
         debugs(9, DBG_IMPORTANT, "FTP Gateway timeout in SENT_PASV state");
 
         // cancel the data connection setup, if any
-        dataOpener.cancel("timeout");
+        dataConnWait.cancel("timeout");
 
         data.close();
     }
@@ -1720,8 +1720,8 @@ void
 Ftp::Gateway::dataChannelConnected(const CommConnectCbParams &io)
 {
     debugs(9, 3, HERE);
-    assert(dataOpener);
-    dataOpener.reset();
+    assert(dataConnWait);
+    dataConnWait.finish();
 
     if (io.flag != Comm::OK) {
         debugs(9, 2, HERE << "Failed to connect. Retrying via another method.");

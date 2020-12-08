@@ -64,8 +64,13 @@ protected:
 private:
     CachePeer *peer; ///< the owner of the pool we manage
     RefCount<HttpRequest> request; ///< fake HTTP request for conn opening code
-    JobCallbackPointer<Comm::ConnOpener> opener; ///< whether we are opening a connection
-    JobCallbackPointer<Security::BlindPeerConnector> securer; ///< whether we are securing a connection
+
+    /// establishes a transport connection
+    JobWait<Comm::ConnOpener> connWait;
+
+    /// encrypts an established transport connection
+    JobWait<Security::BlindPeerConnector> encryptionWait;
+
     AsyncCall::Pointer closer; ///< monitors conn while we are securing it
     unsigned int addrUsed; ///< counter for cycling through peer addresses
 };

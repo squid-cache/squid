@@ -185,7 +185,8 @@ protected:
     virtual void sentRequestBody(const CommIoCbParams &io);
     virtual void doneSendingRequestBody();
 
-    JobCallbackPointer<Comm::ConnOpener> dataOpener; // the data connection opener job
+    /// establishes an FTP data connection
+    JobWait<Comm::ConnOpener> dataConnWait;
 
 private:
     bool parseControlReply(size_t &bytesUsed);

@@ -190,7 +190,7 @@ private:
     /// The list of URLs where missing certificates should be downloaded.
     std::queue<SBuf> urlsOfMissingCerts;
     unsigned int certsDownloads; ///< the number of downloaded missing certificates
-    JobCallbackPointer<Downloader> downloader; ///< cert downloader job
+    JobWait<Downloader> certDownloadWait; ///< downloads a missing certificate
 };
 
 } // namespace Security

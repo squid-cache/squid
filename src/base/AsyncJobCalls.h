@@ -182,18 +182,18 @@ JobDialer<Job>::dial(AsyncCall &call)
     job->callEnd(); // may delete job
 }
 
-/// helps manage responsibilities of waiting for an AsyncJob callback
+/// manages waiting for an AsyncJob callback
 template <class Job>
-class JobCallbackPointer
+class JobWait
 {
 public:
     typedef CbcPointer<Job> JobPointer;
 
-    JobCallbackPointer() = default;
-    ~JobCallbackPointer() { cancel("waiting code quit"); }
+    JobWait() = default;
+    ~JobWait() { cancel("owner gone"); }
 
     /// no copying of any kind: each waiting context needs a dedicated AsyncCall
-    JobCallbackPointer(JobCallbackPointer &&) = delete;
+    JobWait(JobWait &&) = delete;
 
     explicit operator bool() const { return waiting(); }
 
@@ -202,12 +202,12 @@ public:
     bool waiting() const { return bool(callback_); }
 
     /// starts waiting for the given job to call the given callback
-    void reset(const AsyncCall::Pointer, const JobPointer);
+    void start(JobPointer, AsyncCall::Pointer);
 
     /// ends wait (if any) after receiving the call back
     /// forgets the job which is likely to be gone by now
     /// does nothing if were are not waiting (TODO: assert that we are waiting)
-    void reset() { clear(); }
+    void finish() { clear(); }
 
     /// aborts wait (if any) before receiving the call back
     /// does nothing if were are not waiting
@@ -221,21 +221,26 @@ public:
     std::ostream &print(std::ostream &) const;
 
 private:
-    /// the common part of reset() and cancel()
+    /// the common part of finish() and cancel()
     void clear() { callback_ = nullptr; job_.clear(); }
 
     /// the job that we are waiting to call us back (or nil)
     JobPointer job_;
+
     /// the call we are waiting for the job_ to make (or nil)
     AsyncCall::Pointer callback_;
 };
 
 template<class Job>
 void
-JobCallbackPointer<Job>::reset(const AsyncCall::Pointer aCall, const JobPointer aJob)
+JobWait<Job>::start(const JobPointer aJob, const AsyncCall::Pointer aCall)
 {
+    // Invariant: The wait will be over. We cannot guarantee that the job will
+    // call the callback, of course, but we can check these prerequisites.
     assert(aCall);
     assert(aJob.valid());
+
+    // TODO: Should we also assert !callback_ and !job_?
 
     callback_ = aCall;
     job_ = aJob;
@@ -243,7 +248,7 @@ JobCallbackPointer<Job>::reset(const AsyncCall::Pointer aCall, const JobPointer 
 
 template<class Job>
 void
-JobCallbackPointer<Job>::cancel(const char *reason)
+JobWait<Job>::cancel(const char *reason)
 {
     if (callback_) {
         callback_->cancel(reason);
@@ -259,7 +264,7 @@ JobCallbackPointer<Job>::cancel(const char *reason)
 
 template<class Job>
 std::ostream &
-JobCallbackPointer<Job>::print(std::ostream &os) const
+JobWait<Job>::print(std::ostream &os) const
 {
     // use a backarrow to emphasize that this is a callback: call24<-job6
     if (callback_)
@@ -273,7 +278,7 @@ JobCallbackPointer<Job>::print(std::ostream &os) const
 
 template <class Job>
 inline
-std::ostream &operator <<(std::ostream &os, const JobCallbackPointer<Job> &cbPointer)
+std::ostream &operator <<(std::ostream &os, const JobWait<Job> &cbPointer)
 {
     return cbPointer.print(os);
 }

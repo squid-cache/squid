@@ -188,9 +188,15 @@ public:
     // TODO: remove after fixing deferred reads in TunnelStateData::copyRead()
     CodeContext::Pointer codeContext; ///< our creator context
 
-    JobCallbackPointer<HappyConnOpener> connOpener; ///< current connection opening job
-    JobCallbackPointer<Security::BlindPeerConnector> securityConnector; ///< TCP connection encryption to peer job
-    JobCallbackPointer<Http::Tunneler> tunnelEstablisher; ///< HTTP CONNECT tunneler job
+    /// establishes a transport connection
+    JobWait<HappyConnOpener> tcpConnWait;
+
+    /// encrypts an established transport connection
+    JobWait<Security::BlindPeerConnector> encryptionWait;
+
+    /// establishes an HTTP CONNECT tunnel through a cache_peer
+    /// over an (encrypted, if needed), transport connection to that cache_peer
+    JobWait<Http::Tunneler> httpConnectWait;
 
     void copyRead(Connection &from, IOCB *completion);
 
@@ -898,7 +904,7 @@ TunnelStateData::copyServerBytes()
 static void
 tunnelStartShoveling(TunnelStateData *tunnelState)
 {
-    assert(!tunnelState->tunnelEstablisher);
+    assert(!tunnelState->httpConnectWait);
     assert(tunnelState->server.conn);
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
                                      CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
@@ -956,7 +962,7 @@ tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *, size_t len
 void
 TunnelStateData::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
-    tunnelEstablisher.reset();
+    httpConnectWait.finish();
     server.len = 0;
 
     if (logTag_ptr)
@@ -1035,7 +1041,7 @@ tunnelErrorComplete(int fd/*const Comm::ConnectionPointer &*/, void *data, size_
 void
 TunnelStateData::noteConnection(HappyConnOpener::Answer &answer)
 {
-    connOpener.reset();
+    tcpConnWait.finish();
 
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
@@ -1156,11 +1162,11 @@ TunnelStateData::connectToPeer(Comm::ConnectionPointer &conn)
 void
 TunnelStateData::secureConnectionToPeer(Comm::ConnectionPointer &conn)
 {
-    assert(!securityConnector);
+    assert(!encryptionWait);
     AsyncCall::Pointer callback = asyncCall(5,4, "TunnelStateData::noteSecurityPeerConnectorAnswer",
                                             MyAnswerDialer(&TunnelStateData::noteSecurityPeerConnectorAnswer, this));
     const auto connector = new Security::BlindPeerConnector(request, conn, callback, al);
-    securityConnector.reset(callback, connector);
+    encryptionWait.start(connector, callback);
     AsyncJob::Start(connector); // will call our callback
     conn = nullptr;
 }
@@ -1192,16 +1198,16 @@ TunnelStateData::advanceDestination(const char *stepDescription, Comm::Connectio
 void
 TunnelStateData::cancelStep(const char *reason)
 {
-    connOpener.cancel(reason);
-    securityConnector.cancel(reason);
-    tunnelEstablisher.cancel(reason);
+    tcpConnWait.cancel(reason);
+    encryptionWait.cancel(reason);
+    httpConnectWait.cancel(reason);
 }
 
 /// callback handler for the connection encryptor
 void
 TunnelStateData::noteSecurityPeerConnectorAnswer(Security::EncryptorAnswer &answer)
 {
-    securityConnector.reset();
+    encryptionWait.finish();
 
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
@@ -1232,7 +1238,7 @@ TunnelStateData::connectedToPeer(Comm::ConnectionPointer &conn)
 void
 TunnelStateData::establishTunnelThruProxy(Comm::ConnectionPointer &conn)
 {
-    assert(!tunnelEstablisher);
+    assert(!httpConnectWait);
 
     AsyncCall::Pointer callback = asyncCall(5,4,
                                             "TunnelStateData::tunnelEstablishmentDone",
@@ -1241,7 +1247,7 @@ TunnelStateData::establishTunnelThruProxy(Comm::ConnectionPointer &conn)
 #if USE_DELAY_POOLS
     tunneler->setDelayId(server.delayId);
 #endif
-    tunnelEstablisher.reset(callback, tunneler);
+    httpConnectWait.start(tunneler, callback);
     AsyncJob::Start(tunneler);
     conn = nullptr;
     // and wait for the tunnelEstablishmentDone() call
@@ -1265,11 +1271,11 @@ TunnelStateData::noteDestination(Comm::ConnectionPointer path)
     if (usingDestination()) {
         // We are already using a previously opened connection but also
         // receiving destinations in case we need to re-forward.
-        Must(!connOpener);
+        Must(!tcpConnWait);
         return;
     }
 
-    if (connOpener) {
+    if (tcpConnWait) {
         notifyConnOpener();
         return; // and continue to wait for tunnelConnectDone() callback
     }
@@ -1302,18 +1308,18 @@ TunnelStateData::noteDestinationsEnd(ErrorState *selectionError)
     if (usingDestination()) {
         // We are already using a previously opened connection but also
         // receiving destinations in case we need to re-forward.
-        Must(!connOpener);
+        Must(!tcpConnWait);
         return;
     }
 
-    Must(connOpener); // or we would be stuck with nothing to do or wait for
+    Must(tcpConnWait); // or we would be stuck with nothing to do or wait for
     notifyConnOpener();
 }
 
 bool
 TunnelStateData::usingDestination() const
 {
-    return securityConnector || tunnelEstablisher || Comm::IsConnOpen(server.conn);
+    return encryptionWait || httpConnectWait || Comm::IsConnOpen(server.conn);
 }
 
 /// remembers an error to be used if there will be no more connection attempts
@@ -1361,7 +1367,7 @@ TunnelStateData::startConnecting()
         request->hier.startPeerClock();
 
     assert(!destinations->empty());
-    assert(!connOpener);
+    assert(!tcpConnWait);
     assert(!usingDestination());
     AsyncCall::Pointer callback = asyncCall(17, 5, "TunnelStateData::noteConnection", HappyConnOpener::CbDialer<TunnelStateData>(&TunnelStateData::noteConnection, this));
     const auto cs = new HappyConnOpener(destinations, callback, request, startTime, 0, al);
@@ -1369,7 +1375,7 @@ TunnelStateData::startConnecting()
     cs->setRetriable(false);
     cs->allowPersistent(false);
     destinations->notificationPending = true; // start() is async
-    connOpener.reset(callback, cs);
+    tcpConnWait.start(cs, callback);
     AsyncJob::Start(cs);
 }
 
@@ -1419,7 +1425,7 @@ TunnelStateData::Connection::setDelayId(DelayId const &newDelay)
 
 #endif
 
-/// makes sure connOpener knows that destinations have changed
+/// makes sure connection opener knows that the destinations have changed
 void
 TunnelStateData::notifyConnOpener()
 {
@@ -1427,7 +1433,7 @@ TunnelStateData::notifyConnOpener()
         debugs(17, 7, "reusing pending notification");
     } else {
         destinations->notificationPending = true;
-        CallJobHere(17, 5, connOpener.job(), HappyConnOpener, noteCandidatesChange);
+        CallJobHere(17, 5, tcpConnWait.job(), HappyConnOpener, noteCandidatesChange);
     }
 }
 

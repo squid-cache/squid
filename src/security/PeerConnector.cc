@@ -667,16 +667,16 @@ Security::PeerConnector::startCertDownloading(SBuf &url)
 
     const Downloader *csd = (request ? dynamic_cast<const Downloader*>(request->downloader.valid()) : nullptr);
     Downloader *dl = new Downloader(url, certCallback, XactionInitiator::initCertFetcher, csd ? csd->nestedLevel() + 1 : 1);
-    assert(!downloader);
-    downloader.reset(certCallback, dl);
+    assert(!certDownloadWait);
+    certDownloadWait.start(dl, certCallback);
     AsyncJob::Start(dl);
 }
 
 void
 Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 {
-    assert(downloader);
-    downloader.reset();
+    assert(certDownloadWait);
+    certDownloadWait.finish();
 
     ++certsDownloads;
     debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());

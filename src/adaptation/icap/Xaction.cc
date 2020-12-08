@@ -93,7 +93,7 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
     closer(NULL),
     alep(new AccessLogEntry),
     al(*alep),
-    securer(nullptr)
+    encryptionWait(nullptr)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
@@ -109,7 +109,7 @@ Adaptation::Icap::Xaction::~Xaction()
 {
     debugs(93,3, typeName << " destructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
-    delete securer;
+    delete encryptionWait;
     HTTPMSGUNLOCK(icapRequest);
 }
 
@@ -168,9 +168,10 @@ Adaptation::Icap::Xaction::openConnection()
     connection = s.getConnection(isRetriable, wasReused);
 
     if (wasReused && Comm::IsConnOpen(connection)) {
-        // Set comm Close handler
-        // fake the connect callback
-        // TODO: can we sync call Adaptation::Icap::Xaction::noteCommConnected here instead?
+        // TODO: We are called from an async start(). Instead of faking
+        // noteCommConnected(), split that method and sync-call its second half
+        // here. See code like FwdState::successfullyConnectedToPeer() and
+        // TunnelStateData::connectedToPeer() for examples.
         typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> Dialer;
         CbcPointer<Xaction> self(this);
         Dialer dialer(self, &Adaptation::Icap::Xaction::noteCommConnected);
@@ -178,7 +179,7 @@ Adaptation::Icap::Xaction::openConnection()
         dialer.params.flag = Comm::OK;
         // fake other parameters by copying from the existing connection
         AsyncCall::Pointer callback = asyncCall(93, 3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
-        connector.reset(callback, nullptr);
+        connWait.start(nullptr, callback); // XXX: JobWait::start(nullptr) asserts!
         ScheduleCallHere(callback);
         return;
     }
@@ -211,7 +212,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
         dialer.params.flag = Comm::COMM_ERROR;
         // fake other parameters by copying from the existing connection
         AsyncCall::Pointer callback = asyncCall(93, 3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
-        connector.reset(callback, nullptr);
+        connWait.start(nullptr, callback); // XXX: JobWait::start(nullptr) asserts!
         ScheduleCallHere(callback);
 #endif
         return;
@@ -227,7 +228,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     AsyncCall::Pointer callback = JobCallback(93, 3, ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
     auto *cs = new Comm::ConnOpener(connection, callback, TheConfig.connect_timeout(service().cfg().bypass));
     cs->setHost(s.cfg().host.termedBuf());
-    connector.reset(callback, cs);
+    connWait.start(cs, callback);
     AsyncJob::Start(cs);
 }
 
@@ -280,8 +281,8 @@ void Adaptation::Icap::Xaction::closeConnection()
 // connection with the ICAP service established
 void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 {
-    assert(connector);
-    connector.reset();
+    assert(connWait);
+    connWait.finish();
 
     if (io.flag == Comm::TIMEOUT) {
         handleCommTimedout();
@@ -311,10 +312,11 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 
         Ssl::IcapPeerConnector *sslConnector = new Ssl::IcapPeerConnector(theService, io.conn, callback, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
 
-        if (!securer)
-            securer = new JobCallbackPointer<Ssl::IcapPeerConnector>();
+        // TODO: Replace this JobWait pointer with a JobWait?!
+        if (!encryptionWait)
+            encryptionWait = new JobWait<Ssl::IcapPeerConnector>();
 
-        securer->reset(callback, sslConnector);
+        encryptionWait->start(sslConnector, callback);
         AsyncJob::Start(sslConnector); // will call our callback
         return;
     }
@@ -376,12 +378,12 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
            theService->cfg().methodStr() << " " <<
            theService->cfg().uri << status());
     reuseConnection = false;
-    if (connector) {
+    if (connWait) {
         assert(!haveConnection());
         theService->noteConnectionFailed("timedout");
     } else
         closeConnection(); // so that late Comm callbacks do not disturb bypass
-    throw TexcHere(connector ?
+    throw TexcHere(connWait ?
                    "timed out while connecting to the ICAP service" :
                    "timed out while talking to the ICAP service");
 }
@@ -389,8 +391,8 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
 // unexpected connection close while talking to the ICAP service
 void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
 {
-    if (securer)
-        securer->cancel("Connection closed before SSL negotiation finished");
+    if (encryptionWait)
+        encryptionWait->cancel("Connection closed before SSL negotiation finished");
     closer = NULL;
     handleCommClosed();
 }
@@ -419,7 +421,7 @@ void Adaptation::Icap::Xaction::callEnd()
 
 bool Adaptation::Icap::Xaction::doneAll() const
 {
-    return !connector && !securerPending() && !reader && !writer && Adaptation::Initiate::doneAll();
+    return !connWait && !securerPending() && !reader && !writer && Adaptation::Initiate::doneAll();
 }
 
 void Adaptation::Icap::Xaction::updateTimeout()
@@ -562,7 +564,7 @@ bool Adaptation::Icap::Xaction::doneWriting() const
 bool Adaptation::Icap::Xaction::doneWithIo() const
 {
     return haveConnection() &&
-           !connector && !reader && !writer && // fast checks, some redundant
+           !connWait && !reader && !writer && // fast checks, some redundant
            doneReading() && doneWriting();
 }
 
@@ -601,8 +603,8 @@ void Adaptation::Icap::Xaction::setOutcome(const Adaptation::Icap::XactOutcome &
 void Adaptation::Icap::Xaction::swanSong()
 {
     // kids should sing first and then call the parent method.
-    if (connector) {
-        connector.cancel("Icap::Xaction::swanSong");
+    if (connWait) {
+        connWait.cancel("Icap::Xaction::swanSong");
         service().noteConnectionFailed("abort");
     }
 
@@ -739,7 +741,7 @@ void
 Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
     Must(securerPending());
-    securer->reset();
+    encryptionWait->finish();
 
     if (closer != NULL) {
         if (Comm::IsConnOpen(answer.conn))
@@ -769,5 +771,5 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
 bool
 Adaptation::Icap::Xaction::securerPending() const
 {
-    return securer && *securer;
+    return encryptionWait && *encryptionWait;
 }

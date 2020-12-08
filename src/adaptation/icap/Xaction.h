@@ -159,8 +159,11 @@ protected:
 private:
     bool securerPending() const;
 
-    JobCallbackPointer<Comm::ConnOpener> connector; ///< the connection opener job (to the ICAP server)
-    JobCallbackPointer<Ssl::IcapPeerConnector> *securer; ///< the connection securing job
+    /// establishes a transport connection to the ICAP server
+    JobWait<Comm::ConnOpener> connWait;
+
+    /// encrypts an established transport connection
+    JobWait<Ssl::IcapPeerConnector> *encryptionWait;
 };
 
 } // namespace Icap

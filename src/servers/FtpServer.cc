@@ -61,7 +61,7 @@ Ftp::Server::Server(const MasterXaction::Pointer &xact):
     dataConn(),
     uploadAvailSize(0),
     listener(),
-    connector(),
+    dataConnWait(),
     reader(),
     waitingForOrigin(false),
     originDataDownloadAbortedOnError(false)
@@ -1681,7 +1681,7 @@ Ftp::Server::checkDataConnPre()
     AsyncCall::Pointer callback = JobCallback(17, 3, Dialer, this, Ftp::Server::connectedForData);
     Comm::ConnOpener *cs = new Comm::ConnOpener(dataConn, callback,
             Config.Timeout.connect);
-    connector.reset(callback, cs);
+    dataConnWait.start(cs, callback);
     AsyncJob::Start(cs);
     return false; // ConnStateData::processFtpRequest waits handleConnectDone
 }
@@ -1701,8 +1701,8 @@ Ftp::Server::checkDataConnPost() const
 void
 Ftp::Server::connectedForData(const CommConnectCbParams &params)
 {
-    assert(connector);
-    connector.reset();
+    assert(dataConnWait);
+    dataConnWait.finish();
 
     if (params.flag != Comm::OK) {
         /* it might have been a timeout with a partially open link */

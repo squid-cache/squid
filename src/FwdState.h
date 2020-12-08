@@ -195,9 +195,16 @@ private:
         bool destinationsFound; ///< at least one candidate path found
     } flags;
 
-    JobCallbackPointer<HappyConnOpener> connOpener; ///< current connection opening job
-    JobCallbackPointer<Security::PeerConnector> securityConnector; ///< TCP connection encryption to peer job
-    JobCallbackPointer<Http::Tunneler> tunnelEstablisher; ///< HTTP CONNECT tunneler job
+    /// establishes a transport connection
+    JobWait<HappyConnOpener> tcpConnWait;
+
+    /// encrypts an established transport connection
+    JobWait<Security::PeerConnector> encryptionWait;
+
+    /// establishes an HTTP CONNECT tunnel through a cache_peer
+    /// over an (encrypted, if needed), transport connection to that cache_peer
+    JobWait<Http::Tunneler> httpConnectWait;
+
     ResolvedPeersPointer destinations; ///< paths for forwarding the request
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
     PeerConnectionPointer destinationReceipt; ///< peer selection result (or nil)

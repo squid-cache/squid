@@ -321,9 +321,9 @@ FwdState::~FwdState()
 void
 FwdState::cancelStep(const char *reason)
 {
-    connOpener.cancel(reason);
-    securityConnector.cancel(reason);
-    tunnelEstablisher.cancel(reason);
+    tcpConnWait.cancel(reason);
+    encryptionWait.cancel(reason);
+    httpConnectWait.cancel(reason);
 }
 
 /**
@@ -571,7 +571,7 @@ FwdState::complete()
 bool
 FwdState::usingDestination() const
 {
-    return securityConnector || tunnelEstablisher || Comm::IsConnOpen(serverConn);
+    return encryptionWait || httpConnectWait || Comm::IsConnOpen(serverConn);
 }
 
 void
@@ -593,17 +593,17 @@ FwdState::noteDestination(Comm::ConnectionPointer path)
 
     if (usingDestination()) {
         // We are already using a previously opened connection, so we cannot be
-        // waiting for connOpener. We still receive destinations for backup.
-        Must(!connOpener);
+        // waiting for it. We still receive destinations for backup.
+        Must(!tcpConnWait);
         return;
     }
 
-    if (connOpener) {
+    if (tcpConnWait) {
         notifyConnOpener();
         return; // and continue to wait for FwdState::noteConnection() callback
     }
 
-    // This is the first path candidate we have seen. Create connOpener.
+    // This is the first path candidate we have seen. Use it.
     useDestinations();
 }
 
@@ -633,17 +633,17 @@ FwdState::noteDestinationsEnd(ErrorState *selectionError)
 
     if (usingDestination()) {
         // We are already using a previously opened connection, so we cannot be
-        // waiting for connOpener. We were receiving destinations for backup.
-        Must(!connOpener);
+        // waiting for it. We were receiving destinations for backup.
+        Must(!tcpConnWait);
         return;
     }
 
-    Must(connOpener); // or we would be stuck with nothing to do or wait for
+    Must(tcpConnWait); // or we would be stuck with nothing to do or wait for
     notifyConnOpener();
     // and continue to wait for FwdState::noteConnection() callback
 }
 
-/// makes sure connOpener knows that destinations have changed
+/// makes sure connection opener knows that the destinations have changed
 void
 FwdState::notifyConnOpener()
 {
@@ -652,7 +652,7 @@ FwdState::notifyConnOpener()
     } else {
         debugs(17, 7, "notifying about " << *destinations);
         destinations->notificationPending = true;
-        CallJobHere(17, 5, connOpener.job(), HappyConnOpener, noteCandidatesChange);
+        CallJobHere(17, 5, tcpConnWait.job(), HappyConnOpener, noteCandidatesChange);
     }
 }
 
@@ -818,7 +818,7 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 {
     assert(!destinationReceipt);
 
-    connOpener.reset();
+    tcpConnWait.finish();
 
     Must(n_tries <= answer.n_tries); // n_tries cannot decrease
     n_tries = answer.n_tries;
@@ -883,7 +883,7 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
 void
 FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 {
-    assert(!tunnelEstablisher);
+    assert(!httpConnectWait);
 
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::tunnelEstablishmentDone",
@@ -901,7 +901,7 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
     if (!conn->getPeer()->options.no_delay)
         tunneler->setDelayId(entry->mem_obj->mostBytesAllowed());
 #endif
-    tunnelEstablisher.reset(callback, tunneler);
+    httpConnectWait.start(tunneler, callback);
     AsyncJob::Start(tunneler);
     // and wait for the tunnelEstablishmentDone() call
 }
@@ -910,7 +910,7 @@ FwdState::establishTunnelThruProxy(const Comm::ConnectionPointer &conn)
 void
 FwdState::tunnelEstablishmentDone(Http::TunnelerAnswer &answer)
 {
-    tunnelEstablisher.reset();
+    httpConnectWait.finish();
 
     ErrorState *error = nullptr;
     if (!answer.positive()) {
@@ -977,7 +977,7 @@ FwdState::secureConnectionToPeerIfNeeded(const Comm::ConnectionPointer &conn)
 void
 FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 {
-    assert(!securityConnector);
+    assert(!encryptionWait);
     HttpRequest::Pointer requestPointer = request;
     AsyncCall::Pointer callback = asyncCall(17,4,
                                             "FwdState::ConnectedToPeer",
@@ -991,7 +991,7 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 #endif
         connector = new Security::BlindPeerConnector(requestPointer, conn, callback, al, sslNegotiationTimeout);
     connector->noteFwdPconnUse = true;
-    securityConnector.reset(callback, connector);
+    encryptionWait.start(connector, callback);
     AsyncJob::Start(connector); // will call our callback
 }
 
@@ -999,7 +999,7 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
 void
 FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
 {
-    securityConnector.reset();
+    encryptionWait.finish();
 
     ErrorState *error = nullptr;
     if ((error = answer.error.get())) {
@@ -1085,7 +1085,7 @@ FwdState::connectStart()
     Must(!request->pinnedConnection());
 
     assert(!destinations->empty());
-    assert(!connOpener);
+    assert(!tcpConnWait);
     assert(!usingDestination());
 
     // Ditch error page if it was created before.
@@ -1111,7 +1111,7 @@ FwdState::connectStart()
     cs->setRetriable(retriable);
     cs->allowPersistent(pconnRace != raceHappened);
     destinations->notificationPending = true; // start() is async
-    connOpener.reset(callback, cs);
+    tcpConnWait.start(cs, callback);
     AsyncJob::Start(cs);
 }
 

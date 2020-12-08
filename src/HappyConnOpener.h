@@ -160,18 +160,13 @@ private:
         explicit operator bool() const { return static_cast<bool>(path); }
 
         /// reacts to a natural attempt completion (successful or otherwise)
-        void finish() { clear(); }
+        void finish();
 
         /// aborts an in-progress attempt
         void cancel(const char *reason);
 
         PeerConnectionPointer path; ///< the destination we are connecting to
-        // connects to path
-        JobCallbackPointer<Comm::ConnOpener> opener;
-
-    private:
-        /// cleans up after the attempt ends (successfully or otherwise)
-        void clear() { path = nullptr; opener.reset(); }
+        JobWait<Comm::ConnOpener> connWait; ///< establishes a transport connection
     };
     friend std::ostream &operator <<(std::ostream &, const Attempt &);
 

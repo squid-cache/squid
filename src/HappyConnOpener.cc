@@ -419,10 +419,10 @@ operator <<(std::ostream &os, const HappyConnOpener::Attempt &attempt)
         os << '-';
     else if (attempt.path->isOpen())
         os << "FD " << attempt.path->fd;
-    else if (attempt.opener)
-        os << attempt.opener;
-    else
-        os << attempt.path->id; // closed path without an opener
+    else if (attempt.connWait)
+        os << attempt.connWait;
+    else // destination is known; connection closed (and we are not opening any)
+        os << attempt.path->id;
     return os;
 }
 
@@ -527,7 +527,7 @@ void
 HappyConnOpener::startConnecting(Attempt &attempt, PeerConnectionPointer &dest)
 {
     Must(!attempt.path);
-    Must(!attempt.opener);
+    Must(!attempt.connWait);
     Must(dest);
 
     const auto bumpThroughPeer = cause->flags.sslBumped && dest->getPeer();
@@ -578,7 +578,7 @@ HappyConnOpener::openFreshConnection(Attempt &attempt, PeerConnectionPointer &de
         cs->setHost(host_);
 
     attempt.path = dest;
-    attempt.opener.reset(callConnect, cs);
+    attempt.connWait.start(cs, callConnect);
 
     AsyncJob::Start(cs);
 }
@@ -892,9 +892,16 @@ HappyConnOpener::ranOutOfTimeOrAttempts() const
 }
 
 void
+HappyConnOpener::Attempt::finish()
+{
+    connWait.finish();
+    path = nullptr;
+}
+
+void
 HappyConnOpener::Attempt::cancel(const char *reason)
 {
-    opener.cancel(reason);
-    clear();
+    connWait.cancel(reason);
+    path = nullptr;
 }
 

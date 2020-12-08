@@ -43,8 +43,8 @@ public:
 PeerPoolMgr::PeerPoolMgr(CachePeer *aPeer): AsyncJob("PeerPoolMgr"),
     peer(cbdataReference(aPeer)),
     request(),
-    opener(),
-    securer(),
+    connWait(),
+    encryptionWait(),
     closer(),
     addrUsed(0)
 {
@@ -90,8 +90,8 @@ PeerPoolMgr::doneAll() const
 void
 PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
 {
-    assert(opener);
-    opener.reset();
+    assert(connWait);
+    connWait.finish();
 
     if (!validPeer()) {
         debugs(48, 3, "peer gone");
@@ -126,7 +126,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = positiveTimeout(peerTimeout - timeUsed);
         auto *connector = new Security::BlindPeerConnector(request, params.conn, callback, nullptr, timeLeft);
-        securer.reset(callback, connector);
+        encryptionWait.start(connector, callback);
         AsyncJob::Start(connector); // will call our callback
         return;
     }
@@ -146,8 +146,8 @@ PeerPoolMgr::pushNewConnection(const Comm::ConnectionPointer &conn)
 void
 PeerPoolMgr::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
-    assert(securer);
-    securer.reset();
+    assert(encryptionWait);
+    encryptionWait.finish();
 
     if (closer != NULL) {
         if (answer.conn != NULL)
@@ -179,8 +179,8 @@ void
 PeerPoolMgr::handleSecureClosure(const CommCloseCbParams &params)
 {
     Must(closer != NULL);
-    Must(securer);
-    securer.cancel("conn closed by a 3rd party");
+    Must(encryptionWait);
+    encryptionWait.cancel("conn closed by a 3rd party");
     closer = NULL;
     // allow the closing connection to fully close before we check again
     Checkpoint(this, "conn closure while securing");
@@ -190,8 +190,8 @@ void
 PeerPoolMgr::openNewConnection()
 {
     // KISS: Do nothing else when we are already doing something.
-    if (opener || securer || shutting_down) {
-        debugs(48, 7, "busy: " << opener << '|' << securer << '|' << shutting_down);
+    if (connWait || encryptionWait || shutting_down) {
+        debugs(48, 7, "busy: " << connWait << '|' << encryptionWait << '|' << shutting_down);
         return; // there will be another checkpoint when we are done opening/securing
     }
 
@@ -230,7 +230,7 @@ PeerPoolMgr::openNewConnection()
     typedef CommCbMemFunT<PeerPoolMgr, CommConnectCbParams> Dialer;
     AsyncCall::Pointer callback = JobCallback(48, 5, Dialer, this, PeerPoolMgr::handleOpenedConnection);
     Comm::ConnOpener *cs = new Comm::ConnOpener(conn, callback, ctimeout);
-    opener.reset(callback, cs);
+    connWait.start(cs, callback);
     AsyncJob::Start(cs);
 }
 

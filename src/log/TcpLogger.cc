@@ -257,7 +257,7 @@ Log::TcpLogger::doConnect()
     typedef CommCbMemFunT<TcpLogger, CommConnectCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(MY_DEBUG_SECTION, 5, Dialer, this, Log::TcpLogger::connectDone);
     Comm::ConnOpener *cs = new Comm::ConnOpener(futureConn, call, 2);
-    opener.reset(call, cs);
+    connWait.start(cs, call);
     AsyncJob::Start(cs);
 }
 
@@ -265,8 +265,8 @@ Log::TcpLogger::doConnect()
 void
 Log::TcpLogger::connectDone(const CommConnectCbParams &params)
 {
-	assert(opener);
-	opener.reset();
+	assert(connWait);
+	connWait.finish();
 
     if (params.flag != Comm::OK) {
         const double delay = 0.5; // seconds
