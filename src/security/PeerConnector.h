@@ -214,6 +214,9 @@ private:
 
     /// AsyncCall to resume negotiation after a suspendNegotiation call.
     AsyncCall::Pointer resumeNegotiationCall;
+
+    /// Whether the validation callouts run
+    bool runValidationCallouts = false;
 #endif
 };
 

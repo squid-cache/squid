@@ -746,8 +746,13 @@ Security::PeerConnector::certficatesReceived() const
 bool
 Security::PeerConnector::needsValidationCallouts()
 {
-    if (checkForMissingCertificates())
+    if (runValidationCallouts)
+        return false;
+
+    if (checkForMissingCertificates()) {
+        runValidationCallouts = true;
         return true;
+    }
 
     // TODO: Move here the certificate validator code from sslFinalized()
 
