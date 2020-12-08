@@ -472,7 +472,7 @@ Ssl::PeerCertificatesVerify(Security::SessionPointer &s, const Ssl::X509_STACK_P
     }
 
     // The X509_verify_cert will only use dane if it is enabled.
-    X509_STORE_CTX_set0_dane(storeCtx.get(), SSL_get0_dane(s.get()));
+    // X509_STORE_CTX_set0_dane(storeCtx.get(), SSL_get0_dane(s.get()));
 
     // We are verifying a server certificate
     X509_STORE_CTX_set_default(storeCtx.get(), "ssl_server");
