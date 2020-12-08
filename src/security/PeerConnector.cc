@@ -757,6 +757,7 @@ Security::PeerConnector::needsValidationCallouts()
 void
 Security::PeerConnector::suspendNegotiation(const AsyncCall::Pointer &resumeCallback)
 {
+    Must(!isSuspended());
     resumeNegotiationCall = resumeCallback;
 }
 
