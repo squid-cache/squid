@@ -349,6 +349,9 @@ public:
     /// Do not report missing issuer certificates as validation errors.
     bool ignoreIssuer = false;
 
+    /// Whether the server certificates received.
+    bool gotServerCertificates = false;
+
     /// \returns The SquidVerifyData object attached to session
     static SquidVerifyData *SessionData(const Security::SessionPointer &session);
 };

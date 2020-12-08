@@ -131,6 +131,9 @@ protected:
     /// to external resources (eg downloads missing certificates)
     /// \return true if required callouts to external resources
     bool needsValidationCallouts();
+
+    /// Whether the server certificates are received
+    bool certficatesReceived() const;
 #endif
 
     /// Called when the openSSL SSL_connect function needs to write data to

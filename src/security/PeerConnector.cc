@@ -397,7 +397,7 @@ Security::PeerConnector::handleNegotiateError(const int ret)
         return;
 
     case SSL_ERROR_WANT_WRITE:
-        if (needsValidationCallouts()) {
+        if (certficatesReceived() && needsValidationCallouts()) {
             typedef NullaryMemFunT<Security::PeerConnector> cbDialer;
             AsyncCall::Pointer resumeCall = JobCallback(83, 5,
                                             cbDialer, this,
@@ -731,6 +731,16 @@ Security::PeerConnector::checkForMissingCertificates()
         debugs(83, 5, "No certificates retrieved from server");
 
     return false;
+}
+
+bool
+Security::PeerConnector::certficatesReceived() const
+{
+    const int fd = serverConnection()->fd;
+    Security::SessionPointer session(fd_table[fd].ssl);
+    const auto verifyData = Ssl::SquidVerifyData::SessionData(session);
+    assert(verifyData);
+    return verifyData->gotServerCertificates;
 }
 
 bool
