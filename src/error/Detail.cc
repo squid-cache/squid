@@ -16,11 +16,8 @@
 class NamedErrorDetail: public ErrorDetail
 {
 public:
-    /// briefly describes the error circumstances
-    /// must not contain characters that require quoting in access logs or HTML
-    typedef SBuf Name;
-
     // convert from c-string to SBuf to simplify creation and optimize usage
+    /// \param aName must not contain characters that require quoting in access logs or HTML
     explicit NamedErrorDetail(const char *aName): name(aName) {}
 
     /* ErrorDetail API */
@@ -29,7 +26,7 @@ public:
 
 private:
     /// distinguishes us from all other NamedErrorDetail objects
-    Name name;
+    SBuf name;
 };
 
 /* ErrorDetail */
