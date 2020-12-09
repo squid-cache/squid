@@ -1219,7 +1219,7 @@ squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
     // list, but it must include certificates on the OpenSSL ctx->untrusted
     STACK_OF(X509) *oldUntrusted = X509_STORE_CTX_get0_untrusted(ctx);
     // X509_chain_up_ref() increments cert references _and_ dupes the stack
-    Ssl::X509_STACK_Pointer untrustedCerts(X509_chain_up_ref(oldUntrusted)); // oldUntrusted is never nil
+    Ssl::X509_STACK_Pointer untrustedCerts(oldUntrusted ? X509_chain_up_ref(oldUntrusted) : sk_X509_new_null());
 
     if (extraCerts) {
         for (int i = 0; i < sk_X509_num(extraCerts); ++i) {
