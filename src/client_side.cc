@@ -178,7 +178,6 @@ private:
 static void clientListenerConnectionOpened(AnyP::PortCfgPointer &s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
 
 static IOACB httpAccept;
-static CTCB clientLifetimeTimeout;
 #if USE_IDENT
 static IDCB clientIdentDone;
 #endif
@@ -588,6 +587,22 @@ ConnStateData::setAuth(const Auth::UserRequest::Pointer &aur, const char *by)
 }
 #endif
 
+void
+ConnStateData::resetReadTimeout(const time_t timeout)
+{
+    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer callback = JobCallback(33, 5, TimeoutDialer, this, ConnStateData::requestTimeout);
+    commSetConnTimeout(clientConnection, timeout, callback);
+}
+
+void
+ConnStateData::extendLifetime()
+{
+    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer callback = JobCallback(5, 4, TimeoutDialer, this, ConnStateData::lifetimeTimeout);
+    commSetConnTimeout(clientConnection, Config.Timeout.lifetime, callback);
+}
+
 // cleans up before destructor is called
 void
 ConnStateData::swanSong()
@@ -892,10 +907,7 @@ ConnStateData::readNextRequest()
     /**
      * Set the timeout BEFORE calling readSomeData().
      */
-    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall = JobCallback(33, 5,
-                                     TimeoutDialer, this, ConnStateData::requestTimeout);
-    commSetConnTimeout(clientConnection, clientConnection->timeLeft(idleTimeout()), timeoutCall);
+    resetReadTimeout(clientConnection->timeLeft(idleTimeout()));
 
     readSomeData();
     /** Please don't do anything with the FD past here! */
@@ -1916,11 +1928,7 @@ ConnStateData::receivedFirstByte()
         return;
 
     receivedFirstByte_ = true;
-    // Set timeout to Config.Timeout.request
-    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                      TimeoutDialer, this, ConnStateData::requestTimeout);
-    commSetConnTimeout(clientConnection, Config.Timeout.request, timeoutCall);
+    resetReadTimeout(Config.Timeout.request);
 }
 
 /**
@@ -1967,11 +1975,7 @@ ConnStateData::clientParseRequests()
 
         if (Http::StreamPointer context = parseOneRequest()) {
             debugs(33, 5, clientConnection << ": done parsing a request");
-
-            AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "clientLifetimeTimeout",
-                                             CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
-            commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
-
+            extendLifetime();
             context->registerWithConn();
 
 #if USE_OPENSSL
@@ -2202,16 +2206,15 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     io.conn->close();
 }
 
-static void
-clientLifetimeTimeout(const CommTimeoutCbParams &io)
+void
+ConnStateData::lifetimeTimeout(const CommTimeoutCbParams &io)
 {
-    ClientHttpRequest *http = static_cast<ClientHttpRequest *>(io.data);
-    debugs(33, DBG_IMPORTANT, "WARNING: Closing client connection due to lifetime timeout");
-    debugs(33, DBG_IMPORTANT, "\t" << http->uri);
-    if (const auto conn = http->getConn())
-        conn->pipeline.terminateAll(ETIMEDOUT);
-    if (Comm::IsConnOpen(io.conn))
-        io.conn->close();
+    debugs(33, DBG_IMPORTANT, "WARNING: Closing client connection due to lifetime timeout" <<
+           Debug::Extra << "connection: " << io.conn);
+
+    LogTagsErrors lte;
+    lte.timedout = true;
+    terminateAll(ERR_LIFETIME_EXP, lte);
 }
 
 ConnStateData::ConnStateData(const MasterXaction::Pointer &xact) :
@@ -2504,10 +2507,7 @@ httpsEstablish(ConnStateData *connState, const Security::ContextPointer &ctx)
     if (!ctx || !httpsCreate(connState, ctx))
         return;
 
-    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall = JobCallback(33, 5, TimeoutDialer,
-                                     connState, ConnStateData::requestTimeout);
-    commSetConnTimeout(details, Config.Timeout.request, timeoutCall);
+    connState->resetReadTimeout(Config.Timeout.request);
 
     Comm::SetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
 }
@@ -2868,10 +2868,7 @@ ConnStateData::getSslContextDone(Security::ContextPointer &ctx)
     // bumped intercepted conns should already have Config.Timeout.request set
     // but forwarded connections may only have Config.Timeout.lifetime. [Re]set
     // to make sure the connection does not get stuck on non-SSL clients.
-    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall = JobCallback(33, 5, TimeoutDialer,
-                                     this, ConnStateData::requestTimeout);
-    commSetConnTimeout(clientConnection, Config.Timeout.request, timeoutCall);
+    resetReadTimeout(Config.Timeout.request);
 
     switchedToHttps_ = true;
 
@@ -2920,10 +2917,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
 
     // commSetConnTimeout() was called for this request before we switched.
     // Fix timeout to request_start_timeout
-    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                      TimeoutDialer, this, ConnStateData::requestTimeout);
-    commSetConnTimeout(clientConnection, Config.Timeout.request_start_timeout, timeoutCall);
+    resetReadTimeout(Config.Timeout.request_start_timeout);
     // Also reset receivedFirstByte_ flag to allow this timeout work in the case we have
     // a bumbed "connect" request on non transparent port.
     receivedFirstByte_ = false;
@@ -3294,11 +3288,7 @@ ConnStateData::buildFakeRequest(Http::MethodType const method, SBuf &useHost, un
 
     stream->flags.parsed_ok = 1; // Do we need it?
     stream->mayUseConnection(true);
-
-    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "clientLifetimeTimeout",
-                                     CommTimeoutCbPtrFun(clientLifetimeTimeout, stream->http));
-    commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
-
+    extendLifetime();
     stream->registerWithConn();
 
     MasterXaction::Pointer mx = new MasterXaction(XactionInitiator::initClient);

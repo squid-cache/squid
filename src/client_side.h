@@ -160,6 +160,11 @@ public:
     /// note response sending error and close as soon as we read the request
     void stopSending(const char *error);
 
+    /// (re)sets timeout for receiving more bytes from the client
+    void resetReadTimeout(time_t timeout);
+    /// (re)sets client_lifetime timeout
+    void extendLifetime();
+
     void expectNoForwarding(); ///< cleans up virgin request [body] forwarding state
 
     /* BodyPipe API */
@@ -223,6 +228,7 @@ public:
     void clientReadFtpData(const CommIoCbParams &io);
     void connStateClosed(const CommCloseCbParams &io);
     void requestTimeout(const CommTimeoutCbParams &params);
+    void lifetimeTimeout(const CommTimeoutCbParams &params);
 
     // AsyncJob API
     virtual void start();
