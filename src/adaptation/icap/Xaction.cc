@@ -190,9 +190,7 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
 #if WHEN_IPCACHE_NBGETHOSTBYNAME_USES_ASYNC_CALLS
         dieOnConnectionFailure(); // throws
 #else // take a step back into protected Async call dialing.
-        typedef NullaryMemFunT<Xaction> Dialer;
-        AsyncCall::Pointer call = JobCallback(93, 3, Dialer, this, Xaction::dieOnConnectionFailure);
-        ScheduleCallHere(call);
+        CallJobHere(93, 3, this, Xaction, Xaction::dieOnConnectionFailure);
 #endif
         return;
     }
