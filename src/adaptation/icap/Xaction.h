@@ -157,14 +157,13 @@ protected:
     timeval icap_tio_finish;   /*time when the last byte of the ICAP responsewas received*/
 
 private:
-    bool securerPending() const;
     void successfullyConnected();
 
     /// establishes a transport connection to the ICAP server
     JobWait<Comm::ConnOpener> connWait;
 
     /// encrypts an established transport connection
-    JobWait<Ssl::IcapPeerConnector> *encryptionWait;
+    JobWait<Ssl::IcapPeerConnector> encryptionWait;
 };
 
 } // namespace Icap

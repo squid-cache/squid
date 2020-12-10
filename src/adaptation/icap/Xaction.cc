@@ -92,8 +92,7 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
     writer(NULL),
     closer(NULL),
     alep(new AccessLogEntry),
-    al(*alep),
-    encryptionWait(nullptr)
+    al(*alep)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
@@ -109,7 +108,6 @@ Adaptation::Icap::Xaction::~Xaction()
 {
     debugs(93,3, typeName << " destructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
-    delete encryptionWait;
     HTTPMSGUNLOCK(icapRequest);
 }
 
@@ -302,11 +300,7 @@ Adaptation::Icap::Xaction::successfullyConnected()
 
         Ssl::IcapPeerConnector *sslConnector = new Ssl::IcapPeerConnector(theService, connection, callback, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
 
-        // TODO: Replace this JobWait pointer with a JobWait?!
-        if (!encryptionWait)
-            encryptionWait = new JobWait<Ssl::IcapPeerConnector>();
-
-        encryptionWait->start(sslConnector, callback);
+        encryptionWait.start(sslConnector, callback);
         AsyncJob::Start(sslConnector); // will call our callback
         return;
     }
@@ -382,7 +376,7 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
 void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
 {
     if (encryptionWait)
-        encryptionWait->cancel("Connection closed before SSL negotiation finished");
+        encryptionWait.cancel("Connection closed before SSL negotiation finished");
     closer = NULL;
     handleCommClosed();
 }
@@ -411,7 +405,7 @@ void Adaptation::Icap::Xaction::callEnd()
 
 bool Adaptation::Icap::Xaction::doneAll() const
 {
-    return !connWait && !securerPending() && !reader && !writer && Adaptation::Initiate::doneAll();
+    return !connWait && !encryptionWait && !reader && !writer && Adaptation::Initiate::doneAll();
 }
 
 void Adaptation::Icap::Xaction::updateTimeout()
@@ -730,8 +724,8 @@ Ssl::IcapPeerConnector::noteNegotiationDone(ErrorState *error)
 void
 Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
 {
-    Must(securerPending());
-    encryptionWait->finish();
+    Must(encryptionWait);
+    encryptionWait.finish();
 
     if (closer != NULL) {
         if (Comm::IsConnOpen(answer.conn))
@@ -756,10 +750,4 @@ Adaptation::Icap::Xaction::handleSecuredPeer(Security::EncryptorAnswer &answer)
     service().noteConnectionUse(answer.conn);
 
     handleCommConnected();
-}
-
-bool
-Adaptation::Icap::Xaction::securerPending() const
-{
-    return encryptionWait && *encryptionWait;
 }
