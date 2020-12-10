@@ -59,7 +59,6 @@
 #if USE_OPENSSL
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
-#include "ssl/ErrorDetail.h"
 #include "ssl/helper.h"
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"

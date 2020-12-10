@@ -14,7 +14,8 @@
 #include "clients/forward.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
+#include "error/SysErrorDetail.h"
 #include "errorpage.h"
 #include "fde.h"
 #include "format/Format.h"
@@ -167,6 +168,10 @@ error_hard_text[] = {
     {
         TCP_RESET,
         "reset"
+    },
+    {
+        ERR_CLIENT_GONE,
+        "unexpected client disconnect"
     },
     {
         ERR_SECURE_ACCEPT_FAIL,
@@ -796,9 +801,6 @@ ErrorState::~ErrorState()
     if (err_language != Config.errorDefaultLanguage)
 #endif
         safe_free(err_language);
-#if USE_OPENSSL
-    delete detail;
-#endif
 }
 
 int
@@ -962,18 +964,13 @@ ErrorState::compileLegacyCode(Build &build)
     case 'D':
         if (!build.allowRecursion)
             p = "%D";  // if recursion is not allowed, do not convert
-#if USE_OPENSSL
-        // currently only SSL error details implemented
         else if (detail) {
-            detail->useRequest(request.getRaw());
-            const String &errDetail = detail->toString();
-            if (errDetail.size() > 0) {
-                const auto compiledDetail = compileBody(errDetail.termedBuf(), false);
-                mb.append(compiledDetail.rawContent(), compiledDetail.length());
-                do_quote = 0;
-            }
+            auto rawDetail = detail->verbose(request);
+            // XXX: Performance regression. c_str() reallocates
+            const auto compiledDetail = compileBody(rawDetail.c_str(), false);
+            mb.append(compiledDetail.rawContent(), compiledDetail.length());
+            do_quote = 0;
         }
-#endif
         if (!mb.contentSize())
             mb.append("[No Error Detail]", 17);
         break;
@@ -1204,13 +1201,12 @@ ErrorState::compileLegacyCode(Build &build)
         break;
 
     case 'x':
-#if USE_OPENSSL
-        if (detail)
-            mb.appendf("%s", detail->errorName());
-        else
-#endif
-            if (!building_deny_info_url)
-                p = "[Unknown Error Code]";
+        if (detail) {
+            const auto brief = detail->brief();
+            mb.append(brief.rawContent(), brief.length());
+        } else if (!building_deny_info_url) {
+            p = "[Unknown Error Code]";
+        }
         break;
 
     case 'z':
@@ -1351,17 +1347,10 @@ ErrorState::BuildHttpReply()
     // Make sure error codes get back to the client side for logging and
     // error tracking.
     if (request) {
-        int edc = ERR_DETAIL_NONE; // error detail code
-#if USE_OPENSSL
         if (detail)
-            edc = detail->errorNo();
+            request->detailError(type, detail);
         else
-#endif
-            if (detailCode)
-                edc = detailCode;
-            else
-                edc = xerrno;
-        request->detailError(type, edc);
+            request->detailError(type, SysErrorDetail::NewIfAny(xerrno));
     }
 
     return rep;

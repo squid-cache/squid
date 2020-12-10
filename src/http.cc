@@ -24,7 +24,7 @@
 #include "comm/Read.h"
 #include "comm/Write.h"
 #include "CommRead.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
 #include "fde.h"
@@ -2630,7 +2630,8 @@ HttpStateData::handleRequestBodyProducerAborted()
         // should not matter because either client-side will provide its own or
         // there will be no response at all (e.g., if the the client has left).
         const auto err = new ErrorState(ERR_ICAP_FAILURE, Http::scInternalServerError, fwd->request, fwd->al);
-        err->detailError(ERR_DETAIL_SRV_REQMOD_REQ_BODY);
+        static const auto d = MakeNamedErrorDetail("SRV_REQMOD_REQ_BODY");
+        err->detailError(d);
         fwd->fail(err);
     }
 

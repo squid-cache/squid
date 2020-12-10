@@ -15,6 +15,7 @@
 #include "fde.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
+#include "security/ErrorDetail.h"
 #include "security/NegotiationHistory.h"
 #include "SquidConfig.h"
 #include "ssl/bio.h"
@@ -222,8 +223,9 @@ Ssl::PeekingPeerConnector::noteNegotiationDone(ErrorState *error)
     if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
         if (!serverBump->serverCert.get()) {
             // remember the server certificate from the ErrorDetail object
-            if (error && error->detail && error->detail->peerCert())
-                serverBump->serverCert.resetAndLock(error->detail->peerCert());
+            const auto errDetail = dynamic_cast<Security::ErrorDetail *>(error ? error->detail.getRaw() : nullptr);
+            if (errDetail && errDetail->peerCert())
+                serverBump->serverCert.resetAndLock(errDetail->peerCert());
             else {
                 handleServerCertificate();
             }
@@ -292,7 +294,7 @@ Ssl::PeekingPeerConnector::noteWantWrite()
 }
 
 void
-Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error)
+Ssl::PeekingPeerConnector::noteNegotiationError(const Security::ErrorDetailPointer &errorDetail)
 {
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
@@ -340,14 +342,14 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
             (srvBio->bumpMode() == Ssl::bumpPeek  || srvBio->bumpMode() == Ssl::bumpStare) && srvBio->holdWrite()) {
         Security::CertPointer serverCert(SSL_get_peer_certificate(session.get()));
         if (serverCert) {
-            debugs(81, 3, "Error ("  << Security::ErrorString(ssl_lib_error) <<  ") but, hold write on SSL connection on FD " << fd);
+            debugs(81, 3, "hold TLS write on FD " << fd << " despite " << errorDetail);
             checkForPeekAndSplice();
             return;
         }
     }
 
     // else call parent noteNegotiationError to produce an error page
-    Security::PeerConnector::noteNegotiationError(result, ssl_error, ssl_lib_error);
+    Security::PeerConnector::noteNegotiationError(errorDetail);
 }
 
 void
