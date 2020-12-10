@@ -158,6 +158,7 @@ protected:
 
 private:
     bool securerPending() const;
+    void successfullyConnected();
 
     /// establishes a transport connection to the ICAP server
     JobWait<Comm::ConnOpener> connWait;

@@ -168,19 +168,7 @@ Adaptation::Icap::Xaction::openConnection()
     connection = s.getConnection(isRetriable, wasReused);
 
     if (wasReused && Comm::IsConnOpen(connection)) {
-        // TODO: We are called from an async start(). Instead of faking
-        // noteCommConnected(), split that method and sync-call its second half
-        // here. See code like FwdState::successfullyConnectedToPeer() and
-        // TunnelStateData::connectedToPeer() for examples.
-        typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> Dialer;
-        CbcPointer<Xaction> self(this);
-        Dialer dialer(self, &Adaptation::Icap::Xaction::noteCommConnected);
-        dialer.params.conn = connection;
-        dialer.params.flag = Comm::OK;
-        // fake other parameters by copying from the existing connection
-        AsyncCall::Pointer callback = asyncCall(93, 3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
-        connWait.start(nullptr, callback); // XXX: JobWait::start(nullptr) asserts!
-        ScheduleCallHere(callback);
+        successfullyConnected();
         return;
     }
 
@@ -204,16 +192,9 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
 #if WHEN_IPCACHE_NBGETHOSTBYNAME_USES_ASYNC_CALLS
         dieOnConnectionFailure(); // throws
 #else // take a step back into protected Async call dialing.
-        // fake the connect callback
-        typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> Dialer;
-        CbcPointer<Xaction> self(this);
-        Dialer dialer(self, &Adaptation::Icap::Xaction::noteCommConnected);
-        dialer.params.conn = connection;
-        dialer.params.flag = Comm::COMM_ERROR;
-        // fake other parameters by copying from the existing connection
-        AsyncCall::Pointer callback = asyncCall(93, 3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
-        connWait.start(nullptr, callback); // XXX: JobWait::start(nullptr) asserts!
-        ScheduleCallHere(callback);
+        typedef NullaryMemFunT<Xaction> Dialer;
+        AsyncCall::Pointer call = JobCallback(93, 3, Dialer, this, Xaction::dieOnConnectionFailure);
+        ScheduleCallHere(call);
 #endif
         return;
     }
@@ -278,7 +259,7 @@ void Adaptation::Icap::Xaction::closeConnection()
     }
 }
 
-// connection with the ICAP service established
+/// called when the connection attempt to an ICAP service completes (successfully or not)
 void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 {
     assert(connWait);
@@ -292,25 +273,34 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
     if (io.flag != Comm::OK)
         dieOnConnectionFailure(); // throws
 
+    successfullyConnected();
+}
+
+/// called when successfully connected to an ICAP service
+void
+Adaptation::Icap::Xaction::successfullyConnected()
+{
+    assert(Comm::IsConnOpen(connection));
+
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommTimedout",
                                       TimeoutDialer(this,&Adaptation::Icap::Xaction::noteCommTimedout));
-    commSetConnTimeout(io.conn, TheConfig.connect_timeout(service().cfg().bypass), timeoutCall);
+    commSetConnTimeout(connection, TheConfig.connect_timeout(service().cfg().bypass), timeoutCall);
 
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommCloseCbParams> CloseDialer;
     closer =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommClosed",
                         CloseDialer(this,&Adaptation::Icap::Xaction::noteCommClosed));
-    comm_add_close_handler(io.conn->fd, closer);
+    comm_add_close_handler(connection->fd, closer);
 
     // If it is a reused connection and the TLS object is built
     // we should not negotiate new TLS session
-    const auto &ssl = fd_table[io.conn->fd].ssl;
+    const auto &ssl = fd_table[connection->fd].ssl;
     if (!ssl && service().cfg().secure.encryptTransport) {
         CbcPointer<Adaptation::Icap::Xaction> me(this);
         AsyncCall::Pointer callback = asyncCall(93, 4, "Adaptation::Icap::Xaction::handleSecuredPeer",
                                                 MyIcapAnswerDialer(me, &Adaptation::Icap::Xaction::handleSecuredPeer));
 
-        Ssl::IcapPeerConnector *sslConnector = new Ssl::IcapPeerConnector(theService, io.conn, callback, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
+        Ssl::IcapPeerConnector *sslConnector = new Ssl::IcapPeerConnector(theService, connection, callback, masterLogEntry(), TheConfig.connect_timeout(service().cfg().bypass));
 
         // TODO: Replace this JobWait pointer with a JobWait?!
         if (!encryptionWait)
