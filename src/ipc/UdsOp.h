@@ -12,6 +12,7 @@
 #define SQUID_IPC_ASYNCUDSOP_H
 
 #include "base/AsyncJob.h"
+#include "base/forward.h"
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "ipc/FdNotes.h"
@@ -70,6 +71,8 @@ class UdsSender: public UdsOp
 
 public:
     UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage);
+
+    CodeContextPointer codeContext;
 
 protected:
     virtual void swanSong(); // UdsOp (AsyncJob) API

@@ -101,7 +101,7 @@ public:
 
     bool isOpen() const;
 
-    Http1::TeChunkedParser *bodyParser; ///< parses HTTP/1.1 chunked request body
+    Http1::TeChunkedParser *bodyParser = nullptr; ///< parses HTTP/1.1 chunked request body
 
     /** number of body bytes we need to comm_read for the "current" request
      *
@@ -132,21 +132,21 @@ public:
     Ip::Address log_addr;
 
     struct {
-        bool readMore; ///< needs comm_read (for this request or new requests)
-        bool swanSang; // XXX: temporary flag to check proper cleanup
+        bool readMore = true; ///< needs comm_read (for this request or new requests)
+        bool swanSang = false; // XXX: temporary flag to check proper cleanup
     } flags;
     struct {
         Comm::ConnectionPointer serverConnection; /* pinned server side connection */
-        char *host;             /* host name of pinned connection */
-        int port;               /* port of pinned connection */
-        bool pinned;             /* this connection was pinned */
-        bool auth;               /* pinned for www authentication */
-        bool reading;   ///< we are monitoring for peer connection closure
-        bool zeroReply; ///< server closed w/o response (ERR_ZERO_SIZE_OBJECT)
-        bool peerAccessDenied; ///< cache_peer_access denied pinned connection reuse
-        CachePeer *peer;             /* CachePeer the connection goes via */
+        char *host = nullptr; ///< host name of pinned connection
+        int port = -1; ///< port of pinned connection
+        bool pinned = false; ///< this connection was pinned
+        bool auth = false; ///< pinned for www authentication
+        bool reading = false; ///< we are monitoring for peer connection closure
+        bool zeroReply = false; ///< server closed w/o response (ERR_ZERO_SIZE_OBJECT)
+        bool peerAccessDenied = false; ///< cache_peer_access denied pinned connection reuse
+        CachePeer *peer = nullptr; ///< CachePeer the connection goes via
         AsyncCall::Pointer readHandler; ///< detects serverConnection closure
-        AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
+        AsyncCall::Pointer closeHandler; ///< The close handler for pinned server side connection
     } pinning;
 
     bool transparent() const;
@@ -190,9 +190,7 @@ public:
     /// \returns validated pinned to-server connection, stopping its monitoring
     /// \throws a newly allocated ErrorState if validation fails
     static Comm::ConnectionPointer BorrowPinnedConnection(HttpRequest *, const AccessLogEntryPointer &);
-    /**
-     * returts the pinned CachePeer if exists, NULL otherwise
-     */
+    /// \returns the pinned CachePeer if one exists, nil otherwise
     CachePeer *pinnedPeer() const {return pinning.peer;}
     bool pinnedAuth() const {return pinning.auth;}
 
@@ -289,7 +287,7 @@ public:
     /// for SQUID_X509_V_ERR_DOMAIN_MISMATCH on bumped requests.
     bool serveDelayedError(Http::Stream *);
 
-    Ssl::BumpMode sslBumpMode; ///< ssl_bump decision (Ssl::bumpEnd if n/a).
+    Ssl::BumpMode sslBumpMode = Ssl::bumpEnd; ///< ssl_bump decision (Ssl::bumpEnd if n/a).
 
     /// Tls parser to use for client HELLO messages parsing on bumped
     /// connections.
@@ -409,7 +407,7 @@ protected:
     BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
 
     /// whether preservedClientData is valid and should be kept up to date
-    bool preservingClientData_;
+    bool preservingClientData_ = false;
 
 private:
     /* ::Server API */
@@ -439,7 +437,7 @@ private:
 #endif
 
     /// whether PROXY protocol header is still expected
-    bool needProxyProtocolHeader_;
+    bool needProxyProtocolHeader_ = false;
 
     /// the parsed PROXY protocol header
     ProxyProtocol::HeaderPointer proxyProtocolHeader_;
@@ -450,14 +448,14 @@ private:
 #endif
 
 #if USE_OPENSSL
-    bool switchedToHttps_;
-    bool parsingTlsHandshake; ///< whether we are getting/parsing TLS Hello bytes
+    bool switchedToHttps_ = false;
+    bool parsingTlsHandshake = false; ///< whether we are getting/parsing TLS Hello bytes
     /// The number of parsed HTTP requests headers on a bumped client connection
-    uint64_t parsedBumpedRequestCount;
+    uint64_t parsedBumpedRequestCount = 0;
 
     /// The TLS server host name appears in CONNECT request or the server ip address for the intercepted requests
     SBuf tlsConnectHostOrIp; ///< The TLS server host name as passed in the CONNECT request
-    unsigned short tlsConnectPort; ///< The TLS server port number as passed in the CONNECT request
+    unsigned short tlsConnectPort = 0; ///< The TLS server port number as passed in the CONNECT request
     SBuf sslCommonName_; ///< CN name for SSL certificate generation
 
     /// TLS client delivered SNI value. Empty string if none has been received.
@@ -465,14 +463,14 @@ private:
     SBuf sslBumpCertKey; ///< Key to use to store/retrieve generated certificate
 
     /// HTTPS server cert. fetching state for bump-ssl-server-first
-    Ssl::ServerBump *sslServerBump;
-    Ssl::CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
+    Ssl::ServerBump *sslServerBump = nullptr;
+    Ssl::CertSignAlgorithm signAlgorithm = Ssl::algSignTrusted; ///< The signing algorithm to use
 #endif
 
     /// the reason why we no longer write the response or nil
-    const char *stoppedSending_;
+    const char *stoppedSending_ = nullptr;
     /// the reason why we no longer read the request or nil
-    const char *stoppedReceiving_;
+    const char *stoppedReceiving_ = nullptr;
     /// Connection annotations, clt_conn_tag and other tags are stored here.
     /// If set, are propagated to the current and all future master transactions
     /// on the connection.

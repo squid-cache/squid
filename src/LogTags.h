@@ -77,6 +77,9 @@ public:
     /// determine if the log tag code indicates a cache HIT
     bool isTcpHit() const;
 
+    /// \returns Cache-Status "hit" or "fwd=..." parameter (or nil)
+    const char *cacheStatusSource() const;
+
     /// various problems augmenting the primary log tag
     LogTagsErrors err;
 

@@ -19,6 +19,8 @@
 #include "ssl/support.h"
 #endif
 
+#include <bitset>
+
 Security::PeerOptions Security::ProxyOutgoingConfig;
 
 Security::PeerOptions::PeerOptions()
@@ -539,7 +541,7 @@ Security::PeerOptions::parseOptions()
 /**
  * Parses the TLS flags squid.conf parameter
  */
-long
+Security::ParsedPortFlags
 Security::PeerOptions::parseFlags()
 {
     if (sslFlags.isEmpty())
@@ -547,11 +549,12 @@ Security::PeerOptions::parseFlags()
 
     static struct {
         SBuf label;
-        long mask;
+        ParsedPortFlags mask;
     } flagTokens[] = {
         { SBuf("NO_DEFAULT_CA"), SSL_FLAG_NO_DEFAULT_CA },
         { SBuf("DELAYED_AUTH"), SSL_FLAG_DELAYED_AUTH },
         { SBuf("DONT_VERIFY_PEER"), SSL_FLAG_DONT_VERIFY_PEER },
+        { SBuf("CONDITIONAL_AUTH"), SSL_FLAG_CONDITIONAL_AUTH },
         { SBuf("DONT_VERIFY_DOMAIN"), SSL_FLAG_DONT_VERIFY_DOMAIN },
         { SBuf("NO_SESSION_REUSE"), SSL_FLAG_NO_SESSION_REUSE },
 #if X509_V_FLAG_CRL_CHECK
@@ -564,10 +567,11 @@ Security::PeerOptions::parseFlags()
     ::Parser::Tokenizer tok(sslFlags);
     static const CharacterSet delims("Flag-delimiter", ":,");
 
-    long fl = 0;
+    ParsedPortFlags fl = 0;
     do {
-        long found = 0;
+        ParsedPortFlags found = 0;
         for (size_t i = 0; flagTokens[i].mask; ++i) {
+            // XXX: skips FOO in FOOBAR, missing merged flags and trailing typos
             if (tok.skip(flagTokens[i].label)) {
                 found = flagTokens[i].mask;
                 break;
@@ -583,6 +587,18 @@ Security::PeerOptions::parseFlags()
         } else
             fl |= found;
     } while (tok.skipOne(delims));
+
+    const auto mutuallyExclusive =
+        SSL_FLAG_DONT_VERIFY_PEER|
+        SSL_FLAG_DELAYED_AUTH|
+        SSL_FLAG_CONDITIONAL_AUTH;
+    typedef std::bitset<sizeof(decltype(fl))> ParsedPortFlagBits;
+    if (ParsedPortFlagBits(fl & mutuallyExclusive).count() > 1) {
+        if (fl & SSL_FLAG_CONDITIONAL_AUTH)
+            throw TextException("CONDITIONAL_AUTH is not compatible with NO_DEFAULT_CA and DELAYED_AUTH flags", Here());
+        debugs(83, DBG_PARSE_NOTE(DBG_IMPORTANT), "WARNING: Mixtures of incompatible TLS flags" <<
+               " are deprecated and will become a fatal configuration error");
+    }
 
     return fl;
 }

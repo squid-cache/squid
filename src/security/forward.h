@@ -50,6 +50,7 @@
 #define SSL_FLAG_NO_SESSION_REUSE   (1<<4)
 #define SSL_FLAG_VERIFY_CRL         (1<<5)
 #define SSL_FLAG_VERIFY_CRL_ALL     (1<<6)
+#define SSL_FLAG_CONDITIONAL_AUTH   (1<<7)
 
 /// Network/connection security abstraction layer
 namespace Security
@@ -163,6 +164,11 @@ typedef std::shared_ptr<struct gnutls_priority_st> ParsedOptions;
 #else
 class ParsedOptions {}; // we never parse/use TLS options in this case
 #endif
+
+/// bitmask representing configured http(s)_port `sslflags`
+/// as well tls_outgoing_options `flags`, cache_peer `sslflags`, and
+/// icap_service `tls-flags`
+typedef long ParsedPortFlags;
 
 class PeerConnector;
 class PeerOptions;

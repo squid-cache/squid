@@ -24,6 +24,7 @@ libbase_la_SOURCES = \
 	CbcPointer.h \
 	CharacterSet.cc \
 	CharacterSet.h \
+	ClpMap.h \
 	CodeContext.cc \
 	CodeContext.h \
 	EnumIterator.h \
@@ -36,7 +37,7 @@ libbase_la_SOURCES = \
 	InstanceId.h \
 	Lock.h \
 	LookupTable.h \
-	LruMap.h \
+	Optional.h \
 	Packable.h \
 	PackableStream.h \
 	Range.h \

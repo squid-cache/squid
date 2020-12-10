@@ -74,8 +74,8 @@ public:
     /// reduce the risk of selecting the wrong disk cache for the growing entry.
     int64_t accumulateMore(StoreEntry &) const;
 
-    /// slowly calculate (and cache) hi/lo watermarks and similar limits
-    void updateLimits();
+    /// update configuration, including limits (re)calculation
+    void configure();
 
     /// called when the entry is no longer needed by any transaction
     void handleIdleEntry(StoreEntry &);
