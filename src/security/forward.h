@@ -18,6 +18,7 @@
 #include <gnutls/abstract.h>
 #endif
 #include <list>
+#include <limits>
 #if USE_OPENSSL
 #include "compat/openssl.h"
 #if HAVE_OPENSSL_BN_H
@@ -194,7 +195,7 @@ typedef RefCount<ErrorDetail> ErrorDetailPointer;
 /// supplement official certificate validation errors to cover special cases.
 /// We use negative values, assuming that those official errors are positive.
 enum {
-    SQUID_TLS_ERR_OFFSET = INT_MIN,
+    SQUID_TLS_ERR_OFFSET = std::numeric_limits<int>::min(),
 
     /* TLS library calls/contexts other than validation (e.g., I/O) */
     SQUID_TLS_ERR_ACCEPT, ///< failure to accept a connection from a TLS client
