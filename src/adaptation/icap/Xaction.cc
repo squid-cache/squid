@@ -375,8 +375,7 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
 // unexpected connection close while talking to the ICAP service
 void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &)
 {
-    if (encryptionWait)
-        encryptionWait.cancel("Connection closed before SSL negotiation finished");
+    encryptionWait.cancel("Connection closed before SSL negotiation finished");
     closer = NULL;
     handleCommClosed();
 }
@@ -591,6 +590,8 @@ void Adaptation::Icap::Xaction::swanSong()
         connWait.cancel("Icap::Xaction::swanSong");
         service().noteConnectionFailed("abort");
     }
+
+    encryptionWait.cancel("Icap::Xaction::swanSong");
 
     closeConnection(); // TODO: rename because we do not always close
 
