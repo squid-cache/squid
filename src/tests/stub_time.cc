@@ -25,5 +25,7 @@ const char * Time::FormatStrf(time_t ) STUB_RETVAL("")
 const char * Time::FormatHttpd(time_t ) STUB_RETVAL("")
 
 void TimeEngine::tick() STUB
-TimeEngine::~TimeEngine() STUB
+TimeEngine::~TimeEngine() {STUB_NOP}
+
+std::ostream &operator <<(std::ostream &os, const timeval &) STUB_RETVAL(os)
 

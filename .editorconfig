@@ -1,0 +1,32 @@
+# https://editorconfig.org/
+# specification: https://editorconfig-specification.readthedocs.io/en/latest/
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{c,h,hh,cc,cci}]
+indent_style = space
+indent_size = 4
+
+[Makefile]
+indent_style = tab
+
+[*.am]
+indent_style = tab
+
+[*.{ac,m4}]
+indent_style = space
+indent_size = 2
+
+[*.awk]
+indent_style = space
+indent_size = 4
+
+[*.{pl,pl.in,pm}]
+indent_style = space
+indent_size = 4
+
+# [*.data.pre]
+# no clear convention here

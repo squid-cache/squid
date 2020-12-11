@@ -10,7 +10,8 @@
 #define SQUID_HTTPHDRSURROGATECONTROLTARGET_H
 
 #include "defines.h" //for bit mask operations
-#include "HttpHdrSc.h"
+#include "http/forward.h"
+#include "SquidString.h"
 
 class Packable;
 class StatHist;
@@ -22,21 +23,16 @@ class StoreEntry;
  */
 class HttpHdrScTarget
 {
-    MEMPROXY_CLASS(HttpHdrScTarget);
-
     // parsing is done in HttpHdrSc, need to grant them access.
     friend class HttpHdrSc;
 public:
     static const int MAX_AGE_UNSET=-1; //max-age is unset
     static const int MAX_STALE_UNSET=0; //max-stale is unset
 
-    HttpHdrScTarget(const char *target_):
-        mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
-    HttpHdrScTarget(const String &target_):
-        mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
-    HttpHdrScTarget(const HttpHdrScTarget &t):
-        mask(t.mask), max_age(t.max_age), max_stale(t.max_stale),
-        content_(t.content_), target(t.target) {}
+    explicit HttpHdrScTarget(const char *aTarget): target(aTarget) {}
+    explicit HttpHdrScTarget(const String &aTarget): target(aTarget) {}
+    explicit HttpHdrScTarget(const HttpHdrScTarget &) = delete; // avoid accidental string copies
+    HttpHdrScTarget &operator =(const HttpHdrScTarget &) = delete; // avoid accidental string copies
 
     bool hasNoStore() const {return isSet(SC_NO_STORE); }
     void noStore(bool v) { setMask(SC_NO_STORE,v); }
@@ -93,12 +89,11 @@ private:
         else EBIT_CLR(mask,id);
     }
 
-    int mask;
-    int max_age;
-    int max_stale;
+    int mask = 0;
+    int max_age = MAX_AGE_UNSET;
+    int max_stale = MAX_STALE_UNSET;
     String content_;
     String target;
-    dlink_node node;
 };
 
 void httpHdrScTargetStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);

@@ -83,10 +83,11 @@ typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 bool InitServerContext(Security::ContextPointer &, AnyP::PortCfg &);
 
 /// initialize a TLS client context with OpenSSL specific settings
-bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, long flags);
+bool InitClientContext(Security::ContextPointer &, Security::PeerOptions &, Security::ParsedPortFlags);
 
 /// set the certificate verify callback for a context
-void SetupVerifyCallback(Security::ContextPointer &);
+void ConfigurePeerVerification(Security::ContextPointer &, const Security::ParsedPortFlags);
+void DisablePeerVerification(Security::ContextPointer &);
 
 /// if required, setup callback for generating ephemeral RSA keys
 void MaybeSetupRsaCallback(Security::ContextPointer &);
@@ -231,7 +232,7 @@ Security::ContextPointer GenerateSslContext(CertificateProperties const &, Secur
   \param properties Check if the context certificate matches the given properties
   \return true if the contexts certificate is valid, false otherwise
  */
-bool verifySslCertificate(Security::ContextPointer &, CertificateProperties const &);
+bool verifySslCertificate(const Security::ContextPointer &, CertificateProperties const &);
 
 /**
   \ingroup ServerProtocolSSLAPI

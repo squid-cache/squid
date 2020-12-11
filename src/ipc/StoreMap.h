@@ -129,6 +129,25 @@ public:
     size_t sharedMemorySize() const { return SharedMemorySize(capacity); }
     static size_t SharedMemorySize(const int aCapacity) { return sizeof(StoreMapItems<Item>) + aCapacity*sizeof(Item); }
 
+    Item &at(const int index)
+    {
+        assert(index >= 0);
+        assert(index < capacity);
+        return items[index];
+    }
+
+    const Item &at(const int index) const
+    {
+        return const_cast<StoreMapItems<C>&>(*this).at(index);
+    }
+
+    /// reset all items to the same value
+    void fill(const Item &value)
+    {
+        for (int index = 0; index < capacity; ++index)
+            items[index] = value;
+    }
+
     const int capacity; ///< total number of items
     Ipc::Mem::FlexibleArray<Item> items; ///< storage
 };
@@ -293,6 +312,9 @@ public:
     void closeForReading(const sfileno fileno);
     /// same as closeForReading() but also frees the entry if it is unlocked
     void closeForReadingAndFreeIdle(const sfileno fileno);
+
+    /// openForReading() but creates a new entry if there is no old one
+    const Anchor *openOrCreateForReading(const cache_key *, sfileno &, const StoreEntry &);
 
     /// writeable slice within an entry chain created by openForWriting()
     Slice &writeableSlice(const AnchorId anchorId, const SliceId sliceId);

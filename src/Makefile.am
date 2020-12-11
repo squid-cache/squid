@@ -241,8 +241,6 @@ squid_SOURCES = \
 	CommRead.h \
 	CommandLine.cc \
 	CommandLine.h \
-	CompletionDispatcher.cc \
-	CompletionDispatcher.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ConfigParser.h \
@@ -721,6 +719,7 @@ EXTRA_DIST = \
 	mk-string-arrays.awk \
 	repl_modules.sh \
 	$(STUB_SOURCE) \
+	tests/STUB.h \
 	mib.txt \
 	mime.conf.default
 
@@ -1002,7 +1001,6 @@ nodist_tests_testURL_SOURCES = \
 	tests/stub_libmem.cc
 tests_testURL_LDADD = \
 	libsquid.la \
-	proxyp/libproxyp.la \
 	anyp/libanyp.la \
 	parser/libparser.la \
 	base/libbase.la \
@@ -1509,6 +1507,7 @@ tests_testStore_SOURCES = \
 	tests/testStore.h \
 	tests/testStoreController.cc \
 	tests/testStoreController.h \
+	StoreFileSystem.cc \
 	tests/testStoreHashIndex.cc \
 	tests/testStoreHashIndex.h \
 	StoreIOState.cc \
@@ -1598,12 +1597,12 @@ tests_testStore_LDADD= \
 	ip/libip.la \
 	fs/libfs.la \
 	mgr/libmgr.la \
-	ipc/libipc.la \
 	anyp/libanyp.la \
 	mem/libmem.la \
 	store/libstore.la \
 	sbuf/libsbuf.la \
 	DiskIO/libdiskio.la \
+	ipc/libipc.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1783,7 +1782,6 @@ tests_testDiskIO_LDADD = \
 	dns/libdns.la \
 	base/libbase.la \
 	mem/libmem.la \
-	store/libstore.la \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
@@ -1899,6 +1897,7 @@ tests_test_http_range_SOURCES = \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	IoStats.h \
+	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -2288,6 +2287,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequestMethod.h \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	IoStats.h \
+	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -2591,6 +2591,7 @@ tests_testCacheManager_SOURCES = \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	IoStats.h \
+	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -2911,6 +2912,7 @@ tests_testEvent_SOURCES = \
 	HttpRequest.cc \
 	tests/stub_HttpUpgradeProtocolAccess.cc \
 	IoStats.h \
+	tests/stub_IpcIoFile.cc \
 	LogTags.cc \
 	MasterXaction.cc \
 	MasterXaction.h \
@@ -3097,237 +3099,15 @@ tests_testEvent_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testEventLoop
 tests_testEventLoop_SOURCES = \
-	$(DELAY_POOL_SOURCE) \
-	$(DNSSOURCE) \
-	$(HTCPSOURCE) \
-	$(IPC_SOURCE) \
-	$(SNMP_SOURCE) \
-	$(UNLINKDSOURCE) \
-	$(WIN32_SOURCE) \
-	AccessLogEntry.cc \
-	AuthReg.h \
-	BodyPipe.cc \
-	tests/stub_CacheDigest.cc \
-	CacheDigest.h \
-	CachePeer.cc \
-	CachePeer.h \
-	ClientInfo.h \
-	tests/stub_CollapsedForwarding.cc \
-	ConfigOption.cc \
-	ConfigParser.cc \
-	CpuAffinityMap.cc \
-	CpuAffinityMap.h \
-	CpuAffinitySet.cc \
-	CpuAffinitySet.h \
-	tests/stub_ETag.cc \
-	EventLoop.cc \
 	tests/testEventLoop.cc \
-	EventLoop.h \
-	tests/testEventLoop.h \
-	ExternalACLEntry.cc \
-	FadingCounter.cc \
-	FileMap.h \
-	FwdState.cc \
-	FwdState.h \
-	HappyConnOpener.cc \
-	HappyConnOpener.h \
-	HttpBody.cc \
-	HttpBody.h \
-	tests/stub_HttpControlMsg.cc \
-	HttpHdrCc.cc \
-	HttpHdrCc.h \
-	HttpHdrContRange.cc \
-	HttpHdrRange.cc \
-	HttpHdrSc.cc \
-	HttpHdrScTarget.cc \
-	HttpHeader.cc \
-	HttpHeader.h \
-	HttpHeaderFieldInfo.h \
-	HttpHeaderFieldStat.h \
-	HttpHeaderTools.cc \
-	HttpHeaderTools.h \
-	HttpReply.cc \
-	HttpRequest.cc \
-	tests/stub_HttpUpgradeProtocolAccess.cc \
-	IoStats.h \
-	LogTags.cc \
-	MasterXaction.cc \
-	MasterXaction.h \
-	MemBuf.cc \
-	MemObject.cc \
-	MemStore.cc \
-	Notes.cc \
-	Notes.h \
-	Parsing.cc \
-	PeerPoolMgr.cc \
-	PeerPoolMgr.h \
-	Pipeline.cc \
-	Pipeline.h \
-	RefreshPattern.h \
-	RemovalPolicy.cc \
-	RequestFlags.cc \
-	RequestFlags.h \
-	ResolvedPeers.cc \
-	ResolvedPeers.h \
-	tests/stub_SBufDetailedStats.cc \
-	SquidMath.cc \
-	SquidMath.h \
-	StatCounters.cc \
-	StatCounters.h \
-	StatHist.cc \
-	StatHist.h \
-	StoreFileSystem.cc \
-	StoreIOState.cc \
-	tests/stub_StoreMeta.cc \
-	StoreMetaUnpacker.cc \
-	StoreSwapLogData.cc \
-	StrList.cc \
-	StrList.h \
-	String.cc \
-	Transients.cc \
-	tests/stub_cache_cf.cc \
-	cache_cf.h \
-	cache_manager.cc \
-	tests/stub_carp.cc \
-	carp.h \
-	cbdata.cc \
-	clientStream.cc \
-	tests/stub_client_db.cc \
-	client_side.cc \
-	client_side.h \
-	client_side_reply.cc \
-	client_side_request.cc \
-	debug.cc \
-	dlink.cc \
-	dlink.h \
-	errorpage.cc \
-	event.cc \
-	external_acl.cc \
-	tests/stub_fatal.cc \
-	fatal.h \
-	fd.cc \
-	fd.h \
-	fde.cc \
-	filemap.cc \
-	fqdncache.cc \
-	fqdncache.h \
-	fs_io.cc \
-	fs_io.h \
-	tests/stub_gopher.cc \
-	gopher.h \
-	helper.cc \
-	hier_code.h \
-	http.cc \
-	icp_v2.cc \
-	icp_v3.cc \
-	int.cc \
-	int.h \
-	internal.cc \
-	internal.h \
-	tests/stub_ipc_Forwarder.cc \
-	ipcache.cc \
-	tests/stub_libauth.cc \
-	tests/stub_libauth_acls.cc \
-	tests/stub_libdiskio.cc \
-	tests/stub_libeui.cc \
-	tests/stub_libmem.cc \
-	tests/stub_libsecurity.cc \
-	tests/stub_libstore.cc \
-	tests/stub_main_cc.cc \
-	mem_node.cc \
-	mime.cc \
-	mime.h \
-	mime_header.cc \
-	mime_header.h \
-	multicast.cc \
-	multicast.h \
-	neighbors.cc \
-	neighbors.h \
-	pconn.cc \
-	peer_digest.cc \
-	peer_proxy_negotiate_auth.cc \
-	peer_proxy_negotiate_auth.h \
-	peer_select.cc \
-	peer_sourcehash.cc \
-	peer_sourcehash.h \
-	peer_userhash.cc \
-	peer_userhash.h \
-	tests/stub_redirect.cc \
-	redirect.h \
-	refresh.cc \
-	refresh.h \
-	repl_modules.h \
-	stat.cc \
-	stat.h \
-	stmem.cc \
-	store.cc \
-	store_client.cc \
-	tests/stub_store_digest.cc \
-	store_digest.h \
-	store_io.cc \
-	store_key_md5.cc \
-	store_key_md5.h \
-	store_log.cc \
-	store_log.h \
-	store_rebuild.cc \
-	store_rebuild.h \
-	tests/stub_store_stats.cc \
-	store_swapin.cc \
-	store_swapin.h \
-	store_swapmeta.cc \
-	store_swapout.cc \
-	time.cc \
-	tools.cc \
-	tools.h \
-	tests/stub_tunnel.cc \
-	urn.cc \
-	urn.h \
-	tests/stub_wccp2.cc \
-	wccp2.h \
-	tests/stub_whois.cc \
-	whois.h \
-	wordlist.cc \
-	wordlist.h
+	tests/testEventLoop.h
 nodist_tests_testEventLoop_SOURCES = \
-	$(BUILT_SOURCES)
+	EventLoop.cc \
+	tests/stub_debug.cc \
+	tests/stub_fatal.cc \
+	tests/stub_time.cc
 tests_testEventLoop_LDADD = \
-	libsquid.la \
-	clients/libclients.la \
-	servers/libservers.la \
-	ftp/libftp.la \
-	helper/libhelper.la \
-	http/libhttp.la \
-	proxyp/libproxyp.la \
-	parser/libparser.la \
-	ident/libident.la \
-	acl/libacls.la \
-	acl/libstate.la \
-	acl/libapi.la \
-	dns/libdns.la \
 	base/libbase.la \
-	ip/libip.la \
-	fs/libfs.la \
-	anyp/libanyp.la \
-	icmp/libicmp.la \
-	comm/libcomm.la \
-	log/liblog.la \
-	format/libformat.la \
-	$(REPL_OBJS) \
-	$(ADAPTATION_LIBS) \
-	$(ESI_LIBS) \
-	$(SSL_LIBS) \
-	$(top_builddir)/lib/libmisccontainers.la \
-	$(top_builddir)/lib/libmiscencoding.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	sbuf/libsbuf.la \
-	store/libstore.la \
-	$(SNMP_LIBS) \
-	$(NETTLELIB) \
-	$(REGEXLIB) \
-	$(SSLLIB) \
-	$(KRB5LIBS) \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)

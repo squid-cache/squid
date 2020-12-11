@@ -14,6 +14,7 @@
 #include "rfc1123.h"
 
 #include <ctime>
+#include <iosfwd>
 /* NP: sys/time.h is provided by libcompat */
 
 /* Use uint64_t to store milliseconds */
@@ -96,6 +97,9 @@ operator ==(const timeval &a, const timeval &b)
 {
     return !(a != b);
 }
+
+/// prints <seconds>.<microseconds>
+std::ostream &operator <<(std::ostream &, const timeval &);
 
 namespace Time
 {

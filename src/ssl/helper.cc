@@ -9,8 +9,11 @@
 #include "squid.h"
 #include "../helper.h"
 #include "anyp/PortCfg.h"
+#include "cache_cf.h"
 #include "fs_io.h"
 #include "helper/Reply.h"
+#include "Parsing.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "SquidTime.h"
@@ -19,7 +22,7 @@
 #include "ssl/helper.h"
 #include "wordlist.h"
 
-Ssl::CertValidationHelper::LruCache *Ssl::CertValidationHelper::HelperCache = nullptr;
+Ssl::CertValidationHelper::CacheType *Ssl::CertValidationHelper::HelperCache = nullptr;
 
 #if USE_SSL_CRTD
 
@@ -186,20 +189,30 @@ void Ssl::CertValidationHelper::Init()
     ssl_crt_validator->eom = '\1';
     assert(ssl_crt_validator->cmdline == NULL);
 
-    int ttl = 60;
-    size_t cache = 2048;
+    /* defaults */
+    int ttl = 3600; // 1 hour
+    size_t cache = 64*1024*1024; // 64 MB
     {
+        // TODO: Do this during parseConfigFile() for proper parsing, error handling
         char *tmp = xstrdup(Ssl::TheConfig.ssl_crt_validator);
         char *tmp_begin = tmp;
         char * token = NULL;
         bool parseParams = true;
         while ((token = strwordtok(NULL, &tmp))) {
             if (parseParams) {
-                if (strncmp(token, "ttl=", 4) == 0) {
-                    ttl = atoi(token + 4);
+                if (strcmp(token, "ttl=infinity") == 0) {
+                    ttl = std::numeric_limits<CacheType::Ttl>::max();
+                    continue;
+                } else if (strncmp(token, "ttl=", 4) == 0) {
+                    ttl = xatoi(token + 4);
+                    if (ttl < 0) {
+                        throw TextException(ToSBuf("Negative TTL in sslcrtvalidator_program ", Ssl::TheConfig.ssl_crt_validator,
+                                                   Debug::Extra, "For unlimited TTL, use ttl=infinity"),
+                                            Here());
+                    }
                     continue;
                 } else if (strncmp(token, "cache=", 6) == 0) {
-                    cache = atoi(token + 6);
+                    cache = xatoi(token + 6);
                     continue;
                 } else
                     parseParams = false;
@@ -212,7 +225,7 @@ void Ssl::CertValidationHelper::Init()
 
     //WARNING: initializing static member in an object initialization method
     assert(HelperCache == NULL);
-    HelperCache = new Ssl::CertValidationHelper::LruCache(ttl, cache);
+    HelperCache = new CacheType(cache, ttl);
 }
 
 void Ssl::CertValidationHelper::Shutdown()
@@ -279,9 +292,7 @@ sslCrtvdHandleReplyWrapper(void *data, const ::Helper::Reply &reply)
 
     if (Ssl::CertValidationHelper::HelperCache &&
             (validationResponse->resultCode == ::Helper::Okay || validationResponse->resultCode == ::Helper::Error)) {
-        Ssl::CertValidationResponse::Pointer *item = new Ssl::CertValidationResponse::Pointer(validationResponse);
-        if (!Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query, item))
-            delete item;
+        (void)Ssl::CertValidationHelper::HelperCache->add(crtdvdData->query, validationResponse);
     }
 
     delete crtdvdData;

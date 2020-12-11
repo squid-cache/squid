@@ -14,4 +14,5 @@
 
 void CollapsedForwarding::Broadcast(StoreEntry const&, const bool) STUB
 void CollapsedForwarding::Broadcast(const sfileno, const bool) STUB
+void CollapsedForwarding::StatQueue(std::ostream &) STUB
 

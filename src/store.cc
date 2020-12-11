@@ -10,11 +10,16 @@
 
 #include "squid.h"
 #include "base/AsyncCbdataCalls.h"
+#include "base/PackableStream.h"
 #include "base/TextException.h"
 #include "CacheDigest.h"
 #include "CacheManager.h"
+#include "CollapsedForwarding.h"
 #include "comm/Connection.h"
 #include "comm/Read.h"
+#if HAVE_DISKIO_MODULE_IPCIO
+#include "DiskIO/IpcIo/IpcIoFile.h"
+#endif
 #include "ETag.h"
 #include "event.h"
 #include "fde.h"
@@ -120,6 +125,20 @@ Store::Stats(StoreEntry * output)
 {
     assert(output);
     Root().stat(*output);
+}
+
+/// reports the current state of Store-related queues
+static void
+StatQueues(StoreEntry *e)
+{
+    assert(e);
+    PackableStream stream(*e);
+    CollapsedForwarding::StatQueue(stream);
+#if HAVE_DISKIO_MODULE_IPCIO
+    stream << "\n";
+    IpcIoFile::StatQueue(stream);
+#endif
+    stream.flush();
 }
 
 // XXX: new/delete operators need to be replaced with MEMPROXY_CLASS
@@ -496,27 +515,6 @@ StoreEntry::doAbandon(const char *context)
         debugs(20, DBG_IMPORTANT, "WARNING: " << __FILE__ << ":" << __LINE__ << ": found KEY_PRIVATE");
 
     Store::Root().handleIdleEntry(*this); // may delete us
-}
-
-void
-StoreEntry::getPublicByRequestMethod  (StoreClient *aClient, HttpRequest * request, const HttpRequestMethod& method)
-{
-    assert (aClient);
-    aClient->created(storeGetPublicByRequestMethod(request, method));
-}
-
-void
-StoreEntry::getPublicByRequest (StoreClient *aClient, HttpRequest * request)
-{
-    assert (aClient);
-    aClient->created(storeGetPublicByRequest(request));
-}
-
-void
-StoreEntry::getPublic (StoreClient *aClient, const char *uri, const HttpRequestMethod& method)
-{
-    assert (aClient);
-    aClient->created(storeGetPublic(uri, method));
 }
 
 StoreEntry *
@@ -1285,6 +1283,7 @@ storeRegisterWithCacheManager(void)
     Mgr::RegisterAction("store_io", "Store IO Interface Stats", &Mgr::StoreIoAction::Create, 0, 1);
     Mgr::RegisterAction("store_check_cachable_stats", "storeCheckCachable() Stats",
                         storeCheckCachableStats, 0, 1);
+    Mgr::RegisterAction("store_queues", "SMP Transients and Caching Queues", StatQueues, 0, 1);
 }
 
 void
@@ -1304,7 +1303,7 @@ storeInit(void)
 void
 storeConfigure(void)
 {
-    Store::Root().updateLimits();
+    Store::Root().configure();
 }
 
 bool
