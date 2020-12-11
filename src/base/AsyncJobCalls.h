@@ -269,8 +269,8 @@ JobWait<Job>::print(std::ostream &os) const
     // use a backarrow to emphasize that this is a callback: call24<-job6
     if (callback_)
         os << callback_->id << "<-";
-    if (const auto job = job_.get())
-        os << *job; // TODO: make AsyncJob::id public
+    if (const auto rawJob = job_.get())
+        os << *rawJob; // TODO: make AsyncJob::id public
     else
         os << job_; // raw pointer of a gone job may still be useful for triage
     return os;
