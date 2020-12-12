@@ -148,6 +148,8 @@ static void
 icapLookupDnsResults(const ipcache_addrs *ia, const Dns::LookupDetails &, void *data)
 {
     Adaptation::Icap::Xaction *xa = static_cast<Adaptation::Icap::Xaction *>(data);
+    /// TODO: refactor with CallJobHere1, passing either std::optional (after upgrading to C++17)
+    /// or Optional<Ip::Address> (when it can take non-trivial types)
     xa->dnsLookupDone(ia);
 }
 
