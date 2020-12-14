@@ -1185,7 +1185,7 @@ StoreEntry::release(const bool shareable)
         return;
     }
 
-    if (Store::Controller::store_dirs_rebuilding && hasDisk()) {
+    if (!Store::Controller::FullyIndexed() && hasDisk()) {
         /* TODO: Teach disk stores to handle releases during rebuild instead. */
 
         // lock the entry until rebuilding is done
@@ -1208,7 +1208,7 @@ storeLateRelease(void *)
     StoreEntry *e;
     static int n = 0;
 
-    if (Store::Controller::store_dirs_rebuilding) {
+    if (!Store::Controller::FullyIndexed()) {
         eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
         return;
     }

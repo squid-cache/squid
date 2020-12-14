@@ -29,9 +29,6 @@ void StoreRebuildData::updateStartTime(const timeval &dirStartTime)
 
 void storeRebuildComplete(StoreRebuildData *)
 {
-    --StoreController::store_dirs_rebuilding;
-    if (StoreController::store_dirs_rebuilding == 1)
-        --StoreController::store_dirs_rebuilding; // normally in storeCleanup()
 }
 
 bool

@@ -56,7 +56,6 @@ void Controller::transientsClearCollapsingRequirement(StoreEntry &) STUB
 void Controller::memoryDisconnect(StoreEntry &) STUB
 StoreSearch *Controller::search() STUB_RETVAL(nullptr)
 bool Controller::SmpAware() STUB_RETVAL(false)
-int Controller::store_dirs_rebuilding = 0;
 Controller nil;
 Controller &Root() STUB_RETVAL(Store::nil)
 void Init(Controller *) STUB

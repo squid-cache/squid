@@ -284,11 +284,6 @@ Store::Disks::init()
     store_table = hash_create(storeKeyHashCmp,
                               store_hash_buckets, storeKeyHashHash);
 
-    // Increment _before_ any possible storeRebuildComplete() calls so that
-    // storeRebuildComplete() can reliably detect when all disks are done. The
-    // level is decremented in each corresponding storeRebuildComplete() call.
-    StoreController::store_dirs_rebuilding += Config.cacheSwap.n_configured;
-
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         /* this starts a search of the store dirs, loading their
          * index. under the new Store api this should be
@@ -380,9 +375,6 @@ Store::Disks::maxObjectSize() const
 void
 Store::Disks::configure()
 {
-    if (!Config.cacheSwap.swapDirs)
-        Controller::store_dirs_rebuilding = 0; // nothing to index
-
     largestMinimumObjectSize = -1;
     largestMaximumObjectSize = -1;
     secondLargestMaximumObjectSize = -1;
@@ -681,11 +673,15 @@ Store::Disks::indexed(const int diskerId)
 }
 
 bool
-Store::Disks::fullyIndexed() const
+Store::Disks::FullyIndexed()
 {
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i)
-        if (!Dir(i).indexed)
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        auto &dir = Dir(i);
+        if (!dir.active())
+            continue;
+        if (!dir.indexed)
             return false;
+    }
     return true;
 }
 
@@ -723,10 +719,10 @@ storeDirWriteCleanLogs(int reopen)
     int dirn;
     int notdone = 1;
 
-    // Check for store_dirs_rebuilding because fatal() often calls us in early
+    // Check StoreController::FullyIndexed() because fatal() often calls us in early
     // initialization phases, before store log is initialized and ready. Also,
     // some stores do not support log cleanup during Store rebuilding.
-    if (StoreController::store_dirs_rebuilding) {
+    if (!StoreController::FullyIndexed()) {
         debugs(20, DBG_IMPORTANT, "Not currently OK to rewrite swap log.");
         debugs(20, DBG_IMPORTANT, "storeDirWriteCleanLogs: Operation aborted.");
         return 0;

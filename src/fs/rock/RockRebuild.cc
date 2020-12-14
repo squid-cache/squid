@@ -681,8 +681,7 @@ Rock::Rebuild::freeBadEntry(const sfileno fileno, const char *eDescription)
 void
 Rock::Rebuild::swanSong()
 {
-    debugs(47,3, HERE << "cache_dir #" << sd->index << " rebuild level: " <<
-           StoreController::store_dirs_rebuilding);
+    debugs(47,3, "cache_dir #" << sd->index);
     storeRebuildComplete(&counts);
 
     if (opt_foreground_rebuild)

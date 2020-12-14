@@ -136,13 +136,13 @@ public:
     static bool SmpAware();
 
     /// whether we are currently building the Store index in foreground mode
-    static bool WaitingForIndex() { return opt_foreground_rebuild && store_dirs_rebuilding; }
+    static bool WaitingForIndex() { return opt_foreground_rebuild && !FullyIndexed(); }
 
     // the disker successfully finished building its index
     void indexed(int diskerId);
 
-    /// the number of cache_dirs being rebuilt; TODO: move to Disks::Rebuilding
-    static int store_dirs_rebuilding;
+    /// either nothing to index (no swap dirs) or all dirs are indexed
+    static bool FullyIndexed();
 
 private:
     bool memoryCacheHasSpaceFor(const int pagesRequired) const;

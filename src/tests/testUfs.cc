@@ -126,12 +126,12 @@ testUfs::testUfsSearch()
     Store::Root().init();
 
     /* our swapdir must be scheduled to rebuild */
-    CPPUNIT_ASSERT_EQUAL(2, StoreController::store_dirs_rebuilding);
+    CPPUNIT_ASSERT(!StoreController::FullyIndexed());
 
     /* rebuild is a scheduled event */
     StockEventLoop loop;
 
-    while (StoreController::store_dirs_rebuilding)
+    while (!StoreController::FullyIndexed())
         loop.runOnce();
 
     /* cannot use loop.run(); as the loop will never idle: the store-dir
@@ -139,7 +139,7 @@ testUfs::testUfsSearch()
      */
 
     /* nothing left to rebuild */
-    CPPUNIT_ASSERT_EQUAL(0, StoreController::store_dirs_rebuilding);
+    CPPUNIT_ASSERT(StoreController::FullyIndexed());
 
     /* add an entry */
     {

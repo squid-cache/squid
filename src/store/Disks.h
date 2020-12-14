@@ -61,7 +61,7 @@ public:
     // the disker successfully finished building its index
     void indexed(int diskerId);
     // all diskers successfully rebuild their index
-    bool fullyIndexed() const;
+    static bool FullyIndexed();
 
 private:
     /* migration logic */
