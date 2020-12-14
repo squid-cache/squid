@@ -138,6 +138,9 @@ public:
     /// whether we are currently building the Store index in foreground mode
     static bool WaitingForIndex() { return opt_foreground_rebuild && store_dirs_rebuilding; }
 
+    // the disker successfully finished building its index
+    void indexed(int diskerId);
+
     /// the number of cache_dirs being rebuilt; TODO: move to Disks::Rebuilding
     static int store_dirs_rebuilding;
 

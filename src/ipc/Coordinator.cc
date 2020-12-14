@@ -89,6 +89,11 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
         handleForegroundRebuildMessage(StrandMessage(message));
         break;
 
+    case mtRebuildFinished:
+        debugs(54, 6, "Rebuild finished message");
+        handleRebuildFinishedMessage(StrandMessage(message));
+        break;
+
     case mtFindStrand: {
         const StrandSearchRequest sr(message);
         debugs(54, 6, HERE << "Strand search request: " << sr.requestorId <<
@@ -160,6 +165,17 @@ Ipc::Coordinator::handleForegroundRebuildMessage(const StrandMessage& msg)
         TypedMsgHdr message;
         response.pack(message);
         SendMessage(MakeAddr(strandAddrLabel, searchRequest.requestorId), message);
+    }
+}
+
+void
+Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
+{
+    for (const auto &strand: strands_) {
+        StrandMessage response(mtRebuildFinished, msg.strand);
+        TypedMsgHdr message;
+        response.pack(message);
+        SendMessage(MakeAddr(strandAddrLabel, strand.kidId), message);
     }
 }
 

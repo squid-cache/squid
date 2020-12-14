@@ -105,6 +105,7 @@ public:
     RemovalPolicy *repl;
     int removals;
     int scanned;
+    bool indexed;
 
     struct Flags {
         Flags() : selected(false), read_only(false) {}

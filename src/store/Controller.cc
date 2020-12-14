@@ -923,6 +923,12 @@ Store::Controller::SmpAware()
 }
 
 void
+Store::Controller::indexed(const int diskerId)
+{
+    swapDir->indexed(diskerId);
+}
+
+void
 Store::Controller::checkTransients(const StoreEntry &e) const
 {
     if (EBIT_TEST(e.flags, ENTRY_SPECIAL))

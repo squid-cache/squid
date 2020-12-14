@@ -58,6 +58,11 @@ public:
     /// whether any of disk caches has entry with e.key
     bool hasReadableEntry(const StoreEntry &) const;
 
+    // the disker successfully finished building its index
+    void indexed(int diskerId);
+    // all diskers successfully rebuild their index
+    bool fullyIndexed() const;
+
 private:
     /* migration logic */
     SwapDir *store(int const x) const;

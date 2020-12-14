@@ -89,6 +89,7 @@ public:
 
     /// handle open response from coordinator
     static void HandleOpenResponse(const Ipc::StrandMessage &);
+    /// called when Coordinator reports that the strand exists but is not usable (yet)
     static void HandleStrandBusyResponse(const Ipc::StrandMessage &);
 
     /// handle queue push notifications from worker or disker
@@ -96,6 +97,9 @@ public:
 
     /// prints IPC message queue state; suitable for cache manager reports
     static void StatQueue(std::ostream &);
+
+    /// called when Coordinator reports that a disker rebuilt its index
+    static void HandleRebuildFinished(const Ipc::StrandMessage &);
 
     DiskFile::Config config; ///< supported configuration options
 

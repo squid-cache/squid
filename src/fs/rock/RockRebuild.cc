@@ -378,6 +378,12 @@ Rock::Rebuild::checkpoint()
 {
     if (!done())
         eventAdd("Rock::Rebuild", Rock::Rebuild::Steps, this, 0.01, 1, true);
+    else {
+        if (UsingSmp())
+            Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, sd->filePath);
+        else
+            Store::Root().indexed(sd->disker);
+    }
 }
 
 bool

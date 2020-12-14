@@ -671,6 +671,25 @@ Store::Disks::hasReadableEntry(const StoreEntry &e) const
 }
 
 void
+Store::Disks::indexed(const int diskerId)
+{
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        auto &dir = Dir(i);
+        if (dir.disker == diskerId)
+            dir.indexed = true;
+    }
+}
+
+bool
+Store::Disks::fullyIndexed() const
+{
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i)
+        if (!Dir(i).indexed)
+            return false;
+    return true;
+}
+
+void
 storeDirOpenSwapLogs()
 {
     for (int dirn = 0; dirn < Config.cacheSwap.n_configured; ++dirn)

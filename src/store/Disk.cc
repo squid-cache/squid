@@ -25,7 +25,7 @@ Store::Disk::Disk(char const *aType): theType(aType),
     max_size(0), min_objsize(-1), max_objsize (-1),
     path(NULL), index(-1), disker(-1),
     repl(NULL), removals(0), scanned(0),
-    cleanLog(NULL)
+    indexed(false), cleanLog(nullptr)
 {
     fs.blksize = 1024;
 }

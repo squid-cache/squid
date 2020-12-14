@@ -497,6 +497,12 @@ IpcIoFile::HandleStrandBusyResponse(const Ipc::StrandMessage &response)
 }
 
 void
+IpcIoFile::HandleRebuildFinished(const Ipc::StrandMessage &response)
+{
+    Store::Root().indexed(response.strand.kidId);
+}
+
+void
 IpcIoFile::HandleResponses(const char *const when)
 {
     debugs(47, 4, HERE << "popping all " << when);

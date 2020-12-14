@@ -20,6 +20,7 @@ namespace Ipc
 typedef enum { enumBegin_ = 0,
                mtRegistration, ///< strand registration with Coordinator (also used as an ACK)
                mtForegroundRebuild, ///< the disker is building its index in foreground mode
+               mtRebuildFinished, ///< the disker rebuilt its index
                mtFindStrand, ///< a worker requests a strand from Coordinator
                /// a mtFindStrand answer: the strand exists but needs more time to become usable
                /// the sender should send mtStrandReady (or more mtStrandBusy) later

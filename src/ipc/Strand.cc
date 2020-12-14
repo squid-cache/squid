@@ -78,6 +78,10 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         IpcIoFile::HandleStrandBusyResponse(StrandMessage(message));
         break;
 
+    case mtRebuildFinished:
+        IpcIoFile::HandleRebuildFinished(StrandMessage(message));
+        break;
+
     case mtIpcIoNotification:
         IpcIoFile::HandleNotification(message);
         break;
