@@ -139,7 +139,7 @@ public:
     static bool WaitingForIndex() { return opt_foreground_rebuild && !FullyIndexed(); }
 
     // the disker successfully finished building its index
-    void indexed(int diskerId);
+    void indexed(const char *filePath);
 
     /// either nothing to index (no swap dirs) or all dirs are indexed
     static bool FullyIndexed();

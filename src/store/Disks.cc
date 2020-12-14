@@ -663,12 +663,15 @@ Store::Disks::hasReadableEntry(const StoreEntry &e) const
 }
 
 void
-Store::Disks::indexed(const int diskerId)
+Store::Disks::indexed(const char *filePath)
 {
+    assert(filePath);
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         auto &dir = Dir(i);
-        if (dir.disker == diskerId)
+        if (strcmp(filePath, dir.path) == 0) {
             dir.indexed = true;
+            return;
+        }
     }
 }
 

@@ -382,7 +382,7 @@ Rock::Rebuild::checkpoint()
         if (UsingSmp())
             Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, sd->filePath);
         else
-            Store::Root().indexed(sd->disker);
+            Store::Root().indexed(sd->path);
     }
 }
 

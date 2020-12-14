@@ -59,7 +59,7 @@ public:
     bool hasReadableEntry(const StoreEntry &) const;
 
     // the disker successfully finished building its index
-    void indexed(int diskerId);
+    void indexed(const char *filePath);
     // all diskers successfully rebuild their index
     static bool FullyIndexed();
 

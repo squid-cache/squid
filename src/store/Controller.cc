@@ -914,9 +914,9 @@ Store::Controller::SmpAware()
 }
 
 void
-Store::Controller::indexed(const int diskerId)
+Store::Controller::indexed(const char *filePath)
 {
-    swapDir->indexed(diskerId);
+    swapDir->indexed(filePath);
 }
 
 bool
