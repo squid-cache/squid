@@ -651,13 +651,13 @@ HttpRequest::canHandle1xx() const
     return true;
 }
 
-bool
+Http::StatusCode
 HttpRequest::canUseContentLength() const
 {
     // RFC 7230 Section 3.3.3 #4:
     // conflicting Content-Length(s) mean a message framing error
     if (header.conflictingContentLength())
-        return false;
+        return Http::scBadRequest;
 
     // HTTP/1.0 requirements differ from HTTP/1.1
     if (http_ver <= Http::ProtocolVersion(1,0)) {
@@ -668,7 +668,7 @@ HttpRequest::canUseContentLength() const
         //   A valid Content-Length is required on all HTTP/1.0 POST requests.
         // "
         if (m == Http::METHOD_POST)
-            return (content_length >= 0);
+            return (content_length >= 0 ? Http::scNone : Http::scLengthRequired);
 
         // RFC 1945 section 7.2:
         // "
@@ -677,7 +677,7 @@ HttpRequest::canUseContentLength() const
         // "
         // GET and HEAD do not define ('call for') an entity
         if (m == Http::METHOD_GET || m == Http::METHOD_HEAD)
-            return (content_length < 0);
+            return (content_length < 0 ? Http::scNone : Http::scBadRequest);
 
         // other methods are not defined in RFC 1945
     }
@@ -689,7 +689,7 @@ HttpRequest::canUseContentLength() const
     //   framing is independent of method semantics, even if the method does
     //   not define any use for a message body.
     // "
-    return true;
+    return Http::scNone;
 }
 
 bool

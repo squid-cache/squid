@@ -1697,18 +1697,19 @@ clientProcessRequest(ConnStateData *conn, const Http1::RequestParserPointer &hp,
     }
 
     const auto chunked = request->header.chunked();
-    if (!chunked && !request->canUseContentLength()) {
-        clientStreamNode *node = context->getClientReplyContext();
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
-        conn->quitAfterError(request.getRaw());
-        repContext->setReplyToError(ERR_INVALID_REQ,
-                                    Http::scLengthRequired, request->method, NULL,
-                                    conn, request.getRaw(), nullptr, nullptr);
-        assert(context->http->out.offset == 0);
-        context->pullData();
-        clientProcessRequestFinished(conn, request);
-        return;
+    if (!chunked) {
+        const auto clResult = request->canUseContentLength();
+        if (clResult != Http::scNone) {
+            auto *node = context->getClientReplyContext();
+            auto *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+            assert(repContext);
+            conn->quitAfterError(request.getRaw());
+            repContext->setReplyToError(ERR_INVALID_REQ, clResult, request->method, nullptr, conn, request.getRaw(), nullptr, nullptr);
+            assert(context->http->out.offset == 0);
+            context->pullData();
+            clientProcessRequestFinished(conn, request);
+            return;
+        }
     }
 
     clientSetKeepaliveFlag(http);

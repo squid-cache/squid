@@ -249,7 +249,7 @@ public:
     virtual void configureContentLengthInterpreter(Http::ContentLengthInterpreter &) {}
 
     /// checks whether the Content-Length header (or lack of) is acceptible
-    bool canUseContentLength() const;
+    Http::StatusCode canUseContentLength() const;
 
     /// Parses request header using Parser.
     /// Use it in contexts where the Parser object is available.
