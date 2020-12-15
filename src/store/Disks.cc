@@ -301,8 +301,6 @@ Store::Disks::init()
          */
         if (Dir(i).active())
             store(i)->init();
-        else
-            storeRebuildComplete(nullptr, Dir(i).path);
     }
 
     if (strcasecmp(Config.store_dir_select_algorithm, "round-robin") == 0) {
