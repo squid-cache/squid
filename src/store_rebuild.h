@@ -64,7 +64,7 @@ operator <<(std::ostream &os, const Progress &p)
 }
 
 void storeRebuildStart(void);
-void storeRebuildComplete(StoreRebuildData *);
+void storeRebuildComplete(StoreRebuildData *, const char *filePath);
 void storeRebuildProgress(int sd_index, int total, int sofar);
 
 /// loads entry from disk; fills supplied memory buffer on success

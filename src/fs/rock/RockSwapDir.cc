@@ -824,10 +824,8 @@ Rock::SwapDir::ioCompletedNotification()
         startAcceptingRequests();
     // else postpone until Rock::Rebuild::swanSong()
 
-    if (!Rebuild::Start(*this)) {
-        Store::Root().indexed(path);
-        storeRebuildComplete(nullptr);
-    }
+    if (!Rebuild::Start(*this))
+        storeRebuildComplete(nullptr, path);
 }
 
 void

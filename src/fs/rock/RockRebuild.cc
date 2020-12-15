@@ -682,7 +682,7 @@ void
 Rock::Rebuild::swanSong()
 {
     debugs(47,3, "cache_dir #" << sd->index);
-    storeRebuildComplete(&counts);
+    storeRebuildComplete(&counts, sd->path);
 
     if (opt_foreground_rebuild)
         sd->startAcceptingRequests();

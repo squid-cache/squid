@@ -117,8 +117,10 @@ storeCleanup(void *)
 /* meta data recreated from disk image in swap directory */
 void
 
-storeRebuildComplete(StoreRebuildData *dc)
+storeRebuildComplete(StoreRebuildData *dc, const char *filePath)
 {
+    Store::Root().indexed(filePath);
+
     if (dc) {
         counts.objcount += dc->objcount;
         counts.expcount += dc->expcount;
