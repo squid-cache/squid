@@ -306,8 +306,9 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_
         AsyncCall::Pointer resumeCall = asyncCall(83, 5,
                                         "Ssl::PeekingPeerConnector::resumeNegotiationError",
                                         NegotiationErrorDialer(this, &Ssl::PeekingPeerConnector::resumeNegotiationError, params));
-            suspendNegotiation(resumeCall);
-            return;
+        suspendNegotiation(resumeCall);
+        doValidationCallouts();
+        return;
     }
 
     const int fd = serverConnection()->fd;

@@ -117,7 +117,11 @@ protected:
     /// are missing certificates. Adds to the urlOfMissingCerts list the
     /// URLS of missing certificates if this information provided by the
     /// issued certificates with Authority Info Access extension.
-    bool checkForMissingCertificates();
+    void handleMissingCertificates();
+
+    /// Called after the missing certificates are downloaded. Re-runs
+    /// the TLS server certificates validation procedure.
+    void missingCertificatesRetrieved();
 
     /// Start downloading procedure for the given URL.
     void startCertDownloading(SBuf &url);
@@ -125,12 +129,18 @@ protected:
     /// Called by Downloader after a certificate object downloaded.
     void certDownloadingDone(SBuf &object, int status);
 
+    /// Whether there are missing certificates.
+    bool certificatesAreMissing() const;
+
+    /// Whether we need to run validation callout procedures.
+    bool needsValidationCallouts() const;
+
     /// Called while TLS negotiated before the squid-client sends
     /// the final TLS negotiation messages to the server (eg keys
     /// and client finished messages) to initiate required callouts
     /// to external resources (eg downloads missing certificates)
     /// \return true if required callouts to external resources
-    bool needsValidationCallouts();
+    void doValidationCallouts();
 
     /// Whether the server certificates are received
     bool certficatesReceived() const;

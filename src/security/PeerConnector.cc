@@ -403,6 +403,7 @@ Security::PeerConnector::handleNegotiateError(const int ret)
                                             cbDialer, this,
                                             Security::PeerConnector::noteWantWrite);
             suspendNegotiation(resumeCall);
+            doValidationCallouts();
         } else
             noteWantWrite();
         return;
@@ -683,41 +684,50 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         return;
     }
 
+    missingCertificatesRetrieved();
+}
+
+void
+Security::PeerConnector::missingCertificatesRetrieved()
+{
+    Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
     // We should have the full certificates chain now, so clear the
-    // Ssl::SquidVerifyData::missingIssuer flag to report any missing
-    // issuer certificates.
+    // Ssl::SquidVerifyData::missingIssuer flag.
     auto verifyData = Ssl::SquidVerifyData::SessionData(session);
     assert(verifyData);
     verifyData->missingIssuer = false;
+    // We downloaded any certificate we are able to download.
+    // Now check and report missing issuer certificate errors.
+    verifyData->ignoreIssuer = false;
 
     if (!Ssl::PeerCertificatesVerify(session, downloadedCerts)) {
         noteNegotiationError(SSL_ERROR_SSL, 0, 0);
         return;
     }
 
+    // XXX: We should give the control back to doValidationCallouts which
+    // initiated the certificates download procedure, but for now we are
+    // the only callout, so we are just resuming the TLS negotiation.
     resumeNegotiation();
 }
 
-bool
-Security::PeerConnector::checkForMissingCertificates()
+void
+Security::PeerConnector::handleMissingCertificates()
 {
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
-
-    const auto verifyData = Ssl::SquidVerifyData::SessionData(session);
-    assert(verifyData);
-    if (!verifyData->missingIssuer)
-        return false;
+    const STACK_OF(X509) *certs = SSL_get_peer_cert_chain(session.get());
+    // We are here because we found that there are missing Issuer certificates
+    // while we checked retrieved certificates. So certificates should received:
+    Must(certs);
 
     // Check for nested SSL certificates downloads. For example when the
     // certificate located in an SSL site which requires to download a
     // a missing certificate (... from an SSL site which requires to ...).
-
     const Downloader *csd = (request ? request->downloader.get() : nullptr);
-    if (csd && csd->nestedLevel() >= MaxNestedDownloads)
-        return false;
+    const bool abortDownload = (csd && csd->nestedLevel() >= MaxNestedDownloads);
 
-    if (const STACK_OF(X509) *certs = SSL_get_peer_cert_chain(session.get())) {
+    if (!abortDownload){
         debugs(83, 5, "Server sent " << sk_X509_num(certs) << " certificates");
         ContextPointer ctx(getTlsContext());
         Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx);
@@ -725,12 +735,11 @@ Security::PeerConnector::checkForMissingCertificates()
             debugs(83, 5, "Missing at least " << urlsOfMissingCerts.size() << " certificate(s), start downloading");
             startCertDownloading(urlsOfMissingCerts.front());
             urlsOfMissingCerts.pop();
-            return true;
+            return;
         }
-    } else
-        debugs(83, 5, "No certificates retrieved from server");
+    }
 
-    return false;
+    missingCertificatesRetrieved();
 }
 
 bool
@@ -744,19 +753,38 @@ Security::PeerConnector::certficatesReceived() const
 }
 
 bool
-Security::PeerConnector::needsValidationCallouts()
+Security::PeerConnector::certificatesAreMissing() const
+{
+    const int fd = serverConnection()->fd;
+    Security::SessionPointer session(fd_table[fd].ssl);
+    const auto verifyData = Ssl::SquidVerifyData::SessionData(session);
+    assert(verifyData);
+    return verifyData->missingIssuer;
+}
+
+bool
+Security::PeerConnector::needsValidationCallouts() const
 {
     if (runValidationCallouts)
         return false;
 
-    if (checkForMissingCertificates()) {
-        runValidationCallouts = true;
+    if (certificatesAreMissing())
         return true;
+
+    return false;
+}
+
+void
+Security::PeerConnector::doValidationCallouts()
+{
+    runValidationCallouts = true;
+
+    if (certificatesAreMissing()) {
+        handleMissingCertificates();
+        return;
     }
 
     // TODO: Move here the certificate validator code from sslFinalized()
-
-    return false;
 }
 
 void
