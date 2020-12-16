@@ -267,9 +267,6 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
     Ssl::SquidVerifyData *verifyData = (Ssl::SquidVerifyData *)SSL_get_ex_data(ssl, ssl_ex_index_squid_verify);
 
-    if (verifyData)
-        verifyData->gotServerCertificates = true;
-
     Security::CertPointer peer_cert;
     peer_cert.resetAndLock(X509_STORE_CTX_get0_cert(ctx));
 

@@ -154,8 +154,8 @@ protected:
     /// \return true if required callouts to external resources
     void doValidationCallouts();
 
-    /// Whether the server certificates are received
-    bool gotServerCertficates() const;
+    /// Whether we have access to server certificates
+    bool hasServerCertficates() const;
 #endif
 
     /// Called when the openSSL SSL_connect function needs to write data to

@@ -397,7 +397,7 @@ Security::PeerConnector::handleNegotiateError(const int ret)
         return;
 
     case SSL_ERROR_WANT_WRITE:
-        if (gotServerCertficates() && needsValidationCallouts()) {
+        if (hasServerCertficates() && needsValidationCallouts()) {
             typedef NullaryMemFunT<Security::PeerConnector> cbDialer;
             AsyncCall::Pointer resumeCall = JobCallback(83, 5,
                                             cbDialer, this,
@@ -452,7 +452,7 @@ Security::PeerConnector::handleNegotiateError(const int ret)
     recordNegotiationDetails();
 
 #if USE_OPENSSL
-    if (connectionMaySurviveOnError() && needsValidationCallouts()) {
+    if (connectionMaySurviveOnError() && hasServerCertficates() && needsValidationCallouts()) {
         // The connection may still used after the error, for example a
         // PeekingPeerConnector class may splice the connection.
         // If the certificates validation was incomplete, because we need
@@ -770,13 +770,11 @@ Security::PeerConnector::handleMissingCertificates()
 }
 
 bool
-Security::PeerConnector::gotServerCertficates() const
+Security::PeerConnector::hasServerCertficates() const
 {
     const int fd = serverConnection()->fd;
-    Security::SessionPointer session(fd_table[fd].ssl);
-    const auto verifyData = Ssl::SquidVerifyData::SessionData(session);
-    assert(verifyData);
-    return verifyData->gotServerCertificates;
+    const Security::SessionPointer session(fd_table[fd].ssl);
+    return SSL_get_peer_cert_chain(session.get());
 }
 
 bool
