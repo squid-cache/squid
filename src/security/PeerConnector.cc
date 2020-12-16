@@ -450,8 +450,35 @@ Security::PeerConnector::handleNegotiateError(const int ret)
 
     // Log connection details, if any
     recordNegotiationDetails();
+
+#if USE_OPENSSL
+    if (connectionMaySurviveOnError() && needsValidationCallouts()) {
+        // The connection may still used after the error, for example a
+        // PeekingPeerConnector class may splice the connection.
+        // If the certificates validation was incomplete, because we need
+        // to retrieve missing issuer certificates (TODO: or call an
+        // external validator), suspend and complete the validation checks.
+        typedef UnaryMemFunT<Security::PeerConnector, NegotiationErrorDetails> NegotiationErrorDialer;
+        NegotiationErrorDetails params(ret, ssl_error, ssl_lib_error);
+        AsyncCall::Pointer resumeCall = asyncCall(83, 5,
+                                                  "Security::PeerConnector::resumeNegotiationError",
+                                                  NegotiationErrorDialer(this, &Security::PeerConnector::resumeNegotiationError, params));
+        suspendNegotiation(resumeCall);
+        doValidationCallouts();
+        return;
+    }
+#endif
+
     noteNegotiationError(ret, ssl_error, ssl_lib_error);
 }
+
+#if USE_OPENSSL
+void
+Security::PeerConnector::resumeNegotiationError(NegotiationErrorDetails params)
+{
+    noteNegotiationError(params.sslIoResult, params.ssl_error, params.ssl_lib_error);
+}
+#endif
 
 void
 Security::PeerConnector::noteWantRead()

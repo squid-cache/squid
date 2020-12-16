@@ -292,25 +292,8 @@ Ssl::PeekingPeerConnector::noteWantWrite()
 }
 
 void
-Ssl::PeekingPeerConnector::resumeNegotiationError(NegotiationErrorDetails params)
-{
-    noteNegotiationError(params.sslIoResult, params.ssl_error, params.ssl_lib_error);
-}
-
-void
 Ssl::PeekingPeerConnector::noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error)
 {
-    if (needsValidationCallouts()) {
-        typedef UnaryMemFunT<Ssl::PeekingPeerConnector, NegotiationErrorDetails> NegotiationErrorDialer;
-        NegotiationErrorDetails params(result, ssl_error, ssl_lib_error);
-        AsyncCall::Pointer resumeCall = asyncCall(83, 5,
-                                        "Ssl::PeekingPeerConnector::resumeNegotiationError",
-                                        NegotiationErrorDialer(this, &Ssl::PeekingPeerConnector::resumeNegotiationError, params));
-        suspendNegotiation(resumeCall);
-        doValidationCallouts();
-        return;
-    }
-
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
     BIO *b = SSL_get_rbio(session.get());

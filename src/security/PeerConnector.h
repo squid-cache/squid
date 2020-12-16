@@ -54,6 +54,18 @@ public:
         virtual Security::EncryptorAnswer &answer() = 0;
     };
 
+#if USE_OPENSSL
+    /// Used to hold parameters for suspending and calling later the
+    /// Security::PeerConnector::noteNegotiationError call.
+    class NegotiationErrorDetails {
+    public:
+        NegotiationErrorDetails(int ioret, int an_ssl_error, int an_ssl_lib_error): sslIoResult(ioret), ssl_error(an_ssl_error), ssl_lib_error(an_ssl_lib_error) {}
+        int sslIoResult; ///< return value from an OpenSSL IO function (eg SSL_connect)
+        int ssl_error; ///< an error retrieved from SSL_get_error
+        int ssl_lib_error; ///< OpenSSL library error
+    };
+#endif
+
 public:
     PeerConnector(const Comm::ConnectionPointer &aServerConn,
                   AsyncCall::Pointer &aCallback,
@@ -168,6 +180,14 @@ protected:
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }
 
+    /// Some of the kid classes may want to continue use the connection
+    /// even on protocol errors, eg the PeekingPeerconnector kid class may splice
+    /// the a TLS connection on error.
+    /// The PeerConnector needs to know this possibility, in order to complete
+    /// after TLS protocol errors any incomplete certificate validation check,
+    /// if this is possible.
+    virtual bool connectionMaySurviveOnError() const { return false; }
+
     /// sends the given error to the initiator
     void bail(ErrorState *error);
 
@@ -201,6 +221,9 @@ private:
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
+
+    /// Resumes the noteNegotiationError call after a suspend
+    void resumeNegotiationError(NegotiationErrorDetails params);
 #endif
 
     static void NegotiateSsl(int fd, void *data);
@@ -229,6 +252,13 @@ private:
     bool runValidationCallouts = false;
 #endif
 };
+
+#if USE_OPENSSL
+inline std::ostream &operator <<(std::ostream &os, const Security::PeerConnector::NegotiationErrorDetails &holder)
+{
+    return os << "[" << holder.sslIoResult << ", " << holder.ssl_error << ", " << holder.ssl_lib_error << "]";
+}
+#endif
 
 } // namespace Security
 
