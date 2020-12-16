@@ -185,7 +185,7 @@ DOC_END
 NAME: request_entities
 TYPE: obsolete
 DOC_START
-	Remove this line. HTTP/1.1 defines per-message control over GET/HEAD message body using headers.
+	Remove this line. Squid now accepts GET/HEAD message body by default.
 DOC_END
 
 # Options removed in 5.x

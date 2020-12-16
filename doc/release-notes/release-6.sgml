@@ -69,7 +69,16 @@ This section gives an account of those changes in three categories:
 <sect1>Removed directives<label id="removeddirectives">
 <p>
 <descrip>
-	<p>There have been no directives changed.
+	<tag>request_entities</tag>
+	<p>Obsolete. Squid accepts an entity (aka payload, body) on
+	   HTTP/1.1 GET or HEAD requests when a Content-Length or
+	   Transfer-Encoding header is presented to clearly determine size.
+	<p>To retain the old behaviour use <em>http_access</em> rules:
+<verb>
+  acl fetch method GET HEAD
+  acl entity req_header Content-Length .
+  http_access deny fetch entity
+</verb>
 
 </descrip>
 
