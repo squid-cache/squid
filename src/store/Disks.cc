@@ -25,6 +25,8 @@
 #include "tools.h"
 #include "util.h" // for tvSubDsec() which should be in SquidTime.h
 
+bool Store::Disks::Validated = true; // assuming no active dirs by default
+
 typedef SwapDir *STDIRSELECT(const StoreEntry *e);
 
 static STDIRSELECT storeDirSelectSwapDirRoundRobin;
@@ -299,8 +301,10 @@ Store::Disks::init()
         *         above
         * Step 3: have the hash index walk the searches itself.
          */
-        if (Dir(i).active())
+        if (Dir(i).active()) {
             store(i)->init();
+            Validated = false;
+        }
     }
 
     if (strcasecmp(Config.store_dir_select_algorithm, "round-robin") == 0) {
@@ -661,12 +665,12 @@ Store::Disks::hasReadableEntry(const StoreEntry &e) const
 }
 
 void
-Store::Disks::indexed(const char *filePath)
+Store::Disks::markIndexed(const char *filePath)
 {
     assert(filePath);
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         auto &dir = Dir(i);
-        if (strcmp(filePath, dir.path) == 0) {
+        if (strncmp(dir.path, filePath, strlen(dir.path)) == 0) {
             dir.indexed = true;
             return;
         }
@@ -674,7 +678,7 @@ Store::Disks::indexed(const char *filePath)
 }
 
 bool
-Store::Disks::FullyIndexed()
+Store::Disks::AllIndexed()
 {
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         auto &dir = Dir(i);
@@ -723,7 +727,7 @@ storeDirWriteCleanLogs(int reopen)
     // Check StoreController::FullyIndexed() because fatal() often calls us in early
     // initialization phases, before store log is initialized and ready. Also,
     // some stores do not support log cleanup during Store rebuilding.
-    if (!StoreController::FullyIndexed()) {
+    if (!StoreController::IndexReady()) {
         debugs(20, DBG_IMPORTANT, "Not currently OK to rewrite swap log.");
         debugs(20, DBG_IMPORTANT, "storeDirWriteCleanLogs: Operation aborted.");
         return 0;

@@ -499,7 +499,7 @@ IpcIoFile::HandleStrandBusyResponse(const Ipc::StrandMessage &response)
 void
 IpcIoFile::HandleRebuildFinished(const Ipc::StrandMessage &response)
 {
-    Store::Root().indexed(response.strand.tag.termedBuf());
+    Store::Root().onIndexed(response.strand.tag.termedBuf());
 }
 
 void

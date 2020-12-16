@@ -195,8 +195,6 @@ public:
     }
 };
 
-RunnerRegistrationEntry(OpenListeningPortsRr);
-
 /** temporary thunk across to the unrefactored store interface */
 
 class StoreRootEngine : public AsyncEngine
@@ -956,12 +954,10 @@ startServices()
     if (Store::Controller::WaitingForIndex()) {
         debugs(1, DBG_IMPORTANT, "Waiting for Store indexing completion before opening listening sockets "
                "and/or contacting cache_peers");
-        return;
+        RunnerRegistrationEntry(OpenListeningPortsRr);
+    } else {
+        serverConnectionsOpen();
     }
-
-    if (!Config.cacheSwap.swapDirs)
-        RunRegisteredHere(RegisteredRunner::useFullyIndexedStore);
-    // else storeCleanup() is responsible for this
 }
 
 static void

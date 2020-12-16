@@ -26,6 +26,7 @@
 #include "snmp/Response.h"
 #endif
 
+#include <algorithm>
 #include <cerrno>
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
@@ -145,12 +146,23 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 
 void Ipc::Coordinator::handleRegistrationRequest(const StrandMessage& msg)
 {
+    const bool wasRegistered = findStrand(msg.strand.kidId);
     registerStrand(msg.strand);
 
     // send back an acknowledgement; TODO: remove as not needed?
     TypedMsgHdr message;
     msg.pack(message);
     SendMessage(MakeAddr(strandAddrLabel, msg.strand.kidId), message);
+
+    if (wasRegistered)
+        return;
+    // notify the newly registered strand by all already indexed strands
+    for (const auto &finished: rebuildFinishedStrands_) {
+        StrandMessage response(mtRebuildFinished, finished);
+        TypedMsgHdr finishedMsg;
+        response.pack(finishedMsg);
+        SendMessage(MakeAddr(strandAddrLabel, msg.strand.kidId), finishedMsg);
+    }
 }
 
 void
@@ -171,6 +183,11 @@ Ipc::Coordinator::handleForegroundRebuildMessage(const StrandMessage& msg)
 void
 Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
 {
+    const auto alreadyFinished = std::find_if(rebuildFinishedStrands_.begin(), rebuildFinishedStrands_.end(),
+            [&msg](const StrandCoord &coord) { return msg.strand.kidId == coord.kidId; });
+    assert(alreadyFinished == rebuildFinishedStrands_.end());
+    rebuildFinishedStrands_.push_back(msg.strand);
+    // Notify all existing strands, new strands will be notified in handleRegistrationRequest()
     for (const auto &strand: strands_) {
         StrandMessage response(mtRebuildFinished, msg.strand);
         TypedMsgHdr message;

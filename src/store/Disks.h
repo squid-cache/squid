@@ -58,10 +58,14 @@ public:
     /// whether any of disk caches has entry with e.key
     bool hasReadableEntry(const StoreEntry &) const;
 
-    // the disker successfully finished building its index
-    void indexed(const char *filePath);
-    // all diskers successfully rebuild their index
-    static bool FullyIndexed();
+    /// the disker successfully finished building its index
+    void markIndexed(const char *filePath);
+    /// called when the "Validation Procedure" completes
+    static void MarkValidated() { Validated = true; }
+    /// whether all diskers successfully rebuilt their index
+    static bool AllIndexed();
+    /// whether all diskers successfully rebuilt their index and the "Validation Procedure" completed
+    static bool IndexReady() { return AllIndexed() && Validated; }
 
 private:
     /* migration logic */
@@ -71,6 +75,9 @@ private:
     int64_t largestMinimumObjectSize; ///< maximum of all Disk::minObjectSize()s
     int64_t largestMaximumObjectSize; ///< maximum of all Disk::maxObjectSize()s
     int64_t secondLargestMaximumObjectSize; ///< the second-biggest Disk::maxObjectSize()
+    /// true when there are active directories and the "Validation Procedure" completed, or
+    /// when there are not active directories.
+    static bool Validated;
 };
 
 } // namespace Store

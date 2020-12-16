@@ -378,12 +378,6 @@ Rock::Rebuild::checkpoint()
 {
     if (!done())
         eventAdd("Rock::Rebuild", Rock::Rebuild::Steps, this, 0.01, 1, true);
-    else {
-        if (UsingSmp())
-            Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, sd->filePath);
-        else
-            Store::Root().indexed(sd->path);
-    }
 }
 
 bool
@@ -683,6 +677,8 @@ Rock::Rebuild::swanSong()
 {
     debugs(47,3, "cache_dir #" << sd->index);
     storeRebuildComplete(&counts, sd->path);
+    if (UsingSmp())
+        Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, sd->filePath);
 
     if (opt_foreground_rebuild)
         sd->startAcceptingRequests();

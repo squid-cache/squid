@@ -108,7 +108,7 @@ storeCleanup(void *)
         }
 
         currentSearch = NULL;
-
+        Store::Root().markValidated();
         RunRegisteredHere(RegisteredRunner::useFullyIndexedStore);
     } else
         eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
@@ -119,7 +119,7 @@ void
 
 storeRebuildComplete(StoreRebuildData *dc, const char *filePath)
 {
-    Store::Root().indexed(filePath);
+    Store::Root().markIndexed(filePath);
 
     if (dc) {
         counts.objcount += dc->objcount;
@@ -137,7 +137,7 @@ storeRebuildComplete(StoreRebuildData *dc, const char *filePath)
     }
     // else the caller was not responsible for indexing its cache_dir
 
-    if (!StoreController::FullyIndexed())
+    if (!StoreController::AllIndexed())
         return;
 
     /*

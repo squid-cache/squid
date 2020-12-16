@@ -164,7 +164,7 @@ testRock::storeInit()
     StockEventLoop loop;
 
     /* our swapdir must be scheduled to rebuild */
-    CPPUNIT_ASSERT(!StoreController::FullyIndexed());
+    CPPUNIT_ASSERT(!StoreController::IndexReady());
 
     loop.run();
 
@@ -173,7 +173,7 @@ testRock::storeInit()
      */
 
     /* nothing left to rebuild */
-    CPPUNIT_ASSERT(StoreController::FullyIndexed());
+    CPPUNIT_ASSERT(StoreController::IndexReady());
 }
 
 static const char *

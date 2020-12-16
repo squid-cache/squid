@@ -17,6 +17,7 @@
 #include "store/Controller.h"
 #include "store/Disks.h"
 #include "store/LocalSearch.h"
+#include "store_rebuild.h"
 #include "tools.h"
 #include "Transients.h"
 
@@ -914,15 +915,35 @@ Store::Controller::SmpAware()
 }
 
 void
-Store::Controller::indexed(const char *filePath)
+Store::Controller::markIndexed(const char *filePath)
 {
-    swapDir->indexed(filePath);
+    swapDir->markIndexed(filePath);
+}
+
+void
+Store::Controller::markValidated()
+{
+    Disks::MarkValidated();
+}
+
+void
+Store::Controller::onIndexed(const char *filePath)
+{
+    // diskers call this directly
+    if (IamWorkerProcess())
+        storeRebuildComplete(nullptr, filePath);
 }
 
 bool
-Store::Controller::FullyIndexed()
+Store::Controller::AllIndexed()
 {
-    return Disks::FullyIndexed();
+    return Disks::AllIndexed();
+}
+
+bool
+Store::Controller::IndexReady()
+{
+    return Disks::IndexReady();
 }
 
 void

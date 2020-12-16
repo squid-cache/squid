@@ -76,6 +76,8 @@ private:
     typedef std::map<OpenListenerParams, Comm::ConnectionPointer> Listeners; ///< params:connection map
     Listeners listeners; ///< cached comm_open_listener() results
 
+    StrandCoords rebuildFinishedStrands_; ///< disker processes, completed their indexing
+
     static Coordinator* TheInstance; ///< the only class instance in existence
 
 private:
