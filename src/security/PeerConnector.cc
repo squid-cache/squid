@@ -397,7 +397,7 @@ Security::PeerConnector::handleNegotiateError(const int ret)
         return;
 
     case SSL_ERROR_WANT_WRITE:
-        if (certficatesReceived() && needsValidationCallouts()) {
+        if (gotServerCertficates() && needsValidationCallouts()) {
             typedef NullaryMemFunT<Security::PeerConnector> cbDialer;
             AsyncCall::Pointer resumeCall = JobCallback(83, 5,
                                             cbDialer, this,
@@ -743,7 +743,7 @@ Security::PeerConnector::handleMissingCertificates()
 }
 
 bool
-Security::PeerConnector::certficatesReceived() const
+Security::PeerConnector::gotServerCertficates() const
 {
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);

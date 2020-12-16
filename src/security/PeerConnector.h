@@ -132,7 +132,7 @@ protected:
     /// Whether there are missing certificates.
     bool certificatesAreMissing() const;
 
-    /// Whether we need to run validation callout procedures.
+    /// Whether we need to run validation callout procedures
     bool needsValidationCallouts() const;
 
     /// Called while TLS negotiated before the squid-client sends
@@ -143,7 +143,7 @@ protected:
     void doValidationCallouts();
 
     /// Whether the server certificates are received
-    bool certficatesReceived() const;
+    bool gotServerCertficates() const;
 #endif
 
     /// Called when the openSSL SSL_connect function needs to write data to
