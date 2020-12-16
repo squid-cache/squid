@@ -12,6 +12,7 @@
 #include "acl/Acl.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
+#include "base/AsyncJobCalls.h"
 #include "CommCalls.h"
 #include "http/forward.h"
 #include "security/EncryptorAnswer.h"
@@ -56,11 +57,13 @@ public:
 
 #if USE_OPENSSL
     /// Used to hold parameters for suspending and calling later the
-    /// Security::PeerConnector::noteNegotiationError call.
-    class NegotiationErrorDetails {
+    /// TLS negotiation procedure
+    class TlsNegotiationDetails {
     public:
-        NegotiationErrorDetails(int ioret, int an_ssl_error, int an_ssl_lib_error): sslIoResult(ioret), ssl_error(an_ssl_error), ssl_lib_error(an_ssl_lib_error) {}
-        int sslIoResult; ///< return value from an OpenSSL IO function (eg SSL_connect)
+        typedef UnaryMemFunT<Security::PeerConnector, TlsNegotiationDetails> Dialer;
+
+        TlsNegotiationDetails(int ioret, int an_ssl_error, int an_ssl_lib_error): sslIoResult(ioret), ssl_error(an_ssl_error), ssl_lib_error(an_ssl_lib_error) {}
+        int sslIoResult; ///< return value from the OpenSSL SSL_connect function.
         int ssl_error; ///< an error retrieved from SSL_get_error
         int ssl_lib_error; ///< OpenSSL library error
     };
@@ -116,11 +119,13 @@ protected:
     /// Suspends TLS negotiation to execute various required jobs,
     /// eg download missing certificates (XXX: or call certificate
     /// validator helper)
-    /// \param resumeCallback callback to resume negotiation if no error
-    void suspendNegotiation(const AsyncCall::Pointer &resumeCallback);
+    /// \param details The current TLS negotiation step details
+    void suspendNegotiation(const TlsNegotiationDetails &details);
 
     /// Resumes TLS negotiation
-    void resumeNegotiation();
+    /// \param ssl_error if not '0' then pass the error on TLS negotiation
+    ///  handling code
+    void resumeNegotiation(int ssl_error);
 
     /// True if the TLS negotiation is suspended
     bool isSuspended() {return resumeNegotiationCall != nullptr; };
@@ -222,8 +227,8 @@ private:
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
 
-    /// Resumes the noteNegotiationError call after a suspend
-    void resumeNegotiationError(NegotiationErrorDetails params);
+    /// Callback to resume TLS negotiation
+    void resumeTlsNegotiationCb(TlsNegotiationDetails params);
 #endif
 
     static void NegotiateSsl(int fd, void *data);
@@ -254,7 +259,7 @@ private:
 };
 
 #if USE_OPENSSL
-inline std::ostream &operator <<(std::ostream &os, const Security::PeerConnector::NegotiationErrorDetails &holder)
+inline std::ostream &operator <<(std::ostream &os, const Security::PeerConnector::TlsNegotiationDetails &holder)
 {
     return os << "[" << holder.sslIoResult << ", " << holder.ssl_error << ", " << holder.ssl_lib_error << "]";
 }

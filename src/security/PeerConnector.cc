@@ -398,11 +398,7 @@ Security::PeerConnector::handleNegotiateError(const int ret)
 
     case SSL_ERROR_WANT_WRITE:
         if (hasServerCertficates() && needsValidationCallouts()) {
-            typedef NullaryMemFunT<Security::PeerConnector> cbDialer;
-            AsyncCall::Pointer resumeCall = JobCallback(83, 5,
-                                            cbDialer, this,
-                                            Security::PeerConnector::noteWantWrite);
-            suspendNegotiation(resumeCall);
+            suspendNegotiation(TlsNegotiationDetails(ret, ssl_error, ssl_lib_error));
             doValidationCallouts();
         } else
             noteWantWrite();
@@ -458,12 +454,7 @@ Security::PeerConnector::handleNegotiateError(const int ret)
         // If the certificates validation was incomplete, because we need
         // to retrieve missing issuer certificates (TODO: or call an
         // external validator), suspend and complete the validation checks.
-        typedef UnaryMemFunT<Security::PeerConnector, NegotiationErrorDetails> NegotiationErrorDialer;
-        NegotiationErrorDetails params(ret, ssl_error, ssl_lib_error);
-        AsyncCall::Pointer resumeCall = asyncCall(83, 5,
-                                                  "Security::PeerConnector::resumeNegotiationError",
-                                                  NegotiationErrorDialer(this, &Security::PeerConnector::resumeNegotiationError, params));
-        suspendNegotiation(resumeCall);
+        suspendNegotiation(TlsNegotiationDetails(ret, ssl_error, ssl_lib_error));
         doValidationCallouts();
         return;
     }
@@ -474,9 +465,22 @@ Security::PeerConnector::handleNegotiateError(const int ret)
 
 #if USE_OPENSSL
 void
-Security::PeerConnector::resumeNegotiationError(NegotiationErrorDetails params)
+Security::PeerConnector::resumeTlsNegotiationCb(TlsNegotiationDetails params)
 {
-    noteNegotiationError(params.sslIoResult, params.ssl_error, params.ssl_lib_error);
+    switch (params.ssl_error) {
+    case SSL_ERROR_WANT_WRITE:
+            noteWantWrite();
+        return;
+    case SSL_ERROR_SSL:
+        noteNegotiationError(params.sslIoResult, params.ssl_error, params.ssl_lib_error);
+        return;
+    case SSL_ERROR_WANT_READ:
+    case SSL_ERROR_SYSCALL:
+    default: {
+        const bool resumeTlsNegotationCbInvalidError = false;
+        assert(resumeTlsNegotationCbInvalidError); // Currently we are not expecting these type of errors
+    }
+    }
 }
 #endif
 
@@ -727,15 +731,14 @@ Security::PeerConnector::missingCertificatesRetrieved()
     // Now check and report missing issuer certificate errors.
     verifyData->ignoreIssuer = false;
 
-    if (!Ssl::PeerCertificatesVerify(session, downloadedCerts)) {
-        noteNegotiationError(SSL_ERROR_SSL, 0, 0);
-        return;
-    }
+    int ssl_error = 0;
+    if (!Ssl::PeerCertificatesVerify(session, downloadedCerts))
+        ssl_error = SSL_ERROR_SSL;
 
     // XXX: We should give the control back to doValidationCallouts which
     // initiated the certificates download procedure, but for now we are
     // the only callout, so we are just resuming the TLS negotiation.
-    resumeNegotiation();
+    resumeNegotiation(ssl_error);
 }
 
 void
@@ -813,17 +816,25 @@ Security::PeerConnector::doValidationCallouts()
 }
 
 void
-Security::PeerConnector::suspendNegotiation(const AsyncCall::Pointer &resumeCallback)
+Security::PeerConnector::suspendNegotiation(const TlsNegotiationDetails &details)
 {
     Must(!isSuspended());
-    resumeNegotiationCall = resumeCallback;
+    AsyncCall::Pointer resumeCall = asyncCall(83, 5,
+                                              "Security::PeerConnector::resumeTlsNegotiationCb",
+                                              TlsNegotiationDetails::Dialer(this, &Security::PeerConnector::resumeTlsNegotiationCb, details));
+    resumeNegotiationCall = resumeCall;
 }
 
 void
-Security::PeerConnector::resumeNegotiation()
+Security::PeerConnector::resumeNegotiation(int ssl_error)
 {
     Must(isSuspended());
 
+    if (ssl_error) {
+        auto dialer = dynamic_cast<TlsNegotiationDetails::Dialer *>(resumeNegotiationCall->getDialer());
+        TlsNegotiationDetails &params = dialer->arg1;
+        params.ssl_error = ssl_error;
+    }
     //resumeNegotiationCall.make()
     ScheduleCallHere(resumeNegotiationCall);
     resumeNegotiationCall = nullptr;
