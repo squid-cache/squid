@@ -256,7 +256,7 @@ Log::TcpLogger::doConnect()
 
     typedef CommCbMemFunT<TcpLogger, CommConnectCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(MY_DEBUG_SECTION, 5, Dialer, this, Log::TcpLogger::connectDone);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(futureConn, call, 2);
+    const auto cs = new Comm::ConnOpener(futureConn, call, 2);
     connWait.start(cs, call);
     AsyncJob::Start(cs);
 }

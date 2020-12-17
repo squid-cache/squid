@@ -125,7 +125,7 @@ PeerPoolMgr::handleOpenedConnection(const CommConnectCbParams &params)
         const int timeUsed = squid_curtime - params.conn->startTime();
         // Use positive timeout when less than one second is left for conn.
         const int timeLeft = positiveTimeout(peerTimeout - timeUsed);
-        auto *connector = new Security::BlindPeerConnector(request, params.conn, callback, nullptr, timeLeft);
+        const auto connector = new Security::BlindPeerConnector(request, params.conn, callback, nullptr, timeLeft);
         encryptionWait.start(connector, callback);
         AsyncJob::Start(connector); // will call our callback
         return;
@@ -229,7 +229,7 @@ PeerPoolMgr::openNewConnection()
     const auto ctimeout = peer->connectTimeout();
     typedef CommCbMemFunT<PeerPoolMgr, CommConnectCbParams> Dialer;
     AsyncCall::Pointer callback = JobCallback(48, 5, Dialer, this, PeerPoolMgr::handleOpenedConnection);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, callback, ctimeout);
+    const auto cs = new Comm::ConnOpener(conn, callback, ctimeout);
     connWait.start(cs, callback);
     AsyncJob::Start(cs);
 }

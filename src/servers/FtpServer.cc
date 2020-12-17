@@ -1679,7 +1679,7 @@ Ftp::Server::checkDataConnPre()
     // active transfer: open a data connection from Squid to client
     typedef CommCbMemFunT<Server, CommConnectCbParams> Dialer;
     AsyncCall::Pointer callback = JobCallback(17, 3, Dialer, this, Ftp::Server::connectedForData);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(dataConn, callback,
+    const auto cs = new Comm::ConnOpener(dataConn, callback,
             Config.Timeout.connect);
     dataConnWait.start(cs, callback);
     AsyncJob::Start(cs);

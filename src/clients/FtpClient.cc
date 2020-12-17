@@ -766,7 +766,7 @@ Ftp::Client::connectDataChannel()
 
     typedef CommCbMemFunT<Client, CommConnectCbParams> Dialer;
     AsyncCall::Pointer callback = JobCallback(9, 3, Dialer, this, Ftp::Client::dataChannelConnected);
-    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, callback, Config.Timeout.connect);
+    const auto cs = new Comm::ConnOpener(conn, callback, Config.Timeout.connect);
     cs->setHost(data.host);
     dataConnWait.start(cs, callback);
     AsyncJob::Start(cs);
