@@ -452,7 +452,7 @@ Fs::Ufs::UFSSwapDir::maintain()
 
     /* We can't delete objects while rebuilding swap */
     /* XXX each store should start maintaining as it comes online. */
-    if (!StoreController::IndexReady()) {
+    if (!Store::Root().IndexReady()) {
         // suppress the warnings, except once each minute
         static int64_t lastWarn = 0;
         int warnLevel = 3;
@@ -1018,7 +1018,7 @@ Fs::Ufs::UFSSwapDir::writeCleanDone()
     }
 
     /* touch a timestamp file if we're not still validating */
-    if (!StoreController::IndexReady())
+    if (!Store::Root().IndexReady())
         (void) 0;
     else if (fd < 0)
         (void) 0;
@@ -1085,7 +1085,7 @@ Fs::Ufs::UFSSwapDir::HandleCleanEvent()
     }
 
     /* if the rebuild is finished, start cleaning directories. */
-    if (StoreController::IndexReady()) {
+    if (Store::Root().IndexReady()) {
         n = DirClean(swap_index);
         ++swap_index;
     }

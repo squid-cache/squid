@@ -724,10 +724,10 @@ storeDirWriteCleanLogs(int reopen)
     int dirn;
     int notdone = 1;
 
-    // Check StoreController::FullyIndexed() because fatal() often calls us in early
+    // Check StoreController::IndexReady() because fatal() often calls us in early
     // initialization phases, before store log is initialized and ready. Also,
     // some stores do not support log cleanup during Store rebuilding.
-    if (!StoreController::IndexReady()) {
+    if (!Store::Root().IndexReady()) {
         debugs(20, DBG_IMPORTANT, "Not currently OK to rewrite swap log.");
         debugs(20, DBG_IMPORTANT, "storeDirWriteCleanLogs: Operation aborted.");
         return 0;

@@ -137,7 +137,7 @@ storeRebuildComplete(StoreRebuildData *dc, const char *filePath)
     }
     // else the caller was not responsible for indexing its cache_dir
 
-    if (!StoreController::AllIndexed())
+    if (!Store::Root().AllIndexed())
         return;
 
     /*

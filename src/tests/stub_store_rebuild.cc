@@ -34,7 +34,8 @@ void StoreRebuildData::updateStartTime(const timeval &dirStartTime)
 void storeRebuildComplete(StoreRebuildData *, const char *filePath)
 {
     Store::Root().markIndexed(filePath);
-    Store::Root().markValidated();
+    if (Store::Root().AllIndexed())
+        Store::Root().markValidated();
 }
 
 bool
