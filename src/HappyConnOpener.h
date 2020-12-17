@@ -103,7 +103,6 @@ class HappyConnOpener: public AsyncJob
 {
     CBDATA_CHILD(HappyConnOpener);
 public:
-    typedef CbcPointer<HappyConnOpener> Pointer;
     typedef HappyConnOpenerAnswer Answer;
 
     /// AsyncCall dialer for our callback. Gives us access to callback Answer.
