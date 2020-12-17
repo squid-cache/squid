@@ -134,9 +134,6 @@ public:
     /// convenience conversion to Comm::ConnectionPointer
     operator const Comm::ConnectionPointer&() const { return connection_; }
 
-    /// convenience conversion to Comm::ConnectionPointer
-    operator Comm::ConnectionPointer&() { return connection_; }
-
     /// upgrade stored peer selection details with a matching actual connection
     void finalize(const Comm::ConnectionPointer &conn) { connection_ = conn; }
 
