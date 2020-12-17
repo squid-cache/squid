@@ -54,6 +54,10 @@ int Controller::transientReaders(const StoreEntry &) const STUB_RETVAL(0)
 void Controller::transientsDisconnect(StoreEntry &) STUB
 void Controller::transientsClearCollapsingRequirement(StoreEntry &) STUB
 void Controller::memoryDisconnect(StoreEntry &) STUB
+void Controller::onIndexed(const char*) STUB
+bool Controller::IndexReady() STUB_RETVAL(false)
+void Controller::markIndexed(const char *) STUB
+void Controller::markValidated() STUB
 StoreSearch *Controller::search() STUB_RETVAL(nullptr)
 bool Controller::SmpAware() STUB_RETVAL(false)
 Controller nil;
