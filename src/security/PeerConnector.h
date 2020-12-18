@@ -115,6 +115,9 @@ protected:
     /// Squid COMM_SELECT_READ handler.
     void noteWantRead();
 
+    /// Whether TLS negotiation has been paused and not yet resumed
+    bool isSuspended() const;
+
 #if USE_OPENSSL
     /// Suspends TLS negotiation to execute various required jobs,
     /// eg download missing certificates (XXX: or call certificate
@@ -126,9 +129,6 @@ protected:
     /// \param ssl_error if not '0' then pass the error on TLS negotiation
     ///  handling code
     void resumeNegotiation(int ssl_error);
-
-    /// True if the TLS negotiation is suspended
-    bool isSuspended() {return resumeNegotiationCall != nullptr; };
 
     /// Run the certificates list sent by the SSL server and check if there
     /// are missing certificates. Adds to the urlOfMissingCerts list the

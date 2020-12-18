@@ -152,6 +152,16 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     return true;
 }
 
+bool
+Security::PeerConnector::isSuspended() const
+{
+#if USE_OPENSSL
+    return resumeNegotiationCall != nullptr;
+#else
+    return false; // we do not suspend negotiations when using other libraries
+#endif
+}
+
 void
 Security::PeerConnector::recordNegotiationDetails()
 {
