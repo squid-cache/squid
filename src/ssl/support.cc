@@ -251,7 +251,9 @@ bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
 }
 
 static const char *hasAuthorityInfoAccessCaIssuers(X509 *cert);
-/// \ingroup ServerProtocolSSLInternal
+
+/// adjusts OpenSSL validation results for each verified certificate in ctx
+/// OpenSSL "verify_callback function" (\ref OpenSSL_vcb_disambiguation)
 static int
 ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 {
@@ -437,6 +439,9 @@ Ssl::DisablePeerVerification(Security::ContextPointer &ctx)
 
 static int squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts);
 
+/// validates the given TLS connection server certificate chain
+/// in conjunction with a (possibly empty) set of "extra" intermediate certs
+/// OpenSSL "verification callback function" (\ref OpenSSL_vcb_disambiguation)
 bool
 Ssl::PeerCertificatesVerify(Security::SessionPointer &s, const Ssl::X509_STACK_Pointer &extraCerts)
 {
@@ -1208,6 +1213,8 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
         debugs(83, 2,  "exceeded the maximum certificate chain length: " << depth);
 }
 
+/// Validates certificates while consulting sslproxy_foreign_intermediate_certs
+/// and, optionally, the given extra certificates
 static int
 squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
 {
@@ -1237,7 +1244,25 @@ squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
     return ret;
 }
 
-/// OpenSSL certificate validation callback.
+/// \interface OpenSSL_vcb_disambiguation
+///
+/// OpenSSL has two very different concepts with nearly identical names:
+///
+/// a) A (replaceable) certificate verification function -- X509_verify_cert():
+///    This function drives the entire certificate verification algorithm.
+///    It can be called directly, but is usually called during SSL_connect().
+///    OpenSSL calls this function a "verification callback function".
+///    SSL_CTX_set_cert_verify_callback(3) replaces X509_verify_cert() default.
+///
+/// b) An (optional) certificate verification adjustment callback:
+///    This function, if set, is called at the end of (a) to adjust (a) results.
+///    It is never called directly, only from (a).
+///    OpenSSL calls this function a "verify_callback function".
+///    The SSL_CTX_set_verify(3) family of functions sets this function.
+
+/// Validates certificates while consulting sslproxy_foreign_intermediate_certs
+/// but without using any dynamically downloaded intermediate certificates.
+/// OpenSSL "verification callback function" (\ref OpenSSL_vcb_disambiguation)
 static int
 untrustedToStoreCtx_cb(X509_STORE_CTX *ctx, void *)
 {
