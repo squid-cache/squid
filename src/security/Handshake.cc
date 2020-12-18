@@ -366,11 +366,6 @@ Security::HandshakeParser::parseHandshakeMessage()
         if (Tls1p3orLater(details->tlsSupportedVersion))
             done = "ServerHello in v1.3+";
         return;
-    case HandshakeType::hskCertificate:
-        Must(state < atCertificatesReceived);
-        parseServerCertificates(message.msg_body);
-        state = atCertificatesReceived;
-        return;
     case HandshakeType::hskServerHelloDone:
         Must(state < atHelloDoneReceived);
         // zero-length
@@ -662,14 +657,6 @@ Security::HandshakeParser::parseHello(const SBuf &data)
         return false;
     }
     return false; // unreached
-}
-
-void
-Security::HandshakeParser::parseServerCertificates(const SBuf &raw)
-{
-    Parser::BinaryTokenizer tkList(raw);
-    const SBuf clist = tkList.pstring24("CertificateList");
-    Must(tkList.atEnd()); // no leftovers after all certificates
 }
 
 /// A helper function to create a set of all supported TLS extensions

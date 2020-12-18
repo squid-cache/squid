@@ -61,7 +61,7 @@ class HandshakeParser
 {
 public:
     /// The parsing states
-    typedef enum {atHelloNone = 0, atHelloStarted, atHelloReceived, atCertificatesReceived, atHelloDoneReceived, atNstReceived, atCcsReceived, atFinishReceived} ParserState;
+    typedef enum { atHelloNone = 0, atHelloStarted, atHelloReceived, atHelloDoneReceived, atNstReceived, atCcsReceived, atFinishReceived } ParserState;
 
     /// the originator of the TLS handshake being parsed
     typedef enum { fromClient = 0, fromServer } MessageSource;
