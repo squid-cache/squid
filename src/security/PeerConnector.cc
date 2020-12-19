@@ -146,7 +146,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 
     auto sessData = Ssl::SquidVerifyData::SessionData(serverSession);
     assert(sessData);
-    sessData->ignoreIssuer = true;
+    sessData->callerHandlesMissingCertificates = true;
 #endif
 
     return true;
@@ -732,14 +732,6 @@ void
 Security::PeerConnector::missingCertificatesRetrieved()
 {
     Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
-    // We should have the full certificates chain now, so clear the
-    // Ssl::SquidVerifyData::missingIssuer flag.
-    auto verifyData = Ssl::SquidVerifyData::SessionData(session);
-    assert(verifyData);
-    verifyData->missingIssuer = false;
-    // We downloaded any certificate we are able to download.
-    // Now check and report missing issuer certificate errors.
-    verifyData->ignoreIssuer = false;
 
     int ssl_error = 0;
     if (!Ssl::PeerCertificatesVerify(session, downloadedCerts))
@@ -756,6 +748,17 @@ Security::PeerConnector::handleMissingCertificates()
 {
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
+    Must(session);
+
+    auto verifyData = Ssl::SquidVerifyData::SessionData(session);
+    assert(verifyData);
+    // We download the missing certificate(s) once. We would prefer to clear
+    // this right after the first validation, but that ideal place is _inside_
+    // OpenSSL if validation is triggered by SSL_connect(). That function and
+    // our OpenSSL verify_callback function (\ref OpenSSL_vcb_disambiguation)
+    // may be called multiple times, so we cannot reset there.
+    verifyData->callerHandlesMissingCertificates = false;
+
     const STACK_OF(X509) *certs = SSL_get_peer_cert_chain(session.get());
     // We are here because we found that there are missing Issuer certificates
     // while we checked retrieved certificates. So certificates should received:

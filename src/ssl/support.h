@@ -342,12 +342,17 @@ bool PeerCertificatesVerify(Security::SessionPointer &s,  const Ssl::X509_STACK_
 ///  \ingroup ServerProtocolSSLAPI
 class SquidVerifyData {
 public:
-    /// An issuer certificate is missing. It is set by squid validation
-    /// procedure.
+    /// whether certificate validation has failed due to missing certificate(s)
+    /// (i.e. X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY), but the failure was
+    /// ignored due to true callerHandlesMissingCertificates setting; the
+    /// certificate chain has to be deemed untrusted until revalidation (if any)
+    /// XXX: once set, this status is never cleared for the TLS connection
     bool missingIssuer = false;
 
-    /// Do not report missing issuer certificates as validation errors.
-    bool ignoreIssuer = false;
+    /// whether X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY should be ignored
+    /// (after setting missingIssuer) because the validation initiator wants to
+    /// get the missing certificates and redo the validation with them
+    bool callerHandlesMissingCertificates = false;
 
     /// \returns The SquidVerifyData object attached to session
     static SquidVerifyData *SessionData(const Security::SessionPointer &session);

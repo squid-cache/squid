@@ -313,7 +313,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
     }
 
-    const bool ignoreIssuer = (verifyData && verifyData->ignoreIssuer);
+    const bool ignoreIssuer = (verifyData && verifyData->callerHandlesMissingCertificates);
     if (!ok && error_no == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY && ignoreIssuer) {
         if (X509 *currentCert = X509_STORE_CTX_get_current_cert(ctx)) {
             if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(currentCert)) {
