@@ -820,7 +820,7 @@ sig_child(int sig)
 static void
 serverConnectionsOpen(void)
 {
-    assert(!Store::Controller::WaitingForIndex());
+    assert(!Store::Root().waitingForIndex());
 
     if (IamPrimaryProcess()) {
 #if USE_WCCP
@@ -951,7 +951,7 @@ startServices()
     if (IamWorkerProcess())
         startWorkerServices();
 
-    if (Store::Controller::WaitingForIndex()) {
+    if (Store::Root().waitingForIndex()) {
         debugs(1, DBG_IMPORTANT, "Waiting for Store indexing completion before opening listening sockets "
                "and/or contacting cache_peers");
         RunnerRegistrationEntry(OpenListeningPortsRr);

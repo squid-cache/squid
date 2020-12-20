@@ -914,36 +914,10 @@ Store::Controller::SmpAware()
     return MemStore::Enabled() || Disks::SmpAware();
 }
 
-void
-Store::Controller::markIndexed(const char *filePath)
-{
-    swapDir->markIndexed(filePath);
-}
-
-void
-Store::Controller::markValidated()
-{
-    Disks::MarkValidated();
-}
-
-void
-Store::Controller::onIndexed(const char *filePath)
-{
-    // diskers call this directly
-    if (IamWorkerProcess())
-        storeRebuildComplete(nullptr, filePath);
-}
-
 bool
-Store::Controller::AllIndexed()
+Store::Controller::indexReady()
 {
-    return Disks::AllIndexed();
-}
-
-bool
-Store::Controller::IndexReady()
-{
-    return Disks::IndexReady();
+    return Disks::AllIndexed() && validated;
 }
 
 void

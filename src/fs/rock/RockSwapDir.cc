@@ -881,6 +881,12 @@ Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
         CollapsedForwarding::Broadcast(*sio.e);
 }
 
+void
+Rock::SwapDir::indexingCompleted()
+{
+    storeRebuildComplete(nullptr, *this);
+}
+
 /// code shared by writeCompleted() success handling cases
 void
 Rock::SwapDir::handleWriteCompletionSuccess(const WriteRequest &request)

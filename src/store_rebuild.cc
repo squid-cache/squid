@@ -17,7 +17,7 @@
 #include "SquidTime.h"
 #include "StatCounters.h"
 #include "Store.h"
-#include "store/Disk.h"
+#include "store/Disks.h"
 #include "store_key_md5.h"
 #include "store_rebuild.h"
 #include "StoreSearch.h"
@@ -114,12 +114,44 @@ storeCleanup(void *)
         eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
 }
 
+static void
+StoreRebuildFinalize()
+{
+    assert(Store::Disks::AllIndexed());
+
+    /*
+     * We are done reading or scanning all cache_dirs. Now report the stats and start
+     * the validation (storeCleanup()) thread.
+     */
+
+    if (Store::Disks::Active()) {
+        const auto dt = tvSubDsec(counts.startTime, current_time);
+
+        debugs(20, DBG_IMPORTANT, "Finished rebuilding storage from disk.");
+        debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.scancount  << " Entries scanned");
+        debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.invalid  << " Invalid entries.");
+        debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.badflags  << " With invalid flags.");
+        debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.objcount  << " Objects loaded.");
+        debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.expcount  << " Objects expired.");
+        debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.cancelcount  << " Objects cancelled.");
+        debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.dupcount  << " Duplicate URLs purged.");
+        debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.clashcount  << " Swapfile clashes avoided.");
+        debugs(20, DBG_IMPORTANT, "  Took "<< std::setw(3)<< std::setprecision(2) << dt << " seconds ("<< std::setw(6) <<
+                ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
+
+        xfree(RebuildProgress);
+        RebuildProgress = nullptr;
+    }
+
+    debugs(20, DBG_IMPORTANT, "Beginning Validation Procedure");
+    eventAdd("storeCleanup", storeCleanup, nullptr, 0.0, 1);
+}
+
 /* meta data recreated from disk image in swap directory */
 void
-
-storeRebuildComplete(StoreRebuildData *dc, const char *filePath)
+storeRebuildComplete(StoreRebuildData *dc, SwapDir &dir)
 {
-    Store::Root().markIndexed(filePath);
+    dir.indexed = true;
 
     if (dc) {
         counts.objcount += dc->objcount;
@@ -137,34 +169,8 @@ storeRebuildComplete(StoreRebuildData *dc, const char *filePath)
     }
     // else the caller was not responsible for indexing its cache_dir
 
-    if (!Store::Root().AllIndexed())
-        return;
-
-    /*
-     * We are done reading or scanning all cache_dirs. Now report the stats and start
-     * the validation (storeCleanup()) thread.
-     */
-
-    const auto dt = tvSubDsec(counts.startTime, current_time);
-
-    debugs(20, DBG_IMPORTANT, "Finished rebuilding storage from disk.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.scancount  << " Entries scanned");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.invalid  << " Invalid entries.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.badflags  << " With invalid flags.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.objcount  << " Objects loaded.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.expcount  << " Objects expired.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.cancelcount  << " Objects cancelled.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.dupcount  << " Duplicate URLs purged.");
-    debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.clashcount  << " Swapfile clashes avoided.");
-    debugs(20, DBG_IMPORTANT, "  Took "<< std::setw(3)<< std::setprecision(2) << dt << " seconds ("<< std::setw(6) <<
-           ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
-    debugs(20, DBG_IMPORTANT, "Beginning Validation Procedure");
-
-    eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
-
-    xfree(RebuildProgress);
-
-    RebuildProgress = NULL;
+    if (Store::Disks::AllIndexed())
+        StoreRebuildFinalize();
 }
 
 /*
@@ -176,8 +182,12 @@ void
 storeRebuildStart(void)
 {
     counts = StoreRebuildData(); // reset counters
-    RebuildProgress = (store_rebuild_progress *)xcalloc(Config.cacheSwap.n_configured,
-                      sizeof(store_rebuild_progress));
+    if (Store::Disks::AllIndexed()) {
+        StoreRebuildFinalize();
+        return;
+    }
+    RebuildProgress = reinterpret_cast<store_rebuild_progress *>(xcalloc(Config.cacheSwap.n_configured,
+            sizeof(store_rebuild_progress)));
 }
 
 /*

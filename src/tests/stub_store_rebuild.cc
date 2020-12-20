@@ -12,6 +12,8 @@
 #include "MemBuf.h"
 #include "SquidTime.h"
 #include "store/Controller.h"
+#include "store/Disk.h"
+#include "store/Disks.h"
 #include "store_rebuild.h"
 
 #include <cstring>
@@ -31,10 +33,10 @@ void StoreRebuildData::updateStartTime(const timeval &dirStartTime)
     startTime = started() ? std::min(startTime, dirStartTime) : dirStartTime;
 }
 
-void storeRebuildComplete(StoreRebuildData *, const char *filePath)
+void storeRebuildComplete(StoreRebuildData *, SwapDir &dir)
 {
-    Store::Root().markIndexed(filePath);
-    if (Store::Root().AllIndexed())
+    dir.indexed = true;
+    if (Store::Disks::AllIndexed())
         Store::Root().markValidated();
 }
 

@@ -57,15 +57,10 @@ public:
     static SwapDir *SelectSwapDir(const StoreEntry *);
     /// whether any of disk caches has entry with e.key
     bool hasReadableEntry(const StoreEntry &) const;
-
-    /// the disker successfully finished building its index
-    void markIndexed(const char *filePath);
-    /// called when the "Validation Procedure" completes
-    static void MarkValidated() { Validated = true; }
-    /// whether all diskers successfully rebuilt their index
+    /// whether all store_dirs are indexed
     static bool AllIndexed();
-    /// whether all diskers successfully rebuilt their index and the "Validation Procedure" completed
-    static bool IndexReady() { return AllIndexed() && Validated; }
+    /// whether some of the configured store_dirs are active
+    static bool Active();
 
 private:
     /* migration logic */
@@ -75,9 +70,6 @@ private:
     int64_t largestMinimumObjectSize; ///< maximum of all Disk::minObjectSize()s
     int64_t largestMaximumObjectSize; ///< maximum of all Disk::maxObjectSize()s
     int64_t secondLargestMaximumObjectSize; ///< the second-biggest Disk::maxObjectSize()
-    /// true when there are active directories and the "Validation Procedure" completed, or
-    /// when there are not active directories.
-    static bool Validated;
 };
 
 } // namespace Store

@@ -110,6 +110,7 @@ protected:
     virtual void closeCompleted();
     virtual void readCompleted(const char *buf, int len, int errflag, RefCount< ::ReadRequest>);
     virtual void writeCompleted(int errflag, size_t len, RefCount< ::WriteRequest>);
+    virtual void indexingCompleted();
 
     void parseSize(const bool reconfiguring); ///< parses anonymous cache_dir size option
     void validateOptions(); ///< warns of configuration problems; may quit

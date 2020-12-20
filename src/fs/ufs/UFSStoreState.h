@@ -32,6 +32,7 @@ public:
     virtual void ioCompletedNotification();
     virtual void readCompleted(const char *buf, int len, int errflag, RefCount<ReadRequest>);
     virtual void writeCompleted(int errflag, size_t len, RefCount<WriteRequest>);
+    virtual void indexingCompleted() { assert(0); } // the indexing completion event is handled in RebuildState::RebuildStep()
     RefCount<DiskFile> theFile;
     bool opening;
     bool creating;

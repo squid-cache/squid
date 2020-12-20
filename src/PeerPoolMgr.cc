@@ -284,7 +284,7 @@ RunnerRegistrationEntry(PeerPoolMgrsRr);
 void
 PeerPoolMgrsRr::syncConfig()
 {
-    if (Store::Controller::WaitingForIndex()) {
+    if (Store::Root().waitingForIndex()) {
         waitingForStoreIndex = true;
         return; // postpone until useFullyIndexedStore()
     }
@@ -294,7 +294,7 @@ PeerPoolMgrsRr::syncConfig()
 void
 PeerPoolMgrsRr::useFullyIndexedStore()
 {
-    assert(!Store::Controller::WaitingForIndex());
+    assert(!Store::Root().waitingForIndex());
     if (waitingForStoreIndex) {
         waitingForStoreIndex = false;
         configure();
@@ -306,7 +306,7 @@ void
 PeerPoolMgrsRr::configure()
 {
     assert(!waitingForStoreIndex);
-    assert(!Store::Controller::WaitingForIndex());
+    assert(!Store::Root().waitingForIndex());
 
     for (CachePeer *p = Config.peers; p; p = p->next) {
         // On reconfigure, Squid deletes the old config (and old peers in it),

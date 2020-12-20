@@ -136,22 +136,13 @@ public:
     static bool SmpAware();
 
     /// whether we are currently building the Store index in foreground mode
-    static bool WaitingForIndex() { return opt_foreground_rebuild && !IndexReady(); }
+    bool waitingForIndex() { return opt_foreground_rebuild && !indexReady(); }
 
-    /// either nothing to index (no swap dirs) or all dirs are indexed and validated
-    static bool IndexReady();
+    /// the Store index was fully loaded and validated
+    bool indexReady();
 
-    /// start consider the store dir as indexed
-    void markIndexed(const char *filePath);
-
-    /// start consider the whole disk Store as validated
-    void markValidated();
-
-    /// notification from a disker after it successfully finished building its index
-    void onIndexed(const char *filePath);
-
-    /// whether all store dirs completed individual indexing
-    static bool AllIndexed();
+    /// start treating the Store index as validated
+    void markValidated() { validated = true; }
 
 private:
     bool memoryCacheHasSpaceFor(const int pagesRequired) const;
@@ -180,6 +171,8 @@ private:
 
     /// Hack: Relays page shortage from freeMemorySpace() to handleIdleEntry().
     int memoryPagesDebt_ = 0;
+    /// whether the "Validation Procedure" is finished
+    bool validated;
 };
 
 /// safely access controller singleton

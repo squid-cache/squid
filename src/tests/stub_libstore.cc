@@ -54,10 +54,7 @@ int Controller::transientReaders(const StoreEntry &) const STUB_RETVAL(0)
 void Controller::transientsDisconnect(StoreEntry &) STUB
 void Controller::transientsClearCollapsingRequirement(StoreEntry &) STUB
 void Controller::memoryDisconnect(StoreEntry &) STUB
-void Controller::onIndexed(const char*) STUB
-bool Controller::IndexReady() STUB_RETVAL(false)
-void Controller::markIndexed(const char *) STUB
-void Controller::markValidated() STUB
+bool Controller::indexReady() STUB_RETVAL(false)
 StoreSearch *Controller::search() STUB_RETVAL(nullptr)
 bool Controller::SmpAware() STUB_RETVAL(false)
 Controller nil;
@@ -131,6 +128,7 @@ bool Disks::SmpAware() STUB_RETVAL(false)
 bool Disks::hasReadableEntry(const StoreEntry &) const STUB_RETVAL(false)
 void Disks::Parse(DiskConfig &) STUB
 void Disks::Dump(const DiskConfig &, StoreEntry &, const char *name) STUB
+bool Disks::AllIndexed() STUB_RETVAL(true)
 SwapDir *Disks::SelectSwapDir(const StoreEntry *) STUB_RETVAL(nullptr)
 }
 void storeDirOpenSwapLogs(void) STUB

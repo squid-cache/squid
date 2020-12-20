@@ -99,7 +99,7 @@ Fs::Ufs::RebuildState::RebuildStep(void *data)
     if (!rb->isDone() || reconfiguring)
         eventAdd("storeRebuild", RebuildStep, rb, 0.01, 1);
     else {
-        storeRebuildComplete(&rb->counts, rb->sd->path);
+        storeRebuildComplete(&rb->counts, *(rb->sd));
         delete rb;
     }
 }

@@ -676,12 +676,13 @@ void
 Rock::Rebuild::swanSong()
 {
     debugs(47,3, "cache_dir #" << sd->index);
-    storeRebuildComplete(&counts, sd->path);
-    if (UsingSmp())
-        Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, sd->filePath);
-
+    storeRebuildComplete(&counts, *sd);
     if (opt_foreground_rebuild)
         sd->startAcceptingRequests();
+    if (UsingSmp() && IamDiskProcess()) {
+        // do not send this before the disker becomes ready (i.e., before startAcceptingRequests())
+        Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, sd->filePath);
+    }
 }
 
 void

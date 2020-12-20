@@ -499,7 +499,12 @@ IpcIoFile::HandleStrandBusyResponse(const Ipc::StrandMessage &response)
 void
 IpcIoFile::HandleRebuildFinished(const Ipc::StrandMessage &response)
 {
-    Store::Root().onIndexed(response.strand.tag.termedBuf());
+    debugs(47, 7, "disker" << response.strand.kidId << " foreground rebuild completed");
+    if (IamWorkerProcess()) {
+        const IpcIoFilesMap::const_iterator i = IpcIoFiles.find(response.strand.kidId);
+        assert(i != IpcIoFiles.end());
+        i->second->ioRequestor->indexingCompleted();
+    }
 }
 
 void

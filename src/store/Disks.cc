@@ -25,8 +25,6 @@
 #include "tools.h"
 #include "util.h" // for tvSubDsec() which should be in SquidTime.h
 
-bool Store::Disks::Validated = true; // assuming no active dirs by default
-
 typedef SwapDir *STDIRSELECT(const StoreEntry *e);
 
 static STDIRSELECT storeDirSelectSwapDirRoundRobin;
@@ -301,10 +299,8 @@ Store::Disks::init()
         *         above
         * Step 3: have the hash index walk the searches itself.
          */
-        if (Dir(i).active()) {
+        if (Dir(i).active())
             store(i)->init();
-            Validated = false;
-        }
     }
 
     if (strcasecmp(Config.store_dir_select_algorithm, "round-robin") == 0) {
@@ -664,19 +660,6 @@ Store::Disks::hasReadableEntry(const StoreEntry &e) const
     return false;
 }
 
-void
-Store::Disks::markIndexed(const char *filePath)
-{
-    assert(filePath);
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        auto &dir = Dir(i);
-        if (strncmp(dir.path, filePath, strlen(dir.path)) == 0) {
-            dir.indexed = true;
-            return;
-        }
-    }
-}
-
 bool
 Store::Disks::AllIndexed()
 {
@@ -688,6 +671,17 @@ Store::Disks::AllIndexed()
             return false;
     }
     return true;
+}
+
+bool
+Store::Disks::Active()
+{
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        auto &dir = Dir(i);
+        if (dir.active())
+            return true;
+    }
+    return false;
 }
 
 void
@@ -724,10 +718,10 @@ storeDirWriteCleanLogs(int reopen)
     int dirn;
     int notdone = 1;
 
-    // Check StoreController::IndexReady() because fatal() often calls us in early
+    // Check StoreController::indexReady() because fatal() often calls us in early
     // initialization phases, before store log is initialized and ready. Also,
     // some stores do not support log cleanup during Store rebuilding.
-    if (!Store::Root().IndexReady()) {
+    if (!Store::Root().indexReady()) {
         debugs(20, DBG_IMPORTANT, "Not currently OK to rewrite swap log.");
         debugs(20, DBG_IMPORTANT, "storeDirWriteCleanLogs: Operation aborted.");
         return 0;
