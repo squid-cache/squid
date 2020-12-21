@@ -30,6 +30,53 @@
 #include "ssl/helper.h"
 #endif
 
+/// XXX: Replace with Security::ErrorDetail (which also handles errno)
+/// TLS negotiation error details extracted at the error discovery time
+class TlsNegotiationDetails {
+public:
+    typedef UnaryMemFunT<Security::PeerConnector, TlsNegotiationDetails> Dialer;
+
+#if USE_OPENSSL || USE_GNUTLS
+    TlsNegotiationDetails(int ioResult, const Security::SessionPointer &);
+#else
+    TlsNegotiationDetails() = default;
+#endif
+
+    int sslIoResult = 0; ///< SSL_connect() or gnutls_handshake() return value
+    int ssl_error = 0; ///< an error retrieved from SSL_get_error
+    unsigned long ssl_lib_error = 0; ///< OpenSSL library error
+};
+
+/// TlsNegotiationDetails::Dialer parameter printer
+static inline std::ostream &
+operator <<(std::ostream &os, const TlsNegotiationDetails &ed)
+{
+#if USE_OPENSSL
+    os << ed.sslIoResult << ", " << ed.ssl_error << ", " << ed.ssl_lib_error;
+#elif USE_GNUTLS
+    os << ed.sslIoResult;
+#endif
+    return os;
+}
+
+#if USE_OPENSSL || USE_GNUTLS
+TlsNegotiationDetails::TlsNegotiationDetails(const int ioResult, const Security::SessionPointer &session):
+    sslIoResult(ioResult)
+{
+    Must(session);
+#if USE_OPENSSL
+    ssl_error = SSL_get_error(session.get(), sslIoResult);
+
+    switch (ssl_error) {
+    case SSL_ERROR_SSL:
+    case SSL_ERROR_SYSCALL:
+        ssl_lib_error = ERR_get_error();
+        break;
+    }
+#endif
+}
+#endif /* USE_OPENSSL || USE_GNUTLS */
+
 CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 
 Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const AccessLogEntryPointer &alp, const time_t timeout) :
@@ -191,11 +238,43 @@ Security::PeerConnector::negotiate()
     auto session = fd_table[fd].ssl.get();
     debugs(83, 5, "SSL_connect session=" << (void*)session);
     const int result = SSL_connect(session);
+    const TlsNegotiationDetails ed(result, fd_table[fd].ssl);
+
+    // Our handling of X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY (abbreviated
+    // here as EUNABLE) approximates what would happen if we could (try to)
+    // fetch any missing certificate(s) _during_ OpenSSL certificate validation.
+    // * We did not hide EUNABLE; SSL_connect() was successful: Handle success.
+    // * We did not hide EUNABLE; SSL_connect() reported some error E: Honor E.
+    // * We hid EUNABLE; SSL_connect() was successful: Warn and kill the job.
+    // * We hid EUNABLE; SSL_connect() reported EUNABLE: Warn but honor EUNABLE.
+    // * We hid EUNABLE; SSL_connect() reported some EOTHER: Remember EOTHER and
+    //   try to fetch the missing certificates. If all goes well, honor EOTHER.
+    //   If fetching or post-fetching validation fails, then honor that failure
+    //   because EOTHER would not have happened if we fetched during validation.
+    const auto verifyData = Ssl::SquidVerifyData::SessionData(fd_table[fd].ssl);
+    assert(verifyData);
+    if (verifyData->missingIssuer) { // we hid X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
+        // The result cannot be positive here because successful negotiation
+        // (sans X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY) requires sending
+        // a TLS Finished message, which ought to trigger SSL_ERROR_WANT_WRITE.
+        if (result > 0) {
+            debugs(83, DBG_IMPORTANT, "BUG: Discarding SSL_connect() success due to X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
+            throw TextException("unexpected SSL_connect() success", Here());
+        }
+
+        if (ed.ssl_error != X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY)
+            return handleMissingCertificates(ed);
+
+        debugs(83, DBG_IMPORTANT, "BUG: Honoring unexpected SSL_connect() error: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
+        // fall through to regular error handling
+    }
+
     if (result <= 0) {
 #elif USE_GNUTLS
     auto session = fd_table[fd].ssl.get();
     const int result = gnutls_handshake(session);
     debugs(83, 5, "gnutls_handshake session=" << (void*)session << ", result=" << result);
+    const TlsNegotiationDetails ed(result, fd_table[fd].ssl);
 
     if (result == GNUTLS_E_SUCCESS) {
         char *desc = gnutls_session_get_desc(session);
@@ -210,9 +289,10 @@ Security::PeerConnector::negotiate()
         auto descOut = gnutls_handshake_get_last_out(session);
         debugs(83, 2, "handshake OUT: " << gnutls_handshake_description_get_name(descOut));
 #else
-    if (const int result = -1) {
+    const TlsNegotiationDetails ed;
+    {
 #endif
-        handleNegotiateError(result);
+        handleNegotiateError(ed);
         return; // we might be gone by now
     }
 
@@ -392,43 +472,30 @@ Security::PeerConnector::negotiateSsl()
 }
 
 void
-Security::PeerConnector::handleNegotiateError(const int ret)
+Security::PeerConnector::handleNegotiateError(TlsNegotiationDetails ed)
 {
+    Must(!isSuspended());
+
     const int fd = serverConnection()->fd;
     const Security::SessionPointer session(fd_table[fd].ssl);
-    unsigned long ssl_lib_error = ret;
 
 #if USE_OPENSSL
-    const int ssl_error = SSL_get_error(session.get(), ret);
-
-    switch (ssl_error) {
+    switch (ed.ssl_error) {
     case SSL_ERROR_WANT_READ:
         noteWantRead();
         return;
 
     case SSL_ERROR_WANT_WRITE:
-        if (hasServerCertficates() && needsValidationCallouts()) {
-            suspendNegotiation(TlsNegotiationDetails(ret, ssl_error, ssl_lib_error));
-            doValidationCallouts();
-        } else
-            noteWantWrite();
+        noteWantWrite();
         return;
 
-    case SSL_ERROR_SSL:
-    case SSL_ERROR_SYSCALL:
-        ssl_lib_error = ERR_get_error();
-        // proceed to the general error handling code
-        break;
     default:
         // no special error handling for all other errors
-        ssl_lib_error = SSL_ERROR_NONE;
         break;
     }
 
 #elif USE_GNUTLS
-    const int ssl_error = ret;
-
-    switch (ret) {
+    switch (ed.sslIoResult) {
     case GNUTLS_E_WARNING_ALERT_RECEIVED: {
         auto alert = gnutls_alert_get(session.get());
         debugs(83, DBG_IMPORTANT, "TLS ALERT: " << gnutls_alert_get_name(alert));
@@ -451,26 +518,11 @@ Security::PeerConnector::handleNegotiateError(const int ret)
 #else
     // this avoids unused variable compiler warnings.
     Must(!session);
-    const int ssl_error = ret;
 #endif
 
     // Log connection details, if any
     recordNegotiationDetails();
-
-#if USE_OPENSSL
-    if (connectionMaySurviveOnError() && hasServerCertficates() && needsValidationCallouts()) {
-        // The connection may still used after the error, for example a
-        // PeekingPeerConnector class may splice the connection.
-        // If the certificates validation was incomplete, because we need
-        // to retrieve missing issuer certificates (TODO: or call an
-        // external validator), suspend and complete the validation checks.
-        suspendNegotiation(TlsNegotiationDetails(ret, ssl_error, ssl_lib_error));
-        doValidationCallouts();
-        return;
-    }
-#endif
-
-    noteNegotiationError(ret, ssl_error, ssl_lib_error);
+    noteNegotiationError(ed.sslIoResult, ed.ssl_error, ed.ssl_lib_error);
 }
 
 #if USE_OPENSSL
@@ -497,7 +549,6 @@ Security::PeerConnector::resumeTlsNegotiationCb(TlsNegotiationDetails params)
 void
 Security::PeerConnector::noteWantRead()
 {
-    Must(!isSuspended());
     const int fd = serverConnection()->fd;
     debugs(83, 5, serverConnection());
 
@@ -514,7 +565,6 @@ Security::PeerConnector::noteWantRead()
 void
 Security::PeerConnector::noteWantWrite()
 {
-    Must(!isSuspended());
     const int fd = serverConnection()->fd;
     debugs(83, 5, serverConnection());
     Comm::SetSelect(fd, COMM_SELECT_WRITE, &NegotiateSsl, new Pointer(this), 0);
@@ -737,15 +787,20 @@ Security::PeerConnector::missingCertificatesRetrieved()
     if (!Ssl::PeerCertificatesVerify(session, downloadedCerts))
         ssl_error = SSL_ERROR_SSL;
 
-    // XXX: We should give the control back to doValidationCallouts which
-    // initiated the certificates download procedure, but for now we are
-    // the only callout, so we are just resuming the TLS negotiation.
     resumeNegotiation(ssl_error);
 }
 
+// TODO: Rename to startHandlingMissingCertificates to emphasize its async nature
+// TODO: Rename runValidationCallouts as well.
 void
-Security::PeerConnector::handleMissingCertificates()
+Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &ed)
 {
+    // paranoid: we clear callerHandlesMissingCertificates to prevent loops
+    Must(!runValidationCallouts);
+    runValidationCallouts = true;
+
+    suspendNegotiation(ed); // until missingCertificatesRetrieved()
+
     const int fd = serverConnection()->fd;
     Security::SessionPointer session(fd_table[fd].ssl);
     Must(session);
@@ -762,11 +817,14 @@ Security::PeerConnector::handleMissingCertificates()
     const STACK_OF(X509) *certs = SSL_get_peer_cert_chain(session.get());
     // We are here because we found that there are missing Issuer certificates
     // while we checked retrieved certificates. So certificates should received:
+    // XXX: Our checks in ssl_verify_cb() is not a firm guarantee that the
+    // connection has the certificates. Handle this condition without throwing.
     Must(certs);
 
     // Check for nested SSL certificates downloads. For example when the
     // certificate located in an SSL site which requires to download a
     // a missing certificate (... from an SSL site which requires to ...).
+    // TODO: Do not set callerHandlesMissingCertificates at MaxNestedDownloads.
     const Downloader *csd = (request ? request->downloader.get() : nullptr);
     const bool abortDownload = (csd && csd->nestedLevel() >= MaxNestedDownloads);
 
@@ -785,57 +843,15 @@ Security::PeerConnector::handleMissingCertificates()
     missingCertificatesRetrieved();
 }
 
-bool
-Security::PeerConnector::hasServerCertficates() const
-{
-    const int fd = serverConnection()->fd;
-    const Security::SessionPointer session(fd_table[fd].ssl);
-    return SSL_get_peer_cert_chain(session.get());
-}
-
-bool
-Security::PeerConnector::certificatesAreMissing() const
-{
-    const int fd = serverConnection()->fd;
-    Security::SessionPointer session(fd_table[fd].ssl);
-    const auto verifyData = Ssl::SquidVerifyData::SessionData(session);
-    assert(verifyData);
-    return verifyData->missingIssuer;
-}
-
-bool
-Security::PeerConnector::needsValidationCallouts() const
-{
-    if (runValidationCallouts)
-        return false;
-
-    if (certificatesAreMissing())
-        return true;
-
-    return false;
-}
-
-void
-Security::PeerConnector::doValidationCallouts()
-{
-    runValidationCallouts = true;
-
-    if (certificatesAreMissing()) {
-        handleMissingCertificates();
-        return;
-    }
-
-    // TODO: Move here the certificate validator code from sslFinalized()
-}
-
 void
 Security::PeerConnector::suspendNegotiation(const TlsNegotiationDetails &details)
 {
     Must(!isSuspended());
     AsyncCall::Pointer resumeCall = asyncCall(83, 5,
-                                              "Security::PeerConnector::resumeTlsNegotiationCb",
-                                              TlsNegotiationDetails::Dialer(this, &Security::PeerConnector::resumeTlsNegotiationCb, details));
+                                              "Security::PeerConnector::handleNegotiateError",
+                                              TlsNegotiationDetails::Dialer(this, &Security::PeerConnector::handleNegotiateError, details));
     resumeNegotiationCall = resumeCall;
+    Must(isSuspended());
 }
 
 void

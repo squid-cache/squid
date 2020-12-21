@@ -27,6 +27,7 @@
 class ErrorState;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
+class TlsNegotiationDetails;
 
 namespace Security
 {
@@ -54,20 +55,6 @@ public:
         /// gives PeerConnector access to the in-dialer answer
         virtual Security::EncryptorAnswer &answer() = 0;
     };
-
-#if USE_OPENSSL
-    /// Used to hold parameters for suspending and calling later the
-    /// TLS negotiation procedure
-    class TlsNegotiationDetails {
-    public:
-        typedef UnaryMemFunT<Security::PeerConnector, TlsNegotiationDetails> Dialer;
-
-        TlsNegotiationDetails(int ioret, int an_ssl_error, int an_ssl_lib_error): sslIoResult(ioret), ssl_error(an_ssl_error), ssl_lib_error(an_ssl_lib_error) {}
-        int sslIoResult; ///< return value from the OpenSSL SSL_connect function.
-        int ssl_error; ///< an error retrieved from SSL_get_error
-        int ssl_lib_error; ///< OpenSSL library error
-    };
-#endif
 
 public:
     PeerConnector(const Comm::ConnectionPointer &aServerConn,
@@ -108,7 +95,7 @@ protected:
     /// be transferred to/from server or on error. In the first case
     /// setups the appropriate Comm::SetSelect handler. In second case
     /// fill an error and report to the PeerConnector caller.
-    void handleNegotiateError(const int result);
+    void handleNegotiateError(TlsNegotiationDetails);
 
     /// Called when the openSSL SSL_connect fnction request more data from
     /// the remote SSL server. Sets the read timeout and sets the
@@ -134,7 +121,7 @@ protected:
     /// are missing certificates. Adds to the urlOfMissingCerts list the
     /// URLS of missing certificates if this information provided by the
     /// issued certificates with Authority Info Access extension.
-    void handleMissingCertificates();
+    void handleMissingCertificates(const TlsNegotiationDetails &);
 
     /// Called after the missing certificates are downloaded. Re-runs
     /// the TLS server certificates validation procedure.
@@ -146,21 +133,12 @@ protected:
     /// Called by Downloader after a certificate object downloaded.
     void certDownloadingDone(SBuf &object, int status);
 
-    /// Whether there are missing certificates.
-    bool certificatesAreMissing() const;
-
-    /// Whether we need to run validation callout procedures
-    bool needsValidationCallouts() const;
-
     /// Called while TLS negotiated before the squid-client sends
     /// the final TLS negotiation messages to the server (eg keys
     /// and client finished messages) to initiate required callouts
     /// to external resources (eg downloads missing certificates)
     /// \return true if required callouts to external resources
     void doValidationCallouts();
-
-    /// Whether we have access to server certificates
-    bool hasServerCertficates() const;
 #endif
 
     /// Called when the openSSL SSL_connect function needs to write data to
@@ -257,13 +235,6 @@ private:
     bool runValidationCallouts = false;
 #endif
 };
-
-#if USE_OPENSSL
-inline std::ostream &operator <<(std::ostream &os, const Security::PeerConnector::TlsNegotiationDetails &holder)
-{
-    return os << "[" << holder.sslIoResult << ", " << holder.ssl_error << ", " << holder.ssl_lib_error << "]";
-}
-#endif
 
 } // namespace Security
 
