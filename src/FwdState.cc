@@ -800,9 +800,7 @@ FwdState::advanceDestination(const char *stepDescription, const Comm::Connection
         // now wait for the step callback
     } catch (...) {
         debugs (17, 2, "exception while trying to " << stepDescription << ": " << CurrentException);
-        static const char *reason = "connection preparation exception";
-        cancelStep(reason);
-        closePendingConnection(conn, reason);
+        closePendingConnection(conn, "connection preparation exception");
         if (!err) {
             const auto error = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request, al);
             saveError(error);
