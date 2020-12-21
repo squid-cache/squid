@@ -144,6 +144,9 @@ private:
 
     unsigned int lastRequestId; ///< last requestId used
 
+    /// a disker competed its indexing while still being opened by the worker
+    bool indexingNotification;
+
     /// maps requestId to the handleResponse callback
     typedef std::map<unsigned int, IpcIoPendingRequest*> RequestMap;
     RequestMap requestMap1; ///< older (or newer) pending requests

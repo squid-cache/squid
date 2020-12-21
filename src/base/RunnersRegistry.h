@@ -71,8 +71,8 @@ public:
     /// Called when we finish building in-memory Store index.
     /// Never called before useConfig().
     /// Called even if cache_mem is 0 and there are no cache_dir directives.
-    /// Meant for activating features that should not operate either without the index
-    /// or concurrently with an (often expensive) Store indexing activity.
+    /// Meant for activating features that either require a fully indexed store or
+    /// should not operate concurrently with an (often expensive) Store indexing activity.
     virtual void useFullyIndexedStore() {}
 
     /* Shutdown events */

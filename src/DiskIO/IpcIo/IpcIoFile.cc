@@ -99,6 +99,7 @@ IpcIoFile::IpcIoFile(char const *aDb):
     diskId(-1),
     error_(false),
     lastRequestId(0),
+    indexingNotification(false),
     olderRequests(&requestMap1), newerRequests(&requestMap2),
     timeoutCheckScheduled(false)
 {
@@ -183,6 +184,8 @@ IpcIoFile::openCompleted(const Ipc::StrandMessage *const response)
     }
 
     ioRequestor->ioCompletedNotification();
+    if (indexingNotification && !error_)
+        ioRequestor->indexingCompleted();
 }
 
 /**
@@ -501,9 +504,15 @@ IpcIoFile::HandleRebuildFinished(const Ipc::StrandMessage &response)
 {
     debugs(47, 7, "disker" << response.strand.kidId << " foreground rebuild completed");
     if (IamWorkerProcess()) {
-        const IpcIoFilesMap::const_iterator i = IpcIoFiles.find(response.strand.kidId);
-        assert(i != IpcIoFiles.end());
-        i->second->ioRequestor->indexingCompleted();
+        const IpcIoFilesMap::const_iterator opened = IpcIoFiles.find(response.strand.kidId);
+        if (opened == IpcIoFiles.end()) {
+            const auto opening = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
+                    [&response](const WaitingIpcIoFile &pair) { return pair.second->dbName == response.strand.tag; });
+            assert(opening != WaitingForOpen.end());
+            opening->second->indexingNotification = true;
+        } else {
+            opened->second->ioRequestor->indexingCompleted();
+        }
     }
 }
 
