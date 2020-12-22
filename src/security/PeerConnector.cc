@@ -191,7 +191,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
         }
     }
 
-    auto sessData = Ssl::SquidVerifyData::SessionData(serverSession);
+    const auto sessData = Ssl::SquidVerifyData::SessionData(serverSession);
     assert(sessData);
     sessData->callerHandlesMissingCertificates = true;
 #endif
@@ -743,7 +743,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     ++certsDownloads;
     debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
 
-    Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
+    const auto session = fd_table[serverConnection()->fd].ssl;
 
     // Parse Certificate. Assume that it is in DER format.
     // According to RFC 4325:
@@ -757,7 +757,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         char buffer[1024];
         debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
         ContextPointer ctx(getTlsContext());
-        const STACK_OF(X509) *certsList = SSL_get_peer_cert_chain(session.get());
+        const auto certsList = SSL_get_peer_cert_chain(session.get());
         if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert, certsList, ctx)) {
             urlsOfMissingCerts.push(SBuf(issuerUri));
         }
@@ -792,7 +792,7 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
     const auto session = fd_table[fd].ssl;
     Must(session);
 
-    auto verifyData = Ssl::SquidVerifyData::SessionData(session);
+    const auto verifyData = Ssl::SquidVerifyData::SessionData(session);
     assert(verifyData);
     // We download the missing certificate(s) once. We would prefer to clear
     // this right after the first validation, but that ideal place is _inside_
@@ -817,7 +817,7 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
 bool
 Security::PeerConnector::computeMissingCertificates(const SessionPointer &session)
 {
-    const  auto certs = SSL_get_peer_cert_chain(session.get());
+    const auto certs = SSL_get_peer_cert_chain(session.get());
     if (!certs) {
         debugs(83, 3, "nothing to bootstrap the fetch with");
         return false;
@@ -834,7 +834,7 @@ Security::PeerConnector::computeMissingCertificates(const SessionPointer &sessio
         return false;
     }
 
-    ContextPointer ctx(getTlsContext());
+    const auto ctx = getTlsContext();
     Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx);
     if (urlsOfMissingCerts.empty()) {
         debugs(83, 3, "found no URLs to fetch the missing certificates from");
@@ -864,7 +864,7 @@ Security::PeerConnector::resumeNegotiation()
 {
     Must(isSuspended());
 
-    auto session = fd_table[serverConnection()->fd].ssl;
+    const auto session = fd_table[serverConnection()->fd].ssl;
     if (!Ssl::PeerCertificatesVerify(session, downloadedCerts)) {
         // simulate an earlier SSL_connect() failure with a new error
         // TODO: When we can use Security::ErrorDetail, we should resume with a

@@ -267,7 +267,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
     X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
-    Ssl::SquidVerifyData *verifyData = (Ssl::SquidVerifyData *)SSL_get_ex_data(ssl, ssl_ex_index_squid_verify);
+    const auto verifyData = static_cast<Ssl::SquidVerifyData*>(SSL_get_ex_data(ssl, ssl_ex_index_squid_verify));
 
     Security::CertPointer peer_cert;
     peer_cert.resetAndLock(X509_STORE_CTX_get0_cert(ctx));
@@ -313,10 +313,10 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
     }
 
-    const bool ignoreIssuer = (verifyData && verifyData->callerHandlesMissingCertificates);
+    const auto ignoreIssuer = (verifyData && verifyData->callerHandlesMissingCertificates);
     if (!ok && error_no == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY && ignoreIssuer) {
-        if (X509 *currentCert = X509_STORE_CTX_get_current_cert(ctx)) {
-            if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(currentCert)) {
+        if (const auto currentCert = X509_STORE_CTX_get_current_cert(ctx)) {
+            if (const auto issuerUri = hasAuthorityInfoAccessCaIssuers(currentCert)) {
                 /*Store somewhere the missing issuerUri?*/
                 debugs(83, 5, "There is issuerURI for missing issuer: " << issuerUri);
                 ok = 1;
@@ -443,28 +443,28 @@ static int squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts);
 /// in conjunction with a (possibly empty) set of "extra" intermediate certs
 /// OpenSSL "verification callback function" (\ref OpenSSL_vcb_disambiguation)
 bool
-Ssl::PeerCertificatesVerify(Security::SessionPointer &s, const Ssl::X509_STACK_Pointer &extraCerts)
+Ssl::PeerCertificatesVerify(const Security::SessionPointer &s, const Ssl::X509_STACK_Pointer &extraCerts)
 {
-    STACK_OF(X509) *peerCertificatesChain = SSL_get_peer_cert_chain(s.get());
+    const auto peerCertificatesChain = SSL_get_peer_cert_chain(s.get());
 
     if (!peerCertificatesChain || sk_X509_num(peerCertificatesChain) == 0) {
         debugs(83, 2, "no server certificates?");
         return false;
     }
 
-    X509_STORE *verificationStore = SSL_CTX_get_cert_store(SSL_get_SSL_CTX(s.get()));
-    X509_STORE_CTX_Pointer storeCtx(X509_STORE_CTX_new());
-    X509 *peerCert = sk_X509_value(peerCertificatesChain, 0);
+    const auto verificationStore = SSL_CTX_get_cert_store(SSL_get_SSL_CTX(s.get()));
+    const X509_STORE_CTX_Pointer storeCtx(X509_STORE_CTX_new());
+    const auto peerCert = sk_X509_value(peerCertificatesChain, 0);
     if (!X509_STORE_CTX_init(storeCtx.get(), verificationStore, peerCert, peerCertificatesChain)) {
         debugs(83, DBG_IMPORTANT, "error initializing X509_STORE");
         return false;
     }
 
     // Retrieve certificate flags:
-    long certFlags = SSL_set_cert_flags(s.get(), 0);
+    const auto certFlags = SSL_set_cert_flags(s.get(), 0);
     if (certFlags & SSL_CERT_FLAG_SUITEB_128_LOS) {
-        auto SSL_CERT_FLAG_to_X509_V_FLAG = [](long flag) {return flag;};
-        long x509Flags = SSL_CERT_FLAG_to_X509_V_FLAG(certFlags);
+        const auto SSL_CERT_FLAG_to_X509_V_FLAG = [](long flag) {return flag;};
+        const auto x509Flags = SSL_CERT_FLAG_to_X509_V_FLAG(certFlags);
         X509_STORE_CTX_set_flags(storeCtx.get(), x509Flags & X509_V_FLAG_SUITEB_128_LOS);
     }
 
@@ -479,23 +479,23 @@ Ssl::PeerCertificatesVerify(Security::SessionPointer &s, const Ssl::X509_STACK_P
     // We are verifying a server certificate
     X509_STORE_CTX_set_default(storeCtx.get(), "ssl_server");
 
-    X509_VERIFY_PARAM *param = X509_STORE_CTX_get0_param(storeCtx.get());
+    const auto param = X509_STORE_CTX_get0_param(storeCtx.get());
     assert(param);
     X509_VERIFY_PARAM_set_auth_level(param, SSL_get_security_level(s.get()));
     X509_VERIFY_PARAM_set1(param, SSL_get0_param(s.get()));
 
-    if (auto cb = SSL_get_verify_callback(s.get()))
+    if (const auto cb = SSL_get_verify_callback(s.get()))
         X509_STORE_CTX_set_verify_cb(storeCtx.get(), cb);
 
     // Squid implements its own verify function to use instead of
     // using X509_verify_cert, which also adds missing certificates
     // to storeCtx before checks.
     // bool verified = (X509_verify_cert(storeCtx.get()) > 0);
-    bool verified = (squidX509VerifyCert(storeCtx.get(), extraCerts.get()) > 0);
+    const auto verified = (squidX509VerifyCert(storeCtx.get(), extraCerts.get()) > 0);
 
     if (!verified) {
         // Our call back will record errors list
-        int verifyResult = X509_STORE_CTX_get_error(storeCtx.get());
+        const auto verifyResult = X509_STORE_CTX_get_error(storeCtx.get());
         debugs(83, 5, "verify result " << verifyResult << " : " << X509_verify_cert_error_string(verifyResult));
     }
     return verified;
@@ -506,7 +506,7 @@ Ssl::SquidVerifyData::SessionData(const Security::SessionPointer &session)
 {
     auto data = static_cast<SquidVerifyData *>(SSL_get_ex_data(session.get(), ssl_ex_index_squid_verify));
     if (!data) {
-        data =  new Ssl::SquidVerifyData();
+        data = new Ssl::SquidVerifyData();
         SSL_set_ex_data(session.get(), ssl_ex_index_squid_verify, data);
     }
     return data;
@@ -596,8 +596,7 @@ static void
 ssl_free_squid_verify(void *, void *ptr, CRYPTO_EX_DATA *,
                       int, long, void *)
 {
-    Ssl::SquidVerifyData  *data = static_cast <Ssl::SquidVerifyData *>(ptr);
-    delete data;
+    delete static_cast<Ssl::SquidVerifyData*>(ptr);
 }
 
 void
@@ -640,7 +639,7 @@ Ssl::Initialize(void)
     ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
     ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", NULL, NULL, &ssl_free_CertChain);
     ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
-    ssl_ex_index_squid_verify = SSL_get_ex_new_index(0, (void *) "squid_verify", nullptr, nullptr,  &ssl_free_squid_verify);
+    ssl_ex_index_squid_verify = SSL_get_ex_new_index(0, (void *) "squid_verify", nullptr, nullptr, &ssl_free_squid_verify);
 }
 
 bool
@@ -1111,9 +1110,9 @@ sk_x509_findIssuer(const STACK_OF(X509) *sk, X509 *cert)
     if (!sk)
         return nullptr;
 
-    const int skItemsNum = sk_X509_num(sk);
+    const auto skItemsNum = sk_X509_num(sk);
     for (int i = 0; i < skItemsNum; ++i) {
-        X509 *issuer = sk_X509_value(sk, i);
+        const auto issuer = sk_X509_value(sk, i);
         if (X509_check_issued(issuer, cert) == X509_V_OK)
             return issuer;
     }
@@ -1177,8 +1176,8 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *
         return;
 
     for (int i = 0; i < sk_X509_num(serverCertificates); ++i) {
-        X509 *cert = sk_X509_value(serverCertificates, i);
-        if (const char *issuerUri = uriOfIssuerIfMissing(cert, serverCertificates, context))
+        const auto cert = sk_X509_value(serverCertificates, i);
+        if (const auto issuerUri = uriOfIssuerIfMissing(cert, serverCertificates, context))
             URIs.push(SBuf(issuerUri));
     }
 }
@@ -1227,7 +1226,7 @@ squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
 
     if (extraCerts) {
         for (int i = 0; i < sk_X509_num(extraCerts); ++i) {
-            X509 *cert = sk_X509_value(extraCerts, i);
+            const auto cert = sk_X509_value(extraCerts, i);
             X509_up_ref(cert);
             sk_X509_push(untrustedCerts.get(), cert);
         }
@@ -1266,7 +1265,7 @@ squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
 static int
 untrustedToStoreCtx_cb(X509_STORE_CTX *ctx, void *)
 {
-    debugs(83, 4,  "Try to use pre-downloaded intermediate certificates");
+    debugs(83, 4, "Try to use pre-downloaded intermediate certificates");
     return squidX509VerifyCert(ctx, nullptr);
 }
 

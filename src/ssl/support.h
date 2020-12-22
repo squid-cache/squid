@@ -333,13 +333,12 @@ BIO *BIO_new_SBuf(SBuf *buf);
 /**
   \ingroup ServerProtocolSSLAPI
 */
-bool PeerCertificatesVerify(Security::SessionPointer &s,  const Ssl::X509_STACK_Pointer &extraCerts);
+bool PeerCertificatesVerify(const Security::SessionPointer &, const Ssl::X509_STACK_Pointer &extraCerts);
 
 /// Holds parameters and flags required for server certificates verify
 /// procedure.
 /// TODO: Add more parameters used by squid to verify certificates which are
 /// currently passed using the SSL_set_ex_data and ssl_ex_index_* parameters.
-///  \ingroup ServerProtocolSSLAPI
 class SquidVerifyData {
 public:
     /// whether certificate validation has failed due to missing certificate(s)
