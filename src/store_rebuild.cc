@@ -25,6 +25,7 @@
 #include "util.h"
 
 #include <cerrno>
+#include <vector>
 
 static StoreRebuildData counts;
 
@@ -34,12 +35,13 @@ static void storeCleanup(void *);
 // TODO: Handle unknown totals (UFS cache_dir that lost swap.state) correctly.
 typedef struct {
     /* total number of "swap.state" entries that will be read */
-    int total;
+    int total = 0;
     /* number of entries read so far */
-    int scanned;
+    int scanned = 0;
 } store_rebuild_progress;
 
-static store_rebuild_progress *RebuildProgress = NULL;
+typedef std::vector<store_rebuild_progress> RebuildProgressStats;
+static RebuildProgressStats *RebuildProgress = nullptr;
 
 void
 StoreRebuildData::updateStartTime(const timeval &dirStartTime)
@@ -138,10 +140,10 @@ StoreRebuildFinalize()
         debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.clashcount  << " Swapfile clashes avoided.");
         debugs(20, DBG_IMPORTANT, "  Took "<< std::setw(3)<< std::setprecision(2) << dt << " seconds ("<< std::setw(6) <<
                 ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
-
-        xfree(RebuildProgress);
-        RebuildProgress = nullptr;
     }
+
+    delete RebuildProgress;
+    RebuildProgress = nullptr;
 
     debugs(20, DBG_IMPORTANT, "Beginning Validation Procedure");
     eventAdd("storeCleanup", storeCleanup, nullptr, 0.0, 1);
@@ -182,12 +184,8 @@ void
 storeRebuildStart(void)
 {
     counts = StoreRebuildData(); // reset counters
-    if (Store::Disks::AllIndexed()) {
+    if (Store::Disks::AllIndexed())
         StoreRebuildFinalize();
-        return;
-    }
-    RebuildProgress = reinterpret_cast<store_rebuild_progress *>(xcalloc(Config.cacheSwap.n_configured,
-            sizeof(store_rebuild_progress)));
 }
 
 /*
@@ -208,19 +206,19 @@ storeRebuildProgress(int sd_index, int total, int sofar)
     if (sd_index >= Config.cacheSwap.n_configured)
         return;
 
-    if (NULL == RebuildProgress)
-        return;
+    if (!RebuildProgress)
+        RebuildProgress = new RebuildProgressStats(Config.cacheSwap.n_configured);
 
-    RebuildProgress[sd_index].total = total;
+    RebuildProgress->at(sd_index).total = total;
 
-    RebuildProgress[sd_index].scanned = sofar;
+    RebuildProgress->at(sd_index).scanned = sofar;
 
     if (squid_curtime - last_report < 15)
         return;
 
     for (sd_index = 0; sd_index < Config.cacheSwap.n_configured; ++sd_index) {
-        n += (double) RebuildProgress[sd_index].scanned;
-        d += (double) RebuildProgress[sd_index].total;
+        n += static_cast<double>(RebuildProgress->at(sd_index).scanned);
+        d += static_cast<double>(RebuildProgress->at(sd_index).total);
     }
 
     debugs(20, DBG_IMPORTANT, "Indexing cache entries: " << Progress(n, d));
