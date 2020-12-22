@@ -205,6 +205,8 @@ private:
 
     /// Callback to resume TLS negotiation
     void resumeTlsNegotiationCb(TlsNegotiationDetails params);
+
+    bool computeMissingCertificates(const SessionPointer &);
 #endif
 
     static void NegotiateSsl(int fd, void *data);

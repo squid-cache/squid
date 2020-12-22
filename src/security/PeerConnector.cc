@@ -795,17 +795,16 @@ Security::PeerConnector::missingCertificatesRetrieved()
 
 // TODO: Rename to startHandlingMissingCertificates to emphasize its async nature
 // TODO: Rename runValidationCallouts as well.
+/// A call to this function must lead to missingCertificatesRetrieved()!
 void
 Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &ed)
 {
-    // paranoid: we clear callerHandlesMissingCertificates to prevent loops
+    // paranoid: we also clear callerHandlesMissingCertificates to prevent loops
     Must(!runValidationCallouts);
     runValidationCallouts = true;
 
-    suspendNegotiation(ed); // until missingCertificatesRetrieved()
-
-    const int fd = serverConnection()->fd;
-    Security::SessionPointer session(fd_table[fd].ssl);
+    const auto fd = serverConnection()->fd;
+    const auto session = fd_table[fd].ssl;
     Must(session);
 
     auto verifyData = Ssl::SquidVerifyData::SessionData(session);
@@ -817,33 +816,48 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
     // may be called multiple times, so we cannot reset there.
     verifyData->callerHandlesMissingCertificates = false;
 
-    const STACK_OF(X509) *certs = SSL_get_peer_cert_chain(session.get());
-    // We are here because we found that there are missing Issuer certificates
-    // while we checked retrieved certificates. So certificates should received:
-    // XXX: Our checks in ssl_verify_cb() is not a firm guarantee that the
-    // connection has the certificates. Handle this condition without throwing.
-    Must(certs);
+    suspendNegotiation(ed);
+
+    if (computeMissingCertificates(session)) {
+        assert(!urlsOfMissingCerts.empty());
+        startCertDownloading(urlsOfMissingCerts.front());
+        urlsOfMissingCerts.pop();
+        return;
+    }
+
+    missingCertificatesRetrieved();
+}
+
+/// calculates URLs of the missing intermediate certificates or returns false
+bool
+Security::PeerConnector::computeMissingCertificates(const SessionPointer &session)
+{
+    const  auto certs = SSL_get_peer_cert_chain(session.get());
+    if (!certs) {
+        debugs(83, 3, "nothing to bootstrap the fetch with");
+        return false;
+    }
+    debugs(83, 5, "server certificates: " << sk_X509_num(certs));
 
     // Check for nested SSL certificates downloads. For example when the
     // certificate located in an SSL site which requires to download a
     // a missing certificate (... from an SSL site which requires to ...).
     // TODO: Do not set callerHandlesMissingCertificates at MaxNestedDownloads.
-    const Downloader *csd = (request ? request->downloader.get() : nullptr);
-    const bool abortDownload = (csd && csd->nestedLevel() >= MaxNestedDownloads);
-
-    if (!abortDownload){
-        debugs(83, 5, "Server sent " << sk_X509_num(certs) << " certificates");
-        ContextPointer ctx(getTlsContext());
-        Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx);
-        if (urlsOfMissingCerts.size()) {
-            debugs(83, 5, "Missing at least " << urlsOfMissingCerts.size() << " certificate(s), start downloading");
-            startCertDownloading(urlsOfMissingCerts.front());
-            urlsOfMissingCerts.pop();
-            return;
-        }
+    const auto csd = (request ? request->downloader.get() : nullptr);
+    if (csd && csd->nestedLevel() >= MaxNestedDownloads) {
+        debugs(83, 3, "looping? " << csd->nestedLevel() << " >= " << MaxNestedDownloads);
+        return false;
     }
 
-    missingCertificatesRetrieved();
+    ContextPointer ctx(getTlsContext());
+    Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx);
+    if (urlsOfMissingCerts.empty()) {
+        debugs(83, 3, "found no URLs to fetch the missing certificates from");
+        return false;
+    }
+
+    debugs(83, 5, "initial URLs to fetch the missing certificates from: " << urlsOfMissingCerts.size());
+    return true;
 }
 
 void
