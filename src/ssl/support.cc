@@ -250,8 +250,6 @@ bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
     return matchX509CommonNames(cert, (void *)server, check_domain);
 }
 
-static const char *hasAuthorityInfoAccessCaIssuers(X509 *cert);
-
 /// adjusts OpenSSL validation results for each verified certificate in ctx
 /// OpenSSL "verify_callback function" (\ref OpenSSL_vcb_disambiguation)
 static int
@@ -267,7 +265,6 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
     X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
-    const auto verifyData = static_cast<Ssl::SquidVerifyData*>(SSL_get_ex_data(ssl, ssl_ex_index_squid_verify));
 
     Security::CertPointer peer_cert;
     peer_cert.resetAndLock(X509_STORE_CTX_get0_cert(ctx));
@@ -313,12 +310,10 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
     }
 
-    const auto ignoreIssuer = (verifyData && verifyData->callerHandlesMissingCertificates);
-    if (!ok && error_no == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY && ignoreIssuer) {
-        if (const auto currentCert = X509_STORE_CTX_get_current_cert(ctx)) {
-            if (const auto issuerUri = hasAuthorityInfoAccessCaIssuers(currentCert)) {
-                /*Store somewhere the missing issuerUri?*/
-                debugs(83, 5, "There is issuerURI for missing issuer: " << issuerUri);
+    if (!ok && error_no == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY) {
+        if (const auto verifyData = static_cast<Ssl::SquidVerifyData*>(SSL_get_ex_data(ssl, ssl_ex_index_squid_verify))) {
+            if (verifyData->callerHandlesMissingCertificates) {
+                debugs(83, 3, "hiding X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
                 ok = 1;
                 verifyData->missingIssuer = true;
             }
@@ -1175,6 +1170,11 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *
     if (!serverCertificates)
         return;
 
+    // TODO: The caller assumes that it can validate many serverCertificates by
+    // following a single URI found/pushed here. If that is true, we should add
+    // a comment to confirm that surprising fact. Otherwise, we should tell the
+    // caller when it has no chances of validating the whole serverCertificates
+    // chain so that the caller does not fetch certificates in vain.
     for (int i = 0; i < sk_X509_num(serverCertificates); ++i) {
         const auto cert = sk_X509_value(serverCertificates, i);
         if (const auto issuerUri = uriOfIssuerIfMissing(cert, serverCertificates, context))
