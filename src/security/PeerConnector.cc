@@ -525,27 +525,6 @@ Security::PeerConnector::handleNegotiateError(TlsNegotiationDetails ed)
     noteNegotiationError(ed.sslIoResult, ed.ssl_error, ed.ssl_lib_error);
 }
 
-#if USE_OPENSSL
-void
-Security::PeerConnector::resumeTlsNegotiationCb(TlsNegotiationDetails params)
-{
-    switch (params.ssl_error) {
-    case SSL_ERROR_WANT_WRITE:
-            noteWantWrite();
-        return;
-    case SSL_ERROR_SSL:
-        noteNegotiationError(params.sslIoResult, params.ssl_error, params.ssl_lib_error);
-        return;
-    case SSL_ERROR_WANT_READ:
-    case SSL_ERROR_SYSCALL:
-    default: {
-        const bool resumeTlsNegotationCbInvalidError = false;
-        assert(resumeTlsNegotationCbInvalidError); // Currently we are not expecting these type of errors
-    }
-    }
-}
-#endif
-
 void
 Security::PeerConnector::noteWantRead()
 {

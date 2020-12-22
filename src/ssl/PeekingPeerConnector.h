@@ -42,7 +42,6 @@ public:
     virtual void noteWantWrite();
     virtual void noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
     virtual void noteNegotiationDone(ErrorState *error);
-    virtual bool connectionMaySurviveOnError() const { return true; }
 
     /// Updates associated client connection manager members
     /// if the server certificate was received from the server.

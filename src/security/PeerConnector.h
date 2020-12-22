@@ -126,13 +126,6 @@ protected:
 
     /// Called by Downloader after a certificate object downloaded.
     void certDownloadingDone(SBuf &object, int status);
-
-    /// Called while TLS negotiated before the squid-client sends
-    /// the final TLS negotiation messages to the server (eg keys
-    /// and client finished messages) to initiate required callouts
-    /// to external resources (eg downloads missing certificates)
-    /// \return true if required callouts to external resources
-    void doValidationCallouts();
 #endif
 
     /// Called when the openSSL SSL_connect function needs to write data to
@@ -156,14 +149,6 @@ protected:
 
     /// mimics FwdState to minimize changes to FwdState::initiate/negotiateSsl
     Comm::ConnectionPointer const &serverConnection() const { return serverConn; }
-
-    /// Some of the kid classes may want to continue use the connection
-    /// even on protocol errors, eg the PeekingPeerconnector kid class may splice
-    /// the a TLS connection on error.
-    /// The PeerConnector needs to know this possibility, in order to complete
-    /// after TLS protocol errors any incomplete certificate validation check,
-    /// if this is possible.
-    virtual bool connectionMaySurviveOnError() const { return false; }
 
     /// sends the given error to the initiator
     void bail(ErrorState *error);
@@ -198,9 +183,6 @@ private:
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
-
-    /// Callback to resume TLS negotiation
-    void resumeTlsNegotiationCb(TlsNegotiationDetails params);
 
     bool computeMissingCertificates(const SessionPointer &);
 #endif
