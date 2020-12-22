@@ -780,16 +780,14 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
     // may be called multiple times, so we cannot reset there.
     verifyData->callerHandlesMissingCertificates = false;
 
+    if (!computeMissingCertificates(session))
+        return handleNegotiateError(ed);
+
     suspendNegotiation(ed);
 
-    if (computeMissingCertificates(session)) {
-        assert(!urlsOfMissingCerts.empty());
-        startCertDownloading(urlsOfMissingCerts.front());
-        urlsOfMissingCerts.pop();
-        return;
-    }
-
-    resumeNegotiation();
+    assert(!urlsOfMissingCerts.empty());
+    startCertDownloading(urlsOfMissingCerts.front());
+    urlsOfMissingCerts.pop();
 }
 
 /// calculates URLs of the missing intermediate certificates or returns false
