@@ -108,6 +108,7 @@ protected:
     void openCompleted(const Ipc::StrandSearchResponse *const);
     void readCompleted(ReadRequest *readRequest, IpcIoMsg *const response);
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
+    void indexingCompleted();
     bool canWait() const;
 
 private:
@@ -143,6 +144,10 @@ private:
     bool error_; ///< whether we have seen at least one I/O error (XXX)
 
     unsigned int lastRequestId; ///< last requestId used
+
+    /// whether the corresponding disker completed its indexing (worker process)
+    /// undefined (disker process)
+    bool indexed;
 
     /// maps requestId to the handleResponse callback
     typedef std::map<unsigned int, IpcIoPendingRequest*> RequestMap;

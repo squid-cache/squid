@@ -99,6 +99,7 @@ IpcIoFile::IpcIoFile(char const *aDb):
     diskId(-1),
     error_(false),
     lastRequestId(0),
+    indexed(false),
     olderRequests(&requestMap1), newerRequests(&requestMap2),
     timeoutCheckScheduled(false)
 {
@@ -184,7 +185,7 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
 
     ioRequestor->ioCompletedNotification();
     if (response->indexed && !error_)
-        ioRequestor->indexingCompleted();
+        indexingCompleted();
 }
 
 /**
@@ -499,13 +500,22 @@ IpcIoFile::HandleStrandBusyResponse(const Ipc::StrandMessage &response)
 }
 
 void
+IpcIoFile::indexingCompleted()
+{
+    if (!indexed) {
+        ioRequestor->indexingCompleted();
+        indexed = true;
+    }
+}
+
+void
 IpcIoFile::HandleRebuildFinished(const Ipc::StrandMessage &response)
 {
     debugs(47, 7, "disker" << response.strand.kidId << " foreground rebuild completed");
     if (IamWorkerProcess()) {
         const IpcIoFilesMap::const_iterator opened = IpcIoFiles.find(response.strand.kidId);
         if (opened != IpcIoFiles.end())
-            opened->second->ioRequestor->indexingCompleted();
+            opened->second->indexingCompleted();
         else
             debugs(47, 5, "ignoring response from an unknown disker" << response.strand.kidId);
     }
