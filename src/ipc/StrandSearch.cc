@@ -32,3 +32,26 @@ void Ipc::StrandSearchRequest::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.putString(tag);
 }
 
+
+Ipc::StrandSearchResponse::StrandSearchResponse(const bool isIndexed, const StrandCoord &aStrand):
+    indexed(isIndexed),
+    strand(aStrand)
+{
+}
+
+Ipc::StrandSearchResponse::StrandSearchResponse(const TypedMsgHdr &hdrMsg):
+    indexed(false)
+{
+    hdrMsg.checkType(mtStrandReady);
+    hdrMsg.getPod(indexed);
+    strand.unpack(hdrMsg);
+}
+
+void
+Ipc::StrandSearchResponse::pack(TypedMsgHdr &hdrMsg) const
+{
+    hdrMsg.setType(mtStrandReady);
+    hdrMsg.putPod(indexed);
+    strand.pack(hdrMsg);
+}
+

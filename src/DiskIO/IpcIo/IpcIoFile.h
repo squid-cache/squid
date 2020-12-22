@@ -88,7 +88,7 @@ public:
     virtual bool ioInProgress() const;
 
     /// handle open response from coordinator
-    static void HandleOpenResponse(const Ipc::StrandMessage &);
+    static void HandleOpenResponse(const Ipc::StrandSearchResponse &);
     /// called when Coordinator reports that the strand exists but is not usable (yet)
     static void HandleStrandBusyResponse(const Ipc::StrandMessage &);
 
@@ -105,7 +105,7 @@ public:
 
 protected:
     friend class IpcIoPendingRequest;
-    void openCompleted(const Ipc::StrandMessage *const);
+    void openCompleted(const Ipc::StrandSearchResponse *const);
     void readCompleted(ReadRequest *readRequest, IpcIoMsg *const response);
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
     bool canWait() const;
@@ -143,9 +143,6 @@ private:
     bool error_; ///< whether we have seen at least one I/O error (XXX)
 
     unsigned int lastRequestId; ///< last requestId used
-
-    /// a disker competed its indexing while still being opened by the worker
-    bool indexingNotification;
 
     /// maps requestId to the handleResponse callback
     typedef std::map<unsigned int, IpcIoPendingRequest*> RequestMap;

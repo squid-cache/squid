@@ -275,7 +275,14 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
 {
     debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
            request.tag << " is kid" << strand.kidId);
-    const StrandMessage response(mtStrandReady, strand);
+
+    bool isIndexed = false;
+    for (const auto &indexedStrand: rebuildFinishedStrands_) {
+        if (indexedStrand.tag == strand.tag)
+            isIndexed = true;
+    }
+
+    const StrandSearchResponse response(isIndexed, strand);
     TypedMsgHdr message;
     response.pack(message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);

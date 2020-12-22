@@ -99,7 +99,6 @@ IpcIoFile::IpcIoFile(char const *aDb):
     diskId(-1),
     error_(false),
     lastRequestId(0),
-    indexingNotification(false),
     olderRequests(&requestMap1), newerRequests(&requestMap2),
     timeoutCheckScheduled(false)
 {
@@ -162,7 +161,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 }
 
 void
-IpcIoFile::openCompleted(const Ipc::StrandMessage *const response)
+IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
 {
     Must(diskId < 0); // we do not know our disker yet
 
@@ -184,7 +183,7 @@ IpcIoFile::openCompleted(const Ipc::StrandMessage *const response)
     }
 
     ioRequestor->ioCompletedNotification();
-    if (indexingNotification && !error_)
+    if (response->indexed && !error_)
         ioRequestor->indexingCompleted();
 }
 
@@ -451,7 +450,7 @@ IpcIoFile::canWait() const
 
 /// called when coordinator responds to worker open request
 void
-IpcIoFile::HandleOpenResponse(const Ipc::StrandMessage &response)
+IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
 {
     debugs(47, 7, HERE << "coordinator response to open request");
     const auto it = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
@@ -505,14 +504,10 @@ IpcIoFile::HandleRebuildFinished(const Ipc::StrandMessage &response)
     debugs(47, 7, "disker" << response.strand.kidId << " foreground rebuild completed");
     if (IamWorkerProcess()) {
         const IpcIoFilesMap::const_iterator opened = IpcIoFiles.find(response.strand.kidId);
-        if (opened == IpcIoFiles.end()) {
-            const auto opening = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
-                    [&response](const WaitingIpcIoFile &pair) { return pair.second->dbName == response.strand.tag; });
-            assert(opening != WaitingForOpen.end());
-            opening->second->indexingNotification = true;
-        } else {
+        if (opened != IpcIoFiles.end())
             opened->second->ioRequestor->indexingCompleted();
-        }
+        else
+            debugs(47, 5, "ignoring response from an unknown disker" << response.strand.kidId);
     }
 }
 
