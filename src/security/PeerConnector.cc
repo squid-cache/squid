@@ -775,22 +775,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         return;
     }
 
-    missingCertificatesRetrieved();
-}
-
-void
-Security::PeerConnector::missingCertificatesRetrieved()
-{
-    Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
-
-    if (Ssl::PeerCertificatesVerify(session, downloadedCerts))
-        return resumeNegotiation(nullptr); // resume where we left off
-
-    // simulate an earlier SSL_connect() failure with a new error
-    // TODO: When we can use Security::ErrorDetail, we should resume with a
-    // detailed _validation_ error, not just a generic SSL_ERROR_SSL!
-    const TlsNegotiationDetails ed(SSL_ERROR_SSL, session);
-    resumeNegotiation(&ed);
+    resumeNegotiation();
 }
 
 // TODO: Rename to startHandlingMissingCertificates to emphasize its async nature
@@ -825,7 +810,7 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
         return;
     }
 
-    missingCertificatesRetrieved();
+    resumeNegotiation();
 }
 
 /// calculates URLs of the missing intermediate certificates or returns false
@@ -875,15 +860,18 @@ Security::PeerConnector::suspendNegotiation(const TlsNegotiationDetails &details
 }
 
 void
-Security::PeerConnector::resumeNegotiation(const TlsNegotiationDetails *newDetails)
+Security::PeerConnector::resumeNegotiation()
 {
     Must(isSuspended());
 
-    // update the error details if requested
-    if (newDetails) {
+    auto session = fd_table[serverConnection()->fd].ssl;
+    if (!Ssl::PeerCertificatesVerify(session, downloadedCerts)) {
+        // simulate an earlier SSL_connect() failure with a new error
+        // TODO: When we can use Security::ErrorDetail, we should resume with a
+        // detailed _validation_ error, not just a generic SSL_ERROR_SSL!
         const auto dialer = dynamic_cast<TlsNegotiationDetails::Dialer *>(resumeNegotiationCall->getDialer());
         assert(dialer);
-        dialer->arg1 = *newDetails;
+        dialer->arg1 = TlsNegotiationDetails(SSL_ERROR_SSL, session);
     }
 
     ScheduleCallHere(resumeNegotiationCall);

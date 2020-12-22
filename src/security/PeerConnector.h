@@ -112,18 +112,14 @@ protected:
     /// \param details The current TLS negotiation step details
     void suspendNegotiation(const TlsNegotiationDetails &details);
 
-    /// Resumes TLS negotiation (with a new error detail, if given)
-    void resumeNegotiation(const TlsNegotiationDetails *);
+    /// Resumes TLS negotiation paused by suspendNegotiation()
+    void resumeNegotiation();
 
     /// Run the certificates list sent by the SSL server and check if there
     /// are missing certificates. Adds to the urlOfMissingCerts list the
     /// URLS of missing certificates if this information provided by the
     /// issued certificates with Authority Info Access extension.
     void handleMissingCertificates(const TlsNegotiationDetails &);
-
-    /// Called after the missing certificates are downloaded. Re-runs
-    /// the TLS server certificates validation procedure.
-    void missingCertificatesRetrieved();
 
     /// Start downloading procedure for the given URL.
     void startCertDownloading(SBuf &url);
