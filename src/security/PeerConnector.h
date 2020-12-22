@@ -112,10 +112,8 @@ protected:
     /// \param details The current TLS negotiation step details
     void suspendNegotiation(const TlsNegotiationDetails &details);
 
-    /// Resumes TLS negotiation
-    /// \param ssl_error if not '0' then pass the error on TLS negotiation
-    ///  handling code
-    void resumeNegotiation(int ssl_error);
+    /// Resumes TLS negotiation (with a new error detail, if given)
+    void resumeNegotiation(const TlsNegotiationDetails *);
 
     /// Run the certificates list sent by the SSL server and check if there
     /// are missing certificates. Adds to the urlOfMissingCerts list the

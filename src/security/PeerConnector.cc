@@ -783,11 +783,14 @@ Security::PeerConnector::missingCertificatesRetrieved()
 {
     Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
 
-    int ssl_error = 0;
-    if (!Ssl::PeerCertificatesVerify(session, downloadedCerts))
-        ssl_error = SSL_ERROR_SSL;
+    if (Ssl::PeerCertificatesVerify(session, downloadedCerts))
+        return resumeNegotiation(nullptr); // resume where we left off
 
-    resumeNegotiation(ssl_error);
+    // simulate an earlier SSL_connect() failure with a new error
+    // TODO: When we can use Security::ErrorDetail, we should resume with a
+    // detailed _validation_ error, not just a generic SSL_ERROR_SSL!
+    const TlsNegotiationDetails ed(SSL_ERROR_SSL, session);
+    resumeNegotiation(&ed);
 }
 
 // TODO: Rename to startHandlingMissingCertificates to emphasize its async nature
@@ -847,6 +850,9 @@ void
 Security::PeerConnector::suspendNegotiation(const TlsNegotiationDetails &details)
 {
     Must(!isSuspended());
+    // We could store just a copy of the details and call handleNegotiateError()
+    // synchronously, but that would expose PeerConnector users to
+    // TlsNegotiationDetails and lengthen the already complicated call stack.
     AsyncCall::Pointer resumeCall = asyncCall(83, 5,
                                               "Security::PeerConnector::handleNegotiateError",
                                               TlsNegotiationDetails::Dialer(this, &Security::PeerConnector::handleNegotiateError, details));
@@ -855,16 +861,17 @@ Security::PeerConnector::suspendNegotiation(const TlsNegotiationDetails &details
 }
 
 void
-Security::PeerConnector::resumeNegotiation(int ssl_error)
+Security::PeerConnector::resumeNegotiation(const TlsNegotiationDetails *newDetails)
 {
     Must(isSuspended());
 
-    if (ssl_error) {
-        auto dialer = dynamic_cast<TlsNegotiationDetails::Dialer *>(resumeNegotiationCall->getDialer());
-        TlsNegotiationDetails &params = dialer->arg1;
-        params.ssl_error = ssl_error;
+    // update the error details if requested
+    if (newDetails) {
+        const auto dialer = dynamic_cast<TlsNegotiationDetails::Dialer *>(resumeNegotiationCall->getDialer());
+        assert(dialer);
+        dialer->arg1 = *newDetails;
     }
-    //resumeNegotiationCall.make()
+
     ScheduleCallHere(resumeNegotiationCall);
     resumeNegotiationCall = nullptr;
 }
