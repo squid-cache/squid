@@ -272,6 +272,8 @@ Security::PeerConnector::negotiate()
     const auto verifyData = Ssl::SquidVerifyData::SessionData(fd_table[fd].ssl);
     assert(verifyData);
     if (verifyData->missingIssuer) { // we hid X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
+        verifyData->missingIssuer = false; // prep for the next SSL_connect()
+
         // The result cannot be positive here because successful negotiation
         // (sans X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY) requires sending
         // a TLS Finished message, which ought to trigger SSL_ERROR_WANT_WRITE.
