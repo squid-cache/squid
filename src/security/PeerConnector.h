@@ -12,7 +12,6 @@
 #include "acl/Acl.h"
 #include "base/AsyncCbdataCalls.h"
 #include "base/AsyncJob.h"
-#include "base/AsyncJobCalls.h"
 #include "CommCalls.h"
 #include "http/forward.h"
 #include "security/EncryptorAnswer.h"
@@ -61,7 +60,7 @@ public:
                   AsyncCall::Pointer &aCallback,
                   const AccessLogEntryPointer &alp,
                   const time_t timeout = 0);
-    virtual ~PeerConnector() = default;
+    virtual ~PeerConnector();
 
     /// hack: whether the connection requires fwdPconnPool->noteUses()
     bool noteFwdPconnUse;
@@ -206,8 +205,8 @@ private:
 #if USE_OPENSSL
     Ssl::X509_STACK_Pointer downloadedCerts;
 
-    /// AsyncCall to resume negotiation after a suspendNegotiation call.
-    AsyncCall::Pointer resumeNegotiationCall;
+    /// outcome of the last (failed and) suspended negotiation attempt (or nil)
+    TlsNegotiationDetails *suspendedError_ = nullptr;
 
     /// Whether the validation callouts run
     bool runValidationCallouts = false;

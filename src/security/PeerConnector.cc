@@ -103,6 +103,17 @@ Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerCon
     comm_add_close_handler(serverConn->fd, closeHandler);
 }
 
+Security::PeerConnector::~PeerConnector()
+{
+#if USE_OPENSSL
+    // TODO: Hide the PeerConnector class from its users so that we do not have
+    // to hide the TlsNegotiationDetails class from them and can use
+    // std::unique_ptr<TlsNegotiationDetails> (after C++17, std::optional)
+    // instead of this raw pointer.
+    delete suspendedError_;
+#endif
+}
+
 bool Security::PeerConnector::doneAll() const
 {
     return (!callback || callback->canceled()) && AsyncJob::doneAll();
@@ -203,7 +214,7 @@ bool
 Security::PeerConnector::isSuspended() const
 {
 #if USE_OPENSSL
-    return resumeNegotiationCall != nullptr;
+    return suspendedError_ != nullptr;
 #else
     return false; // we do not suspend negotiations when using other libraries
 #endif
@@ -825,15 +836,11 @@ Security::PeerConnector::computeMissingCertificates(const SessionPointer &sessio
 void
 Security::PeerConnector::suspendNegotiation(const TlsNegotiationDetails &details)
 {
+    debugs(83, 5, "after " << details);
     Must(!isSuspended());
-    // We could store just a copy of the details and call handleNegotiateError()
-    // synchronously, but that would expose PeerConnector users to
-    // TlsNegotiationDetails and lengthen the already complicated call stack.
-    AsyncCall::Pointer resumeCall = asyncCall(83, 5,
-                                              "Security::PeerConnector::handleNegotiateError",
-                                              TlsNegotiationDetails::Dialer(this, &Security::PeerConnector::handleNegotiateError, details));
-    resumeNegotiationCall = resumeCall;
+    suspendedError_ = new TlsNegotiationDetails(details);
     Must(isSuspended());
+    // negotiations resume with a resumeNegotiation() call
 }
 
 void
@@ -841,18 +848,19 @@ Security::PeerConnector::resumeNegotiation()
 {
     Must(isSuspended());
 
+    auto lastError = *suspendedError_; // may be reset below
+    delete suspendedError_;
+    suspendedError_ = nullptr;
+
     const auto session = fd_table[serverConnection()->fd].ssl;
     if (!Ssl::PeerCertificatesVerify(session, downloadedCerts)) {
         // simulate an earlier SSL_connect() failure with a new error
         // TODO: When we can use Security::ErrorDetail, we should resume with a
         // detailed _validation_ error, not just a generic SSL_ERROR_SSL!
-        const auto dialer = dynamic_cast<TlsNegotiationDetails::Dialer *>(resumeNegotiationCall->getDialer());
-        assert(dialer);
-        dialer->arg1 = TlsNegotiationDetails(SSL_ERROR_SSL, session);
+        lastError = TlsNegotiationDetails(SSL_ERROR_SSL, session);
     }
 
-    ScheduleCallHere(resumeNegotiationCall);
-    resumeNegotiationCall = nullptr;
+    handleNegotiateError(lastError);
 }
 
 #endif //USE_OPENSSL

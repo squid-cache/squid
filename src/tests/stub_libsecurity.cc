@@ -45,11 +45,13 @@ const char *Security::NegotiationHistory::cipherName() const STUB
 const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &v) const STUB
 
 #include "security/PeerConnector.h"
+class TlsNegotiationDetails {};
 CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 namespace Security
 {
 PeerConnector::PeerConnector(const Comm::ConnectionPointer &, AsyncCall::Pointer &, const AccessLogEntryPointer &, const time_t) :
     AsyncJob("Security::PeerConnector") {STUB}
+PeerConnector::~PeerConnector() STUB
 void PeerConnector::start() STUB
 bool PeerConnector::doneAll() const STUB_RETVAL(true)
 void PeerConnector::swanSong() STUB
@@ -59,7 +61,7 @@ void PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &) STUB
 bool PeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
 void PeerConnector::negotiate() STUB
 bool PeerConnector::sslFinalized() STUB_RETVAL(false)
-void PeerConnector::handleNegotiateError(const int) STUB
+void PeerConnector::handleNegotiateError(TlsNegotiationDetails) STUB
 void PeerConnector::noteWantRead() STUB
 void PeerConnector::noteWantWrite() STUB
 void PeerConnector::noteNegotiationError(const int, const int, const int) STUB
