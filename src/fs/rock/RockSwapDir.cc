@@ -884,6 +884,9 @@ Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
 void
 Rock::SwapDir::indexingCompleted()
 {
+    if(!theFile || theFile->error())
+        return;
+
     storeRebuildComplete(nullptr, *this);
 }
 

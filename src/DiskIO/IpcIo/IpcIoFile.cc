@@ -184,8 +184,8 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
     }
 
     ioRequestor->ioCompletedNotification();
-    if (response->indexed && !error_)
-        indexingCompleted(response->strand.kidId);
+    if (response && response->indexed)
+        indexingCompleted();
 }
 
 /**
@@ -500,10 +500,10 @@ IpcIoFile::HandleStrandBusyResponse(const Ipc::StrandMessage &response)
 }
 
 void
-IpcIoFile::indexingCompleted(const int kidId)
+IpcIoFile::indexingCompleted()
 {
     if (indexed) {
-        debugs(47, DBG_IMPORTANT, "BUG: a duplicated message from the already indexed disker" << kidId);
+        debugs(47, DBG_IMPORTANT, "BUG: a duplicated message from the already indexed disker" << diskId);
         return;
     }
 
@@ -518,7 +518,7 @@ IpcIoFile::HandleRebuildFinished(const Ipc::StrandMessage &response)
     if (IamWorkerProcess()) {
         const IpcIoFilesMap::const_iterator opened = IpcIoFiles.find(response.strand.kidId);
         if (opened != IpcIoFiles.end())
-            opened->second->indexingCompleted(response.strand.kidId);
+            opened->second->indexingCompleted();
         else
             debugs(47, 5, "ignoring response from an unknown disker" << response.strand.kidId);
     }
