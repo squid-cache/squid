@@ -202,15 +202,13 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
         }
     }
 
-    const auto sessData = Ssl::SquidVerifyData::SessionData(serverSession);
-    assert(sessData);
-
     // Protect from cycles in the certificate dependency graph: TLS site S1 is
     // missing certificate C1 located at TLS site S2. TLS site S2 is missing
     // certificate C2 located at TLS site [...] S1.
     const auto cycle = certDownloadNestingLevel() >= MaxNestedDownloads;
     if (cycle)
         debugs(83, 3, "will not fetch any missing certificates; suspecting cycle: " << certDownloadNestingLevel() << '/' << MaxNestedDownloads);
+    const auto sessData = Ssl::SquidVerifyData::New(serverSession);
     sessData->callerHandlesMissingCertificates = !cycle;
 #endif
 
@@ -269,10 +267,8 @@ Security::PeerConnector::negotiate()
     //   try to fetch the missing certificates. If all goes well, honor EOTHER.
     //   If fetching or post-fetching validation fails, then honor that failure
     //   because EOTHER would not have happened if we fetched during validation.
-    const auto verifyData = Ssl::SquidVerifyData::SessionData(fd_table[fd].ssl);
-    assert(verifyData);
-    if (verifyData->missingIssuer) { // we hid X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
-        verifyData->missingIssuer = false; // prep for the next SSL_connect()
+    if (auto &missingIssuer = Ssl::SquidVerifyData::At(fd_table[fd].ssl).missingIssuer) {
+        missingIssuer = false; // prep for the next SSL_connect()
 
         // The result cannot be positive here because successful negotiation
         // (sans X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY) requires sending
@@ -799,14 +795,12 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
     const auto session = fd_table[fd].ssl;
     Must(session);
 
-    const auto verifyData = Ssl::SquidVerifyData::SessionData(session);
-    assert(verifyData);
     // We download the missing certificate(s) once. We would prefer to clear
     // this right after the first validation, but that ideal place is _inside_
     // OpenSSL if validation is triggered by SSL_connect(). That function and
     // our OpenSSL verify_callback function (\ref OpenSSL_vcb_disambiguation)
     // may be called multiple times, so we cannot reset there.
-    verifyData->callerHandlesMissingCertificates = false;
+    Ssl::SquidVerifyData::At(session).callerHandlesMissingCertificates = false;
 
     if (!computeMissingCertificates(session))
         return handleNegotiateError(ed);

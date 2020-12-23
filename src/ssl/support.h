@@ -353,8 +353,11 @@ public:
     /// get the missing certificates and redo the validation with them
     bool callerHandlesMissingCertificates = false;
 
-    /// \returns The SquidVerifyData object attached to session
-    static SquidVerifyData *SessionData(const Security::SessionPointer &session);
+    /// creates a SquidVerifyData object and adds it to the given TLS connection
+    /// \returns the successfully created and added object
+    static SquidVerifyData *New(const Security::SessionPointer &session);
+    /// \returns the SquidVerifyData object previously attached via New()
+    static SquidVerifyData &At(const Security::SessionPointer &session);
 };
 
 } //namespace Ssl

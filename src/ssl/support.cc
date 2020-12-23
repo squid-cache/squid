@@ -496,15 +496,28 @@ Ssl::PeerCertificatesVerify(const Security::SessionPointer &s, const Ssl::X509_S
     return verified;
 }
 
+/* Ssl::SquidVerifyData */
+
 Ssl::SquidVerifyData *
-Ssl::SquidVerifyData::SessionData(const Security::SessionPointer &session)
+Ssl::SquidVerifyData::New(const Security::SessionPointer &session)
 {
-    auto data = static_cast<SquidVerifyData *>(SSL_get_ex_data(session.get(), ssl_ex_index_squid_verify));
-    if (!data) {
-        data = new Ssl::SquidVerifyData();
-        SSL_set_ex_data(session.get(), ssl_ex_index_squid_verify, data);
+    Must(session);
+    Must(!SSL_get_ex_data(session.get(), ssl_ex_index_squid_verify));
+    const auto extras = new SquidVerifyData();
+    if (!SSL_set_ex_data(session.get(), ssl_ex_index_squid_verify, extras)) {
+        delete extras;
+        throw TextException("SSL_set_ex_data() failed; likely OOM", Here());
     }
-    return data;
+    return extras;
+}
+
+Ssl::SquidVerifyData &
+Ssl::SquidVerifyData::At(const Security::SessionPointer &session)
+{
+    Must(session);
+    const auto extras = static_cast<SquidVerifyData*>(SSL_get_ex_data(session.get(), ssl_ex_index_squid_verify));
+    Must(extras);
+    return *extras;
 }
 
 // "dup" function for SSL_get_ex_new_index("cert_err_check")
