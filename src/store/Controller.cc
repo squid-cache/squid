@@ -17,7 +17,6 @@
 #include "store/Controller.h"
 #include "store/Disks.h"
 #include "store/LocalSearch.h"
-#include "store_rebuild.h"
 #include "tools.h"
 #include "Transients.h"
 

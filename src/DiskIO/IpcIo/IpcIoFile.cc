@@ -514,7 +514,7 @@ IpcIoFile::indexingCompleted(const int kidId)
 void
 IpcIoFile::HandleRebuildFinished(const Ipc::StrandMessage &response)
 {
-    debugs(47, 7, "disker" << response.strand.kidId << " foreground rebuild completed");
+    debugs(47, 7, "disker" << response.strand.kidId << " index rebuild completed");
     if (IamWorkerProcess()) {
         const IpcIoFilesMap::const_iterator opened = IpcIoFiles.find(response.strand.kidId);
         if (opened != IpcIoFiles.end())

@@ -567,7 +567,6 @@ Rock::Rebuild::validationSteps()
 
         getCurrentTime();
         const double elapsedMsec = tvSubMsec(loopStart, current_time);
-
         if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
             debugs(47, 5, "pausing after " << validated << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/validated) << "ms per entry");
@@ -675,7 +674,7 @@ Rock::Rebuild::freeBadEntry(const sfileno fileno, const char *eDescription)
 void
 Rock::Rebuild::swanSong()
 {
-    debugs(47,3, "cache_dir #" << sd->index);
+    debugs(47, 3, "cache_dir #" << sd->index);
     storeRebuildComplete(&counts, *sd);
     if (opt_foreground_rebuild)
         sd->startAcceptingRequests();
