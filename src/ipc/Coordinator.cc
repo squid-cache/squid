@@ -185,7 +185,12 @@ Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
 {
     const auto alreadyFinished = std::find_if(rebuildFinishedStrands_.begin(), rebuildFinishedStrands_.end(),
             [&msg](const StrandCoord &coord) { return msg.strand.kidId == coord.kidId; });
-    assert(alreadyFinished == rebuildFinishedStrands_.end());
+    if (alreadyFinished != rebuildFinishedStrands_.end()) {
+        // A message from a possibly restarted disker.
+        // Do not notify other strands the second time, only refresh the coord
+        *alreadyFinished = msg.strand;
+        return;
+    }
     rebuildFinishedStrands_.push_back(msg.strand);
     // Notify all existing strands, new strands will be notified in handleRegistrationRequest()
     for (const auto &strand: strands_) {

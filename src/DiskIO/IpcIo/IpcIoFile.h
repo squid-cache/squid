@@ -108,7 +108,7 @@ protected:
     void openCompleted(const Ipc::StrandSearchResponse *const);
     void readCompleted(ReadRequest *readRequest, IpcIoMsg *const response);
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
-    void indexingCompleted();
+    void indexingCompleted(int kidId);
     bool canWait() const;
 
 private:
