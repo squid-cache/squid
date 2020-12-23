@@ -177,6 +177,8 @@ private:
     PeerConnector &operator =(const PeerConnector &); // not implemented
 
 #if USE_OPENSSL
+    unsigned int certDownloadNestingLevel() const;
+
     /// Process response from cert validator helper
     void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
 

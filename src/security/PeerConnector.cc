@@ -204,7 +204,14 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 
     const auto sessData = Ssl::SquidVerifyData::SessionData(serverSession);
     assert(sessData);
-    sessData->callerHandlesMissingCertificates = true;
+
+    // Protect from cycles in the certificate dependency graph: TLS site S1 is
+    // missing certificate C1 located at TLS site S2. TLS site S2 is missing
+    // certificate C2 located at TLS site [...] S1.
+    const auto cycle = certDownloadNestingLevel() >= MaxNestedDownloads;
+    if (cycle)
+        debugs(83, 3, "will not fetch any missing certificates; suspecting cycle: " << certDownloadNestingLevel() << '/' << MaxNestedDownloads);
+    sessData->callerHandlesMissingCertificates = !cycle;
 #endif
 
     return true;
@@ -715,6 +722,15 @@ public:
     CbcPointer<Security::PeerConnector> peerConnector_; ///< The Security::PeerConnector object
 };
 
+/// the number of concurrent certificate downloading sessions for our request
+unsigned int
+Security::PeerConnector::certDownloadNestingLevel() const
+{
+    if (const auto firstDownloader = (request ? request->downloader.get() : nullptr))
+        return firstDownloader->nestedLevel();
+    return 0;
+}
+
 void
 Security::PeerConnector::startCertDownloading(SBuf &url)
 {
@@ -722,8 +738,7 @@ Security::PeerConnector::startCertDownloading(SBuf &url)
                                       "Security::PeerConnector::certDownloadingDone",
                                       PeerConnectorCertDownloaderDialer(&Security::PeerConnector::certDownloadingDone, this));
 
-    const Downloader *csd = (request ? dynamic_cast<const Downloader*>(request->downloader.valid()) : nullptr);
-    Downloader *dl = new Downloader(url, certCallback, XactionInitiator::initCertFetcher, csd ? csd->nestedLevel() + 1 : 1);
+    const auto dl = new Downloader(url, certCallback, XactionInitiator::initCertFetcher, certDownloadNestingLevel() + 1);
     AsyncJob::Start(dl);
 }
 
@@ -811,16 +826,6 @@ Security::PeerConnector::computeMissingCertificates(const SessionPointer &sessio
         return false;
     }
     debugs(83, 5, "server certificates: " << sk_X509_num(certs));
-
-    // Check for nested SSL certificates downloads. For example when the
-    // certificate located in an SSL site which requires to download a
-    // a missing certificate (... from an SSL site which requires to ...).
-    // TODO: Do not set callerHandlesMissingCertificates at MaxNestedDownloads.
-    const auto csd = (request ? request->downloader.get() : nullptr);
-    if (csd && csd->nestedLevel() >= MaxNestedDownloads) {
-        debugs(83, 3, "looping? " << csd->nestedLevel() << " >= " << MaxNestedDownloads);
-        return false;
-    }
 
     const auto ctx = getTlsContext();
     Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx);
