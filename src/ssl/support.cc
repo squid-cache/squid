@@ -434,13 +434,23 @@ Ssl::DisablePeerVerification(Security::ContextPointer &ctx)
 
 static int squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts);
 
-/// validates the given TLS connection server certificate chain
-/// in conjunction with a (possibly empty) set of "extra" intermediate certs
-/// OpenSSL "verification callback function" (\ref OpenSSL_vcb_disambiguation)
+/// Validates the given TLS connection server certificate chain in conjunction
+/// with a (possibly empty) set of "extra" intermediate certs. This is a
+/// C++/Squid-friendly wrapper of what OpenSSL calls a "verification callback
+/// function" (\ref OpenSSL_vcb_disambiguation). OpenSSL has a similar wrapper,
+/// ssl_verify_cert_chain(), but that wrapper is not a part of OpenSSL API.
 bool
 Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_Pointer &extraCerts)
 {
     const auto peerCertificatesChain = SSL_get_peer_cert_chain(&sconn);
+
+    // TODO: Replace debugs/return false with returning ErrorDetail::Pointer.
+    // Using Security::ErrorDetail terminology, errors in _this_ function are
+    // "non-validation errors", but squidX509VerifyCert() errors may be
+    // "certificate validation errors". Callers detail SQUID_TLS_ERR_CONNECT.
+    // Some details should be created right here. Others extracted from OpenSSL.
+    // Why not throw? Most of the reasons detailed in the following commit apply
+    // here as well: https://github.com/measurement-factory/squid/commit/e862d33
 
     if (!peerCertificatesChain || sk_X509_num(peerCertificatesChain) == 0) {
         debugs(83, 2, "no server certificates?");
