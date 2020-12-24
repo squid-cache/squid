@@ -48,7 +48,9 @@ protected:
     StrandCoord* findStrand(int kidId); ///< registered strand or NULL
     void registerStrand(const StrandCoord &); ///< adds or updates existing
     void handleRegistrationRequest(const StrandMessage &); ///< register,ACK
+    /// notifies waiting searches of a not yet ready strand
     void handleForegroundRebuildMessage(const StrandMessage &);
+    /// notifies all strands of an indexed strand
     void handleRebuildFinishedMessage(const StrandMessage &);
 
     /// answer the waiting search request

@@ -46,7 +46,6 @@ static const int QueueCapacity = 1024;
 
 const double IpcIoFile::Timeout = 7; // seconds;  XXX: ALL,9 may require more
 IpcIoFile::WaitingIpcIoFiles IpcIoFile::WaitingForOpen;
-
 IpcIoFile::IpcIoFilesMap IpcIoFile::IpcIoFiles;
 std::unique_ptr<IpcIoFile::Queue> IpcIoFile::queue;
 
@@ -516,9 +515,9 @@ IpcIoFile::HandleRebuildFinished(const Ipc::StrandMessage &response)
 {
     debugs(47, 7, "disker" << response.strand.kidId << " index rebuild completed");
     if (IamWorkerProcess()) {
-        const IpcIoFilesMap::const_iterator opened = IpcIoFiles.find(response.strand.kidId);
-        if (opened != IpcIoFiles.end())
-            opened->second->indexingCompleted();
+        const IpcIoFilesMap::const_iterator known = IpcIoFiles.find(response.strand.kidId);
+        if (known != IpcIoFiles.end())
+            known->second->indexingCompleted();
         else
             debugs(47, 5, "ignoring response from an unknown disker" << response.strand.kidId);
     }

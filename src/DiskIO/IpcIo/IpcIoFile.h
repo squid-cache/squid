@@ -98,7 +98,7 @@ public:
     /// prints IPC message queue state; suitable for cache manager reports
     static void StatQueue(std::ostream &);
 
-    /// called when Coordinator reports that a disker rebuilt its index
+    /// handles the Coordinator notification about an indexed disker
     static void HandleRebuildFinished(const Ipc::StrandMessage &);
 
     DiskFile::Config config; ///< supported configuration options
@@ -108,7 +108,7 @@ protected:
     void openCompleted(const Ipc::StrandSearchResponse *const);
     void readCompleted(ReadRequest *readRequest, IpcIoMsg *const response);
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
-    /// protects from calling IORequestor::indexingCompleted() twice
+    /// relays to IORequestor::indexingCompleted() protecting from calling it twice
     void indexingCompleted();
     bool canWait() const;
 
@@ -162,7 +162,7 @@ private:
 
     typedef std::pair<const timeval, Pointer> WaitingIpcIoFile;
     typedef std::multimap<timeval, Pointer, std::less<timeval>, PoolingAllocator<WaitingIpcIoFile> > WaitingIpcIoFiles;
-    /// waiting for open IpcIoFile objects, ordered by their absolute deadlines
+    /// being open diskers, ordered by their absolute deadlines
     static WaitingIpcIoFiles WaitingForOpen;
     static void StartWaiting(const Pointer &);
 

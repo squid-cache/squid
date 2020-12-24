@@ -37,7 +37,7 @@ public:
     explicit StrandSearchResponse(const TypedMsgHdr &);
     void pack(TypedMsgHdr &) const;
 
-    bool indexed; ///< whether the found strand is 'indexed'
+    bool indexed; ///< whether the found strand is indexed
     StrandCoord strand; ///< the found strand coordinates
 };
 
