@@ -438,16 +438,16 @@ static int squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts);
 /// in conjunction with a (possibly empty) set of "extra" intermediate certs
 /// OpenSSL "verification callback function" (\ref OpenSSL_vcb_disambiguation)
 bool
-Ssl::PeerCertificatesVerify(const Security::SessionPointer &s, const Ssl::X509_STACK_Pointer &extraCerts)
+Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_Pointer &extraCerts)
 {
-    const auto peerCertificatesChain = SSL_get_peer_cert_chain(s.get());
+    const auto peerCertificatesChain = SSL_get_peer_cert_chain(&sconn);
 
     if (!peerCertificatesChain || sk_X509_num(peerCertificatesChain) == 0) {
         debugs(83, 2, "no server certificates?");
         return false;
     }
 
-    const auto verificationStore = SSL_CTX_get_cert_store(SSL_get_SSL_CTX(s.get()));
+    const auto verificationStore = SSL_CTX_get_cert_store(SSL_get_SSL_CTX(&sconn));
     const X509_STORE_CTX_Pointer storeCtx(X509_STORE_CTX_new());
     const auto peerCert = sk_X509_value(peerCertificatesChain, 0);
     if (!X509_STORE_CTX_init(storeCtx.get(), verificationStore, peerCert, peerCertificatesChain)) {
@@ -456,30 +456,30 @@ Ssl::PeerCertificatesVerify(const Security::SessionPointer &s, const Ssl::X509_S
     }
 
     // Retrieve certificate flags:
-    const auto certFlags = SSL_set_cert_flags(s.get(), 0);
+    const auto certFlags = SSL_set_cert_flags(&sconn, 0);
     if (certFlags & SSL_CERT_FLAG_SUITEB_128_LOS) {
         const auto SSL_CERT_FLAG_to_X509_V_FLAG = [](long flag) {return flag;};
         const auto x509Flags = SSL_CERT_FLAG_to_X509_V_FLAG(certFlags);
         X509_STORE_CTX_set_flags(storeCtx.get(), x509Flags & X509_V_FLAG_SUITEB_128_LOS);
     }
 
-    if (!X509_STORE_CTX_set_ex_data(storeCtx.get(), SSL_get_ex_data_X509_STORE_CTX_idx(), s.get())) {
-        debugs(83, DBG_IMPORTANT, "error attaching session object to X509_STORE");
+    if (!X509_STORE_CTX_set_ex_data(storeCtx.get(), SSL_get_ex_data_X509_STORE_CTX_idx(), &sconn)) {
+        debugs(83, DBG_IMPORTANT, "error attaching SSL object to X509_STORE");
         return false;
     }
 
     // The X509_verify_cert will only use dane if it is enabled.
-    // X509_STORE_CTX_set0_dane(storeCtx.get(), SSL_get0_dane(s.get()));
+    // X509_STORE_CTX_set0_dane(storeCtx.get(), SSL_get0_dane(&sconn));
 
     // We are verifying a server certificate
     X509_STORE_CTX_set_default(storeCtx.get(), "ssl_server");
 
     const auto param = X509_STORE_CTX_get0_param(storeCtx.get());
     assert(param);
-    X509_VERIFY_PARAM_set_auth_level(param, SSL_get_security_level(s.get()));
-    X509_VERIFY_PARAM_set1(param, SSL_get0_param(s.get()));
+    X509_VERIFY_PARAM_set_auth_level(param, SSL_get_security_level(&sconn));
+    X509_VERIFY_PARAM_set1(param, SSL_get0_param(&sconn));
 
-    if (const auto cb = SSL_get_verify_callback(s.get()))
+    if (const auto cb = SSL_get_verify_callback(&sconn))
         X509_STORE_CTX_set_verify_cb(storeCtx.get(), cb);
 
     // Squid implements its own verify function to use instead of
@@ -499,12 +499,11 @@ Ssl::PeerCertificatesVerify(const Security::SessionPointer &s, const Ssl::X509_S
 /* Ssl::SquidVerifyData */
 
 Ssl::SquidVerifyData *
-Ssl::SquidVerifyData::New(const Security::SessionPointer &session)
+Ssl::SquidVerifyData::New(Security::Connection &sconn)
 {
-    Must(session);
-    Must(!SSL_get_ex_data(session.get(), ssl_ex_index_squid_verify));
+    Must(!SSL_get_ex_data(&sconn, ssl_ex_index_squid_verify));
     const auto extras = new SquidVerifyData();
-    if (!SSL_set_ex_data(session.get(), ssl_ex_index_squid_verify, extras)) {
+    if (!SSL_set_ex_data(&sconn, ssl_ex_index_squid_verify, extras)) {
         delete extras;
         throw TextException("SSL_set_ex_data() failed; likely OOM", Here());
     }
@@ -512,10 +511,9 @@ Ssl::SquidVerifyData::New(const Security::SessionPointer &session)
 }
 
 Ssl::SquidVerifyData &
-Ssl::SquidVerifyData::At(const Security::SessionPointer &session)
+Ssl::SquidVerifyData::At(Security::Connection &sconn)
 {
-    Must(session);
-    const auto extras = static_cast<SquidVerifyData*>(SSL_get_ex_data(session.get(), ssl_ex_index_squid_verify));
+    const auto extras = static_cast<SquidVerifyData*>(SSL_get_ex_data(&sconn, ssl_ex_index_squid_verify));
     Must(extras);
     return *extras;
 }

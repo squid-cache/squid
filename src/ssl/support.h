@@ -333,7 +333,7 @@ BIO *BIO_new_SBuf(SBuf *buf);
 /**
   \ingroup ServerProtocolSSLAPI
 */
-bool PeerCertificatesVerify(const Security::SessionPointer &, const Ssl::X509_STACK_Pointer &extraCerts);
+bool PeerCertificatesVerify(Security::Connection &, const Ssl::X509_STACK_Pointer &extraCerts);
 
 /// Holds parameters and flags required for server certificates verify
 /// procedure.
@@ -355,9 +355,9 @@ public:
 
     /// creates a SquidVerifyData object and adds it to the given TLS connection
     /// \returns the successfully created and added object
-    static SquidVerifyData *New(const Security::SessionPointer &session);
+    static SquidVerifyData *New(Security::Connection &);
     /// \returns the SquidVerifyData object previously attached via New()
-    static SquidVerifyData &At(const Security::SessionPointer &session);
+    static SquidVerifyData &At(Security::Connection &);
 };
 
 } //namespace Ssl

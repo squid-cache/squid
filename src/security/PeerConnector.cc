@@ -37,7 +37,7 @@ public:
     typedef UnaryMemFunT<Security::PeerConnector, TlsNegotiationDetails> Dialer;
 
 #if USE_OPENSSL || USE_GNUTLS
-    TlsNegotiationDetails(int ioResult, const Security::SessionPointer &);
+    TlsNegotiationDetails(int ioResult, const Security::Connection &);
 #else
     TlsNegotiationDetails() = default;
 #endif
@@ -60,12 +60,11 @@ operator <<(std::ostream &os, const TlsNegotiationDetails &ed)
 }
 
 #if USE_OPENSSL || USE_GNUTLS
-TlsNegotiationDetails::TlsNegotiationDetails(const int ioResult, const Security::SessionPointer &session):
+TlsNegotiationDetails::TlsNegotiationDetails(const int ioResult, const Security::Connection &sconn):
     sslIoResult(ioResult)
 {
-    Must(session);
 #if USE_OPENSSL
-    ssl_error = SSL_get_error(session.get(), sslIoResult);
+    ssl_error = SSL_get_error(&sconn, sslIoResult);
 
     switch (ssl_error) {
     case SSL_ERROR_SSL:
@@ -208,7 +207,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     const auto cycle = certDownloadNestingLevel() >= MaxNestedDownloads;
     if (cycle)
         debugs(83, 3, "will not fetch any missing certificates; suspecting cycle: " << certDownloadNestingLevel() << '/' << MaxNestedDownloads);
-    const auto sessData = Ssl::SquidVerifyData::New(serverSession);
+    const auto sessData = Ssl::SquidVerifyData::New(*serverSession);
     sessData->callerHandlesMissingCertificates = !cycle;
 #endif
 
@@ -253,8 +252,10 @@ Security::PeerConnector::negotiate()
 #if USE_OPENSSL
     auto session = fd_table[fd].ssl.get();
     debugs(83, 5, "SSL_connect session=" << (void*)session);
+    Must(session);
     const int result = SSL_connect(session);
-    const TlsNegotiationDetails ed(result, fd_table[fd].ssl);
+    auto &sconn = *session;
+    const TlsNegotiationDetails ed(result, sconn);
 
     // Our handling of X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY (abbreviated
     // here as EUNABLE) approximates what would happen if we could (try to)
@@ -267,7 +268,7 @@ Security::PeerConnector::negotiate()
     //   try to fetch the missing certificates. If all goes well, honor EOTHER.
     //   If fetching or post-fetching validation fails, then honor that failure
     //   because EOTHER would not have happened if we fetched during validation.
-    if (auto &missingIssuer = Ssl::SquidVerifyData::At(fd_table[fd].ssl).missingIssuer) {
+    if (auto &missingIssuer = Ssl::SquidVerifyData::At(sconn).missingIssuer) {
         missingIssuer = false; // prep for the next SSL_connect()
 
         // The result cannot be positive here because successful negotiation
@@ -290,7 +291,7 @@ Security::PeerConnector::negotiate()
     auto session = fd_table[fd].ssl.get();
     const int result = gnutls_handshake(session);
     debugs(83, 5, "gnutls_handshake session=" << (void*)session << ", result=" << result);
-    const TlsNegotiationDetails ed(result, fd_table[fd].ssl);
+    const TlsNegotiationDetails ed(result, *session);
 
     if (result == GNUTLS_E_SUCCESS) {
         char *desc = gnutls_session_get_desc(session);
@@ -746,7 +747,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     ++certsDownloads;
     debugs(81, 5, "Certificate downloading status: " << downloadStatus << " certificate size: " << obj.length());
 
-    const auto session = fd_table[serverConnection()->fd].ssl;
+    const auto &sconn = *fd_table[serverConnection()->fd].ssl;
 
     // Parse Certificate. Assume that it is in DER format.
     // According to RFC 4325:
@@ -760,7 +761,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         char buffer[1024];
         debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
         ContextPointer ctx(getTlsContext());
-        const auto certsList = SSL_get_peer_cert_chain(session.get());
+        const auto certsList = SSL_get_peer_cert_chain(&sconn);
         if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert, certsList, ctx)) {
             urlsOfMissingCerts.push(SBuf(issuerUri));
         }
@@ -791,18 +792,16 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
     Must(!runValidationCallouts);
     runValidationCallouts = true;
 
-    const auto fd = serverConnection()->fd;
-    const auto session = fd_table[fd].ssl;
-    Must(session);
+    auto &sconn = *fd_table[serverConnection()->fd].ssl;
 
     // We download the missing certificate(s) once. We would prefer to clear
     // this right after the first validation, but that ideal place is _inside_
     // OpenSSL if validation is triggered by SSL_connect(). That function and
     // our OpenSSL verify_callback function (\ref OpenSSL_vcb_disambiguation)
     // may be called multiple times, so we cannot reset there.
-    Ssl::SquidVerifyData::At(session).callerHandlesMissingCertificates = false;
+    Ssl::SquidVerifyData::At(sconn).callerHandlesMissingCertificates = false;
 
-    if (!computeMissingCertificates(session))
+    if (!computeMissingCertificates(sconn))
         return handleNegotiateError(ed);
 
     suspendNegotiation(ed);
@@ -814,9 +813,9 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
 
 /// calculates URLs of the missing intermediate certificates or returns false
 bool
-Security::PeerConnector::computeMissingCertificates(const SessionPointer &session)
+Security::PeerConnector::computeMissingCertificates(const Connection &sconn)
 {
-    const auto certs = SSL_get_peer_cert_chain(session.get());
+    const auto certs = SSL_get_peer_cert_chain(&sconn);
     if (!certs) {
         debugs(83, 3, "nothing to bootstrap the fetch with");
         return false;
@@ -853,12 +852,12 @@ Security::PeerConnector::resumeNegotiation()
     delete suspendedError_;
     suspendedError_ = nullptr;
 
-    const auto session = fd_table[serverConnection()->fd].ssl;
-    if (!Ssl::PeerCertificatesVerify(session, downloadedCerts)) {
+    auto &sconn = *fd_table[serverConnection()->fd].ssl;
+    if (!Ssl::PeerCertificatesVerify(sconn, downloadedCerts)) {
         // simulate an earlier SSL_connect() failure with a new error
         // TODO: When we can use Security::ErrorDetail, we should resume with a
         // detailed _validation_ error, not just a generic SSL_ERROR_SSL!
-        lastError = TlsNegotiationDetails(SSL_ERROR_SSL, session);
+        lastError = TlsNegotiationDetails(SSL_ERROR_SSL, sconn);
     }
 
     handleNegotiateError(lastError);

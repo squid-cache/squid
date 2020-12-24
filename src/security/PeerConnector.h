@@ -185,7 +185,7 @@ private:
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
 
-    bool computeMissingCertificates(const SessionPointer &);
+    bool computeMissingCertificates(const Connection &);
 #endif
 
     static void NegotiateSsl(int fd, void *data);
