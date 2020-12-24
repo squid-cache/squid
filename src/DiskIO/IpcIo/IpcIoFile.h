@@ -108,8 +108,8 @@ protected:
     void openCompleted(const Ipc::StrandSearchResponse *const);
     void readCompleted(ReadRequest *readRequest, IpcIoMsg *const response);
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
-    /// relays to IORequestor::indexingCompleted() protecting from calling it twice
-    void indexingCompleted();
+    /// relays to IORequestor::remoteIndexingCompleted() protecting from calling it twice
+    void remoteIndexingCompleted();
     bool canWait() const;
 
 private:

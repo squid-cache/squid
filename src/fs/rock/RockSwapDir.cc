@@ -882,8 +882,9 @@ Rock::SwapDir::writeCompleted(int errflag, size_t, RefCount< ::WriteRequest> r)
 }
 
 void
-Rock::SwapDir::indexingCompleted()
+Rock::SwapDir::remoteIndexingCompleted()
 {
+    assert(IamWorkerProcess());
     if(!theFile || theFile->error())
         return;
 
