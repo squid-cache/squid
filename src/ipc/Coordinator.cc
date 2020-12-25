@@ -146,23 +146,12 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 
 void Ipc::Coordinator::handleRegistrationRequest(const StrandMessage& msg)
 {
-    const auto wasRegistered = findStrand(msg.strand.kidId);
     registerStrand(msg.strand);
 
     // send back an acknowledgement; TODO: remove as not needed?
     TypedMsgHdr message;
     msg.pack(message);
     SendMessage(MakeAddr(strandAddrLabel, msg.strand.kidId), message);
-
-    if (wasRegistered)
-        return;
-    // notify the newly registered strand by all already indexed strands
-    for (const auto &finished: rebuildFinishedStrands_) {
-        StrandMessage response(mtRebuildFinished, finished);
-        TypedMsgHdr finishedMsg;
-        response.pack(finishedMsg);
-        SendMessage(MakeAddr(strandAddrLabel, msg.strand.kidId), finishedMsg);
-    }
 }
 
 void
@@ -192,8 +181,18 @@ Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
         return;
     }
     rebuildFinishedStrands_.push_back(msg.strand);
+
+    const auto alreadyTagged = std::find_if(strands_.begin(), strands_.end(),
+            [&msg](const StrandCoord &coord) { return msg.strand.tag == coord.tag; });
+
+    if (alreadyTagged == strands_.end()) {
+        debugs(54, 3, "kid" << msg.strand.kidId << " is indexed but not available yet " << msg.strand.kidId);
+        return;
+    }
+
     // notify all existing strands, new strands will be notified in handleRegistrationRequest()
     for (const auto &strand: strands_) {
+        debugs(54, 3, "tell kid" << strand.kidId << " that kid" << msg.strand.kidId << " rebuilt its index");
         StrandMessage response(mtRebuildFinished, msg.strand);
         TypedMsgHdr message;
         response.pack(message);
@@ -283,8 +282,10 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
 
     auto isIndexed = false;
     for (const auto &indexedStrand: rebuildFinishedStrands_) {
-        if (indexedStrand.tag == strand.tag)
+        if (indexedStrand.tag == strand.tag) {
             isIndexed = true;
+            break;
+        }
     }
 
     const StrandSearchResponse response(isIndexed, strand);

@@ -9,6 +9,7 @@
 #ifndef SQUID_STORE_DISKS_H
 #define SQUID_STORE_DISKS_H
 
+#include "ipc/forward.h"
 #include "store/Controlled.h"
 #include "store/forward.h"
 
@@ -61,6 +62,8 @@ public:
     static bool AllIndexed();
     /// whether some of the configured store_dirs are active
     static bool Active();
+    /// handles the Coordinator notification about an indexed disker
+    static void RemoteIndexingCompleted(int kidId);
 
 private:
     /* migration logic */

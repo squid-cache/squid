@@ -13,6 +13,7 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "globals.h"
+#include "ipc/StrandCoord.h"
 #include "profiler/Profiler.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
@@ -682,6 +683,22 @@ Store::Disks::Active()
             return true;
     }
     return false;
+}
+
+void
+Store::Disks::RemoteIndexingCompleted(const int kidId)
+{
+    assert(UsingSmp());
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        auto &dir = Dir(i);
+        if (dir.active() && IamWorkerProcess() && dir.disker == kidId) {
+            assert(dir.smpAware());
+            if (dir.indexed)
+                debugs(20, DBG_IMPORTANT, "BUG: a duplicated message from the already indexed disker" << kidId);
+            else
+                storeRebuildComplete(nullptr, dir);
+        }
+    }
 }
 
 void

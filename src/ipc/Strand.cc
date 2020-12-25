@@ -33,6 +33,7 @@
 #include "snmp/Request.h"
 #include "snmp/Response.h"
 #endif
+#include "store/Disks.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Strand);
 
@@ -78,9 +79,11 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         IpcIoFile::HandleStrandBusyResponse(StrandMessage(message));
         break;
 
-    case mtRebuildFinished:
-        IpcIoFile::HandleRebuildFinished(StrandMessage(message));
-        break;
+    case mtRebuildFinished: {
+        const StrandMessage resp(message);
+        Store::Disks::RemoteIndexingCompleted(resp.strand.kidId);
+    }
+    break;
 
     case mtIpcIoNotification:
         IpcIoFile::HandleNotification(message);

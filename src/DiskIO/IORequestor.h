@@ -24,7 +24,6 @@ public:
     virtual void closeCompleted() = 0;
     virtual void readCompleted(const char *buf, int len, int errflag, RefCount<ReadRequest>) = 0;
     virtual void writeCompleted(int errflag, size_t len, RefCount<WriteRequest>) = 0;
-    virtual void remoteIndexingCompleted() = 0;
 };
 
 #endif /* SQUID_IOREQUESTOR_H */

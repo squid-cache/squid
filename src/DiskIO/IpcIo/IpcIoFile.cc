@@ -29,6 +29,7 @@
 #include "SquidConfig.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
+#include "store/Disks.h"
 #include "tools.h"
 #include "util.h" // for tvSubDsec() which should be in SquidTime.h
 
@@ -98,7 +99,6 @@ IpcIoFile::IpcIoFile(char const *aDb):
     diskId(-1),
     error_(false),
     lastRequestId(0),
-    indexed(false),
     olderRequests(&requestMap1), newerRequests(&requestMap2),
     timeoutCheckScheduled(false)
 {
@@ -184,7 +184,7 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
 
     ioRequestor->ioCompletedNotification();
     if (response && response->indexed)
-        remoteIndexingCompleted();
+        Store::Disks::RemoteIndexingCompleted(response->strand.kidId);
 }
 
 /**
@@ -495,31 +495,6 @@ IpcIoFile::HandleStrandBusyResponse(const Ipc::StrandMessage &response)
         auto file = it->second;
         WaitingForOpen.erase(it);
         StartWaiting(file);
-    }
-}
-
-void
-IpcIoFile::remoteIndexingCompleted()
-{
-    if (indexed) {
-        debugs(47, DBG_IMPORTANT, "BUG: a duplicated message from the already indexed disker" << diskId);
-        return;
-    }
-
-    indexed = true;
-    ioRequestor->remoteIndexingCompleted();
-}
-
-void
-IpcIoFile::HandleRebuildFinished(const Ipc::StrandMessage &response)
-{
-    debugs(47, 7, "disker" << response.strand.kidId << " index rebuild completed");
-    if (IamWorkerProcess()) {
-        const IpcIoFilesMap::const_iterator known = IpcIoFiles.find(response.strand.kidId);
-        if (known != IpcIoFiles.end())
-            known->second->remoteIndexingCompleted();
-        else
-            debugs(47, 5, "ignoring response from an unknown disker" << response.strand.kidId);
     }
 }
 

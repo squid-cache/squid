@@ -680,8 +680,10 @@ Rock::Rebuild::swanSong()
     storeRebuildComplete(&counts, *sd);
     if (opt_foreground_rebuild)
         sd->startAcceptingRequests();
-    if (UsingSmp() && IamDiskProcess())
+    if (UsingSmp()) {
+        assert(IamDiskProcess());
         Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, sd->filePath);
+    }
 }
 
 void
