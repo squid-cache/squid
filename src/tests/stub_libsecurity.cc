@@ -45,7 +45,7 @@ const char *Security::NegotiationHistory::cipherName() const STUB
 const char *Security::NegotiationHistory::printTlsVersion(AnyP::ProtocolVersion const &v) const STUB
 
 #include "security/PeerConnector.h"
-class TlsNegotiationDetails {};
+class TlsNegotiationDetails: public RefCountable {};
 CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 namespace Security
 {

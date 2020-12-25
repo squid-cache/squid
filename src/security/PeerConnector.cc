@@ -32,7 +32,7 @@
 
 /// XXX: Replace with Security::ErrorDetail (which also handles errno)
 /// TLS negotiation error details extracted at the error discovery time
-class TlsNegotiationDetails {
+class TlsNegotiationDetails: public RefCountable {
 public:
     typedef UnaryMemFunT<Security::PeerConnector, TlsNegotiationDetails> Dialer;
 
@@ -102,16 +102,7 @@ Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerCon
     comm_add_close_handler(serverConn->fd, closeHandler);
 }
 
-Security::PeerConnector::~PeerConnector()
-{
-#if USE_OPENSSL
-    // TODO: Hide the PeerConnector class from its users so that we do not have
-    // to hide the TlsNegotiationDetails class from them and can use
-    // std::unique_ptr<TlsNegotiationDetails> (after C++17, std::optional)
-    // instead of this raw pointer.
-    delete suspendedError_;
-#endif
-}
+Security::PeerConnector::~PeerConnector() = default;
 
 bool Security::PeerConnector::doneAll() const
 {
@@ -849,7 +840,6 @@ Security::PeerConnector::resumeNegotiation()
     Must(isSuspended());
 
     auto lastError = *suspendedError_; // may be reset below
-    delete suspendedError_;
     suspendedError_ = nullptr;
 
     auto &sconn = *fd_table[serverConnection()->fd].ssl;

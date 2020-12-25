@@ -26,7 +26,9 @@
 class ErrorState;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
+
 class TlsNegotiationDetails;
+typedef RefCount<TlsNegotiationDetails> TlsNegotiationDetailsPoiner;
 
 namespace Security
 {
@@ -208,7 +210,7 @@ private:
     Ssl::X509_STACK_Pointer downloadedCerts;
 
     /// outcome of the last (failed and) suspended negotiation attempt (or nil)
-    TlsNegotiationDetails *suspendedError_ = nullptr;
+    TlsNegotiationDetailsPoiner suspendedError_;
 
     /// Whether the validation callouts run
     bool runValidationCallouts = false;
