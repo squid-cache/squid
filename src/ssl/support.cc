@@ -470,12 +470,11 @@ Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_P
     }
 
     // overwrite context "suit B" certificate flags with connection non-defaults
-    const auto certFlags = SSL_set_cert_flags(&sconn, 0);
-    if (certFlags & SSL_CERT_FLAG_SUITEB_128_LOS) {
-        const auto SSL_CERT_FLAG_to_X509_V_FLAG = [](long flag) {return flag;};
-        const auto x509Flags = SSL_CERT_FLAG_to_X509_V_FLAG(certFlags);
-        X509_STORE_CTX_set_flags(storeCtx.get(), x509Flags & X509_V_FLAG_SUITEB_128_LOS);
-    }
+    // SSL_set_cert_flags() return type is long, but its implementation actually
+    // returns an unsigned long flags value expected by X509_STORE_CTX_set_flags
+    const unsigned long certFlags = SSL_set_cert_flags(&sconn, 0);
+    if (const auto suiteBflags = certFlags & SSL_CERT_FLAG_SUITEB_128_LOS)
+        X509_STORE_CTX_set_flags(storeCtx.get(), suiteBflags);
 
     if (!X509_STORE_CTX_set_ex_data(storeCtx.get(), SSL_get_ex_data_X509_STORE_CTX_idx(), &sconn)) {
         debugs(83, DBG_IMPORTANT, "error attaching SSL object to X509_STORE");
