@@ -330,9 +330,11 @@ void InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties, SBu
  */
 BIO *BIO_new_SBuf(SBuf *buf);
 
-/**
-  \ingroup ServerProtocolSSLAPI
-*/
+/// Validates the given TLS connection server certificate chain in conjunction
+/// with a (possibly empty) set of "extra" intermediate certs. This is a
+/// C++/Squid-friendly wrapper of what OpenSSL calls a "verification callback
+/// function" (\ref OpenSSL_vcb_disambiguation). OpenSSL has a similar wrapper,
+/// ssl_verify_cert_chain(), but that wrapper is not a part of OpenSSL API.
 bool PeerCertificatesVerify(Security::Connection &, const Ssl::X509_STACK_Pointer &extraCerts);
 
 /// Holds parameters and flags required for server certificates verify

@@ -34,8 +34,6 @@
 /// TLS negotiation error details extracted at the error discovery time
 class TlsNegotiationDetails: public RefCountable {
 public:
-    typedef UnaryMemFunT<Security::PeerConnector, TlsNegotiationDetails> Dialer;
-
 #if USE_OPENSSL || USE_GNUTLS
     TlsNegotiationDetails(int ioResult, const Security::Connection &);
 #else
@@ -47,7 +45,7 @@ public:
     unsigned long ssl_lib_error = 0; ///< OpenSSL library error
 };
 
-/// TlsNegotiationDetails::Dialer parameter printer
+/// TlsNegotiationDetails printer (for debugging)
 static inline std::ostream &
 operator <<(std::ostream &os, const TlsNegotiationDetails &ed)
 {
@@ -763,7 +761,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
             urlsOfMissingCerts.push(SBuf(issuerUri));
         }
 
-        if (!downloadedCerts.get())
+        if (!downloadedCerts)
             downloadedCerts.reset(sk_X509_new_null());
         sk_X509_push(downloadedCerts.get(), cert);
     }
@@ -779,9 +777,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     resumeNegotiation();
 }
 
-// TODO: Rename to startHandlingMissingCertificates to emphasize its async nature
 // TODO: Rename runValidationCallouts as well.
-/// A call to this function must lead to missingCertificatesRetrieved()!
 void
 Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &ed)
 {
@@ -798,7 +794,7 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
     // may be called multiple times, so we cannot reset there.
     Ssl::SquidVerifyData::At(sconn).callerHandlesMissingCertificates = false;
 
-    if (!computeMissingCertificates(sconn))
+    if (!computeMissingCertificateUrls(sconn))
         return handleNegotiateError(ed);
 
     suspendNegotiation(ed);
@@ -810,7 +806,7 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
 
 /// calculates URLs of the missing intermediate certificates or returns false
 bool
-Security::PeerConnector::computeMissingCertificates(const Connection &sconn)
+Security::PeerConnector::computeMissingCertificateUrls(const Connection &sconn)
 {
     const auto certs = SSL_get_peer_cert_chain(&sconn);
     if (!certs) {
@@ -826,7 +822,7 @@ Security::PeerConnector::computeMissingCertificates(const Connection &sconn)
         return false;
     }
 
-    debugs(83, 5, "initial URLs to fetch the missing certificates from: " << urlsOfMissingCerts.size());
+    debugs(83, 5, "URLs: " << urlsOfMissingCerts.size());
     return true;
 }
 

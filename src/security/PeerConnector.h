@@ -28,7 +28,7 @@ class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
 class TlsNegotiationDetails;
-typedef RefCount<TlsNegotiationDetails> TlsNegotiationDetailsPoiner;
+typedef RefCount<TlsNegotiationDetails> TlsNegotiationDetailsPointer;
 
 namespace Security
 {
@@ -107,20 +107,15 @@ protected:
     bool isSuspended() const;
 
 #if USE_OPENSSL
-    /// Suspends TLS negotiation to execute various required jobs,
-    /// eg download missing certificates (XXX: or call certificate
-    /// validator helper)
-    /// \param details The current TLS negotiation step details
-    void suspendNegotiation(const TlsNegotiationDetails &details);
+    /// Suspends TLS negotiation to download the missing certificates
+    /// \param lastError an error to handle when resuming negotiations
+    void suspendNegotiation(const TlsNegotiationDetails &lastError);
 
     /// Resumes TLS negotiation paused by suspendNegotiation()
     void resumeNegotiation();
 
-    /// Run the certificates list sent by the SSL server and check if there
-    /// are missing certificates. Adds to the urlOfMissingCerts list the
-    /// URLS of missing certificates if this information provided by the
-    /// issued certificates with Authority Info Access extension.
-    void handleMissingCertificates(const TlsNegotiationDetails &);
+    /// Either initiates fetching of missing certificates or bails with an error
+    void handleMissingCertificates(const TlsNegotiationDetails &lastError);
 
     /// Start downloading procedure for the given URL.
     void startCertDownloading(SBuf &url);
@@ -187,7 +182,7 @@ private:
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
 
-    bool computeMissingCertificates(const Connection &);
+    bool computeMissingCertificateUrls(const Connection &);
 #endif
 
     static void NegotiateSsl(int fd, void *data);
@@ -211,7 +206,7 @@ private:
     Ssl::X509_STACK_Pointer downloadedCerts;
 
     /// outcome of the last (failed and) suspended negotiation attempt (or nil)
-    TlsNegotiationDetailsPoiner suspendedError_;
+    TlsNegotiationDetailsPointer suspendedError_;
 
     /// Whether the validation callouts run
     bool runValidationCallouts = false;

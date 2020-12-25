@@ -434,11 +434,6 @@ Ssl::DisablePeerVerification(Security::ContextPointer &ctx)
 
 static int squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts);
 
-/// Validates the given TLS connection server certificate chain in conjunction
-/// with a (possibly empty) set of "extra" intermediate certs. This is a
-/// C++/Squid-friendly wrapper of what OpenSSL calls a "verification callback
-/// function" (\ref OpenSSL_vcb_disambiguation). OpenSSL has a similar wrapper,
-/// ssl_verify_cert_chain(), but that wrapper is not a part of OpenSSL API.
 bool
 Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_Pointer &extraCerts)
 {
@@ -1118,7 +1113,7 @@ findCertIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
     return NULL;
 }
 
-/// Search for the issuer certificate of cert in sk list.
+/// slowly find the issuer certificate of a given cert using linear search
 static X509 *
 sk_x509_findIssuer(const STACK_OF(X509) *sk, X509 *cert)
 {
@@ -1190,11 +1185,15 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *
     if (!serverCertificates)
         return;
 
-    // TODO: The caller assumes that it can validate many serverCertificates by
-    // following a single URI found/pushed here. If that is true, we should add
-    // a comment to confirm that surprising fact. Otherwise, we should tell the
-    // caller when it has no chances of validating the whole serverCertificates
-    // chain so that the caller does not fetch certificates in vain.
+    // TODO: The caller interprets non-empty URIs as a sign of success. However,
+    // if the CA which intermediate certificate is missing added no AIA field to
+    // its (present) certificate, we may still return a non-empty URIs queue.
+    // Does that mean that there is a chance we will fetch that missing CA
+    // certificate using a URI extracted from some other (present) certificate.
+    // If this might indeed happen, we should document that surprising fact.
+    // Otherwise, we should tell the caller when it has no chances of validating
+    // the whole serverCertificates chain (because some necessary AIAs were
+    // missing) so that the caller does not fetch certificates in vain.
     for (int i = 0; i < sk_X509_num(serverCertificates); ++i) {
         const auto cert = sk_X509_value(serverCertificates, i);
         if (const auto issuerUri = uriOfIssuerIfMissing(cert, serverCertificates, context))
