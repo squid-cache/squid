@@ -457,6 +457,10 @@ Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_P
         return false;
     }
 
+    // TODO: Check all OpenSSL calls below for failures. If the documentation
+    // (or OpenSSL code) indicate that a failure is possible, we need to check
+    // for it and return immediately.
+
     const auto verificationStore = SSL_CTX_get_cert_store(SSL_get_SSL_CTX(&sconn));
     const X509_STORE_CTX_Pointer storeCtx(X509_STORE_CTX_new());
     const auto peerCert = sk_X509_value(peerCertificatesChain, 0);
@@ -465,7 +469,7 @@ Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_P
         return false;
     }
 
-    // Retrieve certificate flags:
+    // overwrite context "suit B" certificate flags with connection non-defaults
     const auto certFlags = SSL_set_cert_flags(&sconn, 0);
     if (certFlags & SSL_CERT_FLAG_SUITEB_128_LOS) {
         const auto SSL_CERT_FLAG_to_X509_V_FLAG = [](long flag) {return flag;};
@@ -478,12 +482,13 @@ Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_P
         return false;
     }
 
-    // The X509_verify_cert will only use dane if it is enabled.
+    // If we ever add DANE support to Squid, we will supply DANE details here:
     // X509_STORE_CTX_set0_dane(storeCtx.get(), SSL_get0_dane(&sconn));
 
-    // We are verifying a server certificate
+    // tell OpenSSL we are verifying a server certificate
     X509_STORE_CTX_set_default(storeCtx.get(), "ssl_server");
 
+    // overwrite context "verification parameters" with connection non-defaults
     const auto param = X509_STORE_CTX_get0_param(storeCtx.get());
     assert(param);
     X509_VERIFY_PARAM_set_auth_level(param, SSL_get_security_level(&sconn));
@@ -492,18 +497,13 @@ Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_P
     if (const auto cb = SSL_get_verify_callback(&sconn))
         X509_STORE_CTX_set_verify_cb(storeCtx.get(), cb);
 
-    // Squid implements its own verify function to use instead of
-    // using X509_verify_cert, which also adds missing certificates
-    // to storeCtx before checks.
-    // bool verified = (X509_verify_cert(storeCtx.get()) > 0);
-    const auto verified = (squidX509VerifyCert(storeCtx.get(), extraCerts.get()) > 0);
-
-    if (!verified) {
-        // Our call back will record errors list
+    const auto valid = (squidX509VerifyCert(storeCtx.get(), extraCerts.get()) > 0);
+    if (!valid) {
+        // see also: ssl_verify_cb() details errors via ssl_ex_index_ssl_errors
         const auto verifyResult = X509_STORE_CTX_get_error(storeCtx.get());
         debugs(83, 5, "verify result " << verifyResult << " : " << X509_verify_cert_error_string(verifyResult));
     }
-    return verified;
+    return valid;
 }
 
 /* Ssl::SquidVerifyData */
