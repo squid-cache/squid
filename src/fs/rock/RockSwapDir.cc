@@ -885,8 +885,9 @@ void
 Rock::SwapDir::remoteIndexingCompleted()
 {
     assert(IamWorkerProcess());
+
     if(!theFile || theFile->error())
-        return;
+        return; // the Rock db file is not open/initialized
 
     storeRebuildComplete(nullptr, *this);
 }

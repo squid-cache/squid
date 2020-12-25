@@ -506,8 +506,8 @@ IpcIoFile::remoteIndexingCompleted()
         return;
     }
 
-    ioRequestor->remoteIndexingCompleted();
     indexed = true;
+    ioRequestor->remoteIndexingCompleted();
 }
 
 void

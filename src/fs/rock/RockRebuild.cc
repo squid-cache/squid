@@ -288,8 +288,10 @@ Rock::Rebuild::Start(SwapDir &dir)
         debugs(47, 2, "already indexed cache_dir #" <<
                dir.index << " from " << dir.filePath);
         // we could fail to send this before in a case of crash
-        if (UsingSmp() && IamDiskProcess())
+        if (UsingSmp()) {
+            assert(IamDiskProcess());
             Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, dir.filePath);
+        }
         return false;
     }
 

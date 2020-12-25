@@ -34,7 +34,7 @@ public:
     virtual void writeCompleted(int errflag, size_t len, RefCount<WriteRequest>);
     // no remote indexing in UFS
     // the local indexing completion event is handled in RebuildState::RebuildStep()
-    virtual void remoteIndexingCompleted() { assert(0); }
+    virtual void remoteIndexingCompleted() { assert(false); }
     RefCount<DiskFile> theFile;
     bool opening;
     bool creating;
