@@ -193,9 +193,10 @@ private:
     static void NegotiateSsl(int fd, void *data);
     void negotiateSsl();
 
-    /// The maximum allowed missing certificates downloads.
+    /// The maximum missing certificates a single PeerConnector may download
     static const unsigned int MaxCertsDownloads = 10;
-    /// The maximum allowed nested certificates downloads.
+
+    /// The maximum inter-dependent Downloader jobs a worker may initiate
     static const unsigned int MaxNestedDownloads = 3;
 
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed

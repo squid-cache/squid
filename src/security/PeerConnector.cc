@@ -194,11 +194,12 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
 
     // Protect from cycles in the certificate dependency graph: TLS site S1 is
     // missing certificate C1 located at TLS site S2. TLS site S2 is missing
-    // certificate C2 located at TLS site [...] S1.
+    // certificate C2 located at [...] TLS site S1.
     const auto cycle = certDownloadNestingLevel() >= MaxNestedDownloads;
     if (cycle)
         debugs(83, 3, "will not fetch any missing certificates; suspecting cycle: " << certDownloadNestingLevel() << '/' << MaxNestedDownloads);
     const auto sessData = Ssl::SquidVerifyData::New(*serverSession);
+    // at MaxNestedDownloads level, we can connect but not fetch missing certs
     sessData->callerHandlesMissingCertificates = !cycle;
 #endif
 
@@ -712,13 +713,18 @@ public:
     CbcPointer<Security::PeerConnector> peerConnector_; ///< The Security::PeerConnector object
 };
 
-/// the number of concurrent certificate downloading sessions for our request
+/// the number of concurrent PeerConnector jobs waiting for us
 unsigned int
 Security::PeerConnector::certDownloadNestingLevel() const
 {
-    if (const auto firstDownloader = (request ? request->downloader.get() : nullptr))
-        return firstDownloader->nestedLevel();
-    return 0;
+    if (request) {
+        // Nesting level increases when a PeerConnector (at level L) creates a
+        // Downloader (which is assigned level L+1). If we were initiated by
+        // such a Downloader, then their nesting level is our nesting level.
+        if (const auto previousDownloader = request->downloader.get())
+            return previousDownloader->nestedLevel();
+    }
+    return 0; // no other PeerConnector job waits for us
 }
 
 void
