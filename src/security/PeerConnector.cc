@@ -196,7 +196,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     const auto cycle = certDownloadNestingLevel() >= MaxNestedDownloads;
     if (cycle)
         debugs(83, 3, "will not fetch any missing certificates; suspecting cycle: " << certDownloadNestingLevel() << '/' << MaxNestedDownloads);
-    const auto sessData = Ssl::SquidVerifyData::New(*serverSession);
+    const auto sessData = Ssl::VerifyCallbackParameters::New(*serverSession);
     // at MaxNestedDownloads level, we can connect but not fetch missing certs
     sessData->callerHandlesMissingCertificates = !cycle;
 #endif
@@ -258,8 +258,8 @@ Security::PeerConnector::negotiate()
     //   try to fetch the missing certificates. If all goes well, honor EOTHER.
     //   If fetching or post-fetching validation fails, then honor that failure
     //   because EOTHER would not have happened if we fetched during validation.
-    if (auto &missingIssuer = Ssl::SquidVerifyData::At(sconn).missingIssuer) {
-        missingIssuer = false; // prep for the next SSL_connect()
+    if (auto &hidMissingIssuer = Ssl::VerifyCallbackParameters::At(sconn).hidMissingIssuer) {
+        hidMissingIssuer = false; // prep for the next SSL_connect()
 
         // The result cannot be positive here because successful negotiation
         // (sans X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY) requires sending
@@ -792,7 +792,7 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
     // OpenSSL if validation is triggered by SSL_connect(). That function and
     // our OpenSSL verify_callback function (\ref OpenSSL_vcb_disambiguation)
     // may be called multiple times, so we cannot reset there.
-    Ssl::SquidVerifyData::At(sconn).callerHandlesMissingCertificates = false;
+    Ssl::VerifyCallbackParameters::At(sconn).callerHandlesMissingCertificates = false;
 
     if (!computeMissingCertificateUrls(sconn))
         return handleNegotiateError(ed);

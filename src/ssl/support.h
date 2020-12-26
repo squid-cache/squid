@@ -337,29 +337,37 @@ BIO *BIO_new_SBuf(SBuf *buf);
 /// ssl_verify_cert_chain(), but that wrapper is not a part of OpenSSL API.
 bool PeerCertificatesVerify(Security::Connection &, const Ssl::X509_STACK_Pointer &extraCerts);
 
-/// Holds parameters and flags required for server certificates verify
-/// procedure.
-/// TODO: Add more parameters used by squid to verify certificates which are
-/// currently passed using the SSL_set_ex_data and ssl_ex_index_* parameters.
-class SquidVerifyData {
+// TODO: Move other ssl_ex_index_* validation-related information here.
+/// OpenSSL "verify_callback function" input/output parameters. This information
+/// cannot be passed through the verification API directly, so it is aggregated
+/// in this class and exchanged via ssl_ex_index_verify_callback_parameters. For
+/// OpenSSL validation callback details, see \ref OpenSSL_vcb_disambiguation.
+class VerifyCallbackParameters {
 public:
-    /// whether certificate validation has failed due to missing certificate(s)
-    /// (i.e. X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY), but the failure was
-    /// ignored due to true callerHandlesMissingCertificates setting; the
-    /// certificate chain has to be deemed untrusted until revalidation (if any)
-    /// XXX: once set, this status is never cleared for the TLS connection
-    bool missingIssuer = false;
+    /// creates a VerifyCallbackParameters object and adds it to the given TLS connection
+    /// \returns the successfully created and added object
+    static VerifyCallbackParameters *New(Security::Connection &);
 
-    /// whether X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY should be ignored
-    /// (after setting missingIssuer) because the validation initiator wants to
-    /// get the missing certificates and redo the validation with them
+    /// \returns the VerifyCallbackParameters object previously attached via New()
+    static VerifyCallbackParameters &At(Security::Connection &);
+
+    /// \returns the VerifyCallbackParameters object previously attached via New() or nil
+    static VerifyCallbackParameters *Find(Security::Connection &);
+
+    /* input parameters */
+
+    /// whether X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY should be cleared
+    /// (after setting hidMissingIssuer) because the validation initiator wants
+    /// to get the missing certificates and redo the validation with them
     bool callerHandlesMissingCertificates = false;
 
-    /// creates a SquidVerifyData object and adds it to the given TLS connection
-    /// \returns the successfully created and added object
-    static SquidVerifyData *New(Security::Connection &);
-    /// \returns the SquidVerifyData object previously attached via New()
-    static SquidVerifyData &At(Security::Connection &);
+    /* output parameters */
+
+    /// whether certificate validation has failed due to missing certificate(s)
+    /// (i.e. X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY), but the failure was
+    /// cleared/hidden due to true callerHandlesMissingCertificates setting; the
+    /// certificate chain has to be deemed untrusted until revalidation (if any)
+    bool hidMissingIssuer = false;
 };
 
 } //namespace Ssl

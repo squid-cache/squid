@@ -311,11 +311,11 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     }
 
     if (!ok && error_no == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY) {
-        if (const auto verifyData = static_cast<Ssl::SquidVerifyData*>(SSL_get_ex_data(ssl, ssl_ex_index_squid_verify))) {
-            if (verifyData->callerHandlesMissingCertificates) {
+        if (const auto params = Ssl::VerifyCallbackParameters::Find(*ssl)) {
+            if (params->callerHandlesMissingCertificates) {
                 debugs(83, 3, "hiding X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
+                params->hidMissingIssuer = true;
                 ok = 1;
-                verifyData->missingIssuer = true;
             }
         }
     }
@@ -500,24 +500,30 @@ Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_P
     return valid;
 }
 
-/* Ssl::SquidVerifyData */
+/* Ssl::VerifyCallbackParameters */
 
-Ssl::SquidVerifyData *
-Ssl::SquidVerifyData::New(Security::Connection &sconn)
+Ssl::VerifyCallbackParameters *
+Ssl::VerifyCallbackParameters::Find(Security::Connection &sconn)
 {
-    Must(!SSL_get_ex_data(&sconn, ssl_ex_index_squid_verify));
-    const auto extras = new SquidVerifyData();
-    if (!SSL_set_ex_data(&sconn, ssl_ex_index_squid_verify, extras)) {
+    return static_cast<VerifyCallbackParameters*>(SSL_get_ex_data(&sconn, ssl_ex_index_verify_callback_parameters));
+}
+
+Ssl::VerifyCallbackParameters *
+Ssl::VerifyCallbackParameters::New(Security::Connection &sconn)
+{
+    Must(!Find(sconn));
+    const auto extras = new VerifyCallbackParameters();
+    if (!SSL_set_ex_data(&sconn, ssl_ex_index_verify_callback_parameters, extras)) {
         delete extras;
         throw TextException("SSL_set_ex_data() failed; likely OOM", Here());
     }
     return extras;
 }
 
-Ssl::SquidVerifyData &
-Ssl::SquidVerifyData::At(Security::Connection &sconn)
+Ssl::VerifyCallbackParameters &
+Ssl::VerifyCallbackParameters::At(Security::Connection &sconn)
 {
-    const auto extras = static_cast<SquidVerifyData*>(SSL_get_ex_data(&sconn, ssl_ex_index_squid_verify));
+    const auto extras = Find(sconn);
     Must(extras);
     return *extras;
 }
@@ -602,11 +608,12 @@ ssl_free_SBuf(void *, void *ptr, CRYPTO_EX_DATA *,
     delete buf;
 }
 
+/// "free" function for the ssl_ex_index_verify_callback_parameters entry
 static void
-ssl_free_squid_verify(void *, void *ptr, CRYPTO_EX_DATA *,
+ssl_free_VerifyCallbackParameters(void *, void *ptr, CRYPTO_EX_DATA *,
                       int, long, void *)
 {
-    delete static_cast<Ssl::SquidVerifyData*>(ptr);
+    delete static_cast<Ssl::VerifyCallbackParameters*>(ptr);
 }
 
 void
@@ -649,7 +656,7 @@ Ssl::Initialize(void)
     ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
     ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", NULL, NULL, &ssl_free_CertChain);
     ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
-    ssl_ex_index_squid_verify = SSL_get_ex_new_index(0, (void *) "squid_verify", nullptr, nullptr, &ssl_free_squid_verify);
+    ssl_ex_index_verify_callback_parameters = SSL_get_ex_new_index(0, (void *) "verify_callback_parameters", nullptr, nullptr, &ssl_free_VerifyCallbackParameters);
 }
 
 bool
