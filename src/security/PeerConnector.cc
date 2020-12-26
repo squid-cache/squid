@@ -197,7 +197,7 @@ Security::PeerConnector::initialize(Security::SessionPointer &serverSession)
     if (cycle)
         debugs(83, 3, "will not fetch any missing certificates; suspecting cycle: " << certDownloadNestingLevel() << '/' << MaxNestedDownloads);
     const auto sessData = Ssl::VerifyCallbackParameters::New(*serverSession);
-    // at MaxNestedDownloads level, we can connect but not fetch missing certs
+    // when suspecting a cycle, break it by not fetching any missing certs
     sessData->callerHandlesMissingCertificates = !cycle;
 #endif
 
@@ -249,7 +249,7 @@ Security::PeerConnector::negotiate()
 
     // Our handling of X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY (abbreviated
     // here as EUNABLE) approximates what would happen if we could (try to)
-    // fetch any missing certificate(s) _during_ OpenSSL certificate validation.
+    // fetch any missing certificates _during_ OpenSSL certificate validation.
     // * We did not hide EUNABLE; SSL_connect() was successful: Handle success.
     // * We did not hide EUNABLE; SSL_connect() reported some error E: Honor E.
     // * We hid EUNABLE; SSL_connect() was successful: Warn and kill the job.
@@ -318,6 +318,7 @@ Security::PeerConnector::sslFinalized()
     if (Ssl::TheConfig.ssl_crt_validator && useCertValidator_) {
         const int fd = serverConnection()->fd;
         Security::SessionPointer session(fd_table[fd].ssl);
+
         Ssl::CertValidationRequest validationRequest;
         // WARNING: Currently we do not use any locking for 'errors' member
         // of the Ssl::CertValidationRequest class. In this code the
@@ -479,8 +480,9 @@ Security::PeerConnector::negotiateSsl()
 }
 
 void
-Security::PeerConnector::handleNegotiateError(TlsNegotiationDetails ed)
+Security::PeerConnector::handleNegotiateError(const TlsNegotiationDetails &ed)
 {
+    debugs(83, 5, ed);
     Must(!isSuspended());
 
     const int fd = serverConnection()->fd;

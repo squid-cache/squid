@@ -20,7 +20,6 @@ namespace Ssl
 class PeekingPeerConnector: public Security::PeerConnector {
     CBDATA_CLASS(PeekingPeerConnector);
 public:
-
     PeekingPeerConnector(HttpRequestPointer &aRequest,
                          const Comm::ConnectionPointer &aServerConn,
                          const Comm::ConnectionPointer &aClientConn,

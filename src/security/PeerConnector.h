@@ -96,7 +96,7 @@ protected:
     /// be transferred to/from server or on error. In the first case
     /// setups the appropriate Comm::SetSelect handler. In second case
     /// fill an error and report to the PeerConnector caller.
-    void handleNegotiateError(TlsNegotiationDetails);
+    void handleNegotiateError(const TlsNegotiationDetails &);
 
     /// Called when the openSSL SSL_connect fnction request more data from
     /// the remote SSL server. Sets the read timeout and sets the
@@ -203,6 +203,7 @@ private:
     unsigned int certsDownloads; ///< the number of downloaded missing certificates
 
 #if USE_OPENSSL
+    /// successfully downloaded intermediate certificates (omitted by the peer)
     Ssl::X509_STACK_Pointer downloadedCerts;
 
     /// outcome of the last (failed and) suspended negotiation attempt (or nil)

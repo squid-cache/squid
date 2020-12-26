@@ -35,6 +35,9 @@
 
 #include <cerrno>
 
+// TODO: Move ssl_ex_index_* global variables from global.cc here.
+static int ssl_ex_index_verify_callback_parameters = -1;
+
 static Ssl::CertsIndexedList SquidUntrustedCerts;
 
 const EVP_MD *Ssl::DefaultSignHash = NULL;
@@ -265,7 +268,6 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
     X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
-
     Security::CertPointer peer_cert;
     peer_cert.resetAndLock(X509_STORE_CTX_get0_cert(ctx));
 
@@ -512,20 +514,20 @@ Ssl::VerifyCallbackParameters *
 Ssl::VerifyCallbackParameters::New(Security::Connection &sconn)
 {
     Must(!Find(sconn));
-    const auto extras = new VerifyCallbackParameters();
-    if (!SSL_set_ex_data(&sconn, ssl_ex_index_verify_callback_parameters, extras)) {
-        delete extras;
+    const auto parameters = new VerifyCallbackParameters();
+    if (!SSL_set_ex_data(&sconn, ssl_ex_index_verify_callback_parameters, parameters)) {
+        delete parameters;
         throw TextException("SSL_set_ex_data() failed; likely OOM", Here());
     }
-    return extras;
+    return parameters;
 }
 
 Ssl::VerifyCallbackParameters &
 Ssl::VerifyCallbackParameters::At(Security::Connection &sconn)
 {
-    const auto extras = Find(sconn);
-    Must(extras);
-    return *extras;
+    const auto parameters = Find(sconn);
+    Must(parameters);
+    return *parameters;
 }
 
 // "dup" function for SSL_get_ex_new_index("cert_err_check")
@@ -611,7 +613,7 @@ ssl_free_SBuf(void *, void *ptr, CRYPTO_EX_DATA *,
 /// "free" function for the ssl_ex_index_verify_callback_parameters entry
 static void
 ssl_free_VerifyCallbackParameters(void *, void *ptr, CRYPTO_EX_DATA *,
-                      int, long, void *)
+                                  int, long, void *)
 {
     delete static_cast<Ssl::VerifyCallbackParameters*>(ptr);
 }
@@ -1127,8 +1129,8 @@ sk_x509_findIssuer(const STACK_OF(X509) *sk, X509 *cert)
     if (!sk)
         return nullptr;
 
-    const auto skItemsNum = sk_X509_num(sk);
-    for (int i = 0; i < skItemsNum; ++i) {
+    const auto certCount = sk_X509_num(sk);
+    for (int i = 0; i < certCount; ++i) {
         const auto issuer = sk_X509_value(sk, i);
         if (X509_check_issued(issuer, cert) == X509_V_OK)
             return issuer;
