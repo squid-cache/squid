@@ -454,7 +454,7 @@ IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
 {
     debugs(47, 7, HERE << "coordinator response to open request");
     const auto it = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
-            [&response](const WaitingFile &pair) { return pair.second->dbName == response.strand.tag; });
+    [&response](const WaitingFile &pair) { return pair.second->dbName == response.strand.tag; });
     if (it != WaitingForOpen.end()) {
         it->second->openCompleted(&response);
         WaitingForOpen.erase(it);
@@ -489,7 +489,7 @@ IpcIoFile::HandleStrandBusyResponse(const Ipc::StrandMessage &response)
     assert(opt_foreground_rebuild);
     debugs(47, 7, "disker" << response.strand.kidId << " foreground rebuild is still in progress");
     const auto it = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
-            [&response](const WaitingFile &pair) { return pair.second->dbName == response.strand.tag; });
+    [&response](const WaitingFile &pair) { return pair.second->dbName == response.strand.tag; });
     if (it != WaitingForOpen.end()) {
         // reschedule open timeout
         auto file = it->second;

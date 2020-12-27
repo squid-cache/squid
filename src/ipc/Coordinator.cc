@@ -173,7 +173,7 @@ void
 Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
 {
     const auto alreadyFinished = std::find_if(rebuildFinishedStrands_.begin(), rebuildFinishedStrands_.end(),
-            [&msg](const StrandCoord &coord) { return msg.strand.kidId == coord.kidId; });
+    [&msg](const StrandCoord &coord) { return msg.strand.kidId == coord.kidId; });
     if (alreadyFinished != rebuildFinishedStrands_.end()) {
         // A message from a possibly restarted disker.
         // Do not notify other strands the second time, only refresh the coord.
@@ -183,7 +183,7 @@ Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
     rebuildFinishedStrands_.push_back(msg.strand);
 
     const auto alreadyTagged = std::find_if(strands_.begin(), strands_.end(),
-            [&msg](const StrandCoord &coord) { return msg.strand.tag == coord.tag; });
+    [&msg](const StrandCoord &coord) { return msg.strand.tag == coord.tag; });
 
     if (alreadyTagged == strands_.end()) {
         debugs(54, 3, "cannot yet tell all that kid" << msg.strand.kidId << " is indexed");
@@ -278,7 +278,7 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
                                  const StrandCoord& strand)
 {
     const auto isIndexed = std::find_if(rebuildFinishedStrands_.begin(), rebuildFinishedStrands_.end(),
-            [&strand](const StrandCoord &coord) { return strand.kidId == coord.kidId; }) != rebuildFinishedStrands_.end();
+    [&strand](const StrandCoord &coord) { return strand.kidId == coord.kidId; }) != rebuildFinishedStrands_.end();
 
     debugs(54, 3, "tell kid" << request.requestorId << " that " <<
            request.tag << " is kid" << strand.kidId << " (indexed:" << isIndexed << ")");

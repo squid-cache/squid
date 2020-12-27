@@ -139,7 +139,7 @@ StoreRebuildFinalize()
         debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.dupcount  << " Duplicate URLs purged.");
         debugs(20, DBG_IMPORTANT, "  " << std::setw(7) << counts.clashcount  << " Swapfile clashes avoided.");
         debugs(20, DBG_IMPORTANT, "  Took "<< std::setw(3)<< std::setprecision(2) << dt << " seconds ("<< std::setw(6) <<
-                ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
+               ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
     }
 
     delete RebuildProgress;

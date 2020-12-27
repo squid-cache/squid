@@ -32,7 +32,6 @@ void Ipc::StrandSearchRequest::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.putString(tag);
 }
 
-
 Ipc::StrandSearchResponse::StrandSearchResponse(const bool isIndexed, const StrandCoord &aStrand):
     indexed(isIndexed),
     strand(aStrand)
