@@ -58,9 +58,9 @@ public:
     static SwapDir *SelectSwapDir(const StoreEntry *);
     /// whether any of disk caches has entry with e.key
     bool hasReadableEntry(const StoreEntry &) const;
-    /// whether all store_dirs are indexed
+    /// \returns true if !Active() or each of active cache_dirs is indexed
     static bool AllIndexed();
-    /// whether some of the configured store_dirs are active
+    /// whether there is at least one active cache_dir
     static bool Active();
     /// handles the Coordinator notification about an indexed disker
     static void RemoteIndexingCompleted(int kidId);

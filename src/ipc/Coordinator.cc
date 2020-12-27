@@ -186,13 +186,13 @@ Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
             [&msg](const StrandCoord &coord) { return msg.strand.tag == coord.tag; });
 
     if (alreadyTagged == strands_.end()) {
-        debugs(54, 3, "kid" << msg.strand.kidId << " is indexed but not available yet " << msg.strand.kidId);
+        debugs(54, 3, "cannot yet tell all that kid" << msg.strand.kidId << " is indexed");
         return;
     }
 
     // notify all existing strands, new strands will be notified in handleRegistrationRequest()
     for (const auto &strand: strands_) {
-        debugs(54, 3, "tell kid" << strand.kidId << " that kid" << msg.strand.kidId << " rebuilt its index");
+        debugs(54, 3, "tell kid" << strand.kidId << " that kid" << msg.strand.kidId << " is indexed");
         StrandMessage response(mtRebuildFinished, msg.strand);
         TypedMsgHdr message;
         response.pack(message);
@@ -277,16 +277,11 @@ void
 Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
                                  const StrandCoord& strand)
 {
-    debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
-           request.tag << " is kid" << strand.kidId);
+    const auto isIndexed = std::find_if(rebuildFinishedStrands_.begin(), rebuildFinishedStrands_.end(),
+            [&strand](const StrandCoord &coord) { return strand.kidId == coord.kidId; }) != rebuildFinishedStrands_.end();
 
-    auto isIndexed = false;
-    for (const auto &indexedStrand: rebuildFinishedStrands_) {
-        if (indexedStrand.tag == strand.tag) {
-            isIndexed = true;
-            break;
-        }
-    }
+    debugs(54, 3, "tell kid" << request.requestorId << " that " <<
+           request.tag << " is kid" << strand.kidId << " (indexed:" << isIndexed << ")");
 
     const StrandSearchResponse response(isIndexed, strand);
     TypedMsgHdr message;

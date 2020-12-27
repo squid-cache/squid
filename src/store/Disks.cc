@@ -665,7 +665,7 @@ bool
 Store::Disks::AllIndexed()
 {
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        auto &dir = Dir(i);
+        const auto &dir = Dir(i);
         if (!dir.active())
             continue;
         if (!dir.indexed)
@@ -678,7 +678,7 @@ bool
 Store::Disks::Active()
 {
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        auto &dir = Dir(i);
+        const auto &dir = Dir(i);
         if (dir.active())
             return true;
     }
