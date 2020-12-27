@@ -46,7 +46,7 @@ static const char *const ShmLabel = "io_file";
 static const int QueueCapacity = 1024;
 
 const double IpcIoFile::Timeout = 7; // seconds;  XXX: ALL,9 may require more
-IpcIoFile::WaitingIpcIoFiles IpcIoFile::WaitingForOpen;
+IpcIoFile::WaitingFiles IpcIoFile::WaitingForOpen;
 IpcIoFile::IpcIoFilesMap IpcIoFile::IpcIoFiles;
 std::unique_ptr<IpcIoFile::Queue> IpcIoFile::queue;
 
@@ -454,7 +454,7 @@ IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
 {
     debugs(47, 7, HERE << "coordinator response to open request");
     const auto it = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
-            [&response](const WaitingIpcIoFile &pair) { return pair.second->dbName == response.strand.tag; });
+            [&response](const WaitingFile &pair) { return pair.second->dbName == response.strand.tag; });
     if (it != WaitingForOpen.end()) {
         it->second->openCompleted(&response);
         WaitingForOpen.erase(it);
@@ -489,7 +489,7 @@ IpcIoFile::HandleStrandBusyResponse(const Ipc::StrandMessage &response)
     assert(opt_foreground_rebuild);
     debugs(47, 7, "disker" << response.strand.kidId << " foreground rebuild is still in progress");
     const auto it = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
-            [&response](const WaitingIpcIoFile &pair) { return pair.second->dbName == response.strand.tag; });
+            [&response](const WaitingFile &pair) { return pair.second->dbName == response.strand.tag; });
     if (it != WaitingForOpen.end()) {
         // reschedule open timeout
         auto file = it->second;

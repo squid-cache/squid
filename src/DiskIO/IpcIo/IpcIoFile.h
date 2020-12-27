@@ -15,7 +15,6 @@
 #include "DiskIO/IORequestor.h"
 #include "ipc/forward.h"
 #include "ipc/mem/Page.h"
-#include "mem/PoolingAllocator.h"
 #include "SquidString.h"
 #include <list>
 #include <map>
@@ -151,10 +150,10 @@ private:
 
     static const double Timeout; ///< timeout value in seconds
 
-    typedef std::pair<const timeval, Pointer> WaitingIpcIoFile;
-    typedef std::multimap<timeval, Pointer, std::less<timeval>, PoolingAllocator<WaitingIpcIoFile> > WaitingIpcIoFiles;
+    typedef std::multimap<timeval, Pointer, std::less<timeval> > WaitingFiles;
+    typedef WaitingFiles::value_type WaitingFile;
     /// being open diskers, ordered by their absolute deadlines
-    static WaitingIpcIoFiles WaitingForOpen;
+    static WaitingFiles WaitingForOpen;
     static void StartWaiting(const Pointer &);
 
     ///< maps diskerId to IpcIoFile, cleared in destructor
