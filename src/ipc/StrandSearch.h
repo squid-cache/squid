@@ -33,7 +33,7 @@ public:
 class StrandSearchResponse
 {
 public:
-    explicit StrandSearchResponse(bool isIndexed, const StrandCoord &);
+    StrandSearchResponse(bool isIndexed, const StrandCoord &);
     explicit StrandSearchResponse(const TypedMsgHdr &);
     void pack(TypedMsgHdr &) const;
 
