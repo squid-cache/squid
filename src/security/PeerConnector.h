@@ -208,9 +208,6 @@ private:
 
     /// outcome of the last (failed and) suspended negotiation attempt (or nil)
     TlsNegotiationDetailsPointer suspendedError_;
-
-    /// Whether the validation callouts run
-    bool runValidationCallouts = false;
 #endif
 };
 

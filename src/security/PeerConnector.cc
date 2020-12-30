@@ -779,14 +779,9 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     resumeNegotiation();
 }
 
-// TODO: Rename runValidationCallouts as well.
 void
 Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &ed)
 {
-    // paranoid: we also clear callerHandlesMissingCertificates to prevent loops
-    Must(!runValidationCallouts);
-    runValidationCallouts = true;
-
     auto &sconn = *fd_table[serverConnection()->fd].ssl;
 
     // We download the missing certificate(s) once. We would prefer to clear
@@ -794,7 +789,9 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
     // OpenSSL if validation is triggered by SSL_connect(). That function and
     // our OpenSSL verify_callback function (\ref OpenSSL_vcb_disambiguation)
     // may be called multiple times, so we cannot reset there.
-    Ssl::VerifyCallbackParameters::At(sconn).callerHandlesMissingCertificates = false;
+    auto &callerHandlesMissingCertificates = Ssl::VerifyCallbackParameters::At(sconn).callerHandlesMissingCertificates;
+    Must(callerHandlesMissingCertificates);
+    callerHandlesMissingCertificates = false;
 
     if (!computeMissingCertificateUrls(sconn))
         return handleNegotiateError(ed);
