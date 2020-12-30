@@ -466,7 +466,7 @@ Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_P
         return false;
     }
 
-    // overwrite context "suit B" certificate flags with connection non-defaults
+    // overwrite context Suite B (RFC 5759) flags with connection non-defaults
     // SSL_set_cert_flags() return type is long, but its implementation actually
     // returns an unsigned long flags value expected by X509_STORE_CTX_set_flags
     const unsigned long certFlags = SSL_set_cert_flags(&sconn, 0);
@@ -490,14 +490,17 @@ Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_P
     X509_VERIFY_PARAM_set_auth_level(param, SSL_get_security_level(&sconn));
     X509_VERIFY_PARAM_set1(param, SSL_get0_param(&sconn));
 
+    // copy any connection "verify_callback function" to the validation context
+    // (\ref OpenSSL_vcb_disambiguation)
     if (const auto cb = SSL_get_verify_callback(&sconn))
         X509_STORE_CTX_set_verify_cb(storeCtx.get(), cb);
 
+    // verify the server certificate chain in the prepared validation context
     const auto valid = (squidX509VerifyCert(storeCtx.get(), extraCerts.get()) > 0);
     if (!valid) {
         // see also: ssl_verify_cb() details errors via ssl_ex_index_ssl_errors
         const auto verifyResult = X509_STORE_CTX_get_error(storeCtx.get());
-        debugs(83, 5, "verify result " << verifyResult << " : " << X509_verify_cert_error_string(verifyResult));
+        debugs(83, 3, "verification result: " << verifyResult << ' ' << X509_verify_cert_error_string(verifyResult));
     }
     return valid;
 }
@@ -1195,10 +1198,10 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *
         return;
 
     // TODO: The caller interprets non-empty URIs as a sign of success. However,
-    // if the CA which intermediate certificate is missing added no AIA field to
-    // its (present) certificate, we may still return a non-empty URIs queue.
+    // if the CA (which intermediate certificate is missing) added no AIA field
+    // to its (present) certificate, we may still return a non-empty URIs queue.
     // Does that mean that there is a chance we will fetch that missing CA
-    // certificate using a URI extracted from some other (present) certificate.
+    // certificate using a URI extracted from some other (present) certificate?
     // If this might indeed happen, we should document that surprising fact.
     // Otherwise, we should tell the caller when it has no chances of validating
     // the whole serverCertificates chain (because some necessary AIAs were

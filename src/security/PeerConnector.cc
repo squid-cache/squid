@@ -247,9 +247,11 @@ Security::PeerConnector::negotiate()
     auto &sconn = *session;
     const TlsNegotiationDetails ed(result, sconn);
 
-    // Our handling of X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY (abbreviated
-    // here as EUNABLE) approximates what would happen if we could (try to)
-    // fetch any missing certificates _during_ OpenSSL certificate validation.
+    // OpenSSL v1 APIs do not allow unthreaded applications like Squid to fetch
+    // missing certificates _during_ OpenSSL certificate validation. Our
+    // handling of X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY (abbreviated
+    // here as EUNABLE) approximates what would happen if we did (attempt to)
+    // fetch any missing certificates during OpenSSL certificate validation.
     // * We did not hide EUNABLE; SSL_connect() was successful: Handle success.
     // * We did not hide EUNABLE; SSL_connect() reported some error E: Honor E.
     // * We hid EUNABLE; SSL_connect() was successful: Warn and kill the job.
@@ -261,7 +263,7 @@ Security::PeerConnector::negotiate()
     if (auto &hidMissingIssuer = Ssl::VerifyCallbackParameters::At(sconn).hidMissingIssuer) {
         hidMissingIssuer = false; // prep for the next SSL_connect()
 
-        // The result cannot be positive here because successful negotiation
+        // The result cannot be positive here because a successful negotiation
         // (sans X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY) requires sending
         // a TLS Finished message, which ought to trigger SSL_ERROR_WANT_WRITE.
         if (result > 0) {
