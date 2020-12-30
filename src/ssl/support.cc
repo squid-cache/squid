@@ -434,16 +434,16 @@ Ssl::DisablePeerVerification(Security::ContextPointer &ctx)
     SSL_CTX_set_verify(ctx.get(),SSL_VERIFY_NONE,nullptr);
 }
 
-static int squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts);
+static int VerifyCtxCertificates(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts);
 
 bool
-Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_Pointer &extraCerts)
+Ssl::VerifyConnCertificates(Security::Connection &sconn, const Ssl::X509_STACK_Pointer &extraCerts)
 {
     const auto peerCertificatesChain = SSL_get_peer_cert_chain(&sconn);
 
     // TODO: Replace debugs/return false with returning ErrorDetail::Pointer.
     // Using Security::ErrorDetail terminology, errors in _this_ function are
-    // "non-validation errors", but squidX509VerifyCert() errors may be
+    // "non-validation errors", but VerifyCtxCertificates() errors may be
     // "certificate validation errors". Callers detail SQUID_TLS_ERR_CONNECT.
     // Some details should be created right here. Others extracted from OpenSSL.
     // Why not throw? Most of the reasons detailed in the following commit apply
@@ -496,7 +496,7 @@ Ssl::PeerCertificatesVerify(Security::Connection &sconn, const Ssl::X509_STACK_P
         X509_STORE_CTX_set_verify_cb(storeCtx.get(), cb);
 
     // verify the server certificate chain in the prepared validation context
-    const auto valid = (squidX509VerifyCert(storeCtx.get(), extraCerts.get()) > 0);
+    const auto valid = (VerifyCtxCertificates(storeCtx.get(), extraCerts.get()) > 0);
     if (!valid) {
         // see also: ssl_verify_cb() details errors via ssl_ex_index_ssl_errors
         const auto verifyResult = X509_STORE_CTX_get_error(storeCtx.get());
@@ -1244,9 +1244,10 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
 }
 
 /// Validates certificates while consulting sslproxy_foreign_intermediate_certs
-/// and, optionally, the given extra certificates
+/// and, optionally, the given extra certificates.
+/// \returns whatever OpenSSL X509_verify_cert() returns
 static int
-squidX509VerifyCert(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
+VerifyCtxCertificates(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
 {
     // OpenSSL already maintains ctx->untrusted but we cannot modify
     // internal OpenSSL list directly. We have to give OpenSSL our own
@@ -1297,7 +1298,7 @@ static int
 untrustedToStoreCtx_cb(X509_STORE_CTX *ctx, void *)
 {
     debugs(83, 4, "Try to use pre-downloaded intermediate certificates");
-    return squidX509VerifyCert(ctx, nullptr);
+    return VerifyCtxCertificates(ctx, nullptr);
 }
 
 void

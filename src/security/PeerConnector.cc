@@ -846,7 +846,7 @@ Security::PeerConnector::resumeNegotiation()
     suspendedError_ = nullptr;
 
     auto &sconn = *fd_table[serverConnection()->fd].ssl;
-    if (!Ssl::PeerCertificatesVerify(sconn, downloadedCerts)) {
+    if (!Ssl::VerifyConnCertificates(sconn, downloadedCerts)) {
         // simulate an earlier SSL_connect() failure with a new error
         // TODO: When we can use Security::ErrorDetail, we should resume with a
         // detailed _validation_ error, not just a generic SSL_ERROR_SSL!
