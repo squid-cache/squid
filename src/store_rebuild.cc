@@ -55,13 +55,19 @@ StoreRebuildData::updateStartTime(const timeval &dirStartTime)
 static void
 storeCleanup(void *)
 {
+    Store::Root().validate();
+}
+
+void
+Store::Controller::validate()
+{
     static int store_errors = 0;
     static StoreSearchPointer currentSearch;
     static int validated = 0;
     static int seen = 0;
 
     if (currentSearch == NULL || currentSearch->isDone())
-        currentSearch = Store::Root().search();
+        currentSearch = search();
 
     size_t statCount = 500;
 
@@ -103,7 +109,7 @@ storeCleanup(void *)
         debugs(20, 2, "Seen: " << seen << " entries");
         debugs(20, DBG_IMPORTANT, "  Completed Validation Procedure");
         debugs(20, DBG_IMPORTANT, "  Validated " << validated << " Entries");
-        debugs(20, DBG_IMPORTANT, "  store_swap_size = " << Store::Root().currentSize() / 1024.0 << " KB");
+        debugs(20, DBG_IMPORTANT, "  store_swap_size = " << currentSize() / 1024.0 << " KB");
 
         if (opt_store_doublecheck && store_errors) {
             fatalf("Quitting after finding %d cache index inconsistencies. " \
@@ -113,7 +119,7 @@ storeCleanup(void *)
         }
 
         currentSearch = NULL;
-        Store::Root().markValidated();
+        markValidated();
         RunRegisteredHere(RegisteredRunner::useFullyIndexedStore);
     } else
         eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);

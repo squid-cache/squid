@@ -142,7 +142,10 @@ public:
     bool indexReady();
 
     /// start treating the Store index as validated
-    void markValidated() { validated = true; }
+    void markValidated() { validated_ = true; }
+
+    /// perform Store validation procedure
+    void validate();
 
 private:
     bool memoryCacheHasSpaceFor(const int pagesRequired) const;
@@ -172,7 +175,7 @@ private:
     /// Hack: Relays page shortage from freeMemorySpace() to handleIdleEntry().
     int memoryPagesDebt_ = 0;
     /// whether the "Validation Procedure" is finished
-    bool validated;
+    bool validated_ = false;
 };
 
 /// safely access controller singleton

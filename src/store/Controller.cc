@@ -916,7 +916,7 @@ Store::Controller::SmpAware()
 bool
 Store::Controller::indexReady()
 {
-    return Disks::AllIndexed() && validated;
+    return Disks::AllIndexed() && validated_;
 }
 
 void
