@@ -453,11 +453,9 @@ void
 IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
 {
     debugs(47, 7, HERE << "coordinator response to open request");
-    const auto it = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
-    [&response](const WaitingFile &pair) { return pair.second->dbName == response.strand.tag; });
-    if (it != WaitingForOpen.end()) {
-        it->second->openCompleted(&response);
-        WaitingForOpen.erase(it);
+    const auto file = StopWaiting(response.strand);
+    if (file) {
+        file->openCompleted(&response);
         return;
     }
 
@@ -483,19 +481,30 @@ IpcIoFile::StartWaiting(const Pointer &file)
     eventAdd("IpcIoFile::OpenTimeout", &IpcIoFile::OpenTimeout, nullptr, interval, 0, false);
 }
 
+/// removes the IpcIoFile specified by the response from the waiting queue
+IpcIoFile::Pointer
+IpcIoFile::StopWaiting(const Ipc::StrandCoord &responseStrand)
+{
+    const auto it = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
+    [&responseStrand](const FileWait &pair) { return pair.second->dbName == responseStrand.tag; });
+    if (it != WaitingForOpen.end()) {
+        const auto file = it->second;
+        WaitingForOpen.erase(it);
+        return file;
+    }
+    return nullptr;
+}
+
 void
 IpcIoFile::HandleStrandBusyResponse(const Ipc::StrandMessage &response)
 {
     assert(opt_foreground_rebuild);
     debugs(47, 7, "disker" << response.strand.kidId << " foreground rebuild is still in progress");
-    const auto it = std::find_if(WaitingForOpen.begin(), WaitingForOpen.end(),
-    [&response](const WaitingFile &pair) { return pair.second->dbName == response.strand.tag; });
-    if (it != WaitingForOpen.end()) {
+    const auto file = StopWaiting(response.strand);
+    if (file) {
         // reschedule open timeout
-        auto file = it->second;
-        WaitingForOpen.erase(it);
         StartWaiting(file);
-    }
+    } // else: ignore a presumably late message
 }
 
 void

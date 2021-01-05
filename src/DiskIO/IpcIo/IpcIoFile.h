@@ -101,7 +101,7 @@ public:
 
 protected:
     friend class IpcIoPendingRequest;
-    void openCompleted(const Ipc::StrandSearchResponse *const);
+    void openCompleted(const Ipc::StrandSearchResponse *const response);
     void readCompleted(ReadRequest *readRequest, IpcIoMsg *const response);
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
     bool canWait() const;
@@ -151,10 +151,11 @@ private:
     static const double Timeout; ///< timeout value in seconds
 
     typedef std::multimap<timeval, Pointer, std::less<timeval> > WaitingFiles;
-    typedef WaitingFiles::value_type WaitingFile;
+    typedef WaitingFiles::value_type FileWait;
     /// being open diskers, ordered by their absolute deadlines
     static WaitingFiles WaitingForOpen;
     static void StartWaiting(const Pointer &);
+    static IpcIoFile::Pointer StopWaiting(const Ipc::StrandCoord &);
 
     ///< maps diskerId to IpcIoFile, cleared in destructor
     typedef std::map<int, IpcIoFile*> IpcIoFilesMap;

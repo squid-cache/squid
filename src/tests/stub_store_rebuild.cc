@@ -36,6 +36,7 @@ void StoreRebuildData::updateStartTime(const timeval &dirStartTime)
 void storeRebuildComplete(StoreRebuildData *, SwapDir &dir)
 {
     dir.indexed = true;
+    // normally, storeCleanup() validates first, but stubbed code does not validate indexed entries
     if (Store::Disks::AllIndexed())
         Store::Root().markValidated();
 }

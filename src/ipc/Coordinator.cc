@@ -186,7 +186,7 @@ Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
     [&msg](const StrandCoord &coord) { return msg.strand.tag == coord.tag; });
 
     if (alreadyTagged == strands_.end()) {
-        debugs(54, 3, "cannot yet tell all that kid" << msg.strand.kidId << " is indexed");
+        debugs(54, 3, "waiting for kid" << msg.strand.kidId << " tag to broadcast that it is indexed");
         return;
     }
 

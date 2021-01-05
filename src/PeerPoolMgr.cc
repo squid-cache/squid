@@ -284,9 +284,15 @@ RunnerRegistrationEntry(PeerPoolMgrsRr);
 void
 PeerPoolMgrsRr::syncConfig()
 {
+    if (waitingForStoreIndex)
+        return; // continue waiting for useFullyIndexedStore()
+
     if (Store::Root().waitingForIndex()) {
+        // Delay opening outgoing connections with possibly local addresses:
+        // peers may misinterpret this as indication that Squid started
+        // listening on those addresses.
         waitingForStoreIndex = true;
-        return; // postpone until useFullyIndexedStore()
+        return; // wait for useFullyIndexedStore()
     }
     configure();
 }
@@ -294,7 +300,6 @@ PeerPoolMgrsRr::syncConfig()
 void
 PeerPoolMgrsRr::useFullyIndexedStore()
 {
-    assert(!Store::Root().waitingForIndex());
     if (waitingForStoreIndex) {
         waitingForStoreIndex = false;
         configure();

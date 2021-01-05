@@ -128,7 +128,7 @@ private:
     static void Steps(void *data);
 
     /// informs Coordinator that we are still foreground-rebuilding
-    void keepCoordinatorWaiting();
+    void extendWait();
 };
 
 } // namespace Rock

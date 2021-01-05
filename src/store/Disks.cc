@@ -694,7 +694,7 @@ Store::Disks::RemoteIndexingCompleted(const int kidId)
         if (dir.active() && IamWorkerProcess() && dir.disker == kidId) {
             assert(dir.smpAware());
             if (dir.indexed)
-                debugs(20, DBG_IMPORTANT, "BUG: a duplicated message from the already indexed disker" << kidId);
+                debugs(20, DBG_IMPORTANT, "WARNING: Ignoring repeated 'indexing completed' notification from disker" << kidId);
             else
                 storeRebuildComplete(nullptr, dir);
         }

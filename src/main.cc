@@ -190,7 +190,7 @@ class OpenListeningPortsRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useFullyIndexedStore() {
+    virtual void useFullyIndexedStore() override {
         serverConnectionsOpen();
     }
 };

@@ -820,10 +820,6 @@ Rock::SwapDir::ioCompletedNotification()
            std::setw(7) << map->entryLimit() << " entries, and " <<
            std::setw(7) << map->sliceLimit() << " slots");
 
-    if (!opt_foreground_rebuild)
-        startAcceptingRequests();
-    // else postpone until Rock::Rebuild::swanSong()
-
     (void)Rebuild::Start(*this);
 }
 
@@ -833,6 +829,7 @@ Rock::SwapDir::startAcceptingRequests()
     debugs(47, 7, filePath);
     if (UsingSmp() && IamDiskProcess())
         Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRegistration, filePath);
+    // else the kid is not responsible for accepting worker requests
 }
 
 void

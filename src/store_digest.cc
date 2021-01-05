@@ -80,7 +80,7 @@ class StoreDigestRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void useFullyIndexedStore() {
+    virtual void useFullyIndexedStore() override {
         if (store_digest && Config.onoff.digest_generation) {
             storeDigestRebuildStart(nullptr);
             storeDigestRewriteStart(nullptr);

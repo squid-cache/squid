@@ -287,9 +287,11 @@ Rock::Rebuild::Start(SwapDir &dir)
     if (stats->completed(dir)) {
         debugs(47, 2, "already indexed cache_dir #" <<
                dir.index << " from " << dir.filePath);
-        // we could fail to send this before in a case of crash
+        dir.startAcceptingRequests();
         if (UsingSmp()) {
             assert(IamDiskProcess());
+            // if an earlier crash prevented this notification from being sent, we must send it now
+            // otherwise, it does not hurt to send again -- recipients handle duplicate notifications
             Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, dir.filePath);
         }
         return false;
@@ -371,6 +373,10 @@ Rock::Rebuild::start()
 
     counts.updateStartTime(current_time);
 
+    if (!opt_foreground_rebuild)
+        sd->startAcceptingRequests();
+    // else postpone until swanSong()
+
     checkpoint();
 }
 
@@ -401,12 +407,12 @@ Rock::Rebuild::doneAll() const
 }
 
 void
-Rock::Rebuild::keepCoordinatorWaiting()
+Rock::Rebuild::extendWait()
 {
-    debugs(47, 7, "cache_dir #" << sd->index);
-    assert(opt_foreground_rebuild);
-    assert(UsingSmp());
-    Ipc::StrandMessage::NotifyCoordinator(Ipc::mtForegroundRebuild, sd->filePath);
+    if (opt_foreground_rebuild && UsingSmp()) {
+        debugs(47, 7, "cache_dir #" << sd->index);
+        Ipc::StrandMessage::NotifyCoordinator(Ipc::mtForegroundRebuild, sd->filePath);
+    }
 }
 
 void
@@ -451,11 +457,11 @@ Rock::Rebuild::loadingSteps()
         if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
             debugs(47, 5, HERE << "pausing after " << loaded << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/loaded) << "ms per entry");
-            if (opt_foreground_rebuild && UsingSmp())
-                keepCoordinatorWaiting();
             break;
         }
     }
+    // we may be done loading, but we extend the wait to buy the validation loop more time
+    extendWait();
 }
 
 Rock::LoadingEntry
@@ -572,8 +578,7 @@ Rock::Rebuild::validationSteps()
         if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
             debugs(47, 5, "pausing after " << validated << " entries in " <<
                    elapsedMsec << "ms; " << (elapsedMsec/validated) << "ms per entry");
-            if (opt_foreground_rebuild && UsingSmp())
-                keepCoordinatorWaiting();
+            extendWait();
             break;
         }
     }
