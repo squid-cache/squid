@@ -27,6 +27,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
+#include "security/KeyLogger.h"
 #if USE_OPENSSL
 #include "security/forward.h"
 #include "security/Handshake.h"
@@ -271,6 +272,9 @@ public:
     /// Process response from ssl_crtd.
     void sslCrtdHandleReply(const Helper::Reply &reply);
 
+    /// Starts or resumes accepting a TLS connection. TODO: Make this helper
+    /// method protected after converting clientNegotiateSSL() into a method.
+    Security::IoResult acceptTls();
     void switchToHttps(ClientHttpRequest *, Ssl::BumpMode bumpServerMode);
     void parseTlsHandshake();
     bool switchedToHttps() const { return switchedToHttps_; }
@@ -301,6 +305,7 @@ public:
 #else
     bool switchedToHttps() const { return false; }
 #endif
+
     char *prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp);
 
     /// registers a newly created stream
@@ -364,6 +369,9 @@ public:
     // TODO: Remove. Make sure there is always a suitable ALE instead.
     /// a problem that occurred without a request (e.g., while parsing headers)
     Error bareError;
+
+    /// managers logging of the being-accepted TLS connection secrets
+    Security::KeyLogger keyLogger;
 
 protected:
     void startDechunkingRequest();

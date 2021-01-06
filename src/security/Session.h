@@ -12,6 +12,7 @@
 #include "base/HardFun.h"
 #include "comm/forward.h"
 #include "security/LockingPointer.h"
+#include "security/forward.h"
 
 #include <memory>
 
@@ -43,11 +44,15 @@ bool CreateServerSession(const Security::ContextPointer &, const Comm::Connectio
 #if USE_OPENSSL
 typedef SSL Connection;
 
+using Session = SSL_SESSION;
+
 typedef std::shared_ptr<SSL> SessionPointer;
 
 typedef std::unique_ptr<SSL_SESSION, HardFun<void, SSL_SESSION*, &SSL_SESSION_free>> SessionStatePointer;
 
 #elif USE_GNUTLS
+using Connection = struct gnutls_session_int;
+
 typedef std::shared_ptr<struct gnutls_session_int> SessionPointer;
 
 // wrapper function to get around gnutls_free being a typedef

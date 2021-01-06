@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "acl/Gadgets.h"
 #include "base/Here.h"
 #include "cache_cf.h"
 #include "ConfigParser.h"
@@ -455,6 +456,32 @@ ConfigParser::NextQuotedOrToEol()
 }
 
 bool
+ConfigParser::optionalKvPair(char * &key, char * &value)
+{
+    key = nullptr;
+    value = nullptr;
+
+    if (const char *token = PeekAtToken()) {
+        // NextKvPair() accepts "a = b" and skips "=" or "a=". To avoid
+        // misinterpreting the admin intent, we use strict checks.
+        if (const auto middle = strchr(token, '=')) {
+            if (middle == token)
+                throw TextException(ToSBuf("missing key in a key=value option: ", token), Here());
+            if (middle + 1 == token + strlen(token))
+                throw TextException(ToSBuf("missing value in a key=value option: ", token), Here());
+        } else
+            return false; // not a key=value token
+
+        if (!NextKvPair(key, value)) // may still fail (e.g., bad value quoting)
+            throw TextException(ToSBuf("invalid key=value option: ", token), Here());
+
+        return true;
+    }
+
+    return false; // end of directive or input
+}
+
+bool
 ConfigParser::NextKvPair(char * &key, char * &value)
 {
     key = value = NULL;
@@ -534,6 +561,60 @@ ConfigParser::QuoteString(const String &var)
     }
     quotedStr.append('"');
     return quotedStr.termedBuf();
+}
+
+void
+ConfigParser::rejectDuplicateDirective()
+{
+    assert(cfg_directive);
+    throw TextException("duplicate configuration directive", Here());
+}
+
+void
+ConfigParser::closeDirective()
+{
+    assert(cfg_directive);
+    if (const auto garbage = PeekAtToken())
+        throw TextException(ToSBuf("trailing garbage at the end of a configuration directive: ", garbage), Here());
+    // TODO: cfg_directive = nullptr; // currently in generated code
+}
+
+SBuf
+ConfigParser::token(const char *expectedTokenDescription)
+{
+    if (const auto token = NextToken()) {
+        debugs(3, 5, CurrentLocation() << ' ' << expectedTokenDescription << ": " << token);
+        return SBuf(token);
+    }
+    throw TextException(ToSBuf("missing ", expectedTokenDescription), Here());
+}
+
+bool
+ConfigParser::skipOptional(const char *keyword)
+{
+    assert(keyword);
+    if (const auto nextToken = PeekAtToken()) {
+        if (strcmp(nextToken, keyword) == 0) {
+            (void)NextToken();
+            return true;
+        }
+        return false; // the next token on the line is not the optional keyword
+    }
+    return false; // no more tokens (i.e. we are at the end of the line)
+}
+
+Acl::Tree *
+ConfigParser::optionalAclList()
+{
+    if (!skipOptional("if"))
+        return nullptr; // OK: the directive has no ACLs
+
+    Acl::Tree *acls = nullptr;
+    const auto aclCount = aclParseAclList(*this, &acls, cfg_directive);
+    assert(acls);
+    if (aclCount <= 0)
+        throw TextException("missing ACL name(s) after 'if' keyword", Here());
+    return acls;
 }
 
 bool

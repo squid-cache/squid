@@ -1332,7 +1332,6 @@ tests_testUfs_SOURCES = \
 	tests/testUfs.cc \
 	tests/testUfs.h \
 	tests/stub_access_log.cc \
-	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
@@ -1515,7 +1514,6 @@ tests_testStore_SOURCES = \
 	Transients.cc \
 	tests/stub_UdsOp.cc \
 	tests/stub_access_log.cc \
-	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
@@ -1681,7 +1679,6 @@ tests_testDiskIO_SOURCES = \
 	Transients.cc \
 	tests/stub_UdsOp.cc \
 	tests/stub_access_log.cc \
-	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	tests/stub_cache_manager.cc \
@@ -2830,6 +2827,7 @@ tests_testConfigParser_SOURCES = \
 	tests/stub_MemBuf.cc \
 	tests/stub_SBufDetailedStats.cc \
 	String.cc \
+	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	cache_cf.h \
 	tests/stub_cbdata.cc \

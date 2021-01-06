@@ -281,5 +281,9 @@ operator <<(std::ostream &os, const AsHex<Integer> number)
 template <class Integer>
 inline AsHex<Integer> asHex(const Integer n) { return AsHex<Integer>(n); }
 
+/// Prints the first n data bytes using hex notation. Does nothing if n is 0.
+void PrintHex(std::ostream &, const char *data, size_t n);
+
+
 #endif /* SQUID_DEBUG_H */
 

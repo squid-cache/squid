@@ -145,6 +145,10 @@ public:
         return *this;
     }
 
+    // XXX: assign(s,n)/append(s,n) calls do not assign or append a c-string as
+    // documented -- they do not stop at the first NUL character! They assign or
+    // append the entire raw memory area, including any embedded NUL characters.
+
     /** Import a c-string into a SBuf, copying the data.
      *
      * It is the caller's duty to free the imported string, if needed.

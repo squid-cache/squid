@@ -108,7 +108,9 @@
 #include "proxyp/Parser.h"
 #include "sbuf/Stream.h"
 #include "security/Io.h"
+#include "security/CommunicationSecrets.h"
 #include "security/NegotiationHistory.h"
+#include "security/KeyLog.h"
 #include "servers/forward.h"
 #include "SquidConfig.h"
 #include "SquidTime.h"
@@ -2338,6 +2340,20 @@ ConnStateData::whenClientIpKnown()
     // kids must extend to actually start doing something (e.g., reading)
 }
 
+Security::IoResult
+ConnStateData::acceptTls()
+{
+    const auto handshakeResult = Security::Accept(*clientConnection);
+
+    // log ASAP, even if the handshake has not completed (or failed)
+    const auto fd = clientConnection->fd;
+    assert(fd >= 0);
+    keyLogger.checkpoint(*fd_table[fd].ssl, *this);
+
+    return handshakeResult;
+}
+
+
 /** Handle a new connection on an HTTP socket. */
 void
 httpAccept(const CommAcceptCbParams &params)
@@ -2387,7 +2403,7 @@ clientNegotiateSSL(int fd, void *data)
 {
     ConnStateData *conn = (ConnStateData *)data;
 
-    const auto handshakeResult = Security::Accept(*conn->clientConnection);
+    const auto handshakeResult = conn->acceptTls();
     switch (handshakeResult.category) {
     case Security::IoResult::ioSuccess:
         break;
@@ -3115,7 +3131,7 @@ ConnStateData::startPeekAndSplice()
     // expect Security::Accept() to ask us to write (our) TLS server Hello. We
     // also allow an ioWantRead result in case some fancy TLS extension that
     // Squid does not yet understand requires reading post-Hello client bytes.
-    const auto handshakeResult = Security::Accept(*clientConnection);
+    const auto handshakeResult = acceptTls();
     if (!handshakeResult.wantsIo())
         return handleSslBumpHandshakeError(handshakeResult);
 

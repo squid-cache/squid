@@ -39,9 +39,8 @@ Acl::InnerNode::add(ACL *node)
     aclRegister(node);
 }
 
-// one call parses one "acl name acltype name1 name2 ..." line
 // kids use this method to handle [multiple] parse() calls correctly
-void
+size_t
 Acl::InnerNode::lineParse()
 {
     // XXX: not precise, may change when looping or parsing multiple lines
@@ -50,6 +49,7 @@ Acl::InnerNode::lineParse()
 
     // expect a list of ACL names, each possibly preceded by '!' for negation
 
+    size_t count = 0;
     while (const char *t = ConfigParser::strtokFile()) {
         const bool negated = (*t == '!');
         if (negated)
@@ -61,7 +61,7 @@ Acl::InnerNode::lineParse()
         if (a == NULL) {
             debugs(28, DBG_CRITICAL, "ACL not found: " << t);
             self_destruct();
-            return;
+            return count; // not reached
         }
 
         // append(negated ? new NotNode(a) : a);
@@ -69,9 +69,11 @@ Acl::InnerNode::lineParse()
             add(new NotNode(a));
         else
             add(a);
+
+        ++count;
     }
 
-    return;
+    return count;
 }
 
 SBufList
