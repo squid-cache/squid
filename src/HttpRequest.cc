@@ -667,7 +667,12 @@ HttpRequest::canUseContentLength() const
         // "
         //   A valid Content-Length is required on all HTTP/1.0 POST requests.
         // "
-        if (m == Http::METHOD_POST)
+        // RFC 1945 Appendix D.1.1:
+        // "
+        //   The fundamental difference between the POST and PUT requests is
+        //   reflected in the different meaning of the Request-URI.
+        // "
+        if (m == Http::METHOD_POST || m == Http::METHOD_PUT)
             return (content_length >= 0 ? Http::scNone : Http::scLengthRequired);
 
         // RFC 1945 section 7.2:
@@ -675,11 +680,16 @@ HttpRequest::canUseContentLength() const
         //   An entity body is included with a request message only when the
         //   request method calls for one.
         // "
-        // GET and HEAD do not define ('call for') an entity
+        // section 8.1-2: GET and HEAD do not define ('call for') an entity
         if (m == Http::METHOD_GET || m == Http::METHOD_HEAD)
+            return (content_length < 0 ? Http::scNone : Http::scBadRequest);
+        // appendix D1.1.2-4: DELETE, LINK, UNLINK do not define ('call for') an entity
+        if (m == Http::METHOD_DELETE || m == Http::METHOD_LINK || m == Http::METHOD_UNLINK)
             return (content_length < 0 ? Http::scNone : Http::scBadRequest);
 
         // other methods are not defined in RFC 1945
+        // assume they support an (optional) entity
+        return Http::scNone;
     }
 
     // RFC 7230 section 3.3
