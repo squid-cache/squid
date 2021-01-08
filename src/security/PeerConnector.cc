@@ -842,7 +842,7 @@ Security::PeerConnector::resumeNegotiation()
 {
     Must(isSuspended());
 
-    auto lastError = *suspendedError_; // may be reset below
+    auto lastError = suspendedError_; // may be reset below
     suspendedError_ = nullptr;
 
     auto &sconn = *fd_table[serverConnection()->fd].ssl;
@@ -850,10 +850,10 @@ Security::PeerConnector::resumeNegotiation()
         // simulate an earlier SSL_connect() failure with a new error
         // TODO: When we can use Security::ErrorDetail, we should resume with a
         // detailed _validation_ error, not just a generic SSL_ERROR_SSL!
-        lastError = TlsNegotiationDetails(SSL_ERROR_SSL, sconn);
+        lastError = new TlsNegotiationDetails(SSL_ERROR_SSL, sconn);
     }
 
-    handleNegotiateError(lastError);
+    handleNegotiateError(*lastError);
 }
 
 #endif //USE_OPENSSL
