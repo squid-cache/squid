@@ -833,6 +833,17 @@ Rock::SwapDir::startAcceptingRequests()
 }
 
 void
+Rock::SwapDir::noteRebuildCompleted(StoreRebuildData &counts, const bool startAccepting)
+{
+    storeRebuildComplete(&counts, *this);
+    if (UsingSmp() && IamDiskProcess())
+        Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, filePath);
+    if (startAccepting)
+        startAcceptingRequests();
+    // else should be accepting already
+}
+
+void
 Rock::SwapDir::closeCompleted()
 {
     theFile = NULL;

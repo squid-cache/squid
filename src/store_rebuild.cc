@@ -147,9 +147,6 @@ storeRebuildComplete(StoreRebuildData *dc, SwapDir &dir)
     }
     // else the caller was not responsible for indexing its cache_dir
 
-    if (UsingSmp() && IamDiskProcess())
-        Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, dir.path);
-
     if (Store::Disks::AllIndexed())
         StoreRebuildFinalize();
 }

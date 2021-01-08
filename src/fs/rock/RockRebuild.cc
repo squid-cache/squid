@@ -287,15 +287,13 @@ Rock::Rebuild::Start(SwapDir &dir)
     if (stats->completed(dir)) {
         debugs(47, 2, "already indexed cache_dir #" <<
                dir.index << " from " << dir.filePath);
-        dir.startAcceptingRequests();
-        if (UsingSmp()) {
-            assert(IamDiskProcess());
-            // if an earlier crash prevented this notification from being sent, we must send it now
-            // otherwise, it does not hurt to send again -- recipients handle duplicate notifications
-            Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, dir.filePath);
-        }
+        dir.noteRebuildCompleted(stats->counts, true);
         return false;
     }
+
+    if (!opt_foreground_rebuild)
+        dir.startAcceptingRequests();
+    // else postpone until swanSong()
 
     Must(AsyncJob::Start(new Rebuild(&dir, stats)));
     return true;
@@ -372,10 +370,6 @@ Rock::Rebuild::start()
     parts = new LoadingParts(*sd, resuming);
 
     counts.updateStartTime(current_time);
-
-    if (!opt_foreground_rebuild)
-        sd->startAcceptingRequests();
-    // else postpone until swanSong()
 
     checkpoint();
 }
@@ -682,13 +676,7 @@ void
 Rock::Rebuild::swanSong()
 {
     debugs(47, 3, "cache_dir #" << sd->index);
-    storeRebuildComplete(&counts, *sd);
-    if (opt_foreground_rebuild)
-        sd->startAcceptingRequests();
-    if (UsingSmp()) {
-        assert(IamDiskProcess());
-        Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRebuildFinished, sd->filePath);
-    }
+    sd->noteRebuildCompleted(counts, opt_foreground_rebuild);
 }
 
 void
