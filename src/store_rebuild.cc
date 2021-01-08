@@ -125,6 +125,7 @@ Store::Controller::validate()
         eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
 }
 
+// TODO: Convert to Store::Disk::noteRebuildCompleted(). Check other Disk-specific functions here.
 /* meta data recreated from disk image in swap directory */
 void
 storeRebuildComplete(StoreRebuildData *dc, SwapDir &dir)
