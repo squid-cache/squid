@@ -1,3 +1,14 @@
+Changes in squid-5.0.4 (23 Aug 2020):
+
+	- Bug 5054: mark dns_v4_first as obsolete in cf.data.pre
+	- Bug 5048: ResolvedPeers.cc:35: "found != paths_.end()" assertion
+	- Reforward CONNECT after TLS handshake failure with peer
+	- Do not send keep-alive in 101 (Switching Protocols) responses
+	- Add http_port sslflags=CONDITIONAL_AUTH
+	- ... and several documentation changes
+	- ... and some compile fixes
+	- ... and all fixes from 4.13
+
 Changes in squid-5.0.3 (05 Jun 2020):
 
 	- Bug 5046: FreeBSD lacks open(2) O_DSYNC flag
@@ -68,6 +79,18 @@ Changes in squid-5.0.1 (14 Jan 2020):
 	- ... and many documentation changes
 	- ... and much code cleanup and polishing
 	- ... and all fixes from 4.10
+
+Changes to squid-4.13 (23 Aug 2020):
+
+	- Regression Fix: Support parsing GREASEd (and future) TLS handshakes
+	- Bug 5051: Some collapsed revalidation responses never expire
+	- HTTP: Enforce token characters for field-name
+	- HTTP: Forbid obs-fold and bare CR whitespace in framing header fields
+	- HTTP: Improve Transfer-Encoding handling
+	- WCCP: Fix GCC-10 -Wstringop-truncation failures
+	- Honor on_unsupported_protocol for intercepted https_port
+	- Fix livelocking in peerDigestHandleReply
+	- Do not stall while debugging a scan of an empty store_table
 
 Changes to squid-4.12 (05 Jun 2020):
 

@@ -13,8 +13,8 @@
 
 #include "cbdata.h"
 #include "comm/forward.h"
-#include "err_detail_type.h"
-#include "err_type.h"
+#include "error/Detail.h"
+#include "error/forward.h"
 #include "http/forward.h"
 #include "http/StatusCode.h"
 #include "ip/Address.h"
@@ -23,9 +23,6 @@
 #include "SquidString.h"
 /* auth/UserRequest.h is empty unless USE_AUTH is defined */
 #include "auth/UserRequest.h"
-#if USE_OPENSSL
-#include "ssl/ErrorDetail.h"
-#endif
 
 /// error page callback
 typedef void ERCB(int fd, void *, size_t);
@@ -109,7 +106,7 @@ public:
     HttpReply *BuildHttpReply(void);
 
     /// set error type-specific detail code
-    void detailError(int dCode) {detailCode = dCode;}
+    void detailError(const ErrorDetail::Pointer &dCode) { detail = dCode; }
 
     /// ensures that a future BuildHttpReply() is likely to succeed
     void validate();
@@ -200,12 +197,11 @@ public:
 
     AccessLogEntryPointer ale; ///< transaction details (or nil)
 
-#if USE_OPENSSL
-    Ssl::ErrorDetail *detail = nullptr;
-#endif
+    // TODO: Replace type, xerrno and detail with Error while adding a virtual
+    // Error::Detail::sysError() method to extract errno in detailError().
     /// type-specific detail about the transaction error;
-    /// overwrites xerrno; overwritten by detail, if any.
-    int detailCode = ERR_DETAIL_NONE;
+    /// overwrites xerrno;
+    ErrorDetail::Pointer detail;
 
     HttpReplyPointer response_;
 

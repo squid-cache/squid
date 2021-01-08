@@ -17,10 +17,13 @@
 #include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "errorpage.h"
+#include "error/SysErrorDetail.h"
 #include "fd.h"
 #include "ftp/Parsing.h"
 #include "http/Stream.h"
 #include "ip/tools.h"
+#include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidString.h"
 #include "StatCounters.h"
@@ -62,6 +65,20 @@ escapeIAC(const char *buf)
     ++r;
     assert((r - (unsigned char *)ret) == n );
     return ret;
+}
+
+/* Ftp::ErrorDetail */
+
+SBuf
+Ftp::ErrorDetail::brief() const
+{
+    return ToSBuf("FTP_REPLY_CODE=", completionCode);
+}
+
+SBuf
+Ftp::ErrorDetail::verbose(const HttpRequest::Pointer &) const
+{
+    return ToSBuf("FTP reply with completion code ", completionCode);
 }
 
 /* Ftp::Channel */
@@ -285,7 +302,7 @@ Ftp::Client::failed(err_type error, int xerrno, ErrorState *err)
         ftperr->ftp.reply = xstrdup(reply);
 
     if (!err) {
-        fwd->request->detailError(error, xerrno);
+        fwd->request->detailError(error, SysErrorDetail::NewIfAny(xerrno));
         fwd->fail(ftperr);
         closeServer(); // we failed, so no serverComplete()
     }
