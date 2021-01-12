@@ -53,20 +53,16 @@ void Ipc::Strand::registerSelf()
     debugs(54, 6, HERE);
     Must(!isRegistered);
 
-    HereIamMessage ann(StrandCoord(KidIdentifier, getpid()));
-    TypedMsgHdr message;
-    ann.pack(message);
-    SendMessage(Port::CoordinatorAddr(), message);
+    StrandMessage::NotifyCoordinator(mtRegistration, nullptr);
     setTimeout(6, "Ipc::Strand::timeoutHandler"); // TODO: make 6 configurable?
 }
 
 void Ipc::Strand::receive(const TypedMsgHdr &message)
 {
-    debugs(54, 6, HERE << message.type());
-    switch (message.type()) {
+    switch (message.rawType()) {
 
     case mtRegistration:
-        handleRegistrationResponse(HereIamMessage(message));
+        handleRegistrationResponse(StrandMessage(message));
         break;
 
     case mtSharedListenResponse:
@@ -74,8 +70,8 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         break;
 
 #if HAVE_DISKIO_MODULE_IPCIO
-    case mtStrandSearchResponse:
-        IpcIoFile::HandleOpenResponse(StrandSearchResponse(message));
+    case mtStrandReady:
+        IpcIoFile::HandleOpenResponse(StrandMessage(message));
         break;
 
     case mtIpcIoNotification:
@@ -114,12 +110,13 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 #endif
 
     default:
-        debugs(54, DBG_IMPORTANT, HERE << "Unhandled message type: " << message.type());
+        debugs(54, DBG_IMPORTANT, "WARNING: Ignoring IPC message with an unknown type: " << message.rawType());
         break;
     }
 }
 
-void Ipc::Strand::handleRegistrationResponse(const HereIamMessage &msg)
+void
+Ipc::Strand::handleRegistrationResponse(const StrandMessage &msg)
 {
     // handle registration response from the coordinator; it could be stale
     if (msg.strand.kidId == KidIdentifier && msg.strand.pid == getpid()) {

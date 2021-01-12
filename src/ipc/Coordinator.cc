@@ -78,13 +78,13 @@ void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
 
 void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 {
-    switch (message.type()) {
+    switch (message.rawType()) {
     case mtRegistration:
         debugs(54, 6, HERE << "Registration request");
-        handleRegistrationRequest(HereIamMessage(message));
+        handleRegistrationRequest(StrandMessage(message));
         break;
 
-    case mtStrandSearchRequest: {
+    case mtFindStrand: {
         const StrandSearchRequest sr(message);
         debugs(54, 6, HERE << "Strand search request: " << sr.requestorId <<
                " tag: " << sr.tag);
@@ -128,12 +128,12 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 #endif
 
     default:
-        debugs(54, DBG_IMPORTANT, HERE << "Unhandled message type: " << message.type());
+        debugs(54, DBG_IMPORTANT, "WARNING: Ignoring IPC message with an unknown type: " << message.rawType());
         break;
     }
 }
 
-void Ipc::Coordinator::handleRegistrationRequest(const HereIamMessage& msg)
+void Ipc::Coordinator::handleRegistrationRequest(const StrandMessage& msg)
 {
     registerStrand(msg.strand);
 
@@ -222,7 +222,7 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
 {
     debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
            request.tag << " is kid" << strand.kidId);
-    const StrandSearchResponse response(strand);
+    const StrandMessage response(Ipc::mtStrandReady, strand);
     TypedMsgHdr message;
     response.pack(message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
