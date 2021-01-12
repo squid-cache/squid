@@ -454,12 +454,10 @@ Ssl::VerifyConnCertificates(Security::Connection &sconn, const Ssl::X509_STACK_P
         return false;
     }
 
-    // TODO: Check all OpenSSL calls below for failures. If the documentation
-    // (or OpenSSL code) indicate that a failure is possible, we need to check
-    // for it and return immediately.
-
     const auto verificationStore = SSL_CTX_get_cert_store(SSL_get_SSL_CTX(&sconn));
+    assert(verificationStore);
     const X509_STORE_CTX_Pointer storeCtx(X509_STORE_CTX_new());
+    assert(storeCtx); //check for allocation failure.
     const auto peerCert = sk_X509_value(peerCertificatesChain, 0);
     if (!X509_STORE_CTX_init(storeCtx.get(), verificationStore, peerCert, peerCertificatesChain)) {
         debugs(83, DBG_IMPORTANT, "error initializing X509_STORE");
@@ -482,13 +480,19 @@ Ssl::VerifyConnCertificates(Security::Connection &sconn, const Ssl::X509_STACK_P
     // X509_STORE_CTX_set0_dane(storeCtx.get(), SSL_get0_dane(&sconn));
 
     // tell OpenSSL we are verifying a server certificate
-    X509_STORE_CTX_set_default(storeCtx.get(), "ssl_server");
+    if (!X509_STORE_CTX_set_default(storeCtx.get(), "ssl_server")) {
+        debugs(83, DBG_IMPORTANT, "error setting default verifying method to 'ssl_server'");
+        return false;
+    }
 
     // overwrite context "verification parameters" with connection non-defaults
     const auto param = X509_STORE_CTX_get0_param(storeCtx.get());
     assert(param);
     X509_VERIFY_PARAM_set_auth_level(param, SSL_get_security_level(&sconn));
-    X509_VERIFY_PARAM_set1(param, SSL_get0_param(&sconn));
+    if (!X509_VERIFY_PARAM_set1(param, SSL_get0_param(&sconn))) {
+        debugs(83, DBG_IMPORTANT, "error inheriting SSL verification params");
+        return false;
+    }
 
     // copy any connection "verify_callback function" to the validation context
     // (\ref OpenSSL_vcb_disambiguation)
