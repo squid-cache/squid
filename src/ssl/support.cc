@@ -1053,8 +1053,8 @@ Ssl::setClientSNI(SSL *ssl, const char *fqdn)
 #endif
 }
 
-static const char *
-hasAuthorityInfoAccessCaIssuers(X509 *cert)
+const char *
+Ssl::hasAuthorityInfoAccessCaIssuers(X509 *cert)
 {
     AUTHORITY_INFO_ACCESS *info;
     if (!cert)
@@ -1170,47 +1170,45 @@ issuerExistInCaDb(X509 *cert, const Security::ContextPointer &connContext)
     return gotIssuer;
 }
 
-const char *
-Ssl::uriOfIssuerIfMissing(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context)
+bool
+Ssl::issuerIsMissing(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context)
 {
-    if (!cert || !serverCertificates)
-        return nullptr;
+    Must(cert);
+    Must(serverCertificates);
 
-    if (!sk_x509_findIssuer(serverCertificates, cert)) {
-        //if issuer is missing
-        if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(cert)) {
-            // There is a URI where we can download a certificate.
-            if (!findCertIssuerFast(SquidUntrustedCerts, cert) &&
-                    !issuerExistInCaDb(cert, context)) {
-                // and issuer not found in local databases containing
-                // untrusted certificates and trusted CA certificates
-                return issuerUri;
-            }
-        }
-    }
-    return nullptr;
+    // check certificates chain
+    if (sk_x509_findIssuer(serverCertificates, cert))
+        return false;
+
+    // Check untrusted certificates
+    if (findCertIssuerFast(SquidUntrustedCerts, cert))
+        return false;
+
+    // check trusted CA certificates
+    if (issuerExistInCaDb(cert, context))
+        return false;
+
+    return true;
 }
 
-void
+bool
 Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context)
 {
-    if (!serverCertificates)
-        return;
+    Must(serverCertificates);
 
-    // TODO: The caller interprets non-empty URIs as a sign of success. However,
-    // if the CA (which intermediate certificate is missing) added no AIA field
-    // to its (present) certificate, we may still return a non-empty URIs queue.
-    // Does that mean that there is a chance we will fetch that missing CA
-    // certificate using a URI extracted from some other (present) certificate?
-    // If this might indeed happen, we should document that surprising fact.
-    // Otherwise, we should tell the caller when it has no chances of validating
-    // the whole serverCertificates chain (because some necessary AIAs were
-    // missing) so that the caller does not fetch certificates in vain.
     for (int i = 0; i < sk_X509_num(serverCertificates); ++i) {
         const auto cert = sk_X509_value(serverCertificates, i);
-        if (const auto issuerUri = uriOfIssuerIfMissing(cert, serverCertificates, context))
-            URIs.push(SBuf(issuerUri));
+
+        if (!issuerIsMissing(cert, serverCertificates, context))
+            continue;
+
+        const auto issuerUri = hasAuthorityInfoAccessCaIssuers(cert);
+        if (!issuerUri)
+            return false;
+        URIs.push(SBuf(issuerUri));
     }
+
+    return true;
 }
 
 /// add missing issuer certificates to untrustedCerts

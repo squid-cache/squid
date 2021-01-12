@@ -761,8 +761,17 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
         ContextPointer ctx(getTlsContext());
         const auto certsList = SSL_get_peer_cert_chain(&sconn);
-        if (const char *issuerUri = Ssl::uriOfIssuerIfMissing(cert, certsList, ctx)) {
-            urlsOfMissingCerts.push(SBuf(issuerUri));
+        if (Ssl::issuerIsMissing(cert, certsList, ctx)) {
+            if (const auto issuerUri = Ssl::hasAuthorityInfoAccessCaIssuers(cert))
+                urlsOfMissingCerts.push(SBuf(issuerUri));
+            else {
+                debugs(81, 5, "Can not retrieve issuer for certificate " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024) << " abort");
+
+                // Stop downloading more certificates and let the certificate
+                // validation check fail because of missing issuers certificates.
+                while (urlsOfMissingCerts.size())
+                    urlsOfMissingCerts.pop();
+            }
         }
 
         if (!downloadedCerts)
@@ -817,9 +826,8 @@ Security::PeerConnector::computeMissingCertificateUrls(const Connection &sconn)
     debugs(83, 5, "server certificates: " << sk_X509_num(certs));
 
     const auto ctx = getTlsContext();
-    Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx);
-    if (urlsOfMissingCerts.empty()) {
-        debugs(83, 3, "found no URLs to fetch the missing certificates from");
+    if (!Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx) || urlsOfMissingCerts.empty()) {
+        debugs(83, 3, "Failed to retrieve URLs for one or more missing certificates");
         return false;
     }
 

@@ -179,16 +179,24 @@ void unloadSquidUntrusted();
 void SSL_add_untrusted_cert(SSL *ssl, X509 *cert);
 
 /**
- * Searches in serverCertificates list for the cert issuer and if not found
- * and Authority Info Access of cert provides a URI return it.
+ * Retrieve the certificate issuer URI from Authority Info Access extension
+ * if this info exist.
+ \ingroup ServerProtocolSSLAPI
  */
-const char *uriOfIssuerIfMissing(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
+const char *hasAuthorityInfoAccessCaIssuers(X509 *cert);
+
+/**
+ * Searches in serverCertificates list and in local databases for the cert issuer
+ \return true if the issuer certificate is missing, false otherwise
+ */
+bool issuerIsMissing(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
 
 /**
  * Fill URIs queue with the uris of missing certificates from serverCertificate chain
  * if this information provided by Authority Info Access.
+ \return false if failed to retrieve URI for one or more missing certificates, true otherwise
  */
-void missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
+bool missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
 
 /**
   \ingroup ServerProtocolSSLAPI
