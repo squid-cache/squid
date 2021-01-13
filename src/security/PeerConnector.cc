@@ -254,7 +254,8 @@ Security::PeerConnector::negotiate()
     // fetch any missing certificates during OpenSSL certificate validation.
     // * We did not hide EUNABLE; SSL_connect() was successful: Handle success.
     // * We did not hide EUNABLE; SSL_connect() reported some error E: Honor E.
-    // * We hid EUNABLE; SSL_connect() was successful: Warn and kill the job.
+    // * We hid EUNABLE; SSL_connect() was successful: Remember success and try
+    //   to fetch the missing certificates. If all goes well, honor success
     // * We hid EUNABLE; SSL_connect() reported EUNABLE: Warn but honor EUNABLE.
     // * We hid EUNABLE; SSL_connect() reported some EOTHER: Remember EOTHER and
     //   try to fetch the missing certificates. If all goes well, honor EOTHER.
@@ -262,14 +263,6 @@ Security::PeerConnector::negotiate()
     //   because EOTHER would not have happened if we fetched during validation.
     if (auto &hidMissingIssuer = Ssl::VerifyCallbackParameters::At(sconn).hidMissingIssuer) {
         hidMissingIssuer = false; // prep for the next SSL_connect()
-
-        // The result cannot be positive here because a successful negotiation
-        // (sans X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY) requires sending
-        // a TLS Finished message, which ought to trigger SSL_ERROR_WANT_WRITE.
-        if (result > 0) {
-            debugs(83, DBG_IMPORTANT, "BUG: Discarding SSL_connect() success due to X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
-            throw TextException("unexpected SSL_connect() success", Here());
-        }
 
         if (ed.ssl_error != X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY)
             return handleMissingCertificates(ed);
@@ -305,6 +298,12 @@ Security::PeerConnector::negotiate()
         return; // we might be gone by now
     }
 
+    handleNegotiationSucceed();
+}
+
+void
+Security::PeerConnector::handleNegotiationSucceed()
+{
     recordNegotiationDetails();
 
     if (!sslFinalized())
@@ -861,7 +860,10 @@ Security::PeerConnector::resumeNegotiation()
         lastError = new TlsNegotiationDetails(SSL_ERROR_SSL, sconn);
     }
 
-    handleNegotiateError(*lastError);
+    if (lastError->sslIoResult <= 0)
+        handleNegotiateError(*lastError);
+    else
+        handleNegotiationSucceed();
 }
 
 #endif //USE_OPENSSL

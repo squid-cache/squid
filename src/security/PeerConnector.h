@@ -98,6 +98,9 @@ protected:
     /// fill an error and report to the PeerConnector caller.
     void handleNegotiateError(const TlsNegotiationDetails &);
 
+    /// Called when the negotiation finished successfully
+    void handleNegotiationSucceed();
+
     /// Called when the openSSL SSL_connect fnction request more data from
     /// the remote SSL server. Sets the read timeout and sets the
     /// Squid COMM_SELECT_READ handler.
