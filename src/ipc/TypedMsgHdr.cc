@@ -85,8 +85,8 @@ Ipc::MessageType
 Ipc::TypedMsgHdr::type() const
 {
     const auto uncheckedType = rawType();
-    Must(uncheckedType >= MessageType::enumBegin_);
-    Must(uncheckedType <= MessageType::enumEnd_);
+    Must(uncheckedType > MessageType::mtNone);
+    Must(uncheckedType < MessageType::mtEnd);
     return static_cast<MessageType>(uncheckedType);
 }
 

@@ -17,8 +17,8 @@ namespace Ipc
 {
 
 /// message class identifier
-typedef enum { enumBegin_ = 0,
-               mtRegistration, ///< strand registration with Coordinator (also used as an ACK)
+typedef enum { mtNone = 0, ///< unspecified or unknown message kind; unused on the wire
+               mtStrandRegistration, ///< strand registration with Coordinator (also used as an ACK)
                mtFindStrand, ///< a worker requests a strand from Coordinator
                mtStrandReady, ///< a mtFindStrand answer: the strand exists and should be usable
                mtSharedListenRequest,
@@ -33,7 +33,7 @@ typedef enum { enumBegin_ = 0,
                mtSnmpResponse
 #endif
                ,
-               enumEnd_
+               mtEnd ///< for message kind range checks; unused on the wire
              } MessageType;
 
 } // namespace Ipc;

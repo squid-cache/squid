@@ -47,7 +47,6 @@ Ipc::StrandMessage::StrandMessage(const MessageType msgType, const StrandCoord &
 Ipc::StrandMessage::StrandMessage(const TypedMsgHdr &hdrMsg):
     messageType(hdrMsg.type())
 {
-    hdrMsg.checkType(mtRegistration);
     strand.unpack(hdrMsg);
 }
 

@@ -144,7 +144,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 
         queue->localRateLimit().store(config.ioRate);
 
-        Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRegistration, dbName.termedBuf());
+        Ipc::StrandMessage::NotifyCoordinator(Ipc::mtStrandRegistration, dbName.termedBuf());
 
         ioRequestor->ioCompletedNotification();
         return;

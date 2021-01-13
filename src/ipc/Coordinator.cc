@@ -79,7 +79,7 @@ void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
 void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 {
     switch (message.rawType()) {
-    case mtRegistration:
+    case mtStrandRegistration:
         debugs(54, 6, HERE << "Registration request");
         handleRegistrationRequest(StrandMessage(message));
         break;

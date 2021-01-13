@@ -53,7 +53,7 @@ void Ipc::Strand::registerSelf()
     debugs(54, 6, HERE);
     Must(!isRegistered);
 
-    StrandMessage::NotifyCoordinator(mtRegistration, nullptr);
+    StrandMessage::NotifyCoordinator(mtStrandRegistration, nullptr);
     setTimeout(6, "Ipc::Strand::timeoutHandler"); // TODO: make 6 configurable?
 }
 
@@ -61,7 +61,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 {
     switch (message.rawType()) {
 
-    case mtRegistration:
+    case mtStrandRegistration:
         handleRegistrationResponse(StrandMessage(message));
         break;
 
