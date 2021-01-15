@@ -10,6 +10,7 @@
 #define _PROFILER_GET_TICK_H_
 
 #if USE_XPROF_STATS
+#include <ctime>
 
 /*
  * Ensure that any changes here are synchronised with SQUID_CHECK_FUNCTIONAL_CPU_PROFILER
@@ -65,6 +66,14 @@ get_tick(void)
         mov edx,DWORD PTR regs[4]
     }
     return regs;
+}
+
+#elif defined(HAVE_CLOCK_GETTIME_NSEC_NP) && defined(CLOCK_MONOTONIC_RAW)
+
+static inline hrtime_t
+get_tick()
+{
+    return clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
 }
 
 #else
