@@ -59,7 +59,6 @@
 #if USE_OPENSSL
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
-#include "ssl/ErrorDetail.h"
 #include "ssl/helper.h"
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
@@ -852,8 +851,8 @@ FwdState::noteConnection(HappyConnOpener::Answer &answer)
                 !peer->options.originserver && // the "through a proxy" part
                 !peer->secure.encryptTransport) // the "exclude HTTPS proxies" part
             return advanceDestination("establish tunnel through proxy", answer.conn, [this,&answer] {
-                establishTunnelThruProxy(answer.conn);
-            });
+            establishTunnelThruProxy(answer.conn);
+        });
     }
 
     secureConnectionToPeerIfNeeded(answer.conn);

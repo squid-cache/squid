@@ -46,8 +46,10 @@ public:
     uint64_t trim = 0;  ///<number of trim operations
     uint64_t find = 0;  ///<number of find operations
     uint64_t caseChange = 0; ///<number of toUpper and toLower operations
-    uint64_t cowFast = 0; ///<number of cow operations not actually requiring a copy
-    uint64_t cowSlow = 0; ///<number of cow operations requiring a copy
+    uint64_t cowAvoided = 0; ///< number of cow() calls requiring no expensive operations
+    uint64_t cowShift = 0; ///< number of cow() calls requiring just a memmove(3) inside an old buffer
+    uint64_t cowJustAlloc = 0; ///< number of cow() calls requiring just a new empty buffer
+    uint64_t cowAllocCopy = 0; ///< number of cow() calls requiring copying into a new buffer
     uint64_t live = 0;  ///<number of currently-allocated SBuf
 };
 

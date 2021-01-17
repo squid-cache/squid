@@ -34,6 +34,7 @@ Alternate-Protocol, Http::HdrType::ALTERNATE_PROTOCOL, Http::HdrFieldType::ftStr
 Authentication-Info, Http::HdrType::AUTHENTICATION_INFO, Http::HdrFieldType::ftStr, HdrKind::ListHeader
 Authorization, Http::HdrType::AUTHORIZATION, Http::HdrFieldType::ftStr, HdrKind::RequestHeader
 Cache-Control, Http::HdrType::CACHE_CONTROL, Http::HdrFieldType::ftPCc, HdrKind::ListHeader|HdrKind::GeneralHeader
+Cache-Status, Http::HdrType::CACHE_STATUS, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 CDN-Loop, Http::HdrType::CDN_LOOP, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
 Connection, Http::HdrType::CONNECTION, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader
 Content-Base, Http::HdrType::CONTENT_BASE, Http::HdrFieldType::ftStr, HdrKind::EntityHeader
@@ -95,8 +96,6 @@ Vary, Http::HdrType::VARY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKin
 Via, Http::HdrType::VIA, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 Warning, Http::HdrType::WARNING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 WWW-Authenticate, Http::HdrType::WWW_AUTHENTICATE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
-X-Cache, Http::HdrType::X_CACHE, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
-X-Cache-Lookup, Http::HdrType::X_CACHE_LOOKUP, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 X-Forwarded-For, Http::HdrType::X_FORWARDED_FOR, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader
 X-Request-URI, Http::HdrType::X_REQUEST_URI, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader
 X-Squid-Error, Http::HdrType::X_SQUID_ERROR, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader

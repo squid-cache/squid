@@ -14,5 +14,8 @@
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
+class LogTags;
+class LogTagsErrors;
+
 #endif /* SQUID_FORMAT_FORWARD_H */
 

@@ -10,7 +10,7 @@
 #define SQUID_ACL_GADGETS_H
 
 #include "acl/forward.h"
-#include "err_type.h"
+#include "error/forward.h"
 
 #include <sstream>
 

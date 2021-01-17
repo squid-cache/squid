@@ -31,11 +31,29 @@ std::ostream &Security::operator <<(std::ostream &os, const Security::EncryptorA
 Security::HandshakeParser::HandshakeParser(MessageSource) STUB
 bool Security::HandshakeParser::parseHello(const SBuf &) STUB_RETVAL(false)
 
+#include "security/Io.h"
+Security::IoResult Security::Accept(Comm::Connection &) STUB_RETVAL(IoResult(IoResult::ioError))
+Security::IoResult Security::Connect(Comm::Connection &) STUB_RETVAL(IoResult(IoResult::ioError))
+void Security::ForgetErrors() STUB
+
 #include "security/KeyData.h"
 namespace Security
 {
 void KeyData::loadFromFiles(const AnyP::PortCfg &, const char *) STUB
 }
+
+#include "security/ErrorDetail.h"
+Security::ErrorDetail::ErrorDetail(ErrorCode, const CertPointer &, const CertPointer &, const char *) STUB
+#if USE_OPENSSL
+Security::ErrorDetail::ErrorDetail(ErrorCode, int, int) STUB
+#elif USE_GNUTLS
+Security::ErrorDetail::ErrorDetail(ErrorCode, LibErrorCode, int) STUB
+#endif
+void Security::ErrorDetail::setPeerCertificate(const CertPointer &) STUB
+SBuf Security::ErrorDetail::verbose(const HttpRequestPointer &) const STUB_RETVAL(SBuf())
+SBuf Security::ErrorDetail::brief() const STUB_RETVAL(SBuf())
+Security::ErrorCode Security::ErrorCodeFromName(const char *) STUB_RETVAL(0)
+const char *Security::ErrorNameFromCode(ErrorCode, bool) STUB_RETVAL("")
 
 #include "security/NegotiationHistory.h"
 Security::NegotiationHistory::NegotiationHistory() STUB
@@ -62,7 +80,7 @@ bool PeerConnector::sslFinalized() STUB_RETVAL(false)
 void PeerConnector::handleNegotiateError(const int) STUB
 void PeerConnector::noteWantRead() STUB
 void PeerConnector::noteWantWrite() STUB
-void PeerConnector::noteNegotiationError(const int, const int, const int) STUB
+void PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer &) STUB
 //    virtual Security::ContextPointer getTlsContext() = 0;
 void PeerConnector::bail(ErrorState *) STUB
 void PeerConnector::sendSuccess() STUB

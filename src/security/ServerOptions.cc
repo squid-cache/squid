@@ -169,7 +169,7 @@ Security::ServerOptions::createBlankContext() const
 #elif USE_GNUTLS
     // Initialize for X.509 certificate exchange
     gnutls_certificate_credentials_t t;
-    if (const int x = gnutls_certificate_allocate_credentials(&t)) {
+    if (const auto x = gnutls_certificate_allocate_credentials(&t)) {
         debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate TLS server context: " << Security::ErrorString(x));
     }
     ctx = convertContextFromRawPtr(t);

@@ -10,7 +10,7 @@
 #define SQUID_ACLSQUIDERROR_H
 
 #include "acl/Strategy.h"
-#include "err_type.h"
+#include "error/forward.h"
 
 class ACLSquidErrorStrategy : public ACLStrategy<err_type>
 {

@@ -298,6 +298,10 @@ public:
      */
     bool GetHostByName(const char *s);
 
+    /// \returns an Address with true isNoAddr()
+    /// \see isNoAddr() for more details
+    static const Address &NoAddr() { static const Address noAddr(v6_noaddr); return noAddr; }
+
 public:
     /* XXX: When C => C++ conversion is done will be fully private.
      * Legacy Transition Methods.

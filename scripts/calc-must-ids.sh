@@ -23,7 +23,7 @@ if test -z "$1"; then
         xargs `dirname $0`/calc-must-ids.pl
 else
     find . -name "*.cc" -o -name "*.h" -o -name "*.cci" | \
-        xargs `dirname $0`/calc-must-ids.pl | grep ": $1 "
+        xargs `dirname $0`/calc-must-ids.pl | grep -Ei ": (0x)?$1 "
 fi
 
 

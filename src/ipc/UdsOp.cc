@@ -83,6 +83,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ipc, UdsSender);
 
 Ipc::UdsSender::UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage):
     UdsOp(pathAddr),
+    codeContext(CodeContext::Current()),
     message(aMessage),
     retries(10), // TODO: make configurable?
     timeout(10), // TODO: make configurable?
@@ -161,10 +162,9 @@ void Ipc::UdsSender::DelayedRetry(void *data)
     Pointer *ptr = static_cast<Pointer*>(data);
     assert(ptr);
     if (UdsSender *us = dynamic_cast<UdsSender*>(ptr->valid())) {
-        // get back inside AsyncJob protection by scheduling an async job call
-        typedef NullaryMemFunT<Ipc::UdsSender> Dialer;
-        AsyncCall::Pointer call = JobCallback(54, 4, Dialer, us, Ipc::UdsSender::delayedRetry);
-        ScheduleCallHere(call);
+        CallBack(us->codeContext, [&us] {
+            CallJobHere(54, 4, us, UdsSender, delayedRetry);
+        });
     }
     delete ptr;
 }

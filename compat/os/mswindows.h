@@ -498,12 +498,6 @@ write(int fd, const void * buf, size_t siz)
         return _write(fd, buf, siz);
 }
 
-inline char *
-index(const char *s, int c)
-{
-    return (char *)strchr(s,c);
-}
-
 // stdlib <functional> definitions are required before std API redefinitions.
 #include <functional>
 

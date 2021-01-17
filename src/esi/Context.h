@@ -10,7 +10,7 @@
 #define SQUID_ESICONTEXT_H
 
 #include "clientStream.h"
-#include "err_type.h"
+#include "error/forward.h"
 #include "esi/Element.h"
 #include "esi/Esi.h"
 #include "esi/Parser.h"

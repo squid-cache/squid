@@ -35,8 +35,10 @@ SBufStats::operator +=(const SBufStats& ss)
     trim += ss.trim;
     find += ss.find;
     caseChange += ss.caseChange;
-    cowFast += ss.cowFast;
-    cowSlow += ss.cowSlow;
+    cowAvoided += ss.cowAvoided;
+    cowShift += ss.cowShift;
+    cowJustAlloc += ss.cowJustAlloc;
+    cowAllocCopy += ss.cowAllocCopy;
     live += ss.live;
 
     return *this;
@@ -67,8 +69,10 @@ SBufStats::dump(std::ostream& os) const
        "\ntrim operations: " << trim <<
        "\nfind: " << find <<
        "\ncase-change ops: " << caseChange <<
-       "\nCOW not actually requiring a copy: " << cowFast <<
-       "\nCOW: " << cowSlow <<
+       "\nCOW completely avoided: " << cowAvoided <<
+       "\nCOW replaced with memmove(3): " << cowShift <<
+       "\nCOW requiring an empty buffer allocation: " << cowJustAlloc <<
+       "\nCOW requiring allocation and copying: " << cowAllocCopy <<
        "\naverage store share factor: " <<
        (ststats.live != 0 ? static_cast<float>(live)/ststats.live : 0) <<
        std::endl;

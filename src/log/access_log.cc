@@ -15,7 +15,7 @@
 #include "adaptation/Config.h"
 #endif
 #include "CachePeer.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "errorpage.h"
 #include "format/Token.h"
 #include "globals.h"

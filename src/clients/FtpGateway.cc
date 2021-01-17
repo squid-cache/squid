@@ -2433,8 +2433,8 @@ ftpFail(Ftp::Gateway *ftpState)
 
     Http::StatusCode sc = ftpState->failedHttpStatus(error_code);
     const auto ftperr = new ErrorState(error_code, sc, ftpState->fwd->request, ftpState->fwd->al);
-    ftpState->failed(error_code, code, ftperr);
-    ftperr->detailError(code);
+    ftpState->failed(error_code, 0, ftperr);
+    ftperr->detailError(new Ftp::ErrorDetail(code));
     HttpReply *newrep = ftperr->BuildHttpReply();
     delete ftperr;
 
@@ -2514,8 +2514,7 @@ ftpSendReply(Ftp::Gateway * ftpState)
     else
         err.ftp.reply = xstrdup("");
 
-    // TODO: interpret as FTP-specific error code
-    err.detailError(code);
+    err.detailError(new Ftp::ErrorDetail(code));
 
     ftpState->entry->replaceHttpReply(err.BuildHttpReply());
 

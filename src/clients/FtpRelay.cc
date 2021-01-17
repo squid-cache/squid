@@ -14,6 +14,7 @@
 #include "client_side.h"
 #include "clients/forward.h"
 #include "clients/FtpClient.h"
+#include "error/SysErrorDetail.h"
 #include "ftp/Elements.h"
 #include "ftp/Parsing.h"
 #include "http/Stream.h"
@@ -298,7 +299,7 @@ Ftp::Relay::failedErrorMessage(err_type error, int xerrno)
     const Http::StatusCode httpStatus = failedHttpStatus(error);
     HttpReply *const reply = createHttpReply(httpStatus);
     entry->replaceHttpReply(reply);
-    fwd->request->detailError(error, xerrno);
+    fwd->request->detailError(error, SysErrorDetail::NewIfAny(xerrno));
 }
 
 void

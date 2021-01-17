@@ -70,6 +70,16 @@ StoreFileSystem::FreeAllFs()
     }
 }
 
+StoreFileSystem *
+StoreFileSystem::FindByType(const char *type)
+{
+    for (const auto fs: FileSystems()) {
+        if (strcasecmp(type, fs->type()) == 0)
+            return fs;
+    }
+    return nullptr;
+}
+
 /* no filesystem is required to export statistics */
 void
 StoreFileSystem::registerWithCacheManager(void)

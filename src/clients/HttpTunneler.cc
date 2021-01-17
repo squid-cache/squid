@@ -43,7 +43,7 @@ Http::Tunneler::Tunneler(const Comm::ConnectionPointer &conn, const HttpRequest:
     assert(connection);
     assert(callback);
     assert(dynamic_cast<Http::TunnelerAnswer *>(callback->getDialer()));
-    url = request->url.authority();
+    url = request->url.authority(true);
     watchForClosures();
 }
 

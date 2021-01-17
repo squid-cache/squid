@@ -45,7 +45,7 @@ static char cwd[MAXPATHLEN];
 static void
 addSwapDir(testRock::SwapDirPointer aStore)
 {
-    allocate_new_swapdir(&Config.cacheSwap);
+    allocate_new_swapdir(Config.cacheSwap);
     Config.cacheSwap.swapDirs[Config.cacheSwap.n_configured] = aStore.getRaw();
     ++Config.cacheSwap.n_configured;
 }

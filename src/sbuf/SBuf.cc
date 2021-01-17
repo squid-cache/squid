@@ -167,9 +167,6 @@ SBuf::rawSpace(size_type minSpace)
         debugs(24, 7, id << " not growing");
         return bufEnd();
     }
-    // TODO: we may try to memmove before realloc'ing in order to avoid
-    //   one allocation operation, if we're the sole owners of a MemBlob.
-    //   Maybe some heuristic on off_ and length()?
     cow(minSpace+length());
     return bufEnd();
 }
@@ -856,12 +853,16 @@ SBuf::reAlloc(size_type newsize)
 {
     debugs(24, 8, id << " new size: " << newsize);
     Must(newsize <= maxSize);
+    // TODO: Consider realloc(3)ing in some cases instead.
     MemBlob::Pointer newbuf = new MemBlob(newsize);
-    if (length() > 0)
+    if (length() > 0) {
         newbuf->append(buf(), length());
+        ++stats.cowAllocCopy;
+    } else {
+        ++stats.cowJustAlloc;
+    }
     store_ = newbuf;
     off_ = 0;
-    ++stats.cowSlow;
     debugs(24, 7, id << " new store capacity: " << store_->capacity);
 }
 
@@ -887,10 +888,27 @@ SBuf::cow(SBuf::size_type newsize)
     if (newsize == npos || newsize < length())
         newsize = length();
 
-    if (store_->LockCount() == 1 && newsize == length()) {
-        debugs(24, 8, id << " no cow needed");
-        ++stats.cowFast;
-        return;
+    if (store_->LockCount() == 1) {
+        // MemBlob::size reflects past owners. Refresh to maximize spaceSize().
+        store_->syncSize(off_ + length());
+
+        const auto availableSpace = spaceSize();
+        const auto neededSpace = newsize - length();
+        if (neededSpace <= availableSpace) {
+            debugs(24, 8, id << " no cow needed; have " << availableSpace);
+            ++stats.cowAvoided;
+            return;
+        }
+        // consume idle leading space if doing so avoids reallocation
+        // this case is typical for fill-consume-fill-consume-... I/O buffers
+        if (neededSpace <= availableSpace + off_) {
+            debugs(24, 8, id << " no cow after shifting " << off_ << " to get " << (availableSpace + off_));
+            store_->consume(off_);
+            off_ = 0;
+            ++stats.cowShift;
+            assert(neededSpace <= spaceSize());
+            return;
+        }
     }
     reAlloc(newsize);
 }

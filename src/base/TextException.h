@@ -51,6 +51,9 @@ public:
 /// prints active (i.e., thrown but not yet handled) exception
 std::ostream &CurrentException(std::ostream &);
 
+/// efficiently prints TextException
+std::ostream &operator <<(std::ostream &, const TextException &);
+
 /// legacy convenience macro; it is not difficult to type Here() now
 #define TexcHere(msg) TextException((msg), Here())
 

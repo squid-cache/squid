@@ -11,7 +11,7 @@
 
 #include "acl/Data.h"
 #include "base/CbDataList.h"
-#include "err_type.h"
+#include "error/forward.h"
 
 /// \ingroup ACLAPI
 class ACLSquidErrorData : public ACLData<err_type>

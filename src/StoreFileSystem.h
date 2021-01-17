@@ -93,6 +93,7 @@ public:
     static void SetupAllFs();
     static void FsAdd(StoreFileSystem &);
     static void FreeAllFs();
+    static StoreFileSystem *FindByType(const char *type);
     static std::vector<StoreFileSystem*> const &FileSystems();
     typedef std::vector<StoreFileSystem*>::iterator iterator;
     typedef std::vector<StoreFileSystem*>::const_iterator const_iterator;

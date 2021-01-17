@@ -17,6 +17,7 @@
 #include "BodyPipe.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
+#include "log/forward.h"
 #include "Pipeline.h"
 #include "sbuf/SBuf.h"
 #include "servers/forward.h"
@@ -36,8 +37,8 @@ public:
     virtual bool doneAll() const;
     virtual void swanSong();
 
-    /// ??
-    virtual bool connFinishedWithConn(int size) = 0;
+    /// whether to stop serving our client after reading EOF on its connection
+    virtual bool shouldCloseOnEof() const = 0;
 
     /// maybe grow the inBuf and schedule Comm::Read()
     void readSomeData();
@@ -115,11 +116,11 @@ public:
     Pipeline pipeline;
 
 protected:
+    /// abort any pending transactions and prevent new ones (by closing)
+    virtual void terminateAll(const Error &, const LogTagsErrors &) = 0;
+
     void doClientRead(const CommIoCbParams &io);
     void clientWriteDone(const CommIoCbParams &io);
-
-    /// Log the current [attempt at] transaction if nobody else will.
-    virtual void checkLogging() = 0;
 
     AsyncCall::Pointer reader; ///< set when we are reading
     AsyncCall::Pointer writer; ///< set when we are writing

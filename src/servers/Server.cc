@@ -12,9 +12,11 @@
 #include "comm.h"
 #include "comm/Read.h"
 #include "Debug.h"
+#include "error/SysErrorDetail.h"
 #include "fd.h"
 #include "fde.h"
 #include "http/Stream.h"
+#include "LogTags.h"
 #include "MasterXaction.h"
 #include "servers/Server.h"
 #include "SquidConfig.h"
@@ -146,8 +148,10 @@ Server::doClientRead(const CommIoCbParams &io)
     case Comm::ENDFILE: // close detected by 0-byte read
         debugs(33, 5, io.conn << " closed?");
 
-        if (connFinishedWithConn(rd.size)) {
-            clientConnection->close();
+        if (shouldCloseOnEof()) {
+            LogTagsErrors lte;
+            lte.aborted = true;
+            terminateAll(ERR_CLIENT_GONE, lte);
             return;
         }
 
@@ -167,9 +171,10 @@ Server::doClientRead(const CommIoCbParams &io)
     // case Comm::COMM_ERROR:
     default: // no other flags should ever occur
         debugs(33, 2, io.conn << ": got flag " << rd.flag << "; " << xstrerr(rd.xerrno));
-        checkLogging();
-        pipeline.terminateAll(rd.xerrno);
-        io.conn->close();
+        LogTagsErrors lte;
+        lte.timedout = rd.xerrno == ETIMEDOUT;
+        lte.aborted = !lte.timedout; // intentionally true for zero rd.xerrno
+        terminateAll(Error(ERR_CLIENT_GONE, SysErrorDetail::NewIfAny(rd.xerrno)), lte);
         return;
     }
 

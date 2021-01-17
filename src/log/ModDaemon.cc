@@ -301,8 +301,8 @@ logfile_mod_daemon_writeline(Logfile * lf, const char *buf, size_t len)
 
     /* Are we eol? If so, prefix with our logfile command byte */
     if (ll->eol == 1) {
-	logfile_mod_daemon_append(lf, "L", 1);
-	ll->eol = 0;
+        logfile_mod_daemon_append(lf, "L", 1);
+        ll->eol = 0;
     }
 
     /* Append this data to the end buffer; create a new one if needed */

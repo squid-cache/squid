@@ -13,6 +13,7 @@
 
 #include "base/AsyncJob.h"
 #include "base/AsyncJobCalls.h"
+#include "base/forward.h"
 #include "ipc/forward.h"
 #include "ipc/Request.h"
 #include "ipc/Response.h"
@@ -37,6 +38,8 @@ public:
 
     /* has-to-be-public AsyncJob API */
     virtual void callException(const std::exception& e);
+
+    CodeContextPointer codeContext;
 
 protected:
     /* AsyncJob API */

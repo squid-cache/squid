@@ -36,7 +36,7 @@ public:
 
     template <class OtherValue>
     struct rebind {
-      typedef PoolingAllocator<OtherValue> other;
+        typedef PoolingAllocator<OtherValue> other;
     };
 
     template<class U, class ... Args> void construct(U *p, Args && ... args) { new((void *)p) U(std::forward<Args>(args)...); }

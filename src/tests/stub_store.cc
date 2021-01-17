@@ -71,9 +71,6 @@ bool StoreEntry::hasIfMatchEtag(const HttpRequest &request) const STUB_RETVAL(fa
 bool StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const STUB_RETVAL(false)
 Store::Disk &StoreEntry::disk() const STUB_RETREF(Store::Disk)
 size_t StoreEntry::inUseCount() STUB_RETVAL(0)
-void StoreEntry::getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method) STUB
-void StoreEntry::getPublicByRequest(StoreClient * aClient, HttpRequest * request) STUB
-void StoreEntry::getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method) STUB
 void *StoreEntry::operator new(size_t byteCount)
 {
     STUB

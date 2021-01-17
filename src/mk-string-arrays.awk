@@ -74,7 +74,8 @@ codeSkip == 1		{ next }
 
 END {
 	if (sbuf) print "#include \"sbuf/SBuf.h\""
-	print "#include \"" nspath type ".h\""
+	if (ifile != "") print "#include \"" ifile "\""
+        else print "#include \"" nspath type ".h\""
 
 	# if namespace is not empty ??
 	if (namespace) print "namespace " namespace

@@ -25,6 +25,7 @@ unsigned int Ipc::Forwarder::LastRequestId = 0;
 
 Ipc::Forwarder::Forwarder(Request::Pointer aRequest, double aTimeout):
     AsyncJob("Ipc::Forwarder"),
+    codeContext(CodeContext::Current()),
     request(aRequest), timeout(aTimeout)
 {
 }
@@ -101,7 +102,10 @@ Ipc::Forwarder::RequestTimedOut(void* param)
     Must(param != NULL);
     Forwarder* fwdr = static_cast<Forwarder*>(param);
     // use async call to enable job call protection that time events lack
-    CallJobHere(54, 5, fwdr, Forwarder, requestTimedOut);
+
+    CallBack(fwdr->codeContext, [&fwdr] {
+        CallJobHere(54, 5, fwdr, Forwarder, requestTimedOut);
+    });
 }
 
 /// called when Coordinator fails to start processing the request [in time]

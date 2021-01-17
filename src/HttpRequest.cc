@@ -17,7 +17,7 @@
 #include "client_side_request.h"
 #include "dns/LookupDetails.h"
 #include "Downloader.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "globals.h"
 #include "gopher.h"
 #include "http.h"
@@ -91,8 +91,7 @@ HttpRequest::init()
     body_pipe = NULL;
     // hier
     dnsWait = -1;
-    errType = ERR_NONE;
-    errDetail = ERR_DETAIL_NONE;
+    error.clear();
     peer_login = NULL;      // not allocated/deallocated by this class
     peer_domain = NULL;     // not allocated/deallocated by this class
     peer_host = NULL;
@@ -193,7 +192,7 @@ HttpRequest::clone() const
     copy->imslen = imslen;
     copy->hier = hier; // Is it safe to copy? Should we?
 
-    copy->errType = errType;
+    copy->error = error;
 
     // XXX: what to do with copy->peer_login?
 
@@ -238,8 +237,7 @@ HttpRequest::inheritProperties(const Http::Message *aMsg)
     // may eventually need cloneNullAdaptationImmune() for that.
     flags = aReq->flags.cloneAdaptationImmune();
 
-    errType = aReq->errType;
-    errDetail = aReq->errDetail;
+    error = aReq->error;
 #if USE_AUTH
     auth_user_request = aReq->auth_user_request;
     extacl_user = aReq->extacl_user;
@@ -268,7 +266,7 @@ HttpRequest::inheritProperties(const Http::Message *aMsg)
  * NP: Other errors are left for detection later in the parse.
  */
 bool
-HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *error)
+HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::StatusCode *scode)
 {
     // content is long enough to possibly hold a reply
     // 2 being magic size of a 1-byte request method plus space delimiter
@@ -276,7 +274,7 @@ HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::S
         // this is only a real error if the headers apparently complete.
         if (hdr_len > 0) {
             debugs(58, 3, HERE << "Too large request header (" << hdr_len << " bytes)");
-            *error = Http::scInvalidHeader;
+            *scode = Http::scInvalidHeader;
         }
         return false;
     }
@@ -286,7 +284,7 @@ HttpRequest::sanityCheckStartLine(const char *buf, const size_t hdr_len, Http::S
     m.HttpRequestMethodXXX(buf);
     if (m == Http::METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
-        *error = Http::scInvalidHeader;
+        *scode = Http::scInvalidHeader;
         return false;
     }
 
@@ -465,25 +463,10 @@ HttpRequest::prepForDirect()
 }
 
 void
-HttpRequest::detailError(err_type aType, int aDetail)
-{
-    if (errType || errDetail)
-        debugs(11, 5, HERE << "old error details: " << errType << '/' << errDetail);
-    debugs(11, 5, HERE << "current error details: " << aType << '/' << aDetail);
-    // checking type and detail separately may cause inconsistency, but
-    // may result in more details available if they only become available later
-    if (!errType)
-        errType = aType;
-    if (!errDetail)
-        errDetail = aDetail;
-}
-
-void
 HttpRequest::clearError()
 {
-    debugs(11, 7, HERE << "old error details: " << errType << '/' << errDetail);
-    errType = ERR_NONE;
-    errDetail = ERR_DETAIL_NONE;
+    debugs(11, 7, "old: " << error);
+    error.clear();
 }
 
 void

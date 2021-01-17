@@ -13,7 +13,7 @@
 #include "acl/Checklist.h"
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
-#include "err_type.h"
+#include "error/forward.h"
 #include "ip/Address.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"

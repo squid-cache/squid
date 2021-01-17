@@ -150,7 +150,7 @@ ESIVariableUserAgent::getProductVersion (char const *s)
 {
     char const *t;
     int len;
-    t = index(s,'/');
+    t = strchr(s, '/');
 
     if (!t || !*(++t))
         return xstrdup("");
@@ -328,12 +328,12 @@ ESIVariableUserAgent::ESIVariableUserAgent(ESIVarState &state)
 
         if ((t = strstr (s, "MSIE"))) {
             browser = ESI_BROWSER_MSIE;
-            t = index (t, ' ');
+            t = strchr(t, ' ');
 
             if (!t)
                 browserversion = xstrdup("");
             else {
-                t1 = index(t, ';');
+                t1 = strchr(t, ';');
 
                 if (!t1)
                     browserversion = xstrdup(t + 1);
