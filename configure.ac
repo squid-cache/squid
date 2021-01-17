@@ -2948,6 +2948,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 dnl Check for special functions
 AC_FUNC_ALLOCA
 
+AC_CHECK_DECLS([memset_s], [], [], ([#include <string.h>]))
 
 # TODO: remove this 'lib' prefix to match coding standard
 SQUID_AUTO_LIB(libcap,[Linux capabilities],[LIBCAP])

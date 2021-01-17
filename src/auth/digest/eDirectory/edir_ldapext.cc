@@ -399,7 +399,7 @@ static int nmasldap_get_simple_pwd(
     }
 
     if (pwdBuf != NULL) {
-        memset(pwdBuf, 0, bufferLen);
+        memset_s(pwdBuf, bufferLen, 0, bufferLen);
         free(pwdBuf);
     }
 
@@ -482,7 +482,7 @@ static int nmasldap_get_password(
     }
 
     if (pwdBuf != NULL) {
-        memset(pwdBuf, 0, bufferLen);
+        memset_s(pwdBuf, bufferLen, 0, bufferLen);
         free(pwdBuf);
     }
 

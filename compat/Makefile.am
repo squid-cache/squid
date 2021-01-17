@@ -42,6 +42,8 @@ libcompatsquid_la_SOURCES = \
 	initgroups.h \
 	memrchr.cc \
 	memrchr.h \
+	memset_s.cc \
+	memset_s.h \
 	mswindows.cc \
 	openssl.h \
 	os/aix.h \
