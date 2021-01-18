@@ -84,13 +84,6 @@ StoreClient::startCollapsingOn(const StoreEntry &e, const bool doingRevalidation
     return true;
 }
 
-void
-StoreClient::fillChecklist(ACLFilledChecklist &checklist) const
-{
-    // TODO: Consider moving all CF-related methods into a new dedicated class.
-    Must(!"startCollapsingOn() caller must override fillChecklist()");
-}
-
 /* store_client */
 
 bool

@@ -7,6 +7,7 @@
  */
 
 #include "squid.h"
+#include "acl/ChecklistFiller.h"
 #include "acl/FilledChecklist.h"
 #include "MasterXaction.h"
 #include "security/CommunicationSecrets.h"

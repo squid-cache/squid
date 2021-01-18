@@ -86,20 +86,18 @@ DelayId::DelayClient(ClientHttpRequest * http, HttpReply *reply)
         }
 
         ACLFilledChecklist ch(DelayPools::delay_data[pool].access, r, NULL);
-        if (reply) {
+        clientAclChecklistFill(ch, http);
+        if (!ch.reply && reply) {
             ch.reply = reply;
             HTTPMSGLOCK(reply);
         }
+        // overwrite ACLFilledChecklist acl_uses_indirect_client-based decision
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.delay_pool_uses_indirect_client)
             ch.src_addr = r->indirect_client_addr;
         else
 #endif /* FOLLOW_X_FORWARDED_FOR */
             ch.src_addr = r->client_addr;
-        ch.my_addr = r->my_addr;
-
-        if (http->getConn() != NULL)
-            ch.conn(http->getConn());
 
         if (DelayPools::delay_data[pool].theComposite().getRaw() && ch.fastCheck().allowed()) {
 

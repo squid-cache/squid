@@ -11,7 +11,7 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
-#include "acl/forward.h"
+#include "acl/ChecklistFiller.h"
 #include "base/RunnersRegistry.h"
 #include "clientStreamForward.h"
 #include "comm.h"
@@ -76,7 +76,11 @@ class ServerBump;
  * managing, or for graceful half-close use the stopReceiving() or
  * stopSending() methods.
  */
-class ConnStateData : public Server, public HttpControlMsgSink, private IndependentRunner
+class ConnStateData:
+    public Server,
+    public HttpControlMsgSink,
+    public Acl::ChecklistFiller,
+    private IndependentRunner
 {
 
 public:
@@ -364,6 +368,16 @@ public:
 
     /// emplacement/convenience wrapper for updateError(const Error &)
     void updateError(const err_type c, const ErrorDetailPointer &d) { updateError(Error(c, d)); }
+
+    /* Acl::ChecklistFiller API */
+    virtual void fillChecklist(ACLFilledChecklist &) const;
+
+    /// fillChecklist() obligations not fulfilled by the front request
+    /// TODO: This is a temporary ACLFilledChecklist::setConn() callback to
+    /// allow filling checklist using our non-public information sources. It
+    /// should be removed as unnecessary by making ACLs extract the information
+    /// they need from the ACLFilledChecklist::conn() without filling/copying.
+    void fillConnectionLevelDetails(ACLFilledChecklist &) const;
 
     // Exposed to be accessible inside the ClientHttpRequest constructor.
     // TODO: Remove. Make sure there is always a suitable ALE instead.

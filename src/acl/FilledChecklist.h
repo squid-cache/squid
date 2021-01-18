@@ -51,7 +51,7 @@ public:
     int fd() const;
 
     /// set either conn
-    void conn(ConnStateData *);
+    void setConn(ConnStateData *);
     /// set the client side FD
     void fd(int aDescriptor);
 
