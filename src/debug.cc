@@ -880,7 +880,6 @@ ForceAlert(std::ostream& s)
     return s;
 }
 
-/// Prints the first n data bytes using hex notation. Does nothing for zero n.
 void
 PrintHex(std::ostream &os, const char *data, const size_t n)
 {
