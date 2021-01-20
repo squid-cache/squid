@@ -67,6 +67,9 @@ public:
     }
 
 private:
+    /* Acl::ChecklistFiller API */
+    virtual void fillChecklist(ACLFilledChecklist &) const;
+
     Adaptation::Icap::ServiceRep::Pointer icapService;
 };
 } // namespace Ssl
@@ -717,14 +720,18 @@ Ssl::IcapPeerConnector::initialize(Security::SessionPointer &serverSession)
     SBuf *host = new SBuf(icapService->cfg().secure.sslDomain);
     SSL_set_ex_data(serverSession.get(), ssl_ex_index_server, host);
     setClientSNI(serverSession.get(), host->c_str());
-
-    ACLFilledChecklist *check = static_cast<ACLFilledChecklist *>(SSL_get_ex_data(serverSession.get(), ssl_ex_index_cert_error_check));
-    if (check)
-        check->dst_peer_name = *host;
 #endif
 
     Security::SetSessionResumeData(serverSession, icapService->sslSession);
     return true;
+}
+
+void
+Ssl::IcapPeerConnector::fillChecklist(ACLFilledChecklist &checklist) const
+{
+    Security::PeerConnector::fillChecklist(checklist);
+    if (checklist.dst_peer_name.isEmpty())
+        checklist.dst_peer_name = icapService->cfg().secure.sslDomain;
 }
 
 void
