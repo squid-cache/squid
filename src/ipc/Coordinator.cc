@@ -139,7 +139,7 @@ void Ipc::Coordinator::handleRegistrationRequest(const StrandMessage& msg)
 
     // send back an acknowledgement; TODO: remove as not needed?
     TypedMsgHdr message;
-    msg.pack(message);
+    msg.pack(mtStrandRegistration, message);
     SendMessage(MakeAddr(strandAddrLabel, msg.strand.kidId), message);
 }
 
@@ -222,9 +222,9 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
 {
     debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
            request.tag << " is kid" << strand.kidId);
-    const StrandMessage response(Ipc::mtStrandReady, strand);
+    const StrandMessage response(strand);
     TypedMsgHdr message;
-    response.pack(message);
+    response.pack(mtStrandReady, message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
 }
 

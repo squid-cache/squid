@@ -44,7 +44,6 @@ public:
     /* message type manipulation; these must be called before put/get*() */
     void setType(int aType); ///< sets message type; use MessageType enum
     void checkType(int aType) const; ///< throws if stored type is not aType
-    MessageType type() const; ///< converts rawType() to MessageType
     /// received or set message kind; may not be a MessageType value
     /// \returns 0 if no message kind has been received or set
     int rawType() const { return msg_iov ? data.type_ : 0; }

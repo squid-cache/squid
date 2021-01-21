@@ -38,20 +38,18 @@ void Ipc::StrandCoord::pack(TypedMsgHdr &hdrMsg) const
     hdrMsg.putString(tag);
 }
 
-Ipc::StrandMessage::StrandMessage(const MessageType msgType, const StrandCoord &aStrand):
-    messageType(msgType),
+Ipc::StrandMessage::StrandMessage(const StrandCoord &aStrand):
     strand(aStrand)
 {
 }
 
-Ipc::StrandMessage::StrandMessage(const TypedMsgHdr &hdrMsg):
-    messageType(hdrMsg.type())
+Ipc::StrandMessage::StrandMessage(const TypedMsgHdr &hdrMsg)
 {
     strand.unpack(hdrMsg);
 }
 
 void
-Ipc::StrandMessage::pack(TypedMsgHdr &hdrMsg) const
+Ipc::StrandMessage::pack(const MessageType messageType, TypedMsgHdr &hdrMsg) const
 {
     hdrMsg.setType(messageType);
     strand.pack(hdrMsg);
@@ -61,11 +59,11 @@ void
 Ipc::StrandMessage::NotifyCoordinator(const MessageType msgType, const char *tag)
 {
     static const auto pid = getpid();
-    StrandMessage message(msgType, StrandCoord(KidIdentifier, pid));
+    StrandMessage message(StrandCoord(KidIdentifier, pid));
     if (tag)
         message.strand.tag = tag;
     TypedMsgHdr hdr;
-    message.pack(hdr);
+    message.pack(msgType, hdr);
     SendMessage(Port::CoordinatorAddr(), hdr);
 }
 

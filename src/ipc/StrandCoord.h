@@ -33,19 +33,18 @@ public:
     String tag; ///< optional unique well-known key (e.g., cache_dir path)
 };
 
-/// an IPC message carrying just the kid coordinates and the message kind
+/// an IPC message carrying StrandCoord
 class StrandMessage
 {
 public:
-    StrandMessage(MessageType, const StrandCoord &);
+    explicit StrandMessage(const StrandCoord &);
     explicit StrandMessage(const TypedMsgHdr &);
-    void pack(TypedMsgHdr &) const;
+    void pack(MessageType, TypedMsgHdr &) const;
 
     /// creates and sends StrandMessage to Coordinator
     static void NotifyCoordinator(MessageType, const char *tag);
 
 public:
-    MessageType messageType; ///< overall message purpose or category
     StrandCoord strand; ///< messageType-specific coordinates (e.g., sender)
 };
 
