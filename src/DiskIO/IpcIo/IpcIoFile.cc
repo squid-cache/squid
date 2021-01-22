@@ -23,6 +23,7 @@
 #include "ipc/Messages.h"
 #include "ipc/Port.h"
 #include "ipc/Queue.h"
+#include "ipc/StrandCoord.h"
 #include "ipc/StrandSearch.h"
 #include "ipc/UdsOp.h"
 #include "sbuf/SBuf.h"
@@ -143,11 +144,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 
         queue->localRateLimit().store(config.ioRate);
 
-        Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, myPid));
-        ann.strand.tag = dbName;
-        Ipc::TypedMsgHdr message;
-        ann.pack(message);
-        SendMessage(Ipc::Port::CoordinatorAddr(), message);
+        Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRegisterStrand, dbName.termedBuf());
 
         ioRequestor->ioCompletedNotification();
         return;
@@ -168,7 +165,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 }
 
 void
-IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
+IpcIoFile::openCompleted(const Ipc::StrandMessage *const response)
 {
     Must(diskId < 0); // we do not know our disker yet
 
@@ -455,7 +452,7 @@ IpcIoFile::canWait() const
 
 /// called when coordinator responds to worker open request
 void
-IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
+IpcIoFile::HandleOpenResponse(const Ipc::StrandMessage &response)
 {
     debugs(47, 7, HERE << "coordinator response to open request");
     for (IpcIoFileList::iterator i = WaitingForOpen.begin();
