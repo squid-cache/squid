@@ -18,7 +18,8 @@ namespace Ipc
 
 /// message class identifier
 typedef enum { mtNone = 0, ///< unspecified or unknown message kind; unused on the wire
-               mtStrandRegistration, ///< strand registration with Coordinator (also used as an ACK)
+               mtRegisterStrand, ///< notifies about our strand existence
+               mtStrandRegistered, ///< acknowledges mtRegisterStrand acceptance
                mtFindStrand, ///< a worker requests a strand from Coordinator
                mtStrandReady, ///< a mtFindStrand answer: the strand exists and should be usable
                mtSharedListenRequest,

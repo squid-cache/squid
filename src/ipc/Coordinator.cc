@@ -79,7 +79,7 @@ void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
 void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 {
     switch (message.rawType()) {
-    case mtStrandRegistration:
+    case mtRegisterStrand:
         debugs(54, 6, HERE << "Registration request");
         handleRegistrationRequest(StrandMessage(message));
         break;
@@ -139,7 +139,7 @@ void Ipc::Coordinator::handleRegistrationRequest(const StrandMessage& msg)
 
     // send back an acknowledgement; TODO: remove as not needed?
     TypedMsgHdr message;
-    msg.pack(mtStrandRegistration, message);
+    msg.pack(mtStrandRegistered, message);
     SendMessage(MakeAddr(strandAddrLabel, msg.strand.kidId), message);
 }
 
