@@ -255,7 +255,7 @@ Security::PeerConnector::negotiate()
     // * We did not hide EUNABLE; SSL_connect() was successful: Handle success.
     // * We did not hide EUNABLE; SSL_connect() reported some error E: Honor E.
     // * We hid EUNABLE; SSL_connect() was successful: Remember success and try
-    //   to fetch the missing certificates. If all goes well, honor success
+    //   to fetch the missing certificates. If all goes well, honor success.
     // * We hid EUNABLE; SSL_connect() reported EUNABLE: Warn but honor EUNABLE.
     // * We hid EUNABLE; SSL_connect() reported some EOTHER: Remember EOTHER and
     //   try to fetch the missing certificates. If all goes well, honor EOTHER.
