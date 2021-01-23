@@ -99,7 +99,7 @@ protected:
     void handleNegotiateError(const TlsNegotiationDetails &);
 
     /// Called when the negotiation finished successfully
-    void handleNegotiationSucceed();
+    void handleNegotiationSuccess();
 
     /// Called when the openSSL SSL_connect fnction request more data from
     /// the remote SSL server. Sets the read timeout and sets the
