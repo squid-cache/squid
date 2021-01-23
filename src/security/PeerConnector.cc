@@ -764,7 +764,8 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
             if (const auto issuerUri = Ssl::hasAuthorityInfoAccessCaIssuers(cert))
                 urlsOfMissingCerts.push(SBuf(issuerUri));
             else {
-                debugs(81, 5, "Can not retrieve issuer for certificate " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024) << " abort");
+                debugs(81, 3, "short-circuit: letting negotiation fail after finding a certificate with no IAI, signed by a missing issuer certificate:  "
+                       << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
 
                 // Stop downloading more certificates and let the certificate
                 // validation check fail because of missing issuers certificates.
