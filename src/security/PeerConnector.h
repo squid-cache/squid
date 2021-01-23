@@ -98,7 +98,7 @@ protected:
     /// fill an error and report to the PeerConnector caller.
     void handleNegotiateError(const TlsNegotiationDetails &);
 
-    /// Called when the negotiation finished successfully
+    /// Called when the negotiation finished successfully.
     void handleNegotiationSuccess();
 
     /// Called when the openSSL SSL_connect fnction request more data from
