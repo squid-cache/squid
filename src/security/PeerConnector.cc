@@ -758,6 +758,11 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
     if (X509 *cert = d2i_X509(NULL, &raw, obj.length())) {
         char buffer[1024];
         debugs(81, 5, "Retrieved certificate: " << X509_NAME_oneline(X509_get_subject_name(cert), buffer, 1024));
+
+        if (!downloadedCerts)
+            downloadedCerts.reset(sk_X509_new_null());
+        sk_X509_push(downloadedCerts.get(), cert);
+
         ContextPointer ctx(getTlsContext());
         const auto certsList = SSL_get_peer_cert_chain(&sconn);
         if (Ssl::issuerIsMissing(cert, certsList, ctx)) {
@@ -773,10 +778,6 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
                     urlsOfMissingCerts.pop();
             }
         }
-
-        if (!downloadedCerts)
-            downloadedCerts.reset(sk_X509_new_null());
-        sk_X509_push(downloadedCerts.get(), cert);
     }
 
     // Check if there are URIs to download from and if yes start downloading
