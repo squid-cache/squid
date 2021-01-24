@@ -765,7 +765,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 
         ContextPointer ctx(getTlsContext());
         const auto certsList = SSL_get_peer_cert_chain(&sconn);
-        if (Ssl::issuerIsMissing(cert, certsList, ctx)) {
+        if (!Ssl::findIssuerCertificate(cert, certsList, ctx)) {
             if (const auto issuerUri = Ssl::findIssuerUri(cert))
                 urlsOfMissingCerts.push(SBuf(issuerUri));
             else {

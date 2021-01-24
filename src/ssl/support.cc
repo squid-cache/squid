@@ -1145,54 +1145,62 @@ sk_x509_findIssuer(const STACK_OF(X509) *sk, X509 *cert)
     return nullptr;
 }
 
-/// \return true if the cert issuer exist in the certificates stored in connContext
-static bool
-issuerExistInCaDb(X509 *cert, const Security::ContextPointer &connContext)
+/// Searches for cert issuer in the certificates stored in connContext's
+/// CA store.
+/// \return the cert issuer after increase its reference or nil
+static X509 *
+findIssuerInCaDb(X509 *cert, const Security::ContextPointer &connContext)
 {
     if (!connContext)
-        return false;
+        return nullptr;
 
     X509_STORE_CTX *storeCtx = X509_STORE_CTX_new();
     if (!storeCtx) {
         debugs(83, DBG_IMPORTANT, "Failed to allocate STORE_CTX object");
-        return false;
+        return nullptr;
     }
 
-    bool gotIssuer = false;
+    X509 *issuer = nullptr;
     X509_STORE *store = SSL_CTX_get_cert_store(connContext.get());
     if (X509_STORE_CTX_init(storeCtx, store, nullptr, nullptr)) {
-        X509 *issuer = nullptr;
-        gotIssuer = (X509_STORE_CTX_get1_issuer(&issuer, storeCtx, cert) > 0);
-        if (issuer)
-            X509_free(issuer);
+        auto ret = X509_STORE_CTX_get1_issuer(&issuer, storeCtx, cert);
+        if ( ret < 0)
+            debugs(83, DBG_IMPORTANT, "STORE_CTX search failed");
     } else {
         const int ssl_error = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "Failed to initialize STORE_CTX object: " << Security::ErrorString(ssl_error));
     }
     X509_STORE_CTX_free(storeCtx);
 
-    return gotIssuer;
+    return issuer;
 }
 
-bool
-Ssl::issuerIsMissing(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context)
+Security::CertPointer
+Ssl::findIssuerCertificate(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context)
 {
     Must(cert);
     Must(serverCertificates);
 
+    X509 *issuer = nullptr;
     // check certificates chain
-    if (sk_x509_findIssuer(serverCertificates, cert))
-        return false;
+    if ((issuer = sk_x509_findIssuer(serverCertificates, cert))) {
+        X509_up_ref(issuer);
+        return Security::CertPointer(issuer);
+    }
 
     // Check untrusted certificates
-    if (findCertIssuerFast(SquidUntrustedCerts, cert))
-        return false;
+    if ((issuer = findCertIssuerFast(SquidUntrustedCerts, cert))) {
+        X509_up_ref(issuer);
+        return Security::CertPointer(issuer);
+    }
 
     // check trusted CA certificates
-    if (issuerExistInCaDb(cert, context))
-        return false;
+    if (context && (issuer = findIssuerInCaDb(cert, context))) {
+        // No need to increase reference, findIssuerInCaDb does it.
+        return Security::CertPointer(issuer);
+    }
 
-    return true;
+    return Security::CertPointer(nullptr);
 }
 
 bool
@@ -1203,7 +1211,7 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *
     for (int i = 0; i < sk_X509_num(serverCertificates); ++i) {
         const auto cert = sk_X509_value(serverCertificates, i);
 
-        if (!issuerIsMissing(cert, serverCertificates, context))
+        if (findIssuerCertificate(cert, serverCertificates, context))
             continue;
 
         const auto issuerUri = findIssuerUri(cert);
@@ -1227,22 +1235,22 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
 
     const X509_VERIFY_PARAM *param = X509_STORE_CTX_get0_param(ctx);
     int depth = X509_VERIFY_PARAM_get_depth(param);
-    X509 *current = X509_STORE_CTX_get0_cert(ctx);
+    Security::CertPointer current;
+    current.resetAndLock(X509_STORE_CTX_get0_cert(ctx));
     int i = 0;
     for (i = 0; current && (i < depth); ++i) {
-        if (X509_check_issued(current, current) == X509_V_OK) {
+        if (X509_check_issued(current.get(), current.get()) == X509_V_OK) {
             // either ctx->cert is itself self-signed or untrustedCerts
             // already contain the self-signed current certificate
             break;
         }
 
         // untrustedCerts is short, not worth indexing
-        X509 *issuer = sk_x509_findIssuer(untrustedCerts, current);
-        if (!issuer) {
-            if ((issuer = findCertIssuerFast(SquidUntrustedCerts, current)))
-                sk_X509_push(untrustedCerts, issuer);
-        }
+        const Security::ContextPointer nullCtx;
+        Security::CertPointer issuer = Ssl::findIssuerCertificate(current.get(), untrustedCerts, nullCtx);
         current = issuer;
+        if (issuer)
+            sk_X509_push(untrustedCerts, issuer.release());
     }
 
     if (i >= depth)

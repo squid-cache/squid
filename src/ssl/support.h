@@ -182,10 +182,12 @@ void SSL_add_untrusted_cert(SSL *ssl, X509 *cert);
 const char *findIssuerUri(X509 *cert);
 
 /**
- * Searches in serverCertificates list and in local databases for the cert issuer
- \return true if the issuer certificate is missing, false otherwise
+ * Searches in serverCertificates list and in local databases for the cert
+ * issuer.
+ \param context The context to use to retrieve configured CA's db or a null.
+ \return the issuer certificate if found, nil otherwise
  */
-bool issuerIsMissing(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
+Security::CertPointer findIssuerCertificate(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
 
 /**
  * Fill URIs queue with the uris of missing certificates from serverCertificate chain
