@@ -766,7 +766,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         ContextPointer ctx(getTlsContext());
         const auto certsList = SSL_get_peer_cert_chain(&sconn);
         if (Ssl::issuerIsMissing(cert, certsList, ctx)) {
-            if (const auto issuerUri = Ssl::hasAuthorityInfoAccessCaIssuers(cert))
+            if (const auto issuerUri = Ssl::findIssuerUri(cert))
                 urlsOfMissingCerts.push(SBuf(issuerUri));
             else {
                 debugs(81, 3, "short-circuit: letting negotiation fail after finding a certificate with no IAI, signed by a missing issuer certificate:  "

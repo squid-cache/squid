@@ -178,12 +178,8 @@ void unloadSquidUntrusted();
  */
 void SSL_add_untrusted_cert(SSL *ssl, X509 *cert);
 
-/**
- * Retrieve the certificate issuer URI from Authority Info Access extension
- * if this info exist.
- \ingroup ServerProtocolSSLAPI
- */
-const char *hasAuthorityInfoAccessCaIssuers(X509 *cert);
+/// finds certificate issuer URI in the Authority Info Access extension
+const char *findIssuerUri(X509 *cert);
 
 /**
  * Searches in serverCertificates list and in local databases for the cert issuer
