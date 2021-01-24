@@ -1207,8 +1207,12 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *
             continue;
 
         const auto issuerUri = findIssuerUri(cert);
-        if (!issuerUri)
+        if (!issuerUri) {
+            static char name[2048];
+            X509_NAME_oneline(X509_get_subject_name(cert), name, sizeof(name));
+            debugs(83, 3, "Issuer certificate for " << name << " is missing and its URI is not provided");
             return false;
+        }
         URIs.push(SBuf(issuerUri));
     }
 
