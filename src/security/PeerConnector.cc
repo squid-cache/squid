@@ -828,7 +828,7 @@ Security::PeerConnector::computeMissingCertificateUrls(const Connection &sconn)
 
     const auto ctx = getTlsContext();
     if (!Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx))
-        return false;
+        return false;  // missingChainCertificatesUrls() reports the exact reason
 
     assert(!urlsOfMissingCerts.empty());
 
