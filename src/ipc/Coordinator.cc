@@ -277,7 +277,6 @@ void
 Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
                                  const StrandCoord& strand)
 {
-    /// XXX: send isIndexed separately 
     const auto isIndexed = std::find_if(rebuildFinishedStrands_.begin(), rebuildFinishedStrands_.end(),
     [&strand](const StrandCoord &coord) { return strand.kidId == coord.kidId; }) != rebuildFinishedStrands_.end();
 
@@ -288,6 +287,13 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
     TypedMsgHdr message;
     response.pack(mtStrandReady, message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
+
+    if (isIndexed) {
+        StrandMessage indexedResponse(strand);
+        TypedMsgHdr indexedMessage;
+        indexedResponse.pack(mtRebuildFinished, indexedMessage);
+        SendMessage(MakeAddr(strandAddrLabel, request.requestorId), indexedMessage);
+    }
 }
 
 #if SQUID_SNMP

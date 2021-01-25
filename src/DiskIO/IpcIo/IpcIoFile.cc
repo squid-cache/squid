@@ -184,9 +184,6 @@ IpcIoFile::openCompleted(const Ipc::StrandMessage *const response)
     }
 
     ioRequestor->ioCompletedNotification();
-    // XXX: mtRebuildFinished should be processed separately 
-    // if (response && response->indexed)
-    //     Store::Disks::RemoteIndexingCompleted(response->strand.kidId);
 }
 
 /**
