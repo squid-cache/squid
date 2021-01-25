@@ -71,9 +71,12 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         break;
 
 #if HAVE_DISKIO_MODULE_IPCIO
-    case mtStrandReady:
-        IpcIoFile::HandleOpenResponse(StrandMessage(message));
-        break;
+    case mtStrandReady: {
+        const StrandMessage resp(message);
+        IpcIoFile::HandleOpenResponse(resp);
+        Store::Disks::DiskerReadyNotification(resp.strand.kidId);
+    }
+    break;
 
     case mtStrandBusy:
         IpcIoFile::HandleStrandBusyResponse(StrandMessage(message));

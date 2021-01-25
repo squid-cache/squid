@@ -23,7 +23,7 @@
 
 Store::Disk::Disk(char const *aType): theType(aType),
     max_size(0), min_objsize(-1), max_objsize (-1),
-    path(NULL), index(-1), disker(-1),
+    path(nullptr), index(-1), disker(-1), diskerReady(false), diskerIndexed(false),
     repl(NULL), removals(0), scanned(0),
     indexed(false), cleanLog(nullptr)
 {

@@ -64,6 +64,8 @@ public:
     static bool Active();
     /// handles the Coordinator notification about an indexed disker
     static void RemoteIndexingCompleted(int kidId);
+    /// handles the Coordinator notification about a ready disker
+    static void DiskerReadyNotification(int kidId);
 
 private:
     /* migration logic */
