@@ -1217,11 +1217,17 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *
         const auto issuerUri = findIssuerUri(cert);
         if (!issuerUri) {
             static char name[2048];
-            X509_NAME_oneline(X509_get_subject_name(cert), name, sizeof(name));
-            debugs(83, 3, "Issuer certificate for " << name << " is missing and its URI is not provided");
+            debugs(83, 3, "Issuer certificate for " <<
+                   X509_NAME_oneline(X509_get_subject_name(cert), name, sizeof(name)) <<
+                   " is missing and its URI is not provided");
             return false;
         }
         URIs.push(SBuf(issuerUri));
+    }
+
+    if (URIs.empty()) {
+        debugs(83, 3, "There are no missing issuer certificates");
+        return false;
     }
 
     return true;
