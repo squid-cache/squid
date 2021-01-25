@@ -773,10 +773,9 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
                        "signed by a missing issuer certificate:  " <<
                        X509_NAME_oneline(X509_get_subject_name(cert), buffer, sizeof(buffer)));
 
-                // Stop downloading more certificates and let the certificate
-                // validation check fail because of missing issuers certificates.
-                while (urlsOfMissingCerts.size())
-                    urlsOfMissingCerts.pop();
+                // Continue with downloading certificates, if there are more
+                // on the list, hopping that downloading eventually completes
+                // the chain.
             }
         }
     }

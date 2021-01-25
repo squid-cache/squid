@@ -1214,23 +1214,19 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *
         if (findIssuerCertificate(cert, serverCertificates, context))
             continue;
 
-        const auto issuerUri = findIssuerUri(cert);
-        if (!issuerUri) {
+        if (const auto issuerUri = findIssuerUri(cert)) {
+            URIs.push(SBuf(issuerUri));
+        } else {
             static char name[2048];
             debugs(83, 3, "Issuer certificate for " <<
                    X509_NAME_oneline(X509_get_subject_name(cert), name, sizeof(name)) <<
                    " is missing and its URI is not provided");
-            return false;
         }
-        URIs.push(SBuf(issuerUri));
     }
 
-    if (URIs.empty()) {
-        debugs(83, 3, "There are no missing issuer certificates");
-        return false;
-    }
+    debugs(83, (URIs.empty() ? 3 : 5), "Found " << URIs.size() << " missing issuer certificates URI");
 
-    return true;
+    return !URIs.empty();
 }
 
 /// add missing issuer certificates to untrustedCerts

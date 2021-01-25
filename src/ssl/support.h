@@ -190,9 +190,9 @@ const char *findIssuerUri(X509 *cert);
 Security::CertPointer findIssuerCertificate(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
 
 /**
- * Fill URIs queue with the uris of missing certificates from serverCertificate chain
+ * Fill URIs queue with the URI of missing certificates from serverCertificate chain
  * if this information provided by Authority Info Access.
- \return false if failed to retrieve URI for one or more missing certificates, true otherwise
+ \return true if at least one URI is retrieved, false otherwise
  */
 bool missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
 
