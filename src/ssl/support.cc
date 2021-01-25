@@ -1253,7 +1253,7 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
 
         // untrustedCerts is short, not worth indexing
         const Security::ContextPointer nullCtx;
-        Security::CertPointer issuer = Ssl::findIssuerCertificate(current.get(), untrustedCerts, nullCtx);
+        auto issuer = Ssl::findIssuerCertificate(current.get(), untrustedCerts, nullCtx);
         current = issuer;
         if (issuer)
             sk_X509_push(untrustedCerts, issuer.release());
