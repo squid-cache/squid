@@ -81,21 +81,6 @@ void Ipc::TypedMsgHdr::sync()
     offset = 0;
 }
 
-int
-Ipc::TypedMsgHdr::rawType() const
-{
-    Must(msg_iovlen == 1);
-    return data.type_;
-}
-
-Ipc::MessageType
-Ipc::TypedMsgHdr::type() const
-{
-    const auto uncheckedType = rawType();
-    Must(uncheckedType >= MessageType::enumBegin_ && uncheckedType <= MessageType::enumEnd_);
-    return static_cast<MessageType>(uncheckedType);
-}
-
 void
 Ipc::TypedMsgHdr::address(const struct sockaddr_un& addr)
 {

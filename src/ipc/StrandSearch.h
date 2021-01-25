@@ -29,18 +29,6 @@ public:
     String tag; ///< set when looking for a matching StrandCoord::tag
 };
 
-/// an IPC message with coordinates and 'indexed' status of the found strand
-class StrandSearchResponse
-{
-public:
-    StrandSearchResponse(bool isIndexed, const StrandCoord &);
-    explicit StrandSearchResponse(const TypedMsgHdr &);
-    void pack(TypedMsgHdr &) const;
-
-    bool indexed; ///< whether the found strand is indexed
-    StrandCoord strand; ///< the found strand coordinates
-};
-
 } // namespace Ipc;
 
 #endif /* SQUID_IPC_STRAND_SEARCH_H */

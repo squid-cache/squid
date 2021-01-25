@@ -87,7 +87,7 @@ public:
     virtual bool ioInProgress() const;
 
     /// handle open response from coordinator
-    static void HandleOpenResponse(const Ipc::StrandSearchResponse &);
+    static void HandleOpenResponse(const Ipc::StrandMessage &);
     /// called when Coordinator reports that the strand exists but is not usable (yet)
     static void HandleStrandBusyResponse(const Ipc::StrandMessage &);
 
@@ -101,7 +101,7 @@ public:
 
 protected:
     friend class IpcIoPendingRequest;
-    void openCompleted(const Ipc::StrandSearchResponse *const response);
+    void openCompleted(const Ipc::StrandMessage *);
     void readCompleted(ReadRequest *readRequest, IpcIoMsg *const response);
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
     bool canWait() const;

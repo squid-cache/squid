@@ -830,7 +830,7 @@ Rock::SwapDir::startAcceptingRequests()
     if (!UsingSmp())
         return; // no special work
     assert(IamDiskProcess());
-    Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRegistration, filePath);
+    Ipc::StrandMessage::NotifyCoordinator(Ipc::mtRegisterStrand, filePath);
     // else the kid is not responsible for accepting worker requests
 }
 

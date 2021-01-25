@@ -18,6 +18,7 @@ section 02    Unlink Daemon
 section 03    Configuration File Parsing
 section 03    Configuration Settings
 section 04    Error Generation
+section 04    Error Management
 section 05    Comm
 section 05    Disk I/O pipe manager
 section 05    Listener Socket Handler
@@ -139,6 +140,7 @@ section 81    Store HEAP Removal Policies
 section 82    External ACL
 section 83    SSL accelerator support
 section 83    SSL-Bump Server/Peer negotiation
+section 83    TLS I/O
 section 83    TLS Server/Peer negotiation
 section 83    TLS session management
 section 84    Helper process maintenance

@@ -23,6 +23,7 @@
 #include "ipc/Messages.h"
 #include "ipc/Port.h"
 #include "ipc/Queue.h"
+#include "ipc/StrandCoord.h"
 #include "ipc/StrandSearch.h"
 #include "ipc/UdsOp.h"
 #include "sbuf/SBuf.h"
@@ -161,7 +162,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 }
 
 void
-IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
+IpcIoFile::openCompleted(const Ipc::StrandMessage *const response)
 {
     Must(diskId < 0); // we do not know our disker yet
 
@@ -183,8 +184,9 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
     }
 
     ioRequestor->ioCompletedNotification();
-    if (response && response->indexed)
-        Store::Disks::RemoteIndexingCompleted(response->strand.kidId);
+    // XXX: mtRebuildFinished should be processed separately 
+    // if (response && response->indexed)
+    //     Store::Disks::RemoteIndexingCompleted(response->strand.kidId);
 }
 
 /**
@@ -450,7 +452,7 @@ IpcIoFile::canWait() const
 
 /// called when coordinator responds to worker open request
 void
-IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
+IpcIoFile::HandleOpenResponse(const Ipc::StrandMessage &response)
 {
     debugs(47, 7, HERE << "coordinator response to open request");
     const auto file = StopWaiting(response.strand);

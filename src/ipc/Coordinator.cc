@@ -80,7 +80,7 @@ void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
 void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 {
     switch (message.rawType()) {
-    case mtRegistration:
+    case mtRegisterStrand:
         debugs(54, 6, HERE << "Registration request");
         handleRegistrationRequest(StrandMessage(message));
         break;
@@ -139,7 +139,7 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 #endif
 
     default:
-        debugs(54, DBG_IMPORTANT, "Unhandled message type: " << message.rawType());
+        debugs(54, DBG_IMPORTANT, "WARNING: Ignoring IPC message with an unknown type: " << message.rawType());
         break;
     }
 }
@@ -150,7 +150,7 @@ void Ipc::Coordinator::handleRegistrationRequest(const StrandMessage& msg)
 
     // send back an acknowledgement; TODO: remove as not needed?
     TypedMsgHdr message;
-    msg.pack(message);
+    msg.pack(mtStrandRegistered, message);
     SendMessage(MakeAddr(strandAddrLabel, msg.strand.kidId), message);
 }
 
@@ -162,9 +162,9 @@ Ipc::Coordinator::handleForegroundRebuildMessage(const StrandMessage& msg)
         if (searchRequest.tag != msg.strand.tag)
             continue;
 
-        StrandMessage response(mtStrandBusy, msg.strand);
+        StrandMessage response(msg.strand);
         TypedMsgHdr message;
-        response.pack(message);
+        response.pack(mtStrandBusy, message);
         SendMessage(MakeAddr(strandAddrLabel, searchRequest.requestorId), message);
     }
 }
@@ -193,9 +193,9 @@ Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
     // notify all existing strands, new strands will be notified in handleRegistrationRequest()
     for (const auto &strand: strands_) {
         debugs(54, 3, "tell kid" << strand.kidId << " that kid" << msg.strand.kidId << " is indexed");
-        StrandMessage response(mtRebuildFinished, msg.strand);
+        StrandMessage response(msg.strand);
         TypedMsgHdr message;
-        response.pack(message);
+        response.pack(mtRebuildFinished, message);
         SendMessage(MakeAddr(strandAddrLabel, strand.kidId), message);
     }
 }
@@ -277,15 +277,16 @@ void
 Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
                                  const StrandCoord& strand)
 {
+    /// XXX: send isIndexed separately 
     const auto isIndexed = std::find_if(rebuildFinishedStrands_.begin(), rebuildFinishedStrands_.end(),
     [&strand](const StrandCoord &coord) { return strand.kidId == coord.kidId; }) != rebuildFinishedStrands_.end();
 
     debugs(54, 3, "tell kid" << request.requestorId << " that " <<
            request.tag << " is kid" << strand.kidId << " (indexed:" << isIndexed << ")");
 
-    const StrandSearchResponse response(isIndexed, strand);
+    const StrandMessage response(strand);
     TypedMsgHdr message;
-    response.pack(message);
+    response.pack(mtStrandReady, message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
 }
 

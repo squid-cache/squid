@@ -37,15 +37,6 @@
  \ingroup ServerProtocol
  */
 
-// Custom SSL errors; assumes all official errors are positive
-#define SQUID_X509_V_ERR_INFINITE_VALIDATION -4
-#define SQUID_X509_V_ERR_CERT_CHANGE -3
-#define SQUID_ERR_SSL_HANDSHAKE -2
-#define SQUID_X509_V_ERR_DOMAIN_MISMATCH -1
-// All SSL errors range: from smallest (negative) custom to largest SSL error
-#define SQUID_SSL_ERROR_MIN SQUID_X509_V_ERR_CERT_CHANGE
-#define SQUID_SSL_ERROR_MAX INT_MAX
-
 // Maximum certificate validation callbacks. OpenSSL versions exceeding this
 // limit are deemed stuck in an infinite validation loop (OpenSSL bug #3090)
 // and will trigger the SQUID_X509_V_ERR_INFINITE_VALIDATION error.
@@ -75,7 +66,6 @@ int AskPasswordCb(char *buf, int size, int rwflag, void *userdata);
 /// call before generating any SSL context
 void Initialize();
 
-class ErrorDetail;
 class CertValidationResponse;
 typedef RefCount<CertValidationResponse> CertValidationResponsePointer;
 

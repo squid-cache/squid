@@ -11,6 +11,21 @@
 
 #include "CollapsingHistory.h"
 
+/// Things that may happen to a transaction while it is being
+/// processed according to its LOG_* category. Logged as _SUFFIX(es).
+/// Unlike LOG_* categories, these flags may not be mutually exclusive.
+class LogTagsErrors
+{
+public:
+    /// Update each of this object flags to "set" if the corresponding
+    /// flag of the given object is set
+    void update(const LogTagsErrors &other);
+
+    bool ignored = false; ///< _IGNORED: the response was not used for anything
+    bool timedout = false; ///< _TIMEDOUT: terminated due to a lifetime or I/O timeout
+    bool aborted = false;  ///< _ABORTED: other abnormal termination (e.g., I/O error)
+};
+
 /** Squid transaction result code/tag set.
  *
  * These codes indicate how the request was received
@@ -65,17 +80,8 @@ public:
     /// \returns Cache-Status "hit" or "fwd=..." parameter (or nil)
     const char *cacheStatusSource() const;
 
-    /// Things that may happen to a transaction while it is being
-    /// processed according to its LOG_* category. Logged as _SUFFIX(es).
-    /// Unlike LOG_* categories, these flags may not be mutually exclusive.
-    class Errors {
-    public:
-        Errors() : ignored(false), timedout(false), aborted(false) {}
-
-        bool ignored; ///< _IGNORED: the response was not used for anything
-        bool timedout; ///< _TIMEDOUT: terminated due to a lifetime or I/O timeout
-        bool aborted;  ///< _ABORTED: other abnormal termination (e.g., I/O error)
-    } err;
+    /// various problems augmenting the primary log tag
+    LogTagsErrors err;
 
 private:
     /// list of string representations for LogTags_ot

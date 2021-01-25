@@ -79,7 +79,7 @@ void Ipc::Port::noteRead(const CommIoCbParams& params)
            " [" << this << ']');
     if (params.flag == Comm::OK) {
         assert(params.buf == buf.raw());
-        debugs(54, 6, "received message type: " << buf.rawType());
+        debugs(54, 6, "message type: " << buf.rawType());
         receive(buf);
     }
     // TODO: if there was a fatal error on our socket, close the socket before

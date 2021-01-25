@@ -17,7 +17,6 @@ namespace Ipc
 class TypedMsgHdr;
 class StrandCoord;
 class StrandMessage;
-class StrandSearchResponse;
 class Forwarder;
 class Inquirer;
 class Request;

@@ -31,8 +31,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.cc \
 	LoadableModules.h
 
-SUBDIRS	= mem base anyp helper dns ftp parser comm eui acl format clients sbuf servers fs repl store DiskIO proxyp
-DIST_SUBDIRS = mem base anyp helper dns ftp parser comm eui acl format clients sbuf servers fs repl store DiskIO proxyp
+SUBDIRS = mem base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
+DIST_SUBDIRS = mem base anyp helper dns ftp parser comm error eui acl format clients sbuf servers fs repl store DiskIO proxyp
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -385,8 +385,6 @@ squid_SOURCES = \
 	dlink.cc \
 	dlink.h \
 	enums.h \
-	err_detail_type.h \
-	err_type.h \
 	errorpage.cc \
 	errorpage.h \
 	event.cc \
@@ -509,8 +507,6 @@ noinst_HEADERS = \
 BUILT_SOURCES = \
 	cf_gen_defines.cci \
 	cf_parser.cci \
-	err_detail_type.cc \
-	err_type.cc \
 	globals.cc \
 	hier_code.cc \
 	icp_opcode.cc \
@@ -545,6 +541,7 @@ squid_LDADD = \
 	anyp/libanyp.la \
 	security/libsecurity.la \
 	$(SSL_LIBS) \
+	error/liberror.la \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	proxyp/libproxyp.la \
@@ -731,12 +728,6 @@ globals.cc: globals.h mk-globals-c.awk
 ## Generate files containing string arrays for various enums....
 hier_code.cc: hier_code.h mk-string-arrays.awk
 	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/hier_code.h > $@ || ($(RM) -f $@ && exit 1)
-
-err_type.cc: err_type.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/err_type.h > $@ || ($(RM) -f $@ && exit 1)
-
-err_detail_type.cc: err_detail_type.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/err_detail_type.h | sed 's/ERR_DETAIL_//' > $@ || ($(RM) -f $@ && exit 1)
 
 lookup_t.cc: lookup_t.h mk-string-arrays.awk
 	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/lookup_t.h > $@ || ($(RM) -f $@ && exit 1)
@@ -1195,6 +1186,7 @@ tests_testRock_SOURCES = \
 	tests/stub_ipcache.cc \
 	tests/stub_libanyp.cc \
 	tests/stub_libauth.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
@@ -1371,6 +1363,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_ipcache.cc \
 	tests/stub_libanyp.cc \
 	tests/stub_libauth.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
@@ -1548,6 +1541,7 @@ tests_testStore_SOURCES = \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libsecurity.cc \
@@ -1720,6 +1714,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_libanyp.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libauth_acls.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
@@ -1977,6 +1972,7 @@ tests_test_http_range_SOURCES = \
 	ipcache.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
@@ -2191,6 +2187,7 @@ tests_testHttpReply_SOURCES = \
 	tests/stub_libanyp.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libcomm.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libformat.cc \
 	tests/stub_libmgr.cc \
 	tests/stub_libsecurity.cc \
@@ -2365,6 +2362,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_libauth.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
@@ -2669,6 +2667,7 @@ tests_testCacheManager_SOURCES = \
 	tests/stub_libauth.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libsecurity.cc \
 	tests/stub_main_cc.cc \
 	mem_node.cc \
@@ -2989,6 +2988,7 @@ tests_testEvent_SOURCES = \
 	tests/stub_libauth.cc \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_libmem.cc \
 	tests/stub_libsecurity.cc \
