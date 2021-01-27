@@ -2754,6 +2754,7 @@ AC_CHECK_HEADERS( \
   string.h \
   strings.h \
   sys/bitypes.h \
+  sys/cpuset.h \
   sys/file.h \
   sys/ioctl.h \
   sys/ipc.cc \
@@ -2931,6 +2932,14 @@ AC_CHECK_TYPE(cpu_set_t,
    AC_DEFINE(HAVE_CPU_SET_T,1,[cpu_set_t is defined by the system headers]),,[
 #if HAVE_SCHED_H
 #include <sched.h>
+#endif
+])
+
+AC_CHECK_TYPE(cpuset_t,
+   AC_DEFINE(HAVE_CPUSET_T,1,[cpuset_t is defined by the system headers]),,[
+#if HAVE_SYS_CPUSET_H
+#include <sys/param.h>
+#include <sys/cpuset.h>
 #endif
 ])
 
@@ -3214,6 +3223,7 @@ dnl Check for library functions
 AC_CHECK_FUNCS(\
 	backtrace_symbols_fd \
 	bcopy \
+	cpuset_setaffinity \
 	eui64_aton \
 	fchmod \
 	getdtablesize \

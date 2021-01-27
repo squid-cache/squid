@@ -63,6 +63,8 @@ libcompatsquid_la_SOURCES = \
 	os/sunos.h \
 	osdetect.h \
 	psignal.h \
+	sched_affinity.cc \
+	sched_affinity.h \
 	shm.cc \
 	shm.h \
 	statvfs.cc \
