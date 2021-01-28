@@ -232,7 +232,6 @@ extern "C" {
 
 // memrchr() is a GNU extension. MinGW in particular does not define it.
 #include "compat/memrchr.h"
-#include "compat/sched_affinity.h"
 
 #if !HAVE_MEMCPY
 #if HAVE_BCOPY

@@ -20,6 +20,7 @@
 #include "anyp/UriScheme.h"
 #include "auth/Config.h"
 #include "auth/Scheme.h"
+#include "compat/cpu.h"
 #include "AuthReg.h"
 #include "base/RunnersRegistry.h"
 #include "cache_cf.h"

@@ -38,11 +38,7 @@ CpuAffinitySet::apply()
     } else {
         cpu_set_t cpuSet;
         memcpy(&cpuSet, &theCpuSet, sizeof(cpuSet));
-        #if !HAVE_CPUSET_T
-        (void) CPU_AND(&cpuSet, &cpuSet, &theOrigCpuSet);
-        #else
-        CPU_AND(&cpuSet, &theOrigCpuSet);
-        #endif
+	CpuAnd(&cpuSet, &cpuSet, &theOrigCpuSet);
         if (CPU_COUNT(&cpuSet) <= 0) {
             debugs(54, DBG_IMPORTANT, "ERROR: invalid CPU affinity for process "
                    "PID " << getpid() << ", may be caused by an invalid core in "

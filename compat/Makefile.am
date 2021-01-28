@@ -24,8 +24,9 @@ libcompatsquid_la_SOURCES = \
 	compat.cc \
 	compat.h \
 	compat_shared.h \
+        cpu.cc \
+        cpu.h \
 	cppunit.h \
-	cpu.h \
 	debug.cc \
 	debug.h \
 	eui64_aton.c \
@@ -63,8 +64,6 @@ libcompatsquid_la_SOURCES = \
 	os/sunos.h \
 	osdetect.h \
 	psignal.h \
-	sched_affinity.cc \
-	sched_affinity.h \
 	shm.cc \
 	shm.h \
 	statvfs.cc \

@@ -2748,13 +2748,13 @@ AC_CHECK_HEADERS( \
   siginfo.h \
   signal.h \
   stdarg.h \
+  stdbool.h \
   stddef.h \
   stdio.h \
   stdlib.h \
   string.h \
   strings.h \
   sys/bitypes.h \
-  sys/cpuset.h \
   sys/file.h \
   sys/ioctl.h \
   sys/ipc.cc \
@@ -2815,6 +2815,7 @@ AC_CHECK_HEADERS( \
   netinet/ipl.h \
   net/pf/pfvar.h \
   net/pfvar.h \
+  sys/cpuset.h \
   sys/mount.h\
   resolv.h \
 ,,,
@@ -2932,14 +2933,6 @@ AC_CHECK_TYPE(cpu_set_t,
    AC_DEFINE(HAVE_CPU_SET_T,1,[cpu_set_t is defined by the system headers]),,[
 #if HAVE_SCHED_H
 #include <sched.h>
-#endif
-])
-
-AC_CHECK_TYPE(cpuset_t,
-   AC_DEFINE(HAVE_CPUSET_T,1,[cpuset_t is defined by the system headers]),,[
-#if HAVE_SYS_CPUSET_H
-#include <sys/param.h>
-#include <sys/cpuset.h>
 #endif
 ])
 
@@ -3350,7 +3343,7 @@ case $squid_opt_io_loop_engine in
   select) AC_DEFINE(USE_SELECT,1,[Use select() for the IO loop]) ;;
 esac
 
-if test "x$ac_cv_func_sched_getaffinity" = "xyes" -a "x$ac_cv_func_sched_setaffinity" = "xyes" ; then
+if test "x$ac_cv_func_sched_getaffinity" = "xyes" -a "x$ac_cv_func_sched_setaffinity" = "xyes" || test "x%ac_cv_func_cpuset_setaffinity" = "xyes" ; then
   AC_DEFINE(HAVE_CPU_AFFINITY,1,[Support setting CPU affinity for workers])
 fi
 
