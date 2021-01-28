@@ -654,6 +654,14 @@ HttpRequest::canHandle1xx() const
 Http::StatusCode
 HttpRequest::checkEntityFraming() const
 {
+    // RFC 7230 section 3.3.1:
+    // "
+    //  A server that receives a request message with a transfer coding it
+    //  does not understand SHOULD respond with 501 (Not Implemented).
+    // "
+    if (header.unsupportedTe())
+        return Http::scNotImplemented;
+
     // RFC 7230 section 3.3.3 #3 paragraph 3:
     // Transfer-Encoding overrides Content-Length
     if (header.chunked())
