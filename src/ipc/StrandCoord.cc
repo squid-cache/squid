@@ -70,15 +70,3 @@ Ipc::StrandMessage::NotifyCoordinator(const MessageType msgType, const char *tag
     SendMessage(Port::CoordinatorAddr(), hdr);
 }
 
-void
-Ipc::StrandMessage::NotifyCoordinator(const MessageType msgType, const char *tag)
-{
-    static const auto pid = getpid();
-    StrandMessage message(StrandCoord(KidIdentifier, pid));
-    if (tag)
-        message.strand.tag = tag;
-    TypedMsgHdr hdr;
-    message.pack(msgType, hdr);
-    SendMessage(Port::CoordinatorAddr(), hdr);
-}
-

@@ -38,5 +38,4 @@ libsecurity_la_SOURCES = \
 	ServerOptions.h \
 	Session.cc \
 	Session.h \
-	ZeroSensitiveMemory.h \
 	forward.h
