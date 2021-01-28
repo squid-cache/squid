@@ -652,8 +652,13 @@ HttpRequest::canHandle1xx() const
 }
 
 Http::StatusCode
-HttpRequest::canUseContentLength() const
+HttpRequest::checkEntityFraming() const
 {
+    // RFC 7230 section 3.3.3 #3 paragraph 3:
+    // Transfer-Encoding overrides Content-Length
+    if (header.chunked())
+        return Http::scNone;
+
     // RFC 7230 Section 3.3.3 #4:
     // conflicting Content-Length(s) mean a message framing error
     if (header.conflictingContentLength())

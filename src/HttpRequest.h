@@ -248,8 +248,9 @@ public:
 
     virtual void configureContentLengthInterpreter(Http::ContentLengthInterpreter &) {}
 
-    /// checks whether the Content-Length header (or lack of) is acceptible
-    Http::StatusCode canUseContentLength() const;
+    /// Check whether the message framing headers are valid.
+    /// \returns Http::scNone or an HTTP error status
+    Http::StatusCode checkEntityFraming() const;
 
     /// Parses request header using Parser.
     /// Use it in contexts where the Parser object is available.
