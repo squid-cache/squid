@@ -450,17 +450,25 @@ Ssl::VerifyConnCertificates(Security::Connection &sconn, const Ssl::X509_STACK_P
     // here as well: https://github.com/measurement-factory/squid/commit/e862d33
 
     if (!peerCertificatesChain || sk_X509_num(peerCertificatesChain) == 0) {
-        debugs(83, 2, "no server certificates?");
+        debugs(83, 2, "no server certificates");
         return false;
     }
 
     const auto verificationStore = SSL_CTX_get_cert_store(SSL_get_SSL_CTX(&sconn));
-    assert(verificationStore);
+    if (!verificationStore) {
+        debugs(83, 2, "no certificate store");
+        return false;
+    }
+
     const X509_STORE_CTX_Pointer storeCtx(X509_STORE_CTX_new());
-    assert(storeCtx); //check for allocation failure.
+    if (!storeCtx) {
+        debugs(83, 2, "cannot create X509_STORE_CTX; likely OOM");
+        return false;
+    }
+
     const auto peerCert = sk_X509_value(peerCertificatesChain, 0);
     if (!X509_STORE_CTX_init(storeCtx.get(), verificationStore, peerCert, peerCertificatesChain)) {
-        debugs(83, DBG_IMPORTANT, "error initializing X509_STORE");
+        debugs(83, 2, "cannot initialize X509_STORE_CTX");
         return false;
     }
 
@@ -472,7 +480,7 @@ Ssl::VerifyConnCertificates(Security::Connection &sconn, const Ssl::X509_STACK_P
         X509_STORE_CTX_set_flags(storeCtx.get(), suiteBflags);
 
     if (!X509_STORE_CTX_set_ex_data(storeCtx.get(), SSL_get_ex_data_X509_STORE_CTX_idx(), &sconn)) {
-        debugs(83, DBG_IMPORTANT, "error attaching SSL object to X509_STORE");
+        debugs(83, 2, "cannot attach SSL object to X509_STORE_CTX");
         return false;
     }
 
@@ -481,16 +489,19 @@ Ssl::VerifyConnCertificates(Security::Connection &sconn, const Ssl::X509_STACK_P
 
     // tell OpenSSL we are verifying a server certificate
     if (!X509_STORE_CTX_set_default(storeCtx.get(), "ssl_server")) {
-        debugs(83, DBG_IMPORTANT, "error setting default verifying method to 'ssl_server'");
+        debugs(83, 2, "cannot set default verification method to ssl_server");
         return false;
     }
 
     // overwrite context "verification parameters" with connection non-defaults
     const auto param = X509_STORE_CTX_get0_param(storeCtx.get());
-    assert(param);
+    if (!param) {
+        debugs(83, 2, "no context verification parameters");
+        return false;
+    }
     X509_VERIFY_PARAM_set_auth_level(param, SSL_get_security_level(&sconn));
     if (!X509_VERIFY_PARAM_set1(param, SSL_get0_param(&sconn))) {
-        debugs(83, DBG_IMPORTANT, "error inheriting SSL verification params");
+        debugs(83, 2, "cannot overwrite context verification parameters");
         return false;
     }
 
@@ -500,13 +511,15 @@ Ssl::VerifyConnCertificates(Security::Connection &sconn, const Ssl::X509_STACK_P
         X509_STORE_CTX_set_verify_cb(storeCtx.get(), cb);
 
     // verify the server certificate chain in the prepared validation context
-    const auto valid = (VerifyCtxCertificates(storeCtx.get(), extraCerts.get()) > 0);
-    if (!valid) {
+    if (VerifyCtxCertificates(storeCtx.get(), extraCerts.get()) <= 0) {
         // see also: ssl_verify_cb() details errors via ssl_ex_index_ssl_errors
         const auto verifyResult = X509_STORE_CTX_get_error(storeCtx.get());
-        debugs(83, 3, "verification result: " << verifyResult << ' ' << X509_verify_cert_error_string(verifyResult));
+        debugs(83, 3, "verification failure: " << verifyResult << ' ' << X509_verify_cert_error_string(verifyResult));
+        return false;
     }
-    return valid;
+
+    debugs(83, 7, "success");
+    return true;
 }
 
 /* Ssl::VerifyCallbackParameters */
@@ -1145,9 +1158,8 @@ sk_x509_findIssuer(const STACK_OF(X509) *sk, X509 *cert)
     return nullptr;
 }
 
-/// Searches for cert issuer in the certificates stored in connContext's
-/// CA store.
-/// \return the cert issuer after increase its reference or nil
+/// finds issuer of a given certificate in CA store of the given connContext
+/// \returns the cert issuer (after increasing its reference count) or nil
 static X509 *
 findIssuerInCaDb(X509 *cert, const Security::ContextPointer &connContext)
 {
@@ -1165,11 +1177,12 @@ findIssuerInCaDb(X509 *cert, const Security::ContextPointer &connContext)
     if (X509_STORE_CTX_init(storeCtx, store, nullptr, nullptr)) {
         auto ret = X509_STORE_CTX_get1_issuer(&issuer, storeCtx, cert);
         if ( ret < 0)
-            debugs(83, DBG_IMPORTANT, "STORE_CTX search failed");
+            debugs(83, 3, "found none");
     } else {
         const int ssl_error = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "Failed to initialize STORE_CTX object: " << Security::ErrorString(ssl_error));
     }
+
     X509_STORE_CTX_free(storeCtx);
 
     return issuer;
@@ -1181,22 +1194,21 @@ Ssl::findIssuerCertificate(X509 *cert, const STACK_OF(X509) *serverCertificates,
     Must(cert);
     Must(serverCertificates);
 
-    X509 *issuer = nullptr;
-    // check certificates chain
-    if ((issuer = sk_x509_findIssuer(serverCertificates, cert))) {
+    // check certificate chain
+    if (const auto issuer = sk_x509_findIssuer(serverCertificates, cert)) {
         X509_up_ref(issuer);
         return Security::CertPointer(issuer);
     }
 
-    // Check untrusted certificates
-    if ((issuer = findCertIssuerFast(SquidUntrustedCerts, cert))) {
+    // check untrusted certificates
+    if (const auto issuer = findCertIssuerFast(SquidUntrustedCerts, cert)) {
         X509_up_ref(issuer);
         return Security::CertPointer(issuer);
     }
 
     // check trusted CA certificates
-    if (context && (issuer = findIssuerInCaDb(cert, context))) {
-        // No need to increase reference, findIssuerInCaDb does it.
+    if (const auto issuer = findIssuerInCaDb(cert, context)) {
+        // no X509_up_ref(issuer) because findIssuerInCaDb() ups reference count
         return Security::CertPointer(issuer);
     }
 
@@ -1224,8 +1236,7 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *
         }
     }
 
-    debugs(83, (URIs.empty() ? 3 : 5), "Found " << URIs.size() << " missing issuer certificates URI");
-
+    debugs(83, (URIs.empty() ? 3 : 5), "found: " << URIs.size());
     return !URIs.empty();
 }
 

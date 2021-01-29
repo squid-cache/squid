@@ -766,16 +766,19 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
         ContextPointer ctx(getTlsContext());
         const auto certsList = SSL_get_peer_cert_chain(&sconn);
         if (!Ssl::findIssuerCertificate(cert, certsList, ctx)) {
-            if (const auto issuerUri = Ssl::findIssuerUri(cert))
+            if (const auto issuerUri = Ssl::findIssuerUri(cert)) {
+                debugs(81, 5, "certificate " <<
+                       X509_NAME_oneline(X509_get_subject_name(cert), buffer, sizeof(buffer)) <<
+                       " points to its missing issuer certificate at " << issuerUri);
                 urlsOfMissingCerts.push(SBuf(issuerUri));
-            else {
-                debugs(81, 3, "short-circuit: letting negotiation fail after finding a certificate with no IAI, " <<
+            } else {
+                debugs(81, 3, "found a certificate with no IAI, " <<
                        "signed by a missing issuer certificate:  " <<
                        X509_NAME_oneline(X509_get_subject_name(cert), buffer, sizeof(buffer)));
-
-                // Continue with downloading certificates, if there are more
-                // on the list, hopping that downloading eventually completes
-                // the chain.
+                // We could short-circuit here, proceeding to chain validation
+                // that is likely to fail. Instead, we keep going because we
+                // hope that if we find at least one certificate to fetch, it
+                // will complete the chain (that contained extra certificates).
             }
         }
     }
@@ -815,7 +818,7 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
     urlsOfMissingCerts.pop();
 }
 
-/// calculates URLs of the missing intermediate certificates or returns false
+/// finds URLs of (some) missing intermediate certificates or returns false
 bool
 Security::PeerConnector::computeMissingCertificateUrls(const Connection &sconn)
 {
@@ -828,11 +831,10 @@ Security::PeerConnector::computeMissingCertificateUrls(const Connection &sconn)
 
     const auto ctx = getTlsContext();
     if (!Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx))
-        return false;  // missingChainCertificatesUrls() reports the exact reason
-
-    assert(!urlsOfMissingCerts.empty());
+        return false; // missingChainCertificatesUrls() reports the exact reason
 
     debugs(83, 5, "URLs: " << urlsOfMissingCerts.size());
+    assert(!urlsOfMissingCerts.empty());
     return true;
 }
 
@@ -862,6 +864,7 @@ Security::PeerConnector::resumeNegotiation()
         lastError = new TlsNegotiationDetails(SSL_ERROR_SSL, sconn);
     }
 
+    assert(lastError); // implied by isSuspended()
     if (lastError->sslIoResult <= 0)
         handleNegotiateError(*lastError);
     else

@@ -181,18 +181,15 @@ void SSL_add_untrusted_cert(SSL *ssl, X509 *cert);
 /// finds certificate issuer URI in the Authority Info Access extension
 const char *findIssuerUri(X509 *cert);
 
-/**
- * Searches in serverCertificates list and in local databases for the cert
- * issuer.
- \param context The context to use to retrieve configured CA's db or a null.
- \return the issuer certificate if found, nil otherwise
- */
+/// Searches serverCertificates and local databases for the cert issuer.
+/// \param context where to retrieve the configured CA's db; may be nil
+/// \returns the found issuer certificate or nil
 Security::CertPointer findIssuerCertificate(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
 
 /**
- * Fill URIs queue with the URI of missing certificates from serverCertificate chain
+ * Fill URIs queue with the uris of missing certificates from serverCertificate chain
  * if this information provided by Authority Info Access.
- \return true if at least one URI is retrieved, false otherwise
+ \return whether at least one URI is known, including previously known ones
  */
 bool missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
 
