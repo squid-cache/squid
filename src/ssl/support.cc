@@ -1175,9 +1175,15 @@ findIssuerInCaDb(X509 *cert, const Security::ContextPointer &connContext)
     X509 *issuer = nullptr;
     X509_STORE *store = SSL_CTX_get_cert_store(connContext.get());
     if (X509_STORE_CTX_init(storeCtx, store, nullptr, nullptr)) {
-        auto ret = X509_STORE_CTX_get1_issuer(&issuer, storeCtx, cert);
-        if ( ret < 0)
-            debugs(83, 3, "found none");
+        const auto ret = X509_STORE_CTX_get1_issuer(&issuer, storeCtx, cert);
+        if (ret > 0) {
+            assert(issuer);
+            char buffer[256];
+            debugs(83, 5, "found " << X509_NAME_oneline(X509_get_subject_name(issuer), buffer, sizeof(buffer)));
+        } else {
+            debugs(83, ret < 0 ? 2 : 3, "not found or failure: " << ret);
+            assert(!issuer);
+        }
     } else {
         const int ssl_error = ERR_get_error();
         debugs(83, DBG_IMPORTANT, "Failed to initialize STORE_CTX object: " << Security::ErrorString(ssl_error));
