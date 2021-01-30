@@ -191,7 +191,7 @@ Security::CertPointer findIssuerCertificate(X509 *cert, const STACK_OF(X509) *se
  * if this information provided by Authority Info Access.
  \return whether at least one URI is known, including previously known ones
  */
-bool missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context);
+bool missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) &serverCertificates, const Security::ContextPointer &context);
 
 /**
   \ingroup ServerProtocolSSLAPI

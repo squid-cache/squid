@@ -830,7 +830,7 @@ Security::PeerConnector::computeMissingCertificateUrls(const Connection &sconn)
     debugs(83, 5, "server certificates: " << sk_X509_num(certs));
 
     const auto ctx = getTlsContext();
-    if (!Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, certs, ctx))
+    if (!Ssl::missingChainCertificatesUrls(urlsOfMissingCerts, *certs, ctx))
         return false; // missingChainCertificatesUrls() reports the exact reason
 
     debugs(83, 5, "URLs: " << urlsOfMissingCerts.size());

@@ -1222,14 +1222,12 @@ Ssl::findIssuerCertificate(X509 *cert, const STACK_OF(X509) *serverCertificates,
 }
 
 bool
-Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context)
+Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) &serverCertificates, const Security::ContextPointer &context)
 {
-    Must(serverCertificates);
+    for (int i = 0; i < sk_X509_num(&serverCertificates); ++i) {
+        const auto cert = sk_X509_value(&serverCertificates, i);
 
-    for (int i = 0; i < sk_X509_num(serverCertificates); ++i) {
-        const auto cert = sk_X509_value(serverCertificates, i);
-
-        if (findIssuerCertificate(cert, serverCertificates, context))
+        if (findIssuerCertificate(cert, &serverCertificates, context))
             continue;
 
         if (const auto issuerUri = findIssuerUri(cert)) {
@@ -1248,9 +1246,11 @@ Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) *
 
 /// add missing issuer certificates to untrustedCerts
 static void
-completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
+completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) &untrustedCerts)
 {
-    debugs(83, 2,  "completing " << sk_X509_num(untrustedCerts) << " OpenSSL untrusted certs using " << SquidUntrustedCerts.size() << " configured untrusted certificates");
+    debugs(83, 2,  "completing " << sk_X509_num(&untrustedCerts) <<
+           " OpenSSL untrusted certs using " << SquidUntrustedCerts.size() <<
+           " configured untrusted certificates");
 
     const X509_VERIFY_PARAM *param = X509_STORE_CTX_get0_param(ctx);
     int depth = X509_VERIFY_PARAM_get_depth(param);
@@ -1266,10 +1266,10 @@ completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
 
         // untrustedCerts is short, not worth indexing
         const Security::ContextPointer nullCtx;
-        auto issuer = Ssl::findIssuerCertificate(current.get(), untrustedCerts, nullCtx);
+        auto issuer = Ssl::findIssuerCertificate(current.get(), &untrustedCerts, nullCtx);
         current = issuer;
         if (issuer)
-            sk_X509_push(untrustedCerts, issuer.release());
+            sk_X509_push(&untrustedCerts, issuer.release());
     }
 
     if (i >= depth)
@@ -1300,7 +1300,7 @@ VerifyCtxCertificates(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
     // If the local untrusted certificates internal database is used
     // run completeIssuers to add missing certificates if possible.
     if (SquidUntrustedCerts.size() > 0)
-        completeIssuers(ctx, untrustedCerts.get());
+        completeIssuers(ctx, *untrustedCerts);
 
     X509_STORE_CTX_set0_untrusted(ctx, untrustedCerts.get()); // No locking/unlocking, just sets ctx->untrusted
     int ret = X509_verify_cert(ctx);
