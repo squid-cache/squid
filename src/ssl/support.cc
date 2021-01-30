@@ -1198,10 +1198,9 @@ Security::CertPointer
 Ssl::findIssuerCertificate(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context)
 {
     Must(cert);
-    Must(serverCertificates);
 
-    // check certificate chain
-    if (const auto issuer = sk_x509_findIssuer(serverCertificates, cert)) {
+    // check certificate chain, if any
+    if (const auto issuer = serverCertificates ? sk_x509_findIssuer(serverCertificates, cert) : nullptr) {
         X509_up_ref(issuer);
         return Security::CertPointer(issuer);
     }
