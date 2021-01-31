@@ -36,9 +36,10 @@ public:
 
     /** Update the cached password for a username. */
     void updateCached(User *from);
-    virtual int32_t ttl() const override;
 
     /* Auth::User API */
+    virtual int32_t ttl() const override;
+    virtual void updateExpiration(int64_t) override;
     static CbcPointer<Auth::CredentialsCache> Cache();
     virtual void addToNameCache() override;
 
