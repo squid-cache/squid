@@ -39,7 +39,7 @@ Auth::Digest::User::~User()
 int32_t
 Auth::Digest::User::ttl() const
 {
-    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime + Auth::TheConfig.credentialsTtl);
+    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime);
 
     /* find the longest lasting nonce. */
     int32_t latest_nonce = -1;
