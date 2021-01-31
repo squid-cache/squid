@@ -31,16 +31,22 @@ Auth::Basic::User::ttl() const
     if (credentials() != Auth::Ok && credentials() != Auth::Pending)
         return -1; // TTL is obsolete NOW.
 
-    int32_t basic_ttl = expiretime - squid_curtime + static_cast<Auth::Basic::Config*>(config)->credentialsTTL;
-    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime + Auth::TheConfig.credentialsTtl);
+    return expiretime - current_time.tv_sec;
+}
 
-    return min(basic_ttl, global_ttl);
+void
+Auth::Basic::User::updateExpiration(int64_t ttl)
+{
+    if (ttl < 0)
+        ttl = min(Auth::TheConfig.credentialsTtl, static_cast<Auth::Basic::Config*>(config)->credentialsTTL);
+
+    Auth::User::updateExpiration(ttl);
 }
 
 bool
 Auth::Basic::User::authenticated() const
 {
-    if ((credentials() == Auth::Ok) && (expiretime + static_cast<Auth::Basic::Config*>(config)->credentialsTTL > squid_curtime))
+    if (credentials() == Auth::Ok && !expired())
         return true;
 
     debugs(29, 4, "User not authenticated or credentials need rechecking.");
