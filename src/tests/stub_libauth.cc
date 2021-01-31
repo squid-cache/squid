@@ -45,6 +45,8 @@ Auth::CredentialState Auth::User::credentials() const STUB_RETVAL(credentials_st
 void Auth::User::credentials(CredentialState) STUB
 void Auth::User::absorb(Auth::User::Pointer) STUB
 Auth::User::~User() STUB_NOP
+void Auth::User::noteHelperTtl(const char *) STUB
+void Auth::User::updateExpiration(int64_t) STUB
 void Auth::User::clearIp() STUB
 void Auth::User::removeIp(Ip::Address) STUB
 void Auth::User::addIp(Ip::Address) STUB

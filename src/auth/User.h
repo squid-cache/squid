@@ -71,6 +71,16 @@ public:
      */
     virtual int32_t ttl() const = 0;
 
+    /// simple accessor to detect expired credentials
+    bool expired() const { return ttl() < 0; }
+
+    /// update credentials lifetime using ttl= from helper
+    virtual void noteHelperTtl(const char *);
+
+    /// Scheme-specific update of credentials lifetime
+    /// using TTL value in seconds
+    virtual void updateExpiration(int64_t);
+
     /* Manage list of IPs using this username */
     void clearIp();
     void removeIp(Ip::Address);
