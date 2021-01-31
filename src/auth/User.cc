@@ -47,6 +47,21 @@ Auth::User::credentials(CredentialState newCreds)
     credentials_state = newCreds;
 }
 
+void
+Auth::User::noteHelperTtl(const char *ttlNote)
+{
+    const int64_t ttl = (ttlNote ? strtoll(ttlNote, nullptr, 10) : -1);
+    updateExpiration(ttl);
+}
+
+void
+Auth::User::updateExpiration(int64_t ttl)
+{
+    /// Default behaviour: set expiry to current time + TTL.
+    /// Where TTL is 0 or a positive value.
+    expiretime = current_time.tv_sec + (ttl >= 0 ? ttl : 0);
+}
+
 /**
  * Combine two user structs. ONLY to be called from within a scheme
  * module. The scheme module is responsible for ensuring that the
