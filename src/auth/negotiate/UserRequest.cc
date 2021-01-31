@@ -348,9 +348,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, const Helper::Reply &reply
             local_auth_user = cached_user;
             auth_user_request->user(local_auth_user);
         }
-        /* set these to now because this is either a new login from an
-         * existing user or a new user */
-        local_auth_user->expiretime = current_time.tv_sec;
+        local_auth_user->updateExpiration(0); // either new user or fresh re-login
         auth_user_request->user()->credentials(Auth::Ok);
         debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << auth_user_request->user()->username() << "'");
     }
