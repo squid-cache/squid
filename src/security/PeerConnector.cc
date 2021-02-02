@@ -216,9 +216,11 @@ Security::PeerConnector::negotiate()
         hidMissingIssuer = false; // prep for the next SSL_connect()
 
         // TODO: With a way we need to check for X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY error
-        // or now assume always true, because always we are not blocking on this error.
-        const bool checkforUnableToGetIssuer = true;
-        if (result.category != Security::IoResult::ioError || checkforUnableToGetIssuer)
+        // The IoResult does not provide this information. This info is stored
+        // in ssl_ex_index_ssl_error_detail however.
+        // For now assume always false, this is what current code does.
+        const bool errorIsUnableToGetIssuer = false;
+        if (!errorIsUnableToGetIssuer)
             return handleMissingCertificates(result);
 
         debugs(83, DBG_IMPORTANT, "BUG: Honoring unexpected SSL_connect() error: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
