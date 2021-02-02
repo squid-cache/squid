@@ -150,6 +150,31 @@ applyPluginsTo ()
         done
 }
 
+# succeeds if all MakeNamedErrorDetail() names are unique
+checkMakeNamedErrorDetails ()
+{
+    problems=1 # assume there are problems until proven otherwise
+
+    options='-h --only-matching --extended-regexp'
+    git grep $options 'MakeNamedErrorDetail[(]".*?"[)]' src |
+        sort |
+        uniq --count > \
+        MakeNamedErrorDetail.tmp
+
+    if grep --quiet --word-regexp 1 MakeNamedErrorDetail.tmp; then
+        if grep --invert-match --word-regexp 1 MakeNamedErrorDetail.tmp; then
+            echo "ERROR: Duplicated MakeNamedErrorDetail names (see above)."
+        else
+            problems=0
+        fi
+    else
+        echo "ERROR: Cannot find or process MakeNamedErrorDetail calls."
+    fi
+
+    rm MakeNamedErrorDetail.tmp # ignore (unexpected) cleanup failures
+    return $problems
+}
+
 srcFormat ()
 {
 #
@@ -349,6 +374,8 @@ printAmFile STUB_SOURCE "src/" "tests/stub_*.cc" > src/tests/Stub.am
 
 # Build the GPERF generated content
 make -C src/http gperf-files
+
+run_ checkMakeNamedErrorDetails || exit 1
 
 # Run formatting
 echo "" >doc/debug-sections.tmp

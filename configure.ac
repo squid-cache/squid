@@ -2638,6 +2638,7 @@ SQUID_YESNO([$enableval],
 ])
 # Default OFF. This is a debug feature. Only check and enable if forced ON.
 if test "x$enable_cpu_profiling" = "xyes"; then
+  AC_CHECK_FUNCS(clock_gettime_nsec_np)
   SQUID_CHECK_FUNCTIONAL_CPU_PROFILER
   if test "x$squid_cv_cpu_profiler_works" = "xno"; then
     AC_MSG_ERROR([CPU profiling will not be functional in this build.])
@@ -3742,6 +3743,7 @@ AC_CONFIG_FILES([
 	src/DiskIO/DiskThreads/Makefile
 	src/DiskIO/IpcIo/Makefile
 	src/DiskIO/Mmapped/Makefile
+	src/error/Makefile
 	src/esi/Makefile
 	src/eui/Makefile
 	src/format/Makefile

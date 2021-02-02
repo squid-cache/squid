@@ -239,9 +239,6 @@ public:
 
 public:
     static size_t inUseCount();
-    static void getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method);
-    static void getPublicByRequest(StoreClient * aClient, HttpRequest * request);
-    static void getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method);
 
     void *operator new(size_t byteCount);
     void operator delete(void *address);

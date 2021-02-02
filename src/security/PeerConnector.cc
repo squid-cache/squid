@@ -20,6 +20,7 @@
 #include "HttpRequest.h"
 #include "neighbors.h"
 #include "pconn.h"
+#include "security/Io.h"
 #include "security/NegotiationHistory.h"
 #include "security/PeerConnector.h"
 #include "SquidConfig.h"
@@ -35,42 +36,28 @@
 class TlsNegotiationDetails: public RefCountable {
 public:
 #if USE_OPENSSL || USE_GNUTLS
-    TlsNegotiationDetails(int ioResult, const Security::Connection &);
+    TlsNegotiationDetails(const Security::IoResult &ioResult, const Security::Connection &);
 #else
     TlsNegotiationDetails() = default;
 #endif
 
-    int sslIoResult = 0; ///< SSL_connect() or gnutls_handshake() return value
-    int ssl_error = 0; ///< an error retrieved from SSL_get_error
-    unsigned long ssl_lib_error = 0; ///< OpenSSL library error
+    Security::IoResult sslIoResult; ///< Security::Connect() return value
 };
 
 /// TlsNegotiationDetails printer (for debugging)
 static inline std::ostream &
 operator <<(std::ostream &os, const TlsNegotiationDetails &ed)
 {
-#if USE_OPENSSL
-    os << ed.sslIoResult << ", " << ed.ssl_error << ", " << ed.ssl_lib_error;
-#elif USE_GNUTLS
-    os << ed.sslIoResult;
+#if USE_OPENSSL || USE_GNUTLS
+    os << ed.sslIoResult.category << ", " << ed.sslIoResult.errorDescription;
 #endif
     return os;
 }
 
 #if USE_OPENSSL || USE_GNUTLS
-TlsNegotiationDetails::TlsNegotiationDetails(const int ioResult, const Security::Connection &sconn):
+TlsNegotiationDetails::TlsNegotiationDetails(const Security::IoResult &ioResult, const Security::Connection &sconn):
     sslIoResult(ioResult)
 {
-#if USE_OPENSSL
-    ssl_error = SSL_get_error(&sconn, sslIoResult);
-
-    switch (ssl_error) {
-    case SSL_ERROR_SSL:
-    case SSL_ERROR_SYSCALL:
-        ssl_lib_error = ERR_get_error();
-        break;
-    }
-#endif
 }
 #endif /* USE_OPENSSL || USE_GNUTLS */
 
@@ -136,9 +123,8 @@ Security::PeerConnector::commCloseHandler(const CommCloseCbParams &params)
 
     debugs(83, 5, "FD " << params.fd << ", Security::PeerConnector=" << params.data);
     const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
-#if USE_OPENSSL
-    err->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
-#endif
+    static const auto d = MakeNamedErrorDetail("TLS_CONNECT_CLOSE");
+    err->detailError(d);
     bail(err);
 }
 
@@ -147,9 +133,8 @@ Security::PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &)
 {
     debugs(83, 5, serverConnection() << " timedout. this=" << (void*)this);
     const auto err = new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scGatewayTimeout, request.getRaw(), al);
-#if USE_OPENSSL
-    err->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, nullptr, nullptr);
-#endif
+    static const auto d = MakeNamedErrorDetail("TLS_CONNECT_TIMEOUT");
+    err->detailError(d);
     bail(err);
 }
 
@@ -239,11 +224,8 @@ Security::PeerConnector::negotiate()
     if (fd_table[fd].closing())
         return;
 
-#if USE_OPENSSL
+    const auto result = Security::Connect(*serverConnection());
     auto session = fd_table[fd].ssl.get();
-    debugs(83, 5, "SSL_connect session=" << (void*)session);
-    Must(session);
-    const int result = SSL_connect(session);
     auto &sconn = *session;
     const TlsNegotiationDetails ed(result, sconn);
 
@@ -264,52 +246,46 @@ Security::PeerConnector::negotiate()
     if (auto &hidMissingIssuer = Ssl::VerifyCallbackParameters::At(sconn).hidMissingIssuer) {
         hidMissingIssuer = false; // prep for the next SSL_connect()
 
-        if (ed.sslIoResult > 0 || ed.ssl_error != X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY)
+        // TODO: With a way we need to check for X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY error
+        // or now assume always true, because always we are not blocking on this error.
+        const bool checkforUnableToGetIssuer = true;
+        if (ed.sslIoResult.category != Security::IoResult::ioError || checkforUnableToGetIssuer)
             return handleMissingCertificates(ed);
 
         debugs(83, DBG_IMPORTANT, "BUG: Honoring unexpected SSL_connect() error: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
         // fall through to regular error handling
     }
 
-    if (result <= 0) {
-#elif USE_GNUTLS
-    auto session = fd_table[fd].ssl.get();
-    const int result = gnutls_handshake(session);
-    debugs(83, 5, "gnutls_handshake session=" << (void*)session << ", result=" << result);
-    const TlsNegotiationDetails ed(result, *session);
-
-    if (result == GNUTLS_E_SUCCESS) {
-        char *desc = gnutls_session_get_desc(session);
-        debugs(83, 2, serverConnection() << " TLS Session info: " << desc);
-        gnutls_free(desc);
-    }
-
-    if (result != GNUTLS_E_SUCCESS) {
-        // debug the TLS session state so far
-        auto descIn = gnutls_handshake_get_last_in(session);
-        debugs(83, 2, "handshake IN: " << gnutls_handshake_description_get_name(descIn));
-        auto descOut = gnutls_handshake_get_last_out(session);
-        debugs(83, 2, "handshake OUT: " << gnutls_handshake_description_get_name(descOut));
-#else
-    const TlsNegotiationDetails ed;
-    {
-#endif
-        handleNegotiateError(ed);
-        return; // we might be gone by now
-    }
-
-    handleNegotiationSuccess();
+    handleNegotiationResult(result);
 }
 
 void
-Security::PeerConnector::handleNegotiationSuccess()
+Security::PeerConnector::handleNegotiationResult(const Security::IoResult &result)
 {
-    recordNegotiationDetails();
+    switch (result.category) {
+    case Security::IoResult::ioSuccess:
+        recordNegotiationDetails();
+        if (sslFinalized())
+            sendSuccess();
+        return; // we may be gone by now
 
-    if (!sslFinalized())
+    case Security::IoResult::ioWantRead:
+        noteWantRead();
         return;
 
-    sendSuccess();
+    case Security::IoResult::ioWantWrite:
+        noteWantWrite();
+        return;
+
+    case Security::IoResult::ioError:
+        break; // fall through to error handling
+    }
+
+    // TODO: Honor result.important when working in a reverse proxy role?
+    debugs(83, 2, "ERROR: " << result.errorDescription <<
+           " while establishing TLS connection on FD: " << serverConnection()->fd << result.errorDetail);
+    recordNegotiationDetails();
+    noteNegotiationError(result.errorDetail);
 }
 
 bool
@@ -361,7 +337,7 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 {
     Must(validationResponse != NULL);
 
-    Ssl::ErrorDetail *errDetails = NULL;
+    ErrorDetail::Pointer errDetails;
     bool validatorFailed = false;
 
     if (Debug::Enabled(83, 5)) {
@@ -391,7 +367,7 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
         anErr = new ErrorState(ERR_GATEWAY_FAILURE, Http::scInternalServerError, request.getRaw(), al);
     }  else {
         anErr =  new ErrorState(ERR_SECURE_CONNECT_FAIL, Http::scServiceUnavailable, request.getRaw(), al);
-        anErr->detail = errDetails;
+        anErr->detailError(errDetails);
         /*anErr->xerrno= Should preserved*/
     }
 
@@ -406,7 +382,7 @@ Security::PeerConnector::sslCrtvdHandleReply(Ssl::CertValidationResponse::Pointe
 /// The first honored error, if any, is returned via errDetails parameter.
 /// The method returns all seen errors except SSL_ERROR_NONE as Security::CertErrors.
 Security::CertErrors *
-Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, Ssl::ErrorDetail *& errDetails)
+Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &resp, ErrorDetail::Pointer &errDetails)
 {
     ACLFilledChecklist *check = NULL;
     Security::SessionPointer session(fd_table[serverConnection()->fd].ssl);
@@ -439,10 +415,10 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
                 debugs(83, 3, "bypassing SSL error " << i->error_no << " in " << "buffer");
             } else {
                 debugs(83, 5, "confirming SSL error " << i->error_no);
-                X509 *brokenCert = i->cert.get();
+                const auto &brokenCert = i->cert;
                 Security::CertPointer peerCert(SSL_get_peer_certificate(session.get()));
                 const char *aReason = i->error_reason.empty() ? NULL : i->error_reason.c_str();
-                errDetails = new Ssl::ErrorDetail(i->error_no, peerCert.get(), brokenCert, aReason);
+                errDetails = new ErrorDetail(i->error_no, peerCert, brokenCert, aReason);
             }
             if (check) {
                 delete check->sslErrors;
@@ -481,61 +457,6 @@ Security::PeerConnector::negotiateSsl()
 }
 
 void
-Security::PeerConnector::handleNegotiateError(const TlsNegotiationDetails &ed)
-{
-    debugs(83, 5, ed);
-    Must(!isSuspended());
-
-    const int fd = serverConnection()->fd;
-    const Security::SessionPointer session(fd_table[fd].ssl);
-
-#if USE_OPENSSL
-    switch (ed.ssl_error) {
-    case SSL_ERROR_WANT_READ:
-        noteWantRead();
-        return;
-
-    case SSL_ERROR_WANT_WRITE:
-        noteWantWrite();
-        return;
-
-    default:
-        // no special error handling for all other errors
-        break;
-    }
-
-#elif USE_GNUTLS
-    switch (ed.sslIoResult) {
-    case GNUTLS_E_WARNING_ALERT_RECEIVED: {
-        auto alert = gnutls_alert_get(session.get());
-        debugs(83, DBG_IMPORTANT, "TLS ALERT: " << gnutls_alert_get_name(alert));
-    }
-    // drop through to next case
-
-    case GNUTLS_E_AGAIN:
-    case GNUTLS_E_INTERRUPTED:
-        if (gnutls_record_get_direction(session.get()) == 0)
-            noteWantRead();
-        else
-            noteWantWrite();
-        return;
-
-    default:
-        // no special error handling for all other errors
-        break;
-    }
-
-#else
-    // this avoids unused variable compiler warnings.
-    Must(!session);
-#endif
-
-    // Log connection details, if any
-    recordNegotiationDetails();
-    noteNegotiationError(ed.sslIoResult, ed.ssl_error, ed.ssl_lib_error);
-}
-
-void
 Security::PeerConnector::noteWantRead()
 {
     const int fd = serverConnection()->fd;
@@ -561,48 +482,28 @@ Security::PeerConnector::noteWantWrite()
 }
 
 void
-Security::PeerConnector::noteNegotiationError(const int ret, const int ssl_error, const int ssl_lib_error)
+Security::PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer &callerDetail)
 {
-#if defined(EPROTO)
-    int sysErrNo = EPROTO;
-#else
-    int sysErrNo = EACCES;
-#endif
-
+    auto primaryDetail = callerDetail;
 #if USE_OPENSSL
-    // store/report errno when ssl_error is SSL_ERROR_SYSCALL, ssl_lib_error is 0, and ret is -1
-    if (ssl_error == SSL_ERROR_SYSCALL && ret == -1 && ssl_lib_error == 0)
-        sysErrNo = errno;
-#endif
-    int xerr = errno;
+    const auto tlsConnection = fd_table[serverConnection()->fd].ssl.get();
 
-    const int fd = serverConnection()->fd;
-    debugs(83, DBG_IMPORTANT, "ERROR: negotiating TLS on FD " << fd <<
-           ": " << Security::ErrorString(ssl_lib_error) << " (" <<
-           ssl_error << "/" << ret << "/" << xerr << ")");
-
-    const auto anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request, al);
-    anErr->xerrno = sysErrNo;
-
-#if USE_OPENSSL
-    Security::SessionPointer session(fd_table[fd].ssl);
-    Ssl::ErrorDetail *errFromFailure = static_cast<Ssl::ErrorDetail *>(SSL_get_ex_data(session.get(), ssl_ex_index_ssl_error_detail));
-    if (errFromFailure != NULL) {
-        // The errFromFailure is attached to the ssl object
-        // and will be released when ssl object destroyed.
-        // Copy errFromFailure to a new Ssl::ErrorDetail object
-        anErr->detail = new Ssl::ErrorDetail(*errFromFailure);
-    } else {
-        // server_cert can be NULL here
-        X509 *server_cert = SSL_get_peer_certificate(session.get());
-        anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, server_cert, NULL);
-        X509_free(server_cert);
+    // find the highest priority detail
+    if (const auto storedDetailRaw = SSL_get_ex_data(tlsConnection, ssl_ex_index_ssl_error_detail)) {
+        const auto &storedDetail = *static_cast<ErrorDetail::Pointer*>(storedDetailRaw);
+        if (storedDetail->takesPriorityOver(*primaryDetail))
+            primaryDetail = storedDetail;
     }
 
-    if (ssl_lib_error != SSL_ERROR_NONE)
-        anErr->detail->setLibError(ssl_lib_error);
+    if (!primaryDetail->peerCert()) {
+        if (const auto serverCert = SSL_get_peer_certificate(tlsConnection))
+            primaryDetail->setPeerCertificate(CertPointer(serverCert));
+    }
 #endif
 
+    const auto anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request, al);
+    anErr->xerrno = primaryDetail->sysError();
+    anErr->detailError(primaryDetail);
     noteNegotiationDone(anErr);
     bail(anErr);
 }
@@ -809,7 +710,7 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
     callerHandlesMissingCertificates = false;
 
     if (!computeMissingCertificateUrls(sconn))
-        return handleNegotiateError(ed);
+        return handleNegotiationResult(ed.sslIoResult);
 
     suspendNegotiation(ed);
 
@@ -861,14 +762,12 @@ Security::PeerConnector::resumeNegotiation()
         // simulate an earlier SSL_connect() failure with a new error
         // TODO: When we can use Security::ErrorDetail, we should resume with a
         // detailed _validation_ error, not just a generic SSL_ERROR_SSL!
-        lastError = new TlsNegotiationDetails(SSL_ERROR_SSL, sconn);
+        const ErrorDetail::Pointer errorDetail = new ErrorDetail(SQUID_TLS_ERR_CONNECT, SSL_ERROR_SSL, 0);
+        lastError = new TlsNegotiationDetails(Security::IoResult(errorDetail), sconn);
     }
 
     assert(lastError); // implied by isSuspended()
-    if (lastError->sslIoResult <= 0)
-        handleNegotiateError(*lastError);
-    else
-        handleNegotiationSuccess();
+    handleNegotiationResult(lastError->sslIoResult);
 }
 
 #endif //USE_OPENSSL

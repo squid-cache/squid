@@ -12,6 +12,7 @@
 #define SQUID_IPC_TYPED_MSG_HDR_H
 
 #include "compat/cmsg.h"
+#include "ipc/Messages.h"
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -43,7 +44,9 @@ public:
     /* message type manipulation; these must be called before put/get*() */
     void setType(int aType); ///< sets message type; use MessageType enum
     void checkType(int aType) const; ///< throws if stored type is not aType
-    int type() const; ///< returns stored type or zero if none
+    /// received or set message kind; may not be a MessageType value
+    /// \returns 0 if no message kind has been received or set
+    int rawType() const { return msg_iov ? data.type_ : 0; }
 
     /* access for Plain Old Data (POD)-based message parts */
     template <class Pod>

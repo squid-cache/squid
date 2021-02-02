@@ -33,6 +33,8 @@ typedef RefCount<TlsNegotiationDetails> TlsNegotiationDetailsPointer;
 namespace Security
 {
 
+class IoResult;
+
 /**
  * Initiates encryption of a given open TCP connection to a peer or server.
  * Despite its name does not perform any connect(2) operations. Owns the
@@ -92,14 +94,8 @@ protected:
     /// Otherwise, returns true, regardless of negotiation success/failure.
     bool sslFinalized();
 
-    /// Called when the negotiation step aborted because data needs to
-    /// be transferred to/from server or on error. In the first case
-    /// setups the appropriate Comm::SetSelect handler. In second case
-    /// fill an error and report to the PeerConnector caller.
-    void handleNegotiateError(const TlsNegotiationDetails &);
-
-    /// Called after the negotiation has finished successfully.
-    void handleNegotiationSuccess();
+    /// Called after each negotiation step to handle the result
+    void handleNegotiationResult(const Security::IoResult &);
 
     /// Called when the openSSL SSL_connect fnction request more data from
     /// the remote SSL server. Sets the read timeout and sets the
@@ -132,10 +128,7 @@ protected:
     virtual void noteWantWrite();
 
     /// Called when the SSL_connect function aborts with an SSL negotiation error
-    /// \param result the SSL_connect return code
-    /// \param ssl_error the error code returned from the SSL_get_error function
-    /// \param ssl_lib_error the error returned from the ERR_Get_Error function
-    virtual void noteNegotiationError(const int result, const int ssl_error, const int ssl_lib_error);
+    virtual void noteNegotiationError(const Security::ErrorDetailPointer &);
 
     /// Called when the SSL negotiation to the server completed and the certificates
     /// validated using the cert validator.
@@ -183,7 +176,7 @@ private:
     void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
-    Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, Ssl::ErrorDetail *&);
+    Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, ErrorDetailPointer &);
 
     bool computeMissingCertificateUrls(const Connection &);
 #endif
