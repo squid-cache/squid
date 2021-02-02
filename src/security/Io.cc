@@ -22,6 +22,33 @@ typedef SessionPointer::element_type *ConnectionPointer;
 
 } // namespace Security
 
+void
+Security::IoResult::print(std::ostream &os) const
+{
+    const char *strCat = "\"unknown\"";
+    switch (category) {
+    case ioSuccess:
+        strCat = "\"success\"";
+        break;
+    case ioWantRead:
+        strCat = "\"want read\"";
+        break;
+    case ioWantWrite:
+        strCat = "\"want write\"";
+        break;
+    case ioError:
+        strCat = "\"error\"";
+        break;
+    }
+    os << strCat;
+
+    if (errorDescription)
+        os << ", " << errorDescription;
+
+    if (important)
+        os << ", important";
+}
+
 // TODO: Replace high-level ERR_get_error() calls with a new std::ostream
 // ReportErrors manipulator inside debugs(), followed by a ForgetErrors() call.
 void

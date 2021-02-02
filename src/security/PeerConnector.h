@@ -16,6 +16,7 @@
 #include "http/forward.h"
 #include "security/EncryptorAnswer.h"
 #include "security/forward.h"
+#include "security/Io.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
 #endif
@@ -27,13 +28,8 @@ class ErrorState;
 class AccessLogEntry;
 typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
-class TlsNegotiationDetails;
-typedef RefCount<TlsNegotiationDetails> TlsNegotiationDetailsPointer;
-
 namespace Security
 {
-
-class IoResult;
 
 /**
  * Initiates encryption of a given open TCP connection to a peer or server.
@@ -108,13 +104,13 @@ protected:
 #if USE_OPENSSL
     /// Suspends TLS negotiation to download the missing certificates
     /// \param lastError an error to handle when resuming negotiations
-    void suspendNegotiation(const TlsNegotiationDetails &lastError);
+    void suspendNegotiation(const Security::IoResult &lastError);
 
     /// Resumes TLS negotiation paused by suspendNegotiation()
     void resumeNegotiation();
 
     /// Either initiates fetching of missing certificates or bails with an error
-    void handleMissingCertificates(const TlsNegotiationDetails &lastError);
+    void handleMissingCertificates(const Security::IoResult &lastError);
 
     /// Start downloading procedure for the given URL.
     void startCertDownloading(SBuf &url);
@@ -203,7 +199,7 @@ private:
     Ssl::X509_STACK_Pointer downloadedCerts;
 
     /// outcome of the last (failed and) suspended negotiation attempt (or nil)
-    TlsNegotiationDetailsPointer suspendedError_;
+    Security::IoResult::Pointer suspendedError_;
 #endif
 };
 

@@ -31,36 +31,6 @@
 #include "ssl/helper.h"
 #endif
 
-/// XXX: Replace with Security::ErrorDetail (which also handles errno)
-/// TLS negotiation error details extracted at the error discovery time
-class TlsNegotiationDetails: public RefCountable {
-public:
-#if USE_OPENSSL || USE_GNUTLS
-    TlsNegotiationDetails(const Security::IoResult &ioResult, const Security::Connection &);
-#else
-    TlsNegotiationDetails() = default;
-#endif
-
-    Security::IoResult sslIoResult; ///< Security::Connect() return value
-};
-
-/// TlsNegotiationDetails printer (for debugging)
-static inline std::ostream &
-operator <<(std::ostream &os, const TlsNegotiationDetails &ed)
-{
-#if USE_OPENSSL || USE_GNUTLS
-    os << ed.sslIoResult.category << ", " << ed.sslIoResult.errorDescription;
-#endif
-    return os;
-}
-
-#if USE_OPENSSL || USE_GNUTLS
-TlsNegotiationDetails::TlsNegotiationDetails(const Security::IoResult &ioResult, const Security::Connection &sconn):
-    sslIoResult(ioResult)
-{
-}
-#endif /* USE_OPENSSL || USE_GNUTLS */
-
 CBDATA_NAMESPACED_CLASS_INIT(Security, PeerConnector);
 
 Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerConn, AsyncCall::Pointer &aCallback, const AccessLogEntryPointer &alp, const time_t timeout) :
@@ -227,7 +197,6 @@ Security::PeerConnector::negotiate()
     const auto result = Security::Connect(*serverConnection());
     auto session = fd_table[fd].ssl.get();
     auto &sconn = *session;
-    const TlsNegotiationDetails ed(result, sconn);
 
     // OpenSSL v1 APIs do not allow unthreaded applications like Squid to fetch
     // missing certificates _during_ OpenSSL certificate validation. Our
@@ -249,8 +218,8 @@ Security::PeerConnector::negotiate()
         // TODO: With a way we need to check for X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY error
         // or now assume always true, because always we are not blocking on this error.
         const bool checkforUnableToGetIssuer = true;
-        if (ed.sslIoResult.category != Security::IoResult::ioError || checkforUnableToGetIssuer)
-            return handleMissingCertificates(ed);
+        if (result.category != Security::IoResult::ioError || checkforUnableToGetIssuer)
+            return handleMissingCertificates(result);
 
         debugs(83, DBG_IMPORTANT, "BUG: Honoring unexpected SSL_connect() error: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
         // fall through to regular error handling
@@ -696,7 +665,7 @@ Security::PeerConnector::certDownloadingDone(SBuf &obj, int downloadStatus)
 }
 
 void
-Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &ed)
+Security::PeerConnector::handleMissingCertificates(const Security::IoResult &ioResult)
 {
     auto &sconn = *fd_table[serverConnection()->fd].ssl;
 
@@ -710,9 +679,9 @@ Security::PeerConnector::handleMissingCertificates(const TlsNegotiationDetails &
     callerHandlesMissingCertificates = false;
 
     if (!computeMissingCertificateUrls(sconn))
-        return handleNegotiationResult(ed.sslIoResult);
+        return handleNegotiationResult(ioResult);
 
-    suspendNegotiation(ed);
+    suspendNegotiation(ioResult);
 
     assert(!urlsOfMissingCerts.empty());
     startCertDownloading(urlsOfMissingCerts.front());
@@ -740,11 +709,11 @@ Security::PeerConnector::computeMissingCertificateUrls(const Connection &sconn)
 }
 
 void
-Security::PeerConnector::suspendNegotiation(const TlsNegotiationDetails &details)
+Security::PeerConnector::suspendNegotiation(const Security::IoResult &ioResult)
 {
-    debugs(83, 5, "after " << details);
+    debugs(83, 5, "after " << ioResult);
     Must(!isSuspended());
-    suspendedError_ = new TlsNegotiationDetails(details);
+    suspendedError_ = new Security::IoResult(ioResult);
     Must(isSuspended());
     // negotiations resume with a resumeNegotiation() call
 }
@@ -763,11 +732,10 @@ Security::PeerConnector::resumeNegotiation()
         // TODO: When we can use Security::ErrorDetail, we should resume with a
         // detailed _validation_ error, not just a generic SSL_ERROR_SSL!
         const ErrorDetail::Pointer errorDetail = new ErrorDetail(SQUID_TLS_ERR_CONNECT, SSL_ERROR_SSL, 0);
-        lastError = new TlsNegotiationDetails(Security::IoResult(errorDetail), sconn);
+        lastError = new Security::IoResult(errorDetail);
     }
 
-    assert(lastError); // implied by isSuspended()
-    handleNegotiationResult(lastError->sslIoResult);
+    handleNegotiationResult(*lastError);
 }
 
 #endif //USE_OPENSSL
