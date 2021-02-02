@@ -1,6 +1,6 @@
 Changes in squid-5.0.5 (02 Feb 2021):
 
-	- HTTP: Do not send keep-alive or close in HTTP Upgrade requests
+	- HTTP: Do not send Connection:keep-alive/close in HTTP Upgrade requests
 	- Translations: Add es-mx dialect translation of error pages
 	- Fix missing port in request-target of CONNECT requests to peers
 	- Fix some warnings about client_lifetime timeout
