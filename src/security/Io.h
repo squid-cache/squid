@@ -25,7 +25,7 @@ public:
 
     explicit IoResult(const Category aCategory): category(aCategory) {}
     explicit IoResult(const ErrorDetailPointer &anErrorDetail): errorDetail(anErrorDetail) {}
-    IoResult(const IoResult &aRes): errorDetail(aRes.errorDetail), category(aRes.category), errorDescription(aRes.errorDescription), important(aRes.important) {}
+    IoResult(const IoResult &aRes) = default;
 
     /// convenience wrapper to detect successful I/O outcome; implies !wantsIo()
     bool successful() const { return category == ioSuccess; }
