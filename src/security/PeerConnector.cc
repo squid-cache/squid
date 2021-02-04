@@ -199,8 +199,7 @@ Security::PeerConnector::negotiate()
     const auto result = Security::Connect(*serverConnection());
 
 #if USE_OPENSSL
-    auto session = fd_table[fd].ssl.get();
-    auto &sconn = *session;
+    auto &sconn = *fd_table[fd].ssl;
 
     // OpenSSL v1 APIs do not allow unthreaded applications like Squid to fetch
     // missing certificates _during_ OpenSSL certificate validation. Our
