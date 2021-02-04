@@ -195,6 +195,8 @@ Security::PeerConnector::negotiate()
         return;
 
     const auto result = Security::Connect(*serverConnection());
+
+#if USE_OPENSSL
     auto session = fd_table[fd].ssl.get();
     auto &sconn = *session;
 
@@ -226,6 +228,7 @@ Security::PeerConnector::negotiate()
         debugs(83, DBG_IMPORTANT, "BUG: Honoring unexpected SSL_connect() error: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
         // fall through to regular error handling
     }
+#endif
 
     handleNegotiationResult(result);
 }

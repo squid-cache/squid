@@ -79,7 +79,7 @@ void PeerConnector::commTimeoutHandler(const CommTimeoutCbParams &) STUB
 bool PeerConnector::initialize(Security::SessionPointer &) STUB_RETVAL(false)
 void PeerConnector::negotiate() STUB
 bool PeerConnector::sslFinalized() STUB_RETVAL(false)
-void PeerConnector::handleNegotiateError(const TlsNegotiationDetails &) STUB
+void PeerConnector::handleNegotiationResult(const Security::IoResult &) STUB;
 void PeerConnector::noteWantRead() STUB
 void PeerConnector::noteWantWrite() STUB
 void PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer &) STUB
