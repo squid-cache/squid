@@ -16,7 +16,6 @@
 #include "http/forward.h"
 #include "security/EncryptorAnswer.h"
 #include "security/forward.h"
-#include "security/Io.h"
 #if USE_OPENSSL
 #include "ssl/support.h"
 #endif
@@ -30,6 +29,9 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
 namespace Security
 {
+
+class IoResult;
+typedef RefCount<IoResult> IoResultPointer;
 
 /**
  * Initiates encryption of a given open TCP connection to a peer or server.
@@ -197,10 +199,10 @@ private:
 #if USE_OPENSSL
     /// successfully downloaded intermediate certificates (omitted by the peer)
     Ssl::X509_STACK_Pointer downloadedCerts;
+#endif
 
     /// outcome of the last (failed and) suspended negotiation attempt (or nil)
-    Security::IoResult::Pointer suspendedError_;
-#endif
+    Security::IoResultPointer suspendedError_;
 };
 
 } // namespace Security
