@@ -218,12 +218,8 @@ Security::PeerConnector::negotiate()
     if (auto &hidMissingIssuer = Ssl::VerifyCallbackParameters::At(sconn).hidMissingIssuer) {
         hidMissingIssuer = false; // prep for the next SSL_connect()
 
-        // TODO: With a way we need to check for X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY error
-        // The IoResult does not provide this information. This info is stored
-        // in ssl_ex_index_ssl_error_detail however.
-        // For now assume always false, this is what current code does.
-        const bool errorIsUnableToGetIssuer = false;
-        if (!errorIsUnableToGetIssuer)
+        if (result.category == IoResult::ioSuccess ||
+            !(result.errorDetail && result.errorDetail->errorNo() == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY))
             return handleMissingCertificates(result);
 
         debugs(83, DBG_IMPORTANT, "BUG: Honoring unexpected SSL_connect() error: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
