@@ -25,19 +25,19 @@ typedef SessionPointer::element_type *ConnectionPointer;
 void
 Security::IoResult::print(std::ostream &os) const
 {
-    const char *strCat = "\"unknown\"";
+    const char *strCat = "unknown";
     switch (category) {
     case ioSuccess:
-        strCat = "\"success\"";
+        strCat = "success";
         break;
     case ioWantRead:
-        strCat = "\"want read\"";
+        strCat = "want-read";
         break;
     case ioWantWrite:
-        strCat = "\"want write\"";
+        strCat = "want-write";
         break;
     case ioError:
-        strCat = "\"error\"";
+        strCat = "error";
         break;
     }
     os << strCat;
