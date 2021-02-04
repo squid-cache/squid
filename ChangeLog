@@ -1,3 +1,13 @@
+Changes in squid-4.14 (02 Feb 2021):
+
+	- Regression Fix: support for non-lowercase Transfer-Encoding value
+	- Regression Fix: cachemgr.cgi wrong 403 response to authenticated menu URIs
+	- Bug 5076: WCCP Security Info incorrect
+	- Bug 5073: Compile error: index was not declared in this scope
+	- Bug 5065: url_rewrite_program documentation update
+	- Bug 3074 pt2: improved handling of URI paths implicit '/'
+	- Fix transactions exceeding client_lifetime logged as _ABORTED
+
 Changes to squid-4.13 (23 Aug 2020):
 
 	- Regression Fix: Support parsing GREASEd (and future) TLS handshakes
