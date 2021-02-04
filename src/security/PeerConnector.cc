@@ -164,6 +164,8 @@ Security::PeerConnector::isSuspended() const
 {
 #if USE_OPENSSL
     return suspendedError_ != nullptr;
+#elif USE_GNUTLS
+    return false; // we do not suspend negotiations
 #else
     return false; // we do not suspend negotiations when using other libraries
 #endif
