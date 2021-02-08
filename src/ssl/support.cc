@@ -474,12 +474,14 @@ Ssl::VerifyConnCertificates(Security::Connection &sconn, const Ssl::X509_STACK_P
         return false;
     }
 
+#if defined(SSL_CERT_FLAG_SUITEB_128_LOS)
     // overwrite context Suite B (RFC 5759) flags with connection non-defaults
     // SSL_set_cert_flags() return type is long, but its implementation actually
     // returns an unsigned long flags value expected by X509_STORE_CTX_set_flags
     const unsigned long certFlags = SSL_set_cert_flags(&sconn, 0);
     if (const auto suiteBflags = certFlags & SSL_CERT_FLAG_SUITEB_128_LOS)
         X509_STORE_CTX_set_flags(storeCtx.get(), suiteBflags);
+#endif
 
     if (!X509_STORE_CTX_set_ex_data(storeCtx.get(), SSL_get_ex_data_X509_STORE_CTX_idx(), &sconn)) {
         debugs(83, 2, "cannot attach SSL object to X509_STORE_CTX");
@@ -501,7 +503,9 @@ Ssl::VerifyConnCertificates(Security::Connection &sconn, const Ssl::X509_STACK_P
         debugs(83, 2, "no context verification parameters");
         return false;
     }
+#if defined(HAVE_X509_VERIFY_PARAM_SET_AUTH_LEVEL)
     X509_VERIFY_PARAM_set_auth_level(param, SSL_get_security_level(&sconn));
+#endif
     if (!X509_VERIFY_PARAM_set1(param, SSL_get0_param(&sconn))) {
         debugs(83, 2, "cannot overwrite context verification parameters");
         return false;
