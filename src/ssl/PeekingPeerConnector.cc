@@ -338,8 +338,8 @@ Ssl::PeekingPeerConnector::noteNegotiationError(const Security::ErrorDetailPoint
     // thus hiding them.
     // Abort if no certificate found probably because of malformed or
     // unsupported server Hello message (TODO: make configurable).
-    if (!SSL_get_ex_data(session.get(), ssl_ex_index_ssl_error_detail) &&
-            (srvBio->bumpMode() == Ssl::bumpPeek  || srvBio->bumpMode() == Ssl::bumpStare) && srvBio->holdWrite()) {
+    if (!errorDetail->brokenCert() &&
+        (srvBio->bumpMode() == Ssl::bumpPeek  || srvBio->bumpMode() == Ssl::bumpStare) && srvBio->holdWrite()) {
         Security::CertPointer serverCert(SSL_get_peer_certificate(session.get()));
         if (serverCert) {
             debugs(81, 3, "hold TLS write on FD " << fd << " despite " << errorDetail);
