@@ -539,11 +539,10 @@ HttpHeader::parse(const char *header_start, size_t hdrLen, Http::ContentLengthIn
         if (delById(Http::HdrType::CONTENT_LENGTH))
             debugs(55, 3, "Content-Length is " << clen.prohibitedAndIgnored());
 
-        // RFC 7230 section 3.3.1 has the same criteria forbid Transfer-Encoding
-        if (delById(Http::HdrType::TRANSFER_ENCODING)) {
+        // The same RFC 7230 3.3.3#1-based logic applies to Transfer-Encoding
+        // banned by RFC 7230 section 3.3.1.
+        if (delById(Http::HdrType::TRANSFER_ENCODING))
             debugs(55, 3, "Transfer-Encoding is " << clen.prohibitedAndIgnored());
-            teUnsupported_ = true;
-        }
 
     } else if (getByIdIfPresent(Http::HdrType::TRANSFER_ENCODING, &rawTe)) {
         // RFC 2616 section 4.4: ignore Content-Length with Transfer-Encoding
