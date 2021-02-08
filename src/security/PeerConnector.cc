@@ -417,7 +417,6 @@ Security::PeerConnector::noteWantWrite()
 void
 Security::PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer &detail)
 {
-    auto primaryDetail = detail;
     const auto anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request, al);
     anErr->xerrno = detail->sysError();
     anErr->detailError(detail);
