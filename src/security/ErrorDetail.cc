@@ -438,11 +438,8 @@ Security::ErrorNameFromCode(const ErrorCode err, const bool prefixRawCode)
 
 /* Security::ErrorDetail */
 
-uint64_t Security::ErrorDetail::Generations = 0;
-
 /// helper constructor implementing the logic shared by the two public ones
 Security::ErrorDetail::ErrorDetail(const ErrorCode err, const int aSysErrorNo):
-    generation(++Generations),
     error_no(err),
     // We could restrict errno(3) collection to cases where the TLS library
     // explicitly talks about the errno being set, but correctly detecting those

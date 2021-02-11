@@ -415,28 +415,13 @@ Security::PeerConnector::noteWantWrite()
 }
 
 void
-Security::PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer &callerDetail)
+Security::PeerConnector::noteNegotiationError(const Security::ErrorDetailPointer &detail)
 {
-    auto primaryDetail = callerDetail;
-#if USE_OPENSSL
-    const auto tlsConnection = fd_table[serverConnection()->fd].ssl.get();
-
-    // find the highest priority detail
-    if (const auto storedDetailRaw = SSL_get_ex_data(tlsConnection, ssl_ex_index_ssl_error_detail)) {
-        const auto &storedDetail = *static_cast<ErrorDetail::Pointer*>(storedDetailRaw);
-        if (storedDetail->takesPriorityOver(*primaryDetail))
-            primaryDetail = storedDetail;
-    }
-
-    if (!primaryDetail->peerCert()) {
-        if (const auto serverCert = SSL_get_peer_certificate(tlsConnection))
-            primaryDetail->setPeerCertificate(CertPointer(serverCert));
-    }
-#endif
-
     const auto anErr = ErrorState::NewForwarding(ERR_SECURE_CONNECT_FAIL, request, al);
-    anErr->xerrno = primaryDetail->sysError();
-    anErr->detailError(primaryDetail);
+    if (detail) {
+        anErr->xerrno = detail->sysError();
+        anErr->detailError(detail);
+    }
     noteNegotiationDone(anErr);
     bail(anErr);
 }
