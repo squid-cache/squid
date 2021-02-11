@@ -84,9 +84,14 @@ Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun i
     }
 
     // now we know that we are dealing with a real problem; detail it
-    const ErrorDetail::Pointer errorDetail =
-        new ErrorDetail(topError, ioError, xerrno);
-
+    ErrorDetail::Pointer errorDetail;
+    if (const auto oldDetail = SSL_get_ex_data(connection, ssl_ex_index_ssl_error_detail)) {
+        errorDetail = *static_cast<ErrorDetail::Pointer*>(oldDetail);
+    } else {
+        errorDetail = new ErrorDetail(topError, ioError, xerrno);
+        if (const auto serverCert = SSL_get_peer_certificate(connection))
+            errorDetail->setPeerCertificate(CertPointer(serverCert));
+    }
     IoResult ioResult(errorDetail);
 
     // collect debugging-related details
