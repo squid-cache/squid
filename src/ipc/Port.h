@@ -37,11 +37,11 @@ protected:
 
     /// handle IPC message just read
     /// kids must call parent method when they do not recognize the message type
-    virtual void receive(const TypedMsgHdr &message) = 0;
+    virtual void receive(const TypedMsgHdr &) = 0;
 
 private:
     void noteRead(const CommIoCbParams &params); // Comm callback API
-    void receiveOrIgnore(const TypedMsgHdr& message);
+    void receiveOrIgnore(const TypedMsgHdr& );
 
 private:
     TypedMsgHdr buf; ///< msghdr struct filled by Comm

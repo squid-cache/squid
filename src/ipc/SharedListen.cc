@@ -169,7 +169,7 @@ void Ipc::SharedListenJoined(const SharedListenResponse &response)
     const auto pori = TheSharedListenRequestMap.find(response.mapId.index());
     Must(pori != TheSharedListenRequestMap.end());
     auto por = pori->second;
-    Must(por.callback != NULL);
+    Must(por.callback);
     TheSharedListenRequestMap.erase(pori);
 
     StartListeningCb *cbd = dynamic_cast<StartListeningCb*>(por.callback->getDialer());

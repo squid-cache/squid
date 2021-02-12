@@ -6,8 +6,6 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-/* DEBUG: section 54    Interprocess Communication */
-
 #include "squid.h"
 #include "base/TextException.h"
 #include "Debug.h"

@@ -87,7 +87,7 @@ Ipc::Port::receiveOrIgnore(const TypedMsgHdr &message)
     try {
         receive(message);
     } catch (...) {
-        debugs(54, DBG_IMPORTANT, "WARNING: Ignoring problematic IPC message" <<
+        debugs(54, DBG_IMPORTANT, "WARNING: Ignoring IPC message" <<
                Debug::Extra << "message type: " << message.rawType() <<
                Debug::Extra << "problem: " << CurrentException);
     }
