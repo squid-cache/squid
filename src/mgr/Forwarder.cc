@@ -28,7 +28,10 @@ CBDATA_NAMESPACED_CLASS_INIT(Mgr, Forwarder);
 
 Mgr::Forwarder::Forwarder(const Comm::ConnectionPointer &aConn, const ActionParams &aParams,
                           HttpRequest* aRequest, StoreEntry* anEntry, const AccessLogEntryPointer &anAle):
-    Ipc::Forwarder(new Request(KidIdentifier, 0, aConn, aParams), 10),
+    // TODO: Add virtual Forwarder::makeRequest() to avoid prematurely creating
+    // this dummy request with a dummy ID that are finalized by Ipc::Forwarder.
+    // Same for Snmp::Forwarder.
+    Ipc::Forwarder(new Request(KidIdentifier, Ipc::RequestId(/*XXX*/), aConn, aParams), 10),
     httpRequest(aRequest), entry(anEntry), conn(aConn), ale(anAle)
 {
     debugs(16, 5, HERE << conn);

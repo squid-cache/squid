@@ -55,7 +55,7 @@ public:
     virtual void unpack(const Ipc::TypedMsgHdr &) {}
 
     /// notify Coordinator that this action is done with local processing
-    void sendResponse(unsigned int requestId);
+    void sendResponse(Ipc::RequestId);
 
     /* Action properties */
 

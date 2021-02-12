@@ -28,11 +28,15 @@ libipc_la_SOURCES = \
 	Messages.h \
 	Port.cc \
 	Port.h \
+	QuestionerId.cc \
+	QuestionerId.h \
 	Queue.cc \
 	Queue.h \
 	ReadWriteLock.cc \
 	ReadWriteLock.h \
 	Request.h \
+	RequestId.cc \
+	RequestId.h \
 	Response.h \
 	SharedListen.cc \
 	SharedListen.h \

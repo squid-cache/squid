@@ -12,38 +12,36 @@
 #define SQUID_IPC_RESPONSE_H
 
 #include "base/RefCount.h"
+#include "base/TypeTraits.h"
 #include "ipc/forward.h"
+#include "ipc/QuestionerId.h"
 
 namespace Ipc
 {
 
 /// A response to Ipc::Request.
-class Response: public RefCountable
+class Response: public RefCountable, public Interface
 {
 public:
     typedef RefCount<Response> Pointer;
 
 public:
-    explicit Response(unsigned int aRequestId):
-        requestId(aRequestId) {}
-
     virtual void pack(TypedMsgHdr& msg) const = 0; ///< prepare for sendmsg()
     virtual Pointer clone() const = 0; ///< returns a copy of this
 
-private:
-    Response(const Response&); // not implemented
-    Response& operator= (const Response&); // not implemented
+    /// for Mine() tests
+    QuestionerId intendedRecepient() const { return requestId.questioner(); }
 
 public:
-    unsigned int requestId; ///< ID of request we are responding to
-};
+    RequestId requestId; ///< the ID of the request we are responding to
 
-inline
-std::ostream& operator << (std::ostream &os, const Response& response)
-{
-    os << "[response.requestId %u]" << response.requestId << '}';
-    return os;
-}
+protected:
+    /// sender's constructor
+    explicit Response(const RequestId aRequestId): requestId(aRequestId) {}
+
+    /// recipient's constructor
+    Response() = default;
+};
 
 } // namespace Ipc
 

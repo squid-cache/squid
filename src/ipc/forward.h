@@ -14,13 +14,15 @@
 namespace Ipc
 {
 
-class TypedMsgHdr;
-class StrandCoord;
-class StrandMessage;
 class Forwarder;
 class Inquirer;
+class QuestionerId;
 class Request;
+class RequestId;
 class Response;
+class StrandCoord;
+class StrandMessage;
+class TypedMsgHdr;
 
 } // namespace Ipc
 

@@ -23,7 +23,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Snmp, Forwarder);
 
 Snmp::Forwarder::Forwarder(const Pdu& aPdu, const Session& aSession, int aFd,
                            const Ip::Address& anAddress):
-    Ipc::Forwarder(new Request(KidIdentifier, 0, aPdu, aSession, aFd, anAddress), 2),
+    Ipc::Forwarder(new Request(KidIdentifier, Ipc::RequestId(), aPdu, aSession, aFd, anAddress), 2),
     fd(aFd)
 {
     debugs(49, 5, HERE << "FD " << aFd);
@@ -88,7 +88,7 @@ Snmp::Forwarder::sendError(int error)
 }
 
 void
-Snmp::SendResponse(unsigned int requestId, const Pdu& pdu)
+Snmp::SendResponse(const Ipc::RequestId requestId, const Pdu &pdu)
 {
     debugs(49, 5, HERE);
     // snmpAgentResponse() can modify arg

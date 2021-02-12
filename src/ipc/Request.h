@@ -12,31 +12,41 @@
 #define SQUID_IPC_REQUEST_H
 
 #include "base/RefCount.h"
-#include "ipc/forward.h"
+#include "base/TypeTraits.h"
+#include "ipc/RequestId.h"
 
 namespace Ipc
 {
 
+// TODO: Request and Response ought to have their own un/pack() methods instead
+// of duplicating their functionality in derived classes. To avoid dependency
+// loops between libipc and libmgr/libsnmp, fixing that requires extracting
+// src/ipc/Coordinator and its friends into a new src/coordinator/ library.
+
 /// IPC request
-class Request: public RefCountable
+class Request: public RefCountable, public Interface
 {
 public:
     typedef RefCount<Request> Pointer;
 
 public:
-    Request(int aRequestorId, unsigned int aRequestId):
-        requestorId(aRequestorId), requestId(aRequestId) {}
-
     virtual void pack(TypedMsgHdr& msg) const = 0; ///< prepare for sendmsg()
     virtual Pointer clone() const = 0; ///< returns a copy of this
 
-private:
-    Request(const Request&); // not implemented
-    Request& operator= (const Request&); // not implemented
-
 public:
-    int requestorId; ///< kidId of the requestor; used for response destination
-    unsigned int requestId; ///< unique for sender; matches request w/ response
+    int requestorId = 0; ///< kidId of the requestor; used for response destination
+    RequestId requestId; ///< matches the request[or] with the response
+
+protected:
+    /// sender's constructor
+    Request(const int aRequestorId, const RequestId aRequestId):
+        requestorId(aRequestorId),
+        requestId(aRequestId)
+    {
+    }
+
+    /// recipient's constructor
+    Request() = default;
 };
 
 } // namespace Ipc
