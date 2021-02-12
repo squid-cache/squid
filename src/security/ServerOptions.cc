@@ -18,6 +18,7 @@
 #if USE_OPENSSL
 #include "compat/openssl.h"
 #include "ssl/support.h"
+#include <limits>
 
 #if HAVE_OPENSSL_ERR_H
 #include <openssl/err.h>
