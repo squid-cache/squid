@@ -34,7 +34,7 @@ public:
     virtual Pointer clone() const = 0; ///< returns a copy of this
 
 public:
-    int requestorId; ///< kidId of the requestor; used for response destination
+    int requestorId = 0; ///< kidId of the requestor; used for response destination
     RequestId requestId; ///< matches the request[or] with the response
 
 protected:
@@ -46,7 +46,7 @@ protected:
     }
 
     /// recipient's constructor
-    Request(): requestorId(0) {} // TODO: Use "= default"
+    Request() = default;
 };
 
 } // namespace Ipc
