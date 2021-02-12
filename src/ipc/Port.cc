@@ -14,6 +14,7 @@
 #include "comm/Read.h"
 #include "CommCalls.h"
 #include "ipc/Port.h"
+#include "sbuf/Stream.h"
 #include "tools.h"
 #include "util.h"
 
@@ -73,6 +74,25 @@ Ipc::Port::CoordinatorAddr()
     return coordinatorAddr;
 }
 
+void
+Ipc::Port::receive(const TypedMsgHdr &message)
+{
+    throw TextException(ToSBuf("bad IPC message type: ", message.rawType()), Here());
+}
+
+/// receive() but ignore any errors
+void
+Ipc::Port::receiveOrIgnore(const TypedMsgHdr &message)
+{
+    try {
+        receive(message);
+    } catch (...) {
+        debugs(54, DBG_IMPORTANT, "WARNING: Ignoring IPC message" <<
+               Debug::Extra << "message type: " << message.rawType() <<
+               Debug::Extra << "problem: " << CurrentException);
+    }
+}
+
 void Ipc::Port::noteRead(const CommIoCbParams& params)
 {
     debugs(54, 6, HERE << params.conn << " flag " << params.flag <<
@@ -80,7 +100,7 @@ void Ipc::Port::noteRead(const CommIoCbParams& params)
     if (params.flag == Comm::OK) {
         assert(params.buf == buf.raw());
         debugs(54, 6, "message type: " << buf.rawType());
-        receive(buf);
+        receiveOrIgnore(buf);
     }
     // TODO: if there was a fatal error on our socket, close the socket before
     // trying to listen again and print a level-1 error message.

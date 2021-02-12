@@ -33,25 +33,26 @@ public:
 };
 
 /// maps ID assigned at request time to the response callback
-typedef std::map<int, PendingOpenRequest> SharedListenRequestMap;
+typedef std::map<Ipc::RequestId::Index, PendingOpenRequest> SharedListenRequestMap;
 static SharedListenRequestMap TheSharedListenRequestMap;
 
 /// accumulates delayed requests until they are ready to be sent, in FIFO order
 typedef std::list<PendingOpenRequest> DelayedSharedListenRequests;
 static DelayedSharedListenRequests TheDelayedRequests;
 
-static int
+// TODO: Encapsulate "Pending Request Map" logic shared by all RequestId users.
+/// registers the given request in the collection of pending requests
+/// \returns the registration key
+static Ipc::RequestId::Index
 AddToMap(const PendingOpenRequest &por)
 {
-    // find unused ID using linear seach; there should not be many entries
-    for (int id = 0; true; ++id) {
-        if (TheSharedListenRequestMap.find(id) == TheSharedListenRequestMap.end()) {
-            TheSharedListenRequestMap[id] = por;
-            return id;
-        }
-    }
-    assert(false); // not reached
-    return -1;
+    static Ipc::RequestId::Index LastIndex = 0;
+    // TODO: Switch Ipc::RequestId::Index to uint64_t and drop these 0 checks.
+    if (++LastIndex == 0) // don't use zero value as an ID
+        ++LastIndex;
+    assert(TheSharedListenRequestMap.find(LastIndex) == TheSharedListenRequestMap.end());
+    TheSharedListenRequestMap[LastIndex] = por;
+    return LastIndex;
 }
 
 bool
@@ -68,7 +69,10 @@ Ipc::OpenListenerParams::operator <(const OpenListenerParams &p) const
     return addr.compareWhole(p.addr) < 0;
 }
 
-Ipc::SharedListenRequest::SharedListenRequest(): requestorId(-1), mapId(-1)
+Ipc::SharedListenRequest::SharedListenRequest(const OpenListenerParams &aParams, const RequestId aMapId):
+    requestorId(KidIdentifier),
+    params(aParams),
+    mapId(aMapId)
 {
     // caller will then set public data members
 }
@@ -76,22 +80,25 @@ Ipc::SharedListenRequest::SharedListenRequest(): requestorId(-1), mapId(-1)
 Ipc::SharedListenRequest::SharedListenRequest(const TypedMsgHdr &hdrMsg)
 {
     hdrMsg.checkType(mtSharedListenRequest);
+    // XXX: our handlerSubscription is not a POD!
     hdrMsg.getPod(*this);
 }
 
 void Ipc::SharedListenRequest::pack(TypedMsgHdr &hdrMsg) const
 {
     hdrMsg.setType(mtSharedListenRequest);
+    // XXX: our handlerSubscription is not a POD!
     hdrMsg.putPod(*this);
 }
 
-Ipc::SharedListenResponse::SharedListenResponse(int aFd, int anErrNo, int aMapId):
+Ipc::SharedListenResponse::SharedListenResponse(const int aFd, const int anErrNo, const RequestId aMapId):
     fd(aFd), errNo(anErrNo), mapId(aMapId)
 {
 }
 
 Ipc::SharedListenResponse::SharedListenResponse(const TypedMsgHdr &hdrMsg):
-    fd(-1), errNo(0), mapId(-1)
+    fd(-1),
+    errNo(0)
 {
     hdrMsg.checkType(mtSharedListenResponse);
     hdrMsg.getPod(*this);
@@ -103,16 +110,14 @@ void Ipc::SharedListenResponse::pack(TypedMsgHdr &hdrMsg) const
 {
     hdrMsg.setType(mtSharedListenResponse);
     hdrMsg.putPod(*this);
+    // XXX: When we respond with an error, putFd() throws due to the negative fd
     hdrMsg.putFd(fd);
 }
 
 static void
 SendSharedListenRequest(const PendingOpenRequest &por)
 {
-    Ipc::SharedListenRequest request;
-    request.requestorId = KidIdentifier;
-    request.params = por.params;
-    request.mapId = AddToMap(por);
+    const Ipc::SharedListenRequest request(por.params, Ipc::RequestId(AddToMap(por)));
 
     debugs(54, 3, "getting listening FD for " << request.params.addr <<
            " mapId=" << request.mapId);
@@ -160,10 +165,12 @@ void Ipc::SharedListenJoined(const SharedListenResponse &response)
            TheSharedListenRequestMap.size() << " active + " <<
            TheDelayedRequests.size() << " delayed requests");
 
-    Must(TheSharedListenRequestMap.find(response.mapId) != TheSharedListenRequestMap.end());
-    PendingOpenRequest por = TheSharedListenRequestMap[response.mapId];
-    Must(por.callback != NULL);
-    TheSharedListenRequestMap.erase(response.mapId);
+    Must(response.mapId);
+    const auto pori = TheSharedListenRequestMap.find(response.mapId.index());
+    Must(pori != TheSharedListenRequestMap.end());
+    auto por = pori->second;
+    Must(por.callback);
+    TheSharedListenRequestMap.erase(pori);
 
     StartListeningCb *cbd = dynamic_cast<StartListeningCb*>(por.callback->getDialer());
     assert(cbd && cbd->conn != NULL);
