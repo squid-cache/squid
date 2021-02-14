@@ -724,6 +724,9 @@ IF HAVE_AUTH_MODULE_BASIC
 		often the helper program is called for that user. Set this
 		low to force revalidation with short lived passwords.
 
+		When a ttl= annotation is received from the helper it will
+		be used instead.
+
 		NOTE: setting this high does not impact your susceptibility
 		to replay attacks unless you are using an one-time password
 		system (such as SecureID). If you are using such a system,
@@ -814,10 +817,13 @@ TYPE: time_t
 DEFAULT: 1 hour
 LOC: Auth::TheConfig.credentialsTtl
 DOC_START
-	The time a user & their credentials stay in the logged in
-	user cache since their last request. When the garbage
-	interval passes, all user credentials that have passed their
-	TTL are removed from memory.
+	The time to remember old Basic or Digest credentials after they expire.
+	When the next garbage interval passes, all user credentials which have
+	been expired for longer than this TTL are removed from memory.
+
+	Use helper ttl= annotation, 'auth_param basic credentialsttl', or
+	'auth_param digest nonce_max_duration' to control the expiry period
+	of user credentials before this TTL period begins counting down.
 DOC_END
 
 NAME: authenticate_ip_ttl
