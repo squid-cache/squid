@@ -38,7 +38,7 @@ void
 Auth::Basic::User::updateExpiration(int64_t ttl)
 {
     if (ttl < 0)
-        ttl = min(Auth::TheConfig.credentialsTtl, static_cast<Auth::Basic::Config*>(config)->credentialsTTL);
+        ttl = static_cast<Auth::Basic::Config*>(config)->credentialsTTL;
 
     Auth::User::updateExpiration(ttl);
 }
