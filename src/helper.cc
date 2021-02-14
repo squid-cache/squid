@@ -223,10 +223,10 @@ helperOpenServers(helper * hlp)
     /* figure out how many new child are actually needed. */
     int need_new = hlp->childs.needNew();
 
-    debugs(84, DBG_IMPORTANT, "helperOpenServers: Starting " << need_new << "/" << hlp->childs.n_max << " '" << shortname << "' processes");
+    debugs(84, Important(19), "helperOpenServers: Starting " << need_new << "/" << hlp->childs.n_max << " '" << shortname << "' processes");
 
     if (need_new < 1) {
-        debugs(84, DBG_IMPORTANT, "helperOpenServers: No '" << shortname << "' processes needed.");
+        debugs(84, Important(20), "helperOpenServers: No '" << shortname << "' processes needed.");
     }
 
     procname = (char *)xmalloc(strlen(shortname) + 3);

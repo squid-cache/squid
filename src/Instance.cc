@@ -163,7 +163,7 @@ RemoveInstance()
     if (ThePidFileToRemove.isEmpty()) // not the PidFilename()!
         return; // nothing to do
 
-    debugs(50, DBG_IMPORTANT, "Removing " << PidFileDescription(ThePidFileToRemove));
+    debugs(50, Important(22), "Removing " << PidFileDescription(ThePidFileToRemove));
     const char *filename = ThePidFileToRemove.c_str(); // avoid complex operations inside enter_suid()
     enter_suid();
     safeunlink(filename, 0);
@@ -210,6 +210,6 @@ Instance::WriteOurPid()
     // our written PID (and decide that they are dealing with a corrupted PID file).
     pidFile.synchronize();
 
-    debugs(50, DBG_IMPORTANT, "Created " << TheFile);
+    debugs(50, Important(23), "Created " << TheFile);
 }
 

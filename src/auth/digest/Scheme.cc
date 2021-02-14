@@ -40,7 +40,7 @@ Auth::Digest::Scheme::shutdownCleanup()
     authenticateDigestNonceShutdown();
 
     _instance = NULL;
-    debugs(29, DBG_CRITICAL, "Shutdown: Digest authentication.");
+    debugs(29, Critical(59), "Shutdown: Digest authentication.");
 }
 
 Auth::SchemeConfig *

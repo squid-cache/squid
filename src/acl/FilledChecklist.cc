@@ -75,7 +75,7 @@ showDebugWarning(const char *msg)
         return;
 
     ++count;
-    debugs(28, DBG_IMPORTANT, "ALE missing " << msg);
+    debugs(28, Important(58), "ALE missing " << msg);
 }
 
 void

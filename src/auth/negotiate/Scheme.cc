@@ -37,7 +37,7 @@ Auth::Negotiate::Scheme::shutdownCleanup()
         return;
 
     _instance = NULL;
-    debugs(29, DBG_CRITICAL, "Shutdown: Negotiate authentication.");
+    debugs(29, Critical(60), "Shutdown: Negotiate authentication.");
 }
 
 Auth::SchemeConfig *

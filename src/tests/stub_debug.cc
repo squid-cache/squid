@@ -21,6 +21,7 @@
 
 char *Debug::debugOptions;
 char *Debug::cache_log= NULL;
+DebugMessages TheDebugMessages;
 int Debug::rotateNumber = 0;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::override_X = 0;

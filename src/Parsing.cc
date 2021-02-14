@@ -104,6 +104,17 @@ xatoll(const char *token, int base, char eov)
     return ret;
 }
 
+uint64_t
+xatoull(const char *token, int base, char eov)
+{
+    const auto number = xatoll(token, base, eov);
+    if (number < 0) {
+        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The input value '" << token << "' cannot be less than 0.");
+        self_destruct();
+    }
+    return static_cast<uint64_t>(number);
+}
+
 unsigned short
 xatos(const char *token)
 {

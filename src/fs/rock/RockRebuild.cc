@@ -339,10 +339,10 @@ Rock::Rebuild::start()
     assert(IsResponsible(*sd));
 
     if (!resuming) {
-        debugs(47, DBG_IMPORTANT, "Loading cache_dir #" << sd->index <<
+        debugs(47, Important(18), "Loading cache_dir #" << sd->index <<
                " from " << sd->filePath);
     } else {
-        debugs(47, DBG_IMPORTANT, "Resuming indexing cache_dir #" << sd->index <<
+        debugs(47, Important(62), "Resuming indexing cache_dir #" << sd->index <<
                " from " << sd->filePath << ':' << progressDescription());
     }
 

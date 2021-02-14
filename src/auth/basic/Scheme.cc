@@ -37,7 +37,7 @@ Auth::Basic::Scheme::shutdownCleanup()
         return;
 
     _instance = NULL;
-    debugs(29, DBG_CRITICAL, "Shutdown: Basic authentication.");
+    debugs(29, Critical(12), "Shutdown: Basic authentication.");
 }
 
 Auth::SchemeConfig *

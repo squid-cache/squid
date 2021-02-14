@@ -1438,7 +1438,7 @@ void
 htcpOpenPorts(void)
 {
     if (Config.Port.htcp <= 0) {
-        debugs(31, DBG_IMPORTANT, "HTCP Disabled.");
+        debugs(31, Important(21), "HTCP Disabled.");
         return;
     }
 

@@ -160,6 +160,10 @@ static const char *const list_sep = ", \t\n\r";
 // std::chrono::years requires C++20. Do our own rough calculation for now.
 static const double HoursPerYear = 24*365.2522;
 
+static void parse_cache_log_message(DebugMessages *messages);
+static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages &messages);
+static void free_cache_log_message(DebugMessages *messages);
+
 static void parse_access_log(CustomLog ** customlog_definitions);
 static int check_null_access_log(CustomLog *customlog_definitions);
 static void dump_access_log(StoreEntry * entry, const char *name, CustomLog * definitions);
@@ -4775,6 +4779,85 @@ static void dump_note(StoreEntry *entry, const char *name, Notes &notes)
 static void free_note(Notes *notes)
 {
     notes->clean();
+}
+
+#include "sbuf/Stream.h" /* XXX: Move */
+
+static DebugMessageId ParseDebugMessageId(const char *value, const char eov, const DebugMessageId oldId)
+{
+    if (oldId > 0)
+        throw TexcHere(ToSBuf("repeated id=... or ids=... option in cache_log_message"));
+    const auto id = xatoui(value, eov);
+    if (!(0 < id && id < DebugMessageCount))
+        throw TexcHere(ToSBuf("unknown cache_log_message ID: ", value));
+    return static_cast<DebugMessageId>(id);
+}
+
+static void parse_cache_log_message(DebugMessages *messages)
+{
+    assert(messages);
+
+    DebugMessage msg;
+    DebugMessageId minId = 0;
+    DebugMessageId maxId = 0;
+
+    char *key, *value;
+    while (ConfigParser::NextKvPair(key, value)) {
+        if (strcmp(key, "id") == 0) {
+            minId = maxId = ParseDebugMessageId(value, '\0', minId);
+        } else if (strcmp(key, "ids") == 0) {
+            const auto dash = strchr(value, '-');
+            if (!dash)
+                throw TexcHere(ToSBuf("malformed cache_log_message ID range: ", key, '=', value));
+            const auto oldId = minId;
+            minId = ParseDebugMessageId(value, '-', oldId);
+            maxId = ParseDebugMessageId(dash+1, '\0', oldId);
+            if (minId > maxId)
+                throw TexcHere(ToSBuf("invalid cache_log_message ID range: ", key, '=', value));
+        } else if (strcmp(key, "level") == 0) {
+            const auto level = xatoi(value);
+            if (level < 0)
+                throw TexcHere(ToSBuf("negative cache_log_message level: ", value));
+            msg.level = level;
+        } else if (strcmp(key, "limit") == 0) {
+            msg.limit = xatoull(value, 10);
+        } else {
+            throw TexcHere(ToSBuf("unsupported cache_log_message option: ", key));
+        }
+    }
+
+    if (!minId)
+        throw TexcHere("cache_log_message is missing a required id=... or ids=... option");
+
+    for (auto id = minId; id <= maxId; ++id) {
+        msg.id = id;
+        messages->at(id) = msg;
+    }
+}
+
+static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages &messages)
+{
+    SBufStream out;
+    for (const auto &msg: messages) {
+        if (!msg.configured())
+            continue;
+        out << name << " id=" << msg.id;
+        if (msg.levelled())
+            out << " level=" << msg.level;
+        if (msg.limited())
+            out << " limit=" << msg.limit;
+        out << "\n";
+    }
+    const auto buf = out.buf();
+    entry->append(buf.rawContent(), buf.length()); // may be empty
+}
+
+static void free_cache_log_message(DebugMessages *messages)
+{
+    assert(messages);
+    // clear old messages to avoid cumulative effect across (re)configurations
+    for (auto &msg: *messages)
+        msg = DebugMessage();
 }
 
 static bool FtpEspvDeprecated = false;

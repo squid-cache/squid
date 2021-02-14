@@ -37,7 +37,7 @@ Auth::Ntlm::Scheme::shutdownCleanup()
         return;
 
     _instance = NULL;
-    debugs(29, DBG_CRITICAL, "Shutdown: NTLM authentication.");
+    debugs(29, Critical(61), "Shutdown: NTLM authentication.");
 }
 
 Auth::SchemeConfig *
