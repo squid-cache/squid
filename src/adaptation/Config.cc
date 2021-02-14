@@ -15,6 +15,7 @@
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
 #include "ConfigParser.h"
+#include "DebugMessages.h"
 #include "globals.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"

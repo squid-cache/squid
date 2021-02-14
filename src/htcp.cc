@@ -18,6 +18,7 @@
 #include "comm/Loops.h"
 #include "comm/UdpOpenDialer.h"
 #include "compat/xalloc.h"
+#include "DebugMessages.h"
 #include "globals.h"
 #include "htcp.h"
 #include "http.h"

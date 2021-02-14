@@ -8,6 +8,7 @@
 
 #include "squid.h"
 #include "base/File.h"
+#include "DebugMessages.h"
 #include "fs_io.h"
 #include "Instance.h"
 #include "parser/Tokenizer.h"

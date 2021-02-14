@@ -12,6 +12,7 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
+#include "DebugMessages.h"
 #include "globals.h"
 #include "profiler/Profiler.h"
 #include "sbuf/Stream.h"

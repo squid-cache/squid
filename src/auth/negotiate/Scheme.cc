@@ -10,6 +10,7 @@
 #include "auth/negotiate/Config.h"
 #include "auth/negotiate/Scheme.h"
 #include "Debug.h"
+#include "DebugMessages.h"
 #include "helper.h"
 
 Auth::Scheme::Pointer Auth::Negotiate::Scheme::_instance = NULL;

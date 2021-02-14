@@ -10,6 +10,7 @@
 #include "auth/basic/Config.h"
 #include "auth/basic/Scheme.h"
 #include "Debug.h"
+#include "DebugMessages.h"
 #include "helper.h"
 
 Auth::Scheme::Pointer Auth::Basic::Scheme::_instance = NULL;

@@ -17,6 +17,7 @@
 #include "CollapsedForwarding.h"
 #include "comm/Connection.h"
 #include "comm/Read.h"
+#include "DebugMessages.h"
 #if HAVE_DISKIO_MODULE_IPCIO
 #include "DiskIO/IpcIo/IpcIoFile.h"
 #endif

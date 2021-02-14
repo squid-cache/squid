@@ -9,6 +9,7 @@
 /* DEBUG: section 20    Storage Manager Logging Functions */
 
 #include "squid.h"
+#include "DebugMessages.h"
 #include "format/Token.h"
 #include "HttpReply.h"
 #include "log/File.h"

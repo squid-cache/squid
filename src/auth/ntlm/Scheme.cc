@@ -10,6 +10,7 @@
 #include "auth/ntlm/Config.h"
 #include "auth/ntlm/Scheme.h"
 #include "Debug.h"
+#include "DebugMessages.h"
 #include "helper.h"
 
 Auth::Scheme::Pointer Auth::Ntlm::Scheme::_instance = NULL;

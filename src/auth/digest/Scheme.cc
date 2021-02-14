@@ -10,6 +10,7 @@
 #include "auth/digest/Config.h"
 #include "auth/digest/Scheme.h"
 #include "Debug.h"
+#include "DebugMessages.h"
 #include "globals.h"
 #include "helper.h"
 

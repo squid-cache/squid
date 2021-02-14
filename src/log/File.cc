@@ -9,6 +9,7 @@
 /* DEBUG: section 50    Log file handling */
 
 #include "squid.h"
+#include "DebugMessages.h"
 #include "fatal.h"
 #include "fde.h"
 #include "log/File.h"

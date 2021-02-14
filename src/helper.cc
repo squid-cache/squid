@@ -15,6 +15,7 @@
 #include "comm/Connection.h"
 #include "comm/Read.h"
 #include "comm/Write.h"
+#include "DebugMessages.h"
 #include "fd.h"
 #include "fde.h"
 #include "format/Quoting.h"

@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "Debug.h"
+#include "DebugMessages.h"
 #include "fd.h"
 #include "ipc/Kids.h"
 #include "SquidTime.h"

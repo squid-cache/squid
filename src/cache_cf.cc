@@ -26,6 +26,7 @@
 #include "CachePeer.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
+#include "DebugMessages.h"
 #include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
 #include "ExternalACL.h"

@@ -11,6 +11,7 @@
 #include "squid.h"
 #include "CacheManager.h"
 #include "cbdata.h"
+#include "DebugMessages.h"
 #include "dlink.h"
 #include "dns/LookupDetails.h"
 #include "dns/rfc3596.h"

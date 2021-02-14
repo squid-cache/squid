@@ -251,6 +251,7 @@ squid_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	Debug.h \
+	DebugMessages.h \
 	Downloader.cc \
 	Downloader.h \
 	ETag.cc \
