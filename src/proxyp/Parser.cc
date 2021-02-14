@@ -15,6 +15,7 @@
 #include "sbuf/Stream.h"
 
 #include <algorithm>
+#include <limits>
 
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
