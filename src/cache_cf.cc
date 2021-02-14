@@ -4782,8 +4782,6 @@ static void free_note(Notes *notes)
     notes->clean();
 }
 
-#include "sbuf/Stream.h" /* XXX: Move */
-
 static DebugMessageId ParseDebugMessageId(const char *value, const char eov, const DebugMessageId oldId)
 {
     if (oldId > 0)
