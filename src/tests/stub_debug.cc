@@ -15,6 +15,7 @@
  */
 #include "squid.h"
 #include "Debug.h"
+#include "DebugMessages.h"
 
 #define STUB_API "debug.cc"
 #include "tests/STUB.h"
