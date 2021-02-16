@@ -41,7 +41,7 @@ class Address
 {
 
 public:
-    /** @name Constructors and Destructor */
+    /** @name Constructors */
     /*@{*/
     Address() { setEmpty(); }
     Address(const struct in_addr &);
@@ -51,7 +51,6 @@ public:
     Address(const struct hostent &);
     Address(const struct addrinfo &);
     Address(const char*);
-    ~Address() {}
     /*@}*/
 
     /** @name Assignment Operators */

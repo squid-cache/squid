@@ -150,10 +150,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         return;
     }
 
-    Ipc::StrandSearchRequest request;
-    request.requestorId = KidIdentifier;
-    request.tag = dbName;
-
+    const Ipc::StrandSearchRequest request(dbName);
     Ipc::TypedMsgHdr msg;
     request.pack(msg);
     Ipc::SendMessage(Ipc::Port::CoordinatorAddr(), msg);

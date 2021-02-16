@@ -12,6 +12,7 @@
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #include "globals.h"
+#include "ipc/RequestId.h"
 #include "ipc/UdsOp.h"
 #include "mgr/Command.h"
 #include "mgr/Filler.h"
