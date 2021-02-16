@@ -3044,6 +3044,7 @@ tests_testEvent_SOURCES = \
 	tests/stub_libauth_acls.cc \
 	tests/stub_libauth.cc \
 	tests/stub_libdiskio.cc \
+	tests/stub_liberror.cc \
 	tests/stub_libeui.cc \
 	tests/stub_store_stats.cc \
 	time.cc \
