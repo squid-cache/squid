@@ -933,7 +933,7 @@ mainReconfigureFinish(void *)
         }
     } catch (...) {
         // for now any errors are a fatal condition...
-        debugs(1, DBG_CRITICAL, "FATAL: Configuration error: " << CurrentException);
+        debugs(1, DBG_CRITICAL, "FATAL: Reconfiguration error: " << CurrentException);
         self_destruct();
     }
 

@@ -3,8 +3,8 @@
 
 #include "Debug.h"
 
-#include <limits>
 #include <array>
+#include <limits>
 
 // XXX: Replace Debug class with namespace and use that namespace here.
 
@@ -26,8 +26,11 @@ public:
 
     /// \returns appropriate debugging level for the message
     int currentLevel(const int defaultLevel) const {
-        if (configured())
-            return (count_++ >= limit) ? DBG_DATA : level;
+        if (configured()) {
+            if (count_++ < limit)
+                return level;
+            return level <= DBG_IMPORTANT ? 3 : 8;
+        }
         return defaultLevel;
     }
 
@@ -47,10 +50,11 @@ private:
     mutable uint64_t count_ = 0;
 };
 
-/// The exact number of supported configurable messages. Increase as needed.
-constexpr size_t DebugMessageCount = 64;
+/// The maximum message ID specified in doc/debug-messages.txt plus 1.
+/// Keep in sync these values.
+constexpr size_t DebugMessageIdUpperBound = 64;
 /// configurable messages indexed by DebugMessageId
-typedef std::array<DebugMessage, DebugMessageCount> DebugMessages;
+typedef std::array<DebugMessage, DebugMessageIdUpperBound> DebugMessages;
 /// all configurable debugging messages
 extern DebugMessages TheDebugMessages;
 
@@ -61,7 +65,7 @@ inline int
 DebugMessageLevel(const int defaultLevel)
 {
     static_assert(id > 0, "debugs() message ID must be positive");
-    static_assert(id < DebugMessageCount, "debugs() message ID too large");
+    static_assert(id < DebugMessageIdUpperBound, "debugs() message ID must be smaller than DebugMessageIdUpperBound");
     return TheDebugMessages[id].currentLevel(defaultLevel);
 }
 

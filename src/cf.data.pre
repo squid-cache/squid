@@ -5484,8 +5484,8 @@ LOC: TheDebugMessages
 DOC_START
 	Configures logging of individual cache.log messages.
 
-		cache_log_message id=<number> [option...]
-		cache_log_message ids=<number>-<number> [option...]
+		cache_log_message id=<number> option [options]
+		cache_log_message ids=<number>-<number> option [options]
 
 	Most messages have _not_ been instrumented to support this directive
 	yet. For the list of instrumented messages and their IDs, please see
@@ -5519,6 +5519,8 @@ DOC_START
 		level-9 messages are not logged anywhere so this option can be
 		used to effectively suppress the message. Each SMP Squid process
 		gets the same limit.
+
+	At least one option is required.
 DOC_END
 
 NAME: debug_options

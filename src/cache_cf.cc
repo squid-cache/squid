@@ -559,7 +559,8 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                     }
                 } catch (...) {
                     // fatal for now
-                    debugs(3, DBG_CRITICAL, "configuration error: " << CurrentException);
+                    debugs(3, DBG_CRITICAL, "configuration error: " << CurrentException <<
+                           Debug::Extra << "advice: run squid -k parse and check for errors.");
                     self_destruct();
                 }
             }
@@ -4785,10 +4786,10 @@ static void free_note(Notes *notes)
 static DebugMessageId ParseDebugMessageId(const char *value, const char eov, const DebugMessageId oldId)
 {
     if (oldId > 0)
-        throw TexcHere(ToSBuf("repeated id=... or ids=... option in cache_log_message"));
+        throw TextException(ToSBuf("repeated id=... or ids=... option in cache_log_message"), Here());
     const auto id = xatoui(value, eov);
-    if (!(0 < id && id < DebugMessageCount))
-        throw TexcHere(ToSBuf("unknown cache_log_message ID: ", value));
+    if (!(0 < id && id < DebugMessageIdUpperBound))
+        throw TextException(ToSBuf("unknown cache_log_message ID: ", value), Here());
     return static_cast<DebugMessageId>(id);
 }
 
@@ -4800,33 +4801,49 @@ static void parse_cache_log_message(DebugMessages *messages)
     DebugMessageId minId = 0;
     DebugMessageId maxId = 0;
 
-    char *key, *value;
+    char *key = nullptr;
+    char *value = nullptr;
     while (ConfigParser::NextKvPair(key, value)) {
         if (strcmp(key, "id") == 0) {
+            if (minId > 0)
+                break;
             minId = maxId = ParseDebugMessageId(value, '\0', minId);
         } else if (strcmp(key, "ids") == 0) {
+            if (minId > 0)
+                break;
             const auto dash = strchr(value, '-');
             if (!dash)
-                throw TexcHere(ToSBuf("malformed cache_log_message ID range: ", key, '=', value));
+                throw TextException(ToSBuf("malformed cache_log_message ID range: ", key, '=', value), Here());
             const auto oldId = minId;
             minId = ParseDebugMessageId(value, '-', oldId);
             maxId = ParseDebugMessageId(dash+1, '\0', oldId);
             if (minId > maxId)
-                throw TexcHere(ToSBuf("invalid cache_log_message ID range: ", key, '=', value));
+                throw TextException(ToSBuf("invalid cache_log_message ID range: ", key, '=', value), Here());
         } else if (strcmp(key, "level") == 0) {
+            if (msg.levelled())
+                break;
             const auto level = xatoi(value);
             if (level < 0)
-                throw TexcHere(ToSBuf("negative cache_log_message level: ", value));
+                throw TextException(ToSBuf("negative cache_log_message level: ", value), Here());
             msg.level = level;
         } else if (strcmp(key, "limit") == 0) {
+            if (msg.limited())
+                break;
             msg.limit = xatoull(value, 10);
         } else {
-            throw TexcHere(ToSBuf("unsupported cache_log_message option: ", key));
+            throw TextException(ToSBuf("unsupported cache_log_message option: ", key), Here());
         }
+        key = value = nullptr;
     }
 
+    if (key && value)
+        throw TextException(ToSBuf("duplicated cache_log_message option: ", key, '=', value), Here());
+
     if (!minId)
-        throw TexcHere("cache_log_message is missing a required id=... or ids=... option");
+        throw TextException("cache_log_message is missing a required id=... or ids=... option", Here());
+
+    if (!msg.levelled() || !msg.limited())
+        throw TextException("cache_log_message is missing a required level=... or limit=... option", Here());
 
     for (auto id = minId; id <= maxId; ++id) {
         msg.id = id;
@@ -4855,8 +4872,7 @@ static void free_cache_log_message(DebugMessages *messages)
 {
     assert(messages);
     // clear old messages to avoid cumulative effect across (re)configurations
-    for (auto &msg: *messages)
-        msg = DebugMessage();
+    std::fill(messages->begin(), messages->end(), DebugMessage());
 }
 
 static bool FtpEspvDeprecated = false;
