@@ -13,20 +13,25 @@
 #include <sched.h>
 #endif
 
-#if !HAVE_SCHED_SETAFFINITY
-
 #if HAVE_STDBOOL_H
 #include <stdbool.h>
 #endif
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
-
 #if HAVE_SYS_CPUSET_H
 #include <sys/cpuset.h>
-#if HAVE_CPUSET_T
-typedef cpuset_t cpu_set_t;
 #endif
+
+#if HAVE_CPUSET_T && !HAVE_CPU_SET_T
+typedef cpuset_t cpu_set_t;
+#else
+typedef struct {
+    int bits;
+} cpu_set_t;
+#endif
+
+#if !HAVE_SCHED_SETAFFINITY
 inline void
 CpuAnd(cpu_set_t *destset, const cpu_set_t *srcset1, const cpu_set_t *srcset2)
 {
@@ -34,15 +39,10 @@ CpuAnd(cpu_set_t *destset, const cpu_set_t *srcset1, const cpu_set_t *srcset2)
     CPU_AND(destset, srcset2);
 }
 
-#endif /* HAVE_SYS_CPUSET_H */
 int sched_setaffinity(pid_t, size_t, cpu_set_t *);
 int sched_getaffinity(pid_t, size_t, cpu_set_t *);
 
 #else /* HAVE_SCHED_SETAFFINITY */
-typedef struct {
-    int bits;
-} cpu_set_t;
-
 #if !defined(CPU_SETSIZE)
 #define CPU_SETSIZE 0
 #endif
@@ -64,7 +64,7 @@ typedef struct {
 #endif
 
 // glibc prior to 2.6 lacks CPU_COUNT
-#ifndef CPU_COUNT
+#if !defined(CPU_COUNT)
 #define CPU_COUNT(set) CpuCount(set)
 /// CPU_COUNT replacement
 inline int
@@ -80,7 +80,7 @@ CpuCount(const cpu_set_t *set)
 #endif /* CPU_COUNT */
 
 // glibc prior to 2.7 lacks CPU_AND
-#ifndef CPU_AND
+#if !defined(CPU_AND)
 #define CPU_AND(destset, srcset1, srcset2) CpuAnd((destset), (srcset1), (srcset2))
 /// CPU_AND replacement
 inline void
@@ -94,10 +94,6 @@ CpuAnd(cpu_set_t *destset, const cpu_set_t *srcset1, const cpu_set_t *srcset2)
     }
 }
 #endif /* CPU_AND */
-inline void
-CpuAnd(cpu_set_t *destset, const cpu_set_t *srcset1, const cpu_set_t *srcset2)
-{
-    CPU_AND(destset, srcset1, srcset2);
-}
+
 #endif /* HAVE_SCHED_SETAFFINITY */
 #endif /* SQUID_COMPAT_CPU_H */
