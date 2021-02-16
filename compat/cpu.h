@@ -23,12 +23,14 @@
 #include <sys/cpuset.h>
 #endif
 
-#if HAVE_CPUSET_T && !HAVE_CPU_SET_T
+#if !HAVE_CPU_SET_T
+#if HAVE_CPUSET_T
 typedef cpuset_t cpu_set_t;
 #else
 typedef struct {
     int bits;
 } cpu_set_t;
+#endif
 #endif
 
 #if !HAVE_SCHED_SETAFFINITY
