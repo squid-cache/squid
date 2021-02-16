@@ -2930,7 +2930,20 @@ AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,
 #include <sys/msg.h>])
 
 AC_CHECK_TYPE(cpu_set_t,
-   AC_DEFINE(HAVE_CPU_SET_T,1,[cpu_set_t is defined by the system headers]),,[
+   AC_DEFINE(HAVE_CPU_SET_T,1,[cpu_set_t is defined by the system headers]),[
+   AC_CHECK_TYPE(cpuset_t,
+     AC_DEFINE(HAVE_CPUSET_T,1,[cpuset_t is defined by the system headers]),,[
+#if HAVE_CPUSET_H
+#include <cpuset.h>
+#endif
+#if HAVE_SCHED_H
+#include <sched.h>
+#endif
+  ])
+   ],[
+#if HAVE_CPUSET_H
+#include <cpuset.h>
+#endif
 #if HAVE_SCHED_H
 #include <sched.h>
 #endif
