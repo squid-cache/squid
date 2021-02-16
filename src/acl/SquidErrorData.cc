@@ -12,7 +12,7 @@
 #include "cache_cf.h"
 #include "ConfigParser.h"
 #include "Debug.h"
-#include "err_type.h"
+#include "error/Error.h"
 #include "fatal.h"
 #include "wordlist.h"
 

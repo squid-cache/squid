@@ -57,13 +57,19 @@ public:
     /// a helper label to simplify this objects API definitions below
     typedef Security::LockingPointer<T, UnLocker, Locker> SelfType;
 
+    /// constructs a nil smart pointer
+    constexpr LockingPointer(): raw(nullptr) {}
+
+    /// constructs a nil smart pointer from nullptr
+    constexpr LockingPointer(std::nullptr_t): raw(nullptr) {}
+
     /**
-     * Construct directly from a raw pointer.
-     * This action requires that the producer of that pointer has already
-     * created one reference lock for the object pointed to.
-     * Our destructor will do the matching unlock.
+     * Construct directly from a (possibly nil) raw pointer. If the supplied
+     * pointer is not nil, it is expected that its producer has already created
+     * one reference lock for the object pointed to, and our destructor will do
+     * the matching unlock.
      */
-    explicit LockingPointer(T *t = nullptr): raw(nullptr) {
+    explicit LockingPointer(T *t): raw(nullptr) {
         // de-optimized for clarity about non-locking
         resetWithoutLocking(t);
     }

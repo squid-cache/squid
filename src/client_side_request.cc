@@ -28,7 +28,7 @@
 #include "clientStream.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
-#include "err_detail_type.h"
+#include "error/Detail.h"
 #include "errorpage.h"
 #include "fd.h"
 #include "fde.h"
@@ -157,7 +157,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     maxReplyBodySize_(0),
     entry_(NULL),
     loggingEntry_(NULL),
-    conn_(NULL)
+    conn_(cbdataReference(aConn))
 #if USE_OPENSSL
     , sslBumpNeed_(Ssl::bumpEnd)
 #endif
@@ -166,7 +166,6 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     , request_satisfaction_offset(0)
 #endif
 {
-    setConn(aConn);
     al = new AccessLogEntry;
     CodeContext::Reset(al);
     al->cache.start_time = current_time;
@@ -175,6 +174,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
         al->cache.port = aConn->port;
         al->cache.caddr = aConn->log_addr;
         al->proxyProtocolHeader = aConn->proxyProtocolHeader();
+        al->updateError(aConn->bareError);
 
 #if USE_OPENSSL
         if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
@@ -285,7 +285,7 @@ ClientHttpRequest::~ClientHttpRequest()
     loggingEntry(NULL);
 
     if (request)
-        checkFailureRatio(request->errType, al->hier.code);
+        checkFailureRatio(request->error.category, al->hier.code);
 
     freeResources();
 
@@ -1208,7 +1208,8 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
     switch (reply.result) {
     case Helper::TimedOut:
         if (Config.onUrlRewriteTimeout.action != toutActBypass) {
-            http->calloutsError(ERR_GATEWAY_FAILURE, ERR_DETAIL_REDIRECTOR_TIMEDOUT);
+            static const auto d = MakeNamedErrorDetail("REDIRECTOR_TIMEDOUT");
+            http->calloutsError(ERR_GATEWAY_FAILURE, d);
             debugs(85, DBG_IMPORTANT, "ERROR: URL rewrite helper: Timedout");
         }
         break;
@@ -1622,6 +1623,15 @@ ClientHttpRequest::sslBumpStart()
 
 #endif
 
+void
+ClientHttpRequest::updateError(const Error &error)
+{
+    if (request)
+        request->error.update(error);
+    else
+        al->updateError(error);
+}
+
 bool
 ClientHttpRequest::gotEnough() const
 {
@@ -1979,9 +1989,11 @@ ClientHttpRequest::noteAdaptationAnswer(const Adaptation::Answer &answer)
         handleAdaptationBlock(answer);
         break;
 
-    case Adaptation::Answer::akError:
-        handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_ABORT, !answer.final);
+    case Adaptation::Answer::akError: {
+        static const auto d = MakeNamedErrorDetail("CLT_REQMOD_ABORT");
+        handleAdaptationFailure(d, !answer.final);
         break;
+    }
     }
 }
 
@@ -2033,7 +2045,8 @@ ClientHttpRequest::handleAdaptedHeader(Http::Message *msg)
 void
 ClientHttpRequest::handleAdaptationBlock(const Adaptation::Answer &answer)
 {
-    request->detailError(ERR_ACCESS_DENIED, ERR_DETAIL_REQMOD_BLOCK);
+    static const auto d = MakeNamedErrorDetail("REQMOD_BLOCK");
+    request->detailError(ERR_ACCESS_DENIED, d);
     AclMatchedName = answer.ruleId.termedBuf();
     assert(calloutContext);
     calloutContext->clientAccessCheckDone(ACCESS_DENIED);
@@ -2114,17 +2127,19 @@ ClientHttpRequest::noteBodyProducerAborted(BodyPipe::Pointer)
 
     debugs(85,3, HERE << "REQMOD body production failed");
     if (request_satisfaction_mode) { // too late to recover or serve an error
-        request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_CLT_REQMOD_RESP_BODY);
+        static const auto d = MakeNamedErrorDetail("CLT_REQMOD_RESP_BODY");
+        request->detailError(ERR_ICAP_FAILURE, d);
         const Comm::ConnectionPointer c = getConn()->clientConnection;
         Must(Comm::IsConnOpen(c));
         c->close(); // drastic, but we may be writing a response already
     } else {
-        handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_REQ_BODY);
+        static const auto d = MakeNamedErrorDetail("CLT_REQMOD_REQ_BODY");
+        handleAdaptationFailure(d);
     }
 }
 
 void
-ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
+ClientHttpRequest::handleAdaptationFailure(const ErrorDetail::Pointer &errDetail, bool bypassable)
 {
     debugs(85,3, HERE << "handleAdaptationFailure(" << bypassable << ")");
 
@@ -2170,7 +2185,7 @@ ClientHttpRequest::callException(const std::exception &ex)
 
 // XXX: modify and use with ClientRequestContext::clientAccessCheckDone too.
 void
-ClientHttpRequest::calloutsError(const err_type error, const int errDetail)
+ClientHttpRequest::calloutsError(const err_type error, const ErrorDetail::Pointer &errDetail)
 {
     // The original author of the code also wanted to pass an errno to
     // setReplyToError, but it seems unlikely that the errno reflects the

@@ -65,12 +65,6 @@ public:
     ConnStateData * getConn() const {
         return (cbdataReferenceValid(conn_) ? conn_ : nullptr);
     }
-    void setConn(ConnStateData *aConn) {
-        if (conn_ != aConn) {
-            cbdataReferenceDone(conn_);
-            conn_ = cbdataReference(aConn);
-        }
-    }
 
     /// Initializes the current request with the virgin request.
     /// Call this method when the virgin request becomes known.
@@ -167,7 +161,10 @@ public:
     void setErrorUri(const char *errorUri);
 
     /// Build an error reply. For use with the callouts.
-    void calloutsError(const err_type error, const int errDetail);
+    void calloutsError(const err_type error, const ErrorDetail::Pointer &errDetail);
+
+    /// if necessary, stores new error information (if any)
+    void updateError(const Error &error);
 
 #if USE_ADAPTATION
     // AsyncJob virtual methods
@@ -216,7 +213,7 @@ public:
 private:
     /// Handles an adaptation client request failure.
     /// Bypasses the error if possible, or build an error reply.
-    void handleAdaptationFailure(int errDetail, bool bypassable = false);
+    void handleAdaptationFailure(const ErrorDetail::Pointer &errDetail, bool bypassable = false);
 
     // Adaptation::Initiator API
     virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);

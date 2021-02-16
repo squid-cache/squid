@@ -118,7 +118,7 @@ void Stream::buildRangeHeader(HttpReply *) STUB
 clientStreamNode *Stream::getTail() const STUB_RETVAL(nullptr)
 clientStreamNode *Stream::getClientReplyContext() const STUB_RETVAL(nullptr)
 ConnStateData *Stream::getConn() const STUB_RETVAL(nullptr)
-void Stream::noteIoError(const int) STUB
+void Stream::noteIoError(const Error &, const LogTagsErrors &) STUB
 void Stream::finished() STUB
 void Stream::initiateClose(const char *) STUB
 void Stream::deferRecipientForLater(clientStreamNode *, HttpReply *, StoreIOBuffer) STUB

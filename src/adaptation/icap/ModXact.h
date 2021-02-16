@@ -174,7 +174,7 @@ public:
     virtual void callException(const std::exception &e);
 
     /// record error detail in the virgin request if possible
-    virtual void detailError(int errDetail);
+    virtual void detailError(const ErrorDetail::Pointer &errDetail);
     // Icap::Xaction API
     virtual void clearError();
     /// The master transaction log entry
