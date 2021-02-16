@@ -15,14 +15,12 @@
  */
 #include "squid.h"
 #include "Debug.h"
-#include "DebugMessages.h"
 
 #define STUB_API "debug.cc"
 #include "tests/STUB.h"
 
 char *Debug::debugOptions;
 char *Debug::cache_log= NULL;
-DebugMessages TheDebugMessages;
 int Debug::rotateNumber = 0;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::override_X = 0;

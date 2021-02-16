@@ -161,9 +161,9 @@ static const char *const list_sep = ", \t\n\r";
 // std::chrono::years requires C++20. Do our own rough calculation for now.
 static const double HoursPerYear = 24*365.2522;
 
-static void parse_cache_log_message(DebugMessages *messages);
-static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages &messages);
-static void free_cache_log_message(DebugMessages *messages);
+static void parse_cache_log_message(DebugMessages **messages);
+static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages *messages);
+static void free_cache_log_message(DebugMessages **messages);
 
 static void parse_access_log(CustomLog ** customlog_definitions);
 static int check_null_access_log(CustomLog *customlog_definitions);
@@ -4793,10 +4793,8 @@ static DebugMessageId ParseDebugMessageId(const char *value, const char eov, con
     return static_cast<DebugMessageId>(id);
 }
 
-static void parse_cache_log_message(DebugMessages *messages)
+static void parse_cache_log_message(DebugMessages **debugMessages)
 {
-    assert(messages);
-
     DebugMessage msg;
     DebugMessageId minId = 0;
     DebugMessageId maxId = 0;
@@ -4845,16 +4843,22 @@ static void parse_cache_log_message(DebugMessages *messages)
     if (!msg.levelled() || !msg.limited())
         throw TextException("cache_log_message is missing a required level=... or limit=... option", Here());
 
+    if (!*debugMessages)
+        *debugMessages = new DebugMessages();
+
     for (auto id = minId; id <= maxId; ++id) {
         msg.id = id;
-        messages->at(id) = msg;
+        (*debugMessages)->messages.at(id) = msg;
     }
 }
 
-static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages &messages)
+static void dump_cache_log_message(StoreEntry *entry, const char *name, const DebugMessages *debugMessages)
 {
+    if (!debugMessages)
+        return;
+
     SBufStream out;
-    for (const auto &msg: messages) {
+    for (const auto &msg: debugMessages->messages) {
         if (!msg.configured())
             continue;
         out << name << " id=" << msg.id;
@@ -4868,11 +4872,13 @@ static void dump_cache_log_message(StoreEntry *entry, const char *name, const De
     entry->append(buf.rawContent(), buf.length()); // may be empty
 }
 
-static void free_cache_log_message(DebugMessages *messages)
+static void free_cache_log_message(DebugMessages **debugMessages)
 {
-    assert(messages);
-    // clear old messages to avoid cumulative effect across (re)configurations
-    std::fill(messages->begin(), messages->end(), DebugMessage());
+    if (*debugMessages) {
+        // clear old messages to avoid cumulative effect across (re)configurations
+        auto &m = (*debugMessages)->messages;
+        std::fill(m.begin(), m.end(), DebugMessage());
+    }
 }
 
 static bool FtpEspvDeprecated = false;

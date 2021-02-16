@@ -2,6 +2,7 @@
 #define SQUID_DEBUG_MESSAGES_H
 
 #include "Debug.h"
+#include "SquidConfig.h"
 
 #include <array>
 #include <limits>
@@ -53,10 +54,15 @@ private:
 /// The maximum message ID specified in doc/debug-messages.txt plus 1.
 /// Keep in sync these values.
 constexpr size_t DebugMessageIdUpperBound = 64;
-/// configurable messages indexed by DebugMessageId
-typedef std::array<DebugMessage, DebugMessageIdUpperBound> DebugMessages;
-/// all configurable debugging messages
-extern DebugMessages TheDebugMessages;
+
+class DebugMessages
+{
+public:
+    /// configurable messages indexed by DebugMessageId
+    typedef std::array<DebugMessage, DebugMessageIdUpperBound> DebugMessageList;
+
+    DebugMessageList messages;
+};
 
 // Using a template allows us to check message ID range at compile time.
 /// \returns configured debugging level for the given message or defaultLevel
@@ -66,7 +72,9 @@ DebugMessageLevel(const int defaultLevel)
 {
     static_assert(id > 0, "debugs() message ID must be positive");
     static_assert(id < DebugMessageIdUpperBound, "debugs() message ID must be smaller than DebugMessageIdUpperBound");
-    return TheDebugMessages[id].currentLevel(defaultLevel);
+    if (const auto configured = Config.debugMessages)
+        return (configured->messages)[id].currentLevel(defaultLevel);
+    return defaultLevel;
 }
 
 /* convenience macros for calling DebugMessageLevel */

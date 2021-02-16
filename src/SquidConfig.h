@@ -45,6 +45,7 @@ class ActionPasswordList;
 class CachePeer;
 class CustomLog;
 class CpuAffinityMap;
+class DebugMessages;
 class external_acl;
 class HeaderManglers;
 class RefreshPattern;
@@ -558,6 +559,9 @@ public:
         int connect_gap;
         int connect_timeout;
     } happyEyeballs;
+
+    /// all configurable debugging messages
+    DebugMessages *debugMessages;
 };
 
 extern SquidConfig Config;

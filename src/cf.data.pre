@@ -5480,7 +5480,7 @@ NAME: cache_log_message
 TYPE: cache_log_message
 DEFAULT: none
 DEFAULT_DOC: Use debug_options.
-LOC: TheDebugMessages
+LOC: Config.debugMessages
 DOC_START
 	Configures logging of individual cache.log messages.
 
