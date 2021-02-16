@@ -101,7 +101,7 @@ protected:
     void noteWantRead();
 
     /// Whether TLS negotiation has been paused and not yet resumed
-    bool isSuspended() const;
+    bool isSuspended() const { return static_cast<bool>(suspendedError_); }
 
 #if USE_OPENSSL
     /// Suspends TLS negotiation to download the missing certificates
