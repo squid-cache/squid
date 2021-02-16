@@ -6,7 +6,6 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-
 2 Preparing for shutdown after ... requests
 3 Waiting ... seconds for active connections to finish
 4 Set Current Directory to ...
@@ -49,20 +48,20 @@
 40 Finished. Wrote ... entries.
 41 Took ...
 42 Store logging disabled
+43 Beginning Validation Procedure
 43 Completed Validation Procedure
-44 Validated ... Entries
-45 store_swap_size = ... KB
+43 Validated ... Entries
+43 store_swap_size = ... KB
 46 Finished rebuilding storage from disk.
-47 ... Entries scanned
-48 ... Invalid entries.
-49 ... With invalid flags.
-50 ... Objects loaded.
-51 ... Objects expired.
-52 ... Objects cancelled.
-53 ... Duplicate URLs purged.
-54 ... Swapfile clashes avoided.
-55 Took ... seconds (...
-56 Beginning Validation Procedure
+46 ... Entries scanned
+46 ... Invalid entries.
+46 ... With invalid flags.
+46 ... Objects loaded.
+46 ... Objects expired.
+46 ... Objects cancelled.
+46 ... Duplicate URLs purged.
+46 ... Swapfile clashes avoided.
+46 Took ... seconds (...
 58 ALE missing ...
 59 Shutdown: Digest authentication.
 60 Shutdown: Negotiate authentication.
