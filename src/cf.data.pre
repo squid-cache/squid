@@ -5515,10 +5515,11 @@ DOC_START
 		hard-coded message-specific level is used.
 
 	  limit=<number>: After logging the specified number of messages at
-		the configured (or default) level, start using level 9. Usually,
-		level-9 messages are not logged anywhere so this option can be
-		used to effectively suppress the message. Each SMP Squid process
-		gets the same limit.
+		the configured (or default) debugging level DL, start using
+		level 3 (for DL 0 and 1) or 8 (for higher DL values). Usually,
+		level-3+ messages are not logged anywhere so this option can
+		often be used to effectively suppress the message. Each SMP
+		Squid process gets the same limit.
 
 	At least one option is required.
 DOC_END
