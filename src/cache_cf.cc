@@ -4837,7 +4837,7 @@ static void parse_cache_log_message(DebugMessages **debugMessages)
     if (!minId)
         throw TextException("cache_log_message is missing a required id=... or ids=... option", Here());
 
-    if (!msg.levelled() || !msg.limited())
+    if (!(msg.levelled() || msg.limited()))
         throw TextException("cache_log_message is missing a required level=... or limit=... option", Here());
 
     assert(debugMessages);
