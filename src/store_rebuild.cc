@@ -155,14 +155,14 @@ storeRebuildComplete(StoreRebuildData *dc)
 
     debugs(20, Important(46), "Finished rebuilding storage from disk." <<
            Debug::Extra << std::setw(7) << counts.scancount << " Entries scanned" <<
-           Debug::Extra << std::setw(7) << counts.invalid << " Invalid entries." <<
-           Debug::Extra << std::setw(7) << counts.badflags << " With invalid flags." <<
-           Debug::Extra << std::setw(7) << counts.objcount << " Objects loaded." <<
-           Debug::Extra << std::setw(7) << counts.expcount << " Objects expired." <<
-           Debug::Extra << std::setw(7) << counts.cancelcount << " Objects cancelled." <<
-           Debug::Extra << std::setw(7) << counts.dupcount << " Duplicate URLs purged." <<
-           Debug::Extra << std::setw(7) << counts.clashcount << " Swapfile clashes avoided." <<
-           Debug::Extra << "Took " << std::setw(3) << std::setprecision(2) << dt << " seconds (" << std::setw(6) <<
+           Debug::Extra << std::setw(7) << counts.invalid << " Invalid entries" <<
+           Debug::Extra << std::setw(7) << counts.badflags << " With invalid flags" <<
+           Debug::Extra << std::setw(7) << counts.objcount << " Objects loaded" <<
+           Debug::Extra << std::setw(7) << counts.expcount << " Objects expired" <<
+           Debug::Extra << std::setw(7) << counts.cancelcount << " Objects canceled" <<
+           Debug::Extra << std::setw(7) << counts.dupcount << " Duplicate URLs purged" <<
+           Debug::Extra << std::setw(7) << counts.clashcount << " Swapfile clashes avoided" <<
+           Debug::Extra << "Took " << std::setprecision(2) << dt << " seconds (" <<
            ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
     debugs(20, Important(43), "Beginning Validation Procedure");
 
