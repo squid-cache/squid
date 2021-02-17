@@ -15,6 +15,7 @@
 #include "Debug.h"
 #include "globals.h"
 #include "Parsing.h"
+#include "sbuf/Stream.h"
 
 /*
  * These functions is the same as atoi/l/f, except that they check for errors
@@ -57,16 +58,12 @@ unsigned int
 xatoui(const char *token, char eov)
 {
     int64_t input = xatoll(token, 10, eov);
-    if (input < 0) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The input value '" << token << "' cannot be less than 0.");
-        self_destruct();
-    }
+    if (input < 0)
+        throw TextException(ToSBuf("the input value '", token, "' cannot be less than 0"), Here());
 
     unsigned int ret = (unsigned int) input;
-    if (input != static_cast<int64_t>(ret)) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The value '" << token << "' is larger than the type 'unsigned int'.");
-        self_destruct();
-    }
+    if (input != static_cast<int64_t>(ret))
+        throw TextException(ToSBuf("the value '", token, "' is larger than the type 'unsigned int'"), Here());
 
     return ret;
 }
@@ -108,10 +105,8 @@ uint64_t
 xatoull(const char *token, int base, char eov)
 {
     const auto number = xatoll(token, base, eov);
-    if (number < 0) {
-        debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: The input value '" << token << "' cannot be less than 0.");
-        self_destruct();
-    }
+    if (number < 0)
+        throw TextException(ToSBuf("the input value '", token, "' cannot be less than 0"), Here());
     return static_cast<uint64_t>(number);
 }
 
