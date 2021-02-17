@@ -4840,6 +4840,7 @@ static void parse_cache_log_message(DebugMessages **debugMessages)
     if (!msg.levelled() || !msg.limited())
         throw TextException("cache_log_message is missing a required level=... or limit=... option", Here());
 
+    assert(debugMessages);
     if (!*debugMessages)
         *debugMessages = new DebugMessages();
 
@@ -4871,11 +4872,10 @@ static void dump_cache_log_message(StoreEntry *entry, const char *name, const De
 
 static void free_cache_log_message(DebugMessages **debugMessages)
 {
-    if (*debugMessages) {
-        // clear old messages to avoid cumulative effect across (re)configurations
-        auto &m = (*debugMessages)->messages;
-        std::fill(m.begin(), m.end(), DebugMessage());
-    }
+    // clear old messages to avoid cumulative effect across (re)configurations
+    assert(debugMessages);
+    delete *debugMessages;
+    *debugMessages = nullptr;
 }
 
 static bool FtpEspvDeprecated = false;
