@@ -560,8 +560,7 @@ public:
         int connect_timeout;
     } happyEyeballs;
 
-    /// all configurable debugging messages
-    DebugMessages *debugMessages;
+    DebugMessages *debugMessages; ///< cache_log_message
 };
 
 extern SquidConfig Config;
