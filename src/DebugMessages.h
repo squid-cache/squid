@@ -54,13 +54,13 @@ private:
 /// The maximum used DebugMessage::id plus 1. Increase as you add new IDs.
 constexpr size_t DebugMessageIdUpperBound = 64;
 
+/// a collection of DebugMessage objects (with fast access by message IDs)
 class DebugMessages
 {
 public:
-    /// configurable messages indexed by DebugMessageId
-    typedef std::array<DebugMessage, DebugMessageIdUpperBound> DebugMessageList;
-
-    DebugMessageList messages;
+    /// configurable messages indexed by their IDs
+    typedef std::array<DebugMessage, DebugMessageIdUpperBound> Storage;
+    Storage messages;
 };
 
 // Using a template allows us to check message ID range at compile time.
