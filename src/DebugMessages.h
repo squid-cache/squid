@@ -10,7 +10,7 @@
 // XXX: Replace Debug class with namespace and use that namespace here.
 
 /// an identifier for messages supporting configuration via cache_log_message
-typedef unsigned int DebugMessageId;
+typedef size_t DebugMessageId;
 
 /// manages configurable aspects of a debugs() message
 class DebugMessage
@@ -52,7 +52,7 @@ private:
 };
 
 /// The maximum used DebugMessage::id plus 1. Increase as you add new IDs.
-constexpr size_t DebugMessageIdUpperBound = 64;
+constexpr DebugMessageId DebugMessageIdUpperBound = 64;
 
 /// a collection of DebugMessage objects (with fast access by message IDs)
 class DebugMessages
