@@ -51,8 +51,7 @@ private:
     mutable uint64_t count_ = 0;
 };
 
-/// The maximum message ID specified in doc/debug-messages.txt plus 1.
-/// Keep in sync these values.
+/// The maximum used DebugMessage::id plus 1. Increase as you add new IDs.
 constexpr size_t DebugMessageIdUpperBound = 64;
 
 class DebugMessages
