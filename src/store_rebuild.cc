@@ -164,7 +164,7 @@ storeRebuildComplete(StoreRebuildData *dc)
            Debug::Extra << std::setw(7) << counts.clashcount << " Swapfile clashes avoided" <<
            Debug::Extra << "Took " << std::setprecision(2) << dt << " seconds (" <<
            ((double) counts.objcount / (dt > 0.0 ? dt : 1.0)) << " objects/sec).");
-    debugs(20, Important(43), "Beginning Validation Procedure");
+    debugs(20, Important(56), "Beginning Validation Procedure");
 
     eventAdd("storeCleanup", storeCleanup, NULL, 0.0, 1);
 

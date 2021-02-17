@@ -48,7 +48,6 @@
 40 Finished. Wrote ... entries.
 41 Took ...
 42 Store logging disabled
-43 Beginning Validation Procedure
 43 Completed Validation Procedure
 43 Validated ... Entries
 43 store_swap_size = ... KB
@@ -62,6 +61,7 @@
 46 ... Duplicate URLs purged.
 46 ... Swapfile clashes avoided.
 46 Took ... seconds (...
+56 Beginning Validation Procedure
 58 ALE missing ...
 59 Shutdown: Digest authentication.
 60 Shutdown: Negotiate authentication.
