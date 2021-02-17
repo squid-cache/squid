@@ -4783,10 +4783,8 @@ static void free_note(Notes *notes)
     notes->clean();
 }
 
-static DebugMessageId ParseDebugMessageId(const char *value, const char eov, const DebugMessageId oldId)
+static DebugMessageId ParseDebugMessageId(const char *value, const char eov)
 {
-    if (oldId > 0)
-        throw TextException(ToSBuf("repeated id=... or ids=... option in cache_log_message"), Here());
     const auto id = xatoui(value, eov);
     if (!(0 < id && id < DebugMessageIdUpperBound))
         throw TextException(ToSBuf("unknown cache_log_message ID: ", value), Here());
@@ -4805,16 +4803,15 @@ static void parse_cache_log_message(DebugMessages **debugMessages)
         if (strcmp(key, "id") == 0) {
             if (minId > 0)
                 break;
-            minId = maxId = ParseDebugMessageId(value, '\0', minId);
+            minId = maxId = ParseDebugMessageId(value, '\0');
         } else if (strcmp(key, "ids") == 0) {
             if (minId > 0)
                 break;
             const auto dash = strchr(value, '-');
             if (!dash)
                 throw TextException(ToSBuf("malformed cache_log_message ID range: ", key, '=', value), Here());
-            const auto oldId = minId;
-            minId = ParseDebugMessageId(value, '-', oldId);
-            maxId = ParseDebugMessageId(dash+1, '\0', oldId);
+            minId = ParseDebugMessageId(value, '-');
+            maxId = ParseDebugMessageId(dash+1, '\0');
             if (minId > maxId)
                 throw TextException(ToSBuf("invalid cache_log_message ID range: ", key, '=', value), Here());
         } else if (strcmp(key, "level") == 0) {
@@ -4835,7 +4832,7 @@ static void parse_cache_log_message(DebugMessages **debugMessages)
     }
 
     if (key && value)
-        throw TextException(ToSBuf("duplicated cache_log_message option: ", key, '=', value), Here());
+        throw TextException(ToSBuf("repeated or conflicting cache_log_message option: ", key, '=', value), Here());
 
     if (!minId)
         throw TextException("cache_log_message is missing a required id=... or ids=... option", Here());
