@@ -30,7 +30,7 @@ public:
         if (configured()) {
             if (count_++ < limit)
                 return level;
-            return level <= DBG_IMPORTANT ? 3 : 8;
+            return (level <= DBG_IMPORTANT) ? 3 : 8;
         }
         return defaultLevel;
     }
