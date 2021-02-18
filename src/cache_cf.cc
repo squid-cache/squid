@@ -547,15 +547,23 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
                 err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
             } else {
-                try {
-                    if (!parse_line(tmp_line)) {
-                        debugs(3, DBG_CRITICAL, ConfigParser::CurrentLocation() << ": unrecognized: '" << tmp_line << "'");
+                if (opt_parse_cfg_only) {
+                    // -k parse tries to be verbose about as many errors as possible
+                    try {
+                        if (!parse_line(tmp_line)) {
+                            debugs(3, DBG_CRITICAL, "ERROR: Configuration error: " << ConfigParser::CurrentLocation() <<
+                                   Debug::Extra << CurrentException);
+                            ++err_count;
+                        }
+                    } catch (...) {
+                        debugs(3, DBG_CRITICAL, "FATAL: Configuration error: " << ConfigParser::CurrentLocation() <<
+                               Debug::Extra << CurrentException);
                         ++err_count;
                     }
-                } catch (...) {
-                    // fatal for now
-                    debugs(3, DBG_CRITICAL, "configuration error: " << CurrentException);
-                    self_destruct();
+                } else {
+                    // normal operation halts on first line with any exceptions
+                    if (!parse_line(tmp_line))
+                        ++err_count;
                 }
             }
         }
@@ -619,17 +627,27 @@ parseConfigFileOrThrow(const char *file_name)
     return err_count;
 }
 
-// TODO: Refactor main.cc to centrally handle (and report) all exceptions.
-int
+bool
 parseConfigFile(const char *file_name)
 {
     try {
-        return parseConfigFileOrThrow(file_name);
+        if (const auto err_count = parseConfigFileOrThrow(file_name)) {
+            // TODO: rollback to previous working settings
+            // for now any errors are a fatal condition...
+            debugs(1, DBG_CRITICAL, "FATAL: Shutdown due to " << err_count << " configuration errors." <<
+                   Debug::Extra << "Log lines above or 'squid -k parse' may have more details.");
+            if (!opt_parse_cfg_only)
+                self_destruct();
+            return false;
+        }
+        return true;
     }
-    catch (const std::exception &ex) {
-        debugs(3, DBG_CRITICAL, "FATAL: bad configuration: " << ex.what());
+    catch (...) {
+        debugs(3, DBG_CRITICAL, "FATAL: Configuration Error: " << ConfigParser::CurrentLocation() <<
+               Debug::Extra << CurrentException <<
+               Debug::Extra << "Log lines above or 'squid -k parse' may have more details.");
         self_destruct();
-        return 1; // not reached
+        return false; // not reached
     }
 }
 

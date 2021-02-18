@@ -923,19 +923,9 @@ mainReconfigureFinish(void *)
     if (Config2.onoff.enable_purge)
         Config2.onoff.enable_purge = 2;
 
-    // parse the config returns a count of errors encountered.
     const int oldWorkers = Config.workers;
-    try {
-        if (parseConfigFile(ConfigFile) != 0) {
-            // for now any errors are a fatal condition...
-            self_destruct();
-        }
-    } catch (...) {
-        // for now any errors are a fatal condition...
-        debugs(1, DBG_CRITICAL, "FATAL: Unhandled exception parsing config file. " <<
-               " Run squid -k parse and check for errors.");
-        self_destruct();
-    }
+
+    (void) parseConfigFile(ConfigFile); // handles any config problems or dies
 
     if (oldWorkers != Config.workers) {
         debugs(1, DBG_CRITICAL, "WARNING: Changing 'workers' (from " <<
@@ -1569,8 +1559,6 @@ SquidMain(int argc, char **argv)
     /* parse configuration file
      * note: in "normal" case this used to be called from mainInitialize() */
     {
-        int parse_err;
-
         if (!ConfigFile)
             ConfigFile = xstrdup(DEFAULT_CONFIG_FILE);
 
@@ -1599,19 +1587,13 @@ SquidMain(int argc, char **argv)
 
         Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
 
-        try {
-            parse_err = parseConfigFile(ConfigFile);
-        } catch (...) {
-            // for now any errors are a fatal condition...
-            debugs(1, DBG_CRITICAL, "FATAL: Unhandled exception parsing config file." <<
-                   (opt_parse_cfg_only ? " Run squid -k parse and check for errors." : ""));
-            parse_err = 1;
-        }
+        if (!parseConfigFile(ConfigFile))
+            return EXIT_FAILURE;
 
         Mem::Report();
 
-        if (opt_parse_cfg_only || parse_err > 0)
-            return parse_err;
+        if (opt_parse_cfg_only)
+            return EXIT_SUCCESS;
     }
     setUmask(Config.umask);
 
