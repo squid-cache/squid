@@ -343,7 +343,7 @@ Rock::Rebuild::start()
         debugs(47, Important(18), "Loading cache_dir #" << sd->index <<
                " from " << sd->filePath);
     } else {
-        debugs(47, Important(62), "Resuming indexing cache_dir #" << sd->index <<
+        debugs(47, Important(63), "Resuming indexing cache_dir #" << sd->index <<
                " from " << sd->filePath << ':' << progressDescription());
     }
 

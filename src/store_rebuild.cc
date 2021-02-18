@@ -230,7 +230,7 @@ storeRebuildProgress(int sd_index, int total, int sofar)
         d += (double) RebuildProgress[sd_index].total;
     }
 
-    debugs(20, Important(63), "Indexing cache entries: " << Progress(n, d));
+    debugs(20, Important(57), "Indexing cache entries: " << Progress(n, d));
     last_report = squid_curtime;
 }
 
