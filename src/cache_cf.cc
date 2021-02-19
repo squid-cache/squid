@@ -559,8 +559,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                     }
                 } catch (...) {
                     // fatal for now
-                    debugs(3, DBG_CRITICAL, "configuration error: " << CurrentException <<
-                           Debug::Extra << "advice: run squid -k parse and check for errors.");
+                    debugs(3, DBG_CRITICAL, "configuration error: " << CurrentException);
                     self_destruct();
                 }
             }
