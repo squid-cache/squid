@@ -382,7 +382,13 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     }
 
     Must(sock >= 0);
+
+    // Sync with Comm ASAP so that abandoned details can properly close().
+    // XXX : these are not all HTTP requests. use a note about type and ip:port details->
+    // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
+    fd_open(sock, FD_SOCKET, "HTTP Request");
     details->fd = sock;
+
     details->remote = *gai;
 
     // lookup the local-end details of this new connection
@@ -425,11 +431,6 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
             return Comm::NOMESSAGE;
         }
     }
-
-    /* fdstat update */
-    // XXX : these are not all HTTP requests. use a note about type and ip:port details->
-    // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
-    fd_open(sock, FD_SOCKET, "HTTP Request");
 
     fde *F = &fd_table[sock];
     details->remote.toStr(F->ipaddr,MAX_IPSTRLEN);
