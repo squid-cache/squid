@@ -79,13 +79,15 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
     }
     break;
 
-    case mtStrandBusy:
-        IpcIoFile::HandleStrandBusyResponse(StrandMessage(message));
-        break;
+    case mtStrandBusy: {
+        const StrandMessage resp(message);
+        IpcIoFile::HandleStrandBusyResponse(Mine(resp));
+    }
+    break;
 
     case mtRebuildFinished: {
         const StrandMessage resp(message);
-        Store::Disks::RemoteIndexingCompleted(resp.strand.kidId);
+        Store::Disks::RemoteIndexingCompleted(Mine(resp).strand.kidId);
     }
     break;
 

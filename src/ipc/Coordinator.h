@@ -12,6 +12,7 @@
 #define SQUID_IPC_COORDINATOR_H
 
 #include "ipc/Messages.h"
+#include "ipc/QuestionerId.h"
 #include "ipc/Port.h"
 #include "ipc/SharedListen.h"
 #include "ipc/StrandCoords.h"
@@ -22,6 +23,7 @@
 #endif
 #include <list>
 #include <map>
+#include <vector>
 
 namespace Ipc
 {
@@ -46,7 +48,7 @@ protected:
     virtual void receive(const TypedMsgHdr& message); // Port API
 
     StrandCoord* findStrand(int kidId); ///< registered strand or NULL
-    void registerStrand(const StrandCoord &); ///< adds or updates existing
+    void registerStrand(const StrandMessage &); ///< adds or updates existing
     void handleRegistrationRequest(const StrandMessage &); ///< register,ACK
     /// notifies waiting searches of a not yet ready strand
     void handleForegroundRebuildMessage(const StrandMessage &);
@@ -71,6 +73,7 @@ protected:
 
 private:
     StrandCoords strands_; ///< registered processes and threads
+    std::vector<QuestionerId> questioners_; ///< questioner ids for strands_
 
     typedef std::list<StrandSearchRequest> Searchers; ///< search requests
     Searchers searchers; ///< yet unanswered search requests in arrival order
