@@ -39,8 +39,6 @@ public:
 public:
     Coordinator();
 
-    void broadcastSignal(int sig) const; ///< send sig to registered strands
-
     const StrandCoords &strands() const; ///< currently registered strands
 
 protected:
