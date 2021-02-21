@@ -22,6 +22,8 @@
 #include "ssl/helper.h"
 #include "wordlist.h"
 
+#include <limits>
+
 Ssl::CertValidationHelper::CacheType *Ssl::CertValidationHelper::HelperCache = nullptr;
 
 #if USE_SSL_CRTD

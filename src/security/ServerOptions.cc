@@ -24,6 +24,8 @@
 #endif
 #endif
 
+#include <limits>
+
 Security::ServerOptions &
 Security::ServerOptions::operator =(const Security::ServerOptions &old) {
     if (this != &old) {
