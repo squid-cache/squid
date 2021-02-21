@@ -57,8 +57,6 @@ Auth::User::noteHelperTtl(const char *ttlNote)
 void
 Auth::User::updateExpiration(int64_t ttl)
 {
-    /// Default behaviour: set expiry to current time + TTL.
-    /// Where TTL is 0 or a positive value.
     expiretime = current_time.tv_sec + (ttl >= 0 ? ttl : 0);
 }
 
