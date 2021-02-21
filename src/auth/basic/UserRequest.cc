@@ -27,12 +27,11 @@
 bool
 Auth::Basic::UserRequest::authenticated() const
 {
-    Auth::Basic::User const *basic_auth = dynamic_cast<Auth::Basic::User const *>(user().getRaw());
+    if (user() && user()->credentials() == Auth::Ok && !user()->expired())
+        return 1;
 
-    if (basic_auth && basic_auth->authenticated())
-        return true;
-
-    return false;
+    debugs(29, 4, "User not authenticated or credentials need rechecking.");
+    return 0;
 }
 
 const char *
