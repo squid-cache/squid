@@ -29,7 +29,7 @@ int32_t
 Auth::Basic::User::ttl() const
 {
     if (credentials() != Auth::Ok && credentials() != Auth::Pending)
-        return -1; // TTL is obsolete NOW.
+        return -1; // treat as expired
 
     return expiretime - current_time.tv_sec;
 }
@@ -97,4 +97,3 @@ Auth::Basic::User::addToNameCache()
 {
     Cache()->insert(userKey(), this);
 }
-
