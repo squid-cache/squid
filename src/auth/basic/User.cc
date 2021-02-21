@@ -44,17 +44,6 @@ Auth::Basic::User::updateExpiration(int64_t ttl)
 }
 
 bool
-Auth::Basic::User::authenticated() const
-{
-    if (credentials() == Auth::Ok && !expired())
-        return true;
-
-    debugs(29, 4, "User not authenticated or credentials need rechecking.");
-
-    return false;
-}
-
-bool
 Auth::Basic::User::valid() const
 {
     if (username() == NULL)

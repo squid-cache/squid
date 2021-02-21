@@ -31,7 +31,6 @@ class User : public Auth::User
 public:
     User(Auth::SchemeConfig *, const char *requestRealm);
     virtual ~User();
-    bool authenticated() const;
     bool valid() const;
 
     /** Update the cached password for a username. */
