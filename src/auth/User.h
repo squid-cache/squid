@@ -74,11 +74,13 @@ public:
     /// simple accessor to detect expired credentials
     bool expired() const { return ttl() < 0; }
 
-    /// update credentials lifetime using ttl= from helper
-    virtual void noteHelperTtl(const char *);
+    /// update credentials lifetime using ttl=value from helper
+    /// nil value means the helper sent no TTL option; in that case, negative TTL is assumed
+    /// see updateExpiration() for how negative TTLs are interpreted
+    virtual void noteHelperTtl(const char *value);
 
-    /// Scheme-specific update of credentials lifetime
-    /// using TTL value in seconds
+    /// update credentials lifetime using the given TTL value in seconds
+    /// negative TTL values are interpreted as zero TTL (i.e. expiring within the current second)
     virtual void updateExpiration(int64_t);
 
     /* Manage list of IPs using this username */
@@ -135,4 +137,3 @@ private:
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTH_USER_H */
-
