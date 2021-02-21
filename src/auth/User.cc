@@ -57,7 +57,16 @@ Auth::User::noteHelperTtl(const char *ttlNote)
 void
 Auth::User::updateExpiration(int64_t ttl)
 {
-    expiretime = current_time.tv_sec + (ttl >= 0 ? ttl : 0);
+    // Treat negative values as expiry happening in the current second.
+    // See scheme-specific expired() methods for what that means.
+    if (ttl <= 0)
+        ttl = 0;
+
+    // prevent signed overflows in time calculation
+    if (ttl >= (std::numeric_limits<decltype(current_time.tv_sec)>::max() - current_time.tv_sec))
+        expiretime = std::numeric_limits<decltype(current_time.tv_sec)>::max();
+    else
+        expiretime = current_time.tv_sec + ttl;
 }
 
 /**
