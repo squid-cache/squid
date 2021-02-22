@@ -70,6 +70,7 @@ typedef std::unique_ptr<GENERAL_NAME, HardFun<void, GENERAL_NAME*, &GENERAL_NAME
 
 typedef std::unique_ptr<X509_EXTENSION, HardFun<void, X509_EXTENSION*, &X509_EXTENSION_free>> X509_EXTENSION_Pointer;
 
+typedef std::unique_ptr<X509_STORE_CTX, HardFun<void, X509_STORE_CTX *, &X509_STORE_CTX_free>> X509_STORE_CTX_Pointer;
 /**
  \ingroup SslCrtdSslAPI
  * Create 1024 bits rsa key.

@@ -151,10 +151,6 @@ public:
     bool holdWrite() const {return holdWrite_;}
     /// Enables or disables the write hold state
     void holdWrite(bool h) {holdWrite_ = h;}
-    /// The read hold state
-    bool holdRead() const {return holdRead_;}
-    /// Enables or disables the read hold state
-    void holdRead(bool h) {holdRead_ = h;}
     /// Enables or disables the input data recording, for internal analysis.
     void recordInput(bool r) {record_ = r;}
     /// Whether we can splice or not the SSL stream
@@ -170,9 +166,6 @@ public:
 
     /// Return true if the Server Hello parsing failed
     bool gotHelloFailed() const { return (parsedHandshake && parseError); }
-
-    /// \return the server certificates list if received and parsed correctly
-    const Security::CertList &serverCertificatesIfAny() { return parser_.serverCertificates; }
 
     /// \return the TLS Details advertised by TLS server.
     const Security::TlsDetails::Pointer &receivedHelloDetails() const {return parser_.details;}
@@ -193,7 +186,6 @@ private:
     bool allowSplice; ///< True if the SSL stream can be spliced
     bool allowBump;  ///< True if the SSL stream can be bumped
     bool holdWrite_;  ///< The write hold state of the bio.
-    bool holdRead_;  ///< The read hold state of the bio.
     bool record_; ///< If true the input data recorded to rbuf for internal use
     bool parsedHandshake; ///< whether we are done parsing TLS Hello
     bool parseError; ///< error while parsing server hello message
