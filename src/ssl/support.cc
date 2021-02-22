@@ -37,7 +37,7 @@
 #include <cerrno>
 
 // TODO: Move ssl_ex_index_* global variables from global.cc here.
-int ssl_ex_index_ssl_untrusted_chain = -1;
+static int ssl_ex_index_verify_callback_parameters = -1;
 
 static Ssl::CertsIndexedList SquidUntrustedCerts;
 
@@ -254,7 +254,8 @@ bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
     return matchX509CommonNames(cert, (void *)server, check_domain);
 }
 
-/// \ingroup ServerProtocolSSLInternal
+/// adjusts OpenSSL validation results for each verified certificate in ctx
+/// OpenSSL "verify_callback function" (\ref OpenSSL_vcb_disambiguation)
 static int
 ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 {
@@ -309,6 +310,16 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             debugs(83, 2, "SQUID_X509_V_ERR_CERT_CHANGE: Certificate " << buffer << " does not match peeked certificate");
             ok = 0;
             error_no =  SQUID_X509_V_ERR_CERT_CHANGE;
+        }
+    }
+
+    if (!ok && error_no == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY) {
+        if (const auto params = Ssl::VerifyCallbackParameters::Find(*ssl)) {
+            if (params->callerHandlesMissingCertificates) {
+                debugs(83, 3, "hiding X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY");
+                params->hidMissingIssuer = true;
+                ok = 1;
+            }
         }
     }
 
@@ -425,6 +436,126 @@ Ssl::DisablePeerVerification(Security::ContextPointer &ctx)
     SSL_CTX_set_verify(ctx.get(),SSL_VERIFY_NONE,nullptr);
 }
 
+static int VerifyCtxCertificates(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts);
+
+bool
+Ssl::VerifyConnCertificates(Security::Connection &sconn, const Ssl::X509_STACK_Pointer &extraCerts)
+{
+    const auto peerCertificatesChain = SSL_get_peer_cert_chain(&sconn);
+
+    // TODO: Replace debugs/return false with returning ErrorDetail::Pointer.
+    // Using Security::ErrorDetail terminology, errors in _this_ function are
+    // "non-validation errors", but VerifyCtxCertificates() errors may be
+    // "certificate validation errors". Callers detail SQUID_TLS_ERR_CONNECT.
+    // Some details should be created right here. Others extracted from OpenSSL.
+    // Why not throw? Most of the reasons detailed in the following commit apply
+    // here as well: https://github.com/measurement-factory/squid/commit/e862d33
+
+    if (!peerCertificatesChain || sk_X509_num(peerCertificatesChain) == 0) {
+        debugs(83, 2, "no server certificates");
+        return false;
+    }
+
+    const auto verificationStore = SSL_CTX_get_cert_store(SSL_get_SSL_CTX(&sconn));
+    if (!verificationStore) {
+        debugs(83, 2, "no certificate store");
+        return false;
+    }
+
+    const X509_STORE_CTX_Pointer storeCtx(X509_STORE_CTX_new());
+    if (!storeCtx) {
+        debugs(83, 2, "cannot create X509_STORE_CTX; likely OOM");
+        return false;
+    }
+
+    const auto peerCert = sk_X509_value(peerCertificatesChain, 0);
+    if (!X509_STORE_CTX_init(storeCtx.get(), verificationStore, peerCert, peerCertificatesChain)) {
+        debugs(83, 2, "cannot initialize X509_STORE_CTX");
+        return false;
+    }
+
+#if defined(SSL_CERT_FLAG_SUITEB_128_LOS)
+    // overwrite context Suite B (RFC 5759) flags with connection non-defaults
+    // SSL_set_cert_flags() return type is long, but its implementation actually
+    // returns an unsigned long flags value expected by X509_STORE_CTX_set_flags
+    const unsigned long certFlags = SSL_set_cert_flags(&sconn, 0);
+    if (const auto suiteBflags = certFlags & SSL_CERT_FLAG_SUITEB_128_LOS)
+        X509_STORE_CTX_set_flags(storeCtx.get(), suiteBflags);
+#endif
+
+    if (!X509_STORE_CTX_set_ex_data(storeCtx.get(), SSL_get_ex_data_X509_STORE_CTX_idx(), &sconn)) {
+        debugs(83, 2, "cannot attach SSL object to X509_STORE_CTX");
+        return false;
+    }
+
+    // If we ever add DANE support to Squid, we will supply DANE details here:
+    // X509_STORE_CTX_set0_dane(storeCtx.get(), SSL_get0_dane(&sconn));
+
+    // tell OpenSSL we are verifying a server certificate
+    if (!X509_STORE_CTX_set_default(storeCtx.get(), "ssl_server")) {
+        debugs(83, 2, "cannot set default verification method to ssl_server");
+        return false;
+    }
+
+    // overwrite context "verification parameters" with connection non-defaults
+    const auto param = X509_STORE_CTX_get0_param(storeCtx.get());
+    if (!param) {
+        debugs(83, 2, "no context verification parameters");
+        return false;
+    }
+#if defined(HAVE_X509_VERIFY_PARAM_SET_AUTH_LEVEL)
+    X509_VERIFY_PARAM_set_auth_level(param, SSL_get_security_level(&sconn));
+#endif
+    if (!X509_VERIFY_PARAM_set1(param, SSL_get0_param(&sconn))) {
+        debugs(83, 2, "cannot overwrite context verification parameters");
+        return false;
+    }
+
+    // copy any connection "verify_callback function" to the validation context
+    // (\ref OpenSSL_vcb_disambiguation)
+    if (const auto cb = SSL_get_verify_callback(&sconn))
+        X509_STORE_CTX_set_verify_cb(storeCtx.get(), cb);
+
+    // verify the server certificate chain in the prepared validation context
+    if (VerifyCtxCertificates(storeCtx.get(), extraCerts.get()) <= 0) {
+        // see also: ssl_verify_cb() details errors via ssl_ex_index_ssl_errors
+        const auto verifyResult = X509_STORE_CTX_get_error(storeCtx.get());
+        debugs(83, 3, "verification failure: " << verifyResult << ' ' << X509_verify_cert_error_string(verifyResult));
+        return false;
+    }
+
+    debugs(83, 7, "success");
+    return true;
+}
+
+/* Ssl::VerifyCallbackParameters */
+
+Ssl::VerifyCallbackParameters *
+Ssl::VerifyCallbackParameters::Find(Security::Connection &sconn)
+{
+    return static_cast<VerifyCallbackParameters*>(SSL_get_ex_data(&sconn, ssl_ex_index_verify_callback_parameters));
+}
+
+Ssl::VerifyCallbackParameters *
+Ssl::VerifyCallbackParameters::New(Security::Connection &sconn)
+{
+    Must(!Find(sconn));
+    const auto parameters = new VerifyCallbackParameters();
+    if (!SSL_set_ex_data(&sconn, ssl_ex_index_verify_callback_parameters, parameters)) {
+        delete parameters;
+        throw TextException("SSL_set_ex_data() failed; likely OOM", Here());
+    }
+    return parameters;
+}
+
+Ssl::VerifyCallbackParameters &
+Ssl::VerifyCallbackParameters::At(Security::Connection &sconn)
+{
+    const auto parameters = Find(sconn);
+    Must(parameters);
+    return *parameters;
+}
+
 // "dup" function for SSL_get_ex_new_index("cert_err_check")
 #if SQUID_USE_CONST_CRYPTO_EX_DATA_DUP
 static int
@@ -505,6 +636,14 @@ ssl_free_SBuf(void *, void *ptr, CRYPTO_EX_DATA *,
     delete buf;
 }
 
+/// "free" function for the ssl_ex_index_verify_callback_parameters entry
+static void
+ssl_free_VerifyCallbackParameters(void *, void *ptr, CRYPTO_EX_DATA *,
+                                  int, long, void *)
+{
+    delete static_cast<Ssl::VerifyCallbackParameters*>(ptr);
+}
+
 void
 Ssl::Initialize(void)
 {
@@ -545,7 +684,7 @@ Ssl::Initialize(void)
     ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
     ssl_ex_index_ssl_cert_chain = SSL_get_ex_new_index(0, (void *) "ssl_cert_chain", NULL, NULL, &ssl_free_CertChain);
     ssl_ex_index_ssl_validation_counter = SSL_get_ex_new_index(0, (void *) "ssl_validation_counter", NULL, NULL, &ssl_free_int);
-    ssl_ex_index_ssl_untrusted_chain = SSL_get_ex_new_index(0, (void *) "ssl_untrusted_chain", NULL, NULL, &ssl_free_CertChain);
+    ssl_ex_index_verify_callback_parameters = SSL_get_ex_new_index(0, (void *) "verify_callback_parameters", nullptr, nullptr, &ssl_free_VerifyCallbackParameters);
 }
 
 bool
@@ -937,8 +1076,8 @@ Ssl::setClientSNI(SSL *ssl, const char *fqdn)
 #endif
 }
 
-static const char *
-hasAuthorityInfoAccessCaIssuers(X509 *cert)
+const char *
+Ssl::findIssuerUri(X509 *cert)
 {
     AUTHORITY_INFO_ACCESS *info;
     if (!cert)
@@ -1010,168 +1149,194 @@ findCertIssuerFast(Ssl::CertsIndexedList &list, X509 *cert)
 }
 
 /// slowly find the issuer certificate of a given cert using linear search
-static bool
-findCertIssuer(Security::CertList const &list, X509 *cert)
+static X509 *
+sk_x509_findIssuer(const STACK_OF(X509) *sk, X509 *cert)
 {
-    for (Security::CertList::const_iterator it = list.begin(); it != list.end(); ++it) {
-        if (X509_check_issued(it->get(), cert) == X509_V_OK)
-            return true;
-    }
-    return false;
-}
-
-/// \return true if the cert issuer exist in the certificates stored in connContext
-static bool
-issuerExistInCaDb(X509 *cert, const Security::ContextPointer &connContext)
-{
-    if (!connContext)
-        return false;
-
-    X509_STORE_CTX *storeCtx = X509_STORE_CTX_new();
-    if (!storeCtx) {
-        debugs(83, DBG_IMPORTANT, "Failed to allocate STORE_CTX object");
-        return false;
-    }
-
-    bool gotIssuer = false;
-    X509_STORE *store = SSL_CTX_get_cert_store(connContext.get());
-    if (X509_STORE_CTX_init(storeCtx, store, nullptr, nullptr)) {
-        X509 *issuer = nullptr;
-        gotIssuer = (X509_STORE_CTX_get1_issuer(&issuer, storeCtx, cert) > 0);
-        if (issuer)
-            X509_free(issuer);
-    } else {
-        const auto ssl_error = ERR_get_error();
-        debugs(83, DBG_IMPORTANT, "Failed to initialize STORE_CTX object: " << Security::ErrorString(ssl_error));
-    }
-    X509_STORE_CTX_free(storeCtx);
-
-    return gotIssuer;
-}
-
-const char *
-Ssl::uriOfIssuerIfMissing(X509 *cert, Security::CertList const &serverCertificates, const Security::ContextPointer &context)
-{
-    if (!cert || !serverCertificates.size())
+    if (!sk)
         return nullptr;
 
-    if (!findCertIssuer(serverCertificates, cert)) {
-        //if issuer is missing
-        if (const char *issuerUri = hasAuthorityInfoAccessCaIssuers(cert)) {
-            // There is a URI where we can download a certificate.
-            if (!findCertIssuerFast(SquidUntrustedCerts, cert) &&
-                    !issuerExistInCaDb(cert, context)) {
-                // and issuer not found in local databases containing
-                // untrusted certificates and trusted CA certificates
-                return issuerUri;
-            }
-        }
+    const auto certCount = sk_X509_num(sk);
+    for (int i = 0; i < certCount; ++i) {
+        const auto issuer = sk_X509_value(sk, i);
+        if (X509_check_issued(issuer, cert) == X509_V_OK)
+            return issuer;
     }
     return nullptr;
 }
 
-void
-Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, Security::CertList const &serverCertificates, const Security::ContextPointer &context)
+/// finds issuer of a given certificate in CA store of the given connContext
+/// \returns the cert issuer (after increasing its reference count) or nil
+static X509 *
+findIssuerInCaDb(X509 *cert, const Security::ContextPointer &connContext)
 {
-    if (!serverCertificates.size())
-        return;
+    if (!connContext)
+        return nullptr;
 
-    for (const auto &i : serverCertificates) {
-        if (const char *issuerUri = uriOfIssuerIfMissing(i.get(), serverCertificates, context))
-            URIs.push(SBuf(issuerUri));
+    X509_STORE_CTX *storeCtx = X509_STORE_CTX_new();
+    if (!storeCtx) {
+        debugs(83, DBG_IMPORTANT, "Failed to allocate STORE_CTX object");
+        return nullptr;
     }
+
+    X509 *issuer = nullptr;
+    X509_STORE *store = SSL_CTX_get_cert_store(connContext.get());
+    if (X509_STORE_CTX_init(storeCtx, store, nullptr, nullptr)) {
+        const auto ret = X509_STORE_CTX_get1_issuer(&issuer, storeCtx, cert);
+        if (ret > 0) {
+            assert(issuer);
+            char buffer[256];
+            debugs(83, 5, "found " << X509_NAME_oneline(X509_get_subject_name(issuer), buffer, sizeof(buffer)));
+        } else {
+            debugs(83, ret < 0 ? 2 : 3, "not found or failure: " << ret);
+            assert(!issuer);
+        }
+    } else {
+        const auto ssl_error = ERR_get_error();
+        debugs(83, DBG_IMPORTANT, "Failed to initialize STORE_CTX object: " << Security::ErrorString(ssl_error));
+    }
+
+    X509_STORE_CTX_free(storeCtx);
+
+    return issuer;
 }
 
-void
-Ssl::SSL_add_untrusted_cert(SSL *ssl, X509 *cert)
+Security::CertPointer
+Ssl::findIssuerCertificate(X509 *cert, const STACK_OF(X509) *serverCertificates, const Security::ContextPointer &context)
 {
-    STACK_OF(X509) *untrustedStack = static_cast <STACK_OF(X509) *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_untrusted_chain));
-    if (!untrustedStack) {
-        untrustedStack = sk_X509_new_null();
-        if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_untrusted_chain, untrustedStack)) {
-            sk_X509_pop_free(untrustedStack, X509_free);
-            throw TextException("Failed to attach untrusted certificates chain", Here());
+    Must(cert);
+
+    // check certificate chain, if any
+    if (const auto issuer = serverCertificates ? sk_x509_findIssuer(serverCertificates, cert) : nullptr) {
+        X509_up_ref(issuer);
+        return Security::CertPointer(issuer);
+    }
+
+    // check untrusted certificates
+    if (const auto issuer = findCertIssuerFast(SquidUntrustedCerts, cert)) {
+        X509_up_ref(issuer);
+        return Security::CertPointer(issuer);
+    }
+
+    // check trusted CA certificates
+    if (const auto issuer = findIssuerInCaDb(cert, context)) {
+        // no X509_up_ref(issuer) because findIssuerInCaDb() ups reference count
+        return Security::CertPointer(issuer);
+    }
+
+    return Security::CertPointer(nullptr);
+}
+
+bool
+Ssl::missingChainCertificatesUrls(std::queue<SBuf> &URIs, const STACK_OF(X509) &serverCertificates, const Security::ContextPointer &context)
+{
+    for (int i = 0; i < sk_X509_num(&serverCertificates); ++i) {
+        const auto cert = sk_X509_value(&serverCertificates, i);
+
+        if (findIssuerCertificate(cert, &serverCertificates, context))
+            continue;
+
+        if (const auto issuerUri = findIssuerUri(cert)) {
+            URIs.push(SBuf(issuerUri));
+        } else {
+            static char name[2048];
+            debugs(83, 3, "Issuer certificate for " <<
+                   X509_NAME_oneline(X509_get_subject_name(cert), name, sizeof(name)) <<
+                   " is missing and its URI is not provided");
         }
     }
-    sk_X509_push(untrustedStack, cert);
-}
 
-/// Search for the issuer certificate of cert in sk list.
-static X509 *
-sk_x509_findIssuer(STACK_OF(X509) *sk, X509 *cert)
-{
-    if (!sk)
-        return NULL;
-
-    const int skItemsNum = sk_X509_num(sk);
-    for (int i = 0; i < skItemsNum; ++i) {
-        X509 *issuer = sk_X509_value(sk, i);
-        if (X509_check_issued(issuer, cert) == X509_V_OK)
-            return issuer;
-    }
-    return NULL;
+    debugs(83, (URIs.empty() ? 3 : 5), "found: " << URIs.size());
+    return !URIs.empty();
 }
 
 /// add missing issuer certificates to untrustedCerts
 static void
-completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) *untrustedCerts)
+completeIssuers(X509_STORE_CTX *ctx, STACK_OF(X509) &untrustedCerts)
 {
-    debugs(83, 2,  "completing " << sk_X509_num(untrustedCerts) << " OpenSSL untrusted certs using " << SquidUntrustedCerts.size() << " configured untrusted certificates");
+    debugs(83, 2,  "completing " << sk_X509_num(&untrustedCerts) <<
+           " OpenSSL untrusted certs using " << SquidUntrustedCerts.size() <<
+           " configured untrusted certificates");
 
     const X509_VERIFY_PARAM *param = X509_STORE_CTX_get0_param(ctx);
     int depth = X509_VERIFY_PARAM_get_depth(param);
-    X509 *current = X509_STORE_CTX_get0_cert(ctx);
+    Security::CertPointer current;
+    current.resetAndLock(X509_STORE_CTX_get0_cert(ctx));
     int i = 0;
     for (i = 0; current && (i < depth); ++i) {
-        if (X509_check_issued(current, current) == X509_V_OK) {
+        if (X509_check_issued(current.get(), current.get()) == X509_V_OK) {
             // either ctx->cert is itself self-signed or untrustedCerts
             // already contain the self-signed current certificate
             break;
         }
 
         // untrustedCerts is short, not worth indexing
-        X509 *issuer = sk_x509_findIssuer(untrustedCerts, current);
-        if (!issuer) {
-            if ((issuer = findCertIssuerFast(SquidUntrustedCerts, current)))
-                sk_X509_push(untrustedCerts, issuer);
-        }
+        const Security::ContextPointer nullCtx;
+        auto issuer = Ssl::findIssuerCertificate(current.get(), &untrustedCerts, nullCtx);
         current = issuer;
+        if (issuer)
+            sk_X509_push(&untrustedCerts, issuer.release());
     }
 
     if (i >= depth)
         debugs(83, 2,  "exceeded the maximum certificate chain length: " << depth);
 }
 
-/// OpenSSL certificate validation callback.
+/// Validates certificates while consulting sslproxy_foreign_intermediate_certs
+/// and, optionally, the given extra certificates.
+/// \returns whatever OpenSSL X509_verify_cert() returns
 static int
-untrustedToStoreCtx_cb(X509_STORE_CTX *ctx,void *data)
+VerifyCtxCertificates(X509_STORE_CTX *ctx, STACK_OF(X509) *extraCerts)
 {
-    debugs(83, 4,  "Try to use pre-downloaded intermediate certificates");
-
-    SSL *ssl = static_cast<SSL *>(X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
-    STACK_OF(X509) *sslUntrustedStack = static_cast <STACK_OF(X509) *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_untrusted_chain));
-
     // OpenSSL already maintains ctx->untrusted but we cannot modify
     // internal OpenSSL list directly. We have to give OpenSSL our own
     // list, but it must include certificates on the OpenSSL ctx->untrusted
     STACK_OF(X509) *oldUntrusted = X509_STORE_CTX_get0_untrusted(ctx);
-    STACK_OF(X509) *sk = sk_X509_dup(oldUntrusted); // oldUntrusted is always not NULL
+    // X509_chain_up_ref() increments cert references _and_ dupes the stack
+    Ssl::X509_STACK_Pointer untrustedCerts(oldUntrusted ? X509_chain_up_ref(oldUntrusted) : sk_X509_new_null());
 
-    for (int i = 0; i < sk_X509_num(sslUntrustedStack); ++i) {
-        X509 *cert = sk_X509_value(sslUntrustedStack, i);
-        sk_X509_push(sk, cert);
+    if (extraCerts) {
+        for (int i = 0; i < sk_X509_num(extraCerts); ++i) {
+            const auto cert = sk_X509_value(extraCerts, i);
+            X509_up_ref(cert);
+            sk_X509_push(untrustedCerts.get(), cert);
+        }
     }
 
     // If the local untrusted certificates internal database is used
     // run completeIssuers to add missing certificates if possible.
     if (SquidUntrustedCerts.size() > 0)
-        completeIssuers(ctx, sk);
+        completeIssuers(ctx, *untrustedCerts);
 
-    X509_STORE_CTX_set0_untrusted(ctx, sk); // No locking/unlocking, just sets ctx->untrusted
+    X509_STORE_CTX_set0_untrusted(ctx, untrustedCerts.get()); // No locking/unlocking, just sets ctx->untrusted
     int ret = X509_verify_cert(ctx);
     X509_STORE_CTX_set0_untrusted(ctx, oldUntrusted); // Set back the old untrusted list
-    sk_X509_free(sk); // Release sk list
     return ret;
+}
+
+/// \interface OpenSSL_vcb_disambiguation
+///
+/// OpenSSL has two very different concepts with nearly identical names:
+///
+/// a) A (replaceable) certificate verification function -- X509_verify_cert():
+///    This function drives the entire certificate verification algorithm.
+///    It can be called directly, but is usually called during SSL_connect().
+///    OpenSSL calls this function a "verification callback function".
+///    SSL_CTX_set_cert_verify_callback(3) replaces X509_verify_cert() default.
+///
+/// b) An (optional) certificate verification adjustment callback:
+///    This function, if set, is called at the end of (a) to adjust (a) results.
+///    It is never called directly, only from (a).
+///    OpenSSL calls this function a "verify_callback function".
+///    The SSL_CTX_set_verify(3) family of functions sets this function.
+
+/// Validates certificates while consulting sslproxy_foreign_intermediate_certs
+/// but without using any dynamically downloaded intermediate certificates.
+/// OpenSSL "verification callback function" (\ref OpenSSL_vcb_disambiguation)
+static int
+untrustedToStoreCtx_cb(X509_STORE_CTX *ctx, void *)
+{
+    debugs(83, 4, "Try to use pre-downloaded intermediate certificates");
+    return VerifyCtxCertificates(ctx, nullptr);
 }
 
 void
