@@ -30,6 +30,9 @@ typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 namespace Security
 {
 
+class IoResult;
+typedef RefCount<IoResult> IoResultPointer;
+
 /**
  * Initiates encryption of a given open TCP connection to a peer or server.
  * Despite its name does not perform any connect(2) operations. Owns the
@@ -59,7 +62,7 @@ public:
                   AsyncCall::Pointer &aCallback,
                   const AccessLogEntryPointer &alp,
                   const time_t timeout = 0);
-    virtual ~PeerConnector() = default;
+    virtual ~PeerConnector();
 
     /// hack: whether the connection requires fwdPconnPool->noteUses()
     bool noteFwdPconnUse;
@@ -89,23 +92,27 @@ protected:
     /// Otherwise, returns true, regardless of negotiation success/failure.
     bool sslFinalized();
 
-    /// Called when the negotiation step aborted because data needs to
-    /// be transferred to/from server or on error. In the first case
-    /// setups the appropriate Comm::SetSelect handler. In second case
-    /// fill an error and report to the PeerConnector caller.
-    void handleNegotiateError(const int result);
+    /// Called after each negotiation step to handle the result
+    void handleNegotiationResult(const Security::IoResult &);
 
     /// Called when the openSSL SSL_connect fnction request more data from
     /// the remote SSL server. Sets the read timeout and sets the
     /// Squid COMM_SELECT_READ handler.
     void noteWantRead();
 
+    /// Whether TLS negotiation has been paused and not yet resumed
+    bool isSuspended() const { return static_cast<bool>(suspendedError_); }
+
 #if USE_OPENSSL
-    /// Run the certificates list sent by the SSL server and check if there
-    /// are missing certificates. Adds to the urlOfMissingCerts list the
-    /// URLS of missing certificates if this information provided by the
-    /// issued certificates with Authority Info Access extension.
-    bool checkForMissingCertificates();
+    /// Suspends TLS negotiation to download the missing certificates
+    /// \param lastError an error to handle when resuming negotiations
+    void suspendNegotiation(const Security::IoResult &lastError);
+
+    /// Resumes TLS negotiation paused by suspendNegotiation()
+    void resumeNegotiation();
+
+    /// Either initiates fetching of missing certificates or bails with an error
+    void handleMissingCertificates(const Security::IoResult &lastError);
 
     /// Start downloading procedure for the given URL.
     void startCertDownloading(SBuf &url);
@@ -161,19 +168,24 @@ private:
     PeerConnector &operator =(const PeerConnector &); // not implemented
 
 #if USE_OPENSSL
+    unsigned int certDownloadNestingLevel() const;
+
     /// Process response from cert validator helper
     void sslCrtvdHandleReply(Ssl::CertValidationResponsePointer);
 
     /// Check SSL errors returned from cert validator against sslproxy_cert_error access list
     Security::CertErrors *sslCrtvdCheckForErrors(Ssl::CertValidationResponse const &, ErrorDetailPointer &);
+
+    bool computeMissingCertificateUrls(const Connection &);
 #endif
 
     static void NegotiateSsl(int fd, void *data);
     void negotiateSsl();
 
-    /// The maximum allowed missing certificates downloads.
+    /// The maximum number of missing certificates a single PeerConnector may download
     static const unsigned int MaxCertsDownloads = 10;
-    /// The maximum allowed nested certificates downloads.
+
+    /// The maximum number of inter-dependent Downloader jobs a worker may initiate
     static const unsigned int MaxNestedDownloads = 3;
 
     AsyncCall::Pointer closeHandler; ///< we call this when the connection closed
@@ -183,6 +195,14 @@ private:
     /// The list of URLs where missing certificates should be downloaded.
     std::queue<SBuf> urlsOfMissingCerts;
     unsigned int certsDownloads; ///< the number of downloaded missing certificates
+
+#if USE_OPENSSL
+    /// successfully downloaded intermediate certificates (omitted by the peer)
+    Ssl::X509_STACK_Pointer downloadedCerts;
+#endif
+
+    /// outcome of the last (failed and) suspended negotiation attempt (or nil)
+    Security::IoResultPointer suspendedError_;
 };
 
 } // namespace Security
