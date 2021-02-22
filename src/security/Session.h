@@ -55,7 +55,7 @@ inline void squid_gnutls_free(void *d) {gnutls_free(d);}
 typedef std::unique_ptr<gnutls_datum_t, HardFun<void, void*, &Security::squid_gnutls_free>> SessionStatePointer;
 
 #else
-typedef nullptr_t Connection;
+typedef std::nullptr_t Connection;
 
 typedef std::shared_ptr<void> SessionPointer;
 
