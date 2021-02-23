@@ -95,6 +95,7 @@ Ftp::Channel::opened(const Comm::ConnectionPointer &newConn,
     assert(aCloser != NULL);
 
     conn = newConn;
+    conn->leaveOrphanage();
     closer = aCloser;
     comm_add_close_handler(conn->fd, closer);
 }

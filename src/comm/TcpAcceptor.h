@@ -54,6 +54,7 @@ public:
     TcpAcceptor(const Comm::ConnectionPointer &conn, const char *note, const Subscription::Pointer &aSub);
     TcpAcceptor(const AnyP::PortCfgPointer &listenPort, const char *note, const Subscription::Pointer &aSub);
 
+protected:
     /** Subscribe a handler to receive calls back about new connections.
      * Unsubscribes any existing subscribed handler.
      */
@@ -80,7 +81,6 @@ public:
     /// if not the accept() will be postponed
     static bool okToAccept();
 
-protected:
     friend class AcceptLimiter;
 
 private:

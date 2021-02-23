@@ -388,6 +388,7 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
     fd_open(sock, FD_SOCKET, "HTTP Request");
     details->fd = sock;
+    details->enterOrphanage(); // nobody owns this connection yet
 
     details->remote = *gai;
 

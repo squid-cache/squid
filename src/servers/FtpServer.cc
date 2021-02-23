@@ -418,6 +418,7 @@ Ftp::Server::acceptDataConnection(const CommAcceptCbParams &params)
     } else {
         closeDataConnection();
         dataConn = params.conn;
+        dataConn->leaveOrphanage();
         uploadAvailSize = 0;
         debugs(33, 7, "ready for data");
         if (onDataAcceptCall != NULL) {
