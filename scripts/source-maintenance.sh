@@ -185,6 +185,9 @@ git grep "ifn?def .*_SQUID_" |
     grep -v "scripts/source-maintenance.sh" |
     while read f; do echo "PROBLEM?: ${f}"; done
 
+rm -f doc/debug-messages.tmp1
+rm -f doc/debug-messages.tmp2
+
 #
 # Scan for file-specific actions
 #
@@ -280,6 +283,42 @@ for FILENAME in `git ls-files`; do
 	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' | sort -u >>doc/debug-sections.tmp
 
 	#
+	# DEBUG Important message list maintenance
+	#
+
+	# combine debugs() multiline strings
+	gawk 'BEGIN {found=0; dbgLine=""; } {
+		if ($0 ~ /\<debugs\(/)
+		    found = 1;
+		if (found)
+		    dbgLine = dbgLine $0;
+		if ($0 ~ /\);/) {
+		    if (found) {
+		        found = 0;
+		        print dbgLine;
+		        dbgLine = "";
+		    }
+		}
+	}' $FILENAME > doc/debug-messages.tmp1
+
+	# sed expressions:
+	# - replace debugs() prefix with its message ID
+	# - remove simple parenthesized non-"string" items like (a ? b : c)
+	# - replace any remaining non-"string" items with ...
+	# - remove quotes around "strings"
+	# - remove excessive whitespace
+	# - remove debugs() statement termination sugar
+	grep -o -E '\bdebugs[^,]*,\s*(Critical|Important)[(][0-9]+.*' doc/debug-messages.tmp1 | \
+		sed -r \
+			-e 's/.*?(Critical|Important)[(]([0-9]+)[)],\s*/\2 /' \
+			-e 's/<<\s*[(].*[)]\s*(<<|[)];)/<< ... \1/g' \
+			-e 's/<<\s*[^"]*/.../g' \
+			-e 's@([^\\])"@\1@g' \
+			-e 's/\s\s*/ /g' \
+			-e 's/[)];$//g' \
+			>> doc/debug-messages.tmp2
+
+	#
 	# File permissions maintenance.
 	#
 	chmod 644 ${FILENAME}
@@ -326,6 +365,23 @@ for FILENAME in `git ls-files`; do
     fi
 
 done
+
+rm -f doc/debug-messages.tmp1
+
+IMPORTANT_NUM=`gawk '{print $1}' doc/debug-messages.tmp2 | uniq -d`
+if test "x${IMPORTANT_NUM}" != "x"; then
+    echo "ERROR: duplicated debug important message number: ${IMPORTANT_NUM}"
+    exit 1;
+fi
+
+IMPORTANT_MSG=`gawk '{$1=""; print substr($0,2)}' doc/debug-messages.tmp2 | uniq -d`
+if test "x${IMPORTANT_MSG}" != "x"; then
+    echo "ERROR: duplicated debug important message string: '${IMPORTANT_MSG}'"
+    exit 1;
+fi
+
+mv doc/debug-messages.tmp2 doc/debug-messages.txt
+
 }
 
 # Build XPROF types file from current sources
