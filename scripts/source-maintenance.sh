@@ -380,13 +380,14 @@ if test "x${IMPORTANT_MSG}" != "x"; then
     exit 1;
 fi
 
-printf '/**\n' > doc/debug-messages.dox
+cat scripts/boilerplate.h > doc/debug-messages.dox
+printf '/**\n' >> doc/debug-messages.dox
 printf '\\page DebugMessageList Debug Message List\n' >> doc/debug-messages.dox
 printf '\\verbatim\n' >> doc/debug-messages.dox
 sort -n < doc/debug-messages.tmp2 >> doc/debug-messages.dox
 printf '\\endverbatim\n' >> doc/debug-messages.dox
 printf '*/\n' >> doc/debug-messages.dox
-rm doc/debug-messages.tmp2
+rm -f doc/debug-messages.tmp2
 
 }
 
