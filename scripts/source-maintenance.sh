@@ -380,7 +380,13 @@ if test "x${IMPORTANT_MSG}" != "x"; then
     exit 1;
 fi
 
-mv doc/debug-messages.tmp2 doc/debug-messages.txt
+printf '/**\n' > doc/debug-messages.dox
+printf '\\page DebugMessageList Debug Message List\n' >> doc/debug-messages.dox
+printf '\\verbatim\n' >> doc/debug-messages.dox
+sort -n < doc/debug-messages.tmp2 >> doc/debug-messages.dox
+printf '\\endverbatim\n' >> doc/debug-messages.dox
+printf '*/\n' >> doc/debug-messages.dox
+rm doc/debug-messages.tmp2
 
 }
 
