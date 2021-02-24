@@ -412,6 +412,7 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
     }
 
     debugs(52, 3, "urnParseReply: Found " << i << " URLs");
+    xfree(buf);
     return list;
 }
 
