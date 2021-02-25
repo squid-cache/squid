@@ -19,9 +19,13 @@ libsecurity_la_SOURCES= \
 	Context.h \
 	EncryptorAnswer.cc \
 	EncryptorAnswer.h \
+	ErrorDetail.h \
+	ErrorDetail.cc \
+	forward.h \
 	Handshake.cc \
 	Handshake.h \
-	forward.h \
+	Io.cc \
+	Io.h \
 	KeyData.cc \
 	KeyData.h \
 	LockingPointer.h \

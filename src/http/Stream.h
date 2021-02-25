@@ -116,7 +116,7 @@ public:
     ConnStateData *getConn() const;
 
     /// update state to reflect I/O error
-    void noteIoError(const int xerrno);
+    void noteIoError(const Error &, const LogTagsErrors &);
 
     /// cleanup when the transaction has finished. may destroy 'this'
     void finished();

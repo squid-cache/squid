@@ -116,7 +116,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
 #if USE_OPENSSL || USE_GNUTLS
 
     const char *errAction = "with no TLS/SSL library";
-    int errCode = 0;
+    Security::LibErrorCode errCode = 0;
 #if USE_OPENSSL
     Security::SessionPointer session(Security::NewSessionObject(ctx));
     if (!session) {

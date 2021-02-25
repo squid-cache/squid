@@ -10,7 +10,7 @@
 #define SQUID_ACLDENYINFOLIST_H_
 
 #include "acl/forward.h"
-#include "err_type.h"
+#include "error/forward.h"
 #include "errorpage.h"
 #include "mem/forward.h"
 #include "sbuf/forward.h"

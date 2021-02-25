@@ -12,12 +12,31 @@
 #define SQUID_FTP_CLIENT_H
 
 #include "clients/Client.h"
+#include "error/Detail.h"
 
 class String;
 namespace Ftp
 {
 
 extern const char *const crlf;
+
+/// Holds FTP server reply error code
+/// Squid needs to interpret internally FTP reply codes and respond with
+/// custom error (eg in the case of Ftp::Gateway), however still we need
+/// to log the exact FTP server error reply code as the reason of error.
+class ErrorDetail: public ::ErrorDetail {
+    MEMPROXY_CLASS(Ftp::ErrorDetail);
+
+public:
+    explicit ErrorDetail(const int code): completionCode(code) {}
+
+    /* ErrorDetail API */
+    virtual SBuf brief() const override;
+    virtual SBuf verbose(const HttpRequestPointer &) const override;
+
+private:
+    int completionCode; ///< FTP reply completion code
+};
 
 /// Common code for FTP server control and data channels.
 /// Does not own the channel descriptor, which is managed by Ftp::Client.
