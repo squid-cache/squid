@@ -1,11 +1,14 @@
 /*
- * Copyright (C) 1996-2021 The Squid Software Foundation and contributors
+ * Copyright (C) 1996-2020 The Squid Software Foundation and contributors
  *
  * Squid software is distributed under GPLv2+ license and includes
  * contributions from numerous individuals and organizations.
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
+/**
+\page DebugMessageList Debug Message List
+\verbatim
 2 Preparing for shutdown after ... requests
 3 Waiting ... seconds for active connections to finish
 4 Set Current Directory to ...
@@ -22,8 +25,8 @@
 15 Adding nameserver ... from squid.conf
 16 DNS Socket created at ..., FD ...
 16 DNS Socket created at ..., FD ...
-17 Open FD ...
-18 Loading cache_dir # ...
+17 Open FD ... ...
+18 Loading cache_dir # ... from ...
 19 helperOpenServers: Starting .../ ... ' ...' processes
 20 helperOpenServers: No ' ...' processes needed.
 21 HTCP Disabled.
@@ -36,35 +39,26 @@
 28 Finished loading MIME types and icons.
 29 Configuring ... .../ .../ ...
 30 storeLateRelease: released ... objects
-31 Swap maxSize ...
+31 Swap maxSize ... KB, estimated ... objects
 32 Target number of buckets: ...
 33 Using ... Store buckets
-34 Max Mem size: ... KB ...
+34 Max Mem size: ...
 35 Max Swap size: ... KB
 36 Using Least Load store dir selection
 37 Not currently OK to rewrite swap log.
 38 storeDirWriteCleanLogs: Operation aborted.
 39 storeDirWriteCleanLogs: Starting...
 40 Finished. Wrote ... entries.
-41 Took ...
+41 Took ... seconds (... entries/sec).
 42 Store logging disabled
-43 Completed Validation Procedure
-43 Validated ... Entries
-43 store_swap_size = ... KB
-46 Finished rebuilding storage from disk.
-46 ... Entries scanned
-46 ... Invalid entries.
-46 ... With invalid flags.
-46 ... Objects loaded.
-46 ... Objects expired.
-46 ... Objects cancelled.
-46 ... Duplicate URLs purged.
-46 ... Swapfile clashes avoided.
-46 Took ... seconds (...
+43 Completed Validation Procedure ...Validated ... Entries ...store_swap_size = ... KB
+46 Finished rebuilding storage from disk. ... Entries scanned ... Invalid entries ... With invalid flags ... Objects loaded ... Objects expired ... Objects canceled ... Duplicate URLs purged ... Swapfile clashes avoided ...Took ... seconds ( ... objects/sec).
 56 Beginning Validation Procedure
+57 Indexing cache entries: ...
 58 ALE missing ...
 59 Shutdown: Digest authentication.
 60 Shutdown: Negotiate authentication.
 61 Shutdown: NTLM authentication.
-62 Resuming indexing cache_dir # ... from ...
-63 Indexing cache entries: ...
+63 Resuming indexing cache_dir # ... from ...
+\endverbatim
+*/
