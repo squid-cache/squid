@@ -1575,12 +1575,12 @@ Dns::Init(void)
          */
         if (DnsSocketB >= 0) {
             comm_local_port(DnsSocketB);
-            debugs(78, Important(16), "DNS Socket created at " << addrV6 << ", FD " << DnsSocketB);
+            debugs(78, Important(16), "DNS IPv6 socket created at " << addrV6 << ", FD " << DnsSocketB);
             Comm::SetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
         if (DnsSocketA >= 0) {
             comm_local_port(DnsSocketA);
-            debugs(78, Important(16), "DNS Socket created at " << addrV4 << ", FD " << DnsSocketA);
+            debugs(78, Important(64), "DNS IPv4 socket created at " << addrV4 << ", FD " << DnsSocketA);
             Comm::SetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
     }

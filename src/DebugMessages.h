@@ -52,7 +52,7 @@ private:
 };
 
 /// The maximum used DebugMessage::id plus 1. Increase as you add new IDs.
-constexpr DebugMessageId DebugMessageIdUpperBound = 64;
+constexpr DebugMessageId DebugMessageIdUpperBound = 65;
 
 /// a collection of DebugMessage objects (with fast access by message IDs)
 class DebugMessages
