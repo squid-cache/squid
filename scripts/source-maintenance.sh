@@ -175,6 +175,88 @@ checkMakeNamedErrorDetails ()
     return $problems
 }
 
+collectDebugMessagesFrom()
+{
+    source="$1"
+
+    # combine debugs() multiline strings
+    awk 'BEGIN {found=0; dbgLine=""; } {
+        if ($0 ~ / debugs\s*\(/)
+            found = 1;
+        if (found) {
+            commented = match($0, /\);\s*\/\//);
+            if (commented)
+                $0 = substr($0, 1, RSTART+1)
+            dbgLine = dbgLine $0;
+        }
+        if ($0 ~ /\);/) {
+            if (found) {
+                found = 0;
+                print dbgLine;
+                dbgLine = "";
+            }
+        }
+    }' $source > doc/debug-messages.tmp1
+
+    # sed expressions:
+    # - replace debugs() prefix with its message ID
+    # - remove simple parenthesized non-"string" items like (a ? b : c)
+    # - replace any remaining non-"string" items with ...
+    # - remove quotes around "strings"
+    # - remove excessive whitespace
+    # - remove debugs() statement termination sugar
+    grep -o -E '\bdebugs[^,]*,\s*(Critical|Important)[(][0-9]+.*' doc/debug-messages.tmp1 | \
+        sed -r \
+            -e 's/.*?(Critical|Important)[(]([0-9]+)[)],\s*/\2 /' \
+            -e 's/<<\s*[(].*[)]\s*(<<|[)];)/<< ... \1/g' \
+            -e 's/<<\s*[^"]*/.../g' \
+            -e 's@([^\\])"@\1@g' \
+            -e 's/\s\s*/ /g' \
+            -e 's/[)];$//g' \
+        >> doc/debug-messages.tmp2
+}
+
+processDebugMessages()
+{
+    source="doc/debug-messages.tmp2"
+    dest="doc/debug-messages.dox"
+    importantNum=`awk '{print $1}' $source | sort -n | uniq -d`
+    if test "x${importantNum}" != "x"; then
+        echo "ERROR: duplicated debug important message number: ${importantNum}"
+        return 1;
+    fi
+
+    importantMsg=`awk '{$1=""; print substr($0,2)}' $source | sort | uniq -d`
+    if test "x${importantMsg}" != "x"; then
+        echo "ERROR: duplicated debug important message string: '${importantMsg}'"
+        return 1;
+    fi
+
+    cat scripts/boilerplate.h > ${dest}
+    echo "" >> ${dest}
+    printf '/**\n' >> ${dest}
+    printf '\\page DebugMessageList Debug Message List\n' >> ${dest}
+    printf '\\verbatim\n' >> ${dest}
+    sort -n < $source >> ${dest}
+    printf '\\endverbatim\n' >> ${dest}
+    printf '*/\n' >> ${dest}
+}
+
+processDebugSections()
+{
+    dest="doc/debug-sections.txt"
+    sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
+    cat scripts/boilerplate.h > ${dest}
+    echo "" >> ${dest}
+    cat doc/debug-sections.tmp2 >> ${dest}
+}
+
+removeDebugTempFiles()
+{
+    rm -f doc/debug-messages.tmp*
+    rm -f doc/debug-sections.tmp*
+}
+
 srcFormat ()
 {
 #
@@ -184,9 +266,6 @@ git grep "ifn?def .*_SQUID_" |
     grep -v -E "_H$" |
     grep -v "scripts/source-maintenance.sh" |
     while read f; do echo "PROBLEM?: ${f}"; done
-
-rm -f doc/debug-messages.tmp1
-rm -f doc/debug-messages.tmp2
 
 #
 # Scan for file-specific actions
@@ -286,37 +365,7 @@ for FILENAME in `git ls-files`; do
 	# DEBUG Important message list maintenance
 	#
 
-	# combine debugs() multiline strings
-	gawk 'BEGIN {found=0; dbgLine=""; } {
-		if ($0 ~ /\<debugs\(/)
-		    found = 1;
-		if (found)
-		    dbgLine = dbgLine $0;
-		if ($0 ~ /\);/) {
-		    if (found) {
-		        found = 0;
-		        print dbgLine;
-		        dbgLine = "";
-		    }
-		}
-	}' $FILENAME > doc/debug-messages.tmp1
-
-	# sed expressions:
-	# - replace debugs() prefix with its message ID
-	# - remove simple parenthesized non-"string" items like (a ? b : c)
-	# - replace any remaining non-"string" items with ...
-	# - remove quotes around "strings"
-	# - remove excessive whitespace
-	# - remove debugs() statement termination sugar
-	grep -o -E '\bdebugs[^,]*,\s*(Critical|Important)[(][0-9]+.*' doc/debug-messages.tmp1 | \
-		sed -r \
-			-e 's/.*?(Critical|Important)[(]([0-9]+)[)],\s*/\2 /' \
-			-e 's/<<\s*[(].*[)]\s*(<<|[)];)/<< ... \1/g' \
-			-e 's/<<\s*[^"]*/.../g' \
-			-e 's@([^\\])"@\1@g' \
-			-e 's/\s\s*/ /g' \
-			-e 's/[)];$//g' \
-			>> doc/debug-messages.tmp2
+	collectDebugMessagesFrom ${FILENAME}
 
 	#
 	# File permissions maintenance.
@@ -365,29 +414,6 @@ for FILENAME in `git ls-files`; do
     fi
 
 done
-
-rm -f doc/debug-messages.tmp1
-
-IMPORTANT_NUM=`gawk '{print $1}' doc/debug-messages.tmp2 | uniq -d`
-if test "x${IMPORTANT_NUM}" != "x"; then
-    echo "ERROR: duplicated debug important message number: ${IMPORTANT_NUM}"
-    exit 1;
-fi
-
-IMPORTANT_MSG=`gawk '{$1=""; print substr($0,2)}' doc/debug-messages.tmp2 | uniq -d`
-if test "x${IMPORTANT_MSG}" != "x"; then
-    echo "ERROR: duplicated debug important message string: '${IMPORTANT_MSG}'"
-    exit 1;
-fi
-
-cat scripts/boilerplate.h > doc/debug-messages.dox
-printf '/**\n' >> doc/debug-messages.dox
-printf '\\page DebugMessageList Debug Message List\n' >> doc/debug-messages.dox
-printf '\\verbatim\n' >> doc/debug-messages.dox
-sort -n < doc/debug-messages.tmp2 >> doc/debug-messages.dox
-printf '\\endverbatim\n' >> doc/debug-messages.dox
-printf '*/\n' >> doc/debug-messages.dox
-rm -f doc/debug-messages.tmp2
 
 }
 
@@ -441,11 +467,11 @@ make -C src/http gperf-files
 run_ checkMakeNamedErrorDetails || exit 1
 
 # Run formatting
-echo "" >doc/debug-sections.tmp
+removeDebugTempFiles
 srcFormat || exit 1
-sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
-cat scripts/boilerplate.h doc/debug-sections.tmp2 >doc/debug-sections.txt
-rm doc/debug-sections.tmp doc/debug-sections.tmp2
+processDebugSections || exit 1
+processDebugMessages || exit 1
+removeDebugTempFiles
 rm boilerplate_fix.sed
 
 exit $SeenErrors
