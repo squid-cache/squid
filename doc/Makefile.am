@@ -12,4 +12,5 @@ DEFAULT_MIME_TABLE      = $(sysconfdir)/mime.conf
 DEFAULT_ERROR_DIR       = $(datadir)/errors
 
 EXTRA_DIST = \
-	debug-sections.txt
+	debug-sections.txt \
+	debug-messages.dox
