@@ -179,7 +179,7 @@ collectDebugMessagesFrom()
 {
     source="$1"
 
-    # combine debugs() multiline strings
+    # combine debugs() multiline strings, removing trailing '//...' comments
     awk 'BEGIN {found=0; dbgLine=""; } {
         if ($0 ~ / debugs\s*\(/)
             found = 1;
@@ -233,7 +233,7 @@ processDebugMessages()
     fi
 
     cat scripts/boilerplate.h > ${dest}
-    echo "" >> ${dest}
+    printf '\n' >> ${dest}
     printf '/**\n' >> ${dest}
     printf '\\page DebugMessageList Debug Message List\n' >> ${dest}
     printf '\\verbatim\n' >> ${dest}
