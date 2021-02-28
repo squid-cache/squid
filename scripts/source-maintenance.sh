@@ -243,7 +243,6 @@ processDebugMessages ()
     fi
 
     cat scripts/boilerplate.h > $destination
-    printf '\n' >> $destination
     printf '/**\n' >> $destination
     printf '\\page ControlledCacheLogMessages Message IDs and gists for cache_log_message\n' >> $destination
     printf '\\verbatim\n' >> $destination
