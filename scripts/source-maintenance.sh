@@ -426,8 +426,8 @@ for FILENAME in `git ls-files`; do
 
 done
 
-    processDebugSections || return
-    processDebugMessages || return
+    run_ processDebugSections || return
+    run_ processDebugMessages || return
 
     rm boilerplate_fix.sed
 }
