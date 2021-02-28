@@ -8,7 +8,7 @@
 
 
 /**
-\page DebugMessageList Debug Message List
+\page ControlledCacheLogMessages Message IDs and gists for cache_log_message
 \verbatim
 ID Message gist
 == ============
