@@ -175,18 +175,19 @@ checkMakeNamedErrorDetails ()
     return $problems
 }
 
+# extract IDs and gists of cache_log_message debugs() in the given source file
 collectDebugMessagesFrom ()
 {
     source="$1"
 
-    # combine debugs() multiline strings, removing trailing '//...' comments
-    awk 'BEGIN {found=0; dbgLine=""; } {
-        if ($0 ~ / debugs\s*\(/)
+    # Merge multi-line debugs() into one-liners and remove '//...' comments.
+    awk 'BEGIN { found=0; dbgLine=""; } {
+        if ($0 ~ /\sdebugs\s*\(/)
             found = 1;
         if (found) {
             commented = match($0, /\);\s*\/\//);
             if (commented)
-                $0 = substr($0, 1, RSTART+1)
+                $0 = substr($0, 1, RSTART+1);
             dbgLine = dbgLine $0;
         }
         if ($0 ~ /\);/) {
@@ -199,7 +200,7 @@ collectDebugMessagesFrom ()
     }' $source > doc/debug-messages.tmp1
 
     # sed expressions:
-    # - replace debugs() prefix with its message ID
+    # - replace debugs() prefix with the message ID contained in it
     # - remove simple parenthesized non-"string" items like (a ? b : c)
     # - replace any remaining non-"string" items with ...
     # - remove quotes around "strings"
@@ -216,41 +217,51 @@ collectDebugMessagesFrom ()
         >> doc/debug-messages.tmp2
 }
 
+# make doc/debug-messages.dox from aggregate collectDebugMessagesFrom results
 processDebugMessages ()
 {
     source="doc/debug-messages.tmp2"
-    dest="doc/debug-messages.dox"
-    importantNum=`awk '{print $1}' $source | sort -n | uniq -d`
-    if test "x${importantNum}" != "x"; then
-        echo "ERROR: duplicated debug important message number: ${importantNum}"
+    destination="doc/debug-messages.dox"
+
+    repeatedIds=`awk '{print $1}' $source | sort -n | uniq -d`
+    if test "x$repeatedIds" != "x"; then
+        echo "ERROR: Repeated debugs() message IDs:"
+        echo "$repeatedIds"
+        echo ""
         return 1;
     fi
 
-    importantMsg=`awk '{$1=""; print substr($0,2)}' $source | sort | uniq -d`
-    if test "x${importantMsg}" != "x"; then
-        echo "ERROR: duplicated debug important message string: '${importantMsg}'"
+    repeatedGists=`awk '{$1=""; print substr($0,2)}' $source | sort | uniq -d`
+    if test "x$repeatedGists" != "x"; then
+        echo "ERROR: Repeated debugs() message gists:"
+        echo "$repeatedGists"
+        echo ""
         return 1;
     fi
 
-    cat scripts/boilerplate.h > ${dest}
-    printf '\n' >> ${dest}
-    printf '/**\n' >> ${dest}
-    printf '\\page DebugMessageList Debug Message List\n' >> ${dest}
-    printf '\\verbatim\n' >> ${dest}
-    printf 'ID Message gist\n' >> ${dest}
-    printf '== ============\n' >> ${dest}
-    sort -n < $source >> ${dest}
-    printf '\\endverbatim\n' >> ${dest}
-    printf '*/\n' >> ${dest}
+    cat scripts/boilerplate.h > $destination
+    printf '\n' >> $destination
+    printf '/**\n' >> $destination
+    printf '\\page DebugMessageList Debug Message List\n' >> $destination
+    printf '\\verbatim\n' >> $destination
+    printf 'ID Message gist\n' >> $destination
+    printf '== ============\n' >> $destination
+    sort -n < $source >> $destination
+    printf '\\endverbatim\n' >> $destination
+    printf '*/\n' >> $destination
+
+    rm -f $source
 }
 
+# make doc/debug-sections.txt from aggregated by srcFormat extracts
 processDebugSections ()
 {
-    dest="doc/debug-sections.txt"
-    sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
-    cat scripts/boilerplate.h > ${dest}
-    echo "" >> ${dest}
-    cat doc/debug-sections.tmp2 >> ${dest}
+    destination="doc/debug-sections.txt"
+
+    sort -u < doc/debug-sections.tmp | sort -n > doc/debug-sections.tmp2
+    cat scripts/boilerplate.h > $destination
+    echo "" >> $destination
+    cat doc/debug-sections.tmp2 >> $destination
 }
 
 removeDebugTempFiles ()
@@ -358,16 +369,12 @@ for FILENAME in `git ls-files`; do
 		echo "ERROR: ${FILENAME} contains unsafe use of sprintf()"
 	fi
 
+	collectDebugMessagesFrom ${FILENAME}
+
 	#
 	# DEBUG Section list maintenance
 	#
 	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' -e 's%/\* DEBUG: %%' -e 's% \*/%%' | sort -u >>doc/debug-sections.tmp
-
-	#
-	# DEBUG Important message list maintenance
-	#
-
-	collectDebugMessagesFrom ${FILENAME}
 
 	#
 	# File permissions maintenance.
@@ -416,7 +423,6 @@ for FILENAME in `git ls-files`; do
     fi
 
 done
-
 }
 
 # Build XPROF types file from current sources
