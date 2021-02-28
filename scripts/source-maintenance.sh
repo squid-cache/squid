@@ -425,6 +425,8 @@ for FILENAME in `git ls-files`; do
     fi
 
 done
+
+    rm boilerplate_fix.sed
 }
 
 # Build XPROF types file from current sources
@@ -480,6 +482,5 @@ run_ checkMakeNamedErrorDetails || exit 1
 srcFormat || exit 1
 processDebugSections || exit 1
 processDebugMessages || exit 1
-rm boilerplate_fix.sed
 
 exit $SeenErrors
