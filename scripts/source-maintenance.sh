@@ -175,7 +175,7 @@ checkMakeNamedErrorDetails ()
     return $problems
 }
 
-collectDebugMessagesFrom()
+collectDebugMessagesFrom ()
 {
     source="$1"
 
@@ -216,7 +216,7 @@ collectDebugMessagesFrom()
         >> doc/debug-messages.tmp2
 }
 
-processDebugMessages()
+processDebugMessages ()
 {
     source="doc/debug-messages.tmp2"
     dest="doc/debug-messages.dox"
@@ -244,7 +244,7 @@ processDebugMessages()
     printf '*/\n' >> ${dest}
 }
 
-processDebugSections()
+processDebugSections ()
 {
     dest="doc/debug-sections.txt"
     sort -u <doc/debug-sections.tmp | sort -n >doc/debug-sections.tmp2
@@ -253,7 +253,7 @@ processDebugSections()
     cat doc/debug-sections.tmp2 >> ${dest}
 }
 
-removeDebugTempFiles()
+removeDebugTempFiles ()
 {
     rm -f doc/debug-messages.tmp*
     rm -f doc/debug-sections.tmp*
