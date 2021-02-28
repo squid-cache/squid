@@ -426,6 +426,9 @@ for FILENAME in `git ls-files`; do
 
 done
 
+    processDebugSections || return
+    processDebugMessages || return
+
     rm boilerplate_fix.sed
 }
 
@@ -480,7 +483,5 @@ run_ checkMakeNamedErrorDetails || exit 1
 
 # Run formatting
 srcFormat || exit 1
-processDebugSections || exit 1
-processDebugMessages || exit 1
 
 exit $SeenErrors
