@@ -215,6 +215,8 @@ collectDebugMessagesFrom ()
             -e 's/\s\s*/ /g' \
             -e 's/[)];$//g' \
         >> doc/debug-messages.tmp2
+
+    rm -f doc/debug-messages.tmp1
 }
 
 # make doc/debug-messages.dox from aggregate collectDebugMessagesFrom results
@@ -262,6 +264,8 @@ processDebugSections ()
     cat scripts/boilerplate.h > $destination
     echo "" >> $destination
     cat doc/debug-sections.tmp2 >> $destination
+
+    rm -f doc/debug-sections.tmp*
 }
 
 removeDebugTempFiles ()
@@ -479,7 +483,6 @@ removeDebugTempFiles
 srcFormat || exit 1
 processDebugSections || exit 1
 processDebugMessages || exit 1
-removeDebugTempFiles
 rm boilerplate_fix.sed
 
 exit $SeenErrors
