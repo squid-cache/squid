@@ -268,14 +268,12 @@ processDebugSections ()
     rm -f doc/debug-sections.tmp*
 }
 
-removeDebugTempFiles ()
-{
-    rm -f doc/debug-messages.tmp*
-    rm -f doc/debug-sections.tmp*
-}
-
 srcFormat ()
 {
+    # remove stale temporary files that accumulate info extracted below
+    rm -f doc/debug-messages.tmp*
+    rm -f doc/debug-sections.tmp*
+
 #
 # Scan for incorrect use of #ifdef/#ifndef
 #
@@ -479,7 +477,6 @@ make -C src/http gperf-files
 run_ checkMakeNamedErrorDetails || exit 1
 
 # Run formatting
-removeDebugTempFiles
 srcFormat || exit 1
 processDebugSections || exit 1
 processDebugMessages || exit 1
