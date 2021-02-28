@@ -933,7 +933,8 @@ mainReconfigureFinish(void *)
         }
     } catch (...) {
         // for now any errors are a fatal condition...
-        debugs(1, DBG_CRITICAL, "FATAL: Reconfiguration error: " << CurrentException);
+        debugs(1, DBG_CRITICAL, "FATAL: Unhandled exception parsing config file. " <<
+               " Run squid -k parse and check for errors.");
         self_destruct();
     }
 
