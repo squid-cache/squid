@@ -10,6 +10,8 @@
 /**
 \page DebugMessageList Debug Message List
 \verbatim
+ID Message gist
+== ============
 2 Preparing for shutdown after ... requests
 3 Waiting ... seconds for active connections to finish
 4 Set Current Directory to ...

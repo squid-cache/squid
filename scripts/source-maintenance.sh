@@ -237,6 +237,8 @@ processDebugMessages()
     printf '/**\n' >> ${dest}
     printf '\\page DebugMessageList Debug Message List\n' >> ${dest}
     printf '\\verbatim\n' >> ${dest}
+    printf 'ID Message gist\n' >> ${dest}
+    printf '== ============\n' >> ${dest}
     sort -n < $source >> ${dest}
     printf '\\endverbatim\n' >> ${dest}
     printf '*/\n' >> ${dest}
