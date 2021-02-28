@@ -179,6 +179,7 @@ checkMakeNamedErrorDetails ()
 collectDebugMessagesFrom ()
 {
     source="$1"
+    destination="doc/debug-messages.tmp"
 
     # Merge multi-line debugs() into one-liners and remove '//...' comments.
     awk 'BEGIN { found=0; dbgLine=""; } {
@@ -197,7 +198,7 @@ collectDebugMessagesFrom ()
                 dbgLine = "";
             }
         }
-    }' $source > doc/debug-messages.tmp1
+    }' $source > doc/debug-messages.tmp2
 
     # sed expressions:
     # - replace debugs() prefix with the message ID contained in it
@@ -206,7 +207,7 @@ collectDebugMessagesFrom ()
     # - remove quotes around "strings"
     # - remove excessive whitespace
     # - remove debugs() statement termination sugar
-    grep -o -E '\bdebugs[^,]*,\s*(Critical|Important)[(][0-9]+.*' doc/debug-messages.tmp1 | \
+    grep -o -E '\bdebugs[^,]*,\s*(Critical|Important)[(][0-9]+.*' doc/debug-messages.tmp2 | \
         sed -r \
             -e 's/.*?(Critical|Important)[(]([0-9]+)[)],\s*/\2 /' \
             -e 's/<<\s*[(].*[)]\s*(<<|[)];)/<< ... \1/g' \
@@ -214,15 +215,15 @@ collectDebugMessagesFrom ()
             -e 's@([^\\])"@\1@g' \
             -e 's/\s\s*/ /g' \
             -e 's/[)];$//g' \
-        >> doc/debug-messages.tmp2
+        >> $destination
 
-    rm -f doc/debug-messages.tmp1
+    rm -f doc/debug-messages.tmp2
 }
 
 # make doc/debug-messages.dox from aggregate collectDebugMessagesFrom results
 processDebugMessages ()
 {
-    source="doc/debug-messages.tmp2"
+    source="doc/debug-messages.tmp"
     destination="doc/debug-messages.dox"
 
     repeatedIds=`awk '{print $1}' $source | sort -n | uniq -d`
