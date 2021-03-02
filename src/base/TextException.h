@@ -58,7 +58,7 @@ std::ostream &operator <<(std::ostream &, const TextException &);
 #define TexcHere(msg) TextException((msg), Here())
 
 /// Like assert() but throws an exception instead of aborting the process
-/// and allows the caller to specify a custom exception message.
+/// and allows the caller to customize the exception message and location.
 /// \param description string literal describing the condition; what MUST happen
 #define Must3(condition, description, location) \
     do { \
