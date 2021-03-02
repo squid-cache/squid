@@ -300,7 +300,7 @@ HttpHdrSc::getMergedTarget(const char *ourtarget)
 
     /* W3C Edge Architecture Specification 1.0 section 3
      *
-     * "If more than one is targetted at a surrogate, the most specific applies.
+     * "If more than one is targeted at a surrogate, the most specific applies.
      *  For example,
      *    Surrogate-Control: max-age=60, no-store;abc
      *  The surrogate that identified itself as 'abc' would apply no-store;
