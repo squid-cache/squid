@@ -57,26 +57,20 @@ std::ostream &operator <<(std::ostream &, const TextException &);
 /// legacy convenience macro; it is not difficult to type Here() now
 #define TexcHere(msg) TextException((msg), Here())
 
-/// formats a message similar to that of a failed assert(success) check
-SBuf MakeFailedCheckMessage(const SBuf &successDescription);
-/// convenience wrapper for MakeFailedCheckMessage(SBuf)
-SBuf MakeFailedCheckMessage(const char *successDescription);
-
 /// Like assert() but throws an exception instead of aborting the process
 /// and allows the caller to specify a custom exception message.
-/// \param successDescription description of the condition -- what MUST happen
-template <typename Description>
-inline void
-Must3(const bool condition, const Description successDescription, const SourceLocation &location)
-{
-    // XXX: Cannot pass SBuf to TextException() without #including SBuf.h:
-    // compile error: invalid use of incomplete type ‘class SBuf’
-    if (!condition)
-        throw TextException("MakeFailedCheckMessage(successDescription)", location);
-}
+/// \param description string literal describing the condition; what MUST happen
+#define Must3(condition, description, location) \
+    do { \
+        if (!(condition)) { \
+            const TextException Must_ex_(("check failed: " description), (location)); \
+            debugs(0, 3, Must_ex_.what()); \
+            throw Must_ex_; \
+        } \
+    } while (/*CONSTCOND*/ false)
 
 /// Like assert() but throws an exception instead of aborting the process.
-#define Must(condition) Must3(!!(condition), (#condition), Here())
+#define Must(condition) Must3((condition), #condition, Here())
 
 /// Reports and swallows all exceptions to prevent compiler warnings and runtime
 /// errors related to throwing class destructors. Should be used for most dtors.

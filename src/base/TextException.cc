@@ -8,9 +8,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
-#include "base/Optional.h"
 #include "sbuf/SBuf.h"
-#include "SquidMath.h"
 
 #include <iostream>
 #include <sstream>
@@ -59,49 +57,6 @@ TextException::what() const throw()
 
     return result.what();
 }
-
-SBuf
-MakeFailedCheckMessage(const SBuf &message)
-{
-    static const SBuf prefix("check failed: ");
-    static const SBuf lastResortMessage("check failed: [no details]");
-    static SBuf buf; // optimization to prevent some allocations
-
-    // try hard to handle recursive failures
-    static bool making = false;
-    if (making)
-        return lastResortMessage;
-
-    making = true;
-    try {
-        if (const auto combinedLength = Sum(prefix.length(), message.length())) {
-            buf.clear();
-            buf.reserveSpace(combinedLength.value());
-            buf.append(prefix);
-            buf.append(message);
-            making = false;
-            return buf;
-        }
-        // Handle huge messages by returning lastResortMessage without risking
-        // more troubles by reporting this huge message.
-        // [[fallthrough]]
-    }
-    catch (...) {
-        // Handle this message-forming exception by returning lastResortMessage
-        // without risking more exceptions while reporting this low-level one.
-        // [[fallthrough]]
-    }
-    making = false;
-    return lastResortMessage;
-}
-
-SBuf
-MakeFailedCheckMessage(const char *message)
-{
-    return MakeFailedCheckMessage(SBuf(message));
-}
-
-
 
 std::ostream &
 operator <<(std::ostream &os, const TextException &ex)
