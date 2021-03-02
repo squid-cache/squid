@@ -9,7 +9,6 @@
 #include "squid.h"
 #include "SquidConfig.h"
 
-// TODO: Who is zeroing this global during startup? C++ does not do it for us!
 class SquidConfig Config;
 
 class SquidConfig2 Config2;
