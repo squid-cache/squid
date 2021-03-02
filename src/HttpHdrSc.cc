@@ -336,6 +336,16 @@ HttpHdrSc::getMergedTarget(const char *ourtarget)
     HttpHdrScTarget *sctus = findTarget(ourtarget);
     HttpHdrScTarget *sctgeneric = findTarget(NULL);
 
+    /* W3C Edge Architecture Specification 1.0 section 3
+     *
+     * "If more than one is targeted at a surrogate, the most specific applies.
+     *  For example,
+     *    Surrogate-Control: max-age=60, no-store;abc
+     *  The surrogate that identified itself as 'abc' would apply no-store;
+     *  others would apply max-age=60.
+     *
+     * XXX: the if statements below will *merge* the no-store and max-age settings.
+     */
     if (sctgeneric || sctus) {
         HttpHdrScTarget *sctusable = new HttpHdrScTarget(NULL);
 
