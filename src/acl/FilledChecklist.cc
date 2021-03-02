@@ -260,8 +260,8 @@ void ACLFilledChecklist::setRequest(HttpRequest *httpRequest)
             src_addr = request->client_addr;
         my_addr = request->my_addr;
 
-        if (const auto conn = request->clientConnectionManager.get())
-            setConn(conn);
+        if (const auto cmgr = request->clientConnectionManager.get())
+            setConn(cmgr);
     }
 }
 
