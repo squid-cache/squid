@@ -309,7 +309,6 @@ public:
 #else
     bool switchedToHttps() const { return false; }
 #endif
-
     char *prepareTlsSwitchingURL(const Http1::RequestParserPointer &hp);
 
     /// registers a newly created stream
