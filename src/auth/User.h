@@ -74,13 +74,12 @@ public:
     /// simple accessor to detect expired credentials
     bool expired() const { return ttl() < 0; }
 
-    /// update credentials lifetime using ttl=value from helper
-    /// nil value means the helper sent no TTL option; in that case, negative TTL is assumed
-    /// see updateExpiration() for how negative TTLs are interpreted
+    /// Update credentials lifetime using ttl=value from helper.
+    /// Nil value means the helper sent no TTL option; in that case
+    /// TTL is set to the auth_param credentialsttl value
     virtual void noteHelperTtl(const char *value);
 
     /// update credentials lifetime using the given TTL value in seconds
-    /// negative TTL values are interpreted as zero TTL (i.e. expiring within the current second)
     virtual void updateExpiration(int64_t);
 
     /* Manage list of IPs using this username */
