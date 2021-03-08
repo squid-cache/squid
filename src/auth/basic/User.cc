@@ -25,7 +25,7 @@ Auth::Basic::User::~User()
     safe_free(passwd);
 }
 
-int32_t
+Auth::Ttl
 Auth::Basic::User::ttl() const
 {
     if (credentials() != Auth::Ok && credentials() != Auth::Pending)

@@ -39,7 +39,7 @@ Auth::Digest::User::~User()
 int32_t
 Auth::Digest::User::ttl() const
 {
-    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime);
+    const auto global_ttl = static_cast<Auth::Ttl>(expiretime - squid_curtime);
 
     /* find the longest lasting nonce. */
     int32_t latest_nonce = -1;
@@ -52,9 +52,9 @@ Auth::Digest::User::ttl() const
         link = link->next;
     }
     if (latest_nonce == -1)
-        return min(-1, global_ttl);
+        return min(global_ttl, -1);
 
-    int32_t nonce_ttl = latest_nonce - current_time.tv_sec + static_cast<Config*>(Auth::SchemeConfig::Find("digest"))->noncemaxduration;
+    const Auth::Ttl nonce_ttl = latest_nonce - current_time.tv_sec + static_cast<Config*>(Auth::SchemeConfig::Find("digest"))->noncemaxduration;
 
     return min(nonce_ttl, global_ttl);
 }
