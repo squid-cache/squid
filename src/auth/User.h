@@ -69,7 +69,7 @@ public:
      * How long these credentials are still valid for.
      * Negative numbers means already expired.
      */
-    virtual int32_t ttl() const = 0;
+    virtual Auth::Ttl ttl() const = 0;
 
     /// simple accessor to detect expired credentials
     bool expired() const { return ttl() < 0; }
@@ -77,10 +77,10 @@ public:
     /// Update credentials lifetime using ttl=value from helper.
     /// Nil value means the helper sent no TTL option; in that case
     /// TTL is set to the auth_param credentialsttl value
-    virtual void noteHelperTtl(const char *value);
+    void noteHelperTtl(const char *value);
 
     /// update credentials lifetime using the given TTL value in seconds
-    virtual void updateExpiration(int64_t);
+    void updateExpiration(Auth::Ttl);
 
     /* Manage list of IPs using this username */
     void clearIp();

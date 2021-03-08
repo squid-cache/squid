@@ -37,7 +37,7 @@ public:
     void updateCached(User *from);
 
     /* Auth::User API */
-    virtual int32_t ttl() const override;
+    virtual Auth::Ttl ttl() const override;
     static CbcPointer<Auth::CredentialsCache> Cache();
     virtual void addToNameCache() override;
 

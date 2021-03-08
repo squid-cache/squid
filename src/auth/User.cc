@@ -50,12 +50,20 @@ Auth::User::credentials(CredentialState newCreds)
 void
 Auth::User::noteHelperTtl(const char *ttlNote)
 {
-    const int64_t ttl = (ttlNote ? strtoll(ttlNote, nullptr, 10) : config->credentialsTtl );
-    updateExpiration(ttl);
+    if (ttlNote) {
+        const auto noteValue = strtoll(ttlNote, nullptr, 10);
+        if (noteValue < std::numeric_limits<Auth::Ttl>::max())
+            updateExpiration(Auth::Ttl(noteValue));
+        else
+            updateExpiration(std::numeric_limits<Auth::Ttl>::max());
+
+    } else {
+        updateExpiration(config->credentialsTtl);
+    }
 }
 
 void
-Auth::User::updateExpiration(int64_t ttl)
+Auth::User::updateExpiration(Auth::Ttl ttl)
 {
     // prevent signed overflows in time calculation
     if (ttl >= (std::numeric_limits<decltype(current_time.tv_sec)>::max() - current_time.tv_sec))
