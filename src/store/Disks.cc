@@ -691,21 +691,21 @@ Store::Disks::RemoteIndexingCompleted(const int kidId)
     assert(UsingSmp());
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
         auto &dir = Dir(i);
-        if (dir.active() && IamWorkerProcess() && dir.disker == kidId) {
+        if (dir.active() && IamWorkerProcess() && dir.disker == kidId && dir.diskerReady) {
             assert(dir.smpAware());
-            dir.diskerIndexed = true;
-            if (!dir.diskerReady)
-                continue;
-            if (dir.indexed)
+            if (dir.diskerIndexed)
                 debugs(20, DBG_IMPORTANT, "WARNING: Ignoring repeated 'indexing completed' notification from disker" << kidId);
-            else
+            else {
+                assert(!dir.indexed);
+                dir.diskerIndexed = true;
                 storeRebuildComplete(nullptr, dir);
+            }
         }
     }
 }
 
 void
-Store::Disks::DiskerReadyNotification(const int kidId)
+Store::Disks::DiskerReadyNotification(const int kidId, const bool indexed)
 {
     assert(UsingSmp());
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
@@ -716,7 +716,7 @@ Store::Disks::DiskerReadyNotification(const int kidId)
                 debugs(20, DBG_IMPORTANT, "WARNING: Ignoring repeated 'disker ready' notification from disker" << kidId);
             else {
                 dir.diskerReady = true;
-                if (dir.diskerIndexed)
+                if (indexed)
                     RemoteIndexingCompleted(kidId);
             }
         }

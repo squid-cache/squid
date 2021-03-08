@@ -285,17 +285,10 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
     debugs(54, 3, "tell kid" << request.requestorId << " that " <<
            request.tag << " is kid" << strand.kidId << " (indexed:" << isIndexed << ")");
 
-    const StrandMessage response(strand, request.qid);
+    const StrandReady response(strand, request.qid, isIndexed);
     TypedMsgHdr message;
-    response.pack(mtStrandReady, message);
+    response.pack(message);
     SendMessage(MakeAddr(strandAddrLabel, request.requestorId), message);
-
-    if (isIndexed) {
-        StrandMessage indexedResponse(strand, request.qid);
-        TypedMsgHdr indexedMessage;
-        indexedResponse.pack(mtRebuildFinished, indexedMessage);
-        SendMessage(MakeAddr(strandAddrLabel, request.requestorId), indexedMessage);
-    }
 }
 
 #if SQUID_SNMP

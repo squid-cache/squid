@@ -54,6 +54,23 @@ public:
     QuestionerId qid;
 };
 
+/// mtStrandReady IPC message
+class StrandReady : public StrandMessage
+{
+public:
+    StrandReady(const StrandCoord &aCoord, QuestionerId aQid, bool anIndexed):
+        StrandMessage(aCoord, aQid),
+        indexed(anIndexed)
+    {}
+
+    StrandReady(const TypedMsgHdr &hdrMsg);
+
+    void pack(TypedMsgHdr &) const;
+
+public:
+    bool indexed; ///< whether the found strand is 'indexed'
+};
+
 } // namespace Ipc;
 
 #endif /* SQUID_IPC_STRAND_COORD_H */

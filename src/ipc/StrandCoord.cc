@@ -67,3 +67,16 @@ Ipc::StrandMessage::NotifyCoordinator(const MessageType msgType, const char *tag
     SendMessage(Port::CoordinatorAddr(), hdr);
 }
 
+Ipc::StrandReady::StrandReady(const TypedMsgHdr &hdrMsg):
+    StrandMessage(hdrMsg)
+{
+    hdrMsg.getPod(indexed);
+}
+
+void
+Ipc::StrandReady::pack(TypedMsgHdr &hdrMsg) const
+{
+    StrandMessage::pack(mtStrandReady, hdrMsg);
+    hdrMsg.putPod(indexed);
+}
+
