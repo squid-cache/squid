@@ -50,18 +50,13 @@ Auth::User::credentials(CredentialState newCreds)
 void
 Auth::User::noteHelperTtl(const char *ttlNote)
 {
-    const int64_t ttl = (ttlNote ? strtoll(ttlNote, nullptr, 10) : -1);
+    const int64_t ttl = (ttlNote ? strtoll(ttlNote, nullptr, 10) : config->credentialsTtl );
     updateExpiration(ttl);
 }
 
 void
 Auth::User::updateExpiration(int64_t ttl)
 {
-    // Treat negative values as expiry happening in the current second.
-    // See scheme-specific expired() methods for what that means.
-    if (ttl <= 0)
-        ttl = 0;
-
     // prevent signed overflows in time calculation
     if (ttl >= (std::numeric_limits<decltype(current_time.tv_sec)>::max() - current_time.tv_sec))
         expiretime = std::numeric_limits<decltype(current_time.tv_sec)>::max();

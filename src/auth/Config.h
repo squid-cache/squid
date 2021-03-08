@@ -40,8 +40,6 @@ public:
     /// the authenticate_cache_garbage_interval
     time_t garbageCollectInterval = 0;
 
-    // TODO replace this directive with per-Scheme 'credentialsttl'
-    //      and make Scheme::expirestime the real time-when-expires.
     /// the authenticate_ttl
     time_t credentialsTtl = 0;
 
