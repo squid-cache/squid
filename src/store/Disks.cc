@@ -674,17 +674,6 @@ Store::Disks::AllIndexed()
     return true;
 }
 
-bool
-Store::Disks::Active()
-{
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        const auto &dir = Dir(i);
-        if (dir.active())
-            return true;
-    }
-    return false;
-}
-
 void
 Store::Disks::DiskerReadyNotification(const int kidId, const bool indexed)
 {
@@ -696,9 +685,9 @@ Store::Disks::DiskerReadyNotification(const int kidId, const bool indexed)
             dir.diskerReady = true;
             if (!indexed)
                 continue;
-            if (dir.diskerIndexed)
+            if (dir.diskerIndexed) {
                 debugs(20, 4, "Ignoring repeated 'indexing completed' notification from disker" << kidId);
-            else {
+            } else {
                 assert(!dir.indexed);
                 dir.diskerIndexed = true;
                 storeRebuildComplete(nullptr, dir);

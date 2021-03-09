@@ -71,7 +71,9 @@ protected:
 
 private:
     StrandCoords strands_; ///< registered processes and threads
-    std::vector<QuestionerId> questioners_; ///< questioner ids for strands_
+    /// questioner ids for each of StrandCoord in strands_,
+    /// i.e., questioners_[i] is the questioner id for strands_[i]
+    std::vector<QuestionerId> questioners_;
 
     typedef std::list<StrandSearchRequest> Searchers; ///< search requests
     Searchers searchers; ///< yet unanswered search requests in arrival order

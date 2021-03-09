@@ -63,6 +63,7 @@ void Ipc::Coordinator::registerStrand(const StrandMessage& msg)
         if (oldTag.size() && !strand.tag.size())
             found->tag = oldTag; // keep more detailed info (XXX?)
     } else {
+        assert(strands_.size() == questioners_.size());
         strands_.push_back(strand);
         questioners_.push_back(msg.qid);
     }
