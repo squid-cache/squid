@@ -28,10 +28,11 @@ Auth::Basic::User::~User()
 Auth::Ttl
 Auth::Basic::User::ttl() const
 {
+    static const Auth::Ttl expired(-1);
     if (credentials() != Auth::Ok && credentials() != Auth::Pending)
-        return -1; // treat as expired
+        return expired;
 
-    return expiretime - current_time.tv_sec;
+    return Auth::Ttl(expiretime - current_time.tv_sec);
 }
 
 bool

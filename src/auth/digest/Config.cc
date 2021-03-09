@@ -1052,7 +1052,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
         authDigestUserLinkNonce(digest_user, nonce);
 
         /* auth_user is now linked */
-        auth_user->updateExpiration(Auth::TheConfig.credentialsTtl);
+        auth_user->updateExpiration(Auth::Ttl(Auth::TheConfig.credentialsTtl));
     } else {
         debugs(29, 9, "Found user '" << username << "' in the user cache as '" << auth_user << "'");
         digest_user = static_cast<Auth::Digest::User *>(auth_user.getRaw());

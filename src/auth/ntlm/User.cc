@@ -25,7 +25,8 @@ Auth::Ntlm::User::~User()
 Auth::Ttl
 Auth::Ntlm::User::ttl() const
 {
-    return -1; // NTLM credentials cannot be cached.
+    static const Auth::Ttl expired(-1);
+    return expired; // NTLM credentials cannot be cached.
 }
 
 CbcPointer<Auth::CredentialsCache>

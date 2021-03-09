@@ -72,7 +72,7 @@ public:
     virtual Auth::Ttl ttl() const = 0;
 
     /// simple accessor to detect expired credentials
-    bool expired() const { return ttl() < 0; }
+    bool expired() const { return ttl() < Auth::Ttl::zero(); }
 
     /// Update credentials lifetime using ttl=value from helper.
     /// Nil value means the helper sent no TTL option; in that case
@@ -80,7 +80,7 @@ public:
     void noteHelperTtl(const char *value);
 
     /// update credentials lifetime using the given TTL value in seconds
-    void updateExpiration(Auth::Ttl);
+    void updateExpiration(const Auth::Ttl &);
 
     /* Manage list of IPs using this username */
     void clearIp();

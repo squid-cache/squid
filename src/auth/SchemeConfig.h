@@ -132,8 +132,8 @@ public:
     int keep_alive = 1; ///< whether to close the connection on auth challenges. default: on
     int utf8 = 0; ///< whether to accept UTF-8 characterset instead of ASCII. default: off
 
-    /// The auth_param 'credentialsttl' setting. Default: 0 seconds
-    time_t credentialsTtl = 0;
+    /// the auth_param 'credentialsttl' setting
+    Auth::Ttl credentialsTtl = Auth::Ttl::zero();
 
 protected:
     /**

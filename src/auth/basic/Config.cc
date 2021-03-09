@@ -130,8 +130,7 @@ Auth::Basic::Config::dump(StoreEntry * entry, const char *name, Auth::SchemeConf
 Auth::Basic::Config::Config() :
     casesensitive(0)
 {
-    // Basic auth credentials default TTL is 2 hours
-    credentialsTtl = 2*60*60;
+    credentialsTtl = Auth::Ttl(2*60*60); // 2hrs
 
     static const SBuf defaultRealm("Squid proxy-caching web server");
     realm = defaultRealm;
@@ -273,7 +272,7 @@ Auth::Basic::Config::decode(char const *proxy_auth, const HttpRequest *request, 
         debugs(29, 9, HERE << "Creating new user '" << lb->username() << "'");
         /* set the auth_user type */
         lb->auth_type = Auth::AUTH_BASIC;
-        lb->updateExpiration(0); //  fresh until the end of the current second
+        lb->updateExpiration(Auth::Ttl::zero()); //  fresh until the end of the current second
 
         /* this basic_user struct is the 'lucky one' to get added to the username cache */
         /* the requests after this link to the basic_user */

@@ -51,25 +51,21 @@ void
 Auth::User::noteHelperTtl(const char *ttlNote)
 {
     if (ttlNote) {
-        const auto noteValue = strtoll(ttlNote, nullptr, 10);
-        if (noteValue < std::numeric_limits<Auth::Ttl>::max())
-            updateExpiration(Auth::Ttl(noteValue));
-        else
-            updateExpiration(std::numeric_limits<Auth::Ttl>::max());
-
+        const Auth::Ttl noteValue(strtoll(ttlNote, nullptr, 10));
+        updateExpiration(noteValue);
     } else {
         updateExpiration(config->credentialsTtl);
     }
 }
 
 void
-Auth::User::updateExpiration(Auth::Ttl ttl)
+Auth::User::updateExpiration(const Auth::Ttl &ttl)
 {
     // prevent signed overflows in time calculation
-    if (ttl >= (std::numeric_limits<decltype(current_time.tv_sec)>::max() - current_time.tv_sec))
+    if (ttl.count() >= (std::numeric_limits<decltype(current_time.tv_sec)>::max() - current_time.tv_sec))
         expiretime = std::numeric_limits<decltype(current_time.tv_sec)>::max();
     else
-        expiretime = current_time.tv_sec + ttl;
+        expiretime = current_time.tv_sec + ttl.count();
 }
 
 /**
@@ -278,11 +274,11 @@ Auth::User::CredentialsCacheStats(StoreEntry *output)
                       "Username", "Key");
     storeAppendPrintf(output, "--------------- --------- --------- --------- ------------------------------\n");
     for ( auto auth_user : userlist ) {
-        storeAppendPrintf(output, "%-15s %-9s %-9d %-9d %s\t" SQUIDSBUFPH "\n",
+        storeAppendPrintf(output, "%-15s %-9s %-9ld %-9ld %s\t" SQUIDSBUFPH "\n",
                           Auth::Type_str[auth_user->auth_type],
                           CredentialState_str[auth_user->credentials()],
-                          auth_user->ttl(),
-                          static_cast<int32_t>(auth_user->expiretime - squid_curtime + Auth::TheConfig.credentialsTtl),
+                          auth_user->ttl().count(),
+                          Auth::Ttl(auth_user->expiretime - squid_curtime + Auth::TheConfig.credentialsTtl).count(),
                           auth_user->username(),
                           SQUIDSBUFPRINT(auth_user->userKey())
                          );
