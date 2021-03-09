@@ -195,9 +195,9 @@ Ipc::Coordinator::handleRebuildFinishedMessage(const StrandMessage& msg)
     // notify all existing strands, new strands will be notified in handleRegistrationRequest()
     for (uint32_t i = 0; i < strands_.size(); ++i) {
         debugs(54, 3, "tell kid" << strands_[i].kidId << " that kid" << msg.strand.kidId << " is indexed");
-        StrandMessage response(msg.strand, questioners_.at(i));
+        StrandReady response(msg.strand, questioners_.at(i), true);
         TypedMsgHdr message;
-        response.pack(mtRebuildFinished, message);
+        response.pack(message);
         SendMessage(MakeAddr(strandAddrLabel, strands_[i].kidId), message);
     }
 }

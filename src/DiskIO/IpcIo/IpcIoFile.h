@@ -86,8 +86,8 @@ public:
     virtual bool canWrite() const;
     virtual bool ioInProgress() const;
 
-    /// handle open response from coordinator
-    static void HandleOpenResponse(const Ipc::StrandMessage &);
+    /// called when Coordinator reports that the strand exists and is usable
+    static void HandleStrandReadyResponse(const Ipc::StrandReady &);
     /// called when Coordinator reports that the strand exists but is not usable (yet)
     static void HandleStrandBusyResponse(const Ipc::StrandMessage &);
 

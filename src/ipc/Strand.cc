@@ -74,7 +74,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 #if HAVE_DISKIO_MODULE_IPCIO
     case mtStrandReady: {
         const StrandReady resp(message);
-        IpcIoFile::HandleOpenResponse(Mine(resp));
+        IpcIoFile::HandleStrandReadyResponse(Mine(resp));
         Store::Disks::DiskerReadyNotification(resp.strand.kidId, resp.indexed);
     }
     break;
@@ -82,12 +82,6 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
     case mtStrandBusy: {
         const StrandMessage resp(message);
         IpcIoFile::HandleStrandBusyResponse(Mine(resp));
-    }
-    break;
-
-    case mtRebuildFinished: {
-        const StrandMessage resp(message);
-        Store::Disks::RemoteIndexingCompleted(Mine(resp).strand.kidId);
     }
     break;
 

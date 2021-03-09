@@ -444,20 +444,14 @@ IpcIoFile::canWait() const
     return false; // do not want to wait that long
 }
 
-/// called when coordinator responds to worker open request
 void
-IpcIoFile::HandleOpenResponse(const Ipc::StrandMessage &response)
+IpcIoFile::HandleStrandReadyResponse(const Ipc::StrandReady &response)
 {
-    debugs(47, 7, HERE << "coordinator response to open request");
-    const auto file = StopWaiting(response.strand);
-    if (file) {
+    debugs(47, 7, "disker" << response.strand.kidId <<  " " << response.strand.tag << " is ready");
+    if (const auto file = StopWaiting(response.strand))
         file->openCompleted(&response);
-        return;
-    }
-
-    debugs(47, 4, HERE << "LATE disker response to open for " <<
-           response.strand.tag);
-    // nothing we can do about it; completeIo() has been called already
+    else
+        debugs(47, 4, "premature or late disker response");
 }
 
 /// reschedules IpcIoFile open request timeout for the head of the waiting queue
