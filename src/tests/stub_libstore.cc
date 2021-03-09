@@ -130,7 +130,7 @@ void Disks::Parse(DiskConfig &) STUB
 void Disks::Dump(const DiskConfig &, StoreEntry &, const char *name) STUB
 bool Disks::AllIndexed() STUB_RETVAL(true)
 void Disks::RemoteIndexingCompleted(int) STUB
-void Disks::DiskerReadyNotification(int) STUB
+void Disks::DiskerReadyNotification(int, bool) STUB
 SwapDir *Disks::SelectSwapDir(const StoreEntry *) STUB_RETVAL(nullptr)
 }
 void storeDirOpenSwapLogs(void) STUB
